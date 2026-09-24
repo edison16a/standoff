@@ -1,4 +1,4 @@
-import { SITE } from "@/shared/site";
+import { SITE } from "@/platform/site";
 
 /**
  * One broad sword, point up, as a flat accent silhouette. The fuller down

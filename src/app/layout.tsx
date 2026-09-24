@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import type { ReactNode } from "react";
-import { SITE } from "@/shared/site";
+import { SITE } from "@/platform/site";
 import "./globals.css";
 import "@/styles/ui.css";
 import "@/styles/tabs.css";

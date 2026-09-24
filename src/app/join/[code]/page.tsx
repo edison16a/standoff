@@ -1,4 +1,4 @@
-import { ControllerEntry } from "@/controller/components/ControllerEntry";
+import { ControllerEntry } from "@/platform/phone/components/ControllerEntry";
 import { ROOM_CODE_ALPHABET, ROOM_CODE_LENGTH } from "@/platform/protocol";
 import { notFound } from "next/navigation";
 

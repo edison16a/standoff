@@ -1,4 +1,4 @@
-import { SITE } from "@/shared/site";
+import { SITE } from "@/platform/site";
 
 /** The official GitHub mark, drawn in the current text colour. */
 function GitHubMark() {
