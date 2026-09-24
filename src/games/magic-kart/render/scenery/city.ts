@@ -137,26 +137,26 @@ export function buildCity(track: Track): Scenery {
     group.add(sign);
   }
 
-  const cars = new THREE.Group();
+  // Hover cars circling between the towers, all in one instanced mesh.
   const carGeo = merge([paint(box(3, 0.8, 1.4, 0.3), "#e0e4f0"), paint(box(1.4, 0.5, 1.2, 0.2), "#1fe0ff", { at: [0.2, 0.55, 0] })]);
-  const carMat = new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false });
-  for (let i = 0; i < 14; i++) {
-    const car = new THREE.Mesh(carGeo, carMat);
-    car.userData = { r: 120 + random() * 220, h: 30 + random() * 50, speed: (random() < 0.5 ? -1 : 1) * (0.05 + random() * 0.08), phase: random() * 6 };
-    cars.add(car);
-  }
-  cars.position.set((b.minX + b.maxX) / 2, 0, (b.minZ + b.maxZ) / 2);
+  const flights = Array.from({ length: 14 }, () => ({ r: 120 + random() * 220, h: 30 + random() * 50, speed: (random() < 0.5 ? -1 : 1) * (0.05 + random() * 0.08), phase: random() * 6 }));
+  const cars = new THREE.InstancedMesh(carGeo, new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false }), flights.length);
+  cars.frustumCulled = false;
+  const centre = new THREE.Vector3((b.minX + b.maxX) / 2, 0, (b.minZ + b.maxZ) / 2);
+  const pose = new THREE.Object3D();
   group.add(cars);
 
   return {
     group,
     update(time) {
-      for (const car of cars.children) {
-        const u = car.userData as { r: number; h: number; speed: number; phase: number };
+      flights.forEach((u, i) => {
         const a = u.phase + time * u.speed;
-        car.position.set(Math.cos(a) * u.r, u.h, Math.sin(a) * u.r);
-        car.rotation.y = -a + (u.speed > 0 ? 0 : Math.PI);
-      }
+        pose.position.set(centre.x + Math.cos(a) * u.r, u.h, centre.z + Math.sin(a) * u.r);
+        pose.rotation.y = -a + (u.speed > 0 ? 0 : Math.PI);
+        pose.updateMatrix();
+        cars.setMatrixAt(i, pose.matrix);
+      });
+      cars.instanceMatrix.needsUpdate = true;
     },
   };
 }

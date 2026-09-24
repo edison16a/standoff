@@ -80,18 +80,20 @@ export function buildVolcano(track: Track): Scenery {
   const crystals = scatter(track, 50, track.edge + 3, track.edge + 25, random).map((p) => ({ ...p, y: p.y - 0.3, rotY: random() * 6, scale: 0.8 + random() * 1.2 }));
   group.add(instances(crystal, new THREE.MeshBasicMaterial({ color: "#ff8a2a", toneMapped: false }), crystals));
 
-  // Embers rising from the lava and a plume from the crater, as slow drifting sprites.
-  const emberMat = new THREE.SpriteMaterial({ map: softDot("rgba(255,200,120,1)", "rgba(255,90,20,0)"), blending: THREE.AdditiveBlending, depthWrite: false });
-  const embers: THREE.Sprite[] = [];
-  for (let i = 0; i < 90; i++) {
-    const e = new THREE.Sprite(emberMat);
-    const s = random() * track.length;
-    const f = track.frameAt(s);
-    e.userData = { x: f.x + (random() - 0.5) * 140, z: f.z + (random() - 0.5) * 140, base: f.y - 2, speed: 1 + random() * 3, phase: random() * 40 };
-    e.scale.setScalar(0.5 + random() * 0.6);
-    embers.push(e);
-    group.add(e);
+  // Embers rising from the lava, drawn as one point cloud, and a smoke plume from the crater.
+  const embers: { x: number; z: number; base: number; speed: number; phase: number }[] = [];
+  for (let i = 0; i < 160; i++) {
+    const f = track.frameAt(random() * track.length);
+    embers.push({ x: f.x + (random() - 0.5) * 140, z: f.z + (random() - 0.5) * 140, base: f.y - 2, speed: 1 + random() * 3, phase: random() * 40 });
   }
+  const emberPos = new Float32Array(embers.length * 3);
+  const emberGeo = new THREE.BufferGeometry();
+  emberGeo.setAttribute("position", new THREE.BufferAttribute(emberPos, 3));
+  const emberCloud = new THREE.Points(emberGeo, new THREE.PointsMaterial({
+    map: softDot("rgba(255,200,120,1)", "rgba(255,90,20,0)"), size: 0.9, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  }));
+  emberCloud.frustumCulled = false;
+  group.add(emberCloud);
   const smokeMat = new THREE.SpriteMaterial({ map: softDot("rgba(60,50,50,0.7)", "rgba(60,50,50,0)"), depthWrite: false, fog: false });
   const plume: THREE.Sprite[] = [];
   for (let i = 0; i < 14; i++) {
@@ -104,11 +106,11 @@ export function buildVolcano(track: Track): Scenery {
     group,
     update(time) {
       lava.uniforms.time!.value = time;
-      for (const e of embers) {
-        const u = e.userData as { x: number; z: number; base: number; speed: number; phase: number };
+      embers.forEach((u, i) => {
         const t = (time * u.speed + u.phase) % 40;
-        e.position.set(u.x + Math.sin(t * 0.5) * 2, u.base + t, u.z);
-      }
+        emberPos.set([u.x + Math.sin(t * 0.5) * 2, u.base + t, u.z], i * 3);
+      });
+      emberGeo.getAttribute("position").needsUpdate = true;
       plume.forEach((puff, i) => {
         const t = (time * 0.08 + i / plume.length) % 1;
         puff.position.set(peak.x + Math.sin(i * 1.7) * 10 * t, 92 + t * 140, peak.z + t * 60);

@@ -53,6 +53,8 @@ export class GameRenderer {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.0;
     this.renderer.setScissorTest(true);
+    // Counted across all views of a frame, not per view, so drawCalls is the whole frame's cost.
+    this.renderer.info.autoReset = false;
     const pmrem = new THREE.PMREMGenerator(this.renderer);
     this.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     pmrem.dispose();
@@ -131,6 +133,7 @@ export class GameRenderer {
     stage.animate(time);
     this.dynamic.updateMatrixWorld(true);
 
+    this.renderer.info.reset();
     this.viewKarts = views.map((v) => v.kartId);
     while (this.chase.length < views.length) this.chase.push(new ChaseCamera());
     const px = this.renderer.getPixelRatio();
@@ -159,6 +162,11 @@ export class GameRenderer {
       this.renderer.render(stage.scene, camera);
     });
     this.snap.clear();
+  }
+
+  /** Draw calls in the last frame, all views together. */
+  get drawCalls(): number {
+    return this.renderer.info.render.calls;
   }
 
   dispose(): void {

@@ -63,18 +63,23 @@ export function buildSpace(track: Track): Scenery {
   });
   group.add(new THREE.Mesh(rail, edgeGlow));
 
-  const ringGeo = merge([paint(ring(track.edge + 3, 0.22, 64, 8, Math.PI), "#ffffff")]);
-  const ringMat = new THREE.MeshBasicMaterial({ color: "#8f7dff", toneMapped: false });
-  const rings: THREE.Mesh[] = [];
-  for (let s = 60; s < track.length - 40; s += 95) {
-    if (track.inGap(s) || track.rampHeight(s) > 0) continue;
+  // Portal rings over the road, one instanced mesh, each ring cycling through the rainbow.
+  const ringSpots: number[] = [];
+  for (let s = 60; s < track.length - 40; s += 95) if (!track.inGap(s) && track.rampHeight(s) <= 0) ringSpots.push(s);
+  const rings = new THREE.InstancedMesh(new THREE.TorusGeometry(track.edge + 3, 0.22, 8, 64, Math.PI), new THREE.MeshBasicMaterial({ toneMapped: false }), Math.max(1, ringSpots.length));
+  rings.count = ringSpots.length;
+  const pose = new THREE.Object3D();
+  ringSpots.forEach((s, i) => {
     const f = track.frameAt(s);
-    const mesh = new THREE.Mesh(ringGeo, ringMat.clone());
-    mesh.position.set(f.x, f.y, f.z);
-    mesh.rotation.y = Math.atan2(f.tx, f.tz);
-    rings.push(mesh);
-    group.add(mesh);
-  }
+    pose.position.set(f.x, f.y, f.z);
+    pose.rotation.y = Math.atan2(f.tx, f.tz);
+    pose.updateMatrix();
+    rings.setMatrixAt(i, pose.matrix);
+    rings.setColorAt(i, new THREE.Color("#8f7dff"));
+  });
+  rings.computeBoundingSphere();
+  group.add(rings);
+  const hue = new THREE.Color();
 
   const giant = planet(120, ["#ff9d5c", "#ffcf8a", "#e0703a", "#ffe2b0"], true);
   giant.position.set(cx - 520, 160, cz - 380);
@@ -138,9 +143,8 @@ export function buildSpace(track: Track): Scenery {
       belt.rotation.y = time * 0.01;
       giant.rotation.y = time * 0.02;
       station.rotation.y = time * 0.05;
-      rings.forEach((mesh, i) => {
-        (mesh.material as THREE.MeshBasicMaterial).color.setHSL((time * 0.05 + i * 0.13) % 1, 0.9, 0.62);
-      });
+      for (let i = 0; i < rings.count; i++) rings.setColorAt(i, hue.setHSL((time * 0.05 + i * 0.13) % 1, 0.9, 0.62));
+      if (rings.instanceColor) rings.instanceColor.needsUpdate = true;
     },
   };
 }

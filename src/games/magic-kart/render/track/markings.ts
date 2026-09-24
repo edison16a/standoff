@@ -8,6 +8,18 @@ import { sweep } from "./sweep";
 /** Bends tighter than this radius get chevron boards and a painted arrow. */
 const SIGN_RADIUS = 55;
 
+/** One instanced mesh drawing the geometry at each stand in object's pose. */
+function instanced(geometry: THREE.BufferGeometry, material: THREE.Material, poses: THREE.Object3D[]): THREE.InstancedMesh {
+  const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, poses.length));
+  mesh.count = poses.length;
+  poses.forEach((pose, i) => {
+    pose.updateMatrix();
+    mesh.setMatrixAt(i, pose.matrix);
+  });
+  mesh.computeBoundingSphere();
+  return mesh;
+}
+
 /** Puts a flat object on the road at (s, d), facing along the track. */
 export function placeOnTrack(object: THREE.Object3D, track: Track, s: number, d: number, lift: number): void {
   const p = track.pointAt(s, d);
@@ -67,11 +79,15 @@ export function buildMarkings(track: Track, theme: Theme, pads: readonly BoostPa
   const postMat = new THREE.MeshStandardMaterial({ color: "#d8d8e0" });
   const arrowMat = flatDecal(arrowTexture(theme.line));
   const arrowGeo = new THREE.PlaneGeometry(3.4, 6.8).rotateX(-Math.PI / 2);
+  // Boards, posts and arrows are posed on stand in objects, then drawn instanced: one draw call each.
+  const boards: THREE.Object3D[] = [];
+  const posts: THREE.Object3D[] = [];
+  const arrows: THREE.Object3D[] = [];
   for (const bend of findBends(track)) {
     for (let s = bend.start; s <= bend.end + 4; s += 7) {
-      if (!track.hasWall(s) || track.inGap(s)) continue;
       const outside = -bend.dir;
-      const board = new THREE.Mesh(boardGeo, boardMat);
+      if (!track.hasWall(s, outside) || track.inGap(s)) continue;
+      const board = new THREE.Object3D();
       const p = track.pointAt(s, outside * (track.edge + 0.25));
       const f = track.frameAt(s);
       board.position.set(p.x, p.y + 2.1, p.z);
@@ -79,17 +95,19 @@ export function buildMarkings(track: Track, theme: Theme, pads: readonly BoostPa
       board.rotation.set(0, Math.atan2(-f.tx, -f.tz) + outside * 0.35, 0);
       // The texture points right, so mirror it for left hand bends.
       board.scale.x = bend.dir > 0 ? 1 : -1;
-      const post = new THREE.Mesh(postGeo, postMat);
+      const post = new THREE.Object3D();
       post.position.set(p.x, p.y + 0.8, p.z);
-      group.add(board, post);
+      boards.push(board);
+      posts.push(post);
     }
     const before = track.wrap(bend.start - 24);
     if (track.inGap(before) || track.rampHeight(before) > 0) continue;
-    const arrow = new THREE.Mesh(arrowGeo, arrowMat);
+    const arrow = new THREE.Object3D();
     placeOnTrack(arrow, track, before, 0, 0.025);
     arrow.scale.x = bend.dir > 0 ? 1 : -1;
-    group.add(arrow);
+    arrows.push(arrow);
   }
+  group.add(instanced(boardGeo, boardMat, boards), instanced(postGeo, postMat, posts), instanced(arrowGeo, arrowMat, arrows));
 
   for (const ramp of track.ramps) {
     const stripes = sweep(track, [{ d: -track.halfWidth, y: 0.04 }, { d: track.halfWidth, y: 0.04 }], {

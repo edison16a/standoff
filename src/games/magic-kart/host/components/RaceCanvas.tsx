@@ -23,7 +23,7 @@ export default function RaceCanvas() {
     observer.observe(canvas);
     const unlisten = session.listen((event) => renderer.onEvent(event));
     // Browser tests steer the test phones by reading the race from here. Development builds only.
-    if (process.env.NODE_ENV === "development") Object.assign(window, { __magicKart: session });
+    if (process.env.NODE_ENV === "development") Object.assign(window, { __magicKart: session, __magicKartRenderer: renderer });
 
     let frame = 0;
     const loop = (now: number) => {
