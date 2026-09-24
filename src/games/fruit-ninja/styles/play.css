@@ -1,0 +1,199 @@
+/*
+  Fruit Ninja on the phone during and after a round: the score pad and
+  the result.
+*/
+
+/* The play pad. */
+
+.fn-play {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-height: calc(100dvh - 110px);
+  padding: 16px;
+  overflow: hidden;
+  border-radius: 24px;
+  background: radial-gradient(circle at 50% 30%, #8a5427, #4a2a12 75%);
+  color: #fff3d6;
+}
+
+.fn-play--stunned {
+  animation: fn-phone-stun 0.25s linear infinite;
+}
+
+@keyframes fn-phone-stun {
+  50% {
+    background: radial-gradient(circle at 50% 30%, #7a2a1a, #2a0e06 75%);
+  }
+}
+
+.fn-play__top {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 20px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.fn-play__rank {
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: var(--pop);
+  color: #fff;
+}
+
+.fn-play__score {
+  margin-top: 8px;
+  color: #fff;
+  font-size: 96px;
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 5px 0 var(--pop), 0 10px 24px rgba(0, 0, 0, 0.4);
+  animation: fn-phone-bump 0.3s ease-out;
+}
+
+@keyframes fn-phone-bump {
+  from {
+    transform: scale(1.2);
+  }
+}
+
+.fn-play__status {
+  margin: 0;
+  color: #ffe2b4;
+  font-size: 17px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.fn-play__hand {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  width: 100%;
+}
+
+.fn-play__ring {
+  width: 150px;
+  height: 150px;
+  border: 10px solid var(--pop);
+  border-radius: 50%;
+  box-shadow: 0 0 40px var(--pop), inset 0 0 30px var(--pop);
+  animation: fn-phone-breathe 2s ease-in-out infinite;
+}
+
+@keyframes fn-phone-breathe {
+  50% {
+    transform: scale(0.88);
+    opacity: 0.7;
+  }
+}
+
+.fn-play .kit-pad {
+  width: 100%;
+  flex: 1;
+  border-color: rgba(255, 220, 160, 0.4);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.fn-play .kit-pad__hint {
+  color: #ffe2b4;
+}
+
+.fn-play__recenter.btn {
+  border-color: rgba(255, 220, 160, 0.4);
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff3d6;
+}
+
+.fn-play__flash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  animation: fn-phone-flash 0.4s ease-out both;
+}
+
+.fn-play__flash--slice,
+.fn-play__flash--hit {
+  background: radial-gradient(circle, color-mix(in srgb, var(--pop) 45%, transparent), transparent 70%);
+}
+
+.fn-play__flash--rare,
+.fn-play__flash--combo {
+  background: radial-gradient(circle, rgba(255, 214, 60, 0.6), transparent 70%);
+}
+
+.fn-play__flash--bomb {
+  background: rgba(255, 60, 30, 0.6);
+  animation-duration: 0.8s;
+}
+
+@keyframes fn-phone-flash {
+  to {
+    opacity: 0;
+  }
+}
+
+/* The end of a round. */
+
+.fn-over {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 4px;
+  text-align: center;
+}
+
+.fn-over__kicker {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.fn-over__headline {
+  margin: 0;
+  font-size: 40px;
+  font-weight: 900;
+}
+
+.fn-over__headline--won {
+  color: #e08a00;
+}
+
+.fn-over__score {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.fn-over__list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fn-over__row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--bg);
+  box-shadow: inset 5px 0 0 var(--pop);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.fn-over__row--me {
+  outline: 2px solid var(--pop);
+}

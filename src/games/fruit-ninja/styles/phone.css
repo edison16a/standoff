@@ -1,0 +1,68 @@
+/*
+  Fruit Ninja setup on the phone. The pages sit in the kit's step frame;
+  the blade cards bring the game's own warm wood look.
+*/
+
+.fn-blades {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.fn-blade {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 6px 8px;
+  border: 2px solid var(--border);
+  border-radius: 18px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.fn-blade[aria-checked="true"] {
+  border-color: #f2711c;
+  box-shadow: 0 0 0 3px rgba(242, 113, 28, 0.3);
+}
+
+.fn-blade__preview {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+}
+
+.fn-blade__name {
+  font-size: 15px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.fn-ready__preview {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 8;
+  border-radius: 18px;
+}
+
+.fn-tips {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding-left: 20px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.fn-wait {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(242, 113, 28, 0.12);
+  color: var(--text);
+  font-weight: 700;
+  text-align: center;
+}

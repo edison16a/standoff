@@ -18,6 +18,7 @@ export const GAMES: readonly GameInfo[] = [fencing, fruitNinja, magicKart, zombi
  */
 const LOADERS: Record<string, () => Promise<GameModule>> = {
   fencing: () => import("./fencing").then((mod) => mod.game),
+  "fruit-ninja": () => import("./fruit-ninja").then((mod) => mod.game),
 };
 
 export function findGame(id: string): GameInfo | undefined {

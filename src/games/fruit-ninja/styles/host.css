@@ -1,0 +1,100 @@
+/*
+  Fruit Ninja on the computer. Its own look, not the platform's: a warm
+  wooden board with cream cards on top, like labels on a market stall,
+  and bold juicy orange for anything you can press.
+*/
+
+.fn-stage {
+  --fn-ink: #3a2210;
+  --fn-cream: #fff6e4;
+  --fn-card: rgba(255, 246, 228, 0.95);
+  --fn-edge: #f0d29c;
+  --fn-orange: #f2711c;
+  --fn-orange-deep: #d4520a;
+  --fn-font: ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", system-ui, sans-serif;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #4a2c14;
+  color: var(--fn-ink);
+  font-family: var(--fn-font);
+}
+
+.fn-stage__box,
+.fn-stage__canvas,
+.fn-stage__layer,
+.fn-stage__vignette {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.fn-stage__canvas {
+  display: block;
+}
+
+.fn-stage__layer,
+.fn-stage__vignette {
+  pointer-events: none;
+}
+
+.fn-stage__vignette {
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 55%, rgba(30, 12, 2, 0.45) 100%);
+}
+
+/* The title over the board in the lobby. */
+
+.fn-title {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.fn-title__name {
+  margin: 0;
+  font-size: 54px;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  color: #fff3d6;
+  text-shadow: 0 3px 0 #b8450a, 0 6px 0 #7a2c06, 0 10px 18px rgba(0, 0, 0, 0.45);
+}
+
+.fn-title__tag {
+  margin: 6px 0 0;
+  color: #ffe9c2;
+  font-size: 17px;
+  font-weight: 700;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+/* Cards. */
+
+.fn-panel {
+  position: absolute;
+  padding: 20px;
+  border: 3px solid var(--fn-edge);
+  border-radius: 22px;
+  background: var(--fn-card);
+  box-shadow: 0 14px 40px rgba(40, 16, 2, 0.45), inset 0 -4px 0 rgba(200, 150, 80, 0.25);
+}
+
+.fn-panel__head {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #9a6230;
+}
+
+.fn-panel__hint {
+  margin: 10px 0 0;
+  color: #8a6440;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}

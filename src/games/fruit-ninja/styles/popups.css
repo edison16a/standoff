@@ -1,0 +1,97 @@
+/*
+  Fruit Ninja text over the board: the points that pop out of every cut,
+  combo and bomb callouts, and the name tag riding next to each blade.
+*/
+
+/* Points and callouts rising out of a cut. */
+
+.fn-pop {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--pop);
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+  -webkit-text-stroke: 2px rgba(40, 14, 0, 0.85);
+  paint-order: stroke fill;
+  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+  animation: fn-rise 1.2s ease-out both;
+}
+
+.fn-pop--small {
+  font-size: 30px;
+}
+
+.fn-pop--big {
+  font-size: 52px;
+}
+
+.fn-pop--combo {
+  font-size: 46px;
+  color: #fff6d0;
+  -webkit-text-stroke: 3px var(--pop);
+  animation-duration: 1.3s;
+}
+
+.fn-pop__sub {
+  margin-top: 4px;
+  color: #fff;
+  font-size: 0.5em;
+  -webkit-text-stroke: 1.5px rgba(40, 14, 0, 0.8);
+}
+
+.fn-pop--combo .fn-pop__sub {
+  color: var(--pop);
+  font-size: 0.7em;
+  -webkit-text-stroke: 2px rgba(40, 14, 0, 0.85);
+}
+
+@keyframes fn-rise {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -30%) scale(0.4);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -60%) scale(1.15);
+  }
+  70% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -150%) scale(1);
+  }
+}
+
+/* Each player's name next to their blade. */
+
+.fn-tag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--pop);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+  white-space: nowrap;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+  opacity: 0.92;
+  will-change: transform;
+}
+
+.fn-tag--stunned {
+  background: #555;
+  animation: fn-stun 0.2s linear infinite;
+}
+
+@keyframes fn-stun {
+  50% {
+    opacity: 0.4;
+  }
+}

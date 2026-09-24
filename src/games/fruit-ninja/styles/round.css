@@ -1,0 +1,162 @@
+/*
+  Fruit Ninja during a round: the clock, the leaderboard and the countdown.
+*/
+
+.fn-clock {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  min-width: 128px;
+  padding: 6px 22px;
+  transform: translateX(-50%);
+  border: 3px solid rgba(255, 220, 160, 0.5);
+  border-radius: 999px;
+  background: rgba(40, 18, 4, 0.72);
+  color: #fff3d6;
+  font-size: 40px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.fn-clock--hurry {
+  border-color: #ff5a3c;
+  color: #ffd2c6;
+  animation: fn-hurry 1s ease-in-out infinite;
+}
+
+@keyframes fn-hurry {
+  50% {
+    transform: translateX(-50%) scale(1.08);
+    background: rgba(140, 20, 6, 0.8);
+  }
+}
+
+.fn-board {
+  position: absolute;
+  top: 66px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 270px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fn-board__row {
+  display: grid;
+  grid-template-columns: 26px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px 7px 8px;
+  border-radius: 16px;
+  background: rgba(255, 246, 228, 0.94);
+  box-shadow: inset 6px 0 0 var(--pop), 0 6px 16px rgba(30, 10, 0, 0.35);
+  transition: transform 0.25s;
+}
+
+.fn-board__row--gone {
+  opacity: 0.55;
+  filter: grayscale(0.7);
+}
+
+.fn-board__place {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-left: 6px;
+  border-radius: 50%;
+  background: var(--pop);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.fn-board__name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  color: color-mix(in srgb, var(--pop) 70%, #2a1406);
+  font-size: 19px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.fn-board__crown {
+  flex-shrink: 0;
+  width: 22px;
+  height: 15px;
+  fill: #ffc21a;
+  stroke: #b87400;
+  stroke-width: 1.2;
+}
+
+.fn-board__score {
+  color: var(--fn-ink);
+  font-size: 26px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  animation: fn-bump 0.3s ease-out;
+}
+
+@keyframes fn-bump {
+  from {
+    transform: scale(1.35);
+    color: var(--pop);
+  }
+}
+
+/* The countdown. */
+
+.fn-count {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  color: #fff6e0;
+  font-size: 220px;
+  font-weight: 900;
+  line-height: 1;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  text-shadow: 0 6px 0 #c44a0a, 0 12px 0 #7a2c06, 0 20px 40px rgba(0, 0, 0, 0.5);
+  animation: fn-pop-in 0.9s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+.fn-count--go {
+  font-size: 150px;
+  color: #fff8c8;
+  animation: fn-go 0.9s ease-out both;
+}
+
+@keyframes fn-pop-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.2);
+  }
+  30% {
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes fn-go {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5) rotate(-6deg);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1) rotate(-4deg);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.3) rotate(-4deg);
+  }
+}
