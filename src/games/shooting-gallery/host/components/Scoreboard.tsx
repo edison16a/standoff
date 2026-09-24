@@ -21,7 +21,7 @@ export function Scoreboard() {
       <ol className="sg-board__list">
         {players.map((player) => (
           <li key={player.seat} className={`sg-board__row ${player.connected ? "" : "sg-board__row--gone"}`} style={{ "--p": playerColor(player.seat) } as React.CSSProperties}>
-            <span className="sg-board__place">{player.score > 0 ? player.place : "-"}</span>
+            <span className="sg-board__place">{player.score > 0 ? player.place : ""}</span>
             <span className="sg-board__name">{player.name}</span>
             <span className="sg-board__score">{player.score}</span>
           </li>

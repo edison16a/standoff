@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { KINDS } from "./kinds";
+import { BULLSEYE_RADIUS, BULLSEYE_RINGS, KINDS } from "./kinds";
 import { BOARDS, BOOTH, CAMERA, boardTop, type Vec3 } from "./layout";
 import { probe, type Ray } from "./raycast";
 import { Round } from "./round";
@@ -49,6 +49,17 @@ describe("probe", () => {
     const middle = centreOf(board);
     expect(probe([board], rayTo(middle)).bull).toBe(true);
     expect(probe([board], rayTo({ ...middle, x: middle.x + 0.25 })).bull).toBe(false);
+  });
+
+  it("scores the bull only inside the painted centre ring", () => {
+    const board = target({ kind: "bullseye", lane: "pop", z: -2.55, y: 1.62 });
+    const middle = centreOf(board);
+    const ring = BULLSEYE_RADIUS / BULLSEYE_RINGS;
+    expect(probe([board], rayTo({ ...middle, x: middle.x + ring * 0.95 })).bull).toBe(true);
+    // Just outside the red centre, on the cream ring, is an ordinary hit.
+    const outside = probe([board], rayTo({ ...middle, x: middle.x + ring * 1.08 }));
+    expect(outside.target).toBe(board);
+    expect(outside.bull).toBe(false);
   });
 
   it("lands on the back wall when nothing is in the way", () => {

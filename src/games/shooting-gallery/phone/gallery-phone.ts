@@ -25,6 +25,8 @@ export interface PhoneState {
   scored: (Scored & { at: number }) | null;
   /** True while the gun is being pumped after a shot. */
   pumping: boolean;
+  /** The player left the results page to set up for the next round. */
+  leftResults: boolean;
 }
 
 function savedFinish(): FinishId {
@@ -50,7 +52,7 @@ export class GalleryPhone {
 
   constructor(private readonly room: PhoneRoomApi) {
     this.aim = new PhoneAim(room);
-    this.store = createStore<PhoneState>(() => ({ step: "calibrate", finish: savedFinish(), ready: false, game: null, scored: null, pumping: false }));
+    this.store = createStore<PhoneState>(() => ({ step: "calibrate", finish: savedFinish(), ready: false, game: null, scored: null, pumping: false, leftResults: false }));
     this.off = room.on((event) => this.onRoom(event));
     this.resend();
   }
@@ -82,6 +84,12 @@ export class GalleryPhone {
     this.room.send({ kind: "ready", ready });
   }
 
+  /** From the results page back to setup, for a phone that has to calibrate again first. */
+  leaveResults(): void {
+    this.store.setState({ leftResults: true });
+    this.goTo("calibrate");
+  }
+
   fire(): void {
     if (this.store.getState().pumping) return;
     this.aim.fire();
@@ -105,13 +113,13 @@ export class GalleryPhone {
     const parsed = hostMessageSchema.safeParse(event.payload);
     if (!parsed.success) return;
     const message = parsed.data;
-    if (message.kind === "sync") return this.resend();
     if (message.kind === "scored") {
       this.store.setState({ scored: { ...message, at: performance.now() } });
       navigator.vibrate?.(message.bull || message.target === "golden" ? [25, 40, 25, 40, 25] : [18, 30, 18]);
       return;
     }
     const mine = message.players.find((p) => p.seat === this.room.seat);
+    if (message.phase !== "results") this.store.setState({ leftResults: false });
     // The host clears everyone's ready flag when a round ends, and its word is final, once it has heard our last tap.
     const settled = performance.now() - this.readyTappedAt > READY_HOLD_MS;
     this.store.setState(settled ? { game: message, ready: mine?.ready ?? false } : { game: message });

@@ -51,21 +51,8 @@ function bodyGeometry(): THREE.BufferGeometry {
   // A wide, low neck, so the head grows out of the body with no crease.
   const neck = new THREE.SphereGeometry(1, 32, 20);
   neck.scale(0.14, 0.12, 0.15).translate(0.12, 0.4, 0);
-  return mergeGeometries([geometry, head, neck, quiff(0.55, 1), quiff(0.95, 0.7)]);
-}
-
-/** A soft teardrop of a feather on top of the head, swept back. */
-function quiff(lean: number, size: number): THREE.BufferGeometry {
-  const feather = new THREE.SphereGeometry(1, 16, 12);
-  const p = feather.attributes.position as THREE.BufferAttribute;
-  for (let i = 0; i < p.count; i++) {
-    const y = p.getY(i);
-    // Narrow toward the tip, so it reads as a curl rather than a ball.
-    const taper = 1 - Math.max(0, y) * 0.75;
-    p.setXYZ(i, p.getX(i) * 0.02 * taper * size, (y + 1) * 0.034 * size, p.getZ(i) * 0.014 * taper * size);
-  }
-  feather.computeVertexNormals();
-  return feather.rotateZ(lean).translate(0.18, 0.655, 0);
+  // A plain round crown, like a real bath duck. A tuft up there read as a horn from across the room.
+  return mergeGeometries([geometry, head, neck]);
 }
 
 function wingGeometry(): THREE.BufferGeometry {

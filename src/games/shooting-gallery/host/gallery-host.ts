@@ -10,10 +10,10 @@ import { winners } from "../engine/scoring";
 import { phoneMessageSchema, type GalleryPhase } from "../protocol";
 import { GalleryCamera } from "../render/camera";
 import type { Shooter, StageEvent, StageSource } from "../render/stage-source";
+import { boardEntries } from "./best-entries";
 import { BestStore } from "./best-store";
 import { DropoutWatch } from "./dropout-watch";
 import { createHostStore, type HostStore } from "./host-store";
-import { displayName } from "./host-view";
 import { everyoneReady, lineUp } from "./lobby";
 import { Publisher } from "./publisher";
 import { RoundDriver } from "./round-driver";
@@ -61,8 +61,6 @@ export class GalleryHost implements StageSource {
     this.offs.push(room.on((event) => this.onRoom(event)));
     this.audio.phase("lobby");
     this.store.setState({ best: tableFor(this.best.current, this.store.getState().seconds) });
-    // Phones may have answered a reload before this game was listening, so ask again.
-    room.send("all", { kind: "sync" });
     this.publish();
   }
 
@@ -150,15 +148,19 @@ export class GalleryHost implements StageSource {
     if (event.type === "left") {
       this.seats.unready(event.seat);
       this.dropouts.check();
+      // The one player everyone was waiting for may be the one who left.
+      this.afterSetupChange();
     }
     if (event.type === "message") {
       const parsed = phoneMessageSchema.safeParse(event.payload);
-      if (parsed.success && this.seats.apply(event.seat, parsed.data)) this.audio.sfx.click();
-      if (parsed.success) this.afterSetupChange();
+      // Aim streams in from every phone many times a second. It changes
+      // nothing the phones show, so it must not resend everyone's state.
+      if (!parsed.success) return;
+      if (this.seats.apply(event.seat, parsed.data)) this.audio.sfx.click();
+      this.afterSetupChange();
     }
     if (event.type === "resync") {
       for (const player of this.room.players()) if (player.connected) this.seats.seat(player.seat);
-      this.room.send("all", { kind: "sync" });
       this.dropouts.check();
     }
     // Names, arrivals and departures all change what phones show, so always resend.
@@ -201,10 +203,10 @@ export class GalleryHost implements StageSource {
     if (!live) return;
     const standings = live.standings();
     const seconds = this.store.getState().seconds;
-    const at = Date.now();
-    const players = this.room.players();
-    const places = this.best.add(standings.map((s) => ({ name: displayName(players, s.seat), score: s.score, accuracy: s.accuracy, seconds, at })));
-    this.bestPlaces = new Map(standings.map((s, i) => [s.seat, places[i] ?? null]));
+    // Only players who typed a name go on the board. The results say so.
+    const entries = boardEntries(standings, this.room.players(), seconds, Date.now());
+    const places = entries.length > 0 ? this.best.add(entries.map((e) => e.entry)) : [];
+    this.bestPlaces = new Map(entries.map((e, i) => [e.seat, places[i] ?? null]));
     this.winners = winners(standings);
     this.seats.unreadyAll();
     this.store.setState({ best: tableFor(this.best.current, seconds) });
