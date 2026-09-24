@@ -94,7 +94,6 @@ function blend(a: FencerFrame, b: FencerFrame, k: number): FencerFrame {
     yaw: lerp(a.yaw, b.yaw, k),
     roll: lerp(a.roll, b.roll, k),
     speed: lerp(a.speed, b.speed, k),
-    stride: lerp(a.stride, b.stride, k),
     actionMs: sameAction ? lerp(a.actionMs, b.actionMs, k) : a.actionMs,
   };
 }

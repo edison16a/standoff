@@ -22,8 +22,6 @@ export interface FencerFrame {
   roll: number;
   /** Walking speed toward the opponent, m/s. Negative is retreating. */
   speed: number;
-  /** Distance walked so far, which drives the leg cycle. */
-  stride: number;
   action: FencerAction;
   /** Milliseconds since the action started. */
   actionMs: number;

@@ -28,7 +28,6 @@ export class Fencer {
   characterId: CharacterId;
   x: number;
   speed = 0;
-  stride = 0;
   input: ControllerInput = { pitch: 0, yaw: 0, roll: 0, move: 0 };
   private pose = { pitch: 0, yaw: 0, roll: 0 };
   action: FencerAction = "idle";
@@ -75,7 +74,6 @@ export class Fencer {
     const dt = dtMs / 1000;
     this.speed = allowed ? this.input.move * MAX_SPEED : 0;
     this.x += this.speed * this.facing * dt;
-    this.stride += Math.abs(this.speed) * dt;
   }
 
   /** Eases the drawn blade toward the latest phone reading. */
@@ -96,7 +94,6 @@ export class Fencer {
       yaw: this.pose.yaw,
       roll: this.pose.roll,
       speed: this.speed,
-      stride: this.stride,
       action: this.action,
       actionMs: now - this.actionStartedAt,
       parrying: now < this.parryUntil,
