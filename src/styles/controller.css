@@ -1,0 +1,320 @@
+/*
+  The phone controller. Built for one hand and a small screen: a single
+  column, large tap targets, and the main action pinned where a thumb is.
+*/
+
+.phone {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--bg-workspace);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.phone__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 56px;
+  padding: 0 12px 0 16px;
+  padding-top: env(safe-area-inset-top);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.phone__bar .brand {
+  font-size: 16px;
+}
+
+.phone__bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.phone__bar-actions .btn {
+  width: 40px;
+  padding: 0;
+}
+
+.phone__notice {
+  padding: 10px 16px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 14px;
+  text-align: center;
+}
+
+.phone__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.phone__waiting {
+  margin: auto;
+}
+
+.phone-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+}
+
+.phone-card--center {
+  align-items: center;
+  margin: auto 0;
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.phone-card__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.phone-title {
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.step__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.step__head h2 {
+  font-size: 18px;
+}
+
+.step__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.picker__card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 0 0 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease;
+}
+
+.picker__card--chosen {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.picker__card:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.picker__art {
+  width: 100%;
+  height: 150px;
+  margin-bottom: 8px;
+  background: var(--bg-elevated);
+}
+
+.picker__name {
+  padding: 0 12px;
+  font-weight: 600;
+}
+
+.picker__tag {
+  padding: 0 12px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.calibrate {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.calibrate__live,
+.pad__live {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.calibrate__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ready-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 0 4px;
+  background: var(--bg-workspace);
+  text-align: center;
+  font-size: 14px;
+}
+
+.gauge {
+  width: 100%;
+  height: 120px;
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+}
+
+.gauge__guide {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.gauge__blade {
+  stroke: var(--accent);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.gauge__hilt {
+  fill: var(--text);
+}
+
+.meter {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.meter__track {
+  position: relative;
+  height: 10px;
+  border-radius: 10px;
+  background: var(--bg-muted);
+  overflow: hidden;
+}
+
+.meter__fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--accent);
+}
+
+.meter__centre {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(50% - 1px);
+  width: 2px;
+  background: var(--text-muted);
+}
+
+.pad {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pad__status {
+  align-items: center;
+  text-align: center;
+}
+
+.pad__score {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.pad__score > span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pad__score strong {
+  font-size: 30px;
+  line-height: 1.1;
+}
+
+.pad__title {
+  font-size: 44px;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.touch {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.touch__move {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.touch__buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.touch__buttons .btn {
+  height: 96px;
+  font-size: 18px;
+  touch-action: manipulation;
+}
