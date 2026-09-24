@@ -1,10 +1,7 @@
 import type { StrikeAction } from "@/shared/protocol";
 import type { Tuning } from "@/shared/tuning";
-import { dot, length, rotate, sub, vec, type Quat, type Vec3 } from "./math3d";
-import type { MovementSource } from "./movement/movement-source";
-import { PositionTracker } from "./movement/position-tracker";
-import { TiltTracker } from "./movement/tilt-tracker";
-import { RISE_WINDOW_MS, StrikeDetector } from "./strike-detector";
+import { dot, rotate, sub, vec, type Quat, type Vec3 } from "./math3d";
+import { StrikeDetector } from "./strike-detector";
 import { calibrate, stripAxis, swordPose, type Calibration, type SwordPose } from "./sword-pose";
 
 /** A `devicemotion` reading, in the device frame. */
@@ -16,7 +13,7 @@ export interface MotionReading {
   accelerationIncludingGravity: Vec3 | null;
 }
 
-/** What the phone sends to the host every frame. */
+/** What the phone sends to the host every frame: the sword, plus footwork from the buttons. */
 export interface ControllerFrame extends SwordPose {
   move: number;
 }
@@ -29,8 +26,8 @@ const GRAVITY_SMOOTHING = 0.08;
  * sight so the whole thing can be unit tested with synthetic readings.
  *
  * Orientation drives the sword directly. Motion is rotated into the earth
- * frame, projected onto the strip line, and handed to the strike detector
- * and the movement source side by side.
+ * frame, projected onto the strip line, and handed to the strike detector.
+ * Footwork is not sensed at all: players hold Forward or Back buttons.
  */
 export class MotionPipeline {
   private orientation: Quat | null = null;
@@ -38,35 +35,27 @@ export class MotionPipeline {
   private axis: Vec3 = vec(0, 1, 0);
   private gravity: Vec3 | null = null;
   private readonly strikes: StrikeDetector;
-  private movement: MovementSource;
-  private tuning: Tuning;
   private pose: SwordPose = { pitch: 0, yaw: 0, roll: 0 };
-  private move = 0;
 
   constructor(
     tuning: Tuning,
     /** Called the instant a jab or parry is detected. */
     private readonly onStrike: (action: StrikeAction) => void,
   ) {
-    this.tuning = tuning;
     this.strikes = new StrikeDetector(tuning);
-    this.movement = makeMovement(tuning);
   }
 
   get isCalibrated(): boolean {
     return this.calibration !== null;
   }
 
-  get frame(): ControllerFrame {
-    return { ...this.pose, move: this.move };
+  /** The live sword, relative to the calibrated guard. */
+  get sword(): SwordPose {
+    return this.pose;
   }
 
   configure(tuning: Tuning): void {
-    const modeChanged = tuning.movementMode !== this.tuning.movementMode;
-    this.tuning = tuning;
     this.strikes.configure(tuning);
-    if (modeChanged) this.movement = makeMovement(tuning);
-    else this.movement.configure(tuning);
   }
 
   /** Takes the current pose as guard and the current heading as forward. */
@@ -78,10 +67,9 @@ export class MotionPipeline {
     return true;
   }
 
+  /** Called at every en garde, so a half finished strike never carries over. */
   recenter(): void {
-    this.movement.recenter();
     this.strikes.reset();
-    this.move = 0;
   }
 
   onOrientation(q: Quat): void {
@@ -94,18 +82,8 @@ export class MotionPipeline {
     const linear = this.linearAcceleration(reading);
     if (!linear) return;
 
-    const forward = dot(linear, this.axis);
-    const action = this.strikes.update(forward, reading.t);
-    if (action) {
-      this.movement.hold(reading.t - RISE_WINDOW_MS, reading.t + this.tuning.refractoryMs);
-      this.onStrike(action);
-    }
-    this.move = this.movement.update({
-      t: reading.t,
-      forwardAccel: forward,
-      accelMagnitude: length(linear),
-      roll: this.pose.roll,
-    });
+    const action = this.strikes.update(dot(linear, this.axis), reading.t);
+    if (action) this.onStrike(action);
   }
 
   /**
@@ -128,8 +106,4 @@ export class MotionPipeline {
     };
     return sub(total, this.gravity);
   }
-}
-
-function makeMovement(tuning: Tuning): MovementSource {
-  return tuning.movementMode === "tilt" ? new TiltTracker(tuning) : new PositionTracker(tuning);
 }

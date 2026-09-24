@@ -13,6 +13,8 @@ import { motionSupport, requestMotionPermission, subscribeSensors } from "./sens
 
 /** Phases where the host is drawing this fencer and wants the live reading. */
 const STREAMING = new Set(["enGarde", "live", "halt", "paused"]);
+/** The sword held level, for devices with no motion sensors. */
+const LEVEL = { pitch: 0, yaw: 0, roll: 0 };
 /** Fresh sockets to try when a join cannot find the room. */
 const JOIN_RETRIES = 6;
 
@@ -29,8 +31,8 @@ export class ControllerSession {
   private stopSensors: (() => void) | null = null;
   private readonly motion: MotionStream;
   private joinRetries = 0;
-  /** Footwork from the on screen slider when there are no sensors. */
-  private touchMove = 0;
+  /** Footwork from the Forward and Back buttons: 1, -1 or 0. */
+  private move = 0;
 
   constructor(private readonly code: string) {
     this.pipeline = new MotionPipeline(DEFAULT_TUNING, (action) => this.onStrike(action));
@@ -49,7 +51,8 @@ export class ControllerSession {
 
   /** The live reading being sent, for the gauges on screen. */
   get frame(): ControllerFrame {
-    return store.getState().inputMode === "touch" ? { pitch: 0, yaw: 0, roll: 0, move: this.touchMove } : this.pipeline.frame;
+    const sword = store.getState().inputMode === "touch" ? LEVEL : this.pipeline.sword;
+    return { ...sword, move: this.move };
   }
 
   /**
@@ -124,8 +127,9 @@ export class ControllerSession {
     this.send({ kind: "rematch" });
   }
 
-  setTouchMove(value: number): void {
-    this.touchMove = Math.max(-1, Math.min(1, value));
+  /** Held Forward (1), held Back (-1), or neither (0). */
+  setMove(value: -1 | 0 | 1): void {
+    this.move = value;
   }
 
   /** Touch mode strike buttons go through the same path as detected ones. */

@@ -176,25 +176,6 @@
   line-height: 1.35;
 }
 
-.calibrate {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.calibrate__live,
-.pad__live {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.calibrate__actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
 .ready-bar {
   position: sticky;
   bottom: 0;

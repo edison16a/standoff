@@ -28,20 +28,20 @@ function flatPhone() {
 describe("MotionPipeline", () => {
   it("reports zero angles in the calibrated guard", () => {
     const { pipeline } = flatPhone();
-    expect(pipeline.frame.pitch).toBeCloseTo(0);
-    expect(pipeline.frame.yaw).toBeCloseTo(0);
+    expect(pipeline.sword.pitch).toBeCloseTo(0);
+    expect(pipeline.sword.yaw).toBeCloseTo(0);
   });
 
   it("tips the blade up when the phone tilts up", () => {
     const { pipeline } = flatPhone();
     pipeline.onOrientation(quatFromDeviceEuler(0, 30, 0));
-    expect(pipeline.frame.pitch).toBeCloseTo(Math.PI / 6, 5);
+    expect(pipeline.sword.pitch).toBeCloseTo(Math.PI / 6, 5);
   });
 
   it("swings the blade sideways when the heading turns", () => {
     const { pipeline } = flatPhone();
     pipeline.onOrientation(quatFromDeviceEuler(20, 0, 0));
-    expect(Math.abs(pipeline.frame.yaw)).toBeCloseTo((20 * Math.PI) / 180, 5);
+    expect(Math.abs(pipeline.sword.yaw)).toBeCloseTo((20 * Math.PI) / 180, 5);
   });
 
   it("turns a thrust along the strip into a jab and a pull back into a parry", () => {
@@ -50,14 +50,6 @@ describe("MotionPipeline", () => {
     feed(new Array(40).fill(0));
     feed([0, -10, -22, -26, -8, 0]);
     expect(strikes).toEqual(["jab", "parry"]);
-  });
-
-  it("does not turn a jab into footwork", () => {
-    const { pipeline, feed } = flatPhone();
-    feed(new Array(20).fill(0));
-    feed([0, 12, 28, 30, 10, -20, -28, -14, 0]);
-    feed(new Array(40).fill(0));
-    expect(pipeline.frame.move).toBe(0);
   });
 
   it("falls back to removing gravity itself when only raw acceleration is given", () => {

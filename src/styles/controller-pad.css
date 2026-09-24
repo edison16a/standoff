@@ -1,118 +1,150 @@
 /*
-  Live readouts and the in match pad on the phone: the sword gauge, the
-  footwork meter, the score card and the touch fallback buttons.
+  Calibration and the in match pad on the phone. During a match the
+  player is looking at the computer, so the pad is two buttons big enough
+  to find without looking.
 */
 
-.gauge {
+.calibrate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.calibrate--counting {
+  padding: 24px 0;
+}
+
+.calibrate__count {
+  font-size: 88px;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--accent);
+}
+
+.calibrate__preview {
   width: 100%;
-  height: 120px;
+  height: 200px;
   border-radius: var(--radius);
   background: var(--bg-elevated);
 }
 
-.gauge__guide {
-  stroke: var(--border-strong);
-  stroke-width: 1;
-  stroke-dasharray: 3 4;
+.hold-guide {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
 }
 
-.gauge__blade {
+.hold-guide__line,
+.hold-guide__hand {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hold-guide__hand {
+  fill: var(--bg);
+}
+
+.hold-guide__phone {
+  fill: var(--accent);
+}
+
+.hold-guide__accent {
+  fill: none;
   stroke: var(--accent);
-  stroke-width: 4;
+  stroke-width: 3;
   stroke-linecap: round;
 }
 
-.gauge__hilt {
-  fill: var(--text);
+.hold-guide__dash {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  stroke-dasharray: 5 6;
+  stroke-linecap: round;
 }
 
-.meter {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  font-size: 12px;
-}
-
-.meter__track {
-  position: relative;
-  height: 10px;
-  border-radius: 10px;
-  background: var(--bg-muted);
-  overflow: hidden;
-}
-
-.meter__fill {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  background: var(--accent);
-}
-
-.meter__centre {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: calc(50% - 1px);
-  width: 2px;
-  background: var(--text-muted);
-}
-
+/* The match pad fills the space under the bar. */
 .pad {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  min-height: calc(100dvh - 90px);
 }
 
-.pad__status {
-  align-items: center;
-  text-align: center;
+.pad__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 4px 4px 0;
 }
 
 .pad__score {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.pad__score > span {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.pad__score strong {
-  font-size: 30px;
-  line-height: 1.1;
+  color: var(--text-muted);
+  font-size: 18px;
 }
 
 .pad__title {
-  font-size: 44px;
-  line-height: 1.05;
-  letter-spacing: -0.03em;
+  font-size: 30px;
+  letter-spacing: -0.02em;
 }
 
-.touch {
+.moves {
+  flex: 1;
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 12px;
+}
+
+.hold {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 120px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  transition: background-color 80ms ease;
 }
 
-.touch__move {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.hold--on {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
-.touch__buttons {
+.hold--solo {
+  flex: 1;
+}
+
+.hold:disabled {
+  opacity: 0.5;
+}
+
+.strikes {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
 
-.touch__buttons .btn {
-  height: 96px;
+.strikes .btn {
+  height: 72px;
   font-size: 18px;
   touch-action: manipulation;
 }
