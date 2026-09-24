@@ -4,7 +4,7 @@ import { STRIP_HALF_LENGTH } from "@/game/rules";
 /** Tallest a fencer gets, sword raised, used to size the view. */
 const FIGURE_HEIGHT = 2.3;
 /** Room kept on each side of the pair, metres. */
-const SIDE_MARGIN = 2.2;
+const SIDE_MARGIN = 1.5;
 /** How quickly the camera catches up, per second. Slow enough to feel steady. */
 const FOLLOW_RATE = 3;
 

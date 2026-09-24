@@ -28,6 +28,36 @@ export function paint(brush: Brush, tone: Tone, build: (ctx: CanvasRenderingCont
   ctx.stroke();
 }
 
+/** One filled shape inside a group. */
+export interface Part {
+  tone: Tone;
+  build: (ctx: CanvasRenderingContext2D) => void;
+}
+
+/**
+ * Paints several shapes as one silhouette. All outlines go down first at
+ * double width, then every fill on top, so the seams where a thigh meets
+ * a shin disappear and only the outer edge of the limb is outlined. This
+ * is what makes separate cutout pieces read as one body.
+ */
+export function paintGroup(brush: Brush, parts: Part[]): void {
+  const { ctx } = brush;
+  ctx.lineJoin = "round";
+  ctx.lineWidth = 3 * brush.px;
+  ctx.strokeStyle = brush.outline;
+  for (const part of parts) {
+    ctx.beginPath();
+    part.build(ctx);
+    ctx.stroke();
+  }
+  for (const part of parts) {
+    ctx.beginPath();
+    part.build(ctx);
+    ctx.fillStyle = brush.tones[part.tone];
+    ctx.fill();
+  }
+}
+
 /** Strokes a line in a tone, for details like seams, mesh and visor slits. */
 export function line(brush: Brush, tone: Tone | "outline", width: number, points: Vec2[]): void {
   const { ctx } = brush;

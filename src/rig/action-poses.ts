@@ -18,7 +18,7 @@ const lunge: ActionPose = (live) => ({
   nod: -0.2,
   frontFoot: v2(live.frontFoot.x + 0.62, 0),
   backFoot: v2(live.backFoot.x - 0.06, 0),
-  hand: v2(0.57, -0.02),
+  hand: v2(0.57, 0.0),
   // Aim mostly along the line, keeping a little of where the phone points.
   bladeAngle: -0.06 + (live.bladeAngle - 0.16) * 0.35,
   backHand: v2(-0.5, -0.02),
@@ -57,7 +57,7 @@ const hit: ActionPose = (live) => ({
 /** Standing tall, sword thrown up. */
 const victory: ActionPose = (live) => ({
   ...live,
-  hips: v2(0, 0.93),
+  hips: v2(0, 0.84),
   lean: -0.04,
   nod: -0.18,
   frontFoot: v2(0.2, 0),
@@ -71,7 +71,7 @@ const victory: ActionPose = (live) => ({
 /** Slumped, tip on the floor. */
 const defeat: ActionPose = (live) => ({
   ...live,
-  hips: v2(0, 0.8),
+  hips: v2(0, 0.72),
   lean: 0.42,
   nod: 0.5,
   frontFoot: v2(0.26, 0),

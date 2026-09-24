@@ -36,7 +36,6 @@ function meshMask(brush: Brush, skin: Skin): void {
   for (let x = 0.0; x <= 0.15; x += 0.022) line(brush, skin.tones.headDetail, 0.9, [v2(x, -0.14), v2(x, 0.14)]);
   for (let y = -0.12; y <= 0.13; y += 0.022) line(brush, skin.tones.headDetail, 0.9, [v2(0, y), v2(0.16, y)]);
   ctx.restore();
-  line(brush, "trim", 2.4, [v2(-0.1, 0.03), v2(-0.02, 0.13)]);
 }
 
 /** Face, hair tied back, a wide brimmed hat and a trailing plume. */
@@ -63,7 +62,6 @@ function plumedHat(brush: Brush, skin: Skin): void {
 function bandana(brush: Brush, skin: Skin): void {
   paint(brush, skin.tones.head, (ctx) => ctx.ellipse(0.02, -0.01, 0.1, 0.115, 0, 0, Math.PI * 2));
   paint(brush, "ink", (ctx) => ctx.arc(0.075, 0.015, 0.012, 0, Math.PI * 2));
-  line(brush, "outline", 1.4, [v2(0.1, -0.06), v2(0.065, -0.065)]);
   paint(brush, skin.tones.headDetail, (ctx) => {
     ctx.moveTo(-0.09, 0.0);
     ctx.quadraticCurveTo(-0.08, 0.13, 0.03, 0.125);

@@ -5,12 +5,12 @@ import type { Pose } from "./skeleton";
 
 /** The en garde stance every character rests in. */
 export const GUARD: Pose = {
-  hips: v2(0, 0.84),
+  hips: v2(0, 0.76),
   lean: 0.1,
   nod: -0.05,
-  frontFoot: v2(0.38, 0),
-  backFoot: v2(-0.34, 0),
-  hand: v2(0.3, -0.2),
+  frontFoot: v2(0.4, 0),
+  backFoot: v2(-0.36, 0),
+  hand: v2(0.4, -0.15),
   bladeAngle: 0.16,
   bladeYaw: 0,
   wrist: 0,

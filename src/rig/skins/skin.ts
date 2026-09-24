@@ -17,8 +17,11 @@ export interface Skin {
   blade: BladeKind;
   /** Blade length in metres. The referee's reach does not change with it. */
   bladeLength: number;
-  /** Limb radii at the joint and at the far end, metres. */
-  limb: { upper: number; lower: number };
+  /**
+   * Body proportions: arm and leg radius at the root in metres, and a chest
+   * scale. This is the only thing that makes Iron look heavier than Vale.
+   */
+  build: { arm: number; leg: number; chest: number };
   tones: {
     body: Tone;
     sleeve: Tone;

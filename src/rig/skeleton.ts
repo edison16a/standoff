@@ -2,11 +2,11 @@ import { add, polar, solveTwoBone, v2, type Vec2 } from "./geometry";
 
 /** Bone lengths, shared by every character. One skeleton, many skins. */
 export const BONES = {
-  thigh: 0.46,
-  shin: 0.46,
+  thigh: 0.42,
+  shin: 0.42,
   torso: 0.52,
   neck: 0.07,
-  headRadius: 0.115,
+  headRadius: 0.135,
   upperArm: 0.3,
   forearm: 0.28,
 } as const;

@@ -1,4 +1,4 @@
-import { line, paint, type Brush } from "../brush";
+import { line, paint, paintGroup, type Brush } from "../brush";
 import { v2 } from "../geometry";
 import { BONES } from "../skeleton";
 import type { Skin } from "../skins/skin";
@@ -11,14 +11,23 @@ import type { Skin } from "../skins/skin";
 
 const H = BONES.torso;
 
-/** The shared body outline: flat back, chest bulging toward the opponent. */
-function trunk(ctx: CanvasRenderingContext2D, depth = 1): void {
-  ctx.moveTo(-0.11 * depth, -0.02);
-  ctx.lineTo(0.1 * depth, -0.02);
-  ctx.quadraticCurveTo(0.15 * depth, H * 0.55, 0.1 * depth, H + 0.02);
-  ctx.quadraticCurveTo(0, H + 0.07, -0.1 * depth, H + 0.01);
-  ctx.quadraticCurveTo(-0.14 * depth, H * 0.5, -0.11 * depth, -0.02);
+/**
+ * The shared body outline: a flat back, shoulders rounded over, and a
+ * chest that bulges toward the opponent. `chest` widens it for heavier builds.
+ */
+function trunk(ctx: CanvasRenderingContext2D, chest: number): void {
+  const w = (x: number) => x * chest;
+  ctx.moveTo(w(-0.12), 0.02);
+  ctx.bezierCurveTo(w(-0.13), 0.2, w(-0.16), 0.38, w(-0.13), H - 0.04);
+  ctx.quadraticCurveTo(w(-0.1), H + 0.05, w(0.0), H + 0.05);
+  ctx.quadraticCurveTo(w(0.12), H + 0.05, w(0.14), H - 0.06);
+  ctx.bezierCurveTo(w(0.18), 0.34, w(0.15), 0.16, w(0.12), 0.02);
   ctx.closePath();
+}
+
+/** Hips, in the breeches colour, so the legs have somewhere to attach. */
+function pelvis(ctx: CanvasRenderingContext2D, chest: number): void {
+  ctx.ellipse(0.005, 0.0, 0.135 * chest, 0.1, 0, 0, Math.PI * 2);
 }
 
 export function drawTorsoBack(brush: Brush, skin: Skin, sway: number): void {
@@ -44,7 +53,11 @@ export function drawTorsoBack(brush: Brush, skin: Skin, sway: number): void {
 }
 
 export function drawTorso(brush: Brush, skin: Skin): void {
-  paint(brush, skin.tones.body, (ctx) => trunk(ctx, skin.torso === "plate" ? 1.08 : 1));
+  const { chest } = skin.build;
+  paintGroup(brush, [
+    { tone: skin.tones.legs, build: (ctx) => pelvis(ctx, chest) },
+    { tone: skin.tones.body, build: (ctx) => trunk(ctx, chest) },
+  ]);
   switch (skin.torso) {
     case "jacket":
       // The side seam of a fencing jacket, in the player colour.
