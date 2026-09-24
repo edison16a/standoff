@@ -1,5 +1,5 @@
 import { createServer, type IncomingMessage, type Server } from "node:http";
-import type { AddressInfo, Socket } from "node:net";
+import { connect, type AddressInfo, type Socket } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { WebSocket } from "ws";
 import type { ServerEnvelope } from "@/shared/protocol";
@@ -7,9 +7,9 @@ import { ROTATE_LEAD_MS } from "@/relay/relay-types";
 import { GET } from "./route";
 
 /**
- * Runs the real route and the real @vercel/functions upgrade helper. The
- * only stand in is the hook Vercel's runtime would provide: the raw
- * request, socket and head of the upgrade, plus the invocation deadline.
+ * Runs the real route and its upgrade code. The only stand in is the hook
+ * Vercel's runtime would provide: the raw request, socket and head of the
+ * upgrade, plus the invocation deadline.
  */
 const CONTEXT = Symbol.for("@vercel/request-context");
 let server: Server;
@@ -80,6 +80,22 @@ describe("the Vercel WebSocket route", () => {
     expect(kept.length).toBeGreaterThanOrEqual(2);
     host.socket.close();
     phone.socket.close();
+  });
+
+  it("completes the handshake for an HTTP/2 browser, which sends no key", async () => {
+    // What the edge hands the function when Chrome opens the socket over
+    // HTTP/2: an upgrade with no Sec-WebSocket-Key.
+    const [host, port] = origin.split(":");
+    const reply = await new Promise<string>((resolve) => {
+      const raw = connect(Number(port), host, () => {
+        raw.write(`GET /api/ws HTTP/1.1\r\nHost: ${origin}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Version: 13\r\n\r\n`);
+      });
+      raw.once("data", (data) => {
+        resolve(data.toString());
+        raw.destroy();
+      });
+    });
+    expect(reply.startsWith("HTTP/1.1 101")).toBe(true);
   });
 
   it("asks the client to move before the deadline", async () => {
