@@ -26,7 +26,7 @@ export function MatchCanvas() {
     observer.observe(canvas);
 
     let driver = session.driver;
-    let unlisten = driver?.listen((event) => renderer.react(event, driver!.engine.now)) ?? null;
+    let unlisten = driver?.listen((event) => renderer.react(event)) ?? null;
     let frame = 0;
     const loop = (now: number) => {
       session.tick(now);
@@ -34,7 +34,7 @@ export function MatchCanvas() {
       if (session.driver !== driver) {
         unlisten?.();
         driver = session.driver;
-        unlisten = driver?.listen((event) => renderer.react(event, driver!.engine.now)) ?? null;
+        unlisten = driver?.listen((event) => renderer.react(event)) ?? null;
       }
       if (driver) renderer.render(driver.engine.scene());
       frame = requestAnimationFrame(loop);

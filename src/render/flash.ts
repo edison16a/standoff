@@ -15,9 +15,14 @@ export class Flash {
   private kind: FlashKind | null = null;
   private startedAt = 0;
 
-  react(event: GameEvent, now: number): void {
-    if (event.type === "touch") this.start("touch", now);
-    if (event.type === "parried") this.start("parry", now);
+  /**
+   * Times the flash on the event's own clock. Live events and replayed
+   * ones both carry the time of the frame they belong to, so the flash
+   * lines up in slow motion too.
+   */
+  react(event: GameEvent): void {
+    if (event.type === "touch") this.start("touch", event.t);
+    if (event.type === "parried") this.start("parry", event.t);
   }
 
   draw(ctx: CanvasRenderingContext2D, palette: Palette, now: number, width: number, height: number): void {

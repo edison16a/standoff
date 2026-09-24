@@ -43,8 +43,8 @@ export class SceneRenderer {
     this.camera.resize(cssWidth, cssHeight);
   }
 
-  react(event: GameEvent, now: number): void {
-    this.flash.react(event, now);
+  react(event: GameEvent): void {
+    this.flash.react(event);
   }
 
   render(frame: SceneFrame): void {
