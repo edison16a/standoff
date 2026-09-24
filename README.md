@@ -2,7 +2,7 @@
 
 Standoff is a games console in the browser. One computer is the screen, and every player's phone is their controller. There is nothing to install and no account to make: open the site on a computer, pick a game, and everyone scans the QR code with their phone. Each player types a name, and the game starts.
 
-Fencing is the first game. Your phone is the sword: tilt it and the blade on screen follows, chop down to jab, lift up to parry, and hold Forward or Back to move. Fruit Ninja, Go-Kart Racing, Zombie Survival and Shooting Gallery are on the shelf and in development, each with a brief in its folder under `src/games`.
+Fencing is the first game. Your phone is the sword: tilt it and the blade on screen follows, chop down to jab, lift up to parry, and hold Forward or Back to move. Fruit Ninja, Go-Kart Racing, Zombie Survival and Shooting Gallery are on the home screen and in development, each with a brief in its folder under `src/games`.
 
 It runs on Vercel for play from anywhere, or on your own computer over WiFi. Nothing is saved on the server: close it and the game is gone.
 
@@ -10,11 +10,11 @@ Play it at [standoff-five.vercel.app](https://standoff-five.vercel.app).
 
 ## Screenshots
 
-The home screen. Every game sits on one shelf, the chosen one big in the middle. Arrow keys, a click or a swipe move along it.
+The home screen. Every game is a big card, two to a row, each tinted in its own colour. Games still being built show a rendered preview of their look.
 
-<img src="docs/screenshots/home-light.png" alt="The home screen in light mode with Fencing selected" width="100%" />
+<img src="docs/screenshots/home-light.png" alt="The home screen in light mode, with Fencing, Fruit Ninja, Go-Kart Racing and Zombie Survival cards" width="100%" />
 
-<img src="docs/screenshots/home-next.png" alt="The home screen in dark mode with Go-Kart Racing selected, in development, with a choice of 1, 2 or 4 players" width="100%" />
+<img src="docs/screenshots/home-dark.png" alt="The same home screen in dark mode" width="100%" />
 
 Play opens a room. The QR code waits in the middle, then moves to the bottom left once someone joins, until the game starts. The logo at the top left always leads home.
 
@@ -198,7 +198,7 @@ Every fencer is a cutout rig: separate art pieces for the head, torso, arms, leg
 
 The sword arm follows the phone. Jabs, parries, deflections, hits, and the victory and defeat poses are layered on top by a small animator. Each action has a weight that snaps toward 1 when it starts and eases back to 0 after, which is how a lunge briefly takes over the tracked sword and then springs back to following your hand. The feet step in time with distance travelled, so a retreat plays the same step backwards, back foot first, which is how fencers actually retreat.
 
-The four characters (Vale, Duchess, Marrow, Iron) share that skeleton and animation. A character is only a choice of art pieces and tones, so all of them stay fully reactive. Player one's details are drawn in the accent colour and player two's in white.
+The four characters (Vale, Duchess, Marrow, Iron) share that skeleton and animation. A character is only a choice of art pieces and colours, so all of them stay fully reactive. Player one's trim is red and player two's is green, like the scoring lamps on a real strip.
 
 ### Sound
 

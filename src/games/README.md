@@ -6,7 +6,7 @@ Every game lives in its own folder here and never imports another game. That is 
 
 The platform (`src/platform`) runs the room, the same way for every game:
 
-* The home screen shelf, and Play, which opens a room for the chosen game and player count.
+* The home screen cards, and Play, which opens a room for the chosen game and player count.
 * The QR code: big in the middle until someone joins, then bottom left until the game calls `room.setPlaying(true)`.
 * The Standoff logo top left, which always goes home, and the tool bar top right.
 * On the phone: the name screen, joining, reconnecting, and the header bar. Join is the one tap that unlocks sound, motion access and the wake lock, so a game's phone screen starts with all three ready.
@@ -17,7 +17,7 @@ The platform (`src/platform`) runs the room, the same way for every game:
 A folder with:
 
 * `info.ts`: the title, tagline, status (`ready` or `development`) and the player counts it supports (any of 1, 2 and 4).
-* `Cover.tsx`: the art on its card on the home screen.
+* `Cover.tsx`: the art on its card on the home screen. A still `cover.jpg` is fine until the game can draw itself, as fencing does.
 * `index.tsx`, once playable: a `GameModule` (see `src/platform/games/game-api.ts`).
   * `createHost(room)` returns the host `Screen`, plus optional `Tools` for the tool bar and a `JoinExtra` for under the QR code.
   * `createPhone(room)` returns the phone `Screen`.
@@ -45,5 +45,5 @@ Once two of these games need it, this belongs in one shared place (say `src/plat
 ## Rules of the house
 
 * Files stay under about 200 lines, with comments that say why.
-* The platform's own screens keep to one accent colour plus black and white, from the tokens in `src/app/globals.css`. Inside a game, each game has its own look (Fruit Ninja is warm brown wood, for example), kept in its own folder.
+* The platform's own screens use the tokens in `src/app/globals.css`, with the logo's purple as the accent. Each game brings its own colour in `info.ts`, which tints its home card, and inside the game it has its own look (Fruit Ninja is warm brown wood, for example), kept in its own folder. Be bold with colour.
 * No imports from another game. Shared code belongs in `src/platform` or `src/components`.
