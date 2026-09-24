@@ -9,18 +9,15 @@ import { SessionContext } from "./session-context";
 
 /** The computer's side of Standoff: start a game, fill the lobby, host the match. */
 export function HostApp() {
-  // Created after mount: the session opens sockets and audio, which only exist in the browser.
-  const [session, setSession] = useState<HostSession | null>(null);
+  // This component only renders in the browser (see HostEntry), so the session can be made up front.
+  const [session] = useState(() => new HostSession());
   const screen = useHostStore((state) => state.screen);
 
   useEffect(() => {
-    const created = new HostSession();
-    created.connect();
-    setSession(created);
-    return () => created.dispose();
-  }, []);
+    session.connect();
+    return () => session.dispose();
+  }, [session]);
 
-  if (!session) return null;
   return (
     <SessionContext.Provider value={session}>
       {screen === "landing" && <Landing />}

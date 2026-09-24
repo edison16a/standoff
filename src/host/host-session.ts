@@ -43,6 +43,8 @@ export class HostSession {
   dispose(): void {
     this.director?.stop();
     this.audio?.close();
+    this.director = null;
+    this.audio = null;
     this.socket.close();
   }
 
