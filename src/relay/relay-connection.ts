@@ -144,7 +144,7 @@ export class RelayConnection {
     const channel = this.room(code);
     if (replaced) channel.kickSeat(slot, replaced);
     channel.toHost({ type: "peer:joined", slot, rejoined });
-    this.send({ type: "phone:joined", code, slot, token: outcome.claim.token });
+    this.send({ type: "phone:joined", code, slot, token: outcome.claim.token, hostHere: outcome.hostHere });
     if (!outcome.hostHere) this.watch.start(code);
   }
 

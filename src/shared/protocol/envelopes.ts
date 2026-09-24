@@ -55,7 +55,8 @@ export type ServerEnvelope =
   | { type: "peer:joined"; slot: 1 | 2; rejoined: boolean }
   | { type: "peer:left"; slot: 1 | 2 }
   | { type: "peer:message"; slot: 1 | 2; payload: z.infer<typeof phoneMessageSchema> }
-  | { type: "phone:joined"; code: string; slot: 1 | 2; token: string }
+  /** `hostHere` settles the "host away" state afresh, in case a notice was missed while offline. */
+  | { type: "phone:joined"; code: string; slot: 1 | 2; token: string; hostHere: boolean }
   | { type: "host:message"; payload: z.infer<typeof hostMessageSchema> }
   | { type: "host:away" }
   | { type: "host:back" }

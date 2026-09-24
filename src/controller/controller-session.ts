@@ -76,7 +76,8 @@ export class ControllerSession {
       }
       this.stopSensors = subscribeSensors(this.pipeline, () => store.setState({ sensorsLive: true }));
     } else {
-      store.setState({ inputMode: "touch" });
+      // No sensors at all: straight to the on screen buttons, which need no calibration.
+      this.useTouchControls();
     }
     void this.awake.start();
     store.setState({ stage: "joining" });
@@ -138,11 +139,11 @@ export class ControllerSession {
       case "phone:joined": {
         this.joinRetries = 0;
         writeToken(this.code, message.token);
-        store.setState({ stage: "playing", slot: message.slot, error: null });
+        store.setState({ stage: "playing", slot: message.slot, error: null, hostAway: !message.hostHere });
         this.resendChoices();
         return;
       }
-      case "room:error":
+      case "room:error": {
         // Without a shared room store, a socket can land on a server
         // instance that has never heard of the room, and a server side
         // failure may pass. Either way, try a few fresh sockets.
@@ -154,6 +155,7 @@ export class ControllerSession {
         }
         store.setState({ stage: "error", error: message.reason });
         return;
+      }
       case "room:closed":
         store.setState({ stage: "error", error: "closed" });
         this.dispose();
