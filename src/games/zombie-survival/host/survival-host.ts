@@ -122,6 +122,7 @@ export class SurvivalHost {
         return;
       case "left":
         this.game.setPresent(event.seat, false);
+        if (!this.game.running && this.lobby.everyoneReady(this.connectedSeats())) this.start();
         return;
       case "message": {
         const parsed = phoneMessageSchema.safeParse(event.payload);

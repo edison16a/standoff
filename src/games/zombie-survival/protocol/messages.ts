@@ -52,8 +52,8 @@ export const gunSchema = z.object({
   ammo: z.number().int().min(0),
   magazine: z.number().int().min(1),
   reloading: z.boolean(),
-  /** Seconds the reload that just began will take, for the progress ring. */
-  reloadSeconds: z.number().min(0),
+  /** Seconds the running reload has left, for the progress bar. */
+  reloadLeft: z.number().min(0),
 });
 export type GunMessage = z.infer<typeof gunSchema>;
 

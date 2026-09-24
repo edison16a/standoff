@@ -6,6 +6,9 @@ import type { WeaponSpec } from "./weapons";
 import { hitZombie } from "./zombie";
 import { isBoss, type HitPart } from "./zombie-kinds";
 
+/** Shotgun pellets that land on a weak point count this many times over. */
+export const WEAK_PELLET_BONUS = 1.7;
+
 /** What one bullet or pellet struck, as the renderer's raycast found it. */
 export interface PelletHit {
   zombie: number;
@@ -46,7 +49,8 @@ export function pelletOffsets(spec: WeaponSpec, random: () => number): Offset[] 
 }
 
 /** Applies one shot's bullets to the fight, keeping the shooter's stats. */
-export function resolveShot(member: Member, encounter: Encounter | null, cast: CastFn, random: () => number): GameEvent[] {
+/** `scored` is false between fights, where shooting the scenery should not cost anyone their accuracy. */
+export function resolveShot(member: Member, encounter: Encounter | null, cast: CastFn, random: () => number, scored = true): GameEvent[] {
   const { seat, stats, gun } = member;
   const events: GameEvent[] = [];
   const hits = cast(pelletOffsets(gun.spec, random));
@@ -56,7 +60,9 @@ export function resolveShot(member: Member, encounter: Encounter | null, cast: C
     const z = hit && encounter?.find(hit.zombie);
     if (!hit || !z || z.state === "dead") continue;
     struck = true;
-    const result = hitZombie(z, hit.part, hit.weak, gun.spec.damage);
+    // Buckshot tears a weak point open: each pellet there counts for more, or the shotgun could never drop a boss.
+    const base = hit.part === "weak" && gun.spec.pellets > 1 ? gun.spec.damage * WEAK_PELLET_BONUS : gun.spec.damage;
+    const result = hitZombie(z, hit.part, hit.weak, base);
     stats.damage += result.damage;
     if (hit.part === "weak" && result.damage > 0) stats.weakHits += 1;
     if (hit.part === "head" && result.damage > 0 && !headThisShot) {
@@ -74,6 +80,6 @@ export function resolveShot(member: Member, encounter: Encounter | null, cast: C
       events.push({ type: "kill", seat, zombie: z.id, kind: z.kind, head: hit.part === "head" });
     }
   }
-  recordShot(stats, struck);
+  if (scored) recordShot(stats, struck);
   return events;
 }

@@ -10,24 +10,24 @@ import { usePhoneStore } from "../phone-store";
  */
 export function AmmoPanel() {
   const gun = usePhoneStore((s) => s.gun);
-  const reloadFrom = usePhoneStore((s) => s.reloadFrom);
+  const reload = usePhoneStore((s) => s.reload);
   const weapon = usePhoneStore((s) => s.weapon);
   const [now, setNow] = useState(0);
 
   useEffect(() => {
-    if (reloadFrom === null) return;
+    if (reload === null) return;
     let frame = requestAnimationFrame(function tick(t) {
       setNow(t);
       frame = requestAnimationFrame(tick);
     });
     return () => cancelAnimationFrame(frame);
-  }, [reloadFrom]);
+  }, [reload]);
 
   const spec = WEAPONS[gun?.weapon ?? weapon];
   const ammo = gun?.ammo ?? spec.magazine;
   const magazine = gun?.magazine ?? spec.magazine;
   const reloading = gun?.reloading ?? false;
-  const progress = reloading && reloadFrom !== null && gun ? Math.min(1, Math.max(0, (now - reloadFrom) / 1000 / Math.max(0.1, gun.reloadSeconds))) : 0;
+  const progress = reloading && reload ? Math.min(1, Math.max(0, (now - reload.from) / Math.max(100, reload.to - reload.from))) : 0;
   const empty = ammo === 0;
 
   return (

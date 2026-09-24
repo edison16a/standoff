@@ -120,9 +120,13 @@ export class SurvivalPhone {
         return;
       }
       case "gun": {
-        const before = store.getState().gun;
-        const started = message.reloading && !before?.reloading;
-        store.setState({ gun: message, reloadFrom: message.reloading ? (started ? performance.now() : store.getState().reloadFrom) : null });
+        const now = performance.now();
+        const running = store.getState().reload;
+        const to = now + message.reloadLeft * 1000;
+        // The host rounds the time left, so small differences are noise and would make the bar twitch.
+        const keep = running && Math.abs(running.to - to) < 350;
+        const reload = message.reloading ? { from: running?.from ?? now, to: keep ? running.to : to } : null;
+        store.setState({ gun: message, reload });
         return;
       }
       case "score":

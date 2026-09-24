@@ -13,11 +13,14 @@ const CORPSE_SECONDS = 5;
 
 /** How many ordinary zombies a stage sends at a team of this size. */
 export function teamCount(spec: StageSpec, players: number): number {
-  return Math.round(spec.count * (1 + 0.5 * Math.max(0, players - 1)));
+  // A boss already grows with the team, so its escort grows more gently.
+  const per = spec.boss ? 0.25 : 0.5;
+  return Math.round(spec.count * (1 + per * Math.max(0, players - 1)));
 }
 
 export function teamMaxAlive(spec: StageSpec, players: number): number {
-  return spec.maxAlive + Math.max(0, players - 1);
+  // More guns, a few more at once: but never a horde.
+  return spec.maxAlive + Math.floor(Math.max(0, players - 1) * 0.67);
 }
 
 /**
@@ -98,12 +101,16 @@ export class Encounter {
       this.spawnIn = 0.4;
       return;
     }
-    const kind = this.rng.weighted(this.spec.mix);
-    const half = HALF_WIDTH[this.spec.zone];
-    // Runners start further out so their dash takes a moment longer.
-    const far = kind === "runner" ? this.spec.spawn[1] : this.rng.range(this.spec.spawn[0], this.spec.spawn[1]);
-    this.add(kind, far, this.rng.range(-half, half) * 0.9, emit);
-    this.spawned += 1;
+    // Later on the dead come in twos now and then, still never a crowd.
+    const pack = this.rng.next() < this.spec.packs && standing + 2 <= this.maxAlive && this.spawned + 2 <= this.total ? 2 : 1;
+    for (let i = 0; i < pack; i++) {
+      const kind = this.rng.weighted(this.spec.mix);
+      const half = HALF_WIDTH[this.spec.zone];
+      // Runners start further out so their dash takes a moment longer.
+      const far = kind === "runner" ? this.spec.spawn[1] : this.rng.range(this.spec.spawn[0], this.spec.spawn[1]);
+      this.add(kind, far, this.rng.range(-half, half) * 0.9, emit);
+      this.spawned += 1;
+    }
     this.spawnIn = this.spec.gap * this.rng.range(0.75, 1.25);
   }
 

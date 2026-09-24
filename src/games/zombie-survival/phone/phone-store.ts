@@ -16,8 +16,8 @@ export interface PhoneState {
   state: StateMessage | null;
   gun: GunMessage | null;
   score: ScoreMessage | null;
-  /** When the current reload began on this phone's clock, for the progress bar. */
-  reloadFrom: number | null;
+  /** The running reload on this phone's clock: when it began and when it will end. */
+  reload: { from: number; to: number } | null;
 }
 
 export const usePhoneStore = create<PhoneState>(() => ({
@@ -29,5 +29,5 @@ export const usePhoneStore = create<PhoneState>(() => ({
   state: null,
   gun: null,
   score: null,
-  reloadFrom: null,
+  reload: null,
 }));

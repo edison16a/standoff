@@ -35,6 +35,13 @@ export class Gun {
     return this.reloadLeft !== null;
   }
 
+  /** Seconds until the reload now running is done, or 0. */
+  get reloadLeftSeconds(): number {
+    if (this.reloadLeft === null) return 0;
+    if (this.spec.style === "magazine") return this.reloadLeft;
+    return this.reloadLeft + Math.max(0, this.spec.magazine - this.ammo - 1) * (this.spec.shell ?? 0.4);
+  }
+
   /** Seconds a full reload from here would take, for the phone's progress ring. */
   get reloadSeconds(): number {
     if (this.spec.style === "magazine") return this.spec.reload;

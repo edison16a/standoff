@@ -70,7 +70,8 @@ export function buildState(hud: SurvivalHud): StateMessage {
 export function buildGun(game: SurvivalGame, seat: Seat): GunMessage | null {
   const gun = game.squad.get(seat)?.gun;
   if (!gun) return null;
-  return { kind: "gun", weapon: gun.weapon, ammo: gun.ammo, magazine: gun.spec.magazine, reloading: gun.reloading, reloadSeconds: gun.reloading ? gun.reloadSeconds : 0 };
+  // Rounded, so a running reload does not send a message every frame.
+  return { kind: "gun", weapon: gun.weapon, ammo: gun.ammo, magazine: gun.spec.magazine, reloading: gun.reloading, reloadLeft: Math.round(gun.reloadLeftSeconds * 4) / 4 };
 }
 
 export function buildScore(game: SurvivalGame, seat: Seat): ScoreMessage | null {

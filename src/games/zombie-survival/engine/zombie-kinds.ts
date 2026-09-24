@@ -41,7 +41,7 @@ export interface KindSpec {
 const common = { reach: 1.5, attackEvery: 1.5, stagger: 0.35, knockback: 0.35, bodyTaken: 1, weakPoints: [], weakHp: 0, height: 1.8 };
 
 export const KINDS: Record<ZombieKind, KindSpec> = {
-  walker: { ...common, name: "Walker", hp: 0.6, speed: 0.95, damage: 5 },
+  walker: { ...common, name: "Walker", hp: 0.6, speed: 1.1, damage: 5 },
   runner: { ...common, name: "Runner", hp: 0.5, speed: 2.6, damage: 4, attackEvery: 1.1, knockback: 0.6, height: 1.7 },
   brute: { ...common, name: "Brute", hp: 2, speed: 0.8, damage: 9, attackEvery: 1.9, stagger: 0.25, knockback: 0.2, height: 2.05 },
   armored: { ...common, name: "Riot zombie", hp: 1, speed: 1.05, damage: 7, bodyTaken: 0.35, knockback: 0.2 },
@@ -49,7 +49,7 @@ export const KINDS: Record<ZombieKind, KindSpec> = {
     ...common,
     name: "The Butcher",
     hp: 1,
-    speed: 0.55,
+    speed: 0.5,
     reach: 2.6,
     damage: 12,
     attackEvery: 2.8,
@@ -57,14 +57,14 @@ export const KINDS: Record<ZombieKind, KindSpec> = {
     knockback: 1.4,
     bodyTaken: 0,
     weakPoints: ["kneeL", "kneeR", "shoulderR"],
-    weakHp: 8,
+    weakHp: 7,
     height: 2.9,
   },
   tank: {
     ...common,
     name: "The Tank",
     hp: 1,
-    speed: 0.5,
+    speed: 0.45,
     reach: 3,
     damage: 14,
     attackEvery: 3,
@@ -72,14 +72,14 @@ export const KINDS: Record<ZombieKind, KindSpec> = {
     knockback: 1.4,
     bodyTaken: 0,
     weakPoints: ["shoulderL", "shoulderR", "kneeL", "kneeR"],
-    weakHp: 9,
+    weakHp: 8,
     height: 3.4,
   },
   juggernaut: {
     ...common,
     name: "The Juggernaut",
     hp: 1,
-    speed: 0.6,
+    speed: 0.55,
     reach: 2.6,
     damage: 15,
     attackEvery: 2.6,
@@ -87,14 +87,14 @@ export const KINDS: Record<ZombieKind, KindSpec> = {
     knockback: 1.2,
     bodyTaken: 0,
     weakPoints: ["elbowL", "elbowR", "kneeL", "kneeR"],
-    weakHp: 10,
+    weakHp: 9,
     height: 3.1,
   },
   behemoth: {
     ...common,
     name: "The Behemoth",
     hp: 1,
-    speed: 0.5,
+    speed: 0.45,
     reach: 3.6,
     damage: 18,
     attackEvery: 3,
@@ -102,7 +102,7 @@ export const KINDS: Record<ZombieKind, KindSpec> = {
     knockback: 1.2,
     bodyTaken: 0,
     weakPoints: ["shoulderL", "shoulderR", "elbowL", "elbowR", "kneeL", "kneeR", "chest"],
-    weakHp: 9,
+    weakHp: 7,
     height: 4.6,
   },
 };
@@ -134,5 +134,5 @@ export function hitDamage(kind: ZombieKind, part: HitPart, base: number): HitOut
 
 /** Weak points grow with the team, so four players still need to work for a boss. */
 export function weakPointHp(kind: ZombieKind, players: number): number {
-  return KINDS[kind].weakHp * (1 + 0.55 * Math.max(0, players - 1));
+  return KINDS[kind].weakHp * (1 + 0.45 * Math.max(0, players - 1));
 }

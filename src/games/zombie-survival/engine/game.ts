@@ -82,7 +82,7 @@ export class SurvivalGame {
     }
     this.shotId += 1;
     this.emit({ type: "shot", seat, weapon: member.gun.weapon, shotId: this.shotId });
-    const events = resolveShot(member, this.encounter, cast, Math.random);
+    const events = resolveShot(member, this.encounter, cast, Math.random, this.phase === "fight");
     for (const event of events) this.emit(event);
     return true;
   }
