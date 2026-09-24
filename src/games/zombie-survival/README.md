@@ -14,15 +14,16 @@ Status: ready. A co-op, first person, on rails shooter for 1 to 4 players. Each 
 4. Say **Ready**. The run starts when everyone connected is ready, or when someone presses Start on the big screen. Late players set up and drop straight into the run.
 5. In the run the phone shows a big Shoot button (hold it with an automatic gun), Reload, the rounds left and a Recenter button for when the aim drifts. Phones without motion sensors aim by dragging on a pad around the button.
 
-Precision matters more than speed. Walkers fall to one bullet anywhere early on. Later they need two light rounds, brutes take two body hits or one to the head, riot zombies shrug off body shots but not head shots. Bosses only hurt through the glowing weak points on their joints, so the team has to aim together. Zombies that reach the team hurt the shared health. At zero, the team retries the stage from its checkpoint with its stats kept.
+Precision matters more than speed. Walkers fall to one bullet anywhere early on. Later they need two light rounds, brutes soak up several body hits but drop fast to head shots, riot zombies shrug off body shots but not head shots. Bosses only hurt through the glowing weak points on their joints, so the team has to aim together. Zombies that reach the team hurt the shared health. At zero, the team retries the stage from its checkpoint with its stats kept.
 
 ## What is in it
 
 * **Route**: 26 segments of streets, a back alley, the park, the hospital car park, the parking ramp, the hospital roof, downtown, six stretches of highway and the docks out to pier nine. The team walks between fights and turns corners on its own.
 * **Stages**: 25, with bosses at 5 (the Butcher), 10 (the Tank, on the roof), 15 (the Juggernaut), 20 (the Tank again) and 25 (the Behemoth). Early stages are sparse and slow. Later ones come faster, closer and tougher, a few at a time, sometimes in pairs. The table is in `engine/stages.ts`, and `engine/balance.test.ts` plays it with bot players: steady aim clears the route with any gun, alone or in a team, and sloppy aim falls short.
-* **Story**: radio calls on the way to each stage, the chopper crashing onto the roof after stage 10, and the escape up the gangway as the ship sails.
-* **Scores**: kills, accuracy, head shots, weak point hits and damage per player, a checkpoint summary after each stage, the top gun on the end screen, and achievements popping up as they are earned.
-* **Sound**, all synthesised through the room's audio buses: a gunshot per weapon with a street echo, reloads, pump and dry clicks, growls panned to where each zombie is and louder as it closes in, footsteps, a heartbeat at low health, the rotor, the crash, a horror drone, radio squelch and murmur, the ship's horn.
+* **Story**: radio calls on the way to each stage, the chopper crashing onto the roof after stage 10, and the escape up the gangway as the ship sails, with the dead piling up at the end of the pier behind it.
+* **Scores**: kills, accuracy, head shots, weak point hits, damage and best streak per player, a checkpoint summary after each stage, the top gun on the end screen, and achievements popping up as they are earned.
+* **Sound**, all synthesised through the room's audio buses: a gunshot per weapon with a street echo, reloads, pump and dry clicks, growls panned to where each zombie is and louder as it closes in, footsteps that echo off the empty street, the odd step that is not the team's, a boss's stomp, a heartbeat at low health, the rotor, the crash, a horror drone, radio squelch and murmur, the ship's horn.
+* **Looks**: the dead are modelled from rounded, tapering forms, merged per bone. Every zombie material shares one shader with a cold rim light on its outline and thinner fog than the city, and each has glowing eyes, so they read in the murk while the street stays dark.
 
 ## Code
 
