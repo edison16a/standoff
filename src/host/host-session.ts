@@ -12,6 +12,9 @@ import { MatchDriver } from "./match-driver";
 import { PhoneLink } from "./phone-link";
 import { forgetRoom, recallRoom, rememberRoom } from "./room-memory";
 
+/** Fresh sockets to try when resuming cannot find the room. */
+const RESUME_RETRIES = 6;
+
 /**
  * The computer's side of a game. It keeps the socket to the server, the
  * lobby, the running match and the sound, and it is the referee: phones
@@ -24,6 +27,7 @@ export class HostSession {
   driver: MatchDriver | null = null;
   private wantsRoom = false;
   private readonly phones: PhoneLink;
+  private resumeRetries = 0;
 
   constructor() {
     this.socket = new SocketClient({
@@ -109,6 +113,7 @@ export class HostSession {
         this.enterLobby(message.code, message.joinUrl);
         return;
       case "room:resumed": {
+        this.resumeRetries = 0;
         message.connected.forEach((on, i) => (on ? this.lobby.connect((i + 1) as Slot) : this.lobby.disconnect((i + 1) as Slot)));
         useHostStore.setState({ sharedRooms: message.sharedRooms });
         // Same room as before means the socket reconnected or moved, not a
@@ -118,6 +123,14 @@ export class HostSession {
         return;
       }
       case "room:error":
+        // A resume that cannot find the room may just have landed on the
+        // wrong server instance. Try a few fresh sockets before giving up.
+        if (recallRoom() && this.resumeRetries < RESUME_RETRIES) {
+          this.resumeRetries += 1;
+          this.socket.redial();
+          return;
+        }
+        this.resumeRetries = 0;
         forgetRoom();
         useHostStore.setState({ screen: "landing", room: null, error: this.wantsRoom ? "Could not open a room. Try again." : null });
         return;

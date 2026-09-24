@@ -13,6 +13,8 @@ import { motionSupport, requestMotionPermission, subscribeSensors } from "./sens
 
 /** Phases where the host is drawing this fencer and wants the live reading. */
 const STREAMING = new Set(["enGarde", "live", "halt", "paused"]);
+/** Fresh sockets to try when a join cannot find the room. */
+const JOIN_RETRIES = 6;
 
 /**
  * The phone's side of a game. It reads the sensors, turns them into sword
@@ -26,6 +28,7 @@ export class ControllerSession {
   private sfx: Sfx | null = null;
   private stopSensors: (() => void) | null = null;
   private readonly motion: MotionStream;
+  private joinRetries = 0;
   /** Footwork from the on screen slider when there are no sensors. */
   private touchMove = 0;
 
@@ -133,12 +136,20 @@ export class ControllerSession {
   private onMessage(message: ServerEnvelope): void {
     switch (message.type) {
       case "phone:joined": {
+        this.joinRetries = 0;
         writeToken(this.code, message.token);
         store.setState({ stage: "playing", slot: message.slot, error: null });
         this.resendChoices();
         return;
       }
       case "room:error":
+        // Without a shared room store, a socket can land on a server
+        // instance that has never heard of the room. Try a few fresh ones.
+        if (message.reason === "not-found" && this.joinRetries < JOIN_RETRIES) {
+          this.joinRetries += 1;
+          this.socket.redial();
+          return;
+        }
         store.setState({ stage: "error", error: message.reason });
         return;
       case "room:closed":

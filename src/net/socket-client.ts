@@ -69,6 +69,19 @@ export class SocketClient {
     this.send(message);
   }
 
+  /**
+   * Drops the current socket and dials a fresh one at once. Where rooms are
+   * not shared between server instances, a fresh socket may well land on
+   * the instance that has the room.
+   */
+  redial(): void {
+    if (this.stopped) return;
+    const old = this.current;
+    this.abandonNext();
+    this.current = this.dial();
+    old?.close(1000);
+  }
+
   close(): void {
     this.stopped = true;
     if (this.retry) clearTimeout(this.retry);
