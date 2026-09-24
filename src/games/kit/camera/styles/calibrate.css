@@ -1,0 +1,91 @@
+/* Calibration: the heading, each player's instruction under their spot, and the game's own step. */
+
+.cam-calibrate {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: #ffffff;
+}
+
+.cam-calibrate__header {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  max-width: min(760px, calc(100% - 420px));
+  padding: 18px 32px;
+  border-radius: 24px;
+  background: rgba(14, 11, 30, 0.78);
+  backdrop-filter: blur(10px);
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+.cam-calibrate__title {
+  margin: 0;
+  font-size: clamp(30px, 3.2vw, 56px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.cam-calibrate__text {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: clamp(17px, 1.4vw, 24px);
+}
+
+.cam-calibrate__chip {
+  position: absolute;
+  bottom: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: 30%;
+  padding: 12px 22px 14px;
+  border: 3px solid;
+  border-radius: 22px;
+  background: rgba(14, 11, 30, 0.82);
+  transform: translateX(-50%);
+  text-align: center;
+}
+
+.cam-calibrate__chip--done {
+  background: rgba(46, 213, 115, 0.3);
+}
+
+.cam-calibrate__who {
+  padding: 2px 12px;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cam-calibrate__say {
+  font-size: clamp(20px, 1.8vw, 30px);
+  font-weight: 800;
+}
+
+.cam-calibrate__extra {
+  position: absolute;
+  bottom: 64px;
+  left: 50%;
+  max-width: calc(100% - 48px);
+  transform: translateX(-50%);
+}
+
+.cam-calibrate__privacy {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  margin: 0;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: rgba(14, 11, 30, 0.7);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 15px;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
