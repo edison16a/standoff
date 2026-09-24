@@ -4,9 +4,13 @@ import type { ReactNode } from "react";
 import { SITE } from "@/shared/site";
 import "./globals.css";
 import "@/styles/ui.css";
-import "@/styles/host.css";
+import "@/styles/tabs.css";
+import "@/styles/landing.css";
+import "@/styles/lobby.css";
+import "@/styles/lobby-panels.css";
 import "@/styles/match.css";
 import "@/styles/controller.css";
+import "@/styles/controller-pad.css";
 
 export const metadata: Metadata = {
   title: SITE.name,

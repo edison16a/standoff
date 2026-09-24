@@ -1,0 +1,158 @@
+/*
+  The lobby: the QR code card on the left, and tabs for players, rules and
+  tuning on the right.
+*/
+
+.lobby {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
+  gap: 24px;
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 32px 40px;
+}
+
+.lobby__join {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-self: start;
+  padding: 28px;
+}
+
+.lobby__hint {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 14px;
+}
+
+.lobby__hint svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.lobby__side {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lobby__panel {
+  padding-top: 20px;
+}
+
+.lobby__slots {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.join {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.join__qr {
+  aspect-ratio: 1;
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  background: #ffffff;
+  border: 1px solid var(--border);
+}
+
+.join__qr svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.join__code {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.join__code-value {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.join__url {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 4px 4px 12px;
+  border-radius: var(--radius);
+  background: var(--bg-muted);
+  font-size: 13px;
+}
+
+.join__url span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.slot {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.slot--ready {
+  border-color: var(--accent);
+}
+
+.slot__head,
+.slot__foot {
+  display: flex;
+  padding: 16px 18px;
+}
+
+.slot__head {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.slot__foot {
+  flex-direction: column;
+  gap: 2px;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.slot__art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 260px;
+  background: var(--bg-elevated);
+}
+
+.slot__empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 1px dashed var(--border-strong);
+}
+
+.fencer-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 960px) {
+  .lobby {
+    grid-template-columns: 1fr;
+    padding: 24px 20px;
+  }
+}

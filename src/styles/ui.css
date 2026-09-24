@@ -127,40 +127,6 @@
   color: var(--accent);
 }
 
-/* Tabs, with one accent line that slides under the chosen tab */
-
-.tabs {
-  position: relative;
-  display: flex;
-  gap: 4px;
-  border-bottom: 1px solid var(--border);
-}
-
-.tabs__item {
-  height: 42px;
-  padding: 0 14px;
-  border: 0;
-  background: transparent;
-  color: var(--text-muted);
-  font-weight: 500;
-  cursor: pointer;
-  transition: color 120ms ease;
-}
-
-.tabs__item:hover,
-.tabs__item--active {
-  color: var(--text);
-}
-
-.tabs__underline {
-  position: absolute;
-  bottom: -1px;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--accent);
-  transition: left 220ms ease, width 220ms ease;
-}
-
 /* Cards and small bits */
 
 .card {

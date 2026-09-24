@@ -104,6 +104,10 @@ a {
   color: var(--text-muted);
 }
 
+.small {
+  font-size: 13px;
+}
+
 .mono {
   font-family: var(--font-mono);
 }
