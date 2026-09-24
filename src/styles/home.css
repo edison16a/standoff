@@ -68,7 +68,7 @@
   flex-direction: column;
   min-width: 0;
   padding: 0;
-  border: 2px solid color-mix(in srgb, var(--game) 30%, var(--border));
+  border: 2px solid var(--game);
   border-radius: 22px;
   background: color-mix(in srgb, var(--game) 10%, var(--bg));
   color: var(--text);
@@ -83,7 +83,6 @@
 
 .game-card:hover:not(:disabled),
 .game-card:focus-visible {
-  border-color: var(--game);
   transform: translateY(-3px);
 }
 
