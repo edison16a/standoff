@@ -1,14 +1,11 @@
-/** Two sights, back to back, holding the line. */
+import Image from "next/image";
+import cover from "./cover.jpg";
+
+/**
+ * A foggy street, a boss with a glowing weak point, and two players' lasers on it.
+ * A still render from a three.js scene, so the card shows the game's
+ * look before the game itself exists.
+ */
 export function Cover() {
-  return (
-    <svg className="cover__art" viewBox="0 0 320 200" aria-hidden="true">
-      {[110, 210].map((x, i) => (
-        <g key={x} stroke={i === 0 ? "var(--accent)" : "var(--text)"} strokeWidth="5" fill="none" strokeLinecap="round">
-          <circle cx={x} cy="100" r="40" />
-          <circle cx={x} cy="100" r="5" fill={i === 0 ? "var(--accent)" : "var(--text)"} />
-          <path d={`M${x} 48V70M${x} 130V152M${x - 52} 100H${x - 30}M${x + 30} 100H${x + 52}`} />
-        </g>
-      ))}
-    </svg>
-  );
+  return <Image className="cover__art" src={cover} alt="" fill sizes="(max-width: 720px) 100vw, 50vw" placeholder="blur" />;
 }
