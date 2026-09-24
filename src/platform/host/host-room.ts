@@ -7,6 +7,8 @@ import { useHostStore } from "./host-store";
 import { RoomKeeper, type OpenedRoom } from "./room-keeper";
 
 const reserved = new Set<string>(RESERVED_KINDS);
+/** Enough for every phone's setup messages, small enough that a stuck game never piles them up. */
+const BACKLOG_MAX = 200;
 
 /**
  * The computer's side of the platform. It keeps the connection and the
@@ -19,6 +21,12 @@ export class HostRoom {
   private readonly socket: SocketClient;
   private readonly keeper: RoomKeeper;
   private readonly listeners = new Set<(event: HostRoomEvent) => void>();
+  /**
+   * Phone messages that arrive before the game is listening. After a
+   * reload, phones answer the host coming back while the game's code is
+   * still loading, and those answers would otherwise be lost.
+   */
+  private backlog: HostRoomEvent[] = [];
   private current: HostRoomApi | null = null;
 
   constructor() {
@@ -83,6 +91,7 @@ export class HostRoom {
   private goHome(error: string | null): void {
     this.current = null;
     this.listeners.clear();
+    this.backlog = [];
     useHostStore.setState({ screen: "home", room: null, players: [], playing: false, resuming: false, error });
   }
 
@@ -105,6 +114,7 @@ export class HostRoom {
     }));
     if (!same) {
       this.listeners.clear();
+      this.backlog = [];
       this.current = this.makeApi(code, seats);
     }
     useHostStore.setState({ screen: "room", room: { code, joinUrl, game, seats }, players, resuming: false, error: null });
@@ -155,6 +165,10 @@ export class HostRoom {
   }
 
   private emit(event: HostRoomEvent): void {
+    if (this.listeners.size === 0) {
+      if (event.type === "message" && this.backlog.length < BACKLOG_MAX) this.backlog.push(event);
+      return;
+    }
     for (const listener of [...this.listeners]) listener(event);
   }
 
@@ -170,6 +184,15 @@ export class HostRoom {
       players: () => useHostStore.getState().players,
       on: (listener) => {
         this.listeners.add(listener);
+        // A game usually subscribes several parts at once, so the backlog
+        // goes out once they have all had the chance to listen.
+        if (this.backlog.length > 0) {
+          queueMicrotask(() => {
+            const waiting = this.backlog;
+            this.backlog = [];
+            for (const event of waiting) this.emit(event);
+          });
+        }
         return () => this.listeners.delete(listener);
       },
       send: (to, payload) => this.send(to, payload),
