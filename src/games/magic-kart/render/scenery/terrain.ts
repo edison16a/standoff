@@ -74,7 +74,13 @@ export function trackBounds(track: Track): { minX: number; maxX: number; minZ: n
  * and colour come from the map's own functions, which are told how far
  * each spot is from the road, so the ground always meets the road.
  */
-export function buildTerrain(track: Track, options: TerrainOptions): THREE.Mesh {
+export interface Terrain {
+  mesh: THREE.Mesh;
+  /** The ground height at any spot, so props stand on the dunes rather than float or sink. */
+  heightAt(x: number, z: number): number;
+}
+
+export function buildTerrain(track: Track, options: TerrainOptions): Terrain {
   const b = trackBounds(track);
   const width = b.maxX - b.minX + options.margin * 2;
   const depth = b.maxZ - b.minZ + options.margin * 2;
@@ -98,7 +104,10 @@ export function buildTerrain(track: Track, options: TerrainOptions): THREE.Mesh 
   }
   geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   geo.computeVertexNormals();
-  return new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true }));
+  return {
+    mesh: new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true })),
+    heightAt: (x, z) => options.height(x, z, nearest(samples, x, z)),
+  };
 }
 
 /**

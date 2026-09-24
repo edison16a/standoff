@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { quatFromDeviceEuler } from "@/games/kit/motion/math3d";
-import { steerFromRoll, tiltOf } from "./tilt";
+import { steerFromRoll, tiltOf, zeroFor } from "./tilt";
 
 describe("tilt steering", () => {
   it("reads flat as level", () => {
@@ -32,5 +32,17 @@ describe("tilt steering", () => {
     expect(steerFromRoll(-40 * deg, 0)).toBe(-1);
     // Measured from the calibrated resting roll.
     expect(steerFromRoll(5 * deg, 5 * deg)).toBe(0);
+  });
+
+  it("keeps the calibration when the phone is flipped to the other landscape", () => {
+    // Calibrated resting a little right end down, turned anticlockwise.
+    const resting = quatFromDeviceEuler(0, 4, 0);
+    const zero = tiltOf(resting, 90).roll;
+    expect(steerFromRoll(tiltOf(resting, 90).roll, zeroFor(zero, 90, 90))).toBe(0);
+    // Flipped round, the same pose must still read as straight ahead.
+    const flipped = tiltOf(resting, 270).roll;
+    expect(steerFromRoll(flipped, zeroFor(zero, 90, 270))).toBe(0);
+    // And tilting from there still steers the right way.
+    expect(steerFromRoll(tiltOf(quatFromDeviceEuler(0, -16, 0), 270).roll, zeroFor(zero, 90, 270))).toBeGreaterThan(0.2);
   });
 });

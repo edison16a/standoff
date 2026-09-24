@@ -5,13 +5,13 @@ import { KartPreview } from "../../render/preview";
 
 /** The 3D kart, turning on its stand. */
 export default function KartPreviewCanvas({ character }: { character: CharacterId }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const holderRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<KartPreview | null>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const preview = new KartPreview(canvas);
+    const holder = holderRef.current;
+    if (!holder) return;
+    const preview = new KartPreview(holder);
     previewRef.current = preview;
     return () => {
       preview.dispose();
@@ -23,5 +23,5 @@ export default function KartPreviewCanvas({ character }: { character: CharacterI
     previewRef.current?.show(character);
   }, [character]);
 
-  return <canvas ref={canvasRef} className="mk-pick__canvas" />;
+  return <div ref={holderRef} className="mk-pick__holder" />;
 }

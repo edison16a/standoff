@@ -13,13 +13,15 @@ export function RaceHud() {
   const views = useKartStore((state) => state.views);
   const countdown = useKartStore((state) => state.countdown);
   const laps = useKartStore((state) => state.laps);
+  // Under the results card the views' own messages and the map would only clutter it.
+  const over = useKartStore((state) => state.phase === "results");
   const rects = splitScreen(views.length);
-  // Where the overview goes: the spare quadrant with three players, else
-  // top centre between the views, over sky and clear of every view's corners.
-  const place = views.length === 3 ? "quad" : views.length >= 2 ? "top" : "corner";
+  // The overview always sits top right: in the spare quadrant with three
+  // players, as a compact card over split views, roomy over a single view.
+  const place = views.length === 3 ? "quad" : views.length >= 2 ? "compact" : "corner";
 
   return (
-    <div className="mk-hud">
+    <div className={`mk-hud ${over ? "mk-hud--over" : ""}`}>
       {views.map((hud, i) => (
         <ViewHud key={hud.kartId} hud={hud} rect={rects[i]!} countdown={countdown} laps={laps} />
       ))}

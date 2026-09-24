@@ -6,7 +6,7 @@ import type { CharacterId } from "../characters";
 import { hostMessageSchema, type HostMessage, type PhoneMessage } from "../protocol";
 import { useControllerStore as store } from "./controller-store";
 import { buzz } from "./haptics";
-import { screenAngle, steerFromRoll, tiltOf, type Tilt } from "./tilt";
+import { screenAngle, steerFromRoll, tiltOf, zeroFor, type Tilt } from "./tilt";
 
 /** Input goes out this often while racing, and at once on any button change. */
 const SEND_MS = 33;
@@ -29,6 +29,9 @@ export class KartPhone {
   /** The latest tilt, read by the level and the wheel gauge every frame. */
   tilt: Tilt | null = null;
   private zero = 0;
+  /** Which way the page was turned when calibrated, and which way it is turned now. */
+  private zeroAngle = 90;
+  private angle = 90;
   private pedals: Pedals = { drive: false, brake: false, left: false, right: false };
   private readonly stopSensors: (() => void) | null;
   private readonly unsubscribe: () => void;
@@ -37,7 +40,8 @@ export class KartPhone {
   constructor(private readonly room: PhoneRoomApi) {
     store.setState({ ...store.getInitialState() });
     const onQuat = (q: Quat) => {
-      this.tilt = tiltOf(q, screenAngle());
+      this.angle = screenAngle();
+      this.tilt = tiltOf(q, this.angle);
     };
     this.stopSensors = room.motion === "granted" ? subscribeOrientation(onQuat, () => store.setState({ sensorsLive: true })) : null;
     if (room.motion !== "granted") store.setState({ steerMode: "buttons" });
@@ -55,12 +59,13 @@ export class KartPhone {
   /** Steering from -1 to 1, from the tilt or the arrow buttons. */
   get steer(): number {
     if (store.getState().steerMode === "buttons" || !this.tilt) return (this.pedals.right ? 1 : 0) - (this.pedals.left ? 1 : 0);
-    return steerFromRoll(this.tilt.roll, this.zero);
+    return steerFromRoll(this.tilt.roll, zeroFor(this.zero, this.zeroAngle, this.angle));
   }
 
   /** Takes the phone's resting roll as straight ahead. */
   calibrate(): void {
     this.zero = this.tilt?.roll ?? 0;
+    this.zeroAngle = this.angle;
     store.setState({ calibrated: true });
     this.click();
   }

@@ -105,6 +105,8 @@ export function stepProjectile(p: Projectile, karts: readonly Kart[], track: Tra
 
   for (const kart of karts) {
     if (kart.id === p.owner && p.age < 1.5) continue;
+    // A vanished kart is not there to hit, and a finished one is out of the race. The throw flies on.
+    if (kart.timers.ghost > 0 || kart.race.finished) continue;
     if (Math.hypot(kart.x - p.x, kart.z - p.z) < HIT_RADIUS && Math.abs(kart.y + 0.6 - p.y) < 2) {
       p.alive = false;
       return kart;

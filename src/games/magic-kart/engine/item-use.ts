@@ -61,7 +61,11 @@ export function fireItem(kart: Kart, karts: readonly Kart[], track: Track, nextI
 /** Counts every effect down by one step. */
 export function tickTimers(kart: Kart, dt: number): void {
   const t = kart.timers;
+  const spinning = t.stun > 0;
   t.stun = Math.max(0, t.stun - dt);
+  // A moment of protection as a spin ends, so a crab sweeping back over a
+  // kart that has barely got going cannot spin it out again and again.
+  if (spinning && t.stun === 0) t.grace = Math.max(t.grace, EFFECTS.afterSpin);
   t.ice = Math.max(0, t.ice - dt);
   t.boost = Math.max(0, t.boost - dt);
   t.ghost = Math.max(0, t.ghost - dt);

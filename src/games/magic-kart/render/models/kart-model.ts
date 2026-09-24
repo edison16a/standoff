@@ -75,7 +75,8 @@ export class KartModel {
         material.needsUpdate = true;
       }
       material.opacity = opacity;
-      material.depthWrite = !see;
+      // Still writing depth, so a faded kart shows its outside only, not the driver through the bodywork.
+      material.depthWrite = true;
     }
   }
 

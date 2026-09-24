@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { RaceEvent } from "./events";
-import { fireItem, strike } from "./item-use";
+import { fireItem, strike, tickTimers } from "./item-use";
 import { ITEM_KINDS, rollItem } from "./items";
 import { createKart } from "./kart";
 import { nearestAhead, stepProjectile } from "./projectiles";
 import { OVAL } from "./test-track";
 import { Track } from "./track";
-import { STEP } from "./tuning";
+import { EFFECTS, STEP } from "./tuning";
 
 const track = new Track(OVAL);
 
@@ -85,5 +85,43 @@ describe("using items", () => {
     expect(events).toEqual([{ type: "blocked", kart: 0 }]);
     strike(leader, "ice", 1, (e) => events.push(e));
     expect(leader.timers.ice).toBeGreaterThan(0);
+  });
+
+  it("flies through a kart that vanishes and hits the one behind it", () => {
+    const { leader, chaser, karts } = setup();
+    const ahead = createKart(2, "nova", null, track, 90, 0);
+    ahead.race.progress = 90;
+    const all = [...karts, ahead];
+    chaser.item = "orb";
+    const orb = fireItem(chaser, all, track, 1, 0, () => undefined)!;
+    expect(orb.target).toBe(leader.id);
+    leader.timers.ghost = 5;
+    let struck = null;
+    for (let i = 0; i < 400 && !struck; i++) struck = stepProjectile(orb, all, track, STEP);
+    expect(struck).toBe(ahead);
+  });
+
+  it("never hits a kart that has finished", () => {
+    const { leader, chaser, karts } = setup();
+    chaser.item = "orb";
+    const orb = fireItem(chaser, karts, track, 1, 0, () => undefined)!;
+    leader.race.finished = true;
+    let struck = null;
+    for (let i = 0; i < 400 && !struck; i++) struck = stepProjectile(orb, karts, track, STEP);
+    expect(struck).toBeNull();
+  });
+
+  it("protects a kart for a moment after a spin, so hits never chain", () => {
+    const { leader } = setup();
+    const events: RaceEvent[] = [];
+    strike(leader, "obstacle", null, (e) => events.push(e));
+    while (leader.timers.stun > 0) tickTimers(leader, STEP);
+    expect(leader.timers.grace).toBeGreaterThan(EFFECTS.afterSpin - 0.05);
+    strike(leader, "obstacle", null, (e) => events.push(e));
+    expect(leader.timers.stun).toBe(0);
+    for (let t = 0; t < EFFECTS.afterSpin + 0.1; t += STEP) tickTimers(leader, STEP);
+    strike(leader, "obstacle", null, (e) => events.push(e));
+    expect(leader.timers.stun).toBeGreaterThan(0);
+    expect(events.filter((e) => e.type === "hit")).toHaveLength(2);
   });
 });

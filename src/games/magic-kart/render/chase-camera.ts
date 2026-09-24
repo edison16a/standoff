@@ -31,7 +31,7 @@ export class ChaseCamera {
     // Track the direction of travel while spinning, the nose otherwise.
     const target = kart.timers.stun > 0 && speed > 2 ? Math.atan2(kart.vx, kart.vz) : kart.heading;
     if (this.heading === null || snap) this.heading = target;
-    this.heading += wrapAngle(target - this.heading) * Math.min(1, dt * (kart.timers.stun > 0 ? 2 : 5));
+    this.heading += wrapAngle(target - this.heading) * ease(dt, kart.timers.stun > 0 ? 2 : 5);
     const fx = Math.sin(this.heading);
     const fz = Math.cos(this.heading);
     const back = BEHIND + Math.min(1.5, speed * 0.03);
@@ -42,18 +42,18 @@ export class ChaseCamera {
       this.look.copy(ahead);
     } else {
       // Height follows more slowly, so jumps lift the kart in frame.
-      const k = Math.min(1, dt * 9);
+      const k = ease(dt, 9);
       this.pos.x += (wanted.x - this.pos.x) * k;
       this.pos.z += (wanted.z - this.pos.z) * k;
-      this.pos.y += (wanted.y - this.pos.y) * Math.min(1, dt * 4);
-      this.look.lerp(ahead, Math.min(1, dt * 12));
+      this.pos.y += (wanted.y - this.pos.y) * ease(dt, 4);
+      this.look.lerp(ahead, ease(dt, 12));
     }
-    this.shake = Math.max(0, this.shake - dt * 2.5);
+    this.shake = Math.max(0, this.shake - Math.min(0.05, dt) * 2.5);
     const jitter = this.shake * 0.25;
     this.camera.position.set(this.pos.x + (Math.random() - 0.5) * jitter, this.pos.y + (Math.random() - 0.5) * jitter, this.pos.z);
     this.camera.lookAt(this.look);
     const fov = BASE_FOV + Math.min(1.3, speed / DRIVE.topSpeed) * 6 + (kart.timers.boost > 0 ? 8 : 0);
-    this.fov += (fov - this.fov) * Math.min(1, dt * 3);
+    this.fov += (fov - this.fov) * ease(dt, 3);
     if (Math.abs(this.camera.fov - this.fov) > 0.01) {
       this.camera.fov = this.fov;
       this.camera.updateProjectionMatrix();
@@ -65,4 +65,9 @@ export class ChaseCamera {
     this.camera.aspect = aspect;
     this.camera.updateProjectionMatrix();
   }
+}
+
+/** How far to close a gap this frame, the same over time whatever the frame rate. */
+function ease(dt: number, rate: number): number {
+  return 1 - Math.exp(-rate * dt);
 }

@@ -27,6 +27,8 @@ export class KartView {
   private ghost = false;
   /** Whether the shadow shows at all this frame, before any per view hiding. */
   private shadowOn = false;
+  private shieldOn = false;
+  private boosting = false;
   private readonly footprint: { w: number; l: number };
 
   constructor(readonly kartId: number, kart: Kart, name: string, color: string, extras: KartExtras, scene: THREE.Object3D) {
@@ -93,7 +95,7 @@ export class KartView {
     }
 
     const t = kart.timers;
-    this.shield.visible = t.shield > 0;
+    this.shieldOn = t.shield > 0;
     this.stars.visible = t.stun > 0;
     if (this.stars.visible) {
       this.stars.children.forEach((star, i) => {
@@ -104,8 +106,8 @@ export class KartView {
     }
     this.ice.visible = t.ice > 0;
     const boosting = t.boost > 0;
+    this.boosting = boosting;
     for (const flame of this.flames) {
-      flame.visible = boosting;
       if (boosting) flame.scale.set(1, 1, 0.8 + Math.random() * 0.7 + Math.min(1, t.boost) * 0.5);
     }
     this.model.setTint(t.ice > 0 ? "#3fb8ff" : "#ffffff", t.ice > 0 ? 0.35 : t.stun > 0 ? 0.12 * (Math.sin(time * 30) > 0 ? 1 : 0) : 0);
@@ -117,14 +119,22 @@ export class KartView {
   /**
    * Called before drawing each player's view. The viewer's own kart hides
    * its name tag, and a vanished kart is a faint shimmer to everyone but
-   * its driver, who still sees a ghost of it.
+   * its driver, who still sees a ghost of it. `eye` is where the view's
+   * camera is.
    */
-  setViewer(viewerKartId: number | null): void {
+  setViewer(viewerKartId: number | null, eye: THREE.Vector3): void {
     const own = viewerKartId === this.kartId;
-    this.tag.visible = !own && !this.ghost;
-    this.model.setOpacity(this.ghost ? (own ? 0.4 : 0.06) : 1);
-    this.shadow.visible = this.shadowOn && !(this.ghost && !own);
-    this.flag.visible = !(this.ghost && !own);
+    // Another kart right in front of the camera would block the view of your own, so it turns see through.
+    const near = !own && viewerKartId !== null ? eye.distanceTo(this.model.root.position) : Infinity;
+    const inTheWay = near < 5.5;
+    this.tag.visible = !own && !this.ghost && near > 9;
+    this.model.setOpacity(this.ghost ? (own ? 0.4 : 0.06) : inTheWay ? Math.max(0.3, Math.min(0.75, 0.3 + (near - 2) * 0.13)) : 1);
+    const hidden = this.ghost && !own;
+    this.shadow.visible = this.shadowOn && !hidden;
+    this.flag.visible = !hidden;
+    // A bubble or flames would give a vanished kart away, so others do not see them.
+    this.shield.visible = this.shieldOn && !hidden;
+    for (const flame of this.flames) flame.visible = this.boosting && !hidden;
   }
 
   /** A point on the kart, in the world, for effects to come from. */

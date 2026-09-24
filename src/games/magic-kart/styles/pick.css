@@ -17,6 +17,7 @@
   overflow: hidden;
 }
 
+.mk-pick__holder,
 .mk-pick__canvas {
   position: absolute;
   inset: 0;

@@ -23,7 +23,7 @@ describe("Lobby", () => {
     expect(lobby.seats.get(1)!.pick).toBeNull();
   });
 
-  it("needs a driver before ready, and drops ready on leaving", () => {
+  it("needs a driver before ready, and counts only connected phones as ready", () => {
     const lobby = new Lobby();
     lobby.connect(1);
     lobby.setReady(1, true);
@@ -32,6 +32,21 @@ describe("Lobby", () => {
     lobby.setReady(1, true);
     expect(lobby.readySeats).toEqual([1]);
     lobby.disconnect(1);
+    expect(lobby.readySeats).toEqual([]);
+    // A phone that blips mid race is back on the grid for Race again.
+    lobby.connect(1);
+    expect(lobby.readySeats).toEqual([1]);
+  });
+
+  it("drops ready when the driver was taken while the phone was away", () => {
+    const lobby = new Lobby();
+    lobby.connect(1);
+    lobby.connect(2);
+    lobby.pick(1, "nova");
+    lobby.setReady(1, true);
+    lobby.disconnect(1);
+    lobby.pick(2, "nova");
+    lobby.connect(1);
     expect(lobby.readySeats).toEqual([]);
   });
 

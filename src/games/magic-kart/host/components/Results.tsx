@@ -16,6 +16,8 @@ export function Results() {
   const standings = useKartStore((state) => state.standings);
   const mapId = useKartStore((state) => state.mapId);
   const winner = standings[0];
+  // Race again needs someone ready: a phone still in the room with its driver picked.
+  const ready = useKartStore((state) => state.seats.filter((s) => s.connected && s.ready).length);
 
   return (
     <div className="mk-results">
@@ -40,7 +42,7 @@ export function Results() {
           <button type="button" className="btn btn--lg" onClick={() => session.backToLobby()}>
             Change map
           </button>
-          <button type="button" className="btn btn--primary btn--lg" onClick={() => session.startRace()}>
+          <button type="button" className="btn btn--primary btn--lg" disabled={ready === 0} onClick={() => session.startRace()}>
             <Icon name="refresh" />
             Race again
           </button>

@@ -46,6 +46,15 @@ export function buildBlaze(): KartDesign {
     // Antenna for the player's flag.
     paint(cyl(0.015, 0.02, 1.05, 6), CHROME, { at: [-0.42, 1.25, -0.72] }),
   ];
+  // The tail the chase camera looks at all race: a diffuser with fins, twin tail pipes and a number plate.
+  body.push(paint(box(1.0, 0.1, 0.24, 0.03), DARK, { at: [0, 0.26, -1.42] }));
+  for (const x of [-0.36, -0.12, 0.12, 0.36]) body.push(paint(box(0.03, 0.16, 0.22), "#3a3a44", { at: [x, 0.24, -1.5] }));
+  for (const x of [-0.13, 0.13]) {
+    body.push(paint(cyl(0.075, 0.075, 0.2, 14), CHROME, { at: [x, 0.42, -1.58], rot: [Math.PI / 2, 0, 0] }));
+    body.push(paint(cyl(0.05, 0.05, 0.02, 12), "#111116", { at: [x, 0.42, -1.685], rot: [Math.PI / 2, 0, 0] }));
+  }
+  body.push(paint(box(0.44, 0.16, 0.02, 0.02), "#ffffff", { at: [0, 0.7, -1.43], rot: [-0.1, 0, 0] }));
+  body.push(paint(box(0.4, 0.035, 0.02), FLAME, { at: [0, 0.7, -1.445], rot: [-0.1, 0, 0] }));
   // Intake trumpets on the engine.
   for (const x of [-0.18, 0.06]) body.push(paint(cyl(0.07, 0.09, 0.22, 12, true), CHROME, { at: [x + 0.06, 1.12, -0.95] }));
 
@@ -71,6 +80,8 @@ export function buildBlaze(): KartDesign {
 
   const glow = merge([
     ...mirrorX([paint(ball(0.085, 12, 8), "#fff6d5", { at: [0.3, 0.47, 1.49] }), paint(box(0.16, 0.07, 0.04, 0.02), "#ff2d2d", { at: [0.4, 0.62, -1.47] })]),
+    // A thin brake light strip across the tail between the lamps.
+    paint(box(0.5, 0.025, 0.02), "#ff3b3b", { at: [0, 0.56, -1.46] }),
   ]);
 
   const driver: THREE.BufferGeometry[] = [
