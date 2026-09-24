@@ -1,0 +1,617 @@
+/*
+  Magic Kart on the phone: the setup steps (level, kart picker, ready)
+  and the wheel and pedals while racing. Built for the phone held
+  sideways, and still usable upright.
+*/
+
+.mk-phone {
+  position: relative;
+  left: 50%;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  width: calc(100vw - 24px);
+  max-width: 980px;
+  min-height: 0;
+  transform: translateX(-50%);
+}
+
+.mk-phone .kit-steps {
+  gap: 10px;
+  padding: 0;
+}
+
+.mk-phone .kit-steps__title {
+  font-size: 22px;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .mk-phone .kit-steps {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto 1fr auto;
+    column-gap: 16px;
+  }
+
+  .mk-phone .kit-steps__track {
+    grid-column: 1;
+  }
+
+  .mk-phone .kit-steps__title {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    font-size: 18px;
+  }
+
+  .mk-phone .kit-steps__body {
+    grid-column: 1 / 3;
+  }
+
+  .mk-phone .kit-steps__footer {
+    grid-column: 1 / 3;
+  }
+}
+
+/* Step one: calibrate */
+
+.mk-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mk-setup--split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  align-items: center;
+  gap: 16px;
+}
+
+.mk-setup__visual {
+  display: grid;
+  place-items: center;
+}
+
+.mk-setup__text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mk-setup__lead {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.mk-setup__text p {
+  margin: 0;
+}
+
+.mk-setup__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mk-level {
+  width: min(100%, 260px);
+}
+
+.mk-level__tube {
+  fill: var(--bg-muted);
+  stroke: var(--border-strong);
+  stroke-width: 3;
+}
+
+.mk-level__mark {
+  stroke: var(--text-muted);
+  stroke-width: 2;
+}
+
+.mk-level__centre {
+  fill: var(--text-muted);
+}
+
+.mk-level__bubble {
+  fill: #ffb020;
+  opacity: 0.9;
+}
+
+.mk-level--flat .mk-level__tube {
+  stroke: #2ecc71;
+}
+
+.mk-level--flat .mk-level__bubble {
+  fill: #2ecc71;
+}
+
+.mk-tray {
+  width: min(100%, 240px);
+}
+
+.mk-tray__phone {
+  fill: var(--accent);
+  opacity: 0.85;
+}
+
+.mk-tray__edge {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+.mk-tray__arrow {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mk-gauge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mk-gauge__wheel {
+  width: 64px;
+  height: 64px;
+  color: var(--text);
+  transition: transform 40ms linear;
+}
+
+.mk-gauge--small .mk-gauge__wheel {
+  width: 44px;
+  height: 44px;
+}
+
+.mk-gauge__track {
+  position: relative;
+  flex: 1;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--bg-muted);
+}
+
+.mk-gauge__track::after {
+  content: "";
+  position: absolute;
+  left: calc(50% - 1px);
+  top: -3px;
+  width: 2px;
+  height: 16px;
+  background: var(--text-muted);
+}
+
+.mk-gauge__bar {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+/* Step two: kart */
+
+.mk-pick {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 12px;
+  min-height: 0;
+}
+
+.mk-pick__stage {
+  position: relative;
+  min-height: 170px;
+  border-radius: 16px;
+  background: radial-gradient(circle at 50% 70%, color-mix(in srgb, var(--kart) 45%, #1a1433), #120e26);
+  overflow: hidden;
+}
+
+.mk-pick__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.mk-pick__caption {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  color: #ffffff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.mk-pick__caption strong {
+  font-size: 22px;
+  font-style: italic;
+  font-weight: 900;
+}
+
+.mk-pick__caption span {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mk-pick__side {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mk-pick__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mk-pick__card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.mk-pick__card--on {
+  border-color: var(--kart);
+  box-shadow: 0 0 0 2px var(--kart);
+}
+
+.mk-pick__card:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.mk-pick__swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--kart);
+}
+
+.mk-pick__taken {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.mk-pick__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 12px;
+}
+
+.mk-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mk-stat__label {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mk-stat__pips {
+  display: flex;
+  gap: 3px;
+}
+
+.mk-stat__pip {
+  flex: 1;
+  height: 7px;
+  border-radius: 3px;
+  background: var(--bg-muted);
+}
+
+.mk-stat__pip--on {
+  background: var(--accent);
+}
+
+/* Step three: ready */
+
+.mk-ready {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mk-ready__card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--bg-muted);
+}
+
+.mk-ready__card div {
+  display: flex;
+  flex-direction: column;
+}
+
+.mk-ready__swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--kart);
+}
+
+.mk-ready__note {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.mk-ready__note--on {
+  color: #1f9d55;
+}
+
+/* Racing */
+
+.mk-phone--drive {
+  flex: 1;
+}
+
+.mk-pad {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 12px;
+  min-height: 0;
+  padding-bottom: 4px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.mk-pad__left {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 10px;
+  min-height: 0;
+}
+
+.mk-pedal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 90px;
+  border: none;
+  border-radius: 22px;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  transition: transform 60ms ease, filter 60ms ease;
+}
+
+.mk-pedal .mk-icon {
+  width: 56px;
+  height: 56px;
+}
+
+.mk-pedal--drive {
+  background: linear-gradient(160deg, #3ddc84, #169c55);
+  box-shadow: 0 8px 0 #0d6b39;
+}
+
+.mk-pedal--brake {
+  --mk-brake-ink: #7a1020;
+  background: linear-gradient(160deg, #ff6b6b, #d63040);
+  box-shadow: 0 8px 0 #8f1d28;
+}
+
+.mk-pedal.is-held {
+  transform: translateY(6px);
+  filter: brightness(1.15);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+}
+
+.mk-ability {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-self: center;
+  justify-content: center;
+  width: 118px;
+  height: 118px;
+  padding: 18px;
+  border: 5px dashed var(--border-strong);
+  border-radius: 50%;
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  touch-action: none;
+}
+
+.mk-ability--full {
+  border: 5px solid #ffc53a;
+  background: radial-gradient(circle, #3a2a70, #1a1236);
+  color: #ffffff;
+}
+
+.mk-ability--rolling .mk-icon {
+  animation: mk-spin 300ms linear infinite;
+}
+
+.mk-ability--live {
+  animation: mk-glow 1s ease-in-out infinite;
+}
+
+.mk-ability:disabled {
+  opacity: 1;
+}
+
+.mk-ability__empty {
+  font-size: 40px;
+  font-weight: 900;
+}
+
+.mk-ability__label {
+  position: absolute;
+  bottom: -22px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+@keyframes mk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes mk-glow {
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 197, 58, 0.35);
+  }
+}
+
+.mk-pad__middle {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.mk-pad__status {
+  display: flex;
+  flex-direction: column;
+}
+
+.mk-pad__place {
+  font-size: 54px;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1;
+}
+
+.mk-pad__lap {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.mk-pad__count {
+  font-size: 80px;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1;
+  color: #ffb020;
+}
+
+.mk-pad__warn {
+  padding: 4px 10px;
+  border-radius: 10px;
+  background: #ff3040;
+  color: #ffffff;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.mk-pad__effect {
+  font-weight: 800;
+  color: var(--accent-text);
+}
+
+.mk-pad__hint {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.mk-pad--stun .mk-pad__middle {
+  animation: mk-blink 300ms steps(2) 4;
+}
+
+.mk-pad--ice {
+  background: linear-gradient(180deg, rgba(120, 220, 255, 0.18), transparent);
+  border-radius: 16px;
+}
+
+.mk-pad__arrows {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.mk-arrow {
+  min-height: 70px;
+  border: 2px solid var(--border-strong);
+  border-radius: 16px;
+  background: var(--bg-muted);
+  color: var(--text);
+  font-size: 30px;
+  touch-action: none;
+}
+
+.mk-arrow.is-held {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+@keyframes mk-blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.mk-turn {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  border-radius: 16px;
+  background: var(--bg);
+  text-align: center;
+}
+
+.mk-turn strong {
+  font-size: 24px;
+}
+
+.mk-result {
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.mk-result__label {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.mk-result__place {
+  font-size: 96px;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1;
+}

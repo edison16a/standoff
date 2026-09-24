@@ -1,0 +1,134 @@
+import type { AudioEngine } from "@/platform/audio/audio-engine";
+import type { RaceEvent } from "../engine/events";
+import { speedOf } from "../engine/kart";
+import { DRIVE } from "../engine/tuning";
+import type { RaceWorld } from "../engine/world";
+import type { Phase } from "../protocol";
+import type { TrackId } from "../tracks";
+import { EngineHum } from "./engine-hum";
+import { Music } from "./music";
+import { Sfx } from "./sfx";
+
+/**
+ * Decides what the race sounds like: the tune for the map, an engine per
+ * kart pitched by its speed, and a sound for every race event. Players'
+ * karts are louder than computer ones, so on a shared screen everyone
+ * hears their own moments over the pack.
+ */
+export class SoundDirector {
+  private readonly sfx: Sfx;
+  private readonly music: Music;
+  private hums: EngineHum[] = [];
+  private humsFor: RaceWorld | null = null;
+  private finalLapPlayed = false;
+  private phase: Phase = "lobby";
+
+  constructor(private readonly engine: AudioEngine) {
+    this.sfx = new Sfx(engine);
+    this.music = new Music(engine);
+    engine.setLevels({ music: 0.5, crowd: 0, sfx: 0.85 });
+  }
+
+  setPhase(phase: Phase, map: TrackId): void {
+    this.phase = phase;
+    switch (phase) {
+      case "lobby":
+        this.stopHums();
+        this.music.play("lobby");
+        this.engine.holdDuck("music", 1);
+        return;
+      case "countdown":
+        this.finalLapPlayed = false;
+        this.music.play(null);
+        return;
+      case "racing":
+        this.music.play(map);
+        return;
+      case "results":
+        this.music.play(null);
+        this.music.fanfare();
+        this.engine.holdDuck("sfx", 0.35);
+        setTimeout(() => {
+          if (this.phase === "results") this.music.play("lobby");
+        }, 3500);
+        return;
+    }
+  }
+
+  /** Engines follow every kart's speed, every frame. */
+  frame(world: RaceWorld): void {
+    if (this.humsFor !== world) {
+      this.stopHums();
+      this.engine.holdDuck("sfx", 1);
+      this.hums = world.karts.map((kart, i) => new EngineHum(this.engine, kart.seat !== null ? 0.05 : 0.018, (i - 1.5) * 9));
+      this.humsFor = world;
+    }
+    world.karts.forEach((kart, i) => {
+      const speed = speedOf(kart) / DRIVE.topSpeed;
+      const slide = kart.drift !== 0 ? 0.8 : kart.surface === "offroad" && speed > 0.2 ? 0.35 : kart.timers.ice > 0 && speed > 0.3 ? 0.4 : 0;
+      this.hums[i]?.set(Math.min(1.5, speed), kart.throttle, slide, kart.timers.boost > 0, false);
+    });
+  }
+
+  event(event: RaceEvent, world: RaceWorld): void {
+    const kart = "kart" in event ? world.karts[event.kart] : undefined;
+    const level = kart && kart.seat === null ? 0.35 : 1;
+    switch (event.type) {
+      case "countdown":
+        return this.sfx.countdown(event.count);
+      case "go":
+        return this.sfx.go();
+      case "pickup":
+        return this.sfx.pickup(level);
+      case "use":
+        if (event.item === "orb") this.sfx.throwOrb(level);
+        else if (event.item === "ice") this.sfx.throwIce(level);
+        else if (event.item === "ghost") this.sfx.vanish(level);
+        else if (event.item === "shield") this.sfx.shield(level);
+        return;
+      case "boost":
+        return this.sfx.boost(level, event.source === "nitro" || event.source === "start");
+      case "hit":
+        return event.by === "ice" ? this.sfx.freeze(level) : this.sfx.spinOut(level);
+      case "blocked":
+        return this.sfx.blocked(level);
+      case "bump":
+        return this.sfx.bump(event.strength, level);
+      case "jump":
+        return this.sfx.jump(level);
+      case "land":
+        return this.sfx.land(level);
+      case "fell":
+        return this.sfx.fall(level);
+      case "respawn":
+        return this.sfx.respawn(level);
+      case "lap":
+        if (kart?.seat !== null) this.sfx.lap();
+        return;
+      case "finalLap":
+        // The jingle and the faster tune come once, for the first player to reach the last lap.
+        if (kart?.seat === null || this.finalLapPlayed) return;
+        this.finalLapPlayed = true;
+        this.sfx.finalLap();
+        this.engine.duck("music", 0.3, 1.2);
+        this.music.setTempo(1.08);
+        return;
+      case "finish":
+        if (kart?.seat !== null) this.sfx.finish();
+        return;
+      default:
+        return;
+    }
+  }
+
+  stop(): void {
+    this.stopHums();
+    this.music.stop();
+  }
+
+  private stopHums(): void {
+    for (const hum of this.hums) hum.stop();
+    this.hums = [];
+    this.humsFor = null;
+  }
+}

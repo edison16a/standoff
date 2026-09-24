@@ -5,7 +5,7 @@ export const info: GameInfo = {
   id: "magic-kart",
   title: "Magic Kart",
   tagline: "Race along the beach, grab power up cubes, first over the line wins.",
-  status: "development",
+  status: "ready",
   players: [1, 2, 4],
   color: "#1a9bdc",
   Cover,
