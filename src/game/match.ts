@@ -5,9 +5,10 @@ import { EN_GARDE_SECONDS, HALT_MS, SHORT_HALT_MS } from "./rules";
 /** Why play stopped. Only a touch earns a replay. */
 export type HaltReason = { kind: "touch"; scorer: Slot } | { kind: "double" } | { kind: "corps" };
 
+/** The referee's call, as short as a real one. Left is player one. */
 const CALLS: Record<HaltReason["kind"], (reason: HaltReason) => string> = {
-  touch: (reason) => (reason.kind === "touch" ? `Touch, player ${reason.scorer}` : "Touch"),
-  double: () => "Double, no point",
+  touch: (reason) => (reason.kind === "touch" && reason.scorer === 2 ? "Touch right" : "Touch left"),
+  double: () => "Double",
   corps: () => "Corps-à-corps",
 };
 
