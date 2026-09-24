@@ -12,6 +12,11 @@ export class ShowCamera {
   private readonly pos = new THREE.Vector3();
   private started = false;
 
+  /** Jumps straight to the next shot instead of gliding there, for a new map. */
+  reset(): void {
+    this.started = false;
+  }
+
   follow(kart: Kart, time: number, dt: number): void {
     const a = kart.heading + Math.PI + Math.sin(time * 0.15) * 1.1;
     const wanted = new THREE.Vector3(kart.x + Math.sin(a) * 11, kart.y + 4.5 + Math.sin(time * 0.3) * 1.5, kart.z + Math.cos(a) * 11);

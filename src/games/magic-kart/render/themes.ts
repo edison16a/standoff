@@ -31,6 +31,8 @@ export interface Theme {
   pad: string;
   /** The track floats (space) and needs a thick edge underneath. */
   floating: boolean;
+  /** How strongly shiny things reflect the studio light. More at night, where there is less sun. */
+  reflections: number;
 }
 
 export const THEMES: Record<ThemeId, Theme> = {
@@ -57,6 +59,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     ambient: 1.35,
     pad: "#ffb020",
     floating: false,
+    reflections: 0.35,
   },
   space: {
     road: "#1d1a44",
@@ -81,6 +84,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     ambient: 1.25,
     pad: "#3fe8ff",
     floating: true,
+    reflections: 0.7,
   },
   city: {
     road: "#2a2b36",
@@ -98,13 +102,14 @@ export const THEMES: Record<ThemeId, Theme> = {
     fog: "#24123a",
     fogNear: 90,
     fogFar: 420,
-    sun: "#b8b0ff",
-    sunIntensity: 1.3,
-    ambientSky: "#6c5cff",
-    ambientGround: "#2a1a33",
-    ambient: 1.1,
+    sun: "#c9c2ff",
+    sunIntensity: 1.8,
+    ambientSky: "#8a7dff",
+    ambientGround: "#3a2a46",
+    ambient: 1.5,
     pad: "#ff3fb4",
     floating: false,
+    reflections: 0.8,
   },
   volcano: {
     road: "#3a2f33",
@@ -129,5 +134,6 @@ export const THEMES: Record<ThemeId, Theme> = {
     ambient: 1.15,
     pad: "#ff7a1f",
     floating: false,
+    reflections: 0.5,
   },
 };

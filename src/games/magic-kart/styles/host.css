@@ -453,7 +453,7 @@
   top: 12px;
   right: auto;
   left: 50%;
-  width: 220px;
+  width: 180px;
   transform: translateX(-50%);
 }
 
@@ -461,8 +461,32 @@
   top: 50%;
   right: auto;
   left: 50%;
-  width: 210px;
+  width: 190px;
   transform: translate(-50%, -50%);
+}
+
+/* Between split views the overview is kept small: map, places and names only. */
+.mk-overview--top,
+.mk-overview--centre {
+  gap: 4px;
+  padding: 6px;
+  background: rgba(16, 12, 38, 0.55);
+}
+
+.mk-overview--top .mk-standings__lap,
+.mk-overview--centre .mk-standings__lap {
+  display: none;
+}
+
+.mk-overview--top .mk-standings__row,
+.mk-overview--centre .mk-standings__row {
+  padding: 2px 8px;
+  font-size: 12px;
+}
+
+.mk-overview--top .mk-standings__place,
+.mk-overview--centre .mk-standings__place {
+  font-size: 14px;
 }
 
 .mk-overview--quad {

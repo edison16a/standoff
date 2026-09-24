@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { RaceEvent } from "../engine/events";
 import type { RaceWorld } from "../engine/world";
 import { ShowCamera } from "./cameras";
@@ -44,12 +45,17 @@ export class GameRenderer {
   private width = 1;
   private height = 1;
   private last = 0;
+  /** A soft studio light the karts reflect, so their paint shines on every map, night ones included. */
+  private readonly environment: THREE.Texture;
 
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.0;
     this.renderer.setScissorTest(true);
+    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    this.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    pmrem.dispose();
     this.dynamic.add(this.projectiles.group);
   }
 
@@ -69,6 +75,8 @@ export class GameRenderer {
       this.stage?.dispose();
       this.stage = new TrackScene(world.track.def);
       this.stage.scene.add(this.dynamic);
+      this.stage.scene.environment = this.environment;
+      this.stage.scene.environmentIntensity = this.stage.theme.reflections;
     }
     for (const view of this.karts.values()) view.dispose(this.dynamic);
     this.karts = new Map(world.karts.map((kart) => {
@@ -85,6 +93,7 @@ export class GameRenderer {
     this.effects = new Effects(this.stage!.theme.shoulder);
     this.dynamic.add(this.cubes.group, this.obstacles.group, this.effects.group);
     this.chase = [];
+    this.show.reset();
     this.world = world;
   }
 
@@ -159,6 +168,7 @@ export class GameRenderer {
     this.effects?.dispose();
     this.projectiles.dispose();
     this.extras.dispose();
+    this.environment.dispose();
     this.stage?.scene.remove(this.dynamic);
     this.stage?.dispose();
     this.renderer.dispose();
