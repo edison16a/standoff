@@ -63,7 +63,7 @@ export class HostSession {
     this.driver = null;
     this.wantsRoom = false;
     this.lobby.seats = new Lobby().seats;
-    this.director?.onPhase("lobby");
+    this.director?.stop();
     useHostStore.setState({ screen: "landing", room: null, hud: null, seats: this.lobby.seats });
   }
 
