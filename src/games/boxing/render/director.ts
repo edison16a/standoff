@@ -143,10 +143,13 @@ export class Director {
       return [{ rect: FULL, camera: tv.camera }];
     }
     if (match.phase === "intro" || match.phase === "break") {
-      // The walk out dollies in from wide; the break is a slow sweep over the ring.
+      // The walk out dollies in from wide; the break is a slow sweep over the ring. Both run on the
+      // match clock, so a slow machine sees the same shot, only in fewer frames.
       tv.setFov(34);
       const intro = match.phase === "intro";
-      tv.sideOn(a, b, intro ? -0.9 + t * 0.25 : 1 + t * 0.08, intro ? 6.5 - t * 0.9 : 5.5, intro ? 2.8 - t * 0.25 : 3.2, 1.2);
+      const k = Math.min(1, match.now / 3500);
+      const swept = (match.now % 20000) / 1000;
+      tv.sideOn(a, b, intro ? -0.9 + k * 0.8 : 1 + swept * 0.08, intro ? 6.8 - k * 2.8 : 5.5, intro ? 2.9 - k * 0.9 : 3.2, 1.2);
       tv.finish(dt);
       this.wasFighting = false;
       return [{ rect: FULL, camera: tv.camera }];

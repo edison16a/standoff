@@ -3,10 +3,10 @@ import { SpringVector } from "../anim/springs";
 import { Shake } from "./shake";
 
 /** Where the camera sits from its boxer, in the boxer's own frame: behind, over the right shoulder and up. */
-const BEHIND = 1.55;
-const SIDE = -0.42;
-const HEIGHT = 1.95;
-const LOOK_HEIGHT = 1.28;
+const BEHIND = 1.5;
+const SIDE = -0.68;
+const HEIGHT = 1.86;
+const LOOK_HEIGHT = 1.3;
 
 /**
  * The console boxing view for one player: behind and above their own
@@ -38,7 +38,8 @@ export class ShoulderCamera {
     const rz = fx;
     const back = BEHIND + 0.35 * Math.max(0, gap - 1.1) + 0.9 * down;
     this.wantEye.set(me.x - fx * back - rx * SIDE, HEIGHT + 0.6 * down, me.z - fz * back - rz * SIDE);
-    this.wantLook.set(me.x + fx * gap * 0.75, LOOK_HEIGHT - 0.5 * down, me.z + fz * gap * 0.75);
+    // Aimed a little to the right of the opponent, so our own boxer sits to the left of the picture.
+    this.wantLook.set(me.x + fx * gap * 0.75 + rx * 0.12, LOOK_HEIGHT - 0.5 * down, me.z + fz * gap * 0.75 + rz * 0.12);
     const eye = this.eye.update(this.wantEye, dt, 2.2);
     const look = this.look.update(this.wantLook, dt, 3);
     this.camera.position.copy(eye);

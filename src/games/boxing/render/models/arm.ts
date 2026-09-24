@@ -11,7 +11,9 @@ function scaled(rings: readonly Ring[], bulk: number): Ring[] {
 }
 
 const UPPER: readonly Ring[] = [
-  { t: 0, y: 0.02, rx: 0.052, zf: 0.05, zb: 0.052 },
+  // Closed over the top, so the tube never shows a hole from the camera above the shoulder.
+  { t: 0, y: 0.05, rx: 0.012, zf: 0.012, zb: 0.012 },
+  { t: 0.1, y: 0.03, rx: 0.048, zf: 0.046, zb: 0.048 },
   { t: 0.3, y: -0.08, rx: 0.058, zf: 0.06, zb: 0.058 },
   { t: 0.6, y: -0.17, rx: 0.054, zf: 0.058, zb: 0.052 },
   { t: 0.85, y: -0.25, rx: 0.047, zf: 0.046, zb: 0.046 },

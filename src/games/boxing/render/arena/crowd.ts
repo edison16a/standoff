@@ -27,7 +27,7 @@ export class Crowd {
   private readonly material: THREE.MeshLambertMaterial;
 
   constructor() {
-    this.material = new THREE.MeshLambertMaterial({ vertexColors: true, color: "#8a8a8a" });
+    this.material = new THREE.MeshLambertMaterial({ vertexColors: true, color: "#5e5e66" });
     this.material.onBeforeCompile = (shader) => {
       shader.uniforms.time = this.uniforms.time;
       shader.uniforms.excite = this.uniforms.excite;
@@ -36,11 +36,17 @@ export class Crowd {
         .replace(
           "#include <begin_vertex>",
           `#include <begin_vertex>
+          // Arms and fists hang down for calm fans and go up as the crowd gets excited,
+          // some fans sooner than others, so a big punch sends a wave of arms up.
+          float arm = step(0.78, position.y) * step(0.12, abs(position.x));
+          float up = clamp(excite * 1.7 - phase * 0.9, 0.0, 1.0);
+          vec3 hanging = vec3(position.x * 0.8, 0.8 - (position.y - 0.8) * 0.9, position.z + 0.05);
+          transformed = mix(transformed, mix(hanging, transformed, up), arm);
           // Each fan bounces on their own beat, and raised arms wave on top.
           float beat = sin(time * (5.0 + phase * 3.0) + phase * 40.0);
-          float hop = max(0.0, beat) * excite * 0.22 + sin(time * 1.3 + phase * 20.0) * 0.02;
+          float hop = max(0.0, beat) * excite * 0.2 + sin(time * 1.3 + phase * 20.0) * 0.015;
           transformed.y += hop * (0.4 + 0.6 * smoothstep(0.3, 1.0, position.y));
-          transformed.x += sin(time * 2.0 + phase * 30.0) * 0.03 * excite * step(1.05, position.y);`,
+          transformed.x += sin(time * 2.0 + phase * 30.0) * 0.04 * excite * arm * up;`,
         );
     };
     const random = seeded(99);

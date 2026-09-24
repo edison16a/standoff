@@ -279,3 +279,12 @@
 .bx-check__step--done::before {
   content: "\2713  ";
 }
+
+/* A soft vignette over the picture, as a broadcast lens gives, drawn in CSS so it costs the GPU nothing. */
+.bx-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.55) 100%);
+  pointer-events: none;
+}

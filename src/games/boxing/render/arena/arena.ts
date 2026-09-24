@@ -35,7 +35,7 @@ export class Arena {
     this.group.add(this.flashes.points);
 
     this.group.add(new THREE.HemisphereLight("#5a6a9a", "#140c18", 0.22));
-    this.key = new THREE.SpotLight("#fff4e6", 120, 16, 0.62, 0.45, 1.2);
+    this.key = new THREE.SpotLight("#fff4e6", 95, 16, 0.62, 0.45, 1.2);
     this.key.position.set(0, TRUSS_Y + 1.2, 0);
     this.key.target.position.set(0, 0, 0);
     this.key.castShadow = true;
