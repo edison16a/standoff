@@ -23,9 +23,15 @@ export function RoomShell() {
   const [game, setGame] = useState<HostGame | null>(null);
   const info = room ? findGame(room.game) : undefined;
 
+  // Keyed on the code and game alone. A reconnect stores a fresh room
+  // object for the same room, and the running game must survive that and
+  // get its resync event, not be torn down and built again.
+  const code = room?.code ?? null;
+  const gameId = room?.game ?? null;
+
   useEffect(() => {
     const api = host.api;
-    const loading = room ? loadGame(room.game) : null;
+    const loading = code && gameId ? loadGame(gameId) : null;
     if (!api || !loading) return;
     let made: HostGame | null = null;
     let alive = true;
@@ -38,7 +44,7 @@ export function RoomShell() {
       alive = false;
       made?.dispose();
     };
-  }, [host, room]);
+  }, [host, code, gameId]);
 
   const toggleFullscreen = () => {
     if (document.fullscreenElement) void document.exitFullscreen();
