@@ -9,7 +9,7 @@ import { SteerGauge } from "./SteerGauge";
 const HINTS: Record<Hold, string> = {
   level: "Level. Now tap Calibrate.",
   turned: "Turn it until the bubble sits between the lines.",
-  flat: "Stand it up so the screen faces you.",
+  flat: "Stand it up, screen facing you. Lying flat will not calibrate.",
 };
 
 /**
@@ -33,7 +33,7 @@ export function CalibrateStep() {
     );
   }
 
-  const hint = portrait ? "Turn your phone sideways first." : calibrated ? "Turn it like a wheel to steer. The wheel follows." : HINTS[hold];
+  const hint = portrait ? "Turn your phone sideways first." : calibrated && hold !== "flat" ? "Turn it like a wheel to steer. The wheel follows." : HINTS[hold];
   return (
     <div className="mk-setup mk-setup--split">
       <div className="mk-setup__visual">
@@ -45,7 +45,13 @@ export function CalibrateStep() {
         {sensorsLive && calibrated && !portrait && <SteerGauge className="mk-gauge--small" />}
         {!sensorsLive && <p className="muted">Waiting for the tilt sensor.</p>}
         <div className="mk-setup__actions">
-          <button type="button" className={`btn btn--block ${calibrated ? "btn--ghost" : "btn--primary"}`} disabled={!sensorsLive || portrait} onClick={() => session.calibrate()}>
+          <button
+            type="button"
+            className={`btn btn--block ${calibrated ? "btn--ghost" : "btn--primary"}`}
+            // Lying flat is not how the wheel is held, so straight ahead is never taken from it.
+            disabled={!sensorsLive || portrait || hold === "flat"}
+            onClick={() => session.calibrate()}
+          >
             {calibrated ? "Calibrate again" : "Calibrate"}
           </button>
           {!sensorsLive && (
