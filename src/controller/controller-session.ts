@@ -33,7 +33,7 @@ export class ControllerSession {
   constructor(private readonly code: string) {
     this.pipeline = new MotionPipeline(DEFAULT_TUNING, (action) => this.onStrike(action));
     this.socket = new SocketClient({
-      onOpen: () => this.join(),
+      onOpen: (send) => send({ type: "phone:join", code: this.code, token: readToken(this.code) ?? undefined }),
       onMessage: (message) => this.onMessage(message),
       onStatus: (status) => store.setState({ status }),
     });
@@ -123,10 +123,6 @@ export class ControllerSession {
   /** Touch mode strike buttons go through the same path as detected ones. */
   strike(action: StrikeAction): void {
     this.onStrike(action);
-  }
-
-  private join(): void {
-    this.socket.send({ type: "phone:join", code: this.code, token: readToken(this.code) ?? undefined });
   }
 
   private onMessage(message: ServerEnvelope): void {

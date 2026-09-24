@@ -2,7 +2,7 @@ import { AudioEngine } from "@/audio/audio-engine";
 import { SoundDirector } from "@/audio/sound-director";
 import { SocketClient } from "@/net/socket-client";
 import type { Slot } from "@/shared/players";
-import type { HostMessage, PhoneMessage, ServerEnvelope } from "@/shared/protocol";
+import type { ClientEnvelope, HostMessage, PhoneMessage, ServerEnvelope } from "@/shared/protocol";
 import { clampTuning, type Tuning } from "@/shared/tuning";
 import { buildControllerState } from "./controller-state";
 import { sameHud, useHostStore } from "./host-store";
@@ -26,7 +26,7 @@ export class HostSession {
 
   constructor() {
     this.socket = new SocketClient({
-      onOpen: () => this.announce(),
+      onOpen: (send) => this.announce(send),
       onMessage: (message) => this.onMessage(message),
       onStatus: (status) => useHostStore.setState({ status }),
     });
@@ -92,22 +92,28 @@ export class HostSession {
     this.broadcastState();
   }
 
-  private announce(): void {
+  private announce(send: (message: ClientEnvelope) => void): void {
     const saved = recallRoom();
-    if (saved) this.socket.send({ type: "host:resume", code: saved.code, token: saved.token });
-    else if (this.wantsRoom) this.socket.send({ type: "host:create" });
+    if (saved) send({ type: "host:resume", code: saved.code, token: saved.token });
+    else if (this.wantsRoom) send({ type: "host:create" });
   }
 
   private onMessage(message: ServerEnvelope): void {
     switch (message.type) {
       case "room:created":
         rememberRoom({ code: message.code, token: message.token });
+        useHostStore.setState({ sharedRooms: message.sharedRooms });
         this.enterLobby(message.code, message.joinUrl);
         return;
-      case "room:resumed":
+      case "room:resumed": {
         message.connected.forEach((on, i) => (on ? this.lobby.connect((i + 1) as Slot) : this.lobby.disconnect((i + 1) as Slot)));
-        this.enterLobby(message.code, message.joinUrl);
+        useHostStore.setState({ sharedRooms: message.sharedRooms });
+        // Same room as before means the socket reconnected or moved, not a
+        // page reload. Keep whatever screen and match are running.
+        if (useHostStore.getState().room?.code === message.code) this.onSeatsChanged();
+        else this.enterLobby(message.code, message.joinUrl);
         return;
+      }
       case "room:error":
         forgetRoom();
         useHostStore.setState({ screen: "landing", room: null, error: this.wantsRoom ? "Could not open a room. Try again." : null });
@@ -116,11 +122,8 @@ export class HostSession {
       case "peer:left":
         if (message.type === "peer:joined") this.lobby.connect(message.slot);
         else this.lobby.disconnect(message.slot);
-        this.syncSeats();
-        this.driver?.engine.setConnected({ 1: this.lobby.seats[1].connected, 2: this.lobby.seats[2].connected });
         if (message.type === "peer:joined") this.send(message.slot, { kind: "tuning", tuning: this.tuning });
-        this.lastState = "";
-        this.broadcastState();
+        this.onSeatsChanged();
         return;
       case "peer:message":
         this.onPhone(message.slot, message.payload);
@@ -183,6 +186,14 @@ export class HostSession {
     this.director = new SoundDirector(audio, () => this.tuning);
     // After a reload there was no click yet, so audio waits for the first one.
     if (!audio.unlocked) window.addEventListener("pointerdown", () => void audio.unlock(), { once: true });
+  }
+
+  /** Someone came or went. Pause or resume play and bring every screen up to date. */
+  private onSeatsChanged(): void {
+    this.syncSeats();
+    this.driver?.engine.setConnected({ 1: this.lobby.seats[1].connected, 2: this.lobby.seats[2].connected });
+    this.lastState = "";
+    this.broadcastState();
   }
 
   private syncSeats(): void {
