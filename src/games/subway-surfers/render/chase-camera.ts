@@ -15,6 +15,8 @@ export class ChaseCamera {
   private y = 0;
   private shake = 0;
   private crashView = 0;
+  /** Degrees added to the view at speed. */
+  private boost = 0;
   private readonly look = new THREE.Vector3();
 
   setAspect(aspect: number): void {
@@ -22,7 +24,8 @@ export class ChaseCamera {
     // Narrow split screen views still see all three tracks: widen the view instead of cropping it.
     const horizontal = THREE.MathUtils.degToRad(ACROSS);
     const vertical = 2 * Math.atan(Math.tan(horizontal / 2) / aspect);
-    this.camera.fov = THREE.MathUtils.clamp(THREE.MathUtils.radToDeg(vertical), 52, 82);
+    // The view widens a little with speed, which makes a fast run feel faster.
+    this.camera.fov = THREE.MathUtils.clamp(THREE.MathUtils.radToDeg(vertical), 52, 82) + this.boost;
     this.camera.updateProjectionMatrix();
   }
 
@@ -41,8 +44,12 @@ export class ChaseCamera {
     const s = run.runner;
     this.x += (s.x * 0.85 - this.x) * (1 - Math.exp(-6 * dt));
     // Rises with the runner onto a roof, but only follows a jump a little so the world stays steady.
-    const floor = s.grounded ? s.y : Math.min(s.y, Math.max(this.y, s.y * 0.35));
-    this.y += (floor - this.y) * (1 - Math.exp(-4 * dt));
+    // A jetpack flight is followed all the way up.
+    const flying = run.powers.has("jetpack") && !run.crashed;
+    const floor = flying ? s.y - 1.2 : s.grounded ? s.y : Math.min(s.y, Math.max(this.y, s.y * 0.35));
+    this.y += (floor - this.y) * (1 - Math.exp(-(flying ? 2 : 4) * dt));
+    const fast = run.crashed ? 0 : Math.max(0, Math.min(1, (run.speed - 11) / 10));
+    this.boost += (fast * 7 + (flying ? 4 : 0) - this.boost) * (1 - Math.exp(-2 * dt));
     const target = run.crashed ? 1 : 0;
     this.crashView += (target - this.crashView) * (1 - Math.exp(-1.6 * dt));
     this.shake *= Math.exp(-5 * dt);

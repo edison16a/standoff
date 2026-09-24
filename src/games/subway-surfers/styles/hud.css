@@ -282,6 +282,39 @@
   background: #3ddc84;
 }
 
+/* Half a screen each: smaller words, and the checklist wraps to fit. */
+.ss-hud--2 .ss-tut__title {
+  top: 18%;
+  font-size: 52px;
+}
+
+.ss-hud--2 .ss-tut__hint {
+  top: calc(18% + 64px);
+  padding: 0 16px;
+  font-size: 19px;
+}
+
+.ss-hud--2 .ss-tut__list {
+  top: calc(18% + 104px);
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 90%;
+  gap: 6px;
+}
+
+.ss-hud--2 .ss-tut__list li {
+  padding: 5px 12px;
+  font-size: 15px;
+}
+
+.ss-hud--2 .ss-banner {
+  font-size: 26px;
+}
+
+.ss-hud--2 .ss-score__value {
+  font-size: 36px;
+}
+
 .ss-skip {
   position: absolute;
   left: 50%;

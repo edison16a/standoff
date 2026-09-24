@@ -93,6 +93,7 @@ export class RunScene {
     this.dark += (inside - this.dark) * (1 - Math.exp(-5 * dt));
     const k = 1 - 0.55 * this.dark;
     this.sky.set(l.skyTop, l.skyHorizon, l.sun);
+    this.sky.tintClouds(CLOUD.copy(l.skyHorizon).lerp(WHITE, 0.55));
     this.fog.color.copy(l.fog).lerp(TUNNEL_FOG, this.dark * 0.8);
     this.sun.color.copy(l.sun);
     this.sun.intensity = l.sunIntensity * k;
@@ -113,3 +114,5 @@ export class RunScene {
 }
 
 const TUNNEL_FOG = new THREE.Color(0x1a1a24);
+const WHITE = new THREE.Color(0xffffff);
+const CLOUD = new THREE.Color();
