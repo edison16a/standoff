@@ -177,17 +177,20 @@ export class RaceWorld {
   }
 
   /**
-   * The race ends when every kart is home, or a while after the first one
-   * finishes. Once every player is home the computers get only a short
-   * while longer, so nobody waits on them.
+   * The race ends when every kart is home. Players always get a fair
+   * while to finish after the first of them crosses the line, and once
+   * every player is home the computers get only a few seconds more, so
+   * nobody waits on them. A player who never finishes is not waited on
+   * forever either.
    */
   private checkOver(): void {
     if (this.phase !== "racing") return;
-    if (this.deadline === null && this.karts.some((k) => k.race.finished)) this.deadline = this.time + RACE.finishGrace;
     const humans = this.karts.filter((k) => k.seat !== null);
-    if (humans.length > 0 && humans.every((k) => k.race.finished)) this.deadline = Math.min(this.deadline ?? Infinity, this.time + RACE.computerGrace);
-    const allHome = this.karts.every((k) => k.race.finished);
-    if (allHome || (this.deadline !== null && this.time >= this.deadline)) {
+    const times = (karts: Kart[]) => karts.filter((k) => k.race.finished).map((k) => k.race.finishTime ?? Infinity);
+    let deadline = Math.min(Math.min(...times(this.karts)) + RACE.finishGrace * 2, Math.min(...times(humans)) + RACE.finishGrace);
+    if (humans.length > 0 && humans.every((k) => k.race.finished)) deadline = Math.min(deadline, Math.max(...times(humans)) + RACE.computerGrace);
+    this.deadline = Number.isFinite(deadline) ? deadline : null;
+    if (this.karts.every((k) => k.race.finished) || this.time >= deadline) {
       this.phase = "over";
       this.emit({ type: "raceOver" });
     }

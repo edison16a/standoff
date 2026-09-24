@@ -57,7 +57,7 @@ export const RACE = {
   laps: 2,
   countdown: 3,
   checkpoints: 12,
-  /** After the first finisher, the rest have this long to cross the line. */
+  /** After the first player finishes, the others have this long. After a computer, twice that. */
   finishGrace: 30,
   /** Once every player is home, the computers have this long left. */
   computerGrace: 7,

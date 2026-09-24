@@ -206,7 +206,7 @@
 
 .mk-pick__stage {
   position: relative;
-  min-height: 170px;
+  min-height: 190px;
   border-radius: 16px;
   background: radial-gradient(circle at 50% 70%, color-mix(in srgb, var(--kart) 45%, #1a1433), #120e26);
   overflow: hidden;

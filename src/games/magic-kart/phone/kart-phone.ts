@@ -43,6 +43,7 @@ export class KartPhone {
     if (room.motion !== "granted") store.setState({ steerMode: "buttons" });
     this.unsubscribe = room.on((event) => this.onRoom(event));
     this.timer = setInterval(() => this.stream(false), SEND_MS);
+    this.send({ kind: "hello" });
   }
 
   dispose(): void {

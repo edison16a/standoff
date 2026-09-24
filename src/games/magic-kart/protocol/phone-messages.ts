@@ -22,7 +22,10 @@ export const pickSchema = z.object({ kind: z.literal("pick"), character: z.enum(
 
 export const readySchema = z.object({ kind: z.literal("ready"), ready: z.boolean() });
 
-export const phoneMessageSchema = z.discriminatedUnion("kind", [inputSchema, useSchema, pickSchema, readySchema]);
+/** Sent once as the phone's screen starts, so the host sends it everything, even if earlier messages came too soon. */
+export const helloSchema = z.object({ kind: z.literal("hello") });
+
+export const phoneMessageSchema = z.discriminatedUnion("kind", [inputSchema, useSchema, pickSchema, readySchema, helloSchema]);
 
 export type InputMessage = z.infer<typeof inputSchema>;
 export type PhoneMessage = z.infer<typeof phoneMessageSchema>;

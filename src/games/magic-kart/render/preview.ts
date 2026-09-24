@@ -36,8 +36,8 @@ export class KartPreview {
     this.ring.rotation.x = Math.PI / 2;
     this.turntable.add(disc, this.ring);
     this.scene.add(this.turntable);
-    this.camera.position.set(0, 2.7, 7.2);
-    this.camera.lookAt(0, 0.7, 0);
+    this.camera.position.set(0, 2.4, 6);
+    this.camera.lookAt(0, 0.75, 0);
     this.frame = requestAnimationFrame(this.draw);
   }
 

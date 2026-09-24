@@ -2,9 +2,9 @@ import * as THREE from "three";
 import type { Kart } from "../engine/kart";
 
 /**
- * The lobby's television camera. It follows the race leader of the demo
- * race from the side, slowly circling, so the map picker has the chosen
- * map alive behind it.
+ * The lobby's television camera. It follows the leader of the demo race,
+ * swinging slowly from one side of the kart to the other behind it. It
+ * stays over the road, so it never ends up inside a hill or a tower.
  */
 export class ShowCamera {
   readonly camera = new THREE.PerspectiveCamera(50, 1, 0.5, 1400);
@@ -13,8 +13,8 @@ export class ShowCamera {
   private started = false;
 
   follow(kart: Kart, time: number, dt: number): void {
-    const a = time * 0.12;
-    const wanted = new THREE.Vector3(kart.x + Math.cos(a) * 16, kart.y + 6 + Math.sin(time * 0.3) * 2, kart.z + Math.sin(a) * 16);
+    const a = kart.heading + Math.PI + Math.sin(time * 0.15) * 1.1;
+    const wanted = new THREE.Vector3(kart.x + Math.sin(a) * 11, kart.y + 4.5 + Math.sin(time * 0.3) * 1.5, kart.z + Math.cos(a) * 11);
     const look = new THREE.Vector3(kart.x, kart.y + 1, kart.z);
     if (!this.started) {
       this.pos.copy(wanted);

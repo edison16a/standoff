@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { eyes, seatedBody, steeringWheel } from "../driver-parts";
-import { ball, box, cyl, flat, lathe, merge, mirrorX, paint, profile } from "../geo";
+import { ball, box, cyl, flat, lathe, merge, mirrorX, paint, profile, rod } from "../geo";
 import type { KartDesign } from "../kart-design";
 import { buildWheel } from "../wheel";
 
@@ -30,6 +30,8 @@ export function buildBlaze(): KartDesign {
     paint(profile([[1.5, 0.28], [1.46, 0.44], [1.15, 0.56], [0.55, 0.68], [0.12, 0.74], [0.12, 0.28]], 0.98, 0.1), RED),
     paint(box(0.5, 0.06, 1.1, 0.03), DEEP, { at: [0, 0.73, 0.75], rot: [0.12, 0, 0] }),
     paint(box(1.64, 0.18, 0.26, 0.08), DARK, { at: [0, 0.28, 1.45] }),
+    // A front wing across the nose, with end plates.
+    paint(box(1.7, 0.05, 0.34, 0.02), DEEP, { at: [0, 0.22, 1.58] }),
     // Rear engine deck behind the seat.
     paint(profile([[-0.55, 0.3], [-0.55, 0.78], [-0.9, 0.84], [-1.35, 0.72], [-1.4, 0.3]], 1.1, 0.1), RED),
     paint(box(0.62, 0.2, 0.5, 0.06), CHROME, { at: [0, 0.94, -0.95] }),
@@ -58,6 +60,13 @@ export function buildBlaze(): KartDesign {
     // Headlight bezel.
     paint(cyl(0.12, 0.12, 0.08, 16), CHROME, { at: [0.3, 0.46, 1.44], rot: [Math.PI / 2 - 0.3, 0, 0] }),
     paint(box(0.2, 0.12, 0.06, 0.03), DARK, { at: [0.4, 0.62, -1.44] }),
+    paint(box(0.04, 0.2, 0.36, 0.01), DARK, { at: [0.85, 0.28, 1.58] }),
+    // Race number roundel on each side pod.
+    paint(cyl(0.2, 0.2, 0.02, 20), "#ffffff", { at: [0.815, 0.42, -0.35], rot: [0, 0, Math.PI / 2] }),
+    paint(cyl(0.22, 0.22, 0.015, 20), DARK, { at: [0.81, 0.42, -0.35], rot: [0, 0, Math.PI / 2] }),
+    // Mirror on a stalk.
+    rod([0.42, 0.72, 0.2], [0.58, 0.9, 0.18], 0.015, DARK),
+    paint(box(0.05, 0.12, 0.18, 0.02), DEEP, { at: [0.6, 0.92, 0.18] }),
   ];
 
   const glow = merge([

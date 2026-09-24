@@ -179,6 +179,9 @@ export class KartHost {
       case "ready":
         this.lobby.setReady(seat, message.ready);
         break;
+      case "hello":
+        this.phones.forget(seat);
+        break;
     }
     this.refresh(performance.now());
   }

@@ -61,26 +61,26 @@ export function buildMarkings(track: Track, theme: Theme, pads: readonly BoostPa
     group.add(mark);
   }
 
-  const boardGeo = new THREE.PlaneGeometry(2.6, 1.3);
+  const boardGeo = new THREE.PlaneGeometry(3.6, 1.8);
   const boardMat = new THREE.MeshBasicMaterial({ map: chevronTexture(theme), side: THREE.DoubleSide });
-  const postGeo = new THREE.CylinderGeometry(0.06, 0.06, 1.2, 6);
+  const postGeo = new THREE.CylinderGeometry(0.07, 0.07, 1.4, 6);
   const postMat = new THREE.MeshStandardMaterial({ color: "#d8d8e0" });
   const arrowMat = flatDecal(arrowTexture(theme.line));
   const arrowGeo = new THREE.PlaneGeometry(3.4, 6.8).rotateX(-Math.PI / 2);
   for (const bend of findBends(track)) {
-    for (let s = bend.start; s <= bend.end + 4; s += 9) {
+    for (let s = bend.start; s <= bend.end + 4; s += 7) {
       if (!track.hasWall(s) || track.inGap(s)) continue;
       const outside = -bend.dir;
       const board = new THREE.Mesh(boardGeo, boardMat);
       const p = track.pointAt(s, outside * (track.edge + 0.25));
       const f = track.frameAt(s);
-      board.position.set(p.x, p.y + 1.75, p.z);
+      board.position.set(p.x, p.y + 2.1, p.z);
       // Face the drivers coming toward it, turned a little toward the road.
       board.rotation.set(0, Math.atan2(-f.tx, -f.tz) + outside * 0.35, 0);
       // The texture points right, so mirror it for left hand bends.
       board.scale.x = bend.dir > 0 ? 1 : -1;
       const post = new THREE.Mesh(postGeo, postMat);
-      post.position.set(p.x, p.y + 0.9, p.z);
+      post.position.set(p.x, p.y + 0.8, p.z);
       group.add(board, post);
     }
     const before = track.wrap(bend.start - 24);
