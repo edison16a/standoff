@@ -57,7 +57,7 @@ export function StarStep() {
             {c.blurb} Dunk: {c.dunkName.toLowerCase()}.
           </p>
         </div>
-        <div className="nba-pick__list" role="list">
+        <div className="nba-pick__list" role="group" aria-label="Stars">
           {CHARACTER_IDS.map((id) => {
             const star = CHARACTERS[id];
             const busy = taken.includes(id);
@@ -65,7 +65,6 @@ export function StarStep() {
               <button
                 key={id}
                 type="button"
-                role="listitem"
                 className={`nba-pick__card ${wanted === id ? "nba-pick__card--on" : ""}`}
                 disabled={busy}
                 aria-pressed={wanted === id}
