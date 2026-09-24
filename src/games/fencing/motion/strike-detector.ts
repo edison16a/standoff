@@ -129,6 +129,11 @@ export class StrikeDetector {
     return this.report;
   }
 
+  /** Each strike's score right now, in thresholds, for the practice step's meter. */
+  get scores(): { jab: number; parry: number } {
+    return { jab: this.jab.score, parry: this.parry.score };
+  }
+
   /** Ignores strikes until then, used around taps on the screen. */
   suppressUntil(t: number): void {
     this.suppressedUntil = Math.max(this.suppressedUntil, t);

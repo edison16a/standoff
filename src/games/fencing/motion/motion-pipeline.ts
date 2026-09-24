@@ -86,6 +86,11 @@ export class MotionPipeline {
     return this.strikes.lastStrike;
   }
 
+  /** How close each strike is to firing right now, in thresholds. */
+  get strikeScores(): { jab: number; parry: number } {
+    return this.strikes.scores;
+  }
+
   configure(tuning: Tuning): void {
     this.strikes.configure(tuning);
   }
