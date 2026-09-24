@@ -2,7 +2,15 @@
 
 Standoff is a games console in the browser. One computer is the screen, and every player's phone is their controller. There is nothing to install and no account to make: open the site on a computer, pick a game, and everyone scans the QR code with their phone. Each player types a name, and the game starts.
 
-Fencing is the first game. Your phone is the sword: tilt it and the blade on screen follows, chop down to jab, lift up to parry, and hold Forward or Back to move. Fruit Ninja, Magic Kart, Zombie Survival and Shooting Gallery are on the home screen and in development, each with a brief in its folder under `src/games`.
+There are five games:
+
+* **Fencing:** your phone is the sword. Tilt it and the blade follows, chop down to jab, lift up to parry.
+* **Fruit Ninja:** up to four players slice fruit on one wooden board by pointing their phones at the screen, and dodge the bombs.
+* **Magic Kart:** a party kart racer for up to four in split screen. Tilt the phone to steer, grab power up cubes, two laps.
+* **Zombie Survival:** up to four players aim their phones like guns and fight together through 25 stages to the ship.
+* **Shooting Gallery:** a fairground duck shoot. Point, shoot, top score in 20 seconds wins.
+
+Each game lives in its own folder under `src/games`, with a README of its own.
 
 It runs on Vercel for play from anywhere, or on your own computer over WiFi. Nothing is saved on the server: close it and the game is gone.
 
@@ -10,11 +18,13 @@ Play it at [standoff-five.vercel.app](https://standoff-five.vercel.app).
 
 ## Screenshots
 
-The home screen works like a console menu. A row of square tiles shows each game's art, and the chosen one grows and gets a ring in its own colour. Its art fills the screen behind, with its name, what it is, how many can play and a Host Game button below the row. Opening the app picks a game at random. Click a tile or use the left and right arrow keys to choose, and press Enter, click the chosen tile again or press Host Game to start. Games still being built say Coming soon.
+The home screen works like a console menu. A row of square tiles shows each game's art, and the chosen one grows and gets a ring in its own colour. Its art fills the screen behind, with its name, what it is, how many can play and a Host Game button below the row. Opening the app picks a game at random. Click a tile or use the left and right arrow keys to choose, and press Enter, click the chosen tile again or press Host Game to start. A game still being built says Coming soon.
 
 <img src="docs/screenshots/home-light.png" alt="The home screen in light mode, with Fencing chosen in the row of game tiles and its art filling the background" width="100%" />
 
 <img src="docs/screenshots/home-dark.png" alt="The same home screen in dark mode" width="100%" />
+
+### Fencing
 
 Hosting a game opens a room. The QR code waits in the middle, then moves to the bottom left once someone joins, until the game starts. The logo at the top left always leads home.
 
@@ -56,18 +66,75 @@ On the phone: a name (or Skip), then one page per step. Calibrate first: the dra
   <img src="docs/screenshots/phone-pad.png" alt="The Forward and Back buttons during a bout" width="32%" />
 </p>
 
+### Fruit Ninja
+
+Everyone slices on the same board. Each blade is drawn in the style its player picked and edged in their colour, with the leaderboard at the top right. Rare fruit glow and are worth far more. Bombs cost points.
+
+<img src="docs/screenshots/fruit-ninja-play.png" alt="Four blade trails over the wooden board, with a bomb going off and the leaderboard at the top right" width="100%" />
+
+<img src="docs/screenshots/fruit-ninja-rare.png" alt="A glowing star fruit and dragonfruit beside a watermelon" width="100%" />
+
+### Magic Kart
+
+The computer picks the map over a live demo race. In a race each player gets a view of their own, with the overview map and standings at the top right.
+
+<img src="docs/screenshots/magic-kart-lobby.png" alt="The Magic Kart lobby with the map picker and the racers" width="100%" />
+
+<img src="docs/screenshots/magic-kart-race.png" alt="Two player split screen on Magma Peak, one kart shielded, with the overview map at the top right" width="100%" />
+
+<img src="docs/screenshots/magic-kart-phone.png" alt="The phone held sideways with Brake, Drive and the power up button" width="100%" />
+
+### Zombie Survival
+
+The team walks from stage to stage. Each player's gun follows their phone, and bosses must be shot in the glowing weak points on their joints.
+
+<img src="docs/screenshots/zombie-survival-street.png" alt="Two bosses in a night street with glowing weak points" width="100%" />
+
+<img src="docs/screenshots/zombie-survival-boss.png" alt="A rifle firing at the Tank's weak points" width="100%" />
+
+### Shooting Gallery
+
+Ducks ride the waves, targets slide and plates swing on the rail. Everything hit falls, and every player's BB gun follows their aim.
+
+<img src="docs/screenshots/shooting-gallery-play.png" alt="Four BB guns aiming at ducks and targets in the fairground booth" width="100%" />
+
+<img src="docs/screenshots/shooting-gallery-results.png" alt="The results table with the best scores" width="100%" />
+
 ## How to play
 
-1. On the computer, click a game. Scan the QR code with each phone, type a name and tap **Join**, or tap **Skip**.
-2. For fencing, calibrate first. Hold the phone flat like a sword, top edge pointing at the middle of the screen. When the dot sits in the circle, tap **Calibrate** and hold still through the countdown. Then pick a fencer, and tap **Ready**.
-3. Fence:
+On the computer, pick a game and press **Host Game**. Scan the QR code with each phone, type a name and tap **Join**, or tap **Skip**. Every game then walks the phone through the same steps, each on its own page: **Calibrate**, the game's own choice, then **Ready**.
+
+For Fruit Ninja, Zombie Survival and Shooting Gallery, hold the phone flat like a remote, top edge toward the big screen. Calibration shows a target in the middle of the big screen, then the top left and the bottom right. Point at each and tap **Set**. Your dot then follows wherever you point. **Recenter** fixes any drift later.
+
+### Fencing
+
+1. Calibrate first. Hold the phone flat like a sword, top edge pointing at the middle of the screen. When the dot sits in the circle, tap **Calibrate** and hold still through the countdown. Then pick a fencer, and tap **Ready**.
+2. Fence:
    * **Aim** by tilting the phone. A jab only lands if your tip points at your opponent.
    * **Jab** with a short, sharp chop down.
    * **Parry** with a short, sharp lift up. For one second any jab that reaches you is blocked, and the attacker is knocked off balance.
    * **Move** by holding **Forward** or **Back**.
-4. First to two touches wins. A rematch needs no new scan.
+3. First to two touches wins. A rematch needs no new scan.
 
 To fence alone, tap **Play the computer** on the phone, or **Play solo** on the join card. A device without motion sensors gets on screen Jab and Parry buttons.
+
+### Fruit Ninja
+
+Pick a blade, then slice by sweeping your aim through the fruit. There is no button: a fast sweep cuts, a slow one does not. Big fruit take several cuts. The computer sets the round length, the bombs and the fruit rate before **Start**.
+
+### Magic Kart
+
+Hold the phone sideways, lay it flat and tap **Calibrate**. Pick a kart. Tilt to steer, hold **Drive** to go and **Brake** to slow. Drive through a cube for a power up and tap the round button to use it. You can hold one at a time. Laps only count when you drive the whole track.
+
+### Zombie Survival
+
+Pick a gun. Hold **Shoot** for the automatic guns, tap **Reload** when you run low, and aim for heads. Bosses only go down when you hit their glowing weak points. Reach the chopper at stage 10 and the ship at stage 25.
+
+### Shooting Gallery
+
+Pick a finish for your BB gun. Point and tap **Shoot**. Ducks are 10, ducklings 25, bullseyes 15 or 40 in the bull, plates 30 and the golden duck 50. The best named scores stay on this computer.
+
+Phones without motion sensors aim by dragging on a pad instead.
 
 ## Running it
 
@@ -239,11 +306,12 @@ src/
     audio/                The Web Audio engine
   games/
     catalog.ts            Every game and how to load it
-    fencing/              The first game: engine, rig, renderer, motion, sound, screens
-    fruit-ninja/          In development, as are the three below
-    magic-kart/
-    zombie-survival/
-    shooting-gallery/
+    kit/                  Shared code games may use: phone aiming, setup steps, seat colours
+    fencing/              Engine, rig, renderer, motion, sound, screens
+    fruit-ninja/          Slicing on a wooden board, three.js
+    magic-kart/           Kart racing in split screen, three.js
+    zombie-survival/      Co-op zombie shooter over 25 stages, three.js
+    shooting-gallery/     Fairground duck shoot, three.js
   components/             Shared interface pieces
   styles/                 The platform's stylesheets. Each game keeps its own.
 ```
@@ -254,7 +322,7 @@ src/
 npm test
 ```
 
-The suite covers the relay (seating up to four, ordering, kicks, grace periods, closing, store failures and rate limits), both Vercel routes, the socket handover, the platform's host room and names, the game catalog, and for fencing the motion pipeline fed with synthetic sensor data, jab, parry and level detection, the referee, match flow, slow motion, the engine playing whole exchanges, the computer opponent, the effects, the rig's IK and animator, the lobby and seating rules, and protocol validation.
+The suite covers the relay (seating up to four, ordering, kicks, grace periods, closing, store failures and rate limits), both Vercel routes, the socket handover, the platform's host room and names, the game catalog, and for fencing the motion pipeline fed with synthetic sensor data, jab, parry and level detection, the referee, match flow, slow motion, the engine playing whole exchanges, the computer opponent, the effects, the rig's IK and animator, the lobby and seating rules, and protocol validation. The kit's aim math and phone aiming are tested too. Each three.js game tests its own engine: Fruit Ninja's blade sweeps and scoring, Magic Kart's laps, checkpoints, items and whole computer races on every map, Zombie Survival's guns, stages and a bot team playing all 25 stages, and Shooting Gallery's rounds, hit tests and best scores.
 
 Two more files run against a real Redis: the relay with two separate backends standing in for two Vercel instances, and the store's locking and expiry. They run when `REDIS_TEST_URL` is set:
 
