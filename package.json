@@ -1,0 +1,42 @@
+{
+  "name": "standoff",
+  "private": true,
+  "version": "0.1.0",
+  "description": "A 1v1 fencing game where two phones are the swords and a computer hosts the strip.",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --clear-screen=false server/index.ts",
+    "build": "next build",
+    "start": "NODE_ENV=production tsx server/index.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "dependencies": {
+    "next": "^16.3.6",
+    "qrcode": "^1.5.4",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "selfsigned": "^5.5.0",
+    "tsx": "^4.23.15",
+    "ws": "^8.21.3",
+    "zod": "^4.6.5",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/ws": "^8.18.1",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.6",
+    "jsdom": "^30.1.1",
+    "typescript": "5.9",
+    "vitest": "^5.0.1"
+  }
+}
