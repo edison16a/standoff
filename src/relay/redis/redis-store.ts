@@ -27,6 +27,9 @@ const RELEASE = `if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call
  */
 const WRITE_IF_LOCKED = `if redis.call("get", KEYS[1]) == ARGV[1] then redis.call("set", KEYS[2], ARGV[2], "EX", ARGV[3]) return 1 else return 0 end`;
 
+/** Counts a hit, starting the minute on the first one. */
+const BUMP = `local n = redis.call("incr", KEYS[1]) if n == 1 then redis.call("expire", KEYS[1], 60) end return n`;
+
 const ttlFor = (room: RoomRecord) => (room.hostConn === null ? HOSTLESS_TTL_S : ROOM_TTL_S);
 
 /**
@@ -68,6 +71,10 @@ export class RedisStore implements RoomStore {
 
   async delete(code: string): Promise<void> {
     await this.redis.del(roomKey(code));
+  }
+
+  async bump(key: string): Promise<number> {
+    return Number(await this.redis.eval(BUMP, 1, `standoff:count:${key}`));
   }
 
   private async lock(code: string): Promise<string> {

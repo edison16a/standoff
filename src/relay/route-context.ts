@@ -19,6 +19,7 @@ export function routeContext(request: Request, backend: Backend, deadline: numbe
     backend,
     joinUrlFor: (code) => `${origin}/join/${code}`,
     now: Date.now,
+    client: clientAddress(request.headers),
     sharedRooms: local !== undefined || findRedisUrl() !== null,
     deadline,
   };
@@ -34,4 +35,9 @@ function requestOrigin(request: Request): string {
   const url = new URL(request.url);
   const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? url.host;
   return `https://${host}`;
+}
+
+/** Vercel's edge sets the first forwarded address. Anything unlabelled shares one budget. */
+function clientAddress(headers: Headers): string {
+  return headers.get("x-forwarded-for")?.split(",")[0]?.trim() || headers.get("x-real-ip") || "unknown";
 }

@@ -65,6 +65,7 @@ export function deferredBackend(get: () => Promise<Backend>): Backend {
     get: async (code) => (await get()).store.get(code),
     update: async (code, change) => (await get()).store.update(code, change),
     delete: async (code) => (await get()).store.delete(code),
+    bump: async (key) => (await get()).store.bump(key),
   };
   return {
     store,

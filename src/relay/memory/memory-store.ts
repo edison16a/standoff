@@ -11,6 +11,7 @@ const IDLE_MS = 6 * 60 * 60 * 1000;
  */
 export class MemoryStore implements RoomStore {
   private readonly rooms = new Map<string, { room: RoomRecord; touched: number }>();
+  private readonly counters = new Map<string, { count: number; resetAt: number }>();
 
   constructor(private readonly now: () => number = Date.now) {}
 
@@ -35,6 +36,19 @@ export class MemoryStore implements RoomStore {
 
   async delete(code: string): Promise<void> {
     this.rooms.delete(code);
+  }
+
+  async bump(key: string): Promise<number> {
+    const now = this.now();
+    const counter = this.counters.get(key);
+    if (!counter || counter.resetAt <= now) {
+      // Expired counters are dropped here, so the map stays small.
+      for (const [name, old] of this.counters) if (old.resetAt <= now) this.counters.delete(name);
+      this.counters.set(key, { count: 1, resetAt: now + 60_000 });
+      return 1;
+    }
+    counter.count += 1;
+    return counter.count;
   }
 
   get size(): number {

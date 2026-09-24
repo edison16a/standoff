@@ -14,11 +14,11 @@ import { SOCKET_PATH } from "../../src/shared/protocol";
  * Vercel cuts a function at its maximum duration, and gets the same early
  * warning. That makes the handover testable on a laptop.
  */
-export function createSocketServer(ctx: Omit<RelayContext, "deadline">, lifetimeMs: number | null = null) {
+export function createSocketServer(ctx: Omit<RelayContext, "deadline" | "client">, lifetimeMs: number | null = null) {
   const wss = new WebSocketServer({ noServer: true, maxPayload: MAX_FRAME_BYTES });
-  wss.on("connection", (socket) => {
+  wss.on("connection", (socket, request: IncomingMessage) => {
     const deadline = lifetimeMs === null ? null : ctx.now() + lifetimeMs;
-    void attachSocket(socket, { ...ctx, deadline });
+    void attachSocket(socket, { ...ctx, deadline, client: request.socket.remoteAddress ?? "unknown" });
     if (deadline !== null) {
       const cut = setTimeout(() => socket.terminate(), lifetimeMs!);
       socket.once("close", () => clearTimeout(cut));

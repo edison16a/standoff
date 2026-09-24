@@ -37,7 +37,7 @@ async function flush() {
 
 function connect() {
   const socket = new FakeSocket();
-  const connection = new RelayConnection(socket, { backend, joinUrlFor: (code) => `https://game.test/join/${code}`, now: () => clock, sharedRooms: true, deadline: null });
+  const connection = new RelayConnection(socket, { backend, joinUrlFor: (code) => `https://game.test/join/${code}`, now: () => clock, client: "test", sharedRooms: true, deadline: null });
   const send = async (envelope: ClientEnvelope) => {
     connection.receive(envelope);
     await connection.settled();

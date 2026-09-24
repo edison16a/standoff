@@ -12,6 +12,8 @@ export interface RelayContext {
   /** Builds the address phones open for a room, from wherever this request came in. */
   joinUrlFor(code: string): string;
   now(): number;
+  /** The client's network address, for rate limits shared across connections. */
+  client: string;
   /** False when this server has several instances but no shared store. */
   sharedRooms: boolean;
   /**
@@ -23,3 +25,12 @@ export interface RelayContext {
 
 /** How long before the deadline the client is asked to move to a new socket. */
 export const ROTATE_LEAD_MS = 30_000;
+
+/**
+ * The warning for a socket with `lifetime` ms to live. Short lifetimes, as
+ * when simulating Vercel locally, get a third of their life, so the notice
+ * never lands on a socket still busy taking over from the one before.
+ */
+export function rotateLead(lifetime: number): number {
+  return Math.min(ROTATE_LEAD_MS, lifetime / 3);
+}

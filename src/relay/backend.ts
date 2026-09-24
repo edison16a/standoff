@@ -11,6 +11,11 @@ export interface RoomStore {
   get(code: string): Promise<RoomRecord | null>;
   update<T>(code: string, change: (room: RoomRecord) => { room: RoomRecord | null; result: T }): Promise<T | null>;
   delete(code: string): Promise<void>;
+  /**
+   * Adds one to a counter that resets a minute after its first hit and
+   * returns the new count. Rate limits use it, so every instance shares them.
+   */
+  bump(key: string): Promise<number>;
 }
 
 /**

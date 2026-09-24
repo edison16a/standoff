@@ -36,7 +36,7 @@ describe.skipIf(!url)("Relay over Redis across two instances", () => {
   let instanceB: Backend;
   const connect = (backend: Backend) => {
     const socket = new FakeSocket();
-    const connection = new RelayConnection(socket, { backend, joinUrlFor: (code) => `https://x.test/join/${code}`, now: Date.now, sharedRooms: true, deadline: null });
+    const connection = new RelayConnection(socket, { backend, joinUrlFor: (code) => `https://x.test/join/${code}`, now: Date.now, client: "test", sharedRooms: true, deadline: null });
     return { socket, connection };
   };
 
