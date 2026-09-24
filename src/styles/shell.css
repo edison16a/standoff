@@ -29,8 +29,14 @@
   cursor: pointer;
 }
 
-.home-link:hover {
-  background: var(--bg-muted);
+/*
+  The logo never has a backing, hovered or not. A soft halo in the page
+  colour keeps it readable where a game paints a dark scene behind it.
+*/
+.shell__brand .brand {
+  text-shadow:
+    0 0 2px var(--bg),
+    0 0 8px var(--bg);
 }
 
 .shell__tools {
@@ -47,10 +53,8 @@
 
 /*
   Games draw right up to the edges, often dark 3D scenes under a light
-  theme. A soft backing keeps the logo and the tools readable on any of
-  them.
+  theme. A soft backing keeps the tools readable on any of them.
 */
-.shell__brand .home-link,
 .shell__tools {
   background: color-mix(in srgb, var(--bg) 84%, transparent);
 }
@@ -188,10 +192,10 @@
   color: var(--accent);
 }
 
-.shell__brand .home-link {
-  border-radius: 999px;
-}
-
-.shell__brand .home-link:hover {
-  background: var(--bg-muted);
+/* The capture page for a game's showcase: the scene and nothing else. */
+.showcase {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #000000;
 }
