@@ -31,14 +31,20 @@ export class Pieces {
    * cut and `dir` the blade's direction on screen.
    */
   split(halves: [Object3D, Object3D], at: Vector3, from: Quaternion, scale: number, velocity: { x: number; y: number }, dir: { x: number; y: number }): void {
-    // The cut plane holds the blade's path. Its normal points across the path, tipped toward the camera.
+    // The cut plane holds the blade's path. Its normal points across the path.
     const across = new Vector3(-dir.y, dir.x, 0);
-    const normal = across.clone().multiplyScalar(Math.cos(FACE_TILT)).add(new Vector3(0, 0, Math.sin(FACE_TILT))).normalize();
-    // Turn the fruit as little as possible so its own +y lines up with that normal.
     const current = UP.clone().applyQuaternion(from);
-    const orient = new Quaternion().setFromUnitVectors(current, normal).multiply(from);
     halves.forEach((half, i) => {
       const side = i === 0 ? 1 : -1;
+      // Each half swings open like a book, its cut face tipped toward the camera, so both show their
+      // flesh. Half a's face looks along its own -y and half b's along +y, so they tip opposite ways.
+      const normal = across
+        .clone()
+        .multiplyScalar(Math.cos(FACE_TILT))
+        .add(new Vector3(0, 0, -side * Math.sin(FACE_TILT)))
+        .normalize();
+      // Turn the fruit as little as possible so its own +y lines up with that normal.
+      const orient = new Quaternion().setFromUnitVectors(current, normal).multiply(from);
       half.position.copy(at);
       half.quaternion.copy(orient);
       half.scale.setScalar(scale);

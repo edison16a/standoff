@@ -29,6 +29,7 @@ export class Match {
   private phaseClock = 0;
   private readonly spawner: Spawner;
   private readonly active = new Set<Seat>();
+  private readonly retired = new Set<Seat>();
   private readonly stuns = new Map<Seat, number>();
   private readonly combos = new Combos();
 
@@ -57,7 +58,17 @@ export class Match {
 
   /** Whether this seat plays in this round, even if its phone has dropped for now. */
   has(seat: Seat): boolean {
-    return this.scores.has(seat);
+    return this.scores.has(seat) && !this.retired.has(seat);
+  }
+
+  /**
+   * Someone else took this seat mid round. The old player's score stays on
+   * the board, but the newcomer never inherits it: they wait for the next round.
+   */
+  retire(seat: Seat): void {
+    if (!this.scores.has(seat)) return;
+    this.active.delete(seat);
+    this.retired.add(seat);
   }
 
   isActive(seat: Seat): boolean {

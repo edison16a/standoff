@@ -6,9 +6,9 @@ const HEIGHT = 1024;
 /** Planks across the texture's height, laid horizontally like the cover. */
 export const PLANKS = 5;
 
-const DARK = hex("#5a3016");
-const MID = hex("#8f5427");
-const LIGHT = hex("#b8793f");
+const DARK = hex("#4c2811");
+const MID = hex("#7f4720");
+const LIGHT = hex("#aa6c38");
 const GAP = hex("#2a160a");
 
 interface Knot {
@@ -65,7 +65,7 @@ function paint(): { map: Texture; bump: Texture } {
         gy += Math.sign(dy) * 38 * Math.exp(-((d / (knot.size * 3)) ** 2));
         if (d < knot.size) knotShade = Math.max(knotShade, (1 - d / knot.size) * (0.6 + 0.4 * Math.sin(d * 0.9)));
       }
-      const ring = Math.sin(gy * 0.42 + fbm(u * 6, local * 4, 2, plank.seed + 3) * 5);
+      const ring = Math.sin(gy * 0.55 + fbm(u * 5, local * 3, 2, plank.seed + 3) * 2.6);
       const fibre = noise(x / 26, y / 1.4, plank.seed + 9);
       const streak = fbm(u * 3, y / 6, 3, plank.seed + 21);
       let t = 0.5 + 0.16 * ring + 0.26 * (fibre - 0.5) + 0.6 * (streak - 0.5) + plank.tone;

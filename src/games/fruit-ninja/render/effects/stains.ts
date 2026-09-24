@@ -80,4 +80,13 @@ export class Stains {
   clear(): void {
     for (const stain of this.pool) stain.mesh.visible = false;
   }
+
+  /** The splat textures are shared and kept. Each stain's own material and the one plane go. */
+  dispose(): void {
+    for (const stain of this.pool) {
+      stain.mesh.removeFromParent();
+      stain.material.dispose();
+    }
+    this.pool[0]?.mesh.geometry.dispose();
+  }
 }

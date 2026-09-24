@@ -17,7 +17,7 @@ export interface BladeFrame {
 /** How long a point stays in the trail, in seconds. */
 const TRAIL_S = 0.2;
 const POINTS = 64;
-const HEAD_WIDTH = 0.22;
+const HEAD_WIDTH = 0.34;
 /** Trails float above the fruit so they are never hidden behind one. */
 const Z = 1.2;
 
@@ -131,7 +131,7 @@ export class BladeTrails {
       ny /= len;
       const along = Math.min(1, (time - p.t) / TRAIL_S);
       const width = samples[i] ? HEAD_WIDTH * Math.pow(1 - along, 0.6) : 0;
-      const shake = bolt ? (trail.jitter[i] ?? 0) * 0.16 * Math.min(1, i / 4) : 0;
+      const shake = bolt ? (trail.jitter[Math.floor(i / 3)] ?? 0) * 0.13 * Math.min(1, i / 6) : 0;
       const cx = p.x + nx * shake;
       const cy = p.y + ny * shake;
       const k = i * 6;
