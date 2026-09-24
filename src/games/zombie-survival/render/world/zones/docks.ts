@@ -81,7 +81,12 @@ export function buildDocks(kit: SegmentKit): void {
   }
   for (let a = a0 + 6, i = 0; a < seg.length; a += 26, i++) mast(kit, (i % 2 ? 1 : -1) * (width - 1), a);
   if (rand() < 0.7) barrel(kit, -width + 2, a0 + 8 + rand() * 20, true);
-  for (let i = 0; i < 3; i++) b.box(1.2, 0.15, 1.2, m.wood, kit.at((rand() - 0.5) * width, a0 + rand() * 30, 0.08));
+  // Pallets: slats on three runners.
+  for (let i = 0; i < 3; i++) {
+    const [px, py, pz] = kit.at((rand() - 0.5) * width, a0 + rand() * 30);
+    for (const o of [-0.5, 0, 0.5]) b.box(1.2, 0.09, 0.12, m.wood, [px, py + 0.045, pz + o]);
+    for (const o of [-0.5, -0.25, 0, 0.25, 0.5]) b.box(0.12, 0.025, 1.2, m.wood, [px + o, py + 0.1, pz]);
+  }
   if (pier) {
     const ship = buildShip();
     ship.name = "ship";

@@ -50,8 +50,11 @@ export function buildRifle(): GunModel {
   b.box(0.046, 0.046, 0.3, m.metal, [0, 0, -0.285], undefined, 0.006);
   rail(b, m, [0, 0.026, -0.285], 0.28);
   rail(b, m, [0, -0.026, -0.285], 0.28, [Math.PI, 0, 0]);
-  rail(b, m, [0.026, 0, -0.285], 0.28, [0, 0, -Math.PI / 2]);
-  rail(b, m, [-0.026, 0, -0.285], 0.28, [0, 0, Math.PI / 2]);
+  // Ribbed rail covers on the sides, where a hand would hold it.
+  for (const x of [-0.025, 0.025]) {
+    b.box(0.006, 0.03, 0.22, m.polymer, [x, 0, -0.26], undefined, 0.002);
+    for (let z = -0.36; z < -0.16; z += 0.025) b.box(0.008, 0.026, 0.006, m.polymer, [x * 1.08, 0, z]);
+  }
   b.tube(0.012, 0.09, m.polymer, [0.04, 0, -0.35], 16);
   b.tube(0.014, 0.02, m.polymer, [0.04, 0, -0.4], 16);
   b.tube(0.011, 0.003, m.glass, [0.04, 0, -0.411], 16);
