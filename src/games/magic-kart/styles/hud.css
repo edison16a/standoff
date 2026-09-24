@@ -8,6 +8,12 @@
   pointer-events: none;
 }
 
+.mk-hud--over .mk-view,
+.mk-hud--over .mk-overview {
+  opacity: 0;
+  transition: opacity 400ms ease;
+}
+
 .mk-hud__split {
   position: absolute;
   background: #0d0b1e;

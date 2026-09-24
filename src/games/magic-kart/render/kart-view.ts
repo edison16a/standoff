@@ -119,12 +119,16 @@ export class KartView {
   /**
    * Called before drawing each player's view. The viewer's own kart hides
    * its name tag, and a vanished kart is a faint shimmer to everyone but
-   * its driver, who still sees a ghost of it.
+   * its driver, who still sees a ghost of it. `eye` is where the view's
+   * camera is.
    */
-  setViewer(viewerKartId: number | null): void {
+  setViewer(viewerKartId: number | null, eye: THREE.Vector3): void {
     const own = viewerKartId === this.kartId;
-    this.tag.visible = !own && !this.ghost;
-    this.model.setOpacity(this.ghost ? (own ? 0.4 : 0.06) : 1);
+    // Another kart right in front of the camera would block the view of your own, so it turns see through.
+    const near = !own && viewerKartId !== null ? eye.distanceTo(this.model.root.position) : Infinity;
+    const inTheWay = near < 5.5;
+    this.tag.visible = !own && !this.ghost && near > 9;
+    this.model.setOpacity(this.ghost ? (own ? 0.4 : 0.06) : inTheWay ? Math.max(0.3, Math.min(0.75, 0.3 + (near - 2) * 0.13)) : 1);
     const hidden = this.ghost && !own;
     this.shadow.visible = this.shadowOn && !hidden;
     this.flag.visible = !hidden;

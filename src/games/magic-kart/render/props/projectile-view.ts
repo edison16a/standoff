@@ -38,6 +38,12 @@ export class ProjectileView {
     return g;
   }
 
+  /** Drops every throw on screen, for a new race. */
+  clear(): void {
+    for (const g of this.live.values()) this.group.remove(g);
+    this.live.clear();
+  }
+
   update(projectiles: readonly Projectile[], time: number): void {
     const seen = new Set<number>();
     for (const p of projectiles) {

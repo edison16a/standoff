@@ -96,6 +96,8 @@ export class GameRenderer {
     this.dynamic.add(this.cubes.group, this.obstacles.group, this.effects.group);
     this.chase = [];
     this.show.reset();
+    // Throw ids start again from 1 in every race, so last race's throws must not be mistaken for new ones.
+    this.projectiles.clear();
     this.world = world;
   }
 
@@ -160,7 +162,7 @@ export class GameRenderer {
         if (kart) this.show.follow(kart, time, cameraDt);
         camera = this.show.camera;
       }
-      for (const kv of this.karts.values()) kv.setViewer(view.kartId);
+      for (const kv of this.karts.values()) kv.setViewer(view.kartId, camera.position);
       this.effects?.setView(h * px, camera.fov);
       stage.follow(camera);
       this.renderer.render(stage.scene, camera);
