@@ -48,7 +48,10 @@ export class EventRouter {
       case "achievement":
         return this.toast({ id: this.nextId++, title: event.title, text: event.text, seat: event.seat });
       case "phase":
-        if (event.phase === "fight") this.banner(`Stage ${event.stage}`, stage(event.stage).title, "stage");
+        if (event.phase !== "fight") return;
+        this.banner(`Stage ${event.stage}`, stage(event.stage).title, "stage");
+        // Each note is for its own checkpoint. After the chopper there is none, so an old one must not come back.
+        useSurvivalStore.setState({ checkpoint: null });
         return;
       case "spawn":
         if (isBoss(event.kind)) this.banner(KINDS[event.kind].name, "Shoot the glowing joints", "boss");
