@@ -34,9 +34,9 @@ const FIRE = new THREE.Color(1, 0.45, 0.1);
  */
 export class Effects {
   readonly group = new THREE.Group();
-  private readonly sparks = new Particles(700, 0.09, true, 9);
-  private readonly goo = new Particles(600, 0.13, false, 7);
-  private readonly smoke = new Particles(500, 1.6, false, -1.2);
+  private readonly sparks: Particles;
+  private readonly goo: Particles;
+  private readonly smoke: Particles;
   private readonly tracers: Tracer[] = [];
   private readonly flashes: Flash[] = [];
   private readonly light = new THREE.PointLight(0xffc070, 0, 10, 1.6);
@@ -44,12 +44,16 @@ export class Effects {
   private lightFresh = false;
   private readonly tracerGeo = new THREE.CylinderGeometry(0.018, 0.018, 1, 6, 1, true).rotateX(Math.PI / 2);
 
-  constructor() {
+  /** `random` shapes every spray. The showcase seeds it, so its clip plays the same each time. */
+  constructor(private readonly random: () => number = Math.random) {
+    this.sparks = new Particles(700, 0.09, true, 9, random);
+    this.goo = new Particles(600, 0.13, false, 7, random);
+    this.smoke = new Particles(500, 1.6, false, -1.2, random);
     this.group.add(this.sparks.points, this.goo.points, this.smoke.points, this.light);
   }
 
   muzzle(at: THREE.Vector3, dir: THREE.Vector3, big: boolean): void {
-    const material = new THREE.SpriteMaterial({ map: flashTexture(), color: 0xffe0a0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false, rotation: Math.random() * Math.PI });
+    const material = new THREE.SpriteMaterial({ map: flashTexture(), color: 0xffe0a0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false, rotation: this.random() * Math.PI });
     const sprite = new THREE.Sprite(material);
     sprite.position.copy(at).addScaledVector(dir, 0.05);
     sprite.scale.setScalar(big ? 0.32 : 0.22);
@@ -100,7 +104,7 @@ export class Effects {
 
   private hitFlash(at: THREE.Vector3, kind: Impact, distance: number): void {
     const colour = kind === "flesh" ? 0x9dff6a : kind === "weak" ? 0xffc050 : 0xffd9a0;
-    const material = new THREE.SpriteMaterial({ map: flashTexture(), color: colour, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false, rotation: Math.random() * Math.PI });
+    const material = new THREE.SpriteMaterial({ map: flashTexture(), color: colour, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false, rotation: this.random() * Math.PI });
     const sprite = new THREE.Sprite(material);
     sprite.position.copy(at);
     sprite.scale.setScalar(Math.max(0.2, distance * (kind === "weak" ? 0.05 : 0.032)));

@@ -4,14 +4,16 @@ import type { ScreenPoint } from "@/games/kit/aim/aim-math";
 import { playerColor } from "@/games/kit/players";
 import type { Seat } from "@/platform/protocol";
 import type { GameEvent } from "../engine/events";
+import type { SurvivalGame } from "../engine/game";
 import { fightFrame, segmentAt } from "../engine/route";
 import { stage as stageSpec } from "../engine/stages";
 import type { Offset, PelletHit } from "../engine/shooting";
 import { isBoss } from "../engine/zombie-kinds";
-import type { SurvivalHost, SurvivalView } from "../host/survival-host";
+import type { SurvivalView } from "../host/survival-host";
 import { AimCaster, type CastResult } from "./aim-caster";
 import { Atmosphere } from "./atmosphere";
 import { lowQuality } from "./quality";
+import type { SceneSource, TargetPoint } from "./scene-source";
 import { CameraRig, sailed } from "./camera-rig";
 import { ChopperView } from "./chopper-view";
 import { Effects } from "./effects/effects";
@@ -24,18 +26,18 @@ import { ZombieLayer } from "./zombie-layer";
 
 /**
  * Draws the game: the city, the zombies, the team's guns and lasers and
- * every shot's effects, from the host session's state each frame. It is
- * also the session's raycaster, since only the picture knows exactly
- * where each zombie's head is right now.
+ * every shot's effects, from the source's state each frame. It is also
+ * the session's raycaster, since only the picture knows exactly where
+ * each zombie's head is right now.
  */
 export class SurvivalRenderer implements SurvivalView {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene = new THREE.Scene();
   private readonly camera = new THREE.PerspectiveCamera(56, 16 / 9, 0.05, 400);
-  private readonly rig = new CameraRig();
+  private readonly rig: CameraRig;
   private readonly world = new World();
   private readonly zombies = new ZombieLayer();
-  private readonly effects = new Effects();
+  private readonly effects: Effects;
   private readonly guns: FirstPerson;
   private readonly chopper: ChopperView;
   private readonly caster: AimCaster;
@@ -48,10 +50,14 @@ export class SurvivalRenderer implements SurvivalView {
   private shipBase: THREE.Vector3 | null = null;
   private lastSegment = 0;
 
+  /** `random` drives the shake and the sprays. The showcase seeds it, so its clip plays the same each time. */
   constructor(
     canvas: HTMLCanvasElement,
-    private readonly session: SurvivalHost,
+    private readonly source: SceneSource,
+    random: () => number = Math.random,
   ) {
+    this.rig = new CameraRig(random);
+    this.effects = new Effects(random);
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
@@ -79,7 +85,7 @@ export class SurvivalRenderer implements SurvivalView {
     const dt = this.last ? Math.min(0.1, (nowMs - this.last) / 1000) : 0;
     this.last = nowMs;
     const time = nowMs / 1000;
-    const game = this.session.game;
+    const game = this.source.game;
     this.rig.update(this.camera, game, dt, time);
     this.camera.updateMatrixWorld();
     const segment = game.phase === "lobby" ? 1 : segmentAt(game.distance).index;
@@ -111,7 +117,7 @@ export class SurvivalRenderer implements SurvivalView {
 
   cast(seat: Seat, point: ScreenPoint, offsets: readonly Offset[]): (PelletHit | null)[] {
     const targets = [...this.zombies.proxies(), ...this.world.solids()];
-    const results = offsets.map((offset) => this.caster.cast(point, offset, targets, (id) => this.session.game.encounter?.find(id)));
+    const results = offsets.map((offset) => this.caster.cast(point, offset, targets, (id) => this.source.game.encounter?.find(id)));
     this.pending.set(seat, results);
     return results.map((r) => r.hit);
   }
@@ -160,13 +166,13 @@ export class SurvivalRenderer implements SurvivalView {
     }
   }
 
-  /** For browser tests: every hit shape on screen, in the aim's clip space. */
-  debugTargets(): { zombie: number; part: string; weak: number | null; x: number; y: number; distance: number }[] {
+  /** Every hit shape on screen, in the aim's clip space. Browser tests and the showcase's players aim with it. */
+  targets(): TargetPoint[] {
     return this.zombies.proxies().map((proxy) => {
       const at = proxy.getWorldPosition(new THREE.Vector3());
       const distance = at.distanceTo(this.camera.position);
       at.project(this.camera);
-      const data = proxy.userData as { zombie: number; part: string; weak: number | null };
+      const data = proxy.userData as Pick<TargetPoint, "zombie" | "part" | "weak">;
       return { zombie: data.zombie, part: data.part, weak: data.weak, x: at.x, y: at.y, distance };
     });
   }
@@ -182,27 +188,22 @@ export class SurvivalRenderer implements SurvivalView {
     this.renderer.dispose();
   }
 
-  /** Every player with a gun: the squad in a run, or anyone who has picked one in the lobby. */
+  /** Every player with a gun, and where their laser lands. */
   private shooters(nowMs: number): Shooter[] {
-    const game = this.session.game;
-    const seats = game.running
-      ? game.squad.present().map((m) => ({ seat: m.seat, weapon: m.gun.weapon }))
-      : this.session.players.filter((p) => p.connected && this.session.lobby.get(p.seat).weapon).map((p) => ({ seat: p.seat, weapon: this.session.lobby.get(p.seat).weapon! }));
     const targets = [...this.zombies.proxies(), ...this.world.solids()];
-    return seats.map(({ seat, weapon }) => {
-      const point = this.session.aim.point(seat, nowMs);
+    return this.source.armed().map(({ seat, weapon }) => {
+      const point = this.source.aimAt(seat, nowMs);
       const aim = point ? this.caster.cast(point, { x: 0, y: 0 }, targets, () => undefined).point : null;
       return { seat, weapon, aim };
     });
   }
 
   /** The ship pulls away from the pier in the escape, carrying the team. */
-  private sailShip(game: SurvivalHost["game"]): void {
+  private sailShip(game: SurvivalGame): void {
     const ship = this.world.segment(26)?.group.getObjectByName("ship");
     if (!ship) return;
     this.shipBase ??= ship.position.clone();
-    const t = game.phase === "cutscene" && game.cutscene === "escape" ? game.phaseTime : game.phase === "escaped" ? 16 + game.phaseTime : 0;
     ship.position.copy(this.shipBase);
-    ship.position.x += sailed(t);
+    ship.position.x += sailed(game.phase === "escaped" ? 16 + game.phaseTime : game.cutscene === "escape" ? game.phaseTime : 0);
   }
 }

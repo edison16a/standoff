@@ -40,6 +40,9 @@ export class SurvivalGame {
   private stageHurt = false;
   private lowest = MAX_HEALTH;
 
+  /** `random` spreads each shot's bullets. The showcase seeds it, so its fights replay exactly. */
+  constructor(private readonly random: () => number = Math.random) {}
+
   get running(): boolean {
     return this.phase !== "lobby";
   }
@@ -79,7 +82,7 @@ export class SurvivalGame {
     }
     this.shotId += 1;
     this.emit({ type: "shot", seat, weapon: member.gun.weapon, shotId: this.shotId });
-    const events = resolveShot(member, this.encounter, cast, Math.random, this.phase === "fight");
+    const events = resolveShot(member, this.encounter, cast, this.random, this.phase === "fight");
     for (const event of events) this.emit(event);
     return true;
   }

@@ -46,6 +46,9 @@ export class CameraRig {
   private bob = 0;
   private started = false;
 
+  /** `random` drives the shake. The showcase seeds it, so its clip plays the same each time. */
+  constructor(private readonly random: () => number = Math.random) {}
+
   kick(amount: number): void {
     this.shake = Math.min(1, this.shake + amount);
   }
@@ -60,7 +63,8 @@ export class CameraRig {
     this.look.lerp(look, jump ? 1 : 1 - Math.exp(-dt * (game.phase === "cutscene" ? 7 : 4)));
     this.shake = Math.max(0, this.shake - dt * 2.2);
     const s = this.shake * this.shake * 0.18;
-    camera.position.set(this.pos.x + (Math.random() - 0.5) * s, this.pos.y + (Math.random() - 0.5) * s, this.pos.z + (Math.random() - 0.5) * s);
+    const r = this.random;
+    camera.position.set(this.pos.x + (r() - 0.5) * s, this.pos.y + (r() - 0.5) * s, this.pos.z + (r() - 0.5) * s);
     camera.lookAt(this.look);
   }
 

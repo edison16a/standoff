@@ -21,6 +21,7 @@ export class Particles {
     size: number,
     additive: boolean,
     private readonly gravity: number,
+    private readonly random: () => number,
   ) {
     this.positions = new Float32Array(capacity * 3);
     this.colours = new Float32Array(capacity * 3);
@@ -52,19 +53,19 @@ export class Particles {
     for (let n = 0; n < count; n++) {
       const i = this.next;
       this.next = (this.next + 1) % this.capacity;
-      const s = speed * (0.4 + Math.random() * 0.8);
+      const s = speed * (0.4 + this.random() * 0.8);
       this.positions.set([at.x, at.y, at.z], i * 3);
       this.velocity.set(
         [
-          (dir.x + (Math.random() - 0.5) * spread) * s,
-          (dir.y + (Math.random() - 0.3) * spread) * s,
-          (dir.z + (Math.random() - 0.5) * spread) * s,
+          (dir.x + (this.random() - 0.5) * spread) * s,
+          (dir.y + (this.random() - 0.3) * spread) * s,
+          (dir.z + (this.random() - 0.5) * spread) * s,
         ],
         i * 3,
       );
-      const shade = 0.7 + Math.random() * 0.3;
+      const shade = 0.7 + this.random() * 0.3;
       this.base.set([colour.r * shade, colour.g * shade, colour.b * shade], i * 3);
-      this.life[i] = this.maxLife[i] = life * (0.6 + Math.random() * 0.6);
+      this.life[i] = this.maxLife[i] = life * (0.6 + this.random() * 0.6);
     }
   }
 

@@ -38,7 +38,8 @@ export class Laser {
       mesh.quaternion.setFromUnitVectors(UP, dir);
       mesh.scale.set(width, length, width);
     }
-    const flicker = 0.9 + Math.sin(time * 40) * 0.05 + Math.random() * 0.05;
+    // Two fast waves out of step read as a buzz, and play the same every time.
+    const flicker = 0.92 + Math.sin(time * 40) * 0.05 + Math.sin(time * 97.3) * 0.03;
     const size = eye.distanceTo(to) * 0.03;
     this.dot.position.copy(to);
     this.dot.scale.setScalar(size * 1.6 * flicker);
