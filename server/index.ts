@@ -6,8 +6,8 @@ import next from "next";
 import { loadCertificate } from "./certificates";
 import { readConfig } from "./config";
 import { findLanAddress } from "./network";
-import { createBackend } from "../src/relay/create-backend";
-import { setLocalPhoneOrigin } from "../src/relay/route-context";
+import { createBackend } from "../src/platform/relay/create-backend";
+import { setLocalPhoneOrigin } from "../src/platform/relay/route-context";
 import { createSocketServer } from "./realtime/socket-server";
 
 /**

@@ -1,9 +1,11 @@
+import type { Slot } from "@/shared/players";
 import { AudioEngine } from "@/audio/audio-engine";
 import { Sfx } from "@/audio/sfx";
 import { MotionPipeline, type ControllerFrame } from "@/motion/motion-pipeline";
-import { SocketClient } from "@/net/socket-client";
+import { SocketClient } from "@/platform/net/socket-client";
 import type { CharacterId } from "@/shared/characters";
-import type { HostMessage, PhoneMessage, ServerEnvelope, StrikeAction } from "@/shared/protocol";
+import { hostMessageSchema, type HostMessage, type PhoneMessage, type StrikeAction } from "@/shared/protocol";
+import type { ServerEnvelope } from "@/platform/protocol";
 import { clampTuning, DEFAULT_TUNING } from "@/shared/tuning";
 import { useControllerStore as store } from "./controller-store";
 import { buzz, ScreenAwake } from "./device";
@@ -139,7 +141,7 @@ export class ControllerSession {
       case "phone:joined": {
         this.joinRetries = 0;
         writeToken(this.code, message.token);
-        store.setState({ stage: "playing", slot: message.slot, error: null, hostAway: !message.hostHere });
+        store.setState({ stage: "playing", slot: message.seat as Slot, error: null, hostAway: !message.hostHere });
         this.resendChoices();
         return;
       }
@@ -167,9 +169,11 @@ export class ControllerSession {
         store.setState({ hostAway: false });
         this.resendChoices();
         return;
-      case "host:message":
-        this.onHost(message.payload);
+      case "host:message": {
+        const parsed = hostMessageSchema.safeParse(message.payload);
+        if (parsed.success) this.onHost(parsed.data);
         return;
+      }
     }
   }
 

@@ -1,4 +1,4 @@
-import type { Slot } from "@/shared/players";
+import type { Seat } from "@/platform/protocol";
 
 /** How long a room waits for its host to come back after a reload. */
 export const HOST_GRACE_MS = 30_000;
@@ -23,18 +23,30 @@ export interface RoomRecord {
   code: string;
   hostToken: string;
   joinUrl: string;
+  /** Which game this room plays. The relay only passes it on. */
+  game: string;
   hostConn: string | null;
   hostAwaySince: number | null;
   closed: boolean;
-  seats: { 1: SeatRecord | null; 2: SeatRecord | null };
+  /** One entry per seat, seat 1 first. Its length is how many phones the room takes. */
+  seats: (SeatRecord | null)[];
 }
 
 export type SeatClaim =
-  | { ok: true; slot: Slot; token: string; rejoined: boolean; replaced: string | null }
+  | { ok: true; seat: Seat; token: string; rejoined: boolean; replaced: string | null }
   | { ok: false; reason: "full" | "closed" };
 
-export function newRoom(code: string, hostToken: string, joinUrl: string, hostConn: string): RoomRecord {
-  return { code, hostToken, joinUrl, hostConn, hostAwaySince: null, closed: false, seats: { 1: null, 2: null } };
+export interface NewRoom {
+  code: string;
+  hostToken: string;
+  joinUrl: string;
+  hostConn: string;
+  game: string;
+  seats: number;
+}
+
+export function newRoom({ seats, ...room }: NewRoom): RoomRecord {
+  return { ...room, hostAwaySince: null, closed: false, seats: Array.from({ length: seats }, () => null) };
 }
 
 /** True once the host has been gone longer than the grace period. */
@@ -66,30 +78,28 @@ export function claimSeat(
   now: number,
 ): { room: RoomRecord; claim: SeatClaim } {
   if (isDead(room, now)) return { room, claim: { ok: false, reason: "closed" } };
-  for (const slot of [1, 2] as const) {
-    const seat = room.seats[slot];
-    if (token && seat?.token === token) {
-      const next = withSeat(room, slot, { token, conn, awaySince: null });
-      return { room: next, claim: { ok: true, slot, token, rejoined: true, replaced: seat.conn } };
-    }
+  const known = token ? room.seats.findIndex((seat) => seat?.token === token) : -1;
+  if (token && known >= 0) {
+    const next = withSeat(room, known + 1, { token, conn, awaySince: null });
+    return { room: next, claim: { ok: true, seat: known + 1, token, rejoined: true, replaced: room.seats[known]!.conn } };
   }
-  const free = ([1, 2] as const).find((slot) => seatFree(room.seats[slot], now));
-  if (!free) return { room, claim: { ok: false, reason: "full" } };
-  const next = withSeat(room, free, { token: newToken, conn, awaySince: null });
-  return { room: next, claim: { ok: true, slot: free, token: newToken, rejoined: false, replaced: null } };
+  const free = room.seats.findIndex((seat) => seatFree(seat, now));
+  if (free < 0) return { room, claim: { ok: false, reason: "full" } };
+  const next = withSeat(room, free + 1, { token: newToken, conn, awaySince: null });
+  return { room: next, claim: { ok: true, seat: free + 1, token: newToken, rejoined: false, replaced: null } };
 }
 
 /** Marks a seat away, but only if this connection still holds it. */
-export function releaseSeat(room: RoomRecord, slot: Slot, conn: string, now: number): RoomRecord | null {
-  const seat = room.seats[slot];
-  if (!seat || seat.conn !== conn) return null;
-  return withSeat(room, slot, { ...seat, conn: null, awaySince: now });
+export function releaseSeat(room: RoomRecord, seat: Seat, conn: string, now: number): RoomRecord | null {
+  const held = room.seats[seat - 1];
+  if (!held || held.conn !== conn) return null;
+  return withSeat(room, seat, { ...held, conn: null, awaySince: now });
 }
 
 /** Empties a seat this connection holds, for a join whose token never reached the phone. */
-export function vacateSeat(room: RoomRecord, slot: Slot, conn: string): RoomRecord | null {
-  if (room.seats[slot]?.conn !== conn) return null;
-  return { ...room, seats: { ...room.seats, [slot]: null } };
+export function vacateSeat(room: RoomRecord, seat: Seat, conn: string): RoomRecord | null {
+  if (room.seats[seat - 1]?.conn !== conn) return null;
+  return withSeat(room, seat, null);
 }
 
 /** A reloaded host proves it owns the room with its token. */
@@ -109,10 +119,11 @@ export function releaseHost(room: RoomRecord, conn: string, now: number): RoomRe
   return { ...room, hostConn: null, hostAwaySince: now };
 }
 
-export function connectedSlots(room: RoomRecord): [boolean, boolean] {
-  return [Boolean(room.seats[1]?.conn), Boolean(room.seats[2]?.conn)];
+/** Which seats have a phone right now, seat 1 first. */
+export function connectedSeats(room: RoomRecord): boolean[] {
+  return room.seats.map((seat) => Boolean(seat?.conn));
 }
 
-function withSeat(room: RoomRecord, slot: Slot, seat: SeatRecord): RoomRecord {
-  return { ...room, seats: { ...room.seats, [slot]: seat } };
+function withSeat(room: RoomRecord, seat: Seat, record: SeatRecord | null): RoomRecord {
+  return { ...room, seats: room.seats.map((current, i) => (i === seat - 1 ? record : current)) };
 }

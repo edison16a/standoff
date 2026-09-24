@@ -19,10 +19,10 @@ export class HostWatch {
     private readonly bus: Bus,
   ) {}
 
-  start(code: string): void {
+  start(code: string, seats: number): void {
     this.stop();
     this.watching = code;
-    this.timer = setTimeout(() => void this.check(code), HOST_GRACE_MS + 1000);
+    this.timer = setTimeout(() => void this.check(code, seats), HOST_GRACE_MS + 1000);
   }
 
   stop(): void {
@@ -31,13 +31,13 @@ export class HostWatch {
     this.watching = null;
   }
 
-  private async check(code: string): Promise<void> {
+  private async check(code: string, seats: number): Promise<void> {
     try {
-      if (await this.ops.closeIfHostGone(code)) new RoomChannel(this.bus, code).toPhones({ type: "room:closed" });
+      if (await this.ops.closeIfHostGone(code)) new RoomChannel(this.bus, code, seats).toPhones({ type: "room:closed" });
     } catch (error) {
       // Look again later rather than leave the phones waiting on a host forever.
       logFailure("Host check failed", error);
-      if (this.watching === code) this.start(code);
+      if (this.watching === code) this.start(code, seats);
     }
   }
 }

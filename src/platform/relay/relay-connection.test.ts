@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ClientEnvelope, ServerEnvelope } from "@/shared/protocol";
+import type { ClientEnvelope, ServerEnvelope } from "@/platform/protocol";
 import type { Backend } from "./backend";
 import { MemoryBus } from "./memory/memory-bus";
 import { MemoryStore } from "./memory/memory-store";
@@ -53,7 +53,7 @@ function connect() {
 
 async function openRoom() {
   const host = connect();
-  await host.send({ type: "host:create" });
+  await host.send({ type: "host:create", game: "fencing", seats: 2 });
   const created = host.socket.last("room:created");
   return { host, code: created.code, token: created.token };
 }
@@ -77,8 +77,8 @@ describe("RelayConnection over the memory backend", () => {
     await a.send({ type: "phone:join", code });
     await b.send({ type: "phone:join", code });
     await c.send({ type: "phone:join", code });
-    expect(a.socket.last("phone:joined").slot).toBe(1);
-    expect(b.socket.last("phone:joined").slot).toBe(2);
+    expect(a.socket.last("phone:joined").seat).toBe(1);
+    expect(b.socket.last("phone:joined").seat).toBe(2);
     expect(c.socket.last("room:error").reason).toBe("full");
     expect(host.socket.inbox.filter((m) => m.type === "peer:joined")).toHaveLength(2);
   });
@@ -89,7 +89,7 @@ describe("RelayConnection over the memory backend", () => {
     await a.send({ type: "phone:join", code });
     await b.send({ type: "phone:join", code });
     await a.send({ type: "phone:send", payload: { kind: "strike", action: "jab" } });
-    expect(host.socket.last("peer:message")).toEqual({ type: "peer:message", slot: 1, payload: { kind: "strike", action: "jab" } });
+    expect(host.socket.last("peer:message")).toEqual({ type: "peer:message", seat: 1, payload: { kind: "strike", action: "jab" } });
     await host.send({ type: "host:send", to: 2, payload: { kind: "recenter" } });
     expect(b.socket.last("host:message").payload).toEqual({ kind: "recenter" });
     expect(a.socket.has("host:message")).toBe(false);
@@ -126,7 +126,7 @@ describe("RelayConnection over the memory backend", () => {
     const { token } = first.socket.last("phone:joined");
     const again = connect();
     await again.send({ type: "phone:join", code, token });
-    expect(again.socket.last("phone:joined").slot).toBe(1);
+    expect(again.socket.last("phone:joined").seat).toBe(1);
     expect(first.socket.closedWith).toBe(4000);
     expect(host.socket.last("peer:joined").rejoined).toBe(true);
     // The old socket closing afterwards must not mark the seat as away.
@@ -139,11 +139,11 @@ describe("RelayConnection over the memory backend", () => {
     const gone = connect();
     await gone.send({ type: "phone:join", code });
     await gone.drop();
-    expect(host.socket.last("peer:left").slot).toBe(1);
+    expect(host.socket.last("peer:left").seat).toBe(1);
     clock += SEAT_GRACE_MS + 1;
     const next = connect();
     await next.send({ type: "phone:join", code });
-    expect(next.socket.last("phone:joined").slot).toBe(1);
+    expect(next.socket.last("phone:joined").seat).toBe(1);
   });
 
   it("holds the room through a host reload", async () => {

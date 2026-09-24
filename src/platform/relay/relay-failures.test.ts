@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ClientEnvelope, ServerEnvelope } from "@/shared/protocol";
+import type { ClientEnvelope, ServerEnvelope } from "@/platform/protocol";
 import type { Backend } from "./backend";
 import { MemoryBus } from "./memory/memory-bus";
 import { MemoryStore } from "./memory/memory-store";
@@ -44,7 +44,7 @@ describe("relay failures and limits", () => {
     const store = new MemoryStore();
     const backend: Backend = { store, bus: new MemoryBus(), label: "test", shared: true };
     const host = connect(backend);
-    await host.send({ type: "host:create" });
+    await host.send({ type: "host:create", game: "fencing", seats: 2 });
     const code = host.socket.inbox.find((m) => m.type === "room:created")!.code;
 
     // The seat is claimed, then subscribing to its channel fails.
@@ -56,13 +56,13 @@ describe("relay failures and limits", () => {
 
     const retry = connect(backend);
     await retry.send({ type: "phone:join", code });
-    expect(retry.socket.inbox.find((m) => m.type === "phone:joined")?.slot).toBe(1);
+    expect(retry.socket.inbox.find((m) => m.type === "phone:joined")?.seat).toBe(1);
   });
 
   it("stops one address from creating room after room", async () => {
     const backend: Backend = { store: new MemoryStore(), bus: new MemoryBus(), label: "test", shared: true };
     const host = connect(backend);
-    for (let i = 0; i < 12; i++) await host.send({ type: "host:create" });
+    for (let i = 0; i < 12; i++) await host.send({ type: "host:create", game: "fencing", seats: 2 });
     expect(host.socket.inbox.filter((m) => m.type === "room:created")).toHaveLength(10);
     expect(host.socket.errors).toEqual(["unavailable", "unavailable"]);
   });

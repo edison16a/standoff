@@ -1,4 +1,4 @@
-import type { ClientEnvelope, ServerEnvelope } from "@/shared/protocol";
+import type { ClientEnvelope, ServerEnvelope } from "@/platform/protocol";
 import { forgetRoom, recallRoom, rememberRoom } from "./room-memory";
 
 /** Fresh sockets to try when resuming cannot find the room. */
@@ -13,7 +13,7 @@ export interface OpenedRoom {
   joinUrl: string;
   sharedRooms: boolean;
   /** Which seats already have a phone. Only known when resuming. */
-  connected: [boolean, boolean] | null;
+  connected: boolean[] | null;
 }
 
 export interface RoomKeeperEvents {
@@ -46,12 +46,12 @@ export class RoomKeeper {
   announce(send: Send): void {
     const saved = recallRoom();
     if (saved) send({ type: "host:resume", code: saved.code, token: saved.token });
-    else if (this.wanted) send({ type: "host:create" });
+    else if (this.wanted) send({ type: "host:create", game: "fencing", seats: 2 });
   }
 
   create(send: Send): void {
     this.wanted = true;
-    send({ type: "host:create" });
+    send({ type: "host:create", game: "fencing", seats: 2 });
   }
 
   close(send: Send): void {

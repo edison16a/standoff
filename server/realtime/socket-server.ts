@@ -1,9 +1,9 @@
 import type { IncomingMessage } from "node:http";
 import type { Duplex } from "node:stream";
 import { WebSocketServer } from "ws";
-import { MAX_FRAME_BYTES, attachSocket } from "../../src/relay/attach-socket";
-import type { RelayContext } from "../../src/relay/relay-connection";
-import { SOCKET_PATH } from "../../src/shared/protocol";
+import { MAX_FRAME_BYTES, attachSocket } from "../../src/platform/relay/attach-socket";
+import type { RelayContext } from "../../src/platform/relay/relay-connection";
+import { SOCKET_PATH } from "../../src/platform/protocol";
 
 /**
  * Accepts WebSocket upgrades on the game socket path and hands each one to

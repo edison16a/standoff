@@ -1,4 +1,4 @@
-import { clientEnvelopeSchema, type ClientEnvelope } from "@/shared/protocol";
+import { clientEnvelopeSchema, type ClientEnvelope } from "@/platform/protocol";
 
 /** Motion frames are tiny. Anything this big is not from our client. */
 export const MAX_FRAME_BYTES = 16 * 1024;

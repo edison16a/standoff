@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { SocketStatus } from "@/net/socket-client";
+import type { SocketStatus } from "@/platform/net/socket-client";
 import type { PerSlot, Slot } from "@/shared/players";
 import type { MatchPhase } from "@/shared/protocol";
 import { DEFAULT_TUNING, type Tuning } from "@/shared/tuning";

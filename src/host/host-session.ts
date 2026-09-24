@@ -1,7 +1,8 @@
 import type { StageFrame } from "@/game/frames";
-import { SocketClient, type SocketStatus } from "@/net/socket-client";
+import { SocketClient, type SocketStatus } from "@/platform/net/socket-client";
 import type { Slot } from "@/shared/players";
-import type { ServerEnvelope } from "@/shared/protocol";
+import type { ServerEnvelope } from "@/platform/protocol";
+import { phoneMessageSchema } from "@/shared/protocol";
 import { clampTuning, type Tuning } from "@/shared/tuning";
 import { buildControllerState } from "./controller-state";
 import { HostAudio } from "./host-audio";
@@ -152,11 +153,14 @@ export class HostSession {
         this.room.handle(message);
         return;
       case "peer:joined":
-        return this.desk.joined(message.slot, message.rejoined);
+        return this.desk.joined(message.seat as Slot, message.rejoined);
       case "peer:left":
-        return this.desk.left(message.slot);
-      case "peer:message":
-        return this.desk.message(message.slot, message.payload);
+        return this.desk.left(message.seat as Slot);
+      case "peer:message": {
+        const parsed = phoneMessageSchema.safeParse(message.payload);
+        if (parsed.success) this.desk.message(message.seat as Slot, parsed.data);
+        return;
+      }
     }
   }
 

@@ -2,7 +2,7 @@ import { createServer, type IncomingMessage, type Server } from "node:http";
 import { connect, type AddressInfo, type Socket } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { WebSocket } from "ws";
-import type { ServerEnvelope } from "@/shared/protocol";
+import type { ServerEnvelope } from "@/platform/protocol";
 import { GET } from "./route";
 
 /**
@@ -67,13 +67,13 @@ describe("the Vercel WebSocket route", () => {
   it("hosts a room and relays between host and phone", async () => {
     const host = await open();
     // Sent straight after open, which is exactly what must not be lost.
-    host.send({ type: "host:create" });
+    host.send({ type: "host:create", game: "fencing", seats: 2 });
     const created = await host.waitFor("room:created");
     expect(created.joinUrl).toBe(`https://${origin}/join/${created.code}`);
 
     const phone = await open();
     phone.send({ type: "phone:join", code: created.code });
-    expect((await phone.waitFor("phone:joined")).slot).toBe(1);
+    expect((await phone.waitFor("phone:joined")).seat).toBe(1);
     phone.send({ type: "phone:send", payload: { kind: "strike", action: "jab" } });
     expect((await host.waitFor("peer:message")).payload).toEqual({ kind: "strike", action: "jab" });
     expect(kept.length).toBeGreaterThanOrEqual(2);

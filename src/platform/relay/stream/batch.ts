@@ -1,4 +1,4 @@
-import type { ClientEnvelope } from "@/shared/protocol";
+import type { ClientEnvelope } from "@/platform/protocol";
 import type { Bus } from "../backend";
 import { channels } from "../channels";
 import { parseEnvelope } from "../parse-envelope";

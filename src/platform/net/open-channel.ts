@@ -1,4 +1,4 @@
-import { SOCKET_PATH } from "@/shared/protocol";
+import { SOCKET_PATH } from "@/platform/protocol";
 import { StreamChannel } from "./stream-channel";
 
 /** A WebSocket, or the HTTP stream that stands in for one. */

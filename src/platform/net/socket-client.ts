@@ -1,4 +1,4 @@
-import type { ClientEnvelope, ServerEnvelope } from "@/shared/protocol";
+import type { ClientEnvelope, ServerEnvelope } from "@/platform/protocol";
 import { Handover } from "./handover";
 import { OPEN, openChannel, streamRequested, type Channel } from "./open-channel";
 import type { SocketHandlers } from "./socket-types";

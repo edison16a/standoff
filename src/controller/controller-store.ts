@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { SocketStatus } from "@/net/socket-client";
+import type { SocketStatus } from "@/platform/net/socket-client";
 import type { CharacterId } from "@/shared/characters";
 import type { Slot } from "@/shared/players";
 import type { ControllerState } from "@/shared/protocol";

@@ -1,4 +1,4 @@
-import type { SocketClient } from "@/net/socket-client";
+import type { SocketClient } from "@/platform/net/socket-client";
 import type { Slot } from "@/shared/players";
 import type { ControllerState, HostMessage } from "@/shared/protocol";
 

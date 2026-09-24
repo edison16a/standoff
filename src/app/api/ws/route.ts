@@ -1,8 +1,8 @@
 import { getDeadline, waitUntil } from "@vercel/functions";
-import { MAX_FRAME_BYTES, attachSocket } from "@/relay/attach-socket";
-import { createBackend, deferredBackend } from "@/relay/create-backend";
-import { routeContext } from "@/relay/route-context";
-import { upgradeOnVercel } from "@/relay/vercel-upgrade";
+import { MAX_FRAME_BYTES, attachSocket } from "@/platform/relay/attach-socket";
+import { createBackend, deferredBackend } from "@/platform/relay/create-backend";
+import { routeContext } from "@/platform/relay/route-context";
+import { upgradeOnVercel } from "@/platform/relay/vercel-upgrade";
 
 /**
  * The game socket on Vercel. The local server answers this same path

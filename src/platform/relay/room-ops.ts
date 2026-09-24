@@ -1,4 +1,4 @@
-import type { Slot } from "@/shared/players";
+import type { Seat } from "@/platform/protocol";
 import type { RoomStore } from "./backend";
 import { logFailure } from "./log";
 import { makeRoomCode, makeToken } from "./room-code";
@@ -25,10 +25,15 @@ export class RoomOps {
   ) {}
 
   /** Makes a room with a fresh code. Null if no free code turned up. */
-  async create(conn: string, joinUrlFor: (code: string) => string): Promise<rules.RoomRecord | null> {
+  async create(
+    conn: string,
+    joinUrlFor: (code: string) => string,
+    game: string,
+    seats: number,
+  ): Promise<rules.RoomRecord | null> {
     for (let attempt = 0; attempt < CODE_ATTEMPTS; attempt++) {
       const code = makeRoomCode();
-      const room = rules.newRoom(code, makeToken(), joinUrlFor(code), conn);
+      const room = rules.newRoom({ code, hostToken: makeToken(), joinUrl: joinUrlFor(code), hostConn: conn, game, seats });
       if (await this.store.create(room)) return room;
     }
     return null;
@@ -57,7 +62,10 @@ export class RoomOps {
     const newToken = makeToken();
     return this.store.update(code, (room) => {
       const { room: next, claim } = rules.claimSeat(room, token, conn, newToken, now);
-      return { room: claim.ok ? next : null, result: { claim, hostHere: room.hostConn !== null } };
+      return {
+        room: claim.ok ? next : null,
+        result: { claim, hostHere: room.hostConn !== null, game: room.game, seats: room.seats.length },
+      };
     });
   }
 
@@ -67,13 +75,13 @@ export class RoomOps {
   }
 
   /** True if this connection held the seat and it is now marked away. */
-  releaseSeat(code: string, slot: Slot, conn: string): Promise<boolean> {
-    return this.release(code, (room, now) => rules.releaseSeat(room, slot, conn, now));
+  releaseSeat(code: string, seat: Seat, conn: string): Promise<boolean> {
+    return this.release(code, (room, now) => rules.releaseSeat(room, seat, conn, now));
   }
 
   /** True if this connection held the seat and it is now empty. */
-  vacateSeat(code: string, slot: Slot, conn: string): Promise<boolean> {
-    return this.release(code, (room) => rules.vacateSeat(room, slot, conn));
+  vacateSeat(code: string, seat: Seat, conn: string): Promise<boolean> {
+    return this.release(code, (room) => rules.vacateSeat(room, seat, conn));
   }
 
   /** Closes the room if `conn` is its host. True if it did. */

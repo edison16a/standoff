@@ -1,10 +1,9 @@
-import type { Slot } from "@/shared/players";
-import type { ServerEnvelope } from "@/shared/protocol";
+import type { Seat, ServerEnvelope } from "@/platform/protocol";
 
 /** Channel names on the bus. Everything for one room shares a prefix. */
 export const channels = {
   host: (code: string) => `standoff:room:${code}:host`,
-  seat: (code: string, slot: Slot) => `standoff:room:${code}:seat:${slot}`,
+  seat: (code: string, seat: Seat) => `standoff:room:${code}:seat:${seat}`,
   /** What an HTTP fallback client posted, on its way to whichever instance holds its stream. */
   inbox: (conn: string) => `standoff:conn:${conn}:in`,
 };

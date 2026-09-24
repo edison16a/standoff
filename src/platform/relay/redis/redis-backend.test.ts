@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import type { ServerEnvelope } from "@/shared/protocol";
+import type { ServerEnvelope } from "@/platform/protocol";
 import type { Backend } from "../backend";
 import { RelayConnection } from "../relay-connection";
 import { createRedisBackend } from "./redis-backend";
@@ -51,15 +51,15 @@ describe.skipIf(!url)("Relay over Redis across two instances", () => {
 
   it("joins, relays and reclaims seats across instances", async () => {
     const host = connect(instanceA);
-    host.connection.receive({ type: "host:create" });
+    host.connection.receive({ type: "host:create", game: "fencing", seats: 2 });
     const { code } = await host.socket.waitFor("room:created");
 
     const p1 = connect(instanceB);
     const p2 = connect(instanceA);
     p1.connection.receive({ type: "phone:join", code });
-    const { slot: s1, token } = await p1.socket.waitFor("phone:joined");
+    const { seat: s1, token } = await p1.socket.waitFor("phone:joined");
     p2.connection.receive({ type: "phone:join", code });
-    const { slot: s2 } = await p2.socket.waitFor("phone:joined");
+    const { seat: s2 } = await p2.socket.waitFor("phone:joined");
     expect([s1, s2]).toEqual([1, 2]);
 
     p1.connection.receive({ type: "phone:send", payload: { kind: "strike", action: "parry" } });
@@ -71,7 +71,7 @@ describe.skipIf(!url)("Relay over Redis across two instances", () => {
     // The same phone reloads and lands on the other instance.
     const again = connect(instanceA);
     again.connection.receive({ type: "phone:join", code, token });
-    expect((await again.socket.waitFor("phone:joined")).slot).toBe(1);
+    expect((await again.socket.waitFor("phone:joined")).seat).toBe(1);
     for (let i = 0; i < 50 && p1.socket.closedWith === null; i++) await new Promise((r) => setTimeout(r, 20));
     expect(p1.socket.closedWith).toBe(4000);
 

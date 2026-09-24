@@ -18,7 +18,7 @@ describe.skipIf(!url)("RedisStore", () => {
 
   it("keeps a room whose host has left for about a minute, not hours", async () => {
     const store = new RedisStore(redis);
-    await store.create(newRoom("TTLA", "token", "https://x/join/TTLA", "conn"));
+    await store.create(newRoom({ code: "TTLA", hostToken: "token", joinUrl: "https://x/join/TTLA", hostConn: "conn", game: "fencing", seats: 2 }));
     expect(await redis.ttl("standoff:room:TTLA")).toBeGreaterThan(60 * 60);
     await store.update("TTLA", (room) => ({ room: releaseHost(room, "conn", Date.now()), result: true }));
     expect(await redis.ttl("standoff:room:TTLA")).toBeLessThanOrEqual(60);
@@ -26,12 +26,12 @@ describe.skipIf(!url)("RedisStore", () => {
 
   it("refuses to write once another instance has taken the lock", async () => {
     const store = new RedisStore(redis);
-    await store.create(newRoom("LOCK", "token", "https://x/join/LOCK", "first"));
+    await store.create(newRoom({ code: "LOCK", hostToken: "token", joinUrl: "https://x/join/LOCK", hostConn: "first", game: "fencing", seats: 2 }));
     // Stands in for a stall long enough for the lock to expire and pass
     // to another instance between our read and our write.
     const change = () => {
       void redis.set("standoff:lock:LOCK", "someone-else");
-      return { room: { ...newRoom("LOCK", "token", "https://x/join/LOCK", "stale") }, result: true };
+      return { room: { ...newRoom({ code: "LOCK", hostToken: "token", joinUrl: "https://x/join/LOCK", hostConn: "stale", game: "fencing", seats: 2 }) }, result: true };
     };
     await expect(store.update("LOCK", change)).rejects.toThrow(/Lost the lock/);
     expect((await store.get("LOCK"))?.hostConn).toBe("first");

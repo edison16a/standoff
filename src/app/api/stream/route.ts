@@ -1,8 +1,8 @@
 import { getDeadline } from "@vercel/functions";
-import { createBackend } from "@/relay/create-backend";
-import { routeContext } from "@/relay/route-context";
-import { deliverBatch, MAX_BATCH_BYTES } from "@/relay/stream/batch";
-import { openEventStream } from "@/relay/stream/event-stream";
+import { createBackend } from "@/platform/relay/create-backend";
+import { routeContext } from "@/platform/relay/route-context";
+import { deliverBatch, MAX_BATCH_BYTES } from "@/platform/relay/stream/batch";
+import { openEventStream } from "@/platform/relay/stream/event-stream";
 
 /**
  * The HTTP fallback for clients whose WebSocket will not open. Chrome and

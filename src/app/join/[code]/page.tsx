@@ -1,5 +1,5 @@
 import { ControllerEntry } from "@/controller/components/ControllerEntry";
-import { ROOM_CODE_ALPHABET, ROOM_CODE_LENGTH } from "@/shared/protocol";
+import { ROOM_CODE_ALPHABET, ROOM_CODE_LENGTH } from "@/platform/protocol";
 import { notFound } from "next/navigation";
 
 const CODE_PATTERN = new RegExp(`^[${ROOM_CODE_ALPHABET}]{${ROOM_CODE_LENGTH}}$`);

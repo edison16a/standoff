@@ -1,11 +1,12 @@
-import type { Slot } from "@/shared/players";
+import type { Seat } from "@/platform/protocol";
 import type { Bus } from "./backend";
 import { channels } from "./channels";
 import { logFailure } from "./log";
 import { RoomChannel } from "./room-channel";
 import type { RoomOps } from "./room-ops";
 
-export type Role = { kind: "host"; code: string } | { kind: "phone"; code: string; slot: Slot };
+/** `seats` is how many the room has, which messages to every phone need. */
+export type Role = { kind: "host"; code: string; seats: number } | { kind: "phone"; code: string; seats: number; seat: Seat };
 
 /**
  * The place one connection holds in a room, host or seat, along with its
@@ -24,7 +25,7 @@ export class Membership {
 
   async take(role: Role): Promise<void> {
     this.role = role;
-    const channel = role.kind === "host" ? channels.host(role.code) : channels.seat(role.code, role.slot);
+    const channel = role.kind === "host" ? channels.host(role.code) : channels.seat(role.code, role.seat);
     this.unsubscribe = await this.bus.subscribe(channel, this.onBus);
   }
 
@@ -47,8 +48,8 @@ export class Membership {
     const role = this.role;
     if (role?.kind !== "phone") return this.leave();
     await this.forget();
-    if (await this.ops.vacateSeat(role.code, role.slot, this.conn)) {
-      new RoomChannel(this.bus, role.code).toHost({ type: "peer:left", slot: role.slot });
+    if (await this.ops.vacateSeat(role.code, role.seat, this.conn)) {
+      new RoomChannel(this.bus, role.code, role.seats).toHost({ type: "peer:left", seat: role.seat });
     }
   }
 
@@ -57,10 +58,10 @@ export class Membership {
     const role = this.role;
     await this.forget();
     if (role?.kind === "host" && (await this.ops.releaseHost(role.code, this.conn))) {
-      new RoomChannel(this.bus, role.code).toPhones({ type: "host:away" });
+      new RoomChannel(this.bus, role.code, role.seats).toPhones({ type: "host:away" });
     }
-    if (role?.kind === "phone" && (await this.ops.releaseSeat(role.code, role.slot, this.conn))) {
-      new RoomChannel(this.bus, role.code).toHost({ type: "peer:left", slot: role.slot });
+    if (role?.kind === "phone" && (await this.ops.releaseSeat(role.code, role.seat, this.conn))) {
+      new RoomChannel(this.bus, role.code, role.seats).toHost({ type: "peer:left", seat: role.seat });
     }
   }
 }

@@ -1,4 +1,4 @@
-import { STREAM_PATH } from "@/shared/protocol";
+import { STREAM_PATH } from "@/platform/protocol";
 
 const CONNECTING = 0;
 const OPEN = 1;

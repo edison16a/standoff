@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ClientEnvelope, ServerEnvelope } from "@/shared/protocol";
+import type { ClientEnvelope, ServerEnvelope } from "@/platform/protocol";
 import { GET, POST } from "./route";
 
 const ORIGIN = "https://standoff.example";
@@ -57,7 +57,7 @@ function postRaw(stream: string, body: string) {
 describe("the HTTP stream fallback route", () => {
   it("hosts a room and relays between host and phone", async () => {
     const host = await openStream();
-    expect((await host.post([{ type: "host:create" }])).status).toBe(204);
+    expect((await host.post([{ type: "host:create", game: "fencing", seats: 2 }])).status).toBe(204);
     const created = await host.message("room:created");
     expect(created.joinUrl).toBe(`${ORIGIN}/join/${created.code}`);
 
@@ -66,7 +66,7 @@ describe("the HTTP stream fallback route", () => {
       { type: "phone:join", code: created.code },
       { type: "phone:send", payload: { kind: "strike", action: "jab" } },
     ]);
-    expect((await phone.message("phone:joined")).slot).toBe(1);
+    expect((await phone.message("phone:joined")).seat).toBe(1);
     expect((await host.message("peer:message")).payload).toEqual({ kind: "strike", action: "jab" });
     host.close();
     phone.close();
@@ -76,7 +76,7 @@ describe("the HTTP stream fallback route", () => {
     const stream = await openStream();
     stream.close();
     await new Promise((resolve) => setTimeout(resolve, 20));
-    expect((await stream.post([{ type: "host:create" }])).status).toBe(410);
+    expect((await stream.post([{ type: "host:create", game: "fencing", seats: 2 }])).status).toBe(410);
   });
 
   it("refuses posts that are not a batch for a real stream id", async () => {

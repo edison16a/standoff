@@ -1,4 +1,4 @@
-import type { ClientEnvelope, ServerEnvelope } from "@/shared/protocol";
+import type { ClientEnvelope, ServerEnvelope } from "@/platform/protocol";
 
 export type SocketStatus = "connecting" | "open" | "reconnecting" | "unreachable" | "replaced" | "closed";
 
