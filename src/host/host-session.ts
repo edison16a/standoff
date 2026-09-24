@@ -6,7 +6,9 @@ import type { ClientEnvelope, HostMessage, PhoneMessage, ServerEnvelope } from "
 import { clampTuning, type Tuning } from "@/shared/tuning";
 import { buildControllerState } from "./controller-state";
 import { sameHud, useHostStore } from "./host-store";
+import type { StageFrame } from "@/game/frames";
 import { Lobby } from "./lobby";
+import { lobbyScene } from "./lobby-scene";
 import { MatchDriver } from "./match-driver";
 import { forgetRoom, recallRoom, rememberRoom } from "./room-memory";
 
@@ -83,7 +85,12 @@ export class HostSession {
     this.send("all", { kind: "tuning", tuning });
   }
 
-  /** Called every animation frame while the match screen is up. */
+  /** What the stage should draw right now: the match, or the lobby line up. */
+  scene(wallNow: number): StageFrame {
+    return this.driver ? this.driver.engine.scene() : lobbyScene(this.lobby.seats, wallNow);
+  }
+
+  /** Called every animation frame while the stage is up. */
   tick(wallNow: number): void {
     if (!this.driver) return;
     this.driver.tick(wallNow);
