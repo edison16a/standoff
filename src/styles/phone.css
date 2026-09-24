@@ -86,9 +86,8 @@
 
 .phone-hero__mark svg {
   display: block;
-  width: 72px;
-  height: 72px;
-  color: var(--accent);
+  width: 112px;
+  height: auto;
 }
 
 .phone-title {

@@ -102,10 +102,10 @@
   letter-spacing: -0.01em;
 }
 
+/* The mark is wider than tall, so only its height is set. */
 .brand svg {
-  width: 26px;
-  height: 26px;
-  color: var(--accent);
+  width: auto;
+  height: 24px;
 }
 
 /* Cards and small bits */

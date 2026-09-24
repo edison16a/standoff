@@ -1,20 +1,27 @@
 import { SITE } from "@/platform/site";
 
 /**
- * One broad sword, point up, as a flat accent silhouette. The fuller down
- * the blade is cut out of the blade shape (even-odd fill), so the mark
- * stays one colour at any size, favicon included. The hilt is a separate
- * shape because its overlapping pieces must fill normally.
+ * Three rounded triangles in blue, pink and purple, each one overlapping
+ * the last like a play button moving forward. The round corners come
+ * from a thick stroke in the same colour with round joins, so the paths
+ * stay three plain points each.
  */
-export const SWORD_BLADE = "M16 1 20.8 5.8V19.6H11.2V5.8ZM15.25 7.4V17.2H16.75V7.4Z";
-export const SWORD_HILT =
-  "M6.2 19.6H25.8A1.9 1.9 0 0 1 27.7 21.5V21.9A1.9 1.9 0 0 1 25.8 23.8H6.2A1.9 1.9 0 0 1 4.3 21.9V21.5A1.9 1.9 0 0 1 6.2 19.6ZM13.8 23.5H18.2V27.2H13.8ZM16 25.6A2.75 2.75 0 1 1 16 31.1A2.75 2.75 0 1 1 16 25.6Z";
+export const MARK_SHAPES = [
+  { colour: "#2d8cff", path: "M85 317 159 789 590 476Z" },
+  { colour: "#f5145f", path: "M288 299 362 775 796 462Z" },
+  { colour: "#a855f7", path: "M500 299 574 775 1008 462Z" },
+] as const;
+
+/** The mark's outer edge, stroke included, so it sits flush in its box. */
+export const MARK_VIEWBOX = "44 258 1004 575";
+export const MARK_STROKE = 68;
 
 export function StandoffMark() {
   return (
-    <svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
-      <path d={SWORD_BLADE} fillRule="evenodd" />
-      <path d={SWORD_HILT} />
+    <svg viewBox={MARK_VIEWBOX} strokeWidth={MARK_STROKE} strokeLinejoin="round" aria-hidden="true">
+      {MARK_SHAPES.map((shape) => (
+        <path key={shape.colour} d={shape.path} fill={shape.colour} stroke={shape.colour} />
+      ))}
     </svg>
   );
 }
