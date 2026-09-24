@@ -9,8 +9,12 @@ import { Tools } from "./host/components/Tools";
 import { FencingPhone } from "./phone/fencing-phone";
 import { PhoneScreen } from "./phone/components/PhoneScreen";
 import { ControllerContext } from "./phone/components/session-context";
+import { Showcase } from "./showcase/Showcase";
 import "./styles/stage.css";
 import "./styles/phone.css";
+import "./styles/phone-setup.css";
+import "./styles/phone-practice.css";
+import "./styles/showcase.css";
 
 /**
  * Fencing, as the platform sees it. Each room gets one session, and every
@@ -41,4 +45,6 @@ export const game: GameModule = {
     }
     return { Screen, dispose: () => session.dispose() };
   },
+
+  Showcase,
 };

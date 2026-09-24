@@ -1,6 +1,7 @@
 import { Sfx } from "@/games/fencing/audio/sfx";
 import type { CharacterId } from "@/games/fencing/characters";
 import { MotionPipeline, type ControllerFrame } from "@/games/fencing/motion/motion-pipeline";
+import type { Sensitivity, StrikeReport } from "@/games/fencing/motion/strike-detector";
 import type { Slot } from "@/games/fencing/players";
 import { hostMessageSchema, type HostMessage, type PhoneMessage, type StrikeAction } from "@/games/fencing/protocol";
 import { clampTuning, DEFAULT_TUNING } from "@/games/fencing/tuning";
@@ -8,32 +9,41 @@ import type { PhoneRoomApi, PhoneRoomEvent } from "@/platform/games/game-api";
 import { useControllerStore as store } from "./controller-store";
 import { buzz } from "./haptics";
 import { MotionStream } from "./motion-stream";
+import { LISTEN_LEVEL } from "./practice";
 import { subscribeSensors } from "./sensors";
+import { loadSensitivity, saveSensitivity } from "./sensitivity-memory";
 
 /** Phases where the host is drawing this fencer and wants the live reading. */
 const STREAMING = new Set(["enGarde", "live", "halt", "paused"]);
 /** The sword held level, for devices with no motion sensors. */
 const LEVEL = { pitch: 0, yaw: 0, roll: 0 };
 
+type StrikeListener = (action: StrikeAction, report: StrikeReport | null) => void;
+
 /**
  * Fencing on the phone. It reads the sensors, turns them into sword angles
  * and strikes, adds the footwork buttons, and streams them to the host. It
  * makes no game decisions of its own: whether a jab landed is always the
- * host's call. Joining the room and staying in it is the platform's job.
+ * host's call. But every strike it reads is shown and felt at once, and the
+ * host's verdict follows. Joining the room and staying in it is the
+ * platform's job.
  */
 export class FencingPhone {
   readonly pipeline: MotionPipeline;
-  private readonly sfx: Sfx;
+  readonly sfx: Sfx;
   private readonly motion: MotionStream;
   private readonly stopSensors: (() => void) | null;
   private readonly unsubscribe: () => void;
+  private readonly strikeListeners = new Set<StrikeListener>();
   /** Footwork from the Forward and Back buttons: 1, -1 or 0. */
   private move = 0;
+  private practising = false;
 
   constructor(private readonly room: PhoneRoomApi) {
-    store.setState({ ...store.getInitialState(), slot: room.seat as Slot });
+    store.setState({ ...store.getInitialState(), slot: room.seat as Slot, sensitivity: loadSensitivity() });
     this.sfx = new Sfx(room.audio);
     this.pipeline = new MotionPipeline(DEFAULT_TUNING, (action) => this.onStrike(action));
+    this.applySensitivity();
     this.motion = new MotionStream(
       () => this.frame,
       (frame) => room.sendLossy({ kind: "motion", ...frame }),
@@ -62,7 +72,8 @@ export class FencingPhone {
     const ok = this.pipeline.calibrate();
     if (ok) {
       store.setState({ calibrated: true });
-      this.sfx.click();
+      buzz("captured");
+      this.sfx.chime();
     }
     return ok;
   }
@@ -70,6 +81,30 @@ export class FencingPhone {
   /** No sensors: play with on screen buttons. */
   useTouchControls(): void {
     store.setState({ inputMode: "touch", calibrated: true });
+  }
+
+  /** Hears every strike this phone reads, for the practice step. Returns an unsubscribe. */
+  onLocalStrike(listener: StrikeListener): () => void {
+    this.strikeListeners.add(listener);
+    return () => this.strikeListeners.delete(listener);
+  }
+
+  /** While practising, the detector listens for gentler strikes and nothing is sent to the host. */
+  setPractising(on: boolean): void {
+    this.practising = on;
+    this.applySensitivity();
+  }
+
+  /** The player's own strike levels, kept on this phone for next time. */
+  setSensitivity(sensitivity: Sensitivity | null): void {
+    store.setState({ sensitivity });
+    saveSensitivity(sensitivity);
+    this.applySensitivity();
+  }
+
+  /** A finger touched or left the screen: its jolt is not a strike. */
+  noteTap(): void {
+    this.pipeline.noteTap(performance.now());
   }
 
   pick(characterId: CharacterId): void {
@@ -100,6 +135,11 @@ export class FencingPhone {
     this.onStrike(action);
   }
 
+  private applySensitivity(): void {
+    const own = store.getState().sensitivity ?? { jab: 1, parry: 1 };
+    this.pipeline.setSensitivity(this.practising ? { jab: LISTEN_LEVEL, parry: LISTEN_LEVEL } : own);
+  }
+
   private onRoom(event: PhoneRoomEvent): void {
     if (event.type === "rejoined") return this.resendChoices();
     const parsed = hostMessageSchema.safeParse(event.payload);
@@ -123,6 +163,7 @@ export class FencingPhone {
         return;
       case "feedback":
         buzz(message.event);
+        store.setState({ verdict: { event: message.event, reason: message.reason, at: performance.now() } });
         return;
     }
   }
@@ -135,7 +176,13 @@ export class FencingPhone {
   }
 
   private onStrike(action: StrikeAction): void {
+    const report = this.pipeline.lastStrike;
+    for (const listener of this.strikeListeners) listener(action, report);
+    if (this.practising) return;
     if (store.getState().game?.phase !== "live") return;
+    // Felt and shown the instant it is read; the referee's verdict follows from the host.
+    buzz(action);
+    store.setState({ detected: { action, at: performance.now() }, verdict: null });
     this.send({ kind: "strike", action });
   }
 

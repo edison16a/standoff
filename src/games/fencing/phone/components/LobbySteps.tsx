@@ -1,56 +1,95 @@
 "use client";
 import { useState } from "react";
-import { Icon } from "@/components/ui/Icon";
-import { FencerCanvas } from "@/games/fencing/components/FencerCanvas";
-import { CHARACTERS } from "@/games/fencing/characters";
 import type { Slot } from "@/games/fencing/players";
+import type { PracticeStage } from "@/games/fencing/phone/practice";
 import { StepShell } from "@/games/kit/steps/StepShell";
 import { useControllerStore } from "../controller-store";
-import { CalibratePanel } from "./CalibratePanel";
 import { CharacterPicker } from "./CharacterPicker";
-import { useController } from "./session-context";
+import { ReadyStep } from "./ReadyStep";
+import { CalibrateStep, type CalibratePage } from "./setup/CalibrateStep";
+import { PracticeStep } from "./setup/PracticeStep";
 
-const STEPS = ["Calibrate", "Fencer", "Ready"] as const;
+export const STEPS = ["Calibrate", "Practice", "Fencer", "Ready"] as const;
+
+const TITLES: Record<CalibratePage, string> = { hold: "Hold it like a sword", level: "Find your guard", follow: "Your sword follows" };
 
 /**
- * Before the match, one page per step: calibrate the phone, pick a
- * fencer, then say you are ready. A phone coming back after a reconnect
- * starts at the first step it has not finished.
+ * Before the match, one page per step: calibrate the phone, practise a jab
+ * and a parry, pick a fencer, then say you are ready. A phone coming back
+ * after a reconnect starts at the first step it has not finished.
  */
 export function LobbySteps({ slot }: { slot: Slot }) {
-  const { pick, calibrated, inputMode } = useControllerStore();
-  const setUp = calibrated || inputMode === "touch";
-  const [step, setStep] = useState(() => (!setUp ? 0 : pick ? 2 : 1));
+  const { pick, calibrated, inputMode, sensitivity, sensorsLive } = useControllerStore();
+  const touch = inputMode === "touch";
+  const [step, setStep] = useState(() => (!calibrated ? 0 : !sensitivity && !touch ? 1 : pick ? 3 : 2));
+  const [page, setPage] = useState<CalibratePage>(calibrated ? "follow" : "hold");
+  const [practice, setPractice] = useState<{ run: number; stage: PracticeStage }>({ run: 0, stage: "jab" });
 
   if (step === 0) {
+    const next = (
+      <button type="button" className="btn btn--primary btn--lg kit-grow" disabled={!touch && page === "hold" && !sensorsLive} onClick={() => (touch || page === "follow" ? setStep(1) : setPage("level"))}>
+        Next
+      </button>
+    );
+    const footer = touch ? next : page === "hold" ? next : page === "level" ? (
+      <button type="button" className="btn btn--ghost btn--lg kit-grow" onClick={() => setPage("hold")}>
+        Back
+      </button>
+    ) : (
+      <>
+        <button type="button" className="btn btn--ghost btn--lg" onClick={() => setPage("level")}>
+          Redo
+        </button>
+        {next}
+      </>
+    );
     return (
-      <StepShell
-        steps={STEPS}
-        current={0}
-        title="Calibrate"
-        footer={
-          <button type="button" className="btn btn--primary btn--lg kit-grow" disabled={!setUp} onClick={() => setStep(1)}>
-            Next
-          </button>
-        }
-      >
-        <CalibratePanel slot={slot} />
+      <StepShell steps={STEPS} current={0} title={touch ? "Buttons it is" : TITLES[page]} footer={footer}>
+        <CalibrateStep slot={slot} page={page} onPage={setPage} />
       </StepShell>
     );
   }
 
   if (step === 1) {
+    const done = touch || practice.stage === "done";
+    const footer = done ? (
+      <>
+        <button type="button" className="btn btn--ghost btn--lg" onClick={() => (touch ? setStep(0) : setPractice({ run: practice.run + 1, stage: "jab" }))}>
+          {touch ? "Back" : "Redo"}
+        </button>
+        <button type="button" className="btn btn--primary btn--lg kit-grow" onClick={() => setStep(2)}>
+          Next
+        </button>
+      </>
+    ) : (
+      <>
+        <button type="button" className="btn btn--ghost btn--lg" onClick={() => setStep(0)}>
+          Back
+        </button>
+        <button type="button" className="btn btn--ghost btn--lg kit-grow" onClick={() => setStep(2)}>
+          Skip practice
+        </button>
+      </>
+    );
+    return (
+      <StepShell steps={STEPS} current={1} title={done ? "Ready to fence" : "Practice"} footer={footer}>
+        <PracticeStep key={practice.run} slot={slot} onStage={(stage) => setPractice((p) => ({ ...p, stage }))} />
+      </StepShell>
+    );
+  }
+
+  if (step === 2) {
     return (
       <StepShell
         steps={STEPS}
-        current={1}
+        current={2}
         title="Pick your fencer"
         footer={
           <>
-            <button type="button" className="btn btn--ghost btn--lg" onClick={() => setStep(0)}>
+            <button type="button" className="btn btn--ghost btn--lg" onClick={() => setStep(1)}>
               Back
             </button>
-            <button type="button" className="btn btn--primary btn--lg kit-grow" disabled={!pick} onClick={() => setStep(2)}>
+            <button type="button" className="btn btn--primary btn--lg kit-grow" disabled={!pick} onClick={() => setStep(3)}>
               Next
             </button>
           </>
@@ -61,48 +100,5 @@ export function LobbySteps({ slot }: { slot: Slot }) {
     );
   }
 
-  return <ReadyStep slot={slot} onBack={() => setStep(1)} />;
-}
-
-/** The last page: your fencer, who you are waiting for, and the Ready button. */
-function ReadyStep({ slot, onBack }: { slot: Slot; onBack(): void }) {
-  const session = useController();
-  const { pick, ready, game } = useControllerStore();
-  const other = slot === 1 ? 1 : 0;
-  const otherReady = game?.ready[other] ?? false;
-  const otherHere = game?.connected[other] ?? false;
-  const computer = game?.computer[other] ?? false;
-
-  return (
-    <StepShell
-      steps={STEPS}
-      current={2}
-      title={ready ? "You're ready" : "Ready?"}
-      footer={
-        <>
-          <button type="button" className="btn btn--ghost btn--lg" onClick={onBack} disabled={ready}>
-            Back
-          </button>
-          <button type="button" className={`btn btn--lg kit-grow ${ready ? "" : "btn--primary"}`} onClick={() => session.setReady(!ready)}>
-            <Icon name={ready ? "close" : "check"} />
-            {ready ? "Not ready" : "Ready"}
-          </button>
-        </>
-      }
-    >
-      {pick && (
-        <div className="ready-card">
-          <FencerCanvas characterId={pick} slot={slot} className="ready-card__art" />
-          <strong>{CHARACTERS[pick].name}</strong>
-        </div>
-      )}
-      {ready && !otherReady && <p className="muted">Waiting for your opponent</p>}
-      {(!otherHere || computer) && (
-        <button type="button" className="btn btn--ghost btn--block" onClick={() => session.press({ kind: "solo", on: !computer })}>
-          <Icon name={computer ? "phone" : "cpu"} />
-          {computer ? "Play a friend instead" : "Play the computer"}
-        </button>
-      )}
-    </StepShell>
-  );
+  return <ReadyStep slot={slot} steps={STEPS} onBack={() => setStep(2)} />;
 }

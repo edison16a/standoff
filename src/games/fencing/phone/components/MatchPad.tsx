@@ -4,6 +4,7 @@ import type { Slot } from "@/games/fencing/players";
 import type { ControllerState } from "@/games/fencing/protocol";
 import { useControllerStore } from "../controller-store";
 import { MoveButtons, StrikeButtons } from "./MoveButtons";
+import { StrikeFeedback } from "./StrikeFeedback";
 import { useController } from "./session-context";
 
 /** One word for the current phase, from this player's point of view. */
@@ -26,7 +27,8 @@ function headline(game: ControllerState, slot: Slot): string {
 
 /**
  * The phone during a match. Eyes are on the computer, so this is mostly
- * two huge buttons for footwork, with the score and call along the top.
+ * two huge buttons for footwork, with the score and call along the top and
+ * the word for every strike read, and its verdict, in the middle.
  */
 export function MatchPad({ slot, game }: { slot: Slot; game: ControllerState }) {
   const session = useController();
@@ -50,6 +52,7 @@ export function MatchPad({ slot, game }: { slot: Slot; game: ControllerState }) 
         </button>
       ) : (
         <>
+          <StrikeFeedback />
           <MoveButtons />
           {inputMode === "touch" && <StrikeButtons />}
         </>
