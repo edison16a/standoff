@@ -82,6 +82,8 @@ export class Director {
     const time = now / 1000;
     const { match } = input;
     const replaying = input.shot === "replay" && this.recorder.ready && this.knockdown;
+    // The referee is not recorded, so he steps out of the replay rather than stand frozen in it.
+    this.scene.referee.model.root.visible = !replaying;
     if (replaying) this.playReplay(input.shotMs, time, dt);
     else {
       this.replayImpactShown = false;

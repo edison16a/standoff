@@ -13,17 +13,17 @@ function bout(seed: number): { match: Match; events: MatchEvent[]; maxGap: numbe
   const boxers = [new ComputerBoxer(0, random), new ComputerBoxer(1, random)];
   const events: MatchEvent[] = [];
   let maxGap = 0;
+  let widest = 0;
   for (let t = 0; t < 400_000 && match.phase !== "over"; t += 20) {
     for (const boxer of boxers) boxer.update(match);
     const now = match.update(20);
     for (const event of now) for (const boxer of boxers) boxer.hear(event, match);
     events.push(...now);
     maxGap = Math.max(maxGap, match.footwork.distance());
-    for (const spot of match.footwork.spots) {
-      expect(Math.abs(spot.x)).toBeLessThan(RING_HALF);
-      expect(Math.abs(spot.z)).toBeLessThan(RING_HALF);
-    }
+    for (const spot of match.footwork.spots) widest = Math.max(widest, Math.abs(spot.x), Math.abs(spot.z));
   }
+  // Checked once at the end: an expect on every step makes this slow.
+  expect(widest).toBeLessThan(RING_HALF);
   return { match, events, maxGap };
 }
 

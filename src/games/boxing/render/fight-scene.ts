@@ -5,6 +5,7 @@ import type { Match } from "../engine/match";
 import { other, type FighterId, type Hand } from "../engine/types";
 import type { AnimMode, MirrorInput } from "./anim/anim-input";
 import { BoxerAnimator } from "./anim/boxer-animator";
+import { RefereeAnimator } from "./anim/referee-animator";
 import { Arena } from "./arena/arena";
 import { Confetti } from "./fx/confetti";
 import { HitFx } from "./fx/hit-fx";
@@ -31,6 +32,7 @@ export class FightScene {
   readonly arena = new Arena();
   readonly fx = new HitFx();
   readonly confetti = new Confetti();
+  readonly referee = new RefereeAnimator();
   models: [BoxerModel, BoxerModel];
   animators: [BoxerAnimator, BoxerAnimator];
   /** How worked up the crowd is, 0 to 1. It jumps on big moments and settles. */
@@ -47,7 +49,7 @@ export class FightScene {
     pmrem.dispose();
     this.scene.environment = this.environment;
     this.scene.environmentIntensity = 0.25;
-    this.scene.add(this.arena.group, this.fx.group, this.confetti.mesh);
+    this.scene.add(this.arena.group, this.fx.group, this.confetti.mesh, this.referee.model.root);
     this.models = [new BoxerModel(looks[0]), new BoxerModel(looks[1])];
     this.animators = [new BoxerAnimator(this.models[0], 0), new BoxerAnimator(this.models[1], 1)];
     for (const model of this.models) this.scene.add(model.root);
@@ -63,6 +65,13 @@ export class FightScene {
       this.animators[id] = new BoxerAnimator(this.models[id], id);
       this.scene.add(this.models[id].root);
     });
+  }
+
+  /** Fresh animation for both boxers, as when the showcase starts its loop again. */
+  resetAnimation(): void {
+    this.animators = [new BoxerAnimator(this.models[0], 0), new BoxerAnimator(this.models[1], 1)];
+    this.fx.clear();
+    this.confetti.clear();
   }
 
   update(match: Match, input: SceneInput, time: number, dt: number): void {
@@ -88,6 +97,7 @@ export class FightScene {
         telegraph: input.telegraph[id],
       });
     }
+    this.referee.update(match, time, dt);
     this.excite += (0.2 - this.excite) * Math.min(1, dt * 0.5);
     this.animate(time, dt);
   }
@@ -149,6 +159,7 @@ export class FightScene {
     this.fx.dispose();
     this.confetti.dispose();
     for (const model of this.models) model.dispose();
+    this.referee.dispose();
     this.environment.dispose();
   }
 }
