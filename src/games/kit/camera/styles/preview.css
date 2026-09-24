@@ -1,0 +1,97 @@
+/*
+  The live camera picture and the corner preview. The kit's pieces are
+  read from across a room, so they use big type and dark glass panels
+  that sit well over any game's own look.
+*/
+
+/* The preview fills whatever box it is given. Size and place that box, not the preview. */
+.cam-preview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0b0916;
+}
+
+.cam-preview__video,
+.cam-preview__canvas,
+.cam-preview__fake {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Mirrored like a selfie, so moving left moves left on screen. The kit's points are mirrored to match. */
+.cam-preview__video {
+  transform: scaleX(-1);
+}
+
+.cam-preview__video--cover {
+  object-fit: cover;
+}
+
+.cam-preview__video--contain {
+  object-fit: contain;
+}
+
+.cam-preview__canvas {
+  pointer-events: none;
+}
+
+.cam-preview__fake {
+  display: grid;
+  place-items: end start;
+  padding: 14px 18px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px) 0 0 / 100% 10%,
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px) 0 0 / 10% 100%,
+    radial-gradient(circle at 50% 40%, #2a2250, #0b0916 70%);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cam-corner {
+  position: absolute;
+  z-index: 5;
+  overflow: hidden;
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  border-radius: 18px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.cam-corner--bottom-right {
+  right: 20px;
+  bottom: 20px;
+}
+
+.cam-corner--bottom-left {
+  left: 20px;
+  bottom: 20px;
+}
+
+.cam-corner--top-right {
+  top: 84px;
+  right: 20px;
+}
+
+.cam-corner--top-left {
+  top: 84px;
+  left: 20px;
+}
+
+.cam-corner__warning {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 6px 10px;
+  background: rgba(255, 71, 87, 0.92);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+}
+
