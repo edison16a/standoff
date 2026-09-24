@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { TEAMS } from "../../roster";
-import { ledTexture } from "../textures";
+import { ledTexture, suitesTexture } from "../textures";
 import { Crowd } from "./crowd";
 import { FLOOR, floorTexture } from "./floor-texture";
 import { Hoop } from "./hoop";
@@ -17,6 +17,7 @@ export class Arena {
   readonly crowd: Crowd;
   readonly key: THREE.DirectionalLight;
   private readonly leds: THREE.Texture[] = [];
+  private readonly textures: THREE.Texture[] = [];
   private readonly owned: THREE.Material[] = [];
 
   constructor() {
@@ -96,6 +97,15 @@ export class Arena {
     );
     wall.position.set(0, 12, 6);
     this.group.add(wall);
+    // The upper deck sits just behind the last rows, so wide shots show a full house.
+    const suites = suitesTexture([TEAMS[0].color, TEAMS[1].color, "#facc15", TEAMS[0].color, TEAMS[1].color, "#f8fafc"]);
+    suites.repeat.set(3, 1);
+    this.textures.push(suites);
+    const deckMat = new THREE.MeshBasicMaterial({ map: suites, side: THREE.BackSide, color: "#aab0c4", toneMapped: false });
+    this.owned.push(deckMat);
+    const deck = new THREE.Mesh(new THREE.CylinderGeometry(27, 27, 5.5, 64, 1, true, Math.PI * 0.5, Math.PI * 1.4), deckMat);
+    deck.position.set(0, 10.2, 6);
+    this.group.add(deck);
     const dots: number[] = [];
     for (let ring = 0; ring < 3; ring++) {
       for (let i = 0; i < 120; i++) {
@@ -119,7 +129,7 @@ export class Arena {
   dispose(): void {
     this.hoop.dispose();
     this.crowd.dispose();
-    for (const t of this.leds) t.dispose();
+    for (const t of [...this.leds, ...this.textures]) t.dispose();
     for (const m of this.owned) m.dispose();
     this.group.traverse((o) => {
       if (o instanceof THREE.Mesh || o instanceof THREE.Points) o.geometry.dispose();

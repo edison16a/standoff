@@ -74,3 +74,11 @@ Everything is synthesised through the room's audio buses: the ball on the hardwo
 * `audio/`: effects, the crowd, the music and the announcer.
 * `protocol/`: the zod schemas for the messages between the phones and the host.
 * `showcase/`: the scripted highlight filmed for the home screen: Giannis's hammer dunk and Luka's step back three.
+
+## Home screen media
+
+The icon, the poster and the looping clip are filmed from the showcase with `node tools/media/capture.mjs nba-3v3 --url http://localhost:3000 --ffmpeg ffmpeg`. The poster and the icon are one frame of Giannis rising for the hammer from low by the lane. The film is run ahead to that moment without drawing and held, so they take seconds to shoot. The loop is eight seconds of the broadcast camera: the drive and the dunk in slow motion, then Luka's three from the top. The first three seconds the tool lets run are stepped without drawing.
+
+## Slow computers
+
+A computer that draws WebGL in software (no graphics card, or a blocked driver) gets a lighter picture: fewer pixels, no antialiasing and no shadows. The phone preview draws one pixel per point there too. Browser tests on such machines can set `__nba.turbo` in development builds to run the game clock two or three times faster.

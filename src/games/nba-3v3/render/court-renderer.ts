@@ -46,6 +46,7 @@ export class CourtRenderer {
   private time = 0;
   private height = 1;
   private readonly maxPixelRatio: number;
+  private readonly pixel = new Uint8Array(4);
 
   constructor(canvas: HTMLCanvasElement, quality: Quality = {}) {
     const { antialias = true, shadows = true, reflections = true, maxPixelRatio = 1.75 } = quality;
@@ -88,8 +89,11 @@ export class CourtRenderer {
     if (this.match) this.effects.onEvent(event, this.match);
   }
 
-  /** Draws one frame. `dt` is game time, already slowed for slow motion. */
-  render(dt: number): void {
+  /**
+   * Moves everything on by `dt` of game time, already slowed for slow
+   * motion, and draws the frame unless `draw` is false.
+   */
+  render(dt: number, draw = true): void {
     const m = this.match;
     if (!m) return;
     this.time += dt;
@@ -111,7 +115,17 @@ export class CourtRenderer {
     this.arena.update(dt, this.time, this.ball.mesh.position, calm);
     this.effects.setView(this.height * this.renderer.getPixelRatio(), this.tv.camera.fov);
     this.effects.frame(m, dt);
-    this.renderer.render(this.scene, this.tv.camera);
+    if (draw) this.renderer.render(this.scene, this.tv.camera);
+  }
+
+  /**
+   * Waits until the graphics card has finished the frames asked of it.
+   * Only for filming: the capture tool screenshots each frame, and a
+   * software renderer can take longer than its patience to catch up.
+   */
+  finish(): void {
+    const gl = this.renderer.getContext();
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, this.pixel);
   }
 
   /** Where a world point lands on the canvas, in CSS pixels from the top left, or null behind the camera. */

@@ -119,3 +119,41 @@ export function blobTexture(): THREE.CanvasTexture {
   ctx.fillRect(0, 0, 64, 64);
   return finish(c, false);
 }
+
+/**
+ * The upper deck behind the stands: a row of lit suite windows over a
+ * packed dark tier, broken by team colour banners. It fills the gap
+ * between the crowd and the roof so the arena never ends in black.
+ */
+export function suitesTexture(banners: readonly string[]): THREE.CanvasTexture {
+  const W = 2048;
+  const [c, ctx] = canvas(W, 256);
+  const rng = seeded(71);
+  ctx.fillStyle = "#0b0e1c";
+  ctx.fillRect(0, 0, W, 256);
+  // The upper tier of fans: small dim heads in rows.
+  for (let row = 0; row < 7; row++) {
+    for (let x = 4; x < W; x += 9) {
+      ctx.fillStyle = `hsl(${Math.floor(rng() * 360)}, 35%, ${Math.floor(18 + rng() * 40)}%)`;
+      ctx.fillRect(x + (row % 2) * 4, 118 + row * 19, 6, 12);
+    }
+  }
+  // The suites: warm windows in a band, a few of them dark.
+  ctx.fillStyle = "#151a2e";
+  ctx.fillRect(0, 44, W, 60);
+  for (let x = 6; x < W; x += 40) {
+    ctx.fillStyle = rng() < 0.18 ? "#2a2f45" : `rgb(255, ${200 + Math.floor(rng() * 40)}, ${130 + Math.floor(rng() * 60)})`;
+    ctx.fillRect(x, 52, 32, 44);
+  }
+  // Banners hanging in the team colours.
+  banners.forEach((colour, i) => {
+    const x = ((i + 0.5) / banners.length) * W - 30;
+    ctx.fillStyle = colour;
+    ctx.fillRect(x, 0, 60, 118);
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillRect(x + 8, 14, 44, 6);
+  });
+  const t = finish(c);
+  t.wrapS = THREE.RepeatWrapping;
+  return t;
+}

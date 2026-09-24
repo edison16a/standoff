@@ -76,7 +76,8 @@ export function publish(c: PublishContext): void {
     offence: m?.offence ?? 0,
     mustClear: m?.needsClear ?? false,
     countdown: m && m.phase === "countdown" ? Math.max(0, Math.ceil(RULES.countdown - m.phaseT)) : null,
-    gamePoint: m ? [m.gamePoint[0], m.gamePoint[1]] : [false, false],
+    // Once someone has won, nobody is on game point any more.
+    gamePoint: m && m.phase !== "over" ? [m.gamePoint[0], m.gamePoint[1]] : [false, false],
     winner: m?.winner ?? null,
     results: m && m.phase === "over" ? results(m, c.players) : [],
     waiting: c.driver ? seats.filter((s) => s.connected && !inGame.has(s.seat)).map((s) => s.name) : [],
