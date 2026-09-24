@@ -1,5 +1,6 @@
 import type { TeamId } from "../teams";
 import { goalX } from "./goal";
+import { diveLayout } from "./dive";
 import { fly } from "./shot-aim";
 import { KEEPER, PITCH } from "./tuning";
 import type { Dive, Keeper, MatchState } from "./types";
@@ -57,10 +58,9 @@ export function planDive(state: MatchState, k: Keeper): void {
   }
   const lateral = Math.abs(gloveZ - k.pos.z);
   const standing = save && lateral < 0.55 && hit.y < 1.75;
-  // Lying flat the body is about an arm and a half from the gloves; a high dive stays more upright.
-  const bodyOff = standing ? 0 : Math.min(lateral, height > 1.6 ? 0.55 : 0.95);
+  const feet = standing ? lateral : diveLayout({ fromZ: k.pos.z, gloveZ, height }).feet;
   const duration = clamp(Math.min(KEEPER.diveTime, hit.t), 0.12, KEEPER.diveTime);
-  const dive: Dive = { dir, fromZ: k.pos.z, toZ: gloveZ - dir * bodyOff, gloveZ, height, wait: Math.max(0, hit.t - duration), duration, standing };
+  const dive: Dive = { dir, fromZ: k.pos.z, toZ: k.pos.z + dir * feet, gloveZ, height, wait: Math.max(0, hit.t - duration), duration, standing };
   k.dive = dive;
   k.action = "dive";
   k.actionT = 0;

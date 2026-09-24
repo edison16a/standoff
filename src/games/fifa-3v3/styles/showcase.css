@@ -1,0 +1,48 @@
+/*
+  The showcase: the match filling the frame, and for the store tile a
+  bold logo over it.
+*/
+
+.fifa-showcase {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #05070f;
+}
+
+.fifa-showcase__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.fifa-logo {
+  position: absolute;
+  left: 50%;
+  bottom: 7%;
+  display: flex;
+  align-items: baseline;
+  gap: 0.12em;
+  transform: translateX(-50%) skewX(-8deg);
+  font-family: "Arial Black", Impact, "Helvetica Neue", Arial, sans-serif;
+  font-weight: 900;
+  font-size: 15vmin;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  filter: drop-shadow(0 0.06em 0.08em rgba(0, 0, 0, 0.65));
+}
+
+.fifa-logo__word {
+  color: #ffffff;
+  -webkit-text-stroke: 0.02em #0b1024;
+}
+
+.fifa-logo__vs {
+  padding: 0.02em 0.14em 0.06em;
+  border-radius: 0.12em;
+  background: linear-gradient(135deg, #ff3b4a 0%, #ff3b4a 48%, #2f7bff 52%, #2f7bff 100%);
+  color: #ffffff;
+  font-size: 0.82em;
+  box-shadow: 0 0 0.35em rgba(255, 255, 255, 0.35);
+}

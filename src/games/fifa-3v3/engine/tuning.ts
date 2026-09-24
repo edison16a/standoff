@@ -103,8 +103,11 @@ export const SLIDE = {
 export const KEEPER = {
   speed: 5.4,
   diveTime: 0.36,
-  /** From the body's centre to the gloves at full stretch. */
-  reach: 1.55,
+  height: 1.9,
+  /** From the boots to the gloves, stretched out with the arms above the head. */
+  reach: 2.16,
+  /** From the boots to the middle of the body, where a keeper gets up after a dive. */
+  middle: 0.98,
   holdMin: 0.9,
   holdMax: 1.5,
   claimRange: 0.95,
@@ -116,7 +119,7 @@ export const MATCH = {
   goalsToWin: 5,
   kickoffWait: 1.6,
   celebrate: 3.4,
-  replay: 4.2,
+  replay: 5.8,
   outWait: 1.3,
   fullTimeWait: 1,
 } as const;

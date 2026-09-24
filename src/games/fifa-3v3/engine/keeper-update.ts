@@ -16,8 +16,13 @@ export function updateKeeper(state: MatchState, k: Keeper, dt: number): void {
     case "dive":
       return diving(state, k);
     case "getup":
+      if (holding) {
+        // Rising with the ball from the turf to the chest.
+        Object.assign(ball.pos, hands(k));
+        ball.pos.y = lerp(0.25, 1.05, clamp(k.actionT / 0.6, 0, 1));
+      }
       if (k.actionT > KEEPER.getUp) setAction(k, holding ? "hold" : "set");
-      break;
+      return;
     case "catch":
       if (k.actionT > 0.45) setAction(k, "hold");
       break;
@@ -39,10 +44,11 @@ export function updateKeeper(state: MatchState, k: Keeper, dt: number): void {
   if (holding) Object.assign(ball.pos, hands(k));
 }
 
+/** A dive is kept through getting up, so the body rises from where it lay. */
 function setAction(k: Keeper, action: Keeper["action"]): void {
   k.action = action;
   k.actionT = 0;
-  if (action !== "catch") k.dive = null;
+  if (action !== "catch" && action !== "getup") k.dive = null;
 }
 
 function step(k: Keeper, to: { x: number; z: number }, speed: number, dt: number): void {
@@ -90,7 +96,10 @@ function closestTo(state: MatchState, k: Keeper): boolean {
   return state.athletes.every((a) => a.team === k.team || dist(a.pos, state.ball.pos) / 6.5 > mine + 0.1);
 }
 
-/** The dive plays out over time: leave the ground, stretch to the gloves' spot, land, get up. */
+/**
+ * The dive plays out over time: wait for the ball, push off, stretch to
+ * the gloves' spot, land, then get up where the body came to rest.
+ */
 function diving(state: MatchState, k: Keeper): void {
   const dive = k.dive;
   if (!dive) return setAction(k, "set");
@@ -98,14 +107,20 @@ function diving(state: MatchState, k: Keeper): void {
   // Quick off the mark, easing into full stretch.
   const eased = 1 - (1 - t) * (1 - t);
   k.pos.z = lerp(dive.fromZ, dive.toZ, eased);
-  const holding = state.ball.owner?.kind === "keeper" && state.ball.owner.team === k.team;
-  if (holding) Object.assign(state.ball.pos, { x: k.pos.x, y: Math.max(0.2, dive.height * (1 - Math.max(0, k.actionT - dive.wait - dive.duration) * 1.5)), z: dive.gloveZ });
   const landed = k.actionT - dive.wait - dive.duration;
-  if (landed > (dive.standing ? 0.25 : 0.55)) {
-    if (holding) {
-      setAction(k, "getup");
-      k.dive = null;
-    } else setAction(k, "getup");
+  const holding = state.ball.owner?.kind === "keeper" && state.ball.owner.team === k.team;
+  if (holding) {
+    // Clutched at the gloves, then brought down to the turf with the keeper.
+    const drop = dive.standing ? 0 : clamp(landed / 0.25, 0, 1);
+    Object.assign(state.ball.pos, { x: k.pos.x, y: lerp(dive.height, 0.25, drop), z: dive.gloveZ });
+  }
+  if (dive.standing) {
+    if (landed > 0.25) setAction(k, holding ? "hold" : "set");
+    return;
+  }
+  if (landed > 0.55) {
+    k.pos.z = dive.toZ + dive.dir * KEEPER.middle;
+    setAction(k, "getup");
   }
 }
 
