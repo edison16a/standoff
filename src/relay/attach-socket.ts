@@ -1,9 +1,8 @@
-import { clientEnvelopeSchema } from "@/shared/protocol";
+import { parseEnvelope } from "./parse-envelope";
 import { RateLimiter } from "./rate-limiter";
 import { RelayConnection, type RelayContext } from "./relay-connection";
 
-/** Motion frames are tiny. Anything this big is not from our client. */
-export const MAX_FRAME_BYTES = 16 * 1024;
+export { MAX_FRAME_BYTES } from "./parse-envelope";
 /** Sockets that miss a ping for this long are treated as gone. */
 const HEARTBEAT_MS = 10_000;
 
@@ -56,7 +55,7 @@ export function attachSocket(socket: NodeSocket, ctx: RelayContext): Promise<voi
   socket.on("message", (data, isBinary) => {
     alive = true;
     if (isBinary || !limiter.take()) return;
-    const envelope = parse(data);
+    const envelope = parseEnvelope(toText(data));
     if (envelope) connection.receive(envelope);
   });
   socket.on("error", () => socket.terminate());
@@ -70,13 +69,6 @@ export function attachSocket(socket: NodeSocket, ctx: RelayContext): Promise<voi
   });
 }
 
-function parse(data: Buffer | ArrayBuffer | Buffer[]) {
-  try {
-    const text = Array.isArray(data) ? Buffer.concat(data).toString() : Buffer.from(data as ArrayBuffer).toString();
-    if (text.length > MAX_FRAME_BYTES) return null;
-    const result = clientEnvelopeSchema.safeParse(JSON.parse(text));
-    return result.success ? result.data : null;
-  } catch {
-    return null;
-  }
+function toText(data: Buffer | ArrayBuffer | Buffer[]): string {
+  return Array.isArray(data) ? Buffer.concat(data).toString() : Buffer.from(data as ArrayBuffer).toString();
 }
