@@ -152,6 +152,26 @@ export function glowTexture(): THREE.CanvasTexture {
   }, { width: 128, repeat: false });
 }
 
+/** A name printed across the back of a fencing jacket, as real fencers wear it. */
+export function namePrint(name: string, ink: string, mirrored: boolean): THREE.CanvasTexture {
+  const texture = canvasTexture(`print:${name}:${ink}:${mirrored}`, (ctx, w, h) => {
+    ctx.clearRect(0, 0, w, h);
+    if (mirrored) {
+      ctx.translate(w, 0);
+      ctx.scale(-1, 1);
+    }
+    ctx.font = `italic 900 ${Math.round(h * 0.78)}px Arial, Helvetica, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.lineWidth = h * 0.08;
+    ctx.strokeStyle = "#14213d";
+    ctx.strokeText(name, w / 2, h / 2);
+    ctx.fillStyle = ink;
+    ctx.fillText(name, w / 2, h / 2);
+  }, { width: 256, height: 80, repeat: false });
+  return texture;
+}
+
 /** A soft dark blot, for contact shadows under feet. */
 export function blobTexture(): THREE.CanvasTexture {
   return canvasTexture("blob", (ctx, w) => {

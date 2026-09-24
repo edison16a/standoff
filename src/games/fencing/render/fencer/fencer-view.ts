@@ -70,7 +70,7 @@ export class FencerView {
 
   private swap(frame: FencerFrame): void {
     this.dropModel();
-    this.model = new FencerModel(frame.characterId, PLAYER_COLOURS[this.slot]);
+    this.model = new FencerModel(frame.characterId, PLAYER_COLOURS[this.slot], this.slot === 2);
     this.group.add(this.model.root);
   }
 

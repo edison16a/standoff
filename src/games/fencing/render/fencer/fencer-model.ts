@@ -19,11 +19,12 @@ export class FencerModel {
   constructor(
     readonly characterId: CharacterId,
     readonly trim: THREE.ColorRepresentation,
+    mirrored = false,
   ) {
     const model = MODELS[characterId];
     this.rig = new BodyRig(model.bladeLength);
     const dresser = new Dresser();
-    model.dress(dresser, { trim });
+    model.dress(dresser, { trim, mirrored });
     buildBlade(dresser.on("blade"), model.blade, model.bladeLength, model.bladeColours);
     dresser.finish(this.rig);
     this.rig.bones.head.scale.setScalar(1.12);

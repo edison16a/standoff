@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { MINIMAL, readQuality } from "../quality";
 
 /** Something the hub draws each frame into its own 2D canvas. */
 export interface PreviewSubject {
@@ -19,6 +20,11 @@ class PreviewHub {
   private environment: THREE.Texture | null = null;
   private readonly subjects = new Set<PreviewSubject>();
   private frameId = 0;
+  /** When the next frame may be drawn, and whether the last ones were too slow for full resolution. */
+  private nextAt = 0;
+  private slow = false;
+  /** Browser tests on software rendering ask for the cheapest picture with `?fq=min`. */
+  private readonly minimal = readQuality() === MINIMAL;
 
   add(subject: PreviewSubject): void {
     this.subjects.add(subject);
@@ -59,7 +65,11 @@ class PreviewHub {
   private readonly draw = (now: number) => {
     const renderer = this.renderer;
     if (!renderer) return;
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    this.frameId = requestAnimationFrame(this.draw);
+    // A slow phone must never let the previews starve the page: skip frames and drop resolution until it keeps up.
+    if (now < this.nextAt) return;
+    const started = performance.now();
+    const dpr = this.minimal ? 0.5 : Math.min(this.slow ? 1 : 2, window.devicePixelRatio || 1);
     for (const subject of this.subjects) {
       const target = subject.canvas;
       const width = Math.round(target.clientWidth * dpr);
@@ -82,7 +92,9 @@ class PreviewHub {
       ctx.clearRect(0, 0, width, height);
       ctx.drawImage(renderer.domElement, 0, 0);
     }
-    this.frameId = requestAnimationFrame(this.draw);
+    const took = performance.now() - started;
+    this.slow = took > 40;
+    this.nextAt = took > 14 ? now + took * 1.5 : 0;
   };
 }
 

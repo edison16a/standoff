@@ -44,6 +44,7 @@ export class FencingHost {
     this.phones.send("all", { kind: "tuning", tuning: this.tuning });
     this.syncSeats();
     this.broadcastState();
+    exposeForTests(this);
   }
 
   private get tuning(): Tuning {
@@ -169,4 +170,20 @@ export class FencingHost {
     const names = this.names();
     this.phones.sendState(buildControllerState(this.lobby, this.driver?.engine ?? null, [names[1], names[2]]));
   }
+}
+
+declare global {
+  interface Window {
+    /** The fencing session, for browser tests, when the page asks with `?fdebug`. */
+    __fencing?: FencingHost;
+  }
+}
+
+/**
+ * Browser tests on software rendering run the host at a frame or two a
+ * second, so the match runs slowly too. With `?fdebug` in the host's address
+ * they can read the match itself and wait on it, rather than on the clock.
+ */
+function exposeForTests(session: FencingHost): void {
+  if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("fdebug")) window.__fencing = session;
 }

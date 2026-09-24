@@ -4,4 +4,6 @@ import type * as THREE from "three";
 export interface Look {
   /** Red for player one, green for player two, like the scoring lamps. */
   trim: THREE.ColorRepresentation;
+  /** Player two is drawn as player one's mirror image, so printed words must be flipped back. */
+  mirrored: boolean;
 }

@@ -59,6 +59,16 @@ describe("StrikeDetector", () => {
     expect(detect({ down: sum(chop(100, 24), chop(300, 24)) })).toEqual(["jab"]);
   });
 
+  it("still reads a parry that starts with a small dip", () => {
+    // People often drop the hand a little before lifting it.
+    expect(detect({ down: sum(pulse(80, 90, 4), lift(200, 22)), pitchRate: flick(200, 5) })).toEqual(["parry"]);
+  });
+
+  it("does not let a gyroscope read backwards turn a chop into a parry", () => {
+    // Even with the turn counted the wrong way, a clean chop stays a jab and its brake stays quiet.
+    expect(detect({ down: chop(100, 24), pitchRate: flick(100, 6) })).toEqual(["jab"]);
+  });
+
   it("lets a real parry follow a jab, just a little later than a repeat", () => {
     expect(detect({ down: sum(chop(100, 24), lift(620, 24)), pitchRate: flick(620, 5) })).toEqual(["jab", "parry"]);
   });

@@ -60,9 +60,13 @@ export function dressIron(d: Dresser, look: Look): void {
       chest.sphere(0.095 - i * 0.012, plate, [-0.005, 0.47 - i * 0.045, side * (0.19 + i * 0.012)], [1.05, 0.6, 0.95], 18);
     }
     chest.sphere(0.008, gold, [0.05, 0.49, side * 0.21], [1, 1, 1], 6);
+    chest.add(new THREE.TorusGeometry(0.075, 0.007, 6, 28), gold, [-0.005, 0.405, side * 0.215], [Math.PI / 2 + side * 0.25, 0, 0], [1.05, 0.95, 1]);
   }
 
   for (const side of ["F", "B"] as const) {
+    // Lames down the upper arm and a vambrace over the forearm.
+    for (let i = 0; i < 3; i++) d.on(`upperArm${side}`).cylinder(0.063 - i * 0.003, 0.06 - i * 0.003, 0.05, plate, [0, -0.06 - i * 0.068, 0], [0, 0, 0], 18);
+    d.on(`forearm${side}`).cylinder(0.054, 0.047, 0.15, plate, [0, -0.1, 0], [0, 0, 0], 18);
     // Couters at the elbows and poleyns at the knees, each with a fan.
     d.on(`upperArm${side}`).sphere(0.056, plate, [0, -BODY.upperArm, 0], [1, 1, 1], 14);
     d.on(`upperArm${side}`).cylinder(0.05, 0.05, 0.008, plate, [-0.04, -BODY.upperArm, 0], [0, 0, Math.PI / 2], 16, [1, 1, 1.3]);

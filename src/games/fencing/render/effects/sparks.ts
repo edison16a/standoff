@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { glowTexture } from "../kit/textures";
 
 const MAX = 700;
 const GRAVITY = -9.8;
@@ -28,9 +29,13 @@ export interface BurstOptions {
  */
 export class Sparks {
   readonly mesh: THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>;
+  /** A small glow at the head of every spark. */
+  readonly heads: THREE.Points<THREE.BufferGeometry, THREE.PointsMaterial>;
   private sparks: Spark[] = [];
   private readonly positions = new Float32Array(MAX * 6);
   private readonly colours = new Float32Array(MAX * 8);
+  private readonly headPositions = new Float32Array(MAX * 3);
+  private readonly headColours = new Float32Array(MAX * 4);
   private lastT: number | null = null;
 
   constructor(private readonly random: () => number) {
@@ -40,6 +45,15 @@ export class Sparks {
     this.mesh = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
     this.mesh.frustumCulled = false;
     this.mesh.renderOrder = 4;
+    const heads = new THREE.BufferGeometry();
+    heads.setAttribute("position", new THREE.BufferAttribute(this.headPositions, 3).setUsage(THREE.DynamicDrawUsage));
+    heads.setAttribute("color", new THREE.BufferAttribute(this.headColours, 4).setUsage(THREE.DynamicDrawUsage));
+    this.heads = new THREE.Points(heads, new THREE.PointsMaterial({
+      size: 0.045, map: glowTexture(), vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
+    }));
+    this.heads.frustumCulled = false;
+    this.heads.renderOrder = 4;
+    this.mesh.add(this.heads);
   }
 
   burst(at: THREE.Vector3, t: number, options: BurstOptions): void {
@@ -68,7 +82,13 @@ export class Sparks {
       colour.copy(white).lerp(spark.hot, Math.min(1, age * 1.8));
       const alpha = 1 - age;
       this.colours.set([colour.r, colour.g, colour.b, alpha, colour.r, colour.g * 0.7, colour.b * 0.4, 0], i * 8);
+      this.headPositions.set([spark.p.x, spark.p.y, spark.p.z], i * 3);
+      this.headColours.set([colour.r, colour.g, colour.b, alpha], i * 4);
     });
+    const heads = this.heads.geometry;
+    heads.setDrawRange(0, this.sparks.length);
+    heads.attributes.position!.needsUpdate = true;
+    heads.attributes.color!.needsUpdate = true;
     const geometry = this.mesh.geometry;
     geometry.setDrawRange(0, this.sparks.length * 2);
     geometry.attributes.position!.needsUpdate = true;
@@ -86,5 +106,7 @@ export class Sparks {
   dispose(): void {
     this.mesh.geometry.dispose();
     this.mesh.material.dispose();
+    this.heads.geometry.dispose();
+    this.heads.material.dispose();
   }
 }

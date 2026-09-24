@@ -118,17 +118,26 @@ export interface FaceStyle {
  */
 export function face(b: MeshBuilder, style: FaceStyle): void {
   const { skin } = style;
+  // Neck, skull and the jaw below it.
   b.cylinder(0.05, 0.056, 0.12, skin, [0, 0.03, 0], [0, 0, 0], 14);
-  b.sphere(0.1, skin, [0, 0.19, 0], [1.02, 1.12, 0.9], 22);
-  b.sphere(0.068, skin, [0.045, 0.125, 0], [1, 0.85, 0.95], 16);
-  b.sphere(0.022, skin, [0.1, 0.165, 0], [1.2, 1.1, 0.8], 10);
+  b.sphere(0.1, skin, [0, 0.19, 0], [1.02, 1.12, 0.9], 24);
+  b.sphere(0.068, skin, [0.042, 0.128, 0], [1, 0.85, 0.95], 18);
+  // Chin, cheekbones and brow ridge give the face its planes.
+  b.sphere(0.03, skin, [0.086, 0.098, 0], [1, 0.85, 1.25], 12);
+  b.sphere(0.03, skin, [0.087, 0.216, 0], [0.6, 0.35, 1.9], 12);
   for (const side of [-1, 1]) {
+    b.sphere(0.028, skin, [0.07, 0.166, side * 0.052], [1, 0.72, 1], 12);
     b.sphere(0.022, skin, [0.0, 0.18, side * 0.093], [0.7, 1.2, 0.5], 10);
     if (style.white) b.sphere(0.015, style.white, [0.087, 0.197, side * 0.034], [0.8, 0.85, 1], 10);
-    b.sphere(0.009, style.eye, [0.1, 0.197, side * 0.034], [0.6, 1, 1], 8);
-    b.box(0.018, 0.009, 0.042, style.brow, [0.096, 0.222, side * 0.037], [side * 0.12, 0, side * -0.12], 0.004);
+    b.sphere(0.0085, style.eye, [0.1, 0.197, side * 0.034], [0.6, 1, 1], 8);
+    // An upper lid over each eye, so they look out from under the brow.
+    b.sphere(0.017, skin, [0.09, 0.204, side * 0.034], [0.8, 0.5, 1.1], 10);
+    b.box(0.018, 0.009, 0.042, style.brow, [0.097, 0.224, side * 0.037], [side * 0.12, 0, side * -0.12], 0.004);
   }
-  if (style.lips) b.box(0.014, 0.01, 0.038, style.lips, [0.096, 0.118, 0], [0, 0, 0], 0.005);
+  // The nose: a bridge down from the brow and a rounded tip.
+  b.rod([0.094, 0.205, 0], [0.113, 0.164, 0], 0.011, skin, 8);
+  b.sphere(0.016, skin, [0.112, 0.16, 0], [1, 0.9, 1.1], 10);
+  if (style.lips) b.box(0.014, 0.01, 0.038, style.lips, [0.097, 0.118, 0], [0, 0, 0], 0.005);
 }
 
 function mix(a: number, b: number, t: number): number {

@@ -1,8 +1,8 @@
 import * as THREE from "three";
 import { cloth, leather, metal, plastic, satin, skin } from "../../kit/materials";
 import type { MeshBuilder } from "../../kit/mesh-builder";
-import { maskMesh } from "../../kit/textures";
-import { dressBody, onTorso } from "../anatomy";
+import { maskMesh, namePrint } from "../../kit/textures";
+import { dressBody, onTorso, TORSO_SCALE, torsoRadius } from "../anatomy";
 import type { Dresser } from "../dresser";
 import type { Look } from "./look";
 
@@ -54,6 +54,18 @@ export function dressVale(d: Dresser, look: Look): void {
   d.on("forearmF").cylinder(0.052, 0.04, 0.1, glove, [0, -0.22, 0], [0, 0, 0], 18);
 
   dressMask(d.on("head"), trim);
+  d.attach("chest", backPrint(look));
+}
+
+/** VALE across the shoulders of the jacket, in the player's colour. */
+function backPrint(look: Look): THREE.Mesh {
+  const ink = `#${new THREE.Color(look.trim).getHexString()}`;
+  const material = new THREE.MeshStandardMaterial({ map: namePrint("VALE", ink, look.mirrored), transparent: true, roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -2 });
+  const r = torsoRadius(0.37) * 1.02;
+  const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 0.1, 20, 1, true, Math.PI * 1.5 - 0.62, 1.24), material);
+  mesh.scale.set(TORSO_SCALE.depth, 1, TORSO_SCALE.width);
+  mesh.position.y = 0.37;
+  return mesh;
 }
 
 /** The mask's wire front. */

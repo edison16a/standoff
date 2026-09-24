@@ -31,23 +31,27 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  height: 40px;
-  padding: 0 16px;
-  border: 1px solid var(--border);
+  height: 42px;
+  padding: 0 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 999px;
-  background: var(--bg);
-  color: var(--text-muted);
-  font-size: 14px;
+  background: rgba(12, 10, 28, 0.66);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 15px;
   white-space: nowrap;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
 }
 
 .chip--on {
   border: 2px solid var(--lamp);
-  color: var(--text);
+  color: #ffffff;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--lamp) 45%, transparent), 0 6px 24px rgba(0, 0, 0, 0.25);
 }
 
 .chip__sub {
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.62);
   font-weight: 500;
 }
 
@@ -60,7 +64,7 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  border: 2px solid var(--border-strong);
+  border: 2px solid rgba(255, 255, 255, 0.4);
 }
 
 /* Red and green, like the scoring lamps, matching each fencer's trim on the strip. */
