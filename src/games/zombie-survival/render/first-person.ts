@@ -54,7 +54,7 @@ export class FirstPerson {
       const { rig, laser } = entry;
       // Spread along the bottom edge, pulled in a little on wide screens.
       const x = gunSlotX(index, shooters.length) * Math.min(halfW, halfH * 1.9) * 0.82;
-      rig.place(x, -halfH * 0.86, -DEPTH * 0.82);
+      rig.place(x, -halfH * 1.02, -DEPTH * 0.86);
       const aimLocal = shooter.aim ? this.camera.worldToLocal(shooter.aim.clone()) : new THREE.Vector3(x * 0.5, 0, -20);
       rig.pointAt(aimLocal);
       rig.update(dt, time + shooter.seat);

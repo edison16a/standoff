@@ -216,7 +216,7 @@ export class SurvivalRenderer implements SurvivalView {
     const ship = this.world.segment(26)?.group.getObjectByName("ship");
     if (!ship) return;
     this.shipBase ??= ship.position.clone();
-    const t = game.phase === "cutscene" && game.cutscene === "escape" ? game.phaseTime : game.phase === "escaped" ? 13 + game.phaseTime : 0;
+    const t = game.phase === "cutscene" && game.cutscene === "escape" ? game.phaseTime : game.phase === "escaped" ? 16 + game.phaseTime : 0;
     ship.position.copy(this.shipBase);
     ship.position.x += sailed(t);
   }

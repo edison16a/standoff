@@ -57,8 +57,9 @@ export function buildBoss(kind: BossKind, seed: number): { rig: Rig; weak: WeakM
     dressTorso(dress, d, m, { skin, shirt: null, pants: m.pants[1]!, ribs: false, belly: 1 }, rand);
     dressLimbs(dress, d, m, { skin, sleeve: null, pants: m.pants[1]!, shoes: true }, rand);
     const chest = dress.on("spine");
-    chest.box(d.torsoW * 0.95, d.torso * 1.2, 0.03, m.leather, [0, d.torso * 0.28, d.torsoD * 0.5 + 0.24], [0.12, 0, 0]);
-    for (let i = 0; i < 5; i++) chest.box(0.08 + rand() * 0.12, 0.06 + rand() * 0.14, 0.01, m.blood, [(rand() - 0.5) * 0.5, d.torso * (0.1 + rand() * 0.6), d.torsoD * 0.5 + 0.27], [0.12, 0, 0]);
+    chest.box(d.torsoW * 0.78, d.torso * 1.05, 0.03, m.leather, [0, d.torso * 0.12, d.torsoD * 0.5 + 0.3], [0.1, 0, 0], 0.01);
+    chest.box(d.torsoW * 0.5, d.torso * 0.35, 0.03, m.leather, [0, d.torso * 0.72, d.torsoD * 0.5 + 0.08], [-0.25, 0, 0], 0.01);
+    for (let i = 0; i < 6; i++) chest.box(0.05 + rand() * 0.1, 0.05 + rand() * 0.14, 0.01, m.blood, [(rand() - 0.5) * 0.45, d.torso * (-0.2 + rand() * 0.8), d.torsoD * 0.5 + 0.33], [0.1, 0, (rand() - 0.5) * 0.8]);
     for (const s of [-1, 1]) chest.box(0.04, d.torso * 0.6, 0.02, m.leather, [s * 0.2, d.torso * 0.75, d.torsoD * 0.5 + 0.02]);
     const hand = dress.on("handR");
     hand.box(0.05, 0.16, 0.05, m.leather, [0, -0.1, 0.02]);

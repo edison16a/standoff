@@ -38,7 +38,8 @@ export class CameraRig {
     this.started = true;
     const k = jump ? 1 : 1 - Math.exp(-dt * 6);
     this.pos.lerp(pos, k);
-    this.look.lerp(look, jump ? 1 : 1 - Math.exp(-dt * 4));
+    // Cutscenes follow the action more tightly than play does.
+    this.look.lerp(look, jump ? 1 : 1 - Math.exp(-dt * (game.phase === "cutscene" ? 7 : 4)));
     this.shake = Math.max(0, this.shake - dt * 2.2);
     const s = this.shake * this.shake * 0.18;
     camera.position.set(this.pos.x + (Math.random() - 0.5) * s, this.pos.y + (Math.random() - 0.5) * s, this.pos.z + (Math.random() - 0.5) * s);
@@ -60,7 +61,7 @@ export class CameraRig {
       case "cutscene":
         return game.cutscene === "escape" ? this.escape(game.phaseTime) : this.chopper(game, breathe);
       case "escaped":
-        return this.escape(13 + game.phaseTime);
+        return this.escape(16 + game.phaseTime);
       default: {
         const frame = fightFrame(game.stage);
         const pos = v(frame.origin, EYE).add(breathe);
@@ -77,7 +78,7 @@ export class CameraRig {
     const pose = chopperPose(game.phase, game.stage, game.cutscene, game.phaseTime);
     if (!pose) return { pos, look: v(frame.place(14, 0), 1.5) };
     const at = frame.place(pose.ahead, pose.side);
-    const look = new THREE.Vector3(at.x, frame.origin.y + Math.max(pose.up, -6) + 1, at.z);
+    const look = new THREE.Vector3(at.x, frame.origin.y + pose.up + 1, at.z);
     return { pos, look };
   }
 

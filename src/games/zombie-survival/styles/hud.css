@@ -15,6 +15,7 @@
 }
 
 .zs-hud > div {
+  white-space: nowrap;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -393,6 +394,16 @@
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+.zs-card .btn--ghost {
+  border-color: var(--zs-line);
+  background: transparent;
+  color: var(--zs-ink);
+}
+
+.zs-card .btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .zs-mvp {

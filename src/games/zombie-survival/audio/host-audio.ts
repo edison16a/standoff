@@ -99,7 +99,7 @@ export class HostAudio {
     const standing = game.encounter?.zombies.filter(alive) ?? [];
     this.ambience.frame(dt, {
       fighting: game.phase === "fight",
-      walking: game.phase === "travel" || (game.phase === "cutscene" && game.cutscene === "escape" && game.phaseTime < 9),
+      walking: game.phase === "travel" || (game.phase === "cutscene" && game.cutscene === "escape" && game.phaseTime < 10.5),
       health: game.running ? game.health : 100,
       walkers: game.squad.present().length,
     });

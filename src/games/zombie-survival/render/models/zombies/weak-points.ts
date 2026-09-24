@@ -49,10 +49,10 @@ export function addWeakPoints(rig: Rig, dress: Dresser, joints: readonly Joint[]
     bulb.scale.setScalar(radius);
     bulb.position.copy(at);
     const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color: 0xffa040, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false }));
-    halo.scale.setScalar(radius * 6);
+    halo.scale.setScalar(radius * 4.6);
     halo.position.copy(at);
     const ring = new THREE.Mesh(ringGeo!, new THREE.MeshBasicMaterial({ color: 0xffd080, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
-    ring.scale.setScalar(radius * 1.9);
+    ring.scale.setScalar(radius * 1.55);
     ring.position.copy(at).add(new THREE.Vector3(0, 0, radius * 0.4));
     rig.bones[bone].add(bulb, halo, ring);
     const size = radius * 2.9;

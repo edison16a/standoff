@@ -45,12 +45,12 @@ export function radioFor(stage: number): RadioLine | null {
 export const CHOPPER_LINES: readonly [number, RadioLine][] = [
   [0.5, { from: PILOT, text: "Roof is clear. Coming in to land." }],
   [4.2, { from: PILOT, text: "Losing oil pressure. Engine fire! Mayday, mayday!" }],
-  [8.5, { from: "Radio", text: "Eagle One, come in. Eagle One?" }],
+  [8.5, { from: "Dispatch", text: "Eagle One, come in. Eagle One?" }],
 ];
 
 export const ESCAPE_LINES: readonly [number, RadioLine][] = [
   [0.5, { from: HARBOR, text: "All aboard! Cast off the lines!" }],
-  [7, { from: HARBOR, text: "We are clear of the pier. You made it. Welcome aboard." }],
+  [11.5, { from: HARBOR, text: "We are clear of the pier. You made it. Welcome aboard." }],
 ];
 
 /** Shown on the screen as the goal, until the chopper falls and after. */

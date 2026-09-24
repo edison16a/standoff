@@ -45,14 +45,14 @@ export function chopperPose(phase: Phase, stage: number, cutscene: Cutscene | nu
     const t = phaseTime;
     if (t < APPROACH_END) {
       const k = ease(t / APPROACH_END);
-      return { ahead: 34 - k * 20, side: 0, up: 13 - k * 7, yaw: Math.PI * 0.5, pitch: 0.12 - k * 0.1, failing: 0, crashed: null, loudness: 0.65 + k * 0.35 };
+      return { ahead: 34 - k * 18, side: 0, up: 13 - k * 7, yaw: Math.PI * 0.5, pitch: 0.12 - k * 0.1, failing: 0, crashed: null, loudness: 0.65 + k * 0.35 };
     }
     if (t < CRASH_AT) {
       const k = (t - APPROACH_END) / (CRASH_AT - APPROACH_END);
       return {
-        ahead: 14 + k * 12,
-        side: k * k * 14,
-        up: 6 + Math.sin(k * Math.PI) * 3 - k * k * 24,
+        ahead: 16 + k * 14,
+        side: Math.sin(k * Math.PI) * 5 + k * 6,
+        up: 6 + Math.sin(k * Math.PI) * 2.5 - k * k * 5.2,
         yaw: Math.PI * 0.5 + k * k * 14,
         pitch: 0.02 + k * 0.5,
         failing: Math.min(1, k * 1.4),
@@ -60,8 +60,8 @@ export function chopperPose(phase: Phase, stage: number, cutscene: Cutscene | nu
         loudness: 1 - k * 0.3,
       };
     }
-    return { ahead: 26, side: 14, up: -14, yaw: 0, pitch: 0.5, failing: 1, crashed: t - CRASH_AT, loudness: 0 };
+    return { ahead: 30, side: 6, up: 0.1, yaw: 2.2, pitch: 0.3, failing: 1, crashed: t - CRASH_AT, loudness: 0 };
   }
-  if (phase === "travel" && stage === CHOPPER_STAGE + 1) return { ahead: 26, side: 14, up: -14, yaw: 0, pitch: 0.5, failing: 1, crashed: 10 + phaseTime, loudness: 0 };
+  if (phase === "travel" && stage === CHOPPER_STAGE + 1) return { ahead: 30, side: 6, up: 0.1, yaw: 2.2, pitch: 0.3, failing: 1, crashed: 10 + phaseTime, loudness: 0 };
   return null;
 }

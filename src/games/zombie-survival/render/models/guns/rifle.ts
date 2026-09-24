@@ -6,7 +6,7 @@ import { boreHole, gunMaterials, laserModule, marker, type GunMaterials, type Gu
 function rail(b: MeshBuilder, m: GunMaterials, at: V3, length: number, rot: V3 = [0, 0, 0]): void {
   const holder = new MeshBuilder();
   holder.box(0.022, 0.006, length, m.metal, [0, 0, 0]);
-  for (let z = -length / 2 + 0.006; z < length / 2; z += 0.012) holder.box(0.022, 0.004, 0.006, m.metal, [0, 0.005, z]);
+  for (let z = -length / 2 + 0.008; z < length / 2; z += 0.016) holder.box(0.022, 0.0025, 0.007, m.metal, [0, 0.004, z]);
   // Rails lie on every face of the handguard, so build flat and turn into place.
   const group = holder.build();
   group.rotation.set(...rot);

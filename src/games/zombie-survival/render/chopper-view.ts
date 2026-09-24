@@ -5,6 +5,7 @@ import { fightFrame } from "../engine/route";
 import { CHOPPER_STAGE } from "../engine/stages";
 import type { Effects } from "./effects/effects";
 import { buildHelicopter, type Helicopter } from "./models/vehicles/helicopter";
+import { glowTexture } from "./textures";
 
 /**
  * The rescue chopper on screen, placed from the same pure pose the
@@ -53,11 +54,38 @@ export class ChopperView {
       const exhaust = heli.exhaust.getWorldPosition(new THREE.Vector3());
       this.effects.puff(exhaust, true);
     }
+    this.burn(heli, pose.crashed !== null, time);
     if (pose.crashed !== null && !this.exploded) {
       this.exploded = true;
       // A wreck seen long after the crash just smoulders.
       if (pose.crashed < 1) this.effects.explosion(this.at.clone());
     }
+  }
+
+  /** Flames licking over the wreck once it is down, flickering on their own. */
+  private burn(heli: Helicopter, on: boolean, time: number): void {
+    let fire = heli.root.getObjectByName("wreck-fire");
+    if (!fire && on) {
+      fire = new THREE.Group();
+      fire.name = "wreck-fire";
+      const material = new THREE.MeshBasicMaterial({ color: 0xff7a26, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
+      for (let i = 0; i < 6; i++) {
+        const flame = new THREE.Mesh(new THREE.ConeGeometry(0.5 - i * 0.04, 1.6 + (i % 3) * 0.6, 8), material);
+        flame.position.set(-2 + i * 0.7, 2.4, (i % 2) - 0.5);
+        fire.add(flame);
+      }
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color: 0xff8a30, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+      glow.scale.setScalar(9);
+      glow.position.set(-0.5, 2.5, 0);
+      fire.add(glow);
+      heli.root.add(fire);
+    }
+    if (!fire) return;
+    fire.visible = on;
+    fire.children.forEach((flame, i) => {
+      flame.scale.y = 0.7 + Math.abs(Math.sin(time * (7 + i * 1.3) + i)) * 0.6;
+      flame.scale.x = flame.scale.z = 0.8 + Math.sin(time * 5 + i) * 0.15;
+    });
   }
 
   private add(): Helicopter {

@@ -26,8 +26,8 @@ export function Stage() {
       <ViewCanvas />
       <div className="zs-vignette" aria-hidden="true" />
       <Banners />
-      {phase === "lobby" ? <LobbyPanel /> : <Hud />}
-      {phase !== "lobby" && <PlayerChips />}
+      {phase === "lobby" ? <LobbyPanel /> : !cinematic && phase !== "escaped" && <Hud />}
+      {phase !== "lobby" && !cinematic && phase !== "escaped" && <PlayerChips />}
       <RadioBox />
       <Toasts />
       {phase === "clear" && <Summary />}

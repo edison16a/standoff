@@ -25,12 +25,12 @@ export function buildRoof(kit: SegmentKit): void {
   // Helipad.
   const pad = kit.at(0, 18, 0.02);
   b.post(7, 0.03, m.darkMetal, pad, 40);
-  b.add(new THREE.TorusGeometry(6, 0.18, 6, 48), m.paint, [pad[0], pad[1] + 0.03, pad[2]], [Math.PI / 2, 0, 0]);
+  b.add(new THREE.RingGeometry(5.7, 6.2, 48), m.paint, [pad[0], pad[1] + 0.035, pad[2]], [-Math.PI / 2, 0, 0]);
   for (const x of [-1.2, 1.2]) b.box(0.5, 0.02, 4, m.whitePaint, [pad[0] + x, pad[1] + 0.03, pad[2]]);
   b.box(2.4, 0.02, 0.5, m.whitePaint, [pad[0], pad[1] + 0.03, pad[2]]);
   for (let i = 0; i < 8; i++) {
     const a = (i / 8) * Math.PI * 2;
-    addLamp(kit, pad[0] + Math.cos(a) * 7.2, pad[1] + 0.12, pad[2] + Math.sin(a) * 7.2, 0x9affb0, 0, 0);
+    addLamp(kit, pad[0] + Math.cos(a) * 7.2, pad[1] + 0.12, pad[2] + Math.sin(a) * 7.2, 0xfff0c8, 0, 0);
   }
 
   // Stairwell huts with open doors, where the zombies come from.

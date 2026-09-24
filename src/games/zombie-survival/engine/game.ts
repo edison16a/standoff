@@ -14,7 +14,7 @@ export const MAX_HEALTH = 100;
 export const WALK_SPEED = 3.8;
 /** Seconds on the checkpoint summary before the team moves on. */
 export const CLEAR_SECONDS = 6.5;
-export const CUTSCENE_SECONDS: Record<Cutscene, number> = { chopper: 12, escape: 13 };
+export const CUTSCENE_SECONDS: Record<Cutscene, number> = { chopper: 12, escape: 16 };
 /** Health found at each checkpoint. */
 export const CHECKPOINT_HEAL = 15;
 /** A retry never starts a fight with less than this, so a bad checkpoint is not a dead end. */
@@ -103,6 +103,8 @@ export class SurvivalGame {
   }
 
   update(dt: number): void {
+    // After the escape the clock keeps running for the view of the ship sailing away. Nothing else moves.
+    if (this.phase === "escaped") this.phaseTime += dt;
     if (this.phase === "lobby" || this.phase === "down" || this.phase === "escaped") return;
     const before = this.phaseTime;
     this.time += dt;
