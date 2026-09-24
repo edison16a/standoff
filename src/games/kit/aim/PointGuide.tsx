@@ -18,8 +18,8 @@ export function PointGuide({ step, colour }: { step: AimStep; colour: string }) 
       <rect x="104" y="122" width="32" height="12" className="kit-guide__stand" />
       <circle cx={target.x} cy={target.y} r="15" fill="none" stroke={colour} strokeWidth="4" />
       <circle cx={target.x} cy={target.y} r="5" fill={colour} />
-      <line x1="120" y1="176" x2={target.x} y2={target.y + 16} stroke={colour} strokeWidth="3" strokeDasharray="6 6" strokeLinecap="round" />
-      <g transform="translate(120 196) scale(1 0.55)">
+      <line x1="120" y1="164" x2={target.x} y2={target.y + 16} stroke={colour} strokeWidth="3" strokeDasharray="6 6" strokeLinecap="round" />
+      <g transform="translate(120 184) scale(1 0.55)">
         <rect x="-26" y="-44" width="52" height="88" rx="10" className="kit-guide__phone" />
         <rect x="-10" y="-40" width="20" height="4" rx="2" fill={colour} />
       </g>
