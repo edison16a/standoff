@@ -40,8 +40,6 @@ export const readySchema = z.object({
   ready: z.boolean(),
 });
 
-export const skipSchema = z.object({ kind: z.literal("skip") });
-
 export const rematchSchema = z.object({ kind: z.literal("rematch") });
 
 /** Ask for the computer as the opponent, or send it away again. */
@@ -52,7 +50,6 @@ export const phoneMessageSchema = z.discriminatedUnion("kind", [
   strikeSchema,
   pickSchema,
   readySchema,
-  skipSchema,
   rematchSchema,
   soloSchema,
 ]);

@@ -2,56 +2,34 @@ import { describe, expect, it } from "vitest";
 import { Match } from "./match";
 import { EN_GARDE_SECONDS, HALT_MS, SHORT_HALT_MS } from "./rules";
 
-const TIMEOUT = 10_000;
-
 describe("Match", () => {
-  it("counts down, goes live, halts, replays and returns to en garde", () => {
-    const match = new Match(() => TIMEOUT);
+  it("counts down, goes live, halts and returns to en garde", () => {
+    const match = new Match();
     match.start(0);
     expect(match.countdown(0)).toBe(EN_GARDE_SECONDS);
-    expect(match.update(EN_GARDE_SECONDS * 1000, false)).toBe("live");
+    expect(match.update(EN_GARDE_SECONDS * 1000)).toBe("live");
     match.halt({ kind: "touch", scorer: 2 }, 5000);
     expect(match.scores[2]).toBe(1);
-    expect(match.update(5000 + HALT_MS, false)).toBe("replay");
-    expect(match.update(5000 + HALT_MS + 100, true)).toBe("enGarde");
+    expect(match.update(5000 + HALT_MS - 1)).toBeNull();
+    expect(match.update(5000 + HALT_MS)).toBe("enGarde");
   });
 
-  it("skips the replay once both players vote", () => {
-    const match = new Match(() => TIMEOUT);
-    match.start(0);
-    match.halt({ kind: "touch", scorer: 1 }, 0);
-    match.update(HALT_MS, false);
-    match.voteSkip(1);
-    expect(match.update(HALT_MS + 10, false)).toBeNull();
-    match.voteSkip(2);
-    expect(match.update(HALT_MS + 20, false)).toBe("enGarde");
-  });
-
-  it("gives up on the replay after the timeout", () => {
-    const match = new Match(() => TIMEOUT);
-    match.start(0);
-    match.halt({ kind: "touch", scorer: 1 }, 0);
-    match.update(HALT_MS, false);
-    expect(match.update(HALT_MS + TIMEOUT, false)).toBe("enGarde");
-  });
-
-  it("skips the replay after a double or corps-à-corps", () => {
-    const match = new Match(() => TIMEOUT);
+  it("restarts quickly after a double or corps-à-corps, with no score", () => {
+    const match = new Match();
     match.start(0);
     match.halt({ kind: "double" }, 0);
-    expect(match.update(SHORT_HALT_MS, false)).toBe("enGarde");
+    expect(match.update(SHORT_HALT_MS)).toBe("enGarde");
     expect(match.scores).toEqual({ 1: 0, 2: 0 });
   });
 
   it("ends the match at two touches and restarts on a double rematch vote", () => {
-    const match = new Match(() => TIMEOUT);
+    const match = new Match();
     match.start(0);
     match.halt({ kind: "touch", scorer: 1 }, 0);
     expect(match.isMatchPoint(1)).toBe(true);
     match.halt({ kind: "touch", scorer: 1 }, 10);
     expect(match.winner).toBe(1);
-    match.update(10 + HALT_MS, false);
-    expect(match.update(20 + HALT_MS, true)).toBe("matchOver");
+    expect(match.update(10 + HALT_MS)).toBe("matchOver");
     expect(match.voteRematch(1)).toBe(false);
     expect(match.voteRematch(2)).toBe(true);
     match.start(99_999);
@@ -59,9 +37,9 @@ describe("Match", () => {
   });
 
   it("pauses an exchange and restarts it from the countdown", () => {
-    const match = new Match(() => TIMEOUT);
+    const match = new Match();
     match.start(0);
-    match.update(EN_GARDE_SECONDS * 1000, false);
+    match.update(EN_GARDE_SECONDS * 1000);
     match.pause(4000);
     expect(match.phase).toBe("paused");
     match.resume(9000);

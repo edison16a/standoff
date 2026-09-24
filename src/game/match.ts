@@ -2,7 +2,7 @@ import { perSlot, type PerSlot, type Slot } from "@/shared/players";
 import { TOUCHES_TO_WIN, type MatchPhase } from "@/shared/protocol";
 import { EN_GARDE_SECONDS, HALT_MS, SHORT_HALT_MS } from "./rules";
 
-/** Why play stopped. Only a touch earns a replay. */
+/** Why play stopped. Only a touch scores. */
 export type HaltReason = { kind: "touch"; scorer: Slot } | { kind: "double" } | { kind: "corps" };
 
 /** The referee's call, as short as a real one. Left is player one. */
@@ -22,13 +22,10 @@ export class Match {
   phase: MatchPhase = "lobby";
   phaseStartedAt = 0;
   scores: PerSlot<number> = perSlot(() => 0);
-  skipVotes: PerSlot<boolean> = perSlot(() => false);
   rematchVotes: PerSlot<boolean> = perSlot(() => false);
   winner: Slot | null = null;
   call: string | null = null;
   haltReason: HaltReason | null = null;
-
-  constructor(private readonly replayTimeoutMs: () => number) {}
 
   /** Fresh scores and straight into the first countdown. */
   start(now: number): void {
@@ -61,10 +58,6 @@ export class Match {
     return this.scores[scorer] + 1 >= TOUCHES_TO_WIN;
   }
 
-  voteSkip(slot: Slot): void {
-    if (this.phase === "replay") this.skipVotes[slot] = true;
-  }
-
   /** Records a rematch vote. Returns true once both players want one. */
   voteRematch(slot: Slot): boolean {
     if (this.phase !== "matchOver") return false;
@@ -85,32 +78,20 @@ export class Match {
 
   /**
    * Advances time. Returns the phase we just entered, if any, so the
-   * engine can do the side effects (recenter phones, start a replay).
+   * engine can do the side effects (recenter phones, crown a winner).
    */
-  update(now: number, replayFinished: boolean): MatchPhase | null {
+  update(now: number): MatchPhase | null {
     const elapsed = now - this.phaseStartedAt;
-    switch (this.phase) {
-      case "enGarde":
-        return elapsed >= EN_GARDE_SECONDS * 1000 ? this.enter("live", now) : null;
-      case "halt": {
-        const touch = this.haltReason?.kind === "touch";
-        if (elapsed < (touch ? HALT_MS : SHORT_HALT_MS)) return null;
-        return this.enter(touch ? "replay" : "enGarde", now);
-      }
-      case "replay": {
-        const bothSkipped = this.skipVotes[1] && this.skipVotes[2];
-        if (!replayFinished && !bothSkipped && elapsed < this.replayTimeoutMs()) return null;
-        return this.enter(this.winner ? "matchOver" : "enGarde", now);
-      }
-      default:
-        return null;
-    }
+    if (this.phase === "enGarde") return elapsed >= EN_GARDE_SECONDS * 1000 ? this.enter("live", now) : null;
+    if (this.phase !== "halt") return null;
+    const touch = this.haltReason?.kind === "touch";
+    if (elapsed < (touch ? HALT_MS : SHORT_HALT_MS)) return null;
+    return this.enter(this.winner ? "matchOver" : "enGarde", now);
   }
 
   private enter(phase: MatchPhase, now: number): MatchPhase {
     this.phase = phase;
     this.phaseStartedAt = now;
-    if (phase === "replay") this.skipVotes = perSlot(() => false);
     if (phase === "enGarde") this.call = null;
     return phase;
   }

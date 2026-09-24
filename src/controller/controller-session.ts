@@ -118,8 +118,8 @@ export class ControllerSession {
     this.send({ kind: "ready", ready });
   }
 
-  /** Skip the replay, ask for a rematch, or ask for the computer as opponent. */
-  press(payload: Extract<PhoneMessage, { kind: "skip" | "rematch" | "solo" }>): void {
+  /** Ask for a rematch, or for the computer as opponent. */
+  press(payload: Extract<PhoneMessage, { kind: "rematch" | "solo" }>): void {
     this.sfx?.click();
     this.send(payload);
   }

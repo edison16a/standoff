@@ -9,7 +9,6 @@ import { useSession } from "../session-context";
 
 const GROUPS: { id: TuningGroup; label: string }[] = [
   { id: "Strikes", label: "Strikes" },
-  { id: "Match", label: "Match" },
   { id: "Sound", label: "Sound" },
 ];
 

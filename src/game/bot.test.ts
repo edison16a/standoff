@@ -8,7 +8,7 @@ import { TICK_MS } from "./fixed-step";
 function setup(random: () => number) {
   const events: GameEvent[] = [];
   const engine = new Engine({ 1: "vale", 2: "iron" }, () => DEFAULT_TUNING, {
-    onEvent: (event, source) => source === "live" && events.push(event),
+    onEvent: (event) => events.push(event),
     onPhase: () => undefined,
   });
   const bot = new Bot(2, random);
@@ -42,13 +42,5 @@ describe("Bot", () => {
     engine.strike(1, "jab");
     runFor(300);
     expect(events).toContainEqual(expect.objectContaining({ type: "parried", attacker: 1 }));
-  });
-
-  it("votes to skip the replay straight away", () => {
-    const { engine, runFor } = setup(() => 0.5);
-    runFor(12000, () => engine.phase === "replay");
-    runFor(50);
-    expect(engine.phase).toBe("replay");
-    expect(engine.match.skipVotes[2]).toBe(true);
   });
 });

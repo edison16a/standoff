@@ -1,6 +1,6 @@
 /*
   What floats over the strip during a match: the big call in the middle,
-  the replay line, the result, and the tuning drawer.
+  the result, and the tuning drawer.
 */
 
 .banner {
@@ -16,7 +16,6 @@
   pointer-events: none;
 }
 
-.replay,
 .over {
   position: absolute;
   bottom: 24px;
@@ -31,32 +30,6 @@
   white-space: nowrap;
 }
 
-.replay {
-  height: 44px;
-  padding: 0 18px;
-  border-radius: 999px;
-}
-
-.replay__label {
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.replay__track {
-  width: min(240px, 40vw);
-  height: 3px;
-  border-radius: 3px;
-  background: var(--bg-muted);
-  overflow: hidden;
-}
-
-.replay__fill {
-  display: block;
-  height: 100%;
-  background: var(--accent);
-}
-
-.replay__votes,
 .over__votes {
   display: inline-flex;
   gap: 6px;

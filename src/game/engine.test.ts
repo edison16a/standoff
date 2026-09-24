@@ -10,7 +10,7 @@ function setup() {
   const events: GameEvent[] = [];
   const phases: MatchPhase[] = [];
   const engine = new Engine({ 1: "vale", 2: "marrow" }, () => DEFAULT_TUNING, {
-    onEvent: (event, source) => source === "live" && events.push(event),
+    onEvent: (event) => events.push(event),
     onPhase: (phase) => phases.push(phase),
   });
   const runFor = (ms: number) => {
@@ -20,7 +20,7 @@ function setup() {
 }
 
 describe("Engine", () => {
-  it("plays a full exchange: advance, touch, replay, next en garde", () => {
+  it("plays a full exchange: advance, touch, halt, next en garde", () => {
     const { engine, events, phases, runFor } = setup();
     engine.start();
     runFor(EN_GARDE_SECONDS * 1000 + 50);
@@ -35,13 +35,8 @@ describe("Engine", () => {
 
     expect(events.map((e) => e.type)).toEqual(expect.arrayContaining(["allez", "jab", "touch"]));
     expect(engine.match.scores[1]).toBe(1);
+    expect(engine.phase).toBe("halt");
     runFor(HALT_MS + 50);
-    expect(engine.phase).toBe("replay");
-    expect(engine.replayProgress).not.toBeNull();
-
-    engine.skip(1);
-    engine.skip(2);
-    runFor(50);
     expect(phases.slice(-1)[0]).toBe("enGarde");
     expect(engine.fencers[1].x).toBeCloseTo(engine.fencers[1].startX);
   });

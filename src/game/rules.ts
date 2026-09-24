@@ -32,8 +32,12 @@ export const DEFLECTED_MS = 450;
 export const OFF_TARGET_ANGLE = (75 * Math.PI) / 180;
 /** Seconds counted down before each exchange. */
 export const EN_GARDE_SECONDS = 3;
-/** Freeze after a touch before the replay starts. */
-export const HALT_MS = 1100;
+/**
+ * Freeze after a touch, in engine time. The host plays the first part of
+ * it in slow motion (see MatchDriver), so on screen it lasts about two
+ * seconds, long enough to see the hit land and the burst go off.
+ */
+export const HALT_MS = 1400;
 /** Freeze after a corps-à-corps or a double before play resumes. */
 export const SHORT_HALT_MS = 900;
 /** Two jabs this close together, one of them parried, count as a clash. */

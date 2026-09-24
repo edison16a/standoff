@@ -16,8 +16,6 @@ export interface Tuning {
   parryWindowMs: number;
   /** Quiet time after a jab or parry so the recovery motion is ignored. */
   refractoryMs: number;
-  /** A replay ends on its own after this long, skip votes or not. */
-  replayTimeoutMs: number;
   /** Master levels, 0 to 1. */
   musicVolume: number;
   crowdVolume: number;
@@ -31,7 +29,6 @@ export const DEFAULT_TUNING: Tuning = {
   parryThreshold: 12,
   parryWindowMs: 1000,
   refractoryMs: 350,
-  replayTimeoutMs: 10000,
   musicVolume: 0.5,
   crowdVolume: 0.6,
   sfxVolume: 0.9,
@@ -40,7 +37,7 @@ export const DEFAULT_TUNING: Tuning = {
 
 export type TuningKey = keyof Tuning;
 
-export type TuningGroup = "Strikes" | "Match" | "Sound";
+export type TuningGroup = "Strikes" | "Sound";
 
 export interface TuningField {
   key: TuningKey;
@@ -62,7 +59,6 @@ export const TUNING_FIELDS: readonly TuningField[] = [
   { key: "parryThreshold", label: "Parry threshold", group: "Strikes", min: 4, max: 40, step: 0.5, unit: "m/s²" },
   { key: "parryWindowMs", label: "Parry window", group: "Strikes", min: 200, max: 2000, step: 50, unit: "ms" },
   { key: "refractoryMs", label: "Refractory period", group: "Strikes", min: 100, max: 800, step: 10, unit: "ms" },
-  { key: "replayTimeoutMs", label: "Replay timeout", group: "Match", min: 3000, max: 20000, step: 500, unit: "ms" },
   { key: "musicVolume", label: "Music", group: "Sound", min: 0, max: 1, step: 0.05, unit: "" },
   { key: "crowdVolume", label: "Crowd", group: "Sound", min: 0, max: 1, step: 0.05, unit: "" },
   { key: "sfxVolume", label: "Effects", group: "Sound", min: 0, max: 1, step: 0.05, unit: "" },

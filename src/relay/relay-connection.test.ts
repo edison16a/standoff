@@ -114,7 +114,7 @@ describe("RelayConnection over the memory backend", () => {
     await a.send({ type: "phone:join", code });
     await b.send({ type: "phone:join", code });
     await a.send({ type: "host:send", to: 2, payload: { kind: "recenter" } });
-    await host.send({ type: "phone:send", payload: { kind: "skip" } });
+    await host.send({ type: "phone:send", payload: { kind: "rematch" } });
     expect(b.socket.has("host:message")).toBe(false);
     expect(host.socket.has("peer:message")).toBe(false);
   });

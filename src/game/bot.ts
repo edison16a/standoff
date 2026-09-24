@@ -45,9 +45,8 @@ export class Bot {
     engine.control(this.slot, { ...this.wiggle(engine.now), move });
   }
 
-  /** It never makes the player sit through a replay or wait for a rematch. */
+  /** It never makes the player wait for a rematch. */
   private onPhase(engine: Engine): void {
-    if (engine.phase === "replay") engine.skip(this.slot);
     if (engine.phase === "matchOver") engine.rematch(this.slot);
     if (engine.phase === "live") {
       this.plan = "wait";

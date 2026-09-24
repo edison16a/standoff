@@ -9,21 +9,19 @@ import { JoinPanel } from "./JoinPanel";
 import { MatchOver } from "./MatchOver";
 import { PhaseBanner } from "./PhaseBanner";
 import { PlayerBar } from "./PlayerBar";
-import { ReplayBar } from "./ReplayBar";
 import { StageCanvas } from "./StageCanvas";
 import { TuningDrawer } from "./TuningDrawer";
 
 /**
  * The whole game on one full screen stage. The strip is always there:
  * players appear on it as they pick fencers, the countdown starts on the
- * same picture, and the match, replays and the result play out on top.
+ * same picture, and the match and the result play out on top.
  */
 export function Stage() {
   const session = useSession();
   const rootRef = useRef<HTMLDivElement>(null);
   const [tuning, setTuning] = useState(false);
   const status = useHostStore((state) => state.status);
-  const sharedRooms = useHostStore((state) => state.sharedRooms);
 
   const toggleFullscreen = () => {
     if (document.fullscreenElement) void document.exitFullscreen();
@@ -43,11 +41,8 @@ export function Stage() {
       </div>
       <JoinPanel />
       <PhaseBanner />
-      <ReplayBar />
       <MatchOver />
-      {(status !== "open" || !sharedRooms) && (
-        <p className="stage__notice">{status !== "open" ? "Reconnecting" : "No shared room store. Add Redis to this deployment."}</p>
-      )}
+      {status !== "open" && <p className="stage__notice">Reconnecting</p>}
       {tuning && <TuningDrawer onClose={() => setTuning(false)} />}
     </div>
   );

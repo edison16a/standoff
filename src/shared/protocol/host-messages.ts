@@ -25,7 +25,6 @@ export const controllerStateSchema = z.object({
   computer: pair(z.boolean()),
   /** Whole seconds left in the en garde countdown, when counting. */
   countdown: z.number().int().min(0).nullable(),
-  skipVotes: pair(z.boolean()),
   rematchVotes: pair(z.boolean()),
   /** Short referee call for the last exchange, like "Touch" or "Parried". */
   call: z.string().max(40).nullable(),
@@ -40,7 +39,6 @@ export const tuningMessageSchema = z.object({
     parryThreshold: z.number(),
     parryWindowMs: z.number(),
     refractoryMs: z.number(),
-    replayTimeoutMs: z.number(),
     musicVolume: z.number(),
     crowdVolume: z.number(),
     sfxVolume: z.number(),

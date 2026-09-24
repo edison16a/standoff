@@ -15,8 +15,6 @@ function headline(game: ControllerState, slot: Slot): string {
       return "Allez";
     case "halt":
       return game.call ?? "Halt";
-    case "replay":
-      return "Replay";
     case "paused":
       return "Paused";
     case "matchOver":
@@ -45,12 +43,7 @@ export function MatchPad({ slot, game }: { slot: Slot; game: ControllerState }) 
         <strong className="pad__title">{headline(game, slot)}</strong>
       </header>
 
-      {game.phase === "replay" ? (
-        <button type="button" className="hold hold--solo" disabled={game.skipVotes[me]} onClick={() => session.press({ kind: "skip" })}>
-          <Icon name="skip" size={28} />
-          {game.skipVotes[me] ? "Waiting" : "Skip"}
-        </button>
-      ) : game.phase === "matchOver" ? (
+      {game.phase === "matchOver" ? (
         <button type="button" className="hold hold--solo" disabled={game.rematchVotes[me]} onClick={() => session.press({ kind: "rematch" })}>
           <Icon name="refresh" size={28} />
           {game.rematchVotes[me] ? "Waiting" : "Rematch"}

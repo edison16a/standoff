@@ -1,4 +1,3 @@
-import type { EventSource } from "@/game/engine";
 import type { GameEvent } from "@/game/events";
 import type { MatchPhase } from "@/shared/protocol";
 import type { Tuning } from "@/shared/tuning";
@@ -48,10 +47,6 @@ export class SoundDirector {
         this.crowd.startMurmur();
         this.engine.holdDuck("music", 1);
         break;
-      case "replay":
-        // The replay is about the blades, so the music steps right back.
-        this.engine.holdDuck("music", 0.2);
-        break;
       case "paused":
         this.engine.holdDuck("music", 0.35);
         break;
@@ -65,11 +60,7 @@ export class SoundDirector {
     }
   }
 
-  onEvent(event: GameEvent, source: EventSource): void {
-    if (source === "replay") {
-      this.combat(event);
-      return;
-    }
+  onEvent(event: GameEvent): void {
     switch (event.type) {
       case "countdown":
         this.sfx.tick();
@@ -78,9 +69,14 @@ export class SoundDirector {
         this.sfx.buzzer();
         break;
       case "touch":
+        // The music drops away for the slow motion, and comes back with the burst.
+        this.sfx.impact();
+        this.engine.duck("music", 0.15, 1.1);
+        if (event.matchPoint) this.cheer(0.8);
+        break;
+      case "impact":
         this.sfx.impact();
         this.sfx.chime();
-        if (event.matchPoint) this.cheer(0.8);
         break;
       case "parried":
         this.sfx.clang();
@@ -92,22 +88,18 @@ export class SoundDirector {
       case "corps":
         this.sfx.buzzer();
         break;
-      default:
-        this.combat(event);
+      case "jab":
+        this.sfx.jab();
+        break;
+      case "whiff":
+        this.sfx.whiff();
+        break;
     }
   }
 
   stop(): void {
     this.music.stop();
     this.crowd.stopMurmur();
-  }
-
-  /** The effects that also play during a replay. */
-  private combat(event: GameEvent): void {
-    if (event.type === "jab") this.sfx.jab();
-    if (event.type === "whiff") this.sfx.whiff();
-    if (event.type === "parried") this.sfx.clang();
-    if (event.type === "touch") this.sfx.impact();
   }
 
   private cheer(intensity: number, force = false): void {

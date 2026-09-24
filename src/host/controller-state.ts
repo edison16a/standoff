@@ -20,7 +20,6 @@ export function buildControllerState(lobby: Lobby, engine: Engine | null): Contr
     connected: [seats[1].connected, seats[2].connected],
     computer: [seats[1].computer, seats[2].computer],
     countdown: engine ? engine.match.countdown(engine.now) : null,
-    skipVotes: match ? [match.skipVotes[1], match.skipVotes[2]] : [false, false],
     rematchVotes: match ? [match.rematchVotes[1], match.rematchVotes[2]] : [false, false],
     call: match?.call ?? null,
     winner: match?.winner ?? null,

@@ -14,10 +14,7 @@ export interface MatchHud {
   countdown: number | null;
   call: string | null;
   winner: Slot | null;
-  skipVotes: PerSlot<boolean>;
   rematchVotes: PerSlot<boolean>;
-  /** Replay progress in whole percent, and whether it is in slow motion. */
-  replay: { percent: number; slow: boolean } | null;
 }
 
 /**
