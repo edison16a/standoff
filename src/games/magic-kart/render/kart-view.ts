@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { speedOf, type Kart } from "../engine/kart";
 import type { Track } from "../engine/track";
+import { DRIVE } from "../engine/tuning";
 import type { KartExtras } from "./kart-extras";
 import { nameTag } from "./kart-extras";
 import { KartModel } from "./models/kart-model";
@@ -75,7 +76,7 @@ export class KartView {
     const root = this.model.root;
     root.position.set(kart.x, kart.y, kart.z);
     // In a drift the nose swings into the bend and the rear steps out, more the faster it slides.
-    const slideTo = kart.drift !== 0 && !kart.airborne ? -kart.drift * (0.26 + 0.14 * Math.min(1, speedOf(kart) / 27)) : 0;
+    const slideTo = kart.drift !== 0 ? -kart.drift * (0.26 + 0.14 * Math.min(1, speedOf(kart) / DRIVE.topSpeed)) : 0;
     this.slide += (slideTo - this.slide) * Math.min(1, dt * 7);
     root.rotation.set(0, kart.heading + kart.spin + this.slide, 0, "YXZ");
     // Nose up and down with the road, and a bit more with the jump's arc.

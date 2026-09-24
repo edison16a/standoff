@@ -95,6 +95,25 @@ describe("drifting", () => {
     expect(kart.timers.boost).toBeCloseTo(DRIFT.orangeBoost, 1);
   });
 
+  it("keeps the surge through a power slide", () => {
+    const kart = atSpeed(4);
+    run(kart, FLAT_OUT, SURGE.after + SURGE.build + 1);
+    run(kart, { steer: 0.8, throttle: true, brake: true }, 1);
+    expect(kart.drift).toBe(1);
+    expect(kart.surge).toBe(1);
+  });
+
+  it("holds a drift and its charge through a jump", () => {
+    const kart = atSpeed();
+    run(kart, { steer: 0.8, throttle: true, brake: true }, 1);
+    const charge = kart.driftTime;
+    kart.airborne = true;
+    kart.y = 3;
+    driveKart(kart, { steer: 0.8, throttle: true, brake: false }, wide, STEP, () => undefined);
+    expect(kart.drift).toBe(1);
+    expect(kart.driftTime).toBe(charge);
+  });
+
   it("pays nothing for a flick too short to spark", () => {
     const kart = atSpeed();
     run(kart, { steer: 0.8, throttle: true, brake: true }, 0.3);

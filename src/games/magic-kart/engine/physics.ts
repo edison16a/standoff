@@ -36,8 +36,9 @@ export function driveKart(kart: Kart, input: KartInput, track: Track, dt: number
   kart.throttle = control && input.throttle;
   kart.brakeHeld = control && input.brake ? kart.brakeHeld + dt : 0;
   if (!kart.airborne) vF = pedals(kart, input, vF, top, dt);
-  updateSurge(kart, input, vF, dt);
   updateDrift(kart, input, vF, control, dt, emit);
+  // After the drift, so braking into a power slide counts as the slide, not as lifting off.
+  updateSurge(kart, input, vF, dt);
 
   const wanted = control ? input.steer : 0;
   kart.steer += (wanted - kart.steer) * Math.min(1, dt * 12);

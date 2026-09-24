@@ -58,7 +58,7 @@ function towards(vF: number, top: number, gain: number, dt: number): number {
  * it, so a good line through a bend holds on to the extra pace.
  */
 export function updateSurge(kart: Kart, input: KartInput, vF: number, dt: number): void {
-  const flat = input.throttle && !input.brake && kart.timers.stun <= 0;
+  const flat = input.throttle && (!input.brake || kart.drift !== 0) && kart.timers.stun <= 0;
   if (!flat) kart.flatOut = 0;
   else if (kart.drift === 0 && kart.surface !== "offroad" && vF > baseTop(kart) * SURGE.from) kart.flatOut += dt;
   const target = Math.max(0, Math.min(1, (kart.flatOut - SURGE.after) / SURGE.build));
@@ -77,9 +77,11 @@ function startsDrift(kart: Kart, input: KartInput, vF: number): boolean {
  * Starts, holds and releases a drift. It lasts while Brake is held or
  * Drive is off, and ends when the player drives out of it or the kart
  * has slowed right down. The longer the slide, and the faster, the
- * hotter the sparks, and the turbo it pays when it ends.
+ * hotter the sparks, and the turbo it pays when it ends. A jump mid
+ * drift holds it as it is, so the slide carries on after landing.
  */
 export function updateDrift(kart: Kart, input: KartInput, vF: number, control: boolean, dt: number, emit: Emit): void {
+  if (kart.drift !== 0 && kart.airborne && kart.timers.stun <= 0) return;
   if (kart.drift === 0) {
     if (control && startsDrift(kart, input, vF)) {
       kart.drift = Math.sign(input.steer);
