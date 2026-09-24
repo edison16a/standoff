@@ -5,7 +5,7 @@ import { alive, makeZombie, stepZombie, type Zombie } from "./zombie";
 import { weakPointHp, type ZombieKind } from "./zombie-kinds";
 
 /** The first zombie shows up after this long, so players can settle their aim. */
-const FIRST_SPAWN = 1.6;
+const FIRST_SPAWN = 0.9;
 /** Zombies closer than this push each other apart sideways. */
 const PERSONAL_SPACE = 0.95;
 /** Dead zombies stay on the ground this long before they are cleared away. */
@@ -19,8 +19,13 @@ export function teamCount(spec: StageSpec, players: number): number {
 }
 
 export function teamMaxAlive(spec: StageSpec, players: number): number {
-  // More guns, a few more at once: but never a horde.
-  return spec.maxAlive + Math.floor(Math.max(0, players - 1) * 0.67);
+  // More guns, more at once, so a full team always has something to shoot.
+  return spec.maxAlive + Math.max(0, players - 1);
+}
+
+/** Seconds between spawns for a team. A bigger team gets its bigger share sooner, so its fights do not drag. */
+export function teamGap(spec: StageSpec, players: number): number {
+  return spec.gap / (1 + 0.3 * Math.max(0, players - 1));
 }
 
 /**
@@ -33,6 +38,7 @@ export class Encounter {
   private spawned = 0;
   private readonly total: number;
   private readonly maxAlive: number;
+  private readonly gap: number;
   private spawnIn = FIRST_SPAWN;
   private bossDue: boolean;
   private readonly rng: Rng;
@@ -47,6 +53,7 @@ export class Encounter {
     this.rng = new Rng(seed);
     this.total = teamCount(spec, players);
     this.maxAlive = teamMaxAlive(spec, players);
+    this.gap = teamGap(spec, players);
     this.bossDue = spec.boss !== undefined;
     this.nextId = firstId;
   }
@@ -94,7 +101,7 @@ export class Encounter {
     if (this.bossDue && this.spec.boss) {
       this.bossDue = false;
       this.add(this.spec.boss, Math.max(this.spec.spawn[0], this.spec.spawn[1] - 4), 0, emit);
-      this.spawnIn = this.spec.gap * 1.6;
+      this.spawnIn = this.gap * 1.6;
       return;
     }
     if (this.spawned >= this.total || standing >= this.maxAlive) {
@@ -111,7 +118,7 @@ export class Encounter {
       this.add(kind, far, this.rng.range(-half, half) * 0.9, emit);
       this.spawned += 1;
     }
-    this.spawnIn = this.spec.gap * this.rng.range(0.75, 1.25);
+    this.spawnIn = this.gap * this.rng.range(0.75, 1.25);
   }
 
   private add(kind: ZombieKind, ahead: number, side: number, emit: (event: GameEvent) => void): void {

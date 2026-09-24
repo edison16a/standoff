@@ -8,9 +8,9 @@ export const CHOPPER_STAGE = 10;
 type Mix = Partial<Record<Exclude<ZombieKind, BossKind>, number>>;
 
 /**
- * One fight. Counts are for a single player. The encounter adds more
- * zombies for a bigger team, but never lets many stand at once: this is
- * a game of aim, not of crowds.
+ * One fight. Counts are for a single player. The dead come thick and
+ * fast, but only so many stand at once, so every one can still be aimed
+ * at. The encounter sends a bigger team more of them, and sooner.
  */
 export interface StageSpec {
   index: number;
@@ -42,31 +42,31 @@ type Row = [title: string, count: number, maxAlive: number, mix: Mix, gap: numbe
 const W = (walker: number, runner = 0, brute = 0, armored = 0): Mix => ({ walker, runner, brute, armored });
 
 const ROWS: readonly Row[] = [
-  ["Main Street", 3, 2, W(1), 3.6, 1.0, 1],
-  ["The Pharmacy", 4, 2, W(1), 3.2, 1.0, 1],
-  ["Corner of Fifth", 5, 2, W(1), 3.0, 1.05, 1],
-  ["Back Door", 6, 3, W(85, 15), 2.8, 1.05, 1],
-  ["The Butcher's Alley", 3, 2, W(1), 3.5, 1.05, 1, "butcher"],
-  ["Park Gates", 7, 3, W(70, 30), 2.6, 1.1, 1],
-  ["The Fountain", 8, 3, W(55, 45), 2.4, 1.12, 1],
-  ["Ambulance Bay", 9, 3, W(60, 25, 15), 2.3, 1.15, 1],
-  ["The Parking Ramp", 10, 4, W(50, 25, 25), 2.2, 1.18, 1],
-  ["Hospital Roof", 5, 2, W(60, 40), 3.0, 1.15, 1, "tank"],
-  ["The Long Way Down", 10, 4, W(50, 25, 25), 2.0, 1.22, 1.05],
-  ["Downtown", 11, 4, W(45, 25, 30), 1.9, 1.26, 1.1],
-  ["The On Ramp", 12, 4, W(40, 25, 35), 1.8, 1.3, 1.15],
-  ["Highway Pileup", 12, 5, W(40, 25, 20, 15), 1.7, 1.34, 1.2],
-  ["The Roadblock", 6, 3, W(40, 0, 0, 60), 2.6, 1.3, 1.2, "juggernaut"],
-  ["Riot Line", 13, 5, W(30, 25, 20, 25), 1.6, 1.4, 1.25],
-  ["The Overpass", 13, 5, W(30, 25, 20, 25), 1.5, 1.44, 1.3],
-  ["Jackknifed Trucks", 14, 5, W(30, 30, 20, 20), 1.45, 1.48, 1.35],
-  ["Port Exit", 14, 5, W(30, 30, 20, 20), 1.4, 1.52, 1.4],
-  ["The Port Gate", 8, 3, W(40, 30, 30), 2.2, 1.4, 1.4, "tank"],
-  ["Container Yard", 15, 5, W(30, 30, 20, 20), 1.3, 1.56, 1.42],
-  ["Stacks", 15, 6, W(25, 30, 25, 20), 1.25, 1.6, 1.45],
-  ["Warehouse Row", 16, 6, W(25, 30, 25, 20), 1.2, 1.64, 1.48],
-  ["Crane Yard", 16, 6, W(25, 30, 25, 20), 1.1, 1.7, 1.5],
-  ["Pier Nine", 10, 3, W(30, 30, 20, 20), 2.0, 1.5, 1.5, "behemoth"],
+  ["Main Street", 9, 3, W(1), 1.44, 1.0, 1],
+  ["The Pharmacy", 10, 3, W(1), 1.35, 1.02, 1],
+  ["Corner of Fifth", 12, 4, W(90, 10), 1.3, 1.05, 1],
+  ["Back Door", 14, 4, W(80, 20), 1.26, 1.08, 1],
+  ["The Butcher's Alley", 4, 2, W(1), 2.8, 1.05, 1, "butcher"],
+  ["Park Gates", 15, 4, W(70, 30), 1.22, 1.12, 1],
+  ["The Fountain", 16, 5, W(55, 45), 1.17, 1.15, 1],
+  ["Ambulance Bay", 18, 5, W(60, 25, 15), 1.12, 1.18, 1],
+  ["The Parking Ramp", 19, 5, W(50, 25, 25), 1.08, 1.2, 1],
+  ["Hospital Roof", 6, 2, W(60, 40), 2.6, 1.15, 1, "tank"],
+  ["The Long Way Down", 19, 5, W(50, 25, 25), 1.06, 1.24, 1.05],
+  ["Downtown", 20, 5, W(45, 25, 30), 1.04, 1.27, 1.1],
+  ["The On Ramp", 20, 6, W(40, 25, 35), 1.03, 1.3, 1.15],
+  ["Highway Pileup", 21, 6, W(40, 25, 20, 15), 1.01, 1.33, 1.2],
+  ["The Roadblock", 7, 3, W(40, 0, 0, 60), 2.2, 1.3, 1.2, "juggernaut"],
+  ["Riot Line", 21, 6, W(30, 25, 20, 25), 0.99, 1.37, 1.25],
+  ["The Overpass", 22, 6, W(30, 25, 20, 25), 0.97, 1.4, 1.3],
+  ["Jackknifed Trucks", 22, 6, W(30, 30, 20, 20), 0.95, 1.43, 1.35],
+  ["Port Exit", 24, 6, W(30, 30, 20, 20), 0.94, 1.46, 1.4],
+  ["The Port Gate", 9, 3, W(40, 30, 30), 2.0, 1.4, 1.4, "tank"],
+  ["Container Yard", 24, 7, W(30, 30, 20, 20), 0.92, 1.5, 1.42],
+  ["Stacks", 25, 7, W(25, 30, 25, 20), 0.9, 1.54, 1.45],
+  ["Warehouse Row", 25, 7, W(25, 30, 25, 20), 0.88, 1.58, 1.48],
+  ["Crane Yard", 26, 7, W(25, 30, 25, 20), 0.86, 1.62, 1.5],
+  ["Pier Nine", 11, 3, W(30, 30, 20, 20), 1.8, 1.5, 1.5, "behemoth"],
 ];
 
 /** Short fights on the roof and in the alley, where the space ahead is small. */
@@ -90,6 +90,11 @@ export const STAGES: readonly StageSpec[] = ROWS.map(([title, count, maxAlive, m
   const [from, to] = SPAWN_BY_ZONE[zone];
   return { index, title, zone, count, maxAlive, mix, gap, speed, tough, harm: 1 + i * 0.03, spawn: [from * near, to * near], boss, packs: Math.max(0, (index - 10) * 0.025) };
 });
+
+/** Fights that end in a big moment of the story: the chopper on the roof and the ship at the pier. */
+export function storyBeat(index: number): boolean {
+  return index === CHOPPER_STAGE || index === STAGE_COUNT;
+}
 
 export function stage(index: number): StageSpec {
   const found = STAGES[Math.max(1, Math.min(STAGE_COUNT, index)) - 1];
