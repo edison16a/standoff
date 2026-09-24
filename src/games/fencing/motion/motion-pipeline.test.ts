@@ -52,6 +52,14 @@ describe("MotionPipeline", () => {
     expect(strikes).toEqual(["jab", "parry"]);
   });
 
+  it("reads the level of a phone lying flat, and its tilt", () => {
+    const { pipeline } = flatPhone();
+    expect(pipeline.level!.pitch).toBeCloseTo(0, 5);
+    pipeline.onOrientation(quatFromDeviceEuler(0, 20, 0));
+    expect(pipeline.level!.pitch).toBeCloseTo((20 * Math.PI) / 180, 5);
+    expect(pipeline.level!.roll).toBeCloseTo(0, 5);
+  });
+
   it("falls back to removing gravity itself when only raw acceleration is given", () => {
     const strikes: StrikeAction[] = [];
     const pipeline = new MotionPipeline(DEFAULT_TUNING, (action) => strikes.push(action));

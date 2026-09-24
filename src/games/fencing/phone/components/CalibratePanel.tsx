@@ -4,20 +4,23 @@ import { FencerCanvas } from "@/games/fencing/components/FencerCanvas";
 import type { Slot } from "@/games/fencing/players";
 import { useControllerStore } from "../controller-store";
 import { HoldGuide } from "./HoldGuide";
+import { Level } from "./Level";
 import { useController } from "./session-context";
 
 /** Seconds to get into position after tapping, so the tap itself never moves the guard. */
 const COUNTDOWN = 3;
 
 /**
- * Sets the guard. Tap, get into position, hold still, and the pose is
- * captured when the count runs out. Afterwards the fencer on screen holds
- * its sword wherever the phone points, so it is obvious it worked.
+ * Sets the guard. The drawing shows the grip and where to point, and the
+ * level shows when the phone is flat, so the guard is easy to find again.
+ * Tap, hold still through the count, and the pose is captured. Afterwards
+ * the fencer here holds its sword wherever the phone points.
  */
 export function CalibratePanel({ slot }: { slot: Slot }) {
   const session = useController();
   const { calibrated, sensorsLive, inputMode, pick } = useControllerStore();
   const [count, setCount] = useState<number | null>(null);
+  const [level, setLevel] = useState(false);
 
   useEffect(() => {
     if (count === null) return;
@@ -34,8 +37,9 @@ export function CalibratePanel({ slot }: { slot: Slot }) {
   if (count !== null) {
     return (
       <div className="calibrate calibrate--counting">
+        <Level onLevel={setLevel} />
         <strong className="calibrate__count">{count}</strong>
-        <p>Point at the screen and hold still</p>
+        <p>{level ? "Hold still" : "Keep it level, pointing at the middle of the screen"}</p>
       </div>
     );
   }
@@ -55,7 +59,9 @@ export function CalibratePanel({ slot }: { slot: Slot }) {
   return (
     <div className="calibrate">
       <HoldGuide />
-      <p>Hold it like a sword, pointing at the screen.</p>
+      <p className="calibrate__lead">Point the top of your phone at the middle of the screen.</p>
+      {sensorsLive && <Level onLevel={setLevel} />}
+      {sensorsLive && <p className="muted">{level ? "Level. Now tap Calibrate." : "Hold it flat until the dot sits in the circle."}</p>}
       <button type="button" className="btn btn--primary btn--block" onClick={() => setCount(COUNTDOWN)} disabled={!sensorsLive}>
         Calibrate
       </button>

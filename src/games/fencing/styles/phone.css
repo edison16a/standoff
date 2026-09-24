@@ -234,3 +234,48 @@
   font-size: 18px;
   touch-action: manipulation;
 }
+
+.hold-guide__dot {
+  fill: var(--accent);
+}
+
+.calibrate__lead {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.level {
+  width: 140px;
+  height: 140px;
+}
+
+.level__rim {
+  fill: var(--bg-muted);
+  stroke: var(--border-strong);
+  stroke-width: 2;
+}
+
+.level__cross {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+
+.level__target {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 2;
+}
+
+.level__bubble {
+  fill: var(--text-muted);
+}
+
+.level--on .level__target {
+  stroke: var(--accent);
+}
+
+.level--on .level__bubble {
+  fill: var(--accent);
+}

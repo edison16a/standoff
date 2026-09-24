@@ -50,6 +50,19 @@ export class MotionPipeline {
     return this.calibration !== null;
   }
 
+  /**
+   * How far the phone is from lying level with its top edge forward:
+   * the top edge's rise (pitch) and the right edge's rise (roll), in
+   * radians. The calibration screen shows it as a bubble level, so a
+   * player can find the same guard every time. Null before any reading.
+   */
+  get level(): { pitch: number; roll: number } | null {
+    if (!this.orientation) return null;
+    const top = rotate(this.orientation, { x: 0, y: 1, z: 0 });
+    const right = rotate(this.orientation, { x: 1, y: 0, z: 0 });
+    return { pitch: Math.asin(Math.max(-1, Math.min(1, top.z))), roll: Math.asin(Math.max(-1, Math.min(1, right.z))) };
+  }
+
   /** The live sword, relative to the calibrated guard. */
   get sword(): SwordPose {
     return this.pose;
