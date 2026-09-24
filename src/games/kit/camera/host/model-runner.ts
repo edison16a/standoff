@@ -73,7 +73,7 @@ export class ModelRunner {
       return true;
     } catch (error) {
       if (this.disposed) return false;
-      console.error("Pose model failed to load", error);
+      console.warn("Pose model failed to load", error);
       if (shown) this.store.model({ state: "problem", error: error instanceof Error ? error.message : String(error) });
       return false;
     }

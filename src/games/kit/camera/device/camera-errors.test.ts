@@ -23,7 +23,7 @@ describe("sorting camera failures", () => {
     for (const text of Object.values(PROBLEM_TEXT)) {
       expect(text.title.length).toBeGreaterThan(5);
       expect(text.advice).toMatch(/\.$/);
-      expect(text.advice).not.toMatch(/--|—/);
+      expect(text.advice).not.toMatch(/--|\u2014/);
     }
   });
 });

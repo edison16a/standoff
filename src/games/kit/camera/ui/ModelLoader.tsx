@@ -1,5 +1,5 @@
 "use client";
-import "../camera.css";
+import "../styles/loader.css";
 import { useEffect, type ReactNode } from "react";
 import { PROBLEM_TEXT } from "../device/camera-errors";
 import type { CameraKit } from "../host/camera-kit";
@@ -18,6 +18,11 @@ export interface ModelLoaderProps {
 
 export const PRIVACY_NOTE = "Body tracking runs on this computer. The camera picture never leaves it.";
 
+const MODEL_PROBLEM = {
+  title: "The body tracking could not download",
+  advice: "Check this computer is online, then try again. After the first time it works offline.",
+};
+
 /**
  * The card a camera game shows until the camera is on and the model is
  * running: the camera's state, the model's download with a progress bar,
@@ -30,7 +35,10 @@ export function ModelLoader({ kit, title = "Getting the camera ready", autoStart
   }, [kit, autoStart]);
 
   const problem = status.camera.problem ? PROBLEM_TEXT[status.camera.problem] : null;
-  const modelFailed = status.model.state === "problem";
+  const problems = [
+    ...(problem ? [problem] : []),
+    ...(status.model.state === "problem" ? [MODEL_PROBLEM] : []),
+  ];
   const share = status.model.total ? status.model.loaded / status.model.total : 0;
   return (
     <section className="cam-loader" aria-live="polite">
@@ -56,10 +64,14 @@ export function ModelLoader({ kit, title = "Getting the camera ready", autoStart
         <span className="cam-loader__fill" style={{ width: `${Math.round((status.model.state === "ready" ? 1 : share) * 100)}%` }} />
       </div>
       {status.camera.state === "opening" && <p className="cam-loader__hint">If the browser asks to use the camera, choose Allow.</p>}
-      {(problem || modelFailed) && (
+      {problems.length > 0 && (
         <div className="cam-loader__problem" role="alert">
-          <strong>{problem ? problem.title : "The body tracking could not download"}</strong>
-          <p>{problem ? problem.advice : "Check this computer is online, then try again. After the first time it works offline."}</p>
+          {problems.map((p) => (
+            <div key={p.title}>
+              <strong>{p.title}</strong>
+              <p>{p.advice}</p>
+            </div>
+          ))}
           <div className="cam-loader__actions">
             <button type="button" className="cam-button" onClick={() => void kit.start()}>
               Try again

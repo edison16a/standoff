@@ -1,5 +1,5 @@
 "use client";
-import "../camera.css";
+import "../styles/preview.css";
 import { useEffect, useRef, type ReactNode } from "react";
 import { playerColor } from "@/games/kit/players";
 import type { CameraKit } from "../host/camera-kit";

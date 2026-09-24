@@ -1,4 +1,5 @@
 "use client";
+import "../styles/loader.css";
 import "./lab.css";
 import { useEffect, useState } from "react";
 import type { Baseline } from "../engine/calibration";

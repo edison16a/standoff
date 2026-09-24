@@ -1,5 +1,5 @@
 "use client";
-import "../camera.css";
+import "../styles/calibrate.css";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { playerColor } from "@/games/kit/players";
 import { BaselineCollector, DEFAULT_CALIBRATION, type Baseline, type CalibrationPhase } from "../engine/calibration";

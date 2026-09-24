@@ -67,7 +67,7 @@ for (let i = 0; i < 600 && !status?.ready; i++) {
 if (!status?.ready) throw new Error("The camera and model never got ready.");
 // The kit logs every change of the model's status, so even a fast download shows its steps.
 const firstVisit = await page.evaluate(() => window.__cameraKit.modelHistory);
-const progress = firstVisit.filter((m) => m.state === "downloading").map((m) => m.loaded / m.total);
+const progress = firstVisit.filter((m) => m.state === "downloading" && m.total > 0).map((m) => m.loaded / m.total);
 log(`ready: model ${status.model.variant} on ${status.model.delegate}, camera ${status.camera.width}x${status.camera.height}, ${progress.length} progress steps`);
 
 // 2. Calibration finishes in one of the clip's still stretches.

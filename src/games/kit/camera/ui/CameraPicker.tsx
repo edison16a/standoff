@@ -1,5 +1,5 @@
 "use client";
-import "../camera.css";
+import "../styles/loader.css";
 import type { CameraKit } from "../host/camera-kit";
 import { useKitStatus } from "./use-kit";
 
