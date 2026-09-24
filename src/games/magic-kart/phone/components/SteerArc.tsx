@@ -8,8 +8,9 @@ const CX = 100;
 const CY = 132;
 const LOCK = (38 * Math.PI) / 180;
 
-function point(angle: number): string {
-  return `${(CX + R * Math.sin(angle)).toFixed(1)} ${(CY - R * Math.cos(angle)).toFixed(1)}`;
+/** A point on the arc, this far round from the top, as SVG numbers. */
+function at(angle: number): [string, string] {
+  return [(CX + R * Math.sin(angle)).toFixed(1), (CY - R * Math.cos(angle)).toFixed(1)];
 }
 
 /**
@@ -26,10 +27,10 @@ export function SteerArc() {
     let frame = 0;
     const draw = () => {
       const angle = session.steer * LOCK;
-      fillRef.current?.setAttribute("d", `M${point(0)}A${R} ${R} 0 0 ${angle > 0 ? 1 : 0} ${point(angle)}`);
-      const [x, y] = point(angle).split(" ");
-      dotRef.current?.setAttribute("cx", x!);
-      dotRef.current?.setAttribute("cy", y!);
+      const [x, y] = at(angle);
+      fillRef.current?.setAttribute("d", `M${at(0).join(" ")}A${R} ${R} 0 0 ${angle > 0 ? 1 : 0} ${x} ${y}`);
+      dotRef.current?.setAttribute("cx", x);
+      dotRef.current?.setAttribute("cy", y);
       frame = requestAnimationFrame(draw);
     };
     frame = requestAnimationFrame(draw);
@@ -38,7 +39,7 @@ export function SteerArc() {
 
   return (
     <svg className="mk-arc" viewBox="0 0 200 52" aria-hidden="true">
-      <path d={`M${point(-LOCK)}A${R} ${R} 0 0 1 ${point(LOCK)}`} className="mk-arc__track" />
+      <path d={`M${at(-LOCK).join(" ")}A${R} ${R} 0 0 1 ${at(LOCK).join(" ")}`} className="mk-arc__track" />
       <path ref={fillRef} className="mk-arc__fill" />
       <path d={`M${CX} 4v14`} className="mk-arc__tick" />
       <circle ref={dotRef} cx={CX} cy={CY - R} r="7" className="mk-arc__dot" />

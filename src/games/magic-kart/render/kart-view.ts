@@ -122,12 +122,12 @@ export class KartView {
    * its driver, who still sees a ghost of it. `eye` is where the view's
    * camera is.
    */
-  setViewer(viewerKartId: number | null, eye: THREE.Vector3): void {
+  setViewer(viewerKartId: number | null, eye: THREE.Vector3, tags = true): void {
     const own = viewerKartId === this.kartId;
     // Another kart right in front of the camera would block the view of your own, so it turns see through.
     const near = !own && viewerKartId !== null ? eye.distanceTo(this.model.root.position) : Infinity;
     const inTheWay = near < 5.5;
-    this.tag.visible = !own && !this.ghost && near > 9;
+    this.tag.visible = tags && !own && !this.ghost && near > 9;
     this.model.setOpacity(this.ghost ? (own ? 0.4 : 0.06) : inTheWay ? Math.max(0.3, Math.min(0.75, 0.3 + (near - 2) * 0.13)) : 1);
     const hidden = this.ghost && !own;
     this.shadow.visible = this.shadowOn && !hidden;

@@ -58,5 +58,18 @@ Laps count by checkpoints in order: only driving through each one forwards count
 * `phone/`: the controller session, the steering wheel maths and the phone screens. Steering reads where "up" points across the screen, so it holds however far the phone leans and never flips the way Euler angles do.
 * `audio/`: synthesized music per map, an engine per kart pitched by speed, and every effect, through the platform's audio buses.
 * `protocol/`: the zod schemas for the messages between the phones and the host.
+* `showcase/`: the game playing itself for the home screen's media (see below).
 
 The host draws every player's view with one WebGLRenderer and scissored viewports. Scenery is instanced, karts are two or three meshes each, and shadows are soft blobs, so four views stay smooth on a laptop.
+
+## Home screen media
+
+The home screen's tile, still and looping clip are captured from `showcase/`, which plays real races with four computer karts and no room. Each shot is a seeded race, so it plays out the same way every time, and the computer karts are held in a tight pack so the camera always has close racing to show. The shots were picked by running many seeds and keeping the liveliest seconds: the pack hitting the boost pads and flying the lagoon jump on Sunny Shores with ice landing mid air, then a Star Orb, a Nitro and the flyover jump in Neo City. The icon is Blaze in the air over the lagoon under the logo, and the poster is the whole pack in the air.
+
+With the dev server running:
+
+```bash
+node tools/media/capture.mjs magic-kart --ffmpeg /path/to/ffmpeg
+```
+
+The showcase draws 30 frames a second, the rate the clip is captured at, so each captured frame is drawn once. To change a shot, edit `showcase/shots.ts` and look at it at `/showcase/magic-kart?view=loop`.
