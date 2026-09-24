@@ -25,6 +25,8 @@ export function addLights(scene: THREE.Scene, renderer: THREE.WebGLRenderer): ()
   box.far = 20;
   key.shadow.bias = -0.0004;
   key.shadow.normalBias = 0.02;
+  // A wide filter keeps the shadows on the cloth soft, like the cover.
+  key.shadow.radius = 4;
   scene.add(key, key.target);
 
   // Low and forward of the bulbs, so it warms the wall without a hot spot on the tent roof.

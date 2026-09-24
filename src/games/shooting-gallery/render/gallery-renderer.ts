@@ -51,7 +51,7 @@ export class GalleryRenderer {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 0.95;
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.scene.background = new THREE.Color("#140b10");
     this.releaseLights = addLights(this.scene, this.renderer);
     const canopy = createCanopy();

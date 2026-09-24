@@ -9,6 +9,9 @@ const DUCK_LANES: readonly DuckLane[] = ["back", "front"];
 
 /** Pop ups stay inside this, clear of the side posts. */
 export const POP_HALF_SPAN = 3.5;
+/** A plate waits until the one ahead of it is this far along the rail. */
+const PLATE_GAP = 2.2;
+
 /** Pop ups keep at least this far apart, so a bullseye is never half hidden behind another. */
 export const POP_MIN_APART = 1.2;
 
@@ -68,7 +71,8 @@ export class Spawner {
       this.nextPopAt = time + this.rng.range(0.5, 1.4);
     }
     if (time >= this.nextPlateAt) {
-      if (targets.filter((t) => t.lane === "rail").length < 2) out.push(this.plate(time));
+      const plate = this.plate(time, targets.filter((t) => t.lane === "rail"));
+      if (plate) out.push(plate);
       this.nextPlateAt = time + this.rng.range(2.2, 4.2);
     }
     return out;
@@ -101,10 +105,19 @@ export class Spawner {
     return null;
   }
 
-  private plate(time: number): Target {
+  /**
+   * Plates share one rail, so a new one follows any already on it: the
+   * same way, at the same speed, and a good gap behind. Nothing on the
+   * rail ever passes through anything else.
+   */
+  private plate(time: number, onRail: readonly Target[]): Target | null {
     const lane = LANES.rail;
-    const dir = this.rng.sign();
-    return this.make("plate", "rail", -dir * OFFSTAGE_X, lane.y, lane.z, dir * this.rng.range(0.85, 1.2) * lane.speed, dir, time);
+    const leader = onRail[onRail.length - 1];
+    if (onRail.length >= 2) return null;
+    if (leader && Math.abs(leader.x + Math.sign(leader.vx) * OFFSTAGE_X) < PLATE_GAP) return null;
+    const dir = leader ? leader.facing : this.rng.sign();
+    const vx = leader ? leader.vx : dir * this.rng.range(0.85, 1.2) * lane.speed;
+    return this.make("plate", "rail", -dir * OFFSTAGE_X, lane.y, lane.z, vx, dir, time);
   }
 
   private make(kind: TargetKind, lane: LaneId, x: number, y: number, z: number, vx: number, facing: 1 | -1, time: number): Target {

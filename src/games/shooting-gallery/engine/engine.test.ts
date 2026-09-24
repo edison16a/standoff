@@ -131,6 +131,8 @@ describe("round", () => {
         const pops = round.targets.filter((t) => t.lane === "pop" && !t.hit);
         expect(pops.length).toBeLessThanOrEqual(3);
         for (const a of pops) for (const b of pops) if (a !== b) expect(Math.abs(a.x - b.x)).toBeGreaterThan(0.9);
+        const plates = round.targets.filter((t) => t.lane === "rail");
+        for (const a of plates) for (const b of plates) if (a !== b) expect(Math.abs(a.x - b.x)).toBeGreaterThan(1);
         expect(round.targets.filter((t) => t.lane === "back").length).toBeGreaterThan(1);
         expect(round.targets.filter((t) => t.lane === "front").length).toBeGreaterThan(1);
       }
