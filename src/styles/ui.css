@@ -93,25 +93,6 @@
   height: 20px;
 }
 
-/* Top bar */
-
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  height: var(--topbar-height);
-  padding: 0 20px;
-  border-bottom: 1px solid var(--border);
-  background: var(--bg);
-}
-
-.topbar__actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .brand {
   display: inline-flex;
   align-items: center;

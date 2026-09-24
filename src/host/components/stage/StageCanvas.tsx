@@ -5,11 +5,12 @@ import { SceneRenderer } from "@/render/scene-renderer";
 import { useSession } from "../session-context";
 
 /**
- * The strip itself. One animation frame loop advances the engine and
- * draws whatever scene it hands back, live or replay. Everything else on
- * the match screen is ordinary React laid over the top.
+ * The strip, filling the window from the moment a game exists. One
+ * animation frame loop advances the match (when there is one) and draws
+ * whatever the session hands back: the lobby line up, live play or a
+ * replay. Everything else on the stage is ordinary React laid over it.
  */
-export function MatchCanvas() {
+export function StageCanvas() {
   const session = useSession();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<SceneRenderer | null>(null);
@@ -30,13 +31,13 @@ export function MatchCanvas() {
     let frame = 0;
     const loop = (now: number) => {
       session.tick(now);
-      // A rematch or a new match swaps the driver, so rewire the flash.
+      // A match starting, or a rematch, swaps the driver. Rewire the flash.
       if (session.driver !== driver) {
         unlisten?.();
         driver = session.driver;
         unlisten = driver?.listen((event) => renderer.react(event)) ?? null;
       }
-      if (driver) renderer.render(driver.engine.scene());
+      renderer.render(session.scene(now));
       frame = requestAnimationFrame(loop);
     };
     frame = requestAnimationFrame(loop);
@@ -52,5 +53,5 @@ export function MatchCanvas() {
     rendererRef.current?.refreshPalette();
   }, [theme]);
 
-  return <canvas ref={canvasRef} className="match__canvas" />;
+  return <canvas ref={canvasRef} className="stage__canvas" />;
 }

@@ -7,9 +7,8 @@ import "@/styles/ui.css";
 import "@/styles/tabs.css";
 import "@/styles/range.css";
 import "@/styles/landing.css";
-import "@/styles/lobby.css";
-import "@/styles/lobby-panels.css";
-import "@/styles/match.css";
+import "@/styles/stage.css";
+import "@/styles/stage-overlays.css";
 import "@/styles/controller.css";
 import "@/styles/controller-pad.css";
 

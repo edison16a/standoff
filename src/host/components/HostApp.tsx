@@ -3,9 +3,8 @@ import { useEffect, useState } from "react";
 import { HostSession } from "../host-session";
 import { useHostStore } from "../host-store";
 import { Landing } from "./Landing";
-import { LobbyScreen } from "./LobbyScreen";
-import { MatchScreen } from "./match/MatchScreen";
 import { SessionContext } from "./session-context";
+import { Stage } from "./stage/Stage";
 
 /** The computer's side of Standoff: start a game, fill the lobby, host the match. */
 export function HostApp() {
@@ -20,9 +19,7 @@ export function HostApp() {
 
   return (
     <SessionContext.Provider value={session}>
-      {screen === "landing" && <Landing />}
-      {screen === "lobby" && <LobbyScreen />}
-      {screen === "match" && <MatchScreen />}
+      {screen === "landing" ? <Landing /> : <Stage />}
     </SessionContext.Provider>
   );
 }
