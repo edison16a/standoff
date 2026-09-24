@@ -44,6 +44,9 @@ export const skipSchema = z.object({ kind: z.literal("skip") });
 
 export const rematchSchema = z.object({ kind: z.literal("rematch") });
 
+/** Ask for the computer as the opponent, or send it away again. */
+export const soloSchema = z.object({ kind: z.literal("solo"), on: z.boolean() });
+
 export const phoneMessageSchema = z.discriminatedUnion("kind", [
   motionSchema,
   strikeSchema,
@@ -51,6 +54,7 @@ export const phoneMessageSchema = z.discriminatedUnion("kind", [
   readySchema,
   skipSchema,
   rematchSchema,
+  soloSchema,
 ]);
 
 export type MotionMessage = z.infer<typeof motionSchema>;

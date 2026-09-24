@@ -1,5 +1,5 @@
 import type { CharacterId } from "@/shared/characters";
-import { otherSlot, perSlot, type PerSlot, type Slot } from "@/shared/players";
+import { otherSlot, perSlot, SLOTS, type PerSlot, type Slot } from "@/shared/players";
 
 /** One seat as the host sees it before the match starts. */
 export interface SeatState {
@@ -42,6 +42,17 @@ export class Lobby {
     this.seats[slot] = { ...this.seats[slot], pick: characterId, ready: false };
     if (other.pick === characterId) this.seats[otherSlot(slot)] = { ...other, pick: this.spareFor(otherSlot(slot)) };
     return true;
+  }
+
+  /**
+   * Seats the computer opposite the one player here, or sends it away.
+   * With nobody here there is no one to play it, so it waits.
+   */
+  setComputer(on: boolean): void {
+    const computer = this.computerSlot;
+    if (!on && computer) this.unseatComputer(computer);
+    const free = SLOTS.find((slot) => !this.seats[slot].connected);
+    if (on && !computer && free && this.seats[otherSlot(free)].connected) this.seatComputer(free);
   }
 
   /** Sits the computer in an empty seat, picked and ready. */

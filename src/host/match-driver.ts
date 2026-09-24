@@ -1,9 +1,10 @@
 import type { SoundDirector } from "@/audio/sound-director";
+import { Bot } from "@/game/bot";
 import { Engine, type EventSource } from "@/game/engine";
 import type { GameEvent } from "@/game/events";
 import type { CharacterId } from "@/shared/characters";
 import type { PerSlot, Slot } from "@/shared/players";
-import type { FeedbackEvent, MatchPhase } from "@/shared/protocol";
+import type { FeedbackEvent, MatchPhase, PhoneMessage } from "@/shared/protocol";
 import type { Tuning } from "@/shared/tuning";
 import type { MatchHud } from "./host-store";
 
@@ -21,21 +22,26 @@ type EventListener = (event: GameEvent, source: EventSource) => void;
 /**
  * Runs one match on the host. It owns the engine and fans each game event
  * out to the sound director, the renderer (through `listen`) and the
- * phones' haptics, which is how all three stay in step.
+ * phones' haptics, which is how all three stay in step. In solo play it
+ * also runs the computer's fencer.
  */
 export class MatchDriver {
   readonly engine: Engine;
   private readonly listeners = new Set<EventListener>();
+  private readonly bot: Bot | null;
 
   constructor(
     picks: PerSlot<CharacterId>,
     tuning: () => Tuning,
     private readonly out: DriverOutputs,
+    /** The seat the computer plays, if any. */
+    computer: Slot | null = null,
   ) {
     this.engine = new Engine(picks, tuning, {
       onEvent: (event, source) => this.onEvent(event, source),
       onPhase: (phase) => this.onPhase(phase),
     });
+    this.bot = computer ? new Bot(computer) : null;
   }
 
   start(): void {
@@ -48,7 +54,27 @@ export class MatchDriver {
     return () => this.listeners.delete(listener);
   }
 
+  /** A phone's input during the match. Lobby messages mean nothing here. */
+  input(slot: Slot, message: PhoneMessage): void {
+    switch (message.kind) {
+      case "motion":
+        this.engine.control(slot, message);
+        return;
+      case "strike":
+        this.engine.strike(slot, message.action);
+        return;
+      case "skip":
+        this.engine.skip(slot);
+        this.out.director?.sfx.click();
+        return;
+      case "rematch":
+        this.engine.rematch(slot);
+        return;
+    }
+  }
+
   tick(wallNow: number): void {
+    this.bot?.drive(this.engine);
     this.engine.advance(wallNow);
   }
 

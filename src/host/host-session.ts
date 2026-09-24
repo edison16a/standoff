@@ -75,6 +75,13 @@ export class HostSession {
     this.broadcastState();
   }
 
+  /** Puts the computer in the empty seat, or sends it away to make room for a person. */
+  setSolo(on: boolean): void {
+    if (this.driver) return;
+    this.lobby.setComputer(on);
+    this.lobbyChanged();
+  }
+
   setTuning(next: Tuning): void {
     const tuning = clampTuning(next);
     useHostStore.setState({ tuning });
@@ -98,7 +105,11 @@ export class HostSession {
 
   private onRoomOpened({ code, joinUrl, sharedRooms, connected }: OpenedRoom): void {
     useHostStore.setState({ sharedRooms });
-    connected?.forEach((on, i) => (on ? this.lobby.connect((i + 1) as Slot) : this.lobby.disconnect((i + 1) as Slot)));
+    connected?.forEach((on, i) => {
+      const slot = (i + 1) as Slot;
+      if (on) this.seatPhone(slot);
+      else if (!this.lobby.seats[slot].computer) this.lobby.disconnect(slot);
+    });
     // Resuming the room already on screen means the socket reconnected or
     // moved, not a page reload. Keep whatever screen and match are running.
     if (connected && useHostStore.getState().room?.code === code) this.onSeatsChanged();
@@ -113,10 +124,12 @@ export class HostSession {
         this.room.handle(message);
         return;
       case "peer:joined":
+        this.seatPhone(message.slot);
+        this.phones.send(message.slot, { kind: "tuning", tuning: this.tuning });
+        this.onSeatsChanged();
+        return;
       case "peer:left":
-        if (message.type === "peer:joined") this.lobby.connect(message.slot);
-        else this.lobby.disconnect(message.slot);
-        if (message.type === "peer:joined") this.phones.send(message.slot, { kind: "tuning", tuning: this.tuning });
+        this.lobby.disconnect(message.slot);
         this.onSeatsChanged();
         return;
       case "peer:message":
@@ -125,29 +138,24 @@ export class HostSession {
     }
   }
 
+  /** During a match the driver takes every input. Before it, only lobby choices count. */
   private onPhone(slot: Slot, message: PhoneMessage): void {
-    const engine = this.driver?.engine;
-    switch (message.kind) {
-      case "motion":
-        engine?.control(slot, message);
-        return;
-      case "strike":
-        engine?.strike(slot, message.action);
-        return;
-      case "skip":
-        engine?.skip(slot);
-        this.audio.director?.sfx.click();
-        return;
-      case "rematch":
-        engine?.rematch(slot);
-        return;
-      case "pick":
-        if (!this.driver) this.lobby.pick(slot, message.characterId);
-        break;
-      case "ready":
-        if (!this.driver) this.lobby.setReady(slot, message.ready);
-        break;
-    }
+    if (this.driver) return this.driver.input(slot, message);
+    if (message.kind === "pick") this.lobby.pick(slot, message.characterId);
+    else if (message.kind === "ready") this.lobby.setReady(slot, message.ready);
+    else if (message.kind === "solo") this.lobby.setComputer(message.on);
+    else return;
+    this.lobbyChanged();
+  }
+
+  /** A phone sat down. A real opponent takes over from the computer, even mid match. */
+  private seatPhone(slot: Slot): void {
+    if (this.lobby.unseatComputer(slot) && this.driver) this.backToLobby();
+    this.lobby.connect(slot);
+  }
+
+  /** Picks or ready flags changed. Starts the match once everyone is set. */
+  private lobbyChanged(): void {
     this.syncSeats();
     if (this.lobby.canStart && !this.driver) this.startMatch();
     this.broadcastState();
@@ -159,7 +167,7 @@ export class HostSession {
       feedback: (slot, event) => this.phones.send(slot, { kind: "feedback", event }),
       recenter: () => this.phones.send("all", { kind: "recenter" }),
       onPhase: () => this.broadcastState(),
-    });
+    }, this.lobby.computerSlot);
     useHostStore.setState({ screen: "match" });
     this.driver.start();
   }

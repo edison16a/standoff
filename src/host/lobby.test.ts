@@ -58,4 +58,15 @@ describe("Lobby", () => {
     expect(lobby.unseatComputer(2)).toBe(true);
     expect(lobby.seats[2]).toMatchObject({ connected: false, pick: null, computer: false });
   });
+
+  it("plays the computer only against someone who is here", () => {
+    const lobby = new Lobby();
+    lobby.setComputer(true);
+    expect(lobby.computerSlot).toBeNull();
+    lobby.connect(1);
+    lobby.setComputer(true);
+    expect(lobby.computerSlot).toBe(2);
+    lobby.setComputer(false);
+    expect(lobby.computerSlot).toBeNull();
+  });
 });

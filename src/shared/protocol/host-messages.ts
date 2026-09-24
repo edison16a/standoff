@@ -21,6 +21,8 @@ export const controllerStateSchema = z.object({
   picks: pair(z.enum(CHARACTER_IDS).nullable()),
   ready: pair(z.boolean()),
   connected: pair(z.boolean()),
+  /** Seats played by the computer. */
+  computer: pair(z.boolean()),
   /** Whole seconds left in the en garde countdown, when counting. */
   countdown: z.number().int().min(0).nullable(),
   skipVotes: pair(z.boolean()),
