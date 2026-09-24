@@ -12,6 +12,12 @@ export async function createRedisBackend(url: string): Promise<Backend> {
   const options = { maxRetriesPerRequest: 2, enableAutoPipelining: true, connectTimeout: 5000 };
   const client = new Redis(url, options);
   const subscriber = client.duplicate();
+  // An "error" event with no listener throws. On Vercel an uncaught error
+  // stops the whole instance, taking every socket on it down, when all
+  // that happened was a Redis blip that ioredis would have retried.
+  for (const connection of [client, subscriber]) {
+    connection.on("error", (error: Error) => console.error("Redis connection error", error.message));
+  }
   await Promise.all([ready(client), ready(subscriber)]);
   return {
     store: new RedisStore(client),
