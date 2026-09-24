@@ -38,8 +38,8 @@ export function PlayPad() {
   return (
     <div className={`fn-play ${game.stunned ? "fn-play--stunned" : ""}`} style={{ ["--pop" as string]: colour }}>
       <div className="fn-play__top">
-        <span className="fn-play__clock">{game.phase === "countdown" ? clock(game.secondsLeft) : clock(game.secondsLeft)}</span>
-        {game.rank !== null && game.players > 1 && (
+        <span className="fn-play__clock">{clock(game.secondsLeft)}</span>
+        {game.rank !== null && game.players > 1 && game.score > 0 && (
           <span className="fn-play__rank">
             {PLACE[game.rank - 1]} of {game.players}
           </span>

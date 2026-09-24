@@ -47,7 +47,7 @@ export class Stains {
   }
 
   /** Splats a stain on the board below (x, y). */
-  splat(x: number, y: number, color: Color, size: number, opacity = 0.62): void {
+  splat(x: number, y: number, color: Color, size: number, opacity = 0.5): void {
     const stain = this.pool[this.next]!;
     this.next = (this.next + 1) % POOL;
     // Juice falls straight back onto the board, a little behind the fruit, as the cover shows.

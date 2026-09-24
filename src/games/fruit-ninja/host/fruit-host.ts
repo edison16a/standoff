@@ -173,9 +173,7 @@ export class FruitHost {
         this.phones.forget(event.seat);
         return this.syncSeats();
       case "left":
-        this.seats.leave(event.seat);
-        this.driver.match?.setActive(event.seat, false);
-        if (this.driver.inRound && this.driver.match?.activeCount === 0) this.pending.push(...this.driver.finish());
+        this.drop(event.seat);
         return this.syncSeats();
       case "message": {
         const parsed = phoneMessageSchema.safeParse(event.payload);
@@ -184,12 +182,19 @@ export class FruitHost {
       }
       case "resync":
         // Phones may have come and gone while we were away. Ask the platform, and resend everything.
-        for (const player of this.room.players()) if (!player.connected) this.seats.leave(player.seat);
+        for (const player of this.room.players()) if (!player.connected) this.drop(player.seat);
         this.phones.forget();
         return this.syncSeats();
       case "online":
         return;
     }
+  }
+
+  /** A phone went away. Its score stays, and a round nobody is left in ends. */
+  private drop(seat: Seat): void {
+    this.seats.leave(seat);
+    this.driver.match?.setActive(seat, false);
+    if (this.driver.inRound && this.driver.match?.activeCount === 0) this.pending.push(...this.driver.finish());
   }
 
   private onPhone(seat: Seat, message: PhoneMessage): void {

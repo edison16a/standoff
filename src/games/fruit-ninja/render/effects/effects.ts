@@ -41,7 +41,7 @@ export class Effects {
   /** A clean cut: a spray of juice across the blade, a stain below and a pale mist. */
   slice(x: number, y: number, dir: { x: number; y: number }, color: Color, size: number): void {
     this.juice.burst(x, y, color, Math.round(18 + size * 16), 5 + size * 2, dir);
-    this.stains.splat(x, y, color, 1.6 + size * 1.8);
+    this.stains.splat(x, y, color, 1 + size * 1.4);
     // A fine wet mist. Normal blending, so pale juice stays pale instead of glowing white.
     for (let i = 0; i < 7; i++) {
       this.smoke.emit({ x, y, z: 0.4, vx: (Math.random() - 0.5) * 3, vy: (Math.random() - 0.5) * 3, life: 0.45, size: 0.7 + size * 0.5, grow: 2.2, drag: 4, color, alpha: 0.28 });
@@ -58,8 +58,8 @@ export class Effects {
   /** A big fruit's last hit: juice everywhere and a big stain. */
   burst(x: number, y: number, color: Color, size: number): void {
     this.juice.burst(x, y, color, 90, 9, { x: 0, y: 0 });
-    this.stains.splat(x, y, color, 3.5 + size * 1.5);
-    this.stains.splat(x + (Math.random() - 0.5) * 2, y + (Math.random() - 0.5) * 2, color, 1.8);
+    this.stains.splat(x, y, color, 2.4 + size * 1.2);
+    this.stains.splat(x + (Math.random() - 0.5) * 2, y + (Math.random() - 0.5) * 2, color, 1.4);
     this.shake = Math.max(this.shake, 0.15);
   }
 
@@ -112,7 +112,7 @@ export class Effects {
 
   bomb(x: number, y: number): void {
     this.explosions.blast(x, y);
-    this.stains.splat(x, y, SCORCH, 3.2, 0.85);
+    this.stains.splat(x, y, SCORCH, 2.6, 0.8);
     this.shake = Math.max(this.shake, 0.55);
   }
 

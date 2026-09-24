@@ -156,6 +156,10 @@ export class FruitRenderer {
     // A long gap is a hidden tab or a breakpoint, not a slow machine.
     if (real > 3) return;
     this.slowFor = real > SLOW_FRAME_S ? this.slowFor + real : Math.max(0, this.slowFor - real * 0.5);
-    if (this.slowFor > SLOW_FOR_S && this.stage.lowerQuality()) this.slowFor = 0;
+    if (this.slowFor > SLOW_FOR_S && this.stage.lowerQuality()) {
+      this.slowFor = 0;
+      // Fewer pixels per unit now, so sprites must be told their new size in pixels.
+      this.effects.setScale(this.stage.pointScale, this.camera.z);
+    }
   }
 }
