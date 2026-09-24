@@ -4,6 +4,9 @@ import type { FencerFrame, SceneFrame } from "@/game/frames";
 import { SceneRenderer } from "@/render/scene-renderer";
 import { useTheme } from "@/hooks/use-theme";
 
+/** The two fencers are squared up close, so the picture frames tighter than a match. */
+const PREVIEW_SPAN = 4.6;
+
 function standing(slot: 1 | 2, characterId: FencerFrame["characterId"], x: number): FencerFrame {
   return {
     slot, characterId, x, facing: slot === 1 ? 1 : -1, pitch: 0.05, yaw: 0, roll: 0, speed: 0,
@@ -22,7 +25,7 @@ export function StripPreview() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const renderer = new SceneRenderer(canvas);
+    const renderer = new SceneRenderer(canvas, PREVIEW_SPAN);
     const fit = () => renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
     fit();
     const observer = new ResizeObserver(fit);

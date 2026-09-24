@@ -4,10 +4,10 @@ import { STRIP_HALF_LENGTH } from "@/game/rules";
 /** Tallest a fencer gets, sword raised in victory, used to size the view. */
 const FIGURE_HEIGHT = 2.9;
 /**
- * Never frame less of the strip than this. Without it the camera would
- * zoom right in on a close exchange and lose the blades off the top.
+ * Never frame less of the strip than this during a match. Without it the
+ * camera would zoom right in on a close exchange and lose the blades.
  */
-const MIN_SPAN = 6.5;
+export const MATCH_MIN_SPAN = 6.5;
 /** Room kept on each side of the pair, metres. */
 const SIDE_MARGIN = 1.5;
 /** How quickly the camera catches up, per second. Slow enough to feel steady. */
@@ -24,6 +24,9 @@ export class Camera {
   private lastT: number | null = null;
   width = 1;
   height = 1;
+
+  /** `minSpan` is the least strip width, in metres, the view ever shows. */
+  constructor(private readonly minSpan = MATCH_MIN_SPAN) {}
 
   /** Screen y of the strip surface. */
   get floorY(): number {
@@ -43,7 +46,7 @@ export class Camera {
   follow(frame: SceneFrame): void {
     const [a, b] = frame.fencers;
     const targetCentre = (a.x + b.x) / 2;
-    const span = Math.max(MIN_SPAN, Math.abs(b.x - a.x) + SIDE_MARGIN * 2);
+    const span = Math.max(this.minSpan, Math.abs(b.x - a.x) + SIDE_MARGIN * 2);
     const targetScale = Math.min((this.height * 0.62) / FIGURE_HEIGHT, this.width / span);
 
     const dt = this.lastT === null ? Infinity : Math.max(0, frame.t - this.lastT) / 1000;

@@ -17,13 +17,18 @@ import { drawPiste } from "./piste";
  */
 export class SceneRenderer {
   private readonly ctx: CanvasRenderingContext2D;
-  private readonly camera = new Camera();
+  private readonly camera: Camera;
   private readonly animators = { 1: new Animator(), 2: new Animator() };
   private readonly flash = new Flash();
   private palette: Palette;
   private dpr = 1;
 
-  constructor(private readonly canvas: HTMLCanvasElement) {
+  /** `minSpan` lets a still picture, like the landing page, frame closer than a match. */
+  constructor(
+    private readonly canvas: HTMLCanvasElement,
+    minSpan?: number,
+  ) {
+    this.camera = new Camera(minSpan);
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Canvas 2D is not available in this browser.");
     this.ctx = ctx;
