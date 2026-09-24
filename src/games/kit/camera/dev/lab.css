@@ -1,0 +1,73 @@
+/* The camera lab at /dev/camera. Development only. */
+
+.cam-lab {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #0b0916;
+  color: #ffffff;
+  font-family: var(--font-ui);
+}
+
+.cam-lab--center {
+  display: grid;
+  place-items: center;
+}
+
+.cam-lab__readout {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 440px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(14, 11, 30, 0.82);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.cam-lab__stats {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.cam-lab__player {
+  padding: 8px 10px;
+  border-left: 5px solid;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.cam-lab__log {
+  margin: 0;
+  padding-left: 18px;
+  font-weight: 700;
+}
+
+.cam-lab__again {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.cam-lab__baselines {
+  position: absolute;
+  bottom: 8px;
+  right: 16px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+}
+
+.cam-lab__guard {
+  padding: 16px 26px;
+  border-radius: 20px;
+  background: rgba(14, 11, 30, 0.85);
+  font-size: 26px;
+  font-weight: 800;
+  white-space: pre;
+}

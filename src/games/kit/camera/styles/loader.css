@@ -1,0 +1,161 @@
+/* The card shown while the camera starts and the model downloads, with its button and camera choice. */
+
+.cam-loader {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(720px, calc(100vw - 48px));
+  padding: 32px 36px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
+  background: rgba(14, 11, 30, 0.86);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(14px);
+  color: #ffffff;
+}
+
+.cam-loader__title {
+  margin: 0 0 6px;
+  font-size: clamp(28px, 2.6vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.cam-loader__row {
+  display: grid;
+  grid-template-columns: 16px 150px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  font-size: 20px;
+}
+
+.cam-loader__name {
+  font-weight: 700;
+}
+
+/* One line each, so a long camera name never pushes the bar around. */
+.cam-loader__state {
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.72);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cam-loader__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.cam-loader__dot--busy {
+  background: #ffb400;
+  animation: cam-pulse 1s ease-in-out infinite;
+}
+
+.cam-loader__dot--ok {
+  background: #2ed573;
+}
+
+.cam-loader__dot--bad {
+  background: #ff4757;
+}
+
+.cam-loader__bar {
+  overflow: hidden;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.cam-loader__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #9b45f0, #3a86ff);
+  transition: width 200ms ease;
+}
+
+.cam-loader__hint,
+.cam-loader__privacy {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.cam-loader__privacy {
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cam-loader__problem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: rgba(255, 71, 87, 0.16);
+  font-size: 18px;
+}
+
+.cam-loader__problem p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.cam-loader__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.cam-button {
+  padding: 12px 22px;
+  border: 0;
+  border-radius: 999px;
+  background: #9b45f0;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cam-button:hover {
+  background: #8430de;
+}
+
+.cam-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.cam-picker__select {
+  max-width: 280px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.cam-picker__select option {
+  color: #16132b;
+}
+
+@keyframes cam-pulse {
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cam-loader__dot--busy {
+    animation: none;
+  }
+}
