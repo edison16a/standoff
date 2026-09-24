@@ -47,14 +47,15 @@ export class Stains {
   }
 
   /** Splats a stain on the board below (x, y). */
-  splat(x: number, y: number, color: Color, size: number, opacity = 0.8): void {
+  splat(x: number, y: number, color: Color, size: number, opacity = 0.62): void {
     const stain = this.pool[this.next]!;
     this.next = (this.next + 1) % POOL;
     // Juice falls straight back onto the board, a little behind the fruit, as the cover shows.
     stain.mesh.position.set(x * 1.05, y * 1.05, -BOARD_DEPTH + 0.01);
     stain.mesh.rotation.z = Math.random() * Math.PI * 2;
     stain.mesh.scale.setScalar(size * (0.85 + Math.random() * 0.3));
-    stain.material.color.copy(color);
+    // Juice soaks into wood darker than it looks in the air.
+    stain.material.color.copy(color).multiplyScalar(0.72);
     stain.material.opacity = opacity;
     stain.opacity = opacity;
     stain.age = 0;

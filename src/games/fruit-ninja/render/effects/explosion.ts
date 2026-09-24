@@ -54,8 +54,8 @@ export class Explosions {
   ) {
     this.light.position.z = 2;
     scene.add(this.light);
-    this.ringMaterial = new MeshBasicMaterial({ color: new Color("#ffd08a"), transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false });
-    this.ring = new Mesh(new RingGeometry(0.8, 1, 64), this.ringMaterial);
+    this.ringMaterial = new MeshBasicMaterial({ color: new Color("#ffb45a"), transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false });
+    this.ring = new Mesh(new RingGeometry(0.9, 1, 64), this.ringMaterial);
     this.ring.renderOrder = 15;
     scene.add(this.ring);
     this.shards = new InstancedMesh(new TetrahedronGeometry(1), new MeshStandardMaterial({ color: new Color("#1a1a1c"), roughness: 0.4, metalness: 0.5 }), SHARDS);
@@ -71,47 +71,52 @@ export class Explosions {
     this.lightAge = 0;
     this.ring.position.set(x, y, 0.2);
     this.ringAge = 0;
-    this.fire.emit({ x, y, z: 1, vx: 0, vy: 0, life: 0.25, size: 9, color: "#ffffff", grow: 1.4 });
-    for (let i = 0; i < 70; i++) {
+    // Smoke first, so the fire drawn after it sits on top until it burns out.
+    for (let i = 0; i < 28; i++) {
       const a = Math.random() * Math.PI * 2;
-      const speed = 2 + Math.random() * 7;
-      this.fire.emit({
-        x,
-        y,
-        z: Math.random(),
-        vx: Math.cos(a) * speed,
-        vy: Math.sin(a) * speed,
-        vz: Math.random() * 2,
-        life: 0.35 + Math.random() * 0.6,
-        size: 0.9 + Math.random() * 1.6,
-        grow: 1.8,
-        drag: 3.5,
-        gravity: -1.5,
-        color: FIRE[Math.floor(Math.random() * FIRE.length)]!,
-      });
-    }
-    for (let i = 0; i < 60; i++) {
-      const a = Math.random() * Math.PI * 2;
-      const speed = 6 + Math.random() * 12;
-      this.sparks.emit({ x, y, z: 0.5, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, life: 0.4 + Math.random() * 0.5, size: 0.35, grow: 0.3, drag: 2, gravity: 6, color: "#ffcf6a" });
-    }
-    for (let i = 0; i < 26; i++) {
-      const a = Math.random() * Math.PI * 2;
-      const speed = 0.5 + Math.random() * 2.5;
+      const speed = 0.6 + Math.random() * 2.8;
       this.smoke.emit({
         x: x + Math.cos(a) * 0.3,
         y: y + Math.sin(a) * 0.3,
         z: 0.3,
         vx: Math.cos(a) * speed,
         vy: Math.sin(a) * speed + 0.8,
-        life: 1.6 + Math.random() * 1.4,
-        size: 1.4 + Math.random() * 1.4,
+        life: 1.8 + Math.random() * 1.4,
+        size: 1.5 + Math.random() * 1.5,
         grow: 2.6,
         drag: 1.4,
         gravity: -0.6,
-        alpha: 0.75,
-        color: Math.random() < 0.5 ? "#2a2522" : "#4a403a",
+        alpha: 0.85,
+        color: Math.random() < 0.5 ? "#1e1a18" : "#3a322c",
       });
+    }
+    // Fire billows use normal blending, so they stay orange over pale wood instead of washing out.
+    for (let i = 0; i < 46; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const speed = 1.5 + Math.random() * 6;
+      this.smoke.emit({
+        x,
+        y,
+        z: 0.8,
+        vx: Math.cos(a) * speed,
+        vy: Math.sin(a) * speed,
+        life: 0.35 + Math.random() * 0.45,
+        size: 1 + Math.random() * 1.3,
+        grow: 2,
+        drag: 3.5,
+        gravity: -1.5,
+        color: FIRE[Math.floor(Math.random() * FIRE.length)]!,
+      });
+    }
+    this.fire.emit({ x, y, z: 1.2, vx: 0, vy: 0, life: 0.22, size: 4.5, color: "#fff2d0", grow: 1.8, alpha: 0.85 });
+    for (let i = 0; i < 20; i++) {
+      const a = Math.random() * Math.PI * 2;
+      this.fire.emit({ x, y, z: 1.2, vx: Math.cos(a) * 3, vy: Math.sin(a) * 3, life: 0.3, size: 1.2, grow: 1.5, drag: 5, color: "#ffb347", alpha: 0.6 });
+    }
+    for (let i = 0; i < 70; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const speed = 6 + Math.random() * 12;
+      this.sparks.emit({ x, y, z: 0.5, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, life: 0.4 + Math.random() * 0.5, size: 0.35, grow: 0.3, drag: 2, gravity: 6, color: "#ffcf6a" });
     }
     for (let i = 0; i < 26; i++) {
       if (this.live.length >= SHARDS) this.live.shift();
@@ -130,11 +135,11 @@ export class Explosions {
 
   update(dt: number): void {
     this.lightAge += dt;
-    this.light.intensity = this.lightAge < 0.6 ? 900 * Math.exp(-this.lightAge * 8) : 0;
+    this.light.intensity = this.lightAge < 0.6 ? 160 * Math.exp(-this.lightAge * 9) : 0;
     this.ringAge += dt;
     const k = Math.min(1, this.ringAge / 0.45);
     this.ring.scale.setScalar(0.5 + k * 5);
-    this.ringMaterial.opacity = this.ringAge < 0.45 ? (1 - k) * 0.9 : 0;
+    this.ringMaterial.opacity = this.ringAge < 0.45 ? (1 - k) * 0.7 : 0;
 
     let n = 0;
     for (const s of this.live) {

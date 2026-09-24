@@ -15,8 +15,10 @@ export interface RenderFrame {
 }
 
 const spark = new Vector3();
-/** A frame slower than this, sustained, turns the bloom off. */
-const SLOW_FRAME_S = 1 / 40;
+/** Frames slower than this, for long enough, step the quality down. */
+const SLOW_FRAME_S = 1 / 45;
+/** Seconds of slow frames before stepping down, so one hiccup never costs quality. */
+const SLOW_FOR_S = 2;
 
 /**
  * Draws the game: the board, the fruit in flight, cut halves, blades and
@@ -32,7 +34,8 @@ export class FruitRenderer {
   private readonly effects: Effects;
   private readonly camera: Vector3;
   private time = 0;
-  private slowFrames = 0;
+  private slowFor = 0;
+  private lastFrameAt = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     this.stage = new Stage(canvas);
@@ -110,7 +113,7 @@ export class FruitRenderer {
     this.pieces.update(dt);
     this.effects.update(dt, this.time);
     this.shakeCamera();
-    this.watchFrameRate(dt);
+    this.watchFrameRate();
     this.stage.render();
   }
 
@@ -145,9 +148,14 @@ export class FruitRenderer {
     cam.set(this.camera.x + (Math.random() - 0.5) * s, this.camera.y + (Math.random() - 0.5) * s, this.camera.z);
   }
 
-  /** A laptop that cannot keep up loses the bloom first, then keeps the game smooth. */
-  private watchFrameRate(dt: number): void {
-    this.slowFrames = dt > SLOW_FRAME_S ? this.slowFrames + 1 : Math.max(0, this.slowFrames - 2);
-    if (this.slowFrames > 90) this.stage.setBloom(false);
+  /** A laptop that cannot keep up steps down in quality until it can, so the game stays smooth. */
+  private watchFrameRate(): void {
+    const now = performance.now();
+    const real = this.lastFrameAt ? (now - this.lastFrameAt) / 1000 : 0;
+    this.lastFrameAt = now;
+    // A long gap is a hidden tab or a breakpoint, not a slow machine.
+    if (real > 3) return;
+    this.slowFor = real > SLOW_FRAME_S ? this.slowFor + real : Math.max(0, this.slowFor - real * 0.5);
+    if (this.slowFor > SLOW_FOR_S && this.stage.lowerQuality()) this.slowFor = 0;
   }
 }

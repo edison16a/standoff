@@ -42,8 +42,9 @@ export class Effects {
   slice(x: number, y: number, dir: { x: number; y: number }, color: Color, size: number): void {
     this.juice.burst(x, y, color, Math.round(18 + size * 16), 5 + size * 2, dir);
     this.stains.splat(x, y, color, 1.6 + size * 1.8);
-    for (let i = 0; i < 8; i++) {
-      this.glow.emit({ x, y, z: 0.4, vx: (Math.random() - 0.5) * 3, vy: (Math.random() - 0.5) * 3, life: 0.35, size: 0.6 + size * 0.4, grow: 2, drag: 4, color, alpha: 0.35 });
+    // A fine wet mist. Normal blending, so pale juice stays pale instead of glowing white.
+    for (let i = 0; i < 7; i++) {
+      this.smoke.emit({ x, y, z: 0.4, vx: (Math.random() - 0.5) * 3, vy: (Math.random() - 0.5) * 3, life: 0.45, size: 0.7 + size * 0.5, grow: 2.2, drag: 4, color, alpha: 0.28 });
     }
   }
 

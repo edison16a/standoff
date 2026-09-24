@@ -4,9 +4,9 @@ import { melonFlesh } from "../textures/flesh-across";
 import { bananaFlesh, pineappleFlesh, pomegranateFlesh, starFlesh } from "../textures/flesh-exotic";
 import { canvas } from "../textures/paint";
 import { dragonSkin, melonSkin, pineappleSkin, pomegranateSkin, strawberrySkin } from "../textures/skins-rough";
-import { bananaSkin, plainSkin } from "../textures/skins-smooth";
+import { bananaSkin, starSkin } from "../textures/skins-smooth";
 import { fleshMaterial, skinMaterial } from "./materials";
-import { collar, leaf, leafGeometry, place, stem, toothedCrown } from "./parts";
+import { collar, leaf, leafGeometry, orient, place, stem, toothedCrown } from "./parts";
 import { alongOutline, outlineUv, type RevolveShape } from "./revolve";
 import { BANANA, bendBanana, DRAGONFRUIT, GIANT_MELON, PINEAPPLE, POMEGRANATE, STAR_FRUIT, starOutline, STRAWBERRY } from "./shapes";
 import type { Attachment, FruitSpec } from "./spec";
@@ -56,8 +56,9 @@ export const pineapple: FruitSpec = {
       for (let i = 0; i < tier.count; i++) {
         const a = (i / tier.count) * Math.PI * 2 + k * 0.4;
         const dir = new Vector3(Math.sin(a) * tier.lean, 1, Math.cos(a) * tier.lean);
-        const part = place(leaf(tier.length, 0.17, 0.25, "#8fb08a", 0.5), new Vector3(0, 0.9, 0), dir, 0);
-        part.rotateY(Math.PI / 2);
+        const around = new Vector3(Math.cos(a), 0, -Math.sin(a));
+        // Negative curl arches each leaf outward, like a real crown.
+        const part = orient(leaf(tier.length, 0.17, -0.2, "#8fb08a", 0.5), new Vector3(0, 0.9, 0), dir, around);
         crown.push({ object: part, half: "a" });
       }
     });
@@ -105,8 +106,8 @@ export const pomegranate: FruitSpec = {
 export const starFruit: FruitSpec = {
   shape: STAR_FRUIT,
   cut: "across",
-  fit: 0.85,
-  skin: () => skinMaterial(plainSkin("#ffd83a", "#f2b200", 19), { roughness: 0.18, clearcoat: 1, emissive: "#ffae00", emissiveIntensity: 0.45 }),
+  fit: 0.72,
+  skin: () => skinMaterial(starSkin(), { roughness: 0.15, clearcoat: 1, emissive: "#ff9d00", emissiveIntensity: 0.55 }),
   flesh: () => {
     const material = fleshMaterial(starFlesh(starOutline));
     material.emissive = new Color("#ffcc33");
@@ -145,17 +146,23 @@ export const dragonfruit: FruitSpec = {
   attachments: () => {
     const material = scaleMaterial();
     const scales: Attachment[] = [];
-    for (let i = 0; i < 18; i++) {
-      const t = 0.22 + ((i * 0.37) % 1) * 0.66;
-      const phi = i * 2.399;
-      const r = DRAGONFRUIT.r(t, phi) * 0.96;
-      const y = DRAGONFRUIT.y(t);
-      const out = new Vector3(Math.sin(phi), 0, Math.cos(phi));
-      const mesh = new Mesh(leafGeometry(0.5, 0.34, -0.5, 0.1), material);
-      mesh.castShadow = true;
-      place(mesh, out.clone().multiplyScalar(r).setY(y), out.clone().multiplyScalar(0.8).setY(1), 0);
-      mesh.rotateY(Math.PI / 2);
-      scales.push({ object: mesh, half: Math.sin(phi) >= 0 ? "a" : "b" });
+    // Rows of scales spiral up the fruit, each lying on the skin and flicking out at its green tip.
+    const rows = 5;
+    const perRow = 7;
+    for (let row = 0; row < rows; row++) {
+      for (let k = 0; k < perRow; k++) {
+        const t = 0.14 + (row / (rows - 1)) * 0.68;
+        const phi = ((k + (row % 2) * 0.5) / perRow) * Math.PI * 2;
+        const r = DRAGONFRUIT.r(t, phi) * 0.97;
+        const y = DRAGONFRUIT.y(t);
+        const out = new Vector3(Math.sin(phi), 0, Math.cos(phi));
+        const around = new Vector3(Math.cos(phi), 0, -Math.sin(phi));
+        const length = 0.36 + 0.06 * Math.sin(row + k);
+        const mesh = new Mesh(leafGeometry(length, 0.44, -0.6, 0.08), material);
+        mesh.castShadow = true;
+        orient(mesh, out.clone().multiplyScalar(r).setY(y), out.clone().multiplyScalar(0.35).setY(1), around);
+        scales.push({ object: mesh, half: Math.sin(phi) >= 0 ? "a" : "b" });
+      }
     }
     return scales;
   },

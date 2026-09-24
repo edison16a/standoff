@@ -116,6 +116,19 @@ export function bananaSkin(seed: number): Skin {
   return { map: texture(color.c) };
 }
 
+/** Star fruit: waxy gold, deeper along the five ridges and green at the tips. */
+export function starSkin(): Skin {
+  const color = canvas(W, H);
+  shadePixels(color.ctx, W, H, (u, v) => {
+    // The ridges sit where the star's points are, five times round.
+    const ridge = Math.pow(0.5 + 0.5 * Math.cos(u * Math.PI * 2 * 5), 6);
+    let c = mix(hex("#ffd21f"), hex("#ffb000"), fbm(u * 10, v * 4, 3, 19, 10) * 0.6);
+    c = mix(c, hex("#d98200"), ridge * 0.7);
+    return mix(c, hex("#9ab82a"), smooth(0.1, 0.02, Math.min(v, 1 - v)) * 0.7);
+  });
+  return { map: texture(color.c) };
+}
+
 /** A plain colour field with gentle variation, for leaves, stems and the like. */
 export function plainSkin(base: string, shade: string, seed: number, scale = 4): Skin {
   const color = canvas(128, 128);

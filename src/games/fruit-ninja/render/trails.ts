@@ -17,7 +17,7 @@ export interface BladeFrame {
 /** How long a point stays in the trail, in seconds. */
 const TRAIL_S = 0.2;
 const POINTS = 64;
-const HEAD_WIDTH = 0.3;
+const HEAD_WIDTH = 0.22;
 /** Trails float above the fruit so they are never hidden behind one. */
 const Z = 1.2;
 

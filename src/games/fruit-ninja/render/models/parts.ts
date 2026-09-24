@@ -4,6 +4,7 @@ import {
   CylinderGeometry,
   Float32BufferAttribute,
   Group,
+  Matrix4,
   Mesh,
   Quaternion,
   TubeGeometry,
@@ -68,6 +69,20 @@ export function place<T extends Mesh | Group>(part: T, base: Vector3, direction:
   return part;
 }
 
+/**
+ * Stands a leaf at `base` growing along `direction`, with its width laid
+ * along `across`. Leaves lie flat against the fruit this way instead of
+ * sticking out edge on.
+ */
+export function orient<T extends Mesh | Group>(part: T, base: Vector3, direction: Vector3, across: Vector3): T {
+  const y = direction.clone().normalize();
+  const x = across.clone().addScaledVector(y, -across.dot(y)).normalize();
+  const z = new Vector3().crossVectors(x, y);
+  part.position.copy(base);
+  part.quaternion.setFromRotationMatrix(new Matrix4().makeBasis(x, y, z));
+  return part;
+}
+
 export function leaf(length: number, width: number, curl: number, tint?: string, fold?: number): Mesh {
   const mesh = new Mesh(leafGeometry(length, width, curl, fold), leafMaterial(tint));
   mesh.castShadow = true;
@@ -92,11 +107,10 @@ export function collar(base: Vector3, count: number, length: number, width: numb
   for (let i = 0; i < count; i++) {
     const a = (i / count) * Math.PI * 2;
     const out = new Vector3(Math.sin(a), droop, Math.cos(a));
-    const part = leaf(length * (0.85 + ((i * 37) % 10) / 40), width, -0.4, tint, 0.15);
-    place(part, base, out, 0);
-    // Turn the leaf so its face lies along the fruit, not edge on.
-    part.rotateY(Math.PI / 2);
-    group.add(part);
+    const around = new Vector3(Math.cos(a), 0, -Math.sin(a));
+    // A negative curl bends the tip up and away from the fruit.
+    const part = leaf(length * (0.85 + ((i * 37) % 10) / 40), width, -0.35, tint, 0.15);
+    group.add(orient(part, base, out, around));
   }
   return group;
 }

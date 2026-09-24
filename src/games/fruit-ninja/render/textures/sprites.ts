@@ -65,13 +65,37 @@ export function smokeTexture(): Texture {
       for (let x = 0; x < 128; x++) {
         const d = Math.hypot(x - 64, y - 64) / 64;
         const n = fbm(x / 24, y / 24, 4, 7);
-        const a = Math.max(0, 1 - d * (1.1 - n * 0.5)) * (0.5 + n * 0.8);
+        // The last fade guarantees nothing at the sprite edge, or the square would show.
+        const a = Math.max(0, 1 - d * (1.1 - n * 0.5)) * (0.5 + n * 0.8) * Math.max(0, Math.min(1, (1 - d) / 0.3));
         const i = (y * 128 + x) * 4;
         image.data[i] = image.data[i + 1] = image.data[i + 2] = 255;
         image.data[i + 3] = Math.min(255, a * 255);
       }
     }
     ctx.putImageData(image, 0, 0);
+    return texture(c);
+  });
+}
+
+/** Soft rays of light fanning out from the middle, for the halo round rare fruit. */
+export function raysTexture(): Texture {
+  return once("rays", () => {
+    const { c, ctx } = canvas(256);
+    ctx.translate(128, 128);
+    for (let i = 0; i < 14; i++) {
+      ctx.rotate((Math.PI * 2) / 14);
+      const g = ctx.createLinearGradient(0, 0, 0, 128);
+      g.addColorStop(0, "rgba(255,255,255,0.9)");
+      g.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = g;
+      const spread = i % 2 === 0 ? 10 : 5;
+      ctx.beginPath();
+      ctx.moveTo(-2, 0);
+      ctx.lineTo(-spread, 128);
+      ctx.lineTo(spread, 128);
+      ctx.lineTo(2, 0);
+      ctx.fill();
+    }
     return texture(c);
   });
 }

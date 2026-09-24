@@ -1,4 +1,4 @@
-import { AdditiveBlending, Color, ShaderMaterial } from "three";
+import { Color, CustomBlending, OneFactor, OneMinusSrcAlphaFactor, ShaderMaterial } from "three";
 import { BLADES, type BladeId } from "../blades";
 
 /** The trail's look per blade: 0 smooth, 1 bolt, 2 flame, 3 spectrum, 4 shimmer. */
@@ -51,11 +51,13 @@ const FRAGMENT = /* glsl */ `
       core += glitter * 0.8 * (1.0 - t);
     }
     // The outer rim carries the player's colour, so four blades of one style still tell apart.
-    float rim = smoothstep(0.5, 0.9, across);
-    vec3 colour = mix(glowColour, uPlayer, rim * 0.85) * glow * flicker + uCore * core * 1.3;
-    float fade = pow(1.0 - t, 1.4);
-    float alpha = clamp((glow * 0.85 + core) * fade * uOpacity, 0.0, 1.0);
-    gl_FragColor = vec4(colour * alpha, alpha);
+    float rim = smoothstep(0.55, 0.9, across);
+    float fade = pow(1.0 - t, 1.3);
+    float g = glow * 0.8 * fade * flicker;
+    float c = core * fade;
+    // Premultiplied: the glow covers the wood in its own colour, and the core adds light on top.
+    vec3 colour = mix(glowColour, uPlayer, rim) * g + uCore * c * 1.5;
+    gl_FragColor = vec4(colour, clamp(g + c, 0.0, 1.0)) * uOpacity;
   }
 `;
 
@@ -75,7 +77,9 @@ export function trailMaterial(blade: BladeId, player: string): ShaderMaterial {
     transparent: true,
     depthWrite: false,
     depthTest: false,
-    blending: AdditiveBlending,
+    blending: CustomBlending,
+    blendSrc: OneFactor,
+    blendDst: OneMinusSrcAlphaFactor,
   });
 }
 

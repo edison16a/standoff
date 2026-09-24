@@ -1,8 +1,8 @@
-import { AdditiveBlending, Color, Quaternion, Sprite, SpriteMaterial, Vector3, type Mesh, type MeshStandardMaterial, type Object3D, type Scene } from "three";
+import { Quaternion, Vector3, type Mesh, type MeshStandardMaterial, type Object3D, type Scene } from "three";
 import type { Body } from "../engine/events";
 import { KINDS, type BodyKind } from "../engine/fruit-kinds";
 import type { ModelLibrary } from "./models/library";
-import { glowTexture } from "./textures/sprites";
+import { RareHalo } from "./rare-halo";
 
 export interface FruitView {
   id: number;
@@ -14,7 +14,7 @@ export interface FruitView {
   crack: MeshStandardMaterial | null;
   /** Seconds left of the wobble after a hit. */
   pulse: number;
-  halo: Sprite | null;
+  halo: RareHalo | null;
   sparks: Object3D[];
 }
 
@@ -54,10 +54,7 @@ export class FruitViews {
         view.obj.scale.set(view.scale * wobble, view.scale / wobble, view.scale * wobble);
       }
       if (view.crack) view.crack.opacity = Math.min(1, (1 - body.hitsLeft / body.hits) * 1.3);
-      if (view.halo) {
-        view.halo.material.opacity = 0.55 + 0.25 * Math.sin(time * 6 + body.id);
-        if (view.kind === "dragonfruit") view.halo.material.color.setHSL((time * 0.35) % 1, 1, 0.6);
-      }
+      view.halo?.update(time, body.id);
       for (const spark of view.sparks) spark.scale.setScalar((spark.name === "spark" ? 0.9 : 0.3) * (0.7 + Math.random() * 0.6));
     }
     for (const [id, view] of this.views) {
@@ -99,13 +96,9 @@ export class FruitViews {
       }
       if (child.name === "spark" || child.name === "spark-core") sparks.push(child);
     });
-    let halo: Sprite | null = null;
     const haloColor = RARE_HALO[body.kind];
-    if (haloColor) {
-      halo = new Sprite(new SpriteMaterial({ map: glowTexture(), color: new Color(haloColor), blending: AdditiveBlending, transparent: true, depthWrite: false }));
-      halo.scale.setScalar(3.6);
-      obj.add(halo);
-    }
+    const halo = haloColor ? new RareHalo(haloColor, body.kind === "dragonfruit") : null;
+    if (halo) obj.add(halo.group);
     this.scene.add(obj);
     const view: FruitView = { id: body.id, kind: body.kind, obj, spin: new Vector3(), scale: template.scale, crack, pulse: 0, halo, sparks };
     this.views.set(body.id, view);
@@ -115,7 +108,7 @@ export class FruitViews {
   private remove(view: FruitView): void {
     this.scene.remove(view.obj);
     view.crack?.dispose();
-    view.halo?.material.dispose();
+    view.halo?.dispose();
     this.views.delete(view.id);
   }
 }

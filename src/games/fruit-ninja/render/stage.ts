@@ -28,6 +28,19 @@ export const BOARD_DEPTH = 3.2;
 const BOARD_SIZE = { w: 34, h: 13.5 };
 
 /**
+ * Quality steps, best first. A machine that cannot keep up gives up the
+ * bloom first, then resolution and shadow detail, which the eye misses
+ * least on a busy screen.
+ */
+const QUALITY = [
+  { bloom: true, scale: 1, shadow: 2048 },
+  { bloom: false, scale: 1, shadow: 2048 },
+  { bloom: false, scale: 0.75, shadow: 1024 },
+  { bloom: false, scale: 0.55, shadow: 1024 },
+  { bloom: false, scale: 0.4, shadow: 512 },
+] as const;
+
+/**
  * The scene everything is drawn in. The camera looks straight down at a
  * wooden board; fruit flies in a plane a little above it, so the plane
  * z = 0 fills the screen exactly and a screen point maps straight to a
@@ -46,7 +59,8 @@ export class Stage {
   halfWidth = HALF_HEIGHT * (16 / 9);
   /** Device pixels per world unit at the flight plane's distance, for sizing point sprites. */
   pointScale = 100;
-  private useBloom = true;
+  private quality = 0;
+  private size = { width: 1, height: 1, dpr: 1 };
 
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
@@ -101,8 +115,9 @@ export class Stage {
   }
 
   resize(width: number, height: number, dpr: number): void {
+    this.size = { width, height, dpr };
     // Past 1.5 device pixels per CSS pixel the extra sharpness costs more frame time than it is worth.
-    const ratio = Math.min(dpr, 1.5);
+    const ratio = Math.min(dpr, 1.5) * QUALITY[this.quality]!.scale;
     this.renderer.setPixelRatio(ratio);
     this.renderer.setSize(width, height, false);
     this.composer.setPixelRatio(ratio);
@@ -114,13 +129,22 @@ export class Stage {
     this.pointScale = (height * ratio) / (2 * HALF_HEIGHT);
   }
 
-  /** Drops the bloom on machines that cannot hold the frame rate with it. */
-  setBloom(on: boolean): void {
-    this.useBloom = on;
+  /** Steps down one quality level. Returns false when already at the lowest. */
+  lowerQuality(): boolean {
+    if (this.quality >= QUALITY.length - 1) return false;
+    this.quality += 1;
+    const shadow = QUALITY[this.quality]!.shadow;
+    if (this.key.shadow.mapSize.x !== shadow) {
+      this.key.shadow.mapSize.set(shadow, shadow);
+      this.key.shadow.map?.dispose();
+      this.key.shadow.map = null;
+    }
+    this.resize(this.size.width, this.size.height, this.size.dpr);
+    return true;
   }
 
   render(): void {
-    if (this.useBloom) this.composer.render();
+    if (QUALITY[this.quality]!.bloom) this.composer.render();
     else {
       this.renderer.toneMapping = ACESFilmicToneMapping;
       this.renderer.render(this.scene, this.camera);
