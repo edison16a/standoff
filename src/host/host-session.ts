@@ -1,12 +1,11 @@
-import { AudioEngine } from "@/audio/audio-engine";
-import { SoundDirector } from "@/audio/sound-director";
+import type { StageFrame } from "@/game/frames";
 import { SocketClient } from "@/net/socket-client";
 import type { Slot } from "@/shared/players";
 import type { ClientEnvelope, HostMessage, PhoneMessage, ServerEnvelope } from "@/shared/protocol";
 import { clampTuning, type Tuning } from "@/shared/tuning";
 import { buildControllerState } from "./controller-state";
+import { HostAudio } from "./host-audio";
 import { sameHud, useHostStore } from "./host-store";
-import type { StageFrame } from "@/game/frames";
 import { Lobby } from "./lobby";
 import { lobbyScene } from "./lobby-scene";
 import { MatchDriver } from "./match-driver";
@@ -20,8 +19,7 @@ import { forgetRoom, recallRoom, rememberRoom } from "./room-memory";
 export class HostSession {
   private readonly socket: SocketClient;
   private readonly lobby = new Lobby();
-  private audio: AudioEngine | null = null;
-  private director: SoundDirector | null = null;
+  private readonly audio = new HostAudio(() => this.tuning);
   driver: MatchDriver | null = null;
   private wantsRoom = false;
   private lastState = "";
@@ -43,17 +41,13 @@ export class HostSession {
   }
 
   dispose(): void {
-    this.director?.stop();
-    this.audio?.close();
-    this.director = null;
-    this.audio = null;
+    this.audio.dispose();
     this.socket.close();
   }
 
   /** Runs inside the "Create game" click, which is also what unlocks audio. */
   async createGame(): Promise<void> {
-    this.ensureAudio();
-    await this.audio?.unlock();
+    await this.audio.unlock();
     this.wantsRoom = true;
     this.socket.send({ type: "host:create" });
   }
@@ -65,7 +59,7 @@ export class HostSession {
     this.driver = null;
     this.wantsRoom = false;
     this.lobby.seats = new Lobby().seats;
-    this.director?.stop();
+    this.audio.director?.stop();
     useHostStore.setState({ screen: "landing", room: null, hud: null, seats: this.lobby.seats });
   }
 
@@ -73,7 +67,7 @@ export class HostSession {
   backToLobby(): void {
     this.driver = null;
     this.lobby.clearReady();
-    this.director?.onPhase("lobby");
+    this.audio.director?.onPhase("lobby");
     useHostStore.setState({ screen: "lobby", hud: null, seats: this.lobby.seats });
     this.broadcastState();
   }
@@ -81,7 +75,7 @@ export class HostSession {
   setTuning(next: Tuning): void {
     const tuning = clampTuning(next);
     useHostStore.setState({ tuning });
-    this.director?.applyLevels();
+    this.audio.director?.applyLevels();
     this.send("all", { kind: "tuning", tuning });
   }
 
@@ -149,7 +143,7 @@ export class HostSession {
         return;
       case "skip":
         engine?.skip(slot);
-        this.director?.sfx.click();
+        this.audio.director?.sfx.click();
         return;
       case "rematch":
         engine?.rematch(slot);
@@ -168,7 +162,7 @@ export class HostSession {
 
   private startMatch(): void {
     this.driver = new MatchDriver(this.lobby.picks, () => this.tuning, {
-      director: this.director,
+      director: this.audio.director,
       feedback: (slot, event) => this.send(slot, { kind: "feedback", event }),
       recenter: () => this.send("all", { kind: "recenter" }),
       onPhase: () => this.broadcastState(),
@@ -180,19 +174,10 @@ export class HostSession {
   private enterLobby(code: string, joinUrl: string): void {
     useHostStore.setState({ screen: "lobby", room: { code, joinUrl }, error: null });
     this.syncSeats();
-    this.ensureAudio();
-    this.director?.onPhase("lobby");
+    this.audio.ensure();
+    this.audio.director?.onPhase("lobby");
     this.send("all", { kind: "tuning", tuning: this.tuning });
     this.broadcastState();
-  }
-
-  private ensureAudio(): void {
-    if (this.audio) return;
-    const audio = new AudioEngine();
-    this.audio = audio;
-    this.director = new SoundDirector(audio, () => this.tuning);
-    // After a reload there was no click yet, so audio waits for the first one.
-    if (!audio.unlocked) window.addEventListener("pointerdown", () => void audio.unlock(), { once: true });
   }
 
   /** Someone came or went. Pause or resume play and bring every screen up to date. */
