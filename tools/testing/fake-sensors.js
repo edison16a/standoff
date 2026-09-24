@@ -9,6 +9,12 @@
 // edge up, gamma rolls the right edge down. window.__push(a, ms) queues a
 // vertical acceleration in m/s² for fencing's jabs and parries.
 (() => {
+  // Some browsers and test contexts lack the event constructors, so plain events stand in.
+  const make = (type, init) => {
+    const Ctor = type === "deviceorientation" ? window.DeviceOrientationEvent : window.DeviceMotionEvent;
+    if (typeof Ctor === "function") return new Ctor(type, init);
+    return Object.assign(new Event(type), init);
+  };
   const state = { alpha: 0, beta: 0, gamma: 0, queue: [] };
   window.__sensors = state;
   window.__push = (a, ms) => {
@@ -18,11 +24,11 @@
   window.__parry = () => state.queue.push(0, -10, -24, -28, -8, 6, 0);
   setInterval(() => {
     window.dispatchEvent(
-      new DeviceOrientationEvent("deviceorientation", { alpha: state.alpha, beta: state.beta, gamma: state.gamma, absolute: false }),
+      make("deviceorientation", { alpha: state.alpha, beta: state.beta, gamma: state.gamma, absolute: false }),
     );
     const a = state.queue.length ? state.queue.shift() : (Math.random() - 0.5) * 0.04;
     window.dispatchEvent(
-      new DeviceMotionEvent("devicemotion", {
+      make("devicemotion", {
         acceleration: { x: 0, y: 0, z: -a },
         accelerationIncludingGravity: { x: 0, y: 0, z: 9.81 - a },
         rotationRate: { alpha: 0, beta: 0, gamma: 0 },

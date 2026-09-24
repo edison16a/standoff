@@ -15,7 +15,7 @@ const TARGETS: Partial<Record<AimStep, ScreenPoint>> = {
 
 interface AimOverlayProps {
   aim: HostAim;
-  players: () => Player[];
+  players: () => readonly Player[];
   /** Draw each player's laser dot. Off for games that draw their own aim in 3D. */
   dots?: boolean;
 }
@@ -83,11 +83,19 @@ function drawTarget(ctx: CanvasRenderingContext2D, at: { x: number; y: number },
   ctx.fill();
   ctx.font = "600 16px system-ui, sans-serif";
   ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
   who.forEach((player, i) => {
+    const below = at.y + 78 + i * 30;
+    const y = below > ctx.canvas.clientHeight - 24 ? at.y - 70 - i * 30 : below;
+    const text = `${player.name}, point here`;
+    // A dark pill behind the name, so it reads on any game's background.
+    const width = ctx.measureText(text).width + 24;
+    ctx.fillStyle = "rgba(10, 10, 20, 0.78)";
+    ctx.beginPath();
+    ctx.roundRect(at.x - width / 2, y - 13, width, 26, 13);
+    ctx.fill();
     ctx.fillStyle = playerColor(player.seat);
-    const below = at.y + 78 + i * 22;
-    const y = below > ctx.canvas.clientHeight - 20 ? at.y - 70 - i * 22 : below;
-    ctx.fillText(`${player.name}, point here`, at.x, y);
+    ctx.fillText(text, at.x, y);
   });
   ctx.restore();
 }
