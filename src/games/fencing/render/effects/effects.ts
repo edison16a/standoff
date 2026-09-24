@@ -95,6 +95,13 @@ export class Effects {
     this.confetti.update(wallNow);
   }
 
+  /** Drops the trails and shockwave rings, which read as smears in a frozen frame. */
+  freeze(): void {
+    this.trails[1].clear();
+    this.trails[2].clear();
+    this.impacts.hideRings();
+  }
+
   /** A new match: nothing from the last one carries over. */
   reset(): void {
     this.trails[1].clear();

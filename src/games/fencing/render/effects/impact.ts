@@ -54,6 +54,10 @@ export class Impacts {
     }
   }
 
+  hideRings(): void {
+    for (const { ring } of this.pops) ring.visible = false;
+  }
+
   clear(): void {
     for (const { flash, ring } of this.pops) {
       this.group.remove(flash, ring);

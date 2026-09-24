@@ -107,6 +107,11 @@ export class StageRenderer {
     this.director.release();
   }
 
+  /** Key art is a frozen moment, where trails and rings read as smears rather than motion. */
+  freeze(): void {
+    this.effects.freeze();
+  }
+
   /** Pins the camera for key art, or with null lets the director run it again. */
   pin(shot: FixedShot | null): void {
     this.director.pin(shot);

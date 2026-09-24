@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import type { ShowcaseView } from "@/platform/games/game-api";
+import { CLIP } from "@/games/fencing/render/quality";
 import { StageRenderer } from "@/games/fencing/render/stage-renderer";
 import { galleryFrame, readGallery } from "./gallery";
 import { ShowcaseBout } from "./showcase-bout";
@@ -13,6 +14,7 @@ const WARMUP_MS = 3000;
 /** After the burst the bout holds still, so the loop ends on the moment, not on a reset. */
 const FREEZE_AFTER_IMPACT_MS = 1300;
 const STEP_MS = 1000 / 60;
+const DRAW_EVERY_MS = 30;
 
 /** Who fences in each view. */
 const CAST = {
@@ -40,7 +42,7 @@ export function Showcase({ view }: { view: ShowcaseView }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const renderer = new StageRenderer(canvas, { seed: 11 });
+    const renderer = new StageRenderer(canvas, { seed: 11, quality: view === "loop" && !readGallery() ? CLIP : undefined });
     renderer.setTheme(true);
     const fit = () => renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
     fit();
@@ -82,6 +84,7 @@ function loop(renderer: StageRenderer): (now: number) => void {
   let bout: ShowcaseBout | null = null;
   let impactAt: number | null = null;
   let last = 0;
+  let drawnAt = -Infinity;
   return (now) => {
     start ??= now;
     const elapsed = now - start + CYCLE_MS - WARMUP_MS;
@@ -102,7 +105,11 @@ function loop(renderer: StageRenderer): (now: number) => void {
       last += STEP_MS;
       if (!frozen) bout!.step(STEP_MS);
     }
-    renderer.render(bout!.scene(), now, { scores: bout!.scores });
+    renderer.update(bout!.scene(), now, { scores: bout!.scores });
+    // The clip is recorded at 30 frames a second, so drawing more often only slows the capture.
+    if (now - drawnAt < DRAW_EVERY_MS) return;
+    drawnAt = now;
+    renderer.draw();
   };
 }
 
@@ -125,6 +132,8 @@ function still(renderer: StageRenderer, view: "icon" | "poster"): (now: number) 
     const size = `${window.innerWidth}x${window.innerHeight}`;
     if (size === drawn) return;
     drawn = size;
+    renderer.update(bout.scene(), wall, { scores: bout.scores });
+    renderer.freeze();
     renderer.update(bout.scene(), wall, { scores: bout.scores });
     renderer.draw();
   };

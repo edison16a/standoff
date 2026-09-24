@@ -33,7 +33,7 @@ function eveningHall(): THREE.Scene {
     scene.add(mesh);
   };
   // The rig of spotlights overhead, hard and bright.
-  for (const x of [-6, -2, 2, 6]) lamp(0xfff1dc, 60, [0.8, 0.2, 0.8], [x, 10, 0.5]);
+  for (const x of [-6, -2, 2, 6]) lamp(0xfff1dc, 26, [0.8, 0.2, 0.8], [x, 10, 0.5]);
   // The ribbon boards and scoring lamps glow low down, warm on one side, cool on the other.
   lamp(0x6a5cff, 4, [24, 0.8, 0.2], [0, 1, -9]);
   lamp(0xff4757, 6, [1, 1, 1], [-7, 2, -3]);
