@@ -8,10 +8,10 @@ import type { Bus } from "../backend";
 export class MemoryBus implements Bus {
   private readonly channels = new Map<string, Set<(message: string) => void>>();
 
-  async publish(channel: string, message: string): Promise<void> {
-    const handlers = this.channels.get(channel);
-    if (!handlers) return;
-    for (const handler of [...handlers]) queueMicrotask(() => handler(message));
+  async publish(channel: string, message: string): Promise<number> {
+    const handlers = [...(this.channels.get(channel) ?? [])];
+    for (const handler of handlers) queueMicrotask(() => handler(message));
+    return handlers.length;
   }
 
   async subscribe(channel: string, onMessage: (message: string) => void): Promise<() => Promise<void>> {

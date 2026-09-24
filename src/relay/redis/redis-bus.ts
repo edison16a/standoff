@@ -19,8 +19,9 @@ export class RedisBus implements Bus {
     });
   }
 
-  async publish(channel: string, message: string): Promise<void> {
-    await this.publisher.publish(channel, message);
+  /** Redis counts subscribed connections, which here means server instances listening. */
+  async publish(channel: string, message: string): Promise<number> {
+    return this.publisher.publish(channel, message);
   }
 
   async subscribe(channel: string, onMessage: (message: string) => void): Promise<() => Promise<void>> {

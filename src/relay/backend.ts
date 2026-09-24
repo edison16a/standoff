@@ -19,7 +19,8 @@ export interface RoomStore {
  * one phone's frames arrive at the host in the order the phone sent them.
  */
 export interface Bus {
-  publish(channel: string, message: string): Promise<void>;
+  /** Resolves to how many subscribers it reached, so a sender can tell nobody is listening. */
+  publish(channel: string, message: string): Promise<number>;
   /** Resolves once the subscription is live. Returns an unsubscribe. */
   subscribe(channel: string, onMessage: (message: string) => void): Promise<() => Promise<void>>;
 }
