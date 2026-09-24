@@ -5,6 +5,15 @@ const OPEN = 1;
 const CLOSED = 3;
 /** Close code for a channel that dropped without a word, as a WebSocket reports it. */
 const ABNORMAL = 1006;
+/** The server's answer when no instance it reached holds our stream. */
+const GONE = 410;
+/**
+ * Without Redis, a post can land on a server instance that does not hold
+ * our stream, which answers 410 too. Each retry is routed afresh, so a few
+ * of them usually find the right one. With Redis, 410 is final and this
+ * costs a handful of quick requests once.
+ */
+const MISROUTED_RETRIES = 5;
 
 /**
  * The HTTP fallback for when a WebSocket will not open, as on Chrome
@@ -65,10 +74,12 @@ export class StreamChannel {
       this.queuedBytes = 0;
       this.sendingBytes = body.length;
       try {
-        const response = await fetch(`${STREAM_PATH}?s=${this.id}`, { method: "POST", body });
-        // 410 means the server no longer holds our stream. Anything else
-        // unexpected is treated the same: start over on a fresh channel.
-        if (!response.ok) return this.finish(ABNORMAL);
+        let status = GONE;
+        for (let attempt = 0; status === GONE && attempt <= MISROUTED_RETRIES; attempt++) {
+          status = (await fetch(`${STREAM_PATH}?s=${this.id}`, { method: "POST", body })).status;
+        }
+        // Still gone, or anything else unexpected: start over on a fresh channel.
+        if (status >= 300) return this.finish(ABNORMAL);
       } catch {
         return this.finish(ABNORMAL);
       } finally {
