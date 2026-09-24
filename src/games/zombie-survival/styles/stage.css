@@ -1,0 +1,245 @@
+/*
+  Zombie Survival on the computer: the 3D view and what flashes over it.
+  Its own grim look: near black, sick green, blood red, sodium orange.
+*/
+
+.zs-stage {
+  --zs-green: #5fd37a;
+  --zs-red: #ff4a4a;
+  --zs-gold: #ffd24a;
+  --zs-ink: #e8eee6;
+  --zs-mute: #9aa69a;
+  --zs-panel: rgba(8, 12, 12, 0.72);
+  --zs-line: rgba(160, 220, 170, 0.18);
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #06080b;
+  color: var(--zs-ink);
+  font-family: var(--font-ui);
+}
+
+.zs-stage__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* A dark edge around the picture, like an old lens in the fog. */
+.zs-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+/* Letterbox bars for the cutscenes. */
+.zs-stage::before,
+.zs-stage::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  height: 0;
+  background: #000;
+  transition: height 600ms ease;
+  pointer-events: none;
+}
+
+.zs-stage::before {
+  top: 0;
+}
+
+.zs-stage::after {
+  bottom: 0;
+}
+
+.zs-stage--cinematic::before,
+.zs-stage--cinematic::after {
+  height: 9vh;
+}
+
+.zs-hurt {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, rgba(160, 0, 0, 0) 40%, rgba(190, 0, 0, 0.55) 100%);
+  animation: zs-hurt 520ms ease-out forwards;
+}
+
+@keyframes zs-hurt {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.zs-low {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 120px 30px rgba(200, 0, 0, 0.5);
+  animation: zs-pulse 900ms ease-in-out infinite;
+}
+
+@keyframes zs-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.zs-banner {
+  position: absolute;
+  top: 34%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  text-align: center;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.9);
+  animation: zs-banner 3.2s ease forwards;
+}
+
+.zs-banner strong {
+  font-size: clamp(36px, 5.4vw, 84px);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.zs-banner span {
+  color: var(--zs-mute);
+  font-size: clamp(16px, 1.6vw, 26px);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.zs-banner--boss strong {
+  color: var(--zs-red);
+}
+
+.zs-banner--boss span {
+  color: #ffb070;
+}
+
+.zs-banner--checkpoint strong {
+  color: var(--zs-green);
+}
+
+@keyframes zs-banner {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -40%) scale(1.08);
+  }
+  12%,
+  75% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -54%) scale(1);
+  }
+}
+
+.zs-lobby {
+  position: absolute;
+  top: 50%;
+  right: 6vw;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: min(440px, 40vw);
+  padding: 26px;
+  border: 1px solid var(--zs-line);
+  border-radius: 18px;
+  background: var(--zs-panel);
+  transform: translateY(-50%);
+  backdrop-filter: blur(6px);
+}
+
+.zs-lobby__title {
+  margin: 0;
+  color: var(--zs-green);
+  font-size: 34px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.zs-lobby__lead,
+.zs-lobby__hint {
+  margin: 0;
+  color: var(--zs-mute);
+  line-height: 1.45;
+}
+
+.zs-lobby__hint {
+  font-size: 13px;
+}
+
+.zs-lobby__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.zs-lobby__row {
+  display: grid;
+  grid-template-columns: 14px 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-left: 4px solid var(--seat);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.zs-lobby__name {
+  font-weight: 700;
+}
+
+.zs-lobby__gun {
+  color: var(--zs-mute);
+  font-size: 14px;
+}
+
+.zs-lobby__flag {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--zs-mute);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.zs-lobby__flag--on {
+  background: var(--zs-green);
+  color: #06200e;
+}
+
+.zs-lobby__start {
+  width: 100%;
+}
+
+.zs-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 8px;
+  border-radius: 50%;
+  vertical-align: -1px;
+}

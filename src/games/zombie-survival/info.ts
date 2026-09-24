@@ -5,7 +5,7 @@ export const info: GameInfo = {
   id: "zombie-survival",
   title: "Zombie Survival",
   tagline: "Point your phone to aim. Fight through the horde together.",
-  status: "development",
+  status: "ready",
   players: [1, 2, 4],
   color: "#3fae5a",
   Cover,

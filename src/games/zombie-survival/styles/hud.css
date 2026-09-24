@@ -1,0 +1,434 @@
+/*
+  Zombie Survival's HUD on the computer: the top strip, the tags under
+  the guns, the radio, achievements and the summary cards.
+*/
+
+.zs-hud {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.zs-hud > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding: 10px 16px;
+  border: 1px solid var(--zs-line);
+  border-radius: 14px;
+  background: var(--zs-panel);
+}
+
+.zs-hud__count {
+  color: var(--zs-mute);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.zs-hud__count em {
+  font-style: normal;
+  opacity: 0.7;
+}
+
+.zs-hud__stage strong {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.zs-hud__goal {
+  color: var(--zs-green);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.zs-hud__health {
+  min-width: 220px;
+}
+
+.zs-hud__label {
+  color: var(--zs-mute);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.zs-hud__value {
+  font-size: 20px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.zs-bar {
+  position: relative;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.zs-bar__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2e9a4a, var(--zs-green));
+  transition: width 250ms ease;
+}
+
+.zs-hud__health--low .zs-bar__fill {
+  background: linear-gradient(90deg, #a01818, var(--zs-red));
+}
+
+.zs-hud__health--low .zs-hud__value {
+  color: var(--zs-red);
+}
+
+.zs-hud__left {
+  align-items: center;
+}
+
+.zs-hud__left strong {
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.zs-hud__left span {
+  color: var(--zs-mute);
+  font-size: 12px;
+}
+
+.zs-boss {
+  border-color: rgba(255, 120, 60, 0.5) !important;
+}
+
+.zs-boss strong {
+  color: #ff8a4a;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.zs-boss span {
+  color: var(--zs-mute);
+  font-size: 12px;
+}
+
+.zs-boss__points {
+  display: flex;
+  gap: 6px;
+}
+
+.zs-boss__point {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #2a0c08;
+  box-shadow: inset 0 0 0 2px rgba(255, 120, 60, 0.3);
+}
+
+.zs-boss__point--on {
+  background: radial-gradient(circle, #fff2c0, #ff9a2a 60%, #b0400a);
+  box-shadow: 0 0 12px #ff8a2a;
+}
+
+.zs-chips {
+  position: absolute;
+  right: 0;
+  bottom: 12px;
+  left: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.zs-chip {
+  position: absolute;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 2px 12px;
+  padding: 8px 14px;
+  border-top: 3px solid var(--seat);
+  border-radius: 12px;
+  background: var(--zs-panel);
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.zs-chip__name {
+  color: var(--seat);
+  font-weight: 800;
+}
+
+.zs-chip__gun,
+.zs-chip__kills {
+  color: var(--zs-mute);
+  font-size: 13px;
+  text-align: right;
+}
+
+.zs-chip__ammo {
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.zs-chip__ammo--empty {
+  color: var(--zs-red);
+}
+
+.zs-radio {
+  position: absolute;
+  top: 96px;
+  left: 20px;
+  width: min(440px, 34vw);
+  padding: 12px 16px;
+  border: 1px solid rgba(120, 255, 160, 0.3);
+  border-radius: 12px;
+  background: rgba(4, 16, 8, 0.8);
+  font-family: var(--font-mono);
+  animation: zs-radio 9s ease forwards;
+  pointer-events: none;
+}
+
+.zs-radio__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.zs-radio__led {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--zs-green);
+  box-shadow: 0 0 8px var(--zs-green);
+  animation: zs-pulse 700ms ease-in-out infinite;
+}
+
+.zs-radio__from {
+  color: var(--zs-green);
+}
+
+.zs-radio__band {
+  margin-left: auto;
+  color: var(--zs-mute);
+}
+
+.zs-radio__text {
+  margin: 0;
+  color: #cfeccf;
+  font-size: 15px;
+  line-height: 1.45;
+  clip-path: inset(0 100% 0 0);
+  animation: zs-type calc(var(--chars) * 28ms) steps(40, end) forwards;
+}
+
+@keyframes zs-type {
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes zs-radio {
+  0% {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  4%,
+  85% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.zs-toasts {
+  position: absolute;
+  top: 76px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+
+.zs-toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 300px;
+  padding: 10px 14px;
+  border-left: 4px solid var(--seat);
+  border-radius: 12px;
+  background: var(--zs-panel);
+  animation: zs-toast 4.2s ease forwards;
+}
+
+.zs-toast__icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 210, 74, 0.15);
+  color: var(--zs-gold);
+}
+
+.zs-toast__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--zs-mute);
+}
+
+.zs-toast__body strong {
+  color: var(--zs-gold);
+  font-size: 15px;
+}
+
+@keyframes zs-toast {
+  0% {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  8%,
+  86% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.zs-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(760px, 86vw);
+  padding: 26px 30px;
+  border: 1px solid var(--zs-line);
+  border-radius: 20px;
+  background: rgba(6, 10, 10, 0.86);
+  transform: translate(-50%, -50%);
+  animation: zs-card 400ms ease;
+  backdrop-filter: blur(6px);
+}
+
+@keyframes zs-card {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -46%);
+  }
+}
+
+.zs-card h2 {
+  margin: 4px 0 0;
+  font-size: 32px;
+  font-weight: 900;
+}
+
+.zs-card header p {
+  margin: 6px 0 0;
+  color: var(--zs-mute);
+}
+
+.zs-card__kicker {
+  color: var(--zs-green);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.zs-card--down .zs-card__kicker,
+.zs-card--down h2 {
+  color: var(--zs-red);
+}
+
+.zs-card--won h2 {
+  color: var(--zs-gold);
+}
+
+.zs-card--summary {
+  top: 56%;
+}
+
+.zs-heal {
+  color: var(--zs-green) !important;
+  font-weight: 700;
+}
+
+.zs-card__next {
+  margin: 0;
+  color: var(--zs-mute);
+}
+
+.zs-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.zs-mvp {
+  margin: 0 0 8px;
+  color: var(--zs-mute);
+}
+
+.zs-stats-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.zs-stats-table th {
+  padding: 6px 8px;
+  color: var(--zs-mute);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.zs-stats-table td {
+  padding: 8px;
+  border-top: 1px solid var(--zs-line);
+  font-size: 16px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.zs-stats-table th:first-child,
+.zs-stats-table td:first-child {
+  text-align: left;
+}
+
+.zs-lead {
+  color: var(--zs-gold);
+}
