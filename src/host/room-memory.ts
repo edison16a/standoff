@@ -1,9 +1,12 @@
 /**
  * Remembers this tab's room for the length of the tab, so a reload lands
  * back in the same game instead of stranding two phones. Session storage
- * dies with the tab, so nothing outlives the game.
+ * dies with the tab, so nothing outlives the game. The page keeps its own
+ * copy too, since every socket handover resumes with it, and that must
+ * work where storage is blocked.
  */
 const KEY = "standoff:host-room";
+let held: RememberedRoom | null = null;
 
 export interface RememberedRoom {
   code: string;
@@ -11,6 +14,7 @@ export interface RememberedRoom {
 }
 
 export function rememberRoom(room: RememberedRoom): void {
+  held = room;
   try {
     sessionStorage.setItem(KEY, JSON.stringify(room));
   } catch {
@@ -19,6 +23,7 @@ export function rememberRoom(room: RememberedRoom): void {
 }
 
 export function recallRoom(): RememberedRoom | null {
+  if (held) return held;
   try {
     const raw = sessionStorage.getItem(KEY);
     const parsed = raw ? (JSON.parse(raw) as Partial<RememberedRoom>) : null;
@@ -29,6 +34,7 @@ export function recallRoom(): RememberedRoom | null {
 }
 
 export function forgetRoom(): void {
+  held = null;
   try {
     sessionStorage.removeItem(KEY);
   } catch {
