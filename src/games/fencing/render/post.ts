@@ -26,6 +26,30 @@ const VIGNETTE = {
 };
 
 /**
+ * Caps the light going into the bloom. A glint where a bumpy surface turns
+ * away from a strong spot can be hundreds of times brighter than white, and
+ * some drivers even return NaN there. Bloom would smear either one into a
+ * haze over the whole fencer, so both are tamed first.
+ */
+const CLAMP = {
+  uniforms: { tDiffuse: { value: null }, ceiling: { value: 8 } },
+  vertexShader: VIGNETTE.vertexShader,
+  fragmentShader: /* glsl */ `
+    uniform sampler2D tDiffuse;
+    uniform float ceiling;
+    varying vec2 vUv;
+    void main() {
+      vec4 colour = texture2D(tDiffuse, vUv);
+      vec3 rgb = colour.rgb;
+      if (any(isnan(rgb)) || any(isinf(rgb))) rgb = vec3(0.0);
+      float peak = max(max(rgb.r, rgb.g), rgb.b);
+      if (peak > ceiling) rgb *= ceiling / peak;
+      gl_FragColor = vec4(max(rgb, vec3(0.0)), colour.a);
+    }
+  `,
+};
+
+/**
  * The finish on the picture: bloom, so lamps, sparks and blade trails glow
  * past their edges, then the tone mapping, then a gentle vignette. Only
  * the brightest things bloom, so the hall itself stays crisp.
@@ -41,6 +65,7 @@ export class PostFx {
     this.render = new RenderPass(scene, camera);
     this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.55, 0.45, 0.82);
     this.composer.addPass(this.render);
+    this.composer.addPass(new ShaderPass(CLAMP));
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());
     this.composer.addPass(new ShaderPass(VIGNETTE));

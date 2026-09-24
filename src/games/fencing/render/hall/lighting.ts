@@ -81,13 +81,14 @@ export class Lighting {
 
   /** A white flash from the point of contact. */
   burst(at: THREE.Vector3, strength = 1): void {
-    this.flash.position.copy(at).add(new THREE.Vector3(0, 0.2, 0.6));
+    this.flash.position.copy(at).add(new THREE.Vector3(0, 0.3, 1.1));
     this.flashLevel = strength;
   }
 
   update(dtMs: number): void {
     this.flashLevel *= Math.exp(-dtMs / 160);
-    this.flash.intensity = this.flashLevel * 60;
+    // Enough to lift the fencers for a moment, never enough to wash them out.
+    this.flash.intensity = this.flashLevel * 14;
   }
 
   dispose(): void {

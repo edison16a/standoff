@@ -63,7 +63,7 @@ export const DARK_HALL: HallTheme = {
   sky: 0x5a6aa8,
   ground: 0x10101a,
   hemisphere: 0.32,
-  key: { color: 0xfff0d8, intensity: 200 },
+  key: { color: 0xfff0d8, intensity: 160 },
   rim: { color: 0x7fa6ff, intensity: 2.2 },
   spots: { color: 0xfff1d6, intensity: 170, beam: 0.16 },
   sun: 0,

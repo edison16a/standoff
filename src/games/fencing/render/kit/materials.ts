@@ -23,9 +23,7 @@ function made(key: string, make: () => THREE.MeshStandardMaterial): THREE.MeshSt
 /** Woven cloth: fencing whites, doublets, coats and breeches. */
 export function cloth(color: THREE.ColorRepresentation, roughness = 0.82): THREE.MeshStandardMaterial {
   return made(`cloth:${String(color)}:${roughness}`, () => {
-    // Sheen is the soft bright rim woven cloth shows where it turns away from the light.
-    const sheen = new THREE.Color(color).lerp(new THREE.Color(0xffffff), 0.5);
-    const material = new THREE.MeshPhysicalMaterial({ color, roughness, metalness: 0, sheen: 0.6, sheenRoughness: 0.55, sheenColor: sheen });
+    const material = new THREE.MeshStandardMaterial({ color, roughness, metalness: 0 });
     material.bumpMap = weaveBump();
     material.bumpScale = 0.35;
     return material;
@@ -44,7 +42,7 @@ export function pinstripe(color: THREE.ColorRepresentation): THREE.MeshStandardM
 
 /** Satin and silk: a smoother cloth with a soft sheen, for sashes, capes and trims. */
 export function satin(color: THREE.ColorRepresentation): THREE.MeshStandardMaterial {
-  return made(`satin:${String(color)}`, () => new THREE.MeshStandardMaterial({ color, roughness: 0.42, metalness: 0.05 }));
+  return made(`satin:${String(color)}`, () => new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.05 }));
 }
 
 export function leather(color: THREE.ColorRepresentation, roughness = 0.6): THREE.MeshStandardMaterial {
@@ -69,8 +67,7 @@ export function metal(color: THREE.ColorRepresentation, roughness = 0.28, brushe
 }
 
 export function skin(color: THREE.ColorRepresentation): THREE.MeshStandardMaterial {
-  // A touch of its own colour glowing back stands in for light passing through skin, so faces never go grey.
-  return made(`skin:${String(color)}`, () => new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0, emissive: color, emissiveIntensity: 0.09 }));
+  return made(`skin:${String(color)}`, () => new THREE.MeshStandardMaterial({ color, roughness: 0.58, metalness: 0 }));
 }
 
 /** Hard smooth plastic and rubber: grips, soles, sockets. */

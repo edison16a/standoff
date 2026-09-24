@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { glowTexture } from "../kit/textures";
+import { GLOW } from "./glow";
 
 const MAX = 700;
 const GRAVITY = -9.8;
@@ -53,6 +54,9 @@ export class Sparks {
     }));
     this.heads.frustumCulled = false;
     this.heads.renderOrder = 4;
+    // Nothing is drawn until the first sparks fly.
+    geometry.setDrawRange(0, 0);
+    heads.setDrawRange(0, 0);
     this.mesh.add(this.heads);
   }
 
@@ -79,7 +83,7 @@ export class Sparks {
       const age = (t - spark.born) / spark.life;
       const tail = spark.p.clone().addScaledVector(spark.v, -0.022);
       this.positions.set([spark.p.x, spark.p.y, spark.p.z, tail.x, tail.y, tail.z], i * 6);
-      colour.copy(white).lerp(spark.hot, Math.min(1, age * 1.8));
+      colour.copy(white).lerp(spark.hot, Math.min(1, age * 1.8)).multiplyScalar(GLOW);
       const alpha = 1 - age;
       this.colours.set([colour.r, colour.g, colour.b, alpha, colour.r, colour.g * 0.7, colour.b * 0.4, 0], i * 8);
       this.headPositions.set([spark.p.x, spark.p.y, spark.p.z], i * 3);

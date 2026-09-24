@@ -101,10 +101,6 @@ function dressHead(b: MeshBuilder, trim: THREE.Material): void {
   }
   const hair = cloth(0x2b1a12, 0.95);
   b.sphere(0.104, hair, [-0.02, 0.215, 0], [1, 1.02, 0.95], 18);
-  for (const side of [-1, 1]) {
-    b.sphere(0.03, hair, [0.03, 0.13, side * 0.095], [0.8, 1.5, 0.75], 10);
-    b.sphere(0.026, hair, [0.01, 0.07, side * 0.09], [0.8, 1.4, 0.8], 10);
-  }
   for (const [x, y, z, s] of [[-0.08, 0.12, 0.05, 0.05], [-0.085, 0.12, -0.05, 0.05], [-0.1, 0.06, 0.03, 0.045], [-0.1, 0.06, -0.03, 0.045], [-0.105, 0.0, 0, 0.042]] as const) {
     b.sphere(s, hair, [x, y, z], [0.9, 1.3, 0.9], 12);
   }

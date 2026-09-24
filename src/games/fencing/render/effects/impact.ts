@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { glowTexture } from "../kit/textures";
+import { GLOW } from "./glow";
 
 interface Pop {
   at: THREE.Vector3;
@@ -21,8 +22,9 @@ export class Impacts {
 
   fire(at: THREE.Vector3, t: number, options: { size: number; lifeMs: number; colour: THREE.ColorRepresentation }): void {
     const colour = new THREE.Color(options.colour);
+    const ringColour = colour.clone().multiplyScalar(GLOW * 0.6);
     const flash = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
-    const ring = new THREE.Mesh(this.ringGeometry, new THREE.MeshBasicMaterial({ color: colour, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
+    const ring = new THREE.Mesh(this.ringGeometry, new THREE.MeshBasicMaterial({ color: ringColour, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }));
     flash.renderOrder = 5;
     ring.renderOrder = 5;
     this.group.add(flash, ring);
@@ -44,7 +46,7 @@ export class Impacts {
       flash.position.copy(pop.at);
       flash.scale.setScalar(pop.size * (0.6 + ease * 0.8));
       flash.material.opacity = (1 - age) ** 2;
-      flash.material.color.copy(pop.colour).lerp(new THREE.Color(1, 1, 1), 1 - age);
+      flash.material.color.copy(pop.colour).lerp(new THREE.Color(1, 1, 1), 1 - age).multiplyScalar(GLOW);
       ring.position.copy(pop.at);
       ring.quaternion.copy(camera.quaternion);
       ring.scale.setScalar(0.05 + ease * pop.size * 1.3);
