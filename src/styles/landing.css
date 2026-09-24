@@ -1,97 +1,51 @@
 /*
-  The computer's start screen, and the page frame the lobby shares. Both
-  fill the window with a wide, padded workspace under the top bar.
+  The start screen: the strip fills the window, with the name and one
+  button floating above the fencers.
 */
 
-.host-page {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
+.landing {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
   background: var(--bg-workspace);
 }
 
-/* Landing */
-
-.landing {
-  flex: 1;
-  display: grid;
-  grid-template-columns: minmax(320px, 480px) minmax(0, 1fr);
-  gap: 48px;
+.landing__tools {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
   align-items: center;
-  width: 100%;
-  max-width: 1320px;
-  margin: 0 auto;
-  padding: 48px 40px;
+  gap: 8px;
 }
 
-.landing__intro {
+.landing__center {
+  position: absolute;
+  top: 13%;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 18px;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.landing__mark svg {
+  display: block;
+  width: 56px;
+  height: 56px;
+  color: var(--accent);
 }
 
 .landing__title {
-  font-size: 56px;
+  font-size: clamp(44px, 7vw, 72px);
+  font-weight: 800;
   line-height: 1;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.035em;
 }
 
-.landing__lead {
-  font-size: 17px;
-  max-width: 440px;
-}
-
-.landing__error {
-  color: var(--accent-text);
-}
-
-.landing__steps {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin: 18px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.landing__steps li {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-}
-
-.landing__step-icon,
-.howto__icon {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: var(--radius);
-  background: var(--accent-soft);
-  color: var(--accent-text);
-}
-
-.landing__art {
-  height: min(62vh, 560px);
-  overflow: hidden;
-}
-
-.strip-preview {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-@media (max-width: 960px) {
-  .landing {
-    grid-template-columns: 1fr;
-    padding: 24px 20px;
-  }
-
-  .landing__art {
-    height: 320px;
-  }
+.landing__note {
+  color: var(--text-muted);
+  font-size: 14px;
 }

@@ -5,7 +5,7 @@ import { SceneRenderer } from "@/render/scene-renderer";
 import { useTheme } from "@/hooks/use-theme";
 
 /** The two fencers are squared up close, so the picture frames tighter than a match. */
-const PREVIEW_SPAN = 4.6;
+const PREVIEW_SPAN = 5.2;
 
 function standing(slot: 1 | 2, characterId: FencerFrame["characterId"], x: number): FencerFrame {
   return {
@@ -15,8 +15,8 @@ function standing(slot: 1 | 2, characterId: FencerFrame["characterId"], x: numbe
 }
 
 /**
- * Two fencers squared up on the strip, drawn by the real renderer. It is
- * the landing page picture and a quick proof the rig works in this browser.
+ * Two fencers squared up on the strip, drawn by the real renderer, filling
+ * the landing page behind the title.
  */
 export function StripPreview() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -43,5 +43,5 @@ export function StripPreview() {
     };
   }, [theme]);
 
-  return <canvas ref={canvasRef} className="strip-preview" aria-label="Two fencers facing each other on the strip" role="img" />;
+  return <canvas ref={canvasRef} className="stage__canvas" aria-hidden="true" />;
 }
