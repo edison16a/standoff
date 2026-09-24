@@ -1,0 +1,57 @@
+import { z } from "zod";
+import { hostMessageSchema } from "./host-messages";
+import { phoneMessageSchema } from "./phone-messages";
+
+/**
+ * The outer layer every WebSocket frame is wrapped in. The server reads
+ * the envelope to decide who it is from and where it goes, and never looks
+ * inside the game payload beyond validating it.
+ */
+
+export const ROOM_CODE_LENGTH = 4;
+/** Letters only, and none that are easy to misread on a phone screen. */
+export const ROOM_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ";
+
+const roomCode = z
+  .string()
+  .length(ROOM_CODE_LENGTH)
+  .transform((code) => code.toUpperCase());
+const token = z.string().min(16).max(64);
+const slot = z.union([z.literal(1), z.literal(2)]);
+
+/* Client to server */
+
+export const clientEnvelopeSchema = z.discriminatedUnion("type", [
+  /** The computer opening a new room. */
+  z.object({ type: z.literal("host:create") }),
+  /** The computer reclaiming its room after a page reload. */
+  z.object({ type: z.literal("host:resume"), code: roomCode, token }),
+  /** The computer talking to one phone or both. */
+  z.object({ type: z.literal("host:send"), to: z.union([slot, z.literal("all")]), payload: hostMessageSchema }),
+  /** A phone joining, or rejoining with the token it was given last time. */
+  z.object({ type: z.literal("phone:join"), code: roomCode, token: token.optional() }),
+  /** A phone talking to the host. */
+  z.object({ type: z.literal("phone:send"), payload: phoneMessageSchema }),
+]);
+
+export type ClientEnvelope = z.infer<typeof clientEnvelopeSchema>;
+
+/* Server to client */
+
+export type JoinErrorReason = "not-found" | "full" | "closed";
+
+export type ServerEnvelope =
+  | { type: "room:created"; code: string; token: string; joinUrl: string }
+  | { type: "room:resumed"; code: string; joinUrl: string; connected: [boolean, boolean] }
+  | { type: "room:error"; reason: JoinErrorReason }
+  | { type: "peer:joined"; slot: 1 | 2; rejoined: boolean }
+  | { type: "peer:left"; slot: 1 | 2 }
+  | { type: "peer:message"; slot: 1 | 2; payload: z.infer<typeof phoneMessageSchema> }
+  | { type: "phone:joined"; code: string; slot: 1 | 2; token: string }
+  | { type: "host:message"; payload: z.infer<typeof hostMessageSchema> }
+  | { type: "host:away" }
+  | { type: "host:back" }
+  | { type: "room:closed" };
+
+/** Where every client connects. Kept apart from Next's own HMR socket. */
+export const SOCKET_PATH = "/ws";
