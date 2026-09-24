@@ -6,8 +6,8 @@ import next from "next";
 import { loadCertificate } from "./certificates";
 import { readConfig } from "./config";
 import { findLanAddress } from "./network";
+import { createBackend } from "../src/relay/create-backend";
 import { createSocketServer } from "./realtime/socket-server";
-import { RoomRegistry } from "./rooms/room-registry";
 
 /**
  * Boots Standoff. One Node process serves the Next pages and the game
@@ -20,8 +20,12 @@ async function main() {
   const phoneHost = config.publicHost ?? lanAddress ?? "localhost";
   const phoneOrigin = `https://${phoneHost}:${config.httpsPort}`;
 
-  const registry = new RoomRegistry((code) => `${phoneOrigin}/join/${code}`);
-  const sockets = createSocketServer(registry);
+  const backend = await createBackend();
+  const sockets = createSocketServer({
+    backend,
+    joinUrlFor: (code) => `${phoneOrigin}/join/${code}`,
+    now: Date.now,
+  });
   const certificate = await loadCertificate(lanAddress);
 
   const httpServer = createHttpServer();
@@ -60,6 +64,7 @@ async function main() {
   console.log(`\n  Standoff is running${config.dev ? " in development" : ""}.\n`);
   console.log(`  Open on this computer:  http://localhost:${config.httpPort}`);
   console.log(`  Phones join through:    ${phoneOrigin}`);
+  console.log(`  Rooms are kept in:      ${backend.label}`);
   if (!lanAddress && !config.publicHost) {
     console.log("\n  No network address found. Connect to WiFi so phones can reach this machine.");
   }

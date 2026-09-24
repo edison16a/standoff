@@ -55,5 +55,9 @@ export type ServerEnvelope =
   | { type: "host:back" }
   | { type: "room:closed" };
 
-/** Where every client connects. Kept apart from Next's own HMR socket. */
-export const SOCKET_PATH = "/ws";
+/**
+ * Where every client connects. It sits under /api because on Vercel the
+ * socket is served by a route handler at this path, and the local server
+ * answers the same path so the client never needs to know which it has.
+ */
+export const SOCKET_PATH = "/api/ws";
