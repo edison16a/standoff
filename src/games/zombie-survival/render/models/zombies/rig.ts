@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { MeshBuilder, type V3 } from "../../mesh-builder";
 import type { HitPart } from "../../../engine/zombie-kinds";
+import { glowTexture } from "../../textures";
 import { zombieMaterials } from "./zombie-materials";
 
 /** Body proportions in metres. Every zombie and boss is this skeleton with different numbers. */
@@ -43,6 +44,8 @@ export interface Rig {
   dims: BodyDims;
   /** Invisible hit shapes, one per body part, for the raycast. */
   proxies: THREE.Mesh[];
+  /** The glints in its eyes, which go out when it dies. */
+  eyes: THREE.Sprite[];
 }
 
 export function makeRig(d: BodyDims): Rig {
@@ -78,7 +81,15 @@ export function makeRig(d: BodyDims): Rig {
   const [hipR, kneeR, ankleR] = leg(-1);
   const bones = { hips, spine, neck, head, jaw, shoulderL, elbowL, handL, shoulderR, elbowR, handR, hipL, kneeL, ankleL, hipR, kneeR, ankleR };
   for (const [name, bone] of Object.entries(bones)) bone.name = name;
-  return { root, body, bones, dims: d, proxies: [] };
+  return { root, body, bones, dims: d, proxies: [], eyes: [] };
+}
+
+let eyeGlow: THREE.SpriteMaterial | null = null;
+
+/** One material for every zombie's eye glints, so a crowd of them costs no more than one. */
+function eyeMaterial(): THREE.SpriteMaterial {
+  eyeGlow ??= new THREE.SpriteMaterial({ map: glowTexture(), color: 0xffd98a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false, opacity: 0.9 });
+  return eyeGlow;
 }
 
 /**
@@ -108,6 +119,20 @@ export class Dresser {
     this.rig.bones[bone].add(mesh);
     this.rig.proxies.push(mesh);
     return mesh;
+  }
+
+  /**
+   * A glint on an eye: a small glow that ignores the fog, so a pair of
+   * eyes shows in the murk before the body does. Its material is shared
+   * and marked so, and must not be disposed with the zombie.
+   */
+  eye(bone: Bone, at: V3, size: number): void {
+    const sprite = new THREE.Sprite(eyeMaterial());
+    sprite.userData.shared = true;
+    sprite.position.set(...at);
+    sprite.scale.setScalar(size);
+    this.rig.bones[bone].add(sprite);
+    this.rig.eyes.push(sprite);
   }
 
   finish(): void {

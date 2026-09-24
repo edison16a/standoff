@@ -114,6 +114,15 @@ export class ZombieSounds {
     tone(e, out, e.now + 0.07, { type: "triangle", frequency: 190, glideTo: 130, decay: 0.2, peak: 0.25 });
   }
 
+  /** A boss's foot coming down: a deep thump you feel more than hear. */
+  stomp(spot: Spot): void {
+    const e = this.engine;
+    const place = placement(spot);
+    const out = sendTo(e, e.bus("sfx"), 0.35 + place.gain * 1.2, place.pan);
+    tone(e, out, e.now, { type: "sine", frequency: 48, glideTo: 28, decay: 0.35, peak: 0.9 });
+    noise(e, out, e.now, { filter: "lowpass", frequency: 180, decay: 0.25, peak: 0.5 });
+  }
+
   /** Dragging feet close by. */
   shuffle(spot: Spot): void {
     const e = this.engine;

@@ -19,7 +19,7 @@ export class Atmosphere {
   private readonly skyline: THREE.Group;
 
   constructor(scene: THREE.Scene, camera: THREE.Camera) {
-    scene.fog = new THREE.FogExp2(FOG, 0.025);
+    scene.fog = new THREE.FogExp2(FOG, 0.022);
     scene.background = new THREE.Color(0x07090d);
     this.sky = this.makeSky();
     this.skyline = this.makeSkyline();
@@ -29,7 +29,8 @@ export class Atmosphere {
     moon.position.set(-30, 60, -40);
     this.group.add(hemi, moon);
 
-    this.flashlight = new THREE.SpotLight(0xdfe8ff, 70, 55, 0.5, 0.6, 1.2);
+    // Wide enough to catch the dead coming in from the sides of the road, not just down the middle.
+    this.flashlight = new THREE.SpotLight(0xdfe8ff, 85, 60, 0.7, 0.75, 1.15);
     this.flashlight.position.set(0.25, -0.2, 0);
     this.flashlight.target.position.set(0, -0.6, -10);
     camera.add(this.flashlight, this.flashlight.target);

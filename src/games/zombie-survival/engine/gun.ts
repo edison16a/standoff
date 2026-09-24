@@ -26,6 +26,8 @@ export class Gun {
   /** Seconds left on a magazine reload, or until the next shell. Null when not reloading. */
   private reloadLeft: number | null = null;
   private lastShot = -Infinity;
+  /** A dry click already sounded during this reload. A held trigger stays quiet after one. */
+  private clicked = false;
   private pending: GunEvent[] = [];
 
   constructor(readonly weapon: WeaponId) {
@@ -56,9 +58,12 @@ export class Gun {
     // A pump gun can stop loading and fire what it has. A magazine is out of the gun.
     if (this.reloading && this.spec.style === "shells" && this.ammo > 0) this.reloadLeft = null;
     if (this.reloading || this.ammo <= 0) {
-      // One click per squeeze, not a buzz of them from a held trigger.
-      this.lastShot = now + DRY_PAUSE;
       this.startReload();
+      // One click to say the gun is empty, then silence while the reload runs,
+      // so a held trigger does not buzz and click all through it.
+      if (this.clicked) return "wait";
+      this.clicked = true;
+      this.lastShot = now + DRY_PAUSE;
       return "dry";
     }
     this.ammo -= 1;
@@ -71,6 +76,7 @@ export class Gun {
   startReload(): boolean {
     if (this.reloading || this.ammo >= this.spec.magazine) return false;
     this.pending.push({ type: "reload-start", seconds: this.reloadSeconds });
+    this.clicked = false;
     this.reloadLeft = this.spec.style === "magazine" ? this.spec.reload : SHELL_START + (this.spec.shell ?? 0.4);
     return true;
   }
@@ -79,6 +85,9 @@ export class Gun {
   refill(): void {
     this.ammo = this.spec.magazine;
     this.reloadLeft = null;
+    this.clicked = false;
+    // A reload asked for just before the refill must not play out on a full gun.
+    this.pending = [];
   }
 
   update(dt: number): GunEvent[] {

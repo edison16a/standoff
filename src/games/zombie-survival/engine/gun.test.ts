@@ -38,6 +38,18 @@ describe("a gun", () => {
     expect(gun.reloading).toBe(false);
   });
 
+  it("clicks once when empty, then stays quiet while a held trigger waits out the reload", () => {
+    const gun = new Gun("smg");
+    let t = 0;
+    for (let i = 0; i < WEAPONS.smg.magazine; i++, t += 1) gun.trigger(t);
+    expect(gun.trigger(t)).toBe("dry");
+    const pulls = [];
+    for (let k = 1; k <= 12; k++) pulls.push(gun.trigger(t + k * 0.1));
+    expect(pulls.every((p) => p === "wait")).toBe(true);
+    gun.update(WEAPONS.smg.reload + 0.01);
+    expect(gun.trigger(t + 5)).toBe("fired");
+  });
+
   it("does not reload a full gun", () => {
     expect(new Gun("smg").startReload()).toBe(false);
   });

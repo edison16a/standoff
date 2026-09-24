@@ -25,6 +25,11 @@ export class Lobby {
     this.seats.set(seat, { weapon, ready: false });
   }
 
+  /** A new player took this seat. Nothing the last one chose applies to them. */
+  forget(seat: Seat): void {
+    this.seats.delete(seat);
+  }
+
   /** Ready needs a weapon first. Returns whether the flag changed. */
   setReady(seat: Seat, ready: boolean): boolean {
     const current = this.get(seat);

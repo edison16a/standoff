@@ -58,6 +58,11 @@ export class SurvivalGame {
     this.squad.enlist(seat, weapon);
   }
 
+  /** A different person took this seat. They set up and join like a late player. */
+  release(seat: Seat): void {
+    this.squad.release(seat);
+  }
+
   setPresent(seat: Seat, present: boolean): void {
     this.squad.setPresent(seat, present);
   }
@@ -81,7 +86,9 @@ export class SurvivalGame {
 
   reload(seat: Seat): void {
     const member = this.squad.get(seat);
-    if (this.running && member?.present) member.gun.startReload();
+    // Guns only run while the team is on its feet, so a reload asked for when down or after the escape waits for nothing.
+    if (this.phase === "lobby" || this.phase === "down" || this.phase === "escaped") return;
+    if (member?.present) member.gun.startReload();
   }
 
   /** From the game over screen: the same fight again, from its checkpoint. */

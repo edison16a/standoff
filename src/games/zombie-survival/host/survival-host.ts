@@ -117,6 +117,11 @@ export class SurvivalHost {
   private onRoom(event: HostRoomEvent): void {
     switch (event.type) {
       case "joined":
+        if (!event.rejoined) {
+          // A new phone in a seat someone left: it must not inherit their gun, ready flag or score.
+          this.lobby.forget(event.seat);
+          this.game.release(event.seat);
+        }
         this.game.setPresent(event.seat, true);
         this.phones.forget(event.seat);
         return;

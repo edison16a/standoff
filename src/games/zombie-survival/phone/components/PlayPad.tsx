@@ -36,16 +36,15 @@ export function PlayPad({ seat }: { seat: Seat }) {
     };
   }, [session]);
 
+  // A disabled button hears no finger lift, so a trigger held into a cutscene or a loss is let go here.
+  useEffect(() => {
+    if (!armed) session.releaseTrigger();
+  }, [armed, session]);
+
   const health = state ? state.health / state.maxHealth : 1;
   const trigger = (
-    <div
-      className="zs-trigger"
-      style={{ ["--kit-fire" as string]: playerColor(seat) }}
-      onPointerUp={() => session.releaseTrigger()}
-      onPointerCancel={() => session.releaseTrigger()}
-      onLostPointerCapture={() => session.releaseTrigger()}
-    >
-      <FireButton label="Shoot" disabled={!armed} onFire={() => session.pressTrigger()} />
+    <div className="zs-trigger" style={{ ["--kit-fire" as string]: playerColor(seat) }}>
+      <FireButton label="Shoot" disabled={!armed} onFire={() => session.pressTrigger()} onRelease={() => session.releaseTrigger()} />
     </div>
   );
 

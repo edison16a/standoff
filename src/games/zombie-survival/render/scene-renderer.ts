@@ -30,7 +30,7 @@ import { ZombieLayer } from "./zombie-layer";
 export class SurvivalRenderer implements SurvivalView {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene = new THREE.Scene();
-  private readonly camera = new THREE.PerspectiveCamera(62, 16 / 9, 0.05, 400);
+  private readonly camera = new THREE.PerspectiveCamera(56, 16 / 9, 0.05, 400);
   private readonly rig = new CameraRig();
   private readonly world = new World();
   private readonly zombies = new ZombieLayer();
@@ -121,7 +121,7 @@ export class SurvivalRenderer implements SurvivalView {
     const colour = new THREE.Color(playerColor(seat));
     results.forEach((r, i) => {
       if (i < 3) this.effects.tracer(at, r.point, colour);
-      this.effects.impact(r.point, r.normal, r.impact);
+      this.effects.impact(r.point, r.normal, r.impact, i < 3 ? this.camera.position : undefined);
     });
     this.rig.kick(rig.big ? 0.12 : 0.04);
   }

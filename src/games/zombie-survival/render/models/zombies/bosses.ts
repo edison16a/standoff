@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { KINDS, type BossKind } from "../../../engine/zombie-kinds";
 import type { MeshBuilder, V3 } from "../../mesh-builder";
-import { dressHead, dressLimbs, dressTorso } from "./anatomy";
+import { dressHead, dressTorso } from "./anatomy";
+import { dressLimbs } from "./limbs";
 import { seededRand } from "./commoners";
 import { Dresser, makeRig, standardProxies, type BodyDims, type Rig } from "./rig";
 import { addWeakPoints, type WeakMarker } from "./weak-points";
@@ -110,7 +111,15 @@ export function buildBoss(kind: BossKind, seed: number): { rig: Rig; weak: WeakM
     cone(head, h * 0.12, h * 0.6, m.bone, [h * 0.3, h * 1.05, -h * 0.1], [-0.4, 0, -0.5]);
     const back = dress.on("spine");
     for (let i = 0; i < 7; i++) cone(back, 0.045, 0.3 - i * 0.02, m.bone, [0, d.torso * (0.15 + i * 0.13), -d.torsoD * 0.5], [-1.1, 0, 0]);
-    back.box(d.torsoW * 0.62, d.torso * 0.5, 0.05, m.gore, [0, d.torso * 0.58, d.torsoD * 0.46]);
+    // The ribcage split open down the front, a burning core glowing in the dark inside it.
+    back.sphere(1, m.gore, [0, d.torso * 0.6, d.torsoD * 0.4], [d.torsoW * 0.3, d.torso * 0.28, 0.06], 14);
+    back.sphere(1, m.mouth, [0, d.torso * 0.6, d.torsoD * 0.43], [d.torsoW * 0.22, d.torso * 0.22, 0.05], 12);
+    back.sphere(0.07, m.core, [0, d.torso * 0.6, d.torsoD * 0.44], [1, 1.2, 0.6], 10);
+    for (let i = 0; i < 5; i++) {
+      for (const s of [-1, 1]) {
+        back.add(new THREE.CylinderGeometry(0.013, 0.016, d.torsoW * 0.26, 6), m.bone, [s * d.torsoW * 0.15, d.torso * (0.42 + i * 0.09), d.torsoD * 0.5], [0.3, s * 0.5, Math.PI / 2 + s * 0.25]);
+      }
+    }
     for (const s of ["L", "R"] as const) {
       const hand = dress.on(`hand${s}`);
       for (let f = 0; f < 3; f++) cone(hand, 0.022, 0.28, m.bone, [(f - 1) * 0.05, -d.hand - 0.12, 0.05], [Math.PI - 0.3, 0, 0]);

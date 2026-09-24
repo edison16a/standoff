@@ -42,7 +42,7 @@ export class Effects {
   private readonly light = new THREE.PointLight(0xffc070, 0, 10, 1.6);
   private lightLife = 0;
   private lightFresh = false;
-  private readonly tracerGeo = new THREE.CylinderGeometry(0.012, 0.012, 1, 6, 1, true).rotateX(Math.PI / 2);
+  private readonly tracerGeo = new THREE.CylinderGeometry(0.018, 0.018, 1, 6, 1, true).rotateX(Math.PI / 2);
 
   constructor() {
     this.group.add(this.sparks.points, this.goo.points, this.smoke.points, this.light);
@@ -52,7 +52,7 @@ export class Effects {
     const material = new THREE.SpriteMaterial({ map: flashTexture(), color: 0xffe0a0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false, rotation: Math.random() * Math.PI });
     const sprite = new THREE.Sprite(material);
     sprite.position.copy(at).addScaledVector(dir, 0.05);
-    sprite.scale.setScalar(big ? 0.4 : 0.26);
+    sprite.scale.setScalar(big ? 0.32 : 0.22);
     this.group.add(sprite);
     this.flashes.push({ sprite, life: 0.06, shown: false });
     this.light.position.copy(at);
@@ -77,7 +77,13 @@ export class Effects {
     tracer.mesh.visible = true;
   }
 
-  impact(at: THREE.Vector3, normal: THREE.Vector3, kind: Impact): void {
+  /**
+   * Where a bullet lands. Sparks and goo are small in the world, so a hit
+   * twenty metres off also gets a flash sized to the distance from `eye`,
+   * which reads on screen however far away it is.
+   */
+  impact(at: THREE.Vector3, normal: THREE.Vector3, kind: Impact, eye?: THREE.Vector3): void {
+    if (eye && kind !== "none") this.hitFlash(at, kind, at.distanceTo(eye));
     if (kind === "flesh") {
       this.goo.burst(at, normal, 14, 3.2, 1.4, GOO, 0.7);
       this.goo.burst(at, normal, 6, 1.5, 1, BLOOD, 0.9);
@@ -90,6 +96,16 @@ export class Effects {
       this.sparks.burst(at, normal, 9, 4.5, 1.2, SPARK, 0.3);
       this.smoke.burst(at, normal, 2, 0.6, 0.6, DUST, 0.8);
     }
+  }
+
+  private hitFlash(at: THREE.Vector3, kind: Impact, distance: number): void {
+    const colour = kind === "flesh" ? 0x9dff6a : kind === "weak" ? 0xffc050 : 0xffd9a0;
+    const material = new THREE.SpriteMaterial({ map: flashTexture(), color: colour, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false, rotation: Math.random() * Math.PI });
+    const sprite = new THREE.Sprite(material);
+    sprite.position.copy(at);
+    sprite.scale.setScalar(Math.max(0.2, distance * (kind === "weak" ? 0.05 : 0.032)));
+    this.group.add(sprite);
+    this.flashes.push({ sprite, life: kind === "weak" ? 0.1 : 0.07, shown: false });
   }
 
   /** A bigger spray for a kill or a broken weak point. */
@@ -139,7 +155,7 @@ export class Effects {
     }
     for (const tracer of this.tracers) {
       if (tracer.t >= 1) continue;
-      tracer.t = Math.min(1, tracer.t + dt / 0.07);
+      tracer.t = Math.min(1, tracer.t + dt / 0.09);
       // A short bright streak that runs from the muzzle to the hit.
       const head = tracer.from.clone().lerp(tracer.to, Math.min(1, tracer.t * 1.3));
       const tail = tracer.from.clone().lerp(tracer.to, Math.max(0, tracer.t * 1.3 - 0.45));
@@ -158,5 +174,7 @@ export class Effects {
     this.smoke.dispose();
     this.tracerGeo.dispose();
     for (const t of this.tracers) (t.mesh.material as THREE.Material).dispose();
+    for (const f of this.flashes) f.sprite.material.dispose();
+    this.flashes.length = 0;
   }
 }

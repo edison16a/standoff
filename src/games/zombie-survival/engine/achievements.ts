@@ -40,15 +40,15 @@ export class Achievements {
   private readonly earned = new Set<string>();
   /** Seats that broke a weak point on each boss, by zombie id. */
   private readonly breakers = new Map<number, Set<Seat>>();
-  /** Kills per shot, to spot two with one pellet spread. */
-  private readonly killsByShot = new Map<string, number>();
+  /** Kills by the shot being resolved now, to spot two with one pellet spread. */
+  private shotKills = { key: "", count: 0 };
 
   constructor(private readonly emit: (event: GameEvent) => void) {}
 
   reset(): void {
     this.earned.clear();
     this.breakers.clear();
-    this.killsByShot.clear();
+    this.shotKills = { key: "", count: 0 };
   }
 
   /** Called for each event with the stats of the seat involved. */
@@ -62,10 +62,9 @@ export class Achievements {
       this.personal(event.seat, "centurion", s.kills >= 100);
       this.personal(event.seat, "giantSlayer", event.kind === "butcher" || event.kind === "tank" || event.kind === "juggernaut" || event.kind === "behemoth");
       const key = `${event.seat}:${shotId}`;
-      const count = (this.killsByShot.get(key) ?? 0) + 1;
-      this.killsByShot.set(key, count);
-      this.personal(event.seat, "twoForOne", count >= 2);
-      if (this.killsByShot.size > 64) this.killsByShot.clear();
+      // A shot's kills arrive together, so only the latest shot needs counting.
+      this.shotKills = this.shotKills.key === key ? { key, count: this.shotKills.count + 1 } : { key, count: 1 };
+      this.personal(event.seat, "twoForOne", this.shotKills.count >= 2);
     }
     if (event.type === "hit") {
       const s = stats(event.seat);

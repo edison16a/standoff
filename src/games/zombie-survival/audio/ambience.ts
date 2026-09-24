@@ -17,6 +17,7 @@ export class Ambience {
   private pulseLfo: OscillatorNode | null = null;
   private rotor: { wash: Bed; chop: OscillatorNode; body: Hum } | null = null;
   private stepClock = 0;
+  private stalkerClock = 12;
   private heartClock = 0;
   private eerieClock = 8;
 
@@ -69,6 +70,11 @@ export class Ambience {
       if (this.stepClock <= 0) {
         this.stepClock = 0.5;
         for (let i = 0; i < Math.min(4, state.walkers); i++) this.footstep(i * 0.07);
+      }
+      this.stalkerClock -= dt;
+      if (this.stalkerClock <= 0) {
+        this.stalkerClock = 16 + Math.random() * 14;
+        this.stalker();
       }
     }
     if (state.health > 0 && state.health < 35) {
@@ -134,6 +140,29 @@ export class Ambience {
     noise(e, out, at, { filter: "lowpass", frequency: 320, decay: 0.09, peak: 0.25 });
     tone(e, out, at, { type: "sine", frequency: 85, glideTo: 50, decay: 0.07, peak: 0.18 });
     noise(e, out, at, { filter: "highpass", frequency: 3200, decay: 0.03, peak: 0.04 });
+    // Each step comes back off the empty buildings, fainter and duller, like a film's lonely street.
+    for (const [lag, level] of [[0.19, 0.08], [0.41, 0.035]] as const) {
+      noise(e, out, at + lag, { filter: "lowpass", frequency: 240, decay: 0.12, peak: level });
+    }
+  }
+
+  /**
+   * Now and then on the walk, a few slow steps somewhere off to one side
+   * that do not match the team's. Nothing is there when the fight starts.
+   */
+  private stalker(): void {
+    const e = this.engine;
+    const side = Math.random() < 0.5 ? -0.8 : 0.8;
+    const panner = e.ctx.createStereoPanner();
+    panner.pan.value = side;
+    panner.connect(e.bus("sfx"));
+    const gap = 0.75 + Math.random() * 0.2;
+    for (let i = 0; i < 4; i++) {
+      const at = e.now + 0.3 + i * gap + Math.random() * 0.08;
+      noise(e, panner, at, { filter: "lowpass", frequency: 260, decay: 0.14, peak: 0.07 + i * 0.012 });
+      tone(e, panner, at, { type: "sine", frequency: 70, glideTo: 45, decay: 0.1, peak: 0.05 });
+    }
+    setTimeout(() => panner.disconnect(), 6000);
   }
 
   private heartbeat(): void {
