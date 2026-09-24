@@ -108,7 +108,7 @@ export function dressTorso(dress: Dresser, d: BodyDims, m: ZombieMaterials, styl
     b.box(d.torsoW * 0.26, d.torso * 0.26, 0.02, m.mouth, [rx, d.torso * 0.6, d.torsoD / 2 + 0.012], undefined, 0.008);
     for (let i = 0; i < 3; i++) {
       const y = d.torso * (0.5 + i * 0.09);
-      for (const s of [-1, 1]) b.box(d.torsoW * 0.15, 0.016, 0.02, m.bone, [rx + s * d.torsoW * 0.07, y - 0.01, d.torsoD / 2 + 0.03], [0, s * -0.25, s * -0.3], 0.006);
+      for (const s of [-1, 1]) b.box(d.torsoW * 0.15, 0.016, 0.02, m.bone, [rx + s * d.torsoW * 0.08, y, d.torsoD / 2 + 0.03], [0, s * -0.3, s * 0.08], 0.006);
     }
   }
   const hips = dress.on("hips");

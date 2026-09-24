@@ -3,6 +3,9 @@ import { addLamp, dumpster, trashBags } from "../props";
 import { groundSpan, type SegmentKit } from "../segment-kit";
 import { closeTheView } from "./street";
 
+/** Still water that catches the lamps rather than a black hole in the ground. */
+const PUDDLE = new THREE.MeshStandardMaterial({ color: 0x1a2129, roughness: 0.04, metalness: 0.3, transparent: true, opacity: 0.4, depthWrite: false });
+
 /**
  * A narrow back alley: tall brick walls close on both sides, pipes and
  * fire escapes, bins, crates, puddles, cables overhead and bare bulbs
@@ -53,7 +56,7 @@ export function buildAlley(kit: SegmentKit): void {
     kit.b.box(0.8, 0.8, 0.8, m.wood, kit.at(s * 2.7, a0 + 4 + rand() * 30, 0.4), [0, rand(), 0]);
   }
   for (let i = 0; i < 3; i++) {
-    const puddle = new THREE.Mesh(new THREE.CircleGeometry(0.8 + rand() * 0.8, 16), m.water);
+    const puddle = new THREE.Mesh(new THREE.CircleGeometry(0.8 + rand() * 0.8, 16), PUDDLE);
     puddle.rotation.x = -Math.PI / 2;
     puddle.position.set(...kit.at((rand() - 0.5) * 3, a0 + 5 + rand() * 30, 0.02));
     puddle.scale.set(1.4, 0.8, 1);

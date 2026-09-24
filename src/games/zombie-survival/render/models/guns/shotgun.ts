@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { MeshBuilder } from "../../mesh-builder";
-import { boreHole, gunMaterials, laserModule, marker, type GunModel } from "./gun-kit";
+import { boreHole, gunMaterials, laserModule, marker, profile, type GunModel } from "./gun-kit";
 
 const Z = Math.PI / 2;
 
@@ -49,9 +49,9 @@ export function buildShotgun(): GunModel {
   }
 
   // Walnut stock, grip and rubber pad.
-  b.box(0.04, 0.052, 0.11, m.wood, [0, -0.052, 0.135], [-0.28, 0, 0], 0.012);
-  b.box(0.044, 0.1, 0.25, m.wood, [0, -0.085, 0.31], [-0.1, 0, 0], 0.016);
-  b.box(0.046, 0.115, 0.022, m.rubber, [0, -0.1, 0.44], [-0.1, 0, 0], 0.006);
+  profile(b, [[0.075, 0.016], [0.43, -0.028], [0.43, -0.162], [0.33, -0.142], [0.18, -0.088], [0.11, -0.07], [0.075, -0.058]], 0.044, m.wood);
+  b.box(0.046, 0.138, 0.022, m.rubber, [0, -0.095, 0.441], undefined, 0.006);
+  b.box(0.047, 0.004, 0.2, m.darkWood, [0, -0.02, 0.28], [0.12, 0, 0]);
   b.tube(0.004, 0.012, m.steel, [0, -0.13, 0.36], 8);
 
   laserModule(b, m, 0, -0.064, -0.5);

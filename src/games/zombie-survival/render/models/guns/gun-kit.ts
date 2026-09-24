@@ -63,13 +63,34 @@ export function gunMaterials(): GunMaterials {
   return shared;
 }
 
-/** Gives every gun material a reflection to catch, so metal reads as metal in the dark. */
-export function setGunEnvironment(texture: THREE.Texture | null): void {
+/**
+ * Gives every gun material a reflection to catch, so metal reads as metal.
+ * The night street wants only a hint of it; the phone's studio view more.
+ */
+export function setGunEnvironment(texture: THREE.Texture | null, intensity = 0.22): void {
   const mats = gunMaterials();
   for (const mat of Object.values(mats)) {
     mat.envMap = texture;
+    mat.envMapIntensity = intensity;
     mat.needsUpdate = true;
   }
+}
+
+/**
+ * A solid cut from a side view outline, like a real stock or grip: the
+ * points trace its silhouette as (z, y) pairs, and it is `width` thick,
+ * centred on x, with softened edges.
+ */
+export function profile(b: MeshBuilder, points: readonly (readonly [number, number])[], width: number, material: THREE.Material): void {
+  const shape = new THREE.Shape(points.map(([z, y]) => new THREE.Vector2(z, y)));
+  const bevel = Math.min(0.006, width * 0.2);
+  const geo = new THREE.ExtrudeGeometry(shape, { depth: width - bevel * 2, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 2, curveSegments: 6 });
+  geo.translate(0, 0, -(width - bevel * 2) / 2);
+  geo.rotateY(-Math.PI / 2);
+  // Wood grain runs along the stock, so lay the texture along its length.
+  const uv = geo.attributes.uv as THREE.BufferAttribute;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 4, uv.getY(i) * 4);
+  b.add(geo, material);
 }
 
 /** An empty marker at a point, for the muzzle and the laser. */

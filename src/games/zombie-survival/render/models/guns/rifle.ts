@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { MeshBuilder, type V3 } from "../../mesh-builder";
-import { boreHole, gunMaterials, laserModule, marker, type GunMaterials, type GunModel } from "./gun-kit";
+import { boreHole, gunMaterials, laserModule, marker, profile, type GunMaterials, type GunModel } from "./gun-kit";
 
 /** A picatinny rail: a flat bar with a row of teeth. */
 function rail(b: MeshBuilder, m: GunMaterials, at: V3, length: number, rot: V3 = [0, 0, 0]): void {
@@ -70,7 +70,7 @@ export function buildRifle(): GunModel {
   boreHole(b, m, 0.007, 0, -0.626);
 
   // Grip, trigger, guard.
-  b.box(0.03, 0.095, 0.04, m.polymer, [0, -0.095, 0.045], [0.35, 0, 0], 0.008);
+  profile(b, [[0.02, -0.04], [0.064, -0.04], [0.104, -0.136], [0.09, -0.152], [0.058, -0.148], [0.052, -0.108], [0.036, -0.086]], 0.03, m.polymer);
   b.box(0.012, 0.005, 0.07, m.metal, [0, -0.078, -0.005]);
   b.box(0.005, 0.02, 0.006, m.steel, [0, -0.065, 0.005], [0.3, 0, 0]);
 

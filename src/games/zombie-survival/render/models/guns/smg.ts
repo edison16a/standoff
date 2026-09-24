@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { MeshBuilder } from "../../mesh-builder";
-import { boreHole, gunMaterials, laserModule, marker, type GunModel } from "./gun-kit";
+import { boreHole, gunMaterials, laserModule, marker, profile, type GunModel } from "./gun-kit";
 
 const X = Math.PI / 2;
 
@@ -45,8 +45,8 @@ export function buildSmg(): GunModel {
 
   // Trigger group, grip and selector.
   b.box(0.034, 0.034, 0.11, m.polymer, [0, -0.045, 0.035], undefined, 0.006);
-  b.box(0.032, 0.1, 0.042, m.polymer, [0, -0.1, 0.07], [0.28, 0, 0], 0.01);
-  for (let i = 0; i < 4; i++) b.box(0.034, 0.004, 0.03, m.polymer, [0, -0.075 - i * 0.018, 0.064 + i * 0.005], [0.28, 0, 0]);
+  profile(b, [[0.045, -0.055], [0.09, -0.055], [0.118, -0.152], [0.1, -0.166], [0.072, -0.162], [0.066, -0.12], [0.052, -0.1]], 0.032, m.polymer);
+  for (let i = 0; i < 4; i++) b.box(0.034, 0.004, 0.024, m.polymer, [0, -0.08 - i * 0.02, 0.06 + i * 0.006], [0.28, 0, 0]);
   b.box(0.012, 0.005, 0.06, m.polymer, [0, -0.078, 0.005]);
   b.box(0.005, 0.022, 0.006, m.steel, [0, -0.068, 0.012], [0.3, 0, 0]);
   b.tube(0.007, 0.004, m.steel, [-0.019, -0.04, 0.05], 12, 0.007, [0, 0, X]);

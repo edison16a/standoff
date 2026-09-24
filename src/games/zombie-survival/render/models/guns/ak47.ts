@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { MeshBuilder } from "../../mesh-builder";
-import { boreHole, gunMaterials, laserModule, marker, type GunModel } from "./gun-kit";
+import { boreHole, gunMaterials, laserModule, marker, profile, type GunModel } from "./gun-kit";
 
 /**
  * The AK-47: stamped steel receiver with a ribbed dust cover, wooden
@@ -43,16 +43,16 @@ export function buildAk47(): GunModel {
   boreHole(b, m, 0.007, 0, -0.62);
 
   // Pistol grip, trigger and guard.
-  b.box(0.03, 0.1, 0.04, m.darkWood, [0, -0.09, 0.07], [0.32, 0, 0], 0.01);
+  profile(b, [[0.036, -0.03], [0.08, -0.03], [0.114, -0.136], [0.1, -0.15], [0.07, -0.146]], 0.03, m.darkWood);
   b.box(0.012, 0.005, 0.08, m.metal, [0, -0.074, 0.015]);
   b.box(0.012, 0.03, 0.005, m.metal, [0, -0.06, -0.025]);
   b.box(0.005, 0.022, 0.006, m.steel, [0, -0.058, 0.02], [0.3, 0, 0]);
   b.box(0.012, 0.012, 0.012, m.metal, [0, -0.04, -0.075]);
 
   // The dropped wooden stock and its steel butt plate.
-  b.box(0.038, 0.055, 0.11, m.wood, [0, -0.04, 0.15], [-0.14, 0, 0], 0.012);
-  b.box(0.042, 0.11, 0.24, m.wood, [0, -0.075, 0.31], [-0.12, 0, 0], 0.014);
-  b.box(0.044, 0.12, 0.012, m.metal, [0, -0.09, 0.43], [-0.12, 0, 0], 0.004);
+  profile(b, [[0.1, 0.012], [0.44, -0.052], [0.44, -0.176], [0.34, -0.152], [0.2, -0.086], [0.13, -0.058], [0.1, -0.034]], 0.042, m.wood);
+  b.box(0.044, 0.128, 0.012, m.metal, [0, -0.114, 0.446], undefined, 0.004);
+  b.box(0.043, 0.008, 0.012, m.metal, [0, -0.06, 0.3]);
 
   laserModule(b, m, 0, -0.056, -0.305);
   root.add(b.build("ak-body"));

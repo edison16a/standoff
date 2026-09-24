@@ -14,6 +14,8 @@ interface Tracer {
 interface Flash {
   sprite: THREE.Sprite;
   life: number;
+  /** Drawn at least once. A flash made between two slow frames must still be seen. */
+  shown: boolean;
 }
 
 const SPARK = new THREE.Color(1, 0.72, 0.3);
@@ -39,6 +41,7 @@ export class Effects {
   private readonly flashes: Flash[] = [];
   private readonly light = new THREE.PointLight(0xffc070, 0, 10, 1.6);
   private lightLife = 0;
+  private lightFresh = false;
   private readonly tracerGeo = new THREE.CylinderGeometry(0.012, 0.012, 1, 6, 1, true).rotateX(Math.PI / 2);
 
   constructor() {
@@ -49,12 +52,13 @@ export class Effects {
     const material = new THREE.SpriteMaterial({ map: flashTexture(), color: 0xffe0a0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false, rotation: Math.random() * Math.PI });
     const sprite = new THREE.Sprite(material);
     sprite.position.copy(at).addScaledVector(dir, 0.05);
-    sprite.scale.setScalar(big ? 0.55 : 0.32);
+    sprite.scale.setScalar(big ? 0.4 : 0.26);
     this.group.add(sprite);
-    this.flashes.push({ sprite, life: 0.06 });
+    this.flashes.push({ sprite, life: 0.06, shown: false });
     this.light.position.copy(at);
     this.light.intensity = big ? 40 : 22;
     this.lightLife = 0.06;
+    this.lightFresh = true;
     this.sparks.burst(at, dir, big ? 6 : 3, 4, 0.8, SPARK, 0.12);
   }
 
@@ -108,17 +112,23 @@ export class Effects {
     sprite.position.copy(at);
     sprite.scale.setScalar(30);
     this.group.add(sprite);
-    this.flashes.push({ sprite, life: 0.9 });
+    this.flashes.push({ sprite, life: 0.9, shown: false });
   }
 
   update(dt: number): void {
     this.sparks.update(dt);
     this.goo.update(dt);
     this.smoke.update(dt);
-    this.lightLife -= dt;
+    // The muzzle light, like the flash, always gets one frame on screen.
+    if (this.lightFresh) this.lightFresh = false;
+    else this.lightLife -= dt;
     if (this.lightLife <= 0) this.light.intensity = 0;
     for (let i = this.flashes.length - 1; i >= 0; i--) {
       const flash = this.flashes[i]!;
+      if (!flash.shown) {
+        flash.shown = true;
+        continue;
+      }
       flash.life -= dt;
       flash.sprite.material.opacity = Math.min(1, flash.life * 12);
       if (flash.life <= 0) {

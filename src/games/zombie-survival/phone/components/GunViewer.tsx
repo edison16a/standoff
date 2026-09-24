@@ -21,11 +21,12 @@ export function GunViewer({ weapon }: { weapon: WeaponId }) {
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.3;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     const scene = new THREE.Scene();
     const pmrem = new THREE.PMREMGenerator(renderer);
     const env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    setGunEnvironment(env);
+    setGunEnvironment(env, 0.9);
     const camera = new THREE.PerspectiveCamera(30, 1, 0.05, 20);
     camera.position.set(0, 0.25, 2.1);
     camera.lookAt(0, 0, 0);

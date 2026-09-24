@@ -73,10 +73,13 @@ export class GunRig {
     const r = this.reload ? Math.min(1, this.reload.t / this.reload.seconds) : 1;
     const tilt = this.reload ? span(r, 0, 0.15) * (1 - span(r, 0.88, 1)) : 0;
     this.holder.quaternion.copy(this.aim);
-    this.holder.rotateZ(tilt * 0.7 + Math.sin(time * 1.3) * 0.01);
-    this.holder.rotateX(-tilt * 0.35 + this.recoil * 0.1);
+    // The gun comes up and rolls toward the middle, so everyone sees the magazine come out.
+    const inward = this.home.x > 0 ? 1 : -1;
+    this.holder.rotateZ(tilt * 1.05 * inward + Math.sin(time * 1.3) * 0.01);
+    this.holder.rotateX(tilt * 0.22 + this.recoil * 0.1);
     this.holder.position.copy(this.home);
-    this.holder.position.y += Math.sin(time * 1.7) * 0.004 - tilt * 0.05;
+    this.holder.position.y += Math.sin(time * 1.7) * 0.004 + tilt * 0.14;
+    this.holder.position.x -= inward * tilt * 0.08;
     this.holder.position.z += this.recoil * 0.05;
 
     const { magazine, pump, bolt, shell } = this.model;
