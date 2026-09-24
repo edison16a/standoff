@@ -40,7 +40,7 @@ export function GunPreview({ finish, colour }: GunPreviewProps) {
     scene.add(key);
 
     const camera = new THREE.PerspectiveCamera(26, 1, 0.05, 20);
-    camera.position.set(0.15, 0.3, 1.75);
+    camera.position.set(0.15, 0.3, 2.15);
     camera.lookAt(0, -0.02, 0);
     const gun = createBBGun(finish, colour);
     gunRef.current = gun;
@@ -74,7 +74,8 @@ export function GunPreview({ finish, colour }: GunPreviewProps) {
       renderer.setSize(width, height, false);
       camera.aspect = width / Math.max(1, height);
       // Keep the whole gun in frame on a narrow phone.
-      camera.position.z = camera.aspect < 1.5 ? 1.75 * (1.5 / camera.aspect) : 1.75;
+      // Far enough that the whole gun, 1.4 metres long, fits even side on.
+      camera.position.z = camera.aspect < 1.55 ? 2.15 * (1.55 / camera.aspect) : 2.15;
       camera.updateProjectionMatrix();
     };
     fit();
