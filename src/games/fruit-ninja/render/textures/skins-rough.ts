@@ -1,3 +1,4 @@
+import { pineappleEye } from "../models/shapes";
 import { canvas, fbm, hex, mix, noise, scatter, shadePixels, smooth, texture } from "./paint";
 import type { Skin } from "./skins-smooth";
 
@@ -124,18 +125,23 @@ export function pineappleSkin(seed: number): Skin {
   const bump = canvas(W, H);
   const heights: number[] = [];
   shadePixels(color.ctx, W, H, (u, v) => {
+    const eye = pineappleEye(u, v);
+    const dist = 1 - eye;
+    heights.push(eye);
+    const tone = fbm(u * 9, v * 6, 2, seed, 9);
+    // Golden orange eyes, greener toward the crown, with dark grooves between them.
+    let c = mix(hex("#e89a2a"), hex("#c9781c"), tone);
+    c = mix(c, hex("#8c9a2e"), smooth(0.55, 1, v) * 0.45 * tone);
+    c = mix(c, hex("#b0781e"), smooth(0.45, 0.9, eye) * 0.5);
+    c = mix(c, hex("#3e2208"), smooth(0.7, 0.95, dist));
+    // A dark spiky bract near the top of each eye.
     const s = u * 9 + v * 6;
     const d = u * 9 - v * 6;
     const fs = (((s % 1) + 1) % 1) - 0.5;
     const fd = (((d % 1) + 1) % 1) - 0.5;
-    const dist = Math.max(Math.abs(fs), Math.abs(fd)) * 2;
-    heights.push(1 - dist);
-    let c = mix(hex("#e0a531"), hex("#9a7a26"), smooth(0.2, 0.65, 1 - dist) * 0.7);
-    c = mix(c, hex("#6b8a2a"), smooth(0.75, 1, 1 - dist) * 0.5 * fbm(u * 9, v * 6, 2, seed, 9));
-    c = mix(c, hex("#4a2a0c"), smooth(0.72, 0.95, dist));
-    // The spike sits at the top of each eye.
-    const spike = Math.hypot(fs + fd, (fs - fd) * 0.5 - 0.22);
-    return mix(c, hex("#3a2208"), smooth(0.1, 0.03, spike));
+    const spike = Math.hypot(fs + fd, (fs - fd) * 0.5 - 0.2);
+    c = mix(c, hex("#2e1a06"), smooth(0.12, 0.04, spike));
+    return mix(c, hex("#f6c85a"), smooth(0.2, 0.05, Math.hypot(fs + fd - 0.05, fs - fd + 0.1)) * 0.5);
   });
   shadePixels(bump.ctx, W, H, (_u, _v, x, y) => {
     const h = heights[y * W + x]! * 220;

@@ -44,28 +44,70 @@ function teardrop(ctx: Ctx, x: number, y: number, size: number, angle: number, c
 export function appleFlesh(outline: Outline, skin: string): Texture {
   const { c, ctx } = canvas(S);
   const mid = middle(outline);
+  const cy = (1 - mid.v) * S;
   trace(ctx, outline);
-  const g = ctx.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);
-  g.addColorStop(0, "#fff3cf");
-  g.addColorStop(1, "#f7e2a6");
+  const g = ctx.createRadialGradient(S / 2, cy, 0, S / 2, cy, S * 0.5);
+  g.addColorStop(0, "#fff8e0");
+  g.addColorStop(0.7, "#fbecc0");
+  g.addColorStop(1, "#f3dc9c");
   ctx.fillStyle = g;
   ctx.fill();
+  ctx.save();
+  ctx.clip();
+  // Fine fibres and wet sparkle, so the cut face never reads as flat paint.
+  const r = scatter(31);
+  for (let i = 0; i < 900; i++) {
+    const x = r() * S;
+    const y = r() * S;
+    const a = Math.atan2(y - cy, x - S / 2);
+    ctx.strokeStyle = r() < 0.5 ? "rgba(200,160,80,0.12)" : "rgba(255,255,255,0.35)";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + Math.cos(a) * 6, y + Math.sin(a) * 6);
+    ctx.stroke();
+  }
+  ctx.restore();
+  // A pale band just under the skin, then the skin itself.
+  ctx.lineWidth = 22;
+  ctx.strokeStyle = "rgba(255,252,236,0.7)";
+  ctx.stroke();
   ctx.lineWidth = 9;
   ctx.strokeStyle = skin;
   ctx.stroke();
-  const cy = (1 - mid.v) * S;
-  ctx.fillStyle = "rgba(226,196,120,0.6)";
+  // The core: a soft heart shaped outline from stem to base, ringed by the fruit's vascular dots.
+  ctx.fillStyle = "rgba(232,208,140,0.55)";
+  ctx.strokeStyle = "rgba(180,140,70,0.55)";
+  ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.ellipse(S / 2, cy, S * 0.12, S * 0.2, 0, 0, Math.PI * 2);
+  ctx.moveTo(S / 2, cy - S * 0.22);
+  ctx.bezierCurveTo(S / 2 + S * 0.2, cy - S * 0.2, S / 2 + S * 0.16, cy + S * 0.16, S / 2, cy + S * 0.22);
+  ctx.bezierCurveTo(S / 2 - S * 0.16, cy + S * 0.16, S / 2 - S * 0.2, cy - S * 0.2, S / 2, cy - S * 0.22);
   ctx.fill();
-  ctx.strokeStyle = "rgba(190,150,80,0.6)";
+  ctx.stroke();
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2;
+    ctx.fillStyle = "rgba(170,130,60,0.5)";
+    ctx.beginPath();
+    ctx.arc(S / 2 + Math.cos(a) * S * 0.2, cy + Math.sin(a) * S * 0.27, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.strokeStyle = "rgba(170,130,60,0.6)";
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(S / 2, cy - S * 0.2);
-  ctx.lineTo(S / 2, S * 0.1);
+  ctx.moveTo(S / 2, cy - S * 0.22);
+  ctx.lineTo(S / 2, S * 0.08);
+  ctx.moveTo(S / 2, cy + S * 0.22);
+  ctx.lineTo(S / 2, S * 0.9);
   ctx.stroke();
-  teardrop(ctx, S / 2 - 18, cy + 4, 13, -0.3, "#4a2a12");
-  teardrop(ctx, S / 2 + 18, cy + 4, 13, 0.3, "#4a2a12");
+  teardrop(ctx, S / 2 - 20, cy + 6, 14, -0.3, "#4a2a12");
+  teardrop(ctx, S / 2 + 20, cy + 6, 14, 0.3, "#4a2a12");
+  ctx.fillStyle = "rgba(255,255,255,0.45)";
+  for (const x of [S / 2 - 22, S / 2 + 18]) {
+    ctx.beginPath();
+    ctx.ellipse(x, cy - 2, 3, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
   return texture(c);
 }
 

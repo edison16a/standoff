@@ -43,14 +43,15 @@ export const pineapple: FruitSpec = {
   shape: PINEAPPLE,
   cut: "across",
   fit: 0.95,
-  skin: () => skinMaterial(pineappleSkin(14), { roughness: 0.6, clearcoat: 0.15, bumpScale: 3 }),
+  skin: () => skinMaterial(pineappleSkin(14), { roughness: 0.55, clearcoat: 0.2, bumpScale: 4 }),
   flesh: () => fleshMaterial(pineappleFlesh()),
   attachments: () => {
     const crown: Attachment[] = [];
     const tiers = [
-      { count: 9, length: 0.75, lean: 1.1 },
-      { count: 8, length: 1.05, lean: 0.55 },
-      { count: 6, length: 1.2, lean: 0.25 },
+      { count: 10, length: 0.55, lean: 1.2 },
+      { count: 9, length: 0.8, lean: 0.6 },
+      { count: 7, length: 0.95, lean: 0.3 },
+      { count: 5, length: 0.85, lean: 0.1 },
     ];
     tiers.forEach((tier, k) => {
       for (let i = 0; i < tier.count; i++) {

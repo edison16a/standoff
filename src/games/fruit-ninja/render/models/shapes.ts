@@ -105,9 +105,29 @@ export function bendBanana(geo: BufferGeometry): void {
   pos.needsUpdate = true;
 }
 
+/**
+ * How raised a pineapple's skin is at a point, from 0 at the grooves to 1
+ * at the top of an eye. The texture paints the same lattice, so the bumps
+ * and the colours line up.
+ */
+export function pineappleEye(u: number, v: number): number {
+  const s = u * 9 + v * 6;
+  const d = u * 9 - v * 6;
+  const fs = (((s % 1) + 1) % 1) - 0.5;
+  const fd = (((d % 1) + 1) % 1) - 0.5;
+  return 1 - Math.max(Math.abs(fs), Math.abs(fd)) * 2;
+}
+
 export const PINEAPPLE: RevolveShape = {
   y: (t) => -1 * Math.cos(PI * t),
-  r: (t) => 0.74 * Math.sin(PI * t) ** 0.6,
+  r: (t, phi) => {
+    const body = 0.74 * Math.sin(PI * t) ** 0.6;
+    // Each eye swells out of the skin, so the silhouette and the light both show the pattern.
+    const eye = Math.sqrt(Math.max(0, pineappleEye(phi / (PI * 2), t)));
+    return body * (0.95 + 0.07 * eye);
+  },
+  rings: 72,
+  segments: 96,
 };
 
 export const POMEGRANATE: RevolveShape = {

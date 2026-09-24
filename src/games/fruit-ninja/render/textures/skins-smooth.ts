@@ -62,10 +62,10 @@ export function appleSkin(base: string, blush: string, streak: string, seed: num
     return c;
   });
   const r = scatter(seed + 2);
-  for (let i = 0; i < 700; i++) {
-    color.ctx.fillStyle = `rgba(255,240,200,${0.18 + r() * 0.3})`;
+  for (let i = 0; i < 520; i++) {
+    color.ctx.fillStyle = `rgba(255,240,200,${0.12 + r() * 0.22})`;
     color.ctx.beginPath();
-    color.ctx.arc(r() * W, r() * H, 0.6 + r() * 1.1, 0, Math.PI * 2);
+    color.ctx.arc(r() * W, r() * H, 0.4 + r() * 0.7, 0, Math.PI * 2);
     color.ctx.fill();
   }
   return { map: texture(color.c) };
