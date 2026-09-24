@@ -1,10 +1,17 @@
 import type { Redis } from "ioredis";
-import { makeToken } from "../room-code";
 import type { RoomStore } from "../backend";
-import type { RoomRecord } from "../room-state";
+import { logFailure } from "../log";
+import { makeToken } from "../room-code";
+import { HOST_GRACE_MS, type RoomRecord } from "../room-state";
 
 /** Rooms expire this long after their last change, so abandoned ones clean themselves up. */
 const ROOM_TTL_S = 6 * 60 * 60;
+/**
+ * A room whose host has left cannot be resumed once the grace period is
+ * over, so it is kept only a little past that. Otherwise dead rooms would
+ * hold on to their codes for hours, and the code space is not that big.
+ */
+const HOSTLESS_TTL_S = Math.ceil(HOST_GRACE_MS / 1000) + 30;
 /** A lock is released by its holder, or expires on its own if that holder dies. */
 const LOCK_TTL_MS = 3000;
 const LOCK_WAIT_MS = 4000;
@@ -14,6 +21,13 @@ const lockKey = (code: string) => `standoff:lock:${code}`;
 
 /** Deletes the lock only if we still hold it, in one step on the server. */
 const RELEASE = `if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call("del", KEYS[1]) else return 0 end`;
+/**
+ * Writes the room only if we still hold the lock. An update that stalled
+ * past the lock's life must not overwrite what another instance wrote since.
+ */
+const WRITE_IF_LOCKED = `if redis.call("get", KEYS[1]) == ARGV[1] then redis.call("set", KEYS[2], ARGV[2], "EX", ARGV[3]) return 1 else return 0 end`;
+
+const ttlFor = (room: RoomRecord) => (room.hostConn === null ? HOSTLESS_TTL_S : ROOM_TTL_S);
 
 /**
  * Rooms as JSON values in Redis. Room changes are rare (joins, drops,
@@ -40,10 +54,15 @@ export class RedisStore implements RoomStore {
       const room = await this.get(code);
       if (!room) return null;
       const { room: next, result } = change(room);
-      if (next) await this.redis.set(roomKey(code), JSON.stringify(next), "EX", ROOM_TTL_S);
+      if (next) {
+        const written = await this.redis.eval(WRITE_IF_LOCKED, 2, lockKey(code), roomKey(code), token, JSON.stringify(next), ttlFor(next));
+        if (written !== 1) throw new Error(`Lost the lock on room ${code}`);
+      }
       return result;
     } finally {
-      await this.redis.eval(RELEASE, 1, lockKey(code), token);
+      // The write has landed or failed by now, and the lock expires anyway,
+      // so a failed release must not turn a done update into an error.
+      await this.redis.eval(RELEASE, 1, lockKey(code), token).catch((error: unknown) => logFailure("Lock release failed", error));
     }
   }
 

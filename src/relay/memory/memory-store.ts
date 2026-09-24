@@ -1,5 +1,5 @@
 import type { RoomStore } from "../backend";
-import type { RoomRecord } from "../room-state";
+import { isDead, type RoomRecord } from "../room-state";
 
 /** Rooms left untouched this long are dropped, like the Redis TTL. */
 const IDLE_MS = 6 * 60 * 60 * 1000;
@@ -41,8 +41,11 @@ export class MemoryStore implements RoomStore {
     return this.rooms.size;
   }
 
+  /** Frees the codes of rooms nobody can use any more, like the Redis store's short expiry. */
   private sweep(): void {
-    const cutoff = this.now() - IDLE_MS;
-    for (const [code, entry] of this.rooms) if (entry.touched < cutoff) this.rooms.delete(code);
+    const now = this.now();
+    for (const [code, entry] of this.rooms) {
+      if (entry.touched < now - IDLE_MS || isDead(entry.room, now)) this.rooms.delete(code);
+    }
   }
 }
