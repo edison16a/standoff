@@ -72,9 +72,15 @@
   font-weight: 900;
 }
 
+/* Fixed sizes: a percentage inside the button's auto grid resolves to almost nothing. */
 .nba-icon {
-  width: 42%;
-  height: 42%;
+  width: clamp(26px, 9vmin, 40px);
+  height: clamp(26px, 9vmin, 40px);
+}
+
+.kit-pad-btn--lg .nba-icon {
+  width: clamp(34px, 12vmin, 54px);
+  height: clamp(34px, 12vmin, 54px);
 }
 
 .nba-meter {
@@ -202,9 +208,10 @@
   text-transform: uppercase;
 }
 
+/* Above the score, so the score stays readable while the word fades. */
 .nba-flash {
   position: absolute;
-  top: 50%;
+  top: 12%;
   left: 50%;
   z-index: 2;
   padding: 6px 14px;
