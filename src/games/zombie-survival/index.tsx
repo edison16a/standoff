@@ -13,6 +13,7 @@ import "./styles/lobby.css";
 import "./styles/hud.css";
 import "./styles/radio.css";
 import "./styles/cards.css";
+import "./styles/checkpoint.css";
 import "./styles/phone.css";
 import "./styles/phone-ready.css";
 import "./styles/phone-play.css";

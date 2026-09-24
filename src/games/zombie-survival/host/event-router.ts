@@ -2,7 +2,7 @@ import type { HostRoomApi } from "@/platform/games/game-api";
 import type { HostAudio } from "../audio/host-audio";
 import type { GameEvent } from "../engine/events";
 import type { SurvivalGame } from "../engine/game";
-import { stage } from "../engine/stages";
+import { stage, storyBeat } from "../engine/stages";
 import { isBoss, KINDS } from "../engine/zombie-kinds";
 import type { BuzzEvent } from "../protocol/messages";
 import { useSurvivalStore, type Toast } from "./host-store";
@@ -54,7 +54,9 @@ export class EventRouter {
         if (isBoss(event.kind)) this.banner(KINDS[event.kind].name, "Shoot the glowing joints", "boss");
         return;
       case "stage-clear":
-        this.banner("Checkpoint", event.healed > 0 ? `Supplies found. Health up ${event.healed}` : "Stage cleared", "checkpoint");
+        // Only the story's big moments stop the show. Any other checkpoint is a quick note, and on you go.
+        if (storyBeat(event.stage)) this.banner("Checkpoint", event.healed > 0 ? `Supplies found. Health up ${event.healed}` : "Stage cleared", "checkpoint");
+        else useSurvivalStore.setState({ checkpoint: { id: this.nextId++, stage: event.stage, title: stage(event.stage).title, healed: event.healed } });
         return;
       default:
         return;
