@@ -37,8 +37,9 @@ export class Confetti {
     const palette = colors.map((c) => new Color(c));
     for (let i = 0; i < COUNT; i++) {
       this.pieces.push({
-        p: new Vector3((Math.random() * 2 - 1) * halfWidth, HALF_HEIGHT + 0.5 + Math.random() * 6, 1 + Math.random() * 3),
-        v: new Vector3((Math.random() - 0.5) * 1.5, -1.2 - Math.random() * 1.8, 0),
+        // Some start already on screen, so the celebration shows at once.
+        p: new Vector3((Math.random() * 2 - 1) * halfWidth, HALF_HEIGHT - 2 + Math.random() * 8, 1 + Math.random() * 3),
+        v: new Vector3((Math.random() - 0.5) * 1.5, -1.6 - Math.random() * 2, 0),
         spin: new Euler(Math.random() * 6, Math.random() * 6, Math.random() * 6),
         rate: new Vector3(Math.random() * 8 - 4, Math.random() * 8 - 4, Math.random() * 4 - 2),
         phase: Math.random() * 6,

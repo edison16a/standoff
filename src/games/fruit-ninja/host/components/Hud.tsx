@@ -21,9 +21,10 @@ export function Hud() {
         {hud.phase === "ending" || hud.phase === "over" ? "Time!" : clock(seconds)}
       </div>
       <ol className="fn-board" aria-label="Scores">
-        {hud.standings.map((row, index) => (
+        {hud.standings.map((row) => (
           <li key={row.seat} className={`fn-board__row ${row.active ? "" : "fn-board__row--gone"}`} style={{ ["--pop" as string]: playerColor(row.seat) }}>
-            <span className="fn-board__place">{index + 1}</span>
+            {/* Tied players share a place, as on the results card. */}
+            <span className="fn-board__place">{1 + hud.standings.filter((other) => other.score > row.score).length}</span>
             <span className="fn-board__name">
               {row.name}
               {top > 0 && row.score === top && (

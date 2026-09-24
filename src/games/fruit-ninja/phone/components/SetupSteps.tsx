@@ -1,5 +1,7 @@
 "use client";
+import { useSyncExternalStore } from "react";
 import { AimCalibrate } from "@/games/kit/aim/AimCalibrate";
+import { AimPad } from "@/games/kit/aim/AimPad";
 import { playerColor } from "@/games/kit/players";
 import { StepShell } from "@/games/kit/steps/StepShell";
 import { BLADE_IDS, BLADES } from "../../blades";
@@ -8,6 +10,17 @@ import { BladeCanvas } from "./BladeCanvas";
 import { usePhone } from "./session-context";
 
 const STEPS = ["Calibrate", "Blade", "Ready"] as const;
+
+/**
+ * Without motion sensors the only way to swing is to drag, so the pad
+ * comes out as soon as the player is ready. Its own component, so only
+ * it redraws as the aim moves.
+ */
+function TouchPractice() {
+  const session = usePhone();
+  const snapshot = useSyncExternalStore(session.aim.subscribe, session.aim.getSnapshot, session.aim.getSnapshot);
+  return snapshot.source === "touch" ? <AimPad aim={session.aim} /> : null;
+}
 
 /** Setup, one page per step: calibrate the aim, pick a blade, then say ready. */
 export function SetupSteps() {
@@ -83,6 +96,7 @@ export function SetupSteps() {
         <li>Stay away from bombs.</li>
       </ul>
       {ready && <p className="fn-wait">{inProgress ? "A round is on. You join the next one." : "Waiting for the host to press Start. Try your blade on the practice fruit."}</p>}
+      {ready && <TouchPractice />}
     </StepShell>
   );
 }
