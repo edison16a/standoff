@@ -71,3 +71,6 @@ export type ServerEnvelope =
  * answers the same path so the client never needs to know which it has.
  */
 export const SOCKET_PATH = "/api/ws";
+
+/** The HTTP fallback for when a WebSocket cannot open. GET streams events down, POST sends up. */
+export const STREAM_PATH = "/api/stream";
