@@ -37,7 +37,7 @@ export interface HostState {
   sharedRooms: boolean;
 }
 
-const emptySeat = (): SeatState => ({ connected: false, pick: null, ready: false });
+const emptySeat = (): SeatState => ({ connected: false, pick: null, ready: false, computer: false });
 
 export const useHostStore = create<HostState>(() => ({
   screen: "landing",

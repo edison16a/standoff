@@ -31,4 +31,31 @@ describe("Lobby", () => {
     lobby.pick(1, "duchess");
     expect(lobby.seats[1].ready).toBe(false);
   });
+
+  it("seats the computer ready to play on a fencer nobody has", () => {
+    const lobby = new Lobby();
+    lobby.connect(1);
+    lobby.pick(1, "iron");
+    expect(lobby.seatComputer(2)).toBe(true);
+    expect(lobby.seats[2]).toMatchObject({ connected: true, ready: true, computer: true, pick: "marrow" });
+    lobby.setReady(1, true);
+    expect(lobby.canStart).toBe(true);
+  });
+
+  it("moves the computer off a fencer the player wants", () => {
+    const lobby = new Lobby();
+    lobby.seatComputer(2);
+    expect(lobby.seats[2].pick).toBe("iron");
+    expect(lobby.pick(1, "iron")).toBe(true);
+    expect(lobby.seats[2].pick).toBe("marrow");
+  });
+
+  it("keeps the computer ready between matches and frees its seat on request", () => {
+    const lobby = new Lobby();
+    lobby.seatComputer(2);
+    lobby.clearReady();
+    expect(lobby.seats[2].ready).toBe(true);
+    expect(lobby.unseatComputer(2)).toBe(true);
+    expect(lobby.seats[2]).toMatchObject({ connected: false, pick: null, computer: false });
+  });
 });
