@@ -47,7 +47,7 @@ export function gunMaterials(): GunMaterials {
   const rough = scuffs();
   const std = (params: THREE.MeshStandardMaterialParameters) => new THREE.MeshStandardMaterial({ envMapIntensity: 0.22, ...params });
   shared = {
-    metal: std({ color: 0x1e2024, metalness: 0.8, roughness: 0.48, roughnessMap: rough }),
+    metal: std({ color: 0x2a2d32, metalness: 0.8, roughness: 0.42, roughnessMap: rough }),
     steel: std({ color: 0x55595f, metalness: 0.9, roughness: 0.32, roughnessMap: rough }),
     polymer: std({ color: 0x1c1d20, metalness: 0.05, roughness: 0.78 }),
     wood: std({ color: 0xc58955, map: wood(), roughness: 0.5, metalness: 0 }),

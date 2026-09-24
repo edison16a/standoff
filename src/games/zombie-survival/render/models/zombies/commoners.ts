@@ -1,5 +1,7 @@
+import * as THREE from "three";
 import type { ZombieKind } from "../../../engine/zombie-kinds";
-import { dressHead, dressLimbs, dressTorso } from "./anatomy";
+import { dressHead, dressTorso } from "./anatomy";
+import { dressLimbs } from "./limbs";
 import { dressDoctor, dressPatient, dressWorker, outfitMaterials, type Outfit } from "./outfits";
 import { Dresser, makeRig, standardProxies, type BodyDims, type Rig } from "./rig";
 import { zombieMaterials } from "./zombie-materials";
@@ -74,7 +76,7 @@ export function buildCommoner(kind: Extract<ZombieKind, "walker" | "runner" | "b
     dressLimbs(dress, d, m, { skin, sleeve: null, pants: pick(m.pants), shoes: true }, rand);
     // Lumps of muscle on the shoulders and a chain wrapped round one forearm.
     for (const s of ["L", "R"] as const) dress.on(`shoulder${s}`).sphere(d.arm * 0.75, skin, [0, -0.02, 0], [1.1, 0.9, 1], 10);
-    for (let i = 0; i < 3; i++) dress.on("elbowR").box(d.arm * 1.08, 0.025, d.arm * 1.08, m.steel, [0, -0.08 - i * 0.05, 0], [0, i * 0.4, 0.15]);
+    for (let i = 0; i < 4; i++) dress.on("elbowR").add(new THREE.TorusGeometry(d.arm * 0.42, 0.012, 5, 12), m.steel, [0, -0.07 - i * 0.045, 0], [Math.PI / 2 + (i % 2) * 0.3, 0, 0.15 * (i % 2 ? 1 : -1)]);
   } else {
     dressRiot(dress, d, skin, rand);
   }

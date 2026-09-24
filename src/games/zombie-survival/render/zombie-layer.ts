@@ -40,6 +40,7 @@ export class ZombieLayer {
         view.flinch = Math.max(0, view.flinch - dt * 5);
         this.place(view, z, frame);
         poseZombie(view.rig, z, view.flinch);
+        for (const eye of view.rig.eyes) eye.visible = z.state !== "dead";
         animateWeakPoints(view.weak, z.weak, z.age);
       }
     }
@@ -109,7 +110,7 @@ export class ZombieLayer {
     view.rig.root.traverse((o) => {
       if (o instanceof THREE.Mesh && o.userData.visual) o.geometry.dispose();
       if (o instanceof THREE.Mesh && o.userData.part) o.geometry.dispose();
-      if (o instanceof THREE.Sprite) o.material.dispose();
+      if (o instanceof THREE.Sprite && !o.userData.shared) o.material.dispose();
     });
     for (const w of view.weak) (w.ring.material as THREE.Material).dispose();
     this.views.delete(id);

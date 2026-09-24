@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { KINDS, type BossKind } from "../../../engine/zombie-kinds";
 import type { MeshBuilder, V3 } from "../../mesh-builder";
-import { dressHead, dressLimbs, dressTorso } from "./anatomy";
+import { dressHead, dressTorso } from "./anatomy";
+import { dressLimbs } from "./limbs";
 import { seededRand } from "./commoners";
 import { Dresser, makeRig, standardProxies, type BodyDims, type Rig } from "./rig";
 import { addWeakPoints, type WeakMarker } from "./weak-points";
@@ -22,7 +23,7 @@ interface BossPlan {
 const PLANS: Record<BossKind, BossPlan> = {
   butcher: { dims: { ...BASE, torsoW: 0.72, torsoD: 0.5, shoulderW: 0.86, arm: 0.2, leg: 0.24 }, scale: 1.5, weakRadius: 0.085 },
   tank: {
-    dims: { ...BASE, thigh: 0.36, shin: 0.36, torso: 0.6, torsoW: 0.8, torsoD: 0.5, shoulderW: 1.06, arm: 0.26, upperArm: 0.34, forearm: 0.36, hand: 0.22, head: 0.22, neck: 0.02, leg: 0.25 },
+    dims: { ...BASE, thigh: 0.36, shin: 0.36, torso: 0.6, torsoW: 0.8, torsoD: 0.5, shoulderW: 1.06, arm: 0.26, upperArm: 0.34, forearm: 0.36, hand: 0.22, head: 0.3, neck: 0.07, leg: 0.25 },
     scale: 1.95,
     weakRadius: 0.075,
   },
@@ -57,10 +58,18 @@ export function buildBoss(kind: BossKind, seed: number): { rig: Rig; weak: WeakM
     dressTorso(dress, d, m, { skin, shirt: null, pants: m.pants[1]!, ribs: false, belly: 1 }, rand);
     dressLimbs(dress, d, m, { skin, sleeve: null, pants: m.pants[1]!, shoes: true }, rand);
     const chest = dress.on("spine");
-    chest.box(d.torsoW * 0.78, d.torso * 1.05, 0.03, m.leather, [0, d.torso * 0.12, d.torsoD * 0.5 + 0.3], [0.1, 0, 0], 0.01);
-    chest.box(d.torsoW * 0.5, d.torso * 0.35, 0.03, m.leather, [0, d.torso * 0.72, d.torsoD * 0.5 + 0.08], [-0.25, 0, 0], 0.01);
-    for (let i = 0; i < 6; i++) chest.box(0.05 + rand() * 0.1, 0.05 + rand() * 0.14, 0.01, m.blood, [(rand() - 0.5) * 0.45, d.torso * (-0.2 + rand() * 0.8), d.torsoD * 0.5 + 0.33], [0.1, 0, (rand() - 0.5) * 0.8]);
-    for (const s of [-1, 1]) chest.box(0.04, d.torso * 0.6, 0.02, m.leather, [s * 0.2, d.torso * 0.75, d.torsoD * 0.5 + 0.02]);
+    // A leather apron wrapped round the gut, stiff with old blood, its bib and straps up over the chest.
+    const gutZ = d.torsoD * 0.22;
+    const wrap = d.torsoD * 0.66;
+    chest.add(new THREE.CylinderGeometry(wrap, wrap * 1.08, d.torso * 0.95, 20, 2, true, -1.05, 2.1), m.leather, [0, d.torso * 0.02, gutZ]);
+    chest.box(d.torsoW * 0.5, d.torso * 0.34, 0.025, m.leather, [0, d.torso * 0.66, d.torsoD * 0.5 + 0.015], [-0.12, 0, 0], 0.008);
+    for (let i = 0; i < 7; i++) {
+      const a = (rand() - 0.5) * 1.6;
+      const y = d.torso * (-0.35 + rand() * 0.75);
+      const r = wrap * (1 + (0.5 - (y - d.torso * 0.02) / (d.torso * 0.95)) * 0.08) + 0.006;
+      chest.add(new THREE.SphereGeometry(0.05 + rand() * 0.05, 8, 5), m.blood, [Math.sin(a) * r, y, gutZ + Math.cos(a) * r], [0, a, 0], [1, 1.4, 0.12]);
+    }
+    for (const s of [-1, 1]) chest.box(0.04, d.torso * 0.5, 0.02, m.leather, [s * 0.2, d.torso * 0.86, d.torsoD * 0.42], [-0.2, 0, 0]);
     const hand = dress.on("handR");
     hand.box(0.05, 0.16, 0.05, m.leather, [0, -0.1, 0.02]);
     hand.box(0.018, 0.32, 0.42, m.steel, [0, -0.26, 0.2]);
@@ -110,7 +119,15 @@ export function buildBoss(kind: BossKind, seed: number): { rig: Rig; weak: WeakM
     cone(head, h * 0.12, h * 0.6, m.bone, [h * 0.3, h * 1.05, -h * 0.1], [-0.4, 0, -0.5]);
     const back = dress.on("spine");
     for (let i = 0; i < 7; i++) cone(back, 0.045, 0.3 - i * 0.02, m.bone, [0, d.torso * (0.15 + i * 0.13), -d.torsoD * 0.5], [-1.1, 0, 0]);
-    back.box(d.torsoW * 0.62, d.torso * 0.5, 0.05, m.gore, [0, d.torso * 0.58, d.torsoD * 0.46]);
+    // The ribcage split open down the front, a burning core glowing in the dark inside it.
+    back.sphere(1, m.gore, [0, d.torso * 0.6, d.torsoD * 0.4], [d.torsoW * 0.3, d.torso * 0.28, 0.06], 14);
+    back.sphere(1, m.mouth, [0, d.torso * 0.6, d.torsoD * 0.43], [d.torsoW * 0.22, d.torso * 0.22, 0.05], 12);
+    back.sphere(0.07, m.core, [0, d.torso * 0.6, d.torsoD * 0.44], [1, 1.2, 0.6], 10);
+    for (let i = 0; i < 5; i++) {
+      for (const s of [-1, 1]) {
+        back.add(new THREE.CylinderGeometry(0.013, 0.016, d.torsoW * 0.26, 6), m.bone, [s * d.torsoW * 0.15, d.torso * (0.42 + i * 0.09), d.torsoD * 0.5], [0.3, s * 0.5, Math.PI / 2 + s * 0.25]);
+      }
+    }
     for (const s of ["L", "R"] as const) {
       const hand = dress.on(`hand${s}`);
       for (let f = 0; f < 3; f++) cone(hand, 0.022, 0.28, m.bone, [(f - 1) * 0.05, -d.hand - 0.12, 0.05], [Math.PI - 0.3, 0, 0]);

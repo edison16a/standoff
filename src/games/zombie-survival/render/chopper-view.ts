@@ -98,7 +98,14 @@ export class ChopperView {
   private remove(): void {
     if (!this.heli) return;
     this.scene.remove(this.heli.root);
-    this.heli.root.traverse((o) => o instanceof THREE.Mesh && o.geometry.dispose());
+    // The chopper's materials and its fire are its own, made fresh each time it is built.
+    this.heli.root.traverse((o) => {
+      if (o instanceof THREE.Mesh) {
+        o.geometry.dispose();
+        (o.material as THREE.Material).dispose();
+      }
+      if (o instanceof THREE.Sprite) o.material.dispose();
+    });
     this.heli = null;
   }
 

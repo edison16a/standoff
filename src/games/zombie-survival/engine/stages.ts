@@ -70,15 +70,16 @@ const ROWS: readonly Row[] = [
 ];
 
 /** Short fights on the roof and in the alley, where the space ahead is small. */
+// Close enough to read on screen from the moment they step out of the fog.
 const SPAWN_BY_ZONE: Record<Zone, [number, number]> = {
-  street: [26, 34],
-  alley: [22, 32],
-  park: [26, 36],
-  hospital: [26, 34],
-  ramp: [24, 34],
-  roof: [16, 30],
-  highway: [28, 38],
-  docks: [26, 36],
+  street: [21, 28],
+  alley: [18, 26],
+  park: [21, 29],
+  hospital: [21, 28],
+  ramp: [20, 28],
+  roof: [14, 25],
+  highway: [22, 30],
+  docks: [21, 29],
 };
 
 export const STAGES: readonly StageSpec[] = ROWS.map(([title, count, maxAlive, mix, gap, speed, tough, boss], i) => {

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { cloth } from "../../surfaces";
+import { makeReadable } from "./readable";
 import type { BodyDims, Dresser } from "./rig";
 import type { ZombieMaterials } from "./zombie-materials";
 
@@ -20,7 +21,7 @@ let shared: OutfitMaterials | null = null;
 export function outfitMaterials(): OutfitMaterials {
   if (shared) return shared;
   const map = cloth();
-  const std = (p: THREE.MeshStandardMaterialParameters) => new THREE.MeshStandardMaterial({ roughness: 0.85, ...p });
+  const std = (p: THREE.MeshStandardMaterialParameters) => makeReadable(new THREE.MeshStandardMaterial({ roughness: 0.85, ...p }));
   shared = {
     gown: std({ color: 0x6a8494, map }),
     coat: std({ color: 0xa8a69e, map }),

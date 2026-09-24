@@ -48,6 +48,8 @@ export class GunRig {
   fire(): void {
     this.recoil = Math.min(1.4, this.recoil + (this.weapon === "shotgun" ? 1 : this.weapon === "ak47" ? 0.55 : 0.4));
     this.sinceShot = 0;
+    // Only a pump gun fires mid reload, and firing ends its loading, so the gun comes back up.
+    this.reload = null;
   }
 
   startReload(seconds: number): void {

@@ -5,6 +5,8 @@ import { closeTheView } from "./street";
 
 /** Still water that catches the lamps rather than a black hole in the ground. */
 const PUDDLE = new THREE.MeshStandardMaterial({ color: 0x1a2129, roughness: 0.04, metalness: 0.3, transparent: true, opacity: 0.4, depthWrite: false });
+// Every alley's puddles share it, so dropping a segment must leave it alone.
+PUDDLE.userData.shared = true;
 
 /**
  * A narrow back alley: tall brick walls close on both sides, pipes and

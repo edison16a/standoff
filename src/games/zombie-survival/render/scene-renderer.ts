@@ -15,6 +15,7 @@ import { lowQuality } from "./quality";
 import { CameraRig, sailed } from "./camera-rig";
 import { ChopperView } from "./chopper-view";
 import { Effects } from "./effects/effects";
+import { EscapeHorde } from "./escape-horde";
 import { FirstPerson, type Shooter } from "./first-person";
 import { ageIdle, lobbySetting, lobbyZombies, settingFor } from "./idle-zombies";
 import { setGunEnvironment } from "./models/guns/gun-kit";
@@ -30,7 +31,7 @@ import { ZombieLayer } from "./zombie-layer";
 export class SurvivalRenderer implements SurvivalView {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene = new THREE.Scene();
-  private readonly camera = new THREE.PerspectiveCamera(62, 16 / 9, 0.05, 400);
+  private readonly camera = new THREE.PerspectiveCamera(56, 16 / 9, 0.05, 400);
   private readonly rig = new CameraRig();
   private readonly world = new World();
   private readonly zombies = new ZombieLayer();
@@ -42,6 +43,7 @@ export class SurvivalRenderer implements SurvivalView {
   private readonly atmosphere: Atmosphere;
   private readonly pending = new Map<Seat, CastResult[]>();
   private readonly idle = lobbyZombies();
+  private readonly horde = new EscapeHorde();
   private last = 0;
   private shipBase: THREE.Vector3 | null = null;
   private lastSegment = 0;
@@ -87,9 +89,15 @@ export class SurvivalRenderer implements SurvivalView {
 
     const fighting = game.encounter !== null;
     if (game.phase === "lobby") ageIdle(this.idle, dt);
-    const list = game.phase === "lobby" ? this.idle : (game.encounter?.zombies ?? []);
+    const horde = this.horde.update(game, dt);
+    const list = game.phase === "lobby" ? this.idle : horde.length ? horde : (game.encounter?.zombies ?? []);
     this.zombies.setting = game.phase === "lobby" ? lobbySetting() : settingFor(stageSpec(game.stage).zone);
-    this.zombies.sync(list, game.phase === "lobby" ? fightFrame(0) : fighting ? fightFrame(game.stage) : null, dt);
+    const frame = game.phase === "lobby" ? fightFrame(0) : horde.length ? this.horde.frame : fighting ? fightFrame(game.stage) : null;
+    this.zombies.sync(list, frame, dt);
+    // On the ship's deck the flashlight would only glare off the planks at your feet.
+    const escaping = game.phase === "escaped" || (game.phase === "cutscene" && game.cutscene === "escape" && game.phaseTime > 9);
+    this.atmosphere.flashlight.intensity = escaping ? 0 : 85;
+    this.atmosphere.gunLight.intensity = escaping ? 0 : 1.6;
     this.chopper.update(game, dt, time);
     this.sailShip(game);
     this.scene.updateMatrixWorld();
@@ -121,7 +129,7 @@ export class SurvivalRenderer implements SurvivalView {
     const colour = new THREE.Color(playerColor(seat));
     results.forEach((r, i) => {
       if (i < 3) this.effects.tracer(at, r.point, colour);
-      this.effects.impact(r.point, r.normal, r.impact);
+      this.effects.impact(r.point, r.normal, r.impact, i < 3 ? this.camera.position : undefined);
     });
     this.rig.kick(rig.big ? 0.12 : 0.04);
   }

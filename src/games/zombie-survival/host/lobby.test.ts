@@ -29,4 +29,13 @@ describe("the lobby", () => {
     expect(lobby.everyoneReady([1, 2])).toBe(true);
     expect(lobby.everyoneReady([])).toBe(false);
   });
+
+  it("forgets a seat when someone new takes it", () => {
+    const lobby = new Lobby();
+    lobby.pick(3, "ak47");
+    lobby.setReady(3, true);
+    lobby.forget(3);
+    expect(lobby.get(3)).toEqual({ weapon: null, ready: false });
+    expect(lobby.everyoneReady([3])).toBe(false);
+  });
 });

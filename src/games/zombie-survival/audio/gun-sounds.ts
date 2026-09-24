@@ -11,11 +11,18 @@ import { drive, sendTo } from "./nodes";
 export class GunSounds {
   constructor(private readonly engine: AudioEngine) {}
 
+  /** Where one sound goes: through the grit, then panned toward the shooter's gun. */
   private out(pan: number, gain = 1): GainNode {
     const input = sendTo(this.engine, this.engine.bus("sfx"), gain, pan);
+    // The grit used to hang off the send with nothing feeding it. Sounds now pass through it.
+    const pre = this.engine.ctx.createGain();
     const grit = drive(this.engine, 2.2);
-    grit.connect(input);
-    return input;
+    pre.connect(grit).connect(input);
+    setTimeout(() => {
+      pre.disconnect();
+      grit.disconnect();
+    }, 4000);
+    return pre;
   }
 
   shot(weapon: WeaponId, pan: number): void {

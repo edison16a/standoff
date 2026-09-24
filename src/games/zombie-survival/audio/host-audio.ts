@@ -26,6 +26,8 @@ export class HostAudio {
   private readonly stingers: Stingers;
   private readonly ambience: Ambience;
   private readonly growlAt = new Map<number, number>();
+  /** When each walking boss next puts a foot down. */
+  private readonly stompAt = new Map<number, number>();
   private voices: number[] = [];
   private crashed = false;
 
@@ -39,6 +41,7 @@ export class HostAudio {
 
   onStart(): void {
     this.growlAt.clear();
+    this.stompAt.clear();
     this.crashed = false;
   }
 
@@ -135,6 +138,19 @@ export class HostAudio {
       this.voices.push(t + 1.4);
     }
     if (this.growlAt.size > 200) this.growlAt.clear();
+    this.stomp(standing, now);
+  }
+
+  /** A walking boss shakes the ground with every step, louder as it closes in. */
+  private stomp(standing: Zombie[], now: number): void {
+    for (const z of standing) {
+      if (!isBoss(z.kind) || z.state !== "walk") continue;
+      const due = this.stompAt.get(z.id) ?? now;
+      if (now < due) continue;
+      this.stompAt.set(z.id, now + 1 / Math.max(0.5, z.speed * 2.6));
+      this.zombies.stomp({ side: z.side, ahead: z.ahead });
+    }
+    if (this.stompAt.size > 20) this.stompAt.clear();
   }
 
   private spotOf(game: SurvivalGame, id: number): Spot {

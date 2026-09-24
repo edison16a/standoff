@@ -18,6 +18,7 @@ import { usePhone } from "./session-context";
 export function PlayPad({ seat }: { seat: Seat }) {
   const session = usePhone();
   const state = usePhoneStore((s) => s.state);
+  const gun = usePhoneStore((s) => s.gun);
   const aim = useSyncExternalStore(session.aim.subscribe, session.aim.getSnapshot, session.aim.getSnapshot);
   const touch = aim.source === "touch";
   const phase = state?.phase ?? "travel";
@@ -36,16 +37,18 @@ export function PlayPad({ seat }: { seat: Seat }) {
     };
   }, [session]);
 
+  // A disabled button hears no finger lift, so a trigger held into a cutscene or a loss is let go here.
+  useEffect(() => {
+    if (!armed) session.releaseTrigger();
+  }, [armed, session]);
+
   const health = state ? state.health / state.maxHealth : 1;
+  // Low on rounds with no reload running: the Reload button asks to be pressed.
+  const low = gun !== null && !gun.reloading && gun.ammo <= Math.max(1, Math.floor(gun.magazine / 4));
+  const status = phase === "travel" ? state?.objective : phase === "fight" ? "They are coming. Make every shot count." : phase === "clear" ? "Checkpoint. Reload while it is quiet." : null;
   const trigger = (
-    <div
-      className="zs-trigger"
-      style={{ ["--kit-fire" as string]: playerColor(seat) }}
-      onPointerUp={() => session.releaseTrigger()}
-      onPointerCancel={() => session.releaseTrigger()}
-      onLostPointerCapture={() => session.releaseTrigger()}
-    >
-      <FireButton label="Shoot" disabled={!armed} onFire={() => session.pressTrigger()} />
+    <div className="zs-trigger" style={{ ["--kit-fire" as string]: playerColor(seat) }}>
+      <FireButton label="Shoot" disabled={!armed} onFire={() => session.pressTrigger()} onRelease={() => session.releaseTrigger()} />
     </div>
   );
 
@@ -60,11 +63,12 @@ export function PlayPad({ seat }: { seat: Seat }) {
           <span className="zs-health__fill" style={{ width: `${Math.max(0, health * 100)}%` }} />
           <span className="zs-health__text">Team {state?.health ?? 100}</span>
         </div>
+        {status && <p className="zs-play__status">{status}</p>}
       </header>
       <AmmoPanel />
       {touch ? <AimPad aim={session.aim}>{trigger}</AimPad> : trigger}
       <div className="zs-play__buttons">
-        <button type="button" className="zs-reload" onClick={() => session.reload()}>
+        <button type="button" className={`zs-reload ${low ? "zs-reload--urgent" : ""}`} onClick={() => session.reload()}>
           Reload
         </button>
         {!touch && (

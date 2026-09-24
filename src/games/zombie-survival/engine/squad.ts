@@ -31,6 +31,11 @@ export class Squad {
     return member;
   }
 
+  /** Someone new took this seat: they start with their own gun and their own numbers. */
+  release(seat: Seat): void {
+    this.members.delete(seat);
+  }
+
   get(seat: Seat): Member | undefined {
     return this.members.get(seat);
   }

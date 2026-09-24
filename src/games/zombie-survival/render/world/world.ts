@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { SEGMENTS, type Zone } from "../../engine/route";
+import { worldMaterials } from "./materials";
 import { SegmentKit, type Lamp, type SegmentBuild } from "./segment-kit";
 import { buildAlley } from "./zones/alley";
 import { buildDocks } from "./zones/docks";
@@ -19,6 +20,13 @@ const BUILDERS: Record<Zone, (kit: SegmentKit) => void> = {
   highway: buildHighway,
   docks: buildDocks,
 };
+
+let shared: Set<THREE.Material> | null = null;
+
+function sharedMaterials(): Set<THREE.Material> {
+  shared ??= new Set(Object.values(worldMaterials()).flat());
+  return shared;
+}
 
 /** Real lights lent to the nearest lamps. A fixed count, so shaders never recompile mid game. */
 const LIGHTS = 3;
@@ -89,15 +97,17 @@ export class World {
 
   private drop(index: number, build: SegmentBuild): void {
     this.group.remove(build.group);
+    // The city's shared materials stay. Everything a segment made for itself (lamp
+    // halos, signs, the ship's paint) goes with it, or a long run slowly leaks them.
+    const keep = sharedMaterials();
     build.group.traverse((o) => {
-      // Sprites share one geometry across the whole renderer, so only meshes are freed.
+      if (!(o instanceof THREE.Mesh) && !(o instanceof THREE.Sprite)) return;
+      // Sprites share one geometry across the whole renderer, so only meshes free theirs.
       if (o instanceof THREE.Mesh) o.geometry.dispose();
+      for (const material of [o.material as THREE.Material | THREE.Material[]].flat()) {
+        if (!keep.has(material) && !material.userData.shared) material.dispose();
+      }
     });
-    for (const lamp of build.lamps) {
-      lamp.halo.material.dispose();
-      if (lamp.cone) (lamp.cone.material as THREE.Material).dispose();
-      if (lamp.flicker && lamp.bulb) (lamp.bulb.material as THREE.Material).dispose();
-    }
     this.built.delete(index);
     this.solidCache = [...this.built.values()].flatMap((b) => b.solids);
   }
