@@ -93,7 +93,7 @@ export class PunchDetector {
     const drove = arm.forward - Math.min(...this.history.map((s) => s.forward)) >= o.forward;
     if (straight >= o.straight && straight - low.straight >= o.rise && drove) {
       const seconds = Math.max(0.03, (body.time - low.time) / 1000);
-      return this.land("straight", ramp((straight - low.straight) / seconds, 1, 5), ramp(straight, o.straight - 0.1, o.straight + 0.1));
+      return this.land("straight", ramp((straight - low.straight) / seconds, 0.8, 4.5), ramp(straight, o.straight - 0.1, o.straight + 0.1));
     }
     if (inward >= o.hookSpeed && this.elbowUp(body)) {
       return this.land("hook", ramp(inward, o.hookSpeed, o.hookSpeed * 2.5), ramp(inward, o.hookSpeed * 0.8, o.hookSpeed * 1.3));
