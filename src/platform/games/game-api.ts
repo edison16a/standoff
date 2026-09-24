@@ -1,3 +1,4 @@
+import type { StaticImageData } from "next/image";
 import type { ComponentType } from "react";
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 import type { Payload, Seat } from "@/platform/protocol";
@@ -80,6 +81,13 @@ export interface HostGame {
   Tools?: ComponentType;
   /** Shown on the join card, under the code, once someone has joined. */
   JoinExtra?: ComponentType;
+  /**
+   * Where the join code sits. By default it waits big in the middle until
+   * someone joins, then tucks into the corner. "corner" keeps it there from
+   * the start, for a lobby with its own words in the middle. "hidden" is for
+   * games played without phones, like the camera games.
+   */
+  join?: "center" | "corner" | "hidden";
   dispose(): void;
 }
 
@@ -90,9 +98,33 @@ export interface PhoneGame {
   dispose(): void;
 }
 
+/** What a showcase scene is being drawn for. See `GameModule.Showcase`. */
+export type ShowcaseView = "loop" | "icon" | "poster";
+
 export interface GameModule {
   createHost(room: HostRoomApi): HostGame;
   createPhone(room: PhoneRoomApi): PhoneGame;
+  /**
+   * The game playing itself, with no room and no phones, used to capture
+   * its home screen media (tools/media). "loop" is a few seconds of play
+   * that can repeat. "icon" is a square hero shot. "poster" is one great
+   * frame. It must run from requestAnimationFrame and performance.now so
+   * the capture tool can step time frame by frame.
+   */
+  Showcase?: ComponentType<{ view: ShowcaseView }>;
+}
+
+/** Captured art for the home screen: the tile, a still, and a looping clip. */
+export interface GameMedia {
+  /** Square tile art, about 1024 pixels. */
+  icon: StaticImageData;
+  /** One frame of real play, 16 by 9. Shown before the clip starts and when motion is reduced. */
+  poster: StaticImageData;
+  /**
+   * Paths under /public to a short looping clip of real play, 16 by 9, in
+   * two encodings: WebM for Chromium and Firefox, MP4 for Safari.
+   */
+  video?: { webm: string; mp4: string };
 }
 
 /** What the home screen shows for a game, whether it is built yet or not. */
@@ -106,6 +138,9 @@ export interface GameInfo {
   players: readonly number[];
   /** The game's own colour. Its card on the home screen is tinted with it. */
   color: string;
-  /** The art on its card. */
+  /** What players hold: their phones (the default), or nothing, played in front of the computer's camera. */
+  input?: "phone" | "camera";
+  /** The art drawn in code, used when there is no captured media yet. */
   Cover: ComponentType;
+  media?: GameMedia;
 }

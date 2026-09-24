@@ -17,6 +17,7 @@
     "node": ">=20.9.0"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "^1.0.1",
     "@vercel/functions": "^3.9.9",
     "ioredis": "^6.0.0",
     "next": "^16.3.6",
@@ -40,6 +41,7 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.3.6",
     "jsdom": "^30.1.1",
+    "playwright": "1.56.1",
     "typescript": "5.9",
     "vitest": "^5.0.1"
   }

@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useRef } from "react";
 import type { GameInfo } from "@/platform/games/game-api";
 
@@ -45,7 +46,7 @@ export function GameTiles({ games, selected, onSelect, onHost }: GameTilesProps)
             onClick={() => (chosen ? onHost() : onSelect(index))}
           >
             <span className="game-tile__art">
-              <Cover />
+              {game.media ? <Image className="cover__art" src={game.media.icon} alt="" fill sizes="220px" /> : <Cover />}
             </span>
           </button>
         );

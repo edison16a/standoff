@@ -36,6 +36,12 @@ export function GameDetails({ game, canPlay, starting, onHost }: GameDetailsProp
           <Icon name="users" size={18} />
           {playersLabel(game)}
         </span>
+        {game.input === "camera" && (
+          <span className="home__meta-item">
+            <Icon name="camera" size={18} />
+            Uses your camera
+          </span>
+        )}
         {!ready && <span className="home__badge">In development</span>}
       </p>
       <div className="home__actions">
