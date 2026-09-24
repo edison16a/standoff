@@ -14,6 +14,7 @@ import "./styles/results.css";
 import "./styles/phone.css";
 import "./styles/pick.css";
 import "./styles/drive.css";
+import "./styles/power.css";
 
 /**
  * Magic Kart, as the platform sees it. Each room gets one session, and
