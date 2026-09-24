@@ -27,6 +27,11 @@ interface AimOverlayProps {
  */
 export function AimOverlay({ aim, players, dots = true }: AimOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Read through a ref, so a new players function each render never restarts the drawing loop.
+  const playersRef = useRef(players);
+  useEffect(() => {
+    playersRef.current = players;
+  }, [players]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -41,7 +46,7 @@ export function AimOverlay({ aim, players, dots = true }: AimOverlayProps) {
       if (canvas.height !== Math.round(height * dpr)) canvas.height = Math.round(height * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, width, height);
-      const everyone = players().filter((player) => player.connected);
+      const everyone = playersRef.current().filter((player) => player.connected);
       // Players looking for the same target share it, their names stacked under it.
       const waiting = new Map<AimStep, Player[]>();
       for (const player of everyone) {
@@ -59,7 +64,7 @@ export function AimOverlay({ aim, players, dots = true }: AimOverlayProps) {
     };
     frame = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(frame);
-  }, [aim, players, dots]);
+  }, [aim, dots]);
 
   return <canvas ref={canvasRef} className="aim-overlay" aria-hidden="true" />;
 }
