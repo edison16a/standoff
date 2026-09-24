@@ -5,37 +5,21 @@ import { playerColor } from "@/games/kit/players";
 import type { Seat } from "@/platform/protocol";
 import type { GameEvent } from "../engine/events";
 import { fightFrame, segmentAt } from "../engine/route";
+import { stage as stageSpec } from "../engine/stages";
 import type { Offset, PelletHit } from "../engine/shooting";
-import { makeZombie, type Zombie } from "../engine/zombie";
-import { isBoss, ZOMBIE_KINDS, type ZombieKind } from "../engine/zombie-kinds";
+import { isBoss } from "../engine/zombie-kinds";
 import type { SurvivalHost, SurvivalView } from "../host/survival-host";
 import { AimCaster, type CastResult } from "./aim-caster";
 import { Atmosphere } from "./atmosphere";
-import { gallery, lowQuality } from "./quality";
+import { lowQuality } from "./quality";
 import { CameraRig, sailed } from "./camera-rig";
 import { ChopperView } from "./chopper-view";
 import { Effects } from "./effects/effects";
 import { FirstPerson, type Shooter } from "./first-person";
+import { ageIdle, lobbySetting, lobbyZombies, settingFor } from "./idle-zombies";
 import { setGunEnvironment } from "./models/guns/gun-kit";
 import { World } from "./world/world";
 import { ZombieLayer } from "./zombie-layer";
-
-/** Zombies shambling in the fog behind the lobby, for mood. */
-function lobbyZombies(): Zombie[] {
-  const opts = (seed: number) => ({ hpScale: 1, speedScale: 1, harm: 1, weakHp: 1, seed });
-  const show = gallery();
-  if (show) {
-    return show.kinds.map((kind, i) => {
-      const known = (ZOMBIE_KINDS as readonly string[]).includes(kind) ? (kind as ZombieKind) : "walker";
-      const wide = isBoss(known) ? 4.5 : 1.7;
-      const side = (i - (show.kinds.length - 1) / 2) * wide;
-      const z = makeZombie(-1 - i, known, isBoss(known) ? 12 : 6.8, side, side, opts(0.3 + i * 0.17));
-      if (show.pose === "attack" || show.pose === "dead" || show.pose === "stagger") z.state = show.pose;
-      return z;
-    });
-  }
-  return [makeZombie(-1, "walker", 21, -2.5, -2.5, opts(0.2)), makeZombie(-2, "walker", 27, 2, 2, opts(0.7)), makeZombie(-3, "brute", 33, -0.5, -0.5, opts(0.45))];
-}
 
 /**
  * Draws the game: the city, the zombies, the team's guns and lasers and
@@ -102,16 +86,9 @@ export class SurvivalRenderer implements SurvivalView {
     this.atmosphere.follow(this.camera.position);
 
     const fighting = game.encounter !== null;
-    if (game.phase === "lobby") {
-      for (const z of this.idle) {
-        z.age += dt;
-        z.stateTime += dt;
-        // The gallery's attack pose swings on a loop.
-        if (z.state === "attack") z.swingIn = z.swingIn - dt <= 0 ? 2.5 : z.swingIn - dt;
-        if (z.state === "stagger" && z.stateTime > 0.4) z.stateTime = 0;
-      }
-    }
+    if (game.phase === "lobby") ageIdle(this.idle, dt);
     const list = game.phase === "lobby" ? this.idle : (game.encounter?.zombies ?? []);
+    this.zombies.setting = game.phase === "lobby" ? lobbySetting() : settingFor(stageSpec(game.stage).zone);
     this.zombies.sync(list, game.phase === "lobby" ? fightFrame(0) : fighting ? fightFrame(game.stage) : null, dt);
     this.chopper.update(game, dt, time);
     this.sailShip(game);

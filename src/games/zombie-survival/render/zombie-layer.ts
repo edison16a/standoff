@@ -4,7 +4,7 @@ import { alive, type Zombie } from "../engine/zombie";
 import { isBoss } from "../engine/zombie-kinds";
 import { poseZombie } from "./models/zombies/animate";
 import { buildBoss } from "./models/zombies/bosses";
-import { buildCommoner } from "./models/zombies/commoners";
+import { buildCommoner, type Setting } from "./models/zombies/commoners";
 import type { Rig } from "./models/zombies/rig";
 import { animateWeakPoints, type WeakMarker } from "./models/zombies/weak-points";
 import { glowTexture } from "./textures";
@@ -25,6 +25,8 @@ interface ZombieView {
 export class ZombieLayer {
   readonly group = new THREE.Group();
   private readonly views = new Map<number, ZombieView>();
+  /** Where the fight is, so new zombies come dressed for it. */
+  setting: Setting = "town";
   private standing: THREE.Mesh[] = [];
   private readonly shadowGeo = new THREE.CircleGeometry(1, 20);
   private readonly shadowMat = new THREE.MeshBasicMaterial({ map: glowTexture(), color: 0x000000, transparent: true, opacity: 0.55, depthWrite: false });
@@ -76,7 +78,7 @@ export class ZombieLayer {
   }
 
   private create(z: Zombie): ZombieView {
-    const built = isBoss(z.kind) ? buildBoss(z.kind, z.seed) : { rig: buildCommoner(z.kind as "walker", z.seed), weak: [] };
+    const built = isBoss(z.kind) ? buildBoss(z.kind, z.seed) : { rig: buildCommoner(z.kind as "walker", z.seed, this.setting), weak: [] };
     for (const proxy of built.rig.proxies) proxy.userData.zombie = z.id;
     const shadow = new THREE.Mesh(this.shadowGeo, this.shadowMat);
     shadow.rotation.x = -Math.PI / 2;

@@ -1,5 +1,6 @@
 import type { ZombieKind } from "../../../engine/zombie-kinds";
 import { dressHead, dressLimbs, dressTorso } from "./anatomy";
+import { dressDoctor, dressPatient, dressWorker, outfitMaterials, type Outfit } from "./outfits";
 import { Dresser, makeRig, standardProxies, type BodyDims, type Rig } from "./rig";
 import { zombieMaterials } from "./zombie-materials";
 
@@ -24,12 +25,23 @@ export function seededRand(seed: number): () => number {
   };
 }
 
+/** Where the dead are met, which decides who they were. */
+export type Setting = "town" | "hospital" | "industrial";
+
+/** Picks an outfit for a walker or runner from where it is met. */
+function outfitFor(setting: Setting, roll: number): Outfit {
+  if (setting === "hospital") return roll < 0.55 ? "patient" : roll < 0.8 ? "doctor" : "town";
+  if (setting === "industrial") return roll < 0.45 ? "worker" : "town";
+  return "town";
+}
+
 /**
- * The ordinary dead. Walkers are townsfolk in torn clothes, runners are
- * thin and barefoot, brutes are huge and bare chested with their ribs
- * showing, and riot zombies still wear helmets, vests and pads.
+ * The ordinary dead. Walkers are townsfolk in torn clothes, or patients
+ * and doctors near the hospital, or workers in hi vis on the roads and
+ * docks. Runners are thin and barefoot, brutes are huge and bare chested
+ * with their ribs showing, and riot zombies still wear helmets and vests.
  */
-export function buildCommoner(kind: Extract<ZombieKind, "walker" | "runner" | "brute" | "armored">, seed: number): Rig {
+export function buildCommoner(kind: Extract<ZombieKind, "walker" | "runner" | "brute" | "armored">, seed: number, setting: Setting = "town"): Rig {
   const m = zombieMaterials();
   const rand = seededRand(seed);
   const d = DIMS[kind];
@@ -38,11 +50,20 @@ export function buildCommoner(kind: Extract<ZombieKind, "walker" | "runner" | "b
   const pick = <T,>(list: readonly T[]) => list[Math.floor(rand() * list.length)]!;
   const skin = pick(m.skins);
 
-  if (kind === "walker") {
-    const shirt = pick(m.shirts);
+  const outfit = kind === "walker" || kind === "runner" ? outfitFor(setting, rand()) : "town";
+  if (outfit === "patient") {
+    const gown = outfitMaterials().gown;
+    dressHead(dress, d, m, { skin, hair: pick(["short", "none"] as const), rotten: rand() < 0.6 }, rand);
+    dressTorso(dress, d, m, { skin, shirt: gown, pants: gown, ribs: false, belly: 0 }, rand);
+    dressLimbs(dress, d, m, { skin, sleeve: gown, pants: skin, shoes: false }, rand);
+    dressPatient(dress, d, m, rand);
+  } else if (kind === "walker") {
+    const shirt = outfit === "doctor" ? m.shirts[3]! : pick(m.shirts);
     dressHead(dress, d, m, { skin, hair: pick(["short", "messy", "none"] as const), rotten: rand() < 0.5 }, rand);
-    dressTorso(dress, d, m, { skin, shirt, pants: pick(m.pants), ribs: rand() < 0.25, belly: rand() < 0.3 ? 0.4 : 0 }, rand);
-    dressLimbs(dress, d, m, { skin, sleeve: rand() < 0.6 ? shirt : null, pants: pick(m.pants), shoes: rand() < 0.8 }, rand);
+    dressTorso(dress, d, m, { skin, shirt, pants: pick(m.pants), ribs: outfit === "town" && rand() < 0.25, belly: rand() < 0.3 ? 0.4 : 0 }, rand);
+    dressLimbs(dress, d, m, { skin, sleeve: rand() < 0.6 || outfit !== "town" ? shirt : null, pants: pick(m.pants), shoes: rand() < 0.8 }, rand);
+    if (outfit === "doctor") dressDoctor(dress, d, m);
+    if (outfit === "worker") dressWorker(dress, d);
   } else if (kind === "runner") {
     dressHead(dress, d, m, { skin, hair: "messy", rotten: true }, rand);
     dressTorso(dress, d, m, { skin, shirt: rand() < 0.5 ? pick(m.shirts) : null, pants: pick(m.pants), ribs: true, belly: 0 }, rand);
