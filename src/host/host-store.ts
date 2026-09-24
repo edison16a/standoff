@@ -35,6 +35,8 @@ export interface HostState {
   error: string | null;
   /** False on a multi instance deploy without Redis, where joins can miss the room. */
   sharedRooms: boolean;
+  /** A reload is getting its room back. */
+  resuming: boolean;
 }
 
 const emptySeat = (): SeatState => ({ connected: false, pick: null, ready: false, computer: false });
@@ -48,6 +50,7 @@ export const useHostStore = create<HostState>(() => ({
   tuning: DEFAULT_TUNING,
   error: null,
   sharedRooms: true,
+  resuming: false,
 }));
 
 /** Shallow compare, so the per frame HUD sync only writes when something changed. */

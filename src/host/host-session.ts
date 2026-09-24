@@ -1,7 +1,7 @@
 import type { StageFrame } from "@/game/frames";
-import { SocketClient } from "@/net/socket-client";
+import { SocketClient, type SocketStatus } from "@/net/socket-client";
 import type { Slot } from "@/shared/players";
-import type { PhoneMessage, ServerEnvelope } from "@/shared/protocol";
+import type { ServerEnvelope } from "@/shared/protocol";
 import { clampTuning, type Tuning } from "@/shared/tuning";
 import { buildControllerState } from "./controller-state";
 import { HostAudio } from "./host-audio";
@@ -9,6 +9,7 @@ import { sameHud, useHostStore } from "./host-store";
 import { Lobby } from "./lobby";
 import { lobbyScene } from "./lobby-scene";
 import { MatchDriver } from "./match-driver";
+import { PhoneDesk } from "./phone-desk";
 import { PhoneLink } from "./phone-link";
 import { RoomKeeper, type OpenedRoom } from "./room-keeper";
 
@@ -24,18 +25,27 @@ export class HostSession {
   driver: MatchDriver | null = null;
   private readonly phones: PhoneLink;
   private readonly room: RoomKeeper;
+  private readonly desk = new PhoneDesk(this.lobby, {
+    driver: () => this.driver,
+    backToLobby: () => this.backToLobby(),
+    seatsChanged: () => this.onSeatsChanged(),
+    lobbyChanged: () => this.lobbyChanged(),
+    greet: (slot) => this.phones.send(slot, { kind: "tuning", tuning: this.tuning }),
+  });
 
   constructor() {
     this.socket = new SocketClient({
       onOpen: (send) => this.room.announce(send),
       onMessage: (message) => this.onMessage(message),
-      onStatus: (status) => useHostStore.setState({ status }),
+      onStatus: (status) => this.onStatus(status),
     });
     this.phones = new PhoneLink(this.socket);
     this.room = new RoomKeeper(() => this.socket.redial(), {
       opened: (room) => this.onRoomOpened(room),
-      lost: (error) => useHostStore.setState({ screen: "landing", room: null, error }),
+      lost: (error) => this.leaveRoom(error),
     });
+    // A reload resumes its room. Creating another meanwhile would race it.
+    useHostStore.setState({ resuming: this.room.holding });
   }
 
   private get tuning(): Tuning {
@@ -60,10 +70,16 @@ export class HostSession {
   /** Ends the room for everyone and returns to the start screen. */
   endGame(): void {
     this.room.close((message) => this.socket.send(message));
+    this.leaveRoom(null);
+  }
+
+  /** Back to the start screen with no match, seats or sound left from the old room. */
+  private leaveRoom(error: string | null): void {
     this.driver = null;
     this.lobby.seats = new Lobby().seats;
     this.audio.director?.stop();
-    useHostStore.setState({ screen: "landing", room: null, hud: null, seats: this.lobby.seats });
+    this.phones.forget();
+    useHostStore.setState({ screen: "landing", room: null, hud: null, seats: this.lobby.seats, resuming: false, error });
   }
 
   /** Leaves a finished match for character select, keeping the room. */
@@ -103,17 +119,29 @@ export class HostSession {
     this.broadcastState();
   }
 
+  private onStatus(status: SocketStatus): void {
+    useHostStore.setState({ status });
+    // Another tab resumed this room. This one stops rather than play to nobody.
+    if (status === "replaced") return this.leaveRoom(null);
+    // Phones hear nothing while the host is offline, so the exchange waits.
+    if (status !== "open") this.driver?.engine.setConnected({ 1: false, 2: false });
+  }
+
   private onRoomOpened({ code, joinUrl, sharedRooms, connected }: OpenedRoom): void {
-    useHostStore.setState({ sharedRooms });
-    connected?.forEach((on, i) => {
-      const slot = (i + 1) as Slot;
-      if (on) this.seatPhone(slot);
-      else if (!this.lobby.seats[slot].computer) this.lobby.disconnect(slot);
-    });
     // Resuming the room already on screen means the socket reconnected or
     // moved, not a page reload. Keep whatever screen and match are running.
-    if (connected && useHostStore.getState().room?.code === code) this.onSeatsChanged();
-    else this.enterLobby(code, joinUrl);
+    const same = connected !== null && useHostStore.getState().room?.code === code;
+    if (!same) this.leaveRoom(null);
+    useHostStore.setState({ sharedRooms, resuming: false });
+    connected?.forEach((on, i) => {
+      const slot = (i + 1) as Slot;
+      if (on) this.desk.seat(slot, false);
+      else if (!this.lobby.seats[slot].computer) this.lobby.disconnect(slot);
+    });
+    if (!same) return this.enterLobby(code, joinUrl);
+    // A phone may have joined while we were away and still have defaults.
+    this.phones.send("all", { kind: "tuning", tuning: this.tuning });
+    this.onSeatsChanged();
   }
 
   private onMessage(message: ServerEnvelope): void {
@@ -124,34 +152,12 @@ export class HostSession {
         this.room.handle(message);
         return;
       case "peer:joined":
-        this.seatPhone(message.slot);
-        this.phones.send(message.slot, { kind: "tuning", tuning: this.tuning });
-        this.onSeatsChanged();
-        return;
+        return this.desk.joined(message.slot, message.rejoined);
       case "peer:left":
-        this.lobby.disconnect(message.slot);
-        this.onSeatsChanged();
-        return;
+        return this.desk.left(message.slot);
       case "peer:message":
-        this.onPhone(message.slot, message.payload);
-        return;
+        return this.desk.message(message.slot, message.payload);
     }
-  }
-
-  /** During a match the driver takes every input. Before it, only lobby choices count. */
-  private onPhone(slot: Slot, message: PhoneMessage): void {
-    if (this.driver) return this.driver.input(slot, message);
-    if (message.kind === "pick") this.lobby.pick(slot, message.characterId);
-    else if (message.kind === "ready") this.lobby.setReady(slot, message.ready);
-    else if (message.kind === "solo") this.lobby.setComputer(message.on);
-    else return;
-    this.lobbyChanged();
-  }
-
-  /** A phone sat down. A real opponent takes over from the computer, even mid match. */
-  private seatPhone(slot: Slot): void {
-    if (this.lobby.unseatComputer(slot) && this.driver) this.backToLobby();
-    this.lobby.connect(slot);
   }
 
   /** Picks or ready flags changed. Starts the match once everyone is set. */

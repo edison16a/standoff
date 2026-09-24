@@ -37,6 +37,11 @@ export class RoomKeeper {
     private readonly events: RoomKeeperEvents,
   ) {}
 
+  /** True while there is a room to resume, from before a reload or a dropped socket. */
+  get holding(): boolean {
+    return recallRoom() !== null;
+  }
+
   /** What a new socket says first. */
   announce(send: Send): void {
     const saved = recallRoom();

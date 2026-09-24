@@ -13,8 +13,10 @@ export function Landing() {
   const session = useSession();
   const error = useHostStore((state) => state.error);
   const status = useHostStore((state) => state.status);
+  const resuming = useHostStore((state) => state.resuming);
   const [creating, setCreating] = useState(false);
-  const ready = status === "open";
+  const ready = status === "open" && !resuming;
+  const replaced = status === "replaced";
 
   const create = async () => {
     setCreating(true);
@@ -34,10 +36,18 @@ export function Landing() {
           <StandoffMark />
         </span>
         <h1 className="landing__title">Standoff</h1>
-        <button type="button" className="btn btn--primary btn--lg" onClick={create} disabled={creating || !ready}>
-          <Icon name="plus" />
-          {ready ? "Create game" : "Connecting"}
-        </button>
+        {replaced ? (
+          <button type="button" className="btn btn--primary btn--lg" onClick={() => location.reload()}>
+            <Icon name="refresh" />
+            Use this tab
+          </button>
+        ) : (
+          <button type="button" className="btn btn--primary btn--lg" onClick={create} disabled={creating || !ready}>
+            <Icon name="plus" />
+            {ready ? "Create game" : "Connecting"}
+          </button>
+        )}
+        {replaced && <p className="landing__note">This game is open in another tab.</p>}
         {status === "unreachable" && <p className="landing__note">Can&apos;t reach the game server.</p>}
         {error && <p className="landing__note">{error}</p>}
       </main>
