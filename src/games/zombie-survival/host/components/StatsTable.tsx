@@ -3,12 +3,13 @@ import { playerColor } from "@/games/kit/players";
 import { leaders, mvp, type Category, type StatLine } from "../../engine/stats";
 import type { HudSeat } from "../host-store";
 
-const COLUMNS: { key: Category | "headshots"; label: string; show: (l: StatLine) => string }[] = [
+const COLUMNS: { key: Category | "headshots" | "bestStreak"; label: string; show: (l: StatLine) => string }[] = [
   { key: "kills", label: "Kills", show: (l) => String(l.kills) },
   { key: "accuracy", label: "Accuracy", show: (l) => `${Math.round(l.accuracy * 100)}%` },
   { key: "headshots", label: "Head shots", show: (l) => String(l.headshots) },
   { key: "weakHits", label: "Weak points", show: (l) => String(l.weakHits) },
   { key: "damage", label: "Damage", show: (l) => String(Math.round(l.damage * 10)) },
+  { key: "bestStreak", label: "Best streak", show: (l) => String(l.bestStreak) },
 ];
 
 /**
@@ -43,7 +44,7 @@ export function StatsTable({ lines, seats }: { lines: readonly StatLine[]; seats
                 {name(line.seat)}
               </td>
               {COLUMNS.map((c) => (
-                <td key={c.key} className={c.key !== "headshots" && best[c.key] === line.seat ? "zs-lead" : ""}>
+                <td key={c.key} className={c.key !== "headshots" && c.key !== "bestStreak" && best[c.key] === line.seat ? "zs-lead" : ""}>
                   {c.show(line)}
                 </td>
               ))}

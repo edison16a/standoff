@@ -31,11 +31,17 @@ export function GunViewer({ weapon }: { weapon: WeaponId }) {
     camera.position.set(0, 0.25, 2.1);
     camera.lookAt(0, 0, 0);
     scene.add(new THREE.HemisphereLight(0xcfe3ff, 0x2a1a10, 1.2));
-    const key = new THREE.DirectionalLight(0xffffff, 2.4);
+    // Studio lighting: a warm key, a cool fill from the other side and a green rim behind,
+    // so black steel shows its edges and the wood its grain instead of reading as flat shapes.
+    const key = new THREE.DirectionalLight(0xfff4e6, 3.2);
     key.position.set(1.5, 2, 2);
-    const rim = new THREE.DirectionalLight(0x7fffb0, 1.6);
-    rim.position.set(-2, 1, -2);
-    scene.add(key, rim);
+    const fill = new THREE.DirectionalLight(0xbfd8ff, 1.2);
+    fill.position.set(-2, 0.5, 1.5);
+    const rim = new THREE.DirectionalLight(0x7fffb0, 2.2);
+    rim.position.set(-2, 1.5, -2);
+    const under = new THREE.DirectionalLight(0xffffff, 0.6);
+    under.position.set(0, -2, 0.5);
+    scene.add(key, fill, rim, under);
     const holder = new THREE.Group();
     scene.add(holder);
     sceneRef.current = { scene, holder };

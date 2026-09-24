@@ -50,14 +50,11 @@
   color: #cfeccf;
   font-size: 15px;
   line-height: 1.45;
-  clip-path: inset(0 100% 0 0);
-  animation: zs-type calc(var(--chars) * 28ms) steps(40, end) forwards;
 }
 
-@keyframes zs-type {
-  to {
-    clip-path: inset(0 0 0 0);
-  }
+/* Laid out but not yet typed, so the box keeps its final shape from the start. */
+.zs-radio__rest {
+  visibility: hidden;
 }
 
 @keyframes zs-radio {
