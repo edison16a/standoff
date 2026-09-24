@@ -16,6 +16,8 @@ export interface ShotContext {
   power: number;
   /** The shooter is already past the keeper, so no save is possible. */
   beaten: boolean;
+  /** 1 aimed at the side the keeper left open, -1 straight at the keeper's side, 0 left to the game. */
+  placement?: number;
 }
 
 export type Odds = Record<ShotOutcome, number>;
@@ -47,7 +49,7 @@ export function shotOdds(c: ShotContext): Odds {
   const woodwork = clamp(0.05 * (0.85 + 0.3 * (1 - quality)), 0.035, 0.07);
   const wide = clamp(0.015 + 0.09 * (1 - quality) + (c.angle > 0.95 ? 0.04 : 0), 0.01, 0.16);
   const onTarget = 1 - over - woodwork - wide;
-  const goalShare = c.beaten ? 1 : clamp(0.05 + 0.72 * quality + 0.3 * c.keeperOff + 0.06 * c.power, 0.08, 0.93);
+  const goalShare = c.beaten ? 1 : clamp(0.05 + 0.72 * quality + 0.3 * c.keeperOff + 0.06 * c.power + 0.08 * (c.placement ?? 0), 0.08, 0.93);
   const goal = onTarget * goalShare;
   const save = onTarget - goal;
   const parry = clamp(0.3 + 0.45 * c.power, 0.2, 0.8);

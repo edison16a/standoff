@@ -89,7 +89,7 @@ describe("a phone's player", () => {
         const to = { x: ball.x - me.pos.x, z: ball.z - me.pos.z };
         const d = Math.hypot(to.x, to.z) || 1;
         const theirs = state.ball.owner?.kind === "athlete" && state.ball.owner.id !== 0;
-        stepMatch(state, new Map([[0, { move: { x: to.x / d, z: to.z / d }, action: theirs && d < 2.2 }]]));
+        stepMatch(state, new Map([[0, { move: { x: to.x / d, z: to.z / d }, slide: theirs && d < 2.2 }]]));
         if (state.events.some((e) => e.type === "tackle" && e.athlete === 0 && e.won)) {
           won++;
           break;

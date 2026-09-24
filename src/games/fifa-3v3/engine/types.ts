@@ -56,6 +56,12 @@ export interface Athlete {
   buffered: number;
   /** Who a pass is meant for, while winding up. */
   passTo: number | null;
+  /** The pass being wound up goes in the air. */
+  lofted: boolean;
+  /** Where on the goal line the player pointed a shot, or null to let the game pick. */
+  aimZ: number | null;
+  /** The stick at a Shoot press made before the ball arrived, for the first time kick. */
+  bufferAim: Vec2 | null;
   /** How hard the kick being wound up is, 0 to 1. */
   power: number;
   /** A slide has already met the ball or the man, so it cannot win twice. */
@@ -175,9 +181,11 @@ export interface Command {
   move: Vec2;
   shootDown?: boolean;
   shootUp?: boolean;
-  /** Tackle without the ball, pass with it. */
-  action?: boolean;
-  /** A computer player picks its own pass target. */
+  /** Where the stick pointed when Shoot went down or up, which aims the kick. */
+  aim?: Vec2;
+  /** Slide in the move direction. Does nothing with the ball at your feet. */
+  slide?: boolean;
+  /** A computer player's pass, to a team mate it picked. */
   passTo?: number;
   /** A computer player's instant shot, at this power. */
   shoot?: number;

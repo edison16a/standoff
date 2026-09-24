@@ -197,3 +197,13 @@
 .fifa-result__goals {
   font-weight: 700;
 }
+
+/* With the ball at your feet a slide does nothing, so the button rests. */
+.fifa-pad__slide {
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.fifa-pad__slide--idle {
+  opacity: 0.4;
+  transform: scale(0.92);
+}

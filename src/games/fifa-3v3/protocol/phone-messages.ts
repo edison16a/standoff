@@ -19,4 +19,4 @@ export const phoneMessageSchema = z.discriminatedUnion("kind", [pickSchema, read
 export type PhoneMessage = z.infer<typeof phoneMessageSchema>;
 
 /** The gamepad's buttons, as named to the kit. */
-export const BUTTONS = { shoot: "shoot", action: "tackle" } as const;
+export const BUTTONS = { shoot: "shoot", slide: "slide" } as const;

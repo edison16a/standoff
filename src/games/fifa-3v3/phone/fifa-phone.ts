@@ -60,9 +60,9 @@ export class FifaPhone {
     else this.pad.release(BUTTONS.shoot);
   }
 
-  action(down: boolean): void {
-    if (down) this.pad.press(BUTTONS.action);
-    else this.pad.release(BUTTONS.action);
+  slide(down: boolean): void {
+    if (down) this.pad.press(BUTTONS.slide);
+    else this.pad.release(BUTTONS.slide);
   }
 
   private onRoom(event: PhoneRoomEvent): void {

@@ -96,7 +96,6 @@ function decideWithBall(state: MatchState, a: Athlete, command: Command): void {
     const caller = state.athletes[brain.caller];
     brain.caller = null;
     if (caller && caller.team === a.team && dist(caller.pos, a.pos) < 24) {
-      command.action = true;
       command.passTo = caller.id;
       return;
     }
@@ -117,7 +116,6 @@ function decideWithBall(state: MatchState, a: Athlete, command: Command): void {
   if (pressure > 0.35 || brain.carried > 2.4) {
     const target = choosePassTarget(state, a, null);
     if (target && openness(state, target) > 2 && rng.chance(0.55)) {
-      command.action = true;
       command.passTo = target.id;
       brain.passWait = rng.range(1, 2);
     }
@@ -134,6 +132,6 @@ function decideWithout(state: MatchState, a: Athlete, command: Command): void {
   if (!state.rng.chance(0.3)) return;
   const aim = add(state.ball.pos, carrier.vel, 0.3);
   command.move = norm(sub(aim, a.pos));
-  command.action = true;
+  command.slide = true;
   a.brain.slideWait = state.rng.range(2.5, 4.5);
 }

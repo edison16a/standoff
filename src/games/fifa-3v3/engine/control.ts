@@ -1,6 +1,7 @@
 import { canPlay, footPoint } from "./athlete";
 import { ballSpeed } from "./ball";
-import { startShot } from "./kick";
+import { planKick } from "./assist";
+import { startKick } from "./kick";
 import { TOUCH } from "./tuning";
 import type { Athlete, MatchState } from "./types";
 import { dist } from "./vec";
@@ -41,5 +42,9 @@ export function tryControl(state: MatchState): void {
   ball.heldFor = 0;
   best.brain.carried = 0;
   state.events.push({ type: "control", athlete: best.id, team: best.team, from });
-  if (best.buffered > 0 && best.action === "free") startShot(state, best, 0.45);
+  if (best.buffered > 0 && best.action === "free") {
+    // A first time kick, aimed the way the stick pointed when Shoot was pressed.
+    startKick(state, best, planKick(state, best, best.bufferAim), 0.5);
+    best.bufferAim = null;
+  }
 }

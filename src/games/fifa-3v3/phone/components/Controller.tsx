@@ -13,9 +13,9 @@ function clock(seconds: number): string {
 
 /**
  * The phone as a controller, held sideways: the thumb stick on the left
- * moves your player (and dribbles), Shoot and Tackle on the right. With
- * the ball at your feet Tackle turns into Pass. The middle shows your
- * side, the score and the clock.
+ * moves your player (and dribbles), Shoot and Slide on the right. Shoot
+ * kicks the ball the way the stick points, and the game decides between
+ * a shot and a pass. The middle shows your side, the score and the clock.
  */
 export function Controller({ host }: { host: PhoneState }) {
   const phone = usePhone();
@@ -67,7 +67,9 @@ export function Controller({ host }: { host: PhoneState }) {
             }}
           />
         </div>
-        <PadButton label={host.hasBall ? "Pass" : "Tackle"} size="md" colour={host.hasBall ? "#22c55e" : "#f59e0b"} onDown={() => phone.action(true)} onUp={() => phone.action(false)} />
+        <div className={`fifa-pad__slide ${host.hasBall ? "fifa-pad__slide--idle" : ""}`}>
+          <PadButton label="Slide" size="md" colour="#f59e0b" onDown={() => phone.slide(true)} onUp={() => phone.slide(false)} />
+        </div>
       </div>
     </div>
   );

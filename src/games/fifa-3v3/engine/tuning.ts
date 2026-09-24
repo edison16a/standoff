@@ -84,6 +84,30 @@ export const PASS = {
   arrive: 5.6,
   maxSpeed: 21,
   cone: Math.PI * 0.42,
+  /** The pace across the ground of a lofted pass, short and long. */
+  loftMin: 9,
+  loftMax: 15,
+  /** A lofted ball lands this far short of the receiver and bounces up to them. */
+  loftShort: 1.2,
+} as const;
+
+/** How Shoot reads the stick: see assist.ts. Angles in radians. */
+export const ASSIST = {
+  /** Less stick than this counts as centred. */
+  deadZone: 0.35,
+  /** A team mate this close to the stick's line gets the pass. */
+  mateCone: 0.5,
+  passReach: 26,
+  /** Extra room either side of the goal mouth that still counts as aiming at it. */
+  goalSlack: 0.32,
+  /** The furthest out a pointed shot is taken, and a shot with the stick centred. */
+  shootRange: 24,
+  autoRange: 14,
+  /** How far a pass into space is played. */
+  spaceLength: 9,
+  /** Passes longer than this, or with a defender this close to the line, go in the air. */
+  airLength: 15,
+  laneWidth: 1.1,
 } as const;
 
 export const SLIDE = {

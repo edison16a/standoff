@@ -6,12 +6,13 @@ import { tryControl } from "./control";
 import { goalX, outAt, scoredIn } from "./goal";
 import { makeSave } from "./keeper";
 import { updateKeeper } from "./keeper-update";
-import { owns, progressKick, startPass, startShot } from "./kick";
+import { planKick } from "./assist";
+import { botPass, owns, progressKick, startKick, startShot } from "./kick";
 import { fullTime, onGoal, onOut } from "./rules";
 import { challenges, startSlide, updateSlide } from "./tackle";
 import { SHOOT } from "./tuning";
 import type { Athlete, Command, MatchState } from "./types";
-import { clamp01, scale } from "./vec";
+import { clamp01, scale, type Vec2 } from "./vec";
 
 const IDLE: Command = { move: { x: 0, z: 0 } };
 
@@ -55,7 +56,12 @@ export function stepLooseBall(state: MatchState, dt: number): void {
   }
 }
 
-/** Shoot, pass and tackle presses. The same rules for phones and computer players. */
+/**
+ * Shoot and slide presses. The same rules for phones and computer
+ * players. Shoot is held to charge and kicks on release, the way the
+ * stick pointed at that moment; the assist turns that into a shot or a
+ * pass. Pressed without the ball, it waits a moment for a first time kick.
+ */
 function applyCommand(state: MatchState, a: Athlete, c: Command, dt: number): void {
   const has = owns(state, a);
   const free = a.action === "free";
@@ -65,22 +71,27 @@ function applyCommand(state: MatchState, a: Athlete, c: Command, dt: number): vo
       a.charge = 0;
     } else {
       a.buffered = SHOOT.buffer;
+      a.bufferAim = c.aim ?? null;
       callForBall(state, a);
     }
   }
-  if (c.shootUp && a.charging && has && free) startShot(state, a, 0.25 + 0.75 * clamp01(a.charge / SHOOT.chargeFull));
+  if (c.shootUp && a.charging && has && free) kickNow(state, a, c.aim ?? c.move, a.charge);
   if (c.shootUp) a.charging = false;
   if (c.shoot !== undefined && has && free) startShot(state, a, c.shoot);
-  if (c.action && free) {
-    if (has) startPass(state, a, c.move, c.passTo);
-    else startSlide(state, a, c.move);
-  }
+  if (c.passTo !== undefined && has && free) botPass(state, a, c.passTo);
+  if (c.slide && free && !has) startSlide(state, a, c.move);
   if (a.charging) {
     if (!has) a.charging = false;
     a.charge += dt;
-    if (a.charge >= SHOOT.chargeMax && a.action === "free") startShot(state, a, 1);
+    if (a.charge >= SHOOT.chargeMax && a.action === "free") kickNow(state, a, c.move, a.charge);
   }
   a.buffered = Math.max(0, a.buffered - dt);
+}
+
+/** Kicks the ball the way the stick points, harder the longer Shoot was held. */
+export function kickNow(state: MatchState, a: Athlete, stick: Vec2 | null, held: number): void {
+  const power = 0.25 + 0.75 * clamp01(held / SHOOT.chargeFull);
+  startKick(state, a, planKick(state, a, stick), power);
 }
 
 /** A phone's player without the ball asks a computer team mate on the ball to pass it. */

@@ -18,10 +18,13 @@ const INSIDE = GW - PITCH.postRadius - R - 0.06;
  * the keeper's line), and the woodwork is hit just off centre so the
  * ball bounces away from goal rather than in.
  */
-export function aimPoint(outcome: ShotOutcome, defending: TeamId, keeper: Keeper, rng: Rng): Vec3 {
+export function aimPoint(outcome: ShotOutcome, defending: TeamId, keeper: Keeper, rng: Rng, aimZ: number | null = null): Vec3 {
   const x = goalX(defending);
   const kz = keeper.pos.z;
-  const away = Math.abs(kz) < 0.25 ? rng.sign() : kz > 0 ? -1 : 1;
+  // A player who pointed at one side gets that side; otherwise the side the keeper left open.
+  const pointed = aimZ !== null && Math.abs(aimZ) > 0.5 ? (Math.sign(aimZ) as 1 | -1) : null;
+  const away = pointed ?? (Math.abs(kz) < 0.25 ? rng.sign() : kz > 0 ? -1 : 1);
+  const side = pointed ?? rng.sign();
   const height = () => {
     const roll = rng.next();
     if (roll < 0.5) return rng.range(0.25, 0.6);
@@ -29,8 +32,10 @@ export function aimPoint(outcome: ShotOutcome, defending: TeamId, keeper: Keeper
     return rng.range(1.3, GH - R - 0.14);
   };
   switch (outcome) {
-    case "goal":
-      return { x, y: height(), z: away * rng.range(Math.min(INSIDE - 0.1, Math.abs(kz) + 1.2), INSIDE) };
+    case "goal": {
+      const inner = pointed !== null ? Math.min(INSIDE - 0.1, Math.max(0.9, Math.abs(aimZ!) - 0.4)) : Math.min(INSIDE - 0.1, Math.abs(kz) + 1.2);
+      return { x, y: height(), z: away * rng.range(inner, INSIDE) };
+    }
     case "catch":
       return { x: keeper.pos.x, y: rng.range(0.35, 1.5), z: clamp(kz + rng.range(-0.8, 0.8), -INSIDE, INSIDE) };
     case "parry": {
@@ -38,13 +43,13 @@ export function aimPoint(outcome: ShotOutcome, defending: TeamId, keeper: Keeper
       return { x: keeper.pos.x, y: rng.range(0.3, 1.8), z: clamp(kz + side * rng.range(0.7, 1.45), -INSIDE, INSIDE) };
     }
     case "post":
-      return { x, y: rng.range(0.3, 1.6), z: rng.sign() * (GW + 0.07) };
+      return { x, y: rng.range(0.3, 1.6), z: side * (GW + 0.07) };
     case "bar":
       return { x, y: GH + 0.08, z: rng.range(-GW + 0.4, GW - 0.4) };
     case "over":
-      return { x, y: GH + rng.range(0.7, 2.2), z: rng.range(-GW, GW) * 0.9 };
+      return { x, y: GH + rng.range(0.7, 2.2), z: clamp((aimZ ?? rng.range(-GW, GW)) + rng.range(-0.6, 0.6), -GW, GW) * 0.9 };
     case "wide":
-      return { x, y: rng.range(0.2, 1.6), z: rng.sign() * (GW + rng.range(0.5, 1.5)) };
+      return { x, y: rng.range(0.2, 1.6), z: side * (GW + rng.range(0.5, 1.5)) };
   }
 }
 

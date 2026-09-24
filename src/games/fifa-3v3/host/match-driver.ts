@@ -82,8 +82,9 @@ export class MatchDriver {
         if (next.button === BUTTONS.shoot) {
           if (next.down) command.shootDown = true;
           else command.shootUp = true;
-        } else if (next.button === BUTTONS.action && next.down) {
-          command.action = true;
+          command.aim = aim;
+        } else if (next.button === BUTTONS.slide && next.down) {
+          command.slide = true;
           if (Math.hypot(aim.x, aim.z) > 0.2) command.move = aim;
         }
       }

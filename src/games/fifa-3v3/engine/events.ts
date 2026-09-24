@@ -10,7 +10,7 @@ export type MatchEvent =
   | { type: "whistle"; long: boolean }
   | { type: "kickoff"; team: TeamId }
   | { type: "shot"; athlete: number; team: TeamId; outcome: ShotOutcome; power: number; distance: number }
-  | { type: "pass"; athlete: number; to: number | null }
+  | { type: "pass"; athlete: number; to: number | null; air: boolean }
   | { type: "control"; athlete: number; team: TeamId; from: TeamId | null }
   | { type: "goal"; team: TeamId; scorer: number | null; golden: boolean }
   | { type: "save"; team: TeamId; kind: "catch" | "parry" | "claim"; at: Vec3 }
