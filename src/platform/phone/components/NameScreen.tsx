@@ -4,11 +4,12 @@ import { StandoffMark } from "@/components/ui/Brand";
 import { cleanName, loadName, NAME_MAX } from "@/platform/profile";
 
 /**
- * The first phone screen: what should we call you? Join is also the one
- * tap that lets the browser start sound, read motion on iOS and keep the
- * screen awake, so it all happens here.
+ * The first phone screen: what should we call you? Skip joins as the
+ * seat number instead. Either button is also the one tap that lets the
+ * browser start sound, read motion on iOS and keep the screen awake, so
+ * it all happens here.
  */
-export function NameScreen({ code, onJoin }: { code: string; onJoin(name: string): Promise<void> }) {
+export function NameScreen({ code, onJoin }: { code: string; onJoin(name: string | null): Promise<void> }) {
   const [name, setName] = useState(loadName);
   const [busy, setBusy] = useState(false);
   const clean = cleanName(name);
@@ -41,6 +42,17 @@ export function NameScreen({ code, onJoin }: { code: string; onJoin(name: string
       </label>
       <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={busy || !clean}>
         Join
+      </button>
+      <button
+        type="button"
+        className="btn btn--ghost btn--block"
+        disabled={busy}
+        onClick={() => {
+          setBusy(true);
+          void onJoin(null);
+        }}
+      >
+        Skip
       </button>
     </form>
   );

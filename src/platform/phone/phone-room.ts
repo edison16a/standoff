@@ -1,7 +1,7 @@
 import { AudioEngine } from "@/platform/audio/audio-engine";
 import { RESERVED_KINDS, type PhoneRoomApi, type PhoneRoomEvent } from "@/platform/games/game-api";
 import { SocketClient } from "@/platform/net/socket-client";
-import { saveName } from "@/platform/profile";
+import { defaultName, saveName } from "@/platform/profile";
 import { playersSchema, type Payload, type ServerEnvelope } from "@/platform/protocol";
 import { requestMotion } from "./permissions";
 import { usePhoneStore as store } from "./phone-store";
@@ -47,9 +47,10 @@ export class PhoneRoom {
    * The Join tap. Everything a browser only allows inside a tap happens
    * here at once: sound, motion access on iOS, and keeping the screen on.
    */
-  async join(name: string): Promise<void> {
-    saveName(name);
-    store.setState({ name, stage: "joining" });
+  async join(name: string | null): Promise<void> {
+    // Skipping the name keeps whatever was saved before, and the seat number stands in for it.
+    if (name) saveName(name);
+    store.setState({ name: name ?? "", stage: "joining" });
     this.audio = new AudioEngine();
     void this.audio.unlock();
     this.motion = await requestMotion();
@@ -70,6 +71,7 @@ export class PhoneRoom {
         writeToken(this.code, message.token);
         const first = this.current === null;
         if (first) this.current = this.makeApi(message.seat, message.seats);
+        if (!store.getState().name) store.setState({ name: defaultName(message.seat) });
         store.setState({ stage: "playing", seat: message.seat, game: message.game, error: null, hostAway: !message.hostHere });
         this.sendProfile();
         if (!first) this.emit({ type: "rejoined" });
