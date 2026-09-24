@@ -49,6 +49,7 @@
   gap: 2px;
   padding: 2px;
   border-radius: 999px;
+  overflow: hidden;
 }
 
 /*
@@ -66,8 +67,27 @@
   background: transparent;
 }
 
-.shell__tools .btn:hover {
-  background: var(--bg-muted);
+/*
+  Inside the capsule, hover and press only tint the round button itself.
+  Nothing grows or spills past the capsule's edge.
+*/
+.shell__tools .btn,
+.shell__tools .icon-btn {
+  border-radius: 999px;
+  transform: none;
+}
+
+.shell__tools .btn:hover,
+.shell__tools .icon-btn:hover,
+.shell__tools .btn:active,
+.shell__tools .icon-btn:active {
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  transform: none;
+}
+
+.shell__tools .icon-btn:focus-visible,
+.shell__tools .btn:focus-visible {
+  outline-offset: -2px;
 }
 
 .shell__notice {
