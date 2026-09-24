@@ -144,36 +144,41 @@
   font-size: 13px;
 }
 
-/* Sits low so the victory and defeat poses stay in view above it. */
+/* A low, wide bar so the victory and defeat poses stay in view above it. */
 .over {
   position: absolute;
   bottom: 28px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  width: min(420px, calc(100% - 40px));
-  padding: 32px;
-  text-align: center;
+  gap: 20px;
+  width: max-content;
+  max-width: calc(100% - 40px);
+  padding: 16px 20px;
   box-shadow: var(--shadow);
 }
 
 .over__icon {
   display: inline-flex;
+  flex: none;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
-  margin-bottom: 6px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: var(--accent-soft);
   color: var(--accent-text);
 }
 
+.over__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .over__title {
-  font-size: 30px;
+  font-size: 22px;
   letter-spacing: -0.02em;
 }
 
@@ -181,11 +186,18 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 8px 0 12px;
   font-size: 14px;
+  white-space: nowrap;
 }
 
 .over__actions {
   display: flex;
   gap: 8px;
+}
+
+@media (max-width: 900px) {
+  .over {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }
