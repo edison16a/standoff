@@ -43,6 +43,10 @@ export class Room {
     return this.closed;
   }
 
+  isHost(peer: Peer): boolean {
+    return peer === this.host;
+  }
+
   connectedSlots(): [boolean, boolean] {
     return [Boolean(this.seats[1]?.peer), Boolean(this.seats[2]?.peer)];
   }

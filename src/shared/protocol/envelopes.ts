@@ -26,6 +26,8 @@ export const clientEnvelopeSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("host:create") }),
   /** The computer reclaiming its room after a page reload. */
   z.object({ type: z.literal("host:resume"), code: roomCode, token }),
+  /** The computer ending the game for good. */
+  z.object({ type: z.literal("host:close") }),
   /** The computer talking to one phone or both. */
   z.object({ type: z.literal("host:send"), to: z.union([slot, z.literal("all")]), payload: hostMessageSchema }),
   /** A phone joining, or rejoining with the token it was given last time. */

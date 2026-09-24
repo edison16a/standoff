@@ -33,6 +33,9 @@ export class RoomRegistry {
       case "phone:join":
         this.joinPhone(peer, envelope.code, envelope.token);
         return;
+      case "host:close":
+        this.closeHosted(peer);
+        return;
       case "host:send":
         this.bindings.get(peer)?.fromHost(peer, envelope.to, envelope.payload);
         return;
@@ -94,6 +97,12 @@ export class RoomRegistry {
     if (!current) return;
     this.bindings.delete(peer);
     current.detach(peer);
+  }
+
+  /** Only the room's own host may close it. */
+  private closeHosted(peer: Peer): void {
+    const room = this.bindings.get(peer);
+    if (room?.isHost(peer)) room.close();
   }
 
   private forget(room: Room): void {
