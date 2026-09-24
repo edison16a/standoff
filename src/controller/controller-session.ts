@@ -144,8 +144,10 @@ export class ControllerSession {
       }
       case "room:error":
         // Without a shared room store, a socket can land on a server
-        // instance that has never heard of the room. Try a few fresh ones.
-        if (message.reason === "not-found" && this.joinRetries < JOIN_RETRIES) {
+        // instance that has never heard of the room, and a server side
+        // failure may pass. Either way, try a few fresh sockets.
+        const retry = message.reason === "not-found" || message.reason === "unavailable";
+        if (retry && this.joinRetries < JOIN_RETRIES) {
           this.joinRetries += 1;
           this.socket.redial();
           return;

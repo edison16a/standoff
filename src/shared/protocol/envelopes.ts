@@ -40,7 +40,8 @@ export type ClientEnvelope = z.infer<typeof clientEnvelopeSchema>;
 
 /* Server to client */
 
-export type JoinErrorReason = "not-found" | "full" | "closed";
+/** `unavailable` is a server side failure, worth retrying on a fresh connection. */
+export type JoinErrorReason = "not-found" | "full" | "closed" | "unavailable";
 
 /**
  * `sharedRooms` is false when the server runs on several instances but has

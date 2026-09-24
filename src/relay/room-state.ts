@@ -86,6 +86,12 @@ export function releaseSeat(room: RoomRecord, slot: Slot, conn: string, now: num
   return withSeat(room, slot, { ...seat, conn: null, awaySince: now });
 }
 
+/** Empties a seat this connection holds, for a join whose token never reached the phone. */
+export function vacateSeat(room: RoomRecord, slot: Slot, conn: string): RoomRecord | null {
+  if (room.seats[slot]?.conn !== conn) return null;
+  return { ...room, seats: { ...room.seats, [slot]: null } };
+}
+
 /** A reloaded host proves it owns the room with its token. */
 export function claimHost(
   room: RoomRecord,

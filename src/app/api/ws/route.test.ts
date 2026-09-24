@@ -3,7 +3,6 @@ import { connect, type AddressInfo, type Socket } from "node:net";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { WebSocket } from "ws";
 import type { ServerEnvelope } from "@/shared/protocol";
-import { ROTATE_LEAD_MS } from "@/relay/relay-types";
 import { GET } from "./route";
 
 /**
@@ -99,7 +98,8 @@ describe("the Vercel WebSocket route", () => {
   });
 
   it("asks the client to move before the deadline", async () => {
-    deadlineIn = ROTATE_LEAD_MS + 50;
+    // A short life gets a third of it as warning, so this rotates after 200 ms.
+    deadlineIn = 300;
     const client = await open();
     await client.waitFor("server:rotate");
     client.socket.close();

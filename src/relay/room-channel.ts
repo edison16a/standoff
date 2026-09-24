@@ -2,6 +2,7 @@ import type { Slot } from "@/shared/players";
 import type { ServerEnvelope } from "@/shared/protocol";
 import type { Bus } from "./backend";
 import { channels, encode, type BusMessage } from "./channels";
+import { logFailure } from "./log";
 
 /**
  * Publishing for one room: to the host, to one phone, or to both. Sends
@@ -37,6 +38,6 @@ export class RoomChannel {
   }
 
   private post(channel: string, message: BusMessage): void {
-    this.bus.publish(channel, encode(message)).catch((error: unknown) => console.error("Publish failed", error));
+    this.bus.publish(channel, encode(message)).catch((error: unknown) => logFailure("Publish failed", error));
   }
 }

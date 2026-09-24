@@ -1,10 +1,17 @@
 import type { Slot } from "@/shared/players";
 import type { RoomStore } from "./backend";
+import { logFailure } from "./log";
 import { makeRoomCode, makeToken } from "./room-code";
 import * as rules from "./room-state";
 
 /** Tries before giving up on finding an unused room code. */
 const CODE_ATTEMPTS = 20;
+/** Rooms one address may create a minute. A real host makes one, maybe two. */
+const CREATES_PER_MINUTE = 10;
+/** Wrong room codes one address may try a minute, typos and retries included. */
+const MISSES_PER_MINUTE = 20;
+/** Giving a seat back matters enough to try more than once. */
+const RELEASE_ATTEMPTS = 3;
 
 /**
  * The room rules applied through the store. Each method is one atomic
@@ -27,6 +34,16 @@ export class RoomOps {
     return null;
   }
 
+  /** False once this address has made too many rooms this minute. */
+  async allowCreate(client: string): Promise<boolean> {
+    return (await this.store.bump(`create:${client}`)) <= CREATES_PER_MINUTE;
+  }
+
+  /** Counts a failed join. False once this address has missed too often this minute. */
+  async allowMiss(client: string): Promise<boolean> {
+    return (await this.store.bump(`miss:${client}`)) <= MISSES_PER_MINUTE;
+  }
+
   resumeHost(code: string, token: string, conn: string) {
     const now = this.now();
     return this.store.update(code, (room) => {
@@ -45,23 +62,18 @@ export class RoomOps {
   }
 
   /** True if this connection was the host and is now marked away. */
-  async releaseHost(code: string, conn: string): Promise<boolean> {
-    const now = this.now();
-    const released = await this.store.update(code, (room) => {
-      const next = rules.releaseHost(room, conn, now);
-      return { room: next, result: next !== null };
-    });
-    return released === true;
+  releaseHost(code: string, conn: string): Promise<boolean> {
+    return this.release(code, (room, now) => rules.releaseHost(room, conn, now));
   }
 
   /** True if this connection held the seat and it is now marked away. */
-  async releaseSeat(code: string, slot: Slot, conn: string): Promise<boolean> {
-    const now = this.now();
-    const released = await this.store.update(code, (room) => {
-      const next = rules.releaseSeat(room, slot, conn, now);
-      return { room: next, result: next !== null };
-    });
-    return released === true;
+  releaseSeat(code: string, slot: Slot, conn: string): Promise<boolean> {
+    return this.release(code, (room, now) => rules.releaseSeat(room, slot, conn, now));
+  }
+
+  /** True if this connection held the seat and it is now empty. */
+  vacateSeat(code: string, slot: Slot, conn: string): Promise<boolean> {
+    return this.release(code, (room) => rules.vacateSeat(room, slot, conn));
   }
 
   /** Closes the room if `conn` is its host. True if it did. */
@@ -75,11 +87,34 @@ export class RoomOps {
     return this.closeIf(code, (room) => !room.closed && rules.hostExpired(room, now));
   }
 
+  /**
+   * A release that fails would leave a seat held by a connection that is
+   * gone, which nothing else would ever free. So it gets a few tries.
+   */
+  private async release(code: string, change: (room: rules.RoomRecord, now: number) => rules.RoomRecord | null): Promise<boolean> {
+    for (let attempt = 1; ; attempt++) {
+      try {
+        const now = this.now();
+        const released = await this.store.update(code, (room) => {
+          const next = change(room, now);
+          return { room: next, result: next !== null };
+        });
+        return released === true;
+      } catch (error) {
+        if (attempt >= RELEASE_ATTEMPTS) throw error;
+        await new Promise((resolve) => setTimeout(resolve, 200 * attempt));
+      }
+    }
+  }
+
   private async closeIf(code: string, test: (room: rules.RoomRecord) => boolean): Promise<boolean> {
     const closed = await this.store.update(code, (room) =>
       test(room) ? { room: { ...room, closed: true }, result: true } : { room: null, result: false },
     );
-    if (closed) await this.store.delete(code);
-    return closed === true;
+    if (!closed) return false;
+    // The room is already marked closed and expires by itself, so a failed
+    // delete must not stop everyone being told.
+    await this.store.delete(code).catch((error: unknown) => logFailure("Room delete failed", error));
+    return true;
   }
 }

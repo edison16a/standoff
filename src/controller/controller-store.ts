@@ -8,7 +8,7 @@ import type { ControllerState } from "@/shared/protocol";
 export type ControllerStage = "enable" | "joining" | "playing" | "error";
 
 /** `replaced` means this seat was taken over by the same page in another tab. */
-export type ControllerError = "not-found" | "full" | "closed" | "insecure" | "denied" | "replaced";
+export type ControllerError = "not-found" | "full" | "closed" | "unavailable" | "insecure" | "denied" | "replaced";
 
 /** Motion comes from the sensors, or from on screen buttons where there are none. */
 export type InputMode = "motion" | "touch";

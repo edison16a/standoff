@@ -1,15 +1,16 @@
 import type { Slot } from "@/shared/players";
 import type { ClientEnvelope, HostMessage, ServerEnvelope } from "@/shared/protocol";
-import { channels, decode } from "./channels";
+import { decode } from "./channels";
+import { HostWatch } from "./host-watch";
+import { logFailure } from "./log";
+import { Membership } from "./membership";
 import { RoomChannel } from "./room-channel";
 import { makeToken } from "./room-code";
 import { RoomOps } from "./room-ops";
-import { connectedSlots, HOST_GRACE_MS } from "./room-state";
-import { ROTATE_LEAD_MS, type RelayContext, type SocketLike } from "./relay-types";
+import { connectedSlots } from "./room-state";
+import { rotateLead, type RelayContext, type SocketLike } from "./relay-types";
 
 export type { RelayContext, SocketLike } from "./relay-types";
-
-type Role = { kind: "host"; code: string } | { kind: "phone"; code: string; slot: Slot };
 
 /**
  * One socket's side of the relay. It never talks to another socket
@@ -24,10 +25,9 @@ type Role = { kind: "host"; code: string } | { kind: "phone"; code: string; slot
 export class RelayConnection {
   readonly id = makeToken();
   private readonly ops: RoomOps;
-  private role: Role | null = null;
-  private unsubscribe: (() => Promise<void>) | null = null;
+  private readonly place: Membership;
   private queue: Promise<void> = Promise.resolve();
-  private hostWatch: ReturnType<typeof setTimeout> | null = null;
+  private readonly watch: HostWatch;
   private rotateTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
@@ -35,8 +35,11 @@ export class RelayConnection {
     private readonly ctx: RelayContext,
   ) {
     this.ops = new RoomOps(ctx.backend.store, ctx.now);
+    this.place = new Membership(this.id, this.ops, ctx.backend.bus, (raw) => this.onBus(raw));
+    this.watch = new HostWatch(this.ops, ctx.backend.bus);
     if (ctx.deadline !== null) {
-      const wait = Math.max(0, ctx.deadline - ROTATE_LEAD_MS - ctx.now());
+      const lifetime = ctx.deadline - ctx.now();
+      const wait = Math.max(0, lifetime - rotateLead(lifetime));
       this.rotateTimer = setTimeout(() => this.send({ type: "server:rotate" }), wait);
     }
   }
@@ -56,18 +59,18 @@ export class RelayConnection {
   }
 
   private enqueue(task: () => Promise<void>): void {
-    this.queue = this.queue.then(task).catch((error: unknown) => console.error("Relay error", error));
+    this.queue = this.queue.then(task).catch((error: unknown) => logFailure("Relay error", error));
   }
 
   private async handle(envelope: ClientEnvelope): Promise<void> {
-    const role = this.role;
+    const role = this.place.role;
     switch (envelope.type) {
       case "host:create":
-        return this.createRoom();
+        return this.handshake(() => this.createRoom());
       case "host:resume":
-        return this.resumeHost(envelope.code, envelope.token);
+        return this.handshake(() => this.resumeHost(envelope.code, envelope.token));
       case "phone:join":
-        return this.joinAsPhone(envelope.code, envelope.token);
+        return this.handshake(() => this.joinAsPhone(envelope.code, envelope.token));
       case "host:close":
         if (role?.kind === "host" && (await this.ops.closeByHost(role.code, this.id))) {
           this.room(role.code).toPhones({ type: "room:closed" });
@@ -83,14 +86,30 @@ export class RelayConnection {
     }
   }
 
+  /**
+   * A create, resume or join that fails part way, say on a Redis error, is
+   * undone and answered, so the client retries rather than waiting forever
+   * with a seat claimed that nobody was told about.
+   */
+  private async handshake(task: () => Promise<void>): Promise<void> {
+    try {
+      await task();
+    } catch (error) {
+      logFailure("Handshake failed", error);
+      this.watch.stop();
+      await this.place.abandon().catch((undo: unknown) => logFailure("Undo failed", undo));
+      this.send({ type: "room:error", reason: "unavailable" });
+    }
+  }
+
   private async createRoom(): Promise<void> {
     await this.leave();
-    const room = await this.ops.create(this.id, this.ctx.joinUrlFor);
+    const room = (await this.ops.allowCreate(this.ctx.client)) ? await this.ops.create(this.id, this.ctx.joinUrlFor) : null;
     if (!room) {
-      this.send({ type: "room:error", reason: "full" });
+      this.send({ type: "room:error", reason: "unavailable" });
       return;
     }
-    await this.become({ kind: "host", code: room.code });
+    await this.place.take({ kind: "host", code: room.code });
     const { sharedRooms } = this.ctx;
     this.send({ type: "room:created", code: room.code, token: room.hostToken, joinUrl: room.joinUrl, sharedRooms });
   }
@@ -102,7 +121,7 @@ export class RelayConnection {
       this.send({ type: "room:error", reason: "not-found" });
       return;
     }
-    await this.become({ kind: "host", code });
+    await this.place.take({ kind: "host", code });
     const channel = this.room(code);
     if (outcome.replaced) channel.kickHost(outcome.replaced);
     channel.toPhones({ type: "host:back" });
@@ -116,15 +135,17 @@ export class RelayConnection {
     if (!outcome || !outcome.claim.ok) {
       const full = outcome && !outcome.claim.ok && outcome.claim.reason === "full";
       this.send({ type: "room:error", reason: full ? "full" : "not-found" });
+      // Room codes are short, so wrong guesses from one address are capped.
+      if (!(await this.ops.allowMiss(this.ctx.client))) this.socket.close(1008, "too many attempts");
       return;
     }
     const { slot, rejoined, replaced } = outcome.claim;
-    await this.become({ kind: "phone", code, slot });
+    await this.place.take({ kind: "phone", code, slot });
     const channel = this.room(code);
     if (replaced) channel.kickSeat(slot, replaced);
     channel.toHost({ type: "peer:joined", slot, rejoined });
     this.send({ type: "phone:joined", code, slot, token: outcome.claim.token });
-    if (!outcome.hostHere) this.watchHost(code);
+    if (!outcome.hostHere) this.watch.start(code);
   }
 
   private relayFromHost(channel: RoomChannel, to: Slot | "all", payload: HostMessage): void {
@@ -134,31 +155,15 @@ export class RelayConnection {
   }
 
   /** Called when this connection goes away or switches rooms. */
-  private async leave(): Promise<void> {
-    const role = this.role;
-    await this.drop();
-    if (role?.kind === "host" && (await this.ops.releaseHost(role.code, this.id))) {
-      this.room(role.code).toPhones({ type: "host:away" });
-    }
-    if (role?.kind === "phone" && (await this.ops.releaseSeat(role.code, role.slot, this.id))) {
-      this.room(role.code).toHost({ type: "peer:left", slot: role.slot });
-    }
-  }
-
-  private async become(role: Role): Promise<void> {
-    this.role = role;
-    const channel = role.kind === "host" ? channels.host(role.code) : channels.seat(role.code, role.slot);
-    this.unsubscribe = await this.ctx.backend.bus.subscribe(channel, (raw) => this.onBus(raw));
+  private leave(): Promise<void> {
+    this.watch.stop();
+    return this.place.leave();
   }
 
   /** Forgets the current role without telling anyone, for kicks and closes. */
-  private async drop(): Promise<void> {
-    this.role = null;
-    if (this.hostWatch) clearTimeout(this.hostWatch);
-    this.hostWatch = null;
-    const unsubscribe = this.unsubscribe;
-    this.unsubscribe = null;
-    await unsubscribe?.();
+  private drop(): Promise<void> {
+    this.watch.stop();
+    return this.place.forget();
   }
 
   private onBus(raw: string): void {
@@ -171,27 +176,12 @@ export class RelayConnection {
       return;
     }
     const { envelope } = message;
-    if (this.role?.kind === "phone") {
-      if (envelope.type === "host:away") this.watchHost(this.role.code);
-      if (envelope.type === "host:back" && this.hostWatch) clearTimeout(this.hostWatch);
+    if (this.place.role?.kind === "phone") {
+      if (envelope.type === "host:away") this.watch.start(this.place.role.code);
+      if (envelope.type === "host:back") this.watch.stop();
       if (envelope.type === "room:closed") this.enqueue(() => this.drop());
     }
     this.send(envelope);
-  }
-
-  /**
-   * When the host drops, each phone's connection keeps an eye on the room.
-   * If the host has not come back once the grace period is over, whichever
-   * phone checks first closes the room for everyone. There is no central
-   * timer to lean on, because on Vercel there is no central process.
-   */
-  private watchHost(code: string): void {
-    if (this.hostWatch) clearTimeout(this.hostWatch);
-    this.hostWatch = setTimeout(() => {
-      this.enqueue(async () => {
-        if (await this.ops.closeIfHostGone(code)) this.room(code).toPhones({ type: "room:closed" });
-      });
-    }, HOST_GRACE_MS + 1000);
   }
 
   private room(code: string): RoomChannel {
