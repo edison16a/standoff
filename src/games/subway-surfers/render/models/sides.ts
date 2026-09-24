@@ -102,9 +102,16 @@ const platform: Build = (b, side, v) => {
   }
   const names = ["CENTRAL", "HARBOR ST", "PARK LANE", "UPTOWN"];
   const sign = map(`station-${v}`, () => stationSignTexture(names[v]!), { roughness: 0.4 });
-  b.panel(5, 0.94, sign, [side * (inner + 0.8), 3.4, -15], [0, -side * Math.PI / 2, 0]);
+  // The name board hangs from the canopy, facing the tracks, with its frame just behind it.
+  b.panel(5, 0.94, sign, [side * (inner + 0.64), 3.4, -15], [0, -side * Math.PI / 2, 0]);
   b.box(0.1, 1.05, 5.1, { color: 0x1d2640, finish: "satin" }, [side * (inner + 0.72), 3.4, -15]);
+  for (const x of [-1.6, 1.6]) b.box(0.05, 1.2, 0.05, { color: 0x1d2640, finish: "satin" }, [side * (inner + 0.72), 4.3, -15 + x]);
   b.box(0.3, 8, CHUNK, { color: 0xd8d2c6, finish: "matte" }, [side * outer, 4, -CHUNK / 2]);
+  // Posters along the back wall.
+  for (const z of [-7.5, -22.5]) {
+    const poster = map(`billboard-${(v + (z < -10 ? 1 : 0)) % 4}`, () => billboardTexture((v + (z < -10 ? 1 : 0)) % 4), { roughness: 0.5 });
+    b.panel(4, 2, poster, [side * (outer - 0.16), 2.6, z], [0, -side * Math.PI / 2, 0]);
+  }
 };
 
 const containers: Build = (b, side, v, theme) => {

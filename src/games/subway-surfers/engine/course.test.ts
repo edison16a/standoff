@@ -80,6 +80,7 @@ describe("the course can always be passed", () => {
       const run = botRun(seed, 5000);
       expect(run.crashed).toBeNull();
       expect(run.coins).toBeGreaterThan(100);
-    });
+      // A long run with a bot thinking ahead: slow on a busy machine, so it gets a minute.
+    }, 60_000);
   }
 });

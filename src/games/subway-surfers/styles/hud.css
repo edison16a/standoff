@@ -252,7 +252,7 @@
 .ss-tut__list {
   position: absolute;
   left: 50%;
-  bottom: 28px;
+  top: calc(22% + 136px);
   display: flex;
   gap: 10px;
   margin: 0;

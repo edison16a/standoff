@@ -84,7 +84,8 @@ export class Scenery {
       this.group.remove(chunk);
       this.chunks.delete(k);
     }
-    for (let k = Math.max(0, first); k <= last; k++) if (!this.chunks.has(k)) this.build(k);
+    // Two chunks before the start, so the camera behind the runner never sees the edge of the world.
+    for (let k = Math.max(-2, first); k <= last; k++) if (!this.chunks.has(k)) this.build(k);
   }
 
   private build(k: number): void {

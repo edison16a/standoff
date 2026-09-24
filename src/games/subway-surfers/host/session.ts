@@ -118,19 +118,21 @@ export class SurfSession {
     const winner = store.getState().winner;
     return this.round.seats.map((seat, i) => ({
       run: seat.run,
-      mood: phase === "countdown" ? "idle" : phase === "results" && winner === i + 1 ? "cheer" : "run",
+      mood: phase === "countdown" || this.round!.paused(i + 1) ? "idle" : phase === "results" && winner === i + 1 ? "cheer" : "run",
     }));
   }
 
   tick(now: number): void {
-    const dt = this.last ? Math.min(0.1, (now - this.last) / 1000) : 0;
+    const wall = this.last ? Math.min(1, (now - this.last) / 1000) : 0;
+    const dt = Math.min(0.1, wall);
     this.last = now;
     const phase = this.phase;
     if (!this.round || phase === "lobby" || phase === "camera" || phase === "calibrate") {
       this.demo.advance(dt);
       if (this.demo.run.crashed) this.demo = new ShowRun(this.demo.run.seed + 1, 20);
     } else if (phase === "countdown") {
-      this.tickCountdown(dt);
+      // The countdown keeps to the wall clock even when frames are slow.
+      this.tickCountdown(wall);
     } else if (phase === "tutorial" || phase === "running" || phase === "results") {
       const round = this.round;
       round.update(dt, round.seats.map((_, i) => this.controls!.take(i + 1)));

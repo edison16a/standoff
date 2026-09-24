@@ -61,13 +61,16 @@ export function buildGuard(): Rig {
   head.sphere(0.03, gloss(0xffd21f), [0, cy + 0.14, -0.16], [1, 1, 0.4]);
 
   for (const side of ["L", "R"] as const) {
-    dress.on(`shoulder${side}`).capsule(0.08, 0.2, uniform, [0, -0.15, 0]);
+    dress.on(`shoulder${side}`).capsule(0.085, 0.2, uniform, [0, -0.15, 0]);
     const forearm = dress.on(`elbow${side}`);
-    forearm.capsule(0.07, 0.17, uniform, [0, -0.12, 0]);
-    forearm.post(0.075, 0.04, satin(0xd8ff3a), [0, -0.22, 0]);
-    dress.on(`hand${side}`).sphere(0.065, matte(SKIN), [0, -0.05, 0], [0.9, 1.1, 1]);
-    dress.on(`hip${side}`).capsule(0.1, 0.26, satin(DARK), [0, -0.2, 0]);
-    dress.on(`knee${side}`).capsule(0.085, 0.28, satin(DARK), [0, -0.2, 0]);
+    forearm.sphere(0.08, uniform, [0, 0, 0], [1, 1, 1], 10);
+    forearm.capsule(0.075, 0.17, uniform, [0, -0.12, 0]);
+    forearm.post(0.08, 0.04, satin(0xd8ff3a), [0, -0.22, 0]);
+    dress.on(`hand${side}`).sphere(0.075, matte(SKIN), [0, -0.055, 0], [0.9, 1.1, 1], 12);
+    dress.on(`hip${side}`).capsule(0.11, 0.24, satin(DARK), [0, -0.2, 0]);
+    const shin = dress.on(`knee${side}`);
+    shin.sphere(0.095, satin(DARK), [0, 0, 0], [1, 1, 1], 10);
+    shin.capsule(0.09, 0.26, satin(DARK), [0, -0.2, 0]);
     sneaker(dress.on(`ankle${side}`), 0x1b1b22, 0, 0.04, -0.05, 0x1b1b22);
   }
   // A whistle on a cord, in his right hand.

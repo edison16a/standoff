@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { Run } from "../../engine/run";
 import { runPose } from "../anim/gaits";
 import { Pose } from "../anim/pose";
+import { addOutline } from "../outline";
 import { buildDog, buildGuard, type Dog } from "../models/guard-model";
 import type { Rig } from "../models/rig";
 import { shadowPaint } from "../models/train";
@@ -21,10 +22,13 @@ export class GuardView {
   private readonly target = new Pose();
   private x = 0;
   private dogX = 0;
+  private lastTime = -1;
 
   constructor() {
     this.guard = buildGuard();
     this.dog = buildDog();
+    addOutline(this.guard.root);
+    addOutline(this.dog.root);
     this.root.add(this.guard.root, this.dog.root);
     for (const target of [this.guard.root, this.dog.root]) {
       const shadow = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.1).rotateX(-Math.PI / 2), shadowPaint());
@@ -39,7 +43,9 @@ export class GuardView {
     this.root.visible = gap < 14;
     if (!this.root.visible) return;
     const caught = run.crashed?.cause === "caught";
-    const stopped = !!run.crashed;
+    // Waiting for GO, or for a player who stepped away, they stand shaking a fist like after a catch.
+    const stopped = !!run.crashed || run.time === this.lastTime;
+    this.lastTime = run.time;
     const follow = 1 - Math.exp(-(caught ? 10 : 4) * dt);
     // They run a little to either side of the runner, so the camera sees all three.
     this.x += (s.x - (caught ? 0.8 : 1.0) - this.x) * follow;

@@ -3,6 +3,7 @@ import type { Run } from "../../engine/run";
 import { JUMP, ROLL, RUNNER } from "../../engine/tuning";
 import { cheerPose, crashPose, flyPose, idlePose, jumpPose, rollPose, runPose, boardPose } from "../anim/gaits";
 import { Pose } from "../anim/pose";
+import { addOutline } from "../outline";
 import { MeshBuilder } from "../mesh-builder";
 import { hoverboard } from "../models/pickups";
 import type { Rig } from "../models/rig";
@@ -35,10 +36,12 @@ export class RunnerView {
   constructor(look: number) {
     const style = LOOKS[look % LOOKS.length]!;
     this.rig = buildRunner(style);
+    addOutline(this.rig.root);
     this.root.add(this.rig.root);
     const board = new MeshBuilder();
     hoverboard(board, style.board[0], style.board[1]);
     this.board = board.build("board");
+    addOutline(this.board);
     this.board.position.y = 0.16;
     this.root.add(this.board);
     this.jetpack = buildJetpack();

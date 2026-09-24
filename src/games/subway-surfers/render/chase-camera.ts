@@ -49,12 +49,12 @@ export class ChaseCamera {
     const z = -s.distance;
     const c = this.crashView;
     // After a crash the camera swings out to the side and looks back at the runner.
-    const back = 6 - 1.5 * c;
+    const back = 5.3 - 1.2 * c;
     const side = 2.6 * c;
-    const height = 3.6 + this.y - 0.8 * c;
+    const height = 3.4 + this.y - 0.8 * c;
     const jitter = this.shake * 0.25;
     this.camera.position.set(this.x + side + Math.sin(time * 61) * jitter, height + Math.sin(time * 47) * jitter, z + back);
-    this.look.set(this.x * 0.9 + side * 0.2, 1.2 + this.y * 0.9, z - 9 + 9.5 * c);
+    this.look.set(this.x * 0.9 + side * 0.2, 1.1 + this.y * 0.9, z - 8 + 8.5 * c);
     this.camera.lookAt(this.look);
   }
 }

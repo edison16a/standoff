@@ -105,11 +105,14 @@ function buildPickup(kind: PowerKind): THREE.Group {
 }
 
 /** A chunky sneaker, toe toward -z. Also used for the runners' own shoes. */
-export function sneaker(b: MeshBuilder, upper: number, x: number, y = 0, z = 0, sole = 0xffffff): void {
-  b.box(0.2, 0.08, 0.36, { color: sole, finish: "satin" }, [x, y - 0.1, z - 0.02], undefined, 0.035);
-  b.box(0.18, 0.14, 0.3, { color: upper, finish: "satin" }, [x, y, z], undefined, 0.06);
-  b.box(0.16, 0.1, 0.12, { color: upper, finish: "satin" }, [x, y + 0.08, z + 0.07], undefined, 0.04);
-  b.box(0.1, 0.02, 0.14, { color: 0xffffff, finish: "matte" }, [x, y + 0.075, z - 0.08]);
+export function sneaker(b: MeshBuilder, upper: number, x: number, y = 0, z = 0, sole = 0xffffff, stripe = 0xffffff): void {
+  b.box(0.21, 0.085, 0.38, { color: sole, finish: "satin" }, [x, y - 0.1, z - 0.025], undefined, 0.035);
+  b.box(0.19, 0.15, 0.32, { color: upper, finish: "satin" }, [x, y, z], undefined, 0.065);
+  // The toe cap, the collar round the ankle, laces and a swoosh down each side.
+  b.sphere(0.095, { color: upper, finish: "satin" }, [x, y - 0.02, z - 0.12], [1, 0.75, 1], 12);
+  b.box(0.17, 0.1, 0.13, { color: upper, finish: "satin" }, [x, y + 0.085, z + 0.07], undefined, 0.045);
+  for (let i = 0; i < 3; i++) b.box(0.1, 0.018, 0.022, { color: 0xffffff, finish: "matte" }, [x, y + 0.075 - i * 0.012, z - 0.03 - i * 0.045]);
+  for (const side of [-1, 1]) b.box(0.012, 0.04, 0.2, { color: stripe, finish: "gloss" }, [x + side * 0.097, y - 0.01, z - 0.01], [0.25, 0, 0], 0.006);
 }
 
 /** A hoverboard, nose toward -z. */
