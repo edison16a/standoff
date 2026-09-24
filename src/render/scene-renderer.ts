@@ -6,22 +6,21 @@ import { bladeTip, solve } from "@/rig/skeleton";
 import { SKINS } from "@/rig/skins";
 import { BladeTrail } from "./blade-trail";
 import { Camera } from "./camera";
-import { Flash } from "./flash";
+import { Effects } from "./effects/effects";
 import { makeBrush, readPalette, type Palette } from "./palette";
 import { drawPiste } from "./piste";
 
 /**
- * Draws a scene frame onto a canvas. Live play and replays both come
- * through here, the only difference being where the frame came from.
- * Each renderer owns its own animators and camera, so a replay renderer
- * never disturbs the live one's springs.
+ * Draws a scene frame onto a canvas: the strip, the fencers, their blade
+ * trails and the effects. Each renderer owns its own animators and camera,
+ * so the landing page's still picture never disturbs the match's springs.
  */
 export class SceneRenderer {
   private readonly ctx: CanvasRenderingContext2D;
   private readonly camera: Camera;
   private readonly animators = { 1: new Animator(), 2: new Animator() };
   private readonly trails = { 1: new BladeTrail(), 2: new BladeTrail() };
-  private readonly flash = new Flash();
+  private readonly effects = new Effects();
   private palette: Palette;
   private dpr = 1;
 
@@ -48,10 +47,11 @@ export class SceneRenderer {
     this.canvas.width = Math.max(1, Math.round(cssWidth * dpr));
     this.canvas.height = Math.max(1, Math.round(cssHeight * dpr));
     this.camera.resize(cssWidth, cssHeight);
+    this.effects.resize(cssWidth, cssHeight);
   }
 
   react(event: GameEvent): void {
-    this.flash.react(event);
+    this.effects.react(event);
   }
 
   render(frame: StageFrame): void {
@@ -68,7 +68,9 @@ export class SceneRenderer {
       const skin = SKINS[fencer.characterId];
       const joints = solve(this.animators[fencer.slot].pose(fencer, frame.t));
       const tip = bladeTip(joints, skin.bladeLength);
-      this.trails[fencer.slot].add(fencer.x + tip.x * fencer.facing, tip.y, frame.t);
+      const tipX = fencer.x + tip.x * fencer.facing;
+      this.trails[fencer.slot].add(tipX, tip.y, frame.t);
+      this.effects.track(fencer.slot, tipX, tip.y);
       ctx.save();
       ctx.translate(camera.toScreenX(fencer.x), camera.floorY);
       ctx.scale(scale * fencer.facing, -scale);
@@ -76,10 +78,10 @@ export class SceneRenderer {
       ctx.restore();
     }
     this.drawTrails(frame, scale);
-    this.flash.draw(ctx, palette, frame.t, camera.width, camera.height);
+    this.effects.drawOnScreen(ctx, palette, frame.t);
   }
 
-  /** Over both fencers, in strip metres. Player one in the accent, player two in the text colour. */
+  /** Trails and effects over both fencers, in strip metres. Player one in the accent, player two in the text colour. */
   private drawTrails(frame: StageFrame, scale: number): void {
     const { ctx, camera, palette } = this;
     ctx.save();
@@ -88,6 +90,7 @@ export class SceneRenderer {
     for (const fencer of frame.fencers) {
       this.trails[fencer.slot].draw(ctx, fencer.slot === 1 ? palette.accent : palette.text, frame.t, 1 / scale);
     }
+    this.effects.drawInStrip(ctx, palette, frame.t, 1 / scale);
     ctx.restore();
   }
 }

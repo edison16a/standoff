@@ -21,7 +21,6 @@ export function drawFencer(brush: Brush, skin: Skin, joints: Joints, frame: Fenc
   const sway = Math.max(-0.08, Math.min(0.08, frame.speed * 0.04));
   const torsoTilt = joints.torsoAngle - Math.PI / 2;
 
-  drawShadow(brush, joints);
   drawBackArm(brush, skin, joints.backShoulder, joints.backElbow, joints.backHand);
   at(ctx, joints.hips, torsoTilt, () => drawTorsoBack(brush, skin, sway));
   drawLeg(brush, skin, joints.hips, joints.backKnee, joints.backAnkle, true);
@@ -49,18 +48,4 @@ function drawSwordArm(brush: Brush, skin: Skin, joints: Joints, parrying: boolea
     if (parrying) line(brush, "trim", 3, [v2(0.08, 0), v2(length * 0.92, 0)]);
   });
   paintGroup(brush, gloveParts(skin, joints.hand));
-}
-
-/** A flat oval on the floor so the fencer reads as standing on the strip. */
-function drawShadow(brush: Brush, joints: Joints): void {
-  const { ctx } = brush;
-  const left = Math.min(joints.backAnkle.x, joints.frontAnkle.x) - 0.1;
-  const right = Math.max(joints.backAnkle.x, joints.frontAnkle.x) + 0.2;
-  ctx.save();
-  ctx.globalAlpha = 0.12;
-  ctx.beginPath();
-  ctx.ellipse((left + right) / 2, 0, (right - left) / 2, 0.035, 0, 0, Math.PI * 2);
-  ctx.fillStyle = brush.outline;
-  ctx.fill();
-  ctx.restore();
 }

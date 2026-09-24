@@ -1,5 +1,5 @@
 import type { GameEvent } from "@/game/events";
-import type { Palette } from "./palette";
+import type { Palette } from "../palette";
 
 /** How long a flash lasts. Short enough to punctuate, not to distract. */
 const FLASH_MS = 180;
@@ -7,21 +7,17 @@ const FLASH_MS = 180;
 type FlashKind = "touch" | "parry";
 
 /**
- * A brief flat wash over the whole strip when a touch lands (accent) or a
- * parry connects (the text colour). It is the only screen effect in the
- * game, and it fades linearly with no easing tricks.
+ * A brief flat wash over the whole strip when a touch's burst goes off
+ * (accent) or a parry connects (the text colour). It fades linearly with
+ * no easing tricks.
  */
 export class Flash {
   private kind: FlashKind | null = null;
   private startedAt = 0;
 
-  /**
-   * Times the flash on the event's own clock. Live events and replayed
-   * ones both carry the time of the frame they belong to, so the flash
-   * lines up in slow motion too.
-   */
+  /** Times the flash on the event's own clock, so it lines up in slow motion too. */
   react(event: GameEvent): void {
-    if (event.type === "touch") this.start("touch", event.t);
+    if (event.type === "impact") this.start("touch", event.t);
     if (event.type === "parried") this.start("parry", event.t);
   }
 
