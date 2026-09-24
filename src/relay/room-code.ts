@@ -1,5 +1,5 @@
 import { randomBytes, randomInt } from "node:crypto";
-import { ROOM_CODE_ALPHABET, ROOM_CODE_LENGTH } from "../../src/shared/protocol";
+import { ROOM_CODE_ALPHABET, ROOM_CODE_LENGTH } from "@/shared/protocol";
 
 /** A short code players could also read out loud or type by hand. */
 export function makeRoomCode(): string {
