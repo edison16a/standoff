@@ -63,7 +63,7 @@ export function RoomShell() {
         <IconButton icon="expand" label="Full screen" onClick={toggleFullscreen} />
         <GitHubButton compact />
       </div>
-      <JoinPanel title={info?.title ?? "Standoff"} Extra={game?.JoinExtra} />
+      {game && <JoinPanel title={info?.title ?? "Standoff"} Extra={game.JoinExtra} placement={game.join} />}
       {status !== "open" && <p className="shell__notice">Reconnecting</p>}
     </div>
   );

@@ -30,7 +30,8 @@ export const game: GameModule = {
           </SessionContext.Provider>
         );
       };
-    return { Screen: wrap(Stage), dispose: () => session.dispose() };
+    // The lobby's title and map picker fill the middle, so the join code waits in the corner.
+    return { Screen: wrap(Stage), join: "corner", dispose: () => session.dispose() };
   },
 
   createPhone(room) {
