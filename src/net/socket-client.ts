@@ -1,8 +1,11 @@
 import { SOCKET_PATH, type ClientEnvelope, type ServerEnvelope } from "@/shared/protocol";
+import { StreamChannel } from "./stream-channel";
 
 export type SocketStatus = "connecting" | "open" | "reconnecting" | "unreachable" | "replaced" | "closed";
 
 type Send = (message: ClientEnvelope) => void;
+/** A WebSocket, or the HTTP stream that stands in for one. */
+type Channel = WebSocket | StreamChannel;
 
 export interface SocketHandlers {
   /**
@@ -28,6 +31,7 @@ const CONGESTED_BYTES = 8 * 1024;
 const REPLACED = 4000;
 /** The replies that mean a new socket has taken over the seat or the room. */
 const HANDSHAKES = new Set<ServerEnvelope["type"]>(["phone:joined", "room:resumed", "room:created"]);
+const OPEN = 1;
 
 /**
  * A WebSocket that keeps itself connected. Phones lock, walk out of range
@@ -40,10 +44,15 @@ const HANDSHAKES = new Set<ServerEnvelope["type"]>(["phone:joined", "room:resume
  * queues them behind the announce. Incoming ones switch once it confirms
  * the seat. Until then `current` keeps delivering, so nothing is lost or
  * doubled and the match never sees a disconnect.
+ *
+ * If a WebSocket fails before it ever opens, every channel after it is an
+ * HTTP stream instead (see StreamChannel). That is what Chrome needs on
+ * Vercel today, and it reaches the same relay.
  */
 export class SocketClient {
-  private current: WebSocket | null = null;
-  private next: WebSocket | null = null;
+  private current: Channel | null = null;
+  private next: Channel | null = null;
+  private useStream = streamRequested();
   private backoff = MIN_BACKOFF_MS;
   private failures = 0;
   private retry: ReturnType<typeof setTimeout> | null = null;
@@ -58,8 +67,8 @@ export class SocketClient {
   }
 
   send(message: ClientEnvelope): void {
-    const target = this.next?.readyState === WebSocket.OPEN ? this.next : this.current;
-    if (target?.readyState === WebSocket.OPEN) target.send(JSON.stringify(message));
+    const target = this.next?.readyState === OPEN ? this.next : this.current;
+    if (target?.readyState === OPEN) target.send(JSON.stringify(message));
   }
 
   /** Sends only if the link is keeping up. For high rate, replaceable data. */
@@ -91,27 +100,34 @@ export class SocketClient {
     this.handlers.onStatus("closed");
   }
 
-  private dial(): WebSocket {
+  private dial(): Channel {
     const scheme = location.protocol === "https:" ? "wss" : "ws";
-    const socket = new WebSocket(`${scheme}://${location.host}${SOCKET_PATH}`);
-    socket.onopen = () => this.onOpen(socket);
-    socket.onmessage = (event: MessageEvent<string>) => this.onMessage(socket, event.data);
-    socket.onclose = (event: CloseEvent) => this.onClose(socket, event.code);
-    return socket;
+    const channel = this.useStream ? new StreamChannel() : new WebSocket(`${scheme}://${location.host}${SOCKET_PATH}`);
+    let opened = false;
+    channel.onopen = () => {
+      opened = true;
+      this.onOpen(channel);
+    };
+    channel.onmessage = (event: MessageEvent<string>) => this.onMessage(channel, event.data);
+    channel.onclose = (event: CloseEvent) => {
+      if (!opened) this.useStream = true;
+      this.onClose(channel, event.code);
+    };
+    return channel;
   }
 
-  private onOpen(socket: WebSocket): void {
+  private onOpen(socket: Channel): void {
     if (socket === this.current) {
       this.failures = 0;
       this.backoff = MIN_BACKOFF_MS;
       this.handlers.onStatus("open");
     }
     this.handlers.onOpen((message) => {
-      if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(message));
+      if (socket.readyState === OPEN) socket.send(JSON.stringify(message));
     });
   }
 
-  private onMessage(socket: WebSocket, raw: string): void {
+  private onMessage(socket: Channel, raw: string): void {
     let message: ServerEnvelope;
     try {
       message = JSON.parse(raw) as ServerEnvelope;
@@ -135,7 +151,7 @@ export class SocketClient {
     this.handlers.onMessage(message);
   }
 
-  private onClose(socket: WebSocket, code: number): void {
+  private onClose(socket: Channel, code: number): void {
     if (socket === this.next) {
       this.next = null;
       return;
@@ -164,7 +180,7 @@ export class SocketClient {
   }
 
   /** The new socket holds the seat now. The old one is retired quietly. */
-  private promote(socket: WebSocket): void {
+  private promote(socket: Channel): void {
     const old = this.current;
     this.current = socket;
     this.next = null;
@@ -175,5 +191,14 @@ export class SocketClient {
     const next = this.next;
     this.next = null;
     next?.close(1000);
+  }
+}
+
+/** Lets the fallback be tried anywhere: set "standoff:transport" to "stream" in local storage. */
+function streamRequested(): boolean {
+  try {
+    return localStorage.getItem("standoff:transport") === "stream";
+  } catch {
+    return false;
   }
 }
