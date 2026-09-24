@@ -33,6 +33,8 @@ const DUCK_SHAPES: readonly HitShape[] = [
 /** Bullseye faces sit on a stick, so their centre is well above the hinge. */
 export const BULLSEYE_RADIUS = 0.36;
 export const BULLSEYE_CENTER_Y = 0.78;
+/** The face is painted with this many rings. The bull is the innermost red one. */
+export const BULLSEYE_RINGS = 5;
 export const PLATE_RADIUS = 0.17;
 export const PLATE_CENTER_Y = -0.26;
 
@@ -44,7 +46,8 @@ export const KINDS: Record<TargetKind, KindInfo> = {
     points: 15,
     scale: 1,
     shapes: [{ x: 0, y: BULLSEYE_CENTER_Y, rx: BULLSEYE_RADIUS, ry: BULLSEYE_RADIUS }],
-    bullRadius: 0.085,
+    // Exactly the painted centre ring, so a shot on its edge scores what the eye says.
+    bullRadius: BULLSEYE_RADIUS / BULLSEYE_RINGS,
     bullPoints: 40,
   },
   // Plates hang below the rail, so their centre is under the hinge.

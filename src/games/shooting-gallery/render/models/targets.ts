@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import { BULLSEYE_CENTER_Y, BULLSEYE_RADIUS, PLATE_CENTER_Y, PLATE_RADIUS } from "../../engine/kinds";
+import { BULLSEYE_CENTER_Y, BULLSEYE_RADIUS, BULLSEYE_RINGS, PLATE_CENTER_Y, PLATE_RADIUS } from "../../engine/kinds";
 import { bullseyeTexture, grainTexture } from "../textures";
 
 /**
@@ -86,7 +86,7 @@ function build(): Kit {
     plateFace: disc(PLATE_RADIUS, 0.02, PLATE_CENTER_Y),
     plateRim,
     trolley,
-    faceMat: new THREE.MeshStandardMaterial({ map: bullseyeTexture(5), roughness: 0.55 }),
+    faceMat: new THREE.MeshStandardMaterial({ map: bullseyeTexture(BULLSEYE_RINGS), roughness: 0.55 }),
     plateMat: new THREE.MeshStandardMaterial({ map: bullseyeTexture(3), roughness: 0.35, metalness: 0.3 }),
     rimMat: new THREE.MeshStandardMaterial({ color: "#7a0d18", roughness: 0.4, metalness: 0.3 }),
     backMat: new THREE.MeshStandardMaterial({ color: "#e9dfcc", roughness: 0.7 }),

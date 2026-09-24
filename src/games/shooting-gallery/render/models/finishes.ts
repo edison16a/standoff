@@ -3,7 +3,7 @@
  * the protocol can check a pick without loading three.js.
  */
 
-export const FINISH_IDS = ["walnut", "cherry", "midnight", "birch", "mint", "gold"] as const;
+export const FINISH_IDS = ["walnut", "cherry", "midnight", "birch", "forest", "gold"] as const;
 export type FinishId = (typeof FINISH_IDS)[number];
 
 export interface Finish {
@@ -46,12 +46,13 @@ export const FINISHES: Record<FinishId, Finish> = {
     metal: { color: "#b58b35", metalness: 0.9, roughness: 0.3 },
     trim: "#6b4a1e",
   },
-  mint: {
-    id: "mint",
-    name: "Mint",
-    stock: { color: "#63d4bb", grain: false, roughness: 0.4 },
-    metal: { color: "#eceae4", metalness: 0.9, roughness: 0.22 },
-    trim: "#ff6fae",
+  // A deep green lacquer, like an old club rifle, with brass fittings.
+  forest: {
+    id: "forest",
+    name: "Forest",
+    stock: { color: "#1d5438", grain: false, roughness: 0.32 },
+    metal: { color: "#262a30", metalness: 0.85, roughness: 0.3 },
+    trim: "#d4a64a",
   },
   gold: {
     id: "gold",

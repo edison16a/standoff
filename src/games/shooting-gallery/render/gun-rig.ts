@@ -2,13 +2,8 @@ import * as THREE from "three";
 import { PUMP_TRAVEL } from "./models/bb-gun-parts";
 import { createBBGun, type BBGun } from "./models/bb-gun";
 import type { FinishId } from "./models/finishes";
+import { GUN_PIVOT_Z, type GunSpot } from "./gun-layout";
 import { Laser } from "./laser";
-
-/**
- * The gun is drawn larger than life so it reads from across a room. With
- * fewer players each gun has more room, so it is drawn bigger still.
- */
-const GUN_SCALE: Record<number, number> = { 1: 2.3, 2: 2.1, 3: 1.9, 4: 1.8 };
 /** Where guns rest, relative to the camera, before anyone aims. */
 const REST_TARGET = new THREE.Vector3(0, 1.7, -2);
 /** How quickly a gun swings onto its player's aim, per second. */
@@ -49,12 +44,14 @@ export class GunRig {
   private readonly look = new THREE.Object3D();
   private readonly home = new THREE.Vector3();
   private placed = false;
+  private scale = 1.8;
+  private targetScale = 1.8;
   private firedAt = -Infinity;
   private recoil = 0;
 
   constructor(finish: FinishId, colour: string) {
     this.gun = createBBGun(finish, colour);
-    this.gun.root.scale.setScalar(GUN_SCALE[1]!);
+    this.setScale(this.scale);
     this.kick.add(this.gun.root);
     this.object.add(this.kick);
     this.laser = new Laser(colour);
@@ -62,10 +59,13 @@ export class GunRig {
   }
 
   /** Its spot along the bottom of the screen. A gun already there glides over when players come or go. */
-  place(position: THREE.Vector3, players: number): void {
-    this.home.copy(position);
-    this.gun.root.scale.setScalar(GUN_SCALE[players] ?? GUN_SCALE[4]!);
-    if (!this.placed) this.object.position.copy(position);
+  place(spot: GunSpot): void {
+    this.home.set(spot.x, spot.y, spot.z);
+    this.targetScale = spot.scale;
+    if (!this.placed) {
+      this.object.position.copy(this.home);
+      this.setScale(spot.scale);
+    }
     this.placed = true;
   }
 
@@ -84,7 +84,9 @@ export class GunRig {
    * and plays the kick and pump. `now` and `dt` are in seconds.
    */
   update(now: number, dt: number, target: THREE.Vector3 | null): void {
-    this.object.position.lerp(this.home, 1 - Math.exp(-6 * dt));
+    const glide = 1 - Math.exp(-6 * dt);
+    this.object.position.lerp(this.home, glide);
+    this.setScale(this.scale + (this.targetScale - this.scale) * glide);
     this.aimAt(target ?? REST_TARGET, 1 - Math.exp(-TURN_RATE * dt));
     // The kick: straight back and muzzle up at once, then eased home.
     this.recoil *= Math.exp(-dt * 11);
@@ -101,6 +103,13 @@ export class GunRig {
   dispose(): void {
     this.gun.dispose();
     this.laser.dispose();
+  }
+
+  /** The gun turns about a point on its barrel, so the model sits that far back from the rig's origin. */
+  private setScale(scale: number): void {
+    this.scale = scale;
+    this.gun.root.scale.setScalar(scale);
+    this.gun.root.position.z = -GUN_PIVOT_Z * scale;
   }
 
   private aimAt(target: THREE.Vector3, blend: number): void {

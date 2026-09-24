@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type { Seat } from "@/platform/protocol";
 import { Effects } from "./effects/effects";
+import { gunSpot } from "./gun-layout";
 import { GunRig } from "./gun-rig";
 import { addLights } from "./lights";
 import { QualityGovernor } from "./quality";
@@ -13,15 +14,6 @@ import { TargetViews } from "./target-views";
 
 /** The most pixels per CSS pixel drawn. Past this a laptop spends its frame budget on detail nobody sees. */
 const MAX_PIXEL_RATIO = 1.75;
-
-/** Where each gun stands along the bottom of the screen, for however many players there are. */
-function gunSpot(index: number, count: number, out: THREE.Vector3): THREE.Vector3 {
-  // Spread evenly with room between them, so guns never cross when two players aim at the same duck.
-  const spread = count === 1 ? 0 : Math.min(1.9, 0.62 * (count - 1));
-  // Alone, the gun sits off to the right like the cover, which also keeps the middle clear.
-  const x = count === 1 ? 0.72 : -spread / 2 + (spread * index) / (count - 1);
-  return out.set(x, 1.12, 4.7);
-}
 
 /**
  * Draws the booth with three.js: the fixed set, every target, each
@@ -37,7 +29,6 @@ export class GalleryRenderer {
   private readonly rigs = new Map<Seat, { rig: GunRig; finish: string }>();
   private readonly releaseLights: () => void;
   private readonly unlisten: () => void;
-  private readonly spot = new THREE.Vector3();
   private readonly aim = new THREE.Vector3();
   private readonly quality = new QualityGovernor(MAX_PIXEL_RATIO);
   private lastNow = 0;
@@ -76,8 +67,8 @@ export class GalleryRenderer {
     this.lastNow = now;
     const round = this.source.round();
     this.targets.update(round.targets, round.time);
-    this.updateGuns(this.source.shooters(), now, dt);
     const phase = this.source.phase();
+    this.updateGuns(this.source.shooters(), phase === "lobby", now, dt);
     this.bulbs.update(now, now < this.flashUntil ? "flash" : phase === "lobby" || phase === "results" ? "chase" : "steady");
     this.effects.update(now, dt);
     this.renderer.render(this.scene, this.source.camera.camera);
@@ -119,7 +110,7 @@ export class GalleryRenderer {
   }
 
   /** Adds, removes and moves the guns so there is exactly one per shooter. */
-  private updateGuns(shooters: readonly Shooter[], now: number, dt: number): void {
+  private updateGuns(shooters: readonly Shooter[], lobby: boolean, now: number, dt: number): void {
     const wanted = new Set(shooters.map((s) => s.seat));
     for (const [seat, { rig }] of this.rigs) {
       if (wanted.has(seat)) continue;
@@ -138,7 +129,7 @@ export class GalleryRenderer {
         entry.rig.gun.setFinish(shooter.finish);
         entry.finish = shooter.finish;
       }
-      entry.rig.place(gunSpot(index, shooters.length, this.spot), shooters.length);
+      entry.rig.place(gunSpot(index, shooters.length, lobby));
       const aim = shooter.aim ? this.aim.set(shooter.aim.x, shooter.aim.y, shooter.aim.z) : null;
       entry.rig.update(now, dt, aim);
     });

@@ -1,5 +1,6 @@
 "use client";
 import { playerColor } from "@/games/kit/players";
+import { defaultName } from "@/platform/profile";
 import type { GalleryState } from "../../protocol";
 import { BestTable } from "./BestTable";
 import { useGallery, useHud } from "./session-context";
@@ -8,7 +9,7 @@ function headline(game: GalleryState): string {
   const names = game.winners.map((seat) => game.players.find((p) => p.seat === seat)?.name ?? `Player ${seat}`);
   if (names.length === 0) return "No hits this time";
   if (names.length === 1) return game.players.filter((p) => p.inRound).length === 1 ? `${names[0]} scores` : `${names[0]} wins`;
-  return `A tie: ${names.join(" and ")}`;
+  return `A tie: ${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 }
 
 function ordinal(n: number): string {
@@ -27,6 +28,7 @@ export function Results() {
   const players = game.players.filter((p) => p.inRound);
   const top = players[0];
   const fresh = players.flatMap((p) => (p.best ? [p.best] : []));
+  const unnamed = players.some((p) => p.score > 0 && p.name === defaultName(p.seat));
 
   return (
     <div className="sg-results" role="dialog" aria-label="Round over">
@@ -48,7 +50,7 @@ export function Results() {
           <tbody>
             {players.map((player) => (
               <tr key={player.seat} style={{ "--p": playerColor(player.seat) } as React.CSSProperties}>
-                <td className="sg-results__place">{player.score > 0 ? ordinal(player.place) : "-"}</td>
+                <td className="sg-results__place">{player.score > 0 ? ordinal(player.place) : ""}</td>
                 <td className="sg-results__name">
                   {player.name}
                   {player.best && <span className="sg-results__badge">{ordinal(player.best)} best</span>}
@@ -72,6 +74,7 @@ export function Results() {
       </section>
       <section className="sg-panel sg-results__best">
         <BestTable entries={best} seconds={game.seconds} fresh={fresh} />
+        {unnamed && <p className="sg-best__note">Only players with a name go on the board.</p>}
       </section>
     </div>
   );

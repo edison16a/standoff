@@ -73,9 +73,8 @@ export function GunPreview({ finish, colour }: GunPreviewProps) {
       const height = canvas.clientHeight;
       renderer.setSize(width, height, false);
       camera.aspect = width / Math.max(1, height);
-      // Keep the whole gun in frame on a narrow phone.
-      // Far enough that the whole gun, 1.4 metres long, fits even side on.
-      camera.position.z = camera.aspect < 1.55 ? 2.15 * (1.55 / camera.aspect) : 2.15;
+      // Close enough that the gun fills the window, far enough that all 1.4 metres of it fit side on.
+      camera.position.z = camera.aspect < 1.55 ? 1.95 * (1.55 / camera.aspect) : 1.95;
       camera.updateProjectionMatrix();
     };
     fit();
