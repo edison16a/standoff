@@ -1,35 +1,7 @@
 /*
-  Fencing on the phone: fencer select, calibration, and the match pad.
+  Fencing on the phone: calibration, fencer select, the ready page and
+  the match pad.
 */
-
-.steps {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.step__head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.step__head h2 {
-  font-size: 18px;
-}
-
-.step__num {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: var(--on-accent);
-  font-size: 13px;
-  font-weight: 700;
-}
 
 .picker {
   display: grid;
@@ -80,16 +52,22 @@
   line-height: 1.35;
 }
 
-.ready-bar {
-  position: sticky;
-  bottom: 0;
+/* The last setup step: your fencer, big, with its name. */
+.ready-card {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 8px;
-  padding: 12px 0 4px;
-  background: var(--bg-workspace);
-  text-align: center;
-  font-size: 14px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  font-size: 18px;
+}
+
+.ready-card__art {
+  width: 100%;
+  height: 260px;
 }
 .calibrate {
   display: flex;

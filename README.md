@@ -42,7 +42,7 @@ The winner gets confetti.
 
 <img src="docs/screenshots/match-over.png" alt="Confetti over the winner" width="100%" />
 
-On the phone: a name, then pick a fencer and calibrate. The drawing shows where to point, and the level shows when the phone is flat, so the guard is easy to find again. Then two big buttons to move.
+On the phone: a name (or Skip), then one page per step. Calibrate first: the drawing shows where to point, and the level shows when the phone is flat, so the guard is easy to find again. Then pick a fencer, then Ready. In a bout, two big buttons move you.
 
 <p>
   <img src="docs/screenshots/phone-name.png" alt="The name screen" width="32%" />
@@ -58,8 +58,8 @@ On the phone: a name, then pick a fencer and calibrate. The drawing shows where 
 
 ## How to play
 
-1. On the computer, click a game. Scan the QR code with each phone, type a name and tap **Join**.
-2. For fencing, pick a fencer. Hold the phone flat like a sword, top edge pointing at the middle of the screen. When the dot sits in the circle, tap **Calibrate** and hold still through the countdown. Then **Ready**.
+1. On the computer, click a game. Scan the QR code with each phone, type a name and tap **Join**, or tap **Skip**.
+2. For fencing, calibrate first. Hold the phone flat like a sword, top edge pointing at the middle of the screen. When the dot sits in the circle, tap **Calibrate** and hold still through the countdown. Then pick a fencer, and tap **Ready**.
 3. Fence:
    * **Aim** by tilting the phone. A jab only lands if your tip points at your opponent.
    * **Jab** with a short, sharp chop down.
