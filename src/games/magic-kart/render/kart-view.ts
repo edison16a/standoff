@@ -25,6 +25,8 @@ export class KartView {
   private readonly flames: THREE.Group[] = [];
   private pitch = 0;
   private ghost = false;
+  /** Whether the shadow shows at all this frame, before any per view hiding. */
+  private shadowOn = false;
   private readonly footprint: { w: number; l: number };
 
   constructor(readonly kartId: number, kart: Kart, name: string, color: string, extras: KartExtras, scene: THREE.Object3D) {
@@ -81,7 +83,7 @@ export class KartView {
     this.flag.rotation.y = Math.sin(time * 9 + kart.id) * 0.35;
 
     const ground = track.groundAt(kart.loc.s, kart.loc.d);
-    this.shadow.visible = ground !== null && kart.y - ground < 12;
+    this.shadowOn = ground !== null && kart.y - ground < 12;
     if (ground !== null) {
       this.shadow.position.set(kart.x, ground + 0.06, kart.z);
       this.shadow.rotation.y = kart.heading;
@@ -121,7 +123,7 @@ export class KartView {
     const own = viewerKartId === this.kartId;
     this.tag.visible = !own && !this.ghost;
     this.model.setOpacity(this.ghost ? (own ? 0.4 : 0.06) : 1);
-    this.shadow.visible = this.shadow.visible && !(this.ghost && !own);
+    this.shadow.visible = this.shadowOn && !(this.ghost && !own);
     this.flag.visible = !(this.ghost && !own);
   }
 

@@ -45,7 +45,7 @@ export function PhoneScreen() {
     const place = host.place ? ordinal(host.place) : null;
     return (
       <div className="mk-phone mk-result">
-        <span className="mk-result__label">You finished</span>
+        <span className="mk-result__label">{host.finished ? "You finished" : "Race over"}</span>
         <strong className="mk-result__place">{place ?? "Home"}</strong>
         <span className="muted">Race again or pick a new map on the big screen.</span>
       </div>

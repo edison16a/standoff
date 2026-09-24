@@ -87,7 +87,7 @@ export function nameTag(name: string, hex: string): THREE.Sprite {
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, depthTest: false, transparent: true }));
-  sprite.scale.set(3.2, 0.8, 1);
+  sprite.scale.set(2.6, 0.65, 1);
   sprite.renderOrder = 10;
   return sprite;
 }

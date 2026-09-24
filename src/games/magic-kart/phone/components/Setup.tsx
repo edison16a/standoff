@@ -1,4 +1,5 @@
 "use client";
+import { lazy, Suspense } from "react";
 import { StepShell } from "@/games/kit/steps/StepShell";
 import { CHARACTERS } from "../../characters";
 import { findTrack } from "../../tracks";
@@ -6,6 +7,8 @@ import { useControllerStore } from "../controller-store";
 import { CalibrateStep } from "./CalibrateStep";
 import { KartStep } from "./KartStep";
 import { useController } from "./session-context";
+
+const Preview = lazy(() => import("./KartPreviewCanvas"));
 
 const STEPS = ["Calibrate", "Kart", "Ready"] as const;
 const INDEX = { calibrate: 0, kart: 1, ready: 2 } as const;
@@ -23,6 +26,11 @@ function ReadyStep() {
       : "Tap Ready. The map is picked on the big screen.";
   return (
     <div className="mk-ready" style={{ "--kart": character.color } as React.CSSProperties}>
+      <div className="mk-ready__stage">
+        <Suspense fallback={null}>
+          <Preview character={host.pick} />
+        </Suspense>
+      </div>
       <div className="mk-ready__card">
         <span className="mk-ready__swatch" />
         <div>
@@ -67,7 +75,7 @@ export function Setup() {
         <button type="button" className="btn btn--ghost btn--lg" disabled={ready} onClick={() => session.goTo("kart")}>
           Back
         </button>
-        <button type="button" className={`btn btn--lg kit-grow ${ready ? "" : "btn--primary"}`} disabled={!confirmed} onClick={() => session.setReady(!ready)}>
+        <button type="button" className={`btn btn--lg kit-grow ${ready ? "btn--ghost" : "btn--primary"}`} disabled={!confirmed} onClick={() => session.setReady(!ready)}>
           {ready ? "Not ready" : "Ready"}
         </button>
       </>

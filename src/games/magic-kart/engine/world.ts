@@ -172,16 +172,21 @@ export class RaceWorld {
     for (const kart of this.karts) {
       if (kart.seat !== null) continue;
       const gap = best - kart.race.progress;
-      kart.speedBias = (0.93 + (kart.id % 3) * 0.02) * (1 + Math.max(-0.1, Math.min(0.1, gap / 350)));
+      kart.speedBias = (0.96 + (kart.id % 3) * 0.015) * (1 + Math.max(-0.1, Math.min(0.12, gap / 300)));
     }
   }
 
-  /** The race ends when every player is home, or a while after the first kart finishes. */
+  /**
+   * The race ends when every kart is home, or a while after the first one
+   * finishes. Once every player is home the computers get only a short
+   * while longer, so nobody waits on them.
+   */
   private checkOver(): void {
     if (this.phase !== "racing") return;
     if (this.deadline === null && this.karts.some((k) => k.race.finished)) this.deadline = this.time + RACE.finishGrace;
     const humans = this.karts.filter((k) => k.seat !== null);
-    const allHome = humans.length > 0 ? humans.every((k) => k.race.finished) : this.karts.every((k) => k.race.finished);
+    if (humans.length > 0 && humans.every((k) => k.race.finished)) this.deadline = Math.min(this.deadline ?? Infinity, this.time + RACE.computerGrace);
+    const allHome = this.karts.every((k) => k.race.finished);
     if (allHome || (this.deadline !== null && this.time >= this.deadline)) {
       this.phase = "over";
       this.emit({ type: "raceOver" });

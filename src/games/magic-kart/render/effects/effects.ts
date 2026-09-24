@@ -52,7 +52,7 @@ export class Effects {
         for (const w of rear) {
           view.worldPoint(w.at[0], 0.05, w.at[2], at);
           this.glow.emit({ x: at.x, y: at.y + 0.1, z: at.z, vx: rand(4), vy: 2 + Math.random() * 3, vz: rand(4), life: 0.35, size: 0.28, gravity: 14, color: hot });
-          if (Math.random() < 0.5) this.smoke.emit({ x: at.x, y: at.y + 0.2, z: at.z, vy: 0.6, life: 0.9, size: 1.1, grow: 2.6, color: "#e8e8ee", alpha: 0.35 });
+          if (Math.random() < 0.35) this.smoke.emit({ x: at.x, y: at.y + 0.15, z: at.z, vy: 0.5, life: 0.6, size: 0.6, grow: 2, color: "#e8e8ee", alpha: 0.22 });
         }
       }
       if (kart.surface === "offroad" && speed > 6 && !kart.airborne && Math.random() < 0.6) {
