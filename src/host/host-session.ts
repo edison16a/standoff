@@ -1,7 +1,7 @@
 import type { StageFrame } from "@/game/frames";
 import { SocketClient } from "@/net/socket-client";
 import type { Slot } from "@/shared/players";
-import type { ClientEnvelope, HostMessage, PhoneMessage, ServerEnvelope } from "@/shared/protocol";
+import type { ClientEnvelope, PhoneMessage, ServerEnvelope } from "@/shared/protocol";
 import { clampTuning, type Tuning } from "@/shared/tuning";
 import { buildControllerState } from "./controller-state";
 import { HostAudio } from "./host-audio";
@@ -9,6 +9,7 @@ import { sameHud, useHostStore } from "./host-store";
 import { Lobby } from "./lobby";
 import { lobbyScene } from "./lobby-scene";
 import { MatchDriver } from "./match-driver";
+import { PhoneLink } from "./phone-link";
 import { forgetRoom, recallRoom, rememberRoom } from "./room-memory";
 
 /**
@@ -22,7 +23,7 @@ export class HostSession {
   private readonly audio = new HostAudio(() => this.tuning);
   driver: MatchDriver | null = null;
   private wantsRoom = false;
-  private lastState = "";
+  private readonly phones: PhoneLink;
 
   constructor() {
     this.socket = new SocketClient({
@@ -30,6 +31,7 @@ export class HostSession {
       onMessage: (message) => this.onMessage(message),
       onStatus: (status) => useHostStore.setState({ status }),
     });
+    this.phones = new PhoneLink(this.socket);
   }
 
   private get tuning(): Tuning {
@@ -76,7 +78,7 @@ export class HostSession {
     const tuning = clampTuning(next);
     useHostStore.setState({ tuning });
     this.audio.director?.applyLevels();
-    this.send("all", { kind: "tuning", tuning });
+    this.phones.send("all", { kind: "tuning", tuning });
   }
 
   /** What the stage should draw right now: the match, or the lobby line up. */
@@ -123,7 +125,7 @@ export class HostSession {
       case "peer:left":
         if (message.type === "peer:joined") this.lobby.connect(message.slot);
         else this.lobby.disconnect(message.slot);
-        if (message.type === "peer:joined") this.send(message.slot, { kind: "tuning", tuning: this.tuning });
+        if (message.type === "peer:joined") this.phones.send(message.slot, { kind: "tuning", tuning: this.tuning });
         this.onSeatsChanged();
         return;
       case "peer:message":
@@ -163,8 +165,8 @@ export class HostSession {
   private startMatch(): void {
     this.driver = new MatchDriver(this.lobby.picks, () => this.tuning, {
       director: this.audio.director,
-      feedback: (slot, event) => this.send(slot, { kind: "feedback", event }),
-      recenter: () => this.send("all", { kind: "recenter" }),
+      feedback: (slot, event) => this.phones.send(slot, { kind: "feedback", event }),
+      recenter: () => this.phones.send("all", { kind: "recenter" }),
       onPhase: () => this.broadcastState(),
     });
     useHostStore.setState({ screen: "match" });
@@ -176,7 +178,7 @@ export class HostSession {
     this.syncSeats();
     this.audio.ensure();
     this.audio.director?.onPhase("lobby");
-    this.send("all", { kind: "tuning", tuning: this.tuning });
+    this.phones.send("all", { kind: "tuning", tuning: this.tuning });
     this.broadcastState();
   }
 
@@ -184,7 +186,7 @@ export class HostSession {
   private onSeatsChanged(): void {
     this.syncSeats();
     this.driver?.engine.setConnected({ 1: this.lobby.seats[1].connected, 2: this.lobby.seats[2].connected });
-    this.lastState = "";
+    this.phones.forget();
     this.broadcastState();
   }
 
@@ -194,14 +196,6 @@ export class HostSession {
 
   /** Sends the phones their screen state, but only when it actually changed. */
   private broadcastState(): void {
-    const state = buildControllerState(this.lobby, this.driver?.engine ?? null);
-    const serialized = JSON.stringify(state);
-    if (serialized === this.lastState) return;
-    this.lastState = serialized;
-    this.send("all", state);
-  }
-
-  private send(to: Slot | "all", payload: HostMessage): void {
-    this.socket.send({ type: "host:send", to, payload });
+    this.phones.sendState(buildControllerState(this.lobby, this.driver?.engine ?? null));
   }
 }
