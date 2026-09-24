@@ -46,3 +46,41 @@
   font-size: 0.82em;
   box-shadow: 0 0 0.35em rgba(255, 255, 255, 0.35);
 }
+
+/* The score bug of a television broadcast, top left. */
+.fifa-bug {
+  position: absolute;
+  top: 4.5vh;
+  left: 3vw;
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  border-radius: 0.4em;
+  font: 800 2.6vh/1 "Arial Black", Impact, "Helvetica Neue", Arial, sans-serif;
+  color: #ffffff;
+  background: rgba(8, 12, 28, 0.86);
+  box-shadow: 0 0.3em 1em rgba(0, 0, 0, 0.45);
+}
+
+.fifa-bug > * {
+  padding: 0.45em 0.7em;
+}
+
+.fifa-bug strong {
+  white-space: pre;
+  background: #ffffff;
+  color: #0b1024;
+}
+
+.fifa-bug em {
+  font-style: normal;
+  color: #fde047;
+}
+
+.fifa-bug__team--red {
+  background: #d62839;
+}
+
+.fifa-bug__team--blue {
+  background: #1d5fd8;
+}

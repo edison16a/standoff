@@ -63,7 +63,9 @@ export class SoundDirector {
         if (this.kickoffs++ === 0) this.call("Here we go!", false);
         break;
       case "pass":
-        this.sfx.pass();
+        // A lofted ball is struck with the laces, so it sounds like a soft kick.
+        if (event.air) this.sfx.kick(0.3);
+        else this.sfx.pass();
         break;
       case "shot":
         this.sfx.kick(event.power);

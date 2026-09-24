@@ -7,7 +7,7 @@ import { useSession } from "./session-context";
 
 /**
  * The final whistle: the winners and the score, the man of the match,
- * everyone's goals, shots and tackles, the keepers' saves, and the ways
+ * everyone's goals, shots, passes and tackles, the keepers' saves, and the ways
  * back in: the same teams again, or back to pick new ones.
  */
 export function Results() {
@@ -40,6 +40,7 @@ export function Results() {
               <th scope="col">Star</th>
               <th scope="col">Goals</th>
               <th scope="col">Shots</th>
+              <th scope="col">Passes</th>
               <th scope="col">Tackles</th>
             </tr>
           </thead>
@@ -53,6 +54,7 @@ export function Results() {
                 <td>{ROSTER[r.character].short}</td>
                 <td className="fifa-results__goals">{r.goals}</td>
                 <td>{r.shots}</td>
+                <td>{r.passes}</td>
                 <td>{r.tackles}</td>
               </tr>
             ))}
