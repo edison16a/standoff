@@ -7,6 +7,14 @@ import type { CharacterId } from "@/shared/characters";
 import type { Slot } from "@/shared/players";
 import { makeBrush, readPalette } from "./palette";
 
+export interface SwordAngles {
+  pitch: number;
+  yaw: number;
+  roll: number;
+}
+
+const LEVEL: SwordAngles = { pitch: 0, yaw: 0, roll: 0 };
+
 /**
  * Draws one fencer standing in guard, for the character select cards. It
  * runs the same rig and skins as the strip, so what you pick is exactly
@@ -20,7 +28,8 @@ export class FencerPreview {
     this.ctx = canvas.getContext("2d");
   }
 
-  draw(characterId: CharacterId, slot: Slot, timeMs: number, pitch = 0): void {
+  /** `sword` is the live phone reading during calibration, level otherwise. */
+  draw(characterId: CharacterId, slot: Slot, timeMs: number, sword: SwordAngles = LEVEL): void {
     const { ctx, canvas } = this;
     if (!ctx) return;
     const dpr = window.devicePixelRatio || 1;
@@ -30,7 +39,7 @@ export class FencerPreview {
     if (canvas.height !== Math.round(height * dpr)) canvas.height = Math.round(height * dpr);
 
     const frame: FencerFrame = {
-      slot, characterId, x: 0, facing: 1, pitch, yaw: 0, roll: 0, speed: 0, action: "idle", actionMs: 0, parrying: false,
+      slot, characterId, x: 0, facing: 1, ...sword, speed: 0, action: "idle", actionMs: 0, parrying: false,
     };
     const palette = readPalette();
     const scale = height / 2.25;

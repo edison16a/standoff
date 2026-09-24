@@ -27,7 +27,7 @@ export function LobbySteps({ slot }: { slot: Slot }) {
           <span className="step__num">2</span>
           <h2>Calibrate</h2>
         </header>
-        <CalibratePanel />
+        <CalibratePanel slot={slot} />
       </section>
       <div className="ready-bar">
         {ready && !otherReady && <p className="muted">Waiting for your opponent</p>}
