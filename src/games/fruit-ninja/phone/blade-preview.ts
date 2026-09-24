@@ -16,7 +16,7 @@ interface Spark {
 }
 
 /** Seconds of path kept behind the tip. */
-const TRAIL_S = 0.3;
+const TRAIL_S = 0.42;
 
 /**
  * A little looping swipe on the phone that shows a blade style the way
@@ -35,8 +35,8 @@ export class BladePreview {
   draw(ctx: CanvasRenderingContext2D, width: number, height: number, time: number, dt: number): void {
     const look = BLADES[this.blade];
     // A figure of eight, fast in the middle and slow at the turns, like a real swipe.
-    const x = width / 2 + width * 0.38 * Math.sin(time * 2.1);
-    const y = height / 2 + height * 0.28 * Math.sin(time * 4.2 + 0.5);
+    const x = width / 2 + width * 0.38 * Math.sin(time * 2.6);
+    const y = height / 2 + height * 0.3 * Math.sin(time * 5.2 + 0.5);
     this.path.push({ x, y, t: time });
     while (this.path.length > 2 && time - this.path[0]!.t > TRAIL_S) this.path.shift();
 
