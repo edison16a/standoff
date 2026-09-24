@@ -1,21 +1,20 @@
-import { clamp, rotate, vec, wrapAngle, type Quat, type Vec3 } from "./math3d";
+import { clamp, conjugate, cross, dot, rotate, scale, sub, vec, wrapAngle, type Quat, type Vec3 } from "./math3d";
 
-/**
- * How the player holds the phone: gripped like a sword handle, top edge
- * pointing at the opponent. So the blade runs along the phone's y axis
- * and the screen's x axis tells us how the wrist is turned.
- */
-const BLADE_AXIS = vec(0, 1, 0);
-const WRIST_AXIS = vec(1, 0, 0);
-
-/** Past this elevation the heading of the blade stops meaning anything. */
+const EARTH_UP = vec(0, 0, 1);
+/** Past this elevation the swing of the blade stops meaning anything. */
 const MAX_PITCH = (80 * Math.PI) / 180;
 
-/** The resting guard pose we measure everything against. */
+/**
+ * The guard pose everything is measured against, captured while the
+ * player holds the phone the way they mean to hold their sword.
+ */
 export interface Calibration {
+  /** The phone's own direction (device frame) that was level and pointing forward. */
+  blade: Vec3;
+  /** The phone's own direction (device frame) that was straight up. */
+  up: Vec3;
+  /** Heading of forward in the earth frame, radians. */
   heading: number;
-  elevation: number;
-  roll: number;
 }
 
 /** Angles relative to the calibrated guard, in radians. */
@@ -25,47 +24,50 @@ export interface SwordPose {
   roll: number;
 }
 
-interface RawAngles {
-  heading: number;
-  elevation: number;
-  roll: number;
+/**
+ * Takes the current pose as guard, whatever the grip. People hold a phone
+ * "like a sword" in two ways: flat with the top edge forward, or upright
+ * with the back of the phone facing forward. Whichever of those two edges
+ * is closer to level is taken as pointing at the opponent, and the exact
+ * forward direction becomes the blade. So tilting the phone up raises the
+ * sword on screen, however it is held.
+ */
+export function calibrate(q: Quat): Calibration {
+  const top = rotate(q, vec(0, 1, 0));
+  const back = rotate(q, vec(0, 0, -1));
+  const pointing = Math.abs(top.z) <= Math.abs(back.z) ? top : back;
+  const heading = Math.atan2(pointing.x, pointing.y);
+  const forward = vec(Math.sin(heading), Math.cos(heading), 0);
+  const inverse = conjugate(q);
+  return { blade: rotate(inverse, forward), up: rotate(inverse, EARTH_UP), heading };
 }
 
 /**
- * Reads the blade direction straight off the orientation quaternion. This
- * is what makes the on screen sword follow the real hand: no integration,
- * no drift, just where the phone points right now.
+ * Reads the blade straight off the live orientation. This is what makes
+ * the on screen sword follow the real hand: no integration, no drift, just
+ * where the calibrated blade direction points right now.
  */
-function rawAngles(q: Quat): RawAngles {
-  const blade = rotate(q, BLADE_AXIS);
-  const wrist = rotate(q, WRIST_AXIS);
-  return {
-    heading: Math.atan2(blade.x, blade.y),
-    elevation: Math.asin(clamp(blade.z, -1, 1)),
-    // How far the wrist axis dips below level, which is the twist of the grip.
-    roll: Math.asin(clamp(-wrist.z, -1, 1)),
-  };
-}
-
-export function calibrate(q: Quat): Calibration {
-  return rawAngles(q);
-}
-
 export function swordPose(q: Quat, calibration: Calibration): SwordPose {
-  const raw = rawAngles(q);
+  const blade = rotate(q, calibration.blade);
+  const up = rotate(q, calibration.up);
   return {
-    pitch: clamp(raw.elevation - calibration.elevation, -MAX_PITCH, MAX_PITCH),
-    yaw: wrapAngle(raw.heading - calibration.heading),
-    roll: wrapAngle(raw.roll - calibration.roll),
+    pitch: clamp(Math.asin(clamp(blade.z, -1, 1)), -MAX_PITCH, MAX_PITCH),
+    yaw: wrapAngle(Math.atan2(blade.x, blade.y) - calibration.heading),
+    roll: twist(blade, up),
   };
+}
+
+/** How far the grip has turned around the blade, compared with keeping its top up. */
+function twist(blade: Vec3, up: Vec3): number {
+  const level = sub(EARTH_UP, scale(blade, dot(EARTH_UP, blade)));
+  const turned = sub(up, scale(blade, dot(up, blade)));
+  return Math.atan2(dot(cross(level, turned), blade), dot(level, turned));
 }
 
 /**
  * The strip direction in earth coordinates: level, pointing wherever the
- * blade pointed at calibration. Jabs, parries and footwork are all
- * measured along this line, so a thrust counts the same whether the tip is
- * high or low, and the player can circle the blade without it reading as
- * a step.
+ * blade pointed at calibration. Jabs and parries are measured along this
+ * line, so a thrust counts the same whether the tip is high or low.
  */
 export function stripAxis(calibration: Calibration): Vec3 {
   return vec(Math.sin(calibration.heading), Math.cos(calibration.heading), 0);

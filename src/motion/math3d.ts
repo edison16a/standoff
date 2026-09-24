@@ -35,6 +35,19 @@ export function sub(a: Vec3, b: Vec3): Vec3 {
   return { x: a.x - b.x, y: a.y - b.y, z: a.z - b.z };
 }
 
+export function cross(a: Vec3, b: Vec3): Vec3 {
+  return { x: a.y * b.z - a.z * b.y, y: a.z * b.x - a.x * b.z, z: a.x * b.y - a.y * b.x };
+}
+
+export function scale(v: Vec3, k: number): Vec3 {
+  return { x: v.x * k, y: v.y * k, z: v.z * k };
+}
+
+/** The inverse rotation, taking earth frame vectors back into the device frame. */
+export function conjugate(q: Quat): Quat {
+  return { w: q.w, x: -q.x, y: -q.y, z: -q.z };
+}
+
 /**
  * Builds the device to earth rotation from a `deviceorientation` event.
  * The spec defines alpha, beta and gamma as intrinsic Z, X', Y'' turns,
