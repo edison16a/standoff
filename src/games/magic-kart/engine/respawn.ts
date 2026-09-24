@@ -31,6 +31,8 @@ export function respawn(kart: Kart, track: Track, spot: { s: number; d: number }
   kart.airTime = 0;
   kart.drift = 0;
   kart.driftTime = 0;
+  kart.flatOut = 0;
+  kart.surge = 0;
   kart.spin = 0;
   kart.timers.stun = 0;
   kart.timers.grace = EFFECTS.respawnGrace;

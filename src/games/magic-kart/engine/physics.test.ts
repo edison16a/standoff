@@ -15,7 +15,7 @@ const run = (seconds: number, fn: () => void) => {
 function followRoad(kart: Kart, road: Track): number {
   const f = road.frameAt(kart.loc.s + 6);
   const diff = Math.atan2(Math.sin(Math.atan2(f.tx, f.tz) - kart.heading), Math.cos(Math.atan2(f.tx, f.tz) - kart.heading));
-  return Math.max(-1, Math.min(1, -diff * 2.5 + kart.loc.d * 0.08));
+  return Math.max(-1, Math.min(1, -diff * 2.5 - kart.loc.d * 0.08));
 }
 
 describe("driving", () => {
@@ -86,10 +86,11 @@ describe("driving", () => {
 
 describe("jumps", () => {
   it("launches off a ramp lip, flies over the gap and lands", () => {
-    const jump = new Track({ ...OVAL, ramps: [{ at: 0.08, length: 12, height: 2.2 }], gaps: [{ at: 0.08, length: 10 }] });
+    // Well down the first straight, so the kart reaches the lip near full speed.
+    const jump = new Track({ ...OVAL, ramps: [{ at: 0.2, length: 12, height: 2.2 }], gaps: [{ at: 0.2, length: 10 }] });
     const kart = createKart(0, "blaze", 1, jump, 1, 0);
     const events: RaceEvent[] = [];
-    run(5, () => driveKart(kart, { steer: kart.airborne ? 0 : followRoad(kart, jump), throttle: true, brake: false }, jump, STEP, (e) => events.push(e)));
+    run(11, () => driveKart(kart, { steer: kart.airborne ? 0 : followRoad(kart, jump), throttle: true, brake: false }, jump, STEP, (e) => events.push(e)));
     expect(events.some((e) => e.type === "jump")).toBe(true);
     expect(events.some((e) => e.type === "land")).toBe(true);
     expect(kart.airborne).toBe(false);
