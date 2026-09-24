@@ -1,8 +1,11 @@
 import type { GameInfo, GameModule } from "@/platform/games/game-api";
 import { info as boxing } from "./boxing/info";
+import { info as cubeGame } from "./cube-game/info";
 import { info as fencing } from "./fencing/info";
+import { info as fifa3v3 } from "./fifa-3v3/info";
 import { info as fruitNinja } from "./fruit-ninja/info";
 import { info as magicKart } from "./magic-kart/info";
+import { info as nba3v3 } from "./nba-3v3/info";
 import { info as shootingGallery } from "./shooting-gallery/info";
 import { info as subwaySurfers } from "./subway-surfers/info";
 import { info as zombieSurvival } from "./zombie-survival/info";
@@ -12,7 +15,18 @@ import { info as zombieSurvival } from "./zombie-survival/info";
  * game's own folder are all a new game touches: add its info here, and
  * its loader below once it can be played.
  */
-export const GAMES: readonly GameInfo[] = [magicKart, fruitNinja, zombieSurvival, shootingGallery, boxing, subwaySurfers, fencing];
+export const GAMES: readonly GameInfo[] = [
+  magicKart,
+  fruitNinja,
+  zombieSurvival,
+  shootingGallery,
+  boxing,
+  subwaySurfers,
+  nba3v3,
+  fifa3v3,
+  cubeGame,
+  fencing,
+];
 
 /**
  * Loaded only when a room for that game opens, so the home screen never

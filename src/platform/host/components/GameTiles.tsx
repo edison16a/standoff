@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import type { GameInfo } from "@/platform/games/game-api";
 
 interface GameTilesProps {
@@ -18,6 +18,11 @@ interface GameTilesProps {
  */
 export function GameTiles({ games, selected, onSelect, onHost }: GameTilesProps) {
   const rowRef = useRef<HTMLDivElement>(null);
+
+  // Where the row scrolls, on a narrow screen, the chosen tile is kept in view.
+  useEffect(() => {
+    rowRef.current?.querySelectorAll<HTMLElement>(".game-tile")[selected]?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [selected]);
 
   // Arrow keys on a focused tile move focus with the choice, so keyboard users stay on the row.
   const onKeyDown = (event: React.KeyboardEvent) => {

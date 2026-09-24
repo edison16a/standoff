@@ -16,7 +16,7 @@ The platform (`src/platform`) runs the room, the same way for every game:
 
 A folder with:
 
-* `info.ts`: the title, tagline, status (`ready` or `development`), the player counts it supports (any of 1, 2 and 4), its colour, `input: "camera"` if it is played in front of the computer's camera instead of with phones, and its `media`.
+* `info.ts`: the title, tagline, status (`ready` or `development`), the player counts it supports (1 to 6), its colour, `input: "camera"` if it is played in front of the computer's camera instead of with phones, and its `media`.
 * `Cover.tsx`: art drawn in code, the fallback until the game has captured media.
 * `media/icon.jpg`, `media/poster.jpg` and `public/games/<id>/backdrop.webm` plus `.mp4`: the home screen's tile, still and looping clip, captured from the real game (see below).
 * `index.tsx`, once playable: a `GameModule` (see `src/platform/games/game-api.ts`).

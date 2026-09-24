@@ -97,7 +97,8 @@ export function Home() {
           )}
         </div>
       )}
-      <main className="home__main">
+      {/* The tile size is worked out from how many games there are, see home.css. */}
+      <main className="home__main" style={{ "--count": GAMES.length } as React.CSSProperties}>
         <GameTiles games={GAMES} selected={selected} onSelect={choose} onHost={() => void play()} />
         <GameDetails game={game} canPlay={canPlay} starting={starting} onHost={() => void play()} />
       </main>
