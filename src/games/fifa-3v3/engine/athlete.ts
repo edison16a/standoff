@@ -120,10 +120,12 @@ export function carryBall(a: Athlete, ball: Ball, dt: number): void {
   const k = 1 - Math.exp(-dt * 20);
   const nx = ball.pos.x + (tx - ball.pos.x) * k;
   const nz = ball.pos.z + (tz - ball.pos.z) * k;
-  ball.vel.x = (nx - ball.pos.x) / dt;
+  // The ball stops on the goal line: a goal has to be shot, never walked in.
+  const cx = clamp(nx, -PITCH.halfLength + BALL.radius + 0.05, PITCH.halfLength - BALL.radius - 0.05);
+  ball.vel.x = (cx - ball.pos.x) / dt;
   ball.vel.y = 0;
   ball.vel.z = (nz - ball.pos.z) / dt;
-  ball.pos.x = nx;
+  ball.pos.x = cx;
   ball.pos.y = BALL.radius;
   ball.pos.z = nz;
   ball.spin.x = ball.spin.y = ball.spin.z = 0;
