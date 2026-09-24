@@ -119,7 +119,11 @@ export class GameRenderer {
     const world = this.world;
     const stage = this.stage;
     if (!world || !stage) return;
-    const dt = Math.min(0.05, this.last ? (nowMs - this.last) / 1000 : 0.016);
+    const frameS = this.last ? (nowMs - this.last) / 1000 : 0.016;
+    const dt = Math.min(0.05, frameS);
+    // The cameras smooth over the real frame time (up to the race's own catch up of a quarter
+    // second), so on a slow machine they keep up with the kart instead of trailing it.
+    const cameraDt = Math.min(0.25, frameS);
     this.last = nowMs;
     const time = nowMs / 1000;
     for (const kart of world.karts) this.karts.get(kart.id)?.update(kart, world.track, dt, time);
@@ -149,11 +153,11 @@ export class GameRenderer {
       if (view.kartId !== null && kart) {
         const chase = this.chase[i]!;
         chase.setAspect(w / h);
-        chase.follow(kart, dt, this.snap.has(kart.id));
+        chase.follow(kart, cameraDt, this.snap.has(kart.id));
         camera = chase.camera;
       } else {
         this.show.setAspect(w / h);
-        if (kart) this.show.follow(kart, time, dt);
+        if (kart) this.show.follow(kart, time, cameraDt);
         camera = this.show.camera;
       }
       for (const kv of this.karts.values()) kv.setViewer(view.kartId);

@@ -36,10 +36,12 @@ export class Lobby {
     }
   }
 
+  /**
+   * Ready is kept: only connected seats count as ready, and a phone that
+   * blips or reloads mid race should still be on the grid for Race again.
+   */
   disconnect(seat: number): void {
-    const state = this.state(seat);
-    state.connected = false;
-    state.ready = false;
+    this.state(seat).connected = false;
   }
 
   /** Refused (false) when another player already has that driver. */

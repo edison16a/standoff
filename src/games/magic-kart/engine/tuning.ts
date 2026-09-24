@@ -49,6 +49,8 @@ export const EFFECTS = {
   shield: 10,
   /** After a respawn nothing can hit you for this long. */
   respawnGrace: 1.8,
+  /** After a spin out ends nothing can hit you for this long, so hits never chain. */
+  afterSpin: 1,
   /** Seconds the item roulette spins before the item can be used. */
   roulette: 1.3,
 };

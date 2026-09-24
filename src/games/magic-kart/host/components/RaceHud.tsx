@@ -14,9 +14,9 @@ export function RaceHud() {
   const countdown = useKartStore((state) => state.countdown);
   const laps = useKartStore((state) => state.laps);
   const rects = splitScreen(views.length);
-  // Where the overview goes: the spare quadrant with three players, else
-  // top centre between the views, over sky and clear of every view's corners.
-  const place = views.length === 3 ? "quad" : views.length >= 2 ? "top" : "corner";
+  // The overview always sits top right: in the spare quadrant with three
+  // players, as a compact card over split views, roomy over a single view.
+  const place = views.length === 3 ? "quad" : views.length >= 2 ? "compact" : "corner";
 
   return (
     <div className="mk-hud">

@@ -22,6 +22,7 @@ export class SoundDirector {
   private humsFor: RaceWorld | null = null;
   private finalLapPlayed = false;
   private phase: Phase = "lobby";
+  private lobbyTune: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private readonly engine: AudioEngine) {
     this.sfx = new Sfx(engine);
@@ -31,6 +32,7 @@ export class SoundDirector {
 
   setPhase(phase: Phase, map: TrackId): void {
     this.phase = phase;
+    this.clearLobbyTune();
     switch (phase) {
       case "lobby":
         this.stopHums();
@@ -48,8 +50,9 @@ export class SoundDirector {
         this.music.play(null);
         this.music.fanfare();
         this.engine.holdDuck("sfx", 0.35);
-        setTimeout(() => {
-          if (this.phase === "results") this.music.play("lobby");
+        this.lobbyTune = setTimeout(() => {
+          this.lobbyTune = null;
+          this.music.play("lobby");
         }, 3500);
         return;
     }
@@ -121,9 +124,16 @@ export class SoundDirector {
     }
   }
 
+  /** Leaving the game: silence everything, and the tune queued for after the fanfare never starts. */
   stop(): void {
+    this.clearLobbyTune();
     this.stopHums();
     this.music.stop();
+  }
+
+  private clearLobbyTune(): void {
+    if (this.lobbyTune) clearTimeout(this.lobbyTune);
+    this.lobbyTune = null;
   }
 
   private stopHums(): void {

@@ -1,20 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
-import { ITEM_KINDS, ITEM_NAMES } from "../../engine/items";
+import { ITEM_NAMES } from "../../engine/items";
 import type { ViewRect } from "../../render/layout";
-import { ItemIcon } from "../../ui/icons";
+import { CubeGlyph, ItemIcon } from "../../ui/icons";
+import { Roulette } from "../../ui/Roulette";
 import { ordinal } from "../../ui/format";
 import type { ViewHud as Hud } from "../host-store";
-
-/** Cycles through every item while the roulette spins. */
-function Roulette() {
-  const [i, setI] = useState(0);
-  useEffect(() => {
-    const timer = setInterval(() => setI((n) => (n + 1) % ITEM_KINDS.length), 90);
-    return () => clearInterval(timer);
-  }, []);
-  return <ItemIcon item={ITEM_KINDS[i]!} />;
-}
 
 /**
  * The overlay on one player's view: their name tag, place and lap in the
@@ -36,8 +26,13 @@ export function ViewHud({ hud, rect, countdown, laps }: { hud: Hud; rect: ViewRe
       <div className="mk-view__lap">
         Lap <strong>{hud.lap}</strong>/{laps}
       </div>
-      <div className={`mk-view__item ${hud.item ? "mk-view__item--full" : ""}`} title={hud.item ? ITEM_NAMES[hud.item] : "No power up"}>
-        {hud.item && (hud.rolling ? <Roulette /> : <ItemIcon item={hud.item} />)}
+      <div
+        key={hud.item ?? "empty"}
+        className={`mk-view__item ${hud.item ? "mk-view__item--full" : ""} ${hud.rolling ? "mk-view__item--rolling" : ""}`}
+        title={hud.item ? ITEM_NAMES[hud.item] : "No power up"}
+      >
+        {hud.item ? hud.rolling ? <Roulette /> : <ItemIcon item={hud.item} /> : <CubeGlyph />}
+        {hud.item && !hud.rolling && <span className="mk-view__item-name">{ITEM_NAMES[hud.item]}</span>}
       </div>
       {countdown !== null && (
         <div key={countdown} className={`mk-view__count ${countdown === 0 ? "mk-view__count--go" : ""}`}>

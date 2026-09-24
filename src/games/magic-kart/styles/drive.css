@@ -21,7 +21,7 @@
 .mk-pad__left {
   display: grid;
   grid-template-rows: auto 1fr;
-  gap: 10px;
+  gap: 18px;
   min-height: 0;
 }
 
@@ -89,8 +89,8 @@
   color: #ffffff;
 }
 
-.mk-ability--rolling .mk-icon {
-  animation: mk-spin 300ms linear infinite;
+.mk-ability--rolling {
+  animation: mk-roll-pulse 260ms ease-in-out infinite alternate;
 }
 
 .mk-ability--live {
@@ -101,23 +101,43 @@
   opacity: 1;
 }
 
-.mk-ability__empty {
-  font-size: 40px;
-  font-weight: 900;
+.mk-ability .mk-icon {
+  width: 100%;
+  height: 100%;
 }
 
+.mk-icon--cube {
+  opacity: 0.7;
+}
+
+/* A badge on the bottom of the ring, so the name never spills onto Brake. */
 .mk-ability__label {
   position: absolute;
-  bottom: -22px;
-  color: var(--text);
+  bottom: -11px;
+  left: 50%;
+  max-width: 150px;
+  padding: 3px 10px;
+  overflow: hidden;
+  transform: translateX(-50%);
+  border: 2px solid var(--border-strong);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text-muted);
   font-size: 12px;
   font-weight: 800;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-@keyframes mk-spin {
+.mk-ability--full .mk-ability__label {
+  border-color: #ffc53a;
+  background: #ffc53a;
+  color: #2a1a00;
+}
+
+@keyframes mk-roll-pulse {
   to {
-    transform: rotate(360deg);
+    transform: scale(1.06);
   }
 }
 

@@ -87,28 +87,77 @@
   paint-order: stroke fill;
 }
 
+/* The held item slot. Empty it is a faint outline; full it lights up. */
 .mk-view__item {
   position: absolute;
   top: 14px;
   left: 50%;
   display: grid;
   place-items: center;
-  width: 76px;
-  height: 76px;
-  margin-left: -38px;
-  border: 4px solid rgba(255, 255, 255, 0.85);
+  width: 58px;
+  height: 58px;
+  transform: translateX(-50%);
+  border: 3px dashed rgba(255, 255, 255, 0.4);
   border-radius: 50%;
-  background: rgba(16, 12, 38, 0.55);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
-}
-
-.mk-view__item--full {
-  border-color: #ffe14d;
+  background: rgba(16, 12, 38, 0.28);
+  color: rgba(255, 255, 255, 0.55);
+  transition: width 160ms ease, height 160ms ease;
 }
 
 .mk-view__item .mk-icon {
-  width: 52px;
-  height: 52px;
+  width: 60%;
+  height: 60%;
+}
+
+.mk-view__item--full {
+  width: 84px;
+  height: 84px;
+  border: 4px solid #ffe14d;
+  background: radial-gradient(circle at 50% 35%, #4a3890, #1a1236 72%);
+  box-shadow: 0 0 0 4px rgba(255, 225, 77, 0.25), 0 8px 24px rgba(0, 0, 0, 0.45);
+  animation: mk-slot-in 360ms cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+.mk-view__item--full .mk-icon {
+  width: 64%;
+  height: 64%;
+}
+
+.mk-view__item--rolling {
+  animation: mk-slot-roll 240ms ease-in-out infinite alternate;
+}
+
+.mk-view__item-name {
+  position: absolute;
+  bottom: -12px;
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: #ffe14d;
+  color: #2a1a00;
+  font-size: 12px;
+  font-weight: 900;
+  text-shadow: none;
+  white-space: nowrap;
+}
+
+@keyframes mk-slot-in {
+  from {
+    transform: translateX(-50%) scale(0.4);
+  }
+  to {
+    transform: translateX(-50%) scale(1);
+  }
+}
+
+@keyframes mk-slot-roll {
+  from {
+    transform: translateX(-50%) scale(1);
+    box-shadow: 0 0 0 4px rgba(255, 225, 77, 0.2), 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+  to {
+    transform: translateX(-50%) scale(1.07);
+    box-shadow: 0 0 0 10px rgba(255, 225, 77, 0.35), 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
 }
 
 .mk-view__count,
@@ -177,6 +226,11 @@
   }
 }
 
+/*
+  The overall map and the standings, always at the top right under the
+  tool bar. Alone it has room to be roomy; over split views it shrinks to
+  a compact card so it covers only a corner of sky.
+*/
 .mk-overview {
   position: absolute;
   top: 64px;
@@ -191,43 +245,59 @@
   border-radius: 18px;
 }
 
-/* Between split views the overview is kept small: map, places and names only. */
-.mk-overview--top {
-  top: 12px;
-  right: auto;
-  left: 50%;
-  width: 180px;
-  transform: translateX(-50%);
+.mk-overview--compact {
+  top: 62px;
+  right: 12px;
+  width: 184px;
   gap: 4px;
   padding: 6px;
-  background: rgba(16, 12, 38, 0.55);
+  border-radius: 14px;
+  background: rgba(16, 12, 38, 0.58);
 }
 
-.mk-overview--top .mk-standings__lap {
-  display: none;
+.mk-overview--compact .mk-minimap {
+  aspect-ratio: 4 / 3;
 }
 
-.mk-overview--top .mk-standings__row {
+.mk-overview--compact .mk-standings {
+  gap: 2px;
+}
+
+.mk-overview--compact .mk-standings__row {
+  grid-template-columns: 16px 8px 1fr auto;
+  gap: 6px;
   padding: 2px 8px;
+  border-radius: 7px;
   font-size: 12px;
 }
 
-.mk-overview--top .mk-standings__place {
-  font-size: 14px;
+.mk-overview--compact .mk-standings__place {
+  font-size: 13px;
 }
 
+.mk-overview--compact .mk-standings__chip {
+  width: 8px;
+  height: 8px;
+}
+
+.mk-overview--compact .mk-standings__lap {
+  font-size: 11px;
+}
+
+/* Three players leave the top right quadrant free, and the overview fills it. */
 .mk-overview--quad {
-  top: calc(50% + 2px);
+  top: 0;
   right: 0;
-  bottom: 0;
+  bottom: calc(50% + 2px);
   width: calc(50% - 2px);
   flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: 24px;
-  padding: 24px;
+  padding: 64px 24px 24px;
+  border: none;
   border-radius: 0;
-  background: rgba(13, 11, 30, 0.92);
+  background: radial-gradient(circle at 30% 40%, rgba(60, 40, 120, 0.9), rgba(13, 11, 30, 0.96));
 }
 
 .mk-minimap {
@@ -237,6 +307,8 @@
 
 .mk-overview--quad .mk-minimap {
   width: min(48%, 420px);
+  height: 100%;
+  aspect-ratio: auto;
 }
 
 .mk-standings {

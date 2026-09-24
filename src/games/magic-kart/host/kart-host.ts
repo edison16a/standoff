@@ -92,7 +92,8 @@ export class KartHost {
 
   /** Starts a race on the chosen map with every ready player. */
   startRace(): void {
-    if (this.lobby.readySeats.length === 0) return;
+    // From the lobby or the results only, and never with nobody to race.
+    if (this.phase === "countdown" || this.phase === "racing" || this.lobby.readySeats.length === 0) return;
     const { mapId, computers } = store.getState();
     this.unlistenRace?.();
     this.driver = new RaceDriver(findTrack(mapId), this.lobby.entrants(computers));

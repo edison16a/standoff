@@ -69,3 +69,15 @@ export function screenAngle(): number {
   if (wide && (reported === 0 || reported === 180)) return 90;
   return reported;
 }
+
+/**
+ * The calibrated resting roll, for the way the page is turned now. Roll is
+ * read along the screen's own left to right, so a phone flipped end over
+ * end (landscape the other way) sees the same resting pose with the sign
+ * reversed. Without this, flipping the phone after calibrating would pull
+ * the kart to one side.
+ */
+export function zeroFor(zero: number, calibratedAngle: number, angle: number): number {
+  const turn = (((Math.round((angle - calibratedAngle) / 90) * 90) % 360) + 360) % 360;
+  return turn === 180 ? -zero : turn === 0 ? zero : 0;
+}

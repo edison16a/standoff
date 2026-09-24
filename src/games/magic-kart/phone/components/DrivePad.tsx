@@ -5,7 +5,8 @@ import { ITEM_NAMES } from "../../engine/items";
 import type { PhoneState } from "../../protocol";
 import { useControllerStore } from "../controller-store";
 import { HoldButton } from "./HoldButton";
-import { BrakeIcon, DriveIcon, ItemIcon } from "../../ui/icons";
+import { BrakeIcon, CubeGlyph, DriveIcon, ItemIcon } from "../../ui/icons";
+import { Roulette } from "../../ui/Roulette";
 import { useController } from "./session-context";
 import { SteerGauge } from "./SteerGauge";
 
@@ -24,8 +25,8 @@ function AbilityButton({ host }: { host: PhoneState }) {
       aria-label={item ? `Use ${ITEM_NAMES[item]}` : "No power up"}
       onPointerDown={() => live && session.useItem()}
     >
-      {item ? <ItemIcon item={item} /> : <span className="mk-ability__empty">?</span>}
-      <span className="mk-ability__label">{item ? (host.rolling ? "..." : ITEM_NAMES[item]) : "Get a cube"}</span>
+      {item ? host.rolling ? <Roulette /> : <ItemIcon item={item} /> : <CubeGlyph />}
+      {!host.rolling && <span className="mk-ability__label">{item ? ITEM_NAMES[item] : "Get a cube"}</span>}
     </button>
   );
 }

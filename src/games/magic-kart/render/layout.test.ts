@@ -15,4 +15,9 @@ describe("splitScreen", () => {
       expect(area).toBeLessThanOrEqual(1);
     }
   });
+
+  it("leaves the top right quadrant free for the map with three players", () => {
+    const rects = splitScreen(3);
+    expect(rects.some((r) => r.x >= 0.5 && r.y < 0.5)).toBe(false);
+  });
 });

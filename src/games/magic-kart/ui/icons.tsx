@@ -33,6 +33,17 @@ export function WheelIcon() {
   );
 }
 
+/** An empty item slot: the outline of a power up cube with a question mark. */
+export function CubeGlyph() {
+  return (
+    <svg viewBox="0 0 48 48" className="mk-icon mk-icon--cube" aria-hidden="true">
+      <path d="M24 5 41 14.5v19L24 43 7 33.5v-19z" fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" opacity="0.55" />
+      <path d="M19 19.5a5 5 0 1 1 7 4.6c-1.3.6-2 1.5-2 2.9v1.5" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" />
+      <circle cx="24" cy="33.5" r="2.1" fill="currentColor" />
+    </svg>
+  );
+}
+
 const STAR = "M24 4l5.9 12.6 13.6 1.6-10 9.3 2.6 13.5L24 34.3 11.9 41l2.6-13.5-10-9.3 13.6-1.6z";
 
 export function ItemIcon({ item }: { item: ItemKind }) {
