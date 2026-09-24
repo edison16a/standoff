@@ -1,5 +1,5 @@
 "use client";
-import { useCallback } from "react";
+import { useCallback, type CSSProperties } from "react";
 import type { PhoneState } from "../../protocol";
 import { BrakeIcon, DriveIcon } from "../../ui/icons";
 import { ordinal } from "../../ui/format";
@@ -52,22 +52,26 @@ function Status({ host }: { host: PhoneState }) {
 /**
  * The phone while racing, held sideways like a steering wheel. The left
  * thumb has Brake at the edge and the power up just inside it, the right
- * thumb has Drive, and the middle shows the place and the lap.
+ * thumb has Drive, and the middle shows the place and the lap. Drive
+ * fills as holding it builds extra pace, and Brake turns into Drift and
+ * glows the colour of the sparks while the kart slides.
  */
 export function DrivePad({ host }: { host: PhoneState }) {
   const session = useController();
   const drive = useCallback((held: boolean) => session.setPedals({ drive: held }), [session]);
   const brake = useCallback((held: boolean) => session.setPedals({ brake: held }), [session]);
+  const drifting = host.drift !== null && host.phase === "racing";
 
   return (
     <div className={`mk-pad ${host.effect ? `mk-pad--${host.effect}` : ""}`}>
-      <HoldButton className="mk-pedal mk-pedal--brake" label="Brake" onHold={brake}>
+      <HoldButton className={`mk-pedal mk-pedal--brake ${drifting ? `mk-pedal--drift mk-spark-${host.drift}` : ""}`} label="Brake" onHold={brake}>
         <BrakeIcon />
-        <span className="mk-pedal__label">Brake</span>
+        <span className="mk-pedal__label">{drifting ? "Drift" : "Brake"}</span>
       </HoldButton>
       <PowerButton host={host} />
       <Status host={host} />
-      <HoldButton className="mk-pedal mk-pedal--drive" label="Drive" onHold={drive}>
+      <HoldButton className={`mk-pedal mk-pedal--drive ${host.surge >= 1 ? "mk-pedal--max" : ""}`} label="Drive" onHold={drive}>
+        <span className="mk-pedal__surge" style={{ "--surge": host.surge } as CSSProperties} aria-hidden="true" />
         <DriveIcon />
         <span className="mk-pedal__label">Drive</span>
       </HoldButton>

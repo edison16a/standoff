@@ -1,0 +1,53 @@
+/*
+  The phone's pedals showing the drive model: Drive fills as the surge
+  builds, and Brake glows the spark colour while the kart drifts.
+*/
+
+/* Drive fills from the bottom as holding it builds extra pace, and shimmers once it is all there. */
+.mk-pedal__surge {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(210, 255, 236, 0.5), rgba(210, 255, 236, 0.12));
+  transform: scaleY(var(--surge, 0));
+  transform-origin: bottom;
+  transition: transform 180ms ease-out;
+  pointer-events: none;
+}
+
+.mk-pedal .mk-icon,
+.mk-pedal__label {
+  position: relative;
+}
+
+.mk-pedal--max {
+  animation: mk-max 700ms ease-in-out infinite alternate;
+}
+
+@keyframes mk-max {
+  to {
+    filter: brightness(1.22) saturate(1.15);
+  }
+}
+
+/* Brake becomes Drift while sliding, ringed in the colour the sparks are. */
+.mk-pedal--drift {
+  --spark: #fff3b0;
+  box-shadow: 0 0 0 4px var(--spark), 0 0 36px var(--spark), inset 0 -4px 0 rgba(0, 0, 0, 0.2);
+  transition: box-shadow 120ms ease;
+}
+
+.mk-pedal--drift.is-held {
+  box-shadow: 0 0 0 4px var(--spark), 0 0 44px var(--spark);
+}
+
+.mk-spark-1 {
+  --spark: #39b8ff;
+}
+
+.mk-spark-2 {
+  --spark: #ff8a1f;
+}
+
+.mk-spark-3 {
+  --spark: #c56bff;
+}

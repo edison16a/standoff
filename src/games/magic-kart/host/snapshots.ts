@@ -1,6 +1,7 @@
 import { playerColor } from "@/games/kit/players";
 import { CHARACTERS } from "../characters";
 import type { Kart } from "../engine/kart";
+import { driftTier } from "../engine/drive";
 import { currentLap } from "../engine/race";
 import { RACE } from "../engine/tuning";
 import type { RaceWorld } from "../engine/world";
@@ -92,5 +93,8 @@ export function buildPhoneState(c: PhoneContext): PhoneState {
     wrongWay: kart?.race.wrongWay ?? false,
     finished: kart?.race.finished ?? false,
     effect: kart ? effectOf(kart) : null,
+    // Rounded, so the surge's slow climb is a handful of messages rather than one a frame.
+    surge: kart ? Math.round(kart.surge * 10) / 10 : 0,
+    drift: kart && kart.drift !== 0 ? driftTier(kart.driftTime) : null,
   };
 }

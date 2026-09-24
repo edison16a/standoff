@@ -38,6 +38,10 @@ export const phoneStateSchema = z.object({
   wrongWay: z.boolean(),
   finished: z.boolean(),
   effect: z.enum(EFFECT_KINDS).nullable(),
+  /** How much extra pace holding Drive has built, 0 to 1, in tenths. */
+  surge: z.number().min(0).max(1),
+  /** The drift's spark colour, 0 fresh to 3 purple, or null when not drifting. */
+  drift: z.number().int().min(0).max(3).nullable(),
 });
 
 export const BUZZ_KINDS = ["hit", "pickup", "boost", "lap", "bump", "finish"] as const;

@@ -14,6 +14,7 @@ import "./styles/results.css";
 import "./styles/phone.css";
 import "./styles/pick.css";
 import "./styles/drive.css";
+import "./styles/pedal-states.css";
 import "./styles/power.css";
 
 // The showcase brings three.js and every map with it, so it loads only on the capture page, never on a phone.
