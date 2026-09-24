@@ -26,18 +26,26 @@ const FOV = 36;
 /** How far behind the flight plane the board lies. The gap is what throws the shadows aside, as on the cover. */
 export const BOARD_DEPTH = 3.2;
 const BOARD_SIZE = { w: 34, h: 13.5 };
+/**
+ * Only light brighter than white glows: blades, sparks, fire and the rare
+ * fruit, which shine on their own. Sunlit peel stays crisp, so a lemon
+ * never glows like a rare fruit.
+ */
+const BLOOM_THRESHOLD = 1.6;
 
 /**
- * Quality steps, best first. A machine that cannot keep up gives up the
- * bloom first, then resolution and shadow detail, which the eye misses
- * least on a busy screen.
+ * Quality steps, best first. A machine that cannot keep up gives up a
+ * little resolution and shadow detail first, which the eye misses least
+ * on a busy screen, and the glow only after that, since the blades and
+ * rare fruit lose the most without it. It never drops below half
+ * resolution: past that the picture turns to blocks.
  */
 const QUALITY = [
   { bloom: true, scale: 1, shadow: 2048 },
-  { bloom: false, scale: 1, shadow: 2048 },
-  { bloom: false, scale: 0.75, shadow: 1024 },
-  { bloom: false, scale: 0.55, shadow: 1024 },
-  { bloom: false, scale: 0.4, shadow: 512 },
+  { bloom: true, scale: 0.8, shadow: 2048 },
+  { bloom: true, scale: 0.67, shadow: 1024 },
+  { bloom: false, scale: 0.67, shadow: 1024 },
+  { bloom: false, scale: 0.5, shadow: 1024 },
 ] as const;
 
 /**
@@ -57,8 +65,6 @@ export class Stage {
   private readonly key: DirectionalLight;
   /** Half the width of the flight plane in world units. */
   halfWidth = HALF_HEIGHT * (16 / 9);
-  /** Device pixels per world unit at the flight plane's distance, for sizing point sprites. */
-  pointScale = 100;
   private quality = 0;
   private size = { width: 1, height: 1, dpr: 1 };
 
@@ -109,7 +115,7 @@ export class Stage {
 
     this.composer = new EffectComposer(this.renderer);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
-    this.bloom = new UnrealBloomPass(new Vector2(512, 512), 0.7, 0.4, 1.0);
+    this.bloom = new UnrealBloomPass(new Vector2(512, 512), 0.75, 0.45, BLOOM_THRESHOLD);
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());
   }
@@ -126,13 +132,26 @@ export class Stage {
     this.camera.aspect = width / Math.max(1, height);
     this.camera.updateProjectionMatrix();
     this.halfWidth = HALF_HEIGHT * this.camera.aspect;
-    this.pointScale = (height * ratio) / (2 * HALF_HEIGHT);
   }
 
   /** Steps down one quality level. Returns false when already at the lowest. */
   lowerQuality(): boolean {
-    if (this.quality >= QUALITY.length - 1) return false;
-    this.quality += 1;
+    return this.setQuality(this.quality + 1);
+  }
+
+  /** Steps back up one level. Returns false when already at the best. */
+  raiseQuality(): boolean {
+    return this.setQuality(this.quality - 1);
+  }
+
+  /** The current step, 0 at best. */
+  get qualityLevel(): number {
+    return this.quality;
+  }
+
+  private setQuality(level: number): boolean {
+    if (level < 0 || level >= QUALITY.length || level === this.quality) return false;
+    this.quality = level;
     const shadow = QUALITY[this.quality]!.shadow;
     if (this.key.shadow.mapSize.x !== shadow) {
       this.key.shadow.mapSize.set(shadow, shadow);
@@ -145,13 +164,20 @@ export class Stage {
 
   render(): void {
     if (QUALITY[this.quality]!.bloom) this.composer.render();
-    else {
-      this.renderer.toneMapping = ACESFilmicToneMapping;
-      this.renderer.render(this.scene, this.camera);
-    }
+    else this.renderer.render(this.scene, this.camera);
   }
 
   dispose(): void {
+    // Whatever is still in the scene goes too: the board, and anything the renderer left behind.
+    this.scene.traverse((object) => {
+      const mesh = object as Mesh;
+      if (!mesh.isMesh) return;
+      mesh.geometry.dispose();
+      for (const material of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) material.dispose();
+    });
+    this.key.shadow.dispose();
+    this.scene.environment?.dispose();
+    this.bloom.dispose();
     this.composer.dispose();
     this.renderer.dispose();
     // Browsers allow only a few live WebGL contexts, so give this one back now rather than on garbage collection.

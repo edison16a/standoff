@@ -68,6 +68,19 @@ describe("what the screens are told", () => {
     expect(late).toMatchObject({ inRound: false, score: 0 });
   });
 
+  it("never hands a round's score to someone new who takes the seat mid round", () => {
+    const match = playing([1, 2]);
+    match.scores.set(2, 90);
+    match.setActive(2, false);
+    match.retire(2);
+    // The newcomer says ready, but stays out until the next round.
+    match.setActive(2, true);
+    expect(match.isActive(2)).toBe(false);
+    const hud = roundHud(match, name);
+    expect(hud.standings.find((row) => row.seat === 2)).toMatchObject({ score: 90, active: false });
+    expect(phoneState(2, hud, match)).toMatchObject({ inRound: false, score: 0 });
+  });
+
   it("buzzes the cutter, with a special buzz for rare fruit and combos", () => {
     expect(buzzFor({ type: "slice", seat: 2, body: body("apple"), dir: { x: 1, y: 0 }, at: { x: 0, y: 0 } })).toEqual({ seat: 2, buzz: "slice" });
     expect(buzzFor({ type: "slice", seat: 1, body: body("dragonfruit"), dir: { x: 1, y: 0 }, at: { x: 0, y: 0 } })).toEqual({ seat: 1, buzz: "rare" });

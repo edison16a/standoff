@@ -46,7 +46,7 @@ export function citrusSkin(base: string, shadow: string, seed: number): Skin {
 }
 
 /** Apple skin: a blush over the base, fine vertical streaks and pale pores. */
-export function appleSkin(base: string, blush: string, streak: string, seed: number): Skin {
+export function appleSkin(base: string, blush: string, streak: string, seed: number, streakiness = 0.55): Skin {
   const color = canvas(W, H);
   const b = hex(base);
   const bl = hex(blush);
@@ -56,7 +56,7 @@ export function appleSkin(base: string, blush: string, streak: string, seed: num
     const side = fbm(u * 3, v * 1.5, 3, seed, 3);
     let c = mix(b, bl, smooth(0.35, 0.75, side));
     const streaks = fbm(u * 90, v * 4, 2, seed + 5, 90);
-    c = mix(c, st, smooth(0.45, 0.8, streaks) * 0.55);
+    c = mix(c, st, smooth(0.45, 0.8, streaks) * streakiness);
     // The stem cavity and the base fade toward cream.
     c = mix(c, cream, smooth(0.9, 1, v) * 0.55 + smooth(0.08, 0, v) * 0.4);
     return c;

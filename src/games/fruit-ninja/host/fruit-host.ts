@@ -31,6 +31,8 @@ export class FruitHost {
   private pending: MatchEvent[] = [];
   private hudKey = "";
   private lastCountdown = 0;
+  /** Names as the round began, so a seat someone else takes over mid round keeps its player's name on the board. */
+  private roster = new Map<Seat, string>();
 
   constructor(private readonly room: HostRoomApi) {
     this.aim = new HostAim(room);
@@ -45,6 +47,9 @@ export class FruitHost {
   players = (): Player[] => [...this.room.players()];
 
   nameOf = (seat: Seat): string => this.room.players().find((p) => p.seat === seat)?.name ?? `Player ${seat}`;
+
+  /** The name on the scoreboard: as it was when the round began, so a seat that changes hands keeps its player's name. */
+  private boardName = (seat: Seat): string => this.roster.get(seat) ?? this.nameOf(seat);
 
   /** The canvas hands itself over once it is up, and takes itself back when it goes. */
   attach(screen: Screen): () => void {
@@ -73,7 +78,10 @@ export class FruitHost {
     this.screen?.calm();
     this.screen?.reset();
     this.driver.start(useFruitStore.getState().settings, seats);
+    this.roster = new Map(seats.map((seat) => [seat, this.nameOf(seat)]));
     this.lastCountdown = 0;
+    // The join code tucks away as soon as the countdown starts, not when the first fruit flies.
+    this.room.setPlaying(true);
   }
 
   toLobby(): void {
@@ -123,8 +131,9 @@ export class FruitHost {
   }
 
   private onPhase(phase: MatchPhase): void {
-    if (phase === "playing") this.room.setPlaying(true);
     if (phase === "over") {
+      // Between rounds the code comes back, so someone new can join for the next one.
+      this.room.setPlaying(false);
       const winners = this.driver.match?.winners() ?? [];
       if (winners.length) this.screen?.celebrate([...winners.map(playerColor), "#ffd23a", "#ffffff"]);
     }
@@ -132,7 +141,7 @@ export class FruitHost {
 
   /** Writes the HUD to the store and each phone's state to its phone, only when something changed. */
   private publish(): void {
-    const hud = roundHud(this.driver.match, this.nameOf);
+    const hud = roundHud(this.driver.match, this.boardName);
     if (hud.countdown > 0 && hud.countdown !== this.lastCountdown) this.sound.countdown();
     this.lastCountdown = hud.countdown;
     const key = JSON.stringify(hud);
@@ -151,6 +160,8 @@ export class FruitHost {
         return this.syncSeats();
       case "joined":
         this.phones.forget(event.seat);
+        // A different phone in a seat from this round starts fresh next round, never on the last player's score.
+        if (!event.rejoined) this.driver.match?.retire(event.seat);
         return this.syncSeats();
       case "left":
         this.drop(event.seat);

@@ -9,7 +9,8 @@ import { canvas, fbm, scatter, texture } from "./paint";
 
 const cache = new Map<string, Texture>();
 
-function once(key: string, paint: () => Texture): Texture {
+/** Paints a sprite the first time it is asked for, then shares it. */
+export function once(key: string, paint: () => Texture): Texture {
   let tex = cache.get(key);
   if (!tex) {
     tex = paint();

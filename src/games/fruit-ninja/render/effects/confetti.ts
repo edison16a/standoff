@@ -55,6 +55,12 @@ export class Confetti {
     this.mesh.count = 0;
   }
 
+  dispose(): void {
+    this.mesh.geometry.dispose();
+    (this.mesh.material as MeshStandardMaterial).dispose();
+    this.mesh.dispose();
+  }
+
   update(dt: number, time: number): void {
     if (this.pieces.length === 0) return;
     this.pieces.forEach((piece, i) => {

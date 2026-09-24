@@ -78,12 +78,12 @@ export const coconut: FruitSpec = {
   juice: "#f5f2ea",
 };
 
-function apple(skinBase: string, blush: string, streak: string, rim: string, juice: string, seed: number): FruitSpec {
+function apple(skinBase: string, blush: string, streak: string, rim: string, juice: string, seed: number, streakiness?: number): FruitSpec {
   return {
     shape: APPLE,
     cut: "along",
     fit: 0.98,
-    skin: () => skinMaterial(appleSkin(skinBase, blush, streak, seed), { roughness: 0.28, clearcoat: 0.8 }),
+    skin: () => skinMaterial(appleSkin(skinBase, blush, streak, seed, streakiness), { roughness: 0.28, clearcoat: 0.8 }),
     flesh: () => fleshMaterial(appleFlesh(uvOutline(APPLE), rim)),
     attachments: stemAndLeaf(0.62, 0.34, 0.55),
     juice,
@@ -91,7 +91,8 @@ function apple(skinBase: string, blush: string, streak: string, rim: string, jui
 }
 
 export const redApple = apple("#b3101c", "#d8262a", "#7a0610", "#a8121c", "#fff2c4", 9);
-export const greenApple = apple("#8ccc3c", "#c7dc4a", "#6aa82a", "#78b030", "#f4f8c8", 10);
+// A green apple is smooth and even, with only a hint of streaking and a yellow blush on its sunny side.
+export const greenApple = apple("#5fa823", "#a9c93a", "#4a8a1e", "#78b030", "#f4f8c8", 10, 0.16);
 
 const PLUM = creased(1.02, 0.08);
 const PEACH = creased(0.98, 0.1);

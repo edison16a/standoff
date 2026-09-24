@@ -33,6 +33,25 @@ export function bananaFlesh(): Texture {
   const { c, ctx } = canvas(S);
   disc(ctx, R, "#e8c02c");
   disc(ctx, R * 0.9, radial(ctx, 0, R * 0.9, [[0, "#fff6d6"], [0.8, "#fbeab5"], [1, "#f1d890"]]));
+  // The soft three armed core a sliced banana shows, a shade deeper than the flesh round it.
+  ctx.fillStyle = "rgba(214,168,72,0.45)";
+  ctx.beginPath();
+  for (let i = 0; i <= 90; i++) {
+    const a = (i / 90) * Math.PI * 2;
+    const d = R * (0.12 + 0.13 * Math.max(0, Math.cos(a * 3)) ** 2);
+    ctx.lineTo(C + Math.cos(a + Math.PI / 2) * d, C + Math.sin(a + Math.PI / 2) * d);
+  }
+  ctx.fill();
+  // Faint fibres run out from the core to the peel.
+  ctx.strokeStyle = "rgba(220,190,120,0.35)";
+  ctx.lineWidth = 1.2;
+  for (let i = 0; i < 26; i++) {
+    const a = (i / 26) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.moveTo(C + Math.cos(a) * R * 0.3, C + Math.sin(a) * R * 0.3);
+    ctx.lineTo(C + Math.cos(a) * R * 0.86, C + Math.sin(a) * R * 0.86);
+    ctx.stroke();
+  }
   for (let i = 0; i < 3; i++) {
     const a = (i / 3) * Math.PI * 2;
     ctx.fillStyle = "rgba(120,80,30,0.55)";

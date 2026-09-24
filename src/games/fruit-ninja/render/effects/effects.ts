@@ -1,5 +1,6 @@
 import { Color, NormalBlending, type Scene } from "three";
 import { BLADES, type BladeId } from "../../blades";
+import { puffTexture } from "../textures/blast";
 import { glowTexture, smokeTexture, sparkleTexture } from "../textures/sprites";
 import { Confetti } from "./confetti";
 import { Explosions } from "./explosion";
@@ -21,6 +22,8 @@ export class Effects {
   readonly glow = new Particles(glowTexture(), 1800);
   readonly sparkle = new Particles(sparkleTexture(), 1600);
   readonly smoke = new Particles(smokeTexture(), 300, NormalBlending);
+  /** Fire and smoke with body, for explosions. */
+  readonly puffs = new Particles(puffTexture(), 400, NormalBlending);
   readonly juice = new JuiceDrops();
   readonly stains: Stains;
   readonly explosions: Explosions;
@@ -29,13 +32,9 @@ export class Effects {
   shake = 0;
 
   constructor(scene: Scene) {
-    scene.add(this.glow.points, this.sparkle.points, this.smoke.points, this.juice.mesh, this.confetti.mesh);
+    scene.add(this.glow.mesh, this.sparkle.mesh, this.smoke.mesh, this.puffs.mesh, this.juice.mesh, this.confetti.mesh);
     this.stains = new Stains(scene);
-    this.explosions = new Explosions(scene, this.glow, this.smoke, this.sparkle);
-  }
-
-  setScale(scale: number, distance: number): void {
-    for (const system of [this.glow, this.sparkle, this.smoke]) system.setScale(scale, distance);
+    this.explosions = new Explosions(scene, this.glow, this.puffs, this.sparkle);
   }
 
   /** A clean cut: a spray of juice across the blade, a stain below and a pale mist. */
@@ -44,7 +43,7 @@ export class Effects {
     this.stains.splat(x, y, color, 1 + size * 1.4);
     // A fine wet mist. Normal blending, so pale juice stays pale instead of glowing white.
     for (let i = 0; i < 7; i++) {
-      this.smoke.emit({ x, y, z: 0.4, vx: (Math.random() - 0.5) * 3, vy: (Math.random() - 0.5) * 3, life: 0.45, size: 0.7 + size * 0.5, grow: 2.2, drag: 4, color, alpha: 0.28 });
+      this.smoke.emit({ x, y, z: 0.4, vx: (Math.random() - 0.5) * 3, vy: (Math.random() - 0.5) * 3, life: 0.45, size: 0.7 + size * 0.5, grow: 2.2, drag: 4, spin: (Math.random() - 0.5) * 2, color, alpha: 0.24 });
     }
   }
 
@@ -66,7 +65,8 @@ export class Effects {
   /** Rare fruit: a ring of glitter and a flash, on top of the juice. */
   treasure(x: number, y: number, rainbow: boolean): void {
     const palette = rainbow ? RAINBOW : GOLD;
-    this.glow.emit({ x, y, z: 1, vx: 0, vy: 0, life: 0.35, size: 6, color: rainbow ? "#ffffff" : "#fff2b0", grow: 1.5 });
+    this.glow.emit({ x, y, z: 1, vx: 0, vy: 0, life: 0.3, size: 3.6, color: "#ffffff", grow: 1.6 });
+    this.glow.emit({ x, y, z: 1, vx: 0, vy: 0, life: 0.6, size: 5, color: rainbow ? "#ff4fd0" : "#ffc830", grow: 1.4, alpha: 0.6 });
     for (let i = 0; i < 90; i++) {
       const a = (i / 90) * Math.PI * 2;
       const speed = 3 + Math.random() * 6;
@@ -143,6 +143,7 @@ export class Effects {
     this.glow.update(dt);
     this.sparkle.update(dt);
     this.smoke.update(dt);
+    this.puffs.update(dt);
     this.juice.update(dt);
     this.stains.update(dt);
     this.explosions.update(dt);
@@ -150,9 +151,20 @@ export class Effects {
     this.shake = Math.max(0, this.shake - dt * 1.4);
   }
 
+  /** Wipes the board for a fresh round: nothing in the air, no stains, no shake. */
   clear(): void {
-    for (const system of [this.glow, this.sparkle, this.smoke]) system.clear();
+    for (const system of [this.glow, this.sparkle, this.smoke, this.puffs]) system.clear();
     this.juice.clear();
+    this.stains.clear();
     this.explosions.clear();
+    this.shake = 0;
+  }
+
+  dispose(): void {
+    for (const system of [this.glow, this.sparkle, this.smoke, this.puffs]) system.dispose();
+    this.juice.dispose();
+    this.stains.dispose();
+    this.explosions.dispose();
+    this.confetti.dispose();
   }
 }

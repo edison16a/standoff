@@ -30,7 +30,7 @@ export class JuiceDrops {
   private readonly drops: Drop[] = [];
 
   constructor() {
-    const material = new MeshPhysicalMaterial({ roughness: 0.12, clearcoat: 1, clearcoatRoughness: 0.05 });
+    const material = new MeshPhysicalMaterial({ roughness: 0.2, clearcoat: 0.7, clearcoatRoughness: 0.12 });
     this.mesh = new InstancedMesh(new SphereGeometry(1, 10, 8), material, CAPACITY);
     this.mesh.instanceMatrix.setUsage(DynamicDrawUsage);
     this.mesh.count = 0;
@@ -93,5 +93,12 @@ export class JuiceDrops {
 
   clear(): void {
     this.drops.length = 0;
+    this.mesh.count = 0;
+  }
+
+  dispose(): void {
+    this.mesh.geometry.dispose();
+    (this.mesh.material as MeshPhysicalMaterial).dispose();
+    this.mesh.dispose();
   }
 }
