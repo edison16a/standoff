@@ -15,6 +15,15 @@ export interface SceneSource {
   armed(): { seat: Seat; weapon: WeaponId }[];
   /** Where a player points, in clip space, or null when they are not aiming. */
   aimAt(seat: Seat, nowMs: number): ScreenPoint | null;
+  /** A framing of its own over the game's camera, for the showcase's shots. */
+  framing?(): Framing;
+}
+
+/** Tips the view down by `tilt` radians, which lifts the action up the screen, and sets the lens. */
+export interface Framing {
+  tilt: number;
+  /** Vertical field of view, in degrees. */
+  fov: number;
 }
 
 /** One hit shape as it sits on screen: which zombie and part, where in clip space, and how far off. */

@@ -4,7 +4,6 @@ import type { ScreenPoint } from "@/games/kit/aim/aim-math";
 import { playerColor } from "@/games/kit/players";
 import type { Seat } from "@/platform/protocol";
 import type { GameEvent } from "../engine/events";
-import type { SurvivalGame } from "../engine/game";
 import { fightFrame, segmentAt } from "../engine/route";
 import { stage as stageSpec } from "../engine/stages";
 import type { Offset, PelletHit } from "../engine/shooting";
@@ -47,7 +46,6 @@ export class SurvivalRenderer implements SurvivalView {
   private readonly idle = lobbyZombies();
   private readonly horde = new EscapeHorde();
   private last = 0;
-  private shipBase: THREE.Vector3 | null = null;
   private lastSegment = 0;
 
   /** `random` drives the shake and the sprays. The showcase seeds it, so its clip plays the same each time. */
@@ -87,6 +85,7 @@ export class SurvivalRenderer implements SurvivalView {
     const time = nowMs / 1000;
     const game = this.source.game;
     this.rig.update(this.camera, game, dt, time);
+    this.reframe();
     this.camera.updateMatrixWorld();
     const segment = game.phase === "lobby" ? 1 : segmentAt(game.distance).index;
     this.world.update(segment, this.camera.position, time, Math.abs(segment - this.lastSegment) > 1);
@@ -105,7 +104,7 @@ export class SurvivalRenderer implements SurvivalView {
     this.atmosphere.flashlight.intensity = escaping ? 0 : 85;
     this.atmosphere.gunLight.intensity = escaping ? 0 : 1.6;
     this.chopper.update(game, dt, time);
-    this.sailShip(game);
+    this.world.sailShip(sailed(game.phase === "escaped" ? 16 + game.phaseTime : game.cutscene === "escape" ? game.phaseTime : 0));
     this.scene.updateMatrixWorld();
 
     const shooters = this.shooters(nowMs);
@@ -113,6 +112,11 @@ export class SurvivalRenderer implements SurvivalView {
     this.guns.update(shooters, dt, time, armed);
     this.effects.update(dt);
     this.renderer.render(this.scene, this.camera);
+  }
+
+  /** Waits until the GPU has drawn everything asked of it, so a frame is on the canvas before the next begins. */
+  finish(): void {
+    this.renderer.getContext().finish();
   }
 
   cast(seat: Seat, point: ScreenPoint, offsets: readonly Offset[]): (PelletHit | null)[] {
@@ -168,13 +172,7 @@ export class SurvivalRenderer implements SurvivalView {
 
   /** Every hit shape on screen, in the aim's clip space. Browser tests and the showcase's players aim with it. */
   targets(): TargetPoint[] {
-    return this.zombies.proxies().map((proxy) => {
-      const at = proxy.getWorldPosition(new THREE.Vector3());
-      const distance = at.distanceTo(this.camera.position);
-      at.project(this.camera);
-      const data = proxy.userData as Pick<TargetPoint, "zombie" | "part" | "weak">;
-      return { zombie: data.zombie, part: data.part, weak: data.weak, x: at.x, y: at.y, distance };
-    });
+    return this.zombies.targets(this.camera);
   }
 
   dispose(): void {
@@ -188,6 +186,16 @@ export class SurvivalRenderer implements SurvivalView {
     this.renderer.dispose();
   }
 
+  /** Applies the source's own framing, if it has one, over the camera rig's. */
+  private reframe(): void {
+    const shot = this.source.framing?.();
+    if (!shot) return;
+    this.camera.rotateX(-shot.tilt);
+    if (this.camera.fov === shot.fov) return;
+    this.camera.fov = shot.fov;
+    this.camera.updateProjectionMatrix();
+  }
+
   /** Every player with a gun, and where their laser lands. */
   private shooters(nowMs: number): Shooter[] {
     const targets = [...this.zombies.proxies(), ...this.world.solids()];
@@ -196,14 +204,5 @@ export class SurvivalRenderer implements SurvivalView {
       const aim = point ? this.caster.cast(point, { x: 0, y: 0 }, targets, () => undefined).point : null;
       return { seat, weapon, aim };
     });
-  }
-
-  /** The ship pulls away from the pier in the escape, carrying the team. */
-  private sailShip(game: SurvivalGame): void {
-    const ship = this.world.segment(26)?.group.getObjectByName("ship");
-    if (!ship) return;
-    this.shipBase ??= ship.position.clone();
-    ship.position.copy(this.shipBase);
-    ship.position.x += sailed(game.phase === "escaped" ? 16 + game.phaseTime : game.cutscene === "escape" ? game.phaseTime : 0);
   }
 }

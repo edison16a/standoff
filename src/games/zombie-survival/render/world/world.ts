@@ -69,6 +69,16 @@ export class World {
     return this.built.get(index);
   }
 
+  /** Moves the ship at the pier this many metres out to sea, for the escape. */
+  sailShip(metres: number): void {
+    const ship = this.built.get(SEGMENTS.length)?.group.getObjectByName("ship");
+    if (!ship) return;
+    const base = (ship.userData.base as THREE.Vector3 | undefined) ?? ship.position.clone();
+    ship.userData.base = base;
+    ship.position.copy(base);
+    ship.position.x += metres;
+  }
+
   /** Keeps the segments around `current` built. With `all`, builds every missing one now. */
   update(current: number, camera: THREE.Vector3, time: number, all = false): void {
     const wanted = new Set<number>();

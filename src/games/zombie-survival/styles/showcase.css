@@ -1,0 +1,37 @@
+/*
+  The showcase: the game playing itself for the home screen's media.
+  Only the icon draws anything over the picture, the game's name.
+*/
+
+.zs-showcase .zs-vignette {
+  background: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.6) 100%);
+}
+
+/* The icon darkens toward the bottom so the logo stands clear of the street. */
+.zs-showcase--icon .zs-vignette {
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.55) 72%, rgba(0, 0, 0, 0.85) 100%),
+    radial-gradient(ellipse at 50% 38%, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+.zs-logo {
+  position: absolute;
+  left: 50%;
+  bottom: 3%;
+  width: 94%;
+  transform: translateX(-50%);
+  overflow: visible;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.8));
+}
+
+.zs-logo__word {
+  font-family: Impact, "Arial Black", "DejaVu Sans", "Liberation Sans", sans-serif;
+  font-size: 250px;
+  font-weight: 900;
+}
+
+.zs-logo__sub {
+  font-family: Impact, "Arial Black", "DejaVu Sans", "Liberation Sans", sans-serif;
+  font-size: 92px;
+  font-weight: 900;
+}

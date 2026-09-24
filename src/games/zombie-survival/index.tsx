@@ -8,6 +8,7 @@ import { SurvivalHost } from "./host/survival-host";
 import { PhoneScreen } from "./phone/components/PhoneScreen";
 import { PhoneContext } from "./phone/components/session-context";
 import { SurvivalPhone } from "./phone/survival-phone";
+import { Showcase } from "./showcase/Showcase";
 import "./styles/stage.css";
 import "./styles/lobby.css";
 import "./styles/hud.css";
@@ -18,6 +19,7 @@ import "./styles/phone.css";
 import "./styles/phone-ready.css";
 import "./styles/phone-play.css";
 import "./styles/phone-cards.css";
+import "./styles/showcase.css";
 
 /**
  * Zombie Survival, as the platform sees it. Each room gets one session,
@@ -48,4 +50,6 @@ export const game: GameModule = {
     }
     return { Screen, dispose: () => session.dispose() };
   },
+
+  Showcase,
 };
