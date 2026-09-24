@@ -50,7 +50,7 @@ export const FINISHES: Record<FinishId, Finish> = {
   forest: {
     id: "forest",
     name: "Forest",
-    stock: { color: "#1d5438", grain: false, roughness: 0.32 },
+    stock: { color: "#17452e", grain: false, roughness: 0.32 },
     metal: { color: "#262a30", metalness: 0.85, roughness: 0.3 },
     trim: "#d4a64a",
   },

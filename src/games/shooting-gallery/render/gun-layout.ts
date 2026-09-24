@@ -32,7 +32,7 @@ const SOLO_X = 0.62;
 const LOBBY_RIGHT = 0.42;
 
 /** Drawn larger than life so they read from across a room, and smaller when four share the counter. */
-const SCALE: Record<number, number> = { 1: 2.2, 2: 2.0, 3: 1.85, 4: 1.75 };
+const SCALE: Record<number, number> = { 1: 2.4, 2: 2.1, 3: 1.9, 4: 1.75 };
 
 export interface GunSpot {
   x: number;
