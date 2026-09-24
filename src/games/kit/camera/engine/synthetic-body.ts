@@ -59,7 +59,8 @@ export const ARM_SHAPES = {
   down: { upper: [0.07, -1, 0], fore: [0.03, -1, -0.07] },
   guard: { upper: [0, -0.707, -0.707], fore: [-0.27, 0.93, -0.27] },
   punch: { upper: [-0.1, 0.07, -1], fore: [-0.1, 0.07, -1] },
-  hook: { upper: [0.85, -0.05, -0.5], fore: [-0.91, 0.19, -0.36] },
+  wide: { upper: [1, 0, -0.1], fore: [0.2, 0.1, -1] },
+  hook: { upper: [0.43, 0.02, -0.9], fore: [-0.96, 0.1, -0.26] },
   raise: { upper: [0.1, 1, 0], fore: [0.05, 1, -0.05] },
 } satisfies Record<string, ArmShape>;
 

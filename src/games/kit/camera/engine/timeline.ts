@@ -8,7 +8,7 @@ export interface PoseKey {
 }
 
 const NUMBERS = ["x", "height", "floor", "lift", "crouch", "bow", "lean", "visibility"] as const;
-const ARM_NUMBERS = ["guard", "punch", "hook", "raise"] as const;
+const ARM_NUMBERS = ["guard", "punch", "wide", "hook", "raise"] as const;
 
 /** What a missing number means: standing tall in the middle, arms down. */
 const DEFAULTS: Required<Pick<PoseSpec, (typeof NUMBERS)[number]>> = {

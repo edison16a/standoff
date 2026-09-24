@@ -14,7 +14,9 @@ export interface ArmSpec {
   guard?: number;
   /** Straight out toward the camera. */
   punch?: number;
-  /** Elbow out to the side, fist swung across in front of the face. */
+  /** Elbow up and out to the side, fist forward: the wind up for a hook. */
+  wide?: number;
+  /** The fist swung in across the front of the face. */
   hook?: number;
   /** Straight up overhead. */
   raise?: number;
@@ -72,7 +74,7 @@ function placeArm(joints: Vec[], side: "left" | "right", arm: ArmSpec): void {
   const out = side === "left" ? -1 : 1;
   let upper = ARM_SHAPES.down.upper as Vec;
   let fore = ARM_SHAPES.down.fore as Vec;
-  for (const name of ["guard", "raise", "punch", "hook"] as const) {
+  for (const name of ["guard", "raise", "wide", "punch", "hook"] as const) {
     const shape = ARM_SHAPES[name];
     upper = blend(upper, shape.upper as Vec, arm[name] ?? 0);
     fore = blend(fore, shape.fore as Vec, arm[name] ?? 0);
