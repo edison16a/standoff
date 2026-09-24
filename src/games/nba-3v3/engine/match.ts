@@ -5,6 +5,7 @@ import { updateBall } from "./ball";
 import { Brains } from "./bot/brains";
 import type { MatchEvent } from "./events";
 import { seeded, type Rng } from "./rng";
+import type { Outcome } from "./shot-model";
 import { placeForCheck, updateClock, updateDead, type CheckPlan } from "./rules";
 import { RIM, RULES } from "./tuning";
 import type { Athlete, Ball, Button, Phase, TeamId } from "./types";
@@ -50,6 +51,8 @@ export class Match {
   lastPass: { from: number; to: number; at: number } | null = null;
   /** Where everyone lines up for the next check, while the ball is dead. */
   checkPlan: CheckPlan | null = null;
+  /** The next shot's outcome, set by the showcase to film a sure highlight. Real games leave it alone. */
+  forced: Outcome | null = null;
   gamePoint: [boolean, boolean] = [false, false];
   /** Whose turn it is to bring the ball up, per team, so everyone gets to handle it. */
   readonly checkTurn: [number, number] = [0, 0];

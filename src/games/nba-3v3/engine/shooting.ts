@@ -55,7 +55,9 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   b.pos = { ...hand };
   const assist = m.lastPass && m.lastPass.to === a.id ? m.lastPass.from : null;
   const base = { shooter: a.id, team: a.team, points: three ? 3 : 2, kind, grade, counted: false, touchedRim: false, assist } as const;
-  if (c.blocker && m.rng() < c.blockChance) {
+  const forced = m.forced;
+  m.forced = null;
+  if (!forced && c.blocker && m.rng() < c.blockChance) {
     b.flight = planBlock(m.rng, hand, c.blocker);
     b.flightKind = "block";
     b.shot = { ...base, outcome: "airball", made: false };
@@ -67,9 +69,9 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   const s = charOf(a).stats;
   const ctx = { kind, grade, distance, shooting: s.shooting, contest: c.contest, strengthEdge: c.edge, onFire: a.onFire };
   const chance = makeChance(ctx);
-  const made = m.rng() < chance;
+  const made = forced ? isMake(forced) : m.rng() < chance;
   const side = Math.atan2(a.x - RIM.x, a.z - RIM.z);
-  const outcome = pickOutcome(m.rng, made, ctx, side);
+  const outcome = forced ?? pickOutcome(m.rng, made, ctx, side);
   const apex = kind === "jumper" ? RIM.y + 0.95 + distance * 0.12 + between(m.rng, -0.1, 0.15) : Math.max(hand.y, RIM.y) + 0.38;
   b.flight = planShot(m.rng, { from: hand, outcome, apex });
   b.shot = { ...base, outcome, made: isMake(outcome) };
@@ -90,7 +92,9 @@ export function slam(m: Match, a: Athlete): void {
   b.lastTouch = a.id;
   b.pos = { ...top };
   const base = { shooter: a.id, team: a.team, points: 2, kind: "dunk", grade: "perfect", counted: false, touchedRim: true, assist: m.lastPass?.to === a.id ? m.lastPass.from : null } as const;
-  if (c.blocker && m.rng() < c.blockChance) {
+  const forced = m.forced;
+  m.forced = null;
+  if (!forced && c.blocker && m.rng() < c.blockChance) {
     b.flight = planBlock(m.rng, top, c.blocker);
     b.flightKind = "block";
     b.shot = { ...base, outcome: "airball", made: false };
@@ -99,7 +103,7 @@ export function slam(m: Match, a: Athlete): void {
     m.emit({ type: "block", id: c.blocker.id, victim: a.id });
     return;
   }
-  const made = m.rng() < makeChance({ kind: "dunk", grade: "perfect", distance: 0.5, shooting: 5, contest: c.contest, strengthEdge: c.edge, onFire: a.onFire });
+  const made = forced ? isMake(forced) : m.rng() < makeChance({ kind: "dunk", grade: "perfect", distance: 0.5, shooting: 5, contest: c.contest, strengthEdge: c.edge, onFire: a.onFire });
   if (!made) {
     b.flight = planShot(m.rng, { from: top, outcome: "rimOut", apex: top.y + 0.05 });
     b.flightKind = "shot";

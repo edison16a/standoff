@@ -1,0 +1,189 @@
+/*
+  The lobby on the big screen: the game's logo, two team columns to
+  drag players between, and the start button. The join card sits in the
+  bottom left corner, so the panel keeps clear of it.
+*/
+
+.nba-lobby {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 18px;
+  padding: 72px 32px 28px 220px;
+  background: linear-gradient(180deg, rgba(6, 8, 18, 0.2), rgba(6, 8, 18, 0.72) 55%, rgba(6, 8, 18, 0.9));
+}
+
+.nba-lobby__title {
+  text-shadow: 0 3px 16px rgba(0, 0, 0, 0.6);
+}
+
+.nba-lobby__logo {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 12px;
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: clamp(44px, 6vw, 84px);
+  font-style: italic;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.nba-lobby__logo b {
+  padding: 2px 16px 0;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #2f6bff, #122a80);
+  box-shadow: 0 5px 0 #0b1b55;
+}
+
+.nba-lobby__title p {
+  margin-top: 10px;
+  font-size: 20px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.nba-lobby__teams {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+  max-width: 1100px;
+  width: 100%;
+  justify-self: center;
+}
+
+.nba-lobby__vs {
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: 44px;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.nba-team {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 3px solid transparent;
+  border-radius: 22px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--team) 38%, rgba(10, 12, 30, 0.9)), rgba(10, 12, 30, 0.9));
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), inset 0 3px 0 var(--team);
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.nba-team--over {
+  border-color: #ffffff;
+  transform: scale(1.02);
+}
+
+.nba-team__name {
+  margin: 0;
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: 34px;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.nba-team__spots {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nba-spot {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.nba-spot--bot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px 8px 8px;
+  opacity: 0.75;
+}
+
+.nba-spot__button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 14px 8px 8px;
+  border: 0;
+  border-left: 6px solid var(--player);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  text-align: left;
+  cursor: grab;
+  transition: background 120ms ease, transform 120ms ease;
+}
+
+.nba-spot__button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.nba-spot__button:focus-visible {
+  outline: 3px solid #ffd23f;
+}
+
+.nba-spot__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nba-spot__name {
+  overflow: hidden;
+  font-size: 19px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nba-spot__star {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 14px;
+}
+
+.nba-spot__move {
+  width: 22px;
+  height: 22px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.nba-lobby__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  max-width: 1100px;
+  width: 100%;
+  justify-self: center;
+}
+
+.nba-lobby__note {
+  flex: 1;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 16px;
+}
+
+.nba-lobby__shuffle {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(10, 12, 30, 0.8);
+  color: #ffffff;
+}
+
+.nba-lobby__start {
+  min-width: 200px;
+  font-size: 20px;
+  font-weight: 900;
+}

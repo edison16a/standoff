@@ -1,0 +1,176 @@
+/*
+  The results after the final whistle: the winners, the MVP, both box
+  scores and the buttons to play on.
+*/
+
+.nba-results {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 70px 24px 24px;
+  background: radial-gradient(circle at 50% 40%, rgba(6, 8, 18, 0.35), rgba(6, 8, 18, 0.85));
+  animation: nba-fade 0.5s ease-out both;
+}
+
+@keyframes nba-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.nba-results__card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: min(980px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  padding: 24px 28px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--team) 35%, #0c0f24), #0c0f24 45%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), inset 0 4px 0 var(--team);
+  animation: nba-rise 0.6s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
+@keyframes nba-rise {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.96);
+  }
+}
+
+.nba-results__head {
+  text-align: center;
+}
+
+.nba-results__eyebrow {
+  color: #ffd23f;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.nba-results__head h2 {
+  margin: 2px 0;
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: clamp(48px, 7vw, 88px);
+  font-style: italic;
+  line-height: 1;
+  text-transform: uppercase;
+  text-shadow: 0 5px 0 var(--team-dark);
+}
+
+.nba-results__score {
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: 40px;
+}
+
+.nba-results__score span {
+  font-family: var(--font-ui);
+  font-size: 18px;
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+.nba-results__mvp {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  align-self: center;
+  padding: 10px 22px 10px 12px;
+  border-radius: 18px;
+  background: rgba(255, 210, 63, 0.12);
+  border: 2px solid rgba(255, 210, 63, 0.6);
+}
+
+.nba-results__mvp div {
+  display: flex;
+  flex-direction: column;
+}
+
+.nba-results__mvp strong {
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.nba-results__boxes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.nba-box {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.nba-box caption {
+  padding: 4px 0 8px;
+  border-bottom: 3px solid var(--team);
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: 22px;
+  font-style: italic;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.nba-box th,
+.nba-box td {
+  padding: 7px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.nba-box thead th {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.nba-box tbody th {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  text-align: left;
+}
+
+.nba-box tbody th small {
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 600;
+}
+
+.nba-box__dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.nba-box__pts {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.nba-results__actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.nba-results__actions .btn {
+  min-width: 190px;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.nba-results__actions .btn:not(.btn--primary) {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}

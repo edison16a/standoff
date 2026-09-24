@@ -1,0 +1,258 @@
+/*
+  The game overlay: a broadcast scoreboard at the top, the countdown,
+  the big calls, and small notes. Nothing here takes the mouse.
+*/
+
+.nba-hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.nba-board {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  display: flex;
+  align-items: stretch;
+  transform: translateX(-50%) skewX(-8deg);
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.55));
+}
+
+.nba-board__team {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 230px;
+  padding: 6px 16px;
+  background: linear-gradient(180deg, var(--team), var(--team-dark));
+}
+
+.nba-board__team--0 {
+  justify-content: flex-end;
+  border-radius: 10px 0 0 10px;
+}
+
+.nba-board__team--1 {
+  justify-content: flex-start;
+  border-radius: 0 10px 10px 0;
+}
+
+.nba-board__name {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: skewX(8deg);
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: 26px;
+  letter-spacing: 0.04em;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.nba-board__gp {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: #ffd23f;
+  color: #1a1203;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.nba-board__score {
+  min-width: 64px;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: 46px;
+  line-height: 1.15;
+  text-align: center;
+  transform: skewX(8deg);
+}
+
+.nba-board__ball {
+  width: 22px;
+  height: 22px;
+  transform: skewX(8deg);
+  animation: nba-bob 0.7s ease-in-out infinite alternate;
+}
+
+@keyframes nba-bob {
+  to {
+    transform: skewX(8deg) translateY(-3px);
+  }
+}
+
+.nba-board__clock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  background: #0b0d18;
+  border-top: 3px solid #ffd23f;
+}
+
+.nba-board__clock span {
+  color: #ffb020;
+  font-family: "Courier New", monospace;
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 1;
+  transform: skewX(8deg);
+}
+
+.nba-board__clock small {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transform: skewX(8deg);
+}
+
+.nba-board__clock--late span {
+  color: #ff3b3b;
+  animation: nba-pulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes nba-pulse {
+  to {
+    opacity: 0.55;
+  }
+}
+
+.nba-hud__clear {
+  position: absolute;
+  top: 92px;
+  left: 50%;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: rgba(8, 10, 24, 0.82);
+  border: 2px solid var(--team);
+  font-size: 16px;
+  font-weight: 800;
+  transform: translateX(-50%);
+  animation: nba-pulse 0.6s ease-in-out infinite alternate;
+}
+
+.nba-hud__waiting {
+  position: absolute;
+  right: 20px;
+  bottom: 18px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(8, 10, 24, 0.7);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+}
+
+.nba-count {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: clamp(120px, 18vw, 240px);
+  font-style: italic;
+  line-height: 1;
+  text-shadow: 0 8px 0 #122a80, 0 18px 40px rgba(0, 0, 0, 0.6);
+  transform: translate(-50%, -50%);
+  animation: nba-count 0.9s ease-out both;
+}
+
+@keyframes nba-count {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.8);
+  }
+  30% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0.2;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+}
+
+/* The big calls: DUNK!, FROM DOWNTOWN!, BLOCKED! */
+.nba-banner {
+  position: absolute;
+  top: 24%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transform: translateX(-50%);
+  animation: nba-banner 1.9s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
+.nba-banner strong {
+  --ink: #ffd23f;
+  --edge: #7a4a00;
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: clamp(64px, 9vw, 132px);
+  font-style: italic;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  color: var(--ink);
+  text-shadow: 0 5px 0 var(--edge), 0 10px 0 rgba(0, 0, 0, 0.35), 0 0 40px rgba(0, 0, 0, 0.6);
+  transform: skewX(-8deg);
+}
+
+.nba-banner span {
+  padding: 4px 16px;
+  border-radius: 999px;
+  background: rgba(8, 10, 24, 0.8);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.nba-banner--team0 strong {
+  --ink: #ffffff;
+  --edge: #2f6bff;
+}
+
+.nba-banner--team1 strong {
+  --ink: #ffffff;
+  --edge: #f0263c;
+}
+
+.nba-banner--white strong {
+  --ink: #ffffff;
+  --edge: #334155;
+}
+
+.nba-banner--red strong {
+  --ink: #ff5a36;
+  --edge: #5c0a00;
+}
+
+@keyframes nba-banner {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(2.2);
+  }
+  12% {
+    opacity: 1;
+    transform: translateX(-50%) scale(0.94);
+  }
+  20% {
+    transform: translateX(-50%) scale(1.04);
+  }
+  28%,
+  80% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.96) translateY(-20px);
+  }
+}
