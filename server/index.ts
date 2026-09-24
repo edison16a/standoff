@@ -27,8 +27,7 @@ async function main() {
     now: Date.now,
     // One process holds every socket, so memory is as shared as it gets.
     sharedRooms: true,
-    deadline: null,
-  });
+  }, config.socketLifetimeMs);
   const certificate = await loadCertificate(lanAddress);
 
   const httpServer = createHttpServer();
@@ -68,6 +67,7 @@ async function main() {
   console.log(`  Open on this computer:  http://localhost:${config.httpPort}`);
   console.log(`  Phones join through:    ${phoneOrigin}`);
   console.log(`  Rooms are kept in:      ${backend.label}`);
+  if (config.socketLifetimeMs) console.log(`  Sockets are cut after:  ${config.socketLifetimeMs / 1000} s, like Vercel`);
   if (!lanAddress && !config.publicHost) {
     console.log("\n  No network address found. Connect to WiFi so phones can reach this machine.");
   }

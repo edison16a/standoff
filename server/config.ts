@@ -13,6 +13,20 @@ export interface ServerConfig {
   httpsPort: number;
   /** Overrides the address phones are sent to, e.g. a hostname on your network. */
   publicHost: string | null;
+  /**
+   * Cuts every socket after this long, like Vercel does at a function's
+   * maximum duration. Off by default. Set it to try the socket handover
+   * locally before deploying.
+   */
+  socketLifetimeMs: number | null;
+}
+
+function readDuration(name: string): number | null {
+  const raw = process.env[name];
+  if (!raw) return null;
+  const ms = Number.parseInt(raw, 10);
+  if (!Number.isInteger(ms) || ms < 5000) throw new Error(`${name} must be at least 5000 (milliseconds), got "${raw}"`);
+  return ms;
 }
 
 function readPort(name: string, fallback: number): number {
@@ -31,5 +45,6 @@ export function readConfig(): ServerConfig {
     httpPort: readPort("PORT", 3000),
     httpsPort: readPort("HTTPS_PORT", 3443),
     publicHost: process.env.PUBLIC_HOST?.trim() || null,
+    socketLifetimeMs: readDuration("SOCKET_LIFETIME_MS"),
   };
 }
