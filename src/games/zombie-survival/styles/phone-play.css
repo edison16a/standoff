@@ -1,0 +1,194 @@
+/*
+  The phone during a run: team health, ammo, the trigger and the cards
+  over it when there is nothing to shoot.
+*/
+
+.zs-play {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  min-height: calc(100dvh - 56px);
+  padding: 14px 16px 20px;
+  background: #0a0d0e;
+  color: #e8eee6;
+}
+
+.zs-play__top {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.zs-play__stage {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  color: #9aa69a;
+}
+
+.zs-play__stage strong {
+  color: #e8eee6;
+  font-size: 15px;
+}
+
+.zs-health {
+  position: relative;
+  height: 22px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.zs-health__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, #2e9a4a, #5fd37a);
+  transition: width 250ms ease;
+}
+
+.zs-health--low .zs-health__fill {
+  background: linear-gradient(90deg, #a01818, var(--zs-red));
+}
+
+.zs-health__text {
+  position: relative;
+  display: block;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 22px;
+  text-transform: uppercase;
+}
+
+.zs-ammo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.zs-ammo__count {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.zs-ammo__count strong {
+  font-size: 44px;
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.zs-ammo__count span {
+  color: #9aa69a;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.zs-ammo__count em {
+  margin-left: auto;
+  color: #9aa69a;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.zs-ammo--empty .zs-ammo__count strong {
+  color: var(--zs-red);
+}
+
+.zs-ammo__rounds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.zs-ammo__round {
+  width: 6px;
+  height: 14px;
+  border-radius: 3px 3px 1px 1px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.zs-ammo__round--full {
+  background: linear-gradient(#f0d070, #b08030);
+}
+
+.zs-ammo__reload {
+  position: relative;
+  height: 20px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.zs-ammo__reload-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: rgba(95, 211, 122, 0.45);
+}
+
+.zs-ammo__reload-text {
+  position: relative;
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 20px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.zs-trigger {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  min-height: 240px;
+  touch-action: none;
+}
+
+.zs-play .kit-pad {
+  flex: 1;
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.zs-play__buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.zs-reload,
+.zs-recenter {
+  height: 64px;
+  border: 0;
+  border-radius: 16px;
+  color: #ffffff;
+  font: inherit;
+  font-size: 20px;
+  font-weight: 800;
+  text-transform: uppercase;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.zs-reload {
+  flex: 1;
+  background: #2e7a44;
+}
+
+.zs-reload:active {
+  background: #3fae5a;
+}
+
+.zs-recenter {
+  padding: 0 16px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 13px;
+}

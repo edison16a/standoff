@@ -1,0 +1,62 @@
+/*
+  Cards over the phone's trigger: a cutscene, the team down, the escape.
+*/
+
+.zs-pcard {
+  position: absolute;
+  inset: auto 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(10, 14, 14, 0.96);
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.6);
+}
+
+.zs-pcard h3 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.zs-pcard p {
+  margin: 0;
+  color: #9aa69a;
+}
+
+.zs-pcard--down h3 {
+  color: var(--zs-red);
+}
+
+.zs-pcard--won h3 {
+  color: #ffd24a;
+}
+
+.zs-pcard__stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 0;
+}
+
+.zs-pcard__stats div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.zs-pcard__stats dt {
+  color: #9aa69a;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.zs-pcard__stats dd {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+}

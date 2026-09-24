@@ -1,0 +1,150 @@
+/*
+  Zombie Survival on the phone: the weapon pick, the ready page and the
+  trigger pad. Setup follows the site theme; the pad is always dark, so
+  it is easy on the eyes in a dark room.
+*/
+
+.zs-phone {
+  --zs-green: #3fae5a;
+  --zs-red: #ff4a4a;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  margin: -16px;
+}
+
+.zs-weapon {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.zs-weapon__tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.zs-weapon__tab {
+  padding: 8px 4px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.zs-weapon__tab--on {
+  border-color: var(--zs-green);
+  background: var(--zs-green);
+  color: #ffffff;
+}
+
+.zs-weapon__stage {
+  position: relative;
+  height: 210px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: radial-gradient(ellipse at 50% 40%, #2a3430, #0b0f10 70%);
+}
+
+.zs-viewer {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.zs-weapon__arrow {
+  position: absolute;
+  top: 50%;
+  width: 40px;
+  height: 56px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-size: 28px;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.zs-weapon__arrow--left {
+  left: 6px;
+}
+
+.zs-weapon__arrow--right {
+  right: 6px;
+}
+
+.zs-weapon__about h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.zs-weapon__about p {
+  margin: 4px 0 6px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.zs-weapon__mode {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--zs-green);
+}
+
+.zs-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+
+.zs-stats__row {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.zs-stats__row dt {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.zs-stats__row dd {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.zs-stats__bar {
+  position: relative;
+  flex: 1;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--bg-muted);
+}
+
+.zs-stats__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--zs-green);
+  transition: width 250ms ease;
+}
+
+.zs-stats__value {
+  min-width: 92px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+}

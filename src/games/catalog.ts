@@ -20,6 +20,7 @@ const LOADERS: Record<string, () => Promise<GameModule>> = {
   fencing: () => import("./fencing").then((mod) => mod.game),
   "fruit-ninja": () => import("./fruit-ninja").then((mod) => mod.game),
   "shooting-gallery": () => import("./shooting-gallery").then((mod) => mod.game),
+  "zombie-survival": () => import("./zombie-survival").then((mod) => mod.game),
 };
 
 export function findGame(id: string): GameInfo | undefined {
