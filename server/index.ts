@@ -30,11 +30,13 @@ async function main() {
   }, config.socketLifetimeMs);
   const certificate = await loadCertificate(lanAddress);
 
-  const httpServer = createHttpServer();
-  // Next hooks its own dev reload socket onto this server. Handing it the
-  // server up front means that hook lands here, whichever listener sees
-  // the first request.
-  const app = next({ dev: config.dev, dir: process.cwd(), httpServer });
+  // Next hooks its own upgrade listener (the dev reload socket) onto the
+  // server it is given. It gets this one, which never listens: we forward
+  // it every upgrade that is not the game socket. Next must not see the
+  // game socket, because /api/ws is also a route file (for Vercel) and Next
+  // closes upgrades that match a route.
+  const nextUpgrades = createHttpServer();
+  const app = next({ dev: config.dev, dir: process.cwd(), httpServer: nextUpgrades });
   await app.prepare();
   const handleRequest = app.getRequestHandler();
 
@@ -45,18 +47,11 @@ async function main() {
     });
   };
 
-  httpServer.on("request", onRequest);
-  // On plain HTTP we only take the game socket. Next's listener takes the rest.
-  httpServer.on("upgrade", (req: IncomingMessage, socket: Duplex, head: Buffer) => {
-    sockets.handleUpgrade(req, socket, head);
-  });
-
-  const httpsServer = createHttpsServer({ key: certificate.key, cert: certificate.cert }, onRequest);
-  // Phones reach the game socket here. Anything else (Next's reload socket
-  // in development) is passed to the HTTP server, where Next is listening.
-  httpsServer.on("upgrade", (req: IncomingMessage, socket: Duplex, head: Buffer) => {
-    if (!sockets.handleUpgrade(req, socket, head)) httpServer.emit("upgrade", req, socket, head);
-  });
+  const onUpgrade = (req: IncomingMessage, socket: Duplex, head: Buffer) => {
+    if (!sockets.handleUpgrade(req, socket, head)) nextUpgrades.emit("upgrade", req, socket, head);
+  };
+  const httpServer = createHttpServer(onRequest).on("upgrade", onUpgrade);
+  const httpsServer = createHttpsServer({ key: certificate.key, cert: certificate.cert }, onRequest).on("upgrade", onUpgrade);
 
   await Promise.all([
     listen(httpServer, config.httpPort, config.bindHost),
