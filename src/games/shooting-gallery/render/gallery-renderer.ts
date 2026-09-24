@@ -86,6 +86,16 @@ export class GalleryRenderer {
     this.unlisten();
     for (const { rig } of this.rigs.values()) rig.dispose();
     this.releaseLights();
+    // Free everything on the graphics card, so opening another room starts clean.
+    this.scene.traverse((object) => {
+      const mesh = object as THREE.Mesh;
+      mesh.geometry?.dispose();
+      const materials = Array.isArray(mesh.material) ? mesh.material : mesh.material ? [mesh.material] : [];
+      for (const material of materials) {
+        for (const value of Object.values(material)) if (value instanceof THREE.Texture) value.dispose();
+        material.dispose();
+      }
+    });
     this.renderer.dispose();
   }
 

@@ -48,7 +48,7 @@ export function stripeTexture(): THREE.CanvasTexture {
     ctx.fillRect(x, 0, 128, 256);
   });
   const random = seeded(7);
-  ctx.globalAlpha = 0.06;
+  ctx.globalAlpha = 0.03;
   for (let y = 0; y < 256; y += 2) {
     ctx.fillStyle = random() > 0.5 ? "#000" : "#fff";
     ctx.fillRect(0, y, 256, 1);
@@ -59,24 +59,37 @@ export function stripeTexture(): THREE.CanvasTexture {
 
 /**
  * Long wood grain in greys, meant to be tinted by a material colour. The
- * streaks run along the texture's x axis.
+ * streaks run along the texture's x axis. Every streak waves a whole
+ * number of times across the width and wraps top to bottom, so the
+ * texture tiles without a seam. `strength` below 1 gives a faint grain
+ * under paint, and bare wood gets knots as well.
  */
-export function grainTexture(seed = 3): THREE.CanvasTexture {
+export function grainTexture(seed = 3, strength = 1): THREE.CanvasTexture {
   const [element, ctx] = canvas(512, 128);
-  ctx.fillStyle = "#d9d9d9";
+  const base = Math.round(255 - 38 * strength);
+  ctx.fillStyle = `rgb(${base},${base},${base})`;
   ctx.fillRect(0, 0, 512, 128);
   const random = seeded(seed);
+  // One slow sway shared by every streak keeps them flowing side by side, as real grain does.
+  const sway = random() * Math.PI * 2;
   for (let i = 0; i < 70; i++) {
     const y = random() * 128;
-    const amp = 2 + random() * 6;
-    const freq = 0.004 + random() * 0.01;
-    ctx.strokeStyle = `rgba(${random() > 0.5 ? "70,50,40" : "255,245,230"},${0.08 + random() * 0.2})`;
+    const amp = 0.5 + random() * 1.5;
+    const cycles = 2 + Math.floor(random() * 3);
+    const phase = random() * Math.PI * 2;
+    ctx.strokeStyle = `rgba(${random() > 0.5 ? "70,50,40" : "255,245,230"},${(0.08 + random() * 0.2) * strength})`;
     ctx.lineWidth = 0.6 + random() * 2.2;
-    ctx.beginPath();
-    for (let x = 0; x <= 512; x += 8) ctx.lineTo(x, y + Math.sin(x * freq + i) * amp);
-    ctx.stroke();
+    for (const wrap of [-128, 0, 128]) {
+      ctx.beginPath();
+      for (let x = 0; x <= 512; x += 8) {
+        const u = (x / 512) * Math.PI * 2;
+        ctx.lineTo(x, wrap + y + Math.sin(u + sway) * 6 + Math.sin(u * cycles + phase) * amp);
+      }
+      ctx.stroke();
+    }
   }
-  // A couple of knots.
+  if (strength < 1) return finish(element, true);
+  // A couple of knots, kept clear of the edges so they never cross a seam.
   for (let k = 0; k < 2; k++) {
     const x = 60 + random() * 390;
     const y = 20 + random() * 88;

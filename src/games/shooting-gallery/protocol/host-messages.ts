@@ -58,5 +58,12 @@ export const scoredSchema = z.object({
 });
 export type Scored = z.infer<typeof scoredSchema>;
 
-export const hostMessageSchema = z.discriminatedUnion("kind", [stateSchema, scoredSchema]);
+/**
+ * Asks every phone to send its setup again. A reloaded host sends it on
+ * start, because phones answer the host coming back before the game on
+ * the host is listening, and those answers are lost.
+ */
+export const syncSchema = z.object({ kind: z.literal("sync") });
+
+export const hostMessageSchema = z.discriminatedUnion("kind", [stateSchema, scoredSchema, syncSchema]);
 export type HostMessage = z.infer<typeof hostMessageSchema>;

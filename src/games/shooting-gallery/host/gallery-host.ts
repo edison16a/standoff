@@ -7,14 +7,17 @@ import { tableFor } from "../engine/high-scores";
 import type { Round, Shot } from "../engine/round";
 import { isRoundChoice } from "../engine/rules";
 import { winners } from "../engine/scoring";
-import { phoneMessageSchema, type GalleryPhase, type PhoneMessage } from "../protocol";
+import { phoneMessageSchema, type GalleryPhase } from "../protocol";
 import { GalleryCamera } from "../render/camera";
 import type { Shooter, StageEvent, StageSource } from "../render/stage-source";
 import { BestStore } from "./best-store";
+import { DropoutWatch } from "./dropout-watch";
 import { createHostStore, type HostStore } from "./host-store";
-import { buildState, displayName } from "./host-view";
-import { everyoneReady, freshSetup, lineUp, startHint, type LobbySeat, type SeatSetup } from "./lobby";
+import { displayName } from "./host-view";
+import { everyoneReady, lineUp } from "./lobby";
+import { Publisher } from "./publisher";
 import { RoundDriver } from "./round-driver";
+import { SeatBook } from "./seat-book";
 
 /**
  * Shooting Gallery on the computer, for one room. It is the referee: the
@@ -31,17 +34,21 @@ export class GalleryHost implements StageSource {
   private readonly audio: GalleryAudio;
   private readonly driver: RoundDriver;
   private readonly best = new BestStore();
-  private readonly setups = new Map<Seat, SeatSetup>();
-  private readonly known = new Set<Seat>();
+  private readonly seats = new SeatBook();
   private readonly listeners = new Set<(event: StageEvent) => void>();
   private readonly offs: (() => void)[] = [];
   private current: GalleryPhase = "lobby";
   private bestPlaces = new Map<Seat, number | null>();
   private winners: Seat[] = [];
-  private lastSent = "";
+  private readonly publisher: Publisher;
+  private readonly dropouts = new DropoutWatch(
+    () => this.everyoneGone(),
+    () => this.abandon(),
+  );
 
   constructor(private readonly room: HostRoomApi) {
     this.aim = new HostAim(room);
+    this.publisher = new Publisher(room, this.store);
     this.audio = new GalleryAudio(room.audio);
     this.driver = new RoundDriver(this.camera, this.audio, {
       go: () => this.setPhase("playing"),
@@ -49,16 +56,19 @@ export class GalleryHost implements StageSource {
       shot: (shot) => this.onShot(shot),
     });
     // After a host reload the phones are already sitting in the room.
-    for (const player of room.players()) if (player.connected) this.seat(player.seat);
+    for (const player of room.players()) if (player.connected) this.seats.seat(player.seat);
     this.offs.push(this.aim.onFire((seat, point) => this.driver.fire(seat, point)));
     this.offs.push(room.on((event) => this.onRoom(event)));
     this.audio.phase("lobby");
     this.store.setState({ best: tableFor(this.best.current, this.store.getState().seconds) });
+    // Phones may have answered a reload before this game was listening, so ask again.
+    room.send("all", { kind: "sync" });
     this.publish();
   }
 
   dispose(): void {
     for (const off of this.offs) off();
+    this.dropouts.dispose();
     this.aim.dispose();
     this.audio.dispose();
     this.listeners.clear();
@@ -80,16 +90,16 @@ export class GalleryHost implements StageSource {
     return this.current;
   }
 
+  /** A gun for everyone in the round, or in the lobby for everyone here. */
   shooters(): Shooter[] {
-    const live = this.driver.live;
     const players = this.room.players();
-    const seats = live ? live.seats : [...this.known].sort((a, b) => a - b);
+    const seats = this.driver.live?.seats ?? [...this.seats.known].sort((a, b) => a - b);
     return seats
       .filter((seat) => players[seat - 1]?.connected)
       .map((seat) => {
         const point = this.aim.point(seat);
         const aim = point ? this.driver.round.probe(this.camera.ray(point)).point : null;
-        return { seat, finish: this.setupOf(seat).finish, colour: playerColor(seat), aim };
+        return { seat, finish: this.seats.seat(seat).finish, colour: playerColor(seat), aim };
       });
   }
 
@@ -109,7 +119,7 @@ export class GalleryHost implements StageSource {
 
   start(): void {
     if (this.current !== "lobby") return;
-    const seats = lineUp(this.lobbySeats());
+    const seats = lineUp(this.seats.lobby(this.room.players()));
     if (seats.length === 0) return;
     this.driver.begin(seats, this.store.getState().seconds);
     this.bestPlaces = new Map();
@@ -118,7 +128,7 @@ export class GalleryHost implements StageSource {
     this.setPhase("countdown");
   }
 
-  /** From the results back to the lobby, keeping everyone's setup. */
+  /** Back to the lobby from the results, keeping everyone's setup. */
   toLobby(): void {
     if (this.current === "lobby") return;
     this.driver.end();
@@ -136,74 +146,44 @@ export class GalleryHost implements StageSource {
   /* Room events. */
 
   private onRoom(event: HostRoomEvent): void {
-    switch (event.type) {
-      case "joined":
-        this.seat(event.seat);
-        break;
-      case "left":
-        this.setupOf(event.seat).ready = false;
-        this.abandonIfEmpty();
-        break;
-      case "message": {
-        const parsed = phoneMessageSchema.safeParse(event.payload);
-        if (parsed.success) this.onPhone(event.seat, parsed.data);
-        break;
-      }
-      case "resync":
-        for (const player of this.room.players()) if (player.connected) this.seat(player.seat);
-        this.abandonIfEmpty();
-        break;
-      default:
-        break;
+    if (event.type === "joined") this.seats.seat(event.seat);
+    if (event.type === "left") {
+      this.seats.unready(event.seat);
+      this.dropouts.check();
+    }
+    if (event.type === "message") {
+      const parsed = phoneMessageSchema.safeParse(event.payload);
+      if (parsed.success && this.seats.apply(event.seat, parsed.data)) this.audio.sfx.click();
+      if (parsed.success) this.afterSetupChange();
+    }
+    if (event.type === "resync") {
+      for (const player of this.room.players()) if (player.connected) this.seats.seat(player.seat);
+      this.room.send("all", { kind: "sync" });
+      this.dropouts.check();
     }
     // Names, arrivals and departures all change what phones show, so always resend.
-    this.lastSent = "";
+    this.publisher.forget();
     this.publish();
   }
 
-  private onPhone(seat: Seat, message: PhoneMessage): void {
-    const setup = this.setupOf(seat);
-    this.known.add(seat);
-    if (message.kind === "setup") {
-      setup.step = message.step;
-      if (message.step === "calibrate") setup.ready = false;
-    } else if (message.kind === "gun") {
-      setup.finish = message.finish;
-    } else {
-      setup.ready = message.ready && (setup.step === "gun" || setup.step === "ready");
-      if (setup.ready) this.audio.sfx.click();
-    }
+  private afterSetupChange(): void {
     // In the results, everyone asking to play again goes straight back round.
-    if (this.current === "results" && everyoneReady(this.lobbySeats())) this.toLobby();
+    if (this.current === "results" && everyoneReady(this.seats.lobby(this.room.players()))) this.toLobby();
     else this.maybeStart();
   }
 
-  private seat(seat: Seat): void {
-    this.known.add(seat);
-    this.setupOf(seat);
-  }
-
-  private setupOf(seat: Seat): SeatSetup {
-    let setup = this.setups.get(seat);
-    if (!setup) this.setups.set(seat, (setup = freshSetup()));
-    return setup;
-  }
-
-  private lobbySeats(): LobbySeat[] {
-    const players = this.room.players();
-    return [...this.known].map((seat) => ({ seat, connected: players[seat - 1]?.connected ?? false, ...this.setupOf(seat) }));
-  }
-
   private maybeStart(): void {
-    if (this.current === "lobby" && everyoneReady(this.lobbySeats())) this.start();
+    if (this.current === "lobby" && everyoneReady(this.seats.lobby(this.room.players()))) this.start();
   }
 
-  /** Everyone in the round has gone, so there is nobody to play for. */
-  private abandonIfEmpty(): void {
+  private everyoneGone(): boolean {
     const live = this.driver.live;
-    if (!live || this.current === "results") return;
     const players = this.room.players();
-    if (live.seats.some((seat) => players[seat - 1]?.connected)) return;
+    return live !== null && this.current !== "results" && !live.seats.some((seat) => players[seat - 1]?.connected);
+  }
+
+  /** The whole round dropped out and nobody came back, so there is nobody to play for. */
+  private abandon(): void {
     this.driver.end();
     this.room.setPlaying(false);
     this.setPhase("lobby");
@@ -221,12 +201,12 @@ export class GalleryHost implements StageSource {
     if (!live) return;
     const standings = live.standings();
     const seconds = this.store.getState().seconds;
-    this.winners = winners(standings);
     const at = Date.now();
-    const entries = standings.map((s) => ({ name: displayName(this.room.players(), s.seat), score: s.score, accuracy: s.accuracy, seconds, at }));
-    const places = this.best.add(entries);
+    const players = this.room.players();
+    const places = this.best.add(standings.map((s) => ({ name: displayName(players, s.seat), score: s.score, accuracy: s.accuracy, seconds, at })));
     this.bestPlaces = new Map(standings.map((s, i) => [s.seat, places[i] ?? null]));
-    for (const setup of this.setups.values()) setup.ready = false;
+    this.winners = winners(standings);
+    this.seats.unreadyAll();
     this.store.setState({ best: tableFor(this.best.current, seconds) });
     this.setPhase("results");
   }
@@ -242,23 +222,18 @@ export class GalleryHost implements StageSource {
     for (const listener of this.listeners) listener(event);
   }
 
-  /** Sends the phones their state and refreshes the computer's HUD, but only when something changed. */
   private publish(): void {
-    const seats = this.lobbySeats();
-    const game = buildState({
+    const players = this.room.players();
+    const input = {
       phase: this.current,
       seconds: this.store.getState().seconds,
-      players: this.room.players(),
-      known: this.known,
-      setups: this.setups,
+      players,
+      known: this.seats.known,
+      setups: this.seats.all,
       round: this.driver.live,
       bestPlaces: this.bestPlaces,
       winners: this.winners,
-    });
-    const serialized = JSON.stringify(game);
-    if (serialized === this.lastSent) return;
-    this.lastSent = serialized;
-    this.room.send("all", game);
-    this.store.setState({ game, canStart: this.current === "lobby" && lineUp(seats).length > 0, hint: startHint(seats) });
+    };
+    this.publisher.publish(input, this.seats.lobby(players));
   }
 }

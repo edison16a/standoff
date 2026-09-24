@@ -124,7 +124,11 @@ export function receiverGeometry(): { body: THREE.BufferGeometry; dark: THREE.Bu
   guard.translate(0, -0.042, -0.1);
   const screws = [-0.12, -0.02, 0.035].map((z) => new THREE.CylinderGeometry(0.0045, 0.0045, 0.05, 12).rotateZ(Math.PI / 2).translate(0, -0.01, z));
   const badge = new THREE.CylinderGeometry(0.012, 0.012, 0.047, 24).rotateZ(Math.PI / 2).scale(1, 0.7, 1.4).translate(0, 0.004, -0.085);
-  return { body, dark: merge([port, groove, trigger]), trim: merge([guard, badge, ...screws]) };
+  // A cross bolt safety behind the trigger, standing proud on both sides.
+  const safety = new THREE.CylinderGeometry(0.0055, 0.0055, 0.058, 16).rotateZ(Math.PI / 2).translate(0, -0.03, -0.135);
+  // The steel tang where the stock meets the receiver.
+  const tang = new THREE.BoxGeometry(0.03, 0.006, 0.05).translate(0, 0.031, -0.17);
+  return { body, dark: merge([port, groove, trigger, safety]), trim: merge([guard, badge, tang, ...screws]) };
 }
 
 /** The stock, cut from one board: comb, pistol grip and a flat butt. */
@@ -143,6 +147,17 @@ export function stockGeometry(): { wood: THREE.BufferGeometry; butt: THREE.Buffe
   wood.rotateY(-Math.PI / 2).translate(0.019, 0, 0);
   const butt = new THREE.BoxGeometry(0.052, 0.17, 0.014).rotateX(-0.16).translate(0, -0.03, -0.7);
   return { wood, butt };
+}
+
+/** Sling swivels: one on the stock's belly, one on the shot tube near the muzzle, and a crown ring at the muzzle. */
+export function fittingsGeometry(): THREE.BufferGeometry {
+  const ring = (radius: number) => new THREE.TorusGeometry(radius, 0.0025, 8, 20);
+  const rear = ring(0.011).rotateY(Math.PI / 2).translate(0, -0.1, -0.46);
+  const rearStud = new THREE.CylinderGeometry(0.004, 0.004, 0.012, 8).translate(0, -0.088, -0.46);
+  const front = ring(0.01).rotateY(Math.PI / 2).translate(0, TUBE_Y - 0.021, 0.5);
+  const frontStud = new THREE.CylinderGeometry(0.0035, 0.0035, 0.012, 8).translate(0, TUBE_Y - 0.011, 0.5);
+  const crown = new THREE.TorusGeometry(0.0168, 0.0016, 8, 28).translate(0, BARREL_Y, MUZZLE_Z - 0.052);
+  return merge([rear, rearStud, front, frontStud, crown]);
 }
 
 /** The laser pointer clamped under the barrel, with its ring clamp. */

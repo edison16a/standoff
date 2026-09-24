@@ -2,6 +2,8 @@ import * as THREE from "three";
 import { glowTexture } from "../textures";
 
 const WARM = new THREE.Color("#ffd89a");
+/** The hot white core colour of a lit filament bulb, before its level. */
+const HOT = new THREE.Color(1.25, 1.05, 0.72);
 
 /**
  * Every fairground bulb in the booth, drawn in three calls however many
@@ -22,7 +24,8 @@ export class Bulbs {
     const up = new THREE.Vector3(0, 1, 0);
     const quaternion = new THREE.Quaternion();
 
-    this.glass = new THREE.InstancedMesh(new THREE.SphereGeometry(0.052, 18, 12), new THREE.MeshBasicMaterial({ color: "#ffffff" }), this.count);
+    // Bulbs are light sources, so they skip tone mapping and burn bright.
+    this.glass = new THREE.InstancedMesh(new THREE.SphereGeometry(0.052, 18, 12), new THREE.MeshBasicMaterial({ color: "#ffffff", toneMapped: false }), this.count);
     const sockets = new THREE.InstancedMesh(
       new THREE.CylinderGeometry(0.028, 0.034, 0.06, 14),
       new THREE.MeshStandardMaterial({ color: "#b8923e", metalness: 0.9, roughness: 0.35 }),
@@ -68,7 +71,7 @@ export class Bulbs {
       let level = 0.92 + 0.08 * Math.sin(time * 3 + i * 1.3);
       if (mode === "chase") level = (i + step) % 3 === 0 ? 1.1 : 0.55;
       if (mode === "flash") level = step % 2 === 0 ? 1.15 : 0.35;
-      this.colour.copy(WARM).multiplyScalar(level);
+      this.colour.copy(HOT).multiplyScalar(level);
       this.glass.setColorAt(i, this.colour);
       this.glowColours.setXYZ(i, 1 * level, 0.7 * level, 0.36 * level);
     }

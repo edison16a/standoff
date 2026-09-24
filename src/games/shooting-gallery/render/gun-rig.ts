@@ -44,6 +44,8 @@ export class GunRig {
   private readonly aim = new THREE.Quaternion();
   private readonly want = new THREE.Quaternion();
   private readonly look = new THREE.Object3D();
+  private readonly home = new THREE.Vector3();
+  private placed = false;
   private firedAt = -Infinity;
   private recoil = 0;
 
@@ -56,9 +58,11 @@ export class GunRig {
     this.aimAt(REST_TARGET, 1);
   }
 
-  /** Stands the gun at its spot along the bottom of the screen. */
+  /** Its spot along the bottom of the screen. A gun already there glides over when players come or go. */
   place(position: THREE.Vector3): void {
-    this.object.position.copy(position);
+    this.home.copy(position);
+    if (!this.placed) this.object.position.copy(position);
+    this.placed = true;
   }
 
   fire(now: number): void {
@@ -76,6 +80,7 @@ export class GunRig {
    * and plays the kick and pump. `now` and `dt` are in seconds.
    */
   update(now: number, dt: number, target: THREE.Vector3 | null): void {
+    this.object.position.lerp(this.home, 1 - Math.exp(-6 * dt));
     this.aimAt(target ?? REST_TARGET, 1 - Math.exp(-TURN_RATE * dt));
     // The kick: straight back and muzzle up at once, then eased home.
     this.recoil *= Math.exp(-dt * 11);

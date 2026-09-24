@@ -16,6 +16,7 @@ export class GalleryAudio {
   readonly sfx: Sfx;
   private readonly music: Music;
   private musicOn = true;
+  private fanfare: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private readonly engine: AudioEngine) {
     this.sfx = new Sfx(engine);
@@ -29,6 +30,7 @@ export class GalleryAudio {
   }
 
   phase(phase: GalleryPhase): void {
+    this.cancelFanfare();
     switch (phase) {
       case "lobby":
         this.music.play("waltz");
@@ -44,7 +46,7 @@ export class GalleryAudio {
       case "results":
         this.music.play(null);
         this.sfx.buzzer();
-        setTimeout(() => this.music.fanfare(), 900);
+        this.fanfare = setTimeout(() => this.music.fanfare(), 900);
         break;
     }
   }
@@ -65,7 +67,13 @@ export class GalleryAudio {
   }
 
   dispose(): void {
+    this.cancelFanfare();
     this.music.stop();
+  }
+
+  private cancelFanfare(): void {
+    if (this.fanfare) clearTimeout(this.fanfare);
+    this.fanfare = null;
   }
 
   private applyLevels(): void {

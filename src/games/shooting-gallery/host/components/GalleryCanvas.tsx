@@ -28,6 +28,8 @@ export function GalleryCanvas() {
       });
       return () => cancelAnimationFrame(frame);
     }
+    // Browser tests look at the models close up through this. Never in a production build.
+    if (process.env.NODE_ENV === "development") (window as unknown as { __galleryRenderer?: GalleryRenderer }).__galleryRenderer = renderer;
     const fit = () => renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
     fit();
     const observer = new ResizeObserver(fit);

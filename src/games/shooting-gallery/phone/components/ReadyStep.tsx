@@ -9,6 +9,7 @@ import { STEPS } from "./steps";
 function waitingLine(game: GalleryState | null, seat: number, ready: boolean): string {
   if (!game) return "";
   const me = game.players.find((p) => p.seat === seat);
+  if (game.phase === "results" && !me?.inRound) return "That round just ended. Tap Ready to play in the next one.";
   if (game.phase !== "lobby" && !me?.inRound) return "A round is on. You are in the next one.";
   if (!ready) return "Tap Ready when you are set. The round starts once everyone is.";
   const others = game.players.filter((p) => p.seat !== seat && p.connected && !p.ready).length;

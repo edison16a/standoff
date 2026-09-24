@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { BOARDS, BOOTH, boardTop, type WaveBoard } from "../../engine/layout";
+import { grainTexture } from "../textures";
 
 /**
  * The painted wooden waves the ducks ride behind. Each is cut to the same
@@ -24,7 +25,7 @@ function edge(board: WaveBoard, drop: number): THREE.Vector2[] {
 }
 
 /** The board itself, with a vertical colour ramp baked into its vertices. */
-function slab(board: WaveBoard, paint: (typeof PAINT)[number]): THREE.Mesh {
+function slab(board: WaveBoard, paint: (typeof PAINT)[number], grain: THREE.Texture): THREE.Mesh {
   const shape = new THREE.Shape([new THREE.Vector2(-REACH, BOTTOM), ...edge(board, 0), new THREE.Vector2(REACH, BOTTOM)]);
   const geometry = new THREE.ExtrudeGeometry(shape, { depth: THICK, bevelEnabled: true, bevelSize: 0.012, bevelThickness: 0.012, bevelSegments: 2 });
   geometry.translate(0, 0, -THICK);
@@ -39,7 +40,8 @@ function slab(board: WaveBoard, paint: (typeof PAINT)[number]): THREE.Mesh {
     colours.set([colour.r, colour.g, colour.b], i * 3);
   }
   geometry.setAttribute("color", new THREE.BufferAttribute(colours, 3));
-  const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.45 }));
+  // Painted plywood: the grain shows faintly through the gloss paint.
+  const mesh = new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ vertexColors: true, map: grain, roughness: 0.42 }));
   // The bevelled front face lands exactly on the plane the engine tests.
   mesh.position.z = board.z - 0.012;
   mesh.castShadow = true;
@@ -56,9 +58,12 @@ function line(board: WaveBoard, drop: number, radius: number, colour: string): T
 
 export function createWaves(): THREE.Group {
   const group = new THREE.Group();
+  const grain = grainTexture(31, 0.35);
+  // Extrude uvs are in metres, so this sets the size of the grain on the board.
+  grain.repeat.set(0.45, 1.6);
   BOARDS.forEach((board, i) => {
     const paint = PAINT[i]!;
-    group.add(slab(board, paint), line(board, 0.012, 0.014, paint.lip), line(board, 0.2, 0.008, paint.crest));
+    group.add(slab(board, paint, grain), line(board, 0.012, 0.014, paint.lip), line(board, 0.2, 0.008, paint.crest));
   });
   return group;
 }

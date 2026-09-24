@@ -1,12 +1,12 @@
 import { createStore, type StoreApi } from "zustand/vanilla";
 import { PhoneAim } from "@/games/kit/aim/phone-aim";
 import type { PhoneRoomApi, PhoneRoomEvent } from "@/platform/games/game-api";
-import { COOLDOWN_S } from "../engine/rules";
+import { PUMP_S } from "../engine/rules";
 import { hostMessageSchema, type GalleryState, type PlayerView, type Scored, type SetupStep } from "../protocol";
 import { DEFAULT_FINISH, FINISH_IDS, type FinishId } from "../render/models/finishes";
 
-/** The Shoot button stays grey a little longer than the host's pump time, so no press is ever silently dropped. */
-const REARM_MS = COOLDOWN_S * 1000 + 60;
+/** The Shoot button is grey while the gun is pumped. The host allows a little less, for network jitter. */
+const REARM_MS = PUMP_S * 1000;
 const FINISH_KEY = "standoff:shooting-gallery:finish";
 
 export interface PhoneState {
@@ -102,6 +102,7 @@ export class GalleryPhone {
     const parsed = hostMessageSchema.safeParse(event.payload);
     if (!parsed.success) return;
     const message = parsed.data;
+    if (message.kind === "sync") return this.resend();
     if (message.kind === "scored") {
       this.store.setState({ scored: { ...message, at: performance.now() } });
       navigator.vibrate?.(message.bull || message.target === "golden" ? [25, 40, 25, 40, 25] : [18, 30, 18]);

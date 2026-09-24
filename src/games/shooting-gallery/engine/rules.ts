@@ -13,11 +13,14 @@ export function isRoundChoice(value: number): value is RoundSeconds {
 export const COUNTDOWN_S = 3;
 
 /**
- * The BB gun has to be pumped between shots. It also stops a player from
+ * The BB gun has to be pumped between shots, which also stops a player
  * winning by hammering the button instead of aiming. The phone greys its
- * button a little longer than this, so no press is ever silently dropped.
+ * Shoot button for PUMP_S. The host only refuses shots closer together
+ * than COOLDOWN_S, well under that, so a press delayed on the network is
+ * never silently dropped.
  */
-export const COOLDOWN_S = 0.3;
+export const PUMP_S = 0.36;
+export const COOLDOWN_S = 0.24;
 
 /** How long a hit target takes to fall flat, and when its clack sounds. */
 export const FALL_S = 0.42;
@@ -28,8 +31,8 @@ export const SPEED_RAMP = 0.35;
 /** The last few seconds tick out loud. */
 export const FINAL_SECONDS = 5;
 
-/** A golden duck is rare: this chance per duck, at most this many a round. */
-export const GOLDEN_CHANCE = 0.05;
+/** A golden duck is rare: this chance per duck, about one round in two, and at most this many a round. */
+export const GOLDEN_CHANCE = 0.03;
 export const GOLDEN_MAX = 2;
 
 /** Pop up targets rise and sink this quickly. */

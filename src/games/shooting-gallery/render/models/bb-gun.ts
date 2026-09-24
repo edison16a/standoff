@@ -1,6 +1,17 @@
 import * as THREE from "three";
 import { grainTexture } from "../textures";
-import { barrelGeometry, bandGeometry, LASER_AT, laserGeometry, MUZZLE_Z, BARREL_Y, pumpGeometry, receiverGeometry, stockGeometry } from "./bb-gun-parts";
+import {
+  BARREL_Y,
+  bandGeometry,
+  barrelGeometry,
+  fittingsGeometry,
+  LASER_AT,
+  laserGeometry,
+  MUZZLE_Z,
+  pumpGeometry,
+  receiverGeometry,
+  stockGeometry,
+} from "./bb-gun-parts";
 import { FINISHES, type FinishId } from "./finishes";
 
 /**
@@ -24,6 +35,7 @@ export interface BBGun {
 interface Geometry {
   barrel: THREE.BufferGeometry;
   bands: THREE.BufferGeometry;
+  fittings: THREE.BufferGeometry;
   pump: THREE.BufferGeometry;
   receiver: ReturnType<typeof receiverGeometry>;
   stock: ReturnType<typeof stockGeometry>;
@@ -38,6 +50,7 @@ function shared(): Geometry {
   geometry ??= {
     barrel: barrelGeometry(),
     bands: bandGeometry(),
+    fittings: fittingsGeometry(),
     pump: pumpGeometry(),
     receiver: receiverGeometry(),
     stock: stockGeometry(),
@@ -50,7 +63,7 @@ function shared(): Geometry {
 function woodGrain(): THREE.Texture {
   if (!grain) {
     grain = grainTexture(4);
-    grain.repeat.set(3, 6);
+    grain.repeat.set(2, 3);
   }
   return grain;
 }
@@ -79,6 +92,7 @@ export function createBBGun(finish: FinishId, colour: string): BBGun {
   };
   add(root, g.barrel, mats.metal);
   add(root, g.bands, mats.trim);
+  add(root, g.fittings, mats.trim);
   add(root, g.receiver.body, mats.metal);
   add(root, g.receiver.dark, mats.dark);
   add(root, g.receiver.trim, mats.trim);
