@@ -10,13 +10,13 @@ Play it at [standoff-five.vercel.app](https://standoff-five.vercel.app).
 
 ## Screenshots
 
-The home screen. Every game is a card, three to a row with the last row centred, each tinted in its own colour. Games still being built show a rendered preview of their look.
+The home screen works like a console menu. A row of square tiles shows each game's art, and the chosen one grows and gets a ring in its own colour. Its art fills the screen behind, with its name, what it is, how many can play and a Host Game button below the row. Opening the app picks a game at random. Click a tile or use the left and right arrow keys to choose, and press Enter, click the chosen tile again or press Host Game to start. Games still being built say Coming soon.
 
-<img src="docs/screenshots/home-light.png" alt="The home screen in light mode, with Fencing, Fruit Ninja, Magic Kart and Zombie Survival cards" width="100%" />
+<img src="docs/screenshots/home-light.png" alt="The home screen in light mode, with Fencing chosen in the row of game tiles and its art filling the background" width="100%" />
 
 <img src="docs/screenshots/home-dark.png" alt="The same home screen in dark mode" width="100%" />
 
-Clicking a card opens a room. The QR code waits in the middle, then moves to the bottom left once someone joins, until the game starts. The logo at the top left always leads home.
+Hosting a game opens a room. The QR code waits in the middle, then moves to the bottom left once someone joins, until the game starts. The logo at the top left always leads home.
 
 <img src="docs/screenshots/stage-join.png" alt="The fencing strip with the QR code in the middle" width="100%" />
 

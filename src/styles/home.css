@@ -1,7 +1,8 @@
 /*
-  The home screen: the logo bar, then every game as a card, two to a row.
-  Each row is about half the screen tall, so four cards fill the view and
-  any more sit just below, a scroll away.
+  The home screen, laid out like a console menu. The chosen game's art
+  fills the screen behind a scrim in the theme's own colour. A row of
+  square tiles runs along the top, and under it the chosen game's name,
+  details and Host Game button, all on the left.
 */
 
 .home {
@@ -13,15 +14,55 @@
   overflow-y: auto;
 }
 
+/* Stays put while the page scrolls on a short screen, like a wallpaper. */
+.home__backdrop {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg-workspace);
+}
+
+.home__backdrop-art {
+  position: absolute;
+  inset: 0;
+}
+
+.home__backdrop-art--in {
+  animation: home-fade 450ms ease both;
+}
+
+@keyframes home-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/*
+  A flat wash in the page colour, so the art reads as a backdrop and the
+  theme's own text colours stay legible on it. A little more at the bottom
+  left, where the words sit.
+*/
+.home__scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to right, color-mix(in srgb, var(--bg-workspace) 60%, transparent), transparent 65%),
+    color-mix(in srgb, var(--bg-workspace) 62%, transparent);
+}
+
+:root[data-theme="dark"] .home__scrim {
+  background:
+    linear-gradient(to right, rgba(6, 5, 14, 0.6), transparent 65%),
+    rgba(6, 5, 14, 0.55);
+}
+
 .home__bar {
-  position: sticky;
-  top: 0;
-  z-index: 2;
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 16px 24px;
-  background: var(--bg-workspace);
 }
 
 .home__tools {
@@ -31,11 +72,13 @@
 }
 
 .home__note {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin: 0 24px 16px;
+  margin: 0 48px 8px;
   padding: 12px 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -43,72 +86,87 @@
   font-size: 14px;
 }
 
-/*
-  Three cards to a row, the last row centred. Covers are 16 by 10 and are
-  never cropped, so the cards are only as wide as lets two rows of cover
-  plus text fit under the bar.
-*/
-.home__grid {
-  --bar-h: 76px;
-  --top: 16px;
-  --gap: 20px;
-  --body: 86px;
-  --row: calc((100dvh - var(--bar-h) - var(--top) - var(--gap) - 24px) / 2);
-  --card: min(calc((100% - var(--gap) * 2) / 3), calc((var(--row) - var(--body)) * 1.6));
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-content: flex-start;
-  gap: var(--gap);
-  width: 100%;
-  margin: 0 auto;
-  padding: var(--top) 24px 24px;
-}
-
-.home__grid > * {
-  flex: 0 0 var(--card);
-}
-
-/* Each card is tinted with its game's colour, set inline as --game. The whole card is the button. */
-.game-card {
+.home__main {
+  --tile: clamp(88px, 8.6vw, 172px);
+  --tile-on: calc(var(--tile) * 1.22);
+  position: relative;
   display: flex;
   flex-direction: column;
-  min-width: 0;
-  padding: 0;
-  border: 2px solid var(--game);
-  border-radius: 22px;
-  background: color-mix(in srgb, var(--game) 10%, var(--bg));
-  color: var(--text);
-  font: inherit;
-  text-align: left;
-  overflow: hidden;
-  cursor: pointer;
-  transition:
-    border-color 160ms ease,
-    transform 160ms ease;
+  padding: clamp(8px, 3vh, 40px) 48px 48px;
 }
 
-.game-card:hover:not(:disabled),
-.game-card:focus-visible {
-  transform: translateY(-3px);
+/*
+  The chosen tile really is bigger, not scaled, so the others move along
+  to make room and nothing ever overlaps. The row sits on the tiles' top
+  edge, like the console's. The padding leaves room for the ring.
+*/
+.home__tiles {
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(14px, 1.4vw, 24px);
+  margin: -10px;
+  padding: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
 
-.game-card:focus-visible {
-  outline: 3px solid var(--game);
-  outline-offset: 3px;
+.home__tiles::-webkit-scrollbar {
+  display: none;
 }
 
-.game-card:disabled {
-  cursor: default;
-}
-
-.game-card__cover {
+.game-tile {
   position: relative;
-  display: block;
-  aspect-ratio: 16 / 10;
+  flex: 0 0 auto;
+  width: var(--tile);
+  height: var(--tile);
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
   background: var(--bg-elevated);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  outline: 3px solid transparent;
+  outline-offset: 4px;
+  transition:
+    width 220ms ease,
+    height 220ms ease,
+    outline-color 220ms ease,
+    opacity 220ms ease;
 }
 
+.game-tile[aria-pressed="false"] {
+  opacity: 0.82;
+}
+
+.game-tile[aria-pressed="false"]:hover {
+  opacity: 1;
+}
+
+.game-tile[aria-pressed="true"] {
+  width: var(--tile-on);
+  height: var(--tile-on);
+  border-radius: 24px;
+  outline-color: var(--game);
+}
+
+.game-tile:focus-visible {
+  outline-color: var(--game);
+  outline-style: dashed;
+}
+
+.game-tile[aria-pressed="true"]:focus-visible {
+  outline-style: solid;
+  outline-width: 4px;
+}
+
+.game-tile__art {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+/* Every game's Cover draws one of these. They crop to fill whatever box holds them. */
 .cover__canvas,
 .cover__art {
   position: absolute;
@@ -119,47 +177,89 @@
   object-fit: cover;
 }
 
-.game-card__body {
+.home__details {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-height: var(--body);
-  padding: 14px 20px;
-  border-top: 2px solid var(--game);
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 640px;
+  margin-top: clamp(32px, 11vh, 150px);
+  animation: home-fade 300ms ease both;
 }
 
-.game-card__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.game-card__title {
-  font-size: 22px;
+.home__title {
+  font-size: clamp(40px, 4.6vw, 84px);
   font-weight: 800;
-  letter-spacing: -0.02em;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
 }
 
-.game-card__tagline {
-  color: var(--text-muted);
-  font-size: 14px;
-  line-height: 1.4;
+.home__tagline {
+  font-size: clamp(16px, 1.25vw, 21px);
+  line-height: 1.45;
 }
 
-.game-card__players {
-  display: inline-flex;
-  flex-shrink: 0;
+.home__meta {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: 12px;
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
-  white-space: nowrap;
 }
 
-.game-card__players svg {
+.home__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home__meta-item svg {
   color: var(--game);
+}
+
+.home__badge {
+  padding: 3px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  font-size: 13px;
+}
+
+.home__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+/* The one loud thing on the screen: the page's text colour as a solid block, so it stands out in either theme. */
+.btn.home__host {
+  min-width: 220px;
+  height: 56px;
+  border-color: var(--text);
+  background: var(--text);
+  color: var(--bg);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.btn.home__host:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--text) 85%, var(--bg));
+}
+
+/* Waiting or not built yet: an outline instead of a faded block, so the label still reads. */
+.btn.home__host:disabled {
+  border-color: var(--border-strong);
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+.btn.home__host svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
 }
 
 @media (max-width: 820px) {
@@ -168,14 +268,16 @@
   }
 
   .home__note {
-    margin: 0 16px 12px;
+    margin: 0 16px 8px;
   }
 
-  .home__grid {
-    padding: 8px 16px 16px;
+  .home__main {
+    --tile: 96px;
+    --tile-on: 116px;
+    padding: 8px 16px 32px;
   }
 
-  .home__grid > * {
-    flex-basis: 100%;
+  .home__details {
+    margin-top: 28px;
   }
 }
