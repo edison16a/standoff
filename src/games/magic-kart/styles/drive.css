@@ -1,203 +1,178 @@
 /*
-  Magic Kart on the phone while racing: the pedals, the power up button and the status in the middle.
+  Magic Kart on the phone while racing, held sideways like a steering
+  wheel: Brake and the power up under the left thumb, Drive under the
+  right, the place in the middle. It is a dark cockpit of its own in
+  either theme, so the pedals and the power up glow.
 */
 
 .mk-phone--drive {
   flex: 1;
+  padding: 10px;
+  border-radius: 24px;
+  background: radial-gradient(90% 80% at 50% 0%, #2a2352 0%, transparent 70%), linear-gradient(180deg, #17142e, #0b0916);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+  color: #f3f1ff;
 }
 
 .mk-pad {
   display: grid;
   flex: 1;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: minmax(108px, 0.85fr) auto minmax(0, 1fr) minmax(136px, 1.15fr);
+  gap: 14px;
   min-height: 0;
-  padding-bottom: 4px;
   user-select: none;
   -webkit-user-select: none;
   touch-action: none;
 }
 
-.mk-pad__left {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 18px;
-  min-height: 0;
-}
-
 .mk-pedal {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 90px;
+  min-height: 0;
+  overflow: hidden;
   border: none;
-  border-radius: 22px;
+  border-radius: 20px;
   color: #ffffff;
-  font-size: 20px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   touch-action: none;
   -webkit-touch-callout: none;
-  transition: transform 60ms ease, filter 60ms ease;
+  transition: transform 70ms ease, filter 70ms ease, box-shadow 70ms ease;
+}
+
+/* A soft gloss over the top half, so the pedals read as keys rather than flat panels. */
+.mk-pedal::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 50% 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0));
+  pointer-events: none;
 }
 
 .mk-pedal .mk-icon {
-  width: 56px;
-  height: 56px;
+  width: 62px;
+  height: 62px;
+}
+
+.mk-pedal__label {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .mk-pedal--drive {
-  background: linear-gradient(160deg, #3ddc84, #169c55);
-  box-shadow: 0 8px 0 #0d6b39;
+  background: linear-gradient(170deg, #45f2a6 0%, #14b86d 55%, #0a8a52 100%);
+  box-shadow: 0 8px 26px rgba(20, 184, 109, 0.3), inset 0 -4px 0 rgba(0, 0, 0, 0.2);
 }
 
 .mk-pedal--brake {
-  --mk-brake-ink: #7a1020;
-  background: linear-gradient(160deg, #ff6b6b, #d63040);
-  box-shadow: 0 8px 0 #8f1d28;
+  background: linear-gradient(170deg, #ff808b 0%, #f03f58 55%, #bd1f3d 100%);
+  box-shadow: 0 8px 26px rgba(240, 63, 88, 0.26), inset 0 -4px 0 rgba(0, 0, 0, 0.2);
 }
 
 .mk-pedal.is-held {
-  transform: translateY(6px);
-  filter: brightness(1.15);
-  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  transform: scale(0.97);
+  filter: brightness(1.12);
 }
 
-.mk-ability {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-self: center;
-  justify-content: center;
-  width: 118px;
-  height: 118px;
-  padding: 18px;
-  border: 5px dashed var(--border-strong);
-  border-radius: 50%;
-  background: var(--bg-muted);
-  color: var(--text-muted);
-  touch-action: none;
+.mk-pedal--drive.is-held {
+  box-shadow: 0 0 0 3px rgba(69, 242, 166, 0.45), 0 0 34px rgba(69, 242, 166, 0.5);
 }
 
-.mk-ability--full {
-  border: 5px solid #ffc53a;
-  background: radial-gradient(circle, #3a2a70, #1a1236);
-  color: #ffffff;
-}
-
-.mk-ability--rolling {
-  animation: mk-roll-pulse 260ms ease-in-out infinite alternate;
-}
-
-.mk-ability--live {
-  animation: mk-glow 1s ease-in-out infinite;
-}
-
-.mk-ability:disabled {
-  opacity: 1;
-}
-
-.mk-ability .mk-icon {
-  width: 100%;
-  height: 100%;
-}
-
-.mk-icon--cube {
-  opacity: 0.7;
-}
-
-/* A badge on the bottom of the ring, so the name never spills onto Brake. */
-.mk-ability__label {
-  position: absolute;
-  bottom: -11px;
-  left: 50%;
-  max-width: 150px;
-  padding: 3px 10px;
-  overflow: hidden;
-  transform: translateX(-50%);
-  border: 2px solid var(--border-strong);
-  border-radius: 999px;
-  background: var(--bg);
-  color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 800;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.mk-ability--full .mk-ability__label {
-  border-color: #ffc53a;
-  background: #ffc53a;
-  color: #2a1a00;
-}
-
-@keyframes mk-roll-pulse {
-  to {
-    transform: scale(1.06);
-  }
-}
-
-@keyframes mk-glow {
-  50% {
-    box-shadow: 0 0 0 8px rgba(255, 197, 58, 0.35);
-  }
+.mk-pedal--brake.is-held {
+  box-shadow: 0 0 0 3px rgba(255, 128, 139, 0.45), 0 0 34px rgba(255, 90, 110, 0.45);
 }
 
 .mk-pad__middle {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
+  align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 2px;
+  min-width: 0;
   text-align: center;
 }
 
-.mk-pad__status {
-  display: flex;
-  flex-direction: column;
+.mk-pad__place,
+.mk-pad__count {
+  font-size: 64px;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1;
+  letter-spacing: -0.02em;
 }
 
 .mk-pad__place {
-  font-size: 54px;
-  font-weight: 900;
-  font-style: italic;
-  line-height: 1;
-}
-
-.mk-pad__lap {
-  color: var(--text-muted);
-  font-weight: 700;
+  background: linear-gradient(180deg, #ffffff 30%, #b9b0ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .mk-pad__count {
-  font-size: 80px;
-  font-weight: 900;
-  font-style: italic;
-  line-height: 1;
-  color: #ffb020;
+  color: #ffc53a;
 }
 
-.mk-pad__warn {
-  padding: 4px 10px;
-  border-radius: 10px;
-  background: #ff3040;
-  color: #ffffff;
-  font-weight: 900;
+.mk-pad__count--word {
+  font-size: 44px;
+}
+
+.mk-pad__lap {
+  color: rgba(243, 241, 255, 0.62);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
-.mk-pad__effect {
-  font-weight: 800;
-  color: var(--accent-text);
+.mk-arc {
+  width: min(100%, 170px);
+  margin-top: 12px;
 }
 
-.mk-pad__hint {
-  color: var(--text-muted);
+.mk-arc__track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.13);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.mk-arc__fill {
+  fill: none;
+  stroke: #7cc8ff;
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.mk-arc__tick {
+  stroke: rgba(255, 255, 255, 0.3);
+  stroke-width: 2;
+}
+
+.mk-arc__dot {
+  fill: #ffffff;
+  stroke: rgba(124, 200, 255, 0.45);
+  stroke-width: 6;
+}
+
+.mk-pad__note {
+  min-height: 22px;
+  margin-top: 6px;
+  color: rgba(243, 241, 255, 0.62);
   font-size: 12px;
+  font-weight: 700;
+}
+
+.mk-pad__note--warn {
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: #ff3b52;
+  color: #ffffff;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .mk-pad--stun .mk-pad__middle {
@@ -205,70 +180,35 @@
 }
 
 .mk-pad--ice {
-  background: linear-gradient(180deg, rgba(120, 220, 255, 0.18), transparent);
-  border-radius: 16px;
+  border-radius: 18px;
+  box-shadow: inset 0 0 44px rgba(120, 220, 255, 0.35);
 }
 
 .mk-pad__arrows {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  width: 100%;
+  margin-top: 10px;
 }
 
 .mk-arrow {
-  min-height: 70px;
-  border: 2px solid var(--border-strong);
+  min-height: 64px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 16px;
-  background: var(--bg-muted);
-  color: var(--text);
-  font-size: 30px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-size: 26px;
   touch-action: none;
 }
 
 .mk-arrow.is-held {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: #7cc8ff;
+  color: #0b0916;
 }
 
 @keyframes mk-blink {
   50% {
     opacity: 0.35;
   }
-}
-
-.mk-turn {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 24px;
-  border-radius: 16px;
-  background: var(--bg);
-  text-align: center;
-}
-
-.mk-turn strong {
-  font-size: 24px;
-}
-
-.mk-result {
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  text-align: center;
-}
-
-.mk-result__label {
-  color: var(--text-muted);
-  font-weight: 700;
-}
-
-.mk-result__place {
-  font-size: 96px;
-  font-weight: 900;
-  font-style: italic;
-  line-height: 1;
 }

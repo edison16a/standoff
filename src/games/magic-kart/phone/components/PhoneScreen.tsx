@@ -1,21 +1,9 @@
 "use client";
 import { ordinal } from "../../ui/format";
-import { useEffect, useState } from "react";
 import { useControllerStore } from "../controller-store";
+import { usePortrait } from "../use-portrait";
 import { DrivePad } from "./DrivePad";
 import { Setup } from "./Setup";
-
-
-function usePortrait(): boolean {
-  const [portrait, setPortrait] = useState(false);
-  useEffect(() => {
-    const check = () => setPortrait(window.innerHeight > window.innerWidth);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-  return portrait;
-}
 
 /**
  * Magic Kart on the phone: the setup steps, then the wheel and pedals
@@ -34,7 +22,7 @@ export function PhoneScreen() {
         {portrait && (
           <div className="mk-turn">
             <strong>Turn your phone sideways</strong>
-            <span>Hold it flat like a steering wheel.</span>
+            <span>Hold it upright like a steering wheel, screen facing you.</span>
           </div>
         )}
       </div>

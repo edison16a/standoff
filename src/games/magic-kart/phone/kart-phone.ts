@@ -6,7 +6,7 @@ import type { CharacterId } from "../characters";
 import { hostMessageSchema, type HostMessage, type PhoneMessage } from "../protocol";
 import { useControllerStore as store } from "./controller-store";
 import { buzz } from "./haptics";
-import { screenAngle, steerFromRoll, tiltOf, zeroFor, type Tilt } from "./tilt";
+import { screenAngle, steerFromWheel, tiltOf, wheelAngle, type Tilt } from "./tilt";
 
 /** Input goes out this often while racing, and at once on any button change. */
 const SEND_MS = 33;
@@ -20,7 +20,7 @@ export interface Pedals {
 }
 
 /**
- * Magic Kart on the phone. It reads the tilt, turns it into steering,
+ * Magic Kart on the phone. It reads the wheel, turns it into steering,
  * adds the pedals and the power up button, and streams them to the host.
  * It makes no game decisions: what the kart does is always the host's
  * call. Joining the room and staying in it is the platform's job.
@@ -28,10 +28,11 @@ export interface Pedals {
 export class KartPhone {
   /** The latest tilt, read by the level and the wheel gauge every frame. */
   tilt: Tilt | null = null;
+  /** The wheel angle the player calibrated as level. */
   private zero = 0;
-  /** Which way the page was turned when calibrated, and which way it is turned now. */
-  private zeroAngle = 90;
+  /** Which landscape the page is in, to read the wheel against. */
   private angle = 90;
+  private wheelSteer = 0;
   private pedals: Pedals = { drive: false, brake: false, left: false, right: false };
   private readonly stopSensors: (() => void) | null;
   private readonly unsubscribe: () => void;
@@ -40,8 +41,9 @@ export class KartPhone {
   constructor(private readonly room: PhoneRoomApi) {
     store.setState({ ...store.getInitialState() });
     const onQuat = (q: Quat) => {
-      this.angle = screenAngle();
+      this.angle = wheelAngle(screenAngle(), this.angle);
       this.tilt = tiltOf(q, this.angle);
+      this.wheelSteer = steerFromWheel(this.tilt.wheel, this.zero, this.wheelSteer);
     };
     this.stopSensors = room.motion === "granted" ? subscribeOrientation(onQuat, () => store.setState({ sensorsLive: true })) : null;
     if (room.motion !== "granted") store.setState({ steerMode: "buttons" });
@@ -56,16 +58,20 @@ export class KartPhone {
     this.unsubscribe();
   }
 
-  /** Steering from -1 to 1, from the tilt or the arrow buttons. */
+  /** Steering from -1 to 1, from the wheel or the arrow buttons. */
   get steer(): number {
     if (store.getState().steerMode === "buttons" || !this.tilt) return (this.pedals.right ? 1 : 0) - (this.pedals.left ? 1 : 0);
-    return steerFromRoll(this.tilt.roll, zeroFor(this.zero, this.zeroAngle, this.angle));
+    return this.wheelSteer;
   }
 
-  /** Takes the phone's resting roll as straight ahead. */
+  /**
+   * Takes the way the player holds the wheel now as level. It is kept
+   * against the page, so turning the phone round to the other landscape
+   * keeps it.
+   */
   calibrate(): void {
-    this.zero = this.tilt?.roll ?? 0;
-    this.zeroAngle = this.angle;
+    this.zero = this.tilt?.wheel ?? 0;
+    this.wheelSteer = 0;
     store.setState({ calibrated: true });
     this.click();
   }

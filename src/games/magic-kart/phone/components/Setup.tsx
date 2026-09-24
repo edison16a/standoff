@@ -12,7 +12,7 @@ const Preview = lazy(() => import("./KartPreviewCanvas"));
 
 const STEPS = ["Calibrate", "Kart", "Ready"] as const;
 const INDEX = { calibrate: 0, kart: 1, ready: 2 } as const;
-const TITLES = { calibrate: "Lay it flat", kart: "Pick your driver", ready: "Ready to race" } as const;
+const TITLES = { calibrate: "Hold it like a wheel", kart: "Pick your driver", ready: "Ready to race" } as const;
 
 function ReadyStep() {
   const host = useControllerStore((state) => state.host);

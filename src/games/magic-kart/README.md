@@ -6,11 +6,11 @@ Status: ready. A split screen kart racer for 1 to 4 players, with computer karts
 
 1. Open Magic Kart on the computer. Everyone scans the code with their phone.
 2. On the phone, after the name:
-   * **Calibrate.** Hold the phone sideways and lay it flat. When the level lights up, tap Calibrate. From then on, tilting the phone like a steering wheel steers the kart. A small wheel on screen turns with it so you can try it out. Phones without a tilt sensor get arrow buttons instead.
+   * **Calibrate.** Hold the phone sideways and upright, screen facing you, like a steering wheel. Turn it until the level lights up, then tap Calibrate. From then on, turning the phone like a wheel steers the kart. Leaning it back or forward a fair way changes nothing, and either landscape works, even after turning the phone round. A small wheel on screen turns with it so you can try it out. Phones without a tilt sensor get arrow buttons instead.
    * **Kart.** Pick one of four drivers, each with their own kart, shown turning in 3D. A driver another player has is marked taken.
    * **Ready.** Tap Ready.
 3. On the computer, pick the map with the mouse and click Start race. The chosen map's demo race runs behind the map picker. The switch fills empty grid places with computer karts.
-4. Race two laps. Each player has their own view of the split screen. The map of the whole track and the standings sit at the top right. With three players they fill the free quarter there. On the phone: **Drive** under the right thumb, **Brake** under the left, and the round **power up** button above Brake shows what you hold. Tap it to use it.
+4. Race two laps. Each player has their own view of the split screen. The map of the whole track and the standings sit at the top right. With three players they fill the free quarter there. On the phone: **Drive** under the right thumb, **Brake** under the left, and the round **power up** button just inside Brake shows what you hold and its name. Tap it to use it.
 5. The results come up with confetti. Race again on the same map, or change map.
 
 A phone that joins mid race sets up and joins the next race. A player whose phone drops keeps their kart, with the computer driving until they are back.
@@ -55,8 +55,21 @@ Laps count by checkpoints in order: only driving through each one forwards count
 * `tracks/`: one file per map, as data.
 * `render/`: three.js. `models/` has the four karts and drivers built from painted primitives and merged per kart, `scenery/` one file per map, `track/` the road, kerbs, barriers and markings, `props/` the cubes, obstacles and throws, `effects/` the particles.
 * `host/`: the session on the computer (lobby, race driver, what the phones and the overlay see) and its React screens.
-* `phone/`: the controller session, tilt steering and the phone screens.
+* `phone/`: the controller session, the steering wheel maths and the phone screens. Steering reads where "up" points across the screen, so it holds however far the phone leans and never flips the way Euler angles do.
 * `audio/`: synthesized music per map, an engine per kart pitched by speed, and every effect, through the platform's audio buses.
 * `protocol/`: the zod schemas for the messages between the phones and the host.
+* `showcase/`: the game playing itself for the home screen's media (see below).
 
 The host draws every player's view with one WebGLRenderer and scissored viewports. Scenery is instanced, karts are two or three meshes each, and shadows are soft blobs, so four views stay smooth on a laptop.
+
+## Home screen media
+
+The home screen's tile, still and looping clip are captured from `showcase/`, which plays real races with four computer karts and no room. Each shot is a seeded race, so it plays out the same way every time, and the computer karts are held in a tight pack so the camera always has close racing to show. The shots were picked by running many seeds and keeping the liveliest seconds: the pack hitting the boost pads and flying the lagoon jump on Sunny Shores with ice landing mid air, then a Star Orb, a Nitro and the flyover jump in Neo City. The icon is Blaze in the air over the lagoon under the logo, and the poster is the whole pack in the air.
+
+With the dev server running:
+
+```bash
+node tools/media/capture.mjs magic-kart --ffmpeg /path/to/ffmpeg
+```
+
+The showcase draws 30 frames a second, the rate the clip is captured at, so each captured frame is drawn once. To change a shot, edit `showcase/shots.ts` and look at it at `/showcase/magic-kart?view=loop`.

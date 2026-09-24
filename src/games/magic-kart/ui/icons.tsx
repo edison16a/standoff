@@ -6,19 +6,22 @@ import type { ItemKind } from "../engine/items";
  * glance at arm's length while racing.
  */
 
+/** Two chevrons pointing on, like the boost pads on the road. */
 export function DriveIcon() {
   return (
     <svg viewBox="0 0 48 48" className="mk-icon" aria-hidden="true">
-      <path d="M24 5 41 25H31v18H17V25H7z" fill="currentColor" />
+      <path d="M10 25 24 11l14 14" fill="none" stroke="currentColor" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 39 24 25l14 14" fill="none" stroke="currentColor" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
     </svg>
   );
 }
 
+/** The same chevrons turned back, since Brake slows down and then reverses. */
 export function BrakeIcon() {
   return (
     <svg viewBox="0 0 48 48" className="mk-icon" aria-hidden="true">
-      <path d="M17 4h14l10 10v14L31 38H17L7 28V14z" fill="currentColor" />
-      <rect x="13" y="18" width="22" height="6" rx="2" fill="var(--mk-brake-ink, #7a1020)" />
+      <path d="M10 9 24 23 38 9" fill="none" stroke="currentColor" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.5" />
+      <path d="M10 23 24 37 38 23" fill="none" stroke="currentColor" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
