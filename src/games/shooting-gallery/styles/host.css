@@ -1,0 +1,277 @@
+/*
+  Shooting Gallery on the computer: the booth fills the screen, and the
+  lobby card, the scoreboard, the countdown and the results sit over it,
+  painted like fairground signs in maroon, cream and gold.
+*/
+
+.sg-stage {
+  --sg-wood: #3a160f;
+  --sg-panel: rgba(58, 14, 20, 0.92);
+  --sg-gold: #f2c35b;
+  --sg-cream: #fff4dc;
+  --sg-sign: "Rockwell", "Roboto Slab", "Arvo", Georgia, serif;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #140b10;
+  color: var(--sg-cream);
+}
+
+.sg-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sg-nogl {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 420px;
+  text-align: center;
+}
+
+.sg-panel {
+  border: 3px solid var(--sg-gold);
+  border-radius: 18px;
+  background: var(--sg-panel);
+  box-shadow:
+    0 0 0 5px rgba(20, 6, 8, 0.6),
+    0 18px 40px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+}
+
+/* The lobby card, on the right so the join code keeps the left. */
+
+.sg-lobby {
+  position: absolute;
+  top: 50%;
+  right: 28px;
+  transform: translateY(-46%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(360px, 34vw);
+  max-height: calc(100vh - 110px);
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.sg-panel__title {
+  margin: 0;
+  color: var(--sg-gold);
+  font-family: var(--sg-sign);
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.sg-panel__lead {
+  margin: 4px 0 0;
+  opacity: 0.85;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.sg-lobby__players {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sg-lobby__player,
+.sg-lobby__empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 244, 220, 0.08);
+  font-size: 15px;
+}
+
+.sg-lobby__empty {
+  opacity: 0.75;
+}
+
+.sg-lobby__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--p);
+  box-shadow: 0 0 10px var(--p);
+}
+
+.sg-lobby__name {
+  flex: 1;
+  overflow: hidden;
+  color: var(--p);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sg-lobby__status {
+  opacity: 0.75;
+  font-size: 13px;
+}
+
+.sg-lobby__status--ready {
+  color: #7dffb0;
+  opacity: 1;
+  font-weight: 700;
+}
+
+.sg-lobby__length {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sg-lobby__label {
+  flex: 1;
+  font-weight: 700;
+}
+
+.sg-seg {
+  min-width: 58px;
+  padding: 7px 10px;
+  border: 2px solid rgba(242, 195, 91, 0.5);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--sg-cream);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sg-seg--on {
+  border-color: var(--sg-gold);
+  background: var(--sg-gold);
+  color: #3a160f;
+}
+
+.sg-start {
+  padding: 13px 18px;
+  border: 0;
+  border-radius: 14px;
+  background: linear-gradient(#ff5a6b, #c8142f);
+  box-shadow:
+    inset 0 -4px 0 rgba(0, 0, 0, 0.25),
+    0 4px 14px rgba(200, 20, 47, 0.45);
+  color: #ffffff;
+  font-family: var(--sg-sign);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.sg-start:disabled {
+  filter: grayscale(0.8);
+  opacity: 0.5;
+  cursor: default;
+}
+
+.sg-lobby__hint {
+  margin: -4px 0 0;
+  opacity: 0.8;
+  font-size: 13px;
+  text-align: center;
+}
+
+.sg-points {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 14px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22);
+  font-size: 13px;
+}
+
+.sg-points div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sg-points dt {
+  opacity: 0.8;
+}
+
+.sg-points dd {
+  margin: 0;
+  color: var(--sg-gold);
+  font-weight: 700;
+}
+
+/* High scores. */
+
+.sg-best__title {
+  margin: 0 0 6px;
+  color: var(--sg-gold);
+  font-family: var(--sg-sign);
+  font-size: 17px;
+}
+
+.sg-best__empty {
+  margin: 0;
+  opacity: 0.75;
+  font-size: 13px;
+}
+
+.sg-best__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.sg-best__row {
+  display: grid;
+  grid-template-columns: 22px 1fr auto 48px;
+  gap: 8px;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.sg-best__row--fresh {
+  background: rgba(242, 195, 91, 0.25);
+  animation: sg-glow 1.2s ease-in-out infinite alternate;
+}
+
+.sg-best__place {
+  opacity: 0.7;
+}
+
+.sg-best__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sg-best__acc {
+  opacity: 0.65;
+}
+
+.sg-best__score {
+  font-weight: 800;
+  text-align: right;
+}
+
+@keyframes sg-glow {
+  to {
+    background: rgba(242, 195, 91, 0.45);
+  }
+}
