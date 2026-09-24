@@ -73,6 +73,17 @@ export class ModelLibrary {
   }
 }
 
+let shared: ModelLibrary | null = null;
+
+/**
+ * One library for the whole page, so a second room reuses the models and
+ * painted textures of the first instead of painting them again.
+ */
+export function sharedLibrary(): ModelLibrary {
+  shared ??= new ModelLibrary();
+  return shared;
+}
+
 function fruitTemplate(kind: FruitId, spec: FruitSpec): Template {
   const models = buildFruit(spec);
   if (KINDS[kind].class === "big") addCracks(models.whole, spec);

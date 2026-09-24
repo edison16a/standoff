@@ -3,17 +3,15 @@ import { playerColor } from "@/games/kit/players";
 import type { HostRoomApi, HostRoomEvent, Player } from "@/platform/games/game-api";
 import { SoundDirector } from "../audio/sound-director";
 import type { MatchEvent, MatchPhase, Seat } from "../engine/events";
-import { KINDS } from "../engine/fruit-kinds";
 import type { Settings } from "../engine/settings";
-import { phoneMessageSchema, type BuzzEvent, type PhoneMessage } from "../protocol";
+import { phoneMessageSchema, type PhoneMessage } from "../protocol";
 import type { RenderFrame } from "../render/fruit-renderer";
-import { LOBBY_HUD, useFruitStore, type RoundHud } from "./host-store";
+import { LOBBY_HUD, useFruitStore } from "./host-store";
 import { PhoneLink, phoneState } from "./phone-link";
 import { RoundDriver } from "./round-driver";
+import { buzzFor, roundHud } from "./round-view";
 import { SeatBook } from "./seat-book";
 import type { Screen } from "./screen";
-
-const BUZZ: Partial<Record<MatchEvent["type"], BuzzEvent>> = { slice: "slice", hit: "hit", burst: "hit", bomb: "bomb" };
 
 /**
  * Fruit Ninja on the computer, for one room. It is the referee: phones
@@ -117,17 +115,11 @@ export class FruitHost {
       if (event.type === "score") this.screen?.score(event);
       else if (event.type === "phase") this.onPhase(event.phase);
       else if (event.type !== "stun") this.screen?.react(event);
-      if (!practice) this.buzz(event);
+      // Practice cuts in the lobby are just for fun, so the phones stay still.
+      const buzz = practice ? null : buzzFor(event);
+      if (buzz) this.phones.buzz(buzz.seat, buzz.buzz);
     }
     this.sound.react(events, halfWidth);
-  }
-
-  /** A short buzz on the phone of whoever cut something. */
-  private buzz(event: MatchEvent): void {
-    if (event.type === "score" && event.reason === "combo") return this.phones.buzz(event.seat, "combo");
-    const buzz = BUZZ[event.type];
-    if (!buzz || !("seat" in event) || !("body" in event)) return;
-    this.phones.buzz(event.seat, KINDS[event.body.kind].class === "rare" ? "rare" : buzz);
   }
 
   private onPhase(phase: MatchPhase): void {
@@ -140,7 +132,7 @@ export class FruitHost {
 
   /** Writes the HUD to the store and each phone's state to its phone, only when something changed. */
   private publish(): void {
-    const hud = this.hud();
+    const hud = roundHud(this.driver.match, this.nameOf);
     if (hud.countdown > 0 && hud.countdown !== this.lastCountdown) this.sound.countdown();
     this.lastCountdown = hud.countdown;
     const key = JSON.stringify(hud);
@@ -151,18 +143,6 @@ export class FruitHost {
     for (const player of this.room.players()) {
       if (player.connected) this.phones.sendState(player.seat, phoneState(player.seat, hud, this.driver.match));
     }
-  }
-
-  private hud(): RoundHud {
-    const match = this.driver.match;
-    if (!match) return LOBBY_HUD;
-    return {
-      phase: match.phase,
-      countdown: match.countdown,
-      secondsLeft: Math.ceil(match.secondsLeft),
-      standings: match.standings().map(({ seat, score }) => ({ seat, name: this.nameOf(seat), score, active: match.isActive(seat) })),
-      winners: match.phase === "over" ? match.winners() : [],
-    };
   }
 
   private onRoom(event: HostRoomEvent): void {

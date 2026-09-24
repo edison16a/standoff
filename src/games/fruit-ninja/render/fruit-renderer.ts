@@ -1,9 +1,9 @@
-import { Vector3 } from "three";
+import { Quaternion, Vector3 } from "three";
 import type { ArenaEvent, Body } from "../engine/events";
 import { KINDS } from "../engine/fruit-kinds";
 import { Effects } from "./effects/effects";
 import { FruitViews, isRare, type FruitView } from "./fruit-views";
-import { ModelLibrary } from "./models/library";
+import { sharedLibrary } from "./models/library";
 import { Pieces } from "./pieces";
 import { Stage } from "./stage";
 import { BladeTrails, type BladeFrame } from "./trails";
@@ -27,7 +27,7 @@ const SLOW_FOR_S = 2;
  */
 export class FruitRenderer {
   private readonly stage: Stage;
-  private readonly library = new ModelLibrary();
+  private readonly library = sharedLibrary();
   private readonly views: FruitViews;
   private readonly pieces: Pieces;
   private readonly trails: BladeTrails;
@@ -60,8 +60,7 @@ export class FruitRenderer {
   react(event: ArenaEvent): void {
     switch (event.type) {
       case "slice": {
-        const view = this.views.take(event.body.id);
-        if (view) this.split(view, event.body, event.dir, 1);
+        this.split(this.views.take(event.body.id), event.body, event.dir, 1);
         const { juice } = this.library.get(event.body.kind);
         this.effects.slice(event.body.x, event.body.y, event.dir, juice, event.body.radius);
         if (isRare(event.body.kind)) this.effects.treasure(event.body.x, event.body.y, event.body.kind === "dragonfruit");
@@ -72,8 +71,7 @@ export class FruitRenderer {
         this.effects.hit(event.at.x, event.at.y, event.dir, this.library.get(event.body.kind).juice);
         return;
       case "burst": {
-        const view = this.views.take(event.body.id);
-        if (view) this.split(view, event.body, event.dir, 2.2);
+        this.split(this.views.take(event.body.id), event.body, event.dir, 2.2);
         this.effects.burst(event.body.x, event.body.y, this.library.get(event.body.kind).juice, event.body.radius);
         return;
       }
@@ -118,15 +116,23 @@ export class FruitRenderer {
   }
 
   dispose(): void {
+    this.trails.dispose();
     this.stage.dispose();
   }
 
-  private split(view: FruitView, body: Body, dir: { x: number; y: number }, force: number): void {
+  /**
+   * Swaps a cut fruit for its two halves. A fruit cut in the very frame it
+   * appeared has no view yet, so its halves start from where the engine
+   * says it is.
+   */
+  private split(view: FruitView | null, body: Body, dir: { x: number; y: number }, force: number): void {
     const a = this.library.half(body.kind, 0);
     const b = this.library.half(body.kind, 1);
     if (!a || !b) return;
     const velocity = { x: body.vx * force * 0.6, y: body.vy + (force - 1) * 2 };
-    this.pieces.split([a, b], view.obj.position.clone(), view.obj.quaternion.clone(), view.scale, velocity, dir);
+    const at = view ? view.obj.position.clone() : new Vector3(body.x, body.y, 0);
+    const turn = view ? view.obj.quaternion.clone() : new Quaternion();
+    this.pieces.split([a, b], at, turn, this.library.get(body.kind).scale, velocity, dir);
   }
 
   /** Per frame touches on a flying body: glitter around rare fruit, fizz at a bomb's fuse. */

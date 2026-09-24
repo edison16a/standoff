@@ -14,13 +14,17 @@ const MAX_DT = 1 / 10;
  */
 export function StageCanvas() {
   const session = useSession();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
   const layerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
+    const box = boxRef.current;
     const layer = layerRef.current;
-    if (!canvas || !layer) return;
+    if (!box || !layer) return;
+    // A fresh canvas per mount: the renderer gives its WebGL context back on unmount, and a canvas never gets it back.
+    const canvas = document.createElement("canvas");
+    canvas.className = "fn-stage__canvas";
+    box.appendChild(canvas);
     const renderer = new FruitRenderer(canvas);
     const overlay = new Overlay(layer, () => renderer.halfWidth);
     const fit = () => renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
@@ -53,12 +57,13 @@ export function StageCanvas() {
       detach();
       overlay.dispose();
       renderer.dispose();
+      canvas.remove();
     };
   }, [session]);
 
   return (
     <>
-      <canvas ref={canvasRef} className="fn-stage__canvas" />
+      <div ref={boxRef} className="fn-stage__box" />
       <div ref={layerRef} className="fn-stage__layer" aria-hidden="true" />
     </>
   );

@@ -154,5 +154,7 @@ export class Stage {
   dispose(): void {
     this.composer.dispose();
     this.renderer.dispose();
+    // Browsers allow only a few live WebGL contexts, so give this one back now rather than on garbage collection.
+    this.renderer.forceContextLoss();
   }
 }

@@ -23,7 +23,15 @@ interface Knot {
  * returns a colour map and a matching bump map so the gaps and grain
  * catch the light.
  */
+let painted: { map: Texture; bump: Texture } | null = null;
+
 export function paintWood(): { map: Texture; bump: Texture } {
+  // The board takes the longest to paint, so every room shares one.
+  painted ??= paint();
+  return painted;
+}
+
+function paint(): { map: Texture; bump: Texture } {
   const color = canvas(WIDTH, HEIGHT);
   const bump = canvas(WIDTH, HEIGHT);
   const colorData = color.ctx.createImageData(WIDTH, HEIGHT);

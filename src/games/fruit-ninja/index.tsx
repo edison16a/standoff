@@ -7,8 +7,12 @@ import { FruitPhone } from "./phone/fruit-phone";
 import { PhoneScreen } from "./phone/components/PhoneScreen";
 import { PhoneContext } from "./phone/components/session-context";
 import "./styles/host.css";
+import "./styles/lobby.css";
 import "./styles/round.css";
+import "./styles/popups.css";
+import "./styles/results.css";
 import "./styles/phone.css";
+import "./styles/play.css";
 
 /**
  * Fruit Ninja, as the platform sees it. Each room gets one session, and

@@ -73,11 +73,22 @@ export class BladeTrails {
       trail.core.material.color.set(blade.stunned ? "#777777" : "#ffffff");
     }
     for (const [seat, trail] of this.trails) {
-      if (seen.has(seat)) continue;
-      this.scene.remove(trail.mesh, trail.tip, trail.core);
-      this.trails.delete(seat);
+      if (!seen.has(seat)) this.remove(seat, trail);
     }
     return speeds;
+  }
+
+  dispose(): void {
+    for (const [seat, trail] of this.trails) this.remove(seat, trail);
+  }
+
+  private remove(seat: Seat, trail: Trail): void {
+    this.scene.remove(trail.mesh, trail.tip, trail.core);
+    trail.mesh.geometry.dispose();
+    trail.material.dispose();
+    trail.tip.material.dispose();
+    trail.core.material.dispose();
+    this.trails.delete(seat);
   }
 
   private speed(trail: Trail): number {

@@ -1,0 +1,89 @@
+/*
+  Fruit Ninja at the end of a round: the results card with the winner,
+  the final standings and what to do next.
+*/
+
+/* The results card. */
+
+.fn-results {
+  top: 50%;
+  left: 50%;
+  width: min(480px, calc(100% - 48px));
+  transform: translate(-50%, -50%);
+  text-align: center;
+  animation: fn-card-in 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+@keyframes fn-card-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -40%) scale(0.9);
+  }
+}
+
+.fn-results__kicker {
+  margin: 0;
+  color: #9a6230;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.fn-results__winner {
+  margin: 6px 0 16px;
+  color: var(--pop);
+  font-size: 44px;
+  font-weight: 900;
+  -webkit-text-stroke: 2px rgba(60, 20, 0, 0.6);
+  paint-order: stroke fill;
+}
+
+.fn-results__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.fn-results__row {
+  display: grid;
+  grid-template-columns: 52px 1fr auto;
+  align-items: center;
+  padding: 10px 16px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: inset 6px 0 0 var(--pop);
+  font-size: 20px;
+  font-weight: 800;
+  text-align: left;
+}
+
+.fn-results__row--top {
+  background: linear-gradient(90deg, #fff4c4, #fff);
+  font-size: 24px;
+}
+
+.fn-results__place {
+  color: #9a6230;
+  font-size: 16px;
+}
+
+.fn-results__name {
+  overflow: hidden;
+  color: color-mix(in srgb, var(--pop) 70%, #2a1406);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fn-results__score {
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+}
+
+.fn-results__actions {
+  display: flex;
+  flex-direction: column;
+}
