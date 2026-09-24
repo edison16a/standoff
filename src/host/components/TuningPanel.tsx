@@ -1,4 +1,5 @@
 "use client";
+import { Slider } from "@/components/ui/Slider";
 import { DEFAULT_TUNING, TUNING_FIELDS, type MovementMode, type TuningGroup } from "@/shared/tuning";
 import { useHostStore } from "../host-store";
 import { useSession } from "./session-context";
@@ -41,13 +42,12 @@ export function TuningPanel() {
           {TUNING_FIELDS.filter((field) => field.group === group).map((field) => (
             <label key={field.key} className="tuning__field">
               <span className="tuning__name">{field.label}</span>
-              <input
-                type="range"
+              <Slider
                 min={field.min}
                 max={field.max}
                 step={field.step}
                 value={tuning[field.key]}
-                onChange={(event) => session.setTuning({ ...tuning, [field.key]: Number(event.target.value) })}
+                onChange={(value) => session.setTuning({ ...tuning, [field.key]: value })}
               />
               <span className="tuning__value mono">{format(tuning[field.key], field.step, field.unit)}</span>
             </label>

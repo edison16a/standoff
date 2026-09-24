@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { Slider } from "@/components/ui/Slider";
 import { useController } from "./session-context";
 
 /**
@@ -20,13 +21,13 @@ export function TouchControls() {
     <div className="touch">
       <label className="touch__move">
         <span className="label">Footwork</span>
-        <input
-          type="range"
+        <Slider
           min={-1}
           max={1}
           step={0.05}
           value={move}
-          onChange={(event) => setFootwork(Number(event.target.value))}
+          origin="centre"
+          onChange={setFootwork}
           onPointerUp={() => setFootwork(0)}
         />
       </label>
