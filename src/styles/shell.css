@@ -1,25 +1,39 @@
 /*
-  The stage: the strip fills the window, and a few small pieces float over
-  it. Player chips across the top, icon tools in the corner, and the QR
-  code until both players are in.
+  The frame around every game on the computer: the logo at the top left,
+  the tool bar at the top right, the notice under it, and the join card.
 */
 
-.stage {
+.shell {
   position: fixed;
   inset: 0;
-  overflow: hidden;
   background: var(--bg-workspace);
+  overflow: hidden;
 }
 
-.stage__canvas {
+.shell__brand {
   position: absolute;
-  inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
+  top: 16px;
+  left: 20px;
+  z-index: 3;
 }
 
-.stage__tools {
+.home-link {
+  display: inline-flex;
+  padding: 6px 10px 6px 6px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.home-link:hover {
+  background: var(--bg-muted);
+}
+
+.shell__tools {
   position: absolute;
   top: 12px;
   right: 12px;
@@ -28,18 +42,18 @@
   gap: 2px;
 }
 
-.stage__tools .btn {
+.shell__tools .btn {
   width: 40px;
   padding: 0;
   border-color: transparent;
   background: transparent;
 }
 
-.stage__tools .btn:hover {
+.shell__tools .btn:hover {
   background: var(--bg-muted);
 }
 
-.stage__notice {
+.shell__notice {
   position: absolute;
   top: 76px;
   left: 50%;
@@ -52,56 +66,6 @@
   white-space: nowrap;
 }
 
-.player-bar {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 12px;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  height: 40px;
-  padding: 0 16px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--bg);
-  color: var(--text-muted);
-  font-size: 14px;
-  white-space: nowrap;
-}
-
-.chip--on {
-  color: var(--text);
-}
-
-.pips {
-  display: inline-flex;
-  gap: 5px;
-}
-
-.pip {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 2px solid var(--border-strong);
-}
-
-.chip--p1 .pip--on {
-  border-color: var(--accent);
-  background: var(--accent);
-}
-
-.chip--p2 .pip--on {
-  border-color: var(--text);
-  background: var(--text);
-}
-
-/* The join card is always white, so the QR code reads on any theme. */
 .join {
   position: absolute;
   display: flex;
@@ -141,18 +105,55 @@
   height: 100%;
 }
 
+.join__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.join__label {
+  color: #6b7078;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.join__title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
 .join__code {
   font-size: 26px;
   font-weight: 700;
   letter-spacing: 0.2em;
 }
 
-.join--corner .join__code {
+.join--corner .join__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.join__label {
+  color: #6b7078;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.join__title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.join__code {
   font-size: 16px;
 }
 
-/* Sits on the always white join card, so it keeps dark on white colours too. */
-.join__solo {
+.join__extra {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -169,7 +170,7 @@
   cursor: pointer;
 }
 
-.join__solo:hover {
+.join__extra:hover {
   border-color: var(--accent);
   color: var(--accent);
 }

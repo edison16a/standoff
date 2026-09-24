@@ -104,6 +104,7 @@ export class MatchDriver {
       countdown: match.countdown(this.engine.now),
       call: match.call,
       winner: match.winner,
+      scorer: match.haltReason?.kind === "touch" ? match.haltReason.scorer : null,
       rematchVotes: { ...match.rematchVotes },
     };
   }

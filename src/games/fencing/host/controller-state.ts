@@ -7,7 +7,7 @@ import type { Lobby } from "./lobby";
  * Builds the state message both phones render from. Before a match it is
  * mostly lobby data. During one it mirrors the engine.
  */
-export function buildControllerState(lobby: Lobby, engine: Engine | null): ControllerState {
+export function buildControllerState(lobby: Lobby, engine: Engine | null, names: [string, string]): ControllerState {
   const { seats } = lobby;
   const match = engine?.match;
   return {
@@ -15,6 +15,7 @@ export function buildControllerState(lobby: Lobby, engine: Engine | null): Contr
     phase: engine?.phase ?? "lobby",
     scores: match ? [match.scores[1], match.scores[2]] : [0, 0],
     touchesToWin: TOUCHES_TO_WIN,
+    names,
     picks: [seats[1].pick, seats[2].pick],
     ready: [seats[1].ready, seats[2].ready],
     connected: [seats[1].connected, seats[2].connected],

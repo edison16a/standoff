@@ -1,25 +1,24 @@
 "use client";
 import { useEffect, useState } from "react";
-import { HostSession } from "../../../games/fencing/host/host-session";
-import { useHostStore } from "../../../games/fencing/host/host-store";
-import { Landing } from "./Landing";
-import { SessionContext } from "./session-context";
-import { Stage } from "../../../games/fencing/host/components/Stage";
+import { HostRoom } from "../host-room";
+import { useHostStore } from "../host-store";
+import { Home } from "./Home";
+import { HostContext } from "./host-context";
+import { RoomShell } from "./RoomShell";
 
-/** The computer's side of Standoff: start a game, fill the lobby, host the match. */
+/** The computer's side of Standoff: pick a game on the home screen, then host it. */
 export function HostApp() {
-  // This component only renders in the browser (see HostEntry), so the session can be made up front.
-  const [session] = useState(() => new HostSession());
+  // This component only renders in the browser (see HostEntry), so the host can be made up front.
+  const [host] = useState(() => new HostRoom());
   const screen = useHostStore((state) => state.screen);
+  const code = useHostStore((state) => state.room?.code);
 
   useEffect(() => {
-    session.connect();
-    return () => session.dispose();
-  }, [session]);
+    host.connect();
+    return () => host.dispose();
+  }, [host]);
 
   return (
-    <SessionContext.Provider value={session}>
-      {screen === "landing" ? <Landing /> : <Stage />}
-    </SessionContext.Provider>
+    <HostContext.Provider value={host}>{screen === "room" && code ? <RoomShell key={code} /> : <Home />}</HostContext.Provider>
   );
 }

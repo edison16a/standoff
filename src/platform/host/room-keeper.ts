@@ -10,6 +10,8 @@ export type RoomMessage = Extract<ServerEnvelope, { type: "room:created" | "room
 
 export interface OpenedRoom {
   code: string;
+  game: string;
+  seats: number;
   joinUrl: string;
   sharedRooms: boolean;
   /** Which seats already have a phone. Only known when resuming. */
@@ -28,7 +30,8 @@ export interface RoomKeeperEvents {
  * or, if the player asked for a game, creates one.
  */
 export class RoomKeeper {
-  private wanted = false;
+  /** The game and seat count asked for, until a room exists. */
+  private wanted: { game: string; seats: number } | null = null;
   private retries = 0;
 
   constructor(
@@ -46,30 +49,34 @@ export class RoomKeeper {
   announce(send: Send): void {
     const saved = recallRoom();
     if (saved) send({ type: "host:resume", code: saved.code, token: saved.token });
-    else if (this.wanted) send({ type: "host:create", game: "fencing", seats: 2 });
+    else if (this.wanted) send({ type: "host:create", ...this.wanted });
   }
 
-  create(send: Send): void {
-    this.wanted = true;
-    send({ type: "host:create", game: "fencing", seats: 2 });
+  create(send: Send, game: string, seats: number): void {
+    this.wanted = { game, seats };
+    send({ type: "host:create", game, seats });
   }
 
   close(send: Send): void {
     send({ type: "host:close" });
     forgetRoom();
-    this.wanted = false;
+    this.wanted = null;
   }
 
   handle(message: RoomMessage): void {
     switch (message.type) {
-      case "room:created":
+      case "room:created": {
         rememberRoom({ code: message.code, token: message.token });
-        this.events.opened({ code: message.code, joinUrl: message.joinUrl, sharedRooms: message.sharedRooms, connected: null });
+        const { code, game, seats, joinUrl, sharedRooms } = message;
+        this.events.opened({ code, game, seats, joinUrl, sharedRooms, connected: null });
         return;
-      case "room:resumed":
+      }
+      case "room:resumed": {
         this.retries = 0;
-        this.events.opened({ code: message.code, joinUrl: message.joinUrl, sharedRooms: message.sharedRooms, connected: message.connected });
+        const { code, game, seats, joinUrl, sharedRooms, connected } = message;
+        this.events.opened({ code, game, seats, joinUrl, sharedRooms, connected });
         return;
+      }
       case "room:error":
         // A resume that cannot find the room may just have landed on the
         // wrong server instance. Try a few fresh sockets before giving up.

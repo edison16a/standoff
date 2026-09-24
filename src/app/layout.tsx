@@ -6,11 +6,9 @@ import "./globals.css";
 import "@/styles/ui.css";
 import "@/styles/tabs.css";
 import "@/styles/range.css";
-import "@/styles/landing.css";
-import "@/styles/stage.css";
-import "@/styles/stage-overlays.css";
-import "@/styles/controller.css";
-import "@/styles/controller-pad.css";
+import "@/styles/home.css";
+import "@/styles/shell.css";
+import "@/styles/phone.css";
 
 export const metadata: Metadata = {
   title: SITE.name,

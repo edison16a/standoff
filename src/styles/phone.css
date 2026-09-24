@@ -1,6 +1,6 @@
 /*
-  The phone controller. Built for one hand and a small screen: a single
-  column, large tap targets, and the main action pinned where a thumb is.
+  The frame around every game on a phone: the header bar, the notice
+  under it, the name screen, and the plain card games put their steps in.
 */
 
 .phone {
@@ -74,7 +74,6 @@
   background: var(--bg);
 }
 
-/* A centred column for one moment: a mark or a title, then one button. */
 .phone-hero {
   display: flex;
   flex-direction: column;
@@ -98,92 +97,35 @@
   line-height: 1.2;
 }
 
-.steps {
+.name-field {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-}
-
-.step__head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.step__head h2 {
-  font-size: 18px;
-}
-
-.step__num {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: var(--on-accent);
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.picker {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.picker__card {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 0 0 12px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg);
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 120ms ease;
-}
-
-.picker__card--chosen {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
-}
-
-.picker__card:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.picker__art {
+  gap: 6px;
   width: 100%;
-  height: 150px;
-  margin-bottom: 8px;
-  background: var(--bg-elevated);
+  text-align: left;
 }
 
-.picker__name {
-  padding: 0 12px;
+.name-field__label {
+  color: var(--text-muted);
+  font-size: 14px;
   font-weight: 600;
 }
 
-.picker__tag {
-  padding: 0 12px;
-  font-size: 12px;
-  line-height: 1.35;
+.name-field__input {
+  width: 100%;
+  height: 56px;
+  padding: 0 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 20px;
+  font-weight: 600;
 }
 
-.ready-bar {
-  position: sticky;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px 0 4px;
-  background: var(--bg-workspace);
-  text-align: center;
-  font-size: 14px;
+.name-field__input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: transparent;
 }

@@ -1,36 +1,20 @@
-import { AudioEngine } from "@/platform/audio/audio-engine";
 import { SoundDirector } from "@/games/fencing/audio/sound-director";
 import type { Tuning } from "@/games/fencing/tuning";
+import type { AudioEngine } from "@/platform/audio/audio-engine";
 
 /**
- * The host's sound, created on first use. Browsers only start audio from a
- * user gesture, so the engine is unlocked inside the "Create game" click,
- * or on the first tap anywhere when the page was reloaded into a game.
+ * Fencing's sound on the computer. The platform owns the audio engine and
+ * unlocked it in the click that opened the room. This directs it: music,
+ * crowd and the sound of every clash.
  */
 export class HostAudio {
-  private engine: AudioEngine | null = null;
-  director: SoundDirector | null = null;
+  readonly director: SoundDirector;
 
-  constructor(private readonly tuning: () => Tuning) {}
-
-  /** Call from inside a click or tap. */
-  async unlock(): Promise<void> {
-    await this.ensure().unlock();
-  }
-
-  ensure(): AudioEngine {
-    if (this.engine) return this.engine;
-    const engine = new AudioEngine();
-    this.engine = engine;
-    this.director = new SoundDirector(engine, this.tuning);
-    if (!engine.unlocked) window.addEventListener("pointerdown", () => void engine.unlock(), { once: true });
-    return engine;
+  constructor(engine: AudioEngine, tuning: () => Tuning) {
+    this.director = new SoundDirector(engine, tuning);
   }
 
   dispose(): void {
-    this.director?.stop();
-    this.engine?.close();
-    this.director = null;
-    this.engine = null;
+    this.director.stop();
   }
 }

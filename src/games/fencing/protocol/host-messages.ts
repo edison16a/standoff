@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { NAME_MAX } from "@/platform/profile";
 import { CHARACTER_IDS } from "../characters";
 import type { Tuning } from "../tuning";
 import { MATCH_PHASES } from "./phase";
@@ -18,6 +19,8 @@ export const controllerStateSchema = z.object({
   phase: z.enum(MATCH_PHASES),
   scores: pair(z.number().int().min(0)),
   touchesToWin: z.number().int().min(1),
+  /** What each player is called, as typed on their phone. */
+  names: pair(z.string().max(NAME_MAX)),
   picks: pair(z.enum(CHARACTER_IDS).nullable()),
   ready: pair(z.boolean()),
   connected: pair(z.boolean()),

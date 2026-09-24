@@ -1,4 +1,4 @@
-import { ControllerEntry } from "@/platform/phone/components/ControllerEntry";
+import { PhoneEntry } from "@/platform/phone/components/PhoneEntry";
 import { ROOM_CODE_ALPHABET, ROOM_CODE_LENGTH } from "@/platform/protocol";
 import { notFound } from "next/navigation";
 
@@ -9,5 +9,5 @@ export default async function JoinPage({ params }: { params: Promise<{ code: str
   const { code } = await params;
   const normalized = code.toUpperCase();
   if (!CODE_PATTERN.test(normalized)) notFound();
-  return <ControllerEntry code={normalized} />;
+  return <PhoneEntry code={normalized} />;
 }

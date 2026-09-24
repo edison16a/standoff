@@ -1,11 +1,8 @@
 import { create } from "zustand";
-import type { SocketStatus } from "@/platform/net/socket-client";
 import type { PerSlot, Slot } from "@/games/fencing/players";
 import type { MatchPhase } from "@/games/fencing/protocol";
 import { DEFAULT_TUNING, type Tuning } from "@/games/fencing/tuning";
 import type { SeatState } from "./lobby";
-
-export type HostScreen = "landing" | "lobby" | "match";
 
 /** The slice of match state the overlay on top of the canvas draws. */
 export interface MatchHud {
@@ -14,40 +11,33 @@ export interface MatchHud {
   countdown: number | null;
   call: string | null;
   winner: Slot | null;
+  /** Who scored the last touch, for the call on screen. */
+  scorer: Slot | null;
   rematchVotes: PerSlot<boolean>;
 }
 
 /**
- * Everything the host screens render. The session writes here, React
- * reads. The engine itself never goes in the store: it changes 60 times a
- * second and only the canvas needs it at that rate.
+ * Everything the fencing screens on the computer render. The session
+ * writes here, React reads. The engine itself never goes in the store: it
+ * changes 60 times a second and only the canvas needs it at that rate.
  */
-export interface HostState {
-  screen: HostScreen;
-  status: SocketStatus;
-  room: { code: string; joinUrl: string } | null;
+export interface FencingHostState {
   seats: PerSlot<SeatState>;
+  /** What each player is called, from their phone, or "Computer". */
+  names: PerSlot<string>;
   hud: MatchHud | null;
   tuning: Tuning;
-  error: string | null;
-  /** False on a multi instance deploy without Redis, where joins can miss the room. */
-  sharedRooms: boolean;
-  /** A reload is getting its room back. */
-  resuming: boolean;
+  tuningOpen: boolean;
 }
 
 const emptySeat = (): SeatState => ({ connected: false, pick: null, ready: false, computer: false });
 
-export const useHostStore = create<HostState>(() => ({
-  screen: "landing",
-  status: "connecting",
-  room: null,
+export const useFencingStore = create<FencingHostState>(() => ({
   seats: { 1: emptySeat(), 2: emptySeat() },
+  names: { 1: "Player 1", 2: "Player 2" },
   hud: null,
   tuning: DEFAULT_TUNING,
-  error: null,
-  sharedRooms: true,
-  resuming: false,
+  tuningOpen: false,
 }));
 
 /** Shallow compare, so the per frame HUD sync only writes when something changed. */

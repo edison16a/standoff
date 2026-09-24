@@ -2,7 +2,7 @@
 import { useEffect, useRef } from "react";
 import { useTheme } from "@/hooks/use-theme";
 import { SceneRenderer } from "@/games/fencing/render/scene-renderer";
-import { useSession } from "../../../../platform/host/components/session-context";
+import { useSession } from "./session-context";
 
 /**
  * The strip, filling the window from the moment a game exists. One

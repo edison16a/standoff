@@ -1,0 +1,190 @@
+/*
+  The home screen: the logo bar, the shelf of games, and the chosen
+  game's title, player count and Play button under it.
+*/
+
+.home {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background: var(--bg-workspace);
+  overflow: hidden;
+}
+
+.home__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+}
+
+.home__tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home__detail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 0 24px 7vh;
+  text-align: center;
+}
+
+.home__title {
+  margin: 0;
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.home__tagline {
+  margin: 0;
+  max-width: 34ch;
+  color: var(--text-muted);
+  font-size: 17px;
+}
+
+.home__players {
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.home__play {
+  min-width: 200px;
+}
+
+.home__note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* The shelf. Every card sits at the centre and is moved by its offset from the selected one. */
+.carousel {
+  position: relative;
+  min-height: 0;
+  touch-action: pan-y;
+}
+
+.carousel__track {
+  position: absolute;
+  inset: 0;
+  --card-w: min(46vw, 64vh);
+}
+
+.carousel__card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  width: var(--card-w);
+  aspect-ratio: 16 / 10;
+  padding: 0;
+  border: 2px solid var(--border);
+  border-radius: 22px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  opacity: 0.45;
+  transform: translate(calc(-50% + var(--offset) * (var(--card-w) * 0.78)), -50%) scale(0.62);
+  transition:
+    transform 280ms ease,
+    opacity 280ms ease,
+    border-color 280ms ease;
+}
+
+.carousel__card--selected {
+  z-index: 1;
+  border-color: var(--accent);
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.carousel__cover {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background: var(--bg-elevated);
+}
+
+.cover__canvas,
+.cover__art {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.carousel__name {
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+  font-size: 18px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.carousel__badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.carousel__arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.carousel__arrow:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.carousel__arrow svg {
+  width: 22px;
+  height: 22px;
+}
+
+.carousel__arrow--left {
+  left: 24px;
+}
+
+.carousel__arrow--right {
+  right: 24px;
+}
+
+@media (max-width: 720px) {
+  .carousel__track {
+    --card-w: 78vw;
+  }
+
+  .carousel__arrow {
+    display: none;
+  }
+}

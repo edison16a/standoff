@@ -1,18 +1,16 @@
-import { CHARACTERS } from "@/games/fencing/characters";
-import { useHostStore } from "../host-store";
-import { useSession } from "../../../../platform/host/components/session-context";
+import { useFencingStore } from "../host-store";
+import { useSession } from "./session-context";
 
 /** The end: who won, the score, rematch votes from the phones, and a way out. */
 export function MatchOver() {
   const session = useSession();
-  const hud = useHostStore((state) => state.hud);
-  const seats = useHostStore((state) => state.seats);
+  const hud = useFencingStore((state) => state.hud);
+  const names = useFencingStore((state) => state.names);
   if (!hud || hud.phase !== "matchOver" || !hud.winner) return null;
-  const pick = seats[hud.winner].pick;
   const loser = hud.winner === 1 ? 2 : 1;
   return (
     <div className="over" role="dialog" aria-label="Match over">
-      <strong className="over__title">{pick ? CHARACTERS[pick].name : `Player ${hud.winner}`} wins</strong>
+      <strong className="over__title">{names[hud.winner]} wins</strong>
       <span className="over__score mono">
         {hud.scores[hud.winner]} : {hud.scores[loser]}
       </span>
