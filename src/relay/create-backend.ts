@@ -2,7 +2,13 @@ import type { Backend, RoomStore } from "./backend";
 import { MemoryBus } from "./memory/memory-bus";
 import { MemoryStore } from "./memory/memory-store";
 
-let shared: Promise<Backend> | null = null;
+/**
+ * Kept on the global object, not in a module variable. Locally the custom
+ * server and Next's route handlers load this file as two separate module
+ * copies in the same process, and they must still see the same rooms.
+ */
+const SHARED = Symbol.for("standoff.backend");
+const holder = globalThis as { [SHARED]?: Promise<Backend> | null };
 
 /**
  * Picks where rooms live, once per process. With a Redis URL in the
@@ -14,12 +20,12 @@ let shared: Promise<Backend> | null = null;
  * pair of Redis connections instead of opening two each.
  */
 export function createBackend(): Promise<Backend> {
-  shared ??= open().catch((error: unknown) => {
+  holder[SHARED] ??= open().catch((error: unknown) => {
     // Let the next socket try again rather than caching a failure forever.
-    shared = null;
+    holder[SHARED] = null;
     throw error;
   });
-  return shared;
+  return holder[SHARED];
 }
 
 async function open(): Promise<Backend> {

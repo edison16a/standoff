@@ -7,6 +7,7 @@ import { loadCertificate } from "./certificates";
 import { readConfig } from "./config";
 import { findLanAddress } from "./network";
 import { createBackend } from "../src/relay/create-backend";
+import { setLocalPhoneOrigin } from "../src/relay/route-context";
 import { createSocketServer } from "./realtime/socket-server";
 
 /**
@@ -20,6 +21,9 @@ async function main() {
   const phoneHost = config.publicHost ?? lanAddress ?? "localhost";
   const phoneOrigin = `https://${phoneHost}:${config.httpsPort}`;
 
+  // Next's routes serve the HTTP fallback in this same process. They share
+  // the backend (see createBackend) and need the phone address too.
+  setLocalPhoneOrigin(phoneOrigin);
   const backend = await createBackend();
   const sockets = createSocketServer({
     backend,

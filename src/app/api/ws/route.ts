@@ -1,6 +1,7 @@
 import { getDeadline, waitUntil } from "@vercel/functions";
 import { MAX_FRAME_BYTES, attachSocket } from "@/relay/attach-socket";
-import { createBackend, deferredBackend, findRedisUrl } from "@/relay/create-backend";
+import { createBackend, deferredBackend } from "@/relay/create-backend";
+import { routeContext } from "@/relay/route-context";
 import { upgradeOnVercel } from "@/relay/vercel-upgrade";
 
 /**
@@ -21,21 +22,13 @@ export async function GET(request: Request): Promise<Response> {
   if (!wantsWebSocket(request.headers)) {
     return new Response("This endpoint only speaks WebSocket.", { status: 426, headers: { Upgrade: "websocket" } });
   }
-  const origin = requestOrigin(request);
-  const pending = createBackend();
-  const deadline = getDeadline()?.getTime() ?? null;
+  const ctx = routeContext(request, deferredBackend(createBackend()), getDeadline()?.getTime() ?? null);
 
   return upgradeOnVercel(
     (socket) => {
       // Listeners must be attached before any await, or a message the
       // client sends straight after opening could be dropped.
-      const closed = attachSocket(socket, {
-        backend: deferredBackend(pending),
-        joinUrlFor: (code) => `${origin}/join/${code}`,
-        now: Date.now,
-        sharedRooms: findRedisUrl() !== null,
-        deadline,
-      });
+      const closed = attachSocket(socket, ctx);
       // Keep this invocation alive for as long as the socket is open.
       waitUntil(closed);
     },
@@ -54,11 +47,4 @@ function wantsWebSocket(headers: Headers): boolean {
     headers.has("sec-websocket-version") ||
     headers.get("upgrade")?.toLowerCase() === "websocket"
   );
-}
-
-/** The address the host used to reach us, so the QR code points at the same deployment. */
-function requestOrigin(request: Request): string {
-  const url = new URL(request.url);
-  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? url.host;
-  return `https://${host}`;
 }
