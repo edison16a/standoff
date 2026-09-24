@@ -1,5 +1,5 @@
 import type { GameEvent } from "@/game/events";
-import type { SceneFrame } from "@/game/frames";
+import type { StageFrame } from "@/game/frames";
 import { Animator } from "@/rig/animator";
 import { drawFencer } from "@/rig/draw-fencer";
 import { solve } from "@/rig/skeleton";
@@ -52,7 +52,7 @@ export class SceneRenderer {
     this.flash.react(event);
   }
 
-  render(frame: SceneFrame): void {
+  render(frame: StageFrame): void {
     const { ctx, camera, palette } = this;
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.fillStyle = palette.background;

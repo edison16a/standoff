@@ -1,4 +1,4 @@
-import type { SceneFrame } from "@/game/frames";
+import type { StageFrame } from "@/game/frames";
 import { STRIP_HALF_LENGTH } from "@/game/rules";
 
 /** Tallest a fencer gets, sword raised in victory, used to size the view. */
@@ -43,10 +43,12 @@ export class Camera {
     this.lastT = null;
   }
 
-  follow(frame: SceneFrame): void {
-    const [a, b] = frame.fencers;
-    const targetCentre = (a.x + b.x) / 2;
-    const span = Math.max(this.minSpan, Math.abs(b.x - a.x) + SIDE_MARGIN * 2);
+  follow(frame: StageFrame): void {
+    const xs = frame.fencers.map((fencer) => fencer.x);
+    const left = xs.length ? Math.min(...xs) : 0;
+    const right = xs.length ? Math.max(...xs) : 0;
+    const targetCentre = xs.length === 2 ? (left + right) / 2 : 0;
+    const span = Math.max(this.minSpan, right - left + SIDE_MARGIN * 2);
     const targetScale = Math.min((this.height * 0.62) / FIGURE_HEIGHT, this.width / span);
 
     const dt = this.lastT === null ? Infinity : Math.max(0, frame.t - this.lastT) / 1000;

@@ -34,3 +34,12 @@ export interface SceneFrame {
   t: number;
   fencers: [FencerFrame, FencerFrame];
 }
+
+/**
+ * What the renderer draws: any number of fencers. The lobby shows only the
+ * players who have picked a fencer so far, so it may be none, one or two.
+ */
+export interface StageFrame {
+  t: number;
+  fencers: readonly FencerFrame[];
+}
