@@ -25,6 +25,9 @@ async function main() {
     backend,
     joinUrlFor: (code) => `${phoneOrigin}/join/${code}`,
     now: Date.now,
+    // One process holds every socket, so memory is as shared as it gets.
+    sharedRooms: true,
+    deadline: null,
   });
   const certificate = await loadCertificate(lanAddress);
 

@@ -17,6 +17,7 @@ export async function createRedisBackend(url: string): Promise<Backend> {
     store: new RedisStore(client),
     bus: new RedisBus(client, subscriber),
     label: `Redis at ${new URL(url).hostname}`,
+    shared: true,
     close: async () => {
       await Promise.all([client.quit(), subscriber.quit()]);
     },

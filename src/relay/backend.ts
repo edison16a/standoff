@@ -29,6 +29,8 @@ export interface Backend {
   bus: Bus;
   /** Shown in the server log so it is obvious which mode is running. */
   label: string;
+  /** True when rooms are visible to every server instance, not just this one. */
+  shared: boolean;
   /** Closes network connections, where there are any. */
   close?(): Promise<void>;
 }

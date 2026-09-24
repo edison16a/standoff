@@ -5,7 +5,7 @@ import { RoomChannel } from "./room-channel";
 import { makeToken } from "./room-code";
 import { RoomOps } from "./room-ops";
 import { connectedSlots, HOST_GRACE_MS } from "./room-state";
-import type { RelayContext, SocketLike } from "./relay-types";
+import { ROTATE_LEAD_MS, type RelayContext, type SocketLike } from "./relay-types";
 
 export type { RelayContext, SocketLike } from "./relay-types";
 
@@ -28,12 +28,17 @@ export class RelayConnection {
   private unsubscribe: (() => Promise<void>) | null = null;
   private queue: Promise<void> = Promise.resolve();
   private hostWatch: ReturnType<typeof setTimeout> | null = null;
+  private rotateTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private readonly socket: SocketLike,
     private readonly ctx: RelayContext,
   ) {
     this.ops = new RoomOps(ctx.backend.store, ctx.now);
+    if (ctx.deadline !== null) {
+      const wait = Math.max(0, ctx.deadline - ROTATE_LEAD_MS - ctx.now());
+      this.rotateTimer = setTimeout(() => this.send({ type: "server:rotate" }), wait);
+    }
   }
 
   receive(envelope: ClientEnvelope): void {
@@ -41,6 +46,7 @@ export class RelayConnection {
   }
 
   disconnect(): void {
+    if (this.rotateTimer) clearTimeout(this.rotateTimer);
     this.enqueue(() => this.leave());
   }
 
@@ -85,7 +91,8 @@ export class RelayConnection {
       return;
     }
     await this.become({ kind: "host", code: room.code });
-    this.send({ type: "room:created", code: room.code, token: room.hostToken, joinUrl: room.joinUrl });
+    const { sharedRooms } = this.ctx;
+    this.send({ type: "room:created", code: room.code, token: room.hostToken, joinUrl: room.joinUrl, sharedRooms });
   }
 
   private async resumeHost(code: string, token: string): Promise<void> {
@@ -99,7 +106,8 @@ export class RelayConnection {
     const channel = this.room(code);
     if (outcome.replaced) channel.kickHost(outcome.replaced);
     channel.toPhones({ type: "host:back" });
-    this.send({ type: "room:resumed", code, joinUrl: outcome.room.joinUrl, connected: connectedSlots(outcome.room) });
+    const connected = connectedSlots(outcome.room);
+    this.send({ type: "room:resumed", code, joinUrl: outcome.room.joinUrl, connected, sharedRooms: this.ctx.sharedRooms });
   }
 
   private async joinAsPhone(code: string, token: string | undefined): Promise<void> {

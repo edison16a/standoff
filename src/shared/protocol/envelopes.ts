@@ -42,9 +42,14 @@ export type ClientEnvelope = z.infer<typeof clientEnvelopeSchema>;
 
 export type JoinErrorReason = "not-found" | "full" | "closed";
 
+/**
+ * `sharedRooms` is false when the server runs on several instances but has
+ * no shared store (a Vercel deploy without Redis). Phones may then land on
+ * an instance that has never heard of the room, so the host warns about it.
+ */
 export type ServerEnvelope =
-  | { type: "room:created"; code: string; token: string; joinUrl: string }
-  | { type: "room:resumed"; code: string; joinUrl: string; connected: [boolean, boolean] }
+  | { type: "room:created"; code: string; token: string; joinUrl: string; sharedRooms: boolean }
+  | { type: "room:resumed"; code: string; joinUrl: string; connected: [boolean, boolean]; sharedRooms: boolean }
   | { type: "room:error"; reason: JoinErrorReason }
   | { type: "peer:joined"; slot: 1 | 2; rejoined: boolean }
   | { type: "peer:left"; slot: 1 | 2 }
@@ -53,7 +58,12 @@ export type ServerEnvelope =
   | { type: "host:message"; payload: z.infer<typeof hostMessageSchema> }
   | { type: "host:away" }
   | { type: "host:back" }
-  | { type: "room:closed" };
+  | { type: "room:closed" }
+  /**
+   * This socket is about to hit the server's time limit. The client should
+   * open a new one and rejoin on it before this one is cut.
+   */
+  | { type: "server:rotate" };
 
 /**
  * Where every client connects. It sits under /api because on Vercel the

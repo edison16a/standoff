@@ -37,7 +37,7 @@ async function flush() {
 
 function connect() {
   const socket = new FakeSocket();
-  const connection = new RelayConnection(socket, { backend, joinUrlFor: (code) => `https://game.test/join/${code}`, now: () => clock });
+  const connection = new RelayConnection(socket, { backend, joinUrlFor: (code) => `https://game.test/join/${code}`, now: () => clock, sharedRooms: true, deadline: null });
   const send = async (envelope: ClientEnvelope) => {
     connection.receive(envelope);
     await connection.settled();
@@ -61,7 +61,7 @@ async function openRoom() {
 describe("RelayConnection over the memory backend", () => {
   beforeEach(() => {
     clock = 1_000_000;
-    backend = { store: new MemoryStore(() => clock), bus: new MemoryBus(), label: "test" };
+    backend = { store: new MemoryStore(() => clock), bus: new MemoryBus(), label: "test", shared: true };
   });
   afterEach(() => vi.useRealTimers());
 
