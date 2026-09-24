@@ -1,0 +1,77 @@
+/*
+  The checkpoint note: a small line under the top strip when a stage is
+  cleared. It never blocks the view and fades by itself.
+*/
+
+.zs-check {
+  position: absolute;
+  top: 122px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px 8px 10px;
+  border: 1px solid rgba(95, 211, 122, 0.4);
+  border-radius: 999px;
+  background: rgba(6, 18, 10, 0.82);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  transform: translateX(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+  animation: zs-check 3.4s ease forwards;
+}
+
+.zs-check__icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--zs-green);
+  color: #06140a;
+}
+
+.zs-check__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.zs-check__kicker {
+  color: var(--zs-green);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.zs-check__body strong {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.zs-check__heal {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(95, 211, 122, 0.16);
+  color: var(--zs-green);
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes zs-check {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -10px) scale(0.96);
+  }
+  8%,
+  80% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -6px);
+  }
+}

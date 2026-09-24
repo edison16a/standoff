@@ -7,6 +7,7 @@ import { buildBoss } from "./models/zombies/bosses";
 import { buildCommoner, type Setting } from "./models/zombies/commoners";
 import type { Rig } from "./models/zombies/rig";
 import { animateWeakPoints, type WeakMarker } from "./models/zombies/weak-points";
+import type { TargetPoint } from "./scene-source";
 import { glowTexture } from "./textures";
 
 interface ZombieView {
@@ -52,6 +53,17 @@ export class ZombieLayer {
   /** Hit shapes of every standing zombie. Each carries its zombie id, part and weak point. */
   proxies(): readonly THREE.Mesh[] {
     return this.standing;
+  }
+
+  /** Every hit shape of a standing zombie as `camera` sees it, in the aim's clip space. */
+  targets(camera: THREE.Camera): TargetPoint[] {
+    return this.standing.map((proxy) => {
+      const at = proxy.getWorldPosition(new THREE.Vector3());
+      const distance = at.distanceTo(camera.position);
+      at.project(camera);
+      const data = proxy.userData as Pick<TargetPoint, "zombie" | "part" | "weak">;
+      return { zombie: data.zombie, part: data.part, weak: data.weak, x: at.x, y: at.y, distance };
+    });
   }
 
   /** The kind of zombie a proxy belongs to is looked up by the caller. A hit makes it jolt. */

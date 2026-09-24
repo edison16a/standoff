@@ -61,10 +61,19 @@ export interface BannerView {
   tone: "stage" | "boss" | "checkpoint";
 }
 
+/** A small note that the team made a checkpoint, which leaves the fight in view. */
+export interface CheckpointView {
+  id: number;
+  stage: number;
+  title: string;
+  healed: number;
+}
+
 export interface SurvivalStore {
   hud: SurvivalHud;
   radio: RadioView | null;
   banner: BannerView | null;
+  checkpoint: CheckpointView | null;
   toasts: Toast[];
   /** When the team last took a hit, for the red flash. */
   hurtAt: number;
@@ -85,4 +94,4 @@ export const emptyHud = (): SurvivalHud => ({
   healed: 0,
 });
 
-export const useSurvivalStore = create<SurvivalStore>(() => ({ hud: emptyHud(), radio: null, banner: null, toasts: [], hurtAt: 0 }));
+export const useSurvivalStore = create<SurvivalStore>(() => ({ hud: emptyHud(), radio: null, banner: null, checkpoint: null, toasts: [], hurtAt: 0 }));

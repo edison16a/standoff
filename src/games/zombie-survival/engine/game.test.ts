@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
+import { teamCount } from "./encounter";
 import { SurvivalGame } from "./game";
+import { CLEAR_SECONDS, STORY_CLEAR_SECONDS } from "./pacing";
 import type { CastFn } from "./shooting";
+import { stage } from "./stages";
 import { alive } from "./zombie";
 import { KINDS } from "./zombie-kinds";
 
@@ -47,8 +50,26 @@ describe("a run", () => {
     run(game, 60, () => game.fire(1, cast), settled(game));
     expect(game.phase).toBe("clear");
     const stats = game.squad.get(1)!.stats;
-    expect(stats.kills).toBe(3);
+    expect(stats.kills).toBe(teamCount(stage(1), 1));
     expect(stats.headshots).toBeGreaterThan(0);
+    // A short breather to reload, then straight on to the next fight.
+    run(game, CLEAR_SECONDS + 0.1, undefined, () => game.phase === "travel");
+    expect(game.phase).toBe("travel");
+    expect(game.stage).toBe(2);
+  });
+
+  it("stops longer only where the story needs it", () => {
+    const game = new SurvivalGame();
+    game.start([{ seat: 1, weapon: "rifle" }], 10);
+    run(game, 20);
+    const cast = sniper(game);
+    let tick = 0;
+    run(game, 200, () => (tick++ % 6 === 0 ? game.fire(1, cast) : undefined), settled(game));
+    expect(game.phase).toBe("clear");
+    run(game, CLEAR_SECONDS + 0.1);
+    expect(game.phase).toBe("clear");
+    run(game, STORY_CLEAR_SECONDS - CLEAR_SECONDS);
+    expect(game.phase).toBe("cutscene");
   });
 
   it("falls when nobody hits anything, then retries the same fight", () => {

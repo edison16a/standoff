@@ -1,5 +1,6 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 import { noise, tone } from "@/platform/audio/voices";
+import { STEP_SECONDS } from "../engine/pacing";
 import { hum, noiseBed } from "./nodes";
 
 type Bed = ReturnType<typeof noiseBed>;
@@ -68,7 +69,7 @@ export class Ambience {
     if (state.walking) {
       this.stepClock -= dt;
       if (this.stepClock <= 0) {
-        this.stepClock = 0.5;
+        this.stepClock = STEP_SECONDS;
         for (let i = 0; i < Math.min(4, state.walkers); i++) this.footstep(i * 0.07);
       }
       this.stalkerClock -= dt;
