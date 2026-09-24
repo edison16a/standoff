@@ -136,7 +136,7 @@ export class FencingHost {
   private startMatch(): void {
     this.driver = new MatchDriver(this.lobby.picks, () => this.tuning, {
       director: this.audio.director,
-      feedback: (slot, event) => this.phones.send(slot, { kind: "feedback", event }),
+      feedback: (slot, event, reason) => this.phones.send(slot, { kind: "feedback", event, ...(reason ? { reason } : {}) }),
       recenter: () => this.phones.send("all", { kind: "recenter" }),
       onPhase: () => this.broadcastState(),
     }, this.lobby.computerSlot);

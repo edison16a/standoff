@@ -10,7 +10,8 @@ export type GameEvent =
   | { type: "allez"; t: number }
   | { type: "jab"; t: number; slot: Slot }
   | { type: "parry"; t: number; slot: Slot }
-  | { type: "whiff"; t: number; slot: Slot }
+  /** A jab that hit nothing: too far away, or pointed off line. */
+  | { type: "whiff"; t: number; slot: Slot; reason: "far" | "wide" }
   | { type: "parried"; t: number; attacker: Slot; clash: boolean }
   | { type: "touch"; t: number; scorer: Slot; matchPoint: boolean }
   | { type: "double"; t: number }

@@ -2,12 +2,15 @@ import { otherSlot, type PerSlot, type Slot } from "@/games/fencing/players";
 import type { GameEvent } from "./events";
 import type { Fencer } from "./fencer";
 import {
+  AIM_LOOKBACK_MS,
   CLASH_WINDOW_MS,
   DEFLECTED_MS,
   DOUBLE_WINDOW_MS,
   JAB_DURATION_MS,
   JAB_IMPACT_MS,
   OFF_TARGET_ANGLE,
+  PARRY_GRACE_MS,
+  PARRY_RECOVERY_MS,
   REACH,
 } from "./rules";
 
@@ -15,6 +18,15 @@ interface PendingJab {
   attacker: Slot;
   startedAt: number;
   impactAt: number;
+  /** Where the blade pointed just before the chop, which is what the jab is judged by. */
+  aim: { pitch: number; yaw: number };
+}
+
+/** A jab that got through, waiting out the parry grace and the double window. */
+interface Landed {
+  scorer: Slot;
+  at: number;
+  startedAt: number;
 }
 
 /** How an exchange ended, once the referee is sure. */
@@ -25,17 +37,22 @@ export interface RefereeStep {
   verdict: Verdict | null;
 }
 
+/** A touch is only final once both a late parry and the other fencer's double are ruled out. */
+const SETTLE_MS = Math.max(DOUBLE_WINDOW_MS, PARRY_GRACE_MS);
+
 /**
  * Decides every exchange. It runs on the host, never on a phone, so
  * neither player's device gets a say in whether their own touch landed.
  *
- * A jab does not land the moment it is detected. The tip takes a short
- * while to arrive, and the defender's parry window is checked at that
- * arrival time. That gap is what lets a quick reaction save a touch.
+ * A jab does not land the moment it is detected. The tip takes a moment
+ * to arrive, and the defender's parry is checked at that arrival, with a
+ * short grace after it. A parry blocks the first jab that reaches it and
+ * then closes. Attacking drops your own parry, and a parry cannot start
+ * while your own lunge is still going out.
  */
 export class Referee {
   private pending: PendingJab[] = [];
-  private firstTouch: { scorer: Slot; at: number } | null = null;
+  private landed: Landed[] = [];
   private lastJabAt: PerSlot<number> = { 1: -Infinity, 2: -Infinity };
 
   constructor(
@@ -45,7 +62,7 @@ export class Referee {
 
   reset(): void {
     this.pending = [];
-    this.firstTouch = null;
+    this.landed = [];
     this.lastJabAt = { 1: -Infinity, 2: -Infinity };
   }
 
@@ -53,18 +70,29 @@ export class Referee {
     const fencer = this.fencers[slot];
     const midJab = fencer.action === "jab" && now - fencer.actionStartedAt < JAB_DURATION_MS;
     if (now < fencer.lockedUntil || midJab) return [];
+    // A lunge commits you: whatever parry was open is gone.
+    fencer.parryUntil = Math.min(fencer.parryUntil, now);
     fencer.setAction("jab", now);
     this.lastJabAt[slot] = now;
-    this.pending.push({ attacker: slot, startedAt: now, impactAt: now + JAB_IMPACT_MS });
+    this.pending.push({ attacker: slot, startedAt: now, impactAt: now + JAB_IMPACT_MS, aim: fencer.aimBefore(AIM_LOOKBACK_MS) });
     return [{ type: "jab", t: now, slot }];
   }
 
   parry(slot: Slot, now: number): GameEvent[] {
     const fencer = this.fencers[slot];
-    if (now < fencer.lockedUntil) return [];
+    if (now < fencer.lockedUntil || now < fencer.parryReadyAt) return [];
+    if (this.pending.some((jab) => jab.attacker === slot)) return [];
     fencer.parryUntil = now + this.parryWindowMs();
+    fencer.parryReadyAt = fencer.parryUntil + PARRY_RECOVERY_MS;
     fencer.setAction("parry", now);
-    return [{ type: "parry", t: now, slot }];
+    const events: GameEvent[] = [{ type: "parry", t: now, slot }];
+    // Just too late at the host, but inside the grace: the touch is saved.
+    const saved = this.landed.find((touch) => touch.scorer !== slot && now - touch.at <= PARRY_GRACE_MS);
+    if (saved) {
+      this.landed = this.landed.filter((touch) => touch !== saved);
+      events.push(this.deflect(saved.scorer, saved.startedAt, now));
+    }
+    return events;
   }
 
   step(now: number): RefereeStep {
@@ -73,14 +101,17 @@ export class Referee {
     this.pending = this.pending.filter((jab) => jab.impactAt > now);
     for (const jab of due) events.push(...this.resolve(jab));
 
-    let verdict: Verdict | null = null;
-    if (this.firstTouch && now >= this.firstTouch.at + DOUBLE_WINDOW_MS) {
-      verdict = { kind: "touch", ...this.firstTouch };
-      this.firstTouch = null;
+    const [first, second] = this.landed;
+    if (first && second && first.scorer !== second.scorer && second.at - first.at <= DOUBLE_WINDOW_MS) {
+      this.landed = [];
+      events.push({ type: "double", t: second.at });
+      return { events, verdict: { kind: "double", at: second.at } };
     }
-    const double = events.find((event) => event.type === "double");
-    if (double) verdict = { kind: "double", at: double.t };
-    return { events, verdict };
+    if (first && now >= first.at + SETTLE_MS) {
+      this.landed = [];
+      return { events, verdict: { kind: "touch", scorer: first.scorer, at: first.at } };
+    }
+    return { events, verdict: null };
   }
 
   private resolve(jab: PendingJab): GameEvent[] {
@@ -88,22 +119,26 @@ export class Referee {
     const defender = this.fencers[otherSlot(jab.attacker)];
     const t = jab.impactAt;
 
-    const inRange = Math.abs(defender.x - attacker.x) <= REACH;
-    const onTarget = Math.abs(attacker.aim.pitch) <= OFF_TARGET_ANGLE && Math.abs(attacker.aim.yaw) <= OFF_TARGET_ANGLE;
-    if (!inRange || !onTarget) return [{ type: "whiff", t, slot: jab.attacker }];
+    if (Math.abs(defender.x - attacker.x) > REACH) return [{ type: "whiff", t, slot: jab.attacker, reason: "far" }];
+    const onTarget = Math.abs(jab.aim.pitch) <= OFF_TARGET_ANGLE && Math.abs(jab.aim.yaw) <= OFF_TARGET_ANGLE;
+    if (!onTarget) return [{ type: "whiff", t, slot: jab.attacker, reason: "wide" }];
 
     if (defender.parryUntil >= t) {
-      attacker.lockedUntil = t + DEFLECTED_MS;
-      attacker.setAction("deflected", t);
-      const clash = Math.abs(this.lastJabAt[defender.slot] - jab.startedAt) <= CLASH_WINDOW_MS;
-      return [{ type: "parried", t, attacker: jab.attacker, clash }];
+      // A parry blocks one attack, and blocking it leaves the guard ready at once.
+      defender.parryUntil = t;
+      defender.parryReadyAt = t;
+      return [this.deflect(jab.attacker, jab.startedAt, t)];
     }
-
-    if (this.firstTouch && this.firstTouch.scorer !== jab.attacker && t - this.firstTouch.at <= DOUBLE_WINDOW_MS) {
-      this.firstTouch = null;
-      return [{ type: "double", t }];
-    }
-    this.firstTouch ??= { scorer: jab.attacker, at: t };
+    this.landed.push({ scorer: jab.attacker, at: t, startedAt: jab.startedAt });
     return [];
+  }
+
+  /** The attacker's blade is knocked away, and they cannot strike for a moment. */
+  private deflect(attackerSlot: Slot, startedAt: number, t: number): GameEvent {
+    const attacker = this.fencers[attackerSlot];
+    attacker.lockedUntil = t + DEFLECTED_MS;
+    attacker.setAction("deflected", t);
+    const clash = Math.abs(this.lastJabAt[otherSlot(attackerSlot)] - startedAt) <= CLASH_WINDOW_MS;
+    return { type: "parried", t, attacker: attackerSlot, clash };
   }
 }
