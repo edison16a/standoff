@@ -5,6 +5,8 @@ import type { ServerEnvelope } from "@/shared/protocol";
 export const channels = {
   host: (code: string) => `standoff:room:${code}:host`,
   seat: (code: string, slot: Slot) => `standoff:room:${code}:seat:${slot}`,
+  /** What an HTTP fallback client posted, on its way to whichever instance holds its stream. */
+  inbox: (conn: string) => `standoff:conn:${conn}:in`,
 };
 
 /**
