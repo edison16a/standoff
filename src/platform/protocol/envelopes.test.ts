@@ -10,7 +10,7 @@ describe("clientEnvelopeSchema", () => {
     expect(motion).toEqual({ type: "phone:send", payload: { kind: "motion", pitch: 0.2, yaw: -0.1, roll: 0, move: 0.5 } });
     const join = clientEnvelopeSchema.parse({ type: "phone:join", code: "abcd" });
     expect(join).toEqual({ type: "phone:join", code: "ABCD" });
-    expect(clientEnvelopeSchema.safeParse({ type: "host:create", game: "go-kart", seats: 4 }).success).toBe(true);
+    expect(clientEnvelopeSchema.safeParse({ type: "host:create", game: "magic-kart", seats: 4 }).success).toBe(true);
   });
 
   it("rejects envelopes the relay cannot route", () => {

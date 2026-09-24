@@ -2,7 +2,7 @@
 
 Standoff is a games console in the browser. One computer is the screen, and every player's phone is their controller. There is nothing to install and no account to make: open the site on a computer, pick a game, and everyone scans the QR code with their phone. Each player types a name, and the game starts.
 
-Fencing is the first game. Your phone is the sword: tilt it and the blade on screen follows, chop down to jab, lift up to parry, and hold Forward or Back to move. Fruit Ninja, Go-Kart Racing, Zombie Survival and Shooting Gallery are on the home screen and in development, each with a brief in its folder under `src/games`.
+Fencing is the first game. Your phone is the sword: tilt it and the blade on screen follows, chop down to jab, lift up to parry, and hold Forward or Back to move. Fruit Ninja, Magic Kart, Zombie Survival and Shooting Gallery are on the home screen and in development, each with a brief in its folder under `src/games`.
 
 It runs on Vercel for play from anywhere, or on your own computer over WiFi. Nothing is saved on the server: close it and the game is gone.
 
@@ -12,7 +12,7 @@ Play it at [standoff-five.vercel.app](https://standoff-five.vercel.app).
 
 The home screen. Every game is a big card, two to a row, each tinted in its own colour. Games still being built show a rendered preview of their look.
 
-<img src="docs/screenshots/home-light.png" alt="The home screen in light mode, with Fencing, Fruit Ninja, Go-Kart Racing and Zombie Survival cards" width="100%" />
+<img src="docs/screenshots/home-light.png" alt="The home screen in light mode, with Fencing, Fruit Ninja, Magic Kart and Zombie Survival cards" width="100%" />
 
 <img src="docs/screenshots/home-dark.png" alt="The same home screen in dark mode" width="100%" />
 
@@ -241,7 +241,7 @@ src/
     catalog.ts            Every game and how to load it
     fencing/              The first game: engine, rig, renderer, motion, sound, screens
     fruit-ninja/          In development, as are the three below
-    go-kart/
+    magic-kart/
     zombie-survival/
     shooting-gallery/
   components/             Shared interface pieces

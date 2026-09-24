@@ -2,7 +2,8 @@ import Image from "next/image";
 import cover from "./cover.jpg";
 
 /**
- * Three karts side by side down the straight, heading for the checkered gantry.
+ * Three karts racing along a beach under a rainbow finish arch, with a
+ * row of glowing power up cubes floating over the road ahead.
  * A still render from a three.js scene, so the card shows the game's
  * look before the game itself exists.
  */
