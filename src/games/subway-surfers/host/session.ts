@@ -5,9 +5,10 @@ import type { RunEvent } from "../engine/events";
 import type { Run } from "../engine/run";
 import { ShowRun } from "../showcase/show-run";
 import { Controls } from "./controls";
-import { resultsOf } from "./results";
+import { Countdown } from "./countdown";
+import { recordResults } from "./results";
 import { Round } from "./round";
-import { initialSurfState, useSurfStore as store, type Phase } from "./store";
+import { initialSurfState, shownNames, useSurfStore as store, type Phase } from "./store";
 import { BestStore } from "./best-store";
 
 const HUD_MS = 80;
@@ -35,7 +36,7 @@ export class SurfSession {
   private unlistenRound: () => void = () => undefined;
   private unlistenMoves: () => void = () => undefined;
   private tutorialSeen = false;
-  private countdown = 0;
+  private countdown = new Countdown(0);
   private resultsAt = 0;
   private last = 0;
   private lastHud = 0;
@@ -55,16 +56,6 @@ export class SurfSession {
   listen(listener: (slot: number, event: RunEvent) => void): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
-  }
-
-  setPlayers(players: 1 | 2): void {
-    store.setState({ players });
-  }
-
-  setName(slot: number, name: string): void {
-    const names = [...store.getState().names] as [string, string];
-    names[slot - 1] = name.slice(0, 20);
-    store.setState({ names });
   }
 
   /** From the lobby: open the camera for this many players. */
@@ -167,8 +158,7 @@ export class SurfSession {
   }
 
   names(): string[] {
-    const { names, players } = store.getState();
-    return Array.from({ length: players }, (_, i) => names[i]!.trim() || `Player ${i + 1}`);
+    return shownNames(store.getState());
   }
 
   private beginTutorial(): void {
@@ -179,7 +169,7 @@ export class SurfSession {
 
   private beginRound(): void {
     this.setRound(new Round(this.kit?.players ?? store.getState().players, Math.floor(Math.random() * 1e9)));
-    this.countdown = COUNT_S;
+    this.countdown = new Countdown(COUNT_S);
     this.sound.play(null);
     this.sound.sfx.countdown(false);
     store.setState({ phase: "countdown", countdown: COUNT_S, results: [], winner: null, jumpToReplay: false });
@@ -197,29 +187,25 @@ export class SurfSession {
   }
 
   private tickCountdown(dt: number): void {
-    const before = Math.ceil(this.countdown);
-    this.countdown -= dt;
-    const after = Math.ceil(this.countdown);
-    if (after === before) return;
-    if (after > 0) {
-      this.sound.sfx.countdown(false);
-      store.setState({ countdown: after });
+    const count = this.countdown.tick(dt);
+    if (count === null) return;
+    this.sound.sfx.countdown(count === 0);
+    if (count > 0) {
+      store.setState({ countdown: count });
       return;
     }
-    this.sound.sfx.countdown(true);
     this.sound.sfx.whistle(0);
     this.sound.play("run");
     this.controls?.reset();
     this.room.setPlaying(true);
+    // Anyone out of view at GO waits, like a player who steps away mid run.
+    this.kit?.getSnapshot().present.forEach((seen, i) => !seen && this.round?.setAway(i + 1, true));
     store.setState({ phase: "running", countdown: 0 });
     setTimeout(() => store.getState().countdown === 0 && store.setState({ countdown: null }), 700);
   }
 
   private finish(): void {
-    const round = this.round!;
-    const { rows, winner, entries } = resultsOf(round, store.getState().names);
-    const places = this.best.add(entries.map((e) => e.entry));
-    entries.forEach((e, i) => (rows[e.slot - 1]!.best = places[i] ?? null));
+    const { rows, winner } = recordResults(this.round!, store.getState().names, this.best);
     this.room.setPlaying(false);
     this.sound.play(null);
     this.sound.fanfare();
@@ -230,20 +216,13 @@ export class SurfSession {
 
   private onMove(event: MoveEvent): void {
     const round = this.round;
-    if (!round) return;
     const phase = this.phase;
-    if (event.type === "away" || event.type === "back") {
-      if (phase === "running") {
-        round.setAway(event.slot, event.type === "away");
-        if (event.type === "away") this.sound.sfx.pause();
-      }
-      return;
+    if (!round) return;
+    if (phase === "running" && (event.type === "away" || event.type === "back")) {
+      round.setAway(event.slot, event.type === "away");
+      if (event.type === "away") this.sound.sfx.pause();
     }
-    if (phase === "tutorial") {
-      const seat = round.seats[event.slot - 1];
-      const move = event.type === "lane" ? { type: "lane" as const, lane: event.lane } : event.type === "jump" || event.type === "duck" ? { type: event.type } : null;
-      if (seat && move && seat.tutorial.see(move)) this.sound.sfx.tick(this.sound.panFor(event.slot));
-    }
+    if (phase === "tutorial" && round.tutorialMove(event)) this.sound.sfx.tick(this.sound.panFor(event.slot));
     if (phase === "results" && event.type === "jump" && store.getState().jumpToReplay) this.playAgain();
   }
 

@@ -1,3 +1,4 @@
+import type { MoveEvent } from "@/games/kit/camera";
 import type { RunEvent } from "../engine/events";
 import { POWER_NAMES } from "../engine/powers";
 import { Run } from "../engine/run";
@@ -71,6 +72,15 @@ export class Round {
       seat.away = false;
       seat.resume = RESUME_S;
     }
+  }
+
+  /** Feeds a camera move to that player's tutorial. True when it ticks off a step. */
+  tutorialMove(event: MoveEvent): boolean {
+    const seat = this.seats[event.slot - 1];
+    if (!seat) return false;
+    if (event.type === "lane") return seat.tutorial.see({ type: "lane", lane: event.lane });
+    if (event.type === "jump" || event.type === "duck") return seat.tutorial.see({ type: event.type });
+    return false;
   }
 
   get over(): boolean {

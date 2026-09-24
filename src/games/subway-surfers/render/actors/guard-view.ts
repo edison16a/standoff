@@ -41,8 +41,9 @@ export class GuardView {
     const caught = run.crashed?.cause === "caught";
     const stopped = !!run.crashed;
     const follow = 1 - Math.exp(-(caught ? 10 : 4) * dt);
-    this.x += (s.x - (caught ? 0.9 : 0) - this.x) * follow;
-    this.dogX += (s.x + (caught ? 0.9 : 1.1) - this.dogX) * (1 - Math.exp(-3 * dt));
+    // They run a little to either side of the runner, so the camera sees all three.
+    this.x += (s.x - (caught ? 0.8 : 1.0) - this.x) * follow;
+    this.dogX += (s.x + (caught ? 0.8 : 1.1) - this.dogX) * (1 - Math.exp(-3 * dt));
     const z = s.distance - gap;
     this.guard.root.position.set(this.x, 0, -z);
     this.dog.root.position.set(this.dogX, 0, -(z + 0.9 + Math.sin(time * 2) * 0.3));

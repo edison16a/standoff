@@ -75,3 +75,18 @@ export const initialSurfState = (): SurfState => ({
 });
 
 export const useSurfStore = create<SurfState>(() => initialSurfState());
+
+/** The names to show, one per player, "Player 2" for anyone who typed none. */
+export function shownNames(state: Pick<SurfState, "names" | "players">): string[] {
+  return Array.from({ length: state.players }, (_, i) => state.names[i]!.trim() || `Player ${i + 1}`);
+}
+
+export function setPlayers(players: 1 | 2): void {
+  useSurfStore.setState({ players });
+}
+
+export function setName(slot: number, name: string): void {
+  const names = [...useSurfStore.getState().names] as [string, string];
+  names[slot - 1] = name.slice(0, 20);
+  useSurfStore.setState({ names });
+}

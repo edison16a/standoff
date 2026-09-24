@@ -158,3 +158,29 @@ export function billboardTexture(seed: number): THREE.Texture {
     ctx.fillText(words[seed % 4]!, w * 0.4, h / 2);
   });
 }
+
+/** Glazed subway tiles with a coloured band, grimy near the floor, for the tunnels. */
+export function tunnelTileTexture(): THREE.Texture {
+  return painted("tunnel-tiles", 512, 256, (ctx, w, h) => {
+    const rng = new Rng(21);
+    ctx.fillStyle = "#6f6a60";
+    ctx.fillRect(0, 0, w, h);
+    const tw = 32;
+    const th = 16;
+    for (let y = 0; y < h; y += th) {
+      for (let x = (y / th) % 2 ? -tw / 2 : 0; x < w; x += tw) {
+        const band = y >= h * 0.44 && y < h * 0.56;
+        const shade = rng.int(-10, 10);
+        ctx.fillStyle = band ? `rgb(${31 + shade},${95 + shade},${214 + shade})` : `rgb(${236 + shade},${230 + shade},${214 + shade})`;
+        ctx.fillRect(x + 1, y + 1, tw - 2, th - 2);
+        ctx.fillStyle = "rgba(255,255,255,0.35)";
+        ctx.fillRect(x + 3, y + 2, tw * 0.4, 2);
+      }
+    }
+    const grime = ctx.createLinearGradient(0, h * 0.6, 0, h);
+    grime.addColorStop(0, "rgba(40,32,24,0)");
+    grime.addColorStop(1, "rgba(40,32,24,0.55)");
+    ctx.fillStyle = grime;
+    ctx.fillRect(0, 0, w, h);
+  });
+}

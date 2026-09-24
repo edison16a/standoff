@@ -1,4 +1,5 @@
 import { isNamed, type BestEntry } from "../engine/best-scores";
+import type { BestStore } from "./best-store";
 import type { Round } from "./round";
 import type { ResultRow } from "./store";
 
@@ -22,4 +23,12 @@ export function resultsOf(round: Round, names: readonly string[], at = Date.now(
     .filter((row) => isNamed(names[row.slot - 1] ?? "", row.slot))
     .map((row) => ({ slot: row.slot, entry: { name: row.name, score: row.score, coins: row.coins, distance: row.distance, at } }));
   return { rows, winner, entries };
+}
+
+/** Works out the results and writes the named runs to the best table, marking each row's place on it. */
+export function recordResults(round: Round, names: readonly string[], best: BestStore): { rows: ResultRow[]; winner: number | null } {
+  const { rows, winner, entries } = resultsOf(round, names);
+  const places = best.add(entries.map((e) => e.entry));
+  entries.forEach((e, i) => (rows[e.slot - 1]!.best = places[i] ?? null));
+  return { rows, winner };
 }

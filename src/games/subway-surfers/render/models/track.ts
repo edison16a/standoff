@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { LANES, laneX } from "../../engine/tuning";
 import { MeshBuilder } from "../mesh-builder";
-import { brickTexture, concreteTexture, glowTexture, gravelTexture } from "../textures";
+import { tunnelTileTexture } from "../art/scenery-art";
+import { brickTexture, glowTexture, gravelTexture } from "../textures";
 
 /** Scenery is laid in chunks of this many metres, each built from shared prefabs. */
 export const CHUNK = 30;
@@ -98,7 +99,7 @@ export function gantry(signals: number | null): THREE.Group {
 export function tunnel(): THREE.Group {
   return cached("tunnel", () => {
     const b = new MeshBuilder();
-    const wall = textured("tunnel-wall", () => new THREE.MeshStandardMaterial({ map: repeated(concreteTexture(), "tunnel-wall", 6, 2), color: 0x9a9aa6, roughness: 0.9 }));
+    const wall = textured("tunnel-wall", () => new THREE.MeshStandardMaterial({ map: repeated(tunnelTileTexture(), "tunnel-wall", 6, 1), roughness: 0.35 }));
     for (const side of [-1, 1]) {
       b.panel(CHUNK, 7, wall, [side * 5.4, 3.5, -CHUNK / 2], [0, -side * Math.PI / 2, 0]);
       b.box(0.5, 0.6, CHUNK, { color: 0x3a3d48, finish: "matte" }, [side * 5.1, 0.3, -CHUNK / 2]);
@@ -110,8 +111,10 @@ export function tunnel(): THREE.Group {
     }
     // The vault: a half tube laid along the track.
     const vault = new THREE.CylinderGeometry(5.5, 5.5, CHUNK, 20, 1, true, -Math.PI / 2, Math.PI);
-    b.add(vault, { color: 0x5a5c68, finish: "matte" }, [0, 7, -CHUNK / 2], [Math.PI / 2, 0, 0], [1, 1, 0.4]);
-    for (let z = -2; z > -CHUNK; z -= 6) b.box(10.8, 0.25, 0.4, { color: 0x3a3d48, finish: "satin" }, [0, TUNNEL_TOP - 0.1, z]);
+    b.add(vault, { color: 0xb8b2a4, finish: "matte" }, [0, 7, -CHUNK / 2], [Math.PI / 2, 0, 0], [1, 1, 0.4]);
+    for (let z = -2; z > -CHUNK; z -= 6) b.box(10.8, 0.25, 0.4, { color: 0x6a6d78, finish: "satin" }, [0, TUNNEL_TOP - 0.3, z]);
+    // A strip of lamps along the crown lights the way.
+    for (let z = -5; z > -CHUNK; z -= 10) b.box(0.5, 0.08, 3, { color: 0xfff4d6, finish: "glow" }, [0, TUNNEL_TOP - 0.05, z]);
     const inside = b.build("tunnel");
     // Backfaces show from inside, so the vault is drawn double sided.
     inside.traverse((node) => {

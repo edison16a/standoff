@@ -1,7 +1,7 @@
 "use client";
 import { playerColor } from "@/games/kit/players";
 import { Logo } from "../../showcase/Logo";
-import { useSurfStore } from "../store";
+import { setName, setPlayers, useSurfStore } from "../store";
 import { BestTable } from "./BestTable";
 import { useSession } from "./session-context";
 
@@ -27,7 +27,7 @@ export function Lobby() {
               role="radio"
               aria-checked={players === n}
               className={`ss-chip${players === n ? " ss-chip--on" : ""}`}
-              onClick={() => session.setPlayers(n)}
+              onClick={() => setPlayers(n)}
             >
               {n === 1 ? "1 player" : "2 players"}
             </button>
@@ -45,7 +45,7 @@ export function Lobby() {
                 maxLength={20}
                 placeholder={`Player ${i + 1}`}
                 aria-label={`Player ${i + 1} name`}
-                onChange={(e) => session.setName(i + 1, e.target.value)}
+                onChange={(e) => setName(i + 1, e.target.value)}
               />
             </label>
           ))}
