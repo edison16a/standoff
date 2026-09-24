@@ -1,0 +1,254 @@
+/*
+  Magic Kart on the phone while racing: the pedals, the power up button and the status in the middle.
+*/
+
+.mk-phone--drive {
+  flex: 1;
+}
+
+.mk-pad {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 12px;
+  min-height: 0;
+  padding-bottom: 4px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.mk-pad__left {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 10px;
+  min-height: 0;
+}
+
+.mk-pedal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 90px;
+  border: none;
+  border-radius: 22px;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  transition: transform 60ms ease, filter 60ms ease;
+}
+
+.mk-pedal .mk-icon {
+  width: 56px;
+  height: 56px;
+}
+
+.mk-pedal--drive {
+  background: linear-gradient(160deg, #3ddc84, #169c55);
+  box-shadow: 0 8px 0 #0d6b39;
+}
+
+.mk-pedal--brake {
+  --mk-brake-ink: #7a1020;
+  background: linear-gradient(160deg, #ff6b6b, #d63040);
+  box-shadow: 0 8px 0 #8f1d28;
+}
+
+.mk-pedal.is-held {
+  transform: translateY(6px);
+  filter: brightness(1.15);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+}
+
+.mk-ability {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-self: center;
+  justify-content: center;
+  width: 118px;
+  height: 118px;
+  padding: 18px;
+  border: 5px dashed var(--border-strong);
+  border-radius: 50%;
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  touch-action: none;
+}
+
+.mk-ability--full {
+  border: 5px solid #ffc53a;
+  background: radial-gradient(circle, #3a2a70, #1a1236);
+  color: #ffffff;
+}
+
+.mk-ability--rolling .mk-icon {
+  animation: mk-spin 300ms linear infinite;
+}
+
+.mk-ability--live {
+  animation: mk-glow 1s ease-in-out infinite;
+}
+
+.mk-ability:disabled {
+  opacity: 1;
+}
+
+.mk-ability__empty {
+  font-size: 40px;
+  font-weight: 900;
+}
+
+.mk-ability__label {
+  position: absolute;
+  bottom: -22px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+@keyframes mk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes mk-glow {
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 197, 58, 0.35);
+  }
+}
+
+.mk-pad__middle {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.mk-pad__status {
+  display: flex;
+  flex-direction: column;
+}
+
+.mk-pad__place {
+  font-size: 54px;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1;
+}
+
+.mk-pad__lap {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.mk-pad__count {
+  font-size: 80px;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1;
+  color: #ffb020;
+}
+
+.mk-pad__warn {
+  padding: 4px 10px;
+  border-radius: 10px;
+  background: #ff3040;
+  color: #ffffff;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.mk-pad__effect {
+  font-weight: 800;
+  color: var(--accent-text);
+}
+
+.mk-pad__hint {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.mk-pad--stun .mk-pad__middle {
+  animation: mk-blink 300ms steps(2) 4;
+}
+
+.mk-pad--ice {
+  background: linear-gradient(180deg, rgba(120, 220, 255, 0.18), transparent);
+  border-radius: 16px;
+}
+
+.mk-pad__arrows {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.mk-arrow {
+  min-height: 70px;
+  border: 2px solid var(--border-strong);
+  border-radius: 16px;
+  background: var(--bg-muted);
+  color: var(--text);
+  font-size: 30px;
+  touch-action: none;
+}
+
+.mk-arrow.is-held {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+@keyframes mk-blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.mk-turn {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  border-radius: 16px;
+  background: var(--bg);
+  text-align: center;
+}
+
+.mk-turn strong {
+  font-size: 24px;
+}
+
+.mk-result {
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.mk-result__label {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.mk-result__place {
+  font-size: 96px;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1;
+}

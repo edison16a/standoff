@@ -21,10 +21,16 @@ const LOADERS: Record<string, () => Promise<GameModule>> = {
   "fruit-ninja": () => import("./fruit-ninja").then((mod) => mod.game),
   "shooting-gallery": () => import("./shooting-gallery").then((mod) => mod.game),
   "zombie-survival": () => import("./zombie-survival").then((mod) => mod.game),
+  "magic-kart": () => import("./magic-kart").then((mod) => mod.game),
 };
 
 export function findGame(id: string): GameInfo | undefined {
   return GAMES.find((game) => game.id === id);
+}
+
+/** Whether a game can be played, without loading its code. */
+export function isPlayable(id: string): boolean {
+  return id in LOADERS;
 }
 
 export function loadGame(id: string): Promise<GameModule> | null {

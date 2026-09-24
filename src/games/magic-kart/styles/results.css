@@ -1,0 +1,105 @@
+/*
+  The results: the finishing order, confetti and the ways on.
+*/
+
+.mk-results {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(10, 8, 26, 0.45);
+}
+
+.mk-confetti {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.mk-results__card {
+  position: relative;
+  width: min(560px, 92vw);
+  padding: 28px;
+  border-radius: 24px;
+  background: rgba(16, 12, 38, 0.9);
+  border: 2px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.5);
+}
+
+.mk-results__eyebrow {
+  color: #ffe14d;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.mk-results__card h2 {
+  margin: 6px 0 18px;
+  font-size: 44px;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1.05;
+}
+
+.mk-results__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 22px;
+  padding: 0;
+  list-style: none;
+}
+
+.mk-results__row {
+  display: grid;
+  grid-template-columns: 56px 14px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.mk-results__row--1 {
+  background: linear-gradient(90deg, rgba(255, 210, 63, 0.35), rgba(255, 255, 255, 0.07));
+}
+
+.mk-results__place {
+  font-size: 24px;
+  font-weight: 900;
+  font-style: italic;
+}
+
+.mk-results__chip {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--player);
+}
+
+.mk-results__name {
+  display: flex;
+  flex-direction: column;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.mk-results__name small {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mk-results__time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.mk-results__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}

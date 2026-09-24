@@ -1,0 +1,30 @@
+/*
+  Magic Kart on the computer: the stage the 3D view fills, and the
+  shared pieces. The lobby, the race overlay and the results have their
+  own files. Bright and bold on top of the 3D view, the same in light
+  and dark themes, since the game world has its own colours.
+*/
+
+.mk-stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #0d0b1e;
+  color: #ffffff;
+  font-family: var(--font-ui);
+}
+
+.mk-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The game's own icons, on the big screen and the phones alike. */
+.mk-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
