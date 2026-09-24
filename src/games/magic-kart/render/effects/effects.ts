@@ -1,31 +1,35 @@
 import * as THREE from "three";
 import type { RaceEvent } from "../../engine/events";
 import { speedOf } from "../../engine/kart";
-import { DRIFT } from "../../engine/tuning";
+import { driftTier } from "../../engine/drive";
 import type { RaceWorld } from "../../engine/world";
 import type { KartView } from "../kart-view";
 import { kartDesign } from "../models/karts";
 import { softDot } from "../textures";
 import { Particles } from "./particles";
+import { SkidMarks } from "./skid-marks";
 
 const RAINBOW = ["#ff4d5e", "#ffb347", "#ffe14d", "#6cf08a", "#5fd8ff", "#c77dff"];
+/** Drift sparks, from a fresh slide through blue and orange to purple. */
+const SPARKS = ["#fff3b0", "#39b8ff", "#ff8a1f", "#c56bff"] as const;
 const at = new THREE.Vector3();
 
 /**
  * All the particles in a race: drift sparks and tyre smoke, boost flames,
  * dust off the road, bursts when cubes break and karts get hit, and the
  * trails behind thrown power ups. Two pools: one that glows, one that
- * does not.
+ * does not. The skid marks sliding wheels leave ride along here too.
  */
 export class Effects {
   readonly group = new THREE.Group();
   readonly glow: Particles;
   readonly smoke: Particles;
+  private readonly marks = new SkidMarks();
 
   constructor(private readonly dust: string) {
     this.glow = new Particles(2400, softDot(), true);
     this.smoke = new Particles(1400, softDot("rgba(255,255,255,0.85)", "rgba(255,255,255,0)"), false);
-    this.group.add(this.smoke.points, this.glow.points);
+    this.group.add(this.marks.mesh, this.smoke.points, this.glow.points);
   }
 
   setView(pixels: number, fov: number): void {
@@ -47,12 +51,24 @@ export class Effects {
           this.glow.emit({ x: at.x, y: at.y, z: at.z, vx: -kart.vx * 0.2 + rand(1), vy: rand(1) + 0.5, vz: -kart.vz * 0.2 + rand(1), life: 0.25, size: 0.9, grow: 0.3, color: Math.random() < 0.5 ? "#ffb030" : "#ff5a1f" });
         }
       }
-      if (kart.drift !== 0 && !kart.airborne) {
-        const hot = kart.driftTime >= DRIFT.orangeAt ? "#ff8a1f" : kart.driftTime >= DRIFT.blueAt ? "#39b8ff" : "#fff3b0";
+      const drifting = kart.drift !== 0 && !kart.airborne;
+      // A hard stop leaves rubber too, though only a drift throws sparks.
+      const skidding = drifting || (kart.brakeHeld > 0.15 && speed > 9 && !kart.airborne);
+      rear.forEach((w, i) => {
+        const key = kart.id * 4 + i;
+        if (!skidding || kart.surface === "offroad") return this.marks.lift(key);
+        view.worldPoint(w.at[0], 0.02, w.at[2], at);
+        this.marks.lay(key, at);
+        if (Math.random() < (drifting ? 0.45 : 0.25)) this.smoke.emit({ x: at.x, y: at.y + 0.15, z: at.z, vx: rand(1), vy: 0.6, vz: rand(1), life: 0.8, size: 0.7, grow: 2.4, color: "#ececf2", alpha: 0.26 });
+      });
+      if (drifting) {
+        const tier = driftTier(kart.driftTime);
         for (const w of rear) {
           view.worldPoint(w.at[0], 0.05, w.at[2], at);
-          this.glow.emit({ x: at.x, y: at.y + 0.1, z: at.z, vx: rand(4), vy: 2 + Math.random() * 3, vz: rand(4), life: 0.35, size: 0.28, gravity: 14, color: hot });
-          if (Math.random() < 0.35) this.smoke.emit({ x: at.x, y: at.y + 0.15, z: at.z, vy: 0.5, life: 0.6, size: 0.6, grow: 2, color: "#e8e8ee", alpha: 0.22 });
+          // Hotter sparks come thicker and bigger, so the charge reads at a glance.
+          for (let n = 0; n <= Math.max(0, tier - 1); n++) {
+            this.glow.emit({ x: at.x, y: at.y + 0.1, z: at.z, vx: rand(4), vy: 2 + Math.random() * 3, vz: rand(4), life: 0.35, size: 0.26 + tier * 0.05, gravity: 14, color: SPARKS[tier] });
+          }
         }
       }
       if (kart.surface === "offroad" && speed > 6 && !kart.airborne && Math.random() < 0.6) {
@@ -74,6 +90,7 @@ export class Effects {
     }
     this.glow.update(dt);
     this.smoke.update(dt);
+    this.marks.frame(dt);
   }
 
   /** One off bursts for race events. */
@@ -127,6 +144,7 @@ export class Effects {
   dispose(): void {
     this.glow.dispose();
     this.smoke.dispose();
+    this.marks.dispose();
   }
 }
 
