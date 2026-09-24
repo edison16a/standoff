@@ -15,7 +15,7 @@ export function paint(width: number, height: number, draw: (ctx: CanvasRendering
   if (ctx) draw(ctx);
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 8;
+  texture.anisotropy = 4;
   return texture;
 }
 

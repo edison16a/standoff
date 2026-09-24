@@ -144,9 +144,9 @@ export class Particles {
       s.vy = s.vy * k - s.gravity * dt;
       s.vz *= k;
       const p = i * 3;
-      this.pos[p] += s.vx * dt;
-      this.pos[p + 1] += s.vy * dt;
-      this.pos[p + 2] += s.vz * dt;
+      this.pos[p] = this.pos[p]! + s.vx * dt;
+      this.pos[p + 1] = this.pos[p + 1]! + s.vy * dt;
+      this.pos[p + 2] = this.pos[p + 2]! + s.vz * dt;
       if (s.floor && this.pos[p + 1]! < 0.01) {
         // Settles on the canvas and slides to a stop.
         this.pos[p + 1] = 0.01;

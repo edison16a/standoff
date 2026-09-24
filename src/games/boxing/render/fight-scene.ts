@@ -36,7 +36,7 @@ export class FightScene {
   /** How worked up the crowd is, 0 to 1. It jumps on big moments and settles. */
   excite = 0.2;
   private readonly environment: THREE.Texture;
-  private readonly faces = [new THREE.Vector3(), new THREE.Vector3()];
+  private readonly faces: [THREE.Vector3, THREE.Vector3] = [new THREE.Vector3(), new THREE.Vector3()];
   private readonly tmp = new THREE.Vector3();
 
   constructor(renderer: THREE.WebGLRenderer, looks: readonly [Look, Look]) {

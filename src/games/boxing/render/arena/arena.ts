@@ -45,21 +45,17 @@ export class Arena {
     this.key.shadow.camera.near = 3;
     this.key.shadow.camera.far = 12;
     this.group.add(this.key, this.key.target);
-    for (const [x, z, colour] of [
-      [-1, -1, "#ffd9c2"],
-      [1, 1, "#c9dcff"],
-      [-1, 1, "#ffffff"],
-      [1, -1, "#ffe9d0"],
+    // Two hard rim lights from opposite corners of the truss, warm and cool, carve the boxers
+    // out of the dark from any camera. Directional lights, since they cost least per pixel.
+    for (const [x, z, colour, power] of [
+      [-1, -1, "#ffd2b0", 2.2],
+      [1, 1, "#bcd4ff", 2.0],
     ] as const) {
-      const rim = new THREE.SpotLight(colour, 45, 18, 0.5, 0.6, 1.3);
-      rim.position.set(x * TRUSS_HALF, TRUSS_Y - 0.3, z * TRUSS_HALF);
-      rim.target.position.set(-x * 0.6, 1.2, -z * 0.6);
+      const rim = new THREE.DirectionalLight(colour, power);
+      rim.position.set(x * TRUSS_HALF, TRUSS_Y, z * TRUSS_HALF);
+      rim.target.position.set(0, 1, 0);
       this.group.add(rim, rim.target);
     }
-    // A warm glow from the crowd side lights the stands a little.
-    const stands = new THREE.PointLight("#ff9a5a", 6, 30, 1.6);
-    stands.position.set(0, 3, 0);
-    this.group.add(stands);
 
     this.buildFloor();
     this.buildBoards();

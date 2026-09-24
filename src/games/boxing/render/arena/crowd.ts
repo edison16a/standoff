@@ -3,11 +3,11 @@ import { seeded } from "../../engine/random";
 import { PLATFORM } from "./ring";
 
 /** Rows of seats rising away from the ring on all four sides. */
-const ROWS = 9;
+const ROWS = 8;
 const FIRST_ROW = 5.4;
 const ROW_DEPTH = 0.95;
 const ROW_RISE = 0.48;
-const SEAT = 0.62;
+const SEAT = 0.66;
 
 const SHIRTS = ["#20242e", "#2d3445", "#5a1f24", "#1d3a5c", "#3b3b3b", "#6b5a3a", "#e8e2d4", "#23452f", "#7a2d7a", "#b8412c", "#141414", "#324c8c"];
 const SKINS = ["#e2b08c", "#c68e6a", "#8d5a3c", "#5e3a26", "#f0c8a8", "#b07850"];
@@ -24,10 +24,10 @@ export class Crowd {
   readonly faces: THREE.Vector3[] = [];
   private readonly uniforms = { time: { value: 0 }, excite: { value: 0.2 } };
   private readonly geometries: THREE.BufferGeometry[];
-  private readonly material: THREE.MeshStandardMaterial;
+  private readonly material: THREE.MeshLambertMaterial;
 
   constructor() {
-    this.material = new THREE.MeshStandardMaterial({ roughness: 0.85, vertexColors: true, color: "#8a8a8a" });
+    this.material = new THREE.MeshLambertMaterial({ vertexColors: true, color: "#8a8a8a" });
     this.material.onBeforeCompile = (shader) => {
       shader.uniforms.time = this.uniforms.time;
       shader.uniforms.excite = this.uniforms.excite;
@@ -112,8 +112,8 @@ function build(parts: Part[]): THREE.BufferGeometry {
   const flats = parts.map(([geo, colour, x, y, z, rz = 0]) => {
     geo.rotateZ(rz);
     geo.translate(x, y, z);
-    const flat = geo.toNonIndexed();
-    geo.dispose();
+    const flat = geo.index ? geo.toNonIndexed() : geo;
+    if (flat !== geo) geo.dispose();
     const c = new THREE.Color(colour);
     const count = flat.getAttribute("position").count;
     const colours = new Float32Array(count * 3);
@@ -139,9 +139,9 @@ function build(parts: Part[]): THREE.BufferGeometry {
 /** A seated fan's torso, raised arms and seat back. White parts take the shirt colour. */
 function bodyGeometry(): THREE.BufferGeometry {
   return build([
-    [new THREE.CapsuleGeometry(0.19, 0.34, 3, 8), "#ffffff", 0, 0.62, 0],
-    [new THREE.CapsuleGeometry(0.05, 0.3, 2, 6), "#ffffff", 0.22, 0.95, 0.06, -0.35],
-    [new THREE.CapsuleGeometry(0.05, 0.3, 2, 6), "#ffffff", -0.22, 0.95, 0.06, 0.35],
+    [new THREE.CapsuleGeometry(0.19, 0.34, 2, 7), "#ffffff", 0, 0.62, 0],
+    [new THREE.CylinderGeometry(0.05, 0.05, 0.36, 5, 1), "#ffffff", 0.22, 0.95, 0.06, -0.35],
+    [new THREE.CylinderGeometry(0.05, 0.05, 0.36, 5, 1), "#ffffff", -0.22, 0.95, 0.06, 0.35],
     [new THREE.BoxGeometry(0.5, 0.5, 0.08), "#15151c", 0, 0.45, -0.28],
   ]);
 }
@@ -149,8 +149,8 @@ function bodyGeometry(): THREE.BufferGeometry {
 /** The head and two fists, in the fan's skin tone. */
 function headGeometry(): THREE.BufferGeometry {
   return build([
-    [new THREE.SphereGeometry(0.12, 10, 8), "#ffffff", 0, 1.08, 0.02],
-    [new THREE.SphereGeometry(0.05, 6, 5), "#ffffff", 0.2, 1.22, 0.08],
-    [new THREE.SphereGeometry(0.05, 6, 5), "#ffffff", -0.2, 1.22, 0.08],
+    [new THREE.IcosahedronGeometry(0.12, 1), "#ffffff", 0, 1.08, 0.02],
+    [new THREE.IcosahedronGeometry(0.05, 0), "#ffffff", 0.2, 1.22, 0.08],
+    [new THREE.IcosahedronGeometry(0.05, 0), "#ffffff", -0.2, 1.22, 0.08],
   ]);
 }
