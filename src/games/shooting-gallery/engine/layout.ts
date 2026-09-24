@@ -38,7 +38,7 @@ export interface WaveBoard {
 /** Back to front. Each hides the rail of the lane just behind it. */
 export const BOARDS: readonly WaveBoard[] = [
   { z: -2.2, baseY: 1.72, amp: 0.13, length: 2.3, phase: 0.6 },
-  { z: -1.25, baseY: 1.1, amp: 0.12, length: 2.0, phase: 2.1 },
+  { z: -1.2, baseY: 1.1, amp: 0.12, length: 2.0, phase: 2.1 },
   { z: -0.3, baseY: 0.5, amp: 0.11, length: 1.7, phase: 4.0 },
 ];
 
@@ -69,8 +69,8 @@ export interface Lane {
 export const LANES: Record<LaneId, Lane> = {
   rail: { id: "rail", z: -2.75, y: 3.28, dir: 1, speed: 2.3 },
   pop: { id: "pop", z: -2.55, y: 1.62, dir: 1, speed: 0.5 },
-  back: { id: "back", z: -1.45, y: 0.98, dir: 1, speed: 0.95 },
-  front: { id: "front", z: -0.5, y: 0.38, dir: -1, speed: 1.3 },
+  back: { id: "back", z: -1.62, y: 0.93, dir: 1, speed: 0.95 },
+  front: { id: "front", z: -0.72, y: 0.33, dir: -1, speed: 1.3 },
 };
 
 /** How high a pop up target's stick lifts it when fully up. */

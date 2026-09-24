@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addBest, BEST_MAX, parseBook, tableFor, type BestEntry } from "./high-scores";
+import { addBest, addBests, BEST_MAX, parseBook, tableFor, type BestEntry } from "./high-scores";
 import { rank, winners, type Tally } from "./scoring";
 
 const tally = (seat: number, score: number, shots: number, hits: number): Tally => ({ seat, score, shots, hits, specials: 0 });
@@ -44,6 +44,12 @@ describe("high scores", () => {
   it("an equal score goes below the one already there", () => {
     const { book } = addBest({}, entry(50, 1));
     expect(addBest(book, entry(50, 2)).place).toBe(2);
+  });
+
+  it("places a round's scores after all of them are in", () => {
+    const low = entry(20, 1);
+    const high = entry(50, 2);
+    expect(addBests({}, [low, high]).places).toEqual([2, 1]);
   });
 
   it("survives junk in storage", () => {

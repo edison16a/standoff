@@ -50,6 +50,20 @@ export function addBest(book: BestBook, entry: BestEntry): { book: BestBook; pla
   return { book: { ...book, [key]: table }, place: index === -1 ? null : index + 1 };
 }
 
+/**
+ * Adds a whole round's scores at once. Places are read after every score
+ * is in, since a better score from the same round pushes the others down.
+ */
+export function addBests(book: BestBook, entries: readonly BestEntry[]): { book: BestBook; places: (number | null)[] } {
+  let next = book;
+  for (const entry of entries) next = addBest(next, entry).book;
+  const places = entries.map((entry) => {
+    const index = tableFor(next, entry.seconds).indexOf(entry);
+    return index === -1 ? null : index + 1;
+  });
+  return { book: next, places };
+}
+
 export function tableFor(book: BestBook, seconds: number): BestEntry[] {
   return book[String(seconds)] ?? [];
 }
