@@ -10,8 +10,8 @@ import { z } from "zod";
 export const ROOM_CODE_LENGTH = 4;
 /** Letters only, and none that are easy to misread on a phone screen. */
 export const ROOM_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ";
-/** The most phones one room seats. Games choose 1, 2 or 4. */
-export const MAX_SEATS = 4;
+/** The most phones one room seats. Team games like 3 on 3 need six. */
+export const MAX_SEATS = 6;
 
 /** A player's place in the room, from 1. Join order decides it. */
 export type Seat = number;

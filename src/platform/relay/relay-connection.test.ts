@@ -51,9 +51,9 @@ function connect() {
   return { socket, connection, send, drop };
 }
 
-async function openRoom() {
+async function openRoom(seats = 2) {
   const host = connect();
-  await host.send({ type: "host:create", game: "fencing", seats: 2 });
+  await host.send({ type: "host:create", game: "fencing", seats });
   const created = host.socket.last("room:created");
   return { host, code: created.code, token: created.token };
 }
@@ -81,6 +81,14 @@ describe("RelayConnection over the memory backend", () => {
     expect(b.socket.last("phone:joined").seat).toBe(2);
     expect(c.socket.last("room:error").reason).toBe("full");
     expect(host.socket.inbox.filter((m) => m.type === "peer:joined")).toHaveLength(2);
+  });
+
+  it("seats six phones in a six seat room and refuses a seventh", async () => {
+    const { code } = await openRoom(6);
+    const phones = Array.from({ length: 7 }, () => connect());
+    for (const phone of phones) await phone.send({ type: "phone:join", code });
+    expect(phones.slice(0, 6).map((phone) => phone.socket.last("phone:joined").seat)).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(phones[6]!.socket.last("room:error").reason).toBe("full");
   });
 
   it("relays messages both ways, to one phone or both", async () => {

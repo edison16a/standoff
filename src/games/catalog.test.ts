@@ -16,7 +16,7 @@ describe("the game catalog", () => {
     for (const game of GAMES) {
       expect(isPlayable(game.id)).toBe(game.status === "ready");
       expect(game.players.length).toBeGreaterThan(0);
-      for (const count of game.players) expect([1, 2, 4]).toContain(count);
+      for (const count of game.players) expect([1, 2, 3, 4, 5, 6]).toContain(count);
     }
   });
 });
