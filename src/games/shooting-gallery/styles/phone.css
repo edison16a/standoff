@@ -1,0 +1,270 @@
+/*
+  Shooting Gallery on the phone: the gun picker, the ready button, the
+  Shoot pad and the result. The setup frame itself is the kit's.
+*/
+
+.sg-gun {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255, 214, 150, 0.35), transparent 65%),
+    linear-gradient(#5a1a20, #2a0c10);
+  overflow: hidden;
+}
+
+.sg-preview {
+  display: block;
+  width: 100%;
+  height: 210px;
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+.sg-gun__name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  color: #fff4dc;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.sg-gun__swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.sg-finishes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.sg-finish {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sg-finish--on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.sg-finish__chip {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+}
+
+.sg-ready__rules {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.sg-ready {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 150px;
+  border: 0;
+  border-radius: 22px;
+  background: linear-gradient(#ff5a6b, #c8142f);
+  box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+  font: inherit;
+  font-size: 26px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.sg-ready--on {
+  background: linear-gradient(#3ee08a, #1a9c55);
+}
+
+.sg-ready__wait {
+  margin: 0;
+  text-align: center;
+}
+
+/* The pad during a round. */
+
+.sg-pad {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sg-pad__top {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.sg-pad__stat {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 8px 12px;
+  border: 2px solid var(--p);
+  border-radius: 14px;
+  background: var(--bg);
+}
+
+.sg-pad__label {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sg-pad__value {
+  color: var(--p);
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.sg-pad__recenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sg-pad__middle {
+  position: relative;
+  display: grid;
+  flex: 1;
+  place-items: center;
+}
+
+.sg-pad__middle .kit-fire {
+  --kit-fire: var(--p);
+  width: min(74vw, 300px);
+  box-shadow:
+    0 10px 0 color-mix(in srgb, var(--p) 55%, #000),
+    0 18px 30px rgba(0, 0, 0, 0.3);
+}
+
+.sg-pad__middle .kit-pad {
+  width: 100%;
+  min-height: 360px;
+}
+
+.sg-shoot {
+  font-size: 34px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sg-pad__flash {
+  position: absolute;
+  top: 8%;
+  color: var(--p);
+  font-size: 44px;
+  font-weight: 900;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+  animation: sg-flash 0.9s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes sg-flash {
+  from {
+    opacity: 1;
+    transform: translateY(20px) scale(0.6);
+  }
+  30% {
+    transform: translateY(0) scale(1.15);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-30px) scale(1);
+  }
+}
+
+.sg-pad__hint {
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+}
+
+/* The result after the buzzer. */
+
+.sg-result {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+  text-align: center;
+}
+
+.sg-result__kicker {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.sg-result__title {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.sg-result__score {
+  margin: 0;
+  color: var(--p);
+  font-size: 80px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.sg-result__line,
+.sg-result__best {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.sg-result__best {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.sg-result .sg-ready {
+  margin-top: 14px;
+}
