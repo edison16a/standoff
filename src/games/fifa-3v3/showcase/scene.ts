@@ -64,7 +64,7 @@ export class ShowcaseScene {
     this.state = fresh();
     const strike = firstStrike();
     // The loop: the build up fills the first five seconds of the film, then the finish and the party.
-    const start = kind === "loop" ? Math.max(0, strike - WARMUP - 5.2) : strike + (kind === "icon" ? 0.1 : 0.3);
+    const start = kind === "loop" ? Math.max(0, strike - WARMUP - 5.2) : strike + (kind === "icon" ? 0.03 : 0.3);
     while (this.state.time < start + seek) stepMatch(this.state);
     this.view = buildView(this.state);
     if (kind !== "loop") {
@@ -106,23 +106,23 @@ export class ShowcaseScene {
     return this.state.flight?.shooter ?? null;
   }
 
-  /** Low behind the goal, looking out at the shooter as the ball flies at the net. */
+  /** Over the shooter's shoulder at pitch level: the strike, the ball flying and the keeper diving. */
   private posterPose(): Pose {
     const s = this.state.athletes[this.shooter() ?? 0]!;
     const dir = attackSign(s.team);
-    const ball = this.state.ball.pos;
-    const look = new THREE.Vector3((s.pos.x + ball.x) / 2, 1.1, (s.pos.z + ball.z) / 2);
-    const pos = new THREE.Vector3(ball.x + dir * 6.5, 1.6, ball.z * 0.4 + (s.pos.z > 0 ? -3.2 : 3.2));
-    return { pos, look, fov: 38 };
+    const side = s.pos.z > 0 ? 1 : -1;
+    const gx = dir * 16;
+    const look = new THREE.Vector3(s.pos.x * 0.35 + gx * 0.65, 1.1, s.pos.z * 0.35);
+    const pos = new THREE.Vector3(s.pos.x - dir * 4.2, 1.5, s.pos.z + side * 3.4);
+    return { pos, look, fov: 40 };
   }
 
-  /** Close on the shooter's strike, the ball leaving the boot. */
+  /** Close on the shooter's strike from the lit near side, the ball leaving the boot. */
   private heroPose(): Pose {
     const s = this.state.athletes[this.shooter() ?? 0]!;
     const dir = attackSign(s.team);
-    const side = s.pos.z > 0 ? -1 : 1;
-    const look = new THREE.Vector3(s.pos.x + dir * 0.5, 0.95, s.pos.z);
-    const pos = new THREE.Vector3(s.pos.x + dir * 3.6, 0.7, s.pos.z + side * 2.6);
-    return { pos, look, fov: 34 };
+    const look = new THREE.Vector3(s.pos.x + dir * 0.4, 0.95, s.pos.z);
+    const pos = new THREE.Vector3(s.pos.x + dir * 2.3, 0.5, s.pos.z + 2.1);
+    return { pos, look, fov: 40 };
   }
 }

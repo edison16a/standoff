@@ -65,10 +65,10 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
       <canvas ref={canvasRef} className="fifa-showcase__canvas" />
       {view === "loop" && (
         // The broadcast score bug in the corner, as on a television highlight.
-        <div ref={bugRef} className="fifa-bug">
-          <span className="fifa-bug__team fifa-bug__team--red">RED</span>
+        <div ref={bugRef} className="fifa-tvbug">
+          <span className="fifa-tvbug__team fifa-tvbug__team--red">RED</span>
           <strong>0  0</strong>
-          <span className="fifa-bug__team fifa-bug__team--blue">BLU</span>
+          <span className="fifa-tvbug__team fifa-tvbug__team--blue">BLU</span>
           <em>4:00</em>
         </div>
       )}

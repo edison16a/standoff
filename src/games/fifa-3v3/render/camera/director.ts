@@ -86,9 +86,9 @@ export class CameraDirector {
       case "winners": {
         const at = focus ?? new THREE.Vector3();
         const a = time * 0.18;
-        this.wantPos.set(at.x + Math.sin(a) * 9, 3.4, at.z + Math.cos(a) * 9);
+        this.wantPos.set(at.x + Math.sin(a) * 11, 3.8, at.z + Math.cos(a) * 11);
         this.wantLook.set(at.x, 1.1, at.z);
-        fov = 38;
+        fov = 30;
         rate = 2;
         break;
       }

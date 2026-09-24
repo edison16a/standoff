@@ -48,7 +48,7 @@
 }
 
 /* The score bug of a television broadcast, top left. */
-.fifa-bug {
+.fifa-tvbug {
   position: absolute;
   top: 4.5vh;
   left: 3vw;
@@ -62,25 +62,25 @@
   box-shadow: 0 0.3em 1em rgba(0, 0, 0, 0.45);
 }
 
-.fifa-bug > * {
+.fifa-tvbug > * {
   padding: 0.45em 0.7em;
 }
 
-.fifa-bug strong {
+.fifa-tvbug strong {
   white-space: pre;
   background: #ffffff;
   color: #0b1024;
 }
 
-.fifa-bug em {
+.fifa-tvbug em {
   font-style: normal;
   color: #fde047;
 }
 
-.fifa-bug__team--red {
+.fifa-tvbug__team--red {
   background: #d62839;
 }
 
-.fifa-bug__team--blue {
+.fifa-tvbug__team--blue {
   background: #1d5fd8;
 }

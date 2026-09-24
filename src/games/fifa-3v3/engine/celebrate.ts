@@ -50,13 +50,30 @@ export function celebrateGoal(state: MatchState, dt: number): void {
   }
 }
 
-/** At the final whistle the winners celebrate on the spot and the losers sink. */
+/**
+ * At the final whistle the winners jog together and celebrate as a
+ * group, so the camera can circle them, and the losers sink where they are.
+ */
 export function celebrateWin(state: MatchState, dt: number): void {
+  const winners = state.athletes.filter((a) => a.team === state.winner);
+  const middle = { x: 0, z: 0 };
+  for (const a of winners) {
+    middle.x += a.pos.x / winners.length;
+    middle.z += a.pos.z / winners.length;
+  }
   for (const a of state.athletes) {
     a.actionT += dt;
-    setAction(a, state.winner === a.team ? "celebrate" : "dejected");
-    brake(a, dt, 5);
-    if (state.winner === a.team) faceCamera(a, dt);
+    if (state.winner !== a.team) {
+      setAction(a, "dejected");
+      brake(a, dt, 5);
+    } else if (dist(a.pos, middle) > 1.5) {
+      setAction(a, "free");
+      moveToward(a, middle, 0.6, dt);
+    } else {
+      setAction(a, "celebrate");
+      brake(a, dt, 5);
+      faceCamera(a, dt);
+    }
   }
 }
 
