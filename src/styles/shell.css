@@ -37,9 +37,22 @@
   position: absolute;
   top: 12px;
   right: 12px;
+  z-index: 3;
   display: flex;
   align-items: center;
   gap: 2px;
+  padding: 2px;
+  border-radius: 999px;
+}
+
+/*
+  Games draw right up to the edges, often dark 3D scenes under a light
+  theme. A soft backing keeps the logo and the tools readable on any of
+  them.
+*/
+.shell__brand .home-link,
+.shell__tools {
+  background: color-mix(in srgb, var(--bg) 84%, transparent);
 }
 
 .shell__tools .btn {
@@ -173,4 +186,12 @@
 .join__extra:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.shell__brand .home-link {
+  border-radius: 999px;
+}
+
+.shell__brand .home-link:hover {
+  background: var(--bg-muted);
 }
