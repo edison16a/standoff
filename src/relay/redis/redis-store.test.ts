@@ -8,8 +8,9 @@ const url = process.env.REDIS_TEST_URL;
 
 describe.skipIf(!url)("RedisStore", () => {
   let redis: Redis;
-  beforeAll(() => {
+  beforeAll(async () => {
     redis = new Redis(url!);
+    await redis.del("standoff:room:TTLA", "standoff:room:LOCK", "standoff:lock:LOCK");
   });
   afterAll(async () => {
     await redis.quit();
