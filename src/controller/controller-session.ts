@@ -35,7 +35,8 @@ export class ControllerSession {
     this.socket = new SocketClient({
       onOpen: (send) => send({ type: "phone:join", code: this.code, token: readToken(this.code) ?? undefined }),
       onMessage: (message) => this.onMessage(message),
-      onStatus: (status) => store.setState({ status }),
+      onStatus: (status) =>
+        store.setState(status === "replaced" ? { status, stage: "error", error: "replaced" } : { status }),
     });
   }
 

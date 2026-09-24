@@ -1,19 +1,20 @@
 import Link from "next/link";
-import { TopBar } from "@/components/ui/TopBar";
+import { StandoffMark } from "@/components/ui/Brand";
 
 export default function NotFound() {
   return (
-    <div className="host-page">
-      <TopBar />
-      <main className="phone__body">
-        <section className="phone-card phone-card--center">
-          <h1 className="phone-title">Nothing here</h1>
-          <p className="muted">That room code does not look right. Scan the QR code on the host screen again.</p>
+    <main className="phone">
+      <div className="phone__body">
+        <section className="phone-hero">
+          <span className="phone-hero__mark">
+            <StandoffMark />
+          </span>
+          <h1 className="phone-title">Room not found</h1>
           <Link className="btn" href="/">
-            Go to the start page
+            Start page
           </Link>
         </section>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }

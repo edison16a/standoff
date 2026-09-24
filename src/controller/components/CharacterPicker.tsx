@@ -28,7 +28,7 @@ export function CharacterPicker({ slot }: { slot: Slot }) {
           >
             <FencerCanvas characterId={id} slot={slot} className="picker__art" />
             <span className="picker__name">{CHARACTERS[id].name}</span>
-            <span className="picker__tag muted">{taken ? "Taken" : CHARACTERS[id].tagline}</span>
+            {taken && <span className="picker__tag muted">Taken</span>}
           </button>
         );
       })}

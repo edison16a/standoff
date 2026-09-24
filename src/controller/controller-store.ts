@@ -7,7 +7,8 @@ import type { ControllerState } from "@/shared/protocol";
 /** Where the phone is in the join flow. */
 export type ControllerStage = "enable" | "joining" | "playing" | "error";
 
-export type ControllerError = "not-found" | "full" | "closed" | "insecure" | "denied";
+/** `replaced` means this seat was taken over by the same page in another tab. */
+export type ControllerError = "not-found" | "full" | "closed" | "insecure" | "denied" | "replaced";
 
 /** Motion comes from the sensors, or from on screen buttons where there are none. */
 export type InputMode = "motion" | "touch";

@@ -7,25 +7,23 @@ import { MoveMeter, SwordGauge } from "./Gauges";
 import { useController } from "./session-context";
 import { TouchControls } from "./TouchControls";
 
-/** The short headline for the current phase, from this player's point of view. */
-function headline(game: ControllerState, slot: Slot): { title: string; detail: string } {
+/** One word for the current phase, from this player's point of view. */
+function headline(game: ControllerState, slot: Slot): string {
   switch (game.phase) {
     case "enGarde":
-      return { title: game.countdown ? String(game.countdown) : "Allez", detail: "En garde. Hold your guard." };
+      return game.countdown ? String(game.countdown) : "Allez";
     case "live":
-      return { title: "Allez", detail: "Push out to advance, thrust to jab, snap back to parry." };
+      return "Allez";
     case "halt":
-      return { title: game.call ?? "Halt", detail: "Point decided." };
+      return game.call ?? "Halt";
     case "replay":
-      return { title: "Replay", detail: "Watch the computer, or skip." };
+      return "Replay";
     case "paused":
-      return { title: "Paused", detail: "Waiting for a player to reconnect." };
+      return "Paused";
     case "matchOver":
-      return game.winner === slot
-        ? { title: "You win", detail: `${game.scores[slot - 1]} to ${game.scores[slot === 1 ? 1 : 0]}.` }
-        : { title: "You lose", detail: "Good bout. Go again?" };
+      return game.winner === slot ? "You win" : "You lose";
     default:
-      return { title: "", detail: "" };
+      return "";
   }
 }
 
@@ -33,7 +31,7 @@ function headline(game: ControllerState, slot: Slot): { title: string; detail: s
 export function MatchPad({ slot, game }: { slot: Slot; game: ControllerState }) {
   const session = useController();
   const inputMode = useControllerStore((state) => state.inputMode);
-  const { title, detail } = headline(game, slot);
+  const title = headline(game, slot);
   const me = slot - 1;
   const them = slot === 1 ? 1 : 0;
 
@@ -45,27 +43,25 @@ export function MatchPad({ slot, game }: { slot: Slot; game: ControllerState }) 
             <span className="label">You</span>
             <strong>{game.scores[me]}</strong>
           </span>
-          <span className="label">First to {game.touchesToWin}</span>
           <span>
             <span className="label">Them</span>
             <strong>{game.scores[them]}</strong>
           </span>
         </div>
         <h1 className="pad__title">{title}</h1>
-        <p className="muted">{detail}</p>
       </section>
 
       {game.phase === "replay" && (
         <button type="button" className="btn btn--lg btn--block btn--primary" disabled={game.skipVotes[me]} onClick={() => session.skip()}>
           <Icon name="skip" />
-          {game.skipVotes[me] ? "Waiting for the other player" : "Skip replay"}
+          {game.skipVotes[me] ? "Waiting" : "Skip"}
         </button>
       )}
 
       {game.phase === "matchOver" && (
         <button type="button" className="btn btn--lg btn--block btn--primary" disabled={game.rematchVotes[me]} onClick={() => session.rematch()}>
           <Icon name="refresh" />
-          {game.rematchVotes[me] ? "Waiting for a rematch vote" : "Rematch"}
+          {game.rematchVotes[me] ? "Waiting" : "Rematch"}
         </button>
       )}
 

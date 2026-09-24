@@ -18,7 +18,7 @@ export function LobbySteps({ slot }: { slot: Slot }) {
       <section className="phone-card">
         <header className="step__head">
           <span className="step__num">1</span>
-          <h2>Pick your fencer</h2>
+          <h2>Fencer</h2>
         </header>
         <CharacterPicker slot={slot} />
       </section>
@@ -30,9 +30,7 @@ export function LobbySteps({ slot }: { slot: Slot }) {
         <CalibratePanel />
       </section>
       <div className="ready-bar">
-        <p className="muted">
-          {ready ? (otherReady ? "Starting" : "Waiting for your opponent") : canReady ? "Tap when you are set." : "Pick a fencer and calibrate first."}
-        </p>
+        {ready && !otherReady && <p className="muted">Waiting for your opponent</p>}
         <button
           type="button"
           className={`btn btn--lg btn--block ${ready ? "" : "btn--primary"}`}

@@ -14,16 +14,11 @@ export function CalibratePanel() {
   const sensorsLive = useControllerStore((state) => state.sensorsLive);
   const inputMode = useControllerStore((state) => state.inputMode);
 
-  if (inputMode === "touch") {
-    return <p className="muted">This device has no motion sensors, so you will play with on screen buttons.</p>;
-  }
+  if (inputMode === "touch") return <p className="muted">On screen buttons</p>;
 
   return (
     <div className="calibrate">
-      <p className="muted">
-        Grip the phone like a sword handle, screen up, and point its top edge at the computer screen. Then tap
-        Calibrate. Recalibrate any time it feels off.
-      </p>
+      <p className="muted">Point the top of your phone at the screen.</p>
       {calibrated && (
         <div className="calibrate__live">
           <SwordGauge />
@@ -37,7 +32,7 @@ export function CalibratePanel() {
         </button>
         {!sensorsLive && (
           <button type="button" className="btn btn--ghost btn--block" onClick={() => session.useTouchControls()}>
-            No motion? Use on screen buttons
+            Use buttons instead
           </button>
         )}
       </div>
