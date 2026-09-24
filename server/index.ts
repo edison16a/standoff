@@ -20,13 +20,17 @@ async function main() {
   const phoneHost = config.publicHost ?? lanAddress ?? "localhost";
   const phoneOrigin = `https://${phoneHost}:${config.httpsPort}`;
 
-  const app = next({ dev: config.dev, dir: process.cwd() });
-  await app.prepare();
-  const handleRequest = app.getRequestHandler();
-  const handleNextUpgrade = app.getUpgradeHandler();
-
   const registry = new RoomRegistry((code) => `${phoneOrigin}/join/${code}`);
   const sockets = createSocketServer(registry);
+  const certificate = await loadCertificate(lanAddress);
+
+  const httpServer = createHttpServer();
+  // Next hooks its own dev reload socket onto this server. Handing it the
+  // server up front means that hook lands here, whichever listener sees
+  // the first request.
+  const app = next({ dev: config.dev, dir: process.cwd(), httpServer });
+  await app.prepare();
+  const handleRequest = app.getRequestHandler();
 
   const onRequest = (req: IncomingMessage, res: ServerResponse) => {
     handleRequest(req, res).catch((error: unknown) => {
@@ -34,18 +38,19 @@ async function main() {
       if (!res.headersSent) res.writeHead(500).end("Internal error");
     });
   };
-  const onUpgrade = (req: IncomingMessage, socket: Duplex, head: Buffer) => {
-    if (sockets.handleUpgrade(req, socket, head)) return;
-    // Anything else is Next's own dev reload socket.
-    handleNextUpgrade(req, socket, head).catch(() => socket.destroy());
-  };
 
-  const certificate = await loadCertificate(lanAddress);
-  const httpServer = createHttpServer(onRequest).on("upgrade", onUpgrade);
-  const httpsServer = createHttpsServer({ key: certificate.key, cert: certificate.cert }, onRequest).on(
-    "upgrade",
-    onUpgrade,
-  );
+  httpServer.on("request", onRequest);
+  // On plain HTTP we only take the game socket. Next's listener takes the rest.
+  httpServer.on("upgrade", (req: IncomingMessage, socket: Duplex, head: Buffer) => {
+    sockets.handleUpgrade(req, socket, head);
+  });
+
+  const httpsServer = createHttpsServer({ key: certificate.key, cert: certificate.cert }, onRequest);
+  // Phones reach the game socket here. Anything else (Next's reload socket
+  // in development) is passed to the HTTP server, where Next is listening.
+  httpsServer.on("upgrade", (req: IncomingMessage, socket: Duplex, head: Buffer) => {
+    if (!sockets.handleUpgrade(req, socket, head)) httpServer.emit("upgrade", req, socket, head);
+  });
 
   await Promise.all([
     listen(httpServer, config.httpPort, config.bindHost),
