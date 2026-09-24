@@ -1,7 +1,7 @@
 /*
-  Magic Kart on the phone: the setup steps (level, kart picker, ready)
-  and the wheel and pedals while racing. Built for the phone held
-  sideways, and still usable upright.
+  Magic Kart on the phone: the frame and the calibrate step (the level,
+  the picture of the phone held like a wheel, and the wheel that follows
+  it). Built for the phone held sideways, and still usable upright.
 */
 
 .mk-phone {
@@ -96,59 +96,59 @@
 }
 
 .mk-level {
-  width: min(100%, 260px);
+  width: min(100%, 250px);
+  max-height: 180px;
+}
+
+.mk-level__rim {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 9;
+}
+
+.mk-level__arrow {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.mk-level__head {
+  fill: var(--accent);
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.mk-level__phone {
+  fill: #2b2748;
+}
+
+.mk-level__screen {
+  fill: #13111f;
 }
 
 .mk-level__tube {
-  fill: var(--bg-muted);
-  stroke: var(--border-strong);
-  stroke-width: 3;
+  fill: rgba(255, 255, 255, 0.08);
+  stroke: rgba(255, 255, 255, 0.4);
+  stroke-width: 2.5;
 }
 
 .mk-level__mark {
-  stroke: var(--text-muted);
+  stroke: rgba(255, 255, 255, 0.55);
   stroke-width: 2;
-}
-
-.mk-level__centre {
-  fill: var(--text-muted);
 }
 
 .mk-level__bubble {
   fill: #ffb020;
-  opacity: 0.9;
 }
 
-.mk-level--flat .mk-level__tube {
+.mk-level--on .mk-level__tube {
   stroke: #2ecc71;
 }
 
-.mk-level--flat .mk-level__bubble {
+.mk-level--on .mk-level__bubble {
   fill: #2ecc71;
-}
-
-.mk-tray {
-  width: min(100%, 240px);
-}
-
-.mk-tray__phone {
-  fill: var(--accent);
-  opacity: 0.85;
-}
-
-.mk-tray__edge {
-  fill: none;
-  stroke: var(--text-muted);
-  stroke-width: 3;
-  stroke-linejoin: round;
-}
-
-.mk-tray__arrow {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
 }
 
 .mk-gauge {

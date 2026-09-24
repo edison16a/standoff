@@ -1,83 +1,92 @@
-import { clamp, conjugate, DEG, dot, rotate, vec, type Quat, type Vec3 } from "@/games/kit/motion/math3d";
+import { clamp, conjugate, DEG, rotate, vec, wrapAngle, type Quat } from "@/games/kit/motion/math3d";
 
 /**
- * Steering from the phone's tilt. The phone is held sideways and flat,
- * like a tray, and steering is rolling it: right end down steers right.
+ * Steering from the phone held like a steering wheel: sideways, upright,
+ * screen facing the player. Turning the wheel is turning the phone in the
+ * plane of its screen, and clockwise steers right.
  *
  * The maths works from where "up" points in the phone's own frame. Its
- * part along the screen's left to right axis is the roll. Pitching the
- * phone toward your face turns around that same axis, so it never
- * changes the steering, and the compass heading plays no part at all,
- * so the gyro's slow drift cannot creep in.
+ * direction across the screen is the wheel angle. Tipping the phone back
+ * or forward only shortens that part without turning it, so the angle
+ * holds however the phone leans. Laid almost flat there is too little of
+ * it left to trust, so the reading eases over to how far the right end
+ * has dropped, which steers the same way. No Euler angles are involved,
+ * so nothing flips at their limits, and the compass plays no part, so the
+ * gyro's slow drift cannot creep in.
  */
 
 export interface Tilt {
-  /** Radians, positive with the right end of the screen down. */
-  roll: number;
-  /** Radians, positive with the top of the screen raised. */
-  pitch: number;
+  /** Radians, positive with the phone turned clockwise, like a wheel turning right. */
+  wheel: number;
+  /** Radians the screen leans back from upright, positive as it faces the sky. */
+  lean: number;
+}
+
+/** Wheel angle that means full lock. Far enough for fine control, near enough to hold a hairpin. */
+export const FULL_LOCK = 35 * DEG;
+/** A small dead zone so a wheel held about level drives straight. */
+const DEAD_ZONE = 3 * DEG;
+/** How much of "up" must lie across the screen for its direction to be trusted fully, and at all. */
+const ACROSS_SURE = Math.sin(35 * DEG);
+const ACROSS_NONE = Math.sin(15 * DEG);
+
+function quarter(angle: number): number {
+  return (((Math.round(angle / 90) * 90) % 360) + 360) % 360;
 }
 
 /**
- * The screen's right and up directions in the phone's own axes, for each
- * way the browser can have turned the page. At 90 degrees the phone is
- * turned anticlockwise, so its top edge is on the player's left.
+ * Which way is up on the page, as an angle across the screen from the
+ * phone's own x axis (its right edge when upright). The page turned 90
+ * degrees means the phone is turned anticlockwise, top edge on the left.
  */
-export function screenAxes(angle: number): { right: Vec3; up: Vec3 } {
-  switch (((Math.round(angle / 90) * 90) % 360 + 360) % 360) {
-    case 90:
-      return { right: vec(0, -1, 0), up: vec(1, 0, 0) };
-    case 180:
-      return { right: vec(-1, 0, 0), up: vec(0, -1, 0) };
-    case 270:
-      return { right: vec(0, 1, 0), up: vec(-1, 0, 0) };
-    default:
-      return { right: vec(1, 0, 0), up: vec(0, 1, 0) };
-  }
+export function pageUp(angle: number): number {
+  return (90 - quarter(angle)) * DEG;
 }
 
 export function tiltOf(q: Quat, angle: number): Tilt {
   const up = rotate(conjugate(q), vec(0, 0, 1));
-  const axes = screenAxes(angle);
-  return {
-    roll: -Math.asin(clamp(dot(up, axes.right), -1, 1)),
-    pitch: Math.asin(clamp(dot(up, axes.up), -1, 1)),
-  };
+  const a = pageUp(angle);
+  // The parts of "up" along the page's up and along its right, both across the screen.
+  const alongUp = up.x * Math.cos(a) + up.y * Math.sin(a);
+  const alongRight = up.x * Math.sin(a) - up.y * Math.cos(a);
+  const turned = Math.atan2(-alongRight, alongUp);
+  const dropped = Math.asin(clamp(-alongRight, -1, 1));
+  const t = clamp((Math.hypot(alongUp, alongRight) - ACROSS_NONE) / (ACROSS_SURE - ACROSS_NONE), 0, 1);
+  const sure = t * t * (3 - 2 * t);
+  return { wheel: sure * turned + (1 - sure) * dropped, lean: Math.asin(clamp(up.z, -1, 1)) };
 }
 
-/** Roll that means full lock. About what turning a real wheel a quarter turn feels like. */
-export const FULL_LOCK = 26 * DEG;
-/** A small dead zone so a resting phone drives straight. */
-const DEAD_ZONE = 2 * DEG;
-
 /**
- * Steering from -1 to 1, measured from the roll captured at calibration.
- * The curve is gentle near the middle for fine corrections on straights
- * and firm near full lock for hairpins.
+ * Steering from -1 to 1, measured from the wheel angle captured at
+ * calibration. The curve is gentle near the middle for fine corrections
+ * on straights and firm near full lock for hairpins. Past a right angle
+ * the phone is close to upside down, and the reading could wrap round to
+ * the other side, so it keeps the lock it had.
  */
-export function steerFromRoll(roll: number, zero: number): number {
-  const off = roll - zero;
+export function steerFromWheel(wheel: number, zero: number, last = 0): number {
+  const off = wrapAngle(wheel - zero);
+  if (Math.abs(off) > 90 * DEG && last !== 0) return Math.sign(last);
   const mag = Math.max(0, Math.abs(off) - DEAD_ZONE) / (FULL_LOCK - DEAD_ZONE);
-  const shaped = Math.min(1, 0.55 * mag + 0.45 * mag * mag);
-  return Math.sign(off) * shaped;
+  return Math.sign(off) * Math.min(1, 0.55 * mag + 0.45 * mag * mag);
 }
 
-/** Which way the page is turned, allowing for desktop browsers that report 0 in a wide window. */
+/** Which way the page is turned, allowing for old iPhones and for desktop browsers that report 0 in a wide window. */
 export function screenAngle(): number {
-  const reported = typeof screen !== "undefined" && screen.orientation ? screen.orientation.angle : 0;
-  const wide = typeof window !== "undefined" && window.innerWidth > window.innerHeight;
-  if (wide && (reported === 0 || reported === 180)) return 90;
-  return reported;
+  if (typeof window === "undefined") return 90;
+  const legacy = (window as { orientation?: number }).orientation;
+  const reported = screen.orientation ? screen.orientation.angle : (legacy ?? 0);
+  const wide = window.innerWidth > window.innerHeight;
+  if (wide && quarter(reported) % 180 === 0) return 90;
+  return quarter(reported);
 }
 
 /**
- * The calibrated resting roll, for the way the page is turned now. Roll is
- * read along the screen's own left to right, so a phone flipped end over
- * end (landscape the other way) sees the same resting pose with the sign
- * reversed. Without this, flipping the phone after calibrating would pull
- * the kart to one side.
+ * The page turn the wheel is read against. Only the two landscape turns
+ * count. A hard turn of the wheel can make the phone swing the page
+ * upright for a moment, and taking that as the new up would throw the
+ * steering a quarter turn, so the last landscape turn holds instead.
  */
-export function zeroFor(zero: number, calibratedAngle: number, angle: number): number {
-  const turn = (((Math.round((angle - calibratedAngle) / 90) * 90) % 360) + 360) % 360;
-  return turn === 180 ? -zero : turn === 0 ? zero : 0;
+export function wheelAngle(reported: number, previous: number): number {
+  const turn = quarter(reported);
+  return turn === 90 || turn === 270 ? turn : previous;
 }
