@@ -1,0 +1,84 @@
+/*
+  The phone's ready page: your gun and the team's ready flags.
+*/
+
+.zs-ready {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.zs-ready__gun {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  border: 2px solid;
+  border-radius: 14px;
+  background: var(--bg);
+}
+
+.zs-ready__gun strong {
+  font-size: 22px;
+}
+
+.zs-ready__label,
+.zs-ready__hint {
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.zs-ready__hint {
+  margin: 0;
+}
+
+.zs-team {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.zs-team__row {
+  display: grid;
+  grid-template-columns: 12px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--bg);
+  font-size: 14px;
+}
+
+.zs-team__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.zs-team__name {
+  font-weight: 700;
+}
+
+.zs-team__gun {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.zs-team__flag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.zs-team__flag--on {
+  background: var(--zs-green);
+  color: #ffffff;
+}

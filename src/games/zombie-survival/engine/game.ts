@@ -3,22 +3,14 @@ import { Achievements } from "./achievements";
 import { Encounter } from "./encounter";
 import type { Cutscene, GameEvent, Phase } from "./events";
 import { CHOPPER_LINES, ESCAPE_LINES, radioFor } from "./radio";
-import { checkpointDistance, ROUTE_LENGTH } from "./route";
+import { CHECKPOINT_HEAL, CLEAR_SECONDS, CUTSCENE_SECONDS, MAX_HEALTH, RETRY_FLOOR, WALK_SPEED } from "./pacing";
+import { checkpointDistance } from "./route";
 import { resolveShot, type CastFn } from "./shooting";
 import { Squad } from "./squad";
 import { CHOPPER_STAGE, STAGE_COUNT, stage as stageSpec } from "./stages";
 import type { WeaponId } from "./weapons";
 
-export const MAX_HEALTH = 100;
-/** Metres per second the team walks between fights. */
-export const WALK_SPEED = 3.8;
-/** Seconds on the checkpoint summary before the team moves on. */
-export const CLEAR_SECONDS = 6.5;
-export const CUTSCENE_SECONDS: Record<Cutscene, number> = { chopper: 12, escape: 16 };
-/** Health found at each checkpoint. */
-export const CHECKPOINT_HEAL = 15;
-/** A retry never starts a fight with less than this, so a bad checkpoint is not a dead end. */
-export const RETRY_FLOOR = 50;
+export { MAX_HEALTH } from "./pacing";
 
 const ARMED: ReadonlySet<Phase> = new Set(["travel", "fight", "clear"]);
 
@@ -121,7 +113,7 @@ export class SurvivalGame {
     } else if (this.phase === "clear") {
       if (this.phaseTime >= CLEAR_SECONDS) this.afterClear();
     } else if (this.phase === "cutscene" && this.cutscene) {
-      this.updateCutscene(this.cutscene, before, dt);
+      this.updateCutscene(this.cutscene, before);
     }
   }
 
@@ -163,11 +155,9 @@ export class SurvivalGame {
     this.setPhase("cutscene");
   }
 
-  private updateCutscene(which: Cutscene, before: number, dt: number): void {
+  private updateCutscene(which: Cutscene, before: number): void {
     const lines = which === "chopper" ? CHOPPER_LINES : ESCAPE_LINES;
     for (const [at, line] of lines) if (before < at && this.phaseTime >= at) this.emit({ type: "radio", line });
-    // The walk up the pier to the gangway.
-    if (which === "escape") this.distance = Math.min(ROUTE_LENGTH, this.distance + WALK_SPEED * 1.2 * dt);
     if (this.phaseTime < CUTSCENE_SECONDS[which]) return;
     this.cutscene = null;
     if (which === "chopper") {

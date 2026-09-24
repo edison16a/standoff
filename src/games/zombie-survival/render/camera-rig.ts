@@ -3,10 +3,27 @@ import { chopperPose } from "../engine/chopper";
 import type { SurvivalGame } from "../engine/game";
 import { checkpointDistance, fightFrame, pointAt, type Vec3 } from "../engine/route";
 import { CHOPPER_STAGE, STAGE_COUNT } from "../engine/stages";
+import { alive } from "../engine/zombie";
+import { isBoss, KINDS } from "../engine/zombie-kinds";
 import { SHIP_DECK } from "./models/vehicles/ship";
 
 const EYE = 1.65;
 const v = (p: Vec3, up = 0) => new THREE.Vector3(p.x, p.y + up, p.z);
+
+/**
+ * How high to look, fourteen metres out, during a fight. Normally just
+ * under eye level. A boss that closes in tilts the view up with it, so
+ * the weak points on its shoulders stay on screen to be shot.
+ */
+function lookHeight(game: SurvivalGame): number {
+  const boss = game.encounter?.zombies.find((z) => isBoss(z.kind) && alive(z));
+  const base = 1.45;
+  if (!boss || boss.ahead > 16) return base;
+  const chest = KINDS[boss.kind].height * 0.62;
+  const raised = EYE + ((chest - EYE) * 14) / Math.max(3, boss.ahead);
+  const k = Math.min(1, (16 - boss.ahead) / 10);
+  return base + (raised - base) * k;
+}
 
 /** How far the ship has sailed, in metres, this many seconds into the escape. */
 export function sailed(t: number): number {
@@ -66,7 +83,7 @@ export class CameraRig {
         const frame = fightFrame(game.stage);
         const pos = v(frame.origin, EYE).add(breathe);
         const chopper = game.stage === CHOPPER_STAGE ? this.chopper(game, breathe) : null;
-        return { pos, look: chopper && game.phase === "clear" ? chopper.look : v(frame.place(14, 0), 1.45) };
+        return { pos, look: chopper && game.phase === "clear" ? chopper.look : v(frame.place(14, 0), lookHeight(game)) };
       }
     }
   }

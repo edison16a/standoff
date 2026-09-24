@@ -10,6 +10,8 @@ export type GunEvent = { type: "reload-start"; seconds: number } | { type: "shel
  * keeps a held trigger smooth while still capping a spammed one.
  */
 const RATE_SLACK = 0.8;
+/** After a dry click the trigger stays quiet this long. */
+const DRY_PAUSE = 0.35;
 /** The shotgun lifts the gun before the first shell goes in. */
 const SHELL_START = 0.35;
 
@@ -54,7 +56,8 @@ export class Gun {
     // A pump gun can stop loading and fire what it has. A magazine is out of the gun.
     if (this.reloading && this.spec.style === "shells" && this.ammo > 0) this.reloadLeft = null;
     if (this.reloading || this.ammo <= 0) {
-      this.lastShot = now;
+      // One click per squeeze, not a buzz of them from a held trigger.
+      this.lastShot = now + DRY_PAUSE;
       this.startReload();
       return "dry";
     }
