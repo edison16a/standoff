@@ -13,7 +13,7 @@ Status: ready. Up to 4 players slice fruit on one shared screen. Each phone is a
    * **Blade:** pick a slash style. Each card plays a live preview: Plasma, Lightning, Fire, Ice, Venom, Rainbow and Gold.
    * **Ready:** a few tips, then Ready. Ready players can already try their blade on the practice fruit in the lobby.
 4. On the computer, pick the round length, how many bombs and how much fruit, then press Start. A 3, 2, 1 countdown starts the round.
-5. During the round there is nothing to press. Where the phone points is where the blade is. Swing through fruit fast to cut it; slow moves never cut. The phone shows your score, your place and the clock, plus a small Recenter button for when the aim drifts.
+5. During the round there is nothing to press. Where the phone points is where the blade is. Swing through fruit fast to cut it. Slow moves never cut. The phone shows your score, your place and the clock, plus a small Recenter button for when the aim drifts.
 6. When time runs out, fruit already in the air can still be cut for a moment. Then the results show the winner, everyone's score and confetti, with Play again and Change settings.
 
 ## Scoring
@@ -26,12 +26,12 @@ Status: ready. Up to 4 players slice fruit on one shared screen. Each phone is a
 
 ## Players
 
-1 to 4 at once. Someone who joins or finishes setup during a round plays from the next round. Someone who leaves keeps their score on the board, greyed out; if they come back during the round they carry on. A round that everyone leaves ends early.
+1 to 4 at once. Someone who joins or finishes setup during a round plays from the next round. Someone who leaves keeps their score on the board, greyed out. If their phone comes back during the round, they carry on. A different phone that takes a seat mid round waits for the next one and never inherits the old score. A round that everyone leaves ends early. The join code hides for the countdown and comes back on the results, so new players can join between rounds.
 
 ## How it is built
 
 * `engine/`: the rules, with no drawing and no network. Blades cut only above a speed, tested as a swept segment against moving circles so fast fruit never slips between frames. The spawner paces waves and speeds up in the last ten seconds. Unit tested.
-* `render/`: three.js. Every fruit is built in code, turned around an axis with painted peel, and splits into two halves along the blade with its own flesh face (watermelon seeds, orange segments, apple core, kiwi rays and more). Juice drops, stains on the wood, glitter, explosions and confetti are instanced or pooled. Slow machines step down in quality to keep the frame rate.
+* `render/`: three.js. Every fruit is built in code, turned around an axis with painted peel, and splits into two halves along the blade with its own flesh face (watermelon seeds, orange segments, apple core, kiwi rays and more). Both halves swing open so each shows its flesh. Juice drops, stains on the wood, glitter, explosions and confetti are instanced or pooled. Sparks, fire and smoke are camera facing quads rather than GL points, so they look the same on every graphics card. Only light brighter than white glows (blades, sparks, fire, rare fruit). A slow machine first gives up a little resolution, then the glow, never going below half resolution, and tries a step higher again once it keeps up.
 * `host/`: the session that referees rounds, the lobby, the HUD and the text over the board.
 * `phone/`: setup pages in the kit's `StepShell`, the blade previews and the play pad.
 * `audio/`: every sound synthesized on the platform's buses: whooshes, juicy slices, thunks, chimes, a fuse hiss, explosions, combos, the countdown, a gong and a fanfare.

@@ -69,7 +69,7 @@ const FRAGMENT = /* glsl */ `
     // Premultiplied: the glow covers the wood in its own colour, and the hot core adds light
     // brighter than white on top, which the glow pass turns into a halo.
     vec3 colour = glowColour * g * 1.7 + uPlayer * r + uCore * c * 1.6;
-    gl_FragColor = vec4(colour, clamp(g * 0.9 + r + c, 0.0, 1.0)) * uOpacity;
+    gl_FragColor = vec4(colour, clamp(g * 0.6 + r + c, 0.0, 1.0)) * uOpacity;
     // Without the glow pass the trail draws straight to the screen, so it must tone map and encode itself.
     #include <tonemapping_fragment>
     #include <colorspace_fragment>

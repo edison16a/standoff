@@ -108,7 +108,7 @@ export const starFruit: FruitSpec = {
   shape: STAR_FRUIT,
   cut: "across",
   fit: 0.72,
-  skin: () => skinMaterial(starSkin(), { roughness: 0.15, clearcoat: 1, emissive: "#ff9d00", emissiveIntensity: 0.55 }),
+  skin: () => skinMaterial(starSkin(), { roughness: 0.15, clearcoat: 1, emissive: "#ff9d00", emissiveIntensity: 0.85 }),
   flesh: () => {
     const material = fleshMaterial(starFlesh(starOutline));
     material.emissive = new Color("#ffcc33");
@@ -138,7 +138,7 @@ export const dragonfruit: FruitSpec = {
   cut: "along",
   fit: 0.9,
   skin: () => {
-    const material = skinMaterial(dragonSkin(20), { roughness: 0.25, clearcoat: 0.9, emissive: "#ff2d9a", emissiveIntensity: 0.25 });
+    const material = skinMaterial(dragonSkin(20), { roughness: 0.25, clearcoat: 0.9, emissive: "#ff2d9a", emissiveIntensity: 0.45 });
     material.iridescence = 1;
     material.iridescenceIOR = 1.4;
     return material;
