@@ -86,14 +86,18 @@ export class MatchDriver {
     this.bot?.drive(this.engine);
     const elapsed = this.lastWall === null ? 0 : wallNow - this.lastWall;
     this.lastWall = wallNow;
-    if (this.pendingImpact !== null && this.slowUntil === -Infinity) this.slowUntil = wallNow + SLOW_MO_MS;
     this.gameTime += elapsed * (wallNow < this.slowUntil ? SLOW_MO_RATE : 1);
     this.engine.advance(this.gameTime);
-    if (this.pendingImpact !== null && wallNow >= this.slowUntil) {
-      this.broadcast({ type: "impact", t: this.engine.now, scorer: this.pendingImpact });
-      this.pendingImpact = null;
-      this.slowUntil = -Infinity;
+    if (this.pendingImpact === null) return;
+    // The touch landed during this advance: slow down from the next frame.
+    if (this.slowUntil === -Infinity) {
+      this.slowUntil = wallNow + SLOW_MO_MS;
+      return;
     }
+    if (wallNow < this.slowUntil) return;
+    this.broadcast({ type: "impact", t: this.engine.now, scorer: this.pendingImpact });
+    this.pendingImpact = null;
+    this.slowUntil = -Infinity;
   }
 
   hud(): MatchHud {
@@ -117,7 +121,6 @@ export class MatchDriver {
 
   private onEvent(event: GameEvent): void {
     this.broadcast(event);
-    // Slow motion starts on the next frame, so the touch itself is drawn at full speed.
     if (event.type === "touch") this.pendingImpact = event.scorer;
     if (event.type === "touch") {
       this.out.feedback(event.scorer, "scored");
