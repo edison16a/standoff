@@ -10,7 +10,7 @@ Play it at [standoff-five.vercel.app](https://standoff-five.vercel.app).
 
 ## Screenshots
 
-The home screen. Every game is a big card, two to a row, each tinted in its own colour. Games still being built show a rendered preview of their look.
+The home screen. Every game is a card, three to a row with the last row centred, each tinted in its own colour. Games still being built show a rendered preview of their look.
 
 <img src="docs/screenshots/home-light.png" alt="The home screen in light mode, with Fencing, Fruit Ninja, Magic Kart and Zombie Survival cards" width="100%" />
 

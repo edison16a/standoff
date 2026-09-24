@@ -44,22 +44,29 @@
 }
 
 /*
-  Covers are 16 by 10 and are never cropped. So the columns are only as
-  wide as lets two rows of cards, cover plus text, fit under the bar.
+  Three cards to a row, the last row centred. Covers are 16 by 10 and are
+  never cropped, so the cards are only as wide as lets two rows of cover
+  plus text fit under the bar.
 */
 .home__grid {
   --bar-h: 76px;
+  --top: 16px;
   --gap: 20px;
   --body: 86px;
-  --row: calc((100dvh - var(--bar-h) - var(--gap) - 24px) / 2);
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  --row: calc((100dvh - var(--bar-h) - var(--top) - var(--gap) - 24px) / 2);
+  --card: min(calc((100% - var(--gap) * 2) / 3), calc((var(--row) - var(--body)) * 1.6));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: flex-start;
   gap: var(--gap);
   width: 100%;
-  max-width: calc((var(--row) - var(--body)) * 1.6 * 2 + var(--gap) + 48px);
-  min-width: 0;
   margin: 0 auto;
-  padding: 0 24px 24px;
+  padding: var(--top) 24px 24px;
+}
+
+.home__grid > * {
+  flex: 0 0 var(--card);
 }
 
 /* Each card is tinted with its game's colour, set inline as --game. The whole card is the button. */
@@ -165,8 +172,10 @@
   }
 
   .home__grid {
-    grid-template-columns: minmax(0, 1fr);
-    max-width: none;
-    padding: 0 16px 16px;
+    padding: 8px 16px 16px;
+  }
+
+  .home__grid > * {
+    flex-basis: 100%;
   }
 }
