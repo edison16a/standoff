@@ -62,6 +62,13 @@ export class Lobby {
     return true;
   }
 
+  /** Empties a seat for a new player. True if someone had picked there. */
+  clearSeat(slot: Slot): boolean {
+    const had = this.seats[slot].pick !== null;
+    this.seats[slot] = emptySeat();
+    return had;
+  }
+
   /** Frees the computer's seat, for a real player or to stop solo play. */
   unseatComputer(slot: Slot): boolean {
     if (!this.seats[slot].computer) return false;
