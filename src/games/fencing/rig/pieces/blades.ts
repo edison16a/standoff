@@ -1,4 +1,4 @@
-import { line, paint, type Brush } from "../brush";
+import { colour, INK, line, paint, type Brush } from "../brush";
 import { v2 } from "../geometry";
 import type { Skin } from "../skins/skin";
 
@@ -9,7 +9,7 @@ import type { Skin } from "../skins/skin";
  */
 export function drawBlade(brush: Brush, skin: Skin, length: number, wrist: number): void {
   const guardScale = 0.55 + 0.45 * Math.abs(Math.cos(wrist));
-  paint(brush, "ink", (ctx) => ctx.rect(-0.13, -0.014, 0.13, 0.028));
+  paint(brush, INK, (ctx) => ctx.rect(-0.13, -0.014, 0.13, 0.028));
   BLADES[skin.blade](brush, skin, length, guardScale);
 }
 
@@ -26,7 +26,7 @@ const BLADES: Record<Skin["blade"], (brush: Brush, skin: Skin, length: number, g
     brush.ctx.beginPath();
     brush.ctx.ellipse(0.05, 0, 0.035, 0.03 * guard, 0, 0, Math.PI * 2);
     brush.ctx.lineWidth = 2.4 * brush.px;
-    brush.ctx.strokeStyle = brush.tones[skin.tones.guard];
+    brush.ctx.strokeStyle = colour(brush, skin.tones.guard);
     brush.ctx.stroke();
   },
   saber: (brush, skin, length, guard) => {

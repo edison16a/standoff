@@ -14,7 +14,8 @@ interface Piece {
   angle: number;
   w: number;
   h: number;
-  tone: 0 | 1 | 2;
+  /** Which colour, as a fraction, so any number of colours can be passed in. */
+  tone: number;
 }
 
 /**
@@ -46,7 +47,7 @@ export class Confetti {
           angle: this.random() * Math.PI,
           w: 6 + this.random() * 6,
           h: 10 + this.random() * 8,
-          tone: Math.floor(this.random() * 3) as 0 | 1 | 2,
+          tone: this.random(),
         });
       }
     }
@@ -56,7 +57,7 @@ export class Confetti {
     return this.pieces.length > 0;
   }
 
-  draw(ctx: CanvasRenderingContext2D, tones: [string, string, string], now: number, height: number): void {
+  draw(ctx: CanvasRenderingContext2D, tones: readonly string[], now: number, height: number): void {
     if (this.pieces.length === 0) return;
     if (now - this.startedAt > LIFE_MS) {
       this.pieces = [];
@@ -80,7 +81,7 @@ export class Confetti {
       ctx.rotate(piece.angle);
       // Squashing one side makes a flat piece look like it tumbles.
       ctx.scale(1, Math.cos(piece.angle * 1.7));
-      ctx.fillStyle = tones[piece.tone];
+      ctx.fillStyle = tones[Math.floor(piece.tone * tones.length)] ?? "#ffffff";
       ctx.fillRect(-piece.w / 2, -piece.h / 2, piece.w, piece.h);
       ctx.restore();
     }

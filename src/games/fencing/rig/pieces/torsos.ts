@@ -1,4 +1,4 @@
-import { line, paint, paintGroup, type Brush } from "../brush";
+import { INK, LEATHER, line, paint, paintGroup, type Brush } from "../brush";
 import { v2 } from "../geometry";
 import { BONES } from "../skeleton";
 import type { Skin } from "../skins/skin";
@@ -68,11 +68,11 @@ export function drawTorso(brush: Brush, skin: Skin): void {
       for (let y = 0.08; y < H; y += 0.07) {
         paint(brush, "trim", (ctx) => ctx.arc(0.11, y, 0.011, 0, Math.PI * 2));
       }
-      paint(brush, "ink", (ctx) => ctx.rect(-0.12, 0.02, 0.25, 0.04));
+      paint(brush, INK, (ctx) => ctx.rect(-0.12, 0.02, 0.25, 0.04));
       break;
     case "long-coat":
       line(brush, "trim", 2.4, [v2(0.1, H - 0.02), v2(0.05, H * 0.55), v2(0.09, 0.02)]);
-      paint(brush, "dark", (ctx) => ctx.rect(-0.13, 0.06, 0.26, 0.035));
+      paint(brush, LEATHER, (ctx) => ctx.rect(-0.13, 0.06, 0.26, 0.035));
       break;
     case "plate":
       for (let y = 0.05; y <= 0.17; y += 0.06) line(brush, "outline", 1.2, [v2(-0.12, y), v2(0.12, y)]);

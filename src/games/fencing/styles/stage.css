@@ -42,6 +42,7 @@
 }
 
 .chip--on {
+  border: 2px solid var(--lamp);
   color: var(--text);
 }
 
@@ -62,14 +63,18 @@
   border: 2px solid var(--border-strong);
 }
 
-.chip--p1 .pip--on {
-  border-color: var(--accent);
-  background: var(--accent);
+/* Red and green, like the scoring lamps, matching each fencer's trim on the strip. */
+.chip--p1 {
+  --lamp: #ff4757;
 }
 
-.chip--p2 .pip--on {
-  border-color: var(--text);
-  background: var(--text);
+.chip--p2 {
+  --lamp: #2ed573;
+}
+
+.pip--on {
+  border-color: var(--lamp);
+  background: var(--lamp);
 }
 
 .banner {

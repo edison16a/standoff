@@ -7,5 +7,6 @@ export const info: GameInfo = {
   tagline: "Your phone is the sword. Chop to jab, lift to parry.",
   status: "ready",
   players: [2],
+  color: "#ff4757",
   Cover,
 };

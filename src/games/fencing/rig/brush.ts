@@ -1,19 +1,30 @@
 import type { Vec2 } from "./geometry";
 
 /**
- * The only colours a fencer is drawn in: white, black, three greys between
- * them, and the accent. `trim` is the player colour, the accent for player
- * one and white for player two, so the two read apart even in matching kit.
+ * What a piece is painted in: any CSS colour from the skin, or `trim` for
+ * the player colour. Trim is red for player one and green for player two,
+ * like the scoring lamps, so the two read apart even in matching kit.
  */
-export type Tone = "paper" | "light" | "mid" | "dark" | "ink" | "trim";
+export type Tone = string;
+
+/** Colours that do not change between skins: eyes, grips and bare faces. */
+export const INK = "#18191b";
+export const FACE = "#f0c49c";
+export const LEATHER = "#4a3222";
 
 export interface Brush {
   ctx: CanvasRenderingContext2D;
-  tones: Record<Tone, string>;
+  /** The player colour that `trim` resolves to. */
+  trim: string;
   /** Outline colour, which flips with the theme so pieces read on any background. */
   outline: string;
   /** Metres per screen pixel, so line widths stay crisp at any zoom. */
   px: number;
+}
+
+/** The actual colour for a tone, with `trim` swapped for the player colour. */
+export function colour(brush: Brush, tone: Tone): string {
+  return tone === "trim" ? brush.trim : tone;
 }
 
 /** Fills and outlines whatever path `build` traces. */
@@ -21,7 +32,7 @@ export function paint(brush: Brush, tone: Tone, build: (ctx: CanvasRenderingCont
   const { ctx } = brush;
   ctx.beginPath();
   build(ctx);
-  ctx.fillStyle = brush.tones[tone];
+  ctx.fillStyle = colour(brush, tone);
   ctx.fill();
   ctx.lineWidth = 1.5 * brush.px;
   ctx.strokeStyle = brush.outline;
@@ -53,7 +64,7 @@ export function paintGroup(brush: Brush, parts: Part[]): void {
   for (const part of parts) {
     ctx.beginPath();
     part.build(ctx);
-    ctx.fillStyle = brush.tones[part.tone];
+    ctx.fillStyle = colour(brush, part.tone);
     ctx.fill();
   }
 }
@@ -66,7 +77,7 @@ export function line(brush: Brush, tone: Tone | "outline", width: number, points
   ctx.lineWidth = width * brush.px;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-  ctx.strokeStyle = tone === "outline" ? brush.outline : brush.tones[tone];
+  ctx.strokeStyle = tone === "outline" ? brush.outline : colour(brush, tone);
   ctx.stroke();
 }
 

@@ -1,4 +1,4 @@
-import { line, paint, type Brush } from "../brush";
+import { FACE, INK, line, paint, type Brush } from "../brush";
 import { v2 } from "../geometry";
 import type { Skin } from "../skins/skin";
 
@@ -41,8 +41,8 @@ function meshMask(brush: Brush, skin: Skin): void {
 /** Face, hair tied back, a wide brimmed hat and a trailing plume. */
 function plumedHat(brush: Brush, skin: Skin): void {
   paint(brush, skin.tones.head, (ctx) => ctx.ellipse(-0.06, -0.02, 0.07, 0.09, 0.3, 0, Math.PI * 2));
-  paint(brush, "light", (ctx) => ctx.ellipse(0.02, -0.01, 0.1, 0.112, 0, 0, Math.PI * 2));
-  paint(brush, "ink", (ctx) => ctx.arc(0.07, 0.01, 0.012, 0, Math.PI * 2));
+  paint(brush, FACE, (ctx) => ctx.ellipse(0.02, -0.01, 0.1, 0.112, 0, 0, Math.PI * 2));
+  paint(brush, INK, (ctx) => ctx.arc(0.07, 0.01, 0.012, 0, Math.PI * 2));
   paint(brush, skin.tones.headDetail, (ctx) => {
     ctx.moveTo(-0.02, 0.12);
     ctx.bezierCurveTo(-0.12, 0.26, -0.26, 0.2, -0.3, 0.06);
@@ -61,7 +61,7 @@ function plumedHat(brush: Brush, skin: Skin): void {
 /** Bare face, a wrapped bandana with knot tails blowing back. */
 function bandana(brush: Brush, skin: Skin): void {
   paint(brush, skin.tones.head, (ctx) => ctx.ellipse(0.02, -0.01, 0.1, 0.115, 0, 0, Math.PI * 2));
-  paint(brush, "ink", (ctx) => ctx.arc(0.075, 0.015, 0.012, 0, Math.PI * 2));
+  paint(brush, INK, (ctx) => ctx.arc(0.075, 0.015, 0.012, 0, Math.PI * 2));
   paint(brush, skin.tones.headDetail, (ctx) => {
     ctx.moveTo(-0.09, 0.0);
     ctx.quadraticCurveTo(-0.08, 0.13, 0.03, 0.125);

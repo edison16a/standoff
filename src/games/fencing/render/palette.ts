@@ -1,48 +1,64 @@
-import type { Brush, Tone } from "@/games/fencing/rig/brush";
+import type { Brush } from "@/games/fencing/rig/brush";
 
-/** Colours the canvas needs, read from the same CSS tokens the UI uses. */
+/** The colours the strip is drawn in. Fencing keeps its own, apart from the platform's. */
 export interface Palette {
+  /** The hall wall behind the strip. */
   background: string;
+  /** The painted rail along the hall wall. */
+  rail: string;
+  /** The hall floor the strip lies on. */
   floor: string;
+  /** The strip itself. */
+  strip: string;
+  /** Markings on the strip. */
   line: string;
   muted: string;
   text: string;
-  accent: string;
-  /** Outline for fencer pieces: dark on a light page, light on a dark one. */
+  /** Hot metal: parry sparks, the impact ring and the touch flash. */
+  spark: string;
+  /** Red and green, like the scoring lamps on a real strip. */
+  players: { 1: string; 2: string };
+  confetti: string[];
+  /** Outline for fencer pieces: dark on a light hall, light on a dark one. */
   outline: string;
 }
 
-/**
- * Reads the theme tokens off the document root. Called whenever the theme
- * changes, so the strip redraws in the new colours without a reload.
- */
-export function readPalette(root: HTMLElement = document.documentElement): Palette {
-  const style = getComputedStyle(root);
-  const token = (name: string, fallback: string) => style.getPropertyValue(name).trim() || fallback;
-  const dark = root.getAttribute("data-theme") === "dark";
-  return {
-    background: token("--bg-workspace", dark ? "#0a0b0d" : "#f2f3f5"),
-    floor: token("--bg-muted", dark ? "#1c1e22" : "#e6e8eb"),
-    line: token("--border-strong", dark ? "#3a3d44" : "#c8ccd2"),
-    muted: token("--text-muted", "#6b7280"),
-    text: token("--text", dark ? "#f3f4f6" : "#111214"),
-    accent: token("--accent", "#4da3ff"),
-    outline: dark ? "#d9dbe0" : "#151619",
-  };
-}
+const PLAYERS = { 1: "#ff4757", 2: "#2ed573" };
+const CONFETTI = ["#ff4757", "#2ed573", "#ffd23f", "#3a86ff", "#ff7ad9", "#ff9f1c"];
 
-/** The fixed fencer tones, plus the player colour for this slot. */
-export function brushTones(palette: Palette, slot: 1 | 2): Record<Tone, string> {
-  return {
-    paper: "#ffffff",
-    light: "#dcdde0",
-    mid: "#96989d",
-    dark: "#46484d",
-    ink: "#18191b",
-    trim: slot === 1 ? palette.accent : "#ffffff",
-  };
+const LIGHT: Palette = {
+  background: "#fdf0dc",
+  rail: "#f6d9ae",
+  floor: "#efd3a8",
+  strip: "#3a6ea5",
+  line: "#e9f1ff",
+  muted: "#7a6a58",
+  text: "#1b1a2e",
+  spark: "#ffb400",
+  players: PLAYERS,
+  confetti: CONFETTI,
+  outline: "#1b1a2e",
+};
+
+const DARK: Palette = {
+  background: "#15132b",
+  rail: "#1d1a3a",
+  floor: "#221f45",
+  strip: "#2b4f8a",
+  line: "#cfe0ff",
+  muted: "#9a95c4",
+  text: "#f3f1ff",
+  spark: "#ffd23f",
+  players: PLAYERS,
+  confetti: CONFETTI,
+  outline: "#e6e3ff",
+};
+
+/** Picks the hall for the current theme. Called again whenever the theme flips. */
+export function readPalette(root: HTMLElement = document.documentElement): Palette {
+  return root.getAttribute("data-theme") === "dark" ? DARK : LIGHT;
 }
 
 export function makeBrush(ctx: CanvasRenderingContext2D, palette: Palette, slot: 1 | 2, px: number): Brush {
-  return { ctx, tones: brushTones(palette, slot), outline: palette.outline, px };
+  return { ctx, trim: palette.players[slot], outline: palette.outline, px };
 }

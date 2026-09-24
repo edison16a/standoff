@@ -63,14 +63,14 @@ export class Effects {
 
   /** The strip effects, drawn in strip metres over the fencers. */
   drawInStrip(ctx: CanvasRenderingContext2D, palette: Palette, now: number, px: number): void {
-    const colours = { accent: palette.accent, text: palette.text };
-    this.ring.draw(ctx, palette.accent, now, px);
+    const colours = { accent: palette.spark, text: "#ffffff" };
+    this.ring.draw(ctx, palette.spark, now, px);
     this.sparks.draw(ctx, colours, now, px);
   }
 
   /** The screen wide effects, drawn in CSS pixels over everything. */
   drawOnScreen(ctx: CanvasRenderingContext2D, palette: Palette, now: number): void {
     this.flash.draw(ctx, palette, now, this.screen.width, this.screen.height);
-    this.confetti.draw(ctx, [palette.accent, palette.text, palette.muted], performance.now(), this.screen.height);
+    this.confetti.draw(ctx, palette.confetti, performance.now(), this.screen.height);
   }
 }

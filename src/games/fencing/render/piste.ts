@@ -18,7 +18,11 @@ export function drawPiste(ctx: CanvasRenderingContext2D, camera: Camera, palette
   const left = camera.toScreenX(-STRIP_HALF_LENGTH);
   const right = camera.toScreenX(STRIP_HALF_LENGTH);
 
+  // The hall floor runs from just behind the strip to the bottom of the screen.
   ctx.fillStyle = palette.floor;
+  ctx.fillRect(0, top + height * 0.3, camera.width, camera.height);
+
+  ctx.fillStyle = palette.strip;
   roundRect(ctx, left, top, right - left, height, Math.min(12, height / 2));
   ctx.fill();
 

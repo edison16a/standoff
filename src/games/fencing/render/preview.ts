@@ -58,7 +58,7 @@ export class FencerPreview {
     if (sword) {
       const tip = bladeTip(joints, SKINS[characterId].bladeLength);
       this.trail.add(tip.x, tip.y, timeMs);
-      this.trail.draw(ctx, slot === 1 ? palette.accent : palette.text, timeMs, 1 / scale);
+      this.trail.draw(ctx, palette.players[slot], timeMs, 1 / scale);
     }
     ctx.restore();
   }

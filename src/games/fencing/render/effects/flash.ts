@@ -30,7 +30,7 @@ export class Flash {
     }
     ctx.save();
     ctx.globalAlpha = (1 - age / FLASH_MS) * (this.kind === "touch" ? 0.28 : 0.16);
-    ctx.fillStyle = this.kind === "touch" ? palette.accent : palette.text;
+    ctx.fillStyle = this.kind === "touch" ? palette.spark : palette.text;
     ctx.fillRect(0, 0, width, height);
     ctx.restore();
   }

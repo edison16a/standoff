@@ -8,10 +8,11 @@ import { BladeTrail } from "./blade-trail";
 import { Camera } from "./camera";
 import { Effects } from "./effects/effects";
 import { makeBrush, readPalette, type Palette } from "./palette";
+import { drawHall } from "./hall";
 import { drawPiste } from "./piste";
 
 /**
- * Draws a scene frame onto a canvas: the strip, the fencers, their blade
+ * Draws a scene frame onto a canvas: the hall, the strip, the fencers, their blade
  * trails and the effects. Each renderer owns its own animators and camera,
  * so the landing page's still picture never disturbs the match's springs.
  */
@@ -61,6 +62,7 @@ export class SceneRenderer {
     ctx.fillRect(0, 0, camera.width, camera.height);
 
     camera.follow(frame);
+    drawHall(ctx, camera, palette);
     drawPiste(ctx, camera, palette);
 
     const scale = camera.pixelsPerMetre;
@@ -81,14 +83,14 @@ export class SceneRenderer {
     this.effects.drawOnScreen(ctx, palette, frame.t);
   }
 
-  /** Trails and effects over both fencers, in strip metres. Player one in the accent, player two in the text colour. */
+  /** Trails and effects over both fencers, in strip metres. Each in its player colour. */
   private drawTrails(frame: StageFrame, scale: number): void {
     const { ctx, camera, palette } = this;
     ctx.save();
     ctx.translate(camera.toScreenX(0), camera.floorY);
     ctx.scale(scale, -scale);
     for (const fencer of frame.fencers) {
-      this.trails[fencer.slot].draw(ctx, fencer.slot === 1 ? palette.accent : palette.text, frame.t, 1 / scale);
+      this.trails[fencer.slot].draw(ctx, palette.players[fencer.slot], frame.t, 1 / scale);
     }
     this.effects.drawInStrip(ctx, palette, frame.t, 1 / scale);
     ctx.restore();
