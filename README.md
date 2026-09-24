@@ -16,7 +16,7 @@ The home screen. Every game is a big card, two to a row, each tinted in its own 
 
 <img src="docs/screenshots/home-dark.png" alt="The same home screen in dark mode" width="100%" />
 
-Play opens a room. The QR code waits in the middle, then moves to the bottom left once someone joins, until the game starts. The logo at the top left always leads home.
+Clicking a card opens a room. The QR code waits in the middle, then moves to the bottom left once someone joins, until the game starts. The logo at the top left always leads home.
 
 <img src="docs/screenshots/stage-join.png" alt="The fencing strip with the QR code in the middle" width="100%" />
 
@@ -58,7 +58,7 @@ On the phone: a name, then pick a fencer and calibrate. The drawing shows where 
 
 ## How to play
 
-1. On the computer, pick a game and press **Play**. Scan the QR code with each phone, type a name and tap **Join**.
+1. On the computer, click a game. Scan the QR code with each phone, type a name and tap **Join**.
 2. For fencing, pick a fencer. Hold the phone flat like a sword, top edge pointing at the middle of the screen. When the dot sits in the circle, tap **Calibrate** and hold still through the countdown. Then **Ready**.
 3. Fence:
    * **Aim** by tilting the phone. A jab only lands if your tip points at your opponent.

@@ -11,7 +11,7 @@ import { GameCard } from "./GameCard";
 
 /**
  * The home screen: every game as a big card, two to a row, so the whole
- * line up is visible at once. Play on a card opens a room for that game.
+ * line up is visible at once. Clicking a card opens a room for that game.
  */
 export function Home() {
   const host = useHostRoom();
@@ -55,7 +55,7 @@ export function Home() {
       )}
       <main className="home__grid">
         {GAMES.map((game) => (
-          <GameCard key={game.id} game={game} canPlay={canPlay} waiting={starting ? "Opening" : "Connecting"} onPlay={(players) => play(game.id, players)} />
+          <GameCard key={game.id} game={game} canPlay={canPlay} onPlay={(players) => play(game.id, players)} />
         ))}
       </main>
     </div>

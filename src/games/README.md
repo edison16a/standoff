@@ -6,7 +6,7 @@ Every game lives in its own folder here and never imports another game. That is 
 
 The platform (`src/platform`) runs the room, the same way for every game:
 
-* The home screen cards, and Play, which opens a room for the chosen game and player count.
+* The home screen cards. Clicking one opens a room with a seat for the most players the game takes. The room seats are fixed then, so a game should start with fewer if not everyone joins.
 * The QR code: big in the middle until someone joins, then bottom left until the game calls `room.setPlaying(true)`.
 * The Standoff logo top left, which always goes home, and the tool bar top right.
 * On the phone: the name screen, joining, reconnecting, and the header bar. Join is the one tap that unlocks sound, motion access and the wake lock, so a game's phone screen starts with all three ready.

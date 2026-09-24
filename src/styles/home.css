@@ -43,43 +43,63 @@
   font-size: 14px;
 }
 
+/*
+  Covers are 16 by 10 and are never cropped. So the columns are only as
+  wide as lets two rows of cards, cover plus text, fit under the bar.
+*/
 .home__grid {
   --bar-h: 76px;
   --gap: 20px;
+  --body: 86px;
+  --row: calc((100dvh - var(--bar-h) - var(--gap) - 24px) / 2);
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: max(320px, calc((100dvh - var(--bar-h) - var(--gap) * 2) / 2));
   gap: var(--gap);
+  width: 100%;
+  max-width: calc((var(--row) - var(--body)) * 1.6 * 2 + var(--gap) + 48px);
+  min-width: 0;
+  margin: 0 auto;
   padding: 0 24px 24px;
 }
 
-/* Each card is tinted with its game's colour, set inline as --game. */
+/* Each card is tinted with its game's colour, set inline as --game. The whole card is the button. */
 .game-card {
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  min-width: 0;
+  padding: 0;
   border: 2px solid color-mix(in srgb, var(--game) 30%, var(--border));
   border-radius: 22px;
   background: color-mix(in srgb, var(--game) 10%, var(--bg));
+  color: var(--text);
+  font: inherit;
+  text-align: left;
   overflow: hidden;
+  cursor: pointer;
   transition:
     border-color 160ms ease,
     transform 160ms ease;
 }
 
-.game-card:hover {
+.game-card:hover:not(:disabled),
+.game-card:focus-visible {
   border-color: var(--game);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
 }
 
-.game-card--ready {
-  border-color: var(--game);
+.game-card:focus-visible {
+  outline: 3px solid var(--game);
+  outline-offset: 3px;
+}
+
+.game-card:disabled {
+  cursor: default;
 }
 
 .game-card__cover {
   position: relative;
-  flex: 1;
-  min-height: 0;
+  display: block;
+  aspect-ratio: 16 / 10;
   background: var(--bg-elevated);
 }
 
@@ -93,60 +113,32 @@
   object-fit: cover;
 }
 
-.game-card__badge {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 12px;
-  border-radius: 999px;
-  background: var(--bg);
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.game-card__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--game);
-}
-
 .game-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: var(--body);
+  padding: 14px 20px;
+  border-top: 2px solid var(--game);
+}
+
+.game-card__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 20px;
-  border-top: 2px solid var(--game);
-}
-
-.game-card__text {
-  min-width: 0;
 }
 
 .game-card__title {
-  margin: 0;
   font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
 
 .game-card__tagline {
-  margin: 4px 0 0;
   color: var(--text-muted);
   font-size: 14px;
   line-height: 1.4;
-}
-
-.game-card__actions {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 10px;
 }
 
 .game-card__players {
@@ -158,12 +150,6 @@
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
-}
-
-.game-card__play {
-  min-width: 120px;
-  border-color: var(--game);
-  background: var(--game);
 }
 
 .game-card__players svg {
@@ -181,23 +167,7 @@
 
   .home__grid {
     grid-template-columns: minmax(0, 1fr);
-    grid-auto-rows: auto;
+    max-width: none;
     padding: 0 16px 16px;
-  }
-
-  .game-card__cover {
-    flex: none;
-    aspect-ratio: 16 / 10;
-  }
-
-  .game-card__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--game);
-}
-
-.game-card__body {
-    flex-wrap: wrap;
   }
 }
