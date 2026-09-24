@@ -1,7 +1,7 @@
 import type { StageFrame } from "@/game/frames";
 import { SocketClient } from "@/net/socket-client";
 import type { Slot } from "@/shared/players";
-import type { ClientEnvelope, PhoneMessage, ServerEnvelope } from "@/shared/protocol";
+import type { PhoneMessage, ServerEnvelope } from "@/shared/protocol";
 import { clampTuning, type Tuning } from "@/shared/tuning";
 import { buildControllerState } from "./controller-state";
 import { HostAudio } from "./host-audio";
@@ -10,10 +10,7 @@ import { Lobby } from "./lobby";
 import { lobbyScene } from "./lobby-scene";
 import { MatchDriver } from "./match-driver";
 import { PhoneLink } from "./phone-link";
-import { forgetRoom, recallRoom, rememberRoom } from "./room-memory";
-
-/** Fresh sockets to try when resuming cannot find the room. */
-const RESUME_RETRIES = 6;
+import { RoomKeeper, type OpenedRoom } from "./room-keeper";
 
 /**
  * The computer's side of a game. It keeps the socket to the server, the
@@ -25,17 +22,20 @@ export class HostSession {
   private readonly lobby = new Lobby();
   private readonly audio = new HostAudio(() => this.tuning);
   driver: MatchDriver | null = null;
-  private wantsRoom = false;
   private readonly phones: PhoneLink;
-  private resumeRetries = 0;
+  private readonly room: RoomKeeper;
 
   constructor() {
     this.socket = new SocketClient({
-      onOpen: (send) => this.announce(send),
+      onOpen: (send) => this.room.announce(send),
       onMessage: (message) => this.onMessage(message),
       onStatus: (status) => useHostStore.setState({ status }),
     });
     this.phones = new PhoneLink(this.socket);
+    this.room = new RoomKeeper(() => this.socket.redial(), {
+      opened: (room) => this.onRoomOpened(room),
+      lost: (error) => useHostStore.setState({ screen: "landing", room: null, error }),
+    });
   }
 
   private get tuning(): Tuning {
@@ -54,16 +54,13 @@ export class HostSession {
   /** Runs inside the "Create game" click, which is also what unlocks audio. */
   async createGame(): Promise<void> {
     await this.audio.unlock();
-    this.wantsRoom = true;
-    this.socket.send({ type: "host:create" });
+    this.room.create((message) => this.socket.send(message));
   }
 
   /** Ends the room for everyone and returns to the start screen. */
   endGame(): void {
-    this.socket.send({ type: "host:close" });
-    forgetRoom();
+    this.room.close((message) => this.socket.send(message));
     this.driver = null;
-    this.wantsRoom = false;
     this.lobby.seats = new Lobby().seats;
     this.audio.director?.stop();
     useHostStore.setState({ screen: "landing", room: null, hud: null, seats: this.lobby.seats });
@@ -99,40 +96,21 @@ export class HostSession {
     this.broadcastState();
   }
 
-  private announce(send: (message: ClientEnvelope) => void): void {
-    const saved = recallRoom();
-    if (saved) send({ type: "host:resume", code: saved.code, token: saved.token });
-    else if (this.wantsRoom) send({ type: "host:create" });
+  private onRoomOpened({ code, joinUrl, sharedRooms, connected }: OpenedRoom): void {
+    useHostStore.setState({ sharedRooms });
+    connected?.forEach((on, i) => (on ? this.lobby.connect((i + 1) as Slot) : this.lobby.disconnect((i + 1) as Slot)));
+    // Resuming the room already on screen means the socket reconnected or
+    // moved, not a page reload. Keep whatever screen and match are running.
+    if (connected && useHostStore.getState().room?.code === code) this.onSeatsChanged();
+    else this.enterLobby(code, joinUrl);
   }
 
   private onMessage(message: ServerEnvelope): void {
     switch (message.type) {
       case "room:created":
-        rememberRoom({ code: message.code, token: message.token });
-        useHostStore.setState({ sharedRooms: message.sharedRooms });
-        this.enterLobby(message.code, message.joinUrl);
-        return;
-      case "room:resumed": {
-        this.resumeRetries = 0;
-        message.connected.forEach((on, i) => (on ? this.lobby.connect((i + 1) as Slot) : this.lobby.disconnect((i + 1) as Slot)));
-        useHostStore.setState({ sharedRooms: message.sharedRooms });
-        // Same room as before means the socket reconnected or moved, not a
-        // page reload. Keep whatever screen and match are running.
-        if (useHostStore.getState().room?.code === message.code) this.onSeatsChanged();
-        else this.enterLobby(message.code, message.joinUrl);
-        return;
-      }
+      case "room:resumed":
       case "room:error":
-        // A resume that cannot find the room may just have landed on the
-        // wrong server instance. Try a few fresh sockets before giving up.
-        if (recallRoom() && this.resumeRetries < RESUME_RETRIES) {
-          this.resumeRetries += 1;
-          this.socket.redial();
-          return;
-        }
-        this.resumeRetries = 0;
-        forgetRoom();
-        useHostStore.setState({ screen: "landing", room: null, error: this.wantsRoom ? "Could not open a room. Try again." : null });
+        this.room.handle(message);
         return;
       case "peer:joined":
       case "peer:left":
