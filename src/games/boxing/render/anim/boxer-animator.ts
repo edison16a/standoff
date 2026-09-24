@@ -27,7 +27,8 @@ const LYING_FEET: Record<Hand, THREE.Vector3> = { left: new THREE.Vector3(0.2, 0
 export class BoxerAnimator {
   readonly rig: BoxerRig;
   readonly body: BodyMotion;
-  private readonly pose: RigPose = stance();
+  /** The pose worked out this frame, which the replay records. */
+  readonly pose: RigPose = stance();
   private readonly feet = new FootPlanner();
   private readonly hands: Record<Hand, SpringVector> = { left: new SpringVector(), right: new SpringVector() };
   private readonly poles: Record<Hand, SpringVector> = { left: new SpringVector(), right: new SpringVector() };

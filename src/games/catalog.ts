@@ -33,6 +33,7 @@ export const GAMES: readonly GameInfo[] = [
  * downloads a game nobody picked.
  */
 const LOADERS: Record<string, () => Promise<GameModule>> = {
+  boxing: () => import("./boxing").then((mod) => mod.game),
   fencing: () => import("./fencing").then((mod) => mod.game),
   "fruit-ninja": () => import("./fruit-ninja").then((mod) => mod.game),
   "shooting-gallery": () => import("./shooting-gallery").then((mod) => mod.game),
