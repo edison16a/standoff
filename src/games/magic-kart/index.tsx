@@ -8,7 +8,12 @@ import { KartPhone } from "./phone/kart-phone";
 import { PhoneScreen } from "./phone/components/PhoneScreen";
 import { ControllerContext } from "./phone/components/session-context";
 import "./styles/host.css";
+import "./styles/lobby.css";
+import "./styles/hud.css";
+import "./styles/results.css";
 import "./styles/phone.css";
+import "./styles/pick.css";
+import "./styles/drive.css";
 
 /**
  * Magic Kart, as the platform sees it. Each room gets one session, and

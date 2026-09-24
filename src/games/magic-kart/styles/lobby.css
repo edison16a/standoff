@@ -1,0 +1,229 @@
+/*
+  The lobby on the big screen: the map picker, the racers and the start button.
+*/
+
+.mk-lobby {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-rows: 1fr auto;
+  gap: 20px;
+  padding: 76px 24px 24px 212px;
+  pointer-events: none;
+}
+
+.mk-lobby > * {
+  pointer-events: auto;
+}
+
+.mk-lobby__title {
+  align-self: start;
+  max-width: 640px;
+  text-shadow: 0 3px 16px rgba(0, 0, 0, 0.55);
+}
+
+.mk-lobby__eyebrow {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff4d5e, #ffb347, #ffe14d, #6cf08a, #5fd8ff, #c77dff);
+  color: #1a1030;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-shadow: none;
+}
+
+.mk-lobby__title h1 {
+  margin: 10px 0 4px;
+  font-size: clamp(40px, 6vw, 76px);
+  font-style: italic;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.mk-lobby__title p {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.mk-lobby__maps {
+  grid-column: 1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.mk-map {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border: 3px solid transparent;
+  border-radius: 18px;
+  background: rgba(16, 12, 38, 0.72);
+  color: #ffffff;
+  cursor: pointer;
+  transition: transform 140ms ease, border-color 140ms ease;
+}
+
+.mk-map:hover {
+  transform: translateY(-3px);
+}
+
+.mk-map--on {
+  border-color: #ffe14d;
+  box-shadow: 0 0 0 3px rgba(255, 225, 77, 0.35), 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.mk-map__art {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+}
+
+.mk-map__name {
+  font-size: 18px;
+  font-weight: 800;
+  font-style: italic;
+}
+
+.mk-lobby__side {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  background: rgba(16, 12, 38, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 20px;
+}
+
+.mk-lobby__side h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.mk-lobby__empty,
+.mk-lobby__note {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 15px;
+}
+
+.mk-lobby__note {
+  margin-top: auto;
+}
+
+.mk-roster {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mk-roster__row {
+  display: grid;
+  grid-template-columns: 14px 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.07);
+  border-left: 5px solid var(--player);
+}
+
+.mk-roster__dot {
+  grid-row: 1 / 3;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--player);
+}
+
+.mk-roster__name {
+  font-weight: 800;
+}
+
+.mk-roster__kart {
+  grid-column: 2;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+}
+
+.mk-roster__state {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.mk-roster__state--on {
+  background: #3ddc84;
+  color: #07210f;
+}
+
+.mk-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mk-switch input {
+  position: absolute;
+  opacity: 0;
+}
+
+.mk-switch__track {
+  position: relative;
+  flex-shrink: 0;
+  width: 46px;
+  height: 26px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  transition: background 140ms ease;
+}
+
+.mk-switch__track::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  transition: transform 140ms ease;
+}
+
+.mk-switch input:checked + .mk-switch__track {
+  background: #3ddc84;
+}
+
+.mk-switch input:checked + .mk-switch__track::after {
+  transform: translateX(20px);
+}
+
+.mk-switch input:focus-visible + .mk-switch__track {
+  outline: 3px solid #ffe14d;
+}
+
+.mk-lobby__start {
+  font-size: 20px;
+  font-weight: 900;
+}
