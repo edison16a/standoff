@@ -43,6 +43,8 @@ export class NbaHost {
   private bannerTimer: ReturnType<typeof setTimeout> | null = null;
   private lastPhase: Phase = "lobby";
   private readonly demo: DemoGame;
+  /** Browser tests on slow machines run the game faster than real time. Always 1 in play. */
+  turbo = 1;
 
   constructor(private readonly room: HostRoomApi) {
     this.demo = new DemoGame((event) => {
@@ -133,7 +135,8 @@ export class NbaHost {
     this.lastFrame = nowMs;
     let dt: number;
     if (this.driver) {
-      dt = this.driver.tick(realDt, (seat) => this.pad.stick(seat, nowMs));
+      dt = 0;
+      for (let i = 0; i < this.turbo; i++) dt += this.driver.tick(realDt, (seat) => this.pad.stick(seat, nowMs));
       this.audio.frame(this.driver.match);
     } else dt = this.demo.tick(realDt);
     const phase = this.phase;

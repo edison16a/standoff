@@ -18,7 +18,12 @@ export interface Quality {
   shadows?: boolean;
   /** Glossy reflections of the arena on the floor, the ball and the rim. */
   reflections?: boolean;
+  /** The most device pixels drawn per CSS pixel. */
+  maxPixelRatio?: number;
 }
+
+/** For computers that draw WebGL in software: a smaller picture without antialiasing or shadows. */
+export const LOW_QUALITY: Quality = { antialias: false, shadows: false, maxPixelRatio: 0.6 };
 
 /**
  * Draws the game: the arena, six players, the ball and every effect,
@@ -40,9 +45,11 @@ export class CourtRenderer {
   private intro: number | null = null;
   private time = 0;
   private height = 1;
+  private readonly maxPixelRatio: number;
 
   constructor(canvas: HTMLCanvasElement, quality: Quality = {}) {
-    const { antialias = true, shadows = true, reflections = true } = quality;
+    const { antialias = true, shadows = true, reflections = true, maxPixelRatio = 1.75 } = quality;
+    this.maxPixelRatio = maxPixelRatio;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias, powerPreference: "high-performance" });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
@@ -61,7 +68,7 @@ export class CourtRenderer {
 
   resize(width: number, height: number, dpr: number): void {
     this.height = Math.max(1, height);
-    this.renderer.setPixelRatio(Math.min(dpr, 1.75));
+    this.renderer.setPixelRatio(Math.min(dpr, this.maxPixelRatio));
     this.renderer.setSize(Math.max(1, width), this.height, false);
     this.tv.setAspect(Math.max(1, width) / this.height);
   }

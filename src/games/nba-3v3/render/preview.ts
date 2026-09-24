@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { softwareWebGl } from "@/games/kit/camera/model/gpu-check";
 import type { TeamId } from "../engine/types";
 import { CHARACTERS, TEAMS, type CharacterId } from "../roster";
 import { locomotion } from "./anim/locomotion";
@@ -30,8 +31,10 @@ export class AthletePreview {
     this.canvas = document.createElement("canvas");
     this.canvas.className = "nba-preview__canvas";
     holder.appendChild(this.canvas);
-    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: true });
-    this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    // A phone without a working graphics driver draws in software, so it draws fewer pixels.
+    const soft = softwareWebGl();
+    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: !soft, alpha: true });
+    this.renderer.setPixelRatio(soft ? 1 : Math.min(2, window.devicePixelRatio || 1));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.scene.add(new THREE.HemisphereLight("#dbe7ff", "#3b2a1a", 1.6));
     const key = new THREE.DirectionalLight("#fff3e0", 2.6);

@@ -2,7 +2,8 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { playerColor } from "@/games/kit/players";
-import { CourtRenderer } from "../../render/court-renderer";
+import { softwareWebGl } from "@/games/kit/camera/model/gpu-check";
+import { CourtRenderer, LOW_QUALITY } from "../../render/court-renderer";
 import { Tags } from "../../render/tags";
 import { useSession } from "./session-context";
 
@@ -21,7 +22,8 @@ export default function CourtCanvas() {
     const canvas = canvasRef.current;
     const layer = tagsRef.current;
     if (!canvas || !layer) return;
-    const renderer = new CourtRenderer(canvas);
+    // Without a graphics card the full picture runs at a frame or two a second, so it draws lighter.
+    const renderer = new CourtRenderer(canvas, softwareWebGl() ? LOW_QUALITY : {});
     const tags = new Tags(layer);
     const fit = () => renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
     fit();
