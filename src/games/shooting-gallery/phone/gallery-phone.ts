@@ -2,12 +2,18 @@ import { createStore, type StoreApi } from "zustand/vanilla";
 import { PhoneAim } from "@/games/kit/aim/phone-aim";
 import type { PhoneRoomApi, PhoneRoomEvent } from "@/platform/games/game-api";
 import { PUMP_S } from "../engine/rules";
-import { hostMessageSchema, type GalleryState, type PlayerView, type Scored, type SetupStep } from "../protocol";
+import { hostMessageSchema, type GalleryState, type Scored, type SetupStep } from "../protocol";
 import { DEFAULT_FINISH, FINISH_IDS, type FinishId } from "../render/models/finishes";
 
 /** The Shoot button is grey while the gun is pumped. The host allows a little less, for network jitter. */
 const REARM_MS = PUMP_S * 1000;
 const FINISH_KEY = "standoff:shooting-gallery:finish";
+/**
+ * A state from the host sent before it heard this phone's own Ready tap
+ * would flip the button straight back. For this long after a tap, the
+ * phone keeps its own answer.
+ */
+const READY_HOLD_MS = 1000;
 
 export interface PhoneState {
   step: SetupStep;
@@ -40,6 +46,7 @@ export class GalleryPhone {
   readonly store: StoreApi<PhoneState>;
   private readonly off: () => void;
   private rearm: ReturnType<typeof setTimeout> | null = null;
+  private readyTappedAt = -Infinity;
 
   constructor(private readonly room: PhoneRoomApi) {
     this.aim = new PhoneAim(room);
@@ -50,11 +57,6 @@ export class GalleryPhone {
 
   get seat(): number {
     return this.room.seat;
-  }
-
-  /** This player's entry in the host's state. */
-  me(): PlayerView | null {
-    return this.store.getState().game?.players.find((p) => p.seat === this.room.seat) ?? null;
   }
 
   goTo(step: SetupStep): void {
@@ -75,6 +77,7 @@ export class GalleryPhone {
   }
 
   setReady(ready: boolean): void {
+    this.readyTappedAt = performance.now();
     this.store.setState({ ready });
     this.room.send({ kind: "ready", ready });
   }
@@ -109,8 +112,9 @@ export class GalleryPhone {
       return;
     }
     const mine = message.players.find((p) => p.seat === this.room.seat);
-    // The host clears everyone's ready flag when a round ends, and its word is final.
-    this.store.setState({ game: message, ready: mine?.ready ?? false });
+    // The host clears everyone's ready flag when a round ends, and its word is final, once it has heard our last tap.
+    const settled = performance.now() - this.readyTappedAt > READY_HOLD_MS;
+    this.store.setState(settled ? { game: message, ready: mine?.ready ?? false } : { game: message });
   }
 
   /** After a reconnect or a host reload, tells the host everything chosen so far. */

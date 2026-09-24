@@ -1,7 +1,7 @@
 import type { Seat } from "@/platform/protocol";
 import { KINDS, type TargetKind } from "./kinds";
 import type { Vec3 } from "./layout";
-import { advance } from "./motion";
+import { advance, keepApart } from "./motion";
 import { probe, type Probe, type Ray } from "./raycast";
 import { Rng } from "./rng";
 import { COOLDOWN_S, COUNTDOWN_S, FALL_S, FINAL_SECONDS, SPEED_RAMP } from "./rules";
@@ -106,6 +106,7 @@ export class Round {
     }
     const ramp = 1 + SPEED_RAMP * this.progress;
     this.targets = this.targets.filter((target) => advance(target, now, dt, ramp));
+    keepApart(this.targets);
     // Once the buzzer goes nothing new comes on, so the booth empties out behind the results.
     if (this.phase !== "over") this.targets.push(...this.spawner.update(now, dt, ramp, this.progress, this.targets));
     for (const target of this.targets) {

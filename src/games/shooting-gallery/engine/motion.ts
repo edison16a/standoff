@@ -1,6 +1,6 @@
 import { LANES, OFFSTAGE_X, POP_RISE } from "./layout";
 import { CLEAR_AFTER_S, POP_TIME_S } from "./rules";
-import { POP_HALF_SPAN } from "./spawner";
+import { POP_HALF_SPAN, POP_MIN_APART } from "./spawner";
 import type { Target } from "./target";
 
 /** Ducks rock gently on the waves, each to its own beat. */
@@ -26,6 +26,25 @@ export function advance(target: Target, time: number, dt: number, ramp: number):
   target.y = target.kind === "plate" ? lane.y : lane.y + bob(target, time);
   if (target.hit && target.kind === "plate" && time - target.hit.at > CLEAR_AFTER_S) return false;
   return Math.sign(target.vx) * target.x < OFFSTAGE_X;
+}
+
+/**
+ * Sliding bullseyes turn back when they close on another one, so two
+ * targets never pass through each other or hide one behind the other.
+ */
+export function keepApart(targets: readonly Target[]): void {
+  const pops = targets.filter((t) => t.lane === "pop" && !t.hit);
+  for (let i = 0; i < pops.length; i++) {
+    for (let j = i + 1; j < pops.length; j++) {
+      const a = pops[i]!;
+      const b = pops[j]!;
+      const gap = b.x - a.x;
+      if (Math.abs(gap) >= POP_MIN_APART || (b.vx - a.vx) * gap >= 0) continue;
+      // Only the ones moving toward the other turn round, so a still target stays put.
+      if (a.vx * gap > 0) a.vx = -a.vx;
+      if (b.vx * gap < 0) b.vx = -b.vx;
+    }
+  }
 }
 
 function advancePop(target: Target, time: number, dt: number, ramp: number): boolean {

@@ -9,7 +9,8 @@ const DUCK_LANES: readonly DuckLane[] = ["back", "front"];
 
 /** Pop ups stay inside this, clear of the side posts. */
 export const POP_HALF_SPAN = 3.5;
-const POP_MIN_APART = 1.2;
+/** Pop ups keep at least this far apart, so a bullseye is never half hidden behind another. */
+export const POP_MIN_APART = 1.2;
 
 /**
  * Decides what comes on stage and when. Duck lanes keep a steady stream

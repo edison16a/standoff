@@ -4,8 +4,11 @@ import { createBBGun, type BBGun } from "./models/bb-gun";
 import type { FinishId } from "./models/finishes";
 import { Laser } from "./laser";
 
-/** The gun is drawn a little larger than life so it reads from across a room. */
-const GUN_SCALE = 1.9;
+/**
+ * The gun is drawn larger than life so it reads from across a room. With
+ * fewer players each gun has more room, so it is drawn bigger still.
+ */
+const GUN_SCALE: Record<number, number> = { 1: 2.3, 2: 2.1, 3: 1.9, 4: 1.8 };
 /** Where guns rest, relative to the camera, before anyone aims. */
 const REST_TARGET = new THREE.Vector3(0, 1.7, -2);
 /** How quickly a gun swings onto its player's aim, per second. */
@@ -51,7 +54,7 @@ export class GunRig {
 
   constructor(finish: FinishId, colour: string) {
     this.gun = createBBGun(finish, colour);
-    this.gun.root.scale.setScalar(GUN_SCALE);
+    this.gun.root.scale.setScalar(GUN_SCALE[1]!);
     this.kick.add(this.gun.root);
     this.object.add(this.kick);
     this.laser = new Laser(colour);
@@ -59,8 +62,9 @@ export class GunRig {
   }
 
   /** Its spot along the bottom of the screen. A gun already there glides over when players come or go. */
-  place(position: THREE.Vector3): void {
+  place(position: THREE.Vector3, players: number): void {
     this.home.copy(position);
+    this.gun.root.scale.setScalar(GUN_SCALE[players] ?? GUN_SCALE[4]!);
     if (!this.placed) this.object.position.copy(position);
     this.placed = true;
   }

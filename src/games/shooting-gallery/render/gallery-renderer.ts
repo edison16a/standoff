@@ -18,7 +18,8 @@ const MAX_PIXEL_RATIO = 1.75;
 function gunSpot(index: number, count: number, out: THREE.Vector3): THREE.Vector3 {
   // Spread evenly with room between them, so guns never cross when two players aim at the same duck.
   const spread = count === 1 ? 0 : Math.min(1.9, 0.62 * (count - 1));
-  const x = count === 1 ? 0.5 : -spread / 2 + (spread * index) / (count - 1);
+  // Alone, the gun sits off to the right like the cover, which also keeps the middle clear.
+  const x = count === 1 ? 0.72 : -spread / 2 + (spread * index) / (count - 1);
   return out.set(x, 1.12, 4.7);
 }
 
@@ -137,7 +138,7 @@ export class GalleryRenderer {
         entry.rig.gun.setFinish(shooter.finish);
         entry.finish = shooter.finish;
       }
-      entry.rig.place(gunSpot(index, shooters.length, this.spot));
+      entry.rig.place(gunSpot(index, shooters.length, this.spot), shooters.length);
       const aim = shooter.aim ? this.aim.set(shooter.aim.x, shooter.aim.y, shooter.aim.z) : null;
       entry.rig.update(now, dt, aim);
     });

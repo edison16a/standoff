@@ -124,13 +124,16 @@ describe("round", () => {
   });
 
   it("keeps both duck lanes busy and never overlaps pop ups", () => {
-    const round = new Round({ seats: [1], seconds: 45, seed: 11 });
-    for (let i = 0; i < 60 * 40; i++) {
-      round.tick(1 / 60);
-      const pops = round.targets.filter((t) => t.lane === "pop" && !t.hit);
-      expect(pops.length).toBeLessThanOrEqual(3);
-      expect(round.targets.filter((t) => t.lane === "back").length).toBeGreaterThan(1);
-      expect(round.targets.filter((t) => t.lane === "front").length).toBeGreaterThan(1);
+    for (const seed of [11, 12, 13, 14]) {
+      const round = new Round({ seats: [1], seconds: 45, seed });
+      for (let i = 0; i < 60 * 40; i++) {
+        round.tick(1 / 60);
+        const pops = round.targets.filter((t) => t.lane === "pop" && !t.hit);
+        expect(pops.length).toBeLessThanOrEqual(3);
+        for (const a of pops) for (const b of pops) if (a !== b) expect(Math.abs(a.x - b.x)).toBeGreaterThan(0.9);
+        expect(round.targets.filter((t) => t.lane === "back").length).toBeGreaterThan(1);
+        expect(round.targets.filter((t) => t.lane === "front").length).toBeGreaterThan(1);
+      }
     }
   });
 

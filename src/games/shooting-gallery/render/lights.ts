@@ -27,8 +27,9 @@ export function addLights(scene: THREE.Scene, renderer: THREE.WebGLRenderer): ()
   key.shadow.normalBias = 0.02;
   scene.add(key, key.target);
 
+  // Low and forward of the bulbs, so it warms the wall without a hot spot on the tent roof.
   const bulbs = new THREE.PointLight("#ffc27a", 5, 9, 1.6);
-  bulbs.position.set(0, 3.8, -2.3);
+  bulbs.position.set(0, 3.0, -1.2);
   scene.add(bulbs);
 
   // A cool fill from the side keeps the far side of each duck from going flat.

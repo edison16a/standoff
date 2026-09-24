@@ -48,7 +48,7 @@ export function Results() {
           <tbody>
             {players.map((player) => (
               <tr key={player.seat} style={{ "--p": playerColor(player.seat) } as React.CSSProperties}>
-                <td className="sg-results__place">{ordinal(player.place)}</td>
+                <td className="sg-results__place">{player.score > 0 ? ordinal(player.place) : "-"}</td>
                 <td className="sg-results__name">
                   {player.name}
                   {player.best && <span className="sg-results__badge">{ordinal(player.best)} best</span>}
