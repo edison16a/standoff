@@ -31,8 +31,19 @@ The host and phones exchange payloads of the game's own design: any object with 
 
 Keep the host as the referee. Phones send raw input and draw what the host tells them.
 
+## Pointing at the screen
+
+Fruit Ninja, Zombie Survival and Shooting Gallery all aim the same way. Where the player points their phone at the screen is where they aim.
+
+* **Calibrate** by pointing at the middle of the screen, the way fencing does, so the phone's heading and tilt at that moment mean "centre".
+* **Aim:** from then on, swinging left and right moves the aim across the screen and tilting moves it up and down. The phone's orientation maps straight to a point on screen, with no drift.
+* **Laser dot:** each player's aim shows on screen in real time as a laser dot in their colour, so they always see where they are pointing.
+* **Gun or blade:** the shooters draw the front of each player's gun in 3D at the bottom of the screen, turned to point at that player's dot. It is a BB gun in Shooting Gallery, and the weapon the player chose in Zombie Survival. Fruit Ninja shows a blade instead.
+
+Once two of these games need it, this belongs in one shared place (say `src/platform/aim`), not copied into each game.
+
 ## Rules of the house
 
 * Files stay under about 200 lines, with comments that say why.
-* One accent colour plus black and white, from the tokens in `src/app/globals.css`.
+* The platform's own screens keep to one accent colour plus black and white, from the tokens in `src/app/globals.css`. Inside a game, each game has its own look (Fruit Ninja is warm brown wood, for example), kept in its own folder.
 * No imports from another game. Shared code belongs in `src/platform` or `src/components`.

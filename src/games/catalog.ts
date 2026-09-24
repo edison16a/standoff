@@ -1,16 +1,16 @@
 import type { GameInfo, GameModule } from "@/platform/games/game-api";
-import { info as baseball } from "./baseball/info";
 import { info as fencing } from "./fencing/info";
 import { info as fruitNinja } from "./fruit-ninja/info";
 import { info as goKart } from "./go-kart/info";
-import { info as survival } from "./survival/info";
+import { info as shootingGallery } from "./shooting-gallery/info";
+import { info as zombieSurvival } from "./zombie-survival/info";
 
 /**
  * Every game, in the order the home screen shows them. This file and each
  * game's own folder are all a new game touches: add its info here, and
  * its loader below once it can be played.
  */
-export const GAMES: readonly GameInfo[] = [fencing, goKart, baseball, fruitNinja, survival];
+export const GAMES: readonly GameInfo[] = [fencing, fruitNinja, goKart, zombieSurvival, shootingGallery];
 
 /**
  * Loaded only when a room for that game opens, so the home screen never

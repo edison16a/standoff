@@ -2,10 +2,10 @@ import type { GameInfo } from "@/platform/games/game-api";
 import { Cover } from "./Cover";
 
 export const info: GameInfo = {
-  id: "baseball",
-  title: "Baseball Pitch",
-  tagline: "One pitches, one swings. Real arm, real bat.",
+  id: "zombie-survival",
+  title: "Zombie Survival",
+  tagline: "Point your phone to aim. Fight through the horde together.",
   status: "development",
-  players: [2],
+  players: [1, 2, 4],
   Cover,
 };
