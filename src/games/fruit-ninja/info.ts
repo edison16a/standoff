@@ -7,5 +7,6 @@ export const info: GameInfo = {
   tagline: "Slice the fruit, dodge the bombs. Top score when time runs out wins.",
   status: "development",
   players: [1, 2, 4],
+  color: "#c47a3a",
   Cover,
 };

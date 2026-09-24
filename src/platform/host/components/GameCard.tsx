@@ -26,10 +26,15 @@ export function GameCard({ game, canPlay, waiting, onPlay }: GameCardProps) {
   const Cover = game.Cover;
 
   return (
-    <article className={`game-card ${ready ? "game-card--ready" : ""}`}>
+    <article className={`game-card ${ready ? "game-card--ready" : ""}`} style={{ "--game": game.color } as React.CSSProperties}>
       <div className="game-card__cover">
         <Cover />
-        {!ready && <span className="game-card__badge">In development</span>}
+        {!ready && (
+          <span className="game-card__badge">
+            <span className="game-card__dot" />
+            In development
+          </span>
+        )}
       </div>
       <div className="game-card__body">
         <div className="game-card__text">

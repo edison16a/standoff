@@ -53,18 +53,27 @@
   padding: 0 24px 24px;
 }
 
+/* Each card is tinted with its game's colour, set inline as --game. */
 .game-card {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  border: 1px solid var(--border);
+  border: 2px solid color-mix(in srgb, var(--game) 30%, var(--border));
   border-radius: 22px;
-  background: var(--bg);
+  background: color-mix(in srgb, var(--game) 10%, var(--bg));
   overflow: hidden;
+  transition:
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.game-card:hover {
+  border-color: var(--game);
+  transform: translateY(-2px);
 }
 
 .game-card--ready {
-  border: 2px solid var(--accent);
+  border-color: var(--game);
 }
 
 .game-card__cover {
@@ -88,6 +97,9 @@
   position: absolute;
   top: 14px;
   left: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   padding: 5px 12px;
   border-radius: 999px;
   background: var(--bg);
@@ -96,13 +108,20 @@
   font-weight: 600;
 }
 
+.game-card__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--game);
+}
+
 .game-card__body {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 16px 20px;
-  border-top: 1px solid var(--border);
+  border-top: 2px solid var(--game);
 }
 
 .game-card__text {
@@ -143,6 +162,12 @@
 
 .game-card__play {
   min-width: 120px;
+  border-color: var(--game);
+  background: var(--game);
+}
+
+.game-card__players svg {
+  color: var(--game);
 }
 
 @media (max-width: 820px) {
@@ -165,7 +190,14 @@
     aspect-ratio: 16 / 10;
   }
 
-  .game-card__body {
+  .game-card__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--game);
+}
+
+.game-card__body {
     flex-wrap: wrap;
   }
 }

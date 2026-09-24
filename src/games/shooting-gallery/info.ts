@@ -7,5 +7,6 @@ export const info: GameInfo = {
   tagline: "Point your phone to aim. Ducks and targets, top score wins.",
   status: "development",
   players: [1, 2, 4],
+  color: "#e0368c",
   Cover,
 };

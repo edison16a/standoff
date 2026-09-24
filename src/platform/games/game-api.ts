@@ -104,6 +104,8 @@ export interface GameInfo {
   status: "ready" | "development";
   /** Player counts it can be played with. The host picks one when there is a choice. */
   players: readonly number[];
+  /** The game's own colour. Its card on the home screen is tinted with it. */
+  color: string;
   /** The art on its card. */
   Cover: ComponentType;
 }

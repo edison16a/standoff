@@ -7,5 +7,6 @@ export const info: GameInfo = {
   tagline: "Point your phone to aim. Fight through the horde together.",
   status: "development",
   players: [1, 2, 4],
+  color: "#3fae5a",
   Cover,
 };
