@@ -15,7 +15,7 @@ interface ChannelSpec {
 }
 
 const CHANNELS: Record<Channel, ChannelSpec> = {
-  jab: { active: (f) => f.action === "jab" && f.actionMs < 230, rise: 38, fall: 85 },
+  jab: { active: (f) => f.action === "jab" && f.actionMs < 300, rise: 50, fall: 95 },
   parry: { active: (f) => f.action === "parry" && f.parrying, rise: 25, fall: 90 },
   deflected: { active: (f) => f.action === "deflected" && f.actionMs < 350, rise: 20, fall: 120 },
   hit: { active: (f) => f.action === "hit" && f.actionMs < 700, rise: 40, fall: 220 },
@@ -69,6 +69,7 @@ export function blendPose(a: Pose, b: Pose, k: number): Pose {
   return {
     hips: lerpVec(a.hips, b.hips, k),
     lean: lerp(a.lean, b.lean, k),
+    twist: lerp(a.twist, b.twist, k),
     nod: lerp(a.nod, b.nod, k),
     frontFoot: lerpVec(a.frontFoot, b.frontFoot, k),
     backFoot: lerpVec(a.backFoot, b.backFoot, k),

@@ -10,74 +10,82 @@ import type { Pose } from "./skeleton";
  */
 export type ActionPose = (live: Pose) => Pose;
 
-/** A lunge: front foot shoots out, hips drop, the sword arm locks straight. */
+/** A lunge: the front foot shoots out, the hips drop, the sword arm locks straight and the back arm flies back. */
 const lunge: ActionPose = (live) => ({
   ...live,
-  hips: v2(live.hips.x + 0.36, live.hips.y - 0.12),
-  lean: 0.34,
-  nod: -0.2,
-  frontFoot: v2(live.frontFoot.x + 0.62, 0),
-  backFoot: v2(live.backFoot.x - 0.06, 0),
-  hand: v2(0.57, 0.0),
+  hips: v2(live.hips.x + 0.42, live.hips.y - 0.17),
+  lean: 0.3,
+  twist: 0.78,
+  nod: -0.16,
+  frontFoot: v2(live.frontFoot.x + 0.66, 0),
+  backFoot: v2(live.backFoot.x - 0.08, 0),
+  hand: v2(0.56, 0.02),
   // Aim mostly along the line, keeping a little of where the phone points.
-  bladeAngle: -0.06 + (live.bladeAngle - 0.16) * 0.35,
-  backHand: v2(-0.5, -0.02),
+  bladeAngle: -0.05 + (live.bladeAngle - 0.14) * 0.3,
+  bladeYaw: live.bladeYaw * 0.3,
+  backHand: v2(-0.5, -0.1),
 });
 
-/** A quarte parry: blade snaps near vertical in front of the chest. */
+/** A parry: the blade snaps up and across in front of the chest. */
 const parry: ActionPose = (live) => ({
   ...live,
   lean: 0.02,
-  hand: v2(0.2, -0.08),
-  bladeAngle: 1.12 + (live.bladeAngle - 0.16) * 0.25,
-  bladeYaw: live.bladeYaw * 0.3,
-  wrist: 0.5,
+  twist: 0.36,
+  hand: v2(0.24, -0.08),
+  bladeAngle: 1.08 + (live.bladeAngle - 0.14) * 0.25,
+  bladeYaw: live.bladeYaw * 0.3 - 0.18,
+  wrist: 0.6,
 });
 
 /** Blade knocked high and wide after being parried. */
 const deflected: ActionPose = (live) => ({
   ...live,
-  lean: -0.06,
+  lean: -0.08,
+  twist: 0.3,
   hand: v2(0.2, 0.06),
-  bladeAngle: 1.4,
-  bladeYaw: 0.6,
+  bladeAngle: 1.3,
+  bladeYaw: 0.75,
+  wrist: -0.4,
 });
 
 /** Recoil from a touch: chest pulled back, arm dropping. */
 const hit: ActionPose = (live) => ({
   ...live,
-  hips: v2(live.hips.x - 0.1, live.hips.y + 0.02),
-  lean: -0.28,
-  nod: 0.25,
-  hand: v2(0.2, -0.34),
-  bladeAngle: -0.55,
-  backHand: v2(-0.24, 0.05),
+  hips: v2(live.hips.x - 0.12, live.hips.y + 0.02),
+  lean: -0.3,
+  twist: 0.2,
+  nod: 0.3,
+  hand: v2(0.2, -0.36),
+  bladeAngle: -0.6,
+  backHand: v2(-0.3, 0.02),
 });
 
 /** Standing tall, sword thrown up. */
 const victory: ActionPose = (live) => ({
   ...live,
-  hips: v2(0, 0.84),
-  lean: -0.04,
-  nod: -0.18,
+  hips: v2(0, 0.93),
+  lean: -0.05,
+  twist: 0.2,
+  nod: -0.25,
   frontFoot: v2(0.2, 0),
   backFoot: v2(-0.18, 0),
-  hand: v2(0.1, 0.52),
+  hand: v2(0.08, 0.5),
   bladeAngle: 1.35,
   bladeYaw: 0,
-  backHand: v2(-0.08, -0.5),
+  backHand: v2(-0.06, -0.5),
 });
 
 /** Slumped, tip on the floor. */
 const defeat: ActionPose = (live) => ({
   ...live,
-  hips: v2(0, 0.72),
-  lean: 0.42,
-  nod: 0.5,
+  hips: v2(0, 0.76),
+  lean: 0.45,
+  twist: 0.3,
+  nod: 0.55,
   frontFoot: v2(0.26, 0),
   backFoot: v2(-0.24, 0),
-  hand: v2(0.16, -0.46),
-  bladeAngle: -1.15,
+  hand: v2(0.14, -0.46),
+  bladeAngle: -1.1,
   bladeYaw: 0,
   backHand: v2(0.02, -0.52),
 });

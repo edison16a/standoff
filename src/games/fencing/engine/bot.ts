@@ -9,10 +9,11 @@ const STRIKE_GAP = REACH - 0.25;
 /** Time between its attacks, so the player gets a turn. */
 const ATTACK_EVERY_MS = { min: 1400, spread: 1600 };
 /**
- * How long it takes to see a jab and parry it. A jab lands 140 ms after it
- * starts, so roughly half of these reactions arrive in time.
+ * How long it takes to see a jab and parry it. A jab lands 220 ms after it
+ * starts and a parry may be 80 ms late, so about six in ten of these
+ * reactions arrive in time.
  */
-const REACTION_MS = { min: 70, spread: 160 };
+const REACTION_MS = { min: 140, spread: 260 };
 /** Share of the player's jabs it even tries to parry. */
 const PARRY_CHANCE = 0.55;
 

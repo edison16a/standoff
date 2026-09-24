@@ -27,7 +27,7 @@ export interface Tuning {
 export const DEFAULT_TUNING: Tuning = {
   jabThreshold: 12,
   parryThreshold: 12,
-  parryWindowMs: 1000,
+  parryWindowMs: 600,
   refractoryMs: 350,
   musicVolume: 0.5,
   crowdVolume: 0.6,

@@ -1,5 +1,5 @@
 "use client";
-import { FencerCanvas } from "@/games/fencing/components/FencerCanvas";
+import { FencerPreview } from "@/games/fencing/components/FencerPreview";
 import { CHARACTER_IDS, CHARACTERS } from "@/games/fencing/characters";
 import type { Slot } from "@/games/fencing/players";
 import { useControllerStore } from "../controller-store";
@@ -26,8 +26,9 @@ export function CharacterPicker({ slot }: { slot: Slot }) {
             aria-pressed={chosen}
             onClick={() => session.pick(id)}
           >
-            <FencerCanvas characterId={id} slot={slot} className="picker__art" />
+            <FencerPreview characterId={id} slot={slot} className="picker__art" />
             <span className="picker__name">{CHARACTERS[id].name}</span>
+            {!taken && <span className="picker__tag muted">{CHARACTERS[id].tagline}</span>}
             {taken && <span className="picker__tag muted">Taken</span>}
           </button>
         );

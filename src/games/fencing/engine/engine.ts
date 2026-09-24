@@ -57,10 +57,12 @@ export class Engine {
     this.fencers[slot].input = input;
   }
 
-  strike(slot: Slot, action: StrikeAction): void {
-    if (this.match.phase !== "live") return;
+  /** Returns false when the referee ignored the strike, so the phone can say why nothing happened. */
+  strike(slot: Slot, action: StrikeAction): boolean {
+    if (this.match.phase !== "live") return false;
     const events = action === "jab" ? this.referee.jab(slot, this.clock) : this.referee.parry(slot, this.clock);
     events.forEach((event) => this.emit(event));
+    return events.length > 0;
   }
 
   rematch(slot: Slot): boolean {
