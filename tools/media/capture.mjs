@@ -48,11 +48,18 @@ const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--ena
 /** Opens the showcase with a frozen clock and lets the scene settle. */
 async function open(view, size) {
   const page = await browser.newPage({ viewport: size, deviceScaleFactor: 1 });
+  // A slow frame on a busy machine can take minutes, so nothing may time out.
+  page.setDefaultTimeout(900000);
   page.on("pageerror", (error) => console.error(`[${view}] page error:`, error.message));
   await page.clock.install({ time: 0 });
+  // Installed, the fake clock still flows with real time, so a slow machine would skip frames.
+  // Paused, only runFor moves it.
+  await page.clock.pauseAt(1000);
   await page.goto(`${url}/showcase/${game}?view=${view}`, { waitUntil: "domcontentloaded" });
   for (let i = 0; i < 600; i++) {
     await page.clock.runFor(50);
+    // With the clock paused, the page's own scripts still load in real time.
+    await page.waitForTimeout(100);
     if (await page.evaluate(() => window.__showcaseReady === true)) break;
     if (i === 599) throw new Error(`the ${view} showcase never became ready`);
   }
