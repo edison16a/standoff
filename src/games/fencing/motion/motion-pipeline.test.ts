@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { StrikeAction } from "@/games/fencing/protocol";
 import { DEFAULT_TUNING } from "@/games/fencing/tuning";
-import { quatFromDeviceEuler, vec } from "./math3d";
+import { quatFromDeviceEuler, vec } from "@/games/kit/motion/math3d";
 import { MotionPipeline } from "./motion-pipeline";
 
 const STEP = 1000 / 60;

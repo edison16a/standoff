@@ -5,7 +5,8 @@ import { GAMES, loadGame } from "./catalog";
 describe("the game catalog", () => {
   it("lists every game folder once, by its folder name", () => {
     const folders = readdirSync(__dirname, { withFileTypes: true })
-      .filter((entry) => entry.isDirectory())
+      // The kit is shared code for games, not a game.
+      .filter((entry) => entry.isDirectory() && entry.name !== "kit")
       .map((entry) => entry.name)
       .sort();
     expect(GAMES.map((game) => game.id).sort()).toEqual(folders);

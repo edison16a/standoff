@@ -1,4 +1,4 @@
-import { quatFromDeviceEuler } from "@/games/fencing/motion/math3d";
+import { quatFromDeviceEuler } from "@/games/kit/motion/math3d";
 import type { MotionPipeline } from "@/games/fencing/motion/motion-pipeline";
 
 /**

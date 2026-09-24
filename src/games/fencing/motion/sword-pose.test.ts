@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { quatFromDeviceEuler } from "./math3d";
+import { quatFromDeviceEuler } from "@/games/kit/motion/math3d";
 import { calibrate, swordPose } from "./sword-pose";
 
 const DEG = Math.PI / 180;

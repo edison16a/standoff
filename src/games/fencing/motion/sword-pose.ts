@@ -1,4 +1,4 @@
-import { clamp, conjugate, cross, dot, rotate, scale, sub, vec, wrapAngle, type Quat, type Vec3 } from "./math3d";
+import { clamp, conjugate, cross, dot, rotate, scale, sub, vec, wrapAngle, type Quat, type Vec3 } from "@/games/kit/motion/math3d";
 
 const EARTH_UP = vec(0, 0, 1);
 /** Past this elevation the swing of the blade stops meaning anything. */

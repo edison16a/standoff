@@ -1,6 +1,6 @@
 import type { StrikeAction } from "@/games/fencing/protocol";
 import type { Tuning } from "@/games/fencing/tuning";
-import { rotate, sub, type Quat, type Vec3 } from "./math3d";
+import { rotate, sub, type Quat, type Vec3 } from "@/games/kit/motion/math3d";
 import { StrikeDetector } from "./strike-detector";
 import { calibrate, swordPose, type Calibration, type SwordPose } from "./sword-pose";
 

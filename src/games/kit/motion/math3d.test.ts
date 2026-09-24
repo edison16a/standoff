@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { quatFromDeviceEuler, rotate, vec, wrapAngle } from "./math3d";
+import { quatFromDeviceEuler, rotate, vec, wrapAngle } from "@/games/kit/motion/math3d";
 
 const close = (a: number, b: number) => expect(a).toBeCloseTo(b, 6);
 
