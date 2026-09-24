@@ -117,14 +117,10 @@ export class ControllerSession {
     this.send({ kind: "ready", ready });
   }
 
-  skip(): void {
+  /** Skip the replay, ask for a rematch, or ask for the computer as opponent. */
+  press(payload: Extract<PhoneMessage, { kind: "skip" | "rematch" | "solo" }>): void {
     this.sfx?.click();
-    this.send({ kind: "skip" });
-  }
-
-  rematch(): void {
-    this.sfx?.click();
-    this.send({ kind: "rematch" });
+    this.send(payload);
   }
 
   /** Held Forward (1), held Back (-1), or neither (0). */

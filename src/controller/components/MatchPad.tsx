@@ -46,12 +46,12 @@ export function MatchPad({ slot, game }: { slot: Slot; game: ControllerState }) 
       </header>
 
       {game.phase === "replay" ? (
-        <button type="button" className="hold hold--solo" disabled={game.skipVotes[me]} onClick={() => session.skip()}>
+        <button type="button" className="hold hold--solo" disabled={game.skipVotes[me]} onClick={() => session.press({ kind: "skip" })}>
           <Icon name="skip" size={28} />
           {game.skipVotes[me] ? "Waiting" : "Skip"}
         </button>
       ) : game.phase === "matchOver" ? (
-        <button type="button" className="hold hold--solo" disabled={game.rematchVotes[me]} onClick={() => session.rematch()}>
+        <button type="button" className="hold hold--solo" disabled={game.rematchVotes[me]} onClick={() => session.press({ kind: "rematch" })}>
           <Icon name="refresh" size={28} />
           {game.rematchVotes[me] ? "Waiting" : "Rematch"}
         </button>

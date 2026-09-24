@@ -6,6 +6,7 @@ import type { SeatState } from "../../lobby";
 
 /** A player's status in as few words as possible. */
 function status(slot: Slot, seat: SeatState): string {
+  if (seat.computer) return "Computer ready";
   if (!seat.connected) return seat.pick ? `Player ${slot} reconnecting` : `Waiting for player ${slot}`;
   return seat.ready ? `Player ${slot} ready` : `Player ${slot} connected`;
 }

@@ -22,6 +22,7 @@ export const ICON_PATHS = {
   volume: "M11 5 6 9H3v6h3l5 4V5ZM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13",
   hand: "M8 13V5.5a1.5 1.5 0 0 1 3 0V11M11 10.5v-7a1.5 1.5 0 0 1 3 0V11M14 10.5v-5a1.5 1.5 0 0 1 3 0V13M8 13v-1.5a1.5 1.5 0 0 0-3 0V14a8 8 0 0 0 8 8h1a6 6 0 0 0 6-6v-5.5a1.5 1.5 0 0 0-3 0",
   trophy: "M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3",
+  cpu: "M7 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2ZM10 10h4v4h-4zM9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3",
 } as const;
 
 export type IconName = keyof typeof ICON_PATHS;

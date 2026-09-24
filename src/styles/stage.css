@@ -150,3 +150,26 @@
 .join--corner .join__code {
   font-size: 16px;
 }
+
+/* Sits on the always white join card, so it keeps dark on white colours too. */
+.join__solo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #d4d6db;
+  border-radius: var(--radius);
+  background: #ffffff;
+  color: #111214;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.join__solo:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}

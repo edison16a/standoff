@@ -10,7 +10,10 @@ import { useController } from "./session-context";
 export function LobbySteps({ slot }: { slot: Slot }) {
   const session = useController();
   const { pick, ready, calibrated, game } = useControllerStore();
-  const otherReady = game?.ready[slot === 1 ? 1 : 0] ?? false;
+  const other = slot === 1 ? 1 : 0;
+  const otherReady = game?.ready[other] ?? false;
+  const otherHere = game?.connected[other] ?? false;
+  const computer = game?.computer[other] ?? false;
   const canReady = pick !== null && calibrated;
 
   return (
@@ -31,6 +34,12 @@ export function LobbySteps({ slot }: { slot: Slot }) {
       </section>
       <div className="ready-bar">
         {ready && !otherReady && <p className="muted">Waiting for your opponent</p>}
+        {(!otherHere || computer) && (
+          <button type="button" className="btn btn--ghost btn--block" onClick={() => session.press({ kind: "solo", on: !computer })}>
+            <Icon name={computer ? "phone" : "cpu"} />
+            {computer ? "Play a friend instead" : "Play the computer"}
+          </button>
+        )}
         <button
           type="button"
           className={`btn btn--lg btn--block ${ready ? "" : "btn--primary"}`}
