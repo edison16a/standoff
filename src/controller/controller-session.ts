@@ -7,11 +7,10 @@ import type { HostMessage, PhoneMessage, ServerEnvelope, StrikeAction } from "@/
 import { clampTuning, DEFAULT_TUNING } from "@/shared/tuning";
 import { useControllerStore as store } from "./controller-store";
 import { buzz, ScreenAwake } from "./device";
+import { MotionStream } from "./motion-stream";
 import { readToken, writeToken } from "./seat-token";
 import { motionSupport, requestMotionPermission, subscribeSensors } from "./sensors";
 
-/** How often the live sword reading goes to the host. Matches the host's tick. */
-const SEND_INTERVAL_MS = 1000 / 60;
 /** Phases where the host is drawing this fencer and wants the live reading. */
 const STREAMING = new Set(["enGarde", "live", "halt", "paused"]);
 
@@ -26,12 +25,17 @@ export class ControllerSession {
   private readonly awake = new ScreenAwake();
   private sfx: Sfx | null = null;
   private stopSensors: (() => void) | null = null;
-  private sender: ReturnType<typeof setInterval> | null = null;
+  private readonly motion: MotionStream;
   /** Footwork from the on screen slider when there are no sensors. */
   private touchMove = 0;
 
   constructor(private readonly code: string) {
     this.pipeline = new MotionPipeline(DEFAULT_TUNING, (action) => this.onStrike(action));
+    this.motion = new MotionStream(
+      () => this.frame,
+      (frame) => this.socket.sendLossy({ type: "phone:send", payload: { kind: "motion", ...frame } }),
+      () => STREAMING.has(store.getState().game?.phase ?? "lobby"),
+    );
     this.socket = new SocketClient({
       onOpen: (send) => send({ type: "phone:join", code: this.code, token: readToken(this.code) ?? undefined }),
       onMessage: (message) => this.onMessage(message),
@@ -71,11 +75,11 @@ export class ControllerSession {
     void this.awake.start();
     store.setState({ stage: "joining" });
     this.socket.connect();
-    this.sender = setInterval(() => this.stream(), SEND_INTERVAL_MS);
+    this.motion.start();
   }
 
   dispose(): void {
-    if (this.sender) clearInterval(this.sender);
+    this.motion.stop();
     this.stopSensors?.();
     this.awake.stop();
     this.socket.close();
@@ -185,13 +189,6 @@ export class ControllerSession {
   private onStrike(action: StrikeAction): void {
     if (store.getState().game?.phase !== "live") return;
     this.send({ kind: "strike", action });
-  }
-
-  private stream(): void {
-    const phase = store.getState().game?.phase;
-    if (!phase || !STREAMING.has(phase)) return;
-    const frame = this.frame;
-    this.socket.sendLossy({ type: "phone:send", payload: { kind: "motion", ...frame } });
   }
 
   private send(payload: PhoneMessage): void {
