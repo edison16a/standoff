@@ -8,9 +8,9 @@
  */
 
 export interface Tuning {
-  /** Forward acceleration (m/s²) that counts as a jab. */
+  /** Downward acceleration (m/s²) of a chop that counts as a jab. */
   jabThreshold: number;
-  /** Backward acceleration (m/s²) that counts as a parry. */
+  /** Upward acceleration (m/s²) of a lift that counts as a parry. */
   parryThreshold: number;
   /** How long a parry keeps blocking once it fires. */
   parryWindowMs: number;
@@ -27,7 +27,7 @@ export interface Tuning {
 }
 
 export const DEFAULT_TUNING: Tuning = {
-  jabThreshold: 14,
+  jabThreshold: 12,
   parryThreshold: 12,
   parryWindowMs: 1000,
   refractoryMs: 350,

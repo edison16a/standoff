@@ -63,12 +63,3 @@ function twist(blade: Vec3, up: Vec3): number {
   const turned = sub(up, scale(blade, dot(up, blade)));
   return Math.atan2(dot(cross(level, turned), blade), dot(level, turned));
 }
-
-/**
- * The strip direction in earth coordinates: level, pointing wherever the
- * blade pointed at calibration. Jabs and parries are measured along this
- * line, so a thrust counts the same whether the tip is high or low.
- */
-export function stripAxis(calibration: Calibration): Vec3 {
-  return vec(Math.sin(calibration.heading), Math.cos(calibration.heading), 0);
-}

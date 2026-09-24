@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { quatFromDeviceEuler } from "./math3d";
-import { calibrate, stripAxis, swordPose } from "./sword-pose";
+import { calibrate, swordPose } from "./sword-pose";
 
 const DEG = Math.PI / 180;
 
@@ -19,7 +19,6 @@ describe("sword pose", () => {
     // Leaning the top back toward the player tips the back of the phone, the blade, upward.
     const tipped = swordPose(quatFromDeviceEuler(0, 110, 0), guard);
     expect(tipped.pitch).toBeCloseTo(20 * DEG, 3);
-    expect(stripAxis(guard).y).toBeCloseTo(1, 4);
   });
 
   it("measures swing left and right from the calibrated heading", () => {

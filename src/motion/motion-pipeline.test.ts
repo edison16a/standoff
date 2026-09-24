@@ -7,8 +7,8 @@ import { MotionPipeline } from "./motion-pipeline";
 const STEP = 1000 / 60;
 
 /**
- * A phone lying flat, top edge pointing north. In that pose device y is
- * earth north, so forward acceleration along the strip is device y.
+ * A phone lying flat, top edge pointing north. In that pose device z is
+ * earth up, so a chop down is negative device z.
  */
 function flatPhone() {
   const strikes: StrikeAction[] = [];
@@ -16,9 +16,9 @@ function flatPhone() {
   pipeline.onOrientation(quatFromDeviceEuler(0, 0, 0));
   pipeline.calibrate();
   let t = 0;
-  const feed = (forward: number[]) => {
-    for (const a of forward) {
-      pipeline.onMotion({ t, acceleration: vec(0, a, 0), accelerationIncludingGravity: null });
+  const feed = (down: number[]) => {
+    for (const a of down) {
+      pipeline.onMotion({ t, acceleration: vec(0, 0, -a), accelerationIncludingGravity: null });
       t += STEP;
     }
   };
@@ -44,7 +44,7 @@ describe("MotionPipeline", () => {
     expect(Math.abs(pipeline.sword.yaw)).toBeCloseTo((20 * Math.PI) / 180, 5);
   });
 
-  it("turns a thrust along the strip into a jab and a pull back into a parry", () => {
+  it("turns a chop down into a jab and a lift up into a parry", () => {
     const { strikes, feed } = flatPhone();
     feed([0, 0, 10, 26, 30, 12, -18, -24, -10, 0]);
     feed(new Array(40).fill(0));
@@ -62,7 +62,7 @@ describe("MotionPipeline", () => {
       pipeline.onMotion({ t, acceleration: null, accelerationIncludingGravity: vec(0, 0, 9.81) });
     }
     for (const a of [0, 12, 28, 32, 10, 0]) {
-      pipeline.onMotion({ t, acceleration: null, accelerationIncludingGravity: vec(0, a, 9.81) });
+      pipeline.onMotion({ t, acceleration: null, accelerationIncludingGravity: vec(0, 0, 9.81 - a) });
       t += STEP;
     }
     expect(strikes).toEqual(["jab"]);

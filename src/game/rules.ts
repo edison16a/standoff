@@ -26,9 +26,10 @@ export const DOUBLE_WINDOW_MS = 60;
 export const DEFLECTED_MS = 450;
 /**
  * A tip more than this far off line (radians) misses even in range. It is
- * what makes the live sword angle matter and not just the jab trigger.
+ * what makes the live sword angle matter and not just the jab trigger. It
+ * is generous, because a chop down tips the phone a little as it goes.
  */
-export const OFF_TARGET_ANGLE = (55 * Math.PI) / 180;
+export const OFF_TARGET_ANGLE = (75 * Math.PI) / 180;
 /** Seconds counted down before each exchange. */
 export const EN_GARDE_SECONDS = 3;
 /** Freeze after a touch before the replay starts. */

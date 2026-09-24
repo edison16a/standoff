@@ -1,8 +1,8 @@
 import type { StrikeAction } from "@/shared/protocol";
 import type { Tuning } from "@/shared/tuning";
-import { dot, rotate, sub, vec, type Quat, type Vec3 } from "./math3d";
+import { rotate, sub, type Quat, type Vec3 } from "./math3d";
 import { StrikeDetector } from "./strike-detector";
-import { calibrate, stripAxis, swordPose, type Calibration, type SwordPose } from "./sword-pose";
+import { calibrate, swordPose, type Calibration, type SwordPose } from "./sword-pose";
 
 /** A `devicemotion` reading, in the device frame. */
 export interface MotionReading {
@@ -26,13 +26,14 @@ const GRAVITY_SMOOTHING = 0.08;
  * sight so the whole thing can be unit tested with synthetic readings.
  *
  * Orientation drives the sword directly. Motion is rotated into the earth
- * frame, projected onto the strip line, and handed to the strike detector.
- * Footwork is not sensed at all: players hold Forward or Back buttons.
+ * frame and only its vertical part goes to the strike detector: a sharp
+ * chop down is a jab, a sharp lift up is a parry. Up and down is the one
+ * direction every grip and every arm does cleanly, where a thrust toward
+ * the screen got lost in the arm's swing. Footwork is two buttons.
  */
 export class MotionPipeline {
   private orientation: Quat | null = null;
   private calibration: Calibration | null = null;
-  private axis: Vec3 = vec(0, 1, 0);
   private gravity: Vec3 | null = null;
   private readonly strikes: StrikeDetector;
   private pose: SwordPose = { pitch: 0, yaw: 0, roll: 0 };
@@ -62,7 +63,6 @@ export class MotionPipeline {
   calibrate(): boolean {
     if (!this.orientation) return false;
     this.calibration = calibrate(this.orientation);
-    this.axis = stripAxis(this.calibration);
     this.recenter();
     return true;
   }
@@ -82,7 +82,8 @@ export class MotionPipeline {
     const linear = this.linearAcceleration(reading);
     if (!linear) return;
 
-    const action = this.strikes.update(dot(linear, this.axis), reading.t);
+    // Earth z points up, so a downward chop reads positive.
+    const action = this.strikes.update(-linear.z, reading.t);
     if (action) this.onStrike(action);
   }
 

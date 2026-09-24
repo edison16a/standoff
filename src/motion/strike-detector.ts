@@ -8,8 +8,8 @@ export interface StrikeSettings {
 
 /**
  * A strike has to climb from quiet to the threshold inside this window.
- * That is what separates a snap of the wrist from a slow push of the arm,
- * which the movement tracker wants to see as footwork instead.
+ * That is what separates a snap of the wrist from a slow move of the arm,
+ * like tilting the sword to aim.
  */
 export const RISE_WINDOW_MS = 160;
 /** Below this share of the threshold the signal counts as quiet. */
@@ -18,11 +18,11 @@ const QUIET_RATIO = 0.35;
 const REARM_RATIO = 0.5;
 
 /**
- * Turns forward acceleration along the strip into discrete jab and parry
- * events. A forward spike is a jab, a backward spike is a parry. Both are
- * edge triggered and followed by a refractory period, because every jab
- * ends with the arm braking and coming back, and that recovery is a
- * backward spike we must not read as a parry.
+ * Turns downward acceleration into discrete jab and parry events. A spike
+ * down is a jab, a spike up is a parry. Both are edge triggered and
+ * followed by a refractory period, because every chop ends with the arm
+ * braking and coming back, and that recovery is a spike the other way we
+ * must not read as the other strike.
  */
 export class StrikeDetector {
   private refractoryUntil = -Infinity;
@@ -43,13 +43,13 @@ export class StrikeDetector {
   }
 
   /**
-   * Feeds one sample of forward acceleration in m/s² with its time in ms.
+   * Feeds one sample of downward acceleration in m/s² with its time in ms.
    * Returns the strike it completes, if any.
    */
-  update(forwardAccel: number, now: number): StrikeAction | null {
+  update(downAccel: number, now: number): StrikeAction | null {
     // Average with the previous sample to shave off single frame spikes.
-    const a = (forwardAccel + this.previous) / 2;
-    this.previous = forwardAccel;
+    const a = (downAccel + this.previous) / 2;
+    this.previous = downAccel;
     const { jabThreshold, parryThreshold, refractoryMs } = this.settings;
 
     if (a < jabThreshold * QUIET_RATIO) this.lastQuietForward = now;
