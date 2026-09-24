@@ -1,24 +1,33 @@
 # Standoff
 
-Standoff is a games console in the browser. One computer is the screen, and every player's phone is their controller. There is nothing to install and no account to make: open the site on a computer, pick a game, and everyone scans the QR code with their phone. Each player types a name, and the game starts.
+Standoff is the games console of the web. Open it on any computer, and everyone's phone becomes a controller that tracks how they move. Some games use the computer's camera instead, reading your whole body. Play with up to six friends across ten games, each one its own world.
 
-There are five games:
+I loved the Wii, the PS5 and the Xbox, but there were never enough controllers, and I can't bring my Xbox everywhere. Standoff runs on any computer and uses everyone's phones as controllers. There is nothing to install and no account to make: pick a game, everyone scans the QR code, types a name, and you play.
 
-* **Fencing:** your phone is the sword. Tilt it and the blade follows, chop down to jab, lift up to parry.
+Camera games track movement with a pose model that downloads once and runs on your own computer. The camera picture never leaves it. Phones send their moves through the game server as you play, and nothing is ever saved there: close the game and it is gone.
+
+The games, in the order the home screen shows them:
+
+* **Magic Kart:** a party kart racer for up to four in split screen. Hold the phone like a steering wheel, grab power up cubes, two laps.
 * **Fruit Ninja:** up to four players slice fruit on one wooden board by pointing their phones at the screen, and dodge the bombs.
-* **Magic Kart:** a party kart racer for up to four in split screen. Tilt the phone to steer, grab power up cubes, two laps.
 * **Zombie Survival:** up to four players aim their phones like guns and fight together through 25 stages to the ship.
 * **Shooting Gallery:** a fairground duck shoot. Point, shoot, top score in 20 seconds wins.
+* **Boxing** (coming soon): stand in front of the camera and fight. Punch, block with your gloves up, duck to slip.
+* **Subway Surfers** (coming soon): run the rails with your body. Step to change lanes, jump and duck, chase a high score.
+* **NBA 3v3** (coming soon): three on three with the stars for up to six phones, a shot meter and dunks.
+* **FIFA 3v3** (coming soon): three on three football for up to six phones, with a keeper in each goal.
+* **Cube Game** (coming soon): jump for real to jump the cube through five levels of rhythm and spikes.
+* **Fencing:** your phone is the sword. Tilt it and the blade follows, chop down to jab, lift up to parry.
 
-Each game lives in its own folder under `src/games`, with a README of its own.
+Empty spots in team games are filled by computer players. Each game lives in its own folder under `src/games`, with a README of its own.
 
-It runs on Vercel for play from anywhere, or on your own computer over WiFi. Nothing is saved on the server: close it and the game is gone.
+It runs on Vercel for play from anywhere, or on your own computer over WiFi.
 
 Play it at [standoff-five.vercel.app](https://standoff-five.vercel.app).
 
 ## Screenshots
 
-The home screen works like a console menu. A row of square tiles shows each game's art, and the chosen one grows and gets a ring in its own colour. Its art fills the screen behind, with its name, what it is, how many can play and a Host Game button below the row. Opening the app picks a game at random. Click a tile or use the left and right arrow keys to choose, and press Enter, click the chosen tile again or press Host Game to start. A game still being built says Coming soon.
+The home screen works like a console menu. A row of square tiles shows each game's icon, and the chosen one grows and gets a ring in its own colour. A looping clip of the game really being played fills the screen behind, with its name, what it is, how many can play and a Host Game button below the row. Opening the app picks a game at random. Click a tile or use the left and right arrow keys to choose, and press Enter, click the chosen tile again or press Host Game to start. A game still being built says Coming soon.
 
 <img src="docs/screenshots/home-light.png" alt="The home screen in light mode, with Fencing chosen in the row of game tiles and its art filling the background" width="100%" />
 
