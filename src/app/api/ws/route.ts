@@ -22,7 +22,7 @@ export async function GET(request: Request): Promise<Response> {
   if (!wantsWebSocket(request.headers)) {
     return new Response("This endpoint only speaks WebSocket.", { status: 426, headers: { Upgrade: "websocket" } });
   }
-  const ctx = routeContext(request, deferredBackend(createBackend()), getDeadline()?.getTime() ?? null);
+  const ctx = routeContext(request, deferredBackend(createBackend), getDeadline()?.getTime() ?? null);
 
   return upgradeOnVercel(
     (socket) => {

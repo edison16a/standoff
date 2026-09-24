@@ -20,12 +20,19 @@ const holder = globalThis as { [SHARED]?: Promise<Backend> | null };
  * pair of Redis connections instead of opening two each.
  */
 export function createBackend(): Promise<Backend> {
-  holder[SHARED] ??= open().catch((error: unknown) => {
+  const cached = holder[SHARED];
+  if (cached) return cached;
+  const attempt = open().catch((error: unknown) => {
     // Let the next socket try again rather than caching a failure forever.
     holder[SHARED] = null;
     throw error;
   });
-  return holder[SHARED];
+  // Callers that need the backend still see the failure. This only stops a
+  // failure nobody was waiting on, like a landing page socket's, from
+  // counting as unhandled, which would take the whole Vercel instance down.
+  attempt.catch(() => undefined);
+  holder[SHARED] = attempt;
+  return attempt;
 }
 
 async function open(): Promise<Backend> {
@@ -48,19 +55,22 @@ export function findRedisUrl(): string | null {
  * is still connecting. Vercel's upgrade handler has to attach its listeners
  * before any await, or the client's first message can be lost, so the
  * socket gets this and every call waits for the connection underneath.
+ *
+ * It asks for the backend on every call rather than holding one promise,
+ * so a socket that opened while Redis was down works once Redis is back.
  */
-export function deferredBackend(pending: Promise<Backend>): Backend {
+export function deferredBackend(get: () => Promise<Backend>): Backend {
   const store: RoomStore = {
-    create: async (room) => (await pending).store.create(room),
-    get: async (code) => (await pending).store.get(code),
-    update: async (code, change) => (await pending).store.update(code, change),
-    delete: async (code) => (await pending).store.delete(code),
+    create: async (room) => (await get()).store.create(room),
+    get: async (code) => (await get()).store.get(code),
+    update: async (code, change) => (await get()).store.update(code, change),
+    delete: async (code) => (await get()).store.delete(code),
   };
   return {
     store,
     bus: {
-      publish: async (channel, message) => (await pending).bus.publish(channel, message),
-      subscribe: async (channel, onMessage) => (await pending).bus.subscribe(channel, onMessage),
+      publish: async (channel, message) => (await get()).bus.publish(channel, message),
+      subscribe: async (channel, onMessage) => (await get()).bus.subscribe(channel, onMessage),
     },
     label: "deferred",
     shared: true,

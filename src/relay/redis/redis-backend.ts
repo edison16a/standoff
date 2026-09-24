@@ -5,8 +5,8 @@ import { RedisStore } from "./redis-store";
 
 /**
  * Connects to Redis for rooms and messages. Commands fail fast instead of
- * queueing forever, so a Redis outage shows up as a join error rather than
- * a phone stuck on "Joining".
+ * queueing forever, so a Redis outage shows up as a join error the client
+ * retries, rather than a phone stuck on "Joining".
  */
 export async function createRedisBackend(url: string): Promise<Backend> {
   const options = { maxRetriesPerRequest: 2, enableAutoPipelining: true, connectTimeout: 5000 };
@@ -18,7 +18,15 @@ export async function createRedisBackend(url: string): Promise<Backend> {
   for (const connection of [client, subscriber]) {
     connection.on("error", (error: Error) => console.error("Redis connection error", error.message));
   }
-  await Promise.all([ready(client), ready(subscriber)]);
+  try {
+    await Promise.all([ready(client), ready(subscriber)]);
+  } catch (error) {
+    // Left alone, both would keep reconnecting forever with nothing using
+    // them, and every later attempt would add two more.
+    client.disconnect();
+    subscriber.disconnect();
+    throw error;
+  }
   return {
     store: new RedisStore(client),
     bus: new RedisBus(client, subscriber),
