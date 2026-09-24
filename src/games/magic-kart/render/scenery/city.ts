@@ -57,6 +57,32 @@ function signTexture(text: string, color: string): THREE.CanvasTexture {
 }
 
 /**
+ * The towers' lit facades. One window texture is tiled over every tower
+ * at the same size, so a tall tower gets more floors rather than taller
+ * windows. The instances are boxes scaled per tower, so the tiling is
+ * worked out in the shader from each instance's own scale: across the
+ * face for the width, up it for the floors. Roofs stay dark.
+ */
+function towerMaterial(random: () => number): THREE.MeshLambertMaterial {
+  const lit = windowTexture(random);
+  const glow = windowTexture(random);
+  for (const texture of [lit, glow]) texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  const material = new THREE.MeshLambertMaterial({ map: lit, emissiveMap: glow, emissive: "#ffffff", emissiveIntensity: 1.1, color: "#4a4a66" });
+  material.onBeforeCompile = (shader) => {
+    const tiled = THREE.ShaderChunk.uv_vertex.replace(/\b(MAP_UV|EMISSIVEMAP_UV)\b/g, "towerUv");
+    shader.vertexShader = shader.vertexShader.replace(
+      "#include <uv_vertex>",
+      `vec3 towerScale = vec3(length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz), length(instanceMatrix[2].xyz));
+      float across = abs(normal.x) > 0.5 ? towerScale.z : towerScale.x;
+      // One tile is 15 m of facade across and 48 m up: about 13 windows by 21 floors.
+      vec2 towerUv = abs(normal.y) > 0.5 ? vec2(0.01) : uv * vec2(across / 15.0, towerScale.y / 48.0);
+      ${tiled}`,
+    );
+  };
+  return material;
+}
+
+/**
  * Neo City at night: dark streets, towers full of lit windows, neon
  * strips on the rooftops, glowing billboards, street lamps down both
  * sides of the road and hover cars drifting between the towers.
@@ -84,7 +110,7 @@ export function buildCity(track: Track): Scenery {
       towers.push({ x: px, z: pz, w, d, h });
     }
   }
-  const facade = new THREE.MeshLambertMaterial({ map: windowTexture(random), emissiveMap: windowTexture(random), emissive: "#ffffff", emissiveIntensity: 1.1, color: "#4a4a66" });
+  const facade = towerMaterial(random);
   const unit = new THREE.BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
   const mesh = new THREE.InstancedMesh(unit, facade, towers.length);
   const m = new THREE.Matrix4();

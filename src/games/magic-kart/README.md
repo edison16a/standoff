@@ -10,7 +10,7 @@ Status: ready. A split screen kart racer for 1 to 4 players, with computer karts
    * **Kart.** Pick one of four drivers, each with their own kart, shown turning in 3D. A driver another player has is marked taken.
    * **Ready.** Tap Ready.
 3. On the computer, pick the map with the mouse and click Start race. The chosen map's demo race runs behind the map picker. The switch fills empty grid places with computer karts.
-4. Race two laps. On the phone: **Drive** under the right thumb, **Brake** under the left, and the round **power up** button above Brake shows what you hold. Tap it to use it.
+4. Race two laps. Each player has their own view of the split screen. The map of the whole track and the standings sit at the top right. With three players they fill the free quarter there. On the phone: **Drive** under the right thumb, **Brake** under the left, and the round **power up** button above Brake shows what you hold. Tap it to use it.
 5. The results come up with confetti. Race again on the same map, or change map.
 
 A phone that joins mid race sets up and joins the next race. A player whose phone drops keeps their kart, with the computer driving until they are back.
@@ -26,12 +26,14 @@ A phone that joins mid race sets up and joins the next race. A player whose phon
 
 ## Power ups
 
-Drive through a glowing cube for a random power up. You hold one at a time; a kart already holding one passes through and leaves the cube for others. Cubes come back after a few seconds. The leader tends to get defence, the back of the pack speed.
+Drive through a glowing cube for a random power up. You hold one at a time. A kart already holding one passes through and leaves the cube for others. Cubes come back after a few seconds. The leader tends to get defence, the back of the pack speed. The slot at the top of each view and the round button on the phone spin through the power ups, then show what you got.
 
 * **Star Orb:** homes in on the nearest kart ahead and spins it out. From first place it flies on down the road.
 * **Nitro:** a big speed boost that also carries you across sand at full pace.
 * **Ice Blast:** freezes the wheels of the kart ahead: slippery and slow for a few seconds.
-* **Vanish:** you turn nearly invisible. Homing throws lose you and you drop off the map.
+* **Vanish:** you turn nearly invisible. Throws lose you and fly straight through you, and you drop off the map.
+
+A spin out ends with a second of protection, shown by a blink, so hits never chain one after another.
 * **Shield:** a bubble that soaks up one hit.
 
 ## The maps

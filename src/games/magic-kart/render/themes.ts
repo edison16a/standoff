@@ -14,6 +14,8 @@ export interface Theme {
   kerb: readonly string[];
   shoulder: string;
   wall: string;
+  /** Every other barrier section, for a striped barrier. A darker shade of the wall when left out. */
+  wallAlt?: string;
   wallTop: string;
   /** Chevron boards on the outside of bends. */
   sign: string;
@@ -44,6 +46,7 @@ export const THEMES: Record<ThemeId, Theme> = {
     kerb: ["#ff5470", "#ff9f40", "#ffe14d", "#57d977", "#48a8ff", "#a66bff"],
     shoulder: "#f2dfb0",
     wall: "#ffffff",
+    wallAlt: "#ffc2d1",
     wallTop: "#ff5470",
     sign: "#ff4d6d",
     signInk: "#ffffff",
@@ -112,26 +115,27 @@ export const THEMES: Record<ThemeId, Theme> = {
     reflections: 0.8,
   },
   volcano: {
-    road: "#3a2f33",
-    roadSpeckle: "#4a3c40",
-    line: "#ffb347",
-    centre: "#ffe0a8",
-    kerb: ["#ff3b1f", "#ffd23f"],
-    shoulder: "#4c3a33",
-    wall: "#5b4a44",
-    wallTop: "#ff6a1f",
+    // Basalt tarmac a shade lighter than the rock around it, with bright kerbs and glowing edges.
+    road: "#4d4450",
+    roadSpeckle: "#62586a",
+    line: "#ffc46b",
+    centre: "#fff0d0",
+    kerb: ["#ff3b1f", "#ffe14d"],
+    shoulder: "#9a826f",
+    wall: "#6e5d57",
+    wallTop: "#ff7a1f",
     sign: "#ffb020",
     signInk: "#3a1a0a",
-    skyTop: "#2b0d14",
-    skyBottom: "#ff7a3a",
-    fog: "#8a3a2a",
-    fogNear: 110,
-    fogFar: 460,
-    sun: "#ffc28a",
-    sunIntensity: 2.1,
-    ambientSky: "#ff9a6a",
-    ambientGround: "#3a1a14",
-    ambient: 1.15,
+    skyTop: "#3a1020",
+    skyBottom: "#ff8a45",
+    fog: "#9a4632",
+    fogNear: 120,
+    fogFar: 480,
+    sun: "#ffd2a0",
+    sunIntensity: 2.6,
+    ambientSky: "#ffb08a",
+    ambientGround: "#5a2a1e",
+    ambient: 1.5,
     pad: "#ff7a1f",
     floating: false,
     reflections: 0.5,

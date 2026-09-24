@@ -82,7 +82,11 @@ export function obstacleGeometry(kind: ObstacleKind): { lit: THREE.BufferGeometr
     case "sandcastle":
       return { lit: sandcastle(), glow: null };
     case "asteroid":
-      return { lit: merge([lumpy(1.5, "#7a6f6a", 1), paint(ball(0.35, 8, 6), "#5a514d", { at: [0.9, 0.7, 0.9] })]), glow: null };
+      // Glowing violet seams show through the dips, so a rock drifting across the road reads as a hazard.
+      return {
+        lit: merge([lumpy(1.5, "#7a6f6a", 1), paint(ball(0.35, 8, 6), "#5a514d", { at: [0.9, 0.7, 0.9] })]),
+        glow: merge([lumpy(1.42, "#c77dff", 6)]),
+      };
     case "satellite":
       return { lit: satellite(), glow: null };
     case "drone":

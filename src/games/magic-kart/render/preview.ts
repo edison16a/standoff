@@ -18,8 +18,18 @@ export class KartPreview {
   private last = 0;
   private angle = -0.6;
 
-  constructor(private readonly canvas: HTMLCanvasElement) {
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  private readonly canvas: HTMLCanvasElement;
+
+  /**
+   * The preview makes its own canvas inside `holder`, so a canvas whose
+   * context was released is never handed to a new preview (React mounts
+   * effects twice in development).
+   */
+  constructor(holder: HTMLElement) {
+    this.canvas = document.createElement("canvas");
+    this.canvas.className = "mk-pick__canvas";
+    holder.appendChild(this.canvas);
+    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: true });
     this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
@@ -36,7 +46,7 @@ export class KartPreview {
     this.ring.rotation.x = Math.PI / 2;
     this.turntable.add(disc, this.ring);
     this.scene.add(this.turntable);
-    this.camera.position.set(0, 2.4, 6);
+    this.camera.position.set(0, 2.2, 5.3);
     this.camera.lookAt(0, 0.75, 0);
     this.frame = requestAnimationFrame(this.draw);
   }
@@ -54,8 +64,18 @@ export class KartPreview {
 
   dispose(): void {
     cancelAnimationFrame(this.frame);
+    if (this.model) this.turntable.remove(this.model.root);
     this.model?.dispose();
+    // The turntable and ring are this preview's own. The kart geometry is shared, so it stays.
+    this.turntable.traverse((object) => {
+      if (!(object instanceof THREE.Mesh)) return;
+      object.geometry.dispose();
+      (object.material as THREE.Material).dispose();
+    });
     this.renderer.dispose();
+    // Phones allow only a few live WebGL contexts; flipping between setup steps must not use them up.
+    this.renderer.forceContextLoss();
+    this.canvas.remove();
   }
 
   private readonly draw = (now: number) => {

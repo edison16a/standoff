@@ -10,6 +10,8 @@ import { buildTerrain, scatter, seeded, trackBounds } from "./terrain";
 
 const ROCK = new THREE.Color("#3b302d");
 const ASH = new THREE.Color("#5c4a42");
+/** Pale ash along the road, so the dark tarmac always stands out from the ground beside it. */
+const VERGE = new THREE.Color("#a08a78");
 const SCORCH = new THREE.Color("#7a3a22");
 const LAVA_LEVEL = -2.5;
 
@@ -53,11 +55,15 @@ export function buildVolcano(track: Track): Scenery {
     },
     color(x, z, h, near, out) {
       out.copy(ROCK).lerp(ASH, smooth(-1, 8, h) * 0.6);
+      out.lerp(VERGE, (1 - smooth(track.edge + 2, track.edge + 16, near.dist)) * 0.85);
       if (h < 0.5) out.lerp(SCORCH, smooth(0.5, LAVA_LEVEL, h));
       out.offsetHSL(0, 0, Math.sin(x * 0.23) * Math.cos(z * 0.19) * 0.03);
     },
   });
-  group.add(terrain);
+  group.add(terrain.mesh);
+  const ground = terrain.heightAt;
+  // Props stand on the ground, and never in the lava.
+  const onRock = (p: { x: number; z: number }) => ground(p.x, p.z) > LAVA_LEVEL + 0.6;
 
   const lava = liquidMaterial({ shallow: "#ff7a1a", deep: "#b3200a", crest: "#ffe36a", glow: true, scale: 9 });
   group.add(liquidSheet(lava, 1400, 1400, (b.minX + b.maxX) / 2, LAVA_LEVEL, (b.minZ + b.maxZ) / 2));
@@ -72,12 +78,12 @@ export function buildVolcano(track: Track): Scenery {
   group.add(volcano, crater);
 
   const mat = propMaterial();
-  const spires = scatter(track, 70, track.edge + 6, track.edge + 70, random).map((p) => ({ ...p, y: p.y - 1, rotY: random() * 6, scale: 1.2 + random() * 2.5 }));
+  const spires = scatter(track, 90, track.edge + 6, track.edge + 70, random).filter(onRock).map((p) => ({ ...p, y: ground(p.x, p.z) - 1, rotY: random() * 6, scale: 1.2 + random() * 2.5 }));
   const spire = merge([paint(lathe([[1.4, 0], [1.1, 3], [0.6, 6], [0.001, 8]], 7), "#2b2224")]);
   group.add(instances(spire, mat, spires));
-  group.add(instances(rock("#3f3330"), mat, scatter(track, 60, track.edge + 4, track.edge + 40, random).map((p) => ({ ...p, y: p.y - 0.8, rotY: random() * 6, scale: 0.8 + random() * 1.6 }))));
+  group.add(instances(rock("#4a3c38"), mat, scatter(track, 70, track.edge + 4, track.edge + 40, random).filter(onRock).map((p) => ({ ...p, y: ground(p.x, p.z) - 0.8, rotY: random() * 6, scale: 0.8 + random() * 1.6 }))));
   const crystal = new THREE.OctahedronGeometry(0.8, 0).scale(0.6, 1.8, 0.6).translate(0, 1.2, 0);
-  const crystals = scatter(track, 50, track.edge + 3, track.edge + 25, random).map((p) => ({ ...p, y: p.y - 0.3, rotY: random() * 6, scale: 0.8 + random() * 1.2 }));
+  const crystals = scatter(track, 60, track.edge + 3, track.edge + 25, random).filter(onRock).map((p) => ({ ...p, y: ground(p.x, p.z) - 0.3, rotY: random() * 6, scale: 0.8 + random() * 1.2 }));
   group.add(instances(crystal, new THREE.MeshBasicMaterial({ color: "#ff8a2a", toneMapped: false }), crystals));
 
   // Embers rising from the lava, drawn as one point cloud, and a smoke plume from the crater.

@@ -23,7 +23,7 @@ export function buildRoad(track: Track, theme: Theme): THREE.Group {
   const vertexLit = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, side: THREE.DoubleSide, envMapIntensity: 0.25 });
 
   const road = sweep(track, [{ d: -hw, y: 0.01 }, { d: hw, y: 0.01 }], { skip: inGap, uvLength: 16 });
-  const tarmac = new THREE.MeshStandardMaterial({ map: roadTexture(theme), roughness: theme.floating ? 0.45 : 0.9, metalness: theme.floating ? 0.2 : 0, envMapIntensity: 0.12 });
+  const tarmac = new THREE.MeshStandardMaterial({ map: roadTexture(theme), roughness: theme.floating ? 0.75 : 0.9, metalness: theme.floating ? 0.1 : 0, envMapIntensity: 0.12 });
   group.add(new THREE.Mesh(road, tarmac));
 
   const kerbColors = theme.kerb;
@@ -54,7 +54,7 @@ export function buildRoad(track: Track, theme: Theme): THREE.Group {
     { d: edge + 0.45, y: -0.2 },
   ];
   // Alternate the inner face in blocks, like painted barrier sections.
-  const wallColor = (s: number, i: number) => (i === 1 ? theme.wallTop : Math.floor(s / 6) % 2 === 0 ? theme.wall : shade(theme.wall, 0.82));
+  const wallColor = (s: number, i: number) => (i === 1 ? theme.wallTop : Math.floor(s / 6) % 2 === 0 ? theme.wall : (theme.wallAlt ?? shade(theme.wall, 0.82)));
   const glowMat = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, toneMapped: false });
   for (const wall of perSide(wallProfile, walled, { step: 2, color: wallColor })) group.add(new THREE.Mesh(wall, vertexLit));
   const lineProfile = [{ d: edge - 0.02, y: WALL_HEIGHT - 0.12 }, { d: edge - 0.02, y: WALL_HEIGHT - 0.02 }];
