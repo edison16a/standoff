@@ -1,7 +1,10 @@
 import { STEP } from "./tuning";
 
-/** After a stall, like a hidden tab, skip ahead rather than fast forward. */
-const MAX_STEPS = 6;
+/**
+ * A slow frame is caught up in full, up to a quarter second. Past that,
+ * as after a hidden tab, the race skips ahead rather than fast forward.
+ */
+const MAX_STEPS = 15;
 
 /**
  * Turns uneven animation frames into a steady count of fixed steps, so

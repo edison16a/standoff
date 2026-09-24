@@ -8,7 +8,7 @@ import { buildObstacles, bumpKarts, hitObstacles, placeObstacles, type Obstacle 
 import { driveKart } from "./physics";
 import { buildCubes, buildPads, collectCubes, rideBoostPads, type BoostPad, type Cube } from "./pickups";
 import { stepProjectile, type Projectile } from "./projectiles";
-import { rank, updateProgress, updateSafeSpot, updateStuck, updateWrongWay } from "./race";
+import { creditRespawn, rank, updateProgress, updateSafeSpot, updateStuck, updateWrongWay } from "./race";
 import { hasFallen, respawn, respawnSpot } from "./respawn";
 import { Track } from "./track";
 import { EFFECTS, RACE } from "./tuning";
@@ -157,6 +157,7 @@ export class RaceWorld {
 
   private putBack(kart: Kart, spot: { s: number; d: number }): void {
     respawn(kart, this.track, spot);
+    creditRespawn(kart, this.track, this.time, this.karts.filter((k) => k.race.finished).length, this.emit);
     this.emit({ type: "respawn", kart: kart.id });
   }
 

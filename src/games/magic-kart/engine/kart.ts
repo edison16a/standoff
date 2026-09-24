@@ -29,6 +29,8 @@ export interface KartRace {
   checkpoints: number;
   /** Distance along the lap of the last checkpoint passed. */
   lastCheckpointS: number;
+  /** How far past that checkpoint the kart was last step, negative behind it. */
+  since: number;
   /** Ranking distance: checkpoints times their spacing, plus the way since the last. */
   progress: number;
   finished: boolean;
@@ -113,6 +115,7 @@ export function createKart(id: number, character: CharacterId, seat: number | nu
     race: {
       checkpoints: 0,
       lastCheckpointS: 0,
+      since: track.forward(0, loc.s),
       progress: track.forward(0, loc.s),
       finished: false,
       finishTime: null,

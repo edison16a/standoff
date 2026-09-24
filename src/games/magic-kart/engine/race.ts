@@ -30,16 +30,37 @@ export function currentLap(kart: Kart): number {
 export function updateProgress(kart: Kart, track: Track, time: number, finishedSoFar: number, emit: Emit): "ok" | "lost" {
   const r = kart.race;
   const seg = checkpointSpacing(track);
-  const nextS = ((r.checkpoints + 1) % RACE.checkpoints) * seg;
-  const past = track.forward(nextS, kart.loc.s);
-  if (!r.finished && past >= 0 && past < seg * 0.5) {
+  const before = r.since;
+  let since = track.forward(r.lastCheckpointS, kart.loc.s);
+  // The next checkpoint counts only when driven through forwards, from just behind it to just past it.
+  if (!r.finished && before < seg && since >= seg && since - before < 12) {
     r.checkpoints += 1;
-    r.lastCheckpointS = nextS;
+    r.lastCheckpointS = track.wrap(r.lastCheckpointS + seg);
+    since -= seg;
     if (r.checkpoints % RACE.checkpoints === 0) crossLine(kart, time, finishedSoFar, emit);
   }
-  const since = track.forward(r.lastCheckpointS, kart.loc.s);
+  r.since = since;
   r.progress = r.checkpoints * seg + Math.max(-seg, Math.min(seg, since));
-  return !r.finished && since > seg * 1.4 ? "lost" : "ok";
+  // Far past the next checkpoint without passing it, or far back behind the last: put it back.
+  return !r.finished && (since > seg * 1.4 || since < -seg * 1.5) ? "lost" : "ok";
+}
+
+/**
+ * A kart put back on the far side of a jump it missed may land past a
+ * checkpoint it never drove through. It is credited with it, since the
+ * game moved it there, not the driver.
+ */
+export function creditRespawn(kart: Kart, track: Track, time: number, finishedSoFar: number, emit: Emit): void {
+  const r = kart.race;
+  const seg = checkpointSpacing(track);
+  let since = track.forward(r.lastCheckpointS, kart.loc.s);
+  while (!r.finished && since >= seg && since < seg * 1.4) {
+    r.checkpoints += 1;
+    r.lastCheckpointS = track.wrap(r.lastCheckpointS + seg);
+    since -= seg;
+    if (r.checkpoints % RACE.checkpoints === 0) crossLine(kart, time, finishedSoFar, emit);
+  }
+  r.since = since;
 }
 
 function crossLine(kart: Kart, time: number, finishedSoFar: number, emit: Emit): void {

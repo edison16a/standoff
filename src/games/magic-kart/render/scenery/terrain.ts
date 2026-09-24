@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import type { Track } from "../../engine/track";
 
+export { seeded } from "../../engine/random";
+
 /** What the ground builder knows about the nearest bit of road. */
 export interface Near {
   /** Distance to the centre line. */
@@ -97,18 +99,6 @@ export function buildTerrain(track: Track, options: TerrainOptions): THREE.Mesh 
   geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   geo.computeVertexNormals();
   return new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true }));
-}
-
-/** A tiny seeded random, so the scenery lands in the same places every time. */
-export function seeded(seed: number): () => number {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
 }
 
 /**

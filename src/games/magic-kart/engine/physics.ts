@@ -143,7 +143,8 @@ function settleOnTrack(kart: Kart, track: Track, vF: number, dt: number, emit: E
     }
     kart.airborne = true;
     kart.airTime = 0;
-    if (ground !== null) emit({ type: "jump", kart: kart.id });
+    // Off a ramp lip the kart is still climbing; rolling off an edge it is not.
+    if (kart.vy > 0.5) emit({ type: "jump", kart: kart.id });
     return;
   }
   kart.airTime += dt;
