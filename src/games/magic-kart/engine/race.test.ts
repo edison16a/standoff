@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { RaceEvent } from "./events";
 import { createKart } from "./kart";
-import { checkpointSpacing, currentLap, rank, updateProgress, updateWrongWay } from "./race";
+import { checkpointSpacing, currentLap, rank, updateProgress, updateStuck, updateWrongWay } from "./race";
 import { Track } from "./track";
 import { OVAL } from "./test-track";
 import { RACE } from "./tuning";
@@ -75,5 +75,26 @@ describe("wrong way", () => {
     expect(kart.race.wrongWay).toBe(false);
     for (let i = 0; i < 10; i++) updateWrongWay(kart, track, 0.2);
     expect(kart.race.wrongWay).toBe(true);
+  });
+});
+
+describe("stuck karts", () => {
+  it("are put back after a while of pressing on without getting anywhere, even while bouncing about", () => {
+    const kart = createKart(0, "pip", 1, track, 40, 0);
+    kart.vx = 6;
+    let stuck = false;
+    for (let t = 0; t < 4; t += 0.1) stuck = updateStuck(kart, true, 0.1);
+    expect(stuck).toBe(false);
+    for (let t = 0; t < 2; t += 0.1) stuck = updateStuck(kart, true, 0.1);
+    expect(stuck).toBe(true);
+  });
+
+  it("are left alone while getting on, or while not trying", () => {
+    const kart = createKart(0, "pip", 1, track, 40, 0);
+    for (let t = 0; t < 10; t += 0.1) {
+      kart.race.progress += 1;
+      expect(updateStuck(kart, true, 0.1)).toBe(false);
+    }
+    for (let t = 0; t < 10; t += 0.1) expect(updateStuck(kart, false, 0.1)).toBe(false);
   });
 });

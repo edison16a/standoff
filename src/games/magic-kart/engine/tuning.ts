@@ -61,8 +61,8 @@ export const RACE = {
   finishGrace: 30,
   /** Once every player is home, the computers have this long left. */
   computerGrace: 7,
-  /** Seconds of pressing the pedal without moving before a kart is put back. */
-  stuckAfter: 3,
+  /** Seconds of pressing the pedal without getting anywhere before a kart is put back. */
+  stuckAfter: 5,
   /** Seconds going the wrong way before the warning shows. */
   wrongWayAfter: 1.1,
   cubeRespawn: 4,

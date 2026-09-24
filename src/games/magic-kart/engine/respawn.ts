@@ -36,6 +36,7 @@ export function respawn(kart: Kart, track: Track, spot: { s: number; d: number }
   kart.timers.grace = EFFECTS.respawnGrace;
   kart.loc = track.locate(p.x, p.z, track.indexAt(spot.s));
   kart.race.stuckTime = 0;
+  kart.race.stallFrom = -Infinity;
   // The jump in position is not driving: checkpoints must not see it as a crossing.
   kart.race.since = track.forward(kart.race.lastCheckpointS, kart.loc.s);
   kart.race.wrongWayTime = 0;

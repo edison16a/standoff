@@ -39,6 +39,8 @@ export interface KartRace {
   wrongWay: boolean;
   wrongWayTime: number;
   stuckTime: number;
+  /** Progress when the kart last got anywhere, for spotting a kart that is stuck. */
+  stallFrom: number;
   /** Last spot the kart was safely on the road, for respawns. */
   safeS: number;
   safeD: number;
@@ -123,6 +125,7 @@ export function createKart(id: number, character: CharacterId, seat: number | nu
       wrongWay: false,
       wrongWayTime: 0,
       stuckTime: 0,
+      stallFrom: -Infinity,
       safeS: loc.s,
       safeD: loc.d,
     },

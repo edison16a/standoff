@@ -19,10 +19,11 @@ export function buildRoad(track: Track, theme: Theme): THREE.Group {
   const hw = track.halfWidth;
   const edge = track.edge;
   const inGap = (s: number) => track.inGap(s);
-  const vertexLit = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, side: THREE.DoubleSide });
+  // The studio reflection is for the karts; the road and barriers barely take it, or they wash out.
+  const vertexLit = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, side: THREE.DoubleSide, envMapIntensity: 0.25 });
 
   const road = sweep(track, [{ d: -hw, y: 0.01 }, { d: hw, y: 0.01 }], { skip: inGap, uvLength: 16 });
-  const tarmac = new THREE.MeshStandardMaterial({ map: roadTexture(theme), roughness: theme.floating ? 0.35 : 0.9, metalness: theme.floating ? 0.3 : 0 });
+  const tarmac = new THREE.MeshStandardMaterial({ map: roadTexture(theme), roughness: theme.floating ? 0.45 : 0.9, metalness: theme.floating ? 0.2 : 0, envMapIntensity: 0.12 });
   group.add(new THREE.Mesh(road, tarmac));
 
   const kerbColors = theme.kerb;

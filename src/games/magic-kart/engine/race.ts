@@ -87,13 +87,20 @@ export function updateWrongWay(kart: Kart, track: Track, dt: number): void {
 }
 
 /**
- * Seconds spent trying to move without moving. Beached on something or
- * wedged against a barrier, the kart is put back on the road.
+ * Seconds spent trying to get on without getting anywhere. Wedged on a
+ * barrier, beached, or bouncing off the same obstacle again and again,
+ * the kart is put back on the road. Measured by progress along the lap
+ * rather than speed, so bouncing about in one spot still counts.
  */
 export function updateStuck(kart: Kart, trying: boolean, dt: number): boolean {
-  const stalled = trying && speedOf(kart) < 1.5 && kart.timers.stun <= 0 && !kart.race.finished;
-  kart.race.stuckTime = stalled ? kart.race.stuckTime + dt : 0;
-  return kart.race.stuckTime > RACE.stuckAfter;
+  const r = kart.race;
+  if (!trying || r.finished || kart.timers.stun > 0 || r.progress > r.stallFrom + 4) {
+    r.stuckTime = 0;
+    r.stallFrom = r.progress;
+    return false;
+  }
+  r.stuckTime += dt;
+  return r.stuckTime > RACE.stuckAfter;
 }
 
 /** Remembers where the kart last had its wheels safely on the road. */
