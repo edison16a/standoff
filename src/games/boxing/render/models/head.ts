@@ -106,15 +106,39 @@ export function buildHead(m: BoxerMaterials): HeadParts {
 }
 
 /** Hair with volume, for the styles that have it. A buzz cut is painted on the skin instead. */
-function hairShell(m: BoxerMaterials): THREE.Mesh | null {
+function hairShell(m: BoxerMaterials): THREE.Object3D | null {
   const style = m.look.hairStyle;
   if (style === "spikes") {
-    const offset = (theta: number, t: number) => {
-      const tufts = Math.max(0, Math.sin(theta * 7 + 0.5) * Math.sin(t * 26));
-      // Longer toward the crown and swept back.
-      return 0.012 + 0.028 * tufts * (1 - t) + (Math.cos(theta) > 0 ? 0.004 : 0.01);
-    };
-    return new THREE.Mesh(sculpt(HEAD_RINGS, { rows: 22, segments: 56, until: (th) => hairline(th) * 0.96, offset }), m.hair);
+    // A close cap of hair with sharp tufts standing out of it, swept up and back.
+    const group = new THREE.Group();
+    group.add(new THREE.Mesh(sculpt(HEAD_RINGS, { rows: 22, segments: 48, until: (th) => hairline(th) * 0.96, offset: () => 0.009 }), m.hair));
+    const cone = new THREE.ConeGeometry(0.017, 0.055, 5);
+    cone.translate(0, 0.022, 0);
+    const spots: THREE.Vector3[] = [];
+    for (let row = 0; row < 6; row++) {
+      const count = 7 + row * 3;
+      for (let i = 0; i < count; i++) {
+        const theta = -Math.PI + ((i + (row % 2) * 0.5) / count) * Math.PI * 2;
+        const t = 0.04 + row * 0.06;
+        if (t > hairline(theta) * 0.85) continue;
+        spots.push(new THREE.Vector3(theta, t, 0));
+      }
+    }
+    const tufts = new THREE.InstancedMesh(cone, m.hair, spots.length);
+    const up = new THREE.Vector3(0, 1, 0);
+    const centre = new THREE.Vector3(0, 0.08, -0.01);
+    const matrix = new THREE.Matrix4();
+    const q = new THREE.Quaternion();
+    spots.forEach((spot, i) => {
+      const at = facePoint(spot.x, spot.y, 0.004);
+      const out = at.clone().sub(centre).normalize().add(new THREE.Vector3(0, 0.35, -0.45)).normalize();
+      q.setFromUnitVectors(up, out);
+      const size = 0.8 + 0.4 * Math.abs(Math.sin(i * 12.9898));
+      matrix.compose(at, q, new THREE.Vector3(size, size, size));
+      tufts.setMatrixAt(i, matrix);
+    });
+    group.add(tufts);
+    return group;
   }
   if (style === "curls") {
     const offset = (theta: number, t: number) => 0.018 + 0.006 * Math.sin(theta * 23) * Math.sin(t * 60) + 0.004 * Math.cos(theta * 11 + t * 31);

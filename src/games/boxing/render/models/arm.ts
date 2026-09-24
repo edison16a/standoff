@@ -22,8 +22,10 @@ const UPPER: readonly Ring[] = [
 
 const UPPER_MUSCLE: readonly Bump[] = [
   // Biceps in front, the horseshoe of the triceps behind.
-  { theta: 0, t: 0.5, width: 0.7, height: 0.2, amount: 0.014 },
-  { theta: Math.PI, t: 0.35, width: 0.8, height: 0.22, amount: 0.012 },
+  { theta: 0, t: 0.5, width: 0.7, height: 0.2, amount: 0.02 },
+  { theta: Math.PI, t: 0.35, width: 0.8, height: 0.22, amount: 0.017 },
+  // The long head of the biceps and the brachialis showing on the outside.
+  { theta: 1.3, t: 0.62, width: 0.35, height: 0.15, amount: 0.008, mirror: true },
 ];
 
 const FORE: readonly Ring[] = [
@@ -63,7 +65,10 @@ export function buildUpperArm(m: BoxerMaterials, side: 1 | -1): THREE.Group {
 }
 
 export function buildForearm(m: BoxerMaterials): THREE.Mesh {
-  const bumps: Bump[] = [{ theta: 0.8, t: 0.22, width: 0.6, height: 0.2, amount: 0.006 }];
+  const bumps: Bump[] = [
+    { theta: 0.8, t: 0.22, width: 0.6, height: 0.2, amount: 0.011 },
+    { theta: -0.6, t: 0.3, width: 0.5, height: 0.22, amount: 0.007 },
+  ];
   return new THREE.Mesh(sculpt(scaled(FORE, m.look.bulk), { rows: 12, segments: 20, bumps }), m.skin);
 }
 

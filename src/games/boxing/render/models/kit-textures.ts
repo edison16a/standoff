@@ -59,8 +59,8 @@ export function waistbandTexture(look: Look): THREE.CanvasTexture {
     ctx.textBaseline = "middle";
     ctx.fillText(look.nickname.toUpperCase(), 512, 66);
     ctx.font = "900 44px Impact, 'Arial Black', sans-serif";
-    ctx.fillText(look.name.split(" ")[1]!.toUpperCase(), 0, 66);
-    ctx.fillText(look.name.split(" ")[1]!.toUpperCase(), 1024, 66);
+    ctx.fillText((look.name.split(" ")[1] ?? look.name).toUpperCase(), 0, 66);
+    ctx.fillText((look.name.split(" ")[1] ?? look.name).toUpperCase(), 1024, 66);
   });
 }
 

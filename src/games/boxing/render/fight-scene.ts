@@ -109,7 +109,7 @@ export class FightScene {
     this.confetti.update(dt, time);
   }
 
-  onEvent(event: MatchEvent, match: Match): void {
+  onEvent(event: MatchEvent): void {
     for (const animator of this.animators) animator.onEvent(event);
     if (event.type === "hit") {
       const power = event.damage / 6 + (event.counter ? 0.6 : 0);
@@ -124,11 +124,6 @@ export class FightScene {
     if (event.type === "over") {
       this.excite = 1;
       this.arena.burst(40);
-      const winner = event.result.winner;
-      if (winner !== null) {
-        const spot = match.footwork.spots[winner];
-        this.confetti.burst(spot.x, spot.z);
-      }
     }
   }
 
@@ -149,9 +144,10 @@ export class FightScene {
     return this.models[id].arms[hand].end.getWorldPosition(out);
   }
 
-  setViewHeight(pixels: number): void {
-    this.arena.setViewHeight(pixels);
-    this.fx.setViewHeight(pixels);
+  /** A view's focal length and size in pixels, so sprites and streaks are sized right in it. */
+  setView(focal: number, width: number, height: number): void {
+    this.arena.setViewHeight(focal);
+    this.fx.setView(focal, width, height);
   }
 
   dispose(): void {

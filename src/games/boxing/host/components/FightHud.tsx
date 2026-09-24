@@ -53,6 +53,7 @@ export function FightHud() {
           <span className="bx-paused__big">{Math.ceil(hud.resumeIn)}</span>
         </div>
       )}
+      {hud.stage === "replay" && <div className="bx-letterbox" />}
       {hud.stage === "replay" && (
         <div className="bx-replay">
           <span className="bx-replay__tag">Replay</span>
@@ -72,6 +73,7 @@ function ViewHud({ hud, me, split }: { hud: Hud; me: 0 | 1; split: boolean }) {
   const left = split ? (me === 0 ? "0%" : "50%") : "0%";
   return (
     <div className="bx-view" style={{ left, width: split ? "50%" : "100%" }}>
+      {mine.hurt > 0 && hud.stage === "fight" && <div key={mine.hurt} className="bx-hurt" />}
       {hud.stage === "fight" && (
         <div className="bx-bars">
           <Bar fighter={mine} own label={split ? `Player ${me + 1}` : "You"} />

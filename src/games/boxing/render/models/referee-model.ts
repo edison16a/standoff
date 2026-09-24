@@ -54,6 +54,9 @@ export function buildReferee(): BoxerModel {
     arm.end.add(fist);
     const leg = model.legs[hand];
     dress(leg.root, trousers);
+    // Trousers run straight down: the flared trunk leg a boxer wears on each thigh is hidden.
+    const flare = leg.root.children[0]?.children[1];
+    if (flare) flare.visible = false;
   }
   for (const child of model.hips.children) {
     if (child !== model.spine) dress(child, trousers);

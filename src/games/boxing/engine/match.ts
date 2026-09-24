@@ -184,7 +184,9 @@ export class Match {
     down.addRoundKnockdown(this.round);
     const final = down.knockdowns >= RULES.knockdownsToStop;
     down.down = { since: this.now, count: 0, nextCountAt: this.now + RULES.fallMs, raisedSince: null, risingAt: null, final };
-    for (const fighter of this.fighters) fighter.punch = null;
+    // The fallen boxer's own punch dies with them. The blow that did it follows through, so it
+    // reads on screen, but it has landed and nothing more can be thrown until the fight goes on.
+    down.punch = null;
     this.footwork.setMode("neutral", down.id);
     this.pending.push({ type: "knockdown", fighter: down.id, by: by.id, knockdowns: down.knockdowns });
     if (final) {

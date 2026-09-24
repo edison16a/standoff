@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { FaceTexture } from "./face-texture";
 import type { Look } from "./looks";
 import { gloveTexture, trunksTexture, waistbandTexture } from "./kit-textures";
+import { skinDetail } from "./skin-detail";
 
 /**
  * Every surface of one boxer. Skin is a physical material with a soft
@@ -32,12 +33,16 @@ export class BoxerMaterials {
       metalness: 0,
       clearcoat: 0.12,
       clearcoatRoughness: 0.35,
-      sheen: 0.5,
+      sheen: 0.25,
       sheenRoughness: 0.55,
       sheenColor: new THREE.Color("#ff9a80"),
     };
-    this.skin = new THREE.MeshPhysicalMaterial({ ...skin, color: look.skin });
-    this.head = new THREE.MeshPhysicalMaterial({ ...skin, color: "#ffffff", map: this.face.texture });
+    // Fine grain on the skin breaks up the highlights under the ring lights.
+    const grain = skinDetail();
+    this.textures.push(grain);
+    const detail = { normalMap: grain, normalScale: new THREE.Vector2(0.35, 0.35) };
+    this.skin = new THREE.MeshPhysicalMaterial({ ...skin, ...detail, color: look.skin });
+    this.head = new THREE.MeshPhysicalMaterial({ ...skin, ...detail, color: "#ffffff", map: this.face.texture });
     this.hair = new THREE.MeshStandardMaterial({ color: look.hair, roughness: 0.85 });
     const trunks = trunksTexture(look);
     const band = waistbandTexture(look);

@@ -288,3 +288,32 @@
   background: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.55) 100%);
   pointer-events: none;
 }
+
+.bx-trouble {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 520px;
+  padding: 28px 34px;
+  border: 3px solid var(--bx-red);
+  border-radius: 24px;
+  background: rgba(8, 6, 14, 0.94);
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+.bx-trouble h2 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.bx-trouble p {
+  margin: 0;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+}

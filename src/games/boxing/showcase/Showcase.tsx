@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
+import type * as THREE from "three";
 import type { ShowcaseView } from "@/platform/games/game-api";
 import type { MatchEvent } from "../engine/events";
 import { ShoulderCamera } from "../render/cameras/shoulder-camera";
@@ -12,8 +13,8 @@ import { CYCLE_S, Trailer } from "./trailer";
 import "../styles/showcase.css";
 
 const INPUT = { mirrors: [null, null], telegraph: [false, false] } as const;
-/** The stills freeze just after the knockout hook lands, with the sparks in the air. */
-const STILL_AT = 5.62;
+/** The stills freeze this long after the knockout hook lands, in slow motion seconds, with the sparks in the air. */
+const STILL_AFTER = 0.45;
 const STEP = 1 / 60;
 
 /**
@@ -38,7 +39,7 @@ export function Showcase({ view }: { view: ShowcaseView }) {
     let clock = 0;
     const hear = (events: MatchEvent[]) => {
       for (const event of events) {
-        scene.onEvent(event, trailer.match);
+        scene.onEvent(event);
         if (event.type === "hit") tv.shake.kick(Math.min(1.2, event.damage / 7));
         if (event.type === "knockdown") scene.arena.burst(45);
       }
@@ -46,19 +47,31 @@ export function Showcase({ view }: { view: ShowcaseView }) {
 
     let frame = 0;
     if (view !== "loop") {
-      // Plays the trailer forward to one moment without drawing, then holds it.
-      for (let c = 0; c <= STILL_AT; c += STEP) {
-        hear(trailer.advanceTo(c));
+      // Plays the trailer forward without drawing to just after the knockout blow lands, then holds it.
+      let landed = Infinity;
+      for (let c = 0; c <= Math.min(CYCLE_S, landed + STILL_AFTER); c += STEP) {
+        const events = trailer.advanceTo(c);
+        if (events.some((e) => e.type === "knockdown")) landed = c;
+        hear(events);
         clock += STEP * Trailer.speed(c);
         scene.update(trailer.match, INPUT, clock, STEP * Trailer.speed(c));
       }
       const camera = view === "icon" ? iconShot(trailer.match, tv) : posterShot(trailer.match, tv);
+      settle(renderer, scene, camera);
+      // A still only needs drawing again if the window changes size.
+      let drawn = "";
       const draw = () => {
-        renderer.render(scene, [{ rect: FULL, camera }]);
+        const size = `${canvas.clientWidth}x${canvas.clientHeight}`;
+        if (size !== drawn) {
+          drawn = size;
+          renderer.resize(canvas.clientWidth, canvas.clientHeight, 1);
+          renderer.render(scene, [{ rect: FULL, camera }]);
+        }
         frame = requestAnimationFrame(draw);
       };
       frame = requestAnimationFrame(draw);
     } else {
+      settle(renderer, scene, trailerShot(0, trailer.match, tv, shoulder, 0, true));
       const start = performance.now();
       let last = start;
       let lastCycle = -1;
@@ -100,6 +113,17 @@ export function Showcase({ view }: { view: ShowcaseView }) {
       )}
     </div>
   );
+}
+
+/**
+ * Draws one frame and waits for the GPU to finish it before the page
+ * carries on. The first frame compiles every shader, which on a slow
+ * machine can take longer than the capture tool waits for a screenshot.
+ */
+function settle(renderer: FightRenderer, scene: FightScene, camera: THREE.PerspectiveCamera): void {
+  renderer.render(scene, [{ rect: FULL, camera }]);
+  const gl = renderer.renderer.getContext();
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
 }
 
 function shotIndex(cycle: number): number {

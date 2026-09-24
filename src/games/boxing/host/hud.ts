@@ -19,6 +19,7 @@ export function hudFrom(driver: FightDriver, looks: readonly [Look, Look], banne
       counter: f.counterOpen(match.now) && !f.down,
       blocking: f.blocking(match.now),
       knockdowns: f.knockdowns,
+      hurt: match.fighters[id === 0 ? 1 : 0].stats.landed,
       human: driver.slots[id] !== null,
     };
   }) as [HudFighter, HudFighter];

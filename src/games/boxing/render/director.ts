@@ -40,6 +40,7 @@ export class Director {
   private replayImpactShown = false;
   private last = 0;
   private wasFighting = false;
+  private lastShot: Shot = "menu";
   /** Called at the moment the replayed blow lands, for its sound. */
   onReplayImpact: (() => void) | null = null;
 
@@ -62,7 +63,7 @@ export class Director {
   }
 
   onEvent(event: MatchEvent, match: Match): void {
-    this.scene.onEvent(event, match);
+    this.scene.onEvent(event);
     if (event.type === "hit") {
       const power = Math.min(1.3, event.damage / 8 + (event.counter ? 0.4 : 0));
       this.shoulders[event.target].shake.kick(0.35 + power);
@@ -90,6 +91,13 @@ export class Director {
       this.scene.update(match, { mirrors: input.mirrors, telegraph: [!input.humans[0], !input.humans[1]] }, time, dt);
       if (input.shot === "fight") this.recorder.record(match.now, [this.scene.animators[0].pose, this.scene.animators[1].pose]);
     }
+    // Confetti comes down on the winner once the replay is over, not during it.
+    if (input.shot === "celebrate" && this.lastShot !== "celebrate" && match.result?.winner != null) {
+      const spot = match.footwork.spots[match.result.winner];
+      this.scene.confetti.burst(spot.x, spot.z);
+      this.scene.arena.burst(30);
+    }
+    this.lastShot = input.shot;
     this.renderer.render(this.scene, this.views(input, dt, !!replaying));
   }
 

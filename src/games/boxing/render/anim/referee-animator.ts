@@ -27,7 +27,8 @@ export class RefereeAnimator {
   private readonly look = new SpringVector();
   private readonly bend = new Spring();
   private readonly count = new Spring();
-  private side = 1;
+  /** Which side of the pair he keeps to. The broadcast shots look from the other side, so he never blocks them. */
+  private side = -1;
 
   update(match: Match, time: number, dt: number): void {
     const [a, b] = match.footwork.spots;

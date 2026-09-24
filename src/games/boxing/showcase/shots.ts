@@ -39,8 +39,8 @@ export function trailerShot(cycle: number, match: Match, tv: TvCamera, shoulder:
 /** The icon's square key art: low and close as the hook lands, looking up at both boxers. */
 export function iconShot(match: Match, tv: TvCamera): THREE.PerspectiveCamera {
   const [a, b] = match.footwork.spots;
-  tv.setFov(40);
-  tv.sideOn(a, b, -0.35, 2.2, 1.05, 1.5, 0.55);
+  tv.setFov(42);
+  tv.sideOn(a, b, -0.22, 1.85, 1.15, 1.52, 0.6);
   return tv.camera;
 }
 

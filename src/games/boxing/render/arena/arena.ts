@@ -101,7 +101,7 @@ export class Arena {
   private flash(): void {
     const faces = this.crowd.faces;
     const face = faces[Math.floor(this.random() * faces.length)]!;
-    this.flashes.spawn({ x: face.x, y: face.y + 0.1, z: face.z, life: 0.12, size: 0.55 + this.random() * 0.4, color: "#f4f8ff", alpha: 1 });
+    this.flashes.spawn({ x: face.x, y: face.y + 0.1, z: face.z, life: 0.12, size: 0.22 + this.random() * 0.18, color: "#f4f8ff", alpha: 1 });
   }
 
   private keep<T extends { dispose(): void }>(thing: T): T {

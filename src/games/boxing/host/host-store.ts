@@ -15,6 +15,8 @@ export interface HudFighter {
   counter: boolean;
   blocking: boolean;
   knockdowns: number;
+  /** Clean punches taken so far. Each new one flashes the edges of this boxer's view. */
+  hurt: number;
   /** Played by a person, not the computer. */
   human: boolean;
 }

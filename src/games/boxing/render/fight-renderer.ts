@@ -31,7 +31,7 @@ export class FightRenderer {
   constructor(canvas: HTMLCanvasElement, options: { preserve?: boolean } = {}) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance", preserveDrawingBuffer: !!options.preserve });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    this.renderer.toneMappingExposure = 0.95;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.setScissorTest(true);
@@ -65,7 +65,7 @@ export class FightRenderer {
         view.camera.updateProjectionMatrix();
       }
       // Particle sizes follow the view's height in real pixels and its field of view.
-      scene.setViewHeight((h * px) / (2 * Math.tan(THREE.MathUtils.degToRad(view.camera.fov) / 2)));
+      scene.setView((h * px) / (2 * Math.tan(THREE.MathUtils.degToRad(view.camera.fov) / 2)), w * px, h * px);
       this.renderer.render(scene.scene, view.camera);
     }
   }

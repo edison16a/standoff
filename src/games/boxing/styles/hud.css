@@ -465,3 +465,49 @@
     animation: none;
   }
 }
+
+/* A red flash round the edges of the view of a boxer who just took a clean punch. */
+.bx-hurt {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(255, 0, 0, 0) 50%, rgba(220, 20, 40, 0.55) 100%);
+  animation: bx-hurt 0.45s ease-out forwards;
+}
+
+/* Cinema bars for the slow motion replay. */
+.bx-letterbox::before,
+.bx-letterbox::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 11%;
+  background: #000000;
+  animation: bx-bars 0.5s ease-out;
+}
+
+.bx-letterbox::before {
+  top: 0;
+}
+
+.bx-letterbox::after {
+  bottom: 0;
+}
+
+@keyframes bx-hurt {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes bx-bars {
+  from {
+    height: 0;
+  }
+  to {
+    height: 11%;
+  }
+}
