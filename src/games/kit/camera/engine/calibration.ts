@@ -1,5 +1,5 @@
 import type { Body } from "./body";
-import { span } from "./geometry";
+import { span, type Point } from "./geometry";
 import { LM } from "./landmarks";
 import { checkSpot, DEFAULT_SPOT_RULES, type Spot, type SpotIssue, type SpotRules } from "./spots";
 
@@ -49,8 +49,14 @@ export interface CalibrationProgress {
   baseline: Baseline | null;
 }
 
-/** Frames further apart than this count as this long, so one stall never fills the ring. */
-const MAX_STEP_MS = 120;
+/**
+ * Frames further apart than this count as this long, so one stall never
+ * fills the ring. It is generous enough for a slow machine tracking only
+ * a few frames a second, which still needs `minSamples` frames.
+ */
+const MAX_STEP_MS = 400;
+/** The head moving more than this between samples, in torso lengths, is moving whatever the frame rate. */
+const MAX_DRIFT = 0.12;
 const DEFAULT_ARM = 1.1;
 
 /**
@@ -63,6 +69,7 @@ export class BaselineCollector {
   private held = 0;
   private samples: Baseline[] = [];
   private last: number | null = null;
+  private lastHead: Point | null = null;
   private result: Baseline | null = null;
 
   constructor(
@@ -76,6 +83,7 @@ export class BaselineCollector {
     this.held = 0;
     this.samples = [];
     this.last = null;
+    this.lastHead = null;
     this.result = null;
   }
 
@@ -87,10 +95,15 @@ export class BaselineCollector {
     if (issue || !body) {
       this.held = 0;
       this.samples = [];
+      this.lastHead = null;
       return { phase: "find", progress: 0, issue, baseline: null };
     }
     const speed = Math.max(Math.hypot(body.velocity.torso.x, body.velocity.torso.y), Math.hypot(body.velocity.head.x, body.velocity.head.y));
-    if (speed > this.options.stillSpeed) {
+    // Velocities need frames close together. On a slow machine, how far the head moved since the last sample tells instead.
+    const before = this.lastHead;
+    this.lastHead = body.head;
+    const drift = before ? Math.hypot(((body.head.x - before.x) * body.aspect) / body.scale, (body.head.y - before.y) / body.scale) : 0;
+    if (speed > this.options.stillSpeed || drift > MAX_DRIFT) {
       const before = this.held;
       this.held = Math.max(0, this.held - step * 2);
       this.samples = before > 0 ? this.samples.slice(-Math.ceil((this.samples.length * this.held) / before)) : [];

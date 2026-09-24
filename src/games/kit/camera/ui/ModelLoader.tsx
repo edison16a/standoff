@@ -101,6 +101,8 @@ function modelText({ model }: KitStatus): string {
     case "idle":
       return "Waiting";
     case "downloading":
+      if (!model.total) return "Getting ready";
+      if (model.fromCache) return "Loading from this computer";
       return `Downloading ${mb(model.loaded)} of ${mb(model.total)} MB, just this once`;
     case "starting":
       return model.fromCache ? "Loaded from this computer, starting up" : "Downloaded, starting up";

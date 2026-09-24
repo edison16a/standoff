@@ -4,7 +4,7 @@ import type { MoveEvent, MoveState } from "../engine/gestures/moves";
 import type { Pose } from "../engine/landmarks";
 import { baselineFor } from "../engine/sequence";
 import { syntheticPose, type PoseSpec } from "../engine/synthetic";
-import { poseAt, timelineLength, type PoseKey } from "../engine/timeline";
+import { MOVES, poseAt, timelineLength, type PoseKey } from "../engine/timeline";
 import type { CameraKit } from "./camera-kit";
 import type { KitStatus } from "./kit-status";
 
@@ -30,6 +30,10 @@ export interface CameraKitTestHooks {
   events: MoveEvent[];
   /** Returns the moves so far and clears the list. */
   takeEvents(): MoveEvent[];
+  /** Ready made movements to play, like `timelines.jump()` or `timelines.punch({}, "left")`. */
+  timelines: typeof MOVES;
+  /** Every change of the model's status since the kit was made, so a test can see the download's progress. */
+  modelHistory: Pick<KitStatus["model"], "state" | "loaded" | "total" | "fromCache">[];
   kit: CameraKit;
 }
 
@@ -89,6 +93,14 @@ export function installTestHooks(kit: CameraKit): () => void {
     events.push(event);
     if (events.length > EVENT_LIMIT) events.splice(0, events.length - EVENT_LIMIT);
   });
+  const modelHistory: CameraKitTestHooks["modelHistory"] = [];
+  let lastModel = kit.getSnapshot().model;
+  const stopHistory = kit.subscribe(() => {
+    const model = kit.getSnapshot().model;
+    if (model === lastModel || modelHistory.length >= EVENT_LIMIT) return;
+    lastModel = model;
+    modelHistory.push({ state: model.state, loaded: model.loaded, total: model.total, fromCache: model.fromCache });
+  });
 
   const hooks: CameraKitTestHooks = {
     inject(slot, pose) {
@@ -121,11 +133,14 @@ export function installTestHooks(kit: CameraKit): () => void {
     moves: (slot) => kit.moves(slot),
     events,
     takeEvents: () => events.splice(0, events.length),
+    timelines: MOVES,
+    modelHistory,
     kit,
   };
   window.__cameraKit = hooks;
   return () => {
     stopEvents();
+    stopHistory();
     kit.setOverrides(null);
     if (window.__cameraKit === hooks) delete window.__cameraKit;
   };

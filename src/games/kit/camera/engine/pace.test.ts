@@ -16,6 +16,19 @@ describe("watching the model's pace", () => {
     expect(verdicts.indexOf(true)).toBe(24);
   });
 
+  it("decides early when the model is several times too slow", () => {
+    const guard = new PaceGuard({ warmupFrames: 5, windowFrames: 30, budgetMs: 50 });
+    const verdicts = Array.from({ length: 40 }, () => guard.record(300));
+    expect(verdicts.indexOf(true)).toBe(9);
+    expect(verdicts.filter(Boolean)).toHaveLength(1);
+  });
+
+  it("lets a hopelessly slow machine go on the first frame after the warm up", () => {
+    const guard = new PaceGuard({ warmupFrames: 3, windowFrames: 30, budgetMs: 50 });
+    const verdicts = Array.from({ length: 10 }, () => guard.record(4000));
+    expect(verdicts.indexOf(true)).toBe(3);
+  });
+
   it("counts frames per second and the mean inference time", () => {
     const meter = new RateMeter();
     let ready = false;

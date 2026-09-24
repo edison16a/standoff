@@ -28,6 +28,8 @@ export interface CameraCalibrateProps {
   extra?: { title: string; text?: string; render: (context: CalibrateExtraContext) => ReactNode };
   /** Everyone's baseline, player one first. They are also set on the kit already. */
   onDone: (baselines: Baseline[]) => void;
+  /** Each player's ring filling, for the game's own sound. */
+  onPlayerDone?: (slot: number) => void;
 }
 
 interface Row {
@@ -40,7 +42,7 @@ interface Row {
  * and still while your ring fills, then the game's own step if it has one.
  * Each player's baseline is set on the kit and handed to `onDone`.
  */
-export function CameraCalibrate({ kit, names, needs = "upper", extra, onDone }: CameraCalibrateProps) {
+export function CameraCalibrate({ kit, names, needs = "upper", extra, onDone, onPlayerDone }: CameraCalibrateProps) {
   const players = kit.players;
   const collectors = useMemo(
     () => kit.spots.map((spot) => new BaselineCollector(spot, { rules: { ...DEFAULT_CALIBRATION.rules, needs } })),
@@ -51,10 +53,10 @@ export function CameraCalibrate({ kit, names, needs = "upper", extra, onDone }: 
   const [baselines, setBaselines] = useState<Baseline[] | null>(null);
   const [finished, setFinished] = useState(false);
   const [fit, setFit] = useState<Fit | null>(null);
-  const onDoneRef = useRef(onDone);
+  const callbacks = useRef({ onDone, onPlayerDone });
   useEffect(() => {
-    onDoneRef.current = onDone;
-  }, [onDone]);
+    callbacks.current = { onDone, onPlayerDone };
+  }, [onDone, onPlayerDone]);
 
   useEffect(() => {
     let last = "";
@@ -62,7 +64,10 @@ export function CameraCalibrate({ kit, names, needs = "upper", extra, onDone }: 
     return kit.onFrame((frame) => {
       if (applied) return;
       const steps = collectors.map((collector, i) => collector.update(frame.bodies[i] ?? null, frame.time));
-      steps.forEach((step, i) => Object.assign(guides.current[i]!, { phase: step.phase, progress: step.progress }));
+      steps.forEach((step, i) => {
+        if (step.phase === "done" && guides.current[i]!.phase !== "done") callbacks.current.onPlayerDone?.(i + 1);
+        Object.assign(guides.current[i]!, { phase: step.phase, progress: step.progress });
+      });
       const next = steps.map((step) => ({ phase: step.phase, issue: step.issue }));
       const key = JSON.stringify(next);
       if (key !== last) {
@@ -80,9 +85,14 @@ export function CameraCalibrate({ kit, names, needs = "upper", extra, onDone }: 
   }, [kit, collectors]);
 
   const finish = useCallback(() => setFinished(true), []);
+  const reported = useRef(false);
+  const hasExtra = !!extra;
   useEffect(() => {
-    if (baselines && (finished || !extra)) onDoneRef.current(baselines);
-  }, [baselines, finished, extra]);
+    // Once only, however often the game re-renders with a new `extra`.
+    if (!baselines || reported.current || (hasExtra && !finished)) return;
+    reported.current = true;
+    callbacks.current.onDone(baselines);
+  }, [baselines, finished, hasExtra]);
 
   const inExtra = !!baselines && !!extra && !finished;
   const top = inExtra ? { title: extra.title, text: extra.text ?? "" } : heading(rows.map((row) => row.phase), players);

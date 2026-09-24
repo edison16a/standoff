@@ -75,6 +75,14 @@ describe("calibrating a player's baseline", () => {
     expect(done?.baseline?.centerX).toBeCloseTo(0.72, 3);
   });
 
+  it("still notices a player moving on a machine that tracks one frame a second", () => {
+    const collector = new BaselineCollector(left!);
+    const sway: PoseKey[] = [0, 1000, 2000, 3000, 4000, 5000].map((at, i) => ({ at, pose: { x: 0.28 + (i % 2 ? 0.04 : -0.04) } }));
+    const steps = run(collector, bodiesFrom(sway, { fps: 1, tail: 0 }));
+    expect(steps.some((step) => step.phase === "done")).toBe(false);
+    expect(steps.slice(1).every((step) => step.issue === "moving")).toBe(true);
+  });
+
   it("measures tall and short players in their own torso lengths", () => {
     const [solo] = spotsFor(1);
     const near = run(new BaselineCollector(solo!), bodiesFrom(still({ height: 0.85 }))).find((s) => s.baseline)!.baseline!;

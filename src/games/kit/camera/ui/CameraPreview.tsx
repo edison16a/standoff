@@ -12,7 +12,9 @@ export interface CameraPreviewProps {
   /** "cover" fills the box, cropping the edges. "contain" shows the whole picture. */
   fit?: "cover" | "contain";
   skeletons?: boolean;
-  /** Where each player should stand, with their ring. Read every frame, so it can change without a render. */
+  /** Draws an outline where each player should stand, in their colour. */
+  spots?: boolean;
+  /** Outlines with rings that fill, as calibration uses. Read every frame, so it can change without a render. */
   guides?: () => readonly GuideState[];
   className?: string;
   /** Overlays laid over the picture, like labels. */
@@ -26,7 +28,7 @@ export interface CameraPreviewProps {
  * in their colour. Drawing runs in its own animation loop from the kit's
  * latest frame, so React never re-renders for a moving player.
  */
-export function CameraPreview({ kit, fit: mode = "cover", skeletons = true, guides, className, children, onFit }: CameraPreviewProps) {
+export function CameraPreview({ kit, fit: mode = "cover", skeletons = true, spots = false, guides, className, children, onFit }: CameraPreviewProps) {
   const status = useKitStatus(kit);
   const boxRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -68,7 +70,8 @@ export function CameraPreview({ kit, fit: mode = "cover", skeletons = true, guid
         lastFit = key;
         onFitRef.current?.(fit);
       }
-      for (const guide of guidesRef.current?.() ?? []) {
+      const outlines = guidesRef.current?.() ?? (spots ? plainGuides(kit) : []);
+      for (const guide of outlines) {
         const spot = kit.spots[guide.slot - 1];
         if (spot) drawGuide(ctx, spot, guide, fit);
       }
@@ -79,7 +82,7 @@ export function CameraPreview({ kit, fit: mode = "cover", skeletons = true, guid
     };
     frame = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(frame);
-  }, [kit, mode, skeletons, videoWidth, videoHeight]);
+  }, [kit, mode, skeletons, spots, videoWidth, videoHeight]);
 
   return (
     <div ref={boxRef} className={`cam-preview ${className ?? ""}`}>
@@ -94,4 +97,9 @@ export function CameraPreview({ kit, fit: mode = "cover", skeletons = true, guid
       {children}
     </div>
   );
+}
+
+/** Every spot as an empty outline, with no ring filling. */
+function plainGuides(kit: CameraKit): GuideState[] {
+  return kit.spots.map((spot) => ({ slot: spot.slot, colour: playerColor(spot.slot), phase: "find", progress: 0 }));
 }

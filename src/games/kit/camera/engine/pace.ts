@@ -14,7 +14,13 @@ export interface PaceOptions {
   windowFrames: number;
 }
 
-export const DEFAULT_PACE: PaceOptions = { budgetMs: 55, warmupFrames: 15, windowFrames: 45 };
+export const DEFAULT_PACE: PaceOptions = { budgetMs: 55, warmupFrames: 3, windowFrames: 30 };
+
+/** A few frames this far over budget on average are enough to decide early. */
+const EARLY_FRAMES = 5;
+const EARLY_FACTOR = 4;
+/** One frame this far over budget after the warm up is enough on its own: the player is waiting. */
+const HOPELESS_FACTOR = 10;
 
 export class PaceGuard {
   private seen = 0;
@@ -34,6 +40,12 @@ export class PaceGuard {
     if (this.seen <= this.options.warmupFrames) return false;
     this.total += ms;
     this.counted++;
+    const { budgetMs } = this.options;
+    // Far over budget: no need to wait for the whole window.
+    if (ms > budgetMs * HOPELESS_FACTOR || (this.counted >= EARLY_FRAMES && this.total / this.counted > budgetMs * EARLY_FACTOR)) {
+      this.decided = true;
+      return true;
+    }
     if (this.counted < this.options.windowFrames) return false;
     const slow = this.total / this.counted > this.options.budgetMs;
     this.total = 0;

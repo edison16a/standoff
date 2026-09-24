@@ -17,7 +17,7 @@ export class CameraSource {
     private readonly store: StatusStore,
     private readonly onVideo: (video: HTMLVideoElement | null) => void,
   ) {
-    navigator.mediaDevices?.addEventListener?.("devicechange", this.onDevices);
+    if (typeof navigator !== "undefined") navigator.mediaDevices?.addEventListener?.("devicechange", this.onDevices);
   }
 
   get video(): HTMLVideoElement | null {
@@ -72,7 +72,7 @@ export class CameraSource {
   dispose(): void {
     this.attempt++;
     this.close();
-    navigator.mediaDevices?.removeEventListener?.("devicechange", this.onDevices);
+    if (typeof navigator !== "undefined") navigator.mediaDevices?.removeEventListener?.("devicechange", this.onDevices);
   }
 
   private async play(stream: MediaStream): Promise<HTMLVideoElement> {

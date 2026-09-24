@@ -1,5 +1,5 @@
 import type { PoseLandmarker } from "@mediapipe/tasks-vision";
-import { fetchCached } from "./asset-cache";
+import { fetchCached, isCached } from "./asset-cache";
 import { MODEL_FILES, runtimeFiles, type ModelVariant } from "./model-files";
 
 export type Delegate = "GPU" | "CPU";
@@ -40,8 +40,11 @@ export async function loadPoseModel({ variant, delegate, onProgress, signal }: L
   const files = [runtime.loader, runtime.binary, model];
   const total = files.reduce((sum, file) => sum + file.bytes, 0);
   const loaded = files.map(() => 0);
-  const report = (stage: ModelProgress["stage"], fromCache: boolean) =>
+  // Known up front, so the loader says "from this computer" instead of "downloading" on a second visit.
+  const fromCache = (await Promise.all(files.map(isCached))).every(Boolean);
+  const report = (stage: ModelProgress["stage"]) =>
     onProgress?.({ loaded: Math.min(total, loaded.reduce((a, b) => a + b, 0)), total, stage, fromCache });
+  report("download");
   const fetched = await Promise.all(
     files.map((file, i) =>
       fetchCached(
@@ -49,15 +52,14 @@ export async function loadPoseModel({ variant, delegate, onProgress, signal }: L
         (bytes) => {
           // A compressed download can report more than expected. Never let the bar run past full.
           loaded[i] = Math.min(bytes, file.bytes);
-          report("download", false);
+          report("download");
         },
         signal,
       ),
     ),
   );
-  const fromCache = fetched.every((file) => file.fromCache);
   loaded.forEach((_, i) => (loaded[i] = files[i]!.bytes));
-  report("start", fromCache);
+  report("start");
   const [loader, binary, weights] = fetched;
   const urls = [URL.createObjectURL(new Blob([loader!.bytes], { type: runtime.loader.type })), URL.createObjectURL(new Blob([binary!.bytes], { type: runtime.binary.type }))];
   try {

@@ -1,4 +1,5 @@
 import type { Pose } from "../engine/landmarks";
+import { softwareWebGl } from "../model/gpu-check";
 import type { ModelVariant } from "../model/model-files";
 import { loadPoseModel, type Delegate, type LoadedModel } from "../model/pose-model";
 import { Detector } from "./detector";
@@ -32,7 +33,9 @@ export class ModelRunner {
   /** Downloads and starts the model. Safe to call again after a failure, to retry. */
   load(): Promise<boolean> {
     if (this.model) return Promise.resolve(true);
-    this.loading ??= this.fetch(this.options.model === "lite" ? "lite" : "full", this.options.delegate, true).finally(() => (this.loading = null));
+    // On software WebGL the GPU path is the slow one, so the CPU goes first.
+    const delegate = this.options.delegate === "GPU" && softwareWebGl() ? "CPU" : this.options.delegate;
+    this.loading ??= this.fetch(this.options.model === "lite" ? "lite" : "full", delegate, true).finally(() => (this.loading = null));
     return this.loading;
   }
 
@@ -91,8 +94,11 @@ export class ModelRunner {
       poses: this.onPoses,
       rate: (fps, inferenceMs) => this.store.set({ fps, inferenceMs }),
       slow: () => {
-        // Too slow for the full model on this machine. The lite one downloads quietly while play goes on.
-        if (this.options.model === "auto" && this.model?.variant === "full") void this.fetch("lite", this.model.delegate, false);
+        // Too slow on this machine. Step down while play goes on: the lite model first, then the CPU,
+        // which beats a weak or emulated GPU on the lite model.
+        if (this.options.model !== "auto" || !this.model) return;
+        if (this.model.variant === "full") void this.fetch("lite", this.model.delegate, false);
+        else if (this.model.delegate === "GPU") void this.fetch("lite", "CPU", false);
       },
       failed: (error) => {
         console.error("Pose model stopped working", error);
