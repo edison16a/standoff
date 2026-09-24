@@ -17,6 +17,12 @@ interface Spark {
 
 /** Seconds of path kept behind the tip. */
 const TRAIL_S = 0.42;
+const SAMPLES = 28;
+
+/** A figure of eight, fast in the middle and slow at the turns, like a real swipe. */
+function swing(t: number, width: number, height: number): Point {
+  return { x: width / 2 + width * 0.38 * Math.sin(t * 2.6), y: height / 2 + height * 0.3 * Math.sin(t * 5.2 + 0.5), t };
+}
 
 /**
  * A little looping swipe on the phone that shows a blade style the way
@@ -24,7 +30,7 @@ const TRAIL_S = 0.42;
  * and what it throws off. Drawn in 2D so it is cheap on any phone.
  */
 export class BladePreview {
-  private readonly path: Point[] = [];
+  private path: Point[] = [];
   private readonly sparks: Spark[] = [];
 
   constructor(
@@ -34,11 +40,9 @@ export class BladePreview {
 
   draw(ctx: CanvasRenderingContext2D, width: number, height: number, time: number, dt: number): void {
     const look = BLADES[this.blade];
-    // A figure of eight, fast in the middle and slow at the turns, like a real swipe.
-    const x = width / 2 + width * 0.38 * Math.sin(time * 2.6);
-    const y = height / 2 + height * 0.3 * Math.sin(time * 5.2 + 0.5);
-    this.path.push({ x, y, t: time });
-    while (this.path.length > 2 && time - this.path[0]!.t > TRAIL_S) this.path.shift();
+    // The trail is sampled straight from the swing's path, so it stays a smooth curve even when the phone drops frames.
+    this.path = Array.from({ length: SAMPLES + 1 }, (_, i) => swing(time - TRAIL_S * (1 - i / SAMPLES), width, height));
+    const { x, y } = this.path[SAMPLES]!;
 
     const bg = ctx.createLinearGradient(0, 0, 0, height);
     bg.addColorStop(0, "#3b2211");
@@ -48,7 +52,8 @@ export class BladePreview {
     ctx.fillRect(0, 0, width, height);
 
     ctx.globalCompositeOperation = "lighter";
-    ctx.lineCap = "round";
+    // Butt ends, because round caps pile up where segments meet and burn the trail to white.
+    ctx.lineCap = "butt";
     const points = look.motion === "bolt" ? this.jagged() : this.path;
     const n = points.length;
     const scale = Math.min(width, height) / 90;
@@ -59,7 +64,7 @@ export class BladePreview {
         const b = points[i]!;
         const flicker = look.motion === "flame" ? 0.75 + Math.random() * 0.5 : 1;
         const glow = look.motion === "spectrum" ? spectrum(1 - k, time) : look.glow;
-        const [colour, width0, alpha] = pass === 0 ? [this.colour, 16, 0.25] : pass === 1 ? [glow, 9, 0.55] : [look.core, 3.2, 0.95];
+        const [colour, width0, alpha] = pass === 0 ? [this.colour, 15, 0.14] : pass === 1 ? [glow, 9, 0.5] : [look.core, 3, 0.9];
         ctx.strokeStyle = colour;
         ctx.globalAlpha = alpha * k;
         ctx.lineWidth = width0 * scale * Math.pow(k, 0.7) * flicker;
