@@ -1,0 +1,291 @@
+/* The overlay on each player's half while running: score, coins, power ups, shouts and the tutorial. */
+
+.ss-hud {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  pointer-events: none;
+}
+
+.ss-hud--2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.ss-hud--2 .ss-view:first-child {
+  border-right: 4px solid rgba(255, 255, 255, 0.9);
+}
+
+.ss-view {
+  position: relative;
+  overflow: hidden;
+}
+
+.ss-tag {
+  position: absolute;
+  top: 84px;
+  left: 20px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 20px;
+  font-weight: 900;
+  background: var(--pc);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+}
+
+.ss-hud--2 .ss-view:last-child .ss-tag {
+  top: 20px;
+}
+
+.ss-score {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ss-hud--1 .ss-score,
+.ss-hud--2 .ss-view:last-child .ss-score {
+  top: 84px;
+}
+
+.ss-score__value,
+.ss-coins span {
+  font: 900 44px/1 "Arial Black", var(--font-ui);
+  font-variant-numeric: tabular-nums;
+  -webkit-text-stroke: 3px #1d2a8a;
+  paint-order: stroke fill;
+  text-shadow: 0 4px 0 #1d2a8a;
+}
+
+.ss-mult {
+  padding: 4px 12px;
+  border: 3px solid #ffffff;
+  border-radius: 14px;
+  font: 900 26px/1 "Arial Black", var(--font-ui);
+  color: #1d2a8a;
+  background: #ffffff;
+}
+
+.ss-mult--hot {
+  background: #ffd21f;
+}
+
+.ss-coins {
+  position: absolute;
+  top: 140px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ss-hud--2 .ss-view:first-child .ss-coins {
+  top: 76px;
+}
+
+.ss-coins svg {
+  width: 40px;
+  height: 40px;
+}
+
+.ss-coins span {
+  font-size: 34px;
+  color: #ffd21f;
+}
+
+/* Each power up is a disc with a ring that empties as its time runs out. */
+.ss-powers {
+  position: absolute;
+  left: 20px;
+  bottom: 24px;
+  display: flex;
+  gap: 12px;
+}
+
+.ss-power {
+  width: 68px;
+  height: 68px;
+  padding: 12px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(15, 20, 60, 0.9) 58%, transparent 60%),
+    conic-gradient(var(--power) calc(var(--left) * 360deg), rgba(255, 255, 255, 0.2) 0);
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
+}
+
+.ss-power svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ss-banner {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  padding: 10px 28px;
+  border: 4px solid #ffffff;
+  border-radius: 20px;
+  font: 900 34px/1 "Arial Black", var(--font-ui);
+  white-space: nowrap;
+  color: #1d2a8a;
+  background: #ffd21f;
+  box-shadow: 0 6px 0 #1d2a8a;
+  transform: translateX(-50%);
+  animation: ss-pop 1.6s ease-out forwards;
+}
+
+@keyframes ss-pop {
+  0% {
+    transform: translateX(-50%) scale(0.3) rotate(-8deg);
+    opacity: 0;
+  }
+  12% {
+    transform: translateX(-50%) scale(1.15) rotate(3deg);
+    opacity: 1;
+  }
+  22%,
+  80% {
+    transform: translateX(-50%) scale(1) rotate(-2deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(-30px) scale(0.9);
+    opacity: 0;
+  }
+}
+
+.ss-away,
+.ss-crashed {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 32px;
+  border: 4px solid #ffffff;
+  border-radius: 26px;
+  font: 900 30px/1.1 "Arial Black", var(--font-ui);
+  text-align: center;
+  background: rgba(15, 20, 60, 0.88);
+  transform: translate(-50%, -50%);
+}
+
+.ss-away--ready {
+  background: rgba(47, 127, 224, 0.9);
+}
+
+.ss-crashed {
+  top: 36%;
+  border-color: var(--pc);
+  animation: ss-fade 0.3s ease-out;
+}
+
+.ss-crashed span {
+  font-size: 22px;
+  color: #ffd21f;
+}
+
+.ss-count {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  font: 900 180px/1 "Arial Black", var(--font-ui);
+  color: #ffffff;
+  -webkit-text-stroke: 8px #1d2a8a;
+  paint-order: stroke fill;
+  text-shadow: 0 10px 0 #1d2a8a;
+  transform: translate(-50%, -50%);
+  animation: ss-count 1s ease-out forwards;
+}
+
+.ss-count--go {
+  color: #ffd21f;
+}
+
+@keyframes ss-count {
+  from {
+    transform: translate(-50%, -50%) scale(1.8);
+    opacity: 0;
+  }
+  25% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+.ss-tut {
+  position: absolute;
+  inset: 0;
+}
+
+.ss-tut__title {
+  position: absolute;
+  top: 22%;
+  left: 0;
+  right: 0;
+  margin: 0;
+  font: 900 72px/1 "Arial Black", var(--font-ui);
+  text-align: center;
+  color: #ffd21f;
+  -webkit-text-stroke: 5px #1d2a8a;
+  paint-order: stroke fill;
+  text-shadow: 0 6px 0 #1d2a8a;
+}
+
+.ss-tut__hint {
+  position: absolute;
+  top: calc(22% + 86px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  text-align: center;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.ss-tut__list {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transform: translateX(-50%);
+}
+
+.ss-tut__list li {
+  padding: 8px 16px;
+  border: 3px solid rgba(255, 255, 255, 0.6);
+  border-radius: 999px;
+  font-size: 18px;
+  font-weight: 800;
+  white-space: nowrap;
+  background: rgba(15, 20, 60, 0.7);
+}
+
+.ss-tut__list .ss-tut__now {
+  border-color: #ffd21f;
+  animation: ss-pulse 0.7s ease-in-out infinite alternate;
+}
+
+.ss-tut__list .ss-tut__done {
+  color: #1d2a8a;
+  border-color: #ffffff;
+  background: #3ddc84;
+}
+
+.ss-skip {
+  position: absolute;
+  left: 50%;
+  top: 22px;
+  transform: translateX(-50%);
+  pointer-events: auto;
+}

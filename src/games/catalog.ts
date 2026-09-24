@@ -38,6 +38,7 @@ const LOADERS: Record<string, () => Promise<GameModule>> = {
   "shooting-gallery": () => import("./shooting-gallery").then((mod) => mod.game),
   "zombie-survival": () => import("./zombie-survival").then((mod) => mod.game),
   "magic-kart": () => import("./magic-kart").then((mod) => mod.game),
+  "subway-surfers": () => import("./subway-surfers").then((mod) => mod.game),
 };
 
 export function findGame(id: string): GameInfo | undefined {

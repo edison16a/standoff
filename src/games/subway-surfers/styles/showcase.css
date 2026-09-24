@@ -1,0 +1,54 @@
+.ss-showcase {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #2f8cff;
+}
+
+.ss-showcase__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ss-showcase--icon .ss-logo {
+  position: absolute;
+  left: 50%;
+  top: 5%;
+  transform: translateX(-50%) rotate(-5deg);
+  font-size: 128px;
+}
+
+/* Fat rounded letters with a thick outline and a hard drop shadow, like a sticker. */
+.ss-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: "Arial Black", "Arial Rounded MT Bold", Impact, sans-serif;
+  font-weight: 900;
+  font-size: 72px;
+  line-height: 0.86;
+  letter-spacing: -0.02em;
+  pointer-events: none;
+  user-select: none;
+}
+
+.ss-logo--small {
+  font-size: 44px;
+}
+
+.ss-logo__word {
+  display: block;
+  color: #ffd21f;
+  -webkit-text-stroke: 0.08em #1d2a8a;
+  paint-order: stroke fill;
+  text-shadow:
+    0 0.07em 0 #1d2a8a,
+    0 0.12em 0 #0e1550,
+    0 0.2em 0.25em rgba(0, 0, 0, 0.45);
+}
+
+.ss-logo__word--top {
+  color: #ffffff;
+  font-size: 0.78em;
+}

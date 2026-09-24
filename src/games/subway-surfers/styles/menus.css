@@ -1,0 +1,256 @@
+/* The lobby, the best runs table and the results, over the 3D view. */
+
+.ss-lobby {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 90px 24px 24px;
+  background: radial-gradient(ellipse at center, rgba(10, 14, 40, 0.25), rgba(10, 14, 40, 0.6));
+}
+
+.ss-lobby__card,
+.ss-results__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  max-width: 560px;
+  padding: 36px 44px;
+  border: 5px solid #ffffff;
+  border-radius: 36px;
+  background: linear-gradient(160deg, rgba(47, 127, 224, 0.94), rgba(29, 42, 138, 0.94));
+  box-shadow: 0 12px 0 rgba(10, 14, 60, 0.6), 0 30px 60px rgba(0, 0, 0, 0.35);
+}
+
+.ss-lobby__tagline {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.ss-lobby__count {
+  display: flex;
+  gap: 12px;
+}
+
+.ss-lobby__names {
+  display: flex;
+  gap: 14px;
+}
+
+.ss-name {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px 12px;
+  border: 3px solid;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ss-name__tag {
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.ss-name__input {
+  width: 190px;
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: 800 20px/1 var(--font-ui);
+  color: #1d2a8a;
+  background: #ffffff;
+}
+
+.ss-lobby__note {
+  margin: -6px 0 0;
+  font-size: 15px;
+  opacity: 0.85;
+}
+
+.ss-lobby__how {
+  display: flex;
+  gap: 18px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 16px;
+  text-align: center;
+}
+
+.ss-lobby__how b {
+  display: block;
+  font-size: 20px;
+  color: #ffd21f;
+}
+
+.ss-best {
+  min-width: 300px;
+  padding: 20px 24px;
+  border: 4px solid rgba(255, 255, 255, 0.85);
+  border-radius: 28px;
+  background: rgba(15, 20, 60, 0.82);
+}
+
+.ss-best__title {
+  margin: 0 0 10px;
+  font: 900 24px/1 "Arial Black", var(--font-ui);
+  color: #ffd21f;
+}
+
+.ss-best__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ss-best__row {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.ss-best__row--new {
+  color: #1d2a8a;
+  background: #ffd21f;
+  animation: ss-glow 0.8s ease-in-out infinite alternate;
+}
+
+.ss-best__place {
+  opacity: 0.7;
+}
+
+.ss-best__score {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes ss-glow {
+  to {
+    box-shadow: 0 0 18px #ffd21f;
+  }
+}
+
+.ss-results {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 24px;
+  background: rgba(10, 14, 40, 0.45);
+  animation: ss-fade 0.4s ease-out;
+}
+
+.ss-results__title {
+  margin: 0;
+  font: 900 56px/1 "Arial Black", var(--font-ui);
+  color: #ffd21f;
+  -webkit-text-stroke: 3px #1d2a8a;
+  paint-order: stroke fill;
+  text-shadow: 0 5px 0 #1d2a8a;
+}
+
+.ss-results__rows {
+  display: flex;
+  gap: 16px;
+}
+
+.ss-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 190px;
+  padding: 16px 20px;
+  border: 4px solid var(--pc);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.ss-result--win {
+  background: rgba(255, 210, 31, 0.25);
+  transform: scale(1.06);
+}
+
+.ss-result__name {
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.ss-result__score {
+  font: 900 44px/1 "Arial Black", var(--font-ui);
+  font-variant-numeric: tabular-nums;
+}
+
+.ss-result__meta {
+  font-size: 16px;
+  opacity: 0.85;
+}
+
+.ss-result__badge {
+  margin-top: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 900;
+  color: #1d2a8a;
+  background: #ffd21f;
+}
+
+.ss-results__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.ss-results__jump {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  animation: ss-pulse 1s ease-in-out infinite alternate;
+}
+
+.ss-confetti {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+@keyframes ss-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes ss-pulse {
+  to {
+    opacity: 0.55;
+  }
+}
+
+@media (max-width: 1000px) {
+  .ss-lobby,
+  .ss-results {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+}
