@@ -20,7 +20,7 @@ Phone side:
 const aim = new PhoneAim(room);           // reads the sensors, or falls back to dragging
 <AimCalibrate aim={aim} colour={playerColor(seat)} onDone={next} />
 aim.stream(true);                         // while playing, streams the aim at up to 60 Hz
-<FireButton label="Fire" onFire={() => aim.fire()} />
+<FireButton label="Fire" onFire={() => aim.fire()} onRelease={stopAuto} />   // onRelease also fires if it turns disabled while held
 aim.recenter();                           // a small button for when the gyro drifts
 <AimPad aim={aim}>{/* fire button */}</AimPad>   // only when aim.getSnapshot().source is "touch"
 aim.dispose();
@@ -34,7 +34,7 @@ Host side:
 const aim = new HostAim(room);
 aim.point(seat);                          // smoothed { x, y }, both -1 to 1, y up, or null when not aiming
 aim.onFire((seat, point) => ...);         // the exact aim of every trigger pull
-<AimOverlay aim={aim} players={room.players} dots />   // calibration targets, and laser dots unless dots={false}
+<AimOverlay aim={aim} players={room.players} dots targets />   // targets={false} hides calibration targets in cutscenes
 ```
 
 Screen points are WebGL clip space, so `raycaster.setFromCamera(new Vector2(point.x, point.y), camera)` works as is. Messages the kit sends all have kinds starting with `aim`. Games must not use that prefix for their own.

@@ -18,6 +18,8 @@ interface AimOverlayProps {
   players: () => readonly Player[];
   /** Draw each player's laser dot. Off for games that draw their own aim in 3D. */
   dots?: boolean;
+  /** Show calibration targets. Games can hide them during cutscenes and end screens. */
+  targets?: boolean;
 }
 
 /**
@@ -25,7 +27,7 @@ interface AimOverlayProps {
  * calibrates it shows the target they should point at, ringed in their
  * colour with their name. During play it draws every player's laser dot.
  */
-export function AimOverlay({ aim, players, dots = true }: AimOverlayProps) {
+export function AimOverlay({ aim, players, dots = true, targets = true }: AimOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // Read through a ref, so a new players function each render never restarts the drawing loop.
   const playersRef = useRef(players);
@@ -53,7 +55,7 @@ export function AimOverlay({ aim, players, dots = true }: AimOverlayProps) {
         const step = aim.step(player.seat);
         if (step && TARGETS[step]) waiting.set(step, [...(waiting.get(step) ?? []), player]);
       }
-      for (const [step, who] of waiting) drawTarget(ctx, toPixels(TARGETS[step]!, width, height), who, now);
+      if (targets) for (const [step, who] of waiting) drawTarget(ctx, toPixels(TARGETS[step]!, width, height), who, now);
       if (dots) {
         for (const player of everyone) {
           const point = aim.point(player.seat, now);
@@ -64,7 +66,7 @@ export function AimOverlay({ aim, players, dots = true }: AimOverlayProps) {
     };
     frame = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(frame);
-  }, [aim, dots]);
+  }, [aim, dots, targets]);
 
   return <canvas ref={canvasRef} className="aim-overlay" aria-hidden="true" />;
 }
