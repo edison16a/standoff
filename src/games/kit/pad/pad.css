@@ -48,6 +48,42 @@
   background: var(--pad-colour, var(--accent));
 }
 
+/* The stick at rest: the same base and knob, a touch quieter, with four small ticks round the ring. */
+.kit-stick__base--rest {
+  opacity: 0.9;
+  animation: kit-stick-settle 180ms ease-out;
+}
+
+.kit-stick__base--rest::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: conic-gradient(from -9deg, var(--tick) 0 18deg, transparent 18deg 90deg, var(--tick) 90deg 108deg, transparent 108deg 180deg, var(--tick) 180deg 198deg, transparent 198deg 270deg, var(--tick) 270deg 288deg, transparent 288deg);
+  -webkit-mask: radial-gradient(circle, transparent 52px, #000 53px);
+  mask: radial-gradient(circle, transparent 52px, #000 53px);
+  --tick: color-mix(in srgb, var(--pad-colour, var(--accent)) 70%, transparent);
+}
+
+.kit-stick__label {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 70px);
+  transform: translateX(-50%);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+@keyframes kit-stick-settle {
+  from {
+    opacity: 0.35;
+  }
+}
+
 .kit-pad-btn {
   display: grid;
   place-items: center;

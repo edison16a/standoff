@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { ShowcaseView } from "@/platform/games/game-api";
 import { STEP } from "../engine/tuning";
 import { CourtRenderer } from "../render/court-renderer";
+import { BotFilm } from "./bot-film";
 import { HighlightScript } from "./script";
 
 /** Where the highlight starts for each view, in seconds of the script. */
@@ -54,7 +55,7 @@ const STILL_CAMERA: Partial<Record<ShowcaseView, { pos: THREE.Vector3; look: THR
  */
 export class ShowcaseDirector {
   private readonly renderer: CourtRenderer;
-  private readonly script: HighlightScript;
+  private readonly script: HighlightScript | BotFilm;
   private readonly still: boolean;
   private last = -1;
   private carry = 0;
@@ -67,12 +68,13 @@ export class ShowcaseDirector {
 
   constructor(canvas: HTMLCanvasElement, readonly view: ShowcaseView) {
     this.renderer = new CourtRenderer(canvas);
-    this.script = new HighlightScript(LEAD[view]);
-    this.renderer.setMatch(this.script.match);
-    this.renderer.tv.fixed = STILL_CAMERA[view] ?? null;
     // Development aids: ?cam=x,y,z,lookX,lookY,lookZ,fov pins the camera for close looks at the models,
-    // and ?at=seconds holds a still at another moment of the film.
+    // ?at=seconds holds a still at another moment of the film, and ?bots=seed films a computer game instead.
     const params = new URLSearchParams(window.location.search);
+    const bots = params.get("bots");
+    this.script = bots === null ? new HighlightScript(LEAD[view]) : new BotFilm(Number(bots) || 1);
+    this.renderer.setMatch(this.script.match);
+    this.renderer.tv.fixed = bots === null ? (STILL_CAMERA[view] ?? null) : null;
     const cam = params.get("cam");
     if (cam) {
       const [x = 0, y = 0, z = 0, lx = 0, ly = 0, lz = 0, fov = 40] = cam.split(",").map(Number);

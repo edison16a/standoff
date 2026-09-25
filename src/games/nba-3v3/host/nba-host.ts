@@ -8,7 +8,8 @@ import { BUTTONS, type Button } from "../engine/types";
 import type { V2 } from "../engine/vec";
 import { phoneMessageSchema, type Phase, type PhoneMessage } from "../protocol";
 import { Buzzer } from "./buzzer";
-import { callout } from "./callouts";
+import { banner, type BannerText } from "./callouts";
+import { Commentary } from "./commentary";
 import { DemoGame } from "./demo";
 import { useNbaStore as store } from "./host-store";
 import { Lobby } from "./lobby";
@@ -33,6 +34,7 @@ export class NbaHost {
   private readonly pad: HostPad;
   private readonly phones: PhoneLink;
   private readonly buzzer: Buzzer;
+  private commentary = new Commentary((id) => this.nameOf(id));
   private readonly unsubscribe: () => void;
   private readonly unpress: () => void;
   private unlistenMatch: (() => void) | null = null;
@@ -109,6 +111,7 @@ export class NbaHost {
     if (this.phase === "countdown" || this.phase === "live") return;
     this.unlistenMatch?.();
     this.driver = new MatchDriver(this.lobby.entries());
+    this.commentary = new Commentary((id) => this.nameOf(id));
     this.unlistenMatch = this.driver.listen((event) => this.onMatchEvent(event));
     this.room.setPlaying(true);
     this.phones.forget();
@@ -161,16 +164,16 @@ export class NbaHost {
     if (event.type === "block") driver.slowMo(0.45, 0.25);
     if (event.type === "win") driver.slowMo(0.3, 0.8);
     if (event.type === "shot" && event.grade === "perfect" && m.athletes[event.id]?.seat !== null) this.audio.green();
-    const words = callout(event, m, (id) => this.nameOf(id), this.bannerKey);
-    if (words?.banner) this.showBanner(words.banner);
-    if (words?.say) this.audio.announcer.say(words.say, event.type === "dunk" || event.type === "score" && event.kind === "dunk" || event.type === "block" || event.type === "win" ? 2 : 1);
-    if (event.type === "score" || event.type === "win" || event.type === "go" || event.type === "check") this.refresh(performance.now());
+    const shown = banner(event, m, (id) => this.nameOf(id), this.bannerKey);
+    if (shown) this.showBanner(shown);
+    const line = this.commentary.onEvent(event, m);
+    if (line?.text) this.audio.announcer.say(line.text, line.priority);
+    if (event.type === "score" || event.type === "win" || event.type === "go" || event.type === "check" || event.type === "checkUp") this.refresh(performance.now());
   }
 
-  private showBanner(banner: NonNullable<ReturnType<typeof callout>>["banner"]): void {
-    if (!banner) return;
+  private showBanner(shown: BannerText): void {
     const key = ++this.bannerKey;
-    store.setState({ banner: { ...banner, key } });
+    store.setState({ banner: { ...shown, key } });
     if (this.bannerTimer) clearTimeout(this.bannerTimer);
     this.bannerTimer = setTimeout(() => {
       if (store.getState().banner?.key === key) store.setState({ banner: null });

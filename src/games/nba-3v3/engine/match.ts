@@ -3,10 +3,13 @@ import { pressDefend, pressPass, pressShoot, releaseShot, updateAction } from ".
 import { createAthlete, moveAthlete, separate } from "./athlete";
 import { updateBall } from "./ball";
 import { Brains } from "./bot/brains";
+import { updateDribbleHand } from "./dribble";
 import type { MatchEvent } from "./events";
 import { seeded, type Rng } from "./rng";
 import type { Outcome } from "./shot-model";
-import { placeForCheck, updateClock, updateDead, type CheckPlan } from "./rules";
+import { placeForCheck } from "./check-plan";
+import { stepCheckBall, updateCheck, updateDead, type CheckUp } from "./check-up";
+import { updateClock } from "./rules";
 import { RIM, RULES } from "./tuning";
 import type { Athlete, Ball, Button, Phase, TeamId } from "./types";
 import type { V2 } from "./vec";
@@ -49,8 +52,10 @@ export class Match {
   clockWarned = false;
   winner: TeamId | null = null;
   lastPass: { from: number; to: number; at: number } | null = null;
-  /** Where everyone lines up for the next check, while the ball is dead. */
-  checkPlan: CheckPlan | null = null;
+  /** The break after a basket or a turnover and the check up that ends it, while the ball is dead. */
+  checkUp: CheckUp | null = null;
+  /** The showcase turns the check up off to keep its highlight short. Real games always check. */
+  checkBeat = true;
   /** The next shot's outcome, set by the showcase to film a sure highlight. Real games leave it alone. */
   forced: Outcome | null = null;
   gamePoint: [boolean, boolean] = [false, false];
@@ -74,7 +79,7 @@ export class Match {
       shot: null, lastTouch: null, spin: 0, rimCd: 0,
     };
     this.brains = new Brains(this);
-    placeForCheck(this, this.offence, true);
+    placeForCheck(this, this.offence);
   }
 
   get events(): MatchEvent[] {
@@ -141,7 +146,8 @@ export class Match {
     if (this.phase === "countdown") this.countdown();
     if (this.phase === "countdown" || this.phase === "over") for (const a of this.athletes) a.move = { x: 0, z: 0 };
     if (this.phase === "live") this.brains.think(dt);
-    if (this.phase === "dead") updateDead(this);
+    if (this.phase === "dead") updateDead(this, dt);
+    if (this.phase === "check") updateCheck(this);
     for (const a of this.athletes) {
       a.stealCd = Math.max(0, a.stealCd - dt);
       a.blockCd = Math.max(0, a.blockCd - dt);
@@ -149,9 +155,10 @@ export class Match {
       a.whiff = Math.max(0, a.whiff - dt);
       updateAction(this, a, dt);
       moveAthlete(a, dt, this.ball.holder === a.id, this.facing(a), this.queue);
+      updateDribbleHand(this, a, dt);
     }
     separate(this.athletes, this.queue, this.bumpCd);
-    updateBall(this, dt);
+    if (!stepCheckBall(this, dt)) updateBall(this, dt);
     if (this.phase === "live") updateClock(this, dt);
   }
 
@@ -169,6 +176,13 @@ export class Match {
 
   /** What a standing player looks at: the rim with the ball, the ball on defence. */
   private facing(a: Athlete): V2 | null {
+    const check = this.phase === "check" ? this.checkUp : null;
+    if (check) {
+      // In the check the two at the top face each other and everyone else watches the ball.
+      const other = a.id === check.plan.checker ? check.plan.defender : a.id === check.plan.defender ? check.plan.checker : null;
+      if (other !== null) return this.athletes[other]!;
+      return { x: this.ball.pos.x, z: this.ball.pos.z };
+    }
     if (Math.hypot(a.vx, a.vz) > 1.2 && a.action.kind === "none") return null;
     if (a.action.kind === "shoot" || a.action.kind === "drive") return { x: RIM.x, z: RIM.z };
     if (this.ball.holder === a.id) return { x: RIM.x, z: RIM.z };

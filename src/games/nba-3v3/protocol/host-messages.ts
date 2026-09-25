@@ -25,6 +25,8 @@ export const courtSchema = z.object({
   /** The shot meter for this player: where the green sits and how wide it is, in milliseconds. */
   meter: z.object({ fullMs: z.number(), greenMs: z.number(), halfMs: z.number() }),
   onFire: z.boolean(),
+  /** The ball is being checked at the top; play starts when it is back with the checker. */
+  checking: z.boolean(),
   countdown: z.number().int().min(0).max(9).nullable(),
 });
 

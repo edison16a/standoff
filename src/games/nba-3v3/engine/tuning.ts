@@ -81,11 +81,29 @@ export const SHOT = {
 export const RULES = {
   target: 11,
   shotClock: 12,
-  /** The pause after a basket before the ball is checked again. */
-  deadTime: 2.1,
-  /** How long the check takes before play is live. */
-  checkTime: 0.8,
   countdown: 3,
+} as const;
+
+/** The break after a basket or a turnover, and the check up that ends it. */
+export const CHECK = {
+  /** Everyone takes in the moment before anyone moves. */
+  fetchAt: 0.55,
+  /** Walking pace to the spots, as a share of top speed. */
+  walk: 0.9,
+  onSpot: 0.35,
+  /** The player who picked the ball up passes it out to the checker after this long. */
+  outletAfter: 0.35,
+  minDead: 1,
+  /** A ball still out of bounds this long after the whistle is thrown back in. */
+  giveUp: 1.6,
+  /** Past this, everyone is put on their spot, so a lost ball never stalls the game. */
+  maxDead: 5,
+  /** The showcase skips the check and goes straight on after this long. */
+  quick: 2.1,
+  /** In the check: the bounce to the defender, the bounce back, and play is live. */
+  firstPass: 0.35,
+  secondPass: 1.05,
+  beat: 1.75,
 } as const;
 
 export const DEFENCE = {

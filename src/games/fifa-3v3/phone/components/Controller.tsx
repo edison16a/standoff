@@ -33,7 +33,7 @@ export function Controller({ host }: { host: PhoneState }) {
   return (
     <div className="fifa-pad" style={{ "--team": team.color } as React.CSSProperties}>
       <div className="fifa-pad__stick">
-        <Joystick colour={team.color} onChange={(stick) => phone.stick(stick)} />
+        <Joystick alwaysShown colour={team.color} onChange={(stick) => phone.stick(stick)} />
       </div>
       <div className="fifa-pad__middle">
         <div className="fifa-pad__score" aria-label={`${TEAMS[0].name} ${host.score[0]}, ${TEAMS[1].name} ${host.score[1]}`}>

@@ -13,7 +13,7 @@ function Status({ court }: { court: CourtState }) {
   const flash = useControllerStore((s) => s.flash);
   const mine = TEAMS[court.team];
   const other = TEAMS[court.team === 0 ? 1 : 0];
-  const ball = court.hasBall ? "Your ball" : court.holder ? `${court.holder} has it` : "Loose ball";
+  const ball = court.checking ? (court.hasBall ? "Check ball" : "Check up") : court.hasBall ? "Your ball" : court.holder ? `${court.holder} has it` : "Loose ball";
   return (
     <div className="nba-status">
       <span className="nba-status__team">{mine.name}</span>
@@ -58,25 +58,25 @@ export function Controller({ court }: { court: CourtState }) {
   return (
     <div className="nba-pad" style={{ "--team": team.color } as React.CSSProperties}>
       <div className="nba-pad__stick">
-        <Joystick colour={team.color} onChange={(stick) => session.pad.setStick(stick)} />
+        <Joystick alwaysShown colour={team.color} onChange={(stick) => session.pad.setStick(stick)} />
       </div>
       <Status court={court} />
       <div className="nba-pad__buttons">
         <div className="nba-pad__pass">
-          <PadButton label={passLabel} colour="#3b82f6" disabled={!court.attacking} onDown={() => session.press("pass")} onUp={() => session.release("pass")}>
+          <PadButton label={passLabel} colour="#3b82f6" disabled={!court.attacking || court.checking} onDown={() => session.press("pass")} onUp={() => session.release("pass")}>
             {court.hasBall || !court.attacking ? <PassIcon /> : <CallIcon />}
             <span>{passLabel}</span>
           </PadButton>
         </div>
         <div className="nba-pad__defend">
-          <PadButton label={defendLabel} colour={court.canSteal ? "#a855f7" : "#ef4444"} onDown={() => session.press("defend")} onUp={() => session.release("defend")}>
+          <PadButton label={defendLabel} colour={court.canSteal ? "#a855f7" : "#ef4444"} disabled={court.checking} onDown={() => session.press("defend")} onUp={() => session.release("defend")}>
             {court.canSteal ? <StealIcon /> : <BlockIcon />}
             <span>{defendLabel}</span>
           </PadButton>
         </div>
         <div className="nba-pad__shoot">
           <ShotMeter meter={court.meter} />
-          <PadButton label="Shoot" size="lg" colour="#ff7a18" disabled={!court.hasBall} onDown={() => session.press("shoot")} onUp={() => session.release("shoot")}>
+          <PadButton label="Shoot" size="lg" colour="#ff7a18" disabled={!court.hasBall || court.checking} onDown={() => session.press("shoot")} onUp={() => session.release("shoot")}>
             <ShootIcon />
             <span>Shoot</span>
           </PadButton>
