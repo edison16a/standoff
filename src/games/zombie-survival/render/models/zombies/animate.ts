@@ -122,14 +122,22 @@ function fall(rig: Rig, z: Zombie): void {
   rig.body.rotation.x = (-Math.PI / 2) * down * 0.96;
   // Lying on its back, the body rests on its back rather than half in the road.
   rig.body.position.y = rig.dims.torsoD * 0.5 * down;
-  b.head.rotation.x = head ? -0.9 : -0.3;
+  // Arms fly up as it goes over, then drop flat above its head once it lands.
+  const settle = ease((time - speed) / 0.35);
+  // Set whole, so the lolling head of the walk stops with the body.
+  b.head.rotation.set(head ? -0.9 : -0.3, (z.seed - 0.5) * 0.8, 0);
   b.jaw.rotation.x = 0.6;
-  b.shoulderL.rotation.set(-2.6, 0, 0.5);
-  b.shoulderR.rotation.set(-2.2, 0, -0.7);
+  b.shoulderL.rotation.set(-2.6 - settle * 0.55, 0, 0.5 + settle * 0.3);
+  b.shoulderR.rotation.set(-2.2 - settle * 0.95, 0, -0.7 - settle * 0.2);
   b.elbowL.rotation.x = b.elbowR.rotation.x = -0.2;
+  // The legs are set whole, so no part of the walk keeps moving on a body.
+  b.hips.rotation.set(0, 0, 0);
+  b.hips.position.y = rig.dims.thigh + rig.dims.shin + rig.dims.foot - 0.02;
+  b.hipL.rotation.set(-0.4 * ease(time / speed), 0, 0.08);
+  b.hipR.rotation.set(-0.05, 0, -0.1);
   b.kneeL.rotation.x = 0.5 * ease(time / speed);
   b.kneeR.rotation.x = 0.2;
-  b.hipL.rotation.x = -0.4 * ease(time / speed);
+  b.ankleL.rotation.x = b.ankleR.rotation.x = 0.3;
   b.spine.rotation.set(0, 0, 0);
   if (time > 3.4) rig.body.position.y -= (time - 3.4) * 0.3;
 }
