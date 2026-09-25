@@ -38,6 +38,8 @@ export class HostAim {
       if (aim.success) return this.update(seat, aim.data);
       const fire = aimFireSchema.safeParse(payload);
       if (fire.success) {
+        // A player who is shooting has finished calibrating, whatever message went missing.
+        this.entry(seat).step = null;
         this.update(seat, fire.data);
         for (const listener of this.fireListeners) listener(seat, { x: fire.data.x, y: fire.data.y });
         return;

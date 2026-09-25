@@ -57,6 +57,10 @@ export function AimCalibrate({ aim, colour, onDone }: AimCalibrateProps) {
     aim.stream(current === "test");
   }, [aim, current]);
 
+  // Leaving the page any way at all, Back included, clears this player's
+  // target from the big screen, so it never lingers into play.
+  useEffect(() => () => aim.announce("done"), [aim]);
+
   const set = () => {
     if (current === "center" && aim.setCenter()) setStage("top-left");
     else if (current === "top-left" && aim.setCorner("top-left")) setStage("bottom-right");
