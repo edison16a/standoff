@@ -1,5 +1,6 @@
 import type { GameInfo, GameModule } from "@/platform/games/game-api";
 import { info as boxing } from "./boxing/info";
+import { info as brawlBattle } from "./brawl-battle/info";
 import { info as cubeGame } from "./cube-game/info";
 import { info as fencing } from "./fencing/info";
 import { info as fifa3v3 } from "./fifa-3v3/info";
@@ -26,6 +27,7 @@ export const GAMES: readonly GameInfo[] = [
   fifa3v3,
   cubeGame,
   fencing,
+  brawlBattle,
 ];
 
 /**
