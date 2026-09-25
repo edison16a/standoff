@@ -129,11 +129,14 @@ export class ShowcaseScene {
     return { pos, look, fov: 46 };
   }
 
-  /** Close on the shooter's strike from the lit near side, the ball leaving the boot. */
+  /**
+   * Close on the shooter's strike from the lit near side, the ball leaving
+   * the boot. It looks low, so the boot and ball sit above the logo.
+   */
   private heroPose(): Pose {
     const s = this.state.athletes[this.shooter() ?? 0]!;
     const dir = attackSign(s.team);
-    const look = new THREE.Vector3(s.pos.x + dir * 0.8, 1.15, s.pos.z + 0.3);
+    const look = new THREE.Vector3(s.pos.x + dir * 0.8, 0.6, s.pos.z + 0.3);
     const pos = new THREE.Vector3(s.pos.x + dir * 3.4, 0.9, s.pos.z + 2.3);
     return { pos, look, fov: 40 };
   }

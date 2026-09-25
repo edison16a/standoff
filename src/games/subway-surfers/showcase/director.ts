@@ -70,8 +70,8 @@ const PLACES: Record<Exclude<Angle, "chase">, { at: [number, number, number]; lo
   front: { at: [-1.9, 1.5, -4.4], look: [-0.2, 1.05, 0], fov: 42 },
   // Running alongside, a little ahead.
   side: { at: [4.2, 1.8, -3.5], look: [0, 1.1, -1.5], fov: 48 },
-  // Close and below, so the runner towers over the lens.
-  hero: { at: [1.5, 0.45, -3.1], look: [0.1, 1.35, 0], fov: 52 },
+  // Close and below, so the runner towers over the lens. It looks low, so the runner rides high above the icon's logo.
+  hero: { at: [1.5, 0.45, -3.1], look: [0.1, 0.5, 0], fov: 52 },
 };
 
 /**
