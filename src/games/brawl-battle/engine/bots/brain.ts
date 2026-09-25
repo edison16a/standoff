@@ -1,3 +1,5 @@
+import type { ChargeButton } from "../types";
+
 /**
  * What a computer fighter remembers between steps, and how good it is.
  * Bots see the match exactly as it is but only look again every few
@@ -20,12 +22,14 @@ export interface Skill {
   recovery: number;
   /** Chance a decision is a pause instead, which makes easy bots easy. */
   dither: number;
+  /** Chance to wind up a charged move on a hunch, when the target is not open. */
+  charge: number;
 }
 
 export const SKILLS: Record<Difficulty, Skill> = {
-  easy: { reaction: 26, aggression: 0.4, shield: 0, judgement: 0.35, recovery: 0.6, dither: 0.35 },
-  normal: { reaction: 13, aggression: 0.7, shield: 0.2, judgement: 0.65, recovery: 0.9, dither: 0.12 },
-  hard: { reaction: 6, aggression: 0.9, shield: 0.45, judgement: 0.9, recovery: 1, dither: 0.03 },
+  easy: { reaction: 26, aggression: 0.4, shield: 0, judgement: 0.35, recovery: 0.6, dither: 0.35, charge: 0.04 },
+  normal: { reaction: 13, aggression: 0.7, shield: 0.2, judgement: 0.65, recovery: 0.9, dither: 0.12, charge: 0.08 },
+  hard: { reaction: 6, aggression: 0.9, shield: 0.45, judgement: 0.9, recovery: 1, dither: 0.03, charge: 0.1 },
 };
 
 export interface BotBrain {
@@ -40,9 +44,11 @@ export interface BotBrain {
   shieldFor: number;
   /** Whether this trip off the stage has been judged yet, and whether it will be recovered well. */
   offstage: "none" | "good" | "poor";
+  /** A charged move being held: the button, how many frames to charge it, and which way to face on release. */
+  hold: { button: ChargeButton; frames: number; face: number } | null;
 }
 
 export function makeBrain(difficulty: Difficulty, slot: number): BotBrain {
   // Staggered so four bots do not all decide on the same frame.
-  return { difficulty, wait: 8 + slot * 3, target: null, x: 0, y: 0, shieldFor: 0, offstage: "none" };
+  return { difficulty, wait: 8 + slot * 3, target: null, x: 0, y: 0, shieldFor: 0, offstage: "none", hold: null };
 }

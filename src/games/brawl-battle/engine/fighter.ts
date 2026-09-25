@@ -94,6 +94,12 @@ function act(state: MatchState, f: Fighter, cmd: Command): void {
     case "jumpsquat":
       // Attack during the crouch cancels the jump: that is how up attacks come out.
       if (tryCharge(state, f) || tryAttack(state, f)) break;
+      // Attack held from the crouch keeps the feet down, so up with a held Attack charges the up move instead of jumping.
+      if (f.hold && f.hold.frames <= f.frame) {
+        f.action = "idle";
+        f.frame = 0;
+        break;
+      }
       if (f.frame > MOVEMENT.jumpSquat) leaveGround(state, f);
       break;
     case "land":

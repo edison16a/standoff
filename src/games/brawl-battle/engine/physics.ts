@@ -51,11 +51,9 @@ export function steer(f: Fighter, cmd: Command, dt: number): void {
     // Lunges keep sliding a little toward the walk the stick asks for; everything else stops quickly.
     else f.vel.x = approach(f.vel.x, stick * p.run * share, p.accel * (f.action === "attack" || f.action === "charge" ? 0.4 : 1) * dt);
   } else {
-    const launch = f.action === "hurt" ? LAUNCH.steer : 0;
-    const share = mobility(f, false);
-    // A rooted move in the air keeps its momentum; it just cannot be steered.
-    const control = f.action === "hurt" ? launch : share > 0 ? 1 : 0;
-    const top = f.action === "hurt" ? 1 : share;
+    const control = f.action === "hurt" ? LAUNCH.steer : f.action === "dizzy" ? 0 : 1;
+    // A rooted move cannot be steered; it drifts to a stop, as on the ground.
+    const top = f.action === "hurt" ? 1 : mobility(f, false);
     f.vel.x = approach(f.vel.x, stick * p.air * top, p.airAccel * control * dt);
     // Launches fly straight while they last; gravity takes over as they fade.
     if (!launched) {
