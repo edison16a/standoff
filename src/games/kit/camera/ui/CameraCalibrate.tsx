@@ -2,12 +2,12 @@
 import "../styles/calibrate.css";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { playerColor } from "@/games/kit/players";
-import { BaselineCollector, DEFAULT_CALIBRATION, type Baseline, type CalibrationPhase } from "../engine/calibration";
+import { BaselineCollector, type Baseline, type CalibrationPhase } from "../engine/calibration";
 import type { SpotIssue } from "../engine/spots";
 import type { CameraKit } from "../host/camera-kit";
 import { heading, instruction } from "./calibrate-text";
 import { CameraPreview } from "./CameraPreview";
-import type { GuideState } from "./draw";
+import type { GuideState } from "./draw-guide";
 import type { Fit } from "./fit";
 import { PRIVACY_NOTE } from "./ModelLoader";
 
@@ -22,8 +22,6 @@ export interface CameraCalibrateProps {
   kit: CameraKit;
   /** Names under each ring, player one first. Defaults to Player 1 and Player 2. */
   names?: readonly string[];
-  /** "full" also asks for the knees and feet in view, for games that read the legs. */
-  needs?: "upper" | "full";
   /** A game's own step after standing still, like showing a guard. It calls `done` when finished. */
   extra?: { title: string; text?: string; render: (context: CalibrateExtraContext) => ReactNode };
   /** Everyone's baseline, player one first. They are also set on the kit already. */
@@ -38,16 +36,15 @@ interface Row {
 }
 
 /**
- * Calibration for one or two players at once: find your spot, stand tall
- * and still while your ring fills, then the game's own step if it has one.
- * Each player's baseline is set on the kit and handed to `onDone`.
+ * Calibration for one or two players at once: find your spot, seen from
+ * the waist up, stand tall and still while your ring fills, then the
+ * game's own step if it has one. Where the head rests becomes the
+ * player's head line, drawn across their outline. Each player's baseline
+ * is set on the kit and handed to `onDone`.
  */
-export function CameraCalibrate({ kit, names, needs = "upper", extra, onDone, onPlayerDone }: CameraCalibrateProps) {
+export function CameraCalibrate({ kit, names, extra, onDone, onPlayerDone }: CameraCalibrateProps) {
   const players = kit.players;
-  const collectors = useMemo(
-    () => kit.spots.map((spot) => new BaselineCollector(spot, { rules: { ...DEFAULT_CALIBRATION.rules, needs } })),
-    [kit, needs],
-  );
+  const collectors = useMemo(() => kit.spots.map((spot) => new BaselineCollector(spot)), [kit]);
   const guides = useRef<GuideState[]>(kit.spots.map((spot) => ({ slot: spot.slot, colour: playerColor(spot.slot), phase: "find", progress: 0 })));
   const [rows, setRows] = useState<Row[]>(() => kit.spots.map(() => ({ phase: "find", issue: "missing" })));
   const [baselines, setBaselines] = useState<Baseline[] | null>(null);
@@ -66,7 +63,8 @@ export function CameraCalibrate({ kit, names, needs = "upper", extra, onDone, on
       const steps = collectors.map((collector, i) => collector.update(frame.bodies[i] ?? null, frame.time));
       steps.forEach((step, i) => {
         if (step.phase === "done" && guides.current[i]!.phase !== "done") callbacks.current.onPlayerDone?.(i + 1);
-        Object.assign(guides.current[i]!, { phase: step.phase, progress: step.progress });
+        const settling = step.phase === "hold" ? (frame.bodies[i]?.head.y ?? null) : null;
+        Object.assign(guides.current[i]!, { phase: step.phase, progress: step.progress, line: step.baseline?.headY ?? settling });
       });
       const next = steps.map((step) => ({ phase: step.phase, issue: step.issue }));
       const key = JSON.stringify(next);
