@@ -38,7 +38,9 @@ A touch lights the scorer's lamps and their half of the podium, the referee turn
 
 ## The camera
 
-A broadcast camera, side on and a little high, follows the midpoint between the fencers and pulls back as they part. When a touch lands the game drops to a fifth of its speed for a second and the camera cuts in close on the point of contact, swinging slowly round it. The burst goes off when the slow motion ends, then the camera eases back. At the end it circles the winner under confetti.
+A broadcast camera, side on and a little high, follows the midpoint between the fencers and pulls back as they part. When a touch lands the game drops to a fifth of its speed for a second and the camera cuts in close on the point of contact, from the scorer's side, so the lunge that made it is in the picture. It swings slowly round it. The burst goes off when the slow motion ends, then the camera eases back. At the end it circles the winner under confetti.
+
+A lunge fits the distance to the opponent. From far off it is a full lunge with the arm locked straight. Close in it is shorter, the arm stays bent and the point angles down, so the tip lands on the jacket instead of passing through it.
 
 ## Jabs and parries
 
@@ -81,7 +83,7 @@ Every value worth adjusting by feel is in the tuning drawer (the sliders icon at
 * `motion/`: the phone's sensor maths with no browser in sight: the sword pose, the strike detector, the gyroscope check, and synthetic sensor traces for the tests.
 * `rig/`: the pose of a fencer as a handful of numbers, the guard with its footwork, and the animator that blends lunges, parries, hits and the end of the match over the live sword.
 * `render/`: three.js. `fencer/` is the shared skeleton (joints solved by inverse kinematics from the pose), the anatomy, the four costumes and the weapons, all merged per bone. `hall/` is the room, the podium and strip, the scoring machine, the referee, the stands and crowd, the bunting and the lights. `effects/` has the blade trails, sparks, bursts and confetti. `preview/` draws the phone's 3D fencers, all through one WebGL context. Bloom and a vignette finish the picture.
-* `showcase/`: the scripted bout the home screen's media is captured from, judged by the real referee, and a development gallery (`/showcase/fencing?view=poster&fgallery=vale,iron&fact=parry&fcam=close1`). The icon and poster freeze the clash and drop the trails and rings, which smear in a still. The clip draws once per video frame at a lighter setting, so capturing it in software stays practical.
+* `showcase/`: the scripted bout the home screen's media is captured from, judged by the real referee, and a development gallery (`/showcase/fencing?view=poster&fgallery=vale,iron&fact=parry&fcam=close1`). The icon and poster freeze the clash and drop the trails and rings, which smear in a still. The clip draws once per video frame at a lighter setting, so capturing it in software stays practical. It counts its time from the moment the page says it is ready, runs the hall on its own clock, and with `?fseek=` starts part way in, so a slow machine can record it in pieces side by side and get the same frames.
 * `host/`, `phone/`, `protocol/`, `audio/`: the session on the computer, the phone's controller and setup pages, the messages between them, and the synthesized sound.
 
 `?fq=low` on the host's address draws the hall cheaply, for browser tests on software rendering.
