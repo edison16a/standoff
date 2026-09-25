@@ -36,7 +36,7 @@ export function FightHud() {
       {hud.count && (
         <div className="bx-count" key={hud.count.n}>
           <span className="bx-count__n">{hud.count.n}</span>
-          {!hud.count.rising && hud.fighters[hud.count.fighter].human && <span className="bx-count__hint">Raise both gloves to get up!</span>}
+          {!hud.count.rising && hud.fighters[hud.count.fighter].human && <span className="bx-count__hint">Drop your gloves, then raise both to get up!</span>}
         </div>
       )}
       {hud.away.length > 0 && (

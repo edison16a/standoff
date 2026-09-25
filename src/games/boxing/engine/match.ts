@@ -150,7 +150,7 @@ export class Match {
     down.stats.knockdowns++;
     down.addRoundKnockdown(this.round);
     const final = down.knockdowns >= RULES.knockdownsToStop;
-    down.down = { since: this.now, count: 0, nextCountAt: this.now + RULES.fallMs, raisedSince: null, risingAt: null, final };
+    down.down = { since: this.now, count: 0, nextCountAt: this.now + RULES.fallMs, raisedSince: null, risingAt: null, lowered: !down.input.raise, final };
     // The fallen boxer's own punch dies with them. The blow that did it follows through, so it
     // reads on screen, but it has landed and nothing more can be thrown until the fight goes on.
     down.punch = null;
@@ -179,7 +179,8 @@ export class Match {
       this.pending.push({ type: "resume" });
       return;
     }
-    if (state.count >= 1 && down.input.raise) {
+    if (!down.input.raise) state.lowered = true;
+    if (state.count >= 1 && state.lowered && down.input.raise) {
       state.raisedSince ??= this.now;
       if (this.now - state.raisedSince >= RULES.raiseHoldMs) {
         state.risingAt = this.now;

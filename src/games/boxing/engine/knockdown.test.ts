@@ -37,6 +37,18 @@ describe("knockdowns", () => {
     expect(ofType(run(match, RULES.fallMs - 100), "rise")).toHaveLength(0);
   });
 
+  it("needs a fresh raise, not gloves still held up from before the fall", () => {
+    const match = fighting();
+    hold(match, 1, { raise: true });
+    floor(match);
+    expect(match.phase).toBe("knockdown");
+    expect(ofType(run(match, RULES.fallMs + 3 * RULES.countMs), "rise")).toHaveLength(0);
+    hold(match, 1, {});
+    run(match, 100);
+    hold(match, 1, { guard: true, raise: true });
+    expect(ofType(run(match, RULES.raiseHoldMs + 100), "rise")).toHaveLength(1);
+  });
+
   it("is a knockout at ten", () => {
     const match = fighting();
     floor(match);

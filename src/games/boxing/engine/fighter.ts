@@ -24,6 +24,11 @@ export interface DownState {
   nextCountAt: number;
   /** When both gloves went up, while they stay up. */
   raisedSince: number | null;
+  /**
+   * The gloves have been down since the fall. Getting up takes a fresh
+   * raise, so a guard still held from before the knockdown does not count.
+   */
+  lowered: boolean;
   /** When getting up began, or null while still down. */
   risingAt: number | null;
   /** This was the third knockdown, and there is no getting up. */
