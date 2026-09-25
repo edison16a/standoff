@@ -97,7 +97,7 @@ export function buildAthlete(c: Character, team: Team, bodyMat: THREE.Material):
   // Torso: a jersey with the number printed round it, and bare shoulders and neck.
   const jersey = jerseyTexture(team, c.number, c.short);
   textures.push(jersey);
-  const jerseyMat = new THREE.MeshStandardMaterial({ map: jersey, roughness: 0.62 });
+  const jerseyMat = new THREE.MeshStandardMaterial({ map: jersey, roughness: 0.62, side: THREE.DoubleSide });
   materials.push(jerseyMat);
   const r = 0.17 * s * width;
   const profile = lathe(

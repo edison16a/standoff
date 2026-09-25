@@ -139,7 +139,8 @@ export class Hoop {
     this.rim.position.y = RIM.y - Math.abs(Math.sin(time * 38)) * 0.03 * wobble;
     this.flash = Math.max(0, this.flash - dt);
     const on = this.flash > 0 && Math.sin(time * 18) > -0.3;
-    this.edgeMat.emissive.copy(on ? this.flashColour : new THREE.Color("#000000"));
+    if (on) this.edgeMat.emissive.copy(this.flashColour);
+    else this.edgeMat.emissive.setRGB(0, 0, 0);
     this.edgeMat.emissiveIntensity = on ? 2.5 : 0;
     this.net.update(dt, ball);
   }

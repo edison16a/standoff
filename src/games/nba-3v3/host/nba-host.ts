@@ -143,6 +143,8 @@ export class NbaHost {
     if (phase !== this.lastPhase) {
       this.lastPhase = phase;
       this.audio.setPhase(phase);
+      // The results are a good moment for someone new to scan in for the next game.
+      if (phase === "over") this.room.setPlaying(false);
     }
     if (nowMs - this.lastHud >= HUD_MS) this.refresh(nowMs);
     return dt;

@@ -17,7 +17,13 @@ const ROW_DEPTH = 0.85;
 const ROW_RISE = 0.48;
 const SEAT = 0.62;
 
-const SHIRTS = [TEAMS[0].color, TEAMS[1].color, TEAMS[0].color, TEAMS[1].color, "#f8fafc", "#111827", "#facc15", "#22c55e", "#f97316", "#94a3b8"];
+// Team colours for the fans who dressed up, and mostly everyday clothes: darks, greys, denim and a few whites.
+// A crowd of bright primaries reads as a toy; muted stands make the lit court pop like a broadcast.
+const SHIRTS = [
+  TEAMS[0].color, TEAMS[1].color, TEAMS[0].dark, TEAMS[1].dark,
+  "#1f2937", "#111827", "#374151", "#4b5563", "#1e293b", "#3f3f46",
+  "#e5e7eb", "#cbd5e1", "#35507a", "#5b3a2e", "#6b7280", "#7c2d12",
+];
 const SKINS = ["#f1c7a3", "#d9a47a", "#a86f4c", "#6b4430", "#4b2e1e", "#e8b893"];
 
 /**
@@ -58,7 +64,7 @@ export class Crowd {
           m.scale(new THREE.Vector3(scale, scale, scale));
           m.setPosition(s.x + rx * side - fx * (back + 0.35), y + 0.1, s.z + rz * side - fz * (back + 0.35));
           // Higher rows sit further from the court lights, so they fade a little darker.
-          const dim = 0.75 - row * 0.02;
+          const dim = 0.62 - row * 0.022;
           const shirt = new THREE.Color(SHIRTS[Math.floor(rng() * SHIRTS.length)]!).multiplyScalar(dim);
           seats.push({ m, phase: rng() * Math.PI * 2, shirt, skin: new THREE.Color(SKINS[Math.floor(rng() * SKINS.length)]!).multiplyScalar(dim) });
         }

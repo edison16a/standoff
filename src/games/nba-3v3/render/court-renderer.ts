@@ -37,7 +37,8 @@ export class CourtRenderer {
   readonly tv = new TvCamera();
   private readonly effects: Effects;
   private readonly ball = new BallView();
-  private readonly bodyMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.58, metalness: 0.02 });
+  // Both faces are drawn, so the open ends of the shorts and the jersey never show as see through panels.
+  private readonly bodyMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.58, metalness: 0.02, side: THREE.DoubleSide });
   private readonly players = new THREE.Group();
   private readonly environment: THREE.Texture;
   private views: AthleteView[] = [];

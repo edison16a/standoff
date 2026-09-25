@@ -15,6 +15,13 @@ export interface Shot {
 
 const BROADCAST = { y: 6.4, z: 17.6, fov: 36 };
 
+// Scratch vectors, reused every frame so the camera makes no garbage.
+const wantPos = new THREE.Vector3();
+const wantLook = new THREE.Vector3();
+const scratch = new THREE.Vector3();
+const INTRO_POS = new THREE.Vector3(-14, 15, 2);
+const INTRO_LOOK = new THREE.Vector3(0, 2.2, 1.6);
+
 /**
  * The broadcast camera. It sits high behind the top of the key like a
  * TV end camera, pans with the ball and leans in as play gets near the
@@ -64,16 +71,14 @@ export class TvCamera {
     const fx = clamp(shot.focus.x * 0.5, -3, 3);
     const fz = clamp(shot.focus.z, 1.2, 10);
     const near = clamp((fz - 1.5) / 7.5, 0, 1);
-    const wantPos = new THREE.Vector3(fx * 0.75, BROADCAST.y * wide - (1 - near) * 0.6, BROADCAST.z * wide - (1 - near) * 1.2);
-    const wantLook = new THREE.Vector3(fx * 0.85, 1.9, lerp(3.4, 5.4, near));
+    wantPos.set(fx * 0.75, BROADCAST.y * wide - (1 - near) * 0.6, BROADCAST.z * wide - (1 - near) * 1.2);
+    wantLook.set(fx * 0.85, 1.9, lerp(3.4, 5.4, near));
 
     this.close += ((shot.dunker ? 1 : 0) - this.close) * k(shot.dunker ? 5 : 2.2);
     if (shot.dunker) this.closeSide = shot.dunker.x >= 0 ? 1 : -1;
     if (this.close > 0.01) {
-      const cp = new THREE.Vector3(this.closeSide * 3.4, 3.4, 7.4);
-      const cl = new THREE.Vector3(RIM.x + this.closeSide * 0.3, 2.7, RIM.z + 0.6);
-      wantPos.lerp(cp, this.close);
-      wantLook.lerp(cl, this.close);
+      wantPos.lerp(scratch.set(this.closeSide * 3.4, 3.4, 7.4), this.close);
+      wantLook.lerp(scratch.set(RIM.x + this.closeSide * 0.3, 2.7, RIM.z + 0.6), this.close);
     }
     if (shot.winners) {
       this.orbit += dt * 0.22;
@@ -86,8 +91,8 @@ export class TvCamera {
       // Open high over the far stands and swing down to the broadcast spot.
       const u = clamp(shot.intro / 2.8, 0, 1);
       const e = u * u * (3 - 2 * u);
-      wantPos.lerpVectors(new THREE.Vector3(-14, 15, 2), wantPos, e);
-      wantLook.lerpVectors(new THREE.Vector3(0, 2.2, 1.6), wantLook, e);
+      wantPos.lerpVectors(INTRO_POS, scratch.copy(wantPos), e);
+      wantLook.lerpVectors(INTRO_LOOK, scratch.copy(wantLook), e);
     }
     const rate = shot.winners ? 1.5 : shot.intro !== null ? 20 : 3;
     this.pos.lerp(wantPos, k(rate));

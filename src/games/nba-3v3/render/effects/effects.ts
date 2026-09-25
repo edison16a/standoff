@@ -86,10 +86,20 @@ export class Effects {
         if (a && e.hard) this.soft.burst({ x: a.x, y: 0.05, z: a.z, count: 20, colour: "#c8a47a", speed: [0.8, 2], up: 0.25, life: [0.4, 0.7], size: [0.08, 0.18], gravity: 1, drag: 0.1 }, this.rng);
         return;
       }
-      case "knockdown":
+      case "bump": {
+        // Bodies colliding hard shake a little sweat loose.
+        const a = m.athletes[e.a];
+        const o = m.athletes[e.b];
+        if (a && o && e.power > 0.3) this.sweat((a.x + o.x) / 2, 1.7, (a.z + o.z) / 2, 6 + e.power * 10);
+        return;
+      }
+      case "knockdown": {
+        const a = m.athletes[e.id];
+        if (a) this.sweat(a.x, 1.6, a.z, 18);
         this.tv.shake(0.4, 0.3);
         crowd.cheer(0.6);
         return;
+      }
       case "violation":
         hoop.light("#ff2d2d", 1.2);
         return;
@@ -113,6 +123,11 @@ export class Effects {
     this.fireworksLeft = 6;
     this.nextFirework = 0;
     this.flashes = 3;
+  }
+
+  /** Beads of sweat flicked off in every direction, catching the arena lights as they fall. */
+  private sweat(x: number, y: number, z: number, count: number): void {
+    this.soft.burst({ x, y, z, count: Math.round(count), colour: "#e0f2fe", speed: [1.2, 3], up: 0.45, life: [0.35, 0.6], size: [0.025, 0.045], gravity: 9 }, this.rng);
   }
 
   reset(): void {

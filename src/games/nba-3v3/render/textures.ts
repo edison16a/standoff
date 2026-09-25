@@ -134,7 +134,7 @@ export function suitesTexture(banners: readonly string[]): THREE.CanvasTexture {
   // The upper tier of fans: small dim heads in rows.
   for (let row = 0; row < 7; row++) {
     for (let x = 4; x < W; x += 9) {
-      ctx.fillStyle = `hsl(${Math.floor(rng() * 360)}, 35%, ${Math.floor(18 + rng() * 40)}%)`;
+      ctx.fillStyle = `hsl(${Math.floor(rng() * 360)}, 16%, ${Math.floor(14 + rng() * 34)}%)`;
       ctx.fillRect(x + (row % 2) * 4, 118 + row * 19, 6, 12);
     }
   }

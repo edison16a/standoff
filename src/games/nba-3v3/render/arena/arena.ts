@@ -101,7 +101,7 @@ export class Arena {
     const suites = suitesTexture([TEAMS[0].color, TEAMS[1].color, "#facc15", TEAMS[0].color, TEAMS[1].color, "#f8fafc"]);
     suites.repeat.set(3, 1);
     this.textures.push(suites);
-    const deckMat = new THREE.MeshBasicMaterial({ map: suites, side: THREE.BackSide, color: "#aab0c4", toneMapped: false });
+    const deckMat = new THREE.MeshBasicMaterial({ map: suites, side: THREE.BackSide, color: "#7a8096", toneMapped: false });
     this.owned.push(deckMat);
     const deck = new THREE.Mesh(new THREE.CylinderGeometry(27, 27, 5.5, 64, 1, true, Math.PI * 0.5, Math.PI * 1.4), deckMat);
     deck.position.set(0, 10.2, 6);

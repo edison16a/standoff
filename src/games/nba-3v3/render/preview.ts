@@ -17,7 +17,7 @@ export class AthletePreview {
   private readonly scene = new THREE.Scene();
   private readonly camera = new THREE.PerspectiveCamera(30, 1, 0.1, 40);
   private readonly turntable = new THREE.Group();
-  private readonly bodyMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.58 });
+  private readonly bodyMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.58, side: THREE.DoubleSide });
   private readonly ball: THREE.Mesh;
   private readonly canvas: HTMLCanvasElement;
   private model: AthleteModel | null = null;

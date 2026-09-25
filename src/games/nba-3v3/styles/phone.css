@@ -43,6 +43,29 @@
   .nba-phone .kit-steps__footer {
     grid-column: 1 / 3;
   }
+
+  /* A phone on its side has little height, so the cards shrink and Next stays on screen. */
+  .nba-phone .nba-pick__side {
+    gap: 6px;
+  }
+
+  .nba-phone .nba-pick__stats {
+    gap: 3px;
+  }
+
+  .nba-phone .nba-pick__card {
+    padding: 2px 2px 3px;
+  }
+
+  .nba-phone .nba-pick__card .nba-badge {
+    width: 30px;
+    height: 30px;
+  }
+
+  .nba-phone .nba-pick__blurb {
+    font-size: 12px;
+    line-height: 1.25;
+  }
 }
 
 /* Step one: pick a star */
