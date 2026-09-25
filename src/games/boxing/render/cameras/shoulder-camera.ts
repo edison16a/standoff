@@ -2,11 +2,19 @@ import * as THREE from "three";
 import { SpringVector } from "../anim/springs";
 import { Shake } from "./shake";
 
-/** Where the camera sits from its boxer, in the boxer's own frame: behind, over the right shoulder and up. */
-const BEHIND = 1.5;
-const SIDE = -0.68;
-const HEIGHT = 1.86;
+/**
+ * Where the camera sits from its boxer, in the boxer's own frame: behind,
+ * out past the right shoulder and up. It sits far enough out that the
+ * player's own boxer stands to the left of the picture and the opponent
+ * is seen whole in the middle, gloves and all, so every wind up can be
+ * read. A narrow split screen view sits a little closer in.
+ */
+const BEHIND = 1.35;
+const SIDE = { wide: -0.95, narrow: -0.8 };
+const HEIGHT = 1.95;
 const LOOK_HEIGHT = 1.3;
+/** The aim sits this far to the right of the opponent, so they fill the middle of the picture. */
+const LOOK_RIGHT = { wide: 0.15, narrow: 0.12 };
 /** How far from the middle the camera may go, inside the ropes. */
 const INSIDE = 2.55;
 
@@ -38,10 +46,12 @@ export class ShoulderCamera {
     // The boxer's right is the forward direction turned a quarter to the right.
     const rx = -fz;
     const rz = fx;
+    const shape = this.camera.aspect > 1.2 ? "wide" : "narrow";
     const back = BEHIND + 0.35 * Math.max(0, gap - 1.1) + 0.9 * down;
-    this.wantEye.set(me.x - fx * back - rx * SIDE, HEIGHT + 0.6 * down, me.z - fz * back - rz * SIDE);
-    // Aimed a little to the right of the opponent, so our own boxer sits to the left of the picture.
-    this.wantLook.set(me.x + fx * gap * 0.75 + rx * 0.12, LOOK_HEIGHT - 0.5 * down, me.z + fz * gap * 0.75 + rz * 0.12);
+    const side = SIDE[shape];
+    this.wantEye.set(me.x - fx * back - rx * side, HEIGHT + 0.6 * down, me.z - fz * back - rz * side);
+    const right = LOOK_RIGHT[shape];
+    this.wantLook.set(them.x + rx * right, LOOK_HEIGHT - 0.5 * down, them.z + rz * right);
     // Never outside the ropes: a rope right in front of the lens fills the picture.
     this.wantEye.x = Math.max(-INSIDE, Math.min(INSIDE, this.wantEye.x));
     this.wantEye.z = Math.max(-INSIDE, Math.min(INSIDE, this.wantEye.z));
