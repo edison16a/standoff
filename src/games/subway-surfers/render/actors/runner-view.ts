@@ -58,6 +58,13 @@ export class RunnerView {
     this.root.add(this.shadow);
   }
 
+  /** A new run starts from where it stands, with no lean or flip left over from the last. */
+  reset(run: Run): void {
+    this.lastX = run.runner.x;
+    this.lean = 0;
+    this.flip = 0;
+  }
+
   /** Poses the runner from their run. `mood` is for the moments with no run going. */
   update(run: Run | null, dt: number, time: number, mood: Mood = "run"): void {
     const s = run?.runner;

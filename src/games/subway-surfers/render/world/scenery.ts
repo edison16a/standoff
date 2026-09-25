@@ -66,8 +66,16 @@ export class Scenery {
   readonly group = new THREE.Group();
   private readonly chunks = new Map<number, THREE.Group>();
 
-  constructor(private readonly seed: number) {
+  constructor(private seed: number) {
     this.group.name = "scenery";
+  }
+
+  /** Starts over on another yard, for a new round in the same view. */
+  reseed(seed: number): void {
+    if (seed === this.seed) return;
+    this.seed = seed;
+    this.group.clear();
+    this.chunks.clear();
   }
 
   /** Whether the runner is inside a tunnel at this distance, for the light and the sound. */

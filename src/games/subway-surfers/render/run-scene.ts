@@ -37,7 +37,7 @@ export class RunScene {
   run: Run | null = null;
 
   constructor(
-    readonly seed: number,
+    seed: number,
     look: number,
     environment: THREE.Texture | null,
   ) {
@@ -53,6 +53,8 @@ export class RunScene {
 
   setRun(run: Run): void {
     this.run = run;
+    this.scenery.reseed(run.seed);
+    this.runner.reset(run);
     this.obstacles.clear();
     this.collectibles.clear();
     this.effects.clear();

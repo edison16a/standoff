@@ -24,13 +24,9 @@ export default function RunCanvas() {
     observer.observe(canvas);
     const scenes: RunScene[] = [];
     const sceneFor = (i: number, seed: number) => {
-      const found = scenes[i];
-      if (found && found.seed === seed) return found;
-      found?.dispose();
       // Player one runs as Kai and player two as Mia, in their own colours.
-      const scene = new RunScene(seed, i, renderer.environment);
-      scenes[i] = scene;
-      return scene;
+      scenes[i] ??= new RunScene(seed, i, renderer.environment);
+      return scenes[i];
     };
     const unlisten = session.listen((slot, event) => scenes[slot - 1]?.onEvent(event));
     if (process.env.NODE_ENV === "development") Object.assign(window, { __subwayRenderer: { renderer, scenes } });
