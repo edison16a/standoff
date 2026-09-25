@@ -1,0 +1,104 @@
+/*
+  The results card over the winner's celebration.
+*/
+
+.bx-results {
+  position: absolute;
+  right: 48px;
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: min(560px, 46vw);
+  padding: 30px 34px;
+  border: 2px solid rgba(245, 197, 66, 0.6);
+  border-radius: 26px;
+  background: rgba(8, 8, 16, 0.86);
+  transform: translateY(-50%);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+  animation: bx-rise 500ms ease-out;
+}
+
+.bx-results__title {
+  margin: 0;
+  font-family: var(--bx-display);
+  font-size: 56px;
+  font-style: italic;
+  line-height: 1;
+}
+
+.bx-results__how {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--bx-gold);
+}
+
+.bx-results__best {
+  margin: 0;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: #4ade80;
+  color: #062010;
+  font-weight: 900;
+}
+
+.bx-results__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 17px;
+}
+
+.bx-results__table th {
+  padding: 6px 0;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.bx-results__table td {
+  padding: 5px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  font-weight: 800;
+}
+
+.bx-results__table td:nth-child(2) {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.bx-results__cards td:not(:nth-child(2)) {
+  font-family: var(--bx-display);
+  font-size: 30px;
+  color: var(--bx-gold);
+}
+
+.bx-results__records {
+  margin: 0;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.bx-results__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+@keyframes bx-rise {
+  from {
+    opacity: 0;
+    transform: translateY(-40%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bx-results {
+    animation: none;
+  }
+}
