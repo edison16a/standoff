@@ -92,6 +92,14 @@ describe("the showcase players", () => {
     expect(picks.get(2)!.zombie).toBe(1);
   });
 
+  it("find the cheapest pairing even when a later player's bonus would win it back", () => {
+    // Player 2 holds the near zombie on its side. The search must not stop early on the first pairing it finds.
+    const shooters = team(2).map((s) => ({ ...s, held: s.seat === 2 ? 1 : null }));
+    const picks = assignTargets(shooters, [head(1, 0.6, 3), head(2, 0.9, 7.5)], 0);
+    expect(picks.get(1)!.zombie).toBe(2);
+    expect(picks.get(2)!.zombie).toBe(1);
+  });
+
   it("never aim at the same zombie while others stand free, and hit only their own", () => {
     for (const plan of [PLANS.loop, PLANS.icon]) {
       const director = new ShowcaseDirector(plan);

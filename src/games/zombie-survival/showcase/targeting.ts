@@ -22,12 +22,15 @@ const LANE = 2;
 const STICK = 0.25;
 /** A boss player leans towards the boss. */
 const BOSS_PULL = 0.3;
-/** Zombies this close, in metres, jump the queue. */
+/** Zombies this close, in metres, jump the queue by this much. */
 const TOO_CLOSE = 7;
+const NEAR_PULL = 0.5;
+/** Every bonus at once. Adding it back keeps each cost at zero or above, so the search may stop early on a dear partial sum. */
+const FLOOR = NEAR_PULL + STICK + BOSS_PULL;
 /** A point of another zombie this near the aim, in clip space, and nearer the camera, blocks the shot. */
 const BLOCK = 0.06;
 
-export const onScreen = (t: TargetPoint) => Math.abs(t.x) < 0.92 && Math.abs(t.y) < 0.9;
+const onScreen = (t: TargetPoint) => Math.abs(t.x) < 0.92 && Math.abs(t.y) < 0.9;
 
 /** Each player's patch of screen, spread evenly from left to right. */
 export function lanes(count: number): number[] {
@@ -56,8 +59,8 @@ function candidates(targets: readonly TargetPoint[]): Candidate[] {
 }
 
 function cost(shooter: Shooter, zombie: Candidate): number {
-  let c = LANE * Math.abs(zombie.x - shooter.lane) + zombie.distance / 20;
-  if (zombie.distance < TOO_CLOSE) c -= 0.5;
+  let c = FLOOR + LANE * Math.abs(zombie.x - shooter.lane) + zombie.distance / 20;
+  if (zombie.distance < TOO_CLOSE) c -= NEAR_PULL;
   if (shooter.held === zombie.id) c -= STICK;
   if (shooter.role === "boss" && zombie.boss) c -= BOSS_PULL;
   return c;
