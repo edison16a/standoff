@@ -12,7 +12,7 @@ const LEAD: Record<ShowcaseView, number> = { loop: -0.4, poster: 0.85, icon: 0.8
  * The poster and the icon are single frames, so the film is run this far
  * ahead without drawing and then held: Giannis rising for the hammer.
  */
-const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 2.84, icon: 2.86 };
+const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 2.95, icon: 2.97 };
 
 /**
  * The capture tool lets the scene run three seconds after the page says

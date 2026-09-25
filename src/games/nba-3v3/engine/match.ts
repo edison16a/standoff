@@ -1,4 +1,4 @@
-import type { CharacterId } from "../roster";
+import type { CharacterId, DunkStyle } from "../roster";
 import { pressDefend, pressPass, pressShoot, releaseShot, updateAction } from "./actions";
 import { createAthlete, moveAthlete, separate } from "./athlete";
 import { updateBall } from "./ball";
@@ -65,6 +65,8 @@ export class Match {
   checkBeat = true;
   /** The next shot's outcome, set by the showcase to film a sure highlight. Real games leave it alone. */
   forced: Outcome | null = null;
+  /** The dunk thrown on the next drive, set by the showcase for the same reason. */
+  forcedDunk: DunkStyle | null = null;
   gamePoint: [boolean, boolean] = [false, false];
   /** Whose turn it is to bring the ball up, per team, so everyone gets to handle it. */
   readonly checkTurn: [number, number] = [0, 0];

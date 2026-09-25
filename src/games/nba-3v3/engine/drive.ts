@@ -56,7 +56,8 @@ export function startDrive(m: Match, a: Athlete): void {
   const peak = dunk ? clamp(RIM.y + 0.3 - reach, 0.5, 1.05) : clamp(RIM.y - 0.1 - reach, 0.35, 0.8);
   // The approach and the gather: a longer run in gives a longer last two steps before the leap.
   const gather = clamp((d - stop) / 9, 0.16, 0.3) + (dunk ? 0.04 : 0);
-  const plan = dunk ? chooseDunk(m.rng, a, open) : null;
+  const plan = dunk ? chooseDunk(m.rng, a, open, m.forcedDunk) : null;
+  m.forcedDunk = null;
   const air = plan ? plan.air : 0.4;
   const rimHang = plan ? plan.rimHang : 0;
   // Down from the rim takes about as long as the way up, a touch less for a layup that never went as high.

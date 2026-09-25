@@ -26,7 +26,9 @@ const GRABS: readonly DunkStyle[] = ["hammer", "tomahawk", "cockback", "flush"];
  * a power dunk, and otherwise the star's own signature most of the
  * time, with the odd showier one from those with the legs for it.
  */
-export function chooseDunk(rng: Rng, a: Athlete, open: boolean): DunkPlan {
+export function chooseDunk(rng: Rng, a: Athlete, open: boolean, forced: DunkStyle | null = null): DunkPlan {
+  // A scripted film asks for one dunk, the same every time.
+  if (forced) return { style: forced, air: AIR[forced], rimHang: forced === "rimhang" ? 0.55 : 0 };
   const c = charOf(a);
   const st = c.stats;
   const baseline = a.z < RIM.z + 0.9 && Math.abs(a.x - RIM.x) > 0.8;
