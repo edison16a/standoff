@@ -61,6 +61,9 @@ export function celebrateWin(state: MatchState, dt: number): void {
     middle.x += a.pos.x / winners.length;
     middle.z += a.pos.z / winners.length;
   }
+  // They meet toward the middle of the pitch, clear of the goals, where the camera can circle them.
+  middle.x *= 0.4;
+  middle.z *= 0.4;
   for (const a of state.athletes) {
     a.actionT += dt;
     if (state.winner !== a.team) {

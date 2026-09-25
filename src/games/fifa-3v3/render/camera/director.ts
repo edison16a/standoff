@@ -86,7 +86,8 @@ export class CameraDirector {
       }
       case "winners": {
         const at = focus ?? new THREE.Vector3();
-        const a = time * 0.18;
+        // A slow swing on the near side, never round the back where the goals and nets would get in the way.
+        const a = Math.sin(time * 0.2) * 0.9;
         this.wantPos.set(at.x + Math.sin(a) * 11, 3.8, at.z + Math.cos(a) * 11);
         this.wantLook.set(at.x, 1.1, at.z);
         fov = 30;
