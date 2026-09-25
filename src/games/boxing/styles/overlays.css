@@ -159,13 +159,13 @@
 
 /* Touching gloves: a big gold title, the ask, and a chip per boxer that lights up in their glove colour. */
 .bx-touch {
-  top: 60%;
+  top: 66%;
   gap: 10px;
 }
 
 .bx-touch__title {
   font-family: var(--bx-display);
-  font-size: 84px;
+  font-size: 64px;
   line-height: 1;
   text-transform: uppercase;
   background: linear-gradient(180deg, #ffffff 0%, #ffe3a3 45%, var(--bx-orange) 100%);
