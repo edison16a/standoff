@@ -9,6 +9,7 @@ const MODE_NAME = { cube: "Cube", ufo: "UFO", ball: "Ball" } as const;
 function PlayerHud({ slot, hud, players, stored }: { slot: number; hud: HudPlayer; players: number; stored: number }) {
   const banner = useCubeStore((s) => (s.banner?.slot === slot ? s.banner : null));
   const practice = useCubeStore((s) => s.practice);
+  const results = useCubeStore((s) => s.phase === "results");
   const best = Math.max(stored, hud.best);
   return (
     <section className={`cg-hud cg-hud--${players === 1 ? "solo" : slot === 1 ? "top" : "bottom"}`} aria-label={`Player ${slot}`}>
@@ -34,7 +35,7 @@ function PlayerHud({ slot, hud, players, stored }: { slot: number; hud: HudPlaye
       )}
       {hud.status === "away" && <p className="cg-hud__notice">Step back into view</p>}
       {hud.status === "run" && hud.waiting && <p className="cg-hud__notice cg-hud__notice--soft">Get ready</p>}
-      {hud.status === "done" && (
+      {hud.status === "done" && !results && (
         <>
           <p className="cg-finish">Level complete</p>
           <Confetti />

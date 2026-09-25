@@ -90,7 +90,8 @@ export class GameRenderer {
     this.post.setSize(width, height, pixelRatio);
   }
 
-  draw(input: DrawInput): void {
+  /** Moves everything on by a frame and, unless `render` is false, draws it. */
+  draw(input: DrawInput, render = true): void {
     const { players, views, dt, time, pulse } = input;
     players.forEach((player, i) => {
       if (player.restarted && player.state) this.cameras[views.indexOf(i)]?.snap(player.state);
@@ -129,7 +130,7 @@ export class GameRenderer {
       };
     });
     this.effects.particles.setScale(tall / (2 * Math.tan(THREE.MathUtils.degToRad(13))));
-    this.post.draw(viewports);
+    if (render) this.post.draw(viewports);
   }
 
   /** Before drawing one view: its player solid, rivals as ghosts, its own sign, and the sky behind its camera. */

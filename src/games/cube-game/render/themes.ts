@@ -7,8 +7,9 @@ export interface Theme {
   /** Sky from the horizon up. */
   skyLow: number;
   skyHigh: number;
-  /** The sun or moon disc, and its glow. */
+  /** The sun or moon disc, from its top colour to its foot. */
   sun: number;
+  sunLow: number;
   sunSize: number;
   /** Block bodies, and their glowing edges. */
   fill: number;
@@ -28,6 +29,7 @@ export const THEMES: Record<string, Theme> = {
     skyLow: 0x1b4e9b,
     skyHigh: 0x060b2e,
     sun: 0x7ce8ff,
+    sunLow: 0x5a6bff,
     sunSize: 9,
     fill: 0x08183f,
     edge: 0x3ee6ff,
@@ -37,9 +39,10 @@ export const THEMES: Record<string, Theme> = {
     skyline: "towers",
   },
   "sunset-bounce": {
-    skyLow: 0xff7a45,
+    skyLow: 0xd9543a,
     skyHigh: 0x3a0c52,
     sun: 0xffd166,
+    sunLow: 0xff3d8b,
     sunSize: 14,
     fill: 0x2a0a36,
     edge: 0xff4fb3,
@@ -49,9 +52,10 @@ export const THEMES: Record<string, Theme> = {
     skyline: "dunes",
   },
   "cloud-hopper": {
-    skyLow: 0x6a5cff,
+    skyLow: 0x4a3cc0,
     skyHigh: 0x120a3a,
-    sun: 0xe6f7ff,
+    sun: 0xffd6f5,
+    sunLow: 0x9a6bff,
     sunSize: 7,
     fill: 0x1a1250,
     edge: 0x7dfff0,
@@ -64,6 +68,7 @@ export const THEMES: Record<string, Theme> = {
     skyLow: 0x0b4d2e,
     skyHigh: 0x020d0a,
     sun: 0x9dff6a,
+    sunLow: 0x14b8a6,
     sunSize: 8,
     fill: 0x03170f,
     edge: 0x35ff8f,
@@ -76,6 +81,7 @@ export const THEMES: Record<string, Theme> = {
     skyLow: 0x8a1000,
     skyHigh: 0x120003,
     sun: 0xff5a1f,
+    sunLow: 0xb0003a,
     sunSize: 16,
     fill: 0x1e0404,
     edge: 0xff3b2f,

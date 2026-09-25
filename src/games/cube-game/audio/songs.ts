@@ -55,8 +55,8 @@ export const SONGS: Record<string, Song> = {
     arp: "1 3 2 4 1 3 2 4 1 3 2 4 1 3 2 4",
     arpVoice: "square",
     drums: FOUR,
-    sections: [[0, "pad hat bass"], [8, "kick snare hat bass pad arp"], [16, FULL], [34, "kick snare hat open bass arp pad leadB"], [48, FULL], [78, "pad arp"]],
-    length: 82,
+    sections: [[0, "pad hat bass"], [8, "kick snare hat bass pad arp"], [16, FULL], [34, "kick snare hat open bass arp pad leadB"], [48, FULL], [80, "kick snare hat open bass arp pad leadB"], [91, FULL], [106, "pad arp"]],
+    length: 110,
   }),
 
   "cloud-hopper": song({
@@ -70,8 +70,8 @@ export const SONGS: Record<string, Song> = {
     bassStyle: "saw",
     arp: "1 2 3 1^ 3 2 1 2 3 1^ 3 2 1 2 3 2",
     drums: FOUR,
-    sections: [[0, "pad arp"], [8, "kick snare hat bass arp pad"], [14, FULL], [31, "half snare hat bass pad leadB"], [48, "kick snare hat open bass arp pad lead"], [78, "pad arp"]],
-    length: 82,
+    sections: [[0, "pad arp"], [8, "kick snare hat bass arp pad"], [14, FULL], [31, "half snare hat bass pad leadB"], [48, "kick snare hat open bass arp pad lead"], [71, "kick clap hat open bass arp pad leadB"], [82, FULL], [106, "pad arp"]],
+    length: 110,
   }),
 
   "circuit-rush": song({
@@ -85,8 +85,8 @@ export const SONGS: Record<string, Song> = {
     arp: "1 2 3 2 1 2 3 2 1 2 3 2 1 2 3 1^",
     arpVoice: "square",
     drums: FOUR,
-    sections: [[0, "hat arp bass"], [8, FULL], [28, "kick snare hat open bass arp pad leadB"], [42, "half clap hat bass pad leadB"], [57, "kick snare clap hat open bass arp pad lead"], [80, "pad arp"]],
-    length: 84,
+    sections: [[0, "hat arp bass"], [8, FULL], [28, "kick snare hat open bass arp pad leadB"], [42, "half clap hat bass pad leadB"], [57, "kick snare clap hat open bass arp pad lead"], [75, "half clap hat bass pad leadB"], [88, "kick snare hat open bass arp pad leadB"], [98, "kick snare clap hat open bass arp pad lead"], [110, "pad arp"]],
+    length: 114,
   }),
 
   "core-meltdown": song({
@@ -101,7 +101,7 @@ export const SONGS: Record<string, Song> = {
     arp: "1 2 3 1^ 1 2 3 1^ 1 2 3 1^ 3 2 1 2",
     arpVoice: "sawtooth",
     drums: { ...FOUR, hat: "x.x.x.x.x.x.x.x." },
-    sections: [[0, "kick hat bass pad"], [8, FULL], [27, "kick clap hat open bass arp pad leadB"], [43, "kick snare clap hat bass arp pad leadB"], [56, "kick snare clap hat open bass arp pad lead"], [82, "pad arp"]],
-    length: 86,
+    sections: [[0, "kick hat bass pad"], [8, FULL], [27, "kick clap hat open bass arp pad leadB"], [43, "kick snare clap hat bass arp pad leadB"], [56, "kick snare clap hat open bass arp pad lead"], [75, "half clap hat bass pad leadB"], [89, "kick snare clap hat bass arp pad leadB"], [101, "kick snare clap hat open bass arp pad lead"], [120, "pad arp"]],
+    length: 124,
   }),
 };

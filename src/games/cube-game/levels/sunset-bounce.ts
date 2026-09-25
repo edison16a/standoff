@@ -33,5 +33,16 @@ export function build(): Level {
   padOver(b, 64);
   hop(b, 68);
   hop(b, 70, 2);
-  return b.end(78).build();
+  platform(b, 72, 1, 78);
+  hop(b, 74, 1, 1);
+
+  b.portal(80, "ball");
+  b.jump(81, 83, 84, 86, 88, 89);
+  ballSpikes(b, 82, 89);
+  b.portal(91, "cube");
+
+  hop(b, 93);
+  hop(b, 95, 2);
+  padOver(b, 97);
+  return b.end(106).build();
 }

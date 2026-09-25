@@ -1,5 +1,5 @@
 import { LevelBuilder } from "../engine/builder";
-import { ufoGates } from "../engine/placement";
+import { ballSpikes, ufoGates } from "../engine/placement";
 import type { Level, LevelInfo } from "../engine/types";
 import { gap, hop, hops, padOrb, platform } from "./patterns";
 
@@ -31,5 +31,16 @@ export function build(): Level {
   hop(b, 58, 2, 1);
   padOrb(b, 63, 63.75);
   hops(b, [67, 68, 69]);
-  return b.end(78).build();
+
+  b.portal(71, "ball");
+  b.jump(72, 74, 75, 77, 79, 80);
+  ballSpikes(b, 73, 80);
+  b.portal(82, "cube");
+
+  hop(b, 85);
+  platform(b, 87, 1, 92);
+  hop(b, 89, 2, 1);
+  padOrb(b, 94, 94.75);
+  hops(b, [98, 99]);
+  return b.end(106).build();
 }

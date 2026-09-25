@@ -22,12 +22,12 @@ function skyline(theme: Theme, from: number, to: number, random: () => number): 
     const z = between(-70, -32);
     switch (theme.skyline) {
       case "towers":
-        pieces.push({ x, y: 0, z, w: between(2.5, 6), h: between(4, 18), peak: false });
-        x += between(4, 10);
+        pieces.push({ x, y: 0, z, w: between(3, 7), h: between(3, 13), peak: false });
+        x += between(3, 8);
         break;
       case "dunes":
-        pieces.push({ x, y: -2, z: z - 20, w: between(22, 44), h: between(8, 20), peak: true });
-        x += between(12, 24);
+        pieces.push({ x, y: -1, z: z - 30, w: between(16, 30), h: between(5, 11), peak: true });
+        x += between(10, 20);
         break;
       case "clouds":
         pieces.push({ x, y: between(6, 26), z, w: between(5, 12), h: between(1.2, 3), peak: false });
@@ -40,8 +40,8 @@ function skyline(theme: Theme, from: number, to: number, random: () => number): 
         x += between(7, 14);
         break;
       case "spires":
-        pieces.push({ x, y: -1, z, w: between(4, 9), h: between(14, 38), peak: true });
-        x += between(5, 11);
+        pieces.push({ x, y: -1, z: z - 10, w: between(3, 7), h: between(7, 20), peak: true });
+        x += between(4, 9);
         break;
     }
   }
@@ -70,8 +70,10 @@ export class Backdrop {
     const peaks = pieces.filter((p) => p.peak);
     const boxMaterial = blockMaterial(new THREE.Color(theme.fill).multiplyScalar(0.55).getHex(), theme.accent, 0.5);
     boxMaterial.uniforms.tile!.value = 0.03;
-    const peakMaterial = spikeMaterial(theme.fill, theme.accent);
-    peakMaterial.uniforms.glow!.value = 0.6;
+    boxMaterial.uniforms.windows!.value = theme.skyline === "clouds" ? 0 : 0.55;
+    (boxMaterial.uniforms.windowColour!.value as THREE.Color).set(theme.sun);
+    const peakMaterial = spikeMaterial(new THREE.Color(theme.fill).multiplyScalar(0.6).getHex(), theme.accent, 0.012);
+    peakMaterial.uniforms.glow!.value = 0.55;
     for (const material of [boxMaterial, peakMaterial]) {
       // Fogged toward the dark of the sky, so the skyline stands as a silhouette against the glow at the horizon.
       setFog(material, new THREE.Color(theme.skyHigh).lerp(new THREE.Color(theme.skyLow), 0.25).getHex(), 0.012);
@@ -95,7 +97,7 @@ export class Backdrop {
     place(peak, peakMaterial, peaks);
 
     const shape = new THREE.OctahedronGeometry(1, 0);
-    const wire = new THREE.MeshBasicMaterial({ color: new THREE.Color(theme.accent).multiplyScalar(1.6), wireframe: true });
+    const wire = new THREE.MeshBasicMaterial({ color: new THREE.Color(theme.accent).multiplyScalar(0.9), wireframe: true });
     for (let x = -60; x < length + 120; x += 22 + random() * 20) {
       const floater = new THREE.Mesh(shape, wire);
       floater.position.set(x, 9 + random() * 10, -26 - random() * 12);

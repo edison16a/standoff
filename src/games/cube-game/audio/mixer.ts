@@ -1,5 +1,8 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 
+/** The whole song's level into the music bus. */
+const LEVEL = 0.6;
+
 /** A short hall made of fading noise, so no sample files are needed. */
 function hall(ctx: BaseAudioContext, seconds: number): AudioBuffer {
   const length = Math.floor(ctx.sampleRate * seconds);
@@ -30,6 +33,8 @@ export class MusicMixer {
   constructor(private readonly engine: AudioEngine) {
     const { ctx } = engine;
     this.master = ctx.createGain();
+    // The band peaks near full scale, so it comes in lower, leaving room for the effects on top.
+    this.master.gain.value = LEVEL;
     this.muffle = ctx.createBiquadFilter();
     this.muffle.type = "lowpass";
     this.muffle.frequency.value = 18000;
@@ -86,7 +91,7 @@ export class MusicMixer {
   fadeTo(level: number, seconds: number): void {
     const gain = this.master.gain;
     gain.cancelScheduledValues(this.engine.now);
-    gain.setTargetAtTime(Math.max(0.0001, level), this.engine.now, seconds / 3);
+    gain.setTargetAtTime(Math.max(0.0001, level * LEVEL), this.engine.now, seconds / 3);
   }
 
   dispose(): void {

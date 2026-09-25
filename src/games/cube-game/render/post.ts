@@ -57,7 +57,7 @@ export class Post {
     const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType });
     this.composer = new EffectComposer(renderer, target);
     this.split = new SplitPass(scene);
-    this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.65, 0.4, 0.78);
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.55, 0.4, 0.8);
     this.composer.addPass(this.split);
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());

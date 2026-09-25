@@ -33,5 +33,16 @@ export function build(): Level {
   hop(b, 65, 2);
   padOrb(b, 67, 67.75);
   hops(b, [71, 72, 73]);
-  return b.end(80).build();
+
+  b.portal(75, "ufo");
+  b.jump(76, 77, 78, 80, 81, 83, 84, 86);
+  ufoGates(b, [79, 82, 85], 1.15);
+  b.portal(88, "ball");
+  b.jump(89, 90, 92, 93, 95, 96);
+  ballSpikes(b, 90, 96);
+  b.portal(98, "cube");
+
+  hops(b, [100, 101]);
+  hop(b, 102, 2);
+  return b.end(110).build();
 }

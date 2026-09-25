@@ -27,7 +27,10 @@ export class Sfx {
     this.out.connect(engine.bus("sfx"));
     this.grit = ctx.createWaveShaper();
     this.grit.curve = crunchCurve(6);
-    this.grit.connect(this.out);
+    // The shaper squares its input off near full scale, so its output is turned well down.
+    const gritLevel = ctx.createGain();
+    gritLevel.gain.value = 0.3;
+    this.grit.connect(gritLevel).connect(this.out);
   }
 
   private get now(): number {
@@ -36,47 +39,47 @@ export class Sfx {
 
   /** A quiet upward blip, so the player hears the jump land in time. */
   jump(): void {
-    tone(this.engine, this.out, this.now, { type: "square", frequency: 330, glideTo: 660, decay: 0.07, peak: 0.035 });
-    tone(this.engine, this.out, this.now, { type: "sine", frequency: 520, glideTo: 1040, decay: 0.09, peak: 0.06 });
+    tone(this.engine, this.out, this.now, { type: "square", frequency: 330, glideTo: 660, decay: 0.07, peak: 0.07 });
+    tone(this.engine, this.out, this.now, { type: "sine", frequency: 520, glideTo: 1040, decay: 0.09, peak: 0.14 });
   }
 
   flap(): void {
-    noise(this.engine, this.out, this.now, { filter: "bandpass", frequency: 700, sweepTo: 2200, q: 1.5, decay: 0.14, peak: 0.12 });
-    tone(this.engine, this.out, this.now, { type: "triangle", frequency: 440, glideTo: 740, decay: 0.1, peak: 0.05 });
+    noise(this.engine, this.out, this.now, { filter: "bandpass", frequency: 700, sweepTo: 2200, q: 1.5, decay: 0.14, peak: 0.3 });
+    tone(this.engine, this.out, this.now, { type: "triangle", frequency: 440, glideTo: 740, decay: 0.1, peak: 0.1 });
   }
 
   flip(up: boolean): void {
-    tone(this.engine, this.out, this.now, { type: "sine", frequency: up ? 380 : 900, glideTo: up ? 900 : 380, decay: 0.14, peak: 0.08 });
+    tone(this.engine, this.out, this.now, { type: "sine", frequency: up ? 380 : 900, glideTo: up ? 900 : 380, decay: 0.14, peak: 0.18 });
   }
 
   /** The crash: a gritty burst, a falling thump and a scatter of noise. */
   death(): void {
     const at = this.now;
-    noise(this.engine, this.grit, at, { filter: "lowpass", frequency: 4000, sweepTo: 180, q: 0.8, decay: 0.45, peak: 0.5 });
-    tone(this.engine, this.grit, at, { type: "square", frequency: 180, glideTo: 40, decay: 0.3, peak: 0.25 });
-    tone(this.engine, this.out, at, { type: "sine", frequency: 110, glideTo: 35, decay: 0.4, peak: 0.5 });
+    noise(this.engine, this.grit, at, { filter: "lowpass", frequency: 4000, sweepTo: 180, q: 0.8, decay: 0.45, peak: 0.3 });
+    tone(this.engine, this.grit, at, { type: "square", frequency: 180, glideTo: 40, decay: 0.3, peak: 0.12 });
+    tone(this.engine, this.out, at, { type: "sine", frequency: 110, glideTo: 35, decay: 0.4, peak: 0.35 });
     noise(this.engine, this.out, at + 0.04, { filter: "highpass", frequency: 3000, decay: 0.25, peak: 0.08 });
   }
 
   portal(): void {
     const at = this.now;
-    noise(this.engine, this.out, at, { filter: "bandpass", frequency: 400, sweepTo: 5000, q: 2, attack: 0.05, decay: 0.45, peak: 0.2 });
-    [72, 76, 79, 84].forEach((n, i) => tone(this.engine, this.out, at + i * 0.04, { type: "sine", frequency: midi(n), decay: 0.3, peak: 0.05 }));
+    noise(this.engine, this.out, at, { filter: "bandpass", frequency: 400, sweepTo: 5000, q: 2, attack: 0.05, decay: 0.45, peak: 0.4 });
+    [72, 76, 79, 84].forEach((n, i) => tone(this.engine, this.out, at + i * 0.04, { type: "sine", frequency: midi(n), decay: 0.3, peak: 0.08 }));
   }
 
   speed(faster: boolean): void {
-    noise(this.engine, this.out, this.now, { filter: "bandpass", frequency: faster ? 800 : 3000, sweepTo: faster ? 4000 : 600, q: 3, decay: 0.35, peak: 0.16 });
+    noise(this.engine, this.out, this.now, { filter: "bandpass", frequency: faster ? 800 : 3000, sweepTo: faster ? 4000 : 600, q: 3, decay: 0.35, peak: 0.5 });
   }
 
   pad(): void {
-    tone(this.engine, this.out, this.now, { type: "sine", frequency: 220, glideTo: 880, decay: 0.22, peak: 0.16 });
-    tone(this.engine, this.out, this.now, { type: "triangle", frequency: 440, glideTo: 1320, decay: 0.16, peak: 0.05 });
+    tone(this.engine, this.out, this.now, { type: "sine", frequency: 220, glideTo: 880, decay: 0.22, peak: 0.25 });
+    tone(this.engine, this.out, this.now, { type: "triangle", frequency: 440, glideTo: 1320, decay: 0.16, peak: 0.08 });
   }
 
   orb(): void {
-    tone(this.engine, this.out, this.now, { type: "sine", frequency: midi(88), decay: 0.3, peak: 0.1 });
-    tone(this.engine, this.out, this.now, { type: "sine", frequency: midi(95), decay: 0.22, peak: 0.05 });
-    noise(this.engine, this.out, this.now, { filter: "highpass", frequency: 7000, decay: 0.12, peak: 0.05 });
+    tone(this.engine, this.out, this.now, { type: "sine", frequency: midi(88), decay: 0.3, peak: 0.18 });
+    tone(this.engine, this.out, this.now, { type: "sine", frequency: midi(95), decay: 0.22, peak: 0.1 });
+    noise(this.engine, this.out, this.now, { filter: "highpass", frequency: 7000, decay: 0.12, peak: 0.08 });
   }
 
   checkpoint(): void {
@@ -107,8 +110,8 @@ export class Sfx {
   }
 
   select(): void {
-    tone(this.engine, this.out, this.now, { type: "triangle", frequency: midi(76), decay: 0.12, peak: 0.07 });
-    tone(this.engine, this.out, this.now + 0.06, { type: "triangle", frequency: midi(83), decay: 0.2, peak: 0.07 });
+    tone(this.engine, this.out, this.now, { type: "triangle", frequency: midi(76), decay: 0.12, peak: 0.1 });
+    tone(this.engine, this.out, this.now + 0.06, { type: "triangle", frequency: midi(83), decay: 0.2, peak: 0.1 });
   }
 
   back(): void {

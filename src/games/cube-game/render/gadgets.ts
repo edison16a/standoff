@@ -80,11 +80,11 @@ export class Gadgets {
       const middle = portal.ceiling ? portal.ceiling / 2 : 2.4;
       const frame = new THREE.Group();
       frame.position.set(portal.x, middle, 0);
-      const ring = new THREE.Mesh(portalRing, new THREE.MeshBasicMaterial({ color: bright(colour, 2.6) }));
+      const ring = new THREE.Mesh(portalRing, new THREE.MeshBasicMaterial({ color: bright(colour, 1.7) }));
       ring.scale.set(0.75, tall, 1);
-      const inner = new THREE.Mesh(portalRing, new THREE.MeshBasicMaterial({ color: bright(colour, 1.4) }));
+      const inner = new THREE.Mesh(portalRing, new THREE.MeshBasicMaterial({ color: bright(colour, 1.0) }));
       inner.scale.set(0.5, tall * 0.8, 1);
-      const fog = new THREE.Sprite(additive(this.glow, colour, 0.75));
+      const fog = new THREE.Sprite(additive(this.glow, colour, 0.3));
       fog.scale.set(3.2, tall * 2.6, 1);
       frame.add(ring, inner, fog);
       this.spinners.push(inner);
@@ -104,10 +104,10 @@ export class Gadgets {
       }
     }
 
-    const finish = new THREE.Sprite(additive(this.glow, theme.edge, 1));
-    finish.scale.set(5, 60, 1);
+    const finish = new THREE.Sprite(additive(this.glow, theme.edge, 0.35));
+    finish.scale.set(4, 40, 1);
     finish.position.set(level.endX, 10, -0.5);
-    const beam = new THREE.Mesh(new THREE.BoxGeometry(0.25, 40, 0.25), new THREE.MeshBasicMaterial({ color: bright(0xffffff, 3) }));
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(0.1, 40, 0.1), new THREE.MeshBasicMaterial({ color: bright(theme.edge, 1.6) }));
     beam.position.set(level.endX, 20, 0);
     this.group.add(finish, beam);
     this.disposables.push(padGeometry, padMaterial, ringGeometry, coreGeometry, orbMaterial, coreMaterial, portalRing, chevronGeometry);
