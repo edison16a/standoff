@@ -113,6 +113,23 @@ describe("a run", () => {
     expect(game.stage).toBe(11);
   });
 
+  it("keeps a crowd at the front line in view, so every one can be shot", () => {
+    const game = new SurvivalGame();
+    game.start([1, 2, 3, 4].map((seat) => ({ seat, weapon: "rifle" as const })), 25);
+    let widest = 0;
+    let attacking = 0;
+    run(game, 90, () => {
+      game.health = 100;
+      for (const z of game.encounter?.zombies.filter(alive) ?? []) {
+        widest = Math.max(widest, Math.abs(z.side) / z.ahead);
+        if (z.state === "attack") attacking += 1;
+      }
+    });
+    expect(attacking).toBeGreaterThan(0);
+    // The camera sees about 0.9 to either side per metre ahead on a wide screen.
+    expect(widest).toBeLessThan(0.75);
+  });
+
   it("lets a player leave and come back with their stats", () => {
     const game = new SurvivalGame();
     game.start([{ seat: 1, weapon: "rifle" }, { seat: 2, weapon: "smg" }]);

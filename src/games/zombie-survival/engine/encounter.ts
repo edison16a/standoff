@@ -1,7 +1,7 @@
 import type { GameEvent } from "./events";
 import { Rng } from "./rng";
 import { HALF_WIDTH, type StageSpec } from "./stages";
-import { alive, makeZombie, stepZombie, type Zombie } from "./zombie";
+import { alive, makeZombie, sideRoom, stepZombie, type Zombie } from "./zombie";
 import { weakPointHp, type ZombieKind } from "./zombie-kinds";
 
 /** The first zombie shows up after this long, so players can settle their aim. */
@@ -136,6 +136,12 @@ export class Encounter {
   }
 
   /** Keeps zombies from walking through each other, bosses taking more room. */
+  /** A side position kept on the street and on screen. */
+  private keepInView(z: Zombie, side: number): number {
+    const room = Math.min(HALF_WIDTH[this.spec.zone], sideRoom(z.ahead));
+    return Math.max(-room, Math.min(room, side));
+  }
+
   private separate(): void {
     const standing = this.zombies.filter(alive);
     for (let i = 0; i < standing.length; i++) {
@@ -149,9 +155,13 @@ export class Encounter {
         if (dist >= room) continue;
         const push = (room - dist) * 0.5;
         const dir = dx === 0 ? (a.id < b.id ? 1 : -1) : Math.sign(dx);
-        const half = HALF_WIDTH[this.spec.zone];
-        a.side = Math.max(-half, Math.min(half, a.side - dir * push));
-        b.side = Math.max(-half, Math.min(half, b.side + dir * push));
+        a.side = this.keepInView(a, a.side - dir * push);
+        b.side = this.keepInView(b, b.side + dir * push);
+        // With no room left to the sides, the one behind waits its turn a step back.
+        const left = room - Math.hypot(b.side - a.side, b.ahead - a.ahead);
+        if (left <= 0) continue;
+        const back = a.ahead > b.ahead || (a.ahead === b.ahead && a.id > b.id) ? a : b;
+        back.ahead += left;
       }
     }
   }
