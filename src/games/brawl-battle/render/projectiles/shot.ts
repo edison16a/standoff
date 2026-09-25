@@ -3,7 +3,7 @@ import type { ProjectileLook } from "../../engine/moves";
 import { Rng } from "../../engine/rng";
 import type { Projectile } from "../../engine/types";
 import type { Effects } from "../effects/effects";
-import { beamTexture, dotTexture } from "../effects/textures";
+import { beamTexture, dotTexture, riseTexture } from "../effects/textures";
 import { crescentGeometry, glowing, starGeometry, waveGeometry } from "./shapes";
 
 /** Geometry and textures every shot shares. */
@@ -17,6 +17,7 @@ export class ShotKit {
   readonly tail = new THREE.PlaneGeometry(1, 1).translate(0.5, 0, 0);
   readonly dot = dotTexture();
   readonly streak = beamTexture();
+  readonly rise = riseTexture();
   /** Seeded, so a filmed showcase sheds the same sparks every time. */
   private readonly rng = new Rng(53);
   readonly roll = () => this.rng.next();
@@ -25,6 +26,7 @@ export class ShotKit {
     for (const g of [this.ball, this.ring, this.crescent, this.wave, this.star, this.tail]) g.dispose();
     this.dot.dispose();
     this.streak.dispose();
+    this.rise.dispose();
   }
 }
 
@@ -63,8 +65,8 @@ export class Shot {
     this.looks = {
       bolt: group(mesh(kit.ball, white, 1, 0.5), mesh(kit.ball, null, 0.55)),
       orb: group(mesh(kit.ball, white, 1, 0.55), mesh(kit.ball, null, 0.6, 0.95), this.halo, this.spin),
-      crescent: group(mesh(kit.crescent, null, 0.85, 1.12), mesh(kit.crescent, white, 1, 0.9)),
-      wave: group(mesh(kit.wave, null, 0.8, 1), mesh(kit.wave, white, 0.9, 0.6)),
+      crescent: group(ghost(mesh(kit.crescent, null, 0.35, 1.2)), mesh(kit.crescent, null, 0.95, 1.18), mesh(kit.crescent, white, 0.95, 0.72)),
+      wave: group(mesh(kit.wave, null, 0.9, 1, kit.rise), mesh(kit.wave, white, 0.9, 0.5, kit.rise)),
       star: group(this.flow, mesh(kit.star, null, 0.9, 1.3), mesh(kit.star, white, 1, 0.75)),
     };
     for (const g of Object.values(this.looks)) this.group.add(g);
@@ -101,9 +103,9 @@ export class Shot {
         fx.ember(x - side * p.r, y, white);
         return;
       case "crescent":
-        // Three and a half radii tall, bulge leading, with a shiver so it reads as cutting air.
-        g.scale.set(side * p.r * 2.6, p.r * (3.5 + flicker * 0.15), 1);
-        g.rotation.z = side * Math.sin(time * 18) * 0.05;
+        // A horizontal cut leaves a crescent lying flat, bulge leading, tipped toward the camera so it reads.
+        g.rotation.x = -Math.PI / 2 + 0.6;
+        g.scale.set(side * p.r * 3, p.r * (3.8 + flicker * 0.2), 1);
         fx.glow.burst({ x: x - side * p.r * 0.6, y: y + (roll() - 0.5) * p.r * 2.4, z: 0.1, count: 2, colour: flicker > 0 ? white : colour, speed: [0.2, 1], life: [0.12, 0.3], size: [0.06, 0.14], gravity: 0, drag: 0.2, push: { x: -side * 3, y: 0, z: 0 } }, roll);
         return;
       case "wave": {
@@ -140,6 +142,12 @@ export class Shot {
       if (o instanceof THREE.Mesh) (o.material as THREE.Material).dispose();
     });
   }
+}
+
+/** A fainter copy trailing just behind, like an after image. */
+function ghost(m: THREE.Mesh): THREE.Mesh {
+  m.position.x = -0.35;
+  return m;
 }
 
 function group(...children: THREE.Object3D[]): THREE.Group {

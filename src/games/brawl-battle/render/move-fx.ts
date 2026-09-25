@@ -20,6 +20,9 @@ interface RaySpec {
 const BEAM: RaySpec = { from: 14, full: 17, fade: 35, to: 40, reach: 4.7, width: 0.95 };
 const PILLAR: RaySpec = { from: 10, full: 12, fade: 19, to: 24, reach: 4.4, width: 1.5 };
 
+/** Arcane Beam's hitboxes run this high above the feet. */
+const BEAM_Y = 1.2;
+
 /** Horizontal speed that counts as a dash, metres per second. */
 const DASH = 8.5;
 
@@ -76,8 +79,8 @@ export class MoveFx {
     const fade = f.frame > spec.fade ? 1 - (f.frame - spec.fade) / (spec.to - spec.fade) : 1;
     const width = spec.width * (1 + f.charged * 0.4) * grow * fade * (1 + Math.sin(time * 45) * 0.08);
     const beam = spec === BEAM;
-    // The beam leaves the staff's gem; the pillar rises from the floor in front.
-    const start = beam ? this.anchors.world("tip", point) : point.set(x + f.facing * 0.3, y, 0);
+    // The beam leaves the staff's gem at the height its hitboxes run; the pillar rises from the floor in front.
+    const start = beam ? this.anchors.world("tip", point).setY(y + BEAM_Y) : point.set(x + f.facing * 0.3, y, 0);
     const reach = beam ? Math.abs(x + f.facing * spec.reach - start.x) : spec.reach;
     this.ray.position.set(start.x, start.y, 0.25);
     this.ray.rotation.z = beam ? (f.facing > 0 ? 0 : Math.PI) : Math.PI / 2;

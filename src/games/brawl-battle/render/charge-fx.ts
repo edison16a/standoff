@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { chargeLevel } from "../engine/charge";
-import { isChargeKey } from "../engine/moves";
+import { isChargeKey, moveOf } from "../engine/moves";
 import { Rng } from "../engine/rng";
 import type { Fighter } from "../engine/types";
 import type { Anchors } from "./anchors";
@@ -108,13 +108,15 @@ export class ChargeFx {
     }
   }
 
-  /** The release: a flash on the striking limb and a burst thrown forward, as big as the charge. */
+  /** The release: a flash where the move strikes first and a burst thrown forward, as big as the charge. */
   private flare(f: Fighter, height: number): void {
     const power = 0.4 + 0.6 * f.charged;
-    const at = this.lead(f, f.pos.x, f.pos.y + height * 0.5);
+    const move = moveOf(f.character, f.move!);
+    const first = move.hitboxes[0] ?? move.projectiles?.[0];
+    const at = first ? point.set(f.pos.x + first.x * f.facing, f.pos.y + first.y, 0.4) : point.set(f.pos.x + f.facing * 0.8, f.pos.y + height * 0.5, 0.4);
     const colour = this.hex();
-    this.fx.pulses.spawn({ kind: "star", x: at.x, y: at.y, colour: "#ffffff", from: 0.8, to: 1.6 + 1.6 * power, life: 0.22, spin: 5 });
-    this.fx.pulses.spawn({ kind: "ring", x: at.x, y: at.y, colour, from: 0.4, to: 2 + 2.5 * power, life: 0.35, opacity: 0.85 });
+    this.fx.pulses.spawn({ kind: "star", x: at.x, y: at.y, colour: "#ffffff", from: 0.6, to: 1 + 1.2 * power, life: 0.2, spin: 5 });
+    this.fx.pulses.spawn({ kind: "ring", x: at.x, y: at.y, colour, from: 0.4, to: 1.4 + 1.8 * power, life: 0.3, opacity: 0.8 });
     this.fx.glow.burst({ x: at.x, y: at.y, z: 0.3, count: Math.round(16 + 40 * power), colour, speed: [3, 8 + 6 * power], up: 0.5, life: [0.2, 0.5], size: [0.1, 0.22], gravity: 3, drag: 0.15, push: { x: f.facing * 4, y: 0, z: 0 } }, this.roll);
   }
 

@@ -22,7 +22,12 @@ export const MAGE_STYLE: BaseStyle = {
   win: { armRRaise: 2.9, elbowR: 0.2, wristR: -3.1, armLRaise: 2.6, elbowL: 0.2, armLSpread: 0.5 },
   moves: {
     jab: { windup: { armRRaise: 0.8, elbowR: 1.8, wristR: -1.1, torsoY: 0.3 }, hit: { armRRaise: 1.5, elbowR: 0.1, wristR: -0.1, torsoY: -0.3, hipZ: 0.1 }, trail: "none" },
-    side: { windup: { armLRaise: 0.6, elbowL: 2.0, torsoY: 0.5 }, hit: castL, trail: "handL" },
+    // Spark: a gliding step forward behind an open palm.
+    side: {
+      windup: { armLRaise: 0.5, elbowL: 2.1, armLSpread: -0.3, torsoY: 0.6, torsoX: 0.2, hipY: -0.1, legLLift: 0.6, kneeL: 0.8, legRLift: -0.3 },
+      hit: { ...castL, torsoX: 0.3, hipY: -0.14, legLLift: 0.85, kneeL: 0.9, legRLift: -0.55, kneeR: 0.15 },
+      trail: "handL",
+    },
     up: { windup: { hipY: -0.12, kneeL: 0.5, kneeR: 0.5, armRRaise: 0.2 }, hit: { ...skyward, hipY: 0 }, trail: "tip" },
     down: {
       windup: { armRRaise: 1.6, elbowR: 0.6, wristR: -2.2 },

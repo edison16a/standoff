@@ -23,7 +23,8 @@ const squat: PosePatch = { hipY: -0.32, legLLift: 0.8, kneeL: 1.6, legRLift: 0.8
 const guardL: PosePatch = { armLRaise: 1.2, elbowL: 2.1, armLSpread: -0.2 };
 
 const karateTuck: PosePatch = { legLLift: 1.6, kneeL: 2.3, legRLift: 1.4, kneeR: 2.2, torsoX: 0.4 };
-const flyingKick: PosePatch = { torsoX: -0.45, pelvisX: -0.25, legRLift: 1.55, kneeR: 0, footR: 0.5, legLLift: 0.9, kneeL: 2.3, ...guardL, armRRaise: -0.5, elbowR: 0.6 };
+// Flying feet first: the hips lift clear of the floor and the body lies back behind the kick.
+const flyingKick: PosePatch = { hipY: 0.3, torsoX: -0.2, pelvisX: -0.55, legRLift: 1.5, kneeR: 0, footR: 0.5, legLLift: 1.3, kneeL: 2.4, ...guardL, armRRaise: -0.6, elbowR: 0.5, neckX: 0.3 };
 
 const KARATE: Record<ChargeKey, StrikeAnim> = coiled({
   holdSide: {

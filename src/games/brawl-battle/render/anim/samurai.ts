@@ -23,7 +23,13 @@ export const SAMURAI_STYLE: BaseStyle = {
   win: { armRRaise: 3.0, elbowR: 0.1, wristR: -1.5, armLRaise: 0.3, elbowL: 1.4, armLSpread: 0.3, legRLift: 0, kneeR: 0.1 },
   moves: {
     jab: { windup: { armRRaise: 2.2, elbowR: 0.6, wristR: 0.3, torsoY: 0.3 }, hit: { armRRaise: 1.4, elbowR: 0.1, wristR: -1.8, torsoY: -0.3 }, trail: "tip" },
-    side: { windup: overhead, hit: cutDown, trail: "tip" },
+    // Wide Slash dashes in: a low lunging step under the raised blade, then the cut carries through.
+    side: {
+      windup: { ...overhead, torsoX: 0.15, hipY: -0.12, legLLift: 0.7, kneeL: 1.0, legRLift: -0.45, kneeR: 0.3 },
+      hit: { ...cutDown, hipY: -0.22, torsoX: 0.45 },
+      follow: { ...cutDown, hipY: -0.18, torsoY: -0.75, wristR: -1.9, armRRaise: 0.9 },
+      trail: "tip",
+    },
     up: {
       windup: { armRRaise: 0.6, elbowR: 0.2, wristR: -1.2, torsoX: 0.2 },
       hit: { armRRaise: 3.2, elbowR: 0, wristR: 0.4, torsoX: -0.35 },

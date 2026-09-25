@@ -112,3 +112,15 @@ export function rayTexture(): THREE.CanvasTexture {
     ctx.fillRect(0, 0, s, s);
   });
 }
+
+/** Solid at the bottom and fading upward, for energy rising off the floor. */
+export function riseTexture(): THREE.CanvasTexture {
+  return draw(64, (ctx, s) => {
+    const g = ctx.createLinearGradient(0, s, 0, 0);
+    g.addColorStop(0, "rgba(255,255,255,1)");
+    g.addColorStop(0.6, "rgba(255,255,255,0.75)");
+    g.addColorStop(1, "rgba(255,255,255,0.2)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, s, s);
+  });
+}
