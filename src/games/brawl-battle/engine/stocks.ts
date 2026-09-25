@@ -38,6 +38,7 @@ function knockOut(state: MatchState, f: Fighter): void {
   f.ground = null;
   f.freeze = 0;
   f.buffer = null;
+  f.hold = null;
   f.jumpBuffer = 0;
   f.lastHitBy = null;
   if (f.stocks === 0) {

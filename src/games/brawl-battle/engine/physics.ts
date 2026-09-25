@@ -2,7 +2,7 @@ import { CHARACTERS } from "../roster";
 import { decayLaunch } from "./knockback";
 import { moveOf } from "./moves";
 import { over, type StageDef } from "./stages";
-import { LAUNCH, MOVEMENT } from "./tuning";
+import { ATTACK_MOVE, CHARGE, LAUNCH, MOVEMENT } from "./tuning";
 import type { Command, Fighter } from "./types";
 
 /**
@@ -24,6 +24,18 @@ function hovering(f: Fighter): boolean {
   return f.action === "attack" && f.move !== null && moveOf(f.character, f.move).hover === true;
 }
 
+/**
+ * How much of their normal speed the stick still gives the fighter:
+ * all of it when free, a share while swinging most moves or charging,
+ * none in a move that roots them, in hurt or dizzy.
+ */
+function mobility(f: Fighter, grounded: boolean): number {
+  if (f.action === "idle" || f.action === "run" || f.action === "air") return 1;
+  if (f.action === "charge") return CHARGE.creep * (grounded ? 1 : 2);
+  if (f.action !== "attack" || !f.move || moveOf(f.character, f.move).root) return 0;
+  return grounded ? ATTACK_MOVE.ground : ATTACK_MOVE.air;
+}
+
 /** Sideways speed and falling, before the body moves. */
 export function steer(f: Fighter, cmd: Command, dt: number): void {
   const p = CHARACTERS[f.character].physique;
@@ -34,12 +46,17 @@ export function steer(f: Fighter, cmd: Command, dt: number): void {
     if (f.ground === null) f.vel.y = Math.max(-p.fall, f.vel.y - p.gravity * HOVER_SINK * dt);
   } else if (f.ground !== null) {
     const free = f.action === "idle" || f.action === "run";
+    const share = mobility(f, true);
     if (free) f.vel.x = approach(f.vel.x, stick * p.run, p.accel * dt);
-    // Lunges keep sliding a little, everything else stops quickly.
-    else f.vel.x = approach(f.vel.x, 0, p.accel * (f.action === "attack" ? 0.4 : 1) * dt);
+    // Lunges keep sliding a little toward the walk the stick asks for; everything else stops quickly.
+    else f.vel.x = approach(f.vel.x, stick * p.run * share, p.accel * (f.action === "attack" || f.action === "charge" ? 0.4 : 1) * dt);
   } else {
-    const control = f.action === "hurt" ? LAUNCH.steer : f.action === "dizzy" ? 0 : 1;
-    f.vel.x = approach(f.vel.x, stick * p.air, p.airAccel * control * dt);
+    const launch = f.action === "hurt" ? LAUNCH.steer : 0;
+    const share = mobility(f, false);
+    // A rooted move in the air keeps its momentum; it just cannot be steered.
+    const control = f.action === "hurt" ? launch : share > 0 ? 1 : 0;
+    const top = f.action === "hurt" ? 1 : share;
+    f.vel.x = approach(f.vel.x, stick * p.air * top, p.airAccel * control * dt);
     // Launches fly straight while they last; gravity takes over as they fade.
     if (!launched) {
       const fastFall = cmd.y <= -MOVEMENT.flick && f.vel.y < 2 && (f.action === "air" || f.action === "attack");

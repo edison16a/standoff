@@ -1,8 +1,10 @@
 import { both, box, hit } from "./build";
+import { BEAR_CHARGED } from "./bear-charged";
 import type { Moveset } from "./types";
 
 /** Bear: slow and heavy. Big slams with armor, so small hits cannot stop them. */
 export const BEAR: Moveset = {
+  ...BEAR_CHARGED,
   jab: { name: "Paw Swipe", frames: 20, sound: "punch", hitboxes: [box(1.0, 1.3, 0.6, 4, 7, hit(5, 6, 0.06, 30))] },
   side: { name: "Claw Swing", frames: 34, sound: "slam", hitboxes: [box(1.3, 1.2, 0.75, 10, 13, hit(11, 9, 0.16, 35))] },
   up: { name: "Headbutt", frames: 30, sound: "slam", hitboxes: [box(0.3, 2.3, 0.75, 8, 12, hit(10, 9, 0.14, 85))] },
@@ -12,16 +14,18 @@ export const BEAR: Moveset = {
   airDown: {
     name: "Body Drop",
     frames: 40,
+    root: true,
     sound: "slam",
     heavy: true,
     landLag: 16,
     motion: [{ frame: 8, vx: 0, vy: -20, set: true }],
     hitboxes: [box(0, 0.2, 0.9, 8, 24, hit(14, 8, 0.17, -80))],
   },
-  heavy: { name: "Big Paw", frames: 44, sound: "slam", heavy: true, armor: [8, 20], hitboxes: [box(1.5, 1.3, 0.9, 18, 22, hit(16, 12, 0.23, 38))] },
+  heavy: { name: "Big Paw", frames: 44, sound: "slam", heavy: true, root: true, armor: [8, 20], hitboxes: [box(1.5, 1.3, 0.9, 18, 22, hit(16, 12, 0.23, 38))] },
   heavySide: {
     name: "Charge",
     frames: 46,
+    root: true,
     sound: "slam",
     heavy: true,
     landLag: 14,
@@ -43,6 +47,7 @@ export const BEAR: Moveset = {
   heavyDown: {
     name: "Ground Pound",
     frames: 48,
+    root: true,
     sound: "slam",
     heavy: true,
     armor: [8, 24],
@@ -50,6 +55,7 @@ export const BEAR: Moveset = {
   },
   ult: {
     name: "Earthquake",
+    root: true,
     frames: 80,
     sound: "slam",
     heavy: true,

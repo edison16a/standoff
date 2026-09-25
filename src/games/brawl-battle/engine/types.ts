@@ -1,7 +1,7 @@
 import type { CharacterId } from "../roster";
 import type { BotBrain, Difficulty } from "./bots/brain";
 import type { MatchEvent } from "./events";
-import type { Hit, MoveKey } from "./moves";
+import type { Hit, HitSound, MoveKey } from "./moves";
 import type { Rng } from "./rng";
 import type { StageDef, StageId } from "./stages";
 
@@ -22,6 +22,9 @@ export interface Command {
   light?: boolean;
   heavy?: boolean;
   ult?: boolean;
+  /** Attack 1 and Attack 2 still held down, so a hold can become a charge. */
+  lightHeld?: boolean;
+  heavyHeld?: boolean;
 }
 
 export type Action =
@@ -31,6 +34,7 @@ export type Action =
   | "air"
   | "land"
   | "attack"
+  | "charge"
   | "hurt"
   | "shield"
   | "dizzy"
@@ -39,6 +43,8 @@ export type Action =
   | "out";
 
 export type Button = "light" | "heavy" | "ult";
+/** The buttons that charge when held. */
+export type ChargeButton = "light" | "heavy";
 
 export interface FighterStats {
   kos: number;
@@ -92,6 +98,10 @@ export interface Fighter {
   /** The stick last step, to spot fresh flicks. */
   lastY: number;
   buffer: { button: Button; x: number; y: number; frames: number } | null;
+  /** A charge button held down, timed to tell a tap from a hold. */
+  hold: { button: ChargeButton; x: number; y: number; frames: number } | null;
+  /** How charged the current move was: 0 for a plain move, up to 1 at full charge. */
+  charged: number;
   /** Frames a jump pressed while busy is still waiting to come out. */
   jumpBuffer: number;
   lastHitBy: { id: number; frame: number } | null;
@@ -111,6 +121,7 @@ export interface Projectile {
   r: number;
   life: number;
   hit: Hit;
+  sound: HitSound;
 }
 
 export type Phase = "ready" | "fight" | "game" | "over";

@@ -1,5 +1,6 @@
 import { CHARACTERS, type CharacterId } from "../roster";
 import { advanceMove } from "./attack";
+import { stepCharge, tryCharge } from "./charge";
 import { bufferPress, freeControl, leaveGround, shieldControl, tryAttack } from "./control";
 import { moveOf } from "./moves";
 import { moveBody, steer, type Contact } from "./physics";
@@ -40,6 +41,8 @@ export function makeFighter(id: number, slot: number, character: CharacterId, se
     downHeld: 0,
     lastY: 0,
     buffer: null,
+    hold: null,
+    charged: 0,
     jumpBuffer: 0,
     lastHitBy: null,
     platform: null,
@@ -90,11 +93,14 @@ function act(state: MatchState, f: Fighter, cmd: Command): void {
       break;
     case "jumpsquat":
       // Attack during the crouch cancels the jump: that is how up attacks come out.
-      if (tryAttack(state, f)) break;
+      if (tryCharge(state, f) || tryAttack(state, f)) break;
       if (f.frame > MOVEMENT.jumpSquat) leaveGround(state, f);
       break;
     case "land":
       if (--f.lag <= 0) toFree(f);
+      break;
+    case "charge":
+      stepCharge(state, f, cmd);
       break;
     case "hurt":
       if (--f.hitstun <= 0) toFree(f);

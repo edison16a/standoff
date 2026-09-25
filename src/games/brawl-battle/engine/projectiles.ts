@@ -3,7 +3,7 @@ import { mainSurface } from "./stages";
 import type { MatchState, Projectile } from "./types";
 
 /**
- * Magic bolts: they fly straight, fizzle after a while, break on the
+ * Bolts, slashes and shockwaves: they fly straight, fizzle after a while, break on the
  * main platform, and vanish on the first fighter they touch.
  */
 export function stepProjectiles(state: MatchState, dt: number): void {
@@ -29,7 +29,7 @@ function strikeFirst(state: MatchState, p: Projectile): boolean {
     const side = (p.vel.x === 0 ? (target.pos.x >= p.pos.x ? 1 : -1) : Math.sign(p.vel.x)) as 1 | -1;
     applyStrike(state, owner, target, {
       hit: p.hit,
-      sound: "magic",
+      sound: p.sound,
       heavy: p.hit.damage >= 12,
       unblockable: false,
       side,
