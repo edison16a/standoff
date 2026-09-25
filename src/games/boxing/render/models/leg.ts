@@ -20,8 +20,10 @@ const THIGH_MUSCLE: readonly Bump[] = [
   { theta: 0.9, t: 0.75, width: 0.3, height: 0.12, amount: 0.008 },
 ];
 
+/** Like the forearm, it narrows into the joint so a bent knee shows no end. */
 const SHIN_RINGS: readonly Ring[] = [
-  { t: 0, y: 0.03, rx: 0.052, zf: 0.054, zb: 0.05 },
+  { t: 0, y: 0, rx: 0.04, zf: 0.042, zb: 0.04 },
+  { t: 0.1, y: -0.035, rx: 0.052, zf: 0.052, zb: 0.052 },
   { t: 0.3, y: -0.1, rx: 0.052, zf: 0.045, zb: 0.064 },
   { t: 0.7, y: -0.3, rx: 0.038, zf: 0.036, zb: 0.04 },
   { t: 1, y: -0.44, rx: 0.032, zf: 0.032, zb: 0.032 },

@@ -28,9 +28,11 @@ const UPPER_MUSCLE: readonly Bump[] = [
   { theta: 1.3, t: 0.62, width: 0.35, height: 0.15, amount: 0.008, mirror: true },
 ];
 
+/** It starts at the joint and narrows into it, so a bent elbow never shows the forearm's end. */
 const FORE: readonly Ring[] = [
-  { t: 0, y: 0.03, rx: 0.042, zf: 0.042, zb: 0.042 },
-  { t: 0.25, y: -0.05, rx: 0.049, zf: 0.047, zb: 0.045 },
+  { t: 0, y: 0, rx: 0.03, zf: 0.03, zb: 0.03 },
+  { t: 0.1, y: -0.025, rx: 0.042, zf: 0.041, zb: 0.041 },
+  { t: 0.3, y: -0.07, rx: 0.049, zf: 0.047, zb: 0.045 },
   { t: 0.7, y: -0.18, rx: 0.038, zf: 0.034, zb: 0.034 },
   { t: 1, y: -0.26, rx: 0.033, zf: 0.028, zb: 0.028 },
 ];
