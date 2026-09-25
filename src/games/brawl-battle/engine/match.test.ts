@@ -67,8 +67,9 @@ describe("four bots", () => {
       const seconds = state.frame / 60;
       expect(seconds).toBeGreaterThan(20);
       expect(seconds).toBeLessThan(240);
-      const places = state.fighters.map((f) => f.place).sort();
-      expect(places).toEqual([1, 2, 3, 4]);
+      // Fighters out on the same step share a place, so each place counts who finished ahead.
+      const places = state.fighters.map((f) => f.place!);
+      for (const p of places) expect(p).toBe(1 + places.filter((q) => q < p).length);
       expect(state.fighters[state.winner!]!.place).toBe(1);
     }
   });
