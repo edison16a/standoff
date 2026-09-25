@@ -27,7 +27,7 @@ export class Chips {
   private readonly scale = new THREE.Vector3();
   private readonly hidden = new THREE.Matrix4().makeScale(0, 0, 0);
 
-  constructor() {
+  constructor(private readonly random: () => number = Math.random) {
     const material = new THREE.MeshStandardMaterial({ roughness: 0.5, metalness: 0.2, side: THREE.DoubleSide });
     this.object = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), material, MAX);
     this.object.frustumCulled = false;
@@ -43,15 +43,15 @@ export class Chips {
       const i = this.next;
       this.next = (this.next + 1) % MAX;
       // Mostly back toward the players and upward, the way flecks fly off a struck face.
-      const velocity = new THREE.Vector3((Math.random() - 0.5) * 2, Math.random() * 1.4 + 0.3, Math.random() * 1.2 + 0.2).multiplyScalar(speed);
+      const velocity = new THREE.Vector3((this.random() - 0.5) * 2, this.random() * 1.4 + 0.3, this.random() * 1.2 + 0.2).multiplyScalar(speed);
       this.chips[i] = {
         position: at.clone(),
         velocity,
-        spin: new THREE.Vector3(Math.random() * 20 - 10, Math.random() * 20 - 10, Math.random() * 20 - 10),
-        rotation: new THREE.Euler(Math.random() * 6, Math.random() * 6, 0),
+        spin: new THREE.Vector3(this.random() * 20 - 10, this.random() * 20 - 10, this.random() * 20 - 10),
+        rotation: new THREE.Euler(this.random() * 6, this.random() * 6, 0),
         start: now,
-        life: 0.5 + Math.random() * 0.5,
-        size: 0.015 + Math.random() * 0.025,
+        life: 0.5 + this.random() * 0.5,
+        size: 0.015 + this.random() * 0.025,
       };
       this.object.setColorAt(i, colour.set(colours[n % colours.length]!));
     }

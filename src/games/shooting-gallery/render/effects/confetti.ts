@@ -23,7 +23,7 @@ export class Confetti {
   private readonly quaternion = new THREE.Quaternion();
   private readonly size = new THREE.Vector3(0.05, 0.08, 1);
 
-  constructor() {
+  constructor(private readonly random: () => number = Math.random) {
     this.object = new THREE.InstancedMesh(
       new THREE.PlaneGeometry(1, 1),
       new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, roughness: 0.6 }),
@@ -45,11 +45,11 @@ export class Confetti {
     const palette = colours.length ? [...colours, ...colours, "#ffffff", "#ffd21f"] : PALETTE;
     const colour = new THREE.Color();
     this.pieces.forEach((piece, i) => {
-      piece.position.set((Math.random() - 0.5) * 9, 4.2 + Math.random() * 2.5, -1.5 + Math.random() * 4);
-      piece.velocity.set((Math.random() - 0.5) * 0.8, -0.6 - Math.random() * 0.8, (Math.random() - 0.5) * 0.4);
-      piece.rotation.set(Math.random() * 6, Math.random() * 6, Math.random() * 6);
-      piece.spin.set(Math.random() * 8 - 4, Math.random() * 8 - 4, Math.random() * 8 - 4);
-      piece.flutter = Math.random() * Math.PI * 2;
+      piece.position.set((this.random() - 0.5) * 9, 4.2 + this.random() * 2.5, -1.5 + this.random() * 4);
+      piece.velocity.set((this.random() - 0.5) * 0.8, -0.6 - this.random() * 0.8, (this.random() - 0.5) * 0.4);
+      piece.rotation.set(this.random() * 6, this.random() * 6, this.random() * 6);
+      piece.spin.set(this.random() * 8 - 4, this.random() * 8 - 4, this.random() * 8 - 4);
+      piece.flutter = this.random() * Math.PI * 2;
       this.object.setColorAt(i, colour.set(palette[i % palette.length]!));
     });
     if (this.object.instanceColor) this.object.instanceColor.needsUpdate = true;

@@ -14,7 +14,7 @@ export class Dents {
   private readonly marks: { mesh: THREE.Mesh; start: number }[] = [];
   private next = 0;
 
-  constructor() {
+  constructor(private readonly random: () => number = Math.random) {
     const geometry = new THREE.PlaneGeometry(0.07, 0.07);
     const map = dentTexture();
     for (let i = 0; i < MAX; i++) {
@@ -34,7 +34,7 @@ export class Dents {
     this.next = (this.next + 1) % MAX;
     // Just proud of the surface, so it never fights the cloth for depth.
     mark.mesh.position.set(at.x, at.y, at.z + 0.045);
-    mark.mesh.rotation.z = Math.random() * Math.PI;
+    mark.mesh.rotation.z = this.random() * Math.PI;
     mark.mesh.visible = true;
     mark.start = now;
   }

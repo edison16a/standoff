@@ -134,9 +134,10 @@ function look(kind: TargetKind): DuckLook {
   let found = looks.get(kind);
   if (found) return found;
   if (kind === "golden") {
+    // Only part metal: the booth's soft environment leaves pure metal looking brown, and this one must shine.
     found = {
-      body: new THREE.MeshStandardMaterial({ color: "#ffc629", metalness: 1, roughness: 0.2, emissive: "#5a3a00", emissiveIntensity: 0.35 }),
-      wing: new THREE.MeshStandardMaterial({ color: "#f0a818", metalness: 1, roughness: 0.28 }),
+      body: new THREE.MeshStandardMaterial({ color: "#ffc629", metalness: 0.6, roughness: 0.24, emissive: "#7a4a00", emissiveIntensity: 0.5 }),
+      wing: new THREE.MeshStandardMaterial({ color: "#f0a818", metalness: 0.65, roughness: 0.28, emissive: "#5a3400", emissiveIntensity: 0.4 }),
       beak: new THREE.MeshStandardMaterial({ color: "#ff9d2e", metalness: 0.8, roughness: 0.3 }),
     };
   } else {
