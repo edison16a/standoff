@@ -58,7 +58,14 @@ function fakeView(director: ShowcaseDirector) {
       if (!z.weak.length) return [{ zombie: z.id, part: "head", weak: null, y: 0.2, ...at }];
       return z.weak.map((_, i) => ({ zombie: z.id, part: "weak", weak: i, y: 0.1 * i, ...at }));
     });
-  return { targets, cast: () => [], shotFx: () => undefined };
+  // Every pellet strikes the nearest hit shape under the aim, as the renderer's raycast would.
+  const cast = (_seat: number, aim: { x: number; y: number }, offsets: readonly unknown[]) => {
+    const under = targets()
+      .filter((t) => Math.hypot(t.x - aim.x, t.y - aim.y) < 0.06)
+      .sort((a, b) => a.distance - b.distance)[0];
+    return offsets.map(() => (under ? { zombie: under.zombie, part: under.part, weak: under.weak } : null));
+  };
+  return { targets, cast, shotFx: () => undefined };
 }
 
 describe("the showcase players", () => {
@@ -78,21 +85,29 @@ describe("the showcase players", () => {
     expect(new Set(ids)).toEqual(new Set([1, 2]));
   });
 
-  it("keep their own zombie rather than trade for one a little closer", () => {
+  it("keep their own zombie rather than trade for one a little nearer their side", () => {
     const shooters = team(2).map((s, i) => ({ ...s, held: i === 0 ? 2 : 1 }));
-    const picks = assignTargets(shooters, [head(1, -0.1), head(2, 0.1)], 0);
+    const picks = assignTargets(shooters, [head(1, -0.02), head(2, 0.02)], 0);
     expect(picks.get(1)!.zombie).toBe(2);
     expect(picks.get(2)!.zombie).toBe(1);
   });
 
-  it("never aim at the same zombie while others stand free, all through the fight", () => {
+  it("never aim at the same zombie while others stand free, and hit only their own", () => {
     for (const plan of [PLANS.loop, PLANS.icon]) {
       const director = new ShowcaseDirector(plan);
       const view = fakeView(director);
       let checked = 0;
+      let frames = 0;
+      let hits = 0;
       for (let ms = 0; ms <= 12_000; ms += 1000 / 30) {
         director.update(ms, react);
         director.shoot(view, 1 / 30);
+        frames++;
+        for (const event of director.game.drain()) {
+          if (event.type !== "hit") continue;
+          expect(event.zombie).toBe(director.targetOf(event.seat));
+          hits++;
+        }
         const standing = new Set(view.targets().map((t) => t.zombie)).size;
         const aimed = plan.players.map((_, i) => director.targetOf(i + 1)).filter((id) => id !== null);
         if (standing < plan.players.length) continue;
@@ -100,7 +115,9 @@ describe("the showcase players", () => {
         expect(new Set(aimed).size).toBe(plan.players.length);
         checked++;
       }
-      expect(checked).toBeGreaterThan(100);
+      // The street stays busy enough that nearly every frame has a zombie for each player.
+      expect(checked).toBeGreaterThan(frames * 0.9);
+      expect(hits).toBeGreaterThan(20);
     }
   });
 });
