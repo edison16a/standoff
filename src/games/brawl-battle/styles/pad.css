@@ -134,6 +134,8 @@
     grid-template-rows: auto auto;
     align-content: center;
     gap: 14px 10px;
+    /* Room at the screen edge for the Ult ring and the button shadows, which the frame would clip. */
+    padding: 12px 10px 14px 0;
   }
 
   .bb-pad .kit-pad-btn--lg {
