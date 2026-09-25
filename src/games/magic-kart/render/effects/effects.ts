@@ -77,6 +77,13 @@ export class Effects {
           this.smoke.emit({ x: at.x, y: at.y, z: at.z, vx: rand(1.5), vy: 1.2, vz: rand(1.5), life: 0.8, size: 0.9, grow: 2.8, color: this.dust, alpha: 0.5 });
         }
       }
+      // Thin vapour streams off the wing tips while gliding fast.
+      if (kart.glide > 0.85 && speed > 12 && kart.timers.ghost <= 0) {
+        for (const side of [1, -1]) {
+          view.glider.tipWorld(side, at);
+          this.smoke.emit({ x: at.x, y: at.y, z: at.z, vx: rand(0.3), vy: 0, vz: rand(0.3), life: 0.55, size: 0.28, grow: 1.6, color: "#ffffff", alpha: 0.32 });
+        }
+      }
       if (kart.timers.ice > 0 && Math.random() < 0.5) {
         this.glow.emit({ x: kart.x + rand(2), y: kart.y + 0.4 + Math.random(), z: kart.z + rand(2), vy: 0.4, life: 0.8, size: 0.25, color: "#bff3ff" });
       }
