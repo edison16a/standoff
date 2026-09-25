@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { MatchEvent } from "./events";
 import { createMatch, stepMatch, type Entrant } from "./match";
+import { fullTime } from "./rules";
 import { BALL, MATCH, PITCH, STEP } from "./tuning";
 import type { Command, MatchState } from "./types";
 
@@ -83,5 +84,19 @@ describe("open play", () => {
     const events = run(clearance, 0.5);
     expect(events).toContainEqual({ type: "out", team: 1 });
     expect(events.some((e) => e.type === "miss")).toBe(false);
+  });
+});
+
+describe("the final whistle", () => {
+  it("clears the losers out of the winners' huddle", () => {
+    const state = inPlay();
+    state.score = [2, 0];
+    fullTime(state);
+    // The losers stand right where the winners will gather.
+    for (const a of state.athletes) a.pos = a.team === 0 ? { x: a.slot - 1, z: 0 } : { x: 0.3 * a.slot, z: 0.4 };
+    run(state, 5);
+    const winners = state.athletes.filter((a) => a.team === 0);
+    const middle = { x: winners.reduce((s, a) => s + a.pos.x, 0) / 3, z: winners.reduce((s, a) => s + a.pos.z, 0) / 3 };
+    for (const a of state.athletes) if (a.team === 1) expect(Math.hypot(a.pos.x - middle.x, a.pos.z - middle.z)).toBeGreaterThan(3);
   });
 });

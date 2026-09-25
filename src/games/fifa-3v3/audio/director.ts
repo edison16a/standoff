@@ -33,12 +33,13 @@ export class SoundDirector {
     this.crowd.start();
     this.crowd.setLevel(0.1);
     this.music.startGroove();
-    this.kickoffs = 0;
   }
 
   matchStart(): void {
     this.music.stopGroove();
     this.crowd.start();
+    // Every match opens with the call, Play again included.
+    this.kickoffs = 0;
   }
 
   /** Every frame: the crowd rises as the ball nears a goal. */

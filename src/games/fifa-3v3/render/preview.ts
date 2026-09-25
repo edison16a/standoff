@@ -52,8 +52,8 @@ export class StarPreview {
     this.ring.rotation.x = Math.PI / 2;
     this.turntable.add(podium, this.ring);
     this.scene.add(this.turntable);
-    this.camera.position.set(0, 1.35, 5.2);
-    this.camera.lookAt(0, 1.0, 0);
+    this.camera.position.set(0, 1.3, 4.6);
+    this.camera.lookAt(0, 1.02, 0);
     this.frame = requestAnimationFrame(this.draw);
   }
 

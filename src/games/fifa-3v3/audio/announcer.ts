@@ -11,14 +11,15 @@ export class Announcer {
   constructor() {
     this.synth = typeof window !== "undefined" && "speechSynthesis" in window ? window.speechSynthesis : null;
     if (!this.synth) return;
-    const choose = () => {
-      const voices = this.synth!.getVoices().filter((v) => v.lang.startsWith("en"));
-      // A British or American male voice sounds most like a commentator, where there is one.
-      this.voice = voices.find((v) => /daniel|male|david|george|arthur/i.test(v.name)) ?? voices.find((v) => v.lang === "en-GB") ?? voices[0] ?? null;
-    };
-    choose();
-    this.synth.addEventListener?.("voiceschanged", choose);
+    this.choose();
+    this.synth.addEventListener?.("voiceschanged", this.choose);
   }
+
+  private readonly choose = () => {
+    const voices = this.synth?.getVoices().filter((v) => v.lang.startsWith("en")) ?? [];
+    // A British or American male voice sounds most like a commentator, where there is one.
+    this.voice = voices.find((v) => /daniel|male|david|george|arthur/i.test(v.name)) ?? voices.find((v) => v.lang === "en-GB") ?? voices[0] ?? null;
+  };
 
   /** `urgent` lines interrupt whatever is being said. */
   say(text: string, options: { urgent?: boolean; pitch?: number; rate?: number } = {}): void {
@@ -33,7 +34,9 @@ export class Announcer {
     this.synth.speak(line);
   }
 
+  /** Quiet now, and for good: the room is closing. */
   stop(): void {
     this.synth?.cancel();
+    this.synth?.removeEventListener?.("voiceschanged", this.choose);
   }
 }

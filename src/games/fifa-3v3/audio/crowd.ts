@@ -55,8 +55,11 @@ export class Crowd {
     if (!this.bed) return;
     const at = this.engine.now;
     this.bed.gain.gain.setTargetAtTime(0.0001, at, 0.4);
-    this.bed.source.stop(at + 2);
-    for (const lfo of this.bed.lfos) lfo.stop(at + 2);
+    const { source, gain, lfos } = this.bed;
+    source.stop(at + 2);
+    for (const lfo of lfos) lfo.stop(at + 2);
+    // Unhooked from the bus once silent, so a closed room leaves nothing behind.
+    source.onended = () => gain.disconnect();
     this.bed = null;
   }
 

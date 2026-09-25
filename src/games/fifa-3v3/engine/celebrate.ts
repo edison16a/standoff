@@ -68,7 +68,11 @@ export function celebrateWin(state: MatchState, dt: number): void {
     a.actionT += dt;
     if (state.winner !== a.team) {
       setAction(a, "dejected");
-      brake(a, dt, 5);
+      // Losers trudge off out of the winners' huddle, so the camera circling it never finds them in the middle.
+      const away = sub(a.pos, middle);
+      const gap = Math.hypot(away.x, away.z);
+      if (gap < 5) moveToward(a, { x: a.pos.x + (gap > 0.1 ? away.x / gap : 1) * 2, z: a.pos.z + (gap > 0.1 ? away.z / gap : 0) * 2 }, 0.35, dt);
+      else brake(a, dt, 5);
     } else if (dist(a.pos, middle) > 1.5) {
       setAction(a, "free");
       moveToward(a, middle, 0.6, dt);
