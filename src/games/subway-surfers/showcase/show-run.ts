@@ -10,6 +10,8 @@ export class ShowRun {
   readonly run: Run;
   private readonly bot = new Bot(true);
   private simulated = 0;
+  /** All the time handed in so far. Leftovers carry over, so frames shorter than a step still add up. */
+  private given = 0;
 
   constructor(seed: number, warmupS: number, setup?: (run: Run) => void) {
     this.run = new Run(seed);
@@ -20,9 +22,9 @@ export class ShowRun {
 
   /** Plays on by `seconds`, and returns what happened. */
   advance(seconds: number) {
-    const target = this.simulated + seconds;
+    this.given += seconds;
     const step = 1 / 60;
-    while (this.simulated + step <= target + 1e-9) {
+    while (this.simulated + step <= this.given + 1e-9) {
       this.bot.drive(this.run);
       this.run.update(step);
       this.simulated += step;
