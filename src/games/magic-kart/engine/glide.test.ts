@@ -60,6 +60,15 @@ describe("when the glider opens", () => {
     expect(kart.airborne).toBe(false);
   });
 
+  it("does not open for a kart rolling off an open edge into the drop", () => {
+    const kart = createKart(0, "pip", 1, flat, 40, 0);
+    kart.airborne = true;
+    kart.airTime = 0.7;
+    kart.y = flat.frameAt(kart.loc.s).y - 2;
+    kart.vy = -12;
+    expect(shouldDeploy(kart, flat)).toBe(false);
+  });
+
   it("reckons the time left in the air from height and climb", () => {
     const kart = createKart(0, "blaze", 1, flat, 40, 0);
     kart.airborne = true;

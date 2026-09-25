@@ -26,12 +26,15 @@ export function airLeft(kart: Kart, track: Track): number {
 
 /**
  * Whether the glider should open. Only on a real jump: off the ground a
- * moment, with enough flight in total to be worth it. A bump, a crest or
- * the short drop back in after a respawn never opens it.
+ * moment, with enough flight in total to be worth it. A bump, a crest,
+ * the short drop back in after a respawn or a fall off the edge never
+ * opens it.
  */
 export function shouldDeploy(kart: Kart, track: Track): boolean {
   if (!kart.airborne || kart.gliding || kart.airTime < GLIDE.after) return false;
-  return kart.airTime + airLeft(kart, track) >= GLIDE.minAir;
+  const left = airLeft(kart, track);
+  // Already below the road, off an open edge or short of a gap: that is a fall, not a flight.
+  return left > 0 && kart.airTime + left >= GLIDE.minAir;
 }
 
 /** Opens the glider over a jump and folds it on landing, easing it in and out over a few tenths. */
