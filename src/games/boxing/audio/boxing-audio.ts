@@ -35,6 +35,8 @@ export class BoxingAudio {
     this.crowd = new CrowdSound(engine);
     this.chant = new Chant(engine, this.crowd);
     this.music = new Music(engine);
+    // The engine outlives each game, so set every bus rather than trust what the last game left.
+    engine.setLevels({ music: 1, crowd: 1, sfx: 1 });
     this.crowd.setExcitement(0.2);
     this.crowd.start();
     this.music.play("menu");
