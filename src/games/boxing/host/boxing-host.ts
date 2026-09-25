@@ -100,6 +100,9 @@ export class BoxingHost {
     this.stopDriver = this.driver.listen((event) => this.onMatchEvent(event, this.driver!.match));
     this.banners.clear();
     this.audio.setPlayers(humans);
+    const [red, blue] = this.looks();
+    this.audio.setNames([red.name, blue.name]);
+    this.audio.screen("fight");
     this.fightId++;
     this.feed.reset();
     this.room.setPlaying(true);
@@ -174,6 +177,7 @@ export class BoxingHost {
 
   private showResults(driver: FightDriver): void {
     this.room.setPlaying(false);
+    this.audio.screen("results");
     store.setState(finishFight(driver, this.looks(), store.getState().records));
   }
 
@@ -183,6 +187,7 @@ export class BoxingHost {
     this.driver = null;
     this.lastStage = "";
     this.audio.replay(false);
+    this.audio.screen("menu");
     this.room.setPlaying(false);
     store.setState({ hud: null });
   }

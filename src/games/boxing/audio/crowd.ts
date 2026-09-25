@@ -110,13 +110,13 @@ export class CrowdSound {
   /**
    * Many voices at once: detuned saws around `pitch`, gliding by `glide`,
    * shaped by two vowel formants, swelling and fading over `seconds`.
+   * `rise` is the share of the time spent swelling, short for a chant.
    */
-  private voices(amount: number, pitch: number, glide: number, seconds: number, formants: [number, number]): void {
+  voices(amount: number, pitch: number, glide: number, seconds: number, formants: [number, number], at = this.engine.now, rise = 0.2): void {
     const { ctx } = this.engine;
-    const at = this.engine.now;
     const out = ctx.createGain();
     out.gain.setValueAtTime(0.0001, at);
-    out.gain.linearRampToValueAtTime(0.07 * amount, at + seconds * 0.2);
+    out.gain.linearRampToValueAtTime(0.07 * amount, at + seconds * rise);
     out.gain.exponentialRampToValueAtTime(0.0001, at + seconds);
     out.connect(this.engine.bus("crowd"));
     const filters = formants.map((frequency) => {
@@ -130,7 +130,8 @@ export class CrowdSound {
     for (let i = 0; i < 14; i++) {
       const osc = ctx.createOscillator();
       osc.type = "sawtooth";
-      const start = pitch * (0.7 + ((i * 0.37) % 1) * 0.7);
+      // Spread over most of an octave, with a little chance so no two reactions match.
+      const start = pitch * (0.7 + ((i * 0.37 + Math.random() * 0.1) % 1) * 0.7);
       osc.frequency.setValueAtTime(start, at);
       osc.frequency.linearRampToValueAtTime(start * glide, at + seconds);
       for (const f of filters) osc.connect(f);
@@ -138,6 +139,6 @@ export class CrowdSound {
       osc.stop(at + seconds + 0.1);
       osc.onended = () => osc.disconnect();
     }
-    setTimeout(() => out.disconnect(), (seconds + 0.5) * 1000);
+    setTimeout(() => out.disconnect(), (at - this.engine.now + seconds + 0.5) * 1000);
   }
 }
