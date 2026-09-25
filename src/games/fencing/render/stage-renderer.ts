@@ -45,6 +45,8 @@ export class StageRenderer {
     this.quality = options.quality ?? readQuality();
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: this.quality.antialias, powerPreference: "high-performance" });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    // Browser tests read draw calls and triangles with `?fdebug`, to keep software rendering affordable.
+    if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("fdebug")) window.__fencingRender = { info: this.renderer.info, scene: this.scene };
     this.renderer.shadowMap.enabled = this.quality.shadows;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.post = this.quality.post ? new PostFx(this.renderer, this.scene, this.director.camera, this.quality.antialias ? 4 : 0) : null;
@@ -160,5 +162,11 @@ export class StageRenderer {
     this.environment?.dispose();
     this.post?.dispose();
     this.renderer.dispose();
+  }
+}
+
+declare global {
+  interface Window {
+    __fencingRender?: { info: THREE.WebGLInfo; scene: THREE.Scene };
   }
 }

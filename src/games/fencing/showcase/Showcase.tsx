@@ -42,7 +42,9 @@ export function Showcase({ view }: { view: ShowcaseView }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const renderer = new StageRenderer(canvas, { seed: 11, quality: view === "loop" && !readGallery() ? CLIP : undefined });
+    // The clip gets its lighter preset unless a test asks for another with `?fq`.
+    const clip = view === "loop" && !readGallery() && !new URLSearchParams(window.location.search).has("fq");
+    const renderer = new StageRenderer(canvas, { seed: 11, quality: clip ? CLIP : undefined });
     renderer.setTheme(true);
     const fit = () => renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
     fit();
