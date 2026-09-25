@@ -45,6 +45,16 @@ describe("the difficulty curve", () => {
     }
   });
 
+  it("stops a sloppy team too, however many guns it has", () => {
+    const two = simulateRun([
+      { seat: 1, weapon: "rifle", skill: 0.3 },
+      { seat: 2, weapon: "shotgun", skill: 0.3 },
+    ]);
+    expect(two.reached).toBeLessThan(26);
+    const four = simulateRun(WEAPON_IDS.map((weapon, i) => ({ seat: i + 1, weapon, skill: 0.3 })));
+    expect(four.reached).toBeLessThan(26);
+  });
+
   it("starts gentle: nobody gets hurt in the first four stages", () => {
     const run = simulateRun([{ seat: 1, weapon: "smg", skill: 0.3 }], 1, 4);
     expect(run.results.every((r) => r.healthLost <= 0)).toBe(true);

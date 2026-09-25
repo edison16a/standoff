@@ -29,6 +29,15 @@ export function teamGap(spec: StageSpec, players: number): number {
 }
 
 /**
+ * How hard each swing lands on a team. Four guns spread over the crowd
+ * drop almost everything before it arrives, so the few that get through
+ * hit harder, and a sloppy team still falls before the ship.
+ */
+export function teamHarm(spec: StageSpec, players: number): number {
+  return spec.harm * (1 + 0.3 * Math.max(0, players - 1));
+}
+
+/**
  * One stage's fight: it lets zombies in a few at a time, walks them at
  * the team and reports their swings. It is over once every zombie the
  * stage holds, boss included, is down.
@@ -127,7 +136,7 @@ export class Encounter {
     const z = makeZombie(this.nextId++, kind, ahead, side, this.rng.range(-front, front), {
       hpScale: this.spec.tough,
       speedScale: this.spec.speed,
-      harm: this.spec.harm,
+      harm: teamHarm(this.spec, this.players),
       weakHp: weakPointHp(kind, this.players),
       seed: this.rng.next(),
     });
@@ -135,13 +144,13 @@ export class Encounter {
     emit({ type: "spawn", zombie: z.id, kind });
   }
 
-  /** Keeps zombies from walking through each other, bosses taking more room. */
   /** A side position kept on the street and on screen. */
   private keepInView(z: Zombie, side: number): number {
     const room = Math.min(HALF_WIDTH[this.spec.zone], sideRoom(z.ahead));
     return Math.max(-room, Math.min(room, side));
   }
 
+  /** Keeps zombies from walking through each other, bosses taking more room. */
   private separate(): void {
     const standing = this.zombies.filter(alive);
     for (let i = 0; i < standing.length; i++) {
