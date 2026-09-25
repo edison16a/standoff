@@ -26,30 +26,23 @@
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
-  .mk-phone .kit-steps {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto 1fr auto;
-    column-gap: 16px;
-  }
-
-  .mk-phone .kit-steps__track {
-    grid-column: 1;
-  }
-
   .mk-phone .kit-steps__title {
-    grid-column: 2;
-    grid-row: 1;
-    align-self: center;
     font-size: 18px;
   }
 
-  .mk-phone .kit-steps__body {
-    grid-column: 1 / 3;
+  .mk-phone .mk-setup__lead {
+    font-size: 15px;
   }
 
-  .mk-phone .kit-steps__footer {
-    grid-column: 1 / 3;
+  .mk-phone .mk-setup__text {
+    gap: 4px;
+  }
+}
+
+/* Upright, the pedals are covered by the turn your phone card and must not widen the page. */
+@media (orientation: portrait) {
+  .mk-phone--drive .mk-pad {
+    display: none;
   }
 }
 
@@ -97,7 +90,8 @@
 
 .mk-level {
   width: min(100%, 250px);
-  max-height: 180px;
+  /* Shrinks on a short screen so the step never scrolls. */
+  max-height: min(180px, 34dvh);
 }
 
 .mk-level__rim {
