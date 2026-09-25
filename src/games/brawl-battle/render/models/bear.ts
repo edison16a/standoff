@@ -38,8 +38,12 @@ export function buildBear(tint: string | null): RigSpec {
     paint(ball(r * 0.2, 6, 4), cream, { at: [-r * 0.75, h + r * 0.75, 0.06] }),
     paint(ball(r * 0.48, 7, 5), cream, { at: [0, h - r * 0.28, r * 0.72], scale: [1, 0.75, 0.85] }),
     paint(ball(r * 0.17, 6, 4), "#111827", { at: [0, h - r * 0.12, r * 1.1], scale: [1.3, 0.9, 1] }),
-    paint(box(0.06, 0.07, 0.03), "#111827", { at: [r * 0.38, h + r * 0.28, r * 0.84] }),
-    paint(box(0.06, 0.07, 0.03), "#111827", { at: [-r * 0.38, h + r * 0.28, r * 0.84] }),
+    paint(box(0.075, 0.085, 0.03), "#111827", { at: [r * 0.38, h + r * 0.28, r * 0.84] }),
+    paint(box(0.075, 0.085, 0.03), "#111827", { at: [-r * 0.38, h + r * 0.28, r * 0.84] }),
+    // A glint in each eye, and a flash of teeth under the muzzle.
+    paint(box(0.025, 0.025, 0.02), "#ffffff", { at: [r * 0.33, h + r * 0.34, r * 0.86] }),
+    paint(box(0.025, 0.025, 0.02), "#ffffff", { at: [-r * 0.43, h + r * 0.34, r * 0.86] }),
+    paint(box(0.14, 0.03, 0.03), "#f8fafc", { at: [0, h - r * 0.5, r * 0.98] }),
     // Heavy brows make him look grumpy and ready.
     paint(box(0.13, 0.04, 0.03), darkFur, { at: [r * 0.36, h + r * 0.45, r * 0.84], rot: [0, 0, -0.35] }),
     paint(box(0.13, 0.04, 0.03), darkFur, { at: [-r * 0.36, h + r * 0.45, r * 0.84], rot: [0, 0, 0.35] }),

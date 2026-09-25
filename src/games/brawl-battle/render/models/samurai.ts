@@ -2,7 +2,7 @@ import { humanBody, tinted } from "./body";
 import { ball, box, cone, cyl, paint } from "./geo";
 import { PartList, type Dims, type RigSpec } from "./rig";
 
-export const SAMURAI_DIMS: Dims = { hipY: 0.88, thigh: 0.41, shin: 0.39, torso: 0.52, upper: 0.3, fore: 0.28, shoulderX: 0.24, hipX: 0.11, head: 0.17, headR: 0.15 };
+export const SAMURAI_DIMS: Dims = { hipY: 0.88, thigh: 0.41, shin: 0.39, torso: 0.52, upper: 0.3, fore: 0.28, shoulderX: 0.24, hipX: 0.11, head: 0.2, headR: 0.175 };
 
 /** How far the katana reaches past the fist, for the swing trails. */
 export const KATANA = { grip: 0.08, tip: 1.28 };
@@ -44,7 +44,11 @@ export function buildSamurai(tint: string | null): RigSpec {
     paint(box(0.06, 0.34, 0.03), gold, { at: [0.1, h + r * 1.2, r * 0.8], rot: [0.2, 0, -0.5] }),
     paint(box(0.06, 0.34, 0.03), gold, { at: [-0.1, h + r * 1.2, r * 0.8], rot: [0.2, 0, 0.5] }),
     paint(ball(0.05, 6, 4), gold, { at: [0, h + r * 0.75, r * 1.05] }),
-    // A half mask over the jaw.
+    // The helmet's turned back side flaps, and a half mask over the jaw.
+    paint(box(0.05, r * 0.9, r * 0.8), dark, { at: [r * 1.2, h + r * 0.1, r * 0.25], rot: [0, 0.5, -0.25] }),
+    paint(box(0.05, r * 0.9, r * 0.8), dark, { at: [-r * 1.2, h + r * 0.1, r * 0.25], rot: [0, -0.5, 0.25] }),
+    paint(box(0.055, r * 0.92, 0.02), gold, { at: [r * 1.22, h + r * 0.1, r * 0.25 + 0.03], rot: [0, 0.5, -0.25] }),
+    paint(box(0.055, r * 0.92, 0.02), gold, { at: [-r * 1.22, h + r * 0.1, r * 0.25 + 0.03], rot: [0, -0.5, 0.25] }),
     paint(box(r * 1.5, r * 0.6, 0.06), "#991b1b", { at: [0, h - r * 0.55, r * 0.8] }),
   );
   // The katana, held in the fist and pointing along the hand's forward axis.
