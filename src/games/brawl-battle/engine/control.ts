@@ -10,11 +10,20 @@ import type { Command, Fighter, MatchState } from "./types";
  * the buffer, jumps, dropping through platforms and the shield.
  */
 
-/** Keeps the latest press for a few frames, so an early press still comes out. */
+/** Keeps the latest press, and a jump, for a few frames, so an early press still comes out. */
 export function bufferPress(f: Fighter, cmd: Command): void {
   const button = cmd.ult ? "ult" : cmd.heavy ? "heavy" : cmd.light ? "light" : null;
   if (button) f.buffer = { button, x: cmd.x, y: cmd.y, frames: BUFFER_FRAMES };
   else if (f.buffer && --f.buffer.frames <= 0) f.buffer = null;
+  if (cmd.jump) f.jumpBuffer = BUFFER_FRAMES;
+  else if (f.jumpBuffer > 0) f.jumpBuffer--;
+}
+
+/** A jump pressed this step or a moment ago, used up as it is read. */
+function takeJump(f: Fighter, cmd: Command): boolean {
+  const jump = !!cmd.jump || f.jumpBuffer > 0;
+  f.jumpBuffer = 0;
+  return jump;
 }
 
 /** Starts the buffered attack if the fighter can. */
@@ -58,7 +67,7 @@ export function freeControl(state: MatchState, f: Fighter, cmd: Command): void {
   const grounded = f.ground !== null;
   // An attack pressed with the jump wins, so up and Attack together is an up attack.
   if (tryAttack(state, f)) return;
-  if (cmd.jump) {
+  if (takeJump(f, cmd)) {
     if (grounded) {
       f.action = "jumpsquat";
       f.frame = 0;
@@ -98,7 +107,7 @@ export function shieldControl(state: MatchState, f: Fighter, cmd: Command): void
     f.downHeld = 0;
     return freeControl(state, f, cmd);
   }
-  if (cmd.jump) {
+  if (takeJump(f, cmd)) {
     f.action = "jumpsquat";
     f.frame = 0;
     return;

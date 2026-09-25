@@ -106,6 +106,7 @@ export function applyStrike(state: MatchState, attacker: Fighter, target: Fighte
   target.move = null;
   target.hitstun = Math.max(1, hitstunFrames(speed));
   target.buffer = null;
+  target.jumpBuffer = 0;
   target.lag = 0;
   // Being hit gives back the air jump and the recovery, so a fighter can always try to come back.
   target.airJumps = 1;

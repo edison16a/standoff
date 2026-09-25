@@ -43,6 +43,15 @@ describe("the fighter's state machine", () => {
     expect(f.swing).toBe(2);
   });
 
+  it("keeps a jump pressed near the end of a move and jumps once it ends", () => {
+    const state = fightNow(["karate"]);
+    const f = state.fighters[0]!;
+    place(f, 0);
+    const frames = MOVESETS.karate.jab.frames;
+    const events = run(state, frames + 8, (_, frame) => (frame === 0 ? { x: 0, y: 0, light: true } : frame === frames - 3 ? { x: 0, y: 1, jump: true } : undefined));
+    expect(events.filter((e) => e.type === "jump")).toHaveLength(1);
+  });
+
   it("allows the up recovery once per trip into the air", () => {
     const state = fightNow(["samurai"]);
     const f = state.fighters[0]!;

@@ -40,6 +40,7 @@ export function makeFighter(id: number, slot: number, character: CharacterId, se
     downHeld: 0,
     lastY: 0,
     buffer: null,
+    jumpBuffer: 0,
     lastHitBy: null,
     platform: null,
     place: null,

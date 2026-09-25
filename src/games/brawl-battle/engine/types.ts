@@ -92,6 +92,8 @@ export interface Fighter {
   /** The stick last step, to spot fresh flicks. */
   lastY: number;
   buffer: { button: Button; x: number; y: number; frames: number } | null;
+  /** Frames a jump pressed while busy is still waiting to come out. */
+  jumpBuffer: number;
   lastHitBy: { id: number; frame: number } | null;
   /** Where the respawn platform is, while riding it. */
   platform: Vec2 | null;
