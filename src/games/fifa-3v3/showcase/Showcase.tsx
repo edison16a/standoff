@@ -25,7 +25,10 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     stage.prepend(canvas);
     const params = new URLSearchParams(window.location.search);
     const quality = params.get("quality");
-    const renderer = new MatchRenderer(canvas, { quality: quality === "low" || quality === "high" ? quality : "film" });
+    const renderer = new MatchRenderer(canvas, { quality: quality === "low" || quality === "high" ? quality : "film",
+      // The clip is filmed a frame at a time in software; a lighter frame keeps each one in time.
+      scale: view === "loop" ? 0.75 : 1,
+    });
     // Development peeks can jump ahead in the match without drawing every frame on the way.
     const scene = new ShowcaseScene(view, Number(params.get("seek") ?? 0));
     if (scene.pose) renderer.director.setFixed(scene.pose.pos, scene.pose.look, scene.pose.fov);
@@ -49,6 +52,7 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     const loop = (now: number) => {
       const events = scene.tick(now);
       for (const event of events) renderer.onEvent(event, scene.view);
+      if (frozen && draws > 0) renderer.settle(scene.view, scene.shot, now, 1.5, scene.focus(renderer));
       if (!frozen || draws > 0) {
         renderer.draw(scene.view, scene.shot, now, scene.focus(renderer), scene.tags);
         draws--;

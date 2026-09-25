@@ -19,6 +19,8 @@ export interface RendererOptions {
    * tool renders it in software, and the video encoder softens edges anyway.
    */
   quality?: "high" | "low" | "film";
+  /** Draws at this share of the screen's resolution. The showcase's clip uses less, to film in time. */
+  scale?: number;
 }
 
 /**
@@ -37,9 +39,11 @@ export class MatchRenderer {
   private readonly environment: THREE.Texture;
   private last = 0;
   private readonly low: boolean;
+  private readonly scale: number;
 
   constructor(canvas: HTMLCanvasElement, options: RendererOptions = {}) {
     this.low = options.quality === "low";
+    this.scale = options.scale ?? 1;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: options.quality !== "low" && options.quality !== "film", powerPreference: "high-performance" });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 0.95;
@@ -59,7 +63,7 @@ export class MatchRenderer {
   }
 
   resize(width: number, height: number, dpr: number): void {
-    const ratio = this.low ? 0.6 : Math.min(dpr, 1.5);
+    const ratio = (this.low ? 0.6 : Math.min(dpr, 1.5)) * this.scale;
     this.renderer.setPixelRatio(ratio);
     this.renderer.setSize(width, height, false);
     this.director.setAspect(width / Math.max(1, height));
@@ -86,7 +90,21 @@ export class MatchRenderer {
   }
 
   draw(view: MatchView, shot: Shot, nowMs: number, focus?: THREE.Vector3, tags = true): void {
-    const dt = this.last ? Math.min(0.1, (nowMs - this.last) / 1000) : 1 / 60;
+    this.advance(view, shot, nowMs, focus, tags);
+    this.renderer.render(this.scene, this.director.camera);
+  }
+
+  /**
+   * Plays a frozen moment forward for a while without drawing, so the
+   * players' poses, which ease toward their targets, settle before a
+   * still is drawn once.
+   */
+  settle(view: MatchView, shot: Shot, nowMs: number, seconds: number, focus?: THREE.Vector3): void {
+    for (let t = 0; t < seconds; t += 1 / 30) this.advance(view, shot, nowMs - (seconds - t) * 1000, focus, false);
+  }
+
+  private advance(view: MatchView, shot: Shot, nowMs: number, focus: THREE.Vector3 | undefined, tags: boolean): void {
+    const dt = this.last ? Math.min(0.1, Math.max(0, nowMs - this.last) / 1000) : 1 / 60;
     this.last = nowMs;
     const time = nowMs / 1000;
     this.squad.update(view, dt, time, tags && shot !== "replay-end" && shot !== "replay-side");
@@ -96,7 +114,6 @@ export class MatchRenderer {
     this.effects.frame(view, dt, time);
     this.director.update(view, shot, dt, time, focus);
     this.squad.fitTags(this.director.camera.fov);
-    this.renderer.render(this.scene, this.director.camera);
   }
 
   /** Where a player stands, for the close up camera. */
