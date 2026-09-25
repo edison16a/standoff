@@ -99,13 +99,15 @@ export function dribbleBall(m: Match, a: Athlete, dt: number): void {
   const hand = h * (tall ? 0.5 : lerp(0.46, 0.4, still));
   const drop = 1 - Math.abs(1 - 2 * a.dribble);
   const y = 0.12 + (hand - 0.12) * (1 - drop * drop);
-  let fwd = 0.26 + speed * 0.035;
+  let fwd = 0.26;
   // Behind the back the ball goes round behind the hips on its way across.
   if (act.kind === "move" && act.move === "behindBack" && a.crossArmed) {
     const across = 1 - Math.abs(a.dribbleSide - a.dribbleHand) / 2;
     fwd = lerp(fwd, -0.24, Math.sin(Math.PI * clamp(across, 0, 1)));
   }
-  // Out to the side of the dribbling hand, and through the middle in front during a crossover.
+  // Out to the side of the dribbling hand, through the middle in front during a crossover,
+  // and pushed out ahead of the run so the player runs onto it.
   const side = 0.3 * a.dribbleSide;
-  b.pos = { x: a.x + fx * fwd + rx * side, y, z: a.z + fz * fwd + rz * side };
+  const lead = 0.06;
+  b.pos = { x: a.x + fx * fwd + rx * side + a.vx * lead, y, z: a.z + fz * fwd + rz * side + a.vz * lead };
 }
