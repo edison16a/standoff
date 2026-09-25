@@ -94,6 +94,11 @@ export class MatchRenderer {
     this.renderer.render(this.scene, this.director.camera);
   }
 
+  /** Everything a frame does except drawing it: the camera, the bodies and the effects move on. */
+  update(view: MatchView, shot: Shot, nowMs: number, focus?: THREE.Vector3, tags = true): void {
+    this.advance(view, shot, nowMs, focus, tags);
+  }
+
   /**
    * Plays a frozen moment forward for a while without drawing, so the
    * players' poses, which ease toward their targets, settle before a

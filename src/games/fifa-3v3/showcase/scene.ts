@@ -20,7 +20,7 @@ const LINEUP: Entrant[] = [
 ];
 const SEED = 3;
 /** The capture tool warms up for three seconds before it films. */
-const WARMUP = 3;
+export const WARMUP = 3;
 
 function fresh(): MatchState {
   // The first shots are saved, for some drama in the build up, and then they go in.

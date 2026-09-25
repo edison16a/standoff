@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import type { ShowcaseView } from "@/platform/games/game-api";
 import { MatchRenderer } from "../render/match-renderer";
-import { ShowcaseScene } from "./scene";
+import { ShowcaseScene, WARMUP } from "./scene";
 
 /**
  * FIFA 3v3 playing itself for the home screen: a seeded match of
@@ -53,7 +53,10 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
       const events = scene.tick(now);
       for (const event of events) renderer.onEvent(event, scene.view);
       if (frozen && draws > 0) renderer.settle(scene.view, now, 1.5);
-      if (!frozen || draws > 0) {
+      // Nobody films the capture tool's warm up, and drawing it only queues work for software graphics.
+      const warming = !frozen && now < WARMUP * 1000 - 200;
+      if (warming) renderer.update(scene.view, scene.shot, now, scene.focus(renderer), scene.tags);
+      else if (!frozen || draws > 0) {
         renderer.draw(scene.view, scene.shot, now, scene.focus(renderer), scene.tags);
         draws--;
       }
