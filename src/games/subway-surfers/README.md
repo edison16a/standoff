@@ -47,12 +47,12 @@ Distance times the multiplier, plus 10 times the multiplier for every coin. The 
 
 ## Sound
 
-Everything is synthesised live through the room's music, crowd and effects buses, so the volume settings apply to all of it.
+The music and effects are synthesised live through the room's music, crowd and effects buses, so the volume settings apply to them. The spoken lines use the browser's own voice and follow the effects volume by hand.
 
 * **Music.** The run plays a chill funk and hip hop groove in G minor at 100 beats a minute: sixteen bars with a whistled hook over two A sections and vibes answering over two B sections, with soft boom bap drums, a round sub bass, electric piano and muted guitar chops. It picks up a little as the run gets faster. The menu plays the same band laid back in B flat. The music dips under crashes, power ups and new zones, and goes muffled while every runner is waiting.
 * **Effects.** Coins chime higher through a streak. Jumps, landings, rolls and lane swishes are layered from a short attack, a body and a tail, and drift a little in pitch so repeats never sound the same. Lane swishes travel across the stereo field the way you moved. With two players each hears their own side.
 * **The yard.** Train horns and rushing air, a clang when you glance off a train, the guard's whistle and his dog barking as they close in, and a boom with falling debris on a crash.
-* **Celebrations.** Power ups get a rising arpeggio and a short hype voice line. The results get a horn fanfare and a cheer from the platform, bigger for a winner or a new best. Spoken lines follow the sound effects volume.
+* **Celebrations.** Power ups get a rising arpeggio and a short hype voice line. The results get a horn fanfare and a cheer from the platform, bigger for a winner or a new best.
 
 ## How it is built
 
