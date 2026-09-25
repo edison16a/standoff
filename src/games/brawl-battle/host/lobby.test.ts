@@ -32,6 +32,13 @@ describe("the lobby", () => {
     expect(lobby.slots().filter((s) => s.kind === "bot")).toHaveLength(1);
   });
 
+  it("shows open places before the computers, so there is always room to join", () => {
+    const lobby = new Lobby();
+    readyPlayer(lobby, 1, "bear");
+    lobby.setBots(1);
+    expect(lobby.slots().map((s) => s.kind)).toEqual(["player", "open", "open", "bot"]);
+  });
+
   it("gives a player alone one computer to fight, even with none asked for", () => {
     const lobby = new Lobby();
     lobby.setBots(0);

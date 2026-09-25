@@ -78,11 +78,12 @@ export class Lobby {
     return Math.min(room, Math.max(this.bots, players === 1 ? 1 : 0));
   }
 
-  /** The four places: ready players first, then computers, then open places. */
+  /** The four places: ready players first, then places still open to join, then computers. */
   slots(): Slot[] {
     const out: Slot[] = this.readySeats.map((seat) => ({ kind: "player", seat, character: this.state(seat).pick! }));
-    for (const character of this.botCharacters()) out.push({ kind: "bot", character });
-    while (out.length < MAX_FIGHTERS) out.push({ kind: "open" });
+    const bots = this.botCharacters();
+    while (out.length + bots.length < MAX_FIGHTERS) out.push({ kind: "open" });
+    for (const character of bots) out.push({ kind: "bot", character });
     return out;
   }
 

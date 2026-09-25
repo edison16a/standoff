@@ -88,7 +88,10 @@ export function Lobby() {
   const canStart = useBrawlStore((s) => s.canStart);
   const choosing = seats.filter((s) => s.connected && !s.ready);
   const players = slots.filter((s) => s.kind === "player").length;
+  // Colours as the match will give them: seat colours for players, spare ones for computers.
   const colours = fighterColours(slots.flatMap((s) => (s.kind === "open" ? [] : [{ seat: s.kind === "player" ? s.seat : null, character: s.character }])));
+  let fighter = 0;
+  const colourOf = (slot: SlotView) => (slot.kind === "open" ? "#64748b" : (colours[fighter++]?.colour ?? "#64748b"));
   const note =
     choosing.length > 0
       ? `Still choosing: ${choosing.map((s) => s.name).join(", ")}.`
@@ -106,7 +109,7 @@ export function Lobby() {
       </header>
       <ol className="bb-slots" aria-label="Fighters">
         {slots.map((slot, i) => (
-          <SlotCard key={slot.kind === "player" ? `p${slot.seat}` : `${slot.kind}${i}`} slot={slot} index={i} colour={colours[i]?.colour ?? "#64748b"} />
+          <SlotCard key={slot.kind === "player" ? `p${slot.seat}` : `${slot.kind}${i}`} slot={slot} index={i} colour={colourOf(slot)} />
         ))}
       </ol>
       <footer className="bb-lobby__footer">

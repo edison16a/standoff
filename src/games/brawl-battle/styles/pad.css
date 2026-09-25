@@ -20,7 +20,7 @@
 @media (orientation: portrait) {
   .bb-pad {
     grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-rows: minmax(0, 0.8fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 0.6fr) minmax(0, 1fr);
     grid-template-areas: "status status" "dpad buttons";
   }
 }
@@ -112,6 +112,11 @@
   font-weight: 900;
 }
 
+.bb-pad .kit-pad-btn--md span {
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
 /* Sizes that fit the phone's short side either way up. */
 .bb-pad .kit-pad-btn--lg {
   width: min(27vmin, 116px);
@@ -132,13 +137,13 @@
   }
 
   .bb-pad .kit-pad-btn--lg {
-    width: min(24vmin, 96px);
-    height: min(24vmin, 96px);
+    width: min(25vmin, 100px);
+    height: min(25vmin, 100px);
   }
 
   .bb-pad .kit-pad-btn--md {
-    width: min(17vmin, 72px);
-    height: min(17vmin, 72px);
+    width: min(20vmin, 80px);
+    height: min(20vmin, 80px);
   }
 }
 
