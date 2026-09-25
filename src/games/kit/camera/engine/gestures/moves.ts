@@ -113,13 +113,18 @@ export class MoveReader {
   /** Jumps, ducks and lanes, all from where the head is against its line. */
   private readHead(body: Body, line: HeadLine, time: number, step: number, next: MoveState, say: Say): void {
     const { up, down } = this.options.head;
-    const at = line.measure(body);
+    let at = line.measure(body);
     const moves = this.head.update(at.rise, time);
     const seen = ramp(body.confidence, 0.4, 0.8);
     if (moves.jumped) say({ type: "jump", confidence: ramp(at.rise, up / 2, up * 1.5) * seen });
     if (moves.landed) say({ type: "land" });
     if (moves.ducked) say({ type: "duck", confidence: ramp(-at.rise, down / 2, down * 1.5) * seen });
     if (moves.stood) say({ type: "stand" });
+    if (moves.settled) {
+      // The player stood up or sat down. Their new resting height is the line from now on.
+      line.settle(body);
+      at = line.measure(body);
+    }
     const lane = this.lane.update(at.side, body.confidence);
     if (lane.changed) say({ type: "lane", lane: lane.lane, from: this.state.lane });
     next.lane = lane.lane;

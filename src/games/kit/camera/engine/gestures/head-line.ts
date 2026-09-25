@@ -68,8 +68,7 @@ export class HeadLine {
 
   measure(body: Body): HeadPosition {
     const ratio = body.shoulderWidth / this.shoulderWidth;
-    // A jump can take the head out of the top of the picture. The shoulders still show where it is.
-    const head = body.headSeen ? body.head.y : body.shoulders.y - this.gap * ratio;
+    const head = this.headY(body, ratio);
     return {
       rise: (spread(this.y, ratio) - head) / body.shoulderWidth,
       side: ((centreOf(body) - spread(this.x, ratio)) * body.aspect) / body.shoulderWidth,
@@ -82,6 +81,25 @@ export class HeadLine {
     const ratio = body.shoulderWidth / this.shoulderWidth;
     const y = spread(this.y, ratio);
     return { y, top: y - up * body.shoulderWidth, bottom: y + down * body.shoulderWidth, x: spread(this.x, ratio), width: body.shoulderWidth / body.aspect };
+  }
+
+  /**
+   * Moves the line straight to where the head is now, at the player's size
+   * now. For a player who stood up or sat down, whose head is never coming
+   * back to the old line. Home across the picture stays, only resized.
+   */
+  settle(body: Body): void {
+    const ratio = body.shoulderWidth / this.shoulderWidth;
+    this.x = spread(this.x, ratio);
+    this.y = this.headY(body, ratio);
+    if (body.headSeen) this.gap = body.shoulders.y - body.head.y;
+    else this.gap *= ratio;
+    this.shoulderWidth = body.shoulderWidth;
+  }
+
+  /** A jump can take the head out of the top of the picture. The shoulders still show where it is. */
+  private headY(body: Body, ratio: number): number {
+    return body.headSeen ? body.head.y : body.shoulders.y - this.gap * ratio;
   }
 
   /** Eases the line toward where the player rests now. Only call it while they are not moving. */
