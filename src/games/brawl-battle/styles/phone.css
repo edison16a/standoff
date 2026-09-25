@@ -4,14 +4,6 @@
   sideways, with room for the notch and the browser's bars.
 */
 
-/* Only on this game's phone: the frame takes exactly the visible screen. */
-.phone:has(.bb-phone) {
-  height: 100vh;
-  height: 100dvh;
-  min-height: 0;
-  overflow: hidden;
-}
-
 .phone__body:has(> .bb-phone) {
   min-height: 0;
   max-width: none;
@@ -44,24 +36,10 @@
   overflow: hidden;
 }
 
+/* Sideways the kit lays the title beside the track; this game keeps its buttons a little lower. */
 @media (orientation: landscape) and (max-height: 500px) {
-  .bb-phone .kit-steps {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    gap: 8px 16px;
-  }
-
   .bb-phone .kit-steps__title {
-    grid-column: 2;
-    grid-row: 1;
-    align-self: center;
     font-size: 18px;
-  }
-
-  .bb-phone .kit-steps__body,
-  .bb-phone .kit-steps__footer {
-    grid-column: 1 / 3;
   }
 
   .bb-phone .kit-steps__footer .btn--lg {
