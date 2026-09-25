@@ -2,7 +2,8 @@ import * as THREE from "three";
 import { hash } from "../../engine/rng";
 import { ZONE_LENGTH } from "../../engine/tuning";
 import { sidePiece } from "../models/sides";
-import { CHUNK, gantry, lampGlow, portal, trackTile, tunnel } from "../models/track";
+import { CHUNK, gantry, lampGlow, trackTile } from "../models/track";
+import { portal, tunnel } from "../models/tunnel";
 import { THEMES, themeIndexAt, type SideKind } from "./themes";
 
 /** How far ahead scenery is built. The fog hides the edge. */
@@ -101,19 +102,19 @@ export class Scenery {
     const theme = THEMES[plan.theme]!;
     const chunk = new THREE.Group();
     chunk.position.z = -k * CHUNK;
-    chunk.add(trackTile(theme.verge));
+    chunk.add(trackTile(theme));
     if (plan.tunnel) {
-      chunk.add(tunnel());
-      if (plan.mouth) chunk.add(portal());
+      chunk.add(tunnel(theme));
+      if (plan.mouth) chunk.add(portal(theme));
       for (let z = -3; z > -CHUNK; z -= 7.5) {
         for (const side of [-1, 1]) {
-          const glow = lampGlow(2.2);
+          const glow = lampGlow(2.6, theme.neon[1], 0.4);
           glow.position.set(side * 5.1, 4.2, z);
           chunk.add(glow);
         }
       }
     } else {
-      chunk.add(gantry(plan.signals));
+      chunk.add(gantry(plan.signals, theme.neon[1]));
       chunk.add(sidePiece(plan.left, -1, plan.variant, theme, plan.theme));
       chunk.add(sidePiece(plan.right, 1, plan.variant + 1, theme, plan.theme));
     }

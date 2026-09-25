@@ -28,7 +28,8 @@ export function coinGeometry(): THREE.BufferGeometry {
 let coinMat: THREE.MeshStandardMaterial | null = null;
 
 export function coinMaterial(): THREE.MeshStandardMaterial {
-  coinMat ??= new THREE.MeshStandardMaterial({ color: 0xffc629, metalness: 0.85, roughness: 0.22, emissive: 0x6b4300, emissiveIntensity: 0.9 });
+  // Coins light themselves a little, so they shine gold against the night.
+  coinMat ??= new THREE.MeshStandardMaterial({ color: 0xffc629, metalness: 0.8, roughness: 0.2, emissive: 0xb86e00, emissiveIntensity: 1 });
   coinMat.userData.shared = true;
   return coinMat;
 }
@@ -105,8 +106,10 @@ function buildPickup(kind: PowerKind): THREE.Group {
 }
 
 /** A chunky sneaker, toe toward -z. Also used for the runners' own shoes. */
-export function sneaker(b: MeshBuilder, upper: number, x: number, y = 0, z = 0, sole = 0xffffff, stripe = 0xffffff): void {
+export function sneaker(b: MeshBuilder, upper: number, x: number, y = 0, z = 0, sole = 0xffffff, stripe = 0xffffff, glow?: number): void {
   b.box(0.21, 0.085, 0.38, { color: sole, finish: "satin" }, [x, y - 0.1, z - 0.025], undefined, 0.035);
+  // Light up soles, a streak of neon under every stride.
+  if (glow !== undefined) b.box(0.215, 0.025, 0.385, { color: glow, finish: "glow" }, [x, y - 0.075, z - 0.025]);
   b.box(0.19, 0.15, 0.32, { color: upper, finish: "satin" }, [x, y, z], undefined, 0.065);
   // The toe cap, the collar round the ankle, laces and a swoosh down each side.
   b.sphere(0.095, { color: upper, finish: "satin" }, [x, y - 0.02, z - 0.12], [1, 0.75, 1], 12);

@@ -11,12 +11,14 @@ import { BodyMotion, fallParts } from "./body-motion";
 import { FootPlanner, STANCE_FEET } from "./feet";
 import { blendHand, CHEST_POSES, cloneHand, ROOT_POSES, type HandPose } from "./hand-poses";
 import { punchShape, REST, type PunchShape } from "./punch-curve";
-import { SpringVector } from "./springs";
+import { Spring, SpringVector } from "./springs";
 
 const HANDS: readonly Hand[] = ["left", "right"];
 /** From the wrist to the knuckles of the glove, which is what should land. */
 const GLOVE_REACH = 0.15;
 const FACE_OFFSET = new THREE.Vector3(0, 0.09, 0.075);
+/** Feet out in front, planted, while sitting on the stool. */
+const SEATED_FEET: Record<Hand, THREE.Vector3> = { left: new THREE.Vector3(0.2, 0.075, 0.5), right: new THREE.Vector3(-0.2, 0.075, 0.48) };
 const LYING_FEET: Record<Hand, THREE.Vector3> = { left: new THREE.Vector3(0.2, 0.075, 0.28), right: new THREE.Vector3(-0.22, 0.075, 0.12) };
 
 /**
@@ -37,6 +39,9 @@ export class BoxerAnimator {
   private aimFor: number | null = null;
   private shape: PunchShape = REST;
   private readonly tmp = new THREE.Vector3();
+  /** How far the gloves are out to touch, and where they meet in the model's space. */
+  private readonly touch = new Spring();
+  private readonly touchAt = new THREE.Vector3();
 
   constructor(
     readonly model: BoxerModel,
@@ -66,6 +71,8 @@ export class BoxerAnimator {
     this.shape = punch ? punchShape(punch, now) : REST;
     this.body.update(input, this.pose, this.shape, punch);
     this.rig.applyBody(this.pose);
+    this.touch.update(input.touchAt ? 1 : 0, input.dt, 4);
+    if (input.touchAt) this.rig.worldToModel(input.touchAt, this.touchAt);
     for (const hand of HANDS) this.placeHand(hand, input, punch);
     this.placeFeet(input);
     this.rig.applyLimbs(this.pose);
@@ -80,7 +87,8 @@ export class BoxerAnimator {
     blendHand(held, CHEST_POSES.cheer[hand], body.cheer.value);
     blendHand(held, CHEST_POSES.slump[hand], body.slump.value);
     const pose: HandPose = { target: this.rig.chestToModel(held.target, new THREE.Vector3()), pole: this.rig.chestToModel(held.pole, new THREE.Vector3()) };
-    blendHand(pose, ROOT_POSES.ropes[hand], body.corner.value);
+    blendHand(pose, ROOT_POSES.ropes[hand], body.corner.value * (1 - body.seat.value));
+    blendHand(pose, ROOT_POSES.knees[hand], body.seat.value);
     const shoulder = this.rig.shoulder(hand, new THREE.Vector3());
     const mirror = input.mirror;
     const reach = mirror?.reach[hand];
@@ -90,6 +98,13 @@ export class BoxerAnimator {
       pose.target.lerp(this.tmp.copy(shoulder).add(reach), weight);
       const elbow = mirror.elbow[hand];
       if (elbow) pose.pole.lerp(this.tmp.copy(shoulder).addScaledVector(elbow, 2), weight);
+    }
+    const touch = this.touch.value;
+    if (touch > 0.01) {
+      // Both gloves out to meet the other boxer's in the middle, knuckles to knuckles.
+      const side = hand === "left" ? 1 : -1;
+      const meet = this.tmp.copy(this.touchAt).add(new THREE.Vector3(side * 0.07, 0, -GLOVE_REACH));
+      blendHand(pose, { target: meet, pole: shoulder.clone().add(new THREE.Vector3(side * 0.35, -0.6, -0.1)) }, touch);
     }
     const { sag, topple } = fallParts(body.fall);
     if (sag > 0) blendHand(pose, { target: this.rig.chestToModel(CHEST_POSES.sag[hand].target, this.tmp.clone()), pole: pose.pole.clone() }, sag * (1 - topple));
@@ -103,13 +118,13 @@ export class BoxerAnimator {
     if (punch && punch.hand === hand) this.strike(hand, input, punch, shoulder);
   }
 
-  /** Drives the punching glove out to the other boxer's face, on top of wherever the hand was. */
+  /** Drives the punching glove out to the other boxer's face or body, on top of wherever the hand was. */
   private strike(hand: Hand, input: AnimInput, punch: ActivePunch, shoulder: THREE.Vector3): void {
     const shape = this.shape;
-    // The aim follows the face through the wind up, then commits as the punch leaves.
+    // The aim follows the face, or the body for a body shot, through the wind up, then commits as it leaves.
     if (this.aimFor !== punch.start || shape.extend === 0) {
       this.aimFor = punch.start;
-      this.rig.worldToModel(input.opponentFace, this.aim);
+      this.rig.worldToModel(punch.level === "body" ? input.opponentBody : input.opponentFace, this.aim);
       if (input.opponentBlocking) this.aim.z -= 0.12;
     }
     const side = hand === "left" ? 1 : -1;
@@ -134,9 +149,10 @@ export class BoxerAnimator {
       this.rig.worldToModel(world[hand], plant.position);
       plant.position.y += 0.075;
       plant.position.lerp(LYING_FEET[hand], 1 - standing);
+      plant.position.lerp(SEATED_FEET[hand], this.body.seat.value);
       plant.yaw = STANCE_FEET[hand].yaw;
     }
-    if (standing < 0.5) this.feet.reset();
+    if (standing < 0.5 || this.body.seat.value > 0.5) this.feet.reset();
   }
 
   private dressFace(input: AnimInput): void {

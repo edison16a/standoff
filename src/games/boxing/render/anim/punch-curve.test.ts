@@ -5,6 +5,9 @@ import { punchShape } from "./punch-curve";
 const punch = (windup: number): ActivePunch => ({
   hand: "right",
   style: "cross",
+  level: "head",
+  launchAt: 1000 + windup,
+  aim: { x: 0, y: 0 },
   power: 1,
   start: 1000,
   impactAt: 1000 + windup + 140,

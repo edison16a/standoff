@@ -45,7 +45,7 @@ describe("knockdowns", () => {
     expect(ofType(run(match, RULES.fallMs + 3 * RULES.countMs), "rise")).toHaveLength(0);
     hold(match, 1, {});
     run(match, 100);
-    hold(match, 1, { guard: true, raise: true });
+    hold(match, 1, { shell: "guard", raise: true });
     expect(ofType(run(match, RULES.raiseHoldMs + 100), "rise")).toHaveLength(1);
   });
 

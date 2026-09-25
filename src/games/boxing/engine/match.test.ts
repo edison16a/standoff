@@ -4,31 +4,18 @@ import { PUNCHES, RULES } from "./rules";
 import { fighting, hold, ofType, run } from "./test-helpers";
 
 describe("the fight's flow", () => {
-  it("rings the bell for round one after the intro", () => {
-    const match = new Match({ seed: 1, introMs: 1000 });
+  it("rings the bell for round one after the intro when touching gloves is off", () => {
+    const match = new Match({ seed: 1, introMs: 1000, touch: false });
     const events = run(match, 1100);
     expect(ofType(events, "round")).toEqual([{ type: "round", round: 1 }]);
     expect(ofType(events, "bell")[0]?.kind).toBe("start");
     expect(match.phase).toBe("fight");
   });
 
-  it("takes a break between rounds and scores a decision after the last", () => {
-    const match = fighting({ roundMs: 3000, breakMs: 1000, rounds: 2 });
-    const events = run(match, 3100);
-    expect(match.phase).toBe("break");
-    expect(ofType(events, "bell").map((b) => b.kind)).toContain("end");
-    run(match, 1100);
-    expect(match.round).toBe(2);
-    expect(match.phase).toBe("fight");
-    const rest = run(match, 3100);
-    expect(match.phase).toBe("over");
-    expect(match.result?.method).toBe("Draw");
-    expect(ofType(rest, "bell").map((b) => b.kind)).toContain("final");
-  });
-
-  it("knocks once with ten seconds left", () => {
-    const match = fighting({ roundMs: 12_000 });
-    expect(ofType(run(match, 2500), "warning")).toHaveLength(1);
+  it("knocks once with five seconds left", () => {
+    const match = fighting({ roundMs: 8_000 });
+    expect(ofType(run(match, 2500), "warning")).toHaveLength(0);
+    expect(ofType(run(match, 1000), "warning")).toHaveLength(1);
   });
 
   it("stops everything while paused", () => {
@@ -47,7 +34,7 @@ describe("punches", () => {
     expect(match.throwPunch(0, "left", "jab", 0.5)).toBe(true);
     const hits = ofType(run(match, 200), "hit");
     expect(hits).toHaveLength(1);
-    expect(hits[0]!.damage).toBeGreaterThan(3);
+    expect(hits[0]!.level).toBe("head");
     expect(match.fighters[1].health).toBeLessThan(RULES.maxHealth);
   });
 
@@ -57,54 +44,24 @@ describe("punches", () => {
     expect(match.throwPunch(0, "left", "jab", 1)).toBe(false);
   });
 
-  it("blocks with a settled guard, chips a little, and opens a counter window", () => {
-    const match = fighting();
-    hold(match, 1, { guard: true });
-    run(match, 100);
-    match.throwPunch(0, "right", "cross", 1);
-    const events = run(match, 200);
-    expect(ofType(events, "block")).toHaveLength(1);
-    expect(ofType(events, "counter")[0]).toMatchObject({ fighter: 1, from: "block" });
-    expect(match.fighters[1].health).toBeGreaterThan(RULES.maxHealth - PUNCHES.cross.damage * 0.2);
-    expect(match.fighters[1].counterOpen(match.now)).toBe(true);
-  });
-
-  it("makes a left jab counter land hard and stagger", () => {
-    const match = fighting();
-    hold(match, 1, { guard: true });
-    run(match, 100);
-    match.throwPunch(0, "right", "cross", 1);
-    run(match, 200);
-    hold(match, 1, {});
-    match.throwPunch(1, "left", "jab", 0.5);
-    const hit = ofType(run(match, 200), "hit")[0]!;
-    expect(hit.counter).toBe(true);
-    expect(hit.stagger).toBe(true);
-    expect(hit.damage).toBeGreaterThan(PUNCHES.jab.damage * 2);
-    expect(match.fighters[0].staggered(match.now)).toBe(true);
-    // A staggered boxer can neither punch nor block.
-    expect(match.throwPunch(0, "left", "jab", 1)).toBe(false);
-  });
-
-  it("gives no block to a boxer in the middle of a punch", () => {
-    const match = fighting();
-    hold(match, 1, { guard: true });
-    run(match, 100);
-    match.throwPunch(1, "left", "hook", 1, 400);
-    match.throwPunch(0, "left", "jab", 1);
-    expect(ofType(run(match, 150), "hit")[0]?.target).toBe(1);
-  });
-
-  it("lets a duck beat anything and a slip beat straights, but not hooks", () => {
-    const match = fighting();
-    hold(match, 1, { duck: true });
-    match.throwPunch(0, "right", "hook", 1);
-    expect(ofType(run(match, 400), "miss")[0]?.dodge).toBe("duck");
-    hold(match, 1, { slip: 1 });
-    match.throwPunch(0, "left", "jab", 1);
-    expect(ofType(run(match, 400), "miss")[0]?.dodge).toBe("slip");
-    match.throwPunch(0, "left", "hook", 1);
-    expect(ofType(run(match, 400), "hit")).toHaveLength(1);
+  it("empties the bar with about fifteen clean body shots, and a head shot does two to three times as much", () => {
+    const body: number[] = [];
+    const head: number[] = [];
+    for (const style of ["jab", "cross", "hook"] as const) {
+      for (const level of ["body", "head"] as const) {
+        const match = fighting();
+        match.throwPunch(0, style === "jab" ? "left" : "right", style, 0.5, 0, level);
+        const hit = ofType(run(match, 300), "hit")[0]!;
+        (level === "body" ? body : head).push(hit.damage);
+      }
+    }
+    const mean = body.reduce((a, b) => a + b, 0) / body.length;
+    expect(RULES.maxHealth / mean).toBeGreaterThan(13);
+    expect(RULES.maxHealth / mean).toBeLessThan(17);
+    head.forEach((damage, i) => {
+      expect(damage / body[i]!).toBeGreaterThanOrEqual(2);
+      expect(damage / body[i]!).toBeLessThanOrEqual(3);
+    });
   });
 
   it("spoils a punch still winding up when its thrower is hit first", () => {
@@ -125,5 +82,20 @@ describe("punches", () => {
     tired.throwPunch(0, "right", "cross", 1);
     const weak = ofType(run(tired, 300), "hit")[0]!.damage;
     expect(weak).toBeLessThan(strong * 0.6);
+  });
+
+  it("opens a counter window after a block, and a counter jab lands hard", () => {
+    const match = fighting();
+    hold(match, 1, { shell: "guard" });
+    match.throwPunch(0, "right", "cross", 1);
+    const events = run(match, 200);
+    expect(ofType(events, "block")).toHaveLength(1);
+    expect(ofType(events, "counter")[0]).toMatchObject({ fighter: 1, from: "block" });
+    expect(match.fighters[1].health).toBeGreaterThan(RULES.maxHealth - PUNCHES.cross.damage * 0.2);
+    hold(match, 1, {});
+    match.throwPunch(1, "left", "jab", 0.5);
+    const hit = ofType(run(match, 200), "hit")[0]!;
+    expect(hit.counter).toBe(true);
+    expect(hit.damage).toBeGreaterThan(PUNCHES.jab.damage * RULES.headDamage * 1.4);
   });
 });

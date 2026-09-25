@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { MatchEvent } from "../engine/events";
 import type { Match } from "../engine/match";
-import { other, type FighterId, type Hand } from "../engine/types";
+import { other, type FighterId, type Hand, type Level } from "../engine/types";
 import type { AnimMode, MirrorInput } from "./anim/anim-input";
 import { BoxerAnimator } from "./anim/boxer-animator";
 import { RefereeAnimator } from "./anim/referee-animator";
@@ -11,6 +11,9 @@ import { Confetti } from "./fx/confetti";
 import { HitFx } from "./fx/hit-fx";
 import { BoxerModel } from "./models/boxer-model";
 import type { Look } from "./models/looks";
+
+/** From the middle of the face down to the middle of the body, where body shots dig in. */
+const BODY_FROM_FACE = new THREE.Vector3(0, -0.45, 0);
 
 /** What the scene needs each frame beyond the match itself. */
 export interface SceneInput {
@@ -39,6 +42,8 @@ export class FightScene {
   excite = 0.2;
   private readonly environment: THREE.Texture;
   private readonly faces: [THREE.Vector3, THREE.Vector3] = [new THREE.Vector3(), new THREE.Vector3()];
+  private readonly bodies: [THREE.Vector3, THREE.Vector3] = [new THREE.Vector3(), new THREE.Vector3()];
+  private readonly touchAt = new THREE.Vector3();
   private readonly tmp = new THREE.Vector3();
 
   constructor(renderer: THREE.WebGLRenderer, looks: readonly [Look, Look]) {
@@ -76,12 +81,24 @@ export class FightScene {
   }
 
   update(match: Match, input: SceneInput, time: number, dt: number): void {
-    for (const id of [0, 1] as const) this.animators[id].face(this.faces[id]);
+    for (const id of [0, 1] as const) {
+      this.animators[id].face(this.faces[id]);
+      this.bodies[id].copy(this.faces[id]).add(BODY_FROM_FACE);
+    }
+    // The gloves touch halfway between the boxers, at chest height.
+    this.touchAt.copy(this.faces[0]).add(this.faces[1]).multiplyScalar(0.5);
+    this.touchAt.y -= 0.35;
+    const touching = match.phase === "touch";
+    const touched = match.touch?.touchedAt != null;
+    this.arena.setStools(match.phase === "break" && match.breakStage !== "out");
     for (const id of [0, 1] as const) {
       const fighter = match.fighters[id];
       const them = match.fighters[other(id)];
       const spot = match.footwork.spots[id];
       this.animators[id].update({
+        opponentBody: this.bodies[other(id)],
+        seated: match.breakStage === "rest" && match.footwork.inCorner(id),
+        touchAt: touching && (touched || fighter.input.reach) ? this.touchAt : null,
         now: match.now,
         time,
         dt,
@@ -92,7 +109,7 @@ export class FightScene {
         damageTaken: them.stats.damage,
         round: match.round,
         opponentFace: this.faces[other(id)],
-        opponentBlocking: them.blocking(match.now),
+        opponentBlocking: them.guarding(match.now),
         mode: modeFor(match, id),
         mirror: input.mirrors[id],
         telegraph: input.telegraph[id],
@@ -114,10 +131,10 @@ export class FightScene {
     for (const animator of this.animators) animator.onEvent(event);
     if (event.type === "hit") {
       const power = event.damage / 6 + (event.counter ? 0.6 : 0);
-      this.impact(event.target, event.fighter, power, false);
+      this.impact(event.target, event.fighter, power, false, event.level);
       this.excite = Math.min(1, this.excite + 0.12 + power * 0.12);
     }
-    if (event.type === "block") this.impact(event.target, event.fighter, 0.5, true);
+    if (event.type === "block") this.impact(event.target, event.fighter, 0.5, true, event.level);
     if (event.type === "knockdown") {
       this.excite = 1;
       this.arena.burst(30);
@@ -128,9 +145,10 @@ export class FightScene {
     }
   }
 
-  /** Sparks and sweat where a punch met the head, or a smaller burst off the gloves on a block. */
-  impact(target: FighterId, from: FighterId, power: number, blocked: boolean): void {
+  /** Sparks and sweat where a punch met the head or body, or a smaller burst off the gloves on a block. */
+  impact(target: FighterId, from: FighterId, power: number, blocked: boolean, level: Level = "head"): void {
     const at = this.animators[target].face(new THREE.Vector3());
+    if (level === "body") at.add(BODY_FROM_FACE);
     const direction = at.clone().sub(this.animators[from].face(this.tmp)).setY(0).normalize();
     if (blocked) {
       // The gloves are just in front of the face.

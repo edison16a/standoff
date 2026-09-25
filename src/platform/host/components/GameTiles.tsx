@@ -51,6 +51,7 @@ export function GameTiles({ games, selected, onSelect, onHost }: GameTilesProps)
             key={game.id}
             type="button"
             className="game-tile"
+            data-tile={game.id}
             style={{ "--game": game.color } as React.CSSProperties}
             aria-label={game.title}
             aria-pressed={chosen}

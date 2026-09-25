@@ -1,5 +1,6 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 import { bass, chop, hat, keys, kick, rim, snare, vibes, whistle } from "./band";
+import { arp, arpNote, pad } from "./synth";
 import { locate, type Groove, type Tune } from "./tunes";
 
 /**
@@ -51,6 +52,12 @@ export function playStep(engine: AudioEngine, out: AudioNode, tune: Tune, step: 
   if (inBar === 11 && section.groove === "light") keys(engine, out, at, voicing, sixteenth * 6, 0.016);
 
   if (section.chops && (inBar === 2 || inBar === 10 || inBar === 14)) chop(engine, out, at, voicing.slice(1), 0.011);
+
+  if (section.synth) {
+    const note = arpNote(voicing, inBar);
+    if (note !== null) arp(engine, out, at, note, inBar % 4 === 0 ? 0.012 : 0.008);
+    if (inBar === 0) pad(engine, out, at, voicing.slice(-2), sixteenth * 15, 0.0035);
+  }
 
   const note = section.lead[local];
   if (note !== null && note !== undefined) {

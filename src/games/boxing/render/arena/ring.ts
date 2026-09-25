@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { RING_HALF } from "../../engine/footwork";
+import { CORNERS, RING_HALF } from "../../engine/footwork";
 import { apronTexture, BRAND, matTexture, padTexture } from "./arena-textures";
 
 /** The ring's platform stands this high off the arena floor. The canvas is at y = 0. */
@@ -14,7 +14,7 @@ const ROPE_COLOURS = ["#c8102e", "#f2f2f2", "#c8102e", "#f2f2f2"];
  * steel posts, padded turnbuckles in the corners' colours, four sagging
  * ropes with their spacers, steps and a stool in each boxer's corner.
  */
-export function buildRing(): { group: THREE.Group; dispose: () => void } {
+export function buildRing(): { group: THREE.Group; stools: [THREE.Group, THREE.Group]; dispose: () => void } {
   const group = new THREE.Group();
   const disposables: { dispose(): void }[] = [];
   const keep = <T extends { dispose(): void }>(thing: T): T => {
@@ -81,8 +81,9 @@ export function buildRing(): { group: THREE.Group; dispose: () => void } {
   }
 
   group.add(steps(-1, -1, keep), steps(1, 1, keep));
-  group.add(stool(-1, keep), stool(1, keep));
-  return { group, dispose: () => disposables.forEach((d) => d.dispose()) };
+  const stools: [THREE.Group, THREE.Group] = [stool(-1, keep), stool(1, keep)];
+  group.add(...stools);
+  return { group, stools, dispose: () => disposables.forEach((d) => d.dispose()) };
 }
 
 /** One rope along one side, sagging a little in the middle. */
@@ -114,7 +115,7 @@ function steps(x: number, z: number, keep: <T extends { dispose(): void }>(t: T)
   return group;
 }
 
-/** The corner stool, for between rounds, outside the ropes. */
+/** The corner stool, brought in between rounds under a boxer resting on their corner spot. */
 function stool(corner: number, keep: <T extends { dispose(): void }>(t: T) => T): THREE.Group {
   const group = new THREE.Group();
   const wood = keep(new THREE.MeshStandardMaterial({ color: "#6b4a2a", roughness: 0.7 }));
@@ -127,7 +128,9 @@ function stool(corner: number, keep: <T extends { dispose(): void }>(t: T) => T)
     leg.position.set(Math.sin(a) * 0.14, 0.275, Math.cos(a) * 0.14);
     group.add(leg);
   }
-  group.position.set(corner * (MAT_HALF - 0.2), 0, corner * (MAT_HALF - 0.2));
+  const spot = CORNERS[corner < 0 ? 0 : 1];
+  group.position.set(spot.x, 0, spot.z);
+  group.visible = false;
   return group;
 }
 

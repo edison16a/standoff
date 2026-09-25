@@ -17,7 +17,10 @@ export function hudFrom(driver: FightDriver, looks: readonly [Look, Look], banne
       health: Math.round((f.health / RULES.maxHealth) * 100),
       stamina: Math.round((f.stamina / RULES.maxStamina) * 100),
       counter: f.counterOpen(match.now) && !f.down,
-      blocking: f.blocking(match.now),
+      blocking: f.guarding(match.now),
+      reaching: f.input.reach,
+      stunned: f.staggered(match.now),
+      worn: f.fatigue.level > 0.3,
       knockdowns: f.knockdowns,
       hurt: match.fighters[id === 0 ? 1 : 0].stats.landed,
       human: driver.slots[id] !== null,
@@ -38,6 +41,8 @@ export function hudFrom(driver: FightDriver, looks: readonly [Look, Look], banne
     away: driver.pausedFor,
     resumeIn: driver.resumingIn(now),
     phaseLeft: Math.ceil(match.phaseLeft / 1000),
+    breakStage: match.breakStage,
+    touched: match.touch?.touchedAt != null,
     views: ([0, 1] as const).filter((id) => humans[id]),
   };
 }
