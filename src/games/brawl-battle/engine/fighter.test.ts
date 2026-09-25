@@ -79,6 +79,17 @@ describe("the fighter's state machine", () => {
     expect(b!.move).toBeNull();
   });
 
+  it("hangs in the air while casting, but sinks, so casting again and again cannot stall", () => {
+    const state = fightNow(["mage"]);
+    const f = state.fighters[0]!;
+    hang(f, 14, 3);
+    const frames = MOVESETS.mage.heavy.frames;
+    run(state, frames * 4, (_, frame) => (frame % (frames + 1) === 0 ? { x: 0, y: 0, heavy: true } : undefined));
+    expect(f.pos.y).toBeLessThan(1);
+    // A plain fall over the same time would have dropped well past this.
+    expect(f.pos.y).toBeGreaterThan(-4);
+  });
+
   it("changes direction with the double jump", () => {
     const state = fightNow(["karate"]);
     const f = state.fighters[0]!;

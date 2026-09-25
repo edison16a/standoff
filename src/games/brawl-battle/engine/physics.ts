@@ -11,6 +11,9 @@ import type { Command, Fighter } from "./types";
  * fighter.ts; this only moves the body.
  */
 
+/** Share of gravity felt during a move cast in place in the air. */
+const HOVER_SINK = 0.25;
+
 function approach(value: number, target: number, amount: number): number {
   if (value < target) return Math.min(target, value + amount);
   return Math.max(target, value - amount);
@@ -27,7 +30,8 @@ export function steer(f: Fighter, cmd: Command, dt: number): void {
   const stick = Math.abs(cmd.x) >= MOVEMENT.deadZone ? cmd.x : 0;
   const launched = f.launch.x !== 0 || f.launch.y !== 0;
   if (hovering(f)) {
-    // Moves cast in place own the velocity: only their motion frames change it.
+    // Moves cast in place own the sideways speed. In the air they still sink a little, so casting again and again cannot stall forever.
+    if (f.ground === null) f.vel.y = Math.max(-p.fall, f.vel.y - p.gravity * HOVER_SINK * dt);
   } else if (f.ground !== null) {
     const free = f.action === "idle" || f.action === "run";
     if (free) f.vel.x = approach(f.vel.x, stick * p.run, p.accel * dt);
