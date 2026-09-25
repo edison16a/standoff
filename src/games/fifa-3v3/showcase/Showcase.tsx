@@ -34,7 +34,13 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
       renderer.director.setFixed(new THREE.Vector3(cam[0], cam[1], cam[2]), new THREE.Vector3(cam[3], cam[4], cam[5]), cam[6]!);
       scene.pin();
     }
-    const fit = () => renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
+    // A frozen still only needs a few frames drawn, not one on every tick of the capture's clock.
+    const frozen = scene.pose !== null;
+    let draws = 3;
+    const fit = () => {
+      renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
+      draws = 3;
+    };
     fit();
     const observer = new ResizeObserver(fit);
     observer.observe(canvas);
@@ -42,7 +48,10 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     const loop = (now: number) => {
       const events = scene.tick(now);
       for (const event of events) renderer.onEvent(event, scene.view);
-      renderer.draw(scene.view, scene.shot, now, scene.focus(renderer), scene.tags);
+      if (!frozen || draws > 0) {
+        renderer.draw(scene.view, scene.shot, now, scene.focus(renderer), scene.tags);
+        draws--;
+      }
       const bug = bugRef.current;
       if (bug) {
         const v = scene.view;

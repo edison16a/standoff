@@ -133,8 +133,8 @@ export class ShowcaseScene {
   private heroPose(): Pose {
     const s = this.state.athletes[this.shooter() ?? 0]!;
     const dir = attackSign(s.team);
-    const look = new THREE.Vector3(s.pos.x + dir * 0.4, 1.05, s.pos.z);
-    const pos = new THREE.Vector3(s.pos.x + dir * 2.3, 0.75, s.pos.z + 2.2);
+    const look = new THREE.Vector3(s.pos.x + dir * 0.8, 1.15, s.pos.z + 0.3);
+    const pos = new THREE.Vector3(s.pos.x + dir * 3.4, 0.9, s.pos.z + 2.3);
     return { pos, look, fov: 40 };
   }
 }
