@@ -63,20 +63,20 @@ export function Controller({ court }: { court: CourtState }) {
       <Status court={court} />
       <div className="nba-pad__buttons">
         <div className="nba-pad__pass">
-          <PadButton label={passLabel} colour="#3b82f6" disabled={!court.attacking} onDown={() => session.press("pass")} onUp={() => session.release("pass")}>
+          <PadButton label={passLabel} colour="#3b82f6" disabled={!court.attacking || court.checking} onDown={() => session.press("pass")} onUp={() => session.release("pass")}>
             {court.hasBall || !court.attacking ? <PassIcon /> : <CallIcon />}
             <span>{passLabel}</span>
           </PadButton>
         </div>
         <div className="nba-pad__defend">
-          <PadButton label={defendLabel} colour={court.canSteal ? "#a855f7" : "#ef4444"} onDown={() => session.press("defend")} onUp={() => session.release("defend")}>
+          <PadButton label={defendLabel} colour={court.canSteal ? "#a855f7" : "#ef4444"} disabled={court.checking} onDown={() => session.press("defend")} onUp={() => session.release("defend")}>
             {court.canSteal ? <StealIcon /> : <BlockIcon />}
             <span>{defendLabel}</span>
           </PadButton>
         </div>
         <div className="nba-pad__shoot">
           <ShotMeter meter={court.meter} />
-          <PadButton label="Shoot" size="lg" colour="#ff7a18" disabled={!court.hasBall} onDown={() => session.press("shoot")} onUp={() => session.release("shoot")}>
+          <PadButton label="Shoot" size="lg" colour="#ff7a18" disabled={!court.hasBall || court.checking} onDown={() => session.press("shoot")} onUp={() => session.release("shoot")}>
             <ShootIcon />
             <span>Shoot</span>
           </PadButton>

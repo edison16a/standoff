@@ -46,7 +46,8 @@ function court(m: Match, id: number, players: readonly Player[]): CourtState {
     canSteal: !!holder && holder.team !== a.team && dist2(a, holder) < DEFENCE.stealRange,
     meter: { fullMs: SHOT.meterMs, greenMs: GREEN_MS, halfMs: greenHalfMs(CHARACTERS[a.character].stats.shooting, a.onFire) },
     onFire: a.onFire,
-    checking: m.phase === "check",
+    // The whole break counts, from the basket to the check, so the phone never shows a loose ball meanwhile.
+    checking: m.phase === "dead" || m.phase === "check",
     countdown: m.phase === "countdown" ? Math.max(0, Math.ceil(RULES.countdown - m.phaseT)) : null,
   };
 }
