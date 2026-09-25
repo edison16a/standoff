@@ -7,9 +7,11 @@ import { Stage, Tools } from "./host/components/Stage";
 import { GalleryPhone } from "./phone/gallery-phone";
 import { PhoneScreen } from "./phone/components/PhoneScreen";
 import { PhoneContext } from "./phone/components/session-context";
+import { ShowcaseScene } from "./showcase/ShowcaseScene";
 import "./styles/host.css";
 import "./styles/hud.css";
 import "./styles/phone.css";
+import "./styles/showcase.css";
 
 /**
  * Shooting Gallery, as the platform sees it. Each room gets one session,
@@ -42,4 +44,7 @@ export const game: GameModule = {
     }
     return { Screen, dispose: () => session.dispose() };
   },
+
+  // Part of the game's own chunk, so it is ready the moment the capture tool starts its clock.
+  Showcase: ShowcaseScene,
 };

@@ -34,12 +34,14 @@ export class Puffs {
   private readonly smokeMap = puffTexture();
   private readonly glowMap = glowTexture();
 
+  constructor(private readonly random: () => number = Math.random) {}
+
   spawn(at: THREE.Vector3, now: number, options: PuffOptions): void {
     const pool = options.glow ? this.spare.glow : this.spare.smoke;
     const puff = pool.pop() ?? this.make(options.glow === true);
     const material = puff.sprite.material;
     material.color.set(options.colour);
-    material.rotation = Math.random() * Math.PI * 2;
+    material.rotation = this.random() * Math.PI * 2;
     puff.sprite.position.copy(at);
     puff.sprite.visible = true;
     puff.start = now;

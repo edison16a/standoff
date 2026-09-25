@@ -35,15 +35,20 @@ export interface ShotEffect {
  */
 export class Effects {
   readonly object = new THREE.Group();
-  readonly confetti = new Confetti();
+  readonly confetti: Confetti;
   private readonly tracers = new Tracers();
-  private readonly puffs = new Puffs();
-  private readonly chips = new Chips();
+  private readonly puffs: Puffs;
+  private readonly chips: Chips;
   private readonly popups = new Popups();
-  private readonly dents = new Dents();
+  private readonly dents: Dents;
   private readonly landing: { at: number; shot: ShotEffect }[] = [];
 
-  constructor() {
+  /** `random` scatters flecks, smoke and confetti. The showcase passes a seeded one so its frames repeat exactly. */
+  constructor(random: () => number = Math.random) {
+    this.confetti = new Confetti(random);
+    this.puffs = new Puffs(random);
+    this.chips = new Chips(random);
+    this.dents = new Dents(random);
     this.object.add(this.tracers.object, this.puffs.object, this.chips.object, this.popups.object, this.dents.object, this.confetti.object);
   }
 

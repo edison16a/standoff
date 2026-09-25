@@ -58,3 +58,16 @@ All synthesised with Web Audio through the room's buses: a BB pop, the pump's cl
 * `phone/` the phone session and its setup, play and result screens.
 * `render/` the three.js renderer, with `models/` for the gun, ducks, targets, booth, canopy, bulbs and waves, and `effects/` for the BB, puffs, flecks, dents, points and confetti. A governor lowers the drawing resolution while frames run slow, to hold 60 frames a second.
 * `audio/` effects, tunes and the sequencer.
+* `showcase/` the game playing itself for the home screen's media (see below).
+
+## Home screen media
+
+The tile, the poster and the looping clip behind the home screen are captured from `showcase/`. It runs the real round and the real renderer with four computer players on the guns and no room. Each bot picks a target on its side of the booth, swings its laser onto it and fires once the dot settles, now and then just off the edge. A golden duck is planted to cross the booth and is only shot at its cue. The round, the bots and the effects all run on seeded randomness and a fixed step, so every capture is the same.
+
+`showcase/shots.ts` holds the plan for each view: the round, the moment and the camera. The loop's camera sways on an 8 second beat so the clip joins up. In development, `?at=` on the showcase page holds on another moment, which is how the shots were picked. With the dev server running:
+
+```bash
+node tools/media/capture.mjs shooting-gallery --url http://localhost:3000 --ffmpeg /path/to/ffmpeg
+```
+
+Then copy `media/poster.jpg` over `cover.jpg`, which the drawn cover still uses.
