@@ -30,7 +30,8 @@ function skyline(theme: Theme, from: number, to: number, random: () => number): 
         x += between(10, 20);
         break;
       case "clouds":
-        pieces.push({ x, y: between(6, 26), z, w: between(5, 12), h: between(1.2, 3), peak: false });
+        // High enough to sit above a corridor's ceiling on screen, so none is taken for a block in play.
+        pieces.push({ x, y: between(14, 27), z, w: between(5, 12), h: between(1.2, 3), peak: false });
         pieces.push({ x: x + between(-2, 2), y: pieces.at(-1)!.y + between(1, 3), z: z + 0.5, w: between(3, 6), h: between(1, 2), peak: false });
         x += between(8, 16);
         break;
@@ -40,7 +41,8 @@ function skyline(theme: Theme, from: number, to: number, random: () => number): 
         x += between(7, 14);
         break;
       case "spires":
-        pieces.push({ x, y: -1, z: z - 10, w: between(3, 7), h: between(7, 20), peak: true });
+        // Kept below the corridor on screen, so a dark spire never passes for a spike in play.
+        pieces.push({ x, y: -1, z: z - 10, w: between(3, 7), h: between(5, 12), peak: true });
         x += between(4, 9);
         break;
     }
