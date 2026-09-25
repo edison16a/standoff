@@ -1,11 +1,12 @@
 "use client";
-import { SettingsButton } from "@/platform/settings/SettingsButton";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { GitHubButton } from "@/components/ui/GitHubButton";
 import { HomeLink } from "@/components/ui/HomeLink";
 import { Icon } from "@/components/ui/Icon";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { GAMES } from "@/games/catalog";
+import { SettingsButton } from "@/platform/settings/SettingsButton";
+import { useHomeAudio } from "../home-audio/use-home-audio";
 import { useHostStore } from "../host-store";
 import { GameBackdrop } from "./GameBackdrop";
 import { GameDetails } from "./GameDetails";
@@ -41,13 +42,18 @@ export function Home() {
   const replaced = status === "replaced";
   const canPlay = status === "open" && !resuming && !starting;
 
-  const choose = (index: number) => {
+  const sounds = useHomeAudio(useCallback(() => host.audio, [host]));
+
+  const choose = (index: number, via: "key" | "click" = "key") => {
+    if (via === "click") sounds.pick();
+    else sounds.move(index);
     lastChoice = index;
     setSelected(index);
   };
 
   const play = async () => {
     if (!canPlay || game.status !== "ready") return;
+    sounds.start();
     setStarting(true);
     await host.create(game.id, Math.max(...game.players));
     setStarting(false);

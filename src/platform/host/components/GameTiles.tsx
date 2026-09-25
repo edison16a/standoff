@@ -6,7 +6,8 @@ import type { GameInfo } from "@/platform/games/game-api";
 interface GameTilesProps {
   games: readonly GameInfo[];
   selected: number;
-  onSelect(index: number): void;
+  /** `via` says whether it came from the arrows or a click, for the menu sounds. */
+  onSelect(index: number, via: "key" | "click"): void;
   /** Clicking the tile that is already chosen starts that game. */
   onHost(): void;
 }
@@ -30,7 +31,7 @@ export function GameTiles({ games, selected, onSelect, onHost }: GameTilesProps)
     if (!step) return;
     event.preventDefault();
     const next = (selected + step + games.length) % games.length;
-    onSelect(next);
+    onSelect(next, "key");
     rowRef.current?.querySelectorAll<HTMLButtonElement>(".game-tile")[next]?.focus();
   };
 
@@ -48,7 +49,7 @@ export function GameTiles({ games, selected, onSelect, onHost }: GameTilesProps)
             aria-label={game.title}
             aria-pressed={chosen}
             tabIndex={chosen ? 0 : -1}
-            onClick={() => (chosen ? onHost() : onSelect(index))}
+            onClick={() => (chosen ? onHost() : onSelect(index, "click"))}
           >
             <span className="game-tile__art">
               {game.media ? <Image className="cover__art" src={game.media.icon} alt="" fill sizes="220px" /> : <Cover />}
