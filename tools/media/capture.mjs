@@ -5,7 +5,12 @@
 //
 //   node tools/media/capture.mjs <game-id> [--url http://localhost:3000]
 //     [--seconds 8] [--fps 30] [--fade 1] [--warmup 3] [--size 1600x900]
-//     [--ffmpeg ffmpeg] [--only icon,poster,loop]
+//     [--ffmpeg ffmpeg] [--only icon,poster,loop] [--gpu] [--crf 30]
+//
+// --gpu renders on the computer's graphics card in a visible window, for
+// full quality and fast capture. Without it the tool uses software
+// rendering, which works anywhere but is slow. --crf sets the WebM
+// quality (lower is better and bigger; the MP4 uses it less 8).
 //
 // Writes src/games/<id>/media/icon.jpg, src/games/<id>/media/poster.jpg and
 // public/games/<id>/backdrop.webm and backdrop.mp4.
@@ -37,13 +42,17 @@ const warmup = Number(option("warmup", "3"));
 const [width, height] = option("size", "1600x900").split("x").map(Number);
 const ffmpeg = option("ffmpeg", process.env.FFMPEG ?? "ffmpeg");
 const only = new Set(option("only", "icon,poster,loop").split(","));
+const gpu = args.includes("--gpu");
+const crf = Number(option("crf", "34"));
 
 const mediaDir = join("src/games", game, "media");
 const publicDir = join("public/games", game);
 mkdirSync(mediaDir, { recursive: true });
 mkdirSync(publicDir, { recursive: true });
 
-const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
+const browser = gpu
+  ? await chromium.launch({ headless: false, args: ["--ignore-gpu-blocklist", "--enable-gpu-rasterization"] })
+  : await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 
 /** Opens the showcase with a frozen clock and lets the scene settle. */
 async function open(view, size) {
@@ -106,8 +115,8 @@ if (only.has("loop")) {
   ].join(";");
   // WebM (VP9) for Chromium and Firefox, which may lack H.264, and MP4 (H.264) for Safari.
   const encodings = {
-    webm: ["-c:v", "libvpx-vp9", "-crf", "34", "-b:v", "0", "-row-mt", "1", "-deadline", "good", "-cpu-used", "2"],
-    mp4: ["-c:v", "libx264", "-preset", "slow", "-crf", "26", "-movflags", "+faststart"],
+    webm: ["-c:v", "libvpx-vp9", "-crf", String(crf), "-b:v", "0", "-row-mt", "1", "-deadline", "good", "-cpu-used", "2"],
+    mp4: ["-c:v", "libx264", "-preset", "slow", "-crf", String(Math.max(0, crf - 8)), "-movflags", "+faststart"],
   };
   for (const [ext, codec] of Object.entries(encodings)) {
     const out = join(publicDir, `backdrop.${ext}`);
