@@ -4,7 +4,7 @@ import { startDrive, updateDrive } from "./drive";
 import type { Match } from "./match";
 import { choosePassTarget, throwPass } from "./passing";
 import { JUMPER, releaseJumper, startJumper } from "./shooting";
-import { SHOT } from "./tuning";
+import { BOARD, SHOT } from "./tuning";
 import type { Athlete } from "./types";
 import { dir2, type V2 } from "./vec";
 
@@ -25,7 +25,9 @@ export function pressShoot(m: Match, a: Athlete): void {
   const toRim = dir2(a, RIM_SPOT);
   const heading = speed > 0.1 ? (a.vx * toRim.x + a.vz * toRim.z) / speed : 0;
   const driving = d < SHOT.driveRange && speed > 1.6 && heading > 0.55;
-  if (driving || d < SHOT.closeRange) startDrive(m, a);
+  // Under the glass there is no jumper to take, so it becomes a reverse layup.
+  const underGlass = a.z < BOARD.face + 0.3 && Math.abs(a.x - RIM_SPOT.x) < 2.8;
+  if (driving || underGlass || d < SHOT.closeRange) startDrive(m, a);
   else startJumper(m, a);
 }
 

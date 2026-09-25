@@ -4,7 +4,7 @@ import type { Match } from "./match";
 import { launchShot, slam } from "./shooting";
 import { RIM } from "./tuning";
 import type { Athlete } from "./types";
-import { clamp, dir2, dist2, lerp, segmentDistance, yawOf } from "./vec";
+import { clamp, dir2, dist2, lerp, segmentDistance, yawOf, type V2 } from "./vec";
 
 /**
  * Driving at the rim: a gather step, then off the floor into a layup or
@@ -12,10 +12,23 @@ import { clamp, dir2, dist2, lerp, segmentDistance, yawOf } from "./vec";
  * defender in the way loses the contact battle if much weaker, and wins
  * it if much stronger, which turns the dunk into a layup.
  */
+/**
+ * Which way from the rim the finish happens. A player coming from under
+ * the glass swings round to finish in front of it, so the body and the
+ * ball never pass through the backboard.
+ */
+export function finishSide(a: V2, d = rimDistance(a)): V2 {
+  const raw = d > 0.2 ? dir2(RIM_SPOT, a) : { x: 0, z: 1 };
+  if (raw.z >= 0.45) return raw;
+  const x = Math.abs(raw.x) < 0.05 ? 0.6 : raw.x;
+  const l = Math.hypot(x, 0.45);
+  return { x: x / l, z: 0.45 / l };
+}
+
 export function startDrive(m: Match, a: Athlete): void {
   const c = charOf(a);
   const d = rimDistance(a);
-  const away = d > 0.2 ? dir2(RIM_SPOT, a) : { x: 0, z: 1 };
+  const away = finishSide(a, d);
   const defenders = m.opponents(a.team);
   const open = defenders.every((o) => dist2(o, a) > 2);
   let dunk = (c.stats.strength >= 6 || open) && d > 0.7;
