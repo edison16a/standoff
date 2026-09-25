@@ -70,16 +70,15 @@ export function tiltOf(q: Quat, angle: number): Tilt {
 /**
  * Steering from -1 to 1, measured from the wheel angle captured at
  * calibration. The curve is gentle near the middle for fine corrections
- * on straights and firm near full lock for hairpins. It is applied raw,
- * with no smoothing here, since the host already eases the wheel. Past a right angle
- * the phone is close to upside down, and the reading could wrap round to
- * the other side, so it keeps the lock it had.
+ * on straights and firm near full lock for hairpins. It has no smoothing
+ * here, since the host's physics already eases the wheel. Past a right
+ * angle the phone is close to upside down, and the reading could wrap
+ * round to the other side, so it keeps the lock it had.
  */
 export function steerFromWheel(wheel: number, zero: number, last = 0): number {
   const off = wrapAngle(wheel - zero);
   if (Math.abs(off) > 90 * DEG && last !== 0) return Math.sign(last);
-  const mag = Math.max(0, Math.abs(off) - DEAD_ZONE) / (FULL_LOCK - DEAD_ZONE);
-  const m = Math.min(1, mag);
+  const m = Math.min(1, Math.max(0, Math.abs(off) - DEAD_ZONE) / (FULL_LOCK - DEAD_ZONE));
   return Math.sign(off) * (LINEAR_SHARE * m + (1 - LINEAR_SHARE) * m * m * m);
 }
 
