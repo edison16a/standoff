@@ -19,20 +19,24 @@ const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 2.95, icon: 3.
  * through them without drawing, which saves a long wait on a computer
  * that renders in software.
  */
-const PREROLL_MS = 2950;
+const PREROLL = 2.95;
+
+/**
+ * The tool's fake clock keeps running in real time as well, so a frame
+ * that takes the software renderer twenty seconds would race the film
+ * ahead. A gap longer than a normal frame is taken as one filmed frame.
+ */
+const STALL = 0.05;
+const FILMED_FRAME = 1 / 30;
+
+/** Drawn at most once per filmed frame: the page's own frames come twice as often. */
+const DRAW_EVERY = FILMED_FRAME * 0.9;
 
 /**
  * The loop plays behind the home screen, so it draws a little under full
  * resolution: much quicker to film, and the video's own softening hides it.
  */
 const LOOP_PIXELS = 0.8;
-
-/**
- * The loop draws at most this often. The capture tool films thirty frames
- * a second while the page's own frames come sixty a second, so every
- * other one would be drawn for nothing.
- */
-const DRAW_MS = 30;
 
 /** A held still is drawn once, and again after a resize, so the capture waits on as little as possible. */
 const STILL_DRAWS = 1;
@@ -52,14 +56,14 @@ export class ShowcaseDirector {
   private readonly renderer: CourtRenderer;
   private readonly script: HighlightScript;
   private readonly still: boolean;
-  private readyAt = -1;
   private last = -1;
   private carry = 0;
   private elapsed = 0;
   private slowLeft = 0;
   private slowScale = 1;
   private draws = 0;
-  private lastDraw = -Infinity;
+  private sinceReady = 0;
+  private sinceDraw = Infinity;
 
   constructor(canvas: HTMLCanvasElement, readonly view: ShowcaseView) {
     this.renderer = new CourtRenderer(canvas);
@@ -85,7 +89,6 @@ export class ShowcaseDirector {
   }
 
   frame(now: number): void {
-    if (this.readyAt < 0 && window.__showcaseReady) this.readyAt = now;
     if (this.still) {
       if (this.draws++ < STILL_DRAWS) {
         this.renderer.render(0);
@@ -93,12 +96,15 @@ export class ShowcaseDirector {
       }
       return;
     }
-    const real = this.last < 0 ? STEP : Math.min(0.25, (now - this.last) / 1000);
+    const gap = this.last < 0 ? STEP : (now - this.last) / 1000;
     this.last = now;
-    const draw = this.readyAt >= 0 && now - this.readyAt >= PREROLL_MS && now - this.lastDraw >= DRAW_MS;
+    const real = gap > STALL ? FILMED_FRAME : gap;
+    if (window.__showcaseReady) this.sinceReady += real;
+    this.sinceDraw += real;
+    const draw = this.sinceReady >= PREROLL && this.sinceDraw >= DRAW_EVERY;
     this.renderer.render(this.advance(real), draw);
     if (draw) {
-      this.lastDraw = now;
+      this.sinceDraw = 0;
       this.renderer.finish();
     }
   }

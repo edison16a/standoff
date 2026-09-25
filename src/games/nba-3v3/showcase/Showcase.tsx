@@ -22,8 +22,10 @@ export function Showcase({ view }: { view: ShowcaseView }) {
     const observer = new ResizeObserver(fit);
     observer.observe(canvas);
     let frame = 0;
-    const loop = (now: number) => {
-      director.frame(now);
+    // The clock is read from performance.now rather than the frame's own timestamp: the
+    // capture tool fakes performance.now, while the timestamp keeps real time.
+    const loop = () => {
+      director.frame(performance.now());
       frame = requestAnimationFrame(loop);
     };
     frame = requestAnimationFrame(loop);
