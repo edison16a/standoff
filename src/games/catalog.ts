@@ -39,6 +39,7 @@ const LOADERS: Record<string, () => Promise<GameModule>> = {
   "zombie-survival": () => import("./zombie-survival").then((mod) => mod.game),
   "magic-kart": () => import("./magic-kart").then((mod) => mod.game),
   "nba-3v3": () => import("./nba-3v3").then((mod) => mod.game),
+  "fifa-3v3": () => import("./fifa-3v3").then((mod) => mod.game),
 };
 
 export function findGame(id: string): GameInfo | undefined {

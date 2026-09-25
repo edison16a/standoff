@@ -1,0 +1,278 @@
+/*
+  FIFA 3v3 on the phone: picking a star and getting ready. Built for the
+  phone held sideways, and still usable upright.
+*/
+
+.fifa-phone {
+  position: relative;
+  left: 50%;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  width: calc(100vw - 24px);
+  max-width: 980px;
+  min-height: 0;
+  transform: translateX(-50%);
+}
+
+.fifa-phone .kit-steps {
+  gap: 10px;
+  padding: 0;
+}
+
+.fifa-phone .kit-steps__title {
+  font-size: 22px;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .fifa-phone .kit-steps {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto 1fr auto;
+    column-gap: 16px;
+  }
+
+  .fifa-phone .kit-steps__track {
+    grid-column: 1;
+  }
+
+  .fifa-phone .kit-steps__title {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    font-size: 18px;
+  }
+
+  .fifa-phone .kit-steps__body,
+  .fifa-phone .kit-steps__footer {
+    grid-column: 1 / 3;
+  }
+}
+
+/* The picker: the star in 3D beside their stats and the roster. */
+
+.fifa-pick,
+.fifa-ready {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: 14px;
+  min-height: 0;
+}
+
+.fifa-pick__stage,
+.fifa-ready__stage {
+  position: relative;
+  min-height: 190px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--kit) 55%, #0b1024), #070a14 75%);
+}
+
+.fifa-preview {
+  position: absolute;
+  inset: 0;
+}
+
+.fifa-preview__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.fifa-pick__caption {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+.fifa-pick__caption strong {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.fifa-pick__caption span {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.fifa-pick__side,
+.fifa-ready__side {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.fifa-pick__stats {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.fifa-stat {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.fifa-stat__label {
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.fifa-stat__bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--bg-muted);
+  overflow: hidden;
+}
+
+.fifa-stat__bar span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: #f59e0b;
+}
+
+.fifa-stat--good .fifa-stat__bar span {
+  background: #84cc16;
+}
+
+.fifa-stat--top .fifa-stat__bar span {
+  background: #22c55e;
+}
+
+.fifa-stat__value {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.fifa-pick__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+  gap: 6px;
+}
+
+.fifa-pick__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  padding: 6px 8px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: var(--kit);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fifa-pick__card--on {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.fifa-pick__card:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.fifa-pick__number {
+  font-family: "Arial Black", Impact, Arial, sans-serif;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.fifa-pick__name {
+  overflow: hidden;
+  max-width: 100%;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fifa-pick__taken {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+/* Ready: the chosen star, the side the host picked, and what happens next. */
+
+.fifa-ready__card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border-left: 6px solid var(--kit);
+  border-radius: 12px;
+  background: var(--bg-muted);
+}
+
+.fifa-ready__card strong {
+  font-size: 20px;
+}
+
+.fifa-ready__card span {
+  color: var(--text-muted);
+}
+
+.fifa-ready__team {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  font-weight: 900;
+  font-size: 18px;
+  text-transform: uppercase;
+}
+
+.fifa-ready__team--on {
+  background: var(--team);
+  color: #ffffff;
+}
+
+.fifa-ready__note {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.fifa-ready__note--on {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* The two controls in one line, so nobody starts a match without knowing them. */
+.fifa-ready__how {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+@media (orientation: portrait) {
+  .fifa-pick,
+  .fifa-ready {
+    grid-template-columns: 1fr;
+  }
+}

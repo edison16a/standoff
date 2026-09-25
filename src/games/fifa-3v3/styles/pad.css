@@ -1,0 +1,209 @@
+/*
+  The controller: the stick on the left half, the two buttons on the
+  right, and the score in the middle, readable at a glance while the
+  player watches the big screen.
+*/
+
+.fifa-phone--pad {
+  flex: 1;
+}
+
+.fifa-pad {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.9fr) minmax(0, 1fr);
+  gap: 8px;
+  min-height: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.fifa-pad__stick {
+  min-height: 0;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--team) 8%, transparent);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--team) 25%, transparent);
+}
+
+.fifa-pad__middle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.fifa-pad__score {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: "Arial Black", Impact, Arial, sans-serif;
+  font-size: 15px;
+}
+
+.fifa-pad__score strong {
+  font-size: 30px;
+  font-variant-numeric: tabular-nums;
+}
+
+.fifa-pad__clock {
+  padding: 2px 10px;
+  border-radius: 6px;
+  background: var(--bg-muted);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.fifa-pad__clock--golden {
+  background: #f59e0b;
+  color: #1a1203;
+}
+
+.fifa-pad__me {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.fifa-pad__team {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--team);
+  color: #ffffff;
+}
+
+.fifa-pad__status {
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: var(--bg-muted);
+  font-weight: 900;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.fifa-pad__status--ball {
+  background: var(--team);
+  color: #ffffff;
+  animation: fifa-pulse 700ms ease-in-out infinite alternate;
+}
+
+@keyframes fifa-pulse {
+  to {
+    transform: scale(1.06);
+  }
+}
+
+.fifa-pad__buttons {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1.3fr 1fr;
+  place-items: center;
+  gap: 4px;
+}
+
+.fifa-pad__shoot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+
+/* A ring that fills while Shoot is held, for a harder shot. */
+.fifa-pad__shoot::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: conic-gradient(#fde047 var(--fill, 0%), transparent 0);
+  -webkit-mask: radial-gradient(circle, transparent 64%, #000 65%);
+  mask: radial-gradient(circle, transparent 64%, #000 65%);
+  pointer-events: none;
+}
+
+.fifa-pad__shoot--charging::after {
+  animation: fifa-charge 750ms linear forwards;
+}
+
+@property --fill {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 0%;
+}
+
+@keyframes fifa-charge {
+  to {
+    --fill: 100%;
+  }
+}
+
+.fifa-turn {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  background: var(--bg);
+  text-align: center;
+}
+
+.fifa-turn strong {
+  font-size: 22px;
+}
+
+/* Full time on the phone. */
+
+.fifa-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: auto;
+  text-align: center;
+}
+
+.fifa-result__label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.fifa-result__title {
+  font-family: "Arial Black", Impact, Arial, sans-serif;
+  font-size: 44px;
+}
+
+.fifa-result--win .fifa-result__title {
+  color: #22c55e;
+}
+
+.fifa-result__score {
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.fifa-result__goals {
+  font-weight: 700;
+}
+
+/* With the ball at your feet a slide does nothing, so the button rests. */
+.fifa-pad__slide {
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.fifa-pad__slide--idle {
+  opacity: 0.4;
+  transform: scale(0.92);
+}
