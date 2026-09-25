@@ -1,0 +1,58 @@
+/* The settings panel, anchored under the gear by inline top and right. */
+.settings {
+  position: fixed;
+  z-index: 100;
+  display: grid;
+  gap: 14px;
+  width: min(280px, calc(100vw - 32px));
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  animation: settings-in 140ms ease-out;
+}
+
+.settings__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-weight: 600;
+}
+
+.settings__title svg {
+  width: 18px;
+  height: 18px;
+  color: var(--accent);
+}
+
+.settings__row {
+  display: grid;
+  gap: 8px;
+}
+
+.settings__label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.settings__value {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes settings-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .settings {
+    animation: none;
+  }
+}

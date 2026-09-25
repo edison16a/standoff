@@ -8,6 +8,7 @@ import "@/styles/tabs.css";
 import "@/styles/range.css";
 import "@/styles/home.css";
 import "@/styles/shell.css";
+import "@/styles/settings.css";
 import "@/styles/phone.css";
 
 export const metadata: Metadata = {

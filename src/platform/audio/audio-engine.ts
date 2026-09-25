@@ -9,6 +9,8 @@
  * need a real mixer.
  */
 
+import { loadAudioSettings, onAudioSettings, type AudioSettings } from "./audio-settings";
+
 export type BusName = "music" | "crowd" | "sfx" | "ui";
 
 export interface BusLevels {
@@ -26,6 +28,9 @@ export class AudioEngine {
   private readonly buses: Record<BusName, GainNode>;
   /** Separate duck stage per bus, so ducking never fights the user's level. */
   private readonly ducks: Record<BusName, GainNode>;
+  /** The player's own volume from the settings button, after the game's mix. */
+  private readonly prefs: Record<BusName, GainNode>;
+  private readonly stopSettings: () => void;
   private noise: AudioBuffer | null = null;
 
   constructor() {
@@ -46,10 +51,13 @@ export class AudioEngine {
     const make = () => this.ctx.createGain();
     this.buses = { music: make(), crowd: make(), sfx: make(), ui: make() };
     this.ducks = { music: make(), crowd: make(), sfx: make(), ui: make() };
+    this.prefs = { music: make(), crowd: make(), sfx: make(), ui: make() };
     for (const name of Object.keys(this.buses) as BusName[]) {
-      this.buses[name].connect(this.ducks[name]).connect(this.master);
+      this.buses[name].connect(this.prefs[name]).connect(this.ducks[name]).connect(this.master);
     }
     this.buses.ui.gain.value = 0.5;
+    this.applySettings(loadAudioSettings(), 0);
+    this.stopSettings = onAudioSettings((settings) => this.applySettings(settings, RAMP_S));
   }
 
   get now(): number {
@@ -111,6 +119,16 @@ export class AudioEngine {
   }
 
   close(): void {
+    this.stopSettings();
     void this.ctx.close();
+  }
+
+  private applySettings(settings: AudioSettings, ramp: number): void {
+    for (const name of Object.keys(this.prefs) as BusName[]) {
+      const level = name === "music" ? settings.music : settings.effects;
+      const gain = this.prefs[name].gain;
+      if (ramp === 0) gain.value = level;
+      else gain.setTargetAtTime(level, this.now, ramp);
+    }
   }
 }

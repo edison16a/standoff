@@ -1,4 +1,5 @@
 "use client";
+import { SettingsButton } from "@/platform/settings/SettingsButton";
 import { useEffect, useRef, useState } from "react";
 import { GitHubButton } from "@/components/ui/GitHubButton";
 import { HomeLink } from "@/components/ui/HomeLink";
@@ -59,6 +60,7 @@ export function RoomShell() {
       </div>
       <div className="shell__tools">
         {game?.Tools && <game.Tools />}
+        <SettingsButton />
         <ThemeToggle />
         <IconButton icon="expand" label="Full screen" onClick={toggleFullscreen} />
         <GitHubButton compact />

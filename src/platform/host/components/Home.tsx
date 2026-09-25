@@ -1,4 +1,5 @@
 "use client";
+import { SettingsButton } from "@/platform/settings/SettingsButton";
 import { useEffect, useState } from "react";
 import { GitHubButton } from "@/components/ui/GitHubButton";
 import { HomeLink } from "@/components/ui/HomeLink";
@@ -82,6 +83,7 @@ export function Home() {
       <header className="home__bar">
         <HomeLink />
         <div className="home__tools">
+          <SettingsButton />
           <ThemeToggle />
           <GitHubButton />
         </div>

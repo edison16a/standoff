@@ -1,8 +1,8 @@
-import type { ButtonHTMLAttributes } from "react";
+import type { ComponentPropsWithRef } from "react";
 import { Icon } from "./Icon";
 import type { IconName } from "./icon-paths";
 
-interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> {
+interface IconButtonProps extends Omit<ComponentPropsWithRef<"button">, "children"> {
   icon: IconName;
   /** Read out by screen readers and shown as the hover tooltip. */
   label: string;
