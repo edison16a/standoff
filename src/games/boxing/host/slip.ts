@@ -5,14 +5,12 @@ export interface SlipOptions {
   shift: number;
   /** The slip ends once the head is back within this share of `shift`. */
   release: number;
-  /** How slowly the resting spot follows a player who drifts about between punches. */
+  /** How slowly the resting spot follows the head. A slip is over in a moment, so only a step to a new spot is followed all the way. */
   followMs: number;
-  /** A shift held longer than this is a step to a new spot, not a slip. */
-  stepMs: number;
 }
 
 /** About 13 cm, which a real slip covers easily and a sway does not. */
-export const DEFAULT_SLIP: SlipOptions = { shift: 0.35, release: 0.55, followMs: 1500, stepMs: 1500 };
+export const DEFAULT_SLIP: SlipOptions = { shift: 0.35, release: 0.55, followMs: 1200 };
 
 /** The kit's torso length in shoulder widths, to report the shift in the same unit as its lean. */
 const TORSO = 1.45;
@@ -29,7 +27,6 @@ export class SlipReader {
   amount = 0;
   private home: number | null = null;
   private shifted: Side = 0;
-  private shiftedAt = 0;
   private last = 0;
 
   constructor(private readonly options: SlipOptions = DEFAULT_SLIP) {}
@@ -45,26 +42,18 @@ export class SlipReader {
       this.reset();
       return moves?.present ? moves.lean : 0;
     }
-    const { shift, release, followMs, stepMs } = this.options;
+    const { shift, release, followMs } = this.options;
     const dt = Math.max(0, now - this.last);
     this.last = now;
     const side = moves.head.side;
     this.home ??= side;
-    let offset = side - this.home;
+    // Rest always follows, slowly: a quick slip barely moves it, and a player who steps and stays is soon home again.
+    this.home += (side - this.home) * (1 - Math.exp(-dt / followMs));
+    const offset = side - this.home;
     const toward: Side = offset < 0 ? -1 : 1;
-    const before = this.shifted;
     if (Math.abs(offset) >= shift) this.shifted = toward;
     else if (this.shifted !== 0 && (Math.abs(offset) < shift * release || toward !== this.shifted)) this.shifted = 0;
-    if (this.shifted !== 0 && before === 0) this.shiftedAt = now;
-    if (this.shifted !== 0 && now - this.shiftedAt > stepMs) {
-      // Still over there after this long: the player moved, so that is the new resting spot.
-      this.home = side;
-      this.shifted = 0;
-      offset = 0;
-    }
     const slipping: Side = moves.lean !== 0 ? moves.lean : this.shifted;
-    // Rest follows only while nothing is under way, so a slip held for a moment stays a slip.
-    if (slipping === 0) this.home += (side - this.home) * (1 - Math.exp(-dt / followMs));
     const shiftAmount = offset / TORSO;
     this.amount = Math.abs(moves.amounts.lean) >= Math.abs(shiftAmount) ? moves.amounts.lean : shiftAmount;
     return slipping;

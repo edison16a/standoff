@@ -50,9 +50,13 @@ describe("slipping from the waist up", () => {
   });
 
   it("takes a step to a new spot as a step once it is held", () => {
-    const frames = fight(move({ x: 0.6 }, GUARD, 3000).slice(0, 4));
+    const frames = fight(move({ x: 0.6 }, GUARD, 3000));
     expect(at(frames, 800).slip).toBe(1);
-    expect(frames.filter((frame) => frame.time > 2400).every((frame) => frame.slip === 0)).toBe(true);
+    const stayed = frames.filter((frame) => frame.time > 2400 && frame.time < 3650);
+    expect(stayed.every((frame) => frame.slip === 0)).toBe(true);
+    // Stepping quickly back is a slip for a moment, as it looks the same, but never a held one.
+    const back = frames.filter((frame) => frame.time > 3650 && frame.slip !== 0);
+    expect(back.length / 30).toBeLessThan(0.6);
   });
 
   it("ducks when the head dips under its line, and a dip is not a slip", () => {
