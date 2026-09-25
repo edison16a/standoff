@@ -11,6 +11,7 @@ import { useBoxingStore as store } from "./host-store";
 import { hudFrom } from "./hud";
 import { MenuDemo } from "./menu-demo";
 import { PickControl } from "./pick-control";
+import { levelOf } from "./player-input";
 import { PlayersFeed } from "./players-feed";
 import { loadRecords } from "./records";
 import { testRoundMs } from "./dev-overrides";
@@ -96,11 +97,11 @@ export class BoxingHost {
   startFight(): void {
     const humans = this.humans;
     this.stopDriver?.();
-    this.driver = new FightDriver({ seed: Math.floor(Math.random() * 1e9), slots: [1, humans[1] ? 2 : null], roundMs: testRoundMs() });
+    const [red, blue] = this.looks();
+    this.driver = new FightDriver({ seed: Math.floor(Math.random() * 1e9), slots: [1, humans[1] ? 2 : null], roundMs: testRoundMs(), styles: [red.id, blue.id] });
     this.stopDriver = this.driver.listen((event) => this.onMatchEvent(event, this.driver!.match));
     this.banners.clear();
     this.audio.setPlayers(humans);
-    const [red, blue] = this.looks();
     this.audio.setNames([red.name, blue.name]);
     this.audio.screen("fight");
     this.fightId++;
@@ -200,7 +201,10 @@ export class BoxingHost {
 
   private onMove(event: MoveEvent): void {
     const screen = store.getState().screen;
-    if (screen === "fight" && event.type === "punch") this.driver?.punch(event.slot, event.hand, event.style === "straight", event.power);
+    if (screen === "fight" && event.type === "punch" && this.kit) {
+      const level = levelOf(this.kit.moves(event.slot), this.kit.body(event.slot), event.hand);
+      this.driver?.punch(event.slot, event.hand, event.style === "straight", event.power, level);
+    }
     if (screen === "pick" && this.pick?.onMove(event)) {
       this.audio.tick();
       this.publishPick();

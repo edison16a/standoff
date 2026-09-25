@@ -1,5 +1,6 @@
 import { loadAudioSettings } from "@/platform/audio/audio-settings";
 import type { MatchEvent } from "../engine/events";
+import { RULES } from "../engine/rules";
 import type { FighterId } from "../engine/types";
 
 /** Colour lines wait at least this long after the last one, so the call never turns to chatter. */
@@ -32,10 +33,10 @@ export class Commentator {
       case "intro":
         return this.say(`${this.names[0]} versus ${this.names[1]}. Let's get it on!`, "cut");
       case "round":
-        if (event.round > 1) this.say(event.round === 3 ? "Final round!" : `Round ${event.round}!`, "cut");
+        if (event.round > 1) this.say(event.round === RULES.rounds ? "Final round!" : `Round ${event.round}!`, "cut");
         return;
       case "hit":
-        if (event.stagger) return this.say(pick(["What a counter!", `${surname(event.target)} is hurt!`, "He walked right into that!"]), "colour");
+        if (event.stagger) return this.say(pick([event.counter ? "What a counter!" : "What a shot!", `${surname(event.target)} is hurt!`, "He is stunned, back to the corner!"]), "colour");
         if (event.heavy && Math.random() < 0.5) return this.say(event.style === "hook" ? pick(["Huge hook!", "Big left hook!"]) : pick(["Big right hand!", "Oh, that landed!"]), "colour");
         return;
       case "miss":
@@ -49,6 +50,9 @@ export class Commentator {
         return this.say(event.method === "KO" ? "It's all over! Knockout!" : "The referee waves it off!", "cut");
       case "bell":
         if (event.kind === "end" && Math.random() < 0.5) this.say(pick(["What a round!", "Back to the corners."]), "colour");
+        return;
+      case "touch":
+        if (!event.timedOut && Math.random() < 0.4) this.say(pick(["They touch gloves.", "Good sportsmanship."]), "colour");
         return;
       case "over": {
         const { winner, method } = event.result;

@@ -92,6 +92,29 @@
   font-size: 11px;
 }
 
+/* Hurt and stunned show on the bar, so a player knows why their punches feel slow. */
+.bx-bar__tag {
+  padding: 1px 7px;
+  border-radius: 4px;
+  background: var(--bx-orange);
+  color: var(--bx-ink);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.bx-bar__tag--stun {
+  background: #facc15;
+  animation: bx-stun-blink 0.35s steps(2) infinite;
+}
+
+@keyframes bx-stun-blink {
+  50% {
+    background: var(--bx-red);
+    color: #fff;
+  }
+}
+
 .bx-bar__track {
   position: relative;
   width: 100%;

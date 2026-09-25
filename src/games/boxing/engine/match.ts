@@ -1,18 +1,19 @@
+import { finishStoppage, stepCount, knockDown, type Stoppage } from "./count";
 import type { MatchEvent, MatchResult } from "./events";
 import { Fighter } from "./fighter";
 import { FIGHT_RANGE, Footwork } from "./footwork";
-import { seeded, type Random } from "./random";
 import { applyOutcome } from "./landing";
+import { seeded, type Random } from "./random";
+import { followAim } from "./reach";
 import { judge } from "./resolve";
+import { endRound, stepBreak, stepIntro, stepTouch, type TouchState } from "./rounds";
 import { PUNCHES, RULES } from "./rules";
-import { decision, scorecards } from "./scoring";
-import { other, type DefenseInput, type FighterId, type Hand, type PunchStyle } from "./types";
+import { other, type DefenseInput, type FighterId, type Hand, type Level, type PunchStyle } from "./types";
 
-export type MatchPhase = "intro" | "fight" | "knockdown" | "stoppage" | "break" | "over";
+export type MatchPhase = "intro" | "touch" | "fight" | "knockdown" | "stoppage" | "break" | "over";
 
 /** A punch from further apart than fighting range plus this falls short. */
 const REACH_SPARE = 0.6;
-const WALK_OUT_MS = 1_800;
 
 export interface MatchOptions {
   seed: number;
@@ -20,13 +21,19 @@ export interface MatchOptions {
   roundMs?: number;
   breakMs?: number;
   introMs?: number;
+  /** Touch gloves before each round. Off, the boxers start face to face and the bell goes at once. */
+  touch?: boolean;
+  /** Each boxer's footwork style, by the id of the boxer chosen. */
+  styles?: readonly [string | undefined, string | undefined];
 }
 
 /**
  * One fight, from the walk to the middle to the final bell. It is the
  * referee: it keeps the clock, judges every punch as it lands, counts
- * knockdowns and scores the rounds. Pure and seeded, so tests and the
- * showcase can play whole fights without a browser.
+ * knockdowns and scores the rounds. The rounds, the breaks and touching
+ * gloves are in `rounds.ts`, the knockdowns in `count.ts`. Pure and
+ * seeded, so tests and the showcase can play whole fights without a
+ * browser.
  */
 export class Match {
   readonly fighters: [Fighter, Fighter] = [new Fighter(0), new Fighter(1)];
@@ -34,6 +41,8 @@ export class Match {
   readonly random: Random;
   readonly rounds: number;
   readonly roundMs: number;
+  readonly breakMs: number;
+  readonly touchGloves: boolean;
   phase: MatchPhase = "intro";
   round = 1;
   /** Milliseconds gone in this round. It stops during a count. */
@@ -42,20 +51,24 @@ export class Match {
   now = 0;
   paused = false;
   result: MatchResult | null = null;
-  private phaseEnds: number;
-  private readonly breakMs: number;
-  private warned = false;
+  /** When the current phase began, and when it is due to end. */
+  phaseSince = 0;
+  phaseEnds: number;
+  warned = false;
+  touch: TouchState | null = null;
+  stoppage: Stoppage | null = null;
   private pending: MatchEvent[] = [{ type: "intro" }];
-  private stoppage: { fighter: FighterId; method: "KO" | "TKO" } | null = null;
 
   constructor(options: MatchOptions) {
     this.random = seeded(options.seed);
     this.rounds = options.rounds ?? RULES.rounds;
     this.roundMs = options.roundMs ?? RULES.roundMs;
     this.breakMs = options.breakMs ?? RULES.breakMs;
+    this.touchGloves = options.touch ?? true;
     this.phaseEnds = options.introMs ?? RULES.introMs;
-    this.footwork = new Footwork(this.random);
-    this.footwork.place();
+    this.footwork = new Footwork(this.random, options.styles);
+    this.footwork.place(this.touchGloves);
+    if (this.touchGloves) this.footwork.setMode("centre");
   }
 
   get secondsLeft(): number {
@@ -67,24 +80,45 @@ export class Match {
     return Math.max(0, this.phaseEnds - this.now);
   }
 
+  /** Between rounds: walking to the corners, sitting on the stools, or walking back out. */
+  get breakStage(): "walk" | "rest" | "out" | null {
+    if (this.phase !== "break") return null;
+    if (this.now - this.phaseSince < RULES.cornerWalkMs) return "walk";
+    return this.phaseLeft < RULES.walkOutMs ? "out" : "rest";
+  }
+
+  emit(event: MatchEvent): void {
+    this.pending.push(event);
+  }
+
+  setPhase(phase: MatchPhase, lengthMs = 0): void {
+    this.phase = phase;
+    this.phaseSince = this.now;
+    this.phaseEnds = this.now + lengthMs;
+  }
+
   setInput(id: FighterId, input: DefenseInput): void {
-    this.fighters[id].setInput(input, this.now);
+    this.fighters[id].setInput(input);
   }
 
   /** Starts a punch. `windupMs` telegraphs it first. Returns false when this boxer cannot punch now. */
-  throwPunch(id: FighterId, hand: Hand, style: PunchStyle, power: number, windupMs = 0): boolean {
+  throwPunch(id: FighterId, hand: Hand, style: PunchStyle, power: number, windupMs = 0, level: Level = "head"): boolean {
     const fighter = this.fighters[id];
     if (this.phase !== "fight" || this.paused || !fighter.canPunch(this.now)) return false;
     const spec = PUNCHES[style];
     const tired = fighter.stamina < spec.stamina;
-    const slow = tired ? 1.3 : 1;
+    // Out of stamina or worn down by punishment, the punch takes longer to get there and back.
+    const slow = (tired ? 1.3 : 1) * fighter.fatigue.slow;
     fighter.stamina = Math.max(0, fighter.stamina - spec.stamina);
     const counter = fighter.counterOpen(this.now);
     if (counter) fighter.counterUntil = -Infinity;
-    const impactAt = this.now + windupMs + spec.travelMs * slow;
-    fighter.punch = { hand, style, power, start: this.now, impactAt, endAt: impactAt + spec.recoverMs * slow, counter, tired, resolved: false };
+    const launchAt = this.now + windupMs;
+    const impactAt = launchAt + spec.travelMs * slow;
+    const aim = { ...this.fighters[other(id)].input.head };
+    fighter.punch = { hand, style, level, power, start: this.now, launchAt, impactAt, endAt: impactAt + spec.recoverMs * slow, aim, counter, tired, resolved: false };
     fighter.stats.thrown++;
-    this.pending.push({ type: "throw", fighter: id, hand, style, windupMs, impactAt, counter, tired });
+    this.footwork.threw(id, this.now);
+    this.emit({ type: "throw", fighter: id, hand, style, level, windupMs, impactAt, counter, tired });
     return true;
   }
 
@@ -95,19 +129,22 @@ export class Match {
       this.footwork.update(dtMs, this.now);
       switch (this.phase) {
         case "intro":
+          stepIntro(this);
+          break;
+        case "touch":
+          stepTouch(this);
+          break;
         case "break":
-          // Out of the corners a little before the bell, so they meet in the middle as it rings.
-          if (this.phase === "break" && this.phaseLeft < WALK_OUT_MS) this.footwork.setMode("fight");
-          if (this.now >= this.phaseEnds) this.startRound();
+          stepBreak(this, dtMs);
           break;
         case "fight":
           this.fight(dtMs);
           break;
         case "knockdown":
-          this.count();
+          stepCount(this);
           break;
         case "stoppage":
-          if (this.now >= this.phaseEnds && this.stoppage) this.finishStoppage();
+          if (this.now >= this.phaseEnds && this.stoppage) finishStoppage(this);
           break;
       }
     }
@@ -116,125 +153,39 @@ export class Match {
     return events;
   }
 
+  finish(result: MatchResult): void {
+    this.result = result;
+    this.phase = "over";
+    this.emit({ type: "over", result });
+  }
+
   private fight(dtMs: number): void {
     this.roundClock += dtMs;
     for (const fighter of this.fighters) fighter.recover(this.now, dtMs);
     for (const fighter of this.fighters) {
       const punch = fighter.punch;
+      if (punch && !punch.resolved) followAim(punch, this.fighters[other(fighter.id)].input.head, this.now, dtMs);
       if (punch && !punch.resolved && this.now >= punch.impactAt) this.land(fighter, this.fighters[other(fighter.id)]);
       if (this.phase !== "fight") return;
     }
     if (!this.warned && this.roundMs - this.roundClock <= RULES.warningMs) {
       this.warned = true;
-      this.pending.push({ type: "warning" });
+      this.emit({ type: "warning" });
     }
-    if (this.roundClock >= this.roundMs) this.endRound();
+    if (this.roundClock >= this.roundMs) endRound(this);
   }
 
   private land(attacker: Fighter, defender: Fighter): void {
     const punch = attacker.punch!;
     punch.resolved = true;
     if (defender.down) return;
-    const facts = { fighter: attacker.id, hand: punch.hand, style: punch.style };
+    const facts = { fighter: attacker.id, hand: punch.hand, style: punch.style, level: punch.level };
     if (this.footwork.distance() > FIGHT_RANGE + REACH_SPARE) {
       // Still walking in from the corners: it falls short, and earns nobody a counter.
-      this.pending.push({ type: "miss", ...facts, target: defender.id, dodge: null });
+      this.emit({ type: "miss", ...facts, target: defender.id, dodge: null });
       return;
     }
     const outcome = judge(punch, attacker, defender, this.now);
-    if (applyOutcome(outcome, punch, attacker, defender, this, (event) => this.pending.push(event))) this.knockDown(defender, attacker);
-  }
-
-  private knockDown(down: Fighter, by: Fighter): void {
-    down.knockdowns++;
-    down.stats.knockdowns++;
-    down.addRoundKnockdown(this.round);
-    const final = down.knockdowns >= RULES.knockdownsToStop;
-    down.down = { since: this.now, count: 0, nextCountAt: this.now + RULES.fallMs, raisedSince: null, risingAt: null, lowered: !down.input.raise, final };
-    // The fallen boxer's own punch dies with them. The blow that did it follows through, so it
-    // reads on screen, but it has landed and nothing more can be thrown until the fight goes on.
-    down.punch = null;
-    this.footwork.setMode("neutral", down.id);
-    this.pending.push({ type: "knockdown", fighter: down.id, by: by.id, knockdowns: down.knockdowns });
-    if (final) {
-      this.phase = "stoppage";
-      this.phaseEnds = this.now + RULES.stoppageMs;
-      this.stoppage = { fighter: down.id, method: "TKO" };
-    } else {
-      this.phase = "knockdown";
-    }
-  }
-
-  /** The referee's count, and getting up by raising both gloves. */
-  private count(): void {
-    const down = this.fighters.find((f) => f.down)!;
-    const state = down.down!;
-    if (state.risingAt !== null) {
-      if (this.now < state.risingAt + RULES.riseMs + RULES.resumeMs) return;
-      down.down = null;
-      down.health = RULES.getUpHealth[Math.min(down.knockdowns, 2) - 1] ?? 30;
-      down.staggerUntil = down.rockedUntil = -Infinity;
-      this.phase = "fight";
-      this.footwork.setMode("fight");
-      this.pending.push({ type: "resume" });
-      return;
-    }
-    if (!down.input.raise) state.lowered = true;
-    if (state.count >= 1 && state.lowered && down.input.raise) {
-      state.raisedSince ??= this.now;
-      if (this.now - state.raisedSince >= RULES.raiseHoldMs) {
-        state.risingAt = this.now;
-        // The other boxer leaves the neutral corner while this one gets up.
-        this.footwork.setMode("fight");
-        this.pending.push({ type: "rise", fighter: down.id });
-        return;
-      }
-    } else {
-      state.raisedSince = null;
-    }
-    if (this.now < state.nextCountAt) return;
-    state.count++;
-    state.nextCountAt += RULES.countMs;
-    this.pending.push({ type: "count", fighter: down.id, count: state.count });
-    if (state.count >= 10) {
-      this.stoppage = { fighter: down.id, method: "KO" };
-      this.finishStoppage();
-    }
-  }
-
-  private finishStoppage(): void {
-    const { fighter, method } = this.stoppage!;
-    const winner = other(fighter);
-    const { cards, totals } = scorecards(this.fighters[0], this.fighters[1], this.round);
-    this.pending.push({ type: "stoppage", fighter, by: winner, method });
-    this.finish({ winner, method, round: this.round, second: Math.floor(this.roundClock / 1000), cards, totals });
-  }
-
-  private startRound(): void {
-    if (this.phase === "break") this.round++;
-    this.roundClock = 0;
-    this.warned = false;
-    this.phase = "fight";
-    this.footwork.setMode("fight");
-    this.pending.push({ type: "round", round: this.round }, { type: "bell", kind: "start" });
-  }
-
-  private endRound(): void {
-    for (const fighter of this.fighters) fighter.breakReset();
-    if (this.round >= this.rounds) {
-      this.pending.push({ type: "bell", kind: "final" });
-      this.finish(decision(this.fighters[0], this.fighters[1], this.rounds));
-      return;
-    }
-    this.pending.push({ type: "bell", kind: "end" });
-    this.phase = "break";
-    this.phaseEnds = this.now + this.breakMs;
-    this.footwork.setMode("corners");
-  }
-
-  private finish(result: MatchResult): void {
-    this.result = result;
-    this.phase = "over";
-    this.pending.push({ type: "over", result });
+    if (applyOutcome(outcome, punch, attacker, defender, this, (event) => this.emit(event))) knockDown(this, defender, attacker);
   }
 }

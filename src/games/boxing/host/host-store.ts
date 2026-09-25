@@ -14,6 +14,12 @@ export interface HudFighter {
   /** A counter punch would land hard right now. */
   counter: boolean;
   blocking: boolean;
+  /** Holding both gloves out to touch before a round. */
+  reaching: boolean;
+  /** Stunned by a head shot, reeling back to the corner. */
+  stunned: boolean;
+  /** Worn down by punishment, so punches are slower and softer for a while. */
+  worn: boolean;
   knockdowns: number;
   /** Clean punches taken so far. Each new one flashes the edges of this boxer's view. */
   hurt: number;
@@ -45,8 +51,12 @@ export interface Hud {
   away: number[];
   /** Seconds until a paused fight goes on, once everyone is back. */
   resumeIn: number | null;
-  /** Seconds of the break or the walk out left. */
+  /** Seconds of the break, or of waiting to touch gloves, left. */
   phaseLeft: number;
+  /** Between rounds: walking to the corners, resting on the stools, or walking back out. */
+  breakStage: "walk" | "rest" | "out" | null;
+  /** The gloves have touched, and the bell is about to go. */
+  touched: boolean;
   /** Which boxers have a view on screen: one wide view, or the screen split. */
   views: (0 | 1)[];
 }

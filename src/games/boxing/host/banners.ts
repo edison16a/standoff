@@ -1,4 +1,5 @@
 import type { MatchEvent } from "../engine/events";
+import { RULES } from "../engine/rules";
 import type { Banner } from "./host-store";
 
 /** How long a banner stays up, in milliseconds. */
@@ -21,20 +22,25 @@ export class Banners {
     };
     switch (event.type) {
       case "round":
-        say(event.round === 3 ? "FINAL ROUND" : `ROUND ${event.round}`, "info", null);
+        say(event.round === RULES.rounds ? "FINAL ROUND" : `ROUND ${event.round}`, "info", null);
+        break;
+      case "touch":
+        if (!event.timedOut) say("GLOVES TOUCHED", "good", null);
         break;
       case "bell":
         if (event.kind === "start") say("FIGHT!", "big", null);
         break;
       case "warning":
-        say("10 SECONDS", "info", null);
+        say("5 SECONDS", "info", null);
         break;
       case "hit":
         if (event.stagger) {
-          say("COUNTER!", "good", event.fighter);
-          say("STAGGERED", "bad", event.target);
+          say(event.counter ? "COUNTER!" : "BIG SHOT!", "good", event.fighter);
+          say("STUNNED", "bad", event.target);
         } else if (event.counter) say("COUNTER", "good", event.fighter);
         else if (event.heavy) say("BIG SHOT", "good", event.fighter);
+        else if (event.cover >= 0.4) say("HALF BLOCKED", "good", event.target);
+        else if (event.level === "body") say("BODY SHOT", "good", event.fighter);
         break;
       case "block":
         say("BLOCKED", "good", event.target);
