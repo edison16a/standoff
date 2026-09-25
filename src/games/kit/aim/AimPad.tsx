@@ -1,5 +1,5 @@
 "use client";
-import "../kit.css";
+import "./aim.css";
 import { useRef, type ReactNode } from "react";
 import type { PhoneAim } from "./phone-aim";
 

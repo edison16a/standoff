@@ -1,0 +1,144 @@
+/*
+  The aiming kit's phone pieces: the calibration page, the picture that
+  guides it, the drag pad and the fire button.
+*/
+
+.kit-calibrate {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: clamp(8px, 1.8vh, 14px);
+  min-height: 0;
+}
+
+.kit-calibrate__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.kit-calibrate__text {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.kit-calibrate__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.kit-guide {
+  display: block;
+  flex: 1 1 0;
+  width: 100%;
+  max-width: 340px;
+  min-height: 0;
+  max-height: 330px;
+  margin: 0 auto;
+}
+
+/* Sideways: the words and buttons on the left, the picture on the right. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .kit-calibrate {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    column-gap: 20px;
+  }
+
+  .kit-calibrate > :not(.kit-guide, .kit-pad) {
+    grid-column: 1;
+  }
+
+  .kit-calibrate__actions {
+    align-self: end;
+  }
+
+  .kit-calibrate > .kit-guide,
+  .kit-calibrate > .kit-pad {
+    grid-row: 1 / 4;
+    grid-column: 2;
+    height: 100%;
+    min-height: 0;
+  }
+}
+
+.kit-guide__screen {
+  fill: var(--bg-muted);
+  stroke: var(--text);
+  stroke-width: 3;
+}
+
+.kit-guide__stand {
+  fill: var(--text);
+}
+
+.kit-guide__phone {
+  fill: var(--bg);
+  stroke: var(--text);
+  stroke-width: 4;
+}
+
+.kit-guide__caption {
+  fill: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.kit-pad {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: min(220px, 30vh);
+  border: 2px dashed var(--border-strong);
+  border-radius: 22px;
+  background: var(--bg-elevated);
+  touch-action: none;
+  user-select: none;
+}
+
+.kit-pad__hint {
+  position: absolute;
+  top: 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.kit-fire {
+  display: grid;
+  place-items: center;
+  width: min(62vw, 260px);
+  aspect-ratio: 1;
+  border: 6px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  background: var(--kit-fire, #ff4757);
+  color: #ffffff;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+  transition: transform 60ms ease;
+}
+
+.kit-fire:active {
+  transform: scale(0.94);
+}
+
+.kit-fire:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.aim-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
