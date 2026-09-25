@@ -118,14 +118,26 @@ describe("a run", () => {
     game.start([1, 2, 3, 4].map((seat) => ({ seat, weapon: "rifle" as const })), 25);
     let widest = 0;
     let attacking = 0;
+    let swings = 0;
+    // The furthest a swing came from, past the swinger's reach.
+    let overreach = 0;
     run(game, 90, () => {
       game.health = 100;
       for (const z of game.encounter?.zombies.filter(alive) ?? []) {
         widest = Math.max(widest, Math.abs(z.side) / z.ahead);
         if (z.state === "attack") attacking += 1;
       }
+      for (const e of game.drain()) {
+        const z = e.type === "swing" ? game.encounter?.find(e.zombie) : undefined;
+        if (!z) continue;
+        swings += 1;
+        overreach = Math.max(overreach, z.ahead - KINDS[z.kind].reach);
+      }
     });
     expect(attacking).toBeGreaterThan(0);
+    expect(swings).toBeGreaterThan(0);
+    // Those the crowd holds back wait their turn, and do not hit the team from behind the front line.
+    expect(overreach).toBeLessThan(0.35);
     // The camera sees about 0.9 to either side per metre ahead on a wide screen.
     expect(widest).toBeLessThan(0.75);
   });
