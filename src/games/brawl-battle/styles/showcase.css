@@ -1,0 +1,43 @@
+/*
+  The showcase: the game full screen for capturing the home screen's
+  media, with the logo over the icon.
+*/
+
+.bb-showcase {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #120a24;
+}
+
+.bb-showcase__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.bb-showcase__logo {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: Impact, "Arial Black", "Helvetica Neue", sans-serif;
+  font-size: 15vmin;
+  font-style: italic;
+  font-weight: 900;
+  line-height: 0.92;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: #ffffff;
+  -webkit-text-stroke: 0.06em #140c24;
+  paint-order: stroke fill;
+  text-shadow: 0 0.08em 0 #140c24, 0 0.2em 0.5em rgba(0, 0, 0, 0.6);
+  transform: rotate(-4deg);
+}
+
+.bb-showcase__logo b {
+  color: #ff6b35;
+}

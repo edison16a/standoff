@@ -1,0 +1,282 @@
+/*
+  Brawl Battle on the phone: picking a fighter, getting ready and the
+  result. The page always fits one screen with no scrolling, upright or
+  sideways, with room for the notch and the browser's bars.
+*/
+
+/* Only on this game's phone: the frame takes exactly the visible screen. */
+.phone:has(.bb-phone) {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.phone__body:has(> .bb-phone) {
+  min-height: 0;
+  max-width: none;
+  gap: 0;
+  padding: 8px max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left));
+}
+
+.bb-phone {
+  --bb-orange: #ff6b35;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.bb-phone .kit-steps {
+  flex: 1;
+  gap: 10px;
+  min-height: 0;
+  padding: 0;
+}
+
+.bb-phone .kit-steps__title {
+  font-size: 22px;
+}
+
+.bb-phone .kit-steps__body {
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .bb-phone .kit-steps {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 8px 16px;
+  }
+
+  .bb-phone .kit-steps__title {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    font-size: 18px;
+  }
+
+  .bb-phone .kit-steps__body,
+  .bb-phone .kit-steps__footer {
+    grid-column: 1 / 3;
+  }
+
+  .bb-phone .kit-steps__footer .btn--lg {
+    height: 46px;
+  }
+}
+
+/* Step one: the four fighters and the chosen one's style. */
+
+.bb-pick {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 12px;
+  min-height: 0;
+}
+
+.bb-pick__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.bb-pick__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px 8px;
+  border: 3px solid var(--border);
+  border-radius: 18px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition: transform 100ms ease, border-color 100ms ease;
+}
+
+.bb-pick__card--on {
+  border-color: var(--bb-orange);
+  background: color-mix(in srgb, var(--bb-orange) 14%, var(--bg));
+  box-shadow: 0 4px 0 var(--bb-orange);
+}
+
+.bb-pick__face {
+  width: clamp(52px, 17vmin, 84px);
+  height: auto;
+}
+
+.bb-pick__name {
+  font-size: 15px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.bb-pick__info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--bg-muted);
+}
+
+.bb-pick__title {
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.bb-pick__blurb {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.bb-pick__stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bb-stat {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.bb-stat__label {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.bb-stat__bar {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+}
+
+.bb-stat__pip {
+  height: 8px;
+  border-radius: 3px;
+  background: var(--border);
+}
+
+.bb-stat__pip--on {
+  background: linear-gradient(90deg, var(--bb-orange), #fbbf24);
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .bb-pick {
+    grid-template-rows: none;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .bb-pick__list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-content: center;
+  }
+
+  .bb-pick__info {
+    justify-content: center;
+    padding: 8px 12px;
+  }
+
+  .bb-pick__blurb {
+    font-size: 13px;
+  }
+}
+
+/* Step two: ready. */
+
+.bb-ready {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  height: 100%;
+  text-align: center;
+}
+
+.bb-ready__face {
+  filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.2));
+}
+
+.bb-ready__name {
+  font-size: 26px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.bb-ready__note {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+}
+
+.bb-ready__note--on {
+  color: #16a34a;
+  font-weight: 700;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .bb-ready {
+    flex-direction: row;
+    gap: 24px;
+    text-align: left;
+  }
+}
+
+/* The result after a match. */
+
+.bb-result {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 0;
+  text-align: center;
+}
+
+.bb-result__label {
+  color: var(--fighter);
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bb-result__place {
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: 64px;
+  font-style: italic;
+  line-height: 1;
+}
+
+.bb-result__line {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .bb-result svg {
+    width: 64px;
+    height: 64px;
+  }
+
+  .bb-result__place {
+    font-size: 48px;
+  }
+}

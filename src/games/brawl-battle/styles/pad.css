@@ -1,0 +1,334 @@
+/*
+  The controller: the direction pad on the left, your damage in the
+  middle, and Attack, Special and Ult on the right, placed like a
+  console pad so thumbs find them without looking. Upright, the status
+  moves to the top and the pad and buttons share the bottom.
+*/
+
+.bb-pad {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.75fr) minmax(0, 1.15fr);
+  grid-template-areas: "dpad status buttons";
+  gap: 8px;
+  min-height: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+@media (orientation: portrait) {
+  .bb-pad {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: minmax(0, 0.6fr) minmax(0, 1fr);
+    grid-template-areas: "status status" "dpad buttons";
+  }
+}
+
+.bb-pad__dpad {
+  grid-area: dpad;
+  min-height: 0;
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--pad-colour, #8b5cf6) 8%, var(--bg-muted));
+}
+
+.bb-dpad {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.bb-dpad__cross {
+  width: min(88%, 210px);
+  max-height: 88%;
+  aspect-ratio: 1;
+  filter: drop-shadow(0 5px 0 rgba(0, 0, 0, 0.25));
+  pointer-events: none;
+}
+
+.bb-dpad__arm,
+.bb-dpad__hub {
+  fill: #2a2140;
+}
+
+.bb-dpad__arm--on {
+  fill: var(--pad-colour);
+}
+
+.bb-dpad__arrow {
+  fill: rgba(255, 255, 255, 0.75);
+}
+
+.bb-dpad__hint {
+  position: absolute;
+  bottom: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.bb-pad__buttons {
+  grid-area: buttons;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  align-items: center;
+  justify-items: center;
+  min-height: 0;
+}
+
+.bb-pad__ult {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.bb-pad__special {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.bb-pad__attack {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.bb-pad .kit-pad-btn {
+  box-shadow: 0 6px 0 color-mix(in srgb, var(--pad-colour) 55%, #000000), 0 8px 18px rgba(0, 0, 0, 0.25);
+}
+
+.bb-pad .kit-pad-btn:active {
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--pad-colour) 55%, #000000);
+  transform: translateY(4px);
+}
+
+.bb-pad .kit-pad-btn span {
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.bb-pad .kit-pad-btn--md span {
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+/* Sizes that fit the phone's short side either way up. */
+.bb-pad .kit-pad-btn--lg {
+  width: min(27vmin, 116px);
+  height: min(27vmin, 116px);
+}
+
+.bb-pad .kit-pad-btn--md {
+  width: min(20vmin, 86px);
+  height: min(20vmin, 86px);
+}
+
+@media (orientation: portrait) {
+  .bb-pad__buttons {
+    grid-template-columns: auto auto;
+    grid-template-rows: auto auto;
+    align-content: center;
+    gap: 14px 10px;
+    /* Room at the screen edge for the Ult ring and the button shadows, which the frame would clip. */
+    padding: 12px 10px 14px 0;
+  }
+
+  .bb-pad .kit-pad-btn--lg {
+    width: min(25vmin, 100px);
+    height: min(25vmin, 100px);
+  }
+
+  .bb-pad .kit-pad-btn--md {
+    width: min(20vmin, 80px);
+    height: min(20vmin, 80px);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 330px) {
+  .bb-pad .kit-pad-btn--lg {
+    width: 96px;
+    height: 96px;
+  }
+
+  .bb-pad .kit-pad-btn--md {
+    width: 72px;
+    height: 72px;
+  }
+}
+
+.bb-ultbtn {
+  position: relative;
+}
+
+.bb-ultbtn__ring {
+  position: absolute;
+  inset: -9px;
+  width: calc(100% + 18px);
+  height: calc(100% + 18px);
+  pointer-events: none;
+}
+
+.bb-ultbtn__track {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 6;
+}
+
+.bb-ultbtn__fill {
+  fill: none;
+  stroke: #eab308;
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dasharray 200ms linear;
+}
+
+/* Charging, it stays readable; the ring shows how close it is. */
+.bb-ultbtn .kit-pad-btn:disabled {
+  opacity: 1;
+  background: #3b2f12;
+  color: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 6px 0 #1f1808;
+}
+
+.bb-ultbtn--ready .bb-ultbtn__ring {
+  filter: drop-shadow(0 0 6px #fde047);
+  animation: bb-ult-glow 700ms ease-in-out infinite alternate;
+}
+
+@keyframes bb-ult-glow {
+  to {
+    transform: scale(1.08);
+  }
+}
+
+.bb-status {
+  position: relative;
+  grid-area: status;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  min-height: 0;
+  padding: 8px;
+  border-radius: 22px;
+  /* A little arcade screen, dark in either theme so the damage colours always read. */
+  background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--fighter) 35%, #1b1330), #120b22 75%);
+  color: #ffffff;
+  text-align: center;
+}
+
+@media (orientation: portrait) {
+  .bb-status {
+    gap: 8px;
+  }
+
+  .bb-status__percent {
+    font-size: 76px;
+  }
+}
+
+.bb-status__percent,
+.bb-status__out {
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: 54px;
+  font-style: italic;
+  line-height: 1;
+  color: var(--heat);
+  -webkit-text-stroke: 2px #140c24;
+  paint-order: stroke fill;
+}
+
+.bb-status__percent small {
+  font-size: 26px;
+}
+
+.bb-status__out {
+  color: rgba(255, 255, 255, 0.6);
+  -webkit-text-stroke: 0;
+}
+
+.bb-status__stocks {
+  display: flex;
+  gap: 6px;
+}
+
+.bb-status .bb-stock {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: var(--fighter);
+}
+
+.bb-status .bb-stock--lost {
+  background: transparent;
+  opacity: 0.35;
+}
+
+.bb-status__banner {
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: var(--bb-orange);
+  color: #1d0a00;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.bb-status__note {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+}
+
+.bb-flash {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  z-index: 2;
+  padding: 6px 14px;
+  border-radius: 12px;
+  font-size: 22px;
+  font-weight: 900;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: bb-flash 1.1s ease-out both;
+}
+
+.bb-flash--good {
+  background: #22c55e;
+  color: #052e16;
+}
+
+.bb-flash--bad {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.bb-flash--info {
+  background: #eab308;
+  color: #1c1003;
+}
+
+@keyframes bb-flash {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(1.6);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -30%) scale(1);
+  }
+}
