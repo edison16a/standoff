@@ -18,7 +18,7 @@ function fakeRoom() {
       return () => (listener = null);
     },
   } as unknown as PhoneRoomApi;
-  const host = (payload: object) => listener?.({ type: "message", payload });
+  const host = (payload: { kind: string }) => listener?.({ type: "message", payload });
   return { room, host };
 }
 
