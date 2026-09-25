@@ -14,6 +14,7 @@ import "./styles/stage.css";
 import "./styles/phone.css";
 import "./styles/phone-setup.css";
 import "./styles/phone-practice.css";
+import "./styles/phone-wide.css";
 import "./styles/showcase.css";
 
 /**

@@ -4,13 +4,21 @@
 
 .practice {
   display: grid;
+  flex: 0 1 250px;
   grid-template-columns: 1fr 44px;
+  grid-template-rows: minmax(0, 1fr);
   gap: 8px;
   align-items: center;
+  min-height: 110px;
 }
 
 .practice__stage {
+  height: 100%;
   min-width: 0;
+}
+
+.practice__stage .setup-card--practice {
+  height: 100%;
 }
 
 .practice__ask {
@@ -78,6 +86,7 @@
 .strength {
   width: 40px;
   height: 160px;
+  max-height: 100%;
 }
 
 .strength__track {
@@ -181,8 +190,12 @@
 /* Fencer select: four cards, each a 3D fencer on its stage. */
 .picker {
   display: grid;
+  flex: 1;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* The four cards share the height there is. */
+  grid-auto-rows: minmax(0, 1fr);
   gap: 10px;
+  min-height: 0;
 }
 
 .picker__card {
@@ -191,6 +204,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
+  min-height: 0;
   padding: 0 0 10px;
   overflow: hidden;
   border: 2px solid transparent;
@@ -214,8 +228,10 @@
 
 .picker__art {
   display: block;
+  flex: 1 1 0;
   width: 100%;
-  height: 170px;
+  min-height: 48px;
+  max-height: 170px;
   margin-bottom: 8px;
   background: radial-gradient(120% 90% at 50% 18%, #3a2c7c 0%, #1a1440 55%, #0d0a22 100%);
 }
@@ -237,6 +253,7 @@
   flex-direction: column;
   align-items: center;
   gap: 6px;
+  min-height: 0;
   padding: 0 0 14px;
   overflow: hidden;
   border-radius: var(--radius-lg);
@@ -248,8 +265,9 @@
 
 .ready-card__art {
   display: block;
+  flex: 0 1 300px;
   width: 100%;
-  height: 300px;
+  min-height: 100px;
   background: radial-gradient(120% 90% at 50% 18%, #3a2c7c 0%, #1a1440 55%, #0d0a22 100%);
 }
 
