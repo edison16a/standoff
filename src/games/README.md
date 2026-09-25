@@ -41,7 +41,7 @@ The showcase must animate from `requestAnimationFrame` and `performance.now`, wi
 node tools/media/capture.mjs <game-id> --ffmpeg /path/to/ffmpeg
 ```
 
-On a computer with a graphics card, add `--gpu` for full quality and much faster capture, and `--size 1920x1080 --crf 28` for sharper clips. It opens `/showcase/<game-id>` (development only), writes the icon and poster into `media/` and the clip into `public/games/<game-id>/`. Wire them into `info.ts` as `media: { icon, poster, video: { webm, mp4 } }`.
+On a computer with a graphics card, add `--gpu` for full quality and much faster capture, and `--size 1920x1080 --crf 28` for sharper clips. It opens `/showcase/<game-id>` (development only), writes the icon and poster into `media/` and the clip into `public/games/<game-id>/`. The home screen loads every clip, so each file is kept under 3.9 MB: one that comes out bigger is encoded again a little softer until it fits (`--max-mb` changes the cap). Wire them into `info.ts` as `media: { icon, poster, video: { webm, mp4 } }`.
 
 ## Talking to phones
 
