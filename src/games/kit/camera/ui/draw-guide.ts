@@ -29,12 +29,13 @@ const bustPath = () => (bust ??= new Path2D(BUST));
 /** Where the guide's head sits down the picture, leaving room above it for a jump. Its waist is at the bottom. */
 export const GUIDE_HEAD = 0.32;
 
-/** The outline of where a player should stand, a ring above it that fills as they hold still, and their head line. */
+/** The outline of where a player should stand, a ring by its head that fills as they hold still, and their head line. */
 export function drawGuide(ctx: CanvasRenderingContext2D, spot: Spot, guide: GuideState, fit: Fit): void {
   // Before the first layout the box has no size, and a ring would get a negative radius.
   if (fit.height < 40) return;
   const head = toBox(fit, { x: spot.x, y: GUIDE_HEAD });
-  const scale = ((1 - GUIDE_HEAD) * fit.height) / (BUST_HEIGHT - BUST_HEAD.y);
+  // Waist at the bottom of the picture, unless that would be wider than the spot, as with two players.
+  const scale = Math.min(((1 - GUIDE_HEAD) * fit.height) / (BUST_HEIGHT - BUST_HEAD.y), (spot.halfWidth * 2 * fit.width * 0.9) / 100);
   ctx.save();
   ctx.translate(head.x - BUST_HEAD.x * scale, head.y - BUST_HEAD.y * scale);
   ctx.scale(scale, scale);
@@ -51,9 +52,10 @@ export function drawGuide(ctx: CanvasRenderingContext2D, spot: Spot, guide: Guid
   ctx.stroke();
   ctx.restore();
   if (guide.line !== null && guide.line !== undefined) drawGuideLine(ctx, spot, guide, guide.line, fit, scale * 100);
-  const top = head.y - (BUST_HEAD.r + 4) * scale;
+  // Beside the head, on the outside, so the ring stays clear of the heading above.
   const radius = fit.height * 0.05;
-  drawRing(ctx, { x: head.x, y: Math.max(radius + 6, top - radius - fit.height * 0.02) }, radius, guide);
+  const outward = spot.x < 0.5 ? -1 : 1;
+  drawRing(ctx, { x: head.x + outward * (BUST_HEAD.r * scale + radius * 1.8), y: head.y }, radius, guide);
 }
 
 /** A line across the guide at the head's height: dashed while it settles, solid once it is the player's head line. */

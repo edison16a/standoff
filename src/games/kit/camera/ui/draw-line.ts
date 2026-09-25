@@ -3,7 +3,7 @@ import { withAlpha } from "./draw";
 import { toBox, type Fit } from "./fit";
 
 /** The line is drawn this many shoulder widths either side of the player's home. */
-const REACH = 1.6;
+const REACH = 1.1;
 
 /**
  * A player's head line and the band around it, so they can see what
