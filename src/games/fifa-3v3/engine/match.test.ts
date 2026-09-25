@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { MatchEvent } from "./events";
 import { createMatch, stepMatch, type Entrant } from "./match";
-import { STEP } from "./tuning";
+import { PITCH, STEP } from "./tuning";
 import type { Command, MatchState } from "./types";
 
 const LINEUP: Entrant[] = [
@@ -66,7 +66,7 @@ describe("a phone's player", () => {
       state.kickoffTeam = 0;
       for (let t = 0; t < 15; t += STEP) {
         const me = state.athletes[0]!;
-        const to = { x: 17 - me.pos.x, z: -me.pos.z };
+        const to = { x: PITCH.halfLength + 1 - me.pos.x, z: -me.pos.z };
         const d = Math.hypot(to.x, to.z);
         stepMatch(state, new Map([[0, { move: { x: to.x / d, z: to.z / d } }]]));
         expect(state.events.some((e) => e.type === "goal" && e.scorer === 0)).toBe(false);
@@ -78,18 +78,22 @@ describe("a phone's player", () => {
     const state = createMatch([{ team: 0, character: "messi", seat: 1 }, ...LINEUP.slice(3)], { seed: 5, replays: false });
     state.kickoffTeam = 0;
     const commands = new Map<number, Command>();
-    let scored = false;
-    for (let t = 0; t < 20 && !scored; t += STEP) {
+    let shot = false;
+    let heldSince: number | null = null;
+    for (let t = 0; t < 20 && !shot; t += STEP) {
       const me = state.athletes[0]!;
-      const toGoal = { x: 16 - me.pos.x, z: -me.pos.z };
+      const toGoal = { x: PITCH.halfLength - me.pos.x, z: -me.pos.z };
       const d = Math.hypot(toGoal.x, toGoal.z);
       const mine = state.ball.owner?.kind === "athlete" && state.ball.owner.id === 0;
-      const near = mine && d < 7;
-      commands.set(0, { move: { x: toGoal.x / d, z: toGoal.z / d }, shootDown: near, shootUp: near });
+      // Shoot/Pass is held into the yellow, then let go.
+      const down = mine && d < 10 && heldSince === null;
+      if (down) heldSince = t;
+      const up = heldSince !== null && t - heldSince > 0.7;
+      commands.set(0, { move: { x: toGoal.x / d, z: toGoal.z / d }, shootDown: down, shootUp: up });
       stepMatch(state, commands);
-      scored ||= state.events.some((e) => e.type === "shot");
+      shot ||= state.events.some((e) => e.type === "shot" && e.power > 0.4 && e.power < 0.8);
     }
-    expect(scored).toBe(true);
+    expect(shot).toBe(true);
   });
 
   it("wins the ball back with a slide tackle sometimes", () => {

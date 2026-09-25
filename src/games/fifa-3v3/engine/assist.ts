@@ -1,14 +1,15 @@
-import { other } from "../teams";
-import { goalX, shotAngle, toGoal } from "./goal";
+import { attackSign, other } from "../teams";
+import { goalX } from "./goal";
 import { choosePassTarget, leadFor } from "./passing";
 import { ASSIST, PITCH } from "./tuning";
 import type { Athlete, MatchState } from "./types";
 import { angleDiff, angleOf, clamp, dot, len, norm, sub, type Vec2 } from "./vec";
 
 /**
- * What one press of Shoot turns into. The player only points the stick;
- * the game decides between a shot, a pass to a team mate and a pass into
- * space, and between a ground pass and a lofted one.
+ * What a tap of Shoot/Pass turns into. The player only points the
+ * stick; the game picks between a pass to a team mate and a ball into
+ * space, and between a ground pass and a lofted one. A shot is a hold,
+ * see buttons.ts.
  */
 export type KickPlan =
   | { kind: "shot"; aimZ: number | null }
@@ -17,43 +18,38 @@ export type KickPlan =
 
 /**
  * Reads the stick like a person would. Pointing roughly at a team mate
- * passes to them, roughly at goal shoots toward that part of it, and
- * anywhere else plays the ball into space that way. With the stick
- * centred it shoots when in range and otherwise finds the best pass.
+ * passes to them, anywhere else plays the ball into space that way.
+ * With the stick centred it finds the best pass, or plays it on ahead.
  */
-export function planKick(state: MatchState, a: Athlete, stick: Vec2 | null): KickPlan {
-  const foe = other(a.team);
-  const d = toGoal(a.pos, foe);
+export function planPass(state: MatchState, a: Athlete, stick: Vec2 | null): KickPlan {
   const pushed = stick && len(stick) > ASSIST.deadZone ? norm(stick) : null;
+  const from = { x: a.pos.x, y: 0, z: a.pos.z };
   if (!pushed) {
-    if (d < ASSIST.autoRange && shotAngle(a.pos, foe) < 1.2) return { kind: "shot", aimZ: null };
     const mate = choosePassTarget(state, a, null);
-    if (mate) return { kind: "pass", to: mate.id, air: needsAir(state, a, mate.pos) };
-    return { kind: "shot", aimZ: null };
+    if (mate) return { kind: "pass", to: mate.id, air: needsAir(state, a, leadFor(from, mate)) };
+    return space(state, a, { x: attackSign(a.team), z: 0 });
   }
-  const aim = angleOf(pushed);
-  const goalOff = goalAngleOff(a, foe, aim);
-  const mate = mateInCone(state, a, aim);
-  const goalLooks = d < ASSIST.shootRange && goalOff !== null;
-  // Both look likely: whichever the stick points at more closely wins,
-  // with the goal favoured close in, where a pass is rarely wanted.
-  if (goalLooks && (!mate || goalOff! < mate.off + (d < 10 ? 0.25 : 0))) return { kind: "shot", aimZ: aimOnLine(a, foe, pushed) };
-  if (mate) return { kind: "pass", to: mate.athlete.id, air: needsAir(state, a, leadFor({ x: a.pos.x, y: 0, z: a.pos.z }, mate.athlete)) };
-  const into = { x: a.pos.x + pushed.x * ASSIST.spaceLength, z: a.pos.z + pushed.z * ASSIST.spaceLength };
-  return { kind: "space", dir: pushed, air: needsAir(state, a, into) };
+  const mate = mateInCone(state, a, angleOf(pushed));
+  if (mate) return { kind: "pass", to: mate.athlete.id, air: needsAir(state, a, leadFor(from, mate.athlete)) };
+  return space(state, a, pushed);
 }
 
-/** How far the stick is off the goal, or null when it is not pointing at it at all. */
-function goalAngleOff(a: Athlete, foe: 0 | 1, aim: number): number | null {
-  const gx = goalX(foe);
-  const toPost = (z: number) => angleOf(sub({ x: gx, z }, a.pos));
-  const near = toPost(-PITCH.goalHalfWidth);
-  const far = toPost(PITCH.goalHalfWidth);
-  const middle = angleOf(sub({ x: gx, z: 0 }, a.pos));
-  // The window is the goal mouth itself, widened a little each side.
-  const half = Math.abs(angleDiff(near, far)) / 2 + ASSIST.goalSlack;
-  const off = Math.abs(angleDiff(aim, middle));
-  return off <= half ? off : null;
+function space(state: MatchState, a: Athlete, dir: Vec2): KickPlan {
+  const into = { x: a.pos.x + dir.x * ASSIST.spaceLength, z: a.pos.z + dir.z * ASSIST.spaceLength };
+  return { kind: "space", dir, air: needsAir(state, a, into) };
+}
+
+/**
+ * Where on the goal line a held shot goes. Pointing toward goal aims
+ * along the stick; pointing up or down the screen picks the far or the
+ * near side; centred leaves it to the game.
+ */
+export function shotAimZ(a: Athlete, stick: Vec2): number | null {
+  if (len(stick) < ASSIST.deadZone) return null;
+  const dir = norm(stick);
+  if (dir.x * attackSign(a.team) > 0.2) return aimOnLine(a, other(a.team), dir);
+  if (Math.abs(dir.z) > 0.5) return Math.sign(dir.z) * (PITCH.goalHalfWidth - 0.5);
+  return null;
 }
 
 /** The team mate closest to where the stick points, within the cone. */

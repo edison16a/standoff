@@ -18,7 +18,7 @@ const INSIDE = GW - PITCH.postRadius - R - 0.06;
  * the keeper's line), and the woodwork is hit just off centre so the
  * ball bounces away from goal rather than in.
  */
-export function aimPoint(outcome: ShotOutcome, defending: TeamId, keeper: Keeper, rng: Rng, aimZ: number | null = null): Vec3 {
+export function aimPoint(outcome: ShotOutcome, defending: TeamId, keeper: Keeper, rng: Rng, aimZ: number | null = null, spread = 0.2): Vec3 {
   const x = goalX(defending);
   const kz = keeper.pos.z;
   // A player who pointed at one side gets that side; otherwise the side the keeper left open.
@@ -26,7 +26,8 @@ export function aimPoint(outcome: ShotOutcome, defending: TeamId, keeper: Keeper
   const away = pointed ?? (Math.abs(kz) < 0.25 ? rng.sign() : kz > 0 ? -1 : 1);
   const side = pointed ?? rng.sign();
   const height = () => {
-    const roll = rng.next();
+    // Power lifts the ball: a red bar rarely keeps it low.
+    const roll = rng.next() * (1 - 0.4 * spread) + 0.4 * spread;
     if (roll < 0.5) return rng.range(0.25, 0.6);
     if (roll < 0.78) return rng.range(0.6, 1.3);
     return rng.range(1.3, GH - R - 0.14);
@@ -47,9 +48,10 @@ export function aimPoint(outcome: ShotOutcome, defending: TeamId, keeper: Keeper
     case "bar":
       return { x, y: GH + 0.08, z: rng.range(-GW + 0.4, GW - 0.4) };
     case "over":
-      return { x, y: GH + rng.range(0.7, 2.2), z: clamp((aimZ ?? rng.range(-GW, GW)) + rng.range(-0.6, 0.6), -GW, GW) * 0.9 };
+      // A red bar balloons it well over.
+      return { x, y: GH + rng.range(0.7, 2.2 + 3.5 * spread), z: clamp((aimZ ?? rng.range(-GW, GW)) + rng.range(-0.6, 0.6) * (1 + spread), -GW, GW) * 0.9 };
     case "wide":
-      return { x, y: rng.range(0.2, 1.6), z: side * (GW + rng.range(0.5, 1.5)) };
+      return { x, y: rng.range(0.2, 1.6 + spread), z: side * (GW + rng.range(0.5, 1.5 + 2 * spread)) };
   }
 }
 

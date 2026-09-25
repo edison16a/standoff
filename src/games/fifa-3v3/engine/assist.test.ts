@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { planKick, needsAir } from "./assist";
+import { needsAir, planPass, shotAimZ } from "./assist";
 import { newBall, stepBall, type Contact } from "./ball";
 import { createMatch, stepMatch, type Entrant } from "./match";
 import { loftVelocity } from "./passing";
-import { STEP } from "./tuning";
+import { PITCH, STEP } from "./tuning";
 import type { MatchState } from "./types";
 
 const LINEUP: Entrant[] = [
@@ -27,39 +27,46 @@ function scene(me: { x: number; z: number }, mates: { x: number; z: number }[], 
   return state;
 }
 
-describe("the kick assist", () => {
+describe("the pass assist", () => {
   it("passes to the team mate the stick points at", () => {
     const state = scene({ x: 0, z: 0 }, [{ x: 0, z: -7 }, { x: 6, z: 5 }]);
-    expect(planKick(state, state.athletes[0]!, { x: 0, z: -1 })).toMatchObject({ kind: "pass", to: 1 });
+    expect(planPass(state, state.athletes[0]!, { x: 0, z: -1 })).toMatchObject({ kind: "pass", to: 1 });
     // Roughly is enough: twenty degrees off still finds them.
-    expect(planKick(state, state.athletes[0]!, { x: 0.8, z: 0.6 })).toMatchObject({ kind: "pass", to: 2 });
+    expect(planPass(state, state.athletes[0]!, { x: 0.8, z: 0.6 })).toMatchObject({ kind: "pass", to: 2 });
   });
 
-  it("shoots at the side of the goal the stick points at", () => {
-    const state = scene({ x: 6, z: 0 }, [{ x: -5, z: -6 }, { x: -5, z: 6 }]);
-    const low = planKick(state, state.athletes[0]!, { x: 1, z: -0.14 });
-    const high = planKick(state, state.athletes[0]!, { x: 1, z: 0.14 });
-    expect(low.kind).toBe("shot");
-    expect(high.kind).toBe("shot");
-    if (low.kind === "shot" && high.kind === "shot") {
-      expect(low.aimZ!).toBeLessThan(-0.5);
-      expect(high.aimZ!).toBeGreaterThan(0.5);
-    }
+  it("never shoots on a tap, even pointing at goal", () => {
+    const state = scene({ x: 14, z: 0 }, [{ x: -5, z: -6 }, { x: -5, z: 6 }]);
+    expect(planPass(state, state.athletes[0]!, { x: 1, z: 0 }).kind).toBe("space");
+    expect(planPass(state, state.athletes[0]!, null).kind).toBe("pass");
   });
 
   it("plays a ball into space where there is nobody", () => {
     const state = scene({ x: 0, z: 0 }, [{ x: -8, z: -6 }, { x: -8, z: 6 }]);
-    const plan = planKick(state, state.athletes[0]!, { x: 0, z: 1 });
+    const plan = planPass(state, state.athletes[0]!, { x: 0, z: 1 });
     expect(plan.kind).toBe("space");
   });
+});
 
-  it("shoots with the stick centred in range, and passes from far out", () => {
-    const close = scene({ x: 8, z: 1 }, [{ x: 0, z: -6 }, { x: 2, z: 6 }]);
-    expect(planKick(close, close.athletes[0]!, null).kind).toBe("shot");
-    const far = scene({ x: -10, z: 0 }, [{ x: -2, z: -5 }, { x: 0, z: 6 }]);
-    expect(planKick(far, far.athletes[0]!, null).kind).toBe("pass");
+describe("the shot aim", () => {
+  it("aims at the side of the goal the stick points at", () => {
+    const state = scene({ x: 12, z: 0 }, [{ x: -5, z: -6 }, { x: -5, z: 6 }]);
+    const me = state.athletes[0]!;
+    expect(shotAimZ(me, { x: 1, z: -0.14 })!).toBeLessThan(-0.5);
+    expect(shotAimZ(me, { x: 1, z: 0.14 })!).toBeGreaterThan(0.5);
+    expect(Math.abs(shotAimZ(me, { x: 1, z: 1 })!)).toBeLessThanOrEqual(PITCH.goalHalfWidth);
   });
 
+  it("leaves a centred stick to the game, and reads up and down as far and near", () => {
+    const state = scene({ x: 12, z: 0 }, []);
+    const me = state.athletes[0]!;
+    expect(shotAimZ(me, { x: 0, z: 0 })).toBeNull();
+    expect(shotAimZ(me, { x: -0.2, z: -1 })!).toBeLessThan(0);
+    expect(shotAimZ(me, { x: -0.2, z: 1 })!).toBeGreaterThan(0);
+  });
+});
+
+describe("the air or ground choice", () => {
   it("lofts long balls and balls over a defender, and keeps short clear ones on the ground", () => {
     const state = scene({ x: -10, z: 0 }, [{ x: -4, z: 0 }, { x: 8, z: 4 }], [{ x: 0, z: 2 }]);
     const me = state.athletes[0]!;
