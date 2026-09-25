@@ -60,7 +60,7 @@ export const SHOTS: Record<"loop" | "icon" | "poster", Shot> = {
   // The capture tool lets the scene settle for 3 seconds first, so the clip runs from about 3 to 12.
   loop: { seed: 7, look: 0, warmup: 14, powers: ["boots"], cuts: [[0, "chase"], [7, "side"], [9.6, "chase"]], pace: 1 },
   // Seed 7 meets a train rolling in on the next track at about 23 seconds. The runner leaps as it comes.
-  poster: { seed: 7, look: 0, warmup: 20, moment: (run) => run.runner.grounded && trainComing(run), stage: leap, cuts: [[0, "chase"]], pace: 0.02 },
+  poster: { seed: 7, look: 0, warmup: 20, moment: (run) => run.runner.grounded && trainComing(run), stage: leap, cuts: [[0, "chase"]], pace: 0.005 },
   icon: { seed: 11, look: 0, warmup: 14, moment: (run) => run.runner.grounded && run.runner.lane === 0, stage: hoverLeap, cuts: [[0, "hero"]], pace: 0.005 },
 };
 

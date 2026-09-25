@@ -30,7 +30,8 @@ export class SurfSession {
   kit: CameraKit | null = null;
   round: Round | null = null;
   private controls: Controls | null = null;
-  private demo = new ShowRun(3, 20);
+  // A computer runner plays behind the menus. A short warmup keeps opening the room quick.
+  private demo = new ShowRun(3, 6);
   private readonly best = new BestStore();
   private readonly listeners = new Set<(slot: number, event: RunEvent) => void>();
   private unlistenRound: () => void = () => undefined;
@@ -129,7 +130,7 @@ export class SurfSession {
     const phase = this.phase;
     if (!this.round || phase === "lobby" || phase === "camera" || phase === "calibrate") {
       this.demo.advance(dt);
-      if (this.demo.run.crashed) this.demo = new ShowRun(this.demo.run.seed + 1, 20);
+      if (this.demo.run.crashed) this.demo = new ShowRun(this.demo.run.seed + 1, 6);
     } else if (phase === "countdown") {
       // The countdown keeps to the wall clock even when frames are slow.
       this.tickCountdown(wall);
