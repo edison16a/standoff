@@ -63,7 +63,11 @@ The players are stylised athletes, recognisable by build, skin tone, hair, beard
 
 ## Sound
 
-Everything is synthesised through the room's audio buses: the ball on the hardwood, sneaker squeaks, the net, the clank of the rim, the thud of the glass, passes, blocks, beeps through the last five seconds of the shot clock, its horn and the final buzzer. The crowd murmurs, goes "ooh" as a ball rattles round the rim, groans at misses, roars and whistles at dunks and chants "de-fense" late in the clock. An arena organ plays now and then, hip hop in the lobby and a fanfare for the winners. The announcer ("Dunk!", "From downtown!", "Blocked!") uses the computer's speech synthesis.
+Everything is synthesised through the room's audio buses. Effects have a sharp hit, a body and a tail into a synthetic arena reverb, and each one is pitched slightly differently every time: the ball on the hardwood, sneaker squeaks, the net, the clank of the rim, the thud of the glass, passes, blocks, the shot clock beeps, its horn and the final buzzer.
+
+Music: "Blacktop" plays in the lobby and on the results, a lo-fi boom bap loop in G minor at 90 with a vibraphone hook. "Tip Off" plays under the game, a bouncier F minor groove at 100 with claps and a soft synth flute, mixed lower so the crowd leads. Both run eight bars with an A and a B section, through a warm low pass. The music ducks under dunks, threes, the announcer and the winners' brass fanfare. The arena organ plays its charge riff on dead balls.
+
+The crowd murmurs, goes "ooh" as a ball rattles round the rim, groans at misses, roars and whistles at dunks, chants "de-fense" late in the clock and "let's go" for a player on fire or a winner. The announcer ("Dunk!", "From downtown!", "Blocked!") uses the computer's speech synthesis at the player's effects volume.
 
 ## Code
 

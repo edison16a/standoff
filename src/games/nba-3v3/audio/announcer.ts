@@ -1,3 +1,5 @@
+import { loadAudioSettings } from "@/platform/audio/audio-settings";
+
 /**
  * The arena announcer, through the browser's own speech (the Web Speech
  * API on the host computer). Lines are short and punchy, only one plays
@@ -12,7 +14,8 @@ export class Announcer {
   private muted = false;
   private readonly choose: () => void;
 
-  constructor() {
+  /** `onSpeak` hears every line that is actually spoken, so the director can duck the arena under it. */
+  constructor(private readonly onSpeak: (priority: number) => void = () => {}) {
     this.synth = typeof window !== "undefined" && "speechSynthesis" in window ? window.speechSynthesis : null;
     this.choose = () => {
       const voices = this.synth?.getVoices() ?? [];
@@ -31,7 +34,9 @@ export class Announcer {
    */
   say(text: string, priority = 1, level = 1): void {
     const synth = this.synth;
-    if (!synth || this.muted) return;
+    // Speech skips the Web Audio graph, so the player's effects volume is applied here.
+    const volume = Math.max(0, Math.min(1, level * loadAudioSettings().effects));
+    if (!synth || this.muted || volume === 0) return;
     const now = performance.now();
     if (now < this.busyUntil && priority <= this.priority) return;
     if (synth.speaking) synth.cancel();
@@ -39,8 +44,9 @@ export class Announcer {
     if (this.voice) line.voice = this.voice;
     line.rate = priority >= 2 ? 1.08 : 1.12;
     line.pitch = 0.78;
-    line.volume = Math.max(0, Math.min(1, level));
+    line.volume = volume;
     synth.speak(line);
+    this.onSpeak(priority);
     this.priority = priority;
     this.busyUntil = now + 450 + text.length * 55;
   }

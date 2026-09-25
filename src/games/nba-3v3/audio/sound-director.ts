@@ -7,13 +7,18 @@ import { CrowdVoice } from "./crowd";
 import { Music } from "./music";
 import { Sfx } from "./sfx";
 
+/** The mix in the lobby, and under a game where the crowd and the ball come first. */
+const LOBBY_LEVELS = { music: 0.5, crowd: 0.8, sfx: 0.9 };
+const GAME_LEVELS = { music: 0.3, crowd: 0.8, sfx: 0.9 };
+
 /**
- * Decides what the arena sounds like: music in the lobby and at the end,
- * the crowd through the game rising and falling with the play, a sound
- * for every event on the floor, and the announcer's calls.
+ * Decides what the arena sounds like: a lo-fi tune in the lobby and a
+ * bouncier one under the game, the crowd rising and falling with the
+ * play, a sound for every event on the floor, and the announcer's calls.
+ * The music steps aside for dunks, big shots and the announcer.
  */
 export class SoundDirector {
-  readonly announcer = new Announcer();
+  readonly announcer: Announcer;
   private readonly sfx: Sfx;
   private readonly crowd: CrowdVoice;
   private readonly music: Music;
@@ -29,24 +34,31 @@ export class SoundDirector {
     this.sfx = new Sfx(engine);
     this.crowd = new CrowdVoice(engine);
     this.music = new Music(engine);
-    engine.setLevels({ music: 0.45, crowd: 0.8, sfx: 0.9 });
+    this.announcer = new Announcer((priority) => this.underVoice(priority));
+    engine.setLevels(LOBBY_LEVELS);
   }
 
   setPhase(phase: Phase): void {
     if (phase === this.phase) return;
     this.phase = phase;
     if (phase === "lobby") {
-      this.music.play(true);
+      this.engine.setLevels(LOBBY_LEVELS);
+      this.music.play("lobby");
       this.crowd.start();
       this.crowd.setLevel(0.15);
     } else if (phase === "countdown") {
-      this.music.play(false);
+      this.engine.setLevels(GAME_LEVELS);
+      this.music.play("play");
       this.crowd.start();
       this.crowd.setLevel(0.45);
       this.crowd.claps(30, 2.5);
     } else if (phase === "over") {
       this.music.fanfare();
-      this.later(3500, () => this.phase === "over" && this.music.play(true));
+      this.later(3500, () => {
+        if (this.phase !== "over") return;
+        this.engine.setLevels(LOBBY_LEVELS);
+        this.music.play("lobby");
+      });
     }
   }
 
@@ -105,10 +117,11 @@ export class SoundDirector {
       case "dunk":
         this.sfx.slam(e.power);
         this.crowd.cheer(1);
-        this.engine.duck("sfx", 0.8, 0.4);
+        this.engine.duck("music", 0.3, 2.5);
         return;
       case "score":
         if (e.kind !== "dunk") this.crowd.cheer(e.points === 3 ? 0.85 : 0.55);
+        if (e.points === 3) this.engine.duck("music", 0.5, 1.8);
         if (m.time - this.organAt > 30 && e.kind !== "dunk") {
           this.organAt = m.time;
           this.later(1400, () => this.music.organ());
@@ -143,11 +156,13 @@ export class SoundDirector {
         return;
       case "onFire":
         this.crowd.cheer(0.9);
+        this.later(1800, () => this.crowd.letsGo());
         return;
       case "win":
         this.sfx.horn(true);
         this.crowd.cheer(1);
         this.crowd.claps(60, 5);
+        this.later(2600, () => this.crowd.letsGo());
         return;
       default:
         return;
@@ -157,6 +172,13 @@ export class SoundDirector {
   /** Called after the green of a perfect release, for the host's own chime. */
   green(): void {
     this.sfx.green();
+  }
+
+  /** Dips the music and the crowd a little while the announcer talks, more for a big call. */
+  private underVoice(priority: number): void {
+    const hold = priority >= 2 ? 1.6 : 1.1;
+    this.engine.duck("music", 0.55, hold);
+    this.engine.duck("crowd", priority >= 2 ? 0.8 : 0.65, hold);
   }
 
   private later(ms: number, run: () => void): void {
@@ -174,5 +196,6 @@ export class SoundDirector {
     this.music.stop();
     this.crowd.stop();
     this.announcer.stop();
+    this.sfx.dispose();
   }
 }

@@ -4,7 +4,8 @@ import { noise, tone } from "@/platform/audio/voices";
 /**
  * The crowd, synthesised: a murmuring bed that swells with the moment,
  * an "ooh" as a big shot hangs in the air, groans at a miss, roars and
- * whistles for a dunk, claps, and a "de-fense" chant late in the clock.
+ * whistles for a dunk, claps, a "de-fense" chant late in the clock and
+ * a "let's go" chant with the claps after it for a winner or a hot hand.
  */
 export class CrowdVoice {
   private bed: { src: AudioBufferSourceNode; gain: GainNode; filter: BiquadFilterNode } | null = null;
@@ -109,13 +110,30 @@ export class CrowdVoice {
       this.syllable(t, 196, 520, 0.2);
       this.syllable(t + 0.32, 165, 480, 0.3);
       noise(this.engine, this.out, t + 0.52, { filter: "highpass", frequency: 4000, decay: 0.12, peak: 0.05 });
-      for (const c of [0.72, 0.9]) noise(this.engine, this.out, t + c, { filter: "bandpass", frequency: 1600, q: 1, decay: 0.05, peak: 0.12 });
+      for (const c of [0.72, 0.9]) this.clapHit(t + c, 12);
     }
   }
 
+  /** "Let's go!" then clap clap, clap clap clap, three times over, the way a home crowd does it. */
+  letsGo(): void {
+    const at = this.engine.now + 0.05;
+    const beat = 0.3;
+    for (let rep = 0; rep < 3; rep++) {
+      const t = at + rep * beat * 8;
+      this.syllable(t, 220, 560, 0.18);
+      this.syllable(t + beat, 247, 700, 0.35);
+      for (const b of [2, 3, 4.5, 5.5, 6.5]) this.clapHit(t + b * beat, 16);
+    }
+  }
+
+  /** Many hands at once, a few milliseconds apart, so it sounds like a crowd and not one person. */
+  private clapHit(at: number, hands: number): void {
+    for (let i = 0; i < hands; i++) noise(this.engine, this.out, at + Math.random() * 0.025, { filter: "bandpass", frequency: 1300 + Math.random() * 1200, q: 1.3, decay: 0.05, peak: 0.06 });
+  }
+
   private syllable(at: number, pitch: number, formant: number, length: number): void {
-    for (let i = 0; i < 6; i++) tone(this.engine, this.out, at + Math.random() * 0.03, { type: "sawtooth", frequency: pitch * (0.9 + Math.random() * 0.2), attack: 0.03, decay: length, peak: 0.018 });
-    noise(this.engine, this.out, at, { filter: "bandpass", frequency: formant, q: 2, attack: 0.02, decay: length, peak: 0.06 });
+    for (let i = 0; i < 6; i++) tone(this.engine, this.out, at + Math.random() * 0.03, { type: "sawtooth", frequency: pitch * (0.9 + Math.random() * 0.2), attack: 0.03, decay: length, peak: 0.04 });
+    noise(this.engine, this.out, at, { filter: "bandpass", frequency: formant, q: 2, attack: 0.02, decay: length, peak: 0.14 });
   }
 
   stop(): void {
