@@ -46,7 +46,7 @@ export class Lighting {
 
     const fixtures = new MeshBuilder();
     const housing = metal(0x22252d, 0.4);
-    const lens = glow(theme.spots.color, 3);
+    const lens = glow(theme.spots.color, 5);
     const beam = new THREE.MeshBasicMaterial({
       map: beamTexture(), color: theme.spots.color, transparent: true, opacity: theme.spots.beam,
       blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false,

@@ -6,7 +6,8 @@ import { BODY } from "../body-rig";
 import type { Dresser } from "../dresser";
 import type { Look } from "./look";
 
-const STEEL = 0xd7dde4;
+/** Darker than bare steel looks, because the key spot and the hall's reflections brighten polished plate a lot. */
+const STEEL = 0xa9b1bb;
 const DARK = 0x5a6573;
 const EMERALD = 0x1f8a5b;
 const GOLD = 0xc9a227;
@@ -18,7 +19,7 @@ const GOLD = 0xc9a227;
  * the tabard's border.
  */
 export function dressIron(d: Dresser, look: Look): void {
-  const plate = metal(STEEL, 0.26);
+  const plate = metal(STEEL, 0.5);
   const dark = metal(DARK, 0.34);
   const tabard = cloth(EMERALD, 0.72);
   const trim = satin(look.trim);
@@ -26,8 +27,8 @@ export function dressIron(d: Dresser, look: Look): void {
   dressBody(d, {
     top: plate,
     sleeve: plate,
-    glove: metal(0x98a2ad, 0.3),
-    freeHand: metal(0x98a2ad, 0.3),
+    glove: metal(0x98a2ad, 0.45),
+    freeHand: metal(0x98a2ad, 0.45),
     seat: cloth(0x2e3238, 0.9),
     thigh: dark,
     shin: dark,
@@ -73,13 +74,13 @@ export function dressIron(d: Dresser, look: Look): void {
     d.on(`thigh${side}`).sphere(0.066, plate, [0.01, -BODY.thigh, 0], [1, 1, 1], 14);
     d.on(`thigh${side}`).cylinder(0.055, 0.055, 0.008, plate, [0.05, -BODY.thigh, 0], [0, 0, Math.PI / 2], 16, [1, 1, 1.3]);
     // Gauntlet cuffs and the chainmail skirt's hem at the thigh.
-    d.on(`forearm${side}`).cylinder(0.062, 0.045, 0.08, metal(0x98a2ad, 0.3), [0, -BODY.forearm + 0.03, 0], [0, 0, 0], 18);
+    d.on(`forearm${side}`).cylinder(0.062, 0.045, 0.08, metal(0x98a2ad, 0.45), [0, -BODY.forearm + 0.03, 0], [0, 0, 0], 18);
     d.on(`thigh${side}`).cylinder(0.098, 0.1, 0.08, metal(0x6b727c, 0.55), [0, -0.03, 0], [0, 0, 0], 18);
     // Sabatons: plates across the top of the foot.
     for (let i = 0; i < 3; i++) d.on(`foot${side}`).box(0.05, 0.03, 0.09, metal(0x2d3440, 0.35), [0.07 + i * 0.045, -0.035 - i * 0.004, 0], [0, 0, -0.2], 0.012);
   }
   // Plate fingers on the sword gauntlet.
-  fist(d.on("handF"), metal(0x98a2ad, 0.3));
+  fist(d.on("handF"), metal(0x98a2ad, 0.45));
   d.on("handF").box(0.06, 0.012, 0.064, gold, [0.03, 0.036, 0], [0, 0, 0], 0.004);
   // The tabard's skirt, split, so each half follows a leg into the lunge.
   d.attach("thighF", tabardPanel(doubleSided(EMERALD), trim, true));

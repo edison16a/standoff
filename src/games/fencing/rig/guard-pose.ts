@@ -15,7 +15,8 @@ export const GUARD: Pose = {
   bladeAngle: 0.14,
   bladeYaw: 0,
   wrist: 0,
-  backHand: v2(-0.2, 0.18),
+  // The free hand up and behind the head, where a fencer carries it for balance, clear of the mask.
+  backHand: v2(-0.34, 0.2),
 };
 
 /** Distance covered by one full advance: front foot, then back foot. */

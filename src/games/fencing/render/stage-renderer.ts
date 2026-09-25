@@ -85,8 +85,9 @@ export class StageRenderer {
     this.scene.environment = this.environment;
     this.scene.environmentIntensity = theme.reflections;
     this.renderer.toneMappingExposure = theme.exposure;
-    // Lit white cloth under the key spot reaches about twice white, so only lamps, boards and effects clear these.
-    this.post?.setBloom(dark ? 0.65 : 0.4, dark ? 3 : 3.4);
+    // Lit white cloth under the key spot and the rim lights reaches about four times white, and bloomed into a halo round
+    // every fencer. So only lamps and effects clear these.
+    this.post?.setBloom(dark ? 0.65 : 0.4, dark ? 4.5 : 5);
     for (const slot of [1, 2] as const) this.fencers[slot].group.position.y = this.hall.floor;
   }
 
