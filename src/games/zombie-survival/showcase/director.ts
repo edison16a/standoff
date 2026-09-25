@@ -9,6 +9,7 @@ import { alive, type Zombie } from "../engine/zombie";
 import type { SurvivalRenderer } from "../render/scene-renderer";
 import type { Framing, SceneSource } from "../render/scene-source";
 import { ShowcaseBot, type BotRole } from "./bot";
+import { assignTargets, blocked, lanes } from "./targeting";
 
 /** One staged fight: where, with which guns, and how the boss moves. */
 export interface ShowcasePlan {
@@ -58,7 +59,8 @@ export class ShowcaseDirector implements SceneSource {
     // An endless escort in place of the stage's own count, so the clip never runs dry.
     const spec = { ...stage(plan.stage), count: 10_000, maxAlive: plan.escort.maxAlive, gap: plan.escort.gap, spawn: plan.escort.spawn, packs: 0 };
     this.game.encounter = new Encounter(spec, 1, plan.seed, 5000);
-    this.bots = plan.players.map((p, i) => new ShowcaseBot(i + 1, p.role, { x: (i - 1.5) * 0.2, y: 0 }));
+    const spread = lanes(plan.players.length);
+    this.bots = plan.players.map((p, i) => new ShowcaseBot(i + 1, p.role, spread[i]!));
     for (let t = 0; t < plan.preroll; t += STEP) this.advance();
     this.game.drain();
   }
@@ -69,6 +71,11 @@ export class ShowcaseDirector implements SceneSource {
 
   aimAt(seat: Seat): ScreenPoint | null {
     return this.bots[seat - 1]?.aim ?? null;
+  }
+
+  /** The zombie a player is after right now, or null. */
+  targetOf(seat: Seat): number | null {
+    return this.bots[seat - 1]?.target?.zombie ?? null;
   }
 
   framing(): Framing {
@@ -88,12 +95,21 @@ export class ShowcaseDirector implements SceneSource {
     for (const event of this.game.drain()) view.react(event);
   }
 
-  /** After a frame is drawn, so the raycasts see it: every bot on target pulls the trigger. */
+  /**
+   * After a frame is drawn, so the raycasts see it. Every bot gets a
+   * zombie of its own and fires once on it with a clear line. A stray
+   * pellet that would strike another zombie is let go, so each player's
+   * hits land only on the one it chose.
+   */
   shoot(view: Pick<SurvivalRenderer, "targets" | "cast" | "shotFx">, dt: number): void {
     const targets = view.targets();
+    const picks = assignTargets(this.bots.map((b) => b.shooter()), targets, this.clock);
     for (const bot of this.bots) {
-      if (!bot.track(targets, dt, this.clock)) continue;
-      if (this.game.fire(bot.seat, (offsets) => view.cast(bot.seat, bot.aim, offsets))) view.shotFx(bot.seat);
+      const target = picks.get(bot.seat);
+      if (!bot.track(target, dt, this.clock) || !target || blocked(target, bot.aim, targets)) continue;
+      const cast = (offsets: Parameters<typeof view.cast>[2]) =>
+        view.cast(bot.seat, bot.aim, offsets).map((hit) => (hit && hit.zombie !== target.zombie ? null : hit));
+      if (this.game.fire(bot.seat, cast)) view.shotFx(bot.seat);
     }
   }
 
