@@ -123,6 +123,9 @@ export class Engine {
     } else {
       const matchPoint = this.match.isMatchPoint(verdict.scorer);
       this.fencers[verdict.scorer === 1 ? 2 : 1].setAction("hit", verdict.at);
+      // The lunge stays out through the call. Keeping its start time keeps the pose continuous.
+      const scorer = this.fencers[verdict.scorer];
+      if (scorer.action === "jab") scorer.action = "scored";
       this.emit({ type: "touch", t: verdict.at, scorer: verdict.scorer, matchPoint });
       this.match.halt({ kind: "touch", scorer: verdict.scorer }, this.clock);
     }

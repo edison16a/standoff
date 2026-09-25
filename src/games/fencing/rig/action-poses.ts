@@ -96,7 +96,7 @@ const defeat: ActionPose = (live) => ({
   backHand: v2(0.02, -0.52),
 });
 
-export const ACTION_POSES: Record<Exclude<FencerAction, "idle">, ActionPose> = {
+export const ACTION_POSES: Record<Exclude<FencerAction, "idle" | "scored">, ActionPose> = {
   jab: lunge,
   parry,
   deflected,

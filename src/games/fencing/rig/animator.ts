@@ -4,7 +4,10 @@ import { lerp, lerpVec } from "./geometry";
 import { livePose } from "./guard-pose";
 import type { Pose } from "./skeleton";
 
-type Channel = Exclude<FencerAction, "idle">;
+type Channel = Exclude<FencerAction, "idle" | "scored">;
+
+/** How long a lunge that scored stays out, in game time: through the slow motion and the burst. */
+const SCORED_HOLD_MS = 1100;
 
 interface ChannelSpec {
   /** Whether this action should currently be showing. */
@@ -15,7 +18,7 @@ interface ChannelSpec {
 }
 
 const CHANNELS: Record<Channel, ChannelSpec> = {
-  jab: { active: (f) => f.action === "jab" && f.actionMs < 300, rise: 50, fall: 95 },
+  jab: { active: (f) => (f.action === "jab" && f.actionMs < 300) || (f.action === "scored" && f.actionMs < SCORED_HOLD_MS), rise: 50, fall: 95 },
   parry: { active: (f) => f.action === "parry" && f.parrying, rise: 25, fall: 90 },
   deflected: { active: (f) => f.action === "deflected" && f.actionMs < 350, rise: 20, fall: 120 },
   hit: { active: (f) => f.action === "hit" && f.actionMs < 700, rise: 40, fall: 220 },

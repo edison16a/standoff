@@ -27,6 +27,14 @@ describe("animator", () => {
     expect(pose.frontFoot.x).toBeCloseTo(GUARD.frontFoot.x, 2);
   });
 
+  it("holds a lunge that scored out through the call", () => {
+    const animator = new Animator();
+    let pose = GUARD;
+    for (let t = 0; t <= 300; t += 16) pose = animator.pose(frame({ action: "jab", actionMs: t }), t);
+    for (let t = 316; t <= 900; t += 16) pose = animator.pose(frame({ action: "scored", actionMs: t }), t);
+    expect(pose.frontFoot.x).toBeGreaterThan(GUARD.frontFoot.x + 0.55);
+  });
+
   it("snaps the blade up for a parry while the window is open", () => {
     const animator = new Animator();
     let pose = GUARD;
