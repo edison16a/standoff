@@ -1,102 +1,94 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
-import { midi, noise, tone } from "@/platform/audio/voices";
+import { playStep } from "./band";
+import { organCharge, winnersFanfare } from "./stings";
+import { TUNES, type TuneName } from "./tunes";
 
 const WAKE_MS = 25;
 const LOOKAHEAD_S = 0.12;
-const BPM = 92;
-
-/** A laid back boom bap loop: kick, snare, hats, a walking bass and a chord stab. 16 steps a bar, 4 bars. */
-const KICK = [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0];
-const SNARE = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0];
-const BASS = [38, 38, 41, 43];
-const CHORDS = [[62, 65, 69], [62, 65, 69], [65, 69, 72], [67, 70, 74]];
 
 /**
- * The lobby and results music: a hip hop beat played with the usual
- * lookahead scheduler, so it stays tight while the page is busy drawing.
- * During play the building is left to the crowd.
+ * Plays one looping tune at a time with the usual lookahead scheduler:
+ * a timer wakes often and books every note due in the next slice on the
+ * audio clock, so the beat stays tight while the page is busy drawing.
+ * Tunes crossfade through their own gain so a switch never cuts a note.
  */
 export class Music {
+  private current: { name: TuneName; gain: GainNode; step: number; nextAt: number } | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
-  private gain: GainNode | null = null;
-  private step = 0;
-  private nextAt = 0;
+  private readonly warmth: BiquadFilterNode;
 
-  constructor(private readonly engine: AudioEngine) {}
+  constructor(private readonly engine: AudioEngine) {
+    // Rolls off the top so the band sounds like the arena's speakers, never harsh.
+    this.warmth = engine.ctx.createBiquadFilter();
+    this.warmth.type = "lowpass";
+    this.warmth.frequency.value = 2400;
+    this.warmth.Q.value = 0.5;
+    this.warmth.connect(engine.bus("music"));
+  }
 
-  play(on: boolean): void {
-    if (on === (this.gain !== null)) return;
-    if (!on) return this.fadeOut();
+  play(name: TuneName | null): void {
+    if (this.current?.name === name) return;
+    this.fadeOut();
+    if (!name) return;
     const gain = this.engine.ctx.createGain();
     gain.gain.value = 0.0001;
-    gain.gain.setTargetAtTime(0.9, this.engine.now, 0.4);
-    gain.connect(this.engine.bus("music"));
-    this.gain = gain;
-    this.step = 0;
-    this.nextAt = this.engine.now + 0.1;
+    gain.gain.setTargetAtTime(1, this.engine.now, 0.5);
+    gain.connect(this.warmth);
+    this.current = { name, gain, step: 0, nextAt: this.engine.now + 0.1 };
     this.timer ??= setInterval(() => this.schedule(), WAKE_MS);
   }
 
-  /** A brass fanfare for the winners. */
+  /** A brass fanfare for the winners, with the loop stepping aside for it. */
   fanfare(): void {
-    const out = this.engine.bus("music");
-    const at = this.engine.now + 0.05;
-    [60, 64, 67, 72].forEach((n, i) => {
-      tone(this.engine, out, at + i * 0.12, { type: "sawtooth", frequency: midi(n), attack: 0.02, decay: 0.3, peak: 0.08 });
-      tone(this.engine, out, at + i * 0.12, { type: "square", frequency: midi(n + 12), attack: 0.02, decay: 0.25, peak: 0.03 });
-    });
-    for (const n of [60, 64, 67, 72, 76]) tone(this.engine, out, at + 0.55, { type: "sawtooth", frequency: midi(n), attack: 0.05, decay: 1.8, peak: 0.05 });
-    noise(this.engine, out, at + 0.55, { filter: "highpass", frequency: 5000, decay: 1.4, peak: 0.12 });
+    this.dip(0.15, 3);
+    winnersFanfare(this.engine, this.warmth);
   }
 
   /** The arena organ's rising "charge" riff, for dead balls. */
   organ(): void {
-    const out = this.engine.bus("music");
-    const at = this.engine.now + 0.05;
-    [55, 60, 64, 67, 64, 67].forEach((n, i) => {
-      const len = i === 5 ? 0.6 : 0.16;
-      for (const h of [0, 12]) tone(this.engine, out, at + i * 0.17, { type: "square", frequency: midi(n + h), attack: 0.01, decay: len, peak: 0.035 });
-    });
+    this.dip(0.2, 1.3);
+    organCharge(this.engine, this.warmth);
+  }
+
+  /**
+   * Lowers just the loop, not the whole music bus, so a sting on top of
+   * it is heard in full and never clashes with the chords underneath.
+   */
+  private dip(amount: number, holdS: number): void {
+    const gain = this.current?.gain.gain;
+    if (!gain) return;
+    const now = this.engine.now;
+    gain.cancelScheduledValues(now);
+    gain.setTargetAtTime(amount, now, 0.08);
+    gain.setTargetAtTime(1, now + holdS, 0.6);
   }
 
   stop(): void {
-    this.fadeOut();
+    this.play(null);
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
-  }
-
-  private fadeOut(): void {
-    const gain = this.gain;
-    if (!gain) return;
-    gain.gain.setTargetAtTime(0.0001, this.engine.now, 0.3);
-    setTimeout(() => gain.disconnect(), 2000);
-    this.gain = null;
+    setTimeout(() => this.warmth.disconnect(), 2500);
   }
 
   private schedule(): void {
-    const out = this.gain;
-    if (!out) return;
-    const stepLength = 60 / BPM / 4;
-    if (this.nextAt < this.engine.now - 0.5) this.nextAt = this.engine.now + 0.05;
-    while (this.nextAt < this.engine.now + LOOKAHEAD_S) {
-      this.beat(out, this.step, this.nextAt);
-      this.step = (this.step + 1) % 64;
-      this.nextAt += stepLength;
+    const current = this.current;
+    if (!current) return;
+    const tune = TUNES[current.name];
+    const stepLength = 60 / tune.bpm / 4;
+    // A stalled tab would otherwise try to catch up on every missed note at once.
+    if (current.nextAt < this.engine.now - 0.5) current.nextAt = this.engine.now + 0.05;
+    while (current.nextAt < this.engine.now + LOOKAHEAD_S) {
+      playStep(this.engine, current.gain, tune, current.step, current.nextAt);
+      current.step = (current.step + 1) % tune.hook.length;
+      current.nextAt += stepLength;
     }
   }
 
-  private beat(out: AudioNode, step: number, at: number): void {
-    const s = step % 16;
-    const bar = Math.floor(step / 16);
-    // A lazy swing: every other sixteenth lands a touch late.
-    const t = at + (s % 2 === 1 ? 0.03 : 0);
-    if (KICK[s]) tone(this.engine, out, t, { type: "sine", frequency: 140, glideTo: 42, decay: 0.32, peak: 0.55 });
-    if (SNARE[s]) {
-      noise(this.engine, out, t, { filter: "bandpass", frequency: 1900, q: 0.7, decay: 0.16, peak: 0.28 });
-      tone(this.engine, out, t, { type: "triangle", frequency: 190, glideTo: 150, decay: 0.08, peak: 0.12 });
-    }
-    if (s % 2 === 0) noise(this.engine, out, t, { filter: "highpass", frequency: 7500, decay: s % 4 === 2 ? 0.07 : 0.03, peak: 0.06 });
-    if (s === 0 || s === 6 || s === 10) tone(this.engine, out, t, { type: "sawtooth", frequency: midi(BASS[bar]! + (s === 10 ? 7 : 0)), decay: 0.28, peak: 0.07 });
-    if (s === 2 || s === 11) for (const n of CHORDS[bar]!) tone(this.engine, out, t, { type: "triangle", frequency: midi(n), attack: 0.01, decay: 0.35, peak: 0.028 });
+  private fadeOut(): void {
+    if (!this.current) return;
+    const { gain } = this.current;
+    gain.gain.setTargetAtTime(0.0001, this.engine.now, 0.3);
+    setTimeout(() => gain.disconnect(), 2000);
+    this.current = null;
   }
 }

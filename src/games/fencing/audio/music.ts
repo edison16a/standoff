@@ -1,5 +1,6 @@
 import type { AudioEngine } from "../../../platform/audio/audio-engine";
-import { MATCH_TRACK, MENU_TRACK, playFanfare, type Track } from "./tracks";
+import { playFanfare } from "./stings";
+import { MATCH_TRACK, MENU_TRACK, type Track } from "./tracks";
 
 export type TrackName = "menu" | "match";
 
@@ -23,7 +24,8 @@ export class Music {
     // Rounds off the raw saw and square edges into something easier to sit under.
     this.tone = engine.ctx.createBiquadFilter();
     this.tone.type = "lowpass";
-    this.tone.frequency.value = 2600;
+    this.tone.frequency.value = 2400;
+    this.tone.Q.value = 0.5;
     this.tone.connect(engine.bus("music"));
   }
 
@@ -40,13 +42,29 @@ export class Music {
   }
 
   fanfare(): void {
+    this.dip(0.1, 4);
     playFanfare(this.engine, this.tone);
+  }
+
+  /**
+   * Lowers just the loop, not the whole music bus, so a sting on top of
+   * it is heard in full and never clashes with the chords underneath.
+   */
+  private dip(amount: number, holdS: number): void {
+    const gain = this.current?.gain.gain;
+    if (!gain) return;
+    const now = this.engine.now;
+    gain.cancelScheduledValues(now);
+    gain.setTargetAtTime(amount, now, 0.08);
+    gain.setTargetAtTime(1, now + holdS, 0.6);
   }
 
   stop(): void {
     this.play(null);
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
+    // Let the last notes ring out, then unhook from the shared bus so no node outlives the room.
+    setTimeout(() => this.tone.disconnect(), 2500);
   }
 
   private schedule(): void {
@@ -54,6 +72,8 @@ export class Music {
     if (!current) return;
     const track = TRACKS[current.name];
     const stepLength = 60 / track.bpm / 4;
+    // A stalled tab would otherwise try to catch up on every missed note at once.
+    if (current.nextAt < this.engine.now - 0.5) current.nextAt = this.engine.now + 0.05;
     while (current.nextAt < this.engine.now + LOOKAHEAD_S) {
       track.play(this.engine, current.gain, current.step, current.nextAt);
       current.step = (current.step + 1) % track.length;
