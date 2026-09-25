@@ -65,7 +65,7 @@ Effects are layered and each repeat lands at a slightly different pitch. The cro
 * `render/`: three.js. `models/` has the four karts and drivers built from painted primitives and merged per kart, `scenery/` one file per map, `track/` the road, kerbs, barriers and markings, `props/` the cubes, obstacles and throws, `effects/` the particles.
 * `host/`: the session on the computer (lobby, race driver, what the phones and the overlay see) and its React screens.
 * `phone/`: the controller session, the steering wheel maths and the phone screens. Steering reads where "up" points across the screen, so it holds however far the phone leans and never flips the way Euler angles do.
-* `audio/`: synthesized music per map, an engine per kart pitched by speed, every effect, the crowd and the race caller, through the platform's audio buses (see Sound below).
+* `audio/`: synthesized music per map, an engine per kart pitched by speed, every effect, the crowd and the race caller, through the platform's audio buses (see Sound above).
 * `protocol/`: the zod schemas for the messages between the phones and the host.
 * `showcase/`: the game playing itself for the home screen's media (see below).
 
