@@ -47,7 +47,7 @@ describe("fit above the HUD", () => {
       // The screen spans y - half to y + half; the cards cover its lowest `hidden` share.
       expect(f.y + half).toBeGreaterThanOrEqual(box.y2 - 1e-9);
       expect(f.y - half + 2 * half * hidden).toBeLessThanOrEqual(box.y1 + 1e-9);
-      expect((half * aspect)).toBeGreaterThanOrEqual(10 - 1e-9);
+      expect(half * aspect).toBeGreaterThanOrEqual(10 - 1e-9);
     }
   });
 

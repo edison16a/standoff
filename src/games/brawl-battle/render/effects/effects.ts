@@ -1,12 +1,12 @@
 import * as THREE from "three";
 import type { MatchEvent } from "../../engine/events";
-import { crowdFade } from "../hit-flash";
 import type { HitSound } from "../../engine/moves";
 import { Rng } from "../../engine/rng";
 import type { MatchState } from "../../engine/types";
 import { CHARACTERS } from "../../roster";
 import type { FrameCamera } from "../camera/frame-camera";
 import { FX, type FighterColours } from "../colors";
+import { crowdFade } from "../hit-flash";
 import { Confetti } from "./confetti";
 import { Particles } from "./particles";
 import { Pulses } from "./pulses";
