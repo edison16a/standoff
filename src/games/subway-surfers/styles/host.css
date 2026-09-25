@@ -1,7 +1,7 @@
 /*
   Subway Surfers on the computer: the stage the 3D view fills and the
-  shared pieces. Loud yellow, sticker outlines and fat rounded type, in
-  the spirit of the yard's graffiti. The same in light and dark themes,
+  shared pieces. Neon on a night sky: hot pink, electric cyan and gold,
+  with fat rounded type that glows like the signs in the city. The same in light and dark themes,
   since the game world brings its own colours.
 */
 
@@ -9,7 +9,7 @@
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: #2f8cff;
+  background: #0b0620;
   color: #ffffff;
   font-family: var(--font-ui);
 }
@@ -25,29 +25,29 @@
 .ss-dim {
   position: absolute;
   inset: 0;
-  background: rgba(10, 14, 40, 0.55);
+  background: rgba(8, 4, 26, 0.55);
 }
 
 .ss-button {
-  border: 4px solid #1d2a8a;
+  border: 4px solid #1a0b3d;
   border-radius: 999px;
   padding: 14px 34px;
   font: 900 24px/1 "Arial Black", "Arial Rounded MT Bold", var(--font-ui);
-  color: #1d2a8a;
+  color: #1a0b3d;
   background: #ffffff;
-  box-shadow: 0 6px 0 #1d2a8a;
+  box-shadow: 0 6px 0 #1a0b3d;
   cursor: pointer;
   transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 
 .ss-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 0 #1d2a8a;
+  box-shadow: 0 8px 0 #1a0b3d;
 }
 
 .ss-button:active {
   transform: translateY(4px);
-  box-shadow: 0 2px 0 #1d2a8a;
+  box-shadow: 0 2px 0 #1a0b3d;
 }
 
 .ss-button:focus-visible {
@@ -56,16 +56,24 @@
 }
 
 .ss-button--go {
-  background: linear-gradient(180deg, #fff27a, #ffd21f 50%, #ffb000);
+  border-color: #ffffff;
+  color: #ffffff;
+  background: linear-gradient(180deg, #ff7ae8, #ff2bd6 50%, #b0109a);
   font-size: 32px;
   padding: 18px 56px;
+  text-shadow: 0 2px 0 #1a0b3d;
+  box-shadow: 0 6px 0 #1a0b3d, 0 0 28px rgba(255, 43, 214, 0.75);
+}
+
+.ss-button--go:hover {
+  box-shadow: 0 8px 0 #1a0b3d, 0 0 40px rgba(255, 43, 214, 0.75);
 }
 
 .ss-button--quiet {
   font-size: 18px;
   padding: 10px 22px;
   border-width: 3px;
-  box-shadow: 0 4px 0 #1d2a8a;
+  box-shadow: 0 4px 0 #1a0b3d;
 }
 
 .ss-chip {
@@ -79,9 +87,10 @@
 }
 
 .ss-chip--on {
-  color: #1d2a8a;
-  background: #ffd21f;
+  color: #1a0b3d;
+  background: #21f3ff;
   border-color: #ffffff;
+  box-shadow: 0 0 20px rgba(33, 243, 255, 0.7);
 }
 
 .ss-center {
@@ -94,7 +103,7 @@
 
 .ss-center--over {
   z-index: 5;
-  background: rgba(10, 14, 40, 0.6);
+  background: rgba(8, 4, 26, 0.6);
 }
 
 .ss-center__actions {
