@@ -26,7 +26,7 @@ function args(text, selector, click) {
   return [text.source, text.flags, false, selector, click];
 }
 
-const OPTIONS = { polling: 250, timeout: 60000 };
+const OPTIONS = { polling: 250, timeout: 180000 };
 
 /** Presses the first visible button with this text, or matching this pattern. */
 export async function pressButton(page, text) {
