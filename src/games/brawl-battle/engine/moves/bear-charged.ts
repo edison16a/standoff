@@ -36,8 +36,8 @@ export const BEAR_CHARGED: ChargedSet = {
     armor: [6, 22],
     hitboxes: [box(0, 0.4, 1.1, 20, 24, hit(13, 10, 0.18, 70))],
     projectiles: [
-      { frame: 21, x: 1.4, y: 0.35, vx: 13, vy: 0, r: 0.5, life: 32, ...hit(9, 9, 0.14, 60) },
-      { frame: 21, x: -1.4, y: 0.35, vx: -13, vy: 0, r: 0.5, life: 32, ...hit(9, 9, 0.14, 60) },
+      { frame: 21, x: 1.4, y: 0.35, vx: 13, vy: 0, r: 0.5, life: 32, look: "wave", ...hit(9, 9, 0.14, 60) },
+      { frame: 21, x: -1.4, y: 0.35, vx: -13, vy: 0, r: 0.5, life: 32, look: "wave", ...hit(9, 9, 0.14, 60) },
     ],
   },
   holdHeavy: {

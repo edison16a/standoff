@@ -45,6 +45,9 @@ export interface Hitbox extends Hit {
   group?: number;
 }
 
+/** How a projectile is drawn. The engine treats them all alike. */
+export type ProjectileLook = "bolt" | "orb" | "crescent" | "wave" | "star";
+
 export interface ProjectileSpec extends Hit {
   /** The frame it is released on. */
   frame: number;
@@ -55,6 +58,8 @@ export interface ProjectileSpec extends Hit {
   r: number;
   /** Frames before it fizzles. */
   life: number;
+  /** A magic bolt unless set. */
+  look?: ProjectileLook;
 }
 
 /** A push the fighter gives themselves on a frame, like a lunge or a leap. */

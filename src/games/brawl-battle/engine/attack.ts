@@ -78,6 +78,7 @@ export function advanceMove(state: MatchState, f: Fighter): boolean {
       life: p.life,
       hit: chargedHit(p, f.charged),
       sound: move.sound,
+      look: p.look ?? "bolt",
     });
     state.events.push({ type: "projectile", id, owner: f.id });
   }

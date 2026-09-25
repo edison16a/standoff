@@ -15,7 +15,7 @@ export const SAMURAI_CHARGED: ChargedSet = {
     heavy: true,
     root: true,
     hitboxes: [box(1.1, 1.1, 0.6, 10, 12, hit(7, 7, 0.1, 35))],
-    projectiles: [{ frame: 12, x: 1.3, y: 1.1, vx: 17, vy: 0, r: 0.55, life: 34, ...hit(10, 10, 0.16, 35) }],
+    projectiles: [{ frame: 12, x: 1.3, y: 1.1, vx: 17, vy: 0, r: 0.55, life: 34, look: "crescent", ...hit(10, 10, 0.16, 35) }],
   },
   holdUp: {
     name: "Heaven Cut",
@@ -55,8 +55,8 @@ export const SAMURAI_CHARGED: ChargedSet = {
     root: true,
     hitboxes: [box(0.9, 0.3, 0.7, 14, 17, hit(11, 10, 0.17, 70))],
     projectiles: [
-      { frame: 16, x: 1.2, y: 0.35, vx: 12, vy: 0, r: 0.45, life: 30, ...hit(8, 8, 0.13, 70) },
-      { frame: 16, x: -1.2, y: 0.35, vx: -12, vy: 0, r: 0.45, life: 30, ...hit(8, 8, 0.13, 70) },
+      { frame: 16, x: 1.2, y: 0.35, vx: 12, vy: 0, r: 0.45, life: 30, look: "wave", ...hit(8, 8, 0.13, 70) },
+      { frame: 16, x: -1.2, y: 0.35, vx: -12, vy: 0, r: 0.45, life: 30, look: "wave", ...hit(8, 8, 0.13, 70) },
     ],
   },
 };

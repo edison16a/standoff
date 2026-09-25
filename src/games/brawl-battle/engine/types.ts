@@ -1,7 +1,7 @@
 import type { CharacterId } from "../roster";
 import type { BotBrain, Difficulty } from "./bots/brain";
 import type { MatchEvent } from "./events";
-import type { Hit, HitSound, MoveKey } from "./moves";
+import type { Hit, HitSound, MoveKey, ProjectileLook } from "./moves";
 import type { Rng } from "./rng";
 import type { StageDef, StageId } from "./stages";
 
@@ -122,6 +122,7 @@ export interface Projectile {
   life: number;
   hit: Hit;
   sound: HitSound;
+  look: ProjectileLook;
 }
 
 export type Phase = "ready" | "fight" | "game" | "over";

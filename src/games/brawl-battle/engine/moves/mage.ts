@@ -51,8 +51,8 @@ export const MAGE: Moveset = {
     armor: [1, 72],
     hitboxes: [box(0, 1.0, 3.6, 40, 46, hit(20, 15, 0.22, 55))],
     projectiles: [
-      { frame: 44, x: 1, y: 1.2, vx: 16, vy: 0, r: 0.6, life: 60, ...hit(12, 12, 0.18, 35) },
-      { frame: 44, x: -1, y: 1.2, vx: -16, vy: 0, r: 0.6, life: 60, ...hit(12, 12, 0.18, 35) },
+      { frame: 44, x: 1, y: 1.2, vx: 16, vy: 0, r: 0.6, life: 60, look: "orb", ...hit(12, 12, 0.18, 35) },
+      { frame: 44, x: -1, y: 1.2, vx: -16, vy: 0, r: 0.6, life: 60, look: "orb", ...hit(12, 12, 0.18, 35) },
     ],
   },
 };

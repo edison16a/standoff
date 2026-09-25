@@ -15,7 +15,7 @@ export const MAGE_CHARGED: ChargedSet = {
     root: true,
     hover: true,
     hitboxes: [],
-    projectiles: [{ frame: 12, x: 1.0, y: 1.2, vx: 11, vy: 0, r: 0.55, life: 45, ...hit(8, 9, 0.14, 35) }],
+    projectiles: [{ frame: 12, x: 1.0, y: 1.2, vx: 11, vy: 0, r: 0.55, life: 45, look: "orb", ...hit(8, 9, 0.14, 35) }],
   },
   holdUp: {
     name: "Light Pillar",
@@ -54,9 +54,9 @@ export const MAGE_CHARGED: ChargedSet = {
     hover: true,
     hitboxes: [],
     projectiles: [
-      { frame: 14, x: 1.8, y: 6, vx: 0, vy: -16, r: 0.5, life: 40, ...hit(7, 8, 0.13, 60) },
-      { frame: 20, x: 3.0, y: 6, vx: 0, vy: -16, r: 0.5, life: 40, ...hit(7, 8, 0.13, 60) },
-      { frame: 26, x: 4.2, y: 6, vx: 0, vy: -16, r: 0.5, life: 40, ...hit(7, 8, 0.13, 60) },
+      { frame: 14, x: 1.8, y: 6, vx: 0, vy: -16, r: 0.5, life: 40, look: "star", ...hit(7, 8, 0.13, 60) },
+      { frame: 20, x: 3.0, y: 6, vx: 0, vy: -16, r: 0.5, life: 40, look: "star", ...hit(7, 8, 0.13, 60) },
+      { frame: 26, x: 4.2, y: 6, vx: 0, vy: -16, r: 0.5, life: 40, look: "star", ...hit(7, 8, 0.13, 60) },
     ],
   },
 };
