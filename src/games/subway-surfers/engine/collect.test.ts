@@ -69,7 +69,7 @@ describe("picking up coins", () => {
 describe("the home screen clip", () => {
   it("only takes coins the runner touches, or that a magnet has flown in", () => {
     const shot = SHOTS.loop;
-    const show = new ShowRun(shot.seed, shot.warmup, (run) => shot.powers?.forEach((kind) => run.powers.start(kind)));
+    const show = new ShowRun(shot.seed, shot.warmup, { pickups: shot.pickups, powerSeconds: shot.powerSeconds });
     const run = show.run;
     let coins = 0;
     for (let i = 0; i < 60 * 12; i++) {
