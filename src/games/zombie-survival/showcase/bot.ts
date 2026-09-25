@@ -10,16 +10,22 @@ export type BotRole = "boss" | "escort";
 const ON_TARGET = 0.035;
 /** How quickly a hand swings onto a new target: higher is snappier. */
 const SWING = 8;
+/** Seconds a hand holds steady on a new target before it fires, so each aim is seen to land first. */
+const DWELL = 0.3;
+/** Seconds between shots, so the dead fall one by one and the street stays full. */
+const REST = 0.28;
 
 /**
  * One computer player in the showcase. The director hands it a target,
  * and it swings its aim over like a hand would, with a little tremor,
- * and says when it is on target.
+ * and says when it has held on target long enough to fire.
  */
 export class ShowcaseBot {
   aim: ScreenPoint;
   /** What it is after, or null when it has nothing. */
   target: TargetPoint | null = null;
+  private steady = 0;
+  private rested = REST;
 
   constructor(
     readonly seat: Seat,
@@ -35,8 +41,9 @@ export class ShowcaseBot {
     return { seat: this.seat, role: this.role, lane: this.lane, held: this.target?.zombie ?? null };
   }
 
-  /** Moves the aim on by `dt` seconds towards `target`. Returns whether it sits on it, ready to fire. */
+  /** Moves the aim on by `dt` seconds towards `target`. Returns whether it has settled on it, ready to fire. */
   track(target: TargetPoint | undefined, dt: number, time: number): boolean {
+    if (target?.zombie !== this.target?.zombie) this.steady = 0;
     this.target = target ?? null;
     if (!target) return false;
     const k = 1 - Math.exp(-dt * SWING);
@@ -45,6 +52,11 @@ export class ShowcaseBot {
     const wx = Math.sin(time * 2.3 + this.seat * 1.7) * tremor + Math.sin(time * 5.1 + this.seat) * tremor * 0.4;
     const wy = Math.sin(time * 1.9 + this.seat * 2.9) * tremor + Math.sin(time * 4.3 + this.seat * 3) * tremor * 0.4;
     this.aim = { x: this.aim.x + (target.x + wx - this.aim.x) * k, y: this.aim.y + (target.y + wy - this.aim.y) * k };
-    return Math.hypot(this.aim.x - target.x, this.aim.y - target.y) < ON_TARGET;
+    const on = Math.hypot(this.aim.x - target.x, this.aim.y - target.y) < ON_TARGET;
+    this.steady = on ? this.steady + dt : 0;
+    this.rested += dt;
+    if (this.steady < DWELL || this.rested < REST) return false;
+    this.rested = 0;
+    return true;
   }
 }
