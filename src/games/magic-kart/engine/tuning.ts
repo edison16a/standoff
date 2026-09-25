@@ -76,6 +76,28 @@ export const SURGE = {
   fade: 1.2,
 };
 
+/** The glider that opens over a real jump, and how it flies. */
+export const GLIDE = {
+  /** It opens only when the kart can expect this long in the air, so bumps and small hops never open it. */
+  minAir: 0.6,
+  /** Seconds off the ground before it opens, so it clears the lip first. */
+  after: 0.1,
+  /** Seconds to unfold, and to fold away. */
+  unfold: 0.3,
+  fold: 0.25,
+  /** Share of gravity still pulling once fully open, and the fastest it lets the kart sink. */
+  gravity: 0.5,
+  sink: 5.5,
+  /** Upward pull at full speed, fading below it. */
+  lift: 2.2,
+  /** Turn rate as a share of the ground's, and how fast sideways drift dies away. */
+  turn: 0.75,
+  grip: 2.4,
+  /** Airspeed slowly eases back to this share of top speed, so a boost into the jump still pays off. */
+  cruise: 0.95,
+  drag: 0.35,
+};
+
 export const EFFECTS = {
   boostFactor: 1.42,
   nitro: 2.2,

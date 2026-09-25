@@ -6,6 +6,8 @@ import type { RaceWorld } from "../engine/world";
 import type { Phase } from "../protocol";
 import type { TrackId } from "../tracks";
 import { EngineHum } from "./engine-hum";
+import { GlideSfx } from "./glide-sfx";
+import { GlideWind } from "./glide-wind";
 import { Music } from "./music";
 import { RaceCaller } from "./race-caller";
 import { Sfx } from "./sfx";
@@ -19,9 +21,11 @@ import { Sfx } from "./sfx";
  */
 export class SoundDirector {
   private readonly sfx: Sfx;
+  private readonly glideSfx: GlideSfx;
   private readonly music: Music;
   private readonly caller: RaceCaller;
   private hums: EngineHum[] = [];
+  private winds: GlideWind[] = [];
   private humsFor: RaceWorld | null = null;
   private finalLapPlayed = false;
   private phase: Phase = "lobby";
@@ -29,6 +33,7 @@ export class SoundDirector {
 
   constructor(private readonly engine: AudioEngine) {
     this.sfx = new Sfx(engine);
+    this.glideSfx = new GlideSfx(engine);
     this.music = new Music(engine);
     this.caller = new RaceCaller(engine);
     engine.setLevels({ music: 0.5, crowd: 0.7, sfx: 0.85 });
@@ -72,6 +77,7 @@ export class SoundDirector {
       this.stopHums();
       this.engine.holdDuck("sfx", 1);
       this.hums = world.karts.map((kart, i) => new EngineHum(this.engine, kart.seat !== null ? 0.05 : 0.018, (i - 1.5) * 9));
+      this.winds = world.karts.map((kart) => new GlideWind(this.engine, kart.seat !== null ? 0.09 : 0.03));
       this.humsFor = world;
     }
     world.karts.forEach((kart, i) => {
@@ -79,6 +85,7 @@ export class SoundDirector {
       const skid = kart.brakeHeld > 0.15 && speed > 0.35 && !kart.airborne;
       const slide = kart.drift !== 0 ? 0.8 : skid ? 0.55 : kart.surface === "offroad" && speed > 0.2 ? 0.35 : kart.timers.ice > 0 && speed > 0.3 ? 0.4 : 0;
       this.hums[i]?.set(Math.min(1.5, speed), kart.throttle, slide, kart.timers.boost > 0, false);
+      this.winds[i]?.set(kart.glide, speed);
     });
   }
 
@@ -111,6 +118,8 @@ export class SoundDirector {
         return this.sfx.jump(level);
       case "land":
         return this.sfx.land(level);
+      case "glide":
+        return event.open ? this.glideSfx.deploy(level) : this.glideSfx.fold(level);
       case "fell":
         return this.sfx.fall(level);
       case "respawn":
@@ -148,8 +157,9 @@ export class SoundDirector {
   }
 
   private stopHums(): void {
-    for (const hum of this.hums) hum.stop();
+    for (const sound of [...this.hums, ...this.winds]) sound.stop();
     this.hums = [];
+    this.winds = [];
     this.humsFor = null;
   }
 }

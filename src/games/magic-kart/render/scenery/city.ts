@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type { Track } from "../../engine/track";
 import { box, cyl, merge, paint } from "../models/geo";
+import { buildCanals, canalSpots, inCanal, streetWithCanals } from "./canal";
 import { instances, propMaterial } from "./instances";
 import type { Scenery } from "./scenery";
 import { coarseSamples, nearest, seeded, trackBounds } from "./terrain";
@@ -91,9 +92,12 @@ export function buildCity(track: Track): Scenery {
   const group = new THREE.Group();
   const random = seeded(11);
   const b = trackBounds(track);
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(1600, 1600).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ color: "#1c1c28" }));
-  ground.position.set((b.minX + b.maxX) / 2, -0.06, (b.minZ + b.maxZ) / 2);
-  group.add(ground);
+  // A canal runs under the flyover jump, cut out of the street.
+  const canals = canalSpots(track);
+  const street = new THREE.MeshLambertMaterial({ color: "#1c1c28" });
+  group.add(streetWithCanals(canals, { x: (b.minX + b.maxX) / 2, z: (b.minZ + b.maxZ) / 2 }, 1600, street));
+  const canal = buildCanals(canals);
+  group.add(canal.group);
 
   const samples = coarseSamples(track, 4);
   const towers: { x: number; z: number; w: number; d: number; h: number }[] = [];
@@ -102,7 +106,7 @@ export function buildCity(track: Track): Scenery {
       const px = x + (random() - 0.5) * 8;
       const pz = z + (random() - 0.5) * 8;
       const near = nearest(samples, px, pz);
-      if (near.dist < track.edge + 14) continue;
+      if (near.dist < track.edge + 14 || inCanal(canals, px, pz, 14)) continue;
       const w = 12 + random() * 10;
       const d = 12 + random() * 10;
       // Towers grow taller away from the road, so the road stays open to the sky.
@@ -140,6 +144,7 @@ export function buildCity(track: Track): Scenery {
   const lampSpots = [];
   const headSpots = [];
   for (let s = 0; s < track.length; s += 28) {
+    if (track.inGap(s)) continue;
     const f = track.frameAt(s);
     for (const side of [-1, 1]) {
       const d = side * (track.edge + 1.6);
@@ -175,6 +180,7 @@ export function buildCity(track: Track): Scenery {
   return {
     group,
     update(time) {
+      canal.water.uniforms.time!.value = time;
       flights.forEach((u, i) => {
         const a = u.phase + time * u.speed;
         pose.position.set(centre.x + Math.cos(a) * u.r, u.h, centre.z + Math.sin(a) * u.r);

@@ -7,7 +7,7 @@ import { applause, cheer } from "./crowd";
 
 const PLACES = ["", "first", "second", "third", "fourth"];
 const HIT_LINES = ["Direct hit!", "Ooh, that one stung!", "Spun right out!", "Right on target!"];
-const AIR_LINES = ["Big air!", "Look at that jump!", "Flying!"];
+const AIR_LINES = ["Big air!", "Wings out!", "Look at them fly!", "Flying!"];
 
 /**
  * The grandstands and the race caller: the crowd roars at the start and
@@ -47,8 +47,9 @@ export class RaceCaller {
       case "hit":
         if (player && event.by === "orb" && event.from !== null && Math.random() < 0.5) this.announcer.sayOne(HIT_LINES);
         return;
-      case "land":
-        if (player && event.airTime > 1.1) this.announcer.sayOne(AIR_LINES);
+      case "glide":
+        // Every big jump opens the glider, so only some of them get a call.
+        if (player && event.open && Math.random() < 0.4) this.announcer.sayOne(AIR_LINES);
         return;
       case "finish": {
         if (!kart) return;

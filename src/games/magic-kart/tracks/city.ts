@@ -21,14 +21,18 @@ export const CITY: TrackDef = {
   ),
   width: 16,
   shoulder: 3,
-  ramps: [{ at: 0.5, length: 12, height: 1.8 }],
-  gaps: [],
+  ramps: [{ at: 0.5, length: 14, height: 3 }],
+  gaps: [{ at: 0.5, length: 22 }],
   boostPads: [
     { at: 0.1, offset: -4 },
     { at: 0.36, offset: 4 },
+    // Two pads into the flyover, so the pack reaches the canal with pace to glide it.
+    { at: 0.482, offset: -3 },
+    { at: 0.482, offset: 3 },
     { at: 0.62, offset: 0 },
   ],
   cubeRows: [0.14, 0.4, 0.66, 0.9],
+  skyRows: [{ at: 0.526, height: 5.4 }],
   obstacles: [
     { kind: "drone", at: 0.27, offset: 0, radius: 1.3, sweep: { amplitude: 5.5, period: 3.2 } },
     { kind: "cone", at: 0.445, offset: -3.5, radius: 0.9 },

@@ -18,7 +18,10 @@ describe("a whole race", () => {
     const counts: Record<string, number> = {};
     for (let i = 0; i < 60 * 240 && world.phase !== "over"; i++) {
       world.step(STEP);
-      for (const e of world.drainEvents()) counts[e.type] = (counts[e.type] ?? 0) + 1;
+      for (const e of world.drainEvents()) {
+        const key = e.type === "glide" ? (e.open ? "glideOpen" : "glideFold") : e.type;
+        counts[key] = (counts[key] ?? 0) + 1;
+      }
     }
     expect(world.phase).toBe("over");
     expect(world.karts.filter((k) => k.race.finished).length).toBeGreaterThanOrEqual(3);
@@ -29,6 +32,8 @@ describe("a whole race", () => {
     // They drive on the same model as a player, drifting through the bends for turbos.
     expect(counts.drift).toBeGreaterThan(8);
     expect(counts.fell ?? 0).toBeLessThan(3);
+    // Every map has a glide jump, and the computers fly it on every lap: four karts, two laps, the last maybe cut short.
+    expect(counts.glideOpen ?? 0).toBeGreaterThanOrEqual(7);
   }, 30_000);
 });
 

@@ -39,30 +39,32 @@ export interface Plan {
   freeze?: number;
 }
 
-/** Sunny Shores, seed 36: the pack hits the boost pads and flies the lagoon jump, and a Star Orb spins out the leader in mid air. */
+/** Sunny Shores, seed 36: the pack hits the boost pads, all four gliders open together over the lagoon, a cube is snatched in mid air and throws fly. */
 const LAGOON = { map: "beach", seed: 36 } as const;
 
-/** Neo City, seed 4: the whole pack power slides through a bend side by side, turbos fire, an orb lands, and two more drift out on turbos and a Nitro. */
-const CITY = { map: "city", seed: 4 } as const;
+/** Neo City, seed 17: the pack power slides through the corners side by side, turbos firing one after another, and an orb lands. */
+const CITY = { map: "city", seed: 17 } as const;
 
 /**
  * The loop runs its shots in turn and starts again, like a trailer: low
  * behind the pack through the boost pads, a cut on take off to a camera
- * beyond the lagoon as the pack flies at it, then the drift battle in Neo
- * City. The icon and the poster each stop on one moment of the jump.
+ * high behind as the gliders open over the lagoon, a close up of Pip
+ * gliding in with iced wheels, then the drift battle in Neo City. The
+ * icon and the poster each stop on one moment of the glide.
  */
 export const PLANS: Record<ShowcaseView, Plan> = {
   loop: {
     shots: [
-      { ...LAGOON, from: 25.2, length: 1.7, rig: { kind: "chase", back: 9.5, side: -1.5, height: 2.7, fov: 56 } },
-      { ...LAGOON, from: 26.9, length: 2.2, rig: { kind: "post", at: 0.684, d: -3, height: 1.4, frame: 9 } },
-      { ...CITY, from: 32.2, length: 4.1, rig: { kind: "chase", back: 9.5, side: 2.4, height: 2.9, fov: 56 } },
+      { ...LAGOON, from: 25.5, length: 1.6, rig: { kind: "chase", back: 9.5, side: -1.5, height: 2.7, fov: 56 } },
+      { ...LAGOON, from: 27.1, length: 1.4, rig: { kind: "chase", back: 11, side: -3, height: 4.6, fov: 58 } },
+      { ...LAGOON, from: 28.5, length: 1.3, rig: { kind: "hero", kart: 1, angle: -2.4, dist: 7, height: 0.4, aim: 1.2, fov: 50 } },
+      { ...CITY, from: 25.5, length: 3.7, rig: { kind: "chase", back: 9.5, side: 2.4, height: 2.9, fov: 56 } },
     ],
   },
-  // The whole pack in the air over the lagoon.
-  poster: { shots: [{ ...LAGOON, from: 26, length: 3, rig: { kind: "hero", kart: 3, angle: -0.8, dist: 9, height: 1.6, aim: 0.2, fov: 50 } }], freeze: 1.35 },
-  // Blaze at the top of the jump, high in the square over the logo, with the others flying behind.
-  icon: { shots: [{ ...LAGOON, from: 26, length: 3, rig: { kind: "hero", kart: 0, angle: -0.5, dist: 5.5, height: 0.6, aim: -0.5, fov: 52 } }], freeze: 1.3 },
+  // Nova and Blaze gliding side by side over the lagoon.
+  poster: { shots: [{ ...LAGOON, from: 26.5, length: 3, rig: { kind: "hero", kart: 2, angle: -0.9, dist: 12, height: 2.2, aim: 1.4, fov: 50 } }], freeze: 1.2 },
+  // Blaze under the wing, high in the square over the logo, with Nova gliding behind.
+  icon: { shots: [{ ...LAGOON, from: 26.5, length: 3, rig: { kind: "hero", kart: 0, angle: -0.5, dist: 6.5, height: 0.4, aim: 0.6, fov: 52 } }], freeze: 1.3 },
 };
 
 export function planLength(plan: Plan): number {

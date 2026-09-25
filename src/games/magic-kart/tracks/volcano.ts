@@ -21,14 +21,15 @@ export const VOLCANO: TrackDef = {
   ),
   width: 15,
   shoulder: 3.5,
-  ramps: [{ at: 0.45, length: 12, height: 2.2 }],
-  gaps: [{ at: 0.45, length: 10 }],
+  ramps: [{ at: 0.45, length: 14, height: 3 }],
+  gaps: [{ at: 0.45, length: 22 }],
   boostPads: [
     { at: 0.425, offset: -3 },
     { at: 0.425, offset: 3 },
     { at: 0.2, offset: 0 },
   ],
   cubeRows: [0.12, 0.33, 0.58, 0.84],
+  skyRows: [{ at: 0.475, height: 5.4 }],
   obstacles: [
     { kind: "boulder", at: 0.25, offset: 0, radius: 1.7, sweep: { amplitude: 5, period: 4 } },
     { kind: "pillar", at: 0.63, offset: 4, radius: 1.6 },
