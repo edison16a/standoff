@@ -16,8 +16,10 @@ export interface Shooter {
 const CONSIDER = 6;
 /** Sharing a zombie costs more than any spread or distance could, so it happens only when there are too few. */
 const SHARED = 100;
+/** How much straying from its own side costs a player, per unit of clip space. */
+const LANE = 2;
 /** Keeping the same zombie is cheaper than moving, so aims do not flick between two close choices. */
-const STICK = 0.35;
+const STICK = 0.25;
 /** A boss player leans towards the boss. */
 const BOSS_PULL = 0.3;
 /** Zombies this close, in metres, jump the queue. */
@@ -54,7 +56,7 @@ function candidates(targets: readonly TargetPoint[]): Candidate[] {
 }
 
 function cost(shooter: Shooter, zombie: Candidate): number {
-  let c = Math.abs(zombie.x - shooter.lane) + zombie.distance / 20;
+  let c = LANE * Math.abs(zombie.x - shooter.lane) + zombie.distance / 20;
   if (zombie.distance < TOO_CLOSE) c -= 0.5;
   if (shooter.held === zombie.id) c -= STICK;
   if (shooter.role === "boss" && zombie.boss) c -= BOSS_PULL;
