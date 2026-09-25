@@ -153,7 +153,8 @@
 }
 
 .cg-hud__notice--soft {
-  top: 42%;
+  /* Below the Attempt sign that floats over the start, so the two never overlap. */
+  top: 60%;
   font-size: 26px;
   background: rgba(6, 3, 24, 0.55);
 }

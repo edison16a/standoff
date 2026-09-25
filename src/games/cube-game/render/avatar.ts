@@ -41,26 +41,31 @@ export class Avatar {
 
     const ufo = new THREE.Group();
     const saucerGeometry = new THREE.SphereGeometry(0.72, 32, 12);
-    saucerGeometry.scale(1, 0.3, 1);
-    const hull = new THREE.MeshStandardMaterial({ color: skin.main, roughness: 0.3, metalness: 0.6, emissive: skin.main, emissiveIntensity: 0.25 });
+    saucerGeometry.scale(1, 0.36, 1);
+    // Only a faint glow, so bloom keeps the hull's shape instead of washing it into a bright line.
+    const hull = new THREE.MeshStandardMaterial({ color: skin.main, roughness: 0.3, metalness: 0.5, emissive: skin.main, emissiveIntensity: 0.1 });
     const rimGeometry = new THREE.TorusGeometry(0.72, 0.05, 8, 40);
     rimGeometry.rotateX(Math.PI / 2);
     const rim = new THREE.MeshBasicMaterial({ color: new THREE.Color(skin.trim).multiplyScalar(1.8) });
-    const domeGeometry = new THREE.SphereGeometry(0.4, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+    const domeGeometry = new THREE.SphereGeometry(0.46, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2);
     const glass = new THREE.MeshStandardMaterial({ color: 0xbfe8ff, transparent: true, opacity: 0.35, roughness: 0.05, metalness: 0.2 });
     const rider = new THREE.Mesh(box, face);
-    rider.scale.setScalar(0.42);
-    rider.position.y = 0.12;
+    rider.scale.setScalar(0.52);
+    rider.position.y = 0.2;
     const saucer = new THREE.Mesh(saucerGeometry, hull);
     saucer.position.y = -0.08;
     const band = new THREE.Mesh(rimGeometry, rim);
     band.position.y = -0.08;
     const dome = new THREE.Mesh(domeGeometry, glass);
     dome.position.y = 0;
-    ufo.add(saucer, band, rider, dome);
+    // Tipped toward the camera, so the dome and its rider show instead of a thin edge.
+    const tilt = new THREE.Group();
+    tilt.rotation.x = 0.3;
+    tilt.add(saucer, band, rider, dome);
+    ufo.add(tilt);
 
     const skinMap = ballSkin(skin.main, skin.trim);
-    const ballMaterial = new THREE.MeshStandardMaterial({ map: skinMap, emissiveMap: skinMap, emissive: 0xffffff, emissiveIntensity: 1.1, roughness: 0.4 });
+    const ballMaterial = new THREE.MeshStandardMaterial({ map: skinMap, emissiveMap: skinMap, emissive: 0xffffff, emissiveIntensity: 0.6, roughness: 0.4 });
     const sphere = new THREE.SphereGeometry(0.46, 32, 20);
     const ball = new THREE.Mesh(sphere, ballMaterial);
 
