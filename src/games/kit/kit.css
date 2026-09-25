@@ -1,15 +1,15 @@
 /*
-  Styles for the shared kit's phone pieces: the setup steps, the aim
-  calibration, the drag pad and the fire button. Games keep their own
-  look everywhere else.
+  The shared setup steps on the phone. Games keep their own look
+  everywhere else. The aiming pieces are in aim/aim.css.
 */
 
 .kit-steps {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: 16px;
-  min-height: 100%;
-  padding: 16px;
+  gap: clamp(10px, 2.2vh, 16px);
+  min-height: 0;
+  padding: clamp(8px, 2vh, 16px);
 }
 
 .kit-steps__track {
@@ -62,7 +62,7 @@
 
 .kit-steps__title {
   margin: 0;
-  font-size: 26px;
+  font-size: clamp(20px, 3.4vh, 26px);
   font-weight: 800;
   letter-spacing: -0.02em;
 }
@@ -72,122 +72,50 @@
   flex: 1;
   flex-direction: column;
   gap: 14px;
+  /* The body takes whatever height is left, and its pictures shrink to fit it. */
+  min-height: 0;
+}
+
+/* A button in the body keeps its height; the pictures around it give way. */
+.kit-steps__body > .btn {
+  flex-shrink: 0;
 }
 
 .kit-steps__footer {
   display: flex;
+  flex-shrink: 0;
   gap: 10px;
+}
+
+/* Sideways the title shares a row with the track, leaving the height to the step itself. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .kit-steps {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px 16px;
+    padding: 0;
+  }
+
+  .kit-steps__title {
+    grid-row: 1;
+    grid-column: 1;
+    font-size: 20px;
+  }
+
+  .kit-steps__track {
+    grid-row: 1;
+    grid-column: 2;
+  }
+
+  .kit-steps__body,
+  .kit-steps__footer {
+    grid-column: 1 / 3;
+    align-self: stretch;
+  }
 }
 
 .kit-grow {
   flex: 1;
-}
-
-.kit-calibrate {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.kit-calibrate__title {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.kit-calibrate__text {
-  margin: 0;
-  color: var(--text-muted);
-  line-height: 1.45;
-}
-
-.kit-calibrate__actions {
-  display: flex;
-  gap: 10px;
-}
-
-.kit-guide {
-  display: block;
-  width: 100%;
-  max-width: 340px;
-  margin: 0 auto;
-}
-
-.kit-guide__screen {
-  fill: var(--bg-muted);
-  stroke: var(--text);
-  stroke-width: 3;
-}
-
-.kit-guide__stand {
-  fill: var(--text);
-}
-
-.kit-guide__phone {
-  fill: var(--bg);
-  stroke: var(--text);
-  stroke-width: 4;
-}
-
-.kit-guide__caption {
-  fill: var(--text-muted);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.kit-pad {
-  position: relative;
-  display: grid;
-  place-items: center;
-  min-height: 220px;
-  border: 2px dashed var(--border-strong);
-  border-radius: 22px;
-  background: var(--bg-elevated);
-  touch-action: none;
-  user-select: none;
-}
-
-.kit-pad__hint {
-  position: absolute;
-  top: 12px;
-  color: var(--text-muted);
-  font-size: 13px;
-  pointer-events: none;
-}
-
-.kit-fire {
-  display: grid;
-  place-items: center;
-  width: min(62vw, 260px);
-  aspect-ratio: 1;
-  border: 6px solid rgba(255, 255, 255, 0.35);
-  border-radius: 50%;
-  background: var(--kit-fire, #ff4757);
-  color: #ffffff;
-  font-size: 26px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  cursor: pointer;
-  transition: transform 60ms ease;
-}
-
-.kit-fire:active {
-  transform: scale(0.94);
-}
-
-.kit-fire:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-
-.aim-overlay {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
 }

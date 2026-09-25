@@ -11,6 +11,8 @@ import { ShowcaseScene } from "./showcase/ShowcaseScene";
 import "./styles/host.css";
 import "./styles/hud.css";
 import "./styles/phone.css";
+import "./styles/phone-result.css";
+import "./styles/phone-wide.css";
 import "./styles/showcase.css";
 
 /**

@@ -5,13 +5,14 @@
 .mk-pick {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  flex: 1;
   gap: 12px;
   min-height: 0;
 }
 
 .mk-pick__stage {
   position: relative;
-  min-height: 190px;
+  min-height: min(190px, 36dvh);
   border-radius: 16px;
   background: radial-gradient(circle at 50% 70%, color-mix(in srgb, var(--kart) 45%, #1a1433), #120e26);
   overflow: hidden;

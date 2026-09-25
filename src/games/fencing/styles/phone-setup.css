@@ -23,9 +23,16 @@
 
 .setup-page {
   display: flex;
+  flex: 1;
   flex-direction: column;
-  gap: 12px;
+  gap: clamp(8px, 1.6vh, 12px);
+  min-height: 0;
   text-align: center;
+}
+
+/* Only the pictures give up height; words and buttons keep their size. */
+.setup-page > :not(.setup-card, .level-capture, .practice) {
+  flex-shrink: 0;
 }
 
 .setup-page__lead {
@@ -50,16 +57,22 @@
 }
 
 .setup-card--art {
+  /* Every picture on these pages gives up height first, so the words and buttons always fit. */
+  display: flex;
+  flex: 0 1 auto;
+  min-height: 0;
   padding: 14px 10px 6px;
   background: linear-gradient(180deg, var(--bg-elevated), var(--bg-muted));
 }
 
 .setup-card--fencer {
-  height: 290px;
+  flex: 0 1 290px;
+  min-height: 120px;
 }
 
 .setup-card--practice {
-  height: 250px;
+  flex: 0 1 250px;
+  min-height: 110px;
 }
 
 /* The grip picture. */
@@ -67,6 +80,8 @@
   display: block;
   width: 100%;
   height: auto;
+  min-height: 0;
+  max-height: 100%;
 }
 
 .hold-art__floor {
@@ -176,14 +191,18 @@
 /* The level that captures by itself. */
 .level-capture {
   display: flex;
+  flex: 1;
   flex-direction: column;
   align-items: center;
   gap: 10px;
+  min-height: 0;
 }
 
 .level-capture__dial {
+  flex: 0 1 auto;
   width: min(250px, 72vw);
   height: auto;
+  min-height: 0;
 }
 
 .level-capture__track {

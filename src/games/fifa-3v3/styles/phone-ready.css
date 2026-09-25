@@ -1,0 +1,92 @@
+/*
+  FIFA 3v3 on the phone after the pick: the ready page, and keeping the
+  pad out of the way while the phone is upright.
+*/
+
+/* Ready: the chosen star, the side the host picked, and what happens next. */
+
+.fifa-ready__card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border-left: 6px solid var(--kit);
+  border-radius: 12px;
+  background: var(--bg-muted);
+}
+
+.fifa-ready__card strong {
+  font-size: 20px;
+}
+
+.fifa-ready__card span {
+  color: var(--text-muted);
+}
+
+.fifa-ready__team {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  font-weight: 900;
+  font-size: 18px;
+  text-transform: uppercase;
+}
+
+.fifa-ready__team--on {
+  background: var(--team);
+  color: #ffffff;
+}
+
+.fifa-ready__note {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.fifa-ready__note--on {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* The two controls in one line, so nobody starts a match without knowing them. */
+.fifa-ready__how {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+/* Upright the star takes whatever height the words and cards leave. */
+@media (orientation: portrait) {
+  .fifa-pick,
+  .fifa-ready {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .fifa-pick__stage,
+  .fifa-ready__stage {
+    max-height: 340px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .fifa-ready__side {
+    gap: 6px;
+  }
+
+  .fifa-ready__card {
+    padding: 8px 12px;
+  }
+
+  .fifa-ready__team {
+    padding: 6px 12px;
+    font-size: 15px;
+  }
+}
+
+/* While the turn card shows, the pad under it must not widen the page. */
+.fifa-phone--pad:has(> .fifa-turn) > :not(.fifa-turn) {
+  display: none;
+}

@@ -1,0 +1,69 @@
+/*
+  The phone held sideways, where height is what runs out: the ready page
+  and the pad lay out in two columns so everything fits one screen.
+*/
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .zs-ready {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    align-content: start;
+    gap: 10px 16px;
+  }
+
+  .zs-ready__gun,
+  .zs-ready__hint {
+    grid-column: 1;
+  }
+
+  .zs-team {
+    grid-row: 1 / 3;
+    grid-column: 2;
+  }
+
+  .zs-team__row {
+    padding: 6px 10px;
+  }
+
+  /* Status, ammo and buttons on the left, the trigger on the right under the thumb. */
+  .zs-play {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    column-gap: 20px;
+  }
+
+  .zs-play > :not(.zs-trigger, .kit-pad, .zs-pcard) {
+    grid-column: 1;
+  }
+
+  .zs-play__buttons {
+    align-self: end;
+  }
+
+  .zs-play > .zs-trigger,
+  .zs-play > .kit-pad {
+    grid-row: 1 / 4;
+    grid-column: 2;
+  }
+
+  .zs-trigger .kit-fire {
+    width: min(100%, 66dvh, 260px);
+  }
+
+  .zs-ammo {
+    padding: 8px 12px;
+  }
+
+  .zs-pcard {
+    inset: 10px 10px 10px auto;
+    width: min(440px, 56%);
+    justify-content: center;
+    gap: 8px;
+    padding: 14px;
+  }
+
+  .zs-pcard h3 {
+    font-size: 20px;
+  }
+}

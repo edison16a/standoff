@@ -1,0 +1,83 @@
+/*
+  Fruit Ninja's phone pages held sideways, where height runs out: two
+  columns instead of one. Loaded after the other phone styles.
+*/
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .fn-blades {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .fn-blade__name {
+    font-size: 13px;
+  }
+
+  /* The blade on the left, the tips and the wait on the right. */
+  .fn-ready {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    gap: 10px 16px;
+  }
+
+  .fn-ready__preview {
+    grid-row: 1 / -1;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .fn-ready > :not(.fn-ready__preview) {
+    grid-column: 2;
+  }
+
+  /* Without sensors: the tips and the wait on the left, the practice pad on the right. */
+  .fn-ready:has(> .kit-pad) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .fn-ready:has(> .kit-pad) > :not(.kit-pad) {
+    grid-column: 1;
+    align-self: start;
+  }
+
+  .fn-ready > .kit-pad {
+    grid-row: 1 / -1;
+    grid-column: 2;
+    min-height: 0;
+  }
+
+  .fn-tips {
+    gap: 4px;
+    font-size: 14px;
+  }
+
+  .fn-wait {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  /* The result beside the scores. */
+  .fn-over {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-content: center;
+    gap: 8px 24px;
+    flex: 1;
+  }
+
+  .fn-over > :not(.fn-over__list) {
+    grid-column: 1;
+  }
+
+  .fn-over__list {
+    grid-row: 1 / 5;
+    grid-column: 2;
+    align-self: center;
+  }
+
+  .fn-over__row {
+    padding: 6px 12px;
+  }
+}

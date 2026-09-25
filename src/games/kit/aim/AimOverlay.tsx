@@ -1,5 +1,5 @@
 "use client";
-import "../kit.css";
+import "./aim.css";
 import { useEffect, useRef } from "react";
 import type { Player } from "@/platform/games/game-api";
 import { playerColor } from "@/games/kit/players";

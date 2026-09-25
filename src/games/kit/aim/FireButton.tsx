@@ -1,5 +1,5 @@
 "use client";
-import "../kit.css";
+import "./aim.css";
 import { useEffect, useRef, type ReactNode } from "react";
 
 interface FireButtonProps {

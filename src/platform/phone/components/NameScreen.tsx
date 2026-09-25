@@ -22,7 +22,7 @@ export function NameScreen({ code, onJoin }: { code: string; onJoin(name: string
   };
 
   return (
-    <form className="phone-hero" onSubmit={submit}>
+    <form className="phone-hero phone-hero--form" onSubmit={submit}>
       <span className="phone-hero__mark">
         <StandoffMark />
       </span>

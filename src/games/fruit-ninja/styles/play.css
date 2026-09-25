@@ -11,9 +11,9 @@
   flex: 1;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  min-height: calc(100dvh - 110px);
-  padding: 16px;
+  gap: clamp(6px, 1.2vh, 10px);
+  min-height: 0;
+  padding: clamp(10px, 2vh, 16px);
   overflow: hidden;
   border-radius: 24px;
   background: radial-gradient(circle at 50% 30%, #8a5427, #4a2a12 75%);
@@ -47,9 +47,9 @@
 }
 
 .fn-play__score {
-  margin-top: 8px;
+  margin-top: clamp(0px, 1vh, 8px);
   color: #fff;
-  font-size: 96px;
+  font-size: clamp(56px, 12vh, 96px);
   font-weight: 900;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -76,11 +76,12 @@
   flex: 1;
   place-items: center;
   width: 100%;
+  min-height: 0;
 }
 
 .fn-play__ring {
-  width: 150px;
-  height: 150px;
+  width: clamp(72px, 20vh, 150px);
+  height: clamp(72px, 20vh, 150px);
   border: 10px solid var(--pop);
   border-radius: 50%;
   box-shadow: 0 0 40px var(--pop), inset 0 0 30px var(--pop);

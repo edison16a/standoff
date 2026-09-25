@@ -1,0 +1,125 @@
+/*
+  NBA 3v3 on the phone after the pick: the ready page, the result, and
+  the card asking to turn the phone sideways.
+*/
+
+/* Step two: ready */
+
+.nba-ready {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  align-items: center;
+  gap: 16px;
+  min-height: 0;
+}
+
+.nba-ready__stage {
+  align-self: stretch;
+}
+
+@media (orientation: portrait) {
+  .nba-ready {
+    grid-template-columns: 1fr;
+    /* The star shrinks first on a short screen, and never grows past a good size. */
+    grid-template-rows: minmax(0, 340px) auto;
+    align-content: start;
+  }
+}
+
+.nba-ready__stage {
+  position: relative;
+  min-height: 120px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--team) 55%, #0c0f24), #0c0f24 75%);
+}
+
+.nba-ready__info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nba-ready__name {
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.nba-ready__team {
+  align-self: flex-start;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: var(--team);
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.nba-ready__note {
+  color: var(--text-muted);
+}
+
+.nba-ready__note--on {
+  color: #16a34a;
+  font-weight: 700;
+}
+
+/* The result after the game */
+
+.nba-result {
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.nba-result__label {
+  color: var(--team);
+  font-size: 20px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.nba-result__score {
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: 64px;
+  font-style: italic;
+  line-height: 1;
+}
+
+.nba-result__score small {
+  font-family: var(--font-ui);
+  font-size: 18px;
+  font-style: normal;
+  opacity: 0.6;
+}
+
+.nba-result__line {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.nba-turn {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  background: rgba(8, 10, 24, 0.92);
+  color: #ffffff;
+  text-align: center;
+}
+
+.nba-turn strong {
+  font-size: 22px;
+}
+
+/* While the turn card shows, the pad under it must not widen the page. */
+.nba-phone--pad:has(> .nba-turn) .nba-pad {
+  display: none;
+}

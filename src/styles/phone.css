@@ -6,10 +6,11 @@
 .phone {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  min-height: 100dvh;
+  /* Exactly the visible screen, so no phone page ever scrolls. dvh follows Safari's bars as they come and go. */
+  height: 100vh;
+  height: 100dvh;
   background: var(--bg-workspace);
-  padding-bottom: env(safe-area-inset-bottom);
+  padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 .phone__bar {
@@ -17,9 +18,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  height: 56px;
-  padding: 0 12px 0 16px;
-  padding-top: env(safe-area-inset-top);
+  flex-shrink: 0;
+  height: calc(56px + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) 12px 0 16px;
   border-bottom: 1px solid var(--border);
   background: var(--bg);
 }
@@ -55,9 +56,13 @@
   flex-direction: column;
   gap: 16px;
   width: 100%;
+  min-height: 0;
   max-width: 560px;
   margin: 0 auto;
-  padding: 16px;
+  /* Games that run edge to edge cancel this padding with the same numbers. */
+  --phone-pad-y: 16px;
+  --phone-pad-x: 16px;
+  padding: var(--phone-pad-y) var(--phone-pad-x);
 }
 
 .phone__waiting {
@@ -127,4 +132,57 @@
   outline: 2px solid var(--accent);
   outline-offset: 1px;
   border-color: transparent;
+}
+
+/* Sideways, height is what runs out: a slimmer bar and tighter edges. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .phone__bar {
+    height: calc(44px + env(safe-area-inset-top));
+  }
+
+  .phone__body {
+    gap: 10px;
+    max-width: 960px;
+    --phone-pad-y: 8px;
+  }
+
+  .phone-hero {
+    gap: 10px;
+    padding: 8px;
+  }
+
+  /* The name screen sideways: the logo and room on the left, the form on the right. */
+  .phone-hero--form {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
+    column-gap: 32px;
+    width: 100%;
+    margin: auto;
+  }
+
+  .phone-hero--form > * {
+    grid-column: 2;
+  }
+
+  .phone-hero--form .phone-hero__mark {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-self: end;
+    /* Centred over the room code under it. */
+    justify-self: center;
+  }
+
+  .phone-hero--form > .label {
+    grid-column: 1;
+    grid-row: 3;
+    align-self: start;
+  }
+
+  .phone-hero__mark svg {
+    width: 96px;
+  }
+
+  .name-field__input {
+    height: 48px;
+  }
 }

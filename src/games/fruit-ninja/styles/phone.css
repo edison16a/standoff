@@ -5,15 +5,20 @@
 
 .fn-blades {
   display: grid;
+  flex: 1;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  /* Every blade shares the height there is, so all eight fit without scrolling. */
+  grid-auto-rows: minmax(0, 1fr);
+  gap: clamp(6px, 1.2vh, 10px);
+  min-height: 0;
 }
 
 .fn-blade {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 6px 6px 8px;
+  gap: 4px;
+  min-height: 0;
+  padding: 6px 6px 6px;
   border: 2px solid var(--border);
   border-radius: 18px;
   background: var(--bg);
@@ -29,8 +34,9 @@
 
 .fn-blade__preview {
   display: block;
+  flex: 1;
   width: 100%;
-  aspect-ratio: 16 / 10;
+  min-height: 0;
   border-radius: 12px;
 }
 
@@ -40,11 +46,31 @@
   text-align: center;
 }
 
+.fn-ready {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+
 .fn-ready__preview {
   display: block;
+  flex: 1 1 0;
   width: 100%;
-  aspect-ratio: 16 / 8;
+  min-height: 72px;
+  max-height: 200px;
   border-radius: 18px;
+}
+
+/* Without sensors the practice pad takes the picture's place; the blade was on the last page. */
+.fn-ready:has(> .kit-pad) > .fn-ready__preview {
+  display: none;
+}
+
+.fn-ready > .kit-pad {
+  flex: 1 1 0;
+  min-height: 110px;
 }
 
 .fn-tips {

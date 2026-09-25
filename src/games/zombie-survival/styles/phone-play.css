@@ -8,9 +8,11 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 14px;
-  min-height: calc(100dvh - 56px);
-  padding: 14px 16px 20px;
+  gap: clamp(8px, 1.8vh, 14px);
+  min-height: 0;
+  /* Edge to edge under the bar: this cancels the phone frame's padding. */
+  margin: calc(-1 * var(--phone-pad-y)) calc(-1 * var(--phone-pad-x));
+  padding: clamp(10px, 1.8vh, 14px) 16px clamp(12px, 2.4vh, 20px);
   background: #0a0d0e;
   color: #e8eee6;
 }
@@ -80,7 +82,7 @@
 }
 
 .zs-ammo__count strong {
-  font-size: 44px;
+  font-size: clamp(32px, 5vh, 44px);
   font-weight: 900;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -149,8 +151,13 @@
   display: grid;
   flex: 1;
   place-items: center;
-  min-height: 240px;
+  min-height: 0;
   touch-action: none;
+}
+
+/* The trigger is as big as the room it has, never bigger than the kit's. */
+.zs-trigger .kit-fire {
+  width: min(62vw, 260px, 38dvh);
 }
 
 .zs-play .kit-pad {
@@ -166,7 +173,7 @@
 
 .zs-reload,
 .zs-recenter {
-  height: 64px;
+  height: clamp(52px, 8vh, 64px);
   border: 0;
   border-radius: 16px;
   color: #ffffff;

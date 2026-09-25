@@ -19,6 +19,7 @@ import "./styles/phone.css";
 import "./styles/phone-ready.css";
 import "./styles/phone-play.css";
 import "./styles/phone-cards.css";
+import "./styles/phone-wide.css";
 import "./styles/showcase.css";
 
 /**

@@ -1,4 +1,5 @@
 "use client";
+import "./aim.css";
 import "../kit.css";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { toPixels } from "./host-aim";
