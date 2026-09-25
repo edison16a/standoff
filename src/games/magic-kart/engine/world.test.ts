@@ -29,6 +29,8 @@ describe("a whole race", () => {
     // They drive on the same model as a player, drifting through the bends for turbos.
     expect(counts.drift).toBeGreaterThan(8);
     expect(counts.fell ?? 0).toBeLessThan(3);
+    // Every map has a glide jump, and the computers fly it on every lap.
+    expect(counts.glide ?? 0).toBeGreaterThanOrEqual(12);
   }, 30_000);
 });
 
