@@ -33,6 +33,7 @@ A phone that joins during a game picks a star and joins the next one. A player w
 * The chance to score comes from the release (green, good, early or late), the distance, the shooting stat, and the nearest defender's contest. A defender in front contests a little; one who jumped with Block contests fully and may block the shot, more likely with long arms.
 * Green releases go in almost every time unless heavily contested. The phone measures how long Shoot was held, so network lag never costs a green.
 * Once decided, the kind of make or miss is drawn from weights: swishes, bank shots off the glass (mostly from the wings), rolls round the rim and in, friendly bounces, rim outs, in and outs, off the glass and out, and airballs on bad misses. The ball flies a planned arc for that outcome, touching the iron and the glass exactly where it should, and then real physics takes over for rebounds.
+* Computer players weigh every jumper by the points it is worth on average: their own meter timing, the distance and the defence. Shooters like Curry look for their shot, drivers like Giannis attack open lanes, and the ball goes to whoever is most dangerous.
 * Three makes in a row: heating up. Four: on fire, with a flaming ball, a wider green and a little more speed, until you miss or the other team scores.
 
 ## Strength, dunks and layups
@@ -62,7 +63,7 @@ The players are stylised athletes, recognisable by build, skin tone, hair, beard
 
 ## Sound
 
-Everything is synthesised through the room's audio buses: the ball on the hardwood, sneaker squeaks, the net, the clank of the rim, the thud of the glass, passes, blocks, the shot clock horn and the final buzzer. The crowd murmurs, goes "ooh" as a ball rattles round the rim, groans at misses, roars and whistles at dunks and chants "de-fense" late in the clock. An arena organ plays now and then, hip hop in the lobby and a fanfare for the winners. The announcer ("Dunk!", "From downtown!", "Blocked!") uses the computer's speech synthesis.
+Everything is synthesised through the room's audio buses: the ball on the hardwood, sneaker squeaks, the net, the clank of the rim, the thud of the glass, passes, blocks, beeps through the last five seconds of the shot clock, its horn and the final buzzer. The crowd murmurs, goes "ooh" as a ball rattles round the rim, groans at misses, roars and whistles at dunks and chants "de-fense" late in the clock. An arena organ plays now and then, hip hop in the lobby and a fanfare for the winners. The announcer ("Dunk!", "From downtown!", "Blocked!") uses the computer's speech synthesis.
 
 ## Code
 
@@ -77,9 +78,9 @@ Everything is synthesised through the room's audio buses: the ball on the hardwo
 
 ## Home screen media
 
-The icon, the poster and the looping clip are filmed from the showcase with `node tools/media/capture.mjs nba-3v3 --url http://localhost:3000 --ffmpeg ffmpeg`. The poster and the icon are one frame of Giannis rising for the hammer, from low by the lane. The film is run ahead to that moment without drawing and held, so they take seconds to shoot. The loop is eight seconds of the broadcast camera: the drive and the dunk in slow motion from the close camera, then Luka's three from the top. The first three seconds the tool lets run are stepped without drawing, and the loop draws once per filmed frame.
+The icon, the poster and the looping clip are filmed from the showcase with `node tools/media/capture.mjs nba-3v3 --url http://localhost:3000 --ffmpeg ffmpeg`. The poster and the icon are one frame of Giannis at the top of his hammer, the ball cocked behind his head: the poster from the wing, the icon from low under him. The film is run ahead to that moment without drawing and held, so they take seconds to shoot. The loop is eight seconds of the broadcast camera: the drive and the dunk in slow motion from the close camera, then Luka's three from the top. The first three seconds the tool lets run are stepped without drawing, and the loop draws once per filmed frame.
 
-The tool's fake clock keeps running in real time, so on a computer that renders in software a slow frame used to race the film ahead. The showcase counts any long gap as one filmed frame. The clip here was filmed with a copy of the tool that also pauses the clock, then scaled to 1280 by 720 so each file stays under 4 MB.
+The tool's fake clock keeps running in real time, so on a computer that renders in software a slow frame used to race the film ahead. The showcase counts any long gap as one filmed frame. The tool now pauses the clock itself. The clip is filmed at 1280 by 720 with `--size 1280x720`, so each file stays under 4 MB.
 
 ## Slow computers
 

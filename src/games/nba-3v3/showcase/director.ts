@@ -11,7 +11,7 @@ const LEAD: Record<ShowcaseView, number> = { loop: -0.4, poster: 0.85, icon: 0.8
  * The poster and the icon are single frames, so the film is run this far
  * ahead without drawing and then held: Giannis rising for the hammer.
  */
-const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 2.95, icon: 3.0 };
+const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 2.84, icon: 2.86 };
 
 /**
  * The capture tool lets the scene run three seconds after the page says
@@ -43,8 +43,8 @@ const STILL_DRAWS = 1;
 
 /** The stills' hero angles: low on the floor by the lane, looking up at the dunk. */
 const STILL_CAMERA: Partial<Record<ShowcaseView, { pos: THREE.Vector3; look: THREE.Vector3; fov: number }>> = {
-  poster: { pos: new THREE.Vector3(3.4, 1.8, 7.8), look: new THREE.Vector3(-0.3, 2.35, 2.0), fov: 42 },
-  icon: { pos: new THREE.Vector3(2.6, 1.0, 5.0), look: new THREE.Vector3(-0.3, 2.6, 1.8), fov: 46 },
+  poster: { pos: new THREE.Vector3(2.9, 1.2, 5.9), look: new THREE.Vector3(-0.4, 2.25, 1.9), fov: 46 },
+  icon: { pos: new THREE.Vector3(1.3, 0.9, 3.7), look: new THREE.Vector3(-0.25, 2.4, 1.9), fov: 56 },
 };
 
 /**
