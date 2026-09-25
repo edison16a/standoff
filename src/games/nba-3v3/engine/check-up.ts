@@ -1,6 +1,6 @@
 import { planCheck, placeForCheck, freshPossession, handTo, type CheckPlan } from "./check-plan";
-import { holdAtChest, startToss, stepToss, type Toss } from "./check-toss";
-import { clampToCourt } from "./court";
+import { holdAtChest, returnToss, startToss, stepToss, type Toss } from "./check-toss";
+import { clampToCourt, outOfBounds } from "./court";
 import type { Match } from "./match";
 import { CHECK } from "./tuning";
 import type { Athlete, TeamId } from "./types";
@@ -41,13 +41,36 @@ export function startDead(m: Match, next: TeamId): void {
   m.checkUp = { plan: planCheck(m, next), team: next, fetcher: null, heldFor: 0, toss: null, passes: 0 };
 }
 
-/** Walks a player to a point, slowing as they arrive so nobody overshoots or jitters on the spot. */
-function walkTo(a: Athlete, to: V2, pace: number): number {
+/**
+ * Walks a player to a point, slowing as they arrive so nobody overshoots
+ * or jitters on the spot, and stepping round anyone in the way, since
+ * the checker and their defender often have to pass each other.
+ */
+function walkTo(m: Match, a: Athlete, to: V2, pace: number): number {
   const dx = to.x - a.x;
   const dz = to.z - a.z;
   const d = Math.hypot(dx, dz);
-  const k = d > 0.12 ? (pace * Math.min(1, d / 1.4)) / d : 0;
-  a.move = { x: dx * k, z: dz * k };
+  if (d <= 0.12) {
+    a.move = { x: 0, z: 0 };
+    return d;
+  }
+  const ux = dx / d;
+  const uz = dz / d;
+  let side = 0;
+  for (const o of m.athletes) {
+    const ox = o.x - a.x;
+    const oz = o.z - a.z;
+    const ahead = ox * ux + oz * uz;
+    const across = ox * -uz + oz * ux;
+    if (o === a || ahead <= 0 || ahead > Math.min(d, 1.3) || Math.abs(across) > 0.9) continue;
+    // Step to whichever side they are not on; head on, the lower id keeps right.
+    side += (Math.abs(across) < 0.05 ? (a.id < o.id ? 1 : -1) : -Math.sign(across)) * (1 - ahead / 1.3);
+  }
+  const speed = pace * Math.min(1, d / 1.4);
+  const mx = ux - uz * side * 1.2;
+  const mz = uz + ux * side * 1.2;
+  const l = Math.hypot(mx, mz);
+  a.move = { x: (mx / l) * speed, z: (mz / l) * speed };
   return d;
 }
 
@@ -81,7 +104,7 @@ export function updateDead(m: Match, dt: number): void {
       continue;
     }
     const chasing = a === fetcher && b.mode !== "held" && !c.toss;
-    const d = walkTo(a, chasing ? clampToCourt(b.pos, 0.5) : spot, chasing ? 1 : CHECK.walk);
+    const d = walkTo(m, a, chasing ? clampToCourt(b.pos, 0.5) : spot, chasing ? 1 : CHECK.walk);
     if (chasing || d > CHECK.onSpot) settled = false;
   }
   // The fetcher scoops the ball up once it is low enough to reach.
@@ -90,6 +113,8 @@ export function updateDead(m: Match, dt: number): void {
     fetcher.dribble = 0.5;
     m.emit({ type: "catch", id: fetcher.id });
   }
+  // A ball that got away into the stands is thrown back to the checker instead.
+  if (fetcher && b.mode === "loose" && !c.toss && m.phaseT > CHECK.giveUp && outOfBounds(b.pos)) c.toss = returnToss(m, m.athletes[c.plan.checker]!);
   if (b.mode === "held" && b.holder !== c.plan.checker && !c.toss) {
     c.heldFor += dt;
     const holder = m.holder!;

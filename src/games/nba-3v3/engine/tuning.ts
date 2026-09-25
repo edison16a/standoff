@@ -87,13 +87,15 @@ export const RULES = {
 /** The break after a basket or a turnover, and the check up that ends it. */
 export const CHECK = {
   /** Everyone takes in the moment before anyone moves. */
-  fetchAt: 0.7,
+  fetchAt: 0.55,
   /** Walking pace to the spots, as a share of top speed. */
-  walk: 0.8,
+  walk: 0.9,
   onSpot: 0.35,
   /** The player who picked the ball up passes it out to the checker after this long. */
   outletAfter: 0.35,
-  minDead: 1.1,
+  minDead: 1,
+  /** A ball still out of bounds this long after the whistle is thrown back in. */
+  giveUp: 1.6,
   /** Past this, everyone is put on their spot, so a lost ball never stalls the game. */
   maxDead: 5,
   /** The showcase skips the check and goes straight on after this long. */

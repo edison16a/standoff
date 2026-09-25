@@ -2,7 +2,8 @@ import { charOf } from "./athlete";
 import { handTo } from "./check-plan";
 import type { Match } from "./match";
 import type { Athlete } from "./types";
-import { lerp, type V3 } from "./vec";
+import { COURT } from "./tuning";
+import { clamp, lerp, type V3 } from "./vec";
 
 /**
  * The little passes of a check up: the ball picked up and passed out to
@@ -18,6 +19,8 @@ export interface Toss {
   dur: number;
   /** A bounce pass hits the floor a little past halfway. */
   bounce: boolean;
+  /** How high the arc rises over the straight line, for a toss that is not bounced. */
+  arc: number;
   bounced: boolean;
 }
 
@@ -44,7 +47,23 @@ export function startToss(m: Match, from: Athlete, to: Athlete, bounce: boolean)
   b.lastTouch = from.id;
   if (from.action.kind === "none") from.action = { kind: "pass", t: 0 };
   m.emit({ type: "pass", from: from.id, to: to.id, lob: false });
-  return { from: start, to: to.id, t: 0, dur: Math.max(0.36, d / (bounce ? 5.5 : 8)), bounce, bounced: false };
+  b.passTo = to.id;
+  return { from: start, to: to.id, t: 0, dur: Math.max(0.36, d / (bounce ? 5.5 : 8)), bounce, arc: 0.25, bounced: false };
+}
+
+/** A ball that went into the crowd comes back: tossed from where it lies to the checker, as a ball kid would. */
+export function returnToss(m: Match, to: Athlete): Toss {
+  const b = m.ball;
+  // Thrown from courtside: a ball that rolled deep into the stands is picked up at the front row.
+  const from = { x: clamp(b.pos.x, -COURT.halfWidth - 1.5, COURT.halfWidth + 1.5), y: Math.max(0.6, Math.min(1.5, b.pos.y)), z: clamp(b.pos.z, -1, COURT.depth + 2.5) };
+  const d = Math.hypot(to.x - from.x, to.z - from.z);
+  b.mode = "flight";
+  b.holder = null;
+  b.flight = null;
+  b.flightKind = null;
+  b.passTo = to.id;
+  b.spin = 7;
+  return { from, to: to.id, t: 0, dur: clamp(d / 8, 0.5, 1.1), bounce: false, arc: 0.4 + d * 0.12, bounced: false };
 }
 
 /**
@@ -69,7 +88,7 @@ export function stepToss(m: Match, toss: Toss, dt: number): boolean {
       m.emit({ type: "bounce", id: catcher.id, x: b.pos.x, z: b.pos.z, power: 0.6 });
     }
   } else {
-    y = lerp(toss.from.y, end.y, u) + Math.sin(u * Math.PI) * 0.25;
+    y = lerp(toss.from.y, end.y, u) + Math.sin(u * Math.PI) * toss.arc;
   }
   b.pos = { x: lerp(toss.from.x, end.x, u), y, z: lerp(toss.from.z, end.z, u) };
   const k = dt > 0 ? 1 / dt : 0;
