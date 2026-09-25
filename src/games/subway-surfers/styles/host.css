@@ -1,0 +1,122 @@
+/*
+  Subway Surfers on the computer: the stage the 3D view fills and the
+  shared pieces. Loud yellow, sticker outlines and fat rounded type, in
+  the spirit of the yard's graffiti. The same in light and dark themes,
+  since the game world brings its own colours.
+*/
+
+.ss-stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #2f8cff;
+  color: #ffffff;
+  font-family: var(--font-ui);
+}
+
+.ss-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ss-dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 14, 40, 0.55);
+}
+
+.ss-button {
+  border: 4px solid #1d2a8a;
+  border-radius: 999px;
+  padding: 14px 34px;
+  font: 900 24px/1 "Arial Black", "Arial Rounded MT Bold", var(--font-ui);
+  color: #1d2a8a;
+  background: #ffffff;
+  box-shadow: 0 6px 0 #1d2a8a;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.ss-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 0 #1d2a8a;
+}
+
+.ss-button:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 #1d2a8a;
+}
+
+.ss-button:focus-visible {
+  outline: 4px solid #ffffff;
+  outline-offset: 4px;
+}
+
+.ss-button--go {
+  background: linear-gradient(180deg, #fff27a, #ffd21f 50%, #ffb000);
+  font-size: 32px;
+  padding: 18px 56px;
+}
+
+.ss-button--quiet {
+  font-size: 18px;
+  padding: 10px 22px;
+  border-width: 3px;
+  box-shadow: 0 4px 0 #1d2a8a;
+}
+
+.ss-chip {
+  border: 3px solid rgba(255, 255, 255, 0.7);
+  border-radius: 999px;
+  padding: 10px 24px;
+  font: 800 20px/1 var(--font-ui);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+}
+
+.ss-chip--on {
+  color: #1d2a8a;
+  background: #ffd21f;
+  border-color: #ffffff;
+}
+
+.ss-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.ss-center__actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.ss-calibrate {
+  position: absolute;
+  inset: 0;
+}
+
+.ss-calibrate__back {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+}
+
+.ss-phone {
+  padding: 24px;
+  font-size: 18px;
+  text-align: center;
+}
+
+/* The camera picture in the corner sits above every overlay during play. */
+.ss-stage .cam-corner {
+  z-index: 5;
+}
