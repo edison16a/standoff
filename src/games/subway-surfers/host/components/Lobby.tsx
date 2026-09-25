@@ -18,7 +18,7 @@ export function Lobby() {
     <div className="ss-lobby">
       <div className="ss-lobby__card">
         <Logo />
-        <p className="ss-lobby__tagline">Run the rails with your whole body. No phones needed.</p>
+        <p className="ss-lobby__tagline">Run the rails from the waist up. No phones needed.</p>
         <div className="ss-lobby__count" role="radiogroup" aria-label="Players">
           {([1, 2] as const).map((n) => (
             <button
@@ -56,13 +56,16 @@ export function Lobby() {
         </button>
         <ul className="ss-lobby__how">
           <li>
-            <b>Step</b> or lean to change track
+            <b>Move</b> or lean left and right to change track
           </li>
           <li>
             <b>Jump</b> over barriers
           </li>
           <li>
-            <b>Duck</b> under the high ones
+            <b>Duck</b> to roll under the high ones
+          </li>
+          <li>
+            <b>Waist up</b> is all the camera needs to see
           </li>
         </ul>
       </div>

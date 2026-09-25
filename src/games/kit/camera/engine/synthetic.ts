@@ -1,11 +1,16 @@
 import type { Landmark, Pose } from "./landmarks";
-import { LM } from "./landmarks";
+import { LM, LOWER_START } from "./landmarks";
 import { add, ARM_SHAPES, blend, FOREARM, rotate, STANDING, STANDING_HEIGHT, UPPER_ARM, type Vec } from "./synthetic-body";
+
+export const DEFAULT_HEIGHT = 1.9;
+export const DEFAULT_HEAD = 0.32;
 
 /**
  * Made up poses, described in a few numbers instead of 33 points. Unit
  * tests build movement from them, and browser tests inject them in place
- * of the camera so a game can be played without a person.
+ * of the camera so a game can be played without a person. By default the
+ * player stands close to a computer camera, seen from the waist up, and
+ * the model sees nothing of the hips or legs.
  */
 
 /** One arm. Each is 0 to 1 and they stack: a punch from the guard is `{ guard: 1, punch: 1 }`. */
@@ -25,10 +30,14 @@ export interface ArmSpec {
 export interface PoseSpec {
   /** The middle of the hips across the mirrored picture, 0 to 1. Default 0.5. */
   x?: number;
-  /** How much of the picture's height a person standing tall fills. Default 0.7. */
+  /** How much of the picture's height the whole person would fill, feet to crown. Default 1.9: close up, waist up. */
   height?: number;
-  /** Where the feet stand, 0 at the top of the picture to 1 at the bottom. Default 0.95. */
-  floor?: number;
+  /** Where the nose sits when standing tall, 0 at the top of the picture to 1 at the bottom. Default 0.32. */
+  head?: number;
+  /** Size about the middle of the picture, as when walking nearer (above 1) or further (below 1). Default 1. */
+  near?: number;
+  /** The model sees the hips and legs. Default false: waist up, so nothing below the waist is ever seen. */
+  legs?: boolean;
   /** Metres off the floor, for a jump. */
   lift?: number;
   /** 0 to 1, bending the knees down toward a squat. */
@@ -44,6 +53,8 @@ export interface PoseSpec {
 }
 
 const CAMERA_DISTANCE = 2.6;
+/** The nose's height standing tall, in metres. */
+const NOSE_HEIGHT = STANDING[LM.nose]![1];
 const CROUCH_DROP = 0.42;
 const BOW_ANGLE = Math.PI / 3;
 const LEAN_ANGLE = (25 * Math.PI) / 180;
@@ -97,21 +108,24 @@ function midpoint(a: Vec, b: Vec): Vec {
 
 /** A simple camera: nearer points spread out a little, as through a real lens. */
 function project(joints: readonly Vec[], spec: PoseSpec, aspect: number): Pose {
-  const perMetre = (spec.height ?? 0.7) / STANDING_HEIGHT;
-  const floor = spec.floor ?? 0.95;
+  const perMetre = (spec.height ?? DEFAULT_HEIGHT) / STANDING_HEIGHT;
+  const floor = (spec.head ?? DEFAULT_HEAD) + NOSE_HEIGHT * perMetre;
   const centre = spec.x ?? 0.5;
+  const near = spec.near ?? 1;
   const visibility = spec.visibility ?? 0.98;
   const hips = midpoint(joints[LM.leftHip]!, joints[LM.rightHip]!);
   const landmarks: Landmark[] = [];
   const world: Landmark[] = [];
-  for (const p of joints) {
+  joints.forEach((p, i) => {
     const spread = CAMERA_DISTANCE / (CAMERA_DISTANCE + (p[2] - hips[2]));
-    const x = centre + ((hips[0] + (p[0] - hips[0]) * spread) * perMetre) / aspect;
-    const y = floor - (hips[1] + (p[1] - hips[1]) * spread) * perMetre;
+    // Walking nearer spreads the whole picture out from its middle, as through a lens.
+    const x = 0.5 + (centre + ((hips[0] + (p[0] - hips[0]) * spread) * perMetre) / aspect - 0.5) * near;
+    const y = 0.5 + (floor - (hips[1] + (p[1] - hips[1]) * spread) * perMetre - 0.5) * near;
     const inside = x >= 0 && x <= 1 && y >= 0 && y <= 1;
-    const seen = inside ? visibility : 0.1;
-    landmarks.push({ x, y, z: ((p[2] - hips[2]) * perMetre) / aspect, visibility: seen });
+    const hidden = !spec.legs && i >= LOWER_START;
+    const seen = hidden ? 0 : inside ? visibility : 0.1;
+    landmarks.push({ x, y, z: ((p[2] - hips[2]) * perMetre * near) / aspect, visibility: seen });
     world.push({ x: p[0] - hips[0], y: -(p[1] - hips[1]), z: p[2] - hips[2], visibility: seen });
-  }
+  });
   return { landmarks, world };
 }

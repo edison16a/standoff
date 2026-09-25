@@ -4,7 +4,7 @@ import { CameraLab } from "@/games/kit/camera/dev/CameraLab";
 /**
  * The camera kit's test bench. Development only: players never land here.
  * Options in the address: players=1 or 2, camera=fake (injected poses,
- * no camera), model=full or lite, delegate=CPU, needs=full, guard=1.
+ * no camera), model=full or lite, delegate=CPU, guard=1.
  */
 export default async function CameraDevPage({
   searchParams,
@@ -21,7 +21,6 @@ export default async function CameraDevPage({
         players: pick("players") === "1" ? 1 : 2,
         model: model === "full" || model === "lite" ? model : "auto",
         delegate: pick("delegate") === "CPU" ? "CPU" : "GPU",
-        needs: pick("needs") === "full" ? "full" : "upper",
         guardStep: pick("guard") === "1",
       }}
     />

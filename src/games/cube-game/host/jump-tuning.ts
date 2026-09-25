@@ -1,9 +1,10 @@
 import type { MoveTuning } from "@/games/kit/camera";
 
 /**
- * How Cube Game reads a jump. A little sooner than the kit's default,
- * since the beat does not wait: a smaller rise counts, and a fast start
- * counts sooner still. Everything else stays the kit's, so a jump still
- * needs the hips and shoulders to rise together.
+ * How Cube Game reads a jump. Sooner than the kit's default, since the
+ * beat does not wait: the head only needs to rise a quarter of a
+ * shoulder width over its line, about 9 cm. That is still twice what a
+ * rise onto the toes or a bob gives, and the kit's timing rule means a
+ * slow stretch never counts. Nothing else is tuned: the game only jumps.
  */
-export const JUMP_TUNING: MoveTuning = { jump: { rise: 0.15, speed: 1.2 } };
+export const JUMP_TUNING: MoveTuning = { head: { up: 0.25 } };

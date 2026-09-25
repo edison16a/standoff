@@ -78,7 +78,7 @@ export function LevelSelect() {
         </button>
       </div>
       <p className="cg-menu__hint">
-        Jump for real to jump. {players === 2 ? "Player 1 stands on the left." : "Stand back so the camera sees you from head to hips."}
+        Jump for real to jump. The camera only needs you from the waist up.{players === 2 ? " Player 1 stands on the left." : ""}
       </p>
     </div>
   );

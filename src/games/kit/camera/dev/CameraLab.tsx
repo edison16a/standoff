@@ -16,7 +16,6 @@ export interface LabSettings {
   players: number;
   model: "auto" | ModelVariant;
   delegate: "GPU" | "CPU";
-  needs: "upper" | "full";
   /** Adds a demo extra step to calibration: hold up a guard. */
   guardStep: boolean;
 }
@@ -60,7 +59,6 @@ function Bench({ kit, settings }: { kit: CameraKit; settings: LabSettings }) {
       <main className="cam-lab" data-stage="calibrate">
         <CameraCalibrate
           kit={kit}
-          needs={settings.needs}
           extra={
             settings.guardStep
               ? {
@@ -87,7 +85,7 @@ function Bench({ kit, settings }: { kit: CameraKit; settings: LabSettings }) {
         Calibrate again
       </button>
       <pre className="cam-lab__baselines" data-testid="camera-baselines">
-        {JSON.stringify(baselines.map((b) => ({ slot: b.slot, x: +b.centerX.toFixed(3), scale: +b.scale.toFixed(3) })))}
+        {JSON.stringify(baselines.map((b) => ({ slot: b.slot, x: +b.centerX.toFixed(3), head: +b.headY.toFixed(3), scale: +b.scale.toFixed(3) })))}
       </pre>
     </main>
   );

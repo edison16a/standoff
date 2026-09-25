@@ -1,5 +1,4 @@
 import type { Body } from "./body";
-import { LEG_POINTS, LM, visibilityOf } from "./landmarks";
 
 /** Where one player should stand, across the mirrored picture. */
 export interface Spot {
@@ -19,29 +18,43 @@ export function spotsFor(players: number): Spot[] {
   ];
 }
 
+/**
+ * What a spot asks of a player. Only the head and shoulders count, so a
+ * player seen from the waist up is enough.
+ */
 export interface SpotRules {
-  /** "upper" needs the head, shoulders and hips in view. "full" needs the knees and feet too. */
-  needs: "upper" | "full";
-  /** Torso lengths, in frame heights, that count as too far away and too near. */
-  minScale: number;
-  maxScale: number;
-  /** How clearly the head, shoulders and hips must be seen, 0 to 1. */
+  /** Shoulder widths, in frame heights, that count as too far away and too near. */
+  minShoulder: number;
+  maxShoulder: number;
+  /** The head must sit at least this far below the top of the picture, so a jump stays in view. */
+  headroom: number;
+  /** How clearly the head and shoulders must be seen, 0 to 1. */
   minConfidence: number;
 }
 
-export const DEFAULT_SPOT_RULES: SpotRules = { needs: "upper", minScale: 0.09, maxScale: 0.4, minConfidence: 0.6 };
+export const DEFAULT_SPOT_RULES: SpotRules = { minShoulder: 0.07, maxShoulder: 0.6, headroom: 0.12, minConfidence: 0.6 };
 
 /** What stops a player's spot from counting yet. Each has a plain instruction in the calibration screen. */
-export type SpotIssue = "missing" | "unclear" | "step-left" | "step-right" | "closer" | "back" | "legs";
+export type SpotIssue = "missing" | "unclear" | "step-left" | "step-right" | "closer" | "back" | "headroom";
+
+/**
+ * The middle of the head and shoulders across the picture: where the
+ * player stands. A head out of the picture, as in a high jump, is only
+ * the model's guess, so the shoulders alone decide then.
+ */
+export function centreOf(body: Body): number {
+  return body.headSeen ? (body.head.x + body.shoulders.x) / 2 : body.shoulders.x;
+}
 
 export function checkSpot(body: Body | null, spot: Spot, rules: SpotRules = DEFAULT_SPOT_RULES): SpotIssue | null {
   if (!body) return "missing";
-  // Too near comes first: a head cut off by the top of the picture also makes the body unclear.
-  if (body.scale > rules.maxScale || body.landmarks[LM.nose]!.y < 0.02) return "back";
-  if (body.confidence < rules.minConfidence) return "unclear";
-  if (body.hips.x < spot.x - spot.halfWidth) return "step-right";
-  if (body.hips.x > spot.x + spot.halfWidth) return "step-left";
-  if (body.scale < rules.minScale) return "closer";
-  if (rules.needs === "full" && visibilityOf(body.landmarks, LEG_POINTS) < 0.5) return "legs";
+  // Too near comes first, then a head at the top edge: a head cut off by the picture also makes the body unclear.
+  if (body.shoulderWidth > rules.maxShoulder) return "back";
+  if (body.head.y < rules.headroom) return "headroom";
+  if (body.confidence < rules.minConfidence || !body.headSeen) return "unclear";
+  const x = centreOf(body);
+  if (x < spot.x - spot.halfWidth) return "step-right";
+  if (x > spot.x + spot.halfWidth) return "step-left";
+  if (body.shoulderWidth < rules.minShoulder) return "closer";
   return null;
 }

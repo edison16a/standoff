@@ -3,7 +3,9 @@ import "../styles/preview.css";
 import { useEffect, useRef, type ReactNode } from "react";
 import { playerColor } from "@/games/kit/players";
 import type { CameraKit } from "../host/camera-kit";
-import { drawGuide, drawSkeleton, type GuideState } from "./draw";
+import { drawSkeleton } from "./draw";
+import { drawGuide, type GuideState } from "./draw-guide";
+import { drawHeadLine } from "./draw-line";
 import { fitVideo, type Fit } from "./fit";
 import { useKitStatus } from "./use-kit";
 
@@ -12,6 +14,8 @@ export interface CameraPreviewProps {
   /** "cover" fills the box, cropping the edges. "contain" shows the whole picture. */
   fit?: "cover" | "contain";
   skeletons?: boolean;
+  /** Draws each calibrated player's head line and the band around it. On by default. */
+  headLines?: boolean;
   /** Draws an outline where each player should stand, in their colour. */
   spots?: boolean;
   /** Outlines with rings that fill, as calibration uses. Read every frame, so it can change without a render. */
@@ -25,10 +29,11 @@ export interface CameraPreviewProps {
 
 /**
  * The camera picture, mirrored like a selfie, with every player's skeleton
- * in their colour. Drawing runs in its own animation loop from the kit's
+ * and head line in their colour. Drawing runs in its own animation loop from the kit's
  * latest frame, so React never re-renders for a moving player.
  */
-export function CameraPreview({ kit, fit: mode = "cover", skeletons = true, spots = false, guides, className, children, onFit }: CameraPreviewProps) {
+export function CameraPreview(props: CameraPreviewProps) {
+  const { kit, fit: mode = "cover", skeletons = true, headLines = true, spots = false, guides, className, children, onFit } = props;
   const status = useKitStatus(kit);
   const boxRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -75,6 +80,9 @@ export function CameraPreview({ kit, fit: mode = "cover", skeletons = true, spot
         const spot = kit.spots[guide.slot - 1];
         if (spot) drawGuide(ctx, spot, guide, fit);
       }
+      if (headLines) {
+        kit.latest().moves.forEach((moves, i) => drawHeadLine(ctx, moves, playerColor(i + 1), fit));
+      }
       if (skeletons) {
         kit.latest().bodies.forEach((body, i) => body && drawSkeleton(ctx, body, playerColor(i + 1), fit));
       }
@@ -82,7 +90,7 @@ export function CameraPreview({ kit, fit: mode = "cover", skeletons = true, spot
     };
     frame = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(frame);
-  }, [kit, mode, skeletons, spots, videoWidth, videoHeight]);
+  }, [kit, mode, skeletons, headLines, spots, videoWidth, videoHeight]);
 
   return (
     <div ref={boxRef} className={`cam-preview ${className ?? ""}`}>

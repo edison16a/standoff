@@ -1,5 +1,6 @@
 import { distance3, mid, span, type Point } from "./geometry";
-import { CORE_POINTS, LM, visibilityOf, type Landmark, type Pose } from "./landmarks";
+import { LM, UPPER_POINTS, visibilityOf, type Landmark, type Pose } from "./landmarks";
+import { headOf, hipsOf, hipsSeen, shoulderWidthOf } from "./upper-body";
 
 export type Hand = "left" | "right";
 
@@ -33,7 +34,9 @@ export interface Velocity {
 /**
  * One player's body in one frame. Picture points are 0 to 1 in the
  * mirrored picture. Lengths are in frame heights. Gesture maths divides
- * by `scale` so it works for tall and short players, near or far.
+ * by `scale` so it works for tall and short players, near or far. All of
+ * it comes from the head and shoulders, so the player only needs to be
+ * seen from the waist up.
  */
 export interface Body {
   /** When the frame was taken, on the performance.now clock. */
@@ -42,23 +45,30 @@ export interface Body {
   aspect: number;
   landmarks: readonly Landmark[];
   world: readonly Landmark[];
-  /** How clearly the head, shoulders and hips are seen, 0 to 1. */
+  /** How clearly the head and shoulders are seen, 0 to 1. */
   confidence: number;
+  /** Shoulder to shoulder as if facing the camera, so turning never changes it. Only distance does. */
   shoulderWidth: number;
+  /** Shoulders to hips. A guess from the shoulders when the hips are out of view. */
   torsoLength: number;
-  /** The unit for gestures: the torso length, kept steady when the player bends or turns. */
+  /** The unit for gestures: about one torso length, from the shoulder width, so it needs no hips. */
   scale: number;
+  /** The middle of the face points seen. */
   head: Point;
+  /** Some of the face was clearly seen. When not, as when a jump takes the head out of the picture, `head` is a guess. */
+  headSeen: boolean;
   shoulders: Point;
+  /** Seen when `hipsSeen`, else a guess one torso length below the shoulders. */
   hips: Point;
+  hipsSeen: boolean;
   /** Halfway between the shoulders and the hips. */
   torso: Point;
   arms: Record<Hand, Arm>;
   velocity: Velocity;
 }
 
-/** A person turned side on or bent forward still has a torso about this many shoulder widths long. */
-const TORSO_PER_SHOULDER = 1.2;
+/** A torso is about this many shoulder widths long, which makes the unit about one torso length. */
+export const TORSO_PER_SHOULDER = 1.45;
 /** Velocities are eased a little, since one noisy frame should not look like a punch. */
 const VELOCITY_EASE = 0.6;
 /** A gap longer than this means the player was away, so speeds start again from rest. */
@@ -67,11 +77,11 @@ const MAX_GAP_MS = 250;
 export function deriveBody(pose: Pose, time: number, aspect: number, previous: Body | null): Body {
   const at = (i: number) => pose.landmarks[i]!;
   const shoulders = mid(at(LM.leftShoulder), at(LM.rightShoulder));
-  const hips = mid(at(LM.leftHip), at(LM.rightHip));
-  const shoulderWidth = span(at(LM.leftShoulder), at(LM.rightShoulder), aspect);
+  const shoulderWidth = shoulderWidthOf(pose, aspect);
+  const scale = Math.max(shoulderWidth * TORSO_PER_SHOULDER, 1e-3);
+  const hips = hipsOf(pose.landmarks, aspect, scale);
   const torsoLength = span(shoulders, hips, aspect);
-  const scale = Math.max(torsoLength, shoulderWidth * TORSO_PER_SHOULDER, 1e-3);
-  const head = headPoint(pose.landmarks);
+  const head = headOf(pose.landmarks);
   const torso = mid(shoulders, hips);
   const arms = {
     left: readArm(pose, "left", aspect, scale),
@@ -82,28 +92,21 @@ export function deriveBody(pose: Pose, time: number, aspect: number, previous: B
     aspect,
     landmarks: pose.landmarks,
     world: pose.world,
-    confidence: visibilityOf(pose.landmarks, CORE_POINTS),
+    confidence: visibilityOf(pose.landmarks, UPPER_POINTS),
     shoulderWidth,
     torsoLength,
     scale,
-    head,
+    head: head.point,
+    headSeen: head.seen,
     shoulders,
     hips,
+    hipsSeen: hipsSeen(pose.landmarks),
     torso,
     arms,
     velocity: { torso: { x: 0, y: 0 }, head: { x: 0, y: 0 }, left: { x: 0, y: 0 }, right: { x: 0, y: 0 } },
   };
   if (previous) body.velocity = velocityFrom(previous, body);
   return body;
-}
-
-/** The nose, or between the ears when the nose is hidden, as when looking down. */
-function headPoint(landmarks: readonly Landmark[]): Point {
-  const nose = landmarks[LM.nose]!;
-  const left = landmarks[LM.leftEar]!;
-  const right = landmarks[LM.rightEar]!;
-  if (nose.visibility >= 0.5 || Math.max(left.visibility, right.visibility) < 0.5) return { x: nose.x, y: nose.y };
-  return mid(left, right);
 }
 
 function readArm(pose: Pose, hand: Hand, aspect: number, scale: number): Arm {

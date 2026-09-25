@@ -30,8 +30,8 @@ describe("reading a player's moves", () => {
     const routine = chain(
       MOVES.jump(base),
       MOVES.duck(base),
-      MOVES.step(base, 0.12),
-      MOVES.step({ ...base, x: 0.4 }, -0.12),
+      MOVES.step(base, 0.2),
+      MOVES.step({ ...base, x: 0.48 }, -0.2),
       [{ at: 0, pose: base }, { at: 300, pose: guard }],
       MOVES.punch(base, "right"),
       MOVES.punch(base, "left"),
@@ -60,20 +60,20 @@ describe("reading a player's moves", () => {
   it("says when a player steps out of view and back, keeping their lane", () => {
     const reader = new MoveReader(1);
     reader.setBaseline(baselineFor({}));
-    read(reader, MOVES.step({}, 0.12));
+    read(reader, MOVES.step({}, 0.2));
     expect(reader.current.lane).toBe(1);
     const away = reader.update(null, 5000);
     expect(kinds(away)).toEqual(["away"]);
     expect(reader.current.present).toBe(false);
     expect(reader.current.lane).toBe(1);
-    const back = read(reader, [{ at: 0, pose: { x: 0.62 } }], { smooth: false }).map((e) => e.type);
+    const back = read(reader, [{ at: 0, pose: { x: 0.7 } }], { smooth: false }).map((e) => e.type);
     expect(back[0]).toBe("back");
     expect(back).not.toContain("lane");
   });
 
   it("reads guard, punches and leans before calibration, but not jumps or lanes", () => {
     const reader = new MoveReader(1);
-    const events = read(reader, chain(MOVES.jump(), MOVES.step({}, 0.12), [{ at: 0, pose: {} }, { at: 200, pose: { lean: 0.8 } }], MOVES.punch({}, "right")));
+    const events = read(reader, chain(MOVES.jump(), MOVES.step({}, 0.2), [{ at: 0, pose: {} }, { at: 200, pose: { lean: 0.8 } }], MOVES.punch({}, "right")));
     const types = kinds(events);
     expect(types).not.toContain("jump");
     expect(types).not.toContain("lane1");
@@ -83,27 +83,25 @@ describe("reading a player's moves", () => {
   });
 
   it("takes tuning, like five lanes and a higher jump", () => {
-    const reader = new MoveReader(1, { lane: { lanes: 5 }, jump: { rise: 2 } });
-    reader.setBaseline(baselineFor({}));
-    const events = kinds(read(reader, chain(MOVES.jump(), MOVES.step({}, 0.1), MOVES.step({ x: 0.6 }, 0.1))));
+    const reader = new MoveReader(1, { lane: { lanes: 5 }, head: { up: 2 } });
+    reader.setBaseline(baselineFor({ height: 1 }));
+    const far = { height: 1 };
+    const events = kinds(read(reader, chain(MOVES.jump(far), MOVES.step(far, 0.1), MOVES.step({ ...far, x: 0.6 }, 0.1))));
     expect(events).not.toContain("jump");
     expect(events.filter((e) => e.startsWith("lane"))).toEqual(["lane1", "lane2"]);
-    reader.configure({ jump: { rise: 0.18 } });
-    expect(kinds(read(reader, MOVES.jump({ x: 0.7 })))).toContain("jump");
+    reader.configure({ head: { up: 0.35 } });
+    expect(kinds(read(reader, MOVES.jump({ ...far, x: 0.7 })))).toContain("jump");
   });
 
-  it("ignores a player walking nearer and further between moves", () => {
+  it("gives the head against its line every frame, and the line to draw", () => {
     const reader = new MoveReader(1);
+    expect(reader.current.line).toBeNull();
     reader.setBaseline(baselineFor({}));
-    const walk: PoseKey[] = [
-      { at: 0, pose: {} },
-      { at: 1200, pose: { height: 0.85, floor: 1.08 } },
-      { at: 3000, pose: { height: 0.85, floor: 1.08 } },
-      { at: 4200, pose: { height: 0.55, floor: 0.82 } },
-      { at: 6000, pose: { height: 0.55, floor: 0.82 } },
-    ];
-    const events = kinds(read(reader, walk));
-    expect(events.filter((e) => e === "jump" || e === "duck")).toEqual([]);
-    expect(kinds(read(reader, MOVES.jump({ height: 0.55, floor: 0.82 })))).toContain("jump");
+    read(reader, [{ at: 0, pose: { lift: 0.1 } }], { smooth: false });
+    const { head, line, amounts } = reader.current;
+    expect(head.rise).toBeCloseTo(0.1 / 0.34, 1);
+    expect(amounts.rise).toBe(head.rise);
+    expect(amounts.drop).toBe(0);
+    expect(line!.top).toBeLessThan(line!.y);
   });
 });

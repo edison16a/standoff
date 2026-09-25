@@ -6,7 +6,7 @@ import poster from "./media/poster.jpg";
 export const info: GameInfo = {
   id: "subway-surfers",
   title: "Subway Surfers",
-  tagline: "Run the rails with your whole body. Jump, duck and dodge for a high score.",
+  tagline: "Run the rails from the waist up. Jump, roll and dodge for a high score.",
   status: "ready",
   players: [1, 2],
   color: "#eab308",

@@ -1,5 +1,5 @@
 import { lerp } from "./geometry";
-import type { ArmSpec, PoseSpec } from "./synthetic";
+import { DEFAULT_HEAD, DEFAULT_HEIGHT, type ArmSpec, type PoseSpec } from "./synthetic";
 
 /** One key in a scripted movement: this pose, this many milliseconds from the start. */
 export interface PoseKey {
@@ -7,14 +7,15 @@ export interface PoseKey {
   pose: PoseSpec;
 }
 
-const NUMBERS = ["x", "height", "floor", "lift", "crouch", "bow", "lean", "visibility"] as const;
+const NUMBERS = ["x", "height", "head", "near", "lift", "crouch", "bow", "lean", "visibility"] as const;
 const ARM_NUMBERS = ["guard", "punch", "wide", "hook", "raise"] as const;
 
-/** What a missing number means: standing tall in the middle, arms down. */
+/** What a missing number means: standing tall in the middle, waist up, arms down. */
 const DEFAULTS: Required<Pick<PoseSpec, (typeof NUMBERS)[number]>> = {
   x: 0.5,
-  height: 0.7,
-  floor: 0.95,
+  height: DEFAULT_HEIGHT,
+  head: DEFAULT_HEAD,
+  near: 1,
   lift: 0,
   crouch: 0,
   bow: 0,
@@ -41,6 +42,8 @@ export function poseAt(keys: readonly PoseKey[], t: number, base: PoseSpec = {})
 export function blendPoses(a: PoseSpec, b: PoseSpec, t: number): PoseSpec {
   const out: PoseSpec = {};
   for (const name of NUMBERS) out[name] = lerp(a[name] ?? DEFAULTS[name], b[name] ?? DEFAULTS[name], t);
+  const legs = t < 0.5 ? a.legs : b.legs;
+  if (legs !== undefined) out.legs = legs;
   out.left = blendArms(a.left, b.left, t);
   out.right = blendArms(a.right, b.right, t);
   return out;
@@ -64,8 +67,8 @@ export function timelineLength(keys: readonly PoseKey[]): number {
 export const MOVES = {
   jump: (base: PoseSpec = {}): PoseKey[] => [
     { at: 0, pose: base },
-    { at: 180, pose: { ...base, lift: 0.28 } },
-    { at: 420, pose: { ...base, lift: 0.28 } },
+    { at: 180, pose: { ...base, lift: 0.2 } },
+    { at: 420, pose: { ...base, lift: 0.2 } },
     { at: 600, pose: base },
   ],
   duck: (base: PoseSpec = {}, holdMs = 500): PoseKey[] => [
@@ -74,7 +77,8 @@ export const MOVES = {
     { at: 200 + holdMs, pose: { ...base, crouch: 0.6, bow: 0.3 } },
     { at: 400 + holdMs, pose: base },
   ],
-  step: (base: PoseSpec = {}, dx = 0.12): PoseKey[] => [
+  /** `dx` in picture widths. The default is about one shoulder width for a player close up. */
+  step: (base: PoseSpec = {}, dx = 0.2): PoseKey[] => [
     { at: 0, pose: base },
     { at: 350, pose: { ...base, x: (base.x ?? 0.5) + dx } },
   ],

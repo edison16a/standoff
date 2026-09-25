@@ -105,8 +105,15 @@ export function visibilityOf(landmarks: readonly Landmark[], indices: readonly n
   return indices.length ? sum / indices.length : 0;
 }
 
-/** The points a body needs before the kit trusts it: the head, shoulders and hips. */
-export const CORE_POINTS = [LM.nose, LM.leftShoulder, LM.rightShoulder, LM.leftHip, LM.rightHip] as const;
+/**
+ * The points a body needs before the kit trusts it: the head and the
+ * shoulders. Players stand waist up in front of a computer camera, so
+ * nothing from the hips down is ever needed.
+ */
+export const UPPER_POINTS = [LM.nose, LM.leftShoulder, LM.rightShoulder] as const;
 
-/** Knees and ankles as well, for games that need the whole body in view. */
-export const LEG_POINTS = [LM.leftKnee, LM.rightKnee, LM.leftAnkle, LM.rightAnkle] as const;
+/** The face points averaged into one steady head point. */
+export const FACE_POINTS = [LM.nose, LM.leftEye, LM.rightEye, LM.leftEar, LM.rightEar] as const;
+
+/** The hips and everything below. Used only when seen, never required. */
+export const LOWER_START = LM.leftHip;

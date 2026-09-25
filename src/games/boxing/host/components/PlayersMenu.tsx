@@ -17,7 +17,7 @@ export function PlayersMenu() {
         <h1 className="bx-logo">
           <span>BOXING</span>
         </h1>
-        <p className="bx-menu__lead">Your body is the controller. Stand back from the camera, put your gloves up and fight.</p>
+        <p className="bx-menu__lead">Your body is the controller, from the waist up. Put your gloves up and fight.</p>
       </header>
       <div className="bx-menu__choices">
         <button type="button" className="bx-choice" onClick={() => session.choosePlayers(1)}>
@@ -39,7 +39,7 @@ export function PlayersMenu() {
           <strong>Block</strong> with both gloves up by your face
         </li>
         <li>
-          <strong>Duck</strong> or lean to make punches miss
+          <strong>Duck</strong> or slip to the side to make punches miss
         </li>
         <li>
           <strong>Counter</strong> with a left jab after a block or a dodge

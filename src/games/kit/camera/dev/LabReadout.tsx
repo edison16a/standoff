@@ -53,10 +53,10 @@ export function LabReadout({ kit }: { kit: CameraKit }) {
           <div key={i} className="cam-lab__player" style={{ borderColor: playerColor(i + 1) }} data-slot={i + 1}>
             <strong>Player {i + 1}</strong> {state.present ? "in view" : "away"} {state.calibrated ? "" : "(not calibrated)"}
             <br />
-            lane {state.lane} ({state.offset.toFixed(2)}) | {state.jumping ? "JUMP" : "ground"} | {state.ducking ? "DUCK" : "up"} | lean{" "}
+            lane {state.lane} (side {state.head.side.toFixed(2)}) | {state.jumping ? "JUMP" : "ground"} | {state.ducking ? "DUCK" : "up"} | lean{" "}
             {state.lean} | {state.guard ? "GUARD" : "open"}
             <br />
-            rise {state.amounts.rise.toFixed(2)} drop {state.amounts.drop.toFixed(2)} lean {state.amounts.lean.toFixed(2)}
+            head {state.head.rise.toFixed(2)} lean {state.amounts.lean.toFixed(2)}
           </div>
         ) : null,
       )}

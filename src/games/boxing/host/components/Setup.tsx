@@ -36,7 +36,7 @@ function SetupFor({ kit }: { kit: CameraKit }) {
       ) : (
         <div className="bx-setup__loader">
           <ModelLoader kit={kit} title="Getting the camera ready">
-            <p className="bx-setup__hint">Stand about two metres back, with your head and hands in view.</p>
+            <p className="bx-setup__hint">Waist up is enough. Stand back far enough that your gloves stay in view.</p>
           </ModelLoader>
         </div>
       )}

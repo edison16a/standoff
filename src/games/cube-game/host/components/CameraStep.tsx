@@ -30,13 +30,13 @@ export function CameraStep({ kit }: { kit: CameraKit }) {
   );
 }
 
-/** Stand in your spot, stand tall and still, then one jump to check the camera sees it. */
+/** Stand in your spot, waist up in the picture, stand tall and still, then one jump to check the camera sees it. */
 export function CalibrateStep({ kit }: { kit: CameraKit }) {
   const session = useSession();
   const extra = useMemo(
     () => ({
       title: "Jump once to check",
-      text: "A real jump, feet off the floor. That is the only move in the game.",
+      text: "Your head going up over its line is a jump. That is the only move in the game.",
       render: ({ done }: { done: () => void }) => <JumpCheck kit={kit} onJump={() => session.sound.sfx.tick(true)} done={done} />,
     }),
     [kit, session],

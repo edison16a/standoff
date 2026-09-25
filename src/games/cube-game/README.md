@@ -6,8 +6,8 @@ A rhythm platformer in the spirit of Geometry Dash, played with your body in fro
 
 1. Host Cube Game from the home screen. No phones are needed.
 2. On the level select, pick a level with the mouse, choose 1 or 2 players, and tick Practice if you like.
-3. Press **Play**. Allow the camera, stand in your outline, stand tall and still while your ring fills, then jump once so the game can see it.
-4. Jump on the beat. That is the only move.
+3. Press **Play**. Allow the camera and stand in your outline. The camera only needs you from the waist up, so there is no need to step back until your feet show. Stand tall and still while your ring fills: that sets your head line. Then jump once so the game can see it.
+4. Jump on the beat. Your head going up over its line is a jump, and that is the only move.
 
 **Play with the keyboard** skips the camera: Space (or W) jumps for player 1, Enter (or the up arrow) for player 2. Space also works alongside the camera, for testing and for anyone who cannot jump.
 
@@ -50,7 +50,7 @@ If a player steps out of the camera's view, even while crashed or before the sta
 
 ### Reading the jump
 
-The camera kit reads the jump, tuned a touch quicker than its default (`host/jump-tuning.ts`): on the kit's sample jump it fires about 70 ms after take off, once per jump. A press is timed by when it happened, the camera frame or the key's own time stamp, not by when the next frame gets to it, so a slow frame never moves a jump. Camera jumps closer than 260 ms apart count as one. Keys are never read twice, so quick taps on a key all count.
+The camera kit reads the jump from the head line it sets at calibration. The head going up over the top of its band quickly is a jump, measured in shoulder widths so it works near or far from the camera, and the line follows a player who steps nearer or further. Only the head and shoulders need to be in the picture. Cube Game lowers the top of the band to a quarter of a shoulder width, about 9 cm, so the beat never waits (`host/jump-tuning.ts`). On the kit's sample jump it fires about 100 ms after take off, once per jump. Rising onto the toes, a quick bob, a bow and a slow stretch never count. Every mode uses the same jump: the cube hops, the UFO flaps and the ball flips. A press is timed by when it happened, the camera frame or the key's own time stamp, not by when the next frame gets to it, so a slow frame never moves a jump. Camera jumps closer than 260 ms apart count as one. Keys are never read twice, so quick taps on a key all count.
 
 ### Testing
 

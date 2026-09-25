@@ -85,7 +85,7 @@ const until = Date.now() + (plan.seconds + 6) * 1000;
 let shots = 0;
 while (Date.now() < until) {
   await page.waitForTimeout(250);
-  sides.push(await page.evaluate(() => [1, 2].map((slot) => window.__cameraKit.body(slot)?.hips.x ?? null)));
+  sides.push(await page.evaluate(() => [1, 2].map((slot) => window.__cameraKit.body(slot)?.head.x ?? null)));
   if (shots < 3 && sides.length % 24 === 12) await shot(page, `3-play-${++shots}`);
 }
 const events = await page.evaluate(() => window.__cameraKit.takeEvents());

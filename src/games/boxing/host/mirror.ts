@@ -7,8 +7,8 @@ import { FOREARM, UPPER_ARM } from "../render/models/arm";
 const BOXER_ARM = UPPER_ARM + FOREARM;
 /** A lean this far, in torso lengths, tips the boxer all the way over. */
 const FULL_LEAN = 0.45;
-/** A drop this far, in torso lengths, is a full duck. */
-const FULL_CROUCH = 0.36;
+/** A drop of the head this far under its line, in shoulder widths, is a full duck. The kit starts a duck at 0.4. */
+const FULL_CROUCH = 0.6;
 const POINTS: Record<Hand, [number, number, number]> = {
   left: [LM.leftShoulder, LM.leftElbow, LM.leftWrist],
   right: [LM.rightShoulder, LM.rightElbow, LM.rightWrist],
@@ -18,13 +18,14 @@ const POINTS: Record<Hand, [number, number, number]> = {
  * Turns a player's body from the camera into their boxer's arms, so the
  * boxer copies them like a mirror: the player's left glove is the boxer's
  * left glove, on the left of the screen. The camera's world points are
- * metres around the hips, y down and nearer the camera smaller z; the
+ * metres around the hips, even when the hips are below the picture, y down and nearer the camera smaller z; the
  * boxer's own space has x to its left, y up and z toward the opponent,
  * so reaching at the camera reaches at the opponent. Each arm is resized
  * to the boxer's arm, so a short player and a tall one both reach full
- * extension.
+ * extension. `lean` is the slip in torso lengths, the kit's lean unless
+ * the game reads its own.
  */
-export function mirrorFrom(body: Body | null, moves: MoveState | null, out?: MirrorInput): MirrorInput | null {
+export function mirrorFrom(body: Body | null, moves: MoveState | null, out?: MirrorInput, lean = moves?.amounts.lean ?? 0): MirrorInput | null {
   if (!body) return null;
   const result: MirrorInput = out ?? { reach: { left: null, right: null }, elbow: { left: null, right: null }, lean: 0, crouch: 0 };
   for (const hand of ["left", "right"] as const) {
@@ -43,8 +44,8 @@ export function mirrorFrom(body: Body | null, moves: MoveState | null, out?: Mir
     result.reach[hand] = toBoxer(W.x - S.x, W.y - S.y, W.z - S.z, k, result.reach[hand]);
     result.elbow[hand] = toBoxer(E.x - S.x, E.y - S.y, E.z - S.z, k, result.elbow[hand]);
   }
-  // The kit measures a lean as the head right of the hips; the boxer leans toward its own left when positive.
-  result.lean = clamp(-(moves?.amounts.lean ?? 0) / FULL_LEAN, -1, 1);
+  // A lean is the head right of the hips, or of where the hips would be below the picture; the boxer leans toward its own left when positive.
+  result.lean = clamp(-lean / FULL_LEAN, -1, 1);
   result.crouch = clamp((moves?.amounts.drop ?? 0) / FULL_CROUCH, 0, 1);
   return result;
 }

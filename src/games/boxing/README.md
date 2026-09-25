@@ -8,7 +8,7 @@ A 3D boxing match played with your body in front of the computer's camera. There
 
 1. **Choose players.** One player fights the computer. Two players stand side by side in front of one camera, player 1 on the left of the picture. Pick with the mouse.
 2. **Get the camera ready.** The kit asks for the camera and downloads the body tracking model with a progress bar. Every problem, from a blocked camera to no internet, says what to do and has a Try again button.
-3. **Calibrate.** Step into your outline, stand tall while your ring fills, then show your guard (both gloves up by your face) and throw one jab. Skip this step is there for a camera that struggles.
+3. **Calibrate.** The camera only needs you from the waist up: your head, shoulders and gloves. Step into your outline and stand tall while your ring fills, which sets your head line, then show your guard (both gloves up by your face) and throw one jab. Skip this step is there for a camera that struggles.
 4. **Choose your boxer.** Lean left or right to browse, then drop your hands and hold your guard up to lock in. A guard still up from calibration does not count. The mouse works too. With one player the computer takes a different boxer.
 5. **Fight.** Three rounds of 60 seconds. The boxers move and circle by themselves; you only fight.
 
@@ -18,8 +18,8 @@ A 3D boxing match played with your body in front of the computer's camera. There
 | Cross | Punch straight with your right hand |
 | Hook | Swing a fist in across your face with the elbow up |
 | Block | Both gloves up in front of your face. Almost no damage gets through |
-| Duck | Dip your head and shoulders. Every punch misses |
-| Slip | Lean to one side. Straight punches miss, hooks still land |
+| Duck | Dip your head under its line. Every punch misses |
+| Slip | Move your head to one side, by leaning or by shifting your shoulders. Straight punches miss, hooks still land |
 | Counter | After a block, a duck or a slip, a left jab in the next moment hits hard and staggers |
 | Get up | When you are knocked down, drop your gloves and raise both again before the referee reaches ten |
 
@@ -34,7 +34,7 @@ Each player's view sits behind and out past their boxer's right shoulder, so the
 ## What was built
 
 * `engine/` pure fight logic with tests: the seeded match and its referee (rounds, the clock, punches judged as they land, blocks, ducks and slips, counter windows, stagger, stamina, knockdowns with a count, the ten point must scorecards), the boxers' footwork, and the computer boxer.
-* `host/` the session on the computer: the camera kit, the flow from choosing players to the results, the fight driver that steps the match and pauses it for a player out of view, the player's defence and punches from the camera, the mirrored arms, choosing boxers by leaning, the overlay's data, and records against the computer kept in this browser (`localStorage`, guarded for private windows).
+* `host/` the session on the computer: the camera kit, the flow from choosing players to the results, the fight driver that steps the match and pauses it for a player out of view, the player's defence and punches from the camera (a duck is the kit's head dropping under its line, and a slip is the kit's lean or the head shifting quickly sideways from where it has been resting, in `slip.ts`), the mirrored arms, choosing boxers by leaning, the overlay's data, and records against the computer kept in this browser (`localStorage`, guarded for private windows).
 * `render/` three.js:
   * `models/` four sculpted boxers (Rocco "The Hammer" Vance, Marcus "Night Train" Cole, Kenji "Lightning" Sato, Diego "El Toro" Reyes) with muscle, faces painted on a canvas that bruise and swell with damage, sweat that builds through the rounds, satin trunks with names on the waistband, laced gloves and boots, and the referee in shirt and bow tie.
   * `rig/` and `anim/` joints posed every frame with two bone inverse kinematics. The player's own arms, read from the camera, drive their boxer's arms like a mirror, and a detected punch is boosted into a full powered strike at the opponent's face. Planted feet that step as the boxers circle, head snaps, stagger, a knockdown fall, corner rests, a victory pose, and a referee who counts with his arm.

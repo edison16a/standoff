@@ -5,7 +5,8 @@ import { defenseFrom } from "./player-input";
 import { mirrorFrom } from "./mirror";
 import { FOREARM, UPPER_ARM } from "../render/models/arm";
 
-const bodyOf = (spec: Parameters<typeof syntheticPose>[0]) => deriveBody(syntheticPose(spec), 0, 16 / 9, null);
+/** A little back from the camera, so arms raised overhead stay in the picture. */
+const bodyOf = (spec: Parameters<typeof syntheticPose>[0]) => deriveBody(syntheticPose({ height: 1.2, ...spec }), 0, 16 / 9, null);
 
 describe("mirrorFrom", () => {
   it("reaches the boxer's glove toward the opponent when the player punches at the camera", () => {
@@ -24,6 +25,15 @@ describe("mirrorFrom", () => {
     const mirror = mirrorFrom(bodyOf({ left: { raise: 1 }, right: {} }), null)!;
     expect(mirror.reach.left!.y).toBeGreaterThan(0.3);
     expect(mirror.reach.right!.y).toBeLessThan(-0.3);
+  });
+
+  it("dips the boxer as far as the head drops under its line, and leans it the other way on screen", () => {
+    const moves = { amounts: { rise: 0, drop: 0.45, lean: 0.2 } } as unknown as Parameters<typeof mirrorFrom>[1];
+    const mirror = mirrorFrom(bodyOf({}), moves)!;
+    expect(mirror.crouch).toBeGreaterThan(0.6);
+    expect(mirror.crouch).toBeLessThan(1);
+    expect(mirror.lean).toBeLessThan(0);
+    expect(mirrorFrom(bodyOf({}), moves, undefined, -0.45)!.lean).toBe(1);
   });
 
   it("is null with nobody there", () => {
