@@ -2,7 +2,7 @@ import { ComputerBoxer } from "../engine/ai";
 import type { MatchEvent } from "../engine/events";
 import { Match } from "../engine/match";
 import { seeded } from "../engine/random";
-import { styleFor, type DefenseInput, type FighterId, type Hand } from "../engine/types";
+import { styleFor, type DefenseInput, type FighterId, type Hand, type Level } from "../engine/types";
 import { REPLAY_LENGTH } from "../render/replay";
 
 /** The knockout replay, then a moment before the results. */
@@ -25,6 +25,10 @@ export interface DriverOptions {
   slots: readonly [number | null, number | null];
   roundMs?: number;
   introMs?: number;
+  /** Each boxer's footwork style, by the id of the boxer chosen. */
+  styles?: readonly [string, string];
+  /** Touch gloves before each round, on unless a test turns it off. */
+  touch?: boolean;
 }
 
 /**
@@ -48,7 +52,7 @@ export class FightDriver {
   private readonly listeners = new Set<(event: MatchEvent) => void>();
 
   constructor(options: DriverOptions) {
-    this.match = new Match({ seed: options.seed, roundMs: options.roundMs, introMs: options.introMs });
+    this.match = new Match({ seed: options.seed, roundMs: options.roundMs, introMs: options.introMs, styles: options.styles, touch: options.touch });
     this.slots = options.slots;
     const cpu = options.slots.findIndex((slot) => slot === null);
     this.computer = cpu >= 0 ? new ComputerBoxer(cpu as FighterId, seeded(options.seed * 7 + 3)) : null;
@@ -79,10 +83,10 @@ export class FightDriver {
     if (id !== null) this.match.setInput(id, input);
   }
 
-  punch(slot: number, hand: Hand, straight: boolean, power: number): boolean {
+  punch(slot: number, hand: Hand, straight: boolean, power: number, level: Level = "head"): boolean {
     const id = this.fighterFor(slot);
     if (id === null || !this.live) return false;
-    const thrown = this.match.throwPunch(id, hand, styleFor(hand, straight), power);
+    const thrown = this.match.throwPunch(id, hand, styleFor(hand, straight), power, 0, level);
     if (thrown) this.flush();
     return thrown;
   }

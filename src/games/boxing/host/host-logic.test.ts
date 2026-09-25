@@ -68,8 +68,8 @@ describe("records against the computer", () => {
 describe("banners", () => {
   it("shows each player their own blocks and dodges, and nothing for the computer", () => {
     const banners = new Banners();
-    banners.onEvent({ type: "block", fighter: 1, hand: "left", style: "jab", target: 0 }, 0, [true, false]);
-    banners.onEvent({ type: "block", fighter: 0, hand: "left", style: "jab", target: 1 }, 0, [true, false]);
+    banners.onEvent({ type: "block", fighter: 1, hand: "left", style: "jab", level: "head", target: 0 }, 0, [true, false]);
+    banners.onEvent({ type: "block", fighter: 0, hand: "left", style: "jab", level: "head", target: 1 }, 0, [true, false]);
     expect(banners.current(100).map((b) => [b.text, b.fighter])).toEqual([["BLOCKED", 0]]);
     expect(banners.current(5000)).toEqual([]);
   });
@@ -115,7 +115,7 @@ describe("the fight driver", () => {
   });
 
   it("turns a player's punch into a jab or a cross", () => {
-    const driver = new FightDriver({ seed: 3, slots: [1, 2], introMs: 100 });
+    const driver = new FightDriver({ seed: 3, slots: [1, 2], introMs: 100, touch: false });
     const events: string[] = [];
     driver.listen((event) => {
       if (event.type === "throw") events.push(event.style);
