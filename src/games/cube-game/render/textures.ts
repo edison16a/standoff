@@ -45,14 +45,24 @@ export function cubeFace(main: number, trim: number, glow: boolean): THREE.Canva
   return texture(element);
 }
 
-/** The ball's skin: a ring and a cross, so its rolling is easy to see. */
-export function ballSkin(main: number, trim: number): THREE.CanvasTexture {
+/**
+ * The ball's skin: bold wedges in the two colours split by dark seams,
+ * so its roll is easy to see and it keeps its shape against a bright sky.
+ * `glow` lights the trim fully and the body softly, as on the cube.
+ */
+export function ballSkin(main: number, trim: number, glow: boolean): THREE.CanvasTexture {
   const [element, g] = canvas(256);
-  g.fillStyle = css(main);
-  g.fillRect(0, 0, 256, 256);
-  g.fillStyle = css(trim);
-  for (let i = 0; i < 4; i++) g.fillRect(i * 64 + 20, 0, 24, 256);
-  g.fillRect(0, 116, 256, 24);
+  for (let i = 0; i < 4; i++) {
+    g.fillStyle = css(i % 2 ? trim : main);
+    g.globalAlpha = glow ? (i % 2 ? 1 : 0.35) : 1;
+    g.fillRect(i * 64, 0, 64, 256);
+  }
+  g.globalAlpha = 1;
+  g.fillStyle = "#10091f";
+  for (let i = 0; i < 4; i++) g.fillRect(i * 64 - 5, 0, 10, 256);
+  g.fillRect(0, 120, 256, 16);
+  g.fillRect(0, 0, 256, 10);
+  g.fillRect(0, 246, 256, 10);
   return texture(element);
 }
 

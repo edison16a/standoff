@@ -3,6 +3,9 @@ import type { PlayerState } from "../engine/player";
 import type { Mode } from "../engine/types";
 import { ballSkin, cubeFace, glowSprite } from "./textures";
 
+/** The dark outline every form wears, as the original's icons do, so it reads against any sky. */
+const OUTLINE = 0x0a0418;
+
 export interface Skin {
   main: number;
   trim: number;
@@ -64,10 +67,27 @@ export class Avatar {
     tilt.add(saucer, band, rider, dome);
     ufo.add(tilt);
 
-    const skinMap = ballSkin(skin.main, skin.trim);
-    const ballMaterial = new THREE.MeshStandardMaterial({ map: skinMap, emissiveMap: skinMap, emissive: 0xffffff, emissiveIntensity: 0.6, roughness: 0.4 });
+    const ballMaterial = new THREE.MeshStandardMaterial({
+      map: ballSkin(skin.main, skin.trim, false),
+      emissiveMap: ballSkin(skin.main, skin.trim, true),
+      emissive: 0xffffff,
+      emissiveIntensity: 0.55,
+      roughness: 0.35,
+    });
     const sphere = new THREE.SphereGeometry(0.46, 32, 20);
     const ball = new THREE.Mesh(sphere, ballMaterial);
+
+    // A back face shell a little bigger than each form draws its outline, turning with it.
+    const outline = new THREE.MeshBasicMaterial({ color: OUTLINE, side: THREE.BackSide });
+    const shell = (geometry: THREE.BufferGeometry, scale: number, into: THREE.Object3D, at?: THREE.Object3D) => {
+      const mesh = new THREE.Mesh(geometry, outline);
+      mesh.scale.setScalar(scale);
+      if (at) mesh.position.copy(at.position);
+      into.add(mesh);
+    };
+    shell(box, 1.12, cube);
+    shell(sphere, 1.13, ball);
+    shell(saucerGeometry, 1.08, tilt, saucer);
 
     this.forms = { cube, ufo, ball };
     this.halo = new THREE.Sprite(
@@ -75,7 +95,7 @@ export class Avatar {
     );
     this.halo.scale.setScalar(2.2);
     this.group.add(cube, ufo, ball, this.halo);
-    this.materials.push(face, hull, rim, glass, ballMaterial, this.halo.material);
+    this.materials.push(face, hull, rim, glass, ballMaterial, outline, this.halo.material);
     this.geometries.push(box, saucerGeometry, rimGeometry, domeGeometry, sphere);
     if (ghost) {
       for (const material of this.materials) {
