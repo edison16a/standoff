@@ -24,11 +24,11 @@ export function callout(e: MatchEvent, m: Match, nameOf: (id: number) => string,
       const name = who(e.id);
       if (e.kind === "dunk") {
         const style = CHARACTERS[m.athletes[e.id]!.character].dunkName;
-        return { banner: { text: pick(["DUNK!", "SLAM!", "POSTERIZED!"], n), sub: `${name}, ${style.toLowerCase()}`, tone: "gold" }, say: pick([`${name} throws it down!`, "Oh, what a slam!", `${name} with the jam!`], n) };
+        return { banner: { text: pick(["DUNK!", "SLAM!", "POSTERIZED!"], n), sub: `${name}, ${style.toLowerCase()}`, tone: "gold" }, say: pick([`Dunk! ${name} throws it down!`, "Oh, what a dunk!", `Dunk! ${name} with the jam!`], n) };
       }
       if (e.points === 3) {
         const text = e.outcome === "swish" ? pick(["SPLASH!", "FROM DOWNTOWN!"], n) : "THREE!";
-        return { banner: { text, sub: name, tone: tone(e.id) }, say: e.outcome === "swish" ? pick([`${name} from downtown!`, "Bang! Nothing but net!", "Splash!"], n) : pick([`${name} for three!`, "Three!"], n) };
+        return { banner: { text, sub: name, tone: tone(e.id) }, say: e.outcome === "swish" ? pick([`Three! ${name} from downtown!`, "Bang! Nothing but net!", "Splash! Three!"], n) : pick([`${name} for three!`, "Three!"], n) };
       }
       const words: Record<string, [string, string]> = {
         swish: ["SWISH!", "Swish!"],

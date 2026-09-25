@@ -103,6 +103,11 @@ export class Sfx {
     }
   }
 
+  /** The shot clock's beep for each of the last seconds, higher as it runs out. */
+  clockBeep(left: number): void {
+    tone(this.engine, this.out, this.at, { type: "square", frequency: left <= 2 ? 1320 : 990, attack: 0.003, decay: 0.09, peak: 0.05 });
+  }
+
   countdown(count: number): void {
     tone(this.engine, this.out, this.at, { type: "square", frequency: 587, attack: 0.005, decay: 0.22, peak: 0.1 + (3 - count) * 0.02 });
   }

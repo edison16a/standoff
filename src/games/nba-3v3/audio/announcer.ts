@@ -10,18 +10,19 @@ export class Announcer {
   private priority = 0;
   private readonly synth: SpeechSynthesis | null;
   private muted = false;
+  private readonly choose: () => void;
 
   constructor() {
     this.synth = typeof window !== "undefined" && "speechSynthesis" in window ? window.speechSynthesis : null;
-    const choose = () => {
+    this.choose = () => {
       const voices = this.synth?.getVoices() ?? [];
       // A deep English voice sounds most like an arena announcer.
       const english = voices.filter((v) => v.lang.startsWith("en"));
       const liked = /daniel|david|alex|fred|guy|male|google uk english male|arthur|aaron/i;
       this.voice = english.find((v) => liked.test(v.name)) ?? english[0] ?? null;
     };
-    choose();
-    this.synth?.addEventListener?.("voiceschanged", choose);
+    this.choose();
+    this.synth?.addEventListener?.("voiceschanged", this.choose);
   }
 
   /**
@@ -50,6 +51,7 @@ export class Announcer {
   }
 
   stop(): void {
+    this.synth?.removeEventListener?.("voiceschanged", this.choose);
     this.synth?.cancel();
   }
 }

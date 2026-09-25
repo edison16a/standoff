@@ -21,6 +21,9 @@ export class SoundDirector {
   private oohed = false;
   private chantedAt = -99;
   private organAt = -99;
+  private beeped = 99;
+  /** Delayed music cues, cleared on stop so nothing plays after the game has closed. */
+  private readonly timers = new Set<ReturnType<typeof setTimeout>>();
 
   constructor(private readonly engine: AudioEngine) {
     this.sfx = new Sfx(engine);
@@ -43,7 +46,7 @@ export class SoundDirector {
       this.crowd.claps(30, 2.5);
     } else if (phase === "over") {
       this.music.fanfare();
-      setTimeout(() => this.phase === "over" && this.music.play(true), 3500);
+      this.later(3500, () => this.phase === "over" && this.music.play(true));
     }
   }
 
@@ -53,6 +56,10 @@ export class SoundDirector {
     const late = m.shotClock < 5 && m.ball.mode === "held" ? 0.25 : 0;
     const close = m.gamePoint[0] || m.gamePoint[1] ? 0.2 : 0;
     this.crowd.setLevel(0.3 + late + close);
+    // The shot clock beeps through its last five seconds while the ball is in hand.
+    const left = Math.ceil(m.shotClock);
+    if (left <= 5 && left > 0 && left < this.beeped && m.ball.mode !== "flight") this.sfx.clockBeep(left);
+    this.beeped = left;
     if (m.shotClock < 6 && m.shotClock > 4 && m.time - this.chantedAt > 20) {
       this.chantedAt = m.time;
       this.crowd.chant();
@@ -104,7 +111,7 @@ export class SoundDirector {
         if (e.kind !== "dunk") this.crowd.cheer(e.points === 3 ? 0.85 : 0.55);
         if (m.time - this.organAt > 30 && e.kind !== "dunk") {
           this.organAt = m.time;
-          setTimeout(() => this.music.organ(), 1400);
+          this.later(1400, () => this.music.organ());
         }
         return;
       case "miss":
@@ -152,7 +159,18 @@ export class SoundDirector {
     this.sfx.green();
   }
 
+  private later(ms: number, run: () => void): void {
+    const timer = setTimeout(() => {
+      this.timers.delete(timer);
+      run();
+    }, ms);
+    this.timers.add(timer);
+  }
+
   stop(): void {
+    for (const timer of this.timers) clearTimeout(timer);
+    this.timers.clear();
+    this.phase = null;
     this.music.stop();
     this.crowd.stop();
     this.announcer.stop();
