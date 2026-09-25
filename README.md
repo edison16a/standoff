@@ -27,7 +27,7 @@ Play it at [standoff-five.vercel.app](https://standoff-five.vercel.app).
 
 ## Screenshots
 
-The home screen works like a console menu. A row of square tiles shows each game's icon, and the chosen one grows and gets a ring in its own colour. A looping clip of the game really being played fills the screen behind, with its name, what it is, how many can play and a Host Game button below the row. Opening the app picks a game at random. Click a tile or use the left and right arrow keys to choose, and press Enter, click the chosen tile again or press Host Game to start. A game still being built says Coming soon.
+The home screen works like a console menu. A row of square tiles shows each game's icon, and the chosen one grows and gets a ring in its own colour. A looping clip of the game really being played fills the screen behind, with its name, what it is, how many can play and a Host Game button below the row. Opening the app starts on the first game. Click a tile or use the left and right arrow keys to choose, and press Enter, click the chosen tile again or press Host Game to start. A game still being built says Coming soon.
 
 <img src="docs/screenshots/home-light.png" alt="The home screen in light mode, with Fencing chosen in the row of game tiles and its art filling the background" width="100%" />
 

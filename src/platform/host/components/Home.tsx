@@ -12,13 +12,13 @@ import { GameTiles } from "./GameTiles";
 import { useHostRoom } from "./host-context";
 
 /**
- * The game chosen in this tab. Opening the app picks one at random, so
- * every game gets seen. Coming back from a room keeps the one you had.
+ * The game chosen in this tab. Opening the app always starts on the first
+ * game. Coming back from a room keeps the one you had.
  */
 let lastChoice: number | null = null;
 
 function firstChoice(): number {
-  lastChoice ??= Math.floor(Math.random() * GAMES.length);
+  lastChoice ??= 0;
   return lastChoice;
 }
 
