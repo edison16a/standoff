@@ -1,7 +1,7 @@
 import { Sfx } from "@/games/fencing/audio/sfx";
 import type { CharacterId } from "@/games/fencing/characters";
 import { MotionPipeline, type ControllerFrame } from "@/games/fencing/motion/motion-pipeline";
-import type { Sensitivity, StrikeReport } from "@/games/fencing/motion/strike-detector";
+import type { Sensitivity, StrikeReport } from "@/games/fencing/motion/gesture";
 import type { Slot } from "@/games/fencing/players";
 import { hostMessageSchema, type HostMessage, type PhoneMessage, type StrikeAction } from "@/games/fencing/protocol";
 import { clampTuning, DEFAULT_TUNING } from "@/games/fencing/tuning";
@@ -136,8 +136,8 @@ export class FencingPhone {
   }
 
   private applySensitivity(): void {
-    const own = store.getState().sensitivity ?? { jab: 1, parry: 1 };
-    this.pipeline.setSensitivity(this.practising ? { jab: LISTEN_LEVEL, parry: LISTEN_LEVEL } : own);
+    const own = store.getState().sensitivity ?? { strike: 1 };
+    this.pipeline.setSensitivity(this.practising ? { strike: LISTEN_LEVEL } : own);
   }
 
   private onRoom(event: PhoneRoomEvent): void {
