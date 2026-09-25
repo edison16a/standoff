@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import type { MatchEvent } from "../../engine/events";
+import { crowdFade } from "../hit-flash";
 import type { HitSound } from "../../engine/moves";
 import { Rng } from "../../engine/rng";
 import type { MatchState } from "../../engine/types";
@@ -9,6 +10,8 @@ import { FX, type FighterColours } from "../colors";
 import { Confetti } from "./confetti";
 import { Particles } from "./particles";
 import { Pulses } from "./pulses";
+
+type HitEvent = Extract<MatchEvent, { type: "hit" }>;
 
 const SPARK: Record<HitSound, string> = { punch: "#fff3b0", kick: "#ffd166", slash: "#e0f2fe", magic: "#d8b4fe", slam: "#fb923c" };
 
@@ -47,10 +50,11 @@ export class Effects {
     return this.colours[id]?.colour ?? "#ffffff";
   }
 
-  onEvent(e: MatchEvent, state: MatchState): void {
+  /** `struck` is how many hits landed this step, so a crowd hit at once sparks softer. */
+  onEvent(e: MatchEvent, state: MatchState, struck = 1): void {
     switch (e.type) {
       case "hit":
-        return this.hit(e.x, e.y, e.sound, e.damage, e.heavy, e.speed, state.fighters[e.attacker]?.facing ?? 1);
+        return this.hit(e, state.fighters[e.attacker]?.facing ?? 1, crowdFade(struck));
       case "block":
         this.pulses.spawn({ kind: "ring", x: e.x, y: e.y, colour: "#67e8f9", from: 0.6, to: 1.8, life: 0.25 });
         return;
@@ -133,13 +137,14 @@ export class Effects {
     this.confetti.clear();
   }
 
-  private hit(x: number, y: number, sound: HitSound, damage: number, heavy: boolean, speed: number, facing: number): void {
+  private hit(e: HitEvent, facing: number, fade: number): void {
+    const { x, y, sound, damage, heavy, speed } = e;
     const colour = SPARK[sound];
     const size = 0.9 + damage * 0.07 + (heavy ? 0.6 : 0);
-    this.pulses.spawn({ kind: "star", x, y, colour, from: size * 0.6, to: size * 1.3, life: heavy ? 0.22 : 0.15, angle: this.roll() * 3, spin: 2 });
-    if (heavy) this.pulses.spawn({ kind: "ring", x, y, colour: colour, from: 0.4, to: size * 1.8, life: 0.3, opacity: 0.6 });
-    if (sound === "slash") this.pulses.spawn({ kind: "streak", x, y, colour: "#ffffff", from: size * 2.2, to: size * 2.8, life: 0.18, thin: 0.08, angle: (this.roll() - 0.5) * 1.2 + (facing > 0 ? -0.5 : 0.5) });
-    this.glow.burst({ x, y, z: 0.3, count: Math.round(8 + damage * 1.6), colour, speed: [3, 7 + speed * 0.3], up: 0.5, life: [0.15, 0.4], size: [0.08, 0.16], gravity: 10, drag: 0.1, push: { x: facing * 2, y: 0, z: 0 } }, this.roll);
+    this.pulses.spawn({ kind: "star", x, y, colour, from: size * 0.6, to: size * 1.3, life: heavy ? 0.22 : 0.15, angle: this.roll() * 3, spin: 2, opacity: fade });
+    if (heavy) this.pulses.spawn({ kind: "ring", x, y, colour: colour, from: 0.4, to: size * 1.8, life: 0.3, opacity: 0.6 * fade });
+    if (sound === "slash") this.pulses.spawn({ kind: "streak", x, y, colour: "#ffffff", from: size * 2.2, to: size * 2.8, life: 0.18, thin: 0.08, angle: (this.roll() - 0.5) * 1.2 + (facing > 0 ? -0.5 : 0.5), opacity: fade });
+    this.glow.burst({ x, y, z: 0.3, count: Math.round((8 + damage * 1.6) * fade), colour, speed: [3, 7 + speed * 0.3], up: 0.5, life: [0.15, 0.4], size: [0.08, 0.16], gravity: 10, drag: 0.1, push: { x: facing * 2, y: 0, z: 0 } }, this.roll);
     this.camera.shake(Math.min(0.7, (heavy ? 0.25 : 0.08) + speed * 0.012));
   }
 
