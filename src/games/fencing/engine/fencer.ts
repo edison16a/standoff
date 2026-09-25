@@ -17,6 +17,14 @@ export interface ControllerInput {
  * that jitter without making the sword feel laggy.
  */
 const POSE_SMOOTHING_PER_S = 30;
+/** How much aim history to keep, in ticks. A third of a second at 60 Hz. */
+const AIM_HISTORY = 20;
+
+interface AimSample {
+  t: number;
+  pitch: number;
+  yaw: number;
+}
 
 /**
  * One fencer on the host. It holds the live controller reading, walks the
@@ -33,7 +41,12 @@ export class Fencer {
   action: FencerAction = "idle";
   actionStartedAt = 0;
   parryUntil = -Infinity;
+  /** A parry that blocked nothing leaves the guard down until then. */
+  parryReadyAt = -Infinity;
   lockedUntil = -Infinity;
+  /** This fencer's own clock, advanced by `followPose`, which stamps the aim history. */
+  private clock = 0;
+  private history: AimSample[] = [];
 
   constructor(
     readonly slot: Slot,
@@ -54,6 +67,13 @@ export class Fencer {
     return this.pose;
   }
 
+  /** Where the blade pointed `ms` ago, or as far back as the history goes. */
+  aimBefore(ms: number): { pitch: number; yaw: number } {
+    const at = this.clock - ms;
+    const sample = this.history.find((entry) => entry.t >= at) ?? this.history.at(-1);
+    return sample ? { pitch: sample.pitch, yaw: sample.yaw } : { ...this.pose };
+  }
+
   setAction(action: FencerAction, now: number): void {
     this.action = action;
     this.actionStartedAt = now;
@@ -65,6 +85,7 @@ export class Fencer {
     this.speed = 0;
     this.action = "idle";
     this.parryUntil = -Infinity;
+    this.parryReadyAt = -Infinity;
     this.lockedUntil = -Infinity;
     this.input = { ...this.input, move: 0 };
   }
@@ -82,6 +103,9 @@ export class Fencer {
     this.pose.pitch += (this.input.pitch - this.pose.pitch) * k;
     this.pose.yaw += (this.input.yaw - this.pose.yaw) * k;
     this.pose.roll += (this.input.roll - this.pose.roll) * k;
+    this.clock += dtMs;
+    this.history.push({ t: this.clock, pitch: this.pose.pitch, yaw: this.pose.yaw });
+    if (this.history.length > AIM_HISTORY) this.history.shift();
   }
 
   frame(now: number): FencerFrame {

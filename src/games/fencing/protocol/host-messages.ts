@@ -52,10 +52,16 @@ export const tuningMessageSchema = z.object({
 /** Tells a phone to zero its tracked position at the start of an exchange. */
 export const recenterSchema = z.object({ kind: z.literal("recenter") });
 
-/** Asks a phone to buzz, on hardware that allows it. */
+/**
+ * What became of this player's last strike, or of the other player's, so
+ * the phone can say it and buzz. "missed" is a jab that hit nothing, too
+ * far away or off line. "refused" is a strike the referee ignored, because
+ * the fencer was knocked off balance or still lunging.
+ */
 export const feedbackSchema = z.object({
   kind: z.literal("feedback"),
-  event: z.enum(["touched", "scored", "parried", "blocked"]),
+  event: z.enum(["touched", "scored", "parried", "blocked", "missed", "refused"]),
+  reason: z.enum(["far", "wide"]).optional(),
 });
 
 export const hostMessageSchema = z.discriminatedUnion("kind", [

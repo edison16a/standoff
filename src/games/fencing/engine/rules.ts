@@ -16,20 +16,41 @@ export const REACH = 2.4;
 export const MIN_GAP = 0.9;
 /** How far apart corps-à-corps puts the fencers back. */
 export const RESET_GAP = 3.2;
-/** Time from a jab being detected to the tip arriving. */
-export const JAB_IMPACT_MS = 140;
+/**
+ * Time from a jab being detected to the tip arriving. Long enough that a
+ * quick defender who sees the lunge start can still parry it, and about
+ * as long as a real lunge takes.
+ */
+export const JAB_IMPACT_MS = 220;
 /** How long the lunge animation takes to extend and recover. */
-export const JAB_DURATION_MS = 420;
+export const JAB_DURATION_MS = 520;
+/**
+ * A parry that reaches the host this soon after a jab landed still saves
+ * it. Phones are never quite in step over WiFi, and a parry the player saw
+ * themselves make in time should count.
+ */
+export const PARRY_GRACE_MS = 80;
+/**
+ * After a parry that blocked nothing, the fencer cannot parry again for
+ * this long. Without it, lifting the phone over and over would keep a
+ * parry open all the time.
+ */
+export const PARRY_RECOVERY_MS = 250;
+/**
+ * A jab is aimed by where the blade pointed this long before it was
+ * detected. By the time a chop is recognised it has already tipped the
+ * phone down, and that dip is not where the player was aiming.
+ */
+export const AIM_LOOKBACK_MS = 110;
 /** Two touches this close together cancel out, like an épée double. */
 export const DOUBLE_WINDOW_MS = 60;
 /** A parried attacker cannot strike again for this long. */
 export const DEFLECTED_MS = 450;
 /**
  * A tip more than this far off line (radians) misses even in range. It is
- * what makes the live sword angle matter and not just the jab trigger. It
- * is generous, because a chop down tips the phone a little as it goes.
+ * what makes the live sword angle matter and not just the jab trigger.
  */
-export const OFF_TARGET_ANGLE = (75 * Math.PI) / 180;
+export const OFF_TARGET_ANGLE = (70 * Math.PI) / 180;
 /** Seconds counted down before each exchange. */
 export const EN_GARDE_SECONDS = 3;
 /**
