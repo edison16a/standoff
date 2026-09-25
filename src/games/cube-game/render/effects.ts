@@ -30,6 +30,10 @@ export class Effects {
   private readonly rings: { mesh: THREE.Mesh; life: number }[] = [];
   private readonly ringGeometry = new THREE.RingGeometry(0.8, 1, 48);
   private readonly colour = new THREE.Color();
+  // Reused every frame, so drawing the shards makes no garbage.
+  private readonly matrix = new THREE.Matrix4();
+  private readonly turn = new THREE.Quaternion();
+  private readonly scale = new THREE.Vector3();
   private seed = 1;
 
   constructor() {
@@ -130,9 +134,7 @@ export class Effects {
 
   update(dt: number): void {
     this.particles.update(dt);
-    const matrix = new THREE.Matrix4();
-    const q = new THREE.Quaternion();
-    const scale = new THREE.Vector3();
+    const { matrix, turn: q, scale } = this;
     for (let i = this.shards.length - 1; i >= 0; i--) {
       const shard = this.shards[i]!;
       shard.life -= dt;
