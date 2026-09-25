@@ -1,5 +1,5 @@
 /*
-  The controller: the direction pad on the left, your damage in the
+  The controller: the stick on the left, your damage in the
   middle, and Attack, Special and Ult on the right, placed like a
   console pad so thumbs find them without looking. Upright, the status
   moves to the top and the pad and buttons share the bottom.
@@ -9,7 +9,7 @@
   display: grid;
   flex: 1;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.75fr) minmax(0, 1.15fr);
-  grid-template-areas: "dpad status buttons";
+  grid-template-areas: "stick status buttons";
   gap: 8px;
   min-height: 0;
   user-select: none;
@@ -21,56 +21,19 @@
   .bb-pad {
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-rows: minmax(0, 0.6fr) minmax(0, 1fr);
-    grid-template-areas: "status status" "dpad buttons";
+    grid-template-areas: "status status" "stick buttons";
   }
 }
 
-.bb-pad__dpad {
-  grid-area: dpad;
+.bb-pad__stick {
+  grid-area: stick;
   min-height: 0;
   border-radius: 22px;
   background: color-mix(in srgb, var(--pad-colour, #8b5cf6) 8%, var(--bg-muted));
 }
 
-.bb-dpad {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 100%;
-  height: 100%;
-  touch-action: none;
-}
-
-.bb-dpad__cross {
-  width: min(88%, 210px);
-  max-height: 88%;
-  aspect-ratio: 1;
-  filter: drop-shadow(0 5px 0 rgba(0, 0, 0, 0.25));
-  pointer-events: none;
-}
-
-.bb-dpad__arm,
-.bb-dpad__hub {
-  fill: #2a2140;
-}
-
-.bb-dpad__arm--on {
-  fill: var(--pad-colour);
-}
-
-.bb-dpad__arrow {
-  fill: rgba(255, 255, 255, 0.75);
-}
-
-.bb-dpad__hint {
-  position: absolute;
-  bottom: 6px;
-  color: var(--text-muted);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  pointer-events: none;
+.bb-pad__stick .kit-stick {
+  min-height: 100%;
 }
 
 .bb-pad__buttons {
@@ -331,4 +294,33 @@
     opacity: 0;
     transform: translate(-50%, -30%) scale(1);
   }
+}
+
+/* Attack and Special: a ring fills round the button while a hold charges, and glows at full power. */
+.bb-charge {
+  position: relative;
+}
+
+.bb-charge__ring {
+  position: absolute;
+  inset: -9px;
+  width: calc(100% + 18px);
+  height: calc(100% + 18px);
+  pointer-events: none;
+}
+
+.bb-charge__fill {
+  fill: none;
+  stroke: #fde047;
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+
+.bb-charge--idle .bb-charge__fill {
+  opacity: 0;
+}
+
+.bb-charge--full .bb-charge__ring {
+  filter: drop-shadow(0 0 8px #fde047);
+  animation: bb-ult-glow 180ms ease-in-out infinite alternate;
 }

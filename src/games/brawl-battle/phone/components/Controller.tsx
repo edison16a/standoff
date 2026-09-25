@@ -1,5 +1,6 @@
 "use client";
 import { useEffect } from "react";
+import { Joystick } from "@/games/kit/pad/Joystick";
 import { PadButton } from "@/games/kit/pad/PadButton";
 import { playerColor } from "@/games/kit/players";
 import { RULES } from "../../engine/tuning";
@@ -7,7 +8,7 @@ import { BUTTONS, type PhoneState } from "../../protocol";
 import { Portrait } from "../../ui/Portrait";
 import { heatColour } from "../../ui/heat";
 import { usePhoneStore } from "../phone-store";
-import { DPad } from "./DPad";
+import { ChargeButton } from "./ChargeButton";
 import { useController } from "./session-context";
 
 /** The Ult button with its charge as a ring round it. It only works once the ring is full. */
@@ -61,10 +62,11 @@ function Status({ host, seat }: { host: PhoneState; seat: number }) {
 }
 
 /**
- * The phone as a controller: the direction pad on the left (up jumps,
- * again in the air for a double jump, down to shield or drop through),
- * and Attack, Special and Ult on the right. The direction held picks
- * each move's variant. Works held sideways or upright.
+ * The phone as a controller: the stick on the left (push up to jump,
+ * let it come back and push up again in the air for a double jump, hold
+ * down to shield or drop through), and Attack, Special and Ult on the
+ * right. The way the stick points picks each move's variant, and holding
+ * Attack or Special charges it. Works held sideways or upright.
  */
 export function Controller({ host, seat }: { host: PhoneState; seat: number }) {
   const session = useController();
@@ -77,22 +79,18 @@ export function Controller({ host, seat }: { host: PhoneState; seat: number }) {
   return (
     <div className="bb-pad">
       <Status host={host} seat={seat} />
-      <div className="bb-pad__dpad" style={{ "--pad-colour": colour } as React.CSSProperties}>
-        <DPad colour={colour} onChange={(stick) => session.setDirection(stick)} />
+      <div className="bb-pad__stick" style={{ "--pad-colour": colour } as React.CSSProperties}>
+        <Joystick alwaysShown colour={colour} onChange={(stick) => session.setStick(stick)} />
       </div>
       <div className="bb-pad__buttons">
         <div className="bb-pad__ult">
           <UltButton ult={host.ult} />
         </div>
         <div className="bb-pad__special">
-          <PadButton label="Special" colour="#8b5cf6" onDown={() => session.press(BUTTONS.special)} onUp={() => session.release(BUTTONS.special)}>
-            <span>Special</span>
-          </PadButton>
+          <ChargeButton button={BUTTONS.special} label="Special" colour="#8b5cf6" />
         </div>
         <div className="bb-pad__attack">
-          <PadButton label="Attack" size="lg" colour="#ff6b35" onDown={() => session.press(BUTTONS.attack)} onUp={() => session.release(BUTTONS.attack)}>
-            <span>Attack</span>
-          </PadButton>
+          <ChargeButton button={BUTTONS.attack} label="Attack" size="lg" colour="#ff6b35" />
         </div>
       </div>
     </div>
