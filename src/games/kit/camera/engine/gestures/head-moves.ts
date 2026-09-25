@@ -38,6 +38,7 @@ export class HeadMoveDetector {
   private jumping = false;
   private ducking = false;
   private restAt = -Infinity;
+  private wasNear = false;
   private belowSince: number | null = null;
   private landedAt = -Infinity;
 
@@ -50,6 +51,7 @@ export class HeadMoveDetector {
   reset(): void {
     this.jumping = this.ducking = false;
     this.restAt = this.landedAt = -Infinity;
+    this.wasNear = false;
     this.belowSince = null;
   }
 
@@ -57,13 +59,17 @@ export class HeadMoveDetector {
   update(rise: number, time: number): HeadMoves {
     const { up, down, riseMs, duckMs, release, landingMs } = this.options;
     const near = rise < up * release && rise > -down * release;
+    // From near the line to over the band in one frame is quick however long the frame took, which
+    // keeps jumps working on a machine that tracks only a few frames a second.
+    const quick = time - this.restAt <= riseMs || this.wasNear;
+    this.wasNear = near;
     if (near) this.restAt = time;
     const out = { jumped: false, landed: false, ducked: false, stood: false };
     if (this.jumping && rise < up * release) {
       this.jumping = false;
       this.landedAt = time;
       out.landed = true;
-    } else if (!this.jumping && !this.ducking && rise >= up && time - this.restAt <= riseMs) {
+    } else if (!this.jumping && !this.ducking && rise >= up && quick) {
       this.jumping = out.jumped = true;
     }
     if (rise <= -down) this.belowSince ??= time;

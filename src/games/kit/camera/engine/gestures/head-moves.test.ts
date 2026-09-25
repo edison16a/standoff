@@ -37,6 +37,11 @@ describe("jumping: the head over the top of the band", () => {
     expect(eventsOf(readMoves(MOVES.jump(), {}, { fps: 8 }), "jump")).toHaveLength(1);
   });
 
+  it("still jumps on a machine that tracks only a frame or two a second", () => {
+    const held: PoseKey[] = [{ at: 0, pose: {} }, { at: 100, pose: { lift: 0.2 } }, { at: 2500, pose: { lift: 0.2 } }, { at: 2600, pose: {} }];
+    expect(kinds(readMoves(held, {}, { fps: 1.5 }))).toEqual(["jump", "land"]);
+  });
+
   it("counts a jump that carries the head out of the top of the picture", () => {
     const base = { head: 0.14 };
     const frames = readMoves(MOVES.jump(base), base);
