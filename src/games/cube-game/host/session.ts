@@ -113,6 +113,16 @@ export class CubeSession {
     this.beginRound();
   }
 
+  /** Two players: end the round now, for when one player cannot finish. */
+  endEarly(): void {
+    if (this.phase !== "play" || !this.round || this.resultsTimer) return;
+    this.sound.sfx.back();
+    this.board.results();
+    this.room.setPlaying(false);
+    this.sound.music.play("menu");
+    store.setState({ phase: "results" });
+  }
+
   /** From the results: on to the next level, if it is open. */
   next(): void {
     const index = LEVELS.findIndex((l) => l.info.id === store.getState().levelId);
@@ -136,7 +146,8 @@ export class CubeSession {
     const pulse = beatPulse(time, this.level.bpm);
     if (this.round && (this.phase === "play" || this.phase === "results")) {
       const round = this.round;
-      const updates = round.update();
+      // Behind the results the runs stand still, so an unfinished player makes no more noise.
+      const updates = this.phase === "play" ? round.update() : round.seats.map(() => ({ events: [], restarted: false }));
       updates.forEach(({ events }, i) => this.hear(i + 1, events));
       this.board.update(round, now);
       if (this.phase === "play" && round.over && !this.resultsTimer) this.finishRound();
@@ -153,7 +164,9 @@ export class CubeSession {
     if (this.demo.run.finished && time > this.demo.run.time + 1.5) {
       this.demo.restart();
       this.demoRestarted = true;
-      this.clock.restart(0, 0.3);
+      // The level's song only plays behind the level select. The camera steps keep the calm menu song.
+      if (this.phase === "menu") this.clock.restart(0, 0.3);
+      else this.clock.hold(0, 0.3);
     }
     const restarted = this.demoRestarted;
     this.demoRestarted = false;
@@ -193,6 +206,8 @@ export class CubeSession {
     );
     this.clock.restart(0, START_LEAD);
     this.room.setPlaying(true);
+    // Anyone out of view at the start waits, as if they had stepped out.
+    this.kit?.getSnapshot().present.forEach((seen, i) => input === "camera" && !seen && this.presence(i + 1, false));
     store.setState({ phase: "play", results: [], unlockedNow: null, banner: null });
   }
 

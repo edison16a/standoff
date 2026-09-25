@@ -39,10 +39,16 @@ export function Stage() {
   );
 }
 
-/** The tool bar button: back to the level select, whenever a round or setup is on. */
+/** The tool bar buttons: end a two player round early, and back to the level select. */
 export function Tools() {
   const session = useSession();
   const phase = useCubeStore((s) => s.phase);
+  const players = useCubeStore((s) => s.hud.length);
   if (phase === "menu") return null;
-  return <IconButton icon="leave" label="Back to the levels" onClick={() => session.toMenu()} />;
+  return (
+    <>
+      {phase === "play" && players > 1 && <IconButton icon="trophy" label="End the round" onClick={() => session.endEarly()} />}
+      <IconButton icon="leave" label="Back to the levels" onClick={() => session.toMenu()} />
+    </>
+  );
 }

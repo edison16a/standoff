@@ -3,6 +3,7 @@ import { Autoplay } from "../engine/autoplay";
 import type { PlayerEvent } from "../engine/player";
 import { levelById } from "../levels";
 import { GameRenderer, type DrawPlayer } from "../render/game-renderer";
+import type { Framing } from "../render/view-camera";
 import { beatPulse } from "../render/pulse";
 
 /** What each view shows: a level, from which second of it, and with how many players. */
@@ -16,6 +17,8 @@ export interface Plan {
   skip?: number[][];
   /** Stills: stop the clock at `from`, with sparks and trails already flying. */
   still?: boolean;
+  /** A closer camera than play uses, for the icon and poster. */
+  framing?: Framing;
 }
 
 /** Played silently before the first frame, so trails and sparks are already in the air. */
@@ -41,6 +44,7 @@ export class ShowcaseDirector {
     const level = levelById(plan.level);
     this.renderer = new GameRenderer(canvas);
     this.renderer.setLevel(level);
+    this.renderer.setFraming(plan.framing ?? null);
     this.bots = Array.from({ length: plan.players }, (_, i) => new Autoplay(level, new Set(plan.skip?.[i] ?? [])));
     this.restarted = this.bots.map(() => true);
     for (let t = -PREROLL; t < -1e-6; t += PREROLL_STEP) this.step(t, PREROLL_STEP, false);
@@ -81,8 +85,14 @@ export class ShowcaseDirector {
   }
 }
 
+/**
+ * The home screen's shots. The capture tool runs three seconds before it
+ * records, so the clip starts at ten seconds and runs through Cloud Hopper's pad and orb,
+ * a burst of hops on the beat and the portal into the UFO. The icon is a
+ * cube leaping spikes against the sunset. The poster is the orb catch.
+ */
 export const PLANS: Record<ShowcaseView, Plan> = {
-  loop: { level: "circuit-rush", from: 17.5, players: 1 },
-  icon: { level: "first-light", from: 4.6, players: 1, still: true },
-  poster: { level: "cloud-hopper", from: 16, players: 1, still: true },
+  loop: { level: "cloud-hopper", from: 7.2, players: 1, framing: { height: 10, across: 0.32, floor: 1.5 } },
+  icon: { level: "sunset-bounce", from: 7.37, players: 1, still: true, framing: { height: 6.5, across: 0.45, floor: 3.1 } },
+  poster: { level: "cloud-hopper", from: 11.25, players: 1, still: true, framing: { height: 9, across: 0.35, floor: 1.6 } },
 };

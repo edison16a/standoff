@@ -6,6 +6,8 @@ import type { Theme } from "./themes";
 const REACH = 150;
 /** The grid itself fades out over this much of it, leaving dark ground to the horizon. */
 const GRID = 34;
+/** How far back from the play a pit cuts into the floor. */
+const NOTCH = 2.5;
 
 /**
  * The glowing grid the level runs on, stretching away behind the play
@@ -54,20 +56,25 @@ export class Floor {
         }
       `,
     });
-    for (const ground of grounds) {
-      const geometry = new THREE.PlaneGeometry(ground.w, REACH);
+    const plane = (x0: number, x1: number, z0: number, z1: number, y = 0) => {
+      const geometry = new THREE.PlaneGeometry(x1 - x0, z0 - z1);
       geometry.rotateX(-Math.PI / 2);
-      geometry.translate(ground.x + ground.w / 2, 0, -0.5 - REACH / 2);
+      geometry.translate((x0 + x1) / 2, y, (z0 + z1) / 2);
       this.geometries.push(geometry);
-      this.group.add(new THREE.Mesh(geometry, this.material));
-    }
-    // Down in a pit: darkness with the level's colour glowing faintly.
-    const deep = new THREE.PlaneGeometry(4000, REACH);
-    deep.rotateX(-Math.PI / 2);
-    deep.translate(1000, -7.5, -REACH / 2);
-    this.geometries.push(deep);
-    this.abyss = new THREE.MeshBasicMaterial({ color: new THREE.Color(theme.edge).multiplyScalar(0.12) });
-    this.group.add(new THREE.Mesh(deep, this.abyss));
+      return geometry;
+    };
+    // A pit only notches the front of the floor. Behind it the grid carries on, so it reads as a hole, not a canyon.
+    const from = Math.min(...grounds.map((g) => g.x));
+    const to = Math.max(...grounds.map((g) => g.x + g.w));
+    this.group.add(new THREE.Mesh(plane(from, to, -NOTCH, -0.5 - REACH), this.material));
+    for (const ground of grounds) this.group.add(new THREE.Mesh(plane(ground.x, ground.x + ground.w, -0.5, -NOTCH), this.material));
+    // Down in a pit: near darkness, with the level's colour glowing faintly.
+    this.abyss = new THREE.MeshBasicMaterial({ color: new THREE.Color(theme.fill).multiplyScalar(0.5) });
+    this.group.add(new THREE.Mesh(plane(from, to, 1, -NOTCH, -6), this.abyss));
+    const back = new THREE.PlaneGeometry(to - from, 8);
+    back.translate((from + to) / 2, -4, -NOTCH);
+    this.geometries.push(back);
+    this.group.add(new THREE.Mesh(back, this.abyss));
   }
 
   update(pulse: number): void {

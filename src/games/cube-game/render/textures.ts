@@ -31,17 +31,17 @@ export function cubeFace(main: number, trim: number, glow: boolean): THREE.Canva
   g.lineWidth = 14;
   g.strokeRect(7, 7, 242, 242);
   g.strokeStyle = css(trim);
-  g.lineWidth = 16;
-  g.strokeRect(24, 24, 208, 208);
-  g.fillStyle = css(trim);
-  g.fillRect(76, 76, 104, 104);
-  g.strokeStyle = "#10091f";
-  g.lineWidth = 8;
-  g.strokeRect(76, 76, 104, 104);
+  g.lineWidth = 12;
+  g.strokeRect(22, 22, 212, 212);
+  // The inner square in the trim colour, with the face on it, like the original icon.
   g.fillStyle = "#10091f";
-  g.fillRect(96, 100, 20, 30);
-  g.fillRect(140, 100, 20, 30);
-  g.fillRect(94, 148, 68, 12);
+  g.fillRect(74, 74, 108, 108);
+  g.fillStyle = css(trim);
+  g.fillRect(82, 82, 92, 92);
+  g.fillStyle = "#10091f";
+  g.fillRect(100, 104, 16, 26);
+  g.fillRect(140, 104, 16, 26);
+  g.fillRect(98, 146, 60, 10);
   return texture(element);
 }
 

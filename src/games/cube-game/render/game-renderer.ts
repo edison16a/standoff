@@ -8,7 +8,7 @@ import { LevelView } from "./level-view";
 import { Post, type Viewport } from "./post";
 import { Signs } from "./signs";
 import { themeFor } from "./themes";
-import { ViewCamera } from "./view-camera";
+import { ViewCamera, type Framing } from "./view-camera";
 
 export interface DrawPlayer {
   state: PlayerState | null;
@@ -83,6 +83,11 @@ export class GameRenderer {
     this.scene.add(this.backdrop.group, this.level.group);
     this.scene.background = new THREE.Color(theme.skyHigh);
     this.effects.clear();
+  }
+
+  /** Showcase shots frame the players closer than play does. */
+  setFraming(framing: Framing | null): void {
+    for (const camera of this.cameras) camera.framing = framing;
   }
 
   resize(width: number, height: number, pixelRatio: number): void {

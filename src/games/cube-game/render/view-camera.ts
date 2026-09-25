@@ -16,7 +16,16 @@ const EYE_DROP = 1.6;
  * depth. It leads the player so there is room to see what comes, rises
  * when the player climbs high, and can shake and punch in.
  */
+/** How a showcase shot frames the player: blocks of level from bottom to top, where across the view they sit, and how far below them the floor is. */
+export interface Framing {
+  height: number;
+  across: number;
+  floor: number;
+}
+
 export class ViewCamera {
+  /** Set for showcase shots, which frame the action closer than play does. */
+  framing: Framing | null = null;
   readonly camera = new THREE.PerspectiveCamera(FOV, 16 / 9, 1, 600);
   /** Blocks of level visible from the bottom of the view to the top. */
   height = 11;
@@ -33,7 +42,7 @@ export class ViewCamera {
   setAspect(aspect: number): void {
     this.camera.aspect = aspect;
     // A wide half of a split screen shows fewer blocks up and down, so each looks as big as in one player.
-    this.height = aspect > 2.4 ? 8.6 : 11;
+    this.height = this.framing?.height ?? (aspect > 2.4 ? 8.6 : 11);
     this.camera.updateProjectionMatrix();
   }
 
@@ -53,11 +62,11 @@ export class ViewCamera {
 
   follow(state: PlayerState | null, dt: number, time: number): void {
     const width = this.height * this.camera.aspect;
-    const bottom = 1.4;
+    const bottom = this.framing?.floor ?? 1.4;
     const floorView = this.height / 2 - bottom;
     const px = state?.x ?? this.x - width * 0.2;
     const py = state?.y ?? 0.5;
-    const targetX = px + width * 0.2;
+    const targetX = px + width * (0.5 - (this.framing?.across ?? 0.3));
     // Stay put near the floor, and follow only when the player climbs into the top part of the view.
     const targetY = Math.max(floorView, py - this.height * 0.18);
     if (!this.ready) {

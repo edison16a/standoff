@@ -1,5 +1,7 @@
 import type { GameInfo } from "@/platform/games/game-api";
 import { Cover } from "./Cover";
+import icon from "./media/icon.jpg";
+import poster from "./media/poster.jpg";
 
 export const info: GameInfo = {
   id: "cube-game",
@@ -10,4 +12,5 @@ export const info: GameInfo = {
   color: "#a855f7",
   input: "camera",
   Cover,
+  media: { icon, poster, video: { webm: "/games/cube-game/backdrop.webm", mp4: "/games/cube-game/backdrop.mp4" } },
 };

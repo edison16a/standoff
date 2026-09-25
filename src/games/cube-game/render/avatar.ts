@@ -13,7 +13,7 @@ function faceMaterial(skin: Skin): THREE.MeshStandardMaterial {
     map: cubeFace(skin.main, skin.trim, false),
     emissiveMap: cubeFace(skin.main, skin.trim, true),
     emissive: new THREE.Color(0xffffff),
-    emissiveIntensity: 0.55,
+    emissiveIntensity: 0.35,
     roughness: 0.35,
     metalness: 0.15,
   });
@@ -45,7 +45,7 @@ export class Avatar {
     const hull = new THREE.MeshStandardMaterial({ color: skin.main, roughness: 0.3, metalness: 0.6, emissive: skin.main, emissiveIntensity: 0.25 });
     const rimGeometry = new THREE.TorusGeometry(0.72, 0.05, 8, 40);
     rimGeometry.rotateX(Math.PI / 2);
-    const rim = new THREE.MeshBasicMaterial({ color: new THREE.Color(skin.trim).multiplyScalar(2.4) });
+    const rim = new THREE.MeshBasicMaterial({ color: new THREE.Color(skin.trim).multiplyScalar(1.8) });
     const domeGeometry = new THREE.SphereGeometry(0.4, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2);
     const glass = new THREE.MeshStandardMaterial({ color: 0xbfe8ff, transparent: true, opacity: 0.35, roughness: 0.05, metalness: 0.2 });
     const rider = new THREE.Mesh(box, face);
@@ -66,7 +66,7 @@ export class Avatar {
 
     this.forms = { cube, ufo, ball };
     this.halo = new THREE.Sprite(
-      new THREE.SpriteMaterial({ map: glowSprite(), color: skin.trim, transparent: true, opacity: ghost ? 0.12 : 0.28, blending: THREE.AdditiveBlending, depthWrite: false }),
+      new THREE.SpriteMaterial({ map: glowSprite(), color: skin.trim, transparent: true, opacity: ghost ? 0.1 : 0.18, blending: THREE.AdditiveBlending, depthWrite: false }),
     );
     this.halo.scale.setScalar(2.2);
     this.group.add(cube, ufo, ball, this.halo);
@@ -99,7 +99,9 @@ export class Avatar {
     this.squash = Math.max(0, this.squash - dt * 6);
     const s = this.squash * this.squash;
     // The squash is along gravity, so a ball on the ceiling flattens upward.
-    form.scale.set(1 + s * 0.16, 1 - s * 0.22, 1 + s * 0.16);
+    // The saucer is a touch bigger than the cube, so its flat shape reads as clearly at a glance.
+    const size = state.mode === "ufo" ? 1.2 : 1;
+    form.scale.set(size * (1 + s * 0.16), size * (1 - s * 0.22), size * (1 + s * 0.16));
     form.position.y = -s * 0.1 * state.gravity;
   }
 

@@ -77,9 +77,9 @@ export class Round {
    */
   press(slot: number, songTime = this.sync.songTime()): boolean {
     const seat = this.seats[slot - 1];
-    const at = songTime - (seat?.offset ?? 0);
-    if (!seat || seat.status !== "run" || at < seat.run.time - 0.02) return false;
-    seat.run.press(at);
+    // Waiting is judged by now, not by the press's time: a key held up by a slow frame still counts.
+    if (!seat || seat.status !== "run" || this.levelTime(slot) < seat.run.time - 0.02) return false;
+    seat.run.press(songTime - seat.offset);
     return true;
   }
 
