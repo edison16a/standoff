@@ -34,3 +34,24 @@ describe("fit", () => {
     expect(wide.y).toBe(1);
   });
 });
+
+describe("fit above the HUD", () => {
+  const box = { x1: -10, x2: 10, y1: -2, y2: 6 };
+  const tan = Math.tan((30 * Math.PI) / 360);
+
+  it("keeps the box inside the part of the screen the cards leave open", () => {
+    for (const aspect of [16 / 9, 4 / 3, 21 / 9]) {
+      const hidden = 0.18;
+      const f = fit(box, 30, aspect, hidden);
+      const half = f.distance * tan;
+      // The screen spans y - half to y + half; the cards cover its lowest `hidden` share.
+      expect(f.y + half).toBeGreaterThanOrEqual(box.y2 - 1e-9);
+      expect(f.y - half + 2 * half * hidden).toBeLessThanOrEqual(box.y1 + 1e-9);
+      expect(half * aspect).toBeGreaterThanOrEqual(10 - 1e-9);
+    }
+  });
+
+  it("matches the plain fit with nothing covered", () => {
+    expect(fit(box, 30, 16 / 9, 0)).toEqual(fit(box, 30, 16 / 9));
+  });
+});

@@ -6,6 +6,7 @@ import { FrameCamera, type Subject } from "./camera/frame-camera";
 import { fighterColours, type FighterColours } from "./colors";
 import { Effects } from "./effects/effects";
 import { FighterView } from "./fighter-view";
+import { hitFlash } from "./hit-flash";
 import { glowMaterial } from "./models/geo";
 import { ProjectileView } from "./projectile-view";
 import { StageScene } from "./stages/scenery";
@@ -61,6 +62,11 @@ export class BrawlRenderer {
     this.cam.setAspect(Math.max(1, width) / this.height);
   }
 
+  /** How many CSS pixels along the bottom of the canvas the HUD covers, so the camera frames the fight above it. */
+  setHudInset(px: number): void {
+    this.cam.hidden = Math.max(0, px) / this.height;
+  }
+
   /** Shows a match, building its stage and fighters the first time it is seen. */
   setMatch(state: MatchState): void {
     if (state === this.match) return;
@@ -86,14 +92,16 @@ export class BrawlRenderer {
   afterStep(): void {
     const m = this.match;
     if (!m) return;
+    // Hits landing together dim each other's flash and spark, see hit-flash.ts.
+    const struck = m.events.filter((e) => e.type === "hit").length;
     for (const e of m.events) {
       if (e.type === "jump") this.views[e.id]?.onJump(e.double, m.frame);
       else if (e.type === "land") this.views[e.id]?.onLand();
       else if (e.type === "hit") {
-        this.views[e.target]?.onHit();
+        this.views[e.target]?.onHit(hitFlash(e.damage, struck));
         if (e.heavy) this.cam.punch(e.x, e.y, 0.05 + e.freeze * 0.004);
       }
-      this.effects.onEvent(e, m);
+      this.effects.onEvent(e, m, struck);
     }
   }
 

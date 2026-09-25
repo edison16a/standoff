@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import { softwareWebGl } from "@/games/kit/camera/model/gpu-check";
 import { BrawlRenderer, LOW_QUALITY } from "../../render/brawl-renderer";
+import { HudInset } from "../hud-inset";
 import { NameTags } from "../name-tags";
 import { useSession } from "./session-context";
 
@@ -23,6 +24,7 @@ export default function ArenaCanvas() {
     // Without a graphics card the full picture runs at a frame or two a second, so it draws lighter.
     const renderer = new BrawlRenderer(canvas, softwareWebGl() ? LOW_QUALITY : {});
     const tags = new NameTags(layer);
+    const inset = new HudInset(canvas);
     const fit = () => renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
     fit();
     const observer = new ResizeObserver(fit);
@@ -37,6 +39,7 @@ export default function ArenaCanvas() {
       const dt = session.tick(now, hooks);
       // The demo may have rolled over to a new match during the tick.
       renderer.setMatch(session.match);
+      renderer.setHudInset(inset.read(now));
       renderer.render(dt, session.alpha);
       if (session.driver) tags.update(session.match, renderer, (id) => session.nameOf(id), canvas.clientWidth, canvas.clientHeight);
       else tags.hide();

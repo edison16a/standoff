@@ -57,9 +57,17 @@ export function frameBox(points: readonly { x: number; y: number }[], stage: Sta
   return box;
 }
 
-/** Where a camera with this vertical field of view must stand to fit the box on a screen of this shape. */
-export function fit(box: Box, fovDeg: number, aspect: number): Framing {
+/**
+ * Where a camera with this vertical field of view must stand to fit the
+ * box on a screen of this shape. `hidden` is the share of the screen's
+ * height covered along the bottom, by the HUD cards: the box then fits
+ * the part above it, and the camera looks a little lower so the box
+ * sits in the middle of that part.
+ */
+export function fit(box: Box, fovDeg: number, aspect: number, hidden = 0): Framing {
   const tan = Math.tan((fovDeg * Math.PI) / 360);
-  const halfH = Math.max((box.y2 - box.y1) / 2, (box.x2 - box.x1) / 2 / Math.max(0.3, aspect));
-  return { x: (box.x1 + box.x2) / 2, y: (box.y1 + box.y2) / 2, distance: halfH / tan };
+  const open = 1 - Math.min(0.4, Math.max(0, hidden));
+  const halfH = Math.max((box.y2 - box.y1) / 2 / open, (box.x2 - box.x1) / 2 / Math.max(0.3, aspect));
+  const y = (box.y1 + box.y2) / 2 - (1 - open) * halfH;
+  return { x: (box.x1 + box.x2) / 2, y, distance: halfH / tan };
 }

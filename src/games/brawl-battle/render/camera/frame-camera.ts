@@ -26,6 +26,8 @@ export class FrameCamera {
   private time = 0;
   private readonly punchAt = new THREE.Vector2();
   private punchPower = 0;
+  /** The share of the screen's height the HUD covers along the bottom, kept clear of fighters. */
+  hidden = 0;
   /** A fixed shot for the showcase's hero frames, or null to follow the fight. */
   fixed: { x: number; y: number; distance: number } | null = null;
 
@@ -52,7 +54,7 @@ export class FrameCamera {
    */
   update(stage: StageDef, subjects: readonly Subject[], dt: number, opts: { zoom?: number; close?: boolean; snap?: boolean } = {}): void {
     this.time += dt;
-    const want = this.fixed ?? fit(frameBox(subjects, stage, opts.close ? 7 : undefined), FOV, this.aspect);
+    const want = this.fixed ?? fit(frameBox(subjects, stage, opts.close ? 7 : undefined), FOV, this.aspect, this.hidden);
     const distance = this.fixed ? want.distance : want.distance * (opts.zoom ?? 1);
     const k = opts.snap ? 1 : 1 - Math.exp(-(opts.close ? 1.6 : 2.6) * dt);
     this.at.x += (want.x - this.at.x) * k;

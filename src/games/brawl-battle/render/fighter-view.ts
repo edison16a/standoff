@@ -66,8 +66,9 @@ export class FighterView {
     this.squash = 1;
   }
 
-  onHit(): void {
-    this.flash = 1;
+  /** `glow` is how white the hit flashes, from `hitFlash`. */
+  onHit(glow: number): void {
+    this.flash = Math.max(this.flash, glow);
   }
 
   /** `alpha` is how far the screen is between the last engine step and the next. */
@@ -121,7 +122,7 @@ export class FighterView {
     this.squash += (0 - this.squash) * (1 - Math.exp(-12 * dt));
     const s = this.squash;
     root.scale.set(1 + s * 0.12, 1 - s * 0.16, 1 + s * 0.12);
-    this.flash = Math.max(0, this.flash - dt * 6);
+    this.flash = Math.max(0, this.flash - dt * 3.5);
     const blink = f.invincible > 0 && f.action !== "attack" ? (Math.sin(time * 24) > 0 ? 0.45 : 0) : 0;
     const glow = Math.max(this.flash, blink);
     this.material.emissive.setRGB(glow, glow, glow);
