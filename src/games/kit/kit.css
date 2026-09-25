@@ -76,6 +76,11 @@
   min-height: 0;
 }
 
+/* A button in the body keeps its height; the pictures around it give way. */
+.kit-steps__body > .btn {
+  flex-shrink: 0;
+}
+
 .kit-steps__footer {
   display: flex;
   flex-shrink: 0;
