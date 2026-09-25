@@ -70,6 +70,7 @@ export class FightScene {
   /** Fresh animation for both boxers, as when the showcase starts its loop again. */
   resetAnimation(): void {
     this.animators = [new BoxerAnimator(this.models[0], 0), new BoxerAnimator(this.models[1], 1)];
+    this.referee.reset();
     this.fx.clear();
     this.confetti.clear();
   }

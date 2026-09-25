@@ -41,6 +41,12 @@ If a player steps out of view the fight pauses with a clear message, and it give
 * `audio/` every sound synthesised through `room.audio` buses: gloves landing by weight, blocks, whooshes, the bell, the ten second clapper, the referee's count, the fall, a counter ping, and a crowd that murmurs, gasps, cheers and roars.
 * `showcase/` a scripted exchange that ends in a slow motion knockout, cut like a trailer, for the home screen's icon, poster and clip.
 
+## Flow on the computer
+
+`host/boxing-host.ts` walks through five screens kept in `host/host-store.ts`: players, setup (the kit's `ModelLoader`, then `CameraCalibrate` with the guard and jab step), pick, fight and results. The 3D picture is always behind them: a demo fight between two computer boxers behind the menus, then `render/director.ts` chooses each frame between the players' over the shoulder views and the broadcast camera for the walk out, the breaks, the replay and the winner. `room.setPlaying(true)` is called as a fight starts and `false` at the results or on leaving it.
+
 ## Testing
 
 `?camera=fake` (or `tools/testing/fake-camera.js`) runs the whole game without a camera; drive players with `window.__cameraKit`. In development `window.__boxing` is the session, `window.__boxingRoundMs` shortens the rounds and `window.__boxingRenderScale` draws at a lower resolution on software WebGL.
+
+Play again skips calibration: the baselines stay on the kit. Choose boxers goes back to the picks, and Menu back to choosing players.

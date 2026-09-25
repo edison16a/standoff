@@ -8,7 +8,7 @@ import { FootPlanner, STANCE_FEET } from "./feet";
 import { Spring, SpringVector } from "./springs";
 
 /** Where the referee keeps to: this far off the line between the boxers, and never nearer the ropes than this. */
-const STAND_OFF = 1.45;
+const STAND_OFF = 1.9;
 const ROOM = 2.1;
 const WALK = 1.8;
 
@@ -29,6 +29,7 @@ export class RefereeAnimator {
   private readonly count = new Spring();
   /** Which side of the pair he keeps to. The broadcast shots look from the other side, so he never blocks them. */
   private side = -1;
+  private snapNext = true;
 
   update(match: Match, time: number, dt: number): void {
     const [a, b] = match.footwork.spots;
@@ -51,6 +52,12 @@ export class RefereeAnimator {
       const pz = mz + Math.cos(along) * STAND_OFF * this.side;
       if (Math.max(Math.abs(px), Math.abs(pz)) > ROOM + 0.4) this.side = -this.side;
       this.goal.set(clamp(px, ROOM), 0, clamp(pz, ROOM));
+    }
+    if (this.snapNext) {
+      // A fresh fight: straight to his place, rather than walking through the boxers to it.
+      this.snapNext = false;
+      this.spot.copy(this.goal);
+      this.feet.reset();
     }
     const step = this.goal.clone().sub(this.spot);
     const gap = step.length();
@@ -93,6 +100,11 @@ export class RefereeAnimator {
       p.gloveRoll[hand] = 0.3;
     }
     this.rig.applyLimbs(p);
+  }
+
+  /** Puts him straight in his place on the next frame, for a new fight. */
+  reset(): void {
+    this.snapNext = true;
   }
 
   dispose(): void {

@@ -1,5 +1,7 @@
 import type { GameInfo } from "@/platform/games/game-api";
 import { Cover } from "./Cover";
+import icon from "./media/icon.jpg";
+import poster from "./media/poster.jpg";
 
 export const info: GameInfo = {
   id: "boxing",
@@ -10,4 +12,5 @@ export const info: GameInfo = {
   color: "#f97316",
   input: "camera",
   Cover,
+  media: { icon, poster, video: { webm: "/games/boxing/backdrop.webm", mp4: "/games/boxing/backdrop.mp4" } },
 };

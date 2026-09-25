@@ -71,12 +71,21 @@ export function Showcase({ view }: { view: ShowcaseView }) {
       };
       frame = requestAnimationFrame(draw);
     } else {
+      // The clip plays behind the home screen and is compressed anyway, so it is drawn a little
+      // under full resolution, which a slow machine capturing it needs.
+      renderer.resize(canvas.clientWidth, canvas.clientHeight, 0.8);
       settle(renderer, scene, trailerShot(0, trailer.match, tv, shoulder, 0, true));
       const start = performance.now();
       let last = start;
       let lastCycle = -1;
       const loop = () => {
         const now = performance.now();
+        // The clip is 30 frames a second, so a frame closer than that to the last one is not drawn.
+        // A slow machine capturing the clip then draws each frame once instead of twice.
+        if (now - last < 1000 / 30 - 1) {
+          frame = requestAnimationFrame(loop);
+          return;
+        }
         const dt = Math.min(0.1, (now - last) / 1000);
         last = now;
         const cycle = ((now - start) / 1000) % CYCLE_S;
@@ -90,8 +99,9 @@ export function Showcase({ view }: { view: ShowcaseView }) {
         const speed = Trailer.speed(cycle);
         clock += dt * speed;
         scene.update(trailer.match, INPUT, clock, dt * speed);
-        const camera = trailerShot(cycle, trailer.match, tv, shoulder, dt, cut);
-        renderer.render(scene, [{ rect: FULL, camera }]);
+        // Each frame is finished before the next is started, so a slow machine never queues
+        // up frames behind the one the capture tool is waiting to take.
+        settle(renderer, scene, trailerShot(cycle, trailer.match, tv, shoulder, dt, cut));
         frame = requestAnimationFrame(loop);
       };
       frame = requestAnimationFrame(loop);

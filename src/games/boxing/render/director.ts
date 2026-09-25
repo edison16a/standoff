@@ -60,6 +60,7 @@ export class Director {
     this.knockdown = null;
     this.scene.fx.clear();
     this.scene.confetti.clear();
+    this.scene.referee.reset();
   }
 
   onEvent(event: MatchEvent, match: Match): void {
