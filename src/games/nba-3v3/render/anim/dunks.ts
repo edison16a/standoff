@@ -12,7 +12,8 @@ const SLAM1: PosePatch = { armRRaise: 1.7, elbowR: 0.1, wristR: 0.8, torsoX: 0.2
 
 /** Each signature dunk as keys through the flight, s from takeoff (0) to the slam (1). */
 const STYLES: Record<DunkStyle, Key[]> = {
-  hammer: [[0.15, { ...AIR, legLLift: 0.5, legRLift: 0.5, kneeL: 1.2, kneeR: 1.2, ...TWO_UP }], [0.7, { armLRaise: 3.25, armRRaise: 3.25, elbowL: 1.5, elbowR: 1.5, torsoX: -0.25, neckX: -0.2 }], [1, SLAM2]],
+  // Both hands stay on the ball as it is cocked right back behind the head.
+  hammer: [[0.15, { ...AIR, legLLift: 0.5, legRLift: 0.5, kneeL: 1.2, kneeR: 1.2, ...TWO_UP, armLSpread: -0.06, armRSpread: -0.06 }], [0.7, { armLRaise: 3.25, armRRaise: 3.25, elbowL: 1.5, elbowR: 1.5, armLSpread: -0.1, armRSpread: -0.1, torsoX: -0.25, neckX: -0.2 }], [1, { ...SLAM2, armLSpread: 0, armRSpread: 0 }]],
   tomahawk: [[0.15, { ...AIR, armRRaise: 2.4, elbowR: 1.4, armLRaise: 1.6, elbowL: 0.6, armLSpread: 0.4 }], [0.72, { armRRaise: 3.35, elbowR: 1.9, torsoX: -0.3, armLRaise: 1.9, legRLift: 0.1, kneeR: 1.6 }], [1, { ...SLAM1, armLRaise: 1.2 }]],
   windmill: [[0.05, { ...AIR, armRRaise: 1.1, elbowR: 0.2, armRSpread: 0.35, armLRaise: 1.5, armLSpread: 0.6 }], [0.35, { armRRaise: -0.9 }], [0.65, { armRRaise: -2.6, torsoX: -0.15 }], [1, { armRRaise: -4.5, elbowR: 0.1, wristR: 0.8, torsoX: 0.25 }]],
   reverse: [[0.2, { ...AIR, ...TWO_UP }], [0.75, { armLRaise: 3.0, armRRaise: 3.0, elbowL: 0.5, elbowR: 0.5, torsoX: -0.35, neckX: -0.4 }], [1, { armLRaise: 3.45, armRRaise: 3.45, elbowL: 0.2, elbowR: 0.2, torsoX: -0.5, wristL: 0.6, wristR: 0.6 }]],
