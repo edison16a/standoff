@@ -28,6 +28,8 @@ export interface Coin {
   x: number;
   y: number;
   z: number;
+  /** Seconds since a magnet caught it and it took off toward the runner. Absent while it sits still. */
+  flying?: number;
 }
 
 export type PowerKind = "boots" | "hoverboard" | "magnet" | "double" | "jetpack";
