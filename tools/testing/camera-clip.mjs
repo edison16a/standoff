@@ -3,16 +3,17 @@
 // testing the camera kit with the real pose model. Chromium plays it as
 // its camera with --use-file-for-fake-video-capture (see camera-e2e.mjs).
 //
-// The photo is cut around one standing person and placed once per
-// player. Each copy then moves over time: a jump, a duck, a step to the
+// The photo is cut around one standing person from the head to the
+// waist and placed once per player, waist up as players stand in front
+// of a computer camera. Each copy then moves over time: a jump, a duck, a step to the
 // side and back, and stepping out of view and back in. Positions below
 // are in the mirrored picture the kit uses, so player 1 is on the left.
 //
-//   node tools/testing/camera-clip.mjs --photo person.jpg --crop 217,150,340,874 \
+//   node tools/testing/camera-clip.mjs --photo person.jpg --crop 217,150,340,420 \
 //     --out clip.mjpeg --ffmpeg /path/to/ffmpeg [--players 2] [--width 1280 --height 720] [--slow 1]
 //
-// --crop is x,y,width,height in the photo: a tall box around the person,
-// head to feet. A CC0 or public domain photo of someone standing facing
+// --crop is x,y,width,height in the photo: a box around the person from
+// the top of the head to the waist. A CC0 or public domain photo of someone standing facing
 // the camera works best. The script prints the timeline as JSON, so a
 // test knows when each move happens. The clip loops in Chromium. On a
 // machine that tracks only a frame every few seconds, --slow 8 holds every
@@ -41,27 +42,29 @@ const W = Number(values.width);
 const H = Number(values.height);
 const players = values.players === "1" ? 1 : 2;
 const [cx, cy, cw, ch] = values.crop.split(",").map(Number);
-// Each person is about 80 percent of the picture's height, feet near the bottom.
-const personHeight = Math.round(H * 0.89);
+// Waist up with room over the head for a jump: the waist sits at the bottom edge, smaller for two side by side.
+const personHeight = Math.round(H * (players === 1 ? 0.8 : 0.64));
 const personWidth = Math.round((cw * personHeight) / ch / 2) * 2;
-const top = H - personHeight - Math.round(H * 0.03);
+const top = H - personHeight;
+// Head to waist is about 85 cm, which sizes every move in the clip's pixels.
+const metre = personHeight / 0.85;
 
-// Moves in seconds. Heights are in pixels of the clip, positive x is to the player's right.
+// Moves in seconds. Lifts, drops and steps are in metres, positive x is to the player's right. Stepping away is in picture widths.
 const slow = Math.max(1, Number(values.slow));
 const SECONDS = 26 * slow;
 const spots = players === 1 ? [0.5] : [0.28, 0.72];
 const moves = players === 1
   ? [
-      { player: 1, move: "jump", from: 6, to: 7.45, lift: 0.085 },
-      { player: 1, move: "duck", from: 9, to: 10.8, drop: 0.13 },
-      { player: 1, move: "step", from: 12, to: 14.4, dx: 0.1 },
-      { player: 1, move: "step", from: 16, to: 18.4, dx: -0.1 },
+      { player: 1, move: "jump", from: 6, to: 7.45, lift: 0.17 },
+      { player: 1, move: "duck", from: 9, to: 10.8, drop: 0.26 },
+      { player: 1, move: "step", from: 12, to: 14.4, dx: 0.4 },
+      { player: 1, move: "step", from: 16, to: 18.4, dx: -0.4 },
     ]
   : [
-      { player: 1, move: "jump", from: 6, to: 7.45, lift: 0.085 },
-      { player: 2, move: "duck", from: 9, to: 10.8, drop: 0.13 },
-      { player: 1, move: "step", from: 12, to: 14.4, dx: 0.09 },
-      { player: 2, move: "step", from: 16, to: 18.4, dx: -0.09 },
+      { player: 1, move: "jump", from: 6, to: 7.45, lift: 0.17 },
+      { player: 2, move: "duck", from: 9, to: 10.8, drop: 0.26 },
+      { player: 1, move: "step", from: 12, to: 14.4, dx: 0.36 },
+      { player: 2, move: "step", from: 16, to: 18.4, dx: -0.36 },
       { player: 2, move: "away", from: 20, to: 22.5, dx: 0.5 },
     ];
 // A slow machine may track only a frame every few seconds, so --slow holds every move longer. Moves stay quick.
@@ -78,9 +81,10 @@ function position(player) {
   const x = [`${Math.round((1 - spots[player - 1]) * W - personWidth / 2)}`];
   const y = [`${top}`];
   for (const m of mine) {
-    if (m.move === "jump") y.push(`-${Math.round(m.lift * H)}*${pulse(m.from, m.to)}`);
-    if (m.move === "duck") y.push(`+${Math.round(m.drop * H)}*${pulse(m.from, m.to, 0.3)}`);
-    if (m.move === "step" || m.move === "away") x.push(`-${Math.round(m.dx * W)}*${pulse(m.from, m.to, 0.4)}`);
+    if (m.move === "jump") y.push(`-${Math.round(m.lift * metre)}*${pulse(m.from, m.to)}`);
+    if (m.move === "duck") y.push(`+${Math.round(m.drop * metre)}*${pulse(m.from, m.to, 0.3)}`);
+    if (m.move === "step") x.push(`-${Math.round(m.dx * metre)}*${pulse(m.from, m.to, 0.4)}`);
+    if (m.move === "away") x.push(`-${Math.round(m.dx * W)}*${pulse(m.from, m.to, 0.4)}`);
   }
   return { x: x.join(""), y: y.join("") };
 }

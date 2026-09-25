@@ -216,9 +216,9 @@ With the real model, `/dev/camera` (development only) walks through loading, cal
 
 ```bash
 # A clip of one or two people jumping, ducking, stepping to the sides and out of view, from any still photo of someone standing.
-node tools/testing/camera-clip.mjs --photo person.jpg --crop 217,150,340,874 --out clip.mjpeg --ffmpeg /path/to/ffmpeg > clip.json
+node tools/testing/camera-clip.mjs --photo person.jpg --crop 217,150,340,420 --out clip.mjpeg --ffmpeg /path/to/ffmpeg > clip.json
 # Chromium plays the clip as its webcam. The script checks the download, the slots and every move.
 node tools/testing/camera-e2e.mjs --clip clip.mjpeg --timeline clip.json --out shots/
 ```
 
-`--crop` is a tall box around the person in the photo, head to feet. A CC0 photo of one person facing the camera is enough: the clip uses it twice, flipped for player 2. On a very slow machine add `--slow 8 --width 640 --height 360` to the clip, so every pose holds long enough to be seen. If the test browser cannot reach the CDN, `--mirror folder/` serves the model files from a local folder that it fills once with curl.
+`--crop` is a box around the person in the photo, from the top of the head to the waist. The clip shows each player waist up, as in front of a computer camera. A CC0 photo of one person facing the camera is enough: the clip uses it twice, flipped for player 2. On a very slow machine add `--slow 8 --width 640 --height 360` to the clip, so every pose holds long enough to be seen. If the test browser cannot reach the CDN, `--mirror folder/` serves the model files from a local folder that it fills once with curl.
