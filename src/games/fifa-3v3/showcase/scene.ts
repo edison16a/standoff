@@ -3,7 +3,7 @@ import type { ShowcaseView } from "@/platform/games/game-api";
 import { FixedStepClock } from "../engine/clock";
 import type { MatchEvent } from "../engine/events";
 import { createMatch, stepMatch, type Entrant } from "../engine/match";
-import { STEP } from "../engine/tuning";
+import { PITCH, STEP } from "../engine/tuning";
 import type { MatchState } from "../engine/types";
 import { buildView, type MatchView } from "../engine/view";
 import type { Shot } from "../render/camera/director";
@@ -23,18 +23,27 @@ const SEED = 3;
 const WARMUP = 3;
 
 function fresh(): MatchState {
-  // Every shot goes in, so the highlight always ends in a goal.
-  return createMatch(LINEUP, { seed: SEED, replays: false, rig: () => "goal" });
+  // The first shots are saved, for some drama in the build up, and then they go in.
+  return createMatch(LINEUP, { seed: SEED, replays: false, rig: (n) => (n < 2 ? "parry" : "goal") });
 }
 
-/** When the first goal's shot is struck, found by playing the seeded match through once. */
-function firstStrike(): number {
+/**
+ * When the showcase's goal is struck, found by playing the seeded match
+ * through once: the first strike from outside the box after some build
+ * up, which films better than a tap in from the kick off.
+ */
+function pickStrike(): number {
   const state = fresh();
+  let fallback = 20;
   for (let t = 0; t < 180; t += STEP) {
     stepMatch(state);
-    if (state.events.some((e) => e.type === "shot" && e.outcome === "goal")) return state.time;
+    for (const e of state.events) {
+      if (e.type !== "shot" || e.outcome !== "goal") continue;
+      if (state.time > 9 && e.distance > 7) return state.time;
+      if (fallback === 20) fallback = state.time;
+    }
   }
-  return 20;
+  return fallback;
 }
 
 /** A still camera, for the icon and the poster. */
@@ -62,7 +71,7 @@ export class ShowcaseScene {
 
   constructor(private readonly kind: ShowcaseView, seek = 0) {
     this.state = fresh();
-    const strike = firstStrike();
+    const strike = pickStrike();
     // The loop: the build up fills the first five seconds of the film, then the finish and the party.
     const start = kind === "loop" ? Math.max(0, strike - WARMUP - 5.2) : strike + (kind === "icon" ? 0.03 : 0.3);
     while (this.state.time < start + seek) stepMatch(this.state);
@@ -106,15 +115,18 @@ export class ShowcaseScene {
     return this.state.flight?.shooter ?? null;
   }
 
-  /** Over the shooter's shoulder at pitch level: the strike, the ball flying and the keeper diving. */
+  /**
+   * The goal line camera: low beside the near post, looking out at the
+   * shooter, with the keeper at full stretch and the ball on its way.
+   */
   private posterPose(): Pose {
     const s = this.state.athletes[this.shooter() ?? 0]!;
     const dir = attackSign(s.team);
-    const side = s.pos.z > 0 ? 1 : -1;
-    const gx = dir * 16;
-    const look = new THREE.Vector3(s.pos.x * 0.35 + gx * 0.65, 1.1, s.pos.z * 0.35);
-    const pos = new THREE.Vector3(s.pos.x - dir * 4.2, 1.5, s.pos.z + side * 3.4);
-    return { pos, look, fov: 40 };
+    const gx = dir * PITCH.halfLength;
+    const ball = this.state.ball.pos;
+    const look = new THREE.Vector3(s.pos.x * 0.4 + ball.x * 0.6, 1.0, s.pos.z * 0.4 + ball.z * 0.6);
+    const pos = new THREE.Vector3(gx - dir * 1.0, 1.1, PITCH.goalHalfWidth + 4.6);
+    return { pos, look, fov: 46 };
   }
 
   /** Close on the shooter's strike from the lit near side, the ball leaving the boot. */

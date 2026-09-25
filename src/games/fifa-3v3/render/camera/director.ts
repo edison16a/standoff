@@ -70,7 +70,8 @@ export class CameraDirector {
       }
       case "replay-end": {
         const s = view.scorer !== null ? attackSign(view.athletes[view.scorer]?.team ?? 0) : Math.sign(b.x) || 1;
-        this.wantPos.set(s * (PITCH.halfLength + 6.5), 5.2, b.z * 0.4 + 4);
+        // Inside the catch net behind the goal, so its mesh never crosses the picture.
+        this.wantPos.set(s * (PITCH.halfLength + PITCH.catchNet - 0.6), 4.6, b.z * 0.4 + 3);
         this.wantLook.set(b.x, 0.8, b.z);
         fov = 36;
         rate = 5;

@@ -12,12 +12,17 @@ import { ShowcaseScene } from "./scene";
  * step the clock frame by frame and get the same film every time.
  */
 export default function Showcase({ view }: { view: ShowcaseView }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const bugRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const stage = stageRef.current;
+    if (!stage) return;
+    // A fresh canvas for every mount. Reusing one after its renderer was
+    // disposed (as development mode's double mount does) can leave it black.
+    const canvas = document.createElement("canvas");
+    canvas.className = "fifa-showcase__canvas";
+    stage.prepend(canvas);
     const params = new URLSearchParams(window.location.search);
     const renderer = new MatchRenderer(canvas, { quality: params.get("quality") === "low" ? "low" : "high" });
     // Development peeks can jump ahead in the match without drawing every frame on the way.
@@ -57,12 +62,12 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
       cancelAnimationFrame(frame);
       observer.disconnect();
       renderer.dispose();
+      canvas.remove();
     };
   }, [view]);
 
   return (
-    <div className="fifa-showcase">
-      <canvas ref={canvasRef} className="fifa-showcase__canvas" />
+    <div ref={stageRef} className="fifa-showcase">
       {view === "loop" && (
         // The broadcast score bug in the corner, as on a television highlight.
         <div ref={bugRef} className="fifa-tvbug">
