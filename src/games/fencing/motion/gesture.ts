@@ -118,6 +118,8 @@ export class GestureClassifier {
     const spin = prev ? (sample.spin + prev.spin) / 2 : sample.spin;
     this.score = Math.max(accel / this.settings.strikeAccel, spin / this.settings.strikeSpin);
     this.progress = parryProgress(sample, this.settings.parry);
+    // Rearm first, so a move starting on this very reading can still jab.
+    if (this.progress < PARRY_REARM_SHARE) this.parryArmed = true;
     this.trackMove(sample.t);
     return this.checkParry(sample.t) ?? this.checkJab(sample.t);
   }
@@ -159,11 +161,7 @@ export class GestureClassifier {
   }
 
   private checkParry(t: number): StrikeAction | null {
-    if (!this.parryArmed) {
-      if (this.progress < PARRY_REARM_SHARE) this.parryArmed = true;
-      return null;
-    }
-    if (this.progress < 1 || t < this.suppressedUntil || t - this.lastActionAt < this.settings.refractoryMs) return null;
+    if (!this.parryArmed || this.progress < 1 || t < this.suppressedUntil || t - this.lastActionAt < this.settings.refractoryMs) return null;
     this.parryArmed = false;
     this.pending = null;
     return this.fire("parry", t, this.move?.best ?? this.score);
@@ -172,6 +170,11 @@ export class GestureClassifier {
   private checkJab(t: number): StrikeAction | null {
     const pending = this.pending;
     if (!pending) return null;
+    // A tap noted after the move began was what jolted the phone.
+    if (t < this.suppressedUntil) {
+      this.pending = null;
+      return null;
+    }
     if (this.progress > pending.best + GAIN_STEP) {
       pending.best = this.progress;
       pending.gainAt = t;

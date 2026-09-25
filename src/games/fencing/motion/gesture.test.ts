@@ -121,4 +121,14 @@ describe("GestureClassifier", () => {
     const out = trace({ accel: sum(thrust(100, 24), thrust(700, 24)) }, 1200).map((s) => classifier.update(s));
     expect(out.filter(Boolean)).toEqual(["jab"]);
   });
+
+  it("drops a jab still waiting when a tap is noted just after the move began", () => {
+    const classifier = new GestureClassifier(settings);
+    // The move starts at about 133 ms. The tap lands soon after, before the jab is confirmed.
+    const out = trace({ accel: thrust(100, 24) }, 800).map((s) => {
+      if (s.t >= 150) classifier.suppressUntil(150 + 150);
+      return classifier.update(s);
+    });
+    expect(out.filter(Boolean)).toEqual([]);
+  });
 });
