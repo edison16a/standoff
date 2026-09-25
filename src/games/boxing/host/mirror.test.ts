@@ -5,7 +5,8 @@ import { defenseFrom } from "./player-input";
 import { mirrorFrom } from "./mirror";
 import { FOREARM, UPPER_ARM } from "../render/models/arm";
 
-const bodyOf = (spec: Parameters<typeof syntheticPose>[0]) => deriveBody(syntheticPose(spec), 0, 16 / 9, null);
+/** A little back from the camera, so arms raised overhead stay in the picture. */
+const bodyOf = (spec: Parameters<typeof syntheticPose>[0]) => deriveBody(syntheticPose({ height: 1.2, ...spec }), 0, 16 / 9, null);
 
 describe("mirrorFrom", () => {
   it("reaches the boxer's glove toward the opponent when the player punches at the camera", () => {
