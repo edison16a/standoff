@@ -1,46 +1,75 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_TUNING } from "@/games/blade-clash/tuning";
-import { Bot } from "./bot";
-import { Engine } from "./engine";
-import type { GameEvent } from "./events";
-import { TICK_MS } from "./fixed-step";
+import { Bot, blockToward } from "./bot";
+import { ATTACKS, attackHold, attackLength } from "./bot-moves";
+import { closestBetween } from "./geometry";
+import { GUARD, swordPose } from "./sword";
+import { hold, makeEngine, runUntil, toLive } from "./test-helpers";
+import { CHARACTERS } from "@/games/blade-clash/characters";
 
-function setup(random: () => number) {
-  const events: GameEvent[] = [];
-  const engine = new Engine({ 1: "vale", 2: "iron" }, () => DEFAULT_TUNING, {
-    onEvent: (event) => events.push(event),
-    onPhase: () => undefined,
-  });
-  const bot = new Bot(2, random);
-  /** Runs the engine with the bot at the controls, stopping early if `until` says so. */
-  const runFor = (ms: number, until: () => boolean = () => false) => {
-    for (let t = 0; t < ms && !until(); t += TICK_MS) {
-      bot.drive(engine);
-      engine.tick();
-    }
+/** A small fixed random sequence, so every run plays the same. */
+function seeded(seed: number): () => number {
+  let state = seed;
+  return () => {
+    state = (state * 1664525 + 1013904223) % 4294967296;
+    return state / 4294967296;
   };
-  engine.start();
-  runFor(3100);
-  return { engine, events, runFor };
 }
 
 describe("Bot", () => {
-  it("closes in and scores on a player who stands still", () => {
-    const { engine, runFor } = setup(() => 0.5);
-    expect(engine.phase).toBe("live");
-    runFor(8000, () => engine.match.scores[2] > 0);
-    expect(engine.match.scores[2]).toBe(1);
+  it("steps in and lands hits on a player who just stands there", () => {
+    const { engine, events } = makeEngine();
+    const bot = new Bot(2, seeded(3));
+    toLive(engine);
+    runUntil(engine, () => events.some((e) => e.type === "hit" && e.attacker === 2), 20_000, () => {
+      engine.control(1, { ...hold(-1, -1.1), move: 0 });
+      bot.drive(engine);
+    });
+    expect(engine.fighters[1].health).toBeLessThan(5);
   });
 
-  it("parries a jab when it reacts in time", () => {
-    // The first draw puts its own attack far off. Every later one parries, fast.
-    let draws = 0;
-    const { engine, events, runFor } = setup(() => (draws++ === 0 ? 1 : 0));
-    engine.control(1, { pitch: 0, yaw: 0, roll: 0, move: 1 });
-    runFor(3000, () => engine.fencers[2].x - engine.fencers[1].x <= 2.1);
-    engine.control(1, { pitch: 0, yaw: 0, roll: 0, move: 0 });
-    engine.strike(1, "jab");
-    runFor(300);
-    expect(events).toContainEqual(expect.objectContaining({ type: "parried", attacker: 1 }));
+  it("wins a whole fight against a player who never moves, then asks for a rematch", () => {
+    const { engine, events } = makeEngine();
+    const bot = new Bot(2, seeded(11));
+    toLive(engine);
+    runUntil(engine, () => engine.phase === "matchOver", 180_000, () => {
+      engine.control(1, { ...hold(-1, -1.1), move: 0 });
+      bot.drive(engine);
+    });
+    expect(events.find((e) => e.type === "matchWon")).toMatchObject({ winner: 2 });
+    bot.drive(engine);
+    expect(engine.match.rematchVotes[2]).toBe(true);
+  });
+
+  it("fights itself to a finish, with clashes along the way", () => {
+    const { engine, events } = makeEngine({ 1: "block", 2: "star" });
+    const bots = [new Bot(1, seeded(5)), new Bot(2, seeded(9))];
+    toLive(engine);
+    runUntil(engine, () => engine.phase === "matchOver", 300_000, () => bots.forEach((bot) => bot.drive(engine)));
+    expect(events.some((e) => e.type === "clash")).toBe(true);
+    expect(events.filter((e) => e.type === "hit").length).toBeGreaterThanOrEqual(5);
+  });
+});
+
+describe("bot moves", () => {
+  it("starts where the blade was, strikes through, and ends back in guard", () => {
+    const start = hold(0.3, 0.2);
+    for (const attack of ATTACKS) {
+      expect(attackHold(attack, start, 0)).toMatchObject({ yaw: start.yaw, pitch: start.pitch });
+      expect(attackHold(attack, start, attack.windUpMs + attack.strikeMs - 0.001).yaw).toBeCloseTo(attack.to.yaw, 2);
+      const end = attackHold(attack, start, attackLength(attack));
+      expect(end.yaw).toBeCloseTo(GUARD.yaw);
+      expect(end.pitch).toBeCloseTo(GUARD.pitch);
+    }
+  });
+
+  it("blocks by pointing its blade at the middle of the other one", () => {
+    const blade = CHARACTERS.knight.blade;
+    const theirs = swordPose(0.8, -1, hold(0, 0.6, 0.5), blade);
+    const mine = swordPose(-0.8, 1, GUARD, blade);
+    const frame = (x: number, facing: 1 | -1, sword: typeof mine) => ({ x, facing, sword }) as Parameters<typeof blockToward>[0];
+    const block = blockToward(frame(-0.8, 1, mine), frame(0.8, -1, theirs));
+    const after = swordPose(-0.8, 1, block, blade);
+    // The blade now lies across the other one.
+    expect(closestBetween({ a: after.base, b: after.tip }, { a: theirs.base, b: theirs.tip }).distance).toBeLessThan(0.08);
   });
 });

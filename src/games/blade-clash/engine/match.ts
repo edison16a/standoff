@@ -1,61 +1,41 @@
-import { perSlot, type PerSlot, type Slot } from "@/games/blade-clash/players";
-import { TOUCHES_TO_WIN, type MatchPhase } from "@/games/blade-clash/protocol";
-import { EN_GARDE_SECONDS, HALT_MS, SHORT_HALT_MS } from "./rules";
-
-/** Why play stopped. Only a touch scores. */
-export type HaltReason = { kind: "touch"; scorer: Slot } | { kind: "double" } | { kind: "corps" };
-
-/** The referee's call, as short as a real one. Left is player one. */
-const CALLS: Record<HaltReason["kind"], (reason: HaltReason) => string> = {
-  touch: (reason) => (reason.kind === "touch" && reason.scorer === 2 ? "Touch right" : "Touch left"),
-  double: () => "Double",
-  corps: () => "Corps-à-corps",
-};
+import { otherSlot, perSlot, type PerSlot, type Slot } from "@/games/blade-clash/players";
+import type { MatchPhase } from "@/games/blade-clash/protocol";
+import { COUNTDOWN_SECONDS, FINISH_MS, MAX_HEALTH } from "./rules";
 
 /**
- * The match as a timed state machine: scores, whose turn it is to do
- * what, and when each phase should hand over to the next. It does not
- * know about fencers or sensors. The engine asks it what phase we are in
- * and reacts to the phase changes `update` reports.
+ * The match as a timed state machine: health, the winner, and when each
+ * phase hands over to the next. It knows nothing about swords. The engine
+ * tells it about hits and reacts to the phase changes `update` reports.
  */
 export class Match {
   phase: MatchPhase = "lobby";
   phaseStartedAt = 0;
-  scores: PerSlot<number> = perSlot(() => 0);
+  health: PerSlot<number> = perSlot(() => MAX_HEALTH);
   rematchVotes: PerSlot<boolean> = perSlot(() => false);
   winner: Slot | null = null;
-  call: string | null = null;
-  haltReason: HaltReason | null = null;
 
-  /** Fresh scores and straight into the first countdown. */
+  /** Full health and straight into the countdown. */
   start(now: number): void {
-    this.scores = perSlot(() => 0);
+    this.health = perSlot(() => MAX_HEALTH);
     this.winner = null;
     this.rematchVotes = perSlot(() => false);
-    this.call = null;
-    this.enter("enGarde", now);
+    this.enter("countdown", now);
   }
 
-  /** Whole seconds left before "allez", or null outside the countdown. */
+  /** Whole seconds left before the fight, or null outside the countdown. */
   countdown(now: number): number | null {
-    if (this.phase !== "enGarde") return null;
-    return Math.max(0, Math.ceil(EN_GARDE_SECONDS - (now - this.phaseStartedAt) / 1000));
+    if (this.phase !== "countdown") return null;
+    return Math.max(0, Math.ceil(COUNTDOWN_SECONDS - (now - this.phaseStartedAt) / 1000));
   }
 
-  /** Stops the exchange. A touch is scored right away so the HUD updates. */
-  halt(reason: HaltReason, now: number): void {
-    this.haltReason = reason;
-    this.call = CALLS[reason.kind](reason);
-    if (reason.kind === "touch") {
-      this.scores[reason.scorer] += 1;
-      if (this.scores[reason.scorer] >= TOUCHES_TO_WIN) this.winner = reason.scorer;
-    }
-    this.enter("halt", now);
-  }
-
-  /** True if this touch would end the match, used to pick a bigger cheer. */
-  isMatchPoint(scorer: Slot): boolean {
-    return this.scores[scorer] + 1 >= TOUCHES_TO_WIN;
+  /** Takes one health from `victim`. Returns true when that was their last, which ends the fight. */
+  hurt(victim: Slot, now: number): boolean {
+    if (this.phase !== "live") return false;
+    this.health[victim] = Math.max(0, this.health[victim] - 1);
+    if (this.health[victim] > 0) return false;
+    this.winner = otherSlot(victim);
+    this.enter("finish", now);
+    return true;
   }
 
   /** Records a rematch vote. Returns true once both players want one. */
@@ -66,33 +46,27 @@ export class Match {
   }
 
   pause(now: number): void {
-    if (this.phase !== "enGarde" && this.phase !== "live") return;
+    if (this.phase !== "countdown" && this.phase !== "live") return;
     this.enter("paused", now);
   }
 
-  /** Coming back from a pause always restarts the exchange from the countdown. */
+  /** Coming back from a pause counts down again, with health as it was. */
   resume(now: number): void {
     if (this.phase !== "paused") return;
-    this.enter("enGarde", now);
+    this.enter("countdown", now);
   }
 
-  /**
-   * Advances time. Returns the phase we just entered, if any, so the
-   * engine can do the side effects (recenter phones, crown a winner).
-   */
+  /** Advances time. Returns the phase just entered, if any, so the engine can react. */
   update(now: number): MatchPhase | null {
     const elapsed = now - this.phaseStartedAt;
-    if (this.phase === "enGarde") return elapsed >= EN_GARDE_SECONDS * 1000 ? this.enter("live", now) : null;
-    if (this.phase !== "halt") return null;
-    const touch = this.haltReason?.kind === "touch";
-    if (elapsed < (touch ? HALT_MS : SHORT_HALT_MS)) return null;
-    return this.enter(this.winner ? "matchOver" : "enGarde", now);
+    if (this.phase === "countdown" && elapsed >= COUNTDOWN_SECONDS * 1000) return this.enter("live", now);
+    if (this.phase === "finish" && elapsed >= FINISH_MS) return this.enter("matchOver", now);
+    return null;
   }
 
   private enter(phase: MatchPhase, now: number): MatchPhase {
     this.phase = phase;
     this.phaseStartedAt = now;
-    if (phase === "enGarde") this.call = null;
     return phase;
   }
 }

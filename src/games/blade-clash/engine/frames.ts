@@ -1,49 +1,49 @@
 import type { CharacterId } from "@/games/blade-clash/characters";
 import type { Slot } from "@/games/blade-clash/players";
+import type { SwordControl, SwordPose } from "./sword";
 
 /**
- * What a fencer is doing beyond following the live controller. "scored" is
- * the lunge that made a touch, held out while the referee calls it, so the
- * slow motion close up shows the hit and not the recovery.
+ * What a fighter is doing beyond walking and holding their sword. "hit"
+ * is the flinch after taking a hit, "stagger" the shake after a clash.
  */
-export type FencerAction = "idle" | "jab" | "scored" | "parry" | "hit" | "deflected" | "victory" | "defeat";
+export type FighterAction = "idle" | "hit" | "stagger" | "defeat" | "victory";
 
 /**
- * One fencer at one instant, holding everything the renderer needs. The
- * renderer is a pure function of these frames, which is why a replay can
- * run back through the exact same drawing code as live play.
+ * One fighter at one instant, holding everything the renderer needs. The
+ * renderer is a pure function of these frames and never decides anything.
  */
-export interface FencerFrame {
+export interface FighterFrame {
   slot: Slot;
   characterId: CharacterId;
-  /** Position on the strip, metres from the centre line. */
+  /** Position on the line, metres from the middle. */
   x: number;
-  /** 1 faces right (player one), -1 faces left. */
+  /** 1 faces along +x (player one), -1 faces back. */
   facing: 1 | -1;
-  /** Live sword angles from the phone, radians. */
-  pitch: number;
-  yaw: number;
-  roll: number;
-  /** Walking speed toward the opponent, m/s. Negative is retreating. */
+  /** Walking speed toward the opponent, m/s. Negative is backing off. */
   speed: number;
-  action: FencerAction;
+  health: number;
+  action: FighterAction;
   /** Milliseconds since the action started. */
   actionMs: number;
-  /** True while a parry window is open, drawn as a blade glint. */
-  parrying: boolean;
+  /** The hold, as the sword shows it. */
+  control: SwordControl;
+  /** The sword in the world. */
+  sword: SwordPose;
+  /** 1 while a clash has thrown the sword, easing to 0 as it returns. */
+  knocked: number;
 }
 
 export interface SceneFrame {
   /** Engine clock, milliseconds. */
   t: number;
-  fencers: [FencerFrame, FencerFrame];
+  fighters: [FighterFrame, FighterFrame];
 }
 
 /**
- * What the renderer draws: any number of fencers. The lobby shows only the
- * players who have picked a fencer so far, so it may be none, one or two.
+ * What the renderer draws: any number of fighters. The lobby shows only
+ * the players who have picked someone so far, so it may be none, one or two.
  */
 export interface StageFrame {
   t: number;
-  fencers: readonly FencerFrame[];
+  fighters: readonly FighterFrame[];
 }

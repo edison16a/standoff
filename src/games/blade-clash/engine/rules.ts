@@ -1,66 +1,40 @@
 /**
- * Fixed rules of the strip. Unlike the tuning values these do not change
+ * Fixed rules of the duel. Unlike the tuning values these never change
  * during play, they describe the world. Distances are metres, times are
- * milliseconds, and x runs along the strip with 0 at the centre line.
+ * milliseconds. x runs along the fighting line with 0 in the middle, y is
+ * up from the floor, and z is across the line.
  */
 
-/** A real strip is 14 m long. */
-export const STRIP_HALF_LENGTH = 7;
-/** Each fencer starts this far from the centre, like the en garde lines. */
-export const EN_GARDE_X = 2;
-/** Top walking speed when the controller is pushed all the way out. */
-export const MAX_SPEED = 1.8;
-/** Centre to centre distance a lunging jab can reach. */
-export const REACH = 2.4;
-/** Closer than this and the bodies collide: corps-à-corps. */
-export const MIN_GAP = 0.9;
-/** How far apart corps-à-corps puts the fencers back. */
-export const RESET_GAP = 3.2;
+/** How far either way the fighters may walk from the middle. */
+export const LINE_HALF_LENGTH = 5;
+/** Each fighter starts this far from the middle. */
+export const START_X = 1.75;
+/** Bodies never get closer than this, centre to centre. */
+export const MIN_GAP = 1.05;
+/** Walking speed with Forward or Back held. */
+export const WALK_SPEED = 1.7;
+/** Hits a fighter can take. The last one ends the fight. */
+export const MAX_HEALTH = 5;
+/** Seconds counted down before the fight starts. */
+export const COUNTDOWN_SECONDS = 3;
 /**
- * Time from a jab being detected to the tip arriving. Long enough that a
- * quick defender who sees the lunge start can still parry it, and about
- * as long as a real lunge takes.
+ * Engine time from the final hit to the winner screen. The host plays the
+ * start of it in slow motion, so on screen it lasts a good while longer.
  */
-export const JAB_IMPACT_MS = 220;
-/** How long the lunge animation takes to extend and recover. */
-export const JAB_DURATION_MS = 520;
-/**
- * A parry that reaches the host this soon after a jab landed still saves
- * it. Phones are never quite in step over WiFi, and a parry the player saw
- * themselves make in time should count.
- */
-export const PARRY_GRACE_MS = 80;
-/**
- * After a parry that blocked nothing, the fencer cannot parry again for
- * this long. Without it, raising the phone over and over would keep a
- * parry open all the time.
- */
-export const PARRY_RECOVERY_MS = 250;
-/**
- * A jab is aimed by where the blade pointed this long before it was
- * detected. A jab is a quick flick or shake, and the phone waits a moment
- * to be sure it is not a fast parry, so by then the flick has thrown the
- * blade off where the player was aiming.
- */
-export const AIM_LOOKBACK_MS = 180;
-/** Two touches this close together cancel out, like an épée double. */
-export const DOUBLE_WINDOW_MS = 60;
-/** A parried attacker cannot strike again for this long. */
-export const DEFLECTED_MS = 450;
-/**
- * A tip more than this far off line (radians) misses even in range. It is
- * what makes the live sword angle matter and not just the jab trigger.
- */
-export const OFF_TARGET_ANGLE = (70 * Math.PI) / 180;
-/** Seconds counted down before each exchange. */
-export const EN_GARDE_SECONDS = 3;
-/**
- * Freeze after a touch, in engine time. The host plays the first part of
- * it in slow motion (see MatchDriver), so on screen it lasts about two
- * seconds, long enough to see the hit land and the burst go off.
- */
-export const HALT_MS = 1400;
-/** Freeze after a corps-à-corps or a double before play resumes. */
-export const SHORT_HALT_MS = 900;
-/** Two jabs this close together, one of them parried, count as a clash. */
-export const CLASH_WINDOW_MS = 350;
+export const FINISH_MS = 1600;
+
+/** A hit fighter flinches for this long. */
+export const HIT_REACTION_MS = 420;
+/** And cannot be hit again meanwhile, so one swing is one hit. */
+export const HIT_GUARD_MS = 480;
+/** A hit pushes the fighter who took it back along the line by this much. */
+export const HIT_PUSHBACK = 0.3;
+/** After a clash, the blades cannot clash again for this long. */
+export const CLASH_COOLDOWN_MS = 220;
+/** Both fighters stagger for this long after a clash. */
+export const STAGGER_MS = 380;
+
+/** A blade tip moving faster than this makes a whoosh. */
+export const SWING_SPEED = 5;
+/** And has to slow below this before it can make another. */
+export const SWING_REARM_SPEED = 2.5;

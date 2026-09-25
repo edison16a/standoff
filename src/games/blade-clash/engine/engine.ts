@@ -1,43 +1,48 @@
 import type { CharacterId } from "@/games/blade-clash/characters";
 import { SLOTS, type PerSlot, type Slot } from "@/games/blade-clash/players";
-import type { MatchPhase, StrikeAction } from "@/games/blade-clash/protocol";
+import type { MatchPhase } from "@/games/blade-clash/protocol";
 import type { Tuning } from "@/games/blade-clash/tuning";
+import { Combat } from "./combat";
 import type { GameEvent } from "./events";
-import { Fencer, type ControllerInput } from "./fencer";
+import { Fighter } from "./fighter";
 import { FixedStepClock, TICK_MS } from "./fixed-step";
 import type { SceneFrame } from "./frames";
 import { Match } from "./match";
-import { Referee } from "./referee";
-import { clampToStrip, isCorpsACorps, separate } from "./strip";
+import { LINE_HALF_LENGTH, MIN_GAP } from "./rules";
+import type { SwordControl } from "./sword";
 
 export interface EngineListener {
   onEvent(event: GameEvent): void;
   onPhase(phase: MatchPhase): void;
 }
 
+/** What a phone sends every frame: how the sword is held, and the footwork buttons. */
+export interface ControllerInput extends SwordControl {
+  move: number;
+}
+
 /**
- * The host side game: two fencers, the referee and the match clock. The page calls `advance` every animation frame and draws
- * whatever `scene` returns. Inputs from the phones arrive through
- * `control` and `strike`, stamped with the engine's own clock, because
- * the phones' clocks cannot be trusted to agree with each other.
+ * The duel on the host: two fighters, their swords and the match clock.
+ * The page calls `advance` every animation frame and draws whatever
+ * `scene` returns. Phones only say how they hold the sword and which
+ * button is down. Every hit and clash is decided here, by the swords
+ * themselves meeting in the world.
  */
 export class Engine {
-  readonly match: Match;
-  readonly fencers: PerSlot<Fencer>;
-  private readonly referee: Referee;
+  readonly match = new Match();
+  readonly fighters: PerSlot<Fighter>;
+  private readonly combat = new Combat();
   private clock = 0;
   private readonly stepper = new FixedStepClock();
   private lastCountdown: number | null = null;
-  private nextPositions: [number, number] | null = null;
 
   constructor(
     characters: PerSlot<CharacterId>,
     private readonly tuning: () => Tuning,
     private readonly listener: EngineListener,
   ) {
-    this.fencers = { 1: new Fencer(1, characters[1]), 2: new Fencer(2, characters[2]) };
-    this.match = new Match();
-    this.referee = new Referee(this.fencers, () => this.tuning().parryWindowMs);
+    const timing = () => ({ outMs: this.tuning().knockOutMs, returnMs: this.tuning().knockReturnMs });
+    this.fighters = { 1: new Fighter(1, characters[1], timing), 2: new Fighter(2, characters[2], timing) };
   }
 
   get now(): number {
@@ -50,19 +55,13 @@ export class Engine {
 
   start(): void {
     this.match.start(this.clock);
-    this.onEnter("enGarde");
+    this.onEnter("countdown");
   }
 
   control(slot: Slot, input: ControllerInput): void {
-    this.fencers[slot].input = input;
-  }
-
-  /** Returns false when the referee ignored the strike, so the phone can say why nothing happened. */
-  strike(slot: Slot, action: StrikeAction): boolean {
-    if (this.match.phase !== "live") return false;
-    const events = action === "jab" ? this.referee.jab(slot, this.clock) : this.referee.parry(slot, this.clock);
-    events.forEach((event) => this.emit(event));
-    return events.length > 0;
+    const fighter = this.fighters[slot];
+    fighter.sword.setTarget(input);
+    fighter.move = Math.max(-1, Math.min(1, input.move));
   }
 
   rematch(slot: Slot): boolean {
@@ -71,65 +70,66 @@ export class Engine {
     return true;
   }
 
-  /** A phone dropping mid exchange pauses play until it is back. */
+  /** A phone dropping mid fight pauses it until the phone is back. */
   setConnected(connected: PerSlot<boolean>): void {
-    const bothHere = connected[1] && connected[2];
     const before = this.match.phase;
-    if (!bothHere) this.match.pause(this.clock);
+    if (!(connected[1] && connected[2])) this.match.pause(this.clock);
     else this.match.resume(this.clock);
     if (this.match.phase !== before) this.onEnter(this.match.phase);
   }
 
-  /** Runs as many fixed steps as the wall clock says have passed. */
-  advance(wallNow: number): void {
-    const steps = this.stepper.stepsFor(wallNow);
+  /** Runs as many fixed steps as the game clock says have passed. */
+  advance(gameNow: number): void {
+    const steps = this.stepper.stepsFor(gameNow);
     for (let i = 0; i < steps; i++) this.tick();
   }
 
-  /** What to draw right now. */
   scene(): SceneFrame {
-    return this.liveFrame();
+    return { t: this.clock, fighters: [this.fighters[1].frame(this.clock), this.fighters[2].frame(this.clock)] };
   }
 
   tick(): void {
     this.clock += TICK_MS;
     const phase = this.match.phase;
-    for (const slot of SLOTS) this.fencers[slot].followPose(TICK_MS);
-
-    if (phase === "live") this.stepLive();
-    if (phase === "enGarde") this.announceCountdown();
+    const live = phase === "live";
+    for (const slot of SLOTS) {
+      const fighter = this.fighters[slot];
+      fighter.beginTick(TICK_MS, this.clock);
+      fighter.settle(this.clock);
+      fighter.walk(TICK_MS, live && fighter.action !== "defeat", this.clock);
+    }
+    this.keepApart();
+    if (live) this.fight();
+    if (phase === "countdown") this.announceCountdown();
     const entered = this.match.update(this.clock);
     if (entered) this.onEnter(entered);
   }
 
-  private stepLive(): void {
-    const [left, right] = [this.fencers[1], this.fencers[2]];
-    for (const fencer of [left, right]) {
-      fencer.walk(TICK_MS, true);
-      fencer.x = clampToStrip(fencer.x);
+  private fight(): void {
+    for (const slot of SLOTS) {
+      const speed = this.fighters[slot].swing(TICK_MS);
+      if (speed !== null) this.emit({ type: "swing", t: this.clock, slot, speed });
     }
-    if (isCorpsACorps(left.x, right.x)) {
-      this.nextPositions = separate(left.x, right.x);
-      this.emit({ type: "corps", t: this.clock });
-      this.match.halt({ kind: "corps" }, this.clock);
-      this.onEnter("halt");
-      return;
-    }
-    const { events, verdict } = this.referee.step(this.clock);
+    const events = this.combat.step(this.fighters, this.match, this.tuning(), this.clock, TICK_MS);
     events.forEach((event) => this.emit(event));
-    if (!verdict) return;
-    if (verdict.kind === "double") {
-      this.match.halt({ kind: "double" }, this.clock);
-    } else {
-      const matchPoint = this.match.isMatchPoint(verdict.scorer);
-      this.fencers[verdict.scorer === 1 ? 2 : 1].setAction("hit", verdict.at);
-      // The lunge stays out through the call. Keeping its start time keeps the pose continuous.
-      const scorer = this.fencers[verdict.scorer];
-      if (scorer.action === "jab") scorer.action = "scored";
-      this.emit({ type: "touch", t: verdict.at, scorer: verdict.scorer, matchPoint });
-      this.match.halt({ kind: "touch", scorer: verdict.scorer }, this.clock);
-    }
-    this.onEnter("halt");
+    // A hit pushes the fighter back, which may need the line's ends again.
+    this.keepApart();
+    if (this.match.phase === "finish") this.onEnter("finish");
+  }
+
+  /** Nobody walks through the other or off the end of the line. */
+  private keepApart(): void {
+    const [left, right] = [this.fighters[1], this.fighters[2]];
+    left.x = Math.max(-LINE_HALF_LENGTH, Math.min(left.x, LINE_HALF_LENGTH - MIN_GAP));
+    right.x = Math.min(LINE_HALF_LENGTH, Math.max(right.x, -LINE_HALF_LENGTH + MIN_GAP));
+    const overlap = MIN_GAP - (right.x - left.x);
+    if (overlap <= 0) return;
+    // Whoever walked in gets stopped: split the overlap by how hard each pressed forward.
+    const pushLeft = Math.max(0, left.speed);
+    const pushRight = Math.max(0, right.speed);
+    const share = pushLeft + pushRight > 0 ? pushLeft / (pushLeft + pushRight) : 0.5;
+    left.x -= overlap * share;
+    right.x += overlap * (1 - share);
   }
 
   private announceCountdown(): void {
@@ -142,19 +142,18 @@ export class Engine {
 
   /** Side effects of entering a phase. */
   private onEnter(phase: MatchPhase): void {
-    if (phase === "enGarde") {
-      const [left, right] = this.nextPositions ?? [this.fencers[1].startX, this.fencers[2].startX];
-      this.nextPositions = null;
-      this.fencers[1].reset(left);
-      this.fencers[2].reset(right);
-      this.referee.reset();
+    if (phase === "countdown") {
+      for (const slot of SLOTS) {
+        this.fighters[slot].reset();
+        this.fighters[slot].health = this.match.health[slot];
+      }
+      this.combat.reset();
       this.lastCountdown = null;
     } else if (phase === "live") {
-      this.emit({ type: "allez", t: this.clock });
+      this.emit({ type: "fight", t: this.clock });
     } else if (phase === "matchOver") {
       const winner = this.match.winner ?? 1;
-      this.fencers[winner].setAction("victory", this.clock);
-      this.fencers[winner === 1 ? 2 : 1].setAction("defeat", this.clock);
+      this.fighters[winner].setAction("victory", this.clock);
       this.emit({ type: "matchWon", t: this.clock, winner });
     }
     this.listener.onPhase(phase);
@@ -162,9 +161,5 @@ export class Engine {
 
   private emit(event: GameEvent): void {
     this.listener.onEvent(event);
-  }
-
-  private liveFrame(): SceneFrame {
-    return { t: this.clock, fencers: [this.fencers[1].frame(this.clock), this.fencers[2].frame(this.clock)] };
   }
 }
