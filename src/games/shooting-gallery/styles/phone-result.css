@@ -1,0 +1,125 @@
+/*
+  Shooting Gallery on the phone after the buzzer: this player's result
+  and everyone's scores.
+*/
+
+/* The result after the buzzer. */
+
+.sg-result {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 1vh, 8px);
+  padding: 8px 0;
+  text-align: center;
+}
+
+.sg-result__kicker {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.sg-result__title {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 900;
+}
+
+.sg-result__score {
+  margin: 0;
+  color: var(--p);
+  font-size: clamp(48px, 9vh, 80px);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.sg-result__line,
+.sg-result__best {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.sg-result__best {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.sg-result .sg-ready {
+  min-height: clamp(64px, 12vh, 150px);
+  margin-top: clamp(4px, 1.5vh, 14px);
+}
+
+/* Everyone's score, so a player sees who beat them without looking up. */
+.sg-result__others {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: clamp(2px, 1vh, 10px) 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.sg-result__others li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--p);
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+}
+
+.sg-result__others .sg-result__me {
+  background: var(--bg-muted);
+}
+
+.sg-result__place {
+  min-width: 2.4em;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.sg-result__who {
+  flex: 1;
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sg-result__others strong {
+  color: var(--p);
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sideways: the result and its button on the left, everyone's scores on the right. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .sg-result {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-content: center;
+    column-gap: 24px;
+    flex: 1;
+  }
+
+  .sg-result > :not(.sg-result__others) {
+    grid-column: 1;
+  }
+
+  .sg-result__others {
+    grid-row: 1 / span 6;
+    grid-column: 2;
+    align-self: center;
+    margin: 0;
+  }
+
+  .sg-result__others li {
+    padding: 5px 12px;
+  }
+}

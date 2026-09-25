@@ -5,8 +5,12 @@
 
 .sg-gun {
   display: flex;
+  flex: 1 1 0;
   flex-direction: column;
   gap: 6px;
+  /* The gun gets the height the finishes leave. */
+  min-height: 120px;
+  max-height: 300px;
   border-radius: 18px;
   background:
     radial-gradient(circle at 50% 40%, rgba(255, 214, 150, 0.35), transparent 65%),
@@ -16,8 +20,9 @@
 
 .sg-preview {
   display: block;
+  flex: 1;
   width: 100%;
-  height: 210px;
+  min-height: 0;
   touch-action: pan-y;
   cursor: grab;
 }
@@ -86,7 +91,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 150px;
+  min-height: clamp(72px, 20vh, 150px);
   border: 0;
   border-radius: 22px;
   background: linear-gradient(#ff5a6b, #c8142f);
@@ -113,7 +118,8 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: 14px;
+  gap: clamp(8px, 1.8vh, 14px);
+  min-height: 0;
 }
 
 .sg-pad__top {
@@ -170,11 +176,13 @@
   display: grid;
   flex: 1;
   place-items: center;
+  min-height: 0;
 }
 
 .sg-pad__middle .kit-fire {
   --kit-fire: var(--p);
-  width: min(74vw, 300px);
+  /* As big as the room it has, which sideways is the height. */
+  width: min(74vw, 300px, 46dvh);
   box-shadow:
     0 10px 0 color-mix(in srgb, var(--p) 55%, #000),
     0 18px 30px rgba(0, 0, 0, 0.3);
@@ -182,7 +190,8 @@
 
 .sg-pad__middle .kit-pad {
   width: 100%;
-  min-height: 360px;
+  height: 100%;
+  min-height: min(360px, 40dvh);
 }
 
 .sg-shoot {
@@ -219,98 +228,4 @@
   margin: 0;
   text-align: center;
   font-size: 13px;
-}
-
-/* The result after the buzzer. */
-
-.sg-result {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px 0;
-  text-align: center;
-}
-
-.sg-result__kicker {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.sg-result__title {
-  margin: 0;
-  font-size: 30px;
-  font-weight: 900;
-}
-
-.sg-result__score {
-  margin: 0;
-  color: var(--p);
-  font-size: 80px;
-  font-weight: 900;
-  line-height: 1;
-}
-
-.sg-result__line,
-.sg-result__best {
-  margin: 0;
-  color: var(--text-muted);
-}
-
-.sg-result__best {
-  color: var(--text);
-  font-weight: 700;
-}
-
-.sg-result .sg-ready {
-  margin-top: 14px;
-}
-
-/* Everyone's score, so a player sees who beat them without looking up. */
-.sg-result__others {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 10px 0 0;
-  padding: 0;
-  list-style: none;
-  text-align: left;
-}
-
-.sg-result__others li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--p);
-  border-radius: var(--radius);
-  background: var(--bg-elevated);
-}
-
-.sg-result__others .sg-result__me {
-  background: var(--bg-muted);
-}
-
-.sg-result__place {
-  min-width: 2.4em;
-  color: var(--text-muted);
-  font-weight: 700;
-}
-
-.sg-result__who {
-  flex: 1;
-  overflow: hidden;
-  font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.sg-result__others strong {
-  color: var(--p);
-  font-size: 20px;
-  font-variant-numeric: tabular-nums;
 }

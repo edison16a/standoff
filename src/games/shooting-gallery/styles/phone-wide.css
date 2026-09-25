@@ -1,0 +1,61 @@
+/*
+  Shooting Gallery's phone pages held sideways, where height runs out:
+  the gun beside its finishes, and the score beside the trigger.
+*/
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .kit-steps__body:has(> .sg-gun) {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .sg-gun {
+    min-height: 0;
+    max-height: none;
+  }
+
+  .sg-gun__name {
+    margin-bottom: 8px;
+  }
+
+  .sg-finishes {
+    align-content: center;
+  }
+
+  .sg-finish {
+    padding: 6px;
+  }
+
+  .sg-finish__chip {
+    width: 28px;
+    height: 28px;
+  }
+
+  /* The score and time on the left, the trigger on the right. */
+  .sg-pad {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    column-gap: 20px;
+  }
+
+  .sg-pad__top,
+  .sg-pad__hint {
+    grid-column: 1;
+  }
+
+  .sg-pad__hint {
+    align-self: start;
+    text-align: left;
+  }
+
+  .sg-pad__middle {
+    grid-row: 1 / 3;
+    grid-column: 2;
+  }
+
+  .sg-pad__middle .kit-fire {
+    width: min(100%, 64dvh, 300px);
+  }
+}
