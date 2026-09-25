@@ -1,6 +1,6 @@
 import type { CameraKit, MoveEvent } from "@/games/kit/camera";
-import { BodySteer } from "../engine/body-steer";
 import { clampLane, type Lane } from "../engine/tuning";
+import { CameraInput } from "./camera-input";
 
 /** What one player asks of their runner this frame. */
 export interface Intent {
@@ -29,15 +29,15 @@ interface PlayerInput {
   keyDuck: boolean;
   /** The lane last handed out, to tell listeners when it changes. */
   lane: Lane;
-  steer: BodySteer;
+  camera: CameraInput;
 }
 
 /**
- * Turns each player's body into runner input. Jumps and ducks are caught
- * on the camera frame they happen and held until the game reads them, so
- * none is lost between frames. The lane is read fresh every frame, so a
- * step or a lean counts the moment the camera sees it. The keyboard works
- * too, for trying the game without standing up.
+ * Turns each player's head line into runner input: the head up out of
+ * its band jumps, down out of it rolls, and the head and shoulders
+ * moving left or right change track. Only the upper body counts, so
+ * players stand waist up. The keyboard works too, for trying the game
+ * without standing up.
  */
 export class Controls {
   private readonly inputs: PlayerInput[];
@@ -48,7 +48,7 @@ export class Controls {
     private readonly kit: CameraKit | null,
     private readonly players: number,
   ) {
-    this.inputs = Array.from({ length: players }, () => ({ jump: false, duck: false, keyLane: null, keyDuck: false, lane: 0, steer: new BodySteer() }));
+    this.inputs = Array.from({ length: players }, () => ({ jump: false, duck: false, keyLane: null, keyDuck: false, lane: 0, camera: new CameraInput() }));
     const stopKit = kit?.onMove((event) => this.onMove(event)) ?? (() => undefined);
     const down = (e: KeyboardEvent) => this.onKey(e, true);
     const up = (e: KeyboardEvent) => this.onKey(e, false);
@@ -61,7 +61,7 @@ export class Controls {
     };
   }
 
-  /** Camera moves for the tutorial and for pausing a player who steps away, with lane changes from leans and keys too. */
+  /** Camera moves for the tutorial and for pausing a player who steps away, with lane changes from keys too. */
   listen(listener: (event: MoveEvent) => void): () => void {
     this.moveListeners.add(listener);
     return () => this.moveListeners.delete(listener);
@@ -70,18 +70,19 @@ export class Controls {
   /** Takes a player's input for this frame. Jumps and ducks are handed out once. */
   take(slot: number, now = performance.now()): Intent {
     const input = this.inputs[slot - 1]!;
-    const moves = this.kit?.moves(slot);
-    const reading = moves?.calibrated ? { lane: moves.lane, offset: moves.offset, lean: moves.lean, ducking: moves.ducking } : null;
-    const lane = input.keyLane ?? (reading ? input.steer.lane(reading, now) : 0);
-    if (reading && input.steer.heldDuck(reading, now)) input.duck = true;
-    const ducking = input.keyDuck || (!!reading && input.steer.ducking(reading, now));
-    const intent: Intent = { lane, jump: input.jump, duck: input.duck, ducking };
+    const camera = input.camera.take(this.kit?.moves(slot) ?? null);
+    const lane = input.keyLane ?? camera?.lane ?? 0;
+    const intent: Intent = {
+      lane,
+      jump: input.jump || !!camera?.jump,
+      duck: input.duck || !!camera?.duck,
+      ducking: input.keyDuck || !!camera?.ducking,
+    };
     input.jump = false;
     input.duck = false;
-    // A step is told by the kit on the camera frame it happens, so a quick one is never missed
-    // between drawn frames. A lean or a key is told here.
-    const stepped = input.keyLane === null && !!reading && clampLane(Math.round(reading.lane)) === lane;
-    if (lane !== input.lane && !stepped) this.tell({ slot, time: now, type: "lane", lane, from: input.lane });
+    // A camera lane change is told by the kit on the frame it happens, so a quick one is never
+    // missed between drawn frames. A key is told here.
+    if (lane !== input.lane && input.keyLane !== null) this.tell({ slot, time: now, type: "lane", lane, from: input.lane });
     input.lane = lane;
     return intent;
   }
@@ -90,7 +91,7 @@ export class Controls {
   reset(): void {
     for (const input of this.inputs) {
       input.jump = input.duck = false;
-      input.steer.reset();
+      input.camera.reset();
     }
   }
 
@@ -106,9 +107,7 @@ export class Controls {
   private onMove(event: MoveEvent): void {
     const input = this.inputs[event.slot - 1];
     if (!input) return;
-    if (event.type === "jump") input.jump = true;
-    if (event.type === "land") input.steer.landed(event.time);
-    if (event.type === "duck" && input.steer.duck(event.time)) input.duck = true;
+    input.camera.see(event);
     // A body move takes the lane back from the keys.
     if (event.type === "lane") input.keyLane = null;
     this.tell(event);

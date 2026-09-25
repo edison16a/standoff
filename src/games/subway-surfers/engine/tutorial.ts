@@ -1,7 +1,9 @@
 /**
- * The short live tutorial before the first run: each player steps left,
- * steps right, jumps and ducks, in that order, and each move is ticked
- * off as the camera sees it. Pure, so tests can drive it with moves.
+ * The short live tutorial before the first run: each player moves left,
+ * moves right, jumps and rolls, in that order, and each move is ticked
+ * off as the camera sees it. Every move is the head leaving its band, so
+ * the camera only needs to see players from the waist up. Pure, so tests
+ * can drive it with moves.
  */
 
 export type TutorialStep = "left" | "right" | "jump" | "duck";
@@ -9,10 +11,10 @@ export type TutorialStep = "left" | "right" | "jump" | "duck";
 export const TUTORIAL_STEPS: readonly TutorialStep[] = ["left", "right", "jump", "duck"];
 
 export const STEP_TEXT: Record<TutorialStep, { title: string; hint: string }> = {
-  left: { title: "Step left", hint: "One big step to your left, or lean that way" },
-  right: { title: "Step right", hint: "Now step or lean to your right, past the middle" },
-  jump: { title: "Jump", hint: "Jump up with both feet" },
-  duck: { title: "Duck", hint: "Bend your knees and get low" },
+  left: { title: "Move left", hint: "Move or lean your head and shoulders to your left" },
+  right: { title: "Move right", hint: "Now move or lean to your right, past the middle" },
+  jump: { title: "Jump", hint: "Jump so your head goes up past the top of your band" },
+  duck: { title: "Roll", hint: "Duck so your head drops below your band" },
 };
 
 /** A move as the tutorial needs it: a lane reached, a jump or a duck. */
