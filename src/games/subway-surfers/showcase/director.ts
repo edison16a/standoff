@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import type { Run } from "../engine/run";
-import { frontAt } from "../engine/types";
+import { frontAt, type PowerKind } from "../engine/types";
 import type { RunScene } from "../render/run-scene";
 import { ShowRun } from "./show-run";
 
@@ -15,8 +15,10 @@ export interface Shot {
   moment?: (run: Run) => boolean;
   /** Sets up a still by hand once the moment comes: a pose in the air, coins round the runner. */
   stage?: (run: Run) => void;
-  /** Power ups to start with, for the look of them. */
-  powers?: readonly ("hoverboard" | "boots" | "magnet")[];
+  /** What every power up on the course becomes, or null for none. See ShowRun. */
+  pickups: PowerKind | null;
+  /** Cuts each power up short, so it shows for part of the clip. */
+  powerSeconds?: number;
   /** Which camera, by seconds into the showcase. */
   cuts: readonly (readonly [number, Angle])[];
   /** Time runs this fast. Stills barely move, so every pose has settled when the picture is taken. */
@@ -58,10 +60,12 @@ function hoverLeap(run: Run): void {
 
 export const SHOTS: Record<"loop" | "icon" | "poster", Shot> = {
   // The capture tool lets the scene settle for 3 seconds first, so the clip runs from about 3 to 12.
-  loop: { seed: 7, look: 0, warmup: 14, powers: ["boots"], cuts: [[0, "chase"], [7, "side"], [9.6, "chase"]], pace: 1 },
+  // Coins are taken by touch, in the open city with no tunnel. Seed 20 grabs jump boots at 6 seconds,
+  // leaps high with a flip at 7 seen from the side, slams down into a roll and loses the boots at 11.
+  loop: { seed: 20, look: 0, warmup: 12.5, pickups: "boots", powerSeconds: 5, cuts: [[0, "chase"], [6.8, "side"], [9.4, "chase"]], pace: 1 },
   // Seed 7 meets a train rolling in on the next track at about 23 seconds. The runner leaps as it comes.
-  poster: { seed: 7, look: 0, warmup: 20, moment: (run) => run.runner.grounded && trainComing(run), stage: leap, cuts: [[0, "chase"]], pace: 0.005 },
-  icon: { seed: 11, look: 0, warmup: 14, moment: (run) => run.runner.grounded && run.runner.lane === 0, stage: hoverLeap, cuts: [[0, "hero"]], pace: 0.005 },
+  poster: { seed: 7, look: 0, warmup: 20, moment: (run) => run.runner.grounded && trainComing(run), stage: leap, pickups: null, cuts: [[0, "chase"]], pace: 0.005 },
+  icon: { seed: 11, look: 0, warmup: 14, moment: (run) => run.runner.grounded && run.runner.lane === 0, stage: hoverLeap, pickups: null, cuts: [[0, "hero"]], pace: 0.005 },
 };
 
 /** Where each camera sits and looks, from the runner's feet: [x, y, z] then the point it looks at. */
@@ -88,7 +92,7 @@ export class Director {
     private readonly shot: Shot,
     private readonly scene: RunScene,
   ) {
-    this.show = new ShowRun(shot.seed, shot.warmup, (run) => shot.powers?.forEach((kind) => run.powers.start(kind)));
+    this.show = new ShowRun(shot.seed, shot.warmup, { pickups: shot.pickups, powerSeconds: shot.powerSeconds });
     if (shot.moment) {
       // Up to a minute and a half on, staying in the first zone's sunny yard.
       const run = this.show.run;

@@ -77,7 +77,7 @@ await page.evaluate(() => window.__cameraKit.inject(2, null));          // playe
 
 ## Home screen media
 
-`showcase/` plays a seeded run with a computer runner and a director that picks the camera, so every capture is the same. The tile shows the runner on a hoverboard in the neon city above the logo, the poster has a train rolling in, and the clip is eight seconds of neon downtown: trains, ramps, roofs and coins.
+`showcase/` plays a seeded run with a computer runner and a director that picks the camera, so every capture is the same. The tile shows the runner on a hoverboard in the neon city above the logo, the poster has a train rolling in, and the clip is eight seconds of neon downtown: lane changes, coins picked up as the runner touches them, jump boots for a few seconds with a high flip seen from the side, then a roll. The showcase turns every power up on its course into jump boots (or clears them), since the magnets the yard lays early on pull coins in from afar.
 
 ```sh
 node tools/media/capture.mjs subway-surfers --url http://localhost:3000 --ffmpeg ffmpeg --size 960x540
