@@ -56,7 +56,7 @@ export function Lobby() {
         </button>
         <ul className="ss-lobby__how">
           <li>
-            <b>Step</b> left or right to change track
+            <b>Step</b> or lean to change track
           </li>
           <li>
             <b>Jump</b> over barriers

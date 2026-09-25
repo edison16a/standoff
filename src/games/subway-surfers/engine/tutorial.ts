@@ -9,8 +9,8 @@ export type TutorialStep = "left" | "right" | "jump" | "duck";
 export const TUTORIAL_STEPS: readonly TutorialStep[] = ["left", "right", "jump", "duck"];
 
 export const STEP_TEXT: Record<TutorialStep, { title: string; hint: string }> = {
-  left: { title: "Step left", hint: "One big step to your left" },
-  right: { title: "Step right", hint: "Now one step past the middle to your right" },
+  left: { title: "Step left", hint: "One big step to your left, or lean that way" },
+  right: { title: "Step right", hint: "Now step or lean to your right, past the middle" },
   jump: { title: "Jump", hint: "Jump up with both feet" },
   duck: { title: "Duck", hint: "Bend your knees and get low" },
 };
