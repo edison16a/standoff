@@ -1,6 +1,7 @@
 import { ROSTER, unit, type CharacterId } from "../roster";
 import type { TeamId } from "../teams";
 import { isTap } from "./charge";
+import { cycleLength, touchPush } from "./stride";
 import { MOVE, PITCH, TOUCH, BALL } from "./tuning";
 import type { Athlete, Ball } from "./types";
 import { angleDiff, clamp, clampLen, fromAngle, len, v2, type Vec2 } from "./vec";
@@ -93,8 +94,8 @@ export function integrate(a: Athlete, dt: number): void {
   a.pos.x += a.vel.x * dt;
   a.pos.z += a.vel.z * dt;
   keepOnPitch(a.pos);
-  // About two strides a cycle, each roughly the player's height.
-  a.stride += (len(a.vel) * dt) / 2.4;
+  const speed = len(a.vel);
+  a.stride += (speed * dt) / cycleLength(speed);
 }
 
 export function turnToward(a: Athlete, angle: number, maxTurn: number): void {
@@ -118,13 +119,15 @@ export function brake(a: Athlete, dt: number, rate = 14): void {
 export function carryBall(a: Athlete, ball: Ball, dt: number): void {
   const face = fromAngle(a.facing);
   const speed = len(a.vel);
-  const push = speed > 0.8 ? 0.2 * (0.5 + 0.5 * Math.sin(a.stride * Math.PI * 2)) * Math.min(1, speed / 6) * (1.3 - 0.6 * a.dribbling) : 0;
+  // Pushed on the lead boot's touch (see stride.ts), further at pace, less by a close dribbler.
+  const push = speed > 0.8 ? 0.22 * touchPush(a.stride) * Math.min(1, speed / 6) * (1.3 - 0.6 * a.dribbling) : 0;
   const reach = TOUCH.carry * (speed > 0.5 ? 1 : 0.8) + push;
   const tx = a.pos.x + face.x * reach;
   const tz = a.pos.z + face.z * reach;
+  // Carried along with the body first and then eased to its spot, so it never trails behind at pace.
   const k = 1 - Math.exp(-dt * 20);
-  const nx = ball.pos.x + (tx - ball.pos.x) * k;
-  const nz = ball.pos.z + (tz - ball.pos.z) * k;
+  const nx = ball.pos.x + a.vel.x * dt + (tx - ball.pos.x - a.vel.x * dt) * k;
+  const nz = ball.pos.z + a.vel.z * dt + (tz - ball.pos.z - a.vel.z * dt) * k;
   // The ball stops on the goal line: a goal has to be shot, never walked in.
   const cx = clamp(nx, -PITCH.halfLength + BALL.radius + 0.05, PITCH.halfLength - BALL.radius - 0.05);
   // Along the side boards the ball rolls against them rather than through.

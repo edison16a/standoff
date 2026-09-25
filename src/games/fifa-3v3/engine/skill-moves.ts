@@ -60,7 +60,8 @@ export function moveVelocity(f: MoveFrame, u: number): Vec2 {
   const { from, exit, top, pace, side } = f;
   switch (f.kind) {
     case "rainbow":
-      return scale(exit, top * lerp(0.7, 0.9, s(u / 0.6)));
+      // Nearly on the spot while the feet lift it, then away after the ball once it is flicked.
+      return scale(exit, top * lerp(0.3, 0.9, s((u - 0.2) / 0.4)));
     case "crossover":
       // Plant on the outside foot, then burst away the other way.
       return add(scale(from, pace * 0.5 * (1 - s(u / 0.4))), scale(exit, top * 0.95 * s((u - 0.2) / 0.5)));

@@ -96,8 +96,11 @@ function placeBall(state: MatchState, a: Athlete, f: MoveFrame, u: number, dt: n
   const ball = state.ball;
   const off = ballOffset(f, u);
   const k = 1 - Math.exp(-dt * 35);
-  const x = clamp(ball.pos.x + (a.pos.x + off.x - ball.pos.x) * k, -PITCH.halfLength + 0.2, PITCH.halfLength - 0.2);
-  const z = clamp(ball.pos.z + (a.pos.z + off.z - ball.pos.z) * k, -PITCH.halfWidth + BALL.radius, PITCH.halfWidth - BALL.radius);
+  // Carried with the body before easing, so the ball keeps to the script at pace instead of trailing it.
+  const bx = ball.pos.x + a.vel.x * dt;
+  const bz = ball.pos.z + a.vel.z * dt;
+  const x = clamp(bx + (a.pos.x + off.x - bx) * k, -PITCH.halfLength + 0.2, PITCH.halfLength - 0.2);
+  const z = clamp(bz + (a.pos.z + off.z - bz) * k, -PITCH.halfWidth + BALL.radius, PITCH.halfWidth - BALL.radius);
   const y = ball.pos.y + (off.y - ball.pos.y) * k;
   ball.vel = { x: (x - ball.pos.x) / dt, y: (y - ball.pos.y) / dt, z: (z - ball.pos.z) / dt };
   ball.pos = { x, y, z };
