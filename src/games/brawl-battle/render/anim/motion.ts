@@ -57,6 +57,11 @@ export function motionPose(style: Style, m: MotionInput, out: Pose): Pose {
       return blend(out, RECOIL, Math.min(1, m.frame / 3 + 0.5), out);
     case "shield":
       return over(blend(out, CROUCH, 0.45, out), style.guard);
+    case "respawn":
+      // Riding the platform down: guard up, bobbing, ready to drop back in.
+      blend(out, style.guard, 0.6, out);
+      out.hipY += Math.sin(m.time * 2.4) * 0.03;
+      return out;
     case "dizzy": {
       const sway = Math.sin(m.time * 4);
       return over(out, { torsoZ: sway * 0.25, neckX: 0.5, neckY: sway * 0.4, armLRaise: 0.1, armRRaise: 0.1, elbowL: 0.1, elbowR: 0.1, kneeL: 0.35, kneeR: 0.35, hipY: -0.05 });

@@ -102,7 +102,9 @@ export class FighterView {
     // Hit stop: the struck fighter shivers in place.
     if (frozen && f.action === "hurt") x += Math.sin(time * 95) * 0.07;
     root.position.set(x, y, 0);
-    const turn = f.facing * (Math.PI / 2 - CHEAT);
+    const winner = state.phase !== "fight" && state.phase !== "ready" && state.winner === f.id;
+    // The winner turns to face the crowd.
+    const turn = f.facing * (Math.PI / 2 - CHEAT) * (winner ? 0.3 : 1);
     this.yaw += (turn - this.yaw) * (1 - Math.exp(-22 * dt));
     root.rotation.y = this.yaw;
 
@@ -119,7 +121,7 @@ export class FighterView {
       time,
       doubleJump: f.action === "air" && sinceFlip < 24,
       launch: Math.hypot(f.launch.x, f.launch.y),
-      winner: state.phase !== "fight" && state.phase !== "ready" && state.winner === f.id,
+      winner,
     };
     if (input.doubleJump) input.frame = sinceFlip;
     motionPose(this.style, input, this.target);
