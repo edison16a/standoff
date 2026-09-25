@@ -132,7 +132,7 @@ export class AthleteFigure {
       case "skill":
         return skillFrame(v.skill ?? "roulette", v.actionT / Math.max(0.01, v.actionLen), v.skillSide, v.stride, v.speed, ctx, time);
       case "beaten":
-        return beatenFrame(v.actionT, v.actionLen, v.stride, v.speed, ctx, time, v.id);
+        return beatenFrame(v.actionT, v.actionLen, v.stride, v.speed, v.skillSide, ctx, time, v.id);
       case "celebrate":
         return fk(v.signature ? celebration(this.character.celebration, v.actionT) : cheer(v.actionT, this.phase));
       case "dejected":

@@ -117,13 +117,13 @@ function spread(f: Frame, k: number): void {
  * stuck, the body tipping back and one arm flung out, then gathering
  * and turning to chase.
  */
-export function beatenFrame(t: number, length: number, stride: number, speed: number, ctx: Context, time: number, id: number): Frame {
+export function beatenFrame(t: number, length: number, stride: number, speed: number, side: 1 | -1, ctx: Context, time: number, id: number): Frame {
   const f = gait(stride, speed, false, ctx, time, id);
   const p = f.pose;
   const u = t / length;
   const caught = window(u, 0, 0.12, 0.45, 0.8);
-  // Which way they were sold, fixed per player so the same man always falls the same way.
-  const way: Side = id % 2 === 0 ? LEFT : RIGHT;
+  // Which way they were sold, the side the engine sends the body (engine/skills.ts).
+  const way: Side = side === 1 ? LEFT : RIGHT;
   // The foot on the side they were sold lunges out that way, then both stick until they gather.
   const lunge: Foot = { x: way * (ctx.build.hipW + 0.3 * ctx.build.s), y: ctx.build.ground, z: 0.1 * ctx.build.s, toe: 0 };
   steer(f, way, lunge, window(u, 0, 0.14, 0.5, 0.7));

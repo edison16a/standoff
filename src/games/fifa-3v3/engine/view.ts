@@ -28,7 +28,7 @@ export interface AthleteView {
   bar: boolean;
   /** How full the bar is, 0 to 1, and 0 without one. Drives the wind up. */
   charge: number;
-  /** The skill move under way while the action is "skill", and the side it takes the ball to. */
+  /** The skill move under way while the action is "skill", and the side it takes the ball to, or the side a beaten defender lunges. */
   skill: SkillKind | null;
   skillSide: 1 | -1;
   /** The goal scorer does their own celebration, team mates a plain cheer. */

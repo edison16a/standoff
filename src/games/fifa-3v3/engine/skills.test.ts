@@ -99,6 +99,19 @@ describe("a skill move", () => {
     expect(lost).toBeLessThan(beat / 2);
   });
 
+  it("gets past a defender standing square once the rainbow beats him", () => {
+    let beaten = 0;
+    for (let seed = 1; seed <= 20; seed++) {
+      const state = faceOff(seed);
+      const events = skill(state, { x: 1, z: 0 }, 1.4);
+      if (!events.some((e) => e.type === "skillResult" && e.result === "beat")) continue;
+      beaten++;
+      // Sold the wrong way, the defender opens the lane rather than leaving the dribbler stuck on his back.
+      expect(state.athletes[0]!.pos.x, `seed ${seed}`).toBeGreaterThan(state.athletes[3]!.pos.x + 0.5);
+    }
+    expect(beaten).toBeGreaterThan(3);
+  });
+
   it("does nothing without the ball, or while cooling down", () => {
     const state = faceOff(2);
     skill(state, { x: 0, z: 1 }, 0.1);

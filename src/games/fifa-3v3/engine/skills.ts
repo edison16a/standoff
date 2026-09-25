@@ -19,6 +19,8 @@ export const SKILL = {
   reach: 2.6,
   /** A beaten defender staggers this long. */
   lag: 0.65,
+  /** How hard a beaten defender lunges the wrong way, which also opens the lane past them. */
+  lunge: 4,
   risk: 0.05,
 } as const;
 
@@ -134,7 +136,23 @@ function testDefender(state: MatchState, a: Athlete): void {
   d.actionT = 0;
   d.actionLen = SKILL.lag;
   d.noTouch = SKILL.lag;
+  sell(a, d);
   state.events.push({ type: "skillResult", athlete: a.id, defender: d.id, result: "beat" });
+}
+
+/**
+ * Sends a beaten defender lunging the wrong way: away from the side the
+ * move goes, or for a move straight at them, off the line it runs. Without
+ * it a flick over a man standing square leaves the dribbler stuck on his back.
+ */
+function sell(a: Athlete, d: Athlete): void {
+  const f = fromAngle(d.facing);
+  const lat = { x: -f.z, z: f.x };
+  const across = dot(a.skill.exit, lat);
+  const way = Math.abs(across) > 0.3 ? -Math.sign(across) : dot(sub(a.pos, d.pos), lat) > 0 ? -1 : 1;
+  // The renderer reads the side to lunge the matching foot out.
+  d.skill.side = way > 0 ? 1 : -1;
+  d.vel = { x: lat.x * way * SKILL.lunge, z: lat.z * way * SKILL.lunge };
 }
 
 /** The chance a move goes wrong against this defender. */
