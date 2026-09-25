@@ -24,11 +24,12 @@ interface StandSpec {
 const HL = PITCH.halfLength;
 const HW = PITCH.halfWidth;
 
+// The side stands run past the ends of the pitch, the end stands just past its width.
 const STANDS: StandSpec[] = [
-  { front: -(HW + 3.2), axis: "z", climb: -1, rows: 13, half: 23, roof: true },
-  { front: HW + 3.2, axis: "z", climb: 1, rows: 9, half: 23, roof: false },
-  { front: -(HL + 6.5), axis: "x", climb: -1, rows: 9, half: 12.5, roof: false },
-  { front: HL + 6.5, axis: "x", climb: 1, rows: 9, half: 12.5, roof: false },
+  { front: -(HW + 3.2), axis: "z", climb: -1, rows: 13, half: HL + 7, roof: true },
+  { front: HW + 3.2, axis: "z", climb: 1, rows: 9, half: HL + 7, roof: false },
+  { front: -(HL + 6.5), axis: "x", climb: -1, rows: 9, half: HW + 2.5, roof: false },
+  { front: HL + 6.5, axis: "x", climb: 1, rows: 9, half: HW + 2.5, roof: false },
 ];
 
 /**

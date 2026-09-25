@@ -3,6 +3,7 @@ import type { MatchView } from "../../engine/view";
 import { ROSTER } from "../../roster";
 import { TEAMS } from "../../teams";
 import { AthleteFigure } from "./athlete-figure";
+import { ChargeSprite } from "./charge-bar";
 import { KeeperFigure } from "./keeper-figure";
 import { Marker } from "./markers";
 import { NameTag } from "./tag";
@@ -27,6 +28,7 @@ export class Squad {
   private tags: (NameTag | null)[] = [];
   private markers: (Marker | null)[] = [];
   private blobs: THREE.Mesh[] = [];
+  private bars: ChargeSprite[] = [];
   private lineup = "";
   private labels = "";
   private label: ((id: number) => Label) | null = null;
@@ -59,12 +61,16 @@ export class Squad {
         tag.sprite.position.set(a.x, figure.character.look.height + 0.34, a.z);
       }
       this.markers[i]?.update(a, time);
+      const bar = this.bars[i]!;
+      bar.set(a.bar ? a.charge : null);
+      bar.sprite.position.set(a.x, figure.character.look.height + 0.34, a.z);
     });
     view.keepers.forEach((k, i) => this.keepers[i]!.update(k, dt, time));
   }
 
   fitTags(fov: number): void {
     for (const tag of this.tags) tag?.fit(fov);
+    for (const bar of this.bars) bar.fit(fov);
   }
 
   private rebuild(view: MatchView, lineup: string): void {
@@ -81,6 +87,11 @@ export class Squad {
       blob.renderOrder = 1;
       this.blobs.push(blob);
       this.group.add(blob);
+      // The charge bar sits above the name tag, anchored at the same spot.
+      const bar = new ChargeSprite();
+      bar.sprite.center.set(0.5, -3.6);
+      this.bars.push(bar);
+      this.group.add(bar.sprite);
     }
     this.labels = "";
   }
@@ -123,8 +134,13 @@ export class Squad {
       figure.dispose();
     }
     for (const blob of this.blobs) this.group.remove(blob);
+    for (const bar of this.bars) {
+      this.group.remove(bar.sprite);
+      bar.dispose();
+    }
     this.athletes = [];
     this.blobs = [];
+    this.bars = [];
   }
 
   dispose(): void {
