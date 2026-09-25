@@ -15,8 +15,12 @@ export const SEED = 9;
  */
 export const PREROLL = 2.95;
 
-/** Where the loop's match starts, in seconds, so two double KOs land inside the clip. */
-export const LOOP_LEAD = 11.5;
+/**
+ * Where the loop's match starts, in seconds: a karate punch flings the
+ * samurai out, the bear's Earthquake sends the karate after, and the
+ * samurai's Thousand Cuts takes out the mage and the bear together.
+ */
+export const LOOP_LEAD = 14.6;
 
 /** How long the tool films: an eight second clip and one more second to blend over its start. */
 export const FILMED = 9;
@@ -25,13 +29,13 @@ export const FILMED = 9;
 export const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 6.58, icon: 6.58 };
 
 /**
- * The stills' shots, in stage metres: the karate kick landing on the
- * mage while the bear tumbles and the samurai waits below. The icon sits
- * closer and low, so the action clears the logo.
+ * The stills' shots, in stage metres: the bear's Charge landing on the
+ * karate while the samurai leaps on the left platform and the mage waits
+ * on the right. The icon sits closer and low, so the action clears the logo.
  */
 export const STILL_CAMERA: Partial<Record<ShowcaseView, { x: number; y: number; distance: number }>> = {
   poster: { x: 0.8, y: 3.2, distance: 17 },
-  icon: { x: 2, y: 1.6, distance: 14.5 },
+  icon: { x: 0.2, y: 1.6, distance: 14.5 },
 };
 
 /** The showcase's match, the same every time for the same seed. */
