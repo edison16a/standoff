@@ -60,6 +60,23 @@ Fruit Ninja, Zombie Survival and Shooting Gallery all aim the same way. Where th
 
 All of this is shared in `src/games/kit/aim` (see `kit/README.md`).
 
+## Phone pages fit one screen
+
+Every phone page fits the screen with no scrolling, upright and sideways, with Safari's address bar and toolbar showing or not. The platform's frame is exactly the visible height (`100dvh`) and pads for the notch. Inside it:
+
+* Let the body of a step take the height left (`flex: 1` and `min-height: 0`) and let pictures, previews and 3D stages give up height first, with the buttons fixed in size.
+* Sideways, height runs out. Under `@media (orientation: landscape) and (max-height: 500px)` put the picture beside the words. The kit's `StepShell` already puts the title beside the step track there.
+* A step too crowded to fit is split into two steps.
+* A game that runs edge to edge under the bar cancels the frame's padding with `--phone-pad-y` and `--phone-pad-x`.
+
+Check it with the dev server running:
+
+```bash
+node tools/phone-fit.mjs --url http://localhost:3000 --out /tmp/phone-fit [--games fencing,magic-kart] [--theme dark]
+```
+
+It opens a room for each game, joins as a phone the size of an iPhone 16, and walks every phone page, from the name to the result. At each page it measures portrait 393 by 852, portrait with Safari's bars 393 by 659, landscape 852 by 393 and landscape with bars 852 by 340. It fails a page that scrolls, a box inside it that scrolls or spills over what follows, and any button cut off or covered, and it saves a screenshot of every page at every size to look over. Pages that need a match, like the controller and the result, are reached by handing the phone made up host messages. Each game's steps are in `tools/phone-fit/flows`; add a flow there with a new game.
+
 ## Camera games
 
 Boxing and Subway Surfers use no phones. They set `input: "camera"` and `join: "hidden"`, open the computer's camera, and read players' bodies with a pose model that downloads to the player's own computer and runs in the browser. The shared camera and pose code lives in `src/games/kit/camera`.
