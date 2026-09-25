@@ -58,7 +58,7 @@ export function Controller({ court }: { court: CourtState }) {
   return (
     <div className="nba-pad" style={{ "--team": team.color } as React.CSSProperties}>
       <div className="nba-pad__stick">
-        <Joystick colour={team.color} onChange={(stick) => session.pad.setStick(stick)} />
+        <Joystick alwaysShown colour={team.color} onChange={(stick) => session.pad.setStick(stick)} />
       </div>
       <Status court={court} />
       <div className="nba-pad__buttons">
