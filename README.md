@@ -17,7 +17,7 @@ The games, in the order the home screen shows them:
 * **NBA 3v3** (coming soon): three on three with the stars for up to six phones, a shot meter and dunks.
 * **FIFA 3v3** (coming soon): three on three football for up to six phones, with a keeper in each goal.
 * **Cube Game** (coming soon): jump for real to jump the cube through five levels of rhythm and spikes.
-* **Fencing:** your phone is the sword. Tilt it and the blade follows, chop down to jab, lift up to parry.
+* **Fencing:** your phone is the sword. Move it slowly and the blade follows, flick or shake it to jab, raise it up and to the right to parry.
 
 Empty spots in team games are filled by computer players. Each game lives in its own folder under `src/games`, with a README of its own.
 
@@ -120,8 +120,8 @@ For Fruit Ninja, Zombie Survival and Shooting Gallery, hold the phone flat like 
 1. Calibrate first. Hold the phone flat like a sword, top edge pointing at the middle of the screen. When the dot sits in the circle, tap **Calibrate** and hold still through the countdown. Then pick a fencer, and tap **Ready**.
 2. Fence:
    * **Aim** by tilting the phone. A jab only lands if your tip points at your opponent.
-   * **Jab** with a short, sharp chop down.
-   * **Parry** with a short, sharp lift up. For one second any jab that reaches you is blocked, and the attacker is knocked off balance.
+   * **Jab** with any quick flick or shake of the phone.
+   * **Parry** by raising the phone up and to the right of your guard. For one second any jab that reaches you is blocked, and the attacker is knocked off balance.
    * **Move** by holding **Forward** or **Back**.
 3. First to two touches wins. A rematch needs no new scan.
 
@@ -246,7 +246,7 @@ The phone's orientation (`deviceorientation`) becomes a quaternion. People hold 
 
 ### Jabs and parries
 
-Acceleration (`devicemotion`, with gravity removed) is rotated into the earth frame, and only its vertical part counts. A jab is a sharp chop down: that signal climbing from quiet past the jab threshold within 160 ms. A parry is the same thing upward. Up and down is the one motion every grip does cleanly, where a thrust toward the screen got lost in the swing of the arm. The rise window keeps a slow tilt to aim from reading as a strike. Both are edge triggered, and after either one the detector ignores everything for a short refractory period, because every chop ends with the arm braking, and that recovery looks exactly like the opposite strike.
+A small gesture classifier sorts the phone's motion into three kinds. Slow moves only move the blade, which is how you aim. Any quick move is a jab: the size of the acceleration (`devicemotion`, with gravity removed) or of the turn passing its threshold, whichever way the phone goes. A whole shake is one jab, because a move has to calm down before the next can start. A parry is a place, not a speed: the blade passing a point up and to the right of the calibrated guard. A quick raise that reaches that point is a parry, not a jab, and the blade has to come back down before it can parry again.
 
 ### Calibration
 
@@ -258,7 +258,7 @@ Footwork is two hold buttons, Forward on top and Back below, since the top of th
 
 ### The referee
 
-The host steps the match at a fixed 60 Hz. A jab does not land when it is detected: the tip takes 140 ms to arrive, and the defender's parry window is checked at the moment of arrival. That gap is what lets a fast reaction save a touch. A jab also has to be in range and on target (the live blade within 75 degrees of the line, generous because a chop tips the phone). Two touches within 60 ms of each other cancel out, like a double in épée. If both fencers walk into each other, it is called corps-à-corps and they are put back at a safe distance.
+The host steps the match at a fixed 60 Hz. A jab does not land when it is detected: the tip takes 220 ms to arrive, and the defender's parry window is checked at the moment of arrival. That gap is what lets a fast reaction save a touch. A jab also has to be in range and on target (the live blade within 75 degrees of the line, generous because a flick throws the phone about). Two touches within 60 ms of each other cancel out, like a double in épée. If both fencers walk into each other, it is called corps-à-corps and they are put back at a safe distance.
 
 ### Slow motion and effects
 
@@ -290,10 +290,12 @@ Every value worth adjusting by feel is in the tuning drawer (the sliders icon at
 
 | Setting | Default | What it changes |
 | --- | --- | --- |
-| Jab threshold | 12 m/s² | How sharp a chop down has to be |
-| Parry threshold | 12 m/s² | How sharp a lift up has to be |
+| Jab force | 12 m/s² | How hard a quick move has to push the phone to jab |
+| Jab turn | 300 °/s | How fast a quick move has to turn the phone to jab |
+| Parry rise | 30° | How far above the guard the blade has to rise to parry |
+| Parry right | 20° | How far right of the guard it has to swing as well |
 | Parry window | 1000 ms | How long a parry blocks |
-| Refractory period | 350 ms | Quiet time after any strike |
+| Refractory period | 350 ms | Quiet time after any jab or parry |
 | Music, crowd, effects | 0.5, 0.6, 0.9 | Mix levels |
 | Cheer cooldown | 8 s | Minimum gap between cheers |
 
@@ -331,7 +333,7 @@ src/
 npm test
 ```
 
-The suite covers the relay (seating up to four, ordering, kicks, grace periods, closing, store failures and rate limits), both Vercel routes, the socket handover, the platform's host room and names, the game catalog, and for fencing the motion pipeline fed with synthetic sensor data, jab, parry and level detection, the referee, match flow, slow motion, the engine playing whole exchanges, the computer opponent, the effects, the rig's IK and animator, the lobby and seating rules, and protocol validation. The kit's aim math and phone aiming are tested too. Each three.js game tests its own engine: Fruit Ninja's blade sweeps and scoring, Magic Kart's laps, checkpoints, items and whole computer races on every map, Zombie Survival's guns, stages and a bot team playing all 25 stages, and Shooting Gallery's rounds, hit tests and best scores.
+The suite covers the relay (seating up to four, ordering, kicks, grace periods, closing, store failures and rate limits), both Vercel routes, the socket handover, the platform's host room and names, the game catalog, and for fencing the motion pipeline fed with synthetic sensor data, the gesture classifier (slow moves, shakes, jabs and parries up and to the right), level detection, the referee, match flow, slow motion, the engine playing whole exchanges, the computer opponent, the effects, the rig's IK and animator, the lobby and seating rules, and protocol validation. The kit's aim math and phone aiming are tested too. Each three.js game tests its own engine: Fruit Ninja's blade sweeps and scoring, Magic Kart's laps, checkpoints, items and whole computer races on every map, Zombie Survival's guns, stages and a bot team playing all 25 stages, and Shooting Gallery's rounds, hit tests and best scores.
 
 Two more files run against a real Redis: the relay with two separate backends standing in for two Vercel instances, and the store's locking and expiry. They run when `REDIS_TEST_URL` is set:
 

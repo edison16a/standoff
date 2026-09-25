@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { CharacterId } from "@/games/fencing/characters";
-import type { Sensitivity } from "@/games/fencing/motion/strike-detector";
+import type { Sensitivity } from "@/games/fencing/motion/gesture";
 import type { Slot } from "@/games/fencing/players";
 import type { ControllerState, FeedbackEvent, StrikeAction } from "@/games/fencing/protocol";
 
@@ -27,7 +27,7 @@ export interface ControllerStore {
   /** True once real sensor readings have arrived. */
   sensorsLive: boolean;
   calibrated: boolean;
-  /** This player's own strike levels, from the practice step. Null until practised. */
+  /** This player's own jab level, from the practice step. Null until practised. */
   sensitivity: Sensitivity | null;
   pick: CharacterId | null;
   ready: boolean;

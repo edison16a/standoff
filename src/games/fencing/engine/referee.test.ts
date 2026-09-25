@@ -71,10 +71,10 @@ describe("Referee", () => {
     expect(events).toContainEqual(expect.objectContaining({ type: "whiff", slot: 1, reason: "wide" }));
   });
 
-  it("judges a jab by where the blade pointed before the chop tipped it down", () => {
+  it("judges a jab by where the blade pointed before the flick threw it off", () => {
     const { referee, fencers } = setup();
     point(fencers[1], 0);
-    // The chop itself dips the phone hard in the last few readings.
+    // The flick itself throws the phone hard in the last few readings.
     point(fencers[1], -1.45, 3);
     referee.jab(1, 0);
     expect(run(referee, 0, 400).verdict).toMatchObject({ kind: "touch", scorer: 1 });

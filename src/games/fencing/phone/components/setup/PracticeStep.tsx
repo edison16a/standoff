@@ -15,19 +15,21 @@ import { StrikeArt } from "./StrikeArt";
 const PEAK_SETTLE_MS = 200;
 
 const ASK: Record<StrikeAction, { title: string; how: string }> = {
-  jab: { title: "Jab now", how: "Chop the phone down, short and sharp." },
-  parry: { title: "Parry now", how: "Lift the phone up, short and sharp." },
+  jab: { title: "Jab now", how: "Give the phone a quick flick or shake." },
+  parry: { title: "Parry now", how: "Raise the phone up and to the right." },
 };
 
 function praise(action: StrikeAction, peak: number): string {
+  // A parry is a place the blade reaches, so how hard it moved says nothing.
+  if (action === "parry") return "Nice parry!";
   const how = peak > 2 ? "Sharp" : peak > 1.1 ? "Nice" : "Soft but good";
-  return `${how} ${action}!`;
+  return `${how} jab!`;
 }
 
 /**
  * A quick practice: two jabs, then two parries. Each one the phone reads
- * makes the fencer lunge or parry, buzzes and plays its sound, and is
- * measured. From how hard this player moves, their own strike levels are
+ * makes the fencer lunge or parry, buzzes and plays its sound. Jabs are
+ * measured, and from how hard this player moves their own jab level is
  * set, so a gentle mover's jabs land and a wild one's twitches do not.
  */
 export function PracticeStep({ slot, onStage }: { slot: Slot; onStage(stage: PracticeStage): void }) {
@@ -60,7 +62,7 @@ export function PracticeStep({ slot, onStage }: { slot: Slot; onStage(stage: Pra
         const result = practice.record(action, peak);
         setCount(practice.count(asked));
         if (!result.right) {
-          setMessage({ good: false, text: asked === "jab" ? "That was a lift. Chop down to jab." : "That was a chop. Lift up to parry." });
+          setMessage({ good: false, text: asked === "jab" ? "That was a parry. Flick or shake to jab." : "That was a jab. Raise higher and further right to parry." });
           return;
         }
         setMessage({ good: true, text: praise(action, peak) });
@@ -115,7 +117,7 @@ export function PracticeStep({ slot, onStage }: { slot: Slot; onStage(stage: Pra
       <div className="setup-page">
         {preview}
         <p className="setup-page__lead">All set. Tuned to how you move.</p>
-        <p className="setup-page__text">In a bout, your fencer lunges on every jab and parries on every lift.</p>
+        <p className="setup-page__text">In a bout, your fencer lunges on every flick and parries when you raise the sword up and right.</p>
       </div>
     );
   }

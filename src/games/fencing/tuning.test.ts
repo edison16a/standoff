@@ -11,8 +11,8 @@ describe("clampTuning", () => {
   });
 
   it("pulls out of range and broken values back", () => {
-    const clamped = clampTuning({ ...DEFAULT_TUNING, jabThreshold: 0, parryWindowMs: 1e9, sfxVolume: Number.NaN });
-    expect(clamped.jabThreshold).toBe(4);
+    const clamped = clampTuning({ ...DEFAULT_TUNING, strikeAccel: 0, parryWindowMs: 1e9, sfxVolume: Number.NaN });
+    expect(clamped.strikeAccel).toBe(4);
     expect(clamped.parryWindowMs).toBe(2000);
     expect(clamped.sfxVolume).toBe(DEFAULT_TUNING.sfxVolume);
   });

@@ -8,13 +8,17 @@
  */
 
 export interface Tuning {
-  /** Downward acceleration (m/s²) of a chop that counts as a jab. */
-  jabThreshold: number;
-  /** Upward acceleration (m/s²) of a lift that counts as a parry. */
-  parryThreshold: number;
+  /** Acceleration (m/s², any direction) of a quick move that counts as a jab. */
+  strikeAccel: number;
+  /** Turn rate (degrees a second, about any axis) that counts as a jab. */
+  strikeSpin: number;
+  /** How far above the calibrated guard (degrees) the blade must rise to parry. */
+  parryRise: number;
+  /** How far right of the calibrated guard (degrees) it must swing as well. */
+  parryRight: number;
   /** How long a parry keeps blocking once it fires. */
   parryWindowMs: number;
-  /** Quiet time after a jab or parry so the recovery motion is ignored. */
+  /** Quiet time after a jab or parry, so one shake reads as one jab. */
   refractoryMs: number;
   /** Master levels, 0 to 1. */
   musicVolume: number;
@@ -25,8 +29,10 @@ export interface Tuning {
 }
 
 export const DEFAULT_TUNING: Tuning = {
-  jabThreshold: 12,
-  parryThreshold: 12,
+  strikeAccel: 12,
+  strikeSpin: 300,
+  parryRise: 30,
+  parryRight: 20,
   parryWindowMs: 600,
   refractoryMs: 350,
   musicVolume: 0.5,
@@ -55,8 +61,10 @@ export interface TuningField {
  * threshold of zero and make every twitch a jab.
  */
 export const TUNING_FIELDS: readonly TuningField[] = [
-  { key: "jabThreshold", label: "Jab threshold", group: "Strikes", min: 4, max: 40, step: 0.5, unit: "m/s²" },
-  { key: "parryThreshold", label: "Parry threshold", group: "Strikes", min: 4, max: 40, step: 0.5, unit: "m/s²" },
+  { key: "strikeAccel", label: "Jab force", group: "Strikes", min: 4, max: 40, step: 0.5, unit: "m/s²" },
+  { key: "strikeSpin", label: "Jab turn", group: "Strikes", min: 90, max: 900, step: 10, unit: "°/s" },
+  { key: "parryRise", label: "Parry rise", group: "Strikes", min: 10, max: 70, step: 1, unit: "°" },
+  { key: "parryRight", label: "Parry right", group: "Strikes", min: 5, max: 60, step: 1, unit: "°" },
   { key: "parryWindowMs", label: "Parry window", group: "Strikes", min: 200, max: 2000, step: 50, unit: "ms" },
   { key: "refractoryMs", label: "Refractory period", group: "Strikes", min: 100, max: 800, step: 10, unit: "ms" },
   { key: "musicVolume", label: "Music", group: "Sound", min: 0, max: 1, step: 0.05, unit: "" },

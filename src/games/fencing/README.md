@@ -1,19 +1,19 @@
 # Fencing
 
-Status: ready. One on one fencing for two players, or one against the computer. Each phone is a sword: tilt it and the blade follows, chop down to jab, lift up to parry. The bout plays out in 3D on the big screen.
+Status: ready. One on one fencing for two players, or one against the computer. Each phone is a sword: move it slowly and the blade follows, flick or shake it to jab, raise it up and to the right to parry. The bout plays out in 3D on the big screen.
 
 ## How to play
 
 1. Open Fencing on the computer. Each player scans the code with their phone and types a name, or skips.
 2. On the phone, one page per step:
    * **Calibrate.** A picture shows the grip: the phone flat in the hand like a sword's handle, screen up, top edge pointing at the middle of the big screen. On the next page, tilt until the bubble sits in the middle and hold still. The ring around the level fills and the guard is captured by itself, with a buzz and a chime. Nothing to tap. Then your fencer appears and copies the phone, so you can see it worked. **Redo** goes back to the level.
-   * **Practice.** Jab twice, then parry twice. Each one the phone reads makes your fencer lunge or parry, buzzes and plays its sound, and a gauge shows how hard you moved. From your own strikes the phone sets how hard a jab and a parry have to be for you, so a gentle mover's jabs land and a wild one's twitches do not. **Redo** runs it again, **Skip practice** keeps the last levels this phone learned (or the defaults).
+   * **Practice.** Jab twice, then parry twice. Each one the phone reads makes your fencer lunge or parry, buzzes and plays its sound. For a jab a gauge shows how hard you moved, and for a parry how near the parry point the blade is. From your own jabs the phone sets how hard a jab has to be for you, so a gentle mover's jabs land and a wild one's twitches do not. **Redo** runs it again, **Skip practice** keeps the last level this phone learned (or the default).
    * **Fencer.** Pick one of four, each turning on a little stage in 3D. A fencer the other player has is marked taken.
    * **Ready.** Tap Ready, or **Play the computer** to fence alone.
 3. Fence. First to two touches wins. A rematch needs no new scan.
-   * **Aim** by tilting the phone. A jab only lands if your blade points at your opponent.
-   * **Jab** with a short, sharp chop down, or a chop angled toward the screen.
-   * **Parry** with a short, sharp lift up.
+   * **Aim** by moving the phone slowly. The blade follows it and nothing else happens. A jab only lands if your blade points at your opponent.
+   * **Jab** with any quick flick or shake of the phone, in any direction. A whole shake is one jab.
+   * **Parry** by raising the phone up and to the right of your guard. It counts the moment the blade passes the parry point. Bring it back down before the next parry.
    * **Move** by holding **Forward** or **Back** on the phone.
    * The phone flashes **Jab** or **Parry** the moment it reads one, then the referee's verdict: **Touch**, **Parried**, **Blocked**, **Hit**, **Too far**, **Off line** or **Too soon**.
 
@@ -44,24 +44,30 @@ A lunge fits the distance to the opponent. From far off it is a full lunge with 
 
 ## Jabs and parries
 
-The phone reads the sword from its orientation (`deviceorientation`), measured against the guard captured at calibration. It reads strikes from motion (`devicemotion`), turned into the earth's frame:
+The phone reads the sword from its orientation (`deviceorientation`), measured against the guard captured at calibration. So up and right are always the player's own, however they hold the phone. It reads how hard the phone moves from motion (`devicemotion`). The gesture classifier in `motion/gesture.ts` sorts the two into three kinds of move:
 
-* **What counts.** Each reading becomes two scores, one per strike, measured in thresholds. A jab's score is acceleration along a line tipped 25 degrees forward from straight down, so a chop angled toward the screen counts in full. A parry's is acceleration straight up. With a gyroscope, the blade's own turn adds to the score of the strike it turns toward and takes from the other.
-* **Checking the gyroscope.** Browsers do not all agree which way a rotation rate is signed, and a gyroscope read backwards would push every chop toward a parry. So it is only used once it agrees with the orientation reading: while the player waves the phone about during setup, the two are compared, and the gyroscope is trusted, flipped, or left out.
-* **Firing.** A strike fires when its score climbs from quiet to its level within 200 ms (judged by the highest score since it began, because a soft chop often peaks before it has moved the phone far), which keeps slow aiming out, and when the motion behind it moved the phone (some speed gained, or some turn), which keeps a sharp tap on the screen out. Taps on the Forward and Back buttons also hush the detector for 150 ms, because a thumb jolts the phone.
-* **Rebounds.** Every chop ends with the arm braking, which looks like a lift, and every lift ends like a chop. After a strike, the same strike waits out the refractory period and the other one waits a little longer. A strike also cannot start straight out of the other one: a chop too soft to be a jab still brakes like one, and that brake must not become a parry. Bringing the sword back to guard is the opposite motion too, so for 800 ms after a strike the opposite one has to be a quarter over the player's level and reach three quarters of the strike before it.
-* **Your own levels.** The practice listens at half the usual level, measures each strike, and sets this player's jab and parry levels to a little over half their typical strike. They stay between 0.6 and 1.25 of the base, except that a level is never set above what the weakest practice strike reached, so a gentle player who got through the practice is read in the bout too. They are kept on the phone for next time.
+* **Slow moves.** The blade follows the phone and nothing fires. This is how you aim.
+* **Jab.** Any quick move: the phone's acceleration passes the jab force, or its turn passes the jab turn rate, whichever way it goes. Only sizes are used, so a gyroscope that signs its rates the other way round reads the same. Phones with no gyroscope use the turn of the orientation instead.
+* **Parry.** The blade passing a point up and to the right of the guard: raised at least 30 degrees and swung at least 20 degrees right. Raising straight up, or not far enough, or up and to the left, is no parry. A steady raise is far too slow to be a jab, so it just moves the blade until it gets there.
 
-The phone shows and buzzes every strike it reads at once. Whether it counts is the host's call.
+Some rules keep one move one action:
+
+* **One move, one jab.** Once a quick move starts, it has to calm down for 150 ms before another can start, so a long shake is a single jab. Nothing fires for the refractory period after any action either.
+* **Fast parries.** A quick move waits 70 ms before it counts as a jab. If it is still heading up and right, it waits a little longer, up to 300 ms, and if the blade reaches the parry point it is a parry and not a jab.
+* **Coming back down.** After a parry the blade has to drop back under six tenths of the way to the point before the next parry. Bringing it back down is quick too, so a quick move that starts while the blade is still up there is not a jab.
+* **Taps.** Taps on the Forward and Back buttons hush the classifier for 150 ms, because a thumb jolts the phone.
+* **Your own level.** The practice listens at half the usual jab level, measures each jab, and sets this player's level to a little over half their typical jab. It stays between 0.6 and 1.25 of the base, except that it is never set above what the weakest practice jab reached, so a gentle player who got through the practice is read in the bout too. It is kept on the phone for next time.
+
+The phone shows and buzzes every action it reads at once. Whether it counts is the host's call.
 
 ## The referee
 
 The host steps the match at a fixed 60 Hz and decides every exchange:
 
-* A jab takes 220 ms to arrive, about as long as a real lunge, and is checked at arrival: in reach, on line, and not parried. It is judged by where the blade pointed just before the chop, because by the time a chop is recognised it has tipped the phone down.
+* A jab takes 220 ms to arrive, about as long as a real lunge, and is checked at arrival: in reach, on line, and not parried. It is judged by where the blade pointed 180 ms before it was read, because by then the flick has thrown the blade off where the player was aiming.
 * A parry blocks the first jab that reaches it within 600 ms (the tuning drawer's parry window), then closes. A parry that reaches the host up to 80 ms after a jab landed still saves it, since phones are never quite in step over WiFi.
 * A parried attacker is knocked off balance for 450 ms, and cannot strike, which is the defender's chance to riposte.
-* Attacking drops your own parry. A parry cannot start while your own lunge is still going out, and a parry that blocked nothing leaves you open for 250 ms before the next, so lifting the phone over and over is no defence.
+* Attacking drops your own parry. A parry cannot start while your own lunge is still going out, and a parry that blocked nothing leaves you open for 250 ms before the next, so raising the phone over and over is no defence.
 * Two touches within 60 ms cancel out, like a double in épée. Bodies that collide are a corps à corps, and are put back apart.
 
 ## Sound
@@ -74,21 +80,23 @@ Effects have a sharp transient, a body and a tail into a synthetic hall reverb, 
 
 ## Tuning
 
-Every value worth adjusting by feel is in the tuning drawer (the sliders icon at the top right). Changes reach both phones at once. Nothing is saved. The jab and parry thresholds are the base each player's own practiced level is measured against.
+Every value worth adjusting by feel is in the tuning drawer (the sliders icon at the top right). Changes reach both phones at once. Nothing is saved. The jab force and turn are the base each player's own practiced level is measured against.
 
 | Setting | Default | What it changes |
 | --- | --- | --- |
-| Jab threshold | 12 m/s² | How sharp a chop down has to be, before each player's own level |
-| Parry threshold | 12 m/s² | How sharp a lift up has to be, likewise |
+| Jab force | 12 m/s² | How hard a quick move has to push the phone to jab, before each player's own level |
+| Jab turn | 300 °/s | How fast a quick move has to turn the phone to jab, likewise |
+| Parry rise | 30° | How far above the guard the blade has to rise to parry |
+| Parry right | 20° | How far right of the guard it has to swing as well |
 | Parry window | 600 ms | How long a parry stays open |
-| Refractory period | 350 ms | Quiet time after any strike |
+| Refractory period | 350 ms | Quiet time after any jab or parry |
 | Music, crowd, effects | 0.5, 0.6, 0.9 | Mix levels |
 | Cheer cooldown | 8 s | Minimum gap between cheers |
 
 ## Code
 
 * `engine/`: the match as pure logic: fencers, the referee, the match clock, the computer opponent. Unit tested.
-* `motion/`: the phone's sensor maths with no browser in sight: the sword pose, the strike detector, the gyroscope check, and synthetic sensor traces for the tests.
+* `motion/`: the phone's sensor maths with no browser in sight: the sword pose, the gesture classifier and its parry point, and synthetic motion traces for the tests.
 * `rig/`: the pose of a fencer as a handful of numbers, the guard with its footwork, and the animator that blends lunges, parries, hits and the end of the match over the live sword.
 * `render/`: three.js. `fencer/` is the shared skeleton (joints solved by inverse kinematics from the pose), the anatomy, the four costumes and the weapons, all merged per bone. `hall/` is the room, the podium and strip, the scoring machine, the referee, the stands and crowd, the bunting and the lights. `effects/` has the blade trails, sparks, bursts and confetti. `preview/` draws the phone's 3D fencers, all through one WebGL context. Bloom and a vignette finish the picture.
 * `showcase/`: the scripted bout the home screen's media is captured from, judged by the real referee, and a development gallery (`/showcase/fencing?view=poster&fgallery=vale,iron&fact=parry&fcam=close1`). The icon and poster freeze the clash and drop the trails and rings, which smear in a still. The clip draws once per video frame at a lighter setting, so capturing it in software stays practical. After the burst the bout runs on at a quarter speed to the end of the loop, with the camera staying on the touch. It counts its time from the moment the page says it is ready, runs the hall on its own clock, and with `?fseek=` starts part way in, so a slow machine can record it in pieces side by side and get the same frames.

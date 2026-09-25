@@ -6,7 +6,7 @@ import poster from "./media/poster.jpg";
 export const info: GameInfo = {
   id: "fencing",
   title: "Fencing",
-  tagline: "Your phone is the sword. Chop to jab, lift to parry.",
+  tagline: "Your phone is the sword. Flick to jab, raise up and right to parry.",
   status: "ready",
   players: [2],
   color: "#ff4757",

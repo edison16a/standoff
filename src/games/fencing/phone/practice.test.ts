@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { StrikeDetector } from "@/games/fencing/motion/strike-detector";
-import { chop, trace } from "@/games/fencing/motion/traces";
+import { GestureClassifier, gestureSettings } from "@/games/fencing/motion/gesture";
+import { thrust, trace } from "@/games/fencing/motion/traces";
 import { DEFAULT_TUNING } from "@/games/fencing/tuning";
 import { LEVEL_RANGE, LISTEN_LEVEL, levelFor, Practice } from "./practice";
+
+const settings = gestureSettings(DEFAULT_TUNING);
 
 describe("Practice", () => {
   it("asks for two jabs, then two parries, and ignores the wrong kind", () => {
@@ -21,21 +23,20 @@ describe("Practice", () => {
     expect(levelFor([])).toBe(1);
   });
 
-  it("tunes a gentle player so their own chop lands as a jab afterwards", () => {
-    // A soft chop, too gentle for the default level.
-    const gentle = () => trace({ down: chop(100, 9) }, 700);
-    const settings = { jabThreshold: DEFAULT_TUNING.jabThreshold, parryThreshold: DEFAULT_TUNING.parryThreshold, refractoryMs: DEFAULT_TUNING.refractoryMs };
-    const strict = new StrikeDetector(settings);
+  it("tunes a gentle player so their own soft jab lands afterwards", () => {
+    // A soft jab, too gentle for the default level.
+    const gentle = () => trace({ accel: thrust(100, 9) }, 700);
+    const strict = new GestureClassifier(settings);
     expect(gentle().map((s) => strict.update(s)).filter(Boolean)).toEqual([]);
 
-    const listening = new StrikeDetector(settings, { jab: LISTEN_LEVEL, parry: LISTEN_LEVEL });
+    const listening = new GestureClassifier(settings, { strike: LISTEN_LEVEL });
     const practice = new Practice();
     for (let i = 0; i < 2; i++) {
       listening.reset();
       gentle().forEach((s) => listening.update(s));
       practice.record("jab", listening.lastStrike!.peak);
     }
-    const tuned = new StrikeDetector(settings, practice.sensitivity);
+    const tuned = new GestureClassifier(settings, practice.sensitivity);
     expect(gentle().map((s) => tuned.update(s)).filter(Boolean)).toEqual(["jab"]);
   });
 
@@ -44,17 +45,16 @@ describe("Practice", () => {
     expect(levelFor([0.6, 0.7])).toBeCloseTo(0.51);
   });
 
-  it("keeps ordinary chops readable after one wild practice", () => {
-    const settings = { jabThreshold: DEFAULT_TUNING.jabThreshold, parryThreshold: DEFAULT_TUNING.parryThreshold, refractoryMs: DEFAULT_TUNING.refractoryMs };
-    const listening = new StrikeDetector(settings, { jab: LISTEN_LEVEL, parry: LISTEN_LEVEL });
+  it("keeps ordinary jabs readable after one wild practice", () => {
+    const listening = new GestureClassifier(settings, { strike: LISTEN_LEVEL });
     const practice = new Practice();
     for (let i = 0; i < 2; i++) {
       listening.reset();
-      trace({ down: chop(100, 48) }, 700).forEach((s) => listening.update(s));
+      trace({ accel: thrust(100, 48) }, 700).forEach((s) => listening.update(s));
       practice.record("jab", listening.lastStrike!.peak);
     }
-    const tuned = new StrikeDetector(settings, practice.sensitivity);
+    const tuned = new GestureClassifier(settings, practice.sensitivity);
     // Half as hard, the way people strike once the bout is on.
-    expect(trace({ down: chop(100, 20) }, 700).map((s) => tuned.update(s)).filter(Boolean)).toEqual(["jab"]);
+    expect(trace({ accel: thrust(100, 20) }, 700).map((s) => tuned.update(s)).filter(Boolean)).toEqual(["jab"]);
   });
 });

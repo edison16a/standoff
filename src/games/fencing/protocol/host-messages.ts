@@ -38,8 +38,10 @@ export const controllerStateSchema = z.object({
 export const tuningMessageSchema = z.object({
   kind: z.literal("tuning"),
   tuning: z.object({
-    jabThreshold: z.number(),
-    parryThreshold: z.number(),
+    strikeAccel: z.number(),
+    strikeSpin: z.number(),
+    parryRise: z.number(),
+    parryRight: z.number(),
     parryWindowMs: z.number(),
     refractoryMs: z.number(),
     musicVolume: z.number(),

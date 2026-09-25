@@ -1,8 +1,7 @@
 import type { StrikeAction } from "@/games/fencing/protocol";
 import type { Tuning } from "@/games/fencing/tuning";
-import { cross, DEG, dot, rotate, sub, vec, type Quat, type Vec3 } from "@/games/kit/motion/math3d";
-import { GyroCheck } from "./gyro-check";
-import { StrikeDetector, type Sensitivity, type StrikeReport } from "./strike-detector";
+import { DEG, length, rotate, sub, type Quat, type Vec3 } from "@/games/kit/motion/math3d";
+import { GestureClassifier, gestureSettings, type Sensitivity, type StrikeReport } from "./gesture";
 import { calibrate, swordPose, type Calibration, type SwordPose } from "./sword-pose";
 
 /** A `devicemotion` reading, in the device frame. */
@@ -25,33 +24,35 @@ export interface ControllerFrame extends SwordPose {
 const GRAVITY_SMOOTHING = 0.08;
 /** A thumb on the screen jolts the phone. Strikes wait this long after a tap. */
 export const TAP_QUIET_MS = 150;
-const EARTH_UP = vec(0, 0, 1);
+/** Orientation readings further apart than this are a gap, not a slow turn. */
+const MAX_TURN_GAP_MS = 100;
 
 /**
  * Everything the phone does with its sensors, with no browser APIs in
  * sight so the whole thing can be unit tested with synthetic readings.
  *
- * Orientation drives the sword directly. Motion is rotated into the earth
- * frame, and three things go to the strike detector: the vertical part
- * (a chop down is a jab, a lift is a parry), the part toward the opponent,
- * and, from the gyroscope, how fast the blade tip is rising or falling.
+ * Orientation drives the sword directly, measured from the calibrated
+ * guard. The gesture classifier gets that pose, which is where parries
+ * are read, and how hard the phone is moving: the size of its
+ * acceleration and of its turn, whichever way they go, which is where
+ * jabs are read. Only sizes are used, so a gyroscope that signs its
+ * rates the other way round reads the same.
  */
 export class MotionPipeline {
   private orientation: Quat | null = null;
   private calibration: Calibration | null = null;
   private gravity: Vec3 | null = null;
-  private readonly strikes: StrikeDetector;
+  private readonly strikes: GestureClassifier;
   private pose: SwordPose = { pitch: 0, yaw: 0, roll: 0 };
-  private readonly gyro = new GyroCheck();
-  /** The blade's rise rate as the orientation sees it, for checking the gyroscope. */
-  private tip = { pitch: 0, t: -Infinity, rate: 0 };
+  /** How fast the orientation is turning, rad/s, for phones with no gyroscope. */
+  private turn = { t: -Infinity, rate: 0 };
 
   constructor(
     tuning: Tuning,
     /** Called the instant a jab or parry is detected. */
     private readonly onStrike: (action: StrikeAction) => void,
   ) {
-    this.strikes = new StrikeDetector(tuning);
+    this.strikes = new GestureClassifier(gestureSettings(tuning));
   }
 
   get isCalibrated(): boolean {
@@ -86,13 +87,13 @@ export class MotionPipeline {
     return this.strikes.lastStrike;
   }
 
-  /** How close each strike is to firing right now, in thresholds. */
+  /** How hard the phone is moving, in thresholds, and how near the parry point it is, where 1 is there. */
   get strikeScores(): { jab: number; parry: number } {
     return this.strikes.scores;
   }
 
   configure(tuning: Tuning): void {
-    this.strikes.configure(tuning);
+    this.strikes.configure(gestureSettings(tuning));
   }
 
   /** How hard this player strikes, from the practice step. 1 is the host's setting. */
@@ -104,6 +105,7 @@ export class MotionPipeline {
   calibrate(): boolean {
     if (!this.orientation) return false;
     this.calibration = calibrate(this.orientation);
+    this.pose = swordPose(this.orientation, this.calibration);
     this.recenter();
     return true;
   }
@@ -119,42 +121,32 @@ export class MotionPipeline {
   }
 
   onOrientation(q: Quat, t = -Infinity): void {
+    const before = this.orientation;
     this.orientation = q;
-    if (!this.calibration) return;
-    this.pose = swordPose(q, this.calibration);
-    const dt = (t - this.tip.t) / 1000;
-    this.tip = { pitch: this.pose.pitch, t, rate: dt > 0.004 && dt < 0.1 ? (this.pose.pitch - this.tip.pitch) / dt : 0 };
+    const dt = t - this.turn.t;
+    const rate = before && dt > 4 && dt < MAX_TURN_GAP_MS ? turnBetween(before, q) / (dt / 1000) : 0;
+    this.turn = { t, rate };
+    if (this.calibration) this.pose = swordPose(q, this.calibration);
   }
 
   onMotion(reading: MotionReading): void {
     if (!this.orientation || !this.calibration) return;
     const linear = this.linearAcceleration(reading);
     if (!linear) return;
-    const { heading } = this.calibration;
+    const gyro = reading.rotationRate;
     const action = this.strikes.update({
       t: reading.t,
-      // Earth z points up, so a downward chop reads positive.
-      down: -linear.z,
-      forward: linear.x * Math.sin(heading) + linear.y * Math.cos(heading),
-      pitchRate: this.pitchRate(reading.rotationRate ?? null),
+      pitch: this.pose.pitch,
+      yaw: this.pose.yaw,
+      accel: length(linear),
+      spin: gyro ? length(gyro) * DEG : this.turnRate(reading.t),
     });
     if (action) this.onStrike(action);
   }
 
-  /**
-   * How fast the blade tip rises, in rad/s. The gyroscope turns the phone
-   * around some axis. Carried into the earth frame, the tip's velocity is
-   * that turn crossed with the blade, and its upward part is the rise.
-   */
-  private pitchRate(rate: Vec3 | null): number | null {
-    if (!rate || !this.calibration) return null;
-    const q = this.orientation!;
-    const omega = rotate(q, vec(rate.x * DEG, rate.y * DEG, rate.z * DEG));
-    const blade = rotate(q, this.calibration.blade);
-    const rise = dot(omega, cross(blade, EARTH_UP));
-    this.gyro.compare(this.tip.rate, rise);
-    const sign = this.gyro.verdict;
-    return sign === null ? null : rise * sign;
+  /** The last turn rate, or none once orientation readings have stopped, so a stale spike cannot hold a move open. */
+  private turnRate(t: number): number {
+    return t - this.turn.t < MAX_TURN_GAP_MS ? this.turn.rate : 0;
   }
 
   /**
@@ -177,4 +169,10 @@ export class MotionPipeline {
     };
     return sub(total, this.gravity);
   }
+}
+
+/** The angle between two orientations, radians. */
+function turnBetween(a: Quat, b: Quat): number {
+  const d = Math.abs(a.w * b.w + a.x * b.x + a.y * b.y + a.z * b.z);
+  return 2 * Math.acos(Math.min(1, d));
 }
