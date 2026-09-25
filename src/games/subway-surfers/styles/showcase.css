@@ -11,13 +11,23 @@
   height: 100%;
 }
 
+/* The icon darkens toward the foot, so the name reads over the bright yard like the other tiles. */
+.ss-showcase--icon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(0deg, rgba(10, 16, 70, 0.78) 0%, rgba(10, 16, 70, 0.32) 30%, transparent 48%);
+}
+
 .ss-showcase--icon .ss-logo {
+  z-index: 1;
   position: absolute;
   left: 50%;
-  top: 5%;
+  bottom: 6%;
   transform: translateX(-50%) rotate(-5deg);
-  /* Sized to the tile, so the name fills its top at any capture size. */
-  font-size: 15vmin;
+  /* Sized to the tile, so the name fills its foot at any capture size. */
+  font-size: 18vmin;
 }
 
 /* Fat rounded letters with a thick outline and a hard drop shadow, like a sticker. */
