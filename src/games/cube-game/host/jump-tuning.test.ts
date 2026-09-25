@@ -17,14 +17,18 @@ const hop = (base: PoseSpec = {}): PoseKey[] => [
 ];
 
 describe("reading a jump for Cube Game", () => {
-  it("sees a jump well within 150 ms of the take off", () => {
+  it("sees a jump within 120 ms of the take off", () => {
     const [first] = starts(MOVES.jump());
-    expect(first).toBeLessThanOrEqual(150);
+    expect(first).toBeLessThanOrEqual(120);
+  });
+
+  it("keeps up when the camera gives only 15 frames a second", () => {
+    expect(eventsOf(readMoves(MOVES.jump(), {}, { smooth: true, fps: 15, tuning: JUMP_TUNING }), "jump")[0]?.time).toBeLessThanOrEqual(140);
   });
 
   it("sees a small quick hop too, for fast rhythm parts", () => {
     expect(starts(hop())).toHaveLength(1);
-    expect(starts(hop())[0]).toBeLessThanOrEqual(150);
+    expect(starts(hop())[0]).toBeLessThanOrEqual(140);
   });
 
   it("reads one jump once, never twice", () => {
@@ -32,8 +36,10 @@ describe("reading a jump for Cube Game", () => {
     expect(starts([...hop(), ...hop().map((k) => ({ ...k, at: k.at + 500 }))])).toHaveLength(2);
   });
 
-  it("ignores tiptoes and a bob of the head", () => {
+  it("ignores tiptoes, a quick bob, a bow and a slow stretch up", () => {
     expect(starts([{ at: 0, pose: {} }, { at: 300, pose: { lift: 0.04 } }, { at: 800, pose: { lift: 0.04 } }])).toHaveLength(0);
+    expect(starts([{ at: 0, pose: {} }, { at: 120, pose: { lift: 0.05 } }, { at: 240, pose: {} }])).toHaveLength(0);
+    expect(starts([{ at: 0, pose: {} }, { at: 1500, pose: { lift: 0.12 } }, { at: 2000, pose: { lift: 0.12 } }])).toHaveLength(0);
     expect(starts([{ at: 0, pose: {} }, { at: 200, pose: { bow: 0.2 } }, { at: 500, pose: {} }])).toHaveLength(0);
   });
 
