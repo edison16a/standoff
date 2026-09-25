@@ -125,7 +125,9 @@ export const FREE_THROW = {
   /** Past this, everyone is put on their spot. */
   maxWalk: 3.5,
   /** A computer steps to the line and shoots after this long; a phone gets its shot taken after the longer wait. */
-  botWait: 0.7,
+  botWait: 1.4,
+  /** Two bounces at the line to settle before each shot. */
+  bounces: 1,
   humanWait: 8,
   /** From the first shot leaving the hand to the ball going back to the shooter. */
   resultPause: 1.1,

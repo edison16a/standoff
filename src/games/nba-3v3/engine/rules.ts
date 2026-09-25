@@ -1,5 +1,6 @@
 import { startDead } from "./check-up";
 import { beyondArc, outOfBounds } from "./court";
+import { POCKET } from "./dribble-ball";
 import type { Match } from "./match";
 import { RULES } from "./tuning";
 import type { Athlete, TeamId } from "./types";
@@ -22,6 +23,9 @@ export function gainPossession(m: Match, a: Athlete): void {
   b.passTo = null;
   b.lastTouch = a.id;
   b.vel = { x: 0, y: 0, z: 0 };
+  // Caught or picked up: into both hands at the chest a moment before the first dribble.
+  a.dribble = 0;
+  a.pocket = POCKET;
   if (shot && !shot.counted) {
     a.box.rebounds++;
     m.emit({ type: "rebound", id: a.id, offensive: a.team === shot.team });

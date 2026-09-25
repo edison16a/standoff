@@ -1,6 +1,7 @@
 import { airborne, charOf, topSpeed } from "./athlete";
 import type { Match } from "./match";
 import { basketDir, nearestDefender, pickMove, rightOf } from "./move-pick";
+import { switchHands } from "./dribble";
 import { knockLoose } from "./steal";
 import type { Action, Athlete, DribbleMove } from "./types";
 import { angleDiff, clamp, dir2, dist2, yawOf, type V2 } from "./vec";
@@ -45,7 +46,7 @@ export function pressDribble(m: Match, a: Athlete, aim: V2 | null): void {
   a.moveCd = spec.dur + COOLDOWN;
   // Crossovers and behind the back change hands on the next push down.
   if (choice.move === "crossover" || choice.move === "behindBack") {
-    a.dribbleHand = choice.side;
+    switchHands(a, choice.side);
     a.crossCd = spec.dur + 0.4;
   }
   a.action = { kind: "move", t: 0, move: choice.move, dur: spec.dur, side: choice.side, dir: choice.dir, resolved: false };
@@ -90,7 +91,6 @@ function wanted(act: Move, a: Athlete, f: V2, r: V2): { v: V2; rate: number } {
 export function updateMove(m: Match, a: Athlete, dt: number): void {
   const act = a.action;
   if (act.kind !== "move") return;
-  const before = act.t;
   act.t += dt;
   const f = basketDir(a);
   const r = rightOf(f);
@@ -102,7 +102,6 @@ export function updateMove(m: Match, a: Athlete, dt: number): void {
   // A spin goes all the way round; every other move stays square to the basket.
   const spin = act.move === "spin" ? act.side * Math.PI * 2 * smooth((act.t - 0.06) / 0.44) : 0;
   a.yaw = act.move === "spin" ? face + spin : a.yaw + angleDiff(a.yaw, face) * Math.min(1, dt * 14);
-  if (act.move === "spin" && before < act.dur / 2 && act.t >= act.dur / 2) a.dribbleHand = a.dribbleHand === 1 ? -1 : 1;
   if (!act.resolved && act.t >= MOVES[act.move].at) {
     act.resolved = true;
     resolveMove(m, a, act);

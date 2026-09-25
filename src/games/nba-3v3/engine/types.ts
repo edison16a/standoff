@@ -101,6 +101,10 @@ export interface Athlete {
   /** Where the ball is dribbled across the body, -1 left to 1 right, easing over during a crossover. */
   dribbleSide: number;
   crossCd: number;
+  /** False from a change of hands until the ball is back in the hand, so the cross goes on the next push down. */
+  crossArmed: boolean;
+  /** Seconds the ball stays in the hand rather than bouncing: the pocket after a catch, or the pull through a spin. */
+  pocket: number;
   /** When they last asked for the ball, in match seconds. */
   calledAt: number;
   box: BoxScore;
