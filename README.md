@@ -258,7 +258,7 @@ Footwork is two hold buttons, Forward on top and Back below, since the top of th
 
 ### The referee
 
-The host steps the match at a fixed 60 Hz. A jab does not land when it is detected: the tip takes 140 ms to arrive, and the defender's parry window is checked at the moment of arrival. That gap is what lets a fast reaction save a touch. A jab also has to be in range and on target (the live blade within 75 degrees of the line, generous because a flick throws the phone about). Two touches within 60 ms of each other cancel out, like a double in épée. If both fencers walk into each other, it is called corps-à-corps and they are put back at a safe distance.
+The host steps the match at a fixed 60 Hz. A jab does not land when it is detected: the tip takes 220 ms to arrive, and the defender's parry window is checked at the moment of arrival. That gap is what lets a fast reaction save a touch. A jab also has to be in range and on target (the live blade within 75 degrees of the line, generous because a flick throws the phone about). Two touches within 60 ms of each other cancel out, like a double in épée. If both fencers walk into each other, it is called corps-à-corps and they are put back at a safe distance.
 
 ### Slow motion and effects
 
