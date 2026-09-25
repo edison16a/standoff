@@ -25,13 +25,14 @@ export function GuardJabCheck({ kit, done }: { kit: CameraKit; done: () => void 
 
   useEffect(() => {
     const since: (number | null)[] = kit.spots.map(() => null);
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const update = (next: Progress[]) => {
       state.current = next;
       setProgress(next);
       if (!finished.current && next.every((p) => p.guard && p.jab)) {
         finished.current = true;
         // A beat to see the last tick before moving on.
-        setTimeout(done, 700);
+        timer = setTimeout(done, 700);
       }
     };
     const stopFrame = kit.onFrame((frame) => {
@@ -54,6 +55,8 @@ export function GuardJabCheck({ kit, done }: { kit: CameraKit; done: () => void 
       update(state.current.map((q, j) => (j === event.slot - 1 ? { ...q, jab: true } : q)));
     });
     return () => {
+      // Leaving the screen in that beat must not finish calibration behind the player's back.
+      clearTimeout(timer);
       stopFrame();
       stopMoves();
     };

@@ -90,12 +90,19 @@ export class FightDriver {
   /** A player stepped out of view or came back. The fight waits for everyone. */
   setPresent(slot: number, present: boolean, now: number): void {
     if (this.fighterFor(slot) === null) return;
+    if (this.stage !== "fight" || this.match.phase === "over") {
+      // Once the fight is decided players are free to walk off, and nothing waits for them.
+      this.pausedFor = [];
+      this.resumeAt = null;
+      this.match.paused = false;
+      return;
+    }
     const away = new Set(this.pausedFor);
     if (present) away.delete(slot);
     else away.add(slot);
     this.pausedFor = [...away].sort();
     if (this.pausedFor.length > 0) {
-      this.match.paused = this.stage === "fight" && this.match.phase !== "over";
+      this.match.paused = true;
       this.resumeAt = null;
     } else if (this.match.paused && this.resumeAt === null) {
       // Everyone is back: a moment to set themselves, counted from the first frame they were all seen.
