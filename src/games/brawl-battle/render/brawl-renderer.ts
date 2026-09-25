@@ -61,6 +61,11 @@ export class BrawlRenderer {
     this.cam.setAspect(Math.max(1, width) / this.height);
   }
 
+  /** How many CSS pixels along the bottom of the canvas the HUD covers, so the camera frames the fight above it. */
+  setHudInset(px: number): void {
+    this.cam.hidden = Math.max(0, px) / this.height;
+  }
+
   /** Shows a match, building its stage and fighters the first time it is seen. */
   setMatch(state: MatchState): void {
     if (state === this.match) return;
