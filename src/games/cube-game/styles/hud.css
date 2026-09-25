@@ -50,6 +50,11 @@
   top: 16px;
 }
 
+/* The results card covers the middle of the screen, where this bar would peek out from behind it. */
+.cg-stage--results .cg-hud--bottom .cg-progress {
+  visibility: hidden;
+}
+
 .cg-progress__fill {
   display: block;
   height: 100%;
