@@ -7,7 +7,7 @@ import type { Pose } from "./skeleton";
 type Channel = Exclude<FencerAction, "idle" | "scored">;
 
 /** How long a lunge that scored stays out, in game time: through the slow motion and the burst. */
-const SCORED_HOLD_MS = 1100;
+const SCORED_HOLD_MS = 1300;
 
 interface ChannelSpec {
   /** Whether this action should currently be showing. */

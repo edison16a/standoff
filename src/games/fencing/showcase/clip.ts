@@ -6,11 +6,12 @@ const CYCLE_MS = 8000;
 /** The capture tool warms up this long before recording, so the cycle is lined up to start there. */
 const WARMUP_MS = 3000;
 /**
- * After the burst the bout holds still, so the loop ends on the moment. The
- * referee calls the next en garde about 1.2 seconds after it, which must
- * never make it into the clip.
+ * After the burst the bout runs on at this speed to the end of the loop,
+ * sparks drifting while the camera swings round the touch. The referee
+ * calls the next en garde about 1.2 seconds of game time after the burst,
+ * and at this speed that never makes it into the clip.
  */
-const FREEZE_AFTER_IMPACT_MS = 900;
+const TAIL_RATE = 0.25;
 /** The opening footwork is skipped, so the clip starts a beat before the first attack. */
 const PRE_ROLL_MS = 1000;
 const STEP_MS = 1000 / 60;
@@ -30,7 +31,7 @@ const CLIP_CLOCK_BASE_MS = 60_000;
 const CAST = { 1: "vale", 2: "marrow" } as const;
 
 /**
- * The looping clip: a fresh bout every cycle, frozen after its burst.
+ * The looping clip: a fresh bout every cycle, slowed right down after its burst.
  *
  * `seekMs` starts the clip that far in, as if it had been playing all
  * along: the skipped time is stepped through exactly as it would have
@@ -56,17 +57,20 @@ export function clip(renderer: StageRenderer, seekMs = 0): (now: number) => void
       impactAt = null;
       renderer.reset();
       bout = new ShowcaseBout(CAST, (event) => {
-        if (event.type === "impact") impactAt = tickAt;
         renderer.react(event, tickAt);
+        if (event.type !== "impact") return;
+        impactAt = tickAt;
+        // The close up stays on the touch until the loop ends.
+        renderer.holdShot(tickAt + CYCLE_MS);
       });
       for (let t = 0; t < PRE_ROLL_MS; t += STEP_MS) bout.step(STEP_MS);
       last = now;
     }
-    const frozen = impactAt !== null && tickAt - impactAt > FREEZE_AFTER_IMPACT_MS;
+    const rate = impactAt === null ? 1 : TAIL_RATE;
     // The capture tool steps the clock in whole frames; catch up in fixed steps so every run is identical.
     while (last + STEP_MS <= now) {
       last += STEP_MS;
-      if (!frozen) bout!.step(STEP_MS);
+      bout!.step(STEP_MS * rate);
     }
     renderer.update(bout!.scene(), tickAt, { scores: bout!.scores });
     if (!draw || now - drawnAt < DRAW_EVERY_MS) return;
@@ -76,7 +80,7 @@ export function clip(renderer: StageRenderer, seekMs = 0): (now: number) => void
 
   // Browser tests check where the clip is with `?fdebug`.
   if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("fdebug")) {
-    window.__fencingClip = () => ({ start, clock: performance.now(), cycle, time: bout?.time ?? 0, impactAt, tickAt, frozen: impactAt !== null && tickAt - impactAt > FREEZE_AFTER_IMPACT_MS, phase: bout?.driver.engine.phase ?? "" });
+    window.__fencingClip = () => ({ start, clock: performance.now(), cycle, time: bout?.time ?? 0, impactAt, tickAt, phase: bout?.driver.engine.phase ?? "" });
   }
   return (now) => {
     if (start === null) {
@@ -98,6 +102,6 @@ export function readSeek(): number {
 
 declare global {
   interface Window {
-    __fencingClip?: () => { start: number | null; clock: number; cycle: number; time: number; impactAt: number | null; tickAt: number; frozen: boolean; phase: string };
+    __fencingClip?: () => { start: number | null; clock: number; cycle: number; time: number; impactAt: number | null; tickAt: number; phase: string };
   }
 }

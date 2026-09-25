@@ -19,7 +19,8 @@ const CAST = {
 /** The moment each still is taken, in bout time, and where its camera stands relative to the blades. */
 const STILLS = {
   poster: { at: 4830, camera: (mid: THREE.Vector3) => ({ position: new THREE.Vector3(mid.x + 1.1, 1.62, 4.4), target: new THREE.Vector3(mid.x, 1.2, 0), fov: 30 }) },
-  icon: { at: 4800, camera: (mid: THREE.Vector3) => ({ position: new THREE.Vector3(mid.x + 0.25, 1.0, 3.3), target: new THREE.Vector3(mid.x, 1.42, 0), fov: 40 }) },
+  // Close on the crossed blades from the red side, so both fencers and the sparks fill the top of the tile above the name.
+  icon: { at: 4800, camera: (mid: THREE.Vector3) => ({ position: new THREE.Vector3(mid.x - 0.4, 1.32, 3.3), target: new THREE.Vector3(mid.x + 0.05, 1.4, 0), fov: 44 }) },
 };
 
 /**
