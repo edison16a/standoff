@@ -120,7 +120,7 @@ function passCaught(m: Match): boolean {
     if (b.passRolled.includes(d.id)) continue;
     if (Math.hypot(b.pos.x - d.x, b.pos.z - d.z) > PASS.interceptRange || b.pos.y > standingReach(d) + d.y - 0.15) continue;
     b.passRolled.push(d.id);
-    if (m.rng() >= 0.08 + charOf(d).stats.speed * 0.012) continue;
+    if (d.action.kind !== "none" || m.rng() >= 0.03 + charOf(d).stats.speed * 0.007) continue;
     const passer = b.lastTouch ?? receiver.id;
     gainPossession(m, d);
     d.box.steals++;

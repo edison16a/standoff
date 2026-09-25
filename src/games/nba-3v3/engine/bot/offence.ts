@@ -1,11 +1,12 @@
 import { charOf } from "../athlete";
-import { isThree, nearestBeyondArc, RIM_SPOT, rimDistance } from "../court";
+import { nearestBeyondArc, RIM_SPOT, rimDistance } from "../court";
 import type { Match } from "../match";
 import { openness } from "../passing";
 import { gaussian } from "../rng";
 import { GREEN_MS } from "../shot-model";
 import type { Athlete } from "../types";
 import { dist2, type V2 } from "../vec";
+import { jumperValue, releaseSpread } from "./shot-value";
 import { ballCarrier, bestSpot, goTo, laneOpen, type BotState } from "./util";
 
 /**
@@ -15,6 +16,9 @@ import { ballCarrier, bestSpot, goTo, laneOpen, type BotState } from "./util";
  * the ball get it. Shots are timed on the same meter as everyone's, with
  * a steadier hand for better shooters.
  */
+/** Expected points a jumper must beat, before the lean of the shooter. */
+const SHOOT_BAR = 2.15;
+
 export function thinkWithBall(m: Match, a: Athlete, s: BotState, dt: number): void {
   const act = a.action;
   if (act.kind === "shoot") {
@@ -49,23 +53,34 @@ function decide(m: Match, a: Athlete, s: BotState): void {
     s.target = RIM_SPOT;
     return;
   }
-  const three = isThree(a);
-  const range = three ? (st.shooting >= 8 ? 1 : st.shooting >= 7 ? 0.55 : 0.2) : d < 6.5 ? 1 : 0.7;
-  const space = open > 2.3 ? 1 : open > 1.6 ? 0.55 : 0.15;
-  const want = (st.shooting / 10) * range * space * (d < 8.5 ? 1 : 0.15);
-  if (want > 0.45 && m.rng() < 0.35 + s.holdFor * 0.2) return shoot(m, a, s, d);
+  // Shooters look for their shot; the longer the ball sits, the less picky anyone is.
+  const mine = jumperValue(m, a) * lean(a);
+  const bar = SHOOT_BAR - Math.min(0.6, s.holdFor * 0.1);
+  if (d < 8.8 && mine > bar && m.rng() < 0.55) return shoot(m, a, s, d);
 
   const mate = m
     .teammates(a)
-    .map((t) => ({ t, open: openness(m, t) }))
-    .sort((p, q) => q.open - p.open)[0];
+    .map((t) => ({ t, value: threat(m, t) }))
+    .sort((p, q) => q.value - p.value)[0];
   // Hold it a moment before moving it on, so the ball does not ping around without purpose.
   const settled = s.holdFor > 0.7 || open < 0.9;
-  if (settled && mate && mate.open > open + 0.8 && m.rng() < 0.18 + s.holdFor * 0.1 + (mate.t.auto ? 0 : 0.2)) {
+  if (settled && mate && mate.value > mine + 0.25 && m.rng() < 0.22 + s.holdFor * 0.1 + (mate.t.auto ? 0 : 0.2)) {
     return m.press(a.id, "pass", { x: mate.t.x - a.x, z: mate.t.z - a.z });
   }
   if (s.holdFor > 4 && mate && m.rng() < 0.4) return m.press(a.id, "pass", { x: mate.t.x - a.x, z: mate.t.z - a.z });
   s.target = attackSpot(m, a);
+}
+
+/** How keen a player is on their own jumper: shooters look for it, bigs look inside. */
+function lean(a: Athlete): number {
+  return 0.55 + charOf(a).stats.shooting * 0.055;
+}
+
+/** How dangerous a teammate would be with the ball right now: their jumper, or an open lane to the rim. */
+function threat(m: Match, t: Athlete): number {
+  const st = charOf(t).stats;
+  const drive = laneOpen(m, t, 0.8) && rimDistance(t) < 7 ? 0.2 + (st.speed + st.strength) * 0.05 : 0;
+  return jumperValue(m, t) * lean(t) + drive + Math.min(3, openness(m, t)) * 0.15;
 }
 
 /** A jumper stops the feet first; a drive keeps them going. The meter target wobbles with skill. */
@@ -79,8 +94,7 @@ function shoot(m: Match, a: Athlete, s: BotState, d: number): void {
   }
   a.move = { x: 0, z: 0 };
   s.target = null;
-  const spread = 150 - st.shooting * 8;
-  s.shotAt = GREEN_MS + gaussian(m.rng, spread) + (a.onFire ? 0 : 6);
+  s.shotAt = GREEN_MS + gaussian(m.rng, releaseSpread(st.shooting)) + (a.onFire ? 0 : 6);
   m.press(a.id, "shoot");
   s.holdFor = 0;
 }
