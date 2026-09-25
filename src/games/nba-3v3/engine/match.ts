@@ -3,6 +3,7 @@ import { pressDefend, pressPass, pressShoot, releaseShot, updateAction } from ".
 import { createAthlete, moveAthlete, separate } from "./athlete";
 import { updateBall } from "./ball";
 import { Brains } from "./bot/brains";
+import { updateDribbleHand } from "./dribble";
 import type { MatchEvent } from "./events";
 import { seeded, type Rng } from "./rng";
 import type { Outcome } from "./shot-model";
@@ -154,6 +155,7 @@ export class Match {
       a.whiff = Math.max(0, a.whiff - dt);
       updateAction(this, a, dt);
       moveAthlete(a, dt, this.ball.holder === a.id, this.facing(a), this.queue);
+      updateDribbleHand(this, a, dt);
     }
     separate(this.athletes, this.queue, this.bumpCd);
     if (!stepCheckBall(this, dt)) updateBall(this, dt);
@@ -174,6 +176,13 @@ export class Match {
 
   /** What a standing player looks at: the rim with the ball, the ball on defence. */
   private facing(a: Athlete): V2 | null {
+    const check = this.phase === "check" ? this.checkUp : null;
+    if (check) {
+      // In the check the two at the top face each other and everyone else watches the ball.
+      const other = a.id === check.plan.checker ? check.plan.defender : a.id === check.plan.defender ? check.plan.checker : null;
+      if (other !== null) return this.athletes[other]!;
+      return { x: this.ball.pos.x, z: this.ball.pos.z };
+    }
     if (Math.hypot(a.vx, a.vz) > 1.2 && a.action.kind === "none") return null;
     if (a.action.kind === "shoot" || a.action.kind === "drive") return { x: RIM.x, z: RIM.z };
     if (this.ball.holder === a.id) return { x: RIM.x, z: RIM.z };

@@ -98,14 +98,18 @@ export class CourtRenderer {
     const m = this.match;
     if (!m) return;
     this.time += dt;
-    const holder = m.ball.holder;
+    const b = m.ball;
+    const holder = b.holder;
     const onBall = holder !== null ? m.athletes[holder] : null;
+    // During the check the ball is held at the chest, not dribbled.
+    const chest = m.phase === "check";
     for (const [i, view] of this.views.entries()) {
       const a = m.athletes[i]!;
       const guarding = !!onBall && onBall.team !== a.team && m.phase === "live" && dist2(a, onBall) < 2.6 && a.action.kind === "none";
-      view.update(a, { holding: holder === a.id, guarding, winner: m.phase === "over" && m.phaseT > 1 ? m.winner : null }, dt);
+      const incoming = b.mode === "flight" && b.passTo === a.id && a.action.kind === "none" ? 1 - Math.hypot(b.pos.x - a.x, b.pos.z - a.z) / 3 : 0;
+      view.update(a, { holding: holder === a.id, chest, receiving: Math.max(0, incoming), guarding, winner: m.phase === "over" && m.phaseT > 1 ? m.winner : null }, dt);
     }
-    this.ball.update(m.ball, holder !== null ? (this.views[holder] ?? null) : null, dt);
+    this.ball.update(b, holder !== null ? (this.views[holder] ?? null) : null, chest, dt);
     if (this.intro !== null) {
       this.intro += dt;
       if (this.intro > 2.8) this.intro = null;
