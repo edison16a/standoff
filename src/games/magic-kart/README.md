@@ -24,7 +24,8 @@ A phone that joins mid race sets up and joins the next race. A player whose phon
 * **Mini turbo:** the longer and faster the drift, the hotter the sparks: blue, then orange, then purple. Drive out of it (Brake up, Drive down) to fire a turbo, longer for each colour. While you drift, Brake on the phone reads Drift and glows the spark colour. Computer karts drift the same way.
 * **Rocket start:** press Drive in the last second before GO.
 * Kerbs slow you a little, the sand or dust beyond them a lot. Glowing chevron pads give a boost.
-* Ramps launch you. In the air you cannot steer. Miss a jump over a gap and you fall and are put back on the far side.
+* Ramps launch you. Every map has a big jump over a gap, and off it a **glider** opens: the mast shoots up out of the kart and the wing unfolds over it in about a third of a second. Small bumps and hops never open it, only a real flight.
+* **Gliding:** steer with the phone just as on the road. The kart banks into the turn and the wing carries it on a slow, steady descent with a little lift, gentler to turn than on tarmac. Line up for the bend on the far side, or steer through the pair of power up cubes floating over the gap. Items still work in the air, and a hit spins you under the wing without closing it. The glider folds away the moment you land. Come up short, or glide off an open edge, and you fall and are put back.
 * Moving obstacles (crabs, asteroids, drones, rolling boulders) spin you out. Static ones just bump you.
 
 ## Power ups
@@ -41,10 +42,10 @@ A spin out ends with a second of protection, shown by a blink, so hits never cha
 
 ## The maps
 
-* **Sunny Shores:** the cover's beach. Purple tarmac, rainbow kerbs, palm trees and a rainbow finish arch. A jump over a lagoon, crabs scuttling across, and one open stretch by the sea.
-* **Star Ring:** a neon road floating in space, with portal rings, planets and an asteroid belt. Long stretches have no rail, and a boosted leap crosses the void.
-* **Neo City:** night streets between glowing towers, with tight right angle corners, a flyover ramp and patrol drones.
-* **Magma Peak:** climbs a live volcano past lava rivers, with rolling boulders, basalt pillars and a jump over the lava.
+* **Sunny Shores:** the cover's beach. Purple tarmac, rainbow kerbs, palm trees and a rainbow finish arch. A glide over a lagoon into a left hand bend, crabs scuttling across, and one open stretch by the sea.
+* **Star Ring:** a neon road floating in space, with portal rings, planets and an asteroid belt. Long stretches have no rail, and a boosted launch glides across the void onto a stretch with no rails at all.
+* **Neo City:** night streets between glowing towers, with tight right angle corners, patrol drones, and a flyover ramp that glides you over a neon canal.
+* **Magma Peak:** climbs a live volcano past lava rivers, with rolling boulders, basalt pillars and a glide over a lava river into a long right hander.
 
 Every map has chevron boards on the outside of each tight bend, painted arrows before them, striped kerbs and a clear barrier or drop at the edge.
 
@@ -56,13 +57,13 @@ Laps count by checkpoints in order: only driving through each one forwards count
 
 Every map has its own eight bar tune: an A section with the hook and a B section that answers it on new chords, with soft drums under a low pass filter. The lobby is a bell tune in F, the beach a steel drum calypso in C, space a reed arpeggio in A minor, the city a plucky groove in E minor and the volcano a driving tune in D minor. The last lap speeds the tune up a touch.
 
-Effects are layered and each repeat lands at a slightly different pitch. The crowd roars at the start and at every finish and claps through the podium. A spoken race caller, using the browser's voice at the player's sound effects volume, calls the start, the final lap, big hits, big air and the finishers. The music dips while it talks.
+Effects are layered and each repeat lands at a slightly different pitch. A glider opens with a whoosh and the crack of cloth pulling tight, the wind under it rises with speed, and it folds with a rustle and a click. The crowd roars at the start and at every finish and claps through the podium. A spoken race caller, using the browser's voice at the player's sound effects volume, calls the start, the final lap, big hits, some of the glides and the finishers. The music dips while it talks.
 
 ## Code
 
-* `engine/`: the race as pure code with no drawing: the track geometry, kart physics (the pedals, surge and drift model in `drive.ts`), laps and checkpoints, power ups, throws, obstacles, respawns and the computer drivers. Every number that shapes the feel is in `tuning.ts`. Unit tested.
+* `engine/`: the race as pure code with no drawing: the track geometry, kart physics (the pedals, surge and drift model in `drive.ts`, the glider in `glide.ts`), laps and checkpoints, power ups, throws, obstacles, respawns and the computer drivers. Every number that shapes the feel is in `tuning.ts`. Unit tested.
 * `tracks/`: one file per map, as data.
-* `render/`: three.js. `models/` has the four karts and drivers built from painted primitives and merged per kart, `scenery/` one file per map, `track/` the road, kerbs, barriers and markings, `props/` the cubes, obstacles and throws, `effects/` the particles.
+* `render/`: three.js. `models/` has the four karts and drivers built from painted primitives and merged per kart, and each driver's glider (`glider.ts`, with the cloth in `glider-sail.ts`), which `glider-view.ts` unfolds, `scenery/` one file per map, `track/` the road, kerbs, barriers and markings, `props/` the cubes, obstacles and throws, `effects/` the particles.
 * `host/`: the session on the computer (lobby, race driver, what the phones and the overlay see) and its React screens.
 * `phone/`: the controller session, the steering wheel maths and the phone screens. Steering reads where "up" points across the screen, so it holds however far the phone leans and never flips the way Euler angles do. The response is tuned in `phone/tilt.ts`: `FULL_LOCK` is the wheel angle for full lock (50 degrees, fine anywhere from 45 to 60), `DEAD_ZONE` keeps a steady hand going straight, and `LINEAR_SHARE` blends a linear and a cubic curve so small turns stay fine. With these values a braking drift starts from about 25 degrees of wheel.
 * `audio/`: synthesized music per map, an engine per kart pitched by speed, every effect, the crowd and the race caller, through the platform's audio buses (see Sound above).
@@ -73,7 +74,7 @@ The host draws every player's view with one WebGLRenderer and scissored viewport
 
 ## Home screen media
 
-The home screen's tile, still and looping clip are captured from `showcase/`, which plays real races with four computer karts and no room. Each shot is a seeded race, so it plays out the same way every time, and the computer karts are held in a tight pack so the camera always has close racing to show. The shots were picked by running many seeds and keeping the liveliest seconds: the pack hitting the boost pads and flying the lagoon jump on Sunny Shores, with an orb and an Ice Blast landing as they touch down, then the whole pack power sliding through a bend in Neo City, turbos firing. Changing the driving model changes every seeded race, so the shots must be picked again after any change to `engine/`. The icon is Blaze in the air over the lagoon under the logo, and the poster is the whole pack in the air.
+The home screen's tile, still and looping clip are captured from `showcase/`, which plays real races with four computer karts and no room. Each shot is a seeded race, so it plays out the same way every time, and the computer karts are held in a tight pack so the camera always has close racing to show. The shots were picked by running many seeds and keeping the liveliest seconds: the pack hitting the boost pads on Sunny Shores and all four gliders opening together over the lagoon, a close up of Pip gliding in with the wheels iced over, then the whole pack power sliding through the corners of Neo City, turbos firing. Changing the driving model changes every seeded race, so the shots must be picked again after any change to `engine/`. The icon is Blaze under the wing over the lagoon, below the logo, and the poster is Nova and Blaze gliding side by side.
 
 With the dev server running:
 
