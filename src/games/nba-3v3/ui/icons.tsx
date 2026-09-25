@@ -37,6 +37,18 @@ export function BlockIcon() {
   );
 }
 
+export function DribbleIcon() {
+  return (
+    <svg className="nba-icon" viewBox="0 0 48 48" aria-hidden="true">
+      <path d="M13 6c3-2 8-2 11 0" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      <path d="M10 12h18" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" />
+      <circle cx="21" cy="33" r="9" fill="currentColor" />
+      <path d="M36 14v10M36 28v4M40 18l-4 6-4-6" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 46h18" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function StealIcon() {
   return (
     <svg className="nba-icon" viewBox="0 0 48 48" aria-hidden="true">
