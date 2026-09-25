@@ -31,7 +31,8 @@ export class Run {
   jumps = 0;
   private checkpoints: Checkpoint[] = [];
   private lastCheckpoint = 0;
-  private pending = false;
+  /** Level times of jumps not yet used, oldest first. */
+  private pending: number[] = [];
 
   constructor(
     readonly level: Level,
@@ -60,9 +61,15 @@ export class Run {
     return this.checkpoints.map((c) => c.state.x);
   }
 
-  /** A jump for the next step. Presses while dead or paused are dropped. */
-  press(): void {
-    if (!this.player.dead && !this.player.finished) this.pending = true;
+  /**
+   * A jump at a level time, or on the next step. Timing each press by
+   * when it happened, not when the next frame gets to it, keeps a slow
+   * frame from moving a jump. Presses while dead are dropped.
+   */
+  press(at = this.time): void {
+    if (this.player.dead || this.player.finished) return;
+    this.pending.push(Math.max(at, this.time));
+    this.pending.sort((a, b) => a - b);
   }
 
   /**
@@ -72,8 +79,10 @@ export class Run {
   advanceTo(time: number, events: PlayerEvent[] = []): PlayerEvent[] {
     while (this.time + STEP <= time + 1e-9 && !this.player.dead && !this.player.finished) {
       const before = events.length;
-      step(this.player, this.world, STEP, this.pending, events);
-      this.pending = false;
+      // A press lands on the first step starting at or after its time, exactly as the level tests replay it.
+      const pressed = this.pending.length > 0 && this.pending[0]! <= this.time + 1e-9;
+      if (pressed) this.pending.shift();
+      step(this.player, this.world, STEP, pressed, events);
       this.time += STEP;
       for (let i = before; i < events.length; i++) this.note(events[i]!);
       if (this.practice) this.maybeCheckpoint();
@@ -88,7 +97,7 @@ export class Run {
     const deathTime = this.time;
     this.attempt += 1;
     this.jumps = 0;
-    this.pending = false;
+    this.pending = [];
     const safe = [...this.checkpoints].reverse().find((c) => c.time <= deathTime - CHECKPOINT_MARGIN);
     if (this.practice && safe) {
       this.checkpoints = this.checkpoints.filter((c) => c.time <= safe.time);

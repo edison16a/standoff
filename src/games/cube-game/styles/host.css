@@ -1,0 +1,179 @@
+/*
+  Cube Game on the computer: the stage the 3D view fills, and the shared
+  pieces. Chunky outlined type and glowing neon edges, in the spirit of
+  the levels. The same in light and dark themes, since the game brings
+  its own night sky.
+*/
+
+.cg-stage {
+  --cg-ink: #12052e;
+  --cg-glow: #3ee6ff;
+  --cg-gold: #ffd21f;
+  --cg-type: 900 1em/1 "Arial Black", "Helvetica Neue", Arial, var(--font-ui);
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #060318;
+  color: #ffffff;
+  font-family: var(--font-ui);
+}
+
+.cg-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.cg-dim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(6, 3, 24, 0.6);
+}
+
+/* The level select keeps the computer's run in view, darkening only behind the cards. */
+.cg-dim--menu {
+  background:
+    linear-gradient(180deg, rgba(6, 3, 24, 0.55) 0%, transparent 26%),
+    linear-gradient(0deg, rgba(6, 3, 24, 0.88) 0%, rgba(6, 3, 24, 0.5) 42%, transparent 64%);
+}
+
+.cg-dim--results {
+  background: rgba(6, 3, 24, 0.5);
+}
+
+.cg-button {
+  border: 4px solid var(--cg-ink);
+  border-radius: 14px;
+  padding: 14px 30px;
+  font: var(--cg-type);
+  font-size: 22px;
+  color: var(--cg-ink);
+  background: linear-gradient(180deg, #fff9b0, var(--cg-gold) 55%, #ff9a1f);
+  box-shadow: 0 6px 0 var(--cg-ink), 0 0 24px rgba(255, 210, 31, 0.35);
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.cg-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 0 var(--cg-ink), 0 0 32px rgba(255, 210, 31, 0.55);
+}
+
+.cg-button:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 var(--cg-ink);
+}
+
+.cg-button:focus-visible,
+.cg-link:focus-visible,
+.cg-level:focus-visible,
+.cg-toggle button:focus-visible,
+.cg-check:focus-visible {
+  outline: 4px solid #ffffff;
+  outline-offset: 4px;
+}
+
+.cg-button--quiet {
+  font-size: 17px;
+  padding: 10px 20px;
+  color: #ffffff;
+  background: linear-gradient(180deg, #3a2a8a, #221660);
+  box-shadow: 0 4px 0 var(--cg-ink);
+}
+
+.cg-button--quiet:hover {
+  box-shadow: 0 6px 0 var(--cg-ink), 0 0 20px rgba(62, 230, 255, 0.35);
+}
+
+.cg-center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 80px 24px 24px;
+  overflow: auto;
+}
+
+.cg-center__actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.cg-calibrate {
+  position: absolute;
+  inset: 0;
+}
+
+.cg-calibrate__back {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  z-index: 2;
+}
+
+.cg-phone {
+  padding: 24px;
+  text-align: center;
+}
+
+/* Calibration's last step: each player jumps once and their cube hops. */
+.cg-jumpcheck {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.cg-jumpcheck__player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  min-width: 200px;
+  padding: 22px 26px 18px;
+  border: 4px solid;
+  border-radius: 18px;
+  background: rgba(6, 3, 24, 0.78);
+}
+
+.cg-jumpcheck__player--ok {
+  box-shadow: 0 0 30px rgba(61, 255, 110, 0.5);
+}
+
+.cg-jumpcheck__cube {
+  width: 54px;
+  height: 54px;
+  border: 5px solid var(--cg-ink);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 9px rgba(255, 255, 255, 0.35);
+  animation: cg-hop 0.5s ease-out;
+}
+
+.cg-jumpcheck__label {
+  font: var(--cg-type);
+  font-size: 20px;
+}
+
+@keyframes cg-hop {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  45% {
+    transform: translateY(-40px) rotate(-90deg);
+  }
+  100% {
+    transform: translateY(0) rotate(-180deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cg-jumpcheck__cube {
+    animation: none;
+  }
+}

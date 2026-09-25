@@ -12,7 +12,7 @@ const CUBE_SPIN = Math.PI / ((2 * CUBE.jump) / CUBE.gravity);
  * A cube and a ball need a surface under them (or just behind them). A
  * UFO flaps anywhere. An orb in reach takes the press first.
  */
-function useJump(p: PlayerState, world: World, events: PlayerEvent[]): boolean {
+function spendJump(p: PlayerState, world: World, events: PlayerEvent[]): boolean {
   if (p.buffer <= 0) return false;
   const orb = orbInReach(p, world, ORB_REACH);
   if (orb) {
@@ -68,7 +68,7 @@ function turn(p: PlayerState, dt: number): void {
 export function step(p: PlayerState, world: World, dt: number, pressed: boolean, events: PlayerEvent[] = []): PlayerEvent[] {
   if (p.dead || p.finished) return events;
   if (pressed) p.buffer = JUMP_BUFFER;
-  const jumped = useJump(p, world, events);
+  const jumped = spendJump(p, world, events);
   fall(p, dt);
 
   const prevX = p.x;
@@ -106,7 +106,7 @@ export function step(p: PlayerState, world: World, dt: number, pressed: boolean,
   }
 
   // A jump buffered in the air fires the moment a surface is under the player.
-  if (p.grounded && p.buffer > 0 && !jumped) useJump(p, world, events);
+  if (p.grounded && p.buffer > 0 && !jumped) spendJump(p, world, events);
   if (wasGrounded && !p.grounded && !jumped && !pad) p.coyote = COYOTE;
   else if (p.grounded) p.coyote = 0;
   else p.coyote = Math.max(0, p.coyote - dt);
