@@ -1,6 +1,7 @@
 import type { MatchEvent } from "./events";
 import { Match, type MatchOptions } from "./match";
-import { NO_DEFENSE, type DefenseInput, type FighterId } from "./types";
+import { defenseOf, type Posture } from "./stance";
+import type { FighterId } from "./types";
 
 /** Runs a match for a while in small steps and collects what happened. For tests. */
 export function run(match: Match, ms: number, step = 16, each?: (events: MatchEvent[]) => void): MatchEvent[] {
@@ -13,15 +14,16 @@ export function run(match: Match, ms: number, step = 16, each?: (events: MatchEv
   return all;
 }
 
-/** A match already past the intro, with both boxers in range. */
+/** A match already past the intro, with both boxers in range and no touching gloves. */
 export function fighting(options: Partial<MatchOptions> = {}): Match {
-  const match = new Match({ seed: 7, introMs: 2000, ...options });
+  const match = new Match({ seed: 7, introMs: 2000, touch: false, ...options });
   run(match, 2100);
   return match;
 }
 
-export function hold(match: Match, id: FighterId, input: Partial<DefenseInput>): void {
-  match.setInput(id, { ...NO_DEFENSE, ...input });
+/** Holds a boxer in a posture: `{ shell: "guard" }`, `{ duck: 1 }`, `{ slip: -1 }` and so on. */
+export function hold(match: Match, id: FighterId, posture: Partial<Posture>): void {
+  match.setInput(id, defenseOf(posture));
 }
 
 export function ofType<T extends MatchEvent["type"]>(events: MatchEvent[], type: T): Extract<MatchEvent, { type: T }>[] {

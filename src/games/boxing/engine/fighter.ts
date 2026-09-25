@@ -1,15 +1,21 @@
+import { Fatigue } from "./fatigue";
 import { RULES } from "./rules";
-import { NO_DEFENSE, type DefenseInput, type FighterId, type Hand, type PunchStyle } from "./types";
+import { copyDefense, NO_DEFENSE, type DefenseInput, type FighterId, type Hand, type HeadSpot, type Level, type PunchStyle } from "./types";
 
 /** A punch on its way, from the first twitch of the wind up to the glove coming home. */
 export interface ActivePunch {
   hand: Hand;
   style: PunchStyle;
+  level: Level;
   /** How hard the player threw it, 0 to 1. */
   power: number;
   start: number;
+  /** When the wind up ends and the glove leaves. The aim is set from then on. */
+  launchAt: number;
   impactAt: number;
   endAt: number;
+  /** Where on the other boxer's head it is going, in the same terms as their head spot. */
+  aim: HeadSpot;
   /** Thrown inside a counter window. */
   counter: boolean;
   /** Thrown without the stamina for it. */
@@ -52,11 +58,13 @@ export interface FighterStats {
 export class Fighter {
   health: number = RULES.maxHealth;
   stamina: number = RULES.maxStamina;
-  input: DefenseInput = { ...NO_DEFENSE };
+  input: DefenseInput = copyDefense(NO_DEFENSE);
   punch: ActivePunch | null = null;
-  /** Since when the guard input has been held, or null while it is down. */
-  guardSince: number | null = null;
+  readonly fatigue = new Fatigue();
+  /** A stagger is a stun: the boxer reels back toward their corner. */
   staggerUntil = -Infinity;
+  /** No new stun until then, so a boxer is never stunned over and over. */
+  stunImmuneUntil = -Infinity;
   rockedUntil = -Infinity;
   counterUntil = -Infinity;
   counterFrom: "block" | "dodge" | null = null;
@@ -68,14 +76,12 @@ export class Fighter {
   /** Knockdowns suffered in each round. */
   roundKnockdowns: number[] = [];
   /** Whether the last hit taken came in from this boxer's left or right, for the head snapping away. */
-  lastHit: { at: number; hand: Hand; style: PunchStyle; damage: number } | null = null;
+  lastHit: { at: number; hand: Hand; style: PunchStyle; level: Level; damage: number } | null = null;
 
   constructor(readonly id: FighterId) {}
 
-  setInput(input: DefenseInput, now: number): void {
-    if (input.guard && !this.input.guard) this.guardSince = now;
-    if (!input.guard) this.guardSince = null;
-    this.input = { ...input };
+  setInput(input: DefenseInput): void {
+    this.input = copyDefense(input);
   }
 
   /** In the middle of a punch, from its wind up until the glove is back. */
@@ -91,10 +97,9 @@ export class Fighter {
     return now < this.rockedUntil;
   }
 
-  /** Blocking needs a settled guard, and no punch at the same time: you cannot punch while blocking. */
-  blocking(now: number): boolean {
-    if (this.down || this.staggered(now) || this.rocked(now) || this.punching(now)) return false;
-    return this.guardSince !== null && now - this.guardSince >= RULES.guardSettleMs;
+  /** Covered up and able to use it: not down, not stunned, not in the middle of a punch. */
+  guarding(now: number): boolean {
+    return this.input.guard && !this.down && !this.staggered(now) && !this.punching(now);
   }
 
   counterOpen(now: number): boolean {
@@ -116,19 +121,24 @@ export class Fighter {
     this.roundKnockdowns[round - 1] = (this.roundKnockdowns[round - 1] ?? 0) + 1;
   }
 
-  /** Stamina comes back while the gloves are home. */
+  /** Stamina comes back while the gloves are home, and fatigue drains away. */
   recover(now: number, dtMs: number): void {
+    this.fatigue.update(dtMs, this.health);
     if (this.punching(now) || this.down) return;
     this.stamina = Math.min(RULES.maxStamina, this.stamina + (RULES.staminaRegen * dtMs) / 1000);
   }
 
-  /** Clears the moment to moment state between rounds, keeping health, stats and knockdowns. */
+  /** Clears the moment to moment state as a round ends, keeping health, stats and knockdowns. */
   breakReset(): void {
     this.punch = null;
-    this.staggerUntil = this.rockedUntil = this.counterUntil = -Infinity;
+    this.staggerUntil = this.rockedUntil = this.counterUntil = this.stunImmuneUntil = -Infinity;
     this.counterFrom = null;
-    // A minute on the stool brings some of it back.
     this.stamina = RULES.maxStamina;
-    this.health = Math.min(RULES.maxHealth, this.health + 8);
+    this.fatigue.reset();
+  }
+
+  /** Health back while resting on the stool, never over the top. */
+  heal(amount: number): void {
+    this.health = Math.min(RULES.maxHealth, this.health + amount);
   }
 }
