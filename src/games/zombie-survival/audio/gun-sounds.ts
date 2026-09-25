@@ -32,6 +32,7 @@ export class GunSounds {
     const vary = 0.94 + Math.random() * 0.12;
     const echo = (delay: number, freq: number, peak: number, decay: number) =>
       noise(e, out, at + delay, { filter: "bandpass", frequency: freq * vary, q: 0.8, decay, peak });
+    this.brass(weapon, pan, at);
     switch (weapon) {
       case "shotgun":
         noise(e, out, at, { filter: "highpass", frequency: 2400, decay: 0.06, peak: 0.6 });
@@ -59,6 +60,25 @@ export class GunSounds {
         tone(e, out, at, { type: "sawtooth", frequency: 64 * vary, glideTo: 40, decay: 0.08, peak: 0.12 });
         echo(0.09, 430, 0.14, 0.8);
         return;
+    }
+  }
+
+  /**
+   * The action cycling and the spent case hitting the street: a dry
+   * click on the shot, then a bright bounce or two a moment later. The
+   * shotgun ejects on the pump, so it only gets the click. Clean, not gritty.
+   */
+  private brass(weapon: WeaponId, pan: number, at: number): void {
+    const e = this.engine;
+    const out = sendTo(e, e.bus("sfx"), 0.7, pan * 1.3, at, 2);
+    noise(e, out, at + 0.01, { filter: "bandpass", frequency: 3200 + Math.random() * 600, q: 3, decay: 0.02, peak: 0.18 });
+    if (weapon === "shotgun") return;
+    const land = at + 0.3 + Math.random() * 0.15;
+    for (let i = 0; i < 2 + Math.floor(Math.random() * 2); i++) {
+      const t = land + i * (0.07 - i * 0.015) + Math.random() * 0.02;
+      const f = 4200 + Math.random() * 1800;
+      tone(e, out, t, { frequency: f, decay: 0.07, peak: 0.05 / (i + 1) });
+      tone(e, out, t, { frequency: f * 1.48, decay: 0.04, peak: 0.025 / (i + 1) });
     }
   }
 

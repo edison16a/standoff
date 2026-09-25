@@ -7,7 +7,9 @@ import { alive, type Zombie } from "../engine/zombie";
 import { isBoss, KINDS } from "../engine/zombie-kinds";
 import { gunSlotX } from "../render/gun-layout";
 import { Ambience } from "./ambience";
+import { cheer } from "./crowd";
 import { GunSounds } from "./gun-sounds";
+import { ScoreDirector } from "./score-director";
 import { Stingers } from "./stingers";
 import { ZombieSounds, type Spot } from "./zombie-sounds";
 
@@ -17,14 +19,15 @@ const MAX_VOICES = 3;
 /**
  * Zombie Survival's sound on the computer. The platform owns the audio
  * engine and unlocked it in the click that opened the room. This plays
- * the guns, the zombies, the beds under them and the story beats, from
- * the same events that drive the picture.
+ * the guns, the zombies, the beds under them, the score and the story
+ * beats, from the same events that drive the picture.
  */
 export class HostAudio {
   private readonly guns: GunSounds;
   private readonly zombies: ZombieSounds;
   private readonly stingers: Stingers;
   private readonly ambience: Ambience;
+  private readonly score: ScoreDirector;
   private readonly growlAt = new Map<number, number>();
   /** When each walking boss next puts a foot down. */
   private readonly stompAt = new Map<number, number>();
@@ -37,6 +40,7 @@ export class HostAudio {
     this.stingers = new Stingers(engine);
     this.ambience = new Ambience(engine);
     this.ambience.start();
+    this.score = new ScoreDirector(engine);
   }
 
   onStart(): void {
@@ -47,6 +51,7 @@ export class HostAudio {
 
   onLobby(): void {
     this.ambience.rotorLevel(0, 0);
+    this.score.lobby();
   }
 
   react(event: GameEvent, game: SurvivalGame): void {
@@ -78,20 +83,24 @@ export class HostAudio {
       case "spawn":
         if (isBoss(event.kind)) {
           this.stingers.bossArrives();
+          this.score.dip(0.3, 4);
           this.zombies.growl(spot(event.zombie), 0.4, 2.5, 2);
         }
         return;
       case "swing":
         return this.zombies.swipe(spot(event.zombie), isBoss(event.kind));
       case "radio":
+        this.score.dip(0.6, Math.min(4.5, 0.8 + event.line.text.length * 0.045));
         return this.stingers.radio(event.line.text.length);
       case "achievement":
         return this.stingers.achievement();
       case "stage-clear":
+        this.score.dip(0.4, 2.5);
         return this.stingers.checkpoint();
       case "phase":
+        this.score.phase(event.phase);
         if (event.phase === "down") this.stingers.gameOver();
-        if (event.phase === "escaped") this.stingers.victory();
+        if (event.phase === "escaped") this.celebrate(game.squad.present().length);
         if (event.phase === "cutscene" && game.cutscene === "escape") this.stingers.horn(1.5);
         return;
     }
@@ -116,6 +125,13 @@ export class HostAudio {
 
   dispose(): void {
     this.ambience.stop();
+    this.score.stop();
+  }
+
+  /** Out alive: the fanfare, and the survivors whooping as the boat pulls away. */
+  private celebrate(survivors: number): void {
+    this.stingers.victory();
+    cheer(this.engine, this.engine.bus("crowd"), this.engine.now + 0.8, { size: Math.min(0.5, 0.2 + survivors * 0.08), length: 2.6 });
   }
 
   /** Growls come more often from zombies that are close. */
