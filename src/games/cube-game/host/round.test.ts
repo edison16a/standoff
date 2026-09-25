@@ -85,4 +85,18 @@ describe("a round", () => {
     sync.restart(0, 1);
     expect(round.press(1)).toBe(false);
   });
+
+  it("keeps a player who steps out while crashed waiting at the start", () => {
+    const sync = new FakeSync();
+    const round = new Round(level(), 2, false, sync);
+    play(round, sync, 4.4, { 1: [4] });
+    expect(round.status(2)).toBe("dead");
+    round.setAway(2, true);
+    play(round, sync, 12, { 1: [4] });
+    expect(round.status(2)).toBe("away");
+    expect(round.run(2)!.attempt).toBe(2);
+    expect(round.run(2)!.player.x).toBe(0);
+    round.setAway(2, false);
+    expect(round.status(2)).toBe("run");
+  });
 });

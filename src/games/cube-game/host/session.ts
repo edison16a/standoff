@@ -206,9 +206,9 @@ export class CubeSession {
     );
     this.clock.restart(0, START_LEAD);
     this.room.setPlaying(true);
-    // Anyone out of view at the start waits, as if they had stepped out.
-    this.kit?.getSnapshot().present.forEach((seen, i) => input === "camera" && !seen && this.presence(i + 1, false));
     store.setState({ phase: "play", results: [], unlockedNow: null, banner: null });
+    // Anyone out of view at the start waits, as if they had stepped out. This needs the play phase set first.
+    if (input === "camera") this.kit?.getSnapshot().present.forEach((seen, i) => !seen && this.presence(i + 1, false));
   }
 
   private endRound(): void {

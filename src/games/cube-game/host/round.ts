@@ -24,6 +24,8 @@ interface Seat {
   offset: number;
   deadAt: number;
   restarted: boolean;
+  /** Out of the camera's view. Kept apart from the status, since a player can step out while crashed. */
+  away: boolean;
 }
 
 /** How long a player gets to settle after stepping back into view. */
@@ -46,7 +48,7 @@ export class Round {
     private readonly sync: SongSync,
   ) {
     this.spb = 60 / level.bpm;
-    this.seats = Array.from({ length: players }, () => ({ run: new Run(level, practice), status: "run" as Status, offset: 0, deadAt: 0, restarted: true }));
+    this.seats = Array.from({ length: players }, () => ({ run: new Run(level, practice), status: "run" as Status, offset: 0, deadAt: 0, restarted: true, away: false }));
   }
 
   get solo(): boolean {
@@ -87,6 +89,7 @@ export class Round {
   setAway(slot: number, away: boolean): void {
     const seat = this.seats[slot - 1];
     if (!seat) return;
+    seat.away = away;
     if (away && seat.status === "run") seat.status = "away";
     else if (!away && seat.status === "away") {
       seat.status = "run";
@@ -106,8 +109,11 @@ export class Round {
           seat.deadAt = now;
         } else if (seat.run.finished) seat.status = "done";
       } else if (seat.status === "dead" && now - seat.deadAt >= DEATH_PAUSE) {
-        seat.status = "run";
-        this.startFrom(seat, seat.run.respawn(), 0.05);
+        const from = seat.run.respawn();
+        // Someone who stepped out while crashed waits at the start instead of crashing over and over.
+        seat.status = seat.away ? "away" : "run";
+        if (!seat.away) this.startFrom(seat, from, 0.05);
+        else seat.restarted = true;
       }
       const restarted = seat.restarted;
       seat.restarted = false;

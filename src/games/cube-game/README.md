@@ -35,7 +35,7 @@ Each level has its own song, synthesised in the browser, with the obstacles on i
 
 Crashing restarts that player at once from the start, with the attempt counter going up. With one player the song restarts too, as in the original. With two, the song plays on and a crashed player comes back on the next beat, so the obstacles always land on the music. A progress bar shows the percent through the level and a gold mark for the best. Finishing plays a fanfare with confetti and opens the next level. Bests and open levels are kept in this browser's localStorage. Practice saves a checkpoint every two seconds on safe ground, marked by a green diamond, and does not count toward bests.
 
-If a player steps out of the camera's view, their run pauses, and with one player the song stops too. It picks up on the beat a moment after they come back.
+If a player steps out of the camera's view, even while crashed or before the start, their run pauses, and with one player the song stops too. It picks up on the beat a moment after they come back.
 
 ## How it is built
 
@@ -48,7 +48,7 @@ If a player steps out of the camera's view, their run pauses, and with one playe
 
 ### Reading the jump
 
-The camera kit reads the jump, tuned a touch quicker than its default (`host/jump-tuning.ts`): on the kit's sample jump it fires about 70 ms after take off, once per jump. A press is timed by when it happened, the camera frame or the key's own time stamp, not by when the next frame gets to it, so a slow frame never moves a jump. Presses closer than 260 ms apart count as one.
+The camera kit reads the jump, tuned a touch quicker than its default (`host/jump-tuning.ts`): on the kit's sample jump it fires about 70 ms after take off, once per jump. A press is timed by when it happened, the camera frame or the key's own time stamp, not by when the next frame gets to it, so a slow frame never moves a jump. Camera jumps closer than 260 ms apart count as one. Keys are never read twice, so quick taps on a key all count.
 
 ### Testing
 

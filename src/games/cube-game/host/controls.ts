@@ -2,6 +2,8 @@ import type { CameraKit, MoveEvent } from "@/games/kit/camera";
 
 /** One body jump is one press. Anything sooner than this after the last is the same jump read twice. */
 const REFRACTORY_MS = 260;
+/** A key is never read twice, so it only guards against a bouncing switch, and quick UFO taps still count. */
+const KEY_REFRACTORY_MS = 60;
 
 /** Keys for playing without the camera. Space is always player one. */
 const KEYS: Record<string, number> = { Space: 1, KeyW: 1, Enter: 2, ArrowUp: 2, Numpad0: 2 };
@@ -35,8 +37,8 @@ export class Controls {
     this.unlisten();
   }
 
-  private press(slot: number, time: number): void {
-    if (slot > this.players || time - (this.last[slot] ?? 0) < REFRACTORY_MS) return;
+  private press(slot: number, time: number, refractory = REFRACTORY_MS): void {
+    if (slot > this.players || time - (this.last[slot] ?? 0) < refractory) return;
     this.last[slot] = time;
     this.onPress(slot, time);
   }
@@ -54,6 +56,6 @@ export class Controls {
     // Space would otherwise press whichever button has focus.
     event.preventDefault();
     // The event's own time stamp is when the key went down, even if a slow frame kept it waiting.
-    this.press(slot, event.timeStamp || performance.now());
+    this.press(slot, event.timeStamp || performance.now(), KEY_REFRACTORY_MS);
   }
 }
