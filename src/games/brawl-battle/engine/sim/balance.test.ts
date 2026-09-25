@@ -7,12 +7,13 @@ import { describeTally, fourWay, oneOnOne, pairings } from "./balance";
  * Bot balance, skipped by default because it plays thousands of matches.
  * Run it after changing moves, bodies or bots:
  *
- *   BRAWL_BALANCE=1 npx vitest run src/games/brawl-battle/engine/sim
+ *   BRAWL_BALANCE=1 npx vitest run src/games/brawl-battle/engine/sim --reporter=verbose --silent false
  *
  * BRAWL_BALANCE_GAMES sets the four bot matches per difficulty (default
  * 1000); each pairing plays a fifth of that. BRAWL_BALANCE_SEED moves
  * the seeds, to check a result is not luck. The bounds leave room for
  * noise: at 1000 matches a 25 percent share wobbles by about 3 points.
+ * The flags show the tables, which vitest hides for passing tests.
  */
 const on = !!process.env.BRAWL_BALANCE;
 const games = Number(process.env.BRAWL_BALANCE_GAMES ?? 1000);
