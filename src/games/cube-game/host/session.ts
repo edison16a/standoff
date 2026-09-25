@@ -8,6 +8,7 @@ import { LEVELS, levelById } from "../levels";
 import type { DrawInput } from "../render/game-renderer";
 import { beatPulse } from "../render/pulse";
 import { Controls } from "./controls";
+import { JUMP_TUNING } from "./jump-tuning";
 import { loadProgress } from "./progress";
 import { Round } from "./round";
 import { SongClock } from "./song-clock";
@@ -35,6 +36,8 @@ export class CubeSession {
   private demoRestarted = true;
   private lastFrame = 0;
   private resultsTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Every press this round as level time, for browser tests. */
+  readonly presses: { slot: number; at: number }[] = [];
 
   constructor(private readonly room: HostRoomApi) {
     this.sound = new SoundDirector(room.audio);
@@ -82,8 +85,7 @@ export class CubeSession {
     const { players } = store.getState();
     if (!this.kit || this.kit.players !== players) {
       this.kit?.dispose();
-      // Jumps are read a touch sooner than the kit's default, since the beat does not wait.
-      this.kit = new CameraKit({ players, moves: { jump: { rise: 0.15, speed: 1.2 } } });
+      this.kit = new CameraKit({ players, moves: JUMP_TUNING });
     }
     this.sound.music.play("menu");
     store.setState({ phase: "camera" });
@@ -175,7 +177,12 @@ export class CubeSession {
     this.controls = new Controls(
       input === "camera" ? this.kit : null,
       players,
-      (slot, pageMs) => round.press(slot, Math.min(this.clock.songTime(), this.clock.songTimeAt(pageMs))),
+      (slot, pageMs) => {
+        const at = Math.min(this.clock.songTime(), this.clock.songTimeAt(pageMs));
+        round.press(slot, at);
+        // Browser tests read back when each jump landed. Development builds only.
+        if (process.env.NODE_ENV === "development") this.presses.push({ slot, at: at - (round.seats[slot - 1]?.offset ?? 0) });
+      },
       (slot, present) => this.presence(slot, present),
     );
     this.clock.restart(0, START_LEAD);
