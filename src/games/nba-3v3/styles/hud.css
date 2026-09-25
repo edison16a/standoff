@@ -93,6 +93,8 @@
   align-items: center;
   justify-content: center;
   min-width: 92px;
+  /* Room for the longest word under the digits, "Free throw 1 of 2", clear of the slanted team panels. */
+  padding: 0 16px;
   background: #0b0d18;
   border-top: 3px solid #ffd23f;
 }
