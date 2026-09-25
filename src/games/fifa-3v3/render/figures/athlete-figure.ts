@@ -1,10 +1,12 @@
 import * as THREE from "three";
-import { SHOOT, PASS } from "../../engine/tuning";
+import { shotWindup } from "../../engine/kick";
+import { PASS } from "../../engine/tuning";
 import type { AthleteView } from "../../engine/view";
 import { ROSTER, type Character, type Kit } from "../../roster";
 import { celebration, cheer, dejected } from "../anim/celebrations";
 import { charging, getUp, hurdle, idle, mirror, pass, run, shoot, slide, stumble } from "../anim/moves";
 import { applyPose, ease, neutral, type Pose } from "../anim/pose";
+import { beaten, skillPose } from "../anim/skill-poses";
 import { buildBody, type Rig } from "../models/body";
 
 /**
@@ -38,10 +40,10 @@ export class AthleteFigure {
     const lefty = this.character.foot === "left";
     switch (v.action) {
       case "free":
-        if (v.charge > 0) return this.footed(charging(v.stride, v.speed, v.charge), lefty);
+        if (v.bar) return this.footed(charging(v.stride, v.speed, v.charge), lefty);
         return v.speed > 0.35 ? run(v.stride, v.speed, v.hasBall) : idle(time, this.phase);
       case "shoot":
-        return this.footed(shoot(v.actionT, SHOOT.windup, v.power), lefty);
+        return this.footed(shoot(v.actionT, shotWindup(v.power), v.power), lefty);
       case "pass":
         return this.footed(pass(v.actionT, PASS.windup), lefty);
       case "slide":
@@ -52,6 +54,10 @@ export class AthleteFigure {
         return stumble(v.actionT);
       case "hurdle":
         return hurdle(v.actionT, v.actionLen);
+      case "skill":
+        return skillPose(v.skill ?? "roulette", v.actionT / Math.max(0.01, v.actionLen), v.skillSide, v.stride, v.speed);
+      case "beaten":
+        return beaten(v.actionT, v.actionLen);
       case "celebrate":
         return v.signature ? celebration(this.character.celebration, v.actionT) : cheer(v.actionT, this.phase);
       case "dejected":

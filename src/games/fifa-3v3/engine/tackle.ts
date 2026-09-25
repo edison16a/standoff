@@ -83,7 +83,6 @@ function resolve(state: MatchState, a: Athlete, victim: Athlete): void {
     victim.action = "hurdle";
     victim.actionT = 0;
     victim.actionLen = SLIDE.hurdle;
-    victim.charging = false;
     state.events.push({ type: "tackle", athlete: a.id, victim: victim.id, won: false });
   }
 }
@@ -107,7 +106,8 @@ export function challenges(state: MatchState, dt: number): void {
   const ball = state.ball;
   if (ball.owner?.kind !== "athlete" || ball.heldFor < 0.45) return;
   const carrier = state.athletes[ball.owner.id];
-  if (!carrier || carrier.action === "hurdle") return;
+  // Mid skill move the ball is tested once, in skills.ts, not nicked step by step.
+  if (!carrier || carrier.action === "hurdle" || carrier.action === "skill") return;
   for (const o of state.athletes) {
     if (o.team === carrier.team || o.action !== "free" || o.noTouch > 0) continue;
     if (dist(footPoint(o), ball.pos) > 0.55) continue;

@@ -1,6 +1,6 @@
 /**
  * Every number that shapes the match, in metres and seconds. The pitch
- * is a floodlit five a side cage: boards along the sides stop the ball
+ * is a floodlit small sided cage: boards along the sides stop the ball
  * going out, and only the ends let it out, over the boards.
  */
 
@@ -9,19 +9,19 @@ export const STEP = 1 / 60;
 
 export const PITCH = {
   /** From the centre spot to each goal line. */
-  halfLength: 16,
+  halfLength: 21,
   /** From the centre spot to each side board. */
-  halfWidth: 10,
+  halfWidth: 13,
   boardHeight: 1,
   /** From the middle of the goal to the centre of each post. */
-  goalHalfWidth: 2.3,
+  goalHalfWidth: 2.5,
   /** To the centre of the crossbar. */
-  goalHeight: 2,
+  goalHeight: 2.1,
   goalDepth: 1.4,
   postRadius: 0.06,
   /** The keeper's area, a half circle around the goal. */
-  boxRadius: 5.5,
-  centreRadius: 3,
+  boxRadius: 7,
+  centreRadius: 3.8,
   /** A tall catch net behind each goal stops balls that go over the boards. */
   catchNet: 3.4,
 } as const;
@@ -44,13 +44,13 @@ export const BALL = {
 } as const;
 
 export const MOVE = {
-  accel: 26,
+  accel: 28,
   /** Top speed at 60 pace and at 99 pace. */
-  slowest: 5.2,
-  fastest: 7.7,
+  slowest: 5.6,
+  fastest: 8.2,
   /** With the ball at the feet, scaled up by dribbling. */
   withBall: 0.86,
-  charging: 0.6,
+  charging: 0.55,
   turnRate: 13,
   turnWithBall: 8,
   /** Players never stand closer than this, so they bump instead of merging. */
@@ -69,24 +69,24 @@ export const TOUCH = {
 } as const;
 
 export const SHOOT = {
+  /** The backswing, from a placed shot to a full power one. */
   windup: 0.16,
-  /** Holding Shoot builds power over this long, then shoots by itself. */
-  chargeFull: 0.75,
-  chargeMax: 1.1,
-  /** A press shortly before the ball arrives turns into a first time shot. */
+  windupPower: 0.12,
+  /** A press shortly before the ball arrives turns into a first time kick. */
   buffer: 0.35,
-  minSpeed: 15,
-  maxSpeed: 31,
+  /** Pace off the boot for an empty bar and a full one. */
+  minSpeed: 14,
+  maxSpeed: 32,
 } as const;
 
 export const PASS = {
   windup: 0.1,
   arrive: 5.6,
-  maxSpeed: 21,
+  maxSpeed: 24,
   cone: Math.PI * 0.42,
   /** The pace across the ground of a lofted pass, short and long. */
   loftMin: 9,
-  loftMax: 15,
+  loftMax: 18,
   /** A lofted ball lands this far short of the receiver and bounces up to them. */
   loftShort: 1.2,
 } as const;
@@ -97,22 +97,19 @@ export const ASSIST = {
   deadZone: 0.35,
   /** A team mate this close to the stick's line gets the pass. */
   mateCone: 0.5,
-  passReach: 26,
+  passReach: 32,
   /** Extra room either side of the goal mouth that still counts as aiming at it. */
   goalSlack: 0.32,
-  /** The furthest out a pointed shot is taken, and a shot with the stick centred. */
-  shootRange: 24,
-  autoRange: 14,
   /** How far a pass into space is played. */
-  spaceLength: 9,
+  spaceLength: 11,
   /** Passes longer than this, or with a defender this close to the line, go in the air. */
-  airLength: 15,
+  airLength: 18,
   laneWidth: 1.1,
 } as const;
 
 export const SLIDE = {
   duration: 0.6,
-  speed: 8.4,
+  speed: 9,
   friction: 9,
   /** The sliding boot is this far in front of the body. */
   reach: 0.85,
@@ -125,7 +122,7 @@ export const SLIDE = {
 } as const;
 
 export const KEEPER = {
-  speed: 5.4,
+  speed: 5.8,
   diveTime: 0.36,
   height: 1.9,
   /** From the boots to the gloves, stretched out with the arms above the head. */

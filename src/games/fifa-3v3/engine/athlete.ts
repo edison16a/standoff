@@ -1,5 +1,6 @@
 import { ROSTER, unit, type CharacterId } from "../roster";
 import type { TeamId } from "../teams";
+import { isTap } from "./charge";
 import { MOVE, PITCH, TOUCH, BALL } from "./tuning";
 import type { Athlete, Ball } from "./types";
 import { angleDiff, clamp, clampLen, fromAngle, len, v2, type Vec2 } from "./vec";
@@ -24,18 +25,21 @@ export function makeAthlete(id: number, team: TeamId, slot: number, character: C
     noTouch: 0,
     charge: 0,
     charging: false,
+    release: null,
     buffered: 0,
     passTo: null,
     lofted: false,
     aimZ: null,
     bufferAim: null,
+    bufferHeld: 0,
     power: 0,
     slideDone: false,
+    skill: { kind: null, side: 1, from: v2(1, 0), exit: v2(1, 0), pace: 0, wait: 0, heat: 0, tested: false },
     speed: unit(stats.speed),
     shooting: unit(stats.shooting),
     strength: unit(stats.strength),
     dribbling: unit(stats.dribbling),
-    brain: { thinkIn: 0, target: v2(), slideWait: 0, passWait: 0, carried: 0, caller: null, callFor: 0 },
+    brain: { thinkIn: 0, target: v2(), slideWait: 0, passWait: 0, skillWait: 0, carried: 0, caller: null, callFor: 0 },
     stats: { goals: 0, shots: 0, tackles: 0, passes: 0 },
   };
 }
@@ -66,7 +70,8 @@ function keepOnPitch(p: Vec2): void {
 export function moveAthlete(a: Athlete, want: Vec2, dt: number, carrying: boolean): void {
   let top = topSpeed(a);
   if (carrying) top *= MOVE.withBall + 0.1 * a.dribbling;
-  if (a.charging) top *= MOVE.charging;
+  // Winding up a shot slows the run; holding the button to call for the ball does not.
+  if (a.charging && carrying && !isTap(a.charge)) top *= MOVE.charging;
   const desired = clampLen(want, 1);
   const dvx = desired.x * top - a.vel.x;
   const dvz = desired.z * top - a.vel.z;

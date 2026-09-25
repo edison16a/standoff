@@ -6,13 +6,14 @@ import { tryControl } from "./control";
 import { goalX, outAt, scoredIn } from "./goal";
 import { makeSave } from "./keeper";
 import { updateKeeper } from "./keeper-update";
-import { planKick } from "./assist";
-import { botPass, owns, progressKick, startKick, startShot } from "./kick";
+import { applyButtons } from "./buttons";
+import { owns, progressKick } from "./kick";
 import { fullTime, onGoal, onOut } from "./rules";
-import { challenges, startSlide, updateSlide } from "./tackle";
-import { PITCH, SHOOT } from "./tuning";
+import { coolSkill, updateBeaten, updateSkill } from "./skills";
+import { challenges, updateSlide } from "./tackle";
+import { PITCH } from "./tuning";
 import type { Athlete, Command, MatchState } from "./types";
-import { clamp01, scale, type Vec2 } from "./vec";
+import { scale } from "./vec";
 
 const IDLE: Command = { move: { x: 0, z: 0 } };
 
@@ -21,14 +22,16 @@ export function playStep(state: MatchState, commands: ReadonlyMap<number, Comman
   const live = state.phase === "play";
   for (const a of state.athletes) {
     const command = !live ? IDLE : isHuman(a) ? (commands.get(a.id) ?? IDLE) : botCommand(state, a, dt);
-    if (live) applyCommand(state, a, command, dt);
+    if (live) applyButtons(state, a, command, dt);
     updateAction(state, a, command, dt);
   }
   const ball = state.ball;
   const owner = ball.owner;
   if (owner?.kind === "athlete") {
     ball.heldFor += dt;
-    carryBall(state.athletes[owner.id]!, ball, dt);
+    // During a skill move the move itself places the ball.
+    const carrier = state.athletes[owner.id]!;
+    if (carrier.action !== "skill") carryBall(carrier, ball, dt);
   } else if (!owner) stepLooseBall(state, dt);
   for (const k of state.keepers) updateKeeper(state, k, dt);
   if (owner?.kind === "keeper") ball.heldFor += dt;
@@ -70,59 +73,11 @@ function endShotOnBoards(state: MatchState): void {
   if (Math.abs(state.ball.pos.x) > PITCH.halfLength - 1) state.events.push({ type: "miss", team: flight.team, kind: "wide" });
 }
 
-/**
- * Shoot and slide presses. The same rules for phones and computer
- * players. Shoot is held to charge and kicks on release, the way the
- * stick pointed at that moment; the assist turns that into a shot or a
- * pass. Pressed without the ball, it waits a moment for a first time kick.
- */
-function applyCommand(state: MatchState, a: Athlete, c: Command, dt: number): void {
-  const has = owns(state, a);
-  const free = a.action === "free";
-  if (c.shootDown) {
-    if (has && free) {
-      a.charging = true;
-      a.charge = 0;
-    } else {
-      a.buffered = SHOOT.buffer;
-      a.bufferAim = c.aim ?? null;
-      callForBall(state, a);
-    }
-  }
-  if (c.shootUp && a.charging && has && free) kickNow(state, a, c.aim ?? c.move, a.charge);
-  if (c.shootUp) a.charging = false;
-  if (c.shoot !== undefined && has && free) startShot(state, a, c.shoot);
-  if (c.passTo !== undefined && has && free) botPass(state, a, c.passTo);
-  if (c.slide && free && !has) startSlide(state, a, c.move);
-  if (a.charging) {
-    if (!has) a.charging = false;
-    a.charge += dt;
-    if (a.charge >= SHOOT.chargeMax && a.action === "free") kickNow(state, a, c.move, a.charge);
-  }
-  a.buffered = Math.max(0, a.buffered - dt);
-}
-
-/** Kicks the ball the way the stick points, harder the longer Shoot was held. */
-export function kickNow(state: MatchState, a: Athlete, stick: Vec2 | null, held: number): void {
-  const power = 0.25 + 0.75 * clamp01(held / SHOOT.chargeFull);
-  startKick(state, a, planKick(state, a, stick), power);
-}
-
-/** A phone's player without the ball asks a computer team mate on the ball to pass it. */
-function callForBall(state: MatchState, a: Athlete): void {
-  const owner = state.ball.owner;
-  if (owner?.kind !== "athlete") return;
-  const carrier = state.athletes[owner.id]!;
-  if (carrier.team !== a.team || carrier.id === a.id || isHuman(carrier)) return;
-  carrier.brain.caller = a.id;
-  carrier.brain.callFor = 1;
-  carrier.brain.thinkIn = 0;
-}
-
 function updateAction(state: MatchState, a: Athlete, c: Command, dt: number): void {
   const before = a.actionT;
   a.actionT += dt;
   a.noTouch = Math.max(0, a.noTouch - dt);
+  coolSkill(a, dt);
   const has = owns(state, a);
   switch (a.action) {
     case "free":
@@ -141,6 +96,12 @@ function updateAction(state: MatchState, a: Athlete, c: Command, dt: number): vo
     case "slide":
       updateSlide(state, a, dt);
       return;
+    case "skill":
+      updateSkill(state, a, dt);
+      return;
+    case "beaten":
+      updateBeaten(a, state.ball.pos, dt);
+      break;
     case "getup":
     case "stumble":
       brake(a, dt);

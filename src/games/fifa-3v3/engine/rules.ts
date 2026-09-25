@@ -10,7 +10,7 @@ import { dist } from "./vec";
 function kickoffSpot(a: Athlete, kicking: boolean): { x: number; z: number } {
   const s = attackSign(a.team);
   if (a.slot === 0) return { x: kicking ? -s * 0.35 : -s * (PITCH.centreRadius + 0.4), z: 0 };
-  return { x: -s * 5.5, z: a.slot === 1 ? -4 : 4 };
+  return { x: -s * 7, z: a.slot === 1 ? -5.2 : 5.2 };
 }
 
 /** Everyone back to their kick off spots, a fresh ball on the centre spot. */
@@ -26,7 +26,9 @@ export function setupKickoff(state: MatchState): void {
     a.actionT = 0;
     a.charging = false;
     a.charge = 0;
+    a.release = null;
     a.buffered = 0;
+    a.skill.kind = null;
     a.noTouch = 0;
     a.brain.thinkIn = 0.4;
   }
