@@ -1,0 +1,150 @@
+/*
+  Full screen moments over the fight: the walk out and break callouts, the
+  referee's count, the pause, the replay with its cinema bars, and the red
+  flash of a clean punch taken.
+*/
+
+.bx-callout,
+.bx-count,
+.bx-paused {
+  position: absolute;
+  left: 50%;
+  top: 55%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.bx-callout__small,
+.bx-paused__text {
+  font-size: 26px;
+  font-weight: 900;
+  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.8);
+}
+
+.bx-callout__big,
+.bx-paused__big {
+  font-family: var(--bx-display);
+  font-size: 120px;
+  line-height: 1;
+  color: var(--bx-gold);
+  text-shadow: 0 6px 0 rgba(0, 0, 0, 0.7);
+}
+
+.bx-count {
+  top: 42%;
+}
+
+.bx-count__n {
+  font-family: var(--bx-display);
+  font-size: 220px;
+  line-height: 1;
+  color: #ffffff;
+  text-shadow: 0 10px 0 rgba(150, 10, 30, 0.9), 0 0 60px rgba(225, 29, 72, 0.8);
+  animation: bx-count 0.9s ease-out forwards;
+}
+
+.bx-count__hint {
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: var(--bx-red);
+  font-size: 24px;
+  font-weight: 900;
+  animation: bx-pulse 0.4s ease-in-out infinite alternate;
+}
+
+.bx-paused {
+  padding: 26px 40px;
+  border: 3px solid var(--bx-gold);
+  border-radius: 24px;
+  background: rgba(6, 6, 14, 0.9);
+}
+
+.bx-paused__title {
+  font-family: var(--bx-display);
+  font-size: 60px;
+  font-style: italic;
+  color: var(--bx-gold);
+}
+
+/* Just under the top cinema bar, where it never covers the replay itself. */
+.bx-replay {
+  position: absolute;
+  top: calc(11% + 18px);
+  left: 32px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.bx-replay__tag {
+  padding: 6px 18px 6px 34px;
+  position: relative;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.75);
+  font-family: var(--bx-display);
+  font-size: 34px;
+  font-style: italic;
+  letter-spacing: 0.06em;
+}
+
+.bx-replay__tag::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: var(--bx-red);
+  animation: bx-pulse 0.5s ease-in-out infinite alternate;
+}
+
+/* A red flash round the edges of the view of a boxer who just took a clean punch. */
+.bx-hurt {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(255, 0, 0, 0) 50%, rgba(220, 20, 40, 0.55) 100%);
+  animation: bx-hurt 0.45s ease-out forwards;
+}
+
+/* Cinema bars for the slow motion replay. */
+.bx-letterbox::before,
+.bx-letterbox::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 11%;
+  background: #000000;
+  animation: bx-bars 0.5s ease-out;
+}
+
+.bx-letterbox::before {
+  top: 0;
+}
+
+.bx-letterbox::after {
+  bottom: 0;
+}
+
+@keyframes bx-hurt {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes bx-bars {
+  from {
+    height: 0;
+  }
+  to {
+    height: 11%;
+  }
+}

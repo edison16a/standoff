@@ -3,23 +3,20 @@ import type { HostRoomApi } from "@/platform/games/game-api";
 import { BoxingAudio } from "../audio/boxing-audio";
 import type { MatchEvent } from "../engine/events";
 import type { Match } from "../engine/match";
-import type { MirrorInput } from "../render/anim/anim-input";
 import type { DirectorInput } from "../render/director";
 import { lookFor, type Look } from "../render/models/looks";
-import { DemoFight } from "../showcase/demo-fight";
 import { Banners } from "./banners";
 import { FightDriver } from "./fight-driver";
 import { useBoxingStore as store } from "./host-store";
 import { hudFrom } from "./hud";
-import { mirrorFrom } from "./mirror";
+import { MenuDemo } from "./menu-demo";
 import { PickControl } from "./pick-control";
-import { defenseFrom } from "./player-input";
+import { PlayersFeed } from "./players-feed";
 import { loadRecords } from "./records";
+import { testRoundMs } from "./dev-overrides";
 import { finishFight } from "./results";
 
 const HUD_MS = 100;
-/** A player missing for this long pauses the fight. A frame or two lost by the tracker never does. */
-const AWAY_MS = 600;
 
 /**
  * Boxing on the computer, for one room. It owns the camera kit, runs the
@@ -33,18 +30,15 @@ export class BoxingHost {
   readonly audio: BoxingAudio;
   /** Changes with every new fight, so the picture knows to clear the last one. */
   fightId = 0;
-  private demo = new DemoFight(3, { busy: false });
+  private readonly demo = new MenuDemo();
+  private readonly feed = new PlayersFeed();
   private readonly banners = new Banners();
   private readonly listeners = new Set<(event: MatchEvent, match: Match) => void>();
-  private readonly mirrors: [MirrorInput | null, MirrorInput | null] = [null, null];
-  private readonly missingSince: [number | null, number | null] = [null, null];
   private stopKit: (() => void) | null = null;
   private stopDriver: (() => void) | null = null;
   private lastHud = 0;
   private lastTick = 0;
   private lastStage = "";
-  private demoOver = 0;
-  private demoSeed = 3;
 
   constructor(private readonly room: HostRoomApi) {
     this.audio = new BoxingAudio(room.audio);
@@ -107,7 +101,7 @@ export class BoxingHost {
     this.banners.clear();
     this.audio.setPlayers(humans);
     this.fightId++;
-    this.missingSince.fill(null);
+    this.feed.reset();
     this.room.setPlaying(true);
     store.setState({ screen: "fight", result: null, newBest: null });
   }
@@ -127,12 +121,6 @@ export class BoxingHost {
     store.setState({ screen: "players" });
   }
 
-  /** Back to calibration, for a player who wants to set up again. */
-  recalibrate(): void {
-    this.leaveFight();
-    store.setState({ screen: "setup" });
-  }
-
   skip(): void {
     this.driver?.skip(performance.now());
   }
@@ -144,7 +132,7 @@ export class BoxingHost {
     const screen = store.getState().screen;
     const driver = screen === "fight" || screen === "results" ? this.driver : null;
     if (driver) this.fightFrame(driver, now);
-    else this.demoFrame(dt);
+    else for (const event of this.demo.step(dt)) for (const listener of this.listeners) listener(event, this.demo.match);
     if (screen === "pick" && this.pick && this.kit) {
       const locked = this.pick.update([this.kit.moves(1), this.kit.moves(2)], now);
       if (locked.length) this.audio.confirm();
@@ -158,12 +146,9 @@ export class BoxingHost {
   directorInput(now: number): DirectorInput {
     const driver = store.getState().screen === "fight" || store.getState().screen === "results" ? this.driver : null;
     if (!driver) return { match: this.demo.match, shot: "menu", shotMs: now, humans: [false, false], mirrors: [null, null] };
-    for (const id of [0, 1] as const) {
-      const slot = driver.slots[id];
-      this.mirrors[id] = slot !== null && this.kit ? mirrorFrom(this.kit.body(slot), this.kit.moves(slot), this.mirrors[id] ?? undefined) : null;
-    }
+    const mirrors = this.feed.mirror(driver, this.kit);
     const shot = driver.stage === "fight" ? "fight" : driver.stage === "replay" ? "replay" : "celebrate";
-    return { match: driver.match, shot, shotMs: now - driver.stageSince, humans: [driver.slots[0] !== null, driver.slots[1] !== null], mirrors: this.mirrors };
+    return { match: driver.match, shot, shotMs: now - driver.stageSince, humans: [driver.slots[0] !== null, driver.slots[1] !== null], mirrors };
   }
 
   dispose(): void {
@@ -174,15 +159,7 @@ export class BoxingHost {
   }
 
   private fightFrame(driver: FightDriver, now: number): void {
-    const kit = this.kit;
-    for (const slot of driver.slots) {
-      if (slot === null || !kit) continue;
-      driver.defend(slot, defenseFrom(kit.moves(slot), kit.body(slot)));
-      const seen = kit.body(slot) !== null;
-      const since = this.missingSince[slot - 1] ?? null;
-      this.missingSince[slot - 1] = seen ? null : (since ?? now);
-      driver.setPresent(slot, seen || now - (since ?? now) < AWAY_MS, now);
-    }
+    this.feed.defend(driver, this.kit, now);
     driver.tick(now);
     if (driver.stage !== this.lastStage) {
       this.audio.replay(driver.stage === "replay");
@@ -193,13 +170,6 @@ export class BoxingHost {
       this.lastHud = now;
       store.setState({ hud: hudFrom(driver, this.looks(), this.banners, now) });
     }
-  }
-
-  private demoFrame(dt: number): void {
-    for (const event of this.demo.step(dt)) for (const listener of this.listeners) listener(event, this.demo.match);
-    // A fresh demo a few seconds after this one is decided, so the menus always have a fight behind them.
-    if (this.demo.match.phase !== "over") this.demoOver = 0;
-    else if ((this.demoOver += dt) > 4000) this.demo = new DemoFight(++this.demoSeed, { busy: false });
   }
 
   private showResults(driver: FightDriver): void {
@@ -244,11 +214,4 @@ export class BoxingHost {
     this.kit?.dispose();
     this.kit = null;
   }
-}
-
-/** Browser tests can shorten the rounds, in development builds only. */
-function testRoundMs(): number | undefined {
-  if (process.env.NODE_ENV !== "development" || typeof window === "undefined") return undefined;
-  const ms = (window as unknown as { __boxingRoundMs?: number }).__boxingRoundMs;
-  return typeof ms === "number" && ms > 0 ? ms : undefined;
 }

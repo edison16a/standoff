@@ -5,8 +5,11 @@ import { SessionContext } from "./host/components/session-context";
 import { Stage } from "./host/components/Stage";
 import { Showcase } from "./showcase/Showcase";
 import "./styles/host.css";
+import "./styles/menus.css";
 import "./styles/pick.css";
 import "./styles/hud.css";
+import "./styles/overlays.css";
+import "./styles/results.css";
 
 /**
  * Boxing, as the platform sees it. It is played in front of the

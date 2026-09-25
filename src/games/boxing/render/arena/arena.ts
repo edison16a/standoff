@@ -4,18 +4,15 @@ import { Particles } from "../fx/particles";
 import { glowTexture, ledTexture } from "./arena-textures";
 import { Crowd } from "./crowd";
 import { buildRing, PLATFORM } from "./ring";
-
-/** The lighting rig hangs this high over the canvas. */
-const TRUSS_Y = 6.2;
-const TRUSS_HALF = 3.6;
+import { buildTruss, TRUSS_HALF, TRUSS_Y } from "./truss";
 
 /**
  * Everything around the fight: the ring on its platform, the ringside
  * boards, the crowd rising into the dark, the square lighting truss with
  * its lamps and light shafts, a big screen over the ring, and camera
  * flashes popping in the stands. The lights are few and strong: one key
- * light with shadows straight down on the canvas and four hard rim
- * lights from the truss corners, so the boxers stand out from the dark.
+ * light with shadows straight down on the canvas and two hard rim lights
+ * from opposite corners of the truss, so the boxers stand out from the dark.
  */
 export class Arena {
   readonly group = new THREE.Group();
@@ -59,7 +56,9 @@ export class Arena {
 
     this.buildFloor();
     this.buildBoards();
-    this.buildTruss(glow);
+    const truss = buildTruss(glow, (thing) => this.keep(thing));
+    this.group.add(truss.group);
+    this.shafts.push(...truss.shafts);
     this.buildScreen();
   }
 
@@ -142,62 +141,6 @@ export class Arena {
       face.rotation.y = Math.PI;
       group.add(desk, face);
       this.group.add(group);
-    }
-  }
-
-  /** The square truss over the ring, its lamp cans and the shafts of light they throw through the haze. */
-  private buildTruss(glow: THREE.Texture): void {
-    const metal = this.keep(new THREE.MeshStandardMaterial({ color: "#2a2c34", metalness: 0.8, roughness: 0.35 }));
-    const beam = this.keep(new THREE.BoxGeometry(TRUSS_HALF * 2 + 0.3, 0.25, 0.25));
-    for (let side = 0; side < 4; side++) {
-      const piece = new THREE.Mesh(beam, metal);
-      const angle = (side * Math.PI) / 2;
-      piece.position.set(Math.sin(angle) * TRUSS_HALF, TRUSS_Y, Math.cos(angle) * TRUSS_HALF);
-      piece.rotation.y = angle + Math.PI / 2;
-      this.group.add(piece);
-    }
-    const can = this.keep(new THREE.CylinderGeometry(0.16, 0.2, 0.34, 14));
-    const lens = this.keep(new THREE.MeshBasicMaterial({ color: "#fff8e8", toneMapped: false }));
-    const lensGeo = this.keep(new THREE.CircleGeometry(0.15, 16));
-    const halo = this.keep(new THREE.SpriteMaterial({ map: glow, color: "#fff2d8", blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.8 }));
-    const shaftGeo = this.keep(new THREE.ConeGeometry(1.4, TRUSS_Y + 0.4, 24, 1, true));
-    shaftGeo.translate(0, -(TRUSS_Y + 0.4) / 2, 0);
-    for (let side = 0; side < 4; side++) {
-      for (const along of [-2.2, -0.75, 0.75, 2.2]) {
-        const angle = (side * Math.PI) / 2;
-        const x = Math.sin(angle) * TRUSS_HALF + Math.cos(angle) * along;
-        const z = Math.cos(angle) * TRUSS_HALF - Math.sin(angle) * along;
-        const lamp = new THREE.Group();
-        lamp.position.set(x, TRUSS_Y - 0.25, z);
-        lamp.lookAt(x * 0.15, 0, z * 0.15);
-        const body = new THREE.Mesh(can, metal);
-        body.rotation.x = Math.PI / 2;
-        const face = new THREE.Mesh(lensGeo, lens);
-        face.position.z = 0.18;
-        const sprite = new THREE.Sprite(halo);
-        sprite.scale.setScalar(0.9);
-        sprite.position.z = 0.2;
-        lamp.add(body, face, sprite);
-        this.group.add(lamp);
-      }
-    }
-    // Four soft shafts of light falling through the haze onto the canvas.
-    for (const [x, z] of [
-      [-1, -1],
-      [1, 1],
-      [-1, 1],
-      [1, -1],
-    ] as const) {
-      const shaft = new THREE.Mesh(
-        shaftGeo,
-        this.keep(new THREE.MeshBasicMaterial({ color: "#fff1dc", transparent: true, opacity: 0.05, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })),
-      );
-      shaft.position.set(x * TRUSS_HALF, TRUSS_Y, z * TRUSS_HALF);
-      // The cone's tip is at the lamp and its open base falls on the canvas near the middle.
-      const down = new THREE.Vector3(-x * 0.6, 0, -z * 0.6).sub(shaft.position).normalize();
-      shaft.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), down);
-      this.shafts.push(shaft);
-      this.group.add(shaft);
     }
   }
 

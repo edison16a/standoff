@@ -2,6 +2,7 @@ import type { MatchEvent, MatchResult } from "./events";
 import { Fighter } from "./fighter";
 import { FIGHT_RANGE, Footwork } from "./footwork";
 import { seeded, type Random } from "./random";
+import { applyOutcome } from "./landing";
 import { judge } from "./resolve";
 import { PUNCHES, RULES } from "./rules";
 import { decision, scorecards } from "./scoring";
@@ -141,41 +142,7 @@ export class Match {
       return;
     }
     const outcome = judge(punch, attacker, defender, this.now);
-    if (outcome.kind === "miss" || outcome.kind === "block") {
-      if (outcome.kind === "miss") {
-        defender.stats.dodged++;
-        attacker.stamina = Math.max(0, attacker.stamina - RULES.missStamina);
-        this.pending.push({ type: "miss", ...facts, target: defender.id, dodge: outcome.dodge });
-      } else {
-        defender.stats.blocked++;
-        defender.stamina = Math.max(0, defender.stamina - RULES.blockStamina);
-        defender.health = Math.max(1, defender.health - PUNCHES[punch.style].damage * RULES.blockDamage);
-        this.pending.push({ type: "block", ...facts, target: defender.id });
-      }
-      defender.counterUntil = this.now + RULES.counterMs;
-      defender.counterFrom = outcome.kind === "miss" ? "dodge" : "block";
-      this.pending.push({ type: "counter", fighter: defender.id, from: defender.counterFrom });
-      return;
-    }
-    const { damage, heavy, stagger } = outcome;
-    defender.health = Math.max(0, defender.health - damage);
-    defender.rockedUntil = this.now + (heavy ? RULES.heavyRockMs : RULES.rockMs);
-    if (stagger) defender.staggerUntil = this.now + RULES.staggerMs;
-    defender.counterUntil = -Infinity;
-    defender.lastHit = { at: this.now, hand: punch.hand, style: punch.style, damage };
-    attacker.stats.landed++;
-    attacker.stats.damage += damage;
-    if (punch.counter) attacker.stats.counters++;
-    attacker.addRoundDamage(this.round, damage);
-    this.footwork.knockBack(defender.id, heavy ? 1.5 : 0.6);
-    this.pending.push({ type: "hit", ...facts, target: defender.id, damage, counter: punch.counter, heavy, stagger, power: punch.power });
-    // Getting hit first spoils a punch still on its way, unless the two land together.
-    const theirs = defender.punch;
-    if (theirs && !theirs.resolved && theirs.impactAt > this.now + 40) {
-      defender.punch = null;
-      this.pending.push({ type: "interrupted", fighter: defender.id, hand: theirs.hand, style: theirs.style });
-    }
-    if (defender.health <= 0) this.knockDown(defender, attacker);
+    if (applyOutcome(outcome, punch, attacker, defender, this, (event) => this.pending.push(event))) this.knockDown(defender, attacker);
   }
 
   private knockDown(down: Fighter, by: Fighter): void {
