@@ -57,7 +57,7 @@ function postRaw(stream: string, body: string) {
 describe("the HTTP stream fallback route", () => {
   it("hosts a room and relays between host and phone", async () => {
     const host = await openStream();
-    expect((await host.post([{ type: "host:create", game: "fencing", seats: 2 }])).status).toBe(204);
+    expect((await host.post([{ type: "host:create", game: "blade-clash", seats: 2 }])).status).toBe(204);
     const created = await host.message("room:created");
     expect(created.joinUrl).toBe(`${ORIGIN}/join/${created.code}`);
 
@@ -76,7 +76,7 @@ describe("the HTTP stream fallback route", () => {
     const stream = await openStream();
     stream.close();
     await new Promise((resolve) => setTimeout(resolve, 20));
-    expect((await stream.post([{ type: "host:create", game: "fencing", seats: 2 }])).status).toBe(410);
+    expect((await stream.post([{ type: "host:create", game: "blade-clash", seats: 2 }])).status).toBe(410);
   });
 
   it("refuses posts that are not a batch for a real stream id", async () => {

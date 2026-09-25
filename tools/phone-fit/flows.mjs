@@ -7,7 +7,7 @@
 // with the game it opens and whether the phone has motion sensors, for a
 // second pass at the same game.
 import { fruitNinja, shootingGallery, zombieSurvival } from "./flows/aim-games.mjs";
-import { fencing, fencingButtons } from "./flows/fencing.mjs";
+import { bladeClash, bladeClashTouch } from "./flows/blade-clash.mjs";
 import { brawlBattle, fifa3v3, magicKart, magicKartButtons, nba3v3 } from "./flows/pad-games.mjs";
 
 export const FLOWS = {
@@ -23,8 +23,8 @@ export const FLOWS = {
   "shooting-gallery-touch": { game: "shooting-gallery", flow: shootingGallery, sensors: false },
   "nba-3v3": nba3v3,
   "fifa-3v3": fifa3v3,
-  fencing,
-  // Fencing with buttons, for a phone with no motion sensors.
-  "fencing-buttons": { game: "fencing", flow: fencingButtons, sensors: false },
+  "blade-clash": bladeClash,
+  // Blade Clash with a drag pad, for a phone with no motion sensors.
+  "blade-clash-touch": { game: "blade-clash", flow: bladeClashTouch, sensors: false },
   "brawl-battle": brawlBattle,
 };

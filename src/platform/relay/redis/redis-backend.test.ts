@@ -51,7 +51,7 @@ describe.skipIf(!url)("Relay over Redis across two instances", () => {
 
   it("joins, relays and reclaims seats across instances", async () => {
     const host = connect(instanceA);
-    host.connection.receive({ type: "host:create", game: "fencing", seats: 2 });
+    host.connection.receive({ type: "host:create", game: "blade-clash", seats: 2 });
     const { code } = await host.socket.waitFor("room:created");
 
     const p1 = connect(instanceB);

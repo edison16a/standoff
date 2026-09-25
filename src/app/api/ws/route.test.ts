@@ -67,7 +67,7 @@ describe("the Vercel WebSocket route", () => {
   it("hosts a room and relays between host and phone", async () => {
     const host = await open();
     // Sent straight after open, which is exactly what must not be lost.
-    host.send({ type: "host:create", game: "fencing", seats: 2 });
+    host.send({ type: "host:create", game: "blade-clash", seats: 2 });
     const created = await host.waitFor("room:created");
     expect(created.joinUrl).toBe(`https://${origin}/join/${created.code}`);
 

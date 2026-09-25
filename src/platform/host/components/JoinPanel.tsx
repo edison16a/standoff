@@ -9,7 +9,7 @@ import { useHostStore } from "../host-store";
  * until someone joins, then tucked into the bottom left until the game
  * starts or every seat is taken. The code is always dark on white,
  * whatever the theme, because plenty of phone cameras cannot read it
- * inverted. A game can add a control under it, like fencing's Play solo,
+ * inverted. A game can add a control under it, like Blade Clash's Play solo,
  * keep it in the corner from the start, or hide it when phones are not used.
  */
 export function JoinPanel({ title, Extra, placement = "center" }: { title: string; Extra?: ComponentType; placement?: HostGame["join"] }) {

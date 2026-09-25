@@ -31,7 +31,7 @@ async function openRoom() {
   host.connect();
   await Promise.resolve();
   const socket = FakeSocket.last;
-  socket.receive({ type: "room:created", code: "ABCD", game: "fencing", seats: 2, token: "t".repeat(20), joinUrl: "https://x/join/ABCD", sharedRooms: true });
+  socket.receive({ type: "room:created", code: "ABCD", game: "blade-clash", seats: 2, token: "t".repeat(20), joinUrl: "https://x/join/ABCD", sharedRooms: true });
   const events: HostRoomEvent[] = [];
   host.api!.on((event) => events.push(event));
   return { host, socket, events };

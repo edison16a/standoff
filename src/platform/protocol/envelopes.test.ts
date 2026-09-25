@@ -20,9 +20,9 @@ describe("clientEnvelopeSchema", () => {
       { type: "phone:send", payload: { kind: "" } },
       { type: "phone:join", code: "TOOLONG" },
       { type: "host:send", to: 7, payload: { kind: "state" } },
-      { type: "host:create", game: "fencing", seats: 7 },
-      { type: "host:create", game: "Fencing!", seats: 2 },
-      { type: "host:create", game: "fencing", seats: 0 },
+      { type: "host:create", game: "blade-clash", seats: 7 },
+      { type: "host:create", game: "Blade Clash!", seats: 2 },
+      { type: "host:create", game: "blade-clash", seats: 0 },
       { type: "nonsense" },
     ];
     for (const envelope of bad) expect(clientEnvelopeSchema.safeParse(envelope).success).toBe(false);
