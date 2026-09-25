@@ -105,9 +105,10 @@
 }
 
 .ss-calibrate__back {
+  /* Top left, under the platform logo, so it never covers the camera picture's corner. */
   position: absolute;
   left: 24px;
-  bottom: 24px;
+  top: 72px;
 }
 
 .ss-phone {
