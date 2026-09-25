@@ -2,7 +2,7 @@ import { deriveBody, type Body } from "./body";
 import type { Baseline } from "./calibration";
 import { MoveReader, type MoveEvent, type MoveState } from "./gestures/moves";
 import type { MoveTuning } from "./gestures/options";
-import { CORE_POINTS, LM, visibilityOf, type Pose } from "./landmarks";
+import { LM, UPPER_POINTS, visibilityOf, type Pose } from "./landmarks";
 import { SlotAssigner } from "./slots";
 import { DEFAULT_SMOOTHING, LandmarkSmoother, type SmoothingOptions } from "./smoothing";
 
@@ -27,7 +27,14 @@ export interface TrackFrame {
   events: MoveEvent[];
 }
 
-const MIN_TORSO = 0.04;
+/** Shoulders narrower than this, in frame heights, are someone far behind the players. */
+const MIN_SHOULDERS = 0.03;
+/**
+ * A jump can carry the head out of the top of the picture, and the model
+ * may lose the player for a moment. A player lost mid jump is waited for
+ * this long, instead of the usual grace, before they count as away.
+ */
+const JUMP_GRACE_MS = 700;
 
 /**
  * The pure heart of tracking: people in, players out. Each frame it sorts
@@ -76,7 +83,8 @@ export class PoseTracker {
    */
   update(poses: readonly Pose[], time: number, aspect: number, overrides?: ReadonlyMap<number, Pose | null>): TrackFrame {
     const people = poses.filter((pose) => this.usable(pose, aspect));
-    const centers = people.map((pose) => (pose.landmarks[LM.leftHip]!.x + pose.landmarks[LM.rightHip]!.x) / 2);
+    // The shoulders, not the hips, since players stand waist up and the hips are often out of view.
+    const centers = people.map((pose) => (pose.landmarks[LM.leftShoulder]!.x + pose.landmarks[LM.rightShoulder]!.x) / 2);
     const picked = this.assigner.assign(centers, time);
     const events: MoveEvent[] = [];
     for (let i = 0; i < this.slots; i++) {
@@ -98,7 +106,8 @@ export class PoseTracker {
     const previous = this.bodies[i] ?? null;
     if (!pose) {
       this.missingSince[i] ??= time;
-      if (previous && time - this.missingSince[i]! < this.graceMs) return previous;
+      const grace = this.readers[i]!.current.jumping ? JUMP_GRACE_MS : this.graceMs;
+      if (previous && time - this.missingSince[i]! < grace) return previous;
       this.smoothers[i]!.reset();
       return null;
     }
@@ -110,8 +119,9 @@ export class PoseTracker {
   }
 
   private usable(pose: Pose, aspect: number): boolean {
-    if (visibilityOf(pose.landmarks, CORE_POINTS) < this.minConfidence) return false;
-    const [a, b] = [pose.landmarks[LM.leftShoulder]!, pose.landmarks[LM.leftHip]!];
-    return Math.hypot((a.x - b.x) * aspect, a.y - b.y) >= MIN_TORSO;
+    // Only the head and shoulders count, so a player seen from the waist up is a player.
+    if (visibilityOf(pose.landmarks, UPPER_POINTS) < this.minConfidence) return false;
+    const [a, b] = [pose.landmarks[LM.leftShoulder]!, pose.landmarks[LM.rightShoulder]!];
+    return Math.hypot((a.x - b.x) * aspect, a.y - b.y) >= MIN_SHOULDERS;
   }
 }

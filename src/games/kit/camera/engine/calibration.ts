@@ -1,25 +1,25 @@
 import type { Body } from "./body";
 import { span, type Point } from "./geometry";
 import { LM } from "./landmarks";
-import { checkSpot, DEFAULT_SPOT_RULES, type Spot, type SpotIssue, type SpotRules } from "./spots";
+import { centreOf, checkSpot, DEFAULT_SPOT_RULES, type Spot, type SpotIssue, type SpotRules } from "./spots";
 
 /**
- * How one player stands when standing tall and still in their spot.
- * Every gesture is measured against it, in the player's own torso
- * lengths, so a child near the camera and an adult far back read alike.
+ * How one player stands when standing tall and still in their spot, seen
+ * from the waist up. Its heart is the head line: the resting height of
+ * the head. Jumps and ducks are the head leaving a band around it, in the
+ * player's own shoulder widths, so a child near the camera and an adult
+ * far back read alike.
  */
 export interface Baseline {
   slot: number;
-  /** The middle of the hips across the mirrored picture. The player's home lane. */
+  /** The middle of the head and shoulders across the mirrored picture. The player's home lane. */
   centerX: number;
-  /** Heights down the picture, 0 at the top. */
+  /** The head line: the head's resting height down the picture, 0 at the top, averaged while still. */
   headY: number;
   shoulderY: number;
-  hipY: number;
   /** How far the head naturally sits right of the hips, in torso lengths. */
   headOffset: number;
-  /** In frame heights. */
-  torsoLength: number;
+  /** In frame heights, as if facing the camera. The unit for the head line and the lanes. */
   shoulderWidth: number;
   scale: number;
   /** Shoulder to wrist along the arm, in torso lengths as the picture shows it. */
@@ -124,12 +124,10 @@ export class BaselineCollector {
 export function sampleOf(body: Body, slot: number): Baseline {
   return {
     slot,
-    centerX: body.hips.x,
+    centerX: centreOf(body),
     headY: body.head.y,
     shoulderY: body.shoulders.y,
-    hipY: body.hips.y,
     headOffset: ((body.head.x - body.hips.x) * body.aspect) / body.scale,
-    torsoLength: body.torsoLength,
     shoulderWidth: body.shoulderWidth,
     scale: body.scale,
     armLength: armLength(body),
@@ -159,9 +157,7 @@ function average(samples: readonly Baseline[]): Baseline {
     centerX: mean((b) => b.centerX),
     headY: mean((b) => b.headY),
     shoulderY: mean((b) => b.shoulderY),
-    hipY: mean((b) => b.hipY),
     headOffset: mean((b) => b.headOffset),
-    torsoLength: mean((b) => b.torsoLength),
     shoulderWidth: mean((b) => b.shoulderWidth),
     scale: mean((b) => b.scale),
     armLength: mean((b) => b.armLength),
