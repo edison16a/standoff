@@ -40,6 +40,7 @@ function ReadyStep() {
         </div>
         <div className={`fifa-ready__team ${team ? "fifa-ready__team--on" : ""}`}>{team ? `${team.name} team` : "No team yet"}</div>
         <p className={`fifa-ready__note ${host.ready ? "fifa-ready__note--on" : ""}`}>{note}</p>
+        <p className="fifa-ready__how">Point the stick and press Shoot: at a team mate to pass, at goal to shoot. Slide wins the ball back.</p>
       </div>
     </div>
   );

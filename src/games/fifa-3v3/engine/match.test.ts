@@ -60,6 +60,20 @@ describe("a match of computer players", () => {
 });
 
 describe("a phone's player", () => {
+  it("cannot walk the ball into the net without shooting", () => {
+    for (let seed = 1; seed <= 6; seed++) {
+      const state = createMatch([{ team: 0, character: "messi", seat: 1 }, ...LINEUP.slice(3)], { seed, replays: false });
+      state.kickoffTeam = 0;
+      for (let t = 0; t < 15; t += STEP) {
+        const me = state.athletes[0]!;
+        const to = { x: 17 - me.pos.x, z: -me.pos.z };
+        const d = Math.hypot(to.x, to.z);
+        stepMatch(state, new Map([[0, { move: { x: to.x / d, z: to.z / d } }]]));
+        expect(state.events.some((e) => e.type === "goal" && e.scorer === 0)).toBe(false);
+      }
+    }
+  });
+
   it("dribbles, shoots and scores past an empty goal line", () => {
     const state = createMatch([{ team: 0, character: "messi", seat: 1 }, ...LINEUP.slice(3)], { seed: 5, replays: false });
     state.kickoffTeam = 0;

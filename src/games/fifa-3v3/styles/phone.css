@@ -262,6 +262,14 @@
   font-weight: 700;
 }
 
+/* The two controls in one line, so nobody starts a match without knowing them. */
+.fifa-ready__how {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
 @media (orientation: portrait) {
   .fifa-pick,
   .fifa-ready {
