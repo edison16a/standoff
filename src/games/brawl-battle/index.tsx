@@ -7,12 +7,14 @@ import { Stage } from "./host/components/Stage";
 import { BrawlPhone } from "./phone/brawl-phone";
 import { PhoneScreen } from "./phone/components/PhoneScreen";
 import { ControllerContext } from "./phone/components/session-context";
+import { Showcase } from "./showcase/Showcase";
 import "./styles/host.css";
 import "./styles/hud.css";
 import "./styles/lobby.css";
 import "./styles/results.css";
 import "./styles/phone.css";
 import "./styles/pad.css";
+import "./styles/showcase.css";
 
 /**
  * Brawl Battle, as the platform sees it. Each room gets one session, and
@@ -46,4 +48,6 @@ export const game: GameModule = {
     }
     return { Screen, dispose: () => session.dispose() };
   },
+
+  Showcase,
 };
