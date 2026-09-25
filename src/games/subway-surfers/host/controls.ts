@@ -61,7 +61,7 @@ export class Controls {
     };
   }
 
-  /** Camera moves for the tutorial and for pausing a player who steps away. Lane changes come from here, steps and leans alike. */
+  /** Camera moves for the tutorial and for pausing a player who steps away, with lane changes from leans and keys too. */
   listen(listener: (event: MoveEvent) => void): () => void {
     this.moveListeners.add(listener);
     return () => this.moveListeners.delete(listener);
@@ -78,10 +78,11 @@ export class Controls {
     const intent: Intent = { lane, jump: input.jump, duck: input.duck, ducking };
     input.jump = false;
     input.duck = false;
-    if (lane !== input.lane) {
-      this.tell({ slot, time: now, type: "lane", lane, from: input.lane });
-      input.lane = lane;
-    }
+    // A step is told by the kit on the camera frame it happens, so a quick one is never missed
+    // between drawn frames. A lean or a key is told here.
+    const stepped = input.keyLane === null && !!reading && clampLane(Math.round(reading.lane)) === lane;
+    if (lane !== input.lane && !stepped) this.tell({ slot, time: now, type: "lane", lane, from: input.lane });
+    input.lane = lane;
     return intent;
   }
 
@@ -108,11 +109,8 @@ export class Controls {
     if (event.type === "jump") input.jump = true;
     if (event.type === "land") input.steer.landed(event.time);
     if (event.type === "duck" && input.steer.duck(event.time)) input.duck = true;
-    if (event.type === "lane") {
-      // A body move takes the lane back from the keys. The new lane itself is told from `take`.
-      input.keyLane = null;
-      return;
-    }
+    // A body move takes the lane back from the keys.
+    if (event.type === "lane") input.keyLane = null;
     this.tell(event);
   }
 
