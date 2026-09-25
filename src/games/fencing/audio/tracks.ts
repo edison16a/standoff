@@ -1,10 +1,11 @@
 import type { AudioEngine } from "../../../platform/audio/audio-engine";
-import { midi, noise, tone } from "../../../platform/audio/voices";
+import { brush, castanets, harpsichord, kick, pizzicato, strings, tick } from "./ensemble";
 
 /**
  * The two music loops, written as step sequences. A track is told "step
  * n starts at time t" and schedules whatever plays there. Steps are
- * sixteenth notes.
+ * sixteenth notes, one chord a bar, eight bars a loop: an A section with
+ * the hook, then a B section that lifts and turns back home.
  */
 export interface Track {
   bpm: number;
@@ -13,90 +14,94 @@ export interface Track {
   play(engine: AudioEngine, out: AudioNode, step: number, at: number): void;
 }
 
-/* Menu: a slow A minor pad with a sparse plucked line over it. */
+const _ = null;
+type Line = (number | null)[];
 
-const MENU_CHORDS = [
-  [57, 60, 64, 71], // Am9 without the root doubling
-  [53, 57, 60, 64], // Fmaj7
-  [48, 55, 59, 64], // Cmaj7
-  [55, 59, 62, 64], // G6
+interface Chord {
+  root: number;
+  triad: [number, number, number];
+}
+
+const chord = (root: number, a: number, b: number, c: number): Chord => ({ root, triad: [a, b, c] });
+
+/* Menu, "Salle d'Armes": La Folia in D minor at 78, a harpsichord tune over strings and brushes. */
+
+const FOLIA = [
+  chord(38, 57, 62, 65), chord(33, 57, 61, 64), chord(38, 57, 62, 65), chord(36, 55, 60, 64),
+  chord(41, 57, 60, 65), chord(36, 55, 60, 64), chord(38, 57, 62, 65), chord(33, 57, 61, 64),
 ];
-const MENU_MELODY: (number | null)[] = [76, null, null, 74, null, 72, null, null, 69, null, null, null, 71, null, 72, null];
+const FOLIA_TUNE: Line = [
+  77, _, _, _, 76, _, 77, _, 81, _, _, _, _, _, _, _,
+  76, _, _, _, 73, _, 76, _, 79, _, _, _, 76, _, _, _,
+  77, _, _, _, 74, _, 77, _, 81, _, _, _, 79, _, 77, _,
+  76, _, _, _, 72, _, _, _, _, _, _, _, _, _, _, _,
+  81, _, _, _, 79, _, 77, _, 76, _, 77, _, _, _, _, _,
+  79, _, _, _, 76, _, 72, _, 74, _, 76, _, _, _, _, _,
+  77, _, _, _, 76, _, 74, _, 72, _, 74, _, _, _, 77, _,
+  76, _, _, _, _, _, 73, _, _, _, 69, _, _, _, _, _,
+];
 
 export const MENU_TRACK: Track = {
-  bpm: 72,
+  bpm: 78,
   length: 16 * 8,
   play(engine, out, step, at) {
-    const beat = 60 / 72;
-    if (step % 32 === 0) {
-      const chord = MENU_CHORDS[(step / 32) % MENU_CHORDS.length]!;
-      for (const note of chord) {
-        tone(engine, out, at, { type: "sine", frequency: midi(note), attack: 1.4, decay: beat * 8, peak: 0.05 });
-        tone(engine, out, at, { type: "triangle", frequency: midi(note), detune: 7, attack: 1.8, decay: beat * 8, peak: 0.025 });
-      }
-    }
-    if (step % 2 === 0 && step % 64 >= 32) {
-      const note = MENU_MELODY[(step / 2) % MENU_MELODY.length];
-      if (note) tone(engine, out, at, { type: "triangle", frequency: midi(note), attack: 0.005, decay: 0.9, peak: 0.05 });
-    }
+    const bar = Math.floor(step / 16) % FOLIA.length;
+    const inBar = step % 16;
+    const { root, triad } = FOLIA[bar]!;
+    const beat = 60 / 78;
+    if (inBar === 0) strings(engine, out, at, triad, beat * 4.2, 0.011);
+    // A walking pizzicato bass: root, fifth, octave, fifth.
+    if (inBar % 4 === 0) pizzicato(engine, out, at, root + [0, 7, 12, 7][inBar / 4]!, 0.18);
+    if (inBar === 0 || inBar === 10) kick(engine, out, at, 0.26);
+    if (inBar === 4 || inBar === 12) brush(engine, out, at, 0.06);
+    if (inBar % 2 === 0) tick(engine, out, at, inBar % 4 === 2 ? 0.02 : 0.01);
+    const note = FOLIA_TUNE[step % FOLIA_TUNE.length];
+    if (note !== null && note !== undefined) harpsichord(engine, out, at, note, 0.08);
   },
 };
 
-/* Match: D minor, i VI III VII, driving bass under a straight beat. */
+/* Match, "Riposte": an E minor Andalusian ground at 96, harpsichord ostinato over a trip hop beat. */
 
-const MATCH_ROOTS = [38, 34, 41, 36]; // D, Bb, F, C
-const MATCH_TRIADS = [
-  [62, 65, 69],
-  [58, 62, 65],
-  [60, 65, 69],
-  [60, 64, 67],
+const GROUND = [
+  chord(40, 59, 64, 67), chord(38, 57, 62, 66), chord(36, 55, 60, 64), chord(35, 54, 59, 63),
+  chord(33, 57, 60, 64), chord(40, 59, 64, 67), chord(36, 55, 60, 64), chord(35, 54, 59, 63),
 ];
-const BASS_PATTERN = [0, 0, 12, 0, 0, 12, 0, 7, 0, 0, 12, 0, 0, 12, 7, 12];
+const RIPOSTE_TUNE: Line = [
+  76, _, 79, _, 78, _, 76, _, _, _, 74, _, 76, _, _, _,
+  74, _, 78, _, 76, _, 74, _, _, _, 72, _, 74, _, _, _,
+  72, _, 76, _, 74, _, 72, _, _, _, 71, _, 72, _, _, _,
+  71, _, _, _, 75, _, _, _, 78, _, _, _, _, _, _, _,
+  _, _, _, _, _, _, _, _, 81, _, 79, _, 76, _, _, _,
+  _, _, _, _, _, _, _, _, 79, _, 78, _, 76, _, _, _,
+  _, _, _, _, _, _, _, _, 77, _, 76, _, 72, _, _, _,
+  75, _, _, _, 78, _, _, _, 81, _, _, _, 75, _, _, _,
+];
+/** Which chord tone the harpsichord plays on each eighth; 3 is the top note an octave up. */
+const OSTINATO = [0, 1, 2, 1, 3, 2, 1, 2];
 
 export const MATCH_TRACK: Track = {
-  bpm: 124,
-  length: 16 * 4,
+  bpm: 96,
+  length: 16 * 8,
   play(engine, out, step, at) {
-    const bar = Math.floor(step / 16) % MATCH_ROOTS.length;
+    const bar = Math.floor(step / 16) % GROUND.length;
     const inBar = step % 16;
-    const sixteenth = 60 / 124 / 4;
+    const inB = bar >= 4;
+    const { root, triad } = GROUND[bar]!;
+    const beat = 60 / 96;
 
-    if (inBar % 4 === 0) {
-      tone(engine, out, at, { type: "sine", frequency: 140, glideTo: 45, decay: 0.22, peak: 0.55 });
-    }
-    if (inBar === 4 || inBar === 12) {
-      noise(engine, out, at, { filter: "bandpass", frequency: 1800, q: 0.8, decay: 0.16, peak: 0.25 });
-      tone(engine, out, at, { type: "triangle", frequency: 190, glideTo: 140, decay: 0.1, peak: 0.18 });
-    }
+    if (inBar === 0 || inBar === 10 || (bar % 4 === 3 && inBar === 7)) kick(engine, out, at, 0.3);
+    if (inBar === 4 || inBar === 12) brush(engine, out, at, 0.09);
+    if (inBar % 2 === 0) tick(engine, out, at, inBar % 4 === 2 ? 0.022 : 0.012);
+    if ([6, 7, 14].includes(inBar) || (inB && inBar === 3)) castanets(engine, out, at, 0.05);
+
+    if (inBar === 0 || inBar === 6 || inBar === 10) pizzicato(engine, out, at, root + (inBar === 6 ? 12 : 0), 0.2);
     if (inBar % 2 === 0) {
-      noise(engine, out, at, { filter: "highpass", frequency: 8000, decay: inBar % 4 === 2 ? 0.07 : 0.03, peak: 0.08 });
+      const index = OSTINATO[inBar / 2]!;
+      harpsichord(engine, out, at, index === 3 ? triad[0] + 12 : triad[index]!, 0.03);
     }
+    if (inB && inBar === 0) strings(engine, out, at, triad, beat * 4.2, 0.01);
 
-    const root = MATCH_ROOTS[bar]!;
-    const bass = BASS_PATTERN[inBar]!;
-    tone(engine, out, at, { type: "sawtooth", frequency: midi(root + bass), decay: sixteenth * 1.6, peak: 0.07 });
-    tone(engine, out, at, { type: "square", frequency: midi(root + bass - 12), decay: sixteenth * 1.4, peak: 0.05 });
-
-    // Off beat chord stabs keep it moving without cluttering the effects.
-    if (inBar === 2 || inBar === 6 || inBar === 10 || inBar === 14) {
-      for (const note of MATCH_TRIADS[bar]!) {
-        tone(engine, out, at, { type: "triangle", frequency: midi(note), decay: sixteenth * 1.8, peak: 0.03 });
-      }
-    }
+    const note = RIPOSTE_TUNE[step % RIPOSTE_TUNE.length];
+    if (note !== null && note !== undefined) pizzicato(engine, out, at, note, 0.09);
   },
 };
-
-/** The match winner stinger: a rising D major arpeggio into a held chord. */
-export function playFanfare(engine: AudioEngine, out: AudioNode): void {
-  const at = engine.now + 0.05;
-  const step = 0.13;
-  [62, 66, 69, 74].forEach((note, i) => {
-    tone(engine, out, at + i * step, { type: "sawtooth", frequency: midi(note), attack: 0.01, decay: 0.28, peak: 0.09 });
-    tone(engine, out, at + i * step, { type: "square", frequency: midi(note), detune: 6, attack: 0.01, decay: 0.28, peak: 0.04 });
-  });
-  const held = at + 4 * step;
-  for (const note of [62, 66, 69, 74, 78]) {
-    tone(engine, out, held, { type: "sawtooth", frequency: midi(note), attack: 0.03, decay: 1.8, peak: 0.055 });
-  }
-  tone(engine, out, held, { type: "sine", frequency: midi(38), attack: 0.02, decay: 2, peak: 0.25 });
-}

@@ -64,6 +64,14 @@ The host steps the match at a fixed 60 Hz and decides every exchange:
 * Attacking drops your own parry. A parry cannot start while your own lunge is still going out, and a parry that blocked nothing leaves you open for 250 ms before the next, so lifting the phone over and over is no defence.
 * Two touches within 60 ms cancel out, like a double in épée. Bodies that collide are a corps à corps, and are put back apart.
 
+## Sound
+
+Everything is synthesised through the room's audio buses.
+
+Music: "Salle d'Armes" plays in the lobby and on the results, La Folia in D minor at 78 on harpsichord over strings, pizzicato bass and brushes. "Riposte" plays under the match, an E minor Andalusian ground at 96 with a harpsichord ostinato, a pizzicato hook, castanets and a soft trip hop beat. Both run eight bars with an A and a B section, through a warm low pass. The music drops away for the slow motion after a touch and for the winner's trumpet fanfare.
+
+Effects have a sharp transient, a body and a tail into a synthetic hall reverb, each pitched a little differently every time: the swish of a jab, the scrape of a parry, the ring of a blade on blade, the hit, the fencing box buzzer and the touch chime. The crowd murmurs, applauds each touch, gasps at a last moment parry and cheers the big moments. The referee calls "En garde", "Prêts", "Allez", "Touché" and the rest through the computer's speech, in French where the computer has a French voice, at the player's effects volume.
+
 ## Tuning
 
 Every value worth adjusting by feel is in the tuning drawer (the sliders icon at the top right). Changes reach both phones at once. Nothing is saved. The jab and parry thresholds are the base each player's own practiced level is measured against.

@@ -94,4 +94,23 @@ export class Crowd {
       });
     }
   }
+
+  /** Polite applause after a touch: many hands, busiest at the start and thinning out. */
+  applause(seconds = 2.2, density = 1): void {
+    const at = this.engine.now + 0.15;
+    const hands = Math.round(70 * density);
+    for (let i = 0; i < hands; i++) {
+      const t = Math.pow(Math.random(), 1.6) * seconds;
+      const fade = 1 - (t / seconds) * 0.6;
+      noise(this.engine, this.out, at + t, { filter: "bandpass", frequency: 1200 + Math.random() * 2000, q: 1.4, decay: 0.04, peak: (0.16 + Math.random() * 0.1) * fade });
+    }
+  }
+
+  /** A sharp intake of breath from the stands, for a blade stopped at the last moment. */
+  gasp(): void {
+    const at = this.engine.now;
+    for (const [frequency, peak] of [[520, 0.5], [950, 0.3]] as const) {
+      noise(this.engine, this.out, at, { filter: "bandpass", frequency: frequency * (0.95 + Math.random() * 0.1), q: 2.5, attack: 0.06, decay: 0.55, peak });
+    }
+  }
 }
