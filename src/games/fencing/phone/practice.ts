@@ -10,7 +10,15 @@ export const PRACTICE_REPS = 2;
 export const LISTEN_LEVEL = 0.5;
 /** A player's own level sits at this share of their typical strike, so every real one clears it. */
 const SHARE = 0.55;
-const LEVEL_RANGE = { min: 0.45, max: 1.5 };
+/**
+ * Bounds on a player's own level. Below the floor, walking about and
+ * bringing the sword back to guard start to read as strikes. Above the
+ * ceiling, one wild practice would leave every ordinary chop in the bout
+ * unread, since people strike softer once they are playing.
+ */
+export const LEVEL_RANGE = { min: 0.6, max: 1.25 };
+/** The level stays this far under the weakest practice strike, so strikes like it still clear it. */
+const WEAKEST_SHARE = 0.85;
 
 export type PracticeStage = "jab" | "parry" | "done";
 
@@ -47,11 +55,17 @@ export class Practice {
   }
 }
 
-/** The level for a set of strike peaks: a share of their median, kept within sane bounds. */
+/**
+ * The level for a set of strike peaks: a share of their median, kept
+ * within bounds. The floor never rises above what the player's weakest
+ * practice strike reached, or a gentle player who got through the practice
+ * would find none of their strikes read in the bout.
+ */
 export function levelFor(peaks: readonly number[]): number {
   if (peaks.length === 0) return 1;
   const sorted = [...peaks].sort((a, b) => a - b);
   const mid = sorted.length / 2;
   const median = sorted.length % 2 ? sorted[Math.floor(mid)]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
-  return Math.min(LEVEL_RANGE.max, Math.max(LEVEL_RANGE.min, median * SHARE));
+  const floor = Math.min(LEVEL_RANGE.min, sorted[0]! * WEAKEST_SHARE);
+  return Math.min(LEVEL_RANGE.max, Math.max(floor, median * SHARE));
 }

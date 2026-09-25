@@ -71,6 +71,17 @@ export const OPPOSITE_EXTRA_MS = 120;
  * strike's score being loud does not fire.
  */
 const OPPOSITE_WINDOW_MS = 150;
+/**
+ * Bringing the sword back to guard after a chop is a lift, and after a
+ * lift it is a chop. It comes a little after the refractory period and is
+ * softer than the strike before it. So for this long after a strike, the
+ * opposite one has to be stronger than the player's level by the margin,
+ * and reach this share of the strike it follows. A real parry straight
+ * after your own jab is as deliberate as the jab was, and clears both.
+ */
+export const RETURN_MS = 800;
+const RETURN_MARGIN = 1.25;
+const RETURN_SHARE = 0.75;
 /** A score this high (or the strike's own level, if lower) counts as loud. */
 const LOUD = 0.7;
 /** How long after firing the peak is still being measured. */
@@ -81,6 +92,12 @@ const MAX_DT_MS = 50;
 interface Channel {
   action: StrikeAction;
   score: number;
+  /**
+   * The highest score since it left quiet. A soft strike can peak before
+   * it has moved the phone far enough to count, so the level is checked
+   * against this, not only the score at that instant.
+   */
+  best: number;
   lastQuietAt: number;
   lastLoudAt: number;
   /** Speed and turn gathered since the score left quiet. */
@@ -89,7 +106,7 @@ interface Channel {
   armed: boolean;
 }
 
-const channel = (action: StrikeAction): Channel => ({ action, score: 0, lastQuietAt: -Infinity, lastLoudAt: -Infinity, speed: 0, turn: 0, armed: true });
+const channel = (action: StrikeAction): Channel => ({ action, score: 0, best: 0, lastQuietAt: -Infinity, lastLoudAt: -Infinity, speed: 0, turn: 0, armed: true });
 
 /**
  * Turns motion into jabs and parries. Each reading becomes two scores, one
@@ -160,7 +177,7 @@ export class StrikeDetector {
     if (!fired) return null;
     fired.armed = false;
     this.last = { action: fired.action, at: sample.t };
-    this.report = { action: fired.action, t: sample.t, peak: fired.score };
+    this.report = { action: fired.action, t: sample.t, peak: fired.best };
     return fired.action;
   }
 
@@ -177,7 +194,9 @@ export class StrikeDetector {
       c.lastQuietAt = t;
       c.speed = 0;
       c.turn = 0;
+      c.best = 0;
     } else {
+      c.best = Math.max(c.best, score);
       c.speed += Math.max(0, accel) * dt;
       c.turn += Math.max(0, rate) * dt;
     }
@@ -187,7 +206,7 @@ export class StrikeDetector {
 
   private ready(c: Channel, t: number): boolean {
     if (!c.armed || t < this.suppressedUntil) return false;
-    if (c.score < this.sensitivity[c.action]) return false;
+    if (c.best < this.levelFor(c, t)) return false;
     if (t - c.lastQuietAt > RISE_WINDOW_MS) return false;
     if (c.speed / MIN_SPEED + c.turn / MIN_TURN < 1) return false;
     const other = c === this.jab ? this.parry : this.jab;
@@ -197,11 +216,19 @@ export class StrikeDetector {
     return t - this.last.at >= wait;
   }
 
+  /** The score this strike needs right now: the player's own level, raised just after the opposite strike. */
+  private levelFor(c: Channel, t: number): number {
+    const own = this.sensitivity[c.action];
+    const before = this.report;
+    const returning = this.last !== null && before !== null && before.action !== c.action && t - before.t < RETURN_MS;
+    return returning ? Math.max(own * RETURN_MARGIN, before.peak * RETURN_SHARE) : own;
+  }
+
   /** Keeps raising the last strike's peak while its push is still building. */
   private trackPeak(t: number): void {
     const report = this.report;
     if (!report || t - report.t > PEAK_MS) return;
     const c = report.action === "jab" ? this.jab : this.parry;
-    if (c.score > report.peak) this.report = { ...report, peak: c.score };
+    if (c.best > report.peak) this.report = { ...report, peak: c.best };
   }
 }

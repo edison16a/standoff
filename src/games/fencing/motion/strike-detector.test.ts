@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { StrikeDetector, type Sensitivity, type StrikeSample } from "./strike-detector";
+import { RETURN_MS, StrikeDetector, type Sensitivity, type StrikeSample } from "./strike-detector";
 import { chop, flick, lift, pulse, sum, trace, type Motion } from "./traces";
 
 const settings = { jabThreshold: 12, parryThreshold: 12, refractoryMs: 350 };
@@ -91,5 +91,25 @@ describe("StrikeDetector", () => {
     run(detector, trace({ down: chop(100, 30) }, 600));
     expect(detector.lastStrike?.action).toBe("jab");
     expect(detector.lastStrike!.peak).toBeGreaterThan(2);
+  });
+
+  it("catches a soft chop that peaks before it has moved the phone far, and measures its real peak", () => {
+    // Gentle: the push is over before the phone has picked up much speed.
+    const detector = new StrikeDetector(settings, { jab: 0.55, parry: 0.55 });
+    expect(run(detector, trace({ down: chop(100, 9) }, 600))).toEqual(["jab"]);
+    expect(detector.lastStrike!.peak).toBeGreaterThan(0.62);
+  });
+
+  it("does not read bringing the sword back to guard as the opposite strike", () => {
+    const gentle = { jab: 0.5, parry: 0.5 };
+    // A gentle player's chop, then the lift back up to guard soon after, a little softer.
+    const back = sum(chop(100, 11), pulse(450, 200, -7), pulse(650, 200, 5));
+    expect(detect({ down: back, pitchRate: sum(flick(100, -5), flick(450, 2.5, 400)) }, 1400, gentle)).toEqual(["jab"]);
+    // And a lift, then the drop back down.
+    const down = sum(lift(100, 11), pulse(450, 200, 7), pulse(650, 200, -5));
+    expect(detect({ down, pitchRate: sum(flick(100, 5), flick(450, -2.5, 400)) }, 1400, gentle)).toEqual(["parry"]);
+    // The same soft lift well after the chop is a parry again.
+    const later = sum(chop(100, 11), pulse(100 + RETURN_MS + 100, 200, -7), pulse(RETURN_MS + 400, 200, 5));
+    expect(detect({ down: later }, 2000, gentle)).toEqual(["jab", "parry"]);
   });
 });

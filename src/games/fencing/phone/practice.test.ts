@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { StrikeDetector } from "@/games/fencing/motion/strike-detector";
 import { chop, trace } from "@/games/fencing/motion/traces";
 import { DEFAULT_TUNING } from "@/games/fencing/tuning";
-import { LISTEN_LEVEL, levelFor, Practice } from "./practice";
+import { LEVEL_RANGE, LISTEN_LEVEL, levelFor, Practice } from "./practice";
 
 describe("Practice", () => {
   it("asks for two jabs, then two parries, and ignores the wrong kind", () => {
@@ -16,8 +16,8 @@ describe("Practice", () => {
 
   it("sets each level to a share of the player's typical strike, within bounds", () => {
     expect(levelFor([2, 2.4])).toBeCloseTo(1.21);
-    expect(levelFor([0.6, 0.7])).toBe(0.45);
-    expect(levelFor([5, 6, 7])).toBe(1.5);
+    expect(levelFor([0.8, 0.9])).toBe(LEVEL_RANGE.min);
+    expect(levelFor([5, 6, 7])).toBe(LEVEL_RANGE.max);
     expect(levelFor([])).toBe(1);
   });
 
@@ -37,5 +37,24 @@ describe("Practice", () => {
     }
     const tuned = new StrikeDetector(settings, practice.sensitivity);
     expect(gentle().map((s) => tuned.update(s)).filter(Boolean)).toEqual(["jab"]);
+  });
+
+  it("never sets a level above what the weakest practice strike reached", () => {
+    // A gentle practice that only just got through at the listening level.
+    expect(levelFor([0.6, 0.7])).toBeCloseTo(0.51);
+  });
+
+  it("keeps ordinary chops readable after one wild practice", () => {
+    const settings = { jabThreshold: DEFAULT_TUNING.jabThreshold, parryThreshold: DEFAULT_TUNING.parryThreshold, refractoryMs: DEFAULT_TUNING.refractoryMs };
+    const listening = new StrikeDetector(settings, { jab: LISTEN_LEVEL, parry: LISTEN_LEVEL });
+    const practice = new Practice();
+    for (let i = 0; i < 2; i++) {
+      listening.reset();
+      trace({ down: chop(100, 48) }, 700).forEach((s) => listening.update(s));
+      practice.record("jab", listening.lastStrike!.peak);
+    }
+    const tuned = new StrikeDetector(settings, practice.sensitivity);
+    // Half as hard, the way people strike once the bout is on.
+    expect(trace({ down: chop(100, 20) }, 700).map((s) => tuned.update(s)).filter(Boolean)).toEqual(["jab"]);
   });
 });
