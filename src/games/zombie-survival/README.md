@@ -18,10 +18,11 @@ Precision matters more than speed. Walkers fall to one bullet anywhere early on.
 
 ## What is in it
 
-* **Route**: 26 segments of streets, a back alley, the park, the hospital car park, the parking ramp, the hospital roof, downtown, six stretches of highway and the docks out to pier nine. The team walks between fights and turns corners on its own.
-* **Stages**: 25, with bosses at 5 (the Butcher), 10 (the Tank, on the roof), 15 (the Juggernaut), 20 (the Tank again) and 25 (the Behemoth). Early stages are sparse and slow. Later ones come faster, closer and tougher, a few at a time, sometimes in pairs. The table is in `engine/stages.ts`, and `engine/balance.test.ts` plays it with bot players: steady aim clears the route with any gun, alone or in a team, and sloppy aim falls short.
+* **Route**: 26 segments of streets, a back alley, the park, the hospital car park, the parking ramp, the hospital roof, downtown, six stretches of highway and the docks out to pier nine. The team jogs between fights, about eight seconds a leg, and turns corners on its own.
+* **Stages**: 25, with bosses at 5 (the Butcher), 10 (the Tank, on the roof), 15 (the Juggernaut), 20 (the Tank again) and 25 (the Behemoth). The dead come thick and fast: nine to a lone player on the first street and over twenty a stage by the docks, with more standing at once as the run goes on. A bigger team gets more of them, and sooner, so its fights are no longer. As the dead close in they bunch toward the middle of the street, so none attacks from past the edge of the screen. Later stages also come faster, closer and tougher, sometimes in pairs. The table is in `engine/stages.ts`, and `engine/balance.test.ts` plays it with bot players: steady aim clears the route with any gun, alone or in a team, sloppy aim falls short, and the dead keep coming at better than one every two seconds of fighting.
+* **Checkpoints**: after a fight the team stops for two and a half seconds, enough to reload, while a small note under the top strip says which checkpoint it made and what health it found. Only the story's big moments, the roof and the pier, stop for the full summary card.
 * **Story**: radio calls on the way to each stage, the chopper crashing onto the roof after stage 10, and the escape up the gangway as the ship sails, with the dead piling up at the end of the pier behind it.
-* **Scores**: kills, accuracy, head shots, weak point hits, damage and best streak per player, a checkpoint summary after each stage, the top gun on the end screen, and achievements popping up as they are earned.
+* **Scores**: kills, accuracy, head shots, weak point hits, damage and best streak per player, a summary at the roof and the pier, the top gun on the end screen, and achievements popping up as they are earned.
 * **Sound**, all synthesised through the room's audio buses: a gunshot per weapon with a street echo, reloads, pump and dry clicks, growls panned to where each zombie is and louder as it closes in, footsteps that echo off the empty street, the odd step that is not the team's, a boss's stomp, a heartbeat at low health, the rotor, the crash, a horror drone, radio squelch and murmur, the ship's horn.
 * **Looks**: the dead are modelled from rounded, tapering forms, merged per bone. Every zombie material shares one shader with a cold rim light on its outline and thinner fog than the city, and each has glowing eyes, so they read in the murk while the street stays dark.
 
@@ -33,6 +34,17 @@ Precision matters more than speed. Walkers fall to one bullet anywhere early on.
 * `phone/`: the phone session, the hold to fire trigger and the setup and play screens.
 * `render/`: three.js. `models/` holds the guns, the zombies and bosses, and the chopper and ship. `world/` builds the city segment by segment around the team. The renderer also raycasts every shot from the camera through the player's aim.
 * `audio/`: the sound, from the same events that drive the picture.
+* `showcase/`: the game playing itself for the home screen's media. Four computer players hold the Butcher's alley against the Butcher and his escort, with the real engine, city, models and effects. Every random number comes from one seed, and on every beat the team's fire staggers the boss back to the same spot, so the clip loops. The icon adds the name as a logo drawn in SVG.
+
+## Home screen media
+
+`media/icon.jpg`, `media/poster.jpg` and `public/games/zombie-survival/backdrop.webm` and `.mp4` are captured from the showcase. With the dev server running:
+
+```bash
+node tools/media/capture.mjs zombie-survival --ffmpeg /path/to/ffmpeg
+```
+
+Then copy the new poster over `cover.jpg`, the fallback art.
 
 ## Hidden switches for testing
 

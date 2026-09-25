@@ -1,11 +1,11 @@
 import type { GameEvent } from "./events";
 import { Rng } from "./rng";
 import { HALF_WIDTH, type StageSpec } from "./stages";
-import { alive, makeZombie, stepZombie, type Zombie } from "./zombie";
+import { alive, makeZombie, sideRoom, stepZombie, type Zombie } from "./zombie";
 import { weakPointHp, type ZombieKind } from "./zombie-kinds";
 
 /** The first zombie shows up after this long, so players can settle their aim. */
-const FIRST_SPAWN = 1.6;
+const FIRST_SPAWN = 0.9;
 /** Zombies closer than this push each other apart sideways. */
 const PERSONAL_SPACE = 0.95;
 /** Dead zombies stay on the ground this long before they are cleared away. */
@@ -19,8 +19,13 @@ export function teamCount(spec: StageSpec, players: number): number {
 }
 
 export function teamMaxAlive(spec: StageSpec, players: number): number {
-  // More guns, a few more at once: but never a horde.
-  return spec.maxAlive + Math.floor(Math.max(0, players - 1) * 0.67);
+  // More guns, more at once, so a full team always has something to shoot.
+  return spec.maxAlive + Math.max(0, players - 1);
+}
+
+/** Seconds between spawns for a team. A bigger team gets its bigger share sooner, so its fights do not drag. */
+export function teamGap(spec: StageSpec, players: number): number {
+  return spec.gap / (1 + 0.3 * Math.max(0, players - 1));
 }
 
 /**
@@ -33,6 +38,7 @@ export class Encounter {
   private spawned = 0;
   private readonly total: number;
   private readonly maxAlive: number;
+  private readonly gap: number;
   private spawnIn = FIRST_SPAWN;
   private bossDue: boolean;
   private readonly rng: Rng;
@@ -47,6 +53,7 @@ export class Encounter {
     this.rng = new Rng(seed);
     this.total = teamCount(spec, players);
     this.maxAlive = teamMaxAlive(spec, players);
+    this.gap = teamGap(spec, players);
     this.bossDue = spec.boss !== undefined;
     this.nextId = firstId;
   }
@@ -94,7 +101,7 @@ export class Encounter {
     if (this.bossDue && this.spec.boss) {
       this.bossDue = false;
       this.add(this.spec.boss, Math.max(this.spec.spawn[0], this.spec.spawn[1] - 4), 0, emit);
-      this.spawnIn = this.spec.gap * 1.6;
+      this.spawnIn = this.gap * 1.6;
       return;
     }
     if (this.spawned >= this.total || standing >= this.maxAlive) {
@@ -111,7 +118,7 @@ export class Encounter {
       this.add(kind, far, this.rng.range(-half, half) * 0.9, emit);
       this.spawned += 1;
     }
-    this.spawnIn = this.spec.gap * this.rng.range(0.75, 1.25);
+    this.spawnIn = this.gap * this.rng.range(0.75, 1.25);
   }
 
   private add(kind: ZombieKind, ahead: number, side: number, emit: (event: GameEvent) => void): void {
@@ -129,6 +136,12 @@ export class Encounter {
   }
 
   /** Keeps zombies from walking through each other, bosses taking more room. */
+  /** A side position kept on the street and on screen. */
+  private keepInView(z: Zombie, side: number): number {
+    const room = Math.min(HALF_WIDTH[this.spec.zone], sideRoom(z.ahead));
+    return Math.max(-room, Math.min(room, side));
+  }
+
   private separate(): void {
     const standing = this.zombies.filter(alive);
     for (let i = 0; i < standing.length; i++) {
@@ -142,9 +155,13 @@ export class Encounter {
         if (dist >= room) continue;
         const push = (room - dist) * 0.5;
         const dir = dx === 0 ? (a.id < b.id ? 1 : -1) : Math.sign(dx);
-        const half = HALF_WIDTH[this.spec.zone];
-        a.side = Math.max(-half, Math.min(half, a.side - dir * push));
-        b.side = Math.max(-half, Math.min(half, b.side + dir * push));
+        a.side = this.keepInView(a, a.side - dir * push);
+        b.side = this.keepInView(b, b.side + dir * push);
+        // With no room left to the sides, the one behind waits its turn a step back.
+        const left = room - Math.hypot(b.side - a.side, b.ahead - a.ahead);
+        if (left <= 0) continue;
+        const back = a.ahead > b.ahead || (a.ahead === b.ahead && a.id > b.id) ? a : b;
+        back.ahead += left;
       }
     }
   }

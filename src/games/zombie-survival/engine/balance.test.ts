@@ -1,7 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { simulateRun } from "./sim";
+import { teamCount } from "./encounter";
+import { CLEAR_SECONDS, WALK_SPEED } from "./pacing";
+import { segment } from "./route";
+import { simulateRun, type Bot } from "./sim";
 import { STAGES } from "./stages";
 import { WEAPON_IDS } from "./weapons";
+
+/** Seconds spent fighting over a whole run, and the zombies put down in them. */
+function fighting(bots: readonly Bot[]): { seconds: number; dead: number } {
+  const run = simulateRun(bots);
+  const seconds = run.results.reduce((sum, r) => sum + r.seconds, 0);
+  const dead = STAGES.reduce((sum, s) => sum + teamCount(s, bots.length) + (s.boss ? 1 : 0), 0);
+  return { seconds, dead };
+}
 
 /**
  * The difficulty curve, checked with bots standing in for players. A bot's
@@ -48,5 +59,19 @@ describe("the difficulty curve", () => {
       expect(b.gap).toBeLessThanOrEqual(a.gap);
     }
     expect(STAGES[24]!.spawn[0]).toBeLessThan(STAGES[0]!.spawn[0]);
+  });
+
+  it("keeps the run brisk: short walks, short stops, and the dead coming thick and fast", () => {
+    for (const s of STAGES) expect(segment(s.index).length / WALK_SPEED, s.title).toBeLessThan(15);
+    expect(CLEAR_SECONDS).toBeLessThanOrEqual(3);
+    const solo = fighting([{ seat: 1, weapon: "rifle", skill: 0.7 }]);
+    expect(solo.dead / solo.seconds).toBeGreaterThan(0.6);
+  });
+
+  it("gives a bigger team more of the dead, not longer fights", () => {
+    const solo = fighting([{ seat: 1, weapon: "rifle", skill: 0.7 }]);
+    const four = fighting(WEAPON_IDS.map((weapon, i) => ({ seat: i + 1, weapon, skill: 0.7 })));
+    expect(four.dead).toBeGreaterThan(solo.dead * 2);
+    expect(four.seconds).toBeLessThan(solo.seconds * 1.25);
   });
 });
