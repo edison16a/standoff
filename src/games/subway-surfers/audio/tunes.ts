@@ -2,8 +2,9 @@
  * The music as step patterns: sixteen sixteenths a bar, one chord a bar.
  * Each tune is a form of sections played in order and looped. The run
  * tune is a chill funk and hip hop groove in G minor with a whistled
- * hook over the A sections and vibes answering over the B. The menu
- * tune is the same band laid back in B flat.
+ * hook over the A sections and vibes answering over the B, and a neon
+ * synth arpeggio sparkling over the second half of each. The menu tune
+ * is the same band laid back in B flat.
  */
 
 export type Groove = "full" | "half" | "light";
@@ -20,6 +21,8 @@ export interface Section {
   groove: Groove;
   /** Guitar chops on the offbeats. */
   chops: boolean;
+  /** The neon synth: an arpeggio in eighths and a pad under each bar. */
+  synth?: boolean;
 }
 
 export interface Tune {
@@ -58,6 +61,7 @@ const RUN_A1: Section = {
 
 const RUN_A2: Section = {
   ...RUN_A1,
+  synth: true,
   chords: [Gm9, C9, Ebmaj7, D7],
   lead: [...HOOK,
     79, _, _, 77, _, _, 74, _, 70, _, _, 72, _, 74, _, _,
@@ -78,6 +82,7 @@ const RUN_B2: Section = {
   ...RUN_B1,
   groove: "full",
   chops: true,
+  synth: true,
   lead: [...RUN_B1.lead.slice(0, 48),
     74, _, 72, _, 69, _, 66, _, 69, _, 70, _, 72, _, 74, _],
 };
