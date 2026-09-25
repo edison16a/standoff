@@ -6,7 +6,7 @@ Status: ready. A split screen kart racer for 1 to 4 players, with computer karts
 
 1. Open Magic Kart on the computer. Everyone scans the code with their phone.
 2. On the phone, after the name:
-   * **Calibrate.** Hold the phone sideways and upright, screen facing you, like a steering wheel. Turn it until the level lights up, then tap Calibrate. Calibrate stays off while the phone lies flat, since that is not how a wheel is held. From then on, turning the phone like a wheel steers the kart. Leaning it back or forward a fair way changes nothing, and either landscape works, even after turning the phone round. A small wheel on screen turns with it so you can try it out. Phones without a tilt sensor get arrow buttons instead.
+   * **Calibrate.** Hold the phone sideways and upright, screen facing you, like a steering wheel. Turn it until the level lights up, then tap Calibrate. Calibrate stays off while the phone lies flat, since that is not how a wheel is held. From then on, turning the phone like a wheel steers the kart. Full lock is about 50 degrees from where you calibrated, so a slight shift gives a slight turn and a hard turn needs a real turn of the phone. Leaning it back or forward a fair way changes nothing, and either landscape works, even after turning the phone round. A small wheel on screen turns with it so you can try it out. Phones without a tilt sensor get arrow buttons instead.
    * **Kart.** Pick one of four drivers, each with their own kart, shown turning in 3D. A driver another player has is marked taken.
    * **Ready.** Tap Ready.
 3. On the computer, pick the map with the mouse and click Start race. The chosen map's demo race runs behind the map picker. The switch fills empty grid places with computer karts.
@@ -64,7 +64,7 @@ Effects are layered and each repeat lands at a slightly different pitch. The cro
 * `tracks/`: one file per map, as data.
 * `render/`: three.js. `models/` has the four karts and drivers built from painted primitives and merged per kart, `scenery/` one file per map, `track/` the road, kerbs, barriers and markings, `props/` the cubes, obstacles and throws, `effects/` the particles.
 * `host/`: the session on the computer (lobby, race driver, what the phones and the overlay see) and its React screens.
-* `phone/`: the controller session, the steering wheel maths and the phone screens. Steering reads where "up" points across the screen, so it holds however far the phone leans and never flips the way Euler angles do.
+* `phone/`: the controller session, the steering wheel maths and the phone screens. Steering reads where "up" points across the screen, so it holds however far the phone leans and never flips the way Euler angles do. The response is tuned in `phone/tilt.ts`: `FULL_LOCK` is the wheel angle for full lock (50 degrees, fine anywhere from 45 to 60), `DEAD_ZONE` keeps a steady hand going straight, and `LINEAR_SHARE` blends a linear and a cubic curve so small turns stay fine. With these values a braking drift starts from about 25 degrees of wheel.
 * `audio/`: synthesized music per map, an engine per kart pitched by speed, every effect, the crowd and the race caller, through the platform's audio buses (see Sound above).
 * `protocol/`: the zod schemas for the messages between the phones and the host.
 * `showcase/`: the game playing itself for the home screen's media (see below).
