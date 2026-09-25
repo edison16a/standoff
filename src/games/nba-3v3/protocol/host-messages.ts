@@ -22,6 +22,11 @@ export const courtSchema = z.object({
   mustClear: z.boolean(),
   /** Close enough to the ball on defence that the button swipes. */
   canSteal: z.boolean(),
+  /**
+   * Free throws after a foul: whether this player shoots them, which of
+   * the two is next, and whether the shooter is set at the line.
+   */
+  freeThrow: z.object({ mine: z.boolean(), n: z.union([z.literal(1), z.literal(2)]), ready: z.boolean() }).nullable(),
   /** The shot meter for this player: where the green sits and how wide it is, in milliseconds. */
   meter: z.object({ fullMs: z.number(), greenMs: z.number(), halfMs: z.number() }),
   onFire: z.boolean(),

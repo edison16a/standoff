@@ -1,5 +1,6 @@
 import { startDead } from "./check-up";
 import { beyondArc, outOfBounds } from "./court";
+import { POCKET } from "./dribble-ball";
 import type { Match } from "./match";
 import { RULES } from "./tuning";
 import type { Athlete, TeamId } from "./types";
@@ -22,6 +23,9 @@ export function gainPossession(m: Match, a: Athlete): void {
   b.passTo = null;
   b.lastTouch = a.id;
   b.vel = { x: 0, y: 0, z: 0 };
+  // Caught or picked up: into both hands at the chest a moment before the first dribble.
+  a.dribble = 0;
+  a.pocket = POCKET;
   if (shot && !shot.counted) {
     a.box.rebounds++;
     m.emit({ type: "rebound", id: a.id, offensive: a.team === shot.team });
@@ -29,6 +33,7 @@ export function gainPossession(m: Match, a: Athlete): void {
   b.shot = null;
   if (a.team !== m.offence) {
     m.offence = a.team;
+    m.stealLog.reset();
     m.needsClear = !beyondArc(a);
     m.shotClock = RULES.shotClock;
     m.clockWarned = false;
@@ -48,6 +53,7 @@ export function scoreShot(m: Match): void {
   const shooter = m.athletes[shot.shooter]!;
   m.score[shot.team] += shot.points;
   shooter.box.points += shot.points;
+  if (shot.kind === "free") return scoreFreeThrow(m, shooter);
   shooter.box.made++;
   if (shot.points === 3) shooter.box.threes++;
   if (shot.kind === "dunk") shooter.box.dunks++;
@@ -68,20 +74,38 @@ export function scoreShot(m: Match): void {
     o.onFire = false;
     o.streak = 0;
   }
-  m.emit({ type: "score", team: shot.team, points: shot.points, id: shooter.id, kind: shot.kind, outcome: shot.outcome, assist, streak: shooter.streak });
+  m.emit({ type: "score", team: shot.team, points: shot.points, id: shooter.id, kind: shot.kind, outcome: shot.outcome, assist, streak: shooter.streak, dunk: shot.dunk });
   shooter.action = shooter.action.kind === "none" ? { kind: "celebrate", t: 0, dur: 1.3 } : shooter.action;
-  if (m.score[shot.team] >= m.target) {
+  if (!gameOver(m, shot.team)) startDead(m, shot.team === 0 ? 1 : 0);
+}
+
+/**
+ * A made free throw: one point, and no celebration or streak. The first
+ * of the two leaves the ball dead for the second; the second was live,
+ * so the other team checks it up as after any basket.
+ */
+function scoreFreeThrow(m: Match, shooter: Athlete): void {
+  shooter.box.freeMade++;
+  m.emit({ type: "score", team: shooter.team, points: 1, id: shooter.id, kind: "free", outcome: m.ball.shot?.outcome ?? "swish", assist: null, streak: shooter.streak, dunk: null });
+  if (gameOver(m, shooter.team) || m.phase === "freeThrow") return;
+  startDead(m, shooter.team === 0 ? 1 : 0);
+}
+
+/** Ends the game once a team reaches the target, and marks game point on the way. True when it is over. */
+function gameOver(m: Match, team: TeamId): boolean {
+  if (m.score[team] >= m.target) {
     m.phase = "over";
     m.phaseT = 0;
-    m.winner = shot.team;
-    m.emit({ type: "win", team: shot.team });
-    return;
+    m.winner = team;
+    m.freeThrows = null;
+    m.emit({ type: "win", team });
+    return true;
   }
-  if (m.score[shot.team] >= m.target - 2 && !m.gamePoint[shot.team]) {
-    m.gamePoint[shot.team] = true;
-    m.emit({ type: "gamePoint", team: shot.team });
+  if (m.score[team] >= m.target - 2 && !m.gamePoint[team]) {
+    m.gamePoint[team] = true;
+    m.emit({ type: "gamePoint", team });
   }
-  startDead(m, shot.team === 0 ? 1 : 0);
+  return false;
 }
 
 /** A shot that did not go in: the streak ends and the crowd groans. */
@@ -89,6 +113,8 @@ export function missShot(m: Match): void {
   const shot = m.ball.shot;
   if (!shot || shot.counted) return;
   const shooter = m.athletes[shot.shooter]!;
+  // A missed free throw does not cool a hot shooter.
+  if (shot.kind === "free") return m.emit({ type: "miss", id: shooter.id });
   shooter.streak = 0;
   if (shooter.onFire) m.emit({ type: "fireOut", id: shooter.id });
   shooter.onFire = false;

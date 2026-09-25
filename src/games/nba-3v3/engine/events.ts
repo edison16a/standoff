@@ -1,6 +1,6 @@
 import type { DunkStyle } from "../roster";
 import type { Grade, Outcome, ShotKind } from "./shot-model";
-import type { TeamId } from "./types";
+import type { DribbleMove, TeamId } from "./types";
 
 /**
  * Everything worth a sound, an effect, a buzz or an announcer line. The
@@ -21,7 +21,16 @@ export type MatchEvent =
   | { type: "board"; power: number }
   | { type: "net"; swish: boolean }
   | { type: "floor"; power: number; x: number; z: number }
-  | { type: "score"; team: TeamId; points: 2 | 3; id: number; kind: ShotKind; outcome: Outcome; assist: number | null; streak: number }
+  | { type: "score"; team: TeamId; points: 1 | 2 | 3; id: number; kind: ShotKind; outcome: Outcome; assist: number | null; streak: number; dunk: DunkStyle | null }
+  | { type: "move"; id: number; move: DribbleMove }
+  /** A dribble move beat its defender: `hard` sends them stumbling. */
+  | { type: "shake"; id: number; victim: number; hard: boolean }
+  /** A dribble move went wrong and the ball got away, knocked by `by` if a defender was on top. */
+  | { type: "fumble"; id: number; by: number | null }
+  /** Reaching in once too often: a foul on `id`, and two shots for `victim`. */
+  | { type: "foul"; id: number; victim: number; attempt: number }
+  /** A free throw is ready to shoot: shot `n` of 2. */
+  | { type: "freeThrow"; id: number; n: 1 | 2 }
   | { type: "miss"; id: number }
   | { type: "block"; id: number; victim: number }
   | { type: "steal"; id: number; victim: number }

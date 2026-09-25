@@ -58,6 +58,8 @@ export interface NbaHostState {
   /** The ball is dead or being checked: the shot clock is stopped. */
   checking: boolean;
   countdown: number | null;
+  /** The free throws after a foul, as the scoreboard says it, like "Free throw 1 of 2". */
+  freeThrow: string | null;
   gamePoint: [boolean, boolean];
   banner: Banner | null;
   winner: TeamId | null;
@@ -76,6 +78,7 @@ export const useNbaStore = create<NbaHostState>(() => ({
   mustClear: false,
   checking: false,
   countdown: null,
+  freeThrow: null,
   gamePoint: [false, false],
   banner: null,
   winner: null,

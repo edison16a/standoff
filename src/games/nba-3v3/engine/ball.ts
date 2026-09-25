@@ -1,4 +1,5 @@
 import { charOf, standingReach } from "./athlete";
+import { dribbleBall } from "./dribble-ball";
 import type { FlightEvent } from "./flight";
 import { sampleFlight } from "./flight";
 import { stepLoose, type Contact } from "./loose-ball";
@@ -47,18 +48,7 @@ function holdBall(m: Match, dt: number): void {
     b.pos = { x: a.x + f.fx * fwd, y: a.y + lerp(h * 0.62, top, lift), z: a.z + f.fz * fwd };
     return;
   }
-  const speed = Math.hypot(a.vx, a.vz);
-  const before = a.dribble;
-  a.dribble = (a.dribble + (1.7 + speed * 0.22) * dt) % 1;
-  if (before < 0.5 && a.dribble >= 0.5) m.emit({ type: "bounce", id: a.id, x: b.pos.x, z: b.pos.z, power: 0.5 + speed / 12 });
-  // Pushed down hard, so the bounce is sharp at the floor and slow at the top, where the hand meets it.
-  const hand = h * 0.46;
-  const drop = 1 - Math.abs(1 - 2 * a.dribble);
-  const y = 0.12 + (hand - 0.12) * (1 - drop * drop);
-  const fwd = 0.26 + speed * 0.035;
-  // Out to the side of the dribbling hand, and through the middle in front during a crossover.
-  const side = 0.3 * a.dribbleSide;
-  b.pos = { x: a.x + f.fx * fwd + f.rx * side, y, z: a.z + f.fz * fwd + f.rz * side };
+  dribbleBall(m, a, dt);
 }
 
 function onFlightEvent(m: Match, e: FlightEvent): void {
@@ -143,8 +133,8 @@ function looseBall(m: Match, dt: number): void {
       b.rimCd = 0.1;
       if (b.shot) b.shot.touchedRim = true;
       m.emit({ type: "rim", power: Math.min(1, c.power / 4) });
-    } else if (c.kind === "through" && b.shot && !b.shot.counted && m.phase === "live") {
-      // A lucky roll off the iron that drops after all still counts.
+    } else if (c.kind === "through" && b.shot && !b.shot.counted && (m.phase === "live" || b.shot.kind === "free")) {
+      // A lucky roll off the iron that drops after all still counts, the first free throw included.
       b.shot.made = true;
       b.shot.outcome = "roll";
       m.emit({ type: "net", swish: false });

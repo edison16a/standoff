@@ -19,9 +19,10 @@ export function releasePoint(a: Athlete): V3 {
   return { x: a.x + Math.sin(a.yaw) * 0.22, y: a.y + h * 1.17, z: a.z + Math.cos(a.yaw) * 0.22 };
 }
 
-export function startJumper(m: Match, a: Athlete): void {
-  a.action = { kind: "shoot", t: 0, three: isThree(a), released: false };
-  m.emit({ type: "gather", id: a.id, kind: "jumper" });
+/** Starts a jumper and its meter, or at the line a free throw, which is the same meter with no jump. */
+export function startJumper(m: Match, a: Athlete, free = false): void {
+  a.action = { kind: "shoot", t: 0, three: !free && isThree(a), released: false, free };
+  m.emit({ type: "gather", id: a.id, kind: free ? "free" : "jumper" });
 }
 
 /** Lets go of a jumper. The phone's hold time is trusted within reason, so lag never costs a green. */
@@ -29,11 +30,12 @@ export function releaseJumper(m: Match, a: Athlete, heldMs?: number): void {
   if (a.action.kind !== "shoot" || a.action.released) return;
   a.action.released = true;
   // The whistle can go mid motion (a shot clock violation), and then there is no ball to let go of.
-  if (m.ball.holder !== a.id || m.phase !== "live") return;
+  const free = a.action.free;
+  if (m.ball.holder !== a.id || m.phase !== (free ? "freeThrow" : "live")) return;
   const hostMs = a.action.t * 1000;
   const ms = heldMs === undefined ? hostMs : clamp(heldMs, hostMs - 260, hostMs + 60);
-  const { grade } = gradeRelease(ms, charOf(a).stats.shooting, a.onFire);
-  launchShot(m, a, "jumper", grade, releasePoint(a));
+  const { grade } = gradeRelease(ms, charOf(a).stats.shooting, a.onFire, free);
+  launchShot(m, a, free ? "free" : "jumper", grade, releasePoint(a));
 }
 
 /**
@@ -44,8 +46,11 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   const b = m.ball;
   const distance = rimDistance(a);
   const three = kind === "jumper" && isThree(a);
-  const c = contestFor(a, m.opponents(a.team), kind);
-  a.box.attempts++;
+  const free = kind === "free";
+  // Nobody may contest a free throw.
+  const c = contestFor(a, free ? [] : m.opponents(a.team), kind);
+  if (free) a.box.freeAttempts++;
+  else a.box.attempts++;
   b.holder = null;
   b.mode = "flight";
   b.flightT = 0;
@@ -54,7 +59,7 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   b.lastTouch = a.id;
   b.pos = { ...hand };
   const assist = m.lastPass && m.lastPass.to === a.id ? m.lastPass.from : null;
-  const base = { shooter: a.id, team: a.team, points: three ? 3 : 2, kind, grade, counted: false, touchedRim: false, assist } as const;
+  const base = { shooter: a.id, team: a.team, points: free ? 1 : three ? 3 : 2, kind, dunk: null, grade, counted: false, touchedRim: false, assist: free ? null : assist } as const;
   const forced = m.forced;
   m.forced = null;
   if (!forced && c.blocker && m.rng() < c.blockChance) {
@@ -72,10 +77,11 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   const made = forced ? isMake(forced) : m.rng() < chance;
   const side = Math.atan2(a.x - RIM.x, a.z - RIM.z);
   const outcome = forced ?? pickOutcome(m.rng, made, ctx, side);
-  const apex = kind === "jumper" ? RIM.y + 0.95 + distance * 0.12 + between(m.rng, -0.1, 0.15) : Math.max(hand.y, RIM.y) + 0.38;
+  const set = kind === "jumper" || free;
+  const apex = set ? RIM.y + 0.95 + distance * 0.12 + between(m.rng, -0.1, 0.15) : Math.max(hand.y, RIM.y) + 0.38;
   b.flight = planShot(m.rng, { from: hand, outcome, apex });
   b.shot = { ...base, outcome, made: isMake(outcome) };
-  b.spin = -(kind === "jumper" ? 14 : 8);
+  b.spin = -(set ? 14 : 8);
   m.emit({ type: "shot", id: a.id, kind, three, grade, chance, outcome, made: isMake(outcome), contest: c.contest });
 }
 
@@ -91,7 +97,8 @@ export function slam(m: Match, a: Athlete): void {
   b.flightSeg = -1;
   b.lastTouch = a.id;
   b.pos = { ...top };
-  const base = { shooter: a.id, team: a.team, points: 2, kind: "dunk", grade: "perfect", counted: false, touchedRim: true, assist: m.lastPass?.to === a.id ? m.lastPass.from : null } as const;
+  const style = a.action.kind === "drive" && a.action.style ? a.action.style : charOf(a).dunk;
+  const base = { shooter: a.id, team: a.team, points: 2, kind: "dunk", dunk: style, grade: "perfect", counted: false, touchedRim: true, assist: m.lastPass?.to === a.id ? m.lastPass.from : null } as const;
   const forced = m.forced;
   m.forced = null;
   if (!forced && c.blocker && m.rng() < c.blockChance) {
@@ -119,5 +126,5 @@ export function slam(m: Match, a: Athlete): void {
   b.flightKind = "dunk";
   b.shot = { ...base, outcome: "swish", made: true };
   const power = clamp(0.5 + charOf(a).stats.strength * 0.05, 0.5, 1);
-  m.emit({ type: "dunk", id: a.id, style: charOf(a).dunk, power });
+  m.emit({ type: "dunk", id: a.id, style, power });
 }

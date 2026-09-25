@@ -104,6 +104,12 @@
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
 }
 
+/* At the free throw line the meter wakes up and waits, so the shooter knows it is theirs. */
+.nba-meter--free {
+  opacity: 1;
+  border-color: #ffd23f;
+}
+
 .nba-meter__green {
   position: absolute;
   left: 0;

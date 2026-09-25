@@ -46,7 +46,7 @@ export function startDead(m: Match, next: TeamId): void {
  * or jitters on the spot, and stepping round anyone in the way, since
  * the checker and their defender often have to pass each other.
  */
-function walkTo(m: Match, a: Athlete, to: V2, pace: number): number {
+export function walkTo(m: Match, a: Athlete, to: V2, pace: number): number {
   const dx = to.x - a.x;
   const dz = to.z - a.z;
   const d = Math.hypot(dx, dz);

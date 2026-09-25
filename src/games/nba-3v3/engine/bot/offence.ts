@@ -6,6 +6,8 @@ import { gaussian } from "../rng";
 import { GREEN_MS } from "../shot-model";
 import type { Athlete } from "../types";
 import { dist2, type V2 } from "../vec";
+import { canShootOutOf } from "../moves";
+import { tryMove } from "./moves";
 import { jumperValue, releaseSpread } from "./shot-value";
 import { ballCarrier, bestSpot, goTo, laneOpen, type BotState } from "./util";
 
@@ -25,6 +27,7 @@ export function thinkWithBall(m: Match, a: Athlete, s: BotState, dt: number): vo
     if (!act.released && s.shotAt !== null && act.t * 1000 >= s.shotAt) m.release(a.id, s.shotAt);
     return;
   }
+  if (act.kind === "move") return followMove(m, a, s, act);
   if (act.kind !== "none") return;
   s.holdFor += dt;
   s.decideIn -= dt;
@@ -68,7 +71,19 @@ function decide(m: Match, a: Athlete, s: BotState): void {
     return m.press(a.id, "pass", { x: mate.t.x - a.x, z: mate.t.z - a.z });
   }
   if (s.holdFor > 4 && mate && m.rng() < 0.4) return m.press(a.id, "pass", { x: mate.t.x - a.x, z: mate.t.z - a.z });
+  // A defender square in front: try to shake them before settling for somewhere else to go.
+  if (m.rng() < 0.3 && tryMove(m, a, s, mine)) return;
   s.target = attackSpot(m, a);
+}
+
+/** Out of a move: rise into the jumper off a stepback, or go at the rim once past the defender. */
+function followMove(m: Match, a: Athlete, s: BotState, act: Extract<Athlete["action"], { kind: "move" }>): void {
+  if (!canShootOutOf(act) || s.afterMove === null) return;
+  const plan = s.afterMove;
+  s.afterMove = null;
+  if (plan === "shoot" && jumperValue(m, a) > 1) return shoot(m, a, s, rimDistance(a));
+  s.target = laneOpen(m, a, 0.8) ? RIM_SPOT : attackSpot(m, a);
+  s.decideIn = 0.25;
 }
 
 /** How keen a player is on their own jumper: shooters look for it, bigs look inside. */

@@ -1,10 +1,13 @@
-import type { CharacterId } from "../roster";
+import type { CharacterId, DunkStyle } from "../roster";
 import { pressDefend, pressPass, pressShoot, releaseShot, updateAction } from "./actions";
 import { createAthlete, moveAthlete, separate } from "./athlete";
 import { updateBall } from "./ball";
 import { Brains } from "./bot/brains";
 import { updateDribbleHand } from "./dribble";
 import type { MatchEvent } from "./events";
+import { StealLog } from "./fouls";
+import { pressFreeThrow, stepFreeThrowBall, updateFreeThrows, type FreeThrows } from "./free-throw";
+import { tickMoves } from "./moves";
 import { seeded, type Rng } from "./rng";
 import type { Outcome } from "./shot-model";
 import { placeForCheck } from "./check-plan";
@@ -54,10 +57,16 @@ export class Match {
   lastPass: { from: number; to: number; at: number } | null = null;
   /** The break after a basket or a turnover and the check up that ends it, while the ball is dead. */
   checkUp: CheckUp | null = null;
+  /** A foul's two free throws, from the whistle until the last one leaves the hand. */
+  freeThrows: FreeThrows | null = null;
+  /** Steal attempts per defender and ball handler this possession, for the foul count. */
+  readonly stealLog = new StealLog();
   /** The showcase turns the check up off to keep its highlight short. Real games always check. */
   checkBeat = true;
   /** The next shot's outcome, set by the showcase to film a sure highlight. Real games leave it alone. */
   forced: Outcome | null = null;
+  /** The dunk thrown on the next drive, set by the showcase for the same reason. */
+  forcedDunk: DunkStyle | null = null;
   gamePoint: [boolean, boolean] = [false, false];
   /** Whose turn it is to bring the ball up, per team, so everyone gets to handle it. */
   readonly checkTurn: [number, number] = [0, 0];
@@ -116,10 +125,12 @@ export class Match {
 
   press(id: number, button: Button, aim: V2 | null = null): void {
     const a = this.athletes[id];
-    if (!a || this.phase !== "live") return;
+    if (!a) return;
+    if (this.phase === "freeThrow" && button === "shoot") return pressFreeThrow(this, a);
+    if (this.phase !== "live") return;
     if (button === "shoot") pressShoot(this, a);
     else if (button === "pass") pressPass(this, a, aim);
-    else pressDefend(this, a);
+    else pressDefend(this, a, aim);
   }
 
   /** Shoot let go. `heldMs` is the phone's own measure of the hold, free of network lag. */
@@ -148,17 +159,19 @@ export class Match {
     if (this.phase === "live") this.brains.think(dt);
     if (this.phase === "dead") updateDead(this, dt);
     if (this.phase === "check") updateCheck(this);
+    if (this.phase === "freeThrow") updateFreeThrows(this, dt);
     for (const a of this.athletes) {
       a.stealCd = Math.max(0, a.stealCd - dt);
       a.blockCd = Math.max(0, a.blockCd - dt);
       a.grabCd = Math.max(0, a.grabCd - dt);
       a.whiff = Math.max(0, a.whiff - dt);
+      tickMoves(a, dt);
       updateAction(this, a, dt);
       moveAthlete(a, dt, this.ball.holder === a.id, this.facing(a), this.queue);
       updateDribbleHand(this, a, dt);
     }
     separate(this.athletes, this.queue, this.bumpCd);
-    if (!stepCheckBall(this, dt)) updateBall(this, dt);
+    if (!stepCheckBall(this, dt) && !stepFreeThrowBall(this, dt)) updateBall(this, dt);
     if (this.phase === "live") updateClock(this, dt);
   }
 
@@ -184,6 +197,8 @@ export class Match {
       return { x: this.ball.pos.x, z: this.ball.pos.z };
     }
     if (Math.hypot(a.vx, a.vz) > 1.2 && a.action.kind === "none") return null;
+    // At the free throws everyone watches the shooter and the rim.
+    if (this.phase === "freeThrow") return { x: RIM.x, z: RIM.z };
     if (a.action.kind === "shoot" || a.action.kind === "drive") return { x: RIM.x, z: RIM.z };
     if (this.ball.holder === a.id) return { x: RIM.x, z: RIM.z };
     if (a.team !== this.offence || this.ball.mode !== "held") return { x: this.ball.pos.x, z: this.ball.pos.z };

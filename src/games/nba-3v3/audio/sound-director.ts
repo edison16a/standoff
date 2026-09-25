@@ -154,6 +154,20 @@ export class SoundDirector {
         this.sfx.horn(false);
         this.crowd.aww();
         return;
+      case "foul":
+        this.sfx.whistle();
+        this.crowd.aww();
+        return;
+      case "freeThrow":
+        // The building goes quiet for the shooter at the line.
+        this.crowd.setLevel(0.12);
+        return;
+      case "shake":
+        if (e.hard) this.crowd.ooh();
+        return this.sfx.squeak(e.hard ? 1 : 0.6);
+      case "fumble":
+        this.crowd.cheer(0.4);
+        return this.sfx.slap(0.4);
       case "onFire":
         this.crowd.cheer(0.9);
         this.later(1800, () => this.crowd.letsGo());

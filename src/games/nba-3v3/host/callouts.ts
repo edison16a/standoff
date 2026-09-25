@@ -25,6 +25,10 @@ export function banner(e: MatchEvent, m: Match, nameOf: (id: number) => string, 
       return { text: "PICKED OFF!", sub: nameOf(e.id), tone: tone(e.id) };
     case "knockdown":
       return { text: "BULLDOZED!", sub: nameOf(e.by), tone: tone(e.by) };
+    case "foul":
+      return { text: "FOUL", sub: `${nameOf(e.id)} on ${nameOf(e.victim)}`, tone: "red" };
+    case "shake":
+      return e.hard ? { text: pick(["ANKLES!", "SHOOK HIM!", "BROKE HIS ANKLES!"], n), sub: nameOf(e.id), tone: tone(e.id) } : null;
     case "violation":
       return { text: e.reason === "clock" ? "SHOT CLOCK" : "OUT OF BOUNDS", sub: null, tone: "red" };
     case "gamePoint":

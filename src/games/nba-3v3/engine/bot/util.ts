@@ -18,10 +18,12 @@ export interface BotState {
   /** Off the ball: when to pick a new spot. */
   spotUntil: number;
   cutting: boolean;
+  /** What to do once a dribble move is done: rise into the jumper, or attack the rim. */
+  afterMove: "shoot" | "drive" | null;
 }
 
 export function freshState(): BotState {
-  return { decideIn: 0, target: null, holdFor: 0, shotAt: null, jumpAt: null, spotUntil: 0, cutting: false };
+  return { decideIn: 0, target: null, holdFor: 0, shotAt: null, jumpAt: null, spotUntil: 0, cutting: false, afterMove: null };
 }
 
 /** Who has the ball, counting a pass on its way as already caught, so nobody freezes while it flies. */

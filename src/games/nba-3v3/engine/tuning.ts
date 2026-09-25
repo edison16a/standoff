@@ -55,7 +55,17 @@ export const MOVE = {
   baseSpeed: 4.1,
   perSpeed: 0.28,
   withBall: 0.93,
-  accel: 24,
+  /** Push off from a standstill, in metres per second squared. It fades toward top speed, so the last stretch takes a while. */
+  burst: 17,
+  fade: 0.6,
+  /** Slowing down and turning use the grip of the shoes, which is stronger than the push. */
+  brake: 21,
+  grip: 15,
+  /** A hard cut plants the outside foot and bleeds speed faster still. */
+  plantGrip: 28,
+  plantTime: 0.16,
+  /** Carrying the ball costs a little push. */
+  ballPush: 0.9,
   radius: 0.4,
 } as const;
 
@@ -75,6 +85,8 @@ export const SHOT = {
   takeoff: 0.36,
   /** Inside this distance a drive at the rim becomes a layup or a dunk. */
   driveRange: 3.3,
+  /** The green window at the free throw line is this much wider: a set shot, nobody in the face. */
+  freeGreen: 1.25,
   closeRange: 1.7,
 } as const;
 
@@ -106,8 +118,38 @@ export const CHECK = {
   beat: 1.75,
 } as const;
 
+/** The whistle for a foul and the free throws that follow, in seconds. */
+export const FREE_THROW = {
+  /** Everyone stops for the whistle before walking to the lane. */
+  whistle: 0.9,
+  /** Past this, everyone is put on their spot. */
+  maxWalk: 3.5,
+  /** A computer steps to the line and shoots after this long; a phone gets its shot taken after the longer wait. */
+  botWait: 1.4,
+  /** Two bounces at the line to settle before each shot. */
+  bounces: 1,
+  humanWait: 8,
+  /** From the first shot leaving the hand to the ball going back to the shooter. */
+  resultPause: 1.1,
+  /** Where the shooter stands: just behind the free throw line, at the top of the key. */
+  lineZ: COURT.keyDepth + 0.25,
+  /** The lane spots run along both sides of the key, this far out from the middle. */
+  laneX: COURT.keyHalfWidth + 0.35,
+} as const;
+
+/** Jumping: the crouch before leaving the floor, the time up there, and the legs gathering after. */
+export const JUMP = {
+  blockGather: 0.12,
+  blockAir: 0.56,
+  /** Seconds of slow legs after landing from a block, a jumper, and a dunk or layup. */
+  blockRecover: 0.2,
+  shotRecover: 0.12,
+  driveRecover: 0.24,
+} as const;
+
 export const DEFENCE = {
-  stealRange: 1.55,
+  /** A steal needs the defender right next to the ball handler, body to body. */
+  stealRange: 1.05,
   stealCooldown: 1.1,
   /** A whiffed steal leaves the defender off balance this long. */
   whiffTime: 0.45,

@@ -3,11 +3,13 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import type { MatchEvent } from "../engine/events";
 import type { Match } from "../engine/match";
 import type { Athlete } from "../engine/types";
+import { lineBouncing } from "../engine/free-throw";
 import { dist2 } from "../engine/vec";
 import { Arena } from "./arena/arena";
 import { AthleteView } from "./athlete-view";
 import { BallView } from "./ball-view";
 import { Effects } from "./effects/effects";
+import { lineScene, pressureOn } from "./scene-read";
 import { TvCamera, type Shot } from "./tv-camera";
 
 const tmp = new THREE.Vector3();
@@ -101,13 +103,18 @@ export class CourtRenderer {
     const b = m.ball;
     const holder = b.holder;
     const onBall = holder !== null ? m.athletes[holder] : null;
-    // During the check the ball is held at the chest, not dribbled.
-    const chest = m.phase === "check";
+    // During the check, and at the free throw line before the shot, the ball is held at the chest, not dribbled,
+    // except for the shooter's bounces to settle at the line.
+    const shooting = onBall?.action.kind === "shoot";
+    const chest = m.phase === "check" || (m.phase === "freeThrow" && !shooting && !lineBouncing(m));
+    const pressure = onBall ? pressureOn(m, onBall) : 0;
+    const winner = m.phase === "over" && m.phaseT > 1 ? m.winner : null;
     for (const [i, view] of this.views.entries()) {
       const a = m.athletes[i]!;
       const guarding = !!onBall && onBall.team !== a.team && m.phase === "live" && dist2(a, onBall) < 2.6 && a.action.kind === "none";
       const incoming = b.mode === "flight" && b.passTo === a.id && a.action.kind === "none" ? 1 - Math.hypot(b.pos.x - a.x, b.pos.z - a.z) / 3 : 0;
-      view.update(a, { holding: holder === a.id, chest, receiving: Math.max(0, incoming), guarding, winner: m.phase === "over" && m.phaseT > 1 ? m.winner : null }, dt);
+      const line = lineScene(m, a);
+      view.update(a, { holding: holder === a.id, chest, receiving: Math.max(0, incoming), guarding, pressure: holder === a.id ? pressure : 0, ...line, winner }, dt);
     }
     this.ball.update(b, holder !== null ? (this.views[holder] ?? null) : null, chest, dt);
     if (this.intro !== null) {

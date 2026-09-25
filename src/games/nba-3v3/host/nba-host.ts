@@ -162,13 +162,15 @@ export class NbaHost {
     this.buzzer.onEvent(event, m, driver.athleteBySeat);
     if (event.type === "dunk" && event.power > 0.7) driver.slowMo(0.35, 0.55);
     if (event.type === "block") driver.slowMo(0.45, 0.25);
+    if (event.type === "shake" && event.hard) driver.slowMo(0.5, 0.3);
     if (event.type === "win") driver.slowMo(0.3, 0.8);
     if (event.type === "shot" && event.grade === "perfect" && m.athletes[event.id]?.seat !== null) this.audio.green();
     const shown = banner(event, m, (id) => this.nameOf(id), this.bannerKey);
     if (shown) this.showBanner(shown);
     const line = this.commentary.onEvent(event, m);
     if (line?.text) this.audio.announcer.say(line.text, line.priority);
-    if (event.type === "score" || event.type === "win" || event.type === "go" || event.type === "check" || event.type === "checkUp") this.refresh(performance.now());
+    const prompt = ["score", "win", "go", "check", "checkUp", "foul", "freeThrow"] as const;
+    if ((prompt as readonly string[]).includes(event.type)) this.refresh(performance.now());
   }
 
   private showBanner(shown: BannerText): void {

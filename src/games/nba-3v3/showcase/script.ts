@@ -72,6 +72,7 @@ export class HighlightScript {
       toward(giannis, RIM_SPOT, 1);
       if (rimDistance(giannis) < 3.1 && m.ball.holder === GIANNIS) {
         m.forced = "swish";
+        m.forcedDunk = "hammer";
         m.press(GIANNIS, "shoot");
         this.stage = "dunked";
       }

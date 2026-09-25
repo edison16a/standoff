@@ -33,10 +33,20 @@ export function updateDribbleHand(m: Match, a: Athlete, dt: number): void {
       if (Math.abs(lateral) > 2.2) want = lateral > 0 ? 1 : -1;
     }
     // Only just after the hand has pushed the ball down, so the cross happens on the way to the floor.
-    if (want !== a.dribbleHand && a.crossCd <= 0 && a.dribble < 0.15) {
-      a.dribbleHand = want;
-      a.crossCd = CROSS_COOLDOWN;
-    }
+    if (want !== a.dribbleHand && a.crossCd <= 0 && a.dribble < 0.15) switchHands(a, want);
   }
-  a.dribbleSide += clamp(a.dribbleHand - a.dribbleSide, -CROSS_RATE * dt, CROSS_RATE * dt);
+  // The ball only goes across once it has been pushed down from the old hand, and a move takes it across quicker.
+  const rate = a.action.kind === "move" ? CROSS_RATE * 1.5 : CROSS_RATE;
+  if (a.crossArmed) a.dribbleSide += clamp(a.dribbleHand - a.dribbleSide, -rate * dt, rate * dt);
+}
+
+/**
+ * Changes the dribbling hand. Just after a push the ball goes across on
+ * this bounce; otherwise it comes back up into the old hand first.
+ */
+export function switchHands(a: Athlete, hand: 1 | -1): void {
+  if (hand === a.dribbleHand) return;
+  a.dribbleHand = hand;
+  a.crossCd = CROSS_COOLDOWN;
+  a.crossArmed = a.dribble < 0.15 || a.pocket > 0;
 }

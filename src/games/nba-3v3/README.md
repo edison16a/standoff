@@ -10,11 +10,12 @@ Status: ready. Three on three half court basketball for 1 to 6 players, with com
    * **Ready.** Tap Ready.
 3. On the computer, the lobby shows two team columns, Sky and Fire, three spots each. New players land on the smaller team. Click a player to send them to the other side, or drag them across. Shuffle deals everyone out at random. Computer players fill the empty spots. Click Start game.
 4. Turn the phone sideways. It is a controller:
-   * **Thumb stick** (left half): always on screen, so it is clear how to move. Put your thumb anywhere on that side and it jumps there. It moves your player the way the big screen shows it. Up runs at the hoop. With the ball you dribble on your own, keeping it away from your defender and crossing it over when they switch sides.
+   * **Thumb stick** (left half): always on screen, so it is clear how to move. Put your thumb anywhere on that side and it jumps there. It moves your player the way the big screen shows it. Up runs at the hoop. Players move with momentum: they take about half a second to reach top speed, slow down over a step or two, and plant a foot to cut. They are a little slower with the ball. With the ball you dribble on your own, keeping it away from your defender and crossing it over when they switch sides.
    * **Shoot** (big orange button): hold it and a meter fills, on the phone and over your player on the big screen. Let go in the green band to green it. Driving at the rim close in turns Shoot into a layup, or a dunk for strong players (anyone dunks when nobody is near).
    * **Pass**: to the teammate most in the direction of the stick, or the most open one. Without the ball it becomes **Call**, which asks a teammate for it.
-   * **Block**: jump with your arms up, to contest a jumper or stop a layup or dunk, or to grab a rebound higher. Next to the player with the ball on defence it becomes **Steal**, a swipe that knocks the ball loose if it lands.
-5. The phone buzzes and flashes a word for everything that happens to you: Green!, Stolen, Blocked it!, Rebound!, +3.
+   * **Block**: jump with your arms up, to contest a jumper or stop a layup or dunk, or to grab a rebound higher. There is a short crouch before you leave the floor, and a block counts most at the top of the jump, so time it. Right next to the player with the ball on defence it becomes **Steal**, a swipe that knocks the ball loose if it lands. Reaching in from the ball side works best.
+   * **Dribble**: with the ball the same button makes a move, picked by the stick against the way to the basket. Pull back for a stepback, which makes room for a jumper (press Shoot as you land). Push left or right for a quick crossover to that side. Push up for a spin round your defender. Leave the stick alone for a hesitation, or a behind the back when your defender sits on the ball hand. A move that beats your defender leaves them a step behind, or stumbling. Each move has a short breather after it, and spamming them, or making one into a defender right on top of you, can lose the ball.
+5. The phone buzzes and flashes a word for everything that happens to you: Green!, Stolen, Blocked it!, Rebound!, Ankles!, +3.
 6. Baskets put no text on the big screen. The scoreboard ticks over and the announcer calls it.
 7. First to 11 wins, with confetti and fireworks. The results show the MVP and both box scores. Play again keeps the teams; Change teams goes back to the lobby.
 
@@ -26,7 +27,15 @@ A phone that joins during a game picks a star and joins the next one. A player w
 * After a basket or a turnover there is a check up. The scorer celebrates, a player from the other team picks the ball up and gets it to the checker, and everyone walks to their spot. At the top of the key the checker bounces it to their defender, who bounces it back, and play is live. The shot clock is stopped from the basket until then, and the stick and buttons do nothing. The scoreboard dims the clock and says Check ball; the phone says Check up. It takes about four seconds in all. A ball lost in the stands is thrown back in from courtside.
 * After a defensive rebound or a steal, the ball must be taken back past the arc before it can score. The big screen and the phone say so.
 * A 12 second shot clock with a horn. It resets when the ball hits the rim or changes hands. The clock also shows on the shot clock box above the backboard.
-* The ball going out of bounds goes to the other team. No fouls.
+* The ball going out of bounds goes to the other team.
+
+## Fouls and free throws
+
+* Reaching in too often is a foul. The game counts every steal attempt by one defender on one ball handler through a possession. The first two are free. The third is a foul one time in five, the fourth two times in five, and every one after that three times in five. The count starts again when the other team gets the ball, and after free throws.
+* A foul blows the whistle and stops the clock. The announcer calls it and the big screen says FOUL. The fouled player walks to the line and everyone else lines up along the lane, the defence nearest the basket.
+* The fouled player shoots two free throws with the shot meter on their phone. The phone says which shot it is, lights the meter up, and only Shoot works. The green band is a quarter wider at the line. Computer players shoot their own. A phone that waits eight seconds has its shot taken for it.
+* Each free throw that goes in is worth one point. The first comes back to the shooter either way. Play is live again as the second leaves the hand: a miss is anyone's rebound, and a make is checked up by the other team like any basket.
+* Computer defenders reach in twice freely, a third time only now and then, and never a fourth.
 
 ## Shooting
 
@@ -39,6 +48,8 @@ A phone that joins during a game picks a star and joins the next one. A player w
 
 ## Strength, dunks and layups
 
+* Each dunk has an approach, a gather, the takeoff, time in the air, the slam, and either a hang on the rim or letting go straight away, then the landing. Players land with slow legs for a moment.
+* Stars mostly throw their signature dunk, but not always: along the baseline it is often a reverse, in traffic a power dunk, and players with the legs for it throw the odd windmill or three sixty. Power dunks sometimes grab the rim.
 * Each star has one signature dunk: Curry's scoop, LeBron's tomahawk, Durant's reverse, Giannis's two hand hammer, Jokic hanging on the rim, Luka's one hand flush, Shai's cock back, Tatum's double clutch, Ant's three sixty and Wemby's windmill.
 * Driving into a weaker defender (two or more strength points less) sends them sprawling. A much stronger defender in the way turns a dunk into a layup. Strength also decides who gets pushed off a spot.
 * A big dunk shakes the rim and the camera, slows time for a moment and the camera swoops in.
@@ -73,13 +84,13 @@ The crowd murmurs, goes "ooh" as a ball rattles round the rim, groans at misses,
 ## Code
 
 * `roster.ts`: the ten stars and the two teams.
-* `engine/`: the game as pure code. The court, the shot model and meter, planned ball flights, loose ball physics, the rules, the check up (`check-up.ts`, `check-plan.ts`, `check-toss.ts`), the dribble and crossovers, passing, defence, dunks and layups, and the computer players in `bot/`. Unit tested, including whole computer games played to 11.
-* `render/`: three.js. `arena/` has the floor, the stands with an instanced crowd that bounces in the shader, the LED boards, the hoop with its shot clock box and a spring driven net. `models/` builds each athlete on a simple skeleton; `anim/` poses them (running, dribbling with either hand, guarding, shooting, passes, catches, the check, blocks, steals, the ten dunks and the celebrations). Every change of state eases into the next, the stride follows the ground covered so the feet stay planted, and the ball meets the dribbling palm at the top of each bounce. `effects/` has the particles and the confetti. `tv-camera.ts` is the broadcast camera.
+* `engine/`: the game as pure code. The court, the shot model and meter, planned ball flights, loose ball physics, the rules, the check up (`check-up.ts`, `check-plan.ts`, `check-toss.ts`), running with momentum (`steer.ts`), the dribble and crossovers, the rhythm of the dribble (`dribble-ball.ts`: one bounce every two steps on the run, a low pound standing still, the pocket after a catch), the dribble moves (`moves.ts`, `move-pick.ts`), passing, steals (`steal.ts`), the foul count (`fouls.ts`) and free throws (`free-throw.ts`, `free-throw-plan.ts`), the block jump (`block.ts`), dunks and layups (`drive.ts`, `dunk-style.ts`), and the computer players in `bot/`. Unit tested, including whole computer games played to 11.
+* `render/`: three.js. `arena/` has the floor, the stands with an instanced crowd that bounces in the shader, the LED boards, the hoop with its shot clock box and a spring driven net. `models/` builds each athlete on a simple skeleton; `anim/` poses them (running, dribbling with either hand, guarding, shooting, passes, catches, the check, blocks, steals, the ten dunks and the celebrations). Every change of state eases into the next. The stride follows the ground covered, and on the floor the hips settle so the lower foot stands on the court, so the feet stay planted. The drawn dribble runs from the palm to the floor and back up under the palm, in step with the feet, and the ball stays in the hands through the pocket, a spin, a shot and a dunk. Bursts, stops and cuts lean the body and plant a foot (`balance.ts`), the dribble moves have their own footwork (`moves.ts`), and the free throw routine has its bounces, a set shot and the lane stances (`line.ts`). `effects/` has the particles and the confetti. `tv-camera.ts` is the broadcast camera.
 * `host/`: the session on the computer (lobby and teams, the match driver, what the phones see, the banners in `callouts.ts`, the announcer's words in `commentary.ts`, and the buzzes) and its React screens.
 * `phone/`: the controller session and the phone screens. The stick and buttons use the gamepad kit in `src/games/kit/pad`.
 * `audio/`: effects, the crowd, the music and the announcer.
 * `protocol/`: the zod schemas for the messages between the phones and the host.
-* `showcase/`: the scripted highlight filmed for the home screen: Giannis's hammer dunk and Luka's step back three. It skips the check up to keep the clip short. For looking at the animation in development, `/showcase/nba-3v3?bots=3` films a whole computer game instead, and `&at=12` holds the frame twelve seconds in.
+* `showcase/`: the scripted highlight filmed for the home screen: Giannis's hammer dunk and Luka's step back three. It skips the check up to keep the clip short. For looking at the animation in development, `/showcase/nba-3v3?bots=3` films a whole computer game instead, and `&at=12` holds the frame twelve seconds in. `?lab=moves` (or `run`, `dunk&style=windmill`, `block`, `free`) plays a short scene that shows one thing, `&step=1` lets a script step it one filmed frame at a time through `window.__nbaStep`, and `&follow=id,angle,dist` keeps a close camera on one player.
 
 ## Home screen media
 

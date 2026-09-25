@@ -132,6 +132,17 @@ export class Sfx {
     }
   }
 
+  /** The referee's whistle: a pea rattling in a shrill two note trill, then the building's echo. */
+  whistle(): void {
+    const at = this.at;
+    for (let i = 0; i < 16; i++) {
+      const f = i % 2 === 0 ? 2950 : 3250;
+      tone(this.engine, this.out, at + i * 0.028, { frequency: vary(f, 0.01), attack: 0.004, decay: 0.035, peak: 0.07 });
+    }
+    noise(this.engine, this.out, at, { filter: "bandpass", frequency: 3100, q: 4, attack: 0.01, decay: 0.45, peak: 0.08 });
+    tone(this.engine, this.wet, at + 0.05, { frequency: 3100, decay: 0.5, peak: 0.03 });
+  }
+
   /** The shot clock's beep for each of the last seconds, higher as it runs out. */
   clockBeep(left: number): void {
     tone(this.engine, this.out, this.at, { type: "square", frequency: left <= 2 ? 1320 : 990, attack: 0.003, decay: 0.09, peak: 0.05 });

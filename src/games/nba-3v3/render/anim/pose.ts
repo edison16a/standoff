@@ -34,6 +34,25 @@ export const STAND: Pose = {
   kneeL: 0.12, kneeR: 0.12, legLLift: 0.06, legRLift: 0.06,
 };
 
+/** Channels that swap sides in a mirror image, and those that change sign. */
+const SWAP: Partial<Record<Channel, Channel>> = {};
+for (const c of CHANNELS) {
+  const m = c.match(/^(arm|elbow|wrist|leg|knee|foot)([LR])(.*)$/);
+  if (m) SWAP[c] = `${m[1]}${m[2] === "L" ? "R" : "L"}${m[3]}` as Channel;
+}
+const FLIP: ReadonlySet<Channel> = new Set<Channel>(["hipX", "pelvisY", "pelvisZ", "torsoY", "torsoZ", "neckY", "neckZ", "spin"]);
+
+/** The same patch with left and right swapped, for moves done with the other hand. */
+export function mirrorPatch(patch: PosePatch): PosePatch {
+  const out: PosePatch = {};
+  for (const c of CHANNELS) {
+    const v = patch[c];
+    if (v === undefined) continue;
+    out[SWAP[c] ?? c] = FLIP.has(c) ? -v : v;
+  }
+  return out;
+}
+
 /** out = a + (b - a) * t, channel by channel. */
 export function blend(a: Pose, b: PosePatch, t: number, out: Pose): Pose {
   for (const c of CHANNELS) {

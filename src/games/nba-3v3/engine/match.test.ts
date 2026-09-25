@@ -18,12 +18,12 @@ function playOut(seed: number, maxSeconds = 1500): { match: Match; events: Match
 }
 
 describe("a game between computer players", () => {
-  it("plays to eleven, scoring only twos and threes", () => {
+  it("plays to eleven, scoring twos and threes, and ones only from the line", () => {
     const { match, events } = playOut(7);
     expect(match.phase).toBe("over");
     expect(Math.max(...match.score)).toBeGreaterThanOrEqual(11);
     const scores = events.filter((e) => e.type === "score");
-    for (const s of scores) if (s.type === "score") expect([2, 3]).toContain(s.points);
+    for (const s of scores) if (s.type === "score") expect(s.kind === "free" ? [1] : [2, 3]).toContain(s.points);
     const total = scores.reduce((sum, s) => sum + (s.type === "score" ? s.points : 0), 0);
     expect(total).toBe(match.score[0] + match.score[1]);
   }, 60000);
