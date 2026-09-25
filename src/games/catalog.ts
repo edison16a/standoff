@@ -45,6 +45,7 @@ const LOADERS: Record<string, () => Promise<GameModule>> = {
   "fifa-3v3": () => import("./fifa-3v3").then((mod) => mod.game),
   "cube-game": () => import("./cube-game").then((mod) => mod.game),
   "subway-surfers": () => import("./subway-surfers").then((mod) => mod.game),
+  "brawl-battle": () => import("./brawl-battle").then((mod) => mod.game),
 };
 
 export function findGame(id: string): GameInfo | undefined {
