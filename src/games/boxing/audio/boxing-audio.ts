@@ -123,6 +123,13 @@ export class BoxingAudio {
       case "over":
         if (event.result.method === "Decision" || event.result.method === "Draw") this.crowd.cheer(1.1);
         break;
+      case "touch":
+        // The soft pat of two gloves meeting, and a cheer for it.
+        if (!event.timedOut) {
+          this.punches.block("jab");
+          this.crowd.cheer(0.5);
+        }
+        break;
       case "round":
       case "resume":
       case "interrupted":

@@ -44,11 +44,15 @@ export const CHEST_POSES = {
   },
 } satisfies Record<string, Pair>;
 
-/** Against the model's root: resting on the top ropes in the corner, and flat out on the canvas. */
+/** Against the model's root: resting on the top ropes in the corner, forearms on the knees on the stool, and flat out on the canvas. */
 export const ROOT_POSES = {
   ropes: {
     left: { target: v(0.62, 1.22, -0.3), pole: v(1, 1.2, 0.2) },
     right: { target: v(-0.62, 1.22, -0.3), pole: v(-1, 1.2, 0.2) },
+  },
+  knees: {
+    left: { target: v(0.2, 0.7, 0.4), pole: v(0.55, 0.9, 0.05) },
+    right: { target: v(-0.2, 0.7, 0.4), pole: v(-0.55, 0.9, 0.05) },
   },
   fallen: {
     left: { target: v(0.55, 0.12, -1.05), pole: v(1.2, 0.3, -0.5) },

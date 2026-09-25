@@ -1,4 +1,5 @@
 import type { MatchEvent } from "../../engine/events";
+import { DUCK_DROP, SLIP_SIDE } from "../../engine/stance";
 import type { Hand, PunchStyle } from "../../engine/types";
 import type { RigPose } from "../rig/pose";
 import type { AnimInput } from "./anim-input";
@@ -12,6 +13,12 @@ const TURN: Record<PunchStyle, Record<Hand, number>> = {
   hook: { left: -0.55, right: 0.55 },
 };
 const LUNGE: Record<PunchStyle, number> = { jab: 0.1, cross: 0.16, hook: 0.1 };
+/** The hips on the corner stool, a little over its seat. */
+const SEAT_HEIGHT = 0.6;
+
+function clamp(value: number, low: number, high: number): number {
+  return Math.min(high, Math.max(low, value));
+}
 
 export function smooth01(t: number): number {
   const c = Math.min(1, Math.max(0, t));
@@ -36,6 +43,8 @@ export class BodyMotion {
   readonly corner = new Spring();
   readonly cheer = new Spring();
   readonly slump = new Spring();
+  readonly seat = new Spring();
+  readonly rise = new Spring();
   fall = 0;
   private readonly headYaw = new Kick(160, 12);
   private readonly headPitch = new Kick(160, 12);
@@ -67,27 +76,33 @@ export class BodyMotion {
 
   update(input: AnimInput, pose: RigPose, shape: PunchShape, punch: { hand: Hand; style: PunchStyle } | null): void {
     const { fighter, dt, time, now } = input;
-    const mirror = input.mirror;
     const rocked = fighter.staggered(now);
+    // The head goes where the match judges it, players and computer alike, so what is seen is what is hit.
+    const head = fighter.input.head;
     this.guard.update(fighter.input.guard && !fighter.punching(now) ? 1 : 0, dt, 5);
-    this.duck.update(mirror ? mirror.crouch : fighter.input.duck ? 1 : 0, dt, mirror ? 9 : 4);
-    this.slip.update(mirror ? mirror.lean : fighter.input.slip === 0 ? 0 : fighter.input.slip === -1 ? 1 : -1, dt, mirror ? 9 : 4);
+    this.duck.update(clamp(-head.y / DUCK_DROP, 0, 1.3), dt, 16);
+    this.slip.update(clamp(-head.x / SLIP_SIDE, -1.4, 1.4), dt, 16);
+    this.rise.update(clamp(head.y, 0, 0.2), dt, 16);
     this.stagger.update(rocked ? 1 : 0, dt, 3);
     this.corner.update(input.mode === "corner" ? 1 : 0, dt, 1.2);
+    this.seat.update(input.seated ? 1 : 0, dt, 2.5);
     this.cheer.update(input.mode === "win" ? 1 : 0, dt, 1.5);
     this.slump.update(input.mode === "lose" && !fighter.down ? 1 : 0, dt, 1);
     const duck = this.duck.value;
     const slip = this.slip.value;
     const stagger = this.stagger.value;
+    const seat = this.seat.value;
     const resting = Math.max(this.corner.value, this.slump.value);
 
     // A boxer's bounce on the balls of the feet, calmer when covered up or resting.
     const bounce = Math.sin(time * Math.PI * 2 * 1.6 + this.phase) * 0.013 * (1 - 0.6 * this.guard.value) * (1 - resting);
-    pose.hipHeight = 0.92 + bounce - 0.24 * duck - stagger * (0.06 + 0.03 * Math.sin(time * 8)) + 0.03 * resting;
-    pose.hips.pitch = 0.05 + 0.2 * duck;
+    const standing = 0.92 + bounce - 0.24 * duck + this.rise.value - stagger * (0.06 + 0.03 * Math.sin(time * 8)) + 0.03 * resting;
+    // On the stool the hips sit on the seat, and the boxer leans back against the corner.
+    pose.hipHeight = standing + (SEAT_HEIGHT - standing) * seat;
+    pose.hips.pitch = 0.05 + 0.2 * duck - 0.35 * seat;
     pose.hips.yaw = -0.25 * (1 - resting);
     pose.hips.lean = 0;
-    pose.spine.pitch = 0.08 + 0.32 * duck - 0.08 * this.cheer.value;
+    pose.spine.pitch = 0.08 + 0.32 * duck - 0.08 * this.cheer.value + 0.15 * seat;
     pose.spine.yaw = 0.05 + 0.04 * Math.sin(time * 0.8 + this.phase);
     pose.spine.lean = 0.3 * slip + 0.03 * Math.sin(time * 1.1 + this.phase) + stagger * 0.18 * Math.sin(time * 2.7);
     pose.chest.pitch = 0.06 + this.chestPitch.update(dt) * 0.02;

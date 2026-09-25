@@ -67,6 +67,11 @@ export class Arena {
    * feet. Flashes fire more often when the crowd is excited, and all at
    * once for a knockdown.
    */
+  /** The stools come into the corners between rounds, and go again for the fight. */
+  setStools(visible: boolean): void {
+    for (const stool of this.ring.stools) stool.visible = visible;
+  }
+
   update(time: number, dt: number, excite: number): void {
     this.crowd.update(time, 0.15 + excite * 0.85);
     this.flashTimer -= dt;
