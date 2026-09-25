@@ -133,8 +133,8 @@ function looseBall(m: Match, dt: number): void {
       b.rimCd = 0.1;
       if (b.shot) b.shot.touchedRim = true;
       m.emit({ type: "rim", power: Math.min(1, c.power / 4) });
-    } else if (c.kind === "through" && b.shot && !b.shot.counted && m.phase === "live") {
-      // A lucky roll off the iron that drops after all still counts.
+    } else if (c.kind === "through" && b.shot && !b.shot.counted && (m.phase === "live" || b.shot.kind === "free")) {
+      // A lucky roll off the iron that drops after all still counts, the first free throw included.
       b.shot.made = true;
       b.shot.outcome = "roll";
       m.emit({ type: "net", swish: false });

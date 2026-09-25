@@ -127,6 +127,8 @@ function goLive(m: Match): void {
   m.phase = "live";
   m.phaseT = 0;
   m.freeThrows = null;
+  // The foul ended that possession, so the reach count starts again with the rebound.
+  m.stealLog.reset();
   m.shotClock = RULES.shotClock;
   m.clockWarned = false;
   m.brains.reset();

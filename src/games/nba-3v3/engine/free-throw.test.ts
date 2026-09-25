@@ -82,6 +82,7 @@ describe("a foul and its free throws", () => {
 
   it("leaves a missed second free throw live for the rebound", () => {
     const { m, events } = fouled(0);
+    m.stealLog.attempt(1, 0);
     until(m, events, () => events.some((e) => e.type === "freeThrow"));
     m.forced = "rimOut";
     m.press(0, "shoot");
@@ -91,6 +92,9 @@ describe("a foul and its free throws", () => {
     m.press(0, "shoot");
     until(m, events, () => m.athletes[0]!.action.kind === "shoot" && m.athletes[0]!.action.t > 0.6);
     m.release(0, GREEN_MS);
+    // The foul closed that possession: whoever rebounds, the reach count starts over.
+    until(m, events, () => m.phase === "live");
+    expect(m.stealLog.count(1, 0)).toBe(0);
     until(m, events, () => events.some((e) => e.type === "rebound"));
     expect(m.phase).toBe("live");
     expect(m.score).toEqual([0, 0]);

@@ -31,7 +31,7 @@ A phone that joins during a game picks a star and joins the next one. A player w
 
 ## Fouls and free throws
 
-* Reaching in too often is a foul. The game counts every steal attempt by one defender on one ball handler through a possession. The first two are free. The third is a foul one time in five, the fourth two times in five, and every one after that three times in five. The count starts again when the other team gets the ball.
+* Reaching in too often is a foul. The game counts every steal attempt by one defender on one ball handler through a possession. The first two are free. The third is a foul one time in five, the fourth two times in five, and every one after that three times in five. The count starts again when the other team gets the ball, and after free throws.
 * A foul blows the whistle and stops the clock. The announcer calls it and the big screen says FOUL. The fouled player walks to the line and everyone else lines up along the lane, the defence nearest the basket.
 * The fouled player shoots two free throws with the shot meter on their phone. The phone says which shot it is, lights the meter up, and only Shoot works. The green band is a quarter wider at the line. Computer players shoot their own. A phone that waits eight seconds has its shot taken for it.
 * Each free throw that goes in is worth one point. The first comes back to the shooter either way. Play is live again as the second leaves the hand: a miss is anyone's rebound, and a make is checked up by the other team like any basket.
