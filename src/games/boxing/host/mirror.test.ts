@@ -27,6 +27,15 @@ describe("mirrorFrom", () => {
     expect(mirror.reach.right!.y).toBeLessThan(-0.3);
   });
 
+  it("dips the boxer as far as the head drops under its line, and leans it the other way on screen", () => {
+    const moves = { amounts: { rise: 0, drop: 0.45, lean: 0.2 } } as unknown as Parameters<typeof mirrorFrom>[1];
+    const mirror = mirrorFrom(bodyOf({}), moves)!;
+    expect(mirror.crouch).toBeGreaterThan(0.6);
+    expect(mirror.crouch).toBeLessThan(1);
+    expect(mirror.lean).toBeLessThan(0);
+    expect(mirrorFrom(bodyOf({}), moves, undefined, -0.45)!.lean).toBe(1);
+  });
+
   it("is null with nobody there", () => {
     expect(mirrorFrom(null, null)).toBeNull();
   });
