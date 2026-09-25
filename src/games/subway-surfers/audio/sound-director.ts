@@ -2,63 +2,38 @@ import type { AudioEngine } from "@/platform/audio/audio-engine";
 import type { RunEvent } from "../engine/events";
 import type { Run } from "../engine/run";
 import { speedAt, SPEED } from "../engine/tuning";
+import { cheer, fanfare } from "./celebrate";
+import { Drone } from "./drone";
+import { Hype } from "./hype";
 import { Music, type TuneName } from "./music";
 import { Sfx } from "./sfx";
-
-/** A looping hiss through a filter, for the jetpack's roar and the board's hum. */
-class Drone {
-  private readonly gain: GainNode;
-  private readonly filter: BiquadFilterNode;
-  private readonly source: AudioBufferSourceNode;
-
-  constructor(engine: AudioEngine, frequency: number, pan: number) {
-    const ctx = engine.ctx;
-    this.source = ctx.createBufferSource();
-    this.source.buffer = engine.noiseBuffer();
-    this.source.loop = true;
-    this.filter = ctx.createBiquadFilter();
-    this.filter.type = "bandpass";
-    this.filter.frequency.value = frequency;
-    this.filter.Q.value = 0.8;
-    this.gain = ctx.createGain();
-    this.gain.gain.value = 0;
-    const panner = ctx.createStereoPanner();
-    panner.pan.value = pan;
-    this.source.connect(this.filter).connect(this.gain).connect(panner).connect(engine.bus("sfx"));
-    this.source.start();
-  }
-
-  set(level: number, at: number): void {
-    this.gain.gain.setTargetAtTime(level, at, 0.12);
-  }
-
-  stop(): void {
-    this.source.stop();
-    this.gain.disconnect();
-  }
-}
 
 interface Voice {
   pan: number;
   stride: number;
   left: boolean;
+  /** Whether the guard was close last frame, so the dog barks as he closes in. */
+  guard: boolean;
   jet: Drone;
   board: Drone;
 }
 
 /**
  * What the game sounds like: the music for the moment, and a sound for
- * every run event on the side of the room its player stands.
+ * every run event on the side of the room its player stands. The music
+ * dips under the big moments so they land.
  */
 export class SoundDirector {
   readonly sfx: Sfx;
   private readonly music: Music;
+  private readonly hype: Hype;
   private voices: Voice[] = [];
 
   constructor(private readonly engine: AudioEngine) {
     this.sfx = new Sfx(engine);
     this.music = new Music(engine);
-    engine.setLevels({ music: 0.45, crowd: 0, sfx: 0.9 });
+    this.hype = new Hype(engine);
+    engine.setLevels({ music: 0.5, crowd: 0.7, sfx: 0.9 });
   }
 
   /** Sets up one voice per runner, player one on the left. */
@@ -66,7 +41,7 @@ export class SoundDirector {
     this.stopVoices();
     this.voices = Array.from({ length: count }, (_, i) => {
       const pan = count === 1 ? 0 : i === 0 ? -0.55 : 0.55;
-      return { pan, stride: 0, left: false, jet: new Drone(this.engine, 700, pan), board: new Drone(this.engine, 2400, pan) };
+      return { pan, stride: 0, left: false, guard: false, jet: new Drone(this.engine, 700, pan), board: new Drone(this.engine, 2400, pan) };
     });
   }
 
@@ -79,8 +54,11 @@ export class SoundDirector {
     this.music.muffle(on);
   }
 
-  fanfare(): void {
-    this.music.fanfare();
+  /** The results: a horn fanfare and the platform cheering, bigger for a winner or a new best. */
+  celebrate(big: boolean): void {
+    this.engine.duck("music", 0.3, 3);
+    fanfare(this.engine, this.engine.bus("sfx"), big);
+    cheer(this.engine, this.engine.bus("crowd"), big);
   }
 
   panFor(slot: number): number {
@@ -105,14 +83,21 @@ export class SoundDirector {
         s.stumble(pan);
         return s.whistle(pan);
       case "crash":
-        return s.crash(pan);
+        this.engine.duck("music", 0.35, 1.2);
+        s.crash(pan);
+        if (event.cause !== "caught") return;
+        s.bark(pan);
+        return this.hype.caught();
       case "saved":
         return s.saved(pan);
       case "power":
-        return s.power(pan, event.kind);
+        this.engine.duck("music", 0.6, 0.6);
+        s.power(pan, event.kind);
+        return this.hype.power(event.kind);
       case "powerEnd":
         return s.powerEnd(pan);
       case "level":
+        this.engine.duck("music", 0.6, 0.8);
         return s.level(pan);
       case "horn":
         return s.horn(pan);
@@ -136,6 +121,10 @@ export class SoundDirector {
         this.sfx.footstep(voice.pan, voice.left);
       }
       voice.stride = stride;
+      // The dog barks as the guard closes in: at the start and after a stumble.
+      const guard = live && run.chase.close;
+      if (guard && !voice.guard) this.sfx.bark(voice.pan);
+      voice.guard = guard;
       voice.jet.set(live && run.powers.has("jetpack") ? 0.3 : 0, now);
       voice.board.set(live && run.powers.has("hoverboard") ? 0.05 : 0, now);
       if (live) fastest = Math.max(fastest, run.runner.distance);
@@ -147,6 +136,7 @@ export class SoundDirector {
   stop(): void {
     this.stopVoices();
     this.music.stop();
+    this.hype.stop();
     this.sfx.dispose();
   }
 
