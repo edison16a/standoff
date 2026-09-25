@@ -45,11 +45,20 @@ Active power ups show at the bottom left of each view, each with a ring that emp
 
 Distance times the multiplier, plus 10 times the multiplier for every coin. The multiplier is the zone number (1 to 5), doubled by the Double score power up.
 
+## Sound
+
+The music and effects are synthesised live through the room's music, crowd and effects buses, so the volume settings apply to them. The spoken lines use the browser's own voice and follow the effects volume by hand.
+
+* **Music.** The run plays a chill funk and hip hop groove in G minor at 100 beats a minute: sixteen bars with a whistled hook over two A sections and vibes answering over two B sections, with soft boom bap drums, a round sub bass, electric piano and muted guitar chops. It picks up a little as the run gets faster. The menu plays the same band laid back in B flat. The music dips under crashes, power ups and new zones, and goes muffled while every runner is waiting.
+* **Effects.** Coins chime higher through a streak. Jumps, landings, rolls and lane swishes are layered from a short attack, a body and a tail, and drift a little in pitch so repeats never sound the same. Lane swishes travel across the stereo field the way you moved. With two players each hears their own side.
+* **The yard.** Train horns and rushing air, a clang when you glance off a train, the guard's whistle and his dog barking as they close in, and a boom with falling debris on a crash.
+* **Celebrations.** Power ups get a rising arpeggio and a short hype voice line. The results get a horn fanfare and a cheer from the platform, bigger for a winner or a new best.
+
 ## How it is built
 
 * `engine/`: pure run logic with vitest tests. The runner and collisions (`runner.ts`, `solids.ts`), the course laid from a seed in patterns (`course.ts`, `patterns.ts`, `block.ts`), power ups, the guard, the bot, the tutorial and the best scores table. It runs on a fixed step, so the same inputs always give the same run, and two players on one seed meet the same trains.
 * `render/`: three.js. Models are built in code from rounded boxes, capsules and spheres merged per bone or per car (`models/`), textures are painted on canvases (`art/`), poses are eased between key poses (`anim/`), and scenery comes in chunks from shared prefabs (`world/`). Each player has their own scene, drawn side by side on one canvas.
-* `audio/`: every sound synthesised through the room's buses, panned to each player's side, and a looping tune with a whistled hook.
+* `audio/`: the tunes as step patterns played by a small band (`tunes.ts`, `arrange.ts`, `band.ts`), the effects in layers (`moves.ts`, `hits.ts`, `cues.ts`), the results celebration and the hype voice, all driven by `sound-director.ts`.
 * `host/`: the session (camera kit, phases, rounds), the controls that turn camera moves into runner input, and the React screens.
 * `showcase/`: the game playing itself for the home screen media, with a director that picks the camera.
 

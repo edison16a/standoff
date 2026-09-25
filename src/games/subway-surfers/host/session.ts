@@ -219,7 +219,7 @@ export class SurfSession {
     const { rows, winner } = recordResults(this.round!, store.getState().names, this.best);
     this.room.setPlaying(false);
     this.sound.play(null);
-    this.sound.fanfare();
+    this.sound.celebrate(winner !== null || rows.some((row) => row.best === 1));
     this.resultsAt = performance.now();
     store.setState({ phase: "results", results: rows, winner, best: this.best.current, jumpToReplay: false });
     this.later(3000, () => this.phase === "results" && this.sound.play("menu"));

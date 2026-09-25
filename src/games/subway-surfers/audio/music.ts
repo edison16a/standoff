@@ -1,10 +1,15 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
-import { playFanfare, playStep, TUNES, type Tune } from "./tunes";
+import { playStep } from "./arrange";
+import { loopSteps, TUNES, type Tune } from "./tunes";
 
 export type TuneName = keyof typeof TUNES;
 
 const WAKE_MS = 25;
 const LOOKAHEAD_S = 0.12;
+
+/** Where the low pass sits: warm enough to stay out of the way of the effects. */
+const OPEN_HZ = 3400;
+const MUFFLED_HZ = 650;
 
 /**
  * One looping tune at a time, booked ahead on the audio clock by a timer
@@ -20,7 +25,8 @@ export class Music {
   constructor(private readonly engine: AudioEngine) {
     this.tone = engine.ctx.createBiquadFilter();
     this.tone.type = "lowpass";
-    this.tone.frequency.value = 5200;
+    this.tone.frequency.value = OPEN_HZ;
+    this.tone.Q.value = 0.4;
     this.tone.connect(engine.bus("music"));
   }
 
@@ -44,11 +50,7 @@ export class Music {
 
   /** Muffles the music, as when a run is paused or has just ended. */
   muffle(on: boolean): void {
-    this.tone.frequency.setTargetAtTime(on ? 700 : 5200, this.engine.now, 0.15);
-  }
-
-  fanfare(): void {
-    playFanfare(this.engine, this.tone);
+    this.tone.frequency.setTargetAtTime(on ? MUFFLED_HZ : OPEN_HZ, this.engine.now, 0.15);
   }
 
   stop(): void {
@@ -66,10 +68,11 @@ export class Music {
     // A stalled tab would otherwise try to catch up on every missed note at once.
     if (current.nextAt < this.engine.now - 0.5) current.nextAt = this.engine.now + 0.05;
     while (current.nextAt < this.engine.now + LOOKAHEAD_S) {
-      playStep(this.engine, current.gain, current.tune, current.step, current.nextAt);
-      current.step = (current.step + 1) % (current.tune.lead.length * 2);
-      // A little swing on the offbeat sixteenths gives the groove its bounce.
-      current.nextAt += stepLength * (current.step % 2 === 1 ? 1.12 : 0.88);
+      playStep(this.engine, current.gain, current.tune, current.step, current.nextAt, stepLength);
+      current.step = (current.step + 1) % loopSteps(current.tune);
+      // Swing: the offbeat sixteenths land late, which is where the laid back bounce comes from.
+      const swing = current.tune.swing;
+      current.nextAt += stepLength * (current.step % 2 === 1 ? 1 + swing : 1 - swing);
     }
   }
 
