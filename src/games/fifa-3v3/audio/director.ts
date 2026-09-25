@@ -7,36 +7,52 @@ import { Crowd } from "./crowd";
 import { Music } from "./music";
 import { Sfx } from "./sfx";
 
+/** The mix in the lobby, and under a match where the crowd and the ball come first. */
+const LOBBY_LEVELS = { music: 0.55, crowd: 0.7, sfx: 0.9 };
+const MATCH_LEVELS = { music: 0.32, crowd: 0.75, sfx: 0.9 };
+
 const pick = <T,>(items: readonly T[]): T => items[Math.floor(Math.random() * items.length)]!;
 
 /**
- * Turns the match into sound: every event gets its effect, the crowd
- * reacts and follows the play, and the announcer calls the big moments.
+ * Turns the match into sound: a bossa tune in the lobby and an afro house
+ * groove under the match, every event with its effect, the crowd reacting
+ * and following the play, and the announcer calling the big moments.
+ * The music steps aside for goals and the commentary.
  * `nameOf` gives a player's name as it should be called out.
  */
 export class SoundDirector {
   readonly sfx: Sfx;
   readonly crowd: Crowd;
   readonly music: Music;
-  private readonly announcer = new Announcer();
+  private readonly announcer: Announcer;
   private kickoffs = 0;
+  private later: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private readonly engine: AudioEngine, private readonly nameOf: (athlete: number) => string) {
     this.sfx = new Sfx(engine);
     this.crowd = new Crowd(engine);
     this.music = new Music(engine);
-    engine.setLevels({ music: 0.55, crowd: 0.7, sfx: 0.9 });
+    // A quieter dip while the commentator talks, a deeper one for a big call.
+    this.announcer = new Announcer((urgent) => {
+      this.engine.duck("crowd", urgent ? 0.7 : 0.6, 1.4);
+      this.engine.duck("music", urgent ? 0.4 : 0.6, 1.4);
+    });
+    engine.setLevels(LOBBY_LEVELS);
   }
 
-  /** The lobby: a groove and a quiet crowd. */
+  /** The lobby: the beach tune and a quiet crowd. */
   lobby(): void {
+    this.cancelLater();
+    this.engine.setLevels(LOBBY_LEVELS);
     this.crowd.start();
     this.crowd.setLevel(0.1);
-    this.music.startGroove();
+    this.music.play("lobby");
   }
 
   matchStart(): void {
-    this.music.stopGroove();
+    this.cancelLater();
+    this.engine.setLevels(MATCH_LEVELS);
+    this.music.play("play");
     this.crowd.start();
     // Every match opens with the call, Play again included.
     this.kickoffs = 0;
@@ -52,7 +68,6 @@ export class SoundDirector {
 
   private call(text: string, urgent = true, pitch = 1): void {
     this.announcer.say(text, { urgent, pitch });
-    this.engine.duck("crowd", 0.6, 1.4);
   }
 
   event(event: MatchEvent): void {
@@ -75,7 +90,6 @@ export class SoundDirector {
         this.crowd.roar(1);
         this.sfx.horn();
         this.music.goalSting();
-        this.engine.duck("music", 0.7, 3);
         const name = event.scorer !== null ? this.nameOf(event.scorer) : "";
         if (event.golden) this.call(`Golden goal! ${name} wins it!`, true, 1.1);
         else this.call(name ? `Goal! ${name}!` : pick(["Goal!", "It's in!"]), true, 1.1);
@@ -125,6 +139,12 @@ export class SoundDirector {
         this.crowd.roar(1);
         this.crowd.applause(4);
         this.music.fanfare();
+        // The results get the beach tune back once the fanfare has rung out.
+        this.later = setTimeout(() => {
+          this.later = null;
+          this.engine.setLevels(LOBBY_LEVELS);
+          this.music.play("lobby");
+        }, 4500);
         if (event.winner !== null) this.call(`Full time! ${TEAMS[event.winner].name} win!`, true);
         break;
       case "out":
@@ -139,9 +159,16 @@ export class SoundDirector {
     this.sfx.firework();
   }
 
+  private cancelLater(): void {
+    if (this.later) clearTimeout(this.later);
+    this.later = null;
+  }
+
   stop(): void {
-    this.music.stopGroove();
+    this.cancelLater();
+    this.music.stop();
     this.crowd.stop();
     this.announcer.stop();
+    this.sfx.dispose();
   }
 }
