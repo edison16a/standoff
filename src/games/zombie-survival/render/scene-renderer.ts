@@ -115,11 +115,7 @@ export class SurvivalRenderer implements SurvivalView {
     this.renderer.render(this.scene, this.camera);
   }
 
-  /**
-   * Waits until the GPU has drawn everything asked of it, so a frame is on
-   * the canvas before the next begins. Browsers treat finish() as a flush,
-   * so reading back one pixel is what really waits.
-   */
+  /** Waits for the GPU to finish this frame. Browsers treat finish() as a flush, so a one pixel read does the waiting. */
   finish(): void {
     const gl = this.renderer.getContext();
     gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, this.probe);
