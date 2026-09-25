@@ -1,5 +1,7 @@
 import { deriveBody, type Body } from "./body";
 import { sampleOf, type Baseline } from "./calibration";
+import { MoveReader, type MoveEvent, type MoveState } from "./gestures/moves";
+import type { MoveTuning } from "./gestures/options";
 import { LandmarkSmoother } from "./smoothing";
 import { syntheticPose, type PoseSpec } from "./synthetic";
 import { poseAt, timelineLength, type PoseKey } from "./timeline";
@@ -38,4 +40,25 @@ export function bodiesFrom(keys: readonly PoseKey[], options: SequenceOptions = 
 /** The baseline a player standing still in this pose would get from calibration. */
 export function baselineFor(spec: PoseSpec, slot = 1, aspect = 16 / 9): Baseline {
   return sampleOf(deriveBody(syntheticPose(spec, aspect), 0, aspect, null), slot);
+}
+
+export interface ReadFrame {
+  body: Body;
+  events: MoveEvent[];
+  state: MoveState;
+}
+
+/**
+ * Plays a movement through a move reader calibrated standing still in
+ * `base`, as the tracker does, and returns every frame's events and state.
+ */
+export function readMoves(keys: readonly PoseKey[], base: PoseSpec = {}, options: SequenceOptions & { tuning?: MoveTuning } = {}): ReadFrame[] {
+  const reader = new MoveReader(1, options.tuning);
+  reader.setBaseline(baselineFor(base, 1, options.aspect));
+  return bodiesFrom(keys, options).map((body) => ({ body, events: reader.update(body, body.time), state: reader.current }));
+}
+
+/** Every event of one type in a run of frames. */
+export function eventsOf(frames: readonly ReadFrame[], type: MoveEvent["type"]): MoveEvent[] {
+  return frames.flatMap((frame) => frame.events).filter((event) => event.type === type);
 }

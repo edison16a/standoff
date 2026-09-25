@@ -1,65 +1,20 @@
 import type { Body, Hand } from "../body";
 import type { Baseline } from "../calibration";
-import { DuckDetector } from "./duck";
+import { ramp } from "../geometry";
 import { GuardDetector } from "./guard";
-import { JumpDetector } from "./jump";
+import { HeadLine } from "./head-line";
+import { HeadMoveDetector } from "./head-moves";
 import { LaneTracker } from "./lane";
-import { LeanDetector, type Side } from "./lean";
+import { LeanDetector } from "./lean";
+import { idleState, type MoveEvent, type MoveState } from "./move-types";
 import { DEFAULT_MOVES, tune, type MoveOptions, type MoveTuning } from "./options";
-import { PunchDetector, type Punch } from "./punch";
-import { StandingReference } from "./reference";
+import { PunchDetector } from "./punch";
 
-/** Everything one player is doing right now. Games read it every frame. */
-export interface MoveState {
-  slot: number;
-  /** In view now. */
-  present: boolean;
-  /** Has a baseline. Jumps, ducks and lanes need one. Guard, punches and leans work without. */
-  calibrated: boolean;
-  lane: number;
-  /** The hips from the player's spot, in their shoulder widths, negative to the left. */
-  offset: number;
-  jumping: boolean;
-  ducking: boolean;
-  lean: Side;
-  guard: boolean;
-  /** How clearly each move is happening, 0 to 1. */
-  confidence: { lane: number; jump: number; duck: number; lean: number; guard: number };
-  /** The raw measures in torso lengths, for games that want their own thresholds. */
-  amounts: { rise: number; drop: number; lean: number };
-}
-
-/** Something that happened, on the frame it happened. Punches only ever arrive as events. */
-export type MoveEvent = { slot: number; time: number } & (
-  | { type: "jump"; confidence: number }
-  | { type: "land" }
-  | { type: "duck"; confidence: number }
-  | { type: "stand" }
-  | { type: "lane"; lane: number; from: number }
-  | { type: "lean"; side: Side }
-  | { type: "guard"; up: boolean }
-  | ({ type: "punch" } & Punch)
-  | { type: "away" }
-  | { type: "back" }
-);
+export { idleState, type MoveEvent, type MoveState } from "./move-types";
 
 const DEFAULT_ARM = 1.1;
 
-export function idleState(slot: number, calibrated = false): MoveState {
-  return {
-    slot,
-    present: false,
-    calibrated,
-    lane: 0,
-    offset: 0,
-    jumping: false,
-    ducking: false,
-    lean: 0,
-    guard: false,
-    confidence: { lane: 0, jump: 0, duck: 0, lean: 0, guard: 0 },
-    amounts: { rise: 0, drop: 0, lean: 0 },
-  };
-}
+type Say = (event: DistributiveOmit<MoveEvent, "slot" | "time">) => void;
 
 /**
  * Reads every move for one player from their body, frame by frame. Pure:
@@ -68,9 +23,8 @@ export function idleState(slot: number, calibrated = false): MoveState {
 export class MoveReader {
   private options: MoveOptions;
   private baseline: Baseline | null = null;
-  private reference: StandingReference | null = null;
-  private readonly jump: JumpDetector;
-  private readonly duck: DuckDetector;
+  private line: HeadLine | null = null;
+  private readonly head: HeadMoveDetector;
   private readonly lean: LeanDetector;
   private readonly guard: GuardDetector;
   private readonly lane: LaneTracker;
@@ -83,8 +37,7 @@ export class MoveReader {
     tuning: MoveTuning = {},
   ) {
     this.options = tune(DEFAULT_MOVES, tuning);
-    this.jump = new JumpDetector(this.options.jump);
-    this.duck = new DuckDetector(this.options.duck);
+    this.head = new HeadMoveDetector(this.options.head);
     this.lean = new LeanDetector(this.options.lean);
     this.guard = new GuardDetector(this.options.guard);
     this.lane = new LaneTracker(this.options.lane);
@@ -102,15 +55,15 @@ export class MoveReader {
 
   setBaseline(baseline: Baseline | null): void {
     this.baseline = baseline;
-    this.reference = baseline ? new StandingReference(baseline) : null;
+    this.line = baseline ? new HeadLine(baseline) : null;
     this.resetDetectors();
+    this.lane.reset();
     this.state = { ...this.state, calibrated: !!baseline, lane: 0 };
   }
 
   configure(tuning: MoveTuning): void {
     this.options = tune(this.options, tuning);
-    this.jump.configure(this.options.jump);
-    this.duck.configure(this.options.duck);
+    this.head.configure(this.options.head);
     this.lean.configure(this.options.lean);
     this.guard.configure(this.options.guard);
     this.lane.configure(this.options.lane);
@@ -120,7 +73,7 @@ export class MoveReader {
 
   update(body: Body | null, time: number): MoveEvent[] {
     const events: MoveEvent[] = [];
-    const say = (event: DistributiveOmit<MoveEvent, "slot" | "time">) => events.push({ ...event, slot: this.slot, time } as MoveEvent);
+    const say: Say = (event) => events.push({ ...event, slot: this.slot, time } as MoveEvent);
     if (!body) {
       if (this.state.present) say({ type: "away" });
       this.resetDetectors();
@@ -132,48 +85,60 @@ export class MoveReader {
     if (!this.state.present) say({ type: "back" });
     const step = this.lastTime === null ? 0 : time - this.lastTime;
     this.lastTime = time;
-    const scale = this.reference?.scale ?? body.scale;
     const next = { ...idleState(this.slot, !!this.baseline), present: true, lane: this.state.lane };
+    this.readArms(body, next, say);
+    if (this.line) this.readHead(body, this.line, time, step, next, say);
+    this.state = next;
+    return events;
+  }
 
+  /** Guard, punches and leans, which need no head line. */
+  private readArms(body: Body, next: MoveState, say: Say): void {
+    const scale = this.baseline?.scale ?? body.scale;
     const guard = this.guard.update(body, scale);
     if (guard.changed) say({ type: "guard", up: guard.active });
     next.guard = guard.active;
     next.confidence.guard = guard.confidence;
-
     for (const hand of ["left", "right"] as const) {
       const punch = this.punches[hand].update(body, this.baseline?.armLength ?? DEFAULT_ARM);
       if (punch) say({ type: "punch", ...punch });
     }
-
     const lean = this.lean.update(body, scale, this.baseline?.headOffset ?? 0);
     if (lean.changed) say({ type: "lean", side: lean.side });
     next.lean = lean.side;
     next.confidence.lean = lean.confidence;
     next.amounts.lean = lean.amount;
+  }
 
-    if (this.baseline && this.reference) {
-      const jump = this.jump.update(body, this.reference);
-      if (jump.started) say({ type: "jump", confidence: jump.confidence });
-      if (jump.landed) say({ type: "land" });
-      const duck = this.duck.update(body, this.reference);
-      if (duck.started) say({ type: "duck", confidence: duck.confidence });
-      if (duck.ended) say({ type: "stand" });
-      const lane = this.lane.update(body, this.baseline, this.reference.nearness);
-      if (lane.changed) say({ type: "lane", lane: lane.lane, from: this.state.lane });
-      Object.assign(next, { jumping: jump.active, ducking: duck.active, lane: lane.lane, offset: lane.offset });
-      next.confidence = { ...next.confidence, jump: jump.confidence, duck: duck.confidence, lane: lane.confidence };
-      next.amounts = { ...next.amounts, rise: jump.amount, drop: duck.amount };
-      const { followMs, resizeAt, restSpeed } = this.options.reference;
-      const calm = Math.hypot(body.velocity.torso.x, body.velocity.torso.y) < restSpeed;
-      this.reference.follow(body, calm && !jump.active && !duck.active, step, followMs, resizeAt);
-    }
-    this.state = next;
-    return events;
+  /** Jumps, ducks and lanes, all from where the head is against its line. */
+  private readHead(body: Body, line: HeadLine, time: number, step: number, next: MoveState, say: Say): void {
+    const { up, down } = this.options.head;
+    const at = line.measure(body);
+    const moves = this.head.update(at.rise, time);
+    const seen = ramp(body.confidence, 0.4, 0.8);
+    if (moves.jumped) say({ type: "jump", confidence: ramp(at.rise, up / 2, up * 1.5) * seen });
+    if (moves.landed) say({ type: "land" });
+    if (moves.ducked) say({ type: "duck", confidence: ramp(-at.rise, down / 2, down * 1.5) * seen });
+    if (moves.stood) say({ type: "stand" });
+    const lane = this.lane.update(at.side, body.confidence);
+    if (lane.changed) say({ type: "lane", lane: lane.lane, from: this.state.lane });
+    next.lane = lane.lane;
+    next.head = { rise: at.rise, side: at.side };
+    next.jumping = moves.jumping;
+    next.ducking = moves.ducking;
+    next.confidence.lane = lane.confidence;
+    next.confidence.jump = ramp(at.rise, up / 2, up * 1.5) * seen;
+    next.confidence.duck = ramp(-at.rise, down / 2, down * 1.5) * seen;
+    next.amounts.rise = Math.max(0, at.rise);
+    next.amounts.drop = Math.max(0, -at.rise);
+    next.line = line.view(body, up, down);
+    // The line follows only a player at rest, never during a move.
+    const calm = Math.hypot(body.velocity.head.x, body.velocity.head.y) < this.options.line.restSpeed;
+    if (moves.idle && calm) line.follow(body, step, this.options.line);
   }
 
   private resetDetectors(): void {
-    this.jump.reset();
-    this.duck.reset();
+    this.head.reset();
     this.lean.reset();
     this.guard.reset();
     this.punches.left.reset();
