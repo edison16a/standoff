@@ -1,13 +1,15 @@
 "use client";
 import { useBoxingStore, type Hud, type HudFighter } from "../host-store";
+import { RoundCallout } from "./RoundCallout";
 import { useSession } from "./session-context";
 
 /**
  * The overlay on the fight. Each view gets health bars along its top,
  * its own boxer on the left and the opponent on the right, with the
- * stamina under yours and a glow when a counter is on. The clock sits in
- * the middle, and the count, the pause and the replay take the whole
- * screen when they come.
+ * stamina under yours, a tag while stunned or hurt, and a glow when a
+ * counter is on. The clock sits in the middle, the prompts between
+ * rounds under it, and the count, the pause and the replay take the
+ * whole screen when they come.
  */
 export function FightHud() {
   const hud = useBoxingStore((state) => state.hud);
@@ -27,12 +29,7 @@ export function FightHud() {
           <span className="bx-clock__time">{formatClock(hud.clock)}</span>
         </div>
       )}
-      {hud.stage === "fight" && (hud.phase === "intro" || hud.phase === "break") && (
-        <div className="bx-callout">
-          <span className="bx-callout__small">{hud.phase === "intro" ? "Get your guard up" : `Round ${hud.round + 1} in`}</span>
-          {hud.phase === "break" && <span className="bx-callout__big">{hud.phaseLeft}</span>}
-        </div>
-      )}
+      <RoundCallout hud={hud} />
       {hud.count && (
         <div className="bx-count" key={hud.count.n}>
           <span className="bx-count__n">{hud.count.n}</span>
@@ -100,6 +97,8 @@ function Bar({ fighter, own, label }: { fighter: HudFighter; own?: boolean; labe
         <span className="bx-bar__who">{label}</span>
         <span>{fighter.name}</span>
         {fighter.knockdowns > 0 && <span className="bx-bar__downs">{"KD ".repeat(fighter.knockdowns).trim()}</span>}
+        {fighter.stunned && <span className="bx-bar__tag bx-bar__tag--stun">Stunned</span>}
+        {!fighter.stunned && fighter.worn && <span className="bx-bar__tag">Hurt</span>}
       </div>
       <div className={`bx-bar__track${low ? " bx-bar__track--low" : ""}`}>
         <span className="bx-bar__fill" style={{ width: `${fighter.health}%`, ["--glove" as string]: fighter.colour }} />

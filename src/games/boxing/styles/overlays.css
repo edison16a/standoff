@@ -148,3 +148,67 @@
     height: 11%;
   }
 }
+
+.bx-callout__note {
+  margin-top: 6px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffe3a3;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+/* Touching gloves: a big gold title, the ask, and a chip per boxer that lights up in their glove colour. */
+.bx-touch {
+  top: 60%;
+  gap: 10px;
+}
+
+.bx-touch__title {
+  font-family: var(--bx-display);
+  font-size: 84px;
+  line-height: 1;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #ffffff 0%, #ffe3a3 45%, var(--bx-orange) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 5px 0 rgba(0, 0, 0, 0.7));
+  animation: bx-touch-pulse 1.1s ease-in-out infinite;
+}
+
+.bx-touch__who {
+  display: flex;
+  gap: 12px;
+}
+
+.bx-touch__chip {
+  padding: 8px 18px;
+  border: 3px solid var(--glove);
+  border-radius: 999px;
+  background: var(--bx-panel);
+  font-size: 20px;
+  font-weight: 900;
+  text-transform: uppercase;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.bx-touch__chip--ready {
+  background: var(--glove);
+  transform: scale(1.08);
+  box-shadow: 0 0 24px var(--glove);
+}
+
+@keyframes bx-touch-pulse {
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@media (max-width: 700px) {
+  .bx-touch__title {
+    font-size: 52px;
+  }
+  .bx-touch__chip {
+    font-size: 15px;
+  }
+}
