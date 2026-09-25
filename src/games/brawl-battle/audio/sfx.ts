@@ -82,6 +82,13 @@ export class Sfx {
     noise(this.engine, this.out, this.at, { filter: "bandpass", frequency: 3000, sweepTo: 1200, q: 3, decay: 0.18, peak: 0.1 });
   }
 
+  /** A held button winding up: a hum rising in pitch until the charge is full. */
+  charge(seconds: number): void {
+    const at = this.at;
+    tone(this.engine, this.out, at, { type: "triangle", frequency: vary(170, 0.05), glideTo: 680, attack: seconds, decay: 0.15, peak: 0.06 });
+    noise(this.engine, this.out, at, { filter: "bandpass", frequency: 600, sweepTo: 3600, q: 3, attack: seconds, decay: 0.12, peak: 0.05 });
+  }
+
   /** A little rising chime when a fighter's ult fills. */
   ultReady(): void {
     [72, 76, 79, 84].forEach((n, i) => tone(this.engine, this.out, this.at + i * 0.05, { type: "triangle", frequency: midi(n), decay: 0.3, peak: 0.07 }));

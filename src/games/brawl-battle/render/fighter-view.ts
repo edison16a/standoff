@@ -1,9 +1,10 @@
 import * as THREE from "three";
+import { chargeLevel } from "../engine/charge";
 import { moveOf } from "../engine/moves";
 import type { Fighter, MatchState } from "../engine/types";
 import { CHARACTERS } from "../roster";
 import { motionPose, type MotionInput } from "./anim/motion";
-import { applyPose, approach, restPose, type Pose } from "./anim/pose";
+import { applyPose, approach, over, restPose, type Pose } from "./anim/pose";
 import { strikePose } from "./anim/strike";
 import type { Style } from "./anim/style";
 import { STYLES } from "./anim/styles";
@@ -98,7 +99,7 @@ export class FighterView {
     const frame = f.frame + (frozen ? 0 : alpha);
     const sinceFlip = state.frame - this.flipStart + alpha;
     const input: MotionInput = {
-      action: f.action === "attack" ? (f.ground !== null ? "idle" : "air") : f.action,
+      action: f.action === "attack" || f.action === "charge" ? (f.ground !== null ? "idle" : "air") : f.action,
       frame,
       speed,
       rise: f.vel.y + f.launch.y,
@@ -115,6 +116,11 @@ export class FighterView {
       const anim = this.style.moves[f.move];
       Object.assign(this.target, strikePose(anim, moveOf(f.character, f.move), frame, this.target));
       rate = 40;
+    } else if (f.action === "charge" && f.move) {
+      // Charging holds the move's wind up, trembling harder as it fills.
+      over(this.target, this.style.moves[f.move].windup);
+      this.target.torsoZ += Math.sin(time * 70) * 0.04 * chargeLevel(f);
+      rate = 16;
     } else if (f.action === "hurt" || input.doubleJump) rate = 30;
     approach(this.pose, this.target, rate, dt);
     applyPose(this.pose, this.rig.joints, this.rig.dims);
@@ -125,7 +131,10 @@ export class FighterView {
     this.flash = Math.max(0, this.flash - dt * 3.5);
     const blink = f.invincible > 0 && f.action !== "attack" ? (Math.sin(time * 24) > 0 ? 0.45 : 0) : 0;
     const glow = Math.max(this.flash, blink);
-    this.material.emissive.setRGB(glow, glow, glow);
+    // A charge glows warm and pulses faster as it fills.
+    const level = chargeLevel(f);
+    const warm = f.action === "charge" ? (0.12 + 0.3 * level) * (0.75 + 0.25 * Math.sin(time * (10 + 20 * level))) : 0;
+    this.material.emissive.setRGB(glow + warm, glow + warm * 0.75, glow + warm * 0.2);
 
     root.updateMatrixWorld(true);
     this.trails.update(f, x, y, time, CHARACTERS[f.character].physique.height);

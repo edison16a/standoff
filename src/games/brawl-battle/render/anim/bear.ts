@@ -1,5 +1,5 @@
 import type { PosePatch } from "./pose";
-import type { Style } from "./style";
+import type { BaseStyle } from "./style";
 
 const crouch: PosePatch = { hipY: -0.2, kneeL: 1.2, kneeR: 1.2, legLLift: 0.6, legRLift: 0.6, footL: -0.6, footR: -0.6, torsoX: 0.4 };
 const raised: PosePatch = { armLRaise: 3.0, armRRaise: 3.0, elbowL: 0.7, elbowR: 0.7, armLSpread: 0.1, armRSpread: 0.1, torsoX: -0.3 };
@@ -7,7 +7,7 @@ const pound: PosePatch = { armLRaise: 1.2, armRRaise: 1.2, elbowL: 0, elbowR: 0,
 const wide: PosePatch = { armLRaise: 1.5, armLSpread: 1.4, armRRaise: 1.5, armRSpread: 1.4, elbowL: 0.2, elbowR: 0.2 };
 
 /** Bear: hunched and heavy, arms wide. Everything he does is a big, slow swing. */
-export const BEAR_STYLE: Style = {
+export const BEAR_STYLE: BaseStyle = {
   stance: { torsoX: 0.25, neckX: -0.15, hipY: -0.04, armLRaise: 0.5, armRRaise: 0.5, armLSpread: 0.45, armRSpread: 0.45, elbowL: 0.9, elbowR: 0.9, legLLift: 0.25, kneeL: 0.35, legRLift: 0.25, kneeR: 0.35, legLSpread: 0.12, legRSpread: 0.12 },
   runArms: { elbowL: 1.0, elbowR: 1.0, armLSpread: 0.35, armRSpread: 0.35 },
   armSwing: 0.8,

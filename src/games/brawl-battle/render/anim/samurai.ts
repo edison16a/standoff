@@ -1,5 +1,5 @@
 import type { PosePatch } from "./pose";
-import type { Style } from "./style";
+import type { BaseStyle } from "./style";
 
 /*
  * The katana points along the fist's forward axis. Its angle from
@@ -13,7 +13,7 @@ const iai: PosePatch = { hipZ: 0.3, hipY: -0.25, torsoY: -0.6, torsoX: 0.25, arm
 const crouch: PosePatch = { hipY: -0.25, kneeL: 1.2, kneeR: 1.2, legLLift: 0.6, legRLift: 0.6 };
 
 /** Samurai: a low wide stance with the blade forward, and long arcing cuts. */
-export const SAMURAI_STYLE: Style = {
+export const SAMURAI_STYLE: BaseStyle = {
   stance: { torsoY: 0.2, hipY: -0.08, legLLift: 0.45, kneeL: 0.6, footL: -0.15, legRLift: -0.35, kneeR: 0.3, armRRaise: 0.7, elbowR: 0.9, wristR: -0.9, armLRaise: 0.9, elbowL: 1.2, armLSpread: -0.1 },
   runArms: { armRRaise: 0.4, elbowR: 0.6, wristR: -0.7, armLRaise: 0, elbowL: 0.8 },
   armSwing: 0.5,

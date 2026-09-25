@@ -1,5 +1,5 @@
 import type { PosePatch } from "./pose";
-import type { Style } from "./style";
+import type { BaseStyle } from "./style";
 
 /*
  * The staff runs along the fist. Its tilt is armRRaise + elbowR + wristR:
@@ -12,7 +12,7 @@ const nova: PosePatch = { armLSpread: 1.5, armRSpread: 1.5, armLRaise: 1.4, armR
 const castL: PosePatch = { armLRaise: 1.6, elbowL: 0, armLSpread: -0.1, torsoY: -0.5, armRRaise: 0.6, elbowR: 1.2, wristR: -1.8 };
 
 /** Mage: an upright scholar with the staff planted, who throws spells from both hands. */
-export const MAGE_STYLE: Style = {
+export const MAGE_STYLE: BaseStyle = {
   stance: { torsoX: 0.12, neckX: 0.1, kneeL: 0.15, kneeR: 0.15, armRRaise: 0.3, elbowR: 1.1, wristR: -1.4, armLRaise: 0.6, elbowL: 1.2, armLSpread: 0.3 },
   runArms: { armRRaise: 0.3, elbowR: 1.1, wristR: -1.4, armLRaise: 0.2, elbowL: 0.9 },
   armSwing: 0.4,
