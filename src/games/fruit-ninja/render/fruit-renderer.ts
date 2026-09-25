@@ -5,6 +5,7 @@ import { Effects } from "./effects/effects";
 import { FruitViews, isRare, type FruitView } from "./fruit-views";
 import { sharedLibrary } from "./models/library";
 import { Pieces } from "./pieces";
+import { QualityWatch } from "./quality-watch";
 import { Stage } from "./stage";
 import { BladeTrails, type BladeFrame } from "./trails";
 
@@ -15,20 +16,14 @@ export interface RenderFrame {
 }
 
 const spark = new Vector3();
-/** Frames slower than this, for long enough, step the quality down. */
-const SLOW_FRAME_S = 1 / 45;
-/** Seconds of slow frames before stepping down, so one hiccup never costs quality. */
-const SLOW_FOR_S = 2;
-/**
- * Frames this quick leave room to spare. After a long run of them a
- * lowered quality is tried one step higher again, once per level, so a
- * hitch at the start (shaders compiling, another tab busy) is not a life
- * sentence.
- */
-const QUICK_FRAME_S = 1 / 55;
-const QUICK_FOR_S = 20;
-/** The first seconds after the board appears build shaders and textures, so they never count as slow. */
-const WARM_UP_S = 4;
+
+export interface RendererOptions {
+  /**
+   * Whether a slow machine steps the quality down. The showcase turns it
+   * off: its clock is stepped by hand, so real frame times mean nothing.
+   */
+  adaptive?: boolean;
+}
 
 /**
  * Draws the game: the board, the fruit in flight, cut halves, blades and
@@ -42,22 +37,22 @@ export class FruitRenderer {
   private readonly pieces: Pieces;
   private readonly trails: BladeTrails;
   private readonly effects: Effects;
+  /** Where the camera rests, before any shake. */
   private readonly camera: Vector3;
+  private readonly home: Vector3;
+  private readonly quality: QualityWatch | null;
   private time = 0;
-  private slowFor = 0;
-  private quickFor = 0;
-  private lastFrameAt = 0;
-  /** How often each level ran too slow. A level that failed twice is not tried again. */
-  private readonly failed = new Map<number, number>();
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, options: RendererOptions = {}) {
     this.stage = new Stage(canvas);
+    this.quality = options.adaptive === false ? null : new QualityWatch(this.stage);
     const { scene } = this.stage;
     this.views = new FruitViews(scene, this.library);
     this.pieces = new Pieces(scene);
     this.trails = new BladeTrails(scene);
     this.effects = new Effects(scene);
     this.camera = this.stage.camera.position.clone();
+    this.home = this.camera.clone();
   }
 
   get halfWidth(): number {
@@ -110,7 +105,11 @@ export class FruitRenderer {
     this.effects.clear();
   }
 
-  render(frame: RenderFrame, dt: number): void {
+  /**
+   * Moves everything on by dt and draws it. With `draw` false it only
+   * moves, for the showcase's fast forward to the moment it films.
+   */
+  render(frame: RenderFrame, dt: number, draw = true): void {
     this.time += dt;
     this.library.warm();
     this.views.sync(frame.bodies, dt, this.time);
@@ -123,8 +122,22 @@ export class FruitRenderer {
     this.pieces.update(dt);
     this.effects.update(dt, this.time);
     this.shakeCamera();
-    this.watchFrameRate();
+    if (!draw) return;
+    this.quality?.frame(this.time);
     this.stage.render();
+  }
+
+  /** Draws the same picture again, for a still whose canvas was resized. */
+  redraw(): void {
+    this.stage.render();
+  }
+
+  /**
+   * Moves the camera in toward a point, for the showcase's close shots.
+   * A zoom of 1 is the game's own view of the whole board.
+   */
+  aim(x: number, y: number, zoom: number): void {
+    this.camera.set(this.home.x + x, this.home.y + y, this.home.z / zoom);
   }
 
   dispose(): void {
@@ -167,25 +180,5 @@ export class FruitRenderer {
     const s = this.effects.shake;
     const cam = this.stage.camera.position;
     cam.set(this.camera.x + (Math.random() - 0.5) * s, this.camera.y + (Math.random() - 0.5) * s, this.camera.z);
-  }
-
-  /** A laptop that cannot keep up steps down in quality until it can, so the game stays smooth. */
-  private watchFrameRate(): void {
-    const now = performance.now();
-    const real = this.lastFrameAt ? (now - this.lastFrameAt) / 1000 : 0;
-    this.lastFrameAt = now;
-    // A long gap is a hidden tab or a breakpoint, not a slow machine.
-    if (real > 3 || this.time < WARM_UP_S) return;
-    this.slowFor = real > SLOW_FRAME_S ? this.slowFor + real : Math.max(0, this.slowFor - real * 0.5);
-    this.quickFor = real < QUICK_FRAME_S ? this.quickFor + real : 0;
-    if (this.slowFor > SLOW_FOR_S) {
-      const level = this.stage.qualityLevel;
-      if (this.stage.lowerQuality()) this.failed.set(level, (this.failed.get(level) ?? 0) + 1);
-      this.slowFor = 0;
-      this.quickFor = 0;
-    } else if (this.quickFor > QUICK_FOR_S && (this.failed.get(this.stage.qualityLevel - 1) ?? 0) < 2) {
-      this.stage.raiseQuality();
-      this.quickFor = 0;
-    }
   }
 }

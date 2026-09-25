@@ -1,0 +1,86 @@
+/*
+  The showcase: the board filling the frame, and for the store tile a
+  chunky juicy logo over it, cut clean through like a fruit.
+*/
+
+.fn-showcase--icon .fn-stage__vignette {
+  background: radial-gradient(ellipse at 50% 35%, rgba(0, 0, 0, 0) 40%, rgba(24, 8, 0, 0.7) 100%);
+}
+
+.fn-logo {
+  position: absolute;
+  left: 50%;
+  bottom: 5%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%) rotate(-5deg);
+  font-family: "Arial Black", "Helvetica Neue", "DejaVu Sans", Arial, sans-serif;
+  font-weight: 900;
+  line-height: 0.86;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* A blade's streak cutting across the name, so the logo itself is sliced. */
+.fn-logo::after {
+  content: "";
+  position: absolute;
+  left: -8%;
+  right: -8%;
+  top: 47%;
+  height: 0.9vmin;
+  border-radius: 50%;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, #fff6c8 25%, #ffffff 60%, rgba(255, 210, 120, 0) 100%);
+  box-shadow:
+    0 0 1.2vmin 0.4vmin rgba(255, 190, 60, 0.9),
+    0 0 4vmin 1vmin rgba(255, 110, 0, 0.55);
+  transform: rotate(-9deg);
+}
+
+.fn-logo__word {
+  position: relative;
+  display: block;
+  font-size: 19vmin;
+  color: transparent;
+}
+
+.fn-logo__word--ninja {
+  margin-left: 0.5em;
+  font-size: 16vmin;
+}
+
+/* The back layer: a thick dark outline and a stack of shadows, so the letters stand out of the tile in 3D. */
+.fn-logo__word::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  color: #4a1500;
+  -webkit-text-stroke: 0.14em #2a0a00;
+  text-shadow:
+    0 0.02em 0 #2a0a00,
+    0 0.04em 0 #2a0a00,
+    0 0.06em 0 #2a0a00,
+    0 0.08em 0 #2a0a00,
+    0 0.1em 0 #2a0a00,
+    0 0.16em 0.12em rgba(0, 0, 0, 0.6);
+}
+
+/* The front layer: the juicy fill, with a white shine across the top of each letter. */
+.fn-logo__word::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #fffbd0 0%, #ffe14a 30%, #ffae00 56%, #ff5a00 80%, #e0280a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.fn-logo__word--ninja::after {
+  background: linear-gradient(180deg, #ffffff 0%, #e2fbff 36%, #7fe0ff 60%, #3a7dff 84%, #2447c8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
