@@ -3,6 +3,7 @@ import { ordinal } from "../../ui/format";
 import { useControllerStore } from "../controller-store";
 import { usePortrait } from "../use-portrait";
 import { DrivePad } from "./DrivePad";
+import { ROTATION_LOCK } from "./CalibrateStep";
 import { Setup } from "./Setup";
 
 /**
@@ -23,6 +24,7 @@ export function PhoneScreen() {
           <div className="mk-turn">
             <strong>Turn your phone sideways</strong>
             <span>Hold it upright like a steering wheel, screen facing you.</span>
+            <span className="muted">{ROTATION_LOCK}</span>
           </div>
         )}
       </div>

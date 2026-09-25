@@ -12,6 +12,9 @@ const HINTS: Record<Hold, string> = {
   flat: "Stand it up, screen facing you. Lying flat will not calibrate.",
 };
 
+/** A phone with rotation lock on keeps the page upright however it is held, and the wheel cannot be read. */
+export const ROTATION_LOCK = "If the page does not turn with it, switch off rotation lock.";
+
 /**
  * Step one: hold the phone sideways and upright like a steering wheel,
  * turn it until the level lights up, then Calibrate. That pose becomes
@@ -33,7 +36,7 @@ export function CalibrateStep() {
     );
   }
 
-  const hint = portrait ? "Turn your phone sideways first." : calibrated && hold !== "flat" ? "Turn it like a wheel to steer. The wheel follows." : HINTS[hold];
+  const hint = portrait ? `Turn your phone sideways first. ${ROTATION_LOCK}` :calibrated && hold !== "flat" ? "Turn it like a wheel to steer. The wheel follows." : HINTS[hold];
   return (
     <div className="mk-setup mk-setup--split">
       <div className="mk-setup__visual">
