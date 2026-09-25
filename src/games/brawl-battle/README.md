@@ -1,21 +1,22 @@
 # Brawl Battle
 
-Status: in development. The engine is built and tested. The big screen, the phone controller, sound and the home screen media come next.
+Status: in development. The engine, the big screen, the phone controller and the sound are built. The home screen media come next.
 
 A platform fighter for 1 to 4 players on one big screen, with phones as controllers. Computer fighters fill the empty places if the host wants them. Each fighter has two lives. Hits add damage, and the more damage a fighter carries the further the next hit sends them. Fly past the edge of the screen and you lose a life. The last fighter with lives left wins.
 
 ## How to play
 
 1. Open Brawl Battle on the computer. Everyone scans the code with their phone.
-2. On the phone, after the name, pick a fighter and tap Ready. Two players may pick the same fighter. Each is tinted in their own player colour.
-3. On the computer, the host sets how many computer fighters join and how hard they are, then starts. The computer picks one of four stages at random.
-4. Turn the phone sideways. It is a controller:
-   * **Stick**: move left and right. Push up to jump, and push up again in the air to double jump. Hold down in the air to fall faster. Flick down on a floating platform to drop through it.
+2. On the phone, after the name, pick a fighter, tap Next, then tap Ready. Two players may pick the same fighter. Each is tinted in their own player colour.
+3. On the computer, the host sets how many computer fighters join and how good they are (Easy, Normal or Hard), then starts. A player alone always gets one computer fighter to face. The computer picks one of four stages at random.
+4. The phone is now a controller. It works held sideways or upright:
+   * **Direction pad**: left and right to move. Up to jump, and up again in the air to double jump. Hold down in the air to fall faster. Tap down on a floating platform to drop through it.
    * **Attack**: a quick move. What it does depends on the direction held: neutral, side, up or down on the ground, and an aerial in the air (neutral, up or down).
    * **Special**: a heavy move, again by direction. Up is the recovery move that carries you back to the stage, once per trip into the air.
-   * **Ult**: fills slowly over time and faster when you land hits. The ring on the button shows how full it is. It only works when full.
+   * **Ult**: fills slowly over time and faster when you land hits. The ring round the button shows how full it is. It only works when full.
    * **Shield**: hold down on the main platform. It blocks everything but ults, and shrinks while held and with each block. Blocked too much, it breaks and leaves you dizzy.
 5. After a fall you come back on a platform that floats down from above. You cannot be hurt for a moment. Move to step off it.
+6. The last fighter with lives left wins. Play again keeps everyone on a new stage; Change fighters goes back to the lobby.
 
 ## The fighters
 
@@ -63,10 +64,38 @@ Tuning lives in `tuning.ts` (physics, launch, hit stop, ult, shield, respawn), `
 
 A full match draws in about 80 draw calls and under 10,000 triangles.
 
+### The big screen
+
+`host/` runs a room. `BrawlHost` is the session and the referee: phones send their pad, and everything they show comes back from it.
+
+* `lobby.ts`: each phone's pick and ready state, how many computer fighters join and how good they are. Places fill with ready players first, then places still open, then computers, who take the fighters nobody picked first.
+* `match-driver.ts`: steps the engine at a fixed 60 a second from however fast the screen draws, with one `PadInput` per phone. A frame longer than 0.1 s is not caught up, and the match slows for a moment on the final KO. A phone that drops has a bot play for it until it comes back.
+* `brawl-host.ts`: picks the stage at random, turns each step's events into sound, announcer lines, banners and phone buzzes, and publishes state to the big screen (a zustand store, refreshed ten times a second and on every hit) and to each phone (only when it changed, see `phone-link.ts`).
+* `demo.ts`: four hard computer fighters brawl behind the lobby, silently, a new stage each round.
+* `components/`: the lobby, the HUD, the results and the canvas. The canvas calls `renderer.beforeStep()` and `afterStep()` round every engine step, then `render(dt, alpha)` each frame. The HUD shows a card per fighter: portrait, ult ring, lives, and a percent that runs from white to deep red and shakes harder as it climbs, with a jolt on each hit. Name tags float over the fighters as HTML.
+* `callouts.ts` and `buzz.ts`: what the announcer says and which phones buzz, as pure functions of the event.
+
+### The phone
+
+`phone/` walks the player through two steps in the kit's `StepShell` (fighter, ready), then shows the controller while they are in a match and their place after it.
+
+* The direction pad is eight way. It streams as the pad kit's stick, and up also goes as a reliable `up` button press, because a quick tap can live in one stick sample that the lossy stream drops. `PadInput` takes either and never jumps twice for one push. The engine also keeps a jump pressed in the last few frames of a move, as it does for attacks.
+* Attack, Special and Ult are the kit's `PadButton`s. The Ult button is disabled until full and wears its charge as a ring.
+* The page fits the visible screen exactly: the game's own CSS sets the phone frame to `100dvh` (with `100vh` before it for older browsers), pads for the notch with the safe area insets, and the layout switches between sideways and upright with orientation media queries. Nothing scrolls on an iPhone 16 either way up.
+
+### Sound
+
+`audio/` plays everything through the room's buses: music on `music`, hits and moves on `sfx`, the crowd on `crowd`. Nothing connects to the speakers directly.
+
+* `tunes.ts` and `band.ts`: a lobby tune ("Warm Up", D major, 112 a minute) and one battle theme ("Clash", A minor, 144 a minute, four on the floor with a pumping octave bass). Each stage plays the battle theme in its own key and lead voice: a pluck on the dojo, bells at the temple, crystal tones in the cave and a flute in the forest. `music.ts` schedules notes ahead on the audio clock and crossfades between tunes.
+* `hits.ts` and `sfx.ts`: five kinds of hit (punch, kick, slash, magic, slam), louder the harder the launch, swings in each fighter's style, jumps, landings, shields, bolts, the ult, a KO boom, the countdown drums and a final gong.
+* `crowd.ts`: a murmur that rises with the damage on screen, an "ooh" for big launches, cheers and whistles for KOs, and stomp clap for the winner.
+* `announcer.ts`: "Ready?", "Fight!", KO calls, ult names and "Game!" through the browser's speech, with each line's volume scaled by the player's effects setting.
+
 ### Messages
 
-`protocol/` holds the zod schemas. Phones send `hello`, `pick` and `ready`, plus the pad kit's stick and the buttons `attack`, `special` and `ult`. The host sends each phone a `state` with its phase, pick, percent, lives, ult meter and place, and `buzz` for moments worth a vibration.
+`protocol/` holds the zod schemas. Phones send `hello`, `pick` and `ready`, plus the pad kit's stick and the buttons `attack`, `special`, `ult` and `up`. The host sends each phone a `state` with its phase, pick, percent, lives, ult meter, KOs and place, and `buzz` for moments worth a vibration.
 
 ### Tests
 
-`npx vitest run src/games/brawl-battle` covers the knockback formula, move selection, the pad, physics against the stages, the state machine, hits, the shield, armor, bolts, lives and respawn, the ult meter, bot recovery and choices, full bot matches on every stage, replay from a seed, and a hard bot beating an easy one. On the render side it checks that every move has an animation that strikes while live and settles by the end, that movement poses stay finite, the camera framing, and fighter colours.
+`npx vitest run src/games/brawl-battle` covers the knockback formula, move selection, the pad, physics against the stages, the state machine, hits, the shield, armor, bolts, lives and respawn, the ult meter, bot recovery and choices, full bot matches on every stage, replay from a seed, and a hard bot beating an easy one. On the render side it checks that every move has an animation that strikes while live and settles by the end, that movement poses stay finite, the camera framing, and fighter colours. The host side checks the lobby's places and computer fighters, the match driver's fixed steps and bot hand over, which phones buzz and what the announcer calls. The phone's direction pad, the percent's heat colour and the tunes' bar lengths are checked too.
