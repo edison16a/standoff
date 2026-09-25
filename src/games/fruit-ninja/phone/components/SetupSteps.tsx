@@ -88,15 +88,17 @@ export function SetupSteps() {
         )
       }
     >
-      <BladeCanvas blade={blade} colour={colour} className="fn-ready__preview" />
-      <ul className="fn-tips">
-        <li>Point your phone where you want your blade.</li>
-        <li>Swing fast through fruit to slice it. Slow moves do not cut.</li>
-        <li>Big fruit takes several hits. Glowing fruit is worth a lot.</li>
-        <li>Stay away from bombs.</li>
-      </ul>
-      {ready && <p className="fn-wait">{inProgress ? "A round is on. You join the next one." : "Waiting for the host to press Start. Try your blade on the practice fruit."}</p>}
-      {ready && <TouchPractice />}
+      <div className="fn-ready">
+        <BladeCanvas blade={blade} colour={colour} className="fn-ready__preview" />
+        <ul className="fn-tips">
+          <li>Point your phone where you want your blade.</li>
+          <li>Swing fast through fruit to slice it. Slow moves do not cut.</li>
+          <li>Big fruit takes several hits. Glowing fruit is worth a lot.</li>
+          <li>Stay away from bombs.</li>
+        </ul>
+        {ready && <p className="fn-wait">{inProgress ? "A round is on. You join the next one." : "Waiting for the host to press Start. Try your blade on the practice fruit."}</p>}
+        {ready && <TouchPractice />}
+      </div>
     </StepShell>
   );
 }

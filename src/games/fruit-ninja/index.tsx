@@ -14,6 +14,7 @@ import "./styles/popups.css";
 import "./styles/results.css";
 import "./styles/phone.css";
 import "./styles/play.css";
+import "./styles/phone-wide.css";
 import "./styles/showcase.css";
 
 /**
