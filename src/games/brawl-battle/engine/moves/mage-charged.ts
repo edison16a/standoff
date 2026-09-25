@@ -15,7 +15,7 @@ export const MAGE_CHARGED: ChargedSet = {
     root: true,
     hover: true,
     hitboxes: [],
-    projectiles: [{ frame: 12, x: 1.0, y: 1.2, vx: 11, vy: 0, r: 0.6, life: 70, ...hit(11, 9, 0.16, 35) }],
+    projectiles: [{ frame: 12, x: 1.0, y: 1.2, vx: 11, vy: 0, r: 0.55, life: 45, ...hit(8, 9, 0.14, 35) }],
   },
   holdUp: {
     name: "Light Pillar",
@@ -41,8 +41,8 @@ export const MAGE_CHARGED: ChargedSet = {
     root: true,
     hover: true,
     hitboxes: [
-      ...flurry(3, 16, 6, 4, [[1.5, 1.2, 0.55], [2.6, 1.2, 0.55], [3.7, 1.2, 0.55], [4.8, 1.2, 0.55]], hit(3, 2, 0, 20)),
-      ...[1.5, 2.6, 3.7, 4.8].map((x) => box(x, 1.2, 0.6, 34, 37, hit(8, 11, 0.17, 32), 3)),
+      ...flurry(3, 16, 6, 4, [[1.4, 1.2, 0.5], [2.3, 1.2, 0.5], [3.2, 1.2, 0.5], [4.1, 1.2, 0.5]], hit(3, 2, 0, 20)),
+      ...[1.4, 2.3, 3.2, 4.1].map((x) => box(x, 1.2, 0.55, 34, 37, hit(7, 10, 0.15, 32), 3)),
     ],
   },
   holdHeavyDown: {

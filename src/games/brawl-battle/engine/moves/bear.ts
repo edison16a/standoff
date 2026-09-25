@@ -5,7 +5,7 @@ import type { Moveset } from "./types";
 /** Bear: slow and heavy. Big slams with armor, so small hits cannot stop them. */
 export const BEAR: Moveset = {
   ...BEAR_CHARGED,
-  jab: { name: "Paw Swipe", frames: 20, sound: "punch", hitboxes: [box(1.0, 1.3, 0.6, 4, 7, hit(5, 6, 0.06, 30))] },
+  jab: { name: "Paw Swipe", frames: 18, sound: "punch", hitboxes: [box(1.0, 1.3, 0.6, 4, 7, hit(6, 6, 0.06, 30))] },
   side: { name: "Claw Swing", frames: 34, sound: "slam", hitboxes: [box(1.3, 1.2, 0.75, 10, 13, hit(11, 9, 0.16, 35))] },
   up: { name: "Headbutt", frames: 30, sound: "slam", hitboxes: [box(0.3, 2.3, 0.75, 8, 12, hit(10, 9, 0.14, 85))] },
   down: { name: "Belly Flop", frames: 34, sound: "slam", hitboxes: both(0.9, 0.35, 0.7, 10, 14, hit(11, 9, 0.14, 30)) },
@@ -21,7 +21,7 @@ export const BEAR: Moveset = {
     motion: [{ frame: 8, vx: 0, vy: -20, set: true }],
     hitboxes: [box(0, 0.2, 0.9, 8, 24, hit(14, 8, 0.17, -80))],
   },
-  heavy: { name: "Big Paw", frames: 44, sound: "slam", heavy: true, root: true, armor: [8, 20], hitboxes: [box(1.5, 1.3, 0.9, 18, 22, hit(16, 12, 0.23, 38))] },
+  heavy: { name: "Big Paw", frames: 44, sound: "slam", heavy: true, root: true, armor: [6, 22], hitboxes: [box(1.5, 1.3, 0.9, 18, 22, hit(16, 12, 0.23, 38))] },
   heavySide: {
     name: "Charge",
     frames: 46,
@@ -51,7 +51,7 @@ export const BEAR: Moveset = {
     sound: "slam",
     heavy: true,
     armor: [8, 24],
-    hitboxes: [...both(1.5, 0.3, 0.9, 20, 24, hit(15, 10, 0.19, 45)), box(0, 0.5, 1.0, 20, 24, hit(15, 10, 0.19, 60))],
+    hitboxes: [...both(1.5, 0.3, 0.9, 20, 24, hit(14, 10, 0.19, 45)), box(0, 0.5, 1.0, 20, 24, hit(14, 10, 0.19, 60))],
   },
   ult: {
     name: "Earthquake",
@@ -66,6 +66,6 @@ export const BEAR: Moveset = {
       { frame: 10, vx: 0, vy: 11, set: true },
       { frame: 26, vx: 0, vy: -18, set: true },
     ],
-    hitboxes: [...both(3.2, 0.5, 1.5, 36, 44, hit(22, 15, 0.22, 60)), ...both(1.6, 0.5, 1.5, 36, 44, hit(22, 15, 0.22, 60)), box(0, 0.8, 1.5, 36, 44, hit(22, 15, 0.22, 75))],
+    hitboxes: [...both(2.9, 0.5, 1.5, 36, 44, hit(21, 15, 0.22, 60)), ...both(1.6, 0.5, 1.5, 36, 44, hit(21, 15, 0.22, 60)), box(0, 0.8, 1.5, 36, 44, hit(21, 15, 0.22, 75))],
   },
 };

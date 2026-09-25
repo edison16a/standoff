@@ -6,8 +6,8 @@ import type { Moveset } from "./types";
 export const MAGE: Moveset = {
   ...MAGE_CHARGED,
   jab: { name: "Staff Poke", frames: 16, sound: "punch", hitboxes: [box(0.9, 1.1, 0.45, 3, 5, hit(3, 5, 0.05, 30))] },
-  // The staff counts as a weapon, so both side attacks step in behind it.
-  side: { name: "Spark", frames: 26, sound: "magic", motion: [{ frame: 3, vx: 7, set: true }], hitboxes: [box(1.4, 1.1, 0.65, 7, 11, hit(8, 7, 0.13, 35))] },
+  // The staff counts as a weapon, so its side swing steps in behind it. Arcane Blast is a spell cast in place.
+  side: { name: "Spark", frames: 26, sound: "magic", motion: [{ frame: 3, vx: 5, set: true }], hitboxes: [box(1.4, 1.1, 0.65, 7, 11, hit(8, 7, 0.13, 35))] },
   up: { name: "Flare", frames: 28, sound: "magic", hitboxes: [box(0.2, 2.4, 0.8, 7, 12, hit(8, 8, 0.13, 88))] },
   down: { name: "Frost", frames: 24, sound: "magic", hitboxes: both(0.9, 0.25, 0.6, 6, 10, hit(7, 7, 0.1, 30)) },
   air: { name: "Orb Spin", frames: 28, sound: "magic", landLag: 6, hitboxes: [box(0, 1.0, 1.05, 5, 12, hit(7, 6, 0.1, 45))] },
@@ -15,11 +15,11 @@ export const MAGE: Moveset = {
   airDown: { name: "Drop Blast", frames: 32, sound: "magic", heavy: true, landLag: 12, hitboxes: [box(0, -0.2, 0.8, 10, 14, hit(10, 6, 0.14, -70))] },
   heavy: {
     name: "Magic Bolt",
-    frames: 36,
+    frames: 38,
     sound: "magic",
     hover: true,
     hitboxes: [],
-    projectiles: [{ frame: 12, x: 0.8, y: 1.2, vx: 15, vy: 0, r: 0.38, life: 50, ...hit(7, 6, 0.1, 30) }],
+    projectiles: [{ frame: 13, x: 0.8, y: 1.2, vx: 15, vy: 0, r: 0.38, life: 50, ...hit(6, 6, 0.1, 30) }],
   },
   heavySide: {
     name: "Arcane Blast",
@@ -27,11 +27,7 @@ export const MAGE: Moveset = {
     sound: "magic",
     heavy: true,
     hover: true,
-    motion: [
-      { frame: 5, vx: 6, set: true },
-      { frame: 14, vx: 0, set: true },
-    ],
-    hitboxes: [box(1.3, 1.1, 0.75, 14, 18, hit(14, 9, 0.2, 35))],
+    hitboxes: [box(1.3, 1.1, 0.75, 14, 18, hit(13, 9, 0.19, 35))],
   },
   heavyUp: {
     name: "Blink",
@@ -42,7 +38,7 @@ export const MAGE: Moveset = {
     motion: [{ frame: 8, vx: 3, vy: 18, set: true }],
     hitboxes: [box(0, 1.0, 0.9, 12, 16, hit(7, 8, 0.1, 80))],
   },
-  heavyDown: { name: "Nova", frames: 44, sound: "magic", heavy: true, hover: true, hitboxes: [box(0, 1.0, 1.8, 16, 20, hit(12, 10, 0.18, 50))] },
+  heavyDown: { name: "Nova", frames: 44, sound: "magic", heavy: true, hover: true, hitboxes: [box(0, 1.0, 1.75, 16, 20, hit(12, 10, 0.18, 50))] },
   ult: {
     name: "Arcane Storm",
     root: true,

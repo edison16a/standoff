@@ -23,7 +23,7 @@ export const SAMURAI_CHARGED: ChargedSet = {
     sound: "slash",
     heavy: true,
     root: true,
-    hitboxes: [box(1.1, 1.7, 0.7, 9, 14, hit(14, 11, 0.2, 85)), box(0, 2.6, 0.75, 9, 14, hit(14, 11, 0.2, 85)), box(-1.0, 1.7, 0.65, 9, 14, hit(14, 11, 0.2, 85))],
+    hitboxes: [box(1.1, 1.7, 0.7, 9, 14, hit(13, 10, 0.19, 85)), box(0, 2.6, 0.75, 9, 14, hit(13, 10, 0.19, 85)), box(-1.0, 1.7, 0.65, 9, 14, hit(13, 10, 0.19, 85))],
   },
   holdDown: {
     name: "Whirlwind",
@@ -45,7 +45,7 @@ export const SAMURAI_CHARGED: ChargedSet = {
       { frame: 8, vx: 25, vy: 0, set: true },
       { frame: 18, vx: 2, set: true },
     ],
-    hitboxes: [box(0.6, 1.1, 0.8, 8, 18, hit(15, 12, 0.22, 35))],
+    hitboxes: [box(0.6, 1.1, 0.8, 8, 18, hit(14, 12, 0.21, 35))],
   },
   holdHeavyDown: {
     name: "Earth Splitter",

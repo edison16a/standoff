@@ -16,7 +16,7 @@ describe("move animations", () => {
     const jab = timing(moveOf("karate", "jab"));
     expect(jab).toEqual({ from: 3, to: 5, hits: [3] });
     const bolt = timing(moveOf("mage", "heavy"));
-    expect(bolt.from).toBe(12);
+    expect(bolt.from).toBe(13);
     const rush = timing(moveOf("karate", "ult"));
     expect(rush.hits.length).toBe(6);
   });

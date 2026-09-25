@@ -24,7 +24,7 @@ export const KARATE: Moveset = {
     sound: "punch",
     heavy: true,
     motion: [{ frame: 9, vx: 3 }],
-    hitboxes: [box(1.05, 1.2, 0.65, 11, 16, hit(15, 10, 0.23, 38))],
+    hitboxes: [box(1.05, 1.2, 0.65, 11, 16, hit(15, 10, 0.24, 38))],
   },
   heavySide: {
     name: "Flying Kick",
@@ -34,7 +34,7 @@ export const KARATE: Moveset = {
     heavy: true,
     landLag: 8,
     motion: [{ frame: 7, vx: 15, vy: 3, set: true }],
-    hitboxes: [box(0.85, 1.0, 0.65, 7, 20, hit(13, 9, 0.21, 35))],
+    hitboxes: [box(0.85, 1.0, 0.65, 7, 20, hit(12, 9, 0.21, 35))],
   },
   heavyUp: {
     name: "Rising Dragon",
@@ -62,7 +62,7 @@ export const KARATE: Moveset = {
     ],
     hitboxes: [
       ...flurry(5, 13, 5, 4, [[1.0, 1.1, 1.3]], hit(4, 2, 0, 0)),
-      box(1.1, 1.2, 1.4, 40, 44, hit(18, 17, 0.24, 40), 5),
+      box(1.1, 1.2, 1.4, 40, 44, hit(18, 18, 0.25, 40), 5),
     ],
   },
 };

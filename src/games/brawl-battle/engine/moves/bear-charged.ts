@@ -25,7 +25,7 @@ export const BEAR_CHARGED: ChargedSet = {
     heavy: true,
     root: true,
     armor: [4, 16],
-    hitboxes: [box(0.6, 2.2, 0.9, 14, 19, hit(15, 12, 0.21, 85)), box(0.2, 2.9, 0.8, 14, 19, hit(15, 12, 0.21, 85))],
+    hitboxes: [box(0.6, 2.2, 0.9, 14, 19, hit(16, 12, 0.22, 85)), box(0.2, 2.9, 0.8, 14, 19, hit(16, 12, 0.22, 85))],
   },
   holdDown: {
     name: "Shockwave Slam",
