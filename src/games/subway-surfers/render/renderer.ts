@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { neonEnvironment } from "./world/neon-env";
 import type { RunScene } from "./run-scene";
 import { setTextureDetail } from "./textures";
 
@@ -37,7 +37,7 @@ export function splitScreen(count: number): ViewRect[] {
 
 /**
  * One WebGL canvas that draws each runner's scene into its own part of
- * the screen. The studio light every scene reflects is made once here.
+ * the screen. The neon street every scene reflects is made once here.
  */
 export class Renderer {
   readonly gl: THREE.WebGLRenderer;
@@ -54,11 +54,9 @@ export class Renderer {
     });
     setTextureDetail(softwareDrawn(this.gl) ? 1 : Math.min(4, this.gl.capabilities.getMaxAnisotropy()));
     this.gl.toneMapping = THREE.ACESFilmicToneMapping;
-    this.gl.toneMappingExposure = 1.05;
+    this.gl.toneMappingExposure = 1.15;
     this.gl.setScissorTest(true);
-    const pmrem = new THREE.PMREMGenerator(this.gl);
-    this.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    pmrem.dispose();
+    this.environment = neonEnvironment(this.gl);
   }
 
   resize(width: number, height: number, dpr: number): void {
