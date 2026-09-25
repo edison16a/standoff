@@ -1,5 +1,6 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
-import { playFanfare, playStep, TUNES, type Tune } from "./tunes";
+import { playFanfare, playStep } from "./tune-player";
+import { TUNE_STEPS, TUNES, type Tune } from "./tunes";
 
 export type TuneName = keyof typeof TUNES;
 
@@ -23,7 +24,7 @@ export class Music {
     // Rounds off the raw saw and square edges so the music sits under the engines.
     this.tone = engine.ctx.createBiquadFilter();
     this.tone.type = "lowpass";
-    this.tone.frequency.value = 3200;
+    this.tone.frequency.value = 2600;
     this.tone.connect(engine.bus("music"));
   }
 
@@ -62,7 +63,7 @@ export class Music {
     if (current.nextAt < this.engine.now - 0.5) current.nextAt = this.engine.now + 0.05;
     while (current.nextAt < this.engine.now + LOOKAHEAD_S) {
       playStep(this.engine, current.gain, current.tune, current.step, current.nextAt);
-      current.step = (current.step + 1) % (current.tune.lead.length * 2);
+      current.step = (current.step + 1) % TUNE_STEPS;
       current.nextAt += stepLength;
     }
   }
