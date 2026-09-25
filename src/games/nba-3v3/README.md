@@ -77,7 +77,9 @@ Everything is synthesised through the room's audio buses: the ball on the hardwo
 
 ## Home screen media
 
-The icon, the poster and the looping clip are filmed from the showcase with `node tools/media/capture.mjs nba-3v3 --url http://localhost:3000 --ffmpeg ffmpeg`. The poster and the icon are one frame of Giannis rising for the hammer from low by the lane. The film is run ahead to that moment without drawing and held, so they take seconds to shoot. The loop is eight seconds of the broadcast camera: the drive and the dunk in slow motion, then Luka's three from the top. The first three seconds the tool lets run are stepped without drawing.
+The icon, the poster and the looping clip are filmed from the showcase with `node tools/media/capture.mjs nba-3v3 --url http://localhost:3000 --ffmpeg ffmpeg`. The poster and the icon are one frame of Giannis rising for the hammer, from low by the lane. The film is run ahead to that moment without drawing and held, so they take seconds to shoot. The loop is eight seconds of the broadcast camera: the drive and the dunk in slow motion from the close camera, then Luka's three from the top. The first three seconds the tool lets run are stepped without drawing, and the loop draws once per filmed frame.
+
+The tool's fake clock keeps running in real time, so on a computer that renders in software a slow frame used to race the film ahead. The showcase counts any long gap as one filmed frame. The clip here was filmed with a copy of the tool that also pauses the clock, then scaled to 1280 by 720 so each file stays under 4 MB.
 
 ## Slow computers
 
