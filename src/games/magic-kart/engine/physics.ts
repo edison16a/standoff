@@ -1,5 +1,6 @@
 import { baseTop, gripOf, pedals, updateDrift, updateSurge } from "./drive";
 import type { Emit } from "./events";
+import { airGrip, airSpeed, airVy, glideTurn, updateGlide } from "./glide";
 import type { Kart, KartInput } from "./kart";
 import { KERB_WIDTH, type Track } from "./track";
 import { DRIFT, DRIVE, EFFECTS, SURGE } from "./tuning";
@@ -31,6 +32,8 @@ export function driveKart(kart: Kart, input: KartInput, track: Track, dt: number
   let vR = kart.vx * -fz + kart.vz * fx;
   const stunned = kart.timers.stun > 0;
   const control = !stunned && !kart.airborne;
+  // Under the glider the phone steers just as it does on the road.
+  const flying = !stunned && kart.gliding;
   const top = topSpeed(kart);
 
   kart.throttle = control && input.throttle;
@@ -40,7 +43,7 @@ export function driveKart(kart: Kart, input: KartInput, track: Track, dt: number
   // After the drift, so braking into a power slide counts as the slide, not as lifting off.
   updateSurge(kart, input, vF, dt);
 
-  const wanted = control ? input.steer : 0;
+  const wanted = control || flying ? input.steer : 0;
   kart.steer += (wanted - kart.steer) * Math.min(1, dt * 12);
   if (control) {
     // A drift always turns into its bend. The wheel only tightens or opens it, so it cannot spin the kart round.
@@ -49,10 +52,10 @@ export function driveKart(kart: Kart, input: KartInput, track: Track, dt: number
     const ease = 1 - 0.22 * Math.min(1, Math.abs(vF) / (DRIVE.topSpeed * 1.3));
     const ice = kart.timers.ice > 0 ? 0.8 : 1;
     kart.heading -= turn * DRIVE.turnRate * kart.stats.handling * fade * ease * ice * Math.sign(vF || 1) * dt;
-  }
+  } else if (flying) kart.heading -= glideTurn(kart, dt);
 
-  vR *= Math.exp(-gripOf(kart, vF) * dt);
-  if (kart.airborne) vF *= Math.exp(-0.05 * dt);
+  vR *= Math.exp(-(kart.airborne ? airGrip(kart) : gripOf(kart, vF)) * dt);
+  if (kart.airborne) vF = airSpeed(kart, vF, dt);
 
   const nx = Math.sin(kart.heading);
   const nz = Math.cos(kart.heading);
@@ -64,6 +67,7 @@ export function driveKart(kart: Kart, input: KartInput, track: Track, dt: number
   else kart.spin = 0;
 
   settleOnTrack(kart, track, vF, dt, emit);
+  updateGlide(kart, track, dt, emit);
 }
 
 /** Finds the kart on the track, keeps it inside the barriers and on the ground. */
@@ -106,7 +110,7 @@ function settleOnTrack(kart: Kart, track: Track, vF: number, dt: number, emit: E
     return;
   }
   kart.airTime += dt;
-  kart.vy -= DRIVE.gravity * dt;
+  kart.vy = airVy(kart, dt);
   kart.y += kart.vy * dt;
   // Only land from above. A kart that fell past the lip keeps falling.
   if (ground !== null && kart.y <= ground && kart.y > ground - 1.2) {

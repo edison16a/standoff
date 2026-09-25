@@ -29,6 +29,9 @@ export function respawn(kart: Kart, track: Track, spot: { s: number; d: number }
   kart.heading = Math.atan2(f.tx, f.tz);
   kart.airborne = true;
   kart.airTime = 0;
+  // Dropped back in, not flying: the glider is put away at once.
+  kart.gliding = false;
+  kart.glide = 0;
   kart.drift = 0;
   kart.driftTime = 0;
   kart.flatOut = 0;

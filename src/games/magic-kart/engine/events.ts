@@ -17,6 +17,7 @@ export type RaceEvent =
   | { type: "bump"; kart: number; strength: number }
   | { type: "jump"; kart: number }
   | { type: "land"; kart: number; airTime: number }
+  | { type: "glide"; kart: number; open: boolean }
   | { type: "lap"; kart: number; lap: number }
   | { type: "finalLap"; kart: number }
   | { type: "finish"; kart: number; place: number }

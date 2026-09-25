@@ -65,6 +65,10 @@ export interface Kart {
   heading: number;
   airborne: boolean;
   airTime: number;
+  /** The glider is out: it opened over a jump and folds on landing. */
+  gliding: boolean;
+  /** How far the glider is unfolded, 0 to 1. It eases open and shut, so the picture and the lift follow it. */
+  glide: number;
   loc: Located;
   surface: Surface;
   /** Steering as applied, smoothed, for the wheels and the camera. */
@@ -108,6 +112,8 @@ export function createKart(id: number, character: CharacterId, seat: number | nu
     heading: Math.atan2(f.tx, f.tz),
     airborne: false,
     airTime: 0,
+    gliding: false,
+    glide: 0,
     loc,
     surface: "road",
     steer: 0,
