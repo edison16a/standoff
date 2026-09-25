@@ -7,17 +7,20 @@ import type { Phase } from "../protocol";
 import type { TrackId } from "../tracks";
 import { EngineHum } from "./engine-hum";
 import { Music } from "./music";
+import { RaceCaller } from "./race-caller";
 import { Sfx } from "./sfx";
 
 /**
  * Decides what the race sounds like: the tune for the map, an engine per
- * kart pitched by its speed, and a sound for every race event. Players'
- * karts are louder than computer ones, so on a shared screen everyone
- * hears their own moments over the pack.
+ * kart pitched by its speed, a sound for every race event, and the
+ * crowd and the race caller on top. Players' karts are louder than
+ * computer ones, so on a shared screen everyone hears their own moments
+ * over the pack.
  */
 export class SoundDirector {
   private readonly sfx: Sfx;
   private readonly music: Music;
+  private readonly caller: RaceCaller;
   private hums: EngineHum[] = [];
   private humsFor: RaceWorld | null = null;
   private finalLapPlayed = false;
@@ -27,7 +30,8 @@ export class SoundDirector {
   constructor(private readonly engine: AudioEngine) {
     this.sfx = new Sfx(engine);
     this.music = new Music(engine);
-    engine.setLevels({ music: 0.5, crowd: 0, sfx: 0.85 });
+    this.caller = new RaceCaller(engine);
+    engine.setLevels({ music: 0.5, crowd: 0.7, sfx: 0.85 });
   }
 
   setPhase(phase: Phase, map: TrackId): void {
@@ -36,12 +40,15 @@ export class SoundDirector {
     switch (phase) {
       case "lobby":
         this.stopHums();
+        // A race left early must not leave the caller talking over the lobby.
+        this.caller.stop();
         this.music.play("lobby");
         this.engine.holdDuck("music", 1);
         return;
       case "countdown":
         this.finalLapPlayed = false;
         this.music.play(null);
+        this.caller.countdown();
         return;
       case "racing":
         this.music.play(map);
@@ -49,6 +56,7 @@ export class SoundDirector {
       case "results":
         this.music.play(null);
         this.music.fanfare();
+        this.caller.results();
         this.engine.holdDuck("sfx", 0.35);
         this.lobbyTune = setTimeout(() => {
           this.lobbyTune = null;
@@ -77,6 +85,7 @@ export class SoundDirector {
   event(event: RaceEvent, world: RaceWorld): void {
     const kart = "kart" in event ? world.karts[event.kart] : undefined;
     const level = kart && kart.seat === null ? 0.35 : 1;
+    this.caller.event(event, world);
     switch (event.type) {
       case "countdown":
         return this.sfx.countdown(event.count);
@@ -130,6 +139,7 @@ export class SoundDirector {
     this.clearLobbyTune();
     this.stopHums();
     this.music.stop();
+    this.caller.stop();
   }
 
   private clearLobbyTune(): void {

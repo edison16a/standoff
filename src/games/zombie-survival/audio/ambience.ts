@@ -28,8 +28,8 @@ export class Ambience {
     if (this.drones.length) return;
     const music = this.engine.bus("music");
     const now = this.engine.now;
-    // Two close notes beating slowly against each other, and a sub underneath.
-    for (const [type, freq, level] of [["sawtooth", 55, 0.025], ["sawtooth", 55.35, 0.025], ["sine", 41.2, 0.12]] as const) {
+    // Two close notes beating slowly against each other, and a sub underneath, on the score's C sharp.
+    for (const [type, freq, level] of [["sawtooth", 69.3, 0.018], ["sawtooth", 69.65, 0.018], ["sine", 34.65, 0.1]] as const) {
       const voice = hum(this.engine, music, type, freq);
       voice.gain.gain.setTargetAtTime(level, now, 2);
       this.drones.push(voice);
@@ -45,7 +45,7 @@ export class Ambience {
     this.wind = noiseBed(this.engine, this.engine.bus("crowd"), "bandpass", 380, 0.7);
     this.wind.gain.gain.setTargetAtTime(0.12, now, 2);
     // A slow throb for fights: the level sets how loud, a second gain makes it beat.
-    const pulse = hum(this.engine, music, "sine", 46);
+    const pulse = hum(this.engine, music, "sine", 69.3);
     const beat = this.engine.ctx.createGain();
     beat.gain.value = 0.5;
     pulse.gain.disconnect();

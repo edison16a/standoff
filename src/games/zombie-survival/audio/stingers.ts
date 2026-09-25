@@ -59,7 +59,8 @@ export class Stingers {
   checkpoint(): void {
     const e = this.engine;
     const out = e.bus("music");
-    for (const note of [48, 55, 60, 63]) tone(e, out, e.now, { type: "triangle", frequency: midi(note), attack: 0.05, decay: 2.2, peak: 0.08 });
+    // Tuned to the score's key, so the sting lands inside the song.
+    for (const note of [49, 56, 61, 64]) tone(e, out, e.now, { type: "triangle", frequency: midi(note), attack: 0.05, decay: 2.2, peak: 0.08 });
   }
 
   bossArrives(): void {
@@ -88,12 +89,24 @@ export class Stingers {
   gameOver(): void {
     const e = this.engine;
     const out = e.bus("music");
-    [55, 51, 48, 43].forEach((note, i) => tone(e, out, e.now + i * 0.45, { type: "sawtooth", frequency: midi(note - 12), attack: 0.1, decay: 1.6, peak: 0.08 }));
+    [61, 56, 52, 49].forEach((note, i) => {
+      tone(e, out, e.now + i * 0.45, { type: "sawtooth", frequency: midi(note - 12), attack: 0.1, decay: 1.6, peak: 0.08 });
+      tone(e, out, e.now + i * 0.45, { frequency: midi(note - 12), attack: 0.1, decay: 1.8, peak: 0.12 });
+    });
   }
 
+  /** The score's minor key resolves to major: a rising run, a warm held chord, a low swell and a shimmer. */
   victory(): void {
     const e = this.engine;
     const out = e.bus("music");
-    [60, 64, 67, 72, 76].forEach((note, i) => tone(e, out, e.now + i * 0.18, { type: "triangle", frequency: midi(note), attack: 0.02, decay: 2.5, peak: 0.12 }));
+    const at = e.now + 0.05;
+    [61, 65, 68, 73, 77].forEach((note, i) => {
+      tone(e, out, at + i * 0.16, { type: "triangle", frequency: midi(note), attack: 0.02, decay: 1.2, peak: 0.1 });
+      tone(e, out, at + i * 0.16, { frequency: midi(note + 12), decay: 0.5, peak: 0.03 });
+    });
+    const held = at + 0.85;
+    for (const note of [61, 68, 73, 77, 80]) tone(e, out, held, { type: "triangle", frequency: midi(note), attack: 0.3, decay: 3.2, peak: 0.05 });
+    tone(e, out, held, { frequency: midi(37), attack: 0.2, decay: 3.4, peak: 0.25 });
+    noise(e, out, held, { filter: "highpass", frequency: 6000, attack: 0.4, decay: 2.5, peak: 0.05 });
   }
 }

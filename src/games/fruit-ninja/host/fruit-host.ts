@@ -75,6 +75,7 @@ export class FruitHost {
     const seats = this.contenders();
     if (seats.length === 0 || this.driver.inRound) return;
     this.sound.sfx.click();
+    this.sound.roundStarting();
     this.screen?.calm();
     this.screen?.reset();
     this.driver.start(useFruitStore.getState().settings, seats);
@@ -87,6 +88,7 @@ export class FruitHost {
   toLobby(): void {
     this.driver.stop();
     this.sound.sfx.click();
+    this.sound.lobby();
     this.screen?.calm();
     this.room.setPlaying(false);
   }

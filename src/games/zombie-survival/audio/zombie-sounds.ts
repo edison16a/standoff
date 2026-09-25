@@ -70,8 +70,9 @@ export class ZombieSounds {
     const e = this.engine;
     const place = placement(spot);
     const out = sendTo(e, e.bus("sfx"), 0.4 + place.gain * 0.5, place.pan);
-    noise(e, out, e.now, { filter: "bandpass", frequency: 650, q: 1.3, decay: 0.12, peak: 0.6 });
-    tone(e, out, e.now, { type: "sine", frequency: 210, glideTo: 70, decay: 0.08, peak: 0.4 });
+    const vary = 0.9 + Math.random() * 0.2;
+    noise(e, out, e.now, { filter: "bandpass", frequency: 650 * vary, q: 1.3, decay: 0.12, peak: 0.6 });
+    tone(e, out, e.now, { type: "sine", frequency: 210 * vary, glideTo: 70, decay: 0.08, peak: 0.4 });
     if (head) noise(e, out, e.now + 0.01, { filter: "highpass", frequency: 1700, decay: 0.06, peak: 0.5 });
   }
 
@@ -100,6 +101,8 @@ export class ZombieSounds {
   fall(spot: Spot, heavy: boolean): void {
     const e = this.engine;
     const out = sendTo(e, e.bus("sfx"), placement(spot).gain * (heavy ? 1.6 : 0.9), placement(spot).pan, e.now, 3);
+    // The kill itself lands at once as a wet crunch, so the shot that did it feels like it counted.
+    noise(e, out, e.now + 0.02, { filter: "lowpass", frequency: 1400 * (0.9 + Math.random() * 0.2), sweepTo: 300, q: 2, decay: 0.22, peak: 0.45 });
     const at = e.now + (heavy ? 0.9 : 0.55);
     tone(e, out, at, { type: "sine", frequency: heavy ? 55 : 95, glideTo: 35, decay: heavy ? 0.5 : 0.18, peak: 0.8 });
     noise(e, out, at, { filter: "lowpass", frequency: heavy ? 400 : 900, decay: heavy ? 0.6 : 0.2, peak: 0.5 });
