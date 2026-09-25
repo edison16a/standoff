@@ -91,3 +91,24 @@ export function blobTexture(): THREE.CanvasTexture {
     ctx.fillRect(0, 0, s, s);
   });
 }
+
+/** A ray of light: bright all along with soft edges, fading only at its far end. */
+export function rayTexture(): THREE.CanvasTexture {
+  return draw(128, (ctx, s) => {
+    const along = ctx.createLinearGradient(0, 0, s, 0);
+    along.addColorStop(0, "rgba(255,255,255,1)");
+    along.addColorStop(0.82, "rgba(255,255,255,0.95)");
+    along.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = along;
+    ctx.fillRect(0, 0, s, s);
+    ctx.globalCompositeOperation = "destination-in";
+    const across = ctx.createLinearGradient(0, 0, 0, s);
+    across.addColorStop(0, "rgba(0,0,0,0)");
+    across.addColorStop(0.35, "rgba(0,0,0,0.9)");
+    across.addColorStop(0.5, "rgba(0,0,0,1)");
+    across.addColorStop(0.65, "rgba(0,0,0,0.9)");
+    across.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = across;
+    ctx.fillRect(0, 0, s, s);
+  });
+}

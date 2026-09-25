@@ -3,12 +3,16 @@ import { chargeLevel } from "../engine/charge";
 import { moveOf } from "../engine/moves";
 import type { Fighter, MatchState } from "../engine/types";
 import { CHARACTERS } from "../roster";
+import { Anchors } from "./anchors";
+import { chargingPose } from "./anim/charging";
 import { motionPose, type MotionInput } from "./anim/motion";
-import { applyPose, approach, over, restPose, type Pose } from "./anim/pose";
+import { applyPose, approach, restPose, type Pose } from "./anim/pose";
 import { strikePose } from "./anim/strike";
 import type { Style } from "./anim/style";
 import { STYLES } from "./anim/styles";
-import type { FighterColours } from "./colors";
+import { ChargeFx } from "./charge-fx";
+import { MoveFx } from "./move-fx";
+import { FX, type FighterColours } from "./colors";
 import { FighterExtras } from "./fighter-extras";
 import { FighterTrails } from "./fighter-trails";
 import type { Effects } from "./effects/effects";
@@ -30,6 +34,9 @@ export class FighterView {
   readonly rig: Rig;
   readonly extras: FighterExtras;
   private readonly trails: FighterTrails;
+  private readonly charge: ChargeFx;
+  private readonly moveFx: MoveFx;
+  private readonly aura: THREE.Color;
   private readonly material = solidMaterial();
   private readonly style: Style;
   private readonly pose: Pose = restPose();
@@ -46,11 +53,15 @@ export class FighterView {
     this.rig = buildFighter(f.character, colours.tint, this.material, glow);
     this.style = STYLES[f.character];
     this.extras = new FighterExtras(f, colours.colour);
-    this.trails = new FighterTrails(f, colours.colour, this.rig, fx);
+    const anchors = new Anchors(f.character, this.rig);
+    this.trails = new FighterTrails(f, colours.colour, anchors, fx);
+    this.charge = new ChargeFx(f, anchors, fx);
+    this.moveFx = new MoveFx(f, anchors, fx);
+    this.aura = new THREE.Color(FX[f.character].aura);
     this.yaw = f.facing * (Math.PI / 2 - CHEAT);
     this.cur.set(f.pos.x, f.pos.y);
     this.prev.copy(this.cur);
-    parent.add(this.rig.joints.root, this.extras.group, this.trails.group);
+    parent.add(this.rig.joints.root, this.extras.group, this.trails.group, this.charge.group, this.moveFx.group);
   }
 
   /** Called before each engine step, so drawing can blend between steps. */
@@ -84,6 +95,7 @@ export class FighterView {
     const y = this.prev.y + (this.cur.y - this.prev.y) * k;
     if (hidden) {
       this.trails.reset();
+      this.charge.update(f, x, y, 0, time, dt);
       this.extras.update(f, x, y, state.stage.surfaces, time);
       return;
     }
@@ -117,10 +129,8 @@ export class FighterView {
       Object.assign(this.target, strikePose(anim, moveOf(f.character, f.move), frame, this.target));
       rate = 40;
     } else if (f.action === "charge" && f.move) {
-      // Charging holds the move's wind up, trembling harder as it fills.
-      over(this.target, this.style.moves[f.move].windup);
-      this.target.torsoZ += Math.sin(time * 70) * 0.04 * chargeLevel(f);
-      rate = 16;
+      chargingPose(this.style.moves[f.move], chargeLevel(f), time, this.target);
+      rate = 14;
     } else if (f.action === "hurt" || input.doubleJump) rate = 30;
     approach(this.pose, this.target, rate, dt);
     applyPose(this.pose, this.rig.joints, this.rig.dims);
@@ -131,18 +141,24 @@ export class FighterView {
     this.flash = Math.max(0, this.flash - dt * 3.5);
     const blink = f.invincible > 0 && f.action !== "attack" ? (Math.sin(time * 24) > 0 ? 0.45 : 0) : 0;
     const glow = Math.max(this.flash, blink);
-    // A charge glows warm and pulses faster as it fills.
+    // A charge glows in the fighter's aura colour and pulses faster as it fills.
     const level = chargeLevel(f);
-    const warm = f.action === "charge" ? (0.12 + 0.3 * level) * (0.75 + 0.25 * Math.sin(time * (10 + 20 * level))) : 0;
-    this.material.emissive.setRGB(glow + warm, glow + warm * 0.75, glow + warm * 0.2);
+    const warm = f.action === "charge" ? (0.1 + 0.32 * level) * (0.7 + 0.3 * Math.sin(time * (10 + 20 * level))) : 0;
+    const a = this.aura;
+    this.material.emissive.setRGB(glow + warm * a.r, glow + warm * a.g, glow + warm * a.b);
 
     root.updateMatrixWorld(true);
-    this.trails.update(f, x, y, time, CHARACTERS[f.character].physique.height);
+    const height = CHARACTERS[f.character].physique.height;
+    this.trails.update(f, x, y, time, height);
+    this.charge.update(f, x, y, height, time, dt);
+    this.moveFx.update(f, x, y, height, time);
     this.extras.update(f, x, y, state.stage.surfaces, time);
   }
 
   dispose(parent: THREE.Object3D): void {
-    parent.remove(this.rig.joints.root, this.extras.group, this.trails.group);
+    parent.remove(this.rig.joints.root, this.extras.group, this.trails.group, this.charge.group, this.moveFx.group);
+    this.charge.dispose();
+    this.moveFx.dispose();
     this.rig.dispose();
     this.extras.dispose();
     this.trails.dispose();

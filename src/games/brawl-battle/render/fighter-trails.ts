@@ -1,14 +1,12 @@
 import * as THREE from "three";
 import { moveOf, type Move } from "../engine/moves";
 import type { Fighter } from "../engine/types";
-import { timing, type TrailAnchor } from "./anim/strike";
+import { timing } from "./anim/strike";
 import { STYLES } from "./anim/styles";
 import { FX } from "./colors";
 import type { Effects } from "./effects/effects";
 import { Ribbon } from "./effects/ribbon";
-import type { Rig } from "./models/rig";
-import { STAFF_GEM } from "./models/mage";
-import { KATANA } from "./models/samurai";
+import type { Anchors } from "./anchors";
 
 const point = new THREE.Vector3();
 
@@ -25,7 +23,6 @@ export class FighterTrails {
   readonly group = new THREE.Group();
   private readonly swing = new Ribbon(24, 0.16, 0.16);
   private readonly flight = new Ribbon(40, 0.5, 0.45);
-  private readonly anchors: Record<Exclude<TrailAnchor, "none">, [THREE.Object3D, THREE.Vector3]>;
   private readonly fx: Effects;
   private marked = new Set<number>();
   private swingId = -1;
@@ -34,21 +31,12 @@ export class FighterTrails {
   constructor(
     private readonly f: Fighter,
     colour: string,
-    rig: Rig,
+    private readonly anchors: Anchors,
     fx: Effects,
   ) {
     this.fx = fx;
     this.swing.setColour(FX[f.character].trail);
     this.flight.setColour(colour);
-    const j = rig.joints;
-    const tip = f.character === "samurai" ? new THREE.Vector3(0, -0.04, KATANA.tip + 0.1) : f.character === "mage" ? new THREE.Vector3(0, STAFF_GEM.y, 0.02) : new THREE.Vector3(0, -0.08, 0);
-    this.anchors = {
-      handR: [j.handR, new THREE.Vector3(0, -0.08, 0)],
-      handL: [j.handL, new THREE.Vector3(0, -0.08, 0)],
-      ankleR: [j.ankleR, new THREE.Vector3(0, -0.04, 0.16)],
-      ankleL: [j.ankleL, new THREE.Vector3(0, -0.04, 0.16)],
-      tip: [j.handR, tip],
-    };
     this.group.add(this.swing.mesh, this.flight.mesh);
   }
 
@@ -58,8 +46,7 @@ export class FighterTrails {
       const anchor = STYLES[f.character].moves[f.move].trail ?? "none";
       const t = timing(move);
       if (anchor !== "none" && f.frame >= t.from - 2 && f.frame <= t.to + 1) {
-        const [bone, offset] = this.anchors[anchor];
-        bone.localToWorld(point.copy(offset));
+        this.anchors.world(anchor, point);
         this.swing.push(point.x, point.y, 0.3, time);
       }
       this.markHitboxes(f, move, x, y);
