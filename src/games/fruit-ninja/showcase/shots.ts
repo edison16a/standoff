@@ -24,6 +24,6 @@ export interface Shot {
  */
 export const SHOTS: Record<ShowcaseView, Shot> = {
   loop: { script: LOOP, start: 13, labels: true },
-  poster: { script: LOOP, start: 17.36, freeze: 17.36, labels: true },
+  poster: { script: LOOP, start: 17.44, freeze: 17.44, labels: true },
   icon: { script: ICON, start: ICON_AT, freeze: ICON_AT, camera: { x: 0, y: 1, zoom: 1.35 }, labels: false },
 };

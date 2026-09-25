@@ -37,6 +37,17 @@ Status: ready. Up to 4 players slice fruit on one shared screen. Each phone is a
 * `audio/`: every sound synthesized on the platform's buses: whooshes, juicy slices, thunks, chimes, a fuse hiss, explosions, combos, the countdown, a gong and a fanfare.
 * `protocol/`: zod schemas for the few messages of its own. The aim itself travels on the aim kit's messages.
 
+## Home screen media
+
+`showcase/` plays the game by itself for the home screen's icon, poster and clip. Four computer players follow a script on the real board, with the real arena, fruit, blades, effects and popups. `loop-script.ts` is eight seconds that repeat: a three fruit combo, a giant melon smashed by every blade in turn, a dragonfruit, a bomb and a star fruit. `icon-script.ts` hangs fruit around a watermelon cut by a fire blade, under a sliced logo. Each hand's slashes are timed to meet their fruit, it glides between them, and it only cuts during a slash.
+
+Random draws are seeded and time comes only from the frame clock, so every capture is the same. A test checks that the loop cuts every throw and repeats exactly. Add `&at=20` to `/showcase/fruit-ninja?view=poster` to look at another moment. To capture again, with the dev server running:
+
+```bash
+node tools/media/capture.mjs fruit-ninja --url http://localhost:3000 --ffmpeg ffmpeg
+cp src/games/fruit-ninja/media/poster.jpg src/games/fruit-ninja/cover.jpg
+```
+
 ## Look
 
-Warm brown planks lit from the top left, glossy fruit throwing soft shadows onto the wood, bright blades, as on `cover.jpg`. The styles live in `styles/`.
+Warm brown planks lit from the top left, glossy fruit throwing soft shadows onto the wood, bright blades, as on `media/poster.jpg`. The styles live in `styles/`.
