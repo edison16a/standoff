@@ -103,6 +103,11 @@ export class StageRenderer {
     if (event.type === "countdown" || event.type === "allez") this.director.release();
   }
 
+  /** Keeps the current close up on screen until then, for the showcase's ending. */
+  holdShot(untilWall: number): void {
+    this.director.holdUntil(untilWall);
+  }
+
   /** A new match started: clear the last one's effects and camera. */
   reset(): void {
     this.effects.reset();
@@ -162,9 +167,8 @@ export class StageRenderer {
     this.hall?.dispose();
     this.environment?.dispose();
     this.post?.dispose();
+    // No forceContextLoss here: React mounts the stage twice on the same canvas in development, and a lost context cannot be had back.
     this.renderer.dispose();
-    // The shared materials and textures outlive this renderer and still point at its context. Losing it now frees the GPU at once.
-    this.renderer.forceContextLoss();
   }
 }
 
