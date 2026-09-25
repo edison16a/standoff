@@ -1,0 +1,155 @@
+/*
+  Boxing on the big screen: the stage, its buttons and the camera trouble card.
+  Fight night colours: near black, hot orange and championship gold.
+*/
+
+.bx-stage {
+  --bx-orange: #f97316;
+  --bx-gold: #f5c542;
+  --bx-red: #e11d48;
+  --bx-ink: #07080f;
+  --bx-panel: rgba(10, 11, 22, 0.78);
+  --bx-display: Impact, "Arial Black", "Helvetica Neue", sans-serif;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bx-ink);
+  color: #ffffff;
+  font-family: var(--font-ui);
+}
+
+.bx-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.bx-stage__shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(5, 6, 12, 0.88) 0%, rgba(5, 6, 12, 0.55) 45%, rgba(5, 6, 12, 0.15) 100%);
+  pointer-events: none;
+}
+
+.bx-eyebrow {
+  display: inline-block;
+  margin: 0;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--bx-orange), var(--bx-gold));
+  color: #1a0d02;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.bx-logo {
+  margin: 12px 0 6px;
+  font-family: var(--bx-display);
+  font-size: clamp(64px, 10vw, 140px);
+  font-style: italic;
+  line-height: 0.9;
+  letter-spacing: 0.01em;
+}
+
+.bx-logo span {
+  background: linear-gradient(180deg, #ffffff 0%, #ffe3a3 45%, var(--bx-orange) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 6px 0 rgba(120, 30, 0, 0.9)) drop-shadow(0 12px 30px rgba(249, 115, 22, 0.45));
+}
+
+.bx-button {
+  padding: 12px 26px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--bx-orange), #fb923c);
+  color: #1a0d02;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.35);
+}
+
+.bx-button:disabled {
+  opacity: 0.55;
+  cursor: default;
+  box-shadow: none;
+}
+
+.bx-button--big {
+  padding: 16px 38px;
+  font-size: 22px;
+}
+
+.bx-button--ghost {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.bx-link {
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.bx-back {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  padding: 10px 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+  font-weight: 800;
+  cursor: pointer;
+  z-index: 3;
+}
+
+/* A soft vignette over the picture, as a broadcast lens gives, drawn in CSS so it costs the GPU nothing. */
+.bx-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.55) 100%);
+  pointer-events: none;
+}
+
+.bx-trouble {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 520px;
+  padding: 28px 34px;
+  border: 3px solid var(--bx-red);
+  border-radius: 24px;
+  background: rgba(8, 6, 14, 0.94);
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+.bx-trouble h2 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.bx-trouble p {
+  margin: 0;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+}
