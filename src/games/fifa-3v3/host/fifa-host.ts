@@ -195,6 +195,10 @@ export class FifaHost {
       case "hello":
         this.phones.forget(seat);
         break;
+      case "release":
+        // Mid match only, and nothing on screen changes, so no refresh either.
+        this.driver?.noteHeld(seat, message.heldMs / 1000);
+        return;
     }
     this.refresh(performance.now());
   }

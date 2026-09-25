@@ -13,6 +13,8 @@ interface Press {
   down: boolean;
   x: number;
   y: number;
+  /** For a release of Shoot/Pass, how long the phone saw it held. */
+  held?: number;
 }
 
 /**
@@ -27,6 +29,7 @@ export class MatchDriver {
   view: MatchView;
   private readonly clock: FixedStepClock;
   private readonly presses = new Map<number, Press[]>();
+  private readonly held = new Map<number, number>();
 
   constructor(readonly entrants: readonly Entrant[], seed: number) {
     const hooks = testHooks();
@@ -40,8 +43,15 @@ export class MatchDriver {
   press(seat: number, button: string, down: boolean, x: number, y: number): void {
     if (!this.athleteBySeat.has(seat)) return;
     const list = this.presses.get(seat) ?? [];
-    list.push({ button, down, x, y });
+    const held = !down && button === BUTTONS.shoot ? this.held.get(seat) : undefined;
+    if (!down) this.held.delete(seat);
+    list.push({ button, down, x, y, ...(held !== undefined ? { held } : {}) });
     this.presses.set(seat, list);
+  }
+
+  /** The phone's own measure of a Shoot/Pass hold, which comes just before its release. */
+  noteHeld(seat: number, seconds: number): void {
+    if (this.athleteBySeat.has(seat)) this.held.set(seat, seconds);
   }
 
   /** A phone left or came back. While away, a computer plays for them. */
@@ -83,6 +93,7 @@ export class MatchDriver {
           if (next.down) command.shootDown = true;
           else command.shootUp = true;
           command.aim = aim;
+          if (next.held !== undefined) command.held = next.held;
         } else if (next.button === BUTTONS.slide && next.down) {
           command.slide = true;
           if (Math.hypot(aim.x, aim.z) > 0.2) command.move = aim;

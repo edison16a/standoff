@@ -11,10 +11,13 @@ export interface PhoneStore {
   wanted: CharacterId | null;
   /** The latest screen state from the host, null until the first one lands. */
   host: PhoneState | null;
+  /** When Shoot/Pass went down, on the phone's clock, while it is held. */
+  shootSince: number | null;
 }
 
 export const usePhoneStore = create<PhoneStore>(() => ({
   step: "star",
   wanted: null,
   host: null,
+  shootSince: null,
 }));
