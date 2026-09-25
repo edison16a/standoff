@@ -67,7 +67,7 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
   }, [view]);
 
   return (
-    <div ref={stageRef} className="fifa-showcase">
+    <div ref={stageRef} className={`fifa-showcase fifa-showcase--${view}`}>
       {view === "loop" && (
         // The broadcast score bug in the corner, as on a television highlight.
         <div ref={bugRef} className="fifa-tvbug">
