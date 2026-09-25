@@ -52,7 +52,7 @@ export class Squad {
     this.refreshLabels(view);
     view.athletes.forEach((a, i) => {
       const figure = this.athletes[i]!;
-      figure.update(a, dt, time);
+      figure.update(a, view.ball, dt, time);
       const blob = this.blobs[i]!;
       blob.position.set(a.x, 0.015, a.z);
       const tag = this.tags[i];
