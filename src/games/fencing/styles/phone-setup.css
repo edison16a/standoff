@@ -30,6 +30,11 @@
   text-align: center;
 }
 
+/* Only the pictures give up height; words and buttons keep their size. */
+.setup-page > :not(.setup-card, .level-capture, .practice) {
+  flex-shrink: 0;
+}
+
 .setup-page__lead {
   margin: 0;
   font-size: 19px;
