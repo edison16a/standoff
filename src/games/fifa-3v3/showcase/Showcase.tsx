@@ -49,12 +49,14 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     const observer = new ResizeObserver(fit);
     observer.observe(canvas);
     let frame = 0;
+    let first = -1;
     const loop = (now: number) => {
       const events = scene.tick(now);
       for (const event of events) renderer.onEvent(event, scene.view);
       if (frozen && draws > 0) renderer.settle(scene.view, now, 1.5);
       // Nobody films the capture tool's warm up, and drawing it only queues work for software graphics.
-      const warming = !frozen && now < WARMUP * 1000 - 200;
+      if (first < 0) first = now;
+      const warming = !frozen && now - first < WARMUP * 1000 - 200;
       if (warming) renderer.update(scene.view, scene.shot, now, scene.focus(renderer), scene.tags);
       else if (!frozen || draws > 0) {
         renderer.draw(scene.view, scene.shot, now, scene.focus(renderer), scene.tags);
