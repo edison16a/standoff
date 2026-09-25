@@ -12,6 +12,7 @@ import "./styles/host.css";
 import "./styles/lobby.css";
 import "./styles/results.css";
 import "./styles/phone.css";
+import "./styles/phone-ready.css";
 import "./styles/pad.css";
 import "./styles/showcase.css";
 
