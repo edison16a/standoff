@@ -10,6 +10,8 @@ export type MatchEvent =
   | { type: "jump"; id: number; double: boolean }
   | { type: "land"; id: number }
   | { type: "swing"; id: number; move: MoveKey }
+  /** A held button became a charge: the wind up starts. */
+  | { type: "charge"; id: number; move: MoveKey }
   | {
       type: "hit";
       attacker: number;

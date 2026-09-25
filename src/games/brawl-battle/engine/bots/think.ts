@@ -4,6 +4,7 @@ import { mainSurface, over } from "../stages";
 import { RESPAWN } from "../tuning";
 import type { Command, Fighter, MatchState } from "../types";
 import { SKILLS } from "./brain";
+import { planCharge } from "./charge-plan";
 import { pickAttack, ultReaches } from "./pick-move";
 import { isOffstage, recover } from "./recover";
 
@@ -17,6 +18,7 @@ export function botCommand(state: MatchState, f: Fighter): Command {
   if (!brain) return { x: 0, y: 0 };
   if (f.action === "respawn") return leavePlatform(f);
   if (f.action === "dead" || f.action === "out") return { x: 0, y: 0 };
+  if (brain.hold) return holdCharge(f);
   if (isOffstage(state, f)) return recover(state, f);
   brain.offstage = "none";
   if (brain.shieldFor > 0) {
@@ -40,12 +42,30 @@ export function botCommand(state: MatchState, f: Fighter): Command {
     return { x: 0, y: -1 };
   }
   if (f.ult >= 1 && ultReaches(f, target)) return { x: Math.sign(target.pos.x - f.pos.x), y: 0, ult: true };
+  const plan = state.rng.chance(skill.aggression) ? planCharge(state, f, target, skill, state.rng) : null;
+  if (plan) {
+    brain.hold = { button: plan.button, frames: plan.frames, face: plan.face };
+    brain.x = 0;
+    return plan.button === "light" ? { x: 0, y: plan.y, light: true, lightHeld: true } : { x: 0, y: plan.y, heavy: true, heavyHeld: true };
+  }
   const attack = pickAttack(f, target, skill.judgement, state.rng);
   if (attack && state.rng.chance(skill.aggression)) {
     brain.x = 0;
     return attack;
   }
   return approach(state, f, target);
+}
+
+/** Keeps a charge button down, standing still, then lets go facing the target once charged enough. */
+function holdCharge(f: Fighter): Command {
+  const hold = f.brain!.hold!;
+  // Knocked out of the wind up, there is nothing left to release.
+  const lost = f.action !== "charge" && !f.hold;
+  if (lost || (f.action === "charge" && f.frame >= hold.frames)) {
+    f.brain!.hold = null;
+    return { x: hold.face, y: 0 };
+  }
+  return hold.button === "light" ? { x: 0, y: 0, lightHeld: true } : { x: 0, y: 0, heavyHeld: true };
 }
 
 /** The nearest opponent still on stage. Sharper bots lean toward whoever is closest to a KO. */

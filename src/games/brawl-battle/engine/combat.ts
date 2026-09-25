@@ -1,4 +1,4 @@
-import { inWindow, liveHitboxes } from "./attack";
+import { chargedHit, inWindow, liveHitboxes } from "./attack";
 import { hurtbox, inPlay } from "./fighter";
 import { hitstopFrames, hitstunFrames, launchSpeed, launchVector } from "./knockback";
 import { moveOf, type Hit, type HitSound } from "./moves";
@@ -57,7 +57,7 @@ export function resolveMelee(state: MatchState): void {
         // A box behind the fighter sends the target backwards.
         const side = (b.x < 0 ? -attacker.facing : attacker.facing) as 1 | -1;
         const strike: Strike = {
-          hit: b,
+          hit: chargedHit(b, attacker.charged),
           sound: live.move.sound,
           heavy: live.move.heavy === true,
           unblockable: live.move.unblockable === true,
@@ -106,6 +106,8 @@ export function applyStrike(state: MatchState, attacker: Fighter, target: Fighte
   target.move = null;
   target.hitstun = Math.max(1, hitstunFrames(speed));
   target.buffer = null;
+  // A hit breaks a charge, and a hold still going will not come out later.
+  target.hold = null;
   target.jumpBuffer = 0;
   target.lag = 0;
   // Being hit gives back the air jump and the recovery, so a fighter can always try to come back.

@@ -11,9 +11,16 @@ export type LightKey = "jab" | "side" | "up" | "down";
 export type AirKey = "air" | "airUp" | "airDown";
 /** Attack 2, on the ground or in the air. Its up variant is the recovery. */
 export type HeavyKey = "heavy" | "heavySide" | "heavyUp" | "heavyDown";
-export type MoveKey = LightKey | AirKey | HeavyKey | "ult";
+/**
+ * Held past the charge time, then let go. Attack 1 charges by side (or
+ * neutral), up and down; Attack 2 by side (or neutral) and down. Up on
+ * Attack 2 is the recovery and always comes out at once.
+ */
+export type ChargeKey = "holdSide" | "holdUp" | "holdDown" | "holdHeavy" | "holdHeavyDown";
+export type MoveKey = LightKey | AirKey | HeavyKey | ChargeKey | "ult";
 
-export const MOVE_KEYS: readonly MoveKey[] = ["jab", "side", "up", "down", "air", "airUp", "airDown", "heavy", "heavySide", "heavyUp", "heavyDown", "ult"];
+export const CHARGE_KEYS: readonly ChargeKey[] = ["holdSide", "holdUp", "holdDown", "holdHeavy", "holdHeavyDown"];
+export const MOVE_KEYS: readonly MoveKey[] = ["jab", "side", "up", "down", "air", "airUp", "airDown", "heavy", "heavySide", "heavyUp", "heavyDown", ...CHARGE_KEYS, "ult"];
 
 /** Which sound a hit makes, for the host's audio. */
 export type HitSound = "punch" | "kick" | "slash" | "magic" | "slam";
@@ -38,6 +45,9 @@ export interface Hitbox extends Hit {
   group?: number;
 }
 
+/** How a projectile is drawn. The engine treats them all alike. */
+export type ProjectileLook = "bolt" | "orb" | "crescent" | "wave" | "star";
+
 export interface ProjectileSpec extends Hit {
   /** The frame it is released on. */
   frame: number;
@@ -48,6 +58,8 @@ export interface ProjectileSpec extends Hit {
   r: number;
   /** Frames before it fizzles. */
   life: number;
+  /** A magic bolt unless set. */
+  look?: ProjectileLook;
 }
 
 /** A push the fighter gives themselves on a frame, like a lunge or a leap. */
@@ -77,6 +89,8 @@ export interface Move {
   landLag?: number;
   /** A recovery move: once per trip into the air, and no more jumps after it. */
   recovery?: boolean;
+  /** Holds the fighter's feet: no walking or steering while it plays, for heavy committed moves. */
+  root?: boolean;
   /** Keeps the fighter still in the air while it plays, for moves cast in place. */
   hover?: boolean;
   /** The fighter stops moving on landing a hit, so a rush stays on its target. */
@@ -86,3 +100,4 @@ export interface Move {
 }
 
 export type Moveset = Record<MoveKey, Move>;
+export type ChargedSet = Record<ChargeKey, Move>;

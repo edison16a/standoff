@@ -1,5 +1,5 @@
 import type { PosePatch } from "./pose";
-import type { Style } from "./style";
+import type { BaseStyle } from "./style";
 
 /*
  * The katana points along the fist's forward axis. Its angle from
@@ -13,7 +13,7 @@ const iai: PosePatch = { hipZ: 0.3, hipY: -0.25, torsoY: -0.6, torsoX: 0.25, arm
 const crouch: PosePatch = { hipY: -0.25, kneeL: 1.2, kneeR: 1.2, legLLift: 0.6, legRLift: 0.6 };
 
 /** Samurai: a low wide stance with the blade forward, and long arcing cuts. */
-export const SAMURAI_STYLE: Style = {
+export const SAMURAI_STYLE: BaseStyle = {
   stance: { torsoY: 0.2, hipY: -0.08, legLLift: 0.45, kneeL: 0.6, footL: -0.15, legRLift: -0.35, kneeR: 0.3, armRRaise: 0.7, elbowR: 0.9, wristR: -0.9, armLRaise: 0.9, elbowL: 1.2, armLSpread: -0.1 },
   runArms: { armRRaise: 0.4, elbowR: 0.6, wristR: -0.7, armLRaise: 0, elbowL: 0.8 },
   armSwing: 0.5,
@@ -23,7 +23,13 @@ export const SAMURAI_STYLE: Style = {
   win: { armRRaise: 3.0, elbowR: 0.1, wristR: -1.5, armLRaise: 0.3, elbowL: 1.4, armLSpread: 0.3, legRLift: 0, kneeR: 0.1 },
   moves: {
     jab: { windup: { armRRaise: 2.2, elbowR: 0.6, wristR: 0.3, torsoY: 0.3 }, hit: { armRRaise: 1.4, elbowR: 0.1, wristR: -1.8, torsoY: -0.3 }, trail: "tip" },
-    side: { windup: overhead, hit: cutDown, trail: "tip" },
+    // Wide Slash dashes in: a low lunging step under the raised blade, then the cut carries through.
+    side: {
+      windup: { ...overhead, torsoX: 0.15, hipY: -0.12, legLLift: 0.7, kneeL: 1.0, legRLift: -0.45, kneeR: 0.3 },
+      hit: { ...cutDown, hipY: -0.22, torsoX: 0.45 },
+      follow: { ...cutDown, hipY: -0.18, torsoY: -0.75, wristR: -1.9, armRRaise: 0.9 },
+      trail: "tip",
+    },
     up: {
       windup: { armRRaise: 0.6, elbowR: 0.2, wristR: -1.2, torsoX: 0.2 },
       hit: { armRRaise: 3.2, elbowR: 0, wristR: 0.4, torsoX: -0.35 },

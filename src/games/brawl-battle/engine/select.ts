@@ -1,20 +1,30 @@
-import type { MoveKey } from "./moves";
+import type { ChargeKey, MoveKey } from "./moves";
 import { MOVEMENT } from "./tuning";
-import type { Button } from "./types";
+import type { Button, ChargeButton } from "./types";
 
 export type Direction = "neutral" | "side" | "up" | "down";
+/** The four stick sectors, with left and right kept apart. */
+export type Heading = "neutral" | "left" | "right" | "up" | "down";
 
 /**
- * Which way a stick points, for picking a move. Up and down win a
- * diagonal only when they clearly lead, so a slightly raised run still
- * gives a side attack.
+ * Snaps the stick to the nearest of four directions. Each owns a 90
+ * degree sector centred on its axis, so right but 20 degrees up is still
+ * right. Only a stick inside the dead zone is neutral. On an exact
+ * diagonal the side wins, since running is the common case; the angle
+ * is rounded first so float noise cannot flip a true diagonal.
  */
+export function headingOf(x: number, y: number): Heading {
+  if (Math.hypot(x, y) < MOVEMENT.deadZone) return "neutral";
+  const degrees = Math.round((Math.atan2(y, x) * 180) / Math.PI * 1e6) / 1e6;
+  if (Math.abs(degrees) <= 45) return "right";
+  if (Math.abs(degrees) >= 135) return "left";
+  return degrees > 0 ? "up" : "down";
+}
+
+/** Which way a stick points, for picking a move: left and right are both a side move. */
 export function directionOf(x: number, y: number): Direction {
-  const ax = Math.abs(x);
-  const ay = Math.abs(y);
-  if (Math.max(ax, ay) < MOVEMENT.deadZone) return "neutral";
-  if (ay > MOVEMENT.deadZone && ay >= ax * 1.1) return y > 0 ? "up" : "down";
-  return "side";
+  const heading = headingOf(x, y);
+  return heading === "left" || heading === "right" ? "side" : heading;
 }
 
 const GROUND_LIGHT: Record<Direction, MoveKey> = { neutral: "jab", side: "side", up: "up", down: "down" };
@@ -27,6 +37,18 @@ export function selectMove(button: Button, x: number, y: number, grounded: boole
   const dir = directionOf(x, y);
   if (button === "heavy") return HEAVY[dir];
   return grounded ? GROUND_LIGHT[dir] : AIR_LIGHT[dir];
+}
+
+const HOLD_LIGHT: Record<Direction, ChargeKey> = { neutral: "holdSide", side: "holdSide", up: "holdUp", down: "holdDown" };
+const HOLD_HEAVY: Record<Direction, ChargeKey | null> = { neutral: "holdHeavy", side: "holdHeavy", up: null, down: "holdHeavyDown" };
+
+/**
+ * The charged move a held button winds up, or null when this press never
+ * charges: up on Attack 2 is the recovery, which must come out at once.
+ */
+export function chargedMove(button: ChargeButton, x: number, y: number): ChargeKey | null {
+  const dir = directionOf(x, y);
+  return button === "light" ? HOLD_LIGHT[dir] : HOLD_HEAVY[dir];
 }
 
 /** Which way a side move turns the fighter, or null to keep facing as they are. */

@@ -1,13 +1,18 @@
 import * as THREE from "three";
+import { chargeLevel } from "../engine/charge";
 import { moveOf } from "../engine/moves";
 import type { Fighter, MatchState } from "../engine/types";
 import { CHARACTERS } from "../roster";
+import { Anchors } from "./anchors";
+import { chargingPose } from "./anim/charging";
 import { motionPose, type MotionInput } from "./anim/motion";
 import { applyPose, approach, restPose, type Pose } from "./anim/pose";
 import { strikePose } from "./anim/strike";
 import type { Style } from "./anim/style";
 import { STYLES } from "./anim/styles";
-import type { FighterColours } from "./colors";
+import { ChargeFx } from "./charge-fx";
+import { MoveFx } from "./move-fx";
+import { FX, type FighterColours } from "./colors";
 import { FighterExtras } from "./fighter-extras";
 import { FighterTrails } from "./fighter-trails";
 import type { Effects } from "./effects/effects";
@@ -29,6 +34,9 @@ export class FighterView {
   readonly rig: Rig;
   readonly extras: FighterExtras;
   private readonly trails: FighterTrails;
+  private readonly charge: ChargeFx;
+  private readonly moveFx: MoveFx;
+  private readonly aura: THREE.Color;
   private readonly material = solidMaterial();
   private readonly style: Style;
   private readonly pose: Pose = restPose();
@@ -45,11 +53,15 @@ export class FighterView {
     this.rig = buildFighter(f.character, colours.tint, this.material, glow);
     this.style = STYLES[f.character];
     this.extras = new FighterExtras(f, colours.colour);
-    this.trails = new FighterTrails(f, colours.colour, this.rig, fx);
+    const anchors = new Anchors(f.character, this.rig);
+    this.trails = new FighterTrails(f, colours.colour, anchors, fx);
+    this.charge = new ChargeFx(f, anchors, fx);
+    this.moveFx = new MoveFx(f, anchors, fx);
+    this.aura = new THREE.Color(FX[f.character].aura);
     this.yaw = f.facing * (Math.PI / 2 - CHEAT);
     this.cur.set(f.pos.x, f.pos.y);
     this.prev.copy(this.cur);
-    parent.add(this.rig.joints.root, this.extras.group, this.trails.group);
+    parent.add(this.rig.joints.root, this.extras.group, this.trails.group, this.charge.group, this.moveFx.group);
   }
 
   /** Called before each engine step, so drawing can blend between steps. */
@@ -83,13 +95,16 @@ export class FighterView {
     const y = this.prev.y + (this.cur.y - this.prev.y) * k;
     if (hidden) {
       this.trails.reset();
+      this.charge.update(f, x, y, 0, time, dt);
       this.extras.update(f, x, y, state.stage.surfaces, time);
       return;
     }
     // Hit stop: the struck fighter shivers in place.
     if (frozen && f.action === "hurt") x += Math.sin(time * 95) * 0.07;
     root.position.set(x, y, 0);
-    const turn = f.facing * (Math.PI / 2 - CHEAT);
+    const winner = state.phase !== "fight" && state.phase !== "ready" && state.winner === f.id;
+    // The winner turns to face the crowd.
+    const turn = f.facing * (Math.PI / 2 - CHEAT) * (winner ? 0.3 : 1);
     this.yaw += (turn - this.yaw) * (1 - Math.exp(-22 * dt));
     root.rotation.y = this.yaw;
 
@@ -98,7 +113,7 @@ export class FighterView {
     const frame = f.frame + (frozen ? 0 : alpha);
     const sinceFlip = state.frame - this.flipStart + alpha;
     const input: MotionInput = {
-      action: f.action === "attack" ? (f.ground !== null ? "idle" : "air") : f.action,
+      action: f.action === "attack" || f.action === "charge" ? (f.ground !== null ? "idle" : "air") : f.action,
       frame,
       speed,
       rise: f.vel.y + f.launch.y,
@@ -106,7 +121,7 @@ export class FighterView {
       time,
       doubleJump: f.action === "air" && sinceFlip < 24,
       launch: Math.hypot(f.launch.x, f.launch.y),
-      winner: state.phase !== "fight" && state.phase !== "ready" && state.winner === f.id,
+      winner,
     };
     if (input.doubleJump) input.frame = sinceFlip;
     motionPose(this.style, input, this.target);
@@ -115,6 +130,9 @@ export class FighterView {
       const anim = this.style.moves[f.move];
       Object.assign(this.target, strikePose(anim, moveOf(f.character, f.move), frame, this.target));
       rate = 40;
+    } else if (f.action === "charge" && f.move) {
+      chargingPose(this.style.moves[f.move], chargeLevel(f), time, this.target);
+      rate = 14;
     } else if (f.action === "hurt" || input.doubleJump) rate = 30;
     approach(this.pose, this.target, rate, dt);
     applyPose(this.pose, this.rig.joints, this.rig.dims);
@@ -125,15 +143,24 @@ export class FighterView {
     this.flash = Math.max(0, this.flash - dt * 3.5);
     const blink = f.invincible > 0 && f.action !== "attack" ? (Math.sin(time * 24) > 0 ? 0.45 : 0) : 0;
     const glow = Math.max(this.flash, blink);
-    this.material.emissive.setRGB(glow, glow, glow);
+    // A charge glows in the fighter's aura colour and pulses faster as it fills.
+    const level = chargeLevel(f);
+    const warm = f.action === "charge" ? (0.1 + 0.32 * level) * (0.7 + 0.3 * Math.sin(time * (10 + 20 * level))) : 0;
+    const a = this.aura;
+    this.material.emissive.setRGB(glow + warm * a.r, glow + warm * a.g, glow + warm * a.b);
 
     root.updateMatrixWorld(true);
-    this.trails.update(f, x, y, time, CHARACTERS[f.character].physique.height);
+    const height = CHARACTERS[f.character].physique.height;
+    this.trails.update(f, x, y, time, height);
+    this.charge.update(f, x, y, height, time, dt);
+    this.moveFx.update(f, x, y, height, time);
     this.extras.update(f, x, y, state.stage.surfaces, time);
   }
 
   dispose(parent: THREE.Object3D): void {
-    parent.remove(this.rig.joints.root, this.extras.group, this.trails.group);
+    parent.remove(this.rig.joints.root, this.extras.group, this.trails.group, this.charge.group, this.moveFx.group);
+    this.charge.dispose();
+    this.moveFx.dispose();
     this.rig.dispose();
     this.extras.dispose();
     this.trails.dispose();

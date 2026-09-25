@@ -1,5 +1,6 @@
 import { CHARACTERS } from "../roster";
 import { canStart, startMove } from "./attack";
+import { startHold, trackHold, tryCharge } from "./charge";
 import { onPassThrough } from "./physics";
 import { selectMove } from "./select";
 import { BUFFER_FRAMES, MOVEMENT, SHIELD } from "./tuning";
@@ -13,8 +14,11 @@ import type { Command, Fighter, MatchState } from "./types";
 /** Keeps the latest press, and a jump, for a few frames, so an early press still comes out. */
 export function bufferPress(f: Fighter, cmd: Command): void {
   const button = cmd.ult ? "ult" : cmd.heavy ? "heavy" : cmd.light ? "light" : null;
-  if (button) f.buffer = { button, x: cmd.x, y: cmd.y, frames: BUFFER_FRAMES };
-  else if (f.buffer && --f.buffer.frames <= 0) f.buffer = null;
+  // A press still held is timed instead, to tell a tap from a charge.
+  const holding = button !== null && button !== "ult" && startHold(f, cmd, button);
+  if (button && !holding) f.buffer = { button, x: cmd.x, y: cmd.y, frames: BUFFER_FRAMES };
+  else if (!button && f.buffer && --f.buffer.frames <= 0) f.buffer = null;
+  if (!holding) trackHold(f, cmd);
   if (cmd.jump) f.jumpBuffer = BUFFER_FRAMES;
   else if (f.jumpBuffer > 0) f.jumpBuffer--;
 }
@@ -66,7 +70,7 @@ export function leaveGround(state: MatchState, f: Fighter): void {
 export function freeControl(state: MatchState, f: Fighter, cmd: Command): void {
   const grounded = f.ground !== null;
   // An attack pressed with the jump wins, so up and Attack together is an up attack.
-  if (tryAttack(state, f)) return;
+  if (tryCharge(state, f) || tryAttack(state, f)) return;
   if (takeJump(f, cmd)) {
     if (grounded) {
       f.action = "jumpsquat";
@@ -112,5 +116,5 @@ export function shieldControl(state: MatchState, f: Fighter, cmd: Command): void
     f.frame = 0;
     return;
   }
-  tryAttack(state, f);
+  if (!tryCharge(state, f)) tryAttack(state, f);
 }

@@ -2,6 +2,7 @@ import type { AudioEngine } from "@/platform/audio/audio-engine";
 import type { MatchEvent } from "../engine/events";
 import { isHeavyKey } from "../engine/moves";
 import type { StageId } from "../engine/stages";
+import { CHARGE, STEP } from "../engine/tuning";
 import type { MatchState } from "../engine/types";
 import type { RoomPhase } from "../protocol";
 import { Announcer } from "./announcer";
@@ -87,6 +88,8 @@ export class SoundDirector {
         if (f && e.move !== "ult") this.sfx.swing(f.character, isHeavyKey(e.move));
         return;
       }
+      case "charge":
+        return this.sfx.charge(CHARGE.full * STEP);
       case "hit":
         this.sfx.hit(e.sound, 0.3 + Math.min(1, e.speed / 22) * 0.7 + (e.heavy ? 0.1 : 0));
         if (e.speed > OOH_SPEED && performance.now() - this.oohAt > 1500) {

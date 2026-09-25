@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PadInput } from "./input";
-import { directionOf, selectMove, turnFor } from "./select";
+import { directionOf, headingOf, selectMove, turnFor } from "./select";
 
 describe("reading the stick", () => {
   it("names the four directions and a neutral middle", () => {
@@ -12,7 +12,23 @@ describe("reading the stick", () => {
     expect(directionOf(0.3, -0.9)).toBe("down");
   });
 
-  it("gives a diagonal to side unless up or down clearly leads", () => {
+  it("snaps to the nearest of four 90 degree sectors, with the side winning an exact diagonal", () => {
+    const at = (degrees: number) => headingOf(Math.cos((degrees * Math.PI) / 180), Math.sin((degrees * Math.PI) / 180));
+    expect(at(0)).toBe("right");
+    expect(at(20)).toBe("right");
+    expect(at(44)).toBe("right");
+    expect(at(46)).toBe("up");
+    expect(at(90)).toBe("up");
+    expect(at(135)).toBe("left");
+    expect(at(180)).toBe("left");
+    expect(at(225)).toBe("left");
+    expect(at(315)).toBe("right");
+  });
+
+  it("is neutral only inside the dead zone, however it leans", () => {
+    expect(headingOf(0.1, 0.3)).toBe("neutral");
+    expect(headingOf(0.1, 0.4)).toBe("up");
+    expect(headingOf(-0.4, -0.1)).toBe("left");
     expect(directionOf(0.7, 0.7)).toBe("side");
     expect(directionOf(0.5, 0.8)).toBe("up");
   });

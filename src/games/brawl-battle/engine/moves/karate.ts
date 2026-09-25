@@ -1,8 +1,10 @@
 import { both, box, flurry, hit } from "./build";
+import { KARATE_CHARGED } from "./karate-charged";
 import type { Moveset } from "./types";
 
 /** Karate: quick and light. Small hits that chain, and a fast flying kick. */
 export const KARATE: Moveset = {
+  ...KARATE_CHARGED,
   jab: { name: "Jab", frames: 12, sound: "punch", hitboxes: [box(0.8, 1.25, 0.5, 3, 5, hit(4, 4, 0.04, 20))] },
   side: { name: "Roundhouse", frames: 21, sound: "kick", hitboxes: [box(1.1, 1.05, 0.6, 6, 11, hit(10, 7, 0.15, 35))] },
   up: { name: "High Kick", frames: 20, sound: "kick", hitboxes: [box(0.35, 2.0, 0.65, 4, 9, hit(8, 7, 0.14, 85))] },
@@ -22,16 +24,17 @@ export const KARATE: Moveset = {
     sound: "punch",
     heavy: true,
     motion: [{ frame: 9, vx: 3 }],
-    hitboxes: [box(1.05, 1.2, 0.65, 11, 16, hit(15, 10, 0.23, 38))],
+    hitboxes: [box(1.05, 1.2, 0.65, 11, 16, hit(15, 10, 0.24, 38))],
   },
   heavySide: {
     name: "Flying Kick",
     frames: 32,
+    root: true,
     sound: "kick",
     heavy: true,
     landLag: 8,
     motion: [{ frame: 7, vx: 15, vy: 3, set: true }],
-    hitboxes: [box(0.85, 1.0, 0.65, 7, 20, hit(13, 9, 0.21, 35))],
+    hitboxes: [box(0.85, 1.0, 0.65, 7, 20, hit(12, 9, 0.21, 35))],
   },
   heavyUp: {
     name: "Rising Dragon",
@@ -44,6 +47,7 @@ export const KARATE: Moveset = {
   heavyDown: { name: "Spin Sweep", frames: 30, sound: "kick", heavy: true, hitboxes: both(1.05, 0.4, 0.65, 9, 14, hit(12, 9, 0.2, 30)) },
   ult: {
     name: "Dragon Rush",
+    root: true,
     frames: 70,
     sound: "kick",
     heavy: true,
@@ -58,7 +62,7 @@ export const KARATE: Moveset = {
     ],
     hitboxes: [
       ...flurry(5, 13, 5, 4, [[1.0, 1.1, 1.3]], hit(4, 2, 0, 0)),
-      box(1.1, 1.2, 1.4, 40, 44, hit(18, 17, 0.24, 40), 5),
+      box(1.1, 1.2, 1.4, 40, 44, hit(18, 18, 0.25, 40), 5),
     ],
   },
 };

@@ -1,4 +1,4 @@
-import type { MoveKey } from "../../engine/moves";
+import type { ChargeKey, MoveKey } from "../../engine/moves";
 import type { PosePatch } from "./pose";
 import type { StrikeAnim } from "./strike";
 
@@ -20,3 +20,6 @@ export interface Style {
   win: PosePatch;
   moves: Record<MoveKey, StrikeAnim>;
 }
+
+/** A fighter's own file: every move but the charged ones, which live together in charged.ts. */
+export type BaseStyle = Omit<Style, "moves"> & { moves: Record<Exclude<MoveKey, ChargeKey>, StrikeAnim> };

@@ -51,10 +51,11 @@ export class MatchDriver {
       else pad.upReleased();
       return;
     }
-    if (!down) return;
-    if (button === BUTTONS.attack) pad.press("light");
-    else if (button === BUTTONS.special) pad.press("heavy");
-    else if (button === BUTTONS.ult) pad.press("ult");
+    const which = button === BUTTONS.attack ? "light" : button === BUTTONS.special ? "heavy" : button === BUTTONS.ult ? "ult" : null;
+    if (!which) return;
+    if (down) pad.press(which);
+    // Releases matter too: letting go is what fires a charged move.
+    else if (which !== "ult") pad.release(which);
   }
 
   /** A phone dropped or came back: a bot plays for them meanwhile. */

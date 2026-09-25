@@ -1,13 +1,17 @@
 import { both, box, flurry, hit } from "./build";
+import { SAMURAI_CHARGED } from "./samurai-charged";
 import type { Moveset } from "./types";
 
 /** Samurai: the longest reach. Katana cuts that are a little slower to come out. */
 export const SAMURAI: Moveset = {
-  jab: { name: "Quick Cut", frames: 18, sound: "slash", hitboxes: [box(1.1, 1.2, 0.55, 3, 6, hit(4, 5, 0.05, 25))] },
+  ...SAMURAI_CHARGED,
+  jab: { name: "Quick Cut", frames: 16, sound: "slash", hitboxes: [box(1.1, 1.2, 0.55, 3, 6, hit(4, 5, 0.05, 25))] },
   side: {
     name: "Wide Slash",
     frames: 25,
     sound: "slash",
+    // A weapon side attack: a short dash forward carries the cut.
+    motion: [{ frame: 3, vx: 9, set: true }],
     hitboxes: [box(1.0, 1.1, 0.6, 6, 10, hit(11, 7, 0.16, 35)), box(2.0, 1.0, 0.55, 6, 10, hit(11, 7, 0.16, 35))],
   },
   up: {
@@ -23,6 +27,7 @@ export const SAMURAI: Moveset = {
   heavy: {
     name: "Iai Draw",
     frames: 36,
+    root: true,
     sound: "slash",
     heavy: true,
     hitboxes: [box(1.4, 1.1, 0.6, 13, 16, hit(16, 10, 0.22, 35)), box(2.5, 1.1, 0.6, 13, 16, hit(16, 10, 0.22, 35))],
@@ -30,6 +35,7 @@ export const SAMURAI: Moveset = {
   heavySide: {
     name: "Dash Cut",
     frames: 38,
+    root: true,
     sound: "slash",
     heavy: true,
     landLag: 12,
@@ -50,6 +56,7 @@ export const SAMURAI: Moveset = {
   heavyDown: { name: "Ground Slash", frames: 34, sound: "slash", heavy: true, hitboxes: both(1.7, 0.3, 0.6, 9, 13, hit(13, 9, 0.21, 25)) },
   ult: {
     name: "Thousand Cuts",
+    root: true,
     frames: 80,
     sound: "slash",
     heavy: true,

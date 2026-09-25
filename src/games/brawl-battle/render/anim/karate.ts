@@ -1,5 +1,5 @@
 import type { PosePatch } from "./pose";
-import type { Style } from "./style";
+import type { BaseStyle } from "./style";
 
 const punchR: PosePatch = { armRRaise: 1.55, elbowR: 0.05, armRSpread: -0.1, armLRaise: 0.8, elbowL: 2.2, torsoY: -0.4, hipZ: 0.08 };
 const punchL: PosePatch = { armLRaise: 1.55, elbowL: 0.05, armLSpread: -0.1, armRRaise: 0.8, elbowR: 2.2, torsoY: 0.4, hipZ: 0.08 };
@@ -7,7 +7,7 @@ const coil: PosePatch = { hipY: -0.25, torsoY: 0.9, armRRaise: 0.2, elbowR: 2.3,
 const uppercut: PosePatch = { hipY: 0, armRRaise: 3.0, elbowR: 0, armRSpread: -0.1, torsoY: -0.3, torsoX: -0.3, legLLift: 1.2, kneeL: 2.0, legRLift: -0.2, kneeR: 0.1 };
 
 /** Karate: a bouncy fighting stance, snappy punches and high, wide kicks. */
-export const KARATE_STYLE: Style = {
+export const KARATE_STYLE: BaseStyle = {
   stance: { torsoY: 0.25, hipY: -0.06, legLLift: 0.35, kneeL: 0.45, footL: -0.1, legRLift: -0.25, kneeR: 0.35, armLRaise: 1.0, elbowL: 1.9, armRRaise: 0.7, elbowR: 2.1, armLSpread: 0.15, armRSpread: 0.2 },
   runArms: { armLRaise: 0.3, armRRaise: 0.3, elbowL: 1.5, elbowR: 1.5, torsoY: 0 },
   armSwing: 1,

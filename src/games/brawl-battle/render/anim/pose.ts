@@ -47,14 +47,17 @@ export function blend(a: Pose, b: PosePatch, t: number, out: Pose): Pose {
 
 /**
  * Eases a pose toward a target, frame rate independent. Whole body
- * turns are copied straight across: easing a finished somersault back
- * to zero would play it in reverse.
+ * turns in progress are copied straight across, since easing would lag
+ * a somersault. Once the turn ends the body rolls upright the short way
+ * round, so a tumble cut short by landing never snaps.
  */
 export function approach(current: Pose, target: Pose, rate: number, dt: number): void {
   const k = 1 - Math.exp(-rate * dt);
-  for (const c of CHANNELS) current[c] += (target[c] - current[c]) * k;
-  current.flip = target.flip;
-  current.spin = target.spin;
+  for (const c of CHANNELS) if (c !== "flip" && c !== "spin") current[c] += (target[c] - current[c]) * k;
+  for (const c of ["flip", "spin"] as const) {
+    if (target[c] !== 0) current[c] = target[c];
+    else current[c] = Math.atan2(Math.sin(current[c]), Math.cos(current[c])) * (1 - k);
+  }
 }
 
 const smooth = (u: number) => u * u * (3 - 2 * u);

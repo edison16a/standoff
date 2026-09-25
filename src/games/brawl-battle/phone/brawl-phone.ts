@@ -10,9 +10,10 @@ import { usePhoneStore as store, type SetupStep } from "./phone-store";
 
 /**
  * Brawl Battle on the phone. It walks the player through picking a
- * fighter, then becomes a controller: the direction pad streams as the
- * kit's stick, up also goes as a reliable press, and the three buttons
- * go through the kit. It makes no game decisions.
+ * fighter, then becomes a controller: the stick streams through the
+ * kit, pushing it up also goes as a reliable press, and the three buttons
+ * go through the kit with their releases, so the host can tell a tap
+ * from a hold. It makes no game decisions.
  */
 export class BrawlPhone {
   readonly pad: PhonePad;
@@ -57,8 +58,8 @@ export class BrawlPhone {
     }
   }
 
-  /** The direction pad moved. Up going on or off also goes as a press, so a quick tap always jumps. */
-  setDirection(stick: Stick): void {
+  /** The stick moved. Up going on or off also goes as a press, so a quick flick always jumps. */
+  setStick(stick: Stick): void {
     this.pad.setStick(stick);
     const up = stick.y >= MOVEMENT.flick;
     if (up === this.up) return;

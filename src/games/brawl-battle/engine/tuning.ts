@@ -87,5 +87,24 @@ export const RESPAWN = {
   invincible: 120,
 };
 
+/**
+ * Holding Attack 1 or Attack 2 past `threshold` frames turns the press
+ * into a charged move. It gains power until `full` frames of charging
+ * and lets go by itself at `cap`, so nobody can sit charged forever.
+ */
+export const CHARGE = {
+  threshold: 24,
+  full: 50,
+  cap: 80,
+  /** Extra damage and launch at full charge, as a share of the move's own. */
+  damage: 0.5,
+  launch: 0.25,
+  /** Walking speed while charging, as a share of the run. */
+  creep: 0.25,
+};
+
+/** Speed a fighter keeps while swinging a move that does not root them, as a share of the run and the air speed. */
+export const ATTACK_MOVE = { ground: 0.45, air: 0.85 };
+
 /** Presses are remembered this many frames, so one made a little early still comes out. */
 export const BUFFER_FRAMES = 6;

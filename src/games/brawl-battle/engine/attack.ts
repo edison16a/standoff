@@ -1,5 +1,6 @@
-import { moveOf, type Hitbox, type Move, type MoveKey } from "./moves";
+import { moveOf, type Hit, type Hitbox, type Move, type MoveKey } from "./moves";
 import { turnFor } from "./select";
+import { CHARGE } from "./tuning";
 import type { Fighter, MatchState } from "./types";
 
 /**
@@ -15,7 +16,8 @@ export function canStart(f: Fighter, key: MoveKey): boolean {
   return !(move.recovery && f.ground === null && f.recoveryUsed);
 }
 
-export function startMove(state: MatchState, f: Fighter, key: MoveKey, x: number): void {
+/** `charged` is how charged a held move was, 0 to 1. */
+export function startMove(state: MatchState, f: Fighter, key: MoveKey, x: number, charged = 0): void {
   const move = moveOf(f.character, key);
   const turn = turnFor(key, x, f.ground !== null);
   if (turn !== null) f.facing = turn;
@@ -25,6 +27,7 @@ export function startMove(state: MatchState, f: Fighter, key: MoveKey, x: number
   f.swing++;
   f.struck = [];
   f.buffer = null;
+  f.charged = charged;
   if (move.hover) {
     f.vel = { x: 0, y: 0 };
     f.launch = { x: 0, y: 0 };
@@ -70,13 +73,22 @@ export function advanceMove(state: MatchState, f: Fighter): boolean {
       owner: f.id,
       pos: { x: f.pos.x + p.x * f.facing, y: f.pos.y + p.y },
       vel: { x: p.vx * f.facing, y: p.vy },
-      r: p.r,
+      // A charged projectile grows as well as hitting harder.
+      r: p.r * (1 + f.charged * 0.5),
       life: p.life,
-      hit: { damage: p.damage, base: p.base, growth: p.growth, angle: p.angle },
+      hit: chargedHit(p, f.charged),
+      sound: move.sound,
+      look: p.look ?? "bolt",
     });
     state.events.push({ type: "projectile", id, owner: f.id });
   }
   return true;
+}
+
+/** A hit made stronger by charging: more damage and a harder launch. */
+export function chargedHit(h: Hit, charged: number): Hit {
+  if (charged <= 0) return { damage: h.damage, base: h.base, growth: h.growth, angle: h.angle };
+  return { damage: Math.round(h.damage * (1 + charged * CHARGE.damage)), base: h.base * (1 + charged * CHARGE.launch), growth: h.growth, angle: h.angle };
 }
 
 /** The fighter's hitboxes that are live this frame. */

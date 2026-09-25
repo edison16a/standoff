@@ -8,7 +8,7 @@ import { Effects } from "./effects/effects";
 import { FighterView } from "./fighter-view";
 import { hitFlash } from "./hit-flash";
 import { glowMaterial } from "./models/geo";
-import { ProjectileView } from "./projectile-view";
+import { ProjectileView } from "./projectiles/projectile-view";
 import { StageScene } from "./stages/scenery";
 
 /** Rendering features that can be turned off for weak graphics hardware. */

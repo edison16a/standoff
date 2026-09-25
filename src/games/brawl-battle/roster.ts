@@ -45,7 +45,7 @@ export const CHARACTERS: Record<CharacterId, Character> = {
     name: "Karate",
     blurb: "Fast kicks and punches. Quick in the air.",
     color: "#f8fafc",
-    physique: { run: 8, air: 5.6, accel: 60, airAccel: 30, jump: 13.8, doubleJump: 12.4, gravity: 36, fall: 15, fastFall: 22, weight: 97, width: 0.8, height: 1.75 },
+    physique: { run: 8, air: 5.6, accel: 60, airAccel: 30, jump: 13.8, doubleJump: 12.4, gravity: 36, fall: 15, fastFall: 22, weight: 99, width: 0.8, height: 1.75 },
   },
   samurai: {
     id: "samurai",
@@ -59,7 +59,7 @@ export const CHARACTERS: Record<CharacterId, Character> = {
     name: "Mage",
     blurb: "Magic bolts and blasts from afar.",
     color: "#7c3aed",
-    physique: { run: 5.8, air: 5.2, accel: 42, airAccel: 28, jump: 12.8, doubleJump: 12.6, gravity: 32, fall: 13, fastFall: 19, weight: 82, width: 0.75, height: 1.8 },
+    physique: { run: 5.8, air: 5.2, accel: 42, airAccel: 28, jump: 12.8, doubleJump: 12.6, gravity: 32, fall: 13, fastFall: 19, weight: 80, width: 0.75, height: 1.8 },
   },
   bear: {
     id: "bear",
