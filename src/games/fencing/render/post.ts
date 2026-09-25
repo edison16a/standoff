@@ -90,7 +90,8 @@ export class PostFx {
   }
 
   dispose(): void {
+    // The composer frees its own targets but leaves each pass's material and quad behind.
+    for (const pass of this.composer.passes) pass.dispose();
     this.composer.dispose();
-    this.bloom.dispose();
   }
 }

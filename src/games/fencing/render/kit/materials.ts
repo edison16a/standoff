@@ -88,7 +88,7 @@ export function own(material: THREE.MeshStandardMaterial, changes: Partial<THREE
   return copy;
 }
 
-/** Frees every shared material. Only the host calls this, when the game closes. */
+/** Frees every shared material. They are otherwise kept for the life of the page, shared by every renderer. */
 export function disposeMaterials(): void {
   for (const material of cache.values()) material.dispose();
   cache.clear();

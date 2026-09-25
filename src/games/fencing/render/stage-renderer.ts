@@ -163,6 +163,8 @@ export class StageRenderer {
     this.environment?.dispose();
     this.post?.dispose();
     this.renderer.dispose();
+    // The shared materials and textures outlive this renderer and still point at its context. Losing it now frees the GPU at once.
+    this.renderer.forceContextLoss();
   }
 }
 
