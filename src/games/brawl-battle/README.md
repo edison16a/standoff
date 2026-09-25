@@ -1,6 +1,6 @@
 # Brawl Battle
 
-Status: in development. The engine, the big screen, the phone controller and the sound are built. The home screen media come next.
+Status: ready. The engine, the big screen, the phone controller, the sound and the home screen media are all done.
 
 A platform fighter for 1 to 4 players on one big screen, with phones as controllers. Computer fighters fill the empty places if the host wants them. Each fighter has two lives. Hits add damage, and the more damage a fighter carries the further the next hit sends them. Fly past the edge of the screen and you lose a life. The last fighter with lives left wins.
 
@@ -96,6 +96,18 @@ A full match draws in about 80 draw calls and under 10,000 triangles.
 
 `protocol/` holds the zod schemas. Phones send `hello`, `pick` and `ready`, plus the pad kit's stick and the buttons `attack`, `special`, `ult` and `up`. The host sends each phone a `state` with its phase, pick, percent, lives, ult meter, KOs and place, and `buzz` for moments worth a vibration.
 
+### The showcase
+
+`showcase/` is the game playing itself for the home screen: four hard computer fighters on the Dojo Rooftop. `script.ts` holds the seed, where the loop starts, the still moment and the still camera shots, and builds the match. `director.ts` steps it at the engine's fixed rate from `performance.now` and draws it with the real renderer, so the same seed always films the same fight. The icon puts the logo over a close shot.
+
+The loop starts 11.5 seconds into the match, so its film holds two double KOs, both flung out past the top right corner. The poster and the icon hold the moment the karate kick lands on the mage, with the bear tumbling past and a bolt in the air. For stills the match is run ahead without drawing, then the pinned camera cuts in and one frame is drawn.
+
+For looking around in development, `/showcase/brawl-battle?view=poster&at=8.2&cam=1,3,15&seed=4` holds another moment, pins the camera at x, y and distance, or films another fight.
+
+### Home screen media
+
+The icon, the poster and the clip are filmed with `node tools/media/capture.mjs brawl-battle --url http://localhost:3000 --ffmpeg ffmpeg --size 1280x720` while `npm run dev` is running. The first three seconds the tool lets run are stepped without drawing, and the loop draws once per filmed frame. A slow frame on a software renderer counts as one filmed frame, so the clip never skips. The showcase test fails if an engine or bot change moves the filmed fight; pick new moments and film again when it does.
+
 ### Tests
 
-`npx vitest run src/games/brawl-battle` covers the knockback formula, move selection, the pad, physics against the stages, the state machine, hits, the shield, armor, bolts, lives and respawn, the ult meter, bot recovery and choices, full bot matches on every stage, replay from a seed, and a hard bot beating an easy one. On the render side it checks that every move has an animation that strikes while live and settles by the end, that movement poses stay finite, the camera framing, and fighter colours. The host side checks the lobby's places and computer fighters, the match driver's fixed steps and bot hand over, which phones buzz and what the announcer calls. The phone's direction pad, the percent's heat colour and the tunes' bar lengths are checked too.
+`npx vitest run src/games/brawl-battle` covers the knockback formula, move selection, the pad, physics against the stages, the state machine, hits, the shield, armor, bolts, lives and respawn, the ult meter, bot recovery and choices, full bot matches on every stage, replay from a seed, and a hard bot beating an easy one. On the render side it checks that every move has an animation that strikes while live and settles by the end, that movement poses stay finite, the camera framing, and fighter colours. The host side checks the lobby's places and computer fighters, the match driver's fixed steps and bot hand over, which phones buzz and what the announcer calls. The phone's direction pad, the percent's heat colour and the tunes' bar lengths are checked too. The showcase test pins the filmed fight: the stage, KOs inside the loop and a heavy hit just before the stills.
