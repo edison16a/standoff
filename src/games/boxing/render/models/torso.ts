@@ -64,10 +64,12 @@ const TRUNKS: readonly Ring[] = [
   { t: 1, y: -0.1, rx: 0.1, zf: 0.07, zb: 0.08 },
 ];
 
+/** A fighter's thick neck, flaring at the base into the traps so it grows out of the shoulders. */
 const NECK: readonly Ring[] = [
-  { t: 0, y: 0.15, rx: 0.052, zf: 0.05, zb: 0.052 },
-  { t: 0.5, y: 0.06, rx: 0.058, zf: 0.055, zb: 0.058 },
-  { t: 1, y: -0.04, rx: 0.075, zf: 0.06, zb: 0.07 },
+  { t: 0, y: 0.15, rx: 0.054, zf: 0.05, zb: 0.054 },
+  { t: 0.45, y: 0.07, rx: 0.062, zf: 0.057, zb: 0.062 },
+  { t: 0.75, y: 0.0, rx: 0.085, zf: 0.066, zb: 0.078 },
+  { t: 1, y: -0.06, rx: 0.12, zf: 0.075, zb: 0.09 },
 ];
 
 export function buildChest(m: BoxerMaterials): THREE.Mesh {
@@ -80,7 +82,7 @@ export function buildBelly(m: BoxerMaterials): THREE.Mesh {
 
 export function buildNeck(m: BoxerMaterials): THREE.Mesh {
   const bumps: Bump[] = [{ theta: 0.55, t: 0.45, width: 0.3, height: 0.3, amount: 0.006, mirror: true }];
-  return new THREE.Mesh(sculpt(NECK, { rows: 8, segments: 24, bumps }), m.skin);
+  return new THREE.Mesh(sculpt(widen(NECK, m.look.bulk), { rows: 10, segments: 28, bumps }), m.skin);
 }
 
 /** The trunks' body and their waistband, which carries the boxer's nickname. */

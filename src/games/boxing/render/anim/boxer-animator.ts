@@ -3,6 +3,7 @@ import type { MatchEvent } from "../../engine/events";
 import type { ActivePunch } from "../../engine/fighter";
 import type { Hand } from "../../engine/types";
 import type { BoxerModel } from "../models/boxer-model";
+import { LID_OPEN } from "../models/head";
 import { BoxerRig } from "../rig/boxer-rig";
 import { stance, type RigPose } from "../rig/pose";
 import type { AnimInput } from "./anim-input";
@@ -146,7 +147,7 @@ export class BoxerAnimator {
     m.setSweat(0.15 + 0.25 * input.round + 0.2 * (1 - input.fighter.stamina / 100));
     // A blink every few seconds, never in step with the other boxer.
     const blink = (input.time * 0.27 + this.id * 0.41) % 1 < 0.025;
-    for (const lid of this.model.face.lids) lid.rotation.x = blink ? 1.55 : 0.5;
+    for (const lid of this.model.face.lids) lid.rotation.x = blink ? 1.55 : LID_OPEN;
     const glow = input.telegraph && this.shape.cock > 0 ? this.shape.cock * (0.35 + 0.25 * Math.sin(input.time * 40)) : 0;
     m.setGlint(glow);
   }

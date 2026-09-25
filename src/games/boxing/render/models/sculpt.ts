@@ -39,6 +39,12 @@ export interface SculptOptions {
   offset?: (theta: number, t: number) => number;
   /** Only build the surface from t = 0 down to this, per angle: a hairline. */
   until?: (theta: number) => number;
+  /**
+   * Close both ends with a cap. On by default, since an open end shows as a
+   * dark hole where a part pokes out at a joint. Shells cut at a hairline
+   * are left open.
+   */
+  caps?: boolean;
 }
 
 /** Interpolates a ring at t with a smooth Catmull-Rom curve through the keys. */
@@ -127,6 +133,26 @@ export function sculpt(rings: readonly Ring[], options: SculptOptions = {}): THR
       const a = r * stride + q;
       const b = a + stride;
       indices.push(a, b, a + 1, a + 1, b, b + 1);
+    }
+  }
+  if (options.caps ?? !options.until) {
+    // A fan from the middle of each end ring, on its own copy of the ring so the cap's flat
+    // shading never bends the side's. Rings run round anticlockwise seen from above, so the
+    // top fan faces up and the bottom one, wound the other way, faces down.
+    for (const [row, up] of [[0, true], [rows, false]] as const) {
+      const centre = positions.length / 3;
+      const ring = ringAt(rings, row / rows);
+      positions.push(ring.x, ring.y, ring.z);
+      uvs.push(0.5, 1 - row / rows);
+      for (let q = 0; q <= segments; q++) {
+        const from = row * stride + q;
+        positions.push(positions[from * 3]!, positions[from * 3 + 1]!, positions[from * 3 + 2]!);
+        uvs.push(uvs[from * 2]!, uvs[from * 2 + 1]!);
+      }
+      for (let q = 0; q < segments; q++) {
+        const a = centre + 1 + q;
+        indices.push(...(up ? [centre, a, a + 1] : [centre, a + 1, a]));
+      }
     }
   }
   const geometry = new THREE.BufferGeometry();

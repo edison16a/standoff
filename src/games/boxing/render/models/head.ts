@@ -32,9 +32,12 @@ const FACE: readonly Bump[] = [
   { theta: Math.PI, t: 0.32, width: 0.6, height: 0.1, amount: 0.006 },
 ];
 
+/** How far the upper lid tips over the eye when open. A blink swings it down to cover it. */
+export const LID_OPEN = 0.72;
+
 export interface HeadParts {
   group: THREE.Group;
-  /** Upper lids, scaled down to blink. */
+  /** Upper lids, swung down over the eyes to blink. */
   lids: THREE.Mesh[];
   /** A swelling under the eye that grows with damage. */
   swelling: THREE.Mesh;
@@ -76,16 +79,21 @@ export function buildHead(m: BoxerMaterials): HeadParts {
 
   const lids: THREE.Mesh[] = [];
   for (const side of [-1, 1]) {
-    const centre = facePoint(side * 0.37, 0.515, -0.011);
-    const white = new THREE.Mesh(new THREE.SphereGeometry(0.0125, 14, 10), m.eyeWhite);
+    // Set well back in the socket, so the brow shades the eyes instead of them bulging out.
+    const centre = facePoint(side * 0.37, 0.515, -0.0135);
+    const white = new THREE.Mesh(new THREE.SphereGeometry(0.0115, 14, 10), m.eyeWhite);
     white.position.copy(centre);
-    const iris = new THREE.Mesh(new THREE.SphereGeometry(0.0066, 10, 8), m.iris);
-    iris.position.set(centre.x - side * 0.001, centre.y + 0.0005, centre.z + 0.0085);
-    // The top of the eye stays under a heavy lid, which reads as focus.
-    const lid = new THREE.Mesh(new THREE.SphereGeometry(0.0138, 14, 8, 0, Math.PI * 2, 0, Math.PI * 0.5), m.skin);
+    const iris = new THREE.Mesh(new THREE.SphereGeometry(0.0062, 10, 8), m.iris);
+    iris.position.set(centre.x - side * 0.001, centre.y + 0.0005, centre.z + 0.0078);
+    // The top of the eye stays under a heavy lid, which reads as focus, and a lower lid narrows it more.
+    const cap = new THREE.SphereGeometry(0.0128, 14, 8, 0, Math.PI * 2, 0, Math.PI * 0.5);
+    const lid = new THREE.Mesh(cap, m.skin);
     lid.position.copy(centre);
-    lid.rotation.x = 0.5;
-    group.add(white, iris, lid);
+    lid.rotation.x = LID_OPEN;
+    const lower = new THREE.Mesh(cap, m.skin);
+    lower.position.copy(centre);
+    lower.rotation.x = Math.PI - 0.5;
+    group.add(white, iris, lid, lower);
     lids.push(lid);
 
     const ear = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 10), m.skin);

@@ -58,7 +58,7 @@ export function buildUpperArm(m: BoxerMaterials, side: 1 | -1): THREE.Group {
   );
   delt.position.set(side * 0.012, 0, 0.004);
   group.add(delt);
-  const elbow = new THREE.Mesh(new THREE.SphereGeometry(0.038 * bulk, 14, 10), m.skin);
+  const elbow = new THREE.Mesh(new THREE.SphereGeometry(0.043 * bulk, 16, 12), m.skin);
   elbow.position.y = -UPPER_ARM;
   group.add(elbow);
   return group;
@@ -97,12 +97,13 @@ export function buildGlove(m: BoxerMaterials, side: 1 | -1): THREE.Group {
   thumb.rotation.set(0.35, 0, side * 0.3);
   group.add(thumb);
   // Laces down the palm side of the cuff, finished with a tape wrap.
-  const lace = new THREE.CylinderGeometry(0.0028, 0.0028, 0.05, 5);
+  // Thin crossings lying flat on the leather, so they read as laces and not as pegs.
+  const lace = new THREE.CylinderGeometry(0.0019, 0.0019, 0.034, 5);
   for (let i = 0; i < 4; i++) {
     for (const tilt of [-1, 1]) {
       const piece = new THREE.Mesh(lace, m.laces);
-      piece.position.set(0, 0.06 - i * 0.02, -0.046);
-      piece.rotation.z = tilt * 0.9;
+      piece.position.set(0, 0.062 - i * 0.017, -0.045);
+      piece.rotation.z = tilt * 0.75;
       group.add(piece);
     }
   }
