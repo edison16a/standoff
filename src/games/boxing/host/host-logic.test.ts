@@ -83,9 +83,12 @@ describe("the fight driver", () => {
     const before = driver.match.now;
     driver.tick(1500);
     expect(driver.match.now).toBe(before);
+    // The host reports presence every frame, which must not keep putting the restart off.
     driver.setPresent(1, true, 1500);
     driver.tick(2000);
+    driver.setPresent(1, true, 2000);
     expect(driver.match.now).toBe(before);
+    driver.setPresent(1, true, 3100);
     driver.tick(3100);
     driver.tick(3300);
     expect(driver.match.now).toBeGreaterThan(before);

@@ -13,7 +13,7 @@ export function FightHud() {
   const hud = useBoxingStore((state) => state.hud);
   const session = useSession();
   if (!hud) return null;
-  const split = hud.views.length === 2;
+  const split = hud.views.length === 2 && hud.stage === "fight";
   return (
     <div className={`bx-hud${split ? " bx-hud--split" : ""}`}>
       {hud.views.map((id) => (
@@ -72,7 +72,7 @@ function ViewHud({ hud, me, split }: { hud: Hud; me: 0 | 1; split: boolean }) {
   const banners = hud.banners.filter((b) => b.fighter === null || b.fighter === me);
   const left = split ? (me === 0 ? "0%" : "50%") : "0%";
   return (
-    <div className="bx-view" style={{ left, width: split ? "50%" : "100%" }}>
+    <div className={`bx-view bx-view--${split ? (me === 0 ? "left" : "right") : "full"}`} style={{ left, width: split ? "50%" : "100%" }}>
       {mine.hurt > 0 && hud.stage === "fight" && <div key={mine.hurt} className="bx-hurt" />}
       {hud.stage === "fight" && (
         <div className="bx-bars">

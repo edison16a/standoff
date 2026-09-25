@@ -511,3 +511,12 @@
     height: 11%;
   }
 }
+
+/* In split screen the clock sits on the line between the views, so the bars leave it room. */
+.bx-view--left .bx-bars {
+  right: 90px;
+}
+
+.bx-view--right .bx-bars {
+  left: 90px;
+}

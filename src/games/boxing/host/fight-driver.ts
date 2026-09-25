@@ -97,7 +97,8 @@ export class FightDriver {
     if (this.pausedFor.length > 0) {
       this.match.paused = this.stage === "fight" && this.match.phase !== "over";
       this.resumeAt = null;
-    } else if (this.match.paused) {
+    } else if (this.match.paused && this.resumeAt === null) {
+      // Everyone is back: a moment to set themselves, counted from the first frame they were all seen.
       this.resumeAt = now + RESUME_MS;
     }
   }

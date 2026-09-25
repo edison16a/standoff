@@ -148,7 +148,7 @@ export class Director {
       const winner = match.result?.winner ?? 0;
       const spot = match.footwork.spots[winner];
       tv.setFov(36);
-      tv.orbit(spot, match.footwork.facing(winner) + 0.5 + t * 0.12, 3.3, 1.9, 1.35);
+      tv.orbit(spot, match.footwork.facing(winner) + 0.5 + t * 0.12, 3.9, 2.1, 1.3);
       tv.finish(dt);
       return [{ rect: FULL, camera: tv.camera }];
     }
