@@ -30,7 +30,7 @@ export const MOVEMENT = {
 
 export const LAUNCH = {
   /** How quickly a launch slows down, in metres per second each second. */
-  decay: 30,
+  decay: 34,
   /** Hitstun frames per metre per second of launch. */
   stunPerSpeed: 1.5,
   /** A launch this fast bounces off the floor instead of landing. */
@@ -52,11 +52,11 @@ export const HITSTOP = {
 
 export const ULT = {
   /** Charge from the clock alone fills it in this many seconds. */
-  fillSeconds: 45,
+  fillSeconds: 60,
   /** Damage dealt that fills it on its own. */
-  fillDamage: 110,
+  fillDamage: 200,
   /** Taking damage adds a little, so whoever is losing catches up. */
-  takenShare: 0.25,
+  takenShare: 0.2,
 };
 
 export const SHIELD = {

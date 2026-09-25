@@ -18,7 +18,7 @@ export const BEAR: Moveset = {
     motion: [{ frame: 8, vx: 0, vy: -20, set: true }],
     hitboxes: [box(0, 0.2, 0.9, 8, 24, hit(14, 8, 0.17, -80))],
   },
-  heavy: { name: "Big Paw", frames: 44, sound: "slam", heavy: true, armor: [6, 22], hitboxes: [box(1.5, 1.3, 0.9, 18, 22, hit(19, 11, 0.24, 38))] },
+  heavy: { name: "Big Paw", frames: 44, sound: "slam", heavy: true, armor: [6, 22], hitboxes: [box(1.5, 1.3, 0.9, 18, 22, hit(16, 11, 0.22, 38))] },
   heavySide: {
     name: "Charge",
     frames: 46,
@@ -30,7 +30,7 @@ export const BEAR: Moveset = {
       { frame: 12, vx: 13, vy: 0, set: true },
       { frame: 30, vx: 0, set: true },
     ],
-    hitboxes: [box(1.0, 1.1, 0.9, 12, 28, hit(15, 10, 0.2, 35))],
+    hitboxes: [box(1.0, 1.1, 0.9, 12, 28, hit(13, 9, 0.19, 35))],
   },
   heavyUp: {
     name: "Leap Slam",
@@ -46,7 +46,7 @@ export const BEAR: Moveset = {
     sound: "slam",
     heavy: true,
     armor: [8, 24],
-    hitboxes: [...both(1.5, 0.3, 0.9, 20, 24, hit(18, 12, 0.23, 45)), box(0, 0.5, 1.0, 20, 24, hit(18, 12, 0.23, 60))],
+    hitboxes: [...both(1.5, 0.3, 0.9, 20, 24, hit(16, 11, 0.21, 45)), box(0, 0.5, 1.0, 20, 24, hit(16, 11, 0.21, 60))],
   },
   ult: {
     name: "Earthquake",

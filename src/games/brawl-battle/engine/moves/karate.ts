@@ -4,7 +4,7 @@ import type { Moveset } from "./types";
 /** Karate: quick and light. Small hits that chain, and a fast flying kick. */
 export const KARATE: Moveset = {
   jab: { name: "Jab", frames: 14, sound: "punch", hitboxes: [box(0.75, 1.25, 0.45, 3, 5, hit(3, 4, 0.04, 20))] },
-  side: { name: "Roundhouse", frames: 24, sound: "kick", hitboxes: [box(1.0, 1.05, 0.55, 6, 9, hit(8, 7, 0.13, 35))] },
+  side: { name: "Roundhouse", frames: 24, sound: "kick", hitboxes: [box(1.0, 1.05, 0.55, 6, 9, hit(9, 7, 0.13, 35))] },
   up: { name: "High Kick", frames: 22, sound: "kick", hitboxes: [box(0.35, 2.0, 0.6, 5, 9, hit(7, 7, 0.12, 85))] },
   down: { name: "Low Sweep", frames: 20, sound: "kick", hitboxes: [box(0.95, 0.3, 0.5, 5, 8, hit(6, 6, 0.1, 25))] },
   air: { name: "Flying Knee", frames: 26, sound: "kick", landLag: 6, hitboxes: [box(0.6, 1.0, 0.6, 4, 12, hit(8, 6, 0.11, 40))] },
@@ -22,7 +22,7 @@ export const KARATE: Moveset = {
     sound: "punch",
     heavy: true,
     motion: [{ frame: 11, vx: 3 }],
-    hitboxes: [box(1.0, 1.2, 0.6, 12, 15, hit(14, 9, 0.21, 38))],
+    hitboxes: [box(1.0, 1.2, 0.6, 12, 15, hit(14, 9, 0.23, 38))],
   },
   heavySide: {
     name: "Flying Kick",
@@ -31,7 +31,7 @@ export const KARATE: Moveset = {
     heavy: true,
     landLag: 10,
     motion: [{ frame: 8, vx: 14, vy: 3, set: true }],
-    hitboxes: [box(0.8, 1.0, 0.6, 8, 20, hit(11, 8, 0.17, 35))],
+    hitboxes: [box(0.8, 1.0, 0.6, 8, 20, hit(11, 8, 0.19, 35))],
   },
   heavyUp: {
     name: "Rising Dragon",

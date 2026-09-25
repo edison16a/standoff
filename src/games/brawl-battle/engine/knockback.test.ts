@@ -22,11 +22,11 @@ describe("the knockback formula", () => {
     expect(launchSpeed(SMASH, 80, 82)).toBeGreaterThan(launchSpeed(SMASH, 80, 100));
   });
 
-  it("keeps a jab at 0 percent short, and makes a heavy hit KO from mid stage past 100 percent", () => {
+  it("keeps a jab at 0 percent short, and makes a heavy hit KO from mid stage well past 100 percent", () => {
     expect(launchDistance(launchSpeed(JAB, 3, 100))).toBeLessThan(2);
     const stage = STAGES["dojo-rooftop"];
     const fromMiddle = stage.blast.right - 3;
-    const speed = launchSpeed(SMASH, 120, 100);
+    const speed = launchSpeed(SMASH, 140, 100);
     const across = launchDistance(speed) * Math.cos((SMASH.angle * Math.PI) / 180);
     expect(across).toBeGreaterThan(fromMiddle);
     // The same hit at low percent keeps the fighter on the stage.
