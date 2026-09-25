@@ -2,11 +2,11 @@ import * as THREE from "three";
 import { STRIP_HALF_LENGTH } from "@/games/fencing/engine/rules";
 
 /** The least strip width the bout camera shows, so a close exchange never loses the blades. */
-const MIN_SPAN = 4.6;
+const MIN_SPAN = 4.1;
 /** Room around the pair for lunges and blades. */
-const MARGIN = 1.7;
+const MARGIN = 1.35;
 /** Height the bout camera must fit: a fencer with the sword raised, and some floor. */
-const FIT_HEIGHT = 2.35;
+const FIT_HEIGHT = 2.2;
 const BOUT_FOV = 30;
 const CLOSE_FOV = 24;
 
@@ -126,8 +126,8 @@ export class CameraDirector {
     const limit = STRIP_HALF_LENGTH - 1;
     const x = Math.max(-limit, Math.min(limit, centre));
     return {
-      position: new THREE.Vector3(x, 1.25 + distance * 0.1, distance),
-      target: new THREE.Vector3(x, 1.02, 0),
+      position: new THREE.Vector3(x, 1.3 + distance * 0.08, distance),
+      target: new THREE.Vector3(x, 1.1, 0),
       fov: BOUT_FOV,
     };
   }
