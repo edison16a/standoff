@@ -21,7 +21,8 @@
   width: 94%;
   transform: translateX(-50%);
   overflow: visible;
-  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.8));
+  /* Its own layer, painted once, so the filters are not redrawn with every frame of the scene. */
+  will-change: transform;
 }
 
 .zs-logo__word {

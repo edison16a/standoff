@@ -47,6 +47,7 @@ export class SurvivalRenderer implements SurvivalView {
   private readonly horde = new EscapeHorde();
   private last = 0;
   private lastSegment = 0;
+  private readonly probe = new Uint8Array(4);
 
   /** `random` drives the shake and the sprays. The showcase seeds it, so its clip plays the same each time. */
   constructor(
@@ -114,9 +115,14 @@ export class SurvivalRenderer implements SurvivalView {
     this.renderer.render(this.scene, this.camera);
   }
 
-  /** Waits until the GPU has drawn everything asked of it, so a frame is on the canvas before the next begins. */
+  /**
+   * Waits until the GPU has drawn everything asked of it, so a frame is on
+   * the canvas before the next begins. Browsers treat finish() as a flush,
+   * so reading back one pixel is what really waits.
+   */
   finish(): void {
-    this.renderer.getContext().finish();
+    const gl = this.renderer.getContext();
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, this.probe);
   }
 
   cast(seat: Seat, point: ScreenPoint, offsets: readonly Offset[]): (PelletHit | null)[] {

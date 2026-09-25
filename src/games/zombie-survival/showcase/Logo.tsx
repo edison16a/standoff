@@ -52,33 +52,39 @@ export function Logo() {
         <filter id="zs-logo-glow" x="-20%" y="-50%" width="140%" height="200%">
           <feGaussianBlur stdDeviation="18" />
         </filter>
+        {/* The shadow is drawn in the SVG, not by CSS, so it is painted once and not on every frame of the scene below. */}
+        <filter id="zs-logo-shadow" x="-10%" y="-20%" width="120%" height="150%">
+          <feDropShadow dx="0" dy="10" stdDeviation="22" floodColor="#000" floodOpacity="0.8" />
+        </filter>
       </defs>
 
       <g filter="url(#zs-logo-glow)" opacity="0.7">
         {word({ fill: "#5cff4a", stroke: "#5cff4a", strokeWidth: 24 })}
       </g>
 
-      <g filter="url(#zs-logo-rot)">
-        {/* A dark rim first, then the letters fattened by an outline of their own green. */}
-        {word({ fill: "#041006", stroke: "#041006", strokeWidth: 44 })}
-        <g fill="#041006">
-          {DRIPS.map(([x, length]) => (
-            <path key={x} d={`M${x - 15} 228 h30 v${length} a15 15 0 0 1 -30 0 z`} />
-          ))}
+      <g filter="url(#zs-logo-shadow)">
+        <g filter="url(#zs-logo-rot)">
+          {/* A dark rim first, then the letters fattened by an outline of their own green. */}
+          {word({ fill: "#041006", stroke: "#041006", strokeWidth: 44 })}
+          <g fill="#041006">
+            {DRIPS.map(([x, length]) => (
+              <path key={x} d={`M${x - 15} 228 h30 v${length} a15 15 0 0 1 -30 0 z`} />
+            ))}
+          </g>
+          {word({ fill: "url(#zs-logo-green)", stroke: "url(#zs-logo-green)", strokeWidth: 18 })}
+          <g fill="#3fb04b">
+            {DRIPS.map(([x, length]) => (
+              <path key={x} d={`M${x - 8} 226 h16 v${length} a8 8 0 0 1 -16 0 z`} />
+            ))}
+          </g>
         </g>
-        {word({ fill: "url(#zs-logo-green)", stroke: "url(#zs-logo-green)", strokeWidth: 18 })}
-        <g fill="#3fb04b">
-          {DRIPS.map(([x, length]) => (
-            <path key={x} d={`M${x - 8} 226 h16 v${length} a8 8 0 0 1 -16 0 z`} />
-          ))}
-        </g>
-      </g>
 
-      <g transform="translate(500 372) skewX(-12)">
-        <rect x="-390" y="-56" width="780" height="100" rx="6" fill="url(#zs-logo-red)" stroke="#1a0304" strokeWidth="8" />
-        <text x="0" y="27" textAnchor="middle" textLength="660" lengthAdjust="spacingAndGlyphs" className="zs-logo__sub" fill="#f6eedb" stroke="#f6eedb" strokeWidth="3">
-          SURVIVAL
-        </text>
+        <g transform="translate(500 372) skewX(-12)">
+          <rect x="-390" y="-56" width="780" height="100" rx="6" fill="url(#zs-logo-red)" stroke="#1a0304" strokeWidth="8" />
+          <text x="0" y="27" textAnchor="middle" textLength="660" lengthAdjust="spacingAndGlyphs" className="zs-logo__sub" fill="#f6eedb" stroke="#f6eedb" strokeWidth="3">
+            SURVIVAL
+          </text>
+        </g>
       </g>
     </svg>
   );
