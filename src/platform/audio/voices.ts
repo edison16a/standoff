@@ -22,6 +22,10 @@ export function tone(engine: AudioEngine, destination: AudioNode, at: number, op
   const { ctx } = engine;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
+  // Web Audio gains start at full level. A source that begins between two
+  // samples can let one sample through before the envelope takes hold, which
+  // is a loud click through a high pass. Starting silent removes it.
+  gain.gain.value = 0;
   osc.type = options.type ?? "sine";
   osc.frequency.setValueAtTime(options.frequency, at);
   if (options.glideTo) osc.frequency.exponentialRampToValueAtTime(options.glideTo, at + options.decay);
@@ -56,7 +60,9 @@ export function noise(engine: AudioEngine, destination: AudioNode, at: number, o
   filter.frequency.setValueAtTime(options.frequency, at);
   if (options.sweepTo) filter.frequency.exponentialRampToValueAtTime(options.sweepTo, at + options.decay);
   filter.Q.value = options.q ?? 1;
+  filter.frequency.value = options.frequency;
   const gain = ctx.createGain();
+  gain.gain.value = 0;
   const attack = options.attack ?? 0.005;
   envelope(gain.gain, at, attack, options.decay, options.peak);
   source.connect(filter).connect(gain).connect(destination);
