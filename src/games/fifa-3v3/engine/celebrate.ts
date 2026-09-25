@@ -51,8 +51,8 @@ export function celebrateGoal(state: MatchState, dt: number): void {
 }
 
 /**
- * At the final whistle the winners jog together and celebrate as a
- * group, so the camera can circle them, and the losers sink where they are.
+ * At the final whistle the winners line up side by side to celebrate,
+ * so the camera can circle them, and the losers trudge away.
  */
 export function celebrateWin(state: MatchState, dt: number): void {
   const winners = state.athletes.filter((a) => a.team === state.winner);
@@ -73,13 +73,18 @@ export function celebrateWin(state: MatchState, dt: number): void {
       const gap = Math.hypot(away.x, away.z);
       if (gap < 5) moveToward(a, { x: a.pos.x + (gap > 0.1 ? away.x / gap : 1) * 2, z: a.pos.z + (gap > 0.1 ? away.z / gap : 0) * 2 }, 0.35, dt);
       else brake(a, dt, 5);
-    } else if (dist(a.pos, middle) > 1.5) {
-      setAction(a, "free");
-      moveToward(a, middle, 0.6, dt);
     } else {
-      setAction(a, "celebrate");
-      brake(a, dt, 5);
-      faceCamera(a, dt);
+      // Side by side in a row facing the cameras, like a team photo, rather than piled into one another.
+      const spot = { x: middle.x + (a.slot - 1) * 1.5, z: middle.z };
+      const settled = a.action === "celebrate" ? 1.2 : 0.35;
+      if (dist(a.pos, spot) <= settled) {
+        setAction(a, "celebrate");
+        brake(a, dt, 5);
+        faceCamera(a, dt);
+        continue;
+      }
+      setAction(a, "free");
+      moveToward(a, spot, 0.6, dt);
     }
   }
 }

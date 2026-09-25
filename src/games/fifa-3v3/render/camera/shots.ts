@@ -26,7 +26,7 @@ export function frameFor(view: MatchView, options: { lobby?: boolean; replay?: b
     const focus = new THREE.Vector3();
     for (const a of winners) focus.add(new THREE.Vector3(a.x, 0, a.z));
     focus.divideScalar(Math.max(1, winners.length));
-    return { shot: "winners", focus, tags: true };
+    return { shot: "winners", focus, tags: false };
   }
   return { shot: "tv", tags: true };
 }
