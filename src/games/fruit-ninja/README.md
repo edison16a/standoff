@@ -28,13 +28,19 @@ Status: ready. Up to 4 players slice fruit on one shared screen. Each phone is a
 
 1 to 4 at once. Someone who joins or finishes setup during a round plays from the next round. Someone who leaves keeps their score on the board, greyed out. If their phone comes back during the round, they carry on. A different phone that takes a seat mid round waits for the next one and never inherits the old score. A round that everyone leaves ends early. The join code hides for the countdown and comes back on the results, so new players can join between rounds.
 
+## Sound
+
+The music is a lo-fi dojo groove in G minor: a koto plays a pentatonic hook for four bars, then a bamboo flute answers over new chords, on soft taiko, wood block and shaker. Rounds play it at 90 beats a minute. The lobby plays the same song slower as a quiet garden. A bomb ducks the music.
+
+Slices and swishes are layered and vary in pitch, so a flurry never sounds robotic. Combos of four or more draw a cheer from the crowd, and the winners get a fanfare, a cheer and applause.
+
 ## How it is built
 
 * `engine/`: the rules, with no drawing and no network. Blades cut only above a speed, tested as a swept segment against moving circles so fast fruit never slips between frames. The spawner paces waves and speeds up in the last ten seconds. Unit tested.
 * `render/`: three.js. Every fruit is built in code, turned around an axis with painted peel, and splits into two halves along the blade with its own flesh face (watermelon seeds, orange segments, apple core, kiwi rays and more). Both halves swing open so each shows its flesh. Juice drops, stains on the wood, glitter, explosions and confetti are instanced or pooled. Sparks, fire and smoke are camera facing quads rather than GL points, so they look the same on every graphics card. Only light brighter than white glows (blades, sparks, fire, rare fruit). A slow machine first gives up a little resolution, then the glow, never going below half resolution, and tries a step higher again once it keeps up.
 * `host/`: the session that referees rounds, the lobby, the HUD and the text over the board.
 * `phone/`: setup pages in the kit's `StepShell`, the blade previews and the play pad.
-* `audio/`: every sound synthesized on the platform's buses: whooshes, juicy slices, thunks, chimes, a fuse hiss, explosions, combos, the countdown, a gong and a fanfare.
+* `audio/`: every sound synthesized on the platform's buses: the music, whooshes, juicy slices, thunks, chimes, a fuse hiss, explosions, combos, the crowd, the countdown, a gong and a fanfare.
 * `protocol/`: zod schemas for the few messages of its own. The aim itself travels on the aim kit's messages.
 
 ## Home screen media

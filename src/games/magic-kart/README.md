@@ -52,6 +52,12 @@ Every map has chevron boards on the outside of each tight bend, painted arrows b
 
 Laps count by checkpoints in order: only driving through each one forwards counts. A kart that finds its way too far past the next checkpoint, or far back behind the last, is put back on the road. Falling off, or sitting stuck for a few seconds with the pedal down, also puts a kart back. Facing back down the track shows Wrong way.
 
+## Sound
+
+Every map has its own eight bar tune: an A section with the hook and a B section that answers it on new chords, with soft drums under a low pass filter. The lobby is a bell tune in F, the beach a steel drum calypso in C, space a reed arpeggio in A minor, the city a plucky groove in E minor and the volcano a driving tune in D minor. The last lap speeds the tune up a touch.
+
+Effects are layered and each repeat lands at a slightly different pitch. The crowd roars at the start and at every finish and claps through the podium. A spoken race caller, using the browser's voice at the player's sound effects volume, calls the start, the final lap, big hits, big air and the finishers. The music dips while it talks.
+
 ## Code
 
 * `engine/`: the race as pure code with no drawing: the track geometry, kart physics (the pedals, surge and drift model in `drive.ts`), laps and checkpoints, power ups, throws, obstacles, respawns and the computer drivers. Every number that shapes the feel is in `tuning.ts`. Unit tested.
@@ -59,7 +65,7 @@ Laps count by checkpoints in order: only driving through each one forwards count
 * `render/`: three.js. `models/` has the four karts and drivers built from painted primitives and merged per kart, `scenery/` one file per map, `track/` the road, kerbs, barriers and markings, `props/` the cubes, obstacles and throws, `effects/` the particles.
 * `host/`: the session on the computer (lobby, race driver, what the phones and the overlay see) and its React screens.
 * `phone/`: the controller session, the steering wheel maths and the phone screens. Steering reads where "up" points across the screen, so it holds however far the phone leans and never flips the way Euler angles do.
-* `audio/`: synthesized music per map, an engine per kart pitched by speed, and every effect, through the platform's audio buses.
+* `audio/`: synthesized music per map, an engine per kart pitched by speed, every effect, the crowd and the race caller, through the platform's audio buses (see Sound below).
 * `protocol/`: the zod schemas for the messages between the phones and the host.
 * `showcase/`: the game playing itself for the home screen's media (see below).
 
