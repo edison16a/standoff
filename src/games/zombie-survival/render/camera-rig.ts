@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { chopperPose } from "../engine/chopper";
 import type { SurvivalGame } from "../engine/game";
+import { STEP_SECONDS } from "../engine/pacing";
 import { checkpointDistance, fightFrame, pointAt, type Vec3 } from "../engine/route";
 import { CHOPPER_STAGE, STAGE_COUNT } from "../engine/stages";
 import { alive } from "../engine/zombie";
@@ -45,6 +46,9 @@ export class CameraRig {
   private bob = 0;
   private started = false;
 
+  /** `random` drives the shake. The showcase seeds it, so its clip plays the same each time. */
+  constructor(private readonly random: () => number = Math.random) {}
+
   kick(amount: number): void {
     this.shake = Math.min(1, this.shake + amount);
   }
@@ -59,7 +63,8 @@ export class CameraRig {
     this.look.lerp(look, jump ? 1 : 1 - Math.exp(-dt * (game.phase === "cutscene" ? 7 : 4)));
     this.shake = Math.max(0, this.shake - dt * 2.2);
     const s = this.shake * this.shake * 0.18;
-    camera.position.set(this.pos.x + (Math.random() - 0.5) * s, this.pos.y + (Math.random() - 0.5) * s, this.pos.z + (Math.random() - 0.5) * s);
+    const r = this.random;
+    camera.position.set(this.pos.x + (r() - 0.5) * s, this.pos.y + (r() - 0.5) * s, this.pos.z + (r() - 0.5) * s);
     camera.lookAt(this.look);
   }
 
@@ -69,11 +74,12 @@ export class CameraRig {
       case "lobby":
         return { pos: v(pointAt(3), EYE).add(breathe), look: v(pointAt(22), 1.3 + Math.sin(time * 0.2) * 0.2) };
       case "travel": {
-        this.bob += dt * 7.2;
-        const pos = v(pointAt(game.distance), EYE + Math.sin(this.bob * 2) * 0.035);
+        // One dip per footfall and one sway per stride, in time with the footsteps you hear.
+        this.bob += (dt * Math.PI) / STEP_SECONDS;
+        const pos = v(pointAt(game.distance), EYE + Math.sin(this.bob * 2) * 0.05);
         const ahead = v(pointAt(game.distance + 8), 1.5);
         const right = new THREE.Vector3().subVectors(ahead, pos).cross(new THREE.Vector3(0, 1, 0)).normalize();
-        return { pos: pos.addScaledVector(right, Math.sin(this.bob) * 0.04), look: ahead };
+        return { pos: pos.addScaledVector(right, Math.sin(this.bob) * 0.05), look: ahead };
       }
       case "cutscene":
         return game.cutscene === "escape" ? this.escape(game.phaseTime) : this.chopper(game, breathe);

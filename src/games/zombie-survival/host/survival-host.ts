@@ -6,6 +6,7 @@ import { HostAudio } from "../audio/host-audio";
 import type { GameEvent } from "../engine/events";
 import { SurvivalGame } from "../engine/game";
 import type { Offset, PelletHit } from "../engine/shooting";
+import type { WeaponId } from "../engine/weapons";
 import { phoneMessageSchema, type PhoneMessage } from "../protocol/messages";
 import { lowQuality } from "../render/quality";
 import { debugStage, exposeForTests } from "./debug";
@@ -13,7 +14,7 @@ import { EventRouter } from "./event-router";
 import { emptyHud, useSurvivalStore } from "./host-store";
 import { Lobby } from "./lobby";
 import { PhoneLink } from "./phone-link";
-import { buildGun, buildHud, buildScore, buildState } from "./views";
+import { armedSeats, buildGun, buildHud, buildScore, buildState } from "./views";
 
 /** What the session needs from the 3D view: raycasts and effects. */
 export interface SurvivalView {
@@ -49,7 +50,7 @@ export class SurvivalHost {
     this.audio = new HostAudio(room.audio);
     this.phones = new PhoneLink(room);
     this.router = new EventRouter(this.phones, this.audio, room);
-    useSurvivalStore.setState({ hud: emptyHud(), radio: null, banner: null, toasts: [], hurtAt: 0 });
+    useSurvivalStore.setState({ hud: emptyHud(), radio: null, banner: null, checkpoint: null, toasts: [], hurtAt: 0 });
     this.unsubscribe = room.on((event) => this.onRoom(event));
     this.offFire = this.aim.onFire((seat, point) => this.onFire(seat, point));
     exposeForTests("__zsHost", this);
@@ -62,6 +63,14 @@ export class SurvivalHost {
 
   attachView(view: SurvivalView | null): void {
     this.view = view;
+  }
+
+  armed(): { seat: Seat; weapon: WeaponId }[] {
+    return armedSeats(this.room.players(), this.lobby, this.game);
+  }
+
+  aimAt(seat: Seat, nowMs: number): ScreenPoint | null {
+    return this.aim.point(seat, nowMs);
   }
 
   dispose(): void {
@@ -105,7 +114,7 @@ export class SurvivalHost {
     this.lobby.clearReady();
     this.room.setPlaying(false);
     this.audio.onLobby();
-    useSurvivalStore.setState({ radio: null, banner: null, toasts: [] });
+    useSurvivalStore.setState({ radio: null, banner: null, checkpoint: null, toasts: [] });
   }
 
   private onFire(seat: Seat, point: ScreenPoint): void {

@@ -57,4 +57,17 @@ describe("hurting zombies", () => {
     expect(harm).toBeGreaterThan(0);
     expect(harm).toBeLessThanOrEqual(KINDS.walker.damage * 7);
   });
+
+  it("stops swinging when the crowd shoves it out of reach, and walks back in", () => {
+    const z = make("walker", 1, 3);
+    for (let t = 0; t < 3; t += 1 / 60) stepZombie(z, 1 / 60);
+    expect(z.state).toBe("attack");
+    z.ahead = KINDS.walker.reach + 0.95;
+    let harm = 0;
+    for (let t = 0; t < 0.4; t += 1 / 60) harm += stepZombie(z, 1 / 60);
+    expect(harm).toBe(0);
+    expect(z.state).toBe("walk");
+    for (let t = 0; t < 3; t += 1 / 60) stepZombie(z, 1 / 60);
+    expect(z.state).toBe("attack");
+  });
 });

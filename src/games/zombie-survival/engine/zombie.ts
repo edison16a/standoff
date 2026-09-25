@@ -36,6 +36,17 @@ export interface Zombie {
 const FIRST_SWING = 0.7;
 /** How quickly zombies drift sideways toward their spot on the front line, in m/s. */
 const DRIFT = 0.35;
+/** An attacker shoved further than this out of reach by the crowd steps back in before it swings again. */
+const SHOVED = 0.3;
+
+/**
+ * How far off centre a zombie may stand this far ahead and still be in
+ * view, with room to aim at its head. The street narrows to this as the
+ * dead close in, so none attacks from past the edge of the screen.
+ */
+export function sideRoom(ahead: number): number {
+  return Math.max(1.1, ahead * 0.7);
+}
 
 export function makeZombie(id: number, kind: ZombieKind, ahead: number, side: number, targetSide: number, opts: { hpScale: number; speedScale: number; harm: number; weakHp: number; seed: number }): Zombie {
   const spec = KINDS[kind];
@@ -83,6 +94,8 @@ export function stepZombie(z: Zombie, dt: number): number {
   }
   const drift = z.targetSide - z.side;
   z.side += Math.sign(drift) * Math.min(Math.abs(drift), DRIFT * dt);
+  const room = sideRoom(z.ahead);
+  z.side = Math.max(-room, Math.min(room, z.side));
   if (z.state === "walk") {
     // Bosses speed up once half their weak points are gone.
     const enraged = z.weak.length > 0 && weakLeft(z) <= z.weak.length / 2 ? 1.3 : 1;
@@ -92,6 +105,11 @@ export function stepZombie(z: Zombie, dt: number): number {
       setState(z, "attack");
       z.swingIn = FIRST_SWING;
     }
+    return 0;
+  }
+  // Pushed back behind the front line by the crowd, it cannot reach anyone. It waits its turn and walks in again.
+  if (z.ahead > spec.reach + SHOVED) {
+    setState(z, "walk");
     return 0;
   }
   z.swingIn -= dt;

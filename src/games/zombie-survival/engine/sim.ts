@@ -21,6 +21,8 @@ export interface Bot {
 const DT = 1 / 30;
 /** Seconds a person needs to swing onto a new target. */
 const ACQUIRE = 0.8;
+/** A zombie this close, in metres, pulls a bot's aim off whatever it was shooting. */
+const CLOSE = 7;
 
 export interface StageResult {
   stage: number;
@@ -29,8 +31,14 @@ export interface StageResult {
   seconds: number;
 }
 
-function nearest(game: SurvivalGame): Zombie | undefined {
-  return game.encounter?.zombies.filter(alive).sort((a, b) => a.ahead - b.ahead)[0];
+/**
+ * The zombie a bot shoots at. A team spreads its fire the way people do:
+ * the second player takes the second closest, and so on, doubling up
+ * once there are not enough to go round.
+ */
+function targetFor(game: SurvivalGame, rank: number): Zombie | undefined {
+  const standing = game.encounter?.zombies.filter(alive).sort((a, b) => a.ahead - b.ahead) ?? [];
+  return standing[rank % Math.max(1, standing.length)];
 }
 
 /** Plays one stage's fight from its start with the given health. */
@@ -45,10 +53,14 @@ export function simulateStage(stage: number, bots: readonly Bot[], health: numbe
   let t = 0;
   while (game.phase === "fight" && t < 400) {
     t += DT;
-    for (const bot of bots) {
-      const target = nearest(game);
-      if (!target) continue;
+    for (const [rank, bot] of bots.entries()) {
       const aim = aiming.get(bot.seat);
+      // Like a person, a bot stays on the one it is aiming at until it drops, unless another gets too close.
+      const held = aim && game.encounter?.find(aim.target);
+      const next = targetFor(game, rank);
+      const threat = next && held && next.ahead < CLOSE && next.ahead < held.ahead - 2;
+      const target = held && alive(held) && !threat ? held : next;
+      if (!target) continue;
       if (!aim || aim.target !== target.id) {
         aiming.set(bot.seat, { target: target.id, ready: t + ACQUIRE * (0.8 + rng.next() * 0.4) });
         continue;

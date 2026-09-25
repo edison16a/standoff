@@ -6,6 +6,7 @@ import { accuracy } from "../engine/stats";
 import { stage as stageSpec } from "../engine/stages";
 import { alive, weakLeft } from "../engine/zombie";
 import { isBoss, KINDS } from "../engine/zombie-kinds";
+import type { WeaponId } from "../engine/weapons";
 import type { GunMessage, ScoreMessage, SeatView, StateMessage } from "../protocol/messages";
 import type { HudSeat, SurvivalHud } from "./host-store";
 import type { Lobby } from "./lobby";
@@ -31,6 +32,15 @@ function seatViews(players: readonly Player[], lobby: Lobby, game: SurvivalGame)
       magazine: member?.gun.spec.magazine ?? 0,
       reloading: member?.gun.reloading ?? false,
     };
+  });
+}
+
+/** Every player with a gun: the squad in a run, or anyone who has picked one in the lobby. */
+export function armedSeats(players: readonly Player[], lobby: Lobby, game: SurvivalGame): { seat: Seat; weapon: WeaponId }[] {
+  if (game.running) return game.squad.present().map((m) => ({ seat: m.seat, weapon: m.gun.weapon }));
+  return players.flatMap((p) => {
+    const weapon = lobby.get(p.seat).weapon;
+    return p.connected && weapon ? [{ seat: p.seat, weapon }] : [];
   });
 }
 

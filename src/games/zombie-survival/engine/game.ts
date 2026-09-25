@@ -3,11 +3,11 @@ import { Achievements } from "./achievements";
 import { Encounter } from "./encounter";
 import type { Cutscene, GameEvent, Phase } from "./events";
 import { CHOPPER_LINES, ESCAPE_LINES, radioFor } from "./radio";
-import { CHECKPOINT_HEAL, CLEAR_SECONDS, CUTSCENE_SECONDS, MAX_HEALTH, RETRY_FLOOR, WALK_SPEED } from "./pacing";
+import { CHECKPOINT_HEAL, CLEAR_SECONDS, CUTSCENE_SECONDS, MAX_HEALTH, RETRY_FLOOR, STORY_CLEAR_SECONDS, WALK_SPEED } from "./pacing";
 import { checkpointDistance } from "./route";
 import { resolveShot, type CastFn } from "./shooting";
 import { Squad } from "./squad";
-import { CHOPPER_STAGE, STAGE_COUNT, stage as stageSpec } from "./stages";
+import { CHOPPER_STAGE, STAGE_COUNT, stage as stageSpec, storyBeat } from "./stages";
 import type { WeaponId } from "./weapons";
 
 export { MAX_HEALTH } from "./pacing";
@@ -39,6 +39,9 @@ export class SurvivalGame {
   private shotId = 0;
   private stageHurt = false;
   private lowest = MAX_HEALTH;
+
+  /** `random` spreads each shot's bullets. The showcase seeds it, so its fights replay exactly. */
+  constructor(private readonly random: () => number = Math.random) {}
 
   get running(): boolean {
     return this.phase !== "lobby";
@@ -79,7 +82,7 @@ export class SurvivalGame {
     }
     this.shotId += 1;
     this.emit({ type: "shot", seat, weapon: member.gun.weapon, shotId: this.shotId });
-    const events = resolveShot(member, this.encounter, cast, Math.random, this.phase === "fight");
+    const events = resolveShot(member, this.encounter, cast, this.random, this.phase === "fight");
     for (const event of events) this.emit(event);
     return true;
   }
@@ -118,7 +121,7 @@ export class SurvivalGame {
     } else if (this.phase === "fight") {
       this.updateFight(dt);
     } else if (this.phase === "clear") {
-      if (this.phaseTime >= CLEAR_SECONDS) this.afterClear();
+      if (this.phaseTime >= (storyBeat(this.stage) ? STORY_CLEAR_SECONDS : CLEAR_SECONDS)) this.afterClear();
     } else if (this.phase === "cutscene" && this.cutscene) {
       this.updateCutscene(this.cutscene, before);
     }
