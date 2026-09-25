@@ -119,9 +119,7 @@
   font-size: 22px;
 }
 
-/* Upright, the pad sits under the turn card and must not widen the page. */
-@media (orientation: portrait) {
-  .nba-phone--pad .nba-pad {
-    display: none;
-  }
+/* While the turn card shows, the pad under it must not widen the page. */
+.nba-phone--pad:has(> .nba-turn) .nba-pad {
+  display: none;
 }

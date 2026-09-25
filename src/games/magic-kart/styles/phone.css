@@ -39,11 +39,9 @@
   }
 }
 
-/* Upright, the pedals are covered by the turn your phone card and must not widen the page. */
-@media (orientation: portrait) {
-  .mk-phone--drive .mk-pad {
-    display: none;
-  }
+/* While the turn your phone card shows, the pedals under it must not widen the page. */
+.mk-phone--drive:has(> .mk-turn) .mk-pad {
+  display: none;
 }
 
 /* Step one: calibrate */

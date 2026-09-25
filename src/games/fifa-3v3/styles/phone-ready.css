@@ -86,9 +86,7 @@
   }
 }
 
-/* Upright, the pad sits under the turn card and must not widen the page. */
-@media (orientation: portrait) {
-  .fifa-phone--pad > :not(.fifa-turn) {
-    display: none;
-  }
+/* While the turn card shows, the pad under it must not widen the page. */
+.fifa-phone--pad:has(> .fifa-turn) > :not(.fifa-turn) {
+  display: none;
 }
