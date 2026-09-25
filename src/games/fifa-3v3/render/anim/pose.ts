@@ -47,10 +47,16 @@ export function ease(current: Pose, target: Pose, k: number): void {
   }
 }
 
-export function mixPoses(a: Pose, b: Pose, t: number): Pose {
-  const out = {} as Pose;
-  for (const j of JOINTS) out[j] = a[j] + (b[j] - a[j]) * t;
-  return out;
+/** Writes the pose a share `t` of the way from `a` to `b` into `out`, the body's turn going the short way round. */
+export function blendPoses(out: Pose, a: Pose, b: Pose, t: number): void {
+  for (const j of JOINTS) {
+    if (j === "yaw") {
+      let d = (b.yaw - a.yaw) % (Math.PI * 2);
+      if (d > Math.PI) d -= Math.PI * 2;
+      if (d < -Math.PI) d += Math.PI * 2;
+      out.yaw = a.yaw + d * t;
+    } else out[j] = a[j] + (b[j] - a[j]) * t;
+  }
 }
 
 /** Copies a pose onto the rig's joints. */

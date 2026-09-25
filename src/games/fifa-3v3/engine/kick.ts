@@ -3,11 +3,12 @@ import { goalCentre, goalX, shotAngle, toGoal } from "./goal";
 import { planDive } from "./keeper";
 import { needsAir, type KickPlan } from "./assist";
 import { leadFor, loftVelocity, passVelocity } from "./passing";
+import { shotSpread } from "./charge";
 import { aimPoint, solveKick } from "./shot-aim";
 import { pickOutcome, shotOdds, type ShotContext } from "./shot-odds";
 import { ASSIST, PASS, PITCH, SHOOT, TOUCH } from "./tuning";
 import type { Athlete, MatchState, ShotOutcome } from "./types";
-import { clamp, clamp01, dist, fromAngle, len, norm, sub, type Vec2 } from "./vec";
+import { clamp, clamp01, dist, dot, fromAngle, len, norm, sub, type Vec2 } from "./vec";
 
 export function owns(state: MatchState, a: Athlete): boolean {
   const owner = state.ball.owner;
@@ -25,14 +26,19 @@ export function startKick(state: MatchState, a: Athlete, plan: KickPlan, power: 
 export function startShot(state: MatchState, a: Athlete, power: number, aimZ: number | null = null): void {
   a.action = "shoot";
   a.actionT = 0;
-  a.actionLen = SHOOT.windup + 0.4;
   a.power = clamp01(power);
+  a.actionLen = shotWindup(a.power) + 0.4;
   a.aimZ = aimZ;
   a.charging = false;
   a.charge = 0;
   a.buffered = 0;
   const goal = goalCentre(other(a.team));
   a.actionDir = norm(sub({ x: goal.x, z: aimZ ?? 0 }, a.pos));
+}
+
+/** A bigger backswing for a harder shot. */
+export function shotWindup(power: number): number {
+  return SHOOT.windup + SHOOT.windupPower * clamp01(power);
 }
 
 /** Starts a pass to a team mate, or into space along `dir` when there is nobody to aim at. */
@@ -58,7 +64,7 @@ export function botPass(state: MatchState, a: Athlete, to: number): void {
 
 /** Called every step of a kick's wind up. Strikes the ball at the right moment. */
 export function progressKick(state: MatchState, a: Athlete, before: number): void {
-  const windup = a.action === "shoot" ? SHOOT.windup : a.lofted ? PASS.windup + 0.08 : PASS.windup;
+  const windup = a.action === "shoot" ? shotWindup(a.power) : a.lofted ? PASS.windup + 0.08 : PASS.windup;
   if (before >= windup || a.actionT < windup || !owns(state, a)) return;
   if (a.action === "shoot") strike(state, a);
   else kickPass(state, a);
@@ -81,7 +87,6 @@ function strike(state: MatchState, a: Athlete): void {
   const ball = state.ball;
   const defending = other(a.team);
   const keeper = state.keepers[defending];
-  const gx = goalX(defending);
   let pressure = 0;
   for (const o of state.athletes) if (o.team !== a.team) pressure = Math.max(pressure, clamp01((2.4 - dist(o.pos, a.pos)) / 1.8));
   const context: ShotContext = {
@@ -91,15 +96,18 @@ function strike(state: MatchState, a: Athlete): void {
     pressure,
     keeperOff: keeperOff(state, defending),
     power: a.power,
-    // Past the keeper, or the keeper is down or busy: nobody can save it.
-    beaten: Math.abs(ball.pos.x - gx) < Math.abs(keeper.pos.x - gx) + 0.8 || keeper.action !== "set",
+    spread: shotSpread(a.power),
+    // Round the keeper, or the keeper is down or busy: nobody can save it. A keeper
+    // right on the ball can still smother or block it.
+    beaten: (rounded(ball.pos, keeper.pos, defending) && dist(ball.pos, keeper.pos) > 1.3) || keeper.action !== "set",
     placement: placement(a.aimZ, keeper.pos.z),
   };
   let outcome: ShotOutcome = state.options.rig?.(state.shotCount, a.team) ?? pickOutcome(shotOdds(context), state.rng.next());
   // A save needs a keeper between the ball and the goal.
   if (context.beaten && (outcome === "catch" || outcome === "parry")) outcome = "goal";
-  const target = aimPoint(outcome, defending, keeper, state.rng, a.aimZ);
-  const speed = clamp(SHOOT.minSpeed + context.distance * 0.45 + a.power * 9, SHOOT.minSpeed, SHOOT.maxSpeed);
+  const target = aimPoint(outcome, defending, keeper, state.rng, a.aimZ, context.spread);
+  // The bar sets the pace; a long range effort needs a little extra to get there.
+  const speed = clamp(SHOOT.minSpeed + (SHOOT.maxSpeed - SHOOT.minSpeed) * a.power ** 0.85 + context.distance * 0.12, SHOOT.minSpeed, SHOOT.maxSpeed);
   const curl = state.rng.range(-1, 1) * (3 + 8 * a.shooting);
   const kick = solveKick({ ...ball.pos }, target, speed, curl);
   ball.owner = null;
@@ -113,6 +121,14 @@ function strike(state: MatchState, a: Athlete): void {
   state.flight = { shooter: a.id, team: a.team, outcome, t: 0, target, keeperX: keeper.pos.x, power: a.power, resolved: false };
   planDive(state, keeper);
   state.events.push({ type: "shot", athlete: a.id, team: a.team, outcome, power: a.power, distance: context.distance });
+}
+
+/** Whether the keeper is no longer between the ball and the goal: level with it or behind it. */
+function rounded(ball: Vec2, keeper: Vec2, defending: 0 | 1): boolean {
+  const goal = { x: goalX(defending), z: 0 };
+  const line = sub(goal, ball);
+  const along = dot(sub(keeper, ball), line) / Math.max(1e-6, dot(line, line));
+  return along < 0.05;
 }
 
 /** Rewards picking the corner the keeper has left open, and punishes shooting at them. */

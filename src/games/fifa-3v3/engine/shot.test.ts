@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest";
 import { newBall, stepBall, type Contact } from "./ball";
 import { outAt, scoredIn } from "./goal";
 import { Rng } from "./rng";
+import { shotSpread } from "./charge";
 import { aimPoint, fly, solveKick } from "./shot-aim";
 import { OUTCOMES, pickOutcome, shotOdds, type ShotContext } from "./shot-odds";
-import { BALL, STEP } from "./tuning";
+import { BALL, PITCH, STEP } from "./tuning";
 import type { Keeper, ShotOutcome } from "./types";
 
 const typical: ShotContext = { distance: 11, angle: 0.3, shooting: 0.85, pressure: 0.3, keeperOff: 0, power: 0.4, beaten: false };
@@ -14,9 +15,9 @@ function keeperAt(x: number, z: number): Keeper {
 }
 
 /** Strikes a ball from `from` with the outcome's aim and plays it out with full physics. */
-function playOut(outcome: ShotOutcome, seed: number, from = { x: 5, y: BALL.radius, z: 2 }) {
+function playOut(outcome: ShotOutcome, seed: number, from = { x: PITCH.halfLength - 11, y: BALL.radius, z: 2 }) {
   const rng = new Rng(seed);
-  const keeper = keeperAt(14.8, 0.4);
+  const keeper = keeperAt(PITCH.halfLength - 1.2, 0.4);
   const target = aimPoint(outcome, 1, keeper, rng);
   const kick = solveKick(from, target, 24, rng.range(-8, 8));
   const ball = newBall();
@@ -54,9 +55,25 @@ describe("the shot odds", () => {
     const close = shotOdds({ ...typical, distance: 5, angle: 0 });
     const far = shotOdds({ ...typical, distance: 20 });
     const pressed = shotOdds({ ...typical, pressure: 1 });
-    expect(close.goal).toBeGreaterThan(0.55);
-    expect(far.goal).toBeLessThan(0.3);
+    expect(close.goal).toBeGreaterThan(0.25);
+    expect(far.goal).toBeLessThan(0.15);
+    expect(far.goal).toBeLessThan(close.goal / 2);
     expect(pressed.goal).toBeLessThan(shotOdds(typical).goal);
+  });
+
+  it("sprays a red bar shot over and wide far more than a green one", () => {
+    const green = shotOdds({ ...typical, power: 0.2, spread: shotSpread(0.2) });
+    const red = shotOdds({ ...typical, power: 1, spread: shotSpread(1) });
+    expect(red.over).toBeGreaterThan(green.over * 3);
+    expect(red.wide).toBeGreaterThan(green.wide * 2);
+    expect(red.over + red.wide).toBeGreaterThan(0.25);
+    expect(green.over + green.wide).toBeLessThan(0.12);
+  });
+
+  it("rewards a well placed shot only when it goes where it was aimed", () => {
+    const placed = shotOdds({ ...typical, placement: 1, spread: shotSpread(0.3) });
+    const unplaced = shotOdds({ ...typical, placement: 0, spread: shotSpread(0.3) });
+    expect(placed.goal).toBeGreaterThan(unplaced.goal);
   });
 
   it("always scores once the keeper is beaten, bar the woodwork and misses", () => {
@@ -74,8 +91,8 @@ describe("the shot odds", () => {
 
 describe("the shot's flight", () => {
   it("passes through the chosen point", () => {
-    const from = { x: 3, y: BALL.radius, z: -4 };
-    const target = { x: 16, y: 1.2, z: 1.5 };
+    const from = { x: 8, y: BALL.radius, z: -4 };
+    const target = { x: PITCH.halfLength, y: 1.2, z: 1.5 };
     const kick = solveKick(from, target, 26, 9);
     const hit = fly(from, kick, target.x);
     expect(hit).not.toBeNull();

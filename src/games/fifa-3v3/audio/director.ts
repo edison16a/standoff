@@ -124,6 +124,17 @@ export class SoundDirector {
       case "slide":
         this.sfx.slide();
         break;
+      case "skill":
+        // A soft touch on the ball as the move starts.
+        this.sfx.bounce(3);
+        break;
+      case "skillResult":
+        if (event.result === "beat") {
+          this.crowd.ooh();
+          this.crowd.roar(0.3);
+          if (Math.random() < 0.35) this.call(pick([`Lovely skill from ${this.nameOf(event.athlete)}!`, "Left him for dead!", "What a move!"]), false);
+        } else this.crowd.groan();
+        break;
       case "tackle":
         this.sfx.tackle(event.won);
         if (event.won && event.victim !== null) {

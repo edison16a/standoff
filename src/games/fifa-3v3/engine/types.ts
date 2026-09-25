@@ -1,79 +1,10 @@
-import type { CharacterId } from "../roster";
 import type { TeamId } from "../teams";
+import type { Athlete } from "./athlete-types";
 import type { MatchEvent } from "./events";
 import type { Rng } from "./rng";
 import type { Vec2, Vec3 } from "./vec";
 
-export type AthleteAction = "free" | "shoot" | "pass" | "slide" | "getup" | "stumble" | "hurdle" | "celebrate" | "dejected";
-
-/** What a computer player is thinking. Refreshed a few times a second, not every step. */
-export interface Brain {
-  thinkIn: number;
-  target: Vec2;
-  /** Seconds before this player may try another slide or pass. */
-  slideWait: number;
-  passWait: number;
-  /** How long it has dribbled without doing anything else. */
-  carried: number;
-  /** A player on a phone asked this one for the ball, and how long ago that still counts. */
-  caller: number | null;
-  callFor: number;
-}
-
-export interface AthleteStats {
-  goals: number;
-  shots: number;
-  tackles: number;
-  passes: number;
-}
-
-export interface Athlete {
-  id: number;
-  team: TeamId;
-  slot: number;
-  character: CharacterId;
-  /** The phone driving this player, or null for a computer player. */
-  seat: number | null;
-  /** False while that phone is away. A computer plays for them until it comes back. */
-  online: boolean;
-  pos: Vec2;
-  vel: Vec2;
-  /** Radians, 0 facing +x. */
-  facing: number;
-  action: AthleteAction;
-  actionT: number;
-  actionLen: number;
-  /** The direction of a slide, or of the kick being wound up. */
-  actionDir: Vec2;
-  /** The run cycle, advanced by distance covered so the feet match the ground. */
-  stride: number;
-  /** Seconds until this player may touch the ball again. */
-  noTouch: number;
-  /** Seconds Shoot has been held with the ball. */
-  charge: number;
-  charging: boolean;
-  /** Seconds left on a Shoot press waiting for the ball to arrive. */
-  buffered: number;
-  /** Who a pass is meant for, while winding up. */
-  passTo: number | null;
-  /** The pass being wound up goes in the air. */
-  lofted: boolean;
-  /** Where on the goal line the player pointed a shot, or null to let the game pick. */
-  aimZ: number | null;
-  /** The stick at a Shoot press made before the ball arrived, for the first time kick. */
-  bufferAim: Vec2 | null;
-  /** How hard the kick being wound up is, 0 to 1. */
-  power: number;
-  /** A slide has already met the ball or the man, so it cannot win twice. */
-  slideDone: boolean;
-  /** 0 to 1, from the roster. */
-  speed: number;
-  shooting: number;
-  strength: number;
-  dribbling: number;
-  brain: Brain;
-  stats: AthleteStats;
-}
+export * from "./athlete-types";
 
 export type KeeperAction = "set" | "dive" | "catch" | "hold" | "throw" | "getup" | "cheer";
 
@@ -183,10 +114,12 @@ export interface Command {
   shootUp?: boolean;
   /** Where the stick pointed when Shoot went down or up, which aims the kick. */
   aim?: Vec2;
-  /** Slide in the move direction. Does nothing with the ball at your feet. */
+  /** With a shootUp: seconds the phone measured the press, which it showed on its bar. */
+  held?: number;
+  /** The second button: a slide in the move direction, or with the ball a skill move that way. */
   slide?: boolean;
   /** A computer player's pass, to a team mate it picked. */
   passTo?: number;
-  /** A computer player's instant shot, at this power. */
+  /** A computer player's shot: it holds Shoot until the bar reaches this level. */
   shoot?: number;
 }

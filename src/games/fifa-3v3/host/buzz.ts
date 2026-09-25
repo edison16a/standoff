@@ -21,6 +21,8 @@ export function buzzFor(event: MatchEvent, state: MatchState): [number, BuzzKind
       return one(event.athlete, "pass");
     case "control":
       return one(event.athlete, "ball");
+    case "skillResult":
+      return event.result === "beat" ? one(event.athlete, "pass") : [...one(event.athlete, "tackled"), ...one(event.defender, "tackle")];
     case "tackle":
       return [...one(event.athlete, "tackle"), ...one(event.victim, "tackled")];
     case "goal":

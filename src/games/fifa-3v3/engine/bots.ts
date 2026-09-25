@@ -2,6 +2,7 @@ import { attackSign, other } from "../teams";
 import { closestOfTeam, markSpot, markTarget, shapeSpot, supportSpot, throwSpot } from "./bot-shape";
 import { goalX, shotAngle, toGoal } from "./goal";
 import { owns } from "./kick";
+import { trySkill } from "./bot-skill";
 import { choosePassTarget, openness } from "./passing";
 import { PITCH } from "./tuning";
 import type { Athlete, Command, MatchState } from "./types";
@@ -19,13 +20,15 @@ export function botCommand(state: MatchState, a: Athlete, dt: number): Command {
   brain.thinkIn -= dt;
   brain.slideWait -= dt;
   brain.passWait -= dt;
+  brain.skillWait -= dt;
   brain.callFor -= dt;
   const carrying = owns(state, a);
   brain.carried = carrying ? brain.carried + dt : 0;
   if (state.phase !== "play") return { move: STILL };
   const target = carrying ? dribbleSpot(state, a) : runSpot(state, a);
   const command: Command = { move: approach(a, target) };
-  if (brain.thinkIn > 0 || a.action !== "free") return command;
+  // Mid charge the shot is already decided; it goes when the bar gets there.
+  if (brain.thinkIn > 0 || a.action !== "free" || a.charging) return command;
   brain.thinkIn = state.rng.range(0.12, 0.24);
   if (carrying) decideWithBall(state, a, command);
   else decideWithout(state, a, command);
@@ -69,7 +72,7 @@ function runSpot(state: MatchState, a: Athlete): Vec2 {
     // Attackers follow in for the rebound; defenders get back.
     if (state.flight!.team !== a.team) return shapeSpot(state, a);
     const s = attackSign(a.team);
-    return { x: goalX(other(a.team)) - s * 4.5, z: a.slot === 1 ? -2 : a.slot === 2 ? 2 : 0 };
+    return { x: goalX(other(a.team)) - s * 5.5, z: a.slot === 1 ? -2.5 : a.slot === 2 ? 2.5 : 0 };
   }
   if (owner?.kind === "athlete") {
     const carrier = state.athletes[owner.id]!;
@@ -95,23 +98,21 @@ function decideWithBall(state: MatchState, a: Athlete, command: Command): void {
   if (brain.caller !== null && brain.callFor > 0) {
     const caller = state.athletes[brain.caller];
     brain.caller = null;
-    if (caller && caller.team === a.team && dist(caller.pos, a.pos) < 24) {
+    if (caller && caller.team === a.team && dist(caller.pos, a.pos) < 30) {
       command.passTo = caller.id;
       return;
     }
   }
   const foe = other(a.team);
   const d = toGoal(a.pos, foe);
-  const range = 8 + 5 * a.shooting;
+  const range = 12 + 7 * a.shooting;
   let pressure = 0;
   for (const o of state.athletes) if (o.team === foe) pressure = Math.max(pressure, clamp((2.4 - dist(o.pos, a.pos)) / 1.8, 0, 1));
   if (d < range && shotAngle(a.pos, foe) < 1.05) {
-    const p = 0.28 + 0.5 * (1 - d / range) + pressure * 0.2 + (brain.carried > 3 ? 0.2 : 0);
-    if (rng.chance(p)) {
-      command.shoot = rng.range(0.15, 0.8);
-      return;
-    }
+    const p = 0.22 + 0.5 * (1 - d / range) + pressure * 0.2 + (brain.carried > 3 ? 0.2 : 0);
+    if (rng.chance(p)) return aimShot(state, a, command, d);
   }
+  if (pressure > 0.2 && trySkill(state, a, command)) return;
   if (brain.passWait > 0) return;
   if (pressure > 0.35 || brain.carried > 2.4) {
     const target = choosePassTarget(state, a, null);
@@ -128,10 +129,25 @@ function decideWithout(state: MatchState, a: Athlete, command: Command): void {
   const carrier = state.athletes[owner.id]!;
   if (carrier.team === a.team || carrier.action === "hurdle") return;
   const d = dist(a.pos, carrier.pos);
-  if (d > 2.6 || d < 0.5 || !closestOfTeam(state, a, carrier.pos)) return;
+  if (d > 2.6 || d < 0.5 || carrier.action === "skill" || !closestOfTeam(state, a, carrier.pos)) return;
   if (!state.rng.chance(0.3)) return;
   const aim = add(state.ball.pos, carrier.vel, 0.3);
   command.move = norm(sub(aim, a.pos));
   command.slide = true;
   a.brain.slideWait = state.rng.range(2.5, 4.5);
+}
+
+/**
+ * Picks the power by the range, like a person would: a placed green
+ * shot close in, a strong yellow one from the edge, and now and then a
+ * red rocket from distance. It aims for the side the keeper has left.
+ */
+function aimShot(state: MatchState, a: Athlete, command: Command, d: number): void {
+  const rng = state.rng;
+  const kz = state.keepers[other(a.team)].pos.z;
+  const side = Math.abs(kz) < 0.3 ? rng.sign() : -Math.sign(kz);
+  a.aimZ = side * rng.range(0.9, PITCH.goalHalfWidth - 0.4);
+  if (d < 9) command.shoot = rng.range(0.15, 0.5);
+  else if (d < 14) command.shoot = rng.range(0.45, 0.78);
+  else command.shoot = rng.range(0.65, 0.95);
 }

@@ -48,16 +48,31 @@ export class FifaPhone {
   /** Streams the pad only while the controller is on screen. */
   controlling(on: boolean): void {
     this.pad.stream(on);
-    if (!on) this.pad.releaseAll();
+    if (!on) {
+      this.pad.releaseAll();
+      store.setState({ shootSince: null });
+    }
   }
 
   stick(stick: Stick): void {
     this.pad.setStick(stick);
   }
 
+  /**
+   * Shoot/Pass. The phone times the press itself: the charge bar runs on
+   * that clock, and the host is told the same measure just before the
+   * release, so a tap or a bar level is judged exactly as it was seen.
+   */
   shoot(down: boolean): void {
-    if (down) this.pad.press(BUTTONS.shoot);
-    else this.pad.release(BUTTONS.shoot);
+    const since = store.getState().shootSince;
+    if (down) {
+      if (since === null) store.setState({ shootSince: performance.now() });
+      this.pad.press(BUTTONS.shoot);
+      return;
+    }
+    if (since !== null) this.send({ kind: "release", heldMs: Math.min(10000, performance.now() - since) });
+    store.setState({ shootSince: null });
+    this.pad.release(BUTTONS.shoot);
   }
 
   slide(down: boolean): void {

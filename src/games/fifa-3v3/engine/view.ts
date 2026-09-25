@@ -1,6 +1,7 @@
 import type { CharacterId } from "../roster";
 import type { TeamId } from "../teams";
-import type { AthleteAction, Dive, KeeperAction, MatchState, Phase } from "./types";
+import { chargeLevel, isTap } from "./charge";
+import type { Athlete, AthleteAction, Dive, KeeperAction, MatchState, Phase, SkillKind } from "./types";
 import { angleDiff, len } from "./vec";
 
 /**
@@ -23,8 +24,13 @@ export interface AthleteView {
   actionLen: number;
   power: number;
   hasBall: boolean;
-  /** 0 to 1 while Shoot is held. */
+  /** The charge bar is up: Shoot/Pass held past a tap with the ball. */
+  bar: boolean;
+  /** How full the bar is, 0 to 1, and 0 without one. Drives the wind up. */
   charge: number;
+  /** The skill move under way while the action is "skill", and the side it takes the ball to, or the side a beaten defender lunges. */
+  skill: SkillKind | null;
+  skillSide: 1 | -1;
   /** The goal scorer does their own celebration, team mates a plain cheer. */
   signature: boolean;
 }
@@ -92,13 +98,20 @@ export function buildView(state: MatchState): MatchView {
       actionLen: a.actionLen,
       power: a.power,
       hasBall: owner?.kind === "athlete" && owner.id === a.id,
-      charge: a.charging ? Math.min(1, a.charge / 0.75) : 0,
+      ...barOf(a, owner?.kind === "athlete" && owner.id === a.id),
+      skill: a.action === "skill" ? a.skill.kind : null,
+      skillSide: a.skill.side,
       signature: state.phase === "fulltime" || (celebrating && a.id === scorer),
     })),
     keepers: [keeperView(state, 0), keeperView(state, 1)],
     scorer,
     winner: state.winner,
   };
+}
+
+function barOf(a: Athlete, hasBall: boolean): { bar: boolean; charge: number } {
+  const bar = a.charging && hasBall && a.action === "free" && !isTap(a.charge);
+  return { bar, charge: bar ? chargeLevel(a.charge) : 0 };
 }
 
 function keeperView(state: MatchState, team: TeamId): KeeperView {

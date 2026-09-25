@@ -54,8 +54,10 @@ export class CameraDirector {
       case "tv": {
         // Narrow screens need the camera further back to keep the play in frame.
         const back = clamp(1.7 / this.aspect, 0.85, 1.7);
-        this.wantPos.set(clamp(b.x * 0.7, -10, 10), 8.6 * back, PITCH.halfWidth + 10 * back);
-        this.wantLook.set(clamp(b.x * 0.92, -12.5, 12.5), 0, clamp(b.z * 0.35, -3.5, 3.5) - 0.4);
+        // Panning stops short of each end, so the goal and the box stay in the picture.
+        const HL = PITCH.halfLength;
+        this.wantPos.set(clamp(b.x * 0.7, -HL * 0.62, HL * 0.62), 10 * back, PITCH.halfWidth + 11.5 * back);
+        this.wantLook.set(clamp(b.x * 0.92, -HL * 0.78, HL * 0.78), 0, clamp(b.z * 0.35, -4.5, 4.5) - 0.4);
         fov = 31;
         break;
       }
@@ -103,7 +105,7 @@ export class CameraDirector {
         break;
       case "lobby": {
         const a = time * 0.045 + 0.4;
-        this.wantPos.set(Math.sin(a) * 31, 13, Math.cos(a) * 25);
+        this.wantPos.set(Math.sin(a) * PITCH.halfLength * 1.9, 15, Math.cos(a) * PITCH.halfWidth * 2.5);
         this.wantLook.set(0, 0, 0);
         fov = 40;
         rate = 1.5;

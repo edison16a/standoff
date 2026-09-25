@@ -24,10 +24,10 @@ export function shapeSpot(state: MatchState, a: Athlete): Vec2 {
   const s = attackSign(a.team);
   const b = state.ball.pos;
   const own = goalX(a.team);
-  if (a.slot === 0) return onPitch({ x: lerp(b.x, s * 2, 0.35) + s * 1.5, z: b.z * 0.45 });
+  if (a.slot === 0) return onPitch({ x: lerp(b.x, s * 2.5, 0.35) + s * 2, z: b.z * 0.45 });
   const side = a.slot === 1 ? -1 : 1;
-  const x = lerp(own + s * 6.5, b.x, 0.5);
-  return onPitch({ x, z: side * 4.6 + b.z * 0.3 });
+  const x = lerp(own + s * 8.5, b.x, 0.5);
+  return onPitch({ x, z: side * 6 + b.z * 0.3 });
 }
 
 /**
@@ -41,10 +41,10 @@ export function supportSpot(state: MatchState, a: Athlete, carrier: Athlete): Ve
   const runner = others.every((m) => m.id > a.id);
   const lane = carrier.pos.z > 0 ? -1 : 1;
   const spot = runner
-    ? { x: carrier.pos.x + s * 6, z: lane * 4.5 }
-    : { x: carrier.pos.x - s * 4, z: -lane * 2 + carrier.pos.z * 0.2 };
+    ? { x: carrier.pos.x + s * 7.5, z: lane * 5.8 }
+    : { x: carrier.pos.x - s * 5, z: -lane * 2.6 + carrier.pos.z * 0.2 };
   // Stay out of the keeper's area and onside of the goal line.
-  spot.x = clamp(spot.x, -HL + 3, HL - 3);
+  spot.x = clamp(spot.x, -HL + 3.5, HL - 3.5);
   return onPitch(spot);
 }
 
@@ -52,8 +52,8 @@ export function supportSpot(state: MatchState, a: Athlete, carrier: Athlete): Ve
 export function throwSpot(a: Athlete): Vec2 {
   const s = attackSign(a.team);
   const own = goalX(a.team);
-  if (a.slot === 0) return { x: own + s * 13, z: 0 };
-  return { x: own + s * 6, z: (a.slot === 1 ? -1 : 1) * 6.5 };
+  if (a.slot === 0) return { x: own + s * 17, z: 0 };
+  return { x: own + s * 8, z: (a.slot === 1 ? -1 : 1) * 8.5 };
 }
 
 /**

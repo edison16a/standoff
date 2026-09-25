@@ -1,4 +1,5 @@
 import type { Celebration } from "../../roster";
+import type { Frame } from "./frame";
 import { neutral, type Pose } from "./pose";
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
@@ -160,14 +161,14 @@ export function cheer(t: number, phase: number): Pose {
   return p;
 }
 
-/** Hands on hips, head down, after conceding or losing. */
-export function dejected(t: number, phase: number): Pose {
-  const p = neutral();
+/** Hands on hips, head down, after conceding or losing, trudging on the run's legs. */
+export function dejected(f: Frame, t: number, phase: number): Frame {
+  const p = f.pose;
   p.neckX = 0.55 + 0.05 * Math.sin(t * 1.3 + phase);
   p.spineX = 0.22;
   p.shLX = p.shRX = 0.35;
   p.shLZ = p.shRZ = 0.62;
   p.elL = p.elR = -1.7;
-  p.kneeL = p.kneeR = 0.12;
-  return p;
+  p.spineY *= 0.3;
+  return f;
 }

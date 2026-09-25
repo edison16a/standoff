@@ -48,10 +48,11 @@ export class Arena {
     this.key.castShadow = true;
     this.key.shadow.mapSize.set(2048, 2048);
     const cam = this.key.shadow.camera;
-    cam.left = -24;
-    cam.right = 24;
-    cam.top = 18;
-    cam.bottom = -18;
+    // Wide enough for the whole pitch and its boards.
+    cam.left = -(PITCH.halfLength + 8);
+    cam.right = PITCH.halfLength + 8;
+    cam.top = PITCH.halfWidth + 8;
+    cam.bottom = -(PITCH.halfWidth + 8);
     cam.near = 5;
     cam.far = 90;
     this.key.shadow.bias = -0.0004;

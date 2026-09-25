@@ -1,5 +1,5 @@
 import type { TeamId } from "../teams";
-import type { ShotOutcome } from "./types";
+import type { ShotOutcome, SkillKind } from "./types";
 import type { Vec3 } from "./vec";
 
 /**
@@ -24,6 +24,9 @@ export type MatchEvent =
   | { type: "slide"; athlete: number }
   | { type: "tackle"; athlete: number; victim: number | null; won: boolean }
   | { type: "stumble"; athlete: number }
+  | { type: "skill"; athlete: number; kind: SkillKind }
+  /** A skill move met a defender: beat them, or gave the ball away. */
+  | { type: "skillResult"; athlete: number; defender: number; result: "beat" | "lost" }
   | { type: "throw"; team: TeamId }
   | { type: "golden" }
   | { type: "fulltime"; winner: TeamId | null };

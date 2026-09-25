@@ -9,6 +9,7 @@ import { buildView, type MatchView } from "../engine/view";
 import type { Shot } from "../render/camera/director";
 import type { MatchRenderer } from "../render/match-renderer";
 import { attackSign } from "../teams";
+import { dist } from "../engine/vec";
 
 const LINEUP: Entrant[] = [
   { team: 0, character: "ronaldo", seat: null },
@@ -30,7 +31,8 @@ function fresh(): MatchState {
 /**
  * When the showcase's goal is struck, found by playing the seeded match
  * through once: the first strike from outside the box after some build
- * up, which films better than a tap in from the kick off.
+ * up, with nobody right on the shooter so the strike can be seen, which
+ * films better than a tap in from the kick off.
  */
 function pickStrike(): number {
   const state = fresh();
@@ -39,7 +41,9 @@ function pickStrike(): number {
     stepMatch(state);
     for (const e of state.events) {
       if (e.type !== "shot" || e.outcome !== "goal") continue;
-      if (state.time > 9 && e.distance > 7) return state.time;
+      const shooter = state.athletes[e.athlete]!;
+      const open = state.athletes.every((o) => o.team === shooter.team || dist(o.pos, shooter.pos) > 1.6);
+      if (state.time > 9 && e.distance > 7 && open) return state.time;
       if (fallback === 20) fallback = state.time;
     }
   }
@@ -73,7 +77,7 @@ export class ShowcaseScene {
     this.state = fresh();
     const strike = pickStrike();
     // The loop: the build up fills the first five seconds of the film, then the finish and the party.
-    const start = kind === "loop" ? Math.max(0, strike - WARMUP - 5.2) : strike + (kind === "icon" ? 0.03 : 0.3);
+    const start = kind === "loop" ? Math.max(0, strike - WARMUP - 5.2) : strike + (kind === "icon" ? 0.035 : 0.3);
     while (this.state.time < start + seek) stepMatch(this.state);
     this.view = buildView(this.state);
     if (kind !== "loop") {
@@ -130,14 +134,35 @@ export class ShowcaseScene {
   }
 
   /**
-   * Close on the shooter's strike from the lit near side, the ball leaving
-   * the boot. It looks low, so the boot and ball sit above the logo.
+   * Close on the shooter's strike from the goal side, the ball leaving
+   * the boot. It looks low, so the boot and ball sit above the logo. Of
+   * a fan of angles it takes the one nearest a three quarter view that
+   * no other player blocks.
    */
   private heroPose(): Pose {
     const s = this.state.athletes[this.shooter() ?? 0]!;
     const dir = attackSign(s.team);
-    const look = new THREE.Vector3(s.pos.x + dir * 0.8, 0.6, s.pos.z + 0.3);
-    const pos = new THREE.Vector3(s.pos.x + dir * 3.4, 0.9, s.pos.z + 2.3);
-    return { pos, look, fov: 40 };
+    let best: { pos: THREE.Vector3; score: number } | null = null;
+    for (let deg = -80; deg <= 80; deg += 10) {
+      const a = (deg * Math.PI) / 180;
+      const pos = new THREE.Vector3(s.pos.x + dir * 4.6 * Math.cos(a), 0.9, s.pos.z + 4.6 * Math.sin(a));
+      const clear = Math.min(...this.state.athletes.filter((o) => o !== s).map((o) => gapToSight(o.pos, s.pos, pos)));
+      // Prefer the lit near side, looking back at the strike; a player in the line of sight rules it out.
+      const score = Math.min(clear, 1.2) * 3 - Math.abs(deg - 45) / 40;
+      if (!best || score > best.score) best = { pos, score };
+    }
+    // Aimed a little toward the ball, so it is in the picture on its way.
+    const ball = this.state.ball.pos;
+    const look = new THREE.Vector3(s.pos.x * 0.65 + ball.x * 0.35, 0.65, s.pos.z * 0.65 + ball.z * 0.35);
+    return { pos: best!.pos, look, fov: 40 };
   }
+}
+
+/** How far a player stands from the line between the camera and the shooter, beyond the shooter. */
+function gapToSight(p: { x: number; z: number }, from: { x: number; z: number }, cam: THREE.Vector3): number {
+  const dx = cam.x - from.x;
+  const dz = cam.z - from.z;
+  const t = ((p.x - from.x) * dx + (p.z - from.z) * dz) / (dx * dx + dz * dz);
+  if (t < 0.05 || t > 1.1) return Infinity;
+  return Math.hypot(from.x + dx * t - p.x, from.z + dz * t - p.z);
 }

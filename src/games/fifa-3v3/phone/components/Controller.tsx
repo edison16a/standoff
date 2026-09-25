@@ -1,10 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Joystick } from "@/games/kit/pad/Joystick";
 import { PadButton } from "@/games/kit/pad/PadButton";
 import type { PhoneState } from "../../protocol";
 import { ROSTER } from "../../roster";
 import { TEAMS } from "../../teams";
+import { ButtonFace } from "./ButtonFace";
+import { ChargeBar } from "./ChargeBar";
 import { usePhone } from "./session-context";
 
 function clock(seconds: number): string {
@@ -13,13 +15,13 @@ function clock(seconds: number): string {
 
 /**
  * The phone as a controller, held sideways: the thumb stick on the left
- * moves your player (and dribbles), Shoot and Slide on the right. Shoot
- * kicks the ball the way the stick points, and the game decides between
- * a shot and a pass. The middle shows your side, the score and the clock.
+ * moves your player (and dribbles), two buttons on the right. Shoot/Pass
+ * passes on a tap and shoots on a hold, with the charge bar setting the
+ * power. The second button slides without the ball and does a skill
+ * move with it. The middle shows your side, the score and the clock.
  */
 export function Controller({ host }: { host: PhoneState }) {
   const phone = usePhone();
-  const [charging, setCharging] = useState(false);
   const team = host.team !== null ? TEAMS[host.team] : TEAMS[0];
   const star = host.pick ? ROSTER[host.pick] : null;
 
@@ -50,25 +52,18 @@ export function Controller({ host }: { host: PhoneState }) {
           {host.goals > 0 && <span>{host.goals === 1 ? "1 goal" : `${host.goals} goals`}</span>}
         </div>
         {status && <div className={`fifa-pad__status ${host.hasBall && !host.banner ? "fifa-pad__status--ball" : ""}`}>{status}</div>}
+        <ChargeBar hasBall={host.hasBall} />
       </div>
       <div className="fifa-pad__buttons">
-        <div className={`fifa-pad__shoot ${charging ? "fifa-pad__shoot--charging" : ""}`}>
-          <PadButton
-            label="Shoot"
-            size="lg"
-            colour="#ef4444"
-            onDown={() => {
-              setCharging(true);
-              phone.shoot(true);
-            }}
-            onUp={() => {
-              setCharging(false);
-              phone.shoot(false);
-            }}
-          />
+        <div className="fifa-pad__shoot">
+          <PadButton label="Shoot/Pass" size="lg" colour="#ef4444" onDown={() => phone.shoot(true)} onUp={() => phone.shoot(false)}>
+            <ButtonFace icon="ball" text="Shoot/Pass" />
+          </PadButton>
         </div>
-        <div className={`fifa-pad__slide ${host.hasBall ? "fifa-pad__slide--idle" : ""}`}>
-          <PadButton label="Slide" size="md" colour="#f59e0b" onDown={() => phone.slide(true)} onUp={() => phone.slide(false)} />
+        <div className={`fifa-pad__slide ${host.hasBall ? "fifa-pad__slide--skill" : ""}`}>
+          <PadButton label={host.hasBall ? "Skill" : "Slide"} size="md" colour={host.hasBall ? "#a855f7" : "#f59e0b"} onDown={() => phone.slide(true)} onUp={() => phone.slide(false)}>
+            <ButtonFace icon={host.hasBall ? "skill" : "slide"} text={host.hasBall ? "Skill" : "Slide"} />
+          </PadButton>
         </div>
       </div>
     </div>

@@ -114,34 +114,6 @@
   border-radius: 50%;
 }
 
-/* A ring that fills while Shoot is held, for a harder shot. */
-.fifa-pad__shoot::after {
-  content: "";
-  position: absolute;
-  inset: -8px;
-  border-radius: 50%;
-  background: conic-gradient(#fde047 var(--fill, 0%), transparent 0);
-  -webkit-mask: radial-gradient(circle, transparent 64%, #000 65%);
-  mask: radial-gradient(circle, transparent 64%, #000 65%);
-  pointer-events: none;
-}
-
-.fifa-pad__shoot--charging::after {
-  animation: fifa-charge 750ms linear forwards;
-}
-
-@property --fill {
-  syntax: "<percentage>";
-  inherits: false;
-  initial-value: 0%;
-}
-
-@keyframes fifa-charge {
-  to {
-    --fill: 100%;
-  }
-}
-
 .fifa-turn {
   position: fixed;
   inset: 0;
@@ -198,12 +170,115 @@
   font-weight: 700;
 }
 
-/* With the ball at your feet a slide does nothing, so the button rests. */
+/* With the ball the second button turns into Skill, with a pop so the change is seen. */
 .fifa-pad__slide {
-  transition: opacity 160ms ease, transform 160ms ease;
+  transition: transform 160ms ease;
 }
 
-.fifa-pad__slide--idle {
-  opacity: 0.4;
-  transform: scale(0.92);
+.fifa-pad__slide--skill {
+  animation: fifa-pop 220ms ease-out;
+}
+
+@keyframes fifa-pop {
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* An icon over a short word on each round button. */
+.fifa-face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  line-height: 1;
+}
+
+.fifa-face svg {
+  width: 26px;
+  height: 26px;
+}
+
+.fifa-face__text {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* The shot's charge bar: green, yellow and red zones with a white fill sweeping across. */
+.fifa-charge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  max-width: 220px;
+  opacity: 0;
+  transform: translateY(6px) scale(0.96);
+  transition: opacity 90ms ease, transform 90ms ease;
+  pointer-events: none;
+}
+
+.fifa-charge--on {
+  opacity: 1;
+  transform: none;
+}
+
+.fifa-charge__track {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 18px;
+  overflow: hidden;
+  border-radius: 9px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85), 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.fifa-charge__zone {
+  height: 100%;
+  opacity: 0.45;
+}
+
+.fifa-charge__zone--green {
+  background: #22c55e;
+}
+
+.fifa-charge__zone--yellow {
+  background: #facc15;
+}
+
+.fifa-charge__zone--red {
+  background: #ef4444;
+}
+
+.fifa-charge__fill {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(0 100% 0 0);
+}
+
+.fifa-charge__needle {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  left: 0;
+  width: 4px;
+  margin-left: -2px;
+  border-radius: 2px;
+  background: #ffffff;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+}
+
+.fifa-charge__label {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.fifa-charge[data-zone="red"] .fifa-charge__label {
+  color: #ef4444;
 }
