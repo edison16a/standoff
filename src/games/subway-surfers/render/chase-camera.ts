@@ -55,13 +55,14 @@ export class ChaseCamera {
     this.shake *= Math.exp(-5 * dt);
     const z = -s.distance;
     const c = this.crashView;
-    // After a crash the camera swings out to the side and looks back at the runner.
-    const back = 5.3 - 1.2 * c;
-    const side = 2.6 * c;
-    const height = 3.4 + this.y - 0.8 * c;
+    // After a crash the camera swings a little toward the middle and rises to look down at the runner.
+    // Staying above the roofs means it never ends up inside a train on the next track.
+    const back = 5.3 - 1.4 * c;
+    const side = 1.3 * c * (s.x > 0.1 ? -1 : 1);
+    const height = 3.4 + this.y + 1.1 * c;
     const jitter = this.shake * 0.25;
     this.camera.position.set(this.x + side + Math.sin(time * 61) * jitter, height + Math.sin(time * 47) * jitter, z + back);
-    this.look.set(this.x * 0.9 + side * 0.2, 1.1 + this.y * 0.9, z - 8 + 8.5 * c);
+    this.look.set(this.x * 0.9 + side * 0.2, 1.1 + this.y * 0.9, z - 8 + 7 * c);
     this.camera.lookAt(this.look);
   }
 }

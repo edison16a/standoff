@@ -93,8 +93,8 @@ function cab(b: MeshBuilder, livery: number, face: number, lit: boolean): void {
   const face3 = textured(`cab-${livery}`, () => cabTexture(livery));
   b.box(W - 0.1, BODY_TOP - BODY_BOTTOM, 0.24, { color: LIVERIES[livery % LIVERIES.length]!.body, finish: "gloss" }, [0, mid, z + face * 0.06], undefined, 0.1);
   b.panel(W - 0.16, BODY_TOP - BODY_BOTTOM - 0.06, face3, [0, mid, outer + face * 0.004], [0, face > 0 ? 0 : Math.PI, 0]);
-  // A visor over the windscreen and a coupler below.
-  b.box(W - 0.2, 0.12, 0.42, { color: 0x1d2029, finish: "gloss" }, [0, 2.62, outer + face * 0.2]);
+  // A visor along the top of the windscreen, under the destination sign so the sign stays readable, and a coupler below.
+  b.box(W - 0.2, 0.08, 0.36, { color: 0x1d2029, finish: "gloss" }, [0, 2.47, outer + face * 0.17]);
   b.box(0.46, 0.28, 0.5, { color: 0x3a3f4b, finish: "metal" }, [0, 0.55, outer + face * 0.2]);
   const lamp = lit ? { color: 0xfff4c8, finish: "glow" as const } : { color: 0x8c8f96, finish: "satin" as const };
   for (const x of [-0.72, 0.72]) {
