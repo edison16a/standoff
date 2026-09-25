@@ -7,6 +7,8 @@ const BEHIND = 1.5;
 const SIDE = -0.68;
 const HEIGHT = 1.86;
 const LOOK_HEIGHT = 1.3;
+/** How far from the middle the camera may go, inside the ropes. */
+const INSIDE = 2.55;
 
 /**
  * The console boxing view for one player: behind and above their own
@@ -23,7 +25,7 @@ export class ShoulderCamera {
   private readonly wantLook = new THREE.Vector3();
 
   constructor(fov: number) {
-    this.camera = new THREE.PerspectiveCamera(fov, 16 / 9, 0.05, 120);
+    this.camera = new THREE.PerspectiveCamera(fov, 16 / 9, 0.1, 120);
   }
 
   /** `me` and `them` are the boxers' spots on the canvas; `down` lifts the camera during a knockdown. */
@@ -40,6 +42,9 @@ export class ShoulderCamera {
     this.wantEye.set(me.x - fx * back - rx * SIDE, HEIGHT + 0.6 * down, me.z - fz * back - rz * SIDE);
     // Aimed a little to the right of the opponent, so our own boxer sits to the left of the picture.
     this.wantLook.set(me.x + fx * gap * 0.75 + rx * 0.12, LOOK_HEIGHT - 0.5 * down, me.z + fz * gap * 0.75 + rz * 0.12);
+    // Never outside the ropes: a rope right in front of the lens fills the picture.
+    this.wantEye.x = Math.max(-INSIDE, Math.min(INSIDE, this.wantEye.x));
+    this.wantEye.z = Math.max(-INSIDE, Math.min(INSIDE, this.wantEye.z));
     const eye = this.eye.update(this.wantEye, dt, 2.2);
     const look = this.look.update(this.wantLook, dt, 3);
     this.camera.position.copy(eye);

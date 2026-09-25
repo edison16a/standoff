@@ -18,7 +18,9 @@ export class TvCamera {
   private readonly target = new THREE.Vector3();
 
   constructor(fov = 38) {
-    this.camera = new THREE.PerspectiveCamera(fov, 16 / 9, 0.05, 140);
+    // A near plane well out from the lens clips away a rope passing just in front of it,
+    // as a broadcast camera shooting between the ropes would.
+    this.camera = new THREE.PerspectiveCamera(fov, 16 / 9, 0.4, 140);
   }
 
   setAspect(aspect: number): void {

@@ -135,7 +135,8 @@ export class FightScene {
       // The gloves are just in front of the face.
       this.fx.block(at.addScaledVector(direction, -0.14), direction);
     } else {
-      this.fx.hit(at, direction, power);
+      // Sparks start where the glove meets the face, on the side the punch came from, so the head never hides them.
+      this.fx.hit(at.addScaledVector(direction, -0.09), direction, power);
     }
   }
 

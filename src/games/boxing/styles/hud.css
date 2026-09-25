@@ -284,14 +284,14 @@
   color: var(--bx-gold);
 }
 
+/* Just under the top cinema bar, where it never covers the replay itself. */
 .bx-replay {
   position: absolute;
-  top: 70px;
-  left: 50%;
+  top: calc(11% + 18px);
+  left: 32px;
   display: flex;
   align-items: center;
   gap: 16px;
-  transform: translateX(-50%);
 }
 
 .bx-replay__tag {
