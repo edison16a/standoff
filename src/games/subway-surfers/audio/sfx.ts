@@ -26,6 +26,12 @@ export class Sfx {
     return node;
   }
 
+  /** Unhooks the panners, once the room closes. */
+  dispose(): void {
+    for (const node of this.panners.values()) node.disconnect();
+    this.panners.clear();
+  }
+
   private get at(): number {
     return this.engine.now + 0.005;
   }

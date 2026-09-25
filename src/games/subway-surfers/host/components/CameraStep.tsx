@@ -29,6 +29,31 @@ export function CameraStep({ kit }: { kit: CameraKit }) {
   );
 }
 
+/**
+ * Over the game when the camera or the body tracking stops mid run, as
+ * when the camera is unplugged. Every run waits, and the card says what
+ * went wrong with a way to try again.
+ */
+export function CameraTrouble({ kit }: { kit: CameraKit }) {
+  const session = useSession();
+  const status = useKitStatus(kit);
+  if (!status.camera.problem && status.model.state !== "problem") return null;
+  return (
+    <div className="ss-center ss-center--over">
+      <ModelLoader kit={kit} title="The camera stopped" autoStart={false}>
+        <div className="ss-center__actions">
+          <button type="button" className="ss-button ss-button--quiet" onClick={() => session.toLobby()}>
+            Back
+          </button>
+          <button type="button" className="ss-button ss-button--quiet" onClick={() => session.playWithKeys()}>
+            Play with the keyboard
+          </button>
+        </div>
+      </ModelLoader>
+    </div>
+  );
+}
+
 /** Each player finds their spot and stands tall and still while their ring fills. */
 export function CalibrateStep({ kit }: { kit: CameraKit }) {
   const session = useSession();

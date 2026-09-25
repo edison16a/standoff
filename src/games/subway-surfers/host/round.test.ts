@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Countdown } from "./countdown";
 import type { Intent } from "./controls";
 import { resultsOf } from "./results";
-import { CRASH_HOLD_S, RESUME_S, Round } from "./round";
+import { CRASH_HOLD_S, GIVE_UP_S, RESUME_S, Round } from "./round";
 
 const still: Intent = { lane: 0, jump: false, duck: false, ducking: false };
 
@@ -35,6 +35,23 @@ describe("round", () => {
     expect(round.over).toBe(run.time - run.crashed!.time > CRASH_HOLD_S);
     play(round, CRASH_HOLD_S + 0.1, [still]);
     expect(round.over).toBe(true);
+  });
+
+  it("ends a two player round when one crashed and the other walked off for good", () => {
+    const round = new Round(2, 42);
+    round.setAway(2, true);
+    play(round, 30);
+    expect(round.seats[0]!.run.crashed).not.toBeNull();
+    expect(round.seats[1]!.run.crashed).toBeNull();
+    expect(round.over).toBe(true);
+  });
+
+  it("waits for a lone player who stepped out, however long", () => {
+    const round = new Round(1, 42);
+    round.setAway(1, true);
+    play(round, GIVE_UP_S + 5, [still]);
+    expect(round.over).toBe(false);
+    expect(round.seats[0]!.run.runner.distance).toBe(0);
   });
 
   it("feeds camera moves to the tutorial in order", () => {

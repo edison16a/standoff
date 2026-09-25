@@ -92,6 +92,11 @@
   padding: 24px;
 }
 
+.ss-center--over {
+  z-index: 5;
+  background: rgba(10, 14, 40, 0.6);
+}
+
 .ss-center__actions {
   display: flex;
   justify-content: center;

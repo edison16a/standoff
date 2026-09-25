@@ -147,6 +147,7 @@ export class SoundDirector {
   stop(): void {
     this.stopVoices();
     this.music.stop();
+    this.sfx.dispose();
   }
 
   private stopVoices(): void {

@@ -8,6 +8,7 @@ import { Controls } from "./controls";
 import { Countdown } from "./countdown";
 import { recordResults } from "./results";
 import { Round } from "./round";
+import { RunWatch } from "./run-watch";
 import { initialSurfState, shownNames, useSurfStore as store, type Phase } from "./store";
 import { BestStore } from "./best-store";
 
@@ -36,7 +37,10 @@ export class SurfSession {
   private readonly listeners = new Set<(slot: number, event: RunEvent) => void>();
   private unlistenRound: () => void = () => undefined;
   private unlistenMoves: () => void = () => undefined;
-  private tutorialSeen = false;
+  /** How many players last finished the tutorial, so the same group skips it next time. */
+  private tutorialFor = 0;
+  private readonly timers = new Set<ReturnType<typeof setTimeout>>();
+  private readonly watch: RunWatch;
   private countdown = new Countdown(0);
   private resultsAt = 0;
   private last = 0;
@@ -44,6 +48,7 @@ export class SurfSession {
 
   constructor(private readonly room: HostRoomApi) {
     this.sound = new SoundDirector(room.audio);
+    this.watch = new RunWatch(this.sound);
     store.setState({ ...initialSurfState(), best: this.best.current });
     this.sound.play("menu");
     if (process.env.NODE_ENV === "development") Object.assign(window, { __subwaySurfers: this });
@@ -65,7 +70,6 @@ export class SurfSession {
     if (!this.kit || this.kit.players !== players) {
       this.dropKit();
       this.kit = new CameraKit({ players });
-      this.tutorialSeen = false;
     }
     this.useControls(this.kit);
     store.setState({ phase: "camera" });
@@ -75,7 +79,6 @@ export class SurfSession {
   playWithKeys(): void {
     this.dropKit();
     this.useControls(null);
-    this.tutorialSeen = true;
     this.beginRound();
   }
 
@@ -86,7 +89,7 @@ export class SurfSession {
 
   calibrated(): void {
     if (this.phase !== "calibrate") return;
-    if (this.tutorialSeen) this.beginRound();
+    if (this.tutorialFor === store.getState().players) this.beginRound();
     else this.beginTutorial();
   }
 
@@ -97,13 +100,15 @@ export class SurfSession {
   }
 
   skipTutorial(): void {
-    this.tutorialSeen = true;
+    this.tutorialFor = store.getState().players;
     this.beginRound();
   }
 
   toLobby(): void {
     this.room.setPlaying(false);
     this.round = null;
+    // The camera goes off while nobody is playing. It starts again from the cache.
+    this.dropKit();
     this.sound.play("menu");
     store.setState({ phase: "lobby", countdown: null, hud: [] });
   }
@@ -138,8 +143,9 @@ export class SurfSession {
       const round = this.round;
       round.update(dt, round.seats.map((_, i) => this.controls!.take(i + 1)));
       this.sound.frame(round.runs, round.seats.map((_, i) => round.paused(i + 1)));
+      this.watch.update(this.kit, round, phase === "running");
       if (phase === "tutorial" && round.seats.every((seat) => seat.tutorial.finished)) {
-        this.tutorialSeen = true;
+        this.tutorialFor = round.seats.length;
         this.beginRound();
       }
       if (phase === "running" && round.over) this.finish();
@@ -152,6 +158,8 @@ export class SurfSession {
   }
 
   dispose(): void {
+    for (const timer of this.timers) clearTimeout(timer);
+    this.timers.clear();
     this.unlistenRound();
     this.dropKit();
     this.controls?.dispose();
@@ -204,7 +212,7 @@ export class SurfSession {
     // Anyone out of view at GO waits, like a player who steps away mid run.
     this.kit?.getSnapshot().present.forEach((seen, i) => !seen && this.round?.setAway(i + 1, true));
     store.setState({ phase: "running", countdown: 0 });
-    setTimeout(() => store.getState().countdown === 0 && store.setState({ countdown: null }), 700);
+    this.later(700, () => store.getState().countdown === 0 && store.setState({ countdown: null }));
   }
 
   private finish(): void {
@@ -214,14 +222,23 @@ export class SurfSession {
     this.sound.fanfare();
     this.resultsAt = performance.now();
     store.setState({ phase: "results", results: rows, winner, best: this.best.current, jumpToReplay: false });
-    setTimeout(() => this.phase === "results" && this.sound.play("menu"), 3000);
+    this.later(3000, () => this.phase === "results" && this.sound.play("menu"));
+  }
+
+  /** A timer that dies with the session, so nothing sounds after the room closes. */
+  private later(ms: number, fn: () => void): void {
+    const timer = setTimeout(() => {
+      this.timers.delete(timer);
+      fn();
+    }, ms);
+    this.timers.add(timer);
   }
 
   private onMove(event: MoveEvent): void {
     const round = this.round;
     const phase = this.phase;
     if (!round) return;
-    if (phase === "running" && (event.type === "away" || event.type === "back")) {
+    if (phase === "running" && !this.watch.cameraTrouble && (event.type === "away" || event.type === "back")) {
       round.setAway(event.slot, event.type === "away");
       if (event.type === "away") this.sound.sfx.pause();
     }

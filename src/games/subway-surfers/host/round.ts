@@ -10,10 +10,14 @@ import type { RunnerHud } from "./store";
 export const CRASH_HOLD_S = 2.4;
 /** Seconds of "get ready" after a player who stepped away comes back. */
 export const RESUME_S = 2;
+/** With two players, seconds out of view before a player's run is given up, once the other's is over. */
+export const GIVE_UP_S = 15;
 
 interface Seat {
   run: Run;
   away: boolean;
+  /** Seconds out of view so far this time. */
+  awayFor: number;
   /** Seconds until an away player's run goes on again, once they are back. */
   resume: number | null;
   banner: { text: string; id: number } | null;
@@ -40,6 +44,7 @@ export class Round {
     this.seats = Array.from({ length: players }, () => ({
       run: new Run(seed, { practice }),
       away: false,
+      awayFor: 0,
       resume: null,
       banner: null,
       bannerUntil: 0,
@@ -70,6 +75,7 @@ export class Round {
       seat.resume = null;
     } else if (seat.away) {
       seat.away = false;
+      seat.awayFor = 0;
       seat.resume = RESUME_S;
     }
   }
@@ -84,13 +90,19 @@ export class Round {
   }
 
   get over(): boolean {
-    return this.seats.every((seat) => seat.run.crashed && seat.run.time - seat.run.crashed.time > CRASH_HOLD_S);
+    const done = this.seats.map((seat) => !!seat.run.crashed && seat.run.time - seat.run.crashed.time > CRASH_HOLD_S);
+    if (done.every(Boolean)) return true;
+    // A player who walked off for good must not hold the other's results up forever.
+    return this.seats.length > 1 && done.some(Boolean) && this.seats.every((seat, i) => done[i] || (seat.away && seat.awayFor > GIVE_UP_S));
   }
 
   update(dt: number, intents: readonly Intent[]): void {
     this.time += dt;
     this.seats.forEach((seat, i) => {
-      if (seat.away) return;
+      if (seat.away) {
+        seat.awayFor += dt;
+        return;
+      }
       if (seat.resume !== null) {
         seat.resume -= dt;
         if (seat.resume > 0) return;

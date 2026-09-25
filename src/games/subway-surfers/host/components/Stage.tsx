@@ -2,7 +2,7 @@
 import { lazy, Suspense } from "react";
 import { CornerPreview } from "@/games/kit/camera";
 import { useSurfStore } from "../store";
-import { CalibrateStep, CameraStep } from "./CameraStep";
+import { CalibrateStep, CameraStep, CameraTrouble } from "./CameraStep";
 import { Lobby } from "./Lobby";
 import { Results } from "./Results";
 import { RunHud } from "./RunHud";
@@ -33,6 +33,7 @@ export function Stage() {
       {playing && <RunHud />}
       {phase === "results" && <Results />}
       {playing && kit && <CornerPreview kit={kit} corner="bottom-right" width={240} />}
+      {playing && kit && <CameraTrouble kit={kit} />}
     </div>
   );
 }

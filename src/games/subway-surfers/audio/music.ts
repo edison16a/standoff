@@ -55,6 +55,8 @@ export class Music {
     this.play(null);
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
+    // The last notes fade through the filter, so it is unhooked once they are gone.
+    setTimeout(() => this.tone.disconnect(), 2000);
   }
 
   private schedule(): void {
