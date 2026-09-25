@@ -63,6 +63,16 @@
   border-radius: 18px;
 }
 
+/* Without sensors the practice pad takes the picture's place; the blade was on the last page. */
+.fn-ready:has(> .kit-pad) > .fn-ready__preview {
+  display: none;
+}
+
+.fn-ready > .kit-pad {
+  flex: 1 1 0;
+  min-height: 110px;
+}
+
 .fn-tips {
   display: flex;
   flex-direction: column;

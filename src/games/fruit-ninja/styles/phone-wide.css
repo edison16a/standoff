@@ -31,6 +31,23 @@
     grid-column: 2;
   }
 
+  /* Without sensors: the tips and the wait on the left, the practice pad on the right. */
+  .fn-ready:has(> .kit-pad) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .fn-ready:has(> .kit-pad) > :not(.kit-pad) {
+    grid-column: 1;
+    align-self: start;
+  }
+
+  .fn-ready > .kit-pad {
+    grid-row: 1 / -1;
+    grid-column: 2;
+    min-height: 0;
+  }
+
   .fn-tips {
     gap: 4px;
     font-size: 14px;
