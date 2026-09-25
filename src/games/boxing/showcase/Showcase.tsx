@@ -80,9 +80,10 @@ export function Showcase({ view }: { view: ShowcaseView }) {
       let lastCycle = -1;
       const loop = () => {
         const now = performance.now();
-        // The clip is 30 frames a second, so a frame closer than that to the last one is not drawn.
+        // The clip is 30 frames a second, so a frame much closer than that to the last one is not drawn.
         // A slow machine capturing the clip then draws each frame once instead of twice.
-        if (now - last < 1000 / 30 - 1) {
+        // Page frames come every 16 ms, so two of them are 32 ms apart, a little under 1/30 s.
+        if (now - last < (1000 / 30) * 0.9) {
           frame = requestAnimationFrame(loop);
           return;
         }

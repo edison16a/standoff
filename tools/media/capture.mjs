@@ -5,12 +5,13 @@
 //
 //   node tools/media/capture.mjs <game-id> [--url http://localhost:3000]
 //     [--seconds 8] [--fps 30] [--fade 1] [--warmup 3] [--size 1600x900]
-//     [--ffmpeg ffmpeg] [--only icon,poster,loop] [--gpu] [--crf 30]
+//     [--ffmpeg ffmpeg] [--only icon,poster,loop] [--gpu] [--crf 30] [--max-mb 3.9]
 //
 // --gpu renders on the computer's graphics card in a visible window, for
 // full quality and fast capture. Without it the tool uses software
 // rendering, which works anywhere but is slow. --crf sets the WebM
-// quality (lower is better and bigger; the MP4 uses it less 8).
+// quality (lower is better and bigger; the MP4 uses it less 8). A clip
+// bigger than --max-mb is encoded again at a crf 2 higher until it fits.
 //
 // Writes src/games/<id>/media/icon.jpg, src/games/<id>/media/poster.jpg and
 // public/games/<id>/backdrop.webm and backdrop.mp4.
@@ -44,6 +45,7 @@ const ffmpeg = option("ffmpeg", process.env.FFMPEG ?? "ffmpeg");
 const only = new Set(option("only", "icon,poster,loop").split(","));
 const gpu = args.includes("--gpu");
 const crf = Number(option("crf", "34"));
+const maxMb = Number(option("max-mb", "3.9"));
 
 const mediaDir = join("src/games", game, "media");
 const publicDir = join("public/games", game);
@@ -115,15 +117,20 @@ if (only.has("loop")) {
   ].join(";");
   // WebM (VP9) for Chromium and Firefox, which may lack H.264, and MP4 (H.264) for Safari.
   const encodings = {
-    webm: ["-c:v", "libvpx-vp9", "-crf", String(crf), "-b:v", "0", "-row-mt", "1", "-deadline", "good", "-cpu-used", "2"],
-    mp4: ["-c:v", "libx264", "-preset", "slow", "-crf", String(Math.max(0, crf - 8)), "-movflags", "+faststart"],
+    webm: (q) => ["-c:v", "libvpx-vp9", "-crf", String(q), "-b:v", "0", "-row-mt", "1", "-deadline", "good", "-cpu-used", "2"],
+    mp4: (q) => ["-c:v", "libx264", "-preset", "slow", "-crf", String(Math.max(0, q - 8)), "-movflags", "+faststart"],
   };
   for (const [ext, codec] of Object.entries(encodings)) {
     const out = join(publicDir, `backdrop.${ext}`);
     const input = ["-y", "-loglevel", "error", "-framerate", String(fps), "-i", join(frames, "%05d.jpg")];
-    const run = spawnSync(ffmpeg, [...input, "-filter_complex", filter, "-map", "[out]", "-r", String(fps), ...codec, "-an", out], { stdio: "inherit" });
-    if (run.status !== 0) throw new Error(`ffmpeg failed on ${ext}`);
-    console.log(`wrote ${out} (${Math.round(statSync(out).size / 1024)} KB)`);
+    // The home screen loads every clip, so a file over the cap is encoded again a little softer.
+    for (let q = crf; ; q += 2) {
+      const run = spawnSync(ffmpeg, [...input, "-filter_complex", filter, "-map", "[out]", "-r", String(fps), ...codec(q), "-an", out], { stdio: "inherit" });
+      if (run.status !== 0) throw new Error(`ffmpeg failed on ${ext}`);
+      const size = statSync(out).size;
+      console.log(`wrote ${out} (${Math.round(size / 1024)} KB at crf ${q})`);
+      if (size <= maxMb * 1024 * 1024 || q >= 60) break;
+    }
   }
   rmSync(frames, { recursive: true, force: true });
 }
