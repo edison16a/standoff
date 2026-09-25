@@ -48,7 +48,14 @@ The canopy casts no shadow, so there is no dark band across the wall.
 
 ## Sound
 
-All synthesised with Web Audio through the room's buses: a BB pop, the pump's clicks, a bell on targets, a squeaky rubber quack on ducks, a sparkle for the golden duck, a clack or clang when things land, ticks for the countdown and the last seconds, a buzzer at the end, a fanfare, and two steam organ tunes (a waltz in the lobby and a polka during the round). The tool bar has a music switch.
+All synthesised with Web Audio through the room's buses, so the player's music and effects volumes rule it.
+
+* **Music:** two sixteen bar boardwalk tunes on a small band (music box, whistle, ukulele, upright bass, reed organ, brushed kit), each with a hook in the A section and an answer on another voice in the B section. The lobby has a slow swung stroll in F at 92. The round has a bouncier two step in G at 112. Everything goes through a warm low pass. A fanfare plays for the winner. The tool bar has a music switch.
+* **Shots:** a BB pop in three layers (crack, spring thump, a short bloom off the canvas), the pump's clicks, a tap on a miss. Every repeat is nudged in pitch.
+* **Targets:** a bell on bullseyes and plates that climbs a pentatonic scale with each hit in a row, a triple bell for a bull, a squeaky rubber quack on ducks, a sparkle for the golden duck, a wooden clack or steel clang when things land.
+* **Crowd:** onlookers go "ooh" at a bull or a streak, and cheer, whistle and applaud a golden duck and the winner. The music ducks under the big moments.
+* **Barker:** the browser's speech voice calls the start, the last five seconds and the winner, at the player's effects volume.
+* Ticks for the countdown and the last seconds, a bell at the start and a buzzer at the end.
 
 ## Code
 
@@ -57,7 +64,7 @@ All synthesised with Web Audio through the room's buses: a BB pop, the pump's cl
 * `host/` the session that referees rooms, and its React screens.
 * `phone/` the phone session and its setup, play and result screens.
 * `render/` the three.js renderer, with `models/` for the gun, ducks, targets, booth, canopy, bulbs and waves, and `effects/` for the BB, puffs, flecks, dents, points and confetti. A governor lowers the drawing resolution while frames run slow, to hold 60 frames a second.
-* `audio/` effects, tunes and the sequencer.
+* `audio/` the band and its tunes (`band.ts`, `score.ts`, `tunes.ts`, `music.ts`), the gun and target effects, the crowd and the barker.
 * `showcase/` the game playing itself for the home screen's media (see below).
 
 ## Home screen media
