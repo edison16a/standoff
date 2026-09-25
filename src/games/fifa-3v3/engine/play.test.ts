@@ -108,6 +108,25 @@ describe("the keeper", () => {
   });
 });
 
+describe("the keeper's throw", () => {
+  it("goes out toward the pitch even with team mates crowding behind the keeper", () => {
+    const state = inPlay();
+    clearAround(state);
+    const keeper = state.keepers[1];
+    keeper.pos = { x: 14, z: 0 };
+    keeper.facing = Math.PI;
+    keeper.action = "hold";
+    keeper.holdFor = 0.05;
+    state.ball.owner = { kind: "keeper", team: 1 };
+    // Blue's players are all between their keeper and their own goal.
+    for (const a of state.athletes) if (a.team === 1) a.pos = { x: 15.2, z: a.slot - 1 };
+    const events = run(state, 0.3);
+    expect(events.some((e) => e.type === "throw")).toBe(true);
+    expect(state.ball.vel.x).toBeLessThan(0);
+    expect(state.ball.pos.x).toBeLessThan(14);
+  });
+});
+
 describe("the final whistle", () => {
   it("clears the losers out of the winners' huddle", () => {
     const state = inPlay();

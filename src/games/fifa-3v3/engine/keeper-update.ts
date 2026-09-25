@@ -30,7 +30,8 @@ export function updateKeeper(state: MatchState, k: Keeper, dt: number): void {
       k.holdFor -= dt;
       step(k, { x: goalX(k.team) + outward(k.team) * 1.6, z: k.pos.z * 0.9 }, 2, dt);
       face(k, outward(k.team) > 0 ? 0 : Math.PI, dt);
-      if (k.holdFor <= 0 && holding && state.phase === "play") distribute(state, k);
+      // Thrown, the ball is no longer in the gloves, so it must not be snapped back to them below.
+      if (k.holdFor <= 0 && holding && state.phase === "play") return distribute(state, k);
       break;
     case "throw":
       if (k.actionT > 0.6) setAction(k, "set");
@@ -133,8 +134,10 @@ function distribute(state: MatchState, k: Keeper): void {
   const ball = state.ball;
   let best: Athlete | null = null;
   let bestScore = -Infinity;
+  const out = outward(k.team);
   for (const a of state.athletes) {
-    if (a.team !== k.team) continue;
+    // Never back toward the goal: a mate standing behind the keeper is left out.
+    if (a.team !== k.team || (a.pos.x - k.pos.x) * out < 1.5) continue;
     const score = openness(state, a) + state.rng.range(0, 1.5) - Math.abs(a.pos.x - k.pos.x) * 0.05;
     if (score > bestScore) {
       bestScore = score;
@@ -142,7 +145,9 @@ function distribute(state: MatchState, k: Keeper): void {
     }
   }
   const from = { x: k.pos.x + outward(k.team) * 0.5, y: 0.4, z: k.pos.z };
-  const to = best ? leadFor(from, best) : { x: 0, z: k.pos.z };
+  const lead = best ? leadFor(from, best) : { x: 0, z: k.pos.z };
+  // Leading a runner must not turn the throw round toward the goal either.
+  const to = (lead.x - from.x) * out < 1.5 ? { x: from.x + out * 6, z: lead.z } : lead;
   ball.owner = null;
   ball.pos = from;
   ball.vel = passVelocity(from, to, 6.5);
