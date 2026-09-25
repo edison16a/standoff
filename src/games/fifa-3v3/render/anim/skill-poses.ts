@@ -123,11 +123,12 @@ export function beatenFrame(t: number, length: number, stride: number, speed: nu
   const u = t / length;
   const caught = window(u, 0, 0.12, 0.45, 0.8);
   // Which way they were sold, fixed per player so the same man always falls the same way.
-  const way = id % 2 === 0 ? 1 : -1;
-  if (u < 0.5) {
-    plant(f, LEFT);
-    plant(f, RIGHT);
-  }
+  const way: Side = id % 2 === 0 ? LEFT : RIGHT;
+  // The foot on the side they were sold lunges out that way, then both stick until they gather.
+  const lunge: Foot = { x: way * (ctx.build.hipW + 0.3 * ctx.build.s), y: ctx.build.ground, z: 0.1 * ctx.build.s, toe: 0 };
+  steer(f, way, lunge, window(u, 0, 0.14, 0.5, 0.7));
+  if (u > 0.16 && u < 0.5) plant(f, way);
+  if (u < 0.5) plant(f, -way as Side);
   p.roll += way * 0.2 * caught;
   p.pitch -= 0.2 * caught;
   p.lift -= 0.06 * caught;
