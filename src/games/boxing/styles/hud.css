@@ -37,7 +37,16 @@
   right: 24px;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 90px;
+  gap: 44px;
+}
+
+.bx-view--left .bx-bars {
+  /* Room for the clock in the middle of a split screen. */
+  right: 92px;
+}
+
+.bx-view--right .bx-bars {
+  left: 92px;
 }
 
 .bx-hud:not(.bx-hud--split) .bx-bars {
