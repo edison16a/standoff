@@ -16,6 +16,8 @@ export class SoundDirector {
   constructor(private readonly engine: AudioEngine) {
     this.music = new Music(engine);
     this.sfx = new Sfx(engine);
+    // The engine outlives each game, so set every bus rather than trust what the last game left.
+    engine.setLevels({ music: 1, crowd: 0.8, sfx: 1 });
   }
 
   /** Seconds between the audio clock and what is heard, so pictures can wait for the sound. */
@@ -60,6 +62,8 @@ export class SoundDirector {
         this.sfx.death();
         break;
       case "finish":
+        // With two players the song plays on, so it steps back for the fanfare and the cheer.
+        this.engine.duck("music", 0.4, 2.5);
         this.sfx.fanfare();
         break;
       case "checkpoint":

@@ -70,5 +70,8 @@ export function playStep(engine: AudioEngine, mix: Outputs, song: Song, step: nu
   const line = parts.has("leadB") ? song.leadB : parts.has("lead") ? song.lead : null;
   const voice = parts.has("leadB") ? song.leadBVoice : song.leadVoice;
   const hook = line?.[step % line.length];
-  if (hook) lead(engine, mix.space, time, hook.midi, hook.length * sixteenth, voice);
+  if (!hook) return;
+  lead(engine, mix.space, time, hook.midi, hook.length * sixteenth, voice);
+  // The main hook is doubled an octave up on a quiet bell, which makes it shine and stick.
+  if (line === song.lead && voice !== "bell") lead(engine, mix.space, time, hook.midi + 12, hook.length * sixteenth, "bell", 0.018);
 }

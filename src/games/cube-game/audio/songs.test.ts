@@ -24,6 +24,13 @@ describe("songs", () => {
     });
   }
 
+  it("gives the menu song a hook and an answer, each played twice", () => {
+    const menu = SONGS.menu!;
+    const leads = [0, 16, 32, 48].map((beat) => (sectionAt(menu, beat).parts.has("lead") ? "A" : "B"));
+    expect(leads).toEqual(["A", "B", "A", "B"]);
+    expect(menu.leadB.some(Boolean)).toBe(true);
+  });
+
   it("keeps every melody a whole number of bars", () => {
     for (const song of Object.values(SONGS)) {
       expect(song.lead.length % 16).toBe(0);

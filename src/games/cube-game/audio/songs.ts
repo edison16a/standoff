@@ -17,13 +17,15 @@ export const SONGS: Record<string, Song> = {
     swing: 0.22,
     chords: ["D2 F#3 A3 C#4", "B1 A3 D4 F#4", "G1 F#3 B3 D4", "A1 E3 G3 C#4"],
     lead: ". . F#5 . A5 . . . C#6 - - . B5 . A5 . F#5 - - - - - . . . . D5 . E5 . F#5 . . . D5 . F#5 . . . B5 - - . A5 . F#5 . E5 - - - - - . . . . . . . . . .",
-    leadB: ". . . . . . . . . . . . . . . .",
+    leadB: "A5 - - . F#5 . A5 . B5 - - . A5 . F#5 . D6 - - - - - . . C#6 . B5 . A5 . . . G5 - - . B5 . D6 . F#5 - - . E5 . D5 . E5 - - - C#5 - - - A4 - - - . . . .",
     leadVoice: "bell",
+    leadBVoice: "glass",
     bass: "0 - - . . . . . 7 - . . 0 . . .",
     bassStyle: "round",
     arp: "1 . . 2 . . 3 . . 4 . . 3 . . .",
     drums: LAZY,
-    sections: [[0, "kick clap hat bass arp pad lead"]],
+    // A, then the glass answer, A again with open hats, then the answer with the kick out to breathe.
+    sections: [[0, "kick clap hat bass arp pad lead"], [16, "kick clap hat bass arp pad leadB"], [32, "kick clap hat open bass arp pad lead"], [48, "clap hat bass arp pad leadB"]],
     length: 64,
   }),
 
