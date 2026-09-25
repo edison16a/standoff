@@ -101,8 +101,9 @@ export class CourtRenderer {
     const b = m.ball;
     const holder = b.holder;
     const onBall = holder !== null ? m.athletes[holder] : null;
-    // During the check the ball is held at the chest, not dribbled.
-    const chest = m.phase === "check";
+    // During the check, and at the free throw line before the shot, the ball is held at the chest, not dribbled.
+    const shooting = onBall?.action.kind === "shoot";
+    const chest = m.phase === "check" || (m.phase === "freeThrow" && !shooting);
     for (const [i, view] of this.views.entries()) {
       const a = m.athletes[i]!;
       const guarding = !!onBall && onBall.team !== a.team && m.phase === "live" && dist2(a, onBall) < 2.6 && a.action.kind === "none";

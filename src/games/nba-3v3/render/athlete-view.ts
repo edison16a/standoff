@@ -6,6 +6,7 @@ import { celebratePose, dejectedPose } from "./anim/celebrations";
 import { dunkPose, dunkSpin } from "./anim/dunks";
 import { CHEST_HOLD, RECEIVE } from "./anim/holding";
 import { locomotion, strideLength } from "./anim/locomotion";
+import { movePose } from "./anim/moves";
 import { applyPose, approach, blend, STAND, type Pose } from "./anim/pose";
 import { buildAthlete, type AthleteModel } from "./models/athlete-model";
 
@@ -73,7 +74,7 @@ export class AthleteView {
     const rx = -Math.cos(a.yaw);
     const rz = Math.sin(a.yaw);
     const lateral = speed > 0.2 ? (a.vx * rx + a.vz * rz) / speed : 0;
-    const dribbling = s.holding && !s.chest && a.action.kind === "none";
+    const dribbling = s.holding && !s.chest && (a.action.kind === "none" || a.action.kind === "move");
     let base = locomotion({ speed, phase: this.phase, lateral, guarding: s.guarding, dribble: dribbling ? a.dribble : null, dribbleSide: a.dribbleSide, time: this.time, seed: this.seed });
     if (s.holding && s.chest) base = blend(base, CHEST_HOLD, 1, base);
     else if (s.receiving > 0) base = blend(base, RECEIVE, ease(s.receiving), base);
@@ -102,9 +103,10 @@ export class AthleteView {
         rate = 34;
         break;
       case "drive": {
-        const timing = { takeoff: act.takeoff, finish: act.finish, land: act.land };
-        target = act.dunk ? dunkPose(c.dunk, act.t, timing, base) : layupPose(act.t, timing, base);
-        target.spin = act.dunk ? dunkSpin(c.dunk, act.t, timing) : 0;
+        const timing = { takeoff: act.takeoff, finish: act.finish, land: act.land, rimHang: act.rimHang };
+        const style = act.style ?? c.dunk;
+        target = act.dunk ? dunkPose(style, act.t, timing, base) : layupPose(act.t, timing, base);
+        target.spin = act.dunk ? dunkSpin(style, act.t, timing) : 0;
         rate = 30;
         break;
       }
@@ -119,6 +121,10 @@ export class AthleteView {
       case "steal":
         target = stealPose(act.t, base);
         rate = 30;
+        break;
+      case "move":
+        target = movePose(act, base);
+        rate = 26;
         break;
       case "stumble":
         target = stumblePose(act.t, act.dur, base);

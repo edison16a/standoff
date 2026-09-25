@@ -39,7 +39,7 @@ export function dunkSpin(style: DunkStyle, t: number, d: DriveTiming): number {
  */
 export function dunkPose(style: DunkStyle, t: number, d: DriveTiming, base: Pose): Pose {
   const air = d.finish - d.takeoff;
-  const hang = style === "rimhang" ? 0.35 : 0;
+  const hang = d.rimHang;
   const keys: Key[] = [
     [0, { legLLift: 0.6, kneeL: 0.6, legRLift: -0.2, kneeR: 0.8, hipY: -0.06, torsoX: 0.3, armLRaise: 1.0, armRRaise: 1.05, elbowL: 1.7, elbowR: 1.8, armLSpread: 0.25 }],
     [d.takeoff * 0.85, { legLLift: 0.7, legRLift: 0.7, kneeL: 1.25, kneeR: 1.25, hipY: -0.2, torsoX: 0.4, armLRaise: 0.4, armRRaise: 0.45, elbowL: 0.6, elbowR: 0.6 }],

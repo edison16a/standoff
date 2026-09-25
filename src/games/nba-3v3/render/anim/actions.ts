@@ -32,6 +32,8 @@ export interface DriveTiming {
   takeoff: number;
   finish: number;
   land: number;
+  /** Seconds hanging on the rim after the slam, 0 for none. */
+  rimHang: number;
 }
 
 /** A layup: a long gather stride, off one foot with the other knee driving up, the ball laid up at full stretch. */
