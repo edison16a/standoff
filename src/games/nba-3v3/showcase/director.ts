@@ -14,11 +14,25 @@ const LEAD: Record<ShowcaseView, number> = { loop: -0.4, poster: 0.85, icon: 0.8
 const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 2.95, icon: 3.0 };
 
 /**
- * The capture tool lets the scene run three seconds before it films.
- * Nobody sees those frames, so the loop steps through them without
- * drawing, which saves minutes on a computer that renders in software.
+ * The capture tool lets the scene run three seconds after the page says
+ * it is ready, then films. Nobody sees those frames, so the loop steps
+ * through them without drawing, which saves a long wait on a computer
+ * that renders in software.
  */
-const PREROLL_MS = 2900;
+const PREROLL_MS = 2950;
+
+/**
+ * The loop plays behind the home screen, so it draws a little under full
+ * resolution: much quicker to film, and the video's own softening hides it.
+ */
+const LOOP_PIXELS = 0.8;
+
+/**
+ * The loop draws at most this often. The capture tool films thirty frames
+ * a second while the page's own frames come sixty a second, so every
+ * other one would be drawn for nothing.
+ */
+const DRAW_MS = 30;
 
 /** A held still is drawn once, and again after a resize, so the capture waits on as little as possible. */
 const STILL_DRAWS = 1;
@@ -38,13 +52,14 @@ export class ShowcaseDirector {
   private readonly renderer: CourtRenderer;
   private readonly script: HighlightScript;
   private readonly still: boolean;
-  private start = -1;
+  private readyAt = -1;
   private last = -1;
   private carry = 0;
   private elapsed = 0;
   private slowLeft = 0;
   private slowScale = 1;
   private draws = 0;
+  private lastDraw = -Infinity;
 
   constructor(canvas: HTMLCanvasElement, readonly view: ShowcaseView) {
     this.renderer = new CourtRenderer(canvas);
@@ -65,12 +80,12 @@ export class ShowcaseDirector {
   }
 
   resize(width: number, height: number, dpr: number): void {
-    this.renderer.resize(width, height, dpr);
+    this.renderer.resize(width, height, this.still ? dpr : dpr * LOOP_PIXELS);
     this.draws = 0;
   }
 
   frame(now: number): void {
-    if (this.start < 0) this.start = now;
+    if (this.readyAt < 0 && window.__showcaseReady) this.readyAt = now;
     if (this.still) {
       if (this.draws++ < STILL_DRAWS) {
         this.renderer.render(0);
@@ -80,9 +95,12 @@ export class ShowcaseDirector {
     }
     const real = this.last < 0 ? STEP : Math.min(0.25, (now - this.last) / 1000);
     this.last = now;
-    const draw = now - this.start >= PREROLL_MS;
+    const draw = this.readyAt >= 0 && now - this.readyAt >= PREROLL_MS && now - this.lastDraw >= DRAW_MS;
     this.renderer.render(this.advance(real), draw);
-    if (draw) this.renderer.finish();
+    if (draw) {
+      this.lastDraw = now;
+      this.renderer.finish();
+    }
   }
 
   /** Steps the film by a slice of real time and returns the game time that passed. */

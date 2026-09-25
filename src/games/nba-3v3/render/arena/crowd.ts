@@ -69,9 +69,10 @@ export class Crowd {
     stand.receiveShadow = true;
     this.group.add(stand);
 
-    const body = new THREE.CapsuleGeometry(0.2, 0.42, 3, 8);
+    // Low poly on purpose: nearly two thousand fans are only a few pixels each.
+    const body = new THREE.CapsuleGeometry(0.2, 0.42, 2, 7);
     body.translate(0, 0.42, 0);
-    const head = new THREE.SphereGeometry(0.12, 10, 8);
+    const head = new THREE.SphereGeometry(0.12, 8, 6);
     head.translate(0, 0.98, 0.02);
     const arms = new THREE.BoxGeometry(0.1, 0.55, 0.1);
     arms.translate(0, 0.28, 0);
