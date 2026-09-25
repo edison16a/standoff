@@ -82,9 +82,13 @@ if (only.has("loop")) {
   const page = await open("loop", { width, height });
   const main = Math.round(seconds * fps);
   const blend = Math.round(fade * fps);
-  const step = 1000 / fps;
+  // The clock moves in whole milliseconds, so each step goes to the exact
+  // time of the next frame. Stepping by a rounded 1000 / fps would drift.
+  let elapsed = 0;
   for (let i = 0; i < main + blend; i++) {
-    await page.clock.runFor(step);
+    const next = Math.round(((i + 1) * 1000) / fps);
+    await page.clock.runFor(next - elapsed);
+    elapsed = next;
     await page.screenshot({ path: join(frames, `${String(i).padStart(5, "0")}.jpg`), type: "jpeg", quality: 92 });
     if (i % fps === 0) process.stdout.write(`frame ${i} of ${main + blend}\n`);
   }
