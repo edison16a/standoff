@@ -9,7 +9,7 @@ A 3D boxing match played with your body in front of the computer's camera. There
 1. **Choose players.** One player fights the computer. Two players stand side by side in front of one camera, player 1 on the left of the picture. Pick with the mouse.
 2. **Get the camera ready.** The kit asks for the camera and downloads the body tracking model with a progress bar. Every problem, from a blocked camera to no internet, says what to do and has a Try again button.
 3. **Calibrate.** Step into your outline, stand tall while your ring fills, then show your guard (both gloves up by your face) and throw one jab. Skip this step is there for a camera that struggles.
-4. **Choose your boxer.** Lean left or right to browse, then hold your guard up to lock in. The mouse works too. With one player the computer takes a different boxer.
+4. **Choose your boxer.** Lean left or right to browse, then drop your hands and hold your guard up to lock in. A guard still up from calibration does not count. The mouse works too. With one player the computer takes a different boxer.
 5. **Fight.** Three rounds of 60 seconds. The boxers move and circle by themselves; you only fight.
 
 | Move | What you do |
@@ -21,13 +21,15 @@ A 3D boxing match played with your body in front of the computer's camera. There
 | Duck | Dip your head and shoulders. Every punch misses |
 | Slip | Lean to one side. Straight punches miss, hooks still land |
 | Counter | After a block, a duck or a slip, a left jab in the next moment hits hard and staggers |
-| Get up | When you are knocked down, raise both gloves before the referee reaches ten |
+| Get up | When you are knocked down, drop your gloves and raise both again before the referee reaches ten |
 
 You cannot block while punching, and every punch costs stamina (the blue bar under your health). A tired boxer punches slower and softer. A fight ends on a knockout, on the third knockdown, or on points after the final bell.
 
 The computer boxer lights up its gloves while it winds up a punch, so you can see it coming. It blocks, ducks and counters, and gets quicker and sharper every round.
 
-If a player steps out of view the fight pauses with a clear message, and it gives everyone a moment to set themselves when they are back.
+If a player steps out of view the fight pauses with a clear message, and it gives everyone a moment to set themselves when they are back. Once the fight is decided players can walk off freely.
+
+Each player's view sits behind and out past their boxer's right shoulder, so their own boxer stands to the left and the opponent is seen whole, gloves and all.
 
 ## What was built
 
