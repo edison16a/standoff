@@ -7,6 +7,18 @@ import { Rng } from "../engine/rng";
  */
 const cache = new Map<string, THREE.Texture>();
 
+/** Sharper ground at a glancing angle. Nearly free on a graphics card, very slow when WebGL is drawn in software. */
+let anisotropy = 4;
+
+export function setTextureDetail(level: number): void {
+  anisotropy = level;
+  for (const texture of cache.values()) {
+    if (texture.anisotropy === level) continue;
+    texture.anisotropy = level;
+    texture.needsUpdate = true;
+  }
+}
+
 export function painted(key: string, width: number, height: number, draw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void, repeat = false): THREE.Texture {
   const found = cache.get(key);
   if (found) return found;
@@ -17,7 +29,7 @@ export function painted(key: string, width: number, height: number, draw: (ctx: 
   draw(ctx, width, height);
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 4;
+  texture.anisotropy = anisotropy;
   if (repeat) texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
   texture.userData.shared = true;
   cache.set(key, texture);

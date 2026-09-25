@@ -6,6 +6,9 @@ import { RunScene } from "../render/run-scene";
 import { Director, SHOTS } from "./director";
 import { Logo } from "./Logo";
 
+/** The capture tool lets a scene settle this long before its first frame. */
+const SETTLE_S = 3;
+
 /**
  * Subway Surfers playing itself for the home screen: a computer runner
  * on a seeded run, filmed by a director that picks the best angles. It
@@ -33,12 +36,14 @@ export function Showcase({ view }: { view: ShowcaseView }) {
     // The capture tool steps the clock frame by frame. A clip needs one picture per captured
     // frame and a still barely moves, so pictures in between are skipped to save the drawing.
     const every = view === "loop" ? 0.03 : 0.5;
+    // Nothing is captured in the first seconds while the scene settles, so the clip draws nothing until just before.
+    const from = view === "loop" ? SETTLE_S - 0.2 : 0;
     const loop = (now: number) => {
       if (start < 0) start = now;
       const elapsed = (now - start) / 1000;
       director.frame(elapsed - last, elapsed);
       last = elapsed;
-      if (elapsed - drawn >= every) {
+      if (elapsed >= from && elapsed - drawn >= every) {
         drawn = elapsed;
         renderer.render([{ scene, rect: { x: 0, y: 0, w: 1, h: 1 }, camera: director.camera(canvas.clientWidth / canvas.clientHeight) }]);
       }

@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { RunScene } from "./run-scene";
+import { setTextureDetail } from "./textures";
 
 /** A part of the canvas, each value a share of its width or height, from the top left. */
 export interface ViewRect {
@@ -15,6 +16,14 @@ export interface View {
   rect: ViewRect;
   /** A camera of its own, for the showcase. Otherwise the scene's chase camera. */
   camera?: THREE.PerspectiveCamera;
+}
+
+/** Whether this WebGL is drawn in software, as when the browser has blocked the graphics driver. */
+function softwareDrawn(renderer: THREE.WebGLRenderer): boolean {
+  const gl = renderer.getContext();
+  const info = gl.getExtension("WEBGL_debug_renderer_info");
+  const name = String(gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : gl.RENDERER));
+  return /swiftshader|llvmpipe|softpipe|software|basic render/i.test(name);
 }
 
 /** The rectangles for one runner, or two side by side with player one on the left. */
@@ -36,8 +45,14 @@ export class Renderer {
   private width = 1;
   private height = 1;
 
-  constructor(canvas: HTMLCanvasElement, options: { preserve?: boolean } = {}) {
-    this.gl = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance", preserveDrawingBuffer: options.preserve ?? false });
+  constructor(canvas: HTMLCanvasElement, options: { preserve?: boolean; antialias?: boolean } = {}) {
+    this.gl = new THREE.WebGLRenderer({
+      canvas,
+      antialias: options.antialias ?? true,
+      powerPreference: "high-performance",
+      preserveDrawingBuffer: options.preserve ?? false,
+    });
+    setTextureDetail(softwareDrawn(this.gl) ? 1 : Math.min(4, this.gl.capabilities.getMaxAnisotropy()));
     this.gl.toneMapping = THREE.ACESFilmicToneMapping;
     this.gl.toneMappingExposure = 1.05;
     this.gl.setScissorTest(true);

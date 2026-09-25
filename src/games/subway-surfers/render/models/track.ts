@@ -47,7 +47,7 @@ function repeated(texture: THREE.Texture, key: string, x: number, y: number): TH
 export function trackTile(verge: number): THREE.Group {
   return cached(`track-${verge}`, () => {
     const b = new MeshBuilder();
-    const gravel = textured("gravel-bed", () => new THREE.MeshStandardMaterial({ map: repeated(gravelTexture(), "gravel-bed", 5, 16), roughness: 0.95 }));
+    const gravel = textured("gravel-bed", () => new THREE.MeshLambertMaterial({ map: repeated(gravelTexture(), "gravel-bed", 5, 16) }));
     b.panel(9.6, CHUNK, gravel, [0, 0, -CHUNK / 2], [-Math.PI / 2, 0, 0]);
     for (const side of [-1, 1]) b.panel(60, CHUNK, { color: verge, finish: "matte" }, [side * 34.8, -0.02, -CHUNK / 2], [-Math.PI / 2, 0, 0]);
     const wood = { color: 0x6b4a33, finish: "matte" as const };
@@ -99,7 +99,7 @@ export function gantry(signals: number | null): THREE.Group {
 export function tunnel(): THREE.Group {
   return cached("tunnel", () => {
     const b = new MeshBuilder();
-    const wall = textured("tunnel-wall", () => new THREE.MeshStandardMaterial({ map: repeated(tunnelTileTexture(), "tunnel-wall", 6, 1), roughness: 0.35 }));
+    const wall = textured("tunnel-wall", () => new THREE.MeshLambertMaterial({ map: repeated(tunnelTileTexture(), "tunnel-wall", 6, 1) }));
     for (const side of [-1, 1]) {
       b.panel(CHUNK, 7, wall, [side * 5.4, 3.5, -CHUNK / 2], [0, -side * Math.PI / 2, 0]);
       b.box(0.5, 0.6, CHUNK, { color: 0x3a3d48, finish: "matte" }, [side * 5.1, 0.3, -CHUNK / 2]);
@@ -119,8 +119,8 @@ export function tunnel(): THREE.Group {
     // Backfaces show from inside, so the vault is drawn double sided.
     inside.traverse((node) => {
       const mesh = node as THREE.Mesh;
-      if (mesh.isMesh && !Array.isArray(mesh.material) && (mesh.material as THREE.MeshStandardMaterial).vertexColors) {
-        const own = (mesh.material as THREE.MeshStandardMaterial).clone();
+      if (mesh.isMesh && !Array.isArray(mesh.material) && (mesh.material as THREE.MeshLambertMaterial).vertexColors) {
+        const own = (mesh.material as THREE.MeshLambertMaterial).clone();
         own.side = THREE.DoubleSide;
         own.userData.shared = true;
         mesh.material = own;
@@ -134,7 +134,7 @@ export function tunnel(): THREE.Group {
 export function portal(): THREE.Group {
   return cached("portal", () => {
     const b = new MeshBuilder();
-    const brick = textured("portal-brick", () => new THREE.MeshStandardMaterial({ map: repeated(brickTexture(), "portal-brick", 5, 3), roughness: 0.85 }));
+    const brick = textured("portal-brick", () => new THREE.MeshLambertMaterial({ map: repeated(brickTexture(), "portal-brick", 5, 3) }));
     const shape = new THREE.Shape();
     shape.moveTo(-16, 0);
     shape.lineTo(16, 0);

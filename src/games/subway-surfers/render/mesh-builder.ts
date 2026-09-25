@@ -27,10 +27,14 @@ const shared = new Map<Finish, THREE.Material>();
 export function finish(kind: Finish): THREE.Material {
   let material = shared.get(kind);
   if (!material) {
+    // Matte parts are the big plain surfaces, walls and ground, where the cheaper Lambert
+    // shading looks the same and saves the most drawing. Shiny parts keep the full model.
     material =
       kind === "glow"
         ? new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false })
-        : new THREE.MeshStandardMaterial({ vertexColors: true, ...FINISHES[kind] });
+        : kind === "matte"
+          ? new THREE.MeshLambertMaterial({ vertexColors: true })
+          : new THREE.MeshStandardMaterial({ vertexColors: true, ...FINISHES[kind] });
     material.userData.shared = true;
     shared.set(kind, material);
   }

@@ -5,8 +5,8 @@ import { MeshBuilder } from "../mesh-builder";
 import type { SideKind, Theme } from "../world/themes";
 import { cached, CHUNK, lampGlow, textured } from "./track";
 
-const map = (key: string, make: () => THREE.Texture, extra: THREE.MeshStandardMaterialParameters = {}) =>
-  textured(key, () => new THREE.MeshStandardMaterial({ map: make(), roughness: 0.75, ...extra }));
+/** Scenery is painted flat on Lambert shading: it fills most of the screen, and this keeps it cheap to draw. */
+const map = (key: string, make: () => THREE.Texture) => textured(key, () => new THREE.MeshLambertMaterial({ map: make() }));
 
 const hex = (css: string) => new THREE.Color(css).getHex();
 
@@ -43,13 +43,13 @@ const wall: Build = (b, side, v, theme) => {
 
 const fence: Build = (b, side, v, theme) => {
   const x = side * 6;
-  const mesh = textured("chain-link", () => new THREE.MeshStandardMaterial({ map: chainLink(), transparent: true, alphaTest: 0.4, side: THREE.DoubleSide, metalness: 0.5, roughness: 0.5 }));
+  const mesh = textured("chain-link", () => new THREE.MeshLambertMaterial({ map: chainLink(), transparent: true, alphaTest: 0.4, side: THREE.DoubleSide }));
   b.panel(CHUNK, 2.6, mesh, [x, 1.4, -CHUNK / 2], [0, -side * Math.PI / 2, 0]);
   for (let z = 0; z > -CHUNK; z -= 3.75) b.post(0.05, 2.9, { color: 0x9aa3ad, finish: "metal" }, [x, 1.45, z], 8);
   b.box(0.06, 0.06, CHUNK, { color: 0x9aa3ad, finish: "metal" }, [x, 2.75, -CHUNK / 2]);
   // Bushes along the fence and a billboard behind it.
   for (let i = 0; i < 5; i++) b.sphere(0.8 + hash(i, v) * 0.5, { color: 0x4caf50, finish: "matte" }, [x + side * 1.2, 0.5, -3 - i * 6 - hash(i, v + 3) * 2], [1.4, 0.9, 1.2], 10);
-  const board = map(`billboard-${v}`, () => billboardTexture(v), { roughness: 0.5 });
+  const board = map(`billboard-${v}`, () => billboardTexture(v));
   b.box(0.3, 4.5, 0.3, { color: 0x6f7a88, finish: "metal" }, [x + side * 5, 2.25, -15]);
   b.panel(9, 4.5, board, [x + side * 4.8, 6.4, -15], [0, -side * Math.PI / 2, 0]);
   b.box(0.3, 4.9, 9.4, { color: 0x2a2d35, finish: "satin" }, [x + side * 5, 6.4, -15]);
@@ -101,7 +101,7 @@ const platform: Build = (b, side, v) => {
     b.box(0.1, 0.5, 2, { color: 0x6b4a33, finish: "satin" }, [side * (outer - 2.35), 1.9, z]);
   }
   const names = ["CENTRAL", "HARBOR ST", "PARK LANE", "UPTOWN"];
-  const sign = map(`station-${v}`, () => stationSignTexture(names[v]!), { roughness: 0.4 });
+  const sign = map(`station-${v}`, () => stationSignTexture(names[v]!));
   // The name board hangs from the canopy, facing the tracks, with its frame just behind it.
   b.panel(5, 0.94, sign, [side * (inner + 0.64), 3.4, -15], [0, -side * Math.PI / 2, 0]);
   b.box(0.1, 1.05, 5.1, { color: 0x1d2640, finish: "satin" }, [side * (inner + 0.72), 3.4, -15]);
@@ -109,7 +109,7 @@ const platform: Build = (b, side, v) => {
   b.box(0.3, 8, CHUNK, { color: 0xd8d2c6, finish: "matte" }, [side * outer, 4, -CHUNK / 2]);
   // Posters along the back wall.
   for (const z of [-7.5, -22.5]) {
-    const poster = map(`billboard-${(v + (z < -10 ? 1 : 0)) % 4}`, () => billboardTexture((v + (z < -10 ? 1 : 0)) % 4), { roughness: 0.5 });
+    const poster = map(`billboard-${(v + (z < -10 ? 1 : 0)) % 4}`, () => billboardTexture((v + (z < -10 ? 1 : 0)) % 4));
     b.panel(4, 2, poster, [side * (outer - 0.16), 2.6, z], [0, -side * Math.PI / 2, 0]);
   }
 };
@@ -122,7 +122,7 @@ const containers: Build = (b, side, v, theme) => {
     const stack = 1 + Math.floor(hash(i, v * 5) * 3);
     for (let s = 0; s < stack; s++) {
       const color = colors[(i * 3 + s + v) % colors.length]!;
-      const art = map(`container-${color}-${(i + s) % 4}`, () => containerTexture(color, words[(i + s) % 4]!), { roughness: 0.6, metalness: 0.2 });
+      const art = map(`container-${color}-${(i + s) % 4}`, () => containerTexture(color, words[(i + s) % 4]!));
       const x = side * (8.2 + hash(i + s, v) * 0.6);
       b.box(2.5, 2.6, 6.1, { color: hex(color), finish: "satin" }, [x, 1.3 + s * 2.62, z]);
       b.panel(6, 2.5, art, [x - side * 1.26, 1.3 + s * 2.62, z], [0, -side * Math.PI / 2, 0]);
