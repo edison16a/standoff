@@ -13,7 +13,7 @@ type Score = Extract<MatchEvent, { type: "score" }>;
 /** Puts a basket on the board as the engine would, and returns its event. */
 function basket(m: Match, id: number, extra: Partial<Score> = {}): Score {
   const team = m.athletes[id]!.team;
-  const e: Score = { type: "score", team, points: 2, id, kind: "jumper", outcome: "swish", assist: null, streak: 1, ...extra };
+  const e: Score = { type: "score", team, points: 2, id, kind: "jumper", outcome: "swish", assist: null, streak: 1, dunk: null, ...extra };
   m.score[team] += e.points;
   return e;
 }

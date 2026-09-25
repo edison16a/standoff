@@ -56,6 +56,7 @@ export function freshPossession(m: Match, team: TeamId): void {
   m.shotClock = RULES.shotClock;
   m.clockWarned = false;
   m.lastPass = null;
+  m.stealLog.reset();
   m.brains.reset();
 }
 

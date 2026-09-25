@@ -10,7 +10,8 @@ import { clamp } from "./vec";
  */
 
 export type Grade = "perfect" | "good" | "early" | "late";
-export type ShotKind = "jumper" | "layup" | "dunk";
+/** A free throw is a set shot from the line, worth one. */
+export type ShotKind = "jumper" | "layup" | "dunk" | "free";
 export const MAKES = ["swish", "bank", "roll", "bounce"] as const;
 export const MISSES = ["rimOut", "boardOut", "inOut", "airball"] as const;
 export type MakeOutcome = (typeof MAKES)[number];
@@ -21,19 +22,19 @@ export function isMake(outcome: Outcome): outcome is MakeOutcome {
   return (MAKES as readonly string[]).includes(outcome);
 }
 
-/** Half the green window, in milliseconds. Better shooters, and anyone on fire, get more. */
-export function greenHalfMs(shooting: number, onFire = false): number {
+/** Half the green window, in milliseconds. Better shooters, anyone on fire, and a free throw at the line get more. */
+export function greenHalfMs(shooting: number, onFire = false, free = false): number {
   const base = SHOT.greenBase + shooting * SHOT.greenPerShooting;
-  return onFire ? base * 1.5 : base;
+  return base * (onFire ? 1.5 : 1) * (free ? SHOT.freeGreen : 1);
 }
 
 /** When the green window is centred, in milliseconds after the press. */
 export const GREEN_MS = SHOT.meterMs * SHOT.greenAt;
 
 /** Grades a release from how long Shoot was held. */
-export function gradeRelease(heldMs: number, shooting: number, onFire = false): { grade: Grade; offsetMs: number } {
+export function gradeRelease(heldMs: number, shooting: number, onFire = false, free = false): { grade: Grade; offsetMs: number } {
   const offsetMs = heldMs - GREEN_MS;
-  const half = greenHalfMs(shooting, onFire);
+  const half = greenHalfMs(shooting, onFire, free);
   if (Math.abs(offsetMs) <= half) return { grade: "perfect", offsetMs };
   if (Math.abs(offsetMs) <= half * SHOT.goodSpread) return { grade: "good", offsetMs };
   return { grade: offsetMs < 0 ? "early" : "late", offsetMs };
@@ -61,6 +62,8 @@ export function makeChance(c: ShotContext): number {
   else if (c.grade === "good") chance = (0.42 + c.shooting * 0.035 + (c.onFire ? 0.15 : 0)) * (1 - c.contest * 0.5);
   else chance = (0.08 + c.shooting * 0.012) * (1 - c.contest * 0.4);
   // Deep heaves fall away fast, short jumpers are a touch easier.
+  // Nobody guards a free throw, and the line is short.
+  if (c.kind === "free") return clamp(chance + 0.04, 0.02, 0.99);
   if (c.distance > 7.4) chance -= (c.distance - 7.4) * (c.grade === "perfect" ? 0.05 : 0.09);
   if (c.distance < 3) chance += 0.05;
   return clamp(chance, 0.02, 0.99);
