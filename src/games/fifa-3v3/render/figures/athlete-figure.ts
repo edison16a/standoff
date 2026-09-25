@@ -38,6 +38,8 @@ export class AthleteFigure {
   private last: { x: number; z: number } | null = null;
   private readonly move = { x: 0, y: 0, z: 1 };
   private ball = { x: 0, y: 0, z: 0.5 };
+  /** The move the remembered ball belongs to. */
+  private ballKick = "";
 
   constructor(view: AthleteView, kit: Kit, material: THREE.Material) {
     this.character = ROSTER[view.character];
@@ -96,7 +98,16 @@ export class AthleteFigure {
     const bz = ball.z - v.z;
     // Once a kick has sent the ball away, the follow through keeps to where the boot met it.
     const kicked = (v.action === "shoot" || v.action === "pass") && !v.hasBall;
-    if (!kicked) this.ball = { x: bx * s - bz * c, y: ball.y, z: bx * c + bz * s };
+    const local = (x: number, y: number, z: number) => ({ x: x * s - z * c, y, z: x * c + z * s });
+    if (!kicked) {
+      this.ball = local(bx, ball.y, bz);
+      this.ballKick = v.action;
+    } else if (this.ballKick !== v.action) {
+      // A still that starts after the strike never saw the ball at the boot: run its flight back to the strike.
+      const since = Math.max(0, v.actionT - this.windup(v));
+      this.ball = local(bx - ball.vx * since, Math.max(0.11, ball.y - ball.vy * since), bz - ball.vz * since);
+      this.ballKick = v.action;
+    }
     return { build: this.build, lead: this.lead, move: this.move, ball: this.ball };
   }
 
@@ -107,12 +118,9 @@ export class AthleteFigure {
       case "free":
         return v.bar ? coilFrame(v.stride, v.speed, v.charge, ctx, time, this.phase) : run();
       case "shoot":
-        return shotFrame(v.actionT, shotWindup(v.power), v.power, ctx);
-      case "pass": {
-        // A lofted pass has the longer wind up (engine/kick.ts), which shows in the action's length.
-        const lofted = v.actionLen > PASS.windup + 0.34;
-        return passFrame(v.actionT, lofted ? PASS.windup + 0.08 : PASS.windup, lofted, ctx);
-      }
+        return shotFrame(v.actionT, this.windup(v), v.power, ctx);
+      case "pass":
+        return passFrame(v.actionT, this.windup(v), lofted(v), ctx);
       case "slide":
         return fk(slide(v.actionT));
       case "getup":
@@ -132,8 +140,16 @@ export class AthleteFigure {
     }
   }
 
+  /** When a kick meets the ball, as the engine times it (engine/kick.ts). */
+  private windup(v: AthleteView): number {
+    if (v.action === "shoot") return shotWindup(v.power);
+    return lofted(v) ? PASS.windup + 0.08 : PASS.windup;
+  }
+
   dispose(): void {
     this.rig.dispose();
   }
 }
 
+/** A lofted pass has the longer wind up, which shows in the action's length. */
+const lofted = (v: AthleteView) => v.action === "pass" && v.actionLen > PASS.windup + 0.34;

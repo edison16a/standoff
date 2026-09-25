@@ -53,6 +53,7 @@ export function shotFrame(t: number, windup: number, power: number, ctx: Context
   p.spineX = 0.1 * back - 0.12 * red * through;
   p.lift = -0.05 * back - 0.04 * strike + 0.1 * power * bump((t - windup) / 0.3) * (1 - settle);
   p.neckX = 0.35 * (1 - through) + 0.1;
+  p.fwd = stepIn(ball.z, s, t / (windup * 0.7), settle);
   arms(f, kick, back * (1 - 0.3 * settle), strike * (1 - settle));
   // The standing foot strides in and plants beside the ball, a little behind it.
   const plantAt = windup * 0.7;
@@ -95,11 +96,12 @@ export function passFrame(t: number, windup: number, lofted: boolean, ctx: Conte
   p.pitch = 0.08 + (lofted ? -0.08 : 0.06) * strike * (1 - settle);
   p.lift = -0.04 * back;
   p.neckX = 0.3;
+  p.fwd = stepIn(ball.z, s, t / (windup * 0.6), settle);
   arms(f, kick, 0.6 * back * (1 - settle), 0.5 * strike * (1 - settle));
   const plantAt = windup * 0.6;
   const beside: Foot = { x: ball.x + stand * 0.2 * s, y: b.ground, z: ball.z - 0.08 * s, toe: 0 };
   const from: Foot = { x: stand * b.hipW, y: b.ground, z: -0.15 * s, toe: 0.3 };
-  const standing = t < plantAt ? track(t, [[0, from], [plantAt, beside]]) : { ...beside, plant: true };
+  const standing = t < plantAt ? track(t, [[0, from], [plantAt * 0.5, { ...mid(from, beside), y: b.ground + 0.08 * s }], [plantAt, beside]]) : { ...beside, plant: true };
   const keys: Key[] = [
     [0, { x: kick * b.hipW, y: b.ground + 0.03 * s, z: 0, toe: 0.2 }],
     [windup * 0.8, { x: kick * b.hipW * 1.4, y: b.ground + 0.14 * s, z: -0.28 * s, toe: 0.2 }],
@@ -137,6 +139,15 @@ export function coilFrame(stride: number, speed: number, charge: number, ctx: Co
   if (kick === -1) p.shLZ += 0.7 * c;
   else p.shRZ += 0.7 * c;
   return f;
+}
+
+/**
+ * The simulation keeps the kicker a stride behind the ball, so the
+ * body steps in over its standing foot for the strike and eases back
+ * after it.
+ */
+function stepIn(ballZ: number, s: number, into: number, settle: number): number {
+  return Math.max(0, Math.min(0.4 * s, ballZ - 0.3 * s)) * smooth(into) * (1 - settle);
 }
 
 const mid = (a: Foot, b: Foot): Foot => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, z: (a.z + b.z) / 2, toe: (a.toe + b.toe) / 2 });
