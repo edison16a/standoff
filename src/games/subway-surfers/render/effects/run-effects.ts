@@ -45,7 +45,7 @@ export class RunEffects {
     switch (event.type) {
       case "coin":
         for (let i = 0; i < 7; i++) {
-          this.glow.emit({ x: event.x, y: event.y, z: -event.z - 0.5, vx: this.spread() * 3, vy: this.spread() * 3 + 1, vz: this.spread() * 2 - 4, life: 0.45, size: 0.5, color: i % 2 ? 0xfff3a0 : 0xffc629, drag: 0.1, grow: 0.2 });
+          this.glow.emit({ x: event.x, y: event.y, z: -event.z, vx: this.spread() * 3, vy: this.spread() * 3 + 1, vz: this.spread() * 2 - 4, life: 0.45, size: 0.5, color: i % 2 ? 0xfff3a0 : 0xffc629, drag: 0.1, grow: 0.2 });
         }
         break;
       case "jump":

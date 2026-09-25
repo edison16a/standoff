@@ -119,7 +119,7 @@ export class Run {
       this.level = level;
       this.emit({ type: "level", multiplier: level });
     }
-    this.collect();
+    this.collect(dt);
     for (const kind of this.powers.tick(dt)) {
       this.emit({ type: "powerEnd", kind });
       // Falling from a jetpack's height passes through everything until the landing.
@@ -164,9 +164,9 @@ export class Run {
     this.emit({ type: "crash", cause, obstacleId });
   }
 
-  private collect(): void {
+  private collect(dt: number): void {
     const s = this.runner;
-    for (const { coin, pulled } of collectCoins(this.course, s, this.powers.has("magnet"))) {
+    for (const { coin, pulled } of collectCoins(this.course, s, this.powers.has("magnet"), dt)) {
       this.streak = this.time - this.lastCoin < COIN.streakS ? this.streak + 1 : 1;
       this.lastCoin = this.time;
       this.coins++;

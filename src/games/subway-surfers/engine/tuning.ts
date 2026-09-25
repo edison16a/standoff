@@ -71,10 +71,11 @@ export const BARRIER = {
 export const RAMP_LENGTH = 7;
 
 export const SPEED = {
-  start: 11,
-  max: 21,
-  /** Metres over which the speed rises most of the way to the top. */
-  rise: 3200,
+  start: 12,
+  /** The cap. Fast enough to be a real test, and the course still leaves time for every move. */
+  max: 36,
+  /** Metres over which the speed rises most of the way to the top: about 23 m/s after a minute, 31 after two. */
+  rise: 1400,
 };
 
 /** The speed is a function of distance, so two players on one seed face the same pace at the same place. */
@@ -82,10 +83,27 @@ export function speedAt(distance: number): number {
   return SPEED.start + (SPEED.max - SPEED.start) * (1 - Math.exp(-Math.max(0, distance) / SPEED.rise));
 }
 
+/**
+ * What a person in front of a camera can do. The course never asks for
+ * two moves closer together than `gapS` plus the camera's lag, at any
+ * speed: a head line move takes a camera frame or two and the head
+ * clearing its band before the game sees it.
+ */
+export const REACTION = {
+  gapS: 0.45,
+  cameraS: 0.2,
+};
+
+/** The least time between two moves the course asks for. */
+export const MOVE_GAP_S = REACTION.gapS + REACTION.cameraS;
+
 export const COIN = {
-  /** How near the runner's middle a coin must pass, across and along. */
-  reachX: 0.95,
-  reachZ: 0.9,
+  /** The coin as drawn: its radius and half its thickness. */
+  radius: 0.38,
+  halfThick: 0.05,
+  /** A coin is taken when its edge meets the body, across and along the track, and not a moment sooner. */
+  reachX: RUNNER.halfWidth + 0.38,
+  reachZ: RUNNER.halfDepth + 0.05,
   /** Height of coins on the ground. */
   y: 0.95,
   points: 10,
@@ -103,6 +121,8 @@ export const CHASE = {
   farGap: 26,
   /** A second stumble within this many seconds means they catch you. */
   memoryS: 7,
+  /** Bumps this soon after a stumble are the same stumble. */
+  graceS: 1,
   /** Seconds they keep up at the start of a run. */
   startS: 3.5,
 };

@@ -1,13 +1,15 @@
 import { Block } from "./block";
 import { openingCoins, PATTERNS, type PatternEntry } from "./patterns";
 import { Rng } from "./rng";
-import { speedAt, type Lane } from "./tuning";
+import { MOVE_GAP_S, speedAt, type Lane } from "./tuning";
 import { frontAt, type Coin, type Obstacle, type Pickup, type PowerKind } from "./types";
 
 /** The run up before the first obstacle, while the guard gives chase. */
 const FIRST_BLOCK = 60;
 /** How far ahead the course is always laid, well past what the fog shows. */
 export const LAY_AHEAD = 260;
+/** Metres into a stretch whose pace sets its spacing. */
+const SPEED_AHEAD = 60;
 
 const POWER_WEIGHTS: readonly (readonly [PowerKind, number])[] = [
   ["boots", 24],
@@ -84,8 +86,9 @@ export class Course {
   }
 
   private layBlock(): void {
-    const speed = speedAt(this.cursor);
-    const level = Math.min(1, Math.max(0, (this.cursor - 150) / 2500));
+    // Spaced for the pace a little way in, since the runner speeds up while crossing the stretch.
+    const speed = speedAt(this.cursor + SPEED_AHEAD);
+    const level = Math.min(1, Math.max(0, (this.cursor - 150) / 1600));
     const block = new Block(speed, () => this.rng.int(0, 7));
     if (this.cursor >= this.nextPickup) {
       this.pickupBlock(block);
@@ -96,8 +99,8 @@ export class Course {
       this.last = entry.name;
     }
     this.commit(block, this.cursor);
-    // The gap before the next stretch shrinks from about 1.4 to 0.9 seconds of running.
-    const gap = Math.max(12, speed * (1.4 - 0.5 * level));
+    // The gap before the next stretch shrinks from about 1.4 to 0.9 seconds of running, never under a move and a breath.
+    const gap = Math.max(12, speed * Math.max(MOVE_GAP_S + 0.25, 1.4 - 0.5 * level));
     this.cursor += block.end + gap;
   }
 

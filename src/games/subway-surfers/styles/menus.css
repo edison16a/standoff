@@ -8,7 +8,7 @@
   justify-content: center;
   gap: 32px;
   padding: 90px 24px 24px;
-  background: radial-gradient(ellipse at center, rgba(10, 14, 40, 0.25), rgba(10, 14, 40, 0.6));
+  background: radial-gradient(ellipse at center, rgba(8, 4, 26, 0.25), rgba(8, 4, 26, 0.6));
 }
 
 .ss-lobby__card,
@@ -19,10 +19,10 @@
   gap: 18px;
   max-width: 560px;
   padding: 36px 44px;
-  border: 5px solid #ffffff;
+  border: 4px solid #21f3ff;
   border-radius: 36px;
-  background: linear-gradient(160deg, rgba(47, 127, 224, 0.94), rgba(29, 42, 138, 0.94));
-  box-shadow: 0 12px 0 rgba(10, 14, 60, 0.6), 0 30px 60px rgba(0, 0, 0, 0.35);
+  background: linear-gradient(160deg, rgba(70, 18, 110, 0.94), rgba(14, 8, 44, 0.94));
+  box-shadow: 0 0 0 2px rgba(255, 43, 214, 0.6), 0 0 36px rgba(33, 243, 255, 0.7), 0 30px 60px rgba(0, 0, 0, 0.45);
 }
 
 .ss-lobby__tagline {
@@ -67,7 +67,7 @@
   border-radius: 10px;
   padding: 10px 12px;
   font: 800 20px/1 var(--font-ui);
-  color: #1d2a8a;
+  color: #1a0b3d;
   background: #ffffff;
 }
 
@@ -90,15 +90,17 @@
 .ss-lobby__how b {
   display: block;
   font-size: 20px;
-  color: #ffd21f;
+  color: #21f3ff;
+  text-shadow: 0 0 12px rgba(33, 243, 255, 0.7);
 }
 
 .ss-best {
   min-width: 300px;
   padding: 20px 24px;
-  border: 4px solid rgba(255, 255, 255, 0.85);
+  border: 4px solid #ff2bd6;
   border-radius: 28px;
-  background: rgba(15, 20, 60, 0.82);
+  box-shadow: 0 0 28px rgba(255, 43, 214, 0.75);
+  background: rgba(14, 8, 38, 0.82);
 }
 
 .ss-best__title {
@@ -124,7 +126,7 @@
 }
 
 .ss-best__row--new {
-  color: #1d2a8a;
+  color: #1a0b3d;
   background: #ffd21f;
   animation: ss-glow 0.8s ease-in-out infinite alternate;
 }
@@ -152,7 +154,7 @@
   justify-content: center;
   gap: 32px;
   padding: 24px;
-  background: rgba(10, 14, 40, 0.45);
+  background: rgba(8, 4, 26, 0.45);
   animation: ss-fade 0.4s ease-out;
 }
 
@@ -160,9 +162,9 @@
   margin: 0;
   font: 900 56px/1 "Arial Black", var(--font-ui);
   color: #ffd21f;
-  -webkit-text-stroke: 3px #1d2a8a;
+  -webkit-text-stroke: 3px #1a0b3d;
   paint-order: stroke fill;
-  text-shadow: 0 5px 0 #1d2a8a;
+  text-shadow: 0 5px 0 #1a0b3d, 0 0 28px rgba(255, 43, 214, 0.75);
 }
 
 .ss-results__rows {
@@ -208,7 +210,7 @@
   border-radius: 999px;
   font-size: 15px;
   font-weight: 900;
-  color: #1d2a8a;
+  color: #1a0b3d;
   background: #ffd21f;
 }
 
