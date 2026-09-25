@@ -17,6 +17,8 @@ export class Announcer {
     const synth = typeof window === "undefined" ? undefined : window.speechSynthesis;
     if (!synth || typeof SpeechSynthesisUtterance === "undefined") return;
     const level = loadAudioSettings().effects;
+    // Speech bypasses the audio graph, so it also keeps quiet while the engine is still locked.
+    if (!this.engine.unlocked) return;
     const now = performance.now() / 1000;
     if (level < 0.02 || (!urgent && (now < this.quietUntil || synth.speaking))) return;
     if (urgent) synth.cancel();

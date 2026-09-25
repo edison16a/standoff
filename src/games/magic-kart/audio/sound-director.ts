@@ -40,6 +40,8 @@ export class SoundDirector {
     switch (phase) {
       case "lobby":
         this.stopHums();
+        // A race left early must not leave the caller talking over the lobby.
+        this.caller.stop();
         this.music.play("lobby");
         this.engine.holdDuck("music", 1);
         return;
