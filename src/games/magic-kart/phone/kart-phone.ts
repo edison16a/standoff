@@ -46,7 +46,8 @@ export class KartPhone {
       this.wheelSteer = steerFromWheel(this.tilt.wheel, this.zero, this.wheelSteer);
     };
     this.stopSensors = room.motion === "granted" ? subscribeOrientation(onQuat, () => store.setState({ sensorsLive: true })) : null;
-    if (room.motion !== "granted") store.setState({ steerMode: "buttons" });
+    // With no sensors there is nothing to calibrate, so the setup must not wait for it.
+    if (room.motion !== "granted") store.setState({ steerMode: "buttons", calibrated: true });
     this.unsubscribe = room.on((event) => this.onRoom(event));
     this.timer = setInterval(() => this.stream(false), SEND_MS);
     this.send({ kind: "hello" });
