@@ -54,5 +54,6 @@ describe("computer players", () => {
     expect(curryThrees).toBeGreaterThanOrEqual(3);
     // Passing lanes are a risk, not a coin flip.
     expect(intercepts / passes).toBeLessThan(0.12);
-  });
+    // Three whole games take a few seconds, longer on a busy machine.
+  }, 60000);
 });

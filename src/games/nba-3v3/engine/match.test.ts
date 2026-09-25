@@ -26,7 +26,7 @@ describe("a game between computer players", () => {
     for (const s of scores) if (s.type === "score") expect([2, 3]).toContain(s.points);
     const total = scores.reduce((sum, s) => sum + (s.type === "score" ? s.points : 0), 0);
     expect(total).toBe(match.score[0] + match.score[1]);
-  });
+  }, 60000);
 
   it("shows the whole game over a few seeds: dunks, blocks, steals, passes, rebounds and every kind of shot", () => {
     const seen = new Set<string>();
@@ -41,7 +41,7 @@ describe("a game between computer players", () => {
     for (const outcome of ["swish", "bank", "roll", "bounce", "rimOut", "inOut", "boardOut"]) expect(seen, outcome).toContain(`outcome:${outcome}`);
     expect(seen).toContain("kind:layup");
     expect(seen).toContain("kind:jumper");
-  });
+  }, 60000);
 
   it("replays exactly from the same seed", () => {
     const a = playOut(11, 60);
