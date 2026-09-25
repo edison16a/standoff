@@ -87,6 +87,27 @@ describe("open play", () => {
   });
 });
 
+describe("the keeper", () => {
+  it("never carries the ball over its own line after smothering a dribbler", () => {
+    let smothered = 0;
+    for (let seed = 1; seed <= 30; seed++) {
+      const state = createMatch(LINEUP, { seed, replays: false });
+      for (let t = 0; t <= MATCH.kickoffWait + STEP; t += STEP) stepMatch(state);
+      clearAround(state);
+      const me = state.athletes[0]!;
+      // Running at the goal line past the keeper, the way a phone's player might.
+      me.pos = { x: 12.5, z: (seed % 5) - 2 };
+      state.ball.owner = { kind: "athlete", id: 0 };
+      for (let t = 0; t < 3 && state.phase === "play"; t += STEP) {
+        stepMatch(state, new Map([[0, { move: { x: 1, z: -me.pos.z * 0.1 } }]]));
+        if (state.events.some((e) => e.type === "save" && e.kind === "claim")) smothered++;
+      }
+      expect(state.lastGoal?.scorer === null && state.phase === "goal").toBe(false);
+    }
+    expect(smothered).toBeGreaterThan(0);
+  });
+});
+
 describe("the final whistle", () => {
   it("clears the losers out of the winners' huddle", () => {
     const state = inPlay();

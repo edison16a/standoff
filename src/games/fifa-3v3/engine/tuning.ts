@@ -135,6 +135,8 @@ export const KEEPER = {
   holdMin: 0.9,
   holdMax: 1.5,
   claimRange: 0.95,
+  /** The closest a keeper stands to the goal line, in front of it. */
+  lineGap: 0.3,
   getUp: 0.7,
 } as const;
 

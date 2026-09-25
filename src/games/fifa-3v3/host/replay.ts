@@ -18,8 +18,13 @@ export class ReplayRecorder {
   private clip: MatchView[] = [];
   private goalAt: number | null = null;
 
+  /** Whether a still taken at `time` would be kept, so a skipped one is never built. */
+  wants(time: number): boolean {
+    return time - this.lastAt >= EVERY_S;
+  }
+
   record(view: MatchView): void {
-    if (view.time - this.lastAt < EVERY_S) return;
+    if (!this.wants(view.time)) return;
     this.lastAt = view.time;
     this.frames.push(view);
     while (this.frames.length && view.time - this.frames[0]!.time > KEEP_S) this.frames.shift();

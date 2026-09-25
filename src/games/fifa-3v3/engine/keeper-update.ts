@@ -62,6 +62,10 @@ function step(k: Keeper, to: { x: number; z: number }, speed: number, dt: number
     k.pos.x += (dx / d) * move;
     k.pos.z += (dz / d) * move;
   }
+  // Never back over the goal line: a keeper there would carry a claimed ball into the net.
+  const gx = goalX(k.team);
+  const out = outward(k.team);
+  if ((k.pos.x - gx) * out < KEEPER.lineGap) k.pos.x = gx + out * KEEPER.lineGap;
 }
 
 function face(k: Keeper, angle: number, dt: number): void {

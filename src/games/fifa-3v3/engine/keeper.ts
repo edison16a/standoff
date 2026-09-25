@@ -109,5 +109,9 @@ export function claim(state: MatchState, k: Keeper): void {
 
 /** Where the gloves hold the ball, chest high in front of the keeper. */
 export function hands(k: Keeper): { x: number; y: number; z: number } {
-  return { x: k.pos.x + Math.cos(k.facing) * 0.32, y: 1.05, z: k.pos.z + Math.sin(k.facing) * 0.32 };
+  // Kept on the pitch side of the line even when the keeper turns to face the goal.
+  const gx = goalX(k.team);
+  const x = k.pos.x + Math.cos(k.facing) * 0.32;
+  const inside = (x - gx) * outward(k.team) < 0.2 ? gx + outward(k.team) * 0.2 : x;
+  return { x: inside, y: 1.05, z: k.pos.z + Math.sin(k.facing) * 0.32 };
 }

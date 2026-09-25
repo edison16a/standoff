@@ -58,7 +58,7 @@ export class MatchDriver {
       stepMatch(this.state, this.commands(pad, nowMs));
       events.push(...this.state.events);
       for (const event of this.state.events) if (event.type === "goal") this.replay.markGoal(this.state.time);
-      this.replay.record(buildView(this.state));
+      if (this.replay.wants(this.state.time)) this.replay.record(buildView(this.state));
     }
     this.view = buildView(this.state);
     return events;
