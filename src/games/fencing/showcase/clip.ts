@@ -18,6 +18,14 @@ const STEP_MS = 1000 / 60;
 const DRAW_EVERY_MS = 30;
 /** How often the capture tool checks whether the page is ready. */
 const READY_POLL_MS = 50;
+/** The capture tool's faked animation frames come this far apart, so skipped time is stepped the same way. */
+const FAKE_FRAME_MS = 16;
+/**
+ * The hall, the crowd and the camera are driven by a clock that starts with
+ * the clip, not the page. Two captures of the same moment then look the
+ * same, however long each page took to load.
+ */
+const CLIP_CLOCK_BASE_MS = 60_000;
 
 const CAST = { 1: "vale", 2: "marrow" } as const;
 
@@ -36,11 +44,11 @@ export function clip(renderer: StageRenderer, seekMs = 0): (now: number) => void
   let impactAt: number | null = null;
   let last = 0;
   let drawnAt = -Infinity;
-  /** The time of the tick being played, which the bout's events are stamped with. */
+  /** The clip clock at the tick being played, which the bout's events are stamped with. */
   let tickAt = 0;
 
   const tick = (now: number, draw: boolean) => {
-    tickAt = now;
+    tickAt = now - start! + CLIP_CLOCK_BASE_MS;
     const elapsed = now - start! + CYCLE_MS - WARMUP_MS;
     const index = Math.floor(elapsed / CYCLE_MS);
     if (index !== cycle) {
@@ -54,13 +62,13 @@ export function clip(renderer: StageRenderer, seekMs = 0): (now: number) => void
       for (let t = 0; t < PRE_ROLL_MS; t += STEP_MS) bout.step(STEP_MS);
       last = now;
     }
-    const frozen = impactAt !== null && now - impactAt > FREEZE_AFTER_IMPACT_MS;
+    const frozen = impactAt !== null && tickAt - impactAt > FREEZE_AFTER_IMPACT_MS;
     // The capture tool steps the clock in whole frames; catch up in fixed steps so every run is identical.
     while (last + STEP_MS <= now) {
       last += STEP_MS;
       if (!frozen) bout!.step(STEP_MS);
     }
-    renderer.update(bout!.scene(), now, { scores: bout!.scores });
+    renderer.update(bout!.scene(), tickAt, { scores: bout!.scores });
     if (!draw || now - drawnAt < DRAW_EVERY_MS) return;
     drawnAt = now;
     renderer.draw();
@@ -76,7 +84,7 @@ export function clip(renderer: StageRenderer, seekMs = 0): (now: number) => void
       // so the clip counts from the same moment. Counting from the first frame would drift by however long the page took to settle.
       if (window.__showcaseReady !== true) return;
       start = Math.ceil(now / READY_POLL_MS) * READY_POLL_MS - seekMs;
-      for (let t = start; t < now; t += STEP_MS) tick(t, false);
+      for (let t = start; t < now; t += FAKE_FRAME_MS) tick(t, false);
     }
     tick(now, true);
   };
