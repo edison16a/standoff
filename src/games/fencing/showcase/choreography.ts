@@ -46,8 +46,8 @@ export const MOVES: readonly MoveCue[] = [
   { slot: 2, from: at(3400), to: at(3650), move: 0.25 },
 ];
 
-/** When red lifts the blade high for the feint. */
-const FEINT = { from: at(3150), to: at(3650) };
+/** When red lifts the blade high for the feint, early enough that the jab is aimed from up there. */
+const FEINT = { from: at(3050), to: at(3650) };
 
 export const STRIKES: readonly StrikeCue[] = [
   // Green attacks and red parries: sparks.

@@ -18,7 +18,7 @@ interface PendingJab {
   attacker: Slot;
   startedAt: number;
   impactAt: number;
-  /** Where the blade pointed just before the chop, which is what the jab is judged by. */
+  /** Where the blade pointed just before the flick, which is what the jab is judged by. */
   aim: { pitch: number; yaw: number };
 }
 

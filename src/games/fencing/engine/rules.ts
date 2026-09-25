@@ -32,16 +32,17 @@ export const JAB_DURATION_MS = 520;
 export const PARRY_GRACE_MS = 80;
 /**
  * After a parry that blocked nothing, the fencer cannot parry again for
- * this long. Without it, lifting the phone over and over would keep a
+ * this long. Without it, raising the phone over and over would keep a
  * parry open all the time.
  */
 export const PARRY_RECOVERY_MS = 250;
 /**
  * A jab is aimed by where the blade pointed this long before it was
- * detected. By the time a chop is recognised it has already tipped the
- * phone down, and that dip is not where the player was aiming.
+ * detected. A jab is a quick flick or shake, and the phone waits a moment
+ * to be sure it is not a fast parry, so by then the flick has thrown the
+ * blade off where the player was aiming.
  */
-export const AIM_LOOKBACK_MS = 110;
+export const AIM_LOOKBACK_MS = 180;
 /** Two touches this close together cancel out, like an épée double. */
 export const DOUBLE_WINDOW_MS = 60;
 /** A parried attacker cannot strike again for this long. */
