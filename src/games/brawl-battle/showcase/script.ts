@@ -16,26 +16,28 @@ export const SEED = 9;
 export const PREROLL = 2.95;
 
 /**
- * Where the loop's match starts, in seconds: a karate punch flings the
- * samurai out, the bear's Earthquake sends the karate after, and the
- * samurai's Thousand Cuts takes out the mage and the bear together.
+ * Where the loop's match starts, in seconds. Four KOs land in the film:
+ * the samurai knocks the mage out, the bear sends the samurai after, the
+ * karate takes the bear and the samurai the karate. Along the way the
+ * bear throws two charged Haymakers and the mage a charged Frost Ring.
  */
-export const LOOP_LEAD = 14.6;
+export const LOOP_LEAD = 15.6;
 
 /** How long the tool films: an eight second clip and one more second to blend over its start. */
 export const FILMED = 9;
 
 /** The poster and the icon are single frames, run this far ahead without drawing and then held. */
-export const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 6.58, icon: 6.58 };
+export const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 4.95, icon: 4.95 };
 
 /**
- * The stills' shots, in stage metres: the bear's Charge landing on the
- * karate while the samurai leaps on the left platform and the mage waits
- * on the right. The icon sits closer and low, so the action clears the logo.
+ * The stills' shots, in stage metres: the karate's charged Dragon Flight
+ * landing on the mage, with the samurai slashing down from the air and
+ * the bear winding up Big Paw. The icon sits closer and low, so the
+ * action clears the logo.
  */
 export const STILL_CAMERA: Partial<Record<ShowcaseView, { x: number; y: number; distance: number }>> = {
-  poster: { x: 0.8, y: 3.2, distance: 17 },
-  icon: { x: 0.2, y: 1.6, distance: 14.5 },
+  poster: { x: -0.8, y: 2.2, distance: 13 },
+  icon: { x: -1.1, y: 1.3, distance: 11.5 },
 };
 
 /** The showcase's match, the same every time for the same seed. */
