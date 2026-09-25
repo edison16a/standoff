@@ -9,6 +9,7 @@ import { alive, type Zombie } from "../engine/zombie";
 import type { SurvivalRenderer } from "../render/scene-renderer";
 import type { Framing, SceneSource } from "../render/scene-source";
 import { ShowcaseBot, type BotRole } from "./bot";
+import { EscortSpread } from "./staging";
 import { assignTargets, blocked, lanes } from "./targeting";
 
 /** One staged fight: where, with which guns, and how the boss moves. */
@@ -19,8 +20,8 @@ export interface ShowcasePlan {
   bossAt: number;
   /** Seconds between the volleys that stagger the boss. The clip lasts a whole number of beats, so it loops. */
   beat: number;
-  /** The escort: most standing at once, seconds between arrivals, and where they appear. */
-  escort: { maxAlive: number; gap: number; spawn: [number, number] };
+  /** The escort: most standing at once, seconds between arrivals, where they appear, and how many hits they take. */
+  escort: { maxAlive: number; gap: number; spawn: [number, number]; tough: number };
   /** Seconds the fight runs before the first frame, so the street is already busy. */
   preroll: number;
   /** How the camera frames the fight, over the game's own view. */
@@ -45,6 +46,7 @@ export class ShowcaseDirector implements SceneSource {
   readonly game: SurvivalGame;
   readonly random: () => number;
   private readonly bots: ShowcaseBot[];
+  private readonly spread: EscortSpread;
   private clock = 0;
   private last = -1;
   private beats = 0;
@@ -57,10 +59,11 @@ export class ShowcaseDirector implements SceneSource {
     this.game.start(plan.players.map((p, i) => ({ seat: i + 1, weapon: p.weapon })), plan.stage);
     while (this.game.phase === "travel") this.game.update(0.25);
     // An endless escort in place of the stage's own count, so the clip never runs dry.
-    const spec = { ...stage(plan.stage), count: 10_000, maxAlive: plan.escort.maxAlive, gap: plan.escort.gap, spawn: plan.escort.spawn, packs: 0 };
+    const spec = { ...stage(plan.stage), count: 10_000, maxAlive: plan.escort.maxAlive, gap: plan.escort.gap, spawn: plan.escort.spawn, tough: plan.escort.tough, packs: 0 };
     this.game.encounter = new Encounter(spec, 1, plan.seed, 5000);
-    const spread = lanes(plan.players.length);
-    this.bots = plan.players.map((p, i) => new ShowcaseBot(i + 1, p.role, spread[i]!));
+    this.spread = new EscortSpread(spec.zone);
+    const sides = lanes(plan.players.length);
+    this.bots = plan.players.map((p, i) => new ShowcaseBot(i + 1, p.role, sides[i]!));
     for (let t = 0; t < plan.preroll; t += STEP) this.advance();
     this.game.drain();
   }
@@ -118,6 +121,7 @@ export class ShowcaseDirector implements SceneSource {
     this.game.update(STEP);
     // Nobody falls in a trailer.
     this.game.health = MAX_HEALTH;
+    this.spread.update(this.game.encounter?.zombies ?? []);
     const boss = this.game.encounter?.zombies.find((z) => z.weak.length > 0 && alive(z));
     if (boss) this.stageBoss(boss);
   }
