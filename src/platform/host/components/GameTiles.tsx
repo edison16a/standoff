@@ -20,9 +20,15 @@ interface GameTilesProps {
 export function GameTiles({ games, selected, onSelect, onHost }: GameTilesProps) {
   const rowRef = useRef<HTMLDivElement>(null);
 
-  // Where the row scrolls, on a narrow screen, the chosen tile is kept in view.
+  // The row runs off screen, so it scrolls to keep the chosen tile at the front, like a console menu.
+  // Only the row scrolls: scrollIntoView would also nudge the page sideways.
   useEffect(() => {
-    rowRef.current?.querySelectorAll<HTMLElement>(".game-tile")[selected]?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    const row = rowRef.current;
+    const tile = row?.querySelectorAll<HTMLElement>(".game-tile")[selected];
+    if (!row || !tile) return;
+    const inset = parseFloat(getComputedStyle(row).paddingLeft) || 0;
+    const shift = tile.getBoundingClientRect().left - row.getBoundingClientRect().left - inset;
+    row.scrollTo({ left: row.scrollLeft + shift });
   }, [selected]);
 
   // Arrow keys on a focused tile move focus with the choice, so keyboard users stay on the row.

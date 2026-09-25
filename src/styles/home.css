@@ -87,14 +87,14 @@
 }
 
 /*
-  Tiles shrink to fit every game in one row on a wide screen: the width
-  left after the gaps, shared by all the tiles plus the chosen one's extra
-  size. --count is set from the number of games. Narrow screens scroll.
+  Big tiles, like a console menu. They no longer shrink to fit every game
+  in one row: the row runs off the right edge and scrolls as the choice
+  moves along it.
 */
 .home__main {
+  --edge: 48px;
   --gap: clamp(14px, 1.4vw, 24px);
-  --fit: calc((100vw - 96px - (var(--count, 5) - 1) * var(--gap)) / (var(--count, 5) + 0.22));
-  --tile: clamp(72px, min(8.6vw, var(--fit)), 172px);
+  --tile: clamp(128px, min(14vw, 26vh), 240px);
   --tile-on: calc(var(--tile) * 1.22);
   position: relative;
   display: flex;
@@ -197,12 +197,20 @@
   }
 
   .home__main {
-    --tile: 96px;
-    --tile-on: 116px;
+    --edge: 16px;
+    --tile: 150px;
+    --tile-on: 180px;
     padding: 8px 16px 32px;
   }
 
   .home__details {
     margin-top: 28px;
+  }
+}
+
+/* A phone screen has room for the logo and the round tools, not the GitHub label too. */
+@media (max-width: 480px) {
+  .home__tools .github-btn__label {
+    display: none;
   }
 }

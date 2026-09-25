@@ -1,16 +1,25 @@
 /*
   The chosen tile really is bigger, not scaled, so the others move along
   to make room and nothing ever overlaps. The row sits on the tiles' top
-  edge, like the console's. The padding leaves room for the ring.
+  edge, like the console's. The padding leaves room for the ring. The row
+  runs on to both edges of the screen so games scroll in and out of view.
 */
 .home__tiles {
   display: flex;
   align-items: flex-start;
   gap: var(--gap);
-  margin: -10px;
-  padding: 10px;
+  margin: -10px calc(-1 * var(--edge));
+  padding: 10px var(--edge);
   overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-padding-inline: var(--edge);
   scrollbar-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home__tiles {
+    scroll-behavior: auto;
+  }
 }
 
 .home__tiles::-webkit-scrollbar {
@@ -24,7 +33,7 @@
   height: var(--tile);
   padding: 0;
   border: 0;
-  border-radius: 20px;
+  border-radius: 28px;
   background: var(--bg-elevated);
   box-shadow: var(--shadow);
   cursor: pointer;
@@ -48,7 +57,7 @@
 .game-tile[aria-pressed="true"] {
   width: var(--tile-on);
   height: var(--tile-on);
-  border-radius: 24px;
+  border-radius: 32px;
   outline-color: var(--game);
 }
 

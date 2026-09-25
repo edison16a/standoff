@@ -14,7 +14,7 @@ export function GitHubButton({ compact = false }: { compact?: boolean }) {
   return (
     <a className="btn" href={SITE.repository} target="_blank" rel="noreferrer" aria-label="View on GitHub">
       <GitHubMark />
-      {!compact && <span>View on GitHub</span>}
+      {!compact && <span className="github-btn__label">View on GitHub</span>}
     </a>
   );
 }
