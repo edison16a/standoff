@@ -28,13 +28,20 @@ export function Showcase({ view }: { view: ShowcaseView }) {
     observer.observe(canvas);
     let start = -1;
     let last = 0;
+    let drawn = -Infinity;
     let frame = 0;
+    // The capture tool steps the clock frame by frame. A clip needs one picture per captured
+    // frame and a still barely moves, so pictures in between are skipped to save the drawing.
+    const every = view === "loop" ? 0.03 : 0.5;
     const loop = (now: number) => {
       if (start < 0) start = now;
       const elapsed = (now - start) / 1000;
       director.frame(elapsed - last, elapsed);
       last = elapsed;
-      renderer.render([{ scene, rect: { x: 0, y: 0, w: 1, h: 1 }, camera: director.camera(canvas.clientWidth / canvas.clientHeight) }]);
+      if (elapsed - drawn >= every) {
+        drawn = elapsed;
+        renderer.render([{ scene, rect: { x: 0, y: 0, w: 1, h: 1 }, camera: director.camera(canvas.clientWidth / canvas.clientHeight) }]);
+      }
       frame = requestAnimationFrame(loop);
     };
     frame = requestAnimationFrame(loop);
