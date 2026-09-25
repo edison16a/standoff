@@ -1,0 +1,284 @@
+/*
+  The HUD over each player's half of the screen, the finish, and the
+  results card. With two players the halves are stacked, player one on top.
+*/
+
+.cg-huds {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cg-hud {
+  position: absolute;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+}
+
+.cg-hud--solo {
+  top: 0;
+  bottom: 0;
+}
+
+.cg-hud--top {
+  top: 0;
+  height: 50%;
+  border-bottom: 3px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 2px 16px rgba(62, 230, 255, 0.5);
+}
+
+.cg-hud--bottom {
+  bottom: 0;
+  height: 50%;
+}
+
+.cg-progress {
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  width: min(460px, 36vw);
+  height: 18px;
+  transform: translateX(-50%);
+  border: 3px solid #12052e;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+.cg-hud--bottom .cg-progress {
+  top: 16px;
+}
+
+/* The results card covers the middle of the screen, where this bar would peek out from behind it. */
+.cg-stage--results .cg-hud--bottom .cg-progress {
+  visibility: hidden;
+}
+
+.cg-progress__fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #3dff6e, #d9ffb0);
+  box-shadow: 0 0 12px rgba(61, 255, 110, 0.8);
+  transition: width 0.1s linear;
+}
+
+.cg-progress__best {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  width: 3px;
+  margin-left: -1px;
+  background: #ffd21f;
+  box-shadow: 0 0 8px #ffd21f;
+}
+
+.cg-progress__text {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 12px);
+  transform: translateY(-50%);
+  font: 900 22px/1 "Arial Black", Arial, var(--font-ui);
+  text-shadow: 0 2px 0 #12052e, 0 0 10px rgba(0, 0, 0, 0.6);
+}
+
+.cg-hud__tags {
+  position: absolute;
+  left: 20px;
+  bottom: 16px;
+  display: flex;
+  gap: 8px;
+}
+
+.cg-tag {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font: 800 14px/1 var(--font-ui);
+  color: #ffffff;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+.cg-tag--dark {
+  background: rgba(6, 3, 24, 0.7);
+}
+
+.cg-tag--practice {
+  color: #12052e;
+  background: #3ee6ff;
+  text-shadow: none;
+}
+
+.cg-hud__level {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  margin: 0;
+  transform: translateX(-50%);
+  font: 800 14px/1 var(--font-ui);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.cg-banner,
+.cg-finish,
+.cg-hud__notice {
+  position: absolute;
+  left: 50%;
+  top: 36%;
+  margin: 0;
+  transform: translate(-50%, -50%);
+  font: 900 44px/1 "Arial Black", Arial, var(--font-ui);
+  white-space: nowrap;
+  -webkit-text-stroke: 2px #12052e;
+  text-shadow: 0 5px 0 #12052e, 0 0 24px rgba(255, 210, 31, 0.6);
+}
+
+.cg-banner {
+  color: #ffd21f;
+  animation: cg-banner 1.6s ease-out forwards;
+}
+
+.cg-finish {
+  font-size: 64px;
+  color: #3dff6e;
+  text-shadow: 0 6px 0 #12052e, 0 0 36px rgba(61, 255, 110, 0.8);
+  animation: cg-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.cg-hud__notice {
+  top: 50%;
+  padding: 16px 28px;
+  border-radius: 16px;
+  font-size: 34px;
+  background: rgba(6, 3, 24, 0.8);
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+}
+
+.cg-hud__notice--soft {
+  /* Below the Attempt sign that floats over the start, so the two never overlap. */
+  top: 60%;
+  font-size: 26px;
+  background: rgba(6, 3, 24, 0.55);
+}
+
+.cg-confetti {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes cg-banner {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -30%) scale(0.7);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+  75% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -70%) scale(1);
+  }
+}
+
+@keyframes cg-pop {
+  from {
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.cg-results {
+  width: min(560px, 100%);
+  padding: 28px 30px 26px;
+  border: 4px solid #3ee6ff;
+  border-radius: 22px;
+  text-align: center;
+  background: linear-gradient(170deg, rgba(40, 20, 110, 0.95), rgba(8, 4, 32, 0.96));
+  box-shadow: 0 0 40px rgba(62, 230, 255, 0.45);
+}
+
+.cg-results__level {
+  margin: 0;
+  font: 800 15px/1 var(--font-ui);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #3ee6ff;
+}
+
+.cg-results__title {
+  margin: 10px 0 6px;
+  font: 900 42px/1.05 "Arial Black", Arial, var(--font-ui);
+  text-shadow: 0 4px 0 #12052e;
+}
+
+.cg-results__unlock {
+  margin: 6px 0 0;
+  font: 800 18px/1.2 var(--font-ui);
+  color: #ffd21f;
+}
+
+.cg-results__table {
+  width: 100%;
+  margin: 18px 0 8px;
+  border-collapse: collapse;
+  font: 700 18px/1.2 var(--font-ui);
+}
+
+.cg-results__table th,
+.cg-results__table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.cg-results__table thead th {
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.cg-results__table tbody th {
+  text-align: left;
+}
+
+.cg-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 8px;
+  border-radius: 3px;
+  vertical-align: -1px;
+}
+
+.cg-results__note {
+  margin: 6px 0 0;
+  font: 600 14px/1.3 var(--font-ui);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.cg-results__actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cg-banner,
+  .cg-finish {
+    animation: none;
+  }
+}
