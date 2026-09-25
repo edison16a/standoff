@@ -87,6 +87,19 @@ describe("MotionPipeline", () => {
     expect(strikes).toEqual(["jab"]);
   });
 
+  it("forgets the orientation's turn rate once its readings stop", () => {
+    const { pipeline, strikes, feed } = flatPhone();
+    // The turn is cut off at full speed, then only motion readings come.
+    for (let i = 0; i < 6; i++) {
+      pipeline.onOrientation(quatFromDeviceEuler(-8 * i, -6 * i, 0), i * STEP);
+      feed(still(1));
+    }
+    feed(still(60));
+    feed(down([6, 18, 26, 22, 12, 4]));
+    feed(still(20));
+    expect(strikes).toEqual(["jab", "jab"]);
+  });
+
   it("reads a steady raise up and to the right as a parry", () => {
     const { pipeline, strikes, feed } = flatPhone();
     turn(pipeline, feed, 0, 700, (k) => [-32 * k, 45 * k]);

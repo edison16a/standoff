@@ -139,9 +139,14 @@ export class MotionPipeline {
       pitch: this.pose.pitch,
       yaw: this.pose.yaw,
       accel: length(linear),
-      spin: gyro ? length(gyro) * DEG : this.turn.rate,
+      spin: gyro ? length(gyro) * DEG : this.turnRate(reading.t),
     });
     if (action) this.onStrike(action);
+  }
+
+  /** The last turn rate, or none once orientation readings have stopped, so a stale spike cannot hold a move open. */
+  private turnRate(t: number): number {
+    return t - this.turn.t < MAX_TURN_GAP_MS ? this.turn.rate : 0;
   }
 
   /**
