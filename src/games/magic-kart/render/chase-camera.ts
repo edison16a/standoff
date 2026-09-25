@@ -6,6 +6,9 @@ import { DRIVE } from "../engine/tuning";
 const BEHIND = 6.2;
 const ABOVE = 2.7;
 const BASE_FOV = 68;
+/** How much further back and higher the camera sits with the glider fully open. */
+const GLIDE_BACK = 2.6;
+const GLIDE_UP = 1.3;
 
 /**
  * The camera behind one player's kart. It follows a smoothed heading
@@ -20,6 +23,7 @@ export class ChaseCamera {
   private readonly look = new THREE.Vector3();
   private fov = BASE_FOV;
   private shake = 0;
+  private glide = 0;
 
   /** A jolt from a hit or a hard landing, fading away over a moment. */
   bump(amount: number): void {
@@ -34,9 +38,11 @@ export class ChaseCamera {
     this.heading += wrapAngle(target - this.heading) * ease(dt, kart.timers.stun > 0 ? 2 : 5);
     const fx = Math.sin(this.heading);
     const fz = Math.cos(this.heading);
-    const back = BEHIND + Math.min(1.5, speed * 0.03);
-    const wanted = new THREE.Vector3(kart.x - fx * back, kart.y + ABOVE, kart.z - fz * back);
-    const ahead = new THREE.Vector3(kart.x + fx * 5, kart.y + 1.2, kart.z + fz * 5);
+    // Under a glider it eases back and up, so the whole wing and the road below are in view.
+    this.glide += (kart.glide - this.glide) * ease(dt, 2.5);
+    const back = BEHIND + Math.min(1.5, speed * 0.03) + GLIDE_BACK * this.glide;
+    const wanted = new THREE.Vector3(kart.x - fx * back, kart.y + ABOVE + GLIDE_UP * this.glide, kart.z - fz * back);
+    const ahead = new THREE.Vector3(kart.x + fx * 5, kart.y + 1.2 + this.glide, kart.z + fz * 5);
     if (snap || this.pos.lengthSq() === 0) {
       this.pos.copy(wanted);
       this.look.copy(ahead);

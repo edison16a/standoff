@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { speedOf, type Kart } from "../engine/kart";
 import type { Track } from "../engine/track";
 import { DRIVE } from "../engine/tuning";
+import { GliderView } from "./glider-view";
 import type { KartExtras } from "./kart-extras";
 import { nameTag } from "./kart-extras";
 import { KartModel } from "./models/kart-model";
@@ -17,6 +18,7 @@ const local = new THREE.Vector3();
  */
 export class KartView {
   readonly model: KartModel;
+  readonly glider: GliderView;
   private readonly shadow: THREE.Mesh;
   private readonly flag: THREE.Mesh;
   private readonly tag: THREE.Sprite;
@@ -25,6 +27,8 @@ export class KartView {
   private readonly ice = new THREE.Group();
   private readonly flames: THREE.Group[] = [];
   private pitch = 0;
+  /** Lean into a turn under the glider, eased. */
+  private bank = 0;
   /** How far the body is swung round in a drift, radians, eased in and out. */
   private slide = 0;
   private ghost = false;
@@ -67,7 +71,8 @@ export class KartView {
       this.model.chassis.add(flame);
       this.flames.push(flame);
     }
-    this.model.root.add(this.tag, this.shield, this.stars, this.ice);
+    this.glider = new GliderView(kart.character);
+    this.model.root.add(this.tag, this.shield, this.stars, this.ice, this.glider.root);
     scene.add(this.model.root, this.shadow);
   }
 
@@ -78,7 +83,9 @@ export class KartView {
     // In a drift the nose swings into the bend and the rear steps out, more the faster it slides.
     const slideTo = kart.drift !== 0 ? -kart.drift * (0.26 + 0.14 * Math.min(1, speedOf(kart) / DRIVE.topSpeed)) : 0;
     this.slide += (slideTo - this.slide) * Math.min(1, dt * 7);
-    root.rotation.set(0, kart.heading + kart.spin + this.slide, 0, "YXZ");
+    // Under the wing the kart banks into the turn like a glider does.
+    this.bank += (kart.steer * 0.3 * kart.glide - this.bank) * Math.min(1, dt * 6);
+    root.rotation.set(0, kart.heading + kart.spin + this.slide, this.bank, "YXZ");
     // Nose up and down with the road, and a bit more with the jump's arc.
     const ahead = track.pointAt(kart.loc.s + 1.5, kart.loc.d).y;
     const behind = track.pointAt(kart.loc.s - 1.5, kart.loc.d).y;
@@ -89,6 +96,7 @@ export class KartView {
     const speed = speedOf(kart) * Math.sign(Math.sin(kart.heading) * kart.vx + Math.cos(kart.heading) * kart.vz || 1);
     this.model.animate(speed, kart.steer, dt, time + kart.id, kart.airborne ? 0 : 1);
     this.flag.rotation.y = Math.sin(time * 9 + kart.id) * 0.35;
+    this.glider.update(kart, time);
 
     const ground = track.groundAt(kart.loc.s, kart.loc.d);
     this.shadowOn = ground !== null && kart.y - ground < 12;
@@ -134,7 +142,9 @@ export class KartView {
     const near = !own && viewerKartId !== null ? eye.distanceTo(this.model.root.position) : Infinity;
     const inTheWay = near < 5.5;
     this.tag.visible = tags && !own && !this.ghost && near > 9;
-    this.model.setOpacity(this.ghost ? (own ? 0.4 : 0.06) : inTheWay ? Math.max(0.3, Math.min(0.75, 0.3 + (near - 2) * 0.13)) : 1);
+    const opacity = this.ghost ? (own ? 0.4 : 0.06) : inTheWay ? Math.max(0.3, Math.min(0.75, 0.3 + (near - 2) * 0.13)) : 1;
+    this.model.setOpacity(opacity);
+    this.glider.setOpacity(opacity);
     const hidden = this.ghost && !own;
     this.shadow.visible = this.shadowOn && !hidden;
     this.flag.visible = !hidden;
@@ -152,6 +162,7 @@ export class KartView {
   dispose(scene: THREE.Object3D): void {
     scene.remove(this.model.root, this.shadow);
     this.model.dispose();
+    this.glider.dispose();
     this.flag.geometry.dispose();
     (this.flag.material as THREE.Material).dispose();
     this.tag.material.map?.dispose();
