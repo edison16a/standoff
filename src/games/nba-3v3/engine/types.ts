@@ -105,4 +105,5 @@ export interface Ball {
   rimCd: number;
 }
 
-export type Phase = "countdown" | "live" | "dead" | "over";
+/** Dead is the break after a basket or a turnover; check is the check up at the top that follows it. */
+export type Phase = "countdown" | "live" | "dead" | "check" | "over";

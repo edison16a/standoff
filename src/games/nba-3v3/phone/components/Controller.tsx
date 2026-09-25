@@ -13,7 +13,7 @@ function Status({ court }: { court: CourtState }) {
   const flash = useControllerStore((s) => s.flash);
   const mine = TEAMS[court.team];
   const other = TEAMS[court.team === 0 ? 1 : 0];
-  const ball = court.hasBall ? "Your ball" : court.holder ? `${court.holder} has it` : "Loose ball";
+  const ball = court.checking ? (court.hasBall ? "Check ball" : "Check up") : court.hasBall ? "Your ball" : court.holder ? `${court.holder} has it` : "Loose ball";
   return (
     <div className="nba-status">
       <span className="nba-status__team">{mine.name}</span>

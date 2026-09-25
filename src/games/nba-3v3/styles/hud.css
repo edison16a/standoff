@@ -120,6 +120,23 @@
   animation: nba-pulse 0.5s ease-in-out infinite alternate;
 }
 
+/* Stopped for the check up: the digits dim and the word under them glows softly. */
+.nba-board__clock--held span {
+  opacity: 0.55;
+  transition: opacity 0.25s ease;
+}
+
+.nba-board__clock--held small {
+  color: #ffd23f;
+  animation: nba-fade-in 0.3s ease-out, nba-pulse 0.9s ease-in-out 0.3s infinite alternate;
+}
+
+@keyframes nba-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
 @keyframes nba-pulse {
   to {
     opacity: 0.55;

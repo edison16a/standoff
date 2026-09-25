@@ -30,7 +30,7 @@ describe("a game between computer players", () => {
 
   it("shows the whole game over a few seeds: dunks, blocks, steals, passes, rebounds and every kind of shot", () => {
     const seen = new Set<string>();
-    for (const seed of [1, 2, 3, 4, 5]) {
+    for (const seed of [1, 2, 3, 4, 5, 6, 7]) {
       for (const e of playOut(seed).events) {
         seen.add(e.type);
         if (e.type === "shot") seen.add(`outcome:${e.outcome}`);

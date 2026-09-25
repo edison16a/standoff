@@ -6,7 +6,9 @@ import { Brains } from "./bot/brains";
 import type { MatchEvent } from "./events";
 import { seeded, type Rng } from "./rng";
 import type { Outcome } from "./shot-model";
-import { placeForCheck, updateClock, updateDead, type CheckPlan } from "./rules";
+import { placeForCheck } from "./check-plan";
+import { stepCheckBall, updateCheck, updateDead, type CheckUp } from "./check-up";
+import { updateClock } from "./rules";
 import { RIM, RULES } from "./tuning";
 import type { Athlete, Ball, Button, Phase, TeamId } from "./types";
 import type { V2 } from "./vec";
@@ -49,8 +51,10 @@ export class Match {
   clockWarned = false;
   winner: TeamId | null = null;
   lastPass: { from: number; to: number; at: number } | null = null;
-  /** Where everyone lines up for the next check, while the ball is dead. */
-  checkPlan: CheckPlan | null = null;
+  /** The break after a basket or a turnover and the check up that ends it, while the ball is dead. */
+  checkUp: CheckUp | null = null;
+  /** The showcase turns the check up off to keep its highlight short. Real games always check. */
+  checkBeat = true;
   /** The next shot's outcome, set by the showcase to film a sure highlight. Real games leave it alone. */
   forced: Outcome | null = null;
   gamePoint: [boolean, boolean] = [false, false];
@@ -74,7 +78,7 @@ export class Match {
       shot: null, lastTouch: null, spin: 0, rimCd: 0,
     };
     this.brains = new Brains(this);
-    placeForCheck(this, this.offence, true);
+    placeForCheck(this, this.offence);
   }
 
   get events(): MatchEvent[] {
@@ -141,7 +145,8 @@ export class Match {
     if (this.phase === "countdown") this.countdown();
     if (this.phase === "countdown" || this.phase === "over") for (const a of this.athletes) a.move = { x: 0, z: 0 };
     if (this.phase === "live") this.brains.think(dt);
-    if (this.phase === "dead") updateDead(this);
+    if (this.phase === "dead") updateDead(this, dt);
+    if (this.phase === "check") updateCheck(this);
     for (const a of this.athletes) {
       a.stealCd = Math.max(0, a.stealCd - dt);
       a.blockCd = Math.max(0, a.blockCd - dt);
@@ -151,7 +156,7 @@ export class Match {
       moveAthlete(a, dt, this.ball.holder === a.id, this.facing(a), this.queue);
     }
     separate(this.athletes, this.queue, this.bumpCd);
-    updateBall(this, dt);
+    if (!stepCheckBall(this, dt)) updateBall(this, dt);
     if (this.phase === "live") updateClock(this, dt);
   }
 

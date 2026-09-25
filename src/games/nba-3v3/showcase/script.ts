@@ -45,6 +45,8 @@ export class HighlightScript {
       ],
     });
     const m = this.match;
+    // The film goes straight from the dunk to Luka's three, without the check up in between.
+    m.checkBeat = false;
     m.phase = "live";
     m.phaseT = 0;
     for (const [id, x, z] of OPENING) Object.assign(m.athletes[id]!, { x, z, yaw: Math.PI });

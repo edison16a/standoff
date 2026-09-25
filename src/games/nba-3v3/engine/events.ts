@@ -37,6 +37,7 @@ export type MatchEvent =
   | { type: "mustClear"; id: number }
   | { type: "clockWarning" }
   | { type: "violation"; team: TeamId; reason: "clock" | "out" }
+  | { type: "checkUp"; team: TeamId; id: number; defender: number }
   | { type: "check"; team: TeamId; id: number }
   | { type: "heating"; id: number }
   | { type: "onFire"; id: number }

@@ -18,6 +18,7 @@ function Scoreboard() {
   const offence = useNbaStore((s) => s.offence);
   const gamePoint = useNbaStore((s) => s.gamePoint);
   const phase = useNbaStore((s) => s.phase);
+  const checking = useNbaStore((s) => s.checking);
   const side = (team: 0 | 1) => (
     <div className={`nba-board__team nba-board__team--${team}`} style={{ "--team": TEAMS[team].color, "--team-dark": TEAMS[team].dark } as React.CSSProperties}>
       {team === 1 && <strong className="nba-board__score">{score[1]}</strong>}
@@ -32,9 +33,10 @@ function Scoreboard() {
   return (
     <div className="nba-board" role="status" aria-label={`${TEAMS[0].name} ${score[0]}, ${TEAMS[1].name} ${score[1]}`}>
       {side(0)}
-      <div className={`nba-board__clock ${clock <= 5 && phase === "live" ? "nba-board__clock--late" : ""}`}>
+      <div className={`nba-board__clock ${clock <= 5 && phase === "live" && !checking ? "nba-board__clock--late" : ""} ${checking ? "nba-board__clock--held" : ""}`}>
         <span>{String(clock).padStart(2, "0")}</span>
-        <small>First to 11</small>
+        {/* The clock stops for the check up at the top: a quiet word under it says so. */}
+        <small key={checking ? "check" : "play"}>{checking ? "Check ball" : "First to 11"}</small>
       </div>
       {side(1)}
     </div>

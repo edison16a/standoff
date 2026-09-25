@@ -55,6 +55,8 @@ export interface NbaHostState {
   shotClock: number;
   offence: TeamId;
   mustClear: boolean;
+  /** The ball is dead or being checked: the shot clock is stopped. */
+  checking: boolean;
   countdown: number | null;
   gamePoint: [boolean, boolean];
   banner: Banner | null;
@@ -72,6 +74,7 @@ export const useNbaStore = create<NbaHostState>(() => ({
   shotClock: 12,
   offence: 0,
   mustClear: false,
+  checking: false,
   countdown: null,
   gamePoint: [false, false],
   banner: null,

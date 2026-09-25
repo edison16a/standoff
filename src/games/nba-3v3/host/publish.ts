@@ -46,6 +46,7 @@ function court(m: Match, id: number, players: readonly Player[]): CourtState {
     canSteal: !!holder && holder.team !== a.team && dist2(a, holder) < DEFENCE.stealRange,
     meter: { fullMs: SHOT.meterMs, greenMs: GREEN_MS, halfMs: greenHalfMs(CHARACTERS[a.character].stats.shooting, a.onFire) },
     onFire: a.onFire,
+    checking: m.phase === "check",
     countdown: m.phase === "countdown" ? Math.max(0, Math.ceil(RULES.countdown - m.phaseT)) : null,
   };
 }
@@ -75,6 +76,7 @@ export function publish(c: PublishContext): void {
     shotClock: m ? Math.max(0, Math.ceil(m.shotClock)) : RULES.shotClock,
     offence: m?.offence ?? 0,
     mustClear: m?.needsClear ?? false,
+    checking: m?.phase === "dead" || m?.phase === "check",
     countdown: m && m.phase === "countdown" ? Math.max(0, Math.ceil(RULES.countdown - m.phaseT)) : null,
     // Once someone has won, nobody is on game point any more.
     gamePoint: m && m.phase !== "over" ? [m.gamePoint[0], m.gamePoint[1]] : [false, false],
