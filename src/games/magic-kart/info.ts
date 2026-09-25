@@ -6,7 +6,7 @@ import poster from "./media/poster.jpg";
 export const info: GameInfo = {
   id: "magic-kart",
   title: "Magic Kart",
-  tagline: "Race along the beach, grab power up cubes, first over the line wins.",
+  tagline: "Race four wild maps with power ups and big jumps. First over the line wins.",
   status: "ready",
   players: [1, 2, 4],
   color: "#1a9bdc",
