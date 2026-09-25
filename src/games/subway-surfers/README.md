@@ -11,13 +11,13 @@ An endless runner on the rails, played with your whole body in front of the comp
 3. **Calibrate:** stand in the middle of your half of the picture, tall and still, until your ring fills. Player one stands on the left.
 4. **Tutorial:** step left, step right, jump and duck. Each move ticks off as the camera sees it. Skip is there for players who know it already.
 5. **Run!** After 3, 2, 1:
-   * **Step** left or right to change track (three tracks).
+   * **Step** left or right to change track (three tracks). Leaning that way with your feet in place works too.
    * **Jump** over low barriers, onto ramps and from roof to roof.
-   * **Duck** to roll under the high barriers. Ducking in the air slams you back down.
+   * **Duck** to roll under the high barriers. Ducking in the air slams you back down. The bend of your knees as you land from a jump is not a duck.
 6. One hit ends the run, unless you are on a hoverboard. Glancing off the side of a train brings the guard and his dog close. Do it twice and they catch you.
 7. With two players each runs their own copy of the same yard, side by side. When one crashes the other keeps going. When both are out the results show the winner, confetti and the best runs on this computer. Jump (or click Play again) for another go.
 
-Step out of the picture and your run waits for you, then counts you back in. The small camera picture in the corner shows what the camera sees.
+Step out of the picture and your run waits for you, then counts you back in. With two players, once one has crashed, the other has 15 seconds to come back before their run ends too. If the camera stops mid run, every run waits and the screen says what went wrong. The camera turns off in the lobby. The small camera picture in the corner shows what the camera sees.
 
 The arrow keys (player one) and WASD (player two) also work, for trying it out without standing up, and there is a keyboard mode if the camera or the model will not start.
 
