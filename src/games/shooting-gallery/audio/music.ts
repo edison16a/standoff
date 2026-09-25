@@ -4,9 +4,9 @@ import { playFanfare, STROLL, TWO_STEP, type Track } from "./tunes";
 export type TuneName = "lobby" | "round";
 
 const TRACKS: Record<TuneName, Track> = { lobby: STROLL, round: TWO_STEP };
-/** How often the scheduler wakes, and how far ahead it books notes. */
 /** The band's level into the music bus, which leaves the shots room on top. */
 const LEVEL = 0.8;
+/** How often the scheduler wakes, and how far ahead it books notes. */
 const WAKE_MS = 25;
 const LOOKAHEAD_S = 0.12;
 

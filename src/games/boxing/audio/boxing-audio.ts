@@ -54,6 +54,12 @@ export class BoxingAudio {
   /** Which part of the game is on screen. The results get the fanfare and a cheer. */
   screen(mood: MusicMood): void {
     this.music.play(mood);
+    if (mood === "menu") {
+      // Leaving a fight: the booth goes quiet and the arena settles, so no chant starts over the menus.
+      this.commentator.stop();
+      this.excite = 0.25;
+      return;
+    }
     if (mood !== "results") return;
     this.music.fanfare();
     this.crowd.cheer(1);
