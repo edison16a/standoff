@@ -30,6 +30,8 @@ export class Chase {
 
   /** A stumble. Returns true when it was the second one in a row, and they catch the runner. */
   stumble(time: number): boolean {
+    // Scraping along a ramp and on into its train is one stumble, and a camera player needs a moment to step back.
+    if (time - this.lastStumble < CHASE.graceS) return false;
     const caught = time - this.lastStumble < CHASE.memoryS;
     this.lastStumble = time;
     return caught;

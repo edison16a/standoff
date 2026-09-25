@@ -8,7 +8,7 @@ import { Run } from "../engine/run";
  */
 export class ShowRun {
   readonly run: Run;
-  private readonly bot = new Bot(true);
+  private readonly bot = new Bot({ flair: true });
   private simulated = 0;
   /** All the time handed in so far. Leftovers carry over, so frames shorter than a step still add up. */
   private given = 0;
