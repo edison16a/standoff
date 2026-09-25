@@ -1,0 +1,199 @@
+/*
+  The fighter cards along the bottom of the big screen: portrait with
+  the ult ring, name, lives and the big damage percent.
+*/
+
+.bb-cards {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  display: flex;
+  gap: 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transform: translateX(-50%);
+}
+
+.bb-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 250px;
+  padding: 10px 14px 10px 10px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--fighter) 55%, #140c24), rgba(20, 12, 36, 0.88) 70%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 3px 0 var(--fighter);
+  transform: skewX(-6deg);
+}
+
+.bb-card--out {
+  filter: grayscale(0.85);
+  opacity: 0.6;
+}
+
+.bb-card__face {
+  position: relative;
+  flex-shrink: 0;
+  width: 76px;
+  height: 76px;
+  display: grid;
+  place-items: center;
+  transform: skewX(6deg);
+}
+
+.bb-ult {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.bb-ult__track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 6;
+}
+
+.bb-ult__fill {
+  fill: none;
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dasharray 200ms linear;
+}
+
+.bb-ult--full {
+  filter: drop-shadow(0 0 6px #fde047);
+  animation: bb-ult-pulse 900ms ease-in-out infinite alternate;
+}
+
+@keyframes bb-ult-pulse {
+  to {
+    transform: scale(1.08);
+  }
+}
+
+.bb-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  transform: skewX(6deg);
+}
+
+.bb-card__name {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bb-card__name em {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: #f59e0b;
+  color: #1c1003;
+  font-size: 11px;
+  font-style: normal;
+}
+
+.bb-card__percent {
+  font-family: var(--bb-display);
+  font-size: 52px;
+  font-style: italic;
+  line-height: 0.95;
+  color: var(--heat);
+  -webkit-text-stroke: 2px #140c24;
+  paint-order: stroke fill;
+  text-shadow: 0 4px 0 #140c24;
+  /* A constant tremble that grows with the damage, still at 0. */
+  animation: bb-tremble 90ms linear infinite;
+}
+
+.bb-card__percent small {
+  font-size: 26px;
+}
+
+/* Every hit bumps and jolts the number, harder the higher it is. */
+.bb-card__percent--hit {
+  animation: bb-jolt 380ms cubic-bezier(0.3, 1.6, 0.5, 1), bb-tremble 90ms linear 380ms infinite;
+}
+
+.bb-card__percent--out {
+  color: #cbd5e1;
+  font-size: 40px;
+}
+
+@keyframes bb-jolt {
+  0% {
+    transform: scale(calc(1.2 + var(--shake) * 0.35)) translate(calc(var(--shake) * 7px), calc(var(--shake) * -5px)) rotate(calc(var(--shake) * 6deg));
+  }
+  30% {
+    transform: scale(1.05) translate(calc(var(--shake) * -6px), calc(var(--shake) * 4px)) rotate(calc(var(--shake) * -5deg));
+  }
+  60% {
+    transform: translate(calc(var(--shake) * 3px), 0);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes bb-tremble {
+  0%,
+  100% {
+    transform: none;
+  }
+  25% {
+    transform: translate(calc(var(--shake) * 1.6px), calc(var(--shake) * -1px));
+  }
+  75% {
+    transform: translate(calc(var(--shake) * -1.6px), calc(var(--shake) * 1px));
+  }
+}
+
+.bb-card__stocks {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.bb-stock {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: var(--fighter);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.4);
+}
+
+.bb-stock--lost {
+  background: transparent;
+  opacity: 0.35;
+}
+
+.bb-card__role {
+  margin-left: 4px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 1100px) {
+  .bb-cards {
+    gap: 10px;
+  }
+
+  .bb-card {
+    width: 210px;
+  }
+
+  .bb-card__percent {
+    font-size: 42px;
+  }
+}

@@ -1,0 +1,146 @@
+/*
+  The winner screen: paper confetti over a card with the champion and
+  every fighter by place.
+*/
+
+.bb-results {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 72px 24px 24px 200px;
+  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--fighter) 35%, transparent), rgba(18, 10, 36, 0.82) 70%);
+  animation: bb-fade-in 500ms ease both;
+}
+
+.bb-results__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: min(760px, 100%);
+  padding: 26px 30px;
+  border-radius: 28px;
+  background: rgba(20, 12, 36, 0.94);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55), inset 0 5px 0 var(--fighter);
+  animation: bb-slot-in 600ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.bb-results__head {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.bb-results__face {
+  flex-shrink: 0;
+  filter: drop-shadow(0 8px 0 rgba(0, 0, 0, 0.35));
+  animation: bb-ult-pulse 1s ease-in-out infinite alternate;
+}
+
+.bb-results__eyebrow {
+  color: var(--fighter);
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.bb-results__head h2 {
+  margin: 2px 0 0;
+  font-family: var(--bb-display);
+  font-size: clamp(40px, 5vw, 64px);
+  font-style: italic;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.bb-rank {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 17px;
+}
+
+.bb-rank th,
+.bb-rank td {
+  padding: 6px 10px;
+  text-align: center;
+}
+
+.bb-rank thead th {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.bb-rank tbody tr {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.bb-rank tbody th {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  font-weight: 800;
+}
+
+.bb-rank tbody th span {
+  display: flex;
+  flex-direction: column;
+}
+
+.bb-rank small {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.bb-rank__place {
+  color: var(--fighter);
+  font-family: var(--bb-display);
+  font-size: 26px;
+  font-style: italic;
+}
+
+.bb-results__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.bb-confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bb-confetti span {
+  position: absolute;
+  top: -20px;
+  width: 10px;
+  height: 16px;
+  border-radius: 2px;
+  animation: bb-confetti linear infinite;
+}
+
+@keyframes bb-confetti {
+  0% {
+    transform: translate(0, 0) rotate(0);
+  }
+  50% {
+    transform: translate(30px, 55vh) rotate(260deg);
+  }
+  100% {
+    transform: translate(-10px, 110vh) rotate(560deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bb-confetti {
+    display: none;
+  }
+}

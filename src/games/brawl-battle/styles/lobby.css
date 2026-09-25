@@ -1,0 +1,219 @@
+/*
+  The lobby on the big screen: the logo, four fighter places, and the
+  host's choices for computer fighters. The join card sits in the bottom
+  left corner, so the panel keeps clear of it.
+*/
+
+.bb-lobby {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 18px;
+  padding: 76px 32px 28px 220px;
+  background: linear-gradient(180deg, rgba(18, 10, 36, 0.15), rgba(18, 10, 36, 0.7) 55%, rgba(18, 10, 36, 0.92));
+}
+
+.bb-lobby__title {
+  text-align: center;
+  text-shadow: 0 3px 16px rgba(0, 0, 0, 0.6);
+}
+
+.bb-logo {
+  margin: 0;
+  font-family: var(--bb-display);
+  font-size: clamp(56px, 8vw, 116px);
+  font-style: italic;
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: #ffffff;
+  -webkit-text-stroke: 4px var(--bb-ink);
+  paint-order: stroke fill;
+  text-shadow: 0 8px 0 var(--bb-ink);
+  transform: rotate(-3deg);
+}
+
+.bb-logo b {
+  color: var(--bb-orange);
+}
+
+.bb-lobby__title p {
+  margin-top: 14px;
+  font-size: 21px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.bb-slots {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-self: center;
+  gap: 18px;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0;
+  padding: 0;
+  justify-self: center;
+  list-style: none;
+}
+
+.bb-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 20px 12px 18px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--slot) 50%, #140c24), rgba(20, 12, 36, 0.92));
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45), inset 0 4px 0 var(--slot);
+  text-align: center;
+  animation: bb-slot-in 420ms cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+
+@keyframes bb-slot-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.9);
+  }
+}
+
+.bb-slot--bot {
+  opacity: 0.88;
+}
+
+.bb-slot--open {
+  justify-content: center;
+  min-height: 190px;
+  border: 3px dashed rgba(255, 255, 255, 0.3);
+  background: rgba(20, 12, 36, 0.55);
+  box-shadow: none;
+  animation: none;
+}
+
+.bb-slot__plus {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.bb-slot__face {
+  filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.35));
+}
+
+.bb-slot__name {
+  overflow: hidden;
+  max-width: 100%;
+  font-size: 22px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bb-slot__role {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bb-lobby__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px 28px;
+}
+
+.bb-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px 8px 18px;
+  border-radius: 999px;
+  background: rgba(20, 12, 36, 0.8);
+}
+
+.bb-option__label {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.bb-stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bb-stepper output {
+  min-width: 28px;
+  font-family: var(--bb-display);
+  font-size: 28px;
+  font-style: italic;
+  text-align: center;
+}
+
+.bb-stepper button,
+.bb-segments button {
+  display: grid;
+  place-items: center;
+  height: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.bb-stepper button {
+  width: 40px;
+  font-size: 24px;
+}
+
+.bb-stepper button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.bb-segments {
+  display: flex;
+  gap: 4px;
+}
+
+.bb-segments button {
+  padding: 0 16px;
+}
+
+.bb-segments button[aria-pressed="true"] {
+  background: var(--bb-orange);
+  color: #1d0a00;
+}
+
+.bb-stepper button:focus-visible,
+.bb-segments button:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.bb-lobby__note {
+  flex-basis: 100%;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 17px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.bb-lobby__start {
+  order: 3;
+  min-width: 220px;
+  font-size: 20px;
+}

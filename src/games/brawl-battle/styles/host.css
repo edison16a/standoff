@@ -1,0 +1,183 @@
+/*
+  Brawl Battle on the big screen: the stage canvas, name tags and the
+  fight HUD. Bold arcade colours and heavy italic type over the 3D stage.
+*/
+
+.bb-stage {
+  --bb-display: Impact, "Arial Black", "Helvetica Neue", sans-serif;
+  --bb-orange: #ff6b35;
+  --bb-gold: #fde047;
+  --bb-ink: #140c24;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #120a24;
+  color: #ffffff;
+  font-family: var(--font-ui);
+}
+
+.bb-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.bb-tags {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bb-tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 2px 10px;
+  border: 2px solid var(--tag);
+  border-radius: 999px;
+  background: rgba(20, 12, 36, 0.78);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: opacity 150ms ease;
+  will-change: transform;
+}
+
+.bb-tag--bot {
+  padding: 1px 7px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
+}
+
+.bb-hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.bb-hud__stage {
+  position: absolute;
+  top: 88px;
+  left: 50%;
+  padding: 6px 20px;
+  border-radius: 999px;
+  background: rgba(20, 12, 36, 0.7);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+  animation: bb-fade-in 400ms ease both;
+}
+
+.bb-hud__waiting {
+  position: absolute;
+  top: 88px;
+  right: 24px;
+  padding: 6px 14px;
+  border-radius: 12px;
+  background: rgba(20, 12, 36, 0.7);
+  font-weight: 700;
+}
+
+/* The big word in the middle: Ready, Fight, Game. */
+.bb-call {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  font-family: var(--bb-display);
+  font-size: clamp(80px, 13vw, 200px);
+  font-style: italic;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: #ffffff;
+  -webkit-text-stroke: 4px var(--bb-ink);
+  paint-order: stroke fill;
+  text-shadow: 0 10px 0 var(--bb-ink), 0 0 40px rgba(255, 107, 53, 0.7);
+  transform: translate(-50%, -50%);
+  animation: bb-call 900ms cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+.bb-call--fight {
+  color: var(--bb-gold);
+}
+
+.bb-call--game {
+  color: var(--bb-orange);
+  animation-duration: 1.2s;
+}
+
+@keyframes bb-call {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(2.6) rotate(-6deg);
+  }
+  40% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.92) rotate(-3deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotate(-3deg);
+  }
+}
+
+@keyframes bb-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* A strip across the upper screen for a KO or an ult. */
+.bb-banner {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 380px;
+  padding: 10px 48px 12px;
+  background: linear-gradient(90deg, transparent, var(--banner) 18%, var(--banner) 82%, transparent);
+  color: #ffffff;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
+  transform: translateX(-50%) skewX(-8deg);
+  animation: bb-banner 2.2s ease both;
+}
+
+.bb-banner strong {
+  font-family: var(--bb-display);
+  font-size: 56px;
+  font-style: italic;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.bb-banner span {
+  font-size: 20px;
+  font-weight: 800;
+}
+
+@keyframes bb-banner {
+  0% {
+    opacity: 0;
+    clip-path: inset(0 50% 0 50%);
+  }
+  12% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
