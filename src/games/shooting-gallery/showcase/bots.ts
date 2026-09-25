@@ -9,6 +9,8 @@ import type { Target } from "../engine/target";
 
 /** How stiffly a bot's aim springs onto its target. Higher swings faster. */
 const SNAP = 10;
+/** How close, in metres, the dot must settle on its spot before the trigger is pulled. */
+const STEADY = 0.05;
 /** Targets further out than this are about to leave, so nobody starts on them. */
 const REACH_X = 3.7;
 
@@ -31,15 +33,14 @@ export function rayThrough(point: Vec3): Ray {
 
 /**
  * A computer player for the showcase. It picks a target on its own side
- * of the booth, swings its laser over with a little overshoot, and pulls
- * the trigger once the dot settles. Some shots go early and miss, so the
- * wall gets its pock marks too.
+ * of the booth, swings its laser over, and pulls the trigger once the dot
+ * settles. Now and then it aims just off the edge and misses, so the wall
+ * gets its pock marks too.
  */
 export class Bot {
   readonly aim: Vec3;
   private readonly speed = { x: 0, y: 0 };
   private readonly rng: Rng;
-  private readonly steadiness = 0.05;
   private target: Target | null = null;
   /** Where on the target this shot is meant to land, from its middle. Players are never dead centre. */
   private readonly offset = { x: 0, y: 0 };
@@ -76,7 +77,7 @@ export class Bot {
     this.aim.z = want.z;
     if (!this.target || round.time < this.readyAt) return null;
     const off = Math.hypot(want.x - this.aim.x, want.y - this.aim.y);
-    if (off > this.steadiness) return null;
+    if (off > STEADY) return null;
     const ray = rayThrough(this.aim);
     // Hold fire while a spared target is in the way, so the golden duck is not shot before its moment.
     const blocker = round.probe(ray).target;

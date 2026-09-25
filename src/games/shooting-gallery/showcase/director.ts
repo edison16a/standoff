@@ -16,6 +16,8 @@ export class ShowcaseDirector {
   private readonly renderer: GalleryRenderer;
   private firstMs: number | null = null;
   private steps = 0;
+  /** Stills only draw again when this is set, since nothing in them moves. */
+  private stale = true;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -28,6 +30,7 @@ export class ShowcaseDirector {
 
   resize(width: number, height: number, dpr: number): void {
     this.renderer.resize(width, height, dpr);
+    this.stale = true;
   }
 
   /** One animation frame. */
@@ -35,8 +38,12 @@ export class ShowcaseDirector {
     this.firstMs ??= nowMs;
     const t = this.plan.hold ? 0 : (nowMs - this.firstMs) / 1000;
     this.seek(this.plan.start + t);
-    this.aim(t);
-    this.renderer.draw();
+    if (!this.plan.hold || this.stale) {
+      this.aim(t);
+      this.renderer.draw();
+    }
+    // Software drawing can take seconds a frame, so a still that has been drawn is left alone.
+    this.stale = false;
   }
 
   dispose(): void {
