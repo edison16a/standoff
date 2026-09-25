@@ -1,6 +1,6 @@
 # Standoff
 
-Standoff is the games console of the web. Open it on any computer, and everyone's phone becomes a controller that tracks how they move. Some games use the computer's camera instead, reading your whole body. Play with up to six friends across ten games, each one its own world.
+Standoff is the games console of the web. Open it on any computer, and everyone's phone becomes a controller that tracks how they move. Some games use the computer's camera instead and read you from the waist up. Play with up to six friends across eleven games, each one its own world.
 
 I loved the Wii, the PS5 and the Xbox, but there were never enough controllers, and I can't bring my Xbox everywhere. Standoff runs on any computer and uses everyone's phones as controllers. There is nothing to install and no account to make: pick a game, everyone scans the QR code, types a name, and you play.
 
@@ -8,18 +8,19 @@ Camera games track movement with a pose model that downloads once and runs on yo
 
 The games, in the order the home screen shows them:
 
-* **Magic Kart:** a party kart racer for up to four in split screen. Hold the phone like a steering wheel, grab power up cubes, two laps.
-* **Fruit Ninja:** up to four players slice fruit on one wooden board by pointing their phones at the screen, and dodge the bombs.
+* **Magic Kart:** a kart racer for up to four in split screen. Hold the phone like a steering wheel, grab power ups, and glide over the big jumps.
+* **Fruit Ninja:** up to four players slice fruit on one board by pointing their phones at the screen, and dodge the bombs.
 * **Zombie Survival:** up to four players aim their phones like guns and fight together through 25 stages to the ship.
 * **Shooting Gallery:** a fairground duck shoot. Point, shoot, top score in 20 seconds wins.
-* **Boxing** (coming soon): stand in front of the camera and fight. Punch, block with your gloves up, duck to slip.
-* **Subway Surfers** (coming soon): run the rails with your body. Step to change lanes, jump and duck, chase a high score.
-* **NBA 3v3** (coming soon): three on three with the stars for up to six phones, a shot meter and dunks.
-* **FIFA 3v3** (coming soon): three on three football for up to six phones, with a keeper in each goal.
-* **Cube Game** (coming soon): jump for real to jump the cube through five levels of rhythm and spikes.
+* **Boxing:** stand in front of the camera and fight. Your arms and head drive your boxer, so real blocks and dodges work.
+* **Subway Surfers:** run the neon rails with your body. Lean to change lanes, jump and roll, and survive as it speeds up.
+* **NBA 3v3:** three on three with the stars for up to six phones. Dribble moves, a shot meter, dunks and free throws.
+* **FIFA 3v3:** three on three football for up to six phones. Hold to power a shot, tap to pass, and beat defenders with skill moves.
+* **Cube Game:** jump for real to jump the cube through five levels of rhythm and spikes.
 * **Fencing:** your phone is the sword. Move it slowly and the blade follows, flick or shake it to jab, raise it up and to the right to parry.
+* **Brawl Battle:** a four fighter platform brawl. Charge up attacks, pile on the damage and knock everyone off the stage.
 
-Empty spots in team games are filled by computer players. Each game lives in its own folder under `src/games`, with a README of its own.
+Empty spots are filled by computer players. Each game lives in its own folder under `src/games`, with a README of its own.
 
 It runs on Vercel for play from anywhere, or on your own computer over WiFi.
 
@@ -27,123 +28,69 @@ Play it at [standoff-five.vercel.app](https://standoff-five.vercel.app).
 
 ## Screenshots
 
-The home screen works like a console menu. A row of square tiles shows each game's icon, and the chosen one grows and gets a ring in its own colour. A looping clip of the game really being played fills the screen behind, with its name, what it is, how many can play and a Host Game button below the row. Opening the app starts on the first game. Click a tile or use the left and right arrow keys to choose, and press Enter, click the chosen tile again or press Host Game to start. A game still being built says Coming soon.
+The home screen works like a console menu. Big tiles show each game, and the chosen one grows and gets a ring in its own colour. A looping clip of the game really being played fills the screen behind it, with lobby music and menu sounds. The gear at the top right sets the music and sound effect volume.
 
-<img src="docs/screenshots/home-light.png" alt="The home screen in light mode, with Fencing chosen in the row of game tiles and its art filling the background" width="100%" />
-
-<img src="docs/screenshots/home-dark.png" alt="The same home screen in dark mode" width="100%" />
-
-### Fencing
-
-Hosting a game opens a room. The QR code waits in the middle, then moves to the bottom left once someone joins, until the game starts. The logo at the top left always leads home.
-
-<img src="docs/screenshots/stage-join.png" alt="The fencing strip with the QR code in the middle" width="100%" />
-
-<img src="docs/screenshots/stage-lobby.png" alt="Edison and Alex connected, standing on their lines" width="100%" />
-
-Playing alone, the computer takes the other line, and a friend who scans the code later takes its place.
-
-<img src="docs/screenshots/stage-solo.png" alt="One player and the computer, with the QR code in the corner" width="100%" />
-
-The blade follows the phone and leaves a fading trail. A parry throws sparks where the blades meet.
-
-<img src="docs/screenshots/match-trail.png" alt="A blade sweeping up with a fading trail" width="100%" />
-
-<img src="docs/screenshots/match-parry.png" alt="Sparks flying from a parry" width="100%" />
-
-A touch slows the game right down, then a burst goes off where the blade landed.
-
-<img src="docs/screenshots/match-slowmo.png" alt="A lunge landing in slow motion" width="100%" />
-
-<img src="docs/screenshots/match-impact.png" alt="The burst at the point of contact" width="100%" />
-
-The winner gets confetti.
-
-<img src="docs/screenshots/match-over.png" alt="Confetti over the winner" width="100%" />
-
-On the phone: a name (or Skip), then one page per step. Calibrate first: the drawing shows where to point, and the level shows when the phone is flat, so the guard is easy to find again. Then pick a fencer, then Ready. In a bout, two big buttons move you.
-
-<p>
-  <img src="docs/screenshots/phone-name.png" alt="The name screen" width="32%" />
-  <img src="docs/screenshots/phone-select.png" alt="Fencer select" width="32%" />
-  <img src="docs/screenshots/phone-hold.png" alt="The hold guide and the bubble level" width="32%" />
-</p>
-
-<p>
-  <img src="docs/screenshots/phone-countdown.png" alt="The calibration countdown with the level" width="32%" />
-  <img src="docs/screenshots/phone-calibrate.png" alt="The fencer copying the phone's tilt" width="32%" />
-  <img src="docs/screenshots/phone-pad.png" alt="The Forward and Back buttons during a bout" width="32%" />
-</p>
-
-### Fruit Ninja
-
-Everyone slices on the same board. Each blade is drawn in the style its player picked and edged in their colour, with the leaderboard at the top right. Rare fruit glow and are worth far more. Bombs cost points.
-
-<img src="docs/screenshots/fruit-ninja-play.png" alt="Four blade trails over the wooden board, with a bomb going off and the leaderboard at the top right" width="100%" />
-
-<img src="docs/screenshots/fruit-ninja-rare.png" alt="A glowing star fruit and dragonfruit beside a watermelon" width="100%" />
+<img src="docs/screenshots/home.jpg" alt="The home screen with Magic Kart chosen in the row of game tiles and a clip of the race behind" width="100%" />
 
 ### Magic Kart
 
-The computer picks the map over a live demo race. In a race each player gets a view of their own, with the overview map and standings at the top right.
+<img src="docs/screenshots/magic-kart.jpg" alt="Karts gliding over the lagoon on Sunny Shores" width="100%" />
 
-<img src="docs/screenshots/magic-kart-lobby.png" alt="The Magic Kart lobby with the map picker and the racers" width="100%" />
+### Fruit Ninja
 
-<img src="docs/screenshots/magic-kart-race.png" alt="Two player split screen on Magma Peak, one kart shielded, with the overview map at the top right" width="100%" />
-
-<img src="docs/screenshots/magic-kart-phone.png" alt="The phone held sideways with Brake, Drive and the power up button" width="100%" />
+<img src="docs/screenshots/fruit-ninja.jpg" alt="Blade trails slicing fruit over the wooden board" width="100%" />
 
 ### Zombie Survival
 
-The team walks from stage to stage. Each player's gun follows their phone, and bosses must be shot in the glowing weak points on their joints.
-
-<img src="docs/screenshots/zombie-survival-street.png" alt="Two bosses in a night street with glowing weak points" width="100%" />
-
-<img src="docs/screenshots/zombie-survival-boss.png" alt="A rifle firing at the Tank's weak points" width="100%" />
+<img src="docs/screenshots/zombie-survival.jpg" alt="Players shooting different zombies in a night street" width="100%" />
 
 ### Shooting Gallery
 
-Ducks ride the waves, targets slide and plates swing on the rail. Everything hit falls, and every player's BB gun follows their aim.
+<img src="docs/screenshots/shooting-gallery.jpg" alt="BB guns aiming at ducks and targets in the fairground booth" width="100%" />
 
-<img src="docs/screenshots/shooting-gallery-play.png" alt="Four BB guns aiming at ducks and targets in the fairground booth" width="100%" />
+### Boxing
 
-<img src="docs/screenshots/shooting-gallery-results.png" alt="The results table with the best scores" width="100%" />
+<img src="docs/screenshots/boxing.jpg" alt="Two boxers trading punches in the ring" width="100%" />
+
+### Subway Surfers
+
+<img src="docs/screenshots/subway-surfers.jpg" alt="A runner on the neon rails of the night city" width="100%" />
+
+### NBA 3v3
+
+<img src="docs/screenshots/nba-3v3.jpg" alt="A dunk at the top of the jump in the arena" width="100%" />
+
+### FIFA 3v3
+
+<img src="docs/screenshots/fifa-3v3.jpg" alt="Three on three football on the big pitch" width="100%" />
+
+### Cube Game
+
+<img src="docs/screenshots/cube-game.jpg" alt="The cube jumping spikes in a neon level" width="100%" />
+
+### Fencing
+
+<img src="docs/screenshots/fencing.jpg" alt="Two fencers on the strip with sparks from a parry" width="100%" />
+
+### Brawl Battle
+
+<img src="docs/screenshots/brawl-battle.jpg" alt="Karate releasing a charged Dragon Flight on the temple stage" width="100%" />
 
 ## How to play
 
-On the computer, pick a game and press **Host Game**. Scan the QR code with each phone, type a name and tap **Join**, or tap **Skip**. Every game then walks the phone through the same steps, each on its own page: **Calibrate**, the game's own choice, then **Ready**.
+On the computer, pick a game and press **Host Game**. Scan the QR code with each phone, type a name and tap **Join**, or tap **Skip**. Every game walks the phone through the same steps, each on its own page: calibrate, the game's own choice, then **Ready**. Every phone page fits the screen without scrolling.
 
-For Fruit Ninja, Zombie Survival and Shooting Gallery, hold the phone flat like a remote, top edge toward the big screen. Calibration shows a target in the middle of the big screen, then the top left and the bottom right. Point at each and tap **Set**. Your dot then follows wherever you point. **Recenter** fixes any drift later.
+Camera games have no phones. Stand where the camera sees you from the waist up, hold still while your head line is set, and play with your body. Your head going up out of its band is a jump, and going down is a duck or roll.
 
-### Fencing
-
-1. Calibrate first. Hold the phone flat like a sword, top edge pointing at the middle of the screen. When the dot sits in the circle, tap **Calibrate** and hold still through the countdown. Then pick a fencer, and tap **Ready**.
-2. Fence:
-   * **Aim** by tilting the phone. A jab only lands if your tip points at your opponent.
-   * **Jab** with any quick flick or shake of the phone.
-   * **Parry** by raising the phone up and to the right of your guard. For one second any jab that reaches you is blocked, and the attacker is knocked off balance.
-   * **Move** by holding **Forward** or **Back**.
-3. First to two touches wins. A rematch needs no new scan.
-
-To fence alone, tap **Play the computer** on the phone, or **Play solo** on the join card. A device without motion sensors gets on screen Jab and Parry buttons.
-
-### Fruit Ninja
-
-Pick a blade, then slice by sweeping your aim through the fruit. There is no button: a fast sweep cuts, a slow one does not. Big fruit take several cuts. The computer sets the round length, the bombs and the fruit rate before **Start**.
-
-### Magic Kart
-
-Hold the phone sideways, lay it flat and tap **Calibrate**. Pick a kart. Tilt to steer, hold **Drive** to go and **Brake** to slow. Drive through a cube for a power up and tap the round button to use it. You can hold one at a time. Laps only count when you drive the whole track.
-
-### Zombie Survival
-
-Pick a gun. Hold **Shoot** for the automatic guns, tap **Reload** when you run low, and aim for heads. Bosses only go down when you hit their glowing weak points. Reach the chopper at stage 10 and the ship at stage 25.
-
-### Shooting Gallery
-
-Pick a finish for your BB gun. Point and tap **Shoot**. Ducks are 10, ducklings 25, bullseyes 15 or 40 in the bull, plates 30 and the golden duck 50. The best named scores stay on this computer.
-
-Phones without motion sensors aim by dragging on a pad instead.
+* **Magic Kart:** hold the phone sideways like a wheel and turn it to steer (full lock at about 50 degrees). Hold **Drive** to go, **Brake** to slow and drift, and tap the round button to use a power up. Off a big jump a glider opens, and you steer it the same way.
+* **Fruit Ninja, Zombie Survival and Shooting Gallery:** hold the phone flat like a remote and point it at the screen. Calibrate by pointing at the targets shown. Sweep fast to slice, or tap **Shoot**. Phones without motion sensors aim by dragging on a pad.
+* **Boxing:** punch straight or hook with your arms. Keep your gloves where the punch is coming to block it, and duck or lean to make it miss. Head shots hurt more and can stun. Touch gloves by holding your arms out.
+* **Subway Surfers:** lean or step left and right to change lanes, jump to jump and dip to roll.
+* **NBA 3v3:** the joystick moves. Hold **Shoot** and let go in the green. With the ball the third button is **Dribble**: back is a stepback, sideways a crossover, forward a spin. Without it, it is **Steal** or **Block**. Reach in too often on one player and you may foul.
+* **FIFA 3v3:** the joystick moves and aims. Tap **Shoot/Pass** to pass, or hold it to fill the power bar. Green is placed, red is powerful but wild. With the ball the second button is **Skill**: forward is a rainbow flick, sideways a crossover, back a drag back, centred a 360.
+* **Cube Game:** jump for real to jump the cube.
+* **Fencing:** hold the phone like a sword. Move slowly to aim, flick or shake to jab, raise up and to the right to parry. Hold **Forward** or **Back** to move. To fence alone, tap **Play the computer**.
+* **Brawl Battle:** the joystick moves, and pushing up jumps (push up again in the air to double jump). Attacks change with the direction you hold. Hold an attack past 0.4 seconds to charge a stronger move, and use the Ult when its ring is full. Two lives each, and more damage means you fly further.
 
 ## Running it
 
@@ -215,7 +162,7 @@ Inside a game, the computer is the referee. Phones send raw input, and everythin
 
 Between the computer and the phones sits a relay that makes no game decisions. It seats players, remembers who holds which seat, and passes messages along. It checks only that a message has a `kind` and fits the size cap, so a new game needs nothing from it. Locally, one Node process (`server/index.ts`) serves the pages and accepts sockets at `/api/ws`, and rooms live in memory. On Vercel, a Next.js route at `src/app/api/ws/route.ts` takes over each socket from the runtime, and rooms live in Redis. A second route, `/api/stream`, carries the same relay over plain HTTP for browsers whose WebSocket cannot open.
 
-The seat rules are plain functions over a small room record (`src/platform/relay/room-state.ts`): the lowest free seat goes to the next phone, up to the one to four seats the game asked for, a known seat token gets its old seat back, and a seat or a room is kept for a grace period after its player drops. Two things sit under those rules:
+The seat rules are plain functions over a small room record (`src/platform/relay/room-state.ts`): the lowest free seat goes to the next phone, up to the one to six seats the game asked for, a known seat token gets its old seat back, and a seat or a room is kept for a grace period after its player drops. Two things sit under those rules:
 
 * A **store** that updates one room atomically. In memory that is free. In Redis each update takes a short lock on the room, reads the record, applies the same rules and writes it back, so two instances racing to seat two phones can never both put them in seat one.
 * A **bus** for messages. In memory it is a local pub/sub. In Redis it is Redis pub/sub, with one subscriber connection per instance that fans messages out to the sockets it holds.
@@ -333,7 +280,7 @@ src/
 npm test
 ```
 
-The suite covers the relay (seating up to four, ordering, kicks, grace periods, closing, store failures and rate limits), both Vercel routes, the socket handover, the platform's host room and names, the game catalog, and for fencing the motion pipeline fed with synthetic sensor data, the gesture classifier (slow moves, shakes, jabs and parries up and to the right), level detection, the referee, match flow, slow motion, the engine playing whole exchanges, the computer opponent, the effects, the rig's IK and animator, the lobby and seating rules, and protocol validation. The kit's aim math and phone aiming are tested too. Each three.js game tests its own engine: Fruit Ninja's blade sweeps and scoring, Magic Kart's laps, checkpoints, items and whole computer races on every map, Zombie Survival's guns, stages and a bot team playing all 25 stages, and Shooting Gallery's rounds, hit tests and best scores.
+The suite covers the relay (seating up to six, ordering, kicks, grace periods, closing, store failures and rate limits), both Vercel routes, the socket handover, the platform's host room and names, the game catalog, and for fencing the motion pipeline fed with synthetic sensor data, the gesture classifier (slow moves, shakes, jabs and parries up and to the right), level detection, the referee, match flow, slow motion, the engine playing whole exchanges, the computer opponent, the effects, the rig's IK and animator, the lobby and seating rules, and protocol validation. The kit's aim math and phone aiming are tested too. Each three.js game tests its own engine: Fruit Ninja's blade sweeps and scoring, Magic Kart's laps, checkpoints, items and whole computer races on every map, Zombie Survival's guns, stages and a bot team playing all 25 stages, and Shooting Gallery's rounds, hit tests and best scores.
 
 Two more files run against a real Redis: the relay with two separate backends standing in for two Vercel instances, and the store's locking and expiry. They run when `REDIS_TEST_URL` is set:
 
