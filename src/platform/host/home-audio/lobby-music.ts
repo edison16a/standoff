@@ -11,6 +11,8 @@ const LOOKAHEAD_S = 0.12;
  */
 export class LobbyMusic {
   private gain: GainNode | null = null;
+  /** The filter and echo loop behind the gain, unhooked on stop so none of it lingers. */
+  private chain: AudioNode[] = [];
   private timer: ReturnType<typeof setInterval> | null = null;
   private step = 0;
   private nextAt = 0;
@@ -25,13 +27,24 @@ export class LobbyMusic {
     if (this.gain) return;
     const { ctx } = this.engine;
     const warmth = ctx.createBiquadFilter();
-    // Rolls off the top so it reads as a record in the next room.
+    // Rolls off the saw edges so the pads read as a soft wash.
     warmth.type = "lowpass";
-    warmth.frequency.value = 2400;
+    warmth.frequency.value = 1600;
+    warmth.Q.value = 0.4;
     this.gain = ctx.createGain();
     this.gain.gain.value = 0.0001;
-    this.gain.gain.setTargetAtTime(0.9, this.engine.now, 0.8);
+    this.gain.gain.setTargetAtTime(0.4, this.engine.now, 1.2);
     this.gain.connect(warmth).connect(this.engine.bus("music"));
+    // A soft echo fills the gaps between notes, which is most of what makes it flow.
+    const echo = ctx.createDelay(1);
+    echo.delayTime.value = 0.44;
+    const feedback = ctx.createGain();
+    feedback.gain.value = 0.38;
+    const send = ctx.createGain();
+    send.gain.value = 0.35;
+    this.gain.connect(send).connect(echo).connect(feedback).connect(echo);
+    echo.connect(warmth);
+    this.chain = [warmth, echo, feedback, send];
     this.step = 0;
     this.nextAt = this.engine.now + 0.1;
     this.timer = setInterval(() => this.schedule(), WAKE_MS);
@@ -45,7 +58,13 @@ export class LobbyMusic {
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
     this.gain = null;
-    setTimeout(() => gain.disconnect(), fadeS * 1000 + 1500);
+    const chain = this.chain;
+    this.chain = [];
+    // Waits for the echo tail to die away before unhooking it.
+    setTimeout(() => {
+      gain.disconnect();
+      for (const node of chain) node.disconnect();
+    }, fadeS * 1000 + 4000);
   }
 
   private schedule(): void {
