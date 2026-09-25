@@ -168,6 +168,8 @@
     grid-column: 1;
     grid-row: 1 / span 2;
     align-self: end;
+    /* Centred over the room code under it. */
+    justify-self: center;
   }
 
   .phone-hero--form > .label {
