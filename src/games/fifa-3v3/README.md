@@ -32,6 +32,8 @@ The phone buzzes for kicks, passes, tackles and goals, and shows your team, the 
 
 Every shot's outcome is decided when it is struck, from the distance, the angle, the shooter's shooting stat, pressure from defenders, where the keeper stands and which side you aimed at. About one shot in twenty hits the post or the bar and about one in twenty flies over. Then the ball is flown with real physics (spin, drag, bounces), aimed so it does exactly what was decided: into the corner, into the keeper's gloves, parried back into play, off the woodwork, or over. The net bulges and the post rings.
 
+A ball over the end boards is a goal kick: the keeper rolls it out to a team mate up the pitch. Only a shot that misses is called over the bar or wide.
+
 ## The roster
 
 `roster.ts` holds every star: name, number, stylised look (build, height, skin, hair, beard, boots, kit), the four stats (speed, shooting, strength, dribbling) and the goal celebration. Edit it there and everything follows.
