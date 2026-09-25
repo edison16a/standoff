@@ -50,7 +50,7 @@
   position: relative;
   /* The gun takes the height the words leave, so the page never scrolls. */
   flex: 1 1 0;
-  min-height: 110px;
+  min-height: 80px;
   max-height: 240px;
   overflow: hidden;
   border-radius: 16px;
@@ -154,6 +154,16 @@
   text-align: right;
 }
 
+/* A short screen keeps the blurb to two lines. */
+@media (max-height: 700px) {
+  .zs-weapon__about p {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+}
+
 /* Sideways: the gun on the left, what it does on the right. */
 @media (orientation: landscape) and (max-height: 500px) {
   .zs-weapon {
@@ -176,13 +186,6 @@
 
   .zs-weapon__about {
     grid-row: 1 / 3;
-  }
-
-  .zs-weapon__about p {
-    display: -webkit-box;
-    overflow: hidden;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
   }
 
   .zs-stats {
