@@ -113,7 +113,7 @@ export class AthleteView {
         rate = 30;
         break;
       case "block":
-        target = blockPose(act.t, base);
+        target = blockPose(act.t, act.gather, act.air, base);
         rate = 30;
         break;
       case "steal":

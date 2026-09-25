@@ -1,4 +1,3 @@
-import { BLOCK_AIR } from "../../engine/actions";
 import { JUMPER } from "../../engine/shooting";
 import { blend, keyed, type Pose, type PosePatch } from "./pose";
 
@@ -64,14 +63,22 @@ export function passPose(t: number, base: Pose): Pose {
   );
 }
 
-/** Straight up with both arms high, like a wall. */
-export function blockPose(t: number, base: Pose): Pose {
+/**
+ * A block jump, timed from the engine's own stages: a crouch to load
+ * the legs with the arms cocked, the push up with the arms driving
+ * overhead, full stretch at the top, and the knees giving on the way
+ * down. Stage 2 polishes the shapes; the timing is the engine's.
+ */
+export function blockPose(t: number, gather: number, air: number, base: Pose): Pose {
+  const top = gather + air * 0.5;
   return keyed(
     [
-      [0, { hipY: -0.14, kneeL: 1.0, kneeR: 1.0, legLLift: 0.5, legRLift: 0.5, armLRaise: 1.6, armRRaise: 1.6, elbowL: 1.0, elbowR: 1.0 }],
-      [0.1, { hipY: 0, kneeL: 0.15, kneeR: 0.25, legLLift: 0.05, legRLift: 0.2, footL: 0.6, footR: 0.5, armLRaise: 2.95, armRRaise: 3.0, armLSpread: 0.16, armRSpread: 0.12, elbowL: 0.08, elbowR: 0.08, wristL: 0.2, wristR: 0.3, neckX: -0.3 }],
-      [BLOCK_AIR - 0.12, { kneeL: 0.3, kneeR: 0.35, legLLift: 0.2, legRLift: 0.25, footL: 0.2, footR: 0.2 }],
-      [BLOCK_AIR + 0.06, { hipY: -0.12, kneeL: 0.8, kneeR: 0.8, legLLift: 0.45, legRLift: 0.45, footL: 0, footR: 0, armLRaise: 1.2, armRRaise: 1.2, elbowL: 0.5, elbowR: 0.5 }],
+      [0, { hipY: -0.06, kneeL: 0.5, kneeR: 0.5, legLLift: 0.25, legRLift: 0.25, armLRaise: 0.9, armRRaise: 0.9, elbowL: 1.1, elbowR: 1.1 }],
+      [gather, { hipY: -0.18, kneeL: 1.25, kneeR: 1.25, legLLift: 0.62, legRLift: 0.62, torsoX: 0.3, armLRaise: 1.2, armRRaise: 1.2, elbowL: 1.3, elbowR: 1.3 }],
+      [gather + 0.09, { hipY: 0, kneeL: 0.15, kneeR: 0.25, legLLift: 0.05, legRLift: 0.2, footL: 0.6, footR: 0.5, torsoX: 0.05, armLRaise: 2.6, armRRaise: 2.65, elbowL: 0.4, elbowR: 0.4, neckX: -0.2 }],
+      [top, { armLRaise: 3.0, armRRaise: 3.05, armLSpread: 0.14, armRSpread: 0.1, elbowL: 0.04, elbowR: 0.04, wristL: 0.25, wristR: 0.35, neckX: -0.32 }],
+      [gather + air - 0.1, { kneeL: 0.35, kneeR: 0.4, legLLift: 0.22, legRLift: 0.26, footL: 0.2, footR: 0.2, armLRaise: 2.5, armRRaise: 2.5, elbowL: 0.3, elbowR: 0.3 }],
+      [gather + air + 0.06, { hipY: -0.13, kneeL: 0.85, kneeR: 0.85, legLLift: 0.45, legRLift: 0.45, footL: 0, footR: 0, torsoX: 0.2, armLRaise: 1.2, armRRaise: 1.2, elbowL: 0.5, elbowR: 0.5 }],
     ],
     t,
     base,

@@ -1,8 +1,9 @@
 import { airborne, charOf, standingReach } from "./athlete";
 import { RIM_SPOT, rimDistance } from "./court";
+import { chooseDunk } from "./dunk-style";
 import type { Match } from "./match";
 import { launchShot, slam } from "./shooting";
-import { RIM } from "./tuning";
+import { JUMP, RIM } from "./tuning";
 import type { Athlete } from "./types";
 import { clamp, dir2, dist2, lerp, segmentDistance, yawOf, type V2 } from "./vec";
 
@@ -53,10 +54,17 @@ export function startDrive(m: Match, a: Athlete): void {
   const to = { x: RIM.x + away.x * stop, z: RIM.z + away.z * stop };
   const reach = standingReach(a);
   const peak = dunk ? clamp(RIM.y + 0.3 - reach, 0.5, 1.05) : clamp(RIM.y - 0.1 - reach, 0.35, 0.8);
-  const gather = clamp((d - stop) / 9, 0.16, 0.3);
-  const air = dunk ? 0.46 : 0.4;
-  const hang = dunk && c.dunk === "rimhang" ? 0.55 : dunk ? 0.3 : 0.28;
-  a.action = { kind: "drive", t: 0, dunk, from: { x: a.x, z: a.z }, to, takeoff: gather, finish: gather + air, land: gather + air + hang, peak, released: false };
+  // The approach and the gather: a longer run in gives a longer last two steps before the leap.
+  const gather = clamp((d - stop) / 9, 0.16, 0.3) + (dunk ? 0.04 : 0);
+  const plan = dunk ? chooseDunk(m.rng, a, open) : null;
+  const air = plan ? plan.air : 0.4;
+  const rimHang = plan ? plan.rimHang : 0;
+  // Down from the rim takes about as long as the way up, a touch less for a layup that never went as high.
+  const fall = dunk ? 0.3 : 0.28;
+  a.action = {
+    kind: "drive", t: 0, dunk, style: plan?.style ?? null, from: { x: a.x, z: a.z }, to,
+    takeoff: gather, finish: gather + air, rimHang, land: gather + air + rimHang + fall, peak, released: false,
+  };
   a.yaw = yawOf(RIM.x - a.x, RIM.z - a.z);
   m.emit({ type: "gather", id: a.id, kind: dunk ? "dunk" : "layup" });
 }
@@ -74,7 +82,7 @@ export function updateDrive(m: Match, a: Athlete, dt: number): void {
   a.vx = a.vz = 0;
   a.yaw = yawOf(RIM.x - a.x, RIM.z - a.z);
   // Up to the peak at the moment of the finish, a hang on the rim for those who do, then down.
-  const hang = act.dunk && charOf(a).dunk === "rimhang" ? 0.35 : 0;
+  const hang = act.rimHang;
   const top = act.peak - (hang > 0 ? 0.08 : 0);
   if (t < act.takeoff) a.y = 0;
   else if (t < act.finish) {
@@ -97,6 +105,7 @@ export function updateDrive(m: Match, a: Athlete, dt: number): void {
   if (t >= act.land) {
     a.y = 0;
     a.action = { kind: "none" };
+    a.recover = act.dunk ? JUMP.driveRecover : JUMP.shotRecover;
     m.emit({ type: "land", id: a.id, hard: act.dunk });
   }
 }
