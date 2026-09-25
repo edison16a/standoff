@@ -38,6 +38,12 @@ describe("slipping from the waist up", () => {
     expect(at(fight(move({ lean: -0.6 })), 900).slip).toBe(-1);
   });
 
+  it("still slips on a machine that tracks two frames a second", () => {
+    const reader = new SlipReader();
+    const slips = readMoves(move({ x: 0.6 }), GUARD, { smooth: true, fps: 2 }).map(({ body, state }) => reader.update(state, body.time));
+    expect(slips).toContain(1);
+  });
+
   it("works the same for a smaller player further back", () => {
     const base = { ...GUARD, height: 1.3, x: 0.35 };
     expect(at(fight(move({ x: 0.42 }, base), base), 800).slip).toBe(1);

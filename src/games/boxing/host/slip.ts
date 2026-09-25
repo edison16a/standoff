@@ -14,6 +14,7 @@ export const DEFAULT_SLIP: SlipOptions = { shift: 0.35, release: 0.55, followMs:
 
 /** The kit's torso length in shoulder widths, to report the shift in the same unit as its lean. */
 const TORSO = 1.45;
+const MAX_STEP_MS = 250;
 
 /**
  * A slip from the head moving sideways, read from the waist up. The kit's
@@ -43,13 +44,15 @@ export class SlipReader {
       return moves?.present ? moves.lean : 0;
     }
     const { shift, release, followMs } = this.options;
-    const dt = Math.max(0, now - this.last);
+    // A long gap between frames counts as a short one, so the rest spot never leaps after a stall.
+    const dt = Math.min(MAX_STEP_MS, Math.max(0, now - this.last));
     this.last = now;
     const side = moves.head.side;
     this.home ??= side;
-    // Rest always follows, slowly: a quick slip barely moves it, and a player who steps and stays is soon home again.
-    this.home += (side - this.home) * (1 - Math.exp(-dt / followMs));
     const offset = side - this.home;
+    // Rest always follows, slowly: a quick slip barely moves it, and a player who steps and stays is soon home again.
+    // It moves after the offset is read, so a slip is seen on its first frame even on a slow machine.
+    this.home += offset * (1 - Math.exp(-dt / followMs));
     const toward: Side = offset < 0 ? -1 : 1;
     if (Math.abs(offset) >= shift) this.shifted = toward;
     else if (this.shifted !== 0 && (Math.abs(offset) < shift * release || toward !== this.shifted)) this.shifted = 0;
