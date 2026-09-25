@@ -1,10 +1,11 @@
 import { RIM_SPOT, rimDistance } from "./court";
-import { BLOCK_AIR, updateBlock, updateSteal } from "./defend";
+import { updateBlock, updateSteal } from "./defend";
 import { startDrive, updateDrive } from "./drive";
 import type { Match } from "./match";
+import { canShootOutOf, updateMove } from "./moves";
 import { choosePassTarget, throwPass } from "./passing";
 import { JUMPER, releaseJumper, startJumper } from "./shooting";
-import { BOARD, SHOT } from "./tuning";
+import { BOARD, JUMP, SHOT } from "./tuning";
 import type { Athlete } from "./types";
 import { dir2, type V2 } from "./vec";
 
@@ -15,7 +16,10 @@ export { pressDefend } from "./defend";
  * anywhere else it starts a jump shot and the meter.
  */
 export function pressShoot(m: Match, a: Athlete): void {
-  if (m.ball.holder !== a.id || (a.action.kind !== "none" && a.action.kind !== "pass")) return;
+  if (m.ball.holder !== a.id) return;
+  // Late in a dribble move the shot comes straight out of it, as off a stepback.
+  if (a.action.kind === "move" && canShootOutOf(a.action)) a.action = { kind: "none" };
+  if (a.action.kind !== "none" && a.action.kind !== "pass") return;
   if (m.needsClear) {
     m.emit({ type: "mustClear", id: a.id });
     return;
@@ -60,10 +64,14 @@ export function updateAction(m: Match, a: Athlete, dt: number): void {
       const before = act.t;
       act.t += dt;
       const s = (act.t - JUMPER.takeoff) / JUMPER.air;
-      a.y = s > 0 && s < 1 ? JUMPER.peak * 4 * s * (1 - s) : 0;
+      // A free throw is a set shot: the knees dip and the feet stay down.
+      a.y = !act.free && s > 0 && s < 1 ? JUMPER.peak * 4 * s * (1 - s) : 0;
       if (!act.released && act.t * 1000 >= SHOT.meterMs * SHOT.autoReleaseAt) releaseJumper(m, a);
       const landAt = JUMPER.takeoff + JUMPER.air;
-      if (before < landAt && act.t >= landAt) m.emit({ type: "land", id: a.id, hard: false });
+      if (!act.free && before < landAt && act.t >= landAt) {
+        a.recover = JUMP.shotRecover;
+        m.emit({ type: "land", id: a.id, hard: false });
+      }
       if (act.released && act.t >= landAt + 0.1) a.action = { kind: "none" };
       return;
     }
@@ -73,6 +81,8 @@ export function updateAction(m: Match, a: Athlete, dt: number): void {
       return updateBlock(m, a, dt);
     case "steal":
       return updateSteal(m, a, dt);
+    case "move":
+      return updateMove(m, a, dt);
     case "pass":
       act.t += dt;
       if (act.t > 0.3) a.action = { kind: "none" };
@@ -85,4 +95,3 @@ export function updateAction(m: Match, a: Athlete, dt: number): void {
   }
 }
 
-export { BLOCK_AIR };

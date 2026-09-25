@@ -1,4 +1,4 @@
-import type { CharacterId } from "../roster";
+import type { CharacterId, DunkStyle } from "../roster";
 import type { Flight } from "./flight";
 import type { Grade, Outcome, ShotKind } from "./shot-model";
 import type { V2, V3 } from "./vec";
@@ -9,14 +9,36 @@ export type TeamId = 0 | 1;
 export const BUTTONS = ["shoot", "pass", "defend"] as const;
 export type Button = (typeof BUTTONS)[number];
 
-/** What a player is busy doing. Only "none" and "pass" leave the legs free. */
+/** The dribble moves, picked by where the stick points against the way to the basket. */
+export const DRIBBLE_MOVES = ["stepback", "crossover", "spin", "hesitation", "behindBack"] as const;
+export type DribbleMove = (typeof DRIBBLE_MOVES)[number];
+
+/**
+ * What a player is busy doing. Only "none" and "pass" leave the legs
+ * free. Every action carries its own clock `t`, in seconds, which the
+ * animation reads, so the body and the ball always agree.
+ */
 export type Action =
   | { kind: "none" }
-  | { kind: "shoot"; t: number; three: boolean; released: boolean }
-  | { kind: "drive"; t: number; dunk: boolean; from: V2; to: V2; takeoff: number; finish: number; land: number; peak: number; released: boolean }
+  /** A jumper, or a free throw (`free`), which is a set shot with no jump. */
+  | { kind: "shoot"; t: number; three: boolean; released: boolean; free: boolean }
+  /**
+   * A layup or a dunk. `takeoff`, `finish` (the ball leaves the hand or is
+   * slammed) and `land` are times on `t`; a dunk hangs on the rim for
+   * `rimHang` seconds after the slam, and `style` is the dunk thrown.
+   */
+  | { kind: "drive"; t: number; dunk: boolean; style: DunkStyle | null; from: V2; to: V2; takeoff: number; finish: number; rimHang: number; land: number; peak: number; released: boolean }
   | { kind: "pass"; t: number }
-  | { kind: "block"; t: number; peak: number }
-  | { kind: "steal"; t: number; resolved: boolean }
+  /** A jump with the arms up: a crouch for `gather` seconds, then `air` seconds off the floor. */
+  | { kind: "block"; t: number; peak: number; gather: number; air: number }
+  /**
+   * A dribble move lasting `dur`. `side` is the hand the ball ends in or
+   * the way the move goes, `dir` the way the move carries the player, and
+   * `resolved` is set once it has been checked against the defender.
+   */
+  | { kind: "move"; t: number; move: DribbleMove; dur: number; side: 1 | -1; dir: V2; resolved: boolean }
+  /** A swipe at the ball of `victim`, the defender's `attempt`th on them this possession. */
+  | { kind: "steal"; t: number; resolved: boolean; victim: number; attempt: number }
   | { kind: "stumble"; t: number; dur: number }
   | { kind: "celebrate"; t: number; dur: number };
 
@@ -30,6 +52,8 @@ export interface BoxScore {
   attempts: number;
   threes: number;
   dunks: number;
+  freeMade: number;
+  freeAttempts: number;
 }
 
 export interface Athlete {
@@ -56,9 +80,17 @@ export interface Athlete {
   stealCd: number;
   blockCd: number;
   grabCd: number;
-  /** Off balance after a whiffed steal. */
+  /** Off balance after a whiffed steal or a dribble move that beat them. */
   whiff: number;
   squeakCd: number;
+  /** Seconds left of a planted foot in a hard cut, for the legs to show it. */
+  plant: number;
+  /** Seconds left gathering after a landing, when the legs are slow. */
+  recover: number;
+  /** Until the next dribble move. */
+  moveCd: number;
+  /** How hard the dribble moves have come lately; spamming them loses the ball. */
+  moveHeat: number;
   /** Makes in a row. Three is heating up, four is on fire. */
   streak: number;
   onFire: boolean;
@@ -77,8 +109,10 @@ export interface Athlete {
 export interface ShotInfo {
   shooter: number;
   team: TeamId;
-  points: 2 | 3;
+  points: 1 | 2 | 3;
   kind: ShotKind;
+  /** The dunk thrown, for a dunk. */
+  dunk: DunkStyle | null;
   grade: Grade;
   outcome: Outcome;
   made: boolean;
@@ -110,5 +144,9 @@ export interface Ball {
   rimCd: number;
 }
 
-/** Dead is the break after a basket or a turnover; check is the check up at the top that follows it. */
-export type Phase = "countdown" | "live" | "dead" | "check" | "over";
+/**
+ * Dead is the break after a basket or a turnover; check is the check up
+ * at the top that follows it. Free throws run from the whistle for a
+ * foul until the last one leaves the shooter's hand.
+ */
+export type Phase = "countdown" | "live" | "dead" | "check" | "freeThrow" | "over";
