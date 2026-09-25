@@ -1,9 +1,11 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
-import { playFanfare, POLKA, WALTZ, type Track } from "./tunes";
+import { playFanfare, STROLL, TWO_STEP, type Track } from "./tunes";
 
-export type TuneName = "waltz" | "polka";
+export type TuneName = "lobby" | "round";
 
-const TRACKS: Record<TuneName, Track> = { waltz: WALTZ, polka: POLKA };
+const TRACKS: Record<TuneName, Track> = { lobby: STROLL, round: TWO_STEP };
+/** The band's level into the music bus, which leaves the shots room on top. */
+const LEVEL = 0.8;
 /** How often the scheduler wakes, and how far ahead it books notes. */
 const WAKE_MS = 25;
 const LOOKAHEAD_S = 0.12;
@@ -17,14 +19,17 @@ const LOOKAHEAD_S = 0.12;
 export class Music {
   private current: { name: TuneName; gain: GainNode; step: number; nextAt: number } | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
-  private readonly out: BiquadFilterNode;
+  private readonly out: GainNode;
 
   constructor(private readonly engine: AudioEngine) {
-    // Takes the edge off the square pipes so the tune sits under the shots.
-    this.out = engine.ctx.createBiquadFilter();
-    this.out.type = "lowpass";
-    this.out.frequency.value = 3400;
-    this.out.connect(engine.bus("music"));
+    // Rounds off the top so the band sits warm and low under the shots.
+    const warmth = engine.ctx.createBiquadFilter();
+    warmth.type = "lowpass";
+    warmth.frequency.value = 2600;
+    warmth.Q.value = 0.5;
+    this.out = engine.ctx.createGain();
+    this.out.gain.value = LEVEL;
+    this.out.connect(warmth).connect(engine.bus("music"));
   }
 
   play(name: TuneName | null): void {

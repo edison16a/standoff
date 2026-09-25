@@ -9,6 +9,8 @@ vi.mock("../audio/gallery-audio", () => ({
     sfx = new Proxy({}, { get: () => () => {} });
     phase() {}
     shot() {}
+    count() {}
+    final() {}
     landed() {}
     setMusic() {}
     dispose() {}

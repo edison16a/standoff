@@ -13,9 +13,17 @@ export function kick(engine: AudioEngine, out: AudioNode, at: number, peak = 0.8
   noise(engine, out, at, { filter: "lowpass", frequency: 1800, decay: 0.02, peak: peak * 0.25 });
 }
 
+/** A small random spread around 1, so repeated hits never sound stamped out. */
+export function human(spread = 0.12): number {
+  return 1 - spread / 2 + Math.random() * spread;
+}
+
+/** A snare in two layers: the rattle of the wires over the body of the drum. */
 export function snare(engine: AudioEngine, out: AudioNode, at: number, peak = 0.3): void {
-  noise(engine, out, at, { filter: "bandpass", frequency: 1900, q: 0.7, decay: 0.18, peak });
-  tone(engine, out, at, { type: "triangle", frequency: 210, glideTo: 150, decay: 0.08, peak: peak * 0.8 });
+  const p = peak * human(0.1);
+  noise(engine, out, at, { filter: "bandpass", frequency: 1900, q: 0.7, decay: 0.18, peak: p });
+  noise(engine, out, at, { filter: "lowpass", frequency: 3500, decay: 0.06, peak: p * 0.4 });
+  tone(engine, out, at, { type: "triangle", frequency: 210, glideTo: 150, decay: 0.08, peak: p * 0.8 });
 }
 
 /** A clap: three quick bursts of noise, the way a room smears hands together. */
@@ -26,7 +34,7 @@ export function clap(engine: AudioEngine, out: AudioNode, at: number, peak = 0.2
 }
 
 export function hat(engine: AudioEngine, out: AudioNode, at: number, open = false, peak = 0.07): void {
-  noise(engine, out, at, { filter: "highpass", frequency: 8000, decay: open ? 0.22 : 0.035, peak });
+  noise(engine, out, at, { filter: "highpass", frequency: 8000, decay: open ? 0.22 : 0.035, peak: peak * human(0.35) });
 }
 
 export type BassStyle = "round" | "saw" | "pluck";
@@ -62,8 +70,9 @@ export function pluck(engine: AudioEngine, out: AudioNode, at: number, midi: num
   osc.type = type;
   osc.frequency.value = hz(midi);
   filter.type = "lowpass";
-  filter.frequency.setValueAtTime(5200, at);
-  filter.frequency.exponentialRampToValueAtTime(600, at + 0.2);
+  // Opens bright and closes fast: a pluck with no fizz left on its tail.
+  filter.frequency.setValueAtTime(3600, at);
+  filter.frequency.exponentialRampToValueAtTime(500, at + 0.2);
   envelope(gain.gain, at, 0.003, 0.22, peak);
   osc.connect(filter).connect(gain).connect(out);
   osc.start(at);
@@ -109,29 +118,39 @@ export function lead(engine: AudioEngine, out: AudioNode, at: number, midi: numb
     tone(engine, out, at, { type: voice === "bell" ? "sine" : "triangle", frequency: f * (voice === "bell" ? 3 : 2), decay: 0.25, peak: peak * 0.45 });
     return;
   }
-  const osc = ctx.createOscillator();
+  // Two oscillators a few cents apart: the slow beating between them is what makes a synth lead sound wide and warm.
+  const oscs = [-6, 6].map((detune) => {
+    const osc = ctx.createOscillator();
+    osc.type = voice === "square" ? "square" : "sawtooth";
+    osc.frequency.value = f;
+    osc.detune.value = detune;
+    return osc;
+  });
   const filter = ctx.createBiquadFilter();
   const gain = ctx.createGain();
-  osc.type = voice === "square" ? "square" : "sawtooth";
-  osc.frequency.value = f;
   if (length > 0.3) {
     const lfo = ctx.createOscillator();
     const depth = ctx.createGain();
     lfo.frequency.value = 5.5;
     depth.gain.setValueAtTime(0, at);
     depth.gain.linearRampToValueAtTime(f * 0.012, at + 0.35);
-    lfo.connect(depth).connect(osc.frequency);
+    lfo.connect(depth);
+    for (const osc of oscs) depth.connect(osc.frequency);
     lfo.start(at);
     lfo.stop(at + length + 0.1);
   }
   filter.type = "lowpass";
-  filter.frequency.value = voice === "square" ? 2600 : 3200;
+  filter.frequency.setValueAtTime(voice === "square" ? 2200 : 2600, at);
+  filter.frequency.exponentialRampToValueAtTime(voice === "square" ? 1300 : 1600, at + Math.max(0.1, length));
   gain.gain.setValueAtTime(0.0001, at);
-  gain.gain.linearRampToValueAtTime(peak * 0.7, at + 0.01);
-  gain.gain.setValueAtTime(peak * 0.7, at + Math.max(0.02, length - 0.04));
+  gain.gain.linearRampToValueAtTime(peak * 0.5, at + 0.01);
+  gain.gain.setValueAtTime(peak * 0.5, at + Math.max(0.02, length - 0.04));
   gain.gain.exponentialRampToValueAtTime(0.0001, at + length + 0.12);
-  osc.connect(filter).connect(gain).connect(out);
-  osc.start(at);
-  osc.stop(at + length + 0.2);
-  osc.onended = () => gain.disconnect();
+  filter.connect(gain).connect(out);
+  for (const osc of oscs) {
+    osc.connect(filter);
+    osc.start(at);
+    osc.stop(at + length + 0.2);
+  }
+  oscs[0]!.onended = () => gain.disconnect();
 }

@@ -1,43 +1,82 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 import { tone } from "@/platform/audio/voices";
 import type { MatchEvent } from "../engine/events";
+import { Chant } from "./chant";
+import { Commentator } from "./commentator";
 import { CrowdSound } from "./crowd";
+import { Music, type MusicMood } from "./music";
 import { PunchSounds } from "./punch-sounds";
 import { RingSounds } from "./ring-sounds";
+
+/** The arena starts a chant by itself once it is this worked up, at most this often. */
+const CHANT_EXCITE = 0.5;
+const CHANT_GAP_S = 18;
 
 /**
  * Every sound in Boxing, driven by the same match events as the picture.
  * `players` says which boxers are people, so the counter ping only plays
- * for someone who can use it.
+ * for someone who can use it. The gym tune plays throughout, full in the
+ * menus and low under the crowd in a fight.
  */
 export class BoxingAudio {
   readonly punches: PunchSounds;
   readonly ring: RingSounds;
   readonly crowd: CrowdSound;
+  private readonly chant: Chant;
+  private readonly music: Music;
+  private readonly commentator = new Commentator();
   private excite = 0.3;
   private players: readonly boolean[] = [true, true];
+  private sinceChant = 0;
 
   constructor(private readonly engine: AudioEngine) {
     this.punches = new PunchSounds(engine);
     this.ring = new RingSounds(engine);
     this.crowd = new CrowdSound(engine);
+    this.chant = new Chant(engine, this.crowd);
+    this.music = new Music(engine);
+    // The engine outlives each game, so set every bus rather than trust what the last game left.
+    engine.setLevels({ music: 1, crowd: 1, sfx: 1 });
     this.crowd.setExcitement(0.2);
     this.crowd.start();
+    this.music.play("menu");
   }
 
   setPlayers(players: readonly boolean[]): void {
     this.players = players;
   }
 
+  /** The boxers' full names, red corner first, for the commentator. */
+  setNames(names: [string, string]): void {
+    this.commentator.setNames(names);
+  }
+
+  /** Which part of the game is on screen. The results get the fanfare and a cheer. */
+  screen(mood: MusicMood): void {
+    this.music.play(mood);
+    if (mood === "menu") {
+      // Leaving a fight: the booth goes quiet and the arena settles, so no chant starts over the menus.
+      this.commentator.stop();
+      this.excite = 0.25;
+      return;
+    }
+    if (mood !== "results") return;
+    this.music.fanfare();
+    this.crowd.cheer(1);
+  }
+
   event(event: MatchEvent): void {
+    this.commentator.event(event);
     switch (event.type) {
       case "intro":
         this.crowd.cheer(0.8);
+        this.chant.claps(0.8);
         this.bump(0.4);
         break;
       case "bell":
         this.ring.bell(event.kind);
         if (event.kind !== "start") this.crowd.cheer(event.kind === "final" ? 1 : 0.6);
+        if (event.kind === "end") this.chant.name(0.8);
         break;
       case "warning":
         this.ring.clapper();
@@ -65,6 +104,7 @@ export class BoxingAudio {
       case "knockdown":
         this.punches.fall();
         this.crowd.roar(1);
+        this.engine.duck("music", 0.3, 3);
         this.bump(1);
         break;
       case "count":
@@ -73,9 +113,11 @@ export class BoxingAudio {
         break;
       case "rise":
         this.crowd.cheer(0.9);
+        this.chant.name(1);
         break;
       case "stoppage":
         this.crowd.roar(1.3);
+        this.engine.duck("music", 0.2, 4);
         this.bump(1);
         break;
       case "over":
@@ -92,18 +134,29 @@ export class BoxingAudio {
   frame(dt: number): void {
     this.excite += (0.25 - this.excite) * Math.min(1, dt * 0.35);
     this.crowd.setExcitement(this.excite);
+    this.sinceChant += dt;
+    if (this.excite > CHANT_EXCITE && this.sinceChant > CHANT_GAP_S && !this.chant.busy) {
+      this.sinceChant = 0;
+      if (Math.random() < 0.5) this.chant.name(this.excite);
+      else this.chant.claps(this.excite);
+    }
   }
 
   /** The slow motion replay: the crowd hushes under it, and the knockout blow lands with a deep boom. */
   replay(on: boolean): void {
-    if (on) this.engine.holdDuck("crowd", 0.35);
-    else this.engine.duck("crowd", 1, 0);
+    if (on) {
+      this.engine.holdDuck("crowd", 0.35);
+      this.engine.holdDuck("music", 0.4);
+    } else {
+      this.engine.duck("crowd", 1, 0);
+      this.engine.duck("music", 1, 0);
+    }
   }
 
   replayImpact(): void {
     const out = this.engine.bus("sfx");
     const at = this.engine.now + 0.005;
-    tone(this.engine, out, at, { type: "sine", frequency: 90, glideTo: 28, attack: 0.004, decay: 1.4, peak: 0.9 });
+    tone(this.engine, out, at, { type: "sine", frequency: 90, glideTo: 28, attack: 0.004, decay: 1.4, peak: 0.5 });
     this.punches.hit("hook", 1.6);
   }
 
@@ -120,7 +173,10 @@ export class BoxingAudio {
 
   stop(): void {
     this.crowd.stop();
+    this.music.stop();
+    this.commentator.stop();
     this.engine.duck("crowd", 1, 0);
+    this.engine.duck("music", 1, 0);
   }
 
   private bump(amount: number): void {

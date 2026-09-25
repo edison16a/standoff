@@ -1,7 +1,7 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 
 /** The whole song's level into the music bus. */
-const LEVEL = 0.6;
+const LEVEL = 0.47;
 
 /** A short hall made of fading noise, so no sample files are needed. */
 function hall(ctx: BaseAudioContext, seconds: number): AudioBuffer {

@@ -1,116 +1,163 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
-import { midi, noise, tone } from "@/platform/audio/voices";
+import { human, kit, musicBox, organ, strum, upright, whistle } from "./band";
+import { bars, heldFor, type Bar } from "./score";
 
 /**
- * Two fairground tunes, written as step sequences, played on a little
- * steam organ voice: an oom pah pah waltz for the lobby and a quick polka
- * for the round. A track is told "step n starts at time t" and books
- * whatever plays there.
+ * Two boardwalk tunes for the booth, each sixteen bars: an A section
+ * with the hook and a B section that answers it on another voice. The
+ * lobby's is a slow swung stroll on a music box; the round's is a
+ * bouncier whistled two step in another key. A track is told "step n
+ * starts at time t" and books whatever plays there.
  */
 export interface Track {
-  /** Seconds per step. */
+  /** Seconds per step (an eighth note). */
   step: number;
   length: number;
   play(engine: AudioEngine, out: AudioNode, step: number, at: number): void;
 }
 
-/** A calliope pipe: a soft triangle with a reedy square an octave up and a slow beat between them. */
-function pipe(engine: AudioEngine, out: AudioNode, note: number, at: number, length: number, peak: number): void {
-  const frequency = midi(note);
-  tone(engine, out, at, { type: "triangle", frequency, attack: 0.012, decay: length, peak });
-  tone(engine, out, at, { type: "square", frequency: frequency * 2, attack: 0.02, decay: length * 0.8, peak: peak * 0.16, detune: 7 });
-  tone(engine, out, at, { type: "sine", frequency: frequency * 1.004, attack: 0.02, decay: length, peak: peak * 0.45 });
+interface Arrangement {
+  bpm: number;
+  /** How late the off eighths land, as a share of an eighth. */
+  swing: number;
+  bars: Bar[];
+  /** Plays the rhythm section for one step of a bar. */
+  groove(engine: AudioEngine, out: AudioNode, bar: Bar, next: Bar, inBar: number, at: number, eighth: number): void;
+  /** Plays the tune for one step, told which section it is in. */
+  melody(engine: AudioEngine, out: AudioNode, note: number, at: number, length: number, section: "A" | "B"): void;
 }
 
-function bass(engine: AudioEngine, out: AudioNode, note: number, at: number, length: number): void {
-  tone(engine, out, at, { type: "triangle", frequency: midi(note), attack: 0.008, decay: length, peak: 0.2 });
-  tone(engine, out, at, { type: "square", frequency: midi(note), attack: 0.008, decay: length * 0.6, peak: 0.025 });
+function track(a: Arrangement): Track {
+  const eighth = 60 / a.bpm / 2;
+  return {
+    step: eighth,
+    length: a.bars.length * 8,
+    play(engine, out, step, at) {
+      const index = Math.floor(step / 8);
+      const bar = a.bars[index]!;
+      const next = a.bars[(index + 1) % a.bars.length]!;
+      const inBar = step % 8;
+      const time = at + (inBar % 2 === 1 ? a.swing * eighth : 0);
+      a.groove(engine, out, bar, next, inBar, time, eighth);
+      const note = bar.melody[inBar];
+      if (note === null || note === undefined) return;
+      const section = index < a.bars.length / 2 ? "A" : "B";
+      a.melody(engine, out, note, time, heldFor(bar.melody, inBar) * eighth, section);
+    },
+  };
 }
 
-const F = [65, 69, 72];
-const C7 = [64, 67, 70];
-const BB = [65, 70, 74];
-const ROOT: Record<string, [number, number]> = { F: [41, 36], C7: [36, 43], BB: [34, 41], C: [36, 43], G7: [43, 38], FF: [41, 36] };
-
-/* The lobby waltz, in F: three beats a bar, two steps a beat. */
-const WALTZ_BARS: [string, number[], (number | null)[]][] = [
-  ["F", F, [72, null, 77, null, 81, null]],
-  ["F", F, [81, null, null, null, 79, 77]],
-  ["C7", C7, [76, null, 79, null, 82, null]],
-  ["C7", C7, [82, null, null, null, 81, 79]],
-  ["C7", C7, [79, null, 76, null, 72, null]],
-  ["C7", C7, [74, null, 76, null, 77, null]],
-  ["F", F, [81, null, 77, null, 72, null]],
-  ["F", F, [77, null, null, null, null, null]],
-  ["F", F, [72, null, 77, null, 81, null]],
-  ["F", F, [84, null, null, null, 81, 77]],
-  ["BB", BB, [82, null, 81, null, 79, null]],
-  ["BB", BB, [77, null, 74, null, 70, null]],
-  ["F", F, [72, null, 77, null, 81, null]],
-  ["C7", C7, [79, null, 76, null, 72, null]],
-  ["C7", C7, [76, null, 79, null, 76, null]],
-  ["F", F, [77, null, null, null, null, null]],
-];
-
-export const WALTZ: Track = {
-  step: 60 / 150 / 2,
-  length: WALTZ_BARS.length * 6,
-  play(engine, out, step, at) {
-    const [name, chord, melody] = WALTZ_BARS[Math.floor(step / 6)]!;
-    const inBar = step % 6;
-    const beat = 60 / 150;
-    if (inBar === 0) bass(engine, out, ROOT[name]![Math.floor(step / 6) % 2]!, at, beat * 0.9);
-    if (inBar === 2 || inBar === 4) for (const note of chord) pipe(engine, out, note, at, beat * 0.5, 0.022);
-    const note = melody[inBar];
-    if (note) pipe(engine, out, note, at, beat * (melody[inBar + 1] === null ? 1.5 : 0.7), 0.06);
-  },
+const LOBBY_CHORDS = {
+  F: "F2 A3 C4 F4",
+  Dm7: "D3 A3 C4 F4",
+  Gm7: "G2 Bb3 D4 F4",
+  C7: "C3 Bb3 E4 G4",
+  Bbmaj7: "Bb2 A3 D4 F4",
+  Bbm6: "Bb2 G3 Db4 F4",
+  Am7: "A2 G3 C4 E4",
+  D7: "D3 A3 C4 F#4",
 };
 
-const C = [64, 67, 72];
-const G7 = [62, 65, 71];
-const FC = [65, 69, 72];
-
-/* The round polka, in C: oom pah on eighth notes, a busy tune on top. */
-const POLKA_BARS: [string, number[], (number | null)[]][] = [
-  ["C", C, [67, 72, 76, 72]],
-  ["C", C, [79, null, 76, null]],
-  ["G7", G7, [74, 77, 79, 77]],
-  ["G7", G7, [74, null, 71, null]],
-  ["G7", G7, [71, 74, 77, 74]],
-  ["G7", G7, [79, 77, 76, 74]],
-  ["C", C, [72, 76, 79, 84]],
-  ["C", C, [84, null, null, null]],
-  ["C", C, [76, 79, 84, 79]],
-  ["C", C, [76, null, 72, null]],
-  ["FF", FC, [77, 81, 84, 81]],
-  ["FF", FC, [77, null, 72, null]],
-  ["C", C, [76, 79, 76, 72]],
-  ["G7", G7, [74, 77, 74, 71]],
-  ["C", C, [72, 74, 76, 79]],
-  ["C", C, [84, null, 72, null]],
-];
-
-export const POLKA: Track = {
-  step: 60 / 138 / 2,
-  length: POLKA_BARS.length * 4,
-  play(engine, out, step, at) {
-    const [name, chord, melody] = POLKA_BARS[Math.floor(step / 4)]!;
-    const inBar = step % 4;
-    const eighth = 60 / 138 / 2;
-    if (inBar === 0 || inBar === 2) bass(engine, out, ROOT[name]![inBar / 2]!, at, eighth * 0.9);
-    if (inBar === 1 || inBar === 3) {
-      for (const note of chord) pipe(engine, out, note, at, eighth * 0.6, 0.02);
-      noise(engine, out, at, { filter: "highpass", frequency: 7000, decay: 0.04, peak: 0.05 });
+/** The lobby: a lazy swung stroll in F, hook on the music box, the answer whistled over a reed organ. */
+export const STROLL = track({
+  bpm: 92,
+  swing: 0.33,
+  bars: bars(LOBBY_CHORDS, [
+    ["F", "C5 . F5 A5 . G5 . F5"],
+    ["Dm7", "A5 . . . F5 . D5 ."],
+    ["Gm7", "Bb4 . D5 F5 . E5 . D5"],
+    ["C7", "E5 . . . C5 . . ."],
+    ["F", "C5 . F5 A5 . G5 . F5"],
+    ["Dm7", "C6 . . . A5 . F5 ."],
+    ["C7", "G5 . F5 . D5 . E5 ."],
+    ["F", "F5 . . . . . . ."],
+    ["Bbmaj7", "D5 . F5 . A5 . . G5"],
+    ["Bbm6", "F5 . Db5 . . . C5 ."],
+    ["Am7", "C5 . E5 G5 . . E5 ."],
+    ["D7", "F#5 . . . A5 . C6 ."],
+    ["Gm7", "Bb5 . A5 G5 . F5 . D5"],
+    ["C7", "E5 . G5 . Bb5 . . ."],
+    ["F", "A5 . . . F5 . C5 ."],
+    ["C7", "E5 . G5 . C6 . . ."],
+  ]),
+  groove(engine, out, bar, next, inBar, at, eighth) {
+    const root = bar.chord[0]!;
+    if (inBar === 0) upright(engine, out, root, at, eighth * 3.5);
+    if (inBar === 4) upright(engine, out, root + 7, at, eighth * 2.5, 0.17);
+    // A chromatic step into the next bar's root, the walking bass's little lean.
+    if (inBar === 7) upright(engine, out, next.chord[0]! - 1, at, eighth, 0.1);
+    if (inBar === 0) kit.kick(engine, out, at, 0.22);
+    if (inBar === 2 || inBar === 6) {
+      kit.brush(engine, out, at, 0.05);
+      strum(engine, out, bar.chord.slice(1), at, 0.02);
     }
-    const note = melody[inBar];
-    if (note) pipe(engine, out, note, at, eighth * (melody[inBar + 1] === null ? 1.8 : 0.85), 0.055);
+    if (inBar % 2 === 1) kit.shaker(engine, out, at, 0.018);
+    if (inBar === 0) organ(engine, out, bar.chord.slice(1), at, eighth * 8, 0.006);
   },
+  melody(engine, out, note, at, length, section) {
+    if (section === "A") musicBox(engine, out, note, at, 0.06);
+    else whistle(engine, out, note, at, Math.min(length, 0.9), 0.045);
+  },
+});
+
+const ROUND_CHORDS = {
+  G: "G2 B3 D4 G4",
+  Em: "E3 B3 E4 G4",
+  C: "C3 C4 E4 G4",
+  D: "D3 A3 D4 F#4",
+  D7: "D3 A3 C4 F#4",
+  Cm: "C3 C4 Eb4 G4",
+  E7: "E3 B3 D4 G#4",
+  Am: "A2 A3 C4 E4",
 };
 
-/** A short brass band flourish for the winner. */
+/** The round: a bouncy whistled two step in G, the B section on the music box with a minor turn. */
+export const TWO_STEP = track({
+  bpm: 112,
+  swing: 0.22,
+  bars: bars(ROUND_CHORDS, [
+    ["G", "B4 D5 G5 . F#5 G5 A5 ."],
+    ["Em", "G5 . . . E5 . . ."],
+    ["C", "C5 E5 G5 . F#5 G5 A5 ."],
+    ["D", "F#5 . . . D5 . . ."],
+    ["G", "B4 D5 G5 . F#5 G5 A5 ."],
+    ["Em", "B5 . . . G5 . E5 ."],
+    ["D7", "C6 . B5 . A5 . F#5 ."],
+    ["G", "G5 . . . . . D5 ."],
+    ["C", "E5 . G5 . E5 . C5 ."],
+    ["Cm", "Eb5 . G5 . Eb5 . C5 ."],
+    ["G", "D5 . G5 . B5 . . A5"],
+    ["E7", "G#5 . . . B5 . D6 ."],
+    ["Am", "C6 . B5 A5 . G5 . E5"],
+    ["D7", "F#5 . A5 . C6 . . ."],
+    ["G", "B5 . . . G5 . D5 ."],
+    ["D7", "F#5 . A5 . D5 . . ."],
+  ]),
+  groove(engine, out, bar, _next, inBar, at, eighth) {
+    const root = bar.chord[0]!;
+    if (inBar === 0) upright(engine, out, root, at, eighth * 1.8);
+    if (inBar === 3) upright(engine, out, root + 12, at, eighth * 0.8, 0.09);
+    if (inBar === 4) upright(engine, out, root + 7, at, eighth * 1.8, 0.17);
+    if (inBar === 0 || inBar === 4) kit.kick(engine, out, at, 0.26);
+    if (inBar === 2 || inBar === 6) kit.rim(engine, out, at, 0.05);
+    // The off beat strum is what makes it bounce.
+    if (inBar % 2 === 1) strum(engine, out, bar.chord.slice(1), at, 0.016 * human());
+    kit.shaker(engine, out, at, inBar % 2 === 1 ? 0.022 : 0.012);
+  },
+  melody(engine, out, note, at, length, section) {
+    if (section === "A") whistle(engine, out, note, at, Math.min(length, 0.7), 0.05);
+    else musicBox(engine, out, note, at, 0.055);
+  },
+});
+
+/** A short flourish for the winner: a whistle run up into a rung music box chord over the bass. */
 export function playFanfare(engine: AudioEngine, out: AudioNode): void {
   const at = engine.now + 0.05;
-  [72, 76, 79, 84].forEach((note, i) => pipe(engine, out, note, at + i * 0.12, 0.25, 0.09));
-  for (const note of [72, 76, 79, 84]) pipe(engine, out, note, at + 0.5, 1.4, 0.05);
-  bass(engine, out, 36, at + 0.5, 1.4);
+  [67, 71, 74, 79].forEach((note, i) => whistle(engine, out, note + 12, at + i * 0.11, 0.14, 0.06));
+  const held = at + 0.5;
+  for (const note of [79, 83, 86, 91]) musicBox(engine, out, note, held, 0.05);
+  whistle(engine, out, 91, held, 1.1, 0.055);
+  strum(engine, out, [67, 71, 74, 79], held, 0.04);
+  upright(engine, out, 43, held, 1.2, 0.22);
+  kit.kick(engine, out, held, 0.3);
 }

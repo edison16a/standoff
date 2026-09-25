@@ -71,7 +71,7 @@ export class RoundDriver {
     if (!this.live || this.live.phase !== "playing") return null;
     const shot = this.live.shoot(seat, this.camera.ray(point));
     if (!shot) return null;
-    this.audio.shot(shot.kind, shot.bull);
+    this.audio.shot(seat, shot.kind, shot.bull);
     this.hooks.shot(shot);
     return shot;
   }
@@ -79,9 +79,9 @@ export class RoundDriver {
   private react(event: RoundEvent): void {
     switch (event.type) {
       case "count":
-        return this.audio.sfx.tick();
+        return this.audio.count();
       case "final":
-        return this.audio.sfx.tick(event.n <= 3);
+        return this.audio.final(event.n);
       case "go":
         return this.hooks.go();
       case "over":
