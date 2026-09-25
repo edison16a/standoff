@@ -29,8 +29,8 @@ export class Announcer {
   }
 
   /**
-   * Says a line. `priority` 2 is a dunk, a win or a block, 1 a basket, 0
-   * small talk; a line never cuts off a more important one.
+   * Says a line. `priority` 3 is the winner, 2 a basket, 1 a block or a
+   * steal, 0 small talk; a line never cuts off a more important one.
    */
   say(text: string, priority = 1, level = 1): void {
     const synth = this.synth;
