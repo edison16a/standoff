@@ -19,7 +19,8 @@ export const RULES = {
 } as const;
 
 /**
- * A fighter's hit boxes, the same for every character so the draw is
+ * A fighter's hit boxes. A crouched fighter's head stays below every low
+ * bunker, so hiding really hides., the same for every character so the draw is
  * fair. Heights are metres above the ground.
  */
 export const BODY = {
@@ -27,11 +28,11 @@ export const BODY = {
   headRadius: 0.14,
   standTop: 1.5,
   standHead: 1.64,
-  crouchTop: 0.92,
-  crouchHead: 1.04,
+  crouchTop: 0.78,
+  crouchHead: 0.9,
   /** How far the fighter's eyes and gun sit above the ground, standing and crouched. */
   standEye: 1.58,
-  crouchEye: 0.98,
+  crouchEye: 0.86,
 } as const;
 
 /** Seconds the movement brain waits between fresh plans, unless something forces one sooner. */
