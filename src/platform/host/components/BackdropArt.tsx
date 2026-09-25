@@ -23,6 +23,9 @@ function useReducedMotion(): boolean {
  */
 export function BackdropArt({ game }: { game: GameInfo }) {
   const reduced = useReducedMotion();
+  // The poster is a hero shot, not the clip's first frame, so a hard cut
+  // to the clip reads as a flash. The clip stays clear until it plays, then fades in.
+  const [playing, setPlaying] = useState(false);
   const media = game.media;
   if (!media) {
     const Cover = game.Cover;
@@ -32,7 +35,15 @@ export function BackdropArt({ game }: { game: GameInfo }) {
     <>
       <Image className="cover__art" src={media.poster} alt="" fill sizes="100vw" priority />
       {media.video && !reduced && (
-        <video className="cover__art" poster={media.poster.src} autoPlay muted loop playsInline preload="auto">
+        <video
+          className={playing ? "cover__art cover__clip cover__clip--on" : "cover__art cover__clip"}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          onPlaying={() => setPlaying(true)}
+        >
           <source src={media.video.webm} type="video/webm" />
           <source src={media.video.mp4} type="video/mp4" />
         </video>

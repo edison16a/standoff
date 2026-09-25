@@ -7,6 +7,7 @@ import "@/styles/ui.css";
 import "@/styles/tabs.css";
 import "@/styles/range.css";
 import "@/styles/home.css";
+import "@/styles/home-tiles.css";
 import "@/styles/shell.css";
 import "@/styles/settings.css";
 import "@/styles/phone.css";
