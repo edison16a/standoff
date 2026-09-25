@@ -68,8 +68,8 @@ export const PLANS: Record<ShowcaseView, ShowcasePlan> = {
       return { position: [0.3 * sway, 1.96, 6.05 + 0.15 * breathe], lookAt: [0.12 * sway, 1.66, -1], fov: 40 };
     },
   },
-  // A beat after the golden duck is hit, at about 35.7 seconds. The players open fire later, so the booth is fuller.
-  poster: { ...STILL, openFire: 34.6, start: 35.97, camera: () => ({ position: [0, 1.92, 6.0], lookAt: [0, 1.6, -1], fov: 38 }) },
+  // Four lasers and a dot on the golden duck just before it is hit. The players open fire later, so the booth is fuller.
+  poster: { ...STILL, openFire: 34.6, start: 35.62, camera: () => ({ position: [0, 1.92, 6.0], lookAt: [0, 1.6, -1], fov: 38 }) },
   // A laser dot on the golden duck, seen close, just before it is shot at about 35.65 seconds.
   icon: { ...STILL, start: 35.6, camera: () => ({ position: [0.75, 1.5, 0.9], lookAt: [0.85, 0.8, -1.62], fov: 50 }) },
 };
