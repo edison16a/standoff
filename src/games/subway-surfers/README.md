@@ -62,3 +62,13 @@ await page.evaluate(() => window.__cameraKit.inject(1, { x: 0.38 }));   // step 
 await page.evaluate(() => window.__cameraKit.play(1, window.__cameraKit.timelines.jump()));
 await page.evaluate(() => window.__cameraKit.inject(2, null));          // player two steps out
 ```
+
+## Home screen media
+
+`showcase/` plays a seeded run with a computer runner and a director that picks the camera, so every capture is the same. The tile shows the runner on a hoverboard under the logo, the poster has a train rolling in, and the clip is eight seconds through tunnels, stations, barriers and the sunset docks.
+
+```sh
+node tools/media/capture.mjs subway-surfers --url http://localhost:3000 --ffmpeg ffmpeg
+```
+
+The clip in `public/games/subway-surfers/` is kept at the capture size, 960 by 540, so both files stay under 4 MB.
