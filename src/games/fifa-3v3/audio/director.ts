@@ -139,6 +139,7 @@ export class SoundDirector {
         this.crowd.roar(1);
         this.crowd.applause(4);
         this.music.fanfare();
+        this.cancelLater();
         // The results get the beach tune back once the fanfare has rung out.
         this.later = setTimeout(() => {
           this.later = null;

@@ -63,6 +63,8 @@ export class Music {
     this.play(null);
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
+    // Let the last notes ring out, then unhook from the shared bus so no node outlives the room.
+    setTimeout(() => this.tone.disconnect(), 2500);
   }
 
   private schedule(): void {

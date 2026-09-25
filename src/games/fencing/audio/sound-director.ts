@@ -69,6 +69,7 @@ export class SoundDirector {
         this.crowd.swell(4);
         this.crowd.applause(4, 1.5);
         this.cheer(1, true);
+        this.cancelFanfare();
         // Once the fanfare has rung out, the lobby's tune takes over under the results.
         this.afterFanfare = setTimeout(() => this.music.play("menu"), 4500);
         break;
