@@ -66,7 +66,8 @@ async function race(ctx) {
 
 /** A star pick and a ready page, shared by the two sports games. */
 async function pickStar(ctx, card) {
-  await ctx.phone.waitForSelector(card);
+  // Polled on a timer, since a page busy drawing 3D holds its frames back.
+  await ctx.phone.waitForFunction((selector) => document.querySelector(selector) !== null, card, { polling: 250, timeout: 60000 });
   await ctx.phone.waitForTimeout(800);
   // The host confirms the pick, so a tap made before the line is up is tried again.
   for (let i = 0; i < 10; i++) {
