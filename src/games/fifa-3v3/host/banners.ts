@@ -30,8 +30,10 @@ export class Banners {
         return this.show({ text: "SAVE", sub: event.kind === "parry" ? "Pushed away" : "Held on to it", colour: TEAMS[event.team].color }, 2, time, LENGTH.small);
       case "woodwork":
         return this.show({ text: event.part === "post" ? "OFF THE POST" : "OFF THE BAR", sub: null, colour: "#f5f5f5" }, 2, time, LENGTH.small);
+      case "miss":
+        return this.show({ text: event.kind === "over" ? "OVER THE BAR" : "WIDE", sub: null, colour: "#cbd5e1" }, 1, time, LENGTH.small);
       case "out":
-        return this.show({ text: event.over ? "OVER THE BAR" : "WIDE", sub: null, colour: "#cbd5e1" }, 1, time, LENGTH.small);
+        return this.show({ text: "GOAL KICK", sub: null, colour: "#cbd5e1" }, 0, time, 1.2);
       case "tackle":
         if (!event.won || event.victim === null) return;
         return this.show({ text: "TACKLE", sub: this.nameOf(event.athlete), colour: "#fbbf24" }, 1, time, 1.2);

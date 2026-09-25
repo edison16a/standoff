@@ -122,12 +122,14 @@ export function carryBall(a: Athlete, ball: Ball, dt: number): void {
   const nz = ball.pos.z + (tz - ball.pos.z) * k;
   // The ball stops on the goal line: a goal has to be shot, never walked in.
   const cx = clamp(nx, -PITCH.halfLength + BALL.radius + 0.05, PITCH.halfLength - BALL.radius - 0.05);
+  // Along the side boards the ball rolls against them rather than through.
+  const cz = clamp(nz, -PITCH.halfWidth + BALL.radius, PITCH.halfWidth - BALL.radius);
   ball.vel.x = (cx - ball.pos.x) / dt;
   ball.vel.y = 0;
-  ball.vel.z = (nz - ball.pos.z) / dt;
+  ball.vel.z = (cz - ball.pos.z) / dt;
   ball.pos.x = cx;
   ball.pos.y = BALL.radius;
-  ball.pos.z = nz;
+  ball.pos.z = cz;
   ball.spin.x = ball.spin.y = ball.spin.z = 0;
 }
 

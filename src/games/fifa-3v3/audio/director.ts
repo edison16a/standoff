@@ -101,10 +101,10 @@ export class SoundDirector {
       case "bounce":
         this.sfx.bounce(event.speed);
         break;
-      case "out":
+      case "miss":
         this.crowd.groan();
-        if (event.over) this.call(pick(["Over the bar!", "Blazed over!"]), false);
-        else this.call("Just wide!", false);
+        if (event.kind === "over") this.call(pick(["Over the bar!", "Blazed over!"]), false);
+        else this.call(pick(["Just wide!", "Wide of the post!"]), false);
         break;
       case "slide":
         this.sfx.slide();
@@ -126,6 +126,7 @@ export class SoundDirector {
         this.music.fanfare();
         if (event.winner !== null) this.call(`Full time! ${TEAMS[event.winner].name} win!`, true);
         break;
+      case "out":
       case "throw":
       case "control":
       case "stumble":

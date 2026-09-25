@@ -10,7 +10,7 @@ import { planKick } from "./assist";
 import { botPass, owns, progressKick, startKick, startShot } from "./kick";
 import { fullTime, onGoal, onOut } from "./rules";
 import { challenges, startSlide, updateSlide } from "./tackle";
-import { SHOOT } from "./tuning";
+import { PITCH, SHOOT } from "./tuning";
 import type { Athlete, Command, MatchState } from "./types";
 import { clamp01, scale, type Vec2 } from "./vec";
 
@@ -51,9 +51,23 @@ export function stepLooseBall(state: MatchState, dt: number): void {
       state.events.push({ type: "woodwork", part: c.type, speed: c.speed, at: c.at });
       if (state.flight) state.flight.resolved = true;
     } else if (c.type === "net") state.events.push({ type: "net", team: c.team, speed: c.speed, at: c.at });
-    else if (c.type === "board" && c.speed > 1.5) state.events.push({ type: "board", speed: c.speed, at: c.at });
+    else if (c.type === "board") {
+      if (c.speed > 1.5) state.events.push({ type: "board", speed: c.speed, at: c.at });
+      endShotOnBoards(state);
+    }
     else if (c.type === "bounce" && c.speed > 2) state.events.push({ type: "bounce", speed: c.speed });
   }
+}
+
+/**
+ * A shot that hits the boards is over: the ball is live again for
+ * anyone to play. Off the end boards it was a miss.
+ */
+function endShotOnBoards(state: MatchState): void {
+  const flight = state.flight;
+  if (!flight || flight.resolved) return;
+  flight.resolved = true;
+  if (Math.abs(state.ball.pos.x) > PITCH.halfLength - 1) state.events.push({ type: "miss", team: flight.team, kind: "wide" });
 }
 
 /**

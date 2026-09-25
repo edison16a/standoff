@@ -18,7 +18,9 @@ export type MatchEvent =
   | { type: "net"; team: TeamId; speed: number; at: Vec3 }
   | { type: "board"; speed: number; at: Vec3 }
   | { type: "bounce"; speed: number }
-  | { type: "out"; team: TeamId; over: boolean }
+  | { type: "out"; team: TeamId }
+  /** A shot by `team` that missed the target: over the bar, or wide of the posts. */
+  | { type: "miss"; team: TeamId; kind: "over" | "wide" }
   | { type: "slide"; athlete: number }
   | { type: "tackle"; athlete: number; victim: number | null; won: boolean }
   | { type: "stumble"; athlete: number }

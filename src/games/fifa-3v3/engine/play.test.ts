@@ -1,0 +1,87 @@
+import { describe, expect, it } from "vitest";
+import type { MatchEvent } from "./events";
+import { createMatch, stepMatch, type Entrant } from "./match";
+import { BALL, MATCH, PITCH, STEP } from "./tuning";
+import type { Command, MatchState } from "./types";
+
+const LINEUP: Entrant[] = [
+  { team: 0, character: "messi", seat: 1 },
+  { team: 0, character: "ronaldo", seat: null },
+  { team: 0, character: "mbappe", seat: null },
+  { team: 1, character: "haaland", seat: null },
+  { team: 1, character: "vinicius", seat: null },
+  { team: 1, character: "bellingham", seat: null },
+];
+
+/** A match just after the kick off whistle, with the phone's player on the ball. */
+function inPlay(): MatchState {
+  const state = createMatch(LINEUP, { seed: 3, replays: false });
+  for (let t = 0; t <= MATCH.kickoffWait + STEP; t += STEP) stepMatch(state);
+  expect(state.phase).toBe("play");
+  return state;
+}
+
+/** Everyone but the phone's player is moved far away, so nobody interferes. */
+function clearAround(state: MatchState): void {
+  for (const a of state.athletes) if (a.id !== 0) a.pos = { x: -12 + a.id * 0.9, z: a.team === 0 ? -8 : 8 };
+}
+
+function run(state: MatchState, seconds: number, command?: Command): MatchEvent[] {
+  const events: MatchEvent[] = [];
+  for (let t = 0; t < seconds; t += STEP) {
+    stepMatch(state, new Map(command ? [[0, command]] : []));
+    events.push(...state.events);
+  }
+  return events;
+}
+
+describe("open play", () => {
+  it("keeps a dribbled ball inside the side boards", () => {
+    const state = inPlay();
+    clearAround(state);
+    const me = state.athletes[0]!;
+    me.pos = { x: 0, z: PITCH.halfWidth - 1.5 };
+    state.ball.owner = { kind: "athlete", id: 0 };
+    let widest = 0;
+    for (let t = 0; t < 2; t += STEP) {
+      stepMatch(state, new Map([[0, { move: { x: 0.2, z: 1 } }]]));
+      widest = Math.max(widest, Math.abs(state.ball.pos.z));
+    }
+    expect(state.ball.owner).toEqual({ kind: "athlete", id: 0 });
+    expect(widest).toBeLessThanOrEqual(PITCH.halfWidth - BALL.radius + 1e-9);
+  });
+
+  it("frees a shot that went wide off the end boards at once, and calls it wide", () => {
+    const state = inPlay();
+    clearAround(state);
+    state.ball.owner = null;
+    state.ball.pos = { x: 12, y: BALL.radius, z: 5 };
+    state.ball.vel = { x: 14, y: 0, z: 0 };
+    state.flight = { shooter: 0, team: 0, outcome: "wide", t: 0, target: { x: 16, y: 0.3, z: 5 }, keeperX: 15, power: 0.5, resolved: false };
+    const events = run(state, 0.6);
+    expect(events).toContainEqual({ type: "miss", team: 0, kind: "wide" });
+    expect(state.flight.resolved).toBe(true);
+    expect(state.phase).toBe("play");
+  });
+
+  it("calls a shot over the bar a miss, and a clearance over the boards only a goal kick", () => {
+    const shot = inPlay();
+    clearAround(shot);
+    shot.ball.owner = null;
+    shot.ball.pos = { x: 12, y: 2.5, z: 0.5 };
+    shot.ball.vel = { x: 18, y: 1, z: 0 };
+    shot.flight = { shooter: 0, team: 0, outcome: "over", t: 0, target: { x: 16, y: 3, z: 0.5 }, keeperX: 15, power: 0.5, resolved: false };
+    const shotEvents = run(shot, 0.5);
+    expect(shotEvents).toContainEqual({ type: "miss", team: 0, kind: "over" });
+    expect(shotEvents).toContainEqual({ type: "out", team: 1 });
+
+    const clearance = inPlay();
+    clearAround(clearance);
+    clearance.ball.owner = null;
+    clearance.ball.pos = { x: 12, y: 2.5, z: 7 };
+    clearance.ball.vel = { x: 18, y: 1, z: 0 };
+    const events = run(clearance, 0.5);
+    expect(events).toContainEqual({ type: "out", team: 1 });
+    expect(events.some((e) => e.type === "miss")).toBe(false);
+  });
+});

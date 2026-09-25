@@ -76,11 +76,18 @@ export function onGoal(state: MatchState, team: TeamId): void {
 
 /** Over the end boards: the keeper at that end restarts once the ball is fetched. */
 export function onOut(state: MatchState, team: TeamId): void {
-  if (state.flight) state.flight.resolved = true;
+  const flight = state.flight;
+  if (flight && !flight.resolved) {
+    // Only a shot is a miss. A clearance over the boards is just a goal kick.
+    const { y, z } = state.ball.pos;
+    const over = y > PITCH.goalHeight - 0.2 && Math.abs(z) < PITCH.goalHalfWidth + 0.8;
+    state.events.push({ type: "miss", team: flight.team, kind: over ? "over" : "wide" });
+    flight.resolved = true;
+  }
   state.restartTeam = team;
   state.phase = "restart";
   state.phaseT = 0;
-  state.events.push({ type: "out", team, over: state.ball.pos.y > PITCH.boardHeight });
+  state.events.push({ type: "out", team });
 }
 
 /** The goal kick: the keeper has the ball in hand and the attackers back off. */
