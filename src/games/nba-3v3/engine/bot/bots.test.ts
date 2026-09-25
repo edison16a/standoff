@@ -56,4 +56,24 @@ describe("computer players", () => {
     expect(intercepts / passes).toBeLessThan(0.12);
     // Three whole games take a few seconds, longer on a busy machine.
   }, 60000);
+
+  it("use every kind of dribble move and never reach in past the risky third try", () => {
+    const moves = new Set<string>();
+    let shakes = 0;
+    let most = 0;
+    for (const seed of [1, 2, 3]) {
+      const m = new Match({ entries: lineup(["curry", "lebron", "durant", "giannis", "jokic", "doncic"]), seed });
+      for (let t = 0; t < 900 && m.phase !== "over"; t += STEP) {
+        m.step(STEP);
+        for (const e of m.drainEvents()) {
+          if (e.type === "move") moves.add(e.move);
+          if (e.type === "shake") shakes++;
+        }
+        for (const d of m.athletes) for (const h of m.athletes) if (d.team !== h.team) most = Math.max(most, m.stealLog.count(d.id, h.id));
+      }
+    }
+    expect([...moves].sort()).toEqual(["behindBack", "crossover", "hesitation", "spin", "stepback"]);
+    expect(shakes).toBeGreaterThan(3);
+    expect(most).toBeLessThanOrEqual(3);
+  }, 60000);
 });

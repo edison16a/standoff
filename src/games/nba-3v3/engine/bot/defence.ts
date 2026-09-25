@@ -2,6 +2,7 @@ import { charOf } from "../athlete";
 import { RIM_SPOT, rimDistance } from "../court";
 import type { Match } from "../match";
 import { gaussian } from "../rng";
+import { inStealRange } from "../steal";
 import type { Athlete } from "../types";
 import { dir2, dist2, lerp, type V2 } from "../vec";
 import { ballCarrier, goTo, type BotState } from "./util";
@@ -33,8 +34,10 @@ export function thinkDefence(m: Match, a: Athlete, s: BotState, man: Athlete | n
       s.jumpAt = null;
       if (s.decideIn <= 0) {
         s.decideIn = 0.2 + m.rng() * 0.15;
-        const reachy = charOf(a).stats.speed >= 8 ? 0.07 : 0.045;
-        if (dist2(a, holder) < 1.35 && act.kind === "none" && m.rng() < reachy) m.press(a.id, "defend");
+        // Two reaches are free; after that the whistle is a risk, so a third is rare and a fourth never comes.
+        const tries = m.stealLog.count(a.id, holder.id);
+        const reachy = (charOf(a).stats.speed >= 8 ? 0.08 : 0.055) * (tries < 2 ? 1 : tries === 2 ? 0.2 : 0);
+        if (inStealRange(a, holder) && act.kind === "none" && m.rng() < reachy) m.press(a.id, "defend");
       }
     }
     return;
@@ -61,7 +64,7 @@ export function thinkDefence(m: Match, a: Athlete, s: BotState, man: Athlete | n
 /** Jump so the hands are at their highest as the ball leaves: a reaction delay, then up. */
 function contestJumper(m: Match, a: Athlete, s: BotState, shooter: Athlete): void {
   if (shooter.action.kind !== "shoot") return;
-  if (s.jumpAt === null) s.jumpAt = 0.3 + gaussian(m.rng, 0.09) + (charOf(a).stats.speed < 6 ? 0.05 : 0);
+  if (s.jumpAt === null) s.jumpAt = 0.22 + gaussian(m.rng, 0.09) + (charOf(a).stats.speed < 6 ? 0.05 : 0);
   if (shooter.action.t >= s.jumpAt && dist2(a, shooter) < 2.4) {
     m.press(a.id, "defend");
     s.jumpAt = 99;
@@ -70,6 +73,6 @@ function contestJumper(m: Match, a: Athlete, s: BotState, shooter: Athlete): voi
 
 function contestDrive(m: Match, a: Athlete, driver: Athlete): void {
   if (driver.action.kind !== "drive") return;
-  const leave = driver.action.takeoff - 0.08 + (m.rng() - 0.5) * 0.12;
+  const leave = driver.action.takeoff - 0.2 + (m.rng() - 0.5) * 0.12;
   if (driver.action.t >= leave && dist2(a, driver.action.to) < 2) m.press(a.id, "defend");
 }
