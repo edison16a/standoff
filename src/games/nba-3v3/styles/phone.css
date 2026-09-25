@@ -25,23 +25,8 @@
 }
 
 @media (orientation: landscape) and (max-height: 500px) {
-  .nba-phone .kit-steps {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto 1fr auto;
-    column-gap: 16px;
-  }
-
   .nba-phone .kit-steps__title {
-    grid-column: 2;
-    grid-row: 1;
-    align-self: center;
     font-size: 18px;
-  }
-
-  .nba-phone .kit-steps__body,
-  .nba-phone .kit-steps__footer {
-    grid-column: 1 / 3;
   }
 
   /* A phone on its side has little height, so the cards shrink and Next stays on screen. */
@@ -63,8 +48,32 @@
   }
 
   .nba-phone .nba-pick__blurb {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     font-size: 12px;
     line-height: 1.25;
+  }
+
+  .nba-phone .nba-pick__stage {
+    min-height: 0;
+  }
+}
+
+/* With Safari's bars showing sideways the blurb gives way, so the stars and Next stay on screen. */
+@media (orientation: landscape) and (max-height: 360px) {
+  .nba-phone .nba-pick__blurb {
+    display: none;
+  }
+
+  .nba-phone .nba-pick__side {
+    gap: 4px;
+  }
+
+  .nba-phone .nba-pick__card .nba-badge {
+    width: 24px;
+    height: 24px;
   }
 }
 
@@ -72,20 +81,27 @@
 
 .nba-pick {
   display: grid;
+  flex: 1;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.4fr);
   gap: 12px;
   min-height: 0;
 }
 
+/* Upright the star takes whatever height the stats and cards leave. */
 @media (orientation: portrait) {
   .nba-pick {
     grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .nba-pick__stage {
+    max-height: 320px;
   }
 }
 
 .nba-pick__stage {
   position: relative;
-  min-height: 190px;
+  min-height: 110px;
   overflow: hidden;
   border-radius: 18px;
   background: radial-gradient(circle at 50% 35%, #2a3470, #0c0f24 75%);
@@ -221,111 +237,4 @@
   font-size: 9px;
   font-weight: 900;
   text-transform: uppercase;
-}
-
-/* Step two: ready */
-
-.nba-ready {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-  align-items: center;
-  gap: 16px;
-}
-
-@media (orientation: portrait) {
-  .nba-ready {
-    grid-template-columns: 1fr;
-  }
-}
-
-.nba-ready__stage {
-  position: relative;
-  min-height: 200px;
-  overflow: hidden;
-  border-radius: 18px;
-  background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--team) 55%, #0c0f24), #0c0f24 75%);
-}
-
-.nba-ready__info {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.nba-ready__name {
-  font-size: 24px;
-  font-weight: 900;
-}
-
-.nba-ready__team {
-  align-self: flex-start;
-  padding: 3px 12px;
-  border-radius: 999px;
-  background: var(--team);
-  color: #ffffff;
-  font-weight: 800;
-}
-
-.nba-ready__note {
-  color: var(--text-muted);
-}
-
-.nba-ready__note--on {
-  color: #16a34a;
-  font-weight: 700;
-}
-
-/* The result after the game */
-
-.nba-result {
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  text-align: center;
-}
-
-.nba-result__label {
-  color: var(--team);
-  font-size: 20px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.nba-result__score {
-  font-family: Impact, "Arial Black", sans-serif;
-  font-size: 64px;
-  font-style: italic;
-  line-height: 1;
-}
-
-.nba-result__score small {
-  font-family: var(--font-ui);
-  font-size: 18px;
-  font-style: normal;
-  opacity: 0.6;
-}
-
-.nba-result__line {
-  font-size: 17px;
-  font-weight: 700;
-}
-
-.nba-turn {
-  position: fixed;
-  inset: 0;
-  z-index: 5;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 24px;
-  background: rgba(8, 10, 24, 0.92);
-  color: #ffffff;
-  text-align: center;
-}
-
-.nba-turn strong {
-  font-size: 22px;
 }
