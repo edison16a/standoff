@@ -15,6 +15,8 @@ export interface HeadMoveOptions {
   settleUpMs: number;
   /** A head down this long is a player who sat down, not a duck, so the line moves there. */
   settleDownMs: number;
+  /** A move also needs this many frames before it can settle. A slow machine may see a whole jump in two frames far apart. */
+  settleFrames: number;
 }
 
 export const DEFAULT_HEAD: HeadMoveOptions = {
@@ -26,6 +28,7 @@ export const DEFAULT_HEAD: HeadMoveOptions = {
   landingMs: 400,
   settleUpMs: 2500,
   settleDownMs: 5000,
+  settleFrames: 12,
 };
 
 export interface HeadMoves {
@@ -57,6 +60,8 @@ export class HeadMoveDetector {
   private belowSince: number | null = null;
   private landedAt = -Infinity;
   private movedAt = -Infinity;
+  /** Frames seen since the move under way began. */
+  private movedFrames = 0;
 
   constructor(private options: HeadMoveOptions = DEFAULT_HEAD) {}
 
@@ -73,7 +78,7 @@ export class HeadMoveDetector {
 
   /** `rise` is the head above its line in shoulder widths, negative below. */
   update(rise: number, time: number): HeadMoves {
-    const { up, down, riseMs, duckMs, release, landingMs, settleUpMs, settleDownMs } = this.options;
+    const { up, down, riseMs, duckMs, release, landingMs, settleUpMs, settleDownMs, settleFrames } = this.options;
     const near = rise < up * release && rise > -down * release;
     // From near the line to over the band in one frame is quick however long the frame took, which
     // keeps jumps working on a machine that tracks only a few frames a second.
@@ -82,7 +87,8 @@ export class HeadMoveDetector {
     if (near) this.restAt = time;
     const out = { jumped: false, landed: false, ducked: false, stood: false, settled: false };
     // Standing up from a chair or sitting down between rounds looks like the start of a move that never ends.
-    const settled = time - this.movedAt >= (this.jumping ? settleUpMs : settleDownMs);
+    this.movedFrames++;
+    const settled = time - this.movedAt >= (this.jumping ? settleUpMs : settleDownMs) && this.movedFrames > settleFrames;
     if ((this.jumping || this.ducking) && settled) {
       out.landed = this.jumping;
       out.stood = this.ducking;
@@ -99,6 +105,7 @@ export class HeadMoveDetector {
     } else if (!this.jumping && !this.ducking && rise >= up && quick) {
       this.jumping = out.jumped = true;
       this.movedAt = time;
+      this.movedFrames = 0;
     }
     if (rise <= -down) this.belowSince ??= time;
     else if (!this.ducking) this.belowSince = null;
@@ -112,6 +119,7 @@ export class HeadMoveDetector {
       if (time >= ready) {
         this.ducking = out.ducked = true;
         this.movedAt = time;
+        this.movedFrames = 0;
       }
     }
     const idle = !this.jumping && !this.ducking && this.belowSince === null;

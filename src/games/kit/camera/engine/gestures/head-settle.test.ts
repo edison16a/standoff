@@ -43,4 +43,9 @@ describe("standing up or sitting down between rounds", () => {
     expect(kinds(frames)).toEqual(["duck", "stand"]);
     expect(frames.find((f) => f.events.some((e) => e.type === "stand"))!.body.time).toBeGreaterThan(3000);
   });
+
+  it("waits for enough frames first, since a slow machine may see one jump in a few frames seconds apart", () => {
+    const held: PoseKey[] = [{ at: 0, pose: {} }, { at: 100, pose: { lift: 0.2 } }, { at: 5000, pose: { lift: 0.2 } }, { at: 5100, pose: {} }];
+    expect(kinds(readMoves(held, {}, { fps: 1, tail: 1500 }))).toEqual(["jump", "land"]);
+  });
 });
