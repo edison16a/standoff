@@ -4,8 +4,8 @@ import { noise } from "@/platform/audio/voices";
 /**
  * The people watching the dojo. A cheer is a handful of buzzy voices,
  * each pushed through a vowel formant and gliding up then down like a
- * shout, over a breathy roar. Applause is hundreds of tiny filtered claps. Both are
- * random every time, so no two crowds sound alike.
+ * shout, over a breathy roar. Applause is hundreds of tiny filtered
+ * claps. Both are random every time, so no two crowds sound alike.
  */
 
 export interface CheerOptions {
