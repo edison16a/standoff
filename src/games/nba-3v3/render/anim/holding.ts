@@ -54,7 +54,8 @@ export function dribblePose(p: Pose, dribble: number, run: number, side: number,
 /** Both hands on the ball at the chest, elbows out, as the ball is checked. */
 export const CHEST_HOLD: PosePatch = {
   armLRaise: 0.6, armRRaise: 0.6, armLSpread: 0.05, armRSpread: 0.05, elbowL: 1.35, elbowR: 1.35,
-  armLTwist: -0.5, armRTwist: -0.5, wristL: 0.15, wristR: 0.15, torsoX: 0.1, neckX: -0.05,
+  armLTwist: -0.5, armRTwist: -0.5, wristL: 0.15, wristR: 0.15, torsoX: 0.14, neckX: -0.05,
+  kneeL: 0.3, kneeR: 0.3, legLLift: 0.15, legRLift: 0.15,
 };
 
 /** Hands up and out toward a ball on its way in, fingers spread for the catch. */

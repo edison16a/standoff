@@ -52,7 +52,7 @@ export class LabFilm {
     const spots: Record<LabScene, [number, number][]> = {
       moves: [[0, 8.6], [-6, 3], [6, 3], [0, 7.4], [-5, 9], [5, 9]],
       run: [[-4, 9], [4, 6], [6, 2], [-6, 3], [-5, 10], [6, 10]],
-      dunk: [[5, 8], [-4.6, 7.2], [6, 2], [-2.5, 5.5], [5, 9], [5, 3]],
+      dunk: [[6, 10.5], [-4.6, 7.2], [6.5, 9], [-2.5, 5.5], [5, 10.5], [3.5, 10.5]],
       block: [[0, 6.2], [-6, 3], [6, 3], [-5, 9], [5, 9], [0.1, 5.3]],
       free: [[0, 7], [-4, 6], [4, 6], [0.4, 6.4], [-5, 9], [5, 9]],
     };
@@ -60,7 +60,8 @@ export class LabFilm {
     m.ball.holder = scene === "dunk" ? GIANNIS : CURRY;
     m.brains.reset();
     const star = m.athletes[m.ball.holder]!;
-    star.auto = false;
+    // At the line the computer shoots for the star, as it would for anyone.
+    star.auto = scene === "free";
     if (scene === "free") callFoul(m, m.athletes[LEBRON]!, star);
   }
 
