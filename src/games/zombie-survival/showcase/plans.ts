@@ -17,7 +17,7 @@ const FIGHT: ShowcasePlan = {
   players: TEAM,
   bossAt: 6.5,
   beat: 4,
-  escort: { maxAlive: 5, gap: 0.9, spawn: [7, 13] },
+  escort: { maxAlive: 7, gap: 0.35, spawn: [7, 13], tough: 8 },
   preroll: 5,
   framing: { tilt: 0.1, fov: 58 },
   seed: 7,
@@ -30,7 +30,7 @@ export const PLANS: Record<ShowcaseView, ShowcasePlan> = {
     ...FIGHT,
     players: [TEAM[0], TEAM[3]],
     bossAt: 4.8,
-    escort: { maxAlive: 2, gap: 1.2, spawn: [8, 12] },
+    escort: { maxAlive: 3, gap: 0.8, spawn: [8, 12], tough: 8 },
     framing: { tilt: 0.26, fov: 62 },
   },
 };
