@@ -1,0 +1,79 @@
+/*
+  The split screen map: a rounded frame with four corner marks, one cell per
+  view in its player's colour, and the name as big as the cell allows.
+*/
+.split-map {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 6px;
+  border-radius: 14px;
+  background: rgba(10, 8, 24, 0.55);
+  box-sizing: border-box;
+}
+
+.split-map__corner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+}
+
+.split-map__corner--tl {
+  top: 0;
+  left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  border-top-left-radius: 10px;
+}
+
+.split-map__corner--tr {
+  top: 0;
+  right: 0;
+  border-left: 0;
+  border-bottom: 0;
+  border-top-right-radius: 10px;
+}
+
+.split-map__corner--bl {
+  bottom: 0;
+  left: 0;
+  border-right: 0;
+  border-top: 0;
+  border-bottom-left-radius: 10px;
+}
+
+.split-map__corner--br {
+  bottom: 0;
+  right: 0;
+  border-left: 0;
+  border-top: 0;
+  border-bottom-right-radius: 10px;
+}
+
+.split-map__pane {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  padding: 3px;
+  box-sizing: border-box;
+  /* The inset keeps a small gap between cells, like the lines between views. */
+  clip-path: inset(3px round 8px);
+  background: color-mix(in srgb, var(--pane) 30%, rgba(10, 8, 24, 0.8));
+  box-shadow: inset 0 0 0 2px var(--pane);
+  container-type: size;
+}
+
+.split-map__name {
+  max-width: 100%;
+  overflow: hidden;
+  color: #fff;
+  font-weight: 800;
+  /* Big as the cell allows, since reading it from the couch is the point. */
+  font-size: clamp(11px, 26cqh, 30px);
+  line-height: 1;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6), 0 0 12px var(--pane);
+}

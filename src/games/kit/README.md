@@ -222,3 +222,7 @@ node tools/testing/camera-e2e.mjs --clip clip.mjpeg --timeline clip.json --out s
 ```
 
 `--crop` is a box around the person in the photo, from the top of the head to the waist. The clip shows each player waist up, as in front of a computer camera. A CC0 photo of one person facing the camera is enough: the clip uses it twice, flipped for player 2. On a very slow machine add `--slow 8 --width 640 --height 360` to the clip, so every pose holds long enough to be seen. If the test browser cannot reach the CDN, `--mirror folder/` serves the model files from a local folder that it fills once with curl.
+
+## Split screen map
+
+`split/SplitMap.tsx` draws a small picture of the split screen with each player's name written big in the pane they play in, in their colour, inside a frame with four corner marks. Pass it the same rects the renderer uses (`{ name, color, rect: { x, y, w, h } }` as fractions of the screen) and put it in the game's side panel. It draws nothing for a single view.
