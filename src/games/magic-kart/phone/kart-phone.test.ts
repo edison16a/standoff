@@ -49,9 +49,9 @@ describe("the kart phone", () => {
     hold(4, -80);
     phone.calibrate();
     expect(phone.steer).toBe(0);
-    hold(24, -80);
-    expect(phone.steer).toBeGreaterThan(0.4);
-    hold(-16, -80);
-    expect(phone.steer).toBeLessThan(-0.4);
+    hold(44, -80);
+    expect(phone.steer).toBeGreaterThan(0.6);
+    hold(-36, -80);
+    expect(phone.steer).toBeLessThan(-0.6);
   });
 });
