@@ -1,8 +1,12 @@
 import type { CharacterId } from "@/games/fencing/characters";
 import type { Slot } from "@/games/fencing/players";
 
-/** What a fencer is doing beyond following the live controller. */
-export type FencerAction = "idle" | "jab" | "parry" | "hit" | "deflected" | "victory" | "defeat";
+/**
+ * What a fencer is doing beyond following the live controller. "scored" is
+ * the lunge that made a touch, held out while the referee calls it, so the
+ * slow motion close up shows the hit and not the recovery.
+ */
+export type FencerAction = "idle" | "jab" | "scored" | "parry" | "hit" | "deflected" | "victory" | "defeat";
 
 /**
  * One fencer at one instant, holding everything the renderer needs. The

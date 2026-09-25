@@ -5,16 +5,18 @@ import type { Pose } from "./skeleton";
 
 /** The en garde stance every character rests in. */
 export const GUARD: Pose = {
-  hips: v2(0, 0.76),
-  lean: 0.1,
-  nod: -0.05,
-  frontFoot: v2(0.4, 0),
+  hips: v2(0, 0.8),
+  lean: 0.08,
+  twist: 0.32,
+  nod: -0.04,
+  frontFoot: v2(0.38, 0),
   backFoot: v2(-0.36, 0),
-  hand: v2(0.4, -0.15),
-  bladeAngle: 0.16,
+  hand: v2(0.34, -0.2),
+  bladeAngle: 0.14,
   bladeYaw: 0,
   wrist: 0,
-  backHand: v2(-0.14, 0.26),
+  // The free hand up and behind the head, where a fencer carries it for balance, clear of the mask.
+  backHand: v2(-0.34, 0.2),
 };
 
 /** Distance covered by one full advance: front foot, then back foot. */
@@ -25,6 +27,8 @@ const SWING = STEP_LENGTH / 2;
 /** Blade angle limits, so a phone pointed at the ceiling still looks like fencing. */
 const BLADE_MIN = -1.2;
 const BLADE_MAX = 1.35;
+/** How far the blade may swing toward or away from the camera. */
+const YAW_LIMIT = 1.1;
 
 /**
  * Builds the live pose from a frame: the guard stance, feet stepping in
@@ -49,11 +53,12 @@ export function livePose(frame: FencerFrame, timeMs: number): Pose {
     ...GUARD,
     hips: v2(GUARD.hips.x, GUARD.hips.y - bob + breath * 0.006),
     lean: GUARD.lean + breath * 0.01,
+    twist: GUARD.twist + breath * 0.02,
     frontFoot,
     backFoot,
-    hand: v2(GUARD.hand.x + Math.cos(frame.pitch) * 0.03 - 0.03, GUARD.hand.y + Math.sin(frame.pitch) * 0.1),
+    hand: v2(GUARD.hand.x + Math.cos(frame.pitch) * 0.04 - 0.04, GUARD.hand.y + Math.sin(frame.pitch) * 0.12),
     bladeAngle: clamp(GUARD.bladeAngle + frame.pitch, BLADE_MIN, BLADE_MAX),
-    bladeYaw: frame.yaw,
+    bladeYaw: clamp(frame.yaw, -YAW_LIMIT, YAW_LIMIT),
     wrist: frame.roll,
     backHand: v2(GUARD.backHand.x, GUARD.backHand.y + breath * 0.01),
   };

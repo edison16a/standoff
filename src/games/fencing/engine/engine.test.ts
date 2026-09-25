@@ -36,6 +36,9 @@ describe("Engine", () => {
     expect(events.map((e) => e.type)).toEqual(expect.arrayContaining(["allez", "jab", "touch"]));
     expect(engine.match.scores[1]).toBe(1);
     expect(engine.phase).toBe("halt");
+    // The scorer's lunge is held for the close up, and the other fencer reels.
+    expect(engine.fencers[1].frame(engine.now).action).toBe("scored");
+    expect(engine.fencers[2].frame(engine.now).action).toBe("hit");
     runFor(HALT_MS + 50);
     expect(phases.slice(-1)[0]).toBe("enGarde");
     expect(engine.fencers[1].x).toBeCloseTo(engine.fencers[1].startX);

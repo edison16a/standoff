@@ -1,137 +1,7 @@
 /*
-  Fencing on the phone: calibration, fencer select, the ready page and
-  the match pad.
+  The phone during a bout: the score and call on top, the word for each
+  strike read and its verdict, and the two big footwork buttons.
 */
-
-.picker {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.picker__card {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  padding: 0 0 12px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg);
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 120ms ease;
-}
-
-.picker__card--chosen {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
-}
-
-.picker__card:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.picker__art {
-  width: 100%;
-  height: 150px;
-  margin-bottom: 8px;
-  background: var(--bg-elevated);
-}
-
-.picker__name {
-  padding: 0 12px;
-  font-weight: 600;
-}
-
-.picker__tag {
-  padding: 0 12px;
-  font-size: 12px;
-  line-height: 1.35;
-}
-
-/* The last setup step: your fencer, big, with its name. */
-.ready-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--bg);
-  font-size: 18px;
-}
-
-.ready-card__art {
-  width: 100%;
-  height: 260px;
-}
-.calibrate {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  text-align: center;
-}
-
-.calibrate--counting {
-  padding: 24px 0;
-}
-
-.calibrate__count {
-  font-size: 88px;
-  line-height: 1;
-  letter-spacing: -0.04em;
-  color: var(--accent);
-}
-
-.calibrate__preview {
-  width: 100%;
-  height: 200px;
-  border-radius: var(--radius);
-  background: var(--bg-elevated);
-}
-
-.hold-guide {
-  width: 100%;
-  max-width: 320px;
-  height: auto;
-}
-
-.hold-guide__line,
-.hold-guide__hand {
-  fill: none;
-  stroke: var(--text);
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.hold-guide__hand {
-  fill: var(--bg);
-}
-
-.hold-guide__phone {
-  fill: var(--accent);
-}
-
-.hold-guide__accent {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 3;
-  stroke-linecap: round;
-}
-
-.hold-guide__dash {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 2.5;
-  stroke-dasharray: 5 6;
-  stroke-linecap: round;
-}
 
 .pad {
   flex: 1;
@@ -139,6 +9,7 @@
   flex-direction: column;
   gap: 12px;
   min-height: calc(100dvh - 90px);
+  padding: 12px;
 }
 
 .pad__top {
@@ -158,6 +29,51 @@
   letter-spacing: -0.02em;
 }
 
+.feedback {
+  display: grid;
+  place-items: center;
+  min-height: 64px;
+  border-radius: var(--radius-lg);
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  animation: feedback-in 240ms cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.feedback--idle {
+  animation: none;
+  background: var(--bg-muted);
+  opacity: 0.5;
+}
+
+.feedback--read {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.feedback--good {
+  background: #2ed573;
+  color: #06281a;
+}
+
+.feedback--bad {
+  background: #ff4757;
+  color: #ffffff;
+}
+
+.feedback--plain {
+  background: var(--bg-muted);
+  color: var(--text);
+}
+
+@keyframes feedback-in {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+}
+
 .moves {
   flex: 1;
   display: grid;
@@ -167,30 +83,39 @@
 
 .hold {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 6px;
   width: 100%;
   min-height: 120px;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--bg);
   color: var(--text);
-  font-size: 30px;
-  font-weight: 700;
+  font-size: 28px;
+  font-weight: 800;
   letter-spacing: -0.01em;
   cursor: pointer;
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
-  transition: background-color 80ms ease;
+  transition: background-color 80ms ease, transform 80ms ease;
+}
+
+.hold__arrow {
+  width: 34px;
+  height: 34px;
+  fill: currentColor;
+  opacity: 0.8;
 }
 
 .hold--on {
   border-color: var(--accent);
   background: var(--accent);
   color: var(--on-accent);
+  transform: scale(0.98);
 }
 
 .hold--solo {
@@ -211,49 +136,4 @@
   height: 72px;
   font-size: 18px;
   touch-action: manipulation;
-}
-
-.hold-guide__dot {
-  fill: var(--accent);
-}
-
-.calibrate__lead {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  text-align: center;
-}
-
-.level {
-  width: 140px;
-  height: 140px;
-}
-
-.level__rim {
-  fill: var(--bg-muted);
-  stroke: var(--border-strong);
-  stroke-width: 2;
-}
-
-.level__cross {
-  stroke: var(--border-strong);
-  stroke-width: 1;
-}
-
-.level__target {
-  fill: none;
-  stroke: var(--text-muted);
-  stroke-width: 2;
-}
-
-.level__bubble {
-  fill: var(--text-muted);
-}
-
-.level--on .level__target {
-  stroke: var(--accent);
-}
-
-.level--on .level__bubble {
-  fill: var(--accent);
 }

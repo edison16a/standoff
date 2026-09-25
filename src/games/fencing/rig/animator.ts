@@ -4,7 +4,10 @@ import { lerp, lerpVec } from "./geometry";
 import { livePose } from "./guard-pose";
 import type { Pose } from "./skeleton";
 
-type Channel = Exclude<FencerAction, "idle">;
+type Channel = Exclude<FencerAction, "idle" | "scored">;
+
+/** How long a lunge that scored stays out, in game time: through the slow motion and the burst. */
+const SCORED_HOLD_MS = 1300;
 
 interface ChannelSpec {
   /** Whether this action should currently be showing. */
@@ -15,7 +18,7 @@ interface ChannelSpec {
 }
 
 const CHANNELS: Record<Channel, ChannelSpec> = {
-  jab: { active: (f) => f.action === "jab" && f.actionMs < 230, rise: 38, fall: 85 },
+  jab: { active: (f) => (f.action === "jab" && f.actionMs < 300) || (f.action === "scored" && f.actionMs < SCORED_HOLD_MS), rise: 50, fall: 95 },
   parry: { active: (f) => f.action === "parry" && f.parrying, rise: 25, fall: 90 },
   deflected: { active: (f) => f.action === "deflected" && f.actionMs < 350, rise: 20, fall: 120 },
   hit: { active: (f) => f.action === "hit" && f.actionMs < 700, rise: 40, fall: 220 },
@@ -39,7 +42,8 @@ export class Animator {
   private readonly weights: Record<Channel, number> = { jab: 0, parry: 0, deflected: 0, hit: 0, victory: 0, defeat: 0 };
   private lastT: number | null = null;
 
-  pose(frame: FencerFrame, timeMs: number): Pose {
+  /** `room` is how much of a full lunge fits before the opponent, 0 to 1. */
+  pose(frame: FencerFrame, timeMs: number, room = 1): Pose {
     let dt = this.lastT === null ? 0 : timeMs - this.lastT;
     // Time went backwards (a replay just started) or jumped: settle instantly.
     if (dt < 0 || dt > 250) {
@@ -55,7 +59,7 @@ export class Animator {
       const tau = target > this.weights[channel] ? spec.rise : spec.fall;
       this.weights[channel] += (target - this.weights[channel]) * (1 - Math.exp(-dt / tau));
       const weight = this.weights[channel];
-      if (weight > 0.001) pose = blendPose(pose, ACTION_POSES[channel](pose), weight);
+      if (weight > 0.001) pose = blendPose(pose, ACTION_POSES[channel](pose, room), weight);
     }
     return pose;
   }
@@ -69,6 +73,7 @@ export function blendPose(a: Pose, b: Pose, k: number): Pose {
   return {
     hips: lerpVec(a.hips, b.hips, k),
     lean: lerp(a.lean, b.lean, k),
+    twist: lerp(a.twist, b.twist, k),
     nod: lerp(a.nod, b.nod, k),
     frontFoot: lerpVec(a.frontFoot, b.frontFoot, k),
     backFoot: lerpVec(a.backFoot, b.backFoot, k),

@@ -15,8 +15,8 @@ const SLOW_MO_RATE = 0.2;
 
 export interface DriverOutputs {
   director: SoundDirector | null;
-  /** Buzz one phone. */
-  feedback(slot: Slot, event: FeedbackEvent): void;
+  /** Tell one phone what became of a strike, so it can show it and buzz. */
+  feedback(slot: Slot, event: FeedbackEvent, reason?: "far" | "wide"): void;
   /** Tell both phones to reset their strike detectors. */
   recenter(): void;
   onPhase(phase: MatchPhase): void;
@@ -74,7 +74,7 @@ export class MatchDriver {
         this.engine.control(slot, message);
         return;
       case "strike":
-        this.engine.strike(slot, message.action);
+        if (!this.engine.strike(slot, message.action) && this.engine.phase === "live") this.out.feedback(slot, "refused");
         return;
       case "rematch":
         this.engine.rematch(slot);
@@ -130,6 +130,7 @@ export class MatchDriver {
       this.out.feedback(event.attacker, "blocked");
       this.out.feedback(event.attacker === 1 ? 2 : 1, "parried");
     }
+    if (event.type === "whiff") this.out.feedback(event.slot, "missed", event.reason);
   }
 
   private broadcast(event: GameEvent): void {
