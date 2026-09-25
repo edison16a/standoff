@@ -16,7 +16,8 @@
   left: 50%;
   top: 5%;
   transform: translateX(-50%) rotate(-5deg);
-  font-size: 128px;
+  /* Sized to the tile, so the name fills its top at any capture size. */
+  font-size: 15vmin;
 }
 
 /* Fat rounded letters with a thick outline and a hard drop shadow, like a sticker. */
