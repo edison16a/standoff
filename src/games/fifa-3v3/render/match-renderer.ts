@@ -99,8 +99,12 @@ export class MatchRenderer {
    * players' poses, which ease toward their targets, settle before a
    * still is drawn once.
    */
-  settle(view: MatchView, shot: Shot, nowMs: number, seconds: number, focus?: THREE.Vector3): void {
-    for (let t = 0; t < seconds; t += 1 / 30) this.advance(view, shot, nowMs - (seconds - t) * 1000, focus, false);
+  settle(view: MatchView, nowMs: number, seconds: number): void {
+    // Only the bodies and the ball: the boards and effects would queue work for the graphics card on every pass.
+    for (let t = 0; t < seconds; t += 1 / 30) {
+      this.squad.update(view, 1 / 30, (nowMs - (seconds - t) * 1000) / 1000, false);
+      this.ball.update(view.ball, 1 / 30);
+    }
   }
 
   private advance(view: MatchView, shot: Shot, nowMs: number, focus: THREE.Vector3 | undefined, tags: boolean): void {

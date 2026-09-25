@@ -52,7 +52,7 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     const loop = (now: number) => {
       const events = scene.tick(now);
       for (const event of events) renderer.onEvent(event, scene.view);
-      if (frozen && draws > 0) renderer.settle(scene.view, scene.shot, now, 1.5, scene.focus(renderer));
+      if (frozen && draws > 0) renderer.settle(scene.view, now, 1.5);
       if (!frozen || draws > 0) {
         renderer.draw(scene.view, scene.shot, now, scene.focus(renderer), scene.tags);
         draws--;
