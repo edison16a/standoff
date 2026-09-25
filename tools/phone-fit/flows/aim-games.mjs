@@ -1,8 +1,16 @@
 // The three games that aim by pointing the phone at the screen. They share
 // the kit's calibration page, then each has its own pick, ready and play.
+// Each also runs without motion sensors, where a drag pad does the aiming.
 
 /** The kit's calibration: the middle, both corners, then the test view. */
-export async function calibrateAim(ctx) {
+async function calibrateAim(ctx) {
+  // A phone with no sensors goes straight to the drag pad.
+  if (!ctx.sensors) {
+    await ctx.until("Looks good");
+    await ctx.snap("aim-drag");
+    await ctx.tap("Looks good");
+    return;
+  }
   await ctx.until("Set middle");
   await ctx.snap("aim-middle");
   await ctx.tap("Set middle");

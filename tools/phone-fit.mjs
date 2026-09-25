@@ -37,12 +37,13 @@ for (const game of games) {
   console.log(`\n${game}`);
   const entry = typeof FLOWS[game] === "function" ? { game, flow: FLOWS[game] } : FLOWS[game];
   const { host, code } = await hostRoom(browser, values.url, entry.game, values.theme);
-  const phone = await joinPhone(browser, values.url, code, "P1", { theme: values.theme, sensors: entry.sensors ?? true });
+  const sensors = entry.sensors ?? true;
+  const phone = await joinPhone(browser, values.url, code, "P1", { theme: values.theme, sensors });
   let home = VIEWPORTS[0];
   let count = 0;
 
   const ctx = {
-    game, host, phone, url: values.url, code, browser, theme: values.theme,
+    game, host, phone, url: values.url, code, browser, theme: values.theme, sensors,
     /** Measures the page at every size, then puts the phone back how the flow held it. */
     async snap(step) {
       const index = String(++count).padStart(2, "0");

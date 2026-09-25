@@ -75,7 +75,7 @@ Check it with the dev server running:
 node tools/phone-fit.mjs --url http://localhost:3000 --out /tmp/phone-fit [--games fencing,magic-kart] [--theme dark]
 ```
 
-It opens a room for each game, joins as a phone the size of an iPhone 16, and walks every phone page, from the name to the result. At each page it measures portrait 393 by 852, portrait with Safari's bars 393 by 659, landscape 852 by 393 and landscape with bars 852 by 340. It fails a page that scrolls, a box inside it that scrolls or spills over what follows, and any button cut off or covered, and it saves a screenshot of every page at every size to look over. Pages that need a match, like the controller and the result, are reached by handing the phone made up host messages. Each game's steps are in `tools/phone-fit/flows`; add a flow there with a new game.
+It opens a room for each game, joins as a phone the size of an iPhone 16, and walks every phone page, from the name to the result. At each page it measures portrait 393 by 852, portrait with Safari's bars 393 by 659, landscape 852 by 393 and landscape with bars 852 by 340. It fails a page that scrolls, a box inside it that scrolls or spills over what follows, and any button cut off, covered or squeezed under 40 pixels, and it saves a screenshot of every page at every size to look over. Pages that need a match, like the controller and the result, are reached by handing the phone made up host messages. The games that read motion also run a second time as a phone with no motion sensors, on their buttons or drag pad. Each game's steps are in `tools/phone-fit/flows`; add a flow there with a new game.
 
 ## Camera games
 

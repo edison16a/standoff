@@ -1,6 +1,6 @@
 // What the phone fit check looks for on a page: the page itself never
 // scrolls, no box inside it scrolls, and nothing a player can tap sits
-// even partly outside the screen.
+// even partly outside the screen or shrinks too small to tap.
 
 /** Runs in the page. Returns a list of problems, empty when it all fits. */
 export function measure() {
@@ -43,6 +43,8 @@ export function measure() {
   for (const el of document.querySelectorAll(tappable)) {
     if (!shown(el)) continue;
     const box = el.getBoundingClientRect();
+    // A squeezed control is as bad as a hidden one. 40px is the site's smallest button; the bar keeps its own sizes.
+    if (!el.closest(".phone__bar") && (box.width < 39.5 || box.height < 39.5)) problems.push(`${name(el)} is too small to tap at ${Math.round(box.width)} by ${Math.round(box.height)}`);
     const out = box.left < -1 || box.top < -1 || box.right > w + 1 || box.bottom > h + 1;
     if (out) {
       problems.push(`${name(el)} is cut off at ${Math.round(box.left)},${Math.round(box.top)} to ${Math.round(box.right)},${Math.round(box.bottom)}`);
