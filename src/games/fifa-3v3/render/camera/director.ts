@@ -89,7 +89,8 @@ export class CameraDirector {
         // A slow swing on the near side, never round the back where the goals and nets would get in the way.
         const a = Math.sin(time * 0.2) * 0.9;
         this.wantPos.set(at.x + Math.sin(a) * 11, 3.8, at.z + Math.cos(a) * 11);
-        this.wantLook.set(at.x, 1.1, at.z);
+        // Aimed a little to their right, so the winners stand in the left half beside the results card.
+        this.wantLook.set(at.x + Math.cos(a) * 3, 1.1, at.z - Math.sin(a) * 3);
         fov = 30;
         rate = 2;
         break;
