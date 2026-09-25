@@ -37,9 +37,13 @@ export const DEFAULT_SPOT_RULES: SpotRules = { minShoulder: 0.07, maxShoulder: 0
 /** What stops a player's spot from counting yet. Each has a plain instruction in the calibration screen. */
 export type SpotIssue = "missing" | "unclear" | "step-left" | "step-right" | "closer" | "back" | "headroom";
 
-/** The middle of the head and shoulders across the picture: where the player stands. */
+/**
+ * The middle of the head and shoulders across the picture: where the
+ * player stands. A head out of the picture, as in a high jump, is only
+ * the model's guess, so the shoulders alone decide then.
+ */
 export function centreOf(body: Body): number {
-  return (body.head.x + body.shoulders.x) / 2;
+  return body.headSeen ? (body.head.x + body.shoulders.x) / 2 : body.shoulders.x;
 }
 
 export function checkSpot(body: Body | null, spot: Spot, rules: SpotRules = DEFAULT_SPOT_RULES): SpotIssue | null {

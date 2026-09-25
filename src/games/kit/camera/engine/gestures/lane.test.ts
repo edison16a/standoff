@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { readMoves } from "../sequence";
+import { baselineFor, readMoves } from "../sequence";
 import type { PoseSpec } from "../synthetic";
-import type { PoseKey } from "../timeline";
+import { MOVES, type PoseKey } from "../timeline";
 import { LaneTracker } from "./lane";
+import { MoveReader } from "./moves";
 
 /** Walks a waist up player through spots and returns every lane change, calibrated standing in `base`. */
 function lanes(xs: number[], base: PoseSpec = { x: 0.5 }) {
@@ -50,5 +51,20 @@ describe("lanes from moving sideways, waist up", () => {
     const frames = lanes([0.28, 0.46], { x: 0.28, height: 1.4 });
     expect(changes(frames)).toEqual([1]);
     expect(frames[0]!.state.head.side).toBeCloseTo(0, 2);
+  });
+
+  it("keeps the lane when a jump takes the head out of the picture and the model guesses wildly where it is", () => {
+    const base = { head: 0.14 };
+    const frames = readMoves(MOVES.jump(base), base);
+    const reader = new MoveReader(1);
+    reader.setBaseline(baselineFor(base));
+    const guessed = frames.map(({ body }) => {
+      if (body.headSeen) return body;
+      // The head is out of view, so its point is only a guess, here far over to one side.
+      return { ...body, head: { ...body.head, x: body.head.x + 0.3 } };
+    });
+    const events = guessed.flatMap((body) => reader.update(body, body.time));
+    expect(frames.some((f) => !f.body.headSeen)).toBe(true);
+    expect(events.filter((e) => e.type === "lane")).toEqual([]);
   });
 });
