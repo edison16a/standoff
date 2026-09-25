@@ -27,16 +27,16 @@ export const LOOP_LEAD = 15.6;
 export const FILMED = 9;
 
 /** The poster and the icon are single frames, run this far ahead without drawing and then held. */
-export const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 4.95, icon: 4.95 };
+export const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 4.85, icon: 4.85 };
 
 /**
- * The stills' shots, in stage metres: the karate's charged Dragon Flight
- * landing on the mage, with the samurai slashing down from the air and
- * the bear winding up Big Paw. The icon sits closer and low, so the
- * action clears the logo.
+ * The stills' shots, in stage metres: the karate letting go of a charged
+ * Dragon Flight in a flare, with the samurai slashing down from the air
+ * onto the mage and the bear stepping in. The icon sits closer and low,
+ * so the action clears the logo.
  */
 export const STILL_CAMERA: Partial<Record<ShowcaseView, { x: number; y: number; distance: number }>> = {
-  poster: { x: -0.8, y: 2.2, distance: 13 },
+  poster: { x: -0.9, y: 2.2, distance: 12 },
   icon: { x: -1.1, y: 1.3, distance: 11.5 },
 };
 
