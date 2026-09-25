@@ -20,6 +20,7 @@ function fouled(victim: number, seed = 3): { m: Match; events: MatchEvent[] } {
   m.ball.holder = victim;
   m.ball.mode = "held";
   m.shotClock = 7.5;
+  m.needsClear = true;
   callFoul(m, m.athletes[1]!, a);
   return { m, events: m.drainEvents() };
 }
@@ -37,6 +38,8 @@ describe("a foul and its free throws", () => {
     const { m, events } = fouled(2);
     expect(events.some((e) => e.type === "foul" && e.id === 1 && e.victim === 2)).toBe(true);
     expect(m.phase).toBe("freeThrow");
+    // The fouled team restarts from the line: no clear left to make, and no warning on the phone.
+    expect(m.needsClear).toBe(false);
     until(m, events, () => events.some((e) => e.type === "freeThrow"));
     // At the line with the clock where it stopped, and nobody inside the key.
     const shooter = m.athletes[2]!;

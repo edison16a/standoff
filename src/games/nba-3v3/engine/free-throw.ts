@@ -43,6 +43,8 @@ export function callFoul(m: Match, fouler: Athlete, victim: Athlete): void {
   fouler.action = { kind: "none" };
   if (victim.action.kind === "move") victim.action = { kind: "none" };
   handTo(m, victim.id);
+  // The fouled team restarts from the line, so there is nothing left to clear.
+  m.needsClear = false;
   m.phase = "freeThrow";
   m.phaseT = 0;
   m.freeThrows = { shooter: victim.id, fouler: fouler.id, shot: 1, stage: "whistle", t: 0, spots: lineUp(m, victim), toss: null, botRelease: null };
