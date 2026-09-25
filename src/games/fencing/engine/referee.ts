@@ -89,6 +89,9 @@ export class Referee {
     // Just too late at the host, but inside the grace: the touch is saved.
     const saved = this.landed.find((touch) => touch.scorer !== slot && now - touch.at <= PARRY_GRACE_MS);
     if (saved) {
+      // Like any parry, it blocked one attack and closes, leaving the guard ready.
+      fencer.parryUntil = now;
+      fencer.parryReadyAt = now;
       this.landed = this.landed.filter((touch) => touch !== saved);
       events.push(this.deflect(saved.scorer, saved.startedAt, now));
     }

@@ -132,6 +132,17 @@ describe("Referee", () => {
     expect(run(referee, JAB_IMPACT_MS + 30, 600).verdict).toBeNull();
   });
 
+  it("closes a parry that saved a touch late, like one that blocked in time", () => {
+    const { referee, fencers } = setup();
+    referee.jab(1, 0);
+    run(referee, 0, JAB_IMPACT_MS + 20);
+    const at = JAB_IMPACT_MS + PARRY_GRACE_MS - 10;
+    referee.parry(2, at);
+    expect(fencers[2].frame(at + 10).parrying).toBe(false);
+    // Its guard is ready for the next one straight away.
+    expect(referee.parry(2, at + 20)).toHaveLength(1);
+  });
+
   it("counts the touch when the parry comes too late", () => {
     const { referee } = setup();
     referee.jab(1, 0);
