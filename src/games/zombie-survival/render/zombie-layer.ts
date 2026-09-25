@@ -5,16 +5,23 @@ import { isBoss } from "../engine/zombie-kinds";
 import { poseZombie } from "./models/zombies/animate";
 import { buildBoss } from "./models/zombies/bosses";
 import { buildCommoner, type Setting } from "./models/zombies/commoners";
+import { PoseBlend } from "./models/zombies/pose-blend";
 import type { Rig } from "./models/zombies/rig";
 import { animateWeakPoints, type WeakMarker } from "./models/zombies/weak-points";
 import type { TargetPoint } from "./scene-source";
 import { glowTexture } from "./textures";
+
+/** A shambler never walks quite straight at you. */
+const wander = (z: Zombie) => (z.state === "walk" ? Math.sin(z.age * 0.8 + z.seed * 9) * 0.22 : 0);
 
 interface ZombieView {
   rig: Rig;
   weak: WeakMarker[];
   shadow: THREE.Mesh;
   flinch: number;
+  blend: PoseBlend;
+  /** The sideways drift of its heading, eased so it never snaps when the walk stops. */
+  wander: number;
 }
 
 /**
@@ -39,8 +46,10 @@ export class ZombieLayer {
         seen.add(z.id);
         const view = this.views.get(z.id) ?? this.create(z);
         view.flinch = Math.max(0, view.flinch - dt * 5);
-        this.place(view, z, frame);
+        this.place(view, z, frame, dt);
+        view.blend.before(view.rig, z.state);
         poseZombie(view.rig, z, view.flinch);
+        view.blend.after(view.rig, dt);
         for (const eye of view.rig.eyes) eye.visible = z.state !== "dead";
         animateWeakPoints(view.weak, z.weak, z.age);
       }
@@ -99,21 +108,20 @@ export class ZombieLayer {
     shadow.position.y = 0.03;
     built.rig.root.add(shadow);
     this.group.add(built.rig.root);
-    const view = { rig: built.rig, weak: built.weak, shadow, flinch: 0 };
+    const view = { rig: built.rig, weak: built.weak, shadow, flinch: 0, blend: new PoseBlend(), wander: wander(z) };
     this.views.set(z.id, view);
     return view;
   }
 
-  private place(view: ZombieView, z: Zombie, frame: FightFrame): void {
+  private place(view: ZombieView, z: Zombie, frame: FightFrame, dt: number): void {
     const at = frame.place(z.ahead, z.side);
     const root = view.rig.root;
     root.position.set(at.x, at.y, at.z);
     // Face the team, who stand at the fight's origin.
     const dx = frame.origin.x - at.x;
     const dz = frame.origin.z - at.z;
-    // A shambler never walks quite straight at you.
-    const wander = z.state === "walk" ? Math.sin(z.age * 0.8 + z.seed * 9) * 0.22 : 0;
-    root.rotation.y = Math.atan2(dx, dz) + wander;
+    view.wander += (wander(z) - view.wander) * Math.min(1, dt * 8);
+    root.rotation.y = Math.atan2(dx, dz) + view.wander;
     view.shadow.visible = z.state !== "dead" || z.stateTime < 3;
   }
 
