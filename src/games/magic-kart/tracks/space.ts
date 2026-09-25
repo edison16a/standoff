@@ -22,8 +22,8 @@ export const SPACE: TrackDef = {
   ),
   width: 15,
   shoulder: 3,
-  ramps: [{ at: 0.43, length: 12, height: 2.4 }],
-  gaps: [{ at: 0.43, length: 12 }],
+  ramps: [{ at: 0.43, length: 14, height: 3 }],
+  gaps: [{ at: 0.43, length: 26 }],
   boostPads: [
     { at: 0.405, offset: -3 },
     { at: 0.405, offset: 3 },
@@ -31,6 +31,7 @@ export const SPACE: TrackDef = {
     { at: 0.76, offset: -4 },
   ],
   cubeRows: [0.07, 0.3, 0.55, 0.82],
+  skyRows: [{ at: 0.452, height: 5.4 }],
   obstacles: [
     { kind: "asteroid", at: 0.2, offset: 0, radius: 1.6, sweep: { amplitude: 5, period: 4.2 } },
     { kind: "satellite", at: 0.64, offset: 4, radius: 1.4 },

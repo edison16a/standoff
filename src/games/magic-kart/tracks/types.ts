@@ -26,6 +26,13 @@ export interface GapDef {
   length: number;
 }
 
+/** A pair of power up cubes floating over a jump, for gliders to steer through. */
+export interface SkyRowDef {
+  at: number;
+  /** Metres above the road. */
+  height: number;
+}
+
 /** A glowing strip that gives a short boost when driven over. */
 export interface BoostPadDef {
   at: number;
@@ -68,6 +75,7 @@ export interface TrackDef {
   boostPads: readonly BoostPadDef[];
   /** Each entry is a row of power up cubes across the road. */
   cubeRows: readonly number[];
+  skyRows?: readonly SkyRowDef[];
   obstacles: readonly ObstacleDef[];
   openEdges: readonly OpenEdgeDef[];
 }

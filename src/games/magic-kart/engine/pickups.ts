@@ -23,18 +23,22 @@ const CUBE_HEIGHT = 1.1;
 const CUBE_REACH = 2;
 /** Offsets across the road for a row, as a share of the half width. */
 const ROW = [-0.66, -0.22, 0.22, 0.66];
+/** A sky row is a pair, wide apart, so a glider has to pick a side and steer for it. */
+const SKY_ROW = [-0.45, 0.45];
 export const PAD_LENGTH = 5;
 export const PAD_WIDTH = 3.6;
 
 export function buildCubes(track: Track): Cube[] {
-  return track.def.cubeRows.flatMap((at) =>
-    ROW.map((share) => {
+  const row = (at: number, shares: readonly number[], height: number) =>
+    shares.map((share) => {
       const s = track.wrap(at * track.length);
       const d = share * track.halfWidth;
       const p = track.pointAt(s, d);
-      return { s, d, x: p.x, y: p.y + CUBE_HEIGHT, z: p.z, respawnAt: 0 };
-    }),
-  );
+      return { s, d, x: p.x, y: p.y + height, z: p.z, respawnAt: 0 };
+    });
+  const ground = track.def.cubeRows.flatMap((at) => row(at, ROW, CUBE_HEIGHT));
+  const sky = (track.def.skyRows ?? []).flatMap((r) => row(r.at, SKY_ROW, r.height));
+  return [...ground, ...sky];
 }
 
 export function buildPads(track: Track): BoostPad[] {

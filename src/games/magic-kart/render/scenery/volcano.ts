@@ -30,7 +30,7 @@ export function buildVolcano(track: Track): Scenery {
   const random = seeded(5);
   const b = trackBounds(track);
   const peak = new THREE.Vector3(b.maxX + 150, 0, (b.minZ + b.maxZ) / 2 + 40);
-  const gaps = track.gaps.map((gap) => ({ at: track.pointAt((gap.start + gap.end) / 2, 0), frame: track.frameAt(gap.start) }));
+  const gaps = track.gaps.map((gap) => ({ at: track.pointAt((gap.start + gap.end) / 2, 0), frame: track.frameAt(gap.start), half: (gap.end - gap.start) / 2 + 2 }));
 
   const terrain = buildTerrain(track, {
     margin: 200,
@@ -47,7 +47,7 @@ export function buildVolcano(track: Track): Scenery {
       if (off > 8) h = Math.min(h, LAVA_LEVEL - 1 + smooth(0, 10, river) * 30);
       for (const gap of gaps) {
         const along = (x - gap.at.x) * gap.frame.tx + (z - gap.at.z) * gap.frame.tz;
-        if (Math.abs(along) < 7) h = Math.min(h, LAVA_LEVEL - 2);
+        if (Math.abs(along) < gap.half) h = Math.min(h, LAVA_LEVEL - 2);
       }
       // The open, wall-less stretch drops straight into a lava pool.
       if (near.d > track.edge && !track.hasWall(near.s, 1)) h = Math.min(h, LAVA_LEVEL - 2);

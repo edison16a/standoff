@@ -20,14 +20,15 @@ export const BEACH: TrackDef = {
   ),
   width: 15,
   shoulder: 4,
-  ramps: [{ at: 0.62, length: 12, height: 2.2 }],
-  gaps: [{ at: 0.62, length: 11 }],
+  ramps: [{ at: 0.62, length: 14, height: 3 }],
+  gaps: [{ at: 0.62, length: 24 }],
   boostPads: [
     { at: 0.585, offset: -3 },
     { at: 0.585, offset: 3 },
     { at: 0.9, offset: 0 },
   ],
   cubeRows: [0.1, 0.33, 0.52, 0.8],
+  skyRows: [{ at: 0.646, height: 5.4 }],
   obstacles: [
     { kind: "crab", at: 0.22, offset: 0, radius: 1.1, sweep: { amplitude: 5, period: 3.4 } },
     { kind: "crab", at: 0.45, offset: 0, radius: 1.1, sweep: { amplitude: 5.5, period: 4, phase: 1.5 } },

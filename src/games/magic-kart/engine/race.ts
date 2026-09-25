@@ -103,11 +103,15 @@ export function updateStuck(kart: Kart, trying: boolean, dt: number): boolean {
   return r.stuckTime > RACE.stuckAfter;
 }
 
+/** Metres of road before a gap where a kart is never put back. */
+const SAFE_RUN_UP = 75;
+
 /** Remembers where the kart last had its wheels safely on the road. */
 export function updateSafeSpot(kart: Kart, track: Track): void {
   if (kart.airborne || kart.surface !== "road" || kart.timers.stun > 0) return;
   const s = kart.loc.s;
-  if (track.inGap(s) || track.rampHeight(s) > 0 || track.inGap(s + 12)) return;
+  // Never in the run up to a jump: put back there from a standstill, a kart could not reach the pace to glide across.
+  if (track.inGap(s) || track.rampHeight(s) > 0 || track.gapAhead(s, SAFE_RUN_UP)) return;
   kart.race.safeS = s;
   kart.race.safeD = Math.max(-track.halfWidth + 2, Math.min(track.halfWidth - 2, kart.loc.d));
 }

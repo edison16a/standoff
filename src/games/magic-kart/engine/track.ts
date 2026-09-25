@@ -147,6 +147,14 @@ export class Track {
     return this.gaps.some((gap) => this.wrap(s - gap.start) <= gap.end - gap.start);
   }
 
+  /** True if a gap starts within `distance` metres ahead of s. */
+  gapAhead(s: number, distance: number): boolean {
+    return this.gaps.some((gap) => {
+      const ahead = this.forward(s, gap.start);
+      return ahead >= 0 && ahead <= distance;
+    });
+  }
+
   /**
    * True where the edge has a barrier. Elsewhere it is a drop. `side` is
    * 1 for the right edge, -1 for the left, 0 for either.
