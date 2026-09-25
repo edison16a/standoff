@@ -40,7 +40,9 @@ export class SteadyLevel {
     const right = rotate(q, vec(1, 0, 0));
     const pitch = Math.asin(Math.max(-1, Math.min(1, top.z)));
     const roll = Math.asin(Math.max(-1, Math.min(1, right.z)));
-    const level = Math.hypot(pitch, roll) < LEVEL_TOLERANCE;
+    // Face down reads as level too. That is a phone left on a table, not a player holding a guard.
+    const faceUp = rotate(q, vec(0, 0, 1)).z > 0;
+    const level = faceUp && Math.hypot(pitch, roll) < LEVEL_TOLERANCE;
     const covered = t - this.history[0]!.t >= WINDOW_MS * 0.6;
     const steady = covered && this.history.every((entry) => angleBetween(entry.q, q) < STILL_ANGLE);
 

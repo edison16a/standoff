@@ -26,6 +26,13 @@ describe("SteadyLevel", () => {
     expect(reading.progress).toBe(0);
   });
 
+  it("never fills while the phone lies face down", () => {
+    const level = new SteadyLevel();
+    const reading = hold(level, () => [0, 180, 0], 0, 3000);
+    expect(reading.level).toBe(false);
+    expect(reading.progress).toBe(0);
+  });
+
   it("drains when the hand wobbles, even when level on average", () => {
     const level = new SteadyLevel();
     const reading = hold(level, (t) => [8 * Math.sin(t / 60), 2 * Math.sin(t / 90), 0], 0, 3000);
