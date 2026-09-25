@@ -13,6 +13,7 @@ const STATE: PhoneState = {
   stocks: 2,
   ult: 0.5,
   out: false,
+  kos: 1,
   place: null,
   banner: "Fight",
 };

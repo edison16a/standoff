@@ -21,6 +21,8 @@ export type PhoneMessage = z.infer<typeof phoneMessageSchema>;
 /**
  * The gamepad's buttons, as named to the kit. Directions come from the
  * kit's stick: up is jump, and the direction held picks the move variant.
+ * The direction pad also sends up as a button, so a quick tap on it is
+ * never lost with a dropped stick sample.
  */
-export const BUTTONS = { attack: "attack", special: "special", ult: "ult" } as const;
+export const BUTTONS = { attack: "attack", special: "special", ult: "ult", up: "up" } as const;
 export type ButtonName = (typeof BUTTONS)[keyof typeof BUTTONS];

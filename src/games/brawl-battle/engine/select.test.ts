@@ -71,6 +71,26 @@ describe("the pad", () => {
     expect(pad.read(0, 0).light).toBeUndefined();
   });
 
+  it("jumps from a reliable up press even when the stick sample was lost", () => {
+    const pad = new PadInput();
+    pad.upPressed();
+    expect(pad.read(0, 0).jump).toBe(true);
+    // The stream catches up with up still held: no second jump.
+    expect(pad.read(0, 1).jump).toBeUndefined();
+    pad.upPressed();
+    expect(pad.read(0, 1).jump).toBeUndefined();
+    pad.upReleased();
+    pad.upPressed();
+    expect(pad.read(0, 0).jump).toBe(true);
+  });
+
+  it("does not jump again when the press lands after the stick already jumped", () => {
+    const pad = new PadInput();
+    expect(pad.read(0, 1).jump).toBe(true);
+    pad.upPressed();
+    expect(pad.read(0, 1).jump).toBeUndefined();
+  });
+
   it("cleans up bad stick values", () => {
     const pad = new PadInput();
     expect(pad.read(Number.NaN, 3)).toMatchObject({ x: 0, y: 1 });

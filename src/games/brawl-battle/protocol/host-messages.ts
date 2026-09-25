@@ -25,6 +25,8 @@ export const phoneStateSchema = z.object({
   ult: z.number().min(0).max(1),
   /** Out of lives but the match goes on. */
   out: z.boolean(),
+  /** Rivals this player knocked off the stage. */
+  kos: z.number().int().min(0).max(99),
   /** Set once the match is decided, for players in it. 1 is the winner. */
   place: z.number().int().min(1).max(4).nullable(),
   /** A word for the moment, like Fight or KO. */
