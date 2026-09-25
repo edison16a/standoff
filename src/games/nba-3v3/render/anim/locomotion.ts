@@ -1,3 +1,4 @@
+import { strideLength, strideSwing } from "../../engine/dribble-ball";
 import { dribblePose } from "./holding";
 import { over, STAND, type Pose } from "./pose";
 
@@ -6,14 +7,14 @@ export interface MoveContext {
   speed: number;
   /** Where the legs are in their stride, 0 to 1. */
   phase: number;
-  /** How much of the motion is sideways to the way they face, -1 left to 1 right. */
-  lateral: number;
   /** Down in a guarding stance, arms wide. */
   guarding: boolean;
   /** The dribble, 0 to 1 with the ball at the hand at 0, or null without the ball. */
   dribble: number | null;
   /** Which hand dribbles, -1 left to 1 right, in between during a crossover. */
   dribbleSide: number;
+  /** 0 to 1 as a defender closes in on the ball handler, raising the off arm to shield the ball. */
+  pressure: number;
   time: number;
   /** A per player offset so idle players do not breathe in step. */
   seed: number;
@@ -21,20 +22,7 @@ export interface MoveContext {
 
 const TAU = Math.PI * 2;
 
-/** How far each hip swings through a stride, in radians, growing with speed. */
-export const strideSwing = (speed: number) => 0.12 + Math.min(1, speed / 6.5) * 0.72;
-
-/**
- * The ground covered by one full stride cycle (a step with each foot)
- * for legs of length `leg`. The stride phase advances by the distance
- * run over this, so a planted foot moves back exactly as fast as the
- * body goes forward and the feet do not skate.
- */
-export function strideLength(speed: number, leg: number, guarding: boolean): number {
-  // Feet split 2 leg sin(swing) apart at full stride; the bent knee shortens that a little.
-  const swing = guarding ? 0.3 : strideSwing(speed);
-  return Math.max(0.35, 4 * leg * Math.sin(swing) * 0.88);
-}
+export { strideLength };
 
 /**
  * Feet and arms on the move: an idle sway with the weight drifting from
@@ -87,8 +75,6 @@ export function locomotion(c: MoveContext): Pose {
     p.elbowR = 0.35 + run * 1.05;
     p.armLSpread = 0.14;
     p.armRSpread = 0.14;
-    // Running sideways leans the body into the turn.
-    p.torsoZ += -c.lateral * run * 0.12;
   }
-  return c.dribble === null ? p : dribblePose(p, c.dribble, run, c.dribbleSide);
+  return c.dribble === null ? p : dribblePose(p, c.dribble, run, c.dribbleSide, c.pressure);
 }

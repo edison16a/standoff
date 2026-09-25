@@ -98,8 +98,8 @@ export class AthletePreview {
       }
       this.angle += dt * 0.6;
       this.turntable.rotation.y = this.angle;
-      this.dribble = (this.dribble + dt * 1.8) % 1;
-      const pose = locomotion({ speed: 0, phase: 0, lateral: 0, guarding: false, dribble: this.dribble, dribbleSide: 1, time: now / 1000, seed: 0 });
+      this.dribble = (this.dribble + dt * 2.3) % 1;
+      const pose = locomotion({ speed: 0, phase: 0, guarding: false, dribble: this.dribble, dribbleSide: 1, pressure: 0, time: now / 1000, seed: 0 });
       applyPose(pose, this.model.joints, this.model.dims);
       this.turntable.updateMatrixWorld(true);
       // The ball bounces under the dribbling hand, sharp at the floor and slow at the top.

@@ -1,27 +1,17 @@
 import * as THREE from "three";
-import type { Athlete, TeamId } from "../engine/types";
+import type { Athlete } from "../engine/types";
 import { CHARACTERS, TEAMS } from "../roster";
 import { blockPose, landPose, layupPose, passPose, shootPose, stealPose, stumblePose } from "./anim/actions";
 import { celebratePose, dejectedPose } from "./anim/celebrations";
 import { dunkPose, dunkSpin } from "./anim/dunks";
-import { CHEST_HOLD, RECEIVE } from "./anim/holding";
-import { locomotion, strideLength } from "./anim/locomotion";
+import { basePose, type AthleteScene } from "./anim/base";
+import { setShotPose } from "./anim/line";
+import { strideLength } from "./anim/locomotion";
 import { movePose } from "./anim/moves";
 import { applyPose, approach, blend, STAND, type Pose } from "./anim/pose";
 import { buildAthlete, type AthleteModel } from "./models/athlete-model";
 
-export interface AthleteScene {
-  /** Holding the ball right now. */
-  holding: boolean;
-  /** Holding it in both hands at the chest, as the ball is checked, rather than dribbling. */
-  chest: boolean;
-  /** 0 to 1 as a ball thrown to this player comes in, for reaching out to catch it. */
-  receiving: number;
-  /** Down in a stance, guarding the player with the ball. */
-  guarding: boolean;
-  /** Set once the game is won: winners celebrate, losers hang their heads. */
-  winner: TeamId | null;
-}
+export type { AthleteScene };
 
 const v = new THREE.Vector3();
 /** After a shot, a dunk or a pass the body eases back into its run this slowly at first. */
@@ -56,6 +46,10 @@ export class AthleteView {
   private readonly slip = new THREE.Vector3();
   private readonly last = new THREE.Vector3();
   private readonly seed: number;
+  private readonly lastV = new THREE.Vector2();
+  private ahead = 0;
+  private grounded = 1;
+  private side = 0;
 
   constructor(readonly athlete: Athlete, bodyMat: THREE.Material, parent: THREE.Object3D) {
     this.model = buildAthlete(CHARACTERS[athlete.character], TEAMS[athlete.team], bodyMat);
@@ -69,15 +63,9 @@ export class AthleteView {
     const c = CHARACTERS[a.character];
     this.place(a, dt);
     const speed = Math.hypot(a.vx, a.vz);
-    const leg = this.model.dims.thigh + this.model.dims.shin;
-    this.phase = (this.phase + (speed * dt) / strideLength(speed, leg, s.guarding)) % 1;
-    const rx = -Math.cos(a.yaw);
-    const rz = Math.sin(a.yaw);
-    const lateral = speed > 0.2 ? (a.vx * rx + a.vz * rz) / speed : 0;
-    const dribbling = s.holding && !s.chest && (a.action.kind === "none" || a.action.kind === "move");
-    let base = locomotion({ speed, phase: this.phase, lateral, guarding: s.guarding, dribble: dribbling ? a.dribble : null, dribbleSide: a.dribbleSide, time: this.time, seed: this.seed });
-    if (s.holding && s.chest) base = blend(base, CHEST_HOLD, 1, base);
-    else if (s.receiving > 0) base = blend(base, RECEIVE, ease(s.receiving), base);
+    this.stride(a, s, speed, dt);
+    this.feelMomentum(a, dt);
+    const base = basePose(a, s, { speed, phase: this.phase, ahead: this.ahead, side: this.side, time: this.time, seed: this.seed });
 
     const act = a.action;
     const wasDrive = this.lastKind === "drive";
@@ -99,7 +87,7 @@ export class AthleteView {
     switch (act.kind) {
       case "shoot":
         if (act.released && this.releasedAt === null) this.releasedAt = act.t;
-        target = shootPose(act.t, this.releasedAt, base);
+        target = act.free ? setShotPose(act.t, this.releasedAt, base) : shootPose(act.t, this.releasedAt, base);
         rate = 34;
         break;
       case "drive": {
@@ -145,7 +133,55 @@ export class AthleteView {
     approach(this.pose, target, rate, dt);
     applyPose(this.pose, this.model.joints, this.model.dims);
     this.model.joints.root.rotation.y = a.yaw + this.pose.spin;
+    this.plantFeet(a, dt);
     this.model.joints.root.updateMatrixWorld(true);
+  }
+
+  /**
+   * On the floor the hips are raised or lowered so the lower foot
+   * stands exactly on it, whatever the knees and hips are doing: bent
+   * knees sink the body instead of lifting the feet, and no pose floats
+   * or sinks into the court. In the air the pose's own height is kept.
+   */
+  private plantFeet(a: Athlete, dt: number): void {
+    this.grounded += ((a.y < 0.01 ? 1 : 0) - this.grounded) * (1 - Math.exp(-dt * 25));
+    if (this.grounded < 0.01) return;
+    const j = this.model.joints;
+    const d = this.model.dims;
+    j.root.updateMatrixWorld(true);
+    const low = Math.min(j.ankleL.getWorldPosition(v).y, j.ankleR.getWorldPosition(v).y) - j.root.position.y;
+    j.hips.position.y += (d.hipY - d.thigh - d.shin - low) * this.grounded;
+  }
+
+  /**
+   * Moves the legs through their stride by the ground covered, so the
+   * feet stay planted. On the run with the ball the stride is also
+   * drawn gently into step with the dribble, the ball hitting the floor
+   * as the foot opposite the ball hand lands; the engine already bounces
+   * it once a stride, so the pull is tiny and the feet do not skate.
+   */
+  private stride(a: Athlete, s: AthleteScene, speed: number, dt: number): void {
+    const leg = this.model.dims.thigh + this.model.dims.shin;
+    this.phase = (this.phase + (speed * dt) / strideLength(speed, leg, s.guarding)) % 1;
+    if (!s.holding || s.chest || speed < 1.6 || (a.action.kind !== "none" && a.action.kind !== "move")) return;
+    const want = a.dribble - 0.25 * a.dribbleHand;
+    const err = want - this.phase - Math.round(want - this.phase);
+    this.phase = (this.phase + Math.max(-0.15 * dt, Math.min(0.15 * dt, err)) + 1) % 1;
+  }
+
+  /** Smooths the change in velocity into the lean of a push off, a stop or a cut, in the player's own frame. */
+  private feelMomentum(a: Athlete, dt: number): void {
+    if (dt <= 0) return;
+    const ax = (a.vx - this.lastV.x) / dt;
+    const az = (a.vz - this.lastV.y) / dt;
+    this.lastV.set(a.vx, a.vz);
+    const k = 1 - Math.exp(-dt * 10);
+    const ahead = ax * Math.sin(a.yaw) + az * Math.cos(a.yaw);
+    const side = -ax * Math.cos(a.yaw) + az * Math.sin(a.yaw);
+    // A jump or a teleport is not a push off.
+    const ok = a.y < 0.01 && Math.hypot(ax, az) < 60;
+    this.ahead += ((ok ? ahead : 0) - this.ahead) * k;
+    this.side += ((ok ? side : 0) - this.side) * k;
   }
 
   /** Follows the engine's position, easing out any sudden jump so a reset never pops. */
