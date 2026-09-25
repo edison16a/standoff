@@ -4,10 +4,12 @@ import { useKartStore } from "../host-store";
 import { Minimap } from "./Minimap";
 import { Standings } from "./Standings";
 import { ViewHud } from "./ViewHud";
+import { WhoPlaysWhere } from "./WhoPlaysWhere";
 
 /**
  * Everything laid over the race: one overlay per player's view, lines
- * between the views, and the overall map and standings.
+ * between the views, and the overview: the track map, the standings and,
+ * with two or more views, a small picture of who plays where.
  */
 export function RaceHud() {
   const views = useKartStore((state) => state.views);
@@ -17,8 +19,9 @@ export function RaceHud() {
   const over = useKartStore((state) => state.phase === "results");
   const rects = splitScreen(views.length);
   // The overview always sits top right: in the spare quadrant with three
-  // players, as a compact card over split views, roomy over a single view.
-  const place = views.length === 3 ? "quad" : views.length >= 2 ? "compact" : "corner";
+  // players, as a compact card over two views, a wider but shorter one over
+  // four (their quarters are short), and roomy over a single view.
+  const place = views.length === 3 ? "quad" : views.length === 2 ? "compact" : views.length >= 4 ? "grid" : "corner";
 
   return (
     <div className={`mk-hud ${over ? "mk-hud--over" : ""}`}>
@@ -29,7 +32,10 @@ export function RaceHud() {
       {views.length >= 3 && <div className="mk-hud__split mk-hud__split--h" />}
       <aside className={`mk-overview mk-overview--${place}`}>
         <Minimap />
-        <Standings />
+        <div className="mk-overview__side">
+          <Standings />
+          <WhoPlaysWhere views={views} rects={rects} />
+        </div>
       </aside>
     </div>
   );
