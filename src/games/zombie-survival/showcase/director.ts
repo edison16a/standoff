@@ -112,7 +112,9 @@ export class ShowcaseDirector implements SceneSource {
       if (!bot.track(target, dt, this.clock) || !target || blocked(target, bot.aim, targets)) continue;
       const cast = (offsets: Parameters<typeof view.cast>[2]) =>
         view.cast(bot.seat, bot.aim, offsets).map((hit) => (hit && hit.zombie !== target.zombie ? null : hit));
-      if (this.game.fire(bot.seat, cast)) view.shotFx(bot.seat);
+      if (!this.game.fire(bot.seat, cast)) continue;
+      bot.fired();
+      view.shotFx(bot.seat);
     }
   }
 

@@ -55,8 +55,11 @@ export class ShowcaseBot {
     const on = Math.hypot(this.aim.x - target.x, this.aim.y - target.y) < ON_TARGET;
     this.steady = on ? this.steady + dt : 0;
     this.rested += dt;
-    if (this.steady < DWELL || this.rested < REST) return false;
+    return this.steady >= DWELL && this.rested >= REST;
+  }
+
+  /** Starts the rest after a shot. Only a shot that went off counts, so a blocked line does not cost a turn. */
+  fired(): void {
     this.rested = 0;
-    return true;
   }
 }
