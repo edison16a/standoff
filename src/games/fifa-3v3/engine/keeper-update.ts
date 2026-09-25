@@ -39,7 +39,9 @@ export function updateKeeper(state: MatchState, k: Keeper, dt: number): void {
     case "cheer":
       return;
     case "set":
-      guard(state, k, dt);
+      // A keeper never stands idle with the ball: it is held, then played out.
+      if (holding) setAction(k, "hold");
+      else guard(state, k, dt);
       break;
   }
   if (holding) Object.assign(ball.pos, hands(k));

@@ -26,7 +26,7 @@ export function keeperHome(state: MatchState, k: Keeper): Vec2 {
   const b = state.ball.pos;
   const dx = b.x - gx;
   const d = Math.hypot(dx, b.z);
-  const off = lerp(0.9, 2.1, clamp01(1 - (d - 4) / 14));
+  const off = lerp(0.9, 2.3, clamp01(1 - (d - 4) / 18));
   const ux = d > 0.01 ? dx / d : outward(k.team);
   const uz = d > 0.01 ? b.z / d : 0;
   const x = gx + Math.max(0.6, Math.abs(ux * off)) * outward(k.team);
@@ -83,7 +83,8 @@ export function makeSave(state: MatchState, k: Keeper, parry: boolean): void {
     ball.vel = { x: 0, y: 0, z: 0 };
     ball.heldFor = 0;
     k.holdFor = state.rng.range(KEEPER.holdMin, KEEPER.holdMax);
-    if (k.dive?.standing) {
+    // Not mid dive (a shot too quick to plan one for): the ball is simply taken in the arms.
+    if (k.dive?.standing || k.action !== "dive") {
       k.action = "catch";
       k.actionT = 0;
     }
