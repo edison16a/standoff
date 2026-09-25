@@ -71,7 +71,7 @@ export class Effects {
         this.contact = null;
         this.sparks.burst(at, t, { count: 220, speed: 7.5, lifeMs: 700 });
         this.sparks.burst(at, t, { count: 80, speed: 3.5, lifeMs: 900, colour: PLAYER_COLOURS[event.scorer] });
-        this.impacts.fire(at, t, { size: 1.4, lifeMs: 560, colour: PLAYER_COLOURS[event.scorer] });
+        this.impacts.fire(at, t, { size: 0.75, lifeMs: 560, colour: PLAYER_COLOURS[event.scorer] });
         return at;
       }
       case "double": {
