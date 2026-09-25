@@ -5,6 +5,8 @@ import { ShowcaseStage } from "./stage";
 
 /** The game advances in steps this long, whatever the frame rate, so every run plays out the same. */
 const STEP_S = 1 / 60;
+/** The clip is filmed at this rate, so drawing more often only slows a capture on a slow machine. */
+const FRAME_S = 1 / 30;
 
 /**
  * Runs the showcase: the game's own renderer drawing a round the
@@ -16,8 +18,9 @@ export class ShowcaseDirector {
   private readonly renderer: GalleryRenderer;
   private firstMs: number | null = null;
   private steps = 0;
-  /** Stills only draw again when this is set, since nothing in them moves. */
+  /** Set when the canvas was resized and must be drawn again whatever the clock says. */
   private stale = true;
+  private drawnAt = -Infinity;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -38,11 +41,13 @@ export class ShowcaseDirector {
     this.firstMs ??= nowMs;
     const t = this.plan.hold ? 0 : (nowMs - this.firstMs) / 1000;
     this.seek(this.plan.start + t);
-    if (!this.plan.hold || this.stale) {
-      this.aim(t);
-      this.renderer.draw();
-    }
-    // Software drawing can take seconds a frame, so a still that has been drawn is left alone.
+    // Software drawing can take seconds a frame. A still never changes, and the loop
+    // is filmed at 30 frames a second, so the frames in between are skipped.
+    const due = !this.plan.hold && t - this.drawnAt >= FRAME_S - 0.001;
+    if (!due && !this.stale) return;
+    this.aim(t);
+    this.renderer.draw();
+    this.drawnAt = t;
     this.stale = false;
   }
 

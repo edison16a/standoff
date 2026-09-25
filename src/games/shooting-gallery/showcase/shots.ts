@@ -44,9 +44,8 @@ export interface ShowcasePlan {
 const LOOP_S = 8;
 
 /**
- * The stills share one round. The players open fire just before, so the
- * booth is still full, and a golden duck crosses the middle to be shot
- * at about 35.65 seconds.
+ * The stills share one round, with a golden duck crossing the middle.
+ * The players open fire just before, so the booth is still full.
  */
 const STILL = {
   seed: 11,
@@ -69,8 +68,8 @@ export const PLANS: Record<ShowcaseView, ShowcasePlan> = {
       return { position: [0.3 * sway, 1.96, 6.05 + 0.15 * breathe], lookAt: [0.12 * sway, 1.66, -1], fov: 40 };
     },
   },
-  // A beat after the golden duck is hit: its points float up over a busy booth.
-  poster: { ...STILL, start: 35.8, camera: () => ({ position: [0, 1.92, 6.0], lookAt: [0, 1.6, -1], fov: 38 }) },
-  // Just before: a laser dot on the golden duck, seen close.
+  // A beat after the golden duck is hit, at about 35.7 seconds. The players open fire later, so the booth is fuller.
+  poster: { ...STILL, openFire: 34.6, start: 35.97, camera: () => ({ position: [0, 1.92, 6.0], lookAt: [0, 1.6, -1], fov: 38 }) },
+  // A laser dot on the golden duck, seen close, just before it is shot at about 35.65 seconds.
   icon: { ...STILL, start: 35.6, camera: () => ({ position: [0.75, 1.5, 0.9], lookAt: [0.85, 0.8, -1.62], fov: 50 }) },
 };
