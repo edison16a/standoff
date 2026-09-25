@@ -74,6 +74,15 @@ export class Boards {
     this.refresh();
   }
 
+  /** Back to the adverts at once, for a kick off that comes while GOAL is still flashing. */
+  calm(): void {
+    if (this.flashFor <= 0) return;
+    this.flashFor = 0;
+    this.drawAds();
+    this.refresh();
+    for (const screen of this.screens) screen.color.setScalar(1);
+  }
+
   update(dt: number, time: number): void {
     this.scroll += dt * 0.03;
     let brightness = 1;

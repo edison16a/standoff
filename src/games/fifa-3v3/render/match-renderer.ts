@@ -81,7 +81,10 @@ export class MatchRenderer {
       this.director.bump(0.6);
     }
     if (event.type === "woodwork") this.director.bump(0.5);
-    if (event.type === "kickoff") this.effects.reset();
+    if (event.type === "kickoff") {
+      this.effects.reset();
+      this.arena.boards.calm();
+    }
   }
 
   /** Lets the sound bang with each firework as it bursts. */
