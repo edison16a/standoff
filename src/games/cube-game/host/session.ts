@@ -140,7 +140,13 @@ export class CubeSession {
       updates.forEach(({ events }, i) => this.hear(i + 1, events));
       this.board.update(round, now);
       if (this.phase === "play" && round.over && !this.resultsTimer) this.finishRound();
-      const players = round.seats.map((seat, i) => ({ state: seat.run.player, events: updates[i]!.events, attempt: seat.run.attempt, restarted: updates[i]!.restarted }));
+      const players = round.seats.map((seat, i) => ({
+        state: seat.run.player,
+        events: updates[i]!.events,
+        attempt: seat.run.attempt,
+        restarted: updates[i]!.restarted,
+        checkpoints: round.practice ? seat.run.checkpointSpots : undefined,
+      }));
       return { time, dt, pulse, players, views: players.map((_, i) => i) };
     }
     const events = this.demo.advanceTo(time);

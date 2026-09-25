@@ -35,7 +35,9 @@ export type PlayerEvent =
   | { type: "portal"; mode: Mode }
   | { type: "speed"; speed: number; faster: boolean }
   | { type: "death"; x: number; y: number }
-  | { type: "finish" };
+  | { type: "finish" }
+  /** Practice only: a checkpoint was saved. */
+  | { type: "checkpoint" };
 
 /** The player standing at the start of a level. */
 export function startState(level: Level): PlayerState {

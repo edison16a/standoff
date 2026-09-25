@@ -62,6 +62,9 @@ export class SoundDirector {
       case "finish":
         this.sfx.fanfare();
         break;
+      case "checkpoint":
+        this.sfx.checkpoint();
+        break;
       default:
     }
   }

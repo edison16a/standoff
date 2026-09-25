@@ -57,8 +57,8 @@ export class Run {
   }
 
   /** Practice checkpoints so far, for drawing their diamonds. */
-  get checkpointXs(): number[] {
-    return this.checkpoints.map((c) => c.state.x);
+  get checkpointSpots(): { x: number; y: number }[] {
+    return this.checkpoints.map((c) => ({ x: c.state.x, y: c.state.y }));
   }
 
   /**
@@ -85,7 +85,7 @@ export class Run {
       step(this.player, this.world, STEP, pressed, events);
       this.time += STEP;
       for (let i = before; i < events.length; i++) this.note(events[i]!);
-      if (this.practice) this.maybeCheckpoint();
+      if (this.practice && this.maybeCheckpoint()) events.push({ type: "checkpoint" });
     }
     // A dead or finished run keeps its clock moving, for the explosion and the finish.
     if (this.player.dead || this.player.finished) this.time = Math.max(this.time, time);
@@ -117,11 +117,13 @@ export class Run {
     if (event.type === "death" || event.type === "finish") this.best = Math.max(this.best, this.percent);
   }
 
-  private maybeCheckpoint(): void {
+  /** Saves a checkpoint if one is due and the player is safely placed. Says if it did. */
+  private maybeCheckpoint(): boolean {
     const p = this.player;
     const steady = p.mode === "ufo" ? p.vy > -2 : p.grounded;
-    if (!steady || this.time - this.lastCheckpoint < CHECKPOINT_EVERY) return;
+    if (!steady || this.time - this.lastCheckpoint < CHECKPOINT_EVERY) return false;
     this.checkpoints.push({ state: copyState(p), time: this.time });
     this.lastCheckpoint = this.time;
+    return true;
   }
 }

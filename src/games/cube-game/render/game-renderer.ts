@@ -17,6 +17,8 @@ export interface DrawPlayer {
   attempt: number;
   /** A new attempt began since the last frame, so the camera jumps back. */
   restarted: boolean;
+  /** Practice checkpoints, drawn as diamonds. */
+  checkpoints?: readonly { x: number; y: number }[];
 }
 
 export interface DrawInput {
@@ -106,6 +108,7 @@ export class GameRenderer {
       this.avatars[i]?.update(player.state, dt);
       this.ghosts[i]?.update(players.length > 1 ? player.state : null, dt);
       this.signs.setAttempt(i, player.attempt);
+      this.signs.setCheckpoints(i, player.checkpoints ?? []);
     });
     for (let i = players.length; i < this.avatars.length; i++) {
       this.avatars[i]!.update(null, dt);
@@ -137,7 +140,7 @@ export class GameRenderer {
   private prepare(p: number, players: DrawPlayer[], camera: ViewCamera, time: number, pulse: number): void {
     this.avatars.forEach((avatar, i) => (avatar.group.visible = i === p && !!players[i]?.state && !players[i]!.state!.dead));
     this.ghosts.forEach((ghost, i) => (ghost.group.visible = i !== p && !!players[i]?.state && !players[i]!.state!.dead));
-    this.signs.show(p);
+    this.signs.show(p, time);
     this.level?.showUsed(players[p]?.state ? { pads: players[p]!.state!.usedPads, orbs: players[p]!.state!.usedOrbs } : null);
     this.backdrop?.update(camera.centerX, camera.horizonAt(160, 150.5), time, pulse);
   }
