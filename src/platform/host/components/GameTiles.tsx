@@ -1,7 +1,8 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useMemo, useRef } from "react";
 import type { GameInfo } from "@/platform/games/game-api";
+import { useCarouselMotion } from "./use-carousel-motion";
 
 interface GameTilesProps {
   games: readonly GameInfo[];
@@ -13,17 +14,17 @@ interface GameTilesProps {
 }
 
 /**
- * The row of games along the top: only their art, no words. The chosen
- * one grows and gets a ring in its own colour. Its neighbours move along
- * to make room, so tiles never overlap.
+ * The row of games along the top: only their art, no words. It turns like
+ * a carousel: the chosen game always sits first, and the ones after it
+ * follow in order, wrapping round to the start. The chosen one grows and
+ * gets a ring in its own colour.
  */
 export function GameTiles({ games, selected, onSelect, onHost }: GameTilesProps) {
   const rowRef = useRef<HTMLDivElement>(null);
 
-  // Where the row scrolls, on a narrow screen, the chosen tile is kept in view.
-  useEffect(() => {
-    rowRef.current?.querySelectorAll<HTMLElement>(".game-tile")[selected]?.scrollIntoView({ block: "nearest", inline: "nearest" });
-  }, [selected]);
+  const order = useMemo(() => games.map((_, i) => (selected + i) % games.length), [games, selected]);
+  const ids = useMemo(() => order.map((index) => games[index]!.id), [games, order]);
+  useCarouselMotion(rowRef, ids);
 
   // Arrow keys on a focused tile move focus with the choice, so keyboard users stay on the row.
   const onKeyDown = (event: React.KeyboardEvent) => {
@@ -32,12 +33,14 @@ export function GameTiles({ games, selected, onSelect, onHost }: GameTilesProps)
     event.preventDefault();
     const next = (selected + step + games.length) % games.length;
     onSelect(next, "key");
-    rowRef.current?.querySelectorAll<HTMLButtonElement>(".game-tile")[next]?.focus();
+    // The chosen tile is always first, so focus follows it there.
+    requestAnimationFrame(() => rowRef.current?.querySelector<HTMLButtonElement>(".game-tile")?.focus());
   };
 
   return (
     <div ref={rowRef} className="home__tiles" role="group" aria-label="Games" onKeyDown={onKeyDown}>
-      {games.map((game, index) => {
+      {order.map((index) => {
+        const game = games[index]!;
         const chosen = index === selected;
         const Cover = game.Cover;
         return (
@@ -45,6 +48,7 @@ export function GameTiles({ games, selected, onSelect, onHost }: GameTilesProps)
             key={game.id}
             type="button"
             className="game-tile"
+            data-tile={game.id}
             style={{ "--game": game.color } as React.CSSProperties}
             aria-label={game.title}
             aria-pressed={chosen}
