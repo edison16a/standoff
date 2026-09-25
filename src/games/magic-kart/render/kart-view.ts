@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { speedOf, type Kart } from "../engine/kart";
 import type { Track } from "../engine/track";
+import { DRIVE } from "../engine/tuning";
 import type { KartExtras } from "./kart-extras";
 import { nameTag } from "./kart-extras";
 import { KartModel } from "./models/kart-model";
@@ -24,6 +25,8 @@ export class KartView {
   private readonly ice = new THREE.Group();
   private readonly flames: THREE.Group[] = [];
   private pitch = 0;
+  /** How far the body is swung round in a drift, radians, eased in and out. */
+  private slide = 0;
   private ghost = false;
   /** Whether the shadow shows at all this frame, before any per view hiding. */
   private shadowOn = false;
@@ -72,7 +75,10 @@ export class KartView {
   update(kart: Kart, track: Track, dt: number, time: number): void {
     const root = this.model.root;
     root.position.set(kart.x, kart.y, kart.z);
-    root.rotation.set(0, kart.heading + kart.spin, 0, "YXZ");
+    // In a drift the nose swings into the bend and the rear steps out, more the faster it slides.
+    const slideTo = kart.drift !== 0 ? -kart.drift * (0.26 + 0.14 * Math.min(1, speedOf(kart) / DRIVE.topSpeed)) : 0;
+    this.slide += (slideTo - this.slide) * Math.min(1, dt * 7);
+    root.rotation.set(0, kart.heading + kart.spin + this.slide, 0, "YXZ");
     // Nose up and down with the road, and a bit more with the jump's arc.
     const ahead = track.pointAt(kart.loc.s + 1.5, kart.loc.d).y;
     const behind = track.pointAt(kart.loc.s - 1.5, kart.loc.d).y;
@@ -122,12 +128,12 @@ export class KartView {
    * its driver, who still sees a ghost of it. `eye` is where the view's
    * camera is.
    */
-  setViewer(viewerKartId: number | null, eye: THREE.Vector3): void {
+  setViewer(viewerKartId: number | null, eye: THREE.Vector3, tags = true): void {
     const own = viewerKartId === this.kartId;
     // Another kart right in front of the camera would block the view of your own, so it turns see through.
     const near = !own && viewerKartId !== null ? eye.distanceTo(this.model.root.position) : Infinity;
     const inTheWay = near < 5.5;
-    this.tag.visible = !own && !this.ghost && near > 9;
+    this.tag.visible = tags && !own && !this.ghost && near > 9;
     this.model.setOpacity(this.ghost ? (own ? 0.4 : 0.06) : inTheWay ? Math.max(0.3, Math.min(0.75, 0.3 + (near - 2) * 0.13)) : 1);
     const hidden = this.ghost && !own;
     this.shadow.visible = this.shadowOn && !hidden;

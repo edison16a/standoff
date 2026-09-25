@@ -1,3 +1,4 @@
+import { botPedals } from "./bot-pedals";
 import type { Cube } from "./pickups";
 import type { Kart, KartInput } from "./kart";
 import type { Obstacle } from "./obstacles";
@@ -22,9 +23,6 @@ export interface BotView {
   /** True if a throw is chasing this kart right now. */
   chased: boolean;
 }
-
-/** Sideways grip a computer driver trusts before lifting off in a bend, m/s². */
-const CORNER_GRIP = 24;
 
 export function createBrain(random: () => number): BotBrain {
   return { lane: (random() - 0.5) * 6, laneTimer: 2 + random() * 4, itemTimer: 1 + random() * 3 };
@@ -78,7 +76,7 @@ function wantsItem(kart: Kart, view: BotView): boolean {
 
 /**
  * A simple, readable computer driver. It steers at a point a little way
- * down its chosen lane, lifts off for tight bends, weaves for item cubes
+ * down its chosen lane, drifts or lifts off for bends, weaves for item cubes
  * and around obstacles, and uses items when they are likely to help.
  */
 export function think(kart: Kart, brain: BotBrain, view: BotView, time: number, dt: number, random: () => number): { input: KartInput; use: boolean } {
@@ -96,10 +94,7 @@ export function think(kart: Kart, brain: BotBrain, view: BotView, time: number, 
   const diff = wrapAngle(wanted - kart.heading);
   const steer = Math.max(-1, Math.min(1, -diff * 2.4));
 
-  const bend = Math.abs(track.sharpestAhead(kart.loc.s + 4, 26 + speed * 0.8));
-  const safe = Math.sqrt(CORNER_GRIP / Math.max(bend, 0.002));
-  const throttle = speed < safe + 1.5;
-  const brake = speed > safe + 6;
+  const { throttle, brake } = botPedals(kart, track, steer, speed);
 
   let use = false;
   if (kart.item && time >= kart.itemReadyAt) {
@@ -109,5 +104,5 @@ export function think(kart: Kart, brain: BotBrain, view: BotView, time: number, 
       brain.itemTimer = use ? 1.5 + random() * 3 : 0.7;
     }
   }
-  return { input: { steer, throttle, brake: brake && Math.abs(steer) < 0.3 }, use };
+  return { input: { steer, throttle, brake }, use };
 }

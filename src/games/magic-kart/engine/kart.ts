@@ -70,6 +70,11 @@ export interface Kart {
   /** Steering as applied, smoothed, for the wheels and the camera. */
   steer: number;
   throttle: boolean;
+  /** Seconds Brake has been held, since it bites harder the longer it is. */
+  brakeHeld: number;
+  /** Seconds of Drive held flat out, and the extra top speed built from it, 0 to 1. */
+  flatOut: number;
+  surge: number;
   /** Drift direction, 1 right, -1 left, 0 none, and how long it has been held. */
   drift: number;
   driftTime: number;
@@ -107,6 +112,9 @@ export function createKart(id: number, character: CharacterId, seat: number | nu
     surface: "road",
     steer: 0,
     throttle: false,
+    brakeHeld: 0,
+    flatOut: 0,
+    surge: 0,
     drift: 0,
     driftTime: 0,
     timers: { stun: 0, ice: 0, boost: 0, ghost: 0, shield: 0, grace: 0 },

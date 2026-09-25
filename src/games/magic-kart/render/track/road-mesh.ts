@@ -64,15 +64,21 @@ export function buildRoad(track: Track, theme: Theme): THREE.Group {
   const depth = theme.floating ? 2.4 : 6;
   const bare = (s: number, side: number) =>
     inGap(s) || (!theme.floating && track.rampHeight(s) <= 0 && track.hasWall(s, side) && !nearGap(track, s));
-  const skirtColor = () => (theme.floating ? "#2a2560" : shade(theme.shoulder, 0.7));
-  for (const skirt of perSide([{ d: edge, y: 0 }, { d: edge, y: -depth, ramp: theme.floating }], bare, { color: skirtColor })) {
+  // Ramp sides are painted like the barriers, a bright band on top over striped panels, so a jump looks built.
+  const skirtColor = (s: number, i: number) => {
+    if (theme.floating) return "#2a2560";
+    if (track.rampHeight(s) <= 0) return shade(theme.shoulder, 0.7);
+    return i === 0 ? theme.wallTop : Math.floor(s / 3) % 2 === 0 ? theme.wall : (theme.wallAlt ?? shade(theme.wall, 0.82));
+  };
+  const skirtProfile = [{ d: edge, y: 0 }, { d: edge, y: -0.35 }, { d: edge, y: -depth, ramp: theme.floating }];
+  for (const skirt of perSide(skirtProfile, bare, { color: skirtColor })) {
     group.add(new THREE.Mesh(skirt, vertexLit));
   }
   if (theme.floating) {
     const under = sweep(track, [{ d: edge + 0.45, y: -2.4 }, { d: -edge - 0.45, y: -2.4 }], { skip: inGap, step: 2, color: () => "#15123a" });
     group.add(new THREE.Mesh(under, vertexLit));
   }
-  group.add(gapFaces(track, depth, vertexLit));
+  group.add(gapFaces(track, depth, shade(theme.shoulder, 0.62), vertexLit));
   return group;
 }
 
@@ -80,15 +86,17 @@ function nearGap(track: Track, s: number): boolean {
   return track.gaps.some((gap) => track.forward(gap.start - 2, s) >= 0 && track.forward(gap.start - 2, s) <= gap.end - gap.start + 4);
 }
 
-/** Cliff faces at both ends of each gap, so the hole looks cut out of solid ground. */
-function gapFaces(track: Track, depth: number, material: THREE.Material): THREE.Group {
+/** Cliff faces at both ends of each gap, in a darker shade of the ground, so the hole looks cut out of it. */
+function gapFaces(track: Track, depth: number, color: string, material: THREE.Material): THREE.Group {
+  const tint = new THREE.Color(color);
   const group = new THREE.Group();
   for (const gap of track.gaps) {
     for (const s of [gap.start, gap.end]) {
       const f = track.frameAt(s);
       const top = f.y + track.rampHeight(s - 0.01);
       const face = new THREE.PlaneGeometry(track.edge * 2 + 0.9, top - (f.y - depth));
-      const colors = new Float32Array(face.getAttribute("position").count * 3).fill(0.35);
+      const colors = new Float32Array(face.getAttribute("position").count * 3);
+      for (let i = 0; i < colors.length; i += 3) tint.toArray(colors, i);
       face.setAttribute("color", new THREE.BufferAttribute(colors, 3));
       const mesh = new THREE.Mesh(face, material);
       mesh.position.set(f.x, (top + f.y - depth) / 2, f.z);

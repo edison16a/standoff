@@ -1,6 +1,6 @@
 "use client";
-import type { ComponentType } from "react";
-import type { GameModule } from "@/platform/games/game-api";
+import { lazy, Suspense, type ComponentType } from "react";
+import type { GameModule, ShowcaseView } from "@/platform/games/game-api";
 import { KartHost } from "./host/kart-host";
 import { SessionContext } from "./host/components/session-context";
 import { Stage } from "./host/components/Stage";
@@ -14,6 +14,19 @@ import "./styles/results.css";
 import "./styles/phone.css";
 import "./styles/pick.css";
 import "./styles/drive.css";
+import "./styles/pedal-states.css";
+import "./styles/power.css";
+
+// The showcase brings three.js and every map with it, so it loads only on the capture page, never on a phone.
+const ShowcaseScene = lazy(() => import("./showcase/ShowcaseScene"));
+
+function Showcase({ view }: { view: ShowcaseView }) {
+  return (
+    <Suspense fallback={null}>
+      <ShowcaseScene view={view} />
+    </Suspense>
+  );
+}
 
 /**
  * Magic Kart, as the platform sees it. Each room gets one session, and
@@ -45,4 +58,6 @@ export const game: GameModule = {
     }
     return { Screen, dispose: () => session.dispose() };
   },
+
+  Showcase,
 };

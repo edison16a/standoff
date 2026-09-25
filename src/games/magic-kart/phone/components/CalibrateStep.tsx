@@ -1,31 +1,29 @@
 "use client";
 import { useState } from "react";
 import { useControllerStore } from "../controller-store";
-import { Level } from "./Level";
+import { usePortrait } from "../use-portrait";
+import { Level, type Hold } from "./Level";
 import { useController } from "./session-context";
 import { SteerGauge } from "./SteerGauge";
 
-/** The phone lying flat and sideways, with arrows for the tilt that steers. */
-function TrayGuide() {
-  return (
-    <svg className="mk-tray" viewBox="0 0 200 90" role="img" aria-label="Phone held sideways and flat, tilt left and right to steer">
-      <path d="M40 50 70 30h92l-30 20z" className="mk-tray__phone" />
-      <path d="M40 50v6h92l30-20v-6" className="mk-tray__edge" />
-      <path d="M22 70q-10-22 8-40M178 70q10-22-8-40" className="mk-tray__arrow" />
-      <path d="M24 24l6 6 2-8M176 24l-6 6-2-8" className="mk-tray__arrow" />
-    </svg>
-  );
-}
+const HINTS: Record<Hold, string> = {
+  level: "Level. Now tap Calibrate.",
+  turned: "Turn it until the bubble sits between the lines.",
+  flat: "Stand it up, screen facing you. Lying flat will not calibrate.",
+};
 
 /**
- * Step one: turn the phone sideways, lay it flat until the level lights
- * up, then Calibrate. That flat pose becomes straight ahead. Afterwards a
- * wheel on screen turns with the tilt so the player can try it.
+ * Step one: hold the phone sideways and upright like a steering wheel,
+ * turn it until the level lights up, then Calibrate. That pose becomes
+ * straight ahead. Afterwards a wheel on screen turns with the phone so
+ * the player can try it.
  */
 export function CalibrateStep() {
   const session = useController();
   const { sensorsLive, calibrated, steerMode } = useControllerStore();
-  const [flat, setFlat] = useState(false);
+  const [hold, setHold] = useState<Hold>("turned");
+  // Held upright the page would read the wheel a quarter turn out, so calibrating waits for sideways.
+  const portrait = usePortrait();
 
   if (steerMode === "buttons") {
     return (
@@ -35,21 +33,25 @@ export function CalibrateStep() {
     );
   }
 
+  const hint = portrait ? "Turn your phone sideways first." : calibrated && hold !== "flat" ? "Turn it like a wheel to steer. The wheel follows." : HINTS[hold];
   return (
     <div className="mk-setup mk-setup--split">
-      <div className="mk-setup__visual">{sensorsLive ? <Level onFlat={setFlat} /> : <TrayGuide />}</div>
+      <div className="mk-setup__visual">
+        <Level onHold={setHold} />
+      </div>
       <div className="mk-setup__text">
-        <p className="mk-setup__lead">Hold your phone sideways and lay it flat, screen up.</p>
-        {sensorsLive && !calibrated && <p className="muted">{flat ? "Flat. Now tap Calibrate." : "Level it until the bubble sits between the lines."}</p>}
-        {calibrated && (
-          <>
-            <p className="muted">Tilt left and right to steer. The wheel follows.</p>
-            <SteerGauge className="mk-gauge--small" />
-          </>
-        )}
+        <p className="mk-setup__lead">Hold your phone sideways and upright, screen facing you, like a steering wheel.</p>
+        {sensorsLive && <p className="muted">{hint}</p>}
+        {sensorsLive && calibrated && !portrait && <SteerGauge className="mk-gauge--small" />}
         {!sensorsLive && <p className="muted">Waiting for the tilt sensor.</p>}
         <div className="mk-setup__actions">
-          <button type="button" className={`btn btn--block ${calibrated ? "btn--ghost" : "btn--primary"}`} disabled={!sensorsLive} onClick={() => session.calibrate()}>
+          <button
+            type="button"
+            className={`btn btn--block ${calibrated ? "btn--ghost" : "btn--primary"}`}
+            // Lying flat is not how the wheel is held, so straight ahead is never taken from it.
+            disabled={!sensorsLive || portrait || hold === "flat"}
+            onClick={() => session.calibrate()}
+          >
             {calibrated ? "Calibrate again" : "Calibrate"}
           </button>
           {!sensorsLive && (

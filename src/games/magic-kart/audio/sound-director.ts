@@ -68,7 +68,8 @@ export class SoundDirector {
     }
     world.karts.forEach((kart, i) => {
       const speed = speedOf(kart) / DRIVE.topSpeed;
-      const slide = kart.drift !== 0 ? 0.8 : kart.surface === "offroad" && speed > 0.2 ? 0.35 : kart.timers.ice > 0 && speed > 0.3 ? 0.4 : 0;
+      const skid = kart.brakeHeld > 0.15 && speed > 0.35 && !kart.airborne;
+      const slide = kart.drift !== 0 ? 0.8 : skid ? 0.55 : kart.surface === "offroad" && speed > 0.2 ? 0.35 : kart.timers.ice > 0 && speed > 0.3 ? 0.4 : 0;
       this.hums[i]?.set(Math.min(1.5, speed), kart.throttle, slide, kart.timers.boost > 0, false);
     });
   }

@@ -12,6 +12,7 @@ const GRID = [
 ] as const;
 
 describe("a whole race", () => {
+  // A whole race takes a few seconds, more on a busy machine, hence the long timeout.
   it.each(TRACKS.map((def) => [def.name, def] as const))("computer karts finish two laps of %s", (_, def) => {
     const world = new RaceWorld(def, GRID, seeded(42));
     const counts: Record<string, number> = {};
@@ -25,7 +26,10 @@ describe("a whole race", () => {
     expect(counts.pickup).toBeGreaterThan(4);
     // A clean computer race should almost never need a kart put back.
     expect(counts.respawn ?? 0).toBeLessThan(6);
-  });
+    // They drive on the same model as a player, drifting through the bends for turbos.
+    expect(counts.drift).toBeGreaterThan(8);
+    expect(counts.fell ?? 0).toBeLessThan(3);
+  }, 30_000);
 });
 
 describe("the countdown", () => {

@@ -22,6 +22,8 @@ export interface Label {
 export interface ViewSpec {
   kartId: number | null;
   rect: ViewRect;
+  /** A camera the caller moves itself, like the showcase's directed shots. */
+  camera?: THREE.PerspectiveCamera;
 }
 
 /**
@@ -45,6 +47,8 @@ export class GameRenderer {
   private width = 1;
   private height = 1;
   private last = 0;
+  /** Name tags over the karts. The showcase turns them off for a clean shot. */
+  tags = true;
   /** A soft studio light the karts reflect, so their paint shines on every map, night ones included. */
   private readonly environment: THREE.Texture;
 
@@ -96,6 +100,8 @@ export class GameRenderer {
     this.dynamic.add(this.cubes.group, this.obstacles.group, this.effects.group);
     this.chase = [];
     this.show.reset();
+    // A new race may run on its own clock, so the next frame must not measure its time from the old one.
+    this.last = 0;
     // Throw ids start again from 1 in every race, so last race's throws must not be mistaken for new ones.
     this.projectiles.clear();
     this.world = world;
@@ -150,19 +156,8 @@ export class GameRenderer {
       const y = Math.round((1 - view.rect.y - view.rect.h) * this.height);
       this.renderer.setViewport(x, y, w, h);
       this.renderer.setScissor(x, y, w, h);
-      const kart = view.kartId !== null ? world.karts[view.kartId] : world.standings[0];
-      let camera: THREE.PerspectiveCamera;
-      if (view.kartId !== null && kart) {
-        const chase = this.chase[i]!;
-        chase.setAspect(w / h);
-        chase.follow(kart, cameraDt, this.snap.has(kart.id));
-        camera = chase.camera;
-      } else {
-        this.show.setAspect(w / h);
-        if (kart) this.show.follow(kart, time, cameraDt);
-        camera = this.show.camera;
-      }
-      for (const kv of this.karts.values()) kv.setViewer(view.kartId, camera.position);
+      const camera = this.pickCamera(view, i, w / h, world, time, cameraDt);
+      for (const kv of this.karts.values()) kv.setViewer(view.kartId, camera.position, this.tags);
       this.effects?.setView(h * px, camera.fov);
       stage.follow(camera);
       this.renderer.render(stage.scene, camera);
@@ -170,9 +165,36 @@ export class GameRenderer {
     this.snap.clear();
   }
 
+  /** The view's own camera if it brings one, else the chase camera for its kart, else the show camera. */
+  private pickCamera(view: ViewSpec, i: number, aspect: number, world: RaceWorld, time: number, dt: number): THREE.PerspectiveCamera {
+    if (view.camera) {
+      if (Math.abs(view.camera.aspect - aspect) > 1e-3) {
+        view.camera.aspect = aspect;
+        view.camera.updateProjectionMatrix();
+      }
+      return view.camera;
+    }
+    const kart = view.kartId !== null ? world.karts[view.kartId] : world.standings[0];
+    if (view.kartId !== null && kart) {
+      const chase = this.chase[i]!;
+      chase.setAspect(aspect);
+      chase.follow(kart, dt, this.snap.has(kart.id));
+      return chase.camera;
+    }
+    this.show.setAspect(aspect);
+    if (kart) this.show.follow(kart, time, dt);
+    return this.show.camera;
+  }
+
   /** Draw calls in the last frame, all views together. */
   get drawCalls(): number {
     return this.renderer.info.render.calls;
+  }
+
+  /** Waits until the graphics card has drawn everything asked of it, by reading one pixel back. */
+  finish(): void {
+    const gl = this.renderer.getContext();
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
   }
 
   dispose(): void {

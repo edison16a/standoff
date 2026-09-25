@@ -1,11 +1,12 @@
+import { baseTop, gripOf, pedals, updateDrift, updateSurge } from "./drive";
 import type { Emit } from "./events";
 import type { Kart, KartInput } from "./kart";
 import { KERB_WIDTH, type Track } from "./track";
-import { DRIFT, DRIVE, EFFECTS } from "./tuning";
+import { DRIFT, DRIVE, EFFECTS, SURGE } from "./tuning";
 
-/** The kart's top speed right now, from its stats, the surface and any effect on it. */
+/** The kart's top speed right now, from its stats, the surge, the surface and any effect on it. */
 export function topSpeed(kart: Kart): number {
-  const base = DRIVE.topSpeed * kart.stats.speed * kart.speedBias;
+  const base = baseTop(kart) * (1 + SURGE.bonus * kart.surge);
   // A boost carries you across sand at full pace, which is half its point.
   if (kart.timers.boost > 0) return base * EFFECTS.boostFactor;
   let top = base;
@@ -15,59 +16,13 @@ export function topSpeed(kart: Kart): number {
   return top;
 }
 
-/** Speed along the nose after this step's pedals. */
-function pedals(kart: Kart, input: KartInput, vF: number, top: number, dt: number): number {
-  if (kart.timers.stun > 0) return vF * Math.exp(-2.6 * dt);
-  if (kart.timers.boost > 0) return Math.max(vF, Math.min(top, vF + 55 * dt));
-  const driving = kart.drift !== 0 || (input.throttle && !input.brake);
-  if (driving) {
-    // Pressing Drive while rolling backwards stops the kart first, quickly.
-    if (vF < 0) return Math.min(0, vF + DRIVE.brake * dt);
-    const gain = DRIVE.accel * kart.stats.accel * (1.15 - Math.max(0, vF) / top);
-    const next = vF < top ? Math.min(top, vF + gain * dt) : vF;
-    return next > top ? Math.max(top, next - ((next - top) * 2.2 + 4) * dt) : next;
-  }
-  if (input.brake) {
-    if (vF > 0.5) return Math.max(0, vF - DRIVE.brake * dt);
-    return Math.max(-DRIVE.reverseSpeed, vF - DRIVE.accel * 0.6 * dt);
-  }
-  const slowed = vF - Math.sign(vF) * Math.min(Math.abs(vF), DRIVE.coast * dt);
-  return slowed > top ? Math.max(top, slowed - (slowed - top) * 2.2 * dt) : slowed;
-}
-
-/** Starts, holds and releases a drift. Letting go after a long one fires a mini boost. */
-function updateDrift(kart: Kart, input: KartInput, vF: number, control: boolean, dt: number, emit: Emit): void {
-  const fast = vF > DRIVE.topSpeed * DRIFT.minSpeed;
-  if (kart.drift === 0) {
-    if (control && fast && input.brake && Math.abs(input.steer) > 0.35) {
-      kart.drift = Math.sign(input.steer);
-      kart.driftTime = 0;
-      emit({ type: "drift", kart: kart.id, on: true });
-    }
-    return;
-  }
-  const keep = control && input.brake && vF > DRIVE.topSpeed * 0.3;
-  if (keep) {
-    kart.driftTime += dt * (0.7 + 0.5 * Math.abs(input.steer));
-    return;
-  }
-  const charge = kart.driftTime;
-  kart.drift = 0;
-  kart.driftTime = 0;
-  emit({ type: "drift", kart: kart.id, on: false });
-  if (!control) return;
-  const boost = charge >= DRIFT.orangeAt ? DRIFT.orangeBoost : charge >= DRIFT.blueAt ? DRIFT.blueBoost : 0;
-  if (boost > 0) {
-    kart.timers.boost = Math.max(kart.timers.boost, boost);
-    emit({ type: "boost", kart: kart.id, source: "drift" });
-  }
-}
 
 /**
  * One physics step for one kart: pedals, steering, grip, then the track
  * pushing back. Arcade on purpose. Velocity splits into a part along the
  * nose and a sideways slide that grip bleeds away, and drifting or ice
- * simply lowers the grip, which is what makes a kart feel slippery.
+ * simply lowers the grip, which is what makes a kart feel slippery. The
+ * pedals, the surge and the drift live in drive.ts.
  */
 export function driveKart(kart: Kart, input: KartInput, track: Track, dt: number, emit: Emit): void {
   const fx = Math.sin(kart.heading);
@@ -79,21 +34,24 @@ export function driveKart(kart: Kart, input: KartInput, track: Track, dt: number
   const top = topSpeed(kart);
 
   kart.throttle = control && input.throttle;
+  kart.brakeHeld = control && input.brake ? kart.brakeHeld + dt : 0;
   if (!kart.airborne) vF = pedals(kart, input, vF, top, dt);
   updateDrift(kart, input, vF, control, dt, emit);
+  // After the drift, so braking into a power slide counts as the slide, not as lifting off.
+  updateSurge(kart, input, vF, dt);
 
   const wanted = control ? input.steer : 0;
   kart.steer += (wanted - kart.steer) * Math.min(1, dt * 12);
   if (control) {
-    const turn = kart.drift !== 0 ? kart.drift * (0.72 + 0.45 * kart.steer * kart.drift) : kart.steer;
+    // A drift always turns into its bend. The wheel only tightens or opens it, so it cannot spin the kart round.
+    const turn = kart.drift !== 0 ? kart.drift * (DRIFT.turn + DRIFT.turnRange * kart.steer * kart.drift) : kart.steer;
     const fade = Math.min(1, Math.abs(vF) / DRIVE.steerFullAt);
     const ease = 1 - 0.22 * Math.min(1, Math.abs(vF) / (DRIVE.topSpeed * 1.3));
     const ice = kart.timers.ice > 0 ? 0.8 : 1;
     kart.heading -= turn * DRIVE.turnRate * kart.stats.handling * fade * ease * ice * Math.sign(vF || 1) * dt;
   }
 
-  const grip = kart.airborne ? 0 : kart.timers.ice > 0 ? DRIVE.iceGrip : kart.drift !== 0 ? DRIVE.driftGrip : stunned ? 2 : DRIVE.grip;
-  vR *= Math.exp(-grip * dt);
+  vR *= Math.exp(-gripOf(kart, vF) * dt);
   if (kart.airborne) vF *= Math.exp(-0.05 * dt);
 
   const nx = Math.sin(kart.heading);

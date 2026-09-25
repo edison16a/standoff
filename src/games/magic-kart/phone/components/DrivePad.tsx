@@ -1,35 +1,15 @@
 "use client";
-import { ordinal } from "../../ui/format";
-import { useCallback } from "react";
-import { ITEM_NAMES } from "../../engine/items";
+import { useCallback, type CSSProperties } from "react";
 import type { PhoneState } from "../../protocol";
+import { BrakeIcon, DriveIcon } from "../../ui/icons";
+import { ordinal } from "../../ui/format";
 import { useControllerStore } from "../controller-store";
 import { HoldButton } from "./HoldButton";
-import { BrakeIcon, CubeGlyph, DriveIcon, ItemIcon } from "../../ui/icons";
-import { Roulette } from "../../ui/Roulette";
+import { PowerButton } from "./PowerButton";
 import { useController } from "./session-context";
-import { SteerGauge } from "./SteerGauge";
+import { SteerArc } from "./SteerArc";
 
 const EFFECTS = { stun: "Spun out", ice: "Iced up", ghost: "Invisible", shield: "Shielded", boost: "Boost" } as const;
-
-/** The power up button: shows the held item, spins while the roulette runs, tap to fire. */
-function AbilityButton({ host }: { host: PhoneState }) {
-  const session = useController();
-  const item = host.item;
-  const live = item !== null && !host.rolling && host.phase === "racing";
-  return (
-    <button
-      type="button"
-      className={`mk-ability ${item ? "mk-ability--full" : ""} ${host.rolling ? "mk-ability--rolling" : ""} ${live ? "mk-ability--live" : ""}`}
-      disabled={!live}
-      aria-label={item ? `Use ${ITEM_NAMES[item]}` : "No power up"}
-      onPointerDown={() => live && session.useItem()}
-    >
-      {item ? host.rolling ? <Roulette /> : <ItemIcon item={item} /> : <CubeGlyph />}
-      {!host.rolling && <span className="mk-ability__label">{item ? ITEM_NAMES[item] : "Get a cube"}</span>}
-    </button>
-  );
-}
 
 /** Arrows for phones with no tilt sensor. */
 function SteerButtons() {
@@ -48,45 +28,52 @@ function SteerButtons() {
   );
 }
 
+/** The middle: the countdown, then the place and lap, and anything that just happened. */
+function Status({ host }: { host: PhoneState }) {
+  const steerMode = useControllerStore((state) => state.steerMode);
+  const counting = host.phase === "countdown";
+  const place = host.place ? ordinal(host.place) : "";
+  const note = host.wrongWay ? "Wrong way" : host.effect && host.effect !== "boost" ? EFFECTS[host.effect] : null;
+  return (
+    <div className="mk-pad__middle">
+      {/* A calm comes before the 3, with no number yet. */}
+      {counting ? (
+        <strong className={`mk-pad__count ${host.countdown === null ? "mk-pad__count--word" : ""}`}>{host.countdown ?? "Ready"}</strong>
+      ) : (
+        <strong className="mk-pad__place">{place}</strong>
+      )}
+      <span className="mk-pad__lap">{counting ? `${host.laps} laps` : host.finished ? "Finished" : `Lap ${host.lap} of ${host.laps}`}</span>
+      {steerMode === "buttons" ? <SteerButtons /> : <SteerArc />}
+      <span className={`mk-pad__note ${host.wrongWay ? "mk-pad__note--warn" : ""}`}>{counting ? "Press Drive just before Go for a rocket start" : note}</span>
+    </div>
+  );
+}
+
 /**
- * The phone while racing, held sideways like a wheel. Brake and the
- * power up sit under the left thumb, Drive under the right, and the
- * middle shows the place, the lap and anything that just happened.
+ * The phone while racing, held sideways like a steering wheel. The left
+ * thumb has Brake at the edge and the power up just inside it, the right
+ * thumb has Drive, and the middle shows the place and the lap. Drive
+ * fills as holding it builds extra pace, and Brake turns into Drift and
+ * glows the colour of the sparks while the kart slides.
  */
 export function DrivePad({ host }: { host: PhoneState }) {
   const session = useController();
-  const steerMode = useControllerStore((state) => state.steerMode);
   const drive = useCallback((held: boolean) => session.setPedals({ drive: held }), [session]);
   const brake = useCallback((held: boolean) => session.setPedals({ brake: held }), [session]);
-  const counting = host.phase === "countdown";
-  const place = host.place ? ordinal(host.place) : "";
+  const drifting = host.drift !== null && host.phase === "racing";
 
   return (
     <div className={`mk-pad ${host.effect ? `mk-pad--${host.effect}` : ""}`}>
-      <div className="mk-pad__left">
-        <AbilityButton host={host} />
-        <HoldButton className="mk-pedal mk-pedal--brake" label="Brake" onHold={brake}>
-          <BrakeIcon />
-          <span>Brake</span>
-        </HoldButton>
-      </div>
-      <div className="mk-pad__middle">
-        {counting ? (
-          <strong className="mk-pad__count">{host.countdown || "Go"}</strong>
-        ) : (
-          <div className="mk-pad__status">
-            <strong className="mk-pad__place">{host.finished ? `${place}!` : place}</strong>
-            <span className="mk-pad__lap">{host.finished ? "Finished" : `Lap ${host.lap} of ${host.laps}`}</span>
-          </div>
-        )}
-        {host.wrongWay && <strong className="mk-pad__warn">Wrong way</strong>}
-        {!host.wrongWay && host.effect && host.effect !== "boost" && <span className="mk-pad__effect">{EFFECTS[host.effect]}</span>}
-        {steerMode === "buttons" ? <SteerButtons /> : <SteerGauge />}
-        {counting && <span className="mk-pad__hint">Press Drive just before Go for a rocket start</span>}
-      </div>
-      <HoldButton className="mk-pedal mk-pedal--drive" label="Drive" onHold={drive}>
+      <HoldButton className={`mk-pedal mk-pedal--brake ${drifting ? `mk-pedal--drift mk-spark-${host.drift}` : ""}`} label="Brake" onHold={brake}>
+        <BrakeIcon />
+        <span className="mk-pedal__label">{drifting ? "Drift" : "Brake"}</span>
+      </HoldButton>
+      <PowerButton host={host} />
+      <Status host={host} />
+      <HoldButton className={`mk-pedal mk-pedal--drive ${host.surge >= 1 ? "mk-pedal--max" : ""}`} label="Drive" onHold={drive}>
+        <span className="mk-pedal__surge" style={{ "--surge": host.surge } as CSSProperties} aria-hidden="true" />
         <DriveIcon />
-        <span>Drive</span>
+        <span className="mk-pedal__label">Drive</span>
       </HoldButton>
     </div>
   );
