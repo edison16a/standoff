@@ -39,7 +39,8 @@ export class Animator {
   private readonly weights: Record<Channel, number> = { jab: 0, parry: 0, deflected: 0, hit: 0, victory: 0, defeat: 0 };
   private lastT: number | null = null;
 
-  pose(frame: FencerFrame, timeMs: number): Pose {
+  /** `room` is how much of a full lunge fits before the opponent, 0 to 1. */
+  pose(frame: FencerFrame, timeMs: number, room = 1): Pose {
     let dt = this.lastT === null ? 0 : timeMs - this.lastT;
     // Time went backwards (a replay just started) or jumped: settle instantly.
     if (dt < 0 || dt > 250) {
@@ -55,7 +56,7 @@ export class Animator {
       const tau = target > this.weights[channel] ? spec.rise : spec.fall;
       this.weights[channel] += (target - this.weights[channel]) * (1 - Math.exp(-dt / tau));
       const weight = this.weights[channel];
-      if (weight > 0.001) pose = blendPose(pose, ACTION_POSES[channel](pose), weight);
+      if (weight > 0.001) pose = blendPose(pose, ACTION_POSES[channel](pose, room), weight);
     }
     return pose;
   }

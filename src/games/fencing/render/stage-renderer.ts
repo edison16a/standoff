@@ -138,8 +138,9 @@ export class StageRenderer {
     this.lastGame = frame.t;
 
     const bySlot = { 1: frame.fencers.find((f) => f.slot === 1), 2: frame.fencers.find((f) => f.slot === 2) };
+    const gap = bySlot[1] && bySlot[2] ? Math.abs(bySlot[2].x - bySlot[1].x) : undefined;
     for (const slot of [1, 2] as const) {
-      this.fencers[slot].update(bySlot[slot], frame.t);
+      this.fencers[slot].update(bySlot[slot], frame.t, gap);
       const f = bySlot[slot];
       if (f) this.blades.chest[slot].set(f.x + f.facing * 0.12, hall.floor + 1.3, 0);
     }

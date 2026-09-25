@@ -1,10 +1,14 @@
 import * as THREE from "three";
 import type { FencerFrame } from "@/games/fencing/engine/frames";
+import { REACH } from "@/games/fencing/engine/rules";
 import type { Slot } from "@/games/fencing/players";
 import { Animator } from "@/games/fencing/rig/animator";
 import { blobTexture } from "../kit/textures";
 import { PLAYER_COLOURS } from "../player-colours";
 import { FencerModel } from "./fencer-model";
+
+/** Closer than this, centre to centre, the lunge is as short as it gets. */
+const CLOSEST_LUNGE = 1.2;
 
 /**
  * One fencer on the strip. Every frame it turns the engine's frame into a
@@ -35,7 +39,8 @@ export class FencerView {
     this.group.add(this.shadow);
   }
 
-  update(frame: FencerFrame | undefined, t: number): void {
+  /** `gap` is the distance to the opponent, when there is one, so a lunge lands on them. */
+  update(frame: FencerFrame | undefined, t: number, gap = REACH): void {
     this.visible = Boolean(frame);
     this.group.visible = this.visible;
     if (!frame) return;
@@ -43,7 +48,8 @@ export class FencerView {
     const model = this.model!;
     const dt = this.lastT === null ? 16 : Math.max(0, t - this.lastT);
     this.lastT = t;
-    model.rig.update(this.animator.pose(frame, t));
+    const room = Math.min(1, Math.max(0, (gap - CLOSEST_LUNGE) / (REACH - CLOSEST_LUNGE)));
+    model.rig.update(this.animator.pose(frame, t, room));
     model.setParrying(frame.parrying, dt);
     this.group.position.x = frame.x;
     this.group.scale.set(frame.facing, 1, 1);

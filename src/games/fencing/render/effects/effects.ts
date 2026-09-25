@@ -60,7 +60,11 @@ export class Effects {
         return at;
       }
       case "touch": {
+        // The touch lands on the jacket: a tip that got past the chest is pulled back to it, so the close up finds the body.
         const at = blades.tip[event.scorer].clone();
+        const chest = blades.chest[otherSlot(event.scorer)];
+        const toward = event.scorer === 1 ? 1 : -1;
+        if ((at.x - chest.x) * toward > 0) at.x = chest.x;
         this.contact = at;
         this.sparks.burst(at, t, { count: 26, speed: 1.4, lifeMs: 900, colour: PLAYER_COLOURS[event.scorer] });
         this.impacts.fire(at, t, { size: 0.3, lifeMs: 380, colour: PLAYER_COLOURS[event.scorer] });

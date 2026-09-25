@@ -8,20 +8,26 @@ import type { Pose } from "./skeleton";
  * animator blends toward these and back, so the live sword angle still
  * leaks through the edges of every action.
  */
-export type ActionPose = (live: Pose) => Pose;
+export type ActionPose = (live: Pose, room: number) => Pose;
 
-/** A lunge: the front foot shoots out, the hips drop, the sword arm locks straight and the back arm flies back. */
-const lunge: ActionPose = (live) => ({
+/**
+ * A lunge: the front foot shoots out, the hips drop, the sword arm locks
+ * straight and the back arm flies back. `room` is how much of a full lunge
+ * fits before the opponent's chest, 0 to 1. Close in, the lunge is shorter,
+ * the arm stays bent and the point angles down, so the tip lands on the
+ * jacket instead of passing through it.
+ */
+const lunge: ActionPose = (live, room) => ({
   ...live,
-  hips: v2(live.hips.x + 0.42, live.hips.y - 0.17),
-  lean: 0.3,
+  hips: v2(live.hips.x + 0.42 * room, live.hips.y - 0.17),
+  lean: 0.1 + 0.2 * room,
   twist: 0.78,
   nod: -0.16,
-  frontFoot: v2(live.frontFoot.x + 0.66, 0),
+  frontFoot: v2(live.frontFoot.x + 0.2 + 0.46 * room, 0),
   backFoot: v2(live.backFoot.x - 0.08, 0),
-  hand: v2(0.56, 0.02),
+  hand: v2(0.3 + 0.26 * room, 0.02 + 0.08 * (1 - room)),
   // Aim mostly along the line, keeping a little of where the phone points.
-  bladeAngle: -0.05 + (live.bladeAngle - 0.14) * 0.3,
+  bladeAngle: -0.05 - 0.5 * (1 - room) + (live.bladeAngle - 0.14) * 0.3,
   bladeYaw: live.bladeYaw * 0.3,
   backHand: v2(-0.5, -0.1),
 });

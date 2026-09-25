@@ -8,7 +8,9 @@ const MARGIN = 1.35;
 /** Height the bout camera must fit: a fencer with the sword raised, and some floor. */
 const FIT_HEIGHT = 2.2;
 const BOUT_FOV = 30;
-const CLOSE_FOV = 24;
+const CLOSE_FOV = 27;
+/** How far the close up stands from the touch. Near enough to feel it, far enough to see the lunge that made it. */
+const CLOSE_DISTANCE = 3;
 
 /** A camera placed by hand, for the showcase's key art. */
 export interface FixedShot {
@@ -104,8 +106,9 @@ export class CameraDirector {
       const age = (wallNow - shot.since) / 1000;
       const angle = shot.side * (0.55 - Math.min(1, age / 2.2) * 0.35);
       const at = shot.at;
-      const position = new THREE.Vector3(at.x + Math.sin(angle) * 2.3, at.y + 0.12, at.z + Math.cos(angle) * 2.3);
-      return { position, target: at.clone().add(new THREE.Vector3(0, -0.05, 0)), fov: CLOSE_FOV };
+      const position = new THREE.Vector3(at.x + Math.sin(angle) * CLOSE_DISTANCE, at.y + 0.1, at.z + Math.cos(angle) * CLOSE_DISTANCE);
+      // Framed a little toward the scorer, so the arm and blade lead into the touch.
+      return { position, target: at.clone().add(new THREE.Vector3(shot.side * 0.3, -0.08, 0)), fov: CLOSE_FOV };
     }
     if (shot.kind === "winner") {
       const angle = shot.facing * 0.6 + Math.sin((wallNow - shot.since) / 3200) * 0.45;

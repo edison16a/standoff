@@ -42,8 +42,8 @@ export const MOVES: readonly MoveCue[] = [
   { slot: 1, from: at(2050), to: at(2350), move: 0.8 },
   { slot: 2, from: at(2700), to: at(3000), move: -0.6 },
   // The final exchange.
-  { slot: 1, from: at(3300), to: at(3900), move: 0.9 },
-  { slot: 2, from: at(3400), to: at(3700), move: 0.5 },
+  { slot: 1, from: at(3300), to: at(3700), move: 0.6 },
+  { slot: 2, from: at(3400), to: at(3650), move: 0.25 },
 ];
 
 /** When red lifts the blade high for the feint. */
