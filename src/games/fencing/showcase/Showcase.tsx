@@ -4,21 +4,14 @@ import * as THREE from "three";
 import type { ShowcaseView } from "@/platform/games/game-api";
 import { CLIP } from "@/games/fencing/render/quality";
 import { StageRenderer } from "@/games/fencing/render/stage-renderer";
+import { clip, readSeek } from "./clip";
 import { galleryFrame, readGallery } from "./gallery";
 import { ShowcaseBout } from "./showcase-bout";
 
-/** One pass of the bout, then it starts again. The capture tool records exactly one. */
-const CYCLE_MS = 8000;
-/** The capture tool warms up this long before recording, so the cycle is lined up to start there. */
-const WARMUP_MS = 3000;
-/** After the burst the bout holds still, so the loop ends on the moment, not on a reset. */
-const FREEZE_AFTER_IMPACT_MS = 1300;
 const STEP_MS = 1000 / 60;
-const DRAW_EVERY_MS = 30;
 
-/** Who fences in each view. */
+/** Who fences in each still. The clip's cast is in clip.ts. */
 const CAST = {
-  loop: { 1: "vale", 2: "marrow" },
   poster: { 1: "duchess", 2: "iron" },
   icon: { 1: "vale", 2: "iron" },
 } as const;
@@ -43,8 +36,8 @@ export function Showcase({ view }: { view: ShowcaseView }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     // The clip gets its lighter preset unless a test asks for another with `?fq`.
-    const clip = view === "loop" && !readGallery() && !new URLSearchParams(window.location.search).has("fq");
-    const renderer = new StageRenderer(canvas, { seed: 11, quality: clip ? CLIP : undefined });
+    const light = view === "loop" && !readGallery() && !new URLSearchParams(window.location.search).has("fq");
+    const renderer = new StageRenderer(canvas, { seed: 11, quality: light ? CLIP : undefined });
     renderer.setTheme(true);
     const fit = () => renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
     fit();
@@ -58,7 +51,7 @@ export function Showcase({ view }: { view: ShowcaseView }) {
           if (shown++ < 3) renderer.render(galleryFrame(renderer, gallery, now), now);
         }
       : view === "loop"
-        ? loop(renderer)
+        ? clip(renderer, readSeek())
         : still(renderer, view);
     let frame = requestAnimationFrame(function tick(now) {
       play(now);
@@ -77,42 +70,6 @@ export function Showcase({ view }: { view: ShowcaseView }) {
       {view === "icon" && <FencingLogo />}
     </div>
   );
-}
-
-/** The looping clip: a fresh bout every cycle, frozen after its burst. */
-function loop(renderer: StageRenderer): (now: number) => void {
-  let start: number | null = null;
-  let cycle = -1;
-  let bout: ShowcaseBout | null = null;
-  let impactAt: number | null = null;
-  let last = 0;
-  let drawnAt = -Infinity;
-  return (now) => {
-    start ??= now;
-    const elapsed = now - start + CYCLE_MS - WARMUP_MS;
-    const index = Math.floor(elapsed / CYCLE_MS);
-    if (index !== cycle) {
-      cycle = index;
-      impactAt = null;
-      renderer.reset();
-      bout = new ShowcaseBout(CAST.loop, (event) => {
-        if (event.type === "impact") impactAt = performance.now();
-        renderer.react(event);
-      });
-      last = now;
-    }
-    const frozen = impactAt !== null && now - impactAt > FREEZE_AFTER_IMPACT_MS;
-    // The capture tool steps the clock in whole frames; catch up in fixed steps so every run is identical.
-    while (last + STEP_MS <= now) {
-      last += STEP_MS;
-      if (!frozen) bout!.step(STEP_MS);
-    }
-    renderer.update(bout!.scene(), now, { scores: bout!.scores });
-    // The clip is recorded at 30 frames a second, so drawing more often only slows the capture.
-    if (now - drawnAt < DRAW_EVERY_MS) return;
-    drawnAt = now;
-    renderer.draw();
-  };
 }
 
 /** A still: play the bout up to its moment without drawing, then pin the camera there. */
