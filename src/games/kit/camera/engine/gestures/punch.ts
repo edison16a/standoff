@@ -84,7 +84,10 @@ export class PunchDetector {
     const sample = { time: body.time, straight, forward: arm.forward };
     this.history = this.history.filter((s) => body.time - s.time <= o.windowMs);
     this.history.push(sample);
-    const inward = this.hand === "left" ? body.velocity.left.x : -body.velocity.right.x;
+    // Measured against the head, so a quick lean or slip with the gloves up carries the fists
+    // along with it and never reads as a hook.
+    const drift = body.velocity.head.x;
+    const inward = this.hand === "left" ? body.velocity.left.x - drift : drift - body.velocity.right.x;
     if (!this.armed && straight < o.rearm && Math.abs(inward) < o.hookSpeed / 2) this.armed = true;
     if (!this.armed || body.time - this.lastPunch < o.cooldownMs) return null;
     if (Math.abs(arm.offset.y) > o.band || !arm.visible) return null;

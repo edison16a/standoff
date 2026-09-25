@@ -74,6 +74,20 @@ describe("punching", () => {
     expect(thrown.map((p) => [p.hand, p.style])).toEqual([["right", "hook"]]);
   });
 
+  it("does not read a quick slip with the gloves up as a hook", () => {
+    for (const lean of [-1, 1]) {
+      const slip: PoseKey[] = [
+        { at: 0, pose: { ...GUARD } },
+        { at: 500, pose: { ...GUARD } },
+        { at: 580, pose: { ...GUARD, lean } },
+        { at: 900, pose: { ...GUARD, lean } },
+        { at: 980, pose: { ...GUARD } },
+      ];
+      expect(punches(slip)).toHaveLength(0);
+      expect(punches(slip, { fps: 15, smooth: true })).toHaveLength(0);
+    }
+  });
+
   it("ignores a slow reach, dropping the hands and raising them overhead", () => {
     const reach: PoseKey[] = [{ at: 0, pose: { ...GUARD } }, { at: 1500, pose: throwing("right") }];
     const drop: PoseKey[] = [{ at: 0, pose: { ...GUARD } }, { at: 150, pose: {} }];
