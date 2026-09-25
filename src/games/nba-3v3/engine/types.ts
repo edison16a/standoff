@@ -64,6 +64,11 @@ export interface Athlete {
   onFire: boolean;
   /** 0 to 1 through the dribble; the ball hits the floor as it wraps. */
   dribble: number;
+  /** The dribbling hand, right (1) or left (-1). */
+  dribbleHand: 1 | -1;
+  /** Where the ball is dribbled across the body, -1 left to 1 right, easing over during a crossover. */
+  dribbleSide: number;
+  crossCd: number;
   /** When they last asked for the ball, in match seconds. */
   calledAt: number;
   box: BoxScore;

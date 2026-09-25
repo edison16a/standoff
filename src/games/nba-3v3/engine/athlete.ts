@@ -12,7 +12,7 @@ export function createAthlete(id: number, team: TeamId, slot: number, character:
     move: { x: 0, z: 0 },
     action: { kind: "none" },
     stealCd: 0, blockCd: 0, grabCd: 0, whiff: 0, squeakCd: 0,
-    streak: 0, onFire: false, dribble: 0, calledAt: -99,
+    streak: 0, onFire: false, dribble: 0, dribbleHand: 1, dribbleSide: 1, crossCd: 0, calledAt: -99,
     box: { points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0, made: 0, attempts: 0, threes: 0, dunks: 0 },
   };
 }

@@ -56,7 +56,9 @@ function holdBall(m: Match, dt: number): void {
   const drop = 1 - Math.abs(1 - 2 * a.dribble);
   const y = 0.12 + (hand - 0.12) * (1 - drop * drop);
   const fwd = 0.26 + speed * 0.035;
-  b.pos = { x: a.x + f.fx * fwd + f.rx * 0.3, y, z: a.z + f.fz * fwd + f.rz * 0.3 };
+  // Out to the side of the dribbling hand, and through the middle in front during a crossover.
+  const side = 0.3 * a.dribbleSide;
+  b.pos = { x: a.x + f.fx * fwd + f.rx * side, y, z: a.z + f.fz * fwd + f.rz * side };
 }
 
 function onFlightEvent(m: Match, e: FlightEvent): void {
