@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import { SplitMap, type SplitPane } from "@/games/kit/split/SplitMap";
+import { SplitMap } from "@/games/kit/split/SplitMap";
 import type { ViewRect } from "../../render/layout";
 import type { ViewHud } from "../host-store";
+import { splitPanes } from "../split-panes";
 
 /** The stage fills the window, so its shape is the window's. */
 function useScreenAspect(): number {
@@ -14,14 +15,6 @@ function useScreenAspect(): number {
     return () => window.removeEventListener("resize", fit);
   }, []);
   return aspect;
-}
-
-/** Each player's name and colour in the rect their view is drawn in. */
-export function splitPanes(views: readonly ViewHud[], rects: readonly ViewRect[]): SplitPane[] {
-  return views.flatMap((view, i) => {
-    const rect = rects[i];
-    return rect ? [{ name: view.name, color: view.color, rect }] : [];
-  });
 }
 
 /**

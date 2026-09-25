@@ -44,18 +44,19 @@
 
 /*
   Four quarters are short, so the card goes wider instead of taller: the
-  split map across the top, the track and the standings side by side
-  under it. Its left edge stays clear of the power up slot in the middle
-  of the quarter.
+  split map and the track side by side on top, the standings full width
+  under them. At 720 high it ends above the place in the corner of the
+  view under it, and its left edge stays clear of the power up slot in
+  the middle of the quarter.
 */
 .mk-overview--grid {
   top: 62px;
   right: 12px;
   display: grid;
-  grid-template-columns: 84px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 70px;
   grid-template-areas:
-    "split split"
-    "map standings";
+    "split map"
+    "standings standings";
   align-items: center;
   width: 250px;
   gap: 6px;
@@ -117,7 +118,7 @@
   align-items: center;
   justify-content: center;
   gap: 24px;
-  padding: 64px 24px 24px;
+  padding: 60px 24px 24px;
   border: none;
   border-radius: 0;
   background: radial-gradient(circle at 30% 40%, rgba(60, 40, 120, 0.9), rgba(13, 11, 30, 0.96));
@@ -146,17 +147,26 @@
 .mk-overview--quad .mk-overview__side {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   width: min(44%, 320px);
 }
 
 .mk-overview--quad .mk-standings {
-  gap: 8px;
+  gap: 5px;
 }
 
-/* Sized by the screen's height so the list and the map always fit the quarter. */
+/*
+  Sized by the screen's height so four rows and the map always fit under
+  the tool bar: at 720 high the quarter leaves 274 px and this takes 266.
+*/
 .mk-overview--quad .mk-overview__split {
-  width: min(100%, 28vh);
+  align-self: center;
+  width: min(100%, 23vh);
+}
+
+/* Names get narrow cells over the views, so the width caps the size too. */
+.mk-overview__split .split-map__name {
+  font-size: clamp(10px, min(26cqh, 17cqw), 30px);
 }
 
 .mk-standings__row {
