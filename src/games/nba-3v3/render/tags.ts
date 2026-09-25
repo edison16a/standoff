@@ -37,7 +37,7 @@ export class Tags {
   constructor(private readonly container: HTMLElement) {}
 
   onEvent(e: MatchEvent, nowMs: number): void {
-    if (e.type !== "shot" || e.kind !== "jumper") return;
+    if (e.type !== "shot" || (e.kind !== "jumper" && e.kind !== "free")) return;
     const tag = this.tags[e.id];
     if (!tag) return;
     tag.grade = e.grade;
@@ -79,7 +79,8 @@ export class Tags {
     const showing = aiming || nowMs < tag.gradeUntil;
     tag.meter.style.display = showing ? "" : "none";
     if (!showing) return;
-    const half = greenHalfMs(CHARACTERS[a.character].stats.shooting, a.onFire);
+    const free = m.phase === "freeThrow" && m.freeThrows?.shooter === id;
+    const half = greenHalfMs(CHARACTERS[a.character].stats.shooting, a.onFire, free);
     tag.green.style.bottom = `${((GREEN_MS - half) / SHOT.meterMs) * 100}%`;
     tag.green.style.height = `${((half * 2) / SHOT.meterMs) * 100}%`;
     if (aiming && act.kind === "shoot") {

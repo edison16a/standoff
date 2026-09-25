@@ -21,7 +21,7 @@ export class Buzzer {
     };
     switch (e.type) {
       case "shot":
-        if (e.kind === "jumper") send(e.id, e.grade === "perfect" ? "green" : "shot", GRADE_WORDS[e.grade]);
+        if (e.kind === "jumper" || e.kind === "free") send(e.id, e.grade === "perfect" ? "green" : "shot", GRADE_WORDS[e.grade]);
         return;
       case "score":
         send(e.id, e.kind === "dunk" ? "dunk" : "score", e.kind === "dunk" ? "Slam!" : `+${e.points}`);
@@ -50,6 +50,21 @@ export class Buzzer {
         if (holder && holder.team === m.athletes[e.id]?.team) send(holder.id, "call", "Teammate open!");
         return;
       }
+      case "shake":
+        send(e.id, "steal", e.hard ? "Ankles!" : "Shook him");
+        send(e.victim, "stolen", e.hard ? "Ankles broken" : "Beaten");
+        return;
+      case "fumble":
+        send(e.id, "stolen", "Lost it");
+        if (e.by !== null) send(e.by, "steal", "Poked it!");
+        return;
+      case "foul":
+        send(e.id, "whistle", "Foul");
+        send(e.victim, "whistle", "Fouled! Two shots");
+        return;
+      case "freeThrow":
+        send(e.id, "ball", `Free throw ${e.n} of 2`);
+        return;
       case "violation":
         for (const seat of athleteBySeat.keys()) this.phones.buzz(seat, "whistle", e.reason === "clock" ? "Shot clock" : "Out of bounds");
         return;

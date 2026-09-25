@@ -112,6 +112,7 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  white-space: nowrap;
   transform: skewX(8deg);
 }
 
@@ -120,7 +121,7 @@
   animation: nba-pulse 0.5s ease-in-out infinite alternate;
 }
 
-/* Stopped for the check up: the digits dim and the word under them glows softly. */
+/* Stopped for the check up or free throws: the digits dim and the word under them glows softly. */
 .nba-board__clock--held span {
   opacity: 0.55;
   transition: opacity 0.25s ease;

@@ -1,8 +1,8 @@
 import type { Player } from "@/platform/games/game-api";
 import type { Match } from "../engine/match";
+import { canSteal } from "../engine/defend";
 import { greenHalfMs, GREEN_MS } from "../engine/shot-model";
-import { DEFENCE, RULES, SHOT } from "../engine/tuning";
-import { dist2 } from "../engine/vec";
+import { RULES, SHOT } from "../engine/tuning";
 import type { CourtState, Phase, PhoneState } from "../protocol";
 import { CHARACTERS } from "../roster";
 import { useNbaStore as store, type ResultRow } from "./host-store";
@@ -32,9 +32,18 @@ export function nameFor(m: Match, id: number, players: readonly Player[]): strin
   return person?.name || CHARACTERS[a.character].short;
 }
 
-function court(m: Match, id: number, players: readonly Player[]): CourtState {
+/** What the scoreboard says during free throws, or null the rest of the time. */
+export function freeThrowText(m: Match): string | null {
+  const ft = m.phase === "freeThrow" ? m.freeThrows : null;
+  return ft ? `Free throw ${ft.shot} of 2` : null;
+}
+
+/** What one phone's controller shows for its player. */
+export function courtState(m: Match, id: number, players: readonly Player[]): CourtState {
   const a = m.athletes[id]!;
   const holder = m.holder;
+  const ft = m.phase === "freeThrow" ? m.freeThrows : null;
+  const mine = ft?.shooter === a.id;
   return {
     team: a.team,
     score: [m.score[0], m.score[1]],
@@ -43,8 +52,10 @@ function court(m: Match, id: number, players: readonly Player[]): CourtState {
     attacking: m.offence === a.team,
     holder: holder ? nameFor(m, holder.id, players) : null,
     mustClear: m.needsClear && m.offence === a.team,
-    canSteal: !!holder && holder.team !== a.team && dist2(a, holder) < DEFENCE.stealRange,
-    meter: { fullMs: SHOT.meterMs, greenMs: GREEN_MS, halfMs: greenHalfMs(CHARACTERS[a.character].stats.shooting, a.onFire) },
+    canSteal: canSteal(m, a),
+    freeThrow: ft ? { mine, n: ft.shot, ready: mine && ft.stage === "set" } : null,
+    // At the line the green band is wider: a set shot with nobody in the face.
+    meter: { fullMs: SHOT.meterMs, greenMs: GREEN_MS, halfMs: greenHalfMs(CHARACTERS[a.character].stats.shooting, a.onFire, mine) },
     onFire: a.onFire,
     // The whole break counts, from the basket to the check, so the phone never shows a loose ball meanwhile.
     checking: m.phase === "dead" || m.phase === "check",
@@ -79,6 +90,7 @@ export function publish(c: PublishContext): void {
     mustClear: m?.needsClear ?? false,
     checking: m?.phase === "dead" || m?.phase === "check",
     countdown: m && m.phase === "countdown" ? Math.max(0, Math.ceil(RULES.countdown - m.phaseT)) : null,
+    freeThrow: m ? freeThrowText(m) : null,
     // Once someone has won, nobody is on game point any more.
     gamePoint: m && m.phase !== "over" ? [m.gamePoint[0], m.gamePoint[1]] : [false, false],
     winner: m?.winner ?? null,
@@ -97,7 +109,7 @@ export function publish(c: PublishContext): void {
       ready: s.ready,
       team: s.team,
       playing: !!athlete,
-      court: m && athlete ? court(m, athlete.id, c.players) : null,
+      court: m && athlete ? courtState(m, athlete.id, c.players) : null,
       result: m && athlete && m.phase === "over" ? { won: m.winner === athlete.team, points: athlete.box.points, rebounds: athlete.box.rebounds, assists: athlete.box.assists } : null,
     };
     c.phones.sendState(seat, state, c.nowMs);

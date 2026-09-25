@@ -77,4 +77,14 @@ describe("the announcer's calls", () => {
     expect(baskets).toBeGreaterThan(3);
     expect(calls).toBe(baskets);
   }, 30000);
+
+  it("calls a foul, a made free throw without heating anyone up, and a broken ankle", () => {
+    const m = new Match({ entries: ENTRIES, seed: 1 });
+    const c = new Commentary((id) => NAMES[id]!);
+    expect(c.onEvent({ type: "foul", id: 1, victim: 0, attempt: 3 }, m)?.text).toMatch(/Ben|Ana/);
+    const free = c.onEvent(basket(m, 0, { kind: "free", points: 1, streak: 3 }), m)!;
+    expect(free.text).not.toContain("heating");
+    expect(c.onEvent({ type: "shake", id: 2, victim: 1, hard: true }, m)?.text).toBeTruthy();
+    expect(c.onEvent({ type: "shake", id: 2, victim: 1, hard: false }, m)).toBeNull();
+  });
 });
