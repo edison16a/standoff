@@ -17,6 +17,8 @@ const LOOK_HEIGHT = 1.3;
 const LOOK_RIGHT = { wide: 0.15, narrow: 0.12 };
 /** How far from the middle the camera may go, inside the ropes. */
 const INSIDE = 2.55;
+/** How much the camera rises for each metre the ropes pull it in. */
+const RISE_WHEN_PULLED = 0.6;
 
 /**
  * The console boxing view for one player: behind and above their own
@@ -52,9 +54,13 @@ export class ShoulderCamera {
     this.wantEye.set(me.x - fx * back - rx * side, HEIGHT + 0.6 * down, me.z - fz * back - rz * side);
     const right = LOOK_RIGHT[shape];
     this.wantLook.set(them.x + rx * right, LOOK_HEIGHT - 0.5 * down, them.z + rz * right);
-    // Never outside the ropes: a rope right in front of the lens fills the picture.
-    this.wantEye.x = Math.max(-INSIDE, Math.min(INSIDE, this.wantEye.x));
-    this.wantEye.z = Math.max(-INSIDE, Math.min(INSIDE, this.wantEye.z));
+    // Never outside the ropes: a rope right in front of the lens fills the picture. Pulled in
+    // like that, the camera rises to look over its own boxer instead of into his back.
+    const x = Math.max(-INSIDE, Math.min(INSIDE, this.wantEye.x));
+    const z = Math.max(-INSIDE, Math.min(INSIDE, this.wantEye.z));
+    this.wantEye.y += RISE_WHEN_PULLED * Math.hypot(x - this.wantEye.x, z - this.wantEye.z);
+    this.wantEye.x = x;
+    this.wantEye.z = z;
     const eye = this.eye.update(this.wantEye, dt, 2.2);
     const look = this.look.update(this.wantLook, dt, 3);
     this.camera.position.copy(eye);
