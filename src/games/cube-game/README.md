@@ -53,3 +53,5 @@ The camera kit reads the jump, tuned a touch quicker than its default (`host/jum
 ### Testing
 
 `levels.test.ts`, `physics.test.ts`, `run.test.ts`, `round.test.ts`, `jump-tuning.test.ts` and the song tests run with `npx vitest run src/games/cube-game`. In development the session is on `window.__cubeGame`, with `pressAt(slot, songTime)` for exact presses and `presses` recording when each press landed, and the kit's pose injection drives it from Playwright with the fake camera. `window.__cubeGameRenderScale` draws at a fraction of the resolution on a slow machine. The showcase takes `?plan={...}` to show any moment of any level.
+
+Every level has been played to the finish in the browser: by exact presses, by the space and Enter keys, and by injected camera jumps, with one player and with two. A camera or model that fails shows what went wrong, with a button to try again and one to play with the keyboard instead.
