@@ -22,10 +22,21 @@ export interface Tilt {
   lean: number;
 }
 
-/** Wheel angle that means full lock. Far enough for fine control, near enough to hold a hairpin. */
-export const FULL_LOCK = 35 * DEG;
+/**
+ * Wheel angle that means full lock. Tune between 45 and 60 degrees. It is
+ * wide on purpose, so a slight shift of the hands gives a slight turn and
+ * only a real turn of the phone throws the kart hard over.
+ */
+export const FULL_LOCK = 50 * DEG;
 /** A small dead zone so a wheel held about level drives straight. */
-const DEAD_ZONE = 3 * DEG;
+export const DEAD_ZONE = 3 * DEG;
+/**
+ * Share of the response that is straight linear. The rest is cubic, which
+ * stays soft through small turns for fine control and firms up near full
+ * lock. With 0.7, about 25 degrees gives a third of lock, enough to start
+ * a braking drift, and about 36 degrees starts one by lifting off.
+ */
+const LINEAR_SHARE = 0.7;
 /** How much of "up" must lie across the screen for its direction to be trusted fully, and at all. */
 const ACROSS_SURE = Math.sin(35 * DEG);
 const ACROSS_NONE = Math.sin(15 * DEG);
@@ -59,15 +70,16 @@ export function tiltOf(q: Quat, angle: number): Tilt {
 /**
  * Steering from -1 to 1, measured from the wheel angle captured at
  * calibration. The curve is gentle near the middle for fine corrections
- * on straights and firm near full lock for hairpins. Past a right angle
- * the phone is close to upside down, and the reading could wrap round to
- * the other side, so it keeps the lock it had.
+ * on straights and firm near full lock for hairpins. It has no smoothing
+ * here, since the host's physics already eases the wheel. Past a right
+ * angle the phone is close to upside down, and the reading could wrap
+ * round to the other side, so it keeps the lock it had.
  */
 export function steerFromWheel(wheel: number, zero: number, last = 0): number {
   const off = wrapAngle(wheel - zero);
   if (Math.abs(off) > 90 * DEG && last !== 0) return Math.sign(last);
-  const mag = Math.max(0, Math.abs(off) - DEAD_ZONE) / (FULL_LOCK - DEAD_ZONE);
-  return Math.sign(off) * Math.min(1, 0.55 * mag + 0.45 * mag * mag);
+  const m = Math.min(1, Math.max(0, Math.abs(off) - DEAD_ZONE) / (FULL_LOCK - DEAD_ZONE));
+  return Math.sign(off) * (LINEAR_SHARE * m + (1 - LINEAR_SHARE) * m * m * m);
 }
 
 /** Which way the page is turned, allowing for old iPhones and for desktop browsers that report 0 in a wide window. */
