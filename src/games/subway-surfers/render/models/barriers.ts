@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { BARRIER, RAMP_LENGTH, TRAIN } from "../../engine/tuning";
 import { MeshBuilder } from "../mesh-builder";
-import { chevronTexture, painted, stripeTexture } from "../textures";
+import { chevronTexture, glowTexture, painted, stripeTexture } from "../textures";
 import { shadowPaint } from "./train";
 
 const prefabs = new Map<string, THREE.Group>();
@@ -17,10 +17,12 @@ function cached(key: string, build: () => THREE.Group): THREE.Group {
   return prefab.clone();
 }
 
+/** Barriers light their own paint a little, so they read clearly against the dark at any speed. */
 function mapped(key: string, texture: () => THREE.Texture, extra: THREE.MeshStandardMaterialParameters = {}): THREE.Material {
   let material = materials.get(key);
   if (!material) {
-    material = new THREE.MeshStandardMaterial({ map: texture(), roughness: 0.5, ...extra });
+    const map = texture();
+    material = new THREE.MeshStandardMaterial({ map, roughness: 0.5, emissive: 0xffffff, emissiveMap: map, emissiveIntensity: 0.55, ...extra });
     material.userData.shared = true;
     materials.set(key, material);
   }
@@ -45,7 +47,10 @@ export function lowBarrier(style: number): THREE.Group {
     }
     b.box(2.1, 0.42, 0.12, stripes, [0, BARRIER.lowTop - 0.26, -0.12], undefined, 0.02);
     b.box(2.0, 0.16, 0.1, stripes, [0, 0.36, -0.12], undefined, 0.02);
+    // A tube of red light along the top: the line to clear.
+    b.box(2.1, 0.07, 0.07, { color: 0xff2a3a, finish: "glow" }, [0, BARRIER.lowTop + 0.01, -0.12]);
     b.panel(2.6, 1.2, shadowPaint(), [0, 0.02, -0.17], [-Math.PI / 2, 0, 0]);
+    b.panel(2.4, 1.4, floorGlow(0xff2a3a), [0, 0.025, -0.1], [-Math.PI / 2, 0, 0]);
     return b.build("low-barrier");
   });
 }
@@ -66,9 +71,24 @@ export function highBarrier(style: number): THREE.Group {
     b.box(2.1, 0.1, 0.12, frame, [0, BARRIER.highTop - 0.05, -0.17]);
     b.box(0.9, 0.8, 0.08, sign, [0, BARRIER.highTop - 0.55, -0.1], undefined, 0.02);
     for (const x of [-0.7, 0.7]) b.sphere(0.08, { color: 0xff3b30, finish: "glow" }, [x, BARRIER.highTop + 0.04, -0.17]);
+    // A tube of yellow light along the bottom of the board: the edge to get under.
+    b.box(2.2, 0.07, 0.07, { color: 0xffd21f, finish: "glow" }, [0, BARRIER.highBottom, -0.06]);
+    for (const x of [-1.02, 1.02]) b.box(0.05, BARRIER.highTop - 0.1, 0.05, { color: 0xffd21f, finish: "glow" }, [x, BARRIER.highTop / 2, -0.08]);
     b.panel(2.6, 1.2, shadowPaint(), [0, 0.02, -0.17], [-Math.PI / 2, 0, 0]);
+    b.panel(2.4, 1.4, floorGlow(0xffd21f), [0, 0.025, -0.1], [-Math.PI / 2, 0, 0]);
     return b.build("high-barrier");
   });
+}
+
+/** The light a barrier's tube casts on the wet ground in front of it. */
+function floorGlow(color: number): THREE.Material {
+  let material = materials.get(`floor-${color}`);
+  if (!material) {
+    material = new THREE.MeshBasicMaterial({ map: glowTexture(), color, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+    material.userData.shared = true;
+    materials.set(`floor-${color}`, material);
+  }
+  return material;
 }
 
 /** The sign on a high barrier: a blue disc with an arrow down. */
@@ -100,7 +120,7 @@ export function ramp(): THREE.Group {
     const deck = mapped("ramp-deck", chevronTexture, { roughness: 0.6, metalness: 0.3 });
     const slope = Math.atan2(TRAIN.height, RAMP_LENGTH);
     const length = Math.hypot(TRAIN.height, RAMP_LENGTH);
-    const yellow = { color: 0xffc21a, finish: "satin" as const };
+    const yellow = { color: 0xffc21a, finish: "glow" as const };
     b.panel(2.0, length, deck, [0, TRAIN.height / 2 + 0.02, -RAMP_LENGTH / 2], [-Math.PI / 2 + slope, 0, 0]);
     b.box(2.0, 0.12, length, { color: 0x3a3f4b, finish: "metal" }, [0, TRAIN.height / 2 - 0.05, -RAMP_LENGTH / 2], [slope, 0, 0]);
     for (const x of [-1.05, 1.05]) {

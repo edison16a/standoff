@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import type { Run } from "../engine/run";
+import { SPEED } from "../engine/tuning";
 
 /** How wide the view should be across, in degrees, whatever the shape of the screen. */
 const ACROSS = 78;
@@ -48,8 +49,8 @@ export class ChaseCamera {
     const flying = run.powers.has("jetpack") && !run.crashed;
     const floor = flying ? s.y - 1.2 : s.grounded ? s.y : Math.min(s.y, Math.max(this.y, s.y * 0.35));
     this.y += (floor - this.y) * (1 - Math.exp(-(flying ? 2 : 4) * dt));
-    const fast = run.crashed ? 0 : Math.max(0, Math.min(1, (run.speed - 11) / 10));
-    this.boost += (fast * 7 + (flying ? 4 : 0) - this.boost) * (1 - Math.exp(-2 * dt));
+    const fast = run.crashed ? 0 : Math.max(0, Math.min(1, (run.speed - SPEED.start) / (SPEED.max - SPEED.start)));
+    this.boost += (fast * 9 + (flying ? 4 : 0) - this.boost) * (1 - Math.exp(-2 * dt));
     const target = run.crashed ? 1 : 0;
     this.crashView += (target - this.crashView) * (1 - Math.exp(-1.6 * dt));
     this.shake *= Math.exp(-5 * dt);
