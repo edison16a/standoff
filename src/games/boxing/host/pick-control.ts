@@ -22,6 +22,12 @@ export class PickControl {
   readonly state: PickState;
   private guardSince: [number | null, number | null] = [null, null];
   private lastLean: [number, number] = [-Infinity, -Infinity];
+  /**
+   * A guard only locks in once it has been seen down since this screen
+   * opened. Players arrive from calibration with their gloves still up,
+   * and that must not choose for them.
+   */
+  private dropped: [boolean, boolean] = [false, false];
 
   constructor(
     picks: [number, number],
@@ -54,7 +60,8 @@ export class PickControl {
         continue;
       }
       const guard = !!moves[id]?.guard;
-      if (!guard) this.guardSince[id] = null;
+      if (!guard) this.dropped[id] = true;
+      if (!guard || !this.dropped[id]) this.guardSince[id] = null;
       else this.guardSince[id] ??= now;
       const since = this.guardSince[id];
       this.state.holding[id] = since === null ? 0 : Math.min(1, (now - since) / LOCK_MS);

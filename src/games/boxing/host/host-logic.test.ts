@@ -17,9 +17,20 @@ describe("choosing boxers", () => {
     expect(pick.onMove(lean(1, 1, 0))).toBe(true);
     // The computer never shares a boxer, so it moves out of the way.
     expect(pick.state.picks[0]).not.toBe(pick.state.picks[1]);
+    pick.update([guard(false), null], 900);
     pick.update([guard(true), null], 1000);
     expect(pick.update([guard(true), null], 1000 + LOCK_MS)).toEqual([0]);
     expect(pick.done).toBe(true);
+  });
+
+  it("does not lock in with a guard still up from calibration", () => {
+    const pick = new PickControl([0, 1], [true, false]);
+    pick.update([guard(true), null], 0);
+    expect(pick.update([guard(true), null], LOCK_MS * 3)).toEqual([]);
+    expect(pick.state.holding[0]).toBe(0);
+    pick.update([guard(false), null], LOCK_MS * 3 + 10);
+    pick.update([guard(true), null], LOCK_MS * 3 + 20);
+    expect(pick.update([guard(true), null], LOCK_MS * 4 + 20)).toEqual([0]);
   });
 
   it("does not let two players take the same boxer", () => {
@@ -92,6 +103,15 @@ describe("the fight driver", () => {
     driver.tick(3100);
     driver.tick(3300);
     expect(driver.match.now).toBeGreaterThan(before);
+  });
+
+  it("lets players walk off once the fight is decided", () => {
+    const driver = new FightDriver({ seed: 3, slots: [1, 2], introMs: 100 });
+    driver.tick(0);
+    driver.stage = "results";
+    driver.setPresent(1, false, 100);
+    expect(driver.pausedFor).toEqual([]);
+    expect(driver.paused).toBe(false);
   });
 
   it("turns a player's punch into a jab or a cross", () => {
