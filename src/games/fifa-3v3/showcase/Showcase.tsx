@@ -24,7 +24,8 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     canvas.className = "fifa-showcase__canvas";
     stage.prepend(canvas);
     const params = new URLSearchParams(window.location.search);
-    const renderer = new MatchRenderer(canvas, { quality: params.get("quality") === "low" ? "low" : "high" });
+    const quality = params.get("quality");
+    const renderer = new MatchRenderer(canvas, { quality: quality === "low" || quality === "high" ? quality : "film" });
     // Development peeks can jump ahead in the match without drawing every frame on the way.
     const scene = new ShowcaseScene(view, Number(params.get("seek") ?? 0));
     if (scene.pose) renderer.director.setFixed(scene.pose.pos, scene.pose.look, scene.pose.fov);
@@ -34,12 +35,12 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
       renderer.director.setFixed(new THREE.Vector3(cam[0], cam[1], cam[2]), new THREE.Vector3(cam[3], cam[4], cam[5]), cam[6]!);
       scene.pin();
     }
-    // A frozen still only needs a few frames drawn, not one on every tick of the capture's clock.
+    // A frozen still is drawn once, not on every tick of the capture tool's clock.
     const frozen = scene.pose !== null;
-    let draws = 3;
+    let draws = 1;
     const fit = () => {
       renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
-      draws = 3;
+      draws = 1;
     };
     fit();
     const observer = new ResizeObserver(fit);

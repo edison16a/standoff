@@ -15,8 +15,10 @@ export interface RendererOptions {
   /**
    * "low" drops shadows, antialiasing, the crowd and the light beams and
    * draws at a lower resolution, for software graphics in browser tests.
+   * "film" is "high" without antialiasing, for the showcase: the capture
+   * tool renders it in software, and the video encoder softens edges anyway.
    */
-  quality?: "high" | "low";
+  quality?: "high" | "low" | "film";
 }
 
 /**
@@ -38,7 +40,7 @@ export class MatchRenderer {
 
   constructor(canvas: HTMLCanvasElement, options: RendererOptions = {}) {
     this.low = options.quality === "low";
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: !this.low, powerPreference: "high-performance" });
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: options.quality !== "low" && options.quality !== "film", powerPreference: "high-performance" });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 0.95;
     this.renderer.shadowMap.enabled = !this.low;
