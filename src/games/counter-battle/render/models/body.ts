@@ -42,7 +42,7 @@ export function buildBody(rig: Rig, o: Outfit, st: BodyStyle): void {
   const cw = st.chestWidth * b;
   const cd = st.chestDepth;
   o.add(rig.spine, "cloth", paint(cyl(0.16 * s, 0.15 * s, 0.24 * s, 18), st.top, { at: [0, 0.08 * s, 0], scale: [cw, 1, cd * 0.72] }));
-  if (st.loose) o.add(rig.spine, "cloth", paint(cyl(0.17 * s, 0.18 * s, 0.16 * s, 18), st.top, { at: [0, -0.06 * s, 0], scale: [cw, 1, cd * 0.8] }));
+  if (st.loose) o.add(rig.spine, "cloth", paint(cyl(0.158 * s, 0.165 * s, 0.13 * s, 18), st.top, { at: [0, -0.05 * s, 0], scale: [cw, 1, cd * 0.78] }));
   const chest = lathe([[0.155, 0], [0.168, 0.08], [0.178, 0.17], [0.172, 0.24], [0.13, 0.29], [0.06, 0.31]].map(([r, y]) => [r! * s, y! * s] as const), 22);
   o.add(rig.chest, "cloth", paint(chest, st.top, { scale: [cw * 1.08, 1, cd * 0.74] }));
   // Side panels down the ribs in the trim colour.
@@ -51,7 +51,7 @@ export function buildBody(rig: Rig, o: Outfit, st: BodyStyle): void {
 
   const arm = (side: 1 | -1, shoulder: typeof rig.shoulderL, elbow: typeof rig.elbowL, hand: typeof rig.handL) => {
     const r = (0.052 + 0.014 * b) * s;
-    o.add(shoulder, "cloth", paint(ball(r * 1.35, 14, 10), st.sleeve, { scale: [1.05, 0.95, 1] }));
+    o.add(shoulder, "cloth", paint(ball(r * 1.18, 14, 10), st.sleeve, { scale: [1.05, 0.95, 1] }));
     o.add(shoulder, "cloth", paint(capsule(r, z.upperArm * 0.62), st.sleeve, { at: [0, -z.upperArm * 0.5, 0] }));
     o.add(elbow, "cloth", paint(ball(r * 0.92, 12, 8), st.forearm));
     o.add(elbow, st.forearm === st.skin ? "skin" : "cloth", paint(capsule(r * 0.86, z.foreArm * 0.6), st.forearm, { at: [0, -z.foreArm * 0.45, 0], scale: [1, 1, 0.92] }));

@@ -31,13 +31,13 @@ export function celebrate(id: CharacterId, t: number): Celebration {
     case "pro": {
       c.hop = Math.abs(Math.sin(t * 6.5)) * 0.09 * inn;
       c.gunUp = inn;
-      c.fist = [0.2, 0.34 + 0.12 * Math.max(0, Math.sin(t * 9)), 0.14];
+      c.fist = [0.22, 0.46 + 0.16 * Math.max(0, Math.sin(t * 9)), 0.12];
       c.headPitch = -0.25 * inn;
       c.bend = -0.12 * inn;
       break;
     }
     case "operator": {
-      c.fist = t > 0.25 ? [0.16, 0.5, 0.08] : null;
+      c.fist = t > 0.25 ? [0.18, 0.62, 0.06] : null;
       c.headPitch = 0.18 * Math.sin(t * 3.2) * inn;
       c.twist = 0.15 * inn;
       break;

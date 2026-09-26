@@ -73,7 +73,7 @@ export class Lab {
   }
 
   private move(f: Fighter, t: number): void {
-    const speed = f.gun.spec.speed * 0.7;
+    const speed = f.gun.spec.speed * 0.45;
     // A square: forward, to the right, back, to the left, facing ahead all the way.
     const legs: [number, number, number, number][] = [[2, 3, 0, 1], [3, 4, -1, 0], [4, 5, 0, -1], [5, 6, 1, 0]];
     f.vel = { x: 0, z: 0 };

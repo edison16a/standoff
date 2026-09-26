@@ -17,6 +17,8 @@ const PITCH = -0.07;
 const FOV = 60;
 /** The sniper's view narrows while it looks out, like a scope. */
 const SCOPE_FOV = 40;
+/** The narrowest the view may be across, degrees. */
+const MIN_WIDE = 70;
 
 /**
  * The over the shoulder camera for one player's view. It follows the way
@@ -76,7 +78,9 @@ export class ShoulderCamera {
     // Pull in at once when cover gets in the way, ease back out once it has passed.
     this.boom = room < this.boom ? room : approach(this.boom, room, 3, dt);
     const scoped = f.alive && f.gun.id === "sniper" && f.brain.stance === "peek" ? 1 : 0;
-    this.pose.fov = approach(this.pose.fov, FOV + (SCOPE_FOV - FOV) * scoped, 5, dt);
+    // A tall, narrow view (two players side by side) opens up so it still sees as wide.
+    const wide = Math.max(1, (2 * Math.atan(Math.tan((MIN_WIDE * Math.PI) / 360) / this.pose.aspect) * 180) / Math.PI / FOV);
+    this.pose.fov = approach(this.pose.fov, (FOV + (SCOPE_FOV - FOV) * scoped) * wide, 5, dt);
     this.pose.x = pivot.x - fx * this.boom;
     this.pose.y = pivot.y;
     this.pose.z = pivot.z - fz * this.boom;

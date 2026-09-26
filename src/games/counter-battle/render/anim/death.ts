@@ -68,11 +68,12 @@ export class Fall {
       shoulderR: [-0.3 - 0.6 * fall, 0, -0.4 - 1.1 * fall],
       elbowR: [-0.7, 0, 0],
       handR: [0.3, 0, 0],
-      hipL: [-0.5 * buckle - 0.2 * fall * r, 0, 0.1],
-      kneeL: [0.9 * buckle - 0.3 * fall, 0, 0],
+      // The knees give first; lying down, the legs settle nearly flat, one a little bent.
+      hipL: [-0.5 * buckle * (1 - fall) - 0.12, 0, 0.12],
+      kneeL: [0.9 * buckle * (1 - fall) + 0.2, 0, 0],
       ankleL: [0.3, 0, 0],
-      hipR: [-0.3 * buckle + 0.2 * fall * r, 0, -0.12],
-      kneeR: [0.5 * buckle + 0.4 * fall * r, 0, 0],
+      hipR: [-0.3 * buckle * (1 - fall) - 0.3 * fall * (r > 0 ? 1 : 0.3), 0, -0.1],
+      kneeR: [0.5 * buckle * (1 - fall) + 0.6 * fall * (r > 0 ? 1 : 0.3), 0, 0],
       ankleR: [0.4, 0, 0],
     };
     for (const name of JOINTS) {

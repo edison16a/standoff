@@ -44,7 +44,8 @@ export class ShowcaseDirector {
     this.panes = splitPanes(seated);
     const cam = params.get("cam")?.split(",").map(Number);
     if (cam && cam.length === 6) this.renderer.show.fixed = { from: new THREE.Vector3(cam[0], cam[1], cam[2]), at: new THREE.Vector3(cam[3], cam[4], cam[5]) };
-    else if (this.lab) this.renderer.show.fixed = { from: new THREE.Vector3(0, 3.6, -20.6), at: new THREE.Vector3(0, 0.9, -28.4) };
+    // The lab is seen from the front and to one side, past the end of the base wall.
+    else if (this.lab) this.renderer.show.fixed = { from: new THREE.Vector3(4.6, 2.2, -22.4), at: new THREE.Vector3(-0.6, 1, -28.4) };
     const at = Number(params.get("at")) || 0;
     this.still = at > 0;
     for (let t = 0; t < at; t += FILMED_FRAME) this.draw(FILMED_FRAME, false);

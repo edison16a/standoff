@@ -50,8 +50,9 @@ export function holdGun(rig: Rig, gun: GunModel, h: HoldInput, pos: THREE.Vector
   // The shoulder pocket: the front of the right shoulder, where the stock sits.
   const pocket = toRoot(rig, rig.chest, [-0.08 * s, 0.2 * s, 0.14 * s], va);
   const aimPos = vb.copy(gun.butt).applyQuaternion(aimQ).negate().add(pocket);
-  const lowQ = qb.setFromEuler(e.set(0.75, 0.5 + h.aimYaw * 0.3, -0.25, "YXZ"));
-  const lowPos = toRoot(rig, rig.chest, [-0.03 * s, 0.0, 0.27 * s], pos);
+  // Low ready: the stock under the right arm, the muzzle down and a little across the body.
+  const lowQ = qb.setFromEuler(e.set(0.6, 0.32 + h.aimYaw * 0.3, -0.2, "YXZ"));
+  const lowPos = toRoot(rig, rig.chest, [-0.07 * s, -0.04 * s, 0.25 * s], pos);
   const r = smooth(h.raise);
   pos.lerpVectors(lowPos, aimPos, r);
   quat.slerpQuaternions(lowQ, aimQ, r);
