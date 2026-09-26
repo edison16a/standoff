@@ -37,12 +37,19 @@ const ART: Record<CharacterId, { sky: string; art: ReactNode }> = {
       <>
         <path d="M64 108 h10 v-10 h10 v-10 h10 v-10 h10 v-10 h10 v-10 h10 v10 h-10 v10 h-10 v10 h-10 v10 h-10 v10 h-10 v10 h-10z" fill="#ff5fd2" />
         <path d="M54 100 h20 v8 h-20z M60 108 h8 v14 h-8z" fill="#ffc83d" />
-        <rect x="16" y="40" width="54" height="54" fill="#ff9a3c" />
-        <rect x="16" y="60" width="54" height="12" fill="#2a1b4a" />
-        <rect x="26" y="63" width="8" height="6" fill="#fff36b" />
-        <rect x="52" y="63" width="8" height="6" fill="#fff36b" />
-        <rect x="38" y="30" width="10" height="10" fill="var(--badge-trim)" />
-        <rect x="16" y="86" width="54" height="8" fill="var(--badge-trim)" />
+        <rect x="16" y="44" width="54" height="50" fill="#f0b489" />
+        <rect x="12" y="34" width="62" height="12" fill="#9aa3ad" />
+        <rect x="12" y="44" width="8" height="30" fill="#9aa3ad" />
+        <rect x="66" y="44" width="8" height="30" fill="#9aa3ad" />
+        <rect x="22" y="54" width="14" height="5" fill="#4a2c1a" />
+        <rect x="50" y="54" width="14" height="5" fill="#4a2c1a" />
+        <rect x="26" y="61" width="7" height="8" fill="#1e2a4a" />
+        <rect x="53" y="61" width="7" height="8" fill="#1e2a4a" />
+        <rect x="20" y="72" width="7" height="5" fill="var(--badge-trim)" />
+        <rect x="59" y="72" width="7" height="5" fill="var(--badge-trim)" />
+        <rect x="34" y="82" width="18" height="4" fill="#8a4a36" />
+        <rect x="38" y="24" width="10" height="10" fill="var(--badge-trim)" />
+        <rect x="30" y="18" width="9" height="9" fill="var(--badge-trim)" />
       </>
     ),
   },
@@ -54,8 +61,9 @@ const ART: Record<CharacterId, { sky: string; art: ReactNode }> = {
         <path d="M64 116 L110 26" stroke="#ffffff" strokeWidth="5" strokeLinecap="round" />
         <rect x="56" y="110" width="12" height="20" rx="3" fill="#b8c2d6" transform="rotate(27 62 120)" />
         <path d="M18 96 q0-56 32-56 q32 0 32 56z" fill="#e9edf5" />
-        <path d="M28 70 h44 v10 q-22 8 -44 0z" fill="#1b2340" />
-        <path d="M50 34 l4 9 l10 1 l-8 6 l3 10 l-9 -6 l-9 6 l3 -10 l-8 -6 l10 -1z" fill="var(--badge-trim)" />
+        <path d="M24 82 q26 18 52 0 v14 h-52z" fill="#3a4150" />
+        <path d="M22 64 q28 -8 56 0 v9 q-28 -8 -56 0z" fill="var(--badge-trim)" />
+        <path d="M48 40 q2 -2 4 0 v24 h-4z" fill="#c9d1dc" />
       </>
     ),
   },
