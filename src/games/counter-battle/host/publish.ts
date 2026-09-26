@@ -125,7 +125,8 @@ function phoneState(c: PublishContext, seat: number, phase: RoomPhase, lobbyView
     mode,
     team,
     teammate,
-    zone: f ? d!.viewOf(seat) : lobbyView,
+    // A phone waiting out a match aims at the whole screen, as the host shows it; its view comes with the next match.
+    zone: f ? d!.viewOf(seat) : d ? null : lobbyView,
     gun: gun?.id ?? s?.gun ?? null,
     character: f?.character ?? null,
     ready: s?.ready ?? false,
