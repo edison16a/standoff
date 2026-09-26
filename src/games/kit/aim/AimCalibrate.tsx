@@ -2,7 +2,7 @@
 import "./aim.css";
 import "../kit.css";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import type { AimZone } from "./aim-math";
+import { sameZone, WHOLE_SCREEN, type AimZone } from "./aim-math";
 import { toPixels } from "./host-aim";
 import { AimPad } from "./AimPad";
 import type { PhoneAim } from "./phone-aim";
@@ -65,7 +65,9 @@ interface AimCalibrateProps {
  * from where they sit. Then a test view shows the aim live before moving
  * on. Phones without sensors skip straight to a drag pad.
  */
-export function AimCalibrate({ aim, colour, zone, onDone }: AimCalibrateProps) {
+export function AimCalibrate({ aim, colour, zone: given, onDone }: AimCalibrateProps) {
+  // A zone that is the whole screen is no zone: the big screen draws no outline for it, so neither do the words.
+  const zone = given && !sameZone(given, WHOLE_SCREEN) ? given : undefined;
   const snapshot = useSyncExternalStore(aim.subscribe, aim.getSnapshot, aim.getSnapshot);
   const touch = snapshot.source === "touch";
   const [stage, setStage] = useState<Stage>("center");
