@@ -189,5 +189,7 @@ export class BattleRenderer {
     this.arena?.dispose();
     this.environment.dispose();
     this.renderer.dispose();
+    // Browsers cap live WebGL contexts, so a closed room hands its own back now rather than at garbage collection.
+    this.renderer.forceContextLoss();
   }
 }

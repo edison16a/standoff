@@ -18,6 +18,11 @@
   font-family: var(--font-ui);
 }
 
+.cb-canvas-box {
+  position: absolute;
+  inset: 0;
+}
+
 .cb-canvas {
   position: absolute;
   inset: 0;

@@ -11,6 +11,11 @@
   background: #0b0d18;
 }
 
+.cb-showcase__box {
+  position: absolute;
+  inset: 0;
+}
+
 .cb-showcase__canvas {
   display: block;
   width: 100%;

@@ -15,11 +15,15 @@ const LITE: Quality = { antialias: false, shadows: false, maxPixelRatio: 0.75 };
  */
 export default function BattleCanvas() {
   const session = useSession();
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const box = boxRef.current;
+    if (!box) return;
+    // A fresh canvas per mount: the renderer gives its WebGL context back on unmount, and a canvas never gets it back.
+    const canvas = document.createElement("canvas");
+    canvas.className = "cb-canvas";
+    box.appendChild(canvas);
     const renderer = new BattleRenderer(canvas, softwareWebGl() ? LITE : {});
     session.attachCamera(renderer);
     const fit = () => renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
@@ -47,8 +51,9 @@ export default function BattleCanvas() {
       observer.disconnect();
       session.attachCamera(null);
       renderer.dispose();
+      canvas.remove();
     };
   }, [session]);
 
-  return <canvas ref={canvasRef} className="cb-canvas" />;
+  return <div ref={boxRef} className="cb-canvas-box" />;
 }

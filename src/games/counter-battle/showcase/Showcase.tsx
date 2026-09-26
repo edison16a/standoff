@@ -12,11 +12,15 @@ import { ShowcaseDirector } from "./director";
  * step it frame by frame and get the same film.
  */
 export function Showcase({ view }: { view: ShowcaseView }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const box = boxRef.current;
+    if (!box) return;
+    // A fresh canvas per mount, since the director gives its WebGL context back when it goes.
+    const canvas = document.createElement("canvas");
+    canvas.className = "cb-showcase__canvas";
+    box.prepend(canvas);
     const director = new ShowcaseDirector(canvas, view);
     const fit = () => director.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
     fit();
@@ -33,12 +37,13 @@ export function Showcase({ view }: { view: ShowcaseView }) {
       cancelAnimationFrame(frame);
       observer.disconnect();
       director.dispose();
+      canvas.remove();
     };
   }, [view]);
 
   return (
     <div className="cb-showcase">
-      <canvas ref={canvasRef} className="cb-showcase__canvas" />
+      <div ref={boxRef} className="cb-showcase__box" />
       {view === "icon" && (
         <div className="cb-showcase__logo" aria-hidden="true">
           <span>Counter</span>
