@@ -23,6 +23,8 @@ export class MatchDriver {
   /** The split screen for this match: one view per player, in fighter order. */
   readonly panes: Pane[];
   readonly bySeat = new Map<number, number>();
+  /** Which players hold the shoot button, whatever the match is doing. */
+  private readonly held = new Set<number>();
   private carry = 0;
 
   constructor(lineup: Lineup, seed: number, roundsToWin?: number) {
@@ -55,12 +57,17 @@ export class MatchDriver {
     b.aimAt(f.id, aimTarget(pose, clampPoint(point), b.pieces, b.fighters, f.id));
   }
 
-  /** The shoot button. Pressing only counts while the fight is on; letting go always does. */
+  /**
+   * The shoot button. It fires only while the fight is on; a button held
+   * from before the fight, or through a new round, is pulled as the fight
+   * starts, like a real trigger held down.
+   */
   trigger(seat: number, down: boolean): void {
     const f = this.fighterOf(seat);
     if (!f) return;
-    if (down && this.battle.match.phase !== "fight") return;
-    this.battle.setTrigger(f.id, down);
+    if (down) this.held.add(seat);
+    else this.held.delete(seat);
+    if (!down || this.battle.match.phase === "fight") this.battle.setTrigger(f.id, down);
   }
 
   reload(seat: number): void {
@@ -72,6 +79,7 @@ export class MatchDriver {
   setOnline(seat: number, online: boolean): void {
     const f = this.fighterOf(seat);
     if (!f) return;
+    this.held.delete(seat);
     this.battle.setAutopilot(f.id, !online);
   }
 
@@ -81,9 +89,19 @@ export class MatchDriver {
     const events: BattleEvent[] = [];
     while (this.carry >= STEP) {
       this.carry -= STEP;
+      this.pullHeld();
       events.push(...this.battle.step());
     }
     return events;
+  }
+
+  /** Pulls every trigger held down while the fight is on, as the fight starts or a player comes back. */
+  private pullHeld(): void {
+    if (this.battle.match.phase !== "fight") return;
+    for (const seat of this.held) {
+      const f = this.fighterOf(seat);
+      if (f?.alive && !f.trigger.held) this.battle.setTrigger(f.id, true);
+    }
   }
 }
 

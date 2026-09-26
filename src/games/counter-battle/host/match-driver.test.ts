@@ -43,16 +43,19 @@ describe("the match driver", () => {
     expect(me.aim).toEqual(before);
   });
 
-  it("only takes a trigger press during the fight, but always the release", () => {
+  it("fires only in the fight, pulling a trigger held from before it as the fight starts", () => {
     const d = oneOnOne();
     const me = d.fighterOf(1)!;
     d.trigger(1, true);
     expect(me.trigger.held).toBe(false);
     while (d.battle.match.phase !== "fight") d.advance(0.05);
-    d.trigger(1, true);
+    d.advance(0.05);
     expect(me.trigger.held).toBe(true);
+    expect(me.gun.ammo).toBeLessThan(me.gun.spec.magazine);
     d.trigger(1, false);
     expect(me.trigger.held).toBe(false);
+    d.trigger(1, true);
+    expect(me.trigger.held).toBe(true);
   });
 
   it("steps the battle at its own rate, faster with turbo, and never runs away after a stall", () => {
