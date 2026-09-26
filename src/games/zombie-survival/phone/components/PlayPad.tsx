@@ -70,7 +70,7 @@ export function PlayPad({ seat }: { seat: Seat }) {
       <AmmoPanel />
       {touch ? <AimPad aim={session.aim}>{trigger}</AimPad> : trigger}
       <div className="zs-play__buttons">
-        <button type="button" className={`zs-reload ${low && canReload ?"zs-reload--urgent" : ""}`} disabled={!canReload} onClick={() => session.reload()}>
+        <button type="button" className={`zs-reload ${low && canReload ? "zs-reload--urgent" : ""}`} disabled={!canReload} onClick={() => session.reload()}>
           {gun?.reloading ? "Reloading" : "Reload"}
         </button>
         {!touch && (
