@@ -13,7 +13,8 @@
   pointer-events: auto;
 }
 
-.bx-hud--split::after {
+/* The line between the views comes first, so the clock and the prompts that sit on it are drawn over it. */
+.bx-hud--split::before {
   content: "";
   position: absolute;
   top: 0;
