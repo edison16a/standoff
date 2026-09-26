@@ -4,6 +4,7 @@ import { AimPad } from "@/games/kit/aim/AimPad";
 import { FireButton } from "@/games/kit/aim/FireButton";
 import { playerColor } from "@/games/kit/players";
 import type { Seat } from "@/platform/protocol";
+import { STAGE_COUNT } from "../../engine/stages";
 import { usePhoneStore } from "../phone-store";
 import { AmmoPanel } from "./AmmoPanel";
 import { PhaseCard } from "./PhaseCard";
@@ -58,7 +59,7 @@ export function PlayPad({ seat }: { seat: Seat }) {
     <div className="zs-play">
       <header className="zs-play__top">
         <div className="zs-play__stage">
-          <span>Stage {state?.stage ?? 1} of 25</span>
+          <span>Stage {state?.stage ?? 1} of {STAGE_COUNT}</span>
           <strong>{state?.stageTitle}</strong>
         </div>
         <div className={`zs-health ${health < 0.35 ? "zs-health--low" : ""}`} aria-label={`Team health ${Math.round(health * 100)}`}>

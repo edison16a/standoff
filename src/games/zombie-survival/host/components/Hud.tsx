@@ -1,4 +1,5 @@
 "use client";
+import { STAGE_COUNT } from "../../engine/stages";
 import { useSurvivalStore } from "../host-store";
 
 /**
@@ -13,7 +14,7 @@ export function Hud() {
     <div className="zs-hud">
       <div className="zs-hud__stage">
         <span className="zs-hud__count">
-          Stage {hud.stage} <em>of 25</em>
+          Stage {hud.stage} <em>of {STAGE_COUNT}</em>
         </span>
         <strong>{hud.stageTitle}</strong>
         <span className="zs-hud__goal">{hud.objective}</span>
