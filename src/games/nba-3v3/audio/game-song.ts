@@ -61,7 +61,7 @@ function play(engine: AudioEngine, out: AudioNode, step: number, at: number, six
   // Every fourth bar the hats roll in thirty second notes into the turn.
   const turn = index % 4 === 3;
 
-  if (KICK.has(inBar)) drums.kick(engine, out, time, inBar === 0 ? 0.25 : 0.2);
+  if (KICK.has(inBar)) drums.kick(engine, out, time, inBar === 0 ? 0.23 : 0.185);
   if (inBar === 4 || inBar === 12) drums.snare(engine, out, time, 0.1);
   if (inBar % 2 === 0 || inB) drums.hat(engine, out, time, inBar % 4 === 2 ? 0.03 : 0.018);
   if (turn && inBar >= 12) drums.hat(engine, out, time + sixteenth / 2, 0.016);
@@ -70,8 +70,8 @@ function play(engine: AudioEngine, out: AudioNode, step: number, at: number, six
   if (ring) {
     // The last hit of the bar slides into the next root, the 808's signature.
     const next = BARS[(index + 1) % BARS.length]!.chord[0]!;
-    if (inBar === 14) boom(engine, out, low(next), time, sixteenth * ring, 0.085, low(root!));
-    else boom(engine, out, low(root!), time, sixteenth * ring, inBar === 0 ? 0.1 : 0.085);
+    if (inBar === 14) boom(engine, out, low(next), time, sixteenth * ring, 0.078, low(root!));
+    else boom(engine, out, low(root!), time, sixteenth * ring, inBar === 0 ? 0.093 : 0.078);
   }
 
   if (inBar === 0) glow(engine, out, voicing.slice(0, 3).map((n) => n - 12), time, sixteenth * 16, 0.012);
