@@ -5,7 +5,7 @@ import { createRoom, vary, type Room } from "./mix";
 /**
  * The court's own sounds, synthesised: the ball on the hardwood, sneakers
  * squeaking, the net, the iron and the glass, passes and blocks, and the
- * horns. Each is a sharp transient, a body and a tail sent into the
+ * whistle. The horns and the organ are in `arena.ts`. Each is a sharp transient, a body and a tail sent into the
  * arena's reverb, pitched a little differently every time.
  */
 export class Sfx {
@@ -19,7 +19,8 @@ export class Sfx {
     return this.engine.bus("sfx");
   }
 
-  private get wet(): AudioNode {
+  /** The arena's reverb send, shared with the horns, the organ and the beat. */
+  get wet(): AudioNode {
     return this.room.input;
   }
 
@@ -122,16 +123,6 @@ export class Sfx {
     tone(this.engine, ui, this.at + 0.1, { frequency: midi(96), decay: 0.4, peak: 0.08 });
   }
 
-  /** The shot clock horn: a thick chord of buzzing reeds, with the building ringing after. */
-  horn(long = false): void {
-    const length = long ? 1.8 : 1.0;
-    for (const f of [233, 311, 466]) {
-      tone(this.engine, this.out, this.at, { type: "sawtooth", frequency: f, attack: 0.02, decay: length, peak: 0.06 });
-      tone(this.engine, this.out, this.at, { type: "square", frequency: f * 0.5, attack: 0.02, decay: length, peak: 0.035 });
-      tone(this.engine, this.wet, this.at, { type: "sawtooth", frequency: f, attack: 0.02, decay: length, peak: 0.03 });
-    }
-  }
-
   /** The referee's whistle: a pea rattling in a shrill two note trill, then the building's echo. */
   whistle(): void {
     const at = this.at;
@@ -143,11 +134,6 @@ export class Sfx {
     tone(this.engine, this.wet, at + 0.05, { frequency: 3100, decay: 0.5, peak: 0.03 });
   }
 
-  /** The shot clock's beep for each of the last seconds, higher as it runs out. */
-  clockBeep(left: number): void {
-    tone(this.engine, this.out, this.at, { type: "square", frequency: left <= 2 ? 1320 : 990, attack: 0.003, decay: 0.09, peak: 0.05 });
-  }
-
   countdown(count: number): void {
     tone(this.engine, this.out, this.at, { type: "square", frequency: 587, attack: 0.005, decay: 0.22, peak: 0.1 + (3 - count) * 0.02 });
     tone(this.engine, this.wet, this.at, { type: "triangle", frequency: 587, decay: 0.3, peak: 0.06 });
@@ -155,7 +141,6 @@ export class Sfx {
 
   go(): void {
     tone(this.engine, this.out, this.at, { type: "square", frequency: 1175, attack: 0.005, decay: 0.5, peak: 0.1 });
-    this.horn(false);
   }
 
   dispose(): void {

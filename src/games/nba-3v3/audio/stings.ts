@@ -2,8 +2,8 @@ import type { AudioEngine } from "@/platform/audio/audio-engine";
 import { midi, noise, tone } from "@/platform/audio/voices";
 
 /**
- * One off musical moments on top of the loop: the winners' fanfare and
- * the arena organ. Both go through the music's warm filter.
+ * A one off musical moment on top of the loop: the winners' fanfare,
+ * through the music's warm filter. The arena organ is in `arena.ts`.
  */
 
 /** A brass chord: two detuned saws and a square an octave down per note. */
@@ -28,16 +28,4 @@ export function winnersFanfare(engine: AudioEngine, out: AudioNode): void {
     tone(engine, out, at + b * beat, { frequency: 120, glideTo: 45, decay: 0.3, peak: 0.4 });
     noise(engine, out, at + b * beat, { filter: "bandpass", frequency: 1800, q: 0.7, decay: 0.2, peak: 0.12 });
   }
-}
-
-/** The arena organ's "charge": a rising bugle call on a drawbar organ. */
-export function organCharge(engine: AudioEngine, out: AudioNode): void {
-  const at = engine.now + 0.05;
-  [55, 60, 64, 67, 64, 67].forEach((note, i) => {
-    const length = i === 5 ? 0.7 : 0.16;
-    // Drawbars: the fundamental, the octave and a quiet twelfth.
-    for (const [interval, peak] of [[0, 0.09], [12, 0.065], [19, 0.03]] as const) {
-      tone(engine, out, at + i * 0.17, { type: "square", frequency: midi(note + interval), attack: 0.008, decay: length, peak });
-    }
-  });
 }

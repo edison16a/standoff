@@ -6,7 +6,7 @@ import type { Tune } from "./tunes";
  * The house band behind the music: a dusty boom bap kit, an electric
  * piano, a round bass, and a lead that is either vibraphone or a soft
  * synth flute. Everything is kept low and round so it sits under the
- * squeaks and the crowd.
+ * squeaks and the arena beat.
  */
 
 function kick(engine: AudioEngine, out: AudioNode, at: number, peak: number): void {

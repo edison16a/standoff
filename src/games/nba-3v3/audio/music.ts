@@ -1,6 +1,6 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 import { playStep } from "./band";
-import { organCharge, winnersFanfare } from "./stings";
+import { winnersFanfare } from "./stings";
 import { TUNES, type TuneName } from "./tunes";
 
 const WAKE_MS = 25;
@@ -42,12 +42,6 @@ export class Music {
   fanfare(): void {
     this.dip(0.15, 3);
     winnersFanfare(this.engine, this.warmth);
-  }
-
-  /** The arena organ's rising "charge" riff, for dead balls. */
-  organ(): void {
-    this.dip(0.2, 1.3);
-    organCharge(this.engine, this.warmth);
   }
 
   /**
