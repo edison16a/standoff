@@ -26,6 +26,8 @@ export class RafLimiter {
   /** The browser's own functions, for code that must see every refresh. */
   readonly native: { request: Request; cancel: Cancel };
   private queue = new Map<number, FrameRequestCallback>();
+  /** The batch running right now. A cancel still stops a callback in it that has not run. */
+  private running: Map<number, FrameRequestCallback> | null = null;
   private nextHandle = HANDLE_BASE;
   private pump = 0;
   private pacer: FramePacer | null = null;
@@ -77,6 +79,7 @@ export class RafLimiter {
       this.native.cancel(passed);
       this.settleCancel();
     } else if (handle >= HANDLE_BASE) {
+      this.running?.delete(handle);
       this.queue.delete(handle);
       if (this.queue.size === 0 && this.pump) {
         this.native.cancel(this.pump);
@@ -93,7 +96,13 @@ export class RafLimiter {
       // Callbacks asked for while this batch runs wait for the next frame, as in the browser.
       const batch = this.queue;
       this.queue = new Map();
-      for (const callback of batch.values()) run(callback, now);
+      this.running = batch;
+      // Map iteration is live, so a callback deleted by a cancel mid batch is skipped.
+      for (const [handle, callback] of batch) {
+        batch.delete(handle);
+        run(callback, now);
+      }
+      this.running = null;
     }
     if (this.queue.size > 0 && this.pacer && !this.pump) this.pump = this.native.request(this.onRefresh);
   };

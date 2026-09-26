@@ -140,4 +140,18 @@ describe("RafLimiter", () => {
     for (let i = 0; i < 120; i++) screen.refresh();
     expect(Math.abs(game.times.length - 120)).toBeLessThanOrEqual(1);
   });
+
+  it("skips a callback cancelled by an earlier one in the same frame", () => {
+    const screen = new FakeScreen(60);
+    new RafLimiter(screen).setRate(30, 60);
+    const ran: string[] = [];
+    let second = 0;
+    screen.requestAnimationFrame(() => {
+      ran.push("first");
+      screen.cancelAnimationFrame(second);
+    });
+    second = screen.requestAnimationFrame(() => ran.push("second"));
+    for (let i = 0; i < 4; i++) screen.refresh();
+    expect(ran).toEqual(["first"]);
+  });
 });
