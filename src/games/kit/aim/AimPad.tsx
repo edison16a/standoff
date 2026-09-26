@@ -1,6 +1,7 @@
 "use client";
 import "./aim.css";
-import { useRef, type ReactNode } from "react";
+import { useRef, type PointerEvent, type ReactNode } from "react";
+import { PadTracker } from "./pad-tracker";
 import type { PhoneAim } from "./phone-aim";
 
 /** A full swipe across the pad moves the aim this far across the big screen. */
@@ -12,24 +13,25 @@ const SENSITIVITY = 2.4;
  * put its fire button inside the pad.
  */
 export function AimPad({ aim, children }: { aim: PhoneAim; children?: ReactNode }) {
-  const last = useRef<{ id: number; x: number; y: number } | null>(null);
+  const fingers = useRef(new PadTracker());
+  const lift = (event: PointerEvent) => fingers.current.lift(event.pointerId);
   return (
     <div
       className="kit-pad"
       onPointerDown={(event) => {
         if (event.target !== event.currentTarget) return;
-        last.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
+        fingers.current.press(event.pointerId, event.clientX, event.clientY);
         event.currentTarget.setPointerCapture(event.pointerId);
       }}
       onPointerMove={(event) => {
-        const from = last.current;
-        if (!from || from.id !== event.pointerId) return;
+        const moved = fingers.current.move(event.pointerId, event.clientX, event.clientY);
+        if (!moved) return;
         const box = event.currentTarget.getBoundingClientRect();
-        aim.nudge(((event.clientX - from.x) / box.width) * SENSITIVITY, (-(event.clientY - from.y) / box.height) * SENSITIVITY);
-        last.current = { id: event.pointerId, x: event.clientX, y: event.clientY };
+        aim.nudge((moved.dx / box.width) * SENSITIVITY, (-moved.dy / box.height) * SENSITIVITY);
       }}
-      onPointerUp={() => (last.current = null)}
-      onPointerCancel={() => (last.current = null)}
+      onPointerUp={lift}
+      onPointerCancel={lift}
+      onLostPointerCapture={lift}
     >
       <span className="kit-pad__hint">Drag here to aim</span>
       {children}
