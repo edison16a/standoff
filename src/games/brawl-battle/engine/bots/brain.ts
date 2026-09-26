@@ -46,9 +46,11 @@ export interface BotBrain {
   offstage: "none" | "good" | "poor";
   /** A charged move being held: the button, how many frames to charge it, and which way to face on release. */
   hold: { button: ChargeButton; frames: number; face: number } | null;
+  /** The last swing already weighed for a follow up, so a string is chosen once per hit. */
+  chained: number;
 }
 
 export function makeBrain(difficulty: Difficulty, slot: number): BotBrain {
   // Staggered so four bots do not all decide on the same frame.
-  return { difficulty, wait: 8 + slot * 3, target: null, x: 0, y: 0, shieldFor: 0, offstage: "none", hold: null };
+  return { difficulty, wait: 8 + slot * 3, target: null, x: 0, y: 0, shieldFor: 0, offstage: "none", hold: null, chained: -1 };
 }

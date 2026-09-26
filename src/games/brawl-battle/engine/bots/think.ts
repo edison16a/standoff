@@ -4,6 +4,7 @@ import { mainSurface, over } from "../stages";
 import { RESPAWN } from "../tuning";
 import type { Command, Fighter, MatchState } from "../types";
 import { SKILLS } from "./brain";
+import { chainPress } from "./chain";
 import { planCharge } from "./charge-plan";
 import { pickAttack, ultReaches } from "./pick-move";
 import { isOffstage, recover } from "./recover";
@@ -25,8 +26,12 @@ export function botCommand(state: MatchState, f: Fighter): Command {
     brain.shieldFor--;
     return { x: 0, y: -1 };
   }
-  if (--brain.wait > 0) return { x: brain.x, y: 0 };
   const skill = SKILLS[brain.difficulty];
+  // A landed hit is followed up at once, between decisions, the way a player mashes into a string.
+  const mark = brain.target !== null ? state.fighters[brain.target] : undefined;
+  const link = mark ? chainPress(state, f, mark, skill, state.rng) : null;
+  if (link) return link;
+  if (--brain.wait > 0) return { x: brain.x, y: 0 };
   brain.wait = skill.reaction + Math.floor(state.rng.next() * (skill.reaction / 2 + 1));
   if (state.rng.chance(skill.dither)) {
     brain.x = 0;
