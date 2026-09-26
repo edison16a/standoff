@@ -4,9 +4,12 @@ import type { ShowcaseView } from "@/platform/games/game-api";
 import { ShowcaseDirector } from "./director";
 
 /**
- * Counter Battle playing itself: a seeded 2v2 of computer players drawn
- * by the real renderer. Driven by requestAnimationFrame and
- * performance.now, so the capture tool can step it frame by frame.
+ * Counter Battle playing itself for the home screen's media: the loop
+ * cuts over the shoulders of a seeded 2v2 of computer players as each
+ * takes a kill, the poster holds a shotgun blast at close range, and the
+ * icon is the same moment closer, under the logo. Driven by
+ * requestAnimationFrame and performance.now, so the capture tool can
+ * step it frame by frame and get the same film.
  */
 export function Showcase({ view }: { view: ShowcaseView }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -33,5 +36,15 @@ export function Showcase({ view }: { view: ShowcaseView }) {
     };
   }, [view]);
 
-  return <canvas ref={canvasRef} style={{ display: "block", width: "100%", height: "100%" }} />;
+  return (
+    <div className="cb-showcase">
+      <canvas ref={canvasRef} className="cb-showcase__canvas" />
+      {view === "icon" && (
+        <div className="cb-showcase__logo" aria-hidden="true">
+          <span>Counter</span>
+          <b>Battle</b>
+        </div>
+      )}
+    </div>
+  );
 }

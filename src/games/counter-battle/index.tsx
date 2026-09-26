@@ -14,6 +14,7 @@ import "./styles/lobby.css";
 import "./styles/spots.css";
 import "./styles/hud.css";
 import "./styles/results.css";
+import "./styles/showcase.css";
 // The phone's parts come before the pages that lay them out sideways, so those rules win.
 import "./styles/ready.css";
 import "./styles/status.css";
