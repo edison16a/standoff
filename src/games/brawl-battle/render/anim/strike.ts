@@ -71,12 +71,19 @@ function measure(move: Move): Timing {
   return { from, to, hits: [...starts.values()].sort((a, b) => a - b) };
 }
 
-/** The pose `frame` frames into a move, over a base pose. */
-export function strikePose(anim: StrikeAnim, move: Move, frame: number, base: Pose): Pose {
+/**
+ * The pose `frame` frames into a move, over a base pose. `start` is the
+ * pose a cancelled move grows out of, in place of the stance.
+ */
+export function strikePose(anim: StrikeAnim, move: Move, frame: number, base: Pose, start?: PosePatch): Pose {
   const t = timing(move);
   const keys = anim.keys ? [...anim.keys] : strikeKeys(anim, t, move.frames);
   // A charged move with its own keys still comes out of the held wind up.
   if (anim.keys && anim.coiled) keys.unshift([0, anim.windup]);
+  else if (start && !anim.coiled) {
+    if (anim.keys) keys.unshift([0, start]);
+    else keys[0] = [0, start];
+  }
   // Settle back to the base by the end, setting every channel the move touched.
   const back: PosePatch = {};
   for (const [, patch] of keys) for (const c of CHANNELS) if (patch[c] !== undefined) back[c] = base[c];
