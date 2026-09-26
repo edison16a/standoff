@@ -22,8 +22,8 @@
   font-size: clamp(12px, min(26cqh, 19cqw), 30px);
 }
 
-.ss-hud--2 .ss-view:last-child .ss-score,
-.ss-hud--2 .ss-view:last-child .ss-coins {
+.ss-hud--2 .ss-view--right .ss-score,
+.ss-hud--2 .ss-view--right .ss-coins {
   right: calc(var(--ss-map-w) + 40px);
 }
 

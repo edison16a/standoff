@@ -18,8 +18,9 @@ export function RunHud() {
   const session = useSession();
   return (
     <div className={`ss-hud ss-hud--${hud.length}`}>
-      {hud.map((h) => (
-        <section key={h.slot} className="ss-view" style={{ ["--pc" as string]: playerColor(h.slot) }} aria-label={h.name}>
+      {hud.map((h, i) => (
+        // Named by side, not by child order: the countdown, Skip and the map come after the views.
+        <section key={h.slot} className={`ss-view ss-view--${i === 0 ? "left" : "right"}`} style={{ ["--pc" as string]: playerColor(h.slot) }} aria-label={h.name}>
           {phase === "tutorial" ? <TutorialPanel h={h} /> : <Scoreboard h={h} />}
           {h.banner && (
             <div key={h.banner.id} className="ss-banner">
