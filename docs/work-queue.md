@@ -14,14 +14,12 @@ The running list of what is being built, so work can pick up again after a break
 
 | Work | Branch | State |
 | --- | --- | --- |
-| Review loop, Magic Kart and Fruit Slicer | `worktree-wf_0e9b8a84-bad-1` | first pass done, second pass to run |
-| Review loop, Zombie Survival and Shooting Gallery | `worktree-wf_0e9b8a84-bad-2` | first pass done, second pass to run |
-| Review loop, Boxing and Subway Runner | `worktree-wf_0e9b8a84-bad-3` | first pass done, second pass to run |
-| Review loop, Basketball 3v3 and Soccer 3v3 | `worktree-wf_0e9b8a84-bad-4` | first pass running |
-| Review loop, Cube Game and Brawl Battle | `worktree-wf_0e9b8a84-bad-5` | first pass running |
-| Blade Clash (replaces Fencing) | `worktree-wf_24155454-673-1` | gameplay done, look and sound running, then media and review |
-| Counter Battle (new game) | `worktree-wf_d726d4b1-caf-1` | engine, world and play done; media running, then review |
-| Phone cannot join a new room after one game | `worktree-wf_74602659-578-4` | fix committed and passing its checks; adversarial check running |
+| Review loop, Magic Kart and Fruit Slicer | `worktree-wf_0e9b8a84-bad-1` | first pass done, second pass running |
+| Review loop, Zombie Survival and Shooting Gallery | `worktree-wf_0e9b8a84-bad-2` | first pass done, second pass running |
+| Review loop, Boxing and Subway Runner | `worktree-wf_0e9b8a84-bad-3` | first pass done, second pass running |
+| Review loop, Basketball 3v3 and Soccer 3v3 | `worktree-wf_0e9b8a84-bad-4` | first pass done, second pass running |
+| Review loop, Cube Game and Brawl Battle | `worktree-wf_0e9b8a84-bad-5` | first pass done, second pass running |
+| Blade Clash (replaces Fencing) | `worktree-wf_24155454-673-1` | gameplay, look and sound done; media finishing, then review |
 
 The review loop looks hard at every game for 3D model errors, animation glitches and phone controller problems, fixes them, then a second pass reviews again with fresh eyes. It also adds the split screen name map (`src/games/kit/split/SplitMap.tsx`) to Magic Kart, Subway Runner, Cube Game and Boxing.
 
@@ -52,6 +50,8 @@ The review loop looks hard at every game for 3D model errors, animation glitches
 
 ## Done recently
 
+* Counter Battle: a split screen team shooter for 1v1 or 2v2 with bots, AI movement between cover, four guns with recoil, first to five rounds.
+* Phones can join the next room after a game, in the same tab or a new one.
 * Home screen: tiles 25 percent smaller, the row stays still until an edge then centres the game, endless loop, no lag when holding an arrow.
 * Renamed Fruit Slicer, Subway Runner, Basketball 3v3 and Soccer 3v3, with made up player names and new icons.
 * Voice commentary removed from Basketball 3v3 and Soccer 3v3.
