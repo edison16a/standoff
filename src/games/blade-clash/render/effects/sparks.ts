@@ -87,7 +87,8 @@ export class Sparks {
       const alpha = 1 - age;
       this.colours.set([colour.r, colour.g, colour.b, alpha, colour.r, colour.g * 0.7, colour.b * 0.4, 0], i * 8);
       this.headPositions.set([spark.p.x, spark.p.y, spark.p.z], i * 3);
-      this.headColours.set([colour.r, colour.g, colour.b, alpha], i * 4);
+      // Heads fade in, so a fresh burst, all heads on one point, is a spray and not a white blot.
+      this.headColours.set([colour.r, colour.g, colour.b, alpha * Math.min(1, age * 5) * 0.7], i * 4);
     });
     const heads = this.heads.geometry;
     heads.setDrawRange(0, this.sparks.length);

@@ -14,8 +14,12 @@ import { Choreography, OPENING_HEALTH } from "./choreography";
 const CYCLE_MS = 9500;
 /** Frames are drawn at the clip's rate, so a slow machine capturing it draws each once. */
 const FRAME_MS = 1000 / 30;
-/** The stills stop the duel just after its first big clash, sparks in the air. */
-const STILL_AT_MS = 1130;
+/**
+ * The stills stop the duel just after its first big clash: the icon while
+ * the blades still touch, the poster once the flash is gone and the sparks
+ * have spread with both swords thrown back.
+ */
+const STILL_AT_MS = { icon: 1180, poster: 1300 } as const;
 /** The icon's own close camera, from the side and a little below the clash, which sits high in the frame over the title. */
 const ICON_CAMERA = { from: new THREE.Vector3(0.45, -0.35, 1.9), look: new THREE.Vector3(0, -0.3, 0), fov: 42 };
 
@@ -55,7 +59,7 @@ export class ShowcaseDirector {
     this.cycle = 0;
     if (view !== "loop") {
       // Stills play the duel forward, moving everything on but drawing nothing, then hold the moment.
-      for (let wall = 0; wall <= STILL_AT_MS; wall += FRAME_MS) {
+      for (let wall = 0; wall <= STILL_AT_MS[view]; wall += FRAME_MS) {
         this.step(wall);
         this.renderer.update(this.driver.engine.scene(), wall);
       }

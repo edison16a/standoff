@@ -69,8 +69,8 @@ export class Effects {
         const s = event.strength;
         const [a, b] = clashColour(blades);
         // A fast spray of hot streaks, a slower fall of embers, both in the blades' colours.
-        this.sparks.burst(at, t, { count: Math.round(80 + 180 * s), speed: 3.5 + 4.5 * s, lifeMs: 460, colour: a });
-        this.sparks.burst(at, t, { count: Math.round(40 + 100 * s), speed: 2.5 + 3 * s, lifeMs: 600, colour: b });
+        this.sparks.burst(at, t, { count: Math.round(60 + 120 * s), speed: 3.5 + 4.5 * s, lifeMs: 460, colour: a });
+        this.sparks.burst(at, t, { count: Math.round(30 + 70 * s), speed: 2.5 + 3 * s, lifeMs: 600, colour: b });
         this.sparks.burst(at, t, { count: Math.round(16 + 30 * s), speed: 1.1, lifeMs: 1000, colour: 0xffe7a8 });
         this.impacts.fire(at, t, { size: 0.16 + 0.2 * s, lifeMs: 160, colour: 0xfff1c0, ring: false });
         return;
