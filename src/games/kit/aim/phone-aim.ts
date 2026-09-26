@@ -45,6 +45,9 @@ export class PhoneAim {
   private snapshot: AimSnapshot;
   private readonly listeners = new Set<() => void>();
   private readonly stopSensors: () => void;
+  private readonly unlisten: () => void;
+  /** The calibration target last shown for this player, sent again after a reconnect. */
+  private step: AimStep | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
   private graceTimer: ReturnType<typeof setTimeout> | null = null;
   private lastSent: ScreenPoint | null = null;
@@ -56,6 +59,8 @@ export class PhoneAim {
     this.stopSensors = subscribeOrientation((q, t) => this.onReading(pointing(q), t));
     if (this.source === "motion") this.graceTimer = setTimeout(() => !this.reading && this.useTouch(), SENSOR_GRACE_MS);
     this.snapshot = this.makeSnapshot();
+    // The host forgets a phone's target when it drops, so a player mid calibration would point at nothing.
+    this.unlisten = room.on((event) => event.type === "rejoined" && this.step && this.announce(this.step));
   }
 
   subscribe = (listener: () => void): (() => void) => {
@@ -71,6 +76,7 @@ export class PhoneAim {
 
   /** Tells the big screen which calibration target to show for this player. */
   announce(step: AimStep): void {
+    this.step = step;
     this.room.send({ kind: "aim-step", step });
   }
 
@@ -136,6 +142,7 @@ export class PhoneAim {
   dispose(): void {
     this.stream(false);
     this.stopSensors();
+    this.unlisten();
     if (this.graceTimer) clearTimeout(this.graceTimer);
     this.listeners.clear();
   }

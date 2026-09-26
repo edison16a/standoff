@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { PhoneRoomApi } from "@/platform/games/game-api";
+import type { PhoneRoomApi, PhoneRoomEvent } from "@/platform/games/game-api";
 import type { Payload } from "@/platform/protocol";
 import { TARGET_INSET } from "./aim-math";
 import { PhoneAim } from "./phone-aim";
@@ -15,13 +15,19 @@ function point(headingDeg: number, upDeg: number): void {
 function fakeRoom(motion: "granted" | "unavailable" = "granted") {
   const sent: Payload[] = [];
   const lossy: Payload[] = [];
+  const listeners = new Set<(event: PhoneRoomEvent) => void>();
   const room = {
     seat: 1,
     motion,
     send: (payload: Payload) => sent.push(payload),
     sendLossy: (payload: Payload) => lossy.push(payload),
+    on: (listener: (event: PhoneRoomEvent) => void) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
   } as unknown as PhoneRoomApi;
-  return { room, sent, lossy };
+  const emit = (event: PhoneRoomEvent) => listeners.forEach((listener) => listener(event));
+  return { room, sent, lossy, emit, listeners };
 }
 
 describe("the phone's aim", () => {
@@ -122,5 +128,19 @@ describe("the phone's aim", () => {
     aim.recenter();
     point(10, 0);
     expect(aim.current.x).toBeCloseTo(0, 2);
+  });
+
+  it("shows its calibration target again after a reconnect, and lets go of the room when done", () => {
+    const { room, sent, emit, listeners } = fakeRoom();
+    aim = new PhoneAim(room);
+    emit({ type: "rejoined" });
+    expect(sent).toEqual([]);
+    aim.announce("top-left");
+    emit({ type: "rejoined" });
+    expect(sent.slice(-1)).toEqual([{ kind: "aim-step", step: "top-left" }]);
+    expect(sent).toHaveLength(2);
+    aim.dispose();
+    aim = null;
+    expect(listeners.size).toBe(0);
   });
 });

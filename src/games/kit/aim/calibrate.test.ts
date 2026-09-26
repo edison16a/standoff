@@ -7,7 +7,7 @@ import type { AimZone } from "./aim-math";
 import { AimCalibrate } from "./AimCalibrate";
 import { PhoneAim } from "./phone-aim";
 
-const room = { seat: 1, motion: "granted", send: () => undefined, sendLossy: () => undefined } as unknown as PhoneRoomApi;
+const room = { seat: 1, motion: "granted", send: () => undefined, sendLossy: () => undefined, on: () => () => undefined } as unknown as PhoneRoomApi;
 
 describe("the calibration page", () => {
   let host: HTMLDivElement;
