@@ -127,17 +127,17 @@ export class ShowcaseScene {
   }
 
   /**
-   * The goal line camera: low beside the near post, looking out at the
-   * shooter, with the keeper at full stretch and the ball on its way.
+   * Over the shooter's shoulder after a long strike: his follow through
+   * in front, the ball on its way and the keeper at full stretch in goal.
    */
   private posterPose(): Pose {
     const s = this.state.athletes[this.shooter() ?? 0]!;
     const dir = attackSign(s.team);
     const gx = dir * PITCH.halfLength;
     const ball = this.state.ball.pos;
-    const look = new THREE.Vector3(s.pos.x * 0.4 + ball.x * 0.6, 1.0, s.pos.z * 0.4 + ball.z * 0.6);
-    const pos = new THREE.Vector3(gx - dir * 1.0, 1.1, PITCH.goalHalfWidth + 4.6);
-    return { pos, look, fov: 46 };
+    const look = new THREE.Vector3(gx - dir * 3, 1.0, ball.z * 0.5);
+    const pos = new THREE.Vector3(s.pos.x - dir * 3.4, 2.0, s.pos.z + 3.2);
+    return { pos, look, fov: 44 };
   }
 
   /**
