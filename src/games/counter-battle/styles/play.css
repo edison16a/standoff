@@ -1,0 +1,359 @@
+/*
+  The phone as the gun: health and score on top, the magazine, the big
+  Shoot button under the thumb, and Reload. Always dark, so it is easy on
+  the eyes in a dark room and never lights up a face.
+*/
+
+.cb-phone--play {
+  /* Edge to edge under the bar. */
+  margin: -8px calc(-1 * max(12px, env(safe-area-inset-right))) -8px calc(-1 * max(12px, env(safe-area-inset-left)));
+}
+
+.cb-play {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: clamp(8px, 1.6vh, 12px);
+  min-height: 0;
+  padding: 10px 16px 14px;
+  background: var(--cb-ink);
+  color: #eef2f7;
+}
+
+.cb-status {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.cb-status__health {
+  position: relative;
+  height: 30px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.cb-status__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, #7fb000, var(--cb-lime));
+  transition: width 200ms ease;
+}
+
+.cb-status__health strong {
+  position: relative;
+  display: block;
+  padding: 0 12px;
+  color: var(--cb-ink);
+  font-family: var(--cb-display);
+  font-size: 22px;
+  line-height: 30px;
+}
+
+.cb-status__health--low .cb-status__fill {
+  background: linear-gradient(90deg, #a0101f, #ff4a5a);
+}
+
+.cb-status__health--low strong {
+  color: #ffffff;
+}
+
+.cb-status__score {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.cb-status__score b {
+  font-family: var(--cb-display);
+  font-size: 26px;
+  font-weight: 400;
+}
+
+.cb-status__score span {
+  color: #9aa3b5;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.cb-status__banner {
+  grid-column: 1 / 3;
+  justify-self: center;
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: var(--cb-lime);
+  color: var(--cb-ink);
+  font-size: 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.cb-flash {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  z-index: 2;
+  padding: 4px 16px;
+  border-radius: 999px;
+  font-family: var(--cb-display);
+  font-size: 26px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: cb-flash 1.1s ease-out both;
+}
+
+.cb-flash--good {
+  background: #fde047;
+  color: var(--cb-ink);
+}
+
+.cb-flash--bad {
+  background: #e11d48;
+  color: #ffffff;
+}
+
+@keyframes cb-flash {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px) scale(1.4);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, 8px) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+.cb-mag {
+  display: grid;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.cb-mag__count {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.cb-mag__count strong {
+  font-family: var(--cb-display);
+  font-size: clamp(30px, 5vh, 42px);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.cb-mag__count span {
+  color: #9aa3b5;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.cb-mag__gun {
+  align-self: center;
+  margin-left: auto;
+  color: #cfd6e2;
+}
+
+.cb-mag--empty .cb-mag__count strong {
+  color: #ff4a5a;
+}
+
+.cb-mag__rounds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.cb-mag__round {
+  width: 6px;
+  height: 12px;
+  border-radius: 3px 3px 1px 1px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.cb-mag__round--full {
+  background: linear-gradient(#f5dc7a, #b8862e);
+}
+
+.cb-mag__reload {
+  position: relative;
+  height: 20px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.cb-mag__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: rgba(184, 244, 0, 0.5);
+}
+
+.cb-mag__text {
+  position: relative;
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 20px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.cb-play__trigger {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.cb-play .kit-pad {
+  flex: 1;
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.cb-trigger {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  min-height: 0;
+  touch-action: none;
+}
+
+/* As big as the room it has, never bigger than the kit's own. */
+.cb-trigger .kit-fire {
+  display: grid;
+  place-content: center;
+  width: min(62vw, 260px, 36dvh);
+  min-width: 96px;
+}
+
+.cb-trigger__word {
+  font-family: var(--cb-display);
+  font-size: clamp(26px, 4.4vh, 38px);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+
+.cb-trigger small {
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.cb-play__buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.cb-reload,
+.cb-centre {
+  min-height: 52px;
+  height: clamp(52px, 8vh, 64px);
+  border: 0;
+  border-radius: 16px;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 800;
+  text-transform: uppercase;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.cb-reload {
+  flex: 1;
+  background: #3b4a7a;
+  font-size: 20px;
+}
+
+.cb-reload:active {
+  background: #52649e;
+}
+
+.cb-reload:disabled {
+  opacity: 0.45;
+}
+
+.cb-reload--urgent {
+  background: #c9861a;
+  animation: cb-urgent 900ms ease-in-out infinite;
+}
+
+@keyframes cb-urgent {
+  50% {
+    background: #e8a43a;
+  }
+}
+
+.cb-centre {
+  padding: 0 16px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 13px;
+}
+
+.cb-play__down {
+  position: absolute;
+  inset: 45% 16px auto;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(11, 13, 24, 0.92);
+  box-shadow: 0 0 0 2px #e11d48;
+  text-align: center;
+  transform: translateY(-50%);
+}
+
+.cb-play__down strong {
+  color: #ff4a5a;
+  font-family: var(--cb-display);
+  font-size: 30px;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+/* Sideways: status, magazine and buttons on the left, the trigger on the right under the thumb. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .cb-play {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    column-gap: 20px;
+  }
+
+  .cb-play > :not(.cb-play__trigger, .cb-play__down) {
+    grid-column: 1;
+  }
+
+  .cb-play__buttons {
+    align-self: end;
+  }
+
+  .cb-play__trigger {
+    grid-row: 1 / 4;
+    grid-column: 2;
+  }
+
+  .cb-trigger .kit-fire {
+    width: min(100%, 62dvh, 240px);
+  }
+
+  .cb-mag {
+    padding: 6px 12px;
+  }
+
+  .cb-mag__rounds {
+    display: none;
+  }
+}

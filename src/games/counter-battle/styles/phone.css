@@ -1,0 +1,291 @@
+/*
+  Counter Battle on the phone: aiming at your view, the gun pick, the
+  ready page and the result. Setup follows the site theme; every page
+  fits one screen with no scrolling, upright or sideways.
+*/
+
+.phone__body:has(> .cb-phone) {
+  min-height: 0;
+  max-width: none;
+  gap: 0;
+  padding: 8px max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left));
+}
+
+.cb-phone {
+  --cb-display: Impact, "Arial Black", "Helvetica Neue", sans-serif;
+  --cb-lime: #b8f400;
+  --cb-ink: #0b0d18;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.cb-phone .kit-steps {
+  flex: 1;
+  gap: 10px;
+  min-height: 0;
+  padding: 0;
+}
+
+.cb-phone .kit-steps__title {
+  font-size: 22px;
+}
+
+.cb-phone .kit-steps__body {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* The gun pick: a card per gun, and the chosen one's numbers. */
+
+.cb-guns {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+}
+
+.cb-guns__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  min-height: 0;
+}
+
+.cb-gun {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  min-height: 44px;
+  padding: 8px 6px;
+  border: 2px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.cb-gun__art {
+  width: min(84px, 80%);
+  height: auto;
+}
+
+.cb-gun strong {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.cb-gun span {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.cb-gun--on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.cb-guns__about p {
+  margin: 0 0 8px;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.cb-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 14px;
+  margin: 0;
+}
+
+.cb-stats__row {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.cb-stats dt {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cb-stats dd {
+  height: 8px;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--bg-muted);
+}
+
+.cb-stats__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
+/* The ready page: your team, your view, your gun. */
+
+.cb-ready {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+}
+
+.cb-ready__card {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  justify-items: center;
+  align-content: center;
+  gap: 8px;
+  min-height: 0;
+  padding: 12px;
+  border-radius: 20px;
+  background: var(--bg-elevated);
+  box-shadow: inset 0 5px 0 var(--team);
+}
+
+.cb-ready__team {
+  color: var(--team);
+  font-size: 18px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.cb-view {
+  width: min(180px, 100%);
+  height: 100%;
+  min-height: 0;
+  max-height: 110px;
+}
+
+.cb-view__screen {
+  fill: var(--bg-muted);
+  stroke: var(--text);
+  stroke-width: 2;
+}
+
+.cb-ready__gun {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--player);
+}
+
+.cb-ready__gun strong {
+  color: var(--text);
+  font-size: 18px;
+}
+
+.cb-ready__mate {
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.cb-ready__note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.cb-ready__note--on {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.cb-ready__again {
+  justify-self: center;
+  min-height: 44px;
+}
+
+/* The result after a match. */
+
+.cb-result {
+  display: grid;
+  flex: 1;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.cb-result__label {
+  color: var(--text-muted);
+  font-size: 18px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.cb-result--won .cb-result__label {
+  color: var(--team);
+}
+
+.cb-result__score {
+  display: flex;
+  gap: 8px;
+  font-family: var(--cb-display);
+  font-size: 64px;
+  line-height: 1;
+}
+
+.cb-result__line {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.cb-result__who {
+  color: var(--player);
+  font-weight: 800;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .cb-phone .kit-steps__title {
+    font-size: 18px;
+  }
+
+  .cb-phone .kit-steps__footer .btn--lg {
+    height: 46px;
+  }
+
+  .cb-guns {
+    grid-template-rows: none;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  }
+
+  .cb-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cb-ready {
+    grid-template-rows: none;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-content: center;
+  }
+
+  .cb-ready__card {
+    grid-row: 1 / 3;
+  }
+
+  .cb-ready__note {
+    align-self: end;
+  }
+
+  .cb-ready__again {
+    align-self: start;
+  }
+}
