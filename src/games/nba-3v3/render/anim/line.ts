@@ -15,10 +15,14 @@ const REST: PosePatch = {
   armLRaise: 0.75, armRRaise: 0.75, armLSpread: 0.18, armRSpread: 0.18, elbowL: 0.35, elbowR: 0.35, wristL: 0.2, wristR: 0.2,
 };
 
-/** Once the shot goes up: down low, arms out and hands up, ready to box out for the rebound. */
+/**
+ * Once the shot goes up: down low, arms out and hands up, ready to box
+ * out for the rebound. The arms spread only so far that the hands stop
+ * short of the next player along the lane instead of passing through him.
+ */
 const READY: PosePatch = {
   torsoX: 0.3, hipY: -0.13, neckX: -0.3, kneeL: 0.95, kneeR: 0.95, legLLift: 0.5, legRLift: 0.5, legLSpread: 0.22, legRSpread: 0.22,
-  armLRaise: 1.0, armRRaise: 1.0, armLSpread: 0.75, armRSpread: 0.75, elbowL: 0.9, elbowR: 0.9, wristL: -0.3, wristR: -0.3,
+  armLRaise: 1.0, armRRaise: 1.0, armLSpread: 0.45, armRSpread: 0.45, elbowL: 0.9, elbowR: 0.9, wristL: -0.3, wristR: -0.3,
 };
 
 export function lanePose(p: Pose, stance: LaneStance, time: number, seed: number): Pose {
