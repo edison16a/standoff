@@ -1,17 +1,18 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 import type { Phase } from "../engine/events";
+import { lastStand } from "./last-stand";
 import { LoopMusic } from "./loop-music";
-import { lastLight, SAFEHOUSE } from "./score";
+import { SAFEHOUSE } from "./safehouse";
 
 /**
- * Picks the music for the moment: the safehouse tune in the lobby, the
- * road tune through a run, pushed harder while a fight is on, and
+ * Picks the music for the moment: the safehouse tune in the lobby, Last
+ * Stand through a run, pushed harder while a fight is on, and
  * silence for the two endings so their stingers speak alone.
  */
 export class ScoreDirector {
   private readonly music: LoopMusic;
   private fighting = false;
-  private readonly road = lastLight(() => (this.fighting ? 1 : 0));
+  private readonly road = lastStand(() => (this.fighting ? 1 : 0));
 
   constructor(engine: AudioEngine) {
     // A low cutoff: the score is the room tone of a dead city, never the loudest thing in it.
