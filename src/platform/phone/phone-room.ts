@@ -4,7 +4,7 @@ import { SocketClient } from "@/platform/net/socket-client";
 import { defaultName, saveName } from "@/platform/profile";
 import { playersSchema, type Payload, type ServerEnvelope } from "@/platform/protocol";
 import { requestMotion } from "./permissions";
-import { usePhoneStore as store } from "./phone-store";
+import { createPhoneStore, type PhoneError } from "./phone-store";
 import { ScreenAwake } from "./screen-awake";
 import { readToken, writeToken } from "./seat-token";
 
@@ -21,6 +21,8 @@ const BACKLOG_LIMIT = 50;
  * game's business.
  */
 export class PhoneRoom {
+  /** This room's screens. A fresh room never starts where another one ended. */
+  readonly store = createPhoneStore();
   private readonly socket: SocketClient;
   private readonly awake = new ScreenAwake();
   private readonly listeners = new Set<(event: PhoneRoomEvent) => void>();
@@ -34,7 +36,7 @@ export class PhoneRoom {
     this.socket = new SocketClient({
       onOpen: (send) => send({ type: "phone:join", code: this.code, token: readToken(this.code) ?? undefined }),
       onMessage: (message) => this.onMessage(message),
-      onStatus: (status) => store.setState(status === "replaced" ? { status, stage: "error", error: "replaced" } : { status }),
+      onStatus: (status) => this.store.setState(status === "replaced" ? { status, stage: "error", error: "replaced" } : { status }),
     });
   }
 
@@ -50,7 +52,7 @@ export class PhoneRoom {
   async join(name: string | null): Promise<void> {
     // Skipping the name keeps whatever was saved before, and the seat number stands in for it.
     if (name) saveName(name);
-    store.setState({ name: name ?? "", stage: "joining" });
+    this.store.setState({ name: name ?? "", stage: "joining" });
     this.audio = new AudioEngine();
     void this.audio.unlock();
     this.motion = await requestMotion();
@@ -58,10 +60,22 @@ export class PhoneRoom {
     this.socket.connect();
   }
 
+  /** Safe to call twice: a room that ended is disposed again when its page goes. */
   dispose(): void {
     this.awake.stop();
     this.socket.close();
     this.audio?.close();
+    this.audio = null;
+  }
+
+  /**
+   * Shows the error and stops for good. A socket left open would rejoin a
+   * dead room on every reconnect, and each miss counts against the join
+   * limit that every phone on the same network shares.
+   */
+  fail(error: PhoneError): void {
+    this.store.setState({ stage: "error", error });
+    this.dispose();
   }
 
   private onMessage(message: ServerEnvelope): void {
@@ -71,8 +85,8 @@ export class PhoneRoom {
         writeToken(this.code, message.token);
         const first = this.current === null;
         if (first) this.current = this.makeApi(message.seat, message.seats);
-        if (!store.getState().name) store.setState({ name: defaultName(message.seat) });
-        store.setState({ stage: "playing", seat: message.seat, game: message.game, error: null, hostAway: !message.hostHere });
+        if (!this.store.getState().name) this.store.setState({ name: defaultName(message.seat) });
+        this.store.setState({ stage: "playing", seat: message.seat, game: message.game, error: null, hostAway: !message.hostHere });
         this.sendProfile();
         if (!first) this.emit({ type: "rejoined" });
         return;
@@ -87,18 +101,15 @@ export class PhoneRoom {
           this.socket.redial();
           return;
         }
-        store.setState({ stage: "error", error: message.reason });
-        return;
+        return this.fail(message.reason);
       }
       case "room:closed":
-        store.setState({ stage: "error", error: "closed" });
-        this.dispose();
-        return;
+        return this.fail("closed");
       case "host:away":
-        store.setState({ hostAway: true });
+        this.store.setState({ hostAway: true });
         return;
       case "host:back":
-        store.setState({ hostAway: false });
+        this.store.setState({ hostAway: false });
         this.sendProfile();
         this.emit({ type: "rejoined" });
         return;
@@ -110,12 +121,12 @@ export class PhoneRoom {
   private onHost(payload: Payload): void {
     if (!reserved.has(payload.kind)) return this.emit({ type: "message", payload });
     const players = playersSchema.safeParse(payload);
-    if (players.success) store.setState({ players: players.data.players });
+    if (players.success) this.store.setState({ players: players.data.players });
   }
 
   /** The host learns names from the phones, so it hears again after every reconnect. */
   private sendProfile(): void {
-    this.send({ kind: "profile", name: store.getState().name });
+    this.send({ kind: "profile", name: this.store.getState().name });
   }
 
   private send(payload: Payload): void {
