@@ -1,0 +1,46 @@
+/*
+  The showcase page the media is captured from: the canvas fills the
+  window, and the icon carries the title along its bottom.
+*/
+
+.bc-show {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #07080f;
+}
+
+.bc-show__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.bc-show__title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 6%;
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.22em;
+  font-size: 11vw;
+  font-style: italic;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: #ffffff;
+  -webkit-text-stroke: 0.07em #120d24;
+  paint-order: stroke fill;
+  text-shadow: 0 0.06em 0 #120d24, 0 0 0.35em rgba(255, 138, 31, 0.6);
+  transform: skewX(-6deg);
+  pointer-events: none;
+}
+
+.bc-show__title b {
+  color: #ff8a1f;
+}

@@ -50,7 +50,7 @@ function start() {
   client.connect();
   const first = FakeSocket.all[0]!;
   first.open();
-  first.receive({ type: "phone:joined", code: "ABCD", game: "fencing", seats: 2, seat: 1, token: "t", hostHere: true });
+  first.receive({ type: "phone:joined", code: "ABCD", game: "blade-clash", seats: 2, seat: 1, token: "t", hostHere: true });
   // The server asks for a handover, and the client dials a second socket.
   first.receive({ type: "server:rotate" });
   return { client, first, second: FakeSocket.all[1]! };

@@ -7,7 +7,7 @@
 //
 // alpha is the compass turn (turning right lowers it), beta tips the top
 // edge up, gamma rolls the right edge down. window.__push(a, ms) queues a
-// vertical acceleration in m/s² for fencing's jabs and parries.
+// vertical acceleration in m/s², for games that read a shake or a punch.
 (() => {
   // Some browsers and test contexts lack the event constructors, so plain events stand in.
   const make = (type, init) => {
@@ -20,8 +20,6 @@
   window.__push = (a, ms) => {
     for (let t = 0; t < ms; t += 16) state.queue.push(a);
   };
-  window.__jab = () => state.queue.push(0, 10, 26, 32, 14, -16, -24, -10, 0);
-  window.__parry = () => state.queue.push(0, -10, -24, -28, -8, 6, 0);
   setInterval(() => {
     window.dispatchEvent(
       make("deviceorientation", { alpha: state.alpha, beta: state.beta, gamma: state.gamma, absolute: false }),

@@ -1,0 +1,21 @@
+import { SoundDirector } from "@/games/blade-clash/audio/sound-director";
+import type { Slot } from "@/games/blade-clash/players";
+import type { Tuning } from "@/games/blade-clash/tuning";
+import type { AudioEngine } from "@/platform/audio/audio-engine";
+
+/**
+ * Blade Clash's sound on the computer. The platform owns the audio engine and
+ * unlocked it in the click that opened the room. This directs it: music,
+ * crowd and the sound of every clash.
+ */
+export class HostAudio {
+  readonly director: SoundDirector;
+
+  constructor(engine: AudioEngine, tuning: () => Tuning, name: (slot: Slot) => string) {
+    this.director = new SoundDirector(engine, tuning, name);
+  }
+
+  dispose(): void {
+    this.director.stop();
+  }
+}

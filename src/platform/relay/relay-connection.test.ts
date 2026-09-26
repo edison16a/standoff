@@ -53,7 +53,7 @@ function connect() {
 
 async function openRoom(seats = 2) {
   const host = connect();
-  await host.send({ type: "host:create", game: "fencing", seats });
+  await host.send({ type: "host:create", game: "blade-clash", seats });
   const created = host.socket.last("room:created");
   return { host, code: created.code, token: created.token };
 }

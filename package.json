@@ -2,7 +2,7 @@
   "name": "standoff",
   "private": true,
   "version": "0.1.0",
-  "description": "A 1v1 fencing game where two phones are the swords and a computer hosts the strip.",
+  "description": "A party games console where phones are the controllers and a computer is the big screen.",
   "type": "module",
   "scripts": {
     "dev": "tsx watch --clear-screen=false server/index.ts",

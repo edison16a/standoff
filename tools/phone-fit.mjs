@@ -6,7 +6,7 @@
 // Needs the dev server.
 //
 //   node tools/phone-fit.mjs [--url http://localhost:3000] [--out shots/]
-//     [--games magic-kart,fencing] [--theme light|dark] [--chromium /path/to/chrome]
+//     [--games magic-kart,blade-clash] [--theme light|dark] [--chromium /path/to/chrome]
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";

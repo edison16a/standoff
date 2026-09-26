@@ -44,7 +44,7 @@ describe("relay failures and limits", () => {
     const store = new MemoryStore();
     const backend: Backend = { store, bus: new MemoryBus(), label: "test", shared: true };
     const host = connect(backend);
-    await host.send({ type: "host:create", game: "fencing", seats: 2 });
+    await host.send({ type: "host:create", game: "blade-clash", seats: 2 });
     const code = host.socket.inbox.find((m) => m.type === "room:created")!.code;
 
     // The seat is claimed, then subscribing to its channel fails.
@@ -62,7 +62,7 @@ describe("relay failures and limits", () => {
   it("stops one address from creating room after room", async () => {
     const backend: Backend = { store: new MemoryStore(), bus: new MemoryBus(), label: "test", shared: true };
     const host = connect(backend);
-    for (let i = 0; i < 12; i++) await host.send({ type: "host:create", game: "fencing", seats: 2 });
+    for (let i = 0; i < 12; i++) await host.send({ type: "host:create", game: "blade-clash", seats: 2 });
     expect(host.socket.inbox.filter((m) => m.type === "room:created")).toHaveLength(10);
     expect(host.socket.errors).toEqual(["unavailable", "unavailable"]);
   });

@@ -50,9 +50,9 @@ The home screen works like a console menu. Big tiles show each game, and the cho
 
 <img src="docs/screenshots/cube-game.jpg" alt="The cube jumping spikes in a neon level" width="100%" />
 
-### Fencing
+### Blade Clash
 
-<img src="docs/screenshots/fencing.jpg" alt="Two fencers on the strip with sparks from a parry" width="100%" />
+<img src="docs/screenshots/blade-clash.jpg" alt="The Knight and the Star Knight throwing sparks as their blades clash, one half of the screen for each" width="100%" />
 
 ### Brawl Battle
 
@@ -71,7 +71,7 @@ In the order the home screen shows them:
 * **Basketball 3v3:** three on three with the stars for up to six phones. Dribble moves, a shot meter, dunks and free throws.
 * **Soccer 3v3:** three on three football for up to six phones. Hold to power a shot, tap to pass, and beat defenders with skill moves.
 * **Cube Game:** jump for real to jump the cube through five levels of rhythm and spikes.
-* **Fencing:** your phone is the sword. Move it slowly and the blade follows, flick or shake it to jab, raise it up and to the right to parry.
+* **Blade Clash:** a split screen sword duel for two. Your phone is the sword in full 3D. Swing, block and clash until one fighter has taken five hits.
 * **Brawl Battle:** a four fighter platform brawl. Charge up attacks, pile on the damage and knock everyone off the stage.
 
 Empty spots are filled by computer players. Each game lives in its own folder under `src/games`, with a README of its own.
@@ -91,7 +91,7 @@ Camera games have no phones. Stand where the camera sees you from the waist up, 
 * **Basketball 3v3:** the joystick moves. Hold **Shoot** and let go in the green. With the ball the third button is **Dribble**: back is a stepback, sideways a crossover, forward a spin. Without it, it is **Steal** or **Block**. Reach in too often on one player and you may foul.
 * **Soccer 3v3:** the joystick moves and aims. Tap **Shoot/Pass** to pass, or hold it to fill the power bar. Green is placed, red is powerful but wild. With the ball the second button is **Skill**: forward is a rainbow flick, sideways a crossover, back a drag back, centred a 360.
 * **Cube Game:** jump for real to jump the cube.
-* **Fencing:** hold the phone like a sword. Move slowly to aim, flick or shake to jab, raise up and to the right to parry. Hold **Forward** or **Back** to move. To fence alone, tap **Play the computer**.
+* **Blade Clash:** hold the phone like the handle of a sword and calibrate by pointing at the targets. The sword on screen copies it in 3D. A hit only counts when a moving blade really touches the other fighter, and a blade held in the way blocks it. Hold **Forward** or **Back** to move. To fight alone, tap **Play the computer**.
 * **Brawl Battle:** the joystick moves, and pushing up jumps (push up again in the air to double jump). Attacks change with the direction you hold. Hold an attack past 0.4 seconds to charge a stronger move, and use the Ult when its ring is full. Two lives each, and more damage means you fly further.
 
 ## Running it
@@ -185,70 +185,29 @@ So when a WebSocket fails before it ever opens, the client switches to an HTTP s
 
 To stay inside the free Redis quota, a phone only sends a motion frame when the reading actually changed, plus a keepalive four times a second. Strikes go out the instant they are detected.
 
-## Fencing
+## Blade Clash
 
-Everything in this section lives in `src/games/fencing`.
+Everything in this section lives in `src/games/blade-clash`, and its own README goes further.
 
-### Sword tracking
+### The sword
 
-The phone's orientation (`deviceorientation`) becomes a quaternion. People hold a phone "like a sword" in two ways: flat with the top edge forward, or upright with the back facing forward. Calibration takes whichever of those two edges is closer to level as pointing at the screen, and remembers that direction in the phone's own frame as the blade. From then on the blade's elevation and swing relative to the guard drive the sword on screen every frame, so tilting up raises the sword however the phone is held. It reads an angle directly, so there is nothing to drift. Swinging the blade toward or away from the camera foreshortens it and dips the tip a little, which is how circling the phone shows up as the blade circling in a side view.
+Each phone is the handle of a sword. It reads its orientation (`deviceorientation`) and learns the grip at calibration: the player points at the middle of their half of the screen, then at each corner, then shows a relaxed guard. From then on the phone sends how the sword is held, turned, raised, the edge's angle and how far the arm reaches. The computer puts the hand and the blade in the world from that, so the sword on screen moves in full 3D with the phone. Footwork is two hold buttons, **Forward** and **Back**, which leaves the sensors free for the sword.
 
-### Jabs and parries
+### Hits and clashes
 
-A small gesture classifier sorts the phone's motion into three kinds. Slow moves only move the blade, which is how you aim. Any quick move is a jab: the size of the acceleration (`devicemotion`, with gravity removed) or of the turn passing its threshold, whichever way the phone goes. A whole shake is one jab, because a move has to calm down before the next can start. A parry is a place, not a speed: the blade passing a point up and to the right of the calibrated guard. A quick raise that reaches that point is a parry, not a jab, and the blade has to come back down before it can parry again.
+There are no gestures. A hit is a moving blade passing through the other fighter's head, body or legs. Each swing is tested along its whole path in steps no longer than a blade is thick, so a swing too fast to see in one frame still hits what it went through. Blade against blade is tested first, so a blade held in the way stops a swing. Blades that meet fast enough clash: sparks, a clang, and both swords are thrown back before they ease into the hand again. Each fighter can take five hits.
 
-### Calibration
+### The look
 
-The phone asks for its top edge to point at the middle of the screen, and draws it. A bubble level, fed from the same orientation reading, shows how far the phone is from flat and lights up within 5 degrees. The guard is captured at the end of a three second countdown, so the tap itself never moves it. After that the fencer on the phone copies every tilt, so it is obvious it worked.
-
-### Footwork
-
-Footwork is two hold buttons, Forward on top and Back below, since the top of the screen points at the opponent. Buttons are instant and never drift, which leaves the sensors free for the sword. Lifting a finger anywhere, even off the button, stops the fencer.
-
-### The referee
-
-The host steps the match at a fixed 60 Hz. A jab does not land when it is detected: the tip takes 220 ms to arrive, and the defender's parry window is checked at the moment of arrival. That gap is what lets a fast reaction save a touch. A jab also has to be in range and on target (the live blade within 75 degrees of the line, generous because a flick throws the phone about). Two touches within 60 ms of each other cancel out, like a double in épée. If both fencers walk into each other, it is called corps-à-corps and they are put back at a safe distance.
-
-### Slow motion and effects
-
-The match driver owns time. When a touch lands, the game runs at a fifth of its speed for one second, then an impact cue fires and time snaps back. That cue is when the burst goes off where the blade landed: a shockwave ring, a spray of sparks and a flash. A parry throws sparks where the blades meet, and a win fires confetti from both corners. Blade tips leave a trail that fades within 280 ms. Strip effects are kept in strip metres on the game clock, so they slow down with everything else. The confetti runs on the wall clock and keeps falling at its own pace.
-
-### The computer opponent
-
-`src/games/fencing/engine/bot.ts` drives a fencer through the same `control` and `strike` calls a phone uses, so the referee judges it by the same rules. It waits just outside reach, steps in to attack every couple of seconds, backs off again, and tries to parry about half of your jabs with a human sized reaction time. Some of those parries arrive too late, which is the point.
-
-### Fencers and characters
-
-Every fencer is a cutout rig: separate art pieces for the head, torso, arms, legs and sword, hung on one skeleton and drawn with canvas paths. A pose is a handful of numbers (hip position, lean, where each foot and hand is, blade angle). Knees and elbows are solved with two bone IK, so poses stay small enough to blend field by field.
-
-The sword arm follows the phone. Jabs, parries, deflections, hits, and the victory and defeat poses are layered on top by a small animator. Each action has a weight that snaps toward 1 when it starts and eases back to 0 after, which is how a lunge briefly takes over the tracked sword and then springs back to following your hand. The feet step in time with distance travelled, so a retreat plays the same step backwards, back foot first, which is how fencers actually retreat.
-
-The four characters (Vale, Duchess, Marrow, Iron) share that skeleton and animation. A character is only a choice of art pieces and colours, so all of them stay fully reactive. Player one's trim is red and player two's is green, like the scoring lamps on a real strip.
+The screen is split down the middle, one shoulder camera per player, each with its own bloom. Four fighters share one skeleton with inverse kinematics: the Knight with a longsword, the Samurai with a katana, the Block Hero with a pixel sword and the Star Knight with a glowing energy blade. The arena is an open air stone dais under a full house. Blades leave trails, clashes throw sparks in the blades' colours, and the last hit plays in slow motion before the winner raises their sword under confetti. Each half has its player's card with five health blades, with the split map between them.
 
 ### Sound
 
-All of it is synthesized with the Web Audio API, so there are no audio files. Four buses (music, crowd, effects, interface) feed a limiter. Each combat sound fires off the same game event that starts the animation, so they land on the same frame. The music is two step sequenced loops, an ambient one for the lobby and a driving one for the match, scheduled ahead on the audio clock. It ducks under cheers and drops away during the slow motion after a touch.
-
-The crowd murmurs under the whole match. Cheers are rationed on purpose: only a clash (both fence at once and one parries) or a match point earns one, with a cooldown between them.
-
-iOS will not start audio or share motion until the user taps, so the phone's Join button does both in the one tap, along with a screen wake lock. Haptics use `navigator.vibrate`, which works on Android. iOS Safari has never supported it and the old checkbox trick was closed in iOS 26.5, so on iPhones the computer's sound carries the feedback.
+All of it is synthesized with the Web Audio API through four buses (music, crowd, effects, interface). There is lobby and fight music, a whoosh, clash and hit in each weapon's own voice, the energy blade's hum, clanking armour, and a crowd that gasps at big clashes and cheers the finish.
 
 ### Tuning
 
-Every value worth adjusting by feel is in the tuning drawer (the sliders icon at the top right of the stage). Changes reach both phones at once. Nothing is saved, so a new game starts from the defaults.
-
-| Setting | Default | What it changes |
-| --- | --- | --- |
-| Jab force | 12 m/s² | How hard a quick move has to push the phone to jab |
-| Jab turn | 300 °/s | How fast a quick move has to turn the phone to jab |
-| Parry rise | 30° | How far above the guard the blade has to rise to parry |
-| Parry right | 20° | How far right of the guard it has to swing as well |
-| Parry window | 1000 ms | How long a parry blocks |
-| Refractory period | 350 ms | Quiet time after any jab or parry |
-| Music, crowd, effects | 0.5, 0.6, 0.9 | Mix levels |
-| Cheer cooldown | 8 s | Minimum gap between cheers |
-
-These are starting points. Expect to move them once two people are actually playing.
+The tuning drawer (the sliders icon at the top right) holds the hit and clash speeds, the knockback, the cooldowns and the mix. Nothing is saved.
 
 ## Project layout
 
@@ -267,7 +226,7 @@ src/
   games/
     catalog.ts            Every game and how to load it
     kit/                  Shared code games may use: phone aiming, setup steps, seat colours
-    fencing/              Engine, rig, renderer, motion, sound, screens
+    blade-clash/          Sword duel in split screen, three.js
     fruit-ninja/          Slicing on a wooden board, three.js
     magic-kart/           Kart racing in split screen, three.js
     zombie-survival/      Co-op zombie shooter over 25 stages, three.js
@@ -282,7 +241,7 @@ src/
 npm test
 ```
 
-The suite covers the relay (seating up to six, ordering, kicks, grace periods, closing, store failures and rate limits), both Vercel routes, the socket handover, the platform's host room and names, the game catalog, and for fencing the motion pipeline fed with synthetic sensor data, the gesture classifier (slow moves, shakes, jabs and parries up and to the right), level detection, the referee, match flow, slow motion, the engine playing whole exchanges, the computer opponent, the effects, the rig's IK and animator, the lobby and seating rules, and protocol validation. The kit's aim math and phone aiming are tested too. Each three.js game tests its own engine: Fruit Slicer's blade sweeps and scoring, Magic Kart's laps, checkpoints, items and whole computer races on every map, Zombie Survival's guns, stages and a bot team playing all 25 stages, and Shooting Gallery's rounds, hit tests and best scores.
+The suite covers the relay (seating up to six, ordering, kicks, grace periods, closing, store failures and rate limits), both Vercel routes, the socket handover, the platform's host room and names, the game catalog, and for Blade Clash the motion pipeline fed with synthetic sensor data, calibration and aiming, the swept blade tests, clashes and knockback, the engine playing whole exchanges, match flow with the slow motion finish, the computer opponent, the rig, footwork and endings, the lobby, and the showcase's beats. The kit's aim math and phone aiming are tested too. Each three.js game tests its own engine: Fruit Slicer's blade sweeps and scoring, Magic Kart's laps, checkpoints, items and whole computer races on every map, Zombie Survival's guns, stages and a bot team playing all 25 stages, and Shooting Gallery's rounds, hit tests and best scores.
 
 Two more files run against a real Redis: the relay with two separate backends standing in for two Vercel instances, and the store's locking and expiry. They run when `REDIS_TEST_URL` is set:
 
