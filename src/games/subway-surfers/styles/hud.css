@@ -36,6 +36,11 @@
   top: 20px;
 }
 
+/* The tutorial's Skip button sits on the divider at the top, so the right name drops level with the left. */
+.ss-hud--2 .ss-view--right .ss-tut .ss-tag {
+  top: 84px;
+}
+
 .ss-score {
   position: absolute;
   top: 20px;
