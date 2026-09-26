@@ -6,7 +6,7 @@ import type { Athlete } from "./types";
 
 /** A runner in open space in the middle of the floor. */
 function runner(): Athlete {
-  const a = createAthlete(0, 0, 0, "curry", null);
+  const a = createAthlete(0, 0, 0, "ashby", null);
   Object.assign(a, { x: -6, z: 6, yaw: Math.PI / 2 });
   return a;
 }
