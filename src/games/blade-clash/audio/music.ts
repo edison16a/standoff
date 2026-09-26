@@ -1,6 +1,7 @@
 import type { AudioEngine } from "../../../platform/audio/audio-engine";
 import { playFanfare } from "./stings";
-import { MATCH_TRACK, MENU_TRACK, type Track } from "./tracks";
+import { MENU_TRACK } from "./menu-track";
+import { MATCH_TRACK, type Track } from "./tracks";
 
 export type TrackName = "menu" | "match";
 
@@ -35,7 +36,7 @@ export class Music {
     if (!name) return;
     const gain = this.engine.ctx.createGain();
     gain.gain.value = 0.0001;
-    gain.gain.setTargetAtTime(1, this.engine.now, 0.4);
+    gain.gain.setTargetAtTime(TRACKS[name].level, this.engine.now, 0.4);
     gain.connect(this.tone);
     this.current = { name, gain, step: 0, nextAt: this.engine.now + 0.1 };
     this.timer ??= setInterval(() => this.schedule(), WAKE_MS);
@@ -51,12 +52,14 @@ export class Music {
    * it is heard in full and never clashes with the chords underneath.
    */
   private dip(amount: number, holdS: number): void {
-    const gain = this.current?.gain.gain;
-    if (!gain) return;
+    const current = this.current;
+    if (!current) return;
+    const gain = current.gain.gain;
+    const level = TRACKS[current.name].level;
     const now = this.engine.now;
     gain.cancelScheduledValues(now);
-    gain.setTargetAtTime(amount, now, 0.08);
-    gain.setTargetAtTime(1, now + holdS, 0.6);
+    gain.setTargetAtTime(amount * level, now, 0.08);
+    gain.setTargetAtTime(level, now + holdS, 0.6);
   }
 
   stop(): void {

@@ -1,13 +1,15 @@
 import type { AudioEngine } from "../../../platform/audio/audio-engine";
-import { bass, brass, choir, cymbal, flute, frameDrum, harp, horn, rim, shaker, stringStab, strings, taiko } from "./instruments";
+import { bass, brass, choir, cymbal, horn, koto, rim, shaker, stringStab, strings, taiko } from "./instruments";
 
 /**
- * The two music loops, written as step sequences. A track is told "step
+ * The music loops, written as step sequences. A track is told "step
  * n starts at time t" and schedules whatever plays there. Steps are
  * sixteenth notes and each chord lasts a bar.
  */
 export interface Track {
   bpm: number;
+  /** How loud the track plays into the music bus, so every track sits at the same level. */
+  level: number;
   /** Steps before the pattern repeats. */
   length: number;
   play(engine: AudioEngine, out: AudioNode, step: number, at: number): void;
@@ -23,7 +25,7 @@ function noteLength(line: Line, step: number, stepS: number): number {
   return n * stepS * 0.92;
 }
 
-/* Match, "Steel and Thunder": D minor at 132. Taiko and driving strings under a horn hook; the second half lifts with brass and choir. */
+/* Match, "Steel and Thunder": D minor at 132. Taiko and driving strings under a horn hook doubled by a koto; the second half lifts with brass and choir. */
 
 const BATTLE_CHORDS: [number, number, number][] = [
   [50, 57, 62], [50, 57, 62], [46, 53, 58], [48, 55, 60], [50, 57, 62], [50, 57, 62], [46, 53, 58], [45, 52, 57],
@@ -52,6 +54,7 @@ const OSTINATO = [0, 0, 1, 0, 3, 1, 2, 1];
 
 export const MATCH_TRACK: Track = {
   bpm: 132,
+  level: 0.42,
   length: 16 * 16,
   play(engine, out, step, at) {
     const bar = Math.floor(step / 16) % BATTLE_CHORDS.length;
@@ -83,47 +86,10 @@ export const MATCH_TRACK: Track = {
     if (lift && inBar === 0) strings(engine, out, at, [octave + 12], beat * 4, 0.01);
 
     const note = HOOK[step % HOOK.length];
-    if (note !== null && note !== undefined) horn(engine, out, at, note, noteLength(HOOK, step, stepS), lift ? 0.05 : 0.042);
+    if (note === null || note === undefined) return;
+    horn(engine, out, at, note, noteLength(HOOK, step, stepS), lift ? 0.05 : 0.042);
+    // In the first half a koto plucks along with the horn, which gives the hook its edge and its place.
+    if (!lift) koto(engine, out, at, note, 0.028);
   },
 };
 
-/* Menu, "Before the Duel": D major at 96. A harp rippling under a wooden flute, a frame drum keeping easy time. */
-
-const CAMP_CHORDS: [number, number, number][] = [
-  [62, 66, 69], [60, 64, 67], [55, 59, 62], [62, 66, 69], [59, 62, 66], [55, 59, 62], [57, 61, 64], [57, 61, 64],
-];
-const CAMP_TUNE: Line = [
-  74, _, _, _, 76, _, 78, _, 81, _, _, _, 78, _, 76, _,
-  76, _, _, _, 74, _, 72, _, 74, _, _, _, _, _, _, _,
-  71, _, _, _, 74, _, 79, _, 78, _, 76, _, 74, _, _, _,
-  74, _, _, _, _, _, _, _, 69, _, 71, _, 74, _, 76, _,
-  78, _, _, _, 76, _, 74, _, 71, _, _, _, 74, _, _, _,
-  79, _, _, _, 78, _, 76, _, 74, _, _, _, 71, _, _, _,
-  73, _, _, _, 76, _, 81, _, 79, _, 78, _, 76, _, _, _,
-  76, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
-];
-/** The harp ripples up and down the chord in sixteenths. */
-const RIPPLE = [0, 1, 2, 3, 2, 1];
-
-export const MENU_TRACK: Track = {
-  bpm: 96,
-  length: 16 * 8,
-  play(engine, out, step, at) {
-    const bar = Math.floor(step / 16) % CAMP_CHORDS.length;
-    const inBar = step % 16;
-    const chord = CAMP_CHORDS[bar]!;
-    const beat = 60 / 96;
-    const stepS = beat / 4;
-    if (inBar === 0) strings(engine, out, at, chord.map((n) => n - 12), beat * 4.2, 0.009);
-    if (inBar === 0 || inBar === 10) frameDrum(engine, out, at, 0.26);
-    if (inBar === 6 || inBar === 14) frameDrum(engine, out, at, 0.08, true);
-    if (inBar % 2 === 1) shaker(engine, out, at, 0.018);
-    if (inBar === 0 || inBar === 8) bass(engine, out, at, chord[0] - 24, 0.14);
-    if (inBar % 2 === 0) {
-      const index = RIPPLE[(inBar / 2) % RIPPLE.length]!;
-      harp(engine, out, at, index === 3 ? chord[0] + 12 : chord[index]!, 0.045);
-    }
-    const note = CAMP_TUNE[step % CAMP_TUNE.length];
-    if (note !== null && note !== undefined) flute(engine, out, at, note, noteLength(CAMP_TUNE, step, stepS), 0.05);
-  },
-};
