@@ -31,4 +31,12 @@ describe("the lineup", () => {
       expect(setups[1]!.seat).toBeNull();
     }
   });
+
+  it("never gives a computer player a call sign a player already goes by", () => {
+    const named = (seat: number) => (seat === 2 ? "Nova" : "viper");
+    for (let seed = 1; seed <= 40; seed++) {
+      const names = buildLineup(entries, named, "normal", seed).setups.map((s) => s.name.toLowerCase());
+      expect(new Set(names).size).toBe(4);
+    }
+  });
 });

@@ -29,7 +29,9 @@ export interface Lineup {
 export function buildLineup(entries: readonly LineupEntry[], nameOf: (seat: number) => string, difficulty: Difficulty, seed: number): Lineup {
   const rng = new Rng(seed);
   const characters = assignCharacters(entries.length, rng);
-  const names = shuffle([...CALL_SIGNS], rng);
+  // A call sign a player already goes by would put two of one name in the feed and on the tags.
+  const taken = new Set(entries.flatMap((e) => (e.seat === null ? [] : [nameOf(e.seat).trim().toLowerCase()])));
+  const names = shuffle(CALL_SIGNS.filter((n) => !taken.has(n.toLowerCase())), rng);
   const humanSeats = new Set(entries.flatMap((e) => (e.seat === null ? [] : [e.seat])));
   const spareColours = [1, 2, 3, 4].filter((seat) => !humanSeats.has(seat)).map(playerColor);
   // Players' guns are known; each computer then takes one its side does not have yet.
