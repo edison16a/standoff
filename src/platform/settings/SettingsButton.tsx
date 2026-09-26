@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { IconButton } from "@/components/ui/IconButton";
+import { startFrameLimiter } from "@/platform/frame-rate/frame-limiter";
 import { SettingsPanel } from "./SettingsPanel";
 
 interface Anchor {
@@ -19,6 +20,10 @@ export function SettingsButton() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [anchor, setAnchor] = useState<Anchor | null>(null);
+
+  // The gear is on every host screen, so it is where the frame limiter
+  // starts. Starting is idempotent and the limiter outlives the button.
+  useEffect(startFrameLimiter, []);
 
   const toggle = () => {
     if (anchor) return setAnchor(null);
