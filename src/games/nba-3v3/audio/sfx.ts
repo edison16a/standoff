@@ -5,8 +5,9 @@ import { createRoom, vary, type Room } from "./mix";
 /**
  * The court's own sounds, synthesised: the ball on the hardwood, sneakers
  * squeaking, the net, the iron and the glass, passes and blocks, and the
- * whistle. The horns and the organ are in `arena.ts`. Each is a sharp transient, a body and a tail sent into the
- * arena's reverb, pitched a little differently every time.
+ * whistle. The horns and the organ are in `arena.ts`. Each is a sharp
+ * transient, a body and a tail sent into the arena's reverb, pitched a
+ * little differently every time.
  */
 export class Sfx {
   private readonly room: Room;
