@@ -19,6 +19,14 @@ describe("SteadyHold", () => {
     expect(run(hold, () => [30, 50, -20], HOLD_MS * 0.6, HOLD_MS).progress).toBe(1);
   });
 
+  it("still fills on a phone that reads only five times a second", () => {
+    const hold = new SteadyHold();
+    let reading = hold.update(quatFromDeviceEuler(10, 20, 0), 0);
+    for (let t = 200; t <= HOLD_MS * 3; t += 200) reading = hold.update(quatFromDeviceEuler(10, 20, 0), t);
+    expect(reading.steady).toBe(true);
+    expect(reading.progress).toBe(1);
+  });
+
   it("drains when the hand wobbles", () => {
     const hold = new SteadyHold();
     const reading = run(hold, (t) => [10 * Math.sin(t / 60), 3 * Math.sin(t / 90), 0], 0, 3000);

@@ -25,7 +25,7 @@ async function calibrate(ctx, sensors) {
       return false;
     },
     null,
-    { polling: 500, timeout: 90000 },
+    { polling: 500, timeout: 240000 },
   );
   await ctx.phone.waitForTimeout(800);
   await ctx.snap("follow");

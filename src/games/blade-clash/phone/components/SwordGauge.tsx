@@ -33,7 +33,7 @@ export function SwordGauge({ colour, className }: { colour: string; className?: 
       const { reach, roll } = session.pipeline.control;
       const tip = toView(aim);
       // The hand sits low and right, and moves a little toward where the blade points.
-      const hand = { x: W * 0.62 + (tip.x - W / 2) * 0.25, y: H * 0.95 + (tip.y - H / 2) * 0.2 - reach * 18 };
+      const hand = { x: W * 0.62 + (tip.x - W / 2) * 0.25, y: H * 0.88 + (tip.y - H / 2) * 0.15 - reach * 18 };
       const blade = bladeRef.current;
       if (blade) {
         blade.setAttribute("x1", hand.x.toFixed(1));

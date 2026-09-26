@@ -28,7 +28,8 @@ export class SteadyHold {
     const dt = this.lastT === null ? 0 : Math.min(100, Math.max(0, t - this.lastT));
     this.lastT = t;
     this.history.push({ t, q });
-    while (this.history.length > 2 && t - this.history[0]!.t > WINDOW_MS) this.history.shift();
+    // Keep one reading from before the window, so a phone that reads slowly still covers all of it.
+    while (this.history.length > 2 && t - this.history[1]!.t >= WINDOW_MS) this.history.shift();
     const covered = t - this.history[0]!.t >= WINDOW_MS * 0.6;
     const steady = covered && this.history.every((entry) => angleBetween(entry.q, q) < STILL_ANGLE);
     this.progress = steady ? Math.min(1, this.progress + dt / HOLD_MS) : Math.max(0, this.progress - dt / DRAIN_MS);
