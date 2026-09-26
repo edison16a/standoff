@@ -1,0 +1,169 @@
+/*
+  The phone as the gun: health and score on top, the magazine, the big
+  Shoot button under the thumb, and Reload. Always dark, so it is easy on
+  the eyes in a dark room and never lights up a face.
+*/
+
+.cb-phone--play {
+  /* Edge to edge under the bar. */
+  margin: -8px calc(-1 * max(12px, env(safe-area-inset-right))) -8px calc(-1 * max(12px, env(safe-area-inset-left)));
+}
+
+.cb-play {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: clamp(8px, 1.6vh, 12px);
+  min-height: 0;
+  padding: 10px 16px 14px;
+  background: var(--cb-ink);
+  color: #eef2f7;
+}
+
+.cb-play__trigger {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.cb-play .kit-pad {
+  flex: 1;
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.cb-trigger {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  min-height: 0;
+  touch-action: none;
+}
+
+/* As big as the room it has, never bigger than the kit's own. */
+.cb-trigger .kit-fire {
+  display: grid;
+  place-content: center;
+  width: min(62vw, 260px, 36dvh);
+  min-width: 96px;
+}
+
+.cb-trigger__word {
+  font-family: var(--cb-display);
+  font-size: clamp(26px, 4.4vh, 38px);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+
+.cb-trigger small {
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.cb-play__buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.cb-reload,
+.cb-centre {
+  min-height: 52px;
+  height: clamp(52px, 8vh, 64px);
+  border: 0;
+  border-radius: 16px;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 800;
+  text-transform: uppercase;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.cb-reload {
+  flex: 1;
+  background: #3b4a7a;
+  font-size: 20px;
+}
+
+.cb-reload:active {
+  background: #52649e;
+}
+
+.cb-reload:disabled {
+  opacity: 0.45;
+}
+
+.cb-reload--urgent {
+  background: #c9861a;
+  animation: cb-urgent 900ms ease-in-out infinite;
+}
+
+@keyframes cb-urgent {
+  50% {
+    background: #e8a43a;
+  }
+}
+
+.cb-centre {
+  padding: 0 16px;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 13px;
+}
+
+.cb-play__down {
+  position: absolute;
+  inset: 45% 16px auto;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(11, 13, 24, 0.92);
+  box-shadow: 0 0 0 2px #e11d48;
+  text-align: center;
+  transform: translateY(-50%);
+}
+
+.cb-play__down strong {
+  color: #ff4a5a;
+  font-family: var(--cb-display);
+  font-size: 30px;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+/* Sideways: status, magazine and buttons on the left, the trigger on the right under the thumb. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .cb-play {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    column-gap: 20px;
+  }
+
+  .cb-play > :not(.cb-play__trigger, .cb-play__down) {
+    grid-column: 1;
+  }
+
+  .cb-play__buttons {
+    align-self: end;
+  }
+
+  .cb-play__trigger {
+    grid-row: 1 / 4;
+    grid-column: 2;
+  }
+
+  .cb-trigger .kit-fire {
+    width: min(100%, 62dvh, 240px);
+  }
+
+  .cb-mag {
+    padding: 6px 12px;
+  }
+
+  .cb-mag__rounds {
+    display: none;
+  }
+}

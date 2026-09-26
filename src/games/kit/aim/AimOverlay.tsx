@@ -3,8 +3,8 @@ import "./aim.css";
 import { useEffect, useRef } from "react";
 import type { Player } from "@/platform/games/game-api";
 import { playerColor } from "@/games/kit/players";
-import { TARGET_INSET, type ScreenPoint } from "./aim-math";
-import { toPixels, type HostAim } from "./host-aim";
+import { sameZone, TARGET_INSET, WHOLE_SCREEN, type AimZone, type ScreenPoint } from "./aim-math";
+import { zonePixels, type HostAim } from "./host-aim";
 import type { AimStep } from "./protocol";
 
 const TARGETS: Partial<Record<AimStep, ScreenPoint>> = {
@@ -22,18 +22,24 @@ interface AimOverlayProps {
   targets?: boolean;
 }
 
+type Box = { x: number; y: number; w: number; h: number };
+
 /**
  * A see through layer over the whole game screen. While a player
  * calibrates it shows the target they should point at, ringed in their
  * colour with their name. During play it draws every player's laser dot.
+ * A seat given a zone (see HostAim.setZone) sees its targets inside it,
+ * with the zone outlined in its colour, and its dot moves within it.
  */
 export function AimOverlay({ aim, players, dots = true, targets = true }: AimOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  // Read through a ref, so a new players function each render never restarts the drawing loop.
+  // Read through refs, so new props on a render never restart the drawing loop.
   const playersRef = useRef(players);
+  const showRef = useRef({ dots, targets });
   useEffect(() => {
     playersRef.current = players;
-  }, [players]);
+    showRef.current = { dots, targets };
+  }, [players, dots, targets]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -41,6 +47,9 @@ export function AimOverlay({ aim, players, dots = true, targets = true }: AimOve
     if (!canvas || !ctx) return;
     let frame = 0;
     const draw = (now: number) => {
+      // The next frame is booked first, so one frame that fails never stops the layer.
+      frame = requestAnimationFrame(draw);
+      const { dots, targets } = showRef.current;
       const dpr = window.devicePixelRatio || 1;
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
@@ -49,29 +58,55 @@ export function AimOverlay({ aim, players, dots = true, targets = true }: AimOve
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, width, height);
       const everyone = playersRef.current().filter((player) => player.connected);
-      // Players looking for the same target share it, their names stacked under it.
-      const waiting = new Map<AimStep, Player[]>();
+      // Players looking for the same target in the same zone share it, their names stacked under it.
+      const waiting = new Map<string, { at: { x: number; y: number }; zone: AimZone; who: Player[] }>();
       for (const player of everyone) {
         const step = aim.step(player.seat);
-        if (step && TARGETS[step]) waiting.set(step, [...(waiting.get(step) ?? []), player]);
+        const target = step ? TARGETS[step] : undefined;
+        if (!target) continue;
+        const zone = aim.zone(player.seat);
+        const at = zonePixels(target, zone, width, height);
+        const key = `${Math.round(at.x)},${Math.round(at.y)}`;
+        const spot = waiting.get(key) ?? { at, zone, who: [] };
+        spot.who.push(player);
+        waiting.set(key, spot);
       }
-      if (targets) for (const [step, who] of waiting) drawTarget(ctx, toPixels(TARGETS[step]!, width, height), who, now);
+      if (targets) {
+        for (const { at, zone, who } of waiting.values()) {
+          const box = { x: zone.x * width, y: zone.y * height, w: zone.w * width, h: zone.h * height };
+          if (!sameZone(zone, WHOLE_SCREEN)) drawZone(ctx, box, playerColor(who[0]!.seat));
+          drawTarget(ctx, at, who, now, box);
+        }
+      }
       if (dots) {
         for (const player of everyone) {
           const point = aim.point(player.seat, now);
-          if (point) drawDot(ctx, toPixels(point, width, height), playerColor(player.seat), player.name);
+          if (point) drawDot(ctx, zonePixels(point, aim.zone(player.seat), width, height), playerColor(player.seat), player.name);
         }
       }
-      frame = requestAnimationFrame(draw);
     };
     frame = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(frame);
-  }, [aim, dots, targets]);
+  }, [aim]);
 
   return <canvas ref={canvasRef} className="aim-overlay" aria-hidden="true" />;
 }
 
-function drawTarget(ctx: CanvasRenderingContext2D, at: { x: number; y: number }, who: Player[], now: number): void {
+/** The outline of a player's zone while they calibrate in it, so they can see which part of the screen is theirs. */
+function drawZone(ctx: CanvasRenderingContext2D, box: Box, colour: string): void {
+  ctx.save();
+  ctx.fillStyle = "rgba(10, 10, 20, 0.28)";
+  ctx.strokeStyle = colour;
+  ctx.lineWidth = 4;
+  ctx.setLineDash([18, 10]);
+  ctx.beginPath();
+  ctx.roundRect(box.x + 8, box.y + 8, box.w - 16, box.h - 16, 18);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawTarget(ctx: CanvasRenderingContext2D, at: { x: number; y: number }, who: Player[], now: number, box: Box): void {
   const pulse = 1 + Math.sin(now / 220) * 0.08;
   const colour = playerColor(who[0]!.seat);
   ctx.save();
@@ -93,16 +128,18 @@ function drawTarget(ctx: CanvasRenderingContext2D, at: { x: number; y: number },
   ctx.textBaseline = "middle";
   who.forEach((player, i) => {
     const below = at.y + 78 + i * 30;
-    const y = below > ctx.canvas.clientHeight - 24 ? at.y - 70 - i * 30 : below;
+    const y = below > box.y + box.h - 24 ? at.y - 70 - i * 30 : below;
     const text = `${player.name}, point here`;
     // A dark pill behind the name, so it reads on any game's background.
     const width = ctx.measureText(text).width + 24;
+    // Kept inside the zone, so a target near its edge never pushes the name off it.
+    const x = Math.min(Math.max(at.x, box.x + width / 2 + 4), box.x + box.w - width / 2 - 4);
     ctx.fillStyle = "rgba(10, 10, 20, 0.78)";
     ctx.beginPath();
-    ctx.roundRect(at.x - width / 2, y - 13, width, 26, 13);
+    ctx.roundRect(x - width / 2, y - 13, width, 26, 13);
     ctx.fill();
     ctx.fillStyle = playerColor(player.seat);
-    ctx.fillText(text, at.x, y);
+    ctx.fillText(text, x, y);
   });
   ctx.restore();
 }

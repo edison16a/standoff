@@ -73,6 +73,40 @@ describe("the phone's aim", () => {
     expect(aim.current).toEqual({ x: 0.5, y: -0.25 });
   });
 
+  it("keeps saved spans whole screen, and scales them to a zone when reused", () => {
+    vi.useFakeTimers();
+    localStorage.clear();
+    const settle = (heading: number, up: number) => {
+      for (let i = 0; i < 60; i++) {
+        vi.advanceTimersByTime(16);
+        point(heading, up);
+      }
+    };
+    // Measured across the whole screen: the top left target is 16 degrees left and 9 up.
+    const { room } = fakeRoom();
+    aim = new PhoneAim(room);
+    point(0, 0);
+    aim.setCenter();
+    point(-16, 9);
+    aim.setCorner("top-left");
+    point(16, -9);
+    aim.setCorner("bottom-right");
+    settle(-8, 0);
+    expect(aim.current.x).toBeCloseTo(-TARGET_INSET / 2, 1);
+    aim.dispose();
+
+    // Reused in the left half of the screen, the same turn crosses twice as much of the view.
+    aim = new PhoneAim(fakeRoom().room);
+    aim.setZone({ x: 0, y: 0, w: 0.5, h: 1 });
+    point(0, 0);
+    aim.setCenter();
+    aim.useQuick();
+    settle(-8, 0);
+    expect(aim.current.x).toBeCloseTo(-TARGET_INSET, 1);
+    settle(0, 4.5);
+    expect(aim.current.y).toBeCloseTo(TARGET_INSET / 2, 1);
+  });
+
   it("recentres on the current aim without losing the spans", () => {
     vi.useFakeTimers();
     const { room } = fakeRoom();
