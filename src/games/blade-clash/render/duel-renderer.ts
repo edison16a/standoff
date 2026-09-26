@@ -106,7 +106,7 @@ export class DuelRenderer {
         const at = new THREE.Vector3(event.at.x, event.at.y + floor, event.at.z);
         for (const slot of SLOTS) this.cameras[slot].closeIn(at);
         this.wash.colour.set(PLAYER_COLOURS[event.attacker]);
-        this.wash.target = 0.35;
+        this.wash.target = 0.8;
       }
     }
     if (event.type === "clash") for (const slot of SLOTS) this.cameras[slot].shake(0.02 + 0.04 * event.strength, wallNow);
@@ -125,8 +125,14 @@ export class DuelRenderer {
     this.wash.target = this.wash.amount = 0;
   }
 
-  /** Draws a frame: by default each player's shoulder view in their half, or the `views` given. */
+  /** Moves everything on to `frame` and draws it: by default each player's shoulder view in their half, or the `views` given. */
   render(frame: StageFrame, wallNow: number, views?: readonly View[]): void {
+    this.update(frame, wallNow);
+    this.draw(views);
+  }
+
+  /** Moves everything on to `frame` without drawing: the fighters, the effects, the arena and the cameras. */
+  update(frame: StageFrame, wallNow: number): void {
     if (this.dark === null) this.setTheme(false);
     const arena = this.arena!;
     const dt = this.lastWall === null ? 16 : Math.min(100, Math.max(0, wallNow - this.lastWall));
@@ -147,14 +153,19 @@ export class DuelRenderer {
     }
     this.wash.amount += (this.wash.target - this.wash.amount) * (1 - Math.exp(-dt / 250));
     this.post?.setWash(this.wash.colour, this.wash.amount);
+    this.effects.update(frame.t, wallNow);
+  }
+
+  /** Draws the state `update` left, into each view. */
+  draw(views?: readonly View[]): void {
     this.renderer.shadowMap.needsUpdate = true;
     for (const view of views ?? SLOTS.map((slot) => ({ rect: VIEWS[slot], camera: this.cameras[slot].camera }))) {
-      this.effects.update(frame.t, wallNow, view.camera);
-      this.draw(view);
+      this.effects.face(view.camera);
+      this.drawView(view);
     }
   }
 
-  private draw({ rect, camera }: View): void {
+  private drawView({ rect, camera }: View): void {
     const x = Math.round(rect.x * this.width);
     const w = Math.round(rect.w * this.width);
     const h = Math.round(rect.h * this.height);

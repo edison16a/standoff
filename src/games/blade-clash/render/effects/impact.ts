@@ -37,7 +37,7 @@ export class Impacts {
     this.pops.push({ pop: { at: at.clone(), born: t, lifeMs: options.lifeMs, size: options.size, colour }, flash, ring });
   }
 
-  update(t: number, camera: THREE.Camera): void {
+  update(t: number): void {
     for (let i = this.pops.length - 1; i >= 0; i--) {
       const { pop, flash, ring } = this.pops[i]!;
       const age = (t - pop.born) / pop.lifeMs;
@@ -55,10 +55,14 @@ export class Impacts {
       // Only just past white, so the bloom gives it a halo without swallowing the fighters.
       flash.material.color.copy(pop.colour).lerp(WHITE, 1 - age).multiplyScalar(FLASH);
       ring.position.copy(pop.at);
-      ring.quaternion.copy(camera.quaternion);
       ring.scale.setScalar(0.05 + ease * pop.size * 1.3);
       ring.material.opacity = (1 - age) * 0.9;
     }
+  }
+
+  /** The rings are flat, so each view turns them to face its own camera. */
+  face(camera: THREE.Camera): void {
+    for (const { ring } of this.pops) ring.quaternion.copy(camera.quaternion);
   }
 
   clear(): void {

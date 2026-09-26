@@ -7,29 +7,45 @@ import { canvasTexture } from "../kit/textures";
  * hang from the walls. All painted once on a canvas, seeded, and shared.
  */
 
-/** Square flagstones with worn edges and speckled grain. */
+/**
+ * Old flagstones laid in courses of different lengths, each stone its own
+ * shade, worn and stained, with dark joints between. It tiles seamlessly,
+ * since every course wraps round.
+ */
 export function flagstoneTexture(base: string): THREE.CanvasTexture {
   return canvasTexture(`flagstone:${base}`, (ctx, w, h, rand) => {
-    ctx.fillStyle = base;
+    ctx.fillStyle = "#1a1510";
     ctx.fillRect(0, 0, w, h);
-    const cells = 4;
-    const size = w / cells;
-    for (let y = 0; y < cells; y++) {
-      for (let x = 0; x < cells; x++) {
-        const shade = (rand() - 0.5) * 34;
-        ctx.fillStyle = `rgba(${shade > 0 ? 255 : 0},${shade > 0 ? 240 : 0},${shade > 0 ? 220 : 0},${Math.abs(shade) / 255})`;
-        ctx.fillRect(x * size + 3, y * size + 3, size - 6, size - 6);
+    const rows = 5;
+    const rowH = h / rows;
+    for (let r = 0; r < rows; r++) {
+      let x = -rand() * rowH;
+      while (x < w) {
+        const len = rowH * (0.8 + rand() * 1.1);
+        const shade = (rand() - 0.5) * 50;
+        // Each stone drawn twice across the wrap, so the texture repeats without a seam.
+        for (const shift of [0, -w, w]) {
+          ctx.fillStyle = base;
+          ctx.fillRect(x + shift + 2, r * rowH + 2, len - 4, rowH - 4);
+          ctx.fillStyle = shade > 0 ? `rgba(255,244,226,${shade / 255})` : `rgba(0,0,0,${-shade / 255})`;
+          ctx.fillRect(x + shift + 2, r * rowH + 2, len - 4, rowH - 4);
+        }
+        x += len;
       }
     }
-    for (let i = 0; i < 9000; i++) {
-      ctx.fillStyle = rand() < 0.5 ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.08)";
-      ctx.fillRect(rand() * w, rand() * h, 2, 2);
+    // Wear and stains: soft darker blotches and fine grain over everything.
+    for (let i = 0; i < 60; i++) {
+      const gx = rand() * w;
+      const gy = rand() * h;
+      const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, 10 + rand() * 40);
+      g.addColorStop(0, "rgba(0,0,0,0.12)");
+      g.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(gx - 50, gy - 50, 100, 100);
     }
-    // The joints between the stones.
-    ctx.fillStyle = "rgba(20,14,10,0.55)";
-    for (let i = 0; i <= cells; i++) {
-      ctx.fillRect(i * size - 2, 0, 4, h);
-      ctx.fillRect(0, i * size - 2, w, 4);
+    for (let i = 0; i < 12000; i++) {
+      ctx.fillStyle = rand() < 0.5 ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.09)";
+      ctx.fillRect(rand() * w, rand() * h, 2, 2);
     }
   }, { width: 512 });
 }

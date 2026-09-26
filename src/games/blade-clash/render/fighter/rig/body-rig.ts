@@ -44,9 +44,9 @@ export class BodyRig {
     const { a, b, c } = this.v;
     const bones = this.bones;
 
-    // The pelvis follows the hips' turn and a third of the spine's tip.
+    // The pelvis follows the hips' turn and a third of the spine's tip, and lies down with the spine in a fall.
     a.set(Math.cos(pose.hipsYaw), 0, -Math.sin(pose.hipsYaw));
-    b.copy(Y).lerp(t.up, 0.35).normalize();
+    b.copy(Y).lerp(t.up, 0.35 + 0.5 * THREE.MathUtils.clamp(Math.abs(pose.lean) - 0.6, 0, 1)).normalize();
     placeUpright(bones.pelvis, pose.hips, a, b);
     placeUpright(bones.chest, pose.hips, t.front, t.up);
 

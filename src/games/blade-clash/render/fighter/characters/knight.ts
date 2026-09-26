@@ -17,8 +17,8 @@ const GOLD = 0xc9a227;
  * colour.
  */
 export function dressKnight(d: Dresser, kit: LookKit, trim: THREE.Color): void {
-  const plate = kit.metal(STEEL, 0.32);
-  const dark = kit.metal(DARK, 0.38);
+  const plate = kit.metal(STEEL, 0.42);
+  const dark = kit.metal(DARK, 0.45);
   const gold = kit.metal(GOLD, 0.3);
   const coat = kit.cloth(trim.clone().multiplyScalar(0.8), 0.8);
   const mail = kit.metal(0x6b727c, 0.55);

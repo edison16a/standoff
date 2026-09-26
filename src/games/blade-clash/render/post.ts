@@ -48,7 +48,8 @@ const FINISH = {
       vec2 d = vUv - 0.5;
       float fade = 1.0 - vignette * smoothstep(0.2, 0.8, dot(d, d) * 2.4);
       vec3 rgb = colour.rgb * fade;
-      rgb = mix(rgb, rgb + wash, washAmount * smoothstep(0.05, 0.6, dot(d, d) * 2.4 + 0.1));
+      // The wash only tints the edges, so the middle of the view, where the blow lands, stays true.
+      rgb = mix(rgb, rgb * 0.7 + wash * 0.3, washAmount * smoothstep(0.25, 0.9, dot(d, d) * 2.4));
       gl_FragColor = vec4(rgb, colour.a);
     }
   `,

@@ -14,7 +14,7 @@ const DOWN = {
   footR: v(0.33, 0.09, 0.22),
   footL: v(0.16, 0.09, -0.2),
   hand: v(-0.55, 0.12, 0.58),
-  offHand: v(-0.5, 0.12, -0.55),
+  offHand: v(-0.62, 0.12, -0.55),
 };
 /** Reeling back as the knees go, before the fall. */
 const STUMBLE_HIPS = v(-0.2, 0.72, 0);

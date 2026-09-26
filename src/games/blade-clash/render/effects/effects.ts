@@ -98,12 +98,18 @@ export class Effects {
     }
   }
 
-  update(t: number, wallNow: number, camera: THREE.Camera): void {
+  /** Moves everything on, once a frame: `t` on the game clock, `wallNow` on the page's. */
+  update(t: number, wallNow: number): void {
     this.trails[1].update(t);
     this.trails[2].update(t);
     this.sparks.update(t);
-    this.impacts.update(t, camera);
+    this.impacts.update(t);
     this.confetti.update(wallNow);
+  }
+
+  /** Turns what faces the camera toward the view about to be drawn. */
+  face(camera: THREE.Camera): void {
+    this.impacts.face(camera);
   }
 
   /** A new match: nothing from the last one carries over. */

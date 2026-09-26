@@ -1,8 +1,11 @@
 import * as THREE from "three";
+import { isCharacterId, type CharacterId } from "@/games/blade-clash/characters";
 import type { GameEvent } from "@/games/blade-clash/engine/events";
 import { MatchDriver } from "@/games/blade-clash/host/match-driver";
+import type { PerSlot } from "@/games/blade-clash/players";
 import { DEFAULT_TUNING } from "@/games/blade-clash/tuning";
 import type { ShowcaseView } from "@/platform/games/game-api";
+import { FLOOR } from "../render/arena/dais";
 import { DuelRenderer, type View } from "../render/duel-renderer";
 import { CLIP, HIGH } from "../render/quality";
 import { Choreography, OPENING_HEALTH } from "./choreography";
@@ -12,9 +15,9 @@ const CYCLE_MS = 9500;
 /** Frames are drawn at the clip's rate, so a slow machine capturing it draws each once. */
 const FRAME_MS = 1000 / 30;
 /** The stills stop the duel just after its first big clash, sparks in the air. */
-const STILL_AT_MS = 1400;
-/** The icon's own close camera on that clash. */
-const ICON_CAMERA = { eye: new THREE.Vector3(0.1, 2.05, 2.3), look: new THREE.Vector3(-0.05, 1.75, 0), fov: 34 };
+const STILL_AT_MS = 1130;
+/** The icon's own close camera, from the side and a little below the clash, which sits high in the frame over the title. */
+const ICON_CAMERA = { from: new THREE.Vector3(0.45, -0.35, 1.9), look: new THREE.Vector3(0, -0.3, 0), fov: 42 };
 
 /**
  * Runs the showcase: the scripted duel between the Knight and the Star
@@ -30,20 +33,34 @@ export class ShowcaseDirector {
   private start: number | null = null;
   private last = -Infinity;
   private cycle = -1;
-  private readonly icon: View | null;
+  private icon: View | null = null;
   private still = false;
+  /** Where blades last met, for the icon's camera. */
+  private readonly clashAt = new THREE.Vector3(0, 1.6, 0);
   /** The page clock of the frame being drawn, for effects that keep wall time. */
   private wallNow = 0;
+  private picks: PerSlot<CharacterId> = { 1: "knight", 2: "star" };
+  private readonly skip: number;
 
   constructor(canvas: HTMLCanvasElement, view: ShowcaseView) {
+    const params = new URLSearchParams(window.location.search);
+    // `?pair=samurai,block` puts other fighters in the duel, for looking them over; the media keeps the default pair.
+    const pair = (params.get("pair") ?? "").split(",").filter(isCharacterId);
+    if (pair.length === 2) this.picks = { 1: pair[0]!, 2: pair[1]! };
     this.renderer = new DuelRenderer(canvas, { quality: view === "loop" ? CLIP : HIGH, preserve: true });
-    this.renderer.setTheme(new URLSearchParams(window.location.search).get("theme") !== "light");
-    this.icon = view === "icon" ? this.iconView() : null;
+    this.renderer.setTheme(params.get("theme") !== "light");
+    // `?at=` starts the loop that many milliseconds in, played through without drawing, for looking over one moment.
+    this.skip = Math.max(0, Math.min(CYCLE_MS - FRAME_MS, Number(params.get("at")) || 0));
     this.begin();
+    this.cycle = 0;
     if (view !== "loop") {
-      // Stills play the duel forward without drawing, then hold the moment.
-      for (let wall = 0; wall <= STILL_AT_MS; wall += FRAME_MS) this.step(wall);
+      // Stills play the duel forward, moving everything on but drawing nothing, then hold the moment.
+      for (let wall = 0; wall <= STILL_AT_MS; wall += FRAME_MS) {
+        this.step(wall);
+        this.renderer.update(this.driver.engine.scene(), wall);
+      }
       this.still = true;
+      if (view === "icon") this.icon = this.iconView();
     }
   }
 
@@ -52,10 +69,17 @@ export class ShowcaseDirector {
   }
 
   frame(now: number): void {
-    this.start ??= now;
     this.wallNow = now;
+    if (this.start === null) {
+      this.start = now - this.skip;
+      for (let wall = 0; wall < this.skip; wall += FRAME_MS) {
+        this.step(wall);
+        this.renderer.update(this.driver.engine.scene(), this.start + wall);
+      }
+    }
     if (this.still) {
-      this.draw(now);
+      // The moment is held: only the drawing repeats, in case the window changed size.
+      this.renderer.draw(this.icon ? [this.icon] : undefined);
       return;
     }
     if (now - this.last < FRAME_MS * 0.9) return;
@@ -76,9 +100,12 @@ export class ShowcaseDirector {
 
   /** A fresh duel, its countdown already run, the fight starting now. */
   private begin(): void {
-    this.driver = new MatchDriver({ 1: "knight", 2: "star" }, () => DEFAULT_TUNING, { director: null, feedback: () => undefined, onPhase: () => undefined });
+    this.driver = new MatchDriver(this.picks, () => DEFAULT_TUNING, { director: null, feedback: () => undefined, onPhase: () => undefined });
     this.choreography = new Choreography();
-    this.driver.listen((event: GameEvent) => this.renderer.react(event, this.wallNow));
+    this.driver.listen((event: GameEvent) => {
+      if (event.type === "clash") this.clashAt.set(event.at.x, event.at.y + FLOOR, event.at.z);
+      this.renderer.react(event, this.wallNow);
+    });
     this.driver.start();
     const { engine } = this.driver;
     engine.match.health = { ...OPENING_HEALTH };
@@ -94,13 +121,13 @@ export class ShowcaseDirector {
   }
 
   private draw(now: number): void {
-    this.renderer.render(this.driver.engine.scene(), now, this.icon ? [this.icon] : undefined);
+    this.renderer.render(this.driver.engine.scene(), now);
   }
 
   private iconView(): View {
     const camera = new THREE.PerspectiveCamera(ICON_CAMERA.fov, 1, 0.1, 150);
-    camera.position.copy(ICON_CAMERA.eye);
-    camera.lookAt(ICON_CAMERA.look);
+    camera.position.copy(this.clashAt).add(ICON_CAMERA.from);
+    camera.lookAt(this.clashAt.clone().add(ICON_CAMERA.look));
     return { rect: { x: 0, y: 0, w: 1, h: 1 }, camera };
   }
 }
