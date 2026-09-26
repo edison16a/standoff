@@ -90,11 +90,13 @@ export async function nba3v3(ctx) {
   await pickStar(ctx, ".nba-pick__card");
   const court = {
     team: 0, score: [12, 9], shotClock: 14, hasBall: true, attacking: true, holder: "P1", mustClear: false,
-    canSteal: false, meter: { fullMs: 900, greenMs: 620, halfMs: 60 }, onFire: false, countdown: null,
+    canSteal: false, freeThrow: null, meter: { fullMs: 900, greenMs: 620, halfMs: 60 }, onFire: false, checking: false, countdown: null,
   };
   await ctx.fake("state", { phase: "countdown", team: 0, playing: true, court: { ...court, countdown: 3 } });
   await ctx.snap("countdown");
   await ctx.fake("state", { phase: "live", team: 0, playing: true, court });
+  // The phone drops a message its schema refuses, so a fake that drifted from it would leave the ready page up.
+  await ctx.phone.locator(".nba-pad").waitFor({ state: "attached", timeout: 5000 });
   await ctx.snap("pad");
   await ctx.fake("state", { phase: "over", team: 0, playing: true, court, result: { won: true, points: 14, rebounds: 5, assists: 3 } });
   await ctx.snap("result");
@@ -104,6 +106,7 @@ export async function fifa3v3(ctx) {
   await pickStar(ctx, ".fifa-pick__card");
   const match = { team: 0, playing: true, score: [2, 1], clock: 95, golden: false, goals: 1 };
   await ctx.fake("state", { ...match, phase: "play", hasBall: true, banner: null });
+  await ctx.phone.locator(".fifa-pad").waitFor({ state: "attached", timeout: 5000 });
   await ctx.snap("pad");
   await ctx.fake("state", { ...match, phase: "goal", hasBall: false, banner: "Goal" });
   await ctx.snap("goal");
