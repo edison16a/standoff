@@ -14,13 +14,13 @@ The running list of what is being built, so work can pick up again after a break
 
 | Work | Branch | State |
 | --- | --- | --- |
-| Batch A (playtest fixes, sounds, bots toggle, Boxing and Subway fixes, easier jumps, Brawl flow, frame rate limiter, Zombie pace) | new worktrees from workflow wf_97a836d3-114 | five builds, each then reviewed |
+| Batch B (a song and a lobby tune for every game, Magic Kart continuous clip, Basketball and Soccer clips with the new names, Cube Game portals, Brawl clip) | new worktrees from workflow wf_83b710bc-751 | six builds, each then reviewed |
 
 The review loop looks hard at every game for 3D model errors, animation glitches and phone controller problems, fixes them, then a second pass reviews again with fresh eyes. It also adds the split screen name map (`src/games/kit/split/SplitMap.tsx`) to Magic Kart, Subway Runner, Cube Game and Boxing.
 
 ## Queue, in order
 
-### Batch A: running now (see Running now)
+### Batch A: done
 
 1. **Basketball 3v3 and Soccer 3v3 crowd:** remove the crowd cheering entirely; the noise based crowd sounds like wind.
 2. **Basketball arena sounds:** the arena beat (stomp stomp clap: kick drum and hand claps), shot clock beeps in the last seconds and the buzzer, the game horn, organ stabs. Punchy and synthesized, never noisy.
@@ -32,7 +32,7 @@ The review loop looks hard at every game for 3D model errors, animation glitches
 8. **Frame rate limiter in Settings:** defaults to the screen's measured maximum and can be lowered (for example 30, 60, 90, 120). Applies to every game.
 9. **Zombie Survival pace:** cut to 15 stages. Stage 1 already has lots of zombies, wave 2 already has a boss, stage 10 is the helicopter that carries the team to the final part, and stage 15 is the final boss stage. Faster paced throughout.
 
-### Batch B: ready to start (Blade Clash and Counter Battle have landed)
+### Batch B: running now (see Running now)
 
 10. **Music:** one unique song for every game that matches its vibe (Magic Kart energetic, Fruit Slicer calm and fruity, Subway Runner retro disco, and so on for all of them including Blade Clash and Counter Battle). Each game's lobby music is chill and flowy. Distinct keys, tempos, instruments and hooks, through the music bus.
 11. **Magic Kart home clip:** more continuous, one or two long flowing shots instead of many cuts.
@@ -45,6 +45,7 @@ The review loop looks hard at every game for 3D model errors, animation glitches
 
 ## Done recently
 
+* Batch A: Basketball and Soccer arena sounds with no crowd and a bots off option, the Boxing dark screen and Subway roof view fixes, easier camera jumps, the Brawl Battle flow pass, the frame rate limiter, and Zombie Survival at 15 faster stages.
 * Blade Clash replaces Fencing: a two player split screen sword duel with free 3D swords, clashes, five hit health, four fighters.
 * Review loop: two passes over ten games for 3D model, animation and phone controller glitches, plus the split screen name map.
 * Counter Battle: a split screen team shooter for 1v1 or 2v2 with bots, AI movement between cover, four guns with recoil, first to five rounds.
