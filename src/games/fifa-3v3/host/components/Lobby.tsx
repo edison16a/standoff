@@ -107,7 +107,7 @@ export function Lobby() {
     <div className="fifa-lobby">
       <header className="fifa-lobby__title">
         <span className="fifa-lobby__logo">
-          FIFA <em>3v3</em>
+          SOCCER <em>3v3</em>
         </span>
         <p>Three a side under the lights. First to five goals or four minutes, golden goal if level.</p>
       </header>

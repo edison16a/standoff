@@ -39,7 +39,7 @@ export interface ResultRow {
 }
 
 /**
- * What FIFA 3v3's screens on the computer render. The session writes
+ * What Soccer 3v3's screens on the computer render. The session writes
  * here a few times a second and React reads. The match itself never goes
  * in the store: it changes sixty times a second and only the canvas
  * needs it at that rate.

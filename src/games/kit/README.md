@@ -8,7 +8,7 @@ Shared code that games may import. The kit never imports a game, and games still
 * `motion/math3d.ts`: the small quaternion and vector helpers.
 * `motion/orientation.ts`: `subscribeOrientation`, the phone's orientation as a quaternion on every reading.
 * `steps/StepShell.tsx`: the frame for a game's phone setup. Every game uses the same order: the platform asks for a name (or Skip), then the game shows **Calibrate**, then its own choices (weapon, kart, blade), then **Ready**. Each step is its own page.
-* `aim/`: pointing the phone at the big screen, for Fruit Ninja, Zombie Survival and Shooting Gallery.
+* `aim/`: pointing the phone at the big screen, for Fruit Slicer, Zombie Survival and Shooting Gallery.
 
 ## Aiming
 
@@ -39,13 +39,24 @@ aim.onFire((seat, point) => ...);         // the exact aim of every trigger pull
 
 Screen points are WebGL clip space, so `raycaster.setFromCamera(new Vector2(point.x, point.y), camera)` works as is. Messages the kit sends all have kinds starting with `aim`. Games must not use that prefix for their own.
 
+### Aiming inside a zone
+
+For a split screen game, where each player aims into their own view, give each player a zone: their part of the big screen as fractions from the top left, the same shape as a `SplitMap` rect. The calibration targets then show inside the zone, outlined in the player's colour, and the aim's -1 to 1 spans the zone, so a point maps straight onto that player's view.
+
+```ts
+aim.setZone(seat, { x: 0.5, y: 0, w: 0.5, h: 1 });   // host: this seat aims in the right half. null gives back the whole screen
+<AimCalibrate aim={aim} colour={colour} zone={{ x: 0.5, y: 0, w: 0.5, h: 1 }} onDone={next} />   // phone: the same zone, for its pictures
+```
+
+If a zone changes after a player calibrated (someone joins and the halves become quarters), the host maps their points into the new zone, so the aim still lands where they really point. Saved spans are kept as if measured across the whole screen and scaled to the zone when reused. Games without zones are unchanged.
+
 ## Testing in a browser
 
 `tools/testing/fake-sensors.js` fakes a phone's sensors for Playwright. Set `window.__sensors.alpha` (turn, right is lower), `beta` (top edge up) and `gamma` (roll) to point or tilt.
 
 ## Gamepad
 
-For games where the phone is a controller: a floating thumb stick on the left and round buttons on the right, as in NBA 3v3 and FIFA 3v3. Messages it sends all have kinds starting with `pad`, so games must not use that prefix.
+For games where the phone is a controller: a floating thumb stick on the left and round buttons on the right, as in Basketball 3v3 and Soccer 3v3. Messages it sends all have kinds starting with `pad`, so games must not use that prefix.
 
 Phone side:
 

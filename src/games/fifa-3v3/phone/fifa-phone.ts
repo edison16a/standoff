@@ -8,7 +8,7 @@ import { buzz } from "./haptics";
 import { usePhoneStore as store, type SetupStep } from "./phone-store";
 
 /**
- * FIFA 3v3 on the phone. It shows the setup steps, then turns the phone
+ * Soccer 3v3 on the phone. It shows the setup steps, then turns the phone
  * into a controller: the kit's thumb stick and two buttons, streamed to
  * the host. It makes no game decisions; what the player does on the
  * pitch is always the host's call.

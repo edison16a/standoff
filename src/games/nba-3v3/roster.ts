@@ -2,11 +2,11 @@
  * The ten stars, in one place so the roster is easy to edit. Each is a
  * stylised athlete, recognisable by build, skin tone, hair, beard and a
  * signature detail, never a photographic likeness. Stats run 1 to 10 and
- * follow each player's real game: Curry shoots, Giannis bullies, Wemby
+ * follow each player's style: Ashby shoots, Varelas bullies, Delacroix
  * reaches everything.
  */
 
-export const CHARACTER_IDS = ["curry", "lebron", "durant", "giannis", "jokic", "doncic", "sga", "tatum", "edwards", "wemby"] as const;
+export const CHARACTER_IDS = ["ashby", "whitlock", "crane", "varelas", "vukmir", "zupan", "fontaine", "mensah", "holloway", "delacroix"] as const;
 export type CharacterId = (typeof CHARACTER_IDS)[number];
 
 export const DUNK_STYLES = ["scoop", "tomahawk", "reverse", "hammer", "rimhang", "flush", "cockback", "clutch", "spin360", "windmill"] as const;
@@ -45,14 +45,14 @@ export interface Look {
   shoe: string;
   shoeAccent: string;
   sock: string;
-  /** A mouthguard hanging from the lip, Curry's tell. */
+  /** A mouthguard hanging from the lip, Ashby's tell. */
   mouthguard: boolean;
 }
 
 export interface Character {
   id: CharacterId;
   name: string;
-  /** What the scoreboard and the announcer call them. */
+  /** What the scoreboard and the banners call them. */
   short: string;
   number: number;
   position: string;
@@ -66,80 +66,80 @@ export interface Character {
 }
 
 export const CHARACTERS: Record<CharacterId, Character> = {
-  curry: {
-    id: "curry", name: "Stephen Curry", short: "Curry", number: 30, position: "Guard",
+  ashby: {
+    id: "ashby", name: "Julian Ashby", short: "Ashby", number: 30, position: "Guard",
     blurb: "Limitless range and the quickest release in the game.",
     stats: { speed: 8, shooting: 10, strength: 4 },
     build: { height: 1.88, width: 0.92, bulk: 0.9, reach: 0.98 },
     look: { skin: "#a86f4c", hair: "short", hairColor: "#1d1510", beard: "stubble", headband: null, sleeve: null, wristband: null, shoe: "#1f3a8a", shoeAccent: "#fbbf24", sock: "#ffffff", mouthguard: true },
     dunk: "scoop", dunkName: "Scoop flush", celebration: "night",
   },
-  lebron: {
-    id: "lebron", name: "LeBron James", short: "LeBron", number: 23, position: "Forward",
+  whitlock: {
+    id: "whitlock", name: "Dante Whitlock", short: "Whitlock", number: 23, position: "Forward",
     blurb: "A freight train downhill with the vision of a point guard.",
     stats: { speed: 8, shooting: 7, strength: 10 },
     build: { height: 2.06, width: 1.18, bulk: 1.22, reach: 1.02 },
     look: { skin: "#5b3a26", hair: "buzz", hairColor: "#151010", beard: "full", headband: "#ffffff", sleeve: null, wristband: null, shoe: "#fdb927", shoeAccent: "#552583", sock: "#ffffff", mouthguard: false },
     dunk: "tomahawk", dunkName: "Tomahawk", celebration: "roar",
   },
-  durant: {
-    id: "durant", name: "Kevin Durant", short: "Durant", number: 7, position: "Forward",
+  crane: {
+    id: "crane", name: "Elias Crane", short: "Crane", number: 7, position: "Forward",
     blurb: "Seven feet of silky jumper that nobody can block.",
     stats: { speed: 7, shooting: 9, strength: 6 },
     build: { height: 2.11, width: 0.94, bulk: 0.82, reach: 1.06 },
     look: { skin: "#5e3b26", hair: "buzz", hairColor: "#141010", beard: "short", headband: null, sleeve: { side: -1, color: "#111111" }, wristband: null, shoe: "#e5e7eb", shoeAccent: "#ce1141", sock: "#ffffff", mouthguard: false },
     dunk: "reverse", dunkName: "Reverse slam", celebration: "calm",
   },
-  giannis: {
-    id: "giannis", name: "Giannis Antetokounmpo", short: "Giannis", number: 34, position: "Forward",
-    blurb: "The Greek Freak. Two strides from the arc to the rim.",
+  varelas: {
+    id: "varelas", name: "Nikos Varelas", short: "Varelas", number: 34, position: "Forward",
+    blurb: "Unstoppable in transition. Two strides from the arc to the rim.",
     stats: { speed: 9, shooting: 4, strength: 10 },
     build: { height: 2.11, width: 1.14, bulk: 1.12, reach: 1.1 },
     look: { skin: "#4b2e1e", hair: "buzz", hairColor: "#120d0b", beard: "short", headband: null, sleeve: null, wristband: "#00471b", shoe: "#00471b", shoeAccent: "#eee1c6", sock: "#ffffff", mouthguard: false },
     dunk: "hammer", dunkName: "Two hand hammer", celebration: "flex",
   },
-  jokic: {
-    id: "jokic", name: "Nikola Jokic", short: "Jokic", number: 15, position: "Center",
+  vukmir: {
+    id: "vukmir", name: "Stefan Vukmir", short: "Vukmir", number: 15, position: "Center",
     blurb: "Soft touch, no look passes and a body nobody moves.",
     stats: { speed: 4, shooting: 8, strength: 9 },
     build: { height: 2.11, width: 1.2, bulk: 1.28, reach: 0.98 },
     look: { skin: "#e8c3a2", hair: "short", hairColor: "#5a3b22", beard: "stubble", headband: null, sleeve: null, wristband: null, shoe: "#0e2240", shoeAccent: "#fec524", sock: "#ffffff", mouthguard: false },
     dunk: "rimhang", dunkName: "Rim hang", celebration: "shrug",
   },
-  doncic: {
-    id: "doncic", name: "Luka Doncic", short: "Luka", number: 77, position: "Guard",
+  zupan: {
+    id: "zupan", name: "Tomaz Zupan", short: "Zupan", number: 77, position: "Guard",
     blurb: "Step back threes and a strong frame that bumps you off.",
     stats: { speed: 5, shooting: 9, strength: 8 },
     build: { height: 2.01, width: 1.1, bulk: 1.15, reach: 1.0 },
     look: { skin: "#ecc6a3", hair: "swept", hairColor: "#6a4527", beard: "short", headband: null, sleeve: null, wristband: null, shoe: "#1d1d1f", shoeAccent: "#38bdf8", sock: "#ffffff", mouthguard: false },
     dunk: "flush", dunkName: "One hand flush", celebration: "shimmy",
   },
-  sga: {
-    id: "sga", name: "Shai Gilgeous-Alexander", short: "Shai", number: 2, position: "Guard",
+  fontaine: {
+    id: "fontaine", name: "Andre Fontaine", short: "Fontaine", number: 2, position: "Guard",
     blurb: "Silky footwork, a deadly midrange and quick hands.",
     stats: { speed: 9, shooting: 9, strength: 5 },
     build: { height: 1.98, width: 0.96, bulk: 0.86, reach: 1.04 },
     look: { skin: "#6a432d", hair: "twists", hairColor: "#16100c", beard: "none", headband: null, sleeve: null, wristband: "#ffffff", shoe: "#f5f5f4", shoeAccent: "#ef3b24", sock: "#111111", mouthguard: false },
     dunk: "cockback", dunkName: "Cock back slam", celebration: "wrist",
   },
-  tatum: {
-    id: "tatum", name: "Jayson Tatum", short: "Tatum", number: 0, position: "Forward",
+  mensah: {
+    id: "mensah", name: "Kofi Mensah", short: "Mensah", number: 0, position: "Forward",
     blurb: "A smooth scorer from anywhere with size on the wing.",
     stats: { speed: 7, shooting: 8, strength: 7 },
     build: { height: 2.03, width: 1.02, bulk: 0.98, reach: 1.02 },
     look: { skin: "#7a4e34", hair: "short", hairColor: "#17110d", beard: "short", headband: null, sleeve: { side: 1, color: "#ffffff" }, wristband: null, shoe: "#007a33", shoeAccent: "#ffffff", sock: "#ffffff", mouthguard: false },
     dunk: "clutch", dunkName: "Double clutch", celebration: "pound",
   },
-  edwards: {
-    id: "edwards", name: "Anthony Edwards", short: "Ant", number: 5, position: "Guard",
+  holloway: {
+    id: "holloway", name: "Darius Holloway", short: "Holloway", number: 5, position: "Guard",
     blurb: "Explosive, fearless and always hunting a poster.",
     stats: { speed: 9, shooting: 7, strength: 8 },
     build: { height: 1.93, width: 1.1, bulk: 1.12, reach: 1.0 },
     look: { skin: "#583924", hair: "waves", hairColor: "#110c09", beard: "goatee", headband: null, sleeve: null, wristband: "#78be20", shoe: "#0c2340", shoeAccent: "#78be20", sock: "#ffffff", mouthguard: false },
     dunk: "spin360", dunkName: "Three sixty", celebration: "scream",
   },
-  wemby: {
-    id: "wemby", name: "Victor Wembanyama", short: "Wemby", number: 1, position: "Center",
+  delacroix: {
+    id: "delacroix", name: "Mathis Delacroix", short: "Delacroix", number: 1, position: "Center",
     blurb: "An alien wingspan. Blocks from anywhere and shoots over everyone.",
     stats: { speed: 6, shooting: 7, strength: 6 },
     build: { height: 2.24, width: 0.98, bulk: 0.8, reach: 1.14 },

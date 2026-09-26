@@ -11,10 +11,10 @@ import { DUNK_STYLES, type DunkStyle } from "../roster";
 export const LAB_SCENES = ["moves", "run", "dunk", "block", "free"] as const;
 export type LabScene = (typeof LAB_SCENES)[number];
 
-const CURRY = 0;
-const GIANNIS = 1;
-const EDWARDS = 5;
-const LEBRON = 3;
+const ASHBY = 0;
+const VARELAS = 1;
+const HOLLOWAY = 5;
+const WHITLOCK = 3;
 
 /** What the stick does at a moment of the moves scene: the Dribble button with an aim. */
 type Cue = readonly [at: number, aim: "back" | "left" | "right" | "fwd" | "none"];
@@ -38,12 +38,12 @@ export class LabFilm {
       seed: 7,
       firstOffence: 0,
       entries: [
-        { team: 0, character: "curry", seat: null },
-        { team: 0, character: "giannis", seat: null },
-        { team: 0, character: "wemby", seat: null },
-        { team: 1, character: "lebron", seat: null },
-        { team: 1, character: "doncic", seat: null },
-        { team: 1, character: "edwards", seat: null },
+        { team: 0, character: "ashby", seat: null },
+        { team: 0, character: "varelas", seat: null },
+        { team: 0, character: "delacroix", seat: null },
+        { team: 1, character: "whitlock", seat: null },
+        { team: 1, character: "zupan", seat: null },
+        { team: 1, character: "holloway", seat: null },
       ],
     });
     const m = this.match;
@@ -57,12 +57,12 @@ export class LabFilm {
       free: [[0, 7], [-4, 6], [4, 6], [0.4, 6.4], [-5, 9], [5, 9]],
     };
     spots[scene].forEach(([x, z], id) => Object.assign(m.athletes[id]!, { x, z, yaw: Math.PI }));
-    m.ball.holder = scene === "dunk" ? GIANNIS : CURRY;
+    m.ball.holder = scene === "dunk" ? VARELAS : ASHBY;
     m.brains.reset();
     const star = m.athletes[m.ball.holder]!;
     // At the line the computer shoots for the star, as it would for anyone.
     star.auto = scene === "free";
-    if (scene === "free") callFoul(m, m.athletes[LEBRON]!, star);
+    if (scene === "free") callFoul(m, m.athletes[WHITLOCK]!, star);
   }
 
   steer(t: number): void {
@@ -80,28 +80,28 @@ export class LabFilm {
 
   private moves(t: number): void {
     const m = this.match;
-    const a = m.athletes[CURRY]!;
+    const a = m.athletes[ASHBY]!;
     a.move = t > 6.4 ? toward(a, RIM_SPOT, 1) : { x: 0, z: 0 };
     const cue = MOVE_CUES[this.fired];
     if (!cue || t < cue[0]) return;
     this.fired++;
     a.moveHeat = 0;
-    m.press(CURRY, "defend", aimFor(a, cue[1]));
+    m.press(ASHBY, "defend", aimFor(a, cue[1]));
   }
 
   private run(t: number): void {
     const m = this.match;
-    const a = m.athletes[CURRY]!;
+    const a = m.athletes[ASHBY]!;
     const legs: [number, V2][] = [[0.3, { x: 0, z: 0 }], [1.6, { x: 1, z: 0 }], [2.6, { x: -1, z: 0 }], [3.6, { x: 0.3, z: -1 }], [4.4, { x: 0, z: 0 }]];
     const leg = legs.find(([until]) => t < until);
     a.move = leg ? leg[1] : { x: 0, z: 0 };
-    if (t > 5 && this.once("pass")) m.press(CURRY, "pass", dir2(a, m.athletes[GIANNIS]!));
+    if (t > 5 && this.once("pass")) m.press(ASHBY, "pass", dir2(a, m.athletes[VARELAS]!));
   }
 
   private dunk(t: number): void {
     const m = this.match;
-    const a = m.athletes[GIANNIS]!;
-    if (m.ball.holder !== GIANNIS || a.action.kind === "drive") {
+    const a = m.athletes[VARELAS]!;
+    if (m.ball.holder !== VARELAS || a.action.kind === "drive") {
       a.move = { x: 0, z: 0 };
       return;
     }
@@ -109,7 +109,7 @@ export class LabFilm {
     if (t > 0.6 && Math.hypot(a.x - RIM_SPOT.x, a.z - RIM_SPOT.z) < 3.1 && this.once("dunk")) {
       m.forced = "swish";
       m.forcedDunk = this.style ?? DUNK_STYLES[0];
-      m.press(GIANNIS, "shoot");
+      m.press(VARELAS, "shoot");
     }
   }
 
@@ -117,10 +117,10 @@ export class LabFilm {
     const m = this.match;
     if (t > 0.4 && this.once("shoot")) {
       m.forced = "rimOut";
-      m.press(CURRY, "shoot");
+      m.press(ASHBY, "shoot");
     }
-    if (t > 0.4 + GREEN_MS / 1000 && this.once("release")) m.release(CURRY, GREEN_MS);
-    if (t > 0.62 && this.once("block")) m.press(EDWARDS, "defend");
+    if (t > 0.4 + GREEN_MS / 1000 && this.once("release")) m.release(ASHBY, GREEN_MS);
+    if (t > 0.62 && this.once("block")) m.press(HOLLOWAY, "defend");
   }
 
   private once(key: string): boolean {

@@ -3,7 +3,7 @@ import type { Grade, Outcome, ShotKind } from "./shot-model";
 import type { DribbleMove, TeamId } from "./types";
 
 /**
- * Everything worth a sound, an effect, a buzz or an announcer line. The
+ * Everything worth a sound, an effect or a buzz. The
  * match queues these as they happen and the host drains them each frame.
  */
 export type MatchEvent =

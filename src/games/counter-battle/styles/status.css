@@ -1,0 +1,116 @@
+/*
+  The top of the phone during a match: health, the round and the score in
+  the teams' colours, the round's word, and a flash for a head shot or a kill.
+*/
+
+.cb-status {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.cb-status__health {
+  position: relative;
+  height: 30px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.cb-status__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, #7fb000, var(--cb-lime));
+  transition: width 200ms ease;
+}
+
+.cb-status__health strong {
+  position: relative;
+  display: block;
+  padding: 0 12px;
+  color: var(--cb-ink);
+  font-family: var(--cb-display);
+  font-size: 22px;
+  line-height: 30px;
+}
+
+.cb-status__health--low .cb-status__fill {
+  background: linear-gradient(90deg, #a0101f, #ff4a5a);
+}
+
+.cb-status__health--low strong {
+  color: #ffffff;
+}
+
+.cb-status__score {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.cb-status__score b {
+  font-family: var(--cb-display);
+  font-size: 26px;
+  font-weight: 400;
+}
+
+.cb-status__score span {
+  color: #9aa3b5;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.cb-status__banner {
+  grid-column: 1 / 3;
+  justify-self: center;
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: var(--cb-lime);
+  color: var(--cb-ink);
+  font-size: 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.cb-flash {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  z-index: 2;
+  padding: 4px 16px;
+  border-radius: 999px;
+  font-family: var(--cb-display);
+  font-size: 26px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: cb-flash 1.1s ease-out both;
+}
+
+.cb-flash--good {
+  background: #fde047;
+  color: var(--cb-ink);
+}
+
+.cb-flash--bad {
+  background: #e11d48;
+  color: #ffffff;
+}
+
+@keyframes cb-flash {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px) scale(1.4);
+  }
+  20% {
+    opacity: 1;
+    transform: translate(-50%, 8px) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, 0) scale(1);
+  }
+}

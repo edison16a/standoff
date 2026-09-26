@@ -9,6 +9,7 @@
 import { fruitNinja, shootingGallery, zombieSurvival } from "./flows/aim-games.mjs";
 import { fencing, fencingButtons } from "./flows/fencing.mjs";
 import { brawlBattle, fifa3v3, magicKart, magicKartButtons, nba3v3 } from "./flows/pad-games.mjs";
+import { counterBattle } from "./flows/counter-battle.mjs";
 
 export const FLOWS = {
   "magic-kart": magicKart,
@@ -27,4 +28,7 @@ export const FLOWS = {
   // Fencing with buttons, for a phone with no motion sensors.
   "fencing-buttons": { game: "fencing", flow: fencingButtons, sensors: false },
   "brawl-battle": brawlBattle,
+  "counter-battle": counterBattle,
+  // Counter Battle aiming by dragging, for a phone with no motion sensors.
+  "counter-battle-touch": { game: "counter-battle", flow: counterBattle, sensors: false },
 };

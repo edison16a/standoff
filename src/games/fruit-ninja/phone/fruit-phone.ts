@@ -6,7 +6,7 @@ import { buzz } from "./haptics";
 import { useFruitPhone as store } from "./phone-store";
 
 /**
- * Fruit Ninja on the phone. It walks the player through setup, then just
+ * Fruit Slicer on the phone. It walks the player through setup, then just
  * aims: the kit streams where the phone points and the host decides what
  * got cut. There is no button to press during play. Joining the room and
  * staying in it is the platform's job.

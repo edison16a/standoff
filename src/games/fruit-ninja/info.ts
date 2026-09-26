@@ -5,7 +5,7 @@ import poster from "./media/poster.jpg";
 
 export const info: GameInfo = {
   id: "fruit-ninja",
-  title: "Fruit Ninja",
+  title: "Fruit Slicer",
   tagline: "Slice the fruit, dodge the bombs. Top score when time runs out wins.",
   status: "ready",
   players: [1, 2, 4],

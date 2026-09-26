@@ -12,12 +12,12 @@ import { attackSign } from "../teams";
 import { dist } from "../engine/vec";
 
 const LINEUP: Entrant[] = [
-  { team: 0, character: "ronaldo", seat: null },
-  { team: 0, character: "messi", seat: null },
-  { team: 0, character: "yamal", seat: null },
-  { team: 1, character: "haaland", seat: null },
-  { team: 1, character: "mbappe", seat: null },
-  { team: 1, character: "vinicius", seat: null },
+  { team: 0, character: "brandao", seat: null },
+  { team: 0, character: "echeverri", seat: null },
+  { team: 0, character: "serrano", seat: null },
+  { team: 1, character: "holmvik", seat: null },
+  { team: 1, character: "okemba", seat: null },
+  { team: 1, character: "lacerda", seat: null },
 ];
 const SEED = 3;
 /** The capture tool warms up for three seconds before it films. */

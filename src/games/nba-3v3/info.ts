@@ -5,7 +5,7 @@ import poster from "./media/poster.jpg";
 
 export const info: GameInfo = {
   id: "nba-3v3",
-  title: "NBA 3v3",
+  title: "Basketball 3v3",
   tagline: "Three on three arena basketball with the stars. Green your shots, first to 11.",
   status: "ready",
   players: [1, 2, 3, 4, 5, 6],

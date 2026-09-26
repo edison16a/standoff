@@ -1,59 +1,50 @@
 import { loadAudioSettings } from "@/platform/audio/audio-settings";
 
 /**
- * The arena announcer, through the browser's own speech (the Web Speech
- * API on the host computer). Lines are short and punchy, only one plays
- * at a time, and a big call cuts off a small one. Where speech is not
- * available the game is simply without a voice.
+ * The arena's announcer, through the browser's own speech on the host
+ * computer: the round, Fight, who took it and who won. Lines are short,
+ * one at a time, and a bigger call cuts off a smaller one. Speech skips
+ * the Web Audio graph, so the player's effects volume is applied to each
+ * line here. Without speech the game simply has no voice.
  */
 export class Announcer {
   private voice: SpeechSynthesisVoice | null = null;
   private busyUntil = 0;
   private priority = 0;
   private readonly synth: SpeechSynthesis | null;
-  private muted = false;
   private readonly choose: () => void;
 
-  /** `onSpeak` hears every line that is actually spoken, so the director can duck the arena under it. */
+  /** `onSpeak` hears every line that is actually spoken, so the mix can duck under it. */
   constructor(private readonly onSpeak: (priority: number) => void = () => {}) {
     this.synth = typeof window !== "undefined" && "speechSynthesis" in window ? window.speechSynthesis : null;
     this.choose = () => {
       const voices = this.synth?.getVoices() ?? [];
       // A deep English voice sounds most like an arena announcer.
       const english = voices.filter((v) => v.lang.startsWith("en"));
-      const liked = /daniel|david|alex|fred|guy|male|google uk english male|arthur|aaron/i;
+      const liked = /daniel|david|alex|fred|guy|male|google uk english male|arthur|aaron|rishi/i;
       this.voice = english.find((v) => liked.test(v.name)) ?? english[0] ?? null;
     };
     this.choose();
     this.synth?.addEventListener?.("voiceschanged", this.choose);
   }
 
-  /**
-   * Says a line. `priority` 3 is the winner, 2 a basket, 1 a block or a
-   * steal, 0 small talk; a line never cuts off a more important one.
-   */
-  say(text: string, priority = 1, level = 1): void {
+  /** Says a line. Priority 3 is the match winner, 2 a round call, 1 a shout during play. */
+  say(text: string, priority = 1): void {
     const synth = this.synth;
-    // Speech skips the Web Audio graph, so the player's effects volume is applied here.
-    const volume = Math.max(0, Math.min(1, level * loadAudioSettings().effects));
-    if (!synth || this.muted || volume === 0) return;
+    const volume = Math.max(0, Math.min(1, loadAudioSettings().effects));
+    if (!synth || volume === 0) return;
     const now = performance.now();
     if (now < this.busyUntil && priority <= this.priority) return;
     if (synth.speaking) synth.cancel();
     const line = new SpeechSynthesisUtterance(text);
     if (this.voice) line.voice = this.voice;
-    line.rate = priority >= 2 ? 1.08 : 1.12;
-    line.pitch = 0.78;
+    line.rate = priority >= 2 ? 0.9 : 1.08;
+    line.pitch = 0.7;
     line.volume = volume;
     synth.speak(line);
     this.onSpeak(priority);
     this.priority = priority;
-    this.busyUntil = now + 450 + text.length * 55;
-  }
-
-  mute(muted: boolean): void {
-    this.muted = muted;
-    if (muted) this.synth?.cancel();
+    this.busyUntil = now + 450 + text.length * 60;
   }
 
   stop(): void {

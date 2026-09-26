@@ -1,6 +1,7 @@
 import type { GameInfo, GameModule } from "@/platform/games/game-api";
 import { info as boxing } from "./boxing/info";
 import { info as brawlBattle } from "./brawl-battle/info";
+import { info as counterBattle } from "./counter-battle/info";
 import { info as cubeGame } from "./cube-game/info";
 import { info as fencing } from "./fencing/info";
 import { info as fifa3v3 } from "./fifa-3v3/info";
@@ -28,6 +29,7 @@ export const GAMES: readonly GameInfo[] = [
   cubeGame,
   fencing,
   brawlBattle,
+  counterBattle,
 ];
 
 /**
@@ -46,6 +48,7 @@ const LOADERS: Record<string, () => Promise<GameModule>> = {
   "cube-game": () => import("./cube-game").then((mod) => mod.game),
   "subway-surfers": () => import("./subway-surfers").then((mod) => mod.game),
   "brawl-battle": () => import("./brawl-battle").then((mod) => mod.game),
+  "counter-battle": () => import("./counter-battle").then((mod) => mod.game),
 };
 
 export function findGame(id: string): GameInfo | undefined {

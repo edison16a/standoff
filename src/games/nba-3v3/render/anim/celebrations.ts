@@ -2,9 +2,9 @@ import type { Celebration } from "../../roster";
 import { over, STAND, type Pose, type PosePatch } from "./pose";
 
 /**
- * Each player's own celebration after a make or a win, loosely after
- * their real ones: Curry's night night, LeBron's roar, Giannis flexing,
- * Jokic's shrug, and so on. `t` runs from zero and they loop.
+ * Each player's own celebration after a make or a win:
+ * Ashby's night night, Whitlock's roar, Varelas flexing,
+ * Vukmir's shrug, and so on. `t` runs from zero and they loop.
  */
 export function celebratePose(style: Celebration, t: number): Pose {
   const p = { ...STAND };

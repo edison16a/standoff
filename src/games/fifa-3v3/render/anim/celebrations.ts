@@ -27,7 +27,7 @@ export function celebration(kind: Celebration, t: number): Pose {
       p.lift = 0.02 * Math.sin(t * 3);
       break;
     }
-    case "siu": {
+    case "jumpspin": {
       // A run up, a jump with a half turn, and landing arms spread wide and low.
       const jump = clamp01((t - 0.2) / 0.55);
       p.lift = 0.55 * Math.sin(Math.PI * jump) * (jump < 1 ? 1 : 0);

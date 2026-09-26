@@ -32,6 +32,49 @@ export interface ScreenPoint {
   y: number;
 }
 
+/**
+ * The part of the big screen a player aims inside, as fractions of it
+ * from the top left, the same shape as a split screen view. A game with
+ * one view per player gives each their own zone; calibration targets
+ * then show inside it, and the -1 to 1 aim spans the zone, not the screen.
+ */
+export interface AimZone {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/** The whole screen, which is every player's zone unless a game says otherwise. */
+export const WHOLE_SCREEN: AimZone = { x: 0, y: 0, w: 1, h: 1 };
+
+export function sameZone(a: AimZone, b: AimZone): boolean {
+  return a === b || (a.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h);
+}
+
+/**
+ * A point in one zone, as the same spot on the screen in another zone's
+ * terms. It lets a player keep aiming where they really point after the
+ * split screen changes shape, without calibrating again.
+ */
+export function rezone(point: ScreenPoint, from: AimZone, to: AimZone): ScreenPoint {
+  if (sameZone(from, to)) return point;
+  const sx = from.x + ((point.x + 1) / 2) * from.w;
+  const sy = from.y + ((1 - point.y) / 2) * from.h;
+  return { x: ((sx - to.x) / to.w) * 2 - 1, y: 1 - ((sy - to.y) / to.h) * 2 };
+}
+
+/**
+ * Spans measured across a zone, scaled to what they would be across the
+ * whole screen, or back with `inverse`. Saved spans are kept whole screen
+ * so any game can reuse them, whatever zone it measured them in.
+ */
+export function scaleSpans(calibration: AimCalibration, zone: AimZone, inverse = false): AimCalibration {
+  const sx = inverse ? zone.w : 1 / zone.w;
+  const sy = inverse ? zone.h : 1 / zone.h;
+  return { ...calibration, left: calibration.left * sx, right: calibration.right * sx, up: calibration.up * sy, down: calibration.down * sy };
+}
+
 /** Corner targets sit this far in from the edges, in screen units, so they are easy to see. */
 export const TARGET_INSET = 0.8;
 

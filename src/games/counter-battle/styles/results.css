@@ -1,0 +1,152 @@
+/*
+  The results over the field: confetti in the winners' colour, the
+  score, and a line per fighter team by team.
+*/
+
+.cb-results {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 72px 24px 24px;
+  background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--team) 30%, transparent), rgba(11, 13, 24, 0.9) 70%);
+  animation: cb-fade 400ms ease-out both;
+}
+
+@keyframes cb-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+.cb-confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.cb-confetti span {
+  position: absolute;
+  top: -20px;
+  width: 10px;
+  height: 16px;
+  border-radius: 3px;
+  animation: cb-confetti linear infinite;
+}
+
+@keyframes cb-confetti {
+  to {
+    transform: translateY(110vh) rotate(540deg);
+  }
+}
+
+.cb-results__card {
+  position: relative;
+  display: grid;
+  gap: 18px;
+  width: min(760px, 100%);
+  padding: 26px 30px;
+  border-radius: 26px;
+  background: rgba(11, 13, 24, 0.92);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), inset 0 5px 0 var(--team);
+}
+
+.cb-results__head {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.cb-results__eyebrow {
+  color: var(--cb-lime);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.cb-results__head h2 {
+  margin: 0;
+  color: var(--team);
+  font-family: var(--cb-display);
+  font-size: clamp(40px, 5vw, 64px);
+  font-style: italic;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.cb-results__score {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+  font-family: var(--cb-display);
+  font-size: 38px;
+}
+
+.cb-rank {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 16px;
+}
+
+.cb-rank th,
+.cb-rank td {
+  padding: 7px 10px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.cb-rank thead th {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.cb-rank tbody tr {
+  box-shadow: inset 4px 0 0 var(--team);
+}
+
+.cb-rank tbody tr:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.cb-rank tbody th {
+  text-align: left;
+}
+
+/* Grids inside the cells, so the cells themselves stay table cells and the columns line up. */
+.cb-rank__who {
+  display: grid;
+}
+
+.cb-rank__name {
+  color: var(--player);
+  font-weight: 900;
+}
+
+.cb-rank small {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cb-rank__gun {
+  display: grid;
+  justify-items: center;
+  font-weight: 700;
+}
+
+.cb-rank td {
+  font-weight: 800;
+}
+
+.cb-results__actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  pointer-events: auto;
+}

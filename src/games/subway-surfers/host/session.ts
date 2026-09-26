@@ -22,7 +22,7 @@ export interface Lane3D {
 }
 
 /**
- * Subway Surfers on the computer, for one room. It owns the camera kit,
+ * Subway Runner on the computer, for one room. It owns the camera kit,
  * walks the players through setup, runs the rounds and directs the
  * sound. The canvas asks it every frame what to draw.
  */

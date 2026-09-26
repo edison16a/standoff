@@ -1,4 +1,4 @@
-# FIFA 3v3
+# Soccer 3v3
 
 Status: ready.
 
@@ -6,7 +6,7 @@ Three on three football on a big floodlit pitch for up to six phones. A computer
 
 ## How to play
 
-1. Host FIFA 3v3 from the home screen. Computer players kick about behind the lobby while everyone joins.
+1. Host Soccer 3v3 from the home screen. Computer players kick about behind the lobby while everyone joins.
 2. On each phone: type a name, pick a star (a turning 3D preview with their stats; stars someone else has are marked), then tap Ready.
 3. On the big screen the host puts each player on Red or Blue with the mouse. Empty places are filled by computer players, three a side. Press Kick off.
 4. First to five goals, or the most goals after four minutes. Level at the end means golden goal: the next goal wins.
@@ -47,9 +47,9 @@ A ball over the end boards is a goal kick: the keeper rolls it out to a team mat
 
 Everything is synthesised through the room's audio buses.
 
-Music: "Beach Kickabout" plays in the lobby and on the results, a D major bossa at 108 with a marimba hook over nylon guitar, shaker and clave. "Golden Hour" plays under the match, an A minor afro house groove at 118 with a steel pan hook and a falling log drum bass, mixed lower so the crowd leads. Both run eight bars with an A and a B section, through a warm low pass. A brass sting and timpani mark every goal and a fanfare the full time whistle, and the loop steps aside for them and for the commentator.
+Music: "Beach Kickabout" plays in the lobby and on the results, a D major bossa at 108 with a marimba hook over nylon guitar, shaker and clave. "Golden Hour" plays under the match, an A minor afro house groove at 118 with a steel pan hook and a falling log drum bass, mixed lower so the crowd leads. Both run eight bars with an A and a B section, through a warm low pass. A brass sting and timpani mark every goal and a fanfare the full time whistle, and the loop steps aside for them.
 
-Effects have a sharp hit, a body and a tail into a synthetic stadium reverb, each pitched a little differently every time: strikes, passes, tackles, slides, saves, the post and the bar, the net, the boards, the referee's whistle, the goal horn and fireworks. The crowd murmurs and rises as the ball nears a goal, roars for goals, goes "ooh" at near misses, groans, applauds and starts up a clapping chant now and then. The commentator uses the computer's speech synthesis at the player's effects volume.
+Effects have a sharp hit, a body and a tail into a synthetic stadium reverb, each pitched a little differently every time: strikes, passes, tackles, slides, saves, the post and the bar, the net, the boards, the referee's whistle, the goal horn and fireworks. The crowd murmurs and rises as the ball nears a goal, roars for goals, goes "ooh" at near misses, groans, applauds and starts up a clapping chant now and then. There is no spoken commentary.
 
 ## Code map
 
@@ -58,7 +58,7 @@ Effects have a sharp hit, a body and a tail into a synthetic stadium reverb, eac
   * Players are animated by where their feet go. `engine/stride.ts` sets the running rhythm, and both the simulation and the drawing use it. The dribble touch lands on the lead boot's swing. `anim/gait.ts` pins each foot to the turf for its stance. `anim/leg-ik.ts` solves the legs to reach those spots. `anim/kicks.ts` and `anim/skill-poses.ts` steer a boot onto the ball where it is drawn, so the ball stays at the feet. `figures/athlete-figure.ts` cross fades from one move to the next. In moves set by joint angles alone, like a slide, getting up, a celebration or the keepers' crouch, a leg that would reach down through the pitch is solved again to stand on the turf (`figures/turf.ts`). Name tags stack when players bunch up, so none covers another (`figures/tag-layout.ts`).
 * `host/`: the room on the big screen: lobby, match driver, goal replays, HUD, results, and what each phone is sent.
 * `phone/`: the setup steps and the controller, on the kit's gamepad.
-* `audio/`: the crowd, the announcer (speech synthesis), effects and music, through `room.audio` buses.
+* `audio/`: the crowd, effects and music, through `room.audio` buses. There is no spoken commentary.
 * `protocol/`: the zod schemas for messages both ways.
 * `showcase/`: the game playing itself for the home screen's icon, poster and clip.
 

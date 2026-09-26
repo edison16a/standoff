@@ -10,7 +10,7 @@ import { Logo } from "./Logo";
 const SETTLE_S = 3;
 
 /**
- * Subway Surfers playing itself for the home screen: a computer runner
+ * Subway Runner playing itself for the home screen: a computer runner
  * on a seeded run, filmed by a director that picks the best angles. It
  * runs from requestAnimationFrame and performance.now only, so the
  * capture tool can step it frame by frame.

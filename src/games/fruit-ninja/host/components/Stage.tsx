@@ -9,7 +9,7 @@ import { useSession } from "./session-context";
 import { StageCanvas } from "./StageCanvas";
 
 /**
- * Fruit Ninja on one full screen. The board is always there: practice
+ * Fruit Slicer on one full screen. The board is always there: practice
  * fruit drifts up in the lobby, the countdown and the round play out on
  * it, and the results sit on top at the end. The platform adds the logo,
  * the tool bar and the join code around it.

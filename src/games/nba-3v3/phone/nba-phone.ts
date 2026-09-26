@@ -8,7 +8,7 @@ import { useControllerStore as store, type SetupStep } from "./controller-store"
 import { buzz, toneOf } from "./haptics";
 
 /**
- * NBA 3v3 on the phone. It walks the player through picking a star,
+ * Basketball 3v3 on the phone. It walks the player through picking a star,
  * then becomes a controller: the kit's thumb stick and buttons stream to
  * the host, and Shoot also times its own hold, so the host can judge the
  * release free of network lag. It makes no game decisions.
