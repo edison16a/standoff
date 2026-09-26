@@ -170,7 +170,8 @@ export class CubeSession {
     }
     const restarted = this.demoRestarted;
     this.demoRestarted = false;
-    return { time, dt, pulse, players: [{ state: this.demo.run.player, events, attempt: 1, restarted }], views: [0] };
+    // The computer's run behind the menu counts no attempts, so it shows no counter.
+    return { time, dt, pulse, players: [{ state: this.demo.run.player, events, attempt: 0, restarted }], views: [0] };
   }
 
   dispose(): void {

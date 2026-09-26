@@ -15,6 +15,7 @@ export interface DrawPlayer {
   state: PlayerState | null;
   /** What happened to this player since the last frame. */
   events: readonly PlayerEvent[];
+  /** Shown as a sign at the start of the level. Zero shows none. */
   attempt: number;
   /** A new attempt began since the last frame, so the camera jumps back. */
   restarted: boolean;

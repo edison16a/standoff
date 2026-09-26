@@ -33,10 +33,12 @@ export class Signs {
     return sign;
   }
 
+  /** Zero shows no counter, as for the computer's run behind the menu, where it peeked out from behind the title. */
   setAttempt(player: number, attempt: number): void {
     const sign = this.sign(player);
     if (sign.attempt === attempt) return;
     sign.attempt = attempt;
+    if (attempt <= 0) return;
     sign.sprite.material.map?.dispose();
     sign.sprite.material.map = wordsTexture(`Attempt ${attempt}`);
     sign.sprite.material.needsUpdate = true;
@@ -59,7 +61,7 @@ export class Signs {
 
   show(player: number, time: number): void {
     this.signs.forEach((sign, i) => {
-      sign.sprite.visible = i === player;
+      sign.sprite.visible = i === player && sign.attempt > 0;
       for (const mesh of sign.diamonds) {
         mesh.visible = i === player && mesh.userData.used === true;
         mesh.rotation.y = time * 2;
