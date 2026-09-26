@@ -21,10 +21,10 @@ export class Music {
   private readonly tone: BiquadFilterNode;
 
   constructor(private readonly engine: AudioEngine) {
-    // Rounds off the raw saw and square edges into something easier to sit under.
+    // Rounds off the raw saw and square edges into something easier to sit under, leaving the brass its bite.
     this.tone = engine.ctx.createBiquadFilter();
     this.tone.type = "lowpass";
-    this.tone.frequency.value = 2400;
+    this.tone.frequency.value = 4200;
     this.tone.Q.value = 0.5;
     this.tone.connect(engine.bus("music"));
   }

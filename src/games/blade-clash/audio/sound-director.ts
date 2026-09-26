@@ -1,10 +1,13 @@
+import { CHARACTERS, type CharacterId } from "@/games/blade-clash/characters";
 import type { GameEvent } from "@/games/blade-clash/engine/events";
-import type { Slot } from "@/games/blade-clash/players";
+import type { StageFrame } from "@/games/blade-clash/engine/frames";
+import { SLOTS, type PerSlot, type Slot } from "@/games/blade-clash/players";
 import type { MatchPhase } from "@/games/blade-clash/protocol";
 import type { Tuning } from "@/games/blade-clash/tuning";
 import type { AudioEngine } from "../../../platform/audio/audio-engine";
 import { Announcer } from "./announcer";
 import { Crowd } from "./crowd";
+import { FrameSounds } from "./frame-sounds";
 import { Music } from "./music";
 import { Sfx } from "./sfx";
 
@@ -12,12 +15,14 @@ import { Sfx } from "./sfx";
 const BIG_CLASH = 0.65;
 /** The announcer calls a big clash at most this often. */
 const CLASH_CALL_GAP_MS = 6000;
+const CLASH_CALLS = ["What a clash!", "Steel on steel!", "Blocked!", "Huge clash!"];
 
 /**
  * Decides what the duel sounds like. It listens to the same event stream
  * as the renderer, so every whoosh, clang and hit lands on the frame its
- * picture does. The announcer calls the start, the big clashes and the
- * winner.
+ * picture does, and reads every frame for the sounds that follow the
+ * fighters: the energy blade's hum and the armour on each step. The
+ * announcer calls the start, the big clashes and the winner.
  *
  * Cheers are rationed on purpose. Ordinary hits get a thump and
  * applause. Only a big clash or the final hit gets a cheer, and never
@@ -28,8 +33,11 @@ export class SoundDirector {
   private readonly crowd: Crowd;
   private readonly music: Music;
   private readonly announcer: Announcer;
+  private readonly frames: FrameSounds;
+  private readonly characters: PerSlot<CharacterId | null> = { 1: null, 2: null };
   private lastCheerAt = -Infinity;
   private lastClashCallAt = -Infinity;
+  private clashCall = 0;
   private afterFanfare: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
@@ -41,7 +49,8 @@ export class SoundDirector {
     this.sfx = new Sfx(engine);
     this.crowd = new Crowd(engine);
     this.music = new Music(engine);
-    // The hall hushes a little while the announcer speaks.
+    this.frames = new FrameSounds(engine, this.sfx);
+    // The arena hushes a little while the announcer speaks.
     this.announcer = new Announcer(() => {
       this.engine.duck("music", 0.6, 0.9);
       this.engine.duck("crowd", 0.6, 0.9);
@@ -52,6 +61,12 @@ export class SoundDirector {
   applyLevels(): void {
     const { musicVolume, crowdVolume, sfxVolume } = this.tuning();
     this.engine.setLevels({ music: musicVolume, crowd: crowdVolume, sfx: sfxVolume });
+  }
+
+  /** Every frame the stage draws, for the sounds that follow the fighters. */
+  onFrame(frame: StageFrame): void {
+    for (const slot of SLOTS) this.characters[slot] = frame.fighters.find((f) => f.slot === slot)?.characterId ?? null;
+    this.frames.update(frame);
   }
 
   onPhase(phase: MatchPhase): void {
@@ -67,7 +82,7 @@ export class SoundDirector {
         this.music.play("match");
         this.crowd.startMurmur();
         this.engine.holdDuck("music", 1);
-        this.announcer.say("Blades ready!");
+        this.announcer.say(this.matchup());
         break;
       case "paused":
         this.engine.holdDuck("music", 0.35);
@@ -80,7 +95,7 @@ export class SoundDirector {
         this.cheer(1, true);
         this.cancelFanfare();
         // Once the fanfare has rung out, the lobby's tune takes over under the results.
-        this.afterFanfare = setTimeout(() => this.music.play("menu"), 4500);
+        this.afterFanfare = setTimeout(() => this.music.play("menu"), 5000);
         break;
     }
   }
@@ -94,15 +109,17 @@ export class SoundDirector {
         this.sfx.gong();
         this.announcer.say("Fight!", 1.1);
         break;
-      case "swing":
-        this.sfx.whoosh(Math.min(1, event.speed / 20));
+      case "swing": {
+        const character = this.characters[event.slot];
+        if (character) this.sfx.whoosh(event.slot, character, Math.min(1, event.speed / 20));
         break;
+      }
       case "clash":
-        this.sfx.clang(event.strength);
+        this.sfx.clash(SLOTS.map((slot) => this.characters[slot] ?? "knight"), event.strength);
         if (event.strength >= BIG_CLASH) this.bigClash();
         break;
       case "hit":
-        this.sfx.impact();
+        this.sfx.hit(this.characters[event.attacker] ?? "knight", this.characters[event.victim] ?? "knight", event.victim);
         if (!event.final) {
           this.crowd.applause(1.2, 0.6);
           break;
@@ -127,7 +144,14 @@ export class SoundDirector {
     this.music.stop();
     this.crowd.stopMurmur();
     this.announcer.stop();
+    this.frames.stop();
     this.sfx.dispose();
+  }
+
+  /** The call as a fight starts: who faces whom, or just a call to arms. */
+  private matchup(): string {
+    const [a, b] = [this.characters[1], this.characters[2]];
+    return a && b ? `${CHARACTERS[a].name} against ${CHARACTERS[b].name}. Blades ready!` : "Blades ready!";
   }
 
   private bigClash(): void {
@@ -136,7 +160,7 @@ export class SoundDirector {
     const now = performance.now();
     if (now - this.lastClashCallAt < CLASH_CALL_GAP_MS) return;
     this.lastClashCallAt = now;
-    this.announcer.say("What a clash!", 1.15);
+    this.announcer.say(CLASH_CALLS[this.clashCall++ % CLASH_CALLS.length]!, 1.15);
   }
 
   private cancelFanfare(): void {

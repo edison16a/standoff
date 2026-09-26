@@ -94,6 +94,8 @@ export class BladeHost {
 
   /** Called every animation frame while the stage is up. */
   tick(wallNow: number): void {
+    // The hum and the footsteps follow the fighters in the lobby too.
+    this.audio.director.onFrame(this.scene(wallNow));
     if (!this.driver) return;
     this.driver.tick(wallNow);
     const hud = this.driver.hud();
