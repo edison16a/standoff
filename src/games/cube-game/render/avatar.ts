@@ -5,6 +5,12 @@ import { ballSkin, cubeFace, glowSprite } from "./textures";
 
 /** The dark outline every form wears, as the original's icons do, so it reads against any sky. */
 const OUTLINE = 0x0a0418;
+/**
+ * A ghost runs a little behind the play, so where it overlaps the view's
+ * own avatar the solid one hides it. Level with it, the see through ghost
+ * blended over the solid faces and washed out their colours.
+ */
+const GHOST_Z = -0.4;
 
 export interface Skin {
   main: number;
@@ -30,14 +36,18 @@ function faceMaterial(skin: Skin): THREE.MeshStandardMaterial {
  */
 export class Avatar {
   readonly group = new THREE.Group();
+  /** Holds the forms and takes the landing squash, so it stays along gravity while the form inside turns. */
+  private readonly body = new THREE.Group();
   private readonly forms: Record<Mode, THREE.Object3D>;
   private readonly materials: THREE.Material[] = [];
   private readonly geometries: THREE.BufferGeometry[] = [];
   private readonly halo: THREE.Sprite;
   private squash = 0;
   private mode: Mode | null = null;
+  private readonly z: number;
 
   constructor(skin: Skin, ghost = false) {
+    this.z = ghost ? GHOST_Z : 0;
     const face = faceMaterial(skin);
     const box = new THREE.BoxGeometry(0.92, 0.92, 0.92);
     const cube = new THREE.Mesh(box, face);
@@ -94,7 +104,8 @@ export class Avatar {
       new THREE.SpriteMaterial({ map: glowSprite(), color: skin.trim, transparent: true, opacity: ghost ? 0.1 : 0.18, blending: THREE.AdditiveBlending, depthWrite: false }),
     );
     this.halo.scale.setScalar(2.2);
-    this.group.add(cube, ufo, ball, this.halo);
+    this.body.add(cube, ufo, ball);
+    this.group.add(this.body, this.halo);
     this.materials.push(face, hull, rim, glass, ballMaterial, outline, this.halo.material);
     this.geometries.push(box, saucerGeometry, rimGeometry, domeGeometry, sphere);
     if (ghost) {
@@ -118,16 +129,17 @@ export class Avatar {
       this.mode = state.mode;
       for (const [mode, form] of Object.entries(this.forms)) form.visible = mode === state.mode;
     }
-    this.group.position.set(state.x, state.y, 0);
+    this.group.position.set(state.x, state.y, this.z);
     const form = this.forms[state.mode];
     form.rotation.z = state.angle;
     this.squash = Math.max(0, this.squash - dt * 6);
     const s = this.squash * this.squash;
-    // The squash is along gravity, so a ball on the ceiling flattens upward.
+    // The squash is along gravity, so a ball on the ceiling flattens upward. On the form itself it
+    // followed the form's turn, and a rolling ball landed squashed along whatever way it faced.
     // The saucer is a touch bigger than the cube, so its flat shape reads as clearly at a glance.
     const size = state.mode === "ufo" ? 1.2 : 1;
-    form.scale.set(size * (1 + s * 0.16), size * (1 - s * 0.22), size * (1 + s * 0.16));
-    form.position.y = -s * 0.1 * state.gravity;
+    this.body.scale.set(size * (1 + s * 0.16), size * (1 - s * 0.22), size * (1 + s * 0.16));
+    this.body.position.y = -s * 0.1 * state.gravity;
   }
 
   dispose(): void {

@@ -43,7 +43,7 @@ export class Particles {
     this.geometry.setAttribute("size", new THREE.BufferAttribute(this.size, 1).setUsage(THREE.DynamicDrawUsage));
     this.geometry.setAttribute("alpha", new THREE.BufferAttribute(this.alpha, 1).setUsage(THREE.DynamicDrawUsage));
     this.material = new THREE.ShaderMaterial({
-      uniforms: { map: { value: glowSprite() }, scale: { value: 300 } },
+      uniforms: { map: { value: glowSprite() }, scale: { value: 300 }, fade: { value: 1 } },
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
@@ -64,10 +64,11 @@ export class Particles {
       `,
       fragmentShader: /* glsl */ `
         uniform sampler2D map;
+        uniform float fade;
         varying vec3 vColour;
         varying float vAlpha;
         void main() {
-          float a = texture2D(map, gl_PointCoord).a * vAlpha;
+          float a = texture2D(map, gl_PointCoord).a * vAlpha * fade;
           if (a < 0.01) discard;
           gl_FragColor = vec4(vColour * a * 2.0, a);
         }
@@ -80,6 +81,11 @@ export class Particles {
   /** Points get this big per block of distance, so they match the view's size in pixels. */
   setScale(pixelsPerUnitAtOne: number): void {
     this.material.uniforms.scale!.value = pixelsPerUnitAtOne;
+  }
+
+  /** Dims every point, for a rival's sparks in the other player's view. Set per view before drawing it. */
+  setFade(fade: number): void {
+    this.material.uniforms.fade!.value = fade;
   }
 
   spawn(s: Spark): void {

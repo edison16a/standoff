@@ -7,6 +7,7 @@ import { Effects } from "./effects";
 import { LevelView } from "./level-view";
 import { Post, type Viewport } from "./post";
 import { Signs } from "./signs";
+import { splitRects } from "./split";
 import { themeFor } from "./themes";
 import { ViewCamera, type Framing } from "./view-camera";
 
@@ -14,6 +15,7 @@ export interface DrawPlayer {
   state: PlayerState | null;
   /** What happened to this player since the last frame. */
   events: readonly PlayerEvent[];
+  /** Shown as a sign at the start of the level. Zero shows none. */
   attempt: number;
   /** A new attempt began since the last frame, so the camera jumps back. */
   restarted: boolean;
@@ -103,13 +105,13 @@ export class GameRenderer {
     players.forEach((player, i) => {
       if (player.restarted && player.state) this.cameras[views.indexOf(i)]?.snap(player.state);
       for (const event of player.events) {
-        if (player.state) this.effects.event(event, player.state, SKINS[i]!);
+        if (player.state) this.effects.event(i, event, player.state, SKINS[i]!);
         if (event.type === "land") this.avatars[i]?.land();
         const camera = this.cameras[views.indexOf(i)];
         if (event.type === "death") camera?.shake(1);
         if (event.type === "portal" || event.type === "finish") camera?.punch();
       }
-      if (player.state) this.effects.trail(player.state, SKINS[i]!, dt);
+      if (player.state) this.effects.trail(i, player.state, SKINS[i]!, dt);
       this.avatars[i]?.update(player.state, dt);
       this.ghosts[i]?.update(players.length > 1 ? player.state : null, dt);
       this.signs.setAttempt(i, player.attempt);
@@ -123,26 +125,29 @@ export class GameRenderer {
     this.level?.update(time, pulse);
 
     const { width, height } = this.size;
-    const tall = height / views.length;
+    const rects = splitRects(views.length);
     const viewports: Viewport[] = views.map((p, v) => {
       const camera = this.cameras[v]!;
-      camera.setAspect(width / tall);
+      const rect = rects[v]!;
+      camera.setAspect((rect.w * width) / (rect.h * height));
       camera.follow(players[p]?.state ?? null, dt, time);
       return {
         camera: camera.camera,
-        x: 0,
-        y: v * tall,
-        width,
-        height: tall,
+        x: rect.x * width,
+        y: rect.y * height,
+        width: rect.w * width,
+        height: rect.h * height,
         prepare: () => this.prepare(p, players, camera, time, pulse),
       };
     });
-    this.effects.particles.setScale(tall / (2 * Math.tan(THREE.MathUtils.degToRad(13))));
+    const tall = rects[0]!.h * height;
+    this.effects.setScale(tall / (2 * Math.tan(THREE.MathUtils.degToRad(13))));
     if (render) this.post.draw(viewports);
   }
 
-  /** Before drawing one view: its player solid, rivals as ghosts, its own sign, and the sky behind its camera. */
+  /** Before drawing one view: its player solid, rivals as ghosts with dimmed sparks, its own sign, and the sky behind its camera. */
   private prepare(p: number, players: DrawPlayer[], camera: ViewCamera, time: number, pulse: number): void {
+    this.effects.focus(p);
     this.avatars.forEach((avatar, i) => (avatar.group.visible = i === p && !!players[i]?.state && !players[i]!.state!.dead));
     this.ghosts.forEach((ghost, i) => (ghost.group.visible = i !== p && !!players[i]?.state && !players[i]!.state!.dead));
     this.signs.show(p, time);

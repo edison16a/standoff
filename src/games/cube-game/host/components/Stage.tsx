@@ -8,6 +8,7 @@ import { Hud } from "./Hud";
 import { LevelSelect } from "./LevelSelect";
 import { Results } from "./Results";
 import { useSession } from "./session-context";
+import { SplitScreenMap } from "./SplitScreenMap";
 
 // three.js and the levels load after the room opens, so the menu's words arrive first.
 const GameCanvas = lazy(() => import("./GameCanvas"));
@@ -33,6 +34,7 @@ export function Stage() {
       {phase === "camera" && kit && <CameraStep kit={kit} />}
       {phase === "calibrate" && kit && <CalibrateStep kit={kit} />}
       {playing && <Hud />}
+      {phase === "play" && <SplitScreenMap />}
       {phase === "results" && <Results />}
       {playing && input === "camera" && kit && <CornerPreview kit={kit} corner="bottom-right" width={220} />}
     </div>

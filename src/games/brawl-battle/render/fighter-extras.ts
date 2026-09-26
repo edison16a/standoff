@@ -72,8 +72,10 @@ export class FighterExtras {
         star.rotation.y = a * 2;
       });
     }
+    // The platform goes where its rider is drawn, blended between steps like them.
+    // At the engine's own spot it ran a step ahead, so the feet floated over it on the way down.
     this.platform.visible = f.action === "respawn" && f.platform !== null;
-    if (f.platform) this.platform.position.set(f.platform.x, f.platform.y, 0);
+    if (this.platform.visible) this.platform.position.set(x, y, 0);
     this.ultRing.visible = f.ult >= 1 && f.action !== "respawn";
     if (this.ultRing.visible) {
       this.ultRing.position.set(x, y + 0.05 + (Math.sin(time * 3) * 0.5 + 0.5) * this.height * 0.8, 0);

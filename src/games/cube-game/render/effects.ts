@@ -1,48 +1,51 @@
 import * as THREE from "three";
 import type { PlayerEvent, PlayerState } from "../engine/player";
 import type { Skin } from "./avatar";
+import { Debris } from "./debris";
 import { Particles } from "./particles";
 import { MODE_COLOURS } from "./themes";
 
-const DEBRIS = 64;
-
-interface Shard {
-  at: THREE.Vector3;
-  velocity: THREE.Vector3;
-  spin: THREE.Vector3;
-  turn: THREE.Euler;
-  life: number;
-  size: number;
-  colour: THREE.Color;
-}
+/** How bright a rival's sparks are in the other player's view, like its ghost. */
+const RIVAL_SPARKS = 0.3;
+/** One spark pool per player, so each view can dim the rival's. */
+const PLAYERS = 2;
+const RING_LIFE = 0.45;
 
 /**
  * The sparks: each player's trail, bursts at pads, orbs and portals, a
  * puff on landing, and the crash, which throws cube shards and a ring of
  * light. All of it lives in the world, so both halves of a split screen
- * see a rival's crash if it is in view.
+ * see a rival's crash if it is in view. Each player's sparks are their own
+ * pool, and a view dims the rival's: two runs on the same beats would
+ * otherwise stack their trails into one white glare.
  */
 export class Effects {
   readonly group = new THREE.Group();
-  readonly particles = new Particles();
-  private readonly shards: Shard[] = [];
-  private readonly debris: THREE.InstancedMesh;
-  private readonly rings: { mesh: THREE.Mesh; life: number }[] = [];
+  private readonly pools = Array.from({ length: PLAYERS }, () => new Particles());
+  private readonly lastX: (number | null)[] = Array.from({ length: PLAYERS }, () => null);
+  private readonly debris = new Debris();
+  private readonly rings: { mesh: THREE.Mesh<THREE.RingGeometry, THREE.MeshBasicMaterial>; life: number; player: number }[] = [];
   private readonly ringGeometry = new THREE.RingGeometry(0.8, 1, 48);
   private readonly colour = new THREE.Color();
-  // Reused every frame, so drawing the shards makes no garbage.
-  private readonly matrix = new THREE.Matrix4();
-  private readonly turn = new THREE.Quaternion();
-  private readonly scale = new THREE.Vector3();
   private seed = 1;
 
   constructor() {
-    const material = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1.2, roughness: 0.4 });
-    this.debris = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), material, DEBRIS);
-    this.debris.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(DEBRIS * 3), 3);
-    this.debris.count = 0;
-    this.debris.frustumCulled = false;
-    this.group.add(this.particles.points, this.debris);
+    this.group.add(...this.pools.map((pool) => pool.points), this.debris.mesh);
+  }
+
+  /** Points get this big per block of distance, so they match the view's size in pixels. */
+  setScale(pixelsPerUnitAtOne: number): void {
+    for (const pool of this.pools) pool.setScale(pixelsPerUnitAtOne);
+  }
+
+  /** Before drawing a view: its own player's sparks full, the rival's dimmed. */
+  focus(player: number): void {
+    this.pools.forEach((pool, i) => pool.setFade(i === player ? 1 : RIVAL_SPARKS));
+    for (const ring of this.rings) ring.mesh.material.opacity = (ring.life / RING_LIFE) * (ring.player === player ? 1 : RIVAL_SPARKS);
+  }
+
+  private pool(player: number): Particles {
+    return this.pools[player] ?? this.pools[0]!;
   }
 
   /** Repeatable randomness, so the showcase plays the same on every capture. */
@@ -51,12 +54,15 @@ export class Effects {
     return this.seed / 2147483647;
   }
 
-  trail(state: PlayerState, skin: Skin, dt: number): void {
-    if (state.dead || state.finished) return;
+  trail(player: number, state: PlayerState, skin: Skin, dt: number): void {
+    const last = this.lastX[player] ?? null;
+    this.lastX[player] = state.x;
+    // A run waiting for its start stands still, and a trail would pile up into a glowing blob behind it.
+    if (state.dead || state.finished || last === null || Math.abs(state.x - last) < 1e-3) return;
     const count = Math.min(3, Math.ceil(dt * 90));
     for (let i = 0; i < count; i++) {
       const behind = state.mode === "ufo" ? -0.2 : 0.46 * state.gravity;
-      this.particles.spawn({
+      this.pool(player).spawn({
         x: state.x - 0.45,
         y: state.y - behind * (state.mode === "ufo" ? 1 : 0.8) + (this.random() - 0.5) * 0.3,
         vx: -1 - this.random() * 2,
@@ -69,115 +75,85 @@ export class Effects {
     }
   }
 
-  /** Sparks for whatever just happened. */
-  event(event: PlayerEvent, state: PlayerState, skin: Skin): void {
+  /** Sparks for whatever just happened to a player. */
+  event(player: number, event: PlayerEvent, state: PlayerState, skin: Skin): void {
+    const pool = this.pool(player);
     switch (event.type) {
       case "death":
-        this.explode(event.x, event.y, skin);
+        this.explode(player, event.x, event.y, skin);
         break;
       case "land":
-        this.burst(state.x, state.y - 0.46 * state.gravity, 0xffffff, 6, 3, 0.25);
+        this.burst(pool, state.x, state.y - 0.46 * state.gravity, 0xffffff, 6, 3, 0.25);
         break;
       case "pad":
-        this.burst(event.x + 0.5, event.y, 0xffe14d, 16, 7, 0.4);
+        this.burst(pool, event.x + 0.5, event.y, 0xffe14d, 16, 7, 0.4);
         break;
       case "orb":
-        this.burst(event.x, event.y, 0xffd21f, 22, 8, 0.45);
-        this.ring(event.x, event.y, 0xffd21f);
+        this.burst(pool, event.x, event.y, 0xffd21f, 22, 8, 0.45);
+        this.ring(player, event.x, event.y, 0xffd21f);
         break;
       case "portal":
-        this.burst(state.x, state.y, MODE_COLOURS[event.mode], 40, 10, 0.6);
-        this.ring(state.x, state.y, MODE_COLOURS[event.mode]);
+        this.burst(pool, state.x, state.y, MODE_COLOURS[event.mode], 40, 10, 0.6);
+        this.ring(player, state.x, state.y, MODE_COLOURS[event.mode]);
         break;
       case "finish":
-        for (let i = 0; i < 5; i++) this.burst(state.x + 2 + i, 2 + this.random() * 6, [0xff4fd8, 0x3ee6ff, 0xffe14d, 0x3dff6e, 0xff8a3d][i]!, 30, 9, 1.1);
+        for (let i = 0; i < 5; i++) this.burst(pool, state.x + 2 + i, 2 + this.random() * 6, [0xff4fd8, 0x3ee6ff, 0xffe14d, 0x3dff6e, 0xff8a3d][i]!, 30, 9, 1.1);
         break;
       default:
     }
   }
 
-  private burst(x: number, y: number, hex: number, count: number, speed: number, life: number): void {
+  private burst(pool: Particles, x: number, y: number, hex: number, count: number, speed: number, life: number): void {
     this.colour.set(hex);
     for (let i = 0; i < count; i++) {
       const angle = this.random() * Math.PI * 2;
       const v = speed * (0.4 + this.random() * 0.6);
-      this.particles.spawn({ x, y, vx: Math.cos(angle) * v, vy: Math.sin(angle) * v, vz: (this.random() - 0.5) * v, life: life * (0.6 + this.random() * 0.6), size: 0.3, colour: this.colour, drag: 2.5 });
+      pool.spawn({ x, y, vx: Math.cos(angle) * v, vy: Math.sin(angle) * v, vz: (this.random() - 0.5) * v, life: life * (0.6 + this.random() * 0.6), size: 0.3, colour: this.colour, drag: 2.5 });
     }
   }
 
-  private ring(x: number, y: number, hex: number): void {
+  private ring(player: number, x: number, y: number, hex: number): void {
     const mesh = new THREE.Mesh(this.ringGeometry, new THREE.MeshBasicMaterial({ color: new THREE.Color(hex).multiplyScalar(2.5), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
     mesh.position.set(x, y, 0.2);
     this.group.add(mesh);
-    this.rings.push({ mesh, life: 0.45 });
+    this.rings.push({ mesh, life: RING_LIFE, player });
   }
 
-  private explode(x: number, y: number, skin: Skin): void {
-    this.burst(x, y, skin.trim, 50, 14, 0.7);
-    this.burst(x, y, 0xffffff, 20, 9, 0.35);
-    this.ring(x, y, skin.trim);
-    for (let i = 0; i < 14; i++) {
-      if (this.shards.length >= DEBRIS) this.shards.shift();
-      const angle = this.random() * Math.PI * 2;
-      const v = 5 + this.random() * 9;
-      this.shards.push({
-        at: new THREE.Vector3(x + (this.random() - 0.5) * 0.6, y + (this.random() - 0.5) * 0.6, (this.random() - 0.5) * 0.6),
-        velocity: new THREE.Vector3(Math.cos(angle) * v, Math.sin(angle) * v + 4, (this.random() - 0.5) * 6),
-        spin: new THREE.Vector3(this.random() * 12, this.random() * 12, this.random() * 12),
-        turn: new THREE.Euler(),
-        life: 0.9 + this.random() * 0.5,
-        size: 0.14 + this.random() * 0.2,
-        colour: new THREE.Color(i % 3 === 0 ? skin.trim : skin.main),
-      });
-    }
+  private explode(player: number, x: number, y: number, skin: Skin): void {
+    const pool = this.pool(player);
+    this.burst(pool, x, y, skin.trim, 50, 14, 0.7);
+    this.burst(pool, x, y, 0xffffff, 20, 9, 0.35);
+    this.ring(player, x, y, skin.trim);
+    this.debris.crash(x, y, skin, () => this.random());
   }
 
   update(dt: number): void {
-    this.particles.update(dt);
-    const { matrix, turn: q, scale } = this;
-    for (let i = this.shards.length - 1; i >= 0; i--) {
-      const shard = this.shards[i]!;
-      shard.life -= dt;
-      if (shard.life <= 0) {
-        this.shards.splice(i, 1);
-        continue;
-      }
-      shard.velocity.y -= 30 * dt;
-      shard.at.addScaledVector(shard.velocity, dt);
-      shard.turn.set(shard.turn.x + shard.spin.x * dt, shard.turn.y + shard.spin.y * dt, shard.turn.z + shard.spin.z * dt);
-    }
-    this.shards.forEach((shard, i) => {
-      this.debris.setMatrixAt(i, matrix.compose(shard.at, q.setFromEuler(shard.turn), scale.setScalar(shard.size * Math.min(1, shard.life * 2))));
-      this.debris.setColorAt(i, shard.colour);
-    });
-    if (this.debris.instanceColor) this.debris.instanceColor.needsUpdate = true;
-    this.debris.count = this.shards.length;
-    this.debris.instanceMatrix.needsUpdate = true;
+    for (const pool of this.pools) pool.update(dt);
+    this.debris.update(dt);
     for (let i = this.rings.length - 1; i >= 0; i--) {
       const ring = this.rings[i]!;
       ring.life -= dt;
-      const material = ring.mesh.material as THREE.MeshBasicMaterial;
       if (ring.life <= 0) {
         this.group.remove(ring.mesh);
-        material.dispose();
+        ring.mesh.material.dispose();
         this.rings.splice(i, 1);
         continue;
       }
-      ring.mesh.scale.setScalar(0.5 + (0.45 - ring.life) * 7);
-      material.opacity = ring.life / 0.45;
+      ring.mesh.scale.setScalar(0.5 + (RING_LIFE - ring.life) * 7);
+      ring.mesh.material.opacity = ring.life / RING_LIFE;
     }
   }
 
   clear(): void {
-    this.particles.clear();
-    this.shards.length = 0;
+    for (const pool of this.pools) pool.clear();
+    this.lastX.fill(null);
+    this.debris.clear();
   }
 
   dispose(): void {
-    this.particles.dispose();
-    this.debris.geometry.dispose();
-    (this.debris.material as THREE.Material).dispose();
+    for (const pool of this.pools) pool.dispose();
+    this.debris.dispose();
     this.ringGeometry.dispose();
-    for (const ring of this.rings) (ring.mesh.material as THREE.Material).dispose();
+    for (const ring of this.rings) ring.mesh.material.dispose();
   }
 }

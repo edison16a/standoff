@@ -21,7 +21,8 @@ function UltButton({ ult }: { ult: number }) {
     <div className={`bb-ultbtn ${ready ? "bb-ultbtn--ready" : ""}`}>
       <svg className="bb-ultbtn__ring" viewBox="0 0 100 100" aria-hidden="true">
         <circle cx="50" cy="50" r={r} className="bb-ultbtn__track" />
-        <circle cx="50" cy="50" r={r} className="bb-ultbtn__fill" strokeDasharray={`${length * Math.min(1, ult)} ${length}`} transform="rotate(-90 50 50)" />
+        {/* An empty dash still draws its round cap as a dot, so an empty meter draws no fill. */}
+        {ult > 0 && <circle cx="50" cy="50" r={r} className="bb-ultbtn__fill" strokeDasharray={`${length * Math.min(1, ult)} ${length}`} transform="rotate(-90 50 50)" />}
       </svg>
       <PadButton label={ready ? "Ult, ready" : `Ult, ${Math.floor(ult * 100)} percent charged`} colour="#eab308" disabled={!ready} onDown={() => session.press(BUTTONS.ult)} onUp={() => session.release(BUTTONS.ult)}>
         <span>Ult</span>
