@@ -88,13 +88,13 @@
 
 /*
   Big tiles, like a console menu. They no longer shrink to fit every game
-  in one row: the row runs off the right edge and scrolls as the choice
+  in one row: the row loops past both edges and scrolls as the choice
   moves along it.
 */
 .home__main {
   --edge: 48px;
-  --gap: clamp(14px, 1.4vw, 24px);
-  --tile: clamp(128px, min(14vw, 26vh), 240px);
+  --gap: clamp(12px, 1.2vw, 20px);
+  --tile: clamp(96px, min(10.5vw, 19.5vh), 180px);
   --tile-on: calc(var(--tile) * 1.22);
   position: relative;
   display: flex;
@@ -198,8 +198,8 @@
 
   .home__main {
     --edge: 16px;
-    --tile: 150px;
-    --tile-on: 180px;
+    --tile: 112px;
+    --tile-on: 136px;
     padding: 8px 16px 32px;
   }
 

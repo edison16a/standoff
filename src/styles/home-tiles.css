@@ -26,6 +26,11 @@
   display: none;
 }
 
+/* For the one frame where the looped row jumps back to its middle copy. */
+.home__tiles--jump .game-tile {
+  transition: none;
+}
+
 .game-tile {
   position: relative;
   flex: 0 0 auto;
@@ -33,7 +38,7 @@
   height: var(--tile);
   padding: 0;
   border: 0;
-  border-radius: 28px;
+  border-radius: 22px;
   background: var(--bg-elevated);
   box-shadow: var(--shadow);
   cursor: pointer;
@@ -57,7 +62,7 @@
 .game-tile[aria-pressed="true"] {
   width: var(--tile-on);
   height: var(--tile-on);
-  border-radius: 32px;
+  border-radius: 26px;
   outline-color: var(--game);
 }
 
