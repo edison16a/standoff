@@ -190,8 +190,12 @@
 }
 
 .ss-result__name {
+  max-width: 240px;
   font-size: 22px;
   font-weight: 900;
+  /* A long name wraps onto two centred lines, not flush left under a centred score. */
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .ss-result__score {
