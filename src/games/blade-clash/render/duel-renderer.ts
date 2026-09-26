@@ -106,7 +106,7 @@ export class DuelRenderer {
         const at = new THREE.Vector3(event.at.x, event.at.y + floor, event.at.z);
         for (const slot of SLOTS) this.cameras[slot].closeIn(at);
         this.wash.colour.set(PLAYER_COLOURS[event.attacker]);
-        this.wash.target = 0.8;
+        this.wash.target = 0.6;
       }
     }
     if (event.type === "clash") for (const slot of SLOTS) this.cameras[slot].shake(0.02 + 0.04 * event.strength, wallNow);

@@ -91,7 +91,7 @@ export class LookKit {
   flash(colour: THREE.Color, amount: number): void {
     for (const material of this.flashing) {
       material.emissive.copy(colour);
-      material.emissiveIntensity = amount * 0.45;
+      material.emissiveIntensity = amount * 0.3;
     }
   }
 

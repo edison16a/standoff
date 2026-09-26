@@ -9,7 +9,7 @@ import type { TrailStyle } from "./characters";
 import { FighterModel } from "./model/fighter-model";
 
 /** How long a hit lights the body up, in game milliseconds. */
-const FLASH_MS = 320;
+const FLASH_MS = 240;
 
 /**
  * One fighter in the arena: the character model, animated from the

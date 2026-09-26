@@ -87,9 +87,9 @@ export class Effects {
       case "finish": {
         const at = this.contact ?? blades.chest[otherSlot(event.winner)].clone();
         this.contact = null;
-        this.sparks.burst(at, t, { count: 240, speed: 7, lifeMs: 700 });
-        this.sparks.burst(at, t, { count: 100, speed: 3.2, lifeMs: 950, colour: PLAYER_COLOURS[event.winner] });
-        this.impacts.fire(at, t, { size: 0.6, lifeMs: 560, colour: PLAYER_COLOURS[event.winner] });
+        this.sparks.burst(at, t, { count: 180, speed: 7, lifeMs: 700 });
+        this.sparks.burst(at, t, { count: 90, speed: 3.2, lifeMs: 950, colour: PLAYER_COLOURS[event.winner] });
+        this.impacts.fire(at, t, { size: 0.42, lifeMs: 520, colour: PLAYER_COLOURS[event.winner] });
         return;
       }
       case "matchWon":
