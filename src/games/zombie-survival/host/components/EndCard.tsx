@@ -13,7 +13,7 @@ export function EndCard() {
       <header>
         <span className="zs-card__kicker">{won ? "The Northern Star is out at sea" : `Overrun at stage ${hud.stage}`}</span>
         <h2>{won ? "You escaped the city" : "The team is down"}</h2>
-        <p>{won ? "Twenty five stages, one ship, and the whole team aboard." : "Retry from the checkpoint at the start of this stage. Your stats carry on."}</p>
+        <p>{won ? "Fifteen stages, one chopper ride, one ship, and the whole team aboard." : "Retry from the checkpoint at the start of this stage. Your stats carry on."}</p>
       </header>
       <StatsTable lines={hud.lines} seats={hud.seats} />
       <div className="zs-card__actions">

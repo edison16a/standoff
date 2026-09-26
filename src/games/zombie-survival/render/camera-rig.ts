@@ -1,11 +1,12 @@
 import * as THREE from "three";
-import { chopperPose } from "../engine/chopper";
+import { inFlight } from "../engine/chopper";
 import type { SurvivalGame } from "../engine/game";
 import { STEP_SECONDS } from "../engine/pacing";
 import { checkpointDistance, fightFrame, pointAt, type Vec3 } from "../engine/route";
 import { CHOPPER_STAGE, STAGE_COUNT } from "../engine/stages";
 import { alive } from "../engine/zombie";
 import { isBoss, KINDS } from "../engine/zombie-kinds";
+import { flightView, rooftopView } from "./chopper-camera";
 import { SHIP_DECK } from "./models/vehicles/ship";
 
 const EYE = 1.65;
@@ -36,7 +37,7 @@ export function sailed(t: number): number {
  * Where the team's eyes are. Walking, the view bobs along the route and
  * looks ahead round corners. Fighting, it stands at the checkpoint facing
  * the road the zombies come down. In the cutscenes it follows the chopper
- * down, then walks the pier onto the ship and looks back as it sails.
+ * land and rides it off the roof, then walks the pier onto the ship and looks back as it sails.
  * Everything eases, so a phase change never snaps the view.
  */
 export class CameraRig {
@@ -74,6 +75,7 @@ export class CameraRig {
       case "lobby":
         return { pos: v(pointAt(3), EYE).add(breathe), look: v(pointAt(22), 1.3 + Math.sin(time * 0.2) * 0.2) };
       case "travel": {
+        if (inFlight(game.phase, game.stage)) return flightView(game.distance, time);
         // One dip per footfall and one sway per stride, in time with the footsteps you hear.
         this.bob += (dt * Math.PI) / STEP_SECONDS;
         const pos = v(pointAt(game.distance), EYE + Math.sin(this.bob * 2) * 0.05);
@@ -82,27 +84,16 @@ export class CameraRig {
         return { pos: pos.addScaledVector(right, Math.sin(this.bob) * 0.05), look: ahead };
       }
       case "cutscene":
-        return game.cutscene === "escape" ? this.escape(game.phaseTime) : this.chopper(game, breathe);
+        return game.cutscene === "escape" ? this.escape(game.phaseTime) : rooftopView(game, breathe);
       case "escaped":
         return this.escape(16 + game.phaseTime);
       default: {
         const frame = fightFrame(game.stage);
         const pos = v(frame.origin, EYE).add(breathe);
-        const chopper = game.stage === CHOPPER_STAGE ? this.chopper(game, breathe) : null;
+        const chopper = game.stage === CHOPPER_STAGE ? rooftopView(game, breathe) : null;
         return { pos, look: chopper && game.phase === "clear" ? chopper.look : v(frame.place(14, 0), lookHeight(game)) };
       }
     }
-  }
-
-  /** Watching the chopper come in, catch fire and fall. */
-  private chopper(game: SurvivalGame, breathe: THREE.Vector3): { pos: THREE.Vector3; look: THREE.Vector3 } {
-    const frame = fightFrame(CHOPPER_STAGE);
-    const pos = v(frame.origin, EYE).add(breathe);
-    const pose = chopperPose(game.phase, game.stage, game.cutscene, game.phaseTime);
-    if (!pose) return { pos, look: v(frame.place(14, 0), 1.5) };
-    const at = frame.place(pose.ahead, pose.side);
-    const look = new THREE.Vector3(at.x, frame.origin.y + pose.up + 1, at.z);
-    return { pos, look };
   }
 
   /** Up the pier, up the gangway, then turn and watch the city fall away. */

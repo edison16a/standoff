@@ -92,8 +92,8 @@ export class Ambience {
     }
   }
 
-  /** Brings the rotor in and out, 0 silent to 1 overhead. `failing` drags the blades down. */
-  rotorLevel(level: number, failing: number): void {
+  /** Brings the rotor in and out, 0 silent to 1 overhead. */
+  rotorLevel(level: number): void {
     const now = this.engine.now;
     if (level <= 0.001) {
       if (this.rotor) {
@@ -119,8 +119,6 @@ export class Ambience {
     }
     this.rotor.wash.gain.gain.setTargetAtTime(level * 0.5, now, 0.3);
     this.rotor.body.gain.gain.setTargetAtTime(level * 0.1, now, 0.3);
-    this.rotor.chop.frequency.setTargetAtTime(11 - failing * 6, now, 0.4);
-    this.rotor.body.osc.frequency.setTargetAtTime(38 - failing * 14, now, 0.4);
   }
 
   stop(): void {
@@ -131,7 +129,7 @@ export class Ambience {
     this.pulse?.stop();
     this.pulseLfo?.stop();
     this.pulse = null;
-    this.rotorLevel(0, 0);
+    this.rotorLevel(0);
   }
 
   private footstep(delay: number): void {

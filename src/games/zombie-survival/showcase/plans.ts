@@ -13,7 +13,7 @@ const TEAM = [
  * still shown before the clip starts is the clip's own first frame.
  */
 const FIGHT: ShowcasePlan = {
-  stage: 5,
+  stage: 2,
   players: TEAM,
   bossAt: 6.5,
   beat: 4,

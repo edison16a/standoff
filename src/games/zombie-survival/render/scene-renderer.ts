@@ -68,7 +68,7 @@ export class SurvivalRenderer implements SurvivalView {
     this.scene.add(this.camera);
     this.atmosphere = new Atmosphere(this.scene, this.camera);
     this.guns = new FirstPerson(this.camera);
-    this.chopper = new ChopperView(this.scene, this.effects);
+    this.chopper = new ChopperView(this.scene);
     this.caster = new AimCaster(this.camera);
     this.scene.add(this.atmosphere.group, this.world.group, this.zombies.group, this.effects.group, this.guns.lasers);
   }

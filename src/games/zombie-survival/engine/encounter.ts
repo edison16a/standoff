@@ -5,7 +5,7 @@ import { alive, makeZombie, sideRoom, stepZombie, type Zombie } from "./zombie";
 import { weakPointHp, type ZombieKind } from "./zombie-kinds";
 
 /** The first zombie shows up after this long, so players can settle their aim. */
-const FIRST_SPAWN = 0.9;
+const FIRST_SPAWN = 0.5;
 /** Zombies closer than this push each other apart sideways. */
 const PERSONAL_SPACE = 0.95;
 /** Dead zombies stay on the ground this long before they are cleared away. */
@@ -48,17 +48,20 @@ export class Encounter {
   private readonly total: number;
   private readonly maxAlive: number;
   private readonly gap: number;
-  private spawnIn = FIRST_SPAWN;
+  private spawnIn: number;
   private bossDue: boolean;
   private readonly rng: Rng;
   private nextId: number;
 
+  /** `firstSpawn` lets the showcase keep the timing its captured clip was made with. */
   constructor(
     readonly spec: StageSpec,
     private readonly players: number,
     seed: number,
     firstId: number,
+    firstSpawn = FIRST_SPAWN,
   ) {
+    this.spawnIn = firstSpawn;
     this.rng = new Rng(seed);
     this.total = teamCount(spec, players);
     this.maxAlive = teamMaxAlive(spec, players);

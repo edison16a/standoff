@@ -10,7 +10,7 @@ import { StatsTable } from "./StatsTable";
  */
 export function Summary() {
   const hud = useSurvivalStore((s) => s.hud);
-  // The roof card must not give the crash away: as far as anyone knows, the ride is here.
+  // What comes next: the chopper at the roof, the ship at the pier.
   const after = hud.stage === STAGE_COUNT ? "The ship is right there." : "The chopper is coming in to land.";
   return (
     <section className="zs-card zs-card--summary" aria-label="Checkpoint">

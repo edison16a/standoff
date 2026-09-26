@@ -4,7 +4,7 @@ import { sendTo } from "./nodes";
 
 /**
  * One off moments: the radio squelch and murmur, achievement chimes, the
- * checkpoint sting, the crash, the ship's horn and the two endings.
+ * checkpoint sting, the ship's horn and the two endings.
  */
 export class Stingers {
   constructor(private readonly engine: AudioEngine) {}
@@ -69,15 +69,6 @@ export class Stingers {
     tone(e, out, e.now, { type: "sawtooth", frequency: midi(29), attack: 0.3, decay: 3, peak: 0.12 });
     tone(e, out, e.now, { type: "sawtooth", frequency: midi(30), attack: 0.3, decay: 3, peak: 0.1 });
     noise(e, out, e.now, { filter: "lowpass", frequency: 200, attack: 0.2, decay: 2, peak: 0.3 });
-  }
-
-  explosion(delayS = 0): void {
-    const e = this.engine;
-    const at = e.now + delayS;
-    const out = sendTo(e, e.bus("sfx"), 1, 0.3, at, 5);
-    noise(e, out, at, { filter: "lowpass", frequency: 500, sweepTo: 120, attack: 0.01, decay: 2.6, peak: 1 });
-    tone(e, out, at, { type: "sine", frequency: 60, glideTo: 24, decay: 1.6, peak: 1 });
-    noise(e, out, at, { filter: "highpass", frequency: 2500, decay: 0.3, peak: 0.4 });
   }
 
   horn(delayS = 0): void {

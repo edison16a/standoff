@@ -60,7 +60,7 @@ export class ShowcaseDirector implements SceneSource {
     while (this.game.phase === "travel") this.game.update(0.25);
     // An endless escort in place of the stage's own count, so the clip never runs dry.
     const spec = { ...stage(plan.stage), count: 10_000, maxAlive: plan.escort.maxAlive, gap: plan.escort.gap, spawn: plan.escort.spawn, tough: plan.escort.tough, packs: 0 };
-    this.game.encounter = new Encounter(spec, 1, plan.seed, 5000);
+    this.game.encounter = new Encounter(spec, 1, plan.seed, 5000, 0.9);
     this.spread = new EscortSpread(spec.zone);
     const sides = lanes(plan.players.length);
     this.bots = plan.players.map((p, i) => new ShowcaseBot(i + 1, p.role, sides[i]!));

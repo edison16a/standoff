@@ -24,8 +24,8 @@ const PERSONAL = {
 const TEAM = {
   untouchable: { id: "untouchable", title: "Untouchable", text: "Cleared a stage without a scratch" },
   closeCall: { id: "close-call", title: "Close Call", text: "Cleared a stage on almost no health" },
-  halfway: { id: "halfway", title: "Halfway There", text: "Reached stage 13" },
-  changeOfPlans: { id: "change-of-plans", title: "Change of Plans", text: "Survived the chopper crash" },
+  halfway: { id: "halfway", title: "Halfway There", text: "Reached stage 8" },
+  liftOff: { id: "lift-off", title: "Lift Off", text: "Made it onto the chopper" },
   teamwork: { id: "teamwork", title: "Teamwork", text: "Everyone broke a weak point on the same boss" },
   survivor: { id: "survivor", title: "Survivors", text: "Escaped the city" },
 } satisfies Record<string, Award>;

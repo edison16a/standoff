@@ -2,7 +2,7 @@
  * The way through the city, as straight segments joined at corners.
  * Segment k leads to checkpoint k, where stage k is fought, facing down
  * segment k + 1: the zombies come from the road the team is about to
- * take. Segment 26 is the pier walk onto the ship.
+ * take. Segment 16 is the pier walk onto the ship.
  *
  * World axes: y up, heading 0 looks north along -z, and a positive turn
  * is to the right.
@@ -28,28 +28,19 @@ interface SegmentPlan {
 const PLAN: readonly SegmentPlan[] = [
   { zone: "street", length: 46, turn: 0 },
   { zone: "street", length: 44, turn: 0 },
-  { zone: "street", length: 44, turn: 90 },
-  { zone: "street", length: 42, turn: 0 },
   { zone: "alley", length: 40, turn: -90 },
   { zone: "alley", length: 40, turn: 0 },
   { zone: "park", length: 48, turn: -90 },
   { zone: "park", length: 46, turn: 90 },
+  { zone: "street", length: 44, turn: 0 },
+  { zone: "street", length: 44, turn: 90 },
   { zone: "hospital", length: 44, turn: 0 },
   { zone: "ramp", length: 56, turn: 90, rise: { to: 14, from: 10, until: 50 } },
+  // The chopper flies the team over this one, from the roof to the docks.
   { zone: "roof", length: 86, turn: 0, rise: { to: 0, from: 44, until: 82 } },
-  { zone: "street", length: 44, turn: -90 },
-  { zone: "street", length: 44, turn: 0 },
-  { zone: "highway", length: 52, turn: 90 },
-  { zone: "highway", length: 50, turn: 0 },
-  { zone: "highway", length: 50, turn: 0 },
-  { zone: "highway", length: 50, turn: -45 },
-  { zone: "highway", length: 50, turn: 0 },
-  { zone: "highway", length: 50, turn: 45 },
-  { zone: "docks", length: 48, turn: 0 },
-  { zone: "docks", length: 44, turn: -90 },
+  { zone: "docks", length: 48, turn: -90 },
   { zone: "docks", length: 44, turn: 0 },
   { zone: "docks", length: 44, turn: 90 },
-  { zone: "docks", length: 44, turn: 0 },
   { zone: "docks", length: 44, turn: 0 },
   { zone: "docks", length: 50, turn: 0 },
 ];
