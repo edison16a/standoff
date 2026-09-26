@@ -19,6 +19,7 @@ import type { Effects } from "./effects/effects";
 import { buildFighter } from "./models/build";
 import { solidMaterial } from "./models/geo";
 import type { Rig } from "./models/rig";
+import { isGone, StepTrack } from "./step-track";
 
 /** How far the body turns toward the camera from a pure side view, so faces show. */
 const CHEAT = 0.4;
@@ -41,8 +42,9 @@ export class FighterView {
   private readonly style: Style;
   private readonly pose: Pose = restPose();
   private readonly target: Pose = restPose();
-  private readonly prev = new THREE.Vector2();
-  private readonly cur = new THREE.Vector2();
+  private readonly track: StepTrack;
+  /** Drawn last frame. A fighter back from a fall starts in the right pose instead of easing out of their tumble. */
+  private shown = true;
   private yaw: number;
   private stride = 0;
   private flash = 0;
@@ -59,14 +61,13 @@ export class FighterView {
     this.moveFx = new MoveFx(f, anchors, fx);
     this.aura = new THREE.Color(FX[f.character].aura);
     this.yaw = f.facing * (Math.PI / 2 - CHEAT);
-    this.cur.set(f.pos.x, f.pos.y);
-    this.prev.copy(this.cur);
+    this.track = new StepTrack(f);
     parent.add(this.rig.joints.root, this.extras.group, this.trails.group, this.charge.group, this.moveFx.group);
   }
 
   /** Called before each engine step, so drawing can blend between steps. */
   remember(f: Fighter): void {
-    this.prev.set(f.pos.x, f.pos.y);
+    this.track.remember(f);
   }
 
   onJump(double: boolean, frame: number): void {
@@ -86,13 +87,14 @@ export class FighterView {
   /** `alpha` is how far the screen is between the last engine step and the next. */
   update(f: Fighter, state: MatchState, alpha: number, dt: number, time: number): void {
     const root = this.rig.joints.root;
-    const hidden = f.action === "dead" || f.action === "out";
+    const hidden = isGone(f);
     root.visible = !hidden;
-    this.cur.set(f.pos.x, f.pos.y);
     const frozen = f.freeze > 0;
-    const k = frozen ? 1 : alpha;
-    let x = this.prev.x + (this.cur.x - this.prev.x) * k;
-    const y = this.prev.y + (this.cur.y - this.prev.y) * k;
+    const drawn = this.track.at(f, alpha);
+    let x = drawn.x;
+    const y = drawn.y;
+    const appearing = !hidden && !this.shown;
+    this.shown = !hidden;
     if (hidden) {
       this.trails.reset();
       this.charge.update(f, x, y, 0, time, dt);
@@ -105,7 +107,7 @@ export class FighterView {
     const winner = state.phase !== "fight" && state.phase !== "ready" && state.winner === f.id;
     // The winner turns to face the crowd.
     const turn = f.facing * (Math.PI / 2 - CHEAT) * (winner ? 0.3 : 1);
-    this.yaw += (turn - this.yaw) * (1 - Math.exp(-22 * dt));
+    this.yaw = appearing ? turn : this.yaw + (turn - this.yaw) * (1 - Math.exp(-22 * dt));
     root.rotation.y = this.yaw;
 
     const speed = Math.abs(f.vel.x);
@@ -134,7 +136,8 @@ export class FighterView {
       chargingPose(this.style.moves[f.move], chargeLevel(f), time, this.target);
       rate = 14;
     } else if (f.action === "hurt" || input.doubleJump) rate = 30;
-    approach(this.pose, this.target, rate, dt);
+    if (appearing) Object.assign(this.pose, this.target);
+    else approach(this.pose, this.target, rate, dt);
     applyPose(this.pose, this.rig.joints, this.rig.dims);
 
     this.squash += (0 - this.squash) * (1 - Math.exp(-12 * dt));
