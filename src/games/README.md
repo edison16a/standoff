@@ -79,7 +79,7 @@ It opens a room for each game, joins as a phone the size of an iPhone 16, and wa
 
 ## Camera games
 
-Boxing and Subway Surfers use no phones. They set `input: "camera"` and `join: "hidden"`, open the computer's camera, and read players' bodies with a pose model that downloads to the player's own computer and runs in the browser. The shared camera and pose code lives in `src/games/kit/camera`.
+Boxing and Subway Runner use no phones. They set `input: "camera"` and `join: "hidden"`, open the computer's camera, and read players' bodies with a pose model that downloads to the player's own computer and runs in the browser. The shared camera and pose code lives in `src/games/kit/camera`.
 
 ## Rules of the house
 

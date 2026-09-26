@@ -5,7 +5,7 @@ import poster from "./media/poster.jpg";
 
 export const info: GameInfo = {
   id: "subway-surfers",
-  title: "Subway Surfers",
+  title: "Subway Runner",
   tagline: "Run the neon rails from the waist up. Jump, roll and dodge for a high score.",
   status: "ready",
   players: [1, 2],
