@@ -128,7 +128,9 @@ export class BodyMotion {
 
     this.applyFall(input, pose);
     const sideways = 0.07 * slip;
-    const back = -0.45 * fallParts(this.fall).topple;
+    // A boxer going down drifts back from the puncher as the knees go, before toppling back.
+    const { sag: sagged, topple: toppled } = fallParts(this.fall);
+    const back = -(0.18 * sagged * (1 - toppled) + 0.45 * toppled);
     const c = Math.cos(input.facing);
     const s = Math.sin(input.facing);
     pose.yaw = input.facing;
@@ -147,13 +149,15 @@ export class BodyMotion {
     if (fall <= 0) return;
     const { sag, topple } = fallParts(fall);
     const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+    // The trunk slumps only a little as the knees buckle. Folding further, at fighting range,
+    // put the falling boxer's head through the other boxer's chest and arms.
     pose.hipHeight = lerp(lerp(pose.hipHeight, 0.6, sag), 0.17, topple);
-    pose.hips.pitch = lerp(lerp(pose.hips.pitch, 0.3, sag), -1.45, topple);
+    pose.hips.pitch = lerp(lerp(pose.hips.pitch, 0.12, sag), -1.45, topple);
     pose.hips.yaw *= 1 - topple;
-    pose.spine.pitch = lerp(lerp(pose.spine.pitch, 0.4, sag), 0.05, topple);
+    pose.spine.pitch = lerp(lerp(pose.spine.pitch, 0.2, sag), 0.05, topple);
     pose.spine.lean *= 1 - sag;
     pose.chest.pitch = lerp(pose.chest.pitch, 0.02, topple);
-    pose.head.pitch = lerp(lerp(pose.head.pitch, 0.55, sag), -0.15, topple);
+    pose.head.pitch = lerp(lerp(pose.head.pitch, 0.45, sag), -0.15, topple);
     pose.head.yaw = lerp(pose.head.yaw, 0.45, topple);
     // A boxer who is down still stirs a little while the count goes on.
     pose.head.lean = 0.1 * Math.sin(input.time * 1.3) * topple;
