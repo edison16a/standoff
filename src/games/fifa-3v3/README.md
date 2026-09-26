@@ -31,7 +31,7 @@ Hold the phone sideways.
   * Centred: a 360 roulette, spinning away from the nearest defender.
   * Done at a close defender it can leave them wrong footed for a moment. Moves have a short cooldown, and spamming them, or running one straight into a man or a sliding boot, can give the ball away. Computer players use them too.
 
-The phone buzzes for kicks, passes, tackles and goals, and shows your team, the score and the clock.
+The phone buzzes for kicks, passes, tackles and goals, and shows your team, the score and the clock. The buttons rest during kick offs, goals and replays, when the host is not reading them.
 
 ## The shot model
 
@@ -53,9 +53,9 @@ Effects have a sharp hit, a body and a tail into a synthetic stadium reverb, eac
 
 ## Code map
 
-* `engine/`: the pure match with tests. `play.ts` runs a step, `buttons.ts` turns the two buttons into passes, shots, slides and skill moves, `charge.ts` is the charge bar shared with the phone, `assist.ts` reads the stick for a pass or a shot, `kick.ts` and `passing.ts` strike the ball, `shot-odds.ts` and `shot-aim.ts` decide and aim shots, `keeper*.ts` the goalkeepers, `tackle.ts` slides and challenges, `skills.ts` and `skill-moves.ts` the skill moves, `bots.ts`, `bot-shape.ts` and `bot-skill.ts` the computer players, `rules.ts` kickoffs, restarts and full time.
+* `engine/`: the pure match with tests. `play.ts` runs a step, `buttons.ts` turns the two buttons into passes, shots, slides and skill moves, `charge.ts` is the charge bar shared with the phone, `assist.ts` reads the stick for a pass or a shot, `kick.ts` and `passing.ts` strike the ball, `shot-odds.ts` and `shot-aim.ts` decide and aim shots, `keeper*.ts` the goalkeepers, `tackle.ts` slides and challenges, `skills.ts` and `skill-moves.ts` the skill moves, `bots.ts`, `bot-shape.ts` and `bot-skill.ts` the computer players, `rules.ts` kickoffs, restarts and full time, and `celebrate.ts` the goal and the win. After a goal the team mates stand one on each side of the scorer and a step back, so the close up shows all three.
 * `render/`: three.js. The arena (pitch, boards, goals with nets, stands, crowd, floodlights), the players built from the roster, animations, effects (grass spray, confetti, fireworks) and the broadcast camera.
-  * Players are animated by where their feet go. `engine/stride.ts` sets the running rhythm, and both the simulation and the drawing use it. The dribble touch lands on the lead boot's swing. `anim/gait.ts` pins each foot to the turf for its stance. `anim/leg-ik.ts` solves the legs to reach those spots. `anim/kicks.ts` and `anim/skill-poses.ts` steer a boot onto the ball where it is drawn, so the ball stays at the feet. `figures/athlete-figure.ts` cross fades from one move to the next.
+  * Players are animated by where their feet go. `engine/stride.ts` sets the running rhythm, and both the simulation and the drawing use it. The dribble touch lands on the lead boot's swing. `anim/gait.ts` pins each foot to the turf for its stance. `anim/leg-ik.ts` solves the legs to reach those spots. `anim/kicks.ts` and `anim/skill-poses.ts` steer a boot onto the ball where it is drawn, so the ball stays at the feet. `figures/athlete-figure.ts` cross fades from one move to the next. In moves set by joint angles alone, like a slide, getting up, a celebration or the keepers' crouch, a leg that would reach down through the pitch is solved again to stand on the turf (`figures/turf.ts`). Name tags stack when players bunch up, so none covers another (`figures/tag-layout.ts`).
 * `host/`: the room on the big screen: lobby, match driver, goal replays, HUD, results, and what each phone is sent.
 * `phone/`: the setup steps and the controller, on the kit's gamepad.
 * `audio/`: the crowd, effects and music, through `room.audio` buses. There is no spoken commentary.

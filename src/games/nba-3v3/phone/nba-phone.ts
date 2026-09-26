@@ -17,6 +17,7 @@ export class NbaPhone {
   readonly pad: PhonePad;
   private shootAt: number | null = null;
   private flashKey = 0;
+  private streaming = false;
   private readonly unsubscribe: () => void;
 
   constructor(private readonly room: PhoneRoomApi) {
@@ -50,7 +51,12 @@ export class NbaPhone {
   /** Streams the stick while the controller is on screen. */
   stream(on: boolean): void {
     this.pad.stream(on);
-    if (!on) this.pad.releaseAll();
+    this.streaming = on;
+    if (on) return;
+    this.pad.releaseAll();
+    this.shootAt = null;
+    // The meter and the last word flashed (You win!, +2) belong to that game, not to the next controller shown.
+    store.setState({ flash: null, aimingSince: null });
   }
 
   press(button: Button): void {
@@ -80,7 +86,8 @@ export class NbaPhone {
   private onHost(message: HostMessage): void {
     if (message.kind === "buzz") {
       buzz(message.event);
-      if (message.text) store.setState({ flash: { key: ++this.flashKey, text: message.text, tone: toneOf(message.event) } });
+      // Words are only for the controller on screen; one kept for later would pop up stale.
+      if (message.text && this.streaming) store.setState({ flash: { key: ++this.flashKey, text: message.text, tone: toneOf(message.event) } });
       return;
     }
     const { wanted } = store.getState();

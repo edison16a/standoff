@@ -84,6 +84,7 @@ export class CourtRenderer {
     this.views = match.athletes.map((a) => new AthleteView(a, this.bodyMat, this.players));
     this.match = match;
     this.effects.reset();
+    this.ball.reset();
     this.intro = intro ? 0 : null;
     this.tv.snap(this.shot(match));
   }

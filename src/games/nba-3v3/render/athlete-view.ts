@@ -10,14 +10,13 @@ import { strideLength } from "./anim/locomotion";
 import { movePose } from "./anim/moves";
 import { applyPose, approach, blend, STAND, type Pose } from "./anim/pose";
 import { buildAthlete, type AthleteModel } from "./models/athlete-model";
+import { Placement } from "./placement";
 
 export type { AthleteScene };
 
 const v = new THREE.Vector3();
 /** After a shot, a dunk or a pass the body eases back into its run this slowly at first. */
 const RECOVER = 0.4;
-/** A jump in position bigger than this in one frame is a reset, eased out rather than shown. */
-const TELEPORT = 0.6;
 
 const ease = (u: number) => {
   const k = Math.min(1, Math.max(0, u));
@@ -43,25 +42,22 @@ export class AthleteView {
   private releasedAt: number | null = null;
   private lastKind = "none";
   private endedAt = -9;
-  private readonly slip = new THREE.Vector3();
-  private readonly last = new THREE.Vector3();
+  private readonly placement: Placement;
   private readonly seed: number;
   private readonly lastV = new THREE.Vector2();
   private ahead = 0;
-  private grounded = 1;
   private side = 0;
 
   constructor(readonly athlete: Athlete, bodyMat: THREE.Material, parent: THREE.Object3D) {
     this.model = buildAthlete(CHARACTERS[athlete.character], TEAMS[athlete.team], bodyMat);
     this.seed = athlete.id * 1.7;
-    this.last.set(athlete.x, athlete.y, athlete.z);
+    this.placement = new Placement(athlete);
     parent.add(this.model.joints.root);
   }
 
   update(a: Athlete, s: AthleteScene, dt: number): void {
     this.time += dt;
     const c = CHARACTERS[a.character];
-    this.place(a, dt);
     const speed = Math.hypot(a.vx, a.vz);
     this.stride(a, s, speed, dt);
     this.feelMomentum(a, dt);
@@ -132,25 +128,9 @@ export class AthleteView {
     }
     approach(this.pose, target, rate, dt);
     applyPose(this.pose, this.model.joints, this.model.dims);
-    this.model.joints.root.rotation.y = a.yaw + this.pose.spin;
-    this.plantFeet(a, dt);
+    this.placement.place(a, this.model.joints.root, this.pose.spin, dt);
+    this.placement.plant(a, this.model, { L: this.pose.footL, R: this.pose.footR }, dt);
     this.model.joints.root.updateMatrixWorld(true);
-  }
-
-  /**
-   * On the floor the hips are raised or lowered so the lower foot
-   * stands exactly on it, whatever the knees and hips are doing: bent
-   * knees sink the body instead of lifting the feet, and no pose floats
-   * or sinks into the court. In the air the pose's own height is kept.
-   */
-  private plantFeet(a: Athlete, dt: number): void {
-    this.grounded += ((a.y < 0.01 ? 1 : 0) - this.grounded) * (1 - Math.exp(-dt * 25));
-    if (this.grounded < 0.01) return;
-    const j = this.model.joints;
-    const d = this.model.dims;
-    j.root.updateMatrixWorld(true);
-    const low = Math.min(j.ankleL.getWorldPosition(v).y, j.ankleR.getWorldPosition(v).y) - j.root.position.y;
-    j.hips.position.y += (d.hipY - d.thigh - d.shin - low) * this.grounded;
   }
 
   /**
@@ -182,15 +162,6 @@ export class AthleteView {
     const ok = a.y < 0.01 && Math.hypot(ax, az) < 60;
     this.ahead += ((ok ? ahead : 0) - this.ahead) * k;
     this.side += ((ok ? side : 0) - this.side) * k;
-  }
-
-  /** Follows the engine's position, easing out any sudden jump so a reset never pops. */
-  private place(a: Athlete, dt: number): void {
-    v.set(a.x, a.y, a.z);
-    if (v.distanceTo(this.last) > TELEPORT) this.slip.add(this.last).sub(v);
-    this.last.copy(v);
-    this.slip.multiplyScalar(Math.exp(-dt * 7));
-    this.model.joints.root.position.copy(v).add(this.slip);
   }
 
   /** Where a hand is in the world, for putting the ball in it. */

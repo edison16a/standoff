@@ -5,6 +5,7 @@ import { greenHalfMs, GREEN_MS, type Grade } from "../engine/shot-model";
 import { SHOT } from "../engine/tuning";
 import { CHARACTERS } from "../roster";
 import type { CourtRenderer } from "./court-renderer";
+import { stackTags, type TagBox } from "./tag-layout";
 
 export interface TagLabel {
   name: string;
@@ -21,7 +22,15 @@ interface Tag {
   text: string;
   grade: Grade | null;
   gradeUntil: number;
+  /** The name's size in pixels, measured when its text or style changes. */
+  width: number;
+  height: number;
+  /** How far the tag is drawn above its player to keep clear of the others, eased so it glides. */
+  lift: number;
 }
+
+/** The shot meter's height over the name, with its border and the gap. */
+const METER_H = 72;
 
 const point = new THREE.Vector3();
 
@@ -33,6 +42,7 @@ const point = new THREE.Vector3();
  */
 export class Tags {
   private readonly tags: Tag[] = [];
+  private lastMs = 0;
 
   constructor(private readonly container: HTMLElement) {}
 
@@ -46,6 +56,9 @@ export class Tags {
 
   update(m: Match, renderer: CourtRenderer, label: (id: number) => TagLabel, width: number, height: number, nowMs: number): void {
     while (this.tags.length < m.athletes.length) this.tags.push(this.make());
+    const dt = this.lastMs ? Math.min(0.1, (nowMs - this.lastMs) / 1000) : 0;
+    this.lastMs = nowMs;
+    const shown: { tag: Tag; box: TagBox }[] = [];
     for (const [id, a] of m.athletes.entries()) {
       const tag = this.tags[id]!;
       const at = renderer.tagPoint(id, point);
@@ -53,17 +66,26 @@ export class Tags {
       const hide = !screen || m.phase === "over";
       tag.root.style.display = hide ? "none" : "";
       if (hide || !screen) continue;
-      tag.root.style.transform = `translate(${screen.x.toFixed(1)}px, ${screen.y.toFixed(1)}px) translate(-50%, -100%)`;
       const { name, colour } = label(id);
-      if (tag.text !== name) {
+      const bot = colour === null;
+      if (tag.text !== name || tag.root.classList.contains("nba-tag--bot") !== bot) {
         tag.text = name;
         tag.name.textContent = name;
+        tag.root.classList.toggle("nba-tag--bot", bot);
+        tag.width = tag.name.offsetWidth;
+        tag.height = tag.name.offsetHeight;
       }
       tag.root.style.setProperty("--tag", colour ?? "#cbd5e1");
-      tag.root.classList.toggle("nba-tag--bot", colour === null);
       tag.root.classList.toggle("nba-tag--ball", m.ball.holder === id);
       tag.root.classList.toggle("nba-tag--fire", a.onFire);
-      this.meter(tag, m, id, nowMs);
+      const metered = this.meter(tag, m, id, nowMs);
+      shown.push({ tag, box: { x: screen.x, y: screen.y, w: tag.width, h: tag.height + (metered ? METER_H : 0) } });
+    }
+    // Players bunched together would pile their tags on top of each other, so the tags stack instead.
+    const lifts = stackTags(shown.map((s) => s.box));
+    for (const [i, { tag, box }] of shown.entries()) {
+      tag.lift += (lifts[i]! - tag.lift) * (1 - Math.exp(-dt * 18));
+      tag.root.style.transform = `translate(${box.x.toFixed(1)}px, ${(box.y + tag.lift).toFixed(1)}px) translate(-50%, -100%)`;
     }
   }
 
@@ -72,13 +94,14 @@ export class Tags {
     for (const tag of this.tags) tag.root.style.display = "none";
   }
 
-  private meter(tag: Tag, m: Match, id: number, nowMs: number): void {
+  /** Shows the shot meter over a shooter, and says whether it is showing. */
+  private meter(tag: Tag, m: Match, id: number, nowMs: number): boolean {
     const a = m.athletes[id]!;
     const act = a.action;
     const aiming = act.kind === "shoot" && !act.released;
     const showing = aiming || nowMs < tag.gradeUntil;
     tag.meter.style.display = showing ? "" : "none";
-    if (!showing) return;
+    if (!showing) return false;
     const free = m.phase === "freeThrow" && m.freeThrows?.shooter === id;
     const half = greenHalfMs(CHARACTERS[a.character].stats.shooting, a.onFire, free);
     tag.green.style.bottom = `${((GREEN_MS - half) / SHOT.meterMs) * 100}%`;
@@ -87,6 +110,7 @@ export class Tags {
       tag.fill.style.height = `${Math.min(100, ((act.t * 1000) / SHOT.meterMs) * 100)}%`;
       tag.meter.dataset.grade = "";
     } else tag.meter.dataset.grade = tag.grade ?? "";
+    return true;
   }
 
   private make(): Tag {
@@ -103,7 +127,7 @@ export class Tags {
     name.className = "nba-tag__name";
     root.append(meter, name);
     this.container.appendChild(root);
-    return { root, name, meter, fill, green, text: "", grade: null, gradeUntil: 0 };
+    return { root, name, meter, fill, green, text: "", grade: null, gradeUntil: 0, width: 0, height: 0, lift: 0 };
   }
 
   dispose(): void {

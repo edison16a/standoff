@@ -7,6 +7,11 @@ import { ChargeSprite } from "./charge-bar";
 import { KeeperFigure } from "./keeper-figure";
 import { Marker } from "./markers";
 import { NameTag } from "./tag";
+import { stackTags, type TagBox } from "./tag-layout";
+
+const at = new THREE.Vector3();
+/** The charge bar sits this many of its own heights over the tag's anchor. */
+const BAR_UP = 3.6;
 
 export interface Label {
   name: string;
@@ -29,6 +34,8 @@ export class Squad {
   private markers: (Marker | null)[] = [];
   private blobs: THREE.Mesh[] = [];
   private bars: ChargeSprite[] = [];
+  /** How far each tag is drawn up the screen to keep clear of the others, eased so it glides. */
+  private lifts: number[] = [];
   private lineup = "";
   private labels = "";
   private label: ((id: number) => Label) | null = null;
@@ -73,6 +80,39 @@ export class Squad {
     for (const bar of this.bars) bar.fit(fov);
   }
 
+  /**
+   * Players bunched together would pile their tags on top of each other,
+   * so a tag that would cover another climbs just above it, and the
+   * charge bar over it climbs with it. Worked in half screen heights,
+   * which is how the tags are sized.
+   */
+  stackTags(camera: THREE.PerspectiveCamera, dt: number): void {
+    // The camera was just moved for this frame; drawing would only catch it up afterwards.
+    camera.updateMatrixWorld();
+    const f = camera.projectionMatrix.elements[5]!;
+    const shown: { i: number; box: TagBox }[] = [];
+    this.tags.forEach((tag, i) => {
+      if (!tag?.sprite.visible) return;
+      at.copy(tag.sprite.position).project(camera);
+      if (at.z > 1) return;
+      const size = tag.sprite.scale;
+      const bar = this.bars[i];
+      const barTop = bar?.sprite.visible ? (BAR_UP + 1) * bar.sprite.scale.y * f : 0;
+      shown.push({ i, box: { x: at.x * camera.aspect, y: -at.y, w: size.x * f, h: Math.max(size.y * f, barTop) } });
+    });
+    const lifts = stackTags(shown.map((s) => s.box));
+    const k = 1 - Math.exp(-dt * 18);
+    shown.forEach(({ i }, n) => {
+      const last = this.lifts[i] ?? 0;
+      const lift = last + (lifts[n]! - last) * k;
+      this.lifts[i] = lift;
+      const tag = this.tags[i]!;
+      tag.sprite.center.y = lift / (tag.sprite.scale.y * f);
+      const bar = this.bars[i];
+      if (bar) bar.sprite.center.y = -BAR_UP + lift / (bar.sprite.scale.y * f);
+    });
+  }
+
   private rebuild(view: MatchView, lineup: string): void {
     this.clearAthletes();
     this.lineup = lineup;
@@ -89,7 +129,7 @@ export class Squad {
       this.group.add(blob);
       // The charge bar sits above the name tag, anchored at the same spot.
       const bar = new ChargeSprite();
-      bar.sprite.center.set(0.5, -3.6);
+      bar.sprite.center.set(0.5, -BAR_UP);
       this.bars.push(bar);
       this.group.add(bar.sprite);
     }

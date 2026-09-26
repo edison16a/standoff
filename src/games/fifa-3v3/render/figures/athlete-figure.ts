@@ -13,6 +13,7 @@ import { applyPose, blendPoses, neutral, type Pose } from "../anim/pose";
 import { beatenFrame, skillFrame } from "../anim/skill-poses";
 import { buildBody, type Rig } from "../models/body";
 import { FootLock } from "./foot-locks";
+import { keepAboveTurf } from "./turf";
 
 /** How long a new move takes to blend in: kicks and tackles snap in, the rest ease. */
 const QUICK = new Set(["shoot", "pass", "slide", "stumble", "skill", "beaten"]);
@@ -72,6 +73,7 @@ export class AthleteFigure {
     blendPoses(this.shown, this.from, frame.pose, smooth(this.blendT / this.blendLen));
     applyPose(this.rig, this.shown);
     root.updateMatrixWorld(true);
+    keepAboveTurf(this.rig, this.shown, this.build);
     this.locks.left.remember(this.rig.ankleL);
     this.locks.right.remember(this.rig.ankleR);
   }
