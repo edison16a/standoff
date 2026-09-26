@@ -1,9 +1,11 @@
 import * as THREE from "three";
 import { hash } from "../../engine/rng";
 import { ZONE_LENGTH } from "../../engine/tuning";
+import { GANTRY, tunnelCeilingAt, WIRES } from "../models/overhead";
 import { sidePiece } from "../models/sides";
-import { CHUNK, gantry, lampGlow, trackTile } from "../models/track";
+import { CHUNK, gantry, lampGlow, trackTile, wires } from "../models/track";
 import { portal, tunnel } from "../models/tunnel";
+import { OverheadFade } from "./overhead-fade";
 import { THEMES, themeIndexAt, type SideKind } from "./themes";
 
 /** How far ahead scenery is built. The fog hides the edge. */
@@ -65,7 +67,11 @@ export function planChunk(k: number, seed: number): ChunkPlan {
  */
 export class Scenery {
   readonly group = new THREE.Group();
+  /** Fades the gantries and wires that come between the camera and the runner. */
+  readonly fade = new OverheadFade();
   private readonly chunks = new Map<number, THREE.Group>();
+  /** Each chunk's pieces that fade, to let go of with the chunk. */
+  private readonly overhead = new Map<number, THREE.Object3D[]>();
 
   constructor(private seed: number) {
     this.group.name = "scenery";
@@ -77,12 +83,19 @@ export class Scenery {
     this.seed = seed;
     this.group.clear();
     this.chunks.clear();
+    this.overhead.clear();
+    this.fade.clear();
   }
 
   /** Whether the runner is inside a tunnel at this distance, for the light and the sound. */
   tunnelAt(distance: number): boolean {
     const k = Math.floor(distance / CHUNK);
     return planChunk(k, this.seed).tunnel;
+  }
+
+  /** The lowest thing over the tracks at this distance and `x`, for keeping the camera under it. */
+  ceilingAt(distance: number, x: number): number {
+    return this.tunnelAt(distance) ? tunnelCeilingAt(x) : Infinity;
   }
 
   update(distance: number): void {
@@ -92,6 +105,8 @@ export class Scenery {
       if (k >= first && k <= last) continue;
       this.group.remove(chunk);
       this.chunks.delete(k);
+      for (const piece of this.overhead.get(k) ?? []) this.fade.drop(piece);
+      this.overhead.delete(k);
     }
     // Two chunks before the start, so the camera behind the runner never sees the edge of the world.
     for (let k = Math.max(-2, first); k <= last; k++) if (!this.chunks.has(k)) this.build(k);
@@ -114,7 +129,13 @@ export class Scenery {
         }
       }
     } else {
-      chunk.add(gantry(plan.signals, theme.neon[1]));
+      const z = -k * CHUNK;
+      const frame = gantry(plan.signals, theme.neon[1]);
+      const lines = wires();
+      this.fade.adopt(frame, { near: z + GANTRY.depth / 2, far: z - GANTRY.depth / 2, low: GANTRY.low, high: GANTRY.high });
+      this.fade.adopt(lines, { near: z, far: z - CHUNK, low: WIRES.low, high: WIRES.high });
+      this.overhead.set(k, [frame, lines]);
+      chunk.add(frame, lines);
       chunk.add(sidePiece(plan.left, -1, plan.variant, theme, plan.theme));
       chunk.add(sidePiece(plan.right, 1, plan.variant + 1, theme, plan.theme));
     }
@@ -124,8 +145,10 @@ export class Scenery {
   }
 
   dispose(): void {
-    // Every piece is a clone of a shared prefab, so there is nothing of its own to free.
+    // Every piece is a clone of a shared prefab. Only the gantries' fading materials and the wires' are their own.
+    this.fade.clear();
     this.group.clear();
     this.chunks.clear();
+    this.overhead.clear();
   }
 }

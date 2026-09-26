@@ -29,6 +29,13 @@ export const DEFAULT_MOVES: MoveOptions = {
 /** Any subset of any group, for example `{ lane: { lanes: 5 }, head: { up: 0.3 } }`. */
 export type MoveTuning = { [K in keyof MoveOptions]?: Partial<MoveOptions[K]> };
 
+/**
+ * For games that only jump: a small hop of about 5 cm, near a third of a
+ * full jump, counts. Bobbing and tiptoes stay under it, and a nod or a
+ * shrug never lifts head and shoulders together, so they never count.
+ */
+export const SMALL_JUMP: MoveTuning = { head: { up: 0.14 } };
+
 export function tune(base: MoveOptions, patch: MoveTuning = {}): MoveOptions {
   return {
     lane: { ...base.lane, ...patch.lane },

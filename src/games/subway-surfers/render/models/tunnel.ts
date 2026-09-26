@@ -3,7 +3,8 @@ import { tunnelTileTexture } from "../art/scenery-art";
 import { MeshBuilder } from "../mesh-builder";
 import { brickTexture } from "../textures";
 import type { Theme } from "../world/themes";
-import { cached, CHUNK, glow, repeated, textured, TUNNEL_TOP } from "./track";
+import { TUNNEL_TOP, VAULT_HALF, VAULT_SPRING } from "./overhead";
+import { cached, CHUNK, glow, repeated, textured } from "./track";
 
 /** One chunk of tunnel: dark tiled walls, strips of neon along them and down the crown, a vault over all three tracks. */
 export function tunnel(theme: Theme): THREE.Group {
@@ -18,9 +19,7 @@ export function tunnel(theme: Theme): THREE.Group {
       b.box(0.08, 0.08, CHUNK, glow(strip), [side * 5.3, 1.1, -CHUNK / 2]);
       b.box(0.08, 0.08, CHUNK, glow(crown), [side * 5.3, 4.2, -CHUNK / 2]);
     }
-    // The vault: a half tube laid along the track.
-    const vault = new THREE.CylinderGeometry(5.5, 5.5, CHUNK, 20, 1, true, -Math.PI / 2, Math.PI);
-    b.add(vault, { color: 0x3a3548, finish: "matte" }, [0, 7, -CHUNK / 2], [Math.PI / 2, 0, 0], [1, 1, 0.4]);
+    b.add(vaultGeometry(), { color: 0x3a3548, finish: "matte" });
     for (let z = -2; z > -CHUNK; z -= 6) {
       b.box(10.8, 0.25, 0.4, { color: 0x25222f, finish: "satin" }, [0, TUNNEL_TOP - 0.3, z]);
       b.box(10.2, 0.05, 0.05, glow(z % 12 === -2 ? strip : crown), [0, TUNNEL_TOP - 0.45, z + 0.2]);
@@ -38,6 +37,22 @@ export function tunnel(theme: Theme): THREE.Group {
     });
     return inside;
   });
+}
+
+/**
+ * The vault over one chunk: a half tube laid along the track, arching up
+ * from the tops of the walls to the crown. Turned the other way it hung
+ * down into the space over the trains and walled in a runner on a roof.
+ */
+export function vaultGeometry(): THREE.BufferGeometry {
+  const vault = new THREE.CylinderGeometry(VAULT_HALF, VAULT_HALF, CHUNK, 20, 1, true, -Math.PI / 2, Math.PI);
+  const rise = (TUNNEL_TOP - VAULT_SPRING) / VAULT_HALF;
+  const place = new THREE.Matrix4().compose(
+    new THREE.Vector3(0, VAULT_SPRING, -CHUNK / 2),
+    new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0)),
+    new THREE.Vector3(1, 1, rise),
+  );
+  return vault.applyMatrix4(place);
 }
 
 /** The mouth of a tunnel, a dark brick portal facing the runner at z = 0, its arch traced in neon. */

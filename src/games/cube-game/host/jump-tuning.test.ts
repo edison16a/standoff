@@ -31,6 +31,21 @@ describe("reading a jump for Cube Game", () => {
     expect(starts(hop())[0]).toBeLessThanOrEqual(140);
   });
 
+  it("counts a small jump, about a third of a full one", () => {
+    const small = (base: PoseSpec = {}): PoseKey[] => hop(base).map((k) => ({ ...k, pose: { ...k.pose, lift: k.pose.lift ? 0.06 : 0 } }));
+    expect(starts(small())).toHaveLength(1);
+    expect(starts(small({ height: 2.4 }), { height: 2.4 })).toHaveLength(1);
+  });
+
+  it("ignores bobbing to the beat, nodding and the bend of a landing", () => {
+    const bob: PoseKey[] = Array.from({ length: 16 }, (_, i) => ({ at: i * 160, pose: { crouch: i % 2 ? 0.2 : 0, lift: i % 4 === 2 ? 0.03 : 0 } }));
+    const nod: PoseKey[] = Array.from({ length: 12 }, (_, i) => ({ at: i * 200, pose: { nod: i % 2 ? -0.8 : 0.8 } }));
+    expect(starts(bob)).toHaveLength(0);
+    expect(starts(nod)).toHaveLength(0);
+    const landing: PoseKey[] = [...MOVES.jump(), { at: 700, pose: { crouch: 0.5 } }, { at: 950, pose: {} }];
+    expect(starts(landing)).toHaveLength(1);
+  });
+
   it("reads one jump once, never twice", () => {
     expect(starts(MOVES.jump())).toHaveLength(1);
     expect(starts([...hop(), ...hop().map((k) => ({ ...k, at: k.at + 500 }))])).toHaveLength(2);
@@ -38,7 +53,7 @@ describe("reading a jump for Cube Game", () => {
 
   it("ignores tiptoes, a quick bob, a bow and a slow stretch up", () => {
     expect(starts([{ at: 0, pose: {} }, { at: 300, pose: { lift: 0.04 } }, { at: 800, pose: { lift: 0.04 } }])).toHaveLength(0);
-    expect(starts([{ at: 0, pose: {} }, { at: 120, pose: { lift: 0.05 } }, { at: 240, pose: {} }])).toHaveLength(0);
+    expect(starts([{ at: 0, pose: {} }, { at: 120, pose: { lift: 0.04 } }, { at: 240, pose: {} }])).toHaveLength(0);
     expect(starts([{ at: 0, pose: {} }, { at: 1500, pose: { lift: 0.12 } }, { at: 2000, pose: { lift: 0.12 } }])).toHaveLength(0);
     expect(starts([{ at: 0, pose: {} }, { at: 200, pose: { bow: 0.2 } }, { at: 500, pose: {} }])).toHaveLength(0);
   });

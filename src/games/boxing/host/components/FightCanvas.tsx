@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Director } from "../../render/director";
 import { useBoxingStore } from "../host-store";
 import { useSession } from "./session-context";
@@ -12,6 +12,8 @@ import { useSession } from "./session-context";
 export default function FightCanvas() {
   const session = useSession();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Bumped when the browser takes the WebGL context away, which swaps in a fresh canvas.
+  const [generation, setGeneration] = useState(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -25,6 +27,10 @@ export default function FightCanvas() {
     fit();
     const observer = new ResizeObserver(fit);
     observer.observe(canvas);
+    // Browsers drop the oldest WebGL context when a page holds too many, and a lost canvas stays
+    // dark for good. A new canvas gets a new context, so the fight goes on with a picture.
+    const onLost = () => setGeneration((n) => n + 1);
+    canvas.addEventListener("webglcontextlost", onLost);
     const unlisten = session.listen((event, match) => director.onEvent(event, match));
     // Browser tests read the fight from here. Development builds only.
     if (process.env.NODE_ENV === "development") Object.assign(window, { __boxing: session, __boxingDirector: director });
@@ -51,10 +57,11 @@ export default function FightCanvas() {
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
+      canvas.removeEventListener("webglcontextlost", onLost);
       unlisten();
       director.dispose();
     };
-  }, [session]);
+  }, [session, generation]);
 
-  return <canvas ref={canvasRef} className="bx-canvas" />;
+  return <canvas key={generation} ref={canvasRef} className="bx-canvas" />;
 }

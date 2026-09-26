@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { MOVES, type PoseKey } from "@/games/kit/camera";
+import { MOVES, SMALL_JUMP, type PoseKey } from "@/games/kit/camera";
 import { readMoves } from "@/games/kit/camera/engine/sequence";
 import { CameraInput } from "./camera-input";
 
-/** Plays a waist up movement through the kit and the runner's camera input, and lists what the runner is told. */
+/** Plays a waist up movement through the kit, tuned as the game tunes it, and the runner's camera input, and lists what the runner is told. */
 function play(keys: PoseKey[]) {
   const input = new CameraInput();
   const told: { time: number; what: string }[] = [];
   let lane = 0;
   let rolling = false;
-  for (const frame of readMoves(keys, {}, { smooth: true, tail: 800 })) {
+  for (const frame of readMoves(keys, {}, { smooth: true, tail: 800, tuning: SMALL_JUMP })) {
     for (const event of frame.events) input.see(event);
     const intent = input.take(frame.state)!;
     const t = frame.body.time;
@@ -37,6 +37,11 @@ const jump = (crouch: number): PoseKey[] => [
 describe("steering the runner with the head line, waist up", () => {
   it("jumps when the head goes up out of its band", () => {
     expect(play(MOVES.jump())).toEqual(["jump"]);
+  });
+
+  it("jumps on a small hop, about a third of a full jump", () => {
+    const hop: PoseKey[] = [{ at: 0, pose: {} }, { at: 130, pose: { lift: 0.06 } }, { at: 260, pose: { lift: 0.06 } }, { at: 400, pose: {} }];
+    expect(play(hop)).toEqual(["jump"]);
   });
 
   it("rolls when the head goes down out of its band, and holds it while the head stays down", () => {
@@ -67,6 +72,13 @@ describe("steering the runner with the head line, waist up", () => {
   it("ignores bobbing on the spot", () => {
     const bob: PoseKey[] = Array.from({ length: 14 }, (_, i) => ({ at: i * 170, pose: { crouch: i % 2 ? 0.2 : 0, x: 0.5 + (i % 3) * 0.02 } }));
     expect(play(bob)).toEqual([]);
+  });
+
+  it("ignores a small bounce on the toes and nodding", () => {
+    const bounce: PoseKey[] = Array.from({ length: 16 }, (_, i) => ({ at: i * 160, pose: { crouch: i % 2 ? 0.2 : 0, lift: i % 4 === 2 ? 0.03 : 0 } }));
+    const nod: PoseKey[] = Array.from({ length: 12 }, (_, i) => ({ at: i * 200, pose: { nod: i % 2 ? -0.8 : 0.8 } }));
+    expect(play(bounce)).toEqual([]);
+    expect(play(nod)).toEqual([]);
   });
 
   it("gives nothing before calibration, and forgets a held jump on reset", () => {

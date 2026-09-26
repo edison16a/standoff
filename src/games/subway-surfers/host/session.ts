@@ -1,4 +1,4 @@
-import { CameraKit, type MoveEvent } from "@/games/kit/camera";
+import { CameraKit, SMALL_JUMP, type MoveEvent } from "@/games/kit/camera";
 import type { HostRoomApi } from "@/platform/games/game-api";
 import { SoundDirector } from "../audio/sound-director";
 import type { RunEvent } from "../engine/events";
@@ -69,7 +69,8 @@ export class SurfSession {
     const { players } = store.getState();
     if (!this.kit || this.kit.players !== players) {
       this.dropKit();
-      this.kit = new CameraKit({ players });
+      // A small hop jumps, so the runner reacts as soon as the player does.
+      this.kit = new CameraKit({ players, moves: SMALL_JUMP });
     }
     this.useControls(this.kit);
     store.setState({ phase: "camera" });

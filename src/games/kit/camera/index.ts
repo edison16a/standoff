@@ -17,7 +17,7 @@ export { BaselineCollector, sampleOf, type Baseline, type CalibrationProgress } 
 export { spotsFor, checkSpot, centreOf, type Spot, type SpotIssue, type SpotRules } from "./engine/spots";
 export type { TrackFrame } from "./engine/tracker";
 export { MoveReader, type MoveEvent, type MoveState } from "./engine/gestures/moves";
-export { DEFAULT_MOVES, type MoveOptions, type MoveTuning } from "./engine/gestures/options";
+export { DEFAULT_MOVES, SMALL_JUMP, type MoveOptions, type MoveTuning } from "./engine/gestures/options";
 export type { HeadLineView } from "./engine/gestures/head-line";
 export type { HeadMoveOptions } from "./engine/gestures/head-moves";
 export type { Punch } from "./engine/gestures/punch";

@@ -12,7 +12,7 @@ An endless runner on the neon rails of a city at night, played from the waist up
 4. **Tutorial:** move left, move right, jump and roll. Each move ticks off as the camera sees it. Skip is there for players who know it already.
 5. **Run!** After 3, 2, 1:
    * **Move** or lean left or right to change track (three tracks).
-   * **Jump** so your head goes up out of the band, over low barriers, onto ramps and from roof to roof.
+   * **Jump** so your head goes up out of the band, over low barriers, onto ramps and from roof to roof. A small hop is enough. Bobbing and nodding do not count.
    * **Duck** so your head drops below the band to roll under the high barriers. You keep rolling while your head stays down. Ducking in the air slams you back down. Your head dipping as you land from a jump is not a duck.
 6. One hit ends the run, unless you are on a hoverboard. Glancing off the side of a train brings the guard and his dog close. Do it twice and they catch you.
 7. With two players each runs their own copy of the same yard, side by side. A small map at the top right shows which half is whose, each name in its player's colour. When one crashes the other keeps going. When both are out the results show the winner, confetti and the best runs on this computer. Jump (or click Play again) for another go.
