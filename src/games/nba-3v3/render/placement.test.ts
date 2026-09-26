@@ -40,7 +40,7 @@ describe("Placement", () => {
       hip.rotation.x = -0.6;
       knee.rotation.x = 1.3;
     }
-    new Placement(createAthlete(0, 0, 0, "curry", null)).plant(createAthlete(0, 0, 0, "curry", null), model, { L: 0, R: 0 }, DT);
+    new Placement(createAthlete(0, 0, 0, "ashby", null)).plant(createAthlete(0, 0, 0, "ashby", null), model, { L: 0, R: 0 }, DT);
     j.root.updateMatrixWorld(true);
     for (const ankle of [j.ankleL, j.ankleR]) {
       expect(sole(ankle, DIMS.sole.heel)).toBeCloseTo(0, 2);
@@ -55,7 +55,7 @@ describe("Placement", () => {
     j.kneeL.rotation.x = 1.2;
     j.hipR.rotation.x = 0.3;
     j.kneeR.rotation.x = 0.4;
-    const a = createAthlete(0, 0, 0, "curry", null);
+    const a = createAthlete(0, 0, 0, "ashby", null);
     new Placement(a).plant(a, model, { L: 0, R: 0.3 }, DT);
     j.root.updateMatrixWorld(true);
     expect(j.ankleL.rotation.x).toBe(0);
@@ -66,7 +66,7 @@ describe("Placement", () => {
   });
 
   it("eases a sudden turn over a few frames but follows a spin as it goes", () => {
-    const a = createAthlete(0, 0, 0, "curry", null);
+    const a = createAthlete(0, 0, 0, "ashby", null);
     a.yaw = 0;
     const place = new Placement(a);
     const root = new THREE.Group();
