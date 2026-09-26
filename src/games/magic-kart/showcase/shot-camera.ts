@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { RaceWorld } from "../engine/world";
 import { packFocus } from "./pack";
 import type { Rig } from "./shots";
+import { framingAt, type Framing } from "./sweep";
 
 const wantPos = new THREE.Vector3();
 const wantLook = new THREE.Vector3();
@@ -34,10 +35,13 @@ export class ShotCamera {
     let fov: number;
     switch (rig.kind) {
       case "chase":
-        wantPos.set(focus.x - f.tx * rig.back + f.rx * rig.side, focus.y + rig.height, focus.z - f.tz * rig.back + f.rz * rig.side);
+      case "sweep": {
+        const at: Framing = rig.kind === "chase" ? rig : framingAt(rig.keys, world.time);
+        wantPos.set(focus.x - f.tx * at.back + f.rx * at.side, focus.y + at.height, focus.z - f.tz * at.back + f.rz * at.side);
         wantLook.set(focus.x + f.tx * 9, focus.y + 1, focus.z + f.tz * 9);
-        fov = rig.fov;
+        fov = at.fov;
         break;
+      }
       case "post": {
         const p = world.track.pointAt(rig.at * world.track.length, rig.d);
         wantPos.set(p.x, p.y + rig.height, p.z);
