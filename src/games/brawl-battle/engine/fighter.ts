@@ -1,12 +1,12 @@
 import { CHARACTERS, type CharacterId } from "../roster";
 import { advanceMove } from "./attack";
 import { stepCharge, tryCharge } from "./charge";
-import { bufferPress, freeControl, leaveGround, shieldControl, tryAttack } from "./control";
+import { attackControl, bufferPress, freeControl, leaveGround, shieldControl, tryAttack } from "./control";
 import { moveOf } from "./moves";
 import { moveBody, steer, type Contact } from "./physics";
 import { stepRespawn } from "./stocks";
 import { stepShield } from "./shield";
-import { LAUNCH, MOVEMENT, SHIELD } from "./tuning";
+import { FLOW, LAUNCH, MOVEMENT, SHIELD } from "./tuning";
 import { chargeOverTime } from "./ult";
 import type { Command, Fighter, MatchState } from "./types";
 
@@ -25,6 +25,7 @@ export function makeFighter(id: number, slot: number, character: CharacterId, se
     frame: 0,
     move: null,
     swing: 0,
+    chain: 0,
     struck: [],
     ground: 0,
     airJumps: 1,
@@ -64,7 +65,7 @@ export function stepFighter(state: MatchState, f: Fighter, cmd: Command, dt: num
   // Hit stop freezes everything about the fighter, presses included, except the buffer.
   if (f.freeze > 0) {
     f.freeze--;
-    bufferPress(f, cmd);
+    bufferPress(f, cmd, false);
     return;
   }
   // Moves count their own frames as they play.
@@ -102,14 +103,18 @@ function act(state: MatchState, f: Fighter, cmd: Command): void {
       }
       if (f.frame > MOVEMENT.jumpSquat) leaveGround(state, f);
       break;
+    case "attack":
+      attackControl(state, f, cmd);
+      break;
     case "land":
-      if (--f.lag <= 0) toFree(f);
+      // Straight into whatever comes next, on the same step the lag ends.
+      if (--f.lag <= 0) freeNow(state, f, cmd);
       break;
     case "charge":
       stepCharge(state, f, cmd);
       break;
     case "hurt":
-      if (--f.hitstun <= 0) toFree(f);
+      if (--f.hitstun <= 0) freeNow(state, f, cmd);
       break;
     case "dizzy":
       if (f.frame >= SHIELD.breakStun) {
@@ -127,6 +132,12 @@ function toFree(f: Fighter): void {
   f.action = f.ground !== null ? "idle" : "air";
   f.frame = 0;
   f.move = null;
+}
+
+/** Free, and acting on the controls this same step, so there is no dead frame between actions. */
+function freeNow(state: MatchState, f: Fighter, cmd: Command): void {
+  toFree(f);
+  freeControl(state, f, cmd);
 }
 
 /** Landing, bouncing and walking off edges, after the body moved. */
@@ -153,7 +164,7 @@ function settle(state: MatchState, f: Fighter, contact: Contact): void {
     const move = moveOf(f.character, f.move);
     // Ground moves and cast in place moves carry on; an aerial ends in its landing lag.
     if (move.landLag === undefined) return;
-    f.lag = move.landLag;
+    f.lag = Math.max(1, Math.round(move.landLag * FLOW.landLag));
   } else if (f.action === "hurt") f.lag = Math.min(f.hitstun, 16);
   else if (f.action === "air") f.lag = MOVEMENT.landLag;
   else return;

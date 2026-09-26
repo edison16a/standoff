@@ -74,6 +74,8 @@ export interface Fighter {
   move: MoveKey | null;
   /** Counts up with every move started, so a hit knows which swing it came from. */
   swing: number;
+  /** Moves in the current string, each started from one that landed. 1 for a fresh move. */
+  chain: number;
   /** Who this swing has hit already, as "target:group". */
   struck: string[];
   /** The surface under the fighter, or null in the air. */
