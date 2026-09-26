@@ -26,7 +26,8 @@ export async function hostRoom(browser, url, game, theme) {
   await host.goto(url, { waitUntil: "domcontentloaded" });
   const tile = host.locator(`[data-tile="${game}"]`);
   await tile.waitFor();
-  if ((await tile.getAttribute("aria-pressed")) !== "true") await tile.click();
+  // The carousel can hold the tile past the edge of the screen, where a pointer click cannot reach it.
+  if ((await tile.getAttribute("aria-pressed")) !== "true") await tile.evaluate((el) => el.click());
   const start = host.locator(".home__host");
   await start.waitFor();
   await host.waitForFunction(() => !document.querySelector(".home__host")?.hasAttribute("disabled"), null, { timeout: 30000 });
