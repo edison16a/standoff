@@ -1,8 +1,14 @@
 import { RULES } from "../engine/rules";
 import type { Look } from "../render/models/looks";
+import { ownViews, type Shot } from "../render/views";
 import type { Banners } from "./banners";
-import type { FightDriver } from "./fight-driver";
+import type { FightDriver, Stage } from "./fight-driver";
 import type { Hud, HudFighter } from "./host-store";
+
+/** The picture's shot for each stage of a fight. */
+export function shotOf(stage: Stage): Shot {
+  return stage === "fight" ? "fight" : stage === "replay" ? "replay" : "celebrate";
+}
 
 /** What the overlay shows for a fight right now, read from the driver ten times a second. */
 export function hudFrom(driver: FightDriver, looks: readonly [Look, Look], banners: Banners, now: number): Hud {
@@ -44,5 +50,6 @@ export function hudFrom(driver: FightDriver, looks: readonly [Look, Look], banne
     breakStage: match.breakStage,
     touched: match.touch?.touchedAt != null,
     views: ([0, 1] as const).filter((id) => humans[id]),
+    panes: ownViews(shotOf(driver.stage), match.phase, humans),
   };
 }

@@ -1,25 +1,29 @@
 "use client";
-import { useBoxingStore, type Hud, type HudFighter } from "../host-store";
+import { FULL, type OwnView } from "../../render/views";
+import { useBoxingStore } from "../host-store";
+import { PlayerMap } from "./PlayerMap";
 import { RoundCallout } from "./RoundCallout";
 import { useSession } from "./session-context";
+import { ViewHud } from "./ViewHud";
 
 /**
  * The overlay on the fight. Each view gets health bars along its top,
- * its own boxer on the left and the opponent on the right, with the
- * stamina under yours, a tag while stunned or hurt, and a glow when a
- * counter is on. The clock sits in the middle, the prompts between
- * rounds under it, and the count, the pause and the replay take the
- * whole screen when they come.
+ * laid out on the very rects the picture is drawn in. While the
+ * broadcast camera has the whole screen one set of bars spans it. The
+ * clock sits in the middle, the prompts between rounds under it, and the
+ * count, the pause and the replay take the whole screen when they come.
  */
 export function FightHud() {
   const hud = useBoxingStore((state) => state.hud);
   const session = useSession();
   if (!hud) return null;
-  const split = hud.views.length === 2 && hud.stage === "fight";
+  const split = hud.panes.length === 2;
+  const first = hud.views[0];
+  const shown: OwnView[] = hud.panes.length > 0 ? hud.panes : first !== undefined ? [{ id: first, rect: FULL }] : [];
   return (
     <div className={`bx-hud${split ? " bx-hud--split" : ""}`}>
-      {hud.views.map((id) => (
-        <ViewHud key={id} hud={hud} me={id} split={split} />
+      {shown.map((pane) => (
+        <ViewHud key={pane.id} hud={hud} me={pane.id} rect={pane.rect} shared={hud.panes.length === 0} />
       ))}
       {hud.stage === "fight" && (
         <div className="bx-clock">
@@ -29,6 +33,7 @@ export function FightHud() {
           <span className="bx-clock__time">{formatClock(hud.clock)}</span>
         </div>
       )}
+      {split && <PlayerMap panes={hud.panes} />}
       <RoundCallout hud={hud} />
       {hud.count && (
         <div className="bx-count" key={hud.count.n}>
@@ -57,55 +62,6 @@ export function FightHud() {
           <button type="button" className="bx-link" onClick={() => session.skip()}>
             Skip
           </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ViewHud({ hud, me, split }: { hud: Hud; me: 0 | 1; split: boolean }) {
-  const mine = hud.fighters[me];
-  const theirs = hud.fighters[me === 0 ? 1 : 0];
-  const banners = hud.banners.filter((b) => b.fighter === null || b.fighter === me);
-  const left = split ? (me === 0 ? "0%" : "50%") : "0%";
-  return (
-    <div className={`bx-view bx-view--${split ? (me === 0 ? "left" : "right") : "full"}`} style={{ left, width: split ? "50%" : "100%" }}>
-      {mine.hurt > 0 && hud.stage === "fight" && <div key={mine.hurt} className="bx-hurt" />}
-      {hud.stage === "fight" && (
-        <div className="bx-bars">
-          <Bar fighter={mine} own label={split ? `Player ${me + 1}` : "You"} />
-          <Bar fighter={theirs} label={theirs.human ? `Player ${me === 0 ? 2 : 1}` : "Computer"} />
-        </div>
-      )}
-      {mine.counter && hud.stage === "fight" && <div className="bx-counter">Counter now: left jab!</div>}
-      <div className="bx-banners">
-        {banners.map((b) => (
-          <span key={b.id} className={`bx-banner bx-banner--${b.tone}`}>
-            {b.text}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function Bar({ fighter, own, label }: { fighter: HudFighter; own?: boolean; label: string }) {
-  const low = fighter.health <= 25;
-  return (
-    <div className={`bx-bar${own ? " bx-bar--own" : " bx-bar--them"}`}>
-      <div className="bx-bar__name">
-        <span className="bx-bar__who">{label}</span>
-        <span>{fighter.name}</span>
-        {fighter.knockdowns > 0 && <span className="bx-bar__downs">{"KD ".repeat(fighter.knockdowns).trim()}</span>}
-        {fighter.stunned && <span className="bx-bar__tag bx-bar__tag--stun">Stunned</span>}
-        {!fighter.stunned && fighter.worn && <span className="bx-bar__tag">Hurt</span>}
-      </div>
-      <div className={`bx-bar__track${low ? " bx-bar__track--low" : ""}`}>
-        <span className="bx-bar__fill" style={{ width: `${fighter.health}%`, ["--glove" as string]: fighter.colour }} />
-      </div>
-      {own && (
-        <div className="bx-bar__stamina">
-          <span style={{ width: `${fighter.stamina}%` }} />
         </div>
       )}
     </div>
