@@ -5,8 +5,8 @@
 */
 .ss-hud--2 {
   --ss-map-w: clamp(180px, 12vw, 260px);
-  /* Where the map ends on a wide screen, plus a gap. */
-  --ss-under-map: calc(72px + var(--ss-map-w) * 0.5625 + 14px);
+  /* Where the map ends, plus a gap. The map is the screen's shape, set on the overlay as height over width. */
+  --ss-under-map: calc(72px + var(--ss-map-w) * var(--ss-screen-hw, 0.5625) + 14px);
 }
 
 .ss-map {

@@ -7,6 +7,7 @@ import { useSurfStore, type RunnerHud } from "../store";
 import { CoinIcon, PowerIcon } from "./icons";
 import { PlayerMap } from "./PlayerMap";
 import { useSession } from "./session-context";
+import { useScreenAspect } from "./use-screen-aspect";
 
 const CRASH_TEXT = { caught: "Caught by the guard!", train: "Crashed into a train!", low: "Tripped on a barrier!", high: "Hit a barrier!", ramp: "Crashed!" } as const;
 
@@ -16,8 +17,10 @@ export function RunHud() {
   const phase = useSurfStore((s) => s.phase);
   const countdown = useSurfStore((s) => s.countdown);
   const session = useSession();
+  // The map's height follows the screen's shape, so what sits under it needs that shape too.
+  const aspect = useScreenAspect();
   return (
-    <div className={`ss-hud ss-hud--${hud.length}`}>
+    <div className={`ss-hud ss-hud--${hud.length}`} style={{ ["--ss-screen-hw" as string]: 1 / aspect }}>
       {hud.map((h, i) => (
         // Named by side, not by child order: the countdown, Skip and the map come after the views.
         <section key={h.slot} className={`ss-view ss-view--${i === 0 ? "left" : "right"}`} style={{ ["--pc" as string]: playerColor(h.slot) }} aria-label={h.name}>
