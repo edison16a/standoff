@@ -45,7 +45,7 @@ export const CHARACTERS: Record<CharacterId, Character> = {
     name: "Karate",
     blurb: "Fast kicks and punches. Quick in the air.",
     color: "#f8fafc",
-    physique: { run: 8, air: 5.6, accel: 60, airAccel: 30, jump: 13.8, doubleJump: 12.4, gravity: 36, fall: 15, fastFall: 22, weight: 99, width: 0.8, height: 1.75 },
+    physique: { run: 8, air: 5.6, accel: 60, airAccel: 30, jump: 13.8, doubleJump: 12.4, gravity: 36, fall: 15, fastFall: 22, weight: 103, width: 0.8, height: 1.75 },
   },
   samurai: {
     id: "samurai",

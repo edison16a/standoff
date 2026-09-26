@@ -19,7 +19,7 @@ export const MAGE: Moveset = {
     sound: "magic",
     hover: true,
     hitboxes: [],
-    projectiles: [{ frame: 13, x: 0.8, y: 1.2, vx: 15, vy: 0, r: 0.38, life: 50, ...hit(6, 6, 0.1, 30) }],
+    projectiles: [{ frame: 13, x: 0.8, y: 1.2, vx: 15, vy: 0, r: 0.38, life: 46, ...hit(5, 6, 0.1, 30) }],
   },
   heavySide: {
     name: "Arcane Blast",
