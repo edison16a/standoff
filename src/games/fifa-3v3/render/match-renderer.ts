@@ -126,6 +126,7 @@ export class MatchRenderer {
     this.effects.frame(view, dt, time);
     this.director.update(view, shot, dt, time, focus);
     this.squad.fitTags(this.director.camera.fov);
+    this.squad.stackTags(this.director.camera, dt);
   }
 
   /** Where a player stands, for the close up camera. */
