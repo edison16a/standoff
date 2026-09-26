@@ -1,4 +1,5 @@
 "use client";
+import { RULES } from "../../engine/rules";
 import { useBoxingStore } from "../host-store";
 import { useSession } from "./session-context";
 
@@ -23,7 +24,7 @@ export function PlayersMenu() {
         <button type="button" className="bx-choice" onClick={() => session.choosePlayers(1)}>
           <span className="bx-choice__count">1</span>
           <span className="bx-choice__name">One player</span>
-          <span className="bx-choice__text">Against the computer, three rounds</span>
+          <span className="bx-choice__text">Against the computer, {RULES.rounds} rounds</span>
         </button>
         <button type="button" className="bx-choice bx-choice--two" onClick={() => session.choosePlayers(2)}>
           <span className="bx-choice__count">2</span>
