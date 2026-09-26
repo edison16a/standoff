@@ -33,11 +33,13 @@ type Box = { x: number; y: number; w: number; h: number };
  */
 export function AimOverlay({ aim, players, dots = true, targets = true }: AimOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  // Read through a ref, so a new players function each render never restarts the drawing loop.
+  // Read through refs, so new props on a render never restart the drawing loop.
   const playersRef = useRef(players);
+  const showRef = useRef({ dots, targets });
   useEffect(() => {
     playersRef.current = players;
-  }, [players]);
+    showRef.current = { dots, targets };
+  }, [players, dots, targets]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -45,6 +47,9 @@ export function AimOverlay({ aim, players, dots = true, targets = true }: AimOve
     if (!canvas || !ctx) return;
     let frame = 0;
     const draw = (now: number) => {
+      // The next frame is booked first, so one frame that fails never stops the layer.
+      frame = requestAnimationFrame(draw);
+      const { dots, targets } = showRef.current;
       const dpr = window.devicePixelRatio || 1;
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
@@ -79,11 +84,10 @@ export function AimOverlay({ aim, players, dots = true, targets = true }: AimOve
           if (point) drawDot(ctx, zonePixels(point, aim.zone(player.seat), width, height), playerColor(player.seat), player.name);
         }
       }
-      frame = requestAnimationFrame(draw);
     };
     frame = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(frame);
-  }, [aim, dots, targets]);
+  }, [aim]);
 
   return <canvas ref={canvasRef} className="aim-overlay" aria-hidden="true" />;
 }
@@ -128,12 +132,14 @@ function drawTarget(ctx: CanvasRenderingContext2D, at: { x: number; y: number },
     const text = `${player.name}, point here`;
     // A dark pill behind the name, so it reads on any game's background.
     const width = ctx.measureText(text).width + 24;
+    // Kept inside the zone, so a target near its edge never pushes the name off it.
+    const x = Math.min(Math.max(at.x, box.x + width / 2 + 4), box.x + box.w - width / 2 - 4);
     ctx.fillStyle = "rgba(10, 10, 20, 0.78)";
     ctx.beginPath();
-    ctx.roundRect(at.x - width / 2, y - 13, width, 26, 13);
+    ctx.roundRect(x - width / 2, y - 13, width, 26, 13);
     ctx.fill();
     ctx.fillStyle = playerColor(player.seat);
-    ctx.fillText(text, at.x, y);
+    ctx.fillText(text, x, y);
   });
   ctx.restore();
 }
