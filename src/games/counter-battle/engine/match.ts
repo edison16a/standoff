@@ -21,10 +21,12 @@ export interface MatchState {
   /** Who took the round just played: null for a draw. */
   roundWinner: TeamId | null;
   winner: TeamId | null;
+  /** Round wins that take the match: five, or fewer for a quick test match. */
+  roundsToWin: number;
 }
 
-export function newMatch(): MatchState {
-  return { phase: "countdown", round: 1, timer: RULES.countdown, roundTime: 0, score: [0, 0], roundWinner: null, winner: null };
+export function newMatch(roundsToWin: number = RULES.roundsToWin): MatchState {
+  return { phase: "countdown", round: 1, timer: RULES.countdown, roundTime: 0, score: [0, 0], roundWinner: null, winner: null, roundsToWin };
 }
 
 /** Which end of the field a team plays from in a round. Sides swap every round. */
@@ -74,7 +76,7 @@ export function tickMatch(m: MatchState, fighters: readonly Fighter[], dt: numbe
       m.roundWinner = outcome;
       if (outcome !== null) m.score[outcome] += 1;
       events.push({ type: "round-end", round: m.round, winner: outcome, score: [m.score[0], m.score[1]] });
-      const champion = m.score[0] >= RULES.roundsToWin ? 0 : m.score[1] >= RULES.roundsToWin ? 1 : null;
+      const champion = m.score[0] >= m.roundsToWin ? 0 : m.score[1] >= m.roundsToWin ? 1 : null;
       if (champion !== null) {
         m.winner = champion;
         m.phase = "match-over";

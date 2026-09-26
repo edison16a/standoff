@@ -35,13 +35,14 @@ export class Battle {
   readonly pieces: readonly Piece[] = PIECES;
   readonly graph = fieldGraph();
   readonly fighters: Fighter[];
-  readonly match: MatchState = newMatch();
+  readonly match: MatchState;
   readonly rng: Rng;
   time = 0;
   private readonly bots = new Map<number, BotAim>();
   private readonly engaged = new Set<number>();
 
-  constructor(setups: readonly FighterSetup[], seed: number) {
+  constructor(setups: readonly FighterSetup[], seed: number, options: { roundsToWin?: number } = {}) {
+    this.match = newMatch(options.roundsToWin);
     this.rng = new Rng(seed);
     this.fighters = setups.map((s, i) => createFighter(i, s));
     for (const f of this.fighters) if (isBot(f)) this.bots.set(f.id, new BotAim());
@@ -66,6 +67,18 @@ export class Battle {
     const dx = point.x - eye.x;
     const dz = point.z - eye.z;
     this.setAim(id, Math.atan2(dx, dz), Math.atan2(point.y - eye.y, Math.hypot(dx, dz)));
+  }
+
+  /**
+   * Lets the computer aim and shoot for a human, as when their phone
+   * drops, until it is turned off again. Movement is the same either way.
+   */
+  setAutopilot(id: number, on: boolean): void {
+    const f = this.get(id);
+    if (!f || isBot(f) || on === this.bots.has(id)) return;
+    if (on) this.bots.set(id, new BotAim());
+    else this.bots.delete(id);
+    f.trigger = { held: false, pulls: 0, pulledAt: -Infinity };
   }
 
   /** The shoot button. A press always counts as one pull, and a held automatic keeps firing. */
@@ -112,10 +125,9 @@ export class Battle {
       const mates = living.filter((o) => o.team === f.team && o.id !== f.id && o.alive);
       const claimed: V2[] = mates.map((o) => this.graph.spots[o.brain.spot]!.pos);
       const others = living.filter((o) => o.id !== f.id && o.alive).map((o) => o.pos);
-      const human = !isBot(f);
-      const engaged = human ? f.trigger.held || this.time - f.shotAt < ENGAGED_FOR : this.engaged.has(f.id);
-      updateBrain(f, { graph: this.graph, pieces: this.pieces, enemies, claimed, others, pressure, rng: this.rng, engaged }, this.time, STEP);
       const bot = this.bots.get(f.id);
+      const engaged = bot ? this.engaged.has(f.id) : f.trigger.held || this.time - f.shotAt < ENGAGED_FOR;
+      updateBrain(f, { graph: this.graph, pieces: this.pieces, enemies, claimed, others, pressure, rng: this.rng, engaged }, this.time, STEP);
       if (bot) {
         const intent = bot.update(f, enemies, this.pieces, this.rng, this.time, STEP);
         if (intent.engaged) this.engaged.add(f.id);

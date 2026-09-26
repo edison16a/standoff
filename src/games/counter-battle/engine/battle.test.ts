@@ -167,3 +167,37 @@ describe("a human's gun", () => {
     expect(gun.kick.pitch).toBeLessThan(0.01);
   });
 });
+
+describe("a match run by the host", () => {
+  it("can be shortened for a quick test match", () => {
+    const b = new Battle(BOTS, 5, { roundsToWin: 1 });
+    for (let i = 0; i < 60 * 60 * 5 && b.match.phase !== "done"; i++) b.step();
+    expect(b.match.phase).toBe("done");
+    expect(Math.max(...b.match.score)).toBe(1);
+  });
+
+  it("lets the computer shoot for a player whose phone dropped, and hands the gun back", () => {
+    const setups: FighterSetup[] = [
+      { team: 0, seat: 1, name: "Me", character: "pro", gun: "smg" },
+      { team: 1, seat: null, name: "Bot", character: "heavy", gun: "rifle" },
+    ];
+    const b = new Battle(setups, 2);
+    b.setAutopilot(0, true);
+    // A computer never needs the button: shots come while the phone is away.
+    let shots = 0;
+    for (let i = 0; i < 60 * 60 && shots === 0; i++) shots += b.step().filter((e) => e.type === "shot" && e.shooter === 0).length;
+    expect(shots).toBeGreaterThan(0);
+    b.setAutopilot(0, false);
+    const me = b.fighters[0]!;
+    expect(me.trigger.held).toBe(false);
+    // Back on the phone, nothing fires without the button.
+    let after = 0;
+    for (let i = 0; i < 60 * 3; i++) after += b.step().filter((e) => e.type === "shot" && e.shooter === 0).length;
+    expect(after).toBe(0);
+    // A computer player can never be put on autopilot, or taken off it.
+    b.setAutopilot(1, false);
+    let botShots = 0;
+    for (let i = 0; i < 60 * 60 && botShots === 0 && b.match.phase !== "done"; i++) botShots += b.step().filter((e) => e.type === "shot" && e.shooter === 1).length;
+    expect(botShots).toBeGreaterThan(0);
+  });
+});
