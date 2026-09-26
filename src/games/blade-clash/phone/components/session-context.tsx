@@ -1,10 +1,10 @@
 "use client";
 import { createContext, useContext } from "react";
-import type { FencingPhone } from "../fencing-phone";
+import type { BladePhone } from "../blade-phone";
 
-export const ControllerContext = createContext<FencingPhone | null>(null);
+export const ControllerContext = createContext<BladePhone | null>(null);
 
-export function useController(): FencingPhone {
+export function useController(): BladePhone {
   const session = useContext(ControllerContext);
   if (!session) throw new Error("useController must be used inside the controller app.");
   return session;

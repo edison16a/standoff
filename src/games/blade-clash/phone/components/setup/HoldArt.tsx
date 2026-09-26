@@ -1,12 +1,12 @@
 /**
  * The grip, drawn in three quarter view: the phone lying flat in the hand
- * like a sword's hilt, screen up, its top edge aimed at the middle of the
- * big screen, where the fencers are. One picture answers "how do I hold
- * it and where do I point it" faster than any sentence.
+ * like a sword's handle, screen up, its top edge aimed at the big screen,
+ * where the fighters are. One picture answers "how do I hold it and where
+ * do I point it" faster than any sentence.
  */
 export function HoldArt() {
   return (
-    <svg className="hold-art" viewBox="0 0 320 210" role="img" aria-label="Hold the phone flat, screen up, top edge pointing at the middle of the big screen">
+    <svg className="hold-art" viewBox="0 0 320 210" role="img" aria-label="Hold the phone like a sword handle, top edge pointing at the big screen">
       <defs>
         <linearGradient id="hold-art-screen" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#2c2366" />
@@ -19,13 +19,13 @@ export function HoldArt() {
       </defs>
       <ellipse cx="160" cy="196" rx="150" ry="9" className="hold-art__floor" />
 
-      {/* The big screen, showing the strip, with the aim point in the middle. */}
+      {/* The big screen, showing the two fighters, with the aim point in the middle. */}
       <rect x="204" y="30" width="108" height="72" rx="9" className="hold-art__tv" />
       <rect x="211" y="37" width="94" height="58" rx="4" fill="url(#hold-art-screen)" />
       <rect x="218" y="80" width="80" height="4" rx="2" fill="#3f74ad" />
-      <path d="M233 80v-13m0 0l-4 13m4-13 5 -3" className="hold-art__fencer hold-art__fencer--red" />
+      <path d="M233 80v-13m0 0l-4 13m4-13 5 -3" className="hold-art__fighter hold-art__fighter--red" />
       <circle cx="233" cy="63" r="3" fill="#ff4757" />
-      <path d="M283 80v-13m0 0 4 13m-4-13-5 -3" className="hold-art__fencer hold-art__fencer--green" />
+      <path d="M283 80v-13m0 0 4 13m-4-13-5 -3" className="hold-art__fighter hold-art__fighter--green" />
       <circle cx="283" cy="63" r="3" fill="#2ed573" />
       <circle cx="258" cy="66" r="10" className="hold-art__target" />
       <circle cx="258" cy="66" r="3" className="hold-art__target-dot" />

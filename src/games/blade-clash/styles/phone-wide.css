@@ -1,8 +1,8 @@
 /*
-  Fencing's phone pages held sideways, where height runs out: each setup
-  page puts its picture on the left and its words and buttons on the
-  right, the fencers stand in one row, and the pad's buttons sit side by
-  side.
+  Blade Clash's phone pages held sideways, where height runs out: each
+  setup page puts its picture on the left and its words and buttons on
+  the right, the fighters stand in one row, and during the fight the
+  sword sits beside the footwork buttons.
 */
 
 @media (orientation: landscape) and (max-height: 500px) {
@@ -19,7 +19,7 @@
   }
 
   /* A page of words alone keeps one centred column. */
-  .setup-page:not(:has(> .setup-card, > .level-capture, > .practice)) {
+  .setup-page:not(:has(> .setup-card, > .target-capture)) {
     display: flex;
     justify-content: center;
     max-width: 560px;
@@ -28,8 +28,7 @@
   }
 
   .setup-page > .setup-card,
-  .setup-page > .level-capture,
-  .setup-page > .practice {
+  .setup-page > .target-capture {
     grid-row: 1 / -1;
     grid-column: 1;
     align-self: stretch;
@@ -48,21 +47,9 @@
     justify-content: center;
   }
 
-  .level-capture__dial {
+  .target-capture__tv {
     flex: 1 1 0;
     width: 100%;
-  }
-
-  .practice__ask {
-    grid-template-columns: 80px 1fr;
-  }
-
-  .practice__ask .strike-art {
-    width: 80px;
-  }
-
-  .practice__title {
-    font-size: 22px;
   }
 
   .picker {
@@ -80,7 +67,7 @@
     -webkit-line-clamp: 2;
   }
 
-  /* The ready card lies on its side: the fencer on the left, the name on the right. */
+  /* The ready card lies on its side: the fighter on the left, the name on the right. */
   .ready-card {
     display: grid;
     flex: 1 1 0;
@@ -115,7 +102,19 @@
     min-height: 0;
   }
 
-  .strikes .btn {
-    height: 56px;
+  /* The fight: the sword on the left, the buttons on the right. */
+  .pad {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .pad__top,
+  .pad__after {
+    grid-column: 1 / -1;
+  }
+
+  .pad--motion .pad__sword {
+    flex: none;
   }
 }

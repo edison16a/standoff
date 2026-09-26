@@ -1,40 +1,29 @@
 import { create } from "zustand";
 import type { CharacterId } from "@/games/blade-clash/characters";
-import type { Sensitivity } from "@/games/blade-clash/motion/gesture";
 import type { Slot } from "@/games/blade-clash/players";
-import type { ControllerState, FeedbackEvent, StrikeAction } from "@/games/blade-clash/protocol";
+import type { ControllerState, FeedbackEvent } from "@/games/blade-clash/protocol";
 
-/** Motion comes from the sensors, or from on screen buttons where there are none. */
+/** The sword follows the motion sensors, or a drag pad where there are none. */
 export type InputMode = "motion" | "touch";
 
-/** A strike this phone read, the moment it read it. */
-export interface Detected {
-  action: StrikeAction;
-  at: number;
-}
-
-/** What the referee made of a strike, as the host told this phone. */
-export interface Verdict {
+/** The last thing the host said happened to this player's sword. */
+export interface Flash {
   event: FeedbackEvent;
-  reason?: "far" | "wide";
   at: number;
 }
 
-/** What fencing's phone screens render. */
+/** What Blade Clash's phone screens render. */
 export interface ControllerStore {
   slot: Slot | null;
   inputMode: InputMode;
   /** True once real sensor readings have arrived. */
   sensorsLive: boolean;
   calibrated: boolean;
-  /** This player's own jab level, from the practice step. Null until practised. */
-  sensitivity: Sensitivity | null;
   pick: CharacterId | null;
   ready: boolean;
   /** The latest screen state from the host, null until the first one lands. */
   game: ControllerState | null;
-  detected: Detected | null;
-  verdict: Verdict | null;
+  flash: Flash | null;
 }
 
 export const useControllerStore = create<ControllerStore>(() => ({
@@ -42,10 +31,8 @@ export const useControllerStore = create<ControllerStore>(() => ({
   inputMode: "motion",
   sensorsLive: false,
   calibrated: false,
-  sensitivity: null,
   pick: null,
   ready: false,
   game: null,
-  detected: null,
-  verdict: null,
+  flash: null,
 }));

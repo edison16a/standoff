@@ -1,23 +1,23 @@
 /*
-  Fencing's setup pages on the phone: calibration, practice, fencer select
-  and the ready page. The 3D fencers stand on a small spotlit stage, dark
-  in both themes, so the models always pop.
+  Blade Clash's setup pages on the phone: the grip, the calibration
+  targets and the sword that follows. Fighter select and the ready page
+  are in phone-pick.css.
 */
 
-/* Four steps do not fit by name on a phone: only the current one spells its name out. */
-.fencing-setup {
+/* Three steps: only the current one spells its name out, so the track fits any phone. */
+.blade-setup {
   display: contents;
 }
 
-.fencing-setup .kit-steps__step {
+.blade-setup .kit-steps__step {
   flex: 0 0 auto;
 }
 
-.fencing-setup .kit-steps__step--current {
+.blade-setup .kit-steps__step--current {
   flex: 1 1 auto;
 }
 
-.fencing-setup .kit-steps__step:not(.kit-steps__step--current) .kit-steps__name {
+.blade-setup .kit-steps__step:not(.kit-steps__step--current) .kit-steps__name {
   display: none;
 }
 
@@ -31,7 +31,7 @@
 }
 
 /* Only the pictures give up height; words and buttons keep their size. */
-.setup-page > :not(.setup-card, .level-capture, .practice) {
+.setup-page > :not(.setup-card, .target-capture) {
   flex-shrink: 0;
 }
 
@@ -65,14 +65,11 @@
   background: linear-gradient(180deg, var(--bg-elevated), var(--bg-muted));
 }
 
-.setup-card--fencer {
-  flex: 0 1 290px;
-  min-height: 120px;
-}
-
-.setup-card--practice {
-  flex: 0 1 250px;
+.setup-card--gauge {
+  flex: 0 1 300px;
   min-height: 110px;
+  background: none;
+  box-shadow: none;
 }
 
 /* The grip picture. */
@@ -98,18 +95,18 @@
   fill: var(--text);
 }
 
-.hold-art__fencer {
+.hold-art__fighter {
   fill: none;
   stroke-width: 2.4;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.hold-art__fencer--red {
+.hold-art__fighter--red {
   stroke: #ff4757;
 }
 
-.hold-art__fencer--green {
+.hold-art__fighter--green {
   stroke: #2ed573;
 }
 
@@ -188,8 +185,8 @@
   }
 }
 
-/* The level that captures by itself. */
-.level-capture {
+/* A calibration target: the big screen in miniature with the target to point at. */
+.target-capture {
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -198,85 +195,46 @@
   min-height: 0;
 }
 
-.level-capture__dial {
+.target-capture__tv {
   flex: 0 1 auto;
-  width: min(250px, 72vw);
+  width: min(340px, 90vw);
   height: auto;
   min-height: 0;
 }
 
-.level-capture__track {
-  fill: none;
-  stroke: var(--bg-muted);
-  stroke-width: 10;
-}
-
-.level-capture__progress {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 10;
-  stroke-linecap: round;
-  transition: stroke 200ms ease;
-}
-
-.level-capture__face {
+.target-capture__frame {
   fill: var(--bg-elevated);
   stroke: var(--border-strong);
-  stroke-width: 1.5;
+  stroke-width: 2;
 }
 
-.level-capture__cross {
-  stroke: var(--border-strong);
-  stroke-width: 1;
+.target-capture__screen {
+  fill: #1a1440;
 }
 
-.level-capture__target {
-  fill: none;
-  stroke: var(--text-muted);
-  stroke-width: 2.5;
-  stroke-dasharray: 4 4;
+.target-capture__half {
+  opacity: 0.22;
 }
 
-.level-capture__bubble {
-  fill: var(--text-muted);
-  transition: fill 150ms ease;
+.target-capture__split {
+  stroke: #0c0a1c;
+  stroke-width: 3;
 }
 
-.level-capture__check {
+.target-capture__track {
+  fill: rgba(12, 10, 28, 0.6);
+  stroke: rgba(255, 255, 255, 0.3);
+  stroke-width: 5;
+}
+
+.target-capture__progress {
   fill: none;
   stroke: #ffffff;
-  stroke-width: 7;
+  stroke-width: 5;
   stroke-linecap: round;
-  stroke-linejoin: round;
-  opacity: 0;
 }
 
-.level-capture--still .level-capture__bubble,
-.level-capture--holding .level-capture__bubble {
-  fill: var(--accent);
-}
-
-.level-capture--still .level-capture__target,
-.level-capture--holding .level-capture__target {
-  stroke: var(--accent);
-}
-
-.level-capture--done .level-capture__progress {
-  stroke: #2ed573;
-}
-
-.level-capture--done .level-capture__bubble {
-  fill: #2ed573;
-  r: 34px;
-  transition: r 250ms cubic-bezier(0.2, 1.6, 0.4, 1), fill 150ms ease;
-}
-
-.level-capture--done .level-capture__check {
-  opacity: 1;
-  transition: opacity 200ms ease 120ms;
-}
-
-.level-capture__hint {
+.target-capture__hint {
   margin: 0;
   min-height: 1.4em;
   font-size: 17px;
@@ -284,7 +242,6 @@
   color: var(--text-muted);
 }
 
-.level-capture--holding .level-capture__hint,
-.level-capture--done .level-capture__hint {
+.target-capture--holding .target-capture__hint {
   color: var(--text);
 }

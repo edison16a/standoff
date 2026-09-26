@@ -1,13 +1,14 @@
 "use client";
 import { Icon } from "@/components/ui/Icon";
-import { FencerPreview } from "@/games/blade-clash/components/FencerPreview";
+import { CharacterBadge } from "@/games/blade-clash/components/CharacterBadge";
 import { CHARACTERS } from "@/games/blade-clash/characters";
 import type { Slot } from "@/games/blade-clash/players";
+import { playerColor } from "@/games/kit/players";
 import { StepShell } from "@/games/kit/steps/StepShell";
 import { useControllerStore } from "../controller-store";
 import { useController } from "./session-context";
 
-/** The last page: your fencer, who you are waiting for, and the Ready button. */
+/** The last page: your fighter, who you are waiting for, and the Ready button. */
 export function ReadyStep({ slot, steps, onBack }: { slot: Slot; steps: readonly string[]; onBack(): void }) {
   const session = useController();
   const { pick, ready, game } = useControllerStore();
@@ -35,7 +36,7 @@ export function ReadyStep({ slot, steps, onBack }: { slot: Slot; steps: readonly
     >
       {pick && (
         <div className="ready-card">
-          <FencerPreview characterId={pick} slot={slot} className="ready-card__art" framing="hero" />
+          <CharacterBadge characterId={pick} trim={playerColor(slot)} className="ready-card__art" />
           <strong>{CHARACTERS[pick].name}</strong>
           <span className="muted">{CHARACTERS[pick].tagline}</span>
         </div>

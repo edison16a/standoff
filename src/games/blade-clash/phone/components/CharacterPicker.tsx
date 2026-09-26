@@ -1,11 +1,12 @@
 "use client";
-import { FencerPreview } from "@/games/blade-clash/components/FencerPreview";
+import { CharacterBadge } from "@/games/blade-clash/components/CharacterBadge";
 import { CHARACTER_IDS, CHARACTERS } from "@/games/blade-clash/characters";
 import type { Slot } from "@/games/blade-clash/players";
+import { playerColor } from "@/games/kit/players";
 import { useControllerStore } from "../controller-store";
 import { useController } from "./session-context";
 
-/** Four cards, one per fencer. A fencer the other player has is shown as taken. */
+/** Four cards, one per fighter. A fighter the other player has is shown as taken. */
 export function CharacterPicker({ slot }: { slot: Slot }) {
   const session = useController();
   const pick = useControllerStore((state) => state.pick);
@@ -26,10 +27,9 @@ export function CharacterPicker({ slot }: { slot: Slot }) {
             aria-pressed={chosen}
             onClick={() => session.pick(id)}
           >
-            <FencerPreview characterId={id} slot={slot} className="picker__art" />
+            <CharacterBadge characterId={id} trim={playerColor(slot)} className="picker__art" />
             <span className="picker__name">{CHARACTERS[id].name}</span>
-            {!taken && <span className="picker__tag muted">{CHARACTERS[id].tagline}</span>}
-            {taken && <span className="picker__tag muted">Taken</span>}
+            <span className="picker__tag muted">{taken ? "Taken" : CHARACTERS[id].weapon}</span>
           </button>
         );
       })}

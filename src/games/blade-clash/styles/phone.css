@@ -1,6 +1,6 @@
 /*
-  The phone during a bout: the score and call on top, the word for each
-  strike read and its verdict, and the two big footwork buttons.
+  The phone during a fight: both health bars on top, a live picture of the
+  sword (or the drag pad), and the two big footwork buttons.
 */
 
 .pad {
@@ -14,62 +14,156 @@
 
 .pad__top {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
+  gap: 8px;
   padding: 4px 4px 0;
 }
 
-.pad__score {
-  color: var(--text-muted);
-  font-size: 18px;
-}
-
 .pad__title {
-  font-size: 30px;
+  font-size: 26px;
   letter-spacing: -0.02em;
+  text-align: center;
+  white-space: nowrap;
 }
 
-.feedback {
-  display: grid;
-  place-items: center;
-  min-height: 64px;
+.health {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.health__pip {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  border: 2px solid var(--pip);
+  opacity: 0.45;
+}
+
+.health__pip--full {
+  background: var(--pip);
+  opacity: 1;
+}
+
+.pad__sword {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  justify-content: center;
+  min-height: 0;
+}
+
+.pad--motion .pad__sword {
+  flex: 0 1 34vh;
+}
+
+.pad__gauge {
+  width: 100%;
+  height: 100%;
+}
+
+.pad__after {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sword-gauge {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.sword-gauge__view {
+  fill: #1a1440;
+  stroke: var(--border-strong);
+  stroke-width: 2;
+}
+
+.sword-gauge__cross {
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 1.5;
+}
+
+.sword-gauge__foe {
+  fill: rgba(255, 255, 255, 0.22);
+}
+
+.sword-gauge__blade {
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.35));
+}
+
+.sword-gauge__hand {
+  fill: #c9a24a;
+}
+
+.sword-gauge__tip {
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+/* Phones without sensors: the whole picture is a pad to drag on. */
+.drag-pad {
+  position: relative;
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  min-height: 0;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.drag-pad__gauge {
+  width: 100%;
+  height: 100%;
+}
+
+.drag-pad__hint {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.hit-flash {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 6px 18px;
   border-radius: var(--radius-lg);
   font-size: 30px;
   font-weight: 900;
-  letter-spacing: -0.01em;
   text-transform: uppercase;
-  animation: feedback-in 240ms cubic-bezier(0.2, 1.6, 0.4, 1);
+  pointer-events: none;
+  animation: hit-flash-in 240ms cubic-bezier(0.2, 1.6, 0.4, 1);
 }
 
-.feedback--idle {
-  animation: none;
-  background: var(--bg-muted);
-  opacity: 0.5;
-}
-
-.feedback--read {
-  background: var(--accent);
-  color: var(--on-accent);
-}
-
-.feedback--good {
+.hit-flash--landed {
   background: #2ed573;
   color: #06281a;
 }
 
-.feedback--bad {
+.hit-flash--hurt {
   background: #ff4757;
   color: #ffffff;
 }
 
-.feedback--plain {
-  background: var(--bg-muted);
-  color: var(--text);
+.hit-flash--clash {
+  background: #ffd23f;
+  color: #2a2000;
 }
 
-@keyframes feedback-in {
+@keyframes hit-flash-in {
   from {
-    transform: scale(0.8);
+    transform: translate(-50%, -50%) scale(0.7);
     opacity: 0;
   }
 }
@@ -124,16 +218,4 @@
 
 .hold:disabled {
   opacity: 0.5;
-}
-
-.strikes {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.strikes .btn {
-  height: 72px;
-  font-size: 18px;
-  touch-action: manipulation;
 }

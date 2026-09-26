@@ -1,0 +1,92 @@
+/*
+  Fighter select and the ready page: four cards, each with the fighter's
+  emblem, and the chosen one again on the last page.
+*/
+
+.picker {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* The four cards share the height there is. */
+  grid-auto-rows: minmax(0, 1fr);
+  gap: 10px;
+  min-height: 0;
+}
+
+.picker__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 0;
+  padding: 0 0 10px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.picker__card--chosen {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.picker__card:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.character-badge {
+  display: block;
+}
+
+.picker__art {
+  flex: 1 1 0;
+  width: 100%;
+  min-height: 40px;
+  max-height: 170px;
+  margin-bottom: 8px;
+}
+
+.picker__name {
+  padding: 0 12px;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.picker__tag {
+  padding: 0 12px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.ready-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: 0;
+  padding: 0 0 14px;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  font-size: 20px;
+  text-align: center;
+}
+
+.ready-card__art {
+  flex: 0 1 280px;
+  width: 100%;
+  min-height: 90px;
+}
+
+.ready-card .muted {
+  padding: 0 16px;
+  font-size: 14px;
+}
