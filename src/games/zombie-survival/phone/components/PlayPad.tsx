@@ -45,6 +45,8 @@ export function PlayPad({ seat }: { seat: Seat }) {
   const health = state ? state.health / state.maxHealth : 1;
   // Low on rounds with no reload running: the Reload button asks to be pressed.
   const low = gun !== null && !gun.reloading && gun.ammo <= Math.max(1, Math.floor(gun.magazine / 4));
+  // The host ignores a reload with a full gun or one already running, so the button says so rather than clicking at nothing.
+  const canReload = armed && gun !== null && !gun.reloading && gun.ammo < gun.magazine;
   const status = phase === "travel" ? state?.objective : phase === "fight" ? "They are coming. Make every shot count." : phase === "clear" ? "Checkpoint. Reload while it is quiet." : null;
   const trigger = (
     <div className="zs-trigger" style={{ ["--kit-fire" as string]: playerColor(seat) }}>
@@ -68,8 +70,8 @@ export function PlayPad({ seat }: { seat: Seat }) {
       <AmmoPanel />
       {touch ? <AimPad aim={session.aim}>{trigger}</AimPad> : trigger}
       <div className="zs-play__buttons">
-        <button type="button" className={`zs-reload ${low ? "zs-reload--urgent" : ""}`} onClick={() => session.reload()}>
-          Reload
+        <button type="button" className={`zs-reload ${low && canReload ? "zs-reload--urgent" : ""}`} disabled={!canReload} onClick={() => session.reload()}>
+          {gun?.reloading ? "Reloading" : "Reload"}
         </button>
         {!touch && (
           <button type="button" className="zs-recenter" onClick={() => session.recenter()} aria-label="Recenter aim">

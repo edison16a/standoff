@@ -3,6 +3,7 @@ import { playerColor } from "@/games/kit/players";
 import type { Seat } from "@/platform/protocol";
 import { WEAPONS } from "../../engine/weapons";
 import { usePhoneStore } from "../phone-store";
+import { teamRows } from "../team-rows";
 
 /** The last setup page: your gun, the team, and who is ready. */
 export function ReadyStep({ seat }: { seat: Seat }) {
@@ -10,7 +11,7 @@ export function ReadyStep({ seat }: { seat: Seat }) {
   const ready = usePhoneStore((s) => s.ready);
   const state = usePhoneStore((s) => s.state);
   const running = state !== null && state.phase !== "lobby";
-  const team = state?.seats.map((s, i) => ({ ...s, seat: i + 1 })).filter((s) => s.connected) ?? [];
+  const team = state ? teamRows(state.seats, seat, ready) : [];
 
   return (
     <div className="zs-ready">

@@ -120,6 +120,8 @@ export class GalleryPhone {
     }
     const mine = message.players.find((p) => p.seat === this.room.seat);
     if (message.phase !== "results") this.store.setState({ leftResults: false });
+    // The last points would flash again when the next round's pad mounts, so they go with the round.
+    if (message.phase !== "playing" && this.store.getState().scored) this.store.setState({ scored: null });
     // The host clears everyone's ready flag when a round ends, and its word is final, once it has heard our last tap.
     const settled = performance.now() - this.readyTappedAt > READY_HOLD_MS;
     this.store.setState(settled ? { game: message, ready: mine?.ready ?? false } : { game: message });

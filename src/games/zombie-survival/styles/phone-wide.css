@@ -51,13 +51,19 @@
     width: min(100%, 66dvh, 260px);
   }
 
+  /* In the drag pad the trigger's box only wraps the button, so a percentage shrank it to nothing. */
+  .zs-play .kit-pad .kit-fire {
+    width: min(36vw, 60dvh, 260px);
+  }
+
   .zs-ammo {
     padding: 8px 12px;
   }
 
+  /* Exactly over the trigger column: any wider and it cut the words beside it in half. */
   .zs-pcard {
     inset: 10px 10px 10px auto;
-    width: min(440px, 56%);
+    width: calc((100% - 52px) * 0.9 / 1.9 + 6px);
     justify-content: center;
     gap: 8px;
     padding: 14px;

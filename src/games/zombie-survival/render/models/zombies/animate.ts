@@ -1,5 +1,5 @@
 import { isBoss, KINDS } from "../../../engine/zombie-kinds";
-import type { Zombie } from "../../../engine/zombie";
+import { walkSpeed, type Zombie } from "../../../engine/zombie";
 import type { Rig } from "./rig";
 
 const TAU = Math.PI * 2;
@@ -13,33 +13,51 @@ const thud = (t: number) => {
 };
 
 interface Gait {
+  /** How far each leg swings from straight down, in radians. */
   stride: number;
   lean: number;
-  cadence: number;
 }
 
 const GAITS: Record<string, Gait> = {
-  walker: { stride: 0.36, lean: 0.14, cadence: 2.4 },
-  runner: { stride: 0.78, lean: 0.42, cadence: 2.1 },
-  brute: { stride: 0.3, lean: 0.2, cadence: 2.2 },
-  armored: { stride: 0.34, lean: 0.12, cadence: 2.4 },
-  boss: { stride: 0.26, lean: 0.24, cadence: 2.6 },
+  walker: { stride: 0.36, lean: 0.14 },
+  runner: { stride: 0.78, lean: 0.42 },
+  brute: { stride: 0.3, lean: 0.2 },
+  armored: { stride: 0.34, lean: 0.12 },
+  boss: { stride: 0.26, lean: 0.24 },
 };
+
+/** Standing still in reach or reeling, the body keeps a slow sway at this many cycles a second. */
+const IDLE_RATE = 0.35;
+
+const gaitOf = (z: Zombie) => GAITS[isBoss(z.kind) ? "boss" : z.kind] ?? GAITS.walker!;
+
+/**
+ * Walk cycles per second. A planted foot sweeps back twice the leg's
+ * reach in half a cycle, so the cycle is set by the pace and the leg
+ * for the feet to keep still on the road instead of skating.
+ */
+export function strideRate(rig: Rig, z: Zombie): number {
+  if (z.state !== "walk") return IDLE_RATE;
+  const reach = (rig.dims.thigh + rig.dims.shin) * Math.sin(gaitOf(z).stride);
+  return walkSpeed(z) / (4 * reach);
+}
 
 /**
  * Poses a zombie's joints for this frame from its state: a shambling
  * limp with arms reaching for the team, a sprint for runners, a heavy
  * overhead swing in reach, a jolt when hit, and a dead fall backwards.
  * `flinch` (0 to 1) adds a quick recoil from the latest bullet.
+ * `cycle` is how many walk cycles it has done. The caller adds them up
+ * frame by frame, so a change of pace never jumps the legs.
  */
-export function poseZombie(rig: Rig, z: Zombie, flinch: number): void {
+export function poseZombie(rig: Rig, z: Zombie, flinch: number, cycle = z.age * strideRate(rig, z)): void {
   const b = rig.bones;
   const boss = isBoss(z.kind);
-  const gait = GAITS[boss ? "boss" : z.kind] ?? GAITS.walker!;
+  const gait = gaitOf(z);
   const t = z.age;
   const seed = z.seed;
   const limp = seed > 0.55 ? 0.55 : 1;
-  const phase = t * z.speed * gait.cadence * TAU * (z.state === "walk" ? 1 : 0.15) + seed * 10;
+  const phase = cycle * TAU + seed * 10;
   const s = Math.sin(phase);
   const c = Math.cos(phase);
 
@@ -47,11 +65,11 @@ export function poseZombie(rig: Rig, z: Zombie, flinch: number): void {
   const stride = gait.stride;
   b.hipL.rotation.set(-s * stride, 0, 0.03);
   b.hipR.rotation.set(s * stride * limp, 0, -0.03);
-  b.kneeL.rotation.x = Math.max(0, -c) * stride * 1.4 + 0.05;
-  b.kneeR.rotation.x = Math.max(0, c) * stride * 1.4 * limp + 0.05;
+  b.kneeL.rotation.x = Math.max(0, c) * stride * 1.4 + 0.05;
+  b.kneeR.rotation.x = Math.max(0, -c) * stride * 1.4 * limp + 0.05;
   b.ankleL.rotation.x = -(b.hipL.rotation.x + b.kneeL.rotation.x) * 0.7;
   b.ankleR.rotation.x = -(b.hipR.rotation.x + b.kneeR.rotation.x) * 0.7;
-  b.hips.position.y = rig.dims.thigh + rig.dims.shin + rig.dims.foot - 0.02 + Math.abs(c) * 0.03 - (boss ? 0.04 : 0);
+  b.hips.position.y = plantedHips(rig) - (boss ? 0.04 : 0);
   b.hips.rotation.set(0, s * 0.1, s * 0.04 * (2 - limp));
 
   // Torso and head: hunched, swaying, the head lolling on a slack neck.
@@ -95,6 +113,18 @@ export function poseZombie(rig: Rig, z: Zombie, flinch: number): void {
   if (z.state === "dead") fall(rig, z);
 }
 
+/**
+ * The hip height that puts the lower foot on the road. A leg swung out
+ * reaches less far down than a straight one, so hips held at one height
+ * lifted the planted foot off the ground at the end of a long stride.
+ */
+function plantedHips(rig: Rig): number {
+  const { thigh, shin, foot } = rig.dims;
+  const b = rig.bones;
+  const drop = (hip: number, knee: number) => thigh * Math.cos(hip) + shin * Math.cos(hip + knee);
+  return Math.max(drop(b.hipL.rotation.x, b.kneeL.rotation.x), drop(b.hipR.rotation.x, b.kneeR.rotation.x)) + foot - 0.02;
+}
+
 /** Arms up over the head, then down onto the team as the swing lands. */
 function swing(rig: Rig, z: Zombie, boss: boolean): void {
   const b = rig.bones;
@@ -122,14 +152,22 @@ function fall(rig: Rig, z: Zombie): void {
   rig.body.rotation.x = (-Math.PI / 2) * down * 0.96;
   // Lying on its back, the body rests on its back rather than half in the road.
   rig.body.position.y = rig.dims.torsoD * 0.5 * down;
-  b.head.rotation.x = head ? -0.9 : -0.3;
+  // Arms fly up as it goes over, then drop flat above its head once it lands.
+  const settle = ease((time - speed) / 0.35);
+  // Set whole, so the lolling head of the walk stops with the body.
+  b.head.rotation.set(head ? -0.9 : -0.3, (z.seed - 0.5) * 0.8, 0);
   b.jaw.rotation.x = 0.6;
-  b.shoulderL.rotation.set(-2.6, 0, 0.5);
-  b.shoulderR.rotation.set(-2.2, 0, -0.7);
+  b.shoulderL.rotation.set(-2.6 - settle * 0.55, 0, 0.5 + settle * 0.3);
+  b.shoulderR.rotation.set(-2.2 - settle * 0.95, 0, -0.7 - settle * 0.2);
   b.elbowL.rotation.x = b.elbowR.rotation.x = -0.2;
+  // The legs are set whole, so no part of the walk keeps moving on a body.
+  b.hips.rotation.set(0, 0, 0);
+  b.hips.position.y = rig.dims.thigh + rig.dims.shin + rig.dims.foot - 0.02;
+  b.hipL.rotation.set(-0.4 * ease(time / speed), 0, 0.08);
+  b.hipR.rotation.set(-0.05, 0, -0.1);
   b.kneeL.rotation.x = 0.5 * ease(time / speed);
   b.kneeR.rotation.x = 0.2;
-  b.hipL.rotation.x = -0.4 * ease(time / speed);
+  b.ankleL.rotation.x = b.ankleR.rotation.x = 0.3;
   b.spine.rotation.set(0, 0, 0);
   if (time > 3.4) rig.body.position.y -= (time - 3.4) * 0.3;
 }

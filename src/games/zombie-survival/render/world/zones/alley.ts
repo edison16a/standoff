@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { addLamp, dumpster, trashBags } from "../props";
+import { fitBlock, rowSpan } from "../row-span";
 import { groundSpan, type SegmentKit } from "../segment-kit";
 import { closeTheView } from "./street";
 
@@ -19,10 +20,12 @@ export function buildAlley(kit: SegmentKit): void {
   const wall = 3.4;
   kit.ground(-wall, wall, a0, a1, m.road, 5);
   kit.b.box(0.5, 0.03, seg.length - a0, m.curb, kit.at(0, (a0 + seg.length) / 2, 0.01));
+  const gap = 0.2;
+  const span = rowSpan(seg, a0 - 4, seg.length + 4, gap);
   for (const s of [-1, 1] as const) {
-    let along = a0 - 4;
-    while (along < seg.length + 4) {
-      const w = 7 + rand() * 7;
+    let along = span.from;
+    while (along < span.to) {
+      const w = fitBlock(span, along, 7 + rand() * 7, gap);
       const d = 8;
       const h = 11 + rand() * 10;
       const mid = along + w / 2;
@@ -41,7 +44,7 @@ export function buildAlley(kit: SegmentKit): void {
           }
         }
       }
-      along += w + 0.2;
+      along += w + gap;
     }
   }
   for (let a = a0 + 6; a < seg.length; a += 11) {

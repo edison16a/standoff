@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { fitBlock, rowSpan } from "./row-span";
 import type { SegmentKit } from "./segment-kit";
 
 const SHOP_SIGNS = [0xff3a5a, 0x3affc8, 0xffc23a, 0x6a8aff];
@@ -54,14 +55,16 @@ export function building(kit: SegmentKit, side: number, along: number, w: number
  * `inner` is the distance from the road's middle to the building fronts.
  */
 export function buildingRow(kit: SegmentKit, sign: 1 | -1, inner: number, a0: number, a1: number, height: [number, number] = [9, 26]): void {
-  let along = a0;
-  while (along < a1) {
-    const w = 8 + kit.rand() * 8;
+  const gap = 0.4;
+  const span = rowSpan(kit.seg, a0, a1, gap);
+  let along = span.from;
+  while (along < span.to) {
+    const w = fitBlock(span, along, 8 + kit.rand() * 8, gap);
     const d = 10 + kit.rand() * 6;
     const h = height[0] + kit.rand() * (height[1] - height[0]);
     const mid = along + w / 2;
     const side = sign * (inner + d / 2);
     if (kit.free(side, mid, Math.max(w, d) / 2)) building(kit, side, mid, w, d, h, sign === 1 ? -1 : 1);
-    along += w + 0.4;
+    along += w + gap;
   }
 }
