@@ -1,0 +1,215 @@
+/*
+  The match overlay shared by every view: the score and split map at the
+  top middle, the kill feed in the top right, and the round banners.
+*/
+
+.cb-score {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  transform: translateX(-50%);
+}
+
+.cb-score__bar {
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  border-radius: 14px;
+  background: rgba(11, 13, 24, 0.86);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.cb-score__team {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+}
+
+.cb-score__team strong {
+  min-width: 1ch;
+  font-family: var(--cb-display);
+  font-size: 34px;
+  line-height: 1;
+}
+
+.cb-score__team--0 {
+  box-shadow: inset 0 -4px 0 var(--cb-pink);
+}
+
+.cb-score__team--0 strong {
+  color: var(--cb-pink);
+}
+
+.cb-score__team--1 {
+  box-shadow: inset 0 -4px 0 var(--cb-cyan);
+}
+
+.cb-score__team--1 strong {
+  color: var(--cb-cyan);
+}
+
+.cb-score__round {
+  display: grid;
+  place-items: center;
+  min-width: 64px;
+  padding: 4px 10px;
+  background: var(--cb-lime);
+  color: var(--cb-ink);
+  font-family: var(--cb-display);
+  font-size: 26px;
+  line-height: 1;
+}
+
+.cb-score__round small {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.cb-pips {
+  display: flex;
+  gap: 4px;
+}
+
+.cb-pips--1 {
+  flex-direction: row-reverse;
+}
+
+.cb-pip {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.cb-pips--0 .cb-pip--won {
+  background: var(--cb-pink);
+  box-shadow: 0 0 8px var(--cb-pink);
+}
+
+.cb-pips--1 .cb-pip--won {
+  background: var(--cb-cyan);
+  box-shadow: 0 0 8px var(--cb-cyan);
+}
+
+.cb-score__count {
+  font-family: var(--cb-display);
+  font-size: 54px;
+  line-height: 1;
+  color: var(--cb-lime);
+  text-shadow: 0 4px 0 var(--cb-ink), 0 0 24px rgba(184, 244, 0, 0.5);
+  animation: cb-count 1s ease-out both;
+}
+
+@keyframes cb-count {
+  from {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.cb-score__map {
+  width: 132px;
+}
+
+/* Under the platform's tools in the top right corner. */
+.cb-feed {
+  position: absolute;
+  top: 68px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cb-feed__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 10px;
+  background: rgba(11, 13, 24, 0.82);
+  font-size: 15px;
+  font-weight: 900;
+  animation: cb-feed-in 260ms ease-out both;
+}
+
+@keyframes cb-feed-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+
+.cb-feed__name {
+  padding-bottom: 1px;
+  border-bottom: 3px solid;
+}
+
+.cb-feed__gun {
+  color: #ffffff;
+}
+
+.cb-feed__head {
+  width: 18px;
+  height: 18px;
+  color: #fde047;
+}
+
+.cb-banner {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  animation: cb-banner-in 380ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.cb-banner strong {
+  padding: 4px 28px;
+  background: var(--cb-ink);
+  color: var(--banner);
+  font-family: var(--cb-display);
+  font-size: clamp(48px, 8vw, 110px);
+  font-style: italic;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: skewX(-8deg);
+  box-shadow: 8px 8px 0 var(--cb-lime);
+}
+
+.cb-banner span {
+  padding: 3px 14px;
+  border-radius: 999px;
+  background: rgba(11, 13, 24, 0.85);
+  font-size: clamp(16px, 1.8vw, 24px);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@keyframes cb-banner-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.4);
+  }
+}
