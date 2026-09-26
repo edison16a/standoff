@@ -1,74 +1,117 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
+import { vary } from "./vary";
 import { midi, noise, tone } from "./voices";
 
 /**
- * The band the tunes are played on: soft boom bap drums, a round sub
- * bass, an electric piano, a muted funk guitar, and two lead voices.
- * Every part is kept soft and low, and the music's own low pass takes
- * the last of the edge off, so it sits under the run instead of on it.
+ * The late night band for the menus: a warm synth pad that breathes
+ * with a slow filter, an electric piano, a round bass, a soft gliding
+ * lead and a padded kit. Every voice eases in, so the lobby drifts.
  */
 
-/** A small random spread, so a loop never plays the same hit twice. */
-function human(spread: number): number {
-  return 1 + (Math.random() * 2 - 1) * spread;
+/** A held level: swell in, hold, then let go over `release`. Starts silent so it never clicks. */
+function swell(param: AudioParam, at: number, attack: number, hold: number, release: number, peak: number): void {
+  param.setValueAtTime(0, at);
+  param.linearRampToValueAtTime(peak, at + attack);
+  param.setValueAtTime(peak, at + Math.max(attack, hold));
+  param.linearRampToValueAtTime(0, at + Math.max(attack, hold) + release);
 }
 
-export function kick(engine: AudioEngine, out: AudioNode, at: number, peak: number): void {
-  tone(engine, out, at, { frequency: 118, glideTo: 44, decay: 0.26, peak: peak * human(0.08) });
-  // A tiny click so the kick reads on laptop speakers that cannot play the low end.
-  noise(engine, out, at, { filter: "lowpass", frequency: 1200, decay: 0.02, peak: peak * 0.12 });
-}
-
-/** A dusty snare: a short pitched body under a band of noise. */
-export function snare(engine: AudioEngine, out: AudioNode, at: number, peak: number): void {
-  const p = peak * human(0.1);
-  tone(engine, out, at, { type: "triangle", frequency: 196, glideTo: 150, decay: 0.08, peak: p * 0.45 });
-  noise(engine, out, at, { filter: "bandpass", frequency: 1700, q: 0.8, decay: 0.15, peak: p });
-}
-
-/** A rimshot knock, for the laid back sections. */
-export function rim(engine: AudioEngine, out: AudioNode, at: number, peak: number): void {
-  tone(engine, out, at, { type: "triangle", frequency: 820 * human(0.02), decay: 0.035, peak: peak * human(0.1) });
-  noise(engine, out, at, { filter: "bandpass", frequency: 2600, q: 2, decay: 0.03, peak: peak * 0.5 });
-}
-
-export function hat(engine: AudioEngine, out: AudioNode, at: number, open: boolean, peak: number): void {
-  noise(engine, out, at, { filter: "highpass", frequency: 7500, decay: open ? 0.14 : 0.035, peak: peak * human(0.2) });
-}
-
-/** A round sub note with a soft triangle on top, gliding up into it when `slide` is set. */
-export function bass(engine: AudioEngine, out: AudioNode, at: number, note: number, length: number, peak: number, slide = false): void {
-  const f = midi(note);
-  tone(engine, out, at, { frequency: slide ? f * 0.94 : f, glideTo: slide ? f : undefined, attack: 0.008, decay: length, peak });
-  tone(engine, out, at, { type: "triangle", frequency: f, attack: 0.008, decay: length * 0.5, peak: peak * 0.22 });
+/**
+ * The pad: detuned triangles and a quiet square an octave down, through
+ * a filter a slow wobble opens and closes. Its release runs under the
+ * next chord, so the bed never breaks between bars.
+ */
+export function pad(engine: AudioEngine, out: AudioNode, at: number, notes: readonly number[], length: number, peak: number): void {
+  const { ctx } = engine;
+  const filter = ctx.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.value = 1100;
+  filter.Q.value = 0.8;
+  const lfo = ctx.createOscillator();
+  lfo.frequency.value = 0.25;
+  const depth = ctx.createGain();
+  depth.gain.value = 450;
+  lfo.connect(depth).connect(filter.frequency);
+  const gain = ctx.createGain();
+  gain.gain.value = 0;
+  swell(gain.gain, at, 0.7, length, 1.1, peak);
+  filter.connect(gain).connect(out);
+  const end = at + length + 1.2;
+  for (const note of notes) {
+    for (const [type, shift, detune, level] of [["triangle", 0, -8, 1], ["triangle", 0, 8, 1], ["square", -12, 0, 0.25]] as const) {
+      const osc = ctx.createOscillator();
+      osc.type = type;
+      osc.frequency.value = midi(note + shift);
+      osc.detune.value = detune;
+      const trim = ctx.createGain();
+      trim.gain.value = level;
+      osc.connect(trim).connect(filter);
+      osc.start(at);
+      osc.stop(end);
+    }
+  }
+  lfo.start(at);
+  lfo.stop(end);
+  lfo.onended = () => gain.disconnect();
 }
 
 /** Electric piano: a sine with a quiet bell partial, the notes rolled so it sounds played. */
 export function keys(engine: AudioEngine, out: AudioNode, at: number, notes: readonly number[], length: number, peak: number): void {
   notes.forEach((note, i) => {
-    const t = at + i * 0.014;
+    const t = at + i * 0.018;
     tone(engine, out, t, { frequency: midi(note), attack: 0.012, decay: length, peak });
-    tone(engine, out, t, { frequency: midi(note + 24), detune: 4, attack: 0.004, decay: length * 0.25, peak: peak * 0.18 });
+    tone(engine, out, t, { frequency: midi(note + 24), detune: 4, attack: 0.004, decay: length * 0.2, peak: peak * 0.15 });
   });
 }
 
-/** A muted guitar chop: short plucks and a pick click, the funk on the offbeats. */
-export function chop(engine: AudioEngine, out: AudioNode, at: number, notes: readonly number[], peak: number): void {
-  for (const note of notes) {
-    tone(engine, out, at, { type: "triangle", frequency: midi(note), detune: (Math.random() - 0.5) * 8, attack: 0.003, decay: 0.07, peak });
+/** A round bass that leans into each note. */
+export function bass(engine: AudioEngine, out: AudioNode, at: number, note: number, length: number, peak: number): void {
+  const f = midi(note);
+  tone(engine, out, at, { frequency: f * 0.97, glideTo: f, attack: 0.02, decay: length, peak: peak * vary(0.05) });
+  tone(engine, out, at, { type: "triangle", frequency: f * 2, attack: 0.02, decay: length * 0.5, peak: peak * 0.15 });
+}
+
+/** The lead: a soft sine and triangle that scoop up into the note and hold it with a slow vibrato. */
+export function glide(engine: AudioEngine, out: AudioNode, at: number, note: number, length: number, peak: number): void {
+  const { ctx } = engine;
+  const f = midi(note);
+  const gain = ctx.createGain();
+  gain.gain.value = 0;
+  swell(gain.gain, at, 0.06, length * 0.7, length * 0.5 + 0.2, peak * vary(0.06));
+  gain.connect(out);
+  const lfo = ctx.createOscillator();
+  lfo.frequency.value = 5;
+  const depth = ctx.createGain();
+  depth.gain.setValueAtTime(0, at);
+  depth.gain.linearRampToValueAtTime(12, at + Math.min(0.6, length));
+  lfo.connect(depth);
+  const end = at + length * 1.2 + 0.3;
+  for (const [type, level] of [["sine", 1], ["triangle", 0.35]] as const) {
+    const osc = ctx.createOscillator();
+    osc.type = type;
+    osc.frequency.setValueAtTime(f * 0.94, at);
+    osc.frequency.exponentialRampToValueAtTime(f, at + 0.09);
+    depth.connect(osc.detune);
+    const trim = ctx.createGain();
+    trim.gain.value = level;
+    osc.connect(trim).connect(gain);
+    osc.start(at);
+    osc.stop(end);
   }
-  noise(engine, out, at, { filter: "bandpass", frequency: 2200, q: 3, decay: 0.025, peak: peak * 0.8 });
+  lfo.start(at);
+  lfo.stop(end);
+  lfo.onended = () => gain.disconnect();
 }
 
-/** The whistled hook: a pure tone that scoops up into each note. */
-export function whistle(engine: AudioEngine, out: AudioNode, at: number, note: number, length: number, peak: number): void {
-  tone(engine, out, at, { frequency: midi(note - 0.5), glideTo: midi(note), attack: 0.02, decay: length, peak });
-  tone(engine, out, at, { frequency: midi(note + 12), attack: 0.02, decay: length * 0.4, peak: peak * 0.08 });
-}
-
-/** Vibraphone for the answering phrases: a soft strike and a long shimmer. */
-export function vibes(engine: AudioEngine, out: AudioNode, at: number, note: number, length: number, peak: number): void {
-  tone(engine, out, at, { frequency: midi(note), attack: 0.004, decay: length, peak });
-  tone(engine, out, at, { frequency: midi(note), detune: 9, attack: 0.004, decay: length * 0.8, peak: peak * 0.4 });
-  tone(engine, out, at, { frequency: midi(note + 24), attack: 0.002, decay: length * 0.2, peak: peak * 0.12 });
-}
+/** The padded kit: a soft kick, a finger snap for the backbeat, and a shaker. */
+export const softKit = {
+  kick(engine: AudioEngine, out: AudioNode, at: number, peak: number): void {
+    tone(engine, out, at, { frequency: 100, glideTo: 45, attack: 0.005, decay: 0.28, peak: peak * vary(0.08) });
+  },
+  snap(engine: AudioEngine, out: AudioNode, at: number, peak: number): void {
+    noise(engine, out, at, { filter: "bandpass", frequency: 2000, q: 1.6, attack: 0.002, decay: 0.07, peak: peak * vary(0.12) });
+  },
+  shaker(engine: AudioEngine, out: AudioNode, at: number, peak: number): void {
+    noise(engine, out, at, { filter: "bandpass", frequency: 6500, q: 1, attack: 0.015, decay: 0.05, peak: peak * vary(0.25) });
+  },
+};
