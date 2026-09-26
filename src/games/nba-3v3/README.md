@@ -1,6 +1,6 @@
 # Basketball 3v3
 
-Status: ready. Three on three half court basketball for 1 to 6 players, with computer players filling every empty spot. First to 11.
+Status: ready. Three on three half court basketball for 1 to 6 players, with computer players filling every empty spot. Turn them off to play one on one, two on two or uneven teams. First to 11.
 
 ## How to play
 
@@ -8,7 +8,7 @@ Status: ready. Three on three half court basketball for 1 to 6 players, with com
 2. On the phone, after the name:
    * **Star.** Pick one of ten stars, shown dribbling in 3D with their speed, shooting and strength. A star another phone has is marked taken.
    * **Ready.** Tap Ready.
-3. On the computer, the lobby shows two team columns, Sky and Fire, three spots each. New players land on the smaller team. Click a player to send them to the other side, or drag them across. Shuffle deals everyone out at random. Computer players fill the empty spots. Click Start game.
+3. On the computer, the lobby shows two team columns, Sky and Fire, three spots each. New players land on the smaller team. Click a player to send them to the other side, or drag them across. Shuffle deals everyone out at random. Computer players fill the empty spots. Set Computer players to Off and the teams are just the people, so two friends can play one on one, and a team may have more players than the other. With them off, each team needs a player. Click Start game.
 4. Turn the phone sideways. It is a controller:
    * **Thumb stick** (left half): always on screen, so it is clear how to move. Put your thumb anywhere on that side and it jumps there. It moves your player the way the big screen shows it. Up runs at the hoop. Players move with momentum: they take about half a second to reach top speed, slow down over a step or two, and plant a foot to cut. They are a little slower with the ball. With the ball you dribble on your own, keeping it away from your defender and crossing it over when they switch sides.
    * **Shoot** (big orange button): hold it and a meter fills, on the phone and over your player on the big screen. Let go in the green band to green it. Driving at the rim close in turns Shoot into a layup, or a dunk for strong players (anyone dunks when nobody is near).
@@ -16,7 +16,7 @@ Status: ready. Three on three half court basketball for 1 to 6 players, with com
    * **Block**: jump with your arms up, to contest a jumper or stop a layup or dunk, or to grab a rebound higher. There is a short crouch before you leave the floor, and a block counts most at the top of the jump, so time it. Right next to the player with the ball on defence it becomes **Steal**, a swipe that knocks the ball loose if it lands. Reaching in from the ball side works best.
    * **Dribble**: with the ball the same button makes a move, picked by the stick against the way to the basket. Pull back for a stepback, which makes room for a jumper (press Shoot as you land). Push left or right for a quick crossover to that side. Push up for a spin round your defender. Leave the stick alone for a hesitation, or a behind the back when your defender sits on the ball hand. A move that beats your defender leaves them a step behind, or stumbling. Each move has a short breather after it, and spamming them, or making one into a defender right on top of you, can lose the ball.
 5. The phone buzzes and flashes a word for everything that happens to you: Green!, Stolen, Blocked it!, Rebound!, Ankles!, +3.
-6. Baskets put no text on the big screen. The scoreboard ticks over and the crowd reacts.
+6. Baskets put no text on the big screen. The scoreboard ticks over and the arena answers.
 7. First to 11 wins, with confetti and fireworks. The results show the MVP and both box scores. Play again keeps the teams; Change teams goes back to the lobby.
 
 A phone that joins during a game picks a star and joins the next one. A player whose phone drops keeps their spot, with the computer playing for them until they are back.
@@ -77,9 +77,9 @@ The players are stylised athletes, recognisable by build, skin tone, hair, beard
 
 Everything is synthesised through the room's audio buses. Effects have a sharp hit, a body and a tail into a synthetic arena reverb, and each one is pitched slightly differently every time: the ball on the hardwood, sneaker squeaks, the net, the clank of the rim, the thud of the glass, passes, blocks, the shot clock beeps, its horn and the final buzzer.
 
-Music: "Blacktop" plays in the lobby and on the results, a lo-fi boom bap loop in G minor at 90 with a vibraphone hook. "Tip Off" plays under the game, a bouncier F minor groove at 100 with claps and a soft synth flute, mixed lower so the crowd leads. Both run eight bars with an A and a B section, through a warm low pass. The music ducks under dunks, threes and the winners' brass fanfare. The arena organ plays its charge riff on dead balls.
+Music: "Blacktop" plays in the lobby and on the results, a lo-fi boom bap loop in G minor at 90 with a vibraphone hook. "Tip Off" plays under the game, a bouncier F minor groove at 100 with claps and a soft synth flute, mixed low so the ball and the arena lead. Both run eight bars with an A and a B section, through a warm low pass. The music ducks under dunks, threes and the winners' brass fanfare.
 
-The crowd murmurs, goes "ooh" as a ball rattles round the rim, groans at misses, roars and whistles at dunks, chants "de-fense" late in the clock and "let's go" for a player on fire or a winner. There is no spoken commentary; the crowd, the organ and the music carry the moments. On screen, banners are kept for the tip, blocks, steals, turnovers, game point and the win.
+There is no crowd noise and no spoken commentary. The arena carries the moments instead, all synthesised on the effects bus. Every dead ball and every foul gets the stomp stomp clap beat: a punchy kick twice, then a sharp clap, for a few bars until play is live, with the music stepping back under it. The shot clock beeps through its last five seconds and buzzes at zero. The game horn sounds at the tip and at the final basket. The organ stabs on dunks, threes and blocks, and plays the charge call for a hot hand and at game point. On screen, banners are kept for the tip, blocks, steals, turnovers, game point and the win.
 
 ## Code
 
@@ -88,7 +88,7 @@ The crowd murmurs, goes "ooh" as a ball rattles round the rim, groans at misses,
 * `render/`: three.js. `arena/` has the floor, the stands with an instanced crowd that bounces in the shader, the LED boards, the hoop with its shot clock box and a spring driven net. `models/` builds each athlete on a simple skeleton; `anim/` poses them (running, dribbling with either hand, guarding, shooting, passes, catches, the check, blocks, steals, the ten dunks and the celebrations). Every change of state eases into the next. The stride follows the ground covered. On the floor each ankle takes up the tilt of its shin so the sole lies flat, and the hips settle so the lowest sole stands on the court, so no toe sinks into it and the feet stay planted (`placement.ts`). A turn the engine makes at once, squaring up for a pass, a steal or a drive, is eased over a few frames. The drawn dribble runs from the palm to the floor and back up under the palm, in step with the feet, and the ball stays in the hands through the pocket, a spin, a shot and a dunk. Bursts, stops and cuts lean the body and plant a foot (`balance.ts`), the dribble moves have their own footwork (`moves.ts`), and the free throw routine has its bounces, a set shot and the lane stances (`line.ts`). `effects/` has the particles and the confetti. `tv-camera.ts` is the broadcast camera. The name tags stack when players bunch up, so none covers another (`tag-layout.ts`).
 * `host/`: the session on the computer (lobby and teams, the match driver, what the phones see, the banners in `callouts.ts`, and the buzzes) and its React screens.
 * `phone/`: the controller session and the phone screens. The stick and buttons use the gamepad kit in `src/games/kit/pad`.
-* `audio/`: effects, the crowd and the music.
+* `audio/`: effects, the arena's beat, horns and organ, and the music.
 * `protocol/`: the zod schemas for the messages between the phones and the host.
 * `showcase/`: the scripted highlight filmed for the home screen: Varelas's hammer dunk and Zupan's step back three. It skips the check up to keep the clip short. For looking at the animation in development, `/showcase/nba-3v3?bots=3` films a whole computer game instead, and `&at=12` holds the frame twelve seconds in. `?lab=moves` (or `run`, `dunk&style=windmill`, `block`, `free`) plays a short scene that shows one thing, `&step=1` lets a script step it one filmed frame at a time through `window.__nbaStep`, and `&follow=id,angle,dist` keeps a close camera on one player.
 

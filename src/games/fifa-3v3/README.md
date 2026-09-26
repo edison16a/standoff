@@ -2,13 +2,13 @@
 
 Status: ready.
 
-Three on three football on a big floodlit pitch for up to six phones. A computer goalkeeper stands in each goal, and computer players fill any empty places. The stars have their own looks, stats and goal celebrations.
+Three on three football on a big floodlit pitch for up to six phones. A computer goalkeeper stands in each goal, and computer players fill any empty places. Turn them off to play one on one, two on two or uneven sides, still with both keepers. The stars have their own looks, stats and goal celebrations.
 
 ## How to play
 
 1. Host Soccer 3v3 from the home screen. Computer players kick about behind the lobby while everyone joins.
 2. On each phone: type a name, pick a star (a turning 3D preview with their stats; stars someone else has are marked), then tap Ready.
-3. On the big screen the host puts each player on Red or Blue with the mouse. Empty places are filled by computer players, three a side. Press Kick off.
+3. On the big screen the host puts each player on Red or Blue with the mouse. Empty places are filled by computer players, three a side. Set Computer players to Off and the sides are just the people, so two friends can play one on one, and one side may have more players than the other. With them off, each side needs a player. Press Kick off.
 4. First to five goals, or the most goals after four minutes. Level at the end means golden goal: the next goal wins.
 5. At full time the results show everyone's goals, shots, passes and tackles. Play again keeps the same teams; Change teams goes back to the lobby.
 
@@ -47,18 +47,18 @@ A ball over the end boards is a goal kick: the keeper rolls it out to a team mat
 
 Everything is synthesised through the room's audio buses.
 
-Music: "Beach Kickabout" plays in the lobby and on the results, a D major bossa at 108 with a marimba hook over nylon guitar, shaker and clave. "Golden Hour" plays under the match, an A minor afro house groove at 118 with a steel pan hook and a falling log drum bass, mixed lower so the crowd leads. Both run eight bars with an A and a B section, through a warm low pass. A brass sting and timpani mark every goal and a fanfare the full time whistle, and the loop steps aside for them.
+Music: "Beach Kickabout" plays in the lobby and on the results, a D major bossa at 108 with a marimba hook over nylon guitar, shaker and clave. "Golden Hour" plays under the match, an A minor afro house groove at 118 with a steel pan hook and a falling log drum bass, mixed low so the ball and the whistle lead. Both run eight bars with an A and a B section, through a warm low pass. A brass sting and timpani mark every goal and a fanfare the full time whistle, and the loop steps aside for them.
 
-Effects have a sharp hit, a body and a tail into a synthetic stadium reverb, each pitched a little differently every time: strikes, passes, tackles, slides, saves, the post and the bar, the net, the boards, the referee's whistle, the goal horn and fireworks. The crowd murmurs and rises as the ball nears a goal, roars for goals, goes "ooh" at near misses, groans, applauds and starts up a clapping chant now and then. There is no spoken commentary.
+Effects have a sharp hit, a body and a tail into a synthetic stadium reverb, each pitched a little differently every time: strikes, passes, tackles, slides, saves, the post and the bar, the net, the boards, the referee's whistle, the goal horn and fireworks. There is no crowd noise and no spoken commentary.
 
 ## Code map
 
-* `engine/`: the pure match with tests. `play.ts` runs a step, `buttons.ts` turns the two buttons into passes, shots, slides and skill moves, `charge.ts` is the charge bar shared with the phone, `assist.ts` reads the stick for a pass or a shot, `kick.ts` and `passing.ts` strike the ball, `shot-odds.ts` and `shot-aim.ts` decide and aim shots, `keeper*.ts` the goalkeepers, `tackle.ts` slides and challenges, `skills.ts` and `skill-moves.ts` the skill moves, `bots.ts`, `bot-shape.ts` and `bot-skill.ts` the computer players, `rules.ts` kickoffs, restarts and full time, and `celebrate.ts` the goal and the win. After a goal the team mates stand one on each side of the scorer and a step back, so the close up shows all three.
+* `engine/`: the pure match with tests. `play.ts` runs a step, `buttons.ts` turns the two buttons into passes, shots, slides and skill moves, `charge.ts` is the charge bar shared with the phone, `assist.ts` reads the stick for a pass or a shot, `kick.ts` and `passing.ts` strike the ball, `shot-odds.ts` and `shot-aim.ts` decide and aim shots, `keeper*.ts` the goalkeepers, `tackle.ts` slides and challenges, `skills.ts` and `skill-moves.ts` the skill moves, `bots.ts`, `bot-shape.ts`, `lanes.ts` and `bot-skill.ts` the computer players and where a side of one, two or three lines up, `rules.ts` kickoffs, restarts and full time, and `celebrate.ts` the goal and the win. After a goal the team mates stand one on each side of the scorer and a step back, so the close up shows all three.
 * `render/`: three.js. The arena (pitch, boards, goals with nets, stands, crowd, floodlights), the players built from the roster, animations, effects (grass spray, confetti, fireworks) and the broadcast camera.
   * Players are animated by where their feet go. `engine/stride.ts` sets the running rhythm, and both the simulation and the drawing use it. The dribble touch lands on the lead boot's swing. `anim/gait.ts` pins each foot to the turf for its stance. `anim/leg-ik.ts` solves the legs to reach those spots. `anim/kicks.ts` and `anim/skill-poses.ts` steer a boot onto the ball where it is drawn, so the ball stays at the feet. `figures/athlete-figure.ts` cross fades from one move to the next. In moves set by joint angles alone, like a slide, getting up, a celebration or the keepers' crouch, a leg that would reach down through the pitch is solved again to stand on the turf (`figures/turf.ts`). Name tags stack when players bunch up, so none covers another (`figures/tag-layout.ts`).
 * `host/`: the room on the big screen: lobby, match driver, goal replays, HUD, results, and what each phone is sent.
 * `phone/`: the setup steps and the controller, on the kit's gamepad.
-* `audio/`: the crowd, effects and music, through `room.audio` buses. There is no spoken commentary.
+* `audio/`: effects and music, through `room.audio` buses. There is no spoken commentary.
 * `protocol/`: the zod schemas for messages both ways.
 * `showcase/`: the game playing itself for the home screen's icon, poster and clip.
 
