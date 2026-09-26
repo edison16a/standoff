@@ -75,6 +75,11 @@ describe("lives", () => {
     expect(state.winner).toBe(0);
     expect(events.find((e) => e.type === "game")).toMatchObject({ winner: 0 });
     expect([a!.place, b!.place, c!.place]).toEqual([1, 2, 3]);
+    // A winner who drifts off the edge after the Game call keeps the win and the life.
+    hang(a!, 0, state.stage.blast.bottom - 2);
+    run(state, 5);
+    expect(a!.stocks).toBe(2);
+    expect(state.winner).toBe(0);
   });
 
   it("call a draw when the last two fall on the same step", () => {

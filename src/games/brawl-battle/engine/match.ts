@@ -73,7 +73,8 @@ export function stepMatch(state: MatchState, commands: ReadonlyMap<number, Comma
   }
   resolveMelee(state);
   stepProjectiles(state, STEP);
-  checkBlastZone(state);
+  // Once the match is won nothing more can be lost: a winner still sliding from a last swing may drift off the edge.
+  if (state.phase !== "game") checkBlastZone(state);
   if (state.phase === "fight" && checkWinner(state)) setPhase(state, "game");
   else if (state.phase === "game" && state.phaseFrame >= RULES.gameHold) {
     setPhase(state, "over");
