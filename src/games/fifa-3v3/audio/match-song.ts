@@ -4,13 +4,14 @@ import { bars, heldFor, type Song } from "./score";
 
 /**
  * "Golden Goal": under the match, a sunny stadium anthem with a Latin
- * groove in B flat major at 124. Sixteen bars: the trumpets blow the
+ * groove in B flat major at 116. Sixteen bars: the trumpets blow the
  * hook over the A section, then the terrace choir sings "oh" over the B
  * section while the trumpets punch the chords. A salsa piano montuno, a
  * tumbao bass, surdo, congas, cowbell, claps and a timbale roll into
  * each turn.
  */
-const BPM = 124;
+// Kept clear of the Subway Runner disco at 122, so the two games never feel alike.
+const BPM = 116;
 
 const CHORDS = {
   Bb: "Bb1 D4 F4 Bb4",

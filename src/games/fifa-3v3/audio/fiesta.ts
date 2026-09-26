@@ -65,7 +65,8 @@ export function choir(engine: AudioEngine, out: AudioNode, note: number, at: num
 
 /** A warm held chord under the band, so the sunshine never has gaps in it. */
 export function bed(engine: AudioEngine, out: AudioNode, notes: readonly number[], at: number, length: number, peak: number): void {
-  const parts = notes.flatMap((note) => [["triangle", midi(note), -8], ["triangle", midi(note), 8]] as const);
+  // The second voice sits an octave down: two detuned copies of one note cancel each time their beat comes round.
+  const parts = notes.flatMap((note) => [["triangle", midi(note), -6], ["triangle", midi(note - 12), 6]] as const);
   held(engine, out, at, parts, { attack: 0.15, hold: length, release: 0.3, peak, cutoff: 1300 });
 }
 
