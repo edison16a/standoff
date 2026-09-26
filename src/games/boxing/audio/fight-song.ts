@@ -1,6 +1,6 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 import { horn, kit, rhodes, sub } from "./band";
-import { grit, scratch, stab } from "./grit";
+import { grit, loop, scratch, stab } from "./grit";
 import { bars, heldFor, swung, type Song } from "./score";
 
 /**
@@ -88,7 +88,9 @@ function play(engine: AudioEngine, out: AudioNode, step: number, at: number, six
 
   // The dusty chop answers the hook on the and of two.
   if (inBar === 6 && !inB) stab(engine, out, voicing, time, 0.012);
-  if (inBar === 0 && inB) rhodes(engine, out, voicing, time, sixteenth * 10, 0.016);
+  // The sample loop holds every bar; the Rhodes joins it in the B section.
+  if (inBar === 0) loop(engine, out, voicing, time, sixteenth * 16, 0.009);
+  if (inBar === 0 && inB) rhodes(engine, out, voicing, time, sixteenth * 10, 0.014);
   // The section punches in the B half: on the one and a push before three.
   if (inB && (inBar === 0 || inBar === 7)) {
     for (const note of voicing.slice(-3)) horn(engine, out, note + 12, time, sixteenth * 1.4, 0.016);

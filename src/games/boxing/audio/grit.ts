@@ -51,3 +51,45 @@ export function stab(engine: AudioEngine, out: AudioNode, notes: readonly number
     tone(engine, out, at, { frequency: midi(note + 12), attack: 0.002, decay: 0.08, peak: p * 0.3 });
   }
 }
+
+/**
+ * The sample the beat is built on: a dark held chord with a slow tape
+ * wobble, filling the space between the horns so the groove never
+ * drops out. It fades under the next bar's chord.
+ */
+export function loop(engine: AudioEngine, out: AudioNode, notes: readonly number[], at: number, length: number, peak: number): void {
+  const { ctx } = engine;
+  const filter = ctx.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.value = 850;
+  filter.Q.value = 0.4;
+  const gain = ctx.createGain();
+  gain.gain.value = 0;
+  gain.gain.setValueAtTime(0, at);
+  gain.gain.linearRampToValueAtTime(peak, at + 0.05);
+  gain.gain.setValueAtTime(peak, at + length);
+  gain.gain.linearRampToValueAtTime(0, at + length + 0.25);
+  filter.connect(gain).connect(out);
+  const wow = ctx.createOscillator();
+  wow.frequency.value = 0.6;
+  const depth = ctx.createGain();
+  depth.gain.value = 7;
+  wow.connect(depth);
+  const end = at + length + 0.3;
+  for (const note of notes) {
+    for (const type of ["triangle", "sawtooth"] as const) {
+      const osc = ctx.createOscillator();
+      osc.type = type;
+      osc.frequency.value = midi(note);
+      depth.connect(osc.detune);
+      const trim = ctx.createGain();
+      trim.gain.value = type === "sawtooth" ? 0.3 : 1;
+      osc.connect(trim).connect(filter);
+      osc.start(at);
+      osc.stop(end);
+    }
+  }
+  wow.start(at);
+  wow.stop(end);
+  wow.onended = () => gain.disconnect();
+}
