@@ -27,11 +27,17 @@ export class BallView {
   private readonly offset = new THREE.Vector3();
   private readonly lastTarget = new THREE.Vector3();
   private wasInHands = false;
+  private fresh = true;
 
   constructor() {
     const map = ballTexture();
     this.mesh = new THREE.Mesh(new THREE.SphereGeometry(BALL.radius, 32, 20), new THREE.MeshStandardMaterial({ map, roughness: 0.62, metalness: 0 }));
     this.mesh.castShadow = true;
+  }
+
+  /** A new game: the ball is drawn straight where it is, not eased over from the last one. */
+  reset(): void {
+    this.fresh = true;
   }
 
   /** `chest` is true while the holder has it in both hands at the chest, as in a check. */
@@ -49,17 +55,19 @@ export class BallView {
     } else if (inHands && holder) {
       holder.hand("L", left);
       holder.hand("R", right);
-      // Two hands close together hold it between them; otherwise it sits in the right palm.
-      if (left.distanceTo(right) < 0.42) target.copy(left).add(right).multiplyScalar(0.5);
-      else target.copy(right);
+      // Two hands close together hold it between them; as they part it slides into the right palm, never jumping across.
+      const apart = Math.min(1, Math.max(0, (left.distanceTo(right) - 0.34) / 0.16));
+      target.copy(left).lerp(right, 0.5 + 0.5 * apart * apart * (3 - 2 * apart));
       target.y += 0.02;
     } else if (holder && (act?.kind === "none" || act?.kind === "move")) this.onDribble(holder, target);
     const travel = Math.hypot(ball.vel.x, ball.vel.y, ball.vel.z) * dt * 1.5;
     const held = inHands || carry;
-    if (held !== this.wasInHands || target.distanceTo(this.lastTarget) > JUMP + travel) {
+    if (this.fresh) this.offset.set(0, 0, 0);
+    else if (held !== this.wasInHands || target.distanceTo(this.lastTarget) > JUMP + travel) {
       // Let go, caught, or passed to another hand: start from where the ball was drawn and blend onto the new path.
       this.offset.copy(this.mesh.position).sub(target);
     }
+    this.fresh = false;
     this.wasInHands = held;
     this.lastTarget.copy(target);
     this.offset.multiplyScalar(Math.exp(-dt * 14));
