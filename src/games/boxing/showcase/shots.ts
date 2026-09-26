@@ -20,8 +20,7 @@ export function trailerShot(cycle: number, match: Match, tv: TvCamera, shoulder:
   if (cycle < 4.55) {
     shoulder.camera.fov = 52;
     shoulder.camera.updateProjectionMatrix();
-    shoulder.update(a, b, dt, 0);
-    if (cut) shoulder.snap();
+    shoulder.update(a, b, dt, 0, cut);
     return shoulder.camera;
   }
   if (cycle < 6.55) {

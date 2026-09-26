@@ -4,14 +4,14 @@ import { other, type FighterId } from "../engine/types";
 import type { MirrorInput } from "./anim/anim-input";
 import { ShoulderCamera } from "./cameras/shoulder-camera";
 import { TvCamera } from "./cameras/tv-camera";
-import { FightRenderer, FULL, LEFT, RIGHT, type View } from "./fight-renderer";
+import { FightRenderer, type View } from "./fight-renderer";
 import { FightScene } from "./fight-scene";
 import type { Look } from "./models/looks";
 import { Recorder, replayClock } from "./replay";
 import { stance, type RigPose } from "./rig/pose";
+import { FULL, ownViews, type Shot } from "./views";
 
-/** Where the fight is, as far as the cameras care. */
-export type Shot = "menu" | "fight" | "replay" | "celebrate";
+export type { Shot } from "./views";
 
 export interface DirectorInput {
   match: Match;
@@ -165,23 +165,23 @@ export class Director {
       this.wasFighting = false;
       return [{ rect: FULL, camera: tv.camera }];
     }
-    const humans = ([0, 1] as const).filter((id) => input.humans[id]);
-    if (humans.length === 0) {
+    const own = ownViews(input.shot, match.phase, input.humans);
+    if (own.length === 0) {
       tv.sideOn(a, b, 0.3, 3.6, 1.8, 1.25);
       tv.finish(dt);
       return [{ rect: FULL, camera: tv.camera }];
     }
     const down = match.fighters.some((f) => f.down) ? 1 : 0;
-    const views = humans.map((id): View => {
-      const camera = this.shoulders[id];
-      camera.camera.fov = humans.length === 1 ? 50 : 62;
-      camera.camera.updateProjectionMatrix();
-      camera.update(match.footwork.spots[id], match.footwork.spots[other(id)], dt, down);
-      return { rect: humans.length === 1 ? FULL : id === 0 ? LEFT : RIGHT, camera: camera.camera };
-    });
-    if (!this.wasFighting) for (const id of humans) this.shoulders[id].snap();
+    // Coming back from the broadcast camera, each view starts in place rather than swooping in.
+    const snap = !this.wasFighting;
     this.wasFighting = true;
-    return views;
+    return own.map(({ id, rect }): View => {
+      const camera = this.shoulders[id];
+      camera.camera.fov = own.length === 1 ? 50 : 62;
+      camera.camera.updateProjectionMatrix();
+      camera.update(match.footwork.spots[id], match.footwork.spots[other(id)], dt, down, snap);
+      return { rect, camera: camera.camera };
+    });
   }
 }
 
