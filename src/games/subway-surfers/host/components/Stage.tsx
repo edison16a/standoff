@@ -12,7 +12,7 @@ import { useSession } from "./session-context";
 const RunCanvas = lazy(() => import("./RunCanvas"));
 
 /**
- * Subway Surfers on the big screen. The 3D view is always there: a demo
+ * Subway Runner on the big screen. The 3D view is always there: a demo
  * run behind the menus, then each player's own run. The menus, camera
  * steps, overlay and results are ordinary React on top.
  */

@@ -8,7 +8,7 @@ Shared code that games may import. The kit never imports a game, and games still
 * `motion/math3d.ts`: the small quaternion and vector helpers.
 * `motion/orientation.ts`: `subscribeOrientation`, the phone's orientation as a quaternion on every reading.
 * `steps/StepShell.tsx`: the frame for a game's phone setup. Every game uses the same order: the platform asks for a name (or Skip), then the game shows **Calibrate**, then its own choices (weapon, kart, blade), then **Ready**. Each step is its own page.
-* `aim/`: pointing the phone at the big screen, for Fruit Ninja, Zombie Survival and Shooting Gallery.
+* `aim/`: pointing the phone at the big screen, for Fruit Slicer, Zombie Survival and Shooting Gallery.
 
 ## Aiming
 
@@ -45,7 +45,7 @@ Screen points are WebGL clip space, so `raycaster.setFromCamera(new Vector2(poin
 
 ## Gamepad
 
-For games where the phone is a controller: a floating thumb stick on the left and round buttons on the right, as in NBA 3v3 and FIFA 3v3. Messages it sends all have kinds starting with `pad`, so games must not use that prefix.
+For games where the phone is a controller: a floating thumb stick on the left and round buttons on the right, as in Basketball 3v3 and Soccer 3v3. Messages it sends all have kinds starting with `pad`, so games must not use that prefix.
 
 Phone side:
 

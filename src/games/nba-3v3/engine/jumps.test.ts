@@ -35,10 +35,10 @@ describe("jumping to block", () => {
   });
 
   it("blocks more often when timed to the top of the jump", () => {
-    const shooter = createAthlete(0, 0, 0, "curry", null);
+    const shooter = createAthlete(0, 0, 0, "ashby", null);
     Object.assign(shooter, { x: 0, z: 7 });
     const chanceAt = (t: number) => {
-      const d = createAthlete(1, 1, 0, "wemby", null);
+      const d = createAthlete(1, 1, 0, "delacroix", null);
       Object.assign(d, { x: 0, z: 6.2 });
       startBlock(d);
       if (d.action.kind !== "block") throw new Error("no jump");
@@ -58,11 +58,11 @@ describe("jumping to block", () => {
 describe("dunks", () => {
   it("come in a few variants, with the star's own the most common", () => {
     const rng = seeded(4);
-    const giannis = createAthlete(0, 0, 0, "giannis", null);
-    Object.assign(giannis, { x: 0.3, z: 3 });
+    const varelas = createAthlete(0, 0, 0, "varelas", null);
+    Object.assign(varelas, { x: 0.3, z: 3 });
     const styles = new Map<string, number>();
     for (let i = 0; i < 300; i++) {
-      const plan = chooseDunk(rng, giannis, i % 2 === 0);
+      const plan = chooseDunk(rng, varelas, i % 2 === 0);
       styles.set(plan.style, (styles.get(plan.style) ?? 0) + 1);
     }
     expect(styles.size).toBeGreaterThanOrEqual(3);
@@ -72,15 +72,15 @@ describe("dunks", () => {
 
   it("go reverse along the baseline, and hang on the rim for the rim hang", () => {
     const rng = seeded(9);
-    const tatum = createAthlete(0, 0, 0, "tatum", null);
-    Object.assign(tatum, { x: 2.2, z: 1.2 });
+    const mensah = createAthlete(0, 0, 0, "mensah", null);
+    Object.assign(mensah, { x: 2.2, z: 1.2 });
     let reverse = 0;
-    for (let i = 0; i < 100; i++) if (chooseDunk(rng, tatum, true).style === "reverse") reverse++;
+    for (let i = 0; i < 100; i++) if (chooseDunk(rng, mensah, true).style === "reverse") reverse++;
     expect(reverse).toBeGreaterThan(40);
-    const jokic = createAthlete(0, 0, 0, "jokic", null);
-    Object.assign(jokic, { x: 0, z: 3 });
+    const vukmir = createAthlete(0, 0, 0, "vukmir", null);
+    Object.assign(vukmir, { x: 0, z: 3 });
     for (let i = 0; i < 50; i++) {
-      const plan = chooseDunk(rng, jokic, true);
+      const plan = chooseDunk(rng, vukmir, true);
       if (plan.style === "rimhang") expect(plan.rimHang).toBeGreaterThan(0.4);
     }
   });

@@ -1,4 +1,4 @@
-# Subway Surfers
+# Subway Runner
 
 Status: ready.
 

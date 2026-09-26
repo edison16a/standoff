@@ -32,7 +32,7 @@ export function StarStep() {
   const wanted = useControllerStore((s) => s.wanted);
   const host = useControllerStore((s) => s.host);
   const taken = host?.taken ?? [];
-  const shown = wanted ?? CHARACTER_IDS.find((id) => !taken.includes(id)) ?? "curry";
+  const shown = wanted ?? CHARACTER_IDS.find((id) => !taken.includes(id)) ?? "ashby";
   const c = CHARACTERS[shown];
 
   return (
