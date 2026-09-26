@@ -9,7 +9,7 @@ const KEEP = new Set(["position", "normal", "uv"]);
 /**
  * Collects many small parts and merges them into one mesh per material.
  * A model is built from a few hundred primitives, but each bone draws in
- * a handful of calls, which is what keeps the hall at 60 frames a second.
+ * a handful of calls, which is what keeps the arena at 60 frames a second.
  */
 export class MeshBuilder {
   private readonly parts = new Map<THREE.Material, THREE.BufferGeometry[]>();

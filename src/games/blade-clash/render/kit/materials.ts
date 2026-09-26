@@ -4,7 +4,7 @@ import { brushedBump } from "./textures";
 /**
  * Shared materials, made once per look and reused by every model that
  * wears it, so two fighters and a crowd cost a handful of shader programs.
- * Every surface kind has one recipe here, which keeps the hall consistent.
+ * Every surface kind has one recipe here, which keeps the arena consistent.
  */
 
 const cache = new Map<string, THREE.MeshStandardMaterial>();

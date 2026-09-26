@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { glowTexture } from "../kit/textures";
 import { GLOW } from "./glow";
 
-const MAX = 700;
+const MAX = 1600;
 const GRAVITY = -9.8;
 
 interface Spark {
