@@ -134,5 +134,5 @@ export function hitDamage(kind: ZombieKind, part: HitPart, base: number): HitOut
 
 /** Weak points grow with the team, so four players still need to work for a boss. */
 export function weakPointHp(kind: ZombieKind, players: number): number {
-  return KINDS[kind].weakHp * (1 + 0.45 * Math.max(0, players - 1));
+  return KINDS[kind].weakHp * (1 + 0.6 * Math.max(0, players - 1));
 }

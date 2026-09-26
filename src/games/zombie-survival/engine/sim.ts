@@ -1,6 +1,7 @@
 import type { Seat } from "@/platform/protocol";
 import { SurvivalGame } from "./game";
 import { Rng } from "./rng";
+import { STAGE_COUNT } from "./stages";
 import type { CastFn } from "./shooting";
 import { alive, type Zombie } from "./zombie";
 import type { WeaponId } from "./weapons";
@@ -91,7 +92,7 @@ export function simulateStage(stage: number, bots: readonly Bot[], health: numbe
 }
 
 /** Plays the whole route from a stage, healing at checkpoints as the game does. Returns where it ended. */
-export function simulateRun(bots: readonly Bot[], from = 1, to = 25, seed = 1): { reached: number; results: StageResult[] } {
+export function simulateRun(bots: readonly Bot[], from = 1, to = STAGE_COUNT, seed = 1): { reached: number; results: StageResult[] } {
   let health = 100;
   const results: StageResult[] = [];
   for (let stage = from; stage <= to; stage++) {
