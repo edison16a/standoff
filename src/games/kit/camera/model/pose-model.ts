@@ -1,5 +1,6 @@
 import type { PoseLandmarker } from "@mediapipe/tasks-vision";
 import { fetchCached, isCached } from "./asset-cache";
+import { modelCanvas, releaseCanvas } from "./gl-canvas";
 import { MODEL_FILES, runtimeFiles, type ModelVariant } from "./model-files";
 
 export type Delegate = "GPU" | "CPU";
@@ -8,6 +9,8 @@ export interface LoadedModel {
   landmarker: PoseLandmarker;
   variant: ModelVariant;
   delegate: Delegate;
+  /** Closes the model and frees its WebGL context. Call it instead of `landmarker.close()`. */
+  close(): void;
 }
 
 export interface ModelProgress {
@@ -64,22 +67,35 @@ export async function loadPoseModel({ variant, delegate, onProgress, signal }: L
   const urls = [URL.createObjectURL(new Blob([loader!.bytes], { type: runtime.loader.type })), URL.createObjectURL(new Blob([binary!.bytes], { type: runtime.binary.type }))];
   try {
     const fileset = { wasmLoaderPath: urls[0]!, wasmBinaryPath: urls[1]! };
-    const tryDelegate = (which: Delegate) =>
-      vision.PoseLandmarker.createFromOptions(fileset, {
-        // MediaPipe may keep the buffer it is given, so each try gets its own copy.
-        baseOptions: { modelAssetBuffer: weights!.bytes.slice(), delegate: which },
-        runningMode: "VIDEO",
-        numPoses: 2,
-        minPoseDetectionConfidence: 0.5,
-        minPosePresenceConfidence: 0.5,
-        minTrackingConfidence: 0.5,
-      });
+    const tryDelegate = async (which: Delegate): Promise<LoadedModel> => {
+      const canvas = modelCanvas();
+      try {
+        const landmarker = await vision.PoseLandmarker.createFromOptions(fileset, {
+          // MediaPipe may keep the buffer it is given, so each try gets its own copy.
+          baseOptions: { modelAssetBuffer: weights!.bytes.slice(), delegate: which },
+          canvas,
+          runningMode: "VIDEO",
+          numPoses: 2,
+          minPoseDetectionConfidence: 0.5,
+          minPosePresenceConfidence: 0.5,
+          minTrackingConfidence: 0.5,
+        });
+        const close = () => {
+          landmarker.close();
+          releaseCanvas(canvas);
+        };
+        return { landmarker, variant, delegate: which, close };
+      } catch (error) {
+        releaseCanvas(canvas);
+        throw error;
+      }
+    };
     try {
-      return { landmarker: await tryDelegate(delegate), variant, delegate };
+      return await tryDelegate(delegate);
     } catch (error) {
       if (delegate === "CPU") throw error;
       console.warn("Pose model: the GPU could not run it, so it runs on the CPU.", error);
-      return { landmarker: await tryDelegate("CPU"), variant, delegate: "CPU" };
+      return await tryDelegate("CPU");
     }
   } finally {
     for (const url of urls) URL.revokeObjectURL(url);

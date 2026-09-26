@@ -52,7 +52,7 @@ export class ModelRunner {
     this.abort.abort();
     this.detector?.stop();
     this.detector = null;
-    this.model?.landmarker.close();
+    this.model?.close();
     this.model = null;
   }
 
@@ -66,7 +66,7 @@ export class ModelRunner {
         onProgress: (p) => shown && this.store.model({ state: p.stage === "start" ? "starting" : "downloading", loaded: p.loaded, total: p.total, fromCache: p.fromCache }),
       });
       if (this.disposed) {
-        model.landmarker.close();
+        model.close();
         return false;
       }
       this.use(model);
@@ -85,7 +85,7 @@ export class ModelRunner {
     this.store.model({ state: "ready", variant: model.variant, delegate: model.delegate, error: null });
     if (this.detector) this.detector.swap(model);
     else this.run();
-    if (old && old !== model) old.landmarker.close();
+    if (old && old !== model) old.close();
   }
 
   private run(): void {
