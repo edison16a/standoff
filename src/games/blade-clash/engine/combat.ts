@@ -81,7 +81,7 @@ export class Combat {
     if (match.phase !== "live" || victim.health <= 0) return [];
     attacker.hitReadyAt = now + tuning.hitCooldownMs;
     victim.guardUntil = now + HIT_GUARD_MS;
-    victim.x -= victim.facing * HIT_PUSHBACK;
+    victim.recoil = HIT_PUSHBACK;
     const final = match.hurt(victimSlot, now);
     victim.health = match.health[victimSlot];
     victim.setAction(final ? "defeat" : "hit", now);

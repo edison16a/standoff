@@ -29,6 +29,8 @@ export const HIT_REACTION_MS = 420;
 export const HIT_GUARD_MS = 480;
 /** A hit pushes the fighter who took it back along the line by this much. */
 export const HIT_PUSHBACK = 0.3;
+/** How fast they slide back, in m/s, so the push is a quick shove rather than a jump. */
+export const PUSHBACK_SPEED = 3;
 /** After a clash, the blades cannot clash again for this long. */
 export const CLASH_COOLDOWN_MS = 220;
 /** Both fighters stagger for this long after a clash. */

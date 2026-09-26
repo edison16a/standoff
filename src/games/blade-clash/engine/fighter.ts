@@ -3,7 +3,7 @@ import type { Slot } from "@/games/blade-clash/players";
 import { hurtboxes } from "./body";
 import type { FighterAction, FighterFrame } from "./frames";
 import { distance } from "./geometry";
-import { HIT_REACTION_MS, MAX_HEALTH, STAGGER_MS, START_X, SWING_REARM_SPEED, SWING_SPEED, WALK_SPEED } from "./rules";
+import { HIT_REACTION_MS, MAX_HEALTH, PUSHBACK_SPEED, STAGGER_MS, START_X, SWING_REARM_SPEED, SWING_SPEED, WALK_SPEED } from "./rules";
 import { blendControl, GUARD, swordPose, type SwordControl, type SwordPose } from "./sword";
 import { SwordDriver, type KnockTiming } from "./sword-driver";
 import type { Combatant } from "./sweep";
@@ -34,6 +34,8 @@ export class Fighter {
   hitReadyAt = -Infinity;
   /** They cannot be hit again until then. */
   guardUntil = -Infinity;
+  /** Metres still to slide back from the last hit taken. */
+  recoil = 0;
   private whooshing = false;
 
   constructor(
@@ -70,6 +72,7 @@ export class Fighter {
     this.action = "idle";
     this.hitReadyAt = -Infinity;
     this.guardUntil = -Infinity;
+    this.recoil = 0;
     this.whooshing = false;
     this.sword.reset(GUARD);
   }
@@ -80,11 +83,14 @@ export class Fighter {
     if ((this.action === "hit" && elapsed >= HIT_REACTION_MS) || (this.action === "stagger" && elapsed >= STAGGER_MS)) this.setAction("idle", now);
   }
 
-  /** Walks along the line from the footwork buttons. Reeling from a hit slows the feet. */
+  /** Walks along the line from the footwork buttons, and slides back from a hit. Reeling from a hit slows the feet. */
   walk(dtMs: number, allowed: boolean, now: number): void {
     const reeling = this.action === "hit" && now - this.actionStartedAt < HIT_REACTION_MS;
     this.speed = allowed ? this.move * WALK_SPEED * (reeling ? REELING_WALK : 1) : 0;
     this.x += this.speed * this.facing * (dtMs / 1000);
+    const slide = Math.min(this.recoil, PUSHBACK_SPEED * (dtMs / 1000));
+    this.x -= this.facing * slide;
+    this.recoil -= slide;
   }
 
   /** Starts a tick: remembers where everything was, then moves the sword on. */
