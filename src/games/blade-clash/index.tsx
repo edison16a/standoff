@@ -9,6 +9,7 @@ import { Tools } from "./host/components/Tools";
 import { BladePhone } from "./phone/blade-phone";
 import { PhoneScreen } from "./phone/components/PhoneScreen";
 import { ControllerContext } from "./phone/components/session-context";
+import { Showcase } from "./showcase/Showcase";
 import "./styles/stage.css";
 import "./styles/phone.css";
 import "./styles/phone-setup.css";
@@ -44,4 +45,6 @@ export const game: GameModule = {
     }
     return { Screen, dispose: () => session.dispose() };
   },
+
+  Showcase,
 };

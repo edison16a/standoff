@@ -1,6 +1,6 @@
 # Blade Clash
 
-Status: ready, with simple stand in art while the full art is made. A sword duel for two players, or one against the computer. Each phone is a sword handle. Point it and the sword on the big screen points there too. The screen is split down the middle, and each player looks over their own fighter's shoulder at the other, like Boxing.
+Status: ready. A sword duel for two players, or one against the computer, in an open air arena with a full house all round. Each phone is a sword handle. Point it and the sword on the big screen points there too. The screen is split down the middle, and each player looks over their own fighter's shoulder at the other, like Boxing.
 
 ## How to play
 
@@ -19,12 +19,19 @@ Phones without motion sensors get a drag pad: drag a finger to point the sword, 
 
 ## The fighters
 
-* **Knight:** plate armour and a longsword, the longest reach.
-* **Samurai:** lacquered armour and a katana.
-* **Block Hero:** a warrior built from cubes, with a chunky pixel sword, the widest blade. An original design.
-* **Star Knight:** a robed duellist with a glowing blade in the player's colour. An original design.
+* **Knight:** full plate under a surcoat in the player's colour with a gold cross, layered pauldrons and a visored helm with a plume. A two handed longsword with a cross guard and a wheel pommel, the longest reach.
+* **Samurai:** black lacquered armour laced in the player's colour, broad shoulder plates, a skirt of plates over wide trousers, a crested helmet and a red face mask. A two handed katana with a curved blade, a temper line and a wrapped handle.
+* **Block Hero:** an original warrior built entirely from cubes: a tunic in the player's colour with a gold shield, a steel helmet open at a pixel art face with war paint, and a stack of plume cubes. A pixel sword drawn as sprite art in cubes, the widest blade.
+* **Star Knight:** an original duellist in a white shell of armour over a dark suit, a long split coat and a smooth helmet with a glowing visor band. Lines of light in the player's colour run over the armour, the same colour as the energy blade, which glows, hums and lights up the fighters around it.
 
-Each blade has its own length and width, which is all that changes play.
+Each blade has its own length and width, which is all that changes play. Each also has its own trail, clash, hit and swing sounds.
+
+## Look and feel
+
+* **The arena.** A round open air arena: a stone dais on raked sand with a line of gold down the middle where the fighters walk, a full house on stone tiers all round, a great gate at each end of the line with the player's banner and flags, braziers at the dais's corners and torches and banners round the wall. By day a summer sky and the sun's shadows; by night stars, firelight and a hard spotlight over the dais, following the platform's light and dark theme.
+* **Animation.** One skeleton for all four. The sword hand is placed exactly on the engine's grip and the arm reaches it by inverse kinematics; the body leans and turns into a reach, sinks for a low guard and the two handed swords take the free hand onto the grip whenever it can reach. The feet step on their own and stay planted on the floor between steps. A hit snaps the head, the body or the knees back depending on where it landed, a clash rocks both fighters, the loser of the fight stumbles, falls flat and drops the sword, and the winner raises theirs overhead.
+* **Effects.** A glowing trail per blade, a shower of sparks in the blades' colours on every clash, a flash and ring where a hit lands, the body lighting up in the hitter's colour, and bloom on everything that glows. The final hit slows the game down, closes both cameras in and washes the screen in the winner's colour, then bursts. The winner's camera swings round to face them under confetti.
+* **The screen.** Each half has its player's card along the top: their fighter's emblem, name and five slanted health blades that shatter one at a time. The split map between them shows who plays where.
 
 ## Swords in the world
 
@@ -43,7 +50,12 @@ The view's edges map to wide blade angles and keep going past them, so the sword
 
 ## Sound
 
-Everything is synthesised through the room's audio buses. The fight starts with a gong and the announcer's call, every fast swing whooshes, clashes ring louder the harder they are, hits thump and the crowd answers. The announcer calls the start, the big clashes and the winner through the computer's speech, at the player's effects volume.
+Everything is synthesised through the room's audio buses.
+
+* **Music.** In the lobby, "Before the Duel": a harp rippling under a wooden flute and a frame drum. In the fight, "Steel and Thunder": taiko drums and driving strings under a horn hook, lifting into brass and choir. The winner gets a brass fanfare.
+* **Blades.** Every fast swing whooshes in its weapon's voice: heavy for the longsword, a thin whistle for the katana, a chip tune sweep for the pixel sword and a rising drone for the energy blade. Clashes ring louder the harder they are; steel rings, light crackles and pixels chime. The energy blade hums the whole time it is out, brighter and higher as it swings.
+* **Armour.** Each fighter's armour clanks, rattles or knocks on every step and answers every hit in its own way.
+* **The crowd and the announcer.** The crowd murmurs, gasps at big clashes and cheers the finish. The announcer calls the start, the big clashes and the winner through the computer's speech, at the player's effects volume.
 
 ## Tuning
 
@@ -64,7 +76,8 @@ Every value worth adjusting by feel is in the tuning drawer (the sliders icon at
 
 * `engine/`: the duel as pure logic. `sword.ts` puts the hold in the world, `sweep.ts` runs the swept blade tests, `sword-driver.ts` follows the phone and throws the sword after a clash, `combat.ts` settles each tick, `match.ts` keeps health and phases, and `bot.ts` is the computer opponent. Unit tested.
 * `motion/`: the phone's sensor maths with no browser in sight: the grip, the calibration from the targets, and the mapping from where the phone points to the hold.
-* `render/`: three.js. `duel-renderer.ts` draws the hall twice through scissored viewports, one shoulder camera per player. `fighter/` has the stand in fighters, `hall/` the room, `effects/` the trails, sparks, flashes and confetti.
+* `render/`: three.js. `duel-renderer.ts` draws the arena twice through scissored viewports, one shoulder camera per player, each through its own bloom (`post.ts`). `arena/` is the arena. `fighter/` has the skeleton and inverse kinematics (`rig/`), the animation (`anim/`), the characters' costumes (`characters/`) and weapons (`blades/`). `effects/` has the trails, sparks, flashes and confetti.
 * `host/`, `phone/`, `protocol/`, `audio/`: the session on the computer, the phone's setup pages and controller, the messages between them, and the synthesised sound.
+* `showcase/`: the game playing itself for the home screen media, a scripted duel through the real engine.
 
-`?fq=low` on the host's address draws the hall cheaply, for browser tests on software rendering. `?bdebug` puts the session on `window.__bladeClash`.
+`?fq=low` on the host's address draws the arena cheaply, for browser tests on software rendering. `?bdebug` puts the session on `window.__bladeClash`.
