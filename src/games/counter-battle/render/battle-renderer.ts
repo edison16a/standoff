@@ -14,6 +14,9 @@ import { LIGHT } from "./palette";
 import { crosshair, showTags } from "./pane-view";
 import { FighterViews } from "./views";
 
+/** Half the width of the line between split views, CSS pixels. */
+const DIVIDE = 1.5;
+
 /** Rendering features that can be turned down for weak graphics hardware. */
 export interface Quality {
   antialias?: boolean;
@@ -55,6 +58,7 @@ export class BattleRenderer {
     // Shadows are drawn once a frame, not once per view.
     this.renderer.shadowMap.autoUpdate = false;
     this.renderer.setScissorTest(true);
+    this.renderer.setClearColor("#0b0d18");
     this.renderer.autoClear = false;
     const pmrem = new THREE.PMREMGenerator(this.renderer);
     this.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
@@ -142,10 +146,16 @@ export class BattleRenderer {
     this.renderer.clear();
     const px = this.renderer.getPixelRatio();
     for (const pane of panes) {
-      const x = Math.round(pane.rect.x * this.width);
-      const w = Math.round(pane.rect.w * this.width);
-      const h = Math.round(pane.rect.h * this.height);
-      const y = Math.round((1 - pane.rect.y - pane.rect.h) * this.height);
+      // A thin dark line between views: each view gives up a pixel or two on its inner edges.
+      const r = pane.rect;
+      const inL = r.x > 0 ? DIVIDE : 0;
+      const inR = r.x + r.w < 0.999 ? DIVIDE : 0;
+      const inT = r.y > 0 ? DIVIDE : 0;
+      const inB = r.y + r.h < 0.999 ? DIVIDE : 0;
+      const x = Math.round(r.x * this.width + inL);
+      const w = Math.round(r.w * this.width - inL - inR);
+      const h = Math.round(r.h * this.height - inT - inB);
+      const y = Math.round((1 - r.y - r.h) * this.height + inB);
       this.renderer.setViewport(x, y, w, h);
       this.renderer.setScissor(x, y, w, h);
       const f = pane.fighter !== null ? b.fighters[pane.fighter] : undefined;
@@ -154,7 +164,7 @@ export class BattleRenderer {
         let cam = this.cams.get(f.id);
         if (!cam) this.cams.set(f.id, (cam = new ShoulderCamera()));
         cam.setAspect(w / h);
-        cam.update(f, b.pieces, dt, wallTime);
+        cam.update(f, b.pieces, dt, b.time);
         camera = cam.camera;
       } else {
         this.show.setAspect(w / h);

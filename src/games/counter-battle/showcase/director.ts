@@ -20,7 +20,8 @@ const FILMED_FRAME = 1 / 30;
  * ?panes=4 (or 2, 1) shows the split screen with a camera behind each
  * fighter, ?lab=1 swaps the fight for the animation lab, ?seed= films
  * another fight, ?at=seconds holds a still at that moment, and
- * ?cam=x,y,z,tx,ty,tz pins the television camera.
+ * ?cam=x,y,z,tx,ty,tz pins the television camera, and ?lite=1 draws
+ * cheaply for reviews on a slow machine.
  */
 export class ShowcaseDirector {
   readonly renderer: BattleRenderer;
@@ -35,7 +36,8 @@ export class ShowcaseDirector {
 
   constructor(canvas: HTMLCanvasElement, readonly view: ShowcaseView) {
     const params = new URLSearchParams(window.location.search);
-    this.renderer = new BattleRenderer(canvas);
+    // ?lite=1 draws without shadows or smoothing at a lower resolution, for reviews on a slow machine.
+    this.renderer = new BattleRenderer(canvas, params.get("lite") ? { antialias: false, shadows: false, maxPixelRatio: 0.75 } : {});
     this.lab = params.get("lab") ? new Lab() : null;
     this.battle = this.lab?.battle ?? showcaseBattle(Number(params.get("seed")) || SEED);
     this.renderer.setBattle(this.battle, (id) => ({ name: this.battle.fighters[id]!.name, color: playerColor(id + 1) }));

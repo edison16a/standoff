@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 /** Tag height as a share of the view's height, the same however far away the fighter is. */
-const SCREEN_HEIGHT = 0.03;
+const SCREEN_HEIGHT = 0.045;
 const PILL_PX = 56;
 const BAR_PX = 10;
 

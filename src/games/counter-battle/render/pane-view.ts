@@ -22,7 +22,7 @@ export function crosshair(f: Fighter, b: Battle, camera: THREE.PerspectiveCamera
   v.set(hit.trace.to.x, hit.trace.to.y, hit.trace.to.z).project(camera);
   if (v.z > 1) return null;
   const halfFov = (camera.fov * Math.PI) / 360;
-  const gap = 4 + (Math.tan(coneOf(f)) / Math.tan(halfFov)) * (h / 2);
+  const gap = 6 + (Math.tan(coneOf(f)) / Math.tan(halfFov)) * (h / 2);
   return { at: { x: ((v.x + 1) / 2) * w, y: ((v.y + 1) / 2) * h }, gap };
 }
 

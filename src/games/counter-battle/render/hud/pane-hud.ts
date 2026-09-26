@@ -59,8 +59,9 @@ export class PaneHud {
     });
     this.owned.push(mat);
     this.vignette = new THREE.Mesh(plane, mat);
-    const dark = new THREE.MeshBasicMaterial({ color: "#05060a", transparent: true, opacity: 0.75, depthTest: false });
-    const bright = new THREE.MeshBasicMaterial({ color: colour, depthTest: false });
+    // All see through, so they draw in render order after the vignette: outline, then colour, then markers.
+    const dark = new THREE.MeshBasicMaterial({ color: "#05060a", transparent: true, opacity: 0.8, depthTest: false, depthWrite: false });
+    const bright = new THREE.MeshBasicMaterial({ color: colour, transparent: true, depthTest: false, depthWrite: false });
     this.owned.push(dark, bright);
     // Four ticks and a dot, each over a dark outline so it reads on sky and turf alike.
     for (const outline of [true, false]) {
@@ -131,11 +132,11 @@ export class PaneHud {
   }
 
   private layoutCross(aim: { x: number; y: number }, gap: number, h: number): void {
-    const len = Math.max(6, h * 0.018);
-    const thick = Math.max(2, h * 0.0035);
+    const len = Math.max(9, h * 0.03);
+    const thick = Math.max(2.5, h * 0.006);
     for (const bar of this.bars) {
       const { tick, outline } = bar.userData as { tick: number; outline: boolean };
-      const pad = outline ? 2 : 0;
+      const pad = outline ? 3 : 0;
       if (tick === 4) {
         bar.position.set(aim.x, aim.y, 0);
         bar.scale.set(thick + pad, thick + pad, 1);
