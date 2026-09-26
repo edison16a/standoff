@@ -187,3 +187,57 @@
   font-size: 20px;
   font-weight: 900;
 }
+
+.nba-spot--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 68px;
+  border: 2px dashed rgba(255, 255, 255, 0.28);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.nba-bots {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nba-bots__label {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.nba-bots__segments {
+  display: flex;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  background: rgba(10, 12, 30, 0.8);
+}
+
+.nba-bots__segments button {
+  min-width: 56px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.nba-bots__segments button[aria-pressed="true"] {
+  background: #ffffff;
+  color: #0a0c1e;
+}
+
+.nba-bots__segments button:focus-visible {
+  outline: 3px solid #ffd23f;
+}

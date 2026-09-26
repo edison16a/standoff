@@ -43,7 +43,8 @@ export function thinkDefence(m: Match, a: Athlete, s: BotState, man: Athlete | n
     return;
   }
 
-  if (!man) return;
+  // A spare defender on an uneven floor has nobody to guard: sit in the paint on the ball's side and help.
+  if (!man) return goTo(a, { x: lerp(RIM_SPOT.x, holder.x, 0.4), z: lerp(RIM_SPOT.z + 1.2, holder.z, 0.4) }, 0.9);
   // Help: a driver with nobody on him gets met at the rim.
   const onBall = m.opponents(holder.team).some((o) => o !== a && dist2(o, holder) < 1.8);
   const nearestHelper = m.opponents(holder.team).filter((o) => o !== a).every((o) => dist2(o, RIM_SPOT) >= dist2(a, RIM_SPOT));

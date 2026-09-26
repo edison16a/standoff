@@ -6,6 +6,7 @@ import type { TeamId } from "../../engine/types";
 import { CHARACTERS, TEAMS } from "../../roster";
 import { JerseyBadge } from "../../ui/JerseyBadge";
 import { useNbaStore, type SpotView } from "../host-store";
+import { BotsToggle, matchSize } from "./BotsToggle";
 import { useSession } from "./session-context";
 
 function SpotCard({ spot, onMove }: { spot: SpotView; onMove(seat: number): void }) {
@@ -68,6 +69,7 @@ function TeamColumn({ team, spots, onDrop, onMove }: { team: TeamId; spots: Spot
         {spots.map((spot, i) => (
           <SpotCard key={spot.seat ?? `bot-${i}`} spot={spot} onMove={onMove} />
         ))}
+        {spots.length === 0 && <li className="nba-spot nba-spot--empty">Move a player here</li>}
       </ul>
     </section>
   );
@@ -75,15 +77,20 @@ function TeamColumn({ team, spots, onDrop, onMove }: { team: TeamId; spots: Spot
 
 /**
  * The lobby on the big screen: two team columns with everyone who is
- * ready, and computer players in the empty spots. Click a player to send
- * them to the other side or drag them across, then start.
+ * ready, and computer players in the empty spots unless they are turned
+ * off. Click a player to send them to the other side or drag them
+ * across, then start.
  */
 export function Lobby() {
   const session = useSession();
   const spots = useNbaStore((state) => state.spots);
   const seats = useNbaStore((state) => state.seats);
+  const bots = useNbaStore((state) => state.bots);
+  const block = useNbaStore((state) => state.startBlock);
   const choosing = seats.filter((s) => s.connected && !s.ready);
   const humans = spots.filter((s) => s.seat !== null).length;
+  const home = spots.filter((s) => s.team === 0);
+  const away = spots.filter((s) => s.team === 1);
   const move = (seat: number) => {
     const spot = spots.find((s) => s.seat === seat);
     if (spot) session.setTeam(seat, spot.team === 0 ? 1 : 0);
@@ -95,12 +102,12 @@ export function Lobby() {
         <span className="nba-lobby__logo">
           <b>Basketball</b> 3v3
         </span>
-        <p>Three on three, first to 11. Pick your star on your phone.</p>
+        <p>{matchSize(bots, home.length, away.length)} Pick your star on your phone.</p>
       </header>
       <div className="nba-lobby__teams">
-        <TeamColumn team={0} spots={spots.filter((s) => s.team === 0)} onDrop={(seat, team) => session.setTeam(seat, team)} onMove={move} />
+        <TeamColumn team={0} spots={home} onDrop={(seat, team) => session.setTeam(seat, team)} onMove={move} />
         <span className="nba-lobby__vs">VS</span>
-        <TeamColumn team={1} spots={spots.filter((s) => s.team === 1)} onDrop={(seat, team) => session.setTeam(seat, team)} onMove={move} />
+        <TeamColumn team={1} spots={away} onDrop={(seat, team) => session.setTeam(seat, team)} onMove={move} />
       </div>
       <footer className="nba-lobby__footer">
         <p className="nba-lobby__note">
@@ -108,13 +115,16 @@ export function Lobby() {
             ? `Still choosing: ${choosing.map((s) => s.name).join(", ")}.`
             : humans === 0
               ? "Scan the code to join. Up to six players."
-              : "Click a player to switch sides, or drag them across."}
+              : block === "oneSided"
+                ? "With computer players off, each team needs a player."
+                : "Click a player to switch sides, or drag them across."}
         </p>
+        <BotsToggle on={bots} onChange={(on) => session.setBots(on)} />
         <button type="button" className="btn btn--lg nba-lobby__shuffle" disabled={humans < 2} onClick={() => session.shuffle()}>
           <Icon name="refresh" />
           Shuffle teams
         </button>
-        <button type="button" className="btn btn--primary btn--lg nba-lobby__start" disabled={humans === 0} onClick={() => session.start()}>
+        <button type="button" className="btn btn--primary btn--lg nba-lobby__start" disabled={block !== null} onClick={() => session.start()}>
           <Icon name="play" />
           Start game
         </button>
