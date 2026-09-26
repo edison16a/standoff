@@ -36,6 +36,8 @@ function faceMaterial(skin: Skin): THREE.MeshStandardMaterial {
  */
 export class Avatar {
   readonly group = new THREE.Group();
+  /** Holds the forms and takes the landing squash, so it stays along gravity while the form inside turns. */
+  private readonly body = new THREE.Group();
   private readonly forms: Record<Mode, THREE.Object3D>;
   private readonly materials: THREE.Material[] = [];
   private readonly geometries: THREE.BufferGeometry[] = [];
@@ -102,7 +104,8 @@ export class Avatar {
       new THREE.SpriteMaterial({ map: glowSprite(), color: skin.trim, transparent: true, opacity: ghost ? 0.1 : 0.18, blending: THREE.AdditiveBlending, depthWrite: false }),
     );
     this.halo.scale.setScalar(2.2);
-    this.group.add(cube, ufo, ball, this.halo);
+    this.body.add(cube, ufo, ball);
+    this.group.add(this.body, this.halo);
     this.materials.push(face, hull, rim, glass, ballMaterial, outline, this.halo.material);
     this.geometries.push(box, saucerGeometry, rimGeometry, domeGeometry, sphere);
     if (ghost) {
@@ -131,11 +134,12 @@ export class Avatar {
     form.rotation.z = state.angle;
     this.squash = Math.max(0, this.squash - dt * 6);
     const s = this.squash * this.squash;
-    // The squash is along gravity, so a ball on the ceiling flattens upward.
+    // The squash is along gravity, so a ball on the ceiling flattens upward. On the form itself it
+    // followed the form's turn, and a rolling ball landed squashed along whatever way it faced.
     // The saucer is a touch bigger than the cube, so its flat shape reads as clearly at a glance.
     const size = state.mode === "ufo" ? 1.2 : 1;
-    form.scale.set(size * (1 + s * 0.16), size * (1 - s * 0.22), size * (1 + s * 0.16));
-    form.position.y = -s * 0.1 * state.gravity;
+    this.body.scale.set(size * (1 + s * 0.16), size * (1 - s * 0.22), size * (1 + s * 0.16));
+    this.body.position.y = -s * 0.1 * state.gravity;
   }
 
   dispose(): void {
