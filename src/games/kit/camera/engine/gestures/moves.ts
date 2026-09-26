@@ -114,9 +114,9 @@ export class MoveReader {
   private readHead(body: Body, line: HeadLine, time: number, step: number, next: MoveState, say: Say): void {
     const { up, down } = this.options.head;
     let at = line.measure(body);
-    const moves = this.head.update(at.rise, time);
+    const moves = this.head.update(at.rise, time, at.lift);
     const seen = ramp(body.confidence, 0.4, 0.8);
-    if (moves.jumped) say({ type: "jump", confidence: ramp(at.rise, up / 2, up * 1.5) * seen });
+    if (moves.jumped) say({ type: "jump", confidence: ramp(at.lift, up / 2, up * 1.5) * seen });
     if (moves.landed) say({ type: "land" });
     if (moves.ducked) say({ type: "duck", confidence: ramp(-at.rise, down / 2, down * 1.5) * seen });
     if (moves.stood) say({ type: "stand" });
@@ -132,7 +132,7 @@ export class MoveReader {
     next.jumping = moves.jumping;
     next.ducking = moves.ducking;
     next.confidence.lane = lane.confidence;
-    next.confidence.jump = ramp(at.rise, up / 2, up * 1.5) * seen;
+    next.confidence.jump = ramp(at.lift, up / 2, up * 1.5) * seen;
     next.confidence.duck = ramp(-at.rise, down / 2, down * 1.5) * seen;
     next.amounts.rise = Math.max(0, at.rise);
     next.amounts.drop = Math.max(0, -at.rise);

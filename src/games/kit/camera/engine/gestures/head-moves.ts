@@ -76,10 +76,14 @@ export class HeadMoveDetector {
     this.belowSince = null;
   }
 
-  /** `rise` is the head above its line in shoulder widths, negative below. */
-  update(rise: number, time: number): HeadMoves {
+  /**
+   * `rise` is the head above its line in shoulder widths, negative below.
+   * `lift` is how far head and shoulders both rose. Jumps read it, so a
+   * nod or a shrug never counts even with a low `up`.
+   */
+  update(rise: number, time: number, lift = rise): HeadMoves {
     const { up, down, riseMs, duckMs, release, landingMs, settleUpMs, settleDownMs, settleFrames } = this.options;
-    const near = rise < up * release && rise > -down * release;
+    const near = lift < up * release && rise > -down * release;
     // From near the line to over the band in one frame is quick however long the frame took, which
     // keeps jumps working on a machine that tracks only a few frames a second.
     const quick = time - this.restAt <= riseMs || this.wasNear;
@@ -98,11 +102,11 @@ export class HeadMoveDetector {
       this.restAt = time;
       return { jumping: false, ducking: false, idle: false, ...out };
     }
-    if (this.jumping && rise < up * release) {
+    if (this.jumping && lift < up * release) {
       this.jumping = false;
       this.landedAt = time;
       out.landed = true;
-    } else if (!this.jumping && !this.ducking && rise >= up && quick) {
+    } else if (!this.jumping && !this.ducking && lift >= up && quick) {
       this.jumping = out.jumped = true;
       this.movedAt = time;
       this.movedFrames = 0;

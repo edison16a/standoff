@@ -17,6 +17,12 @@ export const DEFAULT_LINE: LineOptions = { followMs: 2000, resizeAt: 0.12, restS
 export interface HeadPosition {
   /** How far the head is above the line, in shoulder widths. Negative below it. */
   rise: number;
+  /**
+   * The smaller of the head's rise and the shoulders' rise, in shoulder
+   * widths. A jump lifts both. A nod or tipping the chin up moves only
+   * the head and a shrug only the shoulders, so neither shows here.
+   */
+  lift: number;
   /** How far the head and shoulders are right of home, in shoulder widths. Negative to the left. */
   side: number;
   /** The player's size now over the line's size. Above 1 means nearer. */
@@ -69,8 +75,11 @@ export class HeadLine {
   measure(body: Body): HeadPosition {
     const ratio = body.shoulderWidth / this.shoulderWidth;
     const head = this.headY(body, ratio);
+    const rise = (spread(this.y, ratio) - head) / body.shoulderWidth;
+    const shoulderRise = (spread(this.y, ratio) + this.gap * ratio - body.shoulders.y) / body.shoulderWidth;
     return {
-      rise: (spread(this.y, ratio) - head) / body.shoulderWidth,
+      rise,
+      lift: Math.min(rise, shoulderRise),
       side: ((centreOf(body) - spread(this.x, ratio)) * body.aspect) / body.shoulderWidth,
       ratio,
     };

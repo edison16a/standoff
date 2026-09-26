@@ -44,6 +44,10 @@ export interface PoseSpec {
   crouch?: number;
   /** 0 to 1, bending forward at the hips toward the camera. */
   bow?: number;
+  /** -1 to 1, tipping the head about the neck: above 0 lifts the chin, below 0 drops it. */
+  nod?: number;
+  /** Metres the shoulders lift toward the ears, head still. */
+  shrug?: number;
   /** -1 to 1, tipping the upper body to the left or right of the picture. */
   lean?: number;
   left?: ArmSpec;
@@ -58,12 +62,18 @@ const NOSE_HEIGHT = STANDING[LM.nose]![1];
 const CROUCH_DROP = 0.42;
 const BOW_ANGLE = Math.PI / 3;
 const LEAN_ANGLE = (25 * Math.PI) / 180;
+const NOD_ANGLE = (30 * Math.PI) / 180;
+/** Where a nod turns: the top of the neck, a little below the ears. */
+const NECK: Vec = [0, 1.5, 0];
 /** Points above the hips: the face, shoulders and arms. They move with a bow or a lean. */
 const UPPER = LM.leftHip;
 
 /** Builds the 33 points of a pose, mirrored like everything the kit hands out. */
 export function syntheticPose(spec: PoseSpec = {}, aspect = 16 / 9): Pose {
   const joints = STANDING.map((p) => [...p] as Vec);
+  for (let i = 0; i < LM.leftShoulder; i++) joints[i] = rotate(joints[i]!, NECK, 1, 2, (spec.nod ?? 0) * NOD_ANGLE);
+  joints[LM.leftShoulder]![1] += spec.shrug ?? 0;
+  joints[LM.rightShoulder]![1] += spec.shrug ?? 0;
   placeArm(joints, "left", spec.left ?? {});
   placeArm(joints, "right", spec.right ?? {});
   const crouch = spec.crouch ?? 0;

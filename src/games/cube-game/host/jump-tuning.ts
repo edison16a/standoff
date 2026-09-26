@@ -1,10 +1,9 @@
-import type { MoveTuning } from "@/games/kit/camera";
+import { SMALL_JUMP, type MoveTuning } from "@/games/kit/camera";
 
 /**
- * How Cube Game reads a jump. Sooner than the kit's default, since the
- * beat does not wait: the head only needs to rise a quarter of a
- * shoulder width over its line, about 9 cm. That is still twice what a
- * rise onto the toes or a bob gives, and the kit's timing rule means a
- * slow stretch never counts. Nothing else is tuned: the game only jumps.
+ * How Cube Game reads a jump: the kit's small jump, since the beat does
+ * not wait. A hop of about a third of a full jump counts, while bobbing
+ * to the music, a nod and the bend of a landing never do. Nothing else
+ * is tuned: the game only jumps.
  */
-export const JUMP_TUNING: MoveTuning = { head: { up: 0.25 } };
+export const JUMP_TUNING: MoveTuning = SMALL_JUMP;

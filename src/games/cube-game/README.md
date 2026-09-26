@@ -7,7 +7,7 @@ A rhythm platformer in the spirit of Geometry Dash, played with your body in fro
 1. Host Cube Game from the home screen. No phones are needed.
 2. On the level select, pick a level with the mouse, choose 1 or 2 players, and tick Practice if you like.
 3. Press **Play**. Allow the camera and stand in your outline. The camera only needs you from the waist up, so there is no need to step back until your feet show. Stand tall and still while your ring fills: that sets your head line. Then jump once so the game can see it.
-4. Jump on the beat. Your head going up over its line is a jump, and that is the only move.
+4. Jump on the beat. Your head going up over its line is a jump, and that is the only move. A small hop is enough, while bobbing to the music and nodding do not count.
 
 **Play with the keyboard** skips the camera: Space (or W) jumps for player 1, Enter (or the up arrow) for player 2. Space also works alongside the camera, for testing and for anyone who cannot jump.
 
