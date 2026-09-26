@@ -20,8 +20,8 @@ export const RULES = {
 
 /**
  * A fighter's hit boxes. A crouched fighter's head stays below every low
- * bunker, so hiding really hides., the same for every character so the draw is
- * fair. Heights are metres above the ground.
+ * bunker, so hiding really hides. They are the same for every character,
+ * so the draw is fair. Heights are metres above the ground.
  */
 export const BODY = {
   radius: 0.3,
