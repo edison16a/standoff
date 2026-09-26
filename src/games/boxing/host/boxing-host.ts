@@ -107,7 +107,10 @@ export class BoxingHost {
     this.fightId++;
     this.feed.reset();
     this.room.setPlaying(true);
-    store.setState({ screen: "fight", result: null, newBest: null });
+    // The overlay starts from this fight, not the last one's knockdowns and empty bars on a rematch.
+    this.lastStage = "";
+    this.lastHud = performance.now();
+    store.setState({ screen: "fight", result: null, newBest: null, hud: hudFrom(this.driver, this.looks(), this.banners, this.lastHud) });
   }
 
   /** From the results: the same boxers again, the choice of boxers, or the start. */
