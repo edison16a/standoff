@@ -116,6 +116,20 @@
   z-index: 2;
 }
 
+/* Two players: who plays where, under the corner logo and over the stretch of level already run. */
+.cg-split-map {
+  position: absolute;
+  top: 64px;
+  left: 16px;
+  width: clamp(200px, 18vw, 360px);
+  pointer-events: none;
+}
+
+/* The panes are wide and short, so the names can take more of their height than the kit's default. */
+.cg-split-map .split-map__name {
+  font-size: clamp(14px, 42cqh, 30px);
+}
+
 .cg-phone {
   padding: 24px;
   text-align: center;

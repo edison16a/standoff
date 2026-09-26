@@ -7,6 +7,7 @@ import { Effects } from "./effects";
 import { LevelView } from "./level-view";
 import { Post, type Viewport } from "./post";
 import { Signs } from "./signs";
+import { splitRects } from "./split";
 import { themeFor } from "./themes";
 import { ViewCamera, type Framing } from "./view-camera";
 
@@ -123,20 +124,22 @@ export class GameRenderer {
     this.level?.update(time, pulse);
 
     const { width, height } = this.size;
-    const tall = height / views.length;
+    const rects = splitRects(views.length);
     const viewports: Viewport[] = views.map((p, v) => {
       const camera = this.cameras[v]!;
-      camera.setAspect(width / tall);
+      const rect = rects[v]!;
+      camera.setAspect((rect.w * width) / (rect.h * height));
       camera.follow(players[p]?.state ?? null, dt, time);
       return {
         camera: camera.camera,
-        x: 0,
-        y: v * tall,
-        width,
-        height: tall,
+        x: rect.x * width,
+        y: rect.y * height,
+        width: rect.w * width,
+        height: rect.h * height,
         prepare: () => this.prepare(p, players, camera, time, pulse),
       };
     });
+    const tall = rects[0]!.h * height;
     this.effects.setScale(tall / (2 * Math.tan(THREE.MathUtils.degToRad(13))));
     if (render) this.post.draw(viewports);
   }
