@@ -39,7 +39,6 @@ export class FifaHost {
   private seed = Math.floor(Math.random() * 1e6);
   private replaying = false;
   private goals = 0;
-  private lastTick = 0;
 
   constructor(private readonly room: HostRoomApi) {
     store.setState({ ...store.getInitialState() });
@@ -136,9 +135,7 @@ export class FifaHost {
       for (const event of events) this.onMatchEvent(event, driver);
       if (driver.state.phase === "replay" && !this.replaying) this.replaying = driver.replay.cut();
       if (driver.state.phase !== "replay") this.replaying = false;
-      this.audio.frame(driver.view, this.lastTick ? Math.min(0.1, (nowMs - this.lastTick) / 1000) : 0);
     }
-    this.lastTick = nowMs;
     const time = nowMs / 1000;
     const expired = this.banners.expire(time);
     if (expired || this.phase !== before || nowMs - this.lastHud >= HUD_MS) this.refresh(nowMs);
