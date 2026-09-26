@@ -6,7 +6,7 @@ import PitchCanvas from "./PitchCanvas";
 import { Results } from "./Results";
 
 /**
- * FIFA 3v3 on the big screen. The 3D ground is always there: computer
+ * Soccer 3v3 on the big screen. The 3D ground is always there: computer
  * players kicking about behind the lobby, then the match. The lobby, the
  * scoreboard and the results are ordinary React on top.
  */

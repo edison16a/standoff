@@ -18,7 +18,7 @@ import "./styles/phone-wide.css";
 import "./styles/showcase.css";
 
 /**
- * Fruit Ninja, as the platform sees it. Each room gets one session, and
+ * Fruit Slicer, as the platform sees it. Each room gets one session, and
  * the screen the platform renders is wrapped so it can reach it.
  */
 export const game: GameModule = {

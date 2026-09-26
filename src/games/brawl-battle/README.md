@@ -131,7 +131,7 @@ A full match draws in about 80 draw calls and under 10,000 triangles.
 
 `phone/` walks the player through two steps in the kit's `StepShell` (fighter, ready), then shows the controller while they are in a match and their place after it.
 
-* The stick is the kit's `Joystick`, shown at rest like NBA and FIFA. It streams through the pad kit, and crossing up past the jump line also goes as a reliable `up` button press, because a quick flick can live in one stick sample that the lossy stream drops. `PadInput` takes either and never jumps twice for one push. The engine also keeps a jump pressed in the last few frames of a move, as it does for attacks.
+* The stick is the kit's `Joystick`, shown at rest like Basketball 3v3 and Soccer 3v3. It streams through the pad kit, and crossing up past the jump line also goes as a reliable `up` button press, because a quick flick can live in one stick sample that the lossy stream drops. `PadInput` takes either and never jumps twice for one push. The engine also keeps a jump pressed in the last few frames of a move, as it does for attacks.
 * Attack and Special are `ChargeButton`s: the kit's `PadButton` with a ring that fills on the phone's own clock from the moment a hold becomes a charge to full power, and glows when full. Their releases go to the host too, since letting go is what throws a charged move. Ult is a plain `PadButton`, disabled until full, wearing its meter as a ring.
 * The page fits the visible screen exactly: the game's own CSS sets the phone frame to `100dvh` (with `100vh` before it for older browsers), pads for the notch with the safe area insets, and the layout switches between sideways and upright with orientation media queries. Nothing scrolls on an iPhone 16 either way up.
 

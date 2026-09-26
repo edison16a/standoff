@@ -43,7 +43,7 @@ export interface ResultRow {
 }
 
 /**
- * What the NBA 3v3 screens on the computer render. The session writes
+ * What the Basketball 3v3 screens on the computer render. The session writes
  * here a few times a second; the game itself never goes in the store,
  * since only the canvas needs it at full rate.
  */

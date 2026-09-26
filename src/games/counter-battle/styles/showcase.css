@@ -1,0 +1,61 @@
+/*
+  The showcase: the game full screen for capturing the home screen's
+  media, with the logo over the icon. The logo's two shadows are the two
+  teams, pink and cyan, either side of the field's lime.
+*/
+
+.cb-showcase {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #0b0d18;
+}
+
+.cb-showcase__box {
+  position: absolute;
+  inset: 0;
+}
+
+.cb-showcase__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.cb-showcase__logo {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 5%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: Impact, "Arial Black", "Helvetica Neue", sans-serif;
+  font-style: italic;
+  font-weight: 900;
+  line-height: 0.9;
+  text-transform: uppercase;
+  color: #ffffff;
+  -webkit-text-stroke: 0.05em #0b0d18;
+  paint-order: stroke fill;
+  transform: rotate(-4deg);
+}
+
+.cb-showcase__logo span {
+  font-size: 11vmin;
+  letter-spacing: 0.06em;
+  text-shadow:
+    -0.05em 0.05em 0 #ff3fc8,
+    0.05em 0.05em 0 #16d9ff,
+    0 0.16em 0.4em rgba(0, 0, 0, 0.6);
+}
+
+.cb-showcase__logo b {
+  font-size: 19vmin;
+  letter-spacing: 0.02em;
+  color: #b8f400;
+  text-shadow:
+    -0.04em 0.05em 0 #ff3fc8,
+    0.04em 0.05em 0 #16d9ff,
+    0 0.14em 0.4em rgba(0, 0, 0, 0.6);
+}

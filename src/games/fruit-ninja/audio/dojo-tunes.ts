@@ -3,7 +3,7 @@ import { bass, block, drop, flute, koto, pad, shaker, taiko } from "./dojo-band"
 import type { Loop } from "./loop-music";
 
 /**
- * Fruit Ninja's music: a lo-fi dojo groove in G minor. The koto plays a
+ * Fruit Slicer's music: a lo-fi dojo groove in G minor. The koto plays a
  * pentatonic hook over four bars (A), then the flute answers with long
  * notes over new chords (B). The round plays it at a nodding 90 beats a
  * minute with taiko and wood block; the lobby plays the same song slower

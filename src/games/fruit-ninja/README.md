@@ -1,8 +1,6 @@
-# Fruit Ninja
+# Fruit Slicer
 
 Status: ready. Up to 4 players slice fruit on one shared screen. Each phone is a blade: point it at the screen and swing. The highest score when the clock runs out wins.
-
-"Fruit Ninja" is the name of an existing game by Halfbrick, so pick a name of our own before this ships.
 
 ## How to play
 

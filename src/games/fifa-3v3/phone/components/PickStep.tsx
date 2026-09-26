@@ -37,7 +37,7 @@ export function PickStep() {
   const wanted = usePhoneStore((s) => s.wanted);
   const host = usePhoneStore((s) => s.host);
   const taken = host?.taken ?? [];
-  const shown = wanted ?? CHARACTER_IDS.find((id) => !taken.includes(id)) ?? "messi";
+  const shown = wanted ?? CHARACTER_IDS.find((id) => !taken.includes(id)) ?? "echeverri";
   const star = ROSTER[shown];
 
   return (

@@ -72,7 +72,7 @@ export class Arena {
 
   /** LED ribbons along the front of each stand, scrolling. */
   private boards(): void {
-    const words = ["NBA 3V3", "STANDOFF", TEAMS[0].name.toUpperCase(), "FIRST TO 11", TEAMS[1].name.toUpperCase(), "LET'S GO"];
+    const words = ["BASKETBALL 3V3", "STANDOFF", TEAMS[0].name.toUpperCase(), "FIRST TO 11", TEAMS[1].name.toUpperCase(), "LET'S GO"];
     const tex = ledTexture(words, [TEAMS[0].color, "#ffffff", TEAMS[1].color, "#facc15"]);
     this.leds.push(tex);
     const mat = new THREE.MeshBasicMaterial({ map: tex, toneMapped: false });

@@ -11,7 +11,7 @@ import "./styles/menus.css";
 import "./styles/showcase.css";
 
 /**
- * Subway Surfers, as the platform sees it. It is played in front of the
+ * Subway Runner, as the platform sees it. It is played in front of the
  * computer's camera, so there is no phone side and no join code.
  */
 export const game: GameModule = {
@@ -30,7 +30,7 @@ export const game: GameModule = {
   createPhone() {
     // No seats are offered for a camera game, so no phone ever gets here.
     function Screen() {
-      return <p className="ss-phone">Subway Surfers is played in front of the computer&apos;s camera.</p>;
+      return <p className="ss-phone">Subway Runner is played in front of the computer&apos;s camera.</p>;
     }
     return { Screen, dispose: () => undefined };
   },
