@@ -10,6 +10,8 @@ import { z } from "zod";
 export const ROOM_CODE_LENGTH = 4;
 /** Letters only, and none that are easy to misread on a phone screen. */
 export const ROOM_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ";
+/** A whole room code, upper case, as the join page and the phone's code field accept it. */
+export const ROOM_CODE_PATTERN = new RegExp(`^[${ROOM_CODE_ALPHABET}]{${ROOM_CODE_LENGTH}}$`);
 /** The most phones one room seats. Team games like 3 on 3 need six. */
 export const MAX_SEATS = 6;
 

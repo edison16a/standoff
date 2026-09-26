@@ -1,0 +1,71 @@
+/*
+  Counter Battle on the big screen: the field canvas and each player's
+  corner of their own view. Bold paint colours, pink against cyan, with
+  the field's lime for the game's own marks, in heavy condensed type.
+*/
+
+.cb-stage {
+  --cb-display: Impact, "Arial Black", "Helvetica Neue", sans-serif;
+  --cb-lime: #b8f400;
+  --cb-pink: #ff3fc8;
+  --cb-cyan: #16d9ff;
+  --cb-ink: #0b0d18;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--cb-ink);
+  color: #ffffff;
+  font-family: var(--font-ui);
+}
+
+.cb-canvas-box {
+  position: absolute;
+  inset: 0;
+}
+
+.cb-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.cb-hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* One player's view, the same rect the renderer draws it in. */
+.cb-pane {
+  position: absolute;
+  container-type: size;
+}
+
+.cb-pane__tv {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(11, 13, 24, 0.7);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+}
+
+.cb-hud__waiting {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(11, 13, 24, 0.75);
+  font-size: 14px;
+  font-weight: 700;
+  transform: translateX(-50%);
+}
