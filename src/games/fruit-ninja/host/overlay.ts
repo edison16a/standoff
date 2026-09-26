@@ -2,11 +2,14 @@ import { playerColor } from "@/games/kit/players";
 import type { MatchEvent, Seat } from "../engine/events";
 import { HALF_HEIGHT } from "../engine/tuning";
 import type { BladeFrame } from "../render/trails";
+import { placeCallout, type LiveCallout } from "./popup-place";
 
 type ScoreEvent = Extract<MatchEvent, { type: "score" }>;
 
 /** Longest a popup stays, matching its CSS animation. */
 const POPUP_MS = 1300;
+/** How far a callout climbs as it fades, in its own heights, as fn-rise moves it. */
+const RISE = 1.2;
 
 /**
  * Text drawn over the canvas: points rising from each cut, combo and
@@ -16,6 +19,8 @@ const POPUP_MS = 1300;
  */
 export class Overlay {
   private readonly labels = new Map<Seat, HTMLElement>();
+  /** Big callouts still showing, so a new one can stack clear of them. */
+  private callouts: LiveCallout[] = [];
 
   constructor(
     private readonly root: HTMLElement,
@@ -53,10 +58,6 @@ export class Overlay {
     const el = document.createElement("div");
     el.className = `fn-pop fn-pop--${size}`;
     el.style.setProperty("--pop", colour);
-    const { left, top } = this.toPixels(at.x, at.y);
-    // Keep callouts on screen when the cut happens near an edge.
-    el.style.left = `${Math.max(90, Math.min(this.root.clientWidth - 90, left))}px`;
-    el.style.top = `${Math.max(60, Math.min(this.root.clientHeight - 40, top))}px`;
     el.textContent = text;
     if (sub) {
       const small = document.createElement("span");
@@ -64,7 +65,21 @@ export class Overlay {
       small.textContent = sub;
       el.appendChild(small);
     }
+    const { left, top } = this.toPixels(at.x, at.y);
+    // Keep callouts on screen when the cut happens near an edge.
+    const minTop = 60;
+    const maxTop = this.root.clientHeight - 40;
+    let spot = { left: Math.max(90, Math.min(this.root.clientWidth - 90, left)), top: Math.max(minTop, Math.min(maxTop, top)) };
     this.root.appendChild(el);
+    if (size !== "small") {
+      // Measured once it is in the page; offset sizes ignore the rising animation's scale.
+      const now = performance.now();
+      const box = placeCallout(this.callouts, { ...spot, width: el.offsetWidth, height: el.offsetHeight }, now, minTop, maxTop);
+      this.callouts = [...this.callouts.filter((c) => c.until > now), { ...box, rise: box.height * RISE, until: now + POPUP_MS }];
+      spot = box;
+    }
+    el.style.left = `${spot.left}px`;
+    el.style.top = `${spot.top}px`;
     setTimeout(() => el.remove(), POPUP_MS);
   }
 
