@@ -50,7 +50,7 @@ The canopy casts no shadow, so there is no dark band across the wall.
 
 All synthesised with Web Audio through the room's buses, so the player's music and effects volumes rule it.
 
-* **Music:** two sixteen bar boardwalk tunes on a small band (music box, whistle, ukulele, upright bass, reed organ, brushed kit), each with a hook in the A section and an answer on another voice in the B section. The lobby has a slow swung stroll in F at 92. The round has a bouncier two step in G at 112. Everything goes through a warm low pass. A fanfare plays for the winner. The tool bar has a music switch.
+* **Music:** a fairground band of organ, calliope, brass, tuba, upright bass and a swung kit. The lobby plays Boardwalk Dusk, a slow swung stroll in G major at 80: a soft band organ holds each chord and swells into the next, a muted trumpet sings the melody and the organ's mellow stops answer it, over an upright bass and brushes. The round plays Midway Swing, a carnival swing in E flat major at 128: the calliope plays the hook over an oom pah of tuba and organ, then the brass section takes the tune over new chords, and a snare roll leads back to the top. Both run sixteen bars before they repeat, through a warm low pass. A fanfare plays for the winner. The tool bar has a music switch.
 * **Shots:** a BB pop in three layers (crack, spring thump, a short bloom off the canvas), the pump's clicks, a tap on a miss. Every repeat is nudged in pitch.
 * **Targets:** a bell on bullseyes and plates that climbs a pentatonic scale with each hit in a row, a triple bell for a bull, a squeaky rubber quack on ducks, a sparkle for the golden duck, a wooden clack or steel clang when things land.
 * **Crowd:** onlookers go "ooh" at a bull or a streak, and cheer, whistle and applaud a golden duck and the winner. The music ducks under the big moments.
@@ -64,7 +64,7 @@ All synthesised with Web Audio through the room's buses, so the player's music a
 * `host/` the session that referees rooms, and its React screens.
 * `phone/` the phone session and its setup, play and result screens.
 * `render/` the three.js renderer, with `models/` for the gun, ducks, targets, booth, canopy, bulbs and waves, and `effects/` for the BB, puffs, flecks, dents, points and confetti. A governor lowers the drawing resolution while frames run slow, to hold 60 frames a second.
-* `audio/` the band and its tunes (`band.ts`, `score.ts`, `tunes.ts`, `music.ts`), the gun and target effects, the crowd and the barker.
+* `audio/` the band and its tunes (`band.ts` and `kit.ts` for the instruments, `score.ts` and `track.ts` for the notation, `boardwalk.ts` and `midway.ts` for the tunes, `music.ts` to play them), the gun and target effects, the crowd and the barker.
 * `showcase/` the game playing itself for the home screen's media (see below).
 
 ## Home screen media

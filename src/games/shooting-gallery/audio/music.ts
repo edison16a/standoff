@@ -1,9 +1,12 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
-import { playFanfare, STROLL, TWO_STEP, type Track } from "./tunes";
+import { BOARDWALK } from "./boardwalk";
+import { playFanfare } from "./fanfare";
+import { MIDWAY } from "./midway";
+import type { Track } from "./track";
 
 export type TuneName = "lobby" | "round";
 
-const TRACKS: Record<TuneName, Track> = { lobby: STROLL, round: TWO_STEP };
+const TRACKS: Record<TuneName, Track> = { lobby: BOARDWALK, round: MIDWAY };
 /** The band's level into the music bus, which leaves the shots room on top. */
 const LEVEL = 0.8;
 /** How often the scheduler wakes, and how far ahead it books notes. */
