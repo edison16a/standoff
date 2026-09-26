@@ -22,16 +22,12 @@ export const reloadSchema = z.object({ kind: z.literal("reload") });
 /** Sent once as the phone's screen starts, so the host sends it everything even if earlier messages came too soon. */
 export const helloSchema = z.object({ kind: z.literal("hello") });
 
-/** From the results screen, back to the lobby for another match. */
-export const againSchema = z.object({ kind: z.literal("again") });
-
 export const phoneMessageSchema = z.discriminatedUnion("kind", [
   gunPickSchema,
   readySchema,
   triggerSchema,
   reloadSchema,
   helloSchema,
-  againSchema,
 ]);
 
 export type PhoneMessage = z.infer<typeof phoneMessageSchema>;
