@@ -4,7 +4,7 @@ import { sendTo } from "./nodes";
 
 /**
  * One off moments: the radio squelch and murmur, achievement chimes, the
- * checkpoint sting, the crash, the ship's horn and the two endings.
+ * checkpoint sting, an explosion, the ship's horn and the two endings.
  */
 export class Stingers {
   constructor(private readonly engine: AudioEngine) {}

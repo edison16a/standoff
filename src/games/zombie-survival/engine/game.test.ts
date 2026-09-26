@@ -3,7 +3,8 @@ import { teamCount } from "./encounter";
 import { SurvivalGame } from "./game";
 import { CLEAR_SECONDS, STORY_CLEAR_SECONDS } from "./pacing";
 import type { CastFn } from "./shooting";
-import { stage } from "./stages";
+import { inFlight } from "./chopper";
+import { CHOPPER_STAGE, stage, STAGE_COUNT } from "./stages";
 import { alive } from "./zombie";
 import { KINDS } from "./zombie-kinds";
 
@@ -84,7 +85,7 @@ describe("a run", () => {
   });
 
   it("beats every boss stage with steady aim on the weak points", () => {
-    for (const stage of [5, 10, 15, 20, 25]) {
+    for (const stage of [2, 6, 10, 13, 15]) {
       const game = new SurvivalGame();
       game.start([{ seat: 1, weapon: "rifle" }, { seat: 2, weapon: "shotgun" }], stage);
       run(game, 20);
@@ -101,7 +102,7 @@ describe("a run", () => {
     }
   });
 
-  it("plays the chopper crash after stage 10 and heads for the docks", () => {
+  it("flies the team off the roof after stage 10 and sets it down at the docks", () => {
     const game = new SurvivalGame();
     game.start([{ seat: 1, weapon: "ak47" }], 10);
     run(game, 20);
@@ -110,12 +111,15 @@ describe("a run", () => {
     run(game, 200, () => (tick++ % 6 === 0 ? game.fire(1, cast) : undefined), () => game.phase === "travel");
     const phases = game.drain().filter((e) => e.type === "phase").map((e) => (e.type === "phase" ? e.phase : ""));
     expect(phases).toContain("cutscene");
-    expect(game.stage).toBe(11);
+    expect(game.stage).toBe(CHOPPER_STAGE + 1);
+    expect(inFlight(game.phase, game.stage)).toBe(true);
+    run(game, 20, undefined, () => game.phase === "fight");
+    expect(game.phase).toBe("fight");
   });
 
   it("keeps a crowd at the front line in view, so every one can be shot", () => {
     const game = new SurvivalGame();
-    game.start([1, 2, 3, 4].map((seat) => ({ seat, weapon: "rifle" as const })), 25);
+    game.start([1, 2, 3, 4].map((seat) => ({ seat, weapon: "rifle" as const })), STAGE_COUNT);
     let widest = 0;
     let attacking = 0;
     let swings = 0;

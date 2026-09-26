@@ -1,9 +1,10 @@
 import type { Seat } from "@/platform/protocol";
 import { Achievements } from "./achievements";
+import { HELIPAD, inFlight } from "./chopper";
 import { Encounter } from "./encounter";
 import type { Cutscene, GameEvent, Phase } from "./events";
 import { CHOPPER_LINES, ESCAPE_LINES, radioFor } from "./radio";
-import { CHECKPOINT_HEAL, CLEAR_SECONDS, CUTSCENE_SECONDS, MAX_HEALTH, RETRY_FLOOR, STORY_CLEAR_SECONDS, WALK_SPEED } from "./pacing";
+import { CHECKPOINT_HEAL, CLEAR_SECONDS, CUTSCENE_SECONDS, FLY_SPEED, MAX_HEALTH, RETRY_FLOOR, STORY_CLEAR_SECONDS, WALK_SPEED } from "./pacing";
 import { checkpointDistance } from "./route";
 import { resolveShot, type CastFn } from "./shooting";
 import { Squad } from "./squad";
@@ -116,7 +117,8 @@ export class SurvivalGame {
     }
     if (this.phase === "travel") {
       const target = checkpointDistance(this.stage);
-      this.distance = Math.min(target, this.distance + WALK_SPEED * dt);
+      const speed = inFlight(this.phase, this.stage) ? FLY_SPEED : WALK_SPEED;
+      this.distance = Math.min(target, this.distance + speed * dt);
       if (this.distance >= target) this.beginFight();
     } else if (this.phase === "fight") {
       this.updateFight(dt);
@@ -171,8 +173,10 @@ export class SurvivalGame {
     if (this.phaseTime < CUTSCENE_SECONDS[which]) return;
     this.cutscene = null;
     if (which === "chopper") {
-      this.achievements.team("changeOfPlans");
+      this.achievements.team("liftOff");
       this.travelTo(this.stage + 1);
+      // The flight sets off from the helipad, where the cutscene left the team.
+      this.distance += HELIPAD;
     } else {
       this.achievements.team("survivor");
       this.setPhase("escaped");
@@ -183,7 +187,7 @@ export class SurvivalGame {
     this.stage = next;
     this.encounter = null;
     this.distance = checkpointDistance(next - 1);
-    if (next === 13) this.achievements.team("halfway");
+    if (next === 8) this.achievements.team("halfway");
     this.setPhase("travel");
     const line = radioFor(next);
     if (line) this.emit({ type: "radio", line });

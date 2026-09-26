@@ -1,6 +1,6 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 import type { Seat } from "@/platform/protocol";
-import { chopperPose, CRASH_AT } from "../engine/chopper";
+import { chopperPose, inFlight } from "../engine/chopper";
 import type { GameEvent } from "../engine/events";
 import type { SurvivalGame } from "../engine/game";
 import { alive, type Zombie } from "../engine/zombie";
@@ -32,7 +32,6 @@ export class HostAudio {
   /** When each walking boss next puts a foot down. */
   private readonly stompAt = new Map<number, number>();
   private voices: number[] = [];
-  private crashed = false;
 
   constructor(private readonly engine: AudioEngine) {
     this.guns = new GunSounds(engine);
@@ -46,7 +45,6 @@ export class HostAudio {
   onStart(): void {
     this.growlAt.clear();
     this.stompAt.clear();
-    this.crashed = false;
   }
 
   onLobby(): void {
@@ -111,16 +109,14 @@ export class HostAudio {
     const standing = game.encounter?.zombies.filter(alive) ?? [];
     this.ambience.frame(dt, {
       fighting: game.phase === "fight",
-      walking: game.phase === "travel" || (game.phase === "cutscene" && game.cutscene === "escape" && game.phaseTime < 10.5),
+      // No footsteps while the chopper carries the team.
+      walking: (game.phase === "travel" && !inFlight(game.phase, game.stage)) || (game.phase === "cutscene" && game.cutscene === "escape" && game.phaseTime < 10.5),
       health: game.running ? game.health : 100,
       walkers: game.squad.present().length,
     });
     this.voiceZombies(standing, game.time);
     const pose = chopperPose(game.phase, game.stage, game.cutscene, game.phaseTime);
-    this.ambience.rotorLevel(pose?.loudness ?? 0, pose?.failing ?? 0);
-    const crashNow = game.cutscene === "chopper" && game.phaseTime >= CRASH_AT;
-    if (crashNow && !this.crashed) this.stingers.explosion();
-    this.crashed = crashNow;
+    this.ambience.rotorLevel(pose?.loudness ?? 0, 0);
   }
 
   dispose(): void {
