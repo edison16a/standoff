@@ -5,6 +5,7 @@ import { STEP_TEXT, TUTORIAL_STEPS } from "../../engine/tutorial";
 import { POWER_COLORS } from "../../render/models/pickups";
 import { useSurfStore, type RunnerHud } from "../store";
 import { CoinIcon, PowerIcon } from "./icons";
+import { PlayerMap } from "./PlayerMap";
 import { useSession } from "./session-context";
 
 const CRASH_TEXT = { caught: "Caught by the guard!", train: "Crashed into a train!", low: "Tripped on a barrier!", high: "Hit a barrier!", ramp: "Crashed!" } as const;
@@ -45,6 +46,7 @@ export function RunHud() {
           Skip
         </button>
       )}
+      {hud.length > 1 && phase !== "results" && <PlayerMap hud={hud} />}
     </div>
   );
 }
