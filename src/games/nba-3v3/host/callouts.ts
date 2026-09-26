@@ -10,7 +10,7 @@ const pick = <T,>(options: readonly T[], n: number): T => options[Math.abs(n) % 
 /**
  * The banner across the big screen, for the moments that change the
  * game: the tip, a block or a steal, a turnover, game point and the
- * win. Baskets get no banner; the announcer calls them and the
+ * win. Baskets get no banner; the crowd greets them and the
  * scoreboard ticks over. `nameOf` gives the name the room knows a
  * player by, and `n` varies the wording.
  */

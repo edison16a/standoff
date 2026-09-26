@@ -2,28 +2,46 @@
   The chosen tile really is bigger, not scaled, so the others move along
   to make room and nothing ever overlaps. The row sits on the tiles' top
   edge, like the console's. The padding leaves room for the ring. The row
-  runs on to both edges of the screen so games scroll in and out of view.
+  runs on to both edges of the screen, and the track inside it slides with
+  a transform set from script (see use-tile-rail.ts), never by scrolling.
+  Clip rather than hidden, so focusing a tile can never scroll the row.
 */
 .home__tiles {
+  position: relative;
+  margin: -10px calc(-1 * var(--edge));
+  padding: 10px 0;
+  overflow-x: clip;
+}
+
+.home__track {
   display: flex;
   align-items: flex-start;
   gap: var(--gap);
-  margin: -10px calc(-1 * var(--edge));
-  padding: 10px var(--edge);
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  scroll-padding-inline: var(--edge);
-  scrollbar-width: none;
+  padding-left: var(--edge);
+  will-change: transform;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .home__tiles {
-    scroll-behavior: auto;
-  }
+/* Invisible boxes the size of a plain and a chosen tile, measured by the rail. */
+.home__probe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
-.home__tiles::-webkit-scrollbar {
-  display: none;
+.home__probe--off {
+  width: var(--tile);
+}
+
+.home__probe--on {
+  width: var(--tile-on);
+}
+
+/* For the one frame where the looped row jumps back to its middle copy. */
+.home__tiles--jump .game-tile {
+  transition: none;
 }
 
 .game-tile {
@@ -33,7 +51,7 @@
   height: var(--tile);
   padding: 0;
   border: 0;
-  border-radius: 28px;
+  border-radius: 22px;
   background: var(--bg-elevated);
   box-shadow: var(--shadow);
   cursor: pointer;
@@ -57,7 +75,7 @@
 .game-tile[aria-pressed="true"] {
   width: var(--tile-on);
   height: var(--tile-on);
-  border-radius: 32px;
+  border-radius: 26px;
   outline-color: var(--game);
 }
 

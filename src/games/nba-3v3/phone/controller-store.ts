@@ -10,7 +10,7 @@ export interface Flash {
   tone: "good" | "bad" | "info";
 }
 
-/** What NBA 3v3's phone screens render. */
+/** What Basketball 3v3's phone screens render. */
 export interface ControllerStore {
   step: SetupStep;
   /** The star this phone asked for, shown at once while the host confirms. */

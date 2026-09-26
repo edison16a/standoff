@@ -1,7 +1,7 @@
 import type { PhoneRoomApi } from "@/platform/games/game-api";
 import { clamp } from "@/games/kit/motion/math3d";
 import { subscribeOrientation } from "@/games/kit/motion/orientation";
-import { cornerCalibration, pointing, quickCalibration, recenter, toScreen, type AimCalibration, type Pointing, type ScreenPoint } from "./aim-math";
+import { cornerCalibration, pointing, quickCalibration, recenter, scaleSpans, toScreen, WHOLE_SCREEN, type AimCalibration, type AimZone, type Pointing, type ScreenPoint } from "./aim-math";
 import { OneEuro } from "./one-euro";
 import type { AimStep } from "./protocol";
 
@@ -37,6 +37,8 @@ export class PhoneAim {
   private calibration: AimCalibration | null = null;
   private corner: { center: Pointing; topLeft?: Pointing } | null = null;
   private point: ScreenPoint = { x: 0, y: 0 };
+  /** The part of the big screen this player aims inside, for games with a view per player. */
+  private zone: AimZone = WHOLE_SCREEN;
   private readonly fx = new OneEuro();
   private readonly fy = new OneEuro();
   private source: AimSource;
@@ -72,11 +74,20 @@ export class PhoneAim {
     this.room.send({ kind: "aim-step", step });
   }
 
+  /**
+   * For games with a view per player: the part of the big screen this
+   * player calibrates and aims inside. Only saved spans need it, since the
+   * aim itself always spans whatever zone the targets were shown in.
+   */
+  setZone(zone: AimZone | null): void {
+    this.zone = zone ?? WHOLE_SCREEN;
+  }
+
   /** Step one: the phone is pointed at the middle of the screen. */
   setCenter(): boolean {
     if (!this.reading) return this.source === "touch";
     this.corner = { center: this.reading };
-    this.apply(quickCalibration(this.reading), false);
+    this.apply(scaleSpans(quickCalibration(this.reading), this.zone, true), false);
     return true;
   }
 
@@ -92,7 +103,8 @@ export class PhoneAim {
   useQuick(): void {
     if (!this.corner) return;
     const saved = loadSpans();
-    this.apply(saved ? { ...saved, center: this.corner.center } : quickCalibration(this.corner.center), false);
+    // Spans are kept as if measured across the whole screen, so they are scaled down to this zone.
+    this.apply(scaleSpans(saved ? { ...saved, center: this.corner.center } : quickCalibration(this.corner.center), this.zone, true), false);
   }
 
   /** Points the current aim at the middle again, keeping the spans. For drift during play. */
@@ -137,7 +149,7 @@ export class PhoneAim {
   /** Only a full corner measurement is worth keeping for next time. */
   private apply(calibration: AimCalibration, save = true): void {
     this.calibration = calibration;
-    if (save) saveSpans(calibration);
+    if (save) saveSpans(scaleSpans(calibration, this.zone));
     this.fx.reset();
     this.fy.reset();
     if (this.reading) this.set(toScreen(this.reading, calibration));

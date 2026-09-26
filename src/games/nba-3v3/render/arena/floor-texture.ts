@@ -79,7 +79,7 @@ export function floorTexture(): THREE.CanvasTexture {
     ctx.rotate(side * Math.PI / 2);
     ctx.fillStyle = "rgba(255,255,255,0.55)";
     ctx.font = `italic 900 ${0.8 * PX}px Impact, "Arial Black", sans-serif`;
-    ctx.fillText("NBA 3V3", 0, 0);
+    ctx.fillText("BASKETBALL 3V3", 0, 0);
     ctx.restore();
   }
   ctx.restore();

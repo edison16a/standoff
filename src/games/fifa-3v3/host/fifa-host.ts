@@ -21,7 +21,7 @@ import { publish } from "./publish";
 const HUD_MS = 100;
 
 /**
- * FIFA 3v3 on the computer, for one room. It keeps the lobby, runs the
+ * Soccer 3v3 on the computer, for one room. It keeps the lobby, runs the
  * match and directs the sound, and it is the referee: phones send their
  * stick and buttons, and everything they show comes back from here.
  */
@@ -43,7 +43,7 @@ export class FifaHost {
 
   constructor(private readonly room: HostRoomApi) {
     store.setState({ ...store.getInitialState() });
-    this.audio = new SoundDirector(room.audio, (id) => this.calledName(id));
+    this.audio = new SoundDirector(room.audio);
     this.banners = new Banners((id) => this.calledName(id));
     this.phones = new PhoneLink(room);
     this.pad = new HostPad(room);

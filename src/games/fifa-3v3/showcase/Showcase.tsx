@@ -6,7 +6,7 @@ import { MatchRenderer } from "../render/match-renderer";
 import { ShowcaseScene, WARMUP } from "./scene";
 
 /**
- * FIFA 3v3 playing itself for the home screen: a seeded match of
+ * Soccer 3v3 playing itself for the home screen: a seeded match of
  * computer players, filmed like a highlight. It runs only from
  * requestAnimationFrame and performance.now, so the capture tool can
  * step the clock frame by frame and get the same film every time.
@@ -97,8 +97,8 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
         </div>
       )}
       {view === "icon" && (
-        <div className="fifa-logo" aria-label="FIFA 3v3">
-          <span className="fifa-logo__word">FIFA</span>
+        <div className="fifa-logo" aria-label="Soccer 3v3">
+          <span className="fifa-logo__word">SOCCER</span>
           <span className="fifa-logo__vs">3v3</span>
         </div>
       )}

@@ -118,7 +118,7 @@ export class Lobby {
     for (const team of [0, 1] as const) {
       const humans = this.players.filter((seat) => this.seats.get(seat)!.team === team).slice(0, TEAM_SIZE);
       for (const seat of humans) out.push({ team, character: this.seats.get(seat)!.pick!, seat });
-      for (let i = humans.length; i < TEAM_SIZE; i++) out.push({ team, character: spare.shift() ?? "messi", seat: null });
+      for (let i = humans.length; i < TEAM_SIZE; i++) out.push({ team, character: spare.shift() ?? "echeverri", seat: null });
     }
     return out;
   }

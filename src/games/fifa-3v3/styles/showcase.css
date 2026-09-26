@@ -38,7 +38,8 @@
   transform: translateX(-50%) skewX(-8deg);
   font-family: "Arial Black", Impact, "Helvetica Neue", Arial, sans-serif;
   font-weight: 900;
-  font-size: 18vmin;
+  /* Sized so the longer name still fits the square icon. */
+  font-size: 11.5vmin;
   line-height: 1;
   letter-spacing: -0.02em;
   white-space: nowrap;

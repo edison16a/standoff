@@ -16,7 +16,7 @@ function usePortrait(): boolean {
 }
 
 /**
- * FIFA 3v3 on the phone: the setup steps, then the controller while
+ * Soccer 3v3 on the phone: the setup steps, then the controller while
  * this phone has a player in the match, then the result. A phone that
  * joined mid match stays in setup until the next one.
  */
