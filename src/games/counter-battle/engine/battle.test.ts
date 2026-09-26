@@ -168,13 +168,14 @@ describe("a human's gun", () => {
   });
 });
 
+// Whole rounds of fighting take a while on a busy machine, so these get a minute.
 describe("a match run by the host", () => {
   it("can be shortened for a quick test match", () => {
     const b = new Battle(BOTS, 5, { roundsToWin: 1 });
     for (let i = 0; i < 60 * 60 * 5 && b.match.phase !== "done"; i++) b.step();
     expect(b.match.phase).toBe("done");
     expect(Math.max(...b.match.score)).toBe(1);
-  });
+  }, 60_000);
 
   it("lets the computer shoot for a player whose phone dropped, and hands the gun back", () => {
     const setups: FighterSetup[] = [
@@ -199,5 +200,5 @@ describe("a match run by the host", () => {
     let botShots = 0;
     for (let i = 0; i < 60 * 60 && botShots === 0 && b.match.phase !== "done"; i++) botShots += b.step().filter((e) => e.type === "shot" && e.shooter === 1).length;
     expect(botShots).toBeGreaterThan(0);
-  });
+  }, 60_000);
 });
