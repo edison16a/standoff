@@ -24,8 +24,8 @@ const BEAT_DELAY_S = 0.7;
 const STAB_GAP_S = 1.2;
 
 /**
- * Decides what the arena sounds like: a lo-fi tune in the lobby and a
- * bouncier one under the game, the stomp stomp clap on every dead ball
+ * Decides what the arena sounds like: a late night soul tune in the lobby and
+ * arena hip hop under the game, the stomp stomp clap on every dead ball
  * and before free throws, the shot clock's beeps and buzzer, the game
  * horn, organ stabs on big moments and a sound for every event on the
  * floor. There is no spoken commentary.
