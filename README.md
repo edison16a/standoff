@@ -24,7 +24,7 @@ Empty spots are filled by computer players. Each game lives in its own folder un
 
 It runs on Vercel for play from anywhere, or on your own computer over WiFi.
 
-Play it at [standoff-five.vercel.app](https://standoff-five.vercel.app).
+Play it at [standoffgames.vercel.app](https://standoffgames.vercel.app).
 
 ## Screenshots
 
