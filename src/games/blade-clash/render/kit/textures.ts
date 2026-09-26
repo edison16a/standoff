@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 /**
  * Every texture is painted on a canvas the first time it is asked for, then
- * shared. Nothing is downloaded, so the hall appears at once and works
+ * shared. Nothing is downloaded, so the arena appears at once and works
  * offline. Randomness is seeded, so every run paints the same grain.
  */
 
@@ -95,4 +95,23 @@ export function beamTexture(): THREE.CanvasTexture {
     ctx.fillStyle = across;
     ctx.fillRect(0, 0, w, h);
   }, { width: 64, height: 256, repeat: false });
+}
+
+/** A fine woven cloth, as a bump map, for tabards, robes and padding. */
+export function clothBump(): THREE.CanvasTexture {
+  const texture = canvasTexture("cloth", (ctx, w, h, rand) => {
+    ctx.fillStyle = "#808080";
+    ctx.fillRect(0, 0, w, h);
+    // Warp and weft: alternating light and dark threads, a little uneven.
+    for (let y = 0; y < h; y += 4) {
+      for (let x = 0; x < w; x += 4) {
+        const over = ((x + y) / 4) % 2 === 0;
+        const v = (over ? 150 : 100) + (rand() - 0.5) * 30;
+        ctx.fillStyle = `rgb(${v},${v},${v})`;
+        ctx.fillRect(x, y, over ? 4 : 3, over ? 3 : 4);
+      }
+    }
+  }, { width: 128, color: false });
+  texture.repeat.set(6, 6);
+  return texture;
 }
