@@ -25,13 +25,19 @@ function noteLength(line: Line, step: number, stepS: number): number {
   return n * stepS * 0.92;
 }
 
-/* Match, "Steel and Thunder": D minor at 132. Taiko and driving strings under a horn hook doubled by a koto; the second half lifts with brass and choir. */
+/* Match, "Steel and Thunder": B minor at 132. Taiko and driving strings under a horn hook doubled by a koto; the second half lifts with brass and choir. */
 
-const BATTLE_CHORDS: [number, number, number][] = [
+/**
+ * The theme is written in D minor and played three semitones down in B
+ * minor, so no other game's song shares its key and tempo.
+ */
+export const BATTLE_KEY = -3;
+
+const BATTLE_CHORDS = ([
   [50, 57, 62], [50, 57, 62], [46, 53, 58], [48, 55, 60], [50, 57, 62], [50, 57, 62], [46, 53, 58], [45, 52, 57],
   [46, 53, 58], [48, 55, 60], [50, 57, 62], [50, 57, 62], [43, 50, 55], [45, 52, 57], [50, 57, 62], [45, 52, 57],
-];
-const HOOK: Line = [
+] as [number, number, number][]).map((chord) => chord.map((n) => n + BATTLE_KEY) as [number, number, number]);
+const HOOK: Line = ([
   74, _, 69, _, 74, 76, 77, _, 76, _, 74, _, 72, _, 74, _,
   69, _, _, _, _, _, _, _, 74, _, 77, _, 81, _, 79, _,
   77, _, 77, _, 76, _, 74, _, 77, _, 76, _, 74, _, 72, _,
@@ -48,7 +54,7 @@ const HOOK: Line = [
   81, _, _, _, 79, _, 77, _, 76, _, _, _, 73, _, _, _,
   74, _, 77, _, 81, _, 86, _, 84, _, 81, _, 77, _, 81, _,
   81, _, _, _, _, _, _, _, 76, _, 73, _, 69, _, 64, _,
-];
+] as Line).map((n) => (n === null ? null : n + BATTLE_KEY));
 /** The strings' eighths walk root, root, fifth, root, octave, fifth, third, fifth. */
 const OSTINATO = [0, 0, 1, 0, 3, 1, 2, 1];
 
