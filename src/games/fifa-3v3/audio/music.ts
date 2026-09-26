@@ -1,7 +1,15 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
-import { playStep } from "./band";
+import { LOBBY_SONG } from "./lobby-song";
+import { MATCH_SONG } from "./match-song";
+import type { Song } from "./score";
 import { fanfare, goalSting } from "./stings";
-import { TUNES, type TuneName } from "./tunes";
+
+/** The lobby and results get the warm up bossa, the match gets the stadium anthem. */
+export const TUNES = { lobby: LOBBY_SONG, play: MATCH_SONG } as const satisfies Record<string, Song>;
+export type TuneName = keyof typeof TUNES;
+
+/** Rolls off the top so the band sounds like a radio on the terraces, never harsh. */
+export const WARMTH_HZ = 2800;
 
 const WAKE_MS = 25;
 const LOOKAHEAD_S = 0.12;
@@ -18,10 +26,9 @@ export class Music {
   private readonly warmth: BiquadFilterNode;
 
   constructor(private readonly engine: AudioEngine) {
-    // Rolls off the top so the band sounds like a radio on the terraces, never harsh.
     this.warmth = engine.ctx.createBiquadFilter();
     this.warmth.type = "lowpass";
-    this.warmth.frequency.value = 2800;
+    this.warmth.frequency.value = WARMTH_HZ;
     this.warmth.Q.value = 0.5;
     this.warmth.connect(engine.bus("music"));
   }
@@ -73,14 +80,14 @@ export class Music {
   private schedule(): void {
     const current = this.current;
     if (!current) return;
-    const tune = TUNES[current.name];
-    const stepLength = 60 / tune.bpm / 4;
+    const song = TUNES[current.name];
+    const sixteenth = 60 / song.bpm / 4;
     // A stalled tab would otherwise try to catch up on every missed note at once.
     if (current.nextAt < this.engine.now - 0.5) current.nextAt = this.engine.now + 0.05;
     while (current.nextAt < this.engine.now + LOOKAHEAD_S) {
-      playStep(this.engine, current.gain, tune, current.step, current.nextAt);
-      current.step = (current.step + 1) % tune.hook.length;
-      current.nextAt += stepLength;
+      song.play(this.engine, current.gain, current.step, current.nextAt, sixteenth);
+      current.step = (current.step + 1) % song.steps;
+      current.nextAt += sixteenth;
     }
   }
 

@@ -12,8 +12,8 @@ const LOBBY_LEVELS = { music: 0.6, crowd: 0, sfx: 0.9 };
 const MATCH_LEVELS = { music: 0.38, crowd: 0, sfx: 0.95 };
 
 /**
- * Turns the match into sound: a bossa tune in the lobby and an afro house
- * groove under the match, and every event with its effect. There is no
+ * Turns the match into sound: a slow bossa in the lobby and a sunny
+ * stadium anthem under the match, and every event with its effect. There is no
  * commentary and no crowd: the whistle, the horn and the music carry the
  * big moments.
  */

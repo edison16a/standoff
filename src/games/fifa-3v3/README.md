@@ -47,7 +47,11 @@ A ball over the end boards is a goal kick: the keeper rolls it out to a team mat
 
 Everything is synthesised through the room's audio buses.
 
-Music: "Beach Kickabout" plays in the lobby and on the results, a D major bossa at 108 with a marimba hook over nylon guitar, shaker and clave. "Golden Hour" plays under the match, an A minor afro house groove at 118 with a steel pan hook and a falling log drum bass, mixed low so the ball and the whistle lead. Both run eight bars with an A and a B section, through a warm low pass. A brass sting and timpani mark every goal and a fanfare the full time whistle, and the loop steps aside for them.
+Music: two songs, each sixteen bars with an A and a B section, written as text a bar a row and played through a warm low pass (`audio/music.ts`, `audio/score.ts`).
+
+* "Sunday League" plays in the lobby and on the results (`audio/lobby-song.ts`, `audio/lounge.ts`). A slow sunny bossa in G major at 90, the warm up before kick off. A sunset pad swells under every bar and hands each chord to the next, an alto flute sings the A section and a hummed "oo" answers in the B section, over a softly brushed nylon guitar, a round bass, a shaker and a quiet clave.
+* "Golden Goal" plays under the match (`audio/match-song.ts`, `audio/fiesta.ts`). An uplifting stadium anthem with a Latin groove in B flat major at 124. Bright trumpets blow the hook over the A section, then the terrace choir sings "oh" over the B section while the trumpets punch the chords. A salsa piano montuno, a tumbao bass, surdo, congas, cowbell, claps and a timbale roll into each turn, over a warm held chord. It is mixed low so the ball and the whistle lead.
+* A brass sting and timpani mark every goal and a fanfare the full time whistle, and the loop steps aside for them.
 
 Effects have a sharp hit, a body and a tail into a synthetic stadium reverb, each pitched a little differently every time: strikes, passes, tackles, slides, saves, the post and the bar, the net, the boards, the referee's whistle, the goal horn and fireworks. There is no crowd noise and no spoken commentary.
 
