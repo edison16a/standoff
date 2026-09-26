@@ -103,13 +103,13 @@ export class GameRenderer {
     players.forEach((player, i) => {
       if (player.restarted && player.state) this.cameras[views.indexOf(i)]?.snap(player.state);
       for (const event of player.events) {
-        if (player.state) this.effects.event(event, player.state, SKINS[i]!);
+        if (player.state) this.effects.event(i, event, player.state, SKINS[i]!);
         if (event.type === "land") this.avatars[i]?.land();
         const camera = this.cameras[views.indexOf(i)];
         if (event.type === "death") camera?.shake(1);
         if (event.type === "portal" || event.type === "finish") camera?.punch();
       }
-      if (player.state) this.effects.trail(player.state, SKINS[i]!, dt);
+      if (player.state) this.effects.trail(i, player.state, SKINS[i]!, dt);
       this.avatars[i]?.update(player.state, dt);
       this.ghosts[i]?.update(players.length > 1 ? player.state : null, dt);
       this.signs.setAttempt(i, player.attempt);
@@ -137,12 +137,13 @@ export class GameRenderer {
         prepare: () => this.prepare(p, players, camera, time, pulse),
       };
     });
-    this.effects.particles.setScale(tall / (2 * Math.tan(THREE.MathUtils.degToRad(13))));
+    this.effects.setScale(tall / (2 * Math.tan(THREE.MathUtils.degToRad(13))));
     if (render) this.post.draw(viewports);
   }
 
-  /** Before drawing one view: its player solid, rivals as ghosts, its own sign, and the sky behind its camera. */
+  /** Before drawing one view: its player solid, rivals as ghosts with dimmed sparks, its own sign, and the sky behind its camera. */
   private prepare(p: number, players: DrawPlayer[], camera: ViewCamera, time: number, pulse: number): void {
+    this.effects.focus(p);
     this.avatars.forEach((avatar, i) => (avatar.group.visible = i === p && !!players[i]?.state && !players[i]!.state!.dead));
     this.ghosts.forEach((ghost, i) => (ghost.group.visible = i !== p && !!players[i]?.state && !players[i]!.state!.dead));
     this.signs.show(p, time);

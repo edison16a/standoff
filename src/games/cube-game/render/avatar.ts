@@ -5,6 +5,12 @@ import { ballSkin, cubeFace, glowSprite } from "./textures";
 
 /** The dark outline every form wears, as the original's icons do, so it reads against any sky. */
 const OUTLINE = 0x0a0418;
+/**
+ * A ghost runs a little behind the play, so where it overlaps the view's
+ * own avatar the solid one hides it. Level with it, the see through ghost
+ * blended over the solid faces and washed out their colours.
+ */
+const GHOST_Z = -0.4;
 
 export interface Skin {
   main: number;
@@ -36,8 +42,10 @@ export class Avatar {
   private readonly halo: THREE.Sprite;
   private squash = 0;
   private mode: Mode | null = null;
+  private readonly z: number;
 
   constructor(skin: Skin, ghost = false) {
+    this.z = ghost ? GHOST_Z : 0;
     const face = faceMaterial(skin);
     const box = new THREE.BoxGeometry(0.92, 0.92, 0.92);
     const cube = new THREE.Mesh(box, face);
@@ -118,7 +126,7 @@ export class Avatar {
       this.mode = state.mode;
       for (const [mode, form] of Object.entries(this.forms)) form.visible = mode === state.mode;
     }
-    this.group.position.set(state.x, state.y, 0);
+    this.group.position.set(state.x, state.y, this.z);
     const form = this.forms[state.mode];
     form.rotation.z = state.angle;
     this.squash = Math.max(0, this.squash - dt * 6);
