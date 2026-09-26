@@ -1,5 +1,5 @@
 import { attackSign } from "../teams";
-import { brake, moveAthlete } from "./athlete";
+import { brake, moveAthlete, separate } from "./athlete";
 import { goalX } from "./goal";
 import { PITCH } from "./tuning";
 import type { Athlete, MatchState } from "./types";
@@ -7,6 +7,12 @@ import { dist, norm, sub, type Vec2 } from "./vec";
 
 /** How long the scorer runs toward the cameras before breaking into the celebration. */
 const RUN_OFF = 1.3;
+/**
+ * Where team mates join the scorer: one on each side and a step behind,
+ * away from the cameras on the near side, so the close up shows all of
+ * them and none stands in front of the scorer or inside another.
+ */
+const JOIN = { side: 1.5, back: 1.1 };
 
 /**
  * After a goal: the scorer peels away toward the corner by the cameras
@@ -38,8 +44,10 @@ export function celebrateGoal(state: MatchState, dt: number): void {
       }
       continue;
     }
-    const target = scorer ? scorer.pos : corner;
-    if (dist(a.pos, target) > 1.8) {
+    const target = joinSpot(state, a, scorer, corner);
+    // A wider margin once celebrating, so a nudge from the scorer does not send them running again.
+    const settled = a.action === "celebrate" ? 0.9 : 0.35;
+    if (dist(a.pos, target) > settled) {
       setAction(a, "free");
       moveToward(a, target, 0.9, dt);
     } else {
@@ -48,6 +56,16 @@ export function celebrateGoal(state: MatchState, dt: number): void {
       faceCamera(a, dt);
     }
   }
+  separate(state.athletes);
+}
+
+/** A team mate's place beside the scorer: left or right by their order in the side, and a step back. */
+function joinSpot(state: MatchState, a: Athlete, scorer: Athlete | undefined, corner: Vec2): Vec2 {
+  const at = scorer ? scorer.pos : corner;
+  const mates = state.athletes.filter((m) => m.team === a.team && m !== scorer);
+  const side = mates.indexOf(a) % 2 === 0 ? -1 : 1;
+  const row = Math.floor(mates.indexOf(a) / 2) + 1;
+  return { x: at.x + side * JOIN.side * row, z: at.z - JOIN.back * row };
 }
 
 /**
@@ -87,6 +105,7 @@ export function celebrateWin(state: MatchState, dt: number): void {
       moveToward(a, spot, 0.6, dt);
     }
   }
+  separate(state.athletes);
 }
 
 function setAction(a: Athlete, action: Athlete["action"]): void {
