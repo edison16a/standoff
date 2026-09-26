@@ -8,6 +8,7 @@ export interface TagBox {
 
 /** Space kept between stacked tags, in pixels. */
 const GAP = 3;
+const EPS = 1e-6;
 
 /**
  * How far to lift each tag so that none covers another. The lowest on
@@ -36,5 +37,6 @@ function overlaps(a: TagBox, liftA: number, b: TagBox, liftB: number): boolean {
   if (Math.abs(a.x - b.x) >= (a.w + b.w) / 2 + GAP) return false;
   const bottomA = a.y + liftA;
   const bottomB = b.y + liftB;
-  return bottomA > bottomB - b.h - GAP && bottomB > bottomA - a.h - GAP;
+  // A tag just stacked on another sits exactly a gap above it, which rounding must not call an overlap.
+  return bottomA > bottomB - b.h - GAP + EPS && bottomB > bottomA - a.h - GAP + EPS;
 }

@@ -84,7 +84,7 @@ export class Tags {
     // Players bunched together would pile their tags on top of each other, so the tags stack instead.
     const lifts = stackTags(shown.map((s) => s.box));
     for (const [i, { tag, box }] of shown.entries()) {
-      tag.lift += (lifts[i]! - tag.lift) * (1 - Math.exp(-dt * 12));
+      tag.lift += (lifts[i]! - tag.lift) * (1 - Math.exp(-dt * 18));
       tag.root.style.transform = `translate(${box.x.toFixed(1)}px, ${(box.y + tag.lift).toFixed(1)}px) translate(-50%, -100%)`;
     }
   }
