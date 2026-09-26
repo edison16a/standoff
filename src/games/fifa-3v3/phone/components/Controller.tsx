@@ -31,6 +31,9 @@ export function Controller({ host }: { host: PhoneState }) {
   }, [phone]);
 
   const status = host.banner ?? (host.hasBall ? "You have the ball" : host.phase === "replay" ? "Replay" : host.phase === "kickoff" ? "Kick off" : null);
+  // The host only reads the buttons in open play. Pressed at a kick off or a replay they would fill
+  // the charge bar for a shot that never comes, so they wait, and let go of anything held.
+  const live = host.phase === "play";
 
   return (
     <div className="fifa-pad" style={{ "--team": team.color } as React.CSSProperties}>
@@ -56,12 +59,12 @@ export function Controller({ host }: { host: PhoneState }) {
       </div>
       <div className="fifa-pad__buttons">
         <div className="fifa-pad__shoot">
-          <PadButton label="Shoot/Pass" size="lg" colour="#ef4444" onDown={() => phone.shoot(true)} onUp={() => phone.shoot(false)}>
+          <PadButton label="Shoot/Pass" size="lg" colour="#ef4444" disabled={!live} onDown={() => phone.shoot(true)} onUp={() => phone.shoot(false)}>
             <ButtonFace icon="ball" text="Shoot/Pass" />
           </PadButton>
         </div>
         <div className={`fifa-pad__slide ${host.hasBall ? "fifa-pad__slide--skill" : ""}`}>
-          <PadButton label={host.hasBall ? "Skill" : "Slide"} size="md" colour={host.hasBall ? "#a855f7" : "#f59e0b"} onDown={() => phone.slide(true)} onUp={() => phone.slide(false)}>
+          <PadButton label={host.hasBall ? "Skill" : "Slide"} size="md" colour={host.hasBall ? "#a855f7" : "#f59e0b"} disabled={!live} onDown={() => phone.slide(true)} onUp={() => phone.slide(false)}>
             <ButtonFace icon={host.hasBall ? "skill" : "slide"} text={host.hasBall ? "Skill" : "Slide"} />
           </PadButton>
         </div>
