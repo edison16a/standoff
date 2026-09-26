@@ -49,7 +49,12 @@ describe("the four guns", () => {
   });
 
   it("show bars between 0 and 1 for the phone's gun card", () => {
-    for (const g of GUN_IDS) for (const v of Object.values(gunBars(g))) expect(v).toBeGreaterThan(0), expect(v).toBeLessThanOrEqual(1);
+    for (const g of GUN_IDS) {
+      for (const v of Object.values(gunBars(g))) {
+        expect(v).toBeGreaterThan(0);
+        expect(v).toBeLessThanOrEqual(1);
+      }
+    }
     expect(gunBars("smg").rate).toBeCloseTo(1);
     expect(gunBars("sniper").range).toBeCloseTo(1);
   });

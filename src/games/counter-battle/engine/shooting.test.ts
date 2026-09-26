@@ -59,7 +59,8 @@ describe("a shot", () => {
     const chest = run("chest");
     expect(head).toMatchObject({ head: true });
     expect(chest).toMatchObject({ head: false, damage: Math.round(falloffDamage(GUNS.rifle, 39.7)) });
-    expect(head!.type === "hit" && chest!.type === "hit" && head.damage > chest.damage).toBe(true);
+    const damage = (e: typeof head) => (e?.type === "hit" ? e.damage : 0);
+    expect(damage(head)).toBeGreaterThan(damage(chest));
   });
 
   it("sums a shotgun blast into one hit, and downs someone up close", () => {
