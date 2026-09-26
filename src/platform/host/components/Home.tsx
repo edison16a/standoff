@@ -12,6 +12,7 @@ import { GameBackdrop } from "./GameBackdrop";
 import { GameDetails } from "./GameDetails";
 import { GameTiles } from "./GameTiles";
 import { useHostRoom } from "./host-context";
+import { useSettled } from "./use-settled";
 
 /**
  * The game chosen in this tab. Opening the app always starts on the first
@@ -39,6 +40,8 @@ export function Home() {
   const [selected, setSelected] = useState(firstChoice);
   // The catalog is never empty, and every index here comes from wrapping round it.
   const game = GAMES[selected] ?? GAMES[0]!;
+  // The clip behind waits for the choice to settle, so a held arrow key stays smooth.
+  const backdrop = useSettled(game, 180);
   const replaced = status === "replaced";
   const canPlay = status === "open" && !resuming && !starting;
 
@@ -85,7 +88,7 @@ export function Home() {
 
   return (
     <div className="home">
-      <GameBackdrop game={game} />
+      <GameBackdrop game={backdrop} />
       <header className="home__bar">
         <HomeLink />
         <div className="home__tools">
