@@ -56,6 +56,7 @@ describe("the endless loop", () => {
     expect(copiesOff(33, 11, 7)).toBe(0);
     expect(copiesOff(43, 11, 7)).toBe(0);
     expect(copiesOff(44, 11, 7)).toBe(1);
-    expect(copiesOff(21, 11, 7)).toBe(-1);
+    expect(copiesOff(32, 11, 7)).toBe(-1);
+    expect(copiesOff(21, 11, 7)).toBe(-2);
   });
 });

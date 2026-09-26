@@ -33,6 +33,8 @@ export function useTileRail(
   const shift = useRef({ now: 0, target: 0, ready: false });
   const pending = useRef(0);
   const frame = useRef(0);
+  // The chosen tile as last laid out, for the resize handler, which runs outside React.
+  const chosen = useRef(place.at);
 
   // A new choice from the arrows or elsewhere: take the short way round.
   if (place.game !== selected) setPlace({ at: place.at + shortStep(place.game, selected, count), game: selected });
@@ -44,13 +46,15 @@ export function useTileRail(
     if (!row || !track) return;
     const sizes = measure(row, track);
     const s = shift.current;
+    chosen.current = place.at;
     if (pending.current) {
+      // The hop moves the row by exactly one copy, so nothing on screen changes.
       s.now -= pending.current;
       s.target -= pending.current;
       pending.current = 0;
       paint(track, s.now);
       requestAnimationFrame(() => requestAnimationFrame(() => row.classList.remove("home__tiles--jump")));
-      return;
+      // No return: a held key can land a new step in the same render as the hop, and it still needs aiming.
     }
     if (!s.ready) {
       s.now = s.target = startShift(place.at, sizes);
@@ -82,21 +86,18 @@ export function useTileRail(
     return () => window.clearTimeout(timer);
   }, [rowRef, trackRef, place, count]);
 
-  // A new screen size changes every measurement, so settle straight onto the new layout.
-  const atNow = useRef(place.at);
-  useEffect(() => {
-    atNow.current = place.at;
-  }, [place.at]);
+  // A new screen width changes every measurement, so settle straight onto the new layout.
   useEffect(() => {
     const row = rowRef.current;
     const track = trackRef.current;
     if (!row || !track) return;
-    let first = true;
+    let width = row.clientWidth;
     const observer = new ResizeObserver(() => {
-      // The observer reports once on start; the layout effect has placed the row already.
-      if (first) return void (first = false);
+      // The row's height dips while one tile shrinks and the next grows; only a new width matters.
+      if (row.clientWidth === width) return;
+      width = row.clientWidth;
       const s = shift.current;
-      s.now = s.target = railShift(atNow.current, s.target, measure(row, track));
+      s.now = s.target = railShift(chosen.current, s.target, measure(row, track));
       paint(track, s.now);
     });
     observer.observe(row);
