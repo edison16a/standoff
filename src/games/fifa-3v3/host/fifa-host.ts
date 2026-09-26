@@ -21,7 +21,7 @@ import { publish } from "./publish";
 const HUD_MS = 100;
 
 /**
- * FIFA 3v3 on the computer, for one room. It keeps the lobby, runs the
+ * Soccer 3v3 on the computer, for one room. It keeps the lobby, runs the
  * match and directs the sound, and it is the referee: phones send their
  * stick and buttons, and everything they show comes back from here.
  */

@@ -4,7 +4,7 @@ import type { CharacterId } from "../roster";
 
 export type SetupStep = "star" | "ready";
 
-/** What FIFA 3v3's phone screens render. */
+/** What Soccer 3v3's phone screens render. */
 export interface PhoneStore {
   step: SetupStep;
   /** The star this phone asked for, shown at once while the host confirms. */
