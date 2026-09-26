@@ -9,9 +9,15 @@ import { PhoneScreen } from "./phone/components/PhoneScreen";
 import { PhoneContext } from "./phone/components/session-context";
 import { Showcase } from "./showcase/Showcase";
 import "./styles/host.css";
+import "./styles/corner.css";
 import "./styles/lobby.css";
+import "./styles/spots.css";
 import "./styles/hud.css";
 import "./styles/results.css";
+// The phone's parts come before the pages that lay them out sideways, so those rules win.
+import "./styles/ready.css";
+import "./styles/status.css";
+import "./styles/magazine.css";
 import "./styles/phone.css";
 import "./styles/play.css";
 

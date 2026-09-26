@@ -1,0 +1,81 @@
+/*
+  The phone's magazine: rounds left, a row of rounds and the reload bar.
+*/
+
+.cb-mag {
+  display: grid;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.cb-mag__count {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.cb-mag__count strong {
+  font-family: var(--cb-display);
+  font-size: clamp(30px, 5vh, 42px);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.cb-mag__count span {
+  color: #9aa3b5;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.cb-mag__gun {
+  align-self: center;
+  margin-left: auto;
+  color: #cfd6e2;
+}
+
+.cb-mag--empty .cb-mag__count strong {
+  color: #ff4a5a;
+}
+
+.cb-mag__rounds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.cb-mag__round {
+  width: 6px;
+  height: 12px;
+  border-radius: 3px 3px 1px 1px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.cb-mag__round--full {
+  background: linear-gradient(#f5dc7a, #b8862e);
+}
+
+.cb-mag__reload {
+  position: relative;
+  height: 20px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.cb-mag__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: rgba(184, 244, 0, 0.5);
+}
+
+.cb-mag__text {
+  position: relative;
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 20px;
+  text-align: center;
+  text-transform: uppercase;
+}
