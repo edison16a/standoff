@@ -42,7 +42,8 @@ function play(engine: AudioEngine, out: AudioNode, step: number, at: number): vo
   const chord = CHORDS[Math.floor(bar / 2)]!;
   const tones = chord.slice(1);
 
-  if (inBar === 0 && bar % 2 === 0) pad(engine, out, at, tones, BAR * 2, 0.085);
+  // Each pad holds half a bar into the next, so the swell of one covers the fade of the other.
+  if (inBar === 0 && bar % 2 === 0) pad(engine, out, at, tones, BAR * 2.5, 0.08);
   if (inBar === 0 || inBar === 10) keys(engine, out, at, tones, SIXTEENTH * (inBar === 0 ? 10 : 6), inBar === 0 ? 0.022 : 0.014);
   if (inBar === 0) tone(engine, out, at, { frequency: midi(chord[0]!), attack: 0.03, decay: SIXTEENTH * 9, peak: 0.17 });
   if (inBar === 10) tone(engine, out, at, { frequency: midi(chord[0]! + 7), attack: 0.03, decay: SIXTEENTH * 5, peak: 0.11 });
