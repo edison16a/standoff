@@ -52,6 +52,20 @@ describe("the tunnel vault", () => {
     }
   });
 
+  it("is under the ribs as it passes the mouth of a tunnel on a jetpack, even at top speed", () => {
+    const run = runAt(JETPACK_HEIGHT, { flying: true });
+    Object.assign(run, { speed: SPEED.max });
+    const chase = new ChaseCamera();
+    chase.ceiling = (distance, x) => (distance >= 150 ? tunnelCeilingAt(x) : Infinity);
+    chase.reset(run);
+    for (let i = 0; i < 600; i++) {
+      run.runner.distance = 100 + (i * SPEED.max) / 60;
+      chase.update(run, 1 / 60, i / 60);
+      const eye = chase.camera.position;
+      if (-eye.z >= 150) expect(eye.y).toBeLessThan(tunnelCeilingAt(eye.x) - 0.2);
+    }
+  });
+
   it("leaves the camera alone out in the open", () => {
     const open = settle(runAt(JETPACK_HEIGHT, { flying: true })).camera.position.y;
     const roofed = settle(runAt(JETPACK_HEIGHT, { flying: true }), () => Infinity).camera.position.y;

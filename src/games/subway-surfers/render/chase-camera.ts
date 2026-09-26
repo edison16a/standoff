@@ -73,8 +73,11 @@ export class ChaseCamera {
     // flight never lifts it through the vault into the dark above.
     const x = this.x + side;
     const roof = Math.min(this.ceiling(s.distance - back, x), this.ceiling(s.distance - back / 2, x), this.ceiling(s.distance, x));
+    const natural = 3.4 + this.y + 1.1 * c;
+    // Ease down from where the lens is, not from open sky, so it is under the ribs by the tunnel mouth.
+    this.cap = Math.min(this.cap, natural);
     this.cap += (Math.min(OPEN_SKY, roof - CLEARANCE) - this.cap) * (1 - Math.exp(-10 * dt));
-    const height = Math.min(3.4 + this.y + 1.1 * c, this.cap);
+    const height = Math.min(natural, this.cap);
     const jitter = this.shake * 0.25;
     this.camera.position.set(x + Math.sin(time * 61) * jitter, height + Math.sin(time * 47) * jitter, z + back);
     this.look.set(this.x * 0.9 + side * 0.2, 1.1 + this.y * 0.9, z - 8 + 7 * c);
