@@ -65,8 +65,8 @@ export class ArenaBeat {
       if (this.stepsLeft <= 0) return this.finish();
       const hit = PATTERN[this.step % PATTERN.length];
       // The second stomp lands a touch softer, the way feet do.
-      if (hit === "kick") stompKick(this.engine, gain, this.nextAt, this.step % 2 === 0 ? 0.85 : 0.72);
-      else if (hit === "clap") handClap(this.engine, gain, this.wet, this.nextAt, 0.55);
+      if (hit === "kick") stompKick(this.engine, gain, this.nextAt, this.step % 2 === 0 ? 0.7 : 0.6);
+      else if (hit === "clap") handClap(this.engine, gain, this.wet, this.nextAt, 0.5);
       this.step++;
       this.stepsLeft--;
       this.nextAt += eighth;
