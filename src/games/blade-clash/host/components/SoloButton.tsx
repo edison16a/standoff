@@ -1,6 +1,6 @@
 "use client";
 import { Icon } from "@/components/ui/Icon";
-import { useFencingStore } from "../host-store";
+import { useBladeStore } from "../host-store";
 import { useSession } from "./session-context";
 
 /**
@@ -9,7 +9,7 @@ import { useSession } from "./session-context";
  */
 export function SoloButton() {
   const session = useSession();
-  const computer = useFencingStore((state) => state.seats[1].computer || state.seats[2].computer);
+  const computer = useBladeStore((state) => state.seats[1].computer || state.seats[2].computer);
   return (
     <button type="button" className="join__extra" onClick={() => session.setSolo(!computer)}>
       <Icon name={computer ? "close" : "cpu"} />

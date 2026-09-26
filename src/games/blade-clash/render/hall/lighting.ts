@@ -10,7 +10,7 @@ const LIT = new Set([-1.9, 1.9]);
 const RIG_HEIGHT = 8.4;
 
 /**
- * The hall's lights. A follow spot above the fencers casts their shadows
+ * The hall's lights. A follow spot above the fighters casts their shadows
  * and moves with the bout. Cool rim lights from behind outline them against
  * the stands. A row of spotlights down the strip makes pools of light, with
  * their beams showing in the evening haze. Daylight comes in from the
@@ -87,7 +87,7 @@ export class Lighting {
 
   update(dtMs: number): void {
     this.flashLevel *= Math.exp(-dtMs / 160);
-    // Enough to lift the fencers for a moment, never enough to wash them out.
+    // Enough to lift the fighters for a moment, never enough to wash them out.
     this.flash.intensity = this.flashLevel * 14;
   }
 

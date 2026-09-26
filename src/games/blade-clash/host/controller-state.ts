@@ -1,6 +1,6 @@
 import type { Engine } from "@/games/blade-clash/engine/engine";
+import { MAX_HEALTH } from "@/games/blade-clash/engine/rules";
 import type { ControllerState } from "@/games/blade-clash/protocol";
-import { TOUCHES_TO_WIN } from "@/games/blade-clash/protocol";
 import type { Lobby } from "./lobby";
 
 /**
@@ -13,8 +13,8 @@ export function buildControllerState(lobby: Lobby, engine: Engine | null, names:
   return {
     kind: "state",
     phase: engine?.phase ?? "lobby",
-    scores: match ? [match.scores[1], match.scores[2]] : [0, 0],
-    touchesToWin: TOUCHES_TO_WIN,
+    health: match ? [match.health[1], match.health[2]] : [MAX_HEALTH, MAX_HEALTH],
+    maxHealth: MAX_HEALTH,
     names,
     picks: [seats[1].pick, seats[2].pick],
     ready: [seats[1].ready, seats[2].ready],
@@ -22,7 +22,6 @@ export function buildControllerState(lobby: Lobby, engine: Engine | null, names:
     computer: [seats[1].computer, seats[2].computer],
     countdown: engine ? engine.match.countdown(engine.now) : null,
     rematchVotes: match ? [match.rematchVotes[1], match.rematchVotes[2]] : [false, false],
-    call: match?.call ?? null,
     winner: match?.winner ?? null,
   };
 }

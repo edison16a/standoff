@@ -8,7 +8,7 @@ const KEEP = new Set(["position", "normal", "uv"]);
 
 /**
  * Collects many small parts and merges them into one mesh per material.
- * A fencer is built from a few hundred primitives, but each bone draws in
+ * A model is built from a few hundred primitives, but each bone draws in
  * a handful of calls, which is what keeps the hall at 60 frames a second.
  */
 export class MeshBuilder {
@@ -117,13 +117,6 @@ export class MeshBuilder {
     this.parts.set(material, list);
     return this;
   }
-}
-
-/** Frees every geometry under an object. Materials are shared and freed by their owners. */
-export function disposeGeometry(root: THREE.Object3D): void {
-  root.traverse((object) => {
-    if (object instanceof THREE.Mesh || object instanceof THREE.Line || object instanceof THREE.Points) object.geometry.dispose();
-  });
 }
 
 /**

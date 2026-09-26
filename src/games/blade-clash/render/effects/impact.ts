@@ -13,7 +13,7 @@ interface Pop {
 /**
  * The bright parts of a hit: a flash of light at the point of contact and a
  * shockwave ring that races out from it, turned to face the camera. A
- * parry gets a small quick one, the end of a touch's slow motion a big one.
+ * clash gets a small quick one, the end of the final hit's slow motion a big one.
  */
 export class Impacts {
   readonly group = new THREE.Group();

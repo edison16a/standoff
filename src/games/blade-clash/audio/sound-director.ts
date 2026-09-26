@@ -2,27 +2,33 @@ import type { GameEvent } from "@/games/blade-clash/engine/events";
 import type { MatchPhase } from "@/games/blade-clash/protocol";
 import type { Tuning } from "@/games/blade-clash/tuning";
 import type { AudioEngine } from "../../../platform/audio/audio-engine";
+import { Announcer } from "./announcer";
 import { Crowd } from "./crowd";
 import { Music } from "./music";
-import { RefereeVoice } from "./referee-voice";
 import { Sfx } from "./sfx";
 
+/** A clash this strong or more is a big one: the crowd gasps and the announcer says so. */
+const BIG_CLASH = 0.65;
+/** The announcer calls a big clash at most this often. */
+const CLASH_CALL_GAP_MS = 6000;
+
 /**
- * Decides what the match sounds like. It listens to the same event stream
+ * Decides what the duel sounds like. It listens to the same event stream
  * as the renderer, so every whoosh, clang and hit lands on the frame its
- * animation starts. The referee calls the bout, La Folia plays in the
- * lobby and a harpsichord ground under the match.
+ * picture does. The announcer calls the start, the big clashes and the
+ * winner.
  *
- * Cheers are rationed on purpose. Ordinary touches get the chime and
- * polite applause. Only a clash (both jab, one parries) or a match point
- * gets a cheer, and never twice inside the cooldown, so it stays special.
+ * Cheers are rationed on purpose. Ordinary hits get a thump and
+ * applause. Only a big clash or the final hit gets a cheer, and never
+ * twice inside the cooldown, so it stays special.
  */
 export class SoundDirector {
   readonly sfx: Sfx;
   private readonly crowd: Crowd;
   private readonly music: Music;
-  private readonly referee: RefereeVoice;
+  private readonly announcer: Announcer;
   private lastCheerAt = -Infinity;
+  private lastClashCallAt = -Infinity;
   private afterFanfare: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
@@ -32,8 +38,8 @@ export class SoundDirector {
     this.sfx = new Sfx(engine);
     this.crowd = new Crowd(engine);
     this.music = new Music(engine);
-    // The hall hushes a little while the referee speaks.
-    this.referee = new RefereeVoice(() => {
+    // The hall hushes a little while the announcer speaks.
+    this.announcer = new Announcer(() => {
       this.engine.duck("music", 0.6, 0.9);
       this.engine.duck("crowd", 0.6, 0.9);
     });
@@ -53,12 +59,12 @@ export class SoundDirector {
         this.crowd.stopMurmur();
         this.engine.holdDuck("music", 1);
         break;
-      case "enGarde":
+      case "countdown":
         this.cancelFanfare();
         this.music.play("match");
         this.crowd.startMurmur();
         this.engine.holdDuck("music", 1);
-        this.referee.call("En garde !", "En garde!");
+        this.announcer.say("Blades ready!");
         break;
       case "paused":
         this.engine.holdDuck("music", 0.35);
@@ -80,50 +86,35 @@ export class SoundDirector {
     switch (event.type) {
       case "countdown":
         this.sfx.tick();
-        if (event.remaining === 1) this.referee.call("Prêts ?", "Ready?");
         break;
-      case "allez":
-        this.sfx.buzzer();
-        this.referee.call("Allez !", "Allez!", 1.1);
+      case "fight":
+        this.sfx.gong();
+        this.announcer.say("Fight!", 1.1);
         break;
-      case "touch":
-        // The music drops away for the slow motion, and comes back with the burst.
+      case "swing":
+        this.sfx.whoosh(Math.min(1, event.speed / 20));
+        break;
+      case "clash":
+        this.sfx.clang(event.strength);
+        if (event.strength >= BIG_CLASH) this.bigClash();
+        break;
+      case "hit":
         this.sfx.impact();
-        this.engine.duck("music", 0.15, 1.1);
-        this.referee.call("Touché !", "Touché!");
-        if (event.matchPoint) this.cheer(0.8);
+        if (!event.final) {
+          this.crowd.applause(1.2, 0.6);
+          break;
+        }
+        // The music drops away for the slow motion, and comes back with the burst.
+        this.engine.duck("music", 0.15, 1.3);
+        this.crowd.gasp();
         break;
-      case "impact":
+      case "finish":
         this.sfx.impact();
         this.sfx.chime();
-        this.crowd.applause();
-        break;
-      case "parry":
-        this.sfx.parry();
-        break;
-      case "parried":
-        this.sfx.clang();
-        if (event.clash) {
-          this.crowd.gasp();
-          this.cheer(0.5);
-        }
-        break;
-      case "double":
-        this.sfx.impact();
-        this.referee.call("Coup double !", "Double touch!");
-        break;
-      case "corps":
-        this.sfx.buzzer();
-        this.referee.call("Halte ! Corps à corps.", "Halt! Body contact.");
-        break;
-      case "jab":
-        this.sfx.jab();
-        break;
-      case "whiff":
-        this.sfx.whiff();
+        this.cheer(1, true);
         break;
       case "matchWon":
-        this.referee.call("Victoire !", "Victory!");
+        this.announcer.say(event.winner === 1 ? "Player one wins!" : "Player two wins!");
         break;
     }
   }
@@ -132,8 +123,17 @@ export class SoundDirector {
     this.cancelFanfare();
     this.music.stop();
     this.crowd.stopMurmur();
-    this.referee.stop();
+    this.announcer.stop();
     this.sfx.dispose();
+  }
+
+  private bigClash(): void {
+    this.crowd.gasp();
+    this.cheer(0.5);
+    const now = performance.now();
+    if (now - this.lastClashCallAt < CLASH_CALL_GAP_MS) return;
+    this.lastClashCallAt = now;
+    this.announcer.say("What a clash!", 1.15);
   }
 
   private cancelFanfare(): void {

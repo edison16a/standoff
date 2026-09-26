@@ -10,9 +10,9 @@ export interface HallTheme {
   sky: number;
   ground: number;
   hemisphere: number;
-  /** The follow spot over the fencers, which also casts their shadows. */
+  /** The follow spot over the fighters, which also casts their shadows. */
   key: { color: number; intensity: number };
-  /** Cool lights from behind that outline the fencers against the hall. */
+  /** Cool lights from behind that outline the fighters against the hall. */
   rim: { color: number; intensity: number };
   /** Pools of light down the strip, and how visible their beams are. */
   spots: { color: number; intensity: number; beam: number };

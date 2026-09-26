@@ -15,7 +15,7 @@ interface Sample {
 
 /**
  * A ribbon of light swept by the outer blade, bright at the tip, fading
- * out behind it. Every jab, parry and flick of the phone leaves one, in the
+ * out behind it. Every swing and flick of the phone leaves one, in the
  * player's colour. Samples carry the game clock, so the ribbon lingers in
  * slow motion like everything else.
  */

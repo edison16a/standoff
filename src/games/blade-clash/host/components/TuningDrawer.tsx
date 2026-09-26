@@ -4,11 +4,11 @@ import { IconButton } from "@/components/ui/IconButton";
 import { Slider } from "@/components/ui/Slider";
 import { Tabs } from "@/components/ui/Tabs";
 import { DEFAULT_TUNING, TUNING_FIELDS, type TuningGroup } from "@/games/blade-clash/tuning";
-import { useFencingStore } from "../host-store";
+import { useBladeStore } from "../host-store";
 import { useSession } from "./session-context";
 
 const GROUPS: { id: TuningGroup; label: string }[] = [
-  { id: "Strikes", label: "Strikes" },
+  { id: "Swords", label: "Swords" },
   { id: "Sound", label: "Sound" },
 ];
 
@@ -19,12 +19,12 @@ function format(value: number, step: number, unit: string): string {
 
 /**
  * Every feel value, live, in a panel that slides over the side of the
- * strip. Changes reach both phones at once. Nothing is saved.
+ * duel. Nothing is saved.
  */
 export function TuningDrawer({ onClose }: { onClose: () => void }) {
   const session = useSession();
-  const tuning = useFencingStore((state) => state.tuning);
-  const [group, setGroup] = useState<TuningGroup>("Strikes");
+  const tuning = useBladeStore((state) => state.tuning);
+  const [group, setGroup] = useState<TuningGroup>("Swords");
 
   return (
     <aside className="drawer" aria-label="Tuning">

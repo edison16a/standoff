@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { brushedBump, leatherBump, stripes, weaveBump } from "./textures";
+import { brushedBump } from "./textures";
 
 /**
  * Shared materials, made once per look and reused by every model that
- * wears it, so two fencers and a crowd cost a handful of shader programs.
+ * wears it, so two fighters and a crowd cost a handful of shader programs.
  * Every surface kind has one recipe here, which keeps the hall consistent.
  */
 
@@ -20,40 +20,6 @@ function made(key: string, make: () => THREE.MeshStandardMaterial): THREE.MeshSt
   return material;
 }
 
-/** Woven cloth: fencing whites, doublets, coats and breeches. */
-export function cloth(color: THREE.ColorRepresentation, roughness = 0.82): THREE.MeshStandardMaterial {
-  return made(`cloth:${String(color)}:${roughness}`, () => {
-    const material = new THREE.MeshStandardMaterial({ color, roughness, metalness: 0 });
-    material.bumpMap = weaveBump();
-    material.bumpScale = 0.35;
-    return material;
-  });
-}
-
-/** Cloth with a pin stripe running down it. */
-export function pinstripe(color: THREE.ColorRepresentation): THREE.MeshStandardMaterial {
-  return made(`pinstripe:${String(color)}`, () => {
-    const material = new THREE.MeshStandardMaterial({ color, roughness: 0.85, map: stripes() });
-    material.bumpMap = weaveBump();
-    material.bumpScale = 0.35;
-    return material;
-  });
-}
-
-/** Satin and silk: a smoother cloth with a soft sheen, for sashes, capes and trims. */
-export function satin(color: THREE.ColorRepresentation): THREE.MeshStandardMaterial {
-  return made(`satin:${String(color)}`, () => new THREE.MeshStandardMaterial({ color, roughness: 0.5, metalness: 0.05 }));
-}
-
-export function leather(color: THREE.ColorRepresentation, roughness = 0.6): THREE.MeshStandardMaterial {
-  return made(`leather:${String(color)}:${roughness}`, () => {
-    const material = new THREE.MeshStandardMaterial({ color, roughness, metalness: 0 });
-    material.bumpMap = leatherBump();
-    material.bumpScale = 0.5;
-    return material;
-  });
-}
-
 /** Polished or worked metal. Blades are near mirrors, armour is brushed. */
 export function metal(color: THREE.ColorRepresentation, roughness = 0.28, brushed = true): THREE.MeshStandardMaterial {
   return made(`metal:${String(color)}:${roughness}:${brushed}`, () => {
@@ -64,10 +30,6 @@ export function metal(color: THREE.ColorRepresentation, roughness = 0.28, brushe
     }
     return material;
   });
-}
-
-export function skin(color: THREE.ColorRepresentation): THREE.MeshStandardMaterial {
-  return made(`skin:${String(color)}`, () => new THREE.MeshStandardMaterial({ color, roughness: 0.58, metalness: 0 }));
 }
 
 /** Hard smooth plastic and rubber: grips, soles, sockets. */
@@ -86,10 +48,4 @@ export function own(material: THREE.MeshStandardMaterial, changes: Partial<THREE
   copy.userData.shared = false;
   copy.setValues(changes);
   return copy;
-}
-
-/** Frees every shared material. They are otherwise kept for the life of the page, shared by every renderer. */
-export function disposeMaterials(): void {
-  for (const material of cache.values()) material.dispose();
-  cache.clear();
 }

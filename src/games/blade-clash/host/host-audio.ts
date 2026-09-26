@@ -3,7 +3,7 @@ import type { Tuning } from "@/games/blade-clash/tuning";
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 
 /**
- * Fencing's sound on the computer. The platform owns the audio engine and
+ * Blade Clash's sound on the computer. The platform owns the audio engine and
  * unlocked it in the click that opened the room. This directs it: music,
  * crowd and the sound of every clash.
  */

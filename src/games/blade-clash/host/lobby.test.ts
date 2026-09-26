@@ -6,19 +6,19 @@ describe("Lobby", () => {
     const lobby = new Lobby();
     lobby.connect(1);
     lobby.connect(2);
-    lobby.pick(1, "vale");
+    lobby.pick(1, "star");
     lobby.setReady(1, true);
     expect(lobby.canStart).toBe(false);
-    lobby.pick(2, "iron");
+    lobby.pick(2, "knight");
     lobby.setReady(2, true);
     expect(lobby.canStart).toBe(true);
-    expect(lobby.picks).toEqual({ 1: "vale", 2: "iron" });
+    expect(lobby.picks).toEqual({ 1: "star", 2: "knight" });
   });
 
-  it("refuses a fencer the other player already has", () => {
+  it("refuses a fighter the other player already has", () => {
     const lobby = new Lobby();
-    lobby.pick(1, "marrow");
-    expect(lobby.pick(2, "marrow")).toBe(false);
+    lobby.pick(1, "block");
+    expect(lobby.pick(2, "block")).toBe(false);
     expect(lobby.seats[2].pick).toBeNull();
   });
 
@@ -26,28 +26,28 @@ describe("Lobby", () => {
     const lobby = new Lobby();
     lobby.setReady(1, true);
     expect(lobby.seats[1].ready).toBe(false);
-    lobby.pick(1, "vale");
+    lobby.pick(1, "star");
     lobby.setReady(1, true);
-    lobby.pick(1, "duchess");
+    lobby.pick(1, "samurai");
     expect(lobby.seats[1].ready).toBe(false);
   });
 
-  it("seats the computer ready to play on a fencer nobody has", () => {
+  it("seats the computer ready to play on a fighter nobody has", () => {
     const lobby = new Lobby();
     lobby.connect(1);
-    lobby.pick(1, "iron");
+    lobby.pick(1, "knight");
     expect(lobby.seatComputer(2)).toBe(true);
-    expect(lobby.seats[2]).toMatchObject({ connected: true, ready: true, computer: true, pick: "marrow" });
+    expect(lobby.seats[2]).toMatchObject({ connected: true, ready: true, computer: true, pick: "samurai" });
     lobby.setReady(1, true);
     expect(lobby.canStart).toBe(true);
   });
 
-  it("moves the computer off a fencer the player wants", () => {
+  it("moves the computer off a fighter the player wants", () => {
     const lobby = new Lobby();
     lobby.seatComputer(2);
-    expect(lobby.seats[2].pick).toBe("iron");
-    expect(lobby.pick(1, "iron")).toBe(true);
-    expect(lobby.seats[2].pick).toBe("marrow");
+    expect(lobby.seats[2].pick).toBe("knight");
+    expect(lobby.pick(1, "knight")).toBe(true);
+    expect(lobby.seats[2].pick).toBe("samurai");
   });
 
   it("keeps the computer ready between matches and frees its seat on request", () => {

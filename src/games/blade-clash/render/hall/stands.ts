@@ -15,7 +15,7 @@ const SEAT_GAP = 0.62;
 
 interface Fan {
   seat: THREE.Vector3;
-  /** Which fencer they came for, if anyone. Their side cheers hardest. */
+  /** Which fighter they came for, if anyone. Their side cheers hardest. */
   side: Slot | null;
   phase: number;
   delay: number;

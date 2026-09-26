@@ -1,6 +1,7 @@
 /*
-  Fencing on the computer: the strip, the player chips, the big call in
-  the middle, the result and the tuning drawer.
+  Blade Clash on the computer: the split screen, each player's bar with
+  their health, the calibration targets, the big word in the middle, the
+  result and the tuning drawer.
 */
 
 .stage {
@@ -18,72 +19,157 @@
   height: 100%;
 }
 
-.player-bar {
+.stage__divider {
   position: absolute;
-  top: 20px;
+  top: 0;
+  bottom: 0;
   left: 50%;
+  width: 4px;
   transform: translateX(-50%);
-  display: flex;
-  gap: 12px;
+  background: #0c0a1c;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
 }
 
-.chip {
-  display: inline-flex;
+/* Each player's bar sits at the top of their own half. */
+.hud {
+  position: absolute;
+  top: 18px;
+  display: flex;
+  justify-content: center;
+  padding: 0 24px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.hud__card {
+  display: grid;
+  grid-template-columns: auto 1fr;
   align-items: center;
-  gap: 10px;
-  height: 42px;
-  padding: 0 18px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 999px;
-  background: rgba(12, 10, 28, 0.66);
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 15px;
-  white-space: nowrap;
+  column-gap: 12px;
+  row-gap: 6px;
+  min-width: min(360px, 100%);
+  padding: 10px 18px 12px;
+  border: 2px solid var(--lamp);
+  border-radius: 18px;
+  background: rgba(12, 10, 28, 0.7);
+  color: #ffffff;
+  box-shadow: 0 0 18px color-mix(in srgb, var(--lamp) 40%, transparent), 0 6px 24px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
 }
 
-.chip--on {
-  border: 2px solid var(--lamp);
-  color: #ffffff;
-  box-shadow: 0 0 18px color-mix(in srgb, var(--lamp) 45%, transparent), 0 6px 24px rgba(0, 0, 0, 0.25);
+.hud__name {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.chip__sub {
-  color: rgba(255, 255, 255, 0.62);
-  font-weight: 500;
+.hud__sub {
+  justify-self: end;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  white-space: nowrap;
 }
 
-.pips {
-  display: inline-flex;
+.hud__health,
+.hud__status {
+  grid-column: 1 / -1;
+}
+
+.hud__health {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
   gap: 5px;
 }
 
-.pip {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.4);
+.hud__cell {
+  height: 14px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.14);
+  transition: background-color 200ms ease;
 }
 
-/* Red and green, like the scoring lamps, matching each fencer's trim on the strip. */
-.chip--p1 {
-  --lamp: #ff4757;
-}
-
-.chip--p2 {
-  --lamp: #2ed573;
-}
-
-.pip--on {
-  border-color: var(--lamp);
+.hud__cell--full {
   background: var(--lamp);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--lamp) 60%, transparent);
+}
+
+.hud__status {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 15px;
+}
+
+.hud__status--ready {
+  color: var(--lamp);
+  font-weight: 800;
+}
+
+/* The little map of who plays in which half, over the divider. */
+.hud-map {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  width: 150px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* A calibration target in a player's half, big enough to find from the sofa. */
+.calib-target {
+  position: absolute;
+  width: 72px;
+  height: 72px;
+  transform: translate(-50%, -50%);
+  border: 6px solid var(--lamp);
+  border-radius: 50%;
+  box-shadow: 0 0 0 6px rgba(12, 10, 28, 0.55), 0 0 30px var(--lamp);
+  pointer-events: none;
+  animation: calib-pulse 1.2s ease-in-out infinite;
+}
+
+.calib-target::after {
+  content: "";
+  position: absolute;
+  inset: 22px;
+  border-radius: 50%;
+  background: var(--lamp);
+}
+
+.calib-target__word,
+.calib-note {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(12, 10, 28, 0.72);
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.calib-note {
+  top: auto;
+  bottom: 32px;
+  border: 2px solid var(--lamp);
+  pointer-events: none;
+}
+
+@keyframes calib-pulse {
+  50% {
+    transform: translate(-50%, -50%) scale(1.12);
+  }
 }
 
 .banner {
   position: absolute;
-  top: 16%;
+  top: 30%;
   left: 50%;
   transform: translateX(-50%) skewX(-6deg);
   font-size: clamp(48px, 9vw, 128px);

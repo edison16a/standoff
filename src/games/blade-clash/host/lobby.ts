@@ -10,16 +10,16 @@ export interface SeatState {
   computer: boolean;
 }
 
-/** The fencers the computer likes, in order. It takes the first one free. */
-const COMPUTER_PICKS: readonly CharacterId[] = ["iron", "marrow", "duchess", "vale"];
+/** The fighters the computer likes, in order. It takes the first one free. */
+const COMPUTER_PICKS: readonly CharacterId[] = ["knight", "samurai", "star", "block"];
 
 const emptySeat = (): SeatState => ({ connected: false, pick: null, ready: false, computer: false });
 
 /**
  * Who is here, who they picked and whether they are ready. Two players
- * cannot pick the same character, so each fencer stays recognisable on
- * the strip. Changing your pick drops your ready flag, so nobody starts a
- * match against a character they did not see.
+ * cannot pick the same character, so each fighter stays recognisable.
+ * Changing your pick drops your ready flag, so nobody starts a match
+ * against a character they did not see.
  */
 export class Lobby {
   seats: PerSlot<SeatState> = perSlot(emptySeat);
@@ -82,7 +82,7 @@ export class Lobby {
 
   private spareFor(slot: Slot): CharacterId {
     const taken = this.seats[otherSlot(slot)].pick;
-    return COMPUTER_PICKS.find((id) => id !== taken) ?? "iron";
+    return COMPUTER_PICKS.find((id) => id !== taken) ?? "knight";
   }
 
   setReady(slot: Slot, ready: boolean): void {
@@ -100,7 +100,7 @@ export class Lobby {
 
   /** The characters for the engine. Only meaningful once `canStart` is true. */
   get picks(): PerSlot<CharacterId> {
-    return { 1: this.seats[1].pick ?? "vale", 2: this.seats[2].pick ?? "iron" };
+    return { 1: this.seats[1].pick ?? "knight", 2: this.seats[2].pick ?? "samurai" };
   }
 
   /** After a match, every person has to confirm again before the next one. */

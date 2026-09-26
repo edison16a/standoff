@@ -1,13 +1,13 @@
 import * as THREE from "three";
-import { STRIP_HALF_LENGTH } from "@/games/blade-clash/engine/rules";
+import { LINE_HALF_LENGTH } from "@/games/blade-clash/engine/rules";
 import { disposeOwned, MeshBuilder } from "../kit/mesh-builder";
 import { glow, own, plastic } from "../kit/materials";
 import type { HallTheme } from "./hall-theme";
 import { pisteTexture, STRIP_WIDTH } from "./hall-textures";
 
-/** The podium's top, where the fencers stand. Everything on the strip sits at this height. */
+/** The podium's top, where the fighters stand. Everything on the strip sits at this height. */
 export const PODIUM_TOP = 0.12;
-const PODIUM_HALF_LENGTH = STRIP_HALF_LENGTH + 1.8;
+const PODIUM_HALF_LENGTH = LINE_HALF_LENGTH + 1.8;
 const PODIUM_WIDTH = 2.5;
 
 /**
@@ -30,7 +30,7 @@ export class Piste {
     this.group.add(b.build("podium"));
 
     const strip = new THREE.Mesh(
-      new THREE.PlaneGeometry(STRIP_HALF_LENGTH * 2, STRIP_WIDTH),
+      new THREE.PlaneGeometry(LINE_HALF_LENGTH * 2, STRIP_WIDTH),
       new THREE.MeshStandardMaterial({ map: pisteTexture(`#${theme.piste.toString(16).padStart(6, "0")}`), roughness: 0.34, metalness: 0.45 }),
     );
     strip.rotation.x = -Math.PI / 2;
@@ -41,7 +41,7 @@ export class Piste {
     for (const side of [-1, 1]) {
       const runoff = new THREE.Mesh(new THREE.PlaneGeometry(1.6, STRIP_WIDTH), new THREE.MeshStandardMaterial({ color: theme.piste, roughness: 0.7, metalness: 0.2 }));
       runoff.rotation.x = -Math.PI / 2;
-      runoff.position.set(side * (STRIP_HALF_LENGTH + 0.8), PODIUM_TOP + 0.0015, 0);
+      runoff.position.set(side * (LINE_HALF_LENGTH + 0.8), PODIUM_TOP + 0.0015, 0);
       runoff.receiveShadow = true;
       this.group.add(runoff);
     }

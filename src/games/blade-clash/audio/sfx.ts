@@ -4,7 +4,7 @@ import { createRoom, vary, type Room } from "./mix";
 
 /**
  * One shot effects. Each is fired straight off the game event that also
- * drives the animation, so the whoosh and the lunge start together. The
+ * drives the picture, so the whoosh and the swing start together. The
  * big ones are a sharp transient, a body and a tail into the hall's
  * reverb, and every one is pitched a little differently each time.
  */
@@ -23,42 +23,28 @@ export class Sfx {
     return this.room.input;
   }
 
-  /** A sharp rising swish of the blade cutting air, for a jab. */
-  jab(): void {
+  /** The swish of a blade cutting the air, bigger and brighter for a faster swing (`strength` 0 to 1). */
+  whoosh(strength: number): void {
     const at = this.engine.now;
-    const f = vary(900, 0.12);
-    noise(this.engine, this.out, at, { filter: "bandpass", frequency: f, sweepTo: f * 4.6, q: 1.4, attack: 0.02, decay: vary(0.16, 0.1), peak: 0.7 });
-    noise(this.engine, this.out, at, { filter: "highpass", frequency: vary(5000, 0.1), attack: 0.01, decay: 0.08, peak: 0.15 });
-    // The thin whistle of the steel itself, riding on the swish.
-    tone(this.engine, this.out, at + 0.02, { frequency: vary(2400, 0.08), glideTo: 3600, attack: 0.02, decay: 0.1, peak: 0.03 });
+    const f = vary(700 + 500 * strength, 0.12);
+    noise(this.engine, this.out, at, { filter: "bandpass", frequency: f, sweepTo: f * 3.6, q: 1.4, attack: 0.02, decay: vary(0.14 + 0.08 * strength, 0.1), peak: 0.35 + 0.4 * strength });
+    noise(this.engine, this.out, at, { filter: "highpass", frequency: vary(5000, 0.1), attack: 0.01, decay: 0.08, peak: 0.1 + 0.1 * strength });
   }
 
-  /** A lighter, falling swish when a jab lands on nothing. */
-  whiff(): void {
-    const f = vary(2600, 0.1);
-    noise(this.engine, this.out, this.engine.now, { filter: "bandpass", frequency: f, sweepTo: f * 0.27, q: 1.1, attack: 0.01, decay: 0.2, peak: 0.22 });
-  }
-
-  /** A blade raised to parry: a quick scrape of steel, quieter than a clash. */
-  parry(): void {
-    const at = this.engine.now;
-    noise(this.engine, this.out, at, { filter: "bandpass", frequency: vary(4200, 0.1), sweepTo: 2600, q: 2.5, attack: 0.01, decay: 0.12, peak: 0.24 });
-    tone(this.engine, this.out, at, { frequency: vary(2553, 0.04), decay: 0.18, peak: 0.05 });
-  }
-
-  /** Steel on steel: a bright strike plus a few inharmonic partials that ring round the hall. */
-  clang(): void {
+  /** Steel on steel: a bright strike plus a few inharmonic partials that ring round the hall, louder for a harder clash. */
+  clang(strength = 0.5): void {
     const at = this.engine.now;
     const pitch = vary(1, 0.04);
-    noise(this.engine, this.out, at, { filter: "highpass", frequency: 3000, decay: 0.05, peak: 0.4 });
+    const loud = 0.6 + 0.6 * strength;
+    noise(this.engine, this.out, at, { filter: "highpass", frequency: 3000, decay: 0.05, peak: 0.4 * loud });
     for (const [frequency, peak, decay] of [
       [1870, 0.13, 0.7],
       [2553, 0.1, 0.55],
       [3411, 0.07, 0.45],
       [4987, 0.04, 0.3],
     ] as const) {
-      tone(this.engine, this.out, at, { frequency: frequency * pitch, decay, peak });
-      tone(this.engine, this.wet, at, { frequency: frequency * pitch, decay: decay * 1.4, peak: peak * 0.6 });
+      tone(this.engine, this.out, at, { frequency: frequency * pitch, decay, peak: peak * loud });
+      tone(this.engine, this.wet, at, { frequency: frequency * pitch, decay: decay * 1.4, peak: peak * 0.6 * loud });
     }
   }
 
@@ -72,12 +58,19 @@ export class Sfx {
     noise(this.engine, this.wet, at, { filter: "lowpass", frequency: 2200, decay: 0.3, peak: 0.3 });
   }
 
-  /** The starting signal: a short square buzz, like a real fencing box. */
-  buzzer(): void {
+  /** The starting signal: a struck gong, low and long. */
+  gong(): void {
     const at = this.engine.now;
-    tone(this.engine, this.out, at, { type: "square", frequency: 440, attack: 0.005, decay: 0.45, peak: 0.12 });
-    tone(this.engine, this.out, at, { type: "square", frequency: 443, attack: 0.005, decay: 0.45, peak: 0.08 });
-    tone(this.engine, this.wet, at, { type: "square", frequency: 440, attack: 0.005, decay: 0.45, peak: 0.05 });
+    for (const [frequency, peak, decay] of [
+      [98, 0.3, 2.4],
+      [196.7, 0.14, 1.8],
+      [262, 0.08, 1.4],
+      [331, 0.05, 1],
+    ] as const) {
+      tone(this.engine, this.out, at, { frequency, decay, peak });
+      tone(this.engine, this.wet, at, { frequency, decay: decay * 1.2, peak: peak * 0.5 });
+    }
+    noise(this.engine, this.out, at, { filter: "lowpass", frequency: 900, decay: 0.12, peak: 0.3 });
   }
 
   /** A soft tick for each second of the countdown. */
@@ -85,7 +78,7 @@ export class Sfx {
     tone(this.engine, this.out, this.engine.now, { type: "triangle", frequency: 1320, decay: 0.07, peak: 0.12 });
   }
 
-  /** Two note chime when a touch is scored, apart from the impact itself. */
+  /** A two note chime: a calibration target captured on the phone, or the winning blow on the big screen. */
   chime(): void {
     const at = this.engine.now + 0.12;
     tone(this.engine, this.out, at, { type: "triangle", frequency: 1047, decay: 0.5, peak: 0.16 });

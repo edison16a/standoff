@@ -1,12 +1,12 @@
 import type * as THREE from "three";
-import { EN_GARDE_X, STRIP_HALF_LENGTH } from "@/games/blade-clash/engine/rules";
+import { LINE_HALF_LENGTH, START_X } from "@/games/blade-clash/engine/rules";
 import { canvasTexture } from "../kit/textures";
 
 /** Pixels per metre along the strip's texture. */
 const STRIP_PX = 140;
 /** The strip is 1.6 m wide, painted across this many pixels. */
 export const STRIP_WIDTH = 1.6;
-/** The last two metres at each end warn a fencer the back of the strip is near. */
+/** The last two metres at each end warn a fighter the end of the line is near. */
 const WARNING_ZONE = 2;
 
 /**
@@ -16,7 +16,7 @@ const WARNING_ZONE = 2;
  * from end to end, texture x running along the strip.
  */
 export function pisteTexture(base: string): THREE.CanvasTexture {
-  const length = STRIP_HALF_LENGTH * 2;
+  const length = LINE_HALF_LENGTH * 2;
   return canvasTexture(`piste:${base}`, (ctx, w, h, rand) => {
     ctx.fillStyle = base;
     ctx.fillRect(0, 0, w, h);
@@ -26,20 +26,20 @@ export function pisteTexture(base: string): THREE.CanvasTexture {
       ctx.fillStyle = light ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.07)";
       ctx.fillRect(rand() * w, rand() * h, 2, 2);
     }
-    const x = (metres: number) => (metres + STRIP_HALF_LENGTH) * STRIP_PX;
+    const x = (metres: number) => (metres + LINE_HALF_LENGTH) * STRIP_PX;
     // Warning zones, tinted, then the lines over everything.
     ctx.fillStyle = "rgba(255,120,60,0.28)";
-    ctx.fillRect(x(-STRIP_HALF_LENGTH), 0, WARNING_ZONE * STRIP_PX, h);
-    ctx.fillRect(x(STRIP_HALF_LENGTH - WARNING_ZONE), 0, WARNING_ZONE * STRIP_PX, h);
+    ctx.fillRect(x(-LINE_HALF_LENGTH), 0, WARNING_ZONE * STRIP_PX, h);
+    ctx.fillRect(x(LINE_HALF_LENGTH - WARNING_ZONE), 0, WARNING_ZONE * STRIP_PX, h);
     ctx.fillStyle = "rgba(255,255,255,0.92)";
     const line = (metres: number, width = 7) => ctx.fillRect(x(metres) - width / 2, 0, width, h);
     line(0, 8);
-    line(-EN_GARDE_X);
-    line(EN_GARDE_X);
-    line(-STRIP_HALF_LENGTH + WARNING_ZONE, 5);
-    line(STRIP_HALF_LENGTH - WARNING_ZONE, 5);
-    line(-STRIP_HALF_LENGTH + 4, 3);
-    line(STRIP_HALF_LENGTH - 4, 3);
+    line(-START_X);
+    line(START_X);
+    line(-LINE_HALF_LENGTH + WARNING_ZONE, 5);
+    line(LINE_HALF_LENGTH - WARNING_ZONE, 5);
+    line(-LINE_HALF_LENGTH + 4, 3);
+    line(LINE_HALF_LENGTH - 4, 3);
     ctx.fillRect(0, 0, w, 5);
     ctx.fillRect(0, h - 5, w, 5);
     ctx.fillRect(0, 0, 10, h);

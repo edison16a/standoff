@@ -1,26 +1,30 @@
 "use client";
-import { useFencingStore } from "../host-store";
+import { useBladeStore } from "../host-store";
+import { CalibrationTargets } from "./CalibrationTargets";
+import { DuelCanvas } from "./DuelCanvas";
+import { HudBar } from "./HudBar";
 import { MatchOver } from "./MatchOver";
 import { PhaseBanner } from "./PhaseBanner";
-import { PlayerBar } from "./PlayerBar";
-import { StageCanvas } from "./StageCanvas";
 import { TuningDrawer } from "./TuningDrawer";
 
 /**
- * Fencing on one full screen stage. The strip is always there: players
- * appear on it as they pick fencers, the countdown starts on the same
- * picture, and the match and the result play out on top. The platform
- * adds the logo, the tool bar and the join code around it.
+ * Blade Clash on one full screen, split down the middle: each player's
+ * half looks over their own fighter's shoulder at the other. Players
+ * appear as they pick fighters, calibration targets show in each half,
+ * and the fight and the result play out on top. The platform adds the
+ * logo, the tool bar and the join code around it.
  */
 export function Stage() {
-  const tuningOpen = useFencingStore((state) => state.tuningOpen);
+  const tuningOpen = useBladeStore((state) => state.tuningOpen);
   return (
     <div className="stage">
-      <StageCanvas />
-      <PlayerBar />
+      <DuelCanvas />
+      <span className="stage__divider" aria-hidden="true" />
+      <HudBar />
+      <CalibrationTargets />
       <PhaseBanner />
       <MatchOver />
-      {tuningOpen && <TuningDrawer onClose={() => useFencingStore.setState({ tuningOpen: false })} />}
+      {tuningOpen && <TuningDrawer onClose={() => useBladeStore.setState({ tuningOpen: false })} />}
     </div>
   );
 }
