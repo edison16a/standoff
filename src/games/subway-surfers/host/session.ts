@@ -94,9 +94,13 @@ export class SurfSession {
   }
 
   recalibrate(): void {
+    // Played with the keys there is no camera to calibrate, so this is the way back to the players.
+    if (!this.kit) return this.toLobby();
     this.room.setPlaying(false);
     this.round = null;
-    store.setState({ phase: this.kit ? "calibrate" : "lobby" });
+    // Straight from the results the music has not come back yet, and calibrating in silence feels broken.
+    this.sound.play("menu");
+    store.setState({ phase: "calibrate", countdown: null });
   }
 
   skipTutorial(): void {

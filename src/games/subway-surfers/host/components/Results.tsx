@@ -39,9 +39,11 @@ export function Results() {
           <button type="button" className="ss-button ss-button--go" onClick={() => session.playAgain()}>
             Play again
           </button>
-          <button type="button" className="ss-button ss-button--quiet" onClick={() => session.recalibrate()}>
-            Calibrate again
-          </button>
+          {session.kit && (
+            <button type="button" className="ss-button ss-button--quiet" onClick={() => session.recalibrate()}>
+              Calibrate again
+            </button>
+          )}
           <button type="button" className="ss-button ss-button--quiet" onClick={() => session.toLobby()}>
             Players
           </button>
