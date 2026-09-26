@@ -1,0 +1,43 @@
+/* The frame rate choices: one pill of equal segments, the chosen one filled. */
+.frame-rate {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-muted);
+}
+
+.frame-rate__choice {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 30px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.frame-rate__choice:hover {
+  color: var(--text);
+}
+
+.frame-rate__choice--on {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.frame-rate__choice--on:hover {
+  color: var(--on-accent);
+}
+
+.frame-rate__choice:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}

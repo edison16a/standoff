@@ -8,13 +8,14 @@ import {
   saveAudioSettings,
   type AudioSettings,
 } from "@/platform/audio/audio-settings";
+import { FrameRateSection } from "./FrameRateSection";
 
 const ROWS: { key: keyof AudioSettings; label: string }[] = [
   { key: "music", label: "Music" },
   { key: "effects", label: "Sound effects" },
 ];
 
-/** Two volume sliders. Changes apply live to every open audio engine. */
+/** Two volume sliders and the frame rate cap. Changes apply live. */
 export function SettingsPanel() {
   const [settings, setSettings] = useState<AudioSettings>(loadAudioSettings);
   useEffect(() => onAudioSettings(setSettings), []);
@@ -43,6 +44,7 @@ export function SettingsPanel() {
           </label>
         );
       })}
+      <FrameRateSection />
     </>
   );
 }
