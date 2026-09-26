@@ -62,4 +62,8 @@ Effects have a sharp hit, a body and a tail into a synthetic stadium reverb, eac
 * `protocol/`: the zod schemas for messages both ways.
 * `showcase/`: the game playing itself for the home screen's icon, poster and clip.
 
+## Home screen media
+
+The icon, the poster and the looping clip are filmed from the showcase with `node tools/media/capture.mjs fifa-3v3 --url http://localhost:3000 --ffmpeg ffmpeg --max-mb 3.9`. The showcase plays a seeded match between computer players and picks its goal by playing the match through once: a charged strike from outside the box by a player who beat his man with a skill move a moment before. The loop follows the ball with a camera lower and nearer than the broadcast one, so the skill move, the charge bar over the shooter and the big pitch's lines all read on a small tile. Then the strike, the keeper at full stretch, and the close up of the celebration. The icon is the strike leaving the boot, filmed low from the goal side. The poster looks over the shooter's shoulder as the keeper dives. Every name tag is one of the made up stars.
+
 Players who leave are played by a computer until they come back, and a host that reconnects sends every phone its state again.
