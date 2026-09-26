@@ -15,7 +15,7 @@ An endless runner on the neon rails of a city at night, played from the waist up
    * **Jump** so your head goes up out of the band, over low barriers, onto ramps and from roof to roof.
    * **Duck** so your head drops below the band to roll under the high barriers. You keep rolling while your head stays down. Ducking in the air slams you back down. Your head dipping as you land from a jump is not a duck.
 6. One hit ends the run, unless you are on a hoverboard. Glancing off the side of a train brings the guard and his dog close. Do it twice and they catch you.
-7. With two players each runs their own copy of the same yard, side by side. When one crashes the other keeps going. When both are out the results show the winner, confetti and the best runs on this computer. Jump (or click Play again) for another go.
+7. With two players each runs their own copy of the same yard, side by side. A small map at the top right shows which half is whose, each name in its player's colour. When one crashes the other keeps going. When both are out the results show the winner, confetti and the best runs on this computer. Jump (or click Play again) for another go.
 
 Step out of the picture and your run waits for you, then counts you back in. With two players, once one has crashed, the other has 15 seconds to come back before their run ends too. If the camera stops mid run, every run waits and the screen says what went wrong. The camera turns off in the lobby. The small camera picture in the corner shows what the camera sees, with each player's head line and band.
 

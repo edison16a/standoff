@@ -1,0 +1,44 @@
+/*
+  The split screen map, top right under the platform's tools while two
+  players run. The right half's score and coins move over to make room,
+  and the tutorial's words start under it, so nothing hides behind it.
+*/
+.ss-hud--2 {
+  --ss-map-w: clamp(180px, 12vw, 260px);
+  /* Where the map ends, plus a gap. The map is the screen's shape, set on the overlay as height over width. */
+  --ss-under-map: calc(72px + var(--ss-map-w) * var(--ss-screen-hw, 0.5625) + 14px);
+}
+
+.ss-map {
+  position: absolute;
+  top: 72px;
+  right: 24px;
+  width: var(--ss-map-w);
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.55));
+}
+
+/* Names are sized to the width of their pane as well, so a longer name still fits whole. */
+.ss-map .split-map__name {
+  font-size: clamp(12px, min(26cqh, 19cqw), 30px);
+}
+
+.ss-hud--2 .ss-view--right .ss-score,
+.ss-hud--2 .ss-view--right .ss-coins {
+  right: calc(var(--ss-map-w) + 40px);
+}
+
+.ss-hud--2 .ss-tut {
+  --ss-tut-top: max(18%, var(--ss-under-map));
+}
+
+.ss-hud--2 .ss-tut .ss-tut__title {
+  top: var(--ss-tut-top);
+}
+
+.ss-hud--2 .ss-tut .ss-tut__hint {
+  top: calc(var(--ss-tut-top) + 64px);
+}
+
+.ss-hud--2 .ss-tut .ss-tut__list {
+  top: calc(var(--ss-tut-top) + 104px);
+}

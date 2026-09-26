@@ -1,22 +1,13 @@
 import * as THREE from "three";
 import type { FightScene } from "./fight-scene";
+import type { ViewRect } from "./views";
 
-/** A part of the screen, as shares of its width and height from the top left. */
-export interface ViewRect {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
+export { FULL, LEFT, RIGHT, type ViewRect } from "./views";
 
 export interface View {
   rect: ViewRect;
   camera: THREE.PerspectiveCamera;
 }
-
-export const FULL: ViewRect = { x: 0, y: 0, w: 1, h: 1 };
-export const LEFT: ViewRect = { x: 0, y: 0, w: 0.5, h: 1 };
-export const RIGHT: ViewRect = { x: 0.5, y: 0, w: 0.5, h: 1 };
 
 /**
  * One WebGL canvas for the whole fight. Split screen is two scissored
@@ -66,6 +57,7 @@ export class FightRenderer {
       }
       // Particle sizes follow the view's height in real pixels and its field of view.
       scene.setView((h * px) / (2 * Math.tan(THREE.MathUtils.degToRad(view.camera.fov) / 2)), w * px, h * px);
+      scene.arena.lookFrom(view.camera.position);
       this.renderer.render(scene.scene, view.camera);
     }
   }

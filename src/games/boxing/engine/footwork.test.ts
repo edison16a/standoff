@@ -66,4 +66,18 @@ describe("footwork", () => {
     }
     expect(widest).toBeGreaterThan(before + 0.15);
   });
+
+  it("stays put, not NaN, for a zero step while giving ground after a combination", () => {
+    // A player's punch flushes the match with a zero step. It used to divide the step back by it.
+    const footwork = new Footwork(seeded(3), ["rocco", "marcus"]);
+    footwork.place(false);
+    footwork.threw(0, 0);
+    footwork.threw(0, 100);
+    footwork.update(16, 600);
+    const before = footwork.spots.map((spot) => ({ ...spot }));
+    footwork.update(0, 600);
+    expect(footwork.spots).toEqual(before);
+    footwork.update(16, 616);
+    for (const spot of footwork.spots) expect(Number.isFinite(spot.x) && Number.isFinite(spot.z)).toBe(true);
+  });
 });

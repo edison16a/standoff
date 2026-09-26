@@ -42,6 +42,8 @@ If a player steps out of view the fight pauses with a clear message, and it give
 
 Each player's view sits behind and out past their boxer's right shoulder, so their own boxer stands to the left and the opponent is seen whole, gloves and all.
 
+With two players the screen splits down the middle during the rounds, player 1 on the left. A small map at the top right shows which half is whose, each name in its player's colour. The walk out, the breaks and the end are one wide broadcast picture, with one set of health bars across it.
+
 ## What was built
 
 * `engine/` pure fight logic with tests:
@@ -71,4 +73,4 @@ Each player's view sits behind and out past their boxer's right shoulder, so the
 
 `?camera=fake` (or `tools/testing/fake-camera.js`) runs the whole game without a camera; drive players with `window.__cameraKit`. A pose with both arms `{ punch: 1 }` touches gloves, `crouch` ducks and `lean` or `x` slips. In development `window.__boxing` is the session, `window.__boxingRoundMs` changes the round length and `window.__boxingRenderScale` draws at a lower resolution on software WebGL. Every number that shapes a fight, from the round length to how much a head shot does, is in `engine/rules.ts`.
 
-Play again skips calibration: the baselines stay on the kit. Choose boxers goes back to the picks, and Menu back to choosing players.
+Play again skips calibration: the baselines stay on the kit. Choose boxers goes back to the picks, and Menu back to choosing players, which turns the camera off until the next fight.

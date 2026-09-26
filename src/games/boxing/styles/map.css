@@ -1,0 +1,25 @@
+/*
+  The split screen map, top right under the right view's health bars,
+  where that view shows only the crowd and the lights, never the boxers.
+*/
+.bx-hud {
+  --bx-map-w: clamp(200px, 14vw, 270px);
+}
+
+.bx-map {
+  position: absolute;
+  top: 150px;
+  right: 24px;
+  width: var(--bx-map-w);
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.55));
+}
+
+/* Names are sized to the width of their pane as well, so "Player 1" fits whole. */
+.bx-map .split-map__name {
+  font-size: clamp(12px, min(26cqh, 19cqw), 30px);
+}
+
+/* In the right half the counter prompt centres in the room left of the map, so the two never meet. */
+.bx-hud--split .bx-view--right .bx-counter {
+  left: calc((100% - var(--bx-map-w) - 24px) / 2);
+}

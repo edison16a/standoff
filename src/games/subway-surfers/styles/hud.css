@@ -11,7 +11,7 @@
   grid-template-columns: 1fr 1fr;
 }
 
-.ss-hud--2 .ss-view:first-child {
+.ss-hud--2 .ss-view--left {
   border-right: 4px solid rgba(255, 255, 255, 0.9);
 }
 
@@ -32,8 +32,13 @@
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
 }
 
-.ss-hud--2 .ss-view:last-child .ss-tag {
+.ss-hud--2 .ss-view--right .ss-tag {
   top: 20px;
+}
+
+/* The tutorial's Skip button sits on the divider at the top, so the right name drops level with the left. */
+.ss-hud--2 .ss-view--right .ss-tut .ss-tag {
+  top: 84px;
 }
 
 .ss-score {
@@ -46,7 +51,7 @@
 }
 
 .ss-hud--1 .ss-score,
-.ss-hud--2 .ss-view:last-child .ss-score {
+.ss-hud--2 .ss-view--right .ss-score {
   top: 84px;
 }
 
@@ -83,7 +88,7 @@
   gap: 10px;
 }
 
-.ss-hud--2 .ss-view:first-child .ss-coins {
+.ss-hud--2 .ss-view--left .ss-coins {
   top: 76px;
 }
 

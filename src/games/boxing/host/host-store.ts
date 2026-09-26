@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { MatchResult } from "../engine/events";
+import type { OwnView } from "../render/views";
 import type { Stage } from "./fight-driver";
 
 export type Screen = "players" | "setup" | "pick" | "fight" | "results";
@@ -57,8 +58,10 @@ export interface Hud {
   breakStage: "walk" | "rest" | "out" | null;
   /** The gloves have touched, and the bell is about to go. */
   touched: boolean;
-  /** Which boxers have a view on screen: one wide view, or the screen split. */
+  /** Which boxers are played by people, each with a view of their own during the rounds. */
   views: (0 | 1)[];
+  /** The players' views on screen right now and where the picture draws them. Empty while the broadcast camera has the screen. */
+  panes: OwnView[];
 }
 
 export interface Records {

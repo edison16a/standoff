@@ -52,6 +52,9 @@ export function noteThrow(m: Mover, now: number): void {
  * other and the open canvas. After a combination they step back out.
  */
 export function stepInFight(me: Spot, them: Spot, style: RingStyle, m: Mover, dt: number, now: number, random: Random): void {
+  // No time, no steps. A player's punch flushes the match with a zero step, and the step back
+  // after a combination divided by it, turning both spots into NaN and the picture black for good.
+  if (!(dt > 0)) return;
   const dx = them.x - me.x;
   const dz = them.z - me.z;
   const dist = Math.max(1e-3, Math.hypot(dx, dz));

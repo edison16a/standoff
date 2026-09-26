@@ -1,20 +1,28 @@
 import * as THREE from "three";
 import { CORNERS, RING_HALF } from "../../engine/footwork";
 import { apronTexture, BRAND, matTexture, padTexture } from "./arena-textures";
+import { ROPE_HEIGHTS, ROPE_INSET } from "./ropes";
 
 /** The ring's platform stands this high off the arena floor. The canvas is at y = 0. */
 export const PLATFORM = 1.15;
 const MAT_HALF = RING_HALF + 0.55;
 const POST = RING_HALF + 0.2;
-const ROPE_HEIGHTS = [0.42, 0.78, 1.14, 1.5];
 const ROPE_COLOURS = ["#c8102e", "#f2f2f2", "#c8102e", "#f2f2f2"];
+
+export interface Ring {
+  group: THREE.Group;
+  stools: [THREE.Group, THREE.Group];
+  /** Each side's ropes and spacers, round from +z, so a camera can see between them. */
+  sides: THREE.Group[];
+  dispose: () => void;
+}
 
 /**
  * The ring: a branded canvas on a platform with its apron skirt, four
  * steel posts, padded turnbuckles in the corners' colours, four sagging
  * ropes with their spacers, steps and a stool in each boxer's corner.
  */
-export function buildRing(): { group: THREE.Group; stools: [THREE.Group, THREE.Group]; dispose: () => void } {
+export function buildRing(): Ring {
   const group = new THREE.Group();
   const disposables: { dispose(): void }[] = [];
   const keep = <T extends { dispose(): void }>(thing: T): T => {
@@ -63,33 +71,35 @@ export function buildRing(): { group: THREE.Group; stools: [THREE.Group, THREE.G
     group.add(post, pad);
   }
 
+  const sides = [0, 1, 2, 3].map(() => new THREE.Group());
+  group.add(...sides);
   ROPE_HEIGHTS.forEach((height, i) => {
     const rope = keep(new THREE.MeshPhysicalMaterial({ color: ROPE_COLOURS[i], roughness: 0.4, clearcoat: 0.5 }));
-    for (let s = 0; s < 4; s++) group.add(ropeSide(s, height, rope, keep));
+    for (let s = 0; s < 4; s++) sides[s]!.add(ropeSide(s, height, rope, keep));
   });
   // Spacer straps tie the ropes together a third of the way along each side.
   const strap = keep(new THREE.MeshStandardMaterial({ color: "#1a1a24", roughness: 0.8 }));
-  const strapGeo = keep(new THREE.BoxGeometry(0.06, ROPE_HEIGHTS[3]! - ROPE_HEIGHTS[0]! + 0.08, 0.06));
+  const strapGeo = keep(new THREE.BoxGeometry(0.06, ROPE_HEIGHTS[3] - ROPE_HEIGHTS[0] + 0.08, 0.06));
   for (let s = 0; s < 4; s++) {
     for (const along of [-1.1, 1.1]) {
       const angle = (s * Math.PI) / 2;
       const piece = new THREE.Mesh(strapGeo, strap);
-      piece.position.set(Math.sin(angle) * (POST - 0.12) + Math.cos(angle) * along, (ROPE_HEIGHTS[0]! + ROPE_HEIGHTS[3]!) / 2 - 0.06, Math.cos(angle) * (POST - 0.12) - Math.sin(angle) * along);
+      piece.position.set(Math.sin(angle) * (POST - 0.12) + Math.cos(angle) * along, (ROPE_HEIGHTS[0] + ROPE_HEIGHTS[3]) / 2 - 0.06, Math.cos(angle) * (POST - 0.12) - Math.sin(angle) * along);
       piece.rotation.y = angle;
-      group.add(piece);
+      sides[s]!.add(piece);
     }
   }
 
   group.add(steps(-1, -1, keep), steps(1, 1, keep));
   const stools: [THREE.Group, THREE.Group] = [stool(-1, keep), stool(1, keep)];
   group.add(...stools);
-  return { group, stools, dispose: () => disposables.forEach((d) => d.dispose()) };
+  return { group, stools, sides, dispose: () => disposables.forEach((d) => d.dispose()) };
 }
 
 /** One rope along one side, sagging a little in the middle. */
 function ropeSide(side: number, height: number, material: THREE.Material, keep: <T extends { dispose(): void }>(t: T) => T): THREE.Mesh {
   const angle = (side * Math.PI) / 2;
-  const inset = POST - 0.13;
+  const inset = ROPE_INSET;
   const points: THREE.Vector3[] = [];
   for (let i = 0; i <= 12; i++) {
     const along = -inset + (2 * inset * i) / 12;

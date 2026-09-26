@@ -8,7 +8,7 @@ import { lookFor, type Look } from "../render/models/looks";
 import { Banners } from "./banners";
 import { FightDriver } from "./fight-driver";
 import { useBoxingStore as store } from "./host-store";
-import { hudFrom } from "./hud";
+import { hudFrom, shotOf } from "./hud";
 import { MenuDemo } from "./menu-demo";
 import { PickControl } from "./pick-control";
 import { levelOf } from "./player-input";
@@ -107,7 +107,10 @@ export class BoxingHost {
     this.fightId++;
     this.feed.reset();
     this.room.setPlaying(true);
-    store.setState({ screen: "fight", result: null, newBest: null });
+    // The overlay starts from this fight, not the last one's knockdowns and empty bars on a rematch.
+    this.lastStage = "";
+    this.lastHud = performance.now();
+    store.setState({ screen: "fight", result: null, newBest: null, hud: hudFrom(this.driver, this.looks(), this.banners, this.lastHud) });
   }
 
   /** From the results: the same boxers again, the choice of boxers, or the start. */
@@ -122,6 +125,9 @@ export class BoxingHost {
 
   menu(): void {
     this.leaveFight();
+    // Nobody boxes in the menu, so the camera and the body tracking stop. The model starts again from the cache.
+    this.pick = null;
+    this.dropKit();
     store.setState({ screen: "players" });
   }
 
@@ -151,8 +157,7 @@ export class BoxingHost {
     const driver = store.getState().screen === "fight" || store.getState().screen === "results" ? this.driver : null;
     if (!driver) return { match: this.demo.match, shot: "menu", shotMs: now, humans: [false, false], mirrors: [null, null] };
     const mirrors = this.feed.mirror(driver, this.kit);
-    const shot = driver.stage === "fight" ? "fight" : driver.stage === "replay" ? "replay" : "celebrate";
-    return { match: driver.match, shot, shotMs: now - driver.stageSince, humans: [driver.slots[0] !== null, driver.slots[1] !== null], mirrors };
+    return { match: driver.match, shot: shotOf(driver.stage), shotMs: now - driver.stageSince, humans: [driver.slots[0] !== null, driver.slots[1] !== null], mirrors };
   }
 
   dispose(): void {

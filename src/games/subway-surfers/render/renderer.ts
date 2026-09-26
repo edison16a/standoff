@@ -1,15 +1,10 @@
 import * as THREE from "three";
 import { neonEnvironment } from "./world/neon-env";
 import type { RunScene } from "./run-scene";
+import type { ViewRect } from "./split";
 import { setTextureDetail } from "./textures";
 
-/** A part of the canvas, each value a share of its width or height, from the top left. */
-export interface ViewRect {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
+export { splitScreen, type ViewRect } from "./split";
 
 export interface View {
   scene: RunScene;
@@ -24,15 +19,6 @@ function softwareDrawn(renderer: THREE.WebGLRenderer): boolean {
   const info = gl.getExtension("WEBGL_debug_renderer_info");
   const name = String(gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : gl.RENDERER));
   return /swiftshader|llvmpipe|softpipe|software|basic render/i.test(name);
-}
-
-/** The rectangles for one runner, or two side by side with player one on the left. */
-export function splitScreen(count: number): ViewRect[] {
-  if (count <= 1) return [{ x: 0, y: 0, w: 1, h: 1 }];
-  return [
-    { x: 0, y: 0, w: 0.5, h: 1 },
-    { x: 0.5, y: 0, w: 0.5, h: 1 },
-  ];
 }
 
 /**

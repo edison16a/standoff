@@ -38,8 +38,12 @@ export class ShoulderCamera {
     this.camera = new THREE.PerspectiveCamera(fov, 16 / 9, 0.1, 120);
   }
 
-  /** `me` and `them` are the boxers' spots on the canvas; `down` lifts the camera during a knockdown. */
-  update(me: { x: number; z: number }, them: { x: number; z: number }, dt: number, down: number): void {
+  /**
+   * `me` and `them` are the boxers' spots on the canvas; `down` lifts the
+   * camera during a knockdown. `snap` jumps straight to the right place,
+   * as when a round starts, in this very frame rather than the next.
+   */
+  update(me: { x: number; z: number }, them: { x: number; z: number }, dt: number, down: number, snap = false): void {
     const dx = them.x - me.x;
     const dz = them.z - me.z;
     const gap = Math.max(0.3, Math.hypot(dx, dz));
@@ -61,17 +65,11 @@ export class ShoulderCamera {
     this.wantEye.y += RISE_WHEN_PULLED * Math.hypot(x - this.wantEye.x, z - this.wantEye.z);
     this.wantEye.x = x;
     this.wantEye.z = z;
-    const eye = this.eye.update(this.wantEye, dt, 2.2);
-    const look = this.look.update(this.wantLook, dt, 3);
+    const eye = snap ? this.eye.snap(this.wantEye) : this.eye.update(this.wantEye, dt, 2.2);
+    const look = snap ? this.look.snap(this.wantLook) : this.look.update(this.wantLook, dt, 3);
     this.camera.position.copy(eye);
     this.camera.lookAt(look);
     this.shake.apply(this.camera, dt);
-  }
-
-  /** Jumps straight to the right place, as when a fight starts. */
-  snap(): void {
-    this.eye.snap(this.wantEye);
-    this.look.snap(this.wantLook);
   }
 
   setAspect(aspect: number): void {

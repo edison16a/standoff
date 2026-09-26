@@ -9,6 +9,7 @@ import { hoverboard } from "../models/pickups";
 import type { Rig } from "../models/rig";
 import { buildRunner, LOOKS } from "../models/runner-model";
 import { shadowPaint } from "../models/train";
+import { shadowFloor } from "./shadow-floor";
 
 /** Metres of track per full stride, left and right foot. */
 const STRIDE = 2.9;
@@ -129,7 +130,7 @@ export class RunnerView {
     if (board) this.board.rotation.set(Math.sin(time * 5) * 0.05, 0, -0.25 * lean);
 
     // The shadow stays on the ground under them, shrinking as they rise.
-    const ground = run ? groundBelow(run) : 0;
+    const ground = run ? shadowFloor(run) : 0;
     const height = Math.max(0, y - ground);
     this.shadow.position.y = ground - y + 0.04;
     this.shadow.scale.setScalar(Math.max(0.35, 1 - height * 0.12));
@@ -144,13 +145,6 @@ export class RunnerView {
     });
     this.shadow.geometry.dispose();
   }
-}
-
-/** The surface under the runner: the ground, or a roof they are over. */
-function groundBelow(run: Run): number {
-  const s = run.runner;
-  if (s.grounded) return s.y;
-  return s.y > 3.3 && s.airTime < 2 ? Math.min(s.y, 3.4) : 0;
 }
 
 function buildJetpack(): THREE.Group {

@@ -6,6 +6,7 @@ import { SurfSession } from "./host/session";
 import { Showcase } from "./showcase/Showcase";
 import "./styles/host.css";
 import "./styles/hud.css";
+import "./styles/map.css";
 import "./styles/menus.css";
 import "./styles/showcase.css";
 

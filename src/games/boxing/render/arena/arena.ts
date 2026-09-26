@@ -4,6 +4,7 @@ import { Particles } from "../fx/particles";
 import { glowTexture, ledTexture } from "./arena-textures";
 import { Crowd } from "./crowd";
 import { buildRing, PLATFORM } from "./ring";
+import { ropesInTheWay } from "./ropes";
 import { buildTruss, TRUSS_HALF, TRUSS_Y } from "./truss";
 
 /**
@@ -62,16 +63,23 @@ export class Arena {
     this.buildScreen();
   }
 
-  /**
-   * Moves the crowd and the flashes on. `excite` is 0 calm to 1 on its
-   * feet. Flashes fire more often when the crowd is excited, and all at
-   * once for a knockdown.
-   */
   /** The stools come into the corners between rounds, and go again for the fight. */
   setStools(visible: boolean): void {
     for (const stool of this.ring.stools) stool.visible = visible;
   }
 
+  /** Leaves out the ropes right in front of a lens just outside them, for the picture about to be drawn from `eye`. */
+  lookFrom(eye: THREE.Vector3): void {
+    ropesInTheWay(eye).forEach((hide, side) => {
+      this.ring.sides[side]!.visible = !hide;
+    });
+  }
+
+  /**
+   * Moves the crowd and the flashes on. `excite` is 0 calm to 1 on its
+   * feet. Flashes fire more often when the crowd is excited, and all at
+   * once for a knockdown.
+   */
   update(time: number, dt: number, excite: number): void {
     this.crowd.update(time, 0.15 + excite * 0.85);
     this.flashTimer -= dt;
