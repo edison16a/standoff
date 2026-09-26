@@ -11,11 +11,14 @@
   --u: clamp(9px, min(2.2cqw, 3.4cqh), 18px);
 }
 
+/* At the bottom middle, clear of the logo and tools the platform keeps in the top corners. */
 .cb-corner__name {
   position: absolute;
-  top: calc(var(--u) * 0.9);
-  left: calc(var(--u) * 0.9);
+  bottom: calc(var(--u) * 1);
+  left: 50%;
   display: flex;
+  transform: translateX(-50%);
+  white-space: nowrap;
   align-items: center;
   gap: calc(var(--u) * 0.5);
   padding: calc(var(--u) * 0.25) calc(var(--u) * 0.9) calc(var(--u) * 0.25) calc(var(--u) * 0.45);

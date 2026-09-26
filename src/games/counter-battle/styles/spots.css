@@ -17,11 +17,14 @@
 
 .cb-spot__button,
 .cb-spot--bot {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "dot name ready" "dot role role";
   align-items: center;
-  gap: 12px;
+  column-gap: 12px;
+  row-gap: 2px;
   width: 100%;
-  min-height: 72px;
+  min-height: 68px;
   padding: 10px 14px;
   border: 0;
   border-radius: 16px;
@@ -47,7 +50,7 @@
 }
 
 .cb-spot__dot {
-  flex-shrink: 0;
+  grid-area: dot;
   width: 18px;
   height: 18px;
   border-radius: 50%;
@@ -55,13 +58,8 @@
   box-shadow: 0 0 12px var(--player);
 }
 
-.cb-spot__text {
-  display: grid;
-  flex: 1;
-  min-width: 0;
-}
-
 .cb-spot__name {
+  grid-area: name;
   overflow: hidden;
   color: var(--player);
   font-size: 21px;
@@ -75,18 +73,25 @@
 }
 
 .cb-spot__role {
-  color: rgba(255, 255, 255, 0.7);
+  grid-area: role;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.75);
   font-size: 14px;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .cb-spot__gun {
   flex-shrink: 0;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .cb-spot__ready {
-  flex-shrink: 0;
+  grid-area: ready;
   padding: 3px 10px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.1);
@@ -95,6 +100,7 @@
   font-weight: 900;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .cb-spot__ready--on {

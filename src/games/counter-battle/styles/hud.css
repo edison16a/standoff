@@ -119,12 +119,13 @@
 }
 
 .cb-score__map {
-  width: 150px;
+  width: 132px;
 }
 
+/* Under the platform's tools in the top right corner. */
 .cb-feed {
   position: absolute;
-  top: 12px;
+  top: 68px;
   right: 12px;
   display: flex;
   flex-direction: column;

@@ -22,12 +22,12 @@ function SpotCard({ spot, level, onMove }: { spot: SpotView; level: string; onMo
   const body = (
     <>
       <span className="cb-spot__dot" aria-hidden="true" />
-      <span className="cb-spot__text">
-        <strong className="cb-spot__name">{spot.name}</strong>
-        <span className="cb-spot__role">{spot.seat === null ? `Computer, ${level}` : spot.gun ? GUNS[spot.gun].name : "Picking a gun"}</span>
-      </span>
-      {spot.gun && <GunIcon gun={spot.gun} size={58} className="cb-spot__gun" />}
+      <strong className="cb-spot__name">{spot.name}</strong>
       {spot.seat !== null && <span className={`cb-spot__ready ${spot.ready ? "cb-spot__ready--on" : ""}`}>{spot.ready ? "Ready" : "Setting up"}</span>}
+      <span className="cb-spot__role">
+        {spot.gun && <GunIcon gun={spot.gun} size={40} className="cb-spot__gun" />}
+        {spot.seat === null ? `Computer, ${level}` : spot.gun ? GUNS[spot.gun].name : "Picking a gun"}
+      </span>
     </>
   );
   if (spot.seat === null) return <li className="cb-spot cb-spot--bot">{body}</li>;

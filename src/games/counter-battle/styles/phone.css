@@ -71,8 +71,9 @@
 }
 
 .cb-gun__art {
-  width: min(84px, 80%);
+  width: min(150px, 85%);
   height: auto;
+  max-height: 40%;
 }
 
 .cb-gun strong {
