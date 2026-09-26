@@ -42,7 +42,7 @@ export class KartHost {
     // After a host reload the phones are already sitting in the room.
     for (const player of room.players()) if (player.connected) this.lobby.connect(player.seat);
     this.unsubscribe = room.on((event) => this.onRoom(event));
-    this.audio.setPhase("lobby", store.getState().mapId);
+    this.audio.setPhase("lobby");
     this.refresh(performance.now());
   }
 
@@ -82,7 +82,7 @@ export class KartHost {
     if (this.driver) return;
     store.setState({ mapId: id });
     this.demo.setMap(id);
-    this.audio.setPhase("lobby", id);
+    this.audio.setPhase("lobby");
     this.refresh(performance.now());
   }
 
@@ -100,7 +100,7 @@ export class KartHost {
     this.unlistenRace = this.driver.listen((event) => this.onRaceEvent(event));
     this.banners.clear();
     this.room.setPlaying(true);
-    this.audio.setPhase("countdown", mapId);
+    this.audio.setPhase("countdown");
     this.refresh(performance.now());
   }
 
@@ -110,7 +110,7 @@ export class KartHost {
     this.unlistenRace = null;
     this.driver = null;
     this.room.setPlaying(false);
-    this.audio.setPhase("lobby", store.getState().mapId);
+    this.audio.setPhase("lobby");
     this.refresh(performance.now());
   }
 
@@ -120,7 +120,7 @@ export class KartHost {
     if (this.driver) this.driver.tick(nowMs);
     else this.demo.tick(nowMs);
     const phase = this.phase;
-    if (phase !== before) this.audio.setPhase(phase, store.getState().mapId);
+    if (phase !== before) this.audio.setPhase(phase);
     if (this.driver) this.audio.frame(this.driver.world);
     if (nowMs - this.lastHud >= HUD_MS || phase !== before) this.refresh(nowMs);
   }

@@ -55,7 +55,7 @@ Laps count by checkpoints in order: only driving through each one forwards count
 
 ## Sound
 
-Every map has its own eight bar tune: an A section with the hook and a B section that answers it on new chords, with soft drums under a low pass filter. The lobby is a bell tune in F, the beach a steel drum calypso in C, space a reed arpeggio in A minor, the city a plucky groove in E minor and the volcano a driving tune in D minor. The last lap speeds the tune up a touch.
+The lobby plays Paddock Sunset, a chill tune in D flat major at 84 beats a minute. Each chord lasts two bars, so warm pads melt into each other under an electric piano, a round sub bass, a soft half time kit and a slow hummed melody. Every race plays Turbo Bloom, one song in B minor at 140. The A section is a bright synth hook over a busy funk bass. The B section climbs on long notes over brass stabs and a rolling arpeggio, and a riser and a snare fill carry the last bar back into the hook. It runs sixteen bars before it repeats. On the final lap the song gets a touch faster and fuller: the hats double up, the kick and clap push harder, the arpeggio never stops and the lead gains a higher octave. All music is synthesized, goes through the music bus under a low pass filter, and dips under the final lap jingle and the race caller.
 
 Effects are layered and each repeat lands at a slightly different pitch. A glider opens with a whoosh and the crack of cloth pulling tight, the wind under it rises with speed, and it folds with a rustle and a click. The crowd roars at the start and at every finish and claps through the podium. A spoken race caller, using the browser's voice at the player's sound effects volume, calls the start, the final lap, big hits, some of the glides and the finishers. The music dips while it talks.
 
@@ -66,7 +66,7 @@ Effects are layered and each repeat lands at a slightly different pitch. A glide
 * `render/`: three.js. `models/` has the four karts and drivers built from painted primitives and merged per kart, and each driver's glider (`glider.ts`, with the cloth in `glider-sail.ts`), which `glider-view.ts` unfolds, `scenery/` one file per map, `track/` the road, kerbs, barriers and markings, `props/` the cubes, obstacles and throws, `effects/` the particles.
 * `host/`: the session on the computer (lobby, race driver, what the phones and the overlay see) and its React screens.
 * `phone/`: the controller session, the steering wheel maths and the phone screens. Steering reads where "up" points across the screen, so it holds however far the phone leans and never flips the way Euler angles do. The response is tuned in `phone/tilt.ts`: `FULL_LOCK` is the wheel angle for full lock (50 degrees, fine anywhere from 45 to 60), `DEAD_ZONE` keeps a steady hand going straight, and `LINEAR_SHARE` blends a linear and a cubic curve so small turns stay fine. With these values a braking drift starts from about 25 degrees of wheel.
-* `audio/`: synthesized music per map, an engine per kart pitched by speed, every effect, the crowd and the race caller, through the platform's audio buses (see Sound above).
+* `audio/`: the synthesized lobby tune and race song (`lobby-song.ts`, `race-song.ts`, played on the instruments in `kart-band.ts`), an engine per kart pitched by speed, every effect, the crowd and the race caller, through the platform's audio buses (see Sound above).
 * `protocol/`: the zod schemas for the messages between the phones and the host.
 * `showcase/`: the game playing itself for the home screen's media (see below).
 
