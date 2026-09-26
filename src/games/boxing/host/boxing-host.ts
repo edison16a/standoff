@@ -122,6 +122,9 @@ export class BoxingHost {
 
   menu(): void {
     this.leaveFight();
+    // Nobody boxes in the menu, so the camera and the body tracking stop. The model starts again from the cache.
+    this.pick = null;
+    this.dropKit();
     store.setState({ screen: "players" });
   }
 
