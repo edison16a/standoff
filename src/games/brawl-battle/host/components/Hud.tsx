@@ -14,7 +14,8 @@ function UltRing({ value, colour }: { value: number; colour: string }) {
   return (
     <svg className={`bb-ult ${value >= 1 ? "bb-ult--full" : ""}`} viewBox="0 0 100 100" aria-hidden="true">
       <circle cx="50" cy="50" r={r} className="bb-ult__track" />
-      <circle cx="50" cy="50" r={r} className="bb-ult__fill" stroke={colour} strokeDasharray={`${length * value} ${length}`} transform="rotate(-90 50 50)" />
+      {/* An empty dash still draws its round cap, a stray dot at the top, so an empty meter draws no fill at all. */}
+      {value > 0 && <circle cx="50" cy="50" r={r} className="bb-ult__fill" stroke={colour} strokeDasharray={`${length * value} ${length}`} transform="rotate(-90 50 50)" />}
     </svg>
   );
 }
