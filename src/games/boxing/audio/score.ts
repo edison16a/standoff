@@ -1,3 +1,5 @@
+import type { AudioEngine } from "@/platform/audio/audio-engine";
+
 /**
  * Tunes are written as text, one bar a row: a chord name and eight
  * eighth notes like "C5 . F5 A5", with "." for a rest. That keeps a
@@ -38,4 +40,20 @@ export function heldFor(melody: readonly (number | null)[], step: number): numbe
   let length = 1;
   while (step + length < melody.length && melody[step + length] === null) length++;
   return length;
+}
+
+/**
+ * A looping song the music player can run. It books whatever falls on one
+ * sixteenth; the player only keeps time, so each song owns its own groove.
+ */
+export interface Song {
+  readonly bpm: number;
+  /** Sixteenths in one pass through the form. */
+  readonly steps: number;
+  play(engine: AudioEngine, out: AudioNode, step: number, at: number, sixteenth: number): void;
+}
+
+/** When a sixteenth really sounds: the off ones land late by `swing` of a sixteenth. */
+export function swung(at: number, inBar: number, sixteenth: number, swing: number): number {
+  return at + (inBar % 2 === 1 ? swing * sixteenth : 0);
 }

@@ -15,8 +15,8 @@ const CHANT_GAP_S = 18;
 /**
  * Every sound in Boxing, driven by the same match events as the picture.
  * `players` says which boxers are people, so the counter ping only plays
- * for someone who can use it. The gym tune plays throughout, full in the
- * menus and low under the crowd in a fight.
+ * for someone who can use it. A chill soul tune plays in the menus and a
+ * gritty boom bap song sits low under the crowd in a fight.
  */
 export class BoxingAudio {
   readonly punches: PunchSounds;
