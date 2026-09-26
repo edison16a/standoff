@@ -21,7 +21,8 @@
 .mk-overview--compact {
   top: 62px;
   right: 12px;
-  width: 184px;
+  /* A 4:3 screen makes each half tall and narrow, so the card narrows with it. */
+  width: min(184px, 15vw);
   gap: 4px;
   padding: 6px;
   border-radius: 14px;
@@ -58,7 +59,8 @@
     "split map"
     "standings standings";
   align-items: center;
-  width: 250px;
+  /* Narrow screens give narrow quarters, so it shrinks to keep the kart under it clear. */
+  width: min(250px, calc(20vw - 12px));
   gap: 6px;
   padding: 6px;
   border-radius: 14px;
@@ -167,6 +169,15 @@
 /* Names get narrow cells over the views, so the width caps the size too. */
 .mk-overview__split .split-map__name {
   font-size: clamp(10px, min(26cqh, 17cqw), 30px);
+}
+
+/* Four small cells: a two word name breaks onto two lines instead of being cut. */
+.mk-overview--grid .split-map__name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .mk-standings__row {
