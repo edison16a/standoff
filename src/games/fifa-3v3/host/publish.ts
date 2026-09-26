@@ -35,6 +35,8 @@ export function publish(c: PublishContext): void {
     phase: c.phase,
     seats,
     bots: lineup.filter((e) => e.seat === null).map((e) => ({ team: e.team, character: e.character })),
+    botsOn: c.lobby.bots,
+    startBlock: c.lobby.startBlock(),
     score: match ? [match.score[0], match.score[1]] : [0, 0],
     clock: match ? Math.ceil(match.clock) : 0,
     golden: match?.golden ?? false,

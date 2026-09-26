@@ -84,6 +84,8 @@ export function publish(c: PublishContext): void {
     phase,
     seats,
     spots,
+    bots: c.lobby.bots,
+    startBlock: c.lobby.startBlock(),
     score: m ? [m.score[0], m.score[1]] : [0, 0],
     shotClock: m ? Math.max(0, Math.ceil(m.shotClock)) : RULES.shotClock,
     offence: m?.offence ?? 0,

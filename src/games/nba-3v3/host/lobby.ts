@@ -25,10 +25,14 @@ export interface Spot {
  * person at the computer put them on. Each star can be taken once. New
  * players land on the smaller team; the host moves them with the mouse,
  * and a full team swaps its newest member across so it stays three a
- * side. Computer players fill whatever spots are left.
+ * side. Computer players fill whatever spots are left, unless the host
+ * turns them off: then the teams are just the people, one a side or more,
+ * and a team may have more players than the other.
  */
 export class Lobby {
   readonly seats = new Map<number, SeatState>();
+  /** Whether computer players fill the empty spots. */
+  bots = true;
   private clock = 0;
 
   private state(seat: number): SeatState {
@@ -103,10 +107,25 @@ export class Lobby {
     });
   }
 
+  setBots(on: boolean): void {
+    this.bots = on;
+  }
+
   /**
-   * The six spots, team by team: every ready player on their team, then
-   * computer players in the stars nobody picked. Players who are still
-   * choosing show as waiting and sit this game out.
+   * Why a game cannot start yet, or null when it can. With computer
+   * players on, one person is enough; without them each team needs someone.
+   */
+  startBlock(): "empty" | "oneSided" | null {
+    const spots = this.spots();
+    if (!spots.some((s) => s.seat !== null)) return "empty";
+    if (!this.bots && ([0, 1] as const).some((team) => !spots.some((s) => s.team === team))) return "oneSided";
+    return null;
+  }
+
+  /**
+   * The spots, team by team: every ready player on their team, then
+   * computer players in the stars nobody picked, up to three a side when
+   * they are on. Players who are still choosing sit this game out.
    */
   spots(): Spot[] {
     const used = new Set(this.readySeats.map((seat) => this.state(seat).pick!));
@@ -115,6 +134,7 @@ export class Lobby {
     for (const team of [0, 1] as const) {
       const players = this.readySeats.filter((seat) => this.state(seat).team === team).slice(0, TEAM_SIZE);
       for (const seat of players) out.push({ team, seat, character: this.state(seat).pick! });
+      if (!this.bots) continue;
       for (let i = players.length; i < TEAM_SIZE; i++) out.push({ team, seat: null, character: spare.shift()! });
     }
     return out;

@@ -61,6 +61,8 @@ export function Results() {
   const results = useNbaStore((s) => s.results);
   const winner = useNbaStore((s) => s.winner);
   const score = useNbaStore((s) => s.score);
+  // A player who left can leave a team empty with computers off: then only Change teams works.
+  const blocked = useNbaStore((s) => s.startBlock !== null);
   const [shown, setShown] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => setShown(true), 2600);
@@ -100,7 +102,7 @@ export function Results() {
             <Icon name="users" />
             Change teams
           </button>
-          <button type="button" className="btn btn--primary btn--lg" onClick={() => session.start()}>
+          <button type="button" className="btn btn--primary btn--lg" disabled={blocked} onClick={() => session.start()}>
             <Icon name="refresh" />
             Play again
           </button>

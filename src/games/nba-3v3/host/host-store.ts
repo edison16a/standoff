@@ -12,7 +12,7 @@ export interface SeatView {
   team: TeamId | null;
 }
 
-/** One of the six spots in the lobby's team columns. */
+/** One of the spots in the lobby's team columns. */
 export interface SpotView {
   team: TeamId;
   seat: number | null;
@@ -51,6 +51,10 @@ export interface NbaHostState {
   phase: Phase;
   seats: SeatView[];
   spots: SpotView[];
+  /** Whether computer players fill the empty spots. */
+  bots: boolean;
+  /** Why the game cannot start yet, or null when it can. */
+  startBlock: "empty" | "oneSided" | null;
   score: [number, number];
   shotClock: number;
   offence: TeamId;
@@ -72,6 +76,8 @@ export const useNbaStore = create<NbaHostState>(() => ({
   phase: "lobby",
   seats: [],
   spots: [],
+  bots: true,
+  startBlock: "empty",
   score: [0, 0],
   shotClock: 12,
   offence: 0,

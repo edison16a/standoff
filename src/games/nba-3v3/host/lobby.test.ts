@@ -59,4 +59,44 @@ describe("the team lobby", () => {
     expect(lobby.seats.get(1)!.team).toBe(1);
     expect(lobby.seats.get(1)!.pick).toBe("mensah");
   });
+
+  it("with computer players off, fields only the people: one on one", () => {
+    const lobby = new Lobby();
+    lobby.setBots(false);
+    readyPlayer(lobby, 1, "ashby");
+    expect(lobby.startBlock()).toBe("oneSided");
+    readyPlayer(lobby, 2, "whitlock");
+    const entries = lobby.entries();
+    expect(entries).toHaveLength(2);
+    expect(entries.every((e) => e.seat !== null)).toBe(true);
+    expect(new Set(entries.map((e) => e.team))).toEqual(new Set([0, 1]));
+    expect(lobby.startBlock()).toBeNull();
+  });
+
+  it("with computer players off, lets one team have more players than the other", () => {
+    const lobby = new Lobby();
+    lobby.setBots(false);
+    (["ashby", "whitlock", "crane"] as const).forEach((star, i) => readyPlayer(lobby, i + 1, star));
+    lobby.setTeam(2, 0);
+    const spots = lobby.spots();
+    expect(spots.filter((s) => s.team === 0)).toHaveLength(3);
+    expect(spots.filter((s) => s.team === 1)).toHaveLength(0);
+    expect(lobby.startBlock()).toBe("oneSided");
+    lobby.setTeam(2, 1);
+    expect(lobby.spots().map((s) => s.team).sort()).toEqual([0, 0, 1]);
+    expect(lobby.startBlock()).toBeNull();
+  });
+
+  it("fills back to three a side when computer players come back on", () => {
+    const lobby = new Lobby();
+    lobby.setBots(false);
+    readyPlayer(lobby, 1, "ashby");
+    lobby.setBots(true);
+    expect(lobby.spots()).toHaveLength(6);
+    expect(lobby.startBlock()).toBeNull();
+  });
+
+  it("cannot start with nobody ready", () => {
+    expect(new Lobby().startBlock()).toBe("empty");
+  });
 });

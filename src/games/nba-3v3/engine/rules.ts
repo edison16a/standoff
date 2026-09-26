@@ -108,7 +108,7 @@ function gameOver(m: Match, team: TeamId): boolean {
   return false;
 }
 
-/** A shot that did not go in: the streak ends and the crowd groans. */
+/** A shot that did not go in: the streak ends. */
 export function missShot(m: Match): void {
   const shot = m.ball.shot;
   if (!shot || shot.counted) return;

@@ -16,6 +16,8 @@ export function Results() {
   const score = useFifaStore((s) => s.score);
   const rows = useFifaStore((s) => s.results);
   const saves = useFifaStore((s) => s.saves);
+  // A player who left can leave a side empty with computers off: then only Change teams works.
+  const blocked = useFifaStore((s) => s.startBlock !== null);
   if (winner === null || rows.length === 0) return null;
   const team = TEAMS[winner];
   const best = rows[0]!;
@@ -64,7 +66,7 @@ export function Results() {
           Keeper saves: {TEAMS[0].name} {saves[0]}, {TEAMS[1].name} {saves[1]}
         </p>
         <div className="fifa-results__actions">
-          <button type="button" className="fifa-start" onClick={() => session.startMatch()}>
+          <button type="button" className="fifa-start" disabled={blocked} onClick={() => session.startMatch()}>
             Play again
           </button>
           <button type="button" className="fifa-ghost" onClick={() => session.backToLobby()}>

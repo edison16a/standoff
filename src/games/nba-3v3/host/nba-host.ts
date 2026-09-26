@@ -104,9 +104,16 @@ export class NbaHost {
     this.refresh(performance.now());
   }
 
-  /** Starts a game with the teams as they stand, computers filling the gaps. */
-  start(): void {
+  /** Computer players on or off, for the next game. */
+  setBots(on: boolean): void {
     if (this.phase === "countdown" || this.phase === "live") return;
+    this.lobby.setBots(on);
+    this.refresh(performance.now());
+  }
+
+  /** Starts a game with the teams as they stand, computers filling the gaps if they are on. */
+  start(): void {
+    if (this.phase === "countdown" || this.phase === "live" || this.lobby.startBlock()) return;
     this.unlistenMatch?.();
     this.driver = new MatchDriver(this.lobby.entries());
     this.unlistenMatch = this.driver.listen((event) => this.onMatchEvent(event));

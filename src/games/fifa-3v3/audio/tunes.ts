@@ -56,7 +56,7 @@ const KICKABOUT: Tune = {
 /**
  * "Golden Hour": under the match. A minor afro house at 118, a steel pan
  * hook over a falling log drum bass, steady enough to play along to and
- * soft enough to leave the crowd on top.
+ * soft enough to leave the ball and the whistle on top.
  */
 const GOLDEN_HOUR: Tune = {
   bpm: 118,

@@ -15,10 +15,14 @@ export interface SeatState {
  * Who is in the room, which star each picked, and which side the host
  * put them on. Each star can be taken by one player only. A phone that
  * drops keeps its choices for when it comes back, but while it is away
- * its star is free for someone else.
+ * its star is free for someone else. Computer players fill the empty
+ * places unless the host turns them off; then the sides are just the
+ * people, and one side may have more than the other.
  */
 export class Lobby {
   readonly seats = new Map<number, SeatState>();
+  /** Whether computer players fill the empty places. */
+  bots = true;
 
   private state(seat: number): SeatState {
     let state = this.seats.get(seat);
@@ -108,9 +112,25 @@ export class Lobby {
     return CHARACTER_IDS.filter((id) => !used.has(id));
   }
 
+  setBots(on: boolean): void {
+    this.bots = on;
+  }
+
+  /**
+   * Why a match cannot start yet, or null when it can. With computer
+   * players on, one person is enough; without them each side needs someone.
+   */
+  startBlock(): "empty" | "oneSided" | null {
+    const sides = this.players.map((seat) => this.seats.get(seat)!.team);
+    if (sides.length === 0) return "empty";
+    if (!this.bots && !(sides.includes(0) && sides.includes(1))) return "oneSided";
+    return null;
+  }
+
   /**
    * The line up: each side's players in seat order, then computer
-   * players in the stars nobody picked, up to three a side.
+   * players in the stars nobody picked, up to three a side when they
+   * are on. The keepers are always the computer's.
    */
   entrants(): Entrant[] {
     const spare = this.spareStars();
@@ -118,6 +138,7 @@ export class Lobby {
     for (const team of [0, 1] as const) {
       const humans = this.players.filter((seat) => this.seats.get(seat)!.team === team).slice(0, TEAM_SIZE);
       for (const seat of humans) out.push({ team, character: this.seats.get(seat)!.pick!, seat });
+      if (!this.bots) continue;
       for (let i = humans.length; i < TEAM_SIZE; i++) out.push({ team, character: spare.shift() ?? "echeverri", seat: null });
     }
     return out;

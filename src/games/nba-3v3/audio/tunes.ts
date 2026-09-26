@@ -63,7 +63,7 @@ const BLACKTOP: Tune = {
 /**
  * "Tip Off": under the game itself. F minor at 100, a bouncier groove
  * with claps and a soft synth flute, sparse enough to leave room for the
- * crowd and the ball.
+ * arena and the ball.
  */
 const TIP_OFF: Tune = {
   bpm: 100,
