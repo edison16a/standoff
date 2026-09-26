@@ -44,7 +44,7 @@ export function Lobby() {
   return (
     <>
       <header className="fn-title">
-        <h1 className="fn-title__name">Fruit Ninja</h1>
+        <h1 className="fn-title__name">Fruit Slicer</h1>
         <p className="fn-title__tag">Point your phone at the screen. Swing to slice. Dodge the bombs.</p>
       </header>
       <aside className="fn-panel fn-lobby" aria-label="Round setup">

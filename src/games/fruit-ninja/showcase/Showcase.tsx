@@ -14,7 +14,7 @@ const STEP = 1 / 120;
 const SEED = 20260924;
 
 /**
- * Fruit Ninja playing itself for the home screen: four computer players
+ * Fruit Slicer playing itself for the home screen: four computer players
  * on the real board, with the real fruit, blades and effects, following
  * a script. Time comes only from requestAnimationFrame and
  * performance.now, and every random draw is seeded, so the capture tool
@@ -114,12 +114,12 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
 /** The game's name as a sliced logo, for the store tile. */
 function Logo() {
   return (
-    <div className="fn-logo" role="img" aria-label="Fruit Ninja">
+    <div className="fn-logo" role="img" aria-label="Fruit Slicer">
       <span className="fn-logo__word fn-logo__word--fruit" data-text="FRUIT">
         FRUIT
       </span>
-      <span className="fn-logo__word fn-logo__word--ninja" data-text="NINJA">
-        NINJA
+      <span className="fn-logo__word fn-logo__word--slicer" data-text="SLICER">
+        SLICER
       </span>
     </div>
   );

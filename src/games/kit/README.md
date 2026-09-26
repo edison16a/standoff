@@ -8,7 +8,7 @@ Shared code that games may import. The kit never imports a game, and games still
 * `motion/math3d.ts`: the small quaternion and vector helpers.
 * `motion/orientation.ts`: `subscribeOrientation`, the phone's orientation as a quaternion on every reading.
 * `steps/StepShell.tsx`: the frame for a game's phone setup. Every game uses the same order: the platform asks for a name (or Skip), then the game shows **Calibrate**, then its own choices (weapon, kart, blade), then **Ready**. Each step is its own page.
-* `aim/`: pointing the phone at the big screen, for Fruit Ninja, Zombie Survival and Shooting Gallery.
+* `aim/`: pointing the phone at the big screen, for Fruit Slicer, Zombie Survival and Shooting Gallery.
 
 ## Aiming
 

@@ -51,12 +51,12 @@ Keep the host as the referee. Phones send raw input and draw what the host tells
 
 ## Pointing at the screen
 
-Fruit Ninja, Zombie Survival and Shooting Gallery all aim the same way. Where the player points their phone at the screen is where they aim.
+Fruit Slicer, Zombie Survival and Shooting Gallery all aim the same way. Where the player points their phone at the screen is where they aim.
 
 * **Calibrate** with the kit's `AimCalibrate`: the middle of the screen, then the top left and bottom right targets.
 * **Aim:** from then on, swinging left and right moves the aim across the screen and tilting moves it up and down.
 * **Laser dot:** each player's aim shows on screen in real time as a laser dot in their colour, so they always see where they are pointing.
-* **Gun or blade:** the shooters draw the front of each player's gun in 3D at the bottom of the screen, turned to point at that player's dot. It is a BB gun in Shooting Gallery, and the weapon the player chose in Zombie Survival. Fruit Ninja shows a blade instead.
+* **Gun or blade:** the shooters draw the front of each player's gun in 3D at the bottom of the screen, turned to point at that player's dot. It is a BB gun in Shooting Gallery, and the weapon the player chose in Zombie Survival. Fruit Slicer shows a blade instead.
 
 All of this is shared in `src/games/kit/aim` (see `kit/README.md`).
 
@@ -84,5 +84,5 @@ Boxing and Subway Surfers use no phones. They set `input: "camera"` and `join: "
 ## Rules of the house
 
 * Files stay under about 200 lines, with comments that say why.
-* The platform's own screens use the tokens in `src/app/globals.css`, with the logo's purple as the accent. Each game brings its own colour in `info.ts`, which tints its home card, and inside the game it has its own look (Fruit Ninja is warm brown wood, for example), kept in its own folder. Be bold with colour.
+* The platform's own screens use the tokens in `src/app/globals.css`, with the logo's purple as the accent. Each game brings its own colour in `info.ts`, which tints its home card, and inside the game it has its own look (Fruit Slicer is warm brown wood, for example), kept in its own folder. Be bold with colour.
 * No imports from another game. Shared code belongs in `src/platform`, `src/components` or the game kit in `src/games/kit`.
