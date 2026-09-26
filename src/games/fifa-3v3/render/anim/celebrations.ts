@@ -55,12 +55,15 @@ export function celebration(kind: Celebration, t: number): Pose {
       break;
     }
     case "zen": {
-      // Sat cross legged on the turf, hands resting open on the knees.
+      // Sat on the turf with the legs folded in front, hands resting open on the knees. The body
+      // drops first, then the thighs roll out flat and the shins fold in across the front: the
+      // half turn about x lays each knee's hinge upright, so the shin swings level instead of down.
       const sit = smooth(t / 0.6);
-      p.lift = -0.72 * sit;
-      p.hipLX = p.hipRX = -1.45 * sit;
-      p.hipLZ = p.hipRZ = 0.75 * sit;
-      p.kneeL = p.kneeR = 2.3 * sit;
+      const fold = smooth((t - 0.15) / 0.5);
+      p.lift = -0.8 * smooth(t / 0.4);
+      p.hipLX = p.hipRX = -Math.PI * fold;
+      p.hipLZ = p.hipRZ = 1.94 * fold;
+      p.kneeL = p.kneeR = 2.3 * fold;
       p.shLX = p.shRX = -0.5 * sit;
       p.shLZ = p.shRZ = 0.45 * sit;
       p.elL = p.elR = -0.6 * sit;
