@@ -6,6 +6,6 @@ export const SessionContext = createContext<FifaHost | null>(null);
 
 export function useSession(): FifaHost {
   const session = useContext(SessionContext);
-  if (!session) throw new Error("FIFA 3v3's host screens need their session.");
+  if (!session) throw new Error("Soccer 3v3's host screens need their session.");
   return session;
 }

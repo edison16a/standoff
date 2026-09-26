@@ -7,12 +7,12 @@ import { MATCH, STEP } from "./tuning";
 import type { MatchState, SkillKind } from "./types";
 
 const LINEUP: Entrant[] = [
-  { team: 0, character: "messi", seat: 1 },
-  { team: 0, character: "ronaldo", seat: null },
-  { team: 0, character: "mbappe", seat: null },
-  { team: 1, character: "haaland", seat: 2 },
-  { team: 1, character: "vinicius", seat: null },
-  { team: 1, character: "bellingham", seat: null },
+  { team: 0, character: "echeverri", seat: 1 },
+  { team: 0, character: "brandao", seat: null },
+  { team: 0, character: "okemba", seat: null },
+  { team: 1, character: "holmvik", seat: 2 },
+  { team: 1, character: "lacerda", seat: null },
+  { team: 1, character: "ashworth", seat: null },
 ];
 
 /** Red's phone player on the ball facing Blue's goal, Blue's phone player `gap` metres in front. */

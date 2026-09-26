@@ -17,7 +17,7 @@ function usePortrait(): boolean {
 }
 
 /**
- * NBA 3v3 on the phone: the setup steps, then the controller while this
+ * Basketball 3v3 on the phone: the setup steps, then the controller while this
  * phone has a player in the game, then the result. A phone that joins
  * during a game stays in setup until the next one.
  */

@@ -22,7 +22,7 @@ const HUD_MS = 100;
 const BANNER_MS = 1900;
 
 /**
- * NBA 3v3 on the computer, for one room. It keeps the lobby and the
+ * Basketball 3v3 on the computer, for one room. It keeps the lobby and the
  * teams, runs the game, directs the sound and the announcer, and it is
  * the referee: phones send their stick and buttons, and everything they
  * show comes back from here.

@@ -14,7 +14,7 @@ import { SeatBook } from "./seat-book";
 import type { Screen } from "./screen";
 
 /**
- * Fruit Ninja on the computer, for one room. It is the referee: phones
+ * Fruit Slicer on the computer, for one room. It is the referee: phones
  * send their aim and their choices, and everything they see comes back
  * from here. It runs the lobby and the rounds, and passes every event to
  * the screen, the sound and the phones.

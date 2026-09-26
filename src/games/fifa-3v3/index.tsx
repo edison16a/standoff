@@ -17,7 +17,7 @@ import "./styles/pad.css";
 import "./styles/showcase.css";
 
 /**
- * FIFA 3v3, as the platform sees it. Each room gets one session, and
+ * Soccer 3v3, as the platform sees it. Each room gets one session, and
  * every piece the platform renders is wrapped so it can reach it.
  */
 export const game: GameModule = {

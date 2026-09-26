@@ -93,7 +93,7 @@ export function Lobby() {
     <div className="nba-lobby">
       <header className="nba-lobby__title">
         <span className="nba-lobby__logo">
-          <b>NBA</b> 3v3
+          <b>Basketball</b> 3v3
         </span>
         <p>Three on three, first to 11. Pick your star on your phone.</p>
       </header>

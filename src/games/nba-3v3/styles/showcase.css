@@ -26,7 +26,8 @@
   justify-content: center;
   gap: 0.18em;
   font-family: Impact, "Arial Black", "Helvetica Neue", sans-serif;
-  font-size: 15vmin;
+  /* Sized so the longer name still fits the square icon. */
+  font-size: 10.5vmin;
   font-style: italic;
   font-weight: 900;
   line-height: 1;

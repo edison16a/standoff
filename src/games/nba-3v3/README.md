@@ -1,10 +1,10 @@
-# NBA 3v3
+# Basketball 3v3
 
 Status: ready. Three on three half court basketball for 1 to 6 players, with computer players filling every empty spot. First to 11.
 
 ## How to play
 
-1. Open NBA 3v3 on the computer. Everyone scans the code with their phone.
+1. Open Basketball 3v3 on the computer. Everyone scans the code with their phone.
 2. On the phone, after the name:
    * **Star.** Pick one of ten stars, shown dribbling in 3D with their speed, shooting and strength. A star another phone has is marked taken.
    * **Ready.** Tap Ready.
@@ -39,18 +39,18 @@ A phone that joins during a game picks a star and joins the next one. A player w
 
 ## Shooting
 
-* The meter fills in 0.82 seconds. The green band sits near the top; its width grows with the shooting stat (Curry's is widest) and by half again for a player on fire.
+* The meter fills in 0.82 seconds. The green band sits near the top; its width grows with the shooting stat (Ashby's is widest) and by half again for a player on fire.
 * The chance to score comes from the release (green, good, early or late), the distance, the shooting stat, and the nearest defender's contest. A defender in front contests a little; one who jumped with Block contests fully and may block the shot, more likely with long arms.
 * Green releases go in almost every time unless heavily contested. The phone measures how long Shoot was held, so network lag never costs a green.
 * Once decided, the kind of make or miss is drawn from weights: swishes, bank shots off the glass (mostly from the wings), rolls round the rim and in, friendly bounces, rim outs, in and outs, off the glass and out, and airballs on bad misses. The ball flies a planned arc for that outcome, touching the iron and the glass exactly where it should, and then real physics takes over for rebounds.
-* Computer players weigh every jumper by the points it is worth on average: their own meter timing, the distance and the defence. Shooters like Curry look for their shot, drivers like Giannis attack open lanes, and the ball goes to whoever is most dangerous.
+* Computer players weigh every jumper by the points it is worth on average: their own meter timing, the distance and the defence. Shooters like Ashby look for their shot, drivers like Varelas attack open lanes, and the ball goes to whoever is most dangerous.
 * Three makes in a row: heating up. Four: on fire, with a flaming ball, a wider green and a little more speed, until you miss or the other team scores.
 
 ## Strength, dunks and layups
 
 * Each dunk has an approach, a gather, the takeoff, time in the air, the slam, and either a hang on the rim or letting go straight away, then the landing. Players land with slow legs for a moment.
 * Stars mostly throw their signature dunk, but not always: along the baseline it is often a reverse, in traffic a power dunk, and players with the legs for it throw the odd windmill or three sixty. Power dunks sometimes grab the rim.
-* Each star has one signature dunk: Curry's scoop, LeBron's tomahawk, Durant's reverse, Giannis's two hand hammer, Jokic hanging on the rim, Luka's one hand flush, Shai's cock back, Tatum's double clutch, Ant's three sixty and Wemby's windmill.
+* Each star has one signature dunk: Ashby's scoop, Whitlock's tomahawk, Crane's reverse, Varelas's two hand hammer, Vukmir hanging on the rim, Zupan's one hand flush, Fontaine's cock back, Mensah's double clutch, Holloway's three sixty and Delacroix's windmill.
 * Driving into a weaker defender (two or more strength points less) sends them sprawling. A much stronger defender in the way turns a dunk into a layup. Strength also decides who gets pushed off a spot.
 * A big dunk shakes the rim and the camera, slows time for a moment and the camera swoops in.
 
@@ -60,18 +60,18 @@ All ten, with their stats, looks and dunks, live in `roster.ts`, so they are eas
 
 | Star | Speed | Shooting | Strength |
 | --- | --- | --- | --- |
-| Stephen Curry | 8 | 10 | 4 |
-| LeBron James | 8 | 7 | 10 |
-| Kevin Durant | 7 | 9 | 6 |
-| Giannis Antetokounmpo | 9 | 4 | 10 |
-| Nikola Jokic | 4 | 8 | 9 |
-| Luka Doncic | 5 | 9 | 8 |
-| Shai Gilgeous-Alexander | 9 | 9 | 5 |
-| Jayson Tatum | 7 | 8 | 7 |
-| Anthony Edwards | 9 | 7 | 8 |
-| Victor Wembanyama | 6 | 7 | 6, with the longest reach |
+| Julian Ashby | 8 | 10 | 4 |
+| Dante Whitlock | 8 | 7 | 10 |
+| Elias Crane | 7 | 9 | 6 |
+| Nikos Varelas | 9 | 4 | 10 |
+| Stefan Vukmir | 4 | 8 | 9 |
+| Tomaz Zupan | 5 | 9 | 8 |
+| Andre Fontaine | 9 | 9 | 5 |
+| Kofi Mensah | 7 | 8 | 7 |
+| Darius Holloway | 9 | 7 | 8 |
+| Mathis Delacroix | 6 | 7 | 6, with the longest reach |
 
-The players are stylised athletes, recognisable by build, skin tone, hair, beard, jersey number and details like LeBron's headband, Curry's mouthguard and Durant's arm sleeve.
+The players are stylised athletes, recognisable by build, skin tone, hair, beard, jersey number and details like Whitlock's headband, Ashby's mouthguard and Crane's arm sleeve.
 
 ## Sound
 
@@ -90,11 +90,11 @@ The crowd murmurs, goes "ooh" as a ball rattles round the rim, groans at misses,
 * `phone/`: the controller session and the phone screens. The stick and buttons use the gamepad kit in `src/games/kit/pad`.
 * `audio/`: effects, the crowd, the music and the announcer.
 * `protocol/`: the zod schemas for the messages between the phones and the host.
-* `showcase/`: the scripted highlight filmed for the home screen: Giannis's hammer dunk and Luka's step back three. It skips the check up to keep the clip short. For looking at the animation in development, `/showcase/nba-3v3?bots=3` films a whole computer game instead, and `&at=12` holds the frame twelve seconds in. `?lab=moves` (or `run`, `dunk&style=windmill`, `block`, `free`) plays a short scene that shows one thing, `&step=1` lets a script step it one filmed frame at a time through `window.__nbaStep`, and `&follow=id,angle,dist` keeps a close camera on one player.
+* `showcase/`: the scripted highlight filmed for the home screen: Varelas's hammer dunk and Zupan's step back three. It skips the check up to keep the clip short. For looking at the animation in development, `/showcase/nba-3v3?bots=3` films a whole computer game instead, and `&at=12` holds the frame twelve seconds in. `?lab=moves` (or `run`, `dunk&style=windmill`, `block`, `free`) plays a short scene that shows one thing, `&step=1` lets a script step it one filmed frame at a time through `window.__nbaStep`, and `&follow=id,angle,dist` keeps a close camera on one player.
 
 ## Home screen media
 
-The icon, the poster and the looping clip are filmed from the showcase with `node tools/media/capture.mjs nba-3v3 --url http://localhost:3000 --ffmpeg ffmpeg`. The poster and the icon are one frame of Giannis at the top of his hammer, the ball cocked behind his head: the poster from the wing, the icon from low under him. The film is run ahead to that moment without drawing and held, so they take seconds to shoot. The loop is eight seconds of the broadcast camera: the drive and the dunk in slow motion from the close camera, then Luka's three from the top. The first three seconds the tool lets run are stepped without drawing, and the loop draws once per filmed frame.
+The icon, the poster and the looping clip are filmed from the showcase with `node tools/media/capture.mjs nba-3v3 --url http://localhost:3000 --ffmpeg ffmpeg`. The poster and the icon are one frame of Varelas at the top of his hammer, the ball cocked behind his head: the poster from the wing, the icon from low under him. The film is run ahead to that moment without drawing and held, so they take seconds to shoot. The loop is eight seconds of the broadcast camera: the drive and the dunk in slow motion from the close camera, then Zupan's three from the top. The first three seconds the tool lets run are stepped without drawing, and the loop draws once per filmed frame.
 
 The tool's fake clock keeps running in real time, so on a computer that renders in software a slow frame used to race the film ahead. The showcase counts any long gap as one filmed frame. The tool now pauses the clock itself. The clip is filmed at 1280 by 720 with `--size 1280x720`, so each file stays under 4 MB.
 

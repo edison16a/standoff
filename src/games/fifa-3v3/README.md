@@ -1,4 +1,4 @@
-# FIFA 3v3
+# Soccer 3v3
 
 Status: ready.
 
@@ -6,7 +6,7 @@ Three on three football on a big floodlit pitch for up to six phones. A computer
 
 ## How to play
 
-1. Host FIFA 3v3 from the home screen. Computer players kick about behind the lobby while everyone joins.
+1. Host Soccer 3v3 from the home screen. Computer players kick about behind the lobby while everyone joins.
 2. On each phone: type a name, pick a star (a turning 3D preview with their stats; stars someone else has are marked), then tap Ready.
 3. On the big screen the host puts each player on Red or Blue with the mouse. Empty places are filled by computer players, three a side. Press Kick off.
 4. First to five goals, or the most goals after four minutes. Level at the end means golden goal: the next goal wins.

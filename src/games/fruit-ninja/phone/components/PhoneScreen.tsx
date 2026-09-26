@@ -4,7 +4,7 @@ import { PlayPad } from "./PlayPad";
 import { RoundOver } from "./RoundOver";
 import { SetupSteps } from "./SetupSteps";
 
-/** Fruit Ninja on the phone: setup until ready, then the play pad during a round, then the result. */
+/** Fruit Slicer on the phone: setup until ready, then the play pad during a round, then the result. */
 export function PhoneScreen() {
   const { ready, game, seat } = useFruitPhone();
   const inRound = ready && game?.inRound;

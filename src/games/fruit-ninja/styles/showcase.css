@@ -46,7 +46,7 @@
   color: transparent;
 }
 
-.fn-logo__word--ninja {
+.fn-logo__word--slicer {
   margin-left: 0.5em;
   font-size: 16vmin;
 }
@@ -79,7 +79,7 @@
   color: transparent;
 }
 
-.fn-logo__word--ninja::after {
+.fn-logo__word--slicer::after {
   background: linear-gradient(180deg, #ffffff 0%, #e2fbff 36%, #7fe0ff 60%, #3a7dff 84%, #2447c8 100%);
   -webkit-background-clip: text;
   background-clip: text;

@@ -30,12 +30,12 @@ describe("the charge bar", () => {
 });
 
 const LINEUP: Entrant[] = [
-  { team: 0, character: "messi", seat: 1 },
-  { team: 0, character: "ronaldo", seat: null },
-  { team: 0, character: "mbappe", seat: null },
-  { team: 1, character: "haaland", seat: null },
-  { team: 1, character: "vinicius", seat: null },
-  { team: 1, character: "bellingham", seat: null },
+  { team: 0, character: "echeverri", seat: 1 },
+  { team: 0, character: "brandao", seat: null },
+  { team: 0, character: "okemba", seat: null },
+  { team: 1, character: "holmvik", seat: null },
+  { team: 1, character: "lacerda", seat: null },
+  { team: 1, character: "ashworth", seat: null },
 ];
 
 /** Red's phone player on the ball in open play, everyone else far away. */

@@ -5,12 +5,12 @@ import type { MatchState } from "../engine/types";
 import { buildView, type MatchView } from "../engine/view";
 
 const LINEUP: Entrant[] = [
-  { team: 0, character: "messi", seat: null },
-  { team: 0, character: "bellingham", seat: null },
-  { team: 0, character: "salah", seat: null },
-  { team: 1, character: "ronaldo", seat: null },
-  { team: 1, character: "kane", seat: null },
-  { team: 1, character: "yamal", seat: null },
+  { team: 0, character: "echeverri", seat: null },
+  { team: 0, character: "ashworth", seat: null },
+  { team: 0, character: "mansour", seat: null },
+  { team: 1, character: "brandao", seat: null },
+  { team: 1, character: "pritchard", seat: null },
+  { team: 1, character: "serrano", seat: null },
 ];
 
 /**
