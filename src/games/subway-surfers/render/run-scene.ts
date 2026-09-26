@@ -4,6 +4,7 @@ import type { Run } from "../engine/run";
 import { GuardView } from "./actors/guard-view";
 import { RunnerView, type Mood } from "./actors/runner-view";
 import { ChaseCamera } from "./chase-camera";
+import { headAbove } from "./models/overhead";
 import { RunEffects } from "./effects/run-effects";
 import { CollectibleView } from "./world/collectibles";
 import { ObstacleView } from "./world/obstacle-view";
@@ -45,6 +46,7 @@ export class RunScene {
     environment: THREE.Texture | null,
   ) {
     this.scenery = new Scenery(seed);
+    this.chase.ceiling = (distance, x) => this.scenery.ceilingAt(distance, x);
     this.runner = new RunnerView(look);
     this.scene.fog = this.fog;
     this.scene.environment = environment;
@@ -86,6 +88,8 @@ export class RunScene {
     this.guard.update(run, dt, time);
     this.effects.frame(run, dt, time);
     this.chase.update(run, dt, time);
+    const eye = this.chase.camera.position;
+    this.scenery.fade.update({ y: eye.y, z: eye.z }, { y: headAbove(run.runner.y), z: -d }, dt);
     this.relight(d, dt);
     this.sky.follow(this.chase.camera);
     tickHolograms(time);

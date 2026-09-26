@@ -7,8 +7,6 @@ import type { Theme } from "../world/themes";
 
 /** Scenery is laid in chunks of this many metres, each built from shared prefabs. */
 export const CHUNK = 30;
-/** The tunnel roof, above a jetpack's flight. */
-export const TUNNEL_TOP = 9.2;
 const GAUGE = 0.72;
 
 const prefabs = new Map<string, THREE.Group>();
@@ -112,9 +110,6 @@ export function gantry(signals: number | null, neon: number): THREE.Group {
     for (const lane of LANES) {
       const x = laneX(lane);
       b.box(0.05, 0.9, 0.05, dark, [x, 6.3, 0]);
-      // The contact wire runs the whole chunk.
-      b.box(0.04, 0.04, CHUNK, dark, [x, 5.9, -CHUNK / 2]);
-      b.box(0.03, 0.03, CHUNK, dark, [x, 6.5, -CHUNK / 2]);
       if (signals === null) continue;
       // Signal heads hang over each track: green, or red over a track that is blocked ahead.
       b.box(0.5, 1.1, 0.34, dark, [x, 6.1, 0.1], undefined, 0.08);
@@ -123,6 +118,19 @@ export function gantry(signals: number | null, neon: number): THREE.Group {
       b.sphere(0.13, { color: red ? 0x1a3a1a : 0x3ddc84, finish: red ? "satin" : "glow" }, [x, 5.9, 0.28]);
     }
     return b.build("gantry");
+  });
+}
+
+/** The contact wires over each track, the whole chunk long, apart from the gantry so each can fade on its own. */
+export function wires(): THREE.Group {
+  return cached("wires", () => {
+    const b = new MeshBuilder();
+    const dark = { color: 0x16171f, finish: "satin" as const };
+    for (const lane of LANES) {
+      b.box(0.04, 0.04, CHUNK, dark, [laneX(lane), 5.9, -CHUNK / 2]);
+      b.box(0.03, 0.03, CHUNK, dark, [laneX(lane), 6.5, -CHUNK / 2]);
+    }
+    return b.build("wires");
   });
 }
 
