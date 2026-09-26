@@ -55,6 +55,8 @@ export class BrawlPhone {
     if (!on) {
       this.pad.releaseAll();
       this.up = false;
+      // A word left from the last match would flash again when the next one's controller mounts.
+      store.setState({ flash: null });
     }
   }
 
