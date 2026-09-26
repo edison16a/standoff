@@ -1,0 +1,26 @@
+# Counter Battle
+
+Status: in development. The engine and the 3D world are done. The host, the phones, the sound and the home screen media come next.
+
+A team shooter for up to four players on phones, one or two a side, on a paintball style field. Players never steer. A movement brain runs each fighter from cover to cover, and the player aims with their phone and shoots. Every human gets their own view over their fighter's shoulder.
+
+## The engine
+
+`engine/` is pure TypeScript with no drawing and no timers. `Battle` steps at 60 steps a second from a seed, so the same seed and inputs always play out the same way. It holds the field and its cover graph, the fighters, their guns, the movement brain, the computer players' aim and the round and match clock. What happens comes out as `BattleEvent`s: shots with every bullet's trace, hits, kills, reloads and the round and match results.
+
+## The world
+
+`render/` draws a `Battle` with three.js. It only reads the battle, so a replayed match looks the same.
+
+* `arena/`: the turf with its lines and worn patches, the bunkers built to the engine's own shapes (so a bullet stops where the eye sees the bunker), the nets on posts, the stands with fans who cheer on kills, the pit tents, the sky, hills and trees, and the late afternoon sun with shadows.
+* `models/`: the four characters on one rig. The Paintball Pro wears a padded jersey and a mask with a mirrored lens. The Operator has a plate carrier, a helmet with a headset and a balaclava. The Street Runner has a hoodie, a bandana and a cap on backwards. The Heavy Gunner wears plates, shoulder guards, a bandolier and a visored helmet. Team colours tint the kit and the player's own colour marks each one: the Pro's chest band, the Operator's shoulder patch and strobe, the Runner's bandana, cap peak and soles, the Heavy's helmet stripe and arm band. `models/guns/` has the rifle, the pump shotgun, the SMG and the sniper, each with the points the hands hold and moving magazines, pumps and bolts.
+* `anim/`: the animations, all worked out from the fighter's state each frame. The legs stand, run in any direction while the body faces the fight, and kneel behind cover, reaching their feet by IK. The body turns side on to aim, leans out round tall cover, flinches from hits, falls when shot down and celebrates a round won in each character's own way. The gun sits in the shoulder when aiming and is carried low otherwise, kicks with each shot, and the hands work it: a magazine change for the rifle and SMG, shell by shell for the shotgun, bolt and magazine for the sniper, the pump after each shotgun blast and the bolt after each sniper shot. Tests check that the standing and kneeling heads match the engine's hit boxes, that every helmet hides under the lowest bunker, and that both hands hold every gun.
+* `effects/`: muzzle flashes, tracers, paint splats on the bunkers and turf in the shooter's team colour, puffs, spent cases, and a burst of paint when a fighter goes down.
+* `hud/pane-hud.ts`: each player's crosshair in their colour, opening with the spread and following the kick, hit markers (bigger for a head shot, red for a kill), and a red vignette when hurt that stays faint at low health and greys the view once down.
+* `camera/`: the over the shoulder camera, which follows the way the fighter faces, rises when they kneel so the player still sees over low cover, pulls in when a bunker is behind, narrows like a scope when a sniper looks out, and shows the kick. `aim-ray.ts` turns a point in a player's view into what they are pointing at, for `Battle.aimAt`. The television camera fills a spare quarter.
+* `layout.ts`: the split screen. Two players sit side by side. Three or four take quarters, pink down the left and cyan down the right, and a spare quarter shows the television camera. The rects are the shape the kit's `SplitMap` takes.
+* `battle-renderer.ts`: one scene and one WebGL renderer for every view, each a scissored viewport. Name tags show teammates always and enemies only while in sight, so a tag never gives away someone behind cover.
+
+## Looking around in development
+
+`showcase/` is the game playing itself. It needs the game's loader in `catalog.ts`, which comes with the host; until then, wire a loader locally without committing it. `/showcase/counter-battle` plays a seeded 2v2 of computer players from the television camera. `?panes=4` (or 2, or 1) splits the screen with a camera behind each fighter, `?seed=` plays another fight, `?at=seconds` holds a still at that moment, and `?cam=x,y,z,tx,ty,tz` pins the television camera. `?lab=1` swaps the fight for the animation lab: the four characters in a row, each with a different gun, standing, running forward, sideways and back, kneeling, standing up to fire, reloading, taking two hits, falling and celebrating, on a 24 second loop. On a still, `window.__cbFilm(seconds)` steps on and draws, so a script can take a frame sequence at any rate.
