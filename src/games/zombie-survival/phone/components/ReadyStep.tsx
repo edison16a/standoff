@@ -10,7 +10,8 @@ export function ReadyStep({ seat }: { seat: Seat }) {
   const ready = usePhoneStore((s) => s.ready);
   const state = usePhoneStore((s) => s.state);
   const running = state !== null && state.phase !== "lobby";
-  const team = state?.seats.map((s, i) => ({ ...s, seat: i + 1 })).filter((s) => s.connected) ?? [];
+  // Our own flag shows the tap at once, not a round trip later when the host says so.
+  const team = state?.seats.map((s, i) => ({ ...s, seat: i + 1, ready: i + 1 === seat ? ready : s.ready })).filter((s) => s.connected) ?? [];
 
   return (
     <div className="zs-ready">
