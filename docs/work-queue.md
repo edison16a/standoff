@@ -15,7 +15,6 @@ The running list of what is being built, so work can pick up again after a break
 | Work | Branch | State |
 | --- | --- | --- |
 | Batch A (playtest fixes, sounds, bots toggle, Boxing and Subway fixes, easier jumps, Brawl flow, frame rate limiter, Zombie pace) | new worktrees from workflow wf_97a836d3-114 | five builds, each then reviewed |
-| Blade Clash (replaces Fencing) | `worktree-wf_24155454-673-1` | gameplay, look and sound done; media finishing, then review |
 
 The review loop looks hard at every game for 3D model errors, animation glitches and phone controller problems, fixes them, then a second pass reviews again with fresh eyes. It also adds the split screen name map (`src/games/kit/split/SplitMap.tsx`) to Magic Kart, Subway Runner, Cube Game and Boxing.
 
@@ -33,7 +32,7 @@ The review loop looks hard at every game for 3D model errors, animation glitches
 8. **Frame rate limiter in Settings:** defaults to the screen's measured maximum and can be lowered (for example 30, 60, 90, 120). Applies to every game.
 9. **Zombie Survival pace:** cut to 15 stages. Stage 1 already has lots of zombies, wave 2 already has a boss, stage 10 is the helicopter that carries the team to the final part, and stage 15 is the final boss stage. Faster paced throughout.
 
-### Batch B: after Blade Clash and Counter Battle land
+### Batch B: ready to start (Blade Clash and Counter Battle have landed)
 
 10. **Music:** one unique song for every game that matches its vibe (Magic Kart energetic, Fruit Slicer calm and fruity, Subway Runner retro disco, and so on for all of them including Blade Clash and Counter Battle). Each game's lobby music is chill and flowy. Distinct keys, tempos, instruments and hooks, through the music bus.
 11. **Magic Kart home clip:** more continuous, one or two long flowing shots instead of many cuts.
@@ -46,6 +45,7 @@ The review loop looks hard at every game for 3D model errors, animation glitches
 
 ## Done recently
 
+* Blade Clash replaces Fencing: a two player split screen sword duel with free 3D swords, clashes, five hit health, four fighters.
 * Review loop: two passes over ten games for 3D model, animation and phone controller glitches, plus the split screen name map.
 * Counter Battle: a split screen team shooter for 1v1 or 2v2 with bots, AI movement between cover, four guns with recoil, first to five rounds.
 * Phones can join the next room after a game, in the same tab or a new one.
@@ -53,6 +53,10 @@ The review loop looks hard at every game for 3D model errors, animation glitches
 * Renamed Fruit Slicer, Subway Runner, Basketball 3v3 and Soccer 3v3, with made up player names and new icons.
 * Voice commentary removed from Basketball 3v3 and Soccer 3v3.
 * README: play link and screenshots first, dark mode home photo, live site link.
+
+## Known issues
+
+* `counter-battle/engine/battle.test.ts` (same seed plays out the same) can time out in the full suite on a loaded machine; it passes alone. Give it more time or make it lighter.
 
 ## Conventions
 
