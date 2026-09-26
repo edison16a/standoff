@@ -35,7 +35,7 @@ You never steer. Your fighter runs cover to cover, kneels behind low bunkers, an
 
 Each player gets their own view over their fighter's shoulder. Two players share the screen side by side. Three or four take quarters, pink down the left and cyan down the right. Your name sits at the top of your view, your health at the bottom left and your magazine with a reload bar at the bottom right. The score, the round and a small map of the split sit at the top middle, and the kill feed at the top right.
 
-A round ends when one side is all down. Round banners call Round 3 (or Match point), Fight, and who took it. Sides swap every round. First to five rounds wins. The results show confetti in the winners' colour and every fighter's kills, deaths, head shots and damage. Then Play again, or Menu to pick another game.
+A round ends when one side is all down. Round banners call Round 3 (or Match point), Fight, and who took it. Sides swap every round. First to five rounds wins. The results show confetti in the winners' colour and every fighter's kills, deaths, head shots and damage. Then Play again with the same teams, or Menu to go back to the lobby and change teams, guns or the match. The Standoff logo at the top left goes home to pick another game.
 
 ## Technical notes
 
