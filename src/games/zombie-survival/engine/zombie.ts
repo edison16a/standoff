@@ -79,6 +79,12 @@ export const alive = (z: Zombie) => z.state !== "dead";
 /** Weak points still glowing. */
 export const weakLeft = (z: Zombie) => z.weak.filter((hp) => hp > 0).length;
 
+/** How fast it closes in while walking, in m/s. Bosses speed up once half their weak points are gone. */
+export function walkSpeed(z: Zombie): number {
+  const enraged = z.weak.length > 0 && weakLeft(z) <= z.weak.length / 2 ? 1.3 : 1;
+  return z.speed * enraged;
+}
+
 /**
  * Moves a zombie on by `dt`. Returns the damage of a swing that landed on
  * the team this step, or 0.
@@ -97,9 +103,7 @@ export function stepZombie(z: Zombie, dt: number): number {
   const room = sideRoom(z.ahead);
   z.side = Math.max(-room, Math.min(room, z.side));
   if (z.state === "walk") {
-    // Bosses speed up once half their weak points are gone.
-    const enraged = z.weak.length > 0 && weakLeft(z) <= z.weak.length / 2 ? 1.3 : 1;
-    z.ahead -= z.speed * enraged * dt;
+    z.ahead -= walkSpeed(z) * dt;
     if (z.ahead <= spec.reach) {
       z.ahead = spec.reach;
       setState(z, "attack");

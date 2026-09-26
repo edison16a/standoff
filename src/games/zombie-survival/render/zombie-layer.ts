@@ -2,7 +2,7 @@ import * as THREE from "three";
 import type { FightFrame } from "../engine/route";
 import { alive, type Zombie } from "../engine/zombie";
 import { isBoss } from "../engine/zombie-kinds";
-import { poseZombie } from "./models/zombies/animate";
+import { poseZombie, strideRate } from "./models/zombies/animate";
 import { buildBoss } from "./models/zombies/bosses";
 import { buildCommoner, type Setting } from "./models/zombies/commoners";
 import { PoseBlend } from "./models/zombies/pose-blend";
@@ -22,6 +22,8 @@ interface ZombieView {
   blend: PoseBlend;
   /** The sideways drift of its heading, eased so it never snaps when the walk stops. */
   wander: number;
+  /** Walk cycles done, added up so the legs carry on smoothly when the pace changes. */
+  cycle: number;
 }
 
 /**
@@ -48,7 +50,8 @@ export class ZombieLayer {
         view.flinch = Math.max(0, view.flinch - dt * 5);
         this.place(view, z, frame, dt);
         view.blend.before(view.rig, z.state);
-        poseZombie(view.rig, z, view.flinch);
+        view.cycle += strideRate(view.rig, z) * dt;
+        poseZombie(view.rig, z, view.flinch, view.cycle);
         view.blend.after(view.rig, dt);
         for (const eye of view.rig.eyes) eye.visible = z.state !== "dead";
         animateWeakPoints(view.weak, z.weak, z.age);
@@ -108,7 +111,7 @@ export class ZombieLayer {
     shadow.position.y = 0.03;
     built.rig.root.add(shadow);
     this.group.add(built.rig.root);
-    const view = { rig: built.rig, weak: built.weak, shadow, flinch: 0, blend: new PoseBlend(), wander: wander(z) };
+    const view = { rig: built.rig, weak: built.weak, shadow, flinch: 0, blend: new PoseBlend(), wander: wander(z), cycle: 0 };
     this.views.set(z.id, view);
     return view;
   }
