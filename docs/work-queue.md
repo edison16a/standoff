@@ -36,17 +36,18 @@ The review loop looks hard at every game for 3D model errors, animation glitches
 6. **Easier camera jumps:** in Subway Runner and Cube Game a small jump, about 30 percent of a full one, should count. Bobbing and nodding must still be ignored.
 7. **Brawl Battle flow:** smoother and flowier, less mechanical. No popups for ults or KOs. It should feel like always attacking (buffered and chained attacks, cancels, quicker recovery). Fighters walk straight through each other.
 8. **Frame rate limiter in Settings:** defaults to the screen's measured maximum and can be lowered (for example 30, 60, 90, 120). Applies to every game.
+9. **Zombie Survival pace:** cut to 15 stages. Stage 1 already has lots of zombies, wave 2 already has a boss, stage 10 is the helicopter that carries the team to the final part, and stage 15 is the final boss stage. Faster paced throughout.
 
 ### Batch B: after Blade Clash and Counter Battle land
 
-9. **Music:** one unique song for every game that matches its vibe (Magic Kart energetic, Fruit Slicer calm and fruity, and so on for all of them including Blade Clash and Counter Battle). Each game's lobby music is chill and flowy. Distinct keys, tempos, instruments and hooks, through the music bus.
-10. **Magic Kart home clip:** more continuous, one or two long flowing shots instead of many cuts.
-11. **Basketball and Soccer home clips:** remake them with the latest gameplay (one dunk, one shot style scenes) and the made up player names. The current clips still show old real name tags.
-12. **Cube Game portals:** normal proportions, not stretched.
+10. **Music:** one unique song for every game that matches its vibe (Magic Kart energetic, Fruit Slicer calm and fruity, Subway Runner retro disco, and so on for all of them including Blade Clash and Counter Battle). Each game's lobby music is chill and flowy. Distinct keys, tempos, instruments and hooks, through the music bus.
+11. **Magic Kart home clip:** more continuous, one or two long flowing shots instead of many cuts.
+12. **Basketball and Soccer home clips:** remake them with the latest gameplay (one dunk, one shot style scenes) and the made up player names. The current clips still show old real name tags.
+13. **Cube Game portals:** normal proportions, not stretched.
 
 ### Last
 
-13. **Final README:** the new names (Fruit Slicer, Subway Runner, Basketball 3v3, Soccer 3v3, Blade Clash), Counter Battle added, the live site standoffgames.vercel.app, a fresh dark mode home photo and one picture per game, a polished pitch and how to play, then push.
+14. **Final README:** the new names (Fruit Slicer, Subway Runner, Basketball 3v3, Soccer 3v3, Blade Clash), Counter Battle added, the live site standoffgames.vercel.app, a fresh dark mode home photo and one picture per game, a polished pitch and how to play, then push.
 
 ## Done recently
 
