@@ -12,7 +12,7 @@ export const SAMURAI: Moveset = {
     sound: "slash",
     // A weapon side attack: a short dash forward carries the cut.
     motion: [{ frame: 3, vx: 9, set: true }],
-    hitboxes: [box(1.0, 1.1, 0.6, 6, 10, hit(11, 7, 0.16, 35)), box(2.0, 1.0, 0.55, 6, 10, hit(11, 7, 0.16, 35))],
+    hitboxes: [box(1.0, 1.1, 0.6, 6, 10, hit(10, 7, 0.16, 35)), box(2.0, 1.0, 0.55, 6, 10, hit(10, 7, 0.16, 35))],
   },
   up: {
     name: "Arc Slash",

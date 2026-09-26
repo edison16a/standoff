@@ -21,6 +21,8 @@ export function startMove(state: MatchState, f: Fighter, key: MoveKey, x: number
   const move = moveOf(f.character, key);
   const turn = turnFor(key, x, f.ground !== null);
   if (turn !== null) f.facing = turn;
+  // A move started out of one that landed carries the string on; anything else starts afresh.
+  f.chain = f.action === "attack" && f.struck.length > 0 ? f.chain + 1 : 1;
   f.action = "attack";
   f.frame = 0;
   f.move = key;

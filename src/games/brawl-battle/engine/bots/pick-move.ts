@@ -44,7 +44,8 @@ export function wouldHit(f: Fighter, t: Fighter, key: MoveKey, facing: 1 | -1): 
   });
 }
 
-function value(f: Fighter, t: Fighter, key: MoveKey): number {
+/** What a move is worth against the target: damage for the wait, plus the launch near KO percent. */
+export function scoreMove(f: Fighter, t: Fighter, key: MoveKey): number {
   const move = moveOf(f.character, key);
   const hit = move.hitboxes[move.hitboxes.length - 1] ?? move.projectiles?.[0];
   if (!hit) return 0;
@@ -66,11 +67,15 @@ export function pickAttack(f: Fighter, t: Fighter, judgement: number, rng: Rng):
     const facing = turns ? dir : f.facing;
     if (!wouldHit(f, t, key, facing)) continue;
     const noise = rng.next() * (1 - judgement) * 30;
-    options.push({ key, score: value(f, t, key) + noise });
+    options.push({ key, score: scoreMove(f, t, key) + noise });
   }
   if (!options.length) return null;
   options.sort((a, b) => b.score - a.score);
-  const key = options[0]!.key;
+  return pressFor(options[0]!.key, dir);
+}
+
+/** The stick and button that make a move, facing `dir`. */
+export function pressFor(key: MoveKey, dir: number): Command {
   const stick = stickFor(key, dir);
   return key.startsWith("heavy") ? { ...stick, heavy: true } : { ...stick, light: true };
 }

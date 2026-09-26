@@ -36,13 +36,6 @@ export interface FighterCard {
   hits: number;
 }
 
-export interface Banner {
-  key: number;
-  text: string;
-  sub: string | null;
-  colour: string;
-}
-
 /**
  * What Brawl Battle's screens on the computer render. The session writes
  * here a few times a second and on every hit; the match itself never
@@ -59,7 +52,6 @@ export interface BrawlHostState {
   fighters: FighterCard[];
   /** The big word in the middle: Ready, Fight or Game. */
   call: "ready" | "fight" | "game" | null;
-  banner: Banner | null;
   winner: number | null;
   /** Players whose phones joined during the match, waiting for the next one. */
   waiting: string[];
@@ -75,7 +67,6 @@ export const useBrawlStore = create<BrawlHostState>(() => ({
   stageName: "",
   fighters: [],
   call: null,
-  banner: null,
   winner: null,
   waiting: [],
 }));

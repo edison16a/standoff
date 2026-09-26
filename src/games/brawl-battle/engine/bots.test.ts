@@ -22,9 +22,10 @@ describe("bots", () => {
         other!.brain = null;
         hang(f!, side * (state.stage.surfaces[0]!.x2 + 3.5), 1);
         f!.vel.x = side * 3;
-        run(state, 240);
+        const events = run(state, 240);
         expect(f!.stocks, `${character} from ${side}`).toBe(2);
-        expect(f!.ground, `${character} from ${side}`).not.toBeNull();
+        // Back on the stage they may well jump straight after the partner, so any landing counts.
+        expect(events.some((e) => e.type === "land" && e.id === 0), `${character} from ${side}`).toBe(true);
       }
     }
   });
@@ -49,6 +50,20 @@ describe("bots", () => {
     place(target!, 1, -1);
     const events = run(state, 60);
     expect(events.some((e) => e.type === "hit" && e.attacker === 0)).toBe(true);
+  });
+
+  it("follow a landed hit with the next move of a string", () => {
+    const state = bots(["karate", "bear"], "hard");
+    const [f, target] = state.fighters;
+    target!.brain = null;
+    place(f!, 0, 1);
+    place(target!, 1, -1);
+    let longest = 0;
+    for (let i = 0; i < 300; i++) {
+      run(state, 1);
+      longest = Math.max(longest, f!.chain);
+    }
+    expect(longest).toBeGreaterThanOrEqual(2);
   });
 
   it("walk over to a far away opponent", () => {

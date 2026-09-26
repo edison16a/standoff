@@ -18,6 +18,8 @@ interface Segment {
   ult?: boolean;
   /** Stands the partner further off, so projectiles and dashes show their whole flight. */
   far?: boolean;
+  /** Stands the partner close, so every link of a string lands. */
+  near?: boolean;
 }
 
 const WAIT = 50;
@@ -31,6 +33,13 @@ const aerial = (name: string, x: number, y: number): Segment => ({
   name,
   frames: WAIT + 20,
   command: (i) => (i === 0 ? { x: 0, y: 0, jump: true } : i === 10 ? { x, y, light: true } : none()),
+});
+/** A light string cancelled into a heavy on each hit, pressed the way a player mashes. */
+const string = (name: string, presses: [number, Partial<Command>][]): Segment => ({
+  name,
+  frames: WAIT + 30,
+  near: true,
+  command: (i) => ({ x: 0, y: 0, ...presses.find(([at]) => at === i)?.[1] }),
 });
 const hold = (name: string, button: "light" | "heavy", x = 0, y = 0): Segment => ({
   name,
@@ -59,6 +68,7 @@ const SCRIPT: Segment[] = [
   tap("heavySide", { heavy: true }, 1),
   { ...tap("heavyUp", { heavy: true }, 0, 1), frames: 110 },
   tap("heavyDown", { heavy: true }, 0, -1),
+  string("string", [[0, { light: true }], [4, { light: true, x: 1 }], [12, { light: true, y: 1 }], [20, { heavy: true }]]),
   hold("holdSide", "light", 1),
   hold("holdUp", "light", 0, 1),
   hold("holdDown", "light", 0, -1),
@@ -114,7 +124,7 @@ export function makeLab(character: CharacterId): Lab {
 /** Puts both fighters back on their marks between moves, standing and healed, so every move plays the same. */
 function reset(state: MatchState, seg: Segment): void {
   const main = state.stage.surfaces[0]!;
-  for (const [id, x, facing] of [[0, -1.6, 1], [1, seg.far ? 3.4 : 0.9, -1]] as const) {
+  for (const [id, x, facing] of [[0, -1.6, 1], [1, seg.far ? 3.4 : seg.near ? -0.4 : 0.9, -1]] as const) {
     const who = state.fighters[id];
     if (!who || who.action === "dead" || who.action === "out" || who.action === "respawn") continue;
     Object.assign(who, { action: "idle", frame: 0, move: null, ground: 0, facing, hitstun: 0, freeze: 0, lag: 0, percent: 20, platform: null });

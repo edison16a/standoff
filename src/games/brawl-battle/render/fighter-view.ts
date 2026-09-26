@@ -1,14 +1,10 @@
 import * as THREE from "three";
 import { chargeLevel } from "../engine/charge";
-import { moveOf } from "../engine/moves";
 import type { Fighter, MatchState } from "../engine/types";
 import { CHARACTERS } from "../roster";
 import { Anchors } from "./anchors";
-import { chargingPose } from "./anim/charging";
-import { motionPose, type MotionInput } from "./anim/motion";
-import { applyPose, approach, restPose, type Pose } from "./anim/pose";
-import { strikePose } from "./anim/strike";
-import type { Style } from "./anim/style";
+import { PoseDriver } from "./anim/drive";
+import { applyPose } from "./anim/pose";
 import { STYLES } from "./anim/styles";
 import { ChargeFx } from "./charge-fx";
 import { MoveFx } from "./move-fx";
@@ -23,6 +19,8 @@ import { isGone, StepTrack } from "./step-track";
 
 /** How far the body turns toward the camera from a pure side view, so faces show. */
 const CHEAT = 0.4;
+/** Fighters pass through each other, so each stands on its own shallow depth lane and overlaps read cleanly. */
+const LANE = 0.12;
 
 /**
  * One fighter on screen: the model, and the animation that follows the
@@ -39,21 +37,17 @@ export class FighterView {
   private readonly moveFx: MoveFx;
   private readonly aura: THREE.Color;
   private readonly material = solidMaterial();
-  private readonly style: Style;
-  private readonly pose: Pose = restPose();
-  private readonly target: Pose = restPose();
+  private readonly driver: PoseDriver;
   private readonly track: StepTrack;
   /** Drawn last frame. A fighter back from a fall starts in the right pose instead of easing out of their tumble. */
   private shown = true;
   private yaw: number;
-  private stride = 0;
   private flash = 0;
   private squash = 0;
-  private flipStart = -999;
 
   constructor(f: Fighter, colours: FighterColours, glow: THREE.Material, parent: THREE.Object3D, fx: Effects) {
     this.rig = buildFighter(f.character, colours.tint, this.material, glow);
-    this.style = STYLES[f.character];
+    this.driver = new PoseDriver(STYLES[f.character]);
     this.extras = new FighterExtras(f, colours.colour);
     const anchors = new Anchors(f.character, this.rig);
     this.trails = new FighterTrails(f, colours.colour, anchors, fx);
@@ -71,7 +65,7 @@ export class FighterView {
   }
 
   onJump(double: boolean, frame: number): void {
-    if (double) this.flipStart = frame;
+    this.driver.onJump(double, frame);
     this.squash = -0.6;
   }
 
@@ -103,42 +97,15 @@ export class FighterView {
     }
     // Hit stop: the struck fighter shivers in place.
     if (frozen && f.action === "hurt") x += Math.sin(time * 95) * 0.07;
-    root.position.set(x, y, 0);
+    root.position.set(x, y, (f.slot - 1.5) * LANE);
     const winner = state.phase !== "fight" && state.phase !== "ready" && state.winner === f.id;
     // The winner turns to face the crowd.
     const turn = f.facing * (Math.PI / 2 - CHEAT) * (winner ? 0.3 : 1);
     this.yaw = appearing ? turn : this.yaw + (turn - this.yaw) * (1 - Math.exp(-22 * dt));
     root.rotation.y = this.yaw;
 
-    const speed = Math.abs(f.vel.x);
-    this.stride = (this.stride + (speed * dt) / this.style.stride) % 1;
-    const frame = f.frame + (frozen ? 0 : alpha);
-    const sinceFlip = state.frame - this.flipStart + alpha;
-    const input: MotionInput = {
-      action: f.action === "attack" || f.action === "charge" ? (f.ground !== null ? "idle" : "air") : f.action,
-      frame,
-      speed,
-      rise: f.vel.y + f.launch.y,
-      stride: this.stride,
-      time,
-      doubleJump: f.action === "air" && sinceFlip < 24,
-      launch: Math.hypot(f.launch.x, f.launch.y),
-      winner,
-    };
-    if (input.doubleJump) input.frame = sinceFlip;
-    motionPose(this.style, input, this.target);
-    let rate = 18;
-    if (f.action === "attack" && f.move) {
-      const anim = this.style.moves[f.move];
-      Object.assign(this.target, strikePose(anim, moveOf(f.character, f.move), frame, this.target));
-      rate = 40;
-    } else if (f.action === "charge" && f.move) {
-      chargingPose(this.style.moves[f.move], chargeLevel(f), time, this.target);
-      rate = 14;
-    } else if (f.action === "hurt" || input.doubleJump) rate = 30;
-    if (appearing) Object.assign(this.pose, this.target);
-    else approach(this.pose, this.target, rate, dt);
-    applyPose(this.pose, this.rig.joints, this.rig.dims);
+    const pose = this.driver.update(f, { step: state.frame, alpha, dt, time, winner, appearing });
+    applyPose(pose, this.rig.joints, this.rig.dims);
 
     this.squash += (0 - this.squash) * (1 - Math.exp(-12 * dt));
     const s = this.squash;

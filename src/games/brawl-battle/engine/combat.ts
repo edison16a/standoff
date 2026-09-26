@@ -1,10 +1,11 @@
 import { chargedHit, inWindow, liveHitboxes } from "./attack";
+import { linking } from "./flow";
 import { hurtbox, inPlay } from "./fighter";
 import { hitstopFrames, hitstunFrames, launchSpeed, launchVector } from "./knockback";
 import { moveOf, type Hit, type HitSound } from "./moves";
 import { CHARACTERS } from "../roster";
 import { blockHit } from "./shield";
-import { HITSTOP, LAUNCH } from "./tuning";
+import { FLOW, HITSTOP, LAUNCH } from "./tuning";
 import { chargeFromHit } from "./ult";
 import type { Fighter, MatchState } from "./types";
 
@@ -26,6 +27,8 @@ export interface Strike {
   ult: boolean;
   /** Thrown from afar, so the thrower does not freeze with the target. */
   ranged: boolean;
+  /** Part of a light string, so it stuns long enough for the next light move. */
+  link?: boolean;
 }
 
 /** Whether a circle touches the fighter's body box. */
@@ -66,6 +69,7 @@ export function resolveMelee(state: MatchState): void {
           y: Math.min(cy, target.pos.y + CHARACTERS[target.character].physique.height),
           ult: attacker.move === "ult",
           ranged: false,
+          link: linking(attacker),
         };
         found.push({ attacker, target, strike });
         break;
@@ -104,7 +108,7 @@ export function applyStrike(state: MatchState, attacker: Fighter, target: Fighte
   target.action = "hurt";
   target.frame = 0;
   target.move = null;
-  target.hitstun = Math.max(1, hitstunFrames(speed));
+  target.hitstun = Math.max(s.link ? FLOW.minStun : 1, hitstunFrames(speed));
   target.buffer = null;
   // A hit breaks a charge, and a hold still going will not come out later.
   target.hold = null;

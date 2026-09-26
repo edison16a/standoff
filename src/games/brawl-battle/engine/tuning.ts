@@ -20,7 +20,7 @@ export const MOVEMENT = {
   /** Frames crouched before a ground jump leaves, when an attack can still turn it into an up attack. */
   jumpSquat: 3,
   /** A short landing after any fall. */
-  landLag: 4,
+  landLag: 3,
   /** Frames a platform ignores a fighter who dropped through it. */
   dropThrough: 14,
   /** How far a stick must lean to count as held that way, and to start a jump or a drop. */
@@ -104,7 +104,31 @@ export const CHARGE = {
 };
 
 /** Speed a fighter keeps while swinging a move that does not root them, as a share of the run and the air speed. */
-export const ATTACK_MOVE = { ground: 0.45, air: 0.85 };
+export const ATTACK_MOVE = { ground: 0.6, air: 0.85 };
 
-/** Presses are remembered this many frames, so one made a little early still comes out. */
-export const BUFFER_FRAMES = 6;
+/** Presses are remembered this many frames, so one made well before a move ends still comes out. */
+export const BUFFER_FRAMES = 12;
+
+/**
+ * What keeps the fight flowing: moves that chain on a hit, recovery the
+ * next action can cut short, and speed carried through swings and turns.
+ */
+export const FLOW = {
+  /** The longest string of light moves cancelled into each other on hits. */
+  lightString: 3,
+  /** The longest chain of any moves, so a string always ends. */
+  chain: 4,
+  /**
+   * Share of a move's recovery that must play before any input cuts it
+   * short: light moves, heavy moves, and committed ones (rooted, charged).
+   */
+  recovery: { light: 0.35, heavy: 0.6, committed: 0.85 },
+  /** Landing lag after an aerial, as a share of the move's own. */
+  landLag: 0.6,
+  /** Hits never stun for less than this, so a light string can follow up. */
+  minStun: 10,
+  /** Ground grip while swinging with the stick let go: low, so a running attack slides on. */
+  carry: 0.3,
+  /** Extra grip when the stick turns against the run, for quick turnarounds. */
+  turn: 2.2,
+};

@@ -5,9 +5,9 @@ import type { Moveset } from "./types";
 /** Karate: quick and light. Small hits that chain, and a fast flying kick. */
 export const KARATE: Moveset = {
   ...KARATE_CHARGED,
-  jab: { name: "Jab", frames: 12, sound: "punch", hitboxes: [box(0.8, 1.25, 0.5, 3, 5, hit(4, 4, 0.04, 20))] },
-  side: { name: "Roundhouse", frames: 21, sound: "kick", hitboxes: [box(1.1, 1.05, 0.6, 6, 11, hit(10, 7, 0.15, 35))] },
-  up: { name: "High Kick", frames: 20, sound: "kick", hitboxes: [box(0.35, 2.0, 0.65, 4, 9, hit(8, 7, 0.14, 85))] },
+  jab: { name: "Jab", frames: 12, sound: "punch", hitboxes: [box(0.85, 1.25, 0.5, 3, 5, hit(5, 4, 0.04, 20))] },
+  side: { name: "Roundhouse", frames: 21, sound: "kick", hitboxes: [box(1.1, 1.05, 0.6, 6, 11, hit(11, 7, 0.15, 35))] },
+  up: { name: "High Kick", frames: 20, sound: "kick", hitboxes: [box(0.35, 2.0, 0.65, 4, 9, hit(9, 7, 0.14, 85))] },
   down: { name: "Low Sweep", frames: 18, sound: "kick", hitboxes: [box(1.0, 0.3, 0.55, 4, 8, hit(7, 6, 0.12, 25))] },
   air: { name: "Flying Knee", frames: 24, sound: "kick", landLag: 6, hitboxes: [box(0.65, 1.0, 0.6, 5, 12, hit(8, 6, 0.12, 40))] },
   airUp: {
