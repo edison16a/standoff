@@ -1,4 +1,5 @@
 import type { GameEvent } from "@/games/blade-clash/engine/events";
+import type { Slot } from "@/games/blade-clash/players";
 import type { MatchPhase } from "@/games/blade-clash/protocol";
 import type { Tuning } from "@/games/blade-clash/tuning";
 import type { AudioEngine } from "../../../platform/audio/audio-engine";
@@ -34,6 +35,8 @@ export class SoundDirector {
   constructor(
     private readonly engine: AudioEngine,
     private readonly tuning: () => Tuning,
+    /** What each player is called, so the announcer can crown the winner by name. */
+    private readonly name: (slot: Slot) => string = (slot) => `Player ${slot}`,
   ) {
     this.sfx = new Sfx(engine);
     this.crowd = new Crowd(engine);
@@ -114,7 +117,7 @@ export class SoundDirector {
         this.cheer(1, true);
         break;
       case "matchWon":
-        this.announcer.say(event.winner === 1 ? "Player one wins!" : "Player two wins!");
+        this.announcer.say(`${this.name(event.winner)} wins!`);
         break;
     }
   }

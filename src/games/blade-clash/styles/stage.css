@@ -32,9 +32,10 @@
 }
 
 /* Each player's bar sits at the top of their own half. */
+/* Below the platform's logo and tool bar, which sit in the top corners. */
 .hud {
   position: absolute;
-  top: 18px;
+  top: 76px;
   display: flex;
   justify-content: center;
   padding: 0 24px;

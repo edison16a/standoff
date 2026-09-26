@@ -52,7 +52,7 @@ export function pisteTexture(base: string): THREE.CanvasTexture {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("STANDOFF", x(-1), h / 2);
-    ctx.fillText("FENCING", x(1), h / 2);
+    ctx.fillText("BLADE CLASH", x(1), h / 2);
     ctx.restore();
   }, { width: length * STRIP_PX, height: Math.round(STRIP_WIDTH * STRIP_PX), repeat: false });
 }
@@ -100,7 +100,7 @@ export function boardTexture(accent: string): THREE.CanvasTexture {
     bg.addColorStop(1, "#1a1240");
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, w, h);
-    const words = ["STANDOFF", "EN GARDE", "FENCING", "ALLEZ"];
+    const words = ["STANDOFF", "BLADE CLASH", "FIGHT", "CLASH"];
     ctx.font = `italic 900 ${Math.round(h * 0.56)}px Arial, Helvetica, sans-serif`;
     ctx.textBaseline = "middle";
     let x = 20;

@@ -33,7 +33,7 @@ function PlayerHud({ slot }: { slot: Slot }) {
     <div className={`hud hud--p${slot}`} style={style}>
       <div className="hud__card">
         <strong className="hud__name">{name}</strong>
-        <span className="hud__sub">{seat.pick ? CHARACTERS[seat.pick].name : status(seat)}</span>
+        <span className="hud__sub">{seat.pick ? CHARACTERS[seat.pick].name : ""}</span>
         {hud ? (
           <span className="hud__health" role="meter" aria-label={`${name} health`} aria-valuemin={0} aria-valuemax={MAX_HEALTH} aria-valuenow={health}>
             {Array.from({ length: MAX_HEALTH }, (_, i) => (

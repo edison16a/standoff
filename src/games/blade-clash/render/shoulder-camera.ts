@@ -1,9 +1,9 @@
 import * as THREE from "three";
 
 /** Where the camera sits from its own fighter: behind, out past the left shoulder, and up. */
-const BEHIND = 1.55;
-const LEFT = 0.55;
-const HEIGHT = 2.05;
+const BEHIND = 1.8;
+const LEFT = 0.95;
+const HEIGHT = 2.2;
 /** It looks at the opponent's chest, so they stand in the middle of the view where the phone points at the start. */
 const LOOK_HEIGHT = 1.3;
 /** Pulls back as the fighters part, so both stay in the picture. */

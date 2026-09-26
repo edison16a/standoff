@@ -31,7 +31,7 @@ export class BladeHost {
   private readonly holds: PerSlot<SwordControl | null> = { 1: null, 2: null };
 
   constructor(private readonly room: HostRoomApi) {
-    this.audio = new HostAudio(room.audio, () => this.tuning);
+    this.audio = new HostAudio(room.audio, () => this.tuning, (slot) => this.names()[slot]);
     this.phones = new PhoneLink(room);
     this.desk = new PhoneDesk(this.lobby, {
       driver: () => this.driver,

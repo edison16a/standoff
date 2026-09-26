@@ -53,7 +53,7 @@ export class Arena {
     this.group.add(windows.build("windows", false));
 
     // Banners in the players' colours and the hall's own.
-    const banners: [string, string, string][] = [["ALLEZ", "#ff4757", "#ffffff"], ["TOUCHE", "#1d3557", "#ffd23f"], ["STANDOFF", "#5b3cc4", "#ffffff"], ["EN GARDE", "#2ed573", "#10301f"]];
+    const banners: [string, string, string][] = [["FIGHT", "#ff4757", "#ffffff"], ["CLASH", "#1d3557", "#ffd23f"], ["STANDOFF", "#5b3cc4", "#ffffff"], ["BLADE CLASH", "#ff8a1f", "#1c1030"]];
     banners.forEach(([word, background, ink], i) => {
       for (const side of [-1, 1]) {
         const x = side * (4 + i * 3.2);

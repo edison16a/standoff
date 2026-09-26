@@ -1,4 +1,5 @@
 import { SoundDirector } from "@/games/blade-clash/audio/sound-director";
+import type { Slot } from "@/games/blade-clash/players";
 import type { Tuning } from "@/games/blade-clash/tuning";
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 
@@ -10,8 +11,8 @@ import type { AudioEngine } from "@/platform/audio/audio-engine";
 export class HostAudio {
   readonly director: SoundDirector;
 
-  constructor(engine: AudioEngine, tuning: () => Tuning) {
-    this.director = new SoundDirector(engine, tuning);
+  constructor(engine: AudioEngine, tuning: () => Tuning, name: (slot: Slot) => string) {
+    this.director = new SoundDirector(engine, tuning, name);
   }
 
   dispose(): void {
