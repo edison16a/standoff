@@ -10,7 +10,7 @@ const HALF = 11;
  * The hospital roof, fourteen storeys of dark city below it: a helipad
  * with its painted H, stairwell huts the dead pour out of, humming air
  * units, a mast with a blinking red light, and at the far end a ramp
- * spiralling back down to the street.
+ * spiralling back down to the docks.
  */
 export function buildRoof(kit: SegmentKit): void {
   const { m, seg, b, rand } = kit;

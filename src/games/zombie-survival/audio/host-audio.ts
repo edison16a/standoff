@@ -48,7 +48,7 @@ export class HostAudio {
   }
 
   onLobby(): void {
-    this.ambience.rotorLevel(0, 0);
+    this.ambience.rotorLevel(0);
     this.score.lobby();
   }
 
@@ -116,7 +116,7 @@ export class HostAudio {
     });
     this.voiceZombies(standing, game.time);
     const pose = chopperPose(game.phase, game.stage, game.cutscene, game.phaseTime);
-    this.ambience.rotorLevel(pose?.loudness ?? 0, 0);
+    this.ambience.rotorLevel(pose?.loudness ?? 0);
   }
 
   dispose(): void {

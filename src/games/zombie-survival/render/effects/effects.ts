@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { flashTexture, glowTexture } from "../textures";
+import { flashTexture } from "../textures";
 import { Particles } from "./particles";
 
 export type Impact = "flesh" | "armor" | "weak" | "world" | "none";
@@ -23,14 +23,12 @@ const GOO = new THREE.Color(0.35, 0.95, 0.2);
 const BLOOD = new THREE.Color(0.25, 0.5, 0.08);
 const WEAK = new THREE.Color(1, 0.55, 0.15);
 const DUST = new THREE.Color(0.45, 0.43, 0.4);
-const SMOKE = new THREE.Color(0.1, 0.1, 0.1);
-const FIRE = new THREE.Color(1, 0.45, 0.1);
 
 /**
  * Everything a shot leaves in the air: the flash at the muzzle with its
  * burst of light, a streak of tracer to the hit, sparks off stone and
  * armour, green goo from flesh, and a burning orange spray from weak
- * points. Also the chopper's smoke and the crash's fireball.
+ * points.
  */
 export class Effects {
   readonly group = new THREE.Group();
@@ -117,22 +115,6 @@ export class Effects {
     const up = new THREE.Vector3(0, 1, 0);
     this.goo.burst(at, up, big ? 60 : 24, big ? 5 : 3, 2, GOO, 1);
     if (big) this.sparks.burst(at, up, 30, 6, 2, WEAK, 0.6);
-  }
-
-  /** Smoke rising from the burning chopper. */
-  puff(at: THREE.Vector3, fire: boolean): void {
-    this.smoke.burst(at, new THREE.Vector3(0, 1, 0), 1, 1.2, 0.6, SMOKE, 3);
-    if (fire) this.sparks.burst(at, new THREE.Vector3(0, 1, 0), 2, 2, 1, FIRE, 0.5);
-  }
-
-  explosion(at: THREE.Vector3): void {
-    this.sparks.burst(at, new THREE.Vector3(0, 1, 0), 160, 14, 2.2, FIRE, 1.4);
-    this.smoke.burst(at, new THREE.Vector3(0, 1, 0), 40, 4, 1.5, SMOKE, 4);
-    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color: 0xff8a30, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false }));
-    sprite.position.copy(at);
-    sprite.scale.setScalar(30);
-    this.group.add(sprite);
-    this.flashes.push({ sprite, life: 0.9, shown: false });
   }
 
   update(dt: number): void {
