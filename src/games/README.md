@@ -45,7 +45,7 @@ On a computer with a graphics card, add `--gpu` for full quality and much faster
 
 ## Talking to phones
 
-The host and phones exchange payloads of the game's own design: any object with a `kind`. Validate what arrives with zod, as fencing does in `fencing/protocol`. Two kinds are the platform's own, `profile` and `players`, and a game never sees them. The host reads names with `room.players()` and hears arrivals, departures, messages and reconnects through `room.on`.
+The host and phones exchange payloads of the game's own design: any object with a `kind`. Validate what arrives with zod, as Blade Clash does in `blade-clash/protocol`. Two kinds are the platform's own, `profile` and `players`, and a game never sees them. The host reads names with `room.players()` and hears arrivals, departures, messages and reconnects through `room.on`.
 
 Keep the host as the referee. Phones send raw input and draw what the host tells them.
 
@@ -72,7 +72,7 @@ Every phone page fits the screen with no scrolling, upright and sideways, with S
 Check it with the dev server running:
 
 ```bash
-node tools/phone-fit.mjs --url http://localhost:3000 --out /tmp/phone-fit [--games fencing,magic-kart] [--theme dark]
+node tools/phone-fit.mjs --url http://localhost:3000 --out /tmp/phone-fit [--games blade-clash,magic-kart] [--theme dark]
 ```
 
 It opens a room for each game, joins as a phone the size of an iPhone 16, and walks every phone page, from the name to the result. At each page it measures portrait 393 by 852, portrait with Safari's bars 393 by 659, landscape 852 by 393 and landscape with bars 852 by 340. It fails a page that scrolls, a box inside it that scrolls or spills over what follows, and any button cut off, covered or squeezed under 40 pixels, and it saves a screenshot of every page at every size to look over. Pages that need a match, like the controller and the result, are reached by handing the phone made up host messages. The games that read motion also run a second time as a phone with no motion sensors, on their buttons or drag pad. Each game's steps are in `tools/phone-fit/flows`; add a flow there with a new game.
