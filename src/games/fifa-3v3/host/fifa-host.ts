@@ -43,7 +43,7 @@ export class FifaHost {
 
   constructor(private readonly room: HostRoomApi) {
     store.setState({ ...store.getInitialState() });
-    this.audio = new SoundDirector(room.audio, (id) => this.calledName(id));
+    this.audio = new SoundDirector(room.audio);
     this.banners = new Banners((id) => this.calledName(id));
     this.phones = new PhoneLink(room);
     this.pad = new HostPad(room);

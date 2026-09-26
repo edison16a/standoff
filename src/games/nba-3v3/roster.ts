@@ -52,7 +52,7 @@ export interface Look {
 export interface Character {
   id: CharacterId;
   name: string;
-  /** What the scoreboard and the announcer call them. */
+  /** What the scoreboard and the banners call them. */
   short: string;
   number: number;
   position: string;

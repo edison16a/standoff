@@ -9,7 +9,6 @@ import type { V2 } from "../engine/vec";
 import { phoneMessageSchema, type Phase, type PhoneMessage } from "../protocol";
 import { Buzzer } from "./buzzer";
 import { banner, type BannerText } from "./callouts";
-import { Commentary } from "./commentary";
 import { DemoGame } from "./demo";
 import { useNbaStore as store } from "./host-store";
 import { Lobby } from "./lobby";
@@ -23,7 +22,7 @@ const BANNER_MS = 1900;
 
 /**
  * Basketball 3v3 on the computer, for one room. It keeps the lobby and the
- * teams, runs the game, directs the sound and the announcer, and it is
+ * teams, runs the game, directs the sound, and it is
  * the referee: phones send their stick and buttons, and everything they
  * show comes back from here.
  */
@@ -34,7 +33,6 @@ export class NbaHost {
   private readonly pad: HostPad;
   private readonly phones: PhoneLink;
   private readonly buzzer: Buzzer;
-  private commentary = new Commentary((id) => this.nameOf(id));
   private readonly unsubscribe: () => void;
   private readonly unpress: () => void;
   private unlistenMatch: (() => void) | null = null;
@@ -111,7 +109,6 @@ export class NbaHost {
     if (this.phase === "countdown" || this.phase === "live") return;
     this.unlistenMatch?.();
     this.driver = new MatchDriver(this.lobby.entries());
-    this.commentary = new Commentary((id) => this.nameOf(id));
     this.unlistenMatch = this.driver.listen((event) => this.onMatchEvent(event));
     this.room.setPlaying(true);
     this.phones.forget();
@@ -167,8 +164,6 @@ export class NbaHost {
     if (event.type === "shot" && event.grade === "perfect" && m.athletes[event.id]?.seat !== null) this.audio.green();
     const shown = banner(event, m, (id) => this.nameOf(id), this.bannerKey);
     if (shown) this.showBanner(shown);
-    const line = this.commentary.onEvent(event, m);
-    if (line?.text) this.audio.announcer.say(line.text, line.priority);
     const prompt = ["score", "win", "go", "check", "checkUp", "foul", "freeThrow"] as const;
     if ((prompt as readonly string[]).includes(event.type)) this.refresh(performance.now());
   }
