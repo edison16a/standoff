@@ -194,6 +194,11 @@
   background: #3fae5a;
 }
 
+.zs-reload:disabled {
+  background: #2a3a30;
+  color: rgba(255, 255, 255, 0.5);
+}
+
 .zs-reload--urgent {
   background: #c9861a;
   animation: zs-urgent 900ms ease-in-out infinite;
