@@ -6,9 +6,8 @@ import { Rng } from "../engine/rng";
 import { pickStage } from "../engine/stages";
 import type { MatchState } from "../engine/types";
 import { phoneMessageSchema, type PhoneMessage, type RoomPhase } from "../protocol";
-import { fighterColours } from "../render/colors";
 import { buzzesFor } from "./buzz";
-import { callout, type Callout } from "./callouts";
+import { callout } from "./callouts";
 import { DemoMatch } from "./demo";
 import { useBrawlStore as store } from "./host-store";
 import { Lobby } from "./lobby";
@@ -18,7 +17,6 @@ import { nameFor, publish, roomPhaseOf } from "./publish";
 
 /** The overlay and the phones are refreshed this often; the canvas every frame. */
 const HUD_MS = 100;
-const BANNER_MS = 2200;
 
 /**
  * Brawl Battle on the computer, for one room. It keeps the lobby, runs
@@ -38,7 +36,6 @@ export class BrawlHost {
   private lastHud = 0;
   private lastFrame = 0;
   private turn = 0;
-  private bannerTimer: ReturnType<typeof setTimeout> | null = null;
   private lastPhase: RoomPhase = "lobby";
   /** Browser tests on slow machines run the match faster than real time. Always 1 in play. */
   turbo = 1;
@@ -59,7 +56,6 @@ export class BrawlHost {
     this.unsubscribe();
     this.unpress();
     this.pad.dispose();
-    if (this.bannerTimer) clearTimeout(this.bannerTimer);
     this.audio.stop();
     this.room.setPlaying(false);
   }
@@ -145,18 +141,7 @@ export class BrawlHost {
     if (e.type === "game") this.driver?.slowMo(0.35, 1.1);
     const words = callout(e, m, (id) => this.nameOf(id), this.turn++);
     if (words?.say) this.audio.announcer.say(words.say.text, words.say.priority);
-    if (words?.banner) this.showBanner(words.banner, m);
     if (e.type === "hit" || e.type === "ko" || e.type === "game" || e.type === "ultReady") this.refresh(performance.now());
-  }
-
-  private showBanner(banner: NonNullable<Callout["banner"]>, m: MatchState): void {
-    const colour = banner.fighter !== null ? (fighterColours(m.fighters)[banner.fighter]?.colour ?? "#ffffff") : "#ffffff";
-    const key = this.turn;
-    store.setState({ banner: { key, text: banner.text, sub: banner.sub, colour } });
-    if (this.bannerTimer) clearTimeout(this.bannerTimer);
-    this.bannerTimer = setTimeout(() => {
-      if (store.getState().banner?.key === key) store.setState({ banner: null });
-    }, BANNER_MS);
   }
 
   private onRoom(event: HostRoomEvent): void {

@@ -52,22 +52,11 @@ function Card({ f }: { f: FighterCard }) {
   );
 }
 
-function Banner() {
-  const banner = useBrawlStore((s) => s.banner);
-  if (!banner) return null;
-  return (
-    <div key={banner.key} className="bb-banner" style={{ "--banner": banner.colour } as React.CSSProperties} aria-live="polite">
-      <strong>{banner.text}</strong>
-      {banner.sub && <span>{banner.sub}</span>}
-    </div>
-  );
-}
-
 /**
  * The overlay during a match: a card per fighter along the bottom with
  * the portrait, the ult ring, lives and a big percent that reddens and
- * shakes as it climbs; the Ready, Fight and Game calls; and a strip for
- * each KO and ult.
+ * shakes as it climbs; and the Ready, Fight and Game calls. KOs and ults
+ * get no strip: the fight on screen already shows them.
  */
 export function Hud() {
   const fighters = useBrawlStore((s) => s.fighters);
@@ -83,7 +72,6 @@ export function Hud() {
           {CALLS[call]}
         </div>
       )}
-      <Banner />
       <ol className="bb-cards">
         {fighters.map((f) => (
           <Card key={f.id} f={f} />
