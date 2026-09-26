@@ -18,7 +18,7 @@ import "./styles/pad.css";
 import "./styles/showcase.css";
 
 /**
- * NBA 3v3, as the platform sees it. Each room gets one session, and
+ * Basketball 3v3, as the platform sees it. Each room gets one session, and
  * every piece the platform renders is wrapped so it can reach it.
  */
 export const game: GameModule = {

@@ -14,7 +14,7 @@ The games, in the order the home screen shows them:
 * **Shooting Gallery:** a fairground duck shoot. Point, shoot, top score in 20 seconds wins.
 * **Boxing:** stand in front of the camera and fight. Your arms and head drive your boxer, so real blocks and dodges work.
 * **Subway Runner:** run the neon rails with your body. Lean to change lanes, jump and roll, and survive as it speeds up.
-* **NBA 3v3:** three on three with the stars for up to six phones. Dribble moves, a shot meter, dunks and free throws.
+* **Basketball 3v3:** three on three with the stars for up to six phones. Dribble moves, a shot meter, dunks and free throws.
 * **FIFA 3v3:** three on three football for up to six phones. Hold to power a shot, tap to pass, and beat defenders with skill moves.
 * **Cube Game:** jump for real to jump the cube through five levels of rhythm and spikes.
 * **Fencing:** your phone is the sword. Move it slowly and the blade follows, flick or shake it to jab, raise it up and to the right to parry.
@@ -56,7 +56,7 @@ The home screen works like a console menu. Big tiles show each game, and the cho
 
 <img src="docs/screenshots/subway-surfers.jpg" alt="A runner on the neon rails of the night city" width="100%" />
 
-### NBA 3v3
+### Basketball 3v3
 
 <img src="docs/screenshots/nba-3v3.jpg" alt="A dunk at the top of the jump in the arena" width="100%" />
 
@@ -86,7 +86,7 @@ Camera games have no phones. Stand where the camera sees you from the waist up, 
 * **Fruit Slicer, Zombie Survival and Shooting Gallery:** hold the phone flat like a remote and point it at the screen. Calibrate by pointing at the targets shown. Sweep fast to slice, or tap **Shoot**. Phones without motion sensors aim by dragging on a pad.
 * **Boxing:** punch straight or hook with your arms. Keep your gloves where the punch is coming to block it, and duck or lean to make it miss. Head shots hurt more and can stun. Touch gloves by holding your arms out.
 * **Subway Runner:** lean or step left and right to change lanes, jump to jump and dip to roll.
-* **NBA 3v3:** the joystick moves. Hold **Shoot** and let go in the green. With the ball the third button is **Dribble**: back is a stepback, sideways a crossover, forward a spin. Without it, it is **Steal** or **Block**. Reach in too often on one player and you may foul.
+* **Basketball 3v3:** the joystick moves. Hold **Shoot** and let go in the green. With the ball the third button is **Dribble**: back is a stepback, sideways a crossover, forward a spin. Without it, it is **Steal** or **Block**. Reach in too often on one player and you may foul.
 * **FIFA 3v3:** the joystick moves and aims. Tap **Shoot/Pass** to pass, or hold it to fill the power bar. Green is placed, red is powerful but wild. With the ball the second button is **Skill**: forward is a rainbow flick, sideways a crossover, back a drag back, centred a 360.
 * **Cube Game:** jump for real to jump the cube.
 * **Fencing:** hold the phone like a sword. Move slowly to aim, flick or shake to jab, raise up and to the right to parry. Hold **Forward** or **Back** to move. To fence alone, tap **Play the computer**.

@@ -9,7 +9,7 @@ import { Results } from "./Results";
 const CourtCanvas = lazy(() => import("./CourtCanvas"));
 
 /**
- * NBA 3v3 on the big screen. The arena is always there: a demo game
+ * Basketball 3v3 on the big screen. The arena is always there: a demo game
  * behind the team picker, then the real game. The lobby, the scoreboard
  * and the results are ordinary React on top.
  */

@@ -4,7 +4,7 @@ import type { ShowcaseView } from "@/platform/games/game-api";
 import { ShowcaseDirector } from "./director";
 
 /**
- * NBA 3v3 playing itself for the home screen's media: the loop is a
+ * Basketball 3v3 playing itself for the home screen's media: the loop is a
  * highlight from the broadcast camera, the poster one great frame, and
  * the icon a close hero shot under the logo. Driven by
  * requestAnimationFrame and performance.now, with seeded randomness, so
@@ -41,7 +41,7 @@ export function Showcase({ view }: { view: ShowcaseView }) {
       <canvas ref={canvasRef} className="nba-showcase__canvas" />
       {view === "icon" && (
         <div className="nba-showcase__logo" aria-hidden="true">
-          <span className="nba-showcase__nba">NBA</span>
+          <span className="nba-showcase__nba">Basketball</span>
           <span className="nba-showcase__3v3">3v3</span>
         </div>
       )}

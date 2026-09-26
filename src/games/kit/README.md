@@ -45,7 +45,7 @@ Screen points are WebGL clip space, so `raycaster.setFromCamera(new Vector2(poin
 
 ## Gamepad
 
-For games where the phone is a controller: a floating thumb stick on the left and round buttons on the right, as in NBA 3v3 and FIFA 3v3. Messages it sends all have kinds starting with `pad`, so games must not use that prefix.
+For games where the phone is a controller: a floating thumb stick on the left and round buttons on the right, as in Basketball 3v3 and FIFA 3v3. Messages it sends all have kinds starting with `pad`, so games must not use that prefix.
 
 Phone side:
 

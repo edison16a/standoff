@@ -1,10 +1,10 @@
-# NBA 3v3
+# Basketball 3v3
 
 Status: ready. Three on three half court basketball for 1 to 6 players, with computer players filling every empty spot. First to 11.
 
 ## How to play
 
-1. Open NBA 3v3 on the computer. Everyone scans the code with their phone.
+1. Open Basketball 3v3 on the computer. Everyone scans the code with their phone.
 2. On the phone, after the name:
    * **Star.** Pick one of ten stars, shown dribbling in 3D with their speed, shooting and strength. A star another phone has is marked taken.
    * **Ready.** Tap Ready.
