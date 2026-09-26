@@ -1,0 +1,222 @@
+/*
+  The overall map and the standings, always at the top right under the
+  tool bar. Alone it has room to be roomy; over split views it shrinks to
+  a compact card so it covers only a corner of sky, and carries the split
+  screen map on top.
+*/
+.mk-overview {
+  position: absolute;
+  top: 64px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 250px;
+  padding: 10px;
+  background: rgba(16, 12, 38, 0.66);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+}
+
+.mk-overview--compact {
+  top: 62px;
+  right: 12px;
+  /* A 4:3 screen makes each half tall and narrow, so the card narrows with it. */
+  width: min(184px, 15vw);
+  gap: 4px;
+  padding: 6px;
+  border-radius: 14px;
+  background: rgba(16, 12, 38, 0.58);
+}
+
+.mk-overview--compact .mk-minimap {
+  aspect-ratio: 4 / 3;
+}
+
+/* Standings and the split map share a column only in the spare quadrant. */
+.mk-overview__side {
+  display: contents;
+}
+
+/* Over the views the split map heads the card, since it answers "which one is me". */
+.mk-overview--compact .mk-overview__split {
+  order: -1;
+}
+
+/*
+  Four quarters are short, so the card goes wider instead of taller: the
+  split map and the track side by side on top, the standings full width
+  under them. At 720 high it ends above the place in the corner of the
+  view under it, and its left edge stays clear of the power up slot in
+  the middle of the quarter.
+*/
+.mk-overview--grid {
+  top: 62px;
+  right: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 70px;
+  grid-template-areas:
+    "split map"
+    "standings standings";
+  align-items: center;
+  /* Narrow screens give narrow quarters, so it shrinks to keep the kart under it clear. */
+  width: min(250px, calc(20vw - 12px));
+  gap: 6px;
+  padding: 6px;
+  border-radius: 14px;
+  background: rgba(16, 12, 38, 0.58);
+}
+
+.mk-overview--grid .mk-overview__split {
+  grid-area: split;
+}
+
+.mk-overview--grid .mk-minimap {
+  grid-area: map;
+  aspect-ratio: 1;
+}
+
+.mk-overview--grid .mk-standings {
+  grid-area: standings;
+}
+
+.mk-overview--compact .mk-standings,
+.mk-overview--grid .mk-standings {
+  gap: 2px;
+}
+
+.mk-overview--compact .mk-standings__row,
+.mk-overview--grid .mk-standings__row {
+  grid-template-columns: 16px 8px 1fr auto;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 7px;
+  font-size: 12px;
+}
+
+.mk-overview--compact .mk-standings__place,
+.mk-overview--grid .mk-standings__place {
+  font-size: 13px;
+}
+
+.mk-overview--compact .mk-standings__chip,
+.mk-overview--grid .mk-standings__chip {
+  width: 8px;
+  height: 8px;
+}
+
+.mk-overview--compact .mk-standings__lap,
+.mk-overview--grid .mk-standings__lap {
+  font-size: 11px;
+}
+
+/* Three players leave the top right quadrant free, and the overview fills it. */
+.mk-overview--quad {
+  top: 0;
+  right: 0;
+  bottom: calc(50% + 2px);
+  width: calc(50% - 2px);
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 60px 24px 24px;
+  border: none;
+  border-radius: 0;
+  background: radial-gradient(circle at 30% 40%, rgba(60, 40, 120, 0.9), rgba(13, 11, 30, 0.96));
+}
+
+.mk-minimap {
+  width: 100%;
+  aspect-ratio: 5 / 4;
+}
+
+.mk-overview--quad .mk-minimap {
+  width: min(48%, 420px);
+  height: 100%;
+  aspect-ratio: auto;
+}
+
+.mk-standings {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mk-overview--quad .mk-overview__side {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(44%, 320px);
+}
+
+.mk-overview--quad .mk-standings {
+  gap: 5px;
+}
+
+/*
+  Sized by the screen's height so four rows and the map always fit under
+  the tool bar: at 720 high the quarter leaves 274 px and this takes 266.
+*/
+.mk-overview--quad .mk-overview__split {
+  align-self: center;
+  width: min(100%, 23vh);
+}
+
+/* Names get narrow cells over the views, so the width caps the size too. */
+.mk-overview__split .split-map__name {
+  font-size: clamp(10px, min(26cqh, 17cqw), 30px);
+}
+
+/* Four small cells: a two word name breaks onto two lines instead of being cut. */
+.mk-overview--grid .split-map__name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.mk-standings__row {
+  display: grid;
+  grid-template-columns: 24px 10px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.mk-standings__row--cpu {
+  color: rgba(255, 255, 255, 0.72);
+  font-weight: 600;
+}
+
+.mk-standings__place {
+  font-size: 18px;
+  font-weight: 900;
+  font-style: italic;
+}
+
+.mk-standings__chip {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--player);
+}
+
+.mk-standings__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mk-standings__lap {
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}

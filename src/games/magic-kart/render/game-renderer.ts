@@ -157,7 +157,9 @@ export class GameRenderer {
       this.renderer.setViewport(x, y, w, h);
       this.renderer.setScissor(x, y, w, h);
       const camera = this.pickCamera(view, i, w / h, world, time, cameraDt);
-      for (const kv of this.karts.values()) kv.setViewer(view.kartId, camera.position, this.tags);
+      // The show camera rides behind the leader, so that kart is the one this view is about: no tag over it.
+      const followed = view.kartId ?? (view.camera ? null : (world.standings[0]?.id ?? null));
+      for (const kv of this.karts.values()) kv.setViewer(followed, camera.position, this.tags);
       this.effects?.setView(h * px, camera.fov);
       stage.follow(camera);
       this.renderer.render(stage.scene, camera);
