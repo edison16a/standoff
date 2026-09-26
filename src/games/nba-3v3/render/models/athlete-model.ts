@@ -33,6 +33,8 @@ export interface Dims {
   upper: number;
   fore: number;
   torso: number;
+  /** The shoe's sole in the ankle's frame: a hair over its underside, so it never flickers on the floor, and the heel and toe. */
+  sole: { y: number; heel: number; toe: number };
 }
 
 export interface AthleteModel {
@@ -62,6 +64,7 @@ export function buildAthlete(c: Character, team: Team, bodyMat: THREE.Material):
   const skin = c.look.skin;
   const s = H / 2;
   const ankle = 0.075;
+  const shoe = 0.075 * H;
   const thigh = 0.245 * H;
   const shin = 0.232 * H;
   const hipY = thigh + shin + ankle;
@@ -151,7 +154,7 @@ export function buildAthlete(c: Character, team: Team, bodyMat: THREE.Material):
       paint(cyl(0.036 * s * 1.2, 0.033 * s * 1.2, 0.14 * s, 14), c.look.sock, { at: [0, -shin + 0.07 * s, 0] }),
     ]));
     const foot = group("ankle", knee, [0, -shin, 0]);
-    const f = 0.075 * H;
+    const f = shoe;
     add(foot, merge([
       paint(box(0.1 * s, 0.035, f * 1.95), "#f5f5f4", { at: [0, -ankle + 0.02, f * 0.45] }),
       paint(box(0.094 * s, 0.075, f * 1.7), c.look.shoe, { at: [0, -ankle + 0.07, f * 0.38] }),
@@ -170,7 +173,7 @@ export function buildAthlete(c: Character, team: Team, bodyMat: THREE.Material):
       shoulderL: left.shoulder, shoulderR: right.shoulder, elbowL: left.elbow, elbowR: right.elbow, handL: left.hand, handR: right.hand,
       hipL: legL.hip, hipR: legR.hip, kneeL: legL.knee, kneeR: legR.knee, ankleL: legL.foot, ankleR: legR.foot,
     },
-    dims: { height: H, hipY, thigh, shin, upper, fore, torso: torsoLen },
+    dims: { height: H, hipY, thigh, shin, upper, fore, torso: torsoLen, sole: { y: -ankle, heel: -0.525 * shoe, toe: 1.425 * shoe } },
     meshes,
     dispose() {
       for (const mesh of meshes) mesh.geometry.dispose();
