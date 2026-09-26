@@ -5,6 +5,7 @@ import { ROSTER } from "../../roster";
 import { TEAMS, other, type TeamId } from "../../teams";
 import { useFifaStore, type SeatView } from "../host-store";
 import { TEAM_SIZE } from "../lobby";
+import { BotsToggle, matchSize } from "./BotsToggle";
 import { useSession } from "./session-context";
 
 function PlayerCard({ seat, full }: { seat: SeatView; full: (team: TeamId) => boolean }) {
@@ -51,6 +52,7 @@ function PlayerCard({ seat, full }: { seat: SeatView; full: (team: TeamId) => bo
 function TeamColumn({ team }: { team: TeamId }) {
   const seats = useFifaStore((s) => s.seats);
   const bots = useFifaStore((s) => s.bots);
+  const botsOn = useFifaStore((s) => s.botsOn);
   const players = seats.filter((s) => s.connected && s.team === team);
   const counts = (t: TeamId) => seats.filter((s) => s.connected && s.team === t).length;
   const full = (t: TeamId) => counts(t) >= TEAM_SIZE;
@@ -68,6 +70,7 @@ function TeamColumn({ team }: { team: TeamId }) {
         {players.map((seat) => (
           <PlayerCard key={seat.seat} seat={seat} full={full} />
         ))}
+        {players.length === 0 && !botsOn && <li className="fifa-card fifa-card--empty">Nobody on this side yet</li>}
         {fillers.map((bot) => (
           <li key={bot.character} className="fifa-card fifa-card--bot">
             <span className="fifa-card__cpu">CPU</span>
@@ -85,16 +88,20 @@ function TeamColumn({ team }: { team: TeamId }) {
 /**
  * The lobby on the big screen: players pick their star on their phones,
  * and here the host puts them on a side with the mouse. Empty places are
- * filled by computer players. Start when everyone is ready.
+ * filled by computer players unless they are turned off. Start when
+ * everyone is ready.
  */
 export function Lobby() {
   const session = useSession();
   const seats = useFifaStore((s) => s.seats);
+  const botsOn = useFifaStore((s) => s.botsOn);
+  const block = useFifaStore((s) => s.startBlock);
   const joined = seats.filter((s) => s.connected);
   const bench = joined.filter((s) => s.team === null);
   const playing = joined.filter((s) => s.ready && s.pick && s.team !== null).length;
   const waiting = joined.filter((s) => !s.ready).length;
   const full = (team: TeamId) => joined.filter((s) => s.team === team).length >= TEAM_SIZE;
+  const side = (team: TeamId) => joined.filter((s) => s.ready && s.pick && s.team === team).length;
   const note =
     joined.length === 0
       ? "Scan the code with your phone to join. Up to six players."
@@ -102,14 +109,18 @@ export function Lobby() {
         ? "Pick a star on your phone, then tap Ready."
         : waiting > 0
           ? `${playing} ready. ${waiting} still choosing.`
-          : `${playing} ready. Computers fill the empty places.`;
+          : block === "oneSided"
+            ? "With computer players off, each side needs a player."
+            : botsOn
+              ? `${playing} ready. Computers fill the empty places.`
+              : `${playing} ready. No computer players.`;
   return (
     <div className="fifa-lobby">
       <header className="fifa-lobby__title">
         <span className="fifa-lobby__logo">
           SOCCER <em>3v3</em>
         </span>
-        <p>Three a side under the lights. First to five goals or four minutes, golden goal if level.</p>
+        <p>{matchSize(botsOn, side(0), side(1))} First to five goals or four minutes, golden goal if level.</p>
       </header>
       <div className="fifa-lobby__teams">
         <TeamColumn team={0} />
@@ -128,7 +139,8 @@ export function Lobby() {
       )}
       <footer className="fifa-lobby__foot">
         <p className="fifa-lobby__note">{note}</p>
-        <button type="button" className="fifa-start" disabled={playing === 0} onClick={() => session.startMatch()}>
+        <BotsToggle on={botsOn} onChange={(on) => session.setBots(on)} />
+        <button type="button" className="fifa-start" disabled={block !== null} onClick={() => session.startMatch()}>
           <Icon name="play" />
           Kick off
         </button>

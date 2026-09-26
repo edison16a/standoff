@@ -2,15 +2,16 @@ import { attackSign, other, type TeamId } from "../teams";
 import { newBall } from "./ball";
 import { goalX } from "./goal";
 import { hands, makeKeeper, outward } from "./keeper";
+import { laneOf } from "./lanes";
 import { PITCH } from "./tuning";
 import type { Athlete, MatchState } from "./types";
 import { dist } from "./vec";
 
 /** Kick off spots: the kicker on the centre spot, the others back in their own half. */
-function kickoffSpot(a: Athlete, kicking: boolean): { x: number; z: number } {
+function kickoffSpot(state: MatchState, a: Athlete, kicking: boolean): { x: number; z: number } {
   const s = attackSign(a.team);
   if (a.slot === 0) return { x: kicking ? -s * 0.35 : -s * (PITCH.centreRadius + 0.4), z: 0 };
-  return { x: -s * 7, z: a.slot === 1 ? -5.2 : 5.2 };
+  return { x: -s * 7, z: laneOf(state, a) * 5.2 };
 }
 
 /** Everyone back to their kick off spots, a fresh ball on the centre spot. */
@@ -19,7 +20,7 @@ export function setupKickoff(state: MatchState): void {
   state.flight = null;
   for (const a of state.athletes) {
     const kicking = a.team === state.kickoffTeam && a.slot === 0;
-    a.pos = kickoffSpot(a, kicking);
+    a.pos = kickoffSpot(state, a, kicking);
     a.vel = { x: 0, z: 0 };
     a.facing = attackSign(a.team) > 0 ? 0 : Math.PI;
     a.action = "free";

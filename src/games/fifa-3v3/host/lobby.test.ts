@@ -65,4 +65,37 @@ describe("the lobby", () => {
     lobby.setReady(1, true);
     expect(lobby.players).toEqual([1]);
   });
+
+  it("with computer players off, fields only the people: one on one", () => {
+    const lobby = joined(1, 2);
+    lobby.setBots(false);
+    lobby.pick(1, "echeverri");
+    lobby.setReady(1, true);
+    expect(lobby.startBlock()).toBe("oneSided");
+    lobby.pick(2, "pritchard");
+    lobby.setReady(2, true);
+    const lineup = lobby.entrants();
+    expect(lineup).toHaveLength(2);
+    expect(lineup.map((e) => e.team).sort()).toEqual([0, 1]);
+    expect(lineup.every((e) => e.seat !== null)).toBe(true);
+    expect(lobby.startBlock()).toBeNull();
+  });
+
+  it("with computer players off, lets one side have more players than the other", () => {
+    const lobby = joined(1, 2, 3);
+    lobby.setBots(false);
+    (["echeverri", "pritchard", "mansour"] as const).forEach((star, i) => {
+      lobby.pick(i + 1, star);
+      lobby.setTeam(i + 1, i === 2 ? 1 : 0);
+      lobby.setReady(i + 1, true);
+    });
+    const lineup = lobby.entrants();
+    expect(lineup.filter((e) => e.team === 0)).toHaveLength(2);
+    expect(lineup.filter((e) => e.team === 1)).toHaveLength(1);
+    expect(lobby.startBlock()).toBeNull();
+  });
+
+  it("needs a ready player before anything can start", () => {
+    expect(joined(1).startBlock()).toBe("empty");
+  });
 });

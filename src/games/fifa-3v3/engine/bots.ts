@@ -3,6 +3,7 @@ import { closestOfTeam, markSpot, markTarget, shapeSpot, supportSpot, throwSpot 
 import { goalX, shotAngle, toGoal } from "./goal";
 import { owns } from "./kick";
 import { trySkill } from "./bot-skill";
+import { laneOf } from "./lanes";
 import { choosePassTarget, openness } from "./passing";
 import { PITCH } from "./tuning";
 import type { Athlete, Command, MatchState } from "./types";
@@ -66,13 +67,13 @@ function dribbleSpot(state: MatchState, a: Athlete): Vec2 {
 function runSpot(state: MatchState, a: Athlete): Vec2 {
   const ball = state.ball;
   const owner = ball.owner;
-  if (owner?.kind === "keeper") return owner.team === a.team ? throwSpot(a) : shapeSpot(state, a);
+  if (owner?.kind === "keeper") return owner.team === a.team ? throwSpot(state, a) : shapeSpot(state, a);
   const shotLive = state.flight !== null && !state.flight.resolved;
   if (shotLive) {
     // Attackers follow in for the rebound; defenders get back.
     if (state.flight!.team !== a.team) return shapeSpot(state, a);
     const s = attackSign(a.team);
-    return { x: goalX(other(a.team)) - s * 5.5, z: a.slot === 1 ? -2.5 : a.slot === 2 ? 2.5 : 0 };
+    return { x: goalX(other(a.team)) - s * 5.5, z: laneOf(state, a) * 2.5 };
   }
   if (owner?.kind === "athlete") {
     const carrier = state.athletes[owner.id]!;

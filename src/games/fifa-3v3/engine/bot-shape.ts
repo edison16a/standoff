@@ -1,5 +1,6 @@
 import { attackSign, other } from "../teams";
 import { goalX } from "./goal";
+import { laneOf } from "./lanes";
 import { PITCH } from "./tuning";
 import type { Athlete, MatchState } from "./types";
 import { clamp, dist, lerp, norm, sub, type Vec2 } from "./vec";
@@ -18,14 +19,15 @@ function mates(state: MatchState, a: Athlete): Athlete[] {
 
 /**
  * The team's resting shape, which slides with the ball: one up front
- * and two either side behind, all pulled toward the ball's side.
+ * and the rest behind, on the flanks for a three and central for a
+ * pair, all pulled toward the ball's side.
  */
 export function shapeSpot(state: MatchState, a: Athlete): Vec2 {
   const s = attackSign(a.team);
   const b = state.ball.pos;
   const own = goalX(a.team);
   if (a.slot === 0) return onPitch({ x: lerp(b.x, s * 2.5, 0.35) + s * 2, z: b.z * 0.45 });
-  const side = a.slot === 1 ? -1 : 1;
+  const side = laneOf(state, a);
   const x = lerp(own + s * 8.5, b.x, 0.5);
   return onPitch({ x, z: side * 6 + b.z * 0.3 });
 }
@@ -48,12 +50,12 @@ export function supportSpot(state: MatchState, a: Athlete, carrier: Athlete): Ve
   return onPitch(spot);
 }
 
-/** Spread wide to receive the keeper's throw. */
-export function throwSpot(a: Athlete): Vec2 {
+/** Spread out to receive the keeper's throw. */
+export function throwSpot(state: MatchState, a: Athlete): Vec2 {
   const s = attackSign(a.team);
   const own = goalX(a.team);
   if (a.slot === 0) return { x: own + s * 17, z: 0 };
-  return { x: own + s * 8, z: (a.slot === 1 ? -1 : 1) * 8.5 };
+  return { x: own + s * 8, z: laneOf(state, a) * 8.5 };
 }
 
 /**

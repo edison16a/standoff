@@ -104,9 +104,16 @@ export class FifaHost {
     if (this.lobby.setTeam(seat, team)) this.refresh(performance.now());
   }
 
-  /** Starts a match with every ready player, computers filling the gaps. */
+  /** Computer players on or off, for the next match. */
+  setBots(on: boolean): void {
+    if (this.driver) return;
+    this.lobby.setBots(on);
+    this.refresh(performance.now());
+  }
+
+  /** Starts a match with every ready player, computers filling the gaps if they are on. */
   startMatch(): void {
-    if (this.lobby.players.length === 0) return;
+    if (this.lobby.startBlock()) return;
     this.driver = new MatchDriver(this.lobby.entrants(), this.seed++);
     this.replaying = false;
     this.goals = 0;

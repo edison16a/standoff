@@ -48,6 +48,10 @@ export interface FifaHostState {
   phase: RoomPhase;
   seats: SeatView[];
   bots: BotView[];
+  /** Whether computer players fill the empty places. */
+  botsOn: boolean;
+  /** Why the match cannot start yet, or null when it can. */
+  startBlock: "empty" | "oneSided" | null;
   score: [number, number];
   clock: number;
   golden: boolean;
@@ -64,6 +68,8 @@ export const useFifaStore = create<FifaHostState>(() => ({
   phase: "lobby",
   seats: [],
   bots: [],
+  botsOn: true,
+  startBlock: "empty",
   score: [0, 0],
   clock: 0,
   golden: false,
