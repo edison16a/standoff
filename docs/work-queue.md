@@ -14,18 +14,14 @@ The running list of what is being built, so work can pick up again after a break
 
 | Work | Branch | State |
 | --- | --- | --- |
-| Review loop, Magic Kart and Fruit Slicer | `worktree-wf_0e9b8a84-bad-1` | first pass done, second pass running |
-| Review loop, Zombie Survival and Shooting Gallery | `worktree-wf_0e9b8a84-bad-2` | first pass done, second pass running |
-| Review loop, Boxing and Subway Runner | `worktree-wf_0e9b8a84-bad-3` | first pass done, second pass running |
-| Review loop, Basketball 3v3 and Soccer 3v3 | `worktree-wf_0e9b8a84-bad-4` | first pass done, second pass running |
-| Review loop, Cube Game and Brawl Battle | `worktree-wf_0e9b8a84-bad-5` | first pass done, second pass running |
+| Batch A (playtest fixes, sounds, bots toggle, Boxing and Subway fixes, easier jumps, Brawl flow, frame rate limiter, Zombie pace) | new worktrees from workflow wf_97a836d3-114 | five builds, each then reviewed |
 | Blade Clash (replaces Fencing) | `worktree-wf_24155454-673-1` | gameplay, look and sound done; media finishing, then review |
 
 The review loop looks hard at every game for 3D model errors, animation glitches and phone controller problems, fixes them, then a second pass reviews again with fresh eyes. It also adds the split screen name map (`src/games/kit/split/SplitMap.tsx`) to Magic Kart, Subway Runner, Cube Game and Boxing.
 
 ## Queue, in order
 
-### Batch A: after the review loop lands
+### Batch A: running now (see Running now)
 
 1. **Basketball 3v3 and Soccer 3v3 crowd:** remove the crowd cheering entirely; the noise based crowd sounds like wind.
 2. **Basketball arena sounds:** the arena beat (stomp stomp clap: kick drum and hand claps), shot clock beeps in the last seconds and the buzzer, the game horn, organ stabs. Punchy and synthesized, never noisy.
@@ -50,6 +46,7 @@ The review loop looks hard at every game for 3D model errors, animation glitches
 
 ## Done recently
 
+* Review loop: two passes over ten games for 3D model, animation and phone controller glitches, plus the split screen name map.
 * Counter Battle: a split screen team shooter for 1v1 or 2v2 with bots, AI movement between cover, four guns with recoil, first to five rounds.
 * Phones can join the next room after a game, in the same tab or a new one.
 * Home screen: tiles 25 percent smaller, the row stays still until an edge then centres the game, endless loop, no lag when holding an arrow.
