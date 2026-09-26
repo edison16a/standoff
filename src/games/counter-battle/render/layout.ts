@@ -8,6 +8,24 @@ export interface ViewRect {
   h: number;
 }
 
+/**
+ * A view's viewport in canvas pixels from the bottom left, as WebGL wants
+ * it. Inner edges give up `divide` pixels each, which leaves a thin line
+ * between views.
+ */
+export function viewport(r: ViewRect, width: number, height: number, divide: number): { x: number; y: number; w: number; h: number } {
+  const inL = r.x > 0 ? divide : 0;
+  const inR = r.x + r.w < 0.999 ? divide : 0;
+  const inT = r.y > 0 ? divide : 0;
+  const inB = r.y + r.h < 0.999 ? divide : 0;
+  return {
+    x: Math.round(r.x * width + inL),
+    y: Math.round((1 - r.y - r.h) * height + inB),
+    w: Math.max(1, Math.round(r.w * width - inL - inR)),
+    h: Math.max(1, Math.round(r.h * height - inT - inB)),
+  };
+}
+
 /** One view: the fighter it follows over the shoulder, or null for the television camera. */
 export interface Pane {
   fighter: number | null;

@@ -23,7 +23,7 @@ export function buildPro(rig: Rig, o: Outfit, kit: Kit): void {
     top: kit.team,
     trim: kit.dark,
     sleeve: kit.team,
-    forearm: kit.team,
+    forearm: kit.dark,
     glove: C.charcoal,
     pants: kit.dark,
     boot: C.white,
@@ -42,7 +42,7 @@ export function buildPro(rig: Rig, o: Outfit, kit: Kit): void {
   o.add(rig.chest, "cloth", paint(cyl(0.2 * s, 0.2 * s, 0.05 * s, 22), kit.player, { at: [0, 0.14 * s, 0], scale: [1.13, 1, 0.8] }));
   // Sleeve stripes and padded forearm guards.
   for (const sh of [rig.shoulderL, rig.shoulderR]) o.add(sh, "cloth", paint(torus(0.066 * s, 0.012 * s, 16, 6), kit.player, { at: [0, -0.2 * s, 0], rot: [Math.PI / 2, 0, 0] }));
-  for (const el of [rig.elbowL, rig.elbowR]) o.add(el, "cloth", paint(roundBox(0.075 * s, 0.14 * s, 0.07 * s, 0.03 * s), kit.dark, { at: [0, -0.12 * s, -0.012 * s] }));
+  for (const el of [rig.elbowL, rig.elbowR]) o.add(el, "cloth", paint(roundBox(0.075 * s, 0.14 * s, 0.07 * s, 0.03 * s), C.charcoal, { at: [0, -0.12 * s, -0.012 * s] }));
 
   // The harness: a belt, and a pack of pods standing up behind.
   o.add(rig.pelvis, "gear", paint(cyl(0.175 * s, 0.175 * s, 0.06 * s, 20), C.strap, { at: [0, 0.05 * s, 0], scale: [1, 1, 0.8] }));

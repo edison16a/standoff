@@ -9,7 +9,7 @@ import { ShowCamera } from "./camera/show-camera";
 import { Effects } from "./effects/effects";
 import type { Label } from "./fighter-view";
 import { PaneHud } from "./hud/pane-hud";
-import type { Pane } from "./layout";
+import { viewport, type Pane } from "./layout";
 import { LIGHT } from "./palette";
 import { crosshair, showTags } from "./pane-view";
 import { FighterViews } from "./views";
@@ -120,8 +120,11 @@ export class BattleRenderer {
     return this.cams.get(fighter)?.pose ?? null;
   }
 
-  /** Moves every animation on without drawing, for running up to a still. */
-  animate(dt: number, wallTime: number): void {
+  /**
+   * Moves every animation and camera on without drawing. Rendering does
+   * this first; a run up to a still calls it alone for every frame it skips.
+   */
+  animate(dt: number, wallTime: number, panes: readonly Pane[] = []): void {
     const b = this.battle;
     const fighters = this.fighters;
     if (!b || !fighters || !this.arena || !this.effects) return;
@@ -133,47 +136,39 @@ export class BattleRenderer {
     this.effects.update(b.time, dt);
     this.arena.update(wallTime, dt);
     this.show.update(b.fighters, wallTime, dt);
+    for (const pane of panes) {
+      const f = pane.fighter !== null ? b.fighters[pane.fighter] : undefined;
+      if (!f) continue;
+      let cam = this.cams.get(f.id);
+      if (!cam) this.cams.set(f.id, (cam = new ShoulderCamera()));
+      const view = viewport(pane.rect, this.width, this.height, DIVIDE);
+      cam.setAspect(view.w / view.h);
+      cam.update(f, b.pieces, dt, b.time);
+    }
   }
 
   render(panes: readonly Pane[], dt: number, wallTime: number): void {
     const b = this.battle;
     const fighters = this.fighters;
     if (!b || !fighters || !this.arena || !this.effects) return;
-    this.animate(dt, wallTime);
+    this.animate(dt, wallTime, panes);
     this.renderer.shadowMap.needsUpdate = true;
     this.renderer.setScissor(0, 0, this.width, this.height);
     this.renderer.setViewport(0, 0, this.width, this.height);
     this.renderer.clear();
     const px = this.renderer.getPixelRatio();
     for (const pane of panes) {
-      // A thin dark line between views: each view gives up a pixel or two on its inner edges.
-      const r = pane.rect;
-      const inL = r.x > 0 ? DIVIDE : 0;
-      const inR = r.x + r.w < 0.999 ? DIVIDE : 0;
-      const inT = r.y > 0 ? DIVIDE : 0;
-      const inB = r.y + r.h < 0.999 ? DIVIDE : 0;
-      const x = Math.round(r.x * this.width + inL);
-      const w = Math.round(r.w * this.width - inL - inR);
-      const h = Math.round(r.h * this.height - inT - inB);
-      const y = Math.round((1 - r.y - r.h) * this.height + inB);
+      const { x, y, w, h } = viewport(pane.rect, this.width, this.height, DIVIDE);
       this.renderer.setViewport(x, y, w, h);
       this.renderer.setScissor(x, y, w, h);
       const f = pane.fighter !== null ? b.fighters[pane.fighter] : undefined;
-      let camera: THREE.PerspectiveCamera;
-      if (f) {
-        let cam = this.cams.get(f.id);
-        if (!cam) this.cams.set(f.id, (cam = new ShoulderCamera()));
-        cam.setAspect(w / h);
-        cam.update(f, b.pieces, dt, b.time);
-        camera = cam.camera;
-      } else {
-        this.show.setAspect(w / h);
-        camera = this.show.camera;
-      }
+      const cam = f ? this.cams.get(f.id) : undefined;
+      if (!cam) this.show.setAspect(w / h);
+      const camera = cam?.camera ?? this.show.camera;
       showTags(fighters.views, b, f ?? null, camera);
-      this.effects.setView(h * px, camera.fov);
+      this.effects.setView(camera, h * px);
       this.renderer.render(this.scene, camera);
-      if (!f) continue;
+      if (!f || !cam) continue;
       let hud = this.huds.get(f.id);
       if (!hud) this.huds.set(f.id, (hud = new PaneHud(this.labels.get(f.id)?.color ?? "#ffffff")));
       const aim = crosshair(f, b, camera, w, h);

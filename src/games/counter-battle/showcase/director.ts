@@ -48,6 +48,8 @@ export class ShowcaseDirector {
     if (cam && cam.length === 6) this.renderer.show.fixed = { from: new THREE.Vector3(cam[0], cam[1], cam[2]), at: new THREE.Vector3(cam[3], cam[4], cam[5]) };
     // The lab is seen from the front and to one side, past the end of the base wall.
     else if (this.lab) this.renderer.show.fixed = { from: new THREE.Vector3(4.6, 2.2, -22.4), at: new THREE.Vector3(-0.6, 1, -28.4) };
+    // Sized now, so the cameras run up to a still with the view's real shape.
+    this.renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
     const at = Number(params.get("at")) || 0;
     this.still = at > 0;
     for (let t = 0; t < at; t += FILMED_FRAME) this.draw(FILMED_FRAME, false);
@@ -97,7 +99,7 @@ export class ShowcaseDirector {
     this.renderer.onEvents(events);
     this.wall += dt;
     if (show) this.renderer.render(this.panes, dt, this.wall);
-    else this.renderer.animate(dt, this.wall);
+    else this.renderer.animate(dt, this.wall, this.panes);
   }
 
   dispose(): void {

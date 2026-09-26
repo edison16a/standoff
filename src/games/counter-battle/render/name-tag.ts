@@ -46,7 +46,7 @@ export class NameTag {
     this.texture.colorSpace = THREE.SRGBColorSpace;
     this.aspect = width / PILL_PX;
     const sprite = (map: THREE.Texture | null, hex: string, opacity = 1) => {
-      const mat = new THREE.SpriteMaterial({ map, color: hex, sizeAttenuation: false, depthTest: false, depthWrite: false, transparent: true, opacity });
+      const mat = new THREE.SpriteMaterial({ map, color: hex, sizeAttenuation: false, depthTest: false, depthWrite: false, transparent: true, opacity, toneMapped: false });
       const s = new THREE.Sprite(mat);
       s.renderOrder = 30;
       return s;

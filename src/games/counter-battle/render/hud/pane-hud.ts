@@ -39,7 +39,7 @@ export class PaneHud {
   private readonly cross = new THREE.Group();
   private readonly bars: THREE.Mesh[] = [];
   private readonly marks = new THREE.Group();
-  private readonly markMat = new THREE.MeshBasicMaterial({ color: "#ffffff", transparent: true, depthTest: false });
+  private readonly markMat = new THREE.MeshBasicMaterial({ color: "#ffffff", transparent: true, depthTest: false, toneMapped: false });
   private readonly owned: { dispose(): void }[] = [];
   private hurtAt = -Infinity;
   private hurtAmount = 0;
@@ -60,8 +60,8 @@ export class PaneHud {
     this.owned.push(mat);
     this.vignette = new THREE.Mesh(plane, mat);
     // All see through, so they draw in render order after the vignette: outline, then colour, then markers.
-    const dark = new THREE.MeshBasicMaterial({ color: "#05060a", transparent: true, opacity: 0.8, depthTest: false, depthWrite: false });
-    const bright = new THREE.MeshBasicMaterial({ color: colour, transparent: true, depthTest: false, depthWrite: false });
+    const dark = new THREE.MeshBasicMaterial({ color: "#05060a", transparent: true, opacity: 0.8, depthTest: false, depthWrite: false, toneMapped: false });
+    const bright = new THREE.MeshBasicMaterial({ color: colour, transparent: true, depthTest: false, depthWrite: false, toneMapped: false });
     this.owned.push(dark, bright);
     // Four ticks and a dot, each over a dark outline so it reads on sky and turf alike.
     for (const outline of [true, false]) {

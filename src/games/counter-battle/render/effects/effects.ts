@@ -100,10 +100,11 @@ export class Effects {
     this.puffs.burst({ at: to, count: 30, colour: TEAMS[k.team].color, speed: [1.5, 4], life: [0.5, 1], size: [0.07, 0.15], gravity: 8 }, this.rand);
   }
 
-  /** Point sizes follow the view they are drawn in. */
-  setView(heightPx: number, fov: number): void {
-    this.puffs.setView(heightPx, fov);
-    this.glow.setView(heightPx, fov);
+  /** Point sizes and tracer widths follow the view they are drawn in. */
+  setView(camera: THREE.PerspectiveCamera, heightPx: number): void {
+    this.puffs.setView(heightPx, camera.fov);
+    this.glow.setView(heightPx, camera.fov);
+    this.tracers.setView(camera.position, camera.fov, heightPx);
   }
 
   update(now: number, dt: number): void {

@@ -56,6 +56,8 @@ export function readFighter(f: Fighter, now: number, match: MatchState, wonAt: n
   let raise = 0.15;
   if (b.stance === "peek" || busy) raise = 1;
   else if (b.stance === "hide") raise = 0.45;
+  // A reload is done with the gun up in front of the chest, where the hands can be seen working.
+  if (f.gun.reloading) raise = Math.max(raise, 0.6);
   if (!fighting) raise = match.phase === "countdown" ? 0.35 : 0.2;
   const spec = f.gun.spec;
   const left = f.gun.reloadLeftSeconds;
