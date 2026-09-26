@@ -6,24 +6,6 @@ I loved the Wii, the PS5 and the Xbox, but there were never enough controllers, 
 
 Camera games track movement with a pose model that downloads once and runs on your own computer. The camera picture never leaves it. Phones send their moves through the game server as you play, and nothing is ever saved there: close the game and it is gone.
 
-The games, in the order the home screen shows them:
-
-* **Magic Kart:** a kart racer for up to four in split screen. Hold the phone like a steering wheel, grab power ups, and glide over the big jumps.
-* **Fruit Slicer:** up to four players slice fruit on one board by pointing their phones at the screen, and dodge the bombs.
-* **Zombie Survival:** up to four players aim their phones like guns and fight together through 25 stages to the ship.
-* **Shooting Gallery:** a fairground duck shoot. Point, shoot, top score in 20 seconds wins.
-* **Boxing:** stand in front of the camera and fight. Your arms and head drive your boxer, so real blocks and dodges work.
-* **Subway Runner:** run the neon rails with your body. Lean to change lanes, jump and roll, and survive as it speeds up.
-* **Basketball 3v3:** three on three with the stars for up to six phones. Dribble moves, a shot meter, dunks and free throws.
-* **Soccer 3v3:** three on three football for up to six phones. Hold to power a shot, tap to pass, and beat defenders with skill moves.
-* **Cube Game:** jump for real to jump the cube through five levels of rhythm and spikes.
-* **Fencing:** your phone is the sword. Move it slowly and the blade follows, flick or shake it to jab, raise it up and to the right to parry.
-* **Brawl Battle:** a four fighter platform brawl. Charge up attacks, pile on the damage and knock everyone off the stage.
-
-Empty spots are filled by computer players. Each game lives in its own folder under `src/games`, with a README of its own.
-
-It runs on Vercel for play from anywhere, or on your own computer over WiFi.
-
 Play it at [standoffgames.vercel.app](https://standoffgames.vercel.app).
 
 ## Screenshots
@@ -75,6 +57,26 @@ The home screen works like a console menu. Big tiles show each game, and the cho
 ### Brawl Battle
 
 <img src="docs/screenshots/brawl-battle.jpg" alt="Karate releasing a charged Dragon Flight on the temple stage" width="100%" />
+
+## The games
+
+In the order the home screen shows them:
+
+* **Magic Kart:** a kart racer for up to four in split screen. Hold the phone like a steering wheel, grab power ups, and glide over the big jumps.
+* **Fruit Slicer:** up to four players slice fruit on one board by pointing their phones at the screen, and dodge the bombs.
+* **Zombie Survival:** up to four players aim their phones like guns and fight together through 25 stages to the ship.
+* **Shooting Gallery:** a fairground duck shoot. Point, shoot, top score in 20 seconds wins.
+* **Boxing:** stand in front of the camera and fight. Your arms and head drive your boxer, so real blocks and dodges work.
+* **Subway Runner:** run the neon rails with your body. Lean to change lanes, jump and roll, and survive as it speeds up.
+* **Basketball 3v3:** three on three with the stars for up to six phones. Dribble moves, a shot meter, dunks and free throws.
+* **Soccer 3v3:** three on three football for up to six phones. Hold to power a shot, tap to pass, and beat defenders with skill moves.
+* **Cube Game:** jump for real to jump the cube through five levels of rhythm and spikes.
+* **Fencing:** your phone is the sword. Move it slowly and the blade follows, flick or shake it to jab, raise it up and to the right to parry.
+* **Brawl Battle:** a four fighter platform brawl. Charge up attacks, pile on the damage and knock everyone off the stage.
+
+Empty spots are filled by computer players. Each game lives in its own folder under `src/games`, with a README of its own.
+
+It runs on Vercel for play from anywhere, or on your own computer over WiFi.
 
 ## How to play
 
