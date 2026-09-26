@@ -17,8 +17,16 @@ const MESSAGES: Record<PhoneError, string> = {
 /** A room that ended or never existed is not coming back, so reloading it only fails again. */
 const GONE = new Set<PhoneError>(["closed", "not-found"]);
 
-export function ErrorScreen({ error }: { error: PhoneError }) {
-  if (GONE.has(error)) return <NextRoom title={MESSAGES[error]} />;
+interface ErrorScreenProps {
+  error: PhoneError;
+  /** The room this screen is for. */
+  code: string;
+  /** Starts this room over from its name screen. */
+  onRetry(): void;
+}
+
+export function ErrorScreen({ error, code, onRetry }: ErrorScreenProps) {
+  if (GONE.has(error)) return <NextRoom title={MESSAGES[error]} current={code} onRetry={onRetry} />;
   return (
     <section className="phone-hero">
       <h1 className="phone-title">{MESSAGES[error]}</h1>
@@ -34,7 +42,7 @@ export function ErrorScreen({ error }: { error: PhoneError }) {
  * The way on to the host's next game from this same tab: scan the new QR
  * code, or type the code printed under it.
  */
-function NextRoom({ title }: { title: string }) {
+function NextRoom({ title, current, onRetry }: { title: string; current: string; onRetry(): void }) {
   const router = useRouter();
   const [typed, setTyped] = useState("");
   const code = typed.trim();
@@ -42,8 +50,11 @@ function NextRoom({ title }: { title: string }) {
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
+    if (!valid) return;
+    // Opening this same page again would change nothing, so the room starts over in place.
+    if (code === current) return onRetry();
     // The join page makes a fresh room for the new code, so nothing from this one comes along.
-    if (valid) router.push(`/join/${code}`);
+    router.push(`/join/${code}`);
   };
 
   return (

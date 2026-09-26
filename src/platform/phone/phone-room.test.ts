@@ -104,6 +104,7 @@ describe("PhoneApp", () => {
 
   beforeEach(() => {
     (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    navigation.push.mockClear();
     host = document.createElement("div");
     document.body.append(host);
     root = createRoot(host);
@@ -124,6 +125,17 @@ describe("PhoneApp", () => {
       last().open();
       for (const reply of replies) last().receive(reply);
     });
+  }
+
+  /** Types a code on the ended screen and taps Join. */
+  async function typeCode(value: string) {
+    const input = host.querySelector("input")!;
+    act(() => {
+      // React only hears a value set the way a keyboard sets it.
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, value);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(async () => button("Join")!.click());
   }
 
   it("starts the next room at the name screen, not where the last one ended", async () => {
@@ -149,14 +161,27 @@ describe("PhoneApp", () => {
     show("CCCC");
     await joinWith(joined("CCCC", "tiny"), { type: "room:closed" });
     expect(button("Try again")).toBeUndefined();
-    const input = host.querySelector("input")!;
-    act(() => {
-      // React only hears a value set the way a keyboard sets it.
-      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, "wxyz");
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-    });
-    await act(async () => button("Join")!.click());
+    await typeCode("wxyz");
     expect(navigation.push).toHaveBeenCalledWith("/join/WXYZ");
+  });
+
+  it("starts the room over when its own code is typed again, since the same page would change nothing", async () => {
+    show("EEEE");
+    await joinWith(joined("EEEE", "tiny"), { type: "room:closed" });
+    await typeCode("eeee");
+    expect(navigation.push).not.toHaveBeenCalled();
+    expect(text()).toContain("Room EEEE");
+    await joinWith();
+    expect(last().sent[0]).toMatchObject({ type: "phone:join", code: "EEEE" });
+  });
+
+  it("says nothing about reconnecting while a first join falls back to the stream", async () => {
+    show("FFFF");
+    await act(async () => button("Skip")!.click());
+    // A WebSocket that never opens, as Chrome's does on Vercel.
+    act(() => last().close(1006));
+    expect(text()).toContain("Joining room FFFF");
+    expect(host.querySelector(".phone__notice")).toBeNull();
   });
 
   it("says the game did not load instead of Loading forever", async () => {

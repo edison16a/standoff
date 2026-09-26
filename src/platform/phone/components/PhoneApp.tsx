@@ -16,10 +16,12 @@ import { NameScreen } from "./NameScreen";
  * is a new room from the name screen on, whatever this tab showed before.
  */
 export function PhoneApp({ code }: { code: string }) {
-  return <RoomScreen key={code} code={code} />;
+  // The same code typed again keeps the same page, so a fresh key starts that room over.
+  const [attempt, setAttempt] = useState(0);
+  return <RoomScreen key={`${code}:${attempt}`} code={code} onRetry={() => setAttempt((n) => n + 1)} />;
 }
 
-function RoomScreen({ code }: { code: string }) {
+function RoomScreen({ code, onRetry }: { code: string; onRetry(): void }) {
   // Browser only (see PhoneEntry), so the room can be made up front.
   const [room] = useState(() => new PhoneRoom(code));
   const { stage, error, name, seat, game: gameId, status, hostAway } = useStore(room.store);
@@ -47,8 +49,8 @@ function RoomScreen({ code }: { code: string }) {
     };
   }, [room, gameId]);
 
-  const retrying = status === "reconnecting" || status === "unreachable";
-  const offline = (stage === "playing" && (status !== "open" || hostAway)) || (stage === "joining" && retrying);
+  // A first join that falls back to the stream is briefly "reconnecting", which is no news while joining.
+  const offline = (stage === "playing" && (status !== "open" || hostAway)) || (stage === "joining" && status === "unreachable");
 
   return (
     <div className="phone">
@@ -64,7 +66,7 @@ function RoomScreen({ code }: { code: string }) {
       <main className="phone__body">
         {stage === "name" && <NameScreen code={code} onJoin={(chosen) => room.join(chosen)} />}
         {stage === "joining" && <p className="muted phone__waiting">Joining room {code}</p>}
-        {stage === "error" && error && <ErrorScreen error={error} />}
+        {stage === "error" && error && <ErrorScreen error={error} code={code} onRetry={onRetry} />}
         {stage === "playing" && (game ? <game.Screen /> : <p className="muted phone__waiting">Loading</p>)}
       </main>
     </div>
