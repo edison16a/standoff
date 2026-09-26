@@ -1,7 +1,9 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 
 /** The whole song's level into the music bus. */
-const LEVEL = 0.47;
+const LEVEL = 0.45;
+/** Where the low pass sits in normal play: it takes the fizz off the top so the band never gets harsh. */
+const OPEN_HZ = 9000;
 
 /** A short hall made of fading noise, so no sample files are needed. */
 function hall(ctx: BaseAudioContext, seconds: number): AudioBuffer {
@@ -37,7 +39,7 @@ export class MusicMixer {
     this.master.gain.value = LEVEL;
     this.muffle = ctx.createBiquadFilter();
     this.muffle.type = "lowpass";
-    this.muffle.frequency.value = 18000;
+    this.muffle.frequency.value = OPEN_HZ;
     this.master.connect(this.muffle).connect(engine.bus("music"));
 
     this.dry = ctx.createGain();
@@ -85,7 +87,7 @@ export class MusicMixer {
 
   /** Muffles the song, as if heard from another room, while a run is paused. */
   setMuffled(muffled: boolean): void {
-    this.muffle.frequency.setTargetAtTime(muffled ? 500 : 18000, this.engine.now, 0.15);
+    this.muffle.frequency.setTargetAtTime(muffled ? 500 : OPEN_HZ, this.engine.now, 0.15);
   }
 
   fadeTo(level: number, seconds: number): void {

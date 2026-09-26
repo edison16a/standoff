@@ -12,20 +12,24 @@ const LAZY = { kick: "x.....x...x.....", snare: "....x.......x...", hat: "x.x.x.
 const FULL = "kick snare hat bass arp pad lead";
 
 export const SONGS: Record<string, Song> = {
+  // "Neon Drift": F major at 84, for the camera steps. A flute over electric piano and a pad that
+  // washes from bar to bar, with a rim and a shaker instead of a snare and hats. No plucks, no crashes.
   menu: song({
-    bpm: 88,
-    swing: 0.22,
-    chords: ["D2 F#3 A3 C#4", "B1 A3 D4 F#4", "G1 F#3 B3 D4", "A1 E3 G3 C#4"],
-    lead: ". . F#5 . A5 . . . C#6 - - . B5 . A5 . F#5 - - - - - . . . . D5 . E5 . F#5 . . . D5 . F#5 . . . B5 - - . A5 . F#5 . E5 - - - - - . . . . . . . . . .",
-    leadB: "A5 - - . F#5 . A5 . B5 - - . A5 . F#5 . D6 - - - - - . . C#6 . B5 . A5 . . . G5 - - . B5 . D6 . F#5 - - . E5 . D5 . E5 - - - C#5 - - - A4 - - - . . . .",
-    leadVoice: "bell",
-    leadBVoice: "glass",
-    bass: "0 - - . . . . . 7 - . . 0 . . .",
+    bpm: 84,
+    swing: 0.18,
+    chords: ["F2 A3 C4 E4 G4", "D2 F3 A3 C4 E4", "A#1 A3 D4 F4", "C2 G3 A#3 D4 F4", "A1 G3 C4 E4", "D2 F3 A3 C4 E4", "G1 F3 A#3 D4", "C2 E3 A#3 D4 G4"],
+    lead: "A4 - - C5 - - F5 - - - - - E5 - C5 - D5 - - - - - - - . . A4 - C5 - D5 - F5 - - E5 - - D5 - - - C5 - D5 - - - C5 - - - - - - - - - - - . . . .",
+    leadB: "E5 - - G5 - - A5 - - - G5 - E5 - - - F5 - - - - - E5 - D5 - - - A4 - - - A#4 - - D5 - - F5 - - - G5 - A5 - - - G5 - - - - - - - E5 - - - - - - -",
+    leadVoice: "flute",
+    bass: "0 - - - - - - . 7 - - . . . . .",
     bassStyle: "round",
     arp: "1 . . 2 . . 3 . . 4 . . 3 . . .",
-    drums: LAZY,
-    // A, then the glass answer, A again with open hats, then the answer with the kick out to breathe.
-    sections: [[0, "kick clap hat bass arp pad lead"], [16, "kick clap hat bass arp pad leadB"], [32, "kick clap hat open bass arp pad lead"], [48, "clap hat bass arp pad leadB"]],
+    keys: "x.....x.....x...",
+    drums: { kick: "x.........x.....", snare: "....x.......x...", hat: "..x...x...x...x." },
+    padVoice: "wash",
+    crash: false,
+    // The flute's tune over the first four chords, its answer over the next four, twice, with the kick out at the end to breathe.
+    sections: [[0, "kick rim shaker bass keys pad lead"], [16, "kick rim shaker bass keys pad leadB"], [32, "kick rim shaker bass keys pad lead"], [48, "rim shaker bass keys pad leadB"]],
     length: 64,
   }),
 

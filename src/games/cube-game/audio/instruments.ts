@@ -1,6 +1,7 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 import { envelope, noise, tone } from "@/platform/audio/voices";
 import { hz } from "./notes";
+import { flute } from "./soft";
 
 /**
  * The band every song is played by. Each voice books its nodes at an exact
@@ -107,11 +108,12 @@ export function pad(engine: AudioEngine, out: AudioNode, at: number, midis: read
   oscs[0]!.onended = () => gain.disconnect();
 }
 
-export type LeadVoice = "bell" | "square" | "saw" | "glass";
+export type LeadVoice = "bell" | "square" | "saw" | "glass" | "flute";
 
 /** The tune on top. Longer notes get a little vibrato, which is most of what makes a synth lead sing. */
 export function lead(engine: AudioEngine, out: AudioNode, at: number, midi: number, length: number, voice: LeadVoice, peak = 0.06): void {
   const { ctx } = engine;
+  if (voice === "flute") return flute(engine, out, at, midi, length, peak);
   const f = hz(midi);
   if (voice === "bell" || voice === "glass") {
     tone(engine, out, at, { type: "sine", frequency: f, decay: Math.max(0.4, length * 1.2), peak: peak * 1.4 });
