@@ -26,7 +26,7 @@ function SpotCard({ spot, level, onMove }: { spot: SpotView; level: string; onMo
       {spot.seat !== null && <span className={`cb-spot__ready ${spot.ready ? "cb-spot__ready--on" : ""}`}>{spot.ready ? "Ready" : "Setting up"}</span>}
       <span className="cb-spot__role">
         {spot.gun && <GunIcon gun={spot.gun} size={40} className="cb-spot__gun" />}
-        {spot.seat === null ? `Computer, ${level}` : spot.gun ? GUNS[spot.gun].name : "Picking a gun"}
+        {spot.seat === null ? `Skill: ${level}` : spot.gun ? GUNS[spot.gun].name : "Picking a gun"}
       </span>
     </>
   );

@@ -39,6 +39,8 @@ export class CounterPhone {
 
   calibrated(): void {
     this.click();
+    // The kit leaves its test view's stream running; the controller starts its own when play begins.
+    this.aim.stream(false);
     store.setState({ calibrated: true, step: 1 });
   }
 

@@ -115,8 +115,12 @@
 }
 
 .cb-rank tbody th {
-  display: grid;
   text-align: left;
+}
+
+/* Grids inside the cells, so the cells themselves stay table cells and the columns line up. */
+.cb-rank__who {
+  display: grid;
 }
 
 .cb-rank__name {
@@ -133,6 +137,7 @@
 .cb-rank__gun {
   display: grid;
   justify-items: center;
+  font-weight: 700;
 }
 
 .cb-rank td {

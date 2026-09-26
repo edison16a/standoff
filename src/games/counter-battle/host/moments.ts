@@ -62,7 +62,7 @@ export class Moments {
     this.timer = setTimeout(() => {
       if (store.getState().banner?.key === key) store.setState({ banner: null });
       this.changed();
-    }, BANNER_MS);
+    }, c.hold ?? BANNER_MS);
   }
 }
 

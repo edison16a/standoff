@@ -32,12 +32,16 @@ function Row({ r }: { r: ResultRow }) {
   return (
     <tr style={{ "--player": r.colour, "--team": TEAMS[r.team].color } as CSSProperties}>
       <th scope="row">
-        <span className="cb-rank__name">{r.name}</span>
-        <small>{r.bot ? `Computer, ${CHARACTERS[r.character].name}` : CHARACTERS[r.character].name}</small>
+        <span className="cb-rank__who">
+          <span className="cb-rank__name">{r.name}</span>
+          <small>{r.bot ? `Computer, ${CHARACTERS[r.character].name}` : CHARACTERS[r.character].name}</small>
+        </span>
       </th>
-      <td className="cb-rank__gun">
-        <GunIcon gun={r.gun} size={52} />
-        <small>{GUNS[r.gun].name}</small>
+      <td>
+        <span className="cb-rank__gun">
+          <GunIcon gun={r.gun} size={52} />
+          <small>{GUNS[r.gun].name}</small>
+        </span>
       </td>
       <td>{r.kills}</td>
       <td>{r.deaths}</td>

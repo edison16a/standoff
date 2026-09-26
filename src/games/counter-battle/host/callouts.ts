@@ -6,6 +6,8 @@ import type { Banner } from "./host-store";
 /** What a moment puts on the big screen and in the announcer's mouth. */
 export interface Callout {
   banner?: Omit<Banner, "key">;
+  /** How long the banner stays, in milliseconds, if not the usual. */
+  hold?: number;
   say?: { text: string; priority: number };
 }
 
@@ -47,7 +49,8 @@ export function callout(e: BattleEvent, score: readonly [number, number], c: Cal
       };
     }
     case "fight":
-      return { banner: { text: "Fight", sub: null, tone: "white" }, say: { text: "Fight!", priority: 2 } };
+      // Brief, since it sits over everyone's aim just as the shooting starts.
+      return { banner: { text: "Fight", sub: null, tone: "white" }, hold: 1000, say: { text: "Fight!", priority: 2 } };
     case "round-end": {
       if (e.winner === null) return { banner: { text: "Draw", sub: "Nobody takes the round", tone: "white" }, say: { text: "Draw", priority: 2 } };
       const side = c.sideName(e.winner);

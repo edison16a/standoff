@@ -16,6 +16,10 @@ describe("the callouts", () => {
     expect(callout({ type: "countdown", round: 9, seconds: 3 }, [4, 4], ctx)?.say?.text).toBe("Final round");
   });
 
+  it("keeps Fight brief, so it is off the views as the shooting starts", () => {
+    expect(callout({ type: "fight", round: 1 }, [0, 0], ctx)?.hold).toBeLessThan(1500);
+  });
+
   it("names who took the round, a draw, and the winner of the match", () => {
     expect(callout({ type: "round-end", round: 2, winner: 1, score: [1, 1] }, [1, 1], ctx)?.banner).toMatchObject({ text: "Cyan team takes it", tone: 1 });
     expect(callout({ type: "round-end", round: 2, winner: null, score: [1, 0] }, [1, 0], ctx)?.banner?.text).toBe("Draw");
