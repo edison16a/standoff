@@ -41,7 +41,8 @@ export function keeperHome(state: MatchState, k: Keeper): Vec2 {
 export function planDive(state: MatchState, k: Keeper): void {
   const flight = state.flight;
   const ball = state.ball;
-  if (!flight || flight.team === k.team || k.action !== "set") return;
+  // A shot charged down by a defender never reaches the keeper, so he stays on his feet.
+  if (!flight || flight.team === k.team || k.action !== "set" || (flight.blocker ?? null) !== null) return;
   const hit = fly({ ...ball.pos }, { vel: { ...ball.vel }, spin: { ...ball.spin }, time: 0 }, k.pos.x);
   if (!hit) return;
   const dz = hit.z - k.pos.z;
@@ -74,9 +75,7 @@ export function makeSave(state: MatchState, k: Keeper, parry: boolean): void {
   ball.lastTouch = { team: k.team, id: null };
   ball.spin = { x: 0, y: 0, z: 0 };
   if (parry) {
-    const side = k.dive?.dir ?? state.rng.sign();
-    // Pushed away from goal and out to the side the keeper dived to.
-    ball.vel = { x: outward(k.team) * state.rng.range(3, 6.5), y: state.rng.range(1.5, 4), z: side * state.rng.range(3, 7) };
+    parryOffGloves(state, k);
     k.noTouch = 1.1;
   } else {
     ball.owner = { kind: "keeper", team: k.team };
@@ -90,6 +89,42 @@ export function makeSave(state: MatchState, k: Keeper, parry: boolean): void {
     }
   }
   state.events.push({ type: "save", team: k.team, kind: parry ? "parry" : "catch", at });
+}
+
+/**
+ * A parry is a real bounce off the gloves. The palms face out of the
+ * goal, tilted toward the side of the dive and up for a high ball, so
+ * the ball's motion into them is reflected with a soft glove's give,
+ * the part along them is dragged, and the wrists add a push. It always
+ * leaves back into the field, away from the goal.
+ */
+export function parryOffGloves(state: MatchState, k: Keeper): void {
+  const ball = state.ball;
+  const r = state.rng;
+  const out = outward(k.team);
+  const side = k.dive?.dir ?? r.sign();
+  const high = clamp01((ball.pos.y - 1.2) / 1.2);
+  // The palm's normal: mostly out of the goal, leaning to the dive side, and up over a high ball.
+  let nx = out * 0.85;
+  let ny = 0.15 + 0.45 * high;
+  let nz = side * r.range(0.3, 0.6);
+  const n = Math.hypot(nx, ny, nz);
+  nx /= n;
+  ny /= n;
+  nz /= n;
+  const v = ball.vel;
+  const into = v.x * nx + v.y * ny + v.z * nz;
+  const give = 0.42;
+  const push = r.range(2, 3.5);
+  const bounce = into < 0 ? (1 + give) * into : 0;
+  let vx = (v.x - bounce * nx) * 0.55 + nx * push;
+  const vy = (v.y - bounce * ny) * 0.55 + ny * push;
+  const vz = (v.z - bounce * nz) * 0.55 + nz * push;
+  // A glancing touch can still carry on toward the goal; a keeper's palm never lets that happen.
+  if (vx * out < 2) vx = out * r.range(2, 3.5);
+  ball.vel = { x: vx, y: Math.max(0.6, vy), z: vz };
+  // The ball comes off the gloves spinning the way it rolled across them.
+  ball.spin = { x: r.range(-6, 6), y: -side * r.range(4, 10), z: r.range(-6, 6) };
 }
 
 /** A loose ball in the box, gathered up: the keeper holds it and plays it out. */

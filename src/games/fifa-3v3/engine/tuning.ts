@@ -37,6 +37,8 @@ export const BALL = {
   magnus: 0.011,
   /** How much a bounce off the turf keeps. */
   bounce: 0.52,
+  /** How much of the slip between the ball's surface and the turf a bounce takes out. */
+  grip: 0.14,
   /** Slowing of a rolling ball on the turf, metres per second squared. */
   roll: 1.9,
   boardBounce: 0.62,
@@ -136,7 +138,10 @@ export const KEEPER = {
   claimRange: 0.95,
   /** The closest a keeper stands to the goal line, in front of it. */
   lineGap: 0.3,
-  getUp: 0.7,
+  /** Rising from the turf after a dive. */
+  getUp: 0.95,
+  /** Lying on the turf after a dive that did not end with the ball in the gloves. */
+  grounded: 1.1,
 } as const;
 
 export const MATCH = {
@@ -144,7 +149,8 @@ export const MATCH = {
   goalsToWin: 5,
   kickoffWait: 1.6,
   celebrate: 3.4,
-  replay: 5.8,
+  /** The longest a goal replay can run, if the host never ends it. */
+  replay: 20,
   outWait: 1.3,
   fullTimeWait: 1,
 } as const;

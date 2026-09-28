@@ -97,15 +97,19 @@ function diving(k: KeeperView, leftSign: number, time: number): KeeperFrame {
   p.kneeL = 0.3 + 1.3 * curl;
   p.kneeR = 0.6 + 1.1 * curl;
   p.neckY = 0.05 * Math.sin(time);
+  // Winded on the turf: the head comes up to follow the ball and the chest heaves.
+  p.neckX = -0.35 * fall;
+  p.spineX = 0.05 * Math.sin(time * 2.4) * fall;
   return { pose: p, z: k.z };
 }
 
 /** Rising from the turf after a dive, turning up about the middle of the body. */
 function gettingUp(k: KeeperView, leftSign: number): KeeperFrame {
-  const p = getUp(k.actionT, 0.7);
+  const p = getUp(k.actionT, KEEPER.getUp);
   const dive = k.dive;
   if (!dive || dive.standing) return { pose: p, z: k.z };
-  const up = smooth(k.actionT / 0.35);
+  // Rolls onto the front first, then pushes up, rather than springing straight off the side.
+  const up = smooth(k.actionT / (KEEPER.getUp * 0.5));
   p.roll = leftSign * FLAT * (1 - up);
   return { pose: p, z: k.z - dive.dir * KEEPER.middle * (1 - up) };
 }
