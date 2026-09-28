@@ -4,6 +4,8 @@ import type { Role } from "../roles";
 import type { CharacterId } from "../roster";
 import type { RoomPhase } from "../protocol";
 import type { TeamId } from "../teams";
+import type { StrikeFacts } from "./replay-facts";
+import type { ReplayStage } from "./replay-script";
 
 export interface SeatView {
   seat: number;
@@ -31,24 +33,37 @@ export interface Moment {
   colour: string;
 }
 
-export interface Banner {
-  /** Changes each time, so the same words can play their entrance again. */
-  id: number;
-  text: string;
-  sub: string | null;
-  colour: string;
+/** The goal replay's overlay: the stage it is at and the strike's numbers. */
+export interface ReplayCard {
+  stage: ReplayStage;
+  /** Who struck the ball. */
+  kicker: string | null;
+  facts: StrikeFacts | null;
+  /** Playing in slow motion right now. */
+  slow: boolean;
+}
+
+/** One player's say in skipping the replay. */
+export interface SkipView {
+  seat: number;
+  name: string;
+  agreed: boolean;
 }
 
 export interface ResultRow {
+  /** An athlete's id, or -1 and -2 for the red and blue keepers. */
   id: number;
   team: TeamId;
   name: string;
-  character: CharacterId;
+  /** The star played, or null for a keeper. */
+  character: CharacterId | null;
   seat: number | null;
   goals: number;
   shots: number;
   tackles: number;
   passes: number;
+  /** A keeper's saves, or the shots an outfield player blocked. */
+  saves: number;
 }
 
 /**
@@ -72,10 +87,10 @@ export interface FifaHostState {
   clock: number;
   golden: boolean;
   replay: boolean;
-  banner: Banner | null;
+  replayCard: ReplayCard | null;
+  skip: SkipView[];
   winner: TeamId | null;
   results: ResultRow[];
-  saves: [number, number];
   /** Phones' players in the match, for the strip along the bottom. */
   roster: { id: number; seat: number; name: string; team: TeamId; character: CharacterId; hasBall: boolean; away: boolean }[];
 }
@@ -92,9 +107,9 @@ export const useFifaStore = create<FifaHostState>(() => ({
   clock: 0,
   golden: false,
   replay: false,
-  banner: null,
+  replayCard: null,
+  skip: [],
   winner: null,
   results: [],
-  saves: [0, 0],
   roster: [],
 }));

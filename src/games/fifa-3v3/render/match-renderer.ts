@@ -7,6 +7,7 @@ import { Arena } from "./arena/arena";
 import { CameraDirector, type Shot } from "./camera/director";
 import { Effects } from "./effects/effects";
 import { AimLine } from "./figures/aim-line";
+import { AimMarker } from "./figures/aim-marker";
 import { RefereeFigure } from "./figures/referee-figure";
 import { Squad, type Label } from "./figures/squad";
 import { BallModel } from "./models/ball-model";
@@ -41,6 +42,8 @@ export class MatchRenderer {
   private readonly referee: RefereeFigure;
   private readonly refMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.62, metalness: 0.02 });
   private readonly aim = new AimLine();
+  private readonly marker = new AimMarker();
+  private markerAt: { x: number; y: number; z: number } | null = null;
   private readonly environment: THREE.Texture;
   private last = 0;
   private readonly low: boolean;
@@ -65,7 +68,12 @@ export class MatchRenderer {
     this.ball = new BallModel(this.arena.glow);
     this.squad = new Squad(this.arena.glow);
     this.referee = new RefereeFigure(this.refMaterial);
-    this.scene.add(this.arena.group, this.effects.group, this.ball.group, this.squad.group, this.referee.group, this.aim.group);
+    this.scene.add(this.arena.group, this.effects.group, this.ball.group, this.squad.group, this.referee.group, this.aim.group, this.marker.group);
+  }
+
+  /** The replay's target on the goal, shown through the strike, or null to hide it. */
+  setMarker(at: { x: number; y: number; z: number } | null): void {
+    this.markerAt = at;
   }
 
   resize(width: number, height: number, dpr: number): void {
@@ -125,7 +133,8 @@ export class MatchRenderer {
     const dt = this.last ? Math.min(0.1, Math.max(0, nowMs - this.last) / 1000) : 1 / 60;
     this.last = nowMs;
     const time = nowMs / 1000;
-    this.squad.update(view, dt, time, tags && shot !== "replay-end" && shot !== "replay-side");
+    this.squad.update(view, dt, time, tags && shot !== "replay-kicker" && shot !== "replay-keeper");
+    this.marker.update(this.markerAt, time);
     // No referee on the lobby's kick about.
     this.referee.group.visible = shot !== "lobby";
     this.referee.update(view.referee, view.ball, dt, time);
@@ -150,6 +159,7 @@ export class MatchRenderer {
     this.referee.dispose();
     this.refMaterial.dispose();
     this.aim.dispose();
+    this.marker.dispose();
     this.ball.dispose();
     this.effects.dispose();
     this.arena.dispose();

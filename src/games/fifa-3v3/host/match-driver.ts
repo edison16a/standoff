@@ -3,7 +3,7 @@ import type { HostPad } from "@/games/kit/pad/host-pad";
 import { adminFoul, adminSetPiece } from "../engine/admin";
 import { FixedStepClock } from "../engine/clock";
 import type { MatchEvent } from "../engine/events";
-import { createMatch, stepMatch, type Entrant } from "../engine/match";
+import { createMatch, endReplay, stepMatch, type Entrant } from "../engine/match";
 import type { Command, MatchState } from "../engine/types";
 import { buildView, type MatchView } from "../engine/view";
 import { BUTTONS } from "../protocol";
@@ -64,6 +64,14 @@ export class MatchDriver {
 
   setPiece(kind: "free" | "penalty"): boolean {
     return this.admin(() => adminSetPiece(this.state, kind));
+  }
+
+  /** The goal replay has played, or everyone skipped it: on to the kick off. */
+  endReplay(): void {
+    endReplay(this.state);
+    // Presses made to skip must not turn into kicks once play is back.
+    this.presses.clear();
+    this.view = buildView(this.state);
   }
 
   /** The events a shortcut raises are kept for the next tick, so the whistle and the camera hear them. */

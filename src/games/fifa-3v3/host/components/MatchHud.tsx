@@ -3,6 +3,7 @@ import { playerColor } from "@/games/kit/players";
 import { ROSTER } from "../../roster";
 import { TEAMS } from "../../teams";
 import { useFifaStore } from "../host-store";
+import { ReplayOverlay } from "./ReplayOverlay";
 
 function clock(seconds: number): string {
   const s = Math.max(0, seconds);
@@ -41,18 +42,6 @@ function MomentTag() {
   );
 }
 
-/** The big words for goals, saves and the woodwork. Keyed so each one plays its entrance. */
-function BannerView() {
-  const banner = useFifaStore((s) => s.banner);
-  if (!banner) return null;
-  return (
-    <div key={banner.id} className="fifa-banner" style={{ "--banner": banner.colour } as React.CSSProperties} aria-live="assertive">
-      <strong className="fifa-banner__text">{banner.text}</strong>
-      {banner.sub && <span className="fifa-banner__sub">{banner.sub}</span>}
-    </div>
-  );
-}
-
 /** Along the bottom: each phone's player, their star and side, and who has the ball. */
 function PlayerStrip() {
   const roster = useFifaStore((s) => s.roster);
@@ -74,18 +63,12 @@ function PlayerStrip() {
   );
 }
 
+/** No banners across the picture: goals and fouls are told by the score bug and the 3D scene. */
 export function MatchHud() {
-  const replay = useFifaStore((s) => s.replay);
   return (
     <div className="fifa-hud">
       <Scoreboard />
-      {replay && (
-        <div className="fifa-replay" aria-label="Replay">
-          <span className="fifa-replay__dot" />
-          REPLAY
-        </div>
-      )}
-      <BannerView />
+      <ReplayOverlay />
       <PlayerStrip />
     </div>
   );

@@ -32,7 +32,13 @@ export default function PitchCanvas() {
       const events = session.tick(now);
       const view = session.view;
       for (const event of events) renderer.onEvent(event, view);
-      const framing = frameFor(view, { lobby: !session.driver, replay: session.replay, goals: session.goalCount });
+      const replay = session.replayFrame;
+      const script = session.replayScript;
+      const angle = replay && script ? { camera: replay.segment.camera, kicker: script.kicker, keeperTeam: script.keeperTeam } : null;
+      const framing = frameFor(view, { lobby: !session.driver, replay: angle });
+      // The target on the goal shows through the slow motion strike and the ball's flight.
+      const aiming = replay && (replay.segment.stage === "strike" || replay.segment.stage === "flight");
+      renderer.setMarker(aiming ? (script?.target ?? null) : null);
       renderer.draw(view, framing.shot, now, framing.focus, framing.tags);
       frame = requestAnimationFrame(loop);
     };

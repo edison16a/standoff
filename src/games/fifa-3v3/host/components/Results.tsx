@@ -6,8 +6,9 @@ import { useFifaStore } from "../host-store";
 import { useSession } from "./session-context";
 
 /**
- * The final whistle: the winners and the score, the man of the match,
- * everyone's goals, shots, passes and tackles, the keepers' saves, and the ways
+ * The final whistle: the winners and the score, the player of the
+ * match, everyone's goals, shots, passes, tackles and saves (blocked
+ * shots for outfield players, a line each for the keepers), and the ways
  * back in: the same teams again, or back to pick new ones.
  */
 export function Results() {
@@ -15,7 +16,6 @@ export function Results() {
   const winner = useFifaStore((s) => s.winner);
   const score = useFifaStore((s) => s.score);
   const rows = useFifaStore((s) => s.results);
-  const saves = useFifaStore((s) => s.saves);
   // A player who left can leave a side empty with computers off: then only Change teams works.
   const blocked = useFifaStore((s) => s.startBlock !== null);
   if (winner === null || rows.length === 0) return null;
@@ -44,27 +44,26 @@ export function Results() {
               <th scope="col">Shots</th>
               <th scope="col">Passes</th>
               <th scope="col">Tackles</th>
+              <th scope="col">Saves</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} style={{ "--row": r.seat !== null ? playerColor(r.seat) : TEAMS[r.team].color } as React.CSSProperties}>
+              <tr key={r.id} className={r.character === null ? "fifa-results__keeper" : undefined} style={{ "--row": r.seat !== null ? playerColor(r.seat) : TEAMS[r.team].color } as React.CSSProperties}>
                 <td className="fifa-results__name">
                   <span className="fifa-results__side" style={{ background: TEAMS[r.team].color }} />
-                  {r.seat !== null ? r.name : "Computer"}
+                  {r.character === null ? r.name : r.seat !== null ? r.name : "Computer"}
                 </td>
-                <td>{ROSTER[r.character].short}</td>
-                <td className="fifa-results__goals">{r.goals}</td>
-                <td>{r.shots}</td>
-                <td>{r.passes}</td>
-                <td>{r.tackles}</td>
+                <td>{r.character === null ? "Keeper" : ROSTER[r.character].short}</td>
+                <td className="fifa-results__goals">{r.character === null ? "" : r.goals}</td>
+                <td>{r.character === null ? "" : r.shots}</td>
+                <td>{r.character === null ? "" : r.passes}</td>
+                <td>{r.character === null ? "" : r.tackles}</td>
+                <td>{r.saves}</td>
               </tr>
             ))}
           </tbody>
         </table>
-        <p className="fifa-results__keepers">
-          Keeper saves: {TEAMS[0].name} {saves[0]}, {TEAMS[1].name} {saves[1]}
-        </p>
         <div className="fifa-results__actions">
           <button type="button" className="fifa-start" disabled={blocked} onClick={() => session.startMatch()}>
             Play again
