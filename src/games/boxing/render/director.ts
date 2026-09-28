@@ -1,3 +1,4 @@
+import { OrbitCamera } from "@/games/kit/victory";
 import type { MatchEvent } from "../engine/events";
 import type { Match } from "../engine/match";
 import { other, type FighterId } from "../engine/types";
@@ -35,6 +36,8 @@ export class Director {
   readonly recorder = new Recorder();
   private readonly shoulders: [ShoulderCamera, ShoulderCamera];
   private readonly tv = new TvCamera(34);
+  /** The ceremony's slow swing round the champion, opening wide and easing in. */
+  private readonly orbit = new OrbitCamera(this.tv.camera, { radius: 3.3, height: 1.45, lookHeight: 1.45, speed: 0.16, arc: 0.55, introS: 2.6, pullBack: 1.7, rise: 1.4, bob: 0.12 });
   private readonly replayPoses: [RigPose, RigPose] = [stance(), stance()];
   private knockdown: { fighter: FighterId; by: FighterId } | null = null;
   private replayImpactShown = false;
@@ -60,6 +63,7 @@ export class Director {
     this.knockdown = null;
     this.scene.fx.clear();
     this.scene.confetti.clear();
+    this.scene.ceremony.stop();
     this.scene.referee.reset();
   }
 
@@ -84,8 +88,8 @@ export class Director {
     const time = now / 1000;
     const { match } = input;
     const replaying = input.shot === "replay" && this.recorder.ready && this.knockdown;
-    // The referee is not recorded, so he steps out of the replay rather than stand frozen in it.
-    this.scene.referee.model.root.visible = !replaying;
+    // The referee is not recorded, so he steps out of the replay rather than stand frozen in it, and he leaves the ceremony to the boxers.
+    this.scene.referee.model.root.visible = !replaying && !this.scene.ceremony.active;
     if (replaying) this.playReplay(input.shotMs, time, dt);
     else {
       this.replayImpactShown = false;
@@ -95,8 +99,13 @@ export class Director {
     // Confetti comes down on the winner once the replay is over, not during it.
     if (input.shot === "celebrate" && this.lastShot !== "celebrate" && match.result?.winner != null) {
       const spot = match.footwork.spots[match.result.winner];
-      this.scene.confetti.burst(spot.x, spot.z);
+      this.scene.confetti.cannons({ x: spot.x, y: 1.3, z: spot.z }, { ring: 2.4, cannons: 3, count: 160 });
       this.scene.arena.burst(30);
+    }
+    // The results open on the ceremony: a cut to the champion lifting the belt.
+    if (input.shot === "ceremony" && this.lastShot !== "ceremony" && match.result?.winner != null) {
+      this.scene.startCeremony(match.result.winner, time);
+      this.orbit.play({ startAngle: this.scene.ceremony.front });
     }
     this.lastShot = input.shot;
     this.renderer.render(this.scene, this.views(input, dt, !!replaying));
@@ -142,6 +151,12 @@ export class Director {
     if (input.shot === "menu") {
       tv.setFov(34);
       tv.sideOn(a, b, 0.4 + t * 0.05, 4.6, 2.3, 1.1);
+      tv.finish(dt);
+      return [{ rect: FULL, camera: tv.camera }];
+    }
+    if (input.shot === "ceremony" && this.scene.ceremony.active) {
+      tv.setFov(34);
+      this.orbit.update(dt);
       tv.finish(dt);
       return [{ rect: FULL, camera: tv.camera }];
     }

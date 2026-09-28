@@ -1,4 +1,7 @@
 "use client";
+import { playerColor } from "@/games/kit/players";
+import { VictoryOverlay } from "@/games/kit/victory/ui/VictoryOverlay";
+import { buildFor } from "../../engine/builds";
 import { useBoxingStore } from "../host-store";
 import { formatSeconds } from "./PlayersMenu";
 import { useSession } from "./session-context";
@@ -10,74 +13,76 @@ const METHOD: Record<string, string> = {
   Draw: "",
 };
 
-const ROWS: readonly [string, string][] = [
-  ["landed", "Punches landed"],
-  ["thrown", "Punches thrown"],
+const COLUMNS: readonly [string, string][] = [
+  ["landed", "Landed"],
+  ["thrown", "Thrown"],
   ["blocked", "Blocks"],
   ["dodged", "Dodges"],
   ["counters", "Counters"],
   ["knockdowns", "Knockdowns"],
 ];
 
-/** The end of the fight: the winner, the scorecards, the numbers, and what next. */
+/**
+ * The end of the fight, over the ceremony in the ring: the champion's
+ * name big across the top, how they won, and along the bottom the
+ * scorecards, both boxers' numbers and what next.
+ */
 export function Results() {
   const session = useSession();
   const result = useBoxingStore((state) => state.result);
   const players = useBoxingStore((state) => state.players);
+  const picks = useBoxingStore((state) => state.picks);
   const records = useBoxingStore((state) => state.records);
   const newBest = useBoxingStore((state) => state.newBest);
   if (!result) return null;
   const winner = result.winner;
-  const title = winner === null ? "A draw" : `${result.names[winner]} wins`;
-  const who = winner === null ? "" : players === 1 ? (winner === 0 ? "You win" : "The computer wins") : `Player ${winner + 1} wins`;
+  const colour = (id: 0 | 1) => (id === 1 && players === 1 ? "#9aa3b5" : playerColor(id + 1));
+  const how = `${METHOD[result.method]}${result.method === "KO" || result.method === "TKO" ? ` in round ${result.round} at ${formatSeconds(result.second)}` : ""}`;
+  const names = winner === null ? ([0, 1] as const).map((id) => ({ name: result.names[id], colour: colour(id) })) : [{ name: result.names[winner], colour: colour(winner) }];
+  const subtitle = winner === null ? "A draw on the scorecards" : `${buildFor(picks[winner]).name}. Wins ${how}.`;
   return (
-    <section className="bx-results" aria-live="polite">
-      <p className="bx-eyebrow">{who || "Nobody wins"}</p>
-      <h2 className="bx-results__title">{title}</h2>
-      <p className="bx-results__how">
-        {METHOD[result.method]}
-        {result.method === "KO" || result.method === "TKO" ? ` in round ${result.round} at ${formatSeconds(result.second)}` : ""}
-      </p>
-      {newBest && <p className="bx-results__best">{newBest}!</p>}
-      <table className="bx-results__table">
-        <thead>
-          <tr>
-            <th>{result.names[0]}</th>
-            <th />
-            <th>{result.names[1]}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr className="bx-results__cards">
-            <td>{result.totals[0]}</td>
-            <td>Scorecard</td>
-            <td>{result.totals[1]}</td>
-          </tr>
-          {ROWS.map(([key, label]) => (
-            <tr key={key}>
-              <td>{result.stats[0][key]}</td>
-              <td>{label}</td>
-              <td>{result.stats[1][key]}</td>
+    <VictoryOverlay eyebrow={winner === null ? "Draw" : "Champion"} names={names} subtitle={subtitle}>
+      <div className="bx-results">
+        {newBest && <p className="bx-results__best">{newBest}!</p>}
+        <table className="bx-results__table">
+          <thead>
+            <tr>
+              <th />
+              <th>Scorecard</th>
+              {COLUMNS.map(([key, label]) => (
+                <th key={key}>{label}</th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-      {players === 1 && (
-        <p className="bx-results__records">
-          Your record against the computer: {records.wins} won, {records.losses} lost
-        </p>
-      )}
-      <div className="bx-results__actions">
-        <button type="button" className="bx-button bx-button--big" onClick={() => session.rematch()}>
-          Play again
-        </button>
-        <button type="button" className="bx-button bx-button--ghost" onClick={() => session.newBoxers()}>
-          Choose boxers
-        </button>
-        <button type="button" className="bx-button bx-button--ghost" onClick={() => session.menu()}>
-          Menu
-        </button>
+          </thead>
+          <tbody>
+            {([0, 1] as const).map((id) => (
+              <tr key={id} className={winner === id ? "bx-results__won" : undefined} style={{ ["--who" as string]: colour(id) }}>
+                <th scope="row">{result.names[id]}</th>
+                <td className="bx-results__card">{result.totals[id]}</td>
+                {COLUMNS.map(([key]) => (
+                  <td key={key}>{result.stats[id][key]}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {players === 1 && (
+          <p className="bx-results__records">
+            Your record against the computer: {records.wins} won, {records.losses} lost
+          </p>
+        )}
+        <div className="bx-results__actions">
+          <button type="button" className="bx-button bx-button--big" onClick={() => session.rematch()}>
+            Play again
+          </button>
+          <button type="button" className="bx-button bx-button--ghost" onClick={() => session.newBoxers()}>
+            Choose builds
+          </button>
+          <button type="button" className="bx-button bx-button--ghost" onClick={() => session.menu()}>
+            Menu
+          </button>
+        </div>
       </div>
-    </section>
+    </VictoryOverlay>
   );
 }

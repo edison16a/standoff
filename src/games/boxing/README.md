@@ -9,7 +9,7 @@ A 3D boxing match played with your body in front of the computer's camera. There
 1. **Choose players.** One player fights the computer. Two players stand side by side in front of one camera, player 1 on the left of the picture. Pick with the mouse.
 2. **Get the camera ready.** The kit asks for the camera and downloads the body tracking model with a progress bar. Every problem, from a blocked camera to no internet, says what to do and has a Try again button.
 3. **Calibrate.** The camera only needs you from the waist up: your head, shoulders and gloves. Step into your outline and stand tall while your ring fills, which sets your head line, then show your guard (both gloves up by your face) and throw one jab. Skip this step is there for a camera that struggles.
-4. **Choose your boxer.** Lean left or right to browse, then drop your hands and hold your guard up to lock in. A guard still up from calibration does not count. The mouse works too. With one player the computer takes a different boxer.
+4. **Choose your build.** A build is how you box, not who you are: your own name stays on your trunks, over your health bar and on the results. Each card shows the build's power, speed, reach, defense and stamina out of five. Lean left or right to browse, then drop your hands and hold your guard up to lock in. A guard still up from calibration does not count. The mouse works too. With one player the computer takes a different build.
 5. **Touch gloves.** The boxers walk out to the middle. Hold both gloves straight out in front of you until they touch. The computer boxer does it by itself. If nobody does, the bell goes anyway after a few seconds.
 6. **Fight.** Four rounds of 20 seconds. The boxers move their feet by themselves; you only fight with your upper body.
 
@@ -34,9 +34,20 @@ About fifteen clean body shots empty the health bar, and a head shot does two an
 
 At the bell the boxers walk to their corners and sit on their stools. Each gets back about two and a half body shots' worth of health, then they walk out to the middle, touch gloves and go again. A fight ends on a knockout, on the third knockdown, or on points after the final bell.
 
-The boxers move like real boxers, each in their own style. They circle, switching direction now and then, rock in and out of range, step back out after a combination, and circle off the ropes. Rocco is a pressure fighter who walks you down and cuts off the ring. Diego swarms, right in your chest. Kenji is an out boxer who fights from long range and never stands still. Marcus does a bit of everything.
+The boxers move like real boxers, each in their build's style. They circle, switching direction now and then, rock in and out of range, step back out after a combination, and circle off the ropes.
+
+| Build | Good at | Pays for it | In the fight |
+| --- | --- | --- | --- |
+| Slugger | Power 5 | Speed 2, stamina 2 | Hits 30% harder. Hands 18% slower, punches cost 15% more stamina. Walks you down and cuts off the ring. |
+| Out Boxer | Speed 5, reach 5 | Power 2 | Hands 20% quicker. Long arms follow a moving head 35% further, so it takes a bigger slip or duck to get away. Hits 15% softer. Fights from range and never stands still. |
+| Counter Puncher | Defense 5 | Nothing stands out | Gloves cover 20% more. The counter window after a block or a dodge stays open 55% longer, and counters hit 25% harder. Boxes in the middle of the road. |
+| Swarmer | Stamina 5, speed 4 | Reach 2, defense 2 | Punches cost 28% less stamina and it comes back 45% faster. Hands 10% quicker. Shorter reach and a leakier guard. Right in your chest. |
+
+The numbers are in `engine/builds.ts`, and a test checks that every card's bars rank the builds the same way their effects do.
 
 The computer boxer lights up its gloves while it winds up a punch, so you can see it coming. It covers the right spot, ducks and slips, mixes in body shots, counters, and gets quicker and sharper every round.
+
+When the fight is decided, after the knockout replay or a moment on the winner, the results open on the ceremony. The picture cuts to the champion in the middle of the ring holding the championship belt at the chest, who dips and presses it up over their head, holds it high with a pump of the arms now and then and turns to show it round the arena. The loser slumps back on the ropes in their corner. Cannons fire confetti from the corner posts, more keeps raining down, spotlights fade up on the champion, and the camera opens wide and swings in. The champion's name goes up big in gold across the top, with the build and how they won under it, and the scorecards, each boxer's numbers and the buttons sit along the bottom. A draw skips the belt.
 
 If a player steps out of view the fight pauses with a clear message, and it gives everyone a moment to set themselves when they are back. Once the fight is decided players can walk off freely.
 
@@ -49,14 +60,15 @@ With two players the screen splits down the middle during the rounds, player 1 o
 * `engine/` pure fight logic with tests:
   * `match.ts` the seeded match and its referee, with `rounds.ts` (the walk out, touching gloves, the rounds and the rest on the stools) and `count.ts` (knockdowns and the count).
   * `reach.ts` where a punch aims and how squarely it finds the head as it lands, `cover.ts` how much of it the gloves are in the way of, and `resolve.ts` and `landing.ts` what it does: damage, stuns, counter windows. `fatigue.ts` wears a punished boxer down.
+  * `builds.ts` the four builds: their stat bars and what each changes, from damage and hand speed to reach, guard, counters, stamina and footwork.
   * `footwork.ts` and `ring-craft.ts` the boxers' feet, in the styles of `styles.ts`, and `ai.ts` the computer boxer, whose head and gloves come from `stance.ts` and go through the same rules as a player's.
   * `scoring.ts` the ten point must scorecards.
-* `host/` the session on the computer: the camera kit, the flow from choosing players to the results, the fight driver that steps the match and pauses it for a player out of view, the player's defence and punches from the camera (`head-reader.ts` turns the kit's head against its line, in shoulder widths, into the boxer's head with a light ease, and `gloves.ts` scores each glove for covering the face, the side of the head and the body, and spots both arms held out to touch gloves), the mirrored arms, choosing boxers by leaning, the overlay's data, and records against the computer kept in this browser (`localStorage`, guarded for private windows).
+* `host/` the session on the computer: the camera kit, the flow from choosing players to the results, the fight driver that steps the match and pauses it for a player out of view, the player's defence and punches from the camera (`head-reader.ts` turns the kit's head against its line, in shoulder widths, into the boxer's head with a light ease, and `gloves.ts` scores each glove for covering the face, the side of the head and the body, and spots both arms held out to touch gloves), the mirrored arms, choosing builds by leaning, the overlay's data, and records against the computer kept in this browser (`localStorage`, guarded for private windows).
 * `render/` three.js:
-  * `models/` four sculpted boxers (Rocco "The Hammer" Vance, Marcus "Night Train" Cole, Kenji "Lightning" Sato, Diego "El Toro" Reyes) with muscle, faces painted on a canvas that bruise and swell with damage, sweat that builds through the rounds, satin trunks with names on the waistband, laced gloves and boots, and the referee in shirt and bow tie.
+  * `models/` a sculpted body for each build, with its own face, hair and kit colours, and muscle, faces painted on a canvas that bruise and swell with damage, sweat that builds through the rounds, satin trunks with the player's own name across the front of the waistband and the build round the sides, laced gloves and boots, and the referee in shirt and bow tie.
   * `rig/` and `anim/` joints posed every frame with two bone inverse kinematics. The player's own arms, read from the camera, drive their boxer's arms like a mirror, and the trunk and head follow the same head spot the match judges punches on, for players and the computer alike. A detected punch is boosted into a full powered strike at the opponent's face or body. Planted feet that step as the boxers circle, head snaps, a stagger, a knockdown fall, gloves out to touch, sitting on the stool, a victory pose, and a referee who counts with his arm.
   * `arena/` a ring on its platform with branded canvas, apron, four ropes, turnbuckles, steps and stools, a lighting truss with lamps and light shafts, ringside boards, a big screen, and an instanced crowd that jumps with the excitement and pops camera flashes.
-  * `fx/` hit sparks and flashes, sweat spray that lands on the canvas, glove bursts on blocks and confetti for the winner. `cameras/` the over the shoulder view with camera shake, and the broadcast camera. `replay.ts` records the fight so a knockout ends on a slow motion replay of the blow.
+  * `fx/` hit sparks and flashes, sweat spray that lands on the canvas and glove bursts on blocks. `cameras/` the over the shoulder view with camera shake, and the broadcast camera. `replay.ts` records the fight so a knockout ends on a slow motion replay of the blow.
 * `audio/` every sound synthesised through `room.audio` buses, so the player's music and effects volumes rule it:
   * **Music:** two songs, each sixteen bars with an A and a B section, played by a lookahead scheduler through a warm low pass (`music.ts`, with the notes written as text in `score.ts`).
     * "Hand Wraps" plays in the menus and on the results (`lobby-song.ts`, `lounge.ts`). A slow locker room soul tune in A flat major at 76. A string pad swells under every bar and hands each chord to the next, so it never stops. A muted flugelhorn sings the A section and a vibraphone answers in the B section, over a Rhodes, a sub bass and a brushed kit.
@@ -73,6 +85,8 @@ With two players the screen splits down the middle during the rounds, player 1 o
 
 ## Testing
 
+While a fight runs, the host's hidden admin panel (three quick taps on the settings gear) has a button for either boxer to win on the spot, straight to the ceremony. `render/victory/` holds the ceremony: `ceremony.ts` places the boxers, the belt and the spotlights, and `champion-pose.ts` times the lift, with tests. The belt, confetti, spotlights and camera come from the victory kit.
+
 `?camera=fake` (or `tools/testing/fake-camera.js`) runs the whole game without a camera; drive players with `window.__cameraKit`. A pose with both arms `{ punch: 1 }` touches gloves, `crouch` ducks and `lean` or `x` slips. In development `window.__boxing` is the session, `window.__boxingRoundMs` changes the round length and `window.__boxingRenderScale` draws at a lower resolution on software WebGL. Every number that shapes a fight, from the round length to how much a head shot does, is in `engine/rules.ts`.
 
-Play again skips calibration: the baselines stay on the kit. Choose boxers goes back to the picks, and Menu back to choosing players, which turns the camera off until the next fight.
+Play again skips calibration: the baselines stay on the kit. Choose builds goes back to the picks, and Menu back to choosing players, which turns the camera off until the next fight.
