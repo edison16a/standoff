@@ -130,6 +130,33 @@ describe("the phone's aim", () => {
     expect(aim.current.x).toBeCloseTo(0, 2);
   });
 
+  it("takes the sword plan's six targets one by one and keeps the spans once the last is in", () => {
+    vi.useFakeTimers();
+    localStorage.clear();
+    aim = new PhoneAim(fakeRoom().room);
+    expect(aim.capture("top-left")).toBe(false);
+    const reads: [Parameters<PhoneAim["capture"]>[0], number, number][] = [
+      ["center", 0, 0],
+      ["top-left", -16, 9],
+      ["top-right", 16, 9],
+      ["bottom-right", 16, -9],
+      ["bottom-left", -16, -9],
+      ["center", 0, 0],
+    ];
+    reads.forEach(([target, heading, up], i) => {
+      point(heading, up);
+      expect(aim!.pointing).not.toBeNull();
+      expect(aim!.capture(target, i === reads.length - 1)).toBe(true);
+    });
+    expect(localStorage.getItem("standoff:aim-spans")).not.toBeNull();
+    for (let i = 0; i < 60; i++) {
+      vi.advanceTimersByTime(16);
+      point(16, 9);
+    }
+    expect(aim.current.x).toBeCloseTo(TARGET_INSET, 1);
+    expect(aim.current.y).toBeCloseTo(TARGET_INSET, 1);
+  });
+
   it("shows its calibration target again after a reconnect, and lets go of the room when done", () => {
     const { room, sent, emit, listeners } = fakeRoom();
     aim = new PhoneAim(room);
