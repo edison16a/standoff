@@ -43,7 +43,7 @@ export class LabFilm {
         { team: 0, character: "delacroix", seat: null },
         { team: 1, character: "whitlock", seat: null },
         { team: 1, character: "zupan", seat: null },
-        { team: 1, character: "holloway", seat: null },
+        { team: 1, character: "crane", seat: null },
       ],
     });
     const m = this.match;

@@ -72,17 +72,13 @@ describe("dunks", () => {
 
   it("go reverse along the baseline, and hang on the rim for the rim hang", () => {
     const rng = seeded(9);
-    const mensah = createAthlete(0, 0, 0, "mensah", null);
-    Object.assign(mensah, { x: 2.2, z: 1.2 });
+    const zupan = createAthlete(0, 0, 0, "zupan", null);
+    Object.assign(zupan, { x: 2.2, z: 1.2 });
     let reverse = 0;
-    for (let i = 0; i < 100; i++) if (chooseDunk(rng, mensah, true).style === "reverse") reverse++;
+    for (let i = 0; i < 100; i++) if (chooseDunk(rng, zupan, true).style === "reverse") reverse++;
     expect(reverse).toBeGreaterThan(40);
-    const vukmir = createAthlete(0, 0, 0, "vukmir", null);
-    Object.assign(vukmir, { x: 0, z: 3 });
-    for (let i = 0; i < 50; i++) {
-      const plan = chooseDunk(rng, vukmir, true);
-      if (plan.style === "rimhang") expect(plan.rimHang).toBeGreaterThan(0.4);
-    }
+    const plan = chooseDunk(rng, zupan, true, "rimhang");
+    expect(plan.rimHang).toBeGreaterThan(0.4);
   });
 
   it("hold the dunker up on the rim through the hang, then drop and gather", () => {
