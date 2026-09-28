@@ -11,6 +11,8 @@ export interface Shot {
   winners: { x: number; z: number } | null;
   /** Seconds into the opening sweep, or null once it is done. */
   intro: number | null;
+  /** The free throw shooter's spot while the free throws are on, for the view from behind him. */
+  freeThrow: { x: number; z: number } | null;
 }
 
 const BROADCAST = { y: 6.4, z: 17.6, fov: 36 };
@@ -33,11 +35,14 @@ export class TvCamera {
   private readonly pos = new THREE.Vector3(0, BROADCAST.y, BROADCAST.z);
   private readonly look = new THREE.Vector3(0, 1.6, 4.5);
   private close = 0;
+  /** 0 on the broadcast camera, 1 behind the free throw shooter. */
+  private line = 0;
   private closeSide = 1;
   private shakeLeft = 0;
   private shakePower = 0;
   private orbit = 0;
   private aspect = 16 / 9;
+  private lineAt = { x: 0, z: 6 };
   /** A locked framing, for the showcase's hero shots. */
   fixed: { pos: THREE.Vector3; look: THREE.Vector3; fov: number } | null = null;
 
@@ -80,6 +85,14 @@ export class TvCamera {
       wantPos.lerp(scratch.set(this.closeSide * 3.4, 3.4, 7.4), this.close);
       wantLook.lerp(scratch.set(RIM.x + this.closeSide * 0.3, 2.7, RIM.z + 0.6), this.close);
     }
+    this.line += ((shot.freeThrow ? 1 : 0) - this.line) * k(shot.freeThrow ? 2.4 : 1.6);
+    if (shot.freeThrow) this.lineAt = shot.freeThrow;
+    if (this.line > 0.01) {
+      // Low behind the shooter, looking over his shoulder at the rim, the lane lined up either side.
+      const s = this.lineAt;
+      wantPos.lerp(scratch.set(s.x * 0.5 + 0.35, 2.55, s.z + 4.2), this.line);
+      wantLook.lerp(scratch.set(RIM.x, 2.45, RIM.z + 0.9), this.line);
+    }
     if (shot.winners) {
       this.orbit += dt * 0.22;
       const cx = shot.winners.x;
@@ -105,7 +118,7 @@ export class TvCamera {
       this.camera.position.y += Math.cos(time * 57) * a;
     } else this.shakePower = 0;
     this.camera.lookAt(this.look);
-    const fov = lerp(BROADCAST.fov, 44, this.close) + (shot.winners ? 6 : 0);
+    const fov = lerp(lerp(BROADCAST.fov, 44, this.close), 42, this.line) + (shot.winners ? 6 : 0);
     if (Math.abs(this.camera.fov - fov) > 0.01) {
       this.camera.fov += (fov - this.camera.fov) * k(4);
       this.camera.updateProjectionMatrix();
