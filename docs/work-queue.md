@@ -12,39 +12,35 @@ The running list of what is being built, so work can pick up again after a break
 
 ## Running now
 
-| Work | Branch | State |
+| Work | Workflow | State |
 | --- | --- | --- |
-| Batch B (a song and a lobby tune for every game, Magic Kart continuous clip, Basketball and Soccer clips with the new names, Cube Game portals, Brawl clip) | new worktrees from workflow wf_83b710bc-751 | six builds, each then reviewed |
+| Soccer 3v3 (guard, fouls, ref and yellow card, free kicks with a wall, penalties, bigger pitch and goal, shot auto aim, passing, keeper saves, FIFA style replays, SUI celebration, no banners) | wf_c0b12558-24e | two builds in one worktree, then a review |
+| Basketball 3v3 (guard, hand fouls, free throws with a contested rebound, ref, rim physics and ball sounds, slower momentum, layups, dunks, stepbacks, winning basket replay, celebrations) | wf_c0b12558-24e | two builds, then a review |
+| New game: Football 3v3 (engine, 3D, phones, replay, music) | wf_c0b12558-24e | three builds, then a review |
+| Platform: phone join screen with QR scanner, loading spinner, remake lobby, home music at page open, split screen finish text | wf_2d0ebad3-f06 | build, then review |
+| Admin panel (three taps on the gear) and bot difficulty for Kart, Boxing, Brawl and others | wf_2d0ebad3-f06 | build, then review |
+| Hold to calibrate everywhere, pointer stays at the edge, Kart auto calibration | wf_2d0ebad3-f06 | build, then review |
+| Cube Game (calmer look, faster jump, all levels open, music per level, 1v1 split screen race) | wf_80b695fe-bcf | two builds, then a review |
+| Subway Runner (Easy, Medium, Hard starts, no 2 player, name tag top right) | wf_80b695fe-bcf | build, then review |
+| Blade Clash (no voice, a pause and hit moment on every point) | wf_80b695fe-bcf | build, then review |
+| Paintball Battle (the Counter Battle rebrand: paint splatter, thin crosshair, shoot and crouch buttons, closer camera, slower pace) | wf_80b695fe-bcf | build, then review |
 
-The review loop looks hard at every game for 3D model errors, animation glitches and phone controller problems, fixes them, then a second pass reviews again with fresh eyes. It also adds the split screen name map (`src/games/kit/split/SplitMap.tsx`) to Magic Kart, Subway Runner, Cube Game and Boxing.
+Shared pieces already on main for these: `src/games/kit/difficulty` (Easy, Medium, Hard, Training) and `src/platform/admin/admin-actions.ts` (test shortcuts for the admin panel).
 
 ## Queue, in order
 
-### Batch A: done
+### Batch C: running now (see Running now)
 
-1. **Basketball 3v3 and Soccer 3v3 crowd:** remove the crowd cheering entirely; the noise based crowd sounds like wind.
-2. **Basketball arena sounds:** the arena beat (stomp stomp clap: kick drum and hand claps), shot clock beeps in the last seconds and the buzzer, the game horn, organ stabs. Punchy and synthesized, never noisy.
-3. **Bots toggle:** Basketball and Soccer lobbies get an option to turn bots off, so people can play 1v1, 2v2 or 3v3 (or uneven) with no computer players. Team size follows the humans.
-4. **Boxing bug:** during a fight the screen suddenly went dark. Find the cause and fix it.
-5. **Subway Runner bug:** on top of a train the view is blocked by something above. Keep the view clear on roofs.
-6. **Easier camera jumps:** in Subway Runner and Cube Game a small jump, about 30 percent of a full one, should count. Bobbing and nodding must still be ignored.
-7. **Brawl Battle flow:** smoother and flowier, less mechanical. No popups for ults or KOs. It should feel like always attacking (buffered and chained attacks, cancels, quicker recovery). Fighters walk straight through each other.
-8. **Frame rate limiter in Settings:** defaults to the screen's measured maximum and can be lowered (for example 30, 60, 90, 120). Applies to every game.
-9. **Zombie Survival pace:** cut to 15 stages. Stage 1 already has lots of zombies, wave 2 already has a boss, stage 10 is the helicopter that carries the team to the final part, and stage 15 is the final boss stage. Faster paced throughout.
-
-### Batch B: running now (see Running now)
-
-10. **Music:** one unique song for every game that matches its vibe (Magic Kart energetic, Fruit Slicer calm and fruity, Subway Runner retro disco, and so on for all of them including Blade Clash and Counter Battle). Each game's lobby music is chill and flowy. Distinct keys, tempos, instruments and hooks, through the music bus.
-11. **Magic Kart home clip:** more continuous, one or two long flowing shots instead of many cuts.
-12. **Basketball and Soccer home clips:** remake them with the latest gameplay (one dunk, one shot style scenes) and the made up player names. The current clips still show old real name tags.
-13. **Cube Game portals:** normal proportions, not stretched.
+Every Computer player game gets Easy (default), Medium, Hard and Training (bots stand still). Sports games get 6 characters, host picked roles, a winner and stats screen, and replays that skip only when everyone agrees.
 
 ### Last
 
-14. **Final README:** the new names (Fruit Slicer, Subway Runner, Basketball 3v3, Soccer 3v3, Blade Clash), Counter Battle added, the live site standoffgames.vercel.app, a fresh dark mode home photo and one picture per game, a polished pitch and how to play, then push.
+1. **Final README:** every new feature and game, Football 3v3 and Paintball Battle, new screenshots.
+2. **New home screen clips** for every updated game (Soccer, Basketball, Football, Cube, Subway, Blade, Paintball, Kart and others changed in Batch C).
 
 ## Done recently
 
+* Batch B: a song and a lobby tune for every game, the continuous Magic Kart clip, new Basketball and Soccer clips, round Cube Game portals and a fresh Brawl clip.
 * Batch A: Basketball and Soccer arena sounds with no crowd and a bots off option, the Boxing dark screen and Subway roof view fixes, easier camera jumps, the Brawl Battle flow pass, the frame rate limiter, and Zombie Survival at 15 faster stages.
 * Blade Clash replaces Fencing: a two player split screen sword duel with free 3D swords, clashes, five hit health, four fighters.
 * Review loop: two passes over ten games for 3D model, animation and phone controller glitches, plus the split screen name map.
@@ -57,7 +53,7 @@ The review loop looks hard at every game for 3D model errors, animation glitches
 
 ## Known issues
 
-* `counter-battle/engine/battle.test.ts` (same seed plays out the same) can time out in the full suite on a loaded machine; it passes alone. Give it more time or make it lighter.
+* `counter-battle/engine/battle.test.ts` (same seed plays out the same) can time out in the full suite on a loaded machine; it passes alone. The Paintball Battle build is fixing it.
 
 ## Conventions
 
