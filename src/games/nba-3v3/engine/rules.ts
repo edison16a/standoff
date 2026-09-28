@@ -1,4 +1,5 @@
 import { startDead } from "./check-up";
+import { settleShootingFoul } from "./foul-call";
 import { beyondArc, outOfBounds } from "./court";
 import { POCKET } from "./dribble-ball";
 import type { Match } from "./match";
@@ -76,7 +77,9 @@ export function scoreShot(m: Match): void {
   }
   m.emit({ type: "score", team: shot.team, points: shot.points, id: shooter.id, kind: shot.kind, outcome: shot.outcome, assist, streak: shooter.streak, dunk: shot.dunk });
   shooter.action = shooter.action.kind === "none" ? { kind: "celebrate", t: 0, dur: 1.3 } : shooter.action;
-  if (!gameOver(m, shot.team)) startDead(m, shot.team === 0 ? 1 : 0);
+  if (gameOver(m, shot.team)) return;
+  // Fouled on the way up and it still went in: the basket counts and one more from the line.
+  if (!settleShootingFoul(m, shooter.id, true)) startDead(m, shot.team === 0 ? 1 : 0);
 }
 
 /**
@@ -98,6 +101,7 @@ function gameOver(m: Match, team: TeamId): boolean {
     m.phaseT = 0;
     m.winner = team;
     m.freeThrows = null;
+    m.pendingFoul = null;
     m.emit({ type: "win", team });
     return true;
   }
@@ -119,6 +123,7 @@ export function missShot(m: Match): void {
   if (shooter.onFire) m.emit({ type: "fireOut", id: shooter.id });
   shooter.onFire = false;
   m.emit({ type: "miss", id: shooter.id });
+  settleShootingFoul(m, shooter.id, false);
 }
 
 function turnover(m: Match, to: TeamId, reason: "clock" | "out"): void {

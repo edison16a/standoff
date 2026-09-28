@@ -186,7 +186,7 @@ export class NbaHost {
     if (event.type === "shot" && event.grade === "perfect" && m.athletes[event.id]?.seat !== null) this.audio.green();
     const shown = banner(event, m, (id) => this.nameOf(id), this.bannerKey);
     if (shown) this.showBanner(shown);
-    const prompt = ["score", "win", "go", "check", "checkUp", "foul", "freeThrow"] as const;
+    const prompt = ["score", "win", "go", "check", "checkUp", "foul", "andOne", "freeThrow"] as const;
     if ((prompt as readonly string[]).includes(event.type)) this.refresh(performance.now());
   }
 

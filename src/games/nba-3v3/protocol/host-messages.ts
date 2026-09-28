@@ -20,13 +20,19 @@ export const courtSchema = z.object({
   holder: z.string().max(40).nullable(),
   /** The team must take the ball back past the arc before it can score. */
   mustClear: z.boolean(),
-  /** Close enough to the ball on defence that the button swipes. */
+  /** On defence with the ball there to reach for, so the third button is Steal. */
   canSteal: z.boolean(),
+  /** Close enough that a swipe would get there. */
+  stealReach: z.boolean(),
+  /** The other team has the ball: Shoot is Guard and Pass is Block. */
+  defending: z.boolean(),
+  /** Guard held and shadowing (on), held but too far from the man (far), or not held. */
+  guard: z.enum(["off", "on", "far"]),
   /**
-   * Free throws after a foul: whether this player shoots them, which of
-   * the two is next, and whether the shooter is set at the line.
+   * Free throws after a foul: whether this player shoots them, which one
+   * is next of how many, and whether the shooter is set at the line.
    */
-  freeThrow: z.object({ mine: z.boolean(), n: z.union([z.literal(1), z.literal(2)]), ready: z.boolean() }).nullable(),
+  freeThrow: z.object({ mine: z.boolean(), n: z.number().int().min(1).max(3), of: z.number().int().min(1).max(3), ready: z.boolean() }).nullable(),
   /** The shot meter for this player: where the green sits and how wide it is, in milliseconds. */
   meter: z.object({ fullMs: z.number(), greenMs: z.number(), halfMs: z.number() }),
   onFire: z.boolean(),

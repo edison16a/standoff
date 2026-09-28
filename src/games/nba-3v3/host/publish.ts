@@ -1,6 +1,7 @@
 import type { Player } from "@/platform/games/game-api";
 import type { Match } from "../engine/match";
-import { canSteal } from "../engine/defend";
+import { canSteal, stealInReach } from "../engine/defend";
+import { guardStatus } from "../engine/guard";
 import { greenHalfMs, GREEN_MS } from "../engine/shot-model";
 import { RULES, SHOT } from "../engine/tuning";
 import type { CourtState, Phase, PhoneState } from "../protocol";
@@ -35,7 +36,7 @@ export function nameFor(m: Match, id: number, players: readonly Player[]): strin
 /** What the scoreboard says during free throws, or null the rest of the time. */
 export function freeThrowText(m: Match): string | null {
   const ft = m.phase === "freeThrow" ? m.freeThrows : null;
-  return ft ? `Free throw ${ft.shot} of 2` : null;
+  return ft ? `Free throw ${ft.shot} of ${ft.shots}` : null;
 }
 
 /** What one phone's controller shows for its player. */
@@ -53,7 +54,10 @@ export function courtState(m: Match, id: number, players: readonly Player[]): Co
     holder: holder ? nameFor(m, holder.id, players) : null,
     mustClear: m.needsClear && m.offence === a.team,
     canSteal: canSteal(m, a),
-    freeThrow: ft ? { mine, n: ft.shot, ready: mine && ft.stage === "set" } : null,
+    stealReach: stealInReach(m, a),
+    defending: m.phase === "live" && m.defending(a),
+    guard: guardStatus(m, a),
+    freeThrow: ft ? { mine, n: ft.shot, of: ft.shots, ready: mine && ft.stage === "set" } : null,
     // At the line the green band is wider: a set shot with nobody in the face.
     meter: { fullMs: SHOT.meterMs, greenMs: GREEN_MS, halfMs: greenHalfMs(CHARACTERS[a.character].stats.shooting, a.onFire, mine) },
     onFire: a.onFire,

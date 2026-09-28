@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CHARACTER_IDS } from "../roster";
 import type { MatchEvent } from "./events";
-import { callFoul } from "./free-throw";
+import { callFoul } from "./foul-call";
 import { LINE } from "./free-throw-plan";
 import { Match, type Entry } from "./match";
 import { GREEN_MS } from "./shot-model";

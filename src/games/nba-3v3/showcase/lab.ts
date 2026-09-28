@@ -1,6 +1,6 @@
 import { RIM_SPOT } from "../engine/court";
 import type { MatchEvent } from "../engine/events";
-import { callFoul } from "../engine/free-throw";
+import { callFoul } from "../engine/foul-call";
 import { Match } from "../engine/match";
 import { basketDir, rightOf } from "../engine/move-pick";
 import { GREEN_MS } from "../engine/shot-model";

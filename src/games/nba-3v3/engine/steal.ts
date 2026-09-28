@@ -1,6 +1,6 @@
 import { charOf } from "./athlete";
-import { foulChance } from "./fouls";
-import { callFoul } from "./free-throw";
+import { callFoul } from "./foul-call";
+import { handChance, inFront } from "./fouls";
 import type { Match } from "./match";
 import { DEFENCE } from "./tuning";
 import type { Athlete } from "./types";
@@ -24,7 +24,8 @@ export function inStealRange(a: Athlete, holder: Athlete, slack = 0): boolean {
 /** Starts a swipe and counts it against this defender's tally on the ball handler. */
 export function startSteal(m: Match, a: Athlete, holder: Athlete): void {
   if (a.stealCd > 0) return;
-  const attempt = m.stealLog.attempt(a.id, holder.id);
+  // Only a reach that can get there counts toward the foul tally; one at air just whiffs.
+  const attempt = inStealRange(a, holder) ? m.stealLog.attempt(a.id, holder.id) : 0;
   a.action = { kind: "steal", t: 0, resolved: false, victim: holder.id, attempt };
   a.stealCd = DEFENCE.stealCooldown;
   a.yaw = yawOf(holder.x - a.x, holder.z - a.z);
@@ -33,8 +34,9 @@ export function startSteal(m: Match, a: Athlete, holder: Athlete): void {
 /**
  * The swipe lands a tenth of a second in. Quick hands help, a strong
  * dribbler protects the ball, and reaching in on the ball side is far
- * better than across the body or from behind. Reach in too often and
- * the whistle goes instead. A miss leaves the defender off balance.
+ * better than across the body or from behind. From anywhere but square
+ * in front the swipe may catch the hand, and that is a foul (see
+ * `fouls.ts`). A miss leaves the defender off balance.
  */
 export function updateSteal(m: Match, a: Athlete, dt: number): void {
   const act = a.action;
@@ -58,7 +60,7 @@ export function ballSide(a: V2, holder: Athlete): number {
 function resolveSteal(m: Match, a: Athlete, attempt: number): void {
   const holder = m.holder;
   if (!holder || holder.team === a.team || !stealable(holder) || !inStealRange(a, holder, 0.15)) return whiff(m, a);
-  if (m.phase === "live" && m.rng() < foulChance(attempt)) return callFoul(m, a, holder);
+  if (m.phase === "live" && !inFront(a, holder) && m.rng() < handChance(attempt)) return callFoul(m, a, holder);
   const ds = charOf(a).stats;
   const hs = charOf(holder).stats;
   const toMe = dir2(holder, a);

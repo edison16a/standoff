@@ -120,8 +120,10 @@ export const CHECK = {
 
 /** The whistle for a foul and the free throws that follow, in seconds. */
 export const FREE_THROW = {
-  /** Everyone stops for the whistle before walking to the lane. */
-  whistle: 0.9,
+  /** Everyone stops for the whistle while the referee makes the call, before walking to the lane. */
+  whistle: 2.3,
+  /** The least time held for the call when the referee came on earlier, at the contact on a shot. */
+  minWhistle: 0.7,
   /** Past this, everyone is put on their spot. */
   maxWalk: 3.5,
   /** A computer steps to the line and shoots after this long; a phone gets its shot taken after the longer wait. */
@@ -156,6 +158,25 @@ export const DEFENCE = {
   blockCooldown: 0.9,
   /** A player who just lost the ball cannot grab it again straight away. */
   grabCooldown: 0.45,
+} as const;
+
+/** Holding Guard on defence: the auto shadow of a player's man. */
+export const GUARD = {
+  /** Beyond this from the man, Guard does nothing until the defender runs back in. */
+  range: 5,
+  /** Share of top speed the shadow runs at, a little under a player running it themselves. */
+  pace: 0.8,
+  /** Metres off the ball handler, toward the rim, and off a man without the ball. */
+  gap: 1.0,
+  offGap: 1.6,
+  /** Off the ball the spot sags this share of the way toward the ball. */
+  sag: 0.25,
+  /** How fast the shadow follows, per second: on a still man, a dribbling one, and through a move. */
+  track: 7,
+  dribbleTrack: 2.6,
+  moveTrack: 0.7,
+  /** A stick pushed past this takes over from Guard. */
+  manual: 0.3,
 } as const;
 
 export const PASS = {

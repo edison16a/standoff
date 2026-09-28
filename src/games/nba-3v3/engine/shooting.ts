@@ -4,13 +4,18 @@ import { isThree, rimDistance } from "./court";
 import { arcTimed, flight } from "./flight";
 import type { Match } from "./match";
 import { between } from "./rng";
+import { callShootingFoul } from "./foul-call";
 import { planBlock, planShot } from "./shot-flight";
+import { rollShootingFoul } from "./shooting-foul";
 import { gradeRelease, isMake, makeChance, pickOutcome, type Grade, type ShotKind } from "./shot-model";
 import { NET, RIM, SHOT } from "./tuning";
 import type { Athlete } from "./types";
 import { clamp, type V3 } from "./vec";
 
 /** A jump shot's timing, in seconds from the press: up at takeoff, down after the air time. */
+/** A shot fouled in the act goes in this share as often as it would have. */
+const FOULED_MAKE = 0.4;
+
 export const JUMPER = { takeoff: (SHOT.takeoff * SHOT.meterMs) / 1000, air: 0.62, peak: 0.42 } as const;
 
 /** Where the ball leaves the hand on a jumper: above the forehead, a little in front. */
@@ -62,7 +67,10 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   const base = { shooter: a.id, team: a.team, points: free ? 1 : three ? 3 : 2, kind, dunk: null, grade, counted: false, touchedRim: false, assist: free ? null : assist } as const;
   const forced = m.forced;
   m.forced = null;
-  if (!forced && c.blocker && m.rng() < c.blockChance) {
+  // Contact on the shot is a foul, and a fouled shot is never a block: it flies on and may still drop.
+  const fouler = forced || free ? null : rollShootingFoul(m, a, kind);
+  if (fouler) callShootingFoul(m, fouler, a, three ? 3 : 2);
+  if (!forced && !fouler && c.blocker && m.rng() < c.blockChance) {
     b.flight = planBlock(m.rng, hand, c.blocker);
     b.flightKind = "block";
     b.shot = { ...base, outcome: "airball", made: false };
@@ -73,7 +81,8 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   }
   const s = charOf(a).stats;
   const ctx = { kind, grade, distance, shooting: s.shooting, contest: c.contest, strengthEdge: c.edge, onFire: a.onFire };
-  const chance = makeChance(ctx);
+  // Contact knocks the shot off line, so a fouled shot drops far less often.
+  const chance = makeChance(ctx) * (fouler ? FOULED_MAKE : 1);
   const made = forced ? isMake(forced) : m.rng() < chance;
   const side = Math.atan2(a.x - RIM.x, a.z - RIM.z);
   const outcome = forced ?? pickOutcome(m.rng, made, ctx, side);
@@ -101,7 +110,9 @@ export function slam(m: Match, a: Athlete): void {
   const base = { shooter: a.id, team: a.team, points: 2, kind: "dunk", dunk: style, grade: "perfect", counted: false, touchedRim: true, assist: m.lastPass?.to === a.id ? m.lastPass.from : null } as const;
   const forced = m.forced;
   m.forced = null;
-  if (!forced && c.blocker && m.rng() < c.blockChance) {
+  const fouler = forced ? null : rollShootingFoul(m, a, "dunk");
+  if (fouler) callShootingFoul(m, fouler, a, 2);
+  if (!forced && !fouler && c.blocker && m.rng() < c.blockChance) {
     b.flight = planBlock(m.rng, top, c.blocker);
     b.flightKind = "block";
     b.shot = { ...base, outcome: "airball", made: false };
@@ -110,7 +121,7 @@ export function slam(m: Match, a: Athlete): void {
     m.emit({ type: "block", id: c.blocker.id, victim: a.id });
     return;
   }
-  const made = forced ? isMake(forced) : m.rng() < makeChance({ kind: "dunk", grade: "perfect", distance: 0.5, shooting: 5, contest: c.contest, strengthEdge: c.edge, onFire: a.onFire });
+  const made = forced ? isMake(forced) : m.rng() < makeChance({ kind: "dunk", grade: "perfect", distance: 0.5, shooting: 5, contest: c.contest, strengthEdge: c.edge, onFire: a.onFire }) * (fouler ? FOULED_MAKE + 0.15 : 1);
   if (!made) {
     b.flight = planShot(m.rng, { from: top, outcome: "rimOut", apex: top.y + 0.05 });
     b.flightKind = "shot";
