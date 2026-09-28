@@ -60,7 +60,9 @@ export function blockBall(state: MatchState): void {
     ball.lastTouch = { team: a.team, id: a.id };
     ball.passTo = null;
     a.noTouch = 0.35;
-    if (state.flight) state.flight.resolved = true;
+    const shot = state.flight;
+    if (shot && !shot.resolved && shot.team !== a.team) a.stats.blocks++;
+    if (shot) shot.resolved = true;
     state.events.push({ type: "block", athlete: a.id, speed: -into, at: { ...ball.pos } });
     return;
   }

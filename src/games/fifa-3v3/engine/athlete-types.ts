@@ -68,6 +68,8 @@ export interface AthleteStats {
   tackles: number;
   passes: number;
   fouls: number;
+  /** Shots charged down with the body. */
+  blocks: number;
 }
 
 /** Holding Guard on defence: the player shadows the opponent they mark. */

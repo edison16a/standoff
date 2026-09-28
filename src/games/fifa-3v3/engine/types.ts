@@ -54,6 +54,8 @@ export interface Flight {
   keeperX: number;
   power: number;
   resolved: boolean;
+  /** The defender the shot was struck into, who blocks it, or null. */
+  blocker?: number | null;
 }
 
 export type Owner = { kind: "athlete"; id: number } | { kind: "keeper"; team: TeamId };
