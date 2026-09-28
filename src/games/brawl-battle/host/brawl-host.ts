@@ -1,8 +1,10 @@
 import { HostPad } from "@/games/kit/pad/host-pad";
+import { registerAdminActions } from "@/platform/admin/admin-actions";
 import type { HostRoomApi, HostRoomEvent } from "@/platform/games/game-api";
 import { SoundDirector } from "../audio/sound-director";
 import type { Difficulty } from "../engine/bots/brain";
 import { Rng } from "../engine/rng";
+import { fillPlayerUlts, skipToResults } from "../engine/shortcuts";
 import { pickStage } from "../engine/stages";
 import type { MatchState } from "../engine/types";
 import { phoneMessageSchema, type PhoneMessage, type RoomPhase } from "../protocol";
@@ -37,6 +39,8 @@ export class BrawlHost {
   private lastFrame = 0;
   private turn = 0;
   private lastPhase: RoomPhase = "lobby";
+  /** Removes the admin panel's shortcuts for the match running now. */
+  private unadmin: (() => void) | null = null;
   /** Browser tests on slow machines run the match faster than real time. Always 1 in play. */
   turbo = 1;
 
@@ -53,6 +57,7 @@ export class BrawlHost {
   }
 
   dispose(): void {
+    this.unadmin?.();
     this.unsubscribe();
     this.unpress();
     this.pad.dispose();
@@ -96,6 +101,12 @@ export class BrawlHost {
     this.driver = new MatchDriver(this.lobby.entrants(), { seed, stage, difficulty: this.lobby.difficulty });
     for (const player of this.room.players()) if (!player.connected) this.driver.setOnline(player.seat, false);
     this.hits = this.driver.state.fighters.map(() => 0);
+    const state = this.driver.state;
+    this.unadmin?.();
+    this.unadmin = registerAdminActions("brawl-battle", [
+      { id: "skip-to-results", label: "Skip to results", run: () => skipToResults(state) },
+      { id: "fill-ults", label: "Fill players' ults", run: () => fillPlayerUlts(state) },
+    ]);
     this.room.setPlaying(true);
     this.phones.forget();
     this.refresh(performance.now());
@@ -103,6 +114,8 @@ export class BrawlHost {
 
   /** From the results: back to the lobby, keeping everyone's choices. */
   backToLobby(): void {
+    this.unadmin?.();
+    this.unadmin = null;
     this.driver = null;
     this.room.setPlaying(false);
     this.refresh(performance.now());
