@@ -112,8 +112,8 @@ export class GameRenderer {
         if (event.type === "portal" || event.type === "finish") camera?.punch();
       }
       if (player.state) this.effects.trail(i, player.state, SKINS[i]!, dt);
-      this.avatars[i]?.update(player.state, dt);
-      this.ghosts[i]?.update(players.length > 1 ? player.state : null, dt);
+      this.avatars[i]?.update(player.state, dt, player.restarted);
+      this.ghosts[i]?.update(players.length > 1 ? player.state : null, dt, player.restarted);
       this.signs.setAttempt(i, player.attempt);
       this.signs.setCheckpoints(i, player.checkpoints ?? []);
     });

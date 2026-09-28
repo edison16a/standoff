@@ -8,7 +8,7 @@ import { LEVELS, levelById } from "../levels";
 import type { DrawInput } from "../render/game-renderer";
 import { beatPulse } from "../render/pulse";
 import { Controls } from "./controls";
-import { JUMP_TUNING } from "./jump-tuning";
+import { JUMP_SMOOTHING, JUMP_TUNING } from "./jump-tuning";
 import { loadProgress } from "./progress";
 import { Round } from "./round";
 import { SongClock } from "./song-clock";
@@ -85,7 +85,7 @@ export class CubeSession {
     const { players } = store.getState();
     if (!this.kit || this.kit.players !== players) {
       this.kit?.dispose();
-      this.kit = new CameraKit({ players, moves: JUMP_TUNING });
+      this.kit = new CameraKit({ players, moves: JUMP_TUNING, smoothing: JUMP_SMOOTHING });
     }
     this.sound.music.play("menu");
     store.setState({ phase: "camera" });

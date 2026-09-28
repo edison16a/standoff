@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { PlayerState } from "../engine/player";
 import type { Mode } from "../engine/types";
 import { ballSkin, cubeFace, glowSprite } from "./textures";
+import { CatchUp } from "./catch-up";
 
 /** The dark outline every form wears, as the original's icons do, so it reads against any sky. */
 const OUTLINE = 0x0a0418;
@@ -45,6 +46,7 @@ export class Avatar {
   private squash = 0;
   private mode: Mode | null = null;
   private readonly z: number;
+  private readonly height = new CatchUp();
 
   constructor(skin: Skin, ghost = false) {
     this.z = ghost ? GHOST_Z : 0;
@@ -122,14 +124,16 @@ export class Avatar {
     this.squash = 1;
   }
 
-  update(state: PlayerState | null, dt: number): void {
+  /** `restarted` puts the avatar straight at its spot, with no easing from where it was. */
+  update(state: PlayerState | null, dt: number, restarted = false): void {
+    if (restarted) this.height.reset();
     this.group.visible = !!state && !state.dead;
     if (!state || state.dead) return;
     if (state.mode !== this.mode) {
       this.mode = state.mode;
       for (const [mode, form] of Object.entries(this.forms)) form.visible = mode === state.mode;
     }
-    this.group.position.set(state.x, state.y, this.z);
+    this.group.position.set(state.x, this.height.apply(state.y, dt), this.z);
     const form = this.forms[state.mode];
     form.rotation.z = state.angle;
     this.squash = Math.max(0, this.squash - dt * 6);
