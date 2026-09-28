@@ -130,8 +130,10 @@ export class PhoneAim {
     return this.samples.length > 0 && this.capture(which, which === "bottom-right");
   }
 
-  /** Skips the corners, reusing the spans this phone measured last time if there are any. */
+  /** Skips the targets left, reusing the spans this phone measured last time if no corner was taken yet. */
   useQuick(): void {
+    // Corners already taken are better than any saved guess, so the fit so far stands.
+    if (this.samples.some((s) => s.target.x !== 0)) return;
     const center = fitCalibration(this.samples.filter((s) => s.target.x === 0 && s.target.y === 0))?.center;
     if (!center) return;
     const saved = loadSpans();
