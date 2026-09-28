@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { HostRoom } from "./host/host-room";
 import { useHostStore } from "./host/host-store";
-import { PhoneRoom } from "./phone/phone-room";
+import type { PhoneRoom } from "./phone/phone-room";
 import type { Backend } from "./relay/backend";
 import { MemoryBus } from "./relay/memory/memory-bus";
 import { MemoryStore } from "./relay/memory/memory-store";
@@ -65,11 +65,25 @@ async function hostGame(host: HostRoom) {
   return useHostStore.getState().room!.code;
 }
 
+/**
+ * A page of its own, as each phone has: fresh modules, so no seat token
+ * kept in the page, and session storage holding only what `saved` says.
+ */
+async function openPage(saved: Record<string, string> = {}): Promise<typeof PhoneRoom> {
+  sessionStorage.clear();
+  for (const [key, value] of Object.entries(saved)) sessionStorage.setItem(key, value);
+  vi.resetModules();
+  return (await import("./phone/phone-room")).PhoneRoom;
+}
+
 async function phoneJoins(code: string, name: string | null) {
-  const phone = new PhoneRoom(code);
+  const Page = await openPage();
+  const phone = new Page(code);
   await phone.join(name);
   await settle();
-  return phone;
+  // What this tab would keep across a reload.
+  const saved = { [`standoff:seat:${code}`]: sessionStorage.getItem(`standoff:seat:${code}`) ?? "" };
+  return Object.assign(phone, { saved });
 }
 
 describe("a whole room, host and phones over the real relay", () => {
@@ -116,7 +130,8 @@ describe("a whole room, host and phones over the real relay", () => {
     ann.dispose();
     await settle();
     expect(useHostStore.getState().players[0]?.connected).toBe(false);
-    const reloaded = new PhoneRoom(code, "Ann");
+    const Reloaded = await openPage(ann.saved);
+    const reloaded = new Reloaded(code, "Ann");
     reloaded.resume();
     await settle();
     expect(reloaded.store.getState()).toMatchObject({ stage: "playing", seat: 1, name: "Ann" });
@@ -130,12 +145,7 @@ describe("a whole room, host and phones over the real relay", () => {
     ann.dispose();
     await settle();
     // A new tab on another phone: no seat token in storage or in the page.
-    sessionStorage.clear();
-    vi.resetModules();
-    const { PhoneRoom: NewTab } = await import("./phone/phone-room");
-    const tab = new NewTab(code);
-    await tab.join("ann");
-    await settle();
+    const tab = await phoneJoins(code, "ann");
     expect(tab.store.getState().clash).toEqual({ reason: "name-away", name: "ann" });
     await tab.join("ann", true);
     await settle();
