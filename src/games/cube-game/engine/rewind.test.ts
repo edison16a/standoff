@@ -44,10 +44,15 @@ describe("a late press", () => {
     expect(run.finished).toBe(true);
   });
 
-  it("lands now when it is too far back to replay", () => {
-    const now = play(4.3, 0, 4.5).run.player;
-    const stale = play(4, 4.3, 4.5).run.player;
-    expect(stale.y).toBeCloseTo(now.y, 1);
+  it("reaches back no further than the history keeps", () => {
+    const stale = new Run(level());
+    stale.advanceTo(3.8);
+    stale.press(3.5);
+    stale.advanceTo(3.9);
+    const furthest = new Run(level());
+    furthest.press(3.8 - MAX_REWIND);
+    furthest.advanceTo(3.9);
+    expect(stale.player.y).toBeCloseTo(furthest.player.y, 3);
   });
 
   it("sends each jump once, and nothing already heard again", () => {

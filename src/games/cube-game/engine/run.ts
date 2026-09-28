@@ -1,6 +1,6 @@
 import { copyState, startState, type PlayerEvent, type PlayerState } from "./player";
 import { step } from "./physics";
-import { History } from "./rewind";
+import { History, MAX_REWIND } from "./rewind";
 import { STEP } from "./tuning";
 import type { Level } from "./types";
 import { World } from "./world";
@@ -75,7 +75,8 @@ export class Run {
    */
   press(at = this.time): void {
     if (this.player.dead || this.player.finished) return;
-    if (at < this.time - 1e-9 && this.replay(at)) return;
+    // Further back than the history reaches, it counts from as far back as it can.
+    if (at < this.time - 1e-9 && this.replay(Math.max(at, this.time - MAX_REWIND))) return;
     this.pending.push(Math.max(at, this.time));
     this.pending.sort((a, b) => a - b);
   }
