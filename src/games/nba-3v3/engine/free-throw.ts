@@ -112,7 +112,7 @@ function ready(m: Match, ft: FreeThrows): void {
 function botShoot(m: Match, ft: FreeThrows, shooter: Athlete): void {
   const st = charOf(shooter).stats;
   startJumper(m, shooter, true);
-  ft.botRelease = GREEN_MS + gaussian(m.rng, releaseSpread(st.shooting) * 0.8);
+  ft.botRelease = GREEN_MS + gaussian(m.rng, releaseSpread(st.shooting) * 0.8 * m.bots.spread);
   stage(ft, "shooting");
 }
 

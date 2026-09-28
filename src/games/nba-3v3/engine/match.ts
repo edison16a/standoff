@@ -1,8 +1,10 @@
+import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { CharacterId, DunkStyle } from "../roster";
 import { pressDefend, pressPass, pressShoot, releaseShot, updateAction } from "./actions";
 import { createAthlete, moveAthlete, separate } from "./athlete";
 import { updateBall } from "./ball";
 import { Brains } from "./bot/brains";
+import { botTuning, type BotTuning } from "./bot/skill";
 import { updateDribbleHand } from "./dribble";
 import type { MatchEvent } from "./events";
 import { StealLog } from "./fouls";
@@ -22,6 +24,8 @@ export interface Entry {
   character: CharacterId;
   /** The phone playing this athlete, or null for a computer player. */
   seat: number | null;
+  /** The role the host gave them: 0 Guard, 1 Wing, 2 Big. In entry order when left out. */
+  slot?: number;
 }
 
 export interface MatchOptions {
@@ -31,6 +35,8 @@ export interface MatchOptions {
   firstOffence?: TeamId;
   /** Points to win. */
   target?: number;
+  /** How good the computer players are. Easy unless the lobby says otherwise. */
+  botLevel?: BotLevel;
 }
 
 /**
@@ -44,6 +50,8 @@ export class Match {
   readonly ball: Ball;
   readonly rng: Rng;
   readonly target: number;
+  /** The Computer difficulty, as the knobs the bots read. */
+  readonly bots: BotTuning;
   phase: Phase = "countdown";
   phaseT = 0;
   time = 0;
@@ -78,8 +86,9 @@ export class Match {
   constructor(options: MatchOptions) {
     this.rng = seeded(options.seed ?? Math.floor(Math.random() * 2 ** 31));
     this.target = options.target ?? RULES.target;
+    this.bots = botTuning(options.botLevel ?? "easy");
     const slots: [number, number] = [0, 0];
-    this.athletes = options.entries.map((entry, id) => createAthlete(id, entry.team, slots[entry.team]++, entry.character, entry.seat));
+    this.athletes = options.entries.map((entry, id) => createAthlete(id, entry.team, entry.slot ?? slots[entry.team]++, entry.character, entry.seat));
     this.offence = options.firstOffence ?? (this.rng() < 0.5 ? 0 : 1);
     this.nextOffence = this.offence;
     this.ball = {

@@ -1,3 +1,4 @@
+import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { Stick } from "@/games/kit/pad/stick-math";
 import type { MatchEvent } from "../engine/events";
 import { Match, type Entry } from "../engine/match";
@@ -24,8 +25,8 @@ export class MatchDriver {
   /** The camera's forward direction on the floor, so up on the stick is up the screen. */
   private forward: V2 = { x: 0, z: -1 };
 
-  constructor(entries: readonly Entry[], seed?: number) {
-    this.match = new Match({ entries, seed });
+  constructor(entries: readonly Entry[], seed?: number, botLevel?: BotLevel) {
+    this.match = new Match({ entries, seed, botLevel });
     entries.forEach((entry, id) => {
       if (entry.seat !== null) this.athleteBySeat.set(entry.seat, id);
     });
