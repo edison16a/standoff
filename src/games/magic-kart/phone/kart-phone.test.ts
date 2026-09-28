@@ -130,6 +130,14 @@ describe("the kart phone", () => {
     expect(useControllerStore.getState()).toMatchObject({ steerMode: "buttons", calibrated: true });
   });
 
+  it("gets the wheel back after a reload that gained motion access", () => {
+    phone = new KartPhone(fakeRoom("unavailable").room);
+    phone.goTo("kart");
+    phone.dispose();
+    phone = new KartPhone(fakeRoom("granted").room);
+    expect(useControllerStore.getState()).toMatchObject({ step: "kart", steerMode: "tilt", calibrated: false });
+  });
+
   it("starts fresh in a different room", () => {
     phone = new KartPhone(fakeRoom("granted").room);
     phone.goTo("kart");

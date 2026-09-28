@@ -155,14 +155,17 @@ export class KartPhone {
   }
 
   /**
-   * Starts from what this phone had before a reload, or from scratch. A
-   * phone that lost its motion access on the way steers with buttons.
+   * Starts from what this phone had before a reload, or from scratch. The
+   * wheel's calibration only carries over from a phone that steered by
+   * tilting, so a page that had no sensors last time gets the wheel back
+   * once it has them. The constructor then falls back to buttons if not.
    */
   private resume(): void {
     const memory = loadMemory(this.room.code, this.room.seat);
-    this.zero = memory?.zero ?? 0;
+    const tilted = memory?.steerMode === "tilt";
+    this.zero = tilted ? memory.zero : 0;
     this.resumePick = memory?.wanted ?? null;
-    const kept = memory ? { step: memory.step, steerMode: memory.steerMode, calibrated: memory.calibrated, wanted: memory.wanted } : {};
+    const kept = memory ? { step: memory.step, wanted: memory.wanted, calibrated: tilted && memory.calibrated } : {};
     store.setState({ ...store.getInitialState(), ...kept });
   }
 
