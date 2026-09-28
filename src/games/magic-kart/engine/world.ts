@@ -2,7 +2,7 @@ import type { CharacterId } from "../characters";
 import type { TrackDef } from "../tracks/types";
 import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import { createBrain, think, type BotBrain } from "./bot";
-import { KART_BOT_SKILL, skillFor } from "./bot-skill";
+import { computerBias, skillFor } from "./bot-skill";
 import type { RaceEvent } from "./events";
 import { fireItem, strike, tickTimers } from "./item-use";
 import { createKart, NO_INPUT, type Kart, type KartInput } from "./kart";
@@ -184,9 +184,7 @@ export class RaceWorld {
     const best = Math.max(...humans.map((k) => k.race.progress));
     for (const kart of this.karts) {
       if (kart.seat !== null) continue;
-      const gap = best - kart.race.progress;
-      const { pace, catchUp } = KART_BOT_SKILL[this.botLevel];
-      kart.speedBias = (0.96 + (kart.id % 3) * 0.015) * pace * (1 + Math.max(-0.1, Math.min(catchUp, gap / 300)));
+      kart.speedBias = computerBias(kart.id, best - kart.race.progress, this.skill(kart));
     }
   }
 

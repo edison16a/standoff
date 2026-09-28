@@ -39,3 +39,12 @@ export function skillFor(kart: Kart, level: BotLevel, raceOver: boolean): KartBo
   if (level !== "training" && (kart.race.finished || raceOver)) return FULL_SKILL;
   return KART_BOT_SKILL[level];
 }
+
+/**
+ * A computer kart's share of top speed. Each kart differs a little, it
+ * eases off when far ahead of the best player and pushes when far behind,
+ * up to its skill's catch up. The gap is in metres of race progress.
+ */
+export function computerBias(kartId: number, gap: number, skill: KartBotSkill): number {
+  return (0.96 + (kartId % 3) * 0.015) * skill.pace * (1 + Math.max(-0.1, Math.min(skill.catchUp, gap / 300)));
+}

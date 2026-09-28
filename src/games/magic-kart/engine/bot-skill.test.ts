@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import { TRACKS } from "../tracks";
-import { KART_BOT_SKILL } from "./bot-skill";
+import { computerBias, KART_BOT_SKILL, skillFor } from "./bot-skill";
 import { seeded } from "./random";
 import { STEP } from "./tuning";
 import { RaceWorld, type Entrant } from "./world";
@@ -59,5 +59,24 @@ describe("computer kart difficulty", () => {
     world.setAutopilot(3, true);
     for (let i = 0; i < 60 * 12; i++) world.step(STEP);
     expect(world.karts[3]!.race.progress).toBeGreaterThan(40);
+  });
+});
+
+describe("computer kart pace", () => {
+  it("matches the old full strength bias on hard", () => {
+    const hard = KART_BOT_SKILL.hard;
+    expect(computerBias(1, 0, hard)).toBeCloseTo(0.975);
+    expect(computerBias(0, 1000, hard)).toBeCloseTo(0.96 * 1.12);
+    expect(computerBias(0, -1000, hard)).toBeCloseTo(0.96 * 0.9);
+  });
+
+  it("holds easy back and gives a finished kart its full pace", () => {
+    expect(computerBias(0, 1000, KART_BOT_SKILL.easy)).toBeLessThan(computerBias(0, 1000, KART_BOT_SKILL.hard) * 0.9);
+    const world = new RaceWorld(TRACKS[0]!, GRID, seeded(5), "easy");
+    const kart = world.karts[0]!;
+    expect(skillFor(kart, "easy", false)).toBe(KART_BOT_SKILL.easy);
+    kart.race.finished = true;
+    expect(skillFor(kart, "easy", false)).toBe(KART_BOT_SKILL.hard);
+    expect(skillFor(world.karts[3]!, "easy", false)).toBe(KART_BOT_SKILL.hard);
   });
 });
