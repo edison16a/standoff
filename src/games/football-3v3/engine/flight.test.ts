@@ -33,7 +33,7 @@ describe("ball flight", () => {
   it("tips the spiral's nose over to follow the arc", () => {
     const f = fly({ x: 18, y: 12, z: 0 });
     expect(f.axis.y).toBeGreaterThan(0.4);
-    for (let i = 0; i < 180; i++) stepFlight(f, 1 / 120);
+    for (let i = 0; i < 264; i++) stepFlight(f, 1 / 120);
     // Past the top of the arc the nose points down, near the path.
     expect(f.vel.y).toBeLessThan(0);
     expect(f.nose.y).toBeLessThan(0);

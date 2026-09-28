@@ -38,7 +38,7 @@ export const MOVE = {
   perSpeed: 0.2,
   /** The QB is slower than a runner. */
   qbSpeed: 0.86,
-  withBall: 0.97,
+  withBall: 0.93,
   /** Push at a standstill for a 95 kg player, fading to nothing at top speed. */
   push: 7.2,
   refMass: 95,
@@ -69,7 +69,9 @@ export const TACKLE = {
   range: 2.7,
   lungeSpeed: 8.5,
   lungeTime: 0.5,
-  contact: 1.05,
+  contact: 1.2,
+  /** How fast a lunge turns after a runner in its first moments, radians a second. */
+  homing: 3.5,
   /** On the ground after a missed tackle the runner dodged, and after a plain whiff. */
   missedDown: 1.8,
   whiffDown: 1.1,
@@ -134,7 +136,7 @@ export const BALL = {
   dragSide: 0.011,
   gravity: 9.81,
   /** How quickly a spiral's nose turns to follow its path. */
-  noseFollow: 1.6,
+  noseFollow: 3,
   restitution: 0.45,
   groundFriction: 0.55,
 } as const;

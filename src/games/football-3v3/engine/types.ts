@@ -27,7 +27,7 @@ export type Action =
   | { kind: "juke"; t: number; dur: number; juke: JukeKind; side: 1 | -1; dir: V2; speed: number; dodge: [number, number] }
   | { kind: "dive"; t: number; dur: number; dir: V2 }
   | { kind: "lunge"; t: number; dur: number; dir: V2; target: number }
-  | { kind: "throw"; t: number; dur: number; released: boolean }
+  | { kind: "throw"; t: number; dur: number; released: boolean; to: number }
   | { kind: "kick"; t: number; dur: number; released: boolean }
   /** On the ground, then getting up for the last TACKLE.getUp seconds. */
   | { kind: "down"; t: number; dur: number; cause: "tackled" | "missed" | "whiff" | "dive" | "tackler" }
@@ -65,8 +65,10 @@ export interface BotMemory {
   stop: boolean;
   /** The last move it chose, held until it thinks again. */
   goal: V2;
-  /** The offensive player it covers, or null to rush or roam. */
+  /** The offensive player it covers, or null to rush or play deep. */
   cover: number | null;
+  /** With nobody to cover: rush the QB this play, or sit deep as a safety. */
+  rush: boolean;
   /** When the QB bot will throw, in seconds after the snap. */
   readAt: number;
 }

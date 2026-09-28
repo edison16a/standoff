@@ -19,6 +19,8 @@ export interface PassInfo {
   release: V3;
   /** Match time of the release. */
   at: number;
+  /** Computer defenders who already had their one swipe at it. */
+  swiped: number[];
 }
 
 /**

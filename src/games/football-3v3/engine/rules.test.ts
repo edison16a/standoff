@@ -97,7 +97,7 @@ describe("the clock", () => {
     const m = peopleMatch({ quarterSeconds: 2 });
     for (let q = 0; q < 8 && m.phase !== "over"; q++) {
       snap(m);
-      m.setMove(bySeat(m, 0).id, { x: 0, z: 1 });
+      m.setMove(m.qbOf(m.offense).id, { x: 0, z: 1 });
       run(m, 40, () => m.phase === "choose" || m.phase === "over");
     }
     expect(m.phase).toBe("over");

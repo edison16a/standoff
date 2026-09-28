@@ -1,0 +1,62 @@
+import { describe, expect, it } from "vitest";
+import { YARD } from "./field";
+import { seatStatus } from "./status";
+import { bySeat, peopleMatch, run, snap } from "./test-helpers";
+import { buildView } from "./view";
+import { blendViews } from "./view-blend";
+
+describe("the view", () => {
+  it("draws the line of scrimmage and the first down line ten yards on", () => {
+    const v = buildView(peopleMatch());
+    expect(v.drive.text).toBe("1st and 10");
+    expect(v.drive.firstDownX! - v.drive.losX).toBeCloseTo(10 * YARD);
+    expect(v.athletes).toHaveLength(10);
+    expect(v.countdown).toBeGreaterThan(0);
+  });
+
+  it("marks the targeted receiver and the ball carrier", () => {
+    const m = peopleMatch();
+    snap(m);
+    const qb = bySeat(m, 0);
+    const wr = bySeat(m, 1);
+    m.setAim(qb.id, { x: wr.x - qb.x, z: wr.z - qb.z });
+    run(m, 0.05);
+    const v = buildView(m);
+    expect(v.athletes[wr.id]!.targeted).toBe(true);
+    expect(v.athletes[qb.id]!.hasBall).toBe(true);
+  });
+
+  it("blends two stills half way", () => {
+    const m = peopleMatch();
+    snap(m);
+    m.setMove(bySeat(m, 0).id, { x: 0, z: 1 });
+    const a = buildView(m);
+    run(m, 0.5);
+    const b = buildView(m);
+    const mid = blendViews(a, b, 0.5);
+    const id = bySeat(m, 0).id;
+    expect(mid.athletes[id]!.z).toBeCloseTo((a.athletes[id]!.z + b.athletes[id]!.z) / 2);
+  });
+});
+
+describe("phone status", () => {
+  it("gives each phone the right controls through a play", () => {
+    const m = peopleMatch();
+    expect(seatStatus(m, 0)?.pad).toBe("choose");
+    expect(seatStatus(m, 2)?.pad).toBe("wait");
+    m.choose(bySeat(m, 0).id, "throw");
+    expect(seatStatus(m, 0)?.pad).toBe("qb");
+    expect(seatStatus(m, 0)?.hikeLeft).toBeGreaterThan(4);
+    expect(seatStatus(m, 1)?.pad).toBe("runner");
+    expect(seatStatus(m, 3)?.pad).toBe("defense");
+    expect(seatStatus(m, 9)).toBeNull();
+  });
+
+  it("hands the kicker the meters", () => {
+    const m = peopleMatch();
+    m.choose(bySeat(m, 0).id, "kick");
+    const s = seatStatus(m, 0);
+    expect(s?.pad).toBe("kicker");
+    expect(s?.meter?.stage).toBe("aim");
+  });
+});

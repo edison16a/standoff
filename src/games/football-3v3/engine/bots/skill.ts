@@ -21,7 +21,7 @@ export function botSkill(level: BotLevel): FootballSkill {
     ...base,
     reaction: Number.isFinite(base.reaction) ? base.reaction : 1,
     tackle: 0.35 + base.accuracy * 0.6,
-    juke: base.accuracy * 0.7,
-    cushion: 1 + (1 - base.accuracy) * 2.5,
+    juke: base.accuracy * 0.45,
+    cushion: 0.5 + (1 - base.accuracy) * 2,
   };
 }

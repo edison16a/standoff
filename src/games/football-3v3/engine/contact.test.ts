@@ -94,6 +94,8 @@ describe("passing", () => {
     snap(m);
     const qb = bySeat(m, 0);
     const wr = bySeat(m, 1);
+    // Clear the defender lined up across from the receiver out of the way.
+    bySeat(m, 3).z = 20;
     m.setMove(wr.id, { x: m.sign, z: 0 });
     run(m, 1.2);
     m.setAim(qb.id, { x: wr.x - qb.x, z: wr.z - qb.z });

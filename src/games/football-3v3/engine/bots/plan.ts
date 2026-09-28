@@ -29,7 +29,11 @@ export function planPlay(m: Match): void {
 
 function assignCoverage(m: Match, receivers: readonly Athlete[]): void {
   const defenders = m.athletes.filter((a) => a.team === m.defense && a.role !== "lineman");
-  for (const d of defenders) d.bot.cover = null;
+  for (const d of defenders) {
+    d.bot.cover = null;
+    // A spare defender blitzes about half the time and otherwise sits deep as a safety.
+    d.bot.rush = m.rng.chance(0.5);
+  }
   // Runners cover first; the defensive QB covers only when a receiver is left.
   const pool = [...defenders].sort((a, b) => (a.role === b.role ? a.slot - b.slot : a.role === "runner" ? -1 : 1));
   const taken = new Set<number>();

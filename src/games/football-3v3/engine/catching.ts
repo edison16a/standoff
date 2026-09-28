@@ -1,6 +1,7 @@
 import { isDown } from "./body";
 import { inBounds, xToYard } from "./field";
-import { stepFlight } from "./flight";
+import { botSkill } from "./bots/skill";
+import { stepFlight, type Flight } from "./flight";
 import type { Match } from "./match";
 import { endPlay } from "./whistle";
 import { PASS } from "./tuning";
@@ -67,6 +68,14 @@ function incomplete(m: Match, id: number | null): void {
   endPlay(m, "incomplete");
 }
 
+/** A pass swatted down: it pops off the hand and falls, incomplete. */
+function breakUp(m: Match, d: Athlete, f: Flight): void {
+  f.vel = { x: f.vel.x * 0.25, y: 2.5, z: f.vel.z * 0.25 };
+  f.wobble = 0.6;
+  m.emit({ type: "breakUp", id: d.id });
+  incomplete(m, m.ball.pass?.to ?? null);
+}
+
 function caught(m: Match, r: Athlete): void {
   if (!inBounds(r)) return incomplete(m, r.id);
   give(m, r);
@@ -106,9 +115,15 @@ export function updatePass(m: Match, dt: number): void {
     if (d && !isDown(d) && reachable(f.pos, d, PASS.catchRadius * 1.4)) return intercepted(m, d, pass.from);
   } else {
     for (const d of m.athletes) {
+      if (d.team === m.offense || !canPlayBall(d)) continue;
+      const near = f.pos.y > 0.3 && f.pos.y < PASS.maxCatchY && dist2(d, f.pos) < PASS.pickRadius;
       // Only a defender a person steers, not the computer and not Guard, can jump into the path.
-      if (d.team === m.offense || d.auto || !canPlayBall(d)) continue;
-      if (f.pos.y > 0.3 && f.pos.y < PASS.maxCatchY && dist2(d, f.pos) < PASS.pickRadius) return intercepted(m, d, pass.from);
+      if (near && !d.auto) return intercepted(m, d, pass.from);
+      // A computer defender in the way gets one swipe at it: knocked down, never caught.
+      if (near && !pass.swiped.includes(d.id)) {
+        pass.swiped.push(d.id);
+        if (m.rng.chance(botSkill(m.level).accuracy * 0.45)) return breakUp(m, d, f);
+      }
     }
     const r = m.athlete(pass.to);
     if (r && !isDown(r)) {

@@ -1,7 +1,8 @@
 import { pressKick } from "./kick";
 import { startJuke } from "./juke";
 import type { Match } from "./match";
-import { canThrow, throwTo } from "./passing";
+import { pickTarget } from "./aim";
+import { canThrow, receivers, throwTo } from "./passing";
 import { hike } from "./phases";
 import { pressTackle, startDive } from "./tackle";
 import { RUSH } from "./tuning";
@@ -30,7 +31,8 @@ export function setAim(m: Match, id: number, aim: V2 | null): void {
   const a = own(m, id);
   if (!a) return;
   if (aim === null) {
-    const target = m.play?.target ?? null;
+    // A flick released before the match has looked at it still finds its receiver.
+    const target = m.play?.target ?? (a.aim ? pickTarget(a, a.aim, receivers(m, a)) : null);
     if (a.aim && target !== null && canThrow(m, a)) throwTo(m, a, target);
     a.aim = null;
     return;

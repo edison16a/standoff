@@ -1,4 +1,5 @@
 import { startRush } from "../controls";
+import { FIELD, YARD, yardToX } from "../field";
 import type { Match } from "../match";
 import { pressTackle } from "../tackle";
 import { TACKLE } from "../tuning";
@@ -22,7 +23,7 @@ function breakOnBall(m: Match, a: Athlete): boolean {
 export function pursue(m: Match, a: Athlete, carrier: Athlete, skill: FootballSkill): void {
   const d = dist2(a, carrier);
   headFor(a, ahead(carrier, clamp(d / 8, 0, 1.2)), 0.3);
-  if (d < TACKLE.range * 0.9 && a.action.kind === "none" && a.tackleCd <= 0 && m.rng.chance(skill.tackle)) {
+  if (d < TACKLE.range * 0.7 && a.action.kind === "none" && a.tackleCd <= 0 && m.rng.chance(skill.tackle)) {
     pressTackle(m, a, carrier);
   }
 }
@@ -38,6 +39,14 @@ export function cover(m: Match, a: Athlete, skill: FootballSkill): void {
   if (!r) return rushQb(m, a, skill);
   const spot = ahead(r, 0.3);
   headFor(a, { x: spot.x + m.sign * skill.cushion, z: spot.z - Math.sign(spot.z) * 0.5 }, 0.6);
+}
+
+/** The deep safety: fourteen yards off the line in the middle, drifting toward the ball, until it is thrown. */
+export function safety(m: Match, a: Athlete): void {
+  if (breakOnBall(m, a)) return;
+  const losX = yardToX(m.offense, m.drive.los);
+  const deep = clamp(losX + m.sign * 14 * YARD, -(FIELD.endX - 1), FIELD.endX - 1);
+  headFor(a, { x: deep, z: m.ball.pos.z * 0.5 }, 1);
 }
 
 /** The spare defender waits a beat after the snap, then rushes the QB through the line. */

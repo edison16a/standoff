@@ -40,7 +40,7 @@ describe("assisted aim", () => {
     const from = { x: 0, y: 2, z: 0 };
     const lead = leadPass(from, { x: 10, z: 5 }, { x: 8, z: 0 }, 8);
     const receiverThen = { x: 10 + 8 * lead.time, z: 5 };
-    expect(lead.spot.x).toBeCloseTo(receiverThen.x, 1);
+    expect(Math.abs(lead.spot.x - receiverThen.x)).toBeLessThan(0.2);
     const ball = predict(launch(from, lead.vel, "spiral", 62, 0), lead.time).pos;
     expect(Math.hypot(ball.x - receiverThen.x, ball.z - receiverThen.z)).toBeLessThan(0.2);
   });

@@ -35,6 +35,8 @@ export type MatchEvent =
   | { type: "catch"; id: number; yards: number }
   | { type: "intercept"; id: number; from: number }
   | { type: "incomplete"; id: number | null }
+  /** A defender knocked the pass down. */
+  | { type: "breakUp"; id: number }
   | { type: "whistle"; end: PlayEnd; yards: number }
   | { type: "firstDown"; team: TeamId }
   | { type: "turnoverOnDowns"; team: TeamId }

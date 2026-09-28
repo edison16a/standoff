@@ -1,7 +1,7 @@
 import type { Match } from "../match";
 import { canThrow } from "../passing";
 import type { Athlete } from "../types";
-import { cover, pursue, rushQb } from "./defense";
+import { cover, pursue, rushQb, safety } from "./defense";
 import { carry, escort, readField, runRoute } from "./offense";
 import { botSkill, type FootballSkill } from "./skill";
 
@@ -39,6 +39,6 @@ function decide(m: Match, a: Athlete, skill: FootballSkill): void {
     return runRoute(m, a);
   }
   if (carrier && (carrier.role !== "qb" || m.play?.crossed || m.play?.intercepted)) return pursue(m, a, carrier, skill);
-  if (a.bot.cover === null) return rushQb(m, a, skill);
+  if (a.bot.cover === null) return a.bot.rush ? rushQb(m, a, skill) : safety(m, a);
   return cover(m, a, skill);
 }

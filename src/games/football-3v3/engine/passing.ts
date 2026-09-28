@@ -24,6 +24,8 @@ export function updateTarget(m: Match): void {
   const play = m.play;
   if (!play) return;
   const qb = m.qbOf(m.offense);
+  // Through the throwing motion the ring stays on the receiver the ball is going to.
+  if (qb.action.kind === "throw") return;
   if (!qb.aim || !canThrow(m, qb)) {
     play.target = null;
     return;
@@ -35,7 +37,7 @@ export function updateTarget(m: Match): void {
 export function throwTo(m: Match, a: Athlete, to: number): boolean {
   if (!canThrow(m, a) || m.athlete(to)?.team !== a.team) return false;
   m.play!.target = to;
-  a.action = { kind: "throw", t: 0, dur: PASS.throwTime, released: false };
+  a.action = { kind: "throw", t: 0, dur: PASS.throwTime, released: false, to };
   return true;
 }
 
@@ -46,9 +48,9 @@ function wobbleFor(m: Match, a: Athlete): number {
 }
 
 /** Lets the ball go: leads the target, or the defender who has jumped the route. */
-function release(m: Match, a: Athlete): void {
+function release(m: Match, a: Athlete, to: number): void {
   const play = m.play!;
-  const target = play.target === null ? null : m.athlete(play.target);
+  const target = m.athlete(to);
   if (!target || m.carrier()?.id !== a.id) return;
   const from: V3 = { x: a.x + Math.sin(a.yaw) * 0.3, y: PASS.releaseHeight, z: a.z + Math.cos(a.yaw) * 0.3 };
   const arm = statsOf(a).arm;
@@ -63,7 +65,7 @@ function release(m: Match, a: Athlete): void {
   const speed = len3(lead.vel);
   m.ball.pass = {
     from: a.id, to: target.id, interceptor: jumper?.id ?? null, spot: lead.spot, arrive: lead.time, t: 0,
-    speed, rps: spin / (Math.PI * 2), release: from, at: m.time,
+    speed, rps: spin / (Math.PI * 2), release: from, at: m.time, swiped: [],
   };
   play.passed = true;
   a.stats.attempts++;
@@ -76,7 +78,7 @@ export function updateThrow(m: Match, a: Athlete, dt: number): void {
   act.t += dt;
   if (!act.released && act.t >= PASS.windup) {
     act.released = true;
-    release(m, a);
+    release(m, a, act.to);
   }
   if (act.t >= act.dur) a.action = { kind: "none" };
 }

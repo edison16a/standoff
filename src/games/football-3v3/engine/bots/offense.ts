@@ -43,7 +43,7 @@ export function readField(m: Match, qb: Athlete, skill: FootballSkill): void {
         bestOpen = o;
       }
     }
-    if (best && (bestOpen >= 2.2 || pressure || t > qb.bot.readAt + 1.2)) {
+    if (best && (bestOpen >= 3 || pressure || t > qb.bot.readAt + 1.2)) {
       qb.aim = { x: best.x - qb.x, z: best.z - qb.z };
       throwTo(m, qb, best.id);
       qb.aim = null;

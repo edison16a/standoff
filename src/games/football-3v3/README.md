@@ -49,7 +49,7 @@ Difficulty comes from `src/games/kit/difficulty`: Easy (the default), Medium, Ha
 
 * The QB drops back, reads the receivers, throws to the most open one, and avoids throwing into a defender sat in front. With nobody open, it runs.
 * Receivers run slants, gos, outs, curls, drags and posts, and go to meet the ball.
-* Defenders cover a receiver from over the top, and a spare one rushes the QB. Once someone has the ball they chase and tackle.
+* Defenders cover a receiver from over the top. A spare one rushes the QB on about half the plays and sits deep as a safety on the rest. A computer defender next to a pass can knock it down, but never catches it. Once someone has the ball they chase and tackle.
 * On fourth down the bot kicks, a field goal in range or a punt, unless it is fourth and short past midfield.
 
 ## The engine
@@ -74,6 +74,7 @@ const pad = seatStatus(match, seat); // which controls a phone should show
 * Sticks come in field space. The host turns a phone's stick into field space for its camera.
 * The kick meters run from `meterAim` and `meterPower`. A phone can draw them itself from `seatStatus(...).meter` and send its own reading with the press.
 * A phone that drops is played by the computer with `setAuto`.
+* `admin.ts` has the shortcuts for the host's admin panel: `adminTouchdown`, `adminFieldGoal` and `adminTwoPoint`. They go through the real rules.
 
 Files: `field` and `downs` for the field and the rules of downs, `motion` and `body` for running, `juke`, `tackle`, `guard` and `linemen` for contact, `flight`, `aim`, `passing` and `catching` for the ball in the air, `kick` and `kick-flight` for kicking, `whistle`, `score` and `phases` for how plays end and what comes next, `bots/` for the computer players.
 

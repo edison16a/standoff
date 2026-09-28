@@ -43,7 +43,7 @@ export function startChoose(m: Match): void {
 }
 
 /** After a touchdown: set for a try at the two, and ask for kick or two. */
-function startConvert(m: Match): void {
+export function startConvert(m: Match): void {
   // The team that scored tries, even after an interception returned for a touchdown.
   const team = m.athlete(m.scorer ?? -1)?.team ?? m.offense;
   m.drive = tryDrive(team, RULES.twoPointSpot);

@@ -26,7 +26,8 @@ export function pressTackle(m: Match, a: Athlete, carrier: Athlete): boolean {
   if (dist2(a, carrier) > reach(a)) return false;
   const lead = { x: carrier.x + carrier.vx * 0.22, z: carrier.z + carrier.vz * 0.22 };
   const dir = dir2(a, lead);
-  const speed = Math.max(TACKLE.lungeSpeed, Math.hypot(a.vx, a.vz));
+  // A lunge is a burst on top of the run, so a chaser can still dive at a runner from behind.
+  const speed = Math.max(TACKLE.lungeSpeed, Math.hypot(a.vx, a.vz) + 2.5);
   a.action = { kind: "lunge", t: 0, dur: TACKLE.lungeTime, dir, target: carrier.id };
   a.vx = dir.x * speed;
   a.vz = dir.z * speed;
@@ -47,6 +48,20 @@ export function tackle(m: Match, carrier: Athlete, by: Athlete): void {
   endPlay(m, sack ? "sack" : "tackle");
 }
 
+/** Turns a lunge toward the carrier, no faster than TACKLE.homing radians a second. */
+function home(a: Athlete, carrier: Athlete, dt: number): void {
+  const speed = Math.hypot(a.vx, a.vz);
+  if (speed < 0.5) return;
+  const now = Math.atan2(a.vx, a.vz);
+  const want = Math.atan2(carrier.x - a.x, carrier.z - a.z);
+  let d = want - now;
+  while (d > Math.PI) d -= Math.PI * 2;
+  while (d < -Math.PI) d += Math.PI * 2;
+  const turn = Math.max(-TACKLE.homing * dt, Math.min(TACKLE.homing * dt, d));
+  a.vx = Math.sin(now + turn) * speed;
+  a.vz = Math.cos(now + turn) * speed;
+}
+
 /**
  * Carries a lunge through. Reaching the carrier mid lunge tackles them,
  * unless they are in the middle of a juke, which leaves the tackler on
@@ -56,10 +71,12 @@ export function updateLunge(m: Match, a: Athlete, dt: number): void {
   const act = a.action;
   if (act.kind !== "lunge") return;
   act.t += dt;
-  const k = Math.max(0, 1 - 2.2 * dt);
+  const k = Math.max(0, 1 - 1.2 * dt);
   a.vx *= k;
   a.vz *= k;
   const carrier = m.carrier();
+  // Early in the lunge the arms still reach after a runner who keeps going, but not after a juke.
+  if (carrier && carrier.team !== a.team && act.t < 0.25 && !dodging(carrier)) home(a, carrier, dt);
   if (m.phase === "live" && carrier && carrier.team !== a.team && act.t > 0.04 && dist2(a, carrier) < TACKLE.contact) {
     if (dodging(carrier)) {
       knockDown(a, TACKLE.missedDown, "missed");
