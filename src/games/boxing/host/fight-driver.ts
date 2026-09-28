@@ -3,6 +3,7 @@ import type { BuildId } from "../engine/builds";
 import type { MatchEvent } from "../engine/events";
 import { Match } from "../engine/match";
 import { seeded } from "../engine/random";
+import { stopFight } from "../engine/shortcuts";
 import { styleFor, type DefenseInput, type FighterId, type Hand, type Level } from "../engine/types";
 import { REPLAY_LENGTH } from "../render/replay";
 
@@ -139,6 +140,11 @@ export class FightDriver {
       this.computer?.update(this.match);
       this.dispatch(this.match.update(STEP_MS), now);
     }
+  }
+
+  /** A test shortcut: the fight ends now with `winner` on top, for the admin panel. */
+  finishFor(winner: FighterId): void {
+    if (stopFight(this.match, winner)) this.flush();
   }
 
   /** Skips the replay or the celebration, straight to the results. */
