@@ -22,6 +22,8 @@ const POWER_WEIGHTS: readonly (readonly [PowerKind, number])[] = [
 export interface CourseOptions {
   /** No obstacles at all, for the tutorial. */
   empty?: boolean;
+  /** Metres the pace and the busyness start ahead, for a harder run. */
+  headStart?: number;
 }
 
 /**
@@ -40,15 +42,17 @@ export class Course {
   private nextId = 1;
   private nextPickup: number;
   private last = "";
+  private readonly headStart: number;
 
   constructor(
     readonly seed: number,
     private readonly options: CourseOptions = {},
   ) {
     this.rng = new Rng(seed);
+    this.headStart = options.headStart ?? 0;
     this.nextPickup = 160 + this.rng.range(0, 80);
     if (!options.empty) {
-      const opening = new Block(speedAt(0), () => 0);
+      const opening = new Block(speedAt(this.headStart), () => 0);
       openingCoins(opening);
       this.commit(opening, 0);
     }
@@ -87,14 +91,16 @@ export class Course {
 
   private layBlock(): void {
     // Spaced for the pace a little way in, since the runner speeds up while crossing the stretch.
-    const speed = speedAt(this.cursor + SPEED_AHEAD);
-    const level = Math.min(1, Math.max(0, (this.cursor - 150) / 1600));
+    // The head start moves the pace and the patterns on, but not the first power ups.
+    const pace = this.cursor + this.headStart;
+    const speed = speedAt(pace + SPEED_AHEAD);
+    const level = Math.min(1, Math.max(0, (pace - 150) / 1600));
     const block = new Block(speed, () => this.rng.int(0, 7));
     if (this.cursor >= this.nextPickup) {
       this.pickupBlock(block);
       this.nextPickup = this.cursor + 300 + this.rng.range(0, 180);
     } else {
-      const entry = this.choose(level);
+      const entry = this.choose(level, pace);
       entry.make(block, this.rng, level);
       this.last = entry.name;
     }
@@ -104,8 +110,8 @@ export class Course {
     this.cursor += block.end + gap;
   }
 
-  private choose(level: number): PatternEntry {
-    const open = PATTERNS.filter((p) => p.from <= this.cursor && p.name !== this.last);
+  private choose(level: number, pace: number): PatternEntry {
+    const open = PATTERNS.filter((p) => p.from <= pace && p.name !== this.last);
     return this.rng.weighted(open.map((p) => [p, Math.max(0, p.weight(level))] as const));
   }
 

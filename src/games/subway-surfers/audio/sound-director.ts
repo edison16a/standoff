@@ -1,7 +1,7 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 import type { RunEvent } from "../engine/events";
 import type { Run } from "../engine/run";
-import { speedAt, SPEED } from "../engine/tuning";
+import { SPEED } from "../engine/tuning";
 import { cheer, fanfare } from "./celebrate";
 import { Drone } from "./drone";
 import { Hype } from "./hype";
@@ -127,10 +127,10 @@ export class SoundDirector {
       voice.guard = guard;
       voice.jet.set(live && run.powers.has("jetpack") ? 0.3 : 0, now);
       voice.board.set(live && run.powers.has("hoverboard") ? 0.05 : 0, now);
-      if (live) fastest = Math.max(fastest, run.runner.distance);
+      if (live) fastest = Math.max(fastest, run.paceAt(run.runner.distance));
     });
     // The beat quickens by up to a tenth as the runners reach top speed.
-    this.music.setTempo(1 + 0.1 * ((speedAt(fastest) - SPEED.start) / (SPEED.max - SPEED.start)));
+    this.music.setTempo(1 + 0.1 * ((Math.max(SPEED.start, fastest) - SPEED.start) / (SPEED.max - SPEED.start)));
   }
 
   stop(): void {
