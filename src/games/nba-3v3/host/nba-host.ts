@@ -1,3 +1,4 @@
+import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import { HostPad } from "@/games/kit/pad/host-pad";
 import type { HostRoomApi, HostRoomEvent } from "@/platform/games/game-api";
 import { SoundDirector } from "../audio/sound-director";
@@ -111,11 +112,25 @@ export class NbaHost {
     this.refresh(performance.now());
   }
 
+  /** How good the computer players are, for the next game. */
+  setLevel(level: BotLevel): void {
+    if (this.phase === "countdown" || this.phase === "live") return;
+    this.lobby.setLevel(level);
+    this.refresh(performance.now());
+  }
+
+  /** The host gives a player the next role on their team: Guard, Wing or Big. */
+  cycleRole(seat: number): void {
+    if (this.phase === "countdown" || this.phase === "live") return;
+    this.lobby.cycleRole(seat);
+    this.refresh(performance.now());
+  }
+
   /** Starts a game with the teams as they stand, computers filling the gaps if they are on. */
   start(): void {
     if (this.phase === "countdown" || this.phase === "live" || this.lobby.startBlock()) return;
     this.unlistenMatch?.();
-    this.driver = new MatchDriver(this.lobby.entries());
+    this.driver = new MatchDriver(this.lobby.entries(), undefined, this.lobby.level);
     this.unlistenMatch = this.driver.listen((event) => this.onMatchEvent(event));
     this.room.setPlaying(true);
     this.phones.forget();
