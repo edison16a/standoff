@@ -27,6 +27,8 @@ export interface PhoneState {
   hostAway: boolean;
   /** Everyone in the room, as the host last reported. */
   players: Player[];
+  /** The new room's code, once the host remade its lobby. The page follows it. */
+  movedTo: string | null;
 }
 
 /**
@@ -43,5 +45,6 @@ export function createPhoneStore(): StoreApi<PhoneState> {
     game: null,
     hostAway: false,
     players: [],
+    movedTo: null,
   }));
 }
