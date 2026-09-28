@@ -59,8 +59,9 @@ export class NbaPhone {
     store.setState({ flash: null, aimingSince: null });
   }
 
-  press(button: Button): void {
-    if (button === "shoot") {
+  /** A button down. Shoot only runs the meter when it shoots; on defence it is Guard, held with no meter. */
+  press(button: Button, meter = true): void {
+    if (button === "shoot" && meter) {
       this.shootAt = performance.now();
       store.setState({ aimingSince: this.shootAt });
     }
