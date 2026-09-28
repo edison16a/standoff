@@ -1,13 +1,15 @@
+import { BOT_LEVELS, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { ChargeButton } from "../types";
 
 /**
  * What a computer fighter remembers between steps, and how good it is.
  * Bots see the match exactly as it is but only look again every few
- * frames, and a harder bot looks more often and chooses better.
+ * frames, and a harder bot looks more often and chooses better. The
+ * levels are the shared ones every game with bots offers.
  */
 
-export const DIFFICULTIES = ["easy", "normal", "hard"] as const;
-export type Difficulty = (typeof DIFFICULTIES)[number];
+export const DIFFICULTIES = BOT_LEVELS;
+export type Difficulty = BotLevel;
 
 export interface Skill {
   /** Frames between decisions. Lower is sharper. */
@@ -24,12 +26,15 @@ export interface Skill {
   dither: number;
   /** Chance to wind up a charged move on a hunch, when the target is not open. */
   charge: number;
+  /** False in Training: the bot stands where it is and never presses anything. */
+  acts: boolean;
 }
 
 export const SKILLS: Record<Difficulty, Skill> = {
-  easy: { reaction: 26, aggression: 0.4, shield: 0, judgement: 0.35, recovery: 0.6, dither: 0.35, charge: 0.04 },
-  normal: { reaction: 13, aggression: 0.7, shield: 0.2, judgement: 0.65, recovery: 0.9, dither: 0.12, charge: 0.08 },
-  hard: { reaction: 6, aggression: 0.9, shield: 0.45, judgement: 0.9, recovery: 1, dither: 0.03, charge: 0.1 },
+  easy: { reaction: 26, aggression: 0.4, shield: 0, judgement: 0.35, recovery: 0.6, dither: 0.35, charge: 0.04, acts: true },
+  medium: { reaction: 13, aggression: 0.7, shield: 0.2, judgement: 0.65, recovery: 0.9, dither: 0.12, charge: 0.08, acts: true },
+  hard: { reaction: 6, aggression: 0.9, shield: 0.45, judgement: 0.9, recovery: 1, dither: 0.03, charge: 0.1, acts: true },
+  training: { reaction: Infinity, aggression: 0, shield: 0, judgement: 0, recovery: 0, dither: 1, charge: 0, acts: false },
 };
 
 export interface BotBrain {

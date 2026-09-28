@@ -1,5 +1,6 @@
 import { HostAim } from "@/games/kit/aim/host-aim";
 import type { ScreenPoint } from "@/games/kit/aim/aim-math";
+import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { HostRoomApi, HostRoomEvent } from "@/platform/games/game-api";
 import type { Seat } from "@/platform/protocol";
 import { HostAudio } from "../audio/host-audio";
@@ -98,10 +99,15 @@ export class SurvivalHost {
     const ready = this.lobby.readySeats(this.connectedSeats());
     if (ready.length === 0) return;
     const players = ready.map((seat) => ({ seat, weapon: this.lobby.get(seat).weapon! }));
-    this.game = new SurvivalGame();
+    this.game = new SurvivalGame(Math.random, this.lobby.level);
     this.game.start(players, debugStage());
     this.room.setPlaying(true);
     this.audio.onStart();
+  }
+
+  setLevel(level: BotLevel): void {
+    this.lobby.level = level;
+    useSurvivalStore.setState({ level });
   }
 
   retry(): void {

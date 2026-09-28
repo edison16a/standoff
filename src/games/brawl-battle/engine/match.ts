@@ -16,7 +16,7 @@ export interface Entrant {
   seat: number | null;
 }
 
-export const DEFAULT_OPTIONS: MatchOptions = { seed: 1, stage: "dojo-rooftop", stocks: RULES.stocks, difficulty: "normal" };
+export const DEFAULT_OPTIONS: MatchOptions = { seed: 1, stage: "dojo-rooftop", stocks: RULES.stocks, difficulty: "medium" };
 
 const IDLE: Command = { x: 0, y: 0 };
 
