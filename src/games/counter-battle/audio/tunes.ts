@@ -1,10 +1,13 @@
-export type LeadVoice = "stab" | "pluck" | "brass";
+import { chords, melody, type Note } from "./score";
+import type { LeadVoice } from "./synths";
 
 /**
- * A tune as step patterns: sixteen sixteenths a bar, one chord a bar,
- * eight bars that loop. Notes are MIDI numbers before `key` shifts them.
+ * A tune: sixteen sixteenths a bar, one chord a bar, and a melody as long
+ * as the chords. `style` picks the band that plays it. The A half is the
+ * first eight bars and the B half the last eight.
  */
 export interface Tune {
+  style: "lobby" | "match";
   bpm: number;
   /** How late the odd sixteenths land, as a share of a sixteenth. */
   swing: number;
@@ -12,93 +15,63 @@ export interface Tune {
   key: number;
   /** Per bar: the bass root first, then the chord tones. */
   chords: number[][];
-  /** One entry per sixteenth across all bars, null for a rest. */
-  hook: (number | null)[];
+  /** One entry per sixteenth across all bars. */
+  hook: (Note | null)[];
   lead: LeadVoice;
-  /** Which sixteenths the bass plays, as semitones above the root. */
-  bass: (number | null)[];
-  kick: number[];
-  /** Snare hits in a bar, as sixteenths. */
-  snare: number[];
-  /** A ticking sixteenth pulse of the chord, for tension. */
-  pulse: boolean;
 }
 
-const _ = null;
-
 /**
- * "Kit Up", for the lobby and the results: E minor at 100, a laid back
- * half time groove with a plucked riff, while people pick their guns.
+ * "Kit Up", for the lobby and the results: A minor at 76. A slow dark
+ * pad, a deep held bass, vibes carrying the tune and a brushed half time
+ * groove. Calm before the round, while people pick their guns.
  */
 const KIT_UP: Tune = {
-  bpm: 100,
-  swing: 0.14,
+  style: "lobby",
+  bpm: 76,
+  swing: 0.2,
   key: 0,
-  chords: [
-    [40, 64, 67, 71], // Em
-    [36, 64, 67, 72], // C
-    [43, 62, 67, 71], // G
-    [38, 62, 66, 69], // D
-    [40, 64, 67, 71],
-    [36, 64, 67, 72],
-    [45, 64, 69, 72], // Am
-    [47, 63, 66, 71], // B
-  ],
-  hook: [
-    76, _, _, 74, _, 71, _, _, 74, _, _, _, 71, _, 69, _,
-    67, _, _, _, 64, _, _, _, 67, _, 69, _, _, _, _, _,
-    71, _, _, 74, _, 71, _, _, 79, _, _, 78, _, 76, _, _,
-    74, _, _, _, 69, _, _, _, 66, _, _, _, _, _, _, _,
-    76, _, _, 74, _, 71, _, _, 74, _, _, _, 71, _, 69, _,
-    67, _, _, _, 72, _, _, _, 76, _, 79, _, _, _, _, _,
-    81, _, _, 79, _, 76, _, _, 72, _, _, _, 76, _, _, _,
-    75, _, _, _, 71, _, _, _, 78, _, _, _, 75, _, _, _,
-  ],
-  lead: "pluck",
-  bass: [0, _, _, 0, _, _, 12, _, _, _, 7, _, _, _, 10, _],
-  kick: [0, 7, 10],
-  snare: [8],
-  pulse: false,
+  chords: chords([
+    "A1 C4 E4 G4 B4", "F2 C4 E4 F4 A4", "C2 B3 E4 G4", "E2 B3 D4 G4",
+    "A1 C4 E4 G4 B4", "F2 C4 E4 F4 A4", "D2 C4 E4 F4 A4", "E2 B3 D4 E4 A4",
+    "F2 C4 E4 F4 A4", "G2 B3 D4 E4 G4", "E2 B3 D4 G4", "A1 C4 E4 G4 B4",
+    "D2 C4 E4 F4 A4", "F2 C4 E4 F4 A4", "B1 A3 D4 F4", "E2 G#3 B3 D4 E4",
+  ]),
+  hook: melody(`
+    E5:4 -:2 B4:2 C5:4 E5:4 | A5:8 G5:4 E5:4 | G5:4 -:2 E5:2 D5:4 E5:4 | B4:12 -:4
+    E5:4 -:2 B4:2 C5:4 E5:4 | A5:6 C6:2 B5:4 A5:4 | F5:6 E5:2 D5:4 C5:4 | B4:8 -:8
+    C5:4 F5:4 A5:8 | G5:4 E5:4 D5:8 | E5:4 G5:4 B5:6 A5:2 | A5:12 -:4
+    A5:4 F5:4 E5:4 D5:4 | C5:4 E5:4 A5:8 | D5:6 F5:2 A5:8 | G#5:8 E5:4 D5:4
+  `),
+  lead: "vibes",
 };
 
 /**
- * "Standoff", the match theme: D minor at 132, a pulsing sixteenth bass
- * under brassy stabs, and a hook that climbs to a held note and drops,
- * tense but catchy enough to hum between rounds.
+ * "Standoff", the match theme: F minor at 124. A sixteenth pulse bass
+ * drives under a dark pad, and a synth lead plays a clipped, stalking
+ * hook in the A half, then climbs to long held notes in the B half.
  */
 const STANDOFF: Tune = {
-  bpm: 132,
+  style: "match",
+  bpm: 124,
   swing: 0,
   key: 0,
-  chords: [
-    [38, 62, 65, 69], // Dm
-    [38, 62, 65, 69],
-    [46, 62, 65, 70], // Bb
-    [45, 61, 64, 69], // A
-    [38, 62, 65, 69],
-    [43, 62, 67, 70], // Gm
-    [46, 62, 65, 70],
-    [45, 61, 64, 67], // A7
-  ],
-  hook: [
-    74, _, _, 74, _, _, 72, _, 74, _, _, 77, _, _, 76, _,
-    74, _, _, _, _, _, _, _, 69, _, 72, _, 74, _, _, _,
-    77, _, _, 77, _, _, 76, _, 74, _, _, 72, _, _, 70, _,
-    69, _, _, _, _, _, 73, _, 76, _, _, _, 73, _, _, _,
-    74, _, _, 74, _, _, 72, _, 74, _, _, 77, _, _, 79, _,
-    81, _, _, _, _, _, 79, _, 77, _, _, 74, _, _, _, _,
-    77, _, 76, _, 74, _, 72, _, 70, _, 69, _, 70, _, 72, _,
-    73, _, _, _, _, _, _, _, 69, _, _, _, 73, _, 76, _,
-  ],
-  lead: "stab",
-  bass: [0, 0, 12, 0, 0, 12, 0, 0, 0, 0, 12, 0, 0, 12, 7, 10],
-  kick: [0, 6, 8, 14],
-  snare: [4, 12],
-  pulse: true,
+  chords: chords([
+    "F2 G#3 C4 F4", "F2 G#3 C4 F4", "C#2 G#3 C#4 F4", "D#2 G3 A#3 D#4",
+    "F2 G#3 C4 F4", "F2 G#3 C4 F4", "A#1 A#3 C#4 F4", "C2 G3 C4 E4",
+    "C#2 G#3 C#4 F4", "D#2 G3 A#3 D#4", "F2 G#3 C4 F4", "F2 G#3 C4 F4",
+    "C#2 G#3 C#4 F4", "D#2 G3 A#3 D#4", "C2 G3 C4 E4", "C2 G3 A#3 E4",
+  ]),
+  hook: melody(`
+    F5:3 F5:3 G#5:2 G5:3 F5:3 D#5:2 | C5:6 -:2 C5:2 D#5:2 F5:4 | G#5:3 G#5:3 A#5:2 G#5:3 F5:3 C#5:2 | D#5:8 -:4 A#4:4
+    F5:3 F5:3 G#5:2 G5:3 F5:3 D#5:2 | C6:6 A#5:2 G#5:4 G5:4 | F5:3 C#5:3 A#4:2 C#5:4 F5:4 | E5:8 G5:4 C5:4
+    C#6:8 C6:4 G#5:4 | A#5:8 G5:4 D#5:4 | C6:6 G#5:6 F5:4 | G5:4 G#5:4 C6:8
+    C#6:6 C6:2 A#5:4 G#5:4 | G5:6 G#5:2 A#5:8 | C6:4 A#5:4 G5:4 E5:4 | G5:8 E5:4 C5:4
+  `),
+  lead: "dark",
 };
 
 export const LOBBY_TUNE = KIT_UP;
 export const MATCH_TUNE = STANDOFF;
 
-/** The same theme for a match point: up a tone, a touch faster and in brass, so everyone hears it matters. */
-export const FINAL_TUNE: Tune = { ...STANDOFF, key: 2, bpm: 138, lead: "brass" };
+/** The same theme for a match point: a semitone up, a touch faster and in brass, so everyone hears it matters. */
+export const FINAL_TUNE: Tune = { ...STANDOFF, key: 1, bpm: 130, lead: "brass" };

@@ -4,8 +4,8 @@ import { held } from "./voice";
 
 /**
  * The band behind Blade Clash: taiko drums, a brass section, driving
- * strings, a choir, and for the lobby a harp, a wooden flute and a frame
- * drum. Everything is synthesised; each instrument is a few oscillators
+ * strings, a choir and a koto, and for the lobby a bamboo flute, a low
+ * drone and a frame drum. Everything is synthesised; each instrument is a few oscillators
  * and filtered noise shaped to sound like the real thing.
  */
 
@@ -85,17 +85,29 @@ export function bass(engine: AudioEngine, out: Out, at: number, note: number, pe
   tone(engine, out, at, { frequency: midi(note), decay: 0.3, peak: peak * 0.8 });
 }
 
-/** A harp string: bright at the pluck and ringing on. */
-export function harp(engine: AudioEngine, out: Out, at: number, note: number, peak: number): void {
-  tone(engine, out, at, { type: "triangle", frequency: midi(note), attack: 0.003, decay: 1.1, peak });
-  tone(engine, out, at, { frequency: midi(note + 12), attack: 0.002, decay: 0.3, peak: peak * 0.35 });
+/** A koto string: plucked hard, a touch sharp at first as the string settles, then ringing on. */
+export function koto(engine: AudioEngine, out: Out, at: number, note: number, peak: number): void {
+  const f = midi(note);
+  tone(engine, out, at, { type: "triangle", frequency: f * 1.006, glideTo: f, attack: 0.002, decay: 1.3, peak });
+  tone(engine, out, at, { frequency: f * 2, attack: 0.002, decay: 0.22, peak: peak * 0.4 });
+  noise(engine, out, at, { filter: "bandpass", frequency: 3000, q: 2, decay: 0.012, peak: peak * 0.5 });
 }
 
-/** A wooden flute: a pure tone with a breath of air round it. */
-export function flute(engine: AudioEngine, out: Out, at: number, note: number, length: number, peak: number): void {
-  held(engine, out, at, { type: "sine", frequency: midi(note), attack: 0.05, hold: Math.max(0, length - 0.1), release: 0.14, peak });
-  held(engine, out, at, { type: "triangle", frequency: midi(note), detune: 3, attack: 0.06, hold: Math.max(0, length - 0.1), release: 0.12, peak: peak * 0.3 });
-  noise(engine, out, at, { filter: "bandpass", frequency: midi(note) * 2, q: 4, attack: 0.04, decay: length * 0.8, peak: peak * 0.25 });
+/**
+ * A bamboo flute, breathy and slow to speak: a pure tone that swells in,
+ * with a puff of air on the attack only, so long notes stay clean.
+ */
+export function shakuhachi(engine: AudioEngine, out: Out, at: number, note: number, length: number, peak: number): void {
+  const hold = Math.max(0, length - 0.2);
+  held(engine, out, at, { type: "sine", frequency: midi(note), attack: 0.12, hold, release: 0.3, peak });
+  held(engine, out, at, { type: "triangle", frequency: midi(note), detune: 5, attack: 0.18, hold, release: 0.25, peak: peak * 0.3, filter: { from: 900, to: 1800 } });
+  noise(engine, out, at, { filter: "bandpass", frequency: midi(note) * 2, q: 3, attack: 0.05, decay: 0.25, peak: peak * 0.3 });
+}
+
+/** A low held note under the lobby's chords, so the harmony never drops out between bars. */
+export function drone(engine: AudioEngine, out: Out, at: number, note: number, length: number, peak: number): void {
+  held(engine, out, at, { type: "sine", frequency: midi(note), attack: 0.4, hold: length, release: 1.2, peak });
+  held(engine, out, at, { type: "triangle", frequency: midi(note + 12), attack: 0.6, hold: length, release: 1, peak: peak * 0.2 });
 }
 
 /** A frame drum played with the hand: a soft low boom and the fingers' tap. */

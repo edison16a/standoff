@@ -1,6 +1,7 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 import { noise } from "@/platform/audio/voices";
 import { bass, clap, hat, kick, lead, pad, pluck, snare } from "./instruments";
+import { keys, rim, shaker, wash } from "./soft";
 import { sectionAt, type Part, type Song } from "./song";
 
 /** Where one take of a song plays into: the mixer's three inputs, through gains that can fade the take alone. */
@@ -19,12 +20,15 @@ function drums(engine: AudioEngine, mix: Outputs, song: Song, parts: ReadonlySet
   // Half time keeps a kick on one and a big snare on three, which lets the UFO float.
   const kickHere = half ? inBar === 0 || inBar === 10 : hits(d.kick, inBar);
   if ((parts.has("kick") || half) && kickHere) {
-    kick(engine, mix.dry, at);
-    mix.duckAt(at, spb);
+    kick(engine, mix.dry, at, song.padVoice === "wash" ? 0.5 : 0.8);
+    // The levels' pads pump under the kick like a dance record; the menu's wash just flows.
+    if (song.padVoice === "saw") mix.duckAt(at, spb);
   }
   const snareHere = half ? inBar === 8 : hits(d.snare, inBar);
   if (snareHere && parts.has("snare")) snare(engine, mix.dry, at);
   if (snareHere && parts.has("clap")) clap(engine, mix.space, at);
+  if (snareHere && parts.has("rim")) rim(engine, mix.space, at);
+  if (parts.has("shaker") && hits(d.hat, inBar)) shaker(engine, mix.dry, at, inBar % 4 === 2 ? 0.035 : 0.02);
   if (parts.has("hat") && hits(d.hat, inBar)) hat(engine, mix.dry, at, false, inBar % 4 === 2 ? 0.07 : 0.045);
   if (parts.has("open") && inBar % 4 === 2) hat(engine, mix.dry, at, true, 0.05);
 }
@@ -34,7 +38,7 @@ function transitions(engine: AudioEngine, mix: Outputs, song: Song, step: number
   const beat = step / 4;
   const next = song.sections.find((s) => s.from > beat - 1e-9 && s.from - beat <= 1);
   if (next && next.from > beat && step % 16 >= 12 && next.parts.has("snare")) snare(engine, mix.dry, at, 0.08 + (step % 4) * 0.05);
-  if (song.sections.some((s) => s.from === beat && s.from > 0)) {
+  if (song.crash && song.sections.some((s) => s.from === beat && s.from > 0)) {
     noise(engine, mix.space, at, { filter: "highpass", frequency: 5000, decay: 1.4, peak: 0.12 });
   }
 }
@@ -58,7 +62,11 @@ export function playStep(engine: AudioEngine, mix: Outputs, song: Song, step: nu
   const low = song.bass[inBar % song.bass.length];
   if (parts.has("bass") && low) bass(engine, mix.dry, time, chord[0]! + low.midi, low.length * sixteenth, song.bassStyle);
 
-  if (parts.has("pad") && inBar === 0) pad(engine, mix.pumped, at, chord.slice(1), spb * 4);
+  if (parts.has("pad") && inBar === 0) {
+    if (song.padVoice === "wash") wash(engine, mix.pumped, at, chord.slice(1), spb * 4);
+    else pad(engine, mix.pumped, at, chord.slice(1), spb * 4);
+  }
+  if (parts.has("keys") && hits(song.keys, inBar)) keys(engine, mix.space, time, chord.slice(1));
 
   const arp = song.arp[inBar % song.arp.length];
   if (parts.has("arp") && arp !== null && arp !== undefined) {
@@ -73,5 +81,5 @@ export function playStep(engine: AudioEngine, mix: Outputs, song: Song, step: nu
   if (!hook) return;
   lead(engine, mix.space, time, hook.midi, hook.length * sixteenth, voice);
   // The main hook is doubled an octave up on a quiet bell, which makes it shine and stick.
-  if (line === song.lead && voice !== "bell") lead(engine, mix.space, time, hook.midi + 12, hook.length * sixteenth, "bell", 0.018);
+  if (line === song.lead && voice !== "bell" && voice !== "flute") lead(engine, mix.space, time, hook.midi + 12, hook.length * sixteenth, "bell", 0.018);
 }

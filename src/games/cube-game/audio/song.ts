@@ -2,7 +2,10 @@ import type { BassStyle, LeadVoice } from "./instruments";
 import { chord, line, note, type Step } from "./notes";
 
 /** Layers a section of a song can switch on. */
-export type Part = "kick" | "snare" | "clap" | "hat" | "open" | "bass" | "arp" | "pad" | "lead" | "leadB" | "half";
+export type Part = "kick" | "snare" | "clap" | "hat" | "open" | "bass" | "arp" | "pad" | "lead" | "leadB" | "half" | "rim" | "shaker" | "keys";
+
+/** The pad a song holds its chords on: a pumping saw for the levels, a slow wash for the menu. */
+export type PadVoice = "saw" | "wash";
 
 /** From this beat of the level on, these layers play. */
 export interface Section {
@@ -32,6 +35,11 @@ export interface Song {
   arp: (number | null)[];
   arpVoice: OscillatorType;
   drums: { kick: string; snare: string; hat: string };
+  /** Where the electric piano plays the chord in a bar, as "x" and ".", when the keys part is on. */
+  keys: string;
+  padVoice: PadVoice;
+  /** A crash on each new section, which suits the levels but not the menu. */
+  crash: boolean;
   sections: Section[];
   /** Beats before the song loops back to its top. */
   length: number;
@@ -50,6 +58,9 @@ export interface SongText {
   arp: string;
   arpVoice?: OscillatorType;
   drums: { kick: string; snare: string; hat: string };
+  keys?: string;
+  padVoice?: PadVoice;
+  crash?: boolean;
   sections: [number, string][];
   length: number;
 }
@@ -75,6 +86,9 @@ export function song(text: SongText): Song {
     arp: text.arp.split(/\s+/).map((t) => (t === "." ? null : Number(t.replace("^", "")) + (t.endsWith("^") ? 100 : 0))),
     arpVoice: text.arpVoice ?? "triangle",
     drums: text.drums,
+    keys: text.keys ?? "x...............",
+    padVoice: text.padVoice ?? "saw",
+    crash: text.crash ?? true,
     sections: text.sections.map(([from, parts]) => ({ from, parts: new Set(parts.split(/\s+/).filter(Boolean) as Part[]) })),
     length: text.length,
   };

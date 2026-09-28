@@ -1,110 +1,84 @@
 import type { StageId } from "../engine/stages";
-
-export type LeadVoice = "pluck" | "bell" | "crystal" | "flute";
+import { chords, melody, type Note } from "./score";
+import type { LeadVoice } from "./synths";
 
 /**
- * A tune as step patterns: sixteen sixteenths a bar, one chord a bar,
- * eight bars that loop. Notes are MIDI numbers before `key` shifts them.
+ * A tune: sixteen sixteenths a bar, one chord a bar, and a melody as long
+ * as the chords. `style` picks the band that plays it: the soft lobby
+ * band or the full battle band.
  */
 export interface Tune {
+  style: "lobby" | "battle";
   bpm: number;
   /** How late the odd sixteenths land, as a share of a sixteenth. */
   swing: number;
-  /** Semitones the whole tune is moved by. */
-  key: number;
   /** Per bar: the bass root first, then the chord tones. */
   chords: number[][];
-  /** One entry per sixteenth across all bars, null for a rest. */
-  hook: (number | null)[];
+  /** One entry per sixteenth across all bars. The A half is the first eight bars, the B half the rest. */
+  hook: (Note | null)[];
   lead: LeadVoice;
   /** Which sixteenths the bass plays, as semitones above the root. */
   bass: (number | null)[];
-  kick: number[];
-  /** The kick on every fourth bar, to set up the turn. */
-  kickFill: number[];
-  /** A soft sixteenth arpeggio of the chord, for drive. */
-  arp: boolean;
 }
 
 const _ = null;
 
 /**
- * "Warm Up", for the lobby and the results: D major at 112, a bouncy
- * pluck melody over a clap groove. Friendly, so it can loop for a while.
+ * "Warm Up", for the lobby and the results: B flat major at 94,
+ * an organ swelling under a mellow lead, a round bass and brushes. Warm
+ * and easy, so it can loop for as long as people take to pick.
  */
 const WARM_UP: Tune = {
-  bpm: 112,
-  swing: 0.12,
-  key: 0,
-  chords: [
-    [38, 62, 66, 69], // D
-    [47, 62, 66, 71], // Bm
-    [43, 62, 67, 71], // G
-    [45, 61, 64, 69], // A
-    [38, 62, 66, 69],
-    [47, 62, 66, 71],
-    [43, 62, 67, 71],
-    [45, 61, 64, 69],
-  ],
-  hook: [
-    74, _, _, 76, _, 78, _, _, 76, _, 74, _, _, _, 69, _,
-    71, _, _, _, 74, _, _, _, 78, _, 76, _, 74, _, _, _,
-    74, _, _, 76, _, 78, _, _, 81, _, 78, _, _, _, 76, _,
-    76, _, _, _, 73, _, _, _, 69, _, _, _, _, _, _, _,
-    78, _, 78, _, 76, _, 74, _, 76, _, _, _, 69, _, _, _,
-    71, _, 74, _, 78, _, 74, _, 76, _, _, _, _, _, _, _,
-    79, _, 78, _, 76, _, 74, _, 76, _, 78, _, 79, _, _, _,
-    81, _, _, _, 76, _, _, _, 73, _, _, _, 76, _, _, _,
-  ],
-  lead: "pluck",
-  bass: [0, _, _, 0, _, _, 7, _, 12, _, _, 0, _, 7, _, _],
-  kick: [0, 6, 10],
-  kickFill: [0, 6, 8, 10, 14],
-  arp: false,
+  style: "lobby",
+  bpm: 94,
+  swing: 0.16,
+  chords: chords([
+    "A#1 A#3 D4 F4 A4", "G2 A#3 D4 F4 G4", "D#2 A#3 D4 D#4 G4", "F2 A3 C4 F4 A4",
+    "A#1 A#3 D4 F4 A4", "D2 A3 C4 D4 F4", "D#2 A#3 D4 D#4 G4", "F2 A#3 C4 F4",
+    "C2 A#3 C4 D#4 G4", "F2 A3 C4 F4 A4", "D2 A3 C4 D4 F4", "G2 A#3 D4 F4 G4",
+    "D#2 A#3 D4 D#4 G4", "F2 A3 C4 F4 A4", "G2 A#3 D4 F4 G4", "F2 A3 C4 D#4 F4",
+  ]),
+  hook: melody(`
+    -:2 F5:2 D5:2 F5:2 A5:6 G5:2 | F5:8 D5:4 -:4 | -:2 G5:2 F5:2 D5:2 A#4:4 C5:4 | C5:12 -:4
+    -:2 F5:2 D5:2 F5:2 A5:4 C6:4 | A5:8 G5:4 F5:4 | G5:6 F5:2 D#5:4 D5:4 | C5:8 -:8
+    D#5:4 G5:4 A#5:6 G5:2 | A5:8 F5:4 C5:4 | D5:4 F5:4 A5:6 C6:2 | A#5:8 A5:4 G5:4
+    G5:4 A#5:4 D6:8 | C6:6 A5:2 F5:8 | G5:4 F5:4 D5:4 C5:4 | D#5:4 D5:4 C5:8
+  `),
+  lead: "mellow",
+  bass: [0, _, _, _, _, _, _, 7, _, _, 12, _, _, _, 7, _],
 };
 
 /**
- * "Clash", the battle theme: A minor at 144, four on the floor, a
- * pumping octave bass and a hook that climbs every time round. Each
- * stage plays it in its own key and voice.
+ * "Clash", the battle theme: E minor at 152. Four on the floor with
+ * sixteenth hats, a pumping octave bass and chugging guitar. The A half
+ * is a punchy riff that climbs, the B half soars on long notes.
  */
 const CLASH: Tune = {
-  bpm: 144,
+  style: "battle",
+  bpm: 152,
   swing: 0,
-  key: 0,
-  chords: [
-    [45, 57, 60, 64], // Am
-    [41, 57, 60, 65], // F
-    [48, 55, 60, 64], // C
-    [43, 55, 59, 62], // G
-    [45, 57, 60, 64],
-    [41, 57, 60, 65],
-    [43, 55, 59, 62],
-    [40, 56, 59, 64], // E
-  ],
-  hook: [
-    76, _, 76, _, 74, _, 76, _, 79, _, _, 76, _, 74, 72, _,
-    72, _, _, 74, _, 72, 69, _, 72, _, 74, _, 76, _, _, _,
-    76, _, 76, _, 74, _, 76, _, 79, _, _, 81, _, 79, 76, _,
-    74, _, _, _, 71, _, 74, _, 79, _, _, _, _, _, _, _,
-    81, _, 79, _, 76, _, 79, _, 81, _, _, 84, _, 81, 79, _,
-    77, _, 76, _, 72, _, 76, _, 77, _, _, 79, _, 77, 76, _,
-    74, _, 76, _, 79, _, 76, _, 74, _, 71, _, 74, _, 76, _,
-    76, _, _, _, _, _, 71, _, 76, _, _, _, 80, _, _, _,
-  ],
-  lead: "pluck",
-  bass: [0, _, 12, _, 0, _, 12, _, 0, _, 12, _, 0, _, 12, 7],
-  kick: [0, 4, 8, 12],
-  kickFill: [0, 4, 8, 10, 12, 14],
-  arp: true,
+  chords: chords([
+    "E2 G3 B3 E4", "C2 G3 C4 E4", "G2 G3 B3 D4", "D2 F#3 A3 D4",
+    "E2 G3 B3 E4", "C2 G3 C4 E4", "A2 A3 C4 E4", "B1 F#3 B3 D#4",
+    "C2 G3 C4 E4", "D2 F#3 A3 D4", "B1 F#3 B3 D4", "E2 G3 B3 E4",
+    "C2 G3 C4 E4", "D2 F#3 A3 D4", "B1 F#3 B3 D#4", "B1 F#3 A3 D#4",
+  ]),
+  hook: melody(`
+    E5:2 E5:1 G5:2 E5:1 B5:4 A5:2 G5:2 F#5:2 | G5:3 E5:3 C5:2 E5:4 -:4 | D5:2 D5:1 G5:2 D5:1 B5:4 A5:2 G5:2 A5:2 | F#5:6 D5:2 A4:4 -:4
+    E5:2 E5:1 G5:2 E5:1 B5:4 A5:2 G5:2 F#5:2 | G5:3 A5:3 B5:2 C6:4 B5:2 A5:2 | A5:3 G5:3 E5:2 C5:2 E5:2 A5:2 G5:2 | F#5:8 D#5:4 B4:4
+    G5:4 E5:4 G5:2 C6:6 | A5:4 F#5:4 A5:2 D6:6 | B5:3 A5:3 F#5:2 D5:4 F#5:4 | E5:10 -:2 B4:2 D5:2
+    E5:2 G5:2 C6:4 B5:2 A5:2 G5:4 | F#5:2 A5:2 D6:4 C6:2 B5:2 A5:4 | B5:6 A5:2 G5:4 F#5:4 | D#5:4 F#5:4 B5:4 -:4
+  `),
+  lead: "guitar",
+  bass: [0, _, 12, _, 0, _, 12, _, 0, _, 12, _, 0, 12, 7, _],
 };
 
-/** The battle theme per stage: the same tune, moved and revoiced to suit the place. */
+/** The battle theme per stage: the same song in the same key, voiced and paced for the place. */
 const STAGE_VARIANTS: Record<StageId, Partial<Tune>> = {
-  "dojo-rooftop": { lead: "pluck", key: 0, bpm: 144 },
-  "floating-temple": { lead: "bell", key: 2, bpm: 138 },
-  "crystal-cave": { lead: "crystal", key: -3, bpm: 140 },
-  "forest-treetop": { lead: "flute", key: -2, bpm: 146 },
+  "dojo-rooftop": { lead: "guitar", bpm: 152 },
+  "floating-temple": { lead: "wide", bpm: 150 },
+  "crystal-cave": { lead: "square", bpm: 154 },
+  "forest-treetop": { lead: "saw", bpm: 156 },
 };
 
 export const LOBBY_TUNE = WARM_UP;
