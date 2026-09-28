@@ -1,5 +1,5 @@
 import { RIM_SPOT, rimDistance } from "./court";
-import { updateBlock, updateSteal } from "./defend";
+import { pressJump, updateBlock, updateSteal } from "./defend";
 import { startDrive, updateDrive } from "./drive";
 import type { Match } from "./match";
 import { canShootOutOf, updateMove } from "./moves";
@@ -48,6 +48,7 @@ export function pressPass(m: Match, a: Athlete, aim: V2 | null): void {
     if (target) throwPass(m, a, target);
     return;
   }
+  if (holder && holder.team !== a.team) return pressJump(a);
   if (holder && holder.team === a.team && m.time - a.calledAt > 0.8) {
     a.calledAt = m.time;
     m.emit({ type: "call", id: a.id });

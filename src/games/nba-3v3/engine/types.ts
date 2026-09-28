@@ -74,8 +74,14 @@ export interface Athlete {
   y: number;
   /** Facing: 0 looks toward the camera, pi toward the hoop. */
   yaw: number;
-  /** Where the stick asks to go, in court space, length up to 1. */
+  /** Where the player is steered, in court space, length up to 1: the stick, or Guard, or the computer. */
   move: V2;
+  /** The phone's own stick, kept apart from `move` so Guard knows when the thumb takes over. */
+  stick: V2;
+  /** Guard is held: shadow the man on defence (see `guard.ts`). */
+  guard: boolean;
+  /** Where the shadow has got to. It trails the ideal spot, which is how a dribble move leaves it behind. */
+  guardAim: V2 | null;
   action: Action;
   stealCd: number;
   blockCd: number;
