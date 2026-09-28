@@ -45,6 +45,13 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 3. **Builds instead of characters** in Basketball (Shooter, Dunker, and so on), Soccer and Football: each pick is a stat build and the username stays the displayed name.
 4. **Winner scenes** for the other games with a clear winner: Blade Clash, Paintball Battle, Cube Game 1v1.
 
+5. **Zombie Survival rework:**
+   * Each weapon gets its own crosshair and a real trade off (the shotgun has a wide spread and short range, and so on).
+   * Recoil kicks the gun, which springs back to where the player points. The aim itself never moves.
+   * Shorter, faster waves: at most 10 zombies a round early on and about 20 in late rounds.
+   * Difficulty comes from speed, not numbers. Zombies are fast from the start (1x), about 10 percent faster each round, capped at 2x.
+   * A big slow boss every 5 rounds, with fast zombies rushing in behind it. A mini boss every other round.
+
 ### Last
 
 1. **Final README:** every new feature and game, Football 3v3 and Paintball Battle, new screenshots.
