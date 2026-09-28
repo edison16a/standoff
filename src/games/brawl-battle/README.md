@@ -171,7 +171,7 @@ For looking around in development, `/showcase/brawl-battle?view=poster&at=8.2&ca
 
 ### Home screen media
 
-The icon, the poster and the clip are filmed with `node tools/media/capture.mjs brawl-battle --url http://localhost:3000 --ffmpeg ffmpeg --size 1280x720` while `npm run dev` is running. The first three seconds the tool lets run are stepped without drawing, and the loop draws once per filmed frame. A slow frame on a software renderer counts as one filmed frame, so the clip never skips. The showcase test fails if an engine or bot change moves the filmed fight; pick new moments and film again when it does. The current icon and poster were filmed after the flow pass. The clip was filmed after the second pass and still shows that fight; film it again with ffmpeg installed.
+The icon, the poster and the clip are filmed with `node tools/media/capture.mjs brawl-battle --url http://localhost:3000 --ffmpeg ffmpeg --size 1280x720` while `npm run dev` is running. The first three seconds the tool lets run are stepped without drawing, and the loop draws once per filmed frame. A slow frame on a software renderer counts as one filmed frame, so the clip never skips. The showcase test fails if an engine or bot change moves the filmed fight; pick new moments and film again when it does. The icon, the poster and the clip were all filmed after the flow pass, so they show chained attacks and no ult or KO banners.
 
 ### Tests
 

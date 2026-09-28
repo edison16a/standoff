@@ -5,6 +5,8 @@ import { MODE_COLOURS, type Theme } from "./themes";
 
 const PAD_COLOUR = 0xffe14d;
 const ORB_COLOUR = 0xffd21f;
+/** A portal ring's radius, in cubes. Runs nearly always cross portals on the floor. */
+const PORTAL_SIZE = 1.6;
 
 /** A colour pushed past white, so the bloom makes it glow. */
 function bright(hex: number, strength: number): THREE.Color {
@@ -73,19 +75,19 @@ export class Gadgets {
       this.group.add(ring, core, halo);
     }
 
-    const portalRing = new THREE.TorusGeometry(1, 0.1, 10, 56);
+    // Round, and standing on the floor where runs cross it. Only crossing
+    // its x switches the mode, so the ring's size is looks alone.
+    const portalRing = new THREE.TorusGeometry(1, 0.12, 10, 56);
     for (const portal of level.portals) {
       const colour = MODE_COLOURS[portal.mode];
-      const tall = portal.ceiling ? Math.min(portal.ceiling / 2 - 0.3, 3.2) : 2.4;
-      const middle = portal.ceiling ? portal.ceiling / 2 : 2.4;
       const frame = new THREE.Group();
-      frame.position.set(portal.x, middle, 0);
+      frame.position.set(portal.x, PORTAL_SIZE + 0.1, 0);
       const ring = new THREE.Mesh(portalRing, new THREE.MeshBasicMaterial({ color: bright(colour, 1.7) }));
-      ring.scale.set(0.75, tall, 1);
+      ring.scale.setScalar(PORTAL_SIZE);
       const inner = new THREE.Mesh(portalRing, new THREE.MeshBasicMaterial({ color: bright(colour, 1.0) }));
-      inner.scale.set(0.5, tall * 0.8, 1);
+      inner.scale.setScalar(PORTAL_SIZE * 0.72);
       const fog = new THREE.Sprite(additive(this.glow, colour, 0.3));
-      fog.scale.set(3.2, tall * 2.6, 1);
+      fog.scale.setScalar(PORTAL_SIZE * 3.2);
       frame.add(ring, inner, fog);
       this.spinners.push(inner);
       this.disposables.push(ring.material, inner.material, fog.material);
