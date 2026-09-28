@@ -15,7 +15,7 @@ const KICKS: Record<Kit, { from: number; to: number; decay: number; click: numbe
   soft: { from: 120, to: 45, decay: 0.34, click: 0.08 },
   punch: { from: 150, to: 42, decay: 0.28, click: 0.25 },
   tight: { from: 190, to: 50, decay: 0.16, click: 0.4 },
-  hard: { from: 170, to: 38, decay: 0.42, click: 0.35 },
+  hard: { from: 170, to: 38, decay: 0.32, click: 0.3 },
 };
 
 /** A kick drum in the kit's style: a falling sine for the thump and a tick of noise for the beater. */
@@ -57,14 +57,14 @@ export function chip(engine: AudioEngine, out: AudioNode, at: number, midi: numb
 export function reese(engine: AudioEngine, out: AudioNode, at: number, midi: number, length: number): void {
   const { ctx } = engine;
   const f = hz(midi);
-  tone(engine, out, at, { type: "sine", frequency: f, attack: 0.006, decay: length * 0.95, peak: 0.3 });
+  tone(engine, out, at, { type: "sine", frequency: f, attack: 0.006, decay: length * 0.95, peak: 0.22 });
   const filter = ctx.createBiquadFilter();
   const gain = ctx.createGain();
   filter.type = "lowpass";
   filter.Q.value = 3;
   filter.frequency.setValueAtTime(900, at);
   filter.frequency.exponentialRampToValueAtTime(260, at + Math.max(0.1, length));
-  envelope(gain.gain, at, 0.008, length * 0.9, 0.09);
+  envelope(gain.gain, at, 0.008, length * 0.9, 0.07);
   filter.connect(gain).connect(out);
   const oscs = [-14, 14].map((detune) => {
     const osc = ctx.createOscillator();
