@@ -1,6 +1,7 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 import { midi, noise, tone } from "@/platform/audio/voices";
 import { createRoom, vary, type Room } from "./mix";
+import { FOUL_CALL, playWhistle, STOP_CALL } from "./whistle";
 
 /**
  * The court's own sounds, synthesised: the ball on the hardwood, sneakers
@@ -124,15 +125,14 @@ export class Sfx {
     tone(this.engine, ui, this.at + 0.1, { frequency: midi(96), decay: 0.4, peak: 0.08 });
   }
 
-  /** The referee's whistle: a pea rattling in a shrill two note trill, then the building's echo. */
+  /** The referee's whistle for a dead ball: one firm blast (see `whistle.ts`). */
   whistle(): void {
-    const at = this.at;
-    for (let i = 0; i < 16; i++) {
-      const f = i % 2 === 0 ? 2950 : 3250;
-      tone(this.engine, this.out, at + i * 0.028, { frequency: vary(f, 0.01), attack: 0.004, decay: 0.035, peak: 0.07 });
-    }
-    noise(this.engine, this.out, at, { filter: "bandpass", frequency: 3100, q: 4, attack: 0.01, decay: 0.45, peak: 0.08 });
-    tone(this.engine, this.wet, at + 0.05, { frequency: 3100, decay: 0.5, peak: 0.03 });
+    playWhistle(this.engine, this.out, this.wet, STOP_CALL);
+  }
+
+  /** A foul: a short chirp and a long hard blast. */
+  foulWhistle(): void {
+    playWhistle(this.engine, this.out, this.wet, FOUL_CALL);
   }
 
   countdown(count: number): void {
