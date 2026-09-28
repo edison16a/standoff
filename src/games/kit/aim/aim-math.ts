@@ -82,7 +82,7 @@ export const TARGET_INSET = 0.8;
 export const DEFAULT_SPAN = { x: 0.34, y: 0.2 };
 
 /** Smallest believable span, so a sloppy corner never makes the aim twitchy. */
-const MIN_SPAN = 0.05;
+export const MIN_SPAN = 0.05;
 
 /** How far past the edge the aim may wander before it is held at the edge. */
 const OVERSHOOT = 1.15;
