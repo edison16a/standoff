@@ -15,7 +15,7 @@ export const RULES = {
    * health left. Pressure makes it rare; this only stops a round that
    * somehow stalls from running forever.
    */
-  roundLimit: 150,
+  roundLimit: 180,
 } as const;
 
 /**

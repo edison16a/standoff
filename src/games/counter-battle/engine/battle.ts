@@ -164,7 +164,7 @@ export class Battle {
   private humanTrigger(f: Fighter, events: BattleEvent[]): void {
     const t = f.trigger;
     // Still rising out of cover: a shot now would only paint the bunker.
-    if (f.crouch > UP_ENOUGH && f.pose === "crouch") {
+    if (f.crouch > UP_ENOUGH) {
       if (this.time - t.pulledAt > PULL_KEEP) t.pulls = 0;
       return;
     }

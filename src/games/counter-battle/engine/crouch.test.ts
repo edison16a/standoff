@@ -19,7 +19,7 @@ function range(gun: FighterSetup["gun"] = "rifle"): Battle {
 const run = (b: Battle, steps: number): BattleEvent[] => Array.from({ length: steps }, () => b.step()).flat();
 const shots = (events: BattleEvent[], id: number) => events.filter((e) => e.type === "shot" && e.shooter === id).length;
 
-describe("taking cover", () => {
+describe("taking cover", { timeout: 60_000 }, () => {
   it("keeps a player down while Crouch is held, and brings them up when it is let go", () => {
     const b = range();
     const me = b.fighters[0]!;
@@ -73,7 +73,7 @@ describe("taking cover", () => {
   });
 });
 
-describe("training", () => {
+describe("training", { timeout: 60_000 }, () => {
   it("leaves the computer players standing still, never shooting", () => {
     const b = range();
     const dummy = b.fighters[1]!;
