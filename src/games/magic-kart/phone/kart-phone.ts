@@ -4,6 +4,7 @@ import type { PhoneRoomApi, PhoneRoomEvent } from "@/platform/games/game-api";
 import { tone } from "@/platform/audio/voices";
 import type { CharacterId } from "../characters";
 import { hostMessageSchema, type HostMessage, type PhoneMessage } from "../protocol";
+import { loadMemory, saveMemory } from "./controller-memory";
 import { useControllerStore as store } from "./controller-store";
 import { buzz } from "./haptics";
 import { screenAngle, steerFromWheel, tiltOf, wheelAngle, type Tilt } from "./tilt";
@@ -34,12 +35,16 @@ export class KartPhone {
   private angle = 90;
   private wheelSteer = 0;
   private pedals: Pedals = { drive: false, brake: false, left: false, right: false };
+  /** A driver remembered from before a reload, sent again if the host has lost it. */
+  private resumePick: CharacterId | null = null;
+  private saved = "";
   private readonly stopSensors: (() => void) | null;
   private readonly unsubscribe: () => void;
+  private readonly stopMemory: () => void;
   private readonly timer: ReturnType<typeof setInterval>;
 
   constructor(private readonly room: PhoneRoomApi) {
-    store.setState({ ...store.getInitialState() });
+    this.resume();
     const onQuat = (q: Quat) => {
       this.angle = wheelAngle(screenAngle(), this.angle);
       this.tilt = tiltOf(q, this.angle);
@@ -49,6 +54,9 @@ export class KartPhone {
     // With no sensors there is nothing to calibrate, so the setup must not wait for it.
     if (room.motion !== "granted") store.setState({ steerMode: "buttons", calibrated: true });
     this.unsubscribe = room.on((event) => this.onRoom(event));
+    // Every change is kept at once, since a reload gives no warning.
+    this.stopMemory = store.subscribe(() => this.remember());
+    this.remember();
     this.timer = setInterval(() => this.stream(false), SEND_MS);
     this.send({ kind: "hello" });
   }
@@ -57,6 +65,7 @@ export class KartPhone {
     clearInterval(this.timer);
     this.stopSensors?.();
     this.unsubscribe();
+    this.stopMemory();
   }
 
   /** Steering from -1 to 1, from the wheel or the arrow buttons. */
@@ -74,6 +83,7 @@ export class KartPhone {
     this.zero = this.tilt?.wheel ?? 0;
     this.wheelSteer = 0;
     store.setState({ calibrated: true });
+    this.remember();
     this.click();
   }
 
@@ -129,6 +139,8 @@ export class KartPhone {
 
   private onHost(message: HostMessage): void {
     if (message.kind === "buzz") return buzz(message.event);
+    if (this.resumePick && !message.pick && !message.racing) this.send({ kind: "pick", character: this.resumePick });
+    this.resumePick = null;
     const { wanted } = store.getState();
     // The host refused the pick (someone else got there first), so show what it has.
     const refused = wanted !== null && message.pick !== wanted && message.taken.includes(wanted);
@@ -140,6 +152,28 @@ export class KartPhone {
     const { wanted, host } = store.getState();
     if (wanted) this.send({ kind: "pick", character: wanted });
     if (host?.ready) this.send({ kind: "ready", ready: true });
+  }
+
+  /**
+   * Starts from what this phone had before a reload, or from scratch. A
+   * phone that lost its motion access on the way steers with buttons.
+   */
+  private resume(): void {
+    const memory = loadMemory(this.room.code, this.room.seat);
+    this.zero = memory?.zero ?? 0;
+    this.resumePick = memory?.wanted ?? null;
+    const kept = memory ? { step: memory.step, steerMode: memory.steerMode, calibrated: memory.calibrated, wanted: memory.wanted } : {};
+    store.setState({ ...store.getInitialState(), ...kept });
+  }
+
+  /** Saves the setup when it changed. Host updates stream in all race long and leave it alone. */
+  private remember(): void {
+    const { step, steerMode, calibrated, wanted } = store.getState();
+    const memory = { step, steerMode, calibrated, wanted, zero: this.zero };
+    const text = JSON.stringify(memory);
+    if (text === this.saved) return;
+    this.saved = text;
+    saveMemory(this.room.code, this.room.seat, memory);
   }
 
   private send(payload: PhoneMessage): void {

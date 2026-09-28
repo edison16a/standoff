@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { PhoneRoomApi } from "@/platform/games/game-api";
+import type { PhoneRoomApi, PhoneRoomEvent } from "@/platform/games/game-api";
 import type { Payload } from "@/platform/protocol";
+import type { PhoneState } from "../protocol";
 import { useControllerStore } from "./controller-store";
 import { KartPhone } from "./kart-phone";
 
@@ -17,20 +18,52 @@ function hold(beta: number, gamma: number): void {
 
 function fakeRoom(motion: "granted" | "unavailable") {
   const sent: Payload[] = [];
+  const listeners = new Set<(event: PhoneRoomEvent) => void>();
   const room = {
+    code: "KART",
     seat: 1,
     motion,
     audio: { bus: () => null, now: 0 },
     send: (payload: Payload) => sent.push(payload),
     sendLossy: () => {},
-    on: () => () => {},
+    on: (listener: (event: PhoneRoomEvent) => void) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
   } as unknown as PhoneRoomApi;
-  return { room, sent };
+  const hostSays = (payload: Partial<PhoneState>) => listeners.forEach((fn) => fn({ type: "message", payload: { ...LOBBY, ...payload } }));
+  return { room, sent, hostSays };
 }
+
+const LOBBY: PhoneState = {
+  kind: "state",
+  phase: "lobby",
+  map: "beach",
+  taken: [],
+  pick: null,
+  ready: false,
+  racing: false,
+  countdown: null,
+  place: null,
+  karts: 0,
+  lap: 0,
+  laps: 2,
+  item: null,
+  rolling: false,
+  wrongWay: false,
+  finished: false,
+  effect: null,
+  surge: 0,
+  drift: null,
+};
 
 describe("the kart phone", () => {
   let phone: KartPhone | null = null;
-  afterEach(() => phone?.dispose());
+  afterEach(() => {
+    phone?.dispose();
+    phone = null;
+    sessionStorage.clear();
+  });
 
   it("lets a phone with no sensors through setup and steers with the arrows", () => {
     phone = new KartPhone(fakeRoom("unavailable").room);
@@ -53,5 +86,56 @@ describe("the kart phone", () => {
     expect(phone.steer).toBeGreaterThan(0.6);
     hold(-36, -80);
     expect(phone.steer).toBeLessThan(-0.6);
+  });
+
+  it("comes back after a reload where it left off, calibration included", () => {
+    phone = new KartPhone(fakeRoom("granted").room);
+    hold(24, -80);
+    phone.calibrate();
+    phone.pick("nova");
+    phone.goTo("ready");
+    phone.dispose();
+
+    // A reload makes a fresh controller for the same room and seat.
+    phone = new KartPhone(fakeRoom("granted").room);
+    const state = useControllerStore.getState();
+    expect(state).toMatchObject({ step: "ready", calibrated: true, wanted: "nova", steerMode: "tilt" });
+    hold(24, -80);
+    expect(phone.steer).toBe(0);
+  });
+
+  it("asks for its driver again when the host lost it, and only then", () => {
+    phone = new KartPhone(fakeRoom("granted").room);
+    phone.pick("pip");
+    phone.dispose();
+
+    const lost = fakeRoom("granted");
+    phone = new KartPhone(lost.room);
+    lost.hostSays({ pick: null });
+    expect(lost.sent).toContainEqual({ kind: "pick", character: "pip" });
+    phone.dispose();
+
+    const kept = fakeRoom("granted");
+    phone = new KartPhone(kept.room);
+    kept.hostSays({ pick: "pip" });
+    expect(kept.sent.filter((m) => m.kind === "pick")).toEqual([]);
+  });
+
+  it("steers with buttons after a reload that lost motion access", () => {
+    phone = new KartPhone(fakeRoom("granted").room);
+    hold(4, -80);
+    phone.calibrate();
+    phone.dispose();
+    phone = new KartPhone(fakeRoom("unavailable").room);
+    expect(useControllerStore.getState()).toMatchObject({ steerMode: "buttons", calibrated: true });
+  });
+
+  it("starts fresh in a different room", () => {
+    phone = new KartPhone(fakeRoom("granted").room);
+    phone.goTo("kart");
+    phone.dispose();
+    const other = fakeRoom("granted");
+    phone = new KartPhone({ ...other.room, code: "OTHR" });
+    expect(useControllerStore.getState().step).toBe("calibrate");
   });
 });

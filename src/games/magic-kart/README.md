@@ -15,6 +15,8 @@ Status: ready. A split screen kart racer for 1 to 4 players, with computer karts
 
 A phone that joins mid race sets up and joins the next race. A player whose phone drops keeps their kart, with the computer driving until they are back.
 
+Turning the phone never breaks the controller. A hard turn of the wheel can swing the page upright for a moment. The pedals stay put through that, and only a page that stays upright for about a second shows the card asking to turn the phone sideways. Turning it back brings the pedals straight back. If the controller page reloads or drops, it comes back on the same setup step with the same calibration and driver. Rejoin the room and it picks up the race where it was.
+
 ## Driving
 
 * Hold Drive to accelerate. Speed builds over about four seconds, quick at first and easing off near the top. Let go and the kart coasts down gently.
@@ -65,7 +67,7 @@ Effects are layered and each repeat lands at a slightly different pitch. A glide
 * `tracks/`: one file per map, as data.
 * `render/`: three.js. `models/` has the four karts and drivers built from painted primitives and merged per kart, and each driver's glider (`glider.ts`, with the cloth in `glider-sail.ts`), which `glider-view.ts` unfolds, `scenery/` one file per map, `track/` the road, kerbs, barriers and markings, `props/` the cubes, obstacles and throws, `effects/` the particles.
 * `host/`: the session on the computer (lobby, race driver, what the phones and the overlay see) and its React screens.
-* `phone/`: the controller session, the steering wheel maths and the phone screens. Steering reads where "up" points across the screen, so it holds however far the phone leans and never flips the way Euler angles do. The response is tuned in `phone/tilt.ts`: `FULL_LOCK` is the wheel angle for full lock (50 degrees, fine anywhere from 45 to 60), `DEAD_ZONE` keeps a steady hand going straight, and `LINEAR_SHARE` blends a linear and a cubic curve so small turns stay fine. With these values a braking drift starts from about 25 degrees of wheel.
+* `phone/`: the controller session, the steering wheel maths and the phone screens. Steering reads where "up" points across the screen, so it holds however far the phone leans and never flips the way Euler angles do. The response is tuned in `phone/tilt.ts`: `FULL_LOCK` is the wheel angle for full lock (50 degrees, fine anywhere from 45 to 60), `DEAD_ZONE` keeps a steady hand going straight, and `LINEAR_SHARE` blends a linear and a cubic curve so small turns stay fine. With these values a braking drift starts from about 25 degrees of wheel. `phone/orientation-watch.ts` tells whether the page is upright from every signal a turn gives, and reads again shortly after, since iOS can report the new size late. `phone/controller-memory.ts` keeps the setup step, steering mode, calibration and driver in session storage per room and seat, so a reload resumes.
 * `audio/`: the synthesized lobby tune and race song (`lobby-song.ts`, `race-song.ts`, played on the instruments in `kart-band.ts`), an engine per kart pitched by speed, every effect, the crowd and the race caller, through the platform's audio buses (see Sound above).
 * `protocol/`: the zod schemas for the messages between the phones and the host.
 * `showcase/`: the game playing itself for the home screen's media (see below).
