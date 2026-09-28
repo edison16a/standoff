@@ -33,7 +33,8 @@ interface Cut {
   spin: V3;
 }
 
-export function traceShot(from: V3, vel: V3, spin: V3): Trace | null {
+/** `want` false gives up the moment the ball drops in, as an aim for a miss that makes it is no use. */
+export function traceShot(from: V3, vel: V3, spin: V3, want?: boolean): Trace | null {
   const body = { pos: { ...from }, vel: { ...vel }, w: { ...spin } };
   const pts: number[] = [from.x, from.y, from.z];
   const cuts: Cut[] = [{ at: 0, events: [], spin: { ...spin } }];
@@ -65,6 +66,7 @@ export function traceShot(from: V3, vel: V3, spin: V3): Trace | null {
         first ??= "board";
         events.push({ kind: "board", power: Math.min(1, c.power / 5) });
       } else if (c.kind === "through" && !made) {
+        if (want === false) return null;
         made = true;
         events.push({ kind: "net", swish: first === null }, { kind: "score" });
       }

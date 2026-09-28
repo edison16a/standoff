@@ -48,7 +48,7 @@ export function aimShot(rng: Rng, { from, outcome, apex, backspin }: AimInput): 
     const c = fix.get(aim.across)!;
     const virtual = { x: aim.target.x + c.x, y: aim.target.y + c.y, z: aim.target.z + c.z };
     const v = arcTo(from, virtual, apex).v;
-    const trace = traceShot(from, v, spin);
+    const trace = traceShot(from, v, spin, want);
     if (!trace || trace.made !== want) continue;
     if (trace.outcome === outcome) return trace;
     backup ??= trace;
@@ -136,7 +136,7 @@ function crossing(from: V3, v: V3, spin: V3, aim: Aim): V3 | null {
   const pos = { ...from };
   const vel = { ...v };
   const w = { ...spin };
-  const h = 1 / 240;
+  const h = 1 / 120;
   for (let t = 0; t < 4; t += h) {
     const px = pos.x;
     const py = pos.y;

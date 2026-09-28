@@ -44,10 +44,7 @@ export function stepLoose(b: Body, dt: number, contacts: Contact[]): void {
 function substep(b: Body, w: V3, h: number, contacts: Contact[]): void {
   const { pos, vel } = b;
   const wasAbove = pos.y > RIM.y;
-  air(vel, w, h);
-  pos.x += vel.x * h;
-  pos.y += vel.y * h;
-  pos.z += vel.z * h;
+  airStep(pos, vel, w, h);
 
   inNet(b, w, h);
   rim(b, w, contacts);
@@ -58,24 +55,25 @@ function substep(b: Body, w: V3, h: number, contacts: Contact[]): void {
   if (wasAbove && pos.y <= RIM.y && vel.y < 0 && fromAxis < RIM.radius - BALL.radius * 0.5) contacts.push({ kind: "through", power: -vel.y });
 }
 
-/** Just the flight through the air for `h` seconds, with nothing to hit: for aiming a shot. */
+/**
+ * The flight through the air for `h` seconds: gravity, drag against the
+ * air, and the Magnus lift of the spin, which floats a backspun shot a
+ * touch. The position takes the half step of acceleration too, so a
+ * path comes out the same whatever the step size, which is what lets a
+ * shot be aimed in big steps and flown in small ones.
+ */
 export function airStep(pos: V3, vel: V3, w: V3, h: number): void {
-  air(vel, w, h);
-  pos.x += vel.x * h;
-  pos.y += vel.y * h;
-  pos.z += vel.z * h;
-}
-
-/** Gravity, drag against the air, and the Magnus lift of the spin, which floats a backspun shot a touch. */
-function air(vel: V3, w: V3, h: number): void {
   const speed = Math.hypot(vel.x, vel.y, vel.z);
   const drag = BALL.drag * speed;
-  const mx = BALL.magnus * (w.y * vel.z - w.z * vel.y);
-  const my = BALL.magnus * (w.z * vel.x - w.x * vel.z);
-  const mz = BALL.magnus * (w.x * vel.y - w.y * vel.x);
-  vel.x += (mx - drag * vel.x) * h;
-  vel.y += (my - drag * vel.y - BALL.gravity) * h;
-  vel.z += (mz - drag * vel.z) * h;
+  const ax = BALL.magnus * (w.y * vel.z - w.z * vel.y) - drag * vel.x;
+  const ay = BALL.magnus * (w.z * vel.x - w.x * vel.z) - drag * vel.y - BALL.gravity;
+  const az = BALL.magnus * (w.x * vel.y - w.y * vel.x) - drag * vel.z;
+  pos.x += (vel.x + 0.5 * ax * h) * h;
+  pos.y += (vel.y + 0.5 * ay * h) * h;
+  pos.z += (vel.z + 0.5 * az * h) * h;
+  vel.x += ax * h;
+  vel.y += ay * h;
+  vel.z += az * h;
 }
 
 function floor(b: Body, w: V3, h: number, contacts: Contact[]): void {
@@ -157,7 +155,8 @@ function inNet(b: Body, w: V3, h: number): void {
   if (hl > RIM.radius - BALL.radius * 0.4) return;
   const depth = (RIM.y - pos.y) / NET.depth;
   const room = RIM.radius * (1 - depth * 0.35) - BALL.radius * 0.6;
-  const keep = Math.pow(0.08, h);
+  // The cords soak up nearly all the sideways speed in the fraction of a second the ball spends in them.
+  const keep = Math.pow(0.002, h);
   vel.x *= keep;
   vel.z *= keep;
   w.x *= keep;
@@ -167,5 +166,11 @@ function inNet(b: Body, w: V3, h: number): void {
   if (hl > room && hl > 1e-6) {
     pos.x = RIM.x + (hx / hl) * room;
     pos.z = RIM.z + (hz / hl) * room;
+    // The net wall stops the ball going any further out.
+    const out = (vel.x * hx + vel.z * hz) / hl;
+    if (out > 0) {
+      vel.x -= (out * hx) / hl;
+      vel.z -= (out * hz) / hl;
+    }
   }
 }
