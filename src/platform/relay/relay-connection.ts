@@ -1,3 +1,4 @@
+import { cleanName } from "@/platform/profile";
 import type { ClientEnvelope, Payload, Seat, ServerEnvelope } from "@/platform/protocol";
 import { decode } from "./channels";
 import { HostWatch } from "./host-watch";
@@ -7,7 +8,6 @@ import { RoomChannel } from "./room-channel";
 import { makeToken } from "./room-code";
 import { RoomOps } from "./room-ops";
 import { connectedSeats, seatNames } from "./room-state";
-import { cleanName } from "@/platform/profile";
 import { rotateLead, type RelayContext, type SocketLike } from "./relay-types";
 
 export type { RelayContext, SocketLike } from "./relay-types";
