@@ -90,8 +90,8 @@ export class TvCamera {
     if (this.line > 0.01) {
       // Low behind the shooter, looking over his shoulder at the rim, the lane lined up either side.
       const s = this.lineAt;
-      wantPos.lerp(scratch.set(s.x * 0.5 + 0.35, 2.55, s.z + 4.2), this.line);
-      wantLook.lerp(scratch.set(RIM.x, 2.45, RIM.z + 0.9), this.line);
+      wantPos.lerp(scratch.set(s.x * 0.5 + 0.35, 2.95, s.z + 5.2), this.line);
+      wantLook.lerp(scratch.set(RIM.x, 2.2, RIM.z + 1.2), this.line);
     }
     if (shot.winners) {
       this.orbit += dt * 0.22;

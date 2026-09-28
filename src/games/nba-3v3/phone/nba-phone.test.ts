@@ -56,4 +56,16 @@ describe("the NBA phone", () => {
     phone.stream(true);
     expect(store.getState().aimingSince).toBeNull();
   });
+
+  it("holds Guard on defence with no meter and no release timing", () => {
+    const { room } = fakeRoom();
+    const sent: unknown[] = [];
+    room.send = (payload: Payload) => void sent.push(payload);
+    phone = new NbaPhone(room);
+    phone.stream(true);
+    phone.press("shoot", false);
+    expect(store.getState().aimingSince).toBeNull();
+    phone.release("shoot");
+    expect(sent.some((p) => (p as { kind?: string }).kind === "release")).toBe(false);
+  });
 });
