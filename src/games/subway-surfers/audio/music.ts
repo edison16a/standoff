@@ -1,14 +1,17 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
-import { playStep } from "./arrange";
-import { loopSteps, TUNES, type Tune } from "./tunes";
+import { LOBBY_SONG } from "./lobby-song";
+import { RUN_SONG } from "./run-song";
+import type { Song } from "./score";
 
+/** The menus get the lounge tune, the run gets the disco. */
+export const TUNES = { menu: LOBBY_SONG, run: RUN_SONG } as const satisfies Record<string, Song>;
 export type TuneName = keyof typeof TUNES;
 
 const WAKE_MS = 25;
 const LOOKAHEAD_S = 0.12;
 
 /** Where the low pass sits: warm enough to stay out of the way of the effects. */
-const OPEN_HZ = 3400;
+export const OPEN_HZ = 3400;
 const MUFFLED_HZ = 650;
 
 /**
@@ -17,7 +20,7 @@ const MUFFLED_HZ = 650;
  * through their own gain so a switch never cuts a note off.
  */
 export class Music {
-  private current: { name: TuneName; tune: Tune; gain: GainNode; step: number; nextAt: number } | null = null;
+  private current: { name: TuneName; song: Song; gain: GainNode; step: number; nextAt: number } | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
   private readonly tone: BiquadFilterNode;
   private tempo = 1;
@@ -39,7 +42,7 @@ export class Music {
     gain.gain.value = 0.0001;
     gain.gain.setTargetAtTime(1, this.engine.now, 0.3);
     gain.connect(this.tone);
-    this.current = { name, tune: TUNES[name], gain, step: 0, nextAt: this.engine.now + 0.1 };
+    this.current = { name, song: TUNES[name], gain, step: 0, nextAt: this.engine.now + 0.1 };
     this.timer ??= setInterval(() => this.schedule(), WAKE_MS);
   }
 
@@ -64,15 +67,13 @@ export class Music {
   private schedule(): void {
     const current = this.current;
     if (!current) return;
-    const stepLength = 60 / (current.tune.bpm * this.tempo) / 4;
+    const sixteenth = 60 / (current.song.bpm * this.tempo) / 4;
     // A stalled tab would otherwise try to catch up on every missed note at once.
     if (current.nextAt < this.engine.now - 0.5) current.nextAt = this.engine.now + 0.05;
     while (current.nextAt < this.engine.now + LOOKAHEAD_S) {
-      playStep(this.engine, current.gain, current.tune, current.step, current.nextAt, stepLength);
-      current.step = (current.step + 1) % loopSteps(current.tune);
-      // Swing: the offbeat sixteenths land late, which is where the laid back bounce comes from.
-      const swing = current.tune.swing;
-      current.nextAt += stepLength * (current.step % 2 === 1 ? 1 + swing : 1 - swing);
+      current.song.play(this.engine, current.gain, current.step, current.nextAt, sixteenth);
+      current.step = (current.step + 1) % current.song.steps;
+      current.nextAt += sixteenth;
     }
   }
 

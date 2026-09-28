@@ -77,7 +77,11 @@ The players are stylised athletes, recognisable by build, skin tone, hair, beard
 
 Everything is synthesised through the room's audio buses. Effects have a sharp hit, a body and a tail into a synthetic arena reverb, and each one is pitched slightly differently every time: the ball on the hardwood, sneaker squeaks, the net, the clank of the rim, the thud of the glass, passes, blocks, the shot clock beeps, its horn and the final buzzer.
 
-Music: "Blacktop" plays in the lobby and on the results, a lo-fi boom bap loop in G minor at 90 with a vibraphone hook. "Tip Off" plays under the game, a bouncier F minor groove at 100 with claps and a soft synth flute, mixed low so the ball and the arena lead. Both run eight bars with an A and a B section, through a warm low pass. The music ducks under dunks, threes and the winners' brass fanfare.
+Music: two songs, each sixteen bars with an A and a B section, written as text a bar a row and played through a warm low pass (`audio/music.ts`, `audio/score.ts`).
+
+* "Night Court" plays in the lobby and on the results. A slow late night soul tune in D flat major at 82. A soft choir pad swells under every bar and hands each chord to the next, a mellow sax sings the A section and a Wurlitzer with a lazy tremolo answers in the B section, over a round bass, a padded kick, a side stick and a shaker.
+* "Full Court Press" plays under the game. Bouncy arena hip hop in B minor at 96. Brass stabs shout the hook through the A section, then a bell answers up high in the B section while the brass hits the chords. A sliding 808, a tight kick, snare and clap on two and four, and hats that roll into each turn. Its hook is short and its held sounds sit low, so the organ stabs and the stomp stomp clap sit on top, and it steps back while the beat plays.
+* The music ducks under dunks, threes and the winners' brass fanfare.
 
 There is no crowd noise and no spoken commentary. The arena carries the moments instead, all synthesised on the effects bus. Every dead ball and every foul gets the stomp stomp clap beat: a punchy kick twice, then a sharp clap, for a few bars until play is live, with the music stepping back under it. The shot clock beeps through its last five seconds and buzzes at zero. The game horn sounds at the tip and at the final basket. The organ stabs on dunks, threes and blocks, and plays the charge call for a hot hand and at game point. On screen, banners are kept for the tip, blocks, steals, turnovers, game point and the win.
 
