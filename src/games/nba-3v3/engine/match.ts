@@ -6,6 +6,7 @@ import { updateBall } from "./ball";
 import { Brains } from "./bot/brains";
 import { botTuning, type BotTuning } from "./bot/skill";
 import { updateDribbleHand } from "./dribble";
+import { facingFor } from "./facing";
 import { steerGuard } from "./guard";
 import type { MatchEvent } from "./events";
 import type { FoulCall, PendingFoul } from "./foul-call";
@@ -17,7 +18,7 @@ import type { Outcome } from "./shot-model";
 import { placeForCheck } from "./check-plan";
 import { stepCheckBall, updateCheck, updateDead, type CheckUp } from "./check-up";
 import { updateClock } from "./rules";
-import { RIM, RULES } from "./tuning";
+import { RULES } from "./tuning";
 import type { Athlete, Ball, Button, Phase, TeamId } from "./types";
 import type { V2 } from "./vec";
 
@@ -202,7 +203,7 @@ export class Match {
       a.whiff = Math.max(0, a.whiff - dt);
       tickMoves(a, dt);
       updateAction(this, a, dt);
-      moveAthlete(a, dt, this.ball.holder === a.id, this.facing(a), this.queue);
+      moveAthlete(a, dt, this.ball.holder === a.id, facingFor(this, a), this.queue);
       updateDribbleHand(this, a, dt);
     }
     separate(this.athletes, this.queue, this.bumpCd);
@@ -220,23 +221,5 @@ export class Match {
     this.phase = "live";
     this.phaseT = 0;
     this.emit({ type: "go", team: this.offence });
-  }
-
-  /** What a standing player looks at: the rim with the ball, the ball on defence. */
-  private facing(a: Athlete): V2 | null {
-    const check = this.phase === "check" ? this.checkUp : null;
-    if (check) {
-      // In the check the two at the top face each other and everyone else watches the ball.
-      const other = a.id === check.plan.checker ? check.plan.defender : a.id === check.plan.defender ? check.plan.checker : null;
-      if (other !== null) return this.athletes[other]!;
-      return { x: this.ball.pos.x, z: this.ball.pos.z };
-    }
-    if (Math.hypot(a.vx, a.vz) > 1.2 && a.action.kind === "none") return null;
-    // At the free throws everyone watches the shooter and the rim.
-    if (this.phase === "freeThrow") return { x: RIM.x, z: RIM.z };
-    if (a.action.kind === "shoot" || a.action.kind === "drive") return { x: RIM.x, z: RIM.z };
-    if (this.ball.holder === a.id) return { x: RIM.x, z: RIM.z };
-    if (a.team !== this.offence || this.ball.mode !== "held") return { x: this.ball.pos.x, z: this.ball.pos.z };
-    return null;
   }
 }
