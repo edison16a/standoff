@@ -47,6 +47,23 @@ describe("startAudioSoon", () => {
     expect(ctx.resumes).toBe(1);
   });
 
+  it("skips asking on a mouse move the browser says cannot start sound", () => {
+    const activation = { isActive: false, hasBeenActive: false };
+    vi.stubGlobal("navigator", { userActivation: activation });
+    try {
+      const ctx = new FakeContext();
+      const page = new EventTarget();
+      startAudioSoon(ctx, page);
+      page.dispatchEvent(new Event("mousemove"));
+      expect(ctx.resumes).toBe(1);
+      activation.isActive = true;
+      page.dispatchEvent(new Event("pointerdown"));
+      expect(ctx.resumes).toBe(2);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("uses a custom start, such as the engine's unlock", async () => {
     const ctx = new FakeContext();
     const resume = vi.fn(() => Promise.resolve());

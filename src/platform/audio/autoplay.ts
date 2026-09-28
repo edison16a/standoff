@@ -36,6 +36,15 @@ export interface ResumableContext {
   removeEventListener(type: "statechange", listener: () => void): void;
 }
 
+/**
+ * False only where the browser can tell us the page has had no activation
+ * yet (the User Activation API). Anywhere else, asking is the only way to know.
+ */
+function mayStart(): boolean {
+  const activation = (globalThis.navigator as { userActivation?: { isActive: boolean; hasBeenActive: boolean } } | undefined)?.userActivation;
+  return !activation || activation.isActive || activation.hasBeenActive;
+}
+
 export interface StartOptions {
   /** How to start it. Defaults to `ctx.resume()`; the engine's unlock also plays a silent note for old iOS. */
   resume?: () => Promise<void>;
@@ -50,9 +59,13 @@ export interface StartOptions {
 export function startAudioSoon(ctx: ResumableContext, target: EventTarget, options: StartOptions = {}): () => void {
   const resume = options.resume ?? (() => ctx.resume());
   let done = false;
-  const tryResume = () => {
+  const tryResume = (event?: Event) => {
+    if (ctx.state === "running") return;
+    // Chrome warns in the console for every refused start, so a mouse move
+    // before any click only asks where the browser says it could work.
+    if (event && !mayStart()) return;
     // A resume the browser refuses stays pending or rejects. Either way the next interaction tries again.
-    if (ctx.state !== "running") resume().catch(() => undefined);
+    resume().catch(() => undefined);
   };
   const stop = () => {
     for (const type of FIRST_INTERACTION_EVENTS) target.removeEventListener(type, tryResume, { capture: true });
