@@ -58,7 +58,8 @@ export function scriptReplay(clip: readonly MatchView[]): ReplayScript {
     [start, "run", "kicker"],
     [windup - 0.05, "strike", "kicker"],
     [kickAt + 0.15, "flight", "keeper"],
-    [diveAt ?? Math.max(kickAt + 0.2, goalAt - 0.25), "dive", "keeper"],
+    // A keeper who went early still leaves the ball a moment of flight to track.
+    [Math.max(kickAt + 0.35, diveAt ?? goalAt - 0.25), "dive", "keeper"],
     [goalAt + 0.3, "net", "keeper"],
   ];
   const segments: ReplaySegment[] = [];

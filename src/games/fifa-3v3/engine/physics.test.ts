@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { makeAthlete } from "./athlete";
-import { newBall, stepBall } from "./ball";
+import { newBall, stepBall, type Contact } from "./ball";
 import { KNEE_SLIDE, stepCelebration } from "./celebrate-moves";
 import { makeSave } from "./keeper";
 import { createMatch, stepMatch, type Entrant } from "./match";
@@ -43,13 +43,14 @@ describe("a parry", () => {
 });
 
 describe("a bounce", () => {
-  /** Drops a ball moving forward with some spin and returns its pace along the ground after the first bounce. */
+  /** Drops a ball moving forward with some spin and returns its pace along the ground just after the first bounce. */
   function afterBounce(spinZ: number): number {
     const ball = newBall();
-    ball.pos = { x: 0, y: 1, z: 0 };
-    ball.vel = { x: 10, y: 0, z: 0 };
+    ball.pos = { x: 0, y: BALL.radius + 0.02, z: 0 };
+    ball.vel = { x: 10, y: -4, z: 0 };
     ball.spin = { x: 0, y: 0, z: spinZ };
-    for (let t = 0; t < 0.6; t += STEP) stepBall(ball, STEP, [], { flightOnly: true });
+    const contacts: Contact[] = [];
+    for (let t = 0; t < 0.2 && contacts.length === 0; t += STEP) stepBall(ball, STEP, contacts, { flightOnly: true });
     return ball.vel.x;
   }
 
