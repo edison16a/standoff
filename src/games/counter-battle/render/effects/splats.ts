@@ -22,14 +22,14 @@ function patch(shader: THREE.WebGLProgramParametersWithUniforms, time: { value: 
   shader.uniforms.uTime = time;
   shader.uniforms.uAtlas = { value: atlas };
   shader.vertexShader = shader.vertexShader
-    .replace("#include <common>", "#include <common>\nattribute float aTile;\nattribute float aBorn;\nuniform float uTime;\nvarying vec2 vAtlas;\nvarying float vAge;")
+    .replace("#include <common>", "#include <common>\nattribute float aTile;\nattribute float aBorn;\nattribute vec2 aCorner;\nuniform float uTime;\nvarying vec2 vAtlas;\nvarying float vAge;")
     .replace(
       "#include <begin_vertex>",
       `#include <begin_vertex>
       vAge = uTime - aBorn;
       // A splat lands with a quick spread from small.
       transformed.xy *= 0.55 + 0.45 * smoothstep(0.0, 0.07, vAge);
-      vAtlas = (vec2(mod(aTile, 4.0), 3.0 - floor(aTile / 4.0)) + uv) / 4.0;`,
+      vAtlas = (vec2(mod(aTile, 4.0), 3.0 - floor(aTile / 4.0)) + aCorner) / 4.0;`,
     );
   shader.fragmentShader = shader.fragmentShader
     .replace("#include <common>", `#include <common>\nuniform sampler2D uAtlas;\nvarying vec2 vAtlas;\nvarying float vAge;`)
@@ -68,6 +68,8 @@ export class Splats {
   private readonly mat = new THREE.MeshStandardMaterial({ transparent: true, depthWrite: false, roughness: 0.3, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 });
 
   constructor() {
+    // The plane's own corners under a name of ours: the standard uv is only declared when a map is set.
+    this.geo.setAttribute("aCorner", this.geo.getAttribute("uv").clone());
     this.geo.setAttribute("aTile", new THREE.InstancedBufferAttribute(this.tile, 1));
     this.geo.setAttribute("aBorn", new THREE.InstancedBufferAttribute(this.born, 1));
     this.mat.onBeforeCompile = (shader) => patch(shader, this.time, this.atlas);

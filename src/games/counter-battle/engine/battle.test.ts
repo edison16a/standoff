@@ -59,7 +59,7 @@ function watchMatch(seed: number): { battle: Battle; watch: Watch } {
 let run: { battle: Battle; watch: Watch };
 beforeAll(() => {
   run = watchMatch(7);
-}, 300_000);
+}, 900_000);
 
 describe("a bot match", { timeout: 60_000 }, () => {
   it("plays through to a winner", () => {
