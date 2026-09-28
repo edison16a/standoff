@@ -72,6 +72,8 @@ export interface NbaHostState {
   gamePoint: [boolean, boolean];
   banner: Banner | null;
   winner: TeamId | null;
+  /** The replay of the winning basket while it plays: whose view, who scored, and who has voted to skip. */
+  replay: { view: "scorer" | "defender"; scorer: string; votes: { name: string; done: boolean }[] } | null;
   results: ResultRow[];
   /** Players whose phones joined during the game, waiting for the next one. */
   waiting: string[];
@@ -94,6 +96,7 @@ export const useNbaStore = create<NbaHostState>(() => ({
   gamePoint: [false, false],
   banner: null,
   winner: null,
+  replay: null,
   results: [],
   waiting: [],
 }));

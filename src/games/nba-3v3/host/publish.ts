@@ -1,5 +1,6 @@
 import type { Player } from "@/platform/games/game-api";
 import type { Match } from "../engine/match";
+import type { Athlete } from "../engine/types";
 import { canSteal, stealInReach } from "../engine/defend";
 import { guardStatus } from "../engine/guard";
 import { greenHalfMs, GREEN_MS } from "../engine/shot-model";
@@ -22,7 +23,15 @@ export interface PublishContext {
 export function phaseOf(driver: MatchDriver | null): Phase {
   const m = driver?.match;
   if (!m) return "lobby";
+  if (driver.replays.replay) return "replay";
   return m.phase === "countdown" ? "countdown" : m.phase === "over" ? "over" : "live";
+}
+
+/** Who has voted to skip the replay, by name, in the order they play. */
+export function replayVotes(driver: MatchDriver | null, players: readonly Player[]): { seat: number; name: string; done: boolean }[] {
+  const r = driver?.replays.replay;
+  if (!r || !driver) return [];
+  return r.voters.map((seat) => ({ seat, name: nameFor(driver.match, driver.athleteBySeat.get(seat) ?? -1, players) || "Player", done: r.skipped.has(seat) }));
 }
 
 /** The name a player goes by on screen: their own for people, the star's for computer players. */
@@ -67,6 +76,12 @@ export function courtState(m: Match, id: number, players: readonly Player[]): Co
   };
 }
 
+/** A player's line on the phone at the end. */
+function lineOf(a: Athlete): { points: number; rebounds: number; assists: number; steals: number; blocks: number } {
+  const b = a.box;
+  return { points: b.points, rebounds: b.rebounds, assists: b.assists, steals: b.steals, blocks: b.blocks };
+}
+
 function results(m: Match, players: readonly Player[]): ResultRow[] {
   return m.athletes.map((a) => ({
     id: a.id, team: a.team, name: nameFor(m, a.id, players), seat: a.seat, character: a.character,
@@ -84,7 +99,10 @@ export function publish(c: PublishContext): void {
   });
   const spots = c.lobby.spots().map((s) => ({ ...s, name: s.seat === null ? "Computer" : (c.players.find((p) => p.seat === s.seat)?.name ?? "Player") }));
   const inGame = new Set(c.driver ? [...c.driver.athleteBySeat.keys()] : []);
+  const votes = replayVotes(c.driver, c.players);
+  const replay = c.driver?.replays.replay;
   store.setState({
+    replay: replay ? { view: replay.view, scorer: nameFor(replay.ghost, replay.scorer, c.players), votes: votes.map(({ name, done }) => ({ name, done })) } : null,
     phase,
     seats,
     spots,
@@ -117,7 +135,8 @@ export function publish(c: PublishContext): void {
       team: s.team,
       playing: !!athlete,
       court: m && athlete ? courtState(m, athlete.id, c.players) : null,
-      result: m && athlete && m.phase === "over" ? { won: m.winner === athlete.team, points: athlete.box.points, rebounds: athlete.box.rebounds, assists: athlete.box.assists } : null,
+      replay: replay && athlete ? { voted: replay.skipped.has(seat), votes: votes.map(({ name, done }) => ({ name, done })) } : null,
+      result: m && athlete && m.phase === "over" ? { won: m.winner === athlete.team, ...lineOf(athlete) } : null,
     };
     c.phones.sendState(seat, state, c.nowMs);
   }

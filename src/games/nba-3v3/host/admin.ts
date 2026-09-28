@@ -18,5 +18,7 @@ export function registerTestActions(driver: MatchDriver): () => void {
     { id: "free-throws", label: "Free throws (straight to the line)", run: () => void forceFoul(m, 2, person(), false) },
     { id: "and-one", label: "And one (one shot)", run: () => void forceFoul(m, 1, person()) },
     { id: "three-shots", label: "Fouled three (three shots)", run: () => void forceFoul(m, 3, person()) },
+    // Both teams one short of the win, so the next basket ends the game and rolls the replay.
+    { id: "game-point", label: "Next basket wins (to see the replay)", run: () => void (m.score = [m.target - 1, m.target - 1]) },
   ]);
 }

@@ -13,6 +13,7 @@ import "./styles/lobby.css";
 import "./styles/bots-toggle.css";
 import "./styles/hud.css";
 import "./styles/results.css";
+import "./styles/replay.css";
 import "./styles/phone.css";
 import "./styles/phone-ready.css";
 import "./styles/pad.css";

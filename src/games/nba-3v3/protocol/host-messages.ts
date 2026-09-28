@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { CHARACTER_IDS } from "../roster";
 
-/** Where the room is, as a phone sees it. */
-export const PHASES = ["lobby", "countdown", "live", "over"] as const;
+/** Where the room is, as a phone sees it. The replay of the winning basket comes between the win and the results. */
+export const PHASES = ["lobby", "countdown", "live", "replay", "over"] as const;
 export type Phase = (typeof PHASES)[number];
 
 const team = z.union([z.literal(0), z.literal(1)]);
@@ -41,6 +41,12 @@ export const courtSchema = z.object({
   countdown: z.number().int().min(0).max(9).nullable(),
 });
 
+/** The replay's skip vote: it is skipped only once every player in the game has pressed a button. */
+export const replaySchema = z.object({
+  voted: z.boolean(),
+  votes: z.array(z.object({ name: z.string().max(40), done: z.boolean() })).max(6),
+});
+
 export const phoneStateSchema = z.object({
   kind: z.literal("state"),
   phase: z.enum(PHASES),
@@ -53,8 +59,12 @@ export const phoneStateSchema = z.object({
   /** In the game being played, rather than waiting for the next one. */
   playing: z.boolean(),
   court: courtSchema.nullable(),
+  /** During the replay: whether this phone has asked to skip it, and who else has. */
+  replay: replaySchema.nullable(),
   /** At the end: whether this player's team won, and their line. */
-  result: z.object({ won: z.boolean(), points: z.number().int(), rebounds: z.number().int(), assists: z.number().int() }).nullable(),
+  result: z
+    .object({ won: z.boolean(), points: z.number().int(), rebounds: z.number().int(), assists: z.number().int(), steals: z.number().int(), blocks: z.number().int() })
+    .nullable(),
 });
 
 export const BUZZ_KINDS = ["ball", "shot", "green", "score", "dunk", "blocked", "stolen", "block", "steal", "whistle", "win", "lose", "call"] as const;

@@ -53,6 +53,7 @@ export class CourtRenderer {
   private height = 1;
   private readonly maxPixelRatio: number;
   private readonly pixel = new Uint8Array(4);
+  private readonly replayCam = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 50 };
 
   constructor(canvas: HTMLCanvasElement, quality: Quality = {}) {
     const { antialias = true, shadows = true, reflections = true, maxPixelRatio = 1.75 } = quality;
@@ -91,6 +92,18 @@ export class CourtRenderer {
     this.ball.reset();
     this.intro = intro ? 0 : null;
     this.tv.snap(this.shot(match));
+  }
+
+  /** Hands the camera to the replay (a position, a point to look at and a lens), or back to the broadcast camera with null. */
+  setReplayCamera(cam: { pos: { x: number; y: number; z: number }; look: { x: number; y: number; z: number }; fov: number } | null): void {
+    if (!cam) {
+      if (this.tv.fixed === this.replayCam) this.tv.fixed = null;
+      return;
+    }
+    this.replayCam.pos.set(cam.pos.x, cam.pos.y, cam.pos.z);
+    this.replayCam.look.set(cam.look.x, cam.look.y, cam.look.z);
+    this.replayCam.fov = cam.fov;
+    this.tv.fixed = this.replayCam;
   }
 
   onEvent(event: MatchEvent): void {

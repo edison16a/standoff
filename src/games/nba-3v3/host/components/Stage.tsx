@@ -3,6 +3,7 @@ import { lazy, Suspense } from "react";
 import { useNbaStore } from "../host-store";
 import { Hud } from "./Hud";
 import { Lobby } from "./Lobby";
+import { ReplayBar } from "./ReplayBar";
 import { Results } from "./Results";
 
 // three.js and the models load after the room opens, so the game's own code arrives first.
@@ -20,7 +21,7 @@ export function Stage() {
       <Suspense fallback={null}>
         <CourtCanvas />
       </Suspense>
-      {phase === "lobby" ? <Lobby /> : <Hud />}
+      {phase === "lobby" ? <Lobby /> : phase === "replay" ? <ReplayBar /> : <Hud />}
       {phase === "over" && <Results />}
     </div>
   );

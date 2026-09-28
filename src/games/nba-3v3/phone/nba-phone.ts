@@ -48,6 +48,12 @@ export class NbaPhone {
     this.send({ kind: "ready", ready });
   }
 
+  /** A vote to skip the replay of the winning basket. */
+  skipReplay(): void {
+    this.click();
+    this.send({ kind: "skip" });
+  }
+
   /** Streams the stick while the controller is on screen. */
   stream(on: boolean): void {
     this.pad.stream(on);

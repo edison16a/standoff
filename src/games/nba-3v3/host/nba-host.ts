@@ -9,18 +9,19 @@ import { BUTTONS, type Button } from "../engine/types";
 import type { V2 } from "../engine/vec";
 import { phoneMessageSchema, type Phase, type PhoneMessage } from "../protocol";
 import { registerTestActions } from "./admin";
+import { BannerBoard, REPLAY_SOUNDS, slowForMoment } from "./banners";
 import { Buzzer } from "./buzzer";
-import { banner, type BannerText } from "./callouts";
+import { banner } from "./callouts";
 import { DemoGame } from "./demo";
 import { useNbaStore as store } from "./host-store";
 import { Lobby } from "./lobby";
 import { MatchDriver } from "./match-driver";
 import { PhoneLink } from "./phone-link";
 import { nameFor, phaseOf, publish } from "./publish";
+import type { ReplayCamera } from "./replay-camera";
 
 /** The overlay and the phones are refreshed this often; the canvas every frame. */
 const HUD_MS = 100;
-const BANNER_MS = 1900;
 
 /**
  * Basketball 3v3 on the computer, for one room. It keeps the lobby and the
@@ -35,6 +36,7 @@ export class NbaHost {
   private readonly pad: HostPad;
   private readonly phones: PhoneLink;
   private readonly buzzer: Buzzer;
+  private readonly banners = new BannerBoard();
   private readonly unsubscribe: () => void;
   private readonly unpress: () => void;
   private unlistenMatch: (() => void) | null = null;
@@ -43,8 +45,6 @@ export class NbaHost {
   private readonly matchListeners = new Set<(event: MatchEvent) => void>();
   private lastHud = 0;
   private lastFrame = 0;
-  private bannerKey = 0;
-  private bannerTimer: ReturnType<typeof setTimeout> | null = null;
   private lastPhase: Phase = "lobby";
   private readonly demo: DemoGame;
   /** Browser tests on slow machines run the game faster than real time. Always 1 in play. */
@@ -72,7 +72,7 @@ export class NbaHost {
     this.pad.dispose();
     this.unlistenMatch?.();
     this.unadmin?.();
-    if (this.bannerTimer) clearTimeout(this.bannerTimer);
+    this.banners.dispose();
     this.audio.stop();
     this.room.setPlaying(false);
   }
@@ -81,9 +81,14 @@ export class NbaHost {
     return phaseOf(this.driver);
   }
 
-  /** The game on screen: the real one, or the demo behind the lobby. */
+  /** The game on screen: the real one (or its replay), or the demo behind the lobby. */
   get match(): Match {
-    return this.driver?.match ?? this.demo.match;
+    return this.driver?.view ?? this.demo.match;
+  }
+
+  /** Where the replay's camera is while it plays, or null for the broadcast camera. */
+  replayCamera(): ReplayCamera | null {
+    return this.driver?.replays.replay?.camera() ?? null;
   }
 
   /** Match events for the renderer's effects. */
@@ -97,47 +102,53 @@ export class NbaHost {
     return this.driver ? nameFor(this.driver.match, id, this.room.players()) : "";
   }
 
+  private get between(): boolean {
+    const phase = this.phase;
+    return phase !== "countdown" && phase !== "live" && phase !== "replay";
+  }
+
   setTeam(seat: number, team: TeamId): void {
-    if (this.phase === "countdown" || this.phase === "live") return;
-    this.lobby.setTeam(seat, team);
+    if (this.between) this.lobby.setTeam(seat, team);
     this.refresh(performance.now());
   }
 
   shuffle(): void {
-    if (this.phase === "countdown" || this.phase === "live") return;
-    this.lobby.shuffle();
+    if (this.between) this.lobby.shuffle();
     this.refresh(performance.now());
   }
 
   /** Computer players on or off, for the next game. */
   setBots(on: boolean): void {
-    if (this.phase === "countdown" || this.phase === "live") return;
-    this.lobby.setBots(on);
+    if (this.between) this.lobby.setBots(on);
     this.refresh(performance.now());
   }
 
   /** How good the computer players are, for the next game. */
   setLevel(level: BotLevel): void {
-    if (this.phase === "countdown" || this.phase === "live") return;
-    this.lobby.setLevel(level);
+    if (this.between) this.lobby.setLevel(level);
     this.refresh(performance.now());
   }
 
   /** The host gives a player the next role on their team: Guard, Wing or Big. */
   cycleRole(seat: number): void {
-    if (this.phase === "countdown" || this.phase === "live") return;
-    this.lobby.cycleRole(seat);
+    if (this.between) this.lobby.cycleRole(seat);
     this.refresh(performance.now());
   }
 
   /** Starts a game with the teams as they stand, computers filling the gaps if they are on. */
   start(): void {
-    if (this.phase === "countdown" || this.phase === "live" || this.lobby.startBlock()) return;
+    if (!this.between || this.lobby.startBlock()) return;
     this.unlistenMatch?.();
-    this.driver = new MatchDriver(this.lobby.entries(), undefined, this.lobby.level);
-    this.unlistenMatch = this.driver.listen((event) => this.onMatchEvent(event));
+    const driver = new MatchDriver(this.lobby.entries(), undefined, this.lobby.level);
+    this.driver = driver;
+    const unlisten = driver.listen((event) => this.onMatchEvent(event));
+    const unreplay = driver.replays.listen((event, ghost) => this.onReplayEvent(event, ghost));
+    this.unlistenMatch = () => {
+      unlisten();
+      unreplay();
+    };
     this.unadmin?.();
-    this.unadmin = registerTestActions(this.driver);
+    this.unadmin = registerTestActions(driver);
     this.room.setPlaying(true);
     this.phones.forget();
     this.refresh(performance.now());
@@ -175,6 +186,7 @@ export class NbaHost {
       this.audio.setPhase(phase);
       // The results are a good moment for someone new to scan in for the next game.
       if (phase === "over") this.room.setPlaying(false);
+      this.refresh(nowMs);
     }
     if (nowMs - this.lastHud >= HUD_MS) this.refresh(nowMs);
     return dt;
@@ -187,24 +199,18 @@ export class NbaHost {
     this.audio.event(event, m);
     for (const listener of this.matchListeners) listener(event);
     this.buzzer.onEvent(event, m, driver.athleteBySeat);
-    if (event.type === "dunk" && event.power > 0.7) driver.slowMo(0.35, 0.55);
-    if (event.type === "block") driver.slowMo(0.45, 0.25);
-    if (event.type === "shake" && event.hard) driver.slowMo(0.5, 0.3);
-    if (event.type === "win") driver.slowMo(0.3, 0.8);
+    slowForMoment(event, driver);
     if (event.type === "shot" && event.grade === "perfect" && m.athletes[event.id]?.seat !== null) this.audio.green();
-    const shown = banner(event, m, (id) => this.nameOf(id), this.bannerKey);
-    if (shown) this.showBanner(shown);
+    const shown = banner(event, m, (id) => this.nameOf(id), this.banners.count);
+    if (shown) this.banners.show(shown);
     const prompt = ["score", "win", "go", "check", "checkUp", "foul", "andOne", "freeThrow"] as const;
     if ((prompt as readonly string[]).includes(event.type)) this.refresh(performance.now());
   }
 
-  private showBanner(shown: BannerText): void {
-    const key = ++this.bannerKey;
-    store.setState({ banner: { ...shown, key } });
-    if (this.bannerTimer) clearTimeout(this.bannerTimer);
-    this.bannerTimer = setTimeout(() => {
-      if (store.getState().banner?.key === key) store.setState({ banner: null });
-    }, BANNER_MS);
+  /** The replay replays the ball's and the players' sounds and the effects, and nothing that changes the game. */
+  private onReplayEvent(event: MatchEvent, ghost: Match): void {
+    if (REPLAY_SOUNDS.has(event.type)) this.audio.event(event, ghost);
+    for (const listener of this.matchListeners) listener(event);
   }
 
   private onPress(seat: number, button: string, down: boolean, stick: { x: number; y: number }): void {
@@ -213,6 +219,7 @@ export class NbaHost {
     if (down) driver.press(seat, button as Button, stick);
     // The phone's own release message usually lands first; this catches one that did not.
     else if (button === "shoot") driver.release(seat);
+    if (driver.replays.replay || this.phase === "replay") this.refresh(performance.now());
   }
 
   private onRoom(event: HostRoomEvent): void {
@@ -251,6 +258,9 @@ export class NbaHost {
       case "release":
         this.driver?.release(seat, message.heldMs);
         return;
+      case "skip":
+        this.driver?.replays.skip(seat);
+        break;
       case "pick":
         this.lobby.pick(seat, message.character);
         break;
