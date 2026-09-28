@@ -76,15 +76,24 @@ export function settleShootingFoul(m: Match, shooter: number, made: boolean): bo
   return true;
 }
 
-/** Test shortcut: a foul on whoever has the ball, by the nearest defender, for `shots` free throws. */
-export function forceFoul(m: Match, shots: 1 | 2 | 3 = 2): boolean {
+/**
+ * Test shortcut for the admin panel: a foul by the nearest defender on
+ * `victimId` (or whoever has the ball), for `shots` free throws. With
+ * `whistle` off it skips the referee and goes straight to the line.
+ */
+export function forceFoul(m: Match, shots: 1 | 2 | 3 = 2, victimId: number | null = null, whistle = true): boolean {
   if (m.phase !== "live" && m.phase !== "check" && m.phase !== "dead") return false;
-  const victim = m.holder ?? m.athletes.find((a) => a.team === m.offence) ?? null;
+  const victim = (victimId !== null ? m.athletes[victimId] : null) ?? m.holder ?? m.athletes.find((a) => a.team === m.offence) ?? null;
   if (!victim) return false;
   const fouler = m.opponents(victim.team).sort((p, q) => Math.hypot(p.x - victim.x, p.z - victim.z) - Math.hypot(q.x - victim.x, q.z - victim.z))[0];
   if (!fouler) return false;
   m.checkUp = null;
-  m.offence = victim.team;
-  callFoul(m, fouler, victim, shots);
+  m.pendingFoul = null;
+  if (whistle) {
+    callFoul(m, fouler, victim, shots);
+    return true;
+  }
+  m.foulCall = null;
+  startFreeThrows(m, fouler, victim, shots, 0.2);
   return true;
 }

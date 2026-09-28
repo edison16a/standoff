@@ -8,6 +8,7 @@ import type { TeamId } from "../engine/types";
 import { BUTTONS, type Button } from "../engine/types";
 import type { V2 } from "../engine/vec";
 import { phoneMessageSchema, type Phase, type PhoneMessage } from "../protocol";
+import { registerTestActions } from "./admin";
 import { Buzzer } from "./buzzer";
 import { banner, type BannerText } from "./callouts";
 import { DemoGame } from "./demo";
@@ -37,6 +38,8 @@ export class NbaHost {
   private readonly unsubscribe: () => void;
   private readonly unpress: () => void;
   private unlistenMatch: (() => void) | null = null;
+  /** Removes this game's shortcuts from the host's hidden admin panel. */
+  private unadmin: (() => void) | null = null;
   private readonly matchListeners = new Set<(event: MatchEvent) => void>();
   private lastHud = 0;
   private lastFrame = 0;
@@ -68,6 +71,7 @@ export class NbaHost {
     this.unpress();
     this.pad.dispose();
     this.unlistenMatch?.();
+    this.unadmin?.();
     if (this.bannerTimer) clearTimeout(this.bannerTimer);
     this.audio.stop();
     this.room.setPlaying(false);
@@ -132,6 +136,8 @@ export class NbaHost {
     this.unlistenMatch?.();
     this.driver = new MatchDriver(this.lobby.entries(), undefined, this.lobby.level);
     this.unlistenMatch = this.driver.listen((event) => this.onMatchEvent(event));
+    this.unadmin?.();
+    this.unadmin = registerTestActions(this.driver);
     this.room.setPlaying(true);
     this.phones.forget();
     this.refresh(performance.now());
@@ -139,6 +145,8 @@ export class NbaHost {
 
   /** From the results: back to the team picker, keeping everyone's choices. */
   backToLobby(): void {
+    this.unadmin?.();
+    this.unadmin = null;
     this.unlistenMatch?.();
     this.unlistenMatch = null;
     this.driver = null;
