@@ -64,7 +64,7 @@ export class FighterView {
     this.tag.setHealth(f.health / RULES.health);
   }
 
-  /** The tip of the barrel in the world, for flashes and tracers. */
+  /** The tip of the barrel in the world, for the puff of air and the paintball. */
   muzzle(out: THREE.Vector3): THREE.Vector3 {
     return this.gun.muzzle.getWorldPosition(out);
   }
