@@ -54,7 +54,7 @@ export class SoundDirector {
     this.music.muffle(on);
   }
 
-  /** The results: a horn fanfare and the platform cheering, bigger for a winner or a new best. */
+  /** The results: a horn fanfare and the platform cheering, bigger for a new best. */
   celebrate(big: boolean): void {
     this.engine.duck("music", 0.3, 3);
     fanfare(this.engine, this.engine.bus("sfx"), big);

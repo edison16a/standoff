@@ -29,7 +29,7 @@ export interface CourseOptions {
 /**
  * The endless yard for one run: laid a stretch at a time from a seed, and
  * cleared behind the runner. The same seed always lays the same yard, so
- * two players on one seed face the same trains in the same places.
+ * a run can be replayed and tested.
  */
 export class Course {
   readonly obstacles: Obstacle[] = [];
