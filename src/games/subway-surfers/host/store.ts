@@ -1,14 +1,15 @@
 import { create } from "zustand";
 import type { BestEntry } from "../engine/best-scores";
+import { DEFAULT_DIFFICULTY, type Difficulty } from "../engine/difficulty";
 import type { CrashCause } from "../engine/events";
 import type { PowerKind } from "../engine/types";
 
 /**
- * lobby: the host picks one or two players and types names.
+ * lobby: the player picks how hard to start and types a name.
  * camera: the camera and the body tracking get ready.
- * calibrate: each player stands still in their spot.
+ * calibrate: the player stands still in their spot.
  * tutorial: step left, step right, jump and duck, live.
- * countdown, running: the run. results: scores, the winner and the best.
+ * countdown, running: the run. results: the score and the best runs.
  */
 export type Phase = "lobby" | "camera" | "calibrate" | "tutorial" | "countdown" | "running" | "results";
 
@@ -18,9 +19,8 @@ export interface PowerView {
   share: number;
 }
 
-/** One player's corner of the screen while running. */
+/** The overlay while running. */
 export interface RunnerHud {
-  slot: number;
   name: string;
   score: number;
   coins: number;
@@ -38,8 +38,8 @@ export interface RunnerHud {
 }
 
 export interface ResultRow {
-  slot: number;
   name: string;
+  difficulty: Difficulty;
   score: number;
   coins: number;
   distance: number;
@@ -49,14 +49,12 @@ export interface ResultRow {
 
 export interface SurfState {
   phase: Phase;
-  players: 1 | 2;
-  names: [string, string];
-  hud: RunnerHud[];
+  difficulty: Difficulty;
+  name: string;
+  hud: RunnerHud | null;
   /** 3, 2, 1, then 0 for GO, else null. */
   countdown: number | null;
-  results: ResultRow[];
-  /** The winning slot with two players, or null for one player or a tie. */
-  winner: number | null;
+  result: ResultRow | null;
   best: BestEntry[];
   /** Results accept a jump to play again once this is true. */
   jumpToReplay: boolean;
@@ -64,29 +62,26 @@ export interface SurfState {
 
 export const initialSurfState = (): SurfState => ({
   phase: "lobby",
-  players: 1,
-  names: ["", ""],
-  hud: [],
+  difficulty: DEFAULT_DIFFICULTY,
+  name: "",
+  hud: null,
   countdown: null,
-  results: [],
-  winner: null,
+  result: null,
   best: [],
   jumpToReplay: false,
 });
 
 export const useSurfStore = create<SurfState>(() => initialSurfState());
 
-/** The names to show, one per player, "Player 2" for anyone who typed none. */
-export function shownNames(state: Pick<SurfState, "names" | "players">): string[] {
-  return Array.from({ length: state.players }, (_, i) => state.names[i]!.trim() || `Player ${i + 1}`);
+/** The name to show, "Player 1" when none was typed. */
+export function shownName(name: string): string {
+  return name.trim() || "Player 1";
 }
 
-export function setPlayers(players: 1 | 2): void {
-  useSurfStore.setState({ players });
+export function setDifficulty(difficulty: Difficulty): void {
+  useSurfStore.setState({ difficulty });
 }
 
-export function setName(slot: number, name: string): void {
-  const names = [...useSurfStore.getState().names] as [string, string];
-  names[slot - 1] = name.slice(0, 20);
-  useSurfStore.setState({ names });
+export function setName(name: string): void {
+  useSurfStore.setState({ name: name.slice(0, 20) });
 }
