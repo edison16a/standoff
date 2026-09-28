@@ -9,18 +9,20 @@ export const STEP = 1 / 60;
 
 export const PITCH = {
   /** From the centre spot to each goal line. */
-  halfLength: 21,
+  halfLength: 24,
   /** From the centre spot to each side board. */
-  halfWidth: 13,
+  halfWidth: 15,
   boardHeight: 1,
   /** From the middle of the goal to the centre of each post. */
-  goalHalfWidth: 2.5,
-  /** To the centre of the crossbar. */
-  goalHeight: 2.1,
+  goalHalfWidth: 2.9,
+  /** To the centre of the crossbar. A big goal, so the keeper has more to cover. */
+  goalHeight: 2.3,
   goalDepth: 1.4,
   postRadius: 0.06,
   /** The keeper's area, a half circle around the goal. */
-  boxRadius: 7,
+  boxRadius: 8,
+  /** From the goal line to the penalty spot. */
+  penaltySpot: 6.5,
   centreRadius: 3.8,
   /** A tall catch net behind each goal stops balls that go over the boards. */
   catchNet: 3.4,

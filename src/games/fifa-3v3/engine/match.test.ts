@@ -10,7 +10,7 @@ const LINEUP: Entrant[] = [
   { team: 0, character: "okemba", seat: null },
   { team: 1, character: "holmvik", seat: null },
   { team: 1, character: "lacerda", seat: null },
-  { team: 1, character: "ashworth", seat: null },
+  { team: 1, character: "serrano", seat: null },
 ];
 
 /** Plays a match of computer players to the final whistle, or gives up after ten minutes. */
