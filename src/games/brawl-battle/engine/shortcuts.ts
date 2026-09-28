@@ -11,7 +11,9 @@ import type { MatchState } from "./types";
  * the match ends on the next step exactly as a last KO would end it.
  */
 export function skipToResults(state: MatchState): void {
-  if (state.phase !== "fight") return;
+  if (state.phase !== "ready" && state.phase !== "fight") return;
+  // From the countdown too: the win is only checked while fighting.
+  state.phase = "fight";
   const standing = state.fighters.filter((f) => f.stocks > 0);
   const keep = standing.find((f) => f.seat !== null) ?? standing[0];
   for (const f of standing) {

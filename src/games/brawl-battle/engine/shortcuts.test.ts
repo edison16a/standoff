@@ -24,9 +24,17 @@ describe("admin shortcuts", () => {
     expect(state.winner).toBe(1);
   });
 
-  it("does nothing before the fight starts", () => {
+  it("works from the countdown too", () => {
     const state = match();
     state.phase = "ready";
+    skipToResults(state);
+    stepMatch(state);
+    expect(state.phase).toBe("game");
+  });
+
+  it("does nothing once the match is decided", () => {
+    const state = match();
+    state.phase = "game";
     skipToResults(state);
     expect(state.fighters.every((f) => f.stocks > 0)).toBe(true);
   });
