@@ -9,6 +9,7 @@ Shared code that games may import. The kit never imports a game, and games still
 * `motion/orientation.ts`: `subscribeOrientation`, the phone's orientation as a quaternion on every reading.
 * `steps/StepShell.tsx`: the frame for a game's phone setup. Every game uses the same order: the platform asks for a name (or Skip), then the game shows **Calibrate**, then its own choices (weapon, kart, blade), then **Ready**. Each step is its own page.
 * `aim/`: pointing the phone at the big screen, for Fruit Slicer, Zombie Survival and Shooting Gallery.
+* `victory/`: winners' scenes. Confetti, spotlights, a circling camera, trophies and a belt made in code, podiums, and the winners' names over it all. See Victory scenes below.
 
 ## Aiming
 
@@ -237,3 +238,111 @@ node tools/testing/camera-e2e.mjs --clip clip.mjpeg --timeline clip.json --out s
 ## Split screen map
 
 `split/SplitMap.tsx` draws a small picture of the split screen with each player's name written big in the pane they play in, in their colour, inside a frame with four corner marks. Pass it the same rects the renderer uses (`{ name, color, rect: { x, y, w, h } }` as fractions of the screen) and put it in the game's side panel. It draws nothing for a single view.
+
+## Victory scenes
+
+`victory/` has everything for a winners' scene in three.js, and the names that go over it. Each piece works on its own, in a game's own scene. Units are metres, y is up, and trophies stand on their origin. Boxing, Magic Kart and Brawl Battle use it. `/dev/victory` (development only) shows every piece; add `?show=basketball`, `worldcup`, `belt`, `cup` or `podium` for one.
+
+```ts
+import { VictoryConfetti, StageLights, OrbitCamera, createBoxingBelt, studioEnvironment } from "@/games/kit/victory";
+import { VictoryOverlay } from "@/games/kit/victory/ui/VictoryOverlay";
+```
+
+### Metal needs something to reflect
+
+Gold and silver only show what they reflect. Without an environment a trophy looks like a dark lump. If the scene has none, give it one:
+
+```ts
+scene.environment = studioEnvironment(renderer);   // dispose the texture with the scene
+```
+
+### Confetti
+
+Paper and foil cards with a slight curl, some square and some long strips. They fall with real air drag: flat to the fall they float, edge on they drop, and a tilted card skates sideways. A cannon's load leaves as a clump and opens out, so it carries high before it drifts down. Pieces tumble, catch the light and settle flat on the floor. Two instanced meshes draw them all.
+
+```ts
+const confetti = new VictoryConfetti({ count: 1600, size: 0.05, colours, foil: 0.2, physics: { floorY: 0 }, seed: 7 });
+scene.add(confetti.object);
+confetti.burst({ x, y, z }, { direction: { x: 0, y: 1, z: 0 }, count: 260, speed: 11, spread: 0.35 });
+confetti.cannons({ x: 0, y: 1.2, z: 0 }, { ring: 3.5, cannons: 4 });   // a ring of cannons angled in over a spot
+confetti.startRain({ x: 0, y: 8, z: 0 }, 4, 100);                      // keeps falling over a disc, per second
+confetti.update(dt);                                                   // every frame
+confetti.clear();
+```
+
+`size` is the side of a square piece. Pieces that lie on the floor longer than `physics.restS` are reused, so rain can run for as long as the scene is up. The physics alone is `ConfettiSim`, with tests.
+
+### Spotlights
+
+Lamps in a ring high overhead, all aimed at one spot, with soft visible beams through the haze. Their aims drift slowly round the spot.
+
+```ts
+const lights = new StageLights({ count: 4, colours: ["#fff1d6", "#ffd27a"], radius: 5, height: 9, intensity: 260, angle: 0.22, beamStrength: 0.3, sweep: 0.35 });
+scene.add(lights.object);
+lights.aimAt(point);      // snaps; focus(point) slides over
+lights.setLevel(0.5);     // 0 dark to 1 full, for a fade up
+lights.update(time, dt);
+```
+
+`intensity` is in candela with physical falloff. Scenes lit brighter need more, as Boxing's arena does at 1500.
+
+### Circling camera
+
+It opens wide and high, eases in, then circles the subject with a gentle rise and fall, or swings back and forth on an arc.
+
+```ts
+const orbit = new OrbitCamera(camera, { centre, radius: 4, height: 1.6, lookHeight: 1.2, startAngle, speed: 0.12, arc: 0.5, introS: 2.4, pullBack: 1.8, rise: 1.6, bob: 0.2 });
+orbit.play({ startAngle });   // starts the shot from its opening
+orbit.update(dt);
+```
+
+`startAngle` is round +y from +z, so a subject facing angle `a` is seen from the front with `startAngle: a`. `orbitPose(shot, t)` is the same shot as plain numbers.
+
+### Trophies
+
+Each returns a `THREE.Group` with its own materials. `userData.height` is its height. Free one with `disposeTree(group)`.
+
+* `createBasketballTrophy({ metal })`: a gold ball dunked into a rim, a diamond net that tapers into a tall column, on a black plinth. About 0.6 m.
+* `createWorldCupTrophy({ metal })`: two gold figures spiral up out of the base and hold a globe with raised continents. Two green stone bands round the base. About 0.37 m.
+* `createBoxingBelt({ strap, enamel, gems, title, bend })`: a stitched leather strap, a big gold scalloped centre plate with a crown, a star on enamel ringed by gems and a lettered banner, and four gold side plates with gems. It runs along x with the plate facing +z, origin at the plate's middle. `userData.grips` holds the two points hands hold it by, 0.61 m apart. `bend` curls the strap back.
+* `createCupTrophy({ metal })`: a two handled cup on a plinth, in `gold`, `silver` or `bronze`. About 0.41 m.
+
+`metal`, `satinMetal`, `gem`, `lacquer` and `malachite` are the materials, for a game's own pieces.
+
+### Podium and pedestal
+
+```ts
+const podium = createPodium({ width: 1.4, height: 0.9 });   // first in the middle, second on its left, third on its right, from the front (+z)
+scene.add(podium.object);
+scene.updateMatrixWorld();
+kart.position.copy(podium.topOf(1));
+const pedestal = createPedestal({ radius: 0.8, height: 0.7 });   // one winner; its top is at userData.top
+```
+
+### A ready made room
+
+For a game whose own renderer cannot host the scene, as on a results screen over the game, `VictoryRoom` makes its own canvas filling a holder, with a dark glossy stage, the studio environment, a key light with shadows, spotlights, confetti and the circling camera. Add models to `room.scene`, then start it.
+
+```ts
+const room = new VictoryRoom(holder, { background, floorColour, lights, confetti, orbit });
+room.scene.add(winner, trophy);
+room.onFrame((dt, time) => animate(dt, time));
+room.start();
+room.dispose();   // frees the canvas and everything in the scene. Take out shared geometry first.
+```
+
+### Names over the scene
+
+`VictoryOverlay` fills its positioned parent and keeps the middle clear. The names drop in letter by letter in gold, each with its player's colour under it.
+
+```tsx
+<VictoryOverlay
+  eyebrow="Champion"
+  names={[{ name: "Edison", colour: playerColor(1) }]}      // one winner, or a whole team
+  subtitle="Wins by knockout in round 3"
+  placings={[{ place: 1, name, colour, detail: "1:23.45" }]}   // optional
+  align="top"                                                // or "bottom"
+>
+  <button>Play again</button>                                // anything, in a row along the bottom
+</VictoryOverlay>
+```
