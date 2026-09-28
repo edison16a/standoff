@@ -76,11 +76,11 @@ The host gives the aim kit a zone per seat (`HostAim.setZone`), the lobby's spli
 
 `showcase/` is the game playing itself, a seeded 2v2 of hard computer players, for the home screen's media. `script.ts` names the moments; `script.test.ts` fails if an engine change moves them, as a reminder to film again.
 
-* The loop is eight seconds of round five, cut over three shoulders. Blaze runs at Vex and drops him with the shotgun. Kite waits behind the wall at the back, steps out and snipes Blaze. Nova answers with a burst, ducks, peeks again and puts Kite down with the rifle. Each fighter is cut to only once, so every shoulder camera starts in place.
-* The poster holds Blaze's shotgun going off into Vex, side on, with the stands behind.
+* The loop is eight seconds of round four, cut over two shoulders. Nova rises from his bunker and paints Kite's mask from the far end of the field. Then Blaze runs the flank at Vex, who is busy spraying, and splats him with the shotgun at a few paces. Each fighter is cut to only once, so every shoulder camera starts in place.
+* The poster holds Blaze's shotgun going off into Vex, side on, the balls in the air between them.
 * The icon is the same moment from further back, square, under the Paintball Battle logo.
 
-To film them again, with the dev server running:
+The clip, poster and icon on the home screen were filmed before the paintball rework and still need filming again from these moments. To film them again, with the dev server running:
 
 ```bash
 node tools/media/capture.mjs counter-battle --url http://localhost:3000 --ffmpeg /path/to/ffmpeg
