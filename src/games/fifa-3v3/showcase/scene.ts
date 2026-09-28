@@ -9,7 +9,7 @@ import { buildView, type MatchView } from "../engine/view";
 import type { Shot } from "../render/camera/director";
 import type { MatchRenderer } from "../render/match-renderer";
 import { attackSign } from "../teams";
-import { dist } from "../engine/vec";
+import { FollowCam } from "./follow-cam";
 
 const LINEUP: Entrant[] = [
   { team: 0, character: "brandao", seat: null },
@@ -19,9 +19,11 @@ const LINEUP: Entrant[] = [
   { team: 1, character: "okemba", seat: null },
   { team: 1, character: "lacerda", seat: null },
 ];
-const SEED = 3;
+const SEED = 10;
 /** The capture tool warms up for three seconds before it films. */
 export const WARMUP = 3;
+/** A shot this hard fills the charge bar into the red, which reads well on screen. */
+const CHARGED = 0.75;
 
 function fresh(): MatchState {
   // The first shots are saved, for some drama in the build up, and then they go in.
@@ -30,24 +32,26 @@ function fresh(): MatchState {
 
 /**
  * When the showcase's goal is struck, found by playing the seeded match
- * through once: the first strike from outside the box after some build
- * up, with nobody right on the shooter so the strike can be seen, which
- * films better than a tap in from the kick off.
+ * through once: a charged strike from outside the box by a player who
+ * beat his man with a skill move a moment before, so one clip shows the
+ * skill, the charge bar and the finish. Failing that, the first goal
+ * after some build up.
  */
 function pickStrike(): number {
   const state = fresh();
-  let fallback = 20;
+  const beat = new Map<number, number>();
+  let fallback = -1;
   for (let t = 0; t < 180; t += STEP) {
     stepMatch(state);
     for (const e of state.events) {
+      if (e.type === "skillResult" && e.result === "beat") beat.set(e.athlete, state.time);
       if (e.type !== "shot" || e.outcome !== "goal") continue;
-      const shooter = state.athletes[e.athlete]!;
-      const open = state.athletes.every((o) => o.team === shooter.team || dist(o.pos, shooter.pos) > 1.6);
-      if (state.time > 9 && e.distance > 7 && open) return state.time;
-      if (fallback === 20) fallback = state.time;
+      const since = state.time - (beat.get(e.athlete) ?? -Infinity);
+      if (state.time > 9 && e.distance > 7 && e.power >= CHARGED && since > 1 && since < 4.2) return state.time;
+      if (fallback < 0 && state.time > 9) fallback = state.time;
     }
   }
-  return fallback;
+  return fallback < 0 ? 20 : fallback;
 }
 
 /** A still camera, for the icon and the poster. */
@@ -72,6 +76,7 @@ export class ShowcaseScene {
   private readonly clock = new FixedStepClock();
   private pinned = false;
   private frozen = false;
+  private readonly follow = new FollowCam();
 
   constructor(private readonly kind: ShowcaseView, seek = 0) {
     this.state = fresh();
@@ -105,7 +110,9 @@ export class ShowcaseScene {
     this.view = buildView(this.state);
     if (!this.pinned && !this.frozen) {
       const celebrating = this.state.phase === "goal" && this.state.phaseT > 0.8;
-      this.shot = celebrating ? "closeup" : "tv";
+      // The play is filmed by the showcase's own nearer camera, handed to the renderer as a fixed pose.
+      this.pose = celebrating ? null : this.follow.pose(this.view, nowMs);
+      this.shot = celebrating ? "closeup" : "fixed";
       this.tags = !celebrating;
     }
     return events;
@@ -120,17 +127,17 @@ export class ShowcaseScene {
   }
 
   /**
-   * The goal line camera: low beside the near post, looking out at the
-   * shooter, with the keeper at full stretch and the ball on its way.
+   * Over the shooter's shoulder after a long strike: his follow through
+   * in front, the ball on its way and the keeper at full stretch in goal.
    */
   private posterPose(): Pose {
     const s = this.state.athletes[this.shooter() ?? 0]!;
     const dir = attackSign(s.team);
     const gx = dir * PITCH.halfLength;
     const ball = this.state.ball.pos;
-    const look = new THREE.Vector3(s.pos.x * 0.4 + ball.x * 0.6, 1.0, s.pos.z * 0.4 + ball.z * 0.6);
-    const pos = new THREE.Vector3(gx - dir * 1.0, 1.1, PITCH.goalHalfWidth + 4.6);
-    return { pos, look, fov: 46 };
+    const look = new THREE.Vector3(gx - dir * 3, 1.0, ball.z * 0.5);
+    const pos = new THREE.Vector3(s.pos.x - dir * 3.4, 2.0, s.pos.z + 3.2);
+    return { pos, look, fov: 44 };
   }
 
   /**

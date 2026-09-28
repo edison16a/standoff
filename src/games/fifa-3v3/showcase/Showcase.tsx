@@ -53,6 +53,7 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     const loop = (now: number) => {
       const events = scene.tick(now);
       for (const event of events) renderer.onEvent(event, scene.view);
+      if (!frozen && scene.pose) renderer.director.setFixed(scene.pose.pos, scene.pose.look, scene.pose.fov);
       if (frozen && draws > 0) renderer.settle(scene.view, now, 1.5);
       // Nobody films the capture tool's warm up, and drawing it only queues work for software graphics.
       if (first < 0) first = now;

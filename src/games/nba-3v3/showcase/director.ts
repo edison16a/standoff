@@ -5,14 +5,18 @@ import { CourtRenderer } from "../render/court-renderer";
 import { followCamera, readDev, type DevOptions, type Film } from "./dev";
 import { HighlightScript } from "./script";
 
-/** Where the highlight starts for each view, in seconds of the script. */
-const LEAD: Record<ShowcaseView, number> = { loop: -0.4, poster: 0.85, icon: 0.85 };
+/**
+ * Where the highlight starts for each view, in seconds of the script.
+ * The loop's first three seconds are the capture tool's unfilmed warm
+ * up, so its film opens just before the crossover.
+ */
+const LEAD: Record<ShowcaseView, number> = { loop: -2.7, poster: 0, icon: 0 };
 
 /**
  * The poster and the icon are single frames, so the film is run this far
- * ahead without drawing and then held: Varelas rising for the hammer.
+ * ahead without drawing and then held: Varelas at the rim in his windmill.
  */
-const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 2.95, icon: 2.97 };
+const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 2.4, icon: 2.42 };
 
 /**
  * The capture tool lets the scene run three seconds after the page says
