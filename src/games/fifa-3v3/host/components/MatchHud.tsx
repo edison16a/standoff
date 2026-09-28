@@ -23,6 +23,20 @@ function Scoreboard() {
         </div>
       ))}
       <div className={`fifa-bug__clock ${golden ? "fifa-bug__clock--golden" : ""}`}>{golden ? "GOLDEN GOAL" : clock(time)}</div>
+      <MomentTag />
+    </div>
+  );
+}
+
+/** A stoppage under the score: the foul and the booking, then the free kick or penalty. */
+function MomentTag() {
+  const moment = useFifaStore((s) => s.moment);
+  if (!moment) return null;
+  return (
+    <div className="fifa-bug__moment" style={{ "--moment": moment.colour } as React.CSSProperties} aria-live="polite">
+      {moment.card && <span className="fifa-bug__card" aria-label="Yellow card" />}
+      <strong>{moment.text}</strong>
+      {moment.sub && <span>{moment.sub}</span>}
     </div>
   );
 }

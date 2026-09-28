@@ -1,11 +1,13 @@
 import type { Player } from "@/platform/games/game-api";
 import { ROSTER } from "../roster";
-import type { PhoneState, RoomPhase } from "../protocol";
+import type { RoomPhase } from "../protocol";
 import type { Banners } from "./banners";
 import { useFifaStore as store, type ResultRow } from "./host-store";
 import type { Lobby } from "./lobby";
 import type { MatchDriver } from "./match-driver";
 import type { PhoneLink } from "./phone-link";
+import { momentOf } from "./moment";
+import { phoneState } from "./phone-state";
 
 export interface PublishContext {
   nowMs: number;
@@ -16,6 +18,8 @@ export interface PublishContext {
   banners: Banners;
   phones: PhoneLink;
   replay: boolean;
+  /** How a player is called on screen. */
+  nameOf(id: number): string;
 }
 
 /**
@@ -28,14 +32,16 @@ export function publish(c: PublishContext): void {
   const owner = match?.ball.owner;
   const seats = c.players.map((p) => {
     const s = c.lobby.seats.get(p.seat);
-    return { seat: p.seat, name: p.name, connected: p.connected, pick: s?.pick ?? null, ready: s?.ready ?? false, team: s?.team ?? null };
+    return { seat: p.seat, name: p.name, connected: p.connected, pick: s?.pick ?? null, ready: s?.ready ?? false, team: s?.team ?? null, role: s?.role ?? null };
   });
-  const lineup = c.lobby.entrants();
+  const lineup = c.lobby.lineup();
   store.setState({
     phase: c.phase,
     seats,
-    bots: lineup.filter((e) => e.seat === null).map((e) => ({ team: e.team, character: e.character })),
+    bots: lineup.filter((e) => e.seat === null).map((e) => ({ team: e.team, character: e.character, role: e.role })),
     botsOn: c.lobby.bots,
+    level: c.lobby.level,
+    moment: match ? momentOf(match, (id) => c.nameOf(id)) : null,
     startBlock: c.lobby.startBlock(),
     score: match ? [match.score[0], match.score[1]] : [0, 0],
     clock: match ? Math.ceil(match.clock) : 0,
@@ -71,30 +77,4 @@ function results(driver: MatchDriver, names: ReadonlyMap<number, string>): Resul
       ...a.stats,
     }))
     .sort((x, y) => y.goals - x.goals || y.tackles - x.tackles || x.id - y.id);
-}
-
-function phoneState(c: PublishContext, seat: number): PhoneState {
-  const s = c.lobby.seats.get(seat)!;
-  const match = c.driver?.state ?? null;
-  const id = c.driver?.athleteBySeat.get(seat);
-  const athlete = match && id !== undefined ? match.athletes[id] : undefined;
-  const owner = match?.ball.owner;
-  const team = athlete?.team ?? s.team;
-  const over = match?.phase === "fulltime" && athlete;
-  return {
-    kind: "state",
-    phase: c.phase,
-    taken: c.lobby.taken(seat),
-    pick: s.pick,
-    ready: s.ready,
-    team,
-    playing: athlete !== undefined,
-    score: match ? [match.score[0], match.score[1]] : [0, 0],
-    clock: match ? Math.ceil(match.clock) : 0,
-    golden: match?.golden ?? false,
-    hasBall: !!athlete && owner?.kind === "athlete" && owner.id === athlete.id,
-    goals: athlete?.stats.goals ?? 0,
-    result: over ? (match.winner === athlete.team ? "win" : "lose") : null,
-    banner: c.banners.current?.text ?? null,
-  };
 }

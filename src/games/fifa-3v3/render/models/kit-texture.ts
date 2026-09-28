@@ -44,8 +44,11 @@ export function jerseyTexture(kit: Kit, name: string, number: number, keeper = f
     for (let y = 30; y < H; y += 26) ctx.fillRect(0, y, W, 8);
     ctx.globalAlpha = 1;
   }
-  printBack(ctx, kit, name, number);
-  printFront(ctx, kit, number);
+  // Number 0 is a plain shirt with no printing, like the referee's.
+  if (number > 0) {
+    printBack(ctx, kit, name, number);
+    printFront(ctx, kit, number);
+  }
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = 4;

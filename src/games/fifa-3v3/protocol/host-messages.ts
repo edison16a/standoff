@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ROLES } from "../roles";
 import { CHARACTER_IDS } from "../roster";
 
 /** Where the room is, as a phone sees it. */
@@ -34,9 +35,25 @@ export const phoneStateSchema = z.object({
   result: z.enum(["win", "lose"]).nullable(),
   /** A word for the moment, like Goal or Save. */
   banner: z.string().max(24).nullable(),
+  /** The place the host gave this player. */
+  role: z.enum(ROLES).nullable(),
+  /** The other side has the ball: the big button is Guard. */
+  defending: z.boolean(),
+  /** Who Guard shadows, how far away, and whether Guard can take over from here. */
+  guard: z
+    .object({ mark: z.string().max(24), distance: z.number().min(0).max(99), inRange: z.boolean(), on: z.boolean() })
+    .nullable(),
+  /** A free kick or penalty, and this player's part in it. */
+  setPiece: z
+    .object({
+      kind: z.enum(["free", "penalty"]),
+      part: z.enum(["taker", "wall", "attack", "defend"]),
+      stage: z.enum(["aim", "curve", "power", "struck"]),
+    })
+    .nullable(),
 });
 
-export const BUZZ_KINDS = ["kick", "pass", "ball", "tackle", "tackled", "goal", "conceded", "whistle", "win", "lose"] as const;
+export const BUZZ_KINDS = ["kick", "pass", "ball", "tackle", "tackled", "goal", "conceded", "whistle", "win", "lose", "foul"] as const;
 export type BuzzKind = (typeof BUZZ_KINDS)[number];
 
 /** Asks a phone to buzz, on hardware that allows it. */

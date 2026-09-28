@@ -17,6 +17,10 @@ export interface Framing {
 export function frameFor(view: MatchView, options: { lobby?: boolean; replay?: boolean; goals?: number } = {}): Framing {
   if (options.lobby) return { shot: "lobby", tags: true };
   if (options.replay) return { shot: (options.goals ?? 0) % 2 === 0 ? "replay-end" : "replay-side", tags: false };
+  // A foul: follow the referee in, then close on the card. Then the set piece, from behind the ball.
+  if (view.phase === "foul") return { shot: view.foul?.carded ? "card" : "foul", tags: false };
+  if (view.phase === "setpiece") return { shot: "setpiece", tags: true };
+  if (view.phase === "play" && view.setPiece?.launched && view.setPiece.struckT < 1.6) return { shot: "setpiece-follow", tags: false };
   if (view.phase === "goal" && view.phaseT > 0.9) {
     const scorer = view.scorer !== null ? view.athletes[view.scorer] : undefined;
     if (scorer) return { shot: "closeup", focus: new THREE.Vector3(scorer.x, 0, scorer.z), tags: false };

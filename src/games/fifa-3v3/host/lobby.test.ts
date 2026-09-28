@@ -95,6 +95,26 @@ describe("the lobby", () => {
     expect(lobby.startBlock()).toBeNull();
   });
 
+  it("lets the host pick roles, swapping with whoever had the role", () => {
+    const lobby = joined(1, 2);
+    lobby.pick(1, "echeverri");
+    lobby.pick(2, "brandao");
+    lobby.setTeam(1, 1);
+    lobby.setTeam(2, 1);
+    lobby.setReady(1, true);
+    lobby.setReady(2, true);
+    expect(lobby.seats.get(1)!.role).toBe("striker");
+    expect(lobby.seats.get(2)!.role).toBe("left");
+    lobby.setRole(2, "striker");
+    expect(lobby.seats.get(2)!.role).toBe("striker");
+    expect(lobby.seats.get(1)!.role).toBe("left");
+    // Blue attacks to the left, so its left wing is the third place (the near side).
+    const blue = lobby.lineup().filter((e) => e.team === 1);
+    expect(blue.map((e) => e.role)).toEqual(["striker", "right", "left"]);
+    expect(blue[0]!.seat).toBe(2);
+    expect(blue[2]!.seat).toBe(1);
+  });
+
   it("needs a ready player before anything can start", () => {
     expect(joined(1).startBlock()).toBe("empty");
   });

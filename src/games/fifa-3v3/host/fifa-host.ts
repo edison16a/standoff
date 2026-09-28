@@ -1,3 +1,4 @@
+import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import { HostPad } from "@/games/kit/pad/host-pad";
 import { playerColor } from "@/games/kit/players";
 import type { HostRoomApi, HostRoomEvent } from "@/platform/games/game-api";
@@ -8,6 +9,8 @@ import { phoneMessageSchema, type PhoneMessage, type RoomPhase } from "../protoc
 import type { Label } from "../render/match-renderer";
 import { ROSTER } from "../roster";
 import { TEAMS, type TeamId } from "../teams";
+import type { Role } from "../roles";
+import { registerSoccerAdmin } from "./admin";
 import { Banners } from "./banners";
 import { DemoMatch } from "./demo-match";
 import { buzzFor } from "./buzz";
@@ -39,6 +42,7 @@ export class FifaHost {
   private seed = Math.floor(Math.random() * 1e6);
   private replaying = false;
   private goals = 0;
+  private unadmin: (() => void) | null = null;
 
   constructor(private readonly room: HostRoomApi) {
     store.setState({ ...store.getInitialState() });
@@ -55,6 +59,7 @@ export class FifaHost {
   }
 
   dispose(): void {
+    this.unadmin?.();
     this.unsubscribe();
     this.unpress();
     this.pad.dispose();
@@ -104,6 +109,18 @@ export class FifaHost {
     if (this.lobby.setTeam(seat, team)) this.refresh(performance.now());
   }
 
+  /** The host hands a player their place in the side. */
+  setRole(seat: number, role: Role): void {
+    if (!this.driver && this.lobby.setRole(seat, role)) this.refresh(performance.now());
+  }
+
+  /** How sharp the computer players are in the next match. */
+  setLevel(level: BotLevel): void {
+    if (this.driver) return;
+    this.lobby.setLevel(level);
+    this.refresh(performance.now());
+  }
+
   /** Computer players on or off, for the next match. */
   setBots(on: boolean): void {
     if (this.driver) return;
@@ -114,7 +131,9 @@ export class FifaHost {
   /** Starts a match with every ready player, computers filling the gaps if they are on. */
   startMatch(): void {
     if (this.lobby.startBlock()) return;
-    this.driver = new MatchDriver(this.lobby.entrants(), this.seed++);
+    this.driver = new MatchDriver(this.lobby.entrants(), this.seed++, this.lobby.level);
+    this.unadmin?.();
+    this.unadmin = registerSoccerAdmin(() => this.driver);
     this.replaying = false;
     this.goals = 0;
     this.banners.clear();
@@ -126,6 +145,8 @@ export class FifaHost {
   /** From the results: back to the team picker, keeping everyone's choices. */
   backToLobby(): void {
     this.driver = null;
+    this.unadmin?.();
+    this.unadmin = null;
     this.replaying = false;
     this.banners.clear();
     this.room.setPlaying(false);
@@ -209,6 +230,7 @@ export class FifaHost {
 
   private refresh(nowMs: number): void {
     this.lastHud = nowMs;
-    publish({ nowMs, phase: this.phase, players: this.room.players(), lobby: this.lobby, driver: this.driver, banners: this.banners, phones: this.phones, replay: this.replaying });
+    const nameOf = (id: number) => this.calledName(id);
+    publish({ nowMs, phase: this.phase, players: this.room.players(), lobby: this.lobby, driver: this.driver, banners: this.banners, phones: this.phones, replay: this.replaying, nameOf });
   }
 }

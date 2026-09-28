@@ -1,4 +1,6 @@
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { HostPad } from "@/games/kit/pad/host-pad";
+import { adminFoul, adminSetPiece } from "../engine/admin";
 import { FixedStepClock } from "../engine/clock";
 import type { MatchEvent } from "../engine/events";
 import { createMatch, stepMatch, type Entrant } from "../engine/match";
@@ -30,11 +32,12 @@ export class MatchDriver {
   private readonly clock: FixedStepClock;
   private readonly presses = new Map<number, Press[]>();
   private readonly held = new Map<number, number>();
+  private pending: MatchEvent[] = [];
 
-  constructor(readonly entrants: readonly Entrant[], seed: number) {
+  constructor(readonly entrants: readonly Entrant[], seed: number, level: BotLevel = DEFAULT_BOT_LEVEL) {
     const hooks = testHooks();
     this.clock = new FixedStepClock(hooks.catchUp);
-    this.state = createMatch(entrants, { seed, ...(hooks.seconds ? { seconds: hooks.seconds } : {}), ...(hooks.goalsToWin ? { goalsToWin: hooks.goalsToWin } : {}) });
+    this.state = createMatch(entrants, { seed, level, ...(hooks.seconds ? { seconds: hooks.seconds } : {}), ...(hooks.goalsToWin ? { goalsToWin: hooks.goalsToWin } : {}) });
     for (const a of this.state.athletes) if (a.seat !== null) this.athleteBySeat.set(a.seat, a.id);
     this.view = buildView(this.state);
   }
@@ -54,6 +57,24 @@ export class MatchDriver {
     if (this.athleteBySeat.has(seat)) this.held.set(seat, seconds);
   }
 
+  /** Admin panel shortcuts. Each returns whether it could be done right now. */
+  foul(): boolean {
+    return this.admin(() => adminFoul(this.state));
+  }
+
+  setPiece(kind: "free" | "penalty"): boolean {
+    return this.admin(() => adminSetPiece(this.state, kind));
+  }
+
+  /** The events a shortcut raises are kept for the next tick, so the whistle and the camera hear them. */
+  private admin(run: () => boolean): boolean {
+    this.state.events = [];
+    const done = run();
+    this.pending.push(...this.state.events);
+    this.view = buildView(this.state);
+    return done;
+  }
+
   /** A phone left or came back. While away, a computer plays for them. */
   setOnline(seat: number, online: boolean): void {
     const id = this.athleteBySeat.get(seat);
@@ -62,7 +83,8 @@ export class MatchDriver {
 
   /** Runs the steps due by `nowMs` and returns what happened. */
   tick(nowMs: number, pad: HostPad): MatchEvent[] {
-    const events: MatchEvent[] = [];
+    const events: MatchEvent[] = this.pending;
+    this.pending = [];
     const steps = this.clock.stepsFor(nowMs);
     for (let i = 0; i < steps; i++) {
       stepMatch(this.state, this.commands(pad, nowMs));
@@ -83,7 +105,8 @@ export class MatchDriver {
     const out = new Map<number, Command>();
     for (const [seat, id] of this.athleteBySeat) {
       const stick = pad.stick(seat, nowMs);
-      const command: Command = { move: { x: stick.x, z: -stick.y } };
+      // Guard is held rather than pressed, so it is read as a level every step.
+      const command: Command = { move: { x: stick.x, z: -stick.y }, guard: pad.isHeld(seat, BUTTONS.guard) };
       const queued = this.presses.get(seat);
       // One press per step keeps a quick tap's down and up in order.
       const next = queued?.shift();
@@ -97,7 +120,8 @@ export class MatchDriver {
         } else if (next.button === BUTTONS.slide && next.down) {
           command.slide = true;
           if (Math.hypot(aim.x, aim.z) > 0.2) command.move = aim;
-        }
+        } else if (next.button === BUTTONS.steal && next.down) command.steal = true;
+        else if (next.button === BUTTONS.jump && next.down) command.jump = true;
       }
       out.set(id, command);
     }

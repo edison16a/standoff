@@ -2,9 +2,10 @@ import * as THREE from "three";
 import { PITCH } from "../../engine/tuning";
 import type { MatchView } from "../../engine/view";
 import { attackSign } from "../../teams";
+import { stoppage } from "./stoppage";
 
 /** Which camera is cutting to: the broadcast view, a close up, a replay angle, or the lobby's slow orbit. */
-export type Shot = "tv" | "closeup" | "replay-end" | "replay-side" | "winners" | "lobby" | "fixed";
+export type Shot = "tv" | "closeup" | "replay-end" | "replay-side" | "winners" | "lobby" | "fixed" | "foul" | "card" | "setpiece" | "setpiece-follow";
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
@@ -103,6 +104,17 @@ export class CameraDirector {
         fov = this.fixed.fov;
         rate = 1000;
         break;
+      case "foul":
+      case "card":
+      case "setpiece":
+      case "setpiece-follow": {
+        const placed = stoppage(shot, view, this.wantPos, this.wantLook);
+        if (placed) {
+          fov = placed.fov;
+          rate = placed.rate;
+        }
+        break;
+      }
       case "lobby": {
         const a = time * 0.045 + 0.4;
         this.wantPos.set(Math.sin(a) * PITCH.halfLength * 1.9, 15, Math.cos(a) * PITCH.halfWidth * 2.5);

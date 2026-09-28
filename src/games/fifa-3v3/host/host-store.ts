@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
+import type { Role } from "../roles";
 import type { CharacterId } from "../roster";
 import type { RoomPhase } from "../protocol";
 import type { TeamId } from "../teams";
@@ -10,12 +12,23 @@ export interface SeatView {
   pick: CharacterId | null;
   ready: boolean;
   team: TeamId | null;
+  role: Role | null;
 }
 
 /** A computer player filling a place in the lobby's team columns. */
 export interface BotView {
   team: TeamId;
   character: CharacterId;
+  role: Role;
+}
+
+/** A stoppage shown on the score bug: a foul and its booking, then the free kick or penalty. */
+export interface Moment {
+  text: string;
+  /** Who it is about, like the player booked. */
+  sub: string | null;
+  card: boolean;
+  colour: string;
 }
 
 export interface Banner {
@@ -50,6 +63,9 @@ export interface FifaHostState {
   bots: BotView[];
   /** Whether computer players fill the empty places. */
   botsOn: boolean;
+  /** How sharp the computer players are. */
+  level: BotLevel;
+  moment: Moment | null;
   /** Why the match cannot start yet, or null when it can. */
   startBlock: "empty" | "oneSided" | null;
   score: [number, number];
@@ -69,6 +85,8 @@ export const useFifaStore = create<FifaHostState>(() => ({
   seats: [],
   bots: [],
   botsOn: true,
+  level: DEFAULT_BOT_LEVEL,
+  moment: null,
   startBlock: "empty",
   score: [0, 0],
   clock: 0,

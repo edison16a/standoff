@@ -6,6 +6,8 @@ import { TEAMS } from "../teams";
 import { Arena } from "./arena/arena";
 import { CameraDirector, type Shot } from "./camera/director";
 import { Effects } from "./effects/effects";
+import { AimLine } from "./figures/aim-line";
+import { RefereeFigure } from "./figures/referee-figure";
 import { Squad, type Label } from "./figures/squad";
 import { BallModel } from "./models/ball-model";
 
@@ -36,6 +38,9 @@ export class MatchRenderer {
   private readonly effects: Effects;
   private readonly ball: BallModel;
   private readonly squad: Squad;
+  private readonly referee: RefereeFigure;
+  private readonly refMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.62, metalness: 0.02 });
+  private readonly aim = new AimLine();
   private readonly environment: THREE.Texture;
   private last = 0;
   private readonly low: boolean;
@@ -59,7 +64,8 @@ export class MatchRenderer {
     this.effects = new Effects(this.arena.glow);
     this.ball = new BallModel(this.arena.glow);
     this.squad = new Squad(this.arena.glow);
-    this.scene.add(this.arena.group, this.effects.group, this.ball.group, this.squad.group);
+    this.referee = new RefereeFigure(this.refMaterial);
+    this.scene.add(this.arena.group, this.effects.group, this.ball.group, this.squad.group, this.referee.group, this.aim.group);
   }
 
   resize(width: number, height: number, dpr: number): void {
@@ -120,6 +126,10 @@ export class MatchRenderer {
     this.last = nowMs;
     const time = nowMs / 1000;
     this.squad.update(view, dt, time, tags && shot !== "replay-end" && shot !== "replay-side");
+    // No referee on the lobby's kick about.
+    this.referee.group.visible = shot !== "lobby";
+    this.referee.update(view.referee, view.ball, dt, time);
+    this.aim.update(view.setPiece, time);
     this.ball.update(view.ball, dt);
     this.arena.update(view.ball, dt, time);
     this.arena.crowd.setExcitement(excitement(view));
@@ -137,6 +147,9 @@ export class MatchRenderer {
 
   dispose(): void {
     this.squad.dispose();
+    this.referee.dispose();
+    this.refMaterial.dispose();
+    this.aim.dispose();
     this.ball.dispose();
     this.effects.dispose();
     this.arena.dispose();

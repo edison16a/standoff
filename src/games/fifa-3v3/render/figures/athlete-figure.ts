@@ -43,8 +43,9 @@ export class AthleteFigure {
   /** The move the remembered ball belongs to. */
   private ballKick = "";
 
-  constructor(view: AthleteView, kit: Kit, material: THREE.Material) {
-    this.character = ROSTER[view.character];
+  /** `character` stands in for the roster, for someone who is not one of the stars, like the referee. */
+  constructor(view: AthleteView, kit: Kit, material: THREE.Material, character: Character = ROSTER[view.character]) {
+    this.character = character;
     const c = this.character;
     this.rig = buildBody({ look: c.look, kit, name: c.short, number: c.number }, material);
     this.phase = view.id * 1.7;

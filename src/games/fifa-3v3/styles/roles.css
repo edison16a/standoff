@@ -1,0 +1,46 @@
+/* The host's role chips on each player card, and the row of lobby options. */
+
+.fifa-card:has(.fifa-roles) {
+  grid-template-areas: "dot who state" "roles roles moves";
+}
+
+.fifa-roles {
+  grid-area: roles;
+  display: flex;
+  gap: 4px;
+}
+
+.fifa-role {
+  min-width: 40px;
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 7px;
+  background: rgba(10, 12, 30, 0.6);
+  color: rgba(255, 255, 255, 0.75);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.fifa-role[aria-pressed="true"] {
+  border-color: #ffffff;
+  background: #ffffff;
+  color: #0a0c1e;
+}
+
+.fifa-role:focus-visible {
+  outline: 3px solid #ffd23f;
+}
+
+.fifa-card .fifa-card__moves {
+  justify-content: flex-end;
+}
+
+.fifa-lobby__options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px 24px;
+}
