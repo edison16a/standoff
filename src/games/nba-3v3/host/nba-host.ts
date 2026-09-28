@@ -1,13 +1,12 @@
 import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import { HostPad } from "@/games/kit/pad/host-pad";
-import type { HostRoomApi, HostRoomEvent } from "@/platform/games/game-api";
+import type { HostRoomApi } from "@/platform/games/game-api";
 import { SoundDirector } from "../audio/sound-director";
 import type { MatchEvent } from "../engine/events";
 import type { Match } from "../engine/match";
 import type { TeamId } from "../engine/types";
-import { BUTTONS, type Button } from "../engine/types";
 import type { V2 } from "../engine/vec";
-import { phoneMessageSchema, type Phase, type PhoneMessage } from "../protocol";
+import type { Phase } from "../protocol";
 import { registerTestActions } from "./admin";
 import { BannerBoard, REPLAY_SOUNDS, slowForMoment } from "./banners";
 import { Buzzer } from "./buzzer";
@@ -19,6 +18,7 @@ import { MatchDriver } from "./match-driver";
 import { PhoneLink } from "./phone-link";
 import { nameFor, phaseOf, publish } from "./publish";
 import type { ReplayCamera } from "./replay-camera";
+import { RoomInput } from "./room-input";
 
 /** The overlay and the phones are refreshed this often; the canvas every frame. */
 const HUD_MS = 100;
@@ -60,8 +60,9 @@ export class NbaHost {
     this.buzzer = new Buzzer(this.phones);
     store.setState({ ...store.getInitialState() });
     for (const player of room.players()) if (player.connected) this.lobby.connect(player.seat);
-    this.unsubscribe = room.on((event) => this.onRoom(event));
-    this.unpress = this.pad.onPress((seat, button, down, stick) => this.onPress(seat, button, down, stick));
+    const input = new RoomInput({ room, lobby: this.lobby, phones: this.phones, driver: () => this.driver, refresh: () => this.refresh(performance.now()) });
+    this.unsubscribe = room.on((event) => input.onRoom(event));
+    this.unpress = this.pad.onPress((seat, button, down, stick) => input.onPress(seat, button, down, stick));
     this.audio.setPhase("lobby");
     this.refresh(performance.now());
   }
@@ -102,37 +103,38 @@ export class NbaHost {
     return this.driver ? nameFor(this.driver.match, id, this.room.players()) : "";
   }
 
+  /** Between games: the teams, roles and settings can change. */
   private get between(): boolean {
     const phase = this.phase;
     return phase !== "countdown" && phase !== "live" && phase !== "replay";
   }
 
-  setTeam(seat: number, team: TeamId): void {
-    if (this.between) this.lobby.setTeam(seat, team);
+  private edit(change: () => void): void {
+    if (this.between) change();
     this.refresh(performance.now());
   }
 
+  setTeam(seat: number, team: TeamId): void {
+    this.edit(() => this.lobby.setTeam(seat, team));
+  }
+
   shuffle(): void {
-    if (this.between) this.lobby.shuffle();
-    this.refresh(performance.now());
+    this.edit(() => this.lobby.shuffle());
   }
 
   /** Computer players on or off, for the next game. */
   setBots(on: boolean): void {
-    if (this.between) this.lobby.setBots(on);
-    this.refresh(performance.now());
+    this.edit(() => this.lobby.setBots(on));
   }
 
   /** How good the computer players are, for the next game. */
   setLevel(level: BotLevel): void {
-    if (this.between) this.lobby.setLevel(level);
-    this.refresh(performance.now());
+    this.edit(() => this.lobby.setLevel(level));
   }
 
   /** The host gives a player the next role on their team: Guard, Wing or Big. */
   cycleRole(seat: number): void {
-    if (this.between) this.lobby.cycleRole(seat);
-    this.refresh(performance.now());
+    this.edit(() => this.lobby.cycleRole(seat));
   }
 
   /** Starts a game with the teams as they stand, computers filling the gaps if they are on. */
@@ -211,67 +213,6 @@ export class NbaHost {
   private onReplayEvent(event: MatchEvent, ghost: Match): void {
     if (REPLAY_SOUNDS.has(event.type)) this.audio.event(event, ghost);
     for (const listener of this.matchListeners) listener(event);
-  }
-
-  private onPress(seat: number, button: string, down: boolean, stick: { x: number; y: number }): void {
-    const driver = this.driver;
-    if (!driver || !(BUTTONS as readonly string[]).includes(button)) return;
-    if (down) driver.press(seat, button as Button, stick);
-    // The phone's own release message usually lands first; this catches one that did not.
-    else if (button === "shoot") driver.release(seat);
-    if (driver.replays.replay || this.phase === "replay") this.refresh(performance.now());
-  }
-
-  private onRoom(event: HostRoomEvent): void {
-    switch (event.type) {
-      case "joined":
-        this.lobby.connect(event.seat);
-        this.driver?.setOnline(event.seat, true);
-        this.phones.forget(event.seat);
-        break;
-      case "left":
-        this.lobby.disconnect(event.seat);
-        this.driver?.setOnline(event.seat, false);
-        break;
-      case "message": {
-        const parsed = phoneMessageSchema.safeParse(event.payload);
-        if (parsed.success) this.onPhone(event.seat, parsed.data);
-        return;
-      }
-      case "resync":
-        for (const player of this.room.players()) {
-          if (player.connected) this.lobby.connect(player.seat);
-          else this.lobby.disconnect(player.seat);
-          this.driver?.setOnline(player.seat, player.connected);
-        }
-        this.phones.forget();
-        break;
-      case "players":
-      case "online":
-        break;
-    }
-    this.refresh(performance.now());
-  }
-
-  private onPhone(seat: number, message: PhoneMessage): void {
-    switch (message.kind) {
-      case "release":
-        this.driver?.release(seat, message.heldMs);
-        return;
-      case "skip":
-        this.driver?.replays.skip(seat);
-        break;
-      case "pick":
-        this.lobby.pick(seat, message.character);
-        break;
-      case "ready":
-        this.lobby.setReady(seat, message.ready);
-        break;
-      case "hello":
-        this.phones.forget(seat);
-        break;
-    }
-    this.refresh(performance.now());
   }
 
   private refresh(nowMs: number): void {
