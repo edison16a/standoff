@@ -3,15 +3,15 @@ import "./aim.css";
 import { useEffect, useRef } from "react";
 import type { Player } from "@/platform/games/game-api";
 import { playerColor } from "@/games/kit/players";
-import { sameZone, TARGET_INSET, WHOLE_SCREEN, type AimZone, type ScreenPoint } from "./aim-math";
-import { zonePixels, type HostAim } from "./host-aim";
+import { sameZone, WHOLE_SCREEN, type AimZone, type ScreenPoint } from "./aim-math";
+import { TARGET_POINTS } from "./aim-targets";
+import { insideBox, zonePixels, type HostAim } from "./host-aim";
 import type { AimStep } from "./protocol";
 
-const TARGETS: Partial<Record<AimStep, ScreenPoint>> = {
-  center: { x: 0, y: 0 },
-  "top-left": { x: -TARGET_INSET, y: TARGET_INSET },
-  "bottom-right": { x: TARGET_INSET, y: -TARGET_INSET },
-};
+const TARGETS: Partial<Record<AimStep, ScreenPoint>> = TARGET_POINTS;
+
+/** A dot held at the edge is drawn this far inside it, so all of it stays in sight. */
+const DOT_MARGIN = 14;
 
 interface AimOverlayProps {
   aim: HostAim;
@@ -81,7 +81,10 @@ export function AimOverlay({ aim, players, dots = true, targets = true }: AimOve
       if (dots) {
         for (const player of everyone) {
           const point = aim.point(player.seat, now);
-          if (point) drawDot(ctx, zonePixels(point, aim.zone(player.seat), width, height), playerColor(player.seat), player.name);
+          if (!point) continue;
+          const zone = aim.zone(player.seat);
+          const box = { x: zone.x * width, y: zone.y * height, w: zone.w * width, h: zone.h * height };
+          drawDot(ctx, insideBox(zonePixels(point, zone, width, height), box, DOT_MARGIN), playerColor(player.seat), player.name, box);
         }
       }
     };
@@ -144,7 +147,7 @@ function drawTarget(ctx: CanvasRenderingContext2D, at: { x: number; y: number },
   ctx.restore();
 }
 
-function drawDot(ctx: CanvasRenderingContext2D, at: { x: number; y: number }, colour: string, name: string): void {
+function drawDot(ctx: CanvasRenderingContext2D, at: { x: number; y: number }, colour: string, name: string, box: Box): void {
   ctx.save();
   const glow = ctx.createRadialGradient(at.x, at.y, 0, at.x, at.y, 28);
   glow.addColorStop(0, colour);
@@ -166,6 +169,9 @@ function drawDot(ctx: CanvasRenderingContext2D, at: { x: number; y: number }, co
   ctx.stroke();
   ctx.font = "600 13px system-ui, sans-serif";
   ctx.fillStyle = colour;
-  ctx.fillText(name, at.x + 16, at.y - 14);
+  // The name flips to the dot's other side near the right or top edge, so it stays in sight too.
+  const flipX = at.x + 16 + ctx.measureText(name).width > box.x + box.w;
+  ctx.textAlign = flipX ? "right" : "left";
+  ctx.fillText(name, flipX ? at.x - 16 : at.x + 16, at.y - 14 < box.y + 12 ? at.y + 26 : at.y - 14);
   ctx.restore();
 }

@@ -72,6 +72,38 @@ describe("the host's aim", () => {
     aim.dispose();
   });
 
+  it("holds a dot pointed past the edge at the edge, and lets it come straight back in", () => {
+    const { room, say } = fakeRoom();
+    const aim = new HostAim(room);
+    const fired = vi.fn();
+    aim.onFire(fired);
+    say(5, { kind: "aim", x: 1.15, y: -1.15 });
+    close(settle(aim, 5), 1, -1);
+    say(5, { kind: "aim-fire", x: -1.1, y: 0.2 });
+    expect(fired).toHaveBeenCalledWith(5, { x: -1, y: 0.2 });
+    // Back in from the edge: the very next frame moves inward, with no dead time spent easing back from past the edge.
+    let clock = performance.now() + 5000;
+    const end = clock + 1000;
+    const now = vi.spyOn(performance, "now").mockImplementation(() => clock);
+    say(5, { kind: "aim", x: 1.15, y: 0 });
+    for (; clock < end; clock += 16) aim.point(5, clock);
+    say(5, { kind: "aim", x: 0.9, y: 0 });
+    // Ten milliseconds: unpinned, the dot would still be easing back from past the edge.
+    expect(aim.point(5, clock + 10)!.x).toBeLessThan(0.99);
+    now.mockRestore();
+    aim.dispose();
+  });
+
+  it("targets every corner a sword game asks for", () => {
+    const { room, say } = fakeRoom();
+    const aim = new HostAim(room);
+    for (const step of ["top-right", "bottom-left"]) {
+      say(6, { kind: "aim-step", step });
+      expect(aim.step(6)).toBe(step);
+    }
+    aim.dispose();
+  });
+
   it("lets a drag aimed player, who never sees a target, follow their zone", () => {
     const { room, say } = fakeRoom();
     const aim = new HostAim(room);
