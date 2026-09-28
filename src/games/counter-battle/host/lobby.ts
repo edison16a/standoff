@@ -1,4 +1,5 @@
-import type { Difficulty, TeamId } from "../engine/fighter";
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
+import type { TeamId } from "../engine/fighter";
 import type { GunId } from "../engine/guns";
 import type { Mode } from "../protocol";
 import { splitPanes, type ViewRect } from "../render/layout";
@@ -32,7 +33,7 @@ export interface Spot {
 export class Lobby {
   readonly seats = new Map<number, SeatState>();
   mode: Mode = "1v1";
-  difficulty: Difficulty = "normal";
+  difficulty: BotLevel = DEFAULT_BOT_LEVEL;
   private clock = 0;
 
   private state(seat: number): SeatState {
@@ -71,7 +72,7 @@ export class Lobby {
     s.ready = ready && s.gun !== null && s.connected;
   }
 
-  setDifficulty(difficulty: Difficulty): void {
+  setDifficulty(difficulty: BotLevel): void {
     this.difficulty = difficulty;
   }
 

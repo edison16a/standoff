@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { SplitPane } from "@/games/kit/split/SplitMap";
-import type { Difficulty, TeamId } from "../engine/fighter";
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
+import type { TeamId } from "../engine/fighter";
 import type { GunId } from "../engine/guns";
 import type { MatchPhase } from "../engine/match";
 import type { Mode, RoomPhase } from "../protocol";
@@ -75,7 +76,7 @@ export interface ResultRow {
 export interface CounterHostState {
   phase: RoomPhase;
   mode: Mode;
-  difficulty: Difficulty;
+  difficulty: BotLevel;
   spots: SpotView[];
   /** Players waiting for a place, and players still choosing a gun or not ready. */
   bench: string[];
@@ -102,7 +103,7 @@ export interface CounterHostState {
 export const useCounterStore = create<CounterHostState>(() => ({
   phase: "lobby",
   mode: "1v1",
-  difficulty: "normal",
+  difficulty: DEFAULT_BOT_LEVEL,
   spots: [],
   bench: [],
   choosing: [],

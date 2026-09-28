@@ -1,8 +1,10 @@
 "use client";
 import type { CSSProperties } from "react";
 import { Icon } from "@/components/ui/Icon";
+import { DifficultyPicker } from "@/games/kit/difficulty/DifficultyPicker";
+import { BOT_LEVEL_LABELS } from "@/games/kit/difficulty/difficulty";
 import { SplitMap } from "@/games/kit/split/SplitMap";
-import type { Difficulty, TeamId } from "../../engine/fighter";
+import type { TeamId } from "../../engine/fighter";
 import { GUNS } from "../../engine/guns";
 import { MODES } from "../../protocol";
 import { TEAMS } from "../../teams";
@@ -10,11 +12,6 @@ import { GunIcon } from "../../ui/GunIcon";
 import { useCounterStore, type SpotView } from "../host-store";
 import { useSession } from "./session-context";
 
-const LEVELS: { id: Difficulty; name: string }[] = [
-  { id: "easy", name: "Easy" },
-  { id: "normal", name: "Normal" },
-  { id: "hard", name: "Hard" },
-];
 const MODE_NAMES = { "1v1": "1 v 1", "2v2": "2 v 2" } as const;
 
 function SpotCard({ spot, level, onMove }: { spot: SpotView; level: string; onMove(seat: number): void }) {
@@ -79,7 +76,7 @@ function Segments<T extends string>({ label, options, value, onPick }: { label: 
 export function Lobby() {
   const session = useSession();
   const { spots, mode, difficulty, split, bench, choosing, canStart } = useCounterStore();
-  const level = LEVELS.find((l) => l.id === difficulty)?.name ?? "Normal";
+  const level = BOT_LEVEL_LABELS[difficulty];
   const humans = spots.filter((s) => s.seat !== null).length;
   const move = (seat: number) => {
     const spot = spots.find((s) => s.seat === seat);
@@ -98,7 +95,7 @@ export function Lobby() {
         <h1 className="cb-logo">
           Paintball <b>Battle</b>
         </h1>
-        <p>Your fighter runs the bunkers. You aim and shoot. First to five rounds.</p>
+        <p>Your fighter runs the bunkers. Duck, rise and splat them. First to five rounds.</p>
       </header>
       <div className="cb-lobby__middle">
         <TeamColumn team={0} spots={spots.filter((s) => s.team === 0)} level={level} onMove={move} />
@@ -113,7 +110,7 @@ export function Lobby() {
       </div>
       <footer className="cb-lobby__footer">
         <Segments label="Match" options={MODES.map((id) => ({ id, name: MODE_NAMES[id] }))} value={mode} onPick={(m) => session.setMode(m)} />
-        <Segments label="Computer skill" options={LEVELS} value={difficulty} onPick={(d) => session.setDifficulty(d)} />
+        <DifficultyPicker level={difficulty} onChange={(d) => session.setDifficulty(d)} />
         <p className="cb-lobby__note">
           {note}
           {bench.length > 0 && <span className="cb-lobby__bench"> Waiting for a place: {bench.join(", ")}.{mode === "1v1" ? " Pick 2 v 2 to let them in." : ""}</span>}
