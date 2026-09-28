@@ -35,12 +35,14 @@ function choices(gun: GunId, from: V2, foes: V2[], pressure = 0, claimed: V2[] =
 }
 
 const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+/** Seconds at a spot after which a fighter is ready to move on. Fresh at a spot, they stay and fight from it. */
+const RESTLESS = 30;
 const FROM = { x: 0, z: -15 };
 const FOES = [{ x: -4, z: 14 }, { x: 5, z: 12 }];
 
 describe("choosing cover", () => {
   it("keeps the range each gun likes: sniper far, rifle long, SMG mid, shotgun close", () => {
-    const range = (gun: GunId) => mean(choices(gun, FROM, FOES).map((c) => c.near));
+    const range = (gun: GunId) => mean(choices(gun, FROM, FOES, 0, [], RESTLESS).map((c) => c.near));
     const sniper = range("sniper");
     const rifle = range("rifle");
     const smg = range("smg");
@@ -56,8 +58,8 @@ describe("choosing cover", () => {
 
   it("closes in as pressure builds", () => {
     for (const gun of ["rifle", "sniper"] as const) {
-      const calm = mean(choices(gun, FROM, FOES, 0).map((c) => c.near));
-      const late = mean(choices(gun, FROM, FOES, 1).map((c) => c.near));
+      const calm = mean(choices(gun, FROM, FOES, 0, [], RESTLESS).map((c) => c.near));
+      const late = mean(choices(gun, FROM, FOES, 1, [], RESTLESS).map((c) => c.near));
       expect(late).toBeLessThan(calm - 3);
     }
   });
