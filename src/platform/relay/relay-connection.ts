@@ -125,10 +125,12 @@ export class RelayConnection {
     const room = allowed ? await this.ops.remake(old.code, this.id, this.ctx.joinUrlFor) : null;
     // The old room is untouched on a refusal, so the host simply stays in it.
     if (!room) return this.send({ type: "room:error", reason: "unavailable" });
-    this.room(old).toPhones({ type: "room:moved", code: room.code });
     await this.drop();
+    // The host listens on the new room and knows its code before any phone
+    // is told, so no phone's join can arrive before the host is there.
     await this.place.take({ kind: "host", code: room.code, seats: room.seats.length });
     this.sendCreated(room);
+    this.room(old).toPhones({ type: "room:moved", code: room.code });
   }
 
   private sendCreated(room: RoomRecord): void {
