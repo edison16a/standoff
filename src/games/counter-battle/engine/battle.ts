@@ -1,19 +1,23 @@
+import { BOT_SKILL } from "@/games/kit/difficulty/difficulty";
 import { PIECES, spawnPoints, type Piece } from "./arena";
 import { BotAim } from "./bot-aim";
-import { updateBrain } from "./brain";
+import { updateBrain, type BrainWorld } from "./brain";
 import { buildCover, nearestSpot, type CoverGraph } from "./cover";
 import type { BattleEvent } from "./events";
 import { createFighter, eyeOf, isBot, resetFighter, type Fighter, type FighterSetup, type TeamId } from "./fighter";
 import type { GunEvent } from "./gun-state";
 import { newMatch, sideOf, tickMatch, type MatchState } from "./match";
 import { Rng } from "./rng";
+import { duckDown } from "./peek";
 import { coneOf, resolveShot } from "./shooting";
 import { pressureAt } from "./tactics";
 import { STEP } from "./tuning";
 import type { V2, V3 } from "./vec";
 
-/** A tapped shot that comes a moment early still fires once the gun is ready. */
-const PULL_KEEP = 0.3;
+/** A tapped shot that comes a moment early still fires once the gun is ready and the fighter is up. */
+const PULL_KEEP = 0.45;
+/** Below this a player is still down behind cover, and the shot waits for them to come up. */
+const UP_ENOUGH = 0.35;
 /** A human who shot this recently is still in the fight, which holds a peek open. */
 const ENGAGED_FOR = 0.5;
 
@@ -81,15 +85,24 @@ export class Battle {
     f.trigger = { held: false, pulls: 0, pulledAt: -Infinity };
   }
 
-  /** The shoot button. A press always counts as one pull, and a held automatic keeps firing. */
+  /** The shoot button. A press always counts as one pull, and a held automatic keeps firing. A press behind cover also brings the fighter up. */
   setTrigger(id: number, down: boolean): void {
     const f = this.get(id);
     if (!f || !f.alive) return;
     if (down && !f.trigger.held) {
       f.trigger.pulls = 1;
       f.trigger.pulledAt = this.time;
+      f.rise = true;
     }
     f.trigger.held = down;
+  }
+
+  /** The crouch button: held, the fighter stays down behind cover; let go, they come up to shoot. */
+  setCrouch(id: number, down: boolean): void {
+    const f = this.get(id);
+    if (!f || isBot(f) || f.duck === down) return;
+    f.duck = down;
+    if (!down) f.rise = true;
   }
 
   reload(id: number): void {
@@ -126,14 +139,22 @@ export class Battle {
       const claimed: V2[] = mates.map((o) => this.graph.spots[o.brain.spot]!.pos);
       const others = living.filter((o) => o.id !== f.id && o.alive).map((o) => o.pos);
       const bot = this.bots.get(f.id);
+      // Training: computer players stand where they started and never shoot.
+      if (isBot(f) && !BOT_SKILL[f.difficulty].acts) {
+        f.vel = { x: 0, z: 0 };
+        continue;
+      }
       const engaged = bot ? this.engaged.has(f.id) : f.trigger.held || this.time - f.shotAt < ENGAGED_FOR;
-      updateBrain(f, { graph: this.graph, pieces: this.pieces, enemies, claimed, others, pressure, rng: this.rng, engaged }, this.time, STEP);
+      const pace = isBot(f) ? BOT_SKILL[f.difficulty].speed : 1;
+      const world: BrainWorld = { graph: this.graph, pieces: this.pieces, enemies, claimed, others, pressure, rng: this.rng, engaged, pace };
+      updateBrain(f, world, this.time, STEP);
       if (bot) {
         const intent = bot.update(f, enemies, this.pieces, this.rng, this.time, STEP);
         if (intent.engaged) this.engaged.add(f.id);
         else this.engaged.delete(f.id);
         if (intent.reload) f.gun.startReload();
         if (intent.pull) this.fire(f, events);
+        if (intent.duck) duckDown(f, world);
       } else {
         this.humanTrigger(f, events);
       }
@@ -142,6 +163,11 @@ export class Battle {
 
   private humanTrigger(f: Fighter, events: BattleEvent[]): void {
     const t = f.trigger;
+    // Still rising out of cover: a shot now would only paint the bunker.
+    if (f.crouch > UP_ENOUGH && f.pose === "crouch") {
+      if (this.time - t.pulledAt > PULL_KEEP) t.pulls = 0;
+      return;
+    }
     if (t.pulls > 0) {
       if (this.fire(f, events) !== "wait") t.pulls = 0;
       else if (this.time - t.pulledAt > PULL_KEEP) t.pulls = 0;

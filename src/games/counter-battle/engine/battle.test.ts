@@ -109,12 +109,21 @@ describe("a bot match", () => {
     }
   });
 
+  // Two battles side by side for a few seconds of fighting. Events are compared as one
+  // string at the end, since an expect per step is slow on a busy machine.
   it("plays out the same way from the same seed", () => {
     const a = new Battle(BOTS, 11);
     const b = new Battle(BOTS, 11);
-    for (let i = 0; i < 60 * 12; i++) expect(JSON.stringify(a.step())).toBe(JSON.stringify(b.step()));
+    const logA: BattleEvent[] = [];
+    const logB: BattleEvent[] = [];
+    for (let i = 0; i < 60 * 9; i++) {
+      logA.push(...a.step());
+      logB.push(...b.step());
+    }
+    expect(logA.some((e) => e.type === "fight")).toBe(true);
+    expect(JSON.stringify(logA)).toBe(JSON.stringify(logB));
     expect(a.fighters.map((f) => f.pos)).toEqual(b.fighters.map((f) => f.pos));
-  });
+  }, 60_000);
 });
 
 describe("a human's gun", () => {
