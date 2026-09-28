@@ -7,6 +7,7 @@ import { GUNS } from "../../engine/guns";
 import type { PhoneState } from "../../protocol";
 import { TEAMS } from "../../teams";
 import { usePhoneStore } from "../phone-store";
+import { CrouchButton } from "./CrouchButton";
 import { Magazine } from "./Magazine";
 import { usePhone } from "./session-context";
 
@@ -37,10 +38,12 @@ function Status({ host }: { host: PhoneState }) {
 }
 
 /**
- * The phone as the gun: aim by pointing it at your view, Shoot under
- * the thumb (hold it for an automatic, tap for the others), Reload, and
- * Centre to put the aim back in the middle if it drifts. Phones without
- * motion sensors aim by dragging round the trigger.
+ * The phone as the paint marker: aim by pointing it at your view, Shoot
+ * under the thumb (hold it for an automatic, tap for the others), which
+ * also brings your fighter up out of cover. Hold Crouch to stay down
+ * behind the bunker and let go to rise. Reload, and Centre to put the aim
+ * back in the middle if it drifts. Phones without motion sensors aim by
+ * dragging round the trigger.
  */
 export function Controller({ host, seat }: { host: PhoneState; seat: number }) {
   const session = usePhone();
@@ -50,12 +53,15 @@ export function Controller({ host, seat }: { host: PhoneState; seat: number }) {
 
   useEffect(() => {
     session.aim.stream(true);
-    const release = () => session.releaseTrigger();
+    const release = () => {
+      session.releaseTrigger();
+      session.crouch(false);
+    };
     window.addEventListener("blur", release);
     document.addEventListener("visibilitychange", release);
     return () => {
       session.aim.stream(false);
-      session.releaseTrigger();
+      release();
       window.removeEventListener("blur", release);
       document.removeEventListener("visibilitychange", release);
     };
@@ -76,6 +82,7 @@ export function Controller({ host, seat }: { host: PhoneState; seat: number }) {
       <Magazine host={host} />
       <div className="cb-play__trigger">{touch ? <AimPad aim={session.aim}>{trigger}</AimPad> : trigger}</div>
       <div className="cb-play__buttons">
+        <CrouchButton disabled={!host.alive || !host.armed} onChange={(down) => session.crouch(down)} />
         <button type="button" className={`cb-reload ${host.ammo === 0 && !host.reloading ? "cb-reload--urgent" : ""}`} disabled={!host.alive} onClick={() => session.reload()}>
           Reload
         </button>

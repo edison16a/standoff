@@ -1,10 +1,12 @@
 import { HostAim } from "@/games/kit/aim/host-aim";
+import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { HostRoomApi, HostRoomEvent, Player } from "@/platform/games/game-api";
 import { SoundDirector } from "../audio/sound-director";
 import type { BattleEvent } from "../engine/events";
-import type { Difficulty, TeamId } from "../engine/fighter";
+import type { TeamId } from "../engine/fighter";
 import { phoneMessageSchema, type Mode, type PhoneMessage, type RoomPhase } from "../protocol";
 import type { CameraPose } from "../render/camera/aim-ray";
+import { registerMatchAdmin } from "./admin";
 import { DemoBattle } from "./demo";
 import { useCounterStore as store } from "./host-store";
 import { buildLineup } from "./lineup";
@@ -40,6 +42,8 @@ export class CounterHost {
   private readonly offRoom: () => void;
   private readonly offFire: () => void;
   private camera: CameraSource | null = null;
+  /** Removes the admin panel's match shortcuts, while a match has them up. */
+  private offAdmin: (() => void) | null = null;
   private lastFrame = 0;
   private lastHud = 0;
   private lastPhase: RoomPhase = "lobby";
@@ -68,6 +72,7 @@ export class CounterHost {
   }
 
   dispose(): void {
+    this.offAdmin?.();
     this.offRoom();
     this.offFire();
     this.aim.dispose();
@@ -101,7 +106,7 @@ export class CounterHost {
     this.refresh(performance.now());
   }
 
-  setDifficulty(difficulty: Difficulty): void {
+  setDifficulty(difficulty: BotLevel): void {
     this.lobby.setDifficulty(difficulty);
     this.refresh(performance.now());
   }
@@ -128,11 +133,15 @@ export class CounterHost {
     this.room.setPlaying(true);
     this.phones.forget();
     this.moments.start(this.driver);
+    this.offAdmin?.();
+    this.offAdmin = registerMatchAdmin(() => this.driver);
     this.refresh(performance.now());
   }
 
   /** From the results: back to the lobby, keeping everyone's teams and guns. */
   backToLobby(): void {
+    this.offAdmin?.();
+    this.offAdmin = null;
     this.driver = null;
     this.room.setPlaying(false);
     this.refresh(performance.now());
@@ -179,6 +188,7 @@ export class CounterHost {
       case "left":
         this.lobby.disconnect(event.seat);
         this.driver?.trigger(event.seat, false);
+        this.driver?.crouch(event.seat, false);
         this.driver?.setOnline(event.seat, false);
         break;
       case "message": {
@@ -207,6 +217,9 @@ export class CounterHost {
         return;
       case "reload":
         this.driver?.reload(seat);
+        return;
+      case "crouch":
+        this.driver?.crouch(seat, message.down);
         return;
       case "gun":
         this.lobby.setGun(seat, message.gun);

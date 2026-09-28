@@ -16,6 +16,7 @@ import { usePhoneStore as store, type SetupStep } from "./phone-store";
 export class CounterPhone {
   readonly aim: PhoneAim;
   private held = false;
+  private ducked = false;
   private flashKey = 0;
   private readonly unsubscribe: () => void;
 
@@ -28,6 +29,7 @@ export class CounterPhone {
 
   dispose(): void {
     this.releaseTrigger();
+    this.crouch(false);
     this.aim.dispose();
     this.unsubscribe();
   }
@@ -81,6 +83,14 @@ export class CounterPhone {
     this.send({ kind: "trigger", down: false });
   }
 
+  /** Crouch held or let go. Letting go brings the fighter up to shoot. */
+  crouch(down: boolean): void {
+    if (down === this.ducked) return;
+    this.ducked = down;
+    if (down) buzz("tap");
+    this.send({ kind: "crouch", down });
+  }
+
   reload(): void {
     this.click();
     this.send({ kind: "reload" });
@@ -108,6 +118,7 @@ export class CounterPhone {
     // Back in the lobby after a match: pick up at the gun, still calibrated.
     if (before && before.phase !== "lobby" && message.phase === "lobby") {
       this.releaseTrigger();
+      this.crouch(false);
       store.setState({ step: store.getState().calibrated ? 2 : 0 });
     }
     if (!before && message.gun) store.setState({ wanted: message.gun });
