@@ -33,8 +33,10 @@ export const phoneStateSchema = z.object({
   goals: z.number().int().min(0).max(99),
   /** Set at the final whistle for players in the match. */
   result: z.enum(["win", "lose"]).nullable(),
-  /** A word for the moment, like Goal or Save. */
+  /** A word for the moment, like Goal or Foul, shown in the phone's status line. */
   banner: z.string().max(24).nullable(),
+  /** During a goal replay: whether this player pressed to skip it, and how many of everyone have. */
+  skip: z.object({ agreed: z.boolean(), count: z.number().int().min(0).max(6), total: z.number().int().min(0).max(6) }).nullable(),
   /** The place the host gave this player. */
   role: z.enum(ROLES).nullable(),
   /** The other side has the ball: the big button is Guard. */

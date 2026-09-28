@@ -115,7 +115,9 @@ export async function fifa3v3(ctx) {
   await ctx.snap("free-kick");
   await ctx.fake("state", { ...match, phase: "goal", hasBall: false, banner: "Goal", setPiece: null });
   await ctx.snap("goal");
-  await ctx.fake("state", { ...match, phase: "fulltime", hasBall: false, result: "win", banner: null });
+  await ctx.fake("state", { ...match, phase: "replay", hasBall: false, banner: null, setPiece: null, skip: { agreed: false, count: 1, total: 2 } });
+  await ctx.snap("replay-skip");
+  await ctx.fake("state", { ...match, phase: "fulltime", hasBall: false, result: "win", banner: null, skip: null });
   await ctx.snap("result");
 }
 

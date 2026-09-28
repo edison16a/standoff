@@ -4,12 +4,29 @@ import type { PhoneState } from "../../protocol";
 import { ButtonFace } from "./ButtonFace";
 import { usePhone } from "./session-context";
 
-export type PadMode = "attack" | "defend" | "setpiece";
+export type PadMode = "attack" | "defend" | "setpiece" | "replay";
 
-/** Which buttons the phone shows: attacking, defending, or taking or waiting on a set piece. */
+/** Which buttons the phone shows: attacking, defending, taking or waiting on a set piece, or skipping a replay. */
 export function padMode(host: PhoneState): PadMode {
+  if (host.skip) return "replay";
   if (host.setPiece) return "setpiece";
   return host.defending ? "defend" : "attack";
+}
+
+/** During a goal replay: one big button to vote to skip it. It only skips once everyone has pressed. */
+function SkipButton({ host }: { host: PhoneState }) {
+  const phone = usePhone();
+  const agreed = host.skip?.agreed ?? false;
+  const text = agreed ? "Waiting" : "Skip";
+  return (
+    <div className="fifa-pad__buttons fifa-pad__buttons--one">
+      <div className="fifa-pad__shoot" key="skip">
+        <PadButton label={agreed ? "Waiting for the others" : "Skip replay"} size="lg" colour="#64748b" disabled={agreed} onDown={() => phone.shoot(true)} onUp={() => phone.shoot(false)}>
+          <ButtonFace icon="ball" text={text} />
+        </PadButton>
+      </div>
+    </div>
+  );
 }
 
 /**
@@ -23,6 +40,7 @@ export function PadButtons({ host }: { host: PhoneState }) {
   const phone = usePhone();
   const mode = padMode(host);
   const live = host.phase === "play";
+  if (mode === "replay") return <SkipButton host={host} />;
   if (mode === "setpiece") {
     const sp = host.setPiece!;
     const taking = sp.part === "taker" && host.phase === "setpiece" && sp.stage !== "struck";

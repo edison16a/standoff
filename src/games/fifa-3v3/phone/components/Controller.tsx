@@ -35,7 +35,8 @@ export function Controller({ host }: { host: PhoneState }) {
   // A new layout of buttons lets go of anything held under the old one.
   useEffect(() => phone.letGo(), [phone, mode]);
 
-  const status = host.banner ?? (host.hasBall ? "You have the ball" : host.phase === "replay" ? "Replay" : host.phase === "kickoff" ? "Kick off" : host.phase === "foul" ? "Foul" : null);
+  const skip = host.skip ? `Replay. Skip: ${host.skip.count} of ${host.skip.total}` : null;
+  const status = skip ?? host.banner ?? (host.hasBall ? "You have the ball" : host.phase === "replay" ? "Replay" : host.phase === "kickoff" ? "Kick off" : host.phase === "foul" ? "Foul" : null);
   const power = host.setPiece?.part === "taker" && host.setPiece.stage === "power";
 
   return (
