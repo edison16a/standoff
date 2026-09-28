@@ -17,7 +17,7 @@ export function createAthlete(id: number, team: TeamId, role: Role, slot: number
     move: { x: 0, z: 0 }, aim: null,
     action: { kind: "none" },
     jukeCd: 0, jukeHeat: 0, tackleCd: 0, rushT: 0, rushCd: 0, guard: null, blocked: 0,
-    bot: { wait: 0, route: [], leg: 0, cover: null, readAt: 2 },
+    bot: { wait: 0, route: [], leg: 0, stop: false, goal: { x: 0, z: 0 }, cover: null, readAt: 2 },
     stats: emptyStats(),
   };
 }

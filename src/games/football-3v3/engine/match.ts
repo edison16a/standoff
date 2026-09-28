@@ -1,0 +1,175 @@
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
+import { attackSign, other, type TeamId } from "../teams";
+import { newBall, type Ball, type PassInfo } from "./ball";
+import { createAthlete } from "./body";
+import { think } from "./bots/brain";
+import { pressButton, releaseButton, setAim, setMove } from "./controls";
+import { newDrive, type Drive } from "./downs";
+import type { MatchEvent, PlayEnd } from "./events";
+import type { KickState } from "./kick";
+import { lineupProblem, type Entry } from "./lineup";
+import { newLinePairs, type LinePair } from "./linemen";
+import { chooseCall, startChoose } from "./phases";
+import type { Play } from "./play";
+import { Rng } from "./rng";
+import { stepWorld } from "./world";
+import { RULES } from "./tuning";
+import type { Athlete, Button, ConversionCall, Phase, PlayCall } from "./types";
+import type { V2 } from "./vec";
+
+export interface MatchOptions {
+  entries: readonly Entry[];
+  seed?: number;
+  /** Who has the ball first. Drawn from the seed when left out. */
+  firstOffense?: TeamId;
+  target?: number;
+  quarterSeconds?: number;
+  level?: BotLevel;
+}
+
+/**
+ * One game of three on three football, as pure data and rules. The host
+ * feeds it each phone's sticks and buttons in field space, the computer
+ * players think for themselves, and it steps at a fixed rate from a seed,
+ * so the same inputs always play out the same. It never draws or plays a
+ * sound: everything worth showing comes out as events and views.
+ */
+export class Match {
+  readonly athletes: Athlete[];
+  readonly ball: Ball = newBall();
+  readonly rng: Rng;
+  readonly target: number;
+  readonly quarterSeconds: number;
+  level: BotLevel;
+  phase: Phase = "choose";
+  phaseT = 0;
+  time = 0;
+  quarter = 1;
+  /** Seconds left in the quarter. Runs only while the ball is live. */
+  clock: number;
+  /** Tied after four quarters: the next score wins. */
+  overtime = false;
+  score: [number, number] = [0, 0];
+  drive: Drive;
+  play: Play | null = null;
+  kick: KickState | null = null;
+  /** The drive after the whistle, decided when the play ends. */
+  nextDrive: Drive | null = null;
+  lastEnd: PlayEnd | null = null;
+  /** Who scored the last touchdown, for the celebration and the replay. */
+  scorer: number | null = null;
+  winner: TeamId | null = null;
+  /** The last pass once it is caught or falls, kept for the replay's numbers. */
+  lastPass: PassInfo | null = null;
+  readonly lines: LinePair[];
+  /** When each pair of players may next make a pads sound, so one collision is one thud. */
+  readonly bumps = new Map<number, number>();
+  private readonly queue: MatchEvent[] = [];
+
+  constructor(options: MatchOptions) {
+    const problem = lineupProblem(options.entries);
+    if (problem) throw new Error(problem);
+    this.rng = new Rng(options.seed ?? Math.floor(Math.random() * 2 ** 31));
+    this.target = options.target ?? RULES.target;
+    this.quarterSeconds = options.quarterSeconds ?? RULES.quarterSeconds;
+    this.clock = this.quarterSeconds;
+    this.level = options.level ?? DEFAULT_BOT_LEVEL;
+    const athletes: Athlete[] = [];
+    for (const team of [0, 1] as const) {
+      const side = options.entries.filter((e) => e.team === team);
+      const qb = side.find((e) => e.role === "qb")!;
+      athletes.push(createAthlete(athletes.length, team, "qb", 0, qb.character, qb.seat));
+      side.filter((e) => e.role === "runner").forEach((e, slot) => athletes.push(createAthlete(athletes.length, team, "runner", slot, e.character, e.seat)));
+      for (let slot = 0; slot < 3; slot++) athletes.push(createAthlete(athletes.length, team, "lineman", slot, null, null));
+    }
+    this.athletes = athletes;
+    this.lines = newLinePairs();
+    const first = options.firstOffense ?? (this.rng.chance(0.5) ? 0 : 1);
+    this.drive = newDrive(first, RULES.driveStart);
+    startChoose(this);
+  }
+
+  get events(): readonly MatchEvent[] {
+    return this.queue;
+  }
+
+  emit(event: MatchEvent): void {
+    this.queue.push(event);
+  }
+
+  drainEvents(): MatchEvent[] {
+    return this.queue.splice(0, this.queue.length);
+  }
+
+  get offense(): TeamId {
+    return this.drive.offense;
+  }
+
+  get defense(): TeamId {
+    return other(this.drive.offense);
+  }
+
+  athlete(id: number): Athlete | null {
+    return this.athletes[id] ?? null;
+  }
+
+  /** The player holding the ball, while one is. */
+  carrier(): Athlete | null {
+    return this.ball.state === "held" && this.ball.holder !== null ? this.athlete(this.ball.holder) : null;
+  }
+
+  qbOf(team: TeamId): Athlete {
+    return this.athletes.find((a) => a.team === team && a.role === "qb")!;
+  }
+
+  /** The athlete a phone plays, if any. */
+  bySeat(seat: number): Athlete | null {
+    return this.athletes.find((a) => a.seat === seat) ?? null;
+  }
+
+  /** Which way along x the team with the ball is going. */
+  get sign(): 1 | -1 {
+    return attackSign(this.drive.offense);
+  }
+
+  /** The move stick, already turned into field space by the host. */
+  setMove(id: number, move: V2): void {
+    setMove(this, id, move);
+  }
+
+  /** The QB's throw stick in field space while held, or null when let go. Letting go throws. */
+  setAim(id: number, aim: V2 | null): void {
+    setAim(this, id, aim);
+  }
+
+  /** A button pressed. `value` is the phone's own meter reading for a kick, free of lag. */
+  press(id: number, button: Button, value?: number): void {
+    pressButton(this, id, button, value);
+  }
+
+  release(id: number, button: Button): void {
+    releaseButton(this, id, button);
+  }
+
+  /** The QB's pick before a play (kick or throw) or after a touchdown (kick or two). */
+  choose(id: number, call: PlayCall | ConversionCall): void {
+    chooseCall(this, id, call);
+  }
+
+  /** A person's phone dropped or came back. The computer plays for them meanwhile. */
+  setAuto(id: number, auto: boolean): void {
+    const a = this.athlete(id);
+    if (!a || a.seat === null) return;
+    a.auto = auto;
+    a.move = { x: 0, z: 0 };
+    a.aim = null;
+    a.guard = null;
+  }
+
+  step(dt: number): void {
+    this.time += dt;
+    this.phaseT += dt;
+    think(this, dt);
+    stepWorld(this, dt);
+  }
+}

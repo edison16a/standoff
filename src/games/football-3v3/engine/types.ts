@@ -61,6 +61,10 @@ export interface BotMemory {
   /** The route it runs this play, as ground waypoints. */
   route: V2[];
   leg: number;
+  /** A curl ends by settling: the receiver stops at the last point instead of running on. */
+  stop: boolean;
+  /** The last move it chose, held until it thinks again. */
+  goal: V2;
   /** The offensive player it covers, or null to rush or roam. */
   cover: number | null;
   /** When the QB bot will throw, in seconds after the snap. */

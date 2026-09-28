@@ -1,0 +1,51 @@
+import { startRush } from "../controls";
+import type { Match } from "../match";
+import { pressTackle } from "../tackle";
+import { TACKLE } from "../tuning";
+import type { Athlete } from "../types";
+import { clamp, dist2 } from "../vec";
+import { ahead, headFor } from "./goal";
+import type { FootballSkill } from "./skill";
+
+/** Once a pass is up, a defender breaks for where it will come down. */
+function breakOnBall(m: Match, a: Athlete): boolean {
+  const pass = m.ball.pass;
+  if (m.ball.state !== "pass" || !pass) return false;
+  headFor(a, pass.spot, 0.5);
+  return true;
+}
+
+/**
+ * Chases the ball carrier to where they are heading and tackles when in
+ * reach. Easier bots hesitate and whiff more.
+ */
+export function pursue(m: Match, a: Athlete, carrier: Athlete, skill: FootballSkill): void {
+  const d = dist2(a, carrier);
+  headFor(a, ahead(carrier, clamp(d / 8, 0, 1.2)), 0.3);
+  if (d < TACKLE.range * 0.9 && a.action.kind === "none" && a.tackleCd <= 0 && m.rng.chance(skill.tackle)) {
+    pressTackle(m, a, carrier);
+  }
+}
+
+/**
+ * Man coverage from over the top: the bot shadows its receiver a step
+ * deeper, toward the end zone it defends. Playing deep means it is never
+ * sat in front of the receiver, so it is not the one picking passes off.
+ */
+export function cover(m: Match, a: Athlete, skill: FootballSkill): void {
+  if (breakOnBall(m, a)) return;
+  const r = a.bot.cover === null ? null : m.athlete(a.bot.cover);
+  if (!r) return rushQb(m, a, skill);
+  const spot = ahead(r, 0.3);
+  headFor(a, { x: spot.x + m.sign * skill.cushion, z: spot.z - Math.sign(spot.z) * 0.5 }, 0.6);
+}
+
+/** The spare defender waits a beat after the snap, then rushes the QB through the line. */
+export function rushQb(m: Match, a: Athlete, skill: FootballSkill): void {
+  if (breakOnBall(m, a)) return;
+  const qb = m.qbOf(m.offense);
+  if ((m.play?.sinceSnap ?? 0) < skill.reaction) return headFor(a, a, 1);
+  if (a.rushCd <= 0 && a.blocked > 0) startRush(a);
+  if (m.carrier() === qb) return pursue(m, a, qb, skill);
+  headFor(a, qb, 0.5);
+}
