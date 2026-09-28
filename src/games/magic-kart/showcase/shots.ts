@@ -1,10 +1,17 @@
 import type { ShowcaseView } from "@/platform/games/game-api";
 import type { TrackId } from "../tracks";
+import type { Framing, SweepKey } from "./sweep";
 
 /** Where the camera sits for a shot. Distances are metres, fields of view degrees. */
 export type Rig =
   /** Behind the pack, low, a little to one side. */
-  | { kind: "chase"; back: number; side: number; height: number; fov: number }
+  | ({ kind: "chase" } & Framing)
+  /**
+   * Behind the pack like the chase, gliding from one framing to the next
+   * at the race times of its keys, so one long take can swing wide
+   * through a drift and climb as the gliders open.
+   */
+  | { kind: "sweep"; keys: readonly SweepKey[] }
   /**
    * Planted beside the road at a point on the lap, turning to follow the
    * pack and zooming like a television camera, so the pack fills about
@@ -42,23 +49,49 @@ export interface Plan {
 /** Sunny Shores, seed 36: the pack hits the boost pads, all four gliders open together over the lagoon, a cube is snatched in mid air and throws fly. */
 const LAGOON = { map: "beach", seed: 36 } as const;
 
-/** Neo City, seed 17: the pack power slides through the corners side by side, turbos firing one after another, and an orb lands. */
-const CITY = { map: "city", seed: 17 } as const;
+/**
+ * Sunny Shores, seed 99: the tightest pack of 200 seeds tried. The pack
+ * power slides through the bends side by side with turbos firing, hits
+ * the boost pads together and all four gliders open as one over the lagoon.
+ */
+const SLIDE = { map: "beach", seed: 99 } as const;
 
 /**
- * The loop runs its shots in turn and starts again, like a trailer: low
- * behind the pack through the boost pads, a cut on take off to a camera
- * high behind as the gliders open over the lagoon, a close up of Pip
- * gliding in with iced wheels, then the drift battle in Neo City. The
- * icon and the poster each stop on one moment of the glide.
+ * The capture tool warms the loop up for this long before it records 8
+ * seconds, plus one more that it fades over the start. The loop's shot
+ * begins this much early, so the recording lands on the racing picked
+ * for it, and runs long, so no cut falls inside the recording.
+ */
+const WARMUP = 3;
+/** Race seconds where the recording begins: the straight just before the bend. */
+const TAKE = 19;
+
+/**
+ * The loop is one unbroken take behind the pack. It starts low on one
+ * side, swings wide as the pack slides through the bend, tucks in low
+ * for the boost pads, then climbs behind the gliders as they open over
+ * the lagoon. The last second fades into the first, so the take runs
+ * round without a cut. The icon and the poster each stop on one moment
+ * of the glide.
  */
 export const PLANS: Record<ShowcaseView, Plan> = {
   loop: {
     shots: [
-      { ...LAGOON, from: 25.5, length: 1.6, rig: { kind: "chase", back: 9.5, side: -1.5, height: 2.7, fov: 56 } },
-      { ...LAGOON, from: 27.1, length: 1.4, rig: { kind: "chase", back: 11, side: -3, height: 4.6, fov: 58 } },
-      { ...LAGOON, from: 28.5, length: 1.3, rig: { kind: "hero", kart: 1, angle: -2.4, dist: 7, height: 0.4, aim: 1.2, fov: 50 } },
-      { ...CITY, from: 25.5, length: 3.7, rig: { kind: "chase", back: 9.5, side: 2.4, height: 2.9, fov: 56 } },
+      {
+        ...SLIDE,
+        from: TAKE - WARMUP,
+        length: WARMUP + 10,
+        rig: {
+          kind: "sweep",
+          keys: [
+            { at: TAKE, back: 9.5, side: 2.5, height: 2.8, fov: 56 },
+            { at: 21.5, back: 8.5, side: -3, height: 2.4, fov: 58 },
+            { at: 24.3, back: 9, side: -1, height: 2.5, fov: 57 },
+            { at: 26, back: 11, side: 0.5, height: 4.8, fov: 60 },
+            { at: 28, back: 10.5, side: 2, height: 4.2, fov: 58 },
+          ],
+        },
+      },
     ],
   },
   // Nova and Blaze gliding side by side over the lagoon.

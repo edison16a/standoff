@@ -13,11 +13,12 @@ const LEAD = 1.2;
 /** More steps than this in one frame is a jump in time, whose events would all burst at once. */
 const CATCH_UP = 6;
 /**
- * Frames drawn a second: the rate the clip is captured at. Animation
- * frames come twice as often, and drawing each would double the cost of
- * a capture on a machine with no graphics card.
+ * The showcase clock ticks this many times a second, as animation frames
+ * do. The capture tool's fake clock fires animation frames on a 16 ms
+ * grid and records every 33.3 ms, so a 30 a second clock would now and
+ * then show the same moment twice. At 60 every recorded frame is new.
  */
-const FPS = 30;
+const FPS = 60;
 
 /**
  * Plays a showcase plan: builds each shot's seeded race, runs it on to

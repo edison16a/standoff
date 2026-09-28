@@ -74,7 +74,7 @@ The host draws every player's view with one WebGLRenderer and scissored viewport
 
 ## Home screen media
 
-The home screen's tile, still and looping clip are captured from `showcase/`, which plays real races with four computer karts and no room. Each shot is a seeded race, so it plays out the same way every time, and the computer karts are held in a tight pack so the camera always has close racing to show. The shots were picked by running many seeds and keeping the liveliest seconds: the pack hitting the boost pads on Sunny Shores and all four gliders opening together over the lagoon, a close up of Pip gliding in with the wheels iced over, then the whole pack power sliding through the corners of Neo City, turbos firing. Changing the driving model changes every seeded race, so the shots must be picked again after any change to `engine/`. The icon is Blaze under the wing over the lagoon, below the logo, and the poster is Nova and Blaze gliding side by side.
+The home screen's tile, still and looping clip are captured from `showcase/`, which plays real races with four computer karts and no room. Each shot is a seeded race, so it plays out the same way every time, and the computer karts are held in a tight pack so the camera always has close racing to show. The clip is one unbroken take on Sunny Shores with no cuts. A chase camera stays behind the pack the whole time. It swings wide as all four power slide through the bends with turbos firing, tucks in low as they hit the boost pads together, then climbs behind them as all four gliders open over the lagoon. Its last second fades into its first, so it loops without a jump. The race was picked from 200 seeds as the one where the pack stays closest. The camera's path is a list of keys in `showcase/shots.ts`, each a framing at a race time, and it glides from one to the next. The capture tool warms up for 3 seconds before it records, so the take starts that much early. Changing the driving model changes every seeded race, so the shots must be picked again after any change to `engine/`. The icon is Blaze under the wing over the lagoon, below the logo, and the poster is Nova and Blaze gliding side by side.
 
 With the dev server running:
 
@@ -82,4 +82,4 @@ With the dev server running:
 node tools/media/capture.mjs magic-kart --ffmpeg /path/to/ffmpeg
 ```
 
-The showcase draws 30 frames a second, the rate the clip is captured at, so each captured frame is drawn once. To change a shot, edit `showcase/shots.ts` and look at it at `/showcase/magic-kart?view=loop`.
+The showcase clock ticks 60 times a second, as animation frames do. The capture tool records 30 frames a second, so every recorded frame shows a new moment and none is held. To change a shot, edit `showcase/shots.ts` and look at it at `/showcase/magic-kart?view=loop`.
