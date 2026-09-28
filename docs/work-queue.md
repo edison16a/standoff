@@ -24,6 +24,9 @@ The running list of what is being built, so work can pick up again after a break
 | Subway Runner (Easy, Medium, Hard starts, no 2 player, name tag top right) | wf_80b695fe-bcf | build, then review |
 | Blade Clash (no voice, a pause and hit moment on every point) | wf_80b695fe-bcf | build, then review |
 | Paintball Battle (the Counter Battle rebrand: paint splatter, thin crosshair, shoot and crouch buttons, closer camera, slower pace) | wf_80b695fe-bcf | build, then review |
+| Unique usernames, Reconnect by name, a controller link per player (/play/CODE/name) that survives refresh, and the root cause of Room not found on a second game | wf_2fe4d5ee-012 | build, then review |
+| Magic Kart: rotating the phone no longer breaks the controls, and the controller resumes after a refresh | wf_2fe4d5ee-012 | build, then review |
+| Victory kit (confetti, trophies, belt), Boxing belt scene and Boxing builds, Kart podium, Brawl winner scene | wf_2fe4d5ee-012 | build, then review |
 
 Shared pieces already on main for these: `src/games/kit/difficulty` (Easy, Medium, Hard, Training) and `src/platform/admin/admin-actions.ts` (test shortcuts for the admin panel).
 
@@ -32,6 +35,15 @@ Shared pieces already on main for these: `src/games/kit/difficulty` (Easy, Mediu
 ### Batch C: running now (see Running now)
 
 Every Computer player game gets Easy (default), Medium, Hard and Training (bots stand still). Sports games get 6 characters, host picked roles, a winner and stats screen, and replays that skip only when everyone agrees.
+
+### Batch D: running now (see Running now)
+
+### Batch E: starts when Batch C's Subway and sports work is on main
+
+1. **Subway Runner overhaul:** drop the neon look and make it look, move and sound like the real Subway Surfers: bright daytime rail yard, graffiti trains, the real feel of lane switches, jumps, rolls, hoverboards and the chase. Much better graphics, physics and sounds.
+2. **Sports winner scenes:** Basketball team lifting an NBA style trophy with names and confetti, Soccer team lifting a World Cup style trophy, Football with a trophy too. Use the victory kit from Batch D.
+3. **Builds instead of characters** in Basketball (Shooter, Dunker, and so on), Soccer and Football: each pick is a stat build and the username stays the displayed name.
+4. **Winner scenes** for the other games with a clear winner: Blade Clash, Paintball Battle, Cube Game 1v1.
 
 ### Last
 
