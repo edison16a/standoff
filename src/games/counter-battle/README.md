@@ -1,4 +1,4 @@
-# Counter Battle
+# Paintball Battle
 
 A team shooter for up to four players on phones, one or two a side, on a paintball field. Your phone is the gun. Your fighter runs from bunker to bunker by itself, and you aim and shoot. The first team to win five rounds takes the match.
 
@@ -8,7 +8,7 @@ Status: ready, on the home screen with its own icon, poster and clip.
 
 ### Before the match
 
-Pick Counter Battle on the home screen and host a game. Everyone scans the code with their phone and types a name.
+Pick Paintball Battle on the home screen and host a game. Everyone scans the code with their phone and types a name.
 
 The big screen shows both teams, pink and cyan, with each player's name in their own colour, their gun and whether they are ready. The host picks 1 v 1 or 2 v 2 and how good the computer players are: Easy, Normal or Hard. New players land on the smaller team. Click a player to send them to the other side. With both teams full a player waits on the bench, and 2 v 2 lets them in. Computer players fill every empty place, so one player alone still gets a fight. Anyone not ready when the match starts sits it out.
 
@@ -76,7 +76,7 @@ The host gives the aim kit a zone per seat (`HostAim.setZone`), the lobby's spli
 
 * The loop is eight seconds of round five, cut over three shoulders. Blaze runs at Vex and drops him with the shotgun. Kite waits behind the wall at the back, steps out and snipes Blaze. Nova answers with a burst, ducks, peeks again and puts Kite down with the rifle. Each fighter is cut to only once, so every shoulder camera starts in place.
 * The poster holds Blaze's shotgun going off into Vex, side on, with the stands behind.
-* The icon is the same moment from further back, square, under the Counter Battle logo.
+* The icon is the same moment from further back, square, under the Paintball Battle logo.
 
 To film them again, with the dev server running:
 

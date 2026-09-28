@@ -7,7 +7,7 @@ import { buzz, FLASH_WORDS } from "./haptics";
 import { usePhoneStore as store, type SetupStep } from "./phone-store";
 
 /**
- * Counter Battle on the phone. It walks the player through aiming at
+ * Paintball Battle on the phone. It walks the player through aiming at
  * their own view, picking a gun and saying ready, then becomes the gun:
  * it streams the aim through the kit and sends the trigger going down
  * and up, and Reload. It decides nothing: the host says what landed and

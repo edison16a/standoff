@@ -24,7 +24,7 @@ export interface CameraSource {
 }
 
 /**
- * Counter Battle on the computer, for one room. It keeps the lobby and
+ * Paintball Battle on the computer, for one room. It keeps the lobby and
  * the teams, runs the match, turns each phone's aim into a point in its
  * player's own view, directs the sound, and is the referee: phones send
  * their aim and buttons, everything they show comes back from here.

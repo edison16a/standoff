@@ -68,7 +68,7 @@ export interface ResultRow {
 }
 
 /**
- * What the Counter Battle screens on the computer render. The session
+ * What the Paintball Battle screens on the computer render. The session
  * writes here a few times a second and on every kill; the battle itself
  * never goes in the store, since only the canvas needs it at full rate.
  */

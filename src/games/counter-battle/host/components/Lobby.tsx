@@ -96,7 +96,7 @@ export function Lobby() {
     <div className="cb-lobby">
       <header className="cb-lobby__title">
         <h1 className="cb-logo">
-          Counter <b>Battle</b>
+          Paintball <b>Battle</b>
         </h1>
         <p>Your fighter runs the bunkers. You aim and shoot. First to five rounds.</p>
       </header>
