@@ -57,6 +57,15 @@ export class RoomKeeper {
     send({ type: "host:create", game, seats });
   }
 
+  /**
+   * Swaps the room for a fresh one with the same game. The relay tells the
+   * phones the new code, and `room:created` then remembers the new room.
+   */
+  remake(send: Send, game: string, seats: number): void {
+    this.wanted = { game, seats };
+    send({ type: "host:remake" });
+  }
+
   close(send: Send): void {
     send({ type: "host:close" });
     forgetRoom();
