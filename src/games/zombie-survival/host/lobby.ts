@@ -1,3 +1,4 @@
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { Seat } from "@/platform/protocol";
 import type { WeaponId } from "../engine/weapons";
 
@@ -10,10 +11,12 @@ export interface SeatChoice {
  * Each seat's weapon and ready flag, before and during a run. Choices
  * survive a phone dropping out, so a player who rejoins finds their gun
  * waiting. Changing gun clears ready, so nobody starts with a weapon
- * they did not confirm.
+ * they did not confirm. The zombies' difficulty is chosen on the big
+ * screen and kept for every run in this room.
  */
 export class Lobby {
   private readonly seats = new Map<Seat, SeatChoice>();
+  level: BotLevel = DEFAULT_BOT_LEVEL;
 
   get(seat: Seat): SeatChoice {
     return this.seats.get(seat) ?? { weapon: null, ready: false };
