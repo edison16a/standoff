@@ -81,7 +81,7 @@ describe("dunks", () => {
     expect(plan.rimHang).toBeGreaterThan(0.4);
   });
 
-  it("hold the dunker up on the rim through the hang, then drop and gather", () => {
+  it("hang the dunker on the rim, the body dropping under the hands and holding there, then drop and gather", () => {
     const m = new Match({ entries: ENTRIES, seed: 2, firstOffence: 0 });
     while (m.phase !== "live") m.step(STEP);
     const a = m.athletes[0]!;
@@ -103,7 +103,9 @@ describe("dunks", () => {
       if (Math.abs(act.t - (act.finish + 0.3)) < STEP / 2 + 1e-9) midHang = a.y;
     }
     expect(atSlam).toBeGreaterThan(0.4);
-    expect(midHang).toBeGreaterThan(atSlam - 0.1);
+    // The arms take the weight: a hand's length lower, but still well off the floor.
+    expect(midHang).toBeLessThan(atSlam - 0.1);
+    expect(midHang).toBeGreaterThan(atSlam - 0.35);
     expect(a.recover).toBeGreaterThan(0);
   });
 });

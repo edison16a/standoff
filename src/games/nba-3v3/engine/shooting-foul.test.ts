@@ -68,5 +68,6 @@ describe("fouls on a shot", () => {
       return fouls / 300;
     };
     expect(rate(true)).toBeGreaterThan(rate(false) * 2);
-  });
+    // Six hundred games brought up to tip off: slow on a busy machine.
+  }, 30000);
 });
