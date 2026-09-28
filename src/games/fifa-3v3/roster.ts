@@ -10,7 +10,11 @@ export type CharacterId = (typeof CHARACTER_IDS)[number];
 
 export type HairStyle = "swept" | "slick" | "buzz" | "bun" | "twists" | "curls" | "parted" | "afro" | "messy" | "curlytop";
 export type Beard = "none" | "stubble" | "full";
-export type Celebration = "skypoint" | "jumpspin" | "armsfolded" | "zen" | "samba" | "armswide" | "kneeslide" | "airplane" | "fistpump" | "handsign";
+/** A goal celebration: the SUI (run, leap, half turn, land) or a knee slide across the grass. */
+export type Celebration = "sui" | "kneeslide";
+
+const SUI = { celebration: "sui", celebrationName: "The SUI jump" } as const;
+const SLIDE = { celebration: "kneeslide", celebrationName: "Knee slide" } as const;
 
 export interface Kit {
   shirt: string;
@@ -70,42 +74,42 @@ export const ROSTER: Record<CharacterId, Character> = {
     look: { skin: "#e2b48e", hair: "#4a2f1d", hairStyle: "swept", beard: "full", height: 1.7, build: 0.42, boots: "#f5c518", kit: kit("#8fd0f2", "#1b2a4a", "#15171c", "#ffffff", "#15171c", "#ffffff") },
     stats: { speed: 81, shooting: 89, strength: 62, dribbling: 96 },
     foot: "left",
-    celebration: "skypoint", celebrationName: "Points to the sky",
+    ...SLIDE,
   },
   brandao: {
     id: "brandao", name: "Nuno Brandao", short: "BRANDAO", number: 7, role: "Deadly finisher",
     look: { skin: "#d9a57e", hair: "#1a1410", hairStyle: "slick", beard: "none", height: 1.87, build: 0.72, boots: "#ff3b5c", kit: kit("#b0162c", "#1c7a3c", "#1c7a3c", "#b0162c", "#f5d76e") },
     stats: { speed: 82, shooting: 93, strength: 82, dribbling: 82 },
     foot: "right",
-    celebration: "jumpspin", celebrationName: "The jump and spin",
+    ...SUI,
   },
   okemba: {
     id: "okemba", name: "Yanis Okemba", short: "OKEMBA", number: 10, role: "Blistering pace",
     look: { skin: "#6e4631", hair: "#130c09", hairStyle: "buzz", beard: "none", height: 1.78, build: 0.62, boots: "#ff8a1f", kit: kit("#1d2f6f", "#e8c66a", "#f4f5f8", "#d0213f", "#f4f5f8") },
     stats: { speed: 97, shooting: 90, strength: 77, dribbling: 92 },
     foot: "right",
-    celebration: "armsfolded", celebrationName: "Arms folded",
+    ...SUI,
   },
   holmvik: {
     id: "holmvik", name: "Sindre Holmvik", short: "HOLMVIK", number: 9, role: "Unstoppable striker",
     look: { skin: "#f1cfb6", hair: "#e3c47e", hairStyle: "bun", beard: "none", height: 1.95, build: 0.9, boots: "#e9eef5", kit: kit("#c8102e", "#ffffff", "#ffffff", "#0f1f4d", "#ffffff") },
     stats: { speed: 88, shooting: 94, strength: 93, dribbling: 79 },
     foot: "left",
-    celebration: "zen", celebrationName: "Zen pose",
+    ...SLIDE,
   },
   lacerda: {
     id: "lacerda", name: "Davi Lacerda", short: "LACERDA", number: 7, role: "Tricky winger",
     look: { skin: "#4d2e20", hair: "#120c0a", hairStyle: "twists", beard: "none", height: 1.76, build: 0.48, boots: "#22d3ee", kit: kit("#f7d330", "#0a8a3a", "#1f4fa8", "#ffffff", "#0a8a3a") },
     stats: { speed: 95, shooting: 84, strength: 68, dribbling: 92 },
     foot: "right",
-    celebration: "samba", celebrationName: "Samba dance",
+    ...SLIDE,
   },
   serrano: {
     id: "serrano", name: "Adil Serrano", short: "SERRANO", number: 19, role: "Teenage wizard",
     look: { skin: "#9b6b49", hair: "#16100c", hairStyle: "curlytop", beard: "none", height: 1.8, build: 0.38, boots: "#facc15", kit: kit("#c60b1e", "#ffc400", "#10204a", "#10204a", "#ffc400") },
     stats: { speed: 88, shooting: 80, strength: 58, dribbling: 91 },
     foot: "left",
-    celebration: "handsign", celebrationName: "Hand sign",
+    ...SUI,
   },
 };
 

@@ -3,7 +3,7 @@ import type { FoulKind, SetPieceKind, ShotOutcome, SkillKind } from "./types";
 import type { Vec3 } from "./vec";
 
 /**
- * What happened in a step, for the sound, the banners, the effects and
+ * What happened in a step, for the sound, the score bug, the effects and
  * the phones' buzzers. The match never waits on any of them.
  */
 export type MatchEvent =

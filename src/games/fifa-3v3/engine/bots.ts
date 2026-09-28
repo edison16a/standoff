@@ -6,6 +6,7 @@ import { trySkill } from "./bot-skill";
 import { laneOf } from "./lanes";
 import { botSkill, sloppiness, thinkScale } from "./difficulty";
 import { choosePassTarget, openness } from "./passing";
+import { autoAimZ } from "./shot-plan";
 import { PITCH } from "./tuning";
 import type { Athlete, Command, MatchState } from "./types";
 import { add, clamp, dist, dot, fromAngle, len, norm, scale, sub, type Vec2 } from "./vec";
@@ -160,8 +161,8 @@ function decideWithout(state: MatchState, a: Athlete, command: Command): void {
  */
 function aimShot(state: MatchState, a: Athlete, command: Command, d: number): void {
   const rng = state.rng;
-  const kz = state.keepers[other(a.team)].pos.z;
-  const side = Math.abs(kz) < 0.3 ? rng.sign() : -Math.sign(kz);
+  // The same corner a player's shot would pick by itself: far post from the side, unless the keeper has it.
+  const side = Math.sign(autoAimZ(a.pos, state.keepers[other(a.team)].pos)) || 1;
   // A sloppier level drifts off its corner.
   const drift = rng.range(-1, 1) * 1.2 * sloppiness(state);
   a.aimZ = clamp(side * rng.range(0.9, PITCH.goalHalfWidth - 0.4) + drift, -PITCH.goalHalfWidth - 0.6, PITCH.goalHalfWidth + 0.6);

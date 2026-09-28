@@ -60,7 +60,19 @@ export interface BallView {
   vx: number;
   vy: number;
   vz: number;
+  /** Angular velocity in radians a second, for the replay's spin reading. */
+  spin: number;
+  /** Sidespin about the vertical, which is the curl. */
+  curl: number;
   held: boolean;
+}
+
+/** The shot in the air: who struck it and where on the goal it was aimed. */
+export interface ShotView {
+  shooter: number;
+  x: number;
+  y: number;
+  z: number;
 }
 
 export interface MatchView {
@@ -78,6 +90,7 @@ export interface MatchView {
   referee: RefereeView;
   setPiece: SetPieceView | null;
   foul: FoulView | null;
+  shot: ShotView | null;
 }
 
 export function buildView(state: MatchState): MatchView {
@@ -93,7 +106,7 @@ export function buildView(state: MatchState): MatchView {
     clock: state.clock,
     golden: state.golden,
     score: [state.score[0], state.score[1]],
-    ball: { x: b.pos.x, y: b.pos.y, z: b.pos.z, vx: b.vel.x, vy: b.vel.y, vz: b.vel.z, held: owner !== null },
+    ball: { x: b.pos.x, y: b.pos.y, z: b.pos.z, vx: b.vel.x, vy: b.vel.y, vz: b.vel.z, spin: Math.hypot(b.spin.x, b.spin.y, b.spin.z), curl: b.spin.y, held: owner !== null },
     athletes: state.athletes.map((a) => ({
       id: a.id,
       team: a.team,
@@ -112,7 +125,8 @@ export function buildView(state: MatchState): MatchView {
       ...barOf(a, owner?.kind === "athlete" && owner.id === a.id),
       skill: a.action === "skill" ? a.skill.kind : null,
       skillSide: a.skill.side,
-      signature: state.phase === "fulltime" || (celebrating && a.id === scorer),
+      // At full time the winners bounce and cheer together; the SUI and the slide are for goals.
+      signature: celebrating && a.id === scorer,
       guarding: a.guard.on,
       wall: wall.includes(a.id) && (state.phase === "setpiece" || a.action === "jump"),
     })),
@@ -122,6 +136,7 @@ export function buildView(state: MatchState): MatchView {
     referee: refereeView(state),
     setPiece: setPieceView(state),
     foul: foulView(state),
+    shot: state.flight ? { shooter: state.flight.shooter, x: state.flight.target.x, y: state.flight.target.y, z: state.flight.target.z } : null,
   };
 }
 
