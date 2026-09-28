@@ -38,8 +38,6 @@ export interface CubeState {
   /** A short message over one player's view, like a new best. Keyed so the same text can show twice. */
   banner: { slot: number; text: string; key: number } | null;
   results: ResultRow[];
-  /** A level was finished and opened the next one. */
-  unlockedNow: string | null;
 }
 
 export const initialCubeState = (): CubeState => ({
@@ -52,7 +50,6 @@ export const initialCubeState = (): CubeState => ({
   hud: [],
   banner: null,
   results: [],
-  unlockedNow: null,
 });
 
 /** The host's UI state. The game loop writes it a few times a second at most, never per frame. */

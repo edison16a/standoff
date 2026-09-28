@@ -59,7 +59,7 @@ export class CubeSession {
   /** Menu: pick a level. Its song and a computer run of it play behind the menu. */
   chooseLevel(id: string): void {
     const index = LEVELS.findIndex((l) => l.info.id === id);
-    if (index < 0 || index >= store.getState().progress.unlocked || id === store.getState().levelId) return;
+    if (index < 0 || id === store.getState().levelId) return;
     this.sound.sfx.select();
     store.setState({ levelId: id });
     this.demo = new Autoplay(levelById(id));
@@ -103,7 +103,7 @@ export class CubeSession {
   toMenu(): void {
     this.endRound();
     this.sound.sfx.back();
-    store.setState({ phase: "menu", hud: [], banner: null, unlockedNow: null });
+    store.setState({ phase: "menu", hud: [], banner: null });
     this.demoRestarted = true;
     this.demo.restart();
     this.clock.restart(0, 0.3);
@@ -123,11 +123,11 @@ export class CubeSession {
     store.setState({ phase: "results" });
   }
 
-  /** From the results: on to the next level, if it is open. */
+  /** From the results: on to the next level, or back to the menu after the last. */
   next(): void {
     const index = LEVELS.findIndex((l) => l.info.id === store.getState().levelId);
     const next = LEVELS[index + 1];
-    if (!next || index + 1 >= store.getState().progress.unlocked) return this.toMenu();
+    if (!next) return this.toMenu();
     store.setState({ levelId: next.info.id });
     this.demo = new Autoplay(levelById(next.info.id));
     this.beginRound();
@@ -207,7 +207,7 @@ export class CubeSession {
     );
     this.clock.restart(0, START_LEAD);
     this.room.setPlaying(true);
-    store.setState({ phase: "play", results: [], unlockedNow: null, banner: null });
+    store.setState({ phase: "play", results: [], banner: null });
     // Anyone out of view at the start waits, as if they had stepped out. This needs the play phase set first.
     if (input === "camera") this.kit?.getSnapshot().present.forEach((seen, i) => !seen && this.presence(i + 1, false));
   }

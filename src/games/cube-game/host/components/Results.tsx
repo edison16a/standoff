@@ -7,17 +7,16 @@ import { useSession } from "./session-context";
 /** After a round: each player's best, attempts and jumps, and where to go next. */
 export function Results() {
   const session = useSession();
-  const { results, levelId, progress, unlockedNow, practice } = useCubeStore();
+  const { results, levelId, practice } = useCubeStore();
   const index = LEVELS.findIndex((l) => l.info.id === levelId);
   const level = LEVELS[index]?.info;
-  const hasNext = index + 1 < LEVELS.length && index + 1 < progress.unlocked;
+  const hasNext = index + 1 < LEVELS.length;
   const everyone = results.every((row) => row.finished);
   return (
     <div className="cg-center">
       <section className="cg-results" aria-label="Results">
         <p className="cg-results__level">{level?.name}</p>
         <h2 className="cg-results__title">{everyone ? "Level complete" : "Round over"}</h2>
-        {unlockedNow && <p className="cg-results__unlock">{unlockedNow} is open</p>}
         <table className="cg-results__table">
           <thead>
             <tr>
