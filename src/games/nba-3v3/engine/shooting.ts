@@ -7,6 +7,7 @@ import { between } from "./rng";
 import { callShootingFoul } from "./foul-call";
 import { planBlock, planShot } from "./shot-flight";
 import { rollShootingFoul } from "./shooting-foul";
+import { stepbackFor } from "./stepback";
 import { gradeRelease, isMake, makeChance, pickOutcome, type Grade, type ShotKind } from "./shot-model";
 import { NET, RIM, SHOT } from "./tuning";
 import type { Athlete } from "./types";
@@ -26,7 +27,14 @@ export function releasePoint(a: Athlete): V3 {
 
 /** Starts a jumper and its meter, or at the line a free throw, which is the same meter with no jump. */
 export function startJumper(m: Match, a: Athlete, free = false): void {
-  a.action = { kind: "shoot", t: 0, three: !free && isThree(a), released: false, free };
+  // With a defender in the chest the shooter steps back off him first (see `stepback.ts`).
+  const step = free ? null : stepbackFor(m, a);
+  a.action = { kind: "shoot", t: 0, three: !free && isThree(a), released: false, free, step };
+  if (step) {
+    a.vx = step.x;
+    a.vz = step.z;
+    m.emit({ type: "squeak", id: a.id });
+  }
   m.emit({ type: "gather", id: a.id, kind: free ? "free" : "jumper" });
 }
 
@@ -64,7 +72,7 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   b.lastTouch = a.id;
   b.pos = { ...hand };
   const assist = m.lastPass && m.lastPass.to === a.id ? m.lastPass.from : null;
-  const base = { shooter: a.id, team: a.team, points: free ? 1 : three ? 3 : 2, kind, dunk: null, grade, counted: false, touchedRim: false, assist: free ? null : assist } as const;
+  const base = { shooter: a.id, team: a.team, points: free ? 1 : three ? 3 : 2, kind, dunk: null, grade, counted: false, touchedRim: false, assist: free ? null : assist, contest: c.contest, distance } as const;
   const forced = m.forced;
   m.forced = null;
   // Contact on the shot is a foul, and a fouled shot is never a block: it flies on and may still drop.
@@ -85,10 +93,13 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   const chance = makeChance(ctx) * (fouler ? FOULED_MAKE : 1);
   const made = forced ? isMake(forced) : m.rng() < chance;
   const side = Math.atan2(a.x - RIM.x, a.z - RIM.z);
-  const outcome = forced ?? pickOutcome(m.rng, made, ctx, side);
+  const wanted = forced ?? pickOutcome(m.rng, made, ctx, side);
   const set = kind === "jumper" || free;
   const apex = set ? RIM.y + 0.95 + distance * 0.12 + between(m.rng, -0.1, 0.15) : Math.max(hand.y, RIM.y) + 0.38;
-  b.flight = planShot(m.rng, { from: hand, outcome, apex });
+  // A jumper leaves with two and a half turns of backspin; a layup is rolled softly off the fingers.
+  const planned = planShot(m.rng, { from: hand, outcome: wanted, apex, backspin: set ? between(m.rng, 13, 17) : between(m.rng, 5, 8) });
+  const outcome = planned.outcome;
+  b.flight = planned.flight;
   b.shot = { ...base, outcome, made: isMake(outcome) };
   b.spin = -(set ? 14 : 8);
   m.emit({ type: "shot", id: a.id, kind, three, grade, chance, outcome, made: isMake(outcome), contest: c.contest });
@@ -107,7 +118,7 @@ export function slam(m: Match, a: Athlete): void {
   b.lastTouch = a.id;
   b.pos = { ...top };
   const style = a.action.kind === "drive" && a.action.style ? a.action.style : charOf(a).dunk;
-  const base = { shooter: a.id, team: a.team, points: 2, kind: "dunk", dunk: style, grade: "perfect", counted: false, touchedRim: true, assist: m.lastPass?.to === a.id ? m.lastPass.from : null } as const;
+  const base = { shooter: a.id, team: a.team, points: 2, kind: "dunk", dunk: style, grade: "perfect", counted: false, touchedRim: true, assist: m.lastPass?.to === a.id ? m.lastPass.from : null, contest: c.contest, distance: 0.5 } as const;
   const forced = m.forced;
   m.forced = null;
   const fouler = forced ? null : rollShootingFoul(m, a, "dunk");
@@ -123,7 +134,7 @@ export function slam(m: Match, a: Athlete): void {
   }
   const made = forced ? isMake(forced) : m.rng() < makeChance({ kind: "dunk", grade: "perfect", distance: 0.5, shooting: 5, contest: c.contest, strengthEdge: c.edge, onFire: a.onFire }) * (fouler ? FOULED_MAKE + 0.15 : 1);
   if (!made) {
-    b.flight = planShot(m.rng, { from: top, outcome: "rimOut", apex: top.y + 0.05 });
+    b.flight = planShot(m.rng, { from: top, outcome: "rimOut", apex: top.y + 0.05, backspin: 2 }).flight;
     b.flightKind = "shot";
     b.shot = { ...base, outcome: "rimOut", made: false };
     m.emit({ type: "shot", id: a.id, kind: "dunk", three: false, grade: "perfect", chance: 0.9, outcome: "rimOut", made: false, contest: c.contest });
