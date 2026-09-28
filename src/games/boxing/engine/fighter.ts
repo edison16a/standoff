@@ -1,3 +1,4 @@
+import { NEUTRAL, type BuildEffects } from "./builds";
 import { Fatigue } from "./fatigue";
 import { RULES } from "./rules";
 import { copyDefense, NO_DEFENSE, type DefenseInput, type FighterId, type Hand, type HeadSpot, type Level, type PunchStyle } from "./types";
@@ -20,6 +21,8 @@ export interface ActivePunch {
   counter: boolean;
   /** Thrown without the stamina for it. */
   tired: boolean;
+  /** How far it reaches for a head on the move, from the puncher's build. 1 is usual. */
+  reach: number;
   resolved: boolean;
 }
 
@@ -78,7 +81,15 @@ export class Fighter {
   /** Whether the last hit taken came in from this boxer's left or right, for the head snapping away. */
   lastHit: { at: number; hand: Hand; style: PunchStyle; level: Level; damage: number } | null = null;
 
-  constructor(readonly id: FighterId) {}
+  /** How this boxer's build changes the fight: power, hand speed, reach, guard, counters and stamina. */
+  readonly build: BuildEffects;
+
+  constructor(
+    readonly id: FighterId,
+    build: BuildEffects = NEUTRAL,
+  ) {
+    this.build = build;
+  }
 
   setInput(input: DefenseInput): void {
     this.input = copyDefense(input);
@@ -125,7 +136,7 @@ export class Fighter {
   recover(now: number, dtMs: number): void {
     this.fatigue.update(dtMs, this.health);
     if (this.punching(now) || this.down) return;
-    this.stamina = Math.min(RULES.maxStamina, this.stamina + (RULES.staminaRegen * dtMs) / 1000);
+    this.stamina = Math.min(RULES.maxStamina, this.stamina + (RULES.staminaRegen * this.build.staminaRegen * dtMs) / 1000);
   }
 
   /** Clears the moment to moment state as a round ends, keeping health, stats and knockdowns. */

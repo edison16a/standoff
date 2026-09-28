@@ -18,7 +18,8 @@ export type Outcome =
 export function judge(punch: ActivePunch, attacker: Fighter, defender: Fighter, now: number): Outcome {
   const contact = contactOf(punch, defender.input.head);
   if (contact.dodge) return { kind: "miss", dodge: contact.dodge };
-  const cover = coverOf(punch, defender, now);
+  // A defensive build's gloves stop more of what they are in the way of.
+  const cover = Math.min(1, coverOf(punch, defender, now) * defender.build.guard);
   if (cover >= RULES.blockAt) return { kind: "block" };
   const hit = damageOf(punch, attacker, defender, now);
   // A glancing blow and partial cover each take some of the sting out.
@@ -38,6 +39,8 @@ export function damageOf(punch: ActivePunch, attacker: Fighter, defender: Fighte
   const counterJab = punch.counter && punch.style === "jab";
   if (counterJab) damage *= RULES.counterJab;
   else if (punch.counter) damage *= RULES.counterOther;
+  if (punch.counter) damage *= attacker.build.counterPower;
+  damage *= attacker.build.damage;
   if (defender.staggered(now)) damage *= RULES.staggerTaken;
   // A boxer who is gassed or worn down hits softer, even before they run dry.
   damage *= (0.75 + 0.25 * (attacker.stamina / RULES.maxStamina)) * attacker.fatigue.weak;
