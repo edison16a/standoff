@@ -1,12 +1,13 @@
 "use client";
 import { playerColor } from "@/games/kit/players";
+import { SplitFinish, useFinishPlaces } from "@/games/kit/split/SplitFinish";
 import { LEVELS } from "../../levels";
 import { useCubeStore, type HudPlayer } from "../store";
 import { Confetti } from "./Confetti";
 
 const MODE_NAME = { cube: "Cube", ufo: "UFO", ball: "Ball" } as const;
 
-function PlayerHud({ slot, hud, players, stored }: { slot: number; hud: HudPlayer; players: number; stored: number }) {
+function PlayerHud({ slot, hud, players, stored, place }: { slot: number; hud: HudPlayer; players: number; stored: number; place: number | null }) {
   const banner = useCubeStore((s) => (s.banner?.slot === slot ? s.banner : null));
   const practice = useCubeStore((s) => s.practice);
   const results = useCubeStore((s) => s.phase === "results");
@@ -37,7 +38,12 @@ function PlayerHud({ slot, hud, players, stored }: { slot: number; hud: HudPlaye
       {hud.status === "run" && hud.waiting && <p className="cg-hud__notice cg-hud__notice--soft">Get ready</p>}
       {hud.status === "done" && !results && (
         <>
-          <p className="cg-finish">Level complete</p>
+          {/* Split screen: the finisher's half names them and their place while the other runs on. */}
+          {players > 1 && place ? (
+            <SplitFinish name={`Player ${slot}`} place={place} color={playerColor(slot)} />
+          ) : (
+            <p className="cg-finish">Level complete</p>
+          )}
           <Confetti />
         </>
       )}
@@ -50,11 +56,12 @@ export function Hud() {
   const hud = useCubeStore((s) => s.hud);
   const levelId = useCubeStore((s) => s.levelId);
   const stored = useCubeStore((s) => s.progress.best[levelId] ?? 0);
+  const places = useFinishPlaces(hud.map((player) => player.status === "done"));
   const name = LEVELS.find((l) => l.info.id === levelId)?.info.name ?? "";
   return (
     <div className="cg-huds">
       {hud.map((player, i) => (
-        <PlayerHud key={i} slot={i + 1} hud={player} players={hud.length} stored={stored} />
+        <PlayerHud key={i} slot={i + 1} hud={player} players={hud.length} stored={stored} place={places[i] ?? null} />
       ))}
       <p className="cg-hud__level">{name}</p>
     </div>
