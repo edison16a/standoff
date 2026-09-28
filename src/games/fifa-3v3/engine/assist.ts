@@ -52,7 +52,12 @@ export function shotAimZ(a: Athlete, stick: Vec2): number | null {
   return null;
 }
 
-/** The team mate closest to where the stick points, within the cone. */
+/**
+ * The nearest team mate in the direction the stick points. Anyone inside
+ * the cone counts; the closest one gets it, with the angle only nudging
+ * the choice, so a short pass to the man in front beats a long one to a
+ * mate dead on the line. Nobody in the cone means the ball goes into space.
+ */
 function mateInCone(state: MatchState, a: Athlete, aim: number): { athlete: Athlete; off: number } | null {
   let best: { athlete: Athlete; off: number } | null = null;
   let bestScore = Infinity;
@@ -63,8 +68,8 @@ function mateInCone(state: MatchState, a: Athlete, aim: number): { athlete: Athl
     if (d < 1.5 || d > ASSIST.passReach) continue;
     const off = Math.abs(angleDiff(aim, angleOf(to)));
     if (off > ASSIST.mateCone) continue;
-    // The angle matters most, the distance breaks ties.
-    const score = off + d * 0.012;
+    // Distance first: at the edge of the cone a mate counts as twice as far away as one dead ahead.
+    const score = d * (1 + off / ASSIST.mateCone);
     if (score < bestScore) {
       bestScore = score;
       best = { athlete: m, off };
