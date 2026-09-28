@@ -28,6 +28,8 @@ function RoomScreen({ code, onRetry }: { code: string; onRetry(): void }) {
   const [room] = useState(() => new PhoneRoom(code));
   const { stage, error, name, seat, game: gameId, status, hostAway, movedTo } = useStore(room.store);
   const [game, setGame] = useState<PhoneGame | null>(null);
+  // Read once, so a moved phone never flashes the name screen before its join starts.
+  const [moving] = useState(() => moveInto(code) !== null);
 
   // The host remade its lobby: this phone joins the new room, skipping the name screen.
   // Joining again after a development remount is safe, since dispose only closes the socket.
@@ -75,7 +77,8 @@ function RoomScreen({ code, onRetry }: { code: string; onRetry(): void }) {
         </p>
       )}
       <main className="phone__body">
-        {stage === "name" && <NameScreen code={code} onJoin={(chosen) => room.join(chosen)} />}
+        {stage === "name" && moving && <Loader label="Moving to the new room" />}
+        {stage === "name" && !moving && <NameScreen code={code} onJoin={(chosen) => room.join(chosen)} />}
         {stage === "joining" && <Loader label={movedTo ? "Moving to the new room" : `Joining room ${code}`} />}
         {stage === "error" && error && <ErrorScreen error={error} code={code} onRetry={onRetry} />}
         {stage === "playing" && (game ? <game.Screen /> : <Loader label="Loading the game" />)}
