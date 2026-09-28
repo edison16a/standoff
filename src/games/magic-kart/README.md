@@ -11,7 +11,7 @@ Status: ready. A split screen kart racer for 1 to 4 players, with computer karts
    * **Ready.** Tap Ready.
 3. On the computer, pick the map with the mouse and click Start race. The chosen map's demo race runs behind the map picker. The switch fills empty grid places with computer karts.
 4. Race two laps. Each player has their own view of the split screen. The map of the whole track and the standings sit at the top right. With three players they fill the free quarter there. On the phone: **Drive** under the right thumb, **Brake** under the left, and the round **power up** button just inside Brake shows what you hold and its name. Tap it to use it.
-5. The results come up with confetti. Race again on the same map, or change map.
+5. The results open on a podium: the top three karts on their steps, each with a gold, silver or bronze cup, under spotlights with confetti raining down while the camera swings round. The winner's name goes up big in gold, with every place and time along the bottom (`host/components/Results.tsx` and `results/`, built on the victory kit). Race again on the same map, or change map.
 
 A phone that joins mid race sets up and joins the next race. A player whose phone drops keeps their kart, with the computer driving until they are back.
 
