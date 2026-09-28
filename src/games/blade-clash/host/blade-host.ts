@@ -4,6 +4,7 @@ import type { PerSlot, Slot } from "@/games/blade-clash/players";
 import { phoneMessageSchema } from "@/games/blade-clash/protocol";
 import { clampTuning, type Tuning } from "@/games/blade-clash/tuning";
 import type { HostRoomApi, HostRoomEvent } from "@/platform/games/game-api";
+import { registerBladeAdmin } from "./admin";
 import { buildControllerState } from "./controller-state";
 import { HostAudio } from "./host-audio";
 import { sameHud, useBladeStore } from "./host-store";
@@ -29,6 +30,8 @@ export class BladeHost {
   private readonly unsubscribe: () => void;
   /** How each phone holds its sword while waiting in the lobby. */
   private readonly holds: PerSlot<SwordControl | null> = { 1: null, 2: null };
+  /** Removes the admin panel's shortcuts for the running match. */
+  private dropAdmin = () => {};
 
   constructor(private readonly room: HostRoomApi) {
     this.audio = new HostAudio(room.audio, () => this.tuning);
@@ -39,9 +42,7 @@ export class BladeHost {
       seatsChanged: () => this.onSeatsChanged(),
       lobbyChanged: () => this.lobbyChanged(),
       calibrating: (slot, step) => useBladeStore.setState((state) => ({ calibrating: { ...state.calibrating, [slot]: step } })),
-      hold: (slot, control) => {
-        this.holds[slot] = control;
-      },
+      hold: (slot, control) => void (this.holds[slot] = control),
     });
     // After a host reload the phones are already sitting in the room.
     for (const player of room.players()) if (player.connected) this.desk.seat(player.seat as Slot, false);
@@ -59,6 +60,7 @@ export class BladeHost {
 
   dispose(): void {
     this.unsubscribe();
+    this.dropAdmin();
     this.driver = null;
     this.audio.dispose();
     this.room.setPlaying(false);
@@ -66,6 +68,7 @@ export class BladeHost {
 
   /** Leaves a finished match for character select, keeping the room. */
   backToLobby(): void {
+    this.dropAdmin();
     this.driver = null;
     this.lobby.clearReady();
     this.audio.director.onPhase("lobby");
@@ -140,6 +143,7 @@ export class BladeHost {
   }
 
   private startMatch(): void {
+    const computer = this.lobby.computerSlot;
     this.driver = new MatchDriver(
       this.lobby.picks,
       () => this.tuning,
@@ -148,10 +152,12 @@ export class BladeHost {
         feedback: (slot, event) => this.phones.send(slot, { kind: "feedback", event }),
         onPhase: () => this.broadcastState(),
       },
-      this.lobby.computerSlot,
+      // The level is read live, so changing it mid fight applies at once.
+      computer ? { slot: computer, level: () => useBladeStore.getState().botLevel } : null,
     );
     useBladeStore.setState({ calibrating: { 1: null, 2: null } });
     this.room.setPlaying(true);
+    this.dropAdmin = registerBladeAdmin(this.driver, () => this.names());
     this.driver.start();
   }
 
