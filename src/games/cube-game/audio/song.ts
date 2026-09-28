@@ -1,3 +1,4 @@
+import type { Kit } from "./colours";
 import type { BassStyle, LeadVoice } from "./instruments";
 import { chord, line, note, type Step } from "./notes";
 
@@ -35,6 +36,8 @@ export interface Song {
   arp: (number | null)[];
   arpVoice: OscillatorType;
   drums: { kick: string; snare: string; hat: string };
+  /** The drum kit's character, which sets the song's style as much as its patterns. */
+  kit: Kit;
   /** Where the electric piano plays the chord in a bar, as "x" and ".", when the keys part is on. */
   keys: string;
   padVoice: PadVoice;
@@ -58,6 +61,7 @@ export interface SongText {
   arp: string;
   arpVoice?: OscillatorType;
   drums: { kick: string; snare: string; hat: string };
+  kit?: Kit;
   keys?: string;
   padVoice?: PadVoice;
   crash?: boolean;
@@ -86,6 +90,7 @@ export function song(text: SongText): Song {
     arp: text.arp.split(/\s+/).map((t) => (t === "." ? null : Number(t.replace("^", "")) + (t.endsWith("^") ? 100 : 0))),
     arpVoice: text.arpVoice ?? "triangle",
     drums: text.drums,
+    kit: text.kit ?? "punch",
     keys: text.keys ?? "x...............",
     padVoice: text.padVoice ?? "saw",
     crash: text.crash ?? true,

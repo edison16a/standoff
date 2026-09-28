@@ -24,6 +24,15 @@ describe("songs", () => {
     });
   }
 
+  it("gives every level its own tempo, key and sound", () => {
+    const songs = LEVELS.map(({ info }) => SONGS[info.theme]!);
+    const distinct = (values: unknown[]) => new Set(values).size;
+    expect(distinct(songs.map((s) => s.bpm))).toBe(songs.length);
+    // Each song opens on a different chord, so no two share a home key.
+    expect(distinct(songs.map((s) => s.chords[0]![0]! % 12))).toBe(songs.length);
+    expect(distinct(songs.map((s) => `${s.kit} ${s.leadVoice} ${s.bassStyle} ${s.drums.kick}`))).toBe(songs.length);
+  });
+
   it("gives the menu song a hook and an answer, each played twice", () => {
     const menu = SONGS.menu!;
     const leads = [0, 16, 32, 48].map((beat) => (sectionAt(menu, beat).parts.has("lead") ? "A" : "B"));
