@@ -1,9 +1,11 @@
 import * as THREE from "three";
 import type { Athlete } from "../engine/types";
 import { CHARACTERS, TEAMS } from "../roster";
-import { blockPose, landPose, layupPose, passPose, shootPose, stealPose, stumblePose } from "./anim/actions";
+import { blockPose, landPose, passPose, shootPose, stealPose, stumblePose } from "./anim/actions";
 import { celebratePose, dejectedPose } from "./anim/celebrations";
 import { dunkPose, dunkSpin } from "./anim/dunks";
+import { gesturePose } from "./anim/gestures";
+import { layupPose } from "./anim/layups";
 import { basePose, type AthleteScene } from "./anim/base";
 import { setShotPose } from "./anim/line";
 import { strideLength } from "./anim/locomotion";
@@ -83,13 +85,13 @@ export class AthleteView {
     switch (act.kind) {
       case "shoot":
         if (act.released && this.releasedAt === null) this.releasedAt = act.t;
-        target = act.free ? setShotPose(act.t, this.releasedAt, base) : shootPose(act.t, this.releasedAt, base);
+        target = act.free ? setShotPose(act.t, this.releasedAt, base) : shootPose(act.t, this.releasedAt, base, act.step !== null);
         rate = 34;
         break;
       case "drive": {
         const timing = { takeoff: act.takeoff, finish: act.finish, land: act.land, rimHang: act.rimHang };
         const style = act.style ?? c.dunk;
-        target = act.dunk ? dunkPose(style, act.t, timing, base) : layupPose(act.t, timing, base);
+        target = act.dunk ? dunkPose(style, act.t, timing, base) : layupPose(act.layup ?? "finger", act.t, timing, base);
         target.spin = act.dunk ? dunkSpin(style, act.t, timing) : 0;
         rate = 30;
         break;
@@ -116,7 +118,7 @@ export class AthleteView {
         break;
       case "celebrate":
         // Into the celebration and out of it again smoothly, back to the walk to the check.
-        target = s.holding ? base : blend(base, celebratePose(c.celebration, act.t), ease(act.t / 0.25) * ease((act.dur - act.t) / 0.3), { ...base });
+        target = s.holding ? base : blend(base, act.gesture ? gesturePose(act.gesture, act.t) : celebratePose(c.celebration, act.t), ease(act.t / 0.25) * ease((act.dur - act.t) / 0.3), { ...base });
         break;
       case "none": {
         if (s.winner !== null) target = s.winner === a.team ? celebratePose(c.celebration, this.time) : dejectedPose(this.time);

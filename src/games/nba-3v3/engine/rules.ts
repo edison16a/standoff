@@ -1,3 +1,4 @@
+import { cheerFor, startCheer } from "./celebrate";
 import { startDead } from "./check-up";
 import { settleShootingFoul } from "./foul-call";
 import { beyondArc, outOfBounds } from "./court";
@@ -76,7 +77,9 @@ export function scoreShot(m: Match): void {
     o.streak = 0;
   }
   m.emit({ type: "score", team: shot.team, points: shot.points, id: shooter.id, kind: shot.kind, outcome: shot.outcome, assist, streak: shooter.streak, dunk: shot.dunk });
-  shooter.action = shooter.action.kind === "none" ? { kind: "celebrate", t: 0, dur: 1.3 } : shooter.action;
+  // A big basket earns a gesture, played as soon as the feet are down (see `celebrate.ts`).
+  shooter.cheer = cheerFor(m, shot, shooter, m.pendingFoul?.victim === shooter.id);
+  startCheer(shooter, true);
   if (gameOver(m, shot.team)) return;
   // Fouled on the way up and it still went in: the basket counts and one more from the line.
   if (!settleShootingFoul(m, shooter.id, true)) startDead(m, shot.team === 0 ? 1 : 0);

@@ -1,3 +1,4 @@
+import { startCheer } from "./celebrate";
 import { RIM_SPOT, rimDistance } from "./court";
 import { pressJump, updateBlock, updateSteal } from "./defend";
 import { startDrive, updateDrive } from "./drive";
@@ -60,6 +61,8 @@ export function updateAction(m: Match, a: Athlete, dt: number): void {
   const act = a.action;
   switch (act.kind) {
     case "none":
+      // A gesture owed for a big basket starts once the shooter has landed.
+      if (a.cheer) startCheer(a, false);
       return;
     case "shoot": {
       const before = act.t;
