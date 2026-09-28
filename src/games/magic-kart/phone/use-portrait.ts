@@ -15,19 +15,20 @@ export const PORTRAIT_SETTLE_MS = 900;
  * that long, while sideways counts at once.
  */
 export function usePortrait(settleMs = 0): boolean {
-  const [raw, setRaw] = useState(false);
-  const [settled, setSettled] = useState(false);
-
-  useEffect(() => watchPortrait(window, setRaw), []);
+  const [portrait, setPortrait] = useState(false);
 
   useEffect(() => {
-    if (!raw || settleMs <= 0) {
-      setSettled(raw);
-      return;
-    }
-    const timer = setTimeout(() => setSettled(true), settleMs);
-    return () => clearTimeout(timer);
-  }, [raw, settleMs]);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const stop = watchPortrait(window, (upright) => {
+      clearTimeout(timer);
+      if (!upright || settleMs <= 0) setPortrait(upright);
+      else timer = setTimeout(() => setPortrait(true), settleMs);
+    });
+    return () => {
+      stop();
+      clearTimeout(timer);
+    };
+  }, [settleMs]);
 
-  return settleMs > 0 ? raw && settled : raw;
+  return portrait;
 }
