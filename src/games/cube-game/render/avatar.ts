@@ -23,7 +23,7 @@ function faceMaterial(skin: Skin): THREE.MeshStandardMaterial {
     map: cubeFace(skin.main, skin.trim, false),
     emissiveMap: cubeFace(skin.main, skin.trim, true),
     emissive: new THREE.Color(0xffffff),
-    emissiveIntensity: 0.35,
+    emissiveIntensity: 0.25,
     roughness: 0.35,
     metalness: 0.15,
   });
@@ -83,7 +83,7 @@ export class Avatar {
       map: ballSkin(skin.main, skin.trim, false),
       emissiveMap: ballSkin(skin.main, skin.trim, true),
       emissive: 0xffffff,
-      emissiveIntensity: 0.55,
+      emissiveIntensity: 0.35,
       roughness: 0.35,
     });
     const sphere = new THREE.SphereGeometry(0.46, 32, 20);
@@ -103,7 +103,7 @@ export class Avatar {
 
     this.forms = { cube, ufo, ball };
     this.halo = new THREE.Sprite(
-      new THREE.SpriteMaterial({ map: glowSprite(), color: skin.trim, transparent: true, opacity: ghost ? 0.1 : 0.18, blending: THREE.AdditiveBlending, depthWrite: false }),
+      new THREE.SpriteMaterial({ map: glowSprite(), color: skin.trim, transparent: true, opacity: ghost ? 0.05 : 0.07, blending: THREE.AdditiveBlending, depthWrite: false }),
     );
     this.halo.scale.setScalar(2.2);
     this.body.add(cube, ufo, ball);

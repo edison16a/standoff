@@ -61,7 +61,7 @@ export class GameRenderer {
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    this.renderer.toneMappingExposure = 1;
     this.post = new Post(this.renderer, this.scene);
     this.scene.add(new THREE.HemisphereLight(0xcfd8ff, 0x201040, 1.6));
     const key = new THREE.DirectionalLight(0xffffff, 2.2);
