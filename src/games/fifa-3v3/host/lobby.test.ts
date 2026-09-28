@@ -27,8 +27,8 @@ describe("the lobby", () => {
   it("puts ready players on the smaller side, and the host can move them", () => {
     const lobby = joined(1, 2, 3);
     lobby.pick(1, "echeverri");
-    lobby.pick(2, "pritchard");
-    lobby.pick(3, "mansour");
+    lobby.pick(2, "brandao");
+    lobby.pick(3, "okemba");
     for (const seat of [1, 2, 3]) lobby.setReady(seat, true);
     expect([1, 2, 3].map((s) => lobby.seats.get(s)!.team)).toEqual([0, 1, 0]);
     expect(lobby.setTeam(3, 1)).toBe(true);
@@ -37,7 +37,7 @@ describe("the lobby", () => {
 
   it("never puts more than three on a side", () => {
     const lobby = joined(1, 2, 3, 4);
-    const stars = ["echeverri", "pritchard", "mansour", "serrano"] as const;
+    const stars = ["echeverri", "brandao", "okemba", "serrano"] as const;
     stars.forEach((star, i) => {
       lobby.pick(i + 1, star);
       lobby.setTeam(i + 1, 0);
@@ -61,7 +61,7 @@ describe("the lobby", () => {
   it("leaves out players who are not ready yet", () => {
     const lobby = joined(1, 2);
     lobby.pick(1, "echeverri");
-    lobby.pick(2, "pritchard");
+    lobby.pick(2, "brandao");
     lobby.setReady(1, true);
     expect(lobby.players).toEqual([1]);
   });
@@ -72,7 +72,7 @@ describe("the lobby", () => {
     lobby.pick(1, "echeverri");
     lobby.setReady(1, true);
     expect(lobby.startBlock()).toBe("oneSided");
-    lobby.pick(2, "pritchard");
+    lobby.pick(2, "brandao");
     lobby.setReady(2, true);
     const lineup = lobby.entrants();
     expect(lineup).toHaveLength(2);
@@ -84,7 +84,7 @@ describe("the lobby", () => {
   it("with computer players off, lets one side have more players than the other", () => {
     const lobby = joined(1, 2, 3);
     lobby.setBots(false);
-    (["echeverri", "pritchard", "mansour"] as const).forEach((star, i) => {
+    (["echeverri", "brandao", "okemba"] as const).forEach((star, i) => {
       lobby.pick(i + 1, star);
       lobby.setTeam(i + 1, i === 2 ? 1 : 0);
       lobby.setReady(i + 1, true);

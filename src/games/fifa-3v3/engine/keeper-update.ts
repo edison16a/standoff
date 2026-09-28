@@ -131,6 +131,12 @@ function diving(state: MatchState, k: Keeper): void {
   }
 }
 
+/** While a set piece is lined up the keepers hold their spots and watch the ball. */
+export function updateKeeperFacing(state: MatchState, k: Keeper, dt: number): void {
+  k.actionT += dt;
+  face(k, Math.atan2(state.ball.pos.z - k.pos.z, state.ball.pos.x - k.pos.x), dt);
+}
+
 /** Plays the ball out to the most open team mate, rolled along the turf. */
 function distribute(state: MatchState, k: Keeper): void {
   const ball = state.ball;

@@ -4,8 +4,11 @@ import { makeAthlete } from "./athlete";
 import { newBall } from "./ball";
 import { celebrateGoal, celebrateWin } from "./celebrate";
 import { makeKeeper } from "./keeper";
-import { updateKeeper } from "./keeper-update";
+import { stepFoul } from "./foul";
+import { updateKeeper, updateKeeperFacing } from "./keeper-update";
 import { playStep, stepLooseBall } from "./play";
+import { makeReferee } from "./referee";
+import { stepSetPiece } from "./set-piece-step";
 import { Rng } from "./rng";
 import { fullTime, restartFromKeeper, setupKickoff, startPlay } from "./rules";
 import { MATCH, STEP } from "./tuning";
@@ -23,6 +26,7 @@ export const DEFAULT_OPTIONS: MatchOptions = {
   seconds: MATCH.seconds,
   goalsToWin: MATCH.goalsToWin,
   replays: true,
+  level: "hard",
 };
 
 /** A match ready to kick off. Entrants fill the slots of their team in order. */
@@ -49,6 +53,9 @@ export function createMatch(entrants: readonly Entrant[], options: Partial<Match
     options: opts,
     time: 0,
     shotCount: 0,
+    referee: makeReferee(),
+    foul: null,
+    setPiece: null,
   };
   setupKickoff(state);
   return state;
@@ -70,6 +77,13 @@ export function stepMatch(state: MatchState, commands: ReadonlyMap<number, Comma
       return;
     case "play":
       playStep(state, commands, dt);
+      return;
+    case "foul":
+      for (const k of state.keepers) updateKeeperFacing(state, k, dt);
+      stepFoul(state, dt);
+      return;
+    case "setpiece":
+      stepSetPiece(state, commands, dt);
       return;
     case "restart":
       playStep(state, new Map(), dt);

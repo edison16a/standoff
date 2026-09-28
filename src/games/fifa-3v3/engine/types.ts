@@ -1,10 +1,13 @@
+import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { TeamId } from "../teams";
 import type { Athlete } from "./athlete-types";
 import type { MatchEvent } from "./events";
+import type { Foul, Referee, SetPiece } from "./foul-types";
 import type { Rng } from "./rng";
 import type { Vec2, Vec3 } from "./vec";
 
 export * from "./athlete-types";
+export * from "./foul-types";
 
 export type KeeperAction = "set" | "dive" | "catch" | "hold" | "throw" | "getup" | "cheer";
 
@@ -70,7 +73,8 @@ export interface Ball {
   heldFor: number;
 }
 
-export type Phase = "kickoff" | "play" | "goal" | "replay" | "restart" | "fulltime";
+/** "foul": the whistle has gone and the referee runs in to book the player. "setpiece": a free kick or a penalty is being lined up. */
+export type Phase = "kickoff" | "play" | "goal" | "replay" | "restart" | "fulltime" | "foul" | "setpiece";
 
 export interface MatchOptions {
   seed: number;
@@ -80,6 +84,8 @@ export interface MatchOptions {
   replays: boolean;
   /** Lets the showcase decide some shots' outcomes. Return null to roll the dice. */
   rig?: (shotNumber: number, team: TeamId) => ShotOutcome | null;
+  /** How sharp the computer players are. Training leaves them standing still. */
+  level: BotLevel;
 }
 
 export interface MatchState {
@@ -104,6 +110,11 @@ export interface MatchState {
   options: MatchOptions;
   time: number;
   shotCount: number;
+  referee: Referee;
+  /** The foul being given, from the whistle until its set piece is taken. */
+  foul: Foul | null;
+  /** The free kick or penalty being lined up, and for a moment after it is struck. */
+  setPiece: SetPiece | null;
 }
 
 /** One player's controls for one step, from a phone or a computer brain. */
@@ -122,4 +133,9 @@ export interface Command {
   passTo?: number;
   /** A computer player's shot: it holds Shoot until the bar reaches this level. */
   shoot?: number;
+  /** Guard is held down: shadow the marked opponent. A level, not a press. */
+  guard?: boolean;
+  /** Steal and Jump were pressed this step. */
+  steal?: boolean;
+  jump?: boolean;
 }

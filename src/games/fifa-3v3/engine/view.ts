@@ -3,6 +3,9 @@ import type { TeamId } from "../teams";
 import { chargeLevel, isTap } from "./charge";
 import type { Athlete, AthleteAction, Dive, KeeperAction, MatchState, Phase, SkillKind } from "./types";
 import { angleDiff, len } from "./vec";
+import { blendReferee, foulView, refereeView, setPieceView, type FoulView, type RefereeView, type SetPieceView } from "./view-extra";
+
+export type { FoulView, RefereeView, SetPieceView };
 
 /**
  * A still of the match for drawing: plain numbers, no references back
@@ -33,6 +36,10 @@ export interface AthleteView {
   skillSide: 1 | -1;
   /** The goal scorer does their own celebration, team mates a plain cheer. */
   signature: boolean;
+  /** Guard is shadowing a man: a low, square defensive stance. */
+  guarding: boolean;
+  /** Standing in a free kick wall, hands in front, waiting for the kick. */
+  wall: boolean;
 }
 
 export interface KeeperView {
@@ -68,6 +75,9 @@ export interface MatchView {
   keepers: [KeeperView, KeeperView];
   scorer: number | null;
   winner: TeamId | null;
+  referee: RefereeView;
+  setPiece: SetPieceView | null;
+  foul: FoulView | null;
 }
 
 export function buildView(state: MatchState): MatchView {
@@ -75,6 +85,7 @@ export function buildView(state: MatchState): MatchView {
   const scorer = state.lastGoal?.scorer ?? null;
   const celebrating = state.phase === "goal" || state.phase === "replay";
   const b = state.ball;
+  const wall = state.setPiece?.wall ?? [];
   return {
     time: state.time,
     phase: state.phase,
@@ -102,10 +113,15 @@ export function buildView(state: MatchState): MatchView {
       skill: a.action === "skill" ? a.skill.kind : null,
       skillSide: a.skill.side,
       signature: state.phase === "fulltime" || (celebrating && a.id === scorer),
+      guarding: a.guard.on,
+      wall: wall.includes(a.id) && (state.phase === "setpiece" || a.action === "jump"),
     })),
     keepers: [keeperView(state, 0), keeperView(state, 1)],
     scorer,
     winner: state.winner,
+    referee: refereeView(state),
+    setPiece: setPieceView(state),
+    foul: foulView(state),
   };
 }
 
@@ -161,5 +177,6 @@ export function blendViews(a: MatchView, b: MatchView, t: number): MatchView {
       const to = b.keepers[i] ?? p;
       return { ...p, x: mix(from.x, to.x, t), z: mix(from.z, to.z, t), facing: mixAngle(from.facing, to.facing, t), actionT: from.action === to.action ? mix(from.actionT, to.actionT, t) : p.actionT };
     }) as [KeeperView, KeeperView],
+    referee: blendReferee(a.referee, b.referee, t),
   };
 }
