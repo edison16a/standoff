@@ -136,17 +136,18 @@ function decideWithout(state: MatchState, a: Athlete, command: Command): void {
   if (d > 2.6 || d < 0.5 || carrier.action === "skill" || !closestOfTeam(state, a, carrier.pos)) return;
   const rng = state.rng;
   const sharp = botSkill(state).accuracy;
-  // Close enough to poke at it: a steal, better timed by a sharper player.
-  if (d < 1.5 && a.defendWait <= 0 && rng.chance(0.15 + 0.3 * sharp)) {
+  // Close enough to poke at it: a steal, better timed by a sharper player, and not through his back.
+  const behind = dot(norm(sub(carrier.pos, a.pos)), fromAngle(carrier.facing)) > 0.4;
+  if (d < 1.5 && a.defendWait <= 0 && !(behind && rng.chance(0.6 + 0.4 * sharp)) && rng.chance(0.1 + 0.25 * sharp)) {
     command.steal = true;
     a.brain.slideWait = rng.range(1.2, 2.4);
     return;
   }
-  if (!rng.chance(0.18 + 0.15 * sharp)) return;
+  if (!rng.chance(0.12 + 0.12 * sharp)) return;
   const aim = add(state.ball.pos, carrier.vel, 0.3);
   const dir = norm(sub(aim, a.pos));
   // A sharp player will not go through the back of a man; a sloppy one sometimes does.
-  if (dot(dir, fromAngle(carrier.facing)) > 0.5 && rng.chance(0.3 + 0.7 * sharp)) return;
+  if (dot(dir, fromAngle(carrier.facing)) > 0.5 && rng.chance(0.8 + 0.2 * sharp)) return;
   command.move = dir;
   command.slide = true;
   a.brain.slideWait = rng.range(2.5, 4.5);

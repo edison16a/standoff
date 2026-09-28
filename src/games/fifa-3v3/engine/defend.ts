@@ -85,7 +85,7 @@ export function updateSteal(state: MatchState, a: Athlete, before: number, dt: n
     return;
   }
   // Through the back of him, or clumsy and late: the referee may see it.
-  const foul = 0.1 + 0.4 * behind + 0.08 * Math.max(0, victim.strength - a.strength);
+  const foul = 0.08 + 0.32 * behind + 0.08 * Math.max(0, victim.strength - a.strength);
   if (state.rng.chance(foul)) return commitFoul(state, a, victim, "steal");
   a.actionLen += STEAL.missPenalty;
   state.events.push({ type: "steal", athlete: a.id, victim: victim.id, won: false });

@@ -96,7 +96,7 @@ function resolve(state: MatchState, a: Athlete, victim: Athlete, manFirst: boole
  */
 export function foulChance(fromBehind: number, manFirst: boolean): number {
   if (fromBehind > 0.5) return clamp(0.6 + (fromBehind - 0.5) * 0.8, 0, 0.95);
-  return manFirst ? 0.3 : 0.03;
+  return manFirst ? 0.2 : 0.03;
 }
 
 function knockDown(state: MatchState, victim: Athlete): void {

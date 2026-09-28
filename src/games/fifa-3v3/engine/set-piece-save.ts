@@ -46,10 +46,10 @@ export function judgeFreeKick(state: MatchState, sp: SetPiece, kick: Kick, keepe
   const hit = fly(from, kick, keeper.pos.x);
   if (!hit) return "goal";
   const lateral = Math.abs(hit.z - keeper.pos.z);
-  const reach = keeperReach(hit.t, 0.3);
+  const reach = keeperReach(hit.t, 0.22);
   if (lateral > reach || hit.y > KEEPER.reach + 0.45) return "goal";
   const margin = 1 - lateral / reach;
-  const save = clamp(0.2 + 0.75 * margin - 0.3 * sp.power + (hit.y > 1.9 ? -0.15 : 0), 0.05, 0.9);
+  const save = clamp(0.4 + 0.6 * margin - 0.25 * sp.power + (hit.y > 1.9 ? -0.1 : 0), 0.08, 0.92);
   if (!state.rng.chance(save)) return "goal";
   const speed = Math.hypot(kick.vel.x, kick.vel.y, kick.vel.z);
   return speed < 21 && lateral < 1 && hit.y < 1.7 ? "catch" : "parry";
