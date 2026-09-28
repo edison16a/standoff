@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { BOARDWALK } from "./boardwalk";
+import { MIDWAY } from "./midway";
 import { bars, heldFor, note } from "./score";
-import { STROLL, TWO_STEP } from "./tunes";
 
 describe("tunes", () => {
   it("reads note names and bars", () => {
@@ -14,8 +15,8 @@ describe("tunes", () => {
   });
 
   it("gives both tunes sixteen bars of eighths, so the A and B sections loop cleanly", () => {
-    for (const track of [STROLL, TWO_STEP]) expect(track.length).toBe(16 * 8);
+    for (const track of [BOARDWALK, MIDWAY]) expect(track.length).toBe(16 * 8);
     // Different tempos, so the lobby and the round never sound like the same song.
-    expect(STROLL.step).toBeGreaterThan(TWO_STEP.step);
+    expect(BOARDWALK.step).toBeGreaterThan(MIDWAY.step);
   });
 });

@@ -28,7 +28,7 @@ Status: ready. Up to 4 players slice fruit on one shared screen. Each phone is a
 
 ## Sound
 
-The music is a lo-fi dojo groove in G minor: a koto plays a pentatonic hook for four bars, then a bamboo flute answers over new chords, on soft taiko, wood block and shaker. Rounds play it at 90 beats a minute. The lobby plays the same song slower as a quiet garden. A bomb ducks the music.
+The lobby plays Hammock, a slow island drift in A major at 76 beats a minute. Each chord lasts two bars and the warm pads overlap, so it never stops flowing. A pan flute hums the melody over a soft marimba roll, a round bass, a hushed conga and shaker, and a wave that washes in every two bars. Rounds play Mango Tide, a light calypso in F major at 104. A steel drum plays the hook over marimba off beats, then the marimba answers in two mallet thirds over new chords while the steel drum rolls softly underneath. Congas, claves on a son clave and a shaker keep it bouncing, and a conga run carries the last bar back to the top. Both tunes run sixteen bars before they repeat. The music is synthesized, goes through the music bus under a low pass filter, and a bomb ducks it.
 
 Slices and swishes are layered and vary in pitch, so a flurry never sounds robotic. Combos of four or more draw a cheer from the crowd, and the winners get a fanfare, a cheer and applause.
 

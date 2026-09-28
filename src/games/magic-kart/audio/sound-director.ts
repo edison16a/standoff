@@ -4,7 +4,6 @@ import { speedOf } from "../engine/kart";
 import { DRIVE } from "../engine/tuning";
 import type { RaceWorld } from "../engine/world";
 import type { Phase } from "../protocol";
-import type { TrackId } from "../tracks";
 import { EngineHum } from "./engine-hum";
 import { GlideSfx } from "./glide-sfx";
 import { GlideWind } from "./glide-wind";
@@ -13,7 +12,7 @@ import { RaceCaller } from "./race-caller";
 import { Sfx } from "./sfx";
 
 /**
- * Decides what the race sounds like: the tune for the map, an engine per
+ * Decides what the race sounds like: the race song, an engine per
  * kart pitched by its speed, a sound for every race event, and the
  * crowd and the race caller on top. Players' karts are louder than
  * computer ones, so on a shared screen everyone hears their own moments
@@ -39,7 +38,7 @@ export class SoundDirector {
     engine.setLevels({ music: 0.5, crowd: 0.7, sfx: 0.85 });
   }
 
-  setPhase(phase: Phase, map: TrackId): void {
+  setPhase(phase: Phase): void {
     this.phase = phase;
     this.clearLobbyTune();
     switch (phase) {
@@ -56,7 +55,7 @@ export class SoundDirector {
         this.caller.countdown();
         return;
       case "racing":
-        this.music.play(map);
+        this.music.play("race");
         return;
       case "results":
         this.music.play(null);
@@ -128,12 +127,12 @@ export class SoundDirector {
         if (kart?.seat !== null) this.sfx.lap();
         return;
       case "finalLap":
-        // The jingle and the faster tune come once, for the first player to reach the last lap.
+        // The jingle and the fuller, faster song come once, for the first player to reach the last lap.
         if (kart?.seat === null || this.finalLapPlayed) return;
         this.finalLapPlayed = true;
         this.sfx.finalLap();
         this.engine.duck("music", 0.3, 1.2);
-        this.music.setTempo(1.08);
+        this.music.finalLap();
         return;
       case "finish":
         if (kart?.seat !== null) this.sfx.finish();

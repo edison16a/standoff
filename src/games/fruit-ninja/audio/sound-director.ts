@@ -2,9 +2,10 @@ import type { AudioEngine } from "@/platform/audio/audio-engine";
 import type { MatchEvent, MatchPhase } from "../engine/events";
 import { KINDS } from "../engine/fruit-kinds";
 import { applause, cheer } from "./crowd";
-import { DOJO, GARDEN } from "./dojo-tunes";
 import { FuseHiss } from "./fuse";
+import { HAMMOCK } from "./hammock";
 import { LoopMusic } from "./loop-music";
+import { MANGO_TIDE } from "./mango-tide";
 import { Sfx } from "./sfx";
 
 /** At most this many whooshes a second, so four players swiping never turns into a roar. */
@@ -15,7 +16,7 @@ const CELEBRATE_MS = 5000;
 /**
  * Decides what the game sounds like. It hears every game event and plays
  * the matching sound, placed left or right by where it happened. The
- * garden tune plays in the lobby and the dojo groove through a round,
+ * Hammock drifts through the lobby and Mango Tide bounces through a round,
  * and the watching crowd cheers the big combos and the winners.
  */
 export class SoundDirector {
@@ -35,10 +36,10 @@ export class SoundDirector {
 
   lobby(): void {
     this.clearTimer();
-    this.music.play(GARDEN, 2.5);
+    this.music.play(HAMMOCK, 2.5);
   }
 
-  /** The countdown starts: the garden fades so the beeps and the first beat land clean. */
+  /** The countdown starts: the lobby tune fades so the beeps and the first beat land clean. */
   roundStarting(): void {
     this.clearTimer();
     this.music.play(null);
@@ -104,7 +105,7 @@ export class SoundDirector {
     switch (phase) {
       case "playing":
         this.sfx.count(true);
-        this.music.play(DOJO, 0.3);
+        this.music.play(MANGO_TIDE, 0.3);
         return;
       case "ending":
         this.sfx.gong();
