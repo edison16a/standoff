@@ -34,8 +34,9 @@ export function clashPushes(rates: PerSlot<Turn>, strength: number, knockAngle: 
 /**
  * Settles what the swords did during one tick: runs the swept tests and
  * applies what they found. A clash throws both swords and staggers both
- * fighters. A hit costs the fighter who took it one health and pushes
- * them back, and the last one ends the fight.
+ * fighters. A hit scores the attacker a point, pushes the fighter who
+ * took it back and stops play for the hit moment. The winning point ends
+ * the fight.
  */
 export class Combat {
   private clashReadyAt = -Infinity;
@@ -54,8 +55,9 @@ export class Combat {
     const events: GameEvent[] = [];
     // The faster of two hits in the same instant lands first, so a double hit at the end has a clear winner.
     for (const contact of [...contacts].sort((a, b) => b.speed - a.speed)) {
+      if (match.phase !== "live") break;
       if (contact.kind === "clash") events.push(this.clash(fighters, contact, tuning, now));
-      else events.push(...this.hit(fighters, match, contact, tuning, now));
+      else events.push(...this.hit(fighters, match, contact, now));
     }
     return events;
   }
@@ -74,16 +76,21 @@ export class Combat {
     return { type: "clash", t: now, at: contact.at, strength };
   }
 
-  private hit(fighters: PerSlot<Fighter>, match: Match, contact: Extract<Contact, { kind: "hit" }>, tuning: Tuning, now: number): GameEvent[] {
+  /** A clean cut across the other fighter's body, scored exactly as a real one. For test shortcuts. */
+  strike(fighters: PerSlot<Fighter>, match: Match, attacker: Slot, now: number): GameEvent[] {
+    const at = { x: fighters[otherSlot(attacker)].x, y: 1.25, z: 0 };
+    return this.hit(fighters, match, { kind: "hit", t: 0, attacker: attacker === 1 ? 0 : 1, at, speed: 8, part: "torso" }, now);
+  }
+
+  private hit(fighters: PerSlot<Fighter>, match: Match, contact: Extract<Contact, { kind: "hit" }>, now: number): GameEvent[] {
     const attackerSlot: Slot = contact.attacker === 0 ? 1 : 2;
     const victimSlot = otherSlot(attackerSlot);
-    const [attacker, victim] = [fighters[attackerSlot], fighters[victimSlot]];
-    if (match.phase !== "live" || victim.health <= 0) return [];
-    attacker.hitReadyAt = now + tuning.hitCooldownMs;
+    const victim = fighters[victimSlot];
+    // Only the first slash of an exchange counts: once play stops for the point, nothing else lands.
+    if (match.phase !== "live") return [];
     victim.guardUntil = now + HIT_GUARD_MS;
     victim.recoil = HIT_PUSHBACK;
-    const final = match.hurt(victimSlot, now);
-    victim.health = match.health[victimSlot];
+    const final = match.point(attackerSlot, now);
     victim.setAction(final ? "defeat" : "hit", now);
     return [
       {
@@ -94,7 +101,7 @@ export class Combat {
         at: contact.at,
         part: contact.part,
         speed: contact.speed,
-        health: victim.health,
+        score: match.score[attackerSlot],
         final,
       },
     ];

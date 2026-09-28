@@ -21,7 +21,6 @@ export interface FighterFrame {
   facing: 1 | -1;
   /** Walking speed toward the opponent, m/s. Negative is backing off. */
   speed: number;
-  health: number;
   action: FighterAction;
   /** Milliseconds since the action started. */
   actionMs: number;
