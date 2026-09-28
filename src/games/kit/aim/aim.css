@@ -43,7 +43,7 @@
   .kit-calibrate {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto minmax(0, 1fr);
     column-gap: 20px;
   }
 
@@ -57,11 +57,52 @@
 
   .kit-calibrate > .kit-guide,
   .kit-calibrate > .kit-pad {
-    grid-row: 1 / 4;
+    grid-row: 1 / 6;
     grid-column: 2;
     height: 100%;
     min-height: 0;
   }
+}
+
+/* Hold to calibrate: the ring round the target fills, then it all turns green. */
+.kit-guide__ring {
+  fill: none;
+  stroke: var(--kit-hold-done, #2ecc71);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.kit-hold {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0;
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--text);
+  transition: color 150ms ease;
+}
+
+.kit-hold__count {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.kit-hold--holding {
+  color: var(--kit-hold-done, #2ecc71);
+}
+
+.kit-hold--done {
+  color: var(--kit-hold-done, #2ecc71);
+}
+
+.kit-hold--done .kit-hold__count {
+  background: var(--kit-hold-done, #2ecc71);
+  color: #0b1a10;
 }
 
 .kit-guide__screen {
