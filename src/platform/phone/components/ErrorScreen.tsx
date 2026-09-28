@@ -32,7 +32,8 @@ export function ErrorScreen({ error, code, onRetry }: ErrorScreenProps) {
       <h1 className="phone-title">{MESSAGES[error]}</h1>
       <button type="button" className="btn btn--block" onClick={() => location.reload()}>
         <Icon name="refresh" />
-        Try again
+        {/* The page is at the player's own address by now, so a reload takes the seat back. */}
+        {error === "replaced" ? "Reconnect" : "Try again"}
       </button>
     </section>
   );
