@@ -6,7 +6,7 @@ import type { SpinStyle } from "./flight";
 import { inGreen, meterAim, meterPower } from "./kick";
 import type { Match } from "./match";
 import { KICK, RULES } from "./tuning";
-import type { ActionKind, BallState, JukeKind, Phase, Role, TeamId } from "./types";
+import type { ActionKind, BallState, DownCause, JukeKind, Phase, Role, TeamId } from "./types";
 import type { V3 } from "./vec";
 
 /**
@@ -33,6 +33,8 @@ export interface AthleteView {
   juke: JukeKind | null;
   /** Which way a juke or side step goes, 1 left of the run and -1 right. */
   side: 1 | -1;
+  /** Why a player is on the ground, while they are: a tackled carrier lands differently from a diver. */
+  downCause: DownCause | null;
   spike: boolean;
   hasBall: boolean;
   /** The throw stick is on this receiver: light up the ring under them. */
@@ -144,6 +146,7 @@ export function buildView(m: Match): MatchView {
         x: a.x, z: a.z, yaw: a.yaw, vx: a.vx, vz: a.vz, speed: Math.hypot(a.vx, a.vz),
         action: act.kind, actionT: "t" in act ? act.t : 0, actionDur: "dur" in act ? act.dur : 0,
         juke: act.kind === "juke" ? act.juke : null, side: act.kind === "juke" ? act.side : 1,
+        downCause: act.kind === "down" ? act.cause : null,
         spike: act.kind === "celebrate" && act.spike,
         hasBall: b.state === "held" && b.holder === a.id,
         targeted: target === a.id, guarding: a.guard, rushing: a.rushT > 0, blocked: a.blocked > 0,

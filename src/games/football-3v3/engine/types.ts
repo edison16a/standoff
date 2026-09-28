@@ -30,10 +30,13 @@ export type Action =
   | { kind: "throw"; t: number; dur: number; released: boolean; to: number }
   | { kind: "kick"; t: number; dur: number; released: boolean }
   /** On the ground, then getting up for the last TACKLE.getUp seconds. */
-  | { kind: "down"; t: number; dur: number; cause: "tackled" | "missed" | "whiff" | "dive" | "tackler" }
+  | { kind: "down"; t: number; dur: number; cause: DownCause }
   | { kind: "celebrate"; t: number; dur: number; spike: boolean };
 
 export type ActionKind = Action["kind"];
+
+/** Why a player went down: tackled with the ball, dodged or whiffed as a tackler, a dive, or making the tackle. */
+export type DownCause = "tackled" | "missed" | "whiff" | "dive" | "tackler";
 
 export interface Stats {
   passYards: number;

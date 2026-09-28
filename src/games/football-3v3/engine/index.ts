@@ -14,4 +14,4 @@ export { downText, ordinal } from "./downs";
 export { STEP, RULES, KICK } from "./tuning";
 export type { MatchEvent, MatchEventType, PlayEnd } from "./events";
 export type { PassInfo } from "./ball";
-export { BUTTONS, type Button, type ConversionCall, type JukeKind, type Phase, type PlayCall, type Role, type TeamId } from "./types";
+export { BUTTONS, type Button, type ConversionCall, type DownCause, type JukeKind, type Phase, type PlayCall, type Role, type TeamId } from "./types";
