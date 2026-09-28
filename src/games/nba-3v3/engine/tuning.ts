@@ -43,29 +43,40 @@ export const NET = { depth: 0.45 } as const;
 export const BALL = {
   radius: 0.12,
   gravity: 9.81,
-  floorBounce: 0.74,
-  rimBounce: 0.55,
-  boardBounce: 0.6,
+  /** A ball dropped from 1.8 metres comes back up to about 1.25, as the rules ask. */
+  floorBounce: 0.82,
+  /** The rim gives more than the glass, and gives more still on a hard hit (see `contact.ts`). */
+  rimBounce: 0.58,
+  boardBounce: 0.64,
+  /** Friction of the leather on the maple, the steel ring and the glass. */
+  floorGrip: 0.55,
+  rimGrip: 0.3,
+  boardGrip: 0.25,
+  /** Air drag per metre per second of speed: half the air density times the drag coefficient and area, over the mass. */
+  drag: 0.021,
+  /** The Magnus lift of the spin, per radian per second and metre per second. */
+  magnus: 0.005,
   /** Horizontal speed kept per second while rolling on the floor. */
   rollKeep: 0.45,
 } as const;
 
 export const MOVE = {
-  /** Top speed is base plus this per speed point. */
-  baseSpeed: 4.1,
-  perSpeed: 0.28,
-  withBall: 0.93,
-  /** Push off from a standstill, in metres per second squared. It fades toward top speed, so the last stretch takes a while. */
-  burst: 17,
-  fade: 0.6,
+  /** Top speed is base plus this per speed point: about 5 to 6 metres a second, a real half court sprint. */
+  baseSpeed: 3.8,
+  perSpeed: 0.24,
+  withBall: 0.9,
+  /** Push off from a standstill, in metres per second squared. It fades toward top speed, so full speed takes most of a second. */
+  burst: 12,
+  fade: 0.62,
   /** Slowing down and turning use the grip of the shoes, which is stronger than the push. */
-  brake: 21,
-  grip: 15,
+  brake: 14,
+  grip: 9.5,
   /** A hard cut plants the outside foot and bleeds speed faster still. */
-  plantGrip: 28,
-  plantTime: 0.16,
-  /** Carrying the ball costs a little push. */
-  ballPush: 0.9,
+  plantGrip: 19,
+  plantTime: 0.2,
+  /** Carrying the ball costs a little push, and a lot of the grip to turn: the dribble has to come round too. */
+  ballPush: 0.85,
+  ballGrip: 0.7,
   radius: 0.4,
 } as const;
 
