@@ -7,8 +7,9 @@ import { GREEN_MS } from "../engine/shot-model";
 import type { Athlete } from "../engine/types";
 import { dir2, type V2 } from "../engine/vec";
 import { DUNK_STYLES, type DunkStyle } from "../roster";
+import { FINISH_SCENES, FINISH_SPOTS, steerFinish, type FinishScene } from "./lab-finishes";
 
-export const LAB_SCENES = ["moves", "run", "dunk", "block", "free"] as const;
+export const LAB_SCENES = ["moves", "run", "dunk", "block", "free", ...FINISH_SCENES] as const;
 export type LabScene = (typeof LAB_SCENES)[number];
 
 const ASHBY = 0;
@@ -27,6 +28,7 @@ const MOVE_CUES: readonly Cue[] = [[0.6, "back"], [1.7, "left"], [2.6, "right"],
  * `moves` runs every dribble move into a defender, `run` sprints and
  * cuts with the ball then passes, `dunk` throws `&style=` at the rim,
  * `block` jumps at a jumper, and `free` calls a foul for free throws.
+ * The finishes and the celebrations are in `lab-finishes.ts`.
  */
 export class LabFilm {
   readonly match: Match;
@@ -55,9 +57,11 @@ export class LabFilm {
       dunk: [[6, 10.5], [-4.6, 7.2], [6.5, 9], [-2.5, 5.5], [5, 10.5], [3.5, 10.5]],
       block: [[0, 6.2], [-6, 3], [6, 3], [-5, 9], [5, 9], [0.1, 5.3]],
       free: [[0, 7], [-4, 6], [4, 6], [0.4, 6.4], [-5, 9], [5, 9]],
+      ...FINISH_SPOTS,
     };
     spots[scene].forEach(([x, z], id) => Object.assign(m.athletes[id]!, { x, z, yaw: Math.PI }));
-    m.ball.holder = scene === "dunk" ? VARELAS : ASHBY;
+    // In the gesture scene Ashby celebrates with his hands free.
+    m.ball.holder = scene === "dunk" || scene === "gesture" ? VARELAS : ASHBY;
     m.brains.reset();
     const star = m.athletes[m.ball.holder]!;
     // At the line the computer shoots for the star, as it would for anyone.
@@ -76,6 +80,7 @@ export class LabFilm {
     else if (this.scene === "run") this.run(t);
     else if (this.scene === "dunk") this.dunk(t);
     else if (this.scene === "block") this.block(t);
+    else if ((FINISH_SCENES as readonly string[]).includes(this.scene)) steerFinish(this.scene as FinishScene, m, t, (key) => this.once(key));
   }
 
   private moves(t: number): void {
