@@ -1,0 +1,327 @@
+/*
+  Football 3v3 on the phone: picking a star and getting ready. Built for
+  the phone held sideways, and still usable upright.
+*/
+
+.fb-phone {
+  position: relative;
+  left: 50%;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  width: calc(100vw - 24px);
+  max-width: 980px;
+  min-height: 0;
+  transform: translateX(-50%);
+}
+
+.fb-phone .kit-steps {
+  gap: 10px;
+  padding: 0;
+}
+
+.fb-phone .kit-steps__title {
+  font-size: 22px;
+}
+
+/* The picker: the star in 3D beside their stats and the roster. */
+
+.fb-pick,
+.fb-ready {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: clamp(8px, 1.6vh, 14px);
+  min-height: 0;
+}
+
+.fb-pick__stage,
+.fb-ready__stage {
+  position: relative;
+  min-height: 110px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--kit) 55%, #0b1024), #070a14 75%);
+}
+
+.fb-preview {
+  position: absolute;
+  inset: 0;
+}
+
+.fb-preview__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.fb-pick__caption {
+  position: absolute;
+  right: 10px;
+  bottom: 8px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+.fb-pick__caption strong {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.fb-pick__caption span {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.fb-pick__side,
+.fb-ready__side {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.fb-pick__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px 14px;
+}
+
+.fb-stat {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.fb-stat__label {
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.fb-stat__bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--bg-muted);
+  overflow: hidden;
+}
+
+.fb-stat__bar span {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: #f59e0b;
+}
+
+.fb-stat--good .fb-stat__bar span {
+  background: #84cc16;
+}
+
+.fb-stat--top .fb-stat__bar span {
+  background: #22c55e;
+}
+
+.fb-stat__value {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.fb-pick__list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.fb-pick__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 44px;
+  padding: 6px 8px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: var(--bg-muted);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fb-pick__card--on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.fb-pick__card:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.fb-pick__number {
+  font-family: "Arial Black", Impact, Arial, sans-serif;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.fb-pick__name {
+  overflow: hidden;
+  max-width: 100%;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.fb-pick__taken {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+/* Ready: the chosen star, the side and role the host picked, and what happens next. */
+
+.fb-ready__card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  border-left: 6px solid var(--kit);
+  border-radius: 12px;
+  background: var(--bg-muted);
+}
+
+.fb-ready__card strong {
+  font-size: 20px;
+}
+
+.fb-ready__card span {
+  color: var(--text-muted);
+}
+
+.fb-ready__team {
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  font-weight: 900;
+  font-size: 17px;
+  text-transform: uppercase;
+}
+
+.fb-ready__team--on {
+  background: var(--kit);
+  color: #ffffff;
+}
+
+.fb-ready__note {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.fb-ready__note--on {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.fb-ready__how {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+/* Upright the star takes whatever height the words and cards leave. */
+@media (orientation: portrait) {
+  .fb-pick,
+  .fb-ready {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .fb-pick__stage,
+  .fb-ready__stage {
+    max-height: 340px;
+  }
+}
+
+/* Sideways height runs out: everything tightens so the pick fits one short screen. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .fb-phone .kit-steps__title {
+    font-size: 18px;
+  }
+
+  .fb-pick__side,
+  .fb-ready__side {
+    gap: 6px;
+  }
+
+  .fb-stat {
+    font-size: 12px;
+  }
+
+  .fb-pick__card {
+    padding: 3px 8px;
+  }
+
+  .fb-pick__number {
+    font-size: 15px;
+  }
+
+  .fb-pick__stage,
+  .fb-ready__stage {
+    min-height: 0;
+  }
+
+  .fb-ready__card {
+    padding: 6px 12px;
+  }
+
+  .fb-ready__team {
+    padding: 5px 12px;
+    font-size: 15px;
+  }
+
+  .fb-ready__how {
+    font-size: 0.72rem;
+  }
+}
+
+/* Held upright during a game: a card asks for the phone to be turned. */
+.fb-turn {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  background: var(--bg);
+  text-align: center;
+}
+
+.fb-turn strong {
+  font-size: 22px;
+}
+
+/* While the turn card shows, the pad under it must not widen the page. */
+.fb-phone--pad:has(> .fb-turn) > :not(.fb-turn) {
+  display: none;
+}
