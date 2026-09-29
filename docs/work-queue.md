@@ -74,7 +74,7 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ## Conventions
 
-* Calibration point counts are settled: 6 hold points for sword games (Fruit Slicer, Blade Clash), 3 for shooters. More points add waiting without adding accuracy, since the fit only learns the middle and four edge spans.
+* Calibration is always the modern hold to calibrate (point, hold still, it fills and moves on, no button) in every pointing game, with 4 to 6 targets as the owner asked: 6 for sword games (Fruit Slicer, Blade Clash), 5 for shooters (the middle and all four corners). Never go back to 3, and never add more than 6: the fit only learns the middle and four edge spans, so extra holds add waiting without accuracy.
 * Commits end with the co-author and session trailers; the helper `commit.sh` in the session scratchpad adds them. Many small commits, pushed to main.
 * Writing: no em dashes, no double hyphens, no hyphens used as punctuation, no midline dots or bullet characters inside sentences, no arrows standing in for words, short plain sentences.
 * Code: production level, files under about 200 lines, short comments that say why.
