@@ -61,4 +61,15 @@ describe("Lobby", () => {
     expect(new Set(grid.map((e) => e.character)).size).toBe(4);
     expect(lobby.entrants(false)).toEqual([{ character: "pip", seat: 2 }]);
   });
+
+  it("gives every computer kart the chosen difficulty, easy by default", () => {
+    const lobby = new Lobby();
+    lobby.connect(1);
+    lobby.pick(1, "nova");
+    lobby.setReady(1, true);
+    const bots = (level?: "hard") => lobby.entrants(true, level).filter((e) => e.seat === null);
+    expect(bots().every((e) => e.level === "easy")).toBe(true);
+    expect(bots("hard").every((e) => e.level === "hard")).toBe(true);
+    expect(lobby.entrants(true, "hard").find((e) => e.seat === 1)?.level).toBeUndefined();
+  });
 });

@@ -1,3 +1,4 @@
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import { CHARACTER_IDS, type CharacterId } from "../characters";
 import type { Entrant } from "../engine/world";
 import { RACE } from "../engine/tuning";
@@ -80,14 +81,14 @@ export class Lobby {
    * The grid: computer karts in the drivers nobody picked, up to a full
    * grid when `computers` is on, then every ready player in seat order.
    * Computers start in front, so a solo race is a chase from the first
-   * corner.
+   * corner. Every computer kart drives at the lobby's `level`.
    */
-  entrants(computers: boolean): Entrant[] {
+  entrants(computers: boolean, level: BotLevel = DEFAULT_BOT_LEVEL): Entrant[] {
     const players: Entrant[] = this.readySeats.map((seat) => ({ character: this.seats.get(seat)!.pick!, seat }));
     if (!computers) return players;
     const used = new Set(players.map((p) => p.character));
     const spare = CHARACTER_IDS.filter((id) => !used.has(id));
-    const bots = spare.slice(0, Math.max(0, RACE.gridSize - players.length)).map((character) => ({ character, seat: null }));
+    const bots = spare.slice(0, Math.max(0, RACE.gridSize - players.length)).map((character) => ({ character, seat: null, level }));
     return [...bots, ...players];
   }
 }

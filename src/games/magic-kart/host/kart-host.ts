@@ -1,3 +1,4 @@
+import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { HostRoomApi, HostRoomEvent } from "@/platform/games/game-api";
 import { SoundDirector } from "../audio/sound-director";
 import type { RaceEvent } from "../engine/events";
@@ -90,13 +91,17 @@ export class KartHost {
     store.setState({ computers: on });
   }
 
+  setBotLevel(level: BotLevel): void {
+    store.setState({ botLevel: level });
+  }
+
   /** Starts a race on the chosen map with every ready player. */
   startRace(): void {
     // From the lobby or the results only, and never with nobody to race.
     if (this.phase === "countdown" || this.phase === "racing" || this.lobby.readySeats.length === 0) return;
-    const { mapId, computers } = store.getState();
+    const { mapId, computers, botLevel } = store.getState();
     this.unlistenRace?.();
-    this.driver = new RaceDriver(findTrack(mapId), this.lobby.entrants(computers));
+    this.driver = new RaceDriver(findTrack(mapId), this.lobby.entrants(computers, botLevel));
     this.unlistenRace = this.driver.listen((event) => this.onRaceEvent(event));
     this.banners.clear();
     this.room.setPlaying(true);

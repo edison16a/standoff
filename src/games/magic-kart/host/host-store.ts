@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { CharacterId } from "../characters";
 import type { ItemKind } from "../engine/items";
 import type { EffectKind, Phase } from "../protocol";
@@ -53,6 +54,8 @@ export interface KartHostState {
   mapId: TrackId;
   /** Fill empty grid places with computer karts. */
   computers: boolean;
+  /** How well the computer karts drive. */
+  botLevel: BotLevel;
   seats: SeatView[];
   views: ViewHud[];
   standings: StandingRow[];
@@ -65,6 +68,7 @@ export const useKartStore = create<KartHostState>(() => ({
   phase: "lobby",
   mapId: "beach",
   computers: true,
+  botLevel: DEFAULT_BOT_LEVEL,
   seats: [],
   views: [],
   standings: [],
