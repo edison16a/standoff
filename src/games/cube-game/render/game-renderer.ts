@@ -61,7 +61,7 @@ export class GameRenderer {
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    this.renderer.toneMappingExposure = 1;
     this.post = new Post(this.renderer, this.scene);
     this.scene.add(new THREE.HemisphereLight(0xcfd8ff, 0x201040, 1.6));
     const key = new THREE.DirectionalLight(0xffffff, 2.2);
@@ -112,8 +112,8 @@ export class GameRenderer {
         if (event.type === "portal" || event.type === "finish") camera?.punch();
       }
       if (player.state) this.effects.trail(i, player.state, SKINS[i]!, dt);
-      this.avatars[i]?.update(player.state, dt);
-      this.ghosts[i]?.update(players.length > 1 ? player.state : null, dt);
+      this.avatars[i]?.update(player.state, dt, player.restarted);
+      this.ghosts[i]?.update(players.length > 1 ? player.state : null, dt, player.restarted);
       this.signs.setAttempt(i, player.attempt);
       this.signs.setCheckpoints(i, player.checkpoints ?? []);
     });

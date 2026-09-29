@@ -1,18 +1,15 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 import { envelope, noise, tone } from "@/platform/audio/voices";
+import { chip, reese } from "./colours";
 import { hz } from "./notes";
 import { flute } from "./soft";
 
 /**
  * The band every song is played by. Each voice books its nodes at an exact
- * time on the audio clock and cleans up after itself. Levels are only
- * the notes, so all five songs share one warm, consistent sound.
+ * time on the audio clock and cleans up after itself. Each level picks
+ * its own voices, kit and groove from these, so every song has its own
+ * style while the band stays warm and consistent.
  */
-
-export function kick(engine: AudioEngine, out: AudioNode, at: number, peak = 0.8): void {
-  tone(engine, out, at, { type: "sine", frequency: 150, glideTo: 42, decay: 0.28, peak });
-  noise(engine, out, at, { filter: "lowpass", frequency: 1800, decay: 0.02, peak: peak * 0.25 });
-}
 
 /** A small random spread around 1, so repeated hits never sound stamped out. */
 export function human(spread = 0.12): number {
@@ -38,10 +35,11 @@ export function hat(engine: AudioEngine, out: AudioNode, at: number, open = fals
   noise(engine, out, at, { filter: "highpass", frequency: 8000, decay: open ? 0.22 : 0.035, peak: peak * human(0.35) });
 }
 
-export type BassStyle = "round" | "saw" | "pluck";
+export type BassStyle = "round" | "saw" | "pluck" | "reese";
 
 /** Bass: a sine for weight, and for the brighter styles a filtered saw on top that closes as it decays. */
 export function bass(engine: AudioEngine, out: AudioNode, at: number, midi: number, length: number, style: BassStyle = "round"): void {
+  if (style === "reese") return reese(engine, out, at, midi, length);
   const { ctx } = engine;
   const f = hz(midi);
   tone(engine, out, at, { type: "sine", frequency: f, attack: 0.006, decay: length * 0.95, peak: 0.34 });
@@ -108,12 +106,13 @@ export function pad(engine: AudioEngine, out: AudioNode, at: number, midis: read
   oscs[0]!.onended = () => gain.disconnect();
 }
 
-export type LeadVoice = "bell" | "square" | "saw" | "glass" | "flute";
+export type LeadVoice = "bell" | "square" | "saw" | "glass" | "flute" | "chip";
 
 /** The tune on top. Longer notes get a little vibrato, which is most of what makes a synth lead sing. */
 export function lead(engine: AudioEngine, out: AudioNode, at: number, midi: number, length: number, voice: LeadVoice, peak = 0.06): void {
   const { ctx } = engine;
   if (voice === "flute") return flute(engine, out, at, midi, length, peak);
+  if (voice === "chip") return chip(engine, out, at, midi, length, peak);
   const f = hz(midi);
   if (voice === "bell" || voice === "glass") {
     tone(engine, out, at, { type: "sine", frequency: f, decay: Math.max(0.4, length * 1.2), peak: peak * 1.4 });
