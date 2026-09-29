@@ -72,6 +72,15 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
    * Paintball Battle: close ups of a player running then sliding, then a 3v3 firefight seen from one player's view.
    * Basketball 3v3: a cinematic dunk, then an iso play into a three that banks in, then the team celebrating as champions, looping smoothly.
    * Every other game gets the same treatment with its own best moments (Soccer goals and the SUI, Football touchdowns, Kart drifts and glides, Blade Clash slashes, Boxing knockdowns and the belt, and so on).
+   * Zombie Survival: the team on a car, the driver in back, zombies bursting out behind them, then a cut to gameplay.
+4. **Cinematic game icons for every game, like movie posters or key art** (almost photo like, very tough, the single most exciting moment, drawn from the real game in 3D with the stylised title). Examples from the owner:
+   * Basketball 3v3: one player dunking on another.
+   * Boxing: one boxer landing a punch and the other falling, knocked out.
+   * Soccer 3v3: a player jumping over a slide tackle with the ball.
+   * Zombie Survival: third person, not first person: the team on a car being chased by zombies.
+   * Paintball Battle: one player crouched behind a wall, facing the camera, paintballs flying past him, the other team shooting in the background.
+   * Shooting Gallery and every other game get the same treatment with their own most cinematic moment.
+5. **Home screen tiles (app icons) 1.2 times bigger.**
 
 ## Done recently
 
