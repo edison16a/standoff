@@ -69,6 +69,8 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ### Last (in this order: README, clips, icons and tiles first, then the final check)
 
+**Push checkpoints (owner request, in case usage runs out):** before the final builds start, every finished game change must already be merged and pushed to main. After the final builds (README, clips, icons, tiles) pass their checks, push them to main right away, before the final check starts.
+
 1. **Final README:** every new feature and game, Football 3v3 and Paintball Battle, new screenshots.
 2. **New home screen clips for every game, cut like wordless game trailers** (think Fortnite ads): only the high intensity best moments, cinematic cameras, a smooth seamless loop, no text. Examples from the owner:
    * Paintball Battle: close ups of a player running then sliding, then a 3v3 firefight seen from one player's view.
