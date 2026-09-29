@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { HostRoomApi, HostRoomEvent } from "@/platform/games/game-api";
-import { HostAim, insideBox, pinToEdge, zonePixels } from "./host-aim";
+import { EDGE, HostAim, insideBox, pinToEdge, zonePixels } from "./host-aim";
 
 /** A room that lets a test play phone messages into the host. */
 function fakeRoom() {
@@ -52,13 +52,13 @@ describe("the host's aim", () => {
     say(2, { kind: "aim-step", step: "test" });
     say(2, { kind: "aim", x: 0, y: 0 });
     close(settle(aim, 2), 0, 0);
-    // Calibrated on the left half; its middle is the bottom middle edge of the top left quarter.
+    // Calibrated on the left half; its middle is the bottom middle edge of the top left quarter, held just inside.
     aim.setZone(2, TOP_LEFT_QUARTER);
-    close(settle(aim, 2), 0, -1);
+    close(settle(aim, 2), 0, -EDGE);
     const fired = vi.fn();
     aim.onFire(fired);
     say(2, { kind: "aim-fire", x: 0, y: 1 });
-    expect(fired.mock.calls[0]![1].y).toBeCloseTo(1, 9);
+    expect(fired.mock.calls[0]![1].y).toBeCloseTo(EDGE, 9);
     aim.dispose();
   });
 
@@ -78,9 +78,9 @@ describe("the host's aim", () => {
     const fired = vi.fn();
     aim.onFire(fired);
     say(5, { kind: "aim", x: 1.15, y: -1.15 });
-    close(settle(aim, 5), 1, -1);
+    close(settle(aim, 5), EDGE, -EDGE);
     say(5, { kind: "aim-fire", x: -1.1, y: 0.2 });
-    expect(fired).toHaveBeenCalledWith(5, { x: -1, y: 0.2 });
+    expect(fired).toHaveBeenCalledWith(5, { x: -EDGE, y: 0.2 });
     // Back in from the edge: the very next frame moves inward, with no dead time spent easing back from past the edge.
     let clock = performance.now() + 5000;
     const end = clock + 1000;
@@ -89,7 +89,7 @@ describe("the host's aim", () => {
     for (; clock < end; clock += 16) aim.point(5, clock);
     say(5, { kind: "aim", x: 0.9, y: 0 });
     // Ten milliseconds: unpinned, the dot would still be easing back from past the edge.
-    expect(aim.point(5, clock + 10)!.x).toBeLessThan(0.99);
+    expect(aim.point(5, clock + 10)!.x).toBeLessThan(EDGE - 0.01);
     now.mockRestore();
     aim.dispose();
   });
@@ -120,8 +120,10 @@ describe("the host's aim", () => {
 
 describe("keeping the pointer in sight at the edge", () => {
   it("pins a point past the edge to the edge and leaves one inside alone", () => {
-    expect(pinToEdge({ x: 1.15, y: -1.4 })).toEqual({ x: 1, y: -1 });
-    expect(pinToEdge({ x: -0.3, y: 0.99 })).toEqual({ x: -0.3, y: 0.99 });
+    expect(pinToEdge({ x: 1.15, y: -1.4 })).toEqual({ x: EDGE, y: -EDGE });
+    // Only a touch inside the true edge, so a target near it can still be hit.
+    expect(EDGE).toBeGreaterThan(0.94);
+    expect(pinToEdge({ x: -0.3, y: 0.9 })).toEqual({ x: -0.3, y: 0.9 });
   });
 
   it("draws a dot at the edge far enough inside that all of it shows", () => {

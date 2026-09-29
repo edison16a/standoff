@@ -28,12 +28,19 @@ const STALE_MS = 1200;
 const TARGET_STEPS: readonly AimStep[] = AIM_TARGETS;
 
 /**
+ * How far out an aim may go, in zone units. A touch inside the true edge,
+ * so a laser dot a game draws in 3D, centred on the aim, still shows
+ * rather than sitting half off the screen.
+ */
+export const EDGE = 0.96;
+
+/**
  * Holds a point at the edge of its zone. Pointing past the edge leaves the
  * dot there, still in sight, and as the phone comes back in it moves on
  * from the edge smoothly, with no jump. Every pointing game gets this.
  */
 export function pinToEdge(point: ScreenPoint): ScreenPoint {
-  return { x: Math.max(-1, Math.min(1, point.x)), y: Math.max(-1, Math.min(1, point.y)) };
+  return { x: Math.max(-EDGE, Math.min(EDGE, point.x)), y: Math.max(-EDGE, Math.min(EDGE, point.y)) };
 }
 
 /**

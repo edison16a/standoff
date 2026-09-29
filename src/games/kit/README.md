@@ -28,7 +28,7 @@ aim.dispose();
 
 Calibration is hold to calibrate, the kit's standard. Targets show on the big screen and the phone in turn. The player points at each and holds still: a ring fills, the target turns green and the next one comes up by itself. No button, so a tap never nudges the aim. A target only fills once the phone has turned away from the last one. Pick how many with `plan`: `"shooter"` (the default) takes the middle and all four corners; `"sword"` takes the middle, all four corners and the middle again, for games that swing all over the screen. From them the phone learns how far this player turns to cross the screen from where they sit, left, right, up and down separately (`aim-fit.ts`). Skip the rest reuses the spans this phone measured last time. `kit/motion/steady-hold.ts` has the hold meter for any other hold to confirm page.
 
-Pointing past the edge of the screen keeps the aim at the edge, dot and all, and it moves on smoothly the moment the phone points back in. `HostAim` pins every point and shot to its zone, so every pointing game gets this. The measured spans are kept on the phone only.
+Pointing past the edge of the screen keeps the aim at the edge, dot and all, and it moves on smoothly the moment the phone points back in. `HostAim` pins every point and shot a touch inside its zone (`EDGE`), so a laser dot a game draws in 3D still shows whole enough to see, and every pointing game gets this. `AimOverlay` also draws its own dots and names fully inside the zone. The measured spans are kept on the phone only.
 
 Host side:
 
