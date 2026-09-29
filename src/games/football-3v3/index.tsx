@@ -10,11 +10,14 @@ import { PhoneContext } from "./phone/components/session-context";
 import Showcase from "./showcase/Showcase";
 import "./styles/host.css";
 import "./styles/lobby.css";
+import "./styles/lobby-cards.css";
 import "./styles/replay.css";
 import "./styles/results.css";
 import "./styles/scoreboard.css";
 import "./styles/phone.css";
+import "./styles/phone-ready.css";
 import "./styles/pad.css";
+import "./styles/pad-controls.css";
 import "./styles/kick.css";
 import "./styles/showcase.css";
 
