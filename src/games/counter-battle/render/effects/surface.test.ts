@@ -18,3 +18,20 @@ describe("splats lie flat on the surface they hit", () => {
     expect(surfaceNormal(brick, { x: -1.2, y: 1.14, z: 0 })).toEqual({ x: 0, y: 1, z: 0 });
   });
 });
+
+describe("splats on a rounded bunker", () => {
+  it("curve round the side, and sink onto the rounded shoulder facing up and out", () => {
+    const side = surfaceHit(can, { x: 2, y: 0.8, z: 3 - 0.75 });
+    expect(side.curve).toBeCloseTo(1 / 0.75);
+    expect(side.normal).toEqual({ x: 0, y: 0, z: -1 });
+    const shoulder = surfaceHit(can, { x: 2, y: 1.8, z: 3 - 0.75 });
+    expect(shoulder.normal.y).toBeGreaterThan(0.5);
+    expect(shoulder.normal.z).toBeLessThan(0);
+    expect(Math.hypot(shoulder.normal.x, shoulder.normal.y, shoulder.normal.z)).toBeCloseTo(1);
+    expect(3 - shoulder.point.z).toBeLessThan(0.75);
+  });
+
+  it("stay flat on a block", () => {
+    expect(surfaceHit(brick, { x: -1 + 0.95, y: 0.6, z: 0.1 }).curve).toBe(0);
+  });
+});
