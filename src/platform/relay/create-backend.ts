@@ -41,13 +41,51 @@ async function open(): Promise<Backend> {
     const { createRedisBackend } = await import("./redis/redis-backend");
     return createRedisBackend(redisUrl);
   }
+  warnUnshared();
   return { store: new MemoryStore(), bus: new MemoryBus(), label: "memory (this process only)", shared: false };
 }
 
-/** Marketplace integrations name the variable differently, so check the usual ones. */
-export function findRedisUrl(): string | null {
-  const candidates = [process.env.REDIS_URL, process.env.KV_URL, process.env.UPSTASH_REDIS_URL];
-  return candidates.find((value) => value && /^rediss?:\/\//.test(value)) ?? null;
+const KNOWN_NAMES = ["REDIS_URL", "KV_URL", "UPSTASH_REDIS_URL"];
+type Env = Record<string, string | undefined>;
+const REDIS_URL = /^rediss?:\/\//;
+
+/**
+ * Marketplace integrations name the variable differently, and some add a
+ * prefix of their own (STORAGE_REDIS_URL), so the usual names come first
+ * and then any variable ending the same way. REST URLs cannot be used.
+ */
+export function findRedisUrl(env: Env = process.env): string | null {
+  for (const name of KNOWN_NAMES) if (REDIS_URL.test(env[name] ?? "")) return env[name]!;
+  const other = Object.keys(env)
+    .sort()
+    .find((name) => /(REDIS_URL|KV_URL)$/.test(name) && REDIS_URL.test(env[name] ?? ""));
+  return other ? env[other]! : null;
+}
+
+/**
+ * True when every server instance sees the same rooms. A laptop runs one
+ * process, so its memory counts. On Vercel only Redis does.
+ */
+export function sharedStore(env: Env = process.env): boolean {
+  return !env.VERCEL || findRedisUrl(env) !== null;
+}
+
+let warned = false;
+
+/** Says loudly, once, that a Vercel deploy has no shared room store, which breaks rooms at random. */
+function warnUnshared(env: Env = process.env): void {
+  if (!env.VERCEL || warned) return;
+  warned = true;
+  const rest = Object.keys(env).filter((name) => /_REST_/.test(name) && /(REDIS|KV)/.test(name));
+  const hint = rest.length > 0 ? ` Found only REST variables (${rest.join(", ")}), which cannot be used: connect a store that also sets a redis:// URL.` : "";
+  console.error(
+    `No Redis URL on this Vercel deploy, so rooms live in each server instance alone and phones will often get Room not found. Checked ${KNOWN_NAMES.join(", ")} and any variable ending in REDIS_URL or KV_URL.${hint}`,
+  );
+}
+
+/** For tests: lets the warning fire again. */
+export function resetUnsharedWarning(): void {
+  warned = false;
 }
 
 /**

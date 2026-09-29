@@ -9,7 +9,8 @@ import { RedisStore } from "./redis-store";
  * retries, rather than a phone stuck on "Joining".
  */
 export async function createRedisBackend(url: string): Promise<Backend> {
-  const options = { maxRetriesPerRequest: 2, enableAutoPipelining: true, connectTimeout: 5000 };
+  // A command that hangs would hold a room's lock and stall a join, so each one has a deadline.
+  const options = { maxRetriesPerRequest: 2, enableAutoPipelining: true, connectTimeout: 5000, commandTimeout: 3000, keepAlive: 10_000 };
   const client = new Redis(url, options);
   const subscriber = client.duplicate();
   // An "error" event with no listener throws. On Vercel an uncaught error

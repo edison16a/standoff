@@ -1,5 +1,5 @@
 import type { Backend } from "./backend";
-import { findRedisUrl } from "./create-backend";
+import { sharedStore } from "./create-backend";
 import type { RelayContext } from "./relay-types";
 
 /** Set by the local server, which knows the network address phones must use. */
@@ -20,7 +20,7 @@ export function routeContext(request: Request, backend: Backend, deadline: numbe
     joinUrlFor: (code) => `${origin}/join/${code}`,
     now: Date.now,
     client: clientAddress(request.headers),
-    sharedRooms: local !== undefined || findRedisUrl() !== null,
+    sharedRooms: local !== undefined || sharedStore(),
     deadline,
   };
 }
