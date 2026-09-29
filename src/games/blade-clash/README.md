@@ -9,13 +9,18 @@ Status: ready. A sword duel for two players, or one against the computer, in an 
    * **Calibrate.** A picture shows the grip: the phone held like the handle of a sword, top edge toward the big screen. Then a target appears on the phone and in the player's own half of the big screen: the middle, then each corner. Point at it and hold still. A ring fills and the reading is taken by itself, with a buzz and a chime. Nothing to tap. **Skip corners** keeps the usual spans. Last, the player shows a relaxed guard the same way. Then the sword appears and copies the phone, on the phone and on the big screen, so it is plain it worked. **Redo** starts the targets again.
    * **Fighter.** Pick one of four. A fighter the other player has is marked taken.
    * **Ready.** Tap Ready, or **Play the computer** to fight alone.
-3. Fight. Each fighter can take five hits. The fight goes on until someone has none left, then the winner screen, then **Rematch** or **Menu** on the phone.
+3. Fight. Every slash that lands scores a point. The first to five points wins, and the countdown says so. Then the winner screen, then **Rematch** or **Menu** on the phone.
+   * **The hit moment.** When a slash lands, play stops. The game drops into slow motion, both cameras close in, and the screen shows who slashed whom, name to name, with the score. Then both fighters go back to their start marks and the fight picks up again.
    * **Swing** by moving the phone. The sword follows it in 3D: point up for a high guard, down for a low one, turn the phone to angle the edge.
    * **Thrust** by pointing from your guard straight at the opponent. Pointing at the middle of your view stretches the arm out, and the guard pulls it back in.
    * **Block** by holding your blade where the other one is going. Blades that meet clash.
    * **Move** by holding **Forward** or **Back** on the phone. The fighters stand on a straight line.
 
 Phones without motion sensors get a drag pad: drag a finger to point the sword, lift it to rest in guard.
+
+## The computer
+
+While the computer holds a seat, the lobby on the big screen shows **Computer difficulty**: Easy, Medium, Hard or Training. Easy is the default. Harder levels attack more often, swing crisper and block more of your cuts, sooner. **Training** keeps the computer on its mark in guard, standing still, so you can practise your cuts on it. The level is read live and stays for the rematch.
 
 ## The fighters
 
@@ -30,17 +35,17 @@ Each blade has its own length and width, which is all that changes play. Each al
 
 * **The arena.** A round open air arena: a stone dais on raked sand with a line of gold down the middle where the fighters walk, a full house on stone tiers all round, a great gate at each end of the line with the player's banner and flags, braziers at the dais's corners and torches and banners round the wall. By day a summer sky and the sun's shadows; by night stars, firelight and a hard spotlight over the dais, following the platform's light and dark theme.
 * **Animation.** One skeleton for all four. The sword hand is placed exactly on the engine's grip and the arm reaches it by inverse kinematics; the body leans and turns into a reach, sinks for a low guard and the two handed swords take the free hand onto the grip whenever it can reach. The feet step on their own and stay planted on the floor between steps. A hit snaps the head, the body or the knees back depending on where it landed, a clash rocks both fighters, the loser of the fight stumbles, falls flat and drops the sword, and the winner raises theirs overhead.
-* **Effects.** A glowing trail per blade, a shower of sparks in the blades' colours on every clash, a flash and ring where a hit lands, the body lighting up in the hitter's colour, and bloom on everything that glows. The final hit slows the game down, closes both cameras in and washes the screen in the winner's colour, then bursts. The winner's camera swings round to face them under confetti.
-* **The screen.** Each half has its player's card along the top: their fighter's emblem, name and five slanted health blades that shatter one at a time. The split map between them shows who plays where.
+* **Effects.** A glowing trail per blade, a shower of sparks in the blades' colours on every clash, a flash and ring where a hit lands, the body lighting up in the hitter's colour, and bloom on everything that glows. Every point slows the game down, closes both cameras in and washes the screen in the scorer's colour, under letterbox bars and the names of who slashed whom. The winning slash does the same in gold, then bursts, and the winner's camera swings round to face them under confetti.
+* **The screen.** Each half has its player's card along the top: their fighter's emblem, name and five slanted point blades that light up one at a time as they score. The split map between them shows who plays where.
 
 ## Swords in the world
 
 Hits come only from the swords themselves. There are no jab or parry gestures.
 
 * **The hold.** The phone sends how the sword is held: turned left or right, raised or lowered, the edge's turn, and how far the arm reaches. The computer puts the hand and blade in the world from that, with the hand moving the way an arm does: up toward the head for a high guard, down to the hip for a low one, across the body for a blade swung across, out toward the opponent for a thrust.
-* **Hits.** A blade that passes through the other fighter's head, body or legs lands a hit, but only if the part that touched was moving fast enough. Resting a sword on someone does nothing. The swing is tested all along its path, cut into steps no longer than a blade is thick, so a swing too fast to see in any one frame still hits what it passed through. After a hit that blade waits a moment before it can land another, and the fighter who took it cannot be hit again while they flinch.
+* **Hits.** A blade that passes through the other fighter's head, body or legs lands a hit, but only if the part that touched was moving fast enough. Resting a sword on someone does nothing. The swing is tested all along its path, cut into steps no longer than a blade is thick, so a swing too fast to see in any one frame still hits what it passed through. Only the first slash of an exchange counts: the moment it lands, play stops for the point.
 * **Clashes.** At every step blade on blade is tested before blade on body, so a blade held in the way stops a swing before it reaches the body. Blades that meet fast enough clash: sparks, a clang, and both swords are thrown back. The faster blade rebounds the way it came and a still blade is shoved along. For a moment the sword ignores the phone, then eases back into wherever the phone is by then, so it never jumps. A thrown sword cannot hit or clash until it is back in the hand.
-* **The finish.** The last hit plays in slow motion. The loser goes down and the winner cheers under confetti.
+* **The finish.** The winning point plays in slow motion like every other. The loser goes down and the winner cheers under confetti.
 
 ## Calibration
 
@@ -52,10 +57,10 @@ The view's edges map to wide blade angles and keep going past them, so the sword
 
 Everything is synthesised through the room's audio buses.
 
-* **Music.** In the lobby, "Still Water", G major at 72 a minute: strings and a low drone hold each chord into the next, a bamboo flute carries the tune, and a koto and a soft frame drum keep an easy pulse. Its B half climbs higher over a quiet choir. In the fight, "Steel and Thunder", B minor at 132: taiko drums and driving strings under a horn hook with a koto plucking along, lifting into brass and choir for the second eight bars. Both run sixteen bars before they repeat. Each track has its own level, so both sit near an RMS of 0.05 with peaks under 0.4, under a 4.2 kHz low pass. The music ducks for the slow motion hit and the big moments. The winner gets a brass fanfare.
+* **Music.** In the lobby, "Still Water", G major at 72 a minute: strings and a low drone hold each chord into the next, a bamboo flute carries the tune, and a koto and a soft frame drum keep an easy pulse. Its B half climbs higher over a quiet choir. In the fight, "Steel and Thunder", B minor at 132: taiko drums and driving strings under a horn hook with a koto plucking along, lifting into brass and choir for the second eight bars. Both run sixteen bars before they repeat. Each track has its own level, so both sit near an RMS of 0.05 with peaks under 0.4, under a 4.2 kHz low pass. The music ducks for the winning slash and the big moments. The winner gets a brass fanfare.
 * **Blades.** Every fast swing whooshes in its weapon's voice: heavy for the longsword, a thin whistle for the katana, a chip tune sweep for the pixel sword and a rising drone for the energy blade. Clashes ring louder the harder they are; steel rings, light crackles and pixels chime. The energy blade hums the whole time it is out, brighter and higher as it swings.
 * **Armour.** Each fighter's armour clanks, rattles or knocks on every step and answers every hit in its own way.
-* **The crowd and the announcer.** The crowd murmurs, gasps at big clashes and cheers the finish. The announcer calls the start, the big clashes and the winner through the computer's speech, at the player's effects volume.
+* **The crowd.** The crowd murmurs, gasps at big clashes and cheers the finish. There is no announcer or spoken voice.
 
 ## Tuning
 
@@ -64,7 +69,6 @@ Every value worth adjusting by feel is in the tuning drawer (the sliders icon at
 | Setting | Default | What it changes |
 | --- | --- | --- |
 | Hit speed | 3 m/s | How fast the touching part of a blade must move to count as a hit |
-| Hit cooldown | 450 ms | How long a blade waits after landing a hit |
 | Clash speed | 1.6 m/s | How fast two blades must meet to clash |
 | Clash knockback | 38° | How far a clash throws both blades |
 | Knockback time | 150 ms | How long the thrown blade flies |
@@ -74,7 +78,7 @@ Every value worth adjusting by feel is in the tuning drawer (the sliders icon at
 
 ## Code
 
-* `engine/`: the duel as pure logic. `sword.ts` puts the hold in the world, `sweep.ts` runs the swept blade tests, `sword-driver.ts` follows the phone and throws the sword after a clash, `combat.ts` settles each tick, `match.ts` keeps health and phases, and `bot.ts` is the computer opponent. Unit tested.
+* `engine/`: the duel as pure logic. `sword.ts` puts the hold in the world, `sweep.ts` runs the swept blade tests, `sword-driver.ts` follows the phone and throws the sword after a clash, `combat.ts` settles each tick, `match.ts` keeps the score and phases, including the pause for each point, `bot.ts` is the computer opponent and `bot-tactics.ts` maps the difficulty levels onto it. Unit tested.
 * `motion/`: the phone's sensor maths with no browser in sight: the grip, the calibration from the targets, and the mapping from where the phone points to the hold.
 * `render/`: three.js. `duel-renderer.ts` draws the arena twice through scissored viewports, one shoulder camera per player, each through its own bloom (`post.ts`). `arena/` is the arena. `fighter/` has the skeleton and inverse kinematics (`rig/`), the animation (`anim/`), the characters' costumes (`characters/`) and weapons (`blades/`). `effects/` has the trails, sparks, flashes and confetti.
 * `host/`, `phone/`, `protocol/`, `audio/`: the session on the computer, the phone's setup pages and controller, the messages between them, and the synthesised sound.

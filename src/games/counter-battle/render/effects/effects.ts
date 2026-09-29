@@ -5,18 +5,18 @@ import type { Fighter } from "../../engine/fighter";
 import { TEAMS } from "../../teams";
 import type { FighterView } from "../fighter-view";
 import { FIELD_COLOURS } from "../palette";
+import { BodySplats } from "./body-splats";
 import { Flashes } from "./flashes";
+import { Paintballs } from "./paintballs";
 import { Particles } from "./particles";
 import { Splats } from "./splats";
 import { surfaceNormal } from "./surface";
-import { Tracers } from "./tracers";
 
 const from = new THREE.Vector3();
 const to = new THREE.Vector3();
 const n = new THREE.Vector3();
-const d = new THREE.Vector3();
 
-/** A small seeded random source, so the showcase films the same sparks every time. */
+/** A small seeded random source, so the showcase films the same splats every time. */
 function seeded(seed: number): () => number {
   let s = seed >>> 0;
   return () => {
@@ -27,26 +27,39 @@ function seeded(seed: number): () => number {
   };
 }
 
+/** A ball still in the air, and what it does when it lands. */
+interface Landing {
+  at: number;
+  trace: Trace;
+  from: THREE.Vector3;
+  colour: string;
+  pellet: boolean;
+}
+
 /**
- * Everything a shot leaves behind: the muzzle flash, the tracer, a spent
- * case flying out, and where it lands a burst of paint in the shooter's
- * colour, a splat on the bunker or the turf, or a splash off a fighter.
- * Driven by the battle's events, so every shot on screen is a real one.
+ * Everything a shot leaves behind: a puff of air at the barrel, the
+ * paintball flying in the shooter's team colour, and where it lands a
+ * pop of paint and a splat, on the bunker, the turf or the fighter it
+ * struck. Driven by the battle's events, so every shot on screen is a
+ * real one. The splat waits until the ball gets there.
  */
 export class Effects {
   readonly group = new THREE.Group();
   readonly flashes = new Flashes();
-  readonly tracers = new Tracers();
+  readonly balls = new Paintballs();
   readonly splats = new Splats();
+  readonly bodies = new BodySplats(this.splats.texture);
   readonly puffs = new Particles(900, false);
-  readonly glow = new Particles(300, true);
   private rand = seeded(11);
+  private landings: Landing[] = [];
+  private views: ReadonlyMap<number, FighterView> = new Map();
 
   constructor(private readonly pieces: readonly Piece[]) {
-    this.group.add(this.flashes.group, this.tracers.mesh, this.splats.mesh, this.puffs.points, this.glow.points);
+    this.group.add(this.flashes.group, this.balls.mesh, this.splats.mesh, this.puffs.points);
   }
 
   onEvent(e: BattleEvent, fighters: readonly Fighter[], views: ReadonlyMap<number, FighterView>, now: number): void {
+    this.views = views;
     if (e.type === "shot") this.shot(e, fighters, views, now);
     else if (e.type === "kill") this.kill(e.victim, e.killer, fighters, views);
   }
@@ -62,33 +75,39 @@ export class Effects {
     const pellet = e.traces.length > 1;
     for (const t of e.traces) {
       to.set(t.to.x, t.to.y, t.to.z);
-      this.tracers.add(from, to, now, pellet);
-      this.impact(t, colour, pellet);
+      const flight = this.balls.add(from, to, colour, now, pellet);
+      this.landings.push({ at: now + flight, trace: t, from: from.clone(), colour, pellet });
     }
-    // A spent case out of the right side, up and back; the shotgun's comes with the pump.
-    d.set(-1, 0.6, -0.3).applyQuaternion(view.gun.root.getWorldQuaternion(new THREE.Quaternion()));
-    const brass = e.gun === "shotgun" ? "#b3261e" : "#d9a441";
-    this.puffs.burst({ at: from.clone().lerp(view.gun.root.getWorldPosition(new THREE.Vector3()), 0.85), count: 1, colour: brass, speed: [0.3, 0.6], dir: d, push: 2.4, spread: 0.2, life: [0.5, 0.7], size: [0.035, 0.04], gravity: 9.8, drag: 0.6 }, this.rand);
   }
 
-  private impact(t: Trace, colour: string, pellet: boolean): void {
-    const size = pellet ? 0.14 : 0.24;
+  private land(l: Landing, now: number): void {
+    const t = l.trace;
+    to.set(t.to.x, t.to.y, t.to.z);
+    const size = l.pellet ? 0.2 : 0.34;
+    const pick = this.rand();
     const spin = this.rand();
     if (t.hit.type === "cover") {
       const piece = this.pieces[t.hit.piece];
       if (!piece) return;
       const nv = surfaceNormal(piece, t.to);
       n.set(nv.x, nv.y, nv.z);
-      this.splats.add(to, n, colour, size * (0.8 + 0.5 * spin), spin);
-      this.puffs.burst({ at: to, count: pellet ? 2 : 5, colour, speed: [0.8, 2.4], dir: n, push: 1.2, spread: 0.7, life: [0.25, 0.5], size: [0.05, 0.1], gravity: 6 }, this.rand);
+      this.splats.add(to, n, l.colour, size * (0.8 + 0.5 * spin), pick, spin, now);
+      this.pop(to, n, l.colour, l.pellet ? 5 : 11);
     } else if (t.hit.type === "floor") {
       n.set(0, 1, 0);
-      this.splats.add(to, n, colour, size, spin);
-      this.puffs.burst({ at: to, count: 4, colour: FIELD_COLOURS.turf, speed: [0.8, 2], dir: n, push: 1.5, spread: 0.5, life: [0.3, 0.5], size: [0.04, 0.07] }, this.rand);
+      this.splats.add(to, n, l.colour, size, pick, spin, now);
+      this.pop(to, n, l.colour, l.pellet ? 4 : 8);
+      this.puffs.burst({ at: to, count: 3, colour: FIELD_COLOURS.turf, speed: [0.8, 2], dir: n, push: 1.5, spread: 0.5, life: [0.3, 0.5], size: [0.04, 0.07] }, this.rand);
     } else if (t.hit.type === "fighter") {
-      this.puffs.burst({ at: to, count: t.hit.head ? 14 : 8, colour, speed: [1, 3.2], life: [0.3, 0.6], size: [0.06, 0.12], gravity: 7 }, this.rand);
-      this.glow.burst({ at: to, count: t.hit.head ? 6 : 3, colour: "#ffffff", speed: [0.5, 1.5], life: [0.1, 0.2], size: [0.08, 0.14], gravity: 0 }, this.rand);
+      const meshes = this.views.get(t.hit.id)?.model.meshes;
+      if (meshes) this.bodies.add(t.hit.id, meshes, l.from, to, l.colour, (l.pellet ? 0.07 : 0.11) * (0.85 + 0.3 * spin), pick, spin);
+      this.pop(to, n.copy(l.from).sub(to).normalize(), l.colour, t.hit.head ? 16 : 10);
     }
+  }
+
+  /** The ball bursting: a spray of paint flung back off the surface. */
+  private pop(at: THREE.Vector3, normal: THREE.Vector3, colour: string, count: number): void {
+    this.puffs.burst({ at, count, colour, speed: [1, 3.4], dir: normal, push: 1.4, spread: 0.65, life: [0.25, 0.55], size: [0.03, 0.08], gravity: 8 }, this.rand);
   }
 
   /** A fighter going down throws up a big burst of the winner's paint. */
@@ -100,34 +119,40 @@ export class Effects {
     this.puffs.burst({ at: to, count: 30, colour: TEAMS[k.team].color, speed: [1.5, 4], life: [0.5, 1], size: [0.07, 0.15], gravity: 8 }, this.rand);
   }
 
-  /** Point sizes and tracer widths follow the view they are drawn in. */
+  /** Point sizes and ball sizes follow the view they are drawn in. */
   setView(camera: THREE.PerspectiveCamera, heightPx: number): void {
     this.puffs.setView(heightPx, camera.fov);
-    this.glow.setView(heightPx, camera.fov);
-    this.tracers.setView(camera.position, camera.fov, heightPx);
+    this.balls.setView(camera.position, camera.fov, heightPx);
   }
 
   update(now: number, dt: number): void {
+    this.bodies.frame();
+    if (this.landings.length > 0) {
+      const due = this.landings.filter((l) => l.at <= now);
+      this.landings = this.landings.filter((l) => l.at > now);
+      for (const l of due) this.land(l, now);
+    }
     this.flashes.update(now);
-    this.tracers.update(now);
+    this.balls.update(now);
+    this.splats.update(now);
     this.puffs.update(dt);
-    this.glow.update(dt);
   }
 
   /** A fresh field for a new round. */
   clear(): void {
+    this.landings = [];
     this.splats.clear();
-    this.tracers.clear();
+    this.bodies.clear();
+    this.balls.clear();
     this.puffs.clear();
-    this.glow.clear();
     this.flashes.clear();
   }
 
   dispose(): void {
     this.flashes.dispose();
-    this.tracers.dispose();
+    this.balls.dispose();
+    this.bodies.dispose();
     this.splats.dispose();
     this.puffs.dispose();
-    this.glow.dispose();
   }
 }

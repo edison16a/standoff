@@ -1,0 +1,89 @@
+/* The hit moment's timing, beside its layout in moment.css. */
+
+@keyframes moment-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes moment-bar-top {
+  from {
+    transform: translateY(-100%);
+  }
+}
+
+@keyframes moment-bar-bottom {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes moment-slam {
+  from {
+    opacity: 0;
+    transform: scale(1.5);
+    filter: blur(8px);
+  }
+}
+
+@keyframes moment-drift {
+  to {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes moment-from {
+  from {
+    opacity: 0;
+    transform: translateX(-80px);
+  }
+}
+
+@keyframes moment-streak {
+  to {
+    transform: translateY(-50%) rotate(-8deg) scaleX(1);
+  }
+}
+
+/* The one who was slashed takes the hit: a white flash and a shake. */
+@keyframes moment-to {
+  0% {
+    filter: brightness(3);
+    transform: translateX(14px) scale(1.08);
+  }
+  25% {
+    transform: translateX(-10px);
+  }
+  50% {
+    transform: translateX(6px);
+    filter: brightness(1.2);
+  }
+  75% {
+    transform: translateX(-3px);
+  }
+}
+
+@keyframes moment-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .moment,
+  .moment::before,
+  .moment::after,
+  .moment__strip,
+  .moment__who--from,
+  .moment__who--to,
+  .moment__verb,
+  .moment__score {
+    animation: none;
+  }
+
+  .moment__streak {
+    animation: none;
+    transform: translateY(-50%) rotate(-8deg);
+  }
+}

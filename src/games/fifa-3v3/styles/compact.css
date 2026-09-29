@@ -1,0 +1,75 @@
+/*
+  Short screens, like a 720p laptop: the lobby and the full time card
+  tighten up so Kick off, Play again and every line of stats stay in view
+  without scrolling.
+*/
+
+@media (max-height: 820px) {
+  .fifa-lobby {
+    gap: 12px;
+    padding-top: 56px;
+    padding-bottom: 16px;
+  }
+
+  .fifa-lobby__logo {
+    font-size: clamp(40px, 5vw, 64px);
+  }
+
+  .fifa-lobby__title p {
+    display: none;
+  }
+
+  .fifa-team__head {
+    padding: 10px 16px 4px;
+  }
+
+  .fifa-team__list {
+    gap: 6px;
+    padding: 6px 12px 12px;
+  }
+
+  .fifa-card {
+    padding: 8px 12px;
+  }
+
+  .fifa-lobby__note {
+    font-size: 16px;
+  }
+
+  .fifa-start {
+    padding: 12px 40px;
+    font-size: 24px;
+  }
+
+  .fifa-results {
+    padding-top: 72px;
+    padding-bottom: 16px;
+  }
+
+  .fifa-results__card {
+    gap: 6px;
+    padding: 18px 22px;
+  }
+
+  .fifa-results__title {
+    font-size: 44px;
+  }
+
+  .fifa-results__score {
+    font-size: 28px;
+  }
+
+  .fifa-results__table td {
+    padding: 4px 8px;
+  }
+}
+
+/* Seven columns: the card widens a little and the names stay on one line. */
+.fifa-results__card {
+  width: min(620px, 100%);
+}
+
+.fifa-results__table th,
+.fifa-results__name {
+  white-space: nowrap;
+}

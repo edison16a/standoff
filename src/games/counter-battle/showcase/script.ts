@@ -37,8 +37,8 @@ export function showcaseBattle(seed: number): Battle {
  */
 export const PREROLL = 2.95;
 
-/** Battle time of the loop's first filmed frame: round five, as the pink side pushes up. */
-export const FILM_START = 78;
+/** Battle time of the loop's first filmed frame: round four, as Nova looks out down the long lane. */
+export const FILM_START = 82.5;
 
 /** How long the tool films: an eight second clip and one more second to blend over its start. */
 export const FILMED = 9;
@@ -53,16 +53,15 @@ export interface Cut {
 }
 
 /**
- * The loop's cuts, one gun's kill each. Blaze runs at Vex and drops him
- * with the shotgun. Kite waits behind the wall at the back, steps out
- * and snipes Blaze. Nova answers with a burst, ducks, peeks again and
- * walks the rifle onto Kite. Each fighter is cut to once, so every
- * shoulder camera starts fresh in place instead of swinging round.
+ * The loop's cuts, one kill each. Nova rises from behind his bunker and
+ * paints Kite's mask from the far end of the field. Then Blaze runs the
+ * flank at Vex, who is busy spraying, and splats him with the shotgun at
+ * a few paces. Each fighter is cut to once, so every shoulder camera
+ * starts fresh in place instead of swinging round.
  */
 export const CUTS: readonly Cut[] = [
-  { from: 0, fighter: 1 },
-  { from: 81, fighter: 3 },
-  { from: 82.2, fighter: 0 },
+  { from: 0, fighter: 0 },
+  { from: 86, fighter: 1 },
 ];
 
 /** Whose shoulder the loop looks over at a battle time. */
@@ -73,15 +72,17 @@ export function heroAt(time: number): number {
 }
 
 /** The poster and the icon are single frames, run this far ahead without drawing and then held. */
-export const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 79.42, icon: 79.42 };
+export const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 89.42, icon: 89.42 };
 
 /**
- * The stills' television shots, world metres, side on to the fight:
- * Blaze's shotgun going off into Vex a few paces away, paint bursting on
- * Vex's vest, with the stands behind. The square icon stands further
- * back to hold both, and looks lower so they stand above the logo.
+ * The stills' television shots, world metres, low on the far side of the
+ * fight: Blaze on the right, his shotgun going off into Vex four paces
+ * away on the left, paint bursting on Vex's mask. The big round bunker
+ * stands behind them, not in front where it hid Vex. The square icon
+ * stands further back to hold both, and looks lower so they stand above
+ * the logo.
  */
 export const STILL_CAMERA: Partial<Record<ShowcaseView, { from: THREE.Vector3; at: THREE.Vector3 }>> = {
-  poster: { from: new THREE.Vector3(-6.8, 1.5, 1.0), at: new THREE.Vector3(-2.2, 1.1, 1.4) },
-  icon: { from: new THREE.Vector3(-8.2, 1.35, 1.3), at: new THREE.Vector3(-2.2, 0.75, 1.35) },
+  poster: { from: new THREE.Vector3(-2.2, 1.6, -18.9), at: new THREE.Vector3(-0.9, 1.1, -14.1) },
+  icon: { from: new THREE.Vector3(-2.6, 1.45, -21.6), at: new THREE.Vector3(-0.9, 0.75, -14.1) },
 };

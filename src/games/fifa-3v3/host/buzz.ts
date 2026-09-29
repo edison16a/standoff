@@ -29,6 +29,10 @@ export function buzzFor(event: MatchEvent, state: MatchState): [number, BuzzKind
       return humans.map((a) => [a.seat!, a.team === event.team ? "goal" : "conceded"]);
     case "whistle":
       return humans.map((a) => [a.seat!, "whistle"]);
+    case "foul":
+      return humans.map((a) => [a.seat!, a.id === event.victim || a.id === event.by ? "tackled" : "foul"]);
+    case "steal":
+      return event.won ? [...one(event.athlete, "tackle"), ...one(event.victim, "tackled")] : [];
     case "fulltime":
       return humans.map((a) => [a.seat!, a.team === event.winner ? "win" : "lose"]);
     default:

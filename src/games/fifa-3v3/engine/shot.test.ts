@@ -43,12 +43,15 @@ describe("the shot odds", () => {
     expect(sum).toBeCloseTo(1, 6);
   });
 
-  it("send about one shot in twenty off the woodwork and one in twenty over", () => {
+  it("send about one shot in twenty off the woodwork, and hardly any over below the red zone", () => {
     const odds = shotOdds(typical);
     expect(odds.post + odds.bar).toBeGreaterThan(0.035);
     expect(odds.post + odds.bar).toBeLessThan(0.07);
-    expect(odds.over).toBeGreaterThan(0.03);
-    expect(odds.over).toBeLessThan(0.09);
+    expect(odds.over).toBeGreaterThan(0);
+    expect(odds.over).toBeLessThan(0.03);
+    // Full yellow, just short of red, still keeps it under the bar.
+    expect(shotOdds({ ...typical, power: 0.79, spread: shotSpread(0.79) }).over).toBeLessThan(0.03);
+    expect(shotOdds({ ...typical, power: 1, spread: shotSpread(1) }).over).toBeGreaterThan(0.2);
   });
 
   it("make close shots better than long ones, and pressure hurts", () => {

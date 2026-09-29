@@ -1,6 +1,7 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 import { noise } from "@/platform/audio/voices";
-import { bass, clap, hat, kick, lead, pad, pluck, snare } from "./instruments";
+import { kickFor } from "./colours";
+import { bass, clap, hat, lead, pad, pluck, snare } from "./instruments";
 import { keys, rim, shaker, wash } from "./soft";
 import { sectionAt, type Part, type Song } from "./song";
 
@@ -20,7 +21,7 @@ function drums(engine: AudioEngine, mix: Outputs, song: Song, parts: ReadonlySet
   // Half time keeps a kick on one and a big snare on three, which lets the UFO float.
   const kickHere = half ? inBar === 0 || inBar === 10 : hits(d.kick, inBar);
   if ((parts.has("kick") || half) && kickHere) {
-    kick(engine, mix.dry, at, song.padVoice === "wash" ? 0.5 : 0.8);
+    kickFor(engine, mix.dry, at, song.kit, song.padVoice === "wash" ? 0.5 : 0.8);
     // The levels' pads pump under the kick like a dance record; the menu's wash just flows.
     if (song.padVoice === "saw") mix.duckAt(at, spb);
   }

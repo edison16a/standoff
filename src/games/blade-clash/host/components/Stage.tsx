@@ -1,10 +1,12 @@
 "use client";
 import { useBladeStore } from "../host-store";
 import { CalibrationTargets } from "./CalibrationTargets";
+import { ComputerLevel } from "./ComputerLevel";
 import { DuelCanvas } from "./DuelCanvas";
 import { HudBar } from "./HudBar";
 import { MatchOver } from "./MatchOver";
 import { PhaseBanner } from "./PhaseBanner";
+import { PointMoment } from "./PointMoment";
 import { TuningDrawer } from "./TuningDrawer";
 
 /**
@@ -23,6 +25,8 @@ export function Stage() {
       <HudBar />
       <CalibrationTargets />
       <PhaseBanner />
+      <PointMoment />
+      <ComputerLevel />
       <MatchOver />
       {tuningOpen && <TuningDrawer onClose={() => useBladeStore.setState({ tuningOpen: false })} />}
     </div>

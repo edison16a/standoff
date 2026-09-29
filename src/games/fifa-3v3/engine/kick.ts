@@ -5,7 +5,9 @@ import { needsAir, type KickPlan } from "./assist";
 import { leadFor, loftVelocity, passVelocity } from "./passing";
 import { shotSpread } from "./charge";
 import { aimPoint, solveKick } from "./shot-aim";
-import { pickOutcome, shotOdds, type ShotContext } from "./shot-odds";
+import { planBlock, throwBodyIn } from "./shot-block";
+import { pickOutcome, shotOdds, shotQuality, type ShotContext } from "./shot-odds";
+import { autoAimZ, autoCurl } from "./shot-plan";
 import { ASSIST, PASS, PITCH, SHOOT, TOUCH } from "./tuning";
 import type { Athlete, MatchState, ShotOutcome } from "./types";
 import { clamp, clamp01, dist, dot, fromAngle, len, norm, sub, type Vec2 } from "./vec";
@@ -89,6 +91,8 @@ function strike(state: MatchState, a: Athlete): void {
   const keeper = state.keepers[defending];
   let pressure = 0;
   for (const o of state.athletes) if (o.team !== a.team) pressure = Math.max(pressure, clamp01((2.4 - dist(o.pos, a.pos)) / 1.8));
+  // Left to the game, the shot picks its own corner from where the shooter and the keeper stand.
+  const aimZ = a.aimZ ?? autoAimZ(ball.pos, keeper.pos);
   const context: ShotContext = {
     distance: toGoal(ball.pos, defending),
     angle: shotAngle(ball.pos, defending),
@@ -100,16 +104,21 @@ function strike(state: MatchState, a: Athlete): void {
     // Round the keeper, or the keeper is down or busy: nobody can save it. A keeper
     // right on the ball can still smother or block it.
     beaten: (rounded(ball.pos, keeper.pos, defending) && dist(ball.pos, keeper.pos) > 1.3) || keeper.action !== "set",
-    placement: placement(a.aimZ, keeper.pos.z),
+    placement: placement(aimZ, keeper.pos.z),
   };
-  let outcome: ShotOutcome = state.options.rig?.(state.shotCount, a.team) ?? pickOutcome(shotOdds(context), state.rng.next());
+  const rigged = state.options.rig?.(state.shotCount, a.team) ?? null;
+  let outcome: ShotOutcome = rigged ?? pickOutcome(shotOdds(context), state.rng.next());
   // A save needs a keeper between the ball and the goal.
   if (context.beaten && (outcome === "catch" || outcome === "parry")) outcome = "goal";
-  const target = aimPoint(outcome, defending, keeper, state.rng, a.aimZ, context.spread);
+  const target = aimPoint(outcome, defending, keeper, state.rng, aimZ, context.spread, a.power);
   // The bar sets the pace; a long range effort needs a little extra to get there.
   const speed = clamp(SHOOT.minSpeed + (SHOOT.maxSpeed - SHOOT.minSpeed) * a.power ** 0.85 + context.distance * 0.12, SHOOT.minSpeed, SHOOT.maxSpeed);
-  const curl = state.rng.range(-1, 1) * (3 + 8 * a.shooting);
-  const kick = solveKick({ ...ball.pos }, target, speed, curl);
+  // Curl comes from the angle; a touch of random swerve keeps no two strikes the same.
+  const curl = autoCurl(ball.pos, target.z, defending, a.shooting) + state.rng.range(-1, 1) * 1.2;
+  // A hard chance through a crowd can be charged down before it gets near the keeper.
+  const block = rigged ? null : planBlock(state, a, { ...ball.pos }, target, shotQuality(context), speed);
+  if (block) throwBodyIn(state, block);
+  const kick = solveKick({ ...ball.pos }, block ? block.at : target, speed, curl);
   ball.owner = null;
   ball.vel = kick.vel;
   ball.spin = kick.spin;
@@ -118,7 +127,7 @@ function strike(state: MatchState, a: Athlete): void {
   a.noTouch = TOUCH.afterKick;
   a.stats.shots++;
   state.shotCount++;
-  state.flight = { shooter: a.id, team: a.team, outcome, t: 0, target, keeperX: keeper.pos.x, power: a.power, resolved: false };
+  state.flight = { shooter: a.id, team: a.team, outcome, t: 0, target, keeperX: keeper.pos.x, power: a.power, resolved: false, blocker: block?.id ?? null };
   planDive(state, keeper);
   state.events.push({ type: "shot", athlete: a.id, team: a.team, outcome, power: a.power, distance: context.distance });
 }

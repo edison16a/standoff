@@ -1,0 +1,115 @@
+/*
+  The controller's extra buttons and help: Steal, Jump and Guard in a
+  two by two block, Guard's range while defending, and the stages of a
+  set piece for the taker.
+*/
+
+.fifa-pad__buttons--four {
+  grid-template-columns: auto auto;
+  grid-template-rows: auto auto;
+  align-content: center;
+  justify-content: end;
+  gap: 6px 10px;
+}
+
+.fifa-pad__buttons--one {
+  grid-template-rows: 1fr;
+}
+
+.fifa-pad__small .kit-pad-btn--md {
+  width: min(19vmin, 80px);
+  height: min(19vmin, 80px);
+}
+
+.fifa-pad__small .fifa-face svg {
+  width: 22px;
+  height: 22px;
+}
+
+.fifa-guard {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 1px 8px;
+  align-items: baseline;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: var(--bg-muted);
+  font-size: 13px;
+  font-weight: 800;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.fifa-guard strong {
+  font-size: 15px;
+}
+
+.fifa-guard__label,
+.fifa-guard__dist {
+  color: var(--text-muted);
+}
+
+.fifa-guard__state {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.fifa-guard--ready {
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+.fifa-guard--on {
+  background: #22c55e;
+  color: #06220f;
+}
+
+.fifa-guard--ready .fifa-guard__label,
+.fifa-guard--ready .fifa-guard__dist,
+.fifa-guard--on .fifa-guard__label,
+.fifa-guard--on .fifa-guard__dist {
+  color: inherit;
+  opacity: 0.8;
+}
+
+.fifa-coach {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  max-width: 230px;
+}
+
+.fifa-coach__title {
+  font-size: 16px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.fifa-coach__steps {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fifa-coach__step {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.fifa-coach__step--on {
+  background: var(--team);
+  color: #ffffff;
+}
+
+.fifa-coach__tip {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+}

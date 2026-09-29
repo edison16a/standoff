@@ -123,13 +123,14 @@ function scoreSpot(spot: Spot, cost: number, input: PlanInput, want: number, eye
   score += style.safety * (hidden / enemies.length) * (1 - 0.5 * pressure);
   score += style.flank * (flanked / enemies.length);
   if (enemies.some((e) => canPeek(spot, e.pos, pieces))) score += 1.1;
-  score -= Number.isFinite(cost) ? cost / 14 : 3;
+  // Runs cost more than they used to: a fighter settles in and fights from cover rather than roaming.
+  score -= Number.isFinite(cost) ? cost / 9 : 3;
   for (const a of input.claimed) {
     const d = dist(spot.pos, a);
     if (d < SPREAD) score -= ((SPREAD - d) / SPREAD) * 1.7;
   }
   if (input.others.some((o) => dist(spot.pos, o) < 1.3)) score -= 4;
-  if (spot.id === f.brain.spot) score += 0.7 - style.restless * f.brain.held;
+  if (spot.id === f.brain.spot) score += 1.6 - style.restless * f.brain.held;
   else if (dist(spot.pos, input.graph.spots[f.brain.spot]!.pos) < 2.5) score -= 0.5;
   // Closing in: as pressure builds, nearer spots win outright.
   score -= (pressure * near) / 12;

@@ -2,6 +2,7 @@ import { isHuman } from "./athlete";
 import { planPass, shotAimZ } from "./assist";
 import { autoShootAt, chargeLevel, isTap } from "./charge";
 import { botPass, owns, startKick, startShot } from "./kick";
+import { startJump, startSteal } from "./defend";
 import { startSkill } from "./skills";
 import { startSlide } from "./tackle";
 import { SHOOT } from "./tuning";
@@ -43,6 +44,9 @@ export function applyButtons(state: MatchState, a: Athlete, c: Command, dt: numb
     if (has) startSkill(state, a, c.move);
     else startSlide(state, a, c.move);
   }
+  // Steal and Jump are defensive moves: with the ball at the feet they do nothing.
+  if (c.steal && !has) startSteal(state, a);
+  if (c.jump && !has) startJump(state, a);
   a.buffered = Math.max(0, a.buffered - dt);
 }
 

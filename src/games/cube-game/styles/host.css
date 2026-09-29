@@ -7,7 +7,7 @@
 
 .cg-stage {
   --cg-ink: #12052e;
-  --cg-glow: #3ee6ff;
+  --cg-glow: #5fc6dc;
   --cg-gold: #ffd21f;
   --cg-type: 900 1em/1 "Arial Black", "Helvetica Neue", Arial, var(--font-ui);
   position: fixed;
@@ -52,14 +52,14 @@
   font-size: 22px;
   color: var(--cg-ink);
   background: linear-gradient(180deg, #fff9b0, var(--cg-gold) 55%, #ff9a1f);
-  box-shadow: 0 6px 0 var(--cg-ink), 0 0 24px rgba(255, 210, 31, 0.35);
+  box-shadow: 0 6px 0 var(--cg-ink), 0 0 12px rgba(255, 210, 31, 0.2);
   cursor: pointer;
   transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 
 .cg-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 0 var(--cg-ink), 0 0 32px rgba(255, 210, 31, 0.55);
+  box-shadow: 0 8px 0 var(--cg-ink), 0 0 16px rgba(255, 210, 31, 0.3);
 }
 
 .cg-button:active {
@@ -85,7 +85,7 @@
 }
 
 .cg-button--quiet:hover {
-  box-shadow: 0 6px 0 var(--cg-ink), 0 0 20px rgba(62, 230, 255, 0.35);
+  box-shadow: 0 6px 0 var(--cg-ink), 0 0 10px rgba(95, 198, 220, 0.2);
 }
 
 .cg-center {
@@ -157,7 +157,7 @@
 }
 
 .cg-jumpcheck__player--ok {
-  box-shadow: 0 0 30px rgba(61, 255, 110, 0.5);
+  box-shadow: 0 0 16px rgba(61, 255, 110, 0.25);
 }
 
 .cg-jumpcheck__cube {

@@ -17,6 +17,8 @@ function headline(game: ControllerState, slot: Slot): string {
       return game.countdown ? String(game.countdown) : "Fight";
     case "live":
       return "Fight";
+    case "point":
+      return game.scorer === slot ? "Point to you" : "Point to them";
     case "finish":
       return game.winner === slot ? "Finished them" : "Down";
     case "paused":
@@ -28,12 +30,12 @@ function headline(game: ControllerState, slot: Slot): string {
   }
 }
 
-/** Health as a row of pips, full ones in the player's colour. */
-function Health({ left, max, colour, label }: { left: number; max: number; colour: string; label: string }) {
+/** Points as a row of pips toward the win, scored ones in the player's colour. */
+function Points({ scored, max, colour, label }: { scored: number; max: number; colour: string; label: string }) {
   return (
-    <span className="health" aria-label={`${label}: ${left} of ${max}`} style={{ ["--pip" as string]: colour }}>
+    <span className="health" aria-label={`${label}: ${scored} of ${max}`} style={{ ["--pip" as string]: colour }}>
       {Array.from({ length: max }, (_, i) => (
-        <span key={i} className={`health__pip ${i < left ? "health__pip--full" : ""}`} />
+        <span key={i} className={`health__pip ${i < scored ? "health__pip--full" : ""}`} />
       ))}
     </span>
   );
@@ -42,7 +44,7 @@ function Health({ left, max, colour, label }: { left: number; max: number; colou
 /**
  * The phone during a fight. Eyes are on the computer, so this is a live
  * picture of the sword (a drag pad on phones without sensors) and two
- * big buttons for footwork, with both health bars along the top. After
+ * big buttons for footwork, with both scores along the top. After
  * the fight it offers a rematch or the menu.
  */
 export function MatchPad({ slot, game }: { slot: Slot; game: ControllerState }) {
@@ -55,9 +57,9 @@ export function MatchPad({ slot, game }: { slot: Slot; game: ControllerState }) 
   return (
     <div className={`pad pad--${inputMode}`}>
       <header className="pad__top">
-        <Health left={game.health[me] ?? 0} max={game.maxHealth} colour={colour} label="Your health" />
+        <Points scored={game.score[me] ?? 0} max={game.pointsToWin} colour={colour} label="Your points" />
         <strong className="pad__title">{headline(game, slot)}</strong>
-        <Health left={game.health[them] ?? 0} max={game.maxHealth} colour={playerColor(them + 1)} label="Their health" />
+        <Points scored={game.score[them] ?? 0} max={game.pointsToWin} colour={playerColor(them + 1)} label="Their points" />
       </header>
 
       {game.phase === "matchOver" ? (

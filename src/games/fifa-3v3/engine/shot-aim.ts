@@ -2,6 +2,7 @@ import type { TeamId } from "../teams";
 import { cloneBall, newBall, stepBall } from "./ball";
 import { goalX } from "./goal";
 import type { Rng } from "./rng";
+import { shotHeight } from "./shot-plan";
 import { BALL, PITCH, STEP } from "./tuning";
 import type { Keeper, ShotOutcome } from "./types";
 import { clamp, type Vec3 } from "./vec";
@@ -18,20 +19,15 @@ const INSIDE = GW - PITCH.postRadius - R - 0.06;
  * the keeper's line), and the woodwork is hit just off centre so the
  * ball bounces away from goal rather than in.
  */
-export function aimPoint(outcome: ShotOutcome, defending: TeamId, keeper: Keeper, rng: Rng, aimZ: number | null = null, spread = 0.2): Vec3 {
+export function aimPoint(outcome: ShotOutcome, defending: TeamId, keeper: Keeper, rng: Rng, aimZ: number | null = null, spread = 0.2, power = 0.5): Vec3 {
   const x = goalX(defending);
   const kz = keeper.pos.z;
   // A player who pointed at one side gets that side; otherwise the side the keeper left open.
   const pointed = aimZ !== null && Math.abs(aimZ) > 0.5 ? (Math.sign(aimZ) as 1 | -1) : null;
   const away = pointed ?? (Math.abs(kz) < 0.25 ? rng.sign() : kz > 0 ? -1 : 1);
   const side = pointed ?? rng.sign();
-  const height = () => {
-    // Power lifts the ball: a red bar rarely keeps it low.
-    const roll = rng.next() * (1 - 0.4 * spread) + 0.4 * spread;
-    if (roll < 0.5) return rng.range(0.25, 0.6);
-    if (roll < 0.78) return rng.range(0.6, 1.3);
-    return rng.range(1.3, GH - R - 0.14);
-  };
+  // The bar sets the height: low and placed, driven, or into the top corner.
+  const height = () => Math.min(GH - R - 0.14, shotHeight(power, rng.next()));
   switch (outcome) {
     case "goal": {
       const inner = pointed !== null ? Math.min(INSIDE - 0.1, Math.max(0.9, Math.abs(aimZ!) - 0.4)) : Math.min(INSIDE - 0.1, Math.abs(kz) + 1.2);

@@ -4,7 +4,7 @@ import type { ShowcaseView } from "@/platform/games/game-api";
 import { ShowcaseDirector } from "./director";
 
 /**
- * Counter Battle playing itself for the home screen's media: the loop
+ * Paintball Battle playing itself for the home screen's media: the loop
  * cuts over the shoulders of a seeded 2v2 of computer players as each
  * takes a kill, the poster holds a shotgun blast at close range, and the
  * icon is the same moment closer, under the logo. Driven by
@@ -46,7 +46,7 @@ export function Showcase({ view }: { view: ShowcaseView }) {
       <div ref={boxRef} className="cb-showcase__box" />
       {view === "icon" && (
         <div className="cb-showcase__logo" aria-hidden="true">
-          <span>Counter</span>
+          <span>Paintball</span>
           <b>Battle</b>
         </div>
       )}

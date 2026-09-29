@@ -5,8 +5,8 @@ import poster from "./media/poster.jpg";
 
 export const info: GameInfo = {
   id: "counter-battle",
-  title: "Counter Battle",
-  tagline: "Your phone is the gun. Your fighter runs the bunkers. First team to five rounds wins.",
+  title: "Paintball Battle",
+  tagline: "Your phone is the paint marker. Duck behind the bunkers, rise and splat the other team. First to five rounds wins.",
   status: "ready",
   players: [1, 2, 3, 4],
   color: "#b8f400",

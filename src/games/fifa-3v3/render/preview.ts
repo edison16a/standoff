@@ -105,9 +105,12 @@ export class StarPreview {
       const cycle = t % 6;
       const celebrating = cycle > 3.2;
       const angle = this.turntable.rotation.y;
-      const front = Math.round(angle / (Math.PI * 2)) * Math.PI * 2;
+      const kind = ROSTER[this.character].celebration;
+      // The SUI turns half way round in the air, so it starts with the back to the phone and lands facing it.
+      const want = kind === "sui" ? Math.PI : 0;
+      const front = want + Math.round((angle - want) / (Math.PI * 2)) * Math.PI * 2;
       this.turntable.rotation.y = celebrating ? angle + (front - angle) * (1 - Math.exp(-dt * 6)) : angle + dt * 0.8;
-      const target = celebrating ? celebration(ROSTER[this.character].celebration, cycle - 3.2) : idle(now / 1000, 0);
+      const target = celebrating ? celebration(kind, cycle - 3.2) : idle(now / 1000, 0);
       ease(this.pose, target, 1 - Math.exp(-dt * 12));
       applyPose(this.rig, this.pose);
       this.renderer.render(this.scene, this.camera);

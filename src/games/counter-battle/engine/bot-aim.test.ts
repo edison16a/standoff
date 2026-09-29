@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { Piece } from "./arena";
 import { BotAim, SKILLS } from "./bot-aim";
-import type { Difficulty, Fighter } from "./fighter";
+import type { BotLevel } from "@/games/kit/difficulty/difficulty";
+import type { Fighter } from "./fighter";
 import type { GunId } from "./guns";
 import { Rng } from "./rng";
 import { coneOf, resolveShot } from "./shooting";
@@ -10,7 +11,7 @@ import { fighterAt } from "./test-helpers";
 const DT = 1 / 60;
 
 /** A bot shooting at a fighter standing still, for `seconds`. Returns shots, hits and the first shot time. */
-function duel(level: Difficulty, gun: GunId, distance: number, seconds: number, pieces: Piece[] = [], seed = 5) {
+function duel(level: BotLevel, gun: GunId, distance: number, seconds: number, pieces: Piece[] = [], seed = 5) {
   const bot = fighterAt(0, 0, 0, 0, gun, level);
   const target: Fighter = fighterAt(1, 1, 2, distance);
   target.health = 1e6;
@@ -43,7 +44,7 @@ describe("computer players", () => {
   });
 
   it("hit more often the harder they are", () => {
-    const rate = (level: Difficulty) => {
+    const rate = (level: BotLevel) => {
       let shots = 0;
       let hits = 0;
       for (const seed of [1, 2, 3]) {
@@ -61,7 +62,7 @@ describe("computer players", () => {
   });
 
   it("fire automatic guns in bursts, not one endless spray", () => {
-    const { shots } = duel("normal", "smg", 12, 4);
+    const { shots } = duel("medium", "smg", 12, 4);
     expect(shots).toBeGreaterThan(10);
     expect(shots).toBeLessThan(4 * 13 * 0.8);
   });
@@ -76,10 +77,14 @@ describe("computer players", () => {
     expect(duel("hard", "shotgun", 8, 3).shots).toBeGreaterThan(0);
   });
 
+  it("stand still and never shoot in training", () => {
+    expect(duel("training", "rifle", 10, 3).shots).toBe(0);
+  });
+
   it("reload between fights when the magazine runs low", () => {
     const bot = fighterAt(0, 0, 0, 0, "rifle");
     bot.gun.ammo = 5;
     const intent = new BotAim().update(bot, [], [], new Rng(1), 0, DT);
-    expect(intent).toEqual({ pull: false, reload: true, engaged: false });
+    expect(intent).toEqual({ pull: false, reload: true, engaged: false, duck: false });
   });
 });

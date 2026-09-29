@@ -1,0 +1,46 @@
+/* A stoppage on the score bug: the foul, the yellow card and the set piece, in a strip under the clock. */
+
+.fifa-bug__moment {
+  grid-column: 1 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 5px 14px 6px;
+  border-top: 3px solid var(--moment, #facc15);
+  background: rgba(8, 10, 24, 0.88);
+  color: #ffffff;
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  animation: fifa-moment-in 220ms ease-out;
+}
+
+.fifa-bug__moment span {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 14px;
+}
+
+.fifa-bug__card {
+  width: 14px;
+  height: 19px;
+  border-radius: 2px;
+  background: #ffd400;
+  box-shadow: 0 0 8px rgba(255, 212, 0, 0.7);
+  transform: rotate(8deg);
+  animation: fifa-card-up 260ms ease-out;
+}
+
+@keyframes fifa-moment-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes fifa-card-up {
+  from {
+    transform: translateY(8px) rotate(0);
+    opacity: 0;
+  }
+}

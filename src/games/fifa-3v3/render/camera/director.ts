@@ -1,10 +1,11 @@
 import * as THREE from "three";
 import { PITCH } from "../../engine/tuning";
 import type { MatchView } from "../../engine/view";
-import { attackSign } from "../../teams";
+import { replayCam } from "./replay-cam";
+import { stoppage } from "./stoppage";
 
 /** Which camera is cutting to: the broadcast view, a close up, a replay angle, or the lobby's slow orbit. */
-export type Shot = "tv" | "closeup" | "replay-end" | "replay-side" | "winners" | "lobby" | "fixed";
+export type Shot = "tv" | "closeup" | "replay-kicker" | "replay-keeper" | "winners" | "lobby" | "fixed" | "foul" | "card" | "setpiece" | "setpiece-follow";
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
@@ -70,20 +71,13 @@ export class CameraDirector {
         rate = 2.4;
         break;
       }
-      case "replay-end": {
-        const s = view.scorer !== null ? attackSign(view.athletes[view.scorer]?.team ?? 0) : Math.sign(b.x) || 1;
-        // Inside the catch net behind the goal, so its mesh never crosses the picture.
-        this.wantPos.set(s * (PITCH.halfLength + PITCH.catchNet - 0.6), 4.6, b.z * 0.4 + 3);
-        this.wantLook.set(b.x, 0.8, b.z);
-        fov = 36;
-        rate = 5;
-        break;
-      }
-      case "replay-side": {
-        this.wantPos.set(b.x - 3, 1.3, PITCH.halfWidth + 3.5);
-        this.wantLook.set(b.x, 0.9, b.z);
-        fov = 34;
-        rate = 4;
+      case "replay-kicker":
+      case "replay-keeper": {
+        const placed = replayCam(shot, view, focus, this.wantPos, this.wantLook);
+        if (placed) {
+          fov = placed.fov;
+          rate = placed.rate;
+        }
         break;
       }
       case "winners": {
@@ -103,6 +97,17 @@ export class CameraDirector {
         fov = this.fixed.fov;
         rate = 1000;
         break;
+      case "foul":
+      case "card":
+      case "setpiece":
+      case "setpiece-follow": {
+        const placed = stoppage(shot, view, this.wantPos, this.wantLook);
+        if (placed) {
+          fov = placed.fov;
+          rate = placed.rate;
+        }
+        break;
+      }
       case "lobby": {
         const a = time * 0.045 + 0.4;
         this.wantPos.set(Math.sin(a) * PITCH.halfLength * 1.9, 15, Math.cos(a) * PITCH.halfWidth * 2.5);

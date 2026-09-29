@@ -2,6 +2,7 @@ import type { PlayerEvent } from "../engine/player";
 import { Run } from "../engine/run";
 import { DEATH_PAUSE } from "../engine/tuning";
 import type { Level } from "../engine/types";
+import { racePlaces, raceWinner } from "./race";
 
 /** How the round keeps each run in step with the music. */
 export interface SongSync {
@@ -15,7 +16,8 @@ export interface SongSync {
   restart(levelTime: number, lead: number): void;
 }
 
-export type Status = "run" | "dead" | "away" | "done";
+/** `beaten` is a racer still out on the level when the other crossed the line. */
+export type Status = "run" | "dead" | "away" | "done" | "beaten";
 
 interface Seat {
   run: Run;
@@ -26,6 +28,8 @@ interface Seat {
   restarted: boolean;
   /** Out of the camera's view. Kept apart from the status, since a player can step out while crashed. */
   away: boolean;
+  /** Song time this run crossed the finish line, for deciding a race. */
+  finishAt: number | null;
 }
 
 /** How long a player gets to settle after stepping back into view. */
@@ -34,11 +38,15 @@ const RESUME_LEAD = 1.5;
 /**
  * One go at a level for one or two players. Each has their own run of
  * the same level. With one player the song restarts with every attempt.
- * With two, the song plays on and a player who crashes comes back on the
- * next beat, so the obstacles always land on the music.
+ * Two players race: the song plays on, a player who crashes comes back
+ * on the next beat so the obstacles always land on the music, and the
+ * first over the line wins.
  */
 export class Round {
   readonly seats: Seat[];
+  /** The race winner's slot. Null while the race is on, and after a dead heat. */
+  winner: number | null = null;
+  private decided = false;
   private readonly spb: number;
 
   constructor(
@@ -48,15 +56,25 @@ export class Round {
     private readonly sync: SongSync,
   ) {
     this.spb = 60 / level.bpm;
-    this.seats = Array.from({ length: players }, () => ({ run: new Run(level, practice), status: "run" as Status, offset: 0, deadAt: 0, restarted: true, away: false }));
+    this.seats = Array.from({ length: players }, () => ({ run: new Run(level, practice), status: "run" as Status, offset: 0, deadAt: 0, restarted: true, away: false, finishAt: null }));
   }
 
   get solo(): boolean {
     return this.seats.length === 1;
   }
 
+  /** Alone, the level is beaten. In a race, someone crossed the line. */
   get over(): boolean {
-    return this.seats.every((seat) => seat.status === "done");
+    return this.solo ? this.seats.every((seat) => seat.status === "done") : this.decided;
+  }
+
+  /**
+   * Each player's place, 1 for the leader: by where they are now, or with
+   * `byBest` by the furthest they got, for a race ended before anyone finished.
+   */
+  places(byBest = false): number[] {
+    const reach = (run: Seat["run"]) => (byBest ? Math.max(run.player.x, (run.best / 100) * this.level.endX) : run.player.x);
+    return racePlaces(this.seats.map((seat) => ({ finishAt: seat.finishAt, x: reach(seat.run) })));
   }
 
   status(slot: number): Status {
@@ -100,14 +118,19 @@ export class Round {
   /** Moves every run up to now. Returns what happened, per player. */
   update(): { events: PlayerEvent[]; restarted: boolean }[] {
     const now = this.sync.songTime();
-    return this.seats.map((seat) => {
+    const updates = this.seats.map((seat) => {
       const events: PlayerEvent[] = [];
+      // Once a race is won the runs stand still, so the loser makes no more noise.
+      if (this.decided) return { events, restarted: false };
       if (seat.status === "run") {
         seat.run.advanceTo(now - seat.offset, events);
         if (seat.run.dead) {
           seat.status = "dead";
           seat.deadAt = now;
-        } else if (seat.run.finished) seat.status = "done";
+        } else if (seat.run.finished) {
+          seat.status = "done";
+          seat.finishAt = seat.offset + (seat.run.finishTime ?? seat.run.time);
+        }
       } else if (seat.status === "dead" && now - seat.deadAt >= DEATH_PAUSE) {
         const from = seat.run.respawn();
         // Someone who stepped out while crashed waits at the start instead of crashing over and over.
@@ -119,6 +142,17 @@ export class Round {
       seat.restarted = false;
       return { events, restarted };
     });
+    if (!this.solo && !this.decided) this.decide();
+    return updates;
+  }
+
+  /** Both may cross in one frame, so the winner is picked from exact crossing times after every seat moved. */
+  private decide(): void {
+    const entries = this.seats.map((seat) => ({ finishAt: seat.finishAt, x: seat.run.player.x }));
+    if (!entries.some((e) => e.finishAt !== null)) return;
+    this.decided = true;
+    this.winner = raceWinner(entries);
+    for (const seat of this.seats) if (seat.status !== "done") seat.status = "beaten";
   }
 
   /** Sets a seat to play from level time `from`, at least `lead` seconds from now, on the beat. */
