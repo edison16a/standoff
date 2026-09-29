@@ -58,6 +58,7 @@ export class Renderer {
       const y = Math.round((1 - view.rect.y - view.rect.h) * this.height);
       const camera = view.camera ?? view.scene.chase.camera;
       if (!view.camera) view.scene.chase.setAspect(w / h);
+      view.scene.warmup.flush(this.gl, view.scene.scene, camera);
       view.scene.effects.setViewHeight(h * this.gl.getPixelRatio());
       this.gl.setViewport(x, y, w, h);
       this.gl.setScissor(x, y, w, h);

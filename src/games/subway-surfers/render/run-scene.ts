@@ -11,6 +11,7 @@ import { ObstacleView } from "./world/obstacle-view";
 import { Scenery } from "./world/scenery";
 import { Sky, SUN_DIR } from "./world/sky";
 import { lightAt, newLight } from "./world/themes";
+import { Warmup } from "./world/warmup";
 
 const FOG_NEAR = 45;
 const FOG_FAR = 200;
@@ -27,6 +28,8 @@ export class RunScene {
   readonly chase = new ChaseCamera();
   readonly runner: RunnerView;
   readonly effects = new RunEffects();
+  /** Builds the yard's pieces ahead of time, while the menus are up. The renderer finishes each on the graphics card. */
+  readonly warmup = new Warmup();
   private readonly guard = new GuardView();
   private readonly scenery: Scenery;
   private readonly obstacles = new ObstacleView();
@@ -71,6 +74,7 @@ export class RunScene {
 
   /** Moves everything to where the run is now. `mood` poses a runner with no run going. */
   update(dt: number, time: number, mood: Mood = "run"): void {
+    this.warmup.step();
     const run = this.run;
     if (!run) return;
     const d = run.runner.distance;
