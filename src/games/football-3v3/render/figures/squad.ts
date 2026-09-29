@@ -78,7 +78,7 @@ export class Squad {
       have.seat.dispose();
     }
     const figure = new Figure(kitOf(a), this.material, a.id);
-    const seat = new Ring(TEAMS[a.team].trim, 0.62, 0.72);
+    const seat = new Ring(TEAMS[a.team].color, 0.62, 0.74);
     this.group.add(figure.root, seat.mesh);
     const entry = { figure, key, seat };
     this.figures.set(a.id, entry);

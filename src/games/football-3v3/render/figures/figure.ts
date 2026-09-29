@@ -80,8 +80,9 @@ export class Figure {
   /** Applies the pose, then shifts the body so it rests on the turf with the hips over the spot. */
   private stand(): void {
     const r = this.rig;
-    r.body.position.set(0, 0, 0);
     applyPose(r, this.pose);
+    // Measure the body where it stands on its own, then move it into place.
+    r.body.position.set(0, 0, 0);
     r.root.updateMatrixWorld(true);
     inverse.copy(r.root.matrixWorld).invert();
     let low = Infinity;
