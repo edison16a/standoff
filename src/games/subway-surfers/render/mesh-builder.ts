@@ -81,7 +81,8 @@ export class MeshBuilder {
     else {
       const { color: hex, finish: kind } = typeof paint === "number" ? { color: paint, finish: "satin" as Finish } : paint;
       material = finish(kind);
-      color.setHex(hex).convertSRGBToLinear();
+      // setHex already takes the sRGB hex into the linear working space. Converting again darkened every colour.
+      color.setHex(hex);
       const colors = new Float32Array(count * 3);
       for (let i = 0; i < count; i++) colors.set([color.r, color.g, color.b], i * 3);
       geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
