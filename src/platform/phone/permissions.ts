@@ -2,6 +2,15 @@
 type PermissionTarget = { requestPermission?: () => Promise<"granted" | "denied"> };
 
 /**
+ * True where motion access can only be granted inside a tap (iOS), so a
+ * reloaded controller has to ask for one before it can carry on.
+ */
+export function motionNeedsTap(): boolean {
+  if (!window.isSecureContext || typeof DeviceMotionEvent === "undefined") return false;
+  return typeof (DeviceMotionEvent as unknown as PermissionTarget).requestPermission === "function";
+}
+
+/**
  * Asks for motion access where the browser requires it, and reports
  * whether sensors can be read at all. On iOS the request has to run inside
  * a tap, which is why joining is a button. Browsers only expose the

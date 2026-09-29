@@ -16,7 +16,7 @@ describe("bots", () => {
   it("get back to the stage after being knocked off either side", () => {
     for (const character of CHARACTER_IDS) {
       for (const side of [-1, 1]) {
-        const state = bots([character, "bear"], "normal");
+        const state = bots([character, "bear"], "medium");
         const [f, other] = state.fighters;
         place(other!, 0);
         other!.brain = null;
@@ -67,7 +67,7 @@ describe("bots", () => {
   });
 
   it("walk over to a far away opponent", () => {
-    const state = bots(["samurai", "mage"], "normal");
+    const state = bots(["samurai", "mage"], "medium");
     const [f, target] = state.fighters;
     target!.brain = null;
     place(f!, -7, 1);

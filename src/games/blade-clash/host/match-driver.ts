@@ -6,10 +6,11 @@ import type { GameEvent } from "@/games/blade-clash/engine/events";
 import { SLOTS, type PerSlot, type Slot } from "@/games/blade-clash/players";
 import type { FeedbackEvent, MatchPhase, PhoneMessage } from "@/games/blade-clash/protocol";
 import type { Tuning } from "@/games/blade-clash/tuning";
+import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { MatchHud } from "./host-store";
 
-/** How long the final hit plays in slow motion, in real time. */
-const SLOW_MO_MS = 1200;
+/** How long every landed slash plays in slow motion, in real time. */
+export const SLOW_MO_MS = 1200;
 /** How fast the game runs meanwhile. */
 const SLOW_MO_RATE = 0.2;
 
@@ -20,6 +21,12 @@ export interface DriverOutputs {
   onPhase(phase: MatchPhase): void;
 }
 
+/** The computer's seat in solo play, and how hard it plays. */
+export interface ComputerSeat {
+  slot: Slot;
+  level: () => BotLevel;
+}
+
 type EventListener = (event: GameEvent) => void;
 
 /**
@@ -28,9 +35,9 @@ type EventListener = (event: GameEvent) => void;
  * phones' buzzes, which is how all three stay in step. In solo play it
  * also runs the computer's fighter.
  *
- * It also owns time. The final hit drops the game into slow motion for a
- * moment, then the `finish` cue fires, which is when the renderer throws
- * its big burst and time snaps back to normal.
+ * It also owns time. Every slash that lands drops the game into slow
+ * motion for a moment. After the winning one the `finish` cue fires as
+ * time snaps back, which is when the renderer throws its big burst.
  */
 export class MatchDriver {
   readonly engine: Engine;
@@ -39,20 +46,21 @@ export class MatchDriver {
   private gameTime = 0;
   private lastWall: number | null = null;
   private slowUntil = -Infinity;
+  /** A slash landed during the last advance, so slow motion starts from the next frame. */
+  private slashed = false;
   private pendingFinish: Slot | null = null;
 
   constructor(
     picks: PerSlot<CharacterId>,
     tuning: () => Tuning,
     private readonly out: DriverOutputs,
-    /** The seat the computer plays, if any. */
-    computer: Slot | null = null,
+    computer: ComputerSeat | null = null,
   ) {
     this.engine = new Engine(picks, tuning, {
       onEvent: (event) => this.onEvent(event),
       onPhase: (phase) => this.onPhase(phase),
     });
-    this.bot = computer ? new Bot(computer) : null;
+    this.bot = computer ? new Bot(computer.slot, { level: computer.level }) : null;
   }
 
   start(): void {
@@ -77,23 +85,22 @@ export class MatchDriver {
     this.lastWall = wallNow;
     this.gameTime += elapsed * (wallNow < this.slowUntil ? SLOW_MO_RATE : 1);
     this.engine.advance(this.gameTime);
-    if (this.pendingFinish === null) return;
-    // The final hit landed during this advance: slow down from the next frame.
-    if (this.slowUntil === -Infinity) {
+    if (this.slashed) {
+      this.slashed = false;
       this.slowUntil = wallNow + SLOW_MO_MS;
       return;
     }
-    if (wallNow < this.slowUntil) return;
+    if (this.pendingFinish === null || wallNow < this.slowUntil) return;
     this.broadcast({ type: "finish", t: this.engine.now, winner: this.pendingFinish });
     this.pendingFinish = null;
-    this.slowUntil = -Infinity;
   }
 
   hud(): MatchHud {
     const { match } = this.engine;
     return {
       phase: match.phase,
-      health: { ...match.health },
+      score: { ...match.score },
+      scorer: match.scorer,
       countdown: match.countdown(this.engine.now),
       winner: match.winner,
       rematchVotes: { ...match.rematchVotes },
@@ -110,6 +117,7 @@ export class MatchDriver {
     if (event.type === "hit") {
       this.out.feedback(event.attacker, "landed");
       this.out.feedback(event.victim, "hurt");
+      this.slashed = true;
       if (event.final) this.pendingFinish = event.attacker;
     }
     if (event.type === "clash") for (const slot of SLOTS) this.out.feedback(slot, "clash");

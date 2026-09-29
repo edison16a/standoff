@@ -1,9 +1,10 @@
 "use client";
 import { SettingsButton } from "@/platform/settings/SettingsButton";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { GitHubButton } from "@/components/ui/GitHubButton";
 import { HomeLink } from "@/components/ui/HomeLink";
-import { IconButton } from "@/components/ui/IconButton";
+import { FullscreenButton } from "@/components/ui/FullscreenButton";
+import { Loader, Spinner } from "@/components/ui/Loader";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { findGame, loadGame } from "@/games/catalog";
 import type { HostGame } from "@/platform/games/game-api";
@@ -20,7 +21,6 @@ export function RoomShell() {
   const host = useHostRoom();
   const room = useHostStore((state) => state.room);
   const status = useHostStore((state) => state.status);
-  const rootRef = useRef<HTMLDivElement>(null);
   const [game, setGame] = useState<HostGame | null>(null);
   const info = room ? findGame(room.game) : undefined;
 
@@ -47,14 +47,9 @@ export function RoomShell() {
     };
   }, [host, code, gameId]);
 
-  const toggleFullscreen = () => {
-    if (document.fullscreenElement) void document.exitFullscreen();
-    else void rootRef.current?.requestFullscreen?.();
-  };
-
   return (
-    <div ref={rootRef} className="shell">
-      {game && <game.Screen />}
+    <div className="shell">
+      {game ? <game.Screen /> : <Loader label={`Opening ${info?.title ?? "the game"}`} className="shell__loader" />}
       <div className="shell__brand">
         <HomeLink onClick={() => host.leave()} />
       </div>
@@ -62,11 +57,15 @@ export function RoomShell() {
         {game?.Tools && <game.Tools />}
         <SettingsButton />
         <ThemeToggle />
-        <IconButton icon="expand" label="Full screen" onClick={toggleFullscreen} />
+        <FullscreenButton />
         <GitHubButton compact />
       </div>
       {game && <JoinPanel title={info?.title ?? "Standoff"} Extra={game.JoinExtra} placement={game.join} />}
-      {status !== "open" && <p className="shell__notice">Reconnecting</p>}
+      {status !== "open" && (
+        <p className="shell__notice" role="status">
+          <Spinner /> Reconnecting
+        </p>
+      )}
     </div>
   );
 }

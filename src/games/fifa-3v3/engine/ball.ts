@@ -69,9 +69,7 @@ function substep(ball: Ball, h: number, contacts: Contact[], options: StepOption
     if (v.y < -0.9) {
       contacts.push({ type: "bounce", speed: -v.y });
       v.y = -v.y * BALL.bounce;
-      // The turf grabs the ball a little on each bounce.
-      v.x *= 0.9;
-      v.z *= 0.9;
+      gripTurf(ball);
     } else v.y = 0;
   }
   if (options.flightOnly) return;
@@ -80,6 +78,25 @@ function substep(ball: Ball, h: number, contacts: Contact[], options: StepOption
   sides(ball, contacts);
   ends(ball, contacts);
   net(ball, contacts);
+}
+
+/**
+ * On a bounce the turf grips the ball where it touches. The surface there
+ * moves at the ball's speed plus its spin, and friction pulls that slip
+ * toward zero: topspin kicks the ball on, backspin checks it, and either
+ * way the spin is traded toward a clean roll (a hollow ball, I = 2/3 m r²).
+ */
+function gripTurf(ball: Ball): void {
+  const v = ball.vel;
+  const w = ball.spin;
+  const slipX = v.x + w.z * R;
+  const slipZ = v.z - w.x * R;
+  const dx = -BALL.grip * slipX;
+  const dz = -BALL.grip * slipZ;
+  v.x += dx;
+  v.z += dz;
+  w.x += (-1.5 * dz) / R;
+  w.z += (1.5 * dx) / R;
 }
 
 /** The side boards, with a cage net above them, so the ball never leaves along the sides. */

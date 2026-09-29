@@ -131,58 +131,116 @@
   }
 }
 
-/* The big words. */
+.fifa-replay__slow {
+  padding-left: 10px;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  color: #fde047;
+  text-transform: uppercase;
+}
 
-.fifa-banner {
+/* The replay's numbers, a broadcast strap in the lower left. */
+
+.fifa-replay-card {
   position: absolute;
-  top: 38%;
-  left: 50%;
+  left: 28px;
+  bottom: 96px;
+  min-width: 250px;
+  padding: 12px 18px 14px;
+  border-left: 4px solid #fde047;
+  border-radius: 6px;
+  background: var(--fifa-glass);
+}
+
+.fifa-replay-card__name {
+  margin: 0 0 6px;
+  font-family: var(--fifa-display);
+  font-size: 22px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.fifa-replay-card__line {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 2px 0 0;
+  font-size: 16px;
+}
+
+.fifa-replay-card__line span {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.fifa-replay-card__line strong {
+  font-family: var(--fifa-display);
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Who has voted to skip the replay, lower right. */
+
+.fifa-skip {
+  position: absolute;
+  right: 28px;
+  bottom: 96px;
   display: flex;
   flex-direction: column;
+  gap: 6px;
+  padding: 10px 16px 12px;
+  border-radius: 6px;
+  background: var(--fifa-glass);
+}
+
+.fifa-skip__title {
+  font-family: var(--fifa-display);
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.fifa-skip__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 360px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fifa-skip__player {
+  display: flex;
   align-items: center;
   gap: 6px;
-  transform: translate(-50%, -50%);
-  animation: fifa-slam 420ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  padding: 3px 10px 3px 4px;
+  border: 2px solid color-mix(in srgb, var(--player) 60%, transparent);
+  border-radius: 999px;
+  font-size: 14px;
+  opacity: 0.6;
 }
 
-.fifa-banner__text {
-  font-family: var(--fifa-display);
-  font-size: clamp(64px, 12vw, 190px);
-  font-style: italic;
-  line-height: 0.9;
-  letter-spacing: -0.02em;
-  color: #ffffff;
-  -webkit-text-stroke: 0.035em var(--banner);
-  text-shadow: 0 0 0.25em color-mix(in srgb, var(--banner) 70%, transparent), 0 0.08em 0 rgba(0, 0, 0, 0.5);
-  white-space: nowrap;
+.fifa-skip__player--in {
+  opacity: 1;
+  background: color-mix(in srgb, var(--player) 30%, transparent);
 }
 
-.fifa-banner__sub {
-  padding: 6px 22px;
-  transform: skewX(-8deg);
-  border-radius: 6px;
-  background: var(--banner);
+.fifa-skip__tick {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--player);
   color: #0b1024;
-  font-family: var(--fifa-display);
-  font-size: clamp(20px, 2.4vw, 36px);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  animation: fifa-rise 500ms 120ms ease-out both;
+  font-size: 12px;
+  font-weight: 800;
 }
 
-@keyframes fifa-slam {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(1.8) skewX(-12deg);
-    filter: blur(8px);
-  }
-}
-
-@keyframes fifa-rise {
-  from {
-    opacity: 0;
-    transform: translateY(20px) skewX(-8deg);
-  }
+.fifa-skip__hint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* Phones' players along the bottom. */

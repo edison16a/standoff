@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { Seat } from "@/platform/protocol";
 import type { Cutscene, Phase } from "../engine/events";
 import type { StatLine } from "../engine/stats";
@@ -77,6 +78,8 @@ export interface SurvivalStore {
   toasts: Toast[];
   /** When the team last took a hit, for the red flash. */
   hurtAt: number;
+  /** How fast and hard the zombies come, picked in the lobby. */
+  level: BotLevel;
 }
 
 export const emptyHud = (): SurvivalHud => ({
@@ -94,4 +97,4 @@ export const emptyHud = (): SurvivalHud => ({
   healed: 0,
 });
 
-export const useSurvivalStore = create<SurvivalStore>(() => ({ hud: emptyHud(), radio: null, banner: null, checkpoint: null, toasts: [], hurtAt: 0 }));
+export const useSurvivalStore = create<SurvivalStore>(() => ({ hud: emptyHud(), radio: null, banner: null, checkpoint: null, toasts: [], hurtAt: 0, level: DEFAULT_BOT_LEVEL }));

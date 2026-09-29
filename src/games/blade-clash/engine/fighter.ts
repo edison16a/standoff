@@ -3,7 +3,7 @@ import type { Slot } from "@/games/blade-clash/players";
 import { hurtboxes } from "./body";
 import type { FighterAction, FighterFrame } from "./frames";
 import { distance } from "./geometry";
-import { HIT_REACTION_MS, MAX_HEALTH, PUSHBACK_SPEED, STAGGER_MS, START_X, SWING_REARM_SPEED, SWING_SPEED, WALK_SPEED } from "./rules";
+import { HIT_REACTION_MS, PUSHBACK_SPEED, STAGGER_MS, START_X, SWING_REARM_SPEED, SWING_SPEED, WALK_SPEED } from "./rules";
 import { blendControl, GUARD, swordPose, type SwordControl, type SwordPose } from "./sword";
 import { SwordDriver, type KnockTiming } from "./sword-driver";
 import type { Combatant } from "./sweep";
@@ -12,7 +12,7 @@ import type { Combatant } from "./sweep";
 const REELING_WALK = 0.35;
 
 /**
- * One fighter on the host: where they stand on the line, their health,
+ * One fighter on the host: where they stand on the line,
  * what they are doing, and their sword. The engine moves them one tick at
  * a time and asks for the combatant view of the tick just gone, which is
  * what the swept hit tests read.
@@ -27,11 +27,8 @@ export class Fighter {
   speed = 0;
   /** Footwork from the phone: 1 forward, -1 back, 0 still. */
   move = 0;
-  health = MAX_HEALTH;
   action: FighterAction = "idle";
   actionStartedAt = 0;
-  /** Their blade may land another hit from then. */
-  hitReadyAt = -Infinity;
   /** They cannot be hit again until then. */
   guardUntil = -Infinity;
   /** Metres still to slide back from the last hit taken. */
@@ -63,14 +60,13 @@ export class Fighter {
     this.actionStartedAt = now;
   }
 
-  /** Back on their mark with the sword in guard, for a countdown. Health is the match's business. */
+  /** Back on their mark with the sword in guard, for a countdown. The score is the match's business. */
   reset(): void {
     this.x = this.startX;
     this.previousX = this.x;
     this.speed = 0;
     this.move = 0;
     this.action = "idle";
-    this.hitReadyAt = -Infinity;
     this.guardUntil = -Infinity;
     this.recoil = 0;
     this.whooshing = false;
@@ -113,8 +109,8 @@ export class Fighter {
         return { blade: { a: pose.base, b: pose.tip }, body: hurtboxes(this.previousX + (this.x - this.previousX) * t) };
       },
       radius: this.blade.radius,
-      canHit: now >= this.hitReadyAt && this.sword.isFree(now) && this.health > 0,
-      canBeHit: now >= this.guardUntil && this.health > 0,
+      canHit: this.sword.isFree(now) && this.action !== "defeat",
+      canBeHit: now >= this.guardUntil && this.action !== "defeat",
     };
   }
 
@@ -137,7 +133,6 @@ export class Fighter {
       x: this.x,
       facing: this.facing,
       speed: this.speed,
-      health: this.health,
       action: this.action,
       actionMs: now - this.actionStartedAt,
       control,

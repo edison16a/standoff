@@ -14,6 +14,7 @@ const PATTERNS: Record<BuzzKind, number[]> = {
   goal: [80, 60, 80, 60, 220],
   conceded: [260],
   whistle: [30, 40, 30],
+  foul: [60, 50, 160],
   win: [100, 60, 100, 60, 100, 60, 400],
   lose: [400],
 };

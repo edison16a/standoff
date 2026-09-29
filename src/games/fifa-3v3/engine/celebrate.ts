@@ -1,12 +1,28 @@
+import { ROSTER } from "../roster";
 import { attackSign } from "../teams";
 import { brake, moveAthlete, separate } from "./athlete";
+import { celebrationLength, celebrationSpot, stepCelebration } from "./celebrate-moves";
 import { goalX } from "./goal";
-import { PITCH } from "./tuning";
+import { MATCH, PITCH } from "./tuning";
 import type { Athlete, MatchState } from "./types";
 import { dist, norm, sub, type Vec2 } from "./vec";
 
-/** How long the scorer runs toward the cameras before breaking into the celebration. */
+/** How long the scorer runs off before breaking into the celebration. */
 const RUN_OFF = 1.3;
+/** The celebration's final pose is held this long before the replay starts. */
+const HOLD = 0.35;
+
+/**
+ * How long the goal phase lasts: the run off and the scorer's
+ * celebration, ending as it lands, which starts the replay. An own goal
+ * has no celebration and just waits.
+ */
+export function goalPhaseLength(state: MatchState): number {
+  const scorer = state.lastGoal?.scorer ?? null;
+  if (scorer === null) return MATCH.celebrate;
+  const a = state.athletes[scorer];
+  return a ? RUN_OFF + celebrationLength(ROSTER[a.character].celebration) + HOLD : MATCH.celebrate;
+}
 /**
  * Where team mates join the scorer: one on each side and a step behind,
  * away from the cameras on the near side, so the close up shows all of
@@ -24,7 +40,8 @@ export function celebrateGoal(state: MatchState, dt: number): void {
   if (!goal) return;
   const scorer = goal.scorer !== null ? state.athletes[goal.scorer] : undefined;
   const s = attackSign(goal.team);
-  const corner: Vec2 = { x: s * (PITCH.halfLength - 4), z: PITCH.halfWidth - 2.2 };
+  const kind = scorer ? ROSTER[scorer.character].celebration : "sui";
+  const corner: Vec2 = scorer ? celebrationSpot(kind, goal.team) : { x: s * (PITCH.halfLength - 4), z: PITCH.halfWidth - 2.2 };
   for (const a of state.athletes) {
     a.actionT += dt;
     if (a.team !== goal.team) {
@@ -39,8 +56,7 @@ export function celebrateGoal(state: MatchState, dt: number): void {
         moveToward(a, corner, 1, dt);
       } else {
         setAction(a, "celebrate");
-        brake(a, dt, 6);
-        faceCamera(a, dt);
+        stepCelebration(a, kind, a.actionT, dt);
       }
       continue;
     }

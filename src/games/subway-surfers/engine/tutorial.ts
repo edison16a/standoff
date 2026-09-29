@@ -1,8 +1,8 @@
 /**
- * The short live tutorial before the first run: each player moves left,
+ * The short live tutorial before the first run: the player moves left,
  * moves right, jumps and rolls, in that order, and each move is ticked
  * off as the camera sees it. Every move is the head leaving its band, so
- * the camera only needs to see players from the waist up. Pure, so tests
+ * the camera only needs to see the player from the waist up. Pure, so tests
  * can drive it with moves.
  */
 

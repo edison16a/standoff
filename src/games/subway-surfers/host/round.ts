@@ -6,142 +6,111 @@ import { Tutorial } from "../engine/tutorial";
 import type { Intent } from "./controls";
 import type { RunnerHud } from "./store";
 
-/** Seconds a crash plays out before that player's run counts as over. */
+/** Seconds a crash plays out before the run counts as over. */
 export const CRASH_HOLD_S = 2.4;
 /** Seconds of "get ready" after a player who stepped away comes back. */
 export const RESUME_S = 2;
-/** With two players, seconds out of view before a player's run is given up, once the other's is over. */
-export const GIVE_UP_S = 15;
 
-interface Seat {
-  run: Run;
-  away: boolean;
-  /** Seconds out of view so far this time. */
-  awayFor: number;
-  /** Seconds until an away player's run goes on again, once they are back. */
-  resume: number | null;
-  banner: { text: string; id: number } | null;
-  bannerUntil: number;
-  tutorial: Tutorial;
+export interface RoundOptions {
+  /** The tutorial: an empty yard at a jog. */
+  practice?: boolean;
+  /** Metres of head start on the pace, from the chosen difficulty. */
+  headStart?: number;
 }
 
 /**
- * One round of runs, one per player on the same seed, so both face the
- * same yard. Each run pauses on its own when its player steps out of
- * view, and the round is over once every runner has crashed.
+ * One run for the player. It pauses while they are out of view, counts
+ * them back in when they return, and is over once the crash has played out.
  */
 export class Round {
-  readonly seats: Seat[];
+  readonly run: Run;
+  readonly tutorial = new Tutorial();
+  private away = false;
+  /** Seconds until the run goes on again, once the player is back. */
+  private resume: number | null = null;
+  private banner: { text: string; id: number } | null = null;
+  private bannerUntil = 0;
   private time = 0;
-  private bannerId = 0;
-  private readonly listeners = new Set<(slot: number, event: RunEvent) => void>();
+  private readonly listeners = new Set<(event: RunEvent) => void>();
 
   constructor(
-    players: number,
     readonly seed: number,
-    readonly practice = false,
+    options: RoundOptions = {},
   ) {
-    this.seats = Array.from({ length: players }, () => ({
-      run: new Run(seed, { practice }),
-      away: false,
-      awayFor: 0,
-      resume: null,
-      banner: null,
-      bannerUntil: 0,
-      tutorial: new Tutorial(),
-    }));
+    this.run = new Run(seed, { practice: options.practice, headStart: options.headStart });
   }
 
-  get runs(): Run[] {
-    return this.seats.map((seat) => seat.run);
-  }
-
-  listen(listener: (slot: number, event: RunEvent) => void): () => void {
+  listen(listener: (event: RunEvent) => void): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
 
-  /** Whether the run for `slot` is held still, waiting for its player. */
-  paused(slot: number): boolean {
-    const seat = this.seats[slot - 1];
-    return !!seat && (seat.away || seat.resume !== null);
+  /** Whether the run is held still, waiting for the player. */
+  get paused(): boolean {
+    return this.away || this.resume !== null;
   }
 
-  setAway(slot: number, away: boolean): void {
-    const seat = this.seats[slot - 1];
-    if (!seat || seat.run.crashed) return;
+  setAway(away: boolean): void {
+    if (this.run.crashed) return;
     if (away) {
-      seat.away = true;
-      seat.resume = null;
-    } else if (seat.away) {
-      seat.away = false;
-      seat.awayFor = 0;
-      seat.resume = RESUME_S;
+      this.away = true;
+      this.resume = null;
+    } else if (this.away) {
+      this.away = false;
+      this.resume = RESUME_S;
     }
   }
 
-  /** Feeds a camera move to that player's tutorial. True when it ticks off a step. */
+  /** Feeds a camera move to the tutorial. True when it ticks off a step. */
   tutorialMove(event: MoveEvent): boolean {
-    const seat = this.seats[event.slot - 1];
-    if (!seat) return false;
-    if (event.type === "lane") return seat.tutorial.see({ type: "lane", lane: event.lane });
-    if (event.type === "jump" || event.type === "duck") return seat.tutorial.see({ type: event.type });
+    if (event.type === "lane") return this.tutorial.see({ type: "lane", lane: event.lane });
+    if (event.type === "jump" || event.type === "duck") return this.tutorial.see({ type: event.type });
     return false;
   }
 
   get over(): boolean {
-    const done = this.seats.map((seat) => !!seat.run.crashed && seat.run.time - seat.run.crashed.time > CRASH_HOLD_S);
-    if (done.every(Boolean)) return true;
-    // A player who walked off for good must not hold the other's results up forever.
-    return this.seats.length > 1 && done.some(Boolean) && this.seats.every((seat, i) => done[i] || (seat.away && seat.awayFor > GIVE_UP_S));
+    const crashed = this.run.crashed;
+    return !!crashed && this.run.time - crashed.time > CRASH_HOLD_S;
   }
 
-  update(dt: number, intents: readonly Intent[]): void {
+  update(dt: number, intent: Intent | null): void {
     this.time += dt;
-    this.seats.forEach((seat, i) => {
-      if (seat.away) {
-        seat.awayFor += dt;
-        return;
-      }
-      if (seat.resume !== null) {
-        seat.resume -= dt;
-        if (seat.resume > 0) return;
-        seat.resume = null;
-      }
-      const intent = intents[i];
-      if (intent) seat.run.input(intent.lane, intent);
-      seat.run.update(dt);
-      for (const event of seat.run.drain()) this.onEvent(i + 1, seat, event);
-    });
+    if (this.away) return;
+    if (this.resume !== null) {
+      this.resume -= dt;
+      if (this.resume > 0) return;
+      this.resume = null;
+    }
+    if (intent) this.run.input(intent.lane, intent);
+    this.run.update(dt);
+    for (const event of this.run.drain()) this.onEvent(event);
   }
 
-  private onEvent(slot: number, seat: Seat, event: RunEvent): void {
+  hud(name: string): RunnerHud {
+    const run = this.run;
+    return {
+      name,
+      score: Math.floor(run.score),
+      coins: run.coins,
+      multiplier: run.multiplier,
+      distance: Math.floor(run.runner.distance),
+      powers: run.powers.active().map((kind) => ({ kind, share: run.powers.share(kind) })),
+      away: this.away,
+      resume: this.resume === null ? null : Math.ceil(this.resume),
+      crashed: run.crashed?.cause ?? null,
+      banner: this.time < this.bannerUntil ? this.banner : null,
+      tutorial: this.tutorial.done,
+    };
+  }
+
+  private onEvent(event: RunEvent): void {
     const shout = bannerFor(event);
     if (shout) {
-      seat.banner = { text: shout, id: ++this.bannerId };
-      seat.bannerUntil = this.time + 1.6;
+      // A new id each time, so the same shout twice in a row still pops again.
+      this.banner = { text: shout, id: (this.banner?.id ?? 0) + 1 };
+      this.bannerUntil = this.time + 1.6;
     }
-    for (const listener of this.listeners) listener(slot, event);
-  }
-
-  hud(names: readonly string[]): RunnerHud[] {
-    return this.seats.map((seat, i) => {
-      const run = seat.run;
-      return {
-        slot: i + 1,
-        name: names[i] ?? `Player ${i + 1}`,
-        score: Math.floor(run.score),
-        coins: run.coins,
-        multiplier: run.multiplier,
-        distance: Math.floor(run.runner.distance),
-        powers: run.powers.active().map((kind) => ({ kind, share: run.powers.share(kind) })),
-        away: seat.away,
-        resume: seat.resume === null ? null : Math.ceil(seat.resume),
-        crashed: run.crashed?.cause ?? null,
-        banner: this.time < seat.bannerUntil ? seat.banner : null,
-        tutorial: seat.tutorial.done,
-      };
-    });
+    for (const listener of this.listeners) listener(event);
   }
 }
 

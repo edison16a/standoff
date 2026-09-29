@@ -1,6 +1,8 @@
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { Entrant } from "../engine/match";
 import { CHARACTER_IDS, type CharacterId } from "../roster";
 import type { TeamId } from "../teams";
+import { ROLES, slotFor, type Role } from "../roles";
 
 export const TEAM_SIZE = 3;
 
@@ -9,6 +11,13 @@ export interface SeatState {
   pick: CharacterId | null;
   ready: boolean;
   team: TeamId | null;
+  /** The place the host gave them in the side. */
+  role: Role | null;
+}
+
+/** One place in the next match's line up, with the role it plays. */
+export interface LineupEntry extends Entrant {
+  role: Role;
 }
 
 /**
@@ -23,11 +32,13 @@ export class Lobby {
   readonly seats = new Map<number, SeatState>();
   /** Whether computer players fill the empty places. */
   bots = true;
+  /** How sharp the computer players are. */
+  level: BotLevel = DEFAULT_BOT_LEVEL;
 
   private state(seat: number): SeatState {
     let state = this.seats.get(seat);
     if (!state) {
-      state = { connected: false, pick: null, ready: false, team: null };
+      state = { connected: false, pick: null, ready: false, team: null, role: null };
       this.seats.set(seat, state);
     }
     return state;
@@ -42,6 +53,7 @@ export class Lobby {
       state.ready = false;
     }
     if (state.team !== null && this.teamCount(state.team, seat) >= TEAM_SIZE) state.team = null;
+    this.fitRole(seat);
   }
 
   disconnect(seat: number): void {
@@ -60,6 +72,7 @@ export class Lobby {
     const state = this.state(seat);
     state.ready = ready && state.pick !== null && state.connected;
     if (state.ready && state.team === null) state.team = this.smallerTeam(seat);
+    this.fitRole(seat);
   }
 
   /** The host moves a player to a side, if there is room on it. */
@@ -68,7 +81,38 @@ export class Lobby {
     if (!state) return false;
     if (team !== null && this.teamCount(team, seat) >= TEAM_SIZE) return false;
     state.team = team;
+    state.role = null;
+    this.fitRole(seat);
     return true;
+  }
+
+  /**
+   * The host gives a player a role. Whoever on that side had it swaps
+   * over to the role this player leaves.
+   */
+  setRole(seat: number, role: Role): boolean {
+    const state = this.seats.get(seat);
+    if (!state || state.team === null) return false;
+    for (const [other, s] of this.seats) {
+      if (other !== seat && s.connected && s.team === state.team && s.role === role) s.role = state.role;
+    }
+    state.role = role;
+    this.fitRole(seat);
+    return true;
+  }
+
+  /** A player on a side always has a role nobody else on it has: their own if free, else the first free one. */
+  private fitRole(seat: number): void {
+    const state = this.seats.get(seat);
+    if (!state) return;
+    if (state.team === null) {
+      state.role = null;
+      return;
+    }
+    const used = new Set<Role>();
+    for (const [other, s] of this.seats) if (other !== seat && s.connected && s.team === state.team && s.role) used.add(s.role);
+    if (state.role && !used.has(state.role)) return;
+    state.role = ROLES.find((r) => !used.has(r)) ?? null;
   }
 
   /** Stars held by connected players other than `seat`. */
@@ -116,6 +160,10 @@ export class Lobby {
     this.bots = on;
   }
 
+  setLevel(level: BotLevel): void {
+    this.level = level;
+  }
+
   /**
    * Why a match cannot start yet, or null when it can. With computer
    * players on, one person is enough; without them each side needs someone.
@@ -128,19 +176,31 @@ export class Lobby {
   }
 
   /**
-   * The line up: each side's players in seat order, then computer
-   * players in the stars nobody picked, up to three a side when they
-   * are on. The keepers are always the computer's.
+   * The line up: each side's players in the roles the host gave them,
+   * then computer players in the stars nobody picked filling the other
+   * roles, up to three a side when they are on. Each side is listed in
+   * the order of its places on the pitch, which is how the match hands
+   * them out. The keepers are always the computer's.
    */
-  entrants(): Entrant[] {
+  lineup(): LineupEntry[] {
     const spare = this.spareStars();
-    const out: Entrant[] = [];
+    const out: LineupEntry[] = [];
     for (const team of [0, 1] as const) {
       const humans = this.players.filter((seat) => this.seats.get(seat)!.team === team).slice(0, TEAM_SIZE);
-      for (const seat of humans) out.push({ team, character: this.seats.get(seat)!.pick!, seat });
-      if (!this.bots) continue;
-      for (let i = humans.length; i < TEAM_SIZE; i++) out.push({ team, character: spare.shift() ?? "echeverri", seat: null });
+      const side: LineupEntry[] = humans.map((seat) => {
+        const s = this.seats.get(seat)!;
+        return { team, character: s.pick!, seat, role: s.role ?? "striker" };
+      });
+      if (this.bots) {
+        for (const role of ROLES) if (!side.some((e) => e.role === role)) side.push({ team, character: spare.shift() ?? "echeverri", seat: null, role });
+      }
+      side.sort((x, y) => slotFor(team, x.role) - slotFor(team, y.role) || (x.seat ?? 99) - (y.seat ?? 99));
+      out.push(...side);
     }
     return out;
+  }
+
+  entrants(): Entrant[] {
+    return this.lineup().map(({ team, character, seat }) => ({ team, character, seat }));
   }
 }

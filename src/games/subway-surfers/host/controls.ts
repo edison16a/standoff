@@ -2,7 +2,7 @@ import type { CameraKit, MoveEvent } from "@/games/kit/camera";
 import { clampLane, type Lane } from "../engine/tuning";
 import { CameraInput } from "./camera-input";
 
-/** What one player asks of their runner this frame. */
+/** What the player asks of their runner this frame. */
 export interface Intent {
   lane: Lane;
   jump: boolean;
@@ -10,45 +10,33 @@ export interface Intent {
   ducking: boolean;
 }
 
-/** Keys for testing without a camera: arrows for player one, WASD for player two. */
-const KEYS: Record<string, { slot: number; move: "left" | "right" | "jump" | "duck" }> = {
-  ArrowLeft: { slot: 1, move: "left" },
-  ArrowRight: { slot: 1, move: "right" },
-  ArrowUp: { slot: 1, move: "jump" },
-  ArrowDown: { slot: 1, move: "duck" },
-  KeyA: { slot: 2, move: "left" },
-  KeyD: { slot: 2, move: "right" },
-  KeyW: { slot: 2, move: "jump" },
-  KeyS: { slot: 2, move: "duck" },
+/** The arrow keys, for testing without a camera. */
+const KEYS: Record<string, "left" | "right" | "jump" | "duck"> = {
+  ArrowLeft: "left",
+  ArrowRight: "right",
+  ArrowUp: "jump",
+  ArrowDown: "duck",
 };
 
-interface PlayerInput {
-  jump: boolean;
-  duck: boolean;
-  keyLane: Lane | null;
-  keyDuck: boolean;
-  /** The lane last handed out, to tell listeners when it changes. */
-  lane: Lane;
-  camera: CameraInput;
-}
-
 /**
- * Turns each player's head line into runner input: the head up out of
+ * Turns the player's head line into runner input: the head up out of
  * its band jumps, down out of it rolls, and the head and shoulders
  * moving left or right change track. Only the upper body counts, so
- * players stand waist up. The keyboard works too, for trying the game
- * without standing up.
+ * the player stands waist up. The keyboard works too, for trying the
+ * game without standing up.
  */
 export class Controls {
-  private readonly inputs: PlayerInput[];
+  private jump = false;
+  private duck = false;
+  private keyLane: Lane | null = null;
+  private keyDuck = false;
+  /** The lane last handed out, to tell listeners when it changes. */
+  private lane: Lane = 0;
+  private readonly camera = new CameraInput();
   private readonly unlisten: () => void;
   private readonly moveListeners = new Set<(event: MoveEvent) => void>();
 
-  constructor(
-    private readonly kit: CameraKit | null,
-    private readonly players: number,
-  ) {
-    this.inputs = Array.from({ length: players }, () => ({ jump: false, duck: false, keyLane: null, keyDuck: false, lane: 0, camera: new CameraInput() }));
+  constructor(private readonly kit: CameraKit | null) {
     const stopKit = kit?.onMove((event) => this.onMove(event)) ?? (() => undefined);
     const down = (e: KeyboardEvent) => this.onKey(e, true);
     const up = (e: KeyboardEvent) => this.onKey(e, false);
@@ -61,38 +49,35 @@ export class Controls {
     };
   }
 
-  /** Camera moves for the tutorial and for pausing a player who steps away, with lane changes from keys too. */
+  /** Camera moves for the tutorial and for pausing when the player steps away, with lane changes from keys too. */
   listen(listener: (event: MoveEvent) => void): () => void {
     this.moveListeners.add(listener);
     return () => this.moveListeners.delete(listener);
   }
 
-  /** Takes a player's input for this frame. Jumps and ducks are handed out once. */
-  take(slot: number, now = performance.now()): Intent {
-    const input = this.inputs[slot - 1]!;
-    const camera = input.camera.take(this.kit?.moves(slot) ?? null);
-    const lane = input.keyLane ?? camera?.lane ?? 0;
+  /** Takes the input for this frame. Jumps and ducks are handed out once. */
+  take(now = performance.now()): Intent {
+    const camera = this.camera.take(this.kit?.moves(1) ?? null);
+    const lane = this.keyLane ?? camera?.lane ?? 0;
     const intent: Intent = {
       lane,
-      jump: input.jump || !!camera?.jump,
-      duck: input.duck || !!camera?.duck,
-      ducking: input.keyDuck || !!camera?.ducking,
+      jump: this.jump || !!camera?.jump,
+      duck: this.duck || !!camera?.duck,
+      ducking: this.keyDuck || !!camera?.ducking,
     };
-    input.jump = false;
-    input.duck = false;
+    this.jump = false;
+    this.duck = false;
     // A camera lane change is told by the kit on the frame it happens, so a quick one is never
     // missed between drawn frames. A key is told here.
-    if (lane !== input.lane && input.keyLane !== null) this.tell({ slot, time: now, type: "lane", lane, from: input.lane });
-    input.lane = lane;
+    if (lane !== this.lane && this.keyLane !== null) this.tell({ slot: 1, time: now, type: "lane", lane, from: this.lane });
+    this.lane = lane;
     return intent;
   }
 
   /** Forgets held moves, so a jump made during the countdown does not fire on GO. */
   reset(): void {
-    for (const input of this.inputs) {
-      input.jump = input.duck = false;
-      input.camera.reset();
-    }
+    this.jump = this.duck = false;
+    this.camera.reset();
   }
 
   dispose(): void {
@@ -105,27 +90,25 @@ export class Controls {
   }
 
   private onMove(event: MoveEvent): void {
-    const input = this.inputs[event.slot - 1];
-    if (!input) return;
-    input.camera.see(event);
+    if (event.slot !== 1) return;
+    this.camera.see(event);
     // A body move takes the lane back from the keys.
-    if (event.type === "lane") input.keyLane = null;
+    if (event.type === "lane") this.keyLane = null;
     this.tell(event);
   }
 
   private onKey(e: KeyboardEvent, down: boolean): void {
-    const key = KEYS[e.code];
-    if (!key || key.slot > this.players || e.target instanceof HTMLInputElement) return;
+    const move = KEYS[e.code];
+    if (!move || e.target instanceof HTMLInputElement) return;
     e.preventDefault();
-    const input = this.inputs[key.slot - 1]!;
-    if (key.move === "duck") input.keyDuck = down;
+    if (move === "duck") this.keyDuck = down;
     if (!down || e.repeat) return;
     const time = performance.now();
-    if (key.move === "left" || key.move === "right") {
-      input.keyLane = clampLane((input.keyLane ?? input.lane) + (key.move === "left" ? -1 : 1));
+    if (move === "left" || move === "right") {
+      this.keyLane = clampLane((this.keyLane ?? this.lane) + (move === "left" ? -1 : 1));
       return;
     }
-    input[key.move] = true;
-    this.tell(key.move === "jump" ? { slot: key.slot, time, type: "jump", confidence: 1 } : { slot: key.slot, time, type: "duck", confidence: 1 });
+    this[move] = true;
+    this.tell(move === "jump" ? { slot: 1, time, type: "jump", confidence: 1 } : { slot: 1, time, type: "duck", confidence: 1 });
   }
 }

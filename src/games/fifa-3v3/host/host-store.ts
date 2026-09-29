@@ -1,7 +1,11 @@
 import { create } from "zustand";
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
+import type { Role } from "../roles";
 import type { CharacterId } from "../roster";
 import type { RoomPhase } from "../protocol";
 import type { TeamId } from "../teams";
+import type { StrikeFacts } from "./replay-facts";
+import type { ReplayStage } from "./replay-script";
 
 export interface SeatView {
   seat: number;
@@ -10,32 +14,56 @@ export interface SeatView {
   pick: CharacterId | null;
   ready: boolean;
   team: TeamId | null;
+  role: Role | null;
 }
 
 /** A computer player filling a place in the lobby's team columns. */
 export interface BotView {
   team: TeamId;
   character: CharacterId;
+  role: Role;
 }
 
-export interface Banner {
-  /** Changes each time, so the same words can play their entrance again. */
-  id: number;
+/** A stoppage shown on the score bug: a foul and its booking, then the free kick or penalty. */
+export interface Moment {
   text: string;
+  /** Who it is about, like the player booked. */
   sub: string | null;
+  card: boolean;
   colour: string;
 }
 
+/** The goal replay's overlay: the stage it is at and the strike's numbers. */
+export interface ReplayCard {
+  stage: ReplayStage;
+  /** Who struck the ball. */
+  kicker: string | null;
+  facts: StrikeFacts | null;
+  /** Playing in slow motion right now. */
+  slow: boolean;
+}
+
+/** One player's say in skipping the replay. */
+export interface SkipView {
+  seat: number;
+  name: string;
+  agreed: boolean;
+}
+
 export interface ResultRow {
+  /** An athlete's id, or -1 and -2 for the red and blue keepers. */
   id: number;
   team: TeamId;
   name: string;
-  character: CharacterId;
+  /** The star played, or null for a keeper. */
+  character: CharacterId | null;
   seat: number | null;
   goals: number;
   shots: number;
   tackles: number;
   passes: number;
+  /** A keeper's saves, or the shots an outfield player blocked. */
+  saves: number;
 }
 
 /**
@@ -50,16 +78,19 @@ export interface FifaHostState {
   bots: BotView[];
   /** Whether computer players fill the empty places. */
   botsOn: boolean;
+  /** How sharp the computer players are. */
+  level: BotLevel;
+  moment: Moment | null;
   /** Why the match cannot start yet, or null when it can. */
   startBlock: "empty" | "oneSided" | null;
   score: [number, number];
   clock: number;
   golden: boolean;
   replay: boolean;
-  banner: Banner | null;
+  replayCard: ReplayCard | null;
+  skip: SkipView[];
   winner: TeamId | null;
   results: ResultRow[];
-  saves: [number, number];
   /** Phones' players in the match, for the strip along the bottom. */
   roster: { id: number; seat: number; name: string; team: TeamId; character: CharacterId; hasBall: boolean; away: boolean }[];
 }
@@ -69,14 +100,16 @@ export const useFifaStore = create<FifaHostState>(() => ({
   seats: [],
   bots: [],
   botsOn: true,
+  level: DEFAULT_BOT_LEVEL,
+  moment: null,
   startBlock: "empty",
   score: [0, 0],
   clock: 0,
   golden: false,
   replay: false,
-  banner: null,
+  replayCard: null,
+  skip: [],
   winner: null,
   results: [],
-  saves: [0, 0],
   roster: [],
 }));

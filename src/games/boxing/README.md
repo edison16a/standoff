@@ -6,7 +6,7 @@ A 3D boxing match played with your body in front of the computer's camera. There
 
 ## How to play
 
-1. **Choose players.** One player fights the computer. Two players stand side by side in front of one camera, player 1 on the left of the picture. Pick with the mouse.
+1. **Choose players.** One player fights the computer. Two players stand side by side in front of one camera, player 1 on the left of the picture. Pick with the mouse. Computer difficulty sits under the choices: Easy (the default), Medium, Hard or Training.
 2. **Get the camera ready.** The kit asks for the camera and downloads the body tracking model with a progress bar. Every problem, from a blocked camera to no internet, says what to do and has a Try again button.
 3. **Calibrate.** The camera only needs you from the waist up: your head, shoulders and gloves. Step into your outline and stand tall while your ring fills, which sets your head line, then show your guard (both gloves up by your face) and throw one jab. Skip this step is there for a camera that struggles.
 4. **Choose your build.** A build is how you box, not who you are: your own name stays on your trunks, over your health bar and on the results. Each card shows the build's power, speed, reach, defense and stamina out of five. Lean left or right to browse, then drop your hands and hold your guard up to lock in. A guard still up from calibration does not count. The mouse works too. With one player the computer takes a different build.
@@ -46,6 +46,8 @@ The boxers move like real boxers, each in their build's style. They circle, swit
 The numbers are in `engine/builds.ts`, and a test checks that every card's bars rank the builds the same way their effects do.
 
 The computer boxer lights up its gloves while it winds up a punch, so you can see it coming. It covers the right spot, ducks and slips, mixes in body shots, counters, and gets quicker and sharper every round.
+
+The difficulty tilts its round by round table in `engine/ai-difficulty.ts`. Medium is the table as tuned. Easy winds up longer, waits longer between attacks, blocks, dodges and counters less often and stays down longer. Hard does the opposite. In Training the computer is a sparring partner: it holds its spot and never punches, blocks or dodges, but still touches gloves and gets up after a knockdown.
 
 When the fight is decided, after the knockout replay or a moment on the winner, the results open on the ceremony. The picture cuts to the champion in the middle of the ring holding the championship belt at the chest, who dips and presses it up over their head, holds it high with a pump of the arms now and then and turns to show it round the arena. The loser slumps back on the ropes in their corner. Cannons fire confetti from the corner posts, more keeps raining down, spotlights fade up on the champion, and the camera opens wide and swings in. The champion's name goes up big in gold across the top, with the build and how they won under it, and the scorecards, each boxer's numbers and the buttons sit along the bottom. A draw skips the belt.
 

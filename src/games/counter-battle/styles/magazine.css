@@ -45,15 +45,16 @@
   gap: 3px;
 }
 
+/* Paintballs, not cartridges: a row of glossy balls. */
 .cb-mag__round {
-  width: 6px;
-  height: 12px;
-  border-radius: 3px 3px 1px 1px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
   background: rgba(255, 255, 255, 0.12);
 }
 
 .cb-mag__round--full {
-  background: linear-gradient(#f5dc7a, #b8862e);
+  background: radial-gradient(circle at 35% 30%, #fff6c4 0 18%, #d8ff3a 30%, #7fa600 100%);
 }
 
 .cb-mag__reload {

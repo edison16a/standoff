@@ -8,7 +8,7 @@ import type { ShowcaseView } from "@/platform/games/game-api";
 import { FLOOR } from "../render/arena/dais";
 import { DuelRenderer, type View } from "../render/duel-renderer";
 import { CLIP, HIGH } from "../render/quality";
-import { Choreography, OPENING_HEALTH } from "./choreography";
+import { Choreography, OPENING_SCORE } from "./choreography";
 
 /** The clip is eight seconds and a one second dissolve; the duel starts over after both. */
 const CYCLE_MS = 9500;
@@ -25,7 +25,7 @@ const ICON_CAMERA = { from: new THREE.Vector3(0.45, -0.35, 1.9), look: new THREE
 
 /**
  * Runs the showcase: the scripted duel between the Knight and the Star
- * Knight through the real match driver, so the slow motion finish is the
+ * Knight through the real match driver, so the slow motion points are the
  * game's own. The loop and the poster are the split screen as players
  * see it; the icon is a close shot of the first clash.
  */
@@ -112,8 +112,7 @@ export class ShowcaseDirector {
     });
     this.driver.start();
     const { engine } = this.driver;
-    engine.match.health = { ...OPENING_HEALTH };
-    for (const slot of [1, 2] as const) engine.fighters[slot].health = OPENING_HEALTH[slot];
+    engine.match.score = { ...OPENING_SCORE };
     this.renderer.reset();
     for (let t = -3200; t <= 0; t += FRAME_MS) this.driver.tick(t);
     this.fightAt = engine.now;

@@ -159,8 +159,7 @@
   text-align: center;
 }
 
-.bb-stepper button,
-.bb-segments button {
+.bb-stepper button {
   display: grid;
   place-items: center;
   height: 40px;
@@ -183,22 +182,36 @@
   cursor: default;
 }
 
-.bb-segments {
-  display: flex;
+/* The shared difficulty row, dressed as one of the lobby's option pills. */
+.bb-lobby .kit-difficulty {
+  padding: 8px 10px 8px 18px;
+  border-radius: 999px;
+  background: rgba(20, 12, 36, 0.8);
+}
+
+.bb-lobby .kit-difficulty__label {
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.bb-lobby .kit-difficulty__segments {
   gap: 4px;
+  border: 0;
+  background: transparent;
 }
 
-.bb-segments button {
-  padding: 0 16px;
+.bb-lobby .kit-difficulty__segments button {
+  height: 40px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
 }
 
-.bb-segments button[aria-pressed="true"] {
+.bb-lobby .kit-difficulty__segments button[aria-pressed="true"] {
   background: var(--bb-orange);
   color: #1d0a00;
 }
 
-.bb-stepper button:focus-visible,
-.bb-segments button:focus-visible {
+.bb-stepper button:focus-visible {
   outline: 3px solid #ffffff;
   outline-offset: 2px;
 }

@@ -4,7 +4,7 @@ import type { RunScene } from "./run-scene";
 import type { ViewRect } from "./split";
 import { setTextureDetail } from "./textures";
 
-export { splitScreen, type ViewRect } from "./split";
+export { FULL_VIEW, type ViewRect } from "./split";
 
 export interface View {
   scene: RunScene;
@@ -22,7 +22,7 @@ function softwareDrawn(renderer: THREE.WebGLRenderer): boolean {
 }
 
 /**
- * One WebGL canvas that draws each runner's scene into its own part of
+ * One WebGL canvas that draws a runner's scene into its part of
  * the screen. The neon street every scene reflects is made once here.
  */
 export class Renderer {
@@ -48,7 +48,7 @@ export class Renderer {
   resize(width: number, height: number, dpr: number): void {
     this.width = Math.max(1, width);
     this.height = Math.max(1, height);
-    // Two full views at retina density is too much for a laptop, so the density is capped.
+    // A full view at retina density is too much for a laptop, so the density is capped.
     this.gl.setPixelRatio(Math.min(dpr, 1.5));
     this.gl.setSize(this.width, this.height, false);
   }

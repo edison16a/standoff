@@ -134,35 +134,3 @@ export function dotTexture(): THREE.CanvasTexture {
   ctx.fillRect(0, 0, 64, 64);
   return new THREE.CanvasTexture(c);
 }
-
-/** A white paint splat on clear, tinted per use. */
-export function splatTexture(): THREE.CanvasTexture {
-  const [c, ctx] = canvas(128, 128);
-  ctx.fillStyle = "#ffffff";
-  splat(ctx, 64, 64, 26, seeded(3));
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
-}
-
-/** A four pointed muzzle flash: a hot core with spikes. */
-export function flashTexture(): THREE.CanvasTexture {
-  const [c, ctx] = canvas(128, 128);
-  const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 40);
-  g.addColorStop(0, "rgba(255,255,240,1)");
-  g.addColorStop(0.3, "rgba(255,210,120,0.9)");
-  g.addColorStop(1, "rgba(255,120,20,0)");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, 128, 128);
-  ctx.fillStyle = "rgba(255,236,190,0.9)";
-  for (let i = 0; i < 6; i++) {
-    const a = (i / 6) * Math.PI * 2 + 0.3;
-    const len = i % 2 ? 60 : 44;
-    ctx.beginPath();
-    ctx.moveTo(64 + Math.cos(a - 0.12) * 8, 64 + Math.sin(a - 0.12) * 8);
-    ctx.lineTo(64 + Math.cos(a) * len, 64 + Math.sin(a) * len);
-    ctx.lineTo(64 + Math.cos(a + 0.12) * 8, 64 + Math.sin(a + 0.12) * 8);
-    ctx.fill();
-  }
-  return new THREE.CanvasTexture(c);
-}
