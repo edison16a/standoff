@@ -131,12 +131,12 @@ export interface HitResult {
   broke: number | null;
 }
 
-/** One bullet landing. Weak point hits carry the point's index. */
-export function hitZombie(z: Zombie, part: HitPart, weakIndex: number | null, base: number): HitResult {
+/** One bullet landing. Weak point hits carry the point's index. A `pierce` round goes through riot armour. */
+export function hitZombie(z: Zombie, part: HitPart, weakIndex: number | null, base: number, pierce = false): HitResult {
   if (!alive(z)) return { damage: 0, blocked: false, killed: false, broke: null };
   const spec = KINDS[z.kind];
   const broken = part === "weak" && (weakIndex === null || (z.weak[weakIndex] ?? 0) <= 0);
-  const outcome = hitDamage(z.kind, broken ? "body" : part, base);
+  const outcome = hitDamage(z.kind, broken ? "body" : part, base, pierce);
   if (outcome.damage <= 0) return { damage: 0, blocked: outcome.blocked, killed: false, broke: null };
 
   if (part === "weak" && weakIndex !== null) {
@@ -166,7 +166,6 @@ function knockBack(z: Zombie, metres: number, reach: number): void {
   z.ahead = Math.max(reach, z.ahead + metres);
   setState(z, "stagger");
 }
-
 function die(z: Zombie, head: boolean): void {
   z.hp = 0;
   z.death = { head, seat: 0 };
