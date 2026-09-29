@@ -97,10 +97,14 @@ describe("RoomWatchdog", () => {
     expect(passes).toBe(1);
   });
 
-  it("ignores an answer about a room it has moved on from", async () => {
+  it("ignores an answer about a room it has moved on from, and then checks the new one", async () => {
     let answer: (outcome: ProbeOutcome) => void = () => undefined;
+    const asked: string[] = [];
     const dog = new RoomWatchdog({
-      probe: () => new Promise((resolve) => (answer = resolve)),
+      probe: (code) => {
+        asked.push(code);
+        return new Promise((resolve) => (answer = resolve));
+      },
       passed: () => undefined,
       broken: (_code, reason) => broken.push(reason),
       phonesConnected: () => 0,
@@ -110,9 +114,11 @@ describe("RoomWatchdog", () => {
       now: Date.now,
     });
     dog.watch("ABCD");
-    dog.stop();
+    // A new room while the old room's check is still out.
+    dog.watch("WXYZ");
     answer(missing);
     await vi.advanceTimersByTimeAsync(0);
     expect(broken).toEqual([]);
+    expect(asked).toEqual(["ABCD", "WXYZ"]);
   });
 });

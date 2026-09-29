@@ -92,7 +92,8 @@ export class RoomWatchdog {
   private async check(): Promise<void> {
     const code = this.code;
     if (!code || this.busy) return;
-    if (this.deps.paused() || !this.deps.online()) return this.schedule(this.cadence());
+    // A room not yet checked looks again soon, since its code stays hidden till then.
+    if (this.deps.paused() || !this.deps.online()) return this.schedule(this.okSince === null ? RECHECK_MS : this.cadence());
     this.busy = true;
     let outcome: ProbeOutcome;
     try {
@@ -102,8 +103,11 @@ export class RoomWatchdog {
     } finally {
       this.busy = false;
     }
-    // The room changed while the check was out, so its answer is about another room.
+    // The room changed while the check was out, so its answer is about
+    // another room. The new room's own first check could not start while
+    // this one was out, so it starts now, or its code would never show.
     if (this.code === code) this.judge(code, outcome);
+    else if (this.code) void this.check();
   }
 
   private judge(code: string, outcome: ProbeOutcome): void {
