@@ -1,12 +1,15 @@
 import { AudioEngine } from "@/platform/audio/audio-engine";
+import { startAudioSoon } from "@/platform/audio/autoplay";
 import { RESERVED_KINDS, type PhoneRoomApi, type PhoneRoomEvent } from "@/platform/games/game-api";
 import { SocketClient } from "@/platform/net/socket-client";
 import { defaultName, saveName } from "@/platform/profile";
 import { playersSchema, type Payload, type ServerEnvelope } from "@/platform/protocol";
+import { isNameClash, JoinRequest, TAKEN_RETRY_MS } from "./join-request";
 import { requestMotion } from "./permissions";
 import { createPhoneStore, type PhoneError } from "./phone-store";
 import { ScreenAwake } from "./screen-awake";
-import { readToken, writeToken } from "./seat-token";
+import { rememberMove } from "./room-move";
+import { writeToken } from "./seat-token";
 
 /** Fresh sockets to try when a join cannot find the room. */
 const JOIN_RETRIES = 6;
@@ -15,10 +18,10 @@ const reserved = new Set<string>(RESERVED_KINDS);
 const BACKLOG_LIMIT = 50;
 
 /**
- * The phone's side of the platform: joining the room, keeping the seat
- * through reconnects, and telling the host this player's name. Once
- * seated it hands the game a PhoneRoomApi, and everything else is the
- * game's business.
+ * The phone's side of the platform: joining the room under a unique name,
+ * keeping the seat through reconnects and reloads, and telling the host
+ * this player's name. Once seated it hands the game a PhoneRoomApi, and
+ * everything else is the game's business.
  */
 export class PhoneRoom {
   /** This room's screens. A fresh room never starts where another one ended. */
@@ -26,15 +29,24 @@ export class PhoneRoom {
   private readonly socket: SocketClient;
   private readonly awake = new ScreenAwake();
   private readonly listeners = new Set<(event: PhoneRoomEvent) => void>();
+  private readonly request: JoinRequest;
   private audio: AudioEngine | null = null;
+  private stopAudioWait: (() => void) | null = null;
   private motion: PhoneRoomApi["motion"] = "unavailable";
   private joinRetries = 0;
   private current: PhoneRoomApi | null = null;
   private backlog: PhoneRoomEvent[] = [];
+  private active = false;
+  private retryTimer: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(private readonly code: string) {
+  constructor(
+    private readonly code: string,
+    /** The player this page belongs to, from its address. Joining takes back their seat. */
+    resumeAs: string | null = null,
+  ) {
+    this.request = new JoinRequest(code, resumeAs, resumeAs !== null);
     this.socket = new SocketClient({
-      onOpen: (send) => send({ type: "phone:join", code: this.code, token: readToken(this.code) ?? undefined }),
+      onOpen: (send) => send(this.request.message()),
       onMessage: (message) => this.onMessage(message),
       onStatus: (status) => this.store.setState(status === "replaced" ? { status, stage: "error", error: "replaced" } : { status }),
     });
@@ -48,22 +60,53 @@ export class PhoneRoom {
   /**
    * The Join tap. Everything a browser only allows inside a tap happens
    * here at once: sound, motion access on iOS, and keeping the screen on.
+   * `reconnect` takes back the seat of the dropped player with this name.
    */
-  async join(name: string | null): Promise<void> {
-    // Skipping the name keeps whatever was saved before, and the seat number stands in for it.
+  async join(name: string | null, reconnect = false): Promise<void> {
+    // Skipping the name keeps whatever was saved before, and the relay names the seat.
     if (name) saveName(name);
-    this.store.setState({ name: name ?? "", stage: "joining" });
-    this.audio = new AudioEngine();
-    void this.audio.unlock();
+    this.request.name = name;
+    this.request.reconnect = reconnect;
+    this.store.setState({ name: name ?? "", stage: "joining", clash: null });
+    this.audio ??= new AudioEngine();
+    const audio = this.audio;
+    // Inside the Join tap this starts sound at once. A phone moved to a new
+    // room had no tap, so its sound waits for the next touch instead.
+    this.stopAudioWait?.();
+    this.stopAudioWait = startAudioSoon(audio.ctx, window, { resume: () => audio.unlock() });
     this.motion = await requestMotion();
-    void this.awake.start();
-    this.socket.connect();
+    this.start();
+  }
+
+  /**
+   * Straight back into the seat, with no tap, for a page opened at this
+   * player's own address. Sound starts at the first touch instead.
+   */
+  resume(): void {
+    if (this.active || !this.request.name) return;
+    this.store.setState({ name: this.request.name, stage: "joining" });
+    this.audio ??= new AudioEngine();
+    const audio = this.audio;
+    // A reload has no tap, so sound starts on the next touch.
+    this.stopAudioWait?.();
+    this.stopAudioWait = startAudioSoon(audio.ctx, window, { resume: () => audio.unlock() });
+    // Without a tap iOS cannot grant motion, so a resume there goes through Join (see PhoneApp).
+    void requestMotion().then((motion) => (this.motion = motion));
+    this.start();
+  }
+
+  /** The Reconnect button: try a fresh connection now instead of waiting out the backoff. */
+  reconnect(): void {
+    if (this.active) this.socket.redial();
   }
 
   /** Safe to call twice: a room that ended is disposed again when its page goes. */
   dispose(): void {
+    this.active = false;
+    if (this.retryTimer) clearTimeout(this.retryTimer);
     this.awake.stop();
     this.socket.close();
+    this.stopAudioWait?.();
     this.audio?.close();
     this.audio = null;
   }
@@ -78,33 +121,31 @@ export class PhoneRoom {
     this.dispose();
   }
 
+  private start(): void {
+    this.active = true;
+    void this.awake.start();
+    this.socket.connect();
+  }
+
   private onMessage(message: ServerEnvelope): void {
     switch (message.type) {
       case "phone:joined": {
         this.joinRetries = 0;
         writeToken(this.code, message.token);
+        this.request.seated(message.name);
         const first = this.current === null;
         if (first) this.current = this.makeApi(message.seat, message.seats);
-        if (!this.store.getState().name) this.store.setState({ name: defaultName(message.seat) });
-        this.store.setState({ stage: "playing", seat: message.seat, game: message.game, error: null, hostAway: !message.hostHere });
+        this.store.setState({ stage: "playing", seat: message.seat, game: message.game, name: message.name, error: null, clash: null, hostAway: !message.hostHere });
         this.sendProfile();
         if (!first) this.emit({ type: "rejoined" });
         return;
       }
-      case "room:error": {
-        // Without a shared room store, a socket can land on a server
-        // instance that has never heard of the room, and a server side
-        // failure may pass. Either way, try a few fresh sockets.
-        const retry = message.reason === "not-found" || message.reason === "unavailable";
-        if (retry && this.joinRetries < JOIN_RETRIES) {
-          this.joinRetries += 1;
-          this.socket.redial();
-          return;
-        }
-        return this.fail(message.reason);
-      }
+      case "room:error":
+        return this.onJoinError(message.reason);
       case "room:closed":
         return this.fail("closed");
+      case "room:moved":
+        return this.moveTo(message.code);
       case "host:away":
         this.store.setState({ hostAway: true });
         return;
@@ -118,13 +159,46 @@ export class PhoneRoom {
     }
   }
 
+  /** The host remade its lobby. This page follows to the new room with the same name. */
+  private moveTo(code: string): void {
+    const { name, seat } = this.store.getState();
+    const chosen = name && !(seat && name === defaultName(seat)) ? name : null;
+    rememberMove({ code, name: chosen });
+    this.store.setState({ stage: "joining", movedTo: code });
+    this.dispose();
+  }
+
+  private onJoinError(reason: Extract<ServerEnvelope, { type: "room:error" }>["reason"]): void {
+    if (isNameClash(reason)) {
+      if (this.request.retryTaken(reason)) {
+        this.retryTimer = setTimeout(() => this.socket.redial(), TAKEN_RETRY_MS);
+        return;
+      }
+      // Back to the player to pick another name, or to reconnect as this one.
+      this.active = false;
+      this.socket.close();
+      this.store.setState({ stage: "name", clash: { reason, name: this.request.name ?? "" } });
+      return;
+    }
+    // Without a shared room store, a socket can land on a server instance
+    // that has never heard of the room, and a server side failure may
+    // pass. Either way, try a few fresh sockets.
+    const retry = reason === "not-found" || reason === "unavailable";
+    if (retry && this.joinRetries < JOIN_RETRIES) {
+      this.joinRetries += 1;
+      this.socket.redial();
+      return;
+    }
+    this.fail(reason);
+  }
+
   private onHost(payload: Payload): void {
     if (!reserved.has(payload.kind)) return this.emit({ type: "message", payload });
     const players = playersSchema.safeParse(payload);
     if (players.success) this.store.setState({ players: players.data.players });
   }
 
-  /** The host learns names from the phones, so it hears again after every reconnect. */
+  /** The host learns names from the phones too, so it hears again after every reconnect. */
   private sendProfile(): void {
     this.send({ kind: "profile", name: this.store.getState().name });
   }
@@ -146,12 +220,16 @@ export class PhoneRoom {
   }
 
   private makeApi(seat: number, seats: number): PhoneRoomApi {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias -- motion may settle after the seat does
+    const room = this;
     return {
       code: this.code,
       seat,
       seats,
       audio: this.audio ?? new AudioEngine(),
-      motion: this.motion,
+      get motion() {
+        return room.motion;
+      },
       send: (payload) => this.send(payload),
       sendLossy: (payload) => this.socket.sendLossy({ type: "phone:send", payload }),
       on: (listener) => {

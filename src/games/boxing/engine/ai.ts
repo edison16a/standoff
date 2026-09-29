@@ -60,6 +60,8 @@ export class ComputerBoxer {
     readonly id: FighterId,
     private readonly random: Random,
     private readonly level: (round: number) => AiLevel = (round) => AI_LEVELS[Math.min(AI_LEVELS.length, round) - 1]!,
+    /** False for Training: it stands there, but still touches gloves and gets up. */
+    private readonly acts = true,
   ) {
     this.nextAttack = between(random, 900, 1600);
   }
@@ -68,6 +70,11 @@ export class ComputerBoxer {
   hear(event: MatchEvent, match: Match): void {
     const level = this.level(match.round);
     const now = match.now;
+    if (!this.acts) {
+      // A training partner still gets up, so the practice goes on.
+      if (event.type === "knockdown" && event.fighter === this.id) this.getUpAt = 3;
+      return;
+    }
     if (event.type === "throw" && event.fighter === other(this.id)) {
       const roll = this.random();
       const until = event.impactAt + 160;
@@ -104,6 +111,7 @@ export class ComputerBoxer {
     const them = match.fighters[other(this.id)];
     const input = this.defend(match);
     match.setInput(this.id, input);
+    if (!this.acts) return;
     if (match.phase !== "fight" || now < this.nextAttack || input.guard || !me.canPunch(now)) return;
 
     const level = this.level(match.round);
@@ -125,7 +133,8 @@ export class ComputerBoxer {
     const down = match.fighters[this.id].down;
     // A little bob and weave while nothing is coming, so it is never a still target.
     const weave: Partial<Posture> = { slip: 0.2 * Math.sin(now / 430 + this.id * 2), duck: 0.12 * (1 + Math.sin(now / 610 + this.id)) };
-    const posture: Partial<Posture> = this.defense?.posture ?? (now < this.coverUntil ? { shell: "guard" } : weave);
+    const idle = this.acts ? weave : {};
+    const posture: Partial<Posture> = this.defense?.posture ?? (now < this.coverUntil ? { shell: "guard" } : idle);
     const input = defenseOf(posture);
     if (down) input.raise = down.count >= this.getUpAt;
     if (match.phase === "touch") input.reach = now - match.phaseSince > TOUCH_AFTER_MS;

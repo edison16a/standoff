@@ -1,7 +1,7 @@
 "use client";
 import { playerColor } from "@/games/kit/players";
+import { ordinal } from "@/games/kit/split/finish";
 import { LEVELS } from "../../levels";
-import { placeName } from "../race";
 import { useCubeStore, type HudPlayer } from "../store";
 import { PaneFinish } from "./PaneFinish";
 
@@ -35,7 +35,7 @@ function PlayerHud({ slot, all, stored }: PlayerHudProps) {
             P{slot}
           </span>
         )}
-        {racing && <span className={`cg-tag ${hud.place === 1 ? "cg-tag--lead" : "cg-tag--dark"}`}>{placeName(hud.place)}</span>}
+        {racing && <span className={`cg-tag ${hud.place === 1 ? "cg-tag--lead" : "cg-tag--dark"}`}>{ordinal(hud.place)}</span>}
         <span className="cg-tag cg-tag--dark">{MODE_NAME[hud.mode]}</span>
         {practice && <span className="cg-tag cg-tag--practice">Practice</span>}
         <span className="cg-tag cg-tag--dark">Best {best}%</span>

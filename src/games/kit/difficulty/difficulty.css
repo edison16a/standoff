@@ -1,0 +1,43 @@
+/* The shared bot difficulty row. Same look as the sports lobbies. */
+
+.kit-difficulty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.kit-difficulty__label {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.kit-difficulty__segments {
+  display: flex;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  background: rgba(10, 12, 30, 0.8);
+}
+
+.kit-difficulty__segments button {
+  min-width: 56px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.kit-difficulty__segments button[aria-pressed="true"] {
+  background: #ffffff;
+  color: #0a0c1e;
+}
+
+.kit-difficulty__segments button:focus-visible {
+  outline: 3px solid #ffd23f;
+}

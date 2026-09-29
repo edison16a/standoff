@@ -3,6 +3,7 @@ import type { RoomStore } from "./backend";
 import { logFailure } from "./log";
 import { makeRoomCode, makeToken } from "./room-code";
 import * as rules from "./room-state";
+import { claimSeat, type SeatRequest } from "./seat-claim";
 
 /** Tries before giving up on finding an unused room code. */
 const CODE_ATTEMPTS = 20;
@@ -39,6 +40,19 @@ export class RoomOps {
     return null;
   }
 
+  /**
+   * A fresh room with the same game and seat count, made for the host of
+   * `code`, which is then closed. Null if `conn` is not that room's host or
+   * no free code turned up, and the old room is left as it was.
+   */
+  async remake(code: string, conn: string, joinUrlFor: (code: string) => string): Promise<rules.RoomRecord | null> {
+    const old = await this.store.get(code);
+    if (!old || old.hostConn !== conn) return null;
+    const room = await this.create(conn, joinUrlFor, old.game, old.seats.length);
+    if (room) await this.closeByHost(code, conn);
+    return room;
+  }
+
   /** False once this address has made too many rooms this minute. */
   async allowCreate(client: string): Promise<boolean> {
     return (await this.store.bump(`create:${client}`)) <= CREATES_PER_MINUTE;
@@ -57,11 +71,11 @@ export class RoomOps {
     });
   }
 
-  joinSeat(code: string, token: string | undefined, conn: string) {
+  joinSeat(code: string, request: SeatRequest, conn: string) {
     const now = this.now();
     const newToken = makeToken();
     return this.store.update(code, (room) => {
-      const { room: next, claim } = rules.claimSeat(room, token, conn, newToken, now);
+      const { room: next, claim } = claimSeat(room, request, conn, newToken, now);
       return {
         room: claim.ok ? next : null,
         result: { claim, hostHere: room.hostConn !== null, game: room.game, seats: room.seats.length },

@@ -1,7 +1,7 @@
 /**
  * A small seeded random source (mulberry32). The course, the bots and the
  * showcase all draw from one of these, so the same seed always builds the
- * same yard and two players racing on one seed meet the same trains.
+ * same yard and a replay meets the same trains.
  */
 export class Rng {
   private state: number;

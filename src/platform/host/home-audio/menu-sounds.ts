@@ -2,8 +2,8 @@ import type { AudioEngine } from "@/platform/audio/audio-engine";
 import { midi, noise, tone } from "@/platform/audio/voices";
 
 /**
- * The home screen's interface sounds. All three are tuned to the lobby
- * tune's key of C so they sound part of the music, never on top of it.
+ * The home screen's interface sounds. All three use notes from the lobby
+ * tune's key of F major so they sound part of the music, never on top of it.
  */
 
 /** Moving between games: a short round bubble pop, pitched by position so the row feels like a scale. */
