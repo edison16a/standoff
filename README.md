@@ -84,7 +84,7 @@ On the computer, pick a game and press **Host Game**. Scan the QR code with each
 
 Opening the site on a phone goes straight to the join screen, since phones are the controllers. Type the four letter code from the big screen, or tap **Scan QR code** where the browser can read QR codes (Chrome on Android does; elsewhere the button stays hidden and the phone's own camera app works too). The Standoff logo on a phone always leads back there. When the host ends a game or leaves, every phone lands on **Join a new game** with the same code field and scanner.
 
-If phones say "Room not found" while the big screen still shows a code, open the gear on the big screen and press **Remake lobby**. It opens a fresh room for the same game and moves every phone to it, names and all.
+The big screen checks each new room before it shows the code, so for a moment the QR code reads **Checking the room**. Right under the code sits **Regenerate room**. It opens a fresh room for the same game on a fresh connection and moves every phone that can still hear the old room to it, names and all. **Remake lobby** in the gear menu does the same. If a room is lost, see *When a room is lost* below.
 
 Names are unique in a room, whatever the case or spacing. A phone that picks a name someone is using is asked for another. Once seated, the phone moves to its own address, `/play/<CODE>/<name>`. Reload it, or close the tab and open it again, and you land back in your seat with your score. If a phone loses its connection, it shows a **Reconnect** button. A new phone that types the name of a player who dropped is offered **Reconnect** too, and takes over that player rather than joining as someone new.
 
@@ -106,13 +106,11 @@ There are two ways to run Standoff, and they share all their code.
 
 ### On Vercel
 
-1. Import this repository into Vercel. It builds as a normal Next.js app.
-2. In the project, open **Storage**, add **Upstash for Redis** from the Marketplace and connect it to the project. That sets `REDIS_URL`.
-3. Redeploy, so the new variable reaches the functions.
+Import this repository into Vercel. It builds as a normal Next.js app, and needs nothing else. WebSockets need Fluid compute, which is on by default for projects created since April 2025.
 
-Redis is what lets the host and the phones find each other. On Vercel each connection is held by one function instance, and the three connections may land on three different instances. Without Redis some joins fail to find the room. Phones retry a few times, so it often still works, but not reliably. WebSockets need Fluid compute, which is on by default for projects created since April 2025.
+Rooms live in the memory of the function instance that holds the host's WebSocket. A WebSocket stays on its instance for its whole life, which is why a game plays smoothly once everyone is in. The catch: **a deploy, or Vercel adding an instance under load, can end the rooms that are open**, because new connections may reach an instance that has never heard of them. The big screen notices within seconds and either makes a new room by itself or asks you to press **Regenerate room** (see *When a room is lost*). That is the recovery, and nothing needs setting up for it.
 
-Chrome and Firefox can only reach the game through the HTTP fallback on Vercel today (see *The HTTP fallback* below). That fallback leans on Redis even more, so treat Redis as required.
+A Redis URL in the environment (`REDIS_URL`, `KV_URL`, or any variable ending in either) makes every instance share the rooms instead. It is optional and nothing asks for it. `/api/health` says which store a deployment uses and which deployment answered.
 
 On the Hobby plan Vercel ends every socket after five minutes. The server warns each client 30 seconds early, and the client moves to a fresh socket without dropping the game (see *Socket handover* below), so a match never notices.
 
@@ -149,12 +147,13 @@ Public and guest WiFi usually stop devices from reaching each other, so on those
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `REDIS_URL` | none | Shared room store. Set by the Vercel Redis integration. `KV_URL` also works |
+| `REDIS_URL` | none | Optional shared room store. `KV_URL`, or any name ending in either, also works |
 | `PORT` | `3000` | Local HTTP port for the computer |
 | `HTTPS_PORT` | `3443` | Local HTTPS port for the phones |
 | `HOST` | `0.0.0.0` | Local interface to listen on |
 | `PUBLIC_HOST` | LAN address | Address put in the QR code locally |
 | `SOCKET_LIFETIME_MS` | off | Cuts local sockets after this long, like Vercel, to try the handover |
+| `STANDOFF_SIMULATE_INSTANCES` | off | `1` makes a local server act as one of several Vercel instances with rooms of their own |
 
 ## How it works
 
@@ -162,7 +161,7 @@ Public and guest WiFi usually stop devices from reaching each other, so on those
 
 `src/platform` is the console: the home screen, rooms, joining, names, reconnects, and the frame around every game. Each game is a folder in `src/games` that plugs in through one contract, `src/platform/games/game-api.ts`. A game supplies a host screen for the computer and a phone screen, and exchanges messages of its own design with its phones. It never imports another game, so several games can be built at once without touching the same files. `src/games/README.md` explains how to add one.
 
-A remade lobby is one relay message: the host sends `host:remake`, the relay opens a new room for the same game, tells the old room's phones `room:moved` with the new code, and closes the old room. A phone joining a room whose host is gone for good is told `closed`, not `not-found`, so it stops retrying a dead room at once.
+A room ends with `host:retire`, which carries the room's host token, so it works from any connection, even when the one that made the room is dead. It can name where the phones go next (`movedTo`), and the relay tells them `room:moved` with the new code. The host sends it again until the relay answers, so a lost reply never leaves phones in an old game. An ended room stays behind as a tombstone for ten minutes: a phone that slept through the end and joins the old code is told the new code, or that the game ended, rather than "Room not found".
 
 The platform keeps two message kinds for itself. A phone sends `profile` with its player's name, and the host sends every phone `players`, the line up. Games never see either.
 
@@ -170,7 +169,7 @@ Inside a game, the computer is the referee. Phones send raw input, and everythin
 
 ### The relay
 
-Between the computer and the phones sits a relay that makes no game decisions. It seats players, remembers who holds which seat, and passes messages along. It checks only that a message has a `kind` and fits the size cap, so a new game needs nothing from it. Locally, one Node process (`server/index.ts`) serves the pages and accepts sockets at `/api/ws`, and rooms live in memory. On Vercel, a Next.js route at `src/app/api/ws/route.ts` takes over each socket from the runtime, and rooms live in Redis. A second route, `/api/stream`, carries the same relay over plain HTTP for browsers whose WebSocket cannot open.
+Between the computer and the phones sits a relay that makes no game decisions. It seats players, remembers who holds which seat, and passes messages along. It checks only that a message has a `kind` and fits the size cap, so a new game needs nothing from it. Locally, one Node process (`server/index.ts`) serves the pages and accepts sockets at `/api/ws`, and rooms live in memory. On Vercel, a Next.js route at `src/app/api/ws/route.ts` takes over each socket from the runtime, and rooms live in the memory of that function instance, or in Redis when a URL is set. A second route, `/api/stream`, carries the same relay over plain HTTP for browsers whose WebSocket cannot open.
 
 The seat rules are plain functions over a small room record (`src/platform/relay/room-state.ts` and `seat-claim.ts`): the lowest free seat goes to the next phone, up to the one to six seats the game asked for, a known seat token gets its old seat back, and a seat or a room is kept for a grace period after its player drops. Each seat keeps its player's name. A join with a name a connected player has is refused. A join with the name of a player who dropped is refused too, unless it asks to reconnect, and then it takes that same seat, so the game hears a rejoin and keeps the player's state. Two things sit under those rules:
 
@@ -185,13 +184,28 @@ Every frame is validated with zod and rate limited per socket. Room creation and
 
 Vercel ends every function at its maximum duration, sockets included. The route reads the real cutoff with `getDeadline()`, and the relay sends the client `server:rotate` 30 seconds before it (a third of the life, for shorter ones). The client (`src/platform/net/socket-client.ts`) then opens a second socket and rejoins on it. Outgoing messages switch to the new socket as soon as it opens, because the relay queues them behind the rejoin. Incoming messages switch once the new socket confirms the seat. Until then the old one keeps delivering, so nothing is lost or doubled. The relay kicks the old socket once the new one holds the seat, and the host never sees the player leave. If the new socket dies before confirming, whatever went out on it is sent again on the old one. Start the local server with `SOCKET_LIFETIME_MS=36000` to watch it happen every few seconds.
 
+### When a room is lost
+
+A room can stop working without anyone doing anything wrong: a deploy lands, or Vercel adds an instance and new connections reach one that has never heard of the room. The big screen watches for that (`src/platform/host/room-guard.ts`):
+
+* **A room check.** Right after a room is made, and every 20 seconds in the lobby (every minute once it has been fine for five), the host opens a throwaway connection, the way a phone would reach the room, and asks the relay to check it: the room must exist there, and a message must reach the host and come back (`probe:room`, `room:probe`, `host:echo`). A phone joining counts as a pass. Checks wait during a match and in a background tab. The QR code only shows once the first check passes.
+* **The host's own connection.** When it drops and every fresh socket's resume says "not found" for about nine seconds, the room is gone. When a handover socket cannot find the room, the room is checked at once.
+
+Before anyone has joined, a broken room is simply replaced: a new room is made and checked on a fresh connection, and its code appears. At most three such tries happen in five minutes, so a server that cannot keep rooms is never asked for one after another. Once players are in, the big screen says **This room was lost** (or **Phones can't reach this room**) with one big **Regenerate room** button, because the players have to follow the new code.
+
+Regenerate room, Remake lobby and the automatic fix are the same full remake (`room-candidate.ts`): a new socket makes the new room and it is checked, while the old room and its phones carry on untouched. Only once it passes does the host move over to the new socket and retire the old room with `movedTo`, so phones that can still hear it follow by themselves, names and all. If the new room fails its check, it is ended and nothing else changes.
+
+A phone whose room is gone tries to get back in for about nine seconds, still on its game screen, then says **The room was lost** and shows the code field and QR scanner for the new code.
+
 ### The HTTP fallback
 
 Chrome and Firefox open a WebSocket over the page's existing HTTP/2 connection whenever the server allows it, and Vercel's edge does. Those WebSockets currently fail at the edge with a 502, before our code ever sees them. Vercel's own WebSocket demo fails the same way. Safari opens WebSockets over HTTP/1.1, so iPhones are not affected.
 
-So when a WebSocket fails before it ever opens, the client switches to an HTTP stream for good (`src/platform/net/stream-channel.ts`). A Server-Sent Events stream from `GET /api/stream` carries messages down. Messages going up are batched into `POST /api/stream`, one request at a time so they arrive in order, with whatever queued meanwhile riding in the next one. The stream behaves like a socket to the relay, handover included. A POST may reach any instance, so it travels to the stream's instance over the Redis bus. Without Redis about half the posts land on the wrong instance. Each of those is retried a few times, which helps, but Redis is the real fix. Set `standoff:transport` to `stream` in local storage to try the fallback anywhere.
+Every connection starts as a WebSocket. When one fails before it ever opens, that page uses an HTTP stream instead for the next ten minutes, so a room check or a handover does not fail the same way again, and then tries a WebSocket again (`src/platform/net/transport-choice.ts`). The switch happens at once, not after a backoff. A socket the client closed itself while it was still connecting does not count.
 
-To stay inside the free Redis quota, a phone only sends a motion frame when the reading actually changed, plus a keepalive four times a second. Strikes go out the instant they are detected.
+The stream (`src/platform/net/stream-channel.ts`) is a Server-Sent Events stream from `GET /api/stream` for messages down, and `POST /api/stream` for messages up, one request at a time so they arrive in order. Posts start at least 100 ms apart, with whatever queued meanwhile riding in the next one, and a motion frame still waiting is replaced by the newer one rather than sent too. Every post is a request of its own, and a flood of them is what makes Vercel add instances. A POST may reach any instance, and one that does not hold the stream answers 410, so it is sent again at once, up to five times. The stream behaves like a socket to the relay, handover included. Set `standoff:transport` to `stream` in local storage to try the fallback anywhere.
+
+A phone only sends a motion frame when the reading actually changed, plus a keepalive four times a second. Strikes go out the instant they are detected.
 
 ## Blade Clash
 
@@ -227,7 +241,7 @@ src/
     games/                The contract between the platform and a game
     host/                 Home screen, room shell, join card, the host's room
     phone/                Name screen, joining, the phone's room, permissions
-    relay/                Rooms and message routing, with memory and Redis backends
+    relay/                Rooms and message routing, in memory or in Redis
     net/                  Socket client with reconnects, the handover and the HTTP fallback
     protocol/             The envelopes every frame travels in
     audio/                The Web Audio engine
@@ -250,6 +264,8 @@ npm test
 ```
 
 The suite covers the relay (seating up to six, ordering, kicks, grace periods, closing, store failures and rate limits), both Vercel routes, the socket handover, the platform's host room and names, the game catalog, and for Blade Clash the motion pipeline fed with synthetic sensor data, calibration and aiming, the swept blade tests, clashes and knockback, the engine playing whole exchanges, match flow with the slow motion finish, the computer opponent, the rig, footwork and endings, the lobby, and the showcase's beats. The kit's aim math and phone aiming are tested too. Each three.js game tests its own engine: Fruit Slicer's blade sweeps and scoring, Magic Kart's laps, checkpoints, items and whole computer races on every map, Zombie Survival's guns, stages and a bot team playing all 25 stages, and Shooting Gallery's rounds, hit tests and best scores.
+
+Rooms are tested end to end too. `src/platform/testing/fake-cluster.ts` runs several relay instances in one test, each with rooms of its own, and routes the real client's WebSockets, event streams and posts across them. On it the real host and phones play game after game in one tab, over WebSockets and over the stream, regenerate a room with players in it, and live through a deploy that takes the room, before anyone joined and after.
 
 Two more files run against a real Redis: the relay with two separate backends standing in for two Vercel instances, and the store's locking and expiry. They run when `REDIS_TEST_URL` is set:
 
