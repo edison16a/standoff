@@ -43,6 +43,21 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
    * Difficulty comes from speed, not numbers. Zombies are fast from the start (1x), about 10 percent faster each round, capped at 2x.
    * A big slow boss every 5 rounds, with fast zombies rushing in behind it. A mini boss every other round.
 
+### Batch F: the second to last changes, after Batch E and before the final steps
+
+1. **Cube Game portals:**
+   * Turned sideways, like Geometry Dash, each showing a picture of what the player becomes (ship, ball and so on).
+   * Can't be skipped: walls, spikes or ceilings block every way around a portal, so the player is forced through it.
+2. **Cube Game Demon levels:** two new levels labelled Demon, genuinely harder than everything before them, each with its own song.
+3. **Cube Game camera:** the cube sits a bit further to the right on screen.
+4. **Local leaderboards for Cube Game and Subway Runner:**
+   * Saved on each computer only, and never ending (every result is kept).
+   * After a win or a new score, the game says your rank, for example "#3 on this computer".
+   * Cube Game ranks each level by finish time; Subway Runner ranks by score.
+   * Settings gets a button to wipe the leaderboards.
+   * A shared kit piece, so both games use the same one.
+5. **Subway Runner keyboard mode:** play with the arrow keys or WASD (left and right switch lanes, up jumps, down rolls) as well as the camera.
+
 ### Last
 
 1. **Final check that everything works:** every game played end to end in a real browser with a host page and phone pages (lobby, calibration, a full round, results, back home, a second game without a reload), and the live site's connections checked after the deploy: iPhones on WebSockets, Chrome's fallback, room loss noticed and Regenerate room working. Fix anything found before the media pass.
