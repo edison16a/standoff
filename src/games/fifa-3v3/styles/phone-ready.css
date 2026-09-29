@@ -3,7 +3,7 @@
   pad out of the way while the phone is upright.
 */
 
-/* Ready: the chosen star, the side the host picked, and what happens next. */
+/* Ready: the player and their build, the side the host picked, and what happens next. */
 
 .fifa-ready__card {
   display: flex;
@@ -57,7 +57,7 @@
   color: var(--text-muted);
 }
 
-/* Upright the star takes whatever height the words and cards leave. */
+/* Upright the build takes whatever height the words and cards leave. */
 @media (orientation: portrait) {
   .fifa-pick,
   .fifa-ready {
