@@ -47,8 +47,8 @@ The model is Soccer 3v3's World Cup ceremony, made for football from the victory
 Held sideways, like a controller: moving under the left thumb, the ball and the buttons under the right, and the score, the clock, the down and a status line in the middle. The layout follows what the player is doing right now, straight from the engine's `seatStatus`, and every change of layout lets go of anything held.
 
 * **The call.** Before each play the QB gets three big tiles, Throw, Run and Kick, with the seconds left. After a touchdown: Kick for 1 or Go for 2.
-* **The QB.** The same move stick as everyone on the left. Before the snap the middle is one big Hike button with the seconds left of the 5 second window. On the right the throw stick: hold it and push toward a receiver on the big screen, the one nearest that line lights up, and let go to throw. On a run call a big Pass button takes its place for the pitch. Juke sits in the middle after the snap.
-* **A runner** (and the QB once past the line): the run stick, Dive and Juke.
+* **The QB.** The same move stick as everyone on the left. Before the snap the middle is one big Hike button with the seconds left of the 5 second window. On the right the throw stick: hold it and push toward a receiver on the big screen, the one nearest that line lights up, and let go to throw. On a run call a big Pass button takes its place for the pitch. Juke and Run sit in the middle after the snap.
+* **A runner** (and the QB once he presses Run or crosses the line): the run stick, Dive and Juke.
 * **The defence:** the move stick, Rush, Guard (held) and Tackle. The defence never picks a play, so its pad stays up while the offense calls one, and defenders can move to set up (never across the line before the snap). After an interception the QB defends too.
 * **The kicker:** a marker sweeps across the accuracy bar, stop it in the green; then one climbs the power bar, stop it high. The phone draws both meters on its own clock and sends the reading it showed, so lag never moves the kick.
 * **Replay:** one Skip button and the tally.
@@ -108,13 +108,13 @@ Everything is synthesised through the audio engine, with no crowd: the brass and
 
 The throw stick draws an invisible aim line from the QB. The receiver nearest that line is the target and its ring lights up. Letting go throws. The throw leads the receiver's run and bends gently after a receiver who changes course, so a good throw does not miss. It can still be picked off: a defender standing in front of the target at the throw takes the ball, and a defender a person steers into the ball's path picks it off. A defender on Guard, or a computer defender, never jumps into the path.
 
-The QB throws once a play, from behind the line. Past the line the QB is a runner.
+The QB throws once a play, with the ball in hand, and his accuracy is the same on every throw. He can shuffle back while he throws.
 
-**On the run.** The QB is as fast as any player, but how still he is at the release sets how clean the throw is (`engine/accuracy.ts`). Set feet give an accurate pass that bends after the receiver. Flat out, the ball comes down well off the lead spot, more on a long pass, bends less, and defenders read it wider and knock it down more often, so it is often off target, broken up or picked. A big arm steadies it a little. Computer QBs set their feet before they throw unless the rush is on them. The numbers are in `ON_THE_RUN` in `engine/tuning.ts`.
+**The QB and Run.** As a passer the QB is clearly slower than everyone else, slowest just after the snap while he sets up, then a little quicker a few seconds in (`QB_PACE` in `engine/tuning.ts`). To take off he presses Run. From then on he is the runner for the rest of the play: he cannot throw or pitch, his phone switches to the runner's pad with Juke and Dive, and he moves at a normal runner's speed (`engine/qb-run.ts`). Crossing the line with the ball does the same. Computer QBs press Run too, when nobody is open and there is grass ahead, or when the read goes on too long. A QB brought down after pressing Run is tackled, not sacked.
 
 ### Running the ball
 
-On a run call one runner lines up beside the QB and a yard deeper, on the side with more room: a person's runner if there is one, so a player gets the carry. After the snap the QB presses Pass and lobs him the ball, a short soft pitch that leads his run (`engine/run-play.ts`). The ring shows who it is going to. There is no forward pass on a run call. A pitch counts as a run: nobody can pick it off, the yards are rushing yards, and one that hits the turf is dead where the play started. The QB can still keep it and run himself. Computer backs sweep wide and turn upfield, and computer QBs pitch a beat after the snap.
+On a run call one runner lines up beside the QB and a yard deeper, on the side with more room: a person's runner if there is one, so a player gets the carry. After the snap the QB presses Pass and lobs him the ball, a short soft pitch that leads his run (`engine/run-play.ts`). The ring shows who it is going to. There is no forward pass on a run call. A pitch counts as a run: nobody can pick it off, the yards are rushing yards, and one that hits the turf is dead where the play started. The QB can still press Run and keep it himself. Computer backs sweep wide and turn upfield, and computer QBs pitch a beat after the snap.
 
 ### Running and defending
 
@@ -138,7 +138,7 @@ A spiral spins about its long axis, its nose tips over to follow the arc, and it
 
 Difficulty comes from `src/games/kit/difficulty`: Easy (the default), Medium, Hard and Training. It sets how quickly bots react, how well they read the field, tackle and kick, and how hard they run. In Training they stand still.
 
-* The QB drops back, reads the receivers, sets his feet, throws to the most open one, and avoids throwing into a defender sat in front. With nobody open, it runs.
+* The QB drops back, reads the receivers, throws to the most open one, and avoids throwing into a defender sat in front. With nobody open and room ahead, or when the read drags on, it presses Run and takes off.
 * Receivers run slants, gos, outs, curls, drags and posts, and go to meet the ball.
 * Defenders cover a receiver from over the top. A spare one rushes the QB on about half the plays and sits deep as a safety on the rest. A computer defender next to a pass can knock it down, but never catches it. Once someone has the ball they chase and tackle.
 * It calls a run on about one play in four, and on half of them with three yards or less to go.
@@ -152,7 +152,7 @@ Difficulty comes from `src/games/kit/difficulty`: Easy (the default), Medium, Ha
 const match = new Match({ entries: buildLineup(signups), seed, level: "easy" });
 match.setMove(id, { x, z });      // the move stick, in field space
 match.setAim(id, { x, z });       // the throw stick while held; null lets go and throws
-match.press(id, "juke");          // hike, juke, dive, rush, tackle, guard, kick, pass (the pitch)
+match.press(id, "juke");          // hike, juke, dive, rush, tackle, guard, kick, pass (the pitch), run (the QB takes off)
 match.release(id, "guard");
 match.choose(id, "throw");        // throw, run or kick; after a touchdown, kick or two
 match.step(STEP);
@@ -168,7 +168,7 @@ const pad = seatStatus(match, seat); // which controls a phone should show
 * A phone that drops is played by the computer with `setAuto`.
 * `admin.ts` has the shortcuts for the host's admin panel: `adminTouchdown`, `adminFieldGoal` and `adminTwoPoint`. They go through the real rules.
 
-Files: `field` and `downs` for the field and the rules of downs, `motion` and `body` for running, `juke`, `tackle`, `guard` and `linemen` for contact, `flight`, `aim`, `passing`, `accuracy` and `catching` for the ball in the air, `run-play` for the run call and the pitch, `kick` and `kick-flight` for kicking, `whistle`, `score` and `phases` for how plays end and what comes next, `build-effects` for what each rating does, `ceremony` for the trophy presentation, `bots/` for the computer players.
+Files: `field` and `downs` for the field and the rules of downs, `motion` and `body` for running, `juke`, `tackle`, `guard` and `linemen` for contact, `flight`, `aim`, `passing` and `catching` for the ball in the air, `qb-run` for the QB's pace and the Run button, `run-play` for the run call and the pitch, `kick` and `kick-flight` for kicking, `whistle`, `score` and `phases` for how plays end and what comes next, `build-effects` for what each rating does, `ceremony` for the trophy presentation, `bots/` for the computer players.
 
 ## Drawing the game
 
