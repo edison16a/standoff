@@ -1,5 +1,5 @@
 "use client";
-import type { Board } from "./scoreboard";
+import type { Board } from "./board";
 
 /**
  * The broadcast score bug along the bottom of the big screen: both

@@ -115,7 +115,7 @@ const board = scoreboard(view); // for <Scoreboard board={board} />
 
 ### The scoreboard
 
-`render/hud` has the broadcast score bug for the big screen: both teams with their scores and a dot for the side with the ball, the quarter and clock, down and distance with the spot, the play clock while a pick or a hike is due, and the target score. `scoreboard(view)` turns a view into its text.
+`render/hud` has the broadcast score bug for the big screen: both teams with their scores and a dot for the side with the ball, the quarter and clock, down and distance with the spot, the play clock while a pick or a hike is due, and the target score. `scoreboard(view)` in `render/hud/board.ts` turns a view into its text.
 
 ### The showcase
 

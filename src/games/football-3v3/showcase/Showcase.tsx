@@ -4,7 +4,7 @@ import * as THREE from "three";
 import type { ShowcaseView } from "@/platform/games/game-api";
 import { MatchRenderer } from "../render/match-renderer";
 import { Scoreboard } from "../render/hud/Scoreboard";
-import { scoreboard, type Board } from "../render/hud/scoreboard";
+import { scoreboard, type Board } from "../render/hud/board";
 import { isLabMove, labView } from "./lab";
 import { ShowcaseScene } from "./scene";
 

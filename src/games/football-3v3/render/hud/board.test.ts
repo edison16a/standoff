@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { freshView } from "../test-views";
-import { clockText, scoreboard, spotText } from "./scoreboard";
+import { clockText, scoreboard, spotText } from "./board";
 
 describe("scoreboard", () => {
   it("shows the quarter, the clock, the down and the target", () => {
