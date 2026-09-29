@@ -55,6 +55,7 @@ export function strikeSetPiece(state: MatchState, sp: SetPiece): void {
   const onLine = crossing(sp.spot, launch, goalX(defending));
   const speed = Math.hypot(launch.vel.x, launch.vel.y, launch.vel.z);
   state.setPiece = null;
+  state.taken = { kind: sp.kind, team: sp.team, spot: { ...sp.spot }, at: state.time };
   state.phase = "play";
   state.phaseT = 0;
   setRefereeAction(state.referee, "follow");

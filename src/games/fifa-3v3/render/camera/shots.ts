@@ -17,6 +17,10 @@ export interface Framing {
 export function frameFor(view: MatchView, options: { lobby?: boolean; replay?: boolean; goals?: number } = {}): Framing {
   if (options.lobby) return { shot: "lobby", tags: true };
   if (options.replay) return { shot: (options.goals ?? 0) % 2 === 0 ? "replay-end" : "replay-side", tags: false };
+  // A free kick or penalty is lined up and struck from behind the ball.
+  if (view.setPiece || view.kick) return { shot: "setpiece", tags: false };
+  // The whistle: a beat on play, then close on the referee as he shows the card.
+  if (view.phase === "foul" && view.phaseT > 0.7) return { shot: "closeup", focus: new THREE.Vector3(view.referee.x, 0, view.referee.z), tags: false };
   if (view.phase === "goal" && view.phaseT > 0.9) {
     const scorer = view.scorer !== null ? view.athletes[view.scorer] : undefined;
     if (scorer) return { shot: "closeup", focus: new THREE.Vector3(scorer.x, 0, scorer.z), tags: false };

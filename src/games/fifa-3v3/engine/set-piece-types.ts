@@ -48,6 +48,15 @@ export interface SetPiece {
   path: Vec3[];
 }
 
+/** The last free kick or penalty struck, so the camera can stay behind it for its flight. */
+export interface TakenKick {
+  kind: SetPieceKind;
+  team: TeamId;
+  spot: Vec2;
+  /** Match time when it was struck. */
+  at: number;
+}
+
 export type RefereeAction = "follow" | "run" | "card" | "point";
 
 /** The referee: follows play along the far side, runs in for a foul and shows the card. */

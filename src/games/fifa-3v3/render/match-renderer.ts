@@ -6,6 +6,8 @@ import { TEAMS } from "../teams";
 import { Arena } from "./arena/arena";
 import { CameraDirector, type Shot } from "./camera/director";
 import { Effects } from "./effects/effects";
+import { AimLine } from "./figures/aim-line";
+import { RefereeFigure } from "./figures/referee-figure";
 import { Squad, type Label } from "./figures/squad";
 import { BallModel } from "./models/ball-model";
 
@@ -36,6 +38,9 @@ export class MatchRenderer {
   private readonly effects: Effects;
   private readonly ball: BallModel;
   private readonly squad: Squad;
+  private readonly referee: RefereeFigure;
+  private readonly aim = new AimLine();
+  private readonly refereeMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.62, metalness: 0.02 });
   private readonly environment: THREE.Texture;
   private last = 0;
   private readonly low: boolean;
@@ -59,7 +64,8 @@ export class MatchRenderer {
     this.effects = new Effects(this.arena.glow);
     this.ball = new BallModel(this.arena.glow);
     this.squad = new Squad(this.arena.glow);
-    this.scene.add(this.arena.group, this.effects.group, this.ball.group, this.squad.group);
+    this.referee = new RefereeFigure(this.refereeMaterial);
+    this.scene.add(this.arena.group, this.effects.group, this.ball.group, this.squad.group, this.referee.rig.root, this.aim.group);
   }
 
   resize(width: number, height: number, dpr: number): void {
@@ -111,6 +117,7 @@ export class MatchRenderer {
     // Only the bodies and the ball: the boards and effects would queue work for the graphics card on every pass.
     for (let t = 0; t < seconds; t += 1 / 30) {
       this.squad.update(view, 1 / 30, (nowMs - (seconds - t) * 1000) / 1000, false);
+      this.referee.update(view.referee, 1 / 30, (nowMs - (seconds - t) * 1000) / 1000);
       this.ball.update(view.ball, 1 / 30);
     }
   }
@@ -121,6 +128,8 @@ export class MatchRenderer {
     const time = nowMs / 1000;
     this.squad.update(view, dt, time, tags && shot !== "replay-end" && shot !== "replay-side");
     this.ball.update(view.ball, dt);
+    this.referee.update(view.referee, dt, time);
+    this.aim.update(view.setPiece?.path ?? null, time);
     this.arena.update(view.ball, dt, time);
     this.arena.crowd.setExcitement(excitement(view));
     this.effects.frame(view, dt, time);
@@ -137,6 +146,9 @@ export class MatchRenderer {
 
   dispose(): void {
     this.squad.dispose();
+    this.referee.dispose();
+    this.refereeMaterial.dispose();
+    this.aim.dispose();
     this.ball.dispose();
     this.effects.dispose();
     this.arena.dispose();

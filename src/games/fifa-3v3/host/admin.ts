@@ -21,10 +21,13 @@ export function registerTestActions(driver: MatchDriver): () => void {
       state.events = [];
       setupSetPiece(state, state.foul);
     });
-  return registerAdminActions("fifa-3v3", [
+  const actions = [
     { id: "foul", label: "Foul (whistle, referee, free kick)", run: () => foul("free") },
     { id: "foul-box", label: "Foul in the box (whistle, referee, penalty)", run: () => foul("penalty") },
     { id: "free-kick", label: "Free kick (straight to the kick)", run: () => kick("free") },
     { id: "penalty", label: "Penalty (straight to the kick)", run: () => kick("penalty") },
-  ]);
+  ];
+  // Browser tests reach the same shortcuts from here. Development builds only.
+  if (process.env.NODE_ENV === "development" && typeof window !== "undefined") Object.assign(window, { __fifaAdmin: actions });
+  return registerAdminActions("fifa-3v3", actions);
 }

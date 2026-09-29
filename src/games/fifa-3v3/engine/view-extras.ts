@@ -31,6 +31,23 @@ export interface SetPieceView {
   wall: number[];
 }
 
+/** A kick struck in the last moments, which the camera follows from behind. */
+export interface KickView {
+  kind: SetPieceKind;
+  team: TeamId;
+  x: number;
+  z: number;
+}
+
+/** How long the camera stays behind a free kick or penalty once it is struck. */
+const FOLLOW_KICK = 1.8;
+
+export function recentKick(state: MatchState): KickView | null {
+  const k = state.taken;
+  if (!k || state.phase !== "play" || state.time - k.at > FOLLOW_KICK) return null;
+  return { kind: k.kind, team: k.team, x: k.spot.x, z: k.spot.z };
+}
+
 export function refereeView(r: Referee): RefereeView {
   return { x: r.pos.x, z: r.pos.z, facing: r.facing, speed: Math.hypot(r.vel.x, r.vel.z), stride: r.stride, action: r.action, actionT: r.actionT };
 }

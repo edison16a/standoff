@@ -5,10 +5,10 @@ import type { Athlete, AthleteAction, Dive, KeeperAction, MatchState, Phase, Ski
 import { len } from "./vec";
 import { jumpLift } from "./jump";
 import { guardStatus, type GuardStatus } from "./guard";
-import { refereeView, setPieceView, type RefereeView, type SetPieceView } from "./view-extras";
+import { recentKick, refereeView, setPieceView, type KickView, type RefereeView, type SetPieceView } from "./view-extras";
 
 export { blendViews } from "./view-blend";
-export type { RefereeView, SetPieceView } from "./view-extras";
+export type { KickView, RefereeView, SetPieceView } from "./view-extras";
 
 /**
  * A still of the match for drawing: plain numbers, no references back
@@ -81,6 +81,8 @@ export interface MatchView {
   referee: RefereeView;
   /** The free kick or penalty being lined up, with the guide line. */
   setPiece: SetPieceView | null;
+  /** A free kick or penalty just struck, for the camera. */
+  kick: KickView | null;
   /** Who a foul was on and who gave it away, from the whistle until the kick. */
   foul: { offender: number; victim: number; x: number; z: number } | null;
 }
@@ -125,6 +127,7 @@ export function buildView(state: MatchState): MatchView {
     winner: state.winner,
     referee: refereeView(state.referee),
     setPiece: setPieceView(state),
+    kick: recentKick(state),
     foul: state.foul ? { offender: state.foul.offender, victim: state.foul.victim, x: state.foul.at.x, z: state.foul.at.z } : null,
   };
 }

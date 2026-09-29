@@ -56,6 +56,7 @@ export function createMatch(entrants: readonly Entrant[], options: Partial<Match
     foul: null,
     setPiece: null,
     referee: makeReferee(),
+    taken: null,
   };
   setupKickoff(state);
   return state;

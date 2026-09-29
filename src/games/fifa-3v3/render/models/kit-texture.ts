@@ -68,6 +68,8 @@ function printBack(ctx: CanvasRenderingContext2D, kit: Kit, name: string, number
   const size = name.length > 8 ? 22 : 26;
   ctx.font = `800 ${size}px Arial, Helvetica, sans-serif`;
   outlined(ctx, name, x, 44, kit, 4);
+  // A negative number is a shirt without one, like the referee's.
+  if (number < 0) return;
   ctx.font = "900 118px Arial Black, Arial, Helvetica, sans-serif";
   outlined(ctx, String(number), x, 138, kit, 8);
 }
@@ -77,7 +79,7 @@ function printFront(ctx: CanvasRenderingContext2D, kit: Kit, number: number): vo
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.font = "900 58px Arial Black, Arial, Helvetica, sans-serif";
-  outlined(ctx, String(number), x, 128, kit, 5);
+  if (number >= 0) outlined(ctx, String(number), x, 128, kit, 5);
   // A little shield crest over the heart, which is on the player's left, the viewer's right.
   const cx = x + 0.07 * W;
   const cy = 58;

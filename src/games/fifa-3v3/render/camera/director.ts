@@ -4,7 +4,7 @@ import type { MatchView } from "../../engine/view";
 import { attackSign } from "../../teams";
 
 /** Which camera is cutting to: the broadcast view, a close up, a replay angle, or the lobby's slow orbit. */
-export type Shot = "tv" | "closeup" | "replay-end" | "replay-side" | "winners" | "lobby" | "fixed";
+export type Shot = "tv" | "closeup" | "replay-end" | "replay-side" | "winners" | "lobby" | "fixed" | "setpiece";
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
@@ -42,6 +42,26 @@ export class CameraDirector {
   /** A jolt, for the post ringing or the net rippling. */
   bump(amount: number): void {
     this.shake = Math.min(1, this.shake + amount);
+  }
+
+  /**
+   * Behind the ball at a free kick or penalty, looking down the line to
+   * goal, the way the taker sees it: low and close for a penalty, higher
+   * for a free kick so the wall and the guide line both read. Once it is
+   * struck the camera stays put and turns with the ball.
+   */
+  private behindKick(view: MatchView): void {
+    const k = view.setPiece ?? view.kick;
+    if (!k) return;
+    const gx = attackSign(k.team) * PITCH.halfLength;
+    const d = Math.max(0.1, Math.hypot(gx - k.x, k.z));
+    const ux = (gx - k.x) / d;
+    const uz = -k.z / d;
+    const penalty = k.kind === "penalty";
+    const back = penalty ? 5 : 7.5;
+    this.wantPos.set(k.x - ux * back, penalty ? 2 : 3.3, k.z - uz * back);
+    if (view.kick) this.wantLook.set(view.ball.x, Math.min(2, view.ball.y), view.ball.z);
+    else this.wantLook.set(k.x + ux * Math.min(d, 11), 1, k.z + uz * Math.min(d, 11));
   }
 
   update(view: MatchView, shot: Shot, dt: number, time: number, focus?: THREE.Vector3): void {
@@ -95,6 +115,12 @@ export class CameraDirector {
         this.wantLook.set(at.x + Math.cos(a) * 3, 1.1, at.z - Math.sin(a) * 3);
         fov = 30;
         rate = 2;
+        break;
+      }
+      case "setpiece": {
+        this.behindKick(view);
+        fov = 42;
+        rate = 3.5;
         break;
       }
       case "fixed":

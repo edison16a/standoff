@@ -3,7 +3,7 @@ import type { TeamId } from "../teams";
 import type { Athlete } from "./athlete-types";
 import type { MatchEvent } from "./events";
 import type { Rng } from "./rng";
-import type { Foul, Referee, SetPiece } from "./set-piece-types";
+import type { Foul, Referee, SetPiece, TakenKick } from "./set-piece-types";
 import type { Vec2, Vec3 } from "./vec";
 
 export * from "./athlete-types";
@@ -116,6 +116,7 @@ export interface MatchState {
   /** The free kick or penalty being lined up. */
   setPiece: SetPiece | null;
   referee: Referee;
+  taken: TakenKick | null;
 }
 
 /** One player's controls for one step, from a phone or a computer brain. */
