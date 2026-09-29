@@ -8,14 +8,14 @@ function joined(...seats: number[]): Lobby {
 }
 
 describe("the lobby", () => {
-  it("gives each star to one player only", () => {
+  it("gives each build to one player only", () => {
     const lobby = joined(1, 2);
     expect(lobby.pick(1, "playmaker")).toBe(true);
     expect(lobby.pick(2, "playmaker")).toBe(false);
     expect(lobby.taken(2)).toEqual(["playmaker"]);
   });
 
-  it("frees a star while its player is away, and takes it back from them if someone grabs it", () => {
+  it("frees a build while its player is away, and takes it back from them if someone grabs it", () => {
     const lobby = joined(1, 2);
     lobby.pick(1, "striker");
     lobby.disconnect(1);
@@ -37,16 +37,16 @@ describe("the lobby", () => {
 
   it("never puts more than three on a side", () => {
     const lobby = joined(1, 2, 3, 4);
-    const stars = ["playmaker", "striker", "allrounder", "defender"] as const;
-    stars.forEach((star, i) => {
-      lobby.pick(i + 1, star);
+    const builds = ["playmaker", "striker", "allrounder", "defender"] as const;
+    builds.forEach((build, i) => {
+      lobby.pick(i + 1, build);
       lobby.setTeam(i + 1, 0);
     });
     expect(lobby.teamCount(0)).toBe(3);
     expect(lobby.seats.get(4)!.team).toBeNull();
   });
 
-  it("fills each side to three with computer players in the stars nobody picked", () => {
+  it("fills each side to three with computer players in the builds nobody picked", () => {
     const lobby = joined(1);
     lobby.pick(1, "playmaker");
     lobby.setReady(1, true);
@@ -84,8 +84,8 @@ describe("the lobby", () => {
   it("with computer players off, lets one side have more players than the other", () => {
     const lobby = joined(1, 2, 3);
     lobby.setBots(false);
-    (["playmaker", "striker", "allrounder"] as const).forEach((star, i) => {
-      lobby.pick(i + 1, star);
+    (["playmaker", "striker", "allrounder"] as const).forEach((build, i) => {
+      lobby.pick(i + 1, build);
       lobby.setTeam(i + 1, i === 2 ? 1 : 0);
       lobby.setReady(i + 1, true);
     });

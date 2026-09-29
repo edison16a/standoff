@@ -7,7 +7,7 @@ import { createMatch, stepMatch, type Entrant } from "./match";
 import { STEP } from "./tuning";
 import type { MatchState } from "./types";
 
-/** `home` outfield players on team 0 and `away` on team 1, each a different star. */
+/** `home` outfield players on team 0 and `away` on team 1, each a different build. */
 function teams(home: number, away: number, seats = false): Entrant[] {
   const sides: TeamId[] = [...Array<TeamId>(home).fill(0), ...Array<TeamId>(away).fill(1)];
   return sides.map((team, i) => ({ team, build: BUILD_IDS[i]!, seat: seats ? i + 1 : null }));

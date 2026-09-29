@@ -16,7 +16,7 @@ const LINEUP: Entrant[] = [
 
 /**
  * Computer players having a kick about behind the lobby, so the big
- * screen shows the game while everyone picks their stars. When it ends
+ * screen shows the game while everyone picks their builds. When it ends
  * another starts.
  */
 export class DemoMatch {
