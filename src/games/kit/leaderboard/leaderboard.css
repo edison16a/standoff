@@ -43,7 +43,8 @@
 
 .kit-board__row {
   display: grid;
-  grid-template-columns: 3.2em minmax(0, 1fr) auto auto;
+  /* The rank column fits four digits, so the names line up on every row. */
+  grid-template-columns: 2.6em minmax(0, 1fr) auto auto;
   align-items: baseline;
   gap: 10px;
   padding: 6px 8px;
@@ -58,6 +59,7 @@
 }
 
 .kit-board__rank {
+  font-size: 0.85em;
   opacity: 0.7;
   font-variant-numeric: tabular-nums;
 }

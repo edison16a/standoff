@@ -7,7 +7,7 @@
   --board-me-bg: #ffd21f;
   --board-me-fg: #14254a;
   --board-height: min(52vh, 480px);
-  width: 360px;
+  width: 380px;
   flex: none;
   border: 4px solid #ffffff;
   border-radius: 28px;
@@ -46,7 +46,7 @@
 @media (max-width: 1000px), (max-height: 720px) {
   .ss-board {
     --board-height: min(44vh, 320px);
-    width: 290px;
+    width: 330px;
     padding: 14px 16px;
   }
 
