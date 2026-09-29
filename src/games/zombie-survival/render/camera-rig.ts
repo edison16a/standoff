@@ -5,24 +5,36 @@ import { STEP_SECONDS } from "../engine/pacing";
 import { checkpointDistance, fightFrame, pointAt, type Vec3 } from "../engine/route";
 import { CHOPPER_STAGE, STAGE_COUNT } from "../engine/stages";
 import { alive } from "../engine/zombie";
-import { isBoss, KINDS } from "../engine/zombie-kinds";
+import { isBoss, KINDS, type Joint } from "../engine/zombie-kinds";
 import { flightView, rooftopView } from "./chopper-camera";
 import { SHIP_DECK } from "./models/vehicles/ship";
 
 const EYE = 1.65;
 const v = (p: Vec3, up = 0) => new THREE.Vector3(p.x, p.y + up, p.z);
 
+/** Where each glowing joint sits on a boss, as a share of its height. Elbows rise as it swings. */
+export function jointShare(joint: Joint, attacking: boolean): number {
+  if (joint === "kneeL" || joint === "kneeR") return 0.19;
+  if (joint === "elbowL" || joint === "elbowR") return attacking ? 0.9 : 0.56;
+  return joint === "chest" ? 0.64 : 0.7;
+}
+
 /**
  * How high to look, fourteen metres out, during a fight. Normally just
- * under eye level. A boss that closes in tilts the view up with it, so
- * the weak points on its shoulders stay on screen to be shot.
+ * under eye level. A boss that closes in tilts the view with it, aimed
+ * midway between its lowest and highest joints still glowing, so a big
+ * one up close keeps every weak point left on screen to be shot.
  */
-function lookHeight(game: SurvivalGame): number {
+export function lookHeight(game: SurvivalGame): number {
   const boss = game.encounter?.zombies.find((z) => isBoss(z.kind) && alive(z));
   const base = 1.45;
   if (!boss || boss.ahead > 16) return base;
-  const chest = KINDS[boss.kind].height * 0.62;
-  const raised = EYE + ((chest - EYE) * 14) / Math.max(3, boss.ahead);
+  const spec = KINDS[boss.kind];
+  const ahead = Math.max(2, boss.ahead);
+  const angles = spec.weakPoints.filter((_, i) => (boss.weak[i] ?? 0) > 0).map((j) => Math.atan2(jointShare(j, boss.state === "attack") * spec.height - EYE, ahead));
+  if (angles.length === 0) return base;
+  const middle = (Math.min(...angles) + Math.max(...angles)) / 2;
+  const raised = EYE + Math.tan(middle) * 14;
   const k = Math.min(1, (16 - boss.ahead) / 10);
   return base + (raised - base) * k;
 }

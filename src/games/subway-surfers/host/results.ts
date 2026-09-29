@@ -1,31 +1,39 @@
-import { isNamed, type BestEntry } from "../engine/best-scores";
-import type { Difficulty } from "../engine/difficulty";
-import type { BestStore } from "./best-store";
+import { localBoards, recordEntry, type BoardRef, type BoardStorage } from "@/games/kit/leaderboard";
+import { DIFFICULTY, type Difficulty } from "../engine/difficulty";
 import type { Round } from "./round";
-import type { ResultRow } from "./store";
+import { shownName, type InputMode, type ResultRow } from "./store";
 
-/**
- * The end of a run: the row for the results card, and the entry for the
- * best scores table. Only a typed name goes on the table, since
- * "Player 1" means someone else next week.
- */
-export function resultOf(round: Round, name: string, difficulty: Difficulty, at = Date.now()): { row: ResultRow; entry: BestEntry | null } {
-  const run = round.run;
-  const row: ResultRow = {
-    name: name.trim() || "Player 1",
-    difficulty,
-    score: Math.floor(run.score),
-    coins: run.coins,
-    distance: Math.floor(run.runner.distance),
-    best: null,
-  };
-  const entry = isNamed(name, 1) ? { name: row.name, score: row.score, coins: row.coins, distance: row.distance, at } : null;
-  return { row, entry };
+/** Every finished run on this computer, ranked by final score. */
+export const RUNS_BOARD: BoardRef = { game: "subway-surfers", board: "runs", order: "high" };
+
+/** The note on a leaderboard row: the level, and the keyboard when it was played with keys. */
+export function boardTag(difficulty: Difficulty, input: InputMode): string {
+  const label = DIFFICULTY[difficulty].label;
+  return input === "keyboard" ? `${label}, keys` : label;
 }
 
-/** Works out the result and writes a named run to the best table, marking its place on it. */
-export function recordResult(round: Round, name: string, difficulty: Difficulty, best: BestStore): ResultRow {
-  const { row, entry } = resultOf(round, name, difficulty);
-  if (entry) row.best = best.add([entry])[0] ?? null;
-  return row;
+/**
+ * The end of a run: saves it to the leaderboard, whatever its score and
+ * whether or not a name was typed, and returns the row for the results.
+ */
+export function recordResult(round: Round, name: string, input: InputMode, storage: BoardStorage = localBoards(), at = Date.now()): ResultRow {
+  const run = round.run;
+  const score = Math.floor(run.score);
+  // Coins and power ups score whole points, so the running share takes up the rounding.
+  const coins = Math.round(run.points.coins);
+  const powers = Math.round(run.points.powers);
+  const placed = recordEntry(RUNS_BOARD, { name: shownName(name), value: score, tag: boardTag(round.difficulty, input), at }, storage);
+  return {
+    name: shownName(name),
+    difficulty: round.difficulty,
+    input,
+    score,
+    coins: run.coins,
+    distance: Math.floor(run.runner.distance),
+    points: { running: Math.max(0, score - coins - powers), coins, powers },
+    rank: placed.rank,
+    total: placed.total,
+    best: placed.best,
+    entryId: placed.entry.id,
+  };
 }

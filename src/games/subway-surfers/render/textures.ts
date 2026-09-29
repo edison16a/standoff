@@ -69,7 +69,7 @@ export function sparkTexture(): THREE.Texture {
   });
 }
 
-/** The stones between and under the tracks. */
+/** The stones between and under the tracks: warm browns and greys, each with a light top, like painted ballast. */
 export function gravelTexture(): THREE.Texture {
   return painted(
     "gravel",
@@ -77,16 +77,22 @@ export function gravelTexture(): THREE.Texture {
     256,
     (ctx, w, h) => {
       const rng = new Rng(11);
-      ctx.fillStyle = "#8b8378";
+      ctx.fillStyle = "#7d6f60";
       ctx.fillRect(0, 0, w, h);
-      for (let i = 0; i < 2600; i++) {
-        const shade = rng.int(95, 185);
-        ctx.fillStyle = `rgb(${shade + 8},${shade + 2},${shade - 8})`;
-        const r = rng.range(1.2, 4.2);
+      for (let i = 0; i < 1500; i++) {
+        const shade = rng.int(120, 190);
+        const warm = rng.int(-6, 16);
+        const r = rng.range(2, 4.6);
         const x = rng.range(0, w);
         const y = rng.range(0, h);
+        const a = rng.range(0, 3);
+        ctx.fillStyle = `rgb(${shade + warm},${shade + Math.round(warm / 3)},${shade - 14})`;
         ctx.beginPath();
-        ctx.ellipse(x, y, r, r * rng.range(0.6, 1), rng.range(0, 3), 0, Math.PI * 2);
+        ctx.ellipse(x, y, r, r * rng.range(0.6, 0.95), a, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "rgba(255,248,235,0.35)";
+        ctx.beginPath();
+        ctx.ellipse(x - r * 0.2, y - r * 0.25, r * 0.5, r * 0.3, a, 0, Math.PI * 2);
         ctx.fill();
       }
     },

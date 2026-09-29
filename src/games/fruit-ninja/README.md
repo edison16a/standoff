@@ -7,7 +7,7 @@ Status: ready. Up to 4 players slice fruit on one shared screen. Each phone is a
 1. Open the card on the computer. The join code shows in the middle.
 2. Each player scans it and types a name (or skips).
 3. On the phone, three pages follow, one step each:
-   * **Calibrate:** hold the phone flat like a remote and point it at the middle of the screen, then at the top left and bottom right targets. Phones without motion sensors get a drag pad instead.
+   * **Calibrate:** hold the phone flat like a remote and point it at each target the big screen shows and hold still. A ring fills, turns green and the next target comes up by itself: the middle, all four corners, then the middle again. Six targets make the blade exact all over the screen. Past the edge of the screen the blade stays at the edge, and it follows again as soon as you point back in. Phones without motion sensors get a drag pad instead.
    * **Blade:** pick a slash style. Each card plays a live preview: Plasma, Lightning, Fire, Ice, Venom, Rainbow and Gold.
    * **Ready:** a few tips, then Ready. Ready players can already try their blade on the practice fruit in the lobby.
 4. On the computer, pick the round length, how many bombs and how much fruit, then press Start. A 3, 2, 1 countdown starts the round.

@@ -1,0 +1,34 @@
+/*
+  Hold to calibrate on the level: a bar under the tube fills while the
+  dot stays between the lines, then the whole level turns green.
+*/
+
+.mk-level__track {
+  fill: rgba(255, 255, 255, 0.12);
+}
+
+.mk-level__fill {
+  fill: #2ecc71;
+}
+
+.mk-level--done .mk-level__tube {
+  fill: rgba(46, 204, 113, 0.25);
+}
+
+.mk-level--done .mk-level__rim,
+.mk-level--done .mk-level__arrow {
+  stroke: #2ecc71;
+}
+
+.mk-level--done .mk-level__head {
+  fill: #2ecc71;
+  stroke: #2ecc71;
+}
+
+.mk-hold-note {
+  font-weight: 700;
+}
+
+.mk-hold-note--done {
+  color: #2ecc71;
+}

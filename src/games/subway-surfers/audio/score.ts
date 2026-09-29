@@ -50,10 +50,20 @@ export interface Song {
   readonly bpm: number;
   /** Sixteenths in one pass through the form. */
   readonly steps: number;
+  /** Where the music's low pass opens for this song, in hertz. Warm by default. */
+  readonly open?: number;
   play(engine: AudioEngine, out: AudioNode, step: number, at: number, sixteenth: number): void;
 }
 
 /** When a sixteenth really sounds: the off ones land late by `swing` of a sixteenth. */
 export function swung(at: number, inBar: number, sixteenth: number, swing: number): number {
   return at + (inBar % 2 === 1 ? swing * sixteenth : 0);
+}
+
+/** The steps of a sixteen step bar that hit, from a row like "x...x...x...x...", so a drum part reads at a glance. */
+export function hits(row: string): ReadonlySet<number> {
+  if (row.length !== 16) throw new Error(`a drum row needs sixteen steps: ${row}`);
+  const steps = new Set<number>();
+  for (let i = 0; i < 16; i++) if (row[i] !== ".") steps.add(i);
+  return steps;
 }

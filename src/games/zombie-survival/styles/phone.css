@@ -162,6 +162,11 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
   }
+
+  /* Five rows of numbers, packed close so the gun keeps some room above them. */
+  .zs-stats {
+    gap: 2px;
+  }
 }
 
 /* Sideways: the gun on the left, what it does on the right. */
@@ -186,6 +191,11 @@
 
   .zs-weapon__about {
     grid-row: 1 / 3;
+  }
+
+  /* The lit tab already names the gun, so its title gives its room to the numbers. */
+  .zs-weapon__about h3 {
+    display: none;
   }
 
   .zs-stats {

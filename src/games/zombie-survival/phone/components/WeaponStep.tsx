@@ -1,5 +1,6 @@
 "use client";
-import { WEAPON_IDS, WEAPONS, weaponBars, weaponFacts, type WeaponBars } from "../../engine/weapons";
+import { weaponBars, weaponFacts, type WeaponBars } from "../../engine/weapon-card";
+import { WEAPON_IDS, WEAPONS } from "../../engine/weapons";
 import { usePhoneStore } from "../phone-store";
 import { GunViewer } from "./GunViewer";
 import { usePhone } from "./session-context";
@@ -7,6 +8,7 @@ import { usePhone } from "./session-context";
 const ROWS: { key: keyof WeaponBars; label: string }[] = [
   { key: "damage", label: "Damage" },
   { key: "rate", label: "Fire rate" },
+  { key: "range", label: "Range" },
   { key: "magazine", label: "Magazine" },
   { key: "reload", label: "Reload speed" },
 ];

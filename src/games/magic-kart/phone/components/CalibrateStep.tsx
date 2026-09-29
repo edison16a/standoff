@@ -1,14 +1,16 @@
 "use client";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useControllerStore } from "../controller-store";
 import { usePortrait } from "../use-portrait";
 import { Level, type Hold } from "./Level";
 import { useController } from "./session-context";
-import { SteerGauge } from "./SteerGauge";
+
+/** How long the level shows green before the next step comes up. */
+const GREEN_MS = 700;
 
 const HINTS: Record<Hold, string> = {
-  level: "Level. Now tap Calibrate.",
-  turned: "Turn it until the bubble sits between the lines.",
+  level: "Hold it there.",
+  turned: "Align the dot in the middle.",
   flat: "Stand it up, screen facing you. Lying flat will not calibrate.",
 };
 
@@ -17,16 +19,30 @@ export const ROTATION_LOCK = "If the page does not turn with it, switch off rota
 
 /**
  * Step one: hold the phone sideways and upright like a steering wheel,
- * turn it until the level lights up, then Calibrate. That pose becomes
- * straight ahead. Afterwards a wheel on screen turns with the phone so
- * the player can try it.
+ * and align the level's dot in the middle. Holding it there for a second
+ * fills the bar and turns it green: that pose becomes straight ahead, and
+ * the next step comes up by itself. No button to tap, so a tap can never
+ * tip the wheel as it is read.
  */
 export function CalibrateStep() {
   const session = useController();
-  const { sensorsLive, calibrated, steerMode } = useControllerStore();
+  const { sensorsLive, steerMode } = useControllerStore();
   const [hold, setHold] = useState<Hold>("turned");
+  const [done, setDone] = useState(false);
   // Held upright the page would read the wheel a quarter turn out, so calibrating waits for sideways.
   const portrait = usePortrait();
+
+  const held = useCallback(() => {
+    session.calibrate();
+    navigator.vibrate?.(40);
+    setDone(true);
+  }, [session]);
+
+  useEffect(() => {
+    if (!done) return;
+    const timer = setTimeout(() => session.goTo("kart"), GREEN_MS);
+    return () => clearTimeout(timer);
+  }, [done, session]);
 
   if (steerMode === "buttons") {
     return (
@@ -36,33 +52,28 @@ export function CalibrateStep() {
     );
   }
 
-  const hint = portrait ? `Turn your phone sideways first. ${ROTATION_LOCK}` :calibrated && hold !== "flat" ? "Turn it like a wheel to steer. The wheel follows." : HINTS[hold];
+  const hint = done ? "Straight ahead is set." : portrait ? `Turn your phone sideways first. ${ROTATION_LOCK}` : HINTS[hold];
   return (
     <div className="mk-setup mk-setup--split">
       <div className="mk-setup__visual">
-        <Level onHold={setHold} />
+        <Level onHold={setHold} armed={sensorsLive && !portrait} onHeld={held} done={done} />
       </div>
       <div className="mk-setup__text">
         <p className="mk-setup__lead">Hold your phone sideways and upright, screen facing you, like a steering wheel.</p>
-        {sensorsLive && <p className="muted">{hint}</p>}
-        {sensorsLive && calibrated && !portrait && <SteerGauge className="mk-gauge--small" />}
-        {!sensorsLive && <p className="muted">Waiting for the tilt sensor.</p>}
-        <div className="mk-setup__actions">
-          <button
-            type="button"
-            className={`btn btn--block ${calibrated ? "btn--ghost" : "btn--primary"}`}
-            // Lying flat is not how the wheel is held, so straight ahead is never taken from it.
-            disabled={!sensorsLive || portrait || hold === "flat"}
-            onClick={() => session.calibrate()}
-          >
-            {calibrated ? "Calibrate again" : "Calibrate"}
-          </button>
-          {!sensorsLive && (
+        {sensorsLive && (
+          <p className={`muted mk-hold-note ${done ? "mk-hold-note--done" : ""}`} role="status" aria-live="polite">
+            {hint}
+          </p>
+        )}
+        {sensorsLive && !done && <p className="muted">Hold the dot between the lines for a second. It turns green and moves on.</p>}
+        {!sensorsLive && (
+          <div className="mk-setup__actions">
+            <p className="muted">Waiting for the tilt sensor.</p>
             <button type="button" className="btn btn--ghost btn--block" onClick={() => session.useButtons()}>
               Steer with buttons
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

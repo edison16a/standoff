@@ -1,6 +1,7 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 import { midi, noise, tone } from "./voices";
 import type { PowerKind } from "../engine/types";
+import { signature } from "./jingles";
 import { vary } from "./vary";
 
 /**
@@ -11,7 +12,7 @@ import { vary } from "./vary";
 /** Each power up has its own root, so players learn which one they grabbed by ear. */
 const ROOTS: Record<PowerKind, number> = { boots: 67, hoverboard: 69, magnet: 71, double: 74, jetpack: 62 };
 
-/** A thump, a rising arpeggio with sparkle on top, and a shimmer to finish. */
+/** A thump, a rising arpeggio with sparkle on top, a shimmer to finish, and the power up's own sound. */
 export function power(engine: AudioEngine, out: AudioNode, at: number, kind: PowerKind): void {
   const root = ROOTS[kind];
   const cents = (Math.random() - 0.5) * 12;
@@ -23,7 +24,8 @@ export function power(engine: AudioEngine, out: AudioNode, at: number, kind: Pow
     tone(engine, out, t, { frequency: midi(root + n + 12), detune: cents, decay: 0.35, peak: 0.05 });
   });
   tone(engine, out, at + 0.27, { frequency: midi(root + 24), detune: cents + 5, decay: 0.8, peak: 0.05 });
-  noise(engine, out, at + 0.2, { filter: "highpass", frequency: 6000, sweepTo: 10000, decay: 0.6, peak: 0.07 });
+  noise(engine, out, at + 0.2, { filter: "bandpass", frequency: 6000, sweepTo: 9000, q: 0.8, decay: 0.6, peak: 0.05 });
+  signature(engine, out, at, kind);
 }
 
 /** A falling three notes as a power up runs out. */

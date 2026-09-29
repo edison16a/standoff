@@ -1,3 +1,4 @@
+import { buildById, NEUTRAL, type BuildId } from "./builds";
 import { finishStoppage, stepCount, knockDown, type Stoppage } from "./count";
 import type { MatchEvent, MatchResult } from "./events";
 import { Fighter } from "./fighter";
@@ -23,8 +24,8 @@ export interface MatchOptions {
   introMs?: number;
   /** Touch gloves before each round. Off, the boxers start face to face and the bell goes at once. */
   touch?: boolean;
-  /** Each boxer's footwork style, by the id of the boxer chosen. */
-  styles?: readonly [string | undefined, string | undefined];
+  /** Each boxer's build, red corner first. A missing one boxes like everyone else. */
+  builds?: readonly [BuildId | undefined, BuildId | undefined];
 }
 
 /**
@@ -36,7 +37,7 @@ export interface MatchOptions {
  * browser.
  */
 export class Match {
-  readonly fighters: [Fighter, Fighter] = [new Fighter(0), new Fighter(1)];
+  readonly fighters: [Fighter, Fighter];
   readonly footwork: Footwork;
   readonly random: Random;
   readonly rounds: number;
@@ -61,12 +62,14 @@ export class Match {
 
   constructor(options: MatchOptions) {
     this.random = seeded(options.seed);
+    const builds = [buildById(options.builds?.[0])?.effects ?? NEUTRAL, buildById(options.builds?.[1])?.effects ?? NEUTRAL] as const;
+    this.fighters = [new Fighter(0, builds[0]), new Fighter(1, builds[1])];
     this.rounds = options.rounds ?? RULES.rounds;
     this.roundMs = options.roundMs ?? RULES.roundMs;
     this.breakMs = options.breakMs ?? RULES.breakMs;
     this.touchGloves = options.touch ?? true;
     this.phaseEnds = options.introMs ?? RULES.introMs;
-    this.footwork = new Footwork(this.random, options.styles);
+    this.footwork = new Footwork(this.random, [builds[0].footwork, builds[1].footwork]);
     this.footwork.place(this.touchGloves);
     if (this.touchGloves) this.footwork.setMode("centre");
   }
@@ -106,16 +109,17 @@ export class Match {
     const fighter = this.fighters[id];
     if (this.phase !== "fight" || this.paused || !fighter.canPunch(this.now)) return false;
     const spec = PUNCHES[style];
-    const tired = fighter.stamina < spec.stamina;
-    // Out of stamina or worn down by punishment, the punch takes longer to get there and back.
-    const slow = (tired ? 1.3 : 1) * fighter.fatigue.slow;
-    fighter.stamina = Math.max(0, fighter.stamina - spec.stamina);
+    const cost = spec.stamina * fighter.build.staminaCost;
+    const tired = fighter.stamina < cost;
+    // Out of stamina or worn down by punishment, the punch takes longer to get there and back. The build sets the hands' own pace.
+    const slow = (tired ? 1.3 : 1) * fighter.fatigue.slow * fighter.build.handSpeed;
+    fighter.stamina = Math.max(0, fighter.stamina - cost);
     const counter = fighter.counterOpen(this.now);
     if (counter) fighter.counterUntil = -Infinity;
     const launchAt = this.now + windupMs;
     const impactAt = launchAt + spec.travelMs * slow;
     const aim = { ...this.fighters[other(id)].input.head };
-    fighter.punch = { hand, style, level, power, start: this.now, launchAt, impactAt, endAt: impactAt + spec.recoverMs * slow, aim, counter, tired, resolved: false };
+    fighter.punch = { hand, style, level, power, start: this.now, launchAt, impactAt, endAt: impactAt + spec.recoverMs * slow, aim, counter, tired, reach: fighter.build.reach, resolved: false };
     fighter.stats.thrown++;
     this.footwork.threw(id, this.now);
     this.emit({ type: "throw", fighter: id, hand, style, level, windupMs, impactAt, counter, tired });
@@ -180,7 +184,7 @@ export class Match {
     punch.resolved = true;
     if (defender.down) return;
     const facts = { fighter: attacker.id, hand: punch.hand, style: punch.style, level: punch.level };
-    if (this.footwork.distance() > FIGHT_RANGE + REACH_SPARE) {
+    if (this.footwork.distance() > FIGHT_RANGE + REACH_SPARE * punch.reach) {
       // Still walking in from the corners: it falls short, and earns nobody a counter.
       this.emit({ type: "miss", ...facts, target: defender.id, dodge: null });
       return;

@@ -2,53 +2,28 @@
 import "./aim.css";
 import "../kit.css";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { sameZone, WHOLE_SCREEN, type AimZone } from "./aim-math";
-import { toPixels } from "./host-aim";
+import { sameZone, WHOLE_SCREEN, type AimZone, type Pointing } from "./aim-math";
+import { AIM_PLANS, type AimPlan } from "./aim-targets";
 import { AimPad } from "./AimPad";
+import { targetCopy, TEST_COPY, touchCopy } from "./calibrate-copy";
+import { HoldTarget } from "./HoldTarget";
+import { toPixels } from "./host-aim";
 import type { PhoneAim } from "./phone-aim";
-import { PointGuide, ZoneFrame, zoneBox } from "./PointGuide";
-import type { AimStep } from "./protocol";
+import { ZoneFrame, zoneBox } from "./PointGuide";
 
-type Stage = "center" | "top-left" | "bottom-right" | "test";
-
-const COPY: Record<Stage, { title: string; text: string; button: string }> = {
-  center: {
-    title: "Point at the middle",
-    text: "Hold your phone flat like a remote, top edge toward the big screen. Point it at the target in the middle, hold still and tap Set.",
-    button: "Set middle",
-  },
-  "top-left": {
-    title: "Now the top left",
-    text: "Keep the phone flat and point its top edge at the target near the top left corner. Tap Set.",
-    button: "Set top left",
-  },
-  "bottom-right": {
-    title: "Last, the bottom right",
-    text: "Point at the target near the bottom right corner. Tap Set.",
-    button: "Set bottom right",
-  },
-  test: {
-    title: "Try it",
-    text: "Move the phone around. Your dot on the big screen, and the one below, should follow where you point.",
-    button: "Looks good",
-  },
-};
-
-/** The same steps, worded for a player who aims inside their own part of the screen. */
-const ZONE_COPY: Record<Stage, { title: string; text: string }> = {
-  center: {
-    title: "Point at the middle of your view",
-    text: "Your view is outlined in your colour on the big screen. Hold your phone flat like a remote, point its top edge at the target in the middle of it, hold still and tap Set.",
-  },
-  "top-left": { title: "Now its top left", text: "Point the top edge at the target near the top left corner of your view. Tap Set." },
-  "bottom-right": { title: "Last, its bottom right", text: "Point at the target near the bottom right corner of your view. Tap Set." },
-  test: { title: "Try it", text: "Move the phone around. Your dot in your view, and the one below, should follow where you point." },
-};
+/** How long a taken target shows green before the next one appears. */
+const GREEN_MS = 450;
 
 interface AimCalibrateProps {
   aim: PhoneAim;
   /** The player's colour, for the target in the picture. */
   colour: string;
+  /**
+   * How many targets to take. "shooter" (the default) takes five: the
+   * middle and every corner. "sword" takes six, every corner and the middle
+   * twice, for games that swing all over the screen.
+   */
+  plan?: AimPlan;
   /**
    * For games with a view per player: the part of the big screen this
    * player aims inside, as fractions from the top left. The host must give
@@ -59,36 +34,60 @@ interface AimCalibrateProps {
 }
 
 /**
- * The calibration page for every aiming game. Three targets appear on the
- * big screen in turn (middle, top left, bottom right). Pointing at each
- * one teaches the phone how far this player turns to cross the screen
- * from where they sit. Then a test view shows the aim live before moving
- * on. Phones without sensors skip straight to a drag pad.
+ * The calibration page for every aiming game, hold to calibrate. Targets
+ * appear on the big screen and the phone in turn. The player points at
+ * each and holds still; a ring fills, turns green, and the next target
+ * comes up on its own. Those readings teach the phone how far this player
+ * turns to cross the screen from where they sit. Then a test view shows
+ * the aim live before moving on. Phones without sensors get a drag pad.
  */
-export function AimCalibrate({ aim, colour, zone: given, onDone }: AimCalibrateProps) {
+export function AimCalibrate({ aim, colour, plan = "shooter", zone: given, onDone }: AimCalibrateProps) {
   // A zone that is the whole screen is no zone: the big screen draws no outline for it, so neither do the words.
   const zone = given && !sameZone(given, WHOLE_SCREEN) ? given : undefined;
+  const targets = AIM_PLANS[plan];
   const snapshot = useSyncExternalStore(aim.subscribe, aim.getSnapshot, aim.getSnapshot);
   const touch = snapshot.source === "touch";
-  const [stage, setStage] = useState<Stage>("center");
-  const current: Stage = touch ? "test" : stage;
+  const [index, setIndex] = useState(0);
+  const [taken, setTaken] = useState(false);
+  const [last, setLast] = useState<Pointing | null>(null);
+  const testing = touch || index >= targets.length;
+  const target = testing ? null : targets[index]!;
 
   // Setting the same zone again is harmless, so a fresh object each render needs no care.
   useEffect(() => aim.setZone(zone ?? null), [aim, zone]);
 
   useEffect(() => {
-    aim.announce(current as AimStep);
-    aim.stream(current === "test");
-  }, [aim, current]);
+    aim.announce(target ?? "test");
+    aim.stream(target === null);
+  }, [aim, target]);
 
   // Leaving the page any way at all, Back included, clears this player's
   // target from the big screen, so it never lingers into play.
   useEffect(() => () => aim.announce("done"), [aim]);
 
-  const set = () => {
-    if (current === "center" && aim.setCenter()) setStage("top-left");
-    else if (current === "top-left" && aim.setCorner("top-left")) setStage("bottom-right");
-    else if (current === "bottom-right" && aim.setCorner("bottom-right")) setStage("test");
+  // A taken target shows green for a moment, then the next one comes up by itself.
+  useEffect(() => {
+    if (!taken) return;
+    const timer = setTimeout(() => {
+      setTaken(false);
+      setIndex((i) => i + 1);
+    }, GREEN_MS);
+    return () => clearTimeout(timer);
+  }, [taken]);
+
+  const held = () => {
+    if (!target) return;
+    const reading = aim.pointing;
+    if (!aim.capture(target, index === targets.length - 1)) return;
+    setLast(reading);
+    setTaken(true);
+  };
+
+  const restart = () => {
+    aim.restartCalibration();
+    setLast(null);
+    setTaken(false);
+    setIndex(0);
   };
 
   const finish = () => {
@@ -96,52 +95,48 @@ export function AimCalibrate({ aim, colour, zone: given, onDone }: AimCalibrateP
     onDone();
   };
 
-  const copy = zone ? { ...COPY[current], ...ZONE_COPY[current] } : COPY[current];
+  const copy = target ? targetCopy(target, index, zone !== undefined) : { title: touch ? "Aim by dragging" : TEST_COPY.title, text: touch ? touchCopy(zone !== undefined) : TEST_COPY.text(zone !== undefined) };
   return (
     <div className="kit-calibrate">
-      <h3 className="kit-calibrate__title">{touch ? "Aim by dragging" : copy.title}</h3>
-      <p className="kit-calibrate__text">
-        {touch ? `This phone has no motion sensors, so drag on the pad to move your dot ${zone ? "in your view" : "on the big screen"}.` : copy.text}
-      </p>
-      {current === "test" ? (
-        touch ? (
-          <AimPad aim={aim} />
-        ) : (
-          <MiniScreen point={snapshot.point} colour={colour} zone={zone} />
-        )
+      <h3 className="kit-calibrate__title">{copy.title}</h3>
+      <p className="kit-calibrate__text">{copy.text}</p>
+      {target ? (
+        <HoldTarget key={index} aim={aim} target={target} colour={colour} zone={zone} after={last} count={`${index + 1} of ${targets.length}`} onHeld={held} />
+      ) : touch ? (
+        <AimPad aim={aim} />
       ) : (
-        <PointGuide step={current} colour={colour} zone={zone} />
+        <MiniScreen point={snapshot.point} colour={colour} zone={zone} />
       )}
       <div className="kit-calibrate__actions">
-        {current === "test" ? (
+        {testing ? (
           <>
             {!touch && (
-              <button type="button" className="btn btn--ghost btn--lg" onClick={() => setStage("center")}>
+              <button type="button" className="btn btn--ghost btn--lg" onClick={restart}>
                 Redo
               </button>
             )}
             <button type="button" className="btn btn--primary btn--lg kit-grow" onClick={finish}>
-              {copy.button}
+              {TEST_COPY.button}
             </button>
           </>
         ) : (
-          <>
-            {current !== "center" && (
+          index > 0 && (
+            <>
+              <button type="button" className="btn btn--ghost btn--lg" onClick={restart}>
+                Start over
+              </button>
               <button
                 type="button"
-                className="btn btn--ghost btn--lg"
+                className="btn btn--ghost btn--lg kit-grow"
                 onClick={() => {
                   aim.useQuick();
-                  setStage("test");
+                  setIndex(targets.length);
                 }}
               >
-                Skip corners
+                Skip the rest
               </button>
-            )}
-            <button type="button" className="btn btn--primary btn--lg kit-grow" onClick={set} disabled={!snapshot.ready}>
-              {snapshot.ready ? copy.button : "Waiting for sensors"}
-            </button>
-          </>
+            </>
+          )
         )}
       </div>
     </div>

@@ -1,0 +1,127 @@
+/* Everything about points: the mode and level chips with their multipliers, the level chip and
+   the points pop on the run, and the rank and the breakdown on the results. */
+
+.ss-chip--mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ss-chip--mode svg {
+  width: 26px;
+  height: 26px;
+}
+
+/* A level chip: its name over its multiplier, narrow enough for four in a row. */
+.ss-chip--level {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-width: 96px;
+  padding: 9px 16px;
+}
+
+.ss-chip__mult {
+  font: 900 15px/1 "Arial Black", var(--font-ui);
+  opacity: 0.9;
+}
+
+.ss-chip--demon {
+  border-color: rgba(255, 150, 150, 0.8);
+  color: #ffd6da;
+}
+
+.ss-chip--demon.ss-chip--on {
+  border-color: #ffffff;
+  color: #ffffff;
+  background: linear-gradient(180deg, #ff6f61, #d3172f);
+  text-shadow: 0 2px 0 #14254a;
+}
+
+/* On the run: the level and its multiplier, after the zone's multiplier. */
+.ss-diff {
+  padding: 5px 10px;
+  border: 3px solid #ffffff;
+  border-radius: 14px;
+  font: 900 18px/1 "Arial Black", var(--font-ui);
+  color: #14254a;
+  background: #ffc21a;
+  box-shadow: 0 4px 0 #14254a;
+  white-space: nowrap;
+}
+
+.ss-diff--demon {
+  color: #ffffff;
+  background: #d3172f;
+  text-shadow: 0 2px 0 #14254a;
+}
+
+/* Points from coins and power ups, popping up under the coin count as they land. */
+.ss-gain {
+  position: absolute;
+  top: 190px;
+  right: 28px;
+  font: 900 32px/1 "Arial Black", var(--font-ui);
+  font-variant-numeric: tabular-nums;
+  color: #ffd21f;
+  -webkit-text-stroke: 3px #14254a;
+  paint-order: stroke fill;
+  text-shadow: 0 3px 0 #14254a;
+  animation: ss-gain-in 0.2s ease-out;
+}
+
+@keyframes ss-gain-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.8);
+  }
+}
+
+.ss-result__rank {
+  font: 900 24px/1.1 "Arial Black", var(--font-ui);
+  color: #ffd21f;
+  text-shadow: 0 2px 0 #14254a;
+}
+
+/* Where the score came from: running, coins and power ups. */
+.ss-points {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+}
+
+.ss-points__part {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 104px;
+  padding: 8px 12px;
+  border: 3px solid rgba(255, 255, 255, 0.7);
+  border-radius: 16px;
+  background: rgba(20, 37, 74, 0.3);
+}
+
+.ss-points dt {
+  font-size: 14px;
+  font-weight: 800;
+  opacity: 0.85;
+}
+
+.ss-points dd {
+  margin: 0;
+  font: 900 20px/1 "Arial Black", var(--font-ui);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 1000px), (max-height: 720px) {
+  .ss-result__rank {
+    font-size: 20px;
+  }
+
+  .ss-points__part {
+    min-width: 88px;
+    padding: 6px 10px;
+  }
+}

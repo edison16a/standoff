@@ -3,7 +3,7 @@ import type { Run } from "../engine/run";
 import { JETPACK_HEIGHT } from "../engine/powers";
 import { LANES, laneX, RUNNER, SPEED, TRAIN } from "../engine/tuning";
 import { ChaseCamera } from "./chase-camera";
-import { blocksView, GANTRY, headAbove, TUNNEL_TOP, tunnelCeilingAt, VAULT_SPRING, WIRES, type Overhang } from "./models/overhead";
+import { blocksView, GANTRY, headAbove, TUNNEL_TOP, tunnelCeilingAt, VAULT_SPRING, type Overhang } from "./models/overhead";
 import { vaultGeometry } from "./models/tunnel";
 
 /** Just enough of a run for the camera: a runner at a height, grounded or flying. */
@@ -73,32 +73,26 @@ describe("the tunnel vault", () => {
   });
 });
 
-describe("gantries and wires between the camera and the runner", () => {
+describe("signal gantries between the camera and the runner", () => {
   const view = (y: number) => {
     const eye = settle(runAt(y)).camera.position;
     return { eye: { y: eye.y, z: eye.z }, head: { y: headAbove(y), z: -100 } };
   };
   const gantryAt = (z: number): Overhang => ({ near: z + GANTRY.depth / 2, far: z - GANTRY.depth / 2, ...GANTRY });
-  const wiresFrom = (z: number): Overhang => ({ near: z, far: z - 30, ...WIRES });
 
   it("never get in the way of a runner on the ground", () => {
     const { eye, head } = view(0);
-    for (let z = -140; z <= eye.z + 3; z += 0.25) {
-      expect(blocksView(gantryAt(z), eye, head)).toBe(false);
-      expect(blocksView(wiresFrom(z), eye, head)).toBe(false);
-    }
+    for (let z = -140; z <= eye.z + 3; z += 0.25) expect(blocksView(gantryAt(z), eye, head)).toBe(false);
   });
 
   it("are in the way from a train roof once they reach the runner, so they fade", () => {
     const { eye, head } = view(TRAIN.height);
     expect(blocksView(gantryAt(head.z + 1), eye, head)).toBe(true);
     expect(blocksView(gantryAt(eye.z), eye, head)).toBe(true);
-    expect(blocksView(wiresFrom(head.z + 10), eye, head)).toBe(true);
   });
 
-  it("stay as they are far ahead, where they are only lines across the distance", () => {
+  it("stay as they are far ahead, where they are only a line across the distance", () => {
     const { eye, head } = view(TRAIN.height);
     expect(blocksView(gantryAt(head.z - 20), eye, head)).toBe(false);
-    expect(blocksView(wiresFrom(head.z - 20), eye, head)).toBe(false);
   });
 });

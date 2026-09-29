@@ -1,14 +1,15 @@
 import * as THREE from "three";
 import type { Course } from "../../engine/course";
-import { laneX, TRAIN } from "../../engine/tuning";
+import { laneX } from "../../engine/tuning";
 import { frontAt, type Obstacle } from "../../engine/types";
 import { highBarrier, lowBarrier, ramp } from "../models/barriers";
-import { headlightGlow, trainCar, type CarRole } from "../models/train";
+import { trainModel } from "../models/train";
+import { release } from "../prefabs";
 
 const VISIBLE = 200;
 
 interface Shown {
-  object: THREE.Group;
+  object: THREE.Object3D;
   obstacle: Obstacle;
   /** When a hoverboard smashed it, in seconds of view time, for the tumble. */
   smashedAt: number | null;
@@ -17,8 +18,8 @@ interface Shown {
 
 /**
  * The trains, barriers and ramps of one run, kept in step with the
- * course. Each obstacle gets a clone of a shared model when it comes into
- * view and loses it once the runner is past.
+ * course. Each obstacle takes a pooled copy of its model as it comes into
+ * view and gives it back once the runner is past.
  */
 export class ObstacleView {
   readonly group = new THREE.Group();
@@ -48,13 +49,13 @@ export class ObstacleView {
     }
     for (const [id, shown] of this.shown) {
       if (this.seen.has(id)) continue;
-      this.group.remove(shown.object);
+      release(shown.object);
       this.shown.delete(id);
     }
   }
 
   clear(): void {
-    this.group.clear();
+    for (const shown of this.shown.values()) release(shown.object);
     this.shown.clear();
   }
 }
@@ -72,7 +73,7 @@ function place(shown: Shown, front: number, time: number): void {
   object.visible = t < 1.4;
 }
 
-function build(o: Obstacle): THREE.Group {
+function build(o: Obstacle): THREE.Object3D {
   switch (o.kind) {
     case "low":
       return lowBarrier(o.style);
@@ -81,27 +82,7 @@ function build(o: Obstacle): THREE.Group {
     case "ramp":
       return ramp();
     case "train":
-      return train(o);
+      // The paint job from the style, and which graffiti the first car wears from the rest of it.
+      return trainModel(o.style, o.cars, o.drift > 0, Math.floor(o.style / 4));
   }
-}
-
-function train(o: Obstacle): THREE.Group {
-  const group = new THREE.Group();
-  const lit = o.drift > 0;
-  for (let i = 0; i < o.cars; i++) {
-    const role: CarRole = o.cars === 1 ? "single" : i === 0 ? "front" : i === o.cars - 1 ? "rear" : "middle";
-    // About one car in three carries a graffiti piece.
-    const graffiti = (o.id + i) % 3 === 0 ? (o.id * 3 + i) % 4 : null;
-    const car = trainCar(o.style, role, graffiti, lit);
-    car.position.z = -i * (TRAIN.car + TRAIN.gap);
-    group.add(car);
-  }
-  if (lit) {
-    for (const x of [-0.72, 0.72]) {
-      const glow = headlightGlow();
-      glow.position.set(x, 1.05, 0.5);
-      group.add(glow);
-    }
-  }
-  return group;
 }

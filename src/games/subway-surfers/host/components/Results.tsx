@@ -1,17 +1,17 @@
 "use client";
-import { DIFFICULTY_LABELS } from "../../engine/difficulty";
-import { useSurfStore } from "../store";
-import { BestTable } from "./BestTable";
+import { DIFFICULTY, multiplierText } from "../../engine/difficulty";
+import { useSurfStore, type ResultRow } from "../store";
+import { Board } from "./Board";
 import { Confetti } from "./Confetti";
 import { useSession } from "./session-context";
 
-/** The end of a run: the score, the best table, and the way back in. */
+/** The end of a run: the score and where it came from, its place on this computer, and the way back in. */
 export function Results() {
   const session = useSession();
   const row = useSurfStore((s) => s.result);
-  const best = useSurfStore((s) => s.best);
   const jump = useSurfStore((s) => s.jumpToReplay);
   if (!row) return null;
+  const level = DIFFICULTY[row.difficulty];
   return (
     <div className="ss-results">
       <Confetti />
@@ -20,12 +20,14 @@ export function Results() {
         <div className="ss-result">
           <span className="ss-result__name">{row.name}</span>
           <span className="ss-result__score">{row.score.toLocaleString()}</span>
+          <span className="ss-result__rank">#{row.rank.toLocaleString()} on this computer</span>
+          {row.best && <span className="ss-result__badge">New best!</span>}
           <span className="ss-result__meta">
-            {row.coins} coins, {row.distance.toLocaleString()} m, {DIFFICULTY_LABELS[row.difficulty]}
+            {row.coins} coins, {row.distance.toLocaleString()} m, {level.label} {multiplierText(level.multiplier)}
+            {row.input === "keyboard" ? ", keyboard" : ""}
           </span>
-          {row.best === 1 && <span className="ss-result__badge">New record!</span>}
-          {row.best !== null && row.best > 1 && <span className="ss-result__badge">Best run #{row.best}</span>}
         </div>
+        <Breakdown points={row.points} />
         <div className="ss-results__actions">
           <button type="button" className="ss-button ss-button--go" onClick={() => session.playAgain()}>
             Play again
@@ -39,9 +41,28 @@ export function Results() {
             Menu
           </button>
         </div>
-        {jump && session.kit && <p className="ss-results__jump">Or jump to play again</p>}
+        {jump && <p className="ss-results__jump">{session.kit ? "Or jump to play again" : "Or press Up to play again"}</p>}
       </div>
-      {best.length > 0 && <BestTable entries={best} fresh={row.best ? [row.best] : []} />}
+      <Board highlight={row.entryId} />
     </div>
+  );
+}
+
+/** Running, coins and power ups: coins and power ups count on top of the distance. */
+function Breakdown({ points }: { points: ResultRow["points"] }) {
+  const parts = [
+    ["Running", points.running],
+    ["Coins", points.coins],
+    ["Power ups", points.powers],
+  ] as const;
+  return (
+    <dl className="ss-points">
+      {parts.map(([label, value]) => (
+        <div key={label} className="ss-points__part">
+          <dt>{label}</dt>
+          <dd>{value.toLocaleString()}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }

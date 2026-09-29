@@ -48,6 +48,18 @@ export function sideRoom(ahead: number): number {
   return Math.max(1.1, ahead * 0.7);
 }
 
+/**
+ * How far off the middle a boss may walk. A boss is metres wide, so one
+ * that closed in near the edge would carry its outer joints off screen,
+ * where nobody could shoot them and the fight could never be won.
+ */
+export const BOSS_LANE = 0.6;
+
+/** The side room for this zombie where it stands now: a boss keeps to the middle. */
+export function roomFor(z: Pick<Zombie, "kind" | "ahead">): number {
+  return isBoss(z.kind) ? BOSS_LANE : sideRoom(z.ahead);
+}
+
 export function makeZombie(id: number, kind: ZombieKind, ahead: number, side: number, targetSide: number, opts: { hpScale: number; speedScale: number; harm: number; weakHp: number; seed: number }): Zombie {
   const spec = KINDS[kind];
   const boss = isBoss(kind);
@@ -101,7 +113,7 @@ export function stepZombie(z: Zombie, dt: number): number {
   const drift = z.targetSide - z.side;
   // A Training zombie, with no pace at all, holds its spot sideways too.
   if (z.speed > 0) z.side += Math.sign(drift) * Math.min(Math.abs(drift), DRIFT * dt);
-  const room = sideRoom(z.ahead);
+  const room = roomFor(z);
   z.side = Math.max(-room, Math.min(room, z.side));
   if (z.state === "walk") {
     z.ahead -= walkSpeed(z) * dt;
@@ -131,12 +143,12 @@ export interface HitResult {
   broke: number | null;
 }
 
-/** One bullet landing. Weak point hits carry the point's index. */
-export function hitZombie(z: Zombie, part: HitPart, weakIndex: number | null, base: number): HitResult {
+/** One bullet landing. Weak point hits carry the point's index. A `pierce` round goes through riot armour. */
+export function hitZombie(z: Zombie, part: HitPart, weakIndex: number | null, base: number, pierce = false): HitResult {
   if (!alive(z)) return { damage: 0, blocked: false, killed: false, broke: null };
   const spec = KINDS[z.kind];
   const broken = part === "weak" && (weakIndex === null || (z.weak[weakIndex] ?? 0) <= 0);
-  const outcome = hitDamage(z.kind, broken ? "body" : part, base);
+  const outcome = hitDamage(z.kind, broken ? "body" : part, base, pierce);
   if (outcome.damage <= 0) return { damage: 0, blocked: outcome.blocked, killed: false, broke: null };
 
   if (part === "weak" && weakIndex !== null) {
@@ -166,7 +178,6 @@ function knockBack(z: Zombie, metres: number, reach: number): void {
   z.ahead = Math.max(reach, z.ahead + metres);
   setState(z, "stagger");
 }
-
 function die(z: Zombie, head: boolean): void {
   z.hp = 0;
   z.death = { head, seat: 0 };

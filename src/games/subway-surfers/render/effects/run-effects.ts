@@ -105,6 +105,10 @@ export class RunEffects {
         const a = time * 9 + this.r() * 6;
         this.glow.emit({ x: s.x + Math.cos(a) * 0.7, y: s.y + 1 + Math.sin(a) * 0.7, z, vx: 0, vy: 0, vz: 0, life: 0.3, size: 0.3, color: 0xff4d5e });
       }
+      // The score multiplier: gold twinkles rising off the runner, so doubled points are felt as well as shown.
+      if (powers.has("double") && this.r() < 0.4) {
+        this.glow.emit({ x: s.x + this.spread() * 0.5, y: s.y + 0.4 + this.r() * 1.3, z: z + this.spread() * 0.3, vx: 0, vy: 1.4, vz: 1.5, life: 0.6, size: 0.4, color: this.r() < 0.5 ? 0xffc21a : 0xfff3b0, grow: 0.3 });
+      }
     }
     this.glow.update(dt);
     this.puff.update(dt);

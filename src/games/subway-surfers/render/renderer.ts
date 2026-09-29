@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { neonEnvironment } from "./world/neon-env";
 import type { RunScene } from "./run-scene";
 import type { ViewRect } from "./split";
 import { setTextureDetail } from "./textures";
@@ -22,12 +21,12 @@ function softwareDrawn(renderer: THREE.WebGLRenderer): boolean {
 }
 
 /**
- * One WebGL canvas that draws a runner's scene into its part of
- * the screen. The neon street every scene reflects is made once here.
+ * One WebGL canvas that draws a runner's scene into its part of the
+ * screen. No tone mapping: the cartoon colours go out as painted, bold
+ * and saturated, the way the toon shading was tuned.
  */
 export class Renderer {
   readonly gl: THREE.WebGLRenderer;
-  readonly environment: THREE.Texture;
   private width = 1;
   private height = 1;
 
@@ -39,10 +38,8 @@ export class Renderer {
       preserveDrawingBuffer: options.preserve ?? false,
     });
     setTextureDetail(softwareDrawn(this.gl) ? 1 : Math.min(4, this.gl.capabilities.getMaxAnisotropy()));
-    this.gl.toneMapping = THREE.ACESFilmicToneMapping;
-    this.gl.toneMappingExposure = 1.15;
+    this.gl.toneMapping = THREE.NoToneMapping;
     this.gl.setScissorTest(true);
-    this.environment = neonEnvironment(this.gl);
   }
 
   resize(width: number, height: number, dpr: number): void {
@@ -61,6 +58,7 @@ export class Renderer {
       const y = Math.round((1 - view.rect.y - view.rect.h) * this.height);
       const camera = view.camera ?? view.scene.chase.camera;
       if (!view.camera) view.scene.chase.setAspect(w / h);
+      view.scene.warmup.flush(this.gl, view.scene.scene, camera);
       view.scene.effects.setViewHeight(h * this.gl.getPixelRatio());
       this.gl.setViewport(x, y, w, h);
       this.gl.setScissor(x, y, w, h);
@@ -69,7 +67,6 @@ export class Renderer {
   }
 
   dispose(): void {
-    this.environment.dispose();
     this.gl.dispose();
   }
 }

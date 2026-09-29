@@ -4,6 +4,7 @@ import type { MeshBuilder, V3 } from "../../mesh-builder";
 import { dressHead, dressTorso } from "./anatomy";
 import { dressLimbs } from "./limbs";
 import { seededRand } from "./commoners";
+import { dressHook, dressSurgeon } from "./mini-bosses";
 import { Dresser, makeRig, standardProxies, type BodyDims, type Rig } from "./rig";
 import { addWeakPoints, type WeakMarker } from "./weak-points";
 import { zombieMaterials } from "./zombie-materials";
@@ -27,22 +28,31 @@ const PLANS: Record<BossKind, BossPlan> = {
     scale: 1.95,
     weakRadius: 0.075,
   },
-  juggernaut: { dims: { ...BASE, torsoW: 0.66, torsoD: 0.46, shoulderW: 0.9, arm: 0.2, leg: 0.24, head: 0.3 }, scale: 1.62, weakRadius: 0.08 },
+  juggernaut: { dims: { ...BASE, torsoW: 0.66, torsoD: 0.46, shoulderW: 0.9, arm: 0.2, leg: 0.24, head: 0.3 }, scale: 1.79, weakRadius: 0.078 },
+  // Tall and gaunt, all arms and legs.
+  surgeon: {
+    dims: { ...BASE, thigh: 0.5, shin: 0.48, torso: 0.64, torsoW: 0.44, torsoD: 0.26, shoulderW: 0.58, upperArm: 0.4, forearm: 0.4, hand: 0.16, neck: 0.1, head: 0.25, arm: 0.12, leg: 0.15 },
+    scale: 1.27,
+    weakRadius: 0.1,
+  },
+  hook: { dims: { ...BASE, torso: 0.64, torsoW: 0.7, torsoD: 0.46, shoulderW: 0.9, arm: 0.21, leg: 0.23, head: 0.27 }, scale: 1.44, weakRadius: 0.09 },
   behemoth: {
     dims: { ...BASE, thigh: 0.55, shin: 0.52, torso: 0.72, torsoW: 0.62, torsoD: 0.42, shoulderW: 0.92, upperArm: 0.55, forearm: 0.55, hand: 0.24, arm: 0.17, leg: 0.21, head: 0.32, neck: 0.14 },
     scale: 1.95,
-    weakRadius: 0.07,
+    // Big glowing joints for the biggest body, the size the balance bots aim at.
+    weakRadius: 0.095,
   },
 };
 
 const cone = (b: MeshBuilder, r: number, h: number, mat: THREE.Material, at: V3, rot: V3) => b.add(new THREE.ConeGeometry(r, h, 7), mat, at, rot);
 
 /**
- * The four bosses, each with its own silhouette. The Butcher is a huge
- * gut in a bloody apron with a cleaver. The Tank is all shoulders and
- * fists with bone spikes. The Juggernaut is sealed in a bomb suit with
- * bare joints. The Behemoth is a towering thing with long arms, spines
- * down its back and a burning core in an open ribcage.
+ * The bosses, each with its own silhouette. The Butcher is a huge gut in
+ * a bloody apron with a cleaver. The Surgeon and the Hook are dressed in
+ * mini-bosses.ts. The Tank is all shoulders and fists with bone spikes.
+ * The Juggernaut is sealed in a bomb suit with bare joints. The Behemoth
+ * is a towering thing with long arms, spines down its back and a burning
+ * core in an open ribcage.
  */
 export function buildBoss(kind: BossKind, seed: number): { rig: Rig; weak: WeakMarker[] } {
   const m = zombieMaterials();
@@ -53,7 +63,11 @@ export function buildBoss(kind: BossKind, seed: number): { rig: Rig; weak: WeakM
   const dress = new Dresser(rig);
   const skin = kind === "tank" ? m.skins[2]! : kind === "behemoth" ? m.skins[1]! : m.skins[0]!;
 
-  if (kind === "butcher") {
+  if (kind === "surgeon") {
+    dressSurgeon(dress, d, m, rand);
+  } else if (kind === "hook") {
+    dressHook(dress, d, m, rand);
+  } else if (kind === "butcher") {
     dressHead(dress, d, m, { skin, hair: "stitched", rotten: true }, rand);
     dressTorso(dress, d, m, { skin, shirt: null, pants: m.pants[1]!, ribs: false, belly: 1 }, rand);
     dressLimbs(dress, d, m, { skin, sleeve: null, pants: m.pants[1]!, shoes: true }, rand);

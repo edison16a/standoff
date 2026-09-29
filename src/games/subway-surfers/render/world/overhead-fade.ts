@@ -9,39 +9,43 @@ const RATE = 14;
 interface Faded {
   /** Where the piece hangs. */
   span: Overhang;
-  materials: THREE.Material[];
+  /** Each mesh with the shared material it had, to hand back when the piece goes back to the pool. */
+  meshes: { mesh: THREE.Mesh; shared: THREE.Material }[];
   opacity: number;
 }
 
 /**
- * Fades the gantries and wires that come between the camera and the
- * runner. From a train roof the camera rides at the height of the beams,
- * signal heads and wires, which would sweep across the whole picture and
- * cut through the runner. Each piece gets its own copies of its
- * materials, so fading one leaves the rest.
+ * Fades the gantries that come between the camera and the runner. From a
+ * train roof the camera rides at the height of the beams and signal
+ * heads, which would sweep across the whole picture and cut through the
+ * runner. Each piece gets its own copies of its materials while it is
+ * out, so fading one leaves the rest.
  */
 export class OverheadFade {
   private readonly pieces = new Map<THREE.Object3D, Faded>();
 
-  /** Takes over a piece just built, hanging where `span` says, giving it materials of its own to fade. */
+  /** Takes over a piece just placed, hanging where `span` says, giving it materials of its own to fade. */
   adopt(piece: THREE.Object3D, span: Overhang): void {
-    const materials: THREE.Material[] = [];
+    const meshes: Faded["meshes"] = [];
     piece.traverse((node) => {
       const mesh = node as THREE.Mesh;
       if (!mesh.isMesh || Array.isArray(mesh.material)) return;
       const own = mesh.material.clone();
       own.userData.shared = false;
+      meshes.push({ mesh, shared: mesh.material });
       mesh.material = own;
-      materials.push(own);
     });
-    this.pieces.set(piece, { span, materials, opacity: 1 });
+    this.pieces.set(piece, { span, meshes, opacity: 1 });
   }
 
-  /** Lets go of a piece dropped behind, and frees its materials. */
+  /** Lets go of a piece dropped behind: frees its own materials and puts the shared ones back. */
   drop(piece: THREE.Object3D): void {
     const entry = this.pieces.get(piece);
     if (!entry) return;
-    for (const material of entry.materials) material.dispose();
+    for (const { mesh, shared } of entry.meshes) {
+      (mesh.material as THREE.Material).dispose();
+      mesh.material = shared;
+    }
     this.pieces.delete(piece);
   }
 
@@ -54,7 +58,8 @@ export class OverheadFade {
       entry.opacity += (target - entry.opacity) * k;
       if (Math.abs(target - entry.opacity) < 0.01) entry.opacity = target;
       const see = entry.opacity < 1;
-      for (const material of entry.materials) {
+      for (const { mesh } of entry.meshes) {
+        const material = mesh.material as THREE.Material;
         if (material.transparent !== see) {
           material.transparent = see;
           // A see through piece must not hide what is behind it from the depth test.

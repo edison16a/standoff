@@ -1,6 +1,7 @@
 "use client";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { CornerPreview } from "@/games/kit/camera";
+import { registerRunAdmin } from "../admin";
 import { useSurfStore } from "../store";
 import { CalibrateStep, CameraStep, CameraTrouble } from "./CameraStep";
 import { Lobby } from "./Lobby";
@@ -21,6 +22,8 @@ export function Stage() {
   const phase = useSurfStore((s) => s.phase);
   const kit = session.kit;
   const playing = phase === "tutorial" || phase === "countdown" || phase === "running" || phase === "results";
+  // Test shortcuts in the host's admin panel, only while a run is going.
+  useEffect(() => (phase === "running" ? registerRunAdmin(() => session.round?.run ?? null) : undefined), [phase, session]);
   return (
     <div className="ss-stage">
       <Suspense fallback={null}>

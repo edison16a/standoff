@@ -18,14 +18,21 @@ function idle(level: BotLevel, seconds: number): SurvivalGame {
 }
 
 describe("zombie difficulty", () => {
-  it("scales speed and harm but keeps the stage the same length", () => {
+  it("plays the run as written on easy, and faster and harder above it, with the same count", () => {
     const base = stage(5);
-    const easy = tiltStage(base, "easy");
+    expect(tiltStage(base, "easy").speed).toBe(base.speed);
+    const medium = tiltStage(base, "medium");
     const hard = tiltStage(base, "hard");
-    expect(easy.speed).toBeLessThan(base.speed);
+    expect(medium.speed).toBeGreaterThan(base.speed);
+    expect(hard.speed).toBeGreaterThan(medium.speed);
     expect(hard.harm).toBeGreaterThan(base.harm);
-    expect(easy.count).toBe(base.count);
-    expect(tiltStage(base, "medium")).toEqual(base);
+    expect(hard.count).toBe(base.count);
+    expect(hard.bosses).toEqual(base.bosses);
+  });
+
+  it("starts easy at the kinds' own pace and ends it at twice that", () => {
+    expect(tiltStage(stage(1), "easy").speed).toBe(1);
+    expect(tiltStage(stage(15), "easy").speed).toBe(2);
   });
 
   it("gets tougher from easy to hard", () => {

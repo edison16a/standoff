@@ -7,6 +7,8 @@ import { Showcase } from "./showcase/Showcase";
 import "./styles/host.css";
 import "./styles/hud.css";
 import "./styles/menus.css";
+import "./styles/board.css";
+import "./styles/scoring.css";
 import "./styles/showcase.css";
 
 /**
