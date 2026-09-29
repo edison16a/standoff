@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ClientEnvelope, ServerEnvelope } from "@/platform/protocol";
 import { SocketClient, type SocketStatus } from "./socket-client";
-import { preferStream, webSocketOpened, WEBSOCKET_RETRY_MS } from "./transport-choice";
+import { FALLBACK_AFTER, preferStream, resetTransportChoice, webSocketOpened, WEBSOCKET_RETRY_MS } from "./transport-choice";
 
 /** Just enough of a browser WebSocket to drive the client by hand. */
 class FakeSocket {
@@ -40,14 +40,25 @@ const JAB: ClientEnvelope = { type: "phone:send", payload: { kind: "strike", act
 const MOTION: ClientEnvelope = { type: "phone:send", payload: { kind: "motion", pitch: 0, yaw: 0, roll: 0, move: 0 } };
 
 let statuses: SocketStatus[];
+/** Every client a test made, closed after it, so no timer of theirs outlives the test. */
+const clients: SocketClient[] = [];
+
+function track(client: SocketClient): SocketClient {
+  clients.push(client);
+  return client;
+}
+
+function closeAll() {
+  for (const client of clients.splice(0)) client.close();
+}
 
 function start() {
   statuses = [];
-  const client = new SocketClient({
+  const client = track(new SocketClient({
     onOpen: (send) => send({ type: "phone:join", code: "ABCD", token: "t" }),
     onMessage: () => undefined,
     onStatus: (status) => statuses.push(status),
-  });
+  }));
   client.connect();
   const first = FakeSocket.all[0]!;
   first.open();
@@ -63,6 +74,7 @@ describe("SocketClient handover", () => {
     Object.assign(globalThis, { WebSocket: FakeSocket, location: { protocol: "https:", host: "game.test" } });
   });
   afterEach(() => {
+    closeAll();
     Reflect.deleteProperty(globalThis, "location");
   });
 
@@ -92,16 +104,22 @@ describe("SocketClient handover", () => {
   });
 });
 
-/** An EventSource that never opens, counting how many were made. */
-function stubStream() {
+/** An EventSource counting how many were made. With `opens`, each says hello as the relay would. */
+function stubStream({ opens = false } = {}) {
   const made = { count: 0 };
   vi.stubGlobal(
     "EventSource",
     class {
+      private readonly listeners = new Map<string, (event: { data: string }) => void>();
+      onerror: (() => void) | null = null;
       constructor() {
         made.count += 1;
+        if (opens) queueMicrotask(() => this.listeners.get("hello")?.({ data: "id" }));
+        else queueMicrotask(() => this.onerror?.());
       }
-      addEventListener() {}
+      addEventListener(type: string, listener: (event: { data: string }) => void) {
+        this.listeners.set(type, listener);
+      }
       close() {}
     },
   );
@@ -111,11 +129,12 @@ function stubStream() {
 
 describe("SocketClient opening", () => {
   beforeEach(() => {
-    webSocketOpened();
+    resetTransportChoice();
     FakeSocket.all = [];
     Object.assign(globalThis, { WebSocket: FakeSocket, location: { protocol: "https:", host: "game.test" } });
   });
   afterEach(() => {
+    closeAll();
     vi.useRealTimers();
     Reflect.deleteProperty(globalThis, "location");
     vi.unstubAllGlobals();
@@ -125,7 +144,7 @@ describe("SocketClient opening", () => {
 
   it("tells a handover socket from a reconnect", () => {
     const infos: boolean[] = [];
-    const client = new SocketClient({ ...quiet(), onOpen: (_send, info) => infos.push(info.handover) });
+    const client = track(new SocketClient({ ...quiet(), onOpen: (_send, info) => infos.push(info.handover) }));
     client.connect();
     FakeSocket.all[0]!.open();
     FakeSocket.all[0]!.receive({ type: "server:rotate" });
@@ -134,7 +153,7 @@ describe("SocketClient opening", () => {
   });
 
   it("keeps using WebSockets after closing one that was still connecting", () => {
-    const client = new SocketClient(quiet());
+    const client = track(new SocketClient(quiet()));
     client.connect();
     client.redial();
     expect(FakeSocket.all).toHaveLength(2);
@@ -143,7 +162,7 @@ describe("SocketClient opening", () => {
 
   it("passes on a move that arrives on the handover socket", () => {
     const seen: string[] = [];
-    const client = new SocketClient({ ...quiet(), onMessage: (message) => seen.push(message.type) });
+    const client = track(new SocketClient({ ...quiet(), onMessage: (message) => seen.push(message.type) }));
     client.connect();
     FakeSocket.all[0]!.open();
     FakeSocket.all[0]!.receive({ type: "server:rotate" });
@@ -155,7 +174,7 @@ describe("SocketClient opening", () => {
   it("retries a refused handover a few times, and says so each time", () => {
     vi.useFakeTimers();
     let failed = 0;
-    const client = new SocketClient({ ...quiet(), onHandoverFailed: () => (failed += 1) });
+    const client = track(new SocketClient({ ...quiet(), onHandoverFailed: () => (failed += 1) }));
     client.connect();
     const first = FakeSocket.all[0]!;
     first.open();
@@ -172,39 +191,138 @@ describe("SocketClient opening", () => {
     expect(first.readyState).toBe(1);
   });
 
-  it("goes to the stream at once when a WebSocket will not open, and tries one again later", () => {
+  it("goes to the stream at once where no WebSocket ever opened, and tries one again later", async () => {
     vi.useFakeTimers();
-    const sources = stubStream();
-    const client = new SocketClient(quiet());
+    const sources = stubStream({ opens: true });
+    const client = track(new SocketClient(quiet()));
     client.connect();
     FakeSocket.all[0]!.close(1006);
     // No backoff: a WebSocket that would not open is no outage.
     expect(sources.count).toBe(1);
+    await vi.advanceTimersByTimeAsync(0);
     expect(client.usesStream).toBe(true);
+    // The stream opened where the WebSocket did not, so they are blocked here for a while.
     expect(preferStream()).toBe(true);
     vi.advanceTimersByTime(WEBSOCKET_RETRY_MS + 1);
     expect(preferStream()).toBe(false);
     client.redial();
     expect(FakeSocket.all).toHaveLength(2);
-    client.close();
   });
 
-  it("moves a handover to the stream when its WebSocket will not open", () => {
+  it("blames the server, not WebSockets, when the stream fails as well", async () => {
+    vi.useFakeTimers();
     const sources = stubStream();
-    const client = new SocketClient(quiet());
+    const client = track(new SocketClient(quiet()));
+    client.connect();
+    FakeSocket.all[0]!.close(1006);
+    expect(sources.count).toBe(1);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(preferStream()).toBe(false);
+    // The next try after the backoff is a WebSocket again.
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(FakeSocket.all).toHaveLength(2);
+  });
+
+  it("keeps a page whose WebSockets worked on WebSockets through a blip", async () => {
+    vi.useFakeTimers();
+    const sources = stubStream({ opens: true });
+    const client = track(new SocketClient(quiet()));
+    client.connect();
+    FakeSocket.all[0]!.open();
+    FakeSocket.all[0]!.close(1006);
+    // The server restarted or the network dropped: reconnects stay WebSockets.
+    for (let n = 1; n < FALLBACK_AFTER; n++) {
+      await vi.advanceTimersByTimeAsync(5000);
+      FakeSocket.all.at(-1)!.close(1006);
+    }
+    expect(sources.count).toBe(0);
+    await vi.advanceTimersByTimeAsync(5000);
+    FakeSocket.all.at(-1)!.open();
+    expect(client.usesStream).toBe(false);
+    expect(preferStream()).toBe(false);
+  });
+
+  it("lets the stream stand in once after many failures in a row, without moving the page", async () => {
+    vi.useFakeTimers();
+    const sources = stubStream({ opens: true });
+    const client = track(new SocketClient(quiet()));
+    webSocketOpened();
+    client.connect();
+    for (let n = 1; n <= FALLBACK_AFTER; n++) {
+      FakeSocket.all.at(-1)!.close(1006);
+      await vi.advanceTimersByTimeAsync(5000);
+    }
+    expect(sources.count).toBe(1);
+    expect(client.usesStream).toBe(true);
+    expect(preferStream()).toBe(false);
+  });
+
+  it("moves a handover to the stream where no WebSocket ever opened", async () => {
+    vi.useFakeTimers();
+    const sources = stubStream({ opens: true });
+    const client = track(new SocketClient(quiet()));
+    client.connect();
+    FakeSocket.all[0]!.close(1006);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(client.usesStream).toBe(true);
+    // Long after, a rotation tries a WebSocket again, and the stream stands in at once.
+    vi.setSystemTime(Date.now() + WEBSOCKET_RETRY_MS + 1);
+    client.rotateNow();
+    expect(FakeSocket.all).toHaveLength(2);
+    FakeSocket.all[1]!.close(1006);
+    expect(sources.count).toBe(2);
+  });
+
+  it("tries a handover WebSocket again later where WebSockets work", () => {
+    vi.useFakeTimers();
+    const sources = stubStream();
+    const client = track(new SocketClient(quiet()));
     client.connect();
     FakeSocket.all[0]!.open();
     FakeSocket.all[0]!.receive({ type: "server:rotate" });
     FakeSocket.all[1]!.close(1006);
-    expect(sources.count).toBe(1);
+    expect(sources.count).toBe(0);
     // The old socket carries on meanwhile.
     expect(client.usesStream).toBe(false);
-    client.close();
+    vi.advanceTimersByTime(3000);
+    expect(FakeSocket.all).toHaveLength(3);
+  });
+
+  it("moves to a fresh socket on request, with the old one working till it confirms", () => {
+    const client = track(new SocketClient(quiet()));
+    client.connect();
+    FakeSocket.all[0]!.open();
+    expect(client.rotateNow()).toBe(true);
+    expect(client.rotateNow()).toBe(false);
+    expect(FakeSocket.all).toHaveLength(2);
+    expect(FakeSocket.all[0]!.readyState).toBe(1);
+  });
+
+  it("gives the old socket a last word once the new one confirms", () => {
+    const last: string[] = [];
+    const client = track(
+      new SocketClient({
+        ...quiet(),
+        onHandedOver: (confirmation, sendOld) => {
+          last.push(confirmation.type);
+          sendOld({ type: "host:echo", nonce: "n".repeat(20) });
+        },
+      }),
+    );
+    client.connect();
+    const [first] = FakeSocket.all;
+    first!.open();
+    client.rotateNow();
+    FakeSocket.all[1]!.open();
+    FakeSocket.all[1]!.receive({ type: "phone:joined", code: "ABCD", game: "g", seats: 2, seat: 1, token: "t", hostHere: true, name: "Ann" });
+    expect(last).toEqual(["phone:joined"]);
+    expect(first!.types()).toEqual(["host:echo"]);
+    expect(first!.readyState).toBe(3);
   });
 
   it("starts on the stream when asked", () => {
     const sources = stubStream();
-    const client = new SocketClient(quiet(), { stream: true });
+    const client = track(new SocketClient(quiet(), { stream: true }));
     client.connect();
     expect(client.usesStream).toBe(true);
     expect(sources.count).toBe(1);

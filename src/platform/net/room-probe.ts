@@ -1,5 +1,5 @@
 import type { ProbeFailure } from "@/platform/protocol";
-import { openChannel, readEnvelope } from "./open-channel";
+import { openChannel, readEnvelope, type Channel } from "./open-channel";
 import { preferStream } from "./transport-choice";
 
 /** Longer than the relay's own wait for the echo, so the relay's answer normally comes first. */
@@ -14,40 +14,64 @@ const NONCE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456
 export type ProbeOutcome = { ok: true } | { ok: false; reason: ProbeFailure | "timeout" | "transport" };
 
 export interface ProbeOptions {
-  /** Use the HTTP stream. By default a WebSocket, unless one failed to open here a moment ago. */
+  /**
+   * Use the HTTP stream. Pass the transport the caller's own connection
+   * uses, which is known to work here. By default a WebSocket, unless
+   * those are blocked on this page.
+   */
   stream?: boolean;
   timeoutMs?: number;
+  /** The check's nonce, so a host can tell it answered this one itself. */
+  nonce?: string;
 }
 
 /**
  * Checks a room the way a phone would reach it: over a fresh connection,
  * which on Vercel may land on any server instance. The relay answers once
- * the host has echoed, and then closes the connection itself.
+ * the host has echoed, and then closes the connection itself. A WebSocket
+ * that never opens is tried once more over the stream, within the same
+ * time, so a browser that cannot use WebSockets never fails a check for it.
  */
-export function probeRoom(room: { code: string; token: string }, { stream = preferStream(), timeoutMs = PROBE_TIMEOUT_MS }: ProbeOptions = {}): Promise<ProbeOutcome> {
+export function probeRoom(room: { code: string; token: string }, options: ProbeOptions = {}): Promise<ProbeOutcome> {
+  const { stream = preferStream(), timeoutMs = PROBE_TIMEOUT_MS, nonce = makeNonce() } = options;
   return new Promise((resolve) => {
-    const nonce = makeNonce();
-    const channel = openChannel(stream);
+    let channel: Channel;
     let settled = false;
     const finish = (outcome: ProbeOutcome) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      channel.onopen = null;
-      channel.onmessage = null;
-      channel.onclose = null;
+      quiet(channel);
       channel.close(1000);
       resolve(outcome);
     };
     const timer = setTimeout(() => finish({ ok: false, reason: "timeout" }), timeoutMs);
-    channel.onopen = () => channel.send(JSON.stringify({ type: "probe:room", code: room.code, token: room.token, nonce }));
-    channel.onmessage = (event: MessageEvent<string>) => {
-      const message = readEnvelope(event.data);
-      if (message?.type !== "probe:result" || message.nonce !== nonce) return;
-      finish(message.ok ? { ok: true } : { ok: false, reason: message.reason ?? "no-echo" });
+    const open = (overStream: boolean) => {
+      channel = openChannel(overStream);
+      let opened = false;
+      channel.onopen = () => {
+        opened = true;
+        channel.send(JSON.stringify({ type: "probe:room", code: room.code, token: room.token, nonce }));
+      };
+      channel.onmessage = (event: MessageEvent<string>) => {
+        const message = readEnvelope(event.data);
+        if (message?.type !== "probe:result" || message.nonce !== nonce) return;
+        finish(message.ok ? { ok: true } : { ok: false, reason: message.reason ?? "no-echo" });
+      };
+      channel.onclose = () => {
+        if (opened || overStream) return finish({ ok: false, reason: "transport" });
+        quiet(channel);
+        open(true);
+      };
     };
-    channel.onclose = () => finish({ ok: false, reason: "transport" });
+    open(stream);
   });
+}
+
+function quiet(channel: Channel): void {
+  channel.onopen = null;
+  channel.onmessage = null;
+  channel.onclose = null;
 }
 
 /**

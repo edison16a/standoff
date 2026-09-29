@@ -10,6 +10,11 @@ export interface OpenInfo {
   handover: boolean;
 }
 
+export interface HandoverFailure {
+  /** No more tries until the server asks for a move again: the old socket will be cut as it stands. */
+  final: boolean;
+}
+
 export interface SocketHandlers {
   /**
    * Runs on every new socket, which is where a client announces itself
@@ -18,8 +23,14 @@ export interface SocketHandlers {
   onOpen(send: (message: ClientEnvelope) => void, info: OpenInfo): void;
   onMessage(message: ServerEnvelope): void;
   onStatus(status: SocketStatus): void;
-  /** A handover socket was refused. The old socket carries on and the client tries again soon. */
-  onHandoverFailed?(): void;
+  /** A handover socket was refused. The old socket carries on and the client tries again soon, unless `final`. */
+  onHandoverFailed?(info: HandoverFailure): void;
+  /**
+   * A handover socket confirmed with `confirmation`. `sendOld` still
+   * reaches the old socket, and the server instance it sits on, for one
+   * last message before it closes.
+   */
+  onHandedOver?(confirmation: ServerEnvelope, sendOld: (message: ClientEnvelope) => void): void;
 }
 
 export interface SocketOptions {

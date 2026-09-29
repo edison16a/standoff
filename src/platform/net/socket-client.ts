@@ -1,10 +1,10 @@
-import type { ClientEnvelope } from "@/platform/protocol";
+import type { ClientEnvelope, ServerEnvelope } from "@/platform/protocol";
 import { Backoff } from "./backoff";
 import { FINAL, HANDSHAKES, Handover } from "./handover";
 import { lossyKey, OPEN, openChannel, readEnvelope, type Channel } from "./open-channel";
 import type { SocketHandlers, SocketOptions } from "./socket-types";
 import { StreamChannel } from "./stream-channel";
-import { preferStream, webSocketFailed, webSocketOpened } from "./transport-choice";
+import { preferStream, TransportTally } from "./transport-choice";
 
 export type { SocketHandlers, SocketStatus } from "./socket-types";
 
@@ -15,15 +15,11 @@ const REPLACED = 4000;
 
 /**
  * A WebSocket that keeps itself connected, with backoff, since phones lock
- * and walk out of range all the time. When the server warns that it will
- * cut the socket (Vercel's time limit), a second one (`next`) opens and
- * announces itself. Sends switch to it once open, since the server queues
- * them behind the announce, and receives once it confirms the seat, so the
- * match never sees a disconnect.
- *
- * Every connection is a WebSocket unless one just failed to open on this
- * page, and then it is an HTTP stream (see transport-choice). A WebSocket
- * that would not open is no outage, so the stream is dialled at once.
+ * and walk out of range all the time. Before the server cuts a socket
+ * (Vercel's time limit) a second one (`next`) opens and announces itself.
+ * Sends switch to it once open and receives once it confirms the seat, so
+ * the match never sees a disconnect. Each connection's transport is up to
+ * transport-choice: a WebSocket unless those are blocked here.
  */
 export class SocketClient {
   private current: Channel | null = null;
@@ -32,6 +28,7 @@ export class SocketClient {
   private readonly forceStream: boolean;
   private readonly handover = new Handover();
   private readonly backoff = new Backoff();
+  private readonly tally = new TransportTally();
   private stopped = false;
 
   constructor(
@@ -65,9 +62,7 @@ export class SocketClient {
 
   /** Sends only if the link is keeping up. For high rate, replaceable data. */
   sendLossy(message: ClientEnvelope): void {
-    const target = this.target();
-    if (target && target.bufferedAmount > CONGESTED_BYTES) return;
-    this.send(message, lossyKey(message));
+    if ((this.target()?.bufferedAmount ?? 0) <= CONGESTED_BYTES) this.send(message, lossyKey(message));
   }
 
   /** Outgoing messages switch to the new socket as soon as it is open. */
@@ -86,6 +81,14 @@ export class SocketClient {
     old?.close(1000);
   }
 
+  /** A handover now, as for a server rotate. It lands where new connections go, as joining phones do. */
+  rotateNow(): boolean {
+    if (this.stopped || this.next || this.current?.readyState !== OPEN) return false;
+    this.handover.rotating();
+    this.next = this.dial();
+    return true;
+  }
+
   close(): void {
     this.stopped = true;
     this.backoff.cancel();
@@ -96,23 +99,18 @@ export class SocketClient {
     this.handlers.onStatus("closed");
   }
 
-  /** WebSocket first, unless one failed to open here a moment ago. */
-  private dial(): Channel {
-    const stream = this.forceStream || preferStream();
+  private dial(stream = this.forceStream || preferStream(), standingIn = false): Channel {
     const channel = openChannel(stream);
     let opened = false;
     channel.onopen = () => {
       opened = true;
-      if (!stream) webSocketOpened();
+      this.tally.opened(stream, standingIn);
       this.onOpen(channel);
     };
     channel.onmessage = (event: MessageEvent<string>) => this.onMessage(channel, event.data);
     channel.onclose = (event: CloseEvent) => {
-      // Only a WebSocket we still wanted counts against them. One we closed
-      // ourselves while it was connecting, on a redial, says nothing.
-      const failed = !opened && !stream && (channel === this.current || channel === this.next) && !this.stopped;
-      if (failed) webSocketFailed();
-      this.onClose(channel, event.code, failed);
+      const wanted = (channel === this.current || channel === this.next) && !this.stopped;
+      this.onClose(channel, event.code, opened, this.tally.closed(stream, opened, wanted));
     };
     return channel;
   }
@@ -124,10 +122,7 @@ export class SocketClient {
     }
     const handover = socket === this.next;
     if (handover) this.handover.announced();
-    const send = (message: ClientEnvelope) => {
-      if (socket.readyState === OPEN) socket.send(JSON.stringify(message));
-    };
-    this.handlers.onOpen(send, { handover });
+    this.handlers.onOpen((message) => socket.readyState === OPEN && socket.send(JSON.stringify(message)), { handover });
   }
 
   private onMessage(socket: Channel, raw: string): void {
@@ -143,64 +138,54 @@ export class SocketClient {
         if (message.type === "server:rotate") this.handover.rotateAfter = true;
         return;
       }
-      this.promote(socket);
+      this.promote(socket, message);
     }
     if (socket !== this.current) return;
-    if (message.type === "server:rotate") {
-      this.handover.rotating();
-      if (!this.stopped && !this.next) this.next = this.dial();
-      return;
-    }
+    if (message.type === "server:rotate") return void this.rotateNow();
     this.handlers.onMessage(message);
   }
 
-  /**
-   * The new socket could not take over, maybe because it landed where the
-   * room is not known. The old one still works until it is cut, so the
-   * owner hears of it and the handover is tried again shortly.
-   */
+  /** Refused, maybe where the room is not known. The old socket works till its cut, so it is tried again. */
   private refusedHandover(): void {
     this.abandonNext();
-    this.handlers.onHandoverFailed?.();
-    this.handover.retryLater(() => {
+    this.handlers.onHandoverFailed?.({ final: !this.retryHandover() });
+  }
+
+  private retryHandover(): boolean {
+    return this.handover.retryLater(() => {
       if (!this.stopped && !this.next && this.current?.readyState === OPEN) this.next = this.dial();
     });
   }
 
-  private onClose(socket: Channel, code: number, webSocketFailed: boolean): void {
+  private onClose(socket: Channel, code: number, opened: boolean, standIn: boolean): void {
     if (socket === this.next) {
       this.next = null;
       this.resendUnconfirmed();
-      if (webSocketFailed) this.next = this.dial();
+      if (standIn) this.next = this.dial(true, true);
+      // A handover that never connected is tried again while the old socket lasts.
+      else if (!opened && !this.stopped) this.retryHandover();
       return;
     }
     if (socket !== this.current || this.stopped) return;
-    // A handover is under way: the old socket was cut (or kicked by the
-    // relay for the new one) before the new one confirmed. Carry on with it.
-    if (this.next) {
-      this.takeOver(this.next);
-      return;
-    }
-    // The seat moved to a newer socket, most likely this page in a second
-    // tab, unless it was our own handover that then died. Reconnecting
-    // would only start a tug of war.
+    // Cut, or kicked for the new socket, before that one confirmed: carry on with it.
+    if (this.next) return this.takeOver(this.next);
+    // The seat moved to a newer socket, most likely this page in a second tab,
+    // unless our own dead handover did it. Reconnecting would start a tug of war.
     if (code === REPLACED && !this.handover.causedKick()) {
       this.current = null;
-      this.handlers.onStatus("replaced");
-      return;
+      return this.handlers.onStatus("replaced");
     }
-    if (webSocketFailed) {
-      this.current = this.dial();
-      return;
-    }
+    // A WebSocket that will not open here is no outage: the stream goes at once.
+    if (standIn) return void (this.current = this.dial(true, true));
     this.backoff.schedule(() => (this.current = this.dial()));
     this.handlers.onStatus(this.backoff.unreachable ? "unreachable" : "reconnecting");
   }
 
-  /** The new socket holds the seat now, and the old one is retired quietly. */
-  private promote(socket: Channel): void {
+  /** The new socket holds the seat now. The old one gets a last word to its instance, then goes. */
+  private promote(socket: Channel, confirmation: ServerEnvelope): void {
     const old = this.current;
     this.takeOver(socket);
+    this.handlers.onHandedOver?.(confirmation, (message) => old?.readyState === OPEN && old.send(JSON.stringify(message)));
     old?.close(1000);
   }
 
@@ -223,4 +208,3 @@ export class SocketClient {
     if (this.current?.readyState === OPEN) for (const data of messages) this.current.send(data);
   }
 }
-

@@ -73,11 +73,39 @@ describe("probeRoom", () => {
   it("reports a connection that closed before any answer", async () => {
     const pending = probeRoom(ROOM, { stream: false });
     const socket = FakeSocket.last;
+    socket.open();
     socket.onclose?.({ code: 1006 });
     expect(await pending).toEqual({ ok: false, reason: "transport" });
     expect(socket.closed).toBe(true);
     // The timer went with it.
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("checks over the stream when its WebSocket never opens, as on a browser that cannot use them", async () => {
+    vi.stubGlobal(
+      "EventSource",
+      class {
+        addEventListener() {}
+        close() {}
+      },
+    );
+    const pending = probeRoom(ROOM, { stream: false, nonce: "n".repeat(20) });
+    const socket = FakeSocket.last;
+    const { StreamChannel } = await import("./stream-channel");
+    const closed = vi.spyOn(StreamChannel.prototype, "close");
+    socket.onclose?.({ code: 1006 });
+    expect(socket.closed).toBe(false);
+    vi.advanceTimersByTime(5001);
+    expect(await pending).toEqual({ ok: false, reason: "timeout" });
+    // It gave a stream the rest of the time, rather than failing for the WebSocket, and closed it.
+    expect(closed).toHaveBeenCalledTimes(1);
+    vi.unstubAllGlobals();
+  });
+
+  it("passes on the nonce it was given", () => {
+    void probeRoom(ROOM, { stream: false, nonce: "abcdefghijklmnopqrst" });
+    FakeSocket.last.open();
+    expect(FakeSocket.last.sent[0]!.nonce).toBe("abcdefghijklmnopqrst");
   });
 
   it("makes nonces the relay accepts", () => {

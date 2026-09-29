@@ -21,6 +21,12 @@ const MISROUTED_RETRIES = 5;
  */
 export const POST_GAP_MS = 100;
 /**
+ * Motion frames and other replaceable state wait longer, since only the
+ * newest counts. An input like a strike still goes after POST_GAP_MS and
+ * takes the waiting frames along.
+ */
+export const LOSSY_GAP_MS = 200;
+/**
  * The relay pings every 15 s. A stream silent for this long is dead, even
  * if nothing in between said so, like one whose server instance vanished.
  */
@@ -98,8 +104,12 @@ export class StreamChannel {
 
   /** Posts now if the last one is done and far enough back, or once it is. */
   private schedule(): void {
-    if (this.sendingBytes > 0 || this.timer || this.queue.length === 0) return;
-    const wait = this.lastPost + POST_GAP_MS - Date.now();
+    if (this.sendingBytes > 0 || this.queue.length === 0) return;
+    const gap = this.queue.some((item) => item.key === undefined) ? POST_GAP_MS : LOSSY_GAP_MS;
+    const wait = this.lastPost + gap - Date.now();
+    // An input arriving behind motion frames brings the post forward.
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = null;
     if (wait <= 0) return void this.post();
     this.timer = setTimeout(() => {
       this.timer = null;

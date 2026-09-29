@@ -35,14 +35,15 @@ export class Handover {
    * A handover was refused, maybe on a server instance that does not know
    * the room. `dial` runs a little later, a couple of times per rotation.
    */
-  retryLater(dial: () => void): void {
-    if (this.retries >= RETRIES) return;
+  retryLater(dial: () => void): boolean {
+    if (this.retries >= RETRIES) return false;
     this.retries += 1;
     this.stop();
     this.retryTimer = setTimeout(() => {
       this.retryTimer = null;
       dial();
     }, RETRY_MS);
+    return true;
   }
 
   stop(): void {

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { POST_GAP_MS, SILENT_MS, StreamChannel } from "./stream-channel";
+import { LOSSY_GAP_MS, POST_GAP_MS, SILENT_MS, StreamChannel } from "./stream-channel";
 
 /** An event stream the test opens by hand. */
 class FakeSource {
@@ -76,6 +76,24 @@ describe("StreamChannel", () => {
     vi.advanceTimersByTime(POST_GAP_MS);
     await settle();
     expect(bodies[1]).toBe('[{"strike":1},{"motion":2}]');
+  });
+
+  it("lets motion frames wait longer than inputs, which take them along", async () => {
+    const channel = openChannel();
+    channel.send('{"first":true}');
+    await settle();
+    channel.send('{"motion":1}', "motion");
+    vi.advanceTimersByTime(POST_GAP_MS);
+    await settle();
+    expect(bodies).toHaveLength(1);
+    vi.advanceTimersByTime(LOSSY_GAP_MS - POST_GAP_MS);
+    await settle();
+    expect(bodies[1]).toBe('[{"motion":1}]');
+    channel.send('{"motion":2}', "motion");
+    vi.advanceTimersByTime(POST_GAP_MS);
+    channel.send('{"strike":1}');
+    await settle();
+    expect(bodies[2]).toBe('[{"motion":2},{"strike":1}]');
   });
 
   it("gives up on a stream that has gone silent, but not on one the relay pings", () => {
