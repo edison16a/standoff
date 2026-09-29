@@ -122,8 +122,8 @@ function setKeepers(state: MatchState, defending: TeamId, spot: Vec2, kind: SetP
   state.keepers[1].saves = saves[1]!;
   const k = state.keepers[defending];
   const gx = goalX(defending);
-  // For a free kick he stands off his line on the far side of the wall; for a penalty, on it.
-  const farZ = Math.abs(spot.z) < 0.6 ? 0 : -Math.sign(spot.z) * 0.7;
+  // For a free kick he stands off his line on the far side of the wall; for a penalty, on it. How far over scales with the goal.
+  const farZ = Math.abs(spot.z) < 0.6 ? 0 : -Math.sign(spot.z) * PITCH.goalHalfWidth * 0.24;
   k.pos = kind === "penalty" ? { x: gx + outward(defending) * KEEPER.lineGap, z: 0 } : { x: gx + outward(defending) * 0.9, z: farZ };
   k.facing = Math.atan2(spot.z - k.pos.z, spot.x - k.pos.x);
 }
