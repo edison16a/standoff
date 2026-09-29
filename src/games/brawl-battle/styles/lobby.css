@@ -159,8 +159,7 @@
   text-align: center;
 }
 
-.bb-stepper button,
-.bb-segments button {
+.bb-stepper button {
   display: grid;
   place-items: center;
   height: 40px;
@@ -183,22 +182,7 @@
   cursor: default;
 }
 
-.bb-segments {
-  display: flex;
-  gap: 4px;
-}
-
-.bb-segments button {
-  padding: 0 16px;
-}
-
-.bb-segments button[aria-pressed="true"] {
-  background: var(--bb-orange);
-  color: #1d0a00;
-}
-
-.bb-stepper button:focus-visible,
-.bb-segments button:focus-visible {
+.bb-stepper button:focus-visible {
   outline: 3px solid #ffffff;
   outline-offset: 2px;
 }
