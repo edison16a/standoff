@@ -94,6 +94,24 @@ describe("the host's aim", () => {
     aim.dispose();
   });
 
+  it("tells when a seat's aim is held at the edge, and lets go the moment it comes back in", () => {
+    const { room, say } = fakeRoom();
+    const aim = new HostAim(room);
+    aim.setZone(7, LEFT_HALF);
+    say(7, { kind: "aim-step", step: "center" });
+    expect(aim.atEdge(7)).toBe(false);
+    say(7, { kind: "aim", x: 0.3, y: 1.15 });
+    expect(aim.atEdge(7)).toBe(true);
+    // Straight back, before the drawn dot has eased away from the edge.
+    say(7, { kind: "aim", x: 0.3, y: 0.9 });
+    expect(aim.atEdge(7)).toBe(false);
+    // A phone gone quiet is not aiming anywhere.
+    say(7, { kind: "aim", x: -1.15, y: 0 });
+    expect(aim.atEdge(7, performance.now() + 5000)).toBe(false);
+    expect(aim.atEdge(8)).toBe(false);
+    aim.dispose();
+  });
+
   it("targets every corner a sword game asks for", () => {
     const { room, say } = fakeRoom();
     const aim = new HostAim(room);

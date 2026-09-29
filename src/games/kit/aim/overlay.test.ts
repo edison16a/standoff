@@ -107,6 +107,39 @@ describe("the aim overlay", () => {
     aim.dispose();
   });
 
+  it("gives a game that draws its own pointer the dot only while the aim is held at the edge", () => {
+    const { room, say } = fakeRoom();
+    const aim = new HostAim(room);
+    const host = document.createElement("div");
+    const root = createRoot(host);
+    let clock = performance.now();
+    vi.spyOn(performance, "now").mockImplementation(() => clock);
+    act(() => root.render(createElement(AimOverlay, { aim, players: () => PLAYERS, dots: false })));
+    say(1, { kind: "aim", x: 0.5, y: 0.2 });
+    say(2, { kind: "aim", x: 1.15, y: 1.15 });
+    // Half a second of frames, for the drawn dot to reach the edge.
+    for (let i = 0; i < 10; i++) {
+      clock += 50;
+      calls.length = 0;
+      step();
+    }
+    // Only Ben, pointing past the top right corner, gets a dot, drawn whole just inside the corner and with no name.
+    const glows = calls.filter((c) => c.name === "createRadialGradient");
+    expect(glows).toHaveLength(1);
+    const [x, y] = glows[0]!.args as number[];
+    expect(x).toBeGreaterThan(770);
+    expect(x).toBeLessThanOrEqual(786);
+    expect(y).toBeGreaterThanOrEqual(14);
+    expect(y).toBeLessThan(30);
+    expect(calls.some((c) => c.name === "fillText")).toBe(false);
+    say(2, { kind: "aim", x: 0.9, y: 0.9 });
+    calls.length = 0;
+    step();
+    expect(calls.some((c) => c.name === "createRadialGradient")).toBe(false);
+    act(() => root.unmount());
+    aim.dispose();
+  });
+
   it("sits on top of the page, over the join card, but draws in the box of the game it is placed in", () => {
     const { room, say } = fakeRoom();
     const aim = new HostAim(room);

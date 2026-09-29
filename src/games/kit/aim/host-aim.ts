@@ -117,6 +117,18 @@ export class HostAim {
     return this.toZone(seat, aim.shown);
   }
 
+  /**
+   * Whether a seat's aim is held at the edge of its zone right now, the
+   * phone pointing at or past it. Uses the phone's latest point, not the
+   * eased one, so it lets go the moment the aim comes back in.
+   */
+  atEdge(seat: Seat, nowMs = performance.now()): boolean {
+    const aim = this.seats.get(seat);
+    if (!aim || nowMs - aim.seenAt > STALE_MS) return false;
+    const at = this.toZone(seat, aim.target);
+    return Math.max(Math.abs(at.x), Math.abs(at.y)) >= EDGE;
+  }
+
   /** The calibration target a seat is looking for, if it is calibrating. */
   step(seat: Seat): AimStep | null {
     return this.seats.get(seat)?.step ?? null;
