@@ -1,11 +1,12 @@
 import * as THREE from "three";
 import { PITCH } from "../../engine/tuning";
 import type { MatchView } from "../../engine/view";
+import { ceremonyCamera } from "./ceremony-cam";
 import { replayCam } from "./replay-cam";
 import { stoppage } from "./stoppage";
 
 /** Which camera is cutting to: the broadcast view, a close up, a replay angle, or the lobby's slow orbit. */
-export type Shot = "tv" | "closeup" | "replay-kicker" | "replay-keeper" | "winners" | "lobby" | "fixed" | "foul" | "card" | "setpiece" | "setpiece-follow";
+export type Shot = "tv" | "closeup" | "replay-kicker" | "replay-keeper" | "winners" | "ceremony" | "lobby" | "fixed" | "foul" | "card" | "setpiece" | "setpiece-follow";
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
@@ -89,6 +90,15 @@ export class CameraDirector {
         this.wantLook.set(at.x + Math.cos(a) * 3, 1.1, at.z - Math.sin(a) * 3);
         fov = 30;
         rate = 2;
+        break;
+      }
+      case "ceremony": {
+        // Its own shots, cut and moved exactly by the ceremony's clock (see ceremony-cam.ts).
+        const place = ceremonyCamera(view.ceremony?.t ?? 0, this.aspect);
+        this.wantPos.set(place.pos.x, place.pos.y, place.pos.z);
+        this.wantLook.set(place.look.x, place.look.y, place.look.z);
+        fov = place.fov;
+        rate = 1000;
         break;
       }
       case "fixed":
