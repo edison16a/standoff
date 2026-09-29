@@ -4,12 +4,14 @@ import { fitWidth } from "./fit";
 import { replayAim, type ReplayShot } from "./replay-shots";
 import { aimFor, type Aim } from "./shots";
 
+/** Metres from the wanted spot beyond which the camera cuts instead of gliding. A live chase never lags this far. */
+const CUT_DISTANCE = 25;
+
 /**
  * Moves the broadcast camera. It chases the shot the moment calls for
  * with smooth damping, so it glides after the play rather than jerking
- * with every cut of a runner. A change of shot that would drag the
- * camera across the field cuts instead, like a director switching
- * cameras. A small shake marks the big hits.
+ * with every cut of a runner. A move that would drag the camera
+ * across the field cuts instead, like a director switching cameras. A small shake marks the big hits.
  */
 export class CameraDirector {
   readonly camera = new THREE.PerspectiveCamera(52, 16 / 9, 0.3, 900);
@@ -69,7 +71,8 @@ export class CameraDirector {
     const aim = this.replay ? replayAim(view, this.replay) : fitWidth(aimFor(view, time), cam.aspect);
     const target = new THREE.Vector3(aim.pos.x, aim.pos.y, aim.pos.z);
     const look = new THREE.Vector3(aim.look.x, aim.look.y, aim.look.z);
-    const cut = this.kind === null || (aim.kind !== this.kind && this.pos.distanceTo(target) > 25);
+    // Far from the shot means a new scene, like the lobby's demo giving way to the game or the ball spotted downfield: cut to it.
+    const cut = this.kind === null || this.pos.distanceTo(target) > CUT_DISTANCE;
     this.kind = aim.kind;
     const k = cut ? 1 : 1 - Math.exp(-aim.rate * dt);
     this.pos.lerp(target, k);

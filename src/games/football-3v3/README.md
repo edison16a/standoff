@@ -168,7 +168,7 @@ const board = scoreboard(view); // for <Scoreboard board={board} />
 * **Phone sticks.** `renderer.director.groundForward()` is the way up the screen on the ground, in field space, for turning a phone's stick into a field direction that matches the camera.
 * **Kicks.** Low behind the kicker through the posts, then up and after the ball.
 * **Touchdowns.** A slow orbit round the scorer. At the final whistle, a wide orbit of the winners.
-* A big hit shakes it a little. A shot change that would sweep across the field cuts instead.
+* A big hit shakes it a little. Any move that would sweep across the field cuts instead, like the lobby giving way to the game or the ball spotted far downfield.
 
 ### The scoreboard
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { POSTS } from "../../engine/field";
+import type { MatchView } from "../../engine/view";
 import { freshView, viewWhen } from "../test-views";
 import { CameraDirector } from "./director";
 import { fitWidth, sideReach } from "./fit";
@@ -97,6 +98,16 @@ describe("camera shots", () => {
   });
 });
 
+/** The same moment with the whole play `dx` metres further down the field. */
+function shifted(v: MatchView, dx: number): MatchView {
+  return {
+    ...v,
+    drive: { ...v.drive, losX: v.drive.losX + dx },
+    ball: { ...v.ball, x: v.ball.x + dx },
+    athletes: v.athletes.map((a) => ({ ...a, x: a.x + dx })),
+  };
+}
+
 describe("the director", () => {
   it("says which way up the screen is on the ground, for the phone sticks", () => {
     const d = new CameraDirector();
@@ -106,5 +117,26 @@ describe("the director", () => {
     // Behind Storm, who attack toward +x, up the screen is downfield.
     expect(f.x).toBeGreaterThan(0.9);
     expect(Math.hypot(f.x, f.z)).toBeCloseTo(1);
+  });
+
+  it("cuts to a spot far down the field instead of sweeping across it", () => {
+    const d = new CameraDirector();
+    const v = freshView();
+    d.update(v, 1 / 60, 0);
+    const moved = shifted(v, 40);
+    d.update(moved, 1 / 60, 0.02);
+    expect(d.camera.position.x).toBeCloseTo(fitWidth(behind(moved), d.camera.aspect).pos.x, 0);
+  });
+
+  it("glides after a small move", () => {
+    const d = new CameraDirector();
+    const v = freshView();
+    d.update(v, 1 / 60, 0);
+    const before = d.camera.position.x;
+    const moved = shifted(v, 4);
+    const target = fitWidth(behind(moved), d.camera.aspect).pos.x;
+    d.update(moved, 1 / 60, 0.02);
+    expect(Math.abs(target - before)).toBeGreaterThan(3);
+    expect(Math.abs(d.camera.position.x - before)).toBeLessThan(0.2 * Math.abs(target - before));
   });
 });
