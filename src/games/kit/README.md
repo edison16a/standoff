@@ -288,7 +288,7 @@ lights.setLevel(0.5);     // 0 dark to 1 full, for a fade up
 lights.update(time, dt);
 ```
 
-`intensity` is in candela with physical falloff. Scenes lit brighter need more, as Boxing's arena does at 1500.
+`intensity` is in candela with physical falloff. Scenes lit brighter need more, as Boxing's arena does at 650. A lamp costs shading on every lit pixel even at level 0, so in a game's own scene hide `lights.object` until the celebration starts, as Boxing does. The first show compiles the scene's shaders for the extra lamps once.
 
 ### Circling camera
 
