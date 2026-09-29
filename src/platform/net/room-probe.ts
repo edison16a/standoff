@@ -1,5 +1,6 @@
 import type { ProbeFailure } from "@/platform/protocol";
 import { openChannel, readEnvelope } from "./open-channel";
+import { preferStream } from "./transport-choice";
 
 /** Longer than the relay's own wait for the echo, so the relay's answer normally comes first. */
 const PROBE_TIMEOUT_MS = 5000;
@@ -13,8 +14,8 @@ const NONCE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456
 export type ProbeOutcome = { ok: true } | { ok: false; reason: ProbeFailure | "timeout" | "transport" };
 
 export interface ProbeOptions {
-  /** Use the HTTP stream, as the host's own connection does where WebSockets fail. */
-  stream: boolean;
+  /** Use the HTTP stream. By default a WebSocket, unless one failed to open here a moment ago. */
+  stream?: boolean;
   timeoutMs?: number;
 }
 
@@ -23,7 +24,7 @@ export interface ProbeOptions {
  * which on Vercel may land on any server instance. The relay answers once
  * the host has echoed, and then closes the connection itself.
  */
-export function probeRoom(room: { code: string; token: string }, { stream, timeoutMs = PROBE_TIMEOUT_MS }: ProbeOptions): Promise<ProbeOutcome> {
+export function probeRoom(room: { code: string; token: string }, { stream = preferStream(), timeoutMs = PROBE_TIMEOUT_MS }: ProbeOptions = {}): Promise<ProbeOutcome> {
   return new Promise((resolve) => {
     const nonce = makeNonce();
     const channel = openChannel(stream);

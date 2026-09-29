@@ -1,8 +1,10 @@
 import type { ClientEnvelope } from "@/platform/protocol";
 import { Backoff } from "./backoff";
 import { FINAL, HANDSHAKES, Handover } from "./handover";
-import { OPEN, openChannel, readEnvelope, streamRequested, type Channel } from "./open-channel";
+import { lossyKey, OPEN, openChannel, readEnvelope, type Channel } from "./open-channel";
 import type { SocketHandlers, SocketOptions } from "./socket-types";
+import { StreamChannel } from "./stream-channel";
+import { preferStream, webSocketFailed, webSocketOpened } from "./transport-choice";
 
 export type { SocketHandlers, SocketStatus } from "./socket-types";
 
@@ -12,24 +14,22 @@ const CONGESTED_BYTES = 8 * 1024;
 const REPLACED = 4000;
 
 /**
- * A WebSocket that keeps itself connected. Phones lock, walk out of range
- * and come back, so reconnecting with backoff is the normal case here.
+ * A WebSocket that keeps itself connected, with backoff, since phones lock
+ * and walk out of range all the time. When the server warns that it will
+ * cut the socket (Vercel's time limit), a second one (`next`) opens and
+ * announces itself. Sends switch to it once open, since the server queues
+ * them behind the announce, and receives once it confirms the seat, so the
+ * match never sees a disconnect.
  *
- * It also moves itself to a fresh socket when the server asks. On Vercel
- * every socket is cut at the function's time limit, so the relay warns a
- * little early. A second socket (`next`) opens and announces itself.
- * Outgoing messages switch to it as soon as it is open, because the server
- * queues them behind the announce. Incoming ones switch once it confirms
- * the seat. Until then `current` keeps delivering, so nothing is lost or
- * doubled and the match never sees a disconnect.
- *
- * If a WebSocket fails before it ever opens, every channel after it is an
- * HTTP stream (see StreamChannel), as Chrome needs on Vercel today.
+ * Every connection is a WebSocket unless one just failed to open on this
+ * page, and then it is an HTTP stream (see transport-choice). A WebSocket
+ * that would not open is no outage, so the stream is dialled at once.
  */
 export class SocketClient {
   private current: Channel | null = null;
   private next: Channel | null = null;
-  private useStream: boolean;
+  /** Always the stream, for a test or a page that asked for it. */
+  private readonly forceStream: boolean;
   private readonly handover = new Handover();
   private readonly backoff = new Backoff();
   private stopped = false;
@@ -38,12 +38,12 @@ export class SocketClient {
     private readonly handlers: SocketHandlers,
     options: SocketOptions = {},
   ) {
-    this.useStream = options.stream === true || streamRequested();
+    this.forceStream = options.stream === true;
   }
 
-  /** True once this client talks over the HTTP stream, so helpers can use the same. */
+  /** True while this client talks over the HTTP stream. */
   get usesStream(): boolean {
-    return this.useStream;
+    return this.current instanceof StreamChannel;
   }
 
   connect(): void {
@@ -54,11 +54,12 @@ export class SocketClient {
     this.handlers.onStatus("connecting");
   }
 
-  send(message: ClientEnvelope): void {
+  send(message: ClientEnvelope, key?: string): void {
     const target = this.target();
     if (target?.readyState !== OPEN) return;
     const data = JSON.stringify(message);
-    target.send(data);
+    if (target instanceof StreamChannel) target.send(data, key);
+    else target.send(data);
     if (target === this.next) this.handover.record(data);
   }
 
@@ -66,7 +67,7 @@ export class SocketClient {
   sendLossy(message: ClientEnvelope): void {
     const target = this.target();
     if (target && target.bufferedAmount > CONGESTED_BYTES) return;
-    this.send(message);
+    this.send(message, lossyKey(message));
   }
 
   /** Outgoing messages switch to the new socket as soon as it is open. */
@@ -74,11 +75,7 @@ export class SocketClient {
     return this.next?.readyState === OPEN ? this.next : this.current;
   }
 
-  /**
-   * Drops the current socket and dials a fresh one at once. Where rooms are
-   * not shared between server instances, a fresh socket may well land on
-   * the instance that has the room.
-   */
+  /** Drops the current socket and dials a fresh one at once, maybe on another server instance. */
   redial(): void {
     if (this.stopped) return;
     this.backoff.cancel();
@@ -99,19 +96,23 @@ export class SocketClient {
     this.handlers.onStatus("closed");
   }
 
+  /** WebSocket first, unless one failed to open here a moment ago. */
   private dial(): Channel {
-    const channel = openChannel(this.useStream);
+    const stream = this.forceStream || preferStream();
+    const channel = openChannel(stream);
     let opened = false;
     channel.onopen = () => {
       opened = true;
+      if (!stream) webSocketOpened();
       this.onOpen(channel);
     };
     channel.onmessage = (event: MessageEvent<string>) => this.onMessage(channel, event.data);
     channel.onclose = (event: CloseEvent) => {
-      // Only a socket we still wanted counts against WebSockets. One we
-      // closed ourselves while it was connecting, on a redial, says nothing.
-      if (!opened && (channel === this.current || channel === this.next) && !this.stopped) this.useStream = true;
-      this.onClose(channel, event.code);
+      // Only a WebSocket we still wanted counts against them. One we closed
+      // ourselves while it was connecting, on a redial, says nothing.
+      const failed = !opened && !stream && (channel === this.current || channel === this.next) && !this.stopped;
+      if (failed) webSocketFailed();
+      this.onClose(channel, event.code, failed);
     };
     return channel;
   }
@@ -166,10 +167,11 @@ export class SocketClient {
     });
   }
 
-  private onClose(socket: Channel, code: number): void {
+  private onClose(socket: Channel, code: number, webSocketFailed: boolean): void {
     if (socket === this.next) {
       this.next = null;
       this.resendUnconfirmed();
+      if (webSocketFailed) this.next = this.dial();
       return;
     }
     if (socket !== this.current || this.stopped) return;
@@ -187,11 +189,15 @@ export class SocketClient {
       this.handlers.onStatus("replaced");
       return;
     }
+    if (webSocketFailed) {
+      this.current = this.dial();
+      return;
+    }
     this.backoff.schedule(() => (this.current = this.dial()));
     this.handlers.onStatus(this.backoff.unreachable ? "unreachable" : "reconnecting");
   }
 
-  /** The new socket holds the seat now. The old one is retired quietly. */
+  /** The new socket holds the seat now, and the old one is retired quietly. */
   private promote(socket: Channel): void {
     const old = this.current;
     this.takeOver(socket);

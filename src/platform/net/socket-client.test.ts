@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ClientEnvelope, ServerEnvelope } from "@/platform/protocol";
 import { SocketClient, type SocketStatus } from "./socket-client";
+import { preferStream, webSocketOpened, WEBSOCKET_RETRY_MS } from "./transport-choice";
 
 /** Just enough of a browser WebSocket to drive the client by hand. */
 class FakeSocket {
@@ -91,8 +92,26 @@ describe("SocketClient handover", () => {
   });
 });
 
+/** An EventSource that never opens, counting how many were made. */
+function stubStream() {
+  const made = { count: 0 };
+  vi.stubGlobal(
+    "EventSource",
+    class {
+      constructor() {
+        made.count += 1;
+      }
+      addEventListener() {}
+      close() {}
+    },
+  );
+  vi.stubGlobal("CloseEvent", class extends Event {});
+  return made;
+}
+
 describe("SocketClient opening", () => {
   beforeEach(() => {
+    webSocketOpened();
     FakeSocket.all = [];
     Object.assign(globalThis, { WebSocket: FakeSocket, location: { protocol: "https:", host: "game.test" } });
   });
@@ -153,21 +172,42 @@ describe("SocketClient opening", () => {
     expect(first.readyState).toBe(1);
   });
 
+  it("goes to the stream at once when a WebSocket will not open, and tries one again later", () => {
+    vi.useFakeTimers();
+    const sources = stubStream();
+    const client = new SocketClient(quiet());
+    client.connect();
+    FakeSocket.all[0]!.close(1006);
+    // No backoff: a WebSocket that would not open is no outage.
+    expect(sources.count).toBe(1);
+    expect(client.usesStream).toBe(true);
+    expect(preferStream()).toBe(true);
+    vi.advanceTimersByTime(WEBSOCKET_RETRY_MS + 1);
+    expect(preferStream()).toBe(false);
+    client.redial();
+    expect(FakeSocket.all).toHaveLength(2);
+    client.close();
+  });
+
+  it("moves a handover to the stream when its WebSocket will not open", () => {
+    const sources = stubStream();
+    const client = new SocketClient(quiet());
+    client.connect();
+    FakeSocket.all[0]!.open();
+    FakeSocket.all[0]!.receive({ type: "server:rotate" });
+    FakeSocket.all[1]!.close(1006);
+    expect(sources.count).toBe(1);
+    // The old socket carries on meanwhile.
+    expect(client.usesStream).toBe(false);
+    client.close();
+  });
+
   it("starts on the stream when asked", () => {
-    class Source {
-      static count = 0;
-      constructor() {
-        Source.count += 1;
-      }
-      addEventListener() {}
-      close() {}
-    }
-    vi.stubGlobal("EventSource", Source);
-    vi.stubGlobal("CloseEvent", class extends Event {});
+    const sources = stubStream();
     const client = new SocketClient(quiet(), { stream: true });
     client.connect();
     expect(client.usesStream).toBe(true);
-    expect(Source.count).toBe(1);
+    expect(sources.count).toBe(1);
     expect(FakeSocket.all).toHaveLength(0);
     client.close();
   });
