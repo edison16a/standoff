@@ -1,6 +1,8 @@
 import type { CharacterId } from "../characters";
 import type { TrackDef } from "../tracks/types";
+import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import { createBrain, think, type BotBrain } from "./bot";
+import { FULL_SKILL, KART_BOT_SKILL } from "./bot-skill";
 import type { RaceEvent } from "./events";
 import { fireItem, strike, tickTimers } from "./item-use";
 import { createKart, NO_INPUT, type Kart, type KartInput } from "./kart";
@@ -19,6 +21,8 @@ export interface Entrant {
   character: CharacterId;
   /** The player's seat, or null for a computer kart. */
   seat: number | null;
+  /** A computer kart's difficulty. Left out, it drives at full skill. */
+  level?: BotLevel;
 }
 
 /**
@@ -51,7 +55,11 @@ export class RaceWorld {
     this.karts = entrants.map((e, i) =>
       createKart(i, e.character, e.seat, this.track, this.track.wrap(-7 - Math.floor(i / 2) * 7.5 - (i % 2) * 2), (i % 2 ? 1 : -1) * this.track.halfWidth * 0.42),
     );
-    for (const kart of this.karts) this.brains.set(kart.id, createBrain(random));
+    // Only computer karts take the lobby level: a player's kart on autopilot always drives well.
+    this.karts.forEach((kart, i) => {
+      const level = entrants[i]?.level;
+      this.brains.set(kart.id, createBrain(random, kart.seat === null && level ? KART_BOT_SKILL[level] : FULL_SKILL));
+    });
     this.cubes = buildCubes(this.track);
     this.pads = buildPads(this.track);
     this.obstacles = buildObstacles(this.track);
@@ -121,7 +129,7 @@ export class RaceWorld {
     // Pressing Drive in the last second before the start pays off; holding it all along does not.
     for (const kart of this.karts) {
       const since = this.pedalSince.get(kart.id);
-      const good = kart.autopilot ? this.random() < 0.4 : since !== undefined && since > -1.1;
+      const good = kart.autopilot ? this.random() < this.skillOf(kart).rocketStart : since !== undefined && since > -1.1;
       if (!good) continue;
       kart.timers.boost = EFFECTS.startBoost;
       this.emit({ type: "boost", kart: kart.id, source: "start" });
@@ -147,7 +155,8 @@ export class RaceWorld {
     const status = this.phase === "over" ? "ok" : updateProgress(kart, this.track, this.time, finishedSoFar, this.emit);
     updateWrongWay(kart, this.track, dt);
     updateSafeSpot(kart, this.track);
-    const trying = kart.autopilot || input.throttle || input.brake;
+    // A parked training kart is not stuck, so it is never put back.
+    const trying = (kart.autopilot && this.skillOf(kart).drives) || input.throttle || input.brake;
     if (status === "lost") this.putBack(kart, { s: this.track.wrap(kart.race.lastCheckpointS + 4), d: 0 });
     else if (hasFallen(kart, this.track)) {
       this.emit({ type: "fell", kart: kart.id });
@@ -161,18 +170,23 @@ export class RaceWorld {
     this.emit({ type: "respawn", kart: kart.id });
   }
 
+  private skillOf(kart: Kart) {
+    return this.brains.get(kart.id)?.skill ?? FULL_SKILL;
+  }
+
   /**
    * Computer karts ease off when far ahead of the best player and push a
    * little when far behind, so a solo race stays a race.
    */
   private biasComputers(): void {
     const humans = this.karts.filter((k) => k.seat !== null);
+    // A race with no players is the demo or the showcase, which set their own pace.
     if (humans.length === 0) return;
     const best = Math.max(...humans.map((k) => k.race.progress));
     for (const kart of this.karts) {
       if (kart.seat !== null) continue;
       const gap = best - kart.race.progress;
-      kart.speedBias = (0.96 + (kart.id % 3) * 0.015) * (1 + Math.max(-0.1, Math.min(0.12, gap / 300)));
+      kart.speedBias = this.skillOf(kart).pace * (0.96 + (kart.id % 3) * 0.015) * (1 + Math.max(-0.1, Math.min(0.12, gap / 300)));
     }
   }
 

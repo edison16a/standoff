@@ -1,6 +1,7 @@
 import { botPedals } from "./bot-pedals";
+import { FULL_SKILL, type KartBotSkill } from "./bot-skill";
 import type { Cube } from "./pickups";
-import type { Kart, KartInput } from "./kart";
+import { NO_INPUT, type Kart, type KartInput } from "./kart";
 import type { Obstacle } from "./obstacles";
 import { nearestAhead } from "./projectiles";
 import { wrapAngle } from "@/games/kit/motion/math3d";
@@ -13,6 +14,8 @@ export interface BotBrain {
   laneTimer: number;
   /** Seconds until it thinks about using its item. */
   itemTimer: number;
+  /** How well it drives, from the lobby's difficulty. */
+  skill: KartBotSkill;
 }
 
 export interface BotView {
@@ -24,8 +27,8 @@ export interface BotView {
   chased: boolean;
 }
 
-export function createBrain(random: () => number): BotBrain {
-  return { lane: (random() - 0.5) * 6, laneTimer: 2 + random() * 4, itemTimer: 1 + random() * 3 };
+export function createBrain(random: () => number, skill: KartBotSkill = FULL_SKILL): BotBrain {
+  return { lane: (random() - 0.5) * 6, laneTimer: 2 + random() * 4, itemTimer: 1 + random() * 3 + skill.itemDelay, skill };
 }
 
 /** The lane to aim for: an item cube when empty handed, and never an obstacle. */
@@ -80,6 +83,8 @@ function wantsItem(kart: Kart, view: BotView): boolean {
  * and around obstacles, and uses items when they are likely to help.
  */
 export function think(kart: Kart, brain: BotBrain, view: BotView, time: number, dt: number, random: () => number): { input: KartInput; use: boolean } {
+  // Training: parked on the grid, pedals up and item kept.
+  if (!brain.skill.drives) return { input: NO_INPUT, use: false };
   const { track } = view;
   brain.laneTimer -= dt;
   if (brain.laneTimer <= 0) {
@@ -101,7 +106,7 @@ export function think(kart: Kart, brain: BotBrain, view: BotView, time: number, 
     brain.itemTimer -= dt;
     if (brain.itemTimer <= 0) {
       use = wantsItem(kart, view);
-      brain.itemTimer = use ? 1.5 + random() * 3 : 0.7;
+      brain.itemTimer = (use ? 1.5 + random() * 3 : 0.7) + brain.skill.itemDelay;
     }
   }
   return { input: { steer, throttle, brake }, use };
