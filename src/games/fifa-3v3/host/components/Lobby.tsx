@@ -76,7 +76,7 @@ function TeamColumn({ team }: { team: TeamId }) {
         ))}
         {players.length === 0 && !botsOn && <li className="fifa-card fifa-card--empty">Nobody on this side yet</li>}
         {fillers.map((bot) => (
-          <li key={bot.build} className="fifa-card fifa-card--bot">
+          <li key={`${bot.team}-${bot.role}`} className="fifa-card fifa-card--bot">
             <span className="fifa-card__cpu">CPU</span>
             <span className="fifa-card__who">
               <strong>{computerName(bot.build)}</strong>

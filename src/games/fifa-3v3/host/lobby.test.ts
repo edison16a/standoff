@@ -118,4 +118,16 @@ describe("the lobby", () => {
   it("needs a ready player before anything can start", () => {
     expect(joined(1).startBlock()).toBe("empty");
   });
+
+  it("never gives two on the pitch the same build, even with someone still choosing", () => {
+    const lobby = joined(1, 2);
+    lobby.pick(1, "striker");
+    lobby.pick(2, "winger");
+    lobby.setReady(1, true);
+    const builds = lobby.entrants().map((e) => e.build);
+    expect(builds).toHaveLength(6);
+    expect(new Set(builds).size).toBe(6);
+    // Nobody ready yet: the lobby's preview of computer players is still six different builds.
+    expect(new Set(joined(3).lineup().map((e) => e.build)).size).toBe(6);
+  });
 });

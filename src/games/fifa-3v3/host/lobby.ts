@@ -151,10 +151,15 @@ export class Lobby {
     return [...this.seats.entries()].filter(([, s]) => s.connected).map(([seat]) => seat).sort((a, b) => a - b);
   }
 
-  /** Builds nobody picked, in order, for the computer players. */
+  /**
+   * Builds for the computer players: first those nobody picked, then
+   * those held by someone who is not in this match, so no two on the
+   * pitch ever share a build.
+   */
   spareBuilds(): BuildId[] {
-    const used = new Set([...this.seats.values()].filter((s) => s.connected && s.pick).map((s) => s.pick));
-    return BUILD_IDS.filter((id) => !used.has(id));
+    const held = new Set([...this.seats.values()].filter((s) => s.connected && s.pick).map((s) => s.pick));
+    const playing = new Set(this.players.map((seat) => this.seats.get(seat)!.pick));
+    return [...BUILD_IDS.filter((id) => !held.has(id)), ...BUILD_IDS.filter((id) => held.has(id) && !playing.has(id))];
   }
 
   setBots(on: boolean): void {
