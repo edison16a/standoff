@@ -2,7 +2,6 @@ import { isHuman } from "../engine/athlete";
 import { defending, guardInfo } from "../engine/guard";
 import type { Athlete, MatchState } from "../engine/types";
 import type { PhoneState } from "../protocol";
-import { ROSTER } from "../roster";
 import { momentOf } from "./moment";
 import type { PublishContext } from "./publish";
 
@@ -35,18 +34,21 @@ export function phoneState(c: PublishContext, seat: number): PhoneState {
     skip: c.replay.active && c.replay.votes.list().some((v) => v.seat === seat) ? { agreed: c.replay.votes.has(seat), count: c.replay.votes.count, total: c.replay.votes.total } : null,
     role: s.role,
     defending: !!match && !!athlete && !hasBall && defending(match, athlete),
-    guard: match && athlete ? guard(match, athlete) : null,
+    guard: match && athlete ? guard(match, athlete, c.nameOf) : null,
     setPiece: match && athlete ? setPiecePart(match, athlete) : null,
   };
 }
 
-/** Guard's man and range, rounded so the phone is not sent a new state for every centimetre. */
-function guard(match: MatchState, a: Athlete): PhoneState["guard"] {
+/**
+ * Guard's man, called as the big screen tags him (a phone's name, or a
+ * computer star's), and the range, rounded so the phone is not sent a
+ * new state for every centimetre.
+ */
+function guard(match: MatchState, a: Athlete, nameOf: (id: number) => string): PhoneState["guard"] {
   if (match.phase !== "play" || !isHuman(a)) return null;
   const info = guardInfo(match, a);
   if (!info) return null;
-  const mark = match.athletes[info.mark]!;
-  return { mark: ROSTER[mark.character].short, distance: Math.min(99, Math.round(info.distance)), inRange: info.inRange, on: info.on };
+  return { mark: nameOf(info.mark), distance: Math.min(99, Math.round(info.distance)), inRange: info.inRange, on: info.on };
 }
 
 function setPiecePart(match: MatchState, a: Athlete): PhoneState["setPiece"] {
