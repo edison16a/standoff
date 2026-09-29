@@ -34,9 +34,9 @@ export class Crosshair {
     colour: string,
   ) {
     this.strokes = new Strokes(colour);
-    this.anchorStrokes = new Strokes(colour, 0.6);
+    this.anchorStrokes = new Strokes(colour, 0.85);
     this.reticle = buildReticle(weapon, this.strokes);
-    this.anchor = this.anchorStrokes.ring(0.0035, 0.0018);
+    this.anchor = this.anchorStrokes.ring(0.006, 0.0024);
     this.group.add(this.reticle.group, this.anchor);
   }
 
@@ -57,7 +57,7 @@ export class Crosshair {
     this.anchor.visible = aim !== null && off > ANCHOR_FROM;
     if (aim) this.anchor.position.set(aim.x * DEPTH, aim.y * DEPTH, -DEPTH);
     this.anchor.scale.setScalar(DEPTH);
-    this.anchorStrokes.fill.opacity = Math.min(0.7, (off - ANCHOR_FROM) * 40);
+    this.anchorStrokes.fill.opacity = Math.min(0.85, (off - ANCHOR_FROM) * 60);
     this.anchorStrokes.edge.opacity = this.anchorStrokes.fill.opacity * 0.5;
   }
 

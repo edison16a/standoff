@@ -58,7 +58,7 @@ function rifle(s: Strokes): Reticle {
 /** The AK: a chevron whose tip is the aim, with a bar out to each side. */
 function ak47(s: Strokes): Reticle {
   const group = new THREE.Group();
-  group.add(s.bar(0, 0, -0.011, -0.015), s.bar(0, 0, 0.011, -0.015), s.bar(-0.034, 0, -0.02, 0), s.bar(0.02, 0, 0.034, 0), s.dot(0.0019));
+  group.add(s.bar(0, 0, -0.014, -0.019), s.bar(0, 0, 0.014, -0.019), s.bar(-0.044, 0, -0.026, 0), s.bar(0.026, 0, 0.044, 0), s.dot(0.0019));
   return { group, open: () => undefined };
 }
 
