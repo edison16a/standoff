@@ -14,6 +14,7 @@ import "./styles/lobby.css";
 import "./styles/bots-toggle.css";
 import "./styles/roles.css";
 import "./styles/results.css";
+import "./styles/compact.css";
 import "./styles/phone.css";
 import "./styles/phone-ready.css";
 import "./styles/pad.css";
