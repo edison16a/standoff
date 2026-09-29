@@ -9,10 +9,17 @@ import { openEventStream } from "@/platform/relay/stream/event-stream";
 export interface ClusterOptions {
   /** Server instances, each with rooms and a bus of its own, as on Vercel without a store. */
   instances: number;
-  /** How a request picks its instance. */
+  /**
+   * How a request picks its instance. `first` sends everything to the
+   * newest instance, which is what Vercel does in runs: see `switch`.
+   */
   routing: "roundRobin" | "random" | "first";
   /** False makes every WebSocket fail before it opens, as Chrome's do on Vercel. */
   webSockets?: boolean;
+  /** Every instance shares one store and bus, as with Redis. */
+  shared?: boolean;
+  /** Sockets and streams are cut this long after they open, like Vercel's time limit, with a rotate first. */
+  lifetimeMs?: number;
 }
 
 type Listener = (event: { data: string }) => void;
@@ -28,15 +35,33 @@ export class FakeCluster {
   readonly counts = { sockets: 0, streams: 0, posts: 0, post410: 0, creates: 0 };
   private turn = 0;
   private readonly live = new Set<{ drop(): void }>();
+  /** Each deployment signs its room tokens with its own secret. */
+  private secret = makeSecret();
+  private readonly ids = new WeakMap<Backend, string>();
+  private store: Backend | null = null;
 
   constructor(private readonly options: ClusterOptions) {
-    this.backends = Array.from({ length: options.instances }, () => fresh());
+    this.backends = Array.from({ length: options.instances }, () => this.fresh());
   }
 
-  /** A deploy or a recycled instance: every connection drops and every room is gone. */
+  /** A deploy: every connection drops, and the new deployment knows no room and signs differently. */
   deploy(): void {
-    this.backends = this.backends.map(() => fresh());
+    this.secret = makeSecret();
+    this.backends = this.backends.map(() => this.fresh());
     for (const connection of [...this.live]) connection.drop();
+  }
+
+  /**
+   * Vercel adds an instance and sends every new connection to it, while
+   * the connections already open stay where they are until their cut.
+   */
+  switch(): void {
+    this.backends = [this.fresh(), ...this.backends];
+  }
+
+  /** True if the instance new connections go to holds this room. */
+  async newestHas(code: string): Promise<boolean> {
+    return (await this.backends[0]!.store.get(code)) !== null;
   }
 
   /** The browser globals to stub. */
@@ -50,9 +75,24 @@ export class FakeCluster {
     return this.backends[index]!;
   }
 
+  /** A new instance: rooms of its own, or with `shared` the one store every instance uses. */
+  private fresh(): Backend {
+    if (this.options.shared && this.store) return this.store;
+    const backend = { store: new MemoryStore(), bus: new MemoryBus(), label: "instance", shared: false };
+    this.ids.set(backend, Math.random().toString(36).slice(2, 10));
+    if (this.options.shared) this.store = backend;
+    return backend;
+  }
+
   private context(backend: Backend): RelayContext {
-    const shared = this.options.instances === 1;
-    return { backend, joinUrlFor: (code) => `https://x/join/${code}`, now: Date.now, client: "test", sharedRooms: shared, deadline: null };
+    const { lifetimeMs, shared = false } = this.options;
+    const deadline = lifetimeMs ? Date.now() + lifetimeMs : null;
+    return { backend, joinUrlFor: (code) => `https://x/join/${code}`, now: Date.now, client: "test", sharedRooms: shared, deadline, secret: this.secret, instance: this.ids.get(backend) };
+  }
+
+  /** Cuts a connection at its deadline, as Vercel does. */
+  private cutAt(context: RelayContext, cut: () => void): void {
+    if (context.deadline !== null) setTimeout(cut, context.deadline - Date.now());
   }
 
   private async post(url: string, body: string): Promise<{ status: number }> {
@@ -82,7 +122,9 @@ export class FakeCluster {
         setTimeout(() => {
           if (this.readyState !== 0) return;
           if (cluster.options.webSockets === false) return this.shut(1006);
-          this.relay = new RelayConnection({ send: (data) => this.deliver(data), close: (code) => this.shut(code ?? 1000) }, cluster.context(cluster.pick()));
+          const context = cluster.context(cluster.pick());
+          this.relay = new RelayConnection({ send: (data) => this.deliver(data), close: (code) => this.shut(code ?? 1000) }, context);
+          cluster.cutAt(context, () => this.shut(1006));
           this.readyState = 1;
           this.onopen?.();
         });
@@ -134,7 +176,9 @@ export class FakeCluster {
         }
       }
       private async read() {
-        const reader = openEventStream(cluster.context(cluster.pick()), this.abort.signal).body!.getReader();
+        const context = cluster.context(cluster.pick());
+        cluster.cutAt(context, () => this.close());
+        const reader = openEventStream(context, this.abort.signal).body!.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
         for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read()) {
@@ -157,6 +201,6 @@ export class FakeCluster {
   }
 }
 
-function fresh(): Backend {
-  return { store: new MemoryStore(), bus: new MemoryBus(), label: "instance", shared: false };
+function makeSecret(): string {
+  return Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
 }

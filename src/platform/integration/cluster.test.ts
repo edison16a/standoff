@@ -118,8 +118,13 @@ describe("rooms across server instances", () => {
     const ann = await openPhone(code, "Ann");
     await run(1000);
     cluster.deploy();
-    await run(30_000);
+    // Known within seconds, with the dead code hidden meanwhile.
+    await run(1500);
+    expect(state().health).not.toBe("ok");
+    await run(10_500);
     expect(state()).toMatchObject({ health: "lost", problem: "lost", roomGone: true });
+    await run(18_000);
+    expect(cluster.counts.creates).toBe(1);
     expect(ann.store.getState()).toMatchObject({ stage: "error", error: "lost" });
     host.regenerate();
     await run(10_000);

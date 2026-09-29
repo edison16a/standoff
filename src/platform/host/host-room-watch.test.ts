@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { ServerEnvelope } from "@/platform/protocol";
 import { answerChecks, clearHostPage, created, FakeSocket, resetHostPage, tick } from "@/platform/testing/host-harness";
 import { HostRoom } from "./host-room";
 import { useHostStore } from "./host-store";
@@ -30,8 +31,18 @@ async function openRoom({ shared = true, instance = "a" } = {}) {
   return socket;
 }
 
-const resumed = (instance: string, extra = {}) =>
-  ({ type: "room:resumed", code: "ABCD", game: "blade-clash", seats: 2, joinUrl: "", connected: [true, false], names: ["Ann", null], sharedRooms: false, instance, ...extra }) as const;
+const resumed = (instance: string, extra = {}): ServerEnvelope => ({
+  type: "room:resumed",
+  code: "ABCD",
+  game: "blade-clash",
+  seats: 2,
+  joinUrl: "",
+  connected: [true, false],
+  names: ["Ann", null],
+  sharedRooms: false,
+  instance,
+  ...extra,
+});
 
 describe("HostRoom watching its room", () => {
   beforeEach(() => {
