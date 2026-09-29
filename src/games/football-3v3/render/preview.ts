@@ -17,7 +17,7 @@ function still(build: BuildId, team: TeamId, celebrating: number | null): Athlet
     id: 0, team, role: "runner", build, number: BUILDS[build].number, seat: null,
     x: 0, z: 0, yaw: 0, vx: 0, vz: 0, speed: 0,
     action: celebrating === null ? "none" : "celebrate", actionT: celebrating ?? 0, actionDur: 3,
-    juke: null, side: 1, downCause: null, spike: false, hasBall: false, targeted: false, guarding: null, rushing: false, blocked: false,
+    juke: null, side: 1, downCause: null, spike: false, hasBall: false, targeted: false, guarding: null, rushing: false, blocked: false, ceremony: null,
   };
 }
 

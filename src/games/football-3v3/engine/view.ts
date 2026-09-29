@@ -1,4 +1,5 @@
 import type { BuildId } from "../builds";
+import { ceremonyTime } from "./ceremony";
 import { downText, goalToGo, toGo } from "./downs";
 import type { PlayEnd } from "./events";
 import { yardToX } from "./field";
@@ -43,6 +44,15 @@ export interface AthleteView {
   rushing: boolean;
   /** In contact with an opposing lineman; for a lineman, locked up with the one across. */
   blocked: boolean;
+  /** At the trophy presentation: the one lifting it, a team mate, or one of the beaten side. */
+  ceremony: "captain" | "mate" | "beaten" | null;
+}
+
+/** The trophy presentation, from the cut to it: seconds in, who has the trophy, and whose side won. */
+export interface CeremonyView {
+  t: number;
+  captain: number | null;
+  team: TeamId;
 }
 
 export interface BallView extends V3 {
@@ -102,6 +112,7 @@ export interface MatchView {
   scorer: number | null;
   winner: TeamId | null;
   lastEnd: PlayEnd | null;
+  ceremony: CeremonyView | null;
 }
 
 function driveView(m: Match): DriveView {
@@ -126,8 +137,15 @@ function countdown(m: Match): number | null {
   return null;
 }
 
+function ceremonyOf(m: Match): CeremonyView | null {
+  const t = ceremonyTime(m);
+  if (t === null || m.winner === null) return null;
+  return { t, captain: m.ceremony?.captain ?? null, team: m.winner };
+}
+
 export function buildView(m: Match): MatchView {
   const b = m.ball;
+  const ceremony = ceremonyOf(m);
   const f = b.flight;
   // While the ball is in the air the ring stays on the receiver it was thrown to.
   const target = b.state === "pass" && b.pass ? b.pass.to : (m.play?.target ?? null);
@@ -151,8 +169,9 @@ export function buildView(m: Match): MatchView {
         spike: act.kind === "celebrate" && act.spike,
         hasBall: b.state === "held" && b.holder === a.id,
         targeted: target === a.id, guarding: a.guard, rushing: a.rushT > 0, blocked: a.blocked > 0,
+        ceremony: !ceremony ? null : a.id === ceremony.captain ? "captain" : a.team === ceremony.team ? "mate" : "beaten",
       };
     }),
-    countdown: countdown(m), scorer: m.scorer, winner: m.winner, lastEnd: m.lastEnd,
+    countdown: countdown(m), scorer: m.scorer, winner: m.winner, lastEnd: m.lastEnd, ceremony,
   };
 }

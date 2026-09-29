@@ -1,4 +1,5 @@
 import { updateBall } from "./ball-update";
+import { ceremonyTime, stepCeremony } from "./ceremony";
 import { guardMove } from "./guard";
 import { holdOnside } from "./formation";
 import { FIELD, xToYard, yardToX } from "./field";
@@ -60,6 +61,8 @@ function liveChecks(m: Match): void {
 
 /** One fixed step of the whole field: timers, phase, players, linemen, contact and the ball. */
 export function stepWorld(m: Match, dt: number): void {
+  // After the cut the end of the game is the trophy presentation, which moves everyone itself.
+  if (ceremonyTime(m) !== null) return stepCeremony(m, dt);
   for (const a of m.athletes) tick(a, dt);
   updatePhase(m);
   const live = m.phase === "live";

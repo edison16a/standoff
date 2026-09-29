@@ -59,6 +59,8 @@ export class Match {
   /** Who scored the last touchdown, for the celebration and the replay. */
   scorer: number | null = null;
   winner: TeamId | null = null;
+  /** The trophy presentation once the end of the game cuts to it: who lifts the trophy. */
+  ceremony: { captain: number | null } | null = null;
   /** The last pass once it is caught or falls, kept for the replay's numbers. */
   lastPass: PassInfo | null = null;
   readonly lines: LinePair[];
