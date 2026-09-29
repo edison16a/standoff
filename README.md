@@ -108,9 +108,11 @@ There are two ways to run Standoff, and they share all their code.
 
 Import this repository into Vercel. It builds as a normal Next.js app, and needs nothing else. WebSockets need Fluid compute, which is on by default for projects created since April 2025.
 
-Rooms live in the memory of the function instance that holds the host's WebSocket. A WebSocket stays on its instance for its whole life, which is why a game plays smoothly once everyone is in. The catch: **a deploy, or Vercel adding an instance under load, can end the rooms that are open**, because new connections may reach an instance that has never heard of them. The big screen notices within seconds and either makes a new room by itself or asks you to press **Regenerate room** (see *When a room is lost*). That is the recovery, and nothing needs setting up for it.
+Rooms live in the memory of the function instance that holds the host's WebSocket. A WebSocket stays on its instance until Vercel cuts it (five minutes on Hobby), which is why a game plays smoothly once everyone is in. When Vercel adds an instance under load, it can start sending every new connection there, the five minute handovers included, while the open sockets stay where they are. The room follows (see *When a room moves*): every instance of one deployment signs room tokens with the same secret, made at build time, so the host's next socket makes the same room, same code, on the new instance, and each phone takes back its own seat there.
 
-A Redis URL in the environment (`REDIS_URL`, `KV_URL`, or any variable ending in either) makes every instance share the rooms instead. It is optional and nothing asks for it. `/api/health` says which store a deployment uses and which deployment answered.
+What still ends open rooms is **a deploy**, because the new deployment has a new secret and has never heard of them. The big screen notices within seconds and either makes a new room by itself or asks you to press **Regenerate room** (see *When a room is lost*). That is the recovery, and nothing needs setting up for it. Promote deploys by hand if you want none to land during a game night. `STANDOFF_ROOM_SECRET`, if set, replaces the build's secret and so carries rooms across deploys too.
+
+A Redis URL in the environment (`REDIS_URL`, `KV_URL` or `UPSTASH_REDIS_URL`) makes every instance share the rooms instead. It is optional and nothing asks for it. `/api/health` says which store a deployment uses and which deployment answered.
 
 On the Hobby plan Vercel ends every socket after five minutes. The server warns each client 30 seconds early, and the client moves to a fresh socket without dropping the game (see *Socket handover* below), so a match never notices.
 
@@ -147,7 +149,8 @@ Public and guest WiFi usually stop devices from reaching each other, so on those
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `REDIS_URL` | none | Optional shared room store. `KV_URL`, or any name ending in either, also works |
+| `REDIS_URL` | none | Optional shared room store. `KV_URL` and `UPSTASH_REDIS_URL` also work |
+| `STANDOFF_ROOM_SECRET` | made at build | Signs room tokens. Set it to keep rooms across deploys |
 | `PORT` | `3000` | Local HTTP port for the computer |
 | `HTTPS_PORT` | `3443` | Local HTTPS port for the phones |
 | `HOST` | `0.0.0.0` | Local interface to listen on |
@@ -184,12 +187,23 @@ Every frame is validated with zod and rate limited per socket. Room creation and
 
 Vercel ends every function at its maximum duration, sockets included. The route reads the real cutoff with `getDeadline()`, and the relay sends the client `server:rotate` 30 seconds before it (a third of the life, for shorter ones). The client (`src/platform/net/socket-client.ts`) then opens a second socket and rejoins on it. Outgoing messages switch to the new socket as soon as it opens, because the relay queues them behind the rejoin. Incoming messages switch once the new socket confirms the seat. Until then the old one keeps delivering, so nothing is lost or doubled. The relay kicks the old socket once the new one holds the seat, and the host never sees the player leave. If the new socket dies before confirming, whatever went out on it is sent again on the old one. Start the local server with `SOCKET_LIFETIME_MS=36000` to watch it happen every few seconds.
 
+### When a room moves
+
+Without a shared store a room lives in one instance's memory, and Vercel may start sending new connections to another instance at any time. Host tokens and seat tokens are signed (`src/platform/relay/room-sign.ts`), so any instance of the same deployment trusts them:
+
+* The host's `host:resume` carries the game, the seat count and the players' names. An instance that has never heard of the room makes it again from a signed token, same code, and says so (`restored`).
+* When the host's new socket answered from another instance, the old socket's last message, `host:migrate`, lets the old instance forget the room and ask its phones to move to a fresh socket (`server:rotate`), which lands where the host now is. Each phone's signed seat token takes back its own seat and name.
+* The host moves by itself when a room check cannot find the room, or when a phone drops and does not come back within a few seconds (`src/platform/host/room-mover.ts`), since both mean new connections go somewhere else. At most one move every ten seconds.
+* A phone whose host went away looks for it on a fresh socket after two seconds, and twice more, while its old socket stays (`src/platform/phone/host-search.ts`).
+
+A match carries on through all of this with the same code. The tests in `src/platform/integration/switch.test.ts` run ten minute matches while new connections move to a fresh instance.
+
 ### When a room is lost
 
-A room can stop working without anyone doing anything wrong: a deploy lands, or Vercel adds an instance and new connections reach one that has never heard of the room. The big screen watches for that (`src/platform/host/room-guard.ts`):
+A room can still stop working without anyone doing anything wrong, most often because a deploy lands. The big screen watches for that (`src/platform/host/room-guard.ts`):
 
 * **A room check.** Right after a room is made, and every 20 seconds in the lobby (every minute once it has been fine for five), the host opens a throwaway connection, the way a phone would reach the room, and asks the relay to check it: the room must exist there, and a message must reach the host and come back (`probe:room`, `room:probe`, `host:echo`). A phone joining counts as a pass. Checks wait during a match and in a background tab. The QR code only shows once the first check passes.
-* **The host's own connection.** When it drops and every fresh socket's resume says "not found" for about nine seconds, the room is gone. When a handover socket cannot find the room, the room is checked at once.
+* **The host's own connection.** When it drops and a fresh socket's resume is refused, the QR code hides at once, and after two more looks (about two seconds) the room is gone. When the handover before a socket's five minute cut is refused, which means a deploy, the room is checked at once, and once the retries are spent the big screen says **This room is about to close** while the old socket still reaches every phone, so Regenerate room can still move them all. That warning shows during a match too.
 
 Before anyone has joined, a broken room is simply replaced: a new room is made and checked on a fresh connection, and its code appears. At most three such tries happen in five minutes, so a server that cannot keep rooms is never asked for one after another. Once players are in, the big screen says **This room was lost** (or **Phones can't reach this room**) with one big **Regenerate room** button, because the players have to follow the new code. A big screen reloaded after its room was lost opens a new room for the same game by itself.
 
@@ -199,11 +213,11 @@ A phone whose room is gone tries to get back in for about nine seconds, still on
 
 ### The HTTP fallback
 
-Chrome and Firefox open a WebSocket over the page's existing HTTP/2 connection whenever the server allows it, and Vercel's edge does. Those WebSockets currently fail at the edge with a 502, before our code ever sees them. Vercel's own WebSocket demo fails the same way. Safari opens WebSockets over HTTP/1.1, so iPhones are not affected.
+WebSockets come first, everywhere: a WebSocket stays on one instance, which keeps a room together, and costs one request for five minutes of play. Chrome and Firefox **may** fail to open one on Vercel. They would try it over the page's HTTP/2 connection if the edge offered that, and such sockets used to get a 502. Vercel's edge did not offer it when last checked, so those browsers should use HTTP/1.1 WebSockets like Safari does. The relay logs the transport of every room handshake (`[relay] seat 1 ABCD over ws`), so the Vercel logs show the real split. To check a browser by hand, paste `new WebSocket('wss://standoffgames.vercel.app/api/ws').onopen = () => console.log('open')` into its console.
 
-Every connection starts as a WebSocket. When one fails before it ever opens, that page uses an HTTP stream instead for the next ten minutes, so a room check or a handover does not fail the same way again, and then tries a WebSocket again (`src/platform/net/transport-choice.ts`). The switch happens at once, not after a backoff. A socket the client closed itself while it was still connecting does not count.
+The stream stays as the fallback for a browser whose WebSocket will not open at all (`src/platform/net/transport-choice.ts`). A WebSocket that fails once proves little, since a server restart, a deploy or a phone waking with no network look the same. So a page only decides WebSockets are blocked when none has ever opened on it and the stream then opens in its place, which means the server was up all along. Then fresh connections go straight to the stream for ten minutes, and try a WebSocket again after that. On a page where WebSockets have worked, a failure is an outage and the client keeps trying WebSockets, with the stream standing in for one connection only after three failures in a row. A socket the client closed itself while it was still connecting counts for nothing. Room checks use the same transport as the host's own socket, and try the stream within the same check when their WebSocket never opens.
 
-The stream (`src/platform/net/stream-channel.ts`) is a Server-Sent Events stream from `GET /api/stream` for messages down, and `POST /api/stream` for messages up, one request at a time so they arrive in order. Posts start at least 100 ms apart, with whatever queued meanwhile riding in the next one, and a motion frame still waiting is replaced by the newer one rather than sent too. Every post is a request of its own, and a flood of them is what makes Vercel add instances. A POST may reach any instance, and one that does not hold the stream answers 410, so it is sent again at once, up to five times. The stream behaves like a socket to the relay, handover included. Set `standoff:transport` to `stream` in local storage to try the fallback anywhere.
+The stream (`src/platform/net/stream-channel.ts`) is a Server-Sent Events stream from `GET /api/stream` for messages down, and `POST /api/stream` for messages up, one request at a time so they arrive in order. Motion frames wait 200 ms so several ride in one post, and one still waiting is replaced by the newer one. Inputs such as strikes wait at most 100 ms. Every post is a request of its own, and a flood of them is what makes Vercel add instances. A POST may reach any instance, and one that does not hold the stream answers 410, so it is sent again at once, up to five times. The stream behaves like a socket to the relay, handover included. Set `standoff:transport` to `stream` in local storage to try the fallback anywhere.
 
 A phone only sends a motion frame when the reading actually changed, plus a keepalive four times a second. Strikes go out the instant they are detected.
 
