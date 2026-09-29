@@ -16,7 +16,7 @@ The running list of what is being built, so work can pick up again after a break
 | --- | --- | --- |
 | **Room reliability (top priority):** find why rooms fail about every other time and fix the cause, a host watchdog that checks the room like a phone would and fully remakes it when broken, the QR code hidden until the room passes its check, and a Regenerate room button right under the QR code | wf_3938ab23-6cc | four investigations (live site repro, local multi instance repro, client audit, relay audit), two designs and a judge, one build, then stress, code and production reviews with fix rounds |
 | Batch E part 1: Subway Runner overhaul (the real Subway Surfers look, feel and sound) and the Zombie Survival rework (crosshairs, recoil, short fast rounds, bosses) | wf_e5046812-6a8 | build then review each; Subway is two builds in one worktree |
-| Batch C and D, finishing what the restart interrupted, in the same worktrees, two at a time | wf_9713e4a2-c2a | finish and review Cube Game 1v1, hold to calibrate, winner scenes and Boxing builds, Basketball part 2, Football 3v3 steps 2 and 3 |
+| Batch C and D, finishing what the restart interrupted, in the same worktrees, two at a time | wf_9713e4a2-c2a | finish and review hold to calibrate, winner scenes and Boxing builds, Basketball part 2, Football 3v3 steps 2 and 3 |
 
 **Room root cause, found and reproduced on the live site:** production has no shared Redis store (every room:created says sharedRooms:false). Rooms live in one Vercel instance's memory, a game's own traffic makes Vercel add a second instance within about 1.5 s, and then joins, POSTs and hand overs land on an instance without the room: "Room not found". Every deploy to main also wipes open rooms. **Owner action:** add a Redis store to the Vercel project (Storage, Create Database, for example Upstash for Redis), connect it to Production, redeploy. The code reads REDIS_URL, KV_URL or UPSTASH_REDIS_URL. Keep deploys to main batched so they strand fewer rooms.
 
@@ -45,14 +45,17 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ### Last
 
-1. **Final README:** every new feature and game, Football 3v3 and Paintball Battle, new screenshots.
-2. **New home screen clips for every game, cut like wordless game trailers** (think Fortnite ads): only the high intensity best moments, cinematic cameras, a smooth seamless loop, no text. Examples from the owner:
+1. **Final check that everything works:** every game played end to end in a real browser with a host page and phone pages (lobby, calibration, a full round, results, back home, a second game without a reload), and the live site's connections checked after the deploy: iPhones on WebSockets, Chrome's fallback, room loss noticed and Regenerate room working. Fix anything found before the media pass.
+2. **Final README:** every new feature and game, Football 3v3 and Paintball Battle, new screenshots.
+3. **New home screen clips for every game, cut like wordless game trailers** (think Fortnite ads): only the high intensity best moments, cinematic cameras, a smooth seamless loop, no text. Examples from the owner:
    * Paintball Battle: close ups of a player running then sliding, then a 3v3 firefight seen from one player's view.
    * Basketball 3v3: a cinematic dunk, then an iso play into a three that banks in, then the team celebrating as champions, looping smoothly.
    * Every other game gets the same treatment with its own best moments (Soccer goals and the SUI, Football touchdowns, Kart drifts and glides, Blade Clash slashes, Boxing knockdowns and the belt, and so on).
 
 ## Done recently
 
+* Cube Game: calmer look, a quicker camera jump, every level open, a song per level, and 2 players race 1v1 in split screen.
+* Vercel Web Analytics, with room codes and player names taken out of page addresses.
 * Soccer 3v3: Guard, fouls with a referee and yellow card, free kicks with a jumping wall and aimed curve, penalties, bigger pitch and goals, shot auto aim with blocks, smart passing, keeper saves that bounce out, FIFA style replays with a skip vote, the SUI, no banners, six stars, host roles, difficulty.
 * Blade Clash: no voice, a slow motion hit moment on every point, then both fighters reset; difficulty picker.
 * Paintball Battle (was Counter Battle): paint markers and splats, thin crosshair, Shoot and Crouch buttons, closer camera, slower fight from cover, shared difficulty.
