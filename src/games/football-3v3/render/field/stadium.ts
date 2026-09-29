@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { FIELD } from "../../engine/field";
 import { TEAMS } from "../../teams";
 import { box, cyl, merge, paint } from "../models/geo";
-import { BOWL, edge, seat, standsGeometry } from "./bowl";
+import { BOWL, seat, standsGeometry } from "./bowl";
 import { Crowd } from "./crowd";
 import { fieldTexture, PAINT_H, PAINT_W } from "./field-texture";
 import { buildGoalPosts } from "./goal-posts";
@@ -88,13 +88,14 @@ function benches(): THREE.BufferGeometry {
 /** The dark lip along the top of the stands. */
 function rim(): THREE.BufferGeometry {
   const parts: THREE.BufferGeometry[] = [];
-  const steps = 96;
+  const steps = 160;
   for (let i = 0; i < steps; i++) {
-    const t = ((i + 0.5) / steps) * Math.PI * 2;
-    const p = seat(BOWL, t, BOWL.rows);
-    const e = edge(BOWL, t);
-    const len = (2 * Math.PI * (BOWL.a + BOWL.b)) / 2 / steps + 1.5;
-    parts.push(paint(box(len, 3, 1.2), "#0b1120", { at: [p.x, p.y + 1.5, p.z], rot: [0, Math.atan2(e.nx, e.nz) + Math.PI / 2, 0] }));
+    // Each panel spans from one step to the next along the top row, overlapping a little so there are no gaps.
+    const a = seat(BOWL, (i / steps) * Math.PI * 2, BOWL.rows);
+    const b = seat(BOWL, ((i + 1) / steps) * Math.PI * 2, BOWL.rows);
+    const len = Math.hypot(b.x - a.x, b.z - a.z) + 0.6;
+    const yaw = Math.atan2(b.x - a.x, b.z - a.z) - Math.PI / 2;
+    parts.push(paint(box(len, 3, 1.2), "#0b1120", { at: [(a.x + b.x) / 2, a.y + 1.5, (a.z + b.z) / 2], rot: [0, yaw, 0] }));
   }
   return merge(parts);
 }

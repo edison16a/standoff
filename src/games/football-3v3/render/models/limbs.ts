@@ -64,7 +64,7 @@ export function buildLimbs(kit: KitSpec, s: number, torsoH: number, spine: THREE
     const r = (0.08 + 0.03 * b) * s;
     mesh(hip, merge([
       paint(ball(r * 1.3, 12, 10), kit.pants, { at: [0, -thigh * 0.5, r * 0.1], scale: [1, 2.3, 1.05] }),
-      paint(box(r * 0.28, thigh * 0.95, r * 0.5), kit.jersey, { at: [side * r * 1.22, -thigh * 0.48, 0] }),
+      paint(box(r * 0.12, thigh * 0.8, r * 0.34), kit.jersey, { at: [side * r * 1.25, -thigh * 0.5, r * 0.1] }),
       // The knee pad is a hard bump at the front of the pants.
       paint(ball(r * 0.95, 10, 8), shade(kit.pants, -0.08), { at: [0, -thigh, r * 0.3], scale: [1, 1.1, 0.85] }),
     ]));

@@ -83,8 +83,6 @@ export function buildBody(kit: KitSpec, shared: THREE.Material): Rig {
     // Pad caps over each shoulder, under the jersey.
     paint(ball(0.12 * s, 16, 10), kit.jersey, { at: [padX, torsoH - 0.075 * s, 0], scale: [1.05, 0.55, 1.2] }),
     paint(ball(0.12 * s, 16, 10), kit.jersey, { at: [-padX, torsoH - 0.075 * s, 0], scale: [1.05, 0.55, 1.2] }),
-    paint(torus(0.1 * s, 0.022 * s, 16, 6), kit.trim, { at: [padX, torsoH - 0.07 * s, 0], rot: [0, 0, Math.PI / 2], scale: [1.15, 1.2, 1] }),
-    paint(torus(0.1 * s, 0.022 * s, 16, 6), kit.trim, { at: [-padX, torsoH - 0.07 * s, 0], rot: [0, 0, Math.PI / 2], scale: [1.15, 1.2, 1] }),
   ];
   if (kit.neckRoll) pads.push(paint(torus(0.085 * s, 0.035 * s, 18, 8, Math.PI), shade(kit.jersey, -0.35), { at: [0, torsoH - 0.02 * s, -0.01 * s], rot: [Math.PI / 2, 0, Math.PI] }));
   mesh(spine, merge(pads));
