@@ -1,6 +1,7 @@
 import { HostAim } from "@/games/kit/aim/host-aim";
 import type { ScreenPoint } from "@/games/kit/aim/aim-math";
 import type { HostRoomApi, HostRoomEvent } from "@/platform/games/game-api";
+import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { Seat } from "@/platform/protocol";
 import { HostAudio } from "../audio/host-audio";
 import type { GameEvent } from "../engine/events";
@@ -50,7 +51,7 @@ export class SurvivalHost {
     this.audio = new HostAudio(room.audio);
     this.phones = new PhoneLink(room);
     this.router = new EventRouter(this.phones, this.audio, room);
-    useSurvivalStore.setState({ hud: emptyHud(), radio: null, banner: null, checkpoint: null, toasts: [], hurtAt: 0 });
+    useSurvivalStore.setState({ hud: emptyHud(), radio: null, banner: null, checkpoint: null, toasts: [], hurtAt: 0, level: this.lobby.level });
     this.unsubscribe = room.on((event) => this.onRoom(event));
     this.offFire = this.aim.onFire((seat, point) => this.onFire(seat, point));
     exposeForTests("__zsHost", this);
@@ -98,7 +99,7 @@ export class SurvivalHost {
     const ready = this.lobby.readySeats(this.connectedSeats());
     if (ready.length === 0) return;
     const players = ready.map((seat) => ({ seat, weapon: this.lobby.get(seat).weapon! }));
-    this.game = new SurvivalGame();
+    this.game = new SurvivalGame(Math.random, this.lobby.level);
     this.game.start(players, debugStage());
     this.room.setPlaying(true);
     this.audio.onStart();
@@ -106,6 +107,12 @@ export class SurvivalHost {
 
   retry(): void {
     this.game.retry();
+  }
+
+  setLevel(level: BotLevel): void {
+    if (this.game.running) return;
+    this.lobby.level = level;
+    useSurvivalStore.setState({ level });
   }
 
   /** Ends the run and goes back to the weapon pick, keeping the room. */

@@ -1,3 +1,4 @@
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { Seat } from "@/platform/protocol";
 import type { WeaponId } from "../engine/weapons";
 
@@ -14,6 +15,8 @@ export interface SeatChoice {
  */
 export class Lobby {
   private readonly seats = new Map<Seat, SeatChoice>();
+  /** How fast and hard the dead come, for the whole team. */
+  level: BotLevel = DEFAULT_BOT_LEVEL;
 
   get(seat: Seat): SeatChoice {
     return this.seats.get(seat) ?? { weapon: null, ready: false };
