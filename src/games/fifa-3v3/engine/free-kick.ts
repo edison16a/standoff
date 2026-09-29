@@ -75,12 +75,24 @@ export function freeKick(sp: SetPiece, power: number): Kick {
   return { vel: { ...k.vel }, spin: { ...k.spin }, time: k.time };
 }
 
-/** Solves the kick through `target`, easing the spin off in the rare case the solver cannot land that much bend there. */
+/** Shares of the chosen bend to try, most first. */
+const EASE = [1, 0.85, 0.7, 0.55, 0.42, 0.32, 0.24, 0.17, 0.1, 0.05];
+
+/**
+ * Solves the kick through `target`. In the rare case the solver cannot
+ * land that much bend there (close in at a tight angle), it eases the
+ * bend off in small steps, so the line keeps as much bend as it can
+ * rather than snapping back to straight.
+ */
 function solveCurled(from: Vec3, target: Vec3, speed: number, spin: number): Kick {
-  for (let s = spin, i = 0; i < 4; i++, s *= 0.7) {
+  const lands = (s: number): Kick | null => {
     const kick = solveKick(from, target, speed, s);
     const hit = fly(from, kick, target.x);
-    if (hit && Math.abs(hit.z - target.z) < 0.05 && Math.abs(hit.y - target.y) < 0.05) return kick;
+    return hit && Math.abs(hit.z - target.z) < 0.05 && Math.abs(hit.y - target.y) < 0.05 ? kick : null;
+  };
+  for (const share of EASE) {
+    const kick = lands(spin * share);
+    if (kick) return kick;
   }
   return solveKick(from, target, speed, 0);
 }

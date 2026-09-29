@@ -96,6 +96,15 @@ describe("free kick", () => {
     }
   });
 
+  it("keeps some bend close in at a tight angle, rather than going straight", () => {
+    const sp = setPiece("free", { x: PITCH.halfLength - 9.5, z: -11 }).setPiece!;
+    const aimed = { ...sp, aimX: 0.5, curve: 1 };
+    const kick = freeKick(aimed, 0);
+    expect(Math.abs(kick.spin.y)).toBeGreaterThan(5);
+    const hit = fly(spotBall(sp), kick, PITCH.halfLength)!;
+    expect(Math.abs(hit.z - aimSpot(aimed).z)).toBeLessThan(0.06);
+  });
+
   it("aims where the straight line meets the goal line, and never off along it", () => {
     const state = setPiece("free", { x: PITCH.halfLength - 18, z: 0 });
     const sp = state.setPiece!;
