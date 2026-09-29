@@ -19,8 +19,8 @@ interface AimCalibrateProps {
   /** The player's colour, for the target in the picture. */
   colour: string;
   /**
-   * How many targets to take. "shooter" (the default) takes three: the
-   * middle and two corners. "sword" takes six, every corner and the middle
+   * How many targets to take. "shooter" (the default) takes five: the
+   * middle and every corner. "sword" takes six, every corner and the middle
    * twice, for games that swing all over the screen.
    */
   plan?: AimPlan;

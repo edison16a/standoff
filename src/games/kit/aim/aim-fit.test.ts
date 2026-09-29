@@ -32,7 +32,9 @@ describe("fitting a calibration to the targets", () => {
   it("gives the same answer as the three target calibration for the shooter plan", () => {
     const samples = player(40, { left: 18, right: 22, up: 11, down: 9 }, AIM_PLANS.shooter);
     const fit = fitCalibration(samples)!;
-    const classic = cornerCalibration(samples[0]!.reading, samples[1]!.reading, samples[2]!.reading);
+    const plan: readonly AimTarget[] = AIM_PLANS.shooter;
+    const at = (name: AimTarget) => samples[plan.indexOf(name)]!.reading;
+    const classic = cornerCalibration(at("center"), at("top-left"), at("bottom-right"));
     for (const key of ["left", "right", "up", "down"] as const) expect(fit[key]).toBeCloseTo(classic[key], 9);
   });
 

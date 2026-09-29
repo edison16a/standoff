@@ -14,13 +14,15 @@ export const TARGET_POINTS: Record<AimTarget, ScreenPoint> = {
 };
 
 /**
- * How many targets a game asks for. A shooter needs only the middle and
- * two opposite corners. A sword swings all over the screen, so it takes
- * every corner and the middle twice: the second middle reading, taken
- * last, averages out a shaky first one and any drift in between.
+ * How many targets a game asks for, four to six, which is where accuracy
+ * tops out: the fit learns only the middle and four edge spans, so more
+ * holds add waiting, not precision. A shooter takes the middle and every
+ * corner, so each edge is measured twice and one shaky hold counts half.
+ * A sword swings all over the screen, so it also takes the middle again
+ * last, which averages out a shaky first one and any drift in between.
  */
 export const AIM_PLANS = {
-  shooter: ["center", "top-left", "bottom-right"],
+  shooter: ["center", "top-left", "top-right", "bottom-right", "bottom-left"],
   sword: ["center", "top-left", "top-right", "bottom-right", "bottom-left", "center"],
 } as const satisfies Record<string, readonly AimTarget[]>;
 export type AimPlan = keyof typeof AIM_PLANS;
