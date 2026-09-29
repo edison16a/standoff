@@ -30,16 +30,21 @@
     font-size: 18px;
   }
 
+  .fifa-phone .fifa-pick__side {
+    gap: 6px;
+  }
+
   .fifa-phone .fifa-pick__stats {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 2px 14px;
+    gap: 0 14px;
   }
 
   .fifa-phone .fifa-stat {
-    grid-template-columns: 70px minmax(0, 1fr) 20px;
+    grid-template-columns: 66px minmax(0, 1fr) 20px;
     gap: 6px;
-    font-size: 11px;
+    font-size: 10.5px;
+    line-height: 1.25;
   }
 
   .fifa-phone .fifa-stat__bar {
@@ -55,6 +60,7 @@
     flex-direction: row;
     align-items: center;
     gap: 6px;
+    min-height: 40px;
     padding: 4px 7px;
   }
 
