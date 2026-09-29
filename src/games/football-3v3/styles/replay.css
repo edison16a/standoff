@@ -1,0 +1,155 @@
+/*
+  The touchdown replay's graphics: the REPLAY tag at the top, a stat
+  card on the left like a telestrator, and the skip tally at the right.
+*/
+
+.fb-replay {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 22px;
+  transform: translateX(-50%) skewX(-8deg);
+  border-radius: 8px;
+  background: var(--fb-glass);
+  box-shadow: inset 0 0 0 2px var(--fb-gold);
+  font-family: var(--fb-display);
+  font-size: 26px;
+  letter-spacing: 0.12em;
+}
+
+.fb-replay__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: fb-blink 900ms ease-in-out infinite alternate;
+}
+
+.fb-replay__slow {
+  padding: 2px 10px;
+  border-radius: 6px;
+  background: var(--fb-gold);
+  color: #1a1203;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@keyframes fb-blink {
+  to {
+    opacity: 0.25;
+  }
+}
+
+.fb-replay-card {
+  position: absolute;
+  top: 50%;
+  left: clamp(16px, 3vw, 48px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 260px;
+  padding: 16px 22px;
+  transform: translateY(-50%) skewX(-6deg);
+  border-left: 6px solid var(--fb-gold);
+  border-radius: 12px;
+  background: var(--fb-glass);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+}
+
+.fb-replay-card p {
+  margin: 0;
+}
+
+.fb-replay-card__kicker {
+  color: var(--fb-gold);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.fb-replay-card__name {
+  font-family: var(--fb-display);
+  font-size: 30px;
+  text-transform: uppercase;
+}
+
+.fb-replay-card__line {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  font-size: 20px;
+  animation: fb-line-in 240ms ease-out;
+}
+
+.fb-replay-card__line span {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.fb-replay-card__line strong {
+  font-family: var(--fb-display);
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes fb-line-in {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+}
+
+.fb-skip {
+  position: absolute;
+  right: clamp(16px, 3vw, 48px);
+  bottom: calc(clamp(12px, 3vh, 32px) + clamp(40px, 6vh, 64px) + 14px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--fb-glass);
+}
+
+.fb-skip__title {
+  font-family: var(--fb-display);
+  font-size: 18px;
+}
+
+.fb-skip__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fb-skip__player {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 2px solid var(--player);
+  border-radius: 999px;
+  font-weight: 800;
+  opacity: 0.6;
+}
+
+.fb-skip__player--in {
+  background: var(--player);
+  opacity: 1;
+}
+
+.fb-skip__tick {
+  width: 1em;
+  text-align: center;
+}
+
+.fb-skip__hint {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13px;
+}

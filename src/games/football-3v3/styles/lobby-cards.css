@@ -1,0 +1,205 @@
+/* The lobby's player cards, role chips, the bench and the foot, loaded after lobby.css. */
+
+.fb-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "dot who state" "moves moves moves";
+  align-items: center;
+  gap: 6px 12px;
+  padding: 12px 14px;
+  border-left: 5px solid var(--player, transparent);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.fb-card--bot {
+  grid-template-areas: "dot who state";
+  border-left-color: rgba(255, 255, 255, 0.15);
+  opacity: 0.72;
+}
+
+.fb-card__dot {
+  grid-area: dot;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--player);
+}
+
+.fb-card__cpu {
+  grid-area: dot;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.14);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.fb-card__who {
+  grid-area: who;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.fb-card__who strong {
+  overflow: hidden;
+  font-size: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fb-card__who span {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 14px;
+}
+
+.fb-card__state {
+  grid-area: state;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.fb-card__state--on {
+  background: #22c55e;
+  color: #052e12;
+}
+
+.fb-card__moves {
+  grid-area: moves;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fb-roles {
+  display: inline-flex;
+  margin-right: auto;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+.fb-role {
+  padding: 6px 12px;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.fb-role[aria-pressed="true"] {
+  background: var(--fb-gold);
+  color: #1a1203;
+}
+
+.fb-move {
+  padding: 6px 14px;
+  border: 2px solid var(--team, rgba(255, 255, 255, 0.4));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--team, #ffffff) 22%, transparent);
+  color: #ffffff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.fb-move:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--team, #ffffff) 45%, transparent);
+}
+
+.fb-move:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.fb-move--bench {
+  --team: rgba(255, 255, 255, 0.5);
+}
+
+.fb-bench {
+  width: min(760px, 100%);
+  border-radius: 14px;
+  background: var(--fb-glass);
+}
+
+.fb-bench h3 {
+  margin: 0;
+  padding: 12px 18px 0;
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.fb-lobby__foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.fb-lobby__note {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Short screens, like a 720p laptop: everything tightens so Kick off stays in view. */
+@media (max-height: 820px) {
+  .fb-lobby {
+    gap: 10px;
+    padding-top: 56px;
+    padding-bottom: 14px;
+  }
+
+  .fb-lobby__logo {
+    font-size: clamp(40px, 5vw, 64px);
+  }
+
+  .fb-lobby__title p {
+    display: none;
+  }
+
+  .fb-team__list {
+    gap: 6px;
+    padding: 6px 12px 12px;
+  }
+
+  .fb-card {
+    padding: 8px 12px;
+  }
+
+  .fb-start {
+    padding: 12px 40px;
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 900px) {
+  .fb-lobby__teams {
+    grid-template-columns: 1fr;
+  }
+
+  .fb-lobby__vs {
+    display: none;
+  }
+}
+
+/* The platform's join card sits in the bottom left until every seat is taken: keep the teams clear of it. */
+@media (max-width: 1640px) {
+  :root:has(.join--corner) .fb-lobby {
+    padding-left: 212px;
+  }
+}

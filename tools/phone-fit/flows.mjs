@@ -10,6 +10,7 @@ import { fruitNinja, shootingGallery, zombieSurvival } from "./flows/aim-games.m
 import { bladeClash, bladeClashTouch } from "./flows/blade-clash.mjs";
 import { brawlBattle, fifa3v3, magicKart, magicKartButtons, nba3v3 } from "./flows/pad-games.mjs";
 import { counterBattle } from "./flows/counter-battle.mjs";
+import { football3v3 } from "./flows/football.mjs";
 
 export const FLOWS = {
   "magic-kart": magicKart,
@@ -24,6 +25,7 @@ export const FLOWS = {
   "shooting-gallery-touch": { game: "shooting-gallery", flow: shootingGallery, sensors: false },
   "nba-3v3": nba3v3,
   "fifa-3v3": fifa3v3,
+  "football-3v3": football3v3,
   "blade-clash": bladeClash,
   // Blade Clash with a drag pad, for a phone with no motion sensors.
   "blade-clash-touch": { game: "blade-clash", flow: bladeClashTouch, sensors: false },
