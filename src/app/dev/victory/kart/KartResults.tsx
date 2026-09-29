@@ -1,6 +1,6 @@
 "use client";
 import { useEffect } from "react";
-import type { CharacterId } from "@/games/magic-kart/characters";
+import { CHARACTER_IDS, type CharacterId } from "@/games/magic-kart/characters";
 import type { KartHost } from "@/games/magic-kart/host/kart-host";
 import { Results } from "@/games/magic-kart/host/components/Results";
 import { SessionContext } from "@/games/magic-kart/host/components/session-context";
@@ -22,21 +22,24 @@ const row = (kartId: number, name: string, character: CharacterId, color: string
 /** A stand in session: the buttons only need something to call. */
 const session = { backToLobby() {}, startRace() {} } as unknown as KartHost;
 
-/** Magic Kart's real results over sample standings, without racing. Development only. */
-export function KartResults() {
+/** Magic Kart's real results over sample standings, without racing. `who` picks the winner's kart. Development only. */
+export function KartResults({ who }: { who: string }) {
   const ready = useKartStore((state) => state.standings.length > 0);
   useEffect(() => {
+    const first = CHARACTER_IDS.find((id) => id === who) ?? "blaze";
+    // The others take the karts the winner left, in order.
+    const [second, third, fourth] = CHARACTER_IDS.filter((id) => id !== first) as [CharacterId, CharacterId, CharacterId];
     useKartStore.setState({
       mapId: "beach",
-      seats: [{ seat: 1, name: "Edison", connected: true, pick: "blaze", ready: true }],
+      seats: [{ seat: 1, name: "Edison", connected: true, pick: first, ready: true }],
       standings: [
-        row(0, "Edison", "blaze", "#ef4444", 1, 83.45),
-        row(1, "Maya", "pip", "#22c55e", 2, 85.02),
-        row(2, "Computer", "nova", "#3b82f6", 3, 87.8),
-        row(3, "Leo", "mochi", "#f59e0b", 4, null),
+        row(0, "Edison", first, "#ef4444", 1, 83.45),
+        row(1, "Maya", second, "#22c55e", 2, 85.02),
+        row(2, "Computer", third, "#3b82f6", 3, 87.8),
+        row(3, "Leo", fourth, "#f59e0b", 4, null),
       ],
     });
-  }, []);
+  }, [who]);
   if (!ready) return null;
   return (
     <SessionContext.Provider value={session}>
