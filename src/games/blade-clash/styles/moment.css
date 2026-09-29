@@ -180,3 +180,22 @@
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
+
+/* How the fight is won, under the countdown. Kept outside the banner so it holds still while the numbers pop. */
+.banner-rule {
+  position: absolute;
+  top: calc(30% + clamp(62px, 11vw, 150px));
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: rgba(12, 10, 28, 0.72);
+  color: #ffffff;
+  font-size: clamp(14px, 1.5vw, 20px);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: moment-fade 300ms ease-out both;
+}
