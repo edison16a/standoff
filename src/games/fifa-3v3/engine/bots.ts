@@ -110,8 +110,8 @@ function decideWithBall(state: MatchState, a: Athlete, command: Command): void {
   }
   const foe = other(a.team);
   const d = toGoal(a.pos, foe);
-  // A finisher shoots from further out, and a big shot from further still.
-  const range = 11 + 4 * a.attrs.finishing + 4 * a.attrs.power;
+  // A finisher backs himself from further out, and a big shot adds a little.
+  const range = 11 + 5 * a.attrs.finishing + 2 * a.attrs.power;
   let pressure = 0;
   for (const o of state.athletes) if (o.team === foe) pressure = Math.max(pressure, clamp((2.4 - dist(o.pos, a.pos)) / 1.8, 0, 1));
   if (d < range && shotAngle(a.pos, foe) < 1.05) {

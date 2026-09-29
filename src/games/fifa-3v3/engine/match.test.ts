@@ -44,7 +44,9 @@ describe("a match of computer players", () => {
     expect(count("shot")).toBeGreaterThan(count("goal"));
     expect(count("save")).toBeGreaterThan(0);
     expect(count("pass")).toBeGreaterThan(20);
-    expect(count("tackle")).toBeGreaterThan(5);
+    // Builds hold their own depth, so defenders win it back with more steals than slides.
+    expect(count("tackle")).toBeGreaterThan(2);
+    expect(count("steal")).toBeGreaterThan(20);
   });
 
   it("sees shots of every kind", () => {
