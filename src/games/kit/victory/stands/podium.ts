@@ -12,6 +12,13 @@ export interface PodiumOptions {
   trims?: readonly [string, string, string];
 }
 
+/** Each number's ink and outline, first to third: deeper than the trims, since pale silver vanished on white. */
+const INKS: readonly (readonly [string, string])[] = [
+  ["#e3a81c", "#6b4a06"],
+  ["#8e98a8", "#353c48"],
+  ["#bd6c34", "#56290c"],
+];
+
 /** Heights of second and third, as shares of first. */
 const STEP = [1, 0.66, 0.42] as const;
 /** Across the podium, left to right as seen from the front: second, first, third. */
@@ -40,7 +47,7 @@ export function createPodium(options: PodiumOptions = {}): Podium {
   for (let i = 0; i < 3; i++) {
     const h = height * STEP[i]!;
     const x = ACROSS[i]! * width;
-    const front = new THREE.MeshPhysicalMaterial({ map: numberTexture(i + 1, trims[i]!), roughness: 0.35, clearcoat: 0.8 });
+    const front = new THREE.MeshPhysicalMaterial({ map: numberTexture(i + 1, trims[i]!, INKS[i]!), roughness: 0.35, clearcoat: 0.8 });
     if (front.map) {
       // The square number stays square on a wide step; the plain edges of the drawing fill the sides.
       const aspect = (width * 0.98) / h;
@@ -93,7 +100,7 @@ export function createPedestal(options: { radius?: number; height?: number; colo
   return object;
 }
 
-function numberTexture(place: number, trim: string): THREE.Texture | null {
+function numberTexture(place: number, trim: string, [ink, outline]: readonly [string, string]): THREE.Texture | null {
   if (typeof document === "undefined") return null;
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 256;
@@ -106,10 +113,14 @@ function numberTexture(place: number, trim: string): THREE.Texture | null {
   ctx.font = "900 150px system-ui, sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.lineWidth = 10;
-  ctx.strokeStyle = "rgba(0,0,0,0.25)";
+  // A soft drop shadow, then a dark outline under the ink, so the number reads from across the room.
+  ctx.fillStyle = "rgba(0,0,0,0.18)";
+  ctx.fillText(String(place), 134, 148);
+  ctx.lineWidth = 12;
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = outline;
   ctx.strokeText(String(place), 128, 140);
-  ctx.fillStyle = trim;
+  ctx.fillStyle = ink;
   ctx.fillText(String(place), 128, 140);
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
