@@ -1,5 +1,5 @@
 /*
-  The level select: the logo up top, five glowing level cards in a row,
+  The level select: the logo up top, seven glowing level cards in a row,
   and the players, practice and play buttons under them. Each card takes
   its level's neon colour from --level.
 */
@@ -31,9 +31,9 @@
 
 .cg-levels {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 14px;
-  width: min(1180px, 100%);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 12px;
+  width: min(1400px, 100%);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -49,7 +49,7 @@
   gap: 8px;
   width: 100%;
   min-height: 176px;
-  padding: 16px 16px 14px;
+  padding: 14px 13px 13px;
   border: 3px solid color-mix(in srgb, var(--level) 55%, transparent);
   border-radius: 16px;
   color: #ffffff;
@@ -83,7 +83,7 @@
 
 .cg-level__name {
   max-width: 80%;
-  font: 900 21px/1.1 "Arial Black", Arial, var(--font-ui);
+  font: 900 19px/1.1 "Arial Black", Arial, var(--font-ui);
   text-shadow: 0 3px 0 #12052e;
 }
 
@@ -121,6 +121,22 @@
   font-size: 16px;
   letter-spacing: 2px;
   color: var(--cg-gold, #ffd21f);
+}
+
+/* The Demon levels: a red glow, a dark badge and red stars, so they read as a step past Insane. */
+.cg-level--demon {
+  box-shadow: inset 0 0 26px rgba(255, 60, 90, 0.28);
+}
+
+.cg-level__face--6 {
+  border: 1px solid #ff4f6a;
+  color: #ffd6dc;
+  background: #2a0610;
+  box-shadow: 0 0 10px rgba(255, 79, 106, 0.55);
+}
+
+.cg-level--demon .cg-level__stars {
+  color: #ff4f6a;
 }
 
 .cg-level__stars-off {
