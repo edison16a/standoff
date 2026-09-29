@@ -43,9 +43,9 @@ function Status({ court }: { court: CourtState }) {
   );
 }
 
-/** Whether holding Guard is shadowing your man, or you are too far off him for it to help. */
+/** Whether holding Guard is shadowing your man, or sprinting back to him. */
 function GuardRange({ state }: { state: CourtState["guard"] }) {
-  const text = state === "on" ? "Guarding your man" : state === "far" ? "Too far to guard. Run closer" : "Hold Guard to shadow your man";
+  const text = state === "on" ? "Guarding your man" : state === "chase" ? "Catching up to your man" : "Hold Guard to shadow your man";
   return (
     <span className={`nba-guard nba-guard--${state}`}>
       <i aria-hidden="true" />
@@ -88,9 +88,12 @@ export function Controller({ court }: { court: CourtState }) {
   const defending = court.defending;
   const passLabel = defending ? "Block" : court.hasBall ? "Pass" : court.attacking ? "Call" : "Pass";
   const face = defendFace(court);
-  // Dead ball: the check up, or free throws, where only the shooter's Shoot works once set.
-  const dead = court.checking || court.freeThrow !== null;
-  const canShoot = defending || (court.hasBall && (court.freeThrow ? court.freeThrow.ready : !court.checking));
+  // The buttons stay lit the whole game, so a pass or a turnover never lets go of a held Guard.
+  // Only free throws grey them out, where the shooter's Shoot alone works once set.
+  const ft = court.freeThrow;
+  const dead = ft !== null;
+  const canShoot = ft ? ft.ready : true;
+  // The meter only runs for a real shot, so Shoot held without the ball stays quiet.
   // At the line the shooter gets a big meter and only Shoot.
   const atLine = court.freeThrow?.mine ?? false;
 
@@ -102,7 +105,7 @@ export function Controller({ court }: { court: CourtState }) {
       <Status court={court} />
       <div className="nba-pad__buttons">
         <div className="nba-pad__pass">
-          <PadButton label={passLabel} colour={defending ? "#ef4444" : "#3b82f6"} disabled={(!court.attacking && !defending) || dead} onDown={() => session.press("pass")} onUp={() => session.release("pass")}>
+          <PadButton label={passLabel} colour={defending ? "#ef4444" : "#3b82f6"} disabled={dead} onDown={() => session.press("pass")} onUp={() => session.release("pass")}>
             {defending ? <BlockIcon /> : court.hasBall || !court.attacking ? <PassIcon /> : <CallIcon />}
             <span>{passLabel}</span>
           </PadButton>
@@ -120,7 +123,7 @@ export function Controller({ court }: { court: CourtState }) {
             size="lg"
             colour={defending ? "#16a34a" : "#ff7a18"}
             disabled={!canShoot}
-            onDown={() => session.press("shoot", !defending)}
+            onDown={() => session.press("shoot", ft ? ft.ready : !defending && court.hasBall)}
             onUp={() => session.release("shoot")}
           >
             {defending ? <GuardIcon /> : <ShootIcon />}

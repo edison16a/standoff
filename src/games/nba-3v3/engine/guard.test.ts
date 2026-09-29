@@ -44,14 +44,72 @@ describe("guard", () => {
     expect(d.guard).toBe(false);
   });
 
-  it("does nothing out of range", () => {
+  it("sprints back to the man from out of range", () => {
     const m = setup();
     const d = m.athletes[3]!;
     Object.assign(d, { x: -6, z: 1 });
+    const before = Math.hypot(d.x, d.z - 8);
     m.press(3, "shoot");
-    expect(guardStatus(m, d)).toBe("far");
-    run(m, 0.5);
-    expect(Math.hypot(d.vx, d.vz)).toBeLessThan(0.05);
+    expect(guardStatus(m, d)).toBe("chase");
+    run(m, 1);
+    expect(Math.hypot(d.x, d.z - 8)).toBeLessThan(before - 2);
+  });
+
+  it("keeps following through a pass between the attackers", () => {
+    const m = setup();
+    const d = m.athletes[3]!;
+    Object.assign(d, { x: 2, z: 7 });
+    m.press(3, "shoot");
+    // The ball leaves the handler's hands: nobody holds it, but it is still their possession.
+    m.ball.holder = null;
+    m.ball.mode = "loose";
+    expect(m.defending(d)).toBe(true);
+    expect(guardStatus(m, d)).toBe("on");
+    m.press(3, "shoot");
+    expect(d.guard).toBe(true);
+  });
+
+  it("stays on the same man through a change of possession", () => {
+    const m = setup();
+    const d = m.athletes[3]!;
+    Object.assign(d, { x: 2, z: 7 });
+    m.press(3, "shoot");
+    run(m, 0.2);
+    expect(d.guardMan).toBe(0);
+    // A turnover and straight back again on the same play: Guard is still held and still on athlete 0.
+    m.offence = 1;
+    run(m, 0.1);
+    expect(guardStatus(m, d)).toBe("off");
+    m.offence = 0;
+    Object.assign(m.athletes[2]!, { slot: 0 });
+    expect(guardTarget(m, d)?.id).toBe(0);
+    expect(guardStatus(m, d)).toBe("on");
+  });
+
+  it("turns a Shoot held on offence into Guard when the ball is turned over", () => {
+    const m = setup();
+    const a = m.athletes[1]!;
+    m.press(1, "shoot");
+    expect(guardStatus(m, a)).toBe("off");
+    m.offence = 1;
+    expect(guardStatus(m, a)).not.toBe("off");
+  });
+
+  it("takes a Guard held through the check up", () => {
+    const m = setup();
+    m.phase = "check";
+    m.press(3, "shoot");
+    expect(m.athletes[3]!.guard).toBe(true);
+    m.phase = "live";
+    expect(guardStatus(m, m.athletes[3]!)).not.toBe("off");
+  });
+
+  it("picks its man again on a fresh hold", () => {
+    const m = setup();
+    const d = m.athletes[3]!;
+    d.guardMan = 2;
+    m.press(3, "shoot");
+    expect(guardTarget(m, d)?.id).toBe(0);
   });
 
   it("lags behind a dribble move, which the stick has to make up", () => {

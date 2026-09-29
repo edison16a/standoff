@@ -123,17 +123,25 @@ export class Match {
   setGuard(id: number, on: boolean): void {
     const a = this.athletes[id];
     if (!a) return;
+    // A fresh hold picks its man again, so a lock never outlives the play it was made on.
+    if (on && !a.guard) a.guardMan = null;
     a.guard = on;
-    if (!on) a.guardAim = null;
+    if (on) return;
+    a.guardAim = null;
+    a.guardMan = null;
   }
 
   press(id: number, button: Button, aim: V2 | null = null): void {
     const a = this.athletes[id];
     if (!a) return;
     if (this.phase === "freeThrow" && button === "shoot") return pressFreeThrow(this, a);
+    // Guard can be held through the check up, so it takes the man the moment play goes live.
+    if (this.phase === "check" && button === "shoot" && this.defending(a)) return this.setGuard(id, true);
     if (this.phase !== "live") return;
-    // On defence Shoot is Guard, held for as long as the thumb stays down.
-    if (button === "shoot" && this.defending(a)) return this.setGuard(id, true);
+    // On defence Shoot is Guard, held for as long as the thumb stays down. It is armed
+    // on offence too, so a turnover mid hold turns the held button straight into Guard.
+    if (button === "shoot") this.setGuard(id, true);
+    if (button === "shoot" && this.defending(a)) return;
     if (button === "shoot") pressShoot(this, a);
     else if (button === "pass") pressPass(this, a, aim);
     else pressDefend(this, a, aim);
@@ -147,10 +155,13 @@ export class Match {
     releaseShot(this, a, heldMs);
   }
 
-  /** The other team has the ball, so this player is on defence. */
+  /**
+   * The other team has the possession, so this player is on defence. It
+   * goes by possession, not by who holds the ball, so a pass between
+   * attackers or a loose ball never flips the phone's buttons mid play.
+   */
   defending(a: Athlete): boolean {
-    const holder = this.holder;
-    return !!holder && holder.team !== a.team;
+    return this.offence !== a.team;
   }
 
   /** A human's phone dropped or came back. The computer plays for them meanwhile. */

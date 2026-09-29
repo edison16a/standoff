@@ -51,8 +51,9 @@ export class Buzzer {
         return;
       }
       case "shake":
-        send(e.id, "steal", e.hard ? "Ankles!" : "Shook him");
-        send(e.victim, "stolen", e.hard ? "Ankles broken" : "Beaten");
+        // Felt, not read: the stumble on the big screen tells the story.
+        send(e.id, "steal", null);
+        send(e.victim, "stolen", null);
         return;
       case "fumble":
         send(e.id, "stolen", "Lost it");

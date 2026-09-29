@@ -61,7 +61,8 @@ describe("computer players", () => {
     const moves = new Set<string>();
     let shakes = 0;
     let most = 0;
-    for (const seed of [1, 2, 3]) {
+    // Moves are picked by chance, so a fourth game makes sure every kind comes up.
+    for (const seed of [1, 2, 3, 4]) {
       const m = new Match({ entries: lineup(["shooter", "lockdown", "allround", "dunker", "big", "playmaker"]), seed });
       for (let t = 0; t < 900 && m.phase !== "over"; t += STEP) {
         m.step(STEP);
