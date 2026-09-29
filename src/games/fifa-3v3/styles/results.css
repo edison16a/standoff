@@ -96,16 +96,17 @@
 }
 
 .fifa-results__table th {
-  padding: 6px 8px;
+  /* Tight enough that a computer's longer name, like CPU Sweeper Keeper, leaves room for the saves. */
+  padding: 6px 6px;
   font-size: 12px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   text-align: left;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.55);
 }
 
 .fifa-results__table td {
-  padding: 7px 8px;
+  padding: 7px 6px;
   border-top: 1px solid var(--fifa-line);
 }
 
