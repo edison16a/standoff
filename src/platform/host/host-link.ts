@@ -1,9 +1,13 @@
 import { SocketClient, type SocketHandlers, type SocketStatus } from "@/platform/net/socket-client";
 import type { HandoverFailure, OpenInfo } from "@/platform/net/socket-types";
 import type { ClientEnvelope, ServerEnvelope } from "@/platform/protocol";
+import { settles, type Retire, type RetireWhere } from "./retire-queue";
 
-/** How long an old room's socket stays after a swap, for its retire to be confirmed. */
+/** How long an old socket stays after a swap with nothing to retire. */
 const OLD_SOCKET_MS = 3000;
+/** How long it keeps sending its room's retire, and how often. */
+const OLD_RETIRE_MS = 20_000;
+const OLD_RESEND_MS = 2000;
 
 /**
  * Socket handlers that can be pointed somewhere else. A socket built for a
@@ -90,31 +94,41 @@ export class HostLink {
     return old;
   }
 
-  /** Quiets an old socket and closes it once its retire is confirmed, or after a few seconds. */
-  retireOld(old: LinkPart): void {
+  /**
+   * Quiets an old socket and has it end its room: the retire goes out now,
+   * again on a beat and on every reconnect, since the old socket sits
+   * where the old room lives and a lost post once stranded its phones. It
+   * closes once the room's own instance confirms, or when kicked, or after
+   * a while.
+   */
+  retireOld(old: LinkPart, retire: Retire | null = null, where: RetireWhere = { instance: null, shared: true }): void {
     const { client } = old;
     this.retiring.add(client);
     let done = false;
+    const say = () => retire && client.send(retire);
     const close = () => {
       if (done) return;
       done = true;
       clearTimeout(timer);
+      clearInterval(beat);
       this.retiring.delete(client);
       client.close();
     };
-    const timer = setTimeout(close, OLD_SOCKET_MS);
+    const timer = setTimeout(close, retire ? OLD_RETIRE_MS : OLD_SOCKET_MS);
+    const beat = setInterval(say, OLD_RESEND_MS);
     old.handlers.target = {
-      onOpen: () => undefined,
+      onOpen: (send) => retire && send(retire),
       onMessage: (message) => {
         if (message.type !== "room:retired") return;
         this.handlers.onMessage(message);
-        close();
+        if (!retire || message.code !== retire.code || settles(message, where)) close();
       },
-      // Kicked, cut or reconnecting: it has nothing left to do.
+      // Kicked for the retire, or closed: it has nothing left to do. A reconnect may still reach the room.
       onStatus: (status) => {
-        if (status !== "open") close();
+        if (status === "replaced" || status === "closed" || (!retire && status !== "open")) close();
       },
     };
+    say();
   }
 
   close(): void {

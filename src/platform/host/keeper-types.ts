@@ -27,4 +27,6 @@ export interface RoomKeeperEvents {
 export interface KeeperLink {
   send: Send;
   redial(): void;
+  /** The socket talks over the HTTP stream, so throwaway connections should too. */
+  usesStream?(): boolean;
 }

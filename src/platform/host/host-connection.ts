@@ -41,7 +41,8 @@ export class HostConnection {
       onHandoverFailed: (info) => events.handoverFailed(info),
       onHandedOver: (confirmation, sendOld) => this.mover.handedOver(confirmation, this.keeper.instance, this.token, sendOld),
     });
-    this.keeper = new RoomKeeper(sessionMemory, { send: (message) => this.link.send(message), redial: () => this.link.redial() }, events.room);
+    const keeperLink = { send: (message: ClientEnvelope) => this.link.send(message), redial: () => this.link.redial(), usesStream: () => this.link.usesStream };
+    this.keeper = new RoomKeeper(sessionMemory, keeperLink, events.room);
     this.keeper.names = () => events.names();
     this.mover = new RoomMover({ rotate: () => this.link.rotateNow(), shared: () => events.shared(), now: Date.now });
   }
@@ -88,6 +89,8 @@ export class HostConnection {
 
   /** A new room passed its check: its socket and keeper become the host's, and the old room sends its phones on. */
   swap(candidate: RoomCandidate, room: OpenedRoom, old: RememberedRoom): void {
+    // Where the old room lives, to tell a real "not found" from one on another instance.
+    const from = this.keeper.instance;
     const previous = this.link.adopt(candidate.handOver());
     this.keeper.dispose();
     this.keeper = candidate.keeper;
@@ -95,10 +98,10 @@ export class HostConnection {
     this.keeper.events = this.events.room;
     this.keeper.names = () => this.events.names();
     this.keeper.adopt(room);
-    // Through the new socket, and once through the old one, which sits where the old room lives.
-    this.keeper.retire(old, room.code);
-    if (old.token) previous.client.send({ type: "host:retire", code: old.code, token: old.token, movedTo: room.code });
-    this.link.retireOld(previous);
+    // Through the new socket, and through the old one, which sits where the old room lives.
+    this.keeper.retire(old, room.code, from);
+    const retire = old.token ? { type: "host:retire" as const, code: old.code, token: old.token, movedTo: room.code } : null;
+    this.link.retireOld(previous, retire, { instance: from, shared: this.keeper.shared });
   }
 
   private onMessage(message: ServerEnvelope): void {

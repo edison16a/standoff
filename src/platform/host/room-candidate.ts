@@ -41,7 +41,11 @@ export class RoomCandidate {
       onStatus: () => undefined,
     });
     this.client = options.makeClient?.(this.handlers) ?? new SocketClient(this.handlers);
-    const link = { send: (message: Parameters<SocketClient["send"]>[0]) => this.client.send(message), redial: () => this.client.redial() };
+    const link = {
+      send: (message: Parameters<SocketClient["send"]>[0]) => this.client.send(message),
+      redial: () => this.client.redial(),
+      usesStream: () => this.client.usesStream,
+    };
     this.keeper = new RoomKeeper(localMemory(), link, {
       opened: (room) => {
         this.room = room;

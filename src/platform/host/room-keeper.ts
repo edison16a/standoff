@@ -1,7 +1,8 @@
 import type { OpenInfo } from "@/platform/net/socket-types";
 import type { ClientEnvelope } from "@/platform/protocol";
 import type { CreateFailure, KeeperLink, RoomKeeperEvents, RoomMessage, Send } from "./keeper-types";
-import { RetireQueue } from "./retire-queue";
+import { freshCourier, RetireQueue } from "./retire-queue";
+import { preferStream } from "@/platform/net/transport-choice";
 import type { RememberedRoom, RoomMemory } from "./room-memory";
 
 export type { CreateFailure, KeeperLink, OpenedRoom, RoomKeeperEvents, RoomMessage, Send } from "./keeper-types";
@@ -35,6 +36,8 @@ export class RoomKeeper {
   private resumeTries = 0;
   /** The server instance that last answered for the room, to tell when a new socket lands on another. */
   instance: string | null = null;
+  /** Every server instance sees the same rooms, as the relay last said. */
+  shared = true;
   /** Each seat's player name, for making the room again where it is not known. */
   names: (() => (string | null)[]) | null = null;
   private createTimer: ReturnType<typeof setTimeout> | null = null;
@@ -45,7 +48,8 @@ export class RoomKeeper {
     private readonly link: KeeperLink,
     public events: RoomKeeperEvents,
   ) {
-    this.retires = new RetireQueue((message) => this.link.send(message));
+    const courier = freshCourier(() => this.link.usesStream?.() ?? preferStream());
+    this.retires = new RetireQueue((message) => this.link.send(message), courier);
   }
 
   /** True while there is a room to resume, from before a reload or a dropped socket. */
@@ -77,9 +81,12 @@ export class RoomKeeper {
     return true;
   }
 
-  /** Ends a room by its token, sending again until the relay confirms. */
-  retire(room: { code: string; token: string }, movedTo?: string): void {
-    this.retires.add(room, movedTo);
+  /**
+   * Ends a room by its token, sending again until the relay confirms.
+   * `instance` is where that room lives, by default this keeper's own room.
+   */
+  retire(room: { code: string; token: string }, movedTo?: string, instance: string | null = this.instance): void {
+    this.retires.add(room, movedTo, { instance, shared: this.shared });
   }
 
   /** Takes on a room that was made and checked elsewhere (see RoomCandidate). */
@@ -106,10 +113,11 @@ export class RoomKeeper {
         const { code, token, game, seats } = message;
         // Nobody is waiting for this room, say a create answered after its
         // retry had already been answered. Left open it would be a ghost.
-        if (!this.pending) return this.retire({ code, token });
+        if (!this.pending) return this.retire({ code, token }, undefined, message.instance ?? null);
         const deferred = this.deferred;
         this.stopCreate();
         this.instance = message.instance ?? null;
+        this.shared = message.sharedRooms;
         this.memory.remember({ code, token, game, seats });
         deferred?.(this.resume({ code, token, game, seats }));
         return this.events.opened({ ...message, connected: null, names: null });
@@ -117,6 +125,7 @@ export class RoomKeeper {
       case "room:resumed": {
         this.stopResume();
         this.instance = message.instance ?? null;
+        this.shared = message.sharedRooms;
         const token = this.memory.recall()?.token ?? "";
         // An older tab saved no game, and a lost room needs it to be made again.
         if (token) this.memory.remember({ code: message.code, token, game: message.game, seats: message.seats });
@@ -124,8 +133,7 @@ export class RoomKeeper {
         return this.events.opened({ ...message, token, names: message.names ?? null });
       }
       case "room:retired":
-        this.retires.confirm(message.code);
-        return;
+        return this.retires.confirm(message);
       case "room:error":
         if (this.memory.recall()) return this.resumeFailed(message.reason);
         if (!this.pending) return;
