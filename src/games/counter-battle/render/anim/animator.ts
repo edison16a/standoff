@@ -9,7 +9,7 @@ import { afterShot, idleAction, reloadAction, type GunAction, type GunPoints } f
 import { handPoint, holdGun } from "./hold";
 import { blankLegs, blendLegs, kneelLegs, runLegs, standLegs } from "./legs";
 import { blankUpper, poseArms, poseLegs, poseTorso } from "./rig-pose";
-import { celebrate } from "./victory";
+import { celebrate, type Celebration } from "./victory";
 import { GunParts } from "./gun-parts";
 
 const gunPos = new THREE.Vector3();
@@ -59,7 +59,8 @@ export class Animator {
     return this.fall.started;
   }
 
-  update(a: AnimInput, dt: number, pushLocal: { x: number; z: number }): void {
+  /** `celebration` stands in for the fighter's own, as the match winner lifting the trophy does. */
+  update(a: AnimInput, dt: number, pushLocal: { x: number; z: number }, celebration: Celebration | null = null): void {
     const rig = this.rig;
     const s = rig.size.s;
     rig.root.position.set(a.x, 0, a.z);
@@ -84,7 +85,7 @@ export class Animator {
     blendLegs(this.legs, this.legs, kneelLegs(s, ankle), kneel);
     this.legs.hipX += 0.07 * s * this.lean;
 
-    const party = a.wonAt !== null ? celebrate(this.character, a.now - a.wonAt) : null;
+    const party = celebration ?? (a.wonAt !== null ? celebrate(this.character, a.now - a.wonAt) : null);
     const raise = party ? Math.min(this.raise, 0.3) : this.raise;
     const up = blankUpper();
     // Taller fighters hunch lower behind cover, so every head hides under the same bunkers.

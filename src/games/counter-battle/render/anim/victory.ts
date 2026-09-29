@@ -63,3 +63,27 @@ export function celebrate(id: CharacterId, t: number): Celebration {
   }
   return c;
 }
+
+/** The cup held straight up over the left shoulder, on the chest's frame. */
+const OVERHEAD: P3 = [0.12, 0.74, 0.12];
+
+/**
+ * The match winner with the trophy: their own celebration, but the free
+ * hand holds the cup straight up overhead and pumps it every so often,
+ * the gun stays low in the other hand and the head tips back to look up
+ * at it.
+ */
+export function liftTrophy(id: CharacterId, t: number): Celebration {
+  const c = celebrate(id, t);
+  const inn = smooth(t / 0.6);
+  const pump = Math.max(0, Math.sin(t * 2.4)) ** 6;
+  return {
+    ...c,
+    gunUp: 0,
+    across: false,
+    fist: [OVERHEAD[0], OVERHEAD[1] - 0.05 * pump, OVERHEAD[2]],
+    bend: Math.min(c.bend, -0.1 * inn),
+    headPitch: Math.min(c.headPitch, -0.3 * inn),
+    headYaw: c.headYaw * 0.3,
+  };
+}
