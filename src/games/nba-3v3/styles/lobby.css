@@ -150,8 +150,11 @@
 }
 
 .nba-spot__star {
+  overflow: hidden;
   color: rgba(255, 255, 255, 0.72);
   font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .nba-spot__move {
@@ -204,8 +207,18 @@
   position: relative;
 }
 
+/* The role tag and the move arrow sit over the card's right end, so the name keeps the rest of the row. */
 .nba-spot--human .nba-spot__button {
-  padding-right: 128px;
+  padding-right: 124px;
+}
+
+.nba-spot--human .nba-spot__move {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  /* Centred by margin: the card flips the arrow with its own transform for the right hand team. */
+  margin-top: -11px;
+  pointer-events: none;
 }
 
 .nba-role {
@@ -225,7 +238,7 @@
 .nba-spot--human .nba-role {
   position: absolute;
   top: 50%;
-  right: 46px;
+  right: 42px;
   z-index: 1;
   transform: translateY(-50%);
   cursor: pointer;
