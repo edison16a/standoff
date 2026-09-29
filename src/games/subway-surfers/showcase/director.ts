@@ -69,8 +69,8 @@ function hoverLeap(run: Run): void {
 
 export const SHOTS: Record<"loop" | "icon" | "poster", Shot> = {
   // The capture tool lets the scene settle for 3 seconds first, so the clip runs from about 3 to 12.
-  // Coins are taken by touch, in the open city with no tunnel. Seed 20 grabs jump boots at 6 seconds,
-  // leaps high with a flip at 7 seen from the side, slams down into a roll and loses the boots at 11.
+  // Coins are taken by touch, in the open city with no tunnel. Seed 20 grabs super sneakers at 6 seconds,
+  // leaps high with a flip at 7.4 seen from the side, lands and rolls, and loses the sneakers at 11.
   loop: { seed: 20, look: 0, warmup: 12.5, pickups: "boots", powerSeconds: 5, cuts: [[0, "chase"], [6.8, "side"], [9.4, "chase"]], pace: 1 },
   // Seed 7 meets a train rolling in on the next track at about 23 seconds. The runner leaps as it comes.
   poster: { seed: 7, look: 0, warmup: 20, moment: (run) => run.runner.grounded && trainComing(run), stage: leap, pickups: null, cuts: [[0, "chase"]], pace: 0.005 },
