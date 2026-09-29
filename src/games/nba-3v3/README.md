@@ -6,7 +6,7 @@ Status: ready. Three on three half court basketball for 1 to 6 players, with com
 
 1. Open Basketball 3v3 on the computer. Everyone scans the code with their phone.
 2. On the phone, after the name:
-   * **Star.** Pick one of six stars, shown dribbling in 3D with their speed, shooting and strength. A star another phone has is marked taken.
+   * **Build.** Pick one of six builds, shown dribbling in 3D with your own name on the back, five stat bars and how it plays. A build another phone has is marked taken, so the six on the court always differ. See Builds below.
    * **Ready.** Tap Ready.
 3. On the computer, the lobby shows two team columns, Sky and Fire, three spots each. New players land on the smaller team. Click a player to send them to the other side, or drag them across. Shuffle deals everyone out at random. Computer players fill the empty spots. Set Computer players to Off and the teams are just the people, so two friends can play one on one, and a team may have more players than the other. With them off, each team needs a player. Click Start game. On a short laptop screen the lobby tightens up, so Start game stays in view.
    * **Roles.** The host hands out the roles: Guard, Wing and Big. Each card shows its role; click a player's role to give them the next one, and a teammate who had it swaps. A new player takes the first free role. The role sets where a player lines up at the check and along the lane, and who they guard: a Guard picks up the other Guard.
@@ -20,9 +20,9 @@ Status: ready. Three on three half court basketball for 1 to 6 players, with com
    * **On defence** the buttons change. Shoot becomes **Guard**, Pass becomes **Block**, and the third button is **Steal** the whole time (see Defence below).
 5. The phone buzzes and flashes a word for everything that happens to you: Green!, Stolen, Blocked it!, Rebound!, Ankles!, +3.
 6. Baskets put no text on the big screen. The scoreboard ticks over and the arena answers.
-7. First to 11 wins, with confetti and fireworks. Then the winning basket plays again in slow motion (see Replay below). The results show the winner, the MVP and both box scores: points, rebounds, assists, steals, blocks and shots made. Each phone shows its own line. Play again keeps the teams; Change teams goes back to the lobby.
+7. First to 11 wins, with confetti and fireworks. Then the winning basket plays again in slow motion (see Replay below), and the winners lift the trophy at centre court (see The trophy ceremony). The results come up over the end of it: the winner, the MVP and both box scores, with points, rebounds, assists, steals, blocks and shots made. Each phone shows its own line. Play again keeps the teams; Change teams goes back to the lobby.
 
-A phone that joins during a game picks a star and joins the next one. A player whose phone drops keeps their spot, with the computer playing for them until they are back.
+A phone that joins during a game picks a build and joins the next one. A player whose phone drops keeps their spot, with the computer playing for them until they are back.
 
 ## The rules
 
@@ -50,7 +50,7 @@ A phone that joins during a game picks a star and joins the next one. A player w
 * The shooter's phone shows only Shoot with a tall meter beside it, and which shot it is, like Free throw 1 of 2. Hold Shoot and let go in the green; the green band is a quarter wider at the line. Computer players shoot their own. A phone that waits eight seconds has its shot taken for it.
 * Each free throw that goes in is worth one point. Every shot but the last comes back to the shooter. Play is live again as the last leaves the hand. On a miss the defenders step across and box out the attackers beside them, the attackers try to get round the inside, and the ball comes off the rim for anyone to jump for. A make on the last is checked up by the other team like any basket.
 * Computer defenders reach in twice freely, a third time only now and then, and never a fourth.
-* **Test shortcuts.** While a game runs, the host's hidden admin panel (three quick taps on the settings gear) has Foul, Free throws, And one and Fouled three. They go to the first person in the game. Next basket wins puts both teams one point short, so the next basket ends the game and rolls the replay.
+* **Test shortcuts.** While a game runs, the host's hidden admin panel (three quick taps on the settings gear) has Foul, Free throws, And one and Fouled three. They go to the first person in the game. Next basket wins puts both teams one point short, so the next basket ends the game and rolls the replay. Win now ends the game on the spot with the tester's team on top, straight into the trophy ceremony.
 
 ## Replay
 
@@ -60,6 +60,41 @@ A phone that joins during a game picks a star and joins the next one. A player w
 * The vote follows who is there. A phone that drops during the replay stops holding it up, and one that comes back gets a say.
 * Until the replay rolls, the phones keep the controller. The join code and the results wait until it is done, so nothing covers it.
 
+## The trophy ceremony
+
+After the replay the picture cuts to centre court. The winners stand together on the centre circle, facing the camera. The captain, their top scorer (a person before a computer player on a tie), holds a gold championship trophy from the victory kit at his chest: a ball dunked into a net on a slender column. The losers stand back down the floor by the key, hands on their knees.
+
+* He looks down at the trophy, leans in to kiss it, dips at the knees and drives it up over his head with both hands. It stays in his hands the whole way, set between them every frame.
+* As it goes up, cannons round the team fire confetti in the winners' colours, the spotlights flare, the organ horn sounds with a big brass chord, and the confetti keeps raining down.
+* Until then his teammates clap him. Then they throw both fists up, walk in shoulder to shoulder with him and keep jumping, each in their own time. He pumps the trophy, roaring up at it, and turns it a little each way to show it round.
+* The cameras: a close shot drifting round him at chest height, sinking low to follow the lift, a wide cut as it goes up, a crane that rises and swings across the front, then the kit's slow orbit. The arena's lights come down under the spotlights.
+* The winners' own names drop in big across the top as the trophy goes up, top scorer first, with the score under them. A team of computer players only is named by its colour. The camera keeps the raised trophy under the names (`render/ceremony/ceremony-camera.test.ts`).
+* About twelve seconds after the cut the box scores come up over it. Box scores in the corner brings them in early.
+
+## Builds
+
+A pick is a build, not a person. Your own name is who you are: on your tag, across the back of your jersey, on the phone, in the replay, on the trophy ceremony and in the box scores. Computer players are called CPU and their build, like CPU Shooter, and wear the build's name on their backs. All six live in `builds.ts`, so they are easy to edit. Ratings run 1 to 10, and each build adds up to about the same.
+
+| Build | Speed | Shooting | Strength | Passing | Defence | How it plays |
+| --- | --- | --- | --- | --- | --- | --- |
+| Shooter | 8 | 10 | 4 | 7 | 5 | Deep range and the widest green on the meter. |
+| Dunker | 9 | 4 | 10 | 5 | 6 | Explosive to the rim, dunks through contact. |
+| Playmaker | 9 | 7 | 4 | 10 | 4 | Fast, accurate passes and slippery moves. |
+| Lockdown | 8 | 5 | 7 | 5 | 10 | Quick hands, hard contests, sticky Guard. |
+| Big Man | 5 | 4 | 10 | 6 | 9 | The longest arms for blocks and boards, a wall in the paint. |
+| All Rounder | 7 | 7 | 7 | 7 | 7 | Good at everything, best at nothing. |
+
+What each rating does in a game (`engine/build-effects.ts` for passing and defence):
+
+* **Speed**: top speed, how quick a dribble move beats a defender, and how high a block goes.
+* **Shooting**: how wide the green band is, and how often the computer looks for its jumper.
+* **Strength**: dunking through contact, knocking smaller defenders over, holding a spot, and the block at the rim.
+* **Passing**: how fast a pass flies and how well it leads a runner, how hard it is to pick off, and a tighter handle against steals. Computer playmakers look for the pass more.
+* **Defence**: the chance a steal comes off, how hard a hand in the face contests a shot, how well a defender reads a dribble move, how fast Guard keeps up, and picking off passes.
+* **Body**: height and arm length set reach for blocks, rebounds and contests; weight sets how quick a player gets going.
+
+Each build has a signature dunk: the Shooter's scoop, the Dunker's windmill, the Playmaker's one hand flush, the Lockdown tomahawk, the Big Man's two hand hammer and the All Rounder's reverse. Anyone may still hang on the rim, cock it back, double clutch or throw a three sixty.
+
 ## Celebrations
 
 * After an ordinary basket the scorer does his own quick celebration.
@@ -67,7 +102,7 @@ A phone that joins during a game picks a star and joins the next one. A player w
 
 ## Shooting
 
-* The meter fills in 0.82 seconds. The green band sits near the top; its width grows with the shooting stat (Ashby's is widest) and by half again for a player on fire.
+* The meter fills in 0.82 seconds. The green band sits near the top; its width grows with the shooting stat (the Shooter's is widest) and by half again for a player on fire.
 * The chance to score comes from the release (green, good, early or late), the distance, the shooting stat, and the nearest defender's contest. A defender in front contests a little; one who jumped with Block contests fully and may block the shot, more likely with long arms.
 * Green releases go in almost every time unless heavily contested. The phone measures how long Shoot was held, so network lag never costs a green.
 * Once decided, the kind of make or miss is drawn from weights: swishes, bank shots off the glass (mostly from the wings), rolls round the rim and in, friendly bounces, rim outs, in and outs, off the glass and out, and airballs on bad misses. The shot is then aimed for that outcome and flown on the ball physics below, so every touch of the iron and the glass is real. A make always goes in and a miss always stays out; the style follows whenever the physics allows it.
@@ -80,7 +115,7 @@ A phone that joins during a game picks a star and joins the next one. A player w
 * Dropped from 1.8 metres the ball comes back up to about 1.25, as the rules ask. On the floor a backspun ball checks up and a ball with topspin skips on, then it rolls.
 * The net soaks up the ball's speed and steers it out of the bottom.
 * To aim a shot, the host flies the plain arc through the air first and corrects for drag and spin. Then it flies a few aims near the place for the outcome (the middle of the ring for a swish, the front or back iron for a bounce, the side for a roll, a square on the glass for a bank) until one ends the right way. The winner is played back exactly, and when it ends the ball stays on the same physics for the rebound. It all takes a few milliseconds.
-* Computer players weigh every jumper by the points it is worth on average: their own meter timing, the distance and the defence. Shooters like Ashby look for their shot, drivers like Varelas attack open lanes, and the ball goes to whoever is most dangerous.
+* Computer players weigh every jumper by the points it is worth on average: their own meter timing, the distance and the defence. Shooters look for their shot, drivers like the Dunker attack open lanes, and the ball goes to whoever is most dangerous.
 * Three makes in a row: heating up. Four: on fire, with a flaming ball, a wider green and a little more speed, until you miss or the other team scores.
 
 ## Strength, dunks and layups
@@ -88,25 +123,9 @@ A phone that joins during a game picks a star and joins the next one. A player w
 * Each dunk has an approach, the last two steps, a deep load onto both feet with the ball swung down, the rise with the arms driving up, time in the air, the slam, and either a hang on the rim or letting go straight away, then the landing. On a hang the body drops a hand's length as the arms take the weight, the legs swing under and settle, then he lets go. Players land with slow legs for a moment.
 * Layups take the same two step gather: the right foot plants, the left plants long with the knee loaded, and the right knee drives up. Off the fingers the ball is rolled up at full stretch. A reverse is carried under the rim with the back to the basket, the head turned up over the shoulder, and flipped up the far side. A contact layup dips a shoulder into the defender, braces the off arm against him and lays it up high and away. Contact at the rim is a foul more often.
 * A stepback jumper hops most of a metre back off the defender through the dip, both feet land together, and he rises straight up.
-* Stars mostly throw their signature dunk, but not always: along the baseline it is often a reverse, in traffic a power dunk, and players with the legs for it throw the odd windmill or three sixty. Power dunks sometimes grab the rim.
-* Each star has one signature dunk: Ashby's scoop, Whitlock's tomahawk, Crane's reverse, Varelas's two hand hammer, Zupan's one hand flush and Delacroix's windmill. Anyone may still hang on the rim, cock it back, double clutch or throw a three sixty.
+* Players mostly throw their build's signature dunk, but not always: along the baseline it is often a reverse, in traffic a power dunk, and players with the legs for it throw the odd windmill or three sixty. Power dunks sometimes grab the rim.
 * Driving into a weaker defender (two or more strength points less) sends them sprawling. A much stronger defender in the way turns a dunk into a layup. Strength also decides who gets pushed off a spot.
 * A big dunk shakes the rim and the camera, slows time for a moment and the camera swoops in.
-
-## The roster
-
-All six, with their stats, looks and dunks, live in `roster.ts`, so they are easy to edit. Stats run 1 to 10.
-
-| Star | Speed | Shooting | Strength |
-| --- | --- | --- | --- |
-| Julian Ashby | 8 | 10 | 4 |
-| Dante Whitlock | 8 | 7 | 10 |
-| Elias Crane | 7 | 9 | 6 |
-| Nikos Varelas | 9 | 4 | 10 |
-| Tomaz Zupan | 5 | 9 | 8 |
-| Mathis Delacroix | 6 | 7 | 6, with the longest reach |
-
-The players are stylised athletes, recognisable by build, skin tone, hair, beard, jersey number and details like Whitlock's headband, Ashby's mouthguard and Crane's arm sleeve.
 
 ## Sound
 
@@ -129,18 +148,18 @@ There is no crowd noise and no spoken commentary. The arena carries the moments 
 
 ## Code
 
-* `roster.ts`: the six stars and the two teams.
-* `engine/`: the game as pure code. The court, the shot model and meter, the ball physics (`loose-ball.ts`, with each bounce in `contact.ts`), shots aimed and flown on it (`shot-aim.ts`, `shot-trace.ts`, with the old scripted paths kept as a fallback in `shot-script.ts`), the finishes at the rim (`finish.ts`), the stepback jumper (`stepback.ts`), the celebrations (`celebrate.ts`), the tape the replay is cut from (`replay-tape.ts`), the rules, the check up (`check-up.ts`, `check-plan.ts`, `check-toss.ts`), running with momentum (`steer.ts`), the dribble and crossovers, the rhythm of the dribble (`dribble-ball.ts`: one bounce every two steps on the run, a low pound standing still, the pocket after a catch), the dribble moves (`moves.ts`, `move-pick.ts`), passing, steals (`steal.ts`), Guard (`guard.ts`), the foul rules (`fouls.ts`, `shooting-foul.ts`), the whistle and the referee's call (`foul-call.ts`), free throws (`free-throw.ts`, `free-throw-ball.ts`, `free-throw-plan.ts`), the block jump (`block.ts`), dunks and layups (`drive.ts`, `dunk-style.ts`), and the computer players in `bot/`, with the lobby's difficulty in `bot/skill.ts` and the box out on the last free throw in `bot/scramble.ts`. Unit tested, including whole computer games played to 11.
-* `render/`: three.js. `arena/` has the floor, the stands with an instanced crowd that bounces in the shader, the LED boards, the hoop with its shot clock box and a spring driven net. `models/` builds each athlete on a simple skeleton; `anim/` poses them (running, dribbling with either hand, guarding, shooting, passes, catches, the check, blocks, steals, the ten dunks, the layups in `layups.ts`, the stepback, the celebrations, and the gestures after big baskets in `gestures.ts`). Every change of state eases into the next. The stride follows the ground covered. On the floor each ankle takes up the tilt of its shin so the sole lies flat, and the hips settle so the lowest sole stands on the court, so no toe sinks into it and the feet stay planted (`placement.ts`). A turn the engine makes at once, squaring up for a pass, a steal or a drive, is eased over a few frames. The drawn dribble runs from the palm to the floor and back up under the palm, in step with the feet, and the ball stays in the hands through the pocket, a spin, a shot and a dunk. Bursts, stops and cuts lean the body and plant a foot (`balance.ts`), the dribble moves have their own footwork (`moves.ts`), and the free throw routine has its bounces, a set shot and the lane stances (`line.ts`). `effects/` has the particles and the confetti. `tv-camera.ts` is the broadcast camera, and `free-throw-camera.ts` says when it goes behind the free throw shooter. `referee.ts` and `referee-model.ts` are the referee and his signals. The name tags stack when players bunch up, so none covers another (`tag-layout.ts`).
-* `host/`: the session on the computer (lobby, teams and roles in `roles.ts`, the admin shortcuts in `admin.ts`, the match driver, the replay in `replay-director.ts`, `replay.ts` and `replay-camera.ts`, what the phones see, where each game event goes in `event-fanout.ts`, the banners in `callouts.ts`, and the buzzes) and its React screens.
+* `builds.ts`: the six builds. `roster.ts`: the ratings, bodies and looks they are made of, and the two teams.
+* `engine/`: the game as pure code. The court, the shot model and meter, the ball physics (`loose-ball.ts`, with each bounce in `contact.ts`), shots aimed and flown on it (`shot-aim.ts`, `shot-trace.ts`, with the old scripted paths kept as a fallback in `shot-script.ts`), the finishes at the rim (`finish.ts`), the stepback jumper (`stepback.ts`), the celebrations (`celebrate.ts`), the trophy ceremony (`ceremony.ts`: its timing, the captain and where everyone stands), what passing and defence do (`build-effects.ts`), the tape the replay is cut from (`replay-tape.ts`), the rules, the check up (`check-up.ts`, `check-plan.ts`, `check-toss.ts`), running with momentum (`steer.ts`), the dribble and crossovers, the rhythm of the dribble (`dribble-ball.ts`: one bounce every two steps on the run, a low pound standing still, the pocket after a catch), the dribble moves (`moves.ts`, `move-pick.ts`), passing, steals (`steal.ts`), Guard (`guard.ts`), the foul rules (`fouls.ts`, `shooting-foul.ts`), the whistle and the referee's call (`foul-call.ts`), free throws (`free-throw.ts`, `free-throw-ball.ts`, `free-throw-plan.ts`), the block jump (`block.ts`), dunks and layups (`drive.ts`, `dunk-style.ts`), and the computer players in `bot/`, with the lobby's difficulty in `bot/skill.ts` and the box out on the last free throw in `bot/scramble.ts`. Unit tested, including whole computer games played to 11.
+* `render/`: three.js. `arena/` has the floor, the stands with an instanced crowd that bounces in the shader, the LED boards, the hoop with its shot clock box and a spring driven net. `models/` builds each athlete on a simple skeleton; `anim/` poses them (running, dribbling with either hand, guarding, shooting, passes, catches, the check, blocks, steals, the ten dunks, the layups in `layups.ts`, the stepback, the celebrations, and the gestures after big baskets in `gestures.ts`). Every change of state eases into the next. The stride follows the ground covered. On the floor each ankle takes up the tilt of its shin so the sole lies flat, and the hips settle so the lowest sole stands on the court, so no toe sinks into it and the feet stay planted (`placement.ts`). A turn the engine makes at once, squaring up for a pass, a steal or a drive, is eased over a few frames. The drawn dribble runs from the palm to the floor and back up under the palm, in step with the feet, and the ball stays in the hands through the pocket, a spin, a shot and a dunk. Bursts, stops and cuts lean the body and plant a foot (`balance.ts`), the dribble moves have their own footwork (`moves.ts`), and the free throw routine has its bounces, a set shot and the lane stances (`line.ts`). `effects/` has the particles and the confetti. `ceremony/` is the trophy ceremony: the kit's trophy in the captain's hands (`trophy-grip.ts`), the spotlights and confetti (`ceremony-scene.ts`), its cameras (`ceremony-camera.ts`), and who plays which part (`ceremony-stage.ts`); the lift and the teammates are posed in `anim/trophy-poses.ts`. `tv-camera.ts` is the broadcast camera, and `free-throw-camera.ts` says when it goes behind the free throw shooter. `referee.ts` and `referee-model.ts` are the referee and his signals. The name tags stack when players bunch up, so none covers another (`tag-layout.ts`).
+* `host/`: the session on the computer (lobby, teams and roles in `roles.ts`, the admin shortcuts in `admin.ts`, the match driver, the replay in `replay-director.ts`, `replay.ts` and `replay-camera.ts`, the names over the ceremony in `ceremony-card.ts` and `components/Champions.tsx`, what the phones see, where each game event goes in `event-fanout.ts`, the banners in `callouts.ts`, and the buzzes) and its React screens.
 * `phone/`: the controller session and the phone screens. The stick and buttons use the gamepad kit in `src/games/kit/pad`.
 * `audio/`: effects, the arena's beat, horns and organ, and the music.
 * `protocol/`: the zod schemas for the messages between the phones and the host.
-* `showcase/`: the scripted highlight filmed for the home screen: Varelas's crossover and windmill dunk, the check up, and Zupan's stepback three. For looking at the animation in development, `/showcase/nba-3v3?bots=3` films a whole computer game instead, and `&at=12` holds the frame twelve seconds in. `?lab=moves` (or `run`, `dunk&style=windmill`, `block`, `free`, `reverse`, `contact`, `stepback`, `gesture`) plays a short scene that shows one thing, `&step=1` lets a script step it one filmed frame at a time through `window.__nbaStep`, and `&follow=id,angle,dist` keeps a close camera on one player.
+* `showcase/`: the scripted highlight filmed for the home screen: the Dunker's crossover and windmill dunk, the check up, and the Playmaker's stepback three. For looking at the animation in development, `/showcase/nba-3v3?bots=3` films a whole computer game instead, and `&at=12` holds the frame twelve seconds in. `?lab=moves` (or `run`, `dunk&style=windmill`, `block`, `free`, `reverse`, `contact`, `stepback`, `gesture`) plays a short scene that shows one thing, and `?lab=ceremony` plays the trophy ceremony on its own. `&step=1` lets a script step it one filmed frame at a time through `window.__nbaStep`, and `&follow=id,angle,dist` keeps a close camera on one player.
 
 ## Home screen media
 
-The icon, the poster and the looping clip are filmed from the showcase with `node tools/media/capture.mjs nba-3v3 --url http://localhost:3000 --ffmpeg ffmpeg --seconds 11 --size 1280x720`. The poster and the icon are one frame of Varelas at the rim in his windmill, the ball swung out at arm's length: the poster from the wing, the icon from low under him. The film is run ahead to that moment without drawing and held, so they take seconds to shoot. The loop is eleven seconds of live play with nothing skipped. Varelas crosses Whitlock over on the left wing, bursts to the rim with the new momentum and throws down the windmill, slowed at the slam. Then the real check up: Zupan picks up the ball, everyone walks to their spot, and the ball is bounced to his defender and back. Zupan steps back and splashes a three from the top. The first three seconds the tool lets run are stepped without drawing, and the loop draws once per filmed frame. Every name on screen is one of the made up stars.
+The icon, the poster and the looping clip are filmed from the showcase with `node tools/media/capture.mjs nba-3v3 --url http://localhost:3000 --ffmpeg ffmpeg --seconds 11 --size 1280x720`. The poster and the icon are one frame of the Dunker at the rim in his windmill, the ball swung out at arm's length: the poster from the wing, the icon from low under him. The film is run ahead to that moment without drawing and held, so they take seconds to shoot. The loop is eleven seconds of live play with nothing skipped. The Dunker crosses the Lockdown defender over on the left wing, bursts to the rim with the new momentum and throws down the windmill, slowed at the slam. Then the real check up: the Playmaker picks up the ball, everyone walks to their spot, and the ball is bounced to his defender and back. The Playmaker steps back and splashes a three from the top. The first three seconds the tool lets run are stepped without drawing, and the loop draws once per filmed frame. Every name on screen is a build's.
 
 The tool's fake clock keeps running in real time, so on a computer that renders in software a slow frame used to race the film ahead. The showcase counts any long gap as one filmed frame. The tool now pauses the clock itself. The clip is filmed at 1280 by 720 with `--size 1280x720`, so each file stays under 4 MB.
 
