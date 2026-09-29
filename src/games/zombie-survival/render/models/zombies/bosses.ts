@@ -39,7 +39,8 @@ const PLANS: Record<BossKind, BossPlan> = {
   behemoth: {
     dims: { ...BASE, thigh: 0.55, shin: 0.52, torso: 0.72, torsoW: 0.62, torsoD: 0.42, shoulderW: 0.92, upperArm: 0.55, forearm: 0.55, hand: 0.24, arm: 0.17, leg: 0.21, head: 0.32, neck: 0.14 },
     scale: 1.95,
-    weakRadius: 0.07,
+    // Big glowing joints for the biggest body, the size the balance bots aim at.
+    weakRadius: 0.095,
   },
 };
 

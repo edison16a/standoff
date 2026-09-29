@@ -12,6 +12,8 @@ import { isBoss, KINDS, type Joint } from "./zombie-kinds";
 
 /** The team's eyes, in metres above the road. */
 const EYE = 1.65;
+/** A boss's glowing joint as the bots see it: a disc this share of its height across, from its centre. */
+export const WEAK_SHARE = 0.07;
 
 /** Where a spot on a zombie sits in the team's view. */
 export function viewAngle(z: Zombie, up: number, right = 0): Offset {
@@ -51,7 +53,7 @@ function strike(z: Zombie, at: Offset): PelletHit | null {
   const x = Math.tan(at.x) * ahead - z.side;
   const y = Math.tan(at.y) * ahead + EYE;
   if (isBoss(z.kind)) {
-    const r = 0.07 * h;
+    const r = WEAK_SHARE * h;
     const weak = spec.weakPoints.findIndex((joint, i) => {
       const [across, up] = JOINTS[joint];
       return (z.weak[i] ?? 0) > 0 && Math.hypot(x - across * h, y - up * h) < r;
