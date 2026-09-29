@@ -14,23 +14,28 @@ function memory(): Storage {
 }
 
 describe("progress", () => {
-  it("keeps the better percent and opens the next level on a finish", () => {
-    let progress = record(EMPTY_PROGRESS, "first-light", 0, 40, false);
-    progress = record(progress, "first-light", 0, 25, false);
-    expect(progress.best["first-light"]).toBe(40);
-    expect(progress.unlocked).toBe(1);
-    progress = record(progress, "first-light", 0, 100, false);
-    expect(progress.unlocked).toBe(2);
+  it("keeps the better percent", () => {
+    let progress = record(EMPTY_PROGRESS, "first-light", 40, false);
+    const same = record(progress, "first-light", 25, false);
+    expect(same).toBe(progress);
+    progress = record(progress, "first-light", 100, false);
+    expect(progress.best["first-light"]).toBe(100);
   });
 
   it("does not count practice", () => {
-    expect(record(EMPTY_PROGRESS, "first-light", 0, 100, true)).toEqual(EMPTY_PROGRESS);
+    expect(record(EMPTY_PROGRESS, "first-light", 100, true)).toBe(EMPTY_PROGRESS);
+  });
+
+  it("drops the old count of open levels from earlier saves", () => {
+    const storage = memory();
+    storage.setItem("standoff.cube-game.progress", JSON.stringify({ best: { a: 20 }, unlocked: 1 }));
+    expect(loadProgress(storage)).toEqual({ best: { a: 20 } });
   });
 
   it("round trips through storage and shrugs off rubbish", () => {
     const storage = memory();
-    saveProgress({ best: { a: 55 }, unlocked: 3 }, storage);
-    expect(loadProgress(storage)).toEqual({ best: { a: 55 }, unlocked: 3 });
+    saveProgress({ best: { a: 55 } }, storage);
+    expect(loadProgress(storage)).toEqual({ best: { a: 55 } });
     storage.setItem("standoff.cube-game.progress", "{not json");
     expect(loadProgress(storage)).toEqual(EMPTY_PROGRESS);
   });

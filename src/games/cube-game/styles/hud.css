@@ -223,12 +223,6 @@
   text-shadow: 0 4px 0 #12052e;
 }
 
-.cg-results__unlock {
-  margin: 6px 0 0;
-  font: 800 18px/1.2 var(--font-ui);
-  color: #ffd21f;
-}
-
 .cg-results__table {
   width: 100%;
   margin: 18px 0 8px;

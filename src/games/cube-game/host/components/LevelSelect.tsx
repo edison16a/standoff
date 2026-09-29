@@ -24,7 +24,6 @@ export function LevelSelect() {
       </div>
       <ol className="cg-levels" aria-label="Levels">
         {LEVELS.map(({ info }, i) => {
-          const locked = i >= progress.unlocked;
           const best = progress.best[info.id] ?? 0;
           const theme = themeFor(info.theme);
           const style = { "--level": css(theme.edge), "--level-2": css(theme.accent) } as CSSProperties;
@@ -32,13 +31,12 @@ export function LevelSelect() {
             <li key={info.id}>
               <button
                 type="button"
-                className={`cg-level${info.id === levelId ? " cg-level--chosen" : ""}${locked ? " cg-level--locked" : ""}`}
+                className={`cg-level${info.id === levelId ? " cg-level--chosen" : ""}`}
                 style={style}
                 aria-pressed={info.id === levelId}
-                aria-label={locked ? `${info.name}, locked` : `${info.name}, ${DIFFICULTY[info.difficulty - 1]}, best ${best}%`}
-                disabled={locked}
+                aria-label={`${info.name}, ${DIFFICULTY[info.difficulty - 1]}, best ${best}%`}
                 onClick={() => session.chooseLevel(info.id)}
-                onMouseEnter={() => !locked && session.sound.sfx.hover()}
+                onMouseEnter={() => session.sound.sfx.hover()}
               >
                 <span className="cg-level__number">{i + 1}</span>
                 <span className="cg-level__name">{info.name}</span>
@@ -51,7 +49,7 @@ export function LevelSelect() {
                   <span className="cg-level__bar">
                     <span style={{ width: `${best}%` }} />
                   </span>
-                  <span className="cg-level__percent">{locked ? "Locked" : best >= 100 ? "Complete" : `Best ${best}%`}</span>
+                  <span className="cg-level__percent">{best >= 100 ? "Complete" : `Best ${best}%`}</span>
                 </span>
               </button>
             </li>

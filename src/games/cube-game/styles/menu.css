@@ -73,11 +73,6 @@
     0 0 28px color-mix(in srgb, var(--level) 55%, transparent);
 }
 
-.cg-level--locked {
-  cursor: not-allowed;
-  filter: grayscale(0.85) brightness(0.6);
-}
-
 .cg-level__number {
   position: absolute;
   top: 10px;

@@ -1,4 +1,3 @@
-import { LEVELS } from "../levels";
 import { record, saveProgress } from "./progress";
 import type { Round } from "./round";
 import { useCubeStore as store, type HudPlayer, type ResultRow } from "./store";
@@ -37,12 +36,10 @@ export class Scoreboard {
     const before = progress.best[this.levelId] ?? 0;
     const percent = run.percent;
     if (practice) return onBest(null);
-    const index = LEVELS.findIndex((l) => l.info.id === this.levelId);
-    const next = record(progress, this.levelId, index, percent, false);
+    const next = record(progress, this.levelId, percent, false);
     if (next !== progress) {
       saveProgress(next);
-      const opened = next.unlocked > progress.unlocked ? LEVELS[next.unlocked - 1]?.info.name ?? null : null;
-      store.setState({ progress: next, unlockedNow: opened ?? store.getState().unlockedNow });
+      store.setState({ progress: next });
     }
     if (percent > before && percent < 100) {
       const text = `New best ${percent}%`;
