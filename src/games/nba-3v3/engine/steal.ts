@@ -1,4 +1,5 @@
-import { charOf } from "./athlete";
+import { buildOf } from "./athlete";
+import { stealEdge } from "./build-effects";
 import { callFoul } from "./foul-call";
 import { handChance, inFront } from "./fouls";
 import type { Match } from "./match";
@@ -61,12 +62,12 @@ function resolveSteal(m: Match, a: Athlete, attempt: number): void {
   const holder = m.holder;
   if (!holder || holder.team === a.team || !stealable(holder) || !inStealRange(a, holder, 0.15)) return whiff(m, a);
   if (m.phase === "live" && !inFront(a, holder) && m.rng() < handChance(attempt)) return callFoul(m, a, holder);
-  const ds = charOf(a).stats;
-  const hs = charOf(holder).stats;
+  const ds = buildOf(a).stats;
+  const hs = buildOf(holder).stats;
   const toMe = dir2(holder, a);
   const shielded = Math.sin(holder.yaw) * toMe.x + Math.cos(holder.yaw) * toMe.z < -0.3;
   const side = ballSide(a, holder) > 0 ? 0.1 : -0.12;
-  const chance = clamp(0.3 + (ds.speed - 5) * 0.03 + (5 - hs.strength) * 0.025 + side - (shielded ? 0.14 : 0), 0.05, 0.62);
+  const chance = clamp(0.3 + (ds.speed - 5) * 0.02 + (5 - hs.strength) * 0.025 + stealEdge(ds, hs) + side - (shielded ? 0.14 : 0), 0.05, 0.66);
   if (m.rng() >= chance) return whiff(m, a);
   knockLoose(m, holder, toMe, 2.4);
   m.ball.lastTouch = a.id;

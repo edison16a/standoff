@@ -1,3 +1,5 @@
+import { buildOf } from "./athlete";
+import { passLead, passSpeedScale } from "./build-effects";
 import { clampToCourt } from "./court";
 import type { Match } from "./match";
 import { planPass } from "./shot-flight";
@@ -47,16 +49,18 @@ export function choosePassTarget(m: Match, a: Athlete, aim: V2 | null): Athlete 
   return best;
 }
 
-/** Throws to a teammate, leading a runner, and lobs it over a defender standing in the lane. */
+/** Throws to a teammate, leading a runner, and lobs it over a defender standing in the lane. A good passer's is quicker and leads better. */
 export function throwPass(m: Match, a: Athlete, target: Athlete): void {
   const b = m.ball;
   a.yaw = yawOf(target.x - a.x, target.z - a.z);
   const from = { x: a.x + Math.sin(a.yaw) * 0.35, y: 1.35, z: a.z + Math.cos(a.yaw) * 0.35 };
   const d = dist2(a, target);
   const lob = laneBlocked(m, a, target) && d > 3;
-  const speed = lob ? PASS.lobSpeed : PASS.speed;
+  const passing = buildOf(a).stats.passing;
+  const speed = (lob ? PASS.lobSpeed : PASS.speed) * passSpeedScale(passing);
   const time = d / speed;
-  const lead = clampToCourt({ x: target.x + target.vx * time * 0.9, z: target.z + target.vz * time * 0.9 }, 0.4);
+  const ahead = time * passLead(passing);
+  const lead = clampToCourt({ x: target.x + target.vx * ahead, z: target.z + target.vz * ahead }, 0.4);
   const to = { x: lead.x, y: 1.3, z: lead.z };
   b.holder = null;
   b.mode = "flight";

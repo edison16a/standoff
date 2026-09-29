@@ -1,3 +1,5 @@
+import { buildOf } from "./athlete";
+import { guardScale } from "./build-effects";
 import { RIM_SPOT } from "./court";
 import type { Match } from "./match";
 import { GUARD } from "./tuning";
@@ -60,7 +62,7 @@ export function steerGuard(m: Match, a: Athlete, dt: number): void {
   }
   const want = guardSpot(m, man);
   const aim = a.guardAim ?? { x: a.x, z: a.z };
-  const k = 1 - Math.exp(-trackRate(m, man) * dt);
+  const k = 1 - Math.exp(-trackRate(m, man) * guardScale(buildOf(a).stats.defence) * dt);
   a.guardAim = { x: lerp(aim.x, want.x, k), z: lerp(aim.z, want.z, k) };
   if (Math.hypot(a.stick.x, a.stick.z) > GUARD.manual) return;
   const dx = a.guardAim.x - a.x;

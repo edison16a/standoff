@@ -1,4 +1,5 @@
-import { charOf, standingReach } from "./athlete";
+import { buildOf, standingReach } from "./athlete";
+import { interceptChance } from "./build-effects";
 import { dribbleBall } from "./dribble-ball";
 import type { FlightEvent } from "./flight";
 import { sampleFlight } from "./flight";
@@ -36,7 +37,7 @@ function holdBall(m: Match, dt: number): void {
     b.mode = "loose";
     return;
   }
-  const h = charOf(a).build.height;
+  const h = buildOf(a).body.height;
   const f = frame(a);
   const act = a.action;
   b.vel = { x: a.vx, y: 0, z: a.vz };
@@ -117,8 +118,8 @@ function passCaught(m: Match): boolean {
     if (b.passRolled.includes(d.id)) continue;
     if (Math.hypot(b.pos.x - d.x, b.pos.z - d.z) > PASS.interceptRange || b.pos.y > standingReach(d) + d.y - 0.15) continue;
     b.passRolled.push(d.id);
-    if (d.action.kind !== "none" || m.rng() >= 0.03 + charOf(d).stats.speed * 0.007) continue;
     const passer = b.lastTouch ?? receiver.id;
+    if (d.action.kind !== "none" || m.rng() >= interceptChance(buildOf(d).stats, buildOf(m.athletes[passer] ?? receiver).stats)) continue;
     gainPossession(m, d);
     d.box.steals++;
     m.emit({ type: "intercept", id: d.id, victim: passer });
