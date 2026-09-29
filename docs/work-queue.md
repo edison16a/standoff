@@ -67,23 +67,23 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 7. **No duplicate name boxes:** in every game where each player's name already shows on or above their character, remove the separate boxes along the bottom of the big screen that just repeat names like "Edison Law". Audit every game. If a box also carries something useful (health, score, ammo), move that onto the name tag or the main HUD instead of losing it.
 
-### Last
+### Last (in this order: README, clips, icons and tiles first, then the final check)
 
-1. **Final check that everything works:** every game played end to end in a real browser with a host page and phone pages (lobby, calibration, a full round, results, back home, a second game without a reload), and the live site's connections checked after the deploy: iPhones on WebSockets, Chrome's fallback, room loss noticed and Regenerate room working. Fix anything found before the media pass.
-2. **Final README:** every new feature and game, Football 3v3 and Paintball Battle, new screenshots.
-3. **New home screen clips for every game, cut like wordless game trailers** (think Fortnite ads): only the high intensity best moments, cinematic cameras, a smooth seamless loop, no text. Examples from the owner:
+1. **Final README:** every new feature and game, Football 3v3 and Paintball Battle, new screenshots.
+2. **New home screen clips for every game, cut like wordless game trailers** (think Fortnite ads): only the high intensity best moments, cinematic cameras, a smooth seamless loop, no text. Examples from the owner:
    * Paintball Battle: close ups of a player running then sliding, then a 3v3 firefight seen from one player's view.
    * Basketball 3v3: a cinematic dunk, then an iso play into a three that banks in, then the team celebrating as champions, looping smoothly.
    * Every other game gets the same treatment with its own best moments (Soccer goals and the SUI, Football touchdowns, Kart drifts and glides, Blade Clash slashes, Boxing knockdowns and the belt, and so on).
    * Zombie Survival: the team riding in the back of a car or truck, zombies bursting out and chasing them, then a cut to gameplay.
-4. **Cinematic game icons for every game, like movie posters or key art** (almost photo like, very tough, the single most exciting moment, drawn from the real game in 3D with the stylised title). Examples from the owner:
+3. **Cinematic game icons for every game, like movie posters or key art** (almost photo like, very tough, the single most exciting moment, drawn from the real game in 3D with the stylised title). Examples from the owner:
    * Basketball 3v3: one player dunking on another.
    * Boxing: one boxer landing a punch and the other falling, knocked out.
    * Soccer 3v3: a player jumping over a slide tackle with the ball.
    * Zombie Survival: third person, not first person: the team on a car being chased by zombies.
    * Paintball Battle: one player crouched behind a wall, facing the camera, paintballs flying past him, the other team shooting in the background.
    * Shooting Gallery and every other game get the same treatment with their own most cinematic moment.
-5. **Home screen tiles (app icons) 1.2 times bigger.**
+4. **Home screen tiles (app icons) 1.2 times bigger.**
+5. **Final check that everything works:** every game played end to end in a real browser with a host page and phone pages (lobby, calibration, a full round, results, back home, a second game without a reload), and the live site's connections checked after the deploy: iPhones on WebSockets, Chrome's fallback, room loss noticed and Regenerate room working. This runs last, after the README, clips, icons and tiles, so it also checks those. Fix anything found.
 
 ## Done recently
 
