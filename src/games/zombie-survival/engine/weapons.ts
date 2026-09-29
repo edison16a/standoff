@@ -63,7 +63,7 @@ export const WEAPONS: Record<WeaponId, WeaponSpec> = {
     // A big kick, but it settles before the pump is racked.
     recoil: { up: 0.07, side: 0.02, settle: 10, max: 0.1 },
     pierce: false,
-    rate: 1.7,
+    rate: 2,
     magazine: 8,
     reload: 0.35 + 8 * 0.36,
     auto: false,
