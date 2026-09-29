@@ -30,7 +30,7 @@ export class ChaseCamera {
 
   setAspect(aspect: number): void {
     this.camera.aspect = aspect;
-    // Narrow split screen views still see all three tracks: widen the view instead of cropping it.
+    // A narrow window still sees all three tracks: widen the view instead of cropping it.
     const horizontal = THREE.MathUtils.degToRad(ACROSS);
     const vertical = 2 * Math.atan(Math.tan(horizontal / 2) / aspect);
     // The view widens a little with speed, which makes a fast run feel faster.

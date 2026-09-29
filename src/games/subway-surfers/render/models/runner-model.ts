@@ -24,7 +24,7 @@ export interface Look {
   neon: number;
 }
 
-/** Two runners, one per player, in the players' colours: red for one and green for two. */
+/** Two looks for the runner. The game and the showcase use Kai; Mia is kept as a spare look. */
 export const LOOKS: readonly Look[] = [
   {
     name: "Kai",

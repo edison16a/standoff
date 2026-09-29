@@ -6,8 +6,8 @@ import * as moves from "./moves";
 
 /**
  * Every one shot sound of the run, synthesised on the spot. `pan` puts a
- * sound on its player's side of the room in split screen, so each hears
- * their own coins from their own half. The sounds themselves live in
+ * sound across the stereo field, as a lane change swishes the way the
+ * runner moved. The sounds themselves live in
  * `moves`, `hits` and `cues`; this keeps the panners and the clock.
  */
 export class Sfx {

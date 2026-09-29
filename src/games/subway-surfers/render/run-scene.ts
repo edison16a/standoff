@@ -17,9 +17,9 @@ const FOG_NEAR = 30;
 const FOG_FAR = 180;
 
 /**
- * Everything one player sees: their own copy of the yard, their runner,
- * the guard, the sparks and the camera behind them. Two players get two
- * of these, drawn side by side, sharing every model and material.
+ * Everything the player sees: the yard, their runner, the guard, the
+ * sparks and the camera behind them. The showcase makes its own, sharing
+ * every model and material.
  */
 export class RunScene {
   readonly scene = new THREE.Scene();
