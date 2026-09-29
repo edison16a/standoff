@@ -167,3 +167,11 @@
   font-size: 16px;
   color: rgba(255, 255, 255, 0.7);
 }
+
+/* The computer's difficulty, under its name. Label above so the row stays narrow. */
+.bx-pick__versus .kit-difficulty {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 18px;
+}
