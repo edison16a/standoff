@@ -6,6 +6,7 @@ import { SessionContext } from "@/games/boxing/host/components/session-context";
 import { useBoxingStore } from "@/games/boxing/host/host-store";
 import "@/games/boxing/styles/host.css";
 import "@/games/boxing/styles/pick.css";
+import "@/games/boxing/styles/build-card.css";
 
 /** Clicks move the pick and lock it in, as the real session does, without a camera. */
 const session = {
