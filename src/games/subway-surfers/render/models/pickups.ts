@@ -23,7 +23,7 @@ export function coinGeometry(grow = 0): THREE.BufferGeometry {
     [r * 0.62, t * 0.55],
     [0, t * 0.75],
   ].map(([x, y]) => new THREE.Vector2(x, y));
-  const geometry = new THREE.LatheGeometry(profile, 24);
+  const geometry = new THREE.LatheGeometry(profile, 18);
   geometry.rotateX(Math.PI / 2);
   // The face picture is laid straight on from the front, so the rim takes the edge of the picture.
   const pos = geometry.attributes.position as THREE.BufferAttribute;
