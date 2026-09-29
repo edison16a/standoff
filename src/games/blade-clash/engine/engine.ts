@@ -1,5 +1,5 @@
 import type { CharacterId } from "@/games/blade-clash/characters";
-import { SLOTS, type PerSlot, type Slot } from "@/games/blade-clash/players";
+import { otherSlot, SLOTS, type PerSlot, type Slot } from "@/games/blade-clash/players";
 import type { MatchPhase } from "@/games/blade-clash/protocol";
 import type { Tuning } from "@/games/blade-clash/tuning";
 import { Combat } from "./combat";
@@ -176,6 +176,8 @@ export class Engine {
     } else if (phase === "matchOver") {
       const winner = this.match.winner ?? 1;
       this.fighters[winner].setAction("victory", this.clock);
+      // The loser rises to one knee for the winner's ceremony.
+      this.fighters[otherSlot(winner)].setAction("kneel", this.clock);
       this.emit({ type: "matchWon", t: this.clock, winner });
     }
     this.listener.onPhase(phase);

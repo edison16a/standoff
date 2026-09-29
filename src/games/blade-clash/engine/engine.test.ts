@@ -143,7 +143,7 @@ describe("Engine", () => {
     expect(engine.scene().fighters[0].control.yaw).toBeCloseTo(LEFT.yaw, 2);
   });
 
-  it("ends the fight on the winning point, crowns the winner and starts a rematch when both ask", () => {
+  it("ends the fight on the winning point, crowns the winner, kneels the loser and starts a rematch when both ask", () => {
     const { engine, events, phases } = makeEngine();
     toLive(engine);
     for (let i = 0; i < POINTS_TO_WIN; i++) {
@@ -160,6 +160,7 @@ describe("Engine", () => {
     runUntil(engine, () => engine.phase === "matchOver", 3000);
     expect(events.at(-1)).toMatchObject({ type: "matchWon", winner: 1 });
     expect(engine.fighters[1].action).toBe("victory");
+    expect(engine.fighters[2].action).toBe("kneel");
     expect(engine.rematch(1)).toBe(false);
     expect(engine.rematch(2)).toBe(true);
     expect(engine.phase).toBe("countdown");
