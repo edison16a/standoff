@@ -14,7 +14,7 @@ const AIM_MS = 1000 / 30;
 /**
  * Football 3v3 on the phone. It shows the setup steps, then turns the
  * phone into the controller for whatever this player is doing: the QB's
- * move bar and throw stick, a runner's stick, the defence's buttons, the
+ * move stick and throw stick, a runner's stick, the defence's buttons, the
  * play call, the kick meters. It makes no game decisions; what happens
  * on the field is always the host's call.
  */
@@ -60,7 +60,7 @@ export class FootballPhone {
     if (!on) this.letGo();
   }
 
-  /** The move bar or run stick. */
+  /** The move stick. */
   move(stick: Stick): void {
     this.pad.setStick(stick);
   }

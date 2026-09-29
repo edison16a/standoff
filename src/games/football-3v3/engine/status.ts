@@ -5,7 +5,7 @@ import { RULES } from "./tuning";
 import type { ConversionCall, Phase, PlayCall, Role, TeamId } from "./types";
 
 /**
- * Which control layout a phone shows. The QB pad has the move bar,
+ * Which control layout a phone shows. The QB pad has the move stick,
  * throw stick, juke and hike; runners run, dive and juke; the defence
  * moves, rushes, tackles and guards; the kicker gets the two meters.
  */

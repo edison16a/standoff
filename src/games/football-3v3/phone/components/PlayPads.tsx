@@ -4,7 +4,6 @@ import { PadButton } from "@/games/kit/pad/PadButton";
 import type { PadButton as Button, PhoneState } from "../../protocol";
 import { TEAMS } from "../../teams";
 import { ButtonFace, type FaceIcon } from "./ButtonFace";
-import { MoveBar } from "./MoveBar";
 import { PadInfo } from "./PadInfo";
 import { usePhone } from "./session-context";
 import { ThrowStick } from "./ThrowStick";
@@ -22,8 +21,8 @@ function Hold({ button, icon, text, colour, size = "md", disabled }: { button: B
 const colourOf = (host: PhoneState) => TEAMS[host.team ?? 0].color;
 
 /**
- * The QB: the move bar under the left thumb, the throw stick under the
- * right. Before the snap the middle is one big Hike button with the
+ * The QB: the same move stick as everyone under the left thumb, the
+ * throw stick under the right. Before the snap the middle is one big Hike button with the
  * seconds left; after it, Juke.
  */
 export function QbPad({ host }: { host: PhoneState }) {
@@ -32,7 +31,7 @@ export function QbPad({ host }: { host: PhoneState }) {
   return (
     <div className="fb-pad fb-pad--qb">
       <div className="fb-pad__left">
-        <MoveBar colour={colourOf(host)} onChange={(stick) => phone.move(stick)} />
+        <Joystick alwaysShown colour={colourOf(host)} onChange={(stick) => phone.move(stick)} />
       </div>
       <div className="fb-pad__middle">
         <PadInfo host={host} />
