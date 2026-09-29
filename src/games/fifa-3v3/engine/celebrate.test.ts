@@ -10,7 +10,7 @@ const LINEUP: Entrant[] = [
   { team: 0, character: "okemba", seat: null },
   { team: 1, character: "holmvik", seat: null },
   { team: 1, character: "lacerda", seat: null },
-  { team: 1, character: "ashworth", seat: null },
+  { team: 1, character: "serrano", seat: null },
 ];
 
 /** A goal by `scorer`, with the team mates starting from wherever `start` puts them, celebrated for three seconds. */

@@ -5,7 +5,8 @@
  * number, never from photos. Stats run 0 to 99.
  */
 
-export const CHARACTER_IDS = ["echeverri", "brandao", "okemba", "holmvik", "lacerda", "ashworth", "pritchard", "mansour", "vanaken", "serrano"] as const;
+/** Six stars, one for each place on the pitch, so every player and computer gets their own. */
+export const CHARACTER_IDS = ["echeverri", "brandao", "okemba", "holmvik", "lacerda", "serrano"] as const;
 export type CharacterId = (typeof CHARACTER_IDS)[number];
 
 export type HairStyle = "swept" | "slick" | "buzz" | "bun" | "twists" | "curls" | "parted" | "afro" | "messy" | "curlytop";
@@ -99,34 +100,6 @@ export const ROSTER: Record<CharacterId, Character> = {
     stats: { speed: 95, shooting: 84, strength: 68, dribbling: 92 },
     foot: "right",
     celebration: "samba", celebrationName: "Samba dance",
-  },
-  ashworth: {
-    id: "ashworth", name: "Callum Ashworth", short: "ASHWORTH", number: 5, role: "Box to box engine",
-    look: { skin: "#8d5c3e", hair: "#1a120e", hairStyle: "curls", beard: "stubble", height: 1.86, build: 0.74, boots: "#f8fafc", kit: kit("#f4f5f8", "#0b1f4b", "#0b1f4b", "#f4f5f8", "#0b1f4b") },
-    stats: { speed: 80, shooting: 86, strength: 85, dribbling: 88 },
-    foot: "right",
-    celebration: "armswide", celebrationName: "Arms wide",
-  },
-  pritchard: {
-    id: "pritchard", name: "Owen Pritchard", short: "PRITCHARD", number: 9, role: "Complete forward",
-    look: { skin: "#f0caa9", hair: "#86664a", hairStyle: "parted", beard: "stubble", height: 1.88, build: 0.74, boots: "#2563eb", kit: kit("#f4f5f8", "#0b1f4b", "#0b1f4b", "#f4f5f8", "#0b1f4b") },
-    stats: { speed: 70, shooting: 94, strength: 84, dribbling: 83 },
-    foot: "right",
-    celebration: "kneeslide", celebrationName: "Knee slide",
-  },
-  mansour: {
-    id: "mansour", name: "Karim Mansour", short: "MANSOUR", number: 11, role: "Cutting inside",
-    look: { skin: "#b37d58", hair: "#1c130e", hairStyle: "afro", beard: "full", height: 1.75, build: 0.55, boots: "#8b5cf6", kit: kit("#c8102e", "#111111", "#ffffff", "#111111", "#ffffff") },
-    stats: { speed: 90, shooting: 88, strength: 75, dribbling: 88 },
-    foot: "left",
-    celebration: "airplane", celebrationName: "Airplane run",
-  },
-  vanaken: {
-    id: "vanaken", name: "Pieter Van Aken", short: "VAN AKEN", number: 17, role: "Pinpoint playmaker",
-    look: { skin: "#f4d6c2", hair: "#c57a3e", hairStyle: "messy", beard: "stubble", height: 1.81, build: 0.58, boots: "#0ea5e9", kit: kit("#c8102e", "#f2c230", "#15171c", "#c8102e", "#f2c230") },
-    stats: { speed: 72, shooting: 88, strength: 75, dribbling: 86 },
-    foot: "right",
-    celebration: "fistpump", celebrationName: "Fist pump",
   },
   serrano: {
     id: "serrano", name: "Adil Serrano", short: "SERRANO", number: 19, role: "Teenage wizard",

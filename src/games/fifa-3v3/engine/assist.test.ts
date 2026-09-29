@@ -12,7 +12,7 @@ const LINEUP: Entrant[] = [
   { team: 0, character: "okemba", seat: null },
   { team: 1, character: "holmvik", seat: null },
   { team: 1, character: "lacerda", seat: null },
-  { team: 1, character: "ashworth", seat: null },
+  { team: 1, character: "serrano", seat: null },
 ];
 
 /** A frozen scene: Red's player on the ball, everyone else placed by hand. */
