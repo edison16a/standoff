@@ -1,7 +1,7 @@
 /*
-  The level select: the logo up top, five glowing level cards in a row,
+  The level select: the logo up top, five level cards in a row,
   and the players, practice and play buttons under them. Each card takes
-  its level's neon colour from --level.
+  its level's colour from --level.
 */
 
 .cg-menu {
@@ -40,7 +40,7 @@
 }
 
 .cg-level {
-  --level: #3ee6ff;
+  --level: #6cc4dc;
   --level-2: #7a6bff;
   position: relative;
   display: flex;
@@ -69,8 +69,8 @@
   border-color: var(--level);
   transform: translateY(-6px);
   box-shadow:
-    inset 0 0 26px color-mix(in srgb, var(--level) 35%, transparent),
-    0 0 28px color-mix(in srgb, var(--level) 55%, transparent);
+    inset 0 0 18px color-mix(in srgb, var(--level) 22%, transparent),
+    0 0 14px color-mix(in srgb, var(--level) 28%, transparent);
 }
 
 .cg-level__number {
@@ -97,11 +97,11 @@
 }
 
 .cg-level__face--1 {
-  background: #6cf0ff;
+  background: #8fd6e6;
 }
 
 .cg-level__face--2 {
-  background: #7dff8a;
+  background: #8fdc9a;
 }
 
 .cg-level__face--3 {
@@ -147,7 +147,7 @@
   display: block;
   height: 100%;
   background: linear-gradient(90deg, var(--level-2), var(--level));
-  box-shadow: 0 0 10px var(--level);
+  box-shadow: 0 0 5px color-mix(in srgb, var(--level) 50%, transparent);
 }
 
 .cg-level__percent {
@@ -182,8 +182,8 @@
 
 .cg-toggle button[aria-pressed="true"] {
   color: #12052e;
-  background: #3ee6ff;
-  box-shadow: 0 0 18px rgba(62, 230, 255, 0.6);
+  background: #6cc4dc;
+  box-shadow: 0 0 18px rgba(108, 196, 220, 0.25);
 }
 
 .cg-check {
@@ -201,13 +201,13 @@
 .cg-check__box {
   width: 22px;
   height: 22px;
-  border: 3px solid #3ee6ff;
+  border: 3px solid #6cc4dc;
   border-radius: 6px;
 }
 
 .cg-check[aria-pressed="true"] .cg-check__box {
-  background: #3ee6ff;
-  box-shadow: inset 0 0 0 3px #12052e, 0 0 12px #3ee6ff;
+  background: #6cc4dc;
+  box-shadow: inset 0 0 0 3px #12052e, 0 0 6px rgba(108, 196, 220, 0.4);
 }
 
 .cg-play {
@@ -216,8 +216,8 @@
   padding: 16px 64px;
   font: 900 32px/1 "Arial Black", Arial, var(--font-ui);
   color: #12052e;
-  background: linear-gradient(180deg, #d9ffb0, #3dff6e 55%, #19c24a);
-  box-shadow: 0 7px 0 #12052e, 0 0 36px rgba(61, 255, 110, 0.45);
+  background: linear-gradient(180deg, #c8ecc0, #5ee08a 55%, #34a45c);
+  box-shadow: 0 7px 0 #12052e, 0 0 36px rgba(94, 224, 138, 0.18);
   cursor: pointer;
   transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
