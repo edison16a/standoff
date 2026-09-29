@@ -1,4 +1,5 @@
-import type { CameraKit, MoveEvent } from "@/games/kit/camera";
+import type { CameraKit, MoveEvent, TrackFrame } from "@/games/kit/camera";
+import { TakeoffTracker } from "./takeoff";
 
 /** One body jump is one press. Anything sooner than this after the last is the same jump read twice. */
 const REFRACTORY_MS = 260;
@@ -11,12 +12,15 @@ const KEYS: Record<string, number> = { Space: 1, KeyW: 1, Enter: 2, ArrowUp: 2, 
 /**
  * Turns jumps into presses: a real jump seen by the camera, or a key.
  * Camera jumps arrive on the camera frame they start, apart from the
- * render loop, so none waits for the next drawing. Players stepping out
- * of view and back are passed on too, so their run can pause.
+ * render loop, so none waits for the next drawing. Each is timed from
+ * when the head began to rise, not the frame that saw it high enough, and
+ * the run replays the moment since. Players stepping out of view and back
+ * are passed on too, so their run can pause.
  */
 export class Controls {
   private readonly last = [0, 0, 0];
   private readonly unlisten: () => void;
+  private readonly takeoff: TakeoffTracker;
 
   constructor(
     kit: CameraKit | null,
@@ -24,10 +28,14 @@ export class Controls {
     private readonly onPress: (slot: number, pageMs: number) => void,
     private readonly onPresence: (slot: number, present: boolean) => void,
   ) {
+    this.takeoff = new TakeoffTracker(players);
+    // Frames come before the moves they carry, so the jump's own frame is in the trace.
+    const stopFrames = kit?.onFrame((frame) => this.onFrame(frame)) ?? (() => undefined);
     const stopKit = kit?.onMove((event) => this.onMove(event)) ?? (() => undefined);
     const down = (event: KeyboardEvent) => this.onKey(event);
     window.addEventListener("keydown", down);
     this.unlisten = () => {
+      stopFrames();
       stopKit();
       window.removeEventListener("keydown", down);
     };
@@ -37,14 +45,19 @@ export class Controls {
     this.unlisten();
   }
 
-  private press(slot: number, time: number, refractory = REFRACTORY_MS): void {
+  /** `time` is when the move was seen, and `at` when it began, which is when it counts. */
+  private press(slot: number, time: number, refractory = REFRACTORY_MS, at = time): void {
     if (slot > this.players || time - (this.last[slot] ?? 0) < refractory) return;
     this.last[slot] = time;
-    this.onPress(slot, time);
+    this.onPress(slot, at);
+  }
+
+  private onFrame(frame: TrackFrame): void {
+    frame.moves.forEach((moves, i) => (moves.present ? this.takeoff.add(i + 1, frame.time, moves.head.rise) : this.takeoff.clear(i + 1)));
   }
 
   private onMove(event: MoveEvent): void {
-    if (event.type === "jump") this.press(event.slot, event.time);
+    if (event.type === "jump") this.press(event.slot, event.time, REFRACTORY_MS, this.takeoff.takeoff(event.slot, event.time));
     if (event.type === "away") this.onPresence(event.slot, false);
     if (event.type === "back") this.onPresence(event.slot, true);
   }

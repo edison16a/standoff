@@ -113,7 +113,7 @@ export class Effects {
   }
 
   private ring(player: number, x: number, y: number, hex: number): void {
-    const mesh = new THREE.Mesh(this.ringGeometry, new THREE.MeshBasicMaterial({ color: new THREE.Color(hex).multiplyScalar(2.5), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const mesh = new THREE.Mesh(this.ringGeometry, new THREE.MeshBasicMaterial({ color: new THREE.Color(hex).multiplyScalar(1.3), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
     mesh.position.set(x, y, 0.2);
     this.group.add(mesh);
     this.rings.push({ mesh, life: RING_LIFE, player });

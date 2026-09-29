@@ -1,7 +1,8 @@
 /**
  * Each level's look. Colours are hex numbers for three.js. Every level
- * is dark with one strong neon edge colour and a second accent, so the
- * spikes and the player always read against it.
+ * is dark with one soft neon edge colour and a second accent, a little
+ * muted so they sit calmly on screen, while the spikes and the player
+ * still read clearly against them.
  */
 export interface Theme {
   /** Sky from the horizon up. */
@@ -26,68 +27,68 @@ export interface Theme {
 
 export const THEMES: Record<string, Theme> = {
   "first-light": {
-    skyLow: 0x1b4e9b,
-    skyHigh: 0x060b2e,
-    sun: 0x7ce8ff,
-    sunLow: 0x5a6bff,
+    skyLow: 0x24457a,
+    skyHigh: 0x0a1030,
+    sun: 0xa8dcea,
+    sunLow: 0x6a78c8,
     sunSize: 9,
-    fill: 0x08183f,
-    edge: 0x3ee6ff,
-    grid: 0x2aa8ff,
-    accent: 0x7a6bff,
-    spike: 0x9ff4ff,
+    fill: 0x0e1c3a,
+    edge: 0x5fc6dc,
+    grid: 0x3a82b8,
+    accent: 0x8a80d0,
+    spike: 0xc6eef5,
     skyline: "towers",
   },
   "sunset-bounce": {
-    skyLow: 0xd9543a,
-    skyHigh: 0x3a0c52,
-    sun: 0xffd166,
-    sunLow: 0xff3d8b,
+    skyLow: 0xb8604a,
+    skyHigh: 0x351440,
+    sun: 0xf0cf8a,
+    sunLow: 0xd06a8c,
     sunSize: 14,
-    fill: 0x2a0a36,
-    edge: 0xff4fb3,
-    grid: 0xff6a8a,
-    accent: 0xffb347,
-    spike: 0xffe0f0,
+    fill: 0x2c1234,
+    edge: 0xe57aa8,
+    grid: 0xc8708a,
+    accent: 0xe8b070,
+    spike: 0xf5e2ea,
     skyline: "dunes",
   },
   "cloud-hopper": {
-    skyLow: 0x4a3cc0,
-    skyHigh: 0x120a3a,
-    sun: 0xffd6f5,
-    sunLow: 0x9a6bff,
+    skyLow: 0x4a44a0,
+    skyHigh: 0x141036,
+    sun: 0xf0dcef,
+    sunLow: 0x9280d8,
     sunSize: 7,
-    fill: 0x1a1250,
-    edge: 0x7dfff0,
-    grid: 0xa98bff,
-    accent: 0xff9ef5,
-    spike: 0xe8fffd,
+    fill: 0x1c1848,
+    edge: 0x88dcd4,
+    grid: 0x9a8cd8,
+    accent: 0xe0a8dc,
+    spike: 0xeef8f6,
     skyline: "clouds",
   },
   "circuit-rush": {
-    skyLow: 0x0b4d2e,
-    skyHigh: 0x020d0a,
-    sun: 0x9dff6a,
-    sunLow: 0x14b8a6,
+    skyLow: 0x184834,
+    skyHigh: 0x06120e,
+    sun: 0xb4e89a,
+    sunLow: 0x3a9a8e,
     sunSize: 8,
-    fill: 0x03170f,
-    edge: 0x35ff8f,
-    grid: 0x1fd67a,
-    accent: 0xe8ff47,
-    spike: 0xd9ffe9,
+    fill: 0x0a1c14,
+    edge: 0x5cd896,
+    grid: 0x3aa874,
+    accent: 0xd8e07a,
+    spike: 0xe2f5ea,
     skyline: "circuits",
   },
   "core-meltdown": {
-    skyLow: 0x8a1000,
-    skyHigh: 0x120003,
-    sun: 0xff5a1f,
-    sunLow: 0xb0003a,
+    skyLow: 0x7a2414,
+    skyHigh: 0x160608,
+    sun: 0xe8784a,
+    sunLow: 0xa02a44,
     sunSize: 16,
-    fill: 0x1e0404,
-    edge: 0xff3b2f,
-    grid: 0xff6a00,
-    accent: 0xffc400,
-    spike: 0xffe2cc,
+    fill: 0x220a0a,
+    edge: 0xe06050,
+    grid: 0xd07a3a,
+    accent: 0xe8b84a,
+    spike: 0xf5e2d6,
     skyline: "spires",
   },
 };
@@ -97,4 +98,4 @@ export function themeFor(id: string): Theme {
 }
 
 /** Portal colours by mode, as in the original: green cube, orange UFO, red ball. */
-export const MODE_COLOURS = { cube: 0x3dff6e, ufo: 0xffa21f, ball: 0xff3d5a } as const;
+export const MODE_COLOURS = { cube: 0x4fdc7a, ufo: 0xf0a040, ball: 0xe85468 } as const;
