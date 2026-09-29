@@ -97,6 +97,24 @@
   .nba-pick__stage {
     max-height: 320px;
   }
+
+  /* Two rows of three, each card a badge beside the name, so every build's name fits. */
+  .nba-phone .nba-pick__list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .nba-phone .nba-pick__card {
+    flex-direction: row;
+    justify-content: center;
+    gap: 4px;
+    padding: 3px 4px;
+  }
+
+  .nba-phone .nba-pick__card .nba-badge {
+    width: 30px;
+    height: 30px;
+    flex: none;
+  }
 }
 
 .nba-pick__stage {
