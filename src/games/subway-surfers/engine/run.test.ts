@@ -114,6 +114,20 @@ describe("a run", () => {
     expect(run.coins).toBeGreaterThanOrEqual(4);
   });
 
+  it("reaches every sky coin of a jetpack taken on the ground at top speed", () => {
+    const run = new Run(5, { headStart: 20000 });
+    go(run, 1);
+    run.course.obstacles.length = 0;
+    run.grant("jetpack");
+    const sky = run.course.coins.filter((c) => c.y > JETPACK_HEIGHT).length;
+    const events = go(run, POWER_SECONDS.jetpack, (r) => {
+      const next = r.course.coins.find((c) => c.z > r.runner.distance - 0.5 && c.y > JETPACK_HEIGHT);
+      if (next) r.input(Math.round(next.x / 2.6) as Lane);
+    });
+    expect(sky).toBeGreaterThan(30);
+    expect(events.filter((e) => e.type === "coin" && e.y > JETPACK_HEIGHT)).toHaveLength(sky);
+  });
+
   it("eases down to just over the roofs as the jetpack runs out", () => {
     const run = yard();
     give(run, "jetpack");
