@@ -58,8 +58,8 @@ export interface SpeedGate {
 export interface LevelInfo {
   id: string;
   name: string;
-  /** 1 easy to 5 hardest. */
-  difficulty: 1 | 2 | 3 | 4 | 5;
+  /** 1 easy to 5 insane, and 6 for the Demon levels past them. */
+  difficulty: 1 | 2 | 3 | 4 | 5 | 6;
   /** Beats per minute of the level's song. Obstacles sit on its beat. */
   bpm: number;
   /** Which theme draws it and which song plays. Both are keyed by the level id. */

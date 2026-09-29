@@ -3,6 +3,8 @@ import * as circuitRush from "./circuit-rush";
 import * as cloudHopper from "./cloud-hopper";
 import * as coreMeltdown from "./core-meltdown";
 import * as firstLight from "./first-light";
+import * as infernoGate from "./inferno-gate";
+import * as neonAbyss from "./neon-abyss";
 import * as sunsetBounce from "./sunset-bounce";
 
 export interface LevelEntry {
@@ -11,7 +13,7 @@ export interface LevelEntry {
 }
 
 /** Every level in order, easy first. Each is built when it is played, so the menu opens quickly. */
-export const LEVELS: readonly LevelEntry[] = [firstLight, sunsetBounce, cloudHopper, circuitRush, coreMeltdown];
+export const LEVELS: readonly LevelEntry[] = [firstLight, sunsetBounce, cloudHopper, circuitRush, coreMeltdown, neonAbyss, infernoGate];
 
 const built = new Map<string, Level>();
 
