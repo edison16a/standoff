@@ -56,7 +56,8 @@ export class Scoreboard {
     const rows: ResultRow[] = round.seats.map((seat, i) => ({
       slot: i + 1,
       finished: seat.run.finished,
-      best: seat.run.finished ? 100 : seat.run.best,
+      // A racer stopped by the other's finish counts how far they got, as their place does.
+      best: seat.run.finished ? 100 : Math.max(seat.run.best, seat.run.percent),
       attempts: seat.run.attempt,
       jumps: seat.run.jumps,
       place: places[i]!,

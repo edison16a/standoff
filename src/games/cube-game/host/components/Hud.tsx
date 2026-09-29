@@ -21,7 +21,8 @@ function PlayerHud({ slot, all, stored }: PlayerHudProps) {
   const banner = useCubeStore((s) => (s.banner?.slot === slot ? s.banner : null));
   const practice = useCubeStore((s) => s.practice);
   const results = useCubeStore((s) => s.phase === "results");
-  const best = Math.max(stored, hud.best);
+  // In a race each pane shows its own player's best, since the saved best belongs to nobody in particular.
+  const best = players > 1 ? hud.best : Math.max(stored, hud.best);
   return (
     <section className={`cg-hud cg-hud--${players === 1 ? "solo" : slot === 1 ? "top" : "bottom"}`} aria-label={`Player ${slot}`}>
       <div className="cg-progress" role="progressbar" aria-label="Progress through the level" aria-valuenow={hud.percent} aria-valuemin={0} aria-valuemax={100}>
