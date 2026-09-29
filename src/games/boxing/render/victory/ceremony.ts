@@ -38,8 +38,10 @@ export class Ceremony {
 
   constructor() {
     this.belt = createBoxingBelt({ bend: 0.16 });
+    // A touch bigger than life, so it reads from across the room.
+    this.belt.scale.setScalar(1.15);
     this.belt.visible = false;
-    this.lights = new StageLights({ count: 4, colours: ["#fff3dc", "#ffd27a"], radius: 4.2, height: 8.5, intensity: 1500, angle: 0.19, beamStrength: 0.2, sweep: 0.2 });
+    this.lights = new StageLights({ count: 4, colours: ["#fff3dc", "#ffd27a"], radius: 4.2, height: 8.5, intensity: 650, angle: 0.2, beamStrength: 0.16, sweep: 0.2 });
     this.lights.setLevel(0);
     this.lights.aimAt(new THREE.Vector3(0, 0, 0));
     this.group.add(this.belt, this.lights.object);

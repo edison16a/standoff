@@ -37,7 +37,7 @@ export class Director {
   private readonly shoulders: [ShoulderCamera, ShoulderCamera];
   private readonly tv = new TvCamera(34);
   /** The ceremony's slow swing round the champion, opening wide and easing in. */
-  private readonly orbit = new OrbitCamera(this.tv.camera, { radius: 3.3, height: 1.45, lookHeight: 1.45, speed: 0.16, arc: 0.55, introS: 2.6, pullBack: 1.7, rise: 1.4, bob: 0.12 });
+  private readonly orbit = new OrbitCamera(this.tv.camera, { radius: 5, height: 1.5, lookHeight: 2, speed: 0.16, arc: 0.5, introS: 2.6, pullBack: 1.6, rise: 1.4, bob: 0.12 });
   private readonly replayPoses: [RigPose, RigPose] = [stance(), stance()];
   private knockdown: { fighter: FighterId; by: FighterId } | null = null;
   private replayImpactShown = false;
