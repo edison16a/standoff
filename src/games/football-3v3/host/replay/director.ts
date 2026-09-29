@@ -1,4 +1,5 @@
-import { blendViews, type MatchView } from "../../engine/view";
+import type { MatchView } from "../../engine/view";
+import { blendViews } from "../../engine/view-blend";
 import type { PlayFacts } from "./facts";
 import { locate, scriptReplay, type ReplayScript, type ReplaySegment, type ReplayStage } from "./script";
 import { SkipVotes } from "./skip";
