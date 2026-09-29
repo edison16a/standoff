@@ -1,7 +1,6 @@
 import { CameraKit } from "@/games/kit/camera";
 import type { HostRoomApi } from "@/platform/games/game-api";
 import { SoundDirector } from "../audio/sound-director";
-import { Autoplay } from "../engine/autoplay";
 import type { PlayerEvent } from "../engine/player";
 import type { Level } from "../engine/types";
 import { LEVELS, levelById } from "../levels";
@@ -9,6 +8,7 @@ import type { DrawInput } from "../render/game-renderer";
 import { beatPulse } from "../render/pulse";
 import { Controls } from "./controls";
 import { JUMP_SMOOTHING, JUMP_TUNING } from "./jump-tuning";
+import { MenuDemo } from "./menu-demo";
 import { loadProgress } from "./progress";
 import { Round } from "./round";
 import { RoundAdmin } from "./round-admin";
@@ -34,8 +34,7 @@ export class CubeSession {
   private readonly board = new Scoreboard();
   private readonly admin = new RoundAdmin();
   private controls: Controls | null = null;
-  private demo: Autoplay;
-  private demoRestarted = true;
+  private readonly demo: MenuDemo;
   private lastFrame = 0;
   private resultsTimer: ReturnType<typeof setTimeout> | null = null;
   /** Every press this round as level time, for browser tests. */
@@ -45,7 +44,7 @@ export class CubeSession {
     this.sound = new SoundDirector(room.audio);
     this.clock = new SongClock(this.sound, () => this.songFor());
     store.setState({ ...initialCubeState(), progress: loadProgress() });
-    this.demo = new Autoplay(levelById(store.getState().levelId));
+    this.demo = new MenuDemo(store.getState().levelId);
     this.clock.restart(0, 0.3);
     if (process.env.NODE_ENV === "development") Object.assign(window, { __cubeGame: this });
   }
@@ -64,8 +63,7 @@ export class CubeSession {
     if (index < 0 || id === store.getState().levelId) return;
     this.sound.sfx.select();
     store.setState({ levelId: id });
-    this.demo = new Autoplay(levelById(id));
-    this.demoRestarted = true;
+    this.demo.load(id);
     this.clock.restart(0, 0.3);
   }
 
@@ -106,7 +104,6 @@ export class CubeSession {
     this.endRound();
     this.sound.sfx.back();
     store.setState({ phase: "menu", hud: [], banner: null });
-    this.demoRestarted = true;
     this.demo.restart();
     this.clock.restart(0, 0.3);
   }
@@ -119,10 +116,7 @@ export class CubeSession {
   endEarly(): void {
     if (this.phase !== "play" || !this.round || this.resultsTimer) return;
     this.sound.sfx.back();
-    this.board.results();
-    this.room.setPlaying(false);
-    this.sound.music.play("menu");
-    store.setState({ phase: "results" });
+    this.showResults();
   }
 
   /** From the results: on to the next level, or back to the menu after the last. */
@@ -131,7 +125,7 @@ export class CubeSession {
     const next = LEVELS[index + 1];
     if (!next) return this.toMenu();
     store.setState({ levelId: next.info.id });
-    this.demo = new Autoplay(levelById(next.info.id));
+    this.demo.load(next.info.id);
     this.beginRound();
   }
 
@@ -148,8 +142,8 @@ export class CubeSession {
     const pulse = beatPulse(time, this.level.bpm);
     if (this.round && (this.phase === "play" || this.phase === "results")) {
       const round = this.round;
-      // Behind the results the runs stand still, so an unfinished player makes no more noise.
       if (this.phase === "play") this.admin.tick();
+      // Behind the results the runs stand still, so an unfinished player makes no more noise.
       const updates = this.phase === "play" ? round.update() : round.seats.map(() => ({ events: [], restarted: false }));
       updates.forEach(({ events }, i) => this.hear(i + 1, events));
       this.board.update(round, now);
@@ -163,18 +157,11 @@ export class CubeSession {
       }));
       return { time, dt, pulse, players, views: players.map((_, i) => i) };
     }
-    const events = this.demo.advanceTo(time);
-    if (this.demo.run.finished && time > this.demo.run.time + 1.5) {
-      this.demo.restart();
-      this.demoRestarted = true;
-      // The level's song only plays behind the level select. The camera steps keep the calm menu song.
-      if (this.phase === "menu") this.clock.restart(0, 0.3);
-      else this.clock.hold(0, 0.3);
-    }
-    const restarted = this.demoRestarted;
-    this.demoRestarted = false;
-    // The computer's run behind the menu counts no attempts, so it shows no counter.
-    return { time, dt, pulse, players: [{ state: this.demo.run.player, events, attempt: 0, restarted }], views: [0] };
+    const { player, looped } = this.demo.frame(time);
+    // The level's song only plays behind the level select. The camera steps keep the calm menu song.
+    if (looped && this.phase === "menu") this.clock.restart(0, 0.3);
+    else if (looped) this.clock.hold(0, 0.3);
+    return { time, dt, pulse, players: [player], views: [0] };
   }
 
   dispose(): void {
@@ -247,11 +234,14 @@ export class CubeSession {
   private finishRound(): void {
     this.resultsTimer = setTimeout(() => {
       this.resultsTimer = null;
-      if (!this.round) return;
-      this.board.results();
-      this.room.setPlaying(false);
-      this.sound.music.play("menu");
-      store.setState({ phase: "results" });
+      if (this.round) this.showResults();
     }, RESULTS_DELAY_MS);
+  }
+
+  private showResults(): void {
+    this.board.results();
+    this.room.setPlaying(false);
+    this.sound.music.play("menu");
+    store.setState({ phase: "results" });
   }
 }
