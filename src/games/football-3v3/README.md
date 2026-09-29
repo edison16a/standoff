@@ -176,7 +176,7 @@ const board = scoreboard(view); // for <Scoreboard board={board} />
 
 ### The showcase
 
-`showcase/` plays a seeded bot match under the lights with the score bug. The poster is the first pass of that game at the top of its arc from the broadcast camera, and the icon the QB just before he lets it go, from low in front, both frozen (`showcase/stills.ts`). For development: `?seed=` and `?seek=` (seconds to jump ahead), `?quality=low`, `?cam=x,y,z,lookX,lookY,lookZ,fov` to pin the camera, and `?lab=<move>` for the animation lab, where all six stars do one move on a loop next to a pair of linemen. The moves are idle, run, tuck, ready, throw, kick, spin, back, side, dive, lunge, down, tackled, celebrate, spike, stance, block and catch. A spin turns the whole body round, as the engine does in a game.
+`showcase/` plays a seeded bot match under the lights with the score bug. The poster is the first pass of that game at the top of its arc from the broadcast camera, and the icon the QB just before he lets it go, close up and low, facing the camera as he winds up, both frozen (`showcase/stills.ts`). For development: `?seed=` and `?seek=` (seconds to jump ahead), `?quality=low`, `?cam=x,y,z,lookX,lookY,lookZ,fov` to pin the camera, and `?lab=<move>` for the animation lab, where all six stars do one move on a loop next to a pair of linemen. The moves are idle, run, tuck, ready, throw, kick, spin, back, side, dive, lunge, down, tackled, celebrate, spike, stance, block and catch. A spin turns the whole body round, as the engine does in a game.
 
 ## Tests
 
