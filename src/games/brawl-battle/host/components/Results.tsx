@@ -25,8 +25,8 @@ function Row({ f }: { f: FighterCard }) {
 
 /**
  * The winner's scene: the champion on a pedestal lifting a gold cup,
- * their name big across the top, then every fighter by place with their
- * KOs, falls and damage dealt along the bottom. Play again keeps the
+ * their name big across the top, and in the corner every fighter by
+ * place with their KOs, falls and damage dealt. Play again keeps the
  * lineup on a new random stage; Change fighters goes back to the lobby.
  */
 export function Results() {
@@ -54,7 +54,9 @@ export function Results() {
         eyebrow={champ ? "Winner" : "Game over"}
         names={[{ name: champ ? champ.name : "A draw", colour: champ?.colour }]}
         subtitle={champ ? `${CHARACTERS[champ.character].name}, last one standing` : undefined}
-      >
+      />
+      {/* In the bottom left corner, so the champion on the pedestal has the middle to themselves. */}
+      <div className="bb-results__panel">
         <table className="bb-rank">
           <thead>
             <tr>
@@ -80,7 +82,7 @@ export function Results() {
             Play again
           </button>
         </div>
-      </VictoryOverlay>
+      </div>
     </div>
   );
 }
