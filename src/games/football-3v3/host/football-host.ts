@@ -1,6 +1,5 @@
 import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import { HostPad } from "@/games/kit/pad/host-pad";
-import { playerColor } from "@/games/kit/players";
 import type { HostRoomApi, Player } from "@/platform/games/game-api";
 import { SoundDirector } from "../audio/director";
 import { ceremonyTime } from "../engine/ceremony";
