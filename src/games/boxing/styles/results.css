@@ -3,16 +3,20 @@
   champion's name across the top comes from the victory kit.
 */
 
-/* Tucked into the bottom right corner, so the champion and the belt fill the middle. */
+/*
+  Tucked into the bottom left corner, so the champion and the belt fill
+  the middle. The loser always slumps on the right of the picture, since
+  the champion turns off the line the same way whoever wins.
+*/
 .bx-results {
   position: absolute;
-  right: clamp(12px, 2.5vw, 32px);
+  left: clamp(12px, 2.5vw, 32px);
   bottom: clamp(12px, 3vh, 32px);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  padding: 14px 22px 16px;
+  padding: 12px 18px 14px;
   border: 1px solid rgba(245, 197, 66, 0.35);
   border-radius: 20px;
   background: rgba(8, 8, 16, 0.78);
@@ -34,37 +38,40 @@
   font-size: 14px;
 }
 
+/* Each boxer's name heads their column, over a bar in their colour. */
 .bx-results__table thead th {
-  padding: 0 8px 4px;
+  min-width: 96px;
+  padding: 0 10px 6px;
+  border-bottom: 3px solid var(--who, transparent);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.bx-results__table tbody th {
+  padding: 3px 14px 3px 2px;
+  text-align: left;
   font-size: 11px;
   font-weight: 800;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.6);
 }
 
-.bx-results__table tbody th {
-  padding: 5px 14px 5px 10px;
-  border-left: 4px solid var(--who);
-  text-align: left;
-  font-weight: 900;
-}
-
 .bx-results__table td {
-  padding: 4px 8px;
+  padding: 3px 10px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   text-align: center;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 
-.bx-results__card {
+.bx-results__card td {
   font-family: var(--bx-display);
   font-size: 24px;
   color: var(--bx-gold);
 }
 
-.bx-results__won th {
+th.bx-results__won {
   color: var(--bx-gold);
 }
 
@@ -79,4 +86,15 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 12px;
+}
+
+/* A little smaller than on the menus, so the corner panel stays clear of the champion. */
+.bx-results .bx-button {
+  padding: 10px 20px;
+  font-size: 16px;
+}
+
+.bx-results .bx-button--big {
+  padding: 12px 28px;
+  font-size: 19px;
 }

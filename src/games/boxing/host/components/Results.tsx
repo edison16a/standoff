@@ -13,7 +13,7 @@ const METHOD: Record<string, string> = {
   Draw: "",
 };
 
-const COLUMNS: readonly [string, string][] = [
+const ROWS: readonly [string, string][] = [
   ["landed", "Landed"],
   ["thrown", "Thrown"],
   ["blocked", "Blocks"],
@@ -44,24 +44,29 @@ export function Results() {
     <VictoryOverlay eyebrow={winner === null ? "Draw" : "Champion"} names={names} subtitle={subtitle}>
       <div className="bx-results">
         {newBest && <p className="bx-results__best">{newBest}!</p>}
+        {/* One row per number and a column per boxer: narrow, so the panel stays clear of the champion. */}
         <table className="bx-results__table">
           <thead>
             <tr>
               <th />
-              <th>Scorecard</th>
-              {COLUMNS.map(([key, label]) => (
-                <th key={key}>{label}</th>
+              {([0, 1] as const).map((id) => (
+                <th key={id} scope="col" className={winner === id ? "bx-results__won" : undefined} style={{ ["--who" as string]: colour(id) }}>
+                  {result.names[id]}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {([0, 1] as const).map((id) => (
-              <tr key={id} className={winner === id ? "bx-results__won" : undefined} style={{ ["--who" as string]: colour(id) }}>
-                <th scope="row">{result.names[id]}</th>
-                <td className="bx-results__card">{result.totals[id]}</td>
-                {COLUMNS.map(([key]) => (
-                  <td key={key}>{result.stats[id][key]}</td>
-                ))}
+            <tr className="bx-results__card">
+              <th scope="row">Scorecard</th>
+              <td>{result.totals[0]}</td>
+              <td>{result.totals[1]}</td>
+            </tr>
+            {ROWS.map(([key, label]) => (
+              <tr key={key}>
+                <th scope="row">{label}</th>
+                <td>{result.stats[0][key]}</td>
+                <td>{result.stats[1][key]}</td>
               </tr>
             ))}
           </tbody>
