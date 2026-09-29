@@ -1,9 +1,10 @@
-import { AudioEngine } from "@/platform/audio/audio-engine";
+import type { AudioEngine } from "@/platform/audio/audio-engine";
 import type { HostRoomApi } from "@/platform/games/game-api";
 import { probeRoom } from "@/platform/net/room-probe";
 import type { SocketStatus } from "@/platform/net/socket-client";
 import type { Payload, Seat, ServerEnvelope } from "@/platform/protocol";
 import { createHostApi } from "./host-api";
+import { HostAudio } from "./host-audio";
 import { HostEvents } from "./host-events";
 import { HostLink } from "./host-link";
 import { HostPlayers } from "./host-players";
@@ -13,8 +14,6 @@ import { RoomGuard } from "./room-guard";
 import { RoomKeeper, type OpenedRoom, type RoomKeeperEvents } from "./room-keeper";
 import { sessionMemory, type RememberedRoom } from "./room-memory";
 
-/** Back from the background after this long, the room is checked again at once. */
-const AWAY_CHECK_MS = 20_000;
 const set = useHostStore.setState;
 const get = useHostStore.getState;
 
@@ -26,7 +25,7 @@ const get = useHostStore.getState;
  * arrives on its own fresh connection, which then becomes the host's.
  */
 export class HostRoom {
-  private engine: AudioEngine | null = null;
+  private readonly sound = new HostAudio();
   private readonly link: HostLink;
   private keeper: RoomKeeper;
   private readonly events = new HostEvents();
@@ -35,9 +34,8 @@ export class HostRoom {
   private current: HostRoomApi | null = null;
   /** The room on screen, or the one a reload remembered, to make again if it is lost. */
   private last: RememberedRoom | null = null;
-  private hiddenAt: number | null = null;
   private shared = true;
-  private readonly unwatchStore: () => void;
+  private detach: () => void = () => undefined;
   private readonly keeperEvents: RoomKeeperEvents = {
     opened: (room) => this.onOpened(room),
     lost: ({ old }) => this.onLost(old),
@@ -65,30 +63,12 @@ export class HostRoom {
       goHome: (error) => this.goHome(error),
     });
     this.last = this.keeper.memory.recall();
-    // A game ending is a good moment to look at the room again.
-    this.unwatchStore = useHostStore.subscribe((state, before) => {
-      if (before.playing && !state.playing) this.guard.watchdog.checkNow();
-    });
     // A reload resumes its room. Creating another meanwhile would race it.
     set({ resuming: this.keeper.holding });
   }
 
-  private readonly unlockOnTap = () => {
-    void this.audio.unlock().then(() => {
-      if (this.audio.unlocked) window.removeEventListener("pointerdown", this.unlockOnTap);
-    });
-  };
-
-  private readonly onVisibility = () => {
-    if (document.hidden) this.hiddenAt = Date.now();
-    else if (this.hiddenAt !== null && Date.now() - this.hiddenAt > AWAY_CHECK_MS) this.guard.watchdog.checkNow();
-    if (!document.hidden) this.hiddenAt = null;
-  };
-
-  /** Made on first use and again after `dispose`, since React mounts twice in development. */
   get audio(): AudioEngine {
-    this.engine ??= new AudioEngine();
-    return this.engine;
+    return this.sound.get();
   }
 
   /** The open room as the game sees it. Null on the home screen. */
@@ -97,21 +77,17 @@ export class HostRoom {
   }
 
   connect(): void {
-    // After a reload there was no click to start the sound, so the first tap anywhere does it.
-    window.addEventListener("pointerdown", this.unlockOnTap);
-    if (typeof document !== "undefined") document.addEventListener("visibilitychange", this.onVisibility);
+    this.sound.listen();
+    this.detach = this.guard.attach();
     this.link.connect();
   }
 
   dispose(): void {
-    window.removeEventListener("pointerdown", this.unlockOnTap);
-    if (typeof document !== "undefined") document.removeEventListener("visibilitychange", this.onVisibility);
-    this.unwatchStore();
+    this.detach();
     this.guard.stop();
     this.keeper.dispose();
     this.link.close();
-    this.engine?.close();
-    this.engine = null;
+    this.sound.close();
   }
 
   /** Runs inside the Play click, which is also what lets the browser start sound. */

@@ -22,6 +22,8 @@ export interface GuardDeps {
   goHome(error: string): void;
 }
 
+/** Back from the background after this long, the room is checked again at once. */
+const AWAY_CHECK_MS = 20_000;
 const set = useHostStore.setState;
 const get = useHostStore.getState;
 
@@ -75,6 +77,28 @@ export class RoomGuard {
 
   get fixing(): boolean {
     return this.remaker.busy;
+  }
+
+  /**
+   * Looks at the room again at the moments trouble shows: a game ending,
+   * and the tab coming back after a while away. Returns a detach.
+   */
+  attach(): () => void {
+    const unwatch = useHostStore.subscribe((state, before) => {
+      if (before.playing && !state.playing) this.watchdog.checkNow();
+    });
+    if (typeof document === "undefined") return unwatch;
+    let hiddenAt: number | null = null;
+    const onVisibility = () => {
+      if (document.hidden) hiddenAt = Date.now();
+      else if (hiddenAt !== null && Date.now() - hiddenAt > AWAY_CHECK_MS) this.watchdog.checkNow();
+      if (!document.hidden) hiddenAt = null;
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      unwatch();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }
 
   /** A room is on screen: a new one is checked at once, one that came back carries on. */
