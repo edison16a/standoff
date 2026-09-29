@@ -57,6 +57,9 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
    * Settings gets a button to wipe the leaderboards.
    * A shared kit piece, so both games use the same one.
 5. **Subway Runner keyboard mode:** play with the arrow keys or WASD (left and right switch lanes, up jumps, down rolls) as well as the camera.
+   * **Subway Runner Demon difficulty:** a fourth level after Hard, very difficult (faster start, denser obstacles, less reaction time).
+   * **Score multipliers by difficulty:** each level carries its own multiplier (for example Easy 1x, Medium 1.5x, Hard 2x, Demon 3x; tune by playing), shown before the run and on the score.
+   * **Coins add to the score:** every coin and pickup raises the score (on top of distance), also scaled by the multiplier. The leaderboard stores the final score.
 
 6. **Soccer 3v3 fixes from play testing:**
    * Free kick curve changes only how much the ball bends (from a straight kick to a wide curve). It must never move the aim.
