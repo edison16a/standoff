@@ -9,9 +9,15 @@ export interface LineOptions {
   resizeAt: number;
   /** Moving faster than this, in torso lengths per second, is not at rest. */
   restSpeed: number;
+  /**
+   * The player must stay under `restSpeed` this long before the line
+   * follows. Bobbing is still for an instant at the bottom of each bob,
+   * which otherwise drags the line down until a bob reads as a jump.
+   */
+  restMs: number;
 }
 
-export const DEFAULT_LINE: LineOptions = { followMs: 2000, resizeAt: 0.12, restSpeed: 0.8 };
+export const DEFAULT_LINE: LineOptions = { followMs: 2000, resizeAt: 0.12, restSpeed: 0.8, restMs: 0 };
 
 /** Where the head is against the line this frame. */
 export interface HeadPosition {

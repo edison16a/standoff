@@ -104,4 +104,18 @@ describe("reading a player's moves", () => {
     expect(amounts.drop).toBe(0);
     expect(line!.top).toBeLessThan(line!.y);
   });
+
+  it("with a rest time, keeps the line still through bobbing but still follows a player who settles lower", () => {
+    const bob: PoseKey[] = Array.from({ length: 80 }, (_, i) => ({ at: i * 120, pose: { crouch: i % 2 ? 0.35 : 0 } }));
+    const lineAfter = (keys: PoseKey[], restMs: number) => {
+      const reader = new MoveReader(1, { line: { restMs } });
+      reader.setBaseline(baselineFor({}));
+      read(reader, keys);
+      return reader.current.line!.y;
+    };
+    const start = lineAfter([{ at: 0, pose: {} }], 400);
+    expect(lineAfter(bob, 0)).toBeGreaterThan(start + 0.02);
+    expect(lineAfter(bob, 400)).toBeCloseTo(start, 2);
+    expect(lineAfter([{ at: 0, pose: {} }, { at: 200, pose: { crouch: 0.15 } }, { at: 6000, pose: { crouch: 0.15 } }], 400)).toBeGreaterThan(start + 0.01);
+  });
 });

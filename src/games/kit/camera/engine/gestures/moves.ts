@@ -31,6 +31,8 @@ export class MoveReader {
   private readonly punches: Record<Hand, PunchDetector>;
   private state: MoveState;
   private lastTime: number | null = null;
+  /** When the player last came to rest, or null while they move. */
+  private calmSince: number | null = null;
 
   constructor(
     readonly slot: number,
@@ -139,7 +141,11 @@ export class MoveReader {
     next.line = line.view(body, up, down);
     // The line follows only a player at rest, never during a move.
     const calm = Math.hypot(body.velocity.head.x, body.velocity.head.y) < this.options.line.restSpeed;
-    if (moves.idle && calm) line.follow(body, step, this.options.line);
+    // A long gap between frames hides what happened in it, so rest starts over after one.
+    if (!calm || step > this.options.line.restMs) this.calmSince = calm ? time : null;
+    else this.calmSince ??= time;
+    const rested = this.calmSince !== null && time - this.calmSince >= this.options.line.restMs;
+    if (moves.idle && rested) line.follow(body, step, this.options.line);
   }
 
   private resetDetectors(): void {
@@ -148,6 +154,7 @@ export class MoveReader {
     this.guard.reset();
     this.punches.left.reset();
     this.punches.right.reset();
+    this.calmSince = null;
   }
 }
 
