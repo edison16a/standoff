@@ -76,7 +76,9 @@ export const TACKLE = {
   lunge: 0.34,
   lungeSpeed: 9,
   /** Bodies this close wrap up. */
-  reach: 1.05,
+  reach: 1.2,
+  /** Share of the lunge that still steers after the carrier. */
+  homing: 0.6,
   /** A whiff leaves the tackler on the grass this long. */
   missDown: 1.5,
   /** A press with nobody in range waits this long before another. */

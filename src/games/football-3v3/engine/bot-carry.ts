@@ -37,8 +37,10 @@ export function carryCommand(state: MatchState, a: Athlete): Command {
   const toGoal = yardsToGoal(a.team, a.pos.x);
   if (toGoal < 2.5 && toGoal > 0 && gap < 3 && canDive(a)) return { move: v2(s, 0), dive: true };
   const lunging = nearest.action === "lunge" || gap < 2.2;
-  // Sharper bots read the hit coming more often.
-  if (lunging && canJuke(a) && state.rng.chance(0.05 + 0.25 * botSkill(state).accuracy)) {
+  if (!lunging || !canJuke(a) || a.brain.thinkIn > 0) return cmd;
+  // A read a few times a second; sharper bots see the hit coming more often.
+  a.brain.thinkIn = 0.3;
+  if (state.rng.chance(0.1 + 0.3 * botSkill(state).accuracy)) {
     const away = norm(sub(a.pos, nearest.pos));
     const side = dot(perp(v2(s, 0)), away) >= 0 ? 1 : -1;
     cmd.juke = true;

@@ -33,10 +33,15 @@ export function pressTackle(state: MatchState, a: Athlete): boolean {
 
 /** The lunge itself: a burst at the carrier that either wraps him up or ends face down in the grass. */
 export function stepLunge(state: MatchState, a: Athlete, dt: number): void {
+  const c = carrierOf(state);
+  // Arms and shoulders track the carrier early in the lunge; once committed, the body flies on.
+  if (c && c.team !== a.team && a.actionT < a.actionLen * TACKLE.homing) {
+    const want = norm(sub(add(c.pos, c.vel, 0.08), a.pos));
+    a.actionDir = norm(add(a.actionDir, want, Math.min(1, dt * 12)));
+  }
   a.vel = scale(a.actionDir, Math.max(len(a.vel), TACKLE.lungeSpeed));
   advance(a, dt);
-  const c = carrierOf(state);
-  if (c && c.team !== a.team && c.action !== "down" && dist(c.pos, a.pos) < TACKLE.reach) {
+  if (c && !state.play.end && c.team !== a.team && c.action !== "down" && dist(c.pos, a.pos) < TACKLE.reach) {
     resolveTackle(state, a, c);
     return;
   }
