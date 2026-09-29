@@ -10,6 +10,7 @@ Shared code that games may import. The kit never imports a game, and games still
 * `steps/StepShell.tsx`: the frame for a game's phone setup. Every game uses the same order: the platform asks for a name (or Skip), then the game shows **Calibrate**, then its own choices (weapon, kart, blade), then **Ready**. Each step is its own page.
 * `aim/`: pointing the phone at the big screen, for Fruit Slicer, Zombie Survival and Shooting Gallery.
 * `victory/`: winners' scenes. Confetti, spotlights, a circling camera, trophies and a belt made in code, podiums, and the winners' names over it all. See Victory scenes below.
+* `leaderboard/`: local leaderboards that keep every finished run on this computer, and the list that shows them. See Leaderboards below.
 
 ## Aiming
 
@@ -244,6 +245,30 @@ node tools/testing/camera-e2e.mjs --clip clip.mjpeg --timeline clip.json --out s
 ## Split screen finish
 
 `split/SplitFinish.tsx` is the card a player sees in their own pane once they cross the line, for example "Edison Law got 1st place!", while the other panes keep racing. Render `<SplitFinish name={name} place={place} color={color} />` inside the pane's positioned box and it centres itself. A HUD that only knows who has finished, not their place, can get places from `useFinishPlaces(finished)`, which numbers players in the order they finished and starts over when a new round clears them. The words and the order live in `split/finish.ts`, tested on their own. Magic Kart and Cube Game use it. Subway Runner has no finish line, so it does not.
+
+## Leaderboards
+
+`leaderboard/` keeps every finished run on this computer, in localStorage, ranked by one number. Nothing is ever sent anywhere. A board belongs to one game and has a name of its own, so a game can keep one board (Subway Runner's runs) or many (one per level for finish times). Every run is kept, however low, so the board never ends.
+
+```ts
+import { LeaderboardList, readBoard, recordEntry, onBoardsChange, type BoardRef } from "@/games/kit/leaderboard";
+
+const RUNS: BoardRef = { game: "subway-surfers", board: "runs", order: "high" };   // "low" ranks times, quickest first
+const placed = recordEntry(RUNS, { name: "Edison", value: 12400, tag: "Hard" });
+placed.rank;   // 3, for "#3 on this computer"
+placed.best;   // true when it beats every earlier run. A tie does not, since the older run keeps its place.
+placed.entry.id;   // to light up the row
+
+<LeaderboardList entries={placed.entries} highlight={placed.entry.id} title="Leaderboard" format={(v) => `${v.toFixed(1)} s`} />
+onBoardsChange(() => setEntries(readBoard(RUNS)));   // redraw after a clear, or a run saved in another tab
+```
+
+* The list scrolls, with the lit row brought to its middle. A board of thousands draws its top, a line saying how many runs are left out, and the runs around the lit one.
+* The tag is a short note beside the value, like the difficulty. A name or tag past 40 characters is cut to fit, and a blank name is saved as Player, so a saved run always reads back.
+* Give the list a game's look with a class that sets `--board-bg`, `--board-fg`, `--board-accent`, `--board-me-bg`, `--board-me-fg` and `--board-height`.
+* Keys look like `standoff:board:<game>:<board>`. `clearBoards()` wipes every game's boards, which the host's Settings panel does with **Clear leaderboards**. `clearBoards(game)` wipes one game's.
+* Where site data is blocked the boards live in memory until the tab closes. When storage is full a board keeps its best 2,000 runs.
+* The logic is tested on its own in `board.test.ts`, `rows.test.ts` and `store.test.ts`, with an in memory storage from `memoryBoards()`.
 
 ## Victory scenes
 

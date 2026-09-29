@@ -1,5 +1,5 @@
 import { arcHeight, fallTime, riseTime } from "./motion";
-import { BARRIER, COIN, JUMP, laneX, RAMP_LENGTH, TRAIN, trainLength, type Lane } from "./tuning";
+import { BARRIER, COIN, JUMP, laneX, MOVE_GAP_S, RAMP_LENGTH, TRAIN, trainLength, type Lane } from "./tuning";
 import type { Obstacle, ObstacleKind, PowerKind } from "./types";
 
 /** How far ahead the fog lets a player see a train coming. */
@@ -23,6 +23,8 @@ export class Block {
   constructor(
     readonly speed: number,
     private readonly style: () => number,
+    /** The least seconds between two moves this stretch may ask for. */
+    readonly moveGap = MOVE_GAP_S,
   ) {}
 
   sec(seconds: number): number {

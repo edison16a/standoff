@@ -9,6 +9,7 @@ import {
   type AudioSettings,
 } from "@/platform/audio/audio-settings";
 import { FrameRateSection } from "./FrameRateSection";
+import { LeaderboardSection } from "./LeaderboardSection";
 import { RoomSection } from "./RoomSection";
 
 const ROWS: { key: keyof AudioSettings; label: string }[] = [
@@ -16,7 +17,7 @@ const ROWS: { key: keyof AudioSettings; label: string }[] = [
   { key: "effects", label: "Sound effects" },
 ];
 
-/** Two volume sliders and the frame rate cap. Changes apply live. */
+/** Two volume sliders, the frame rate cap and clearing the leaderboards. Changes apply live. */
 export function SettingsPanel() {
   const [settings, setSettings] = useState<AudioSettings>(loadAudioSettings);
   useEffect(() => onAudioSettings(setSettings), []);
@@ -46,6 +47,7 @@ export function SettingsPanel() {
         );
       })}
       <FrameRateSection />
+      <LeaderboardSection />
       <RoomSection />
     </>
   );

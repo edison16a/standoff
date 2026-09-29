@@ -54,3 +54,21 @@ export function CoinIcon() {
     </svg>
   );
 }
+
+/** Camera or keyboard, for the lobby's choice of how to play. Line art in the text colour. */
+export function ModeIcon({ mode }: { mode: "camera" | "keyboard" }) {
+  if (mode === "camera") {
+    return (
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <rect x="3" y="9" width="20" height="15" rx="4" fill="none" stroke="currentColor" strokeWidth="3" />
+        <path d="M23 14l6-4v13l-6-4z" fill="currentColor" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 32 32" aria-hidden="true">
+      <rect x="2" y="8" width="28" height="17" rx="4" fill="none" stroke="currentColor" strokeWidth="3" />
+      <path d="M8 13h2M13 13h2M18 13h2M23 13h2M10 19h12" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}

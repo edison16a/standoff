@@ -1,4 +1,4 @@
-/* The lobby, the best runs table and the results, over the 3D view. */
+/* The lobby and the results, over the 3D view. The leaderboard and the level chips are in board.css. */
 
 .ss-lobby {
   position: absolute;
@@ -32,7 +32,7 @@
   text-align: center;
 }
 
-/* Easy, Medium or Hard, with a line on what the chosen one means. */
+/* Camera or Keyboard, then Easy to Demon, with a line on what the chosen level means. */
 .ss-level {
   display: flex;
   flex-direction: column;
@@ -104,57 +104,6 @@
   font-size: 20px;
   color: #ffc21a;
   text-shadow: 0 2px 0 #14254a;
-}
-
-.ss-best {
-  min-width: 300px;
-  padding: 20px 24px;
-  border: 4px solid #ffffff;
-  border-radius: 28px;
-  box-shadow: 0 0 0 4px #14254a, 0 8px 0 4px #14254a;
-  background: rgba(20, 50, 100, 0.9);
-}
-
-.ss-best__title {
-  margin: 0 0 10px;
-  font: 900 24px/1 "Arial Black", var(--font-ui);
-  color: #ffd21f;
-}
-
-.ss-best__list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.ss-best__row {
-  display: grid;
-  grid-template-columns: 32px 1fr auto;
-  gap: 10px;
-  padding: 6px 8px;
-  border-radius: 10px;
-  font-size: 19px;
-  font-weight: 700;
-}
-
-.ss-best__row--new {
-  color: #14254a;
-  background: #ffd21f;
-  animation: ss-glow 0.8s ease-in-out infinite alternate;
-}
-
-.ss-best__place {
-  opacity: 0.7;
-}
-
-.ss-best__score {
-  font-variant-numeric: tabular-nums;
-}
-
-@keyframes ss-glow {
-  to {
-    box-shadow: 0 0 18px #ffd21f;
-  }
 }
 
 .ss-results {
@@ -255,13 +204,20 @@
   }
 }
 
-/* Small windows: the best table drops away and the cards tighten up, so everything fits without scrolling. */
-@media (max-width: 1000px), (max-height: 720px) {
-  .ss-lobby .ss-best,
-  .ss-results .ss-best {
-    display: none;
+/* Laptop heights: the lobby card, with its Camera or Keyboard row, tightens so it fits with the how to list. */
+@media (max-height: 940px) {
+  .ss-lobby {
+    padding-top: 70px;
   }
 
+  .ss-lobby__card {
+    gap: 12px;
+    padding: 24px 36px;
+  }
+}
+
+/* Small windows: the cards tighten up and the how to list goes, so everything fits without scrolling. */
+@media (max-width: 1000px), (max-height: 820px) {
   .ss-lobby__card,
   .ss-results__card {
     gap: 12px;
