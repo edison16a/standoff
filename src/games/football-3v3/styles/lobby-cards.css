@@ -196,3 +196,10 @@
     display: none;
   }
 }
+
+/* The platform's join card sits in the bottom left until every seat is taken: keep the teams clear of it. */
+@media (max-width: 1640px) {
+  :root:has(.join--corner) .fb-lobby {
+    padding-left: 212px;
+  }
+}
