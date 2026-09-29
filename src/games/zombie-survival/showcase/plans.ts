@@ -18,6 +18,8 @@ const FIGHT: ShowcasePlan = {
   bossAt: 6.5,
   beat: 4,
   escort: { maxAlive: 7, gap: 0.35, spawn: [7, 13], tough: 8 },
+  // The clip was framed around an unhurried walk. The game's own dead come faster.
+  pace: 1.1 / 1.5,
   preroll: 5,
   framing: { tilt: 0.1, fov: 58 },
   seed: 7,
@@ -30,7 +32,7 @@ export const PLANS: Record<ShowcaseView, ShowcasePlan> = {
     ...FIGHT,
     players: [TEAM[0], TEAM[3]],
     bossAt: 4.8,
-    escort: { maxAlive: 3, gap: 0.8, spawn: [8, 12], tough: 8 },
+    escort: { maxAlive: 3, gap: 0.5, spawn: [8, 12], tough: 8 },
     framing: { tilt: 0.26, fov: 62 },
   },
 };

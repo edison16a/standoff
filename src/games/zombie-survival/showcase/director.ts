@@ -22,6 +22,8 @@ export interface ShowcasePlan {
   beat: number;
   /** The escort: most standing at once, seconds between arrivals, where they appear, and how many hits they take. */
   escort: { maxAlive: number; gap: number; spawn: [number, number]; tough: number };
+  /** Multiplies every zombie's pace, so the clip keeps its own tempo whatever the stage's. */
+  pace: number;
   /** Seconds the fight runs before the first frame, so the street is already busy. */
   preroll: number;
   /** How the camera frames the fight, over the game's own view. */
@@ -58,8 +60,9 @@ export class ShowcaseDirector implements SceneSource {
     this.game = new SurvivalGame(this.random);
     this.game.start(plan.players.map((p, i) => ({ seat: i + 1, weapon: p.weapon })), plan.stage);
     while (this.game.phase === "travel") this.game.update(0.25);
-    // An endless escort in place of the stage's own count, so the clip never runs dry.
-    const spec = { ...stage(plan.stage), count: 10_000, maxAlive: plan.escort.maxAlive, gap: plan.escort.gap, spawn: plan.escort.spawn, tough: plan.escort.tough, packs: 0 };
+    // An endless escort of walkers in place of the stage's own crowd, so the clip never runs dry.
+    const { maxAlive, gap, spawn, tough } = plan.escort;
+    const spec = { ...stage(plan.stage), count: 10_000, maxAlive, gap, spawn, tough, mix: { walker: 1 }, speed: plan.pace, bossAt: [0], packs: 0 };
     this.game.encounter = new Encounter(spec, 1, plan.seed, 5000, 0.9);
     this.spread = new EscortSpread(spec.zone);
     const sides = lanes(plan.players.length);
