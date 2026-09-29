@@ -129,7 +129,8 @@ export class SurvivalRenderer implements SurvivalView {
 
   cast(seat: Seat, point: ScreenPoint, offsets: readonly Offset[]): (PelletHit | null)[] {
     const targets = [...this.zombies.proxies(), ...this.world.solids()];
-    const results = offsets.map((offset) => this.caster.cast(point, offset, targets, (id) => this.source.game.encounter?.find(id)));
+    const pierce = this.source.game.squad.get(seat)?.gun.spec.pierce;
+    const results = offsets.map((offset) => this.caster.cast(point, offset, targets, (id) => this.source.game.encounter?.find(id), pierce));
     this.pending.set(seat, results);
     return results.map((r) => r.hit);
   }
