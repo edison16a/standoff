@@ -33,7 +33,8 @@ export function whistle(state: MatchState): void {
 function touchdown(state: MatchState): void {
   const play = state.play;
   const c = carrierOf(state)!;
-  c.stats.touchdowns++;
+  // A two point conversion is points, not a touchdown on the stat sheet.
+  if (!play.isTry) c.stats.touchdowns++;
   const thrower = play.receiver !== null && !play.intercepted ? (state.athletes.find((a) => a.team === c.team && a.role === "qb")?.id ?? null) : null;
   addScore(state, play.carrierTeam, play.isTry ? "twopoint" : "touchdown", c.id, thrower);
 }
