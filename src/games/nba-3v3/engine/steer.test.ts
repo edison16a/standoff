@@ -6,7 +6,7 @@ import type { Athlete } from "./types";
 
 /** A runner in open space in the middle of the floor. */
 function runner(): Athlete {
-  const a = createAthlete(0, 0, 0, "ashby", null);
+  const a = createAthlete(0, 0, 0, "shooter", null);
   Object.assign(a, { x: -6, z: 6, yaw: Math.PI / 2 });
   return a;
 }
@@ -50,8 +50,8 @@ describe("running with momentum", () => {
   });
 
   it("gets a light guard going quicker than a heavy big man", () => {
-    const light = createAthlete(0, 0, 0, "ashby", null);
-    const heavy = createAthlete(1, 0, 1, "zupan", null);
+    const light = createAthlete(0, 0, 0, "shooter", null);
+    const heavy = createAthlete(1, 0, 1, "big", null);
     for (const a of [light, heavy]) Object.assign(a, { x: -6, z: 6, yaw: Math.PI / 2 });
     const tLight = runUntil(light, { x: 1, z: 0 }, (p) => speedOf(p) >= 3);
     const tHeavy = runUntil(heavy, { x: 1, z: 0 }, (p) => speedOf(p) >= 3);

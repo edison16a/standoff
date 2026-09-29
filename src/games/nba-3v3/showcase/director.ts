@@ -14,7 +14,7 @@ const LEAD: Record<ShowcaseView, number> = { loop: -2.7, poster: 0, icon: 0 };
 
 /**
  * The poster and the icon are single frames, so the film is run this far
- * ahead without drawing and then held: Varelas at the rim in his windmill.
+ * ahead without drawing and then held: the Dunker at the rim in his windmill.
  */
 const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 2.4, icon: 2.42 };
 

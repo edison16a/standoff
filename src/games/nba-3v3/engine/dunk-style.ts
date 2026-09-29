@@ -1,5 +1,5 @@
 import type { DunkStyle } from "../roster";
-import { charOf } from "./athlete";
+import { buildOf } from "./athlete";
 import { between, weighted, type Rng } from "./rng";
 import { RIM } from "./tuning";
 import type { Athlete } from "./types";
@@ -23,13 +23,13 @@ const GRABS: readonly DunkStyle[] = ["hammer", "tomahawk", "cockback", "flush"];
 
 /**
  * Picks the dunk. Along the baseline it is often a reverse, in traffic
- * a power dunk, and otherwise the star's own signature most of the
+ * a power dunk, and otherwise the build's own signature most of the
  * time, with the odd showier one from those with the legs for it.
  */
 export function chooseDunk(rng: Rng, a: Athlete, open: boolean, forced: DunkStyle | null = null): DunkPlan {
   // A scripted film asks for one dunk, the same every time.
   if (forced) return { style: forced, air: AIR[forced], rimHang: forced === "rimhang" ? 0.55 : 0 };
-  const c = charOf(a);
+  const c = buildOf(a);
   const st = c.stats;
   const baseline = a.z < RIM.z + 0.9 && Math.abs(a.x - RIM.x) > 0.8;
   let style: DunkStyle;

@@ -1,4 +1,4 @@
-import { charOf } from "./athlete";
+import { buildOf } from "./athlete";
 import type { Match } from "./match";
 import type { Athlete } from "./types";
 import { clamp, lerp } from "./vec";
@@ -37,7 +37,7 @@ const SPIN_CARRY = 0.46;
 
 /** How fast the ball bounces right now, in bounces a second. */
 export function dribbleRate(a: Athlete, speed: number): number {
-  const leg = LEG_SHARE * charOf(a).build.height;
+  const leg = LEG_SHARE * buildOf(a).body.height;
   const stride = speed / strideLength(speed, leg, false);
   const base = lerp(POUND, Math.max(1.5, stride), clamp(speed / 1.6, 0, 1));
   const act = a.action;
@@ -66,7 +66,7 @@ export const spinCarry = (a: Athlete): boolean => a.pocket > 0 && a.action.kind 
 /** The ball on the dribble, or held a moment in the hand. Called every step while the holder has it low. */
 export function dribbleBall(m: Match, a: Athlete, dt: number): void {
   const b = m.ball;
-  const h = charOf(a).build.height;
+  const h = buildOf(a).body.height;
   const fx = Math.sin(a.yaw);
   const fz = Math.cos(a.yaw);
   const rx = -fz;

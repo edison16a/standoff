@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CHARACTER_IDS } from "../roster";
+import { BUILD_IDS } from "../builds";
 
 /**
  * Messages a phone sends to the host. The stick and the buttons travel
@@ -7,7 +7,7 @@ import { CHARACTER_IDS } from "../roster";
  * setup choices and the shot release timing.
  */
 
-export const pickSchema = z.object({ kind: z.literal("pick"), character: z.enum(CHARACTER_IDS) });
+export const pickSchema = z.object({ kind: z.literal("pick"), build: z.enum(BUILD_IDS) });
 
 export const readySchema = z.object({ kind: z.literal("ready"), ready: z.boolean() });
 

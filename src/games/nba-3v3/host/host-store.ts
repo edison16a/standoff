@@ -2,14 +2,14 @@ import { create } from "zustand";
 import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { TeamId } from "../engine/types";
 import type { Phase } from "../protocol";
-import type { CharacterId } from "../roster";
+import type { BuildId } from "../builds";
 import type { Role } from "./roles";
 
 export interface SeatView {
   seat: number;
   name: string;
   connected: boolean;
-  pick: CharacterId | null;
+  pick: BuildId | null;
   ready: boolean;
   team: TeamId | null;
 }
@@ -19,7 +19,7 @@ export interface SpotView {
   team: TeamId;
   seat: number | null;
   name: string;
-  character: CharacterId;
+  build: BuildId;
   role: Role;
 }
 
@@ -35,7 +35,7 @@ export interface ResultRow {
   team: TeamId;
   name: string;
   seat: number | null;
-  character: CharacterId;
+  build: BuildId;
   points: number;
   rebounds: number;
   assists: number;

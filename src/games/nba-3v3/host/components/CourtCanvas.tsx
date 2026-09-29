@@ -25,6 +25,8 @@ export default function CourtCanvas() {
     // Without a graphics card the full picture runs at a frame or two a second, so it draws lighter.
     const renderer = new CourtRenderer(canvas, softwareWebGl() ? LOW_QUALITY : {});
     const tags = new Tags(layer);
+    // People wear their own name on their backs; computer players wear their build's.
+    renderer.jerseyName = (a) => (a.seat !== null ? session.nameOf(a.id) || null : null);
     const fit = () => renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
     fit();
     const observer = new ResizeObserver(fit);

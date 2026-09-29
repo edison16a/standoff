@@ -3,7 +3,7 @@ import type { MatchEvent } from "../engine/events";
 import type { Match } from "../engine/match";
 import { greenHalfMs, GREEN_MS, type Grade } from "../engine/shot-model";
 import { SHOT } from "../engine/tuning";
-import { CHARACTERS } from "../roster";
+import { BUILDS } from "../builds";
 import type { CourtRenderer } from "./court-renderer";
 import { stackTags, type TagBox } from "./tag-layout";
 
@@ -103,7 +103,7 @@ export class Tags {
     tag.meter.style.display = showing ? "" : "none";
     if (!showing) return false;
     const free = m.phase === "freeThrow" && m.freeThrows?.shooter === id;
-    const half = greenHalfMs(CHARACTERS[a.character].stats.shooting, a.onFire, free);
+    const half = greenHalfMs(BUILDS[a.build].stats.shooting, a.onFire, free);
     tag.green.style.bottom = `${((GREEN_MS - half) / SHOT.meterMs) * 100}%`;
     tag.green.style.height = `${((half * 2) / SHOT.meterMs) * 100}%`;
     if (aiming && act.kind === "shoot") {

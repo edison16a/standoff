@@ -1,4 +1,4 @@
-import { charOf } from "../athlete";
+import { buildOf } from "../athlete";
 import { RIM_SPOT, rimDistance } from "../court";
 import type { Match } from "../match";
 import { gaussian } from "../rng";
@@ -26,7 +26,7 @@ export function thinkDefence(m: Match, a: Athlete, s: BotState, man: Athlete | n
   const act = holder.action;
 
   if (man === holder || (!man && dist2(a, holder) < 3)) {
-    const gap = 0.9 + (10 - charOf(holder).stats.shooting) * 0.07;
+    const gap = 0.9 + (10 - buildOf(holder).stats.shooting) * 0.07;
     goTo(a, between(holder, gap), 1);
     if (act.kind === "shoot" && !act.released) contestJumper(m, a, s, holder);
     else if (act.kind === "drive") contestDrive(m, a, holder);
@@ -36,7 +36,7 @@ export function thinkDefence(m: Match, a: Athlete, s: BotState, man: Athlete | n
         s.decideIn = 0.2 + m.rng() * 0.15 + m.bots.think;
         // Two reaches are free; after that the whistle is a risk, so a third is rare and a fourth never comes.
         const tries = m.stealLog.count(a.id, holder.id);
-        const reachy = m.bots.reach * (charOf(a).stats.speed >= 8 ? 0.08 : 0.055) * (tries < 2 ? 1 : tries === 2 ? 0.2 : 0);
+        const reachy = m.bots.reach * (buildOf(a).stats.speed >= 8 ? 0.08 : 0.055) * (tries < 2 ? 1 : tries === 2 ? 0.2 : 0);
         if (inStealRange(a, holder) && act.kind === "none" && m.rng() < reachy) m.press(a.id, "defend");
       }
     }
@@ -54,7 +54,7 @@ export function thinkDefence(m: Match, a: Athlete, s: BotState, man: Athlete | n
     return;
   }
   // Off the ball: sag toward the ball and the paint, closer if the player is a shooter.
-  const shooter = charOf(man).stats.shooting >= 8;
+  const shooter = buildOf(man).stats.shooting >= 8;
   const sag = shooter ? 0.2 : 0.38;
   const guard = between(man, 1.2);
   const spot = { x: lerp(guard.x, holder.x, sag * 0.5), z: lerp(guard.z, RIM_SPOT.z + 2, sag * 0.5) };
@@ -65,7 +65,7 @@ export function thinkDefence(m: Match, a: Athlete, s: BotState, man: Athlete | n
 /** Jump so the hands are at their highest as the ball leaves: a reaction delay, then up. */
 function contestJumper(m: Match, a: Athlete, s: BotState, shooter: Athlete): void {
   if (shooter.action.kind !== "shoot") return;
-  if (s.jumpAt === null) s.jumpAt = 0.22 + gaussian(m.rng, 0.09) + (charOf(a).stats.speed < 6 ? 0.05 : 0) + m.bots.lateJump;
+  if (s.jumpAt === null) s.jumpAt = 0.22 + gaussian(m.rng, 0.09) + (buildOf(a).stats.speed < 6 ? 0.05 : 0) + m.bots.lateJump;
   if (shooter.action.t >= s.jumpAt && dist2(a, shooter) < 2.4) {
     m.press(a.id, "defend");
     s.jumpAt = 99;

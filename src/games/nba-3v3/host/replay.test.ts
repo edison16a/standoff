@@ -7,12 +7,12 @@ import { MatchDriver } from "./match-driver";
 import { Replay, REPLAY_SPEED } from "./replay";
 
 const ENTRIES: Entry[] = [
-  { team: 0, character: "ashby", seat: 1 },
-  { team: 0, character: "varelas", seat: null },
-  { team: 0, character: "zupan", seat: null },
-  { team: 1, character: "whitlock", seat: 2 },
-  { team: 1, character: "crane", seat: null },
-  { team: 1, character: "delacroix", seat: null },
+  { team: 0, build: "shooter", seat: 1 },
+  { team: 0, build: "dunker", seat: null },
+  { team: 0, build: "playmaker", seat: null },
+  { team: 1, build: "lockdown", seat: 2 },
+  { team: 1, build: "allround", seat: null },
+  { team: 1, build: "big", seat: null },
 ];
 
 /** A few seconds of a computer game on tape. */

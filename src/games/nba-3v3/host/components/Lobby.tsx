@@ -4,7 +4,8 @@ import { Icon } from "@/components/ui/Icon";
 import { DifficultyPicker } from "@/games/kit/difficulty/DifficultyPicker";
 import { playerColor } from "@/games/kit/players";
 import type { TeamId } from "../../engine/types";
-import { CHARACTERS, TEAMS } from "../../roster";
+import { BUILDS } from "../../builds";
+import { TEAMS } from "../../roster";
 import { JerseyBadge } from "../../ui/JerseyBadge";
 import { useNbaStore, type SpotView } from "../host-store";
 import { ROLE_NAMES } from "../roles";
@@ -24,15 +25,15 @@ function RoleTag({ spot, onRole }: { spot: SpotView; onRole?(seat: number): void
 }
 
 function SpotCard({ spot, onMove, onRole }: { spot: SpotView; onMove(seat: number): void; onRole(seat: number): void }) {
-  const c = CHARACTERS[spot.character];
+  const c = BUILDS[spot.build];
   const human = spot.seat !== null;
   const style = human ? ({ "--player": playerColor(spot.seat!) } as React.CSSProperties) : undefined;
   const body = (
     <>
-      <JerseyBadge character={spot.character} team={spot.team} size={52} />
+      <JerseyBadge build={spot.build} team={spot.team} size={52} />
       <span className="nba-spot__text">
-        <strong className="nba-spot__name">{human ? spot.name : c.short}</strong>
-        <span className="nba-spot__star">{human ? c.name : "Computer player"}</span>
+        <strong className="nba-spot__name">{spot.name}</strong>
+        <span className="nba-spot__star">{human ? c.name : "Computer"}</span>
       </span>
       {human && (
         <svg className="nba-spot__move" viewBox="0 0 24 24" aria-hidden="true" style={{ transform: spot.team === 0 ? undefined : "scaleX(-1)" }}>
@@ -133,7 +134,7 @@ export function Lobby() {
         <span className="nba-lobby__logo">
           <b>Basketball</b> 3v3
         </span>
-        <p>{matchSize(bots, home.length, away.length)} Pick your star on your phone.</p>
+        <p>{matchSize(bots, home.length, away.length)} Pick your build on your phone.</p>
       </header>
       <div className="nba-lobby__teams">
         <TeamColumn team={0} spots={home} onDrop={(seat, team) => session.setTeam(seat, team)} onMove={move} onRole={(seat) => session.cycleRole(seat)} />

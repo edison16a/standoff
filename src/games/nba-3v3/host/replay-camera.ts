@@ -1,4 +1,4 @@
-import { charOf } from "../engine/athlete";
+import { buildOf } from "../engine/athlete";
 import type { Match } from "../engine/match";
 import { RIM } from "../engine/tuning";
 import type { V3 } from "../engine/vec";
@@ -32,7 +32,7 @@ export function replayCamera(view: "scorer" | "defender", m: Match, cast: Cast, 
     const l = Math.hypot(toX, toZ) || 1;
     const fx = toX / l;
     const fz = toZ / l;
-    const eye = s.y + charOf(s).build.height * 0.98 + 0.2;
+    const eye = s.y + buildOf(s).body.height * 0.98 + 0.2;
     want = {
       pos: { x: s.x - fx * 1.7 - fz * 0.45, y: eye, z: s.z - fz * 1.7 + fx * 0.45 },
       look: mix({ x: RIM.x, y: RIM.y - 0.2, z: RIM.z }, ball, 0.35),
@@ -44,10 +44,10 @@ export function replayCamera(view: "scorer" | "defender", m: Match, cast: Cast, 
     const l = Math.hypot(toX, toZ) || 1;
     const fx = toX / l;
     const fz = toZ / l;
-    const eye = d.y + charOf(d).build.height * 0.95 + 0.25;
+    const eye = d.y + buildOf(d).body.height * 0.95 + 0.25;
     want = {
       pos: { x: d.x - fx * 1.5 + fz * 0.35, y: eye, z: d.z - fz * 1.5 - fx * 0.35 },
-      look: mix({ x: s.x, y: s.y + charOf(s).build.height * 0.75, z: s.z }, ball, 0.45),
+      look: mix({ x: s.x, y: s.y + buildOf(s).body.height * 0.75, z: s.z }, ball, 0.45),
       fov: 50,
     };
   }

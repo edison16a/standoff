@@ -1,4 +1,4 @@
-import { charOf } from "./athlete";
+import { buildOf } from "./athlete";
 import type { Match } from "./match";
 import { DEFENCE, JUMP } from "./tuning";
 import type { Action, Athlete } from "./types";
@@ -16,7 +16,7 @@ export type BlockStage = "gather" | "rise" | "fall" | "done";
  */
 export function startBlock(a: Athlete): void {
   if (a.blockCd > 0) return;
-  const s = charOf(a).stats;
+  const s = buildOf(a).stats;
   a.action = { kind: "block", t: 0, peak: 0.42 + s.speed * 0.012 + s.strength * 0.008, gather: JUMP.blockGather, air: JUMP.blockAir };
   a.blockCd = DEFENCE.blockCooldown;
 }

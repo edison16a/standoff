@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CHARACTER_IDS } from "../roster";
+import { BUILD_IDS } from "../builds";
 
 /** Where the room is, as a phone sees it. The replay of the winning basket comes between the win and the results. */
 export const PHASES = ["lobby", "countdown", "live", "replay", "over"] as const;
@@ -50,9 +50,11 @@ export const replaySchema = z.object({
 export const phoneStateSchema = z.object({
   kind: z.literal("state"),
   phase: z.enum(PHASES),
-  /** Characters other players already have. */
-  taken: z.array(z.enum(CHARACTER_IDS)),
-  pick: z.enum(CHARACTER_IDS).nullable(),
+  /** This player's own name, which is on their jersey. */
+  name: z.string().max(40),
+  /** Builds other players already have. */
+  taken: z.array(z.enum(BUILD_IDS)),
+  pick: z.enum(BUILD_IDS).nullable(),
   ready: z.boolean(),
   /** The team the host has put this player on, or null. */
   team: team.nullable(),

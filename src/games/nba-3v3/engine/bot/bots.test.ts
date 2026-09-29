@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { CharacterId } from "../../roster";
+import type { BuildId } from "../../builds";
 import { Match, type Entry } from "../match";
 import { STEP } from "../tuning";
 import { jumperValue } from "./shot-value";
 
-function lineup(chars: CharacterId[]): Entry[] {
-  return chars.map((character, i) => ({ team: (i % 2) as 0 | 1, character, seat: null }));
+function lineup(chars: BuildId[]): Entry[] {
+  return chars.map((build, i) => ({ team: (i % 2) as 0 | 1, build, seat: null }));
 }
 
 /** Puts one player alone at the top of the key and everyone else far away. */
@@ -18,16 +18,16 @@ function aloneAtTop(m: Match, id: number): void {
 
 describe("computer players", () => {
   it("value an open three from a great shooter above one from a poor shooter", () => {
-    const m = new Match({ entries: lineup(["ashby", "whitlock", "varelas", "crane", "delacroix", "zupan"]), seed: 1 });
+    const m = new Match({ entries: lineup(["shooter", "lockdown", "dunker", "allround", "big", "playmaker"]), seed: 1 });
     aloneAtTop(m, 0);
-    const ashby = jumperValue(m, m.athletes[0]!);
+    const shooter = jumperValue(m, m.athletes[0]!);
     aloneAtTop(m, 2);
-    const varelas = jumperValue(m, m.athletes[2]!);
-    expect(ashby).toBeGreaterThan(varelas);
+    const dunker = jumperValue(m, m.athletes[2]!);
+    expect(shooter).toBeGreaterThan(dunker);
   });
 
   it("value a three less with a defender in the shooter's face", () => {
-    const m = new Match({ entries: lineup(["ashby", "whitlock", "varelas", "crane", "delacroix", "zupan"]), seed: 1 });
+    const m = new Match({ entries: lineup(["shooter", "lockdown", "dunker", "allround", "big", "playmaker"]), seed: 1 });
     aloneAtTop(m, 0);
     const open = jumperValue(m, m.athletes[0]!);
     const guard = m.athletes[1]!;
@@ -37,21 +37,21 @@ describe("computer players", () => {
   });
 
   it("get the great shooters their shots over a few games", () => {
-    let ashbyThrees = 0;
+    let shooterThrees = 0;
     let passes = 0;
     let intercepts = 0;
     for (const seed of [1, 2, 3]) {
-      const m = new Match({ entries: lineup(["ashby", "whitlock", "crane", "varelas", "delacroix", "zupan"]), seed });
+      const m = new Match({ entries: lineup(["shooter", "lockdown", "allround", "dunker", "big", "playmaker"]), seed });
       for (let t = 0; t < 900 && m.phase !== "over"; t += STEP) {
         m.step(STEP);
         for (const e of m.drainEvents()) {
-          if (e.type === "shot" && e.id === 0 && e.three) ashbyThrees++;
+          if (e.type === "shot" && e.id === 0 && e.three) shooterThrees++;
           if (e.type === "pass") passes++;
           if (e.type === "intercept") intercepts++;
         }
       }
     }
-    expect(ashbyThrees).toBeGreaterThanOrEqual(3);
+    expect(shooterThrees).toBeGreaterThanOrEqual(3);
     // Passing lanes are a risk, not a coin flip.
     expect(intercepts / passes).toBeLessThan(0.12);
     // Three whole games take a few seconds, longer on a busy machine.
@@ -62,7 +62,7 @@ describe("computer players", () => {
     let shakes = 0;
     let most = 0;
     for (const seed of [1, 2, 3]) {
-      const m = new Match({ entries: lineup(["ashby", "whitlock", "crane", "varelas", "delacroix", "zupan"]), seed });
+      const m = new Match({ entries: lineup(["shooter", "lockdown", "allround", "dunker", "big", "playmaker"]), seed });
       for (let t = 0; t < 900 && m.phase !== "over"; t += STEP) {
         m.step(STEP);
         for (const e of m.drainEvents()) {

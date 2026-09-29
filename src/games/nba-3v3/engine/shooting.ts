@@ -1,4 +1,4 @@
-import { charOf } from "./athlete";
+import { buildOf } from "./athlete";
 import { contestFor } from "./contest";
 import { isThree, rimDistance } from "./court";
 import { arcTimed, flight } from "./flight";
@@ -21,7 +21,7 @@ export const JUMPER = { takeoff: (SHOT.takeoff * SHOT.meterMs) / 1000, air: 0.62
 
 /** Where the ball leaves the hand on a jumper: above the forehead, a little in front. */
 export function releasePoint(a: Athlete): V3 {
-  const h = charOf(a).build.height;
+  const h = buildOf(a).body.height;
   return { x: a.x + Math.sin(a.yaw) * 0.22, y: a.y + h * 1.17, z: a.z + Math.cos(a.yaw) * 0.22 };
 }
 
@@ -47,7 +47,7 @@ export function releaseJumper(m: Match, a: Athlete, heldMs?: number): void {
   if (m.ball.holder !== a.id || m.phase !== (free ? "freeThrow" : "live")) return;
   const hostMs = a.action.t * 1000;
   const ms = heldMs === undefined ? hostMs : clamp(heldMs, hostMs - 260, hostMs + 60);
-  const { grade } = gradeRelease(ms, charOf(a).stats.shooting, a.onFire, free);
+  const { grade } = gradeRelease(ms, buildOf(a).stats.shooting, a.onFire, free);
   launchShot(m, a, free ? "free" : "jumper", grade, releasePoint(a));
 }
 
@@ -87,7 +87,7 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
     m.emit({ type: "block", id: c.blocker.id, victim: a.id });
     return;
   }
-  const s = charOf(a).stats;
+  const s = buildOf(a).stats;
   const ctx = { kind, grade, distance, shooting: s.shooting, contest: c.contest, strengthEdge: c.edge, onFire: a.onFire };
   // Contact knocks the shot off line, so a fouled shot drops far less often.
   const chance = makeChance(ctx) * (fouler ? FOULED_MAKE : 1);
@@ -117,7 +117,7 @@ export function slam(m: Match, a: Athlete): void {
   b.flightSeg = -1;
   b.lastTouch = a.id;
   b.pos = { ...top };
-  const style = a.action.kind === "drive" && a.action.style ? a.action.style : charOf(a).dunk;
+  const style = a.action.kind === "drive" && a.action.style ? a.action.style : buildOf(a).dunk;
   const base = { shooter: a.id, team: a.team, points: 2, kind: "dunk", dunk: style, grade: "perfect", counted: false, touchedRim: true, assist: m.lastPass?.to === a.id ? m.lastPass.from : null, contest: c.contest, distance: 0.5 } as const;
   const forced = m.forced;
   m.forced = null;
@@ -147,6 +147,6 @@ export function slam(m: Match, a: Athlete): void {
   });
   b.flightKind = "dunk";
   b.shot = { ...base, outcome: "swish", made: true };
-  const power = clamp(0.5 + charOf(a).stats.strength * 0.05, 0.5, 1);
+  const power = clamp(0.5 + buildOf(a).stats.strength * 0.05, 0.5, 1);
   m.emit({ type: "dunk", id: a.id, style, power });
 }

@@ -99,7 +99,7 @@ export class NbaHost {
     return this.fanout.listen(listener);
   }
 
-  /** The name a player is shown by: their own for people, the star's for computers. */
+  /** The name a player is shown by: their own for people, CPU and the build for computers. */
   nameOf(id: number): string {
     return this.driver ? nameFor(this.driver.match, id, this.room.players()) : "";
   }

@@ -1,14 +1,14 @@
 import * as THREE from "three";
-import { CHARACTERS, type Character, type Team } from "../roster";
+import { BUILDS, type BuildSpec } from "../builds";
+import { type Team } from "../roster";
 import { buildAthlete, type AthleteModel } from "./models/athlete-model";
 
 /** The referee: a lean official in a striped shirt, long black trousers and black shoes. */
-const REF: Character = {
-  ...CHARACTERS.ashby,
+const REF: BuildSpec = {
+  ...BUILDS.shooter,
   name: "Referee",
-  short: "Ref",
   number: 0,
-  build: { height: 1.86, width: 0.98, bulk: 0.95, reach: 1 },
+  body: { height: 1.86, width: 0.98, bulk: 0.95, reach: 1 },
   look: {
     skin: "#c99a78", hair: "short", hairColor: "#3b2a1e", beard: "none", headband: null, sleeve: null, wristband: null,
     shoe: "#111111", shoeAccent: "#222222", sock: "#111111", mouthguard: false,

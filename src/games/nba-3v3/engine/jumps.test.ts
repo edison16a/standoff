@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CHARACTER_IDS } from "../roster";
+import { BUILD_IDS, BUILDS } from "../builds";
 import { createAthlete } from "./athlete";
 import { blockStage, startBlock, updateBlock } from "./block";
 import { contestFor } from "./contest";
@@ -8,7 +8,7 @@ import { Match, type Entry } from "./match";
 import { seeded } from "./rng";
 import { JUMP, STEP } from "./tuning";
 
-const ENTRIES: Entry[] = CHARACTER_IDS.slice(0, 6).map((character, i) => ({ team: (i % 2) as 0 | 1, character, seat: null }));
+const ENTRIES: Entry[] = BUILD_IDS.slice(0, 6).map((build, i) => ({ team: (i % 2) as 0 | 1, build, seat: null }));
 
 describe("jumping to block", () => {
   it("crouches first, rises in a real arc, and lands with slow legs", () => {
@@ -35,10 +35,10 @@ describe("jumping to block", () => {
   });
 
   it("blocks more often when timed to the top of the jump", () => {
-    const shooter = createAthlete(0, 0, 0, "ashby", null);
+    const shooter = createAthlete(0, 0, 0, "shooter", null);
     Object.assign(shooter, { x: 0, z: 7 });
     const chanceAt = (t: number) => {
-      const d = createAthlete(1, 1, 0, "delacroix", null);
+      const d = createAthlete(1, 1, 0, "big", null);
       Object.assign(d, { x: 0, z: 6.2 });
       startBlock(d);
       if (d.action.kind !== "block") throw new Error("no jump");
@@ -56,28 +56,28 @@ describe("jumping to block", () => {
 });
 
 describe("dunks", () => {
-  it("come in a few variants, with the star's own the most common", () => {
+  it("come in a few variants, with the build's own the most common", () => {
     const rng = seeded(4);
-    const varelas = createAthlete(0, 0, 0, "varelas", null);
-    Object.assign(varelas, { x: 0.3, z: 3 });
+    const dunker = createAthlete(0, 0, 0, "dunker", null);
+    Object.assign(dunker, { x: 0.3, z: 3 });
     const styles = new Map<string, number>();
     for (let i = 0; i < 300; i++) {
-      const plan = chooseDunk(rng, varelas, i % 2 === 0);
+      const plan = chooseDunk(rng, dunker, i % 2 === 0);
       styles.set(plan.style, (styles.get(plan.style) ?? 0) + 1);
     }
     expect(styles.size).toBeGreaterThanOrEqual(3);
-    const own = styles.get("hammer") ?? 0;
-    for (const [style, n] of styles) if (style !== "hammer") expect(own).toBeGreaterThan(n);
+    const own = styles.get(BUILDS.dunker.dunk) ?? 0;
+    for (const [style, n] of styles) if (style !== BUILDS.dunker.dunk) expect(own).toBeGreaterThan(n);
   });
 
   it("go reverse along the baseline, and hang on the rim for the rim hang", () => {
     const rng = seeded(9);
-    const zupan = createAthlete(0, 0, 0, "zupan", null);
-    Object.assign(zupan, { x: 2.2, z: 1.2 });
+    const playmaker = createAthlete(0, 0, 0, "playmaker", null);
+    Object.assign(playmaker, { x: 2.2, z: 1.2 });
     let reverse = 0;
-    for (let i = 0; i < 100; i++) if (chooseDunk(rng, zupan, true).style === "reverse") reverse++;
+    for (let i = 0; i < 100; i++) if (chooseDunk(rng, playmaker, true).style === "reverse") reverse++;
     expect(reverse).toBeGreaterThan(40);
-    const plan = chooseDunk(rng, zupan, true, "rimhang");
+    const plan = chooseDunk(rng, playmaker, true, "rimhang");
     expect(plan.rimHang).toBeGreaterThan(0.4);
   });
 

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { CHARACTER_IDS } from "../roster";
+import { BUILD_IDS } from "../builds";
 import type { MatchEvent } from "./events";
 import { Match, type Entry } from "./match";
 import { STEP } from "./tuning";
 
-const BOTS: Entry[] = CHARACTER_IDS.slice(0, 6).map((character, i) => ({ team: (i % 2) as 0 | 1, character, seat: null }));
+const BOTS: Entry[] = BUILD_IDS.slice(0, 6).map((build, i) => ({ team: (i % 2) as 0 | 1, build, seat: null }));
 
 /** Plays a whole game between computer players and gathers every event. */
 function playOut(seed: number, maxSeconds = 1500): { match: Match; events: MatchEvent[] } {

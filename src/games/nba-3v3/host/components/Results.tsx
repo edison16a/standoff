@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { playerColor } from "@/games/kit/players";
-import { CHARACTERS, TEAMS } from "../../roster";
+import { BUILDS } from "../../builds";
+import { TEAMS } from "../../roster";
 import { JerseyBadge } from "../../ui/JerseyBadge";
 import { statLine } from "../../ui/stat-line";
 import { useNbaStore, type ResultRow } from "../host-store";
@@ -35,7 +36,7 @@ function BoxScore({ rows, team }: { rows: ResultRow[]; team: 0 | 1 }) {
             <th scope="row">
               <span className="nba-box__dot" style={{ background: r.seat !== null ? playerColor(r.seat) : "#94a3b8" }} />
               {r.name}
-              {r.seat !== null && <small>{CHARACTERS[r.character].short}</small>}
+              {r.seat !== null && <small>{BUILDS[r.build].name}</small>}
             </th>
             <td className="nba-box__pts">{r.points}</td>
             <td>{r.rebounds}</td>
@@ -84,7 +85,7 @@ export function Results() {
         </header>
         {mvp && (
           <div className="nba-results__mvp">
-            <JerseyBadge character={mvp.character} team={mvp.team} size={72} />
+            <JerseyBadge build={mvp.build} team={mvp.team} size={72} />
             <div>
               <span className="nba-results__eyebrow">MVP</span>
               <strong>{mvp.name}</strong>

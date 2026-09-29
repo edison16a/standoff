@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import type { PhoneState } from "../protocol";
-import type { CharacterId } from "../roster";
+import type { BuildId } from "../builds";
 
-export type SetupStep = "star" | "ready";
+export type SetupStep = "build" | "ready";
 
 export interface Flash {
   key: number;
@@ -13,8 +13,8 @@ export interface Flash {
 /** What Basketball 3v3's phone screens render. */
 export interface ControllerStore {
   step: SetupStep;
-  /** The star this phone asked for, shown at once while the host confirms. */
-  wanted: CharacterId | null;
+  /** The build this phone asked for, shown at once while the host confirms. */
+  wanted: BuildId | null;
   /** The latest screen state from the host, null until the first one lands. */
   host: PhoneState | null;
   /** A word flashed over the controller, like "Green!" or "Stolen". */
@@ -24,7 +24,7 @@ export interface ControllerStore {
 }
 
 export const useControllerStore = create<ControllerStore>(() => ({
-  step: "star",
+  step: "build",
   wanted: null,
   host: null,
   flash: null,

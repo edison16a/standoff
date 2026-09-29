@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CHARACTER_IDS } from "../roster";
+import { BUILD_IDS } from "../builds";
 import type { MatchEvent } from "./events";
 import { callShootingFoul } from "./foul-call";
 import { Match, type Entry } from "./match";
@@ -7,7 +7,7 @@ import type { Outcome } from "./shot-model";
 import { rollShootingFoul } from "./shooting-foul";
 import { STEP } from "./tuning";
 
-const ENTRIES: Entry[] = CHARACTER_IDS.slice(0, 6).map((character, i) => ({ team: (i % 2) as 0 | 1, character, seat: null }));
+const ENTRIES: Entry[] = BUILD_IDS.slice(0, 6).map((build, i) => ({ team: (i % 2) as 0 | 1, build, seat: null }));
 
 /** Player 0 up for a jumper from `z` straight out from the rim, defender 1 in his face. */
 function shooting(seed: number, z = 6.5): Match {

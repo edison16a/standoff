@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import type { CharacterId } from "../roster";
+import type { BuildId } from "../builds";
 import { guardSpot, guardStatus, guardTarget } from "./guard";
 import { Match, type Entry } from "./match";
 import { STEP } from "./tuning";
 
-const STARS: CharacterId[] = ["ashby", "whitlock", "crane", "varelas", "zupan", "delacroix"];
+const LINEUP: BuildId[] = ["shooter", "lockdown", "allround", "dunker", "playmaker", "big"];
 /** Team 0 has the ball; athlete 3 is a person on defence, guarding athlete 0 (both Guards). */
-const ENTRIES: Entry[] = STARS.map((character, i) => ({ team: i < 3 ? 0 : 1, character, seat: i === 3 ? 1 : null, slot: i % 3 }));
+const ENTRIES: Entry[] = LINEUP.map((build, i) => ({ team: i < 3 ? 0 : 1, build, seat: i === 3 ? 1 : null, slot: i % 3 }));
 
 function setup(): Match {
   const m = new Match({ entries: ENTRIES, seed: 5, firstOffence: 0, botLevel: "training" });

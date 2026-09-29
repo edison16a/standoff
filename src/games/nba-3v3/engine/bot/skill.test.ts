@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { CHARACTER_IDS } from "../../roster";
+import { BUILD_IDS } from "../../builds";
 import { Match, type Entry } from "../match";
 import { STEP } from "../tuning";
 import { botTuning } from "./skill";
 
-const BOTS: Entry[] = CHARACTER_IDS.map((character, i) => ({ team: (i % 2) as 0 | 1, character, seat: null }));
+const BOTS: Entry[] = BUILD_IDS.map((build, i) => ({ team: (i % 2) as 0 | 1, build, seat: null }));
 
 describe("computer difficulty", () => {
   it("gets sharper from easy to hard", () => {

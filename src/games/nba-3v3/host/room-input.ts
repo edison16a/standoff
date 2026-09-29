@@ -79,7 +79,7 @@ export class RoomInput {
         driver?.replays.skip(seat);
         break;
       case "pick":
-        lobby.pick(seat, message.character);
+        lobby.pick(seat, message.build);
         break;
       case "ready":
         lobby.setReady(seat, message.ready);

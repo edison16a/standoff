@@ -1,4 +1,4 @@
-import { charOf } from "../athlete";
+import { buildOf } from "../athlete";
 import { nearestBeyondArc, RIM_SPOT, rimDistance } from "../court";
 import type { Match } from "../match";
 import { openness } from "../passing";
@@ -42,7 +42,7 @@ export function thinkWithBall(m: Match, a: Athlete, s: BotState, dt: number): vo
 }
 
 function decide(m: Match, a: Athlete, s: BotState): void {
-  const st = charOf(a).stats;
+  const st = buildOf(a).stats;
   const d = rimDistance(a);
   const open = openness(m, a);
   const lane = laneOpen(m, a);
@@ -88,19 +88,19 @@ function followMove(m: Match, a: Athlete, s: BotState, act: Extract<Athlete["act
 
 /** How keen a player is on their own jumper: shooters look for it, bigs look inside. */
 function lean(a: Athlete): number {
-  return 0.55 + charOf(a).stats.shooting * 0.055;
+  return 0.55 + buildOf(a).stats.shooting * 0.055;
 }
 
 /** How dangerous a teammate would be with the ball right now: their jumper, or an open lane to the rim. */
 function threat(m: Match, t: Athlete): number {
-  const st = charOf(t).stats;
+  const st = buildOf(t).stats;
   const drive = laneOpen(m, t, 0.8) && rimDistance(t) < 7 ? 0.2 + (st.speed + st.strength) * 0.05 : 0;
   return jumperValue(m, t) * lean(t) + drive + Math.min(3, openness(m, t)) * 0.15;
 }
 
 /** A jumper stops the feet first; a drive keeps them going. The meter target wobbles with skill. */
 function shoot(m: Match, a: Athlete, s: BotState, d: number): void {
-  const st = charOf(a).stats;
+  const st = buildOf(a).stats;
   if (d < 3.2) {
     s.target = RIM_SPOT;
     goTo(a, RIM_SPOT);

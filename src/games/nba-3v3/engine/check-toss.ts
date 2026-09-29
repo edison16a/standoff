@@ -1,4 +1,4 @@
-import { charOf } from "./athlete";
+import { buildOf } from "./athlete";
 import { handTo } from "./check-plan";
 import type { Match } from "./match";
 import type { Athlete } from "./types";
@@ -29,7 +29,7 @@ const BOUNCE_AT = 0.58;
 
 /** The ball held in both hands at the chest, just in front of the body. */
 export function chestPoint(a: Athlete): V3 {
-  const h = charOf(a).build.height;
+  const h = buildOf(a).body.height;
   return { x: a.x + Math.sin(a.yaw) * 0.32, y: a.y + h * 0.6, z: a.z + Math.cos(a.yaw) * 0.32 };
 }
 

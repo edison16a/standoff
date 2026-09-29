@@ -1,4 +1,4 @@
-import { charOf } from "../athlete";
+import { buildOf } from "../athlete";
 import { contestFor } from "../contest";
 import { isThree, rimDistance } from "../court";
 import type { Match } from "../match";
@@ -31,7 +31,7 @@ function within(half: number, sd: number): number {
  * than they do standing still.
  */
 export function jumperValue(m: Match, a: Athlete): number {
-  const st = charOf(a).stats;
+  const st = buildOf(a).stats;
   const sd = releaseSpread(st.shooting) * SIGMA;
   const half = greenHalfMs(st.shooting, a.onFire);
   const pGreen = within(half, sd);

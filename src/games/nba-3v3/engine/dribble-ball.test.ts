@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { CHARACTER_IDS } from "../roster";
-import { charOf } from "./athlete";
+import { BUILD_IDS } from "../builds";
+import { buildOf } from "./athlete";
 import { dribbleRate, LEG_SHARE, strideLength } from "./dribble-ball";
 import type { MatchEvent } from "./events";
 import { Match, type Entry } from "./match";
 import { gainPossession } from "./rules";
 import { STEP } from "./tuning";
 
-const ENTRIES: Entry[] = CHARACTER_IDS.slice(0, 6).map((character, i) => ({ team: (i % 2) as 0 | 1, character, seat: i === 0 ? 1 : null }));
+const ENTRIES: Entry[] = BUILD_IDS.slice(0, 6).map((build, i) => ({ team: (i % 2) as 0 | 1, build, seat: i === 0 ? 1 : null }));
 
 /** Player 0 on a phone with the ball at the top facing the rim, everyone else far off and still. */
 function setup(): Match {
@@ -34,12 +34,12 @@ describe("the dribble rhythm", () => {
   it("bounces once a stride on the run and pounds quicker and lower standing still", () => {
     const m = setup();
     const a = m.athletes[0]!;
-    const leg = LEG_SHARE * charOf(a).build.height;
+    const leg = LEG_SHARE * buildOf(a).body.height;
     expect(dribbleRate(a, 5)).toBeCloseTo(5 / strideLength(5, leg, false), 5);
     expect(dribbleRate(a, 0)).toBeGreaterThan(dribbleRate(a, 1.2));
     let top = 0;
     run(m, 1, [], () => (top = Math.max(top, m.ball.pos.y)));
-    expect(top).toBeLessThan(charOf(a).build.height * 0.42);
+    expect(top).toBeLessThan(buildOf(a).body.height * 0.42);
   });
 
   it("holds a caught ball in the pocket a moment before the first bounce", () => {
@@ -48,7 +48,7 @@ describe("the dribble rhythm", () => {
     gainPossession(m, a);
     const early = run(m, 0.18);
     expect(early.some((e) => e.type === "bounce")).toBe(false);
-    expect(m.ball.pos.y).toBeGreaterThan(charOf(a).build.height * 0.55);
+    expect(m.ball.pos.y).toBeGreaterThan(buildOf(a).body.height * 0.55);
     expect(run(m, 0.5).some((e) => e.type === "bounce")).toBe(true);
   });
 
