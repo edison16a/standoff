@@ -68,9 +68,8 @@ export class MeshBuilder {
     this.euler.set(rot[0], rot[1], rot[2]);
     this.quat.setFromEuler(this.euler);
     this.matrix.compose(new THREE.Vector3(at[0] + this.origin.x, at[1] + this.origin.y, at[2] + this.origin.z), this.quat, new THREE.Vector3(...scale));
-    geometry.applyMatrix4(this.matrix);
-    const geo = geometry.index ? geometry.toNonIndexed() : geometry;
-    if (geo !== geometry) geometry.dispose();
+    const geo = geometry.applyMatrix4(this.matrix);
+    // Indexed shapes stay indexed: spheres and rounded boxes share most of their vertices, a third of the memory.
     for (const name of Object.keys(geo.attributes)) if (!KEEP.has(name)) geo.deleteAttribute(name);
     const count = geo.attributes.position!.count;
     if (!geo.attributes.uv) geo.setAttribute("uv", new THREE.BufferAttribute(new Float32Array(count * 2), 2));
@@ -151,11 +150,14 @@ export class MeshBuilder {
   build(name = "merged"): THREE.Group {
     const group = new THREE.Group();
     group.name = name;
-    for (const [material, geometries] of this.parts) {
+    for (const [material, list] of this.parts) {
+      // Merging needs all or none indexed. A part without an index, like an extrusion, turns the rest flat too.
+      const flat = list.some((g) => !g.index);
+      const geometries = flat ? list.map((g) => (g.index ? g.toNonIndexed() : g)) : list;
       const hasColor = geometries.some((g) => g.attributes.color);
       if (hasColor) for (const g of geometries) if (!g.attributes.color) g.setAttribute("color", new THREE.BufferAttribute(new Float32Array(g.attributes.position!.count * 3).fill(1), 3));
       const merged = mergeGeometries(geometries, false);
-      for (const geo of geometries) geo.dispose();
+      for (const geo of new Set([...list, ...geometries])) geo.dispose();
       if (!merged) continue;
       merged.computeBoundingSphere();
       group.add(new THREE.Mesh(merged, material));
