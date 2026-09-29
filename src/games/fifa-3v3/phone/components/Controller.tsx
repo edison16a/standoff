@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Joystick } from "@/games/kit/pad/Joystick";
 import type { PhoneState } from "../../protocol";
 import { ROLE_NAMES } from "../../roles";
-import { ROSTER } from "../../roster";
+import { BUILDS } from "../../builds";
 import { TEAMS } from "../../teams";
 import { ChargeBar } from "./ChargeBar";
 import { PadButtons, padMode } from "./PadButtons";
@@ -24,7 +24,7 @@ function clock(seconds: number): string {
 export function Controller({ host }: { host: PhoneState }) {
   const phone = usePhone();
   const team = host.team !== null ? TEAMS[host.team] : TEAMS[0];
-  const star = host.pick ? ROSTER[host.pick] : null;
+  const build = host.pick ? BUILDS[host.pick] : null;
   const mode = padMode(host);
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export function Controller({ host }: { host: PhoneState }) {
         <div className={`fifa-pad__clock ${host.golden ? "fifa-pad__clock--golden" : ""}`}>{host.golden ? "Golden goal" : clock(host.clock)}</div>
         <div className="fifa-pad__me">
           <span className="fifa-pad__team">{team.name}</span>
-          {star && <span>{star.short}</span>}
+          {build && <span>{build.name}</span>}
           {host.role && <span>{ROLE_NAMES[host.role]}</span>}
           {host.goals > 0 && <span>{host.goals === 1 ? "1 goal" : `${host.goals} goals`}</span>}
         </div>

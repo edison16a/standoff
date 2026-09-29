@@ -2,7 +2,7 @@
 import { Icon } from "@/components/ui/Icon";
 import { DifficultyPicker } from "@/games/kit/difficulty/DifficultyPicker";
 import { playerColor } from "@/games/kit/players";
-import { ROSTER } from "../../roster";
+import { BUILDS, computerName } from "../../builds";
 import { ROLE_NAMES } from "../../roles";
 import { TEAMS, other, type TeamId } from "../../teams";
 import { useFifaStore, type SeatView } from "../host-store";
@@ -13,14 +13,14 @@ import { useSession } from "./session-context";
 
 function PlayerCard({ seat, full }: { seat: SeatView; full: (team: TeamId) => boolean }) {
   const session = useSession();
-  const star = seat.pick ? ROSTER[seat.pick] : null;
+  const build = seat.pick ? BUILDS[seat.pick] : null;
   const move = (team: TeamId | null) => session.setTeam(seat.seat, team);
   return (
     <li className={`fifa-card ${seat.ready ? "fifa-card--ready" : ""}`} style={{ "--player": playerColor(seat.seat) } as React.CSSProperties}>
       <span className="fifa-card__dot" />
       <span className="fifa-card__who">
         <strong>{seat.name}</strong>
-        <span>{star ? `${star.name}, ${star.number}` : "Choosing a star"}</span>
+        <span>{build ? `${build.name}, ${build.number}` : "Choosing a build"}</span>
       </span>
       {seat.team !== null && <RolePicker name={seat.name} role={seat.role} onPick={(role) => session.setRole(seat.seat, role)} />}
       <span className={`fifa-card__state ${seat.ready ? "fifa-card__state--on" : ""}`}>{seat.ready ? "Ready" : "Setting up"}</span>
@@ -76,10 +76,10 @@ function TeamColumn({ team }: { team: TeamId }) {
         ))}
         {players.length === 0 && !botsOn && <li className="fifa-card fifa-card--empty">Nobody on this side yet</li>}
         {fillers.map((bot) => (
-          <li key={bot.character} className="fifa-card fifa-card--bot">
+          <li key={bot.build} className="fifa-card fifa-card--bot">
             <span className="fifa-card__cpu">CPU</span>
             <span className="fifa-card__who">
-              <strong>{ROSTER[bot.character].name}</strong>
+              <strong>{computerName(bot.build)}</strong>
               <span>Computer, {ROLE_NAMES[bot.role].toLowerCase()}</span>
             </span>
           </li>
@@ -90,7 +90,7 @@ function TeamColumn({ team }: { team: TeamId }) {
 }
 
 /**
- * The lobby on the big screen: players pick their star on their phones,
+ * The lobby on the big screen: players pick their build on their phones,
  * and here the host puts them on a side with the mouse. Empty places are
  * filled by computer players unless they are turned off. Start when
  * everyone is ready.
@@ -111,7 +111,7 @@ export function Lobby() {
     joined.length === 0
       ? "Scan the code with your phone to join. Up to six players."
       : playing === 0
-        ? "Pick a star on your phone, then tap Ready."
+        ? "Pick a build on your phone, then tap Ready."
         : waiting > 0
           ? `${playing} ready. ${waiting} still choosing.`
           : block === "oneSided"

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import type { Look } from "../../roster";
+import type { Look } from "../../looks";
 import { ball, blend, merge, paint, shade, type V3 } from "./geo";
 import { hairParts } from "./hair";
 

@@ -5,12 +5,12 @@ import { PITCH, STEP } from "./tuning";
 import type { Command, MatchState } from "./types";
 
 const LINEUP: Entrant[] = [
-  { team: 0, character: "echeverri", seat: null },
-  { team: 0, character: "brandao", seat: null },
-  { team: 0, character: "okemba", seat: null },
-  { team: 1, character: "holmvik", seat: null },
-  { team: 1, character: "lacerda", seat: null },
-  { team: 1, character: "serrano", seat: null },
+  { team: 0, build: "playmaker", seat: null },
+  { team: 0, build: "striker", seat: null },
+  { team: 0, build: "allrounder", seat: null },
+  { team: 1, build: "keeper", seat: null },
+  { team: 1, build: "winger", seat: null },
+  { team: 1, build: "defender", seat: null },
 ];
 
 /** Plays a match of computer players to the final whistle, or gives up after ten minutes. */
@@ -62,7 +62,7 @@ describe("a match of computer players", () => {
 describe("a phone's player", () => {
   it("cannot walk the ball into the net without shooting", () => {
     for (let seed = 1; seed <= 6; seed++) {
-      const state = createMatch([{ team: 0, character: "echeverri", seat: 1 }, ...LINEUP.slice(3)], { seed, replays: false });
+      const state = createMatch([{ team: 0, build: "playmaker", seat: 1 }, ...LINEUP.slice(3)], { seed, replays: false });
       state.kickoffTeam = 0;
       for (let t = 0; t < 15; t += STEP) {
         const me = state.athletes[0]!;
@@ -80,7 +80,7 @@ describe("a phone's player", () => {
   });
 
   function runsInAndShoots(seed: number): boolean {
-    const state = createMatch([{ team: 0, character: "echeverri", seat: 1 }, ...LINEUP.slice(3)], { seed, replays: false });
+    const state = createMatch([{ team: 0, build: "playmaker", seat: 1 }, ...LINEUP.slice(3)], { seed, replays: false });
     state.kickoffTeam = 0;
     const commands = new Map<number, Command>();
     let shot = false;
@@ -104,7 +104,7 @@ describe("a phone's player", () => {
   it("wins the ball back with a slide tackle sometimes", () => {
     let won = 0;
     for (let seed = 1; seed <= 12; seed++) {
-      const state = createMatch([{ team: 0, character: "holmvik", seat: 1 }, ...LINEUP.slice(3)], { seed, replays: false });
+      const state = createMatch([{ team: 0, build: "keeper", seat: 1 }, ...LINEUP.slice(3)], { seed, replays: false });
       state.kickoffTeam = 1;
       for (let t = 0; t < 12; t += STEP) {
         const me = state.athletes[0]!;

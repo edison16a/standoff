@@ -1,4 +1,4 @@
-import { ROSTER } from "../roster";
+import { BUILDS } from "../builds";
 import { attackSign, other, type TeamId } from "../teams";
 import { isHuman } from "./athlete";
 import { newBall } from "./ball";
@@ -46,7 +46,7 @@ export function setupSetPiece(state: MatchState, kind: SetPieceKind = state.foul
   for (const a of state.athletes) reset(a);
   // A right footer comes in from the left of the ball, a left footer from the right.
   const run = RUN_UP[kind];
-  place(taker, behindBall(spot, defending, run.back, ROSTER[taker.character].foot === "left" ? run.side : -run.side), spot);
+  place(taker, behindBall(spot, defending, run.back, BUILDS[taker.build].foot === "left" ? run.side : -run.side), spot);
   const wall = kind === "free" ? formWall(state, defending, spot) : [];
   placeOthers(state, taker, wall, spot, defending, kind);
   const ball = newBall();

@@ -1,8 +1,9 @@
 import * as THREE from "three";
-import type { MatchView } from "../../engine/view";
-import { ROSTER } from "../../roster";
+import type { AthleteView, MatchView } from "../../engine/view";
+import { BUILDS } from "../../builds";
 import { TEAMS } from "../../teams";
 import { AthleteFigure } from "./athlete-figure";
+import { figureOf } from "./figure-spec";
 import { ChargeSprite } from "./charge-bar";
 import { KeeperFigure } from "./keeper-figure";
 import { Marker } from "./markers";
@@ -18,6 +19,8 @@ export interface Label {
   colour: string;
   /** A phone's player: bright tag and a ring on the turf. */
   human: boolean;
+  /** The name printed on the back of the shirt, for a phone's player. Computer players have just a number. */
+  shirt?: string;
 }
 
 /**
@@ -54,7 +57,8 @@ export class Squad {
   }
 
   update(view: MatchView, dt: number, time: number, tags: boolean): void {
-    const lineup = view.athletes.map((a) => `${a.character}/${a.team}`).join(",");
+    // A phone's player wears their own name on the back, so a new name is a new shirt.
+    const lineup = view.athletes.map((a) => `${a.build}/${a.team}/${this.shirtName(a)}`).join(",");
     if (lineup !== this.lineup) this.rebuild(view, lineup);
     this.refreshLabels(view);
     view.athletes.forEach((a, i) => {
@@ -65,12 +69,12 @@ export class Squad {
       const tag = this.tags[i];
       if (tag) {
         tag.sprite.visible = tags;
-        tag.sprite.position.set(a.x, figure.character.look.height + 0.34, a.z);
+        tag.sprite.position.set(a.x, figure.spec.look.height + 0.34, a.z);
       }
       this.markers[i]?.update(a, time);
       const bar = this.bars[i]!;
       bar.set(a.bar ? a.charge : null);
-      bar.sprite.position.set(a.x, figure.character.look.height + 0.34, a.z);
+      bar.sprite.position.set(a.x, figure.spec.look.height + 0.34, a.z);
     });
     view.keepers.forEach((k, i) => this.keepers[i]!.update(k, dt, time));
   }
@@ -117,7 +121,7 @@ export class Squad {
     this.clearAthletes();
     this.lineup = lineup;
     for (const a of view.athletes) {
-      const figure = new AthleteFigure(a, TEAMS[a.team].kit, this.material);
+      const figure = new AthleteFigure(a, TEAMS[a.team].kit, this.material, figureOf(a.build, this.shirtName(a)));
       this.athletes.push(figure);
       this.group.add(figure.rig.root);
       // A soft contact shadow grounds each player even where the shadow map is thin.
@@ -139,7 +143,7 @@ export class Squad {
   /** Tags and rings follow who is playing each figure: a phone's player, or a computer. */
   private refreshLabels(view: MatchView): void {
     const labels = view.athletes.map((a) => {
-      const l = this.label?.(a.id) ?? { name: ROSTER[a.character].short, colour: TEAMS[a.team].color, human: false };
+      const l = this.labelOf(a);
       return `${l.name}|${l.colour}|${l.human}`;
     });
     const key = labels.join(",");
@@ -158,7 +162,7 @@ export class Squad {
     this.tags = [];
     this.markers = [];
     for (const a of view.athletes) {
-      const l = this.label?.(a.id) ?? { name: ROSTER[a.character].short, colour: TEAMS[a.team].color, human: false };
+      const l = this.labelOf(a);
       const tag = new NameTag(l.name, l.colour, l.human);
       this.tags.push(tag);
       this.group.add(tag.sprite);
@@ -166,6 +170,16 @@ export class Squad {
       this.markers.push(marker);
       if (marker) this.group.add(marker.group);
     }
+  }
+
+  /** The tag over a player: the session's, or with none (the showcase) the build's name. */
+  private labelOf(a: AthleteView): Label {
+    return this.label?.(a.id) ?? { name: BUILDS[a.build].name, colour: TEAMS[a.team].color, human: false };
+  }
+
+  /** A phone's player has their own name printed on the shirt; a computer player has just the number. */
+  private shirtName(a: AthleteView): string {
+    return this.labelOf(a).shirt ?? "";
   }
 
   private clearAthletes(): void {

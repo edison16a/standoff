@@ -1,4 +1,4 @@
-import type { CharacterId } from "../roster";
+import type { BuildId } from "../builds";
 import type { TeamId } from "../teams";
 import { makeAthlete } from "./athlete";
 import { newBall } from "./ball";
@@ -16,7 +16,7 @@ import type { Command, MatchOptions, MatchState } from "./types";
 
 export interface Entrant {
   team: TeamId;
-  character: CharacterId;
+  build: BuildId;
   /** The phone playing them, or null for a computer player. */
   seat: number | null;
 }
@@ -33,7 +33,7 @@ export const DEFAULT_OPTIONS: MatchOptions = {
 export function createMatch(entrants: readonly Entrant[], options: Partial<MatchOptions> = {}): MatchState {
   const opts = { ...DEFAULT_OPTIONS, ...options };
   const slots: [number, number] = [0, 0];
-  const athletes = entrants.map((e, id) => makeAthlete(id, e.team, slots[e.team]++, e.character, e.seat));
+  const athletes = entrants.map((e, id) => makeAthlete(id, e.team, slots[e.team]++, e.build, e.seat));
   const state: MatchState = {
     phase: "kickoff",
     phaseT: 0,

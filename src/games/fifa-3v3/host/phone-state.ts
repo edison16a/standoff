@@ -18,6 +18,7 @@ export function phoneState(c: PublishContext, seat: number): PhoneState {
   return {
     kind: "state",
     phase: c.phase,
+    name: c.players.find((p) => p.seat === seat)?.name.slice(0, 40) ?? "",
     taken: c.lobby.taken(seat),
     pick: s.pick,
     ready: s.ready,
@@ -41,7 +42,7 @@ export function phoneState(c: PublishContext, seat: number): PhoneState {
 
 /**
  * Guard's man, called as the big screen tags him (a phone's name, or a
- * computer star's), and the range, rounded so the phone is not sent a
+ * computer's build), and the range, rounded so the phone is not sent a
  * new state for every centimetre.
  */
 function guard(match: MatchState, a: Athlete, nameOf: (id: number) => string): PhoneState["guard"] {

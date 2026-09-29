@@ -55,14 +55,18 @@ export function passVelocity(from: Vec3, to: Vec2, arrive: number = PASS.arrive)
   return { x: (dx / d) * speed, y: 0, z: (dz / d) * speed };
 }
 
-/** Where to send it so a running receiver meets it: their spot, plus where they are heading. */
-export function leadFor(from: Vec3, receiver: Athlete): Vec2 {
+/**
+ * Where to send it so a running receiver meets it: their spot, plus
+ * where they are heading. `share` is how much of the run the passer
+ * reads, which is their vision.
+ */
+export function leadFor(from: Vec3, receiver: Athlete, share = 0.8): Vec2 {
   let target = { ...receiver.pos };
   for (let i = 0; i < 2; i++) {
     const d = Math.hypot(target.x - from.x, target.z - from.z);
     const v0 = Math.min(PASS.maxSpeed, Math.sqrt(PASS.arrive * PASS.arrive + 2 * BALL.roll * d));
     const t = d / ((v0 + PASS.arrive) / 2);
-    target = { x: receiver.pos.x + receiver.vel.x * t * 0.8, z: receiver.pos.z + receiver.vel.z * t * 0.8 };
+    target = { x: receiver.pos.x + receiver.vel.x * t * share, z: receiver.pos.z + receiver.vel.z * t * share };
   }
   return target;
 }

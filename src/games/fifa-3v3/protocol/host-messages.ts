@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ROLES } from "../roles";
-import { CHARACTER_IDS } from "../roster";
+import { BUILD_IDS } from "../builds";
 
 /** Where the room is, as a phone sees it. */
 export const PHASES = ["lobby", "kickoff", "play", "goal", "replay", "restart", "fulltime", "foul", "setpiece"] as const;
@@ -17,9 +17,11 @@ const team = z.union([z.literal(0), z.literal(1)]);
 export const phoneStateSchema = z.object({
   kind: z.literal("state"),
   phase: z.enum(PHASES),
-  /** Stars other connected players already have. */
-  taken: z.array(z.enum(CHARACTER_IDS)),
-  pick: z.enum(CHARACTER_IDS).nullable(),
+  /** This phone's player's own name, which is printed on their shirt. */
+  name: z.string().max(40),
+  /** Builds other connected players already have. */
+  taken: z.array(z.enum(BUILD_IDS)),
+  pick: z.enum(BUILD_IDS).nullable(),
   ready: z.boolean(),
   /** The side the host put this player on, or null while unassigned. */
   team: team.nullable(),

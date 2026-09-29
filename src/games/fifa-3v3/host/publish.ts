@@ -1,5 +1,4 @@
 import type { Player } from "@/platform/games/game-api";
-import { ROSTER } from "../roster";
 import type { RoomPhase } from "../protocol";
 import { TEAMS } from "../teams";
 import { useFifaStore as store, type ResultRow } from "./host-store";
@@ -7,6 +6,7 @@ import type { Lobby } from "./lobby";
 import type { MatchDriver } from "./match-driver";
 import type { PhoneLink } from "./phone-link";
 import { momentOf } from "./moment";
+import { nameOf } from "./names";
 import { phoneState } from "./phone-state";
 import type { ReplayDirector } from "./replay-director";
 
@@ -38,7 +38,7 @@ export function publish(c: PublishContext): void {
   store.setState({
     phase: c.phase,
     seats,
-    bots: lineup.filter((e) => e.seat === null).map((e) => ({ team: e.team, character: e.character, role: e.role })),
+    bots: lineup.filter((e) => e.seat === null).map((e) => ({ team: e.team, build: e.build, role: e.role })),
     botsOn: c.lobby.bots,
     level: c.lobby.level,
     moment: match ? momentOf(match, (id) => c.nameOf(id)) : null,
@@ -55,9 +55,9 @@ export function publish(c: PublishContext): void {
       ? match.athletes.filter((a) => a.seat !== null).map((a) => ({
           id: a.id,
           seat: a.seat!,
-          name: names.get(a.seat!) ?? ROSTER[a.character].short,
+          name: nameOf(a, names),
           team: a.team,
-          character: a.character,
+          build: a.build,
           hasBall: owner?.kind === "athlete" && owner.id === a.id,
           away: !a.online,
         }))
@@ -72,8 +72,8 @@ function results(driver: MatchDriver, names: ReadonlyMap<number, string>): Resul
     .map((a) => ({
       id: a.id,
       team: a.team,
-      name: a.seat !== null ? (names.get(a.seat) ?? ROSTER[a.character].short) : ROSTER[a.character].name,
-      character: a.character,
+      name: nameOf(a, names),
+      build: a.build,
       seat: a.seat,
       goals: a.stats.goals,
       shots: a.stats.shots,
@@ -86,7 +86,7 @@ function results(driver: MatchDriver, names: ReadonlyMap<number, string>): Resul
     id: -1 - k.team,
     team: k.team,
     name: `${TEAMS[k.team].name} keeper`,
-    character: null,
+    build: null,
     seat: null,
     goals: 0,
     shots: 0,

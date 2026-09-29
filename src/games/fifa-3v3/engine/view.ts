@@ -1,4 +1,4 @@
-import type { CharacterId } from "../roster";
+import type { BuildId } from "../builds";
 import type { TeamId } from "../teams";
 import { chargeLevel, isTap } from "./charge";
 import type { Athlete, AthleteAction, Dive, KeeperAction, MatchState, Phase, SkillKind } from "./types";
@@ -15,7 +15,7 @@ export type { FoulView, RefereeView, SetPieceView };
 export interface AthleteView {
   id: number;
   team: TeamId;
-  character: CharacterId;
+  build: BuildId;
   seat: number | null;
   x: number;
   z: number;
@@ -110,7 +110,7 @@ export function buildView(state: MatchState): MatchView {
     athletes: state.athletes.map((a) => ({
       id: a.id,
       team: a.team,
-      character: a.character,
+      build: a.build,
       seat: a.online ? a.seat : null,
       x: a.pos.x,
       z: a.pos.z,

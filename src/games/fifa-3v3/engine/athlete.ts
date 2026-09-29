@@ -1,4 +1,5 @@
-import { ROSTER, unit, type CharacterId } from "../roster";
+import { units } from "../attributes";
+import { BUILDS, type BuildId } from "../builds";
 import type { TeamId } from "../teams";
 import { isTap } from "./charge";
 import { cycleLength, touchPush } from "./stride";
@@ -6,13 +7,12 @@ import { MOVE, PITCH, TOUCH, BALL } from "./tuning";
 import type { Athlete, Ball } from "./types";
 import { angleDiff, clamp, clampLen, fromAngle, len, v2, type Vec2 } from "./vec";
 
-export function makeAthlete(id: number, team: TeamId, slot: number, character: CharacterId, seat: number | null): Athlete {
-  const stats = ROSTER[character].stats;
+export function makeAthlete(id: number, team: TeamId, slot: number, build: BuildId, seat: number | null): Athlete {
   return {
     id,
     team,
     slot,
-    character,
+    build,
     seat,
     online: seat !== null,
     pos: v2(),
@@ -36,10 +36,7 @@ export function makeAthlete(id: number, team: TeamId, slot: number, character: C
     power: 0,
     slideDone: false,
     skill: { kind: null, side: 1, from: v2(1, 0), exit: v2(1, 0), pace: 0, wait: 0, heat: 0, tested: false },
-    speed: unit(stats.speed),
-    shooting: unit(stats.shooting),
-    strength: unit(stats.strength),
-    dribbling: unit(stats.dribbling),
+    attrs: units(BUILDS[build].ratings),
     brain: { thinkIn: 0, target: v2(), slideWait: 0, passWait: 0, skillWait: 0, carried: 0, caller: null, callFor: 0 },
     stats: { goals: 0, shots: 0, tackles: 0, passes: 0, fouls: 0, blocks: 0 },
     guard: { held: false, on: false, lag: v2() },
@@ -52,10 +49,10 @@ export function isHuman(a: Athlete): boolean {
   return a.seat !== null && a.online;
 }
 
-/** Top running speed in metres per second, from the pace stat. */
+/** Top running speed in metres per second, from the pace rating. */
 export function topSpeed(a: Athlete): number {
-  // Stats run from about 60 to 99, so that range spans slowest to fastest.
-  const pace = clamp((a.speed - 0.6) / 0.4, 0, 1);
+  // Ratings run from about 60 to 99, so that range spans slowest to fastest.
+  const pace = clamp((a.attrs.pace - 0.6) / 0.4, 0, 1);
   return MOVE.slowest + (MOVE.fastest - MOVE.slowest) * pace;
 }
 
@@ -72,7 +69,7 @@ function keepOnPitch(p: Vec2): void {
  */
 export function moveAthlete(a: Athlete, want: Vec2, dt: number, carrying: boolean): void {
   let top = topSpeed(a);
-  if (carrying) top *= MOVE.withBall + 0.1 * a.dribbling;
+  if (carrying) top *= MOVE.withBall + 0.1 * a.attrs.dribbling;
   // Winding up a shot slows the run; holding the button to call for the ball does not.
   if (a.charging && carrying && !isTap(a.charge)) top *= MOVE.charging;
   const desired = clampLen(want, 1);
@@ -86,7 +83,7 @@ export function moveAthlete(a: Athlete, want: Vec2, dt: number, carrying: boolea
   integrate(a, dt);
   const speed = len(a.vel);
   if (speed > 0.35) {
-    const rate = carrying ? MOVE.turnWithBall + 6 * a.dribbling : MOVE.turnRate;
+    const rate = carrying ? MOVE.turnWithBall + 6 * a.attrs.dribbling : MOVE.turnRate;
     turnToward(a, Math.atan2(a.vel.z, a.vel.x), rate * dt);
   }
 }
@@ -122,7 +119,7 @@ export function carryBall(a: Athlete, ball: Ball, dt: number): void {
   const face = fromAngle(a.facing);
   const speed = len(a.vel);
   // Pushed on the lead boot's touch (see stride.ts), further at pace, less by a close dribbler.
-  const push = speed > 0.8 ? 0.22 * touchPush(a.stride) * Math.min(1, speed / 6) * (1.3 - 0.6 * a.dribbling) : 0;
+  const push = speed > 0.8 ? 0.22 * touchPush(a.stride) * Math.min(1, speed / 6) * (1.3 - 0.6 * a.attrs.dribbling) : 0;
   const reach = TOUCH.carry * (speed > 0.5 ? 1 : 0.8) + push;
   const tx = a.pos.x + face.x * reach;
   const tz = a.pos.z + face.z * reach;
@@ -169,7 +166,7 @@ export function separate(athletes: readonly Athlete[]): void {
       const d = Math.hypot(dx, dz);
       if (d >= MOVE.personalSpace || d < 1e-6) continue;
       const overlap = MOVE.personalSpace - d;
-      const share = 0.5 + 0.35 * (a.strength - b.strength);
+      const share = 0.5 + 0.35 * (a.attrs.strength - b.attrs.strength);
       a.pos.x -= (dx / d) * overlap * (1 - share);
       a.pos.z -= (dz / d) * overlap * (1 - share);
       b.pos.x += (dx / d) * overlap * share;

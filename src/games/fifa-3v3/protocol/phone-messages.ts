@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CHARACTER_IDS } from "../roster";
+import { BUILD_IDS } from "../builds";
 
 /**
  * Messages a phone sends to the host, besides the gamepad kit's own
@@ -7,7 +7,8 @@ import { CHARACTER_IDS } from "../roster";
  * every decision in the match is the host's.
  */
 
-export const pickSchema = z.object({ kind: z.literal("pick"), character: z.enum(CHARACTER_IDS) });
+/** The build this phone wants to play. */
+export const pickSchema = z.object({ kind: z.literal("pick"), build: z.enum(BUILD_IDS) });
 
 export const readySchema = z.object({ kind: z.literal("ready"), ready: z.boolean() });
 

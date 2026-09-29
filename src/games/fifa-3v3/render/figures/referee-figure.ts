@@ -1,20 +1,20 @@
 import * as THREE from "three";
 import type { AthleteView, BallView, RefereeView } from "../../engine/view";
-import { ROSTER, type Character, type Kit } from "../../roster";
+import type { Kit } from "../../looks";
 import { smooth } from "../anim/frame";
 import { AthleteFigure } from "./athlete-figure";
+import type { FigureSpec } from "./figure-spec";
 
 /** The referee's kit: all black with a touch of lime, as referees wear. */
 const KIT: Kit = { shirt: "#141414", trim: "#c6f432", shorts: "#141414", socks: "#141414", ink: "#141414" };
 
 /** Nobody famous: a fit official in his forties, built like a runner. */
-const REFEREE: Character = {
-  ...ROSTER.echeverri,
-  name: "Referee",
-  short: "",
+const REFEREE: FigureSpec = {
+  name: "",
   number: 0,
   look: { skin: "#d7a883", hair: "#3b2a1f", hairStyle: "buzz", beard: "stubble", height: 1.82, build: 0.5, boots: "#111111", kit: KIT },
   foot: "right",
+  celebration: "sui",
 };
 
 /** How long the arm takes to go up with the card. */
@@ -66,7 +66,7 @@ function asAthlete(r: RefereeView | null): AthleteView {
   return {
     id: 99,
     team: 0,
-    character: "echeverri",
+    build: "playmaker",
     seat: null,
     x: r?.x ?? 0,
     z: r?.z ?? 0,

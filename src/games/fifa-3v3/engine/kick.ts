@@ -2,6 +2,7 @@ import { other } from "../teams";
 import { goalCentre, goalX, shotAngle, toGoal } from "./goal";
 import { planDive } from "./keeper";
 import { needsAir, type KickPlan } from "./assist";
+import { leadShare, passError, passZip, strikePace } from "./build-effects";
 import { leadFor, loftVelocity, passVelocity } from "./passing";
 import { shotSpread } from "./charge";
 import { aimPoint, solveKick } from "./shot-aim";
@@ -61,7 +62,7 @@ export function startPass(state: MatchState, a: Athlete, to: Athlete | null, dir
 export function botPass(state: MatchState, a: Athlete, to: number): void {
   const mate = state.athletes[to];
   if (!mate) return;
-  startPass(state, a, mate, null, needsAir(state, a, leadFor({ x: a.pos.x, y: 0, z: a.pos.z }, mate)));
+  startPass(state, a, mate, null, needsAir(state, a, leadFor({ x: a.pos.x, y: 0, z: a.pos.z }, mate, leadShare(a))));
 }
 
 /** Called every step of a kick's wind up. Strikes the ball at the right moment. */
@@ -96,7 +97,8 @@ function strike(state: MatchState, a: Athlete): void {
   const context: ShotContext = {
     distance: toGoal(ball.pos, defending),
     angle: shotAngle(ball.pos, defending),
-    shooting: a.shooting,
+    shooting: a.attrs.finishing,
+    strike: a.attrs.power,
     pressure,
     keeperOff: keeperOff(state, defending),
     power: a.power,
@@ -111,10 +113,11 @@ function strike(state: MatchState, a: Athlete): void {
   // A save needs a keeper between the ball and the goal.
   if (context.beaten && (outcome === "catch" || outcome === "parry")) outcome = "goal";
   const target = aimPoint(outcome, defending, keeper, state.rng, aimZ, context.spread, a.power);
-  // The bar sets the pace; a long range effort needs a little extra to get there.
-  const speed = clamp(SHOOT.minSpeed + (SHOOT.maxSpeed - SHOOT.minSpeed) * a.power ** 0.85 + context.distance * 0.12, SHOOT.minSpeed, SHOOT.maxSpeed);
+  // The bar sets the pace; a long range effort needs a little extra to get there, and a big shot adds its own.
+  const bar = SHOOT.minSpeed + (SHOOT.maxSpeed - SHOOT.minSpeed) * a.power ** 0.85 + context.distance * 0.12;
+  const speed = clamp(bar * strikePace(a), SHOOT.minSpeed, SHOOT.maxSpeed * strikePace(a));
   // Curl comes from the angle; a touch of random swerve keeps no two strikes the same.
-  const curl = autoCurl(ball.pos, target.z, defending, a.shooting) + state.rng.range(-1, 1) * 1.2;
+  const curl = autoCurl(ball.pos, target.z, defending, a.attrs.finishing) + state.rng.range(-1, 1) * 1.2;
   // A hard chance through a crowd can be charged down before it gets near the keeper.
   const block = rigged ? null : planBlock(state, a, { ...ball.pos }, target, shotQuality(context), speed);
   if (block) throwBodyIn(state, block);
@@ -151,7 +154,8 @@ function kickPass(state: MatchState, a: Athlete): void {
   const ball = state.ball;
   const receiver = a.passTo !== null ? state.athletes[a.passTo] : undefined;
   const reach = ASSIST.spaceLength * (0.75 + 0.6 * a.power);
-  let to = receiver ? leadFor(ball.pos, receiver) : { x: ball.pos.x + a.actionDir.x * reach, z: ball.pos.z + a.actionDir.z * reach };
+  let to = receiver ? leadFor(ball.pos, receiver, leadShare(a)) : { x: ball.pos.x + a.actionDir.x * reach, z: ball.pos.z + a.actionDir.z * reach };
+  to = offTarget(state, a, to);
   to = { x: clamp(to.x, -PITCH.halfLength + 1, PITCH.halfLength - 1), z: clamp(to.z, -PITCH.halfWidth + 0.8, PITCH.halfWidth - 0.8) };
   ball.owner = null;
   if (a.lofted) {
@@ -162,7 +166,7 @@ function kickPass(state: MatchState, a: Athlete): void {
     // Backspin holds a chipped ball up a touch after it lands.
     ball.spin = { x: -a.actionDir.z * 6, y: 0, z: a.actionDir.x * 6 };
   } else {
-    ball.vel = passVelocity(ball.pos, to);
+    ball.vel = passVelocity(ball.pos, to, PASS.arrive * passZip(a));
     ball.spin = { x: 0, y: 0, z: 0 };
   }
   ball.lastTouch = { team: a.team, id: a.id };
@@ -170,4 +174,12 @@ function kickPass(state: MatchState, a: Athlete): void {
   a.noTouch = TOUCH.afterKick;
   a.stats.passes++;
   state.events.push({ type: "pass", athlete: a.id, to: receiver?.id ?? null, air: a.lofted });
+}
+
+/** Where a pass really goes: a little off the spot it was meant for, less for a better passer. */
+function offTarget(state: MatchState, a: Athlete, to: Vec2): Vec2 {
+  const d = dist(state.ball.pos, to);
+  const miss = d * passError(a) * state.rng.range(0.3, 1);
+  const angle = state.rng.range(0, Math.PI * 2);
+  return { x: to.x + Math.cos(angle) * miss, z: to.z + Math.sin(angle) * miss };
 }

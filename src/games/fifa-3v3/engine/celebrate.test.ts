@@ -5,12 +5,12 @@ import { STEP } from "./tuning";
 import type { MatchState } from "./types";
 
 const LINEUP: Entrant[] = [
-  { team: 0, character: "echeverri", seat: null },
-  { team: 0, character: "brandao", seat: null },
-  { team: 0, character: "okemba", seat: null },
-  { team: 1, character: "holmvik", seat: null },
-  { team: 1, character: "lacerda", seat: null },
-  { team: 1, character: "serrano", seat: null },
+  { team: 0, build: "playmaker", seat: null },
+  { team: 0, build: "striker", seat: null },
+  { team: 0, build: "allrounder", seat: null },
+  { team: 1, build: "keeper", seat: null },
+  { team: 1, build: "winger", seat: null },
+  { team: 1, build: "defender", seat: null },
 ];
 
 /** A goal by `scorer`, with the team mates starting from wherever `start` puts them, celebrated for three seconds. */

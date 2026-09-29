@@ -1,4 +1,4 @@
-import type { Celebration } from "../roster";
+import type { Celebration } from "../looks";
 import { attackSign, type TeamId } from "../teams";
 import { brake } from "./athlete";
 import { PITCH } from "./tuning";

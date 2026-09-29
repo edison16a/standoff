@@ -7,7 +7,7 @@ import type { MatchEvent } from "../engine/events";
 import type { MatchView } from "../engine/view";
 import { phoneMessageSchema, type PhoneMessage, type RoomPhase } from "../protocol";
 import type { Label } from "../render/match-renderer";
-import { ROSTER } from "../roster";
+import { computerName } from "../builds";
 import { TEAMS, type TeamId } from "../teams";
 import type { Role } from "../roles";
 import { registerSoccerAdmin } from "./admin";
@@ -16,6 +16,7 @@ import { buzzFor } from "./buzz";
 import { useFifaStore as store } from "./host-store";
 import { Lobby } from "./lobby";
 import { MatchDriver } from "./match-driver";
+import { nameOf } from "./names";
 import { PhoneLink } from "./phone-link";
 import { publish } from "./publish";
 import type { ReplayFrame } from "./replay";
@@ -87,22 +88,28 @@ export class FifaHost {
     return this.replayFrame?.view ?? driver.view;
   }
 
-  /** How a player is called out: a phone's player by their name, a computer by the star's. */
+  /** How a player is called out: a phone's player by their own name, a computer by its build. */
   calledName(id: number): string {
     const a = this.driver?.state.athletes[id];
-    if (!a) return "";
-    const player = a.seat !== null ? this.room.players().find((p) => p.seat === a.seat) : undefined;
-    return player?.name ?? ROSTER[a.character].name.split(" ").slice(-1)[0]!;
+    return a ? nameOf(a, this.names()) : "";
   }
 
-  /** The tag over a player on the pitch. */
+  /**
+   * The tag over a player on the pitch, and the name on their shirt. A
+   * phone's player keeps their name while away, in a computer's quieter
+   * tag, since a computer plays for them until they are back.
+   */
   label(id: number): Label {
-    const view = this.view;
-    const a = view.athletes[id];
+    const a = this.view.athletes[id];
     if (!a) return { name: "", colour: "#ffffff", human: false };
-    if (!this.driver || a.seat === null) return { name: ROSTER[a.character].short, colour: TEAMS[a.team].color, human: false };
-    const player = this.room.players().find((p) => p.seat === a.seat);
-    return { name: player?.name ?? ROSTER[a.character].short, colour: playerColor(a.seat), human: true };
+    const seat = this.driver?.state.athletes[id]?.seat ?? null;
+    if (seat === null) return { name: computerName(a.build), colour: TEAMS[a.team].color, human: false };
+    const name = nameOf({ seat, build: a.build }, this.names());
+    return { name, colour: a.seat !== null ? playerColor(seat) : TEAMS[a.team].color, human: a.seat !== null, shirt: name };
+  }
+
+  private names(): Map<number, string> {
+    return new Map(this.room.players().map((p) => [p.seat, p.name]));
   }
 
   setTeam(seat: number, team: TeamId | null): void {
@@ -217,7 +224,7 @@ export class FifaHost {
   private onPhone(seat: number, message: PhoneMessage): void {
     switch (message.kind) {
       case "pick":
-        this.lobby.pick(seat, message.character);
+        this.lobby.pick(seat, message.build);
         break;
       case "ready":
         this.lobby.setReady(seat, message.ready);

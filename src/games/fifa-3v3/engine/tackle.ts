@@ -1,4 +1,5 @@
 import { footPoint, integrate } from "./athlete";
+import { foulRisk, tackleEdge } from "./build-effects";
 import { commitFoul } from "./foul";
 import { SLIDE } from "./tuning";
 import type { Athlete, MatchState } from "./types";
@@ -7,7 +8,7 @@ import { clamp, dist, dot, fromAngle, len, norm, type Vec2 } from "./vec";
 /** Throws the player into a slide along `dir`, or the way they face if the stick is centred. */
 export function startSlide(state: MatchState, a: Athlete, dir: Vec2): void {
   const d = len(dir) > 0.2 ? norm(dir) : fromAngle(a.facing);
-  const speed = SLIDE.speed + 1.4 * a.speed;
+  const speed = SLIDE.speed + 1.4 * a.attrs.pace;
   a.action = "slide";
   a.actionT = 0;
   a.actionLen = SLIDE.duration;
@@ -51,7 +52,7 @@ function contact(state: MatchState, a: Athlete): void {
   if (owner || shotLive || ball.pos.y > 0.5 || dist(boot, ball.pos) > SLIDE.contact) return;
   // A loose ball is poked on in the slide's direction.
   a.slideDone = true;
-  const kick = 6.5 + 2.5 * a.strength;
+  const kick = 6.5 + 2.5 * a.attrs.strength;
   ball.vel = { x: a.actionDir.x * kick, y: 0.8, z: a.actionDir.z * kick };
   ball.lastTouch = { team: a.team, id: a.id };
   ball.passTo = null;
@@ -60,20 +61,21 @@ function contact(state: MatchState, a: Athlete): void {
 }
 
 /**
- * The tackle itself. Strength against strength, the dribbler's close
- * control, and the angle (from behind is hardest) set the chance. Won,
+ * The tackle itself. The tackler's tackling and strength against the
+ * dribbler's strength and close control, and the angle (from behind is
+ * hardest) set the chance. A clean tackler fouls less often. Won,
  * the ball squirts loose and the dribbler goes down. Lost, the dribbler
  * hops over the sliding boot and carries on.
  */
 function resolve(state: MatchState, a: Athlete, victim: Athlete, manFirst: boolean): void {
   a.slideDone = true;
   const fromBehind = Math.max(0, dot(a.actionDir, fromAngle(victim.facing)));
-  if (state.rng.chance(foulChance(fromBehind, manFirst))) return commitFoul(state, a, victim, "slide");
-  const chance = clamp(0.62 + 0.4 * (a.strength - victim.strength) - 0.35 * (victim.dribbling - 0.75) - 0.15 * fromBehind, 0.2, 0.9);
+  if (state.rng.chance(foulChance(fromBehind, manFirst) * foulRisk(a))) return commitFoul(state, a, victim, "slide");
+  const chance = clamp(0.62 + tackleEdge(a, victim) - 0.35 * (victim.attrs.dribbling - 0.75) - 0.15 * fromBehind, 0.2, 0.9);
   const ball = state.ball;
   if (state.rng.chance(chance)) {
     const side = state.rng.range(-1, 1) * 2;
-    const kick = 5 + 3 * a.strength;
+    const kick = 5 + 3 * a.attrs.strength;
     ball.owner = null;
     ball.vel = { x: a.actionDir.x * kick - a.actionDir.z * side, y: 1.1, z: a.actionDir.z * kick + a.actionDir.x * side };
     ball.lastTouch = { team: a.team, id: a.id };
@@ -111,7 +113,8 @@ function knockDown(state: MatchState, victim: Athlete): void {
 
 /**
  * Standing challenges: a defender right at the dribbler's feet may nick
- * the ball away. Strength and close control hold them off, and a player
+ * the ball away, a good tackler more often. Strength and close control
+ * hold them off, and a player
  * who has only just taken the ball cannot be robbed on the spot.
  */
 export function challenges(state: MatchState, dt: number): void {
@@ -123,7 +126,7 @@ export function challenges(state: MatchState, dt: number): void {
   for (const o of state.athletes) {
     if (o.team === carrier.team || o.action !== "free" || o.noTouch > 0) continue;
     if (dist(footPoint(o), ball.pos) > 0.55) continue;
-    const rate = 1.3 * clamp(0.5 + 0.8 * o.strength - 0.5 * carrier.strength - 0.35 * carrier.dribbling, 0.08, 1);
+    const rate = 1.3 * clamp(0.5 + 0.5 * o.attrs.tackling + 0.3 * o.attrs.strength - 0.5 * carrier.attrs.strength - 0.35 * carrier.attrs.dribbling, 0.08, 1);
     if (!state.rng.chance(rate * dt)) continue;
     const away = norm({ x: ball.pos.x - o.pos.x, z: ball.pos.z - o.pos.z });
     ball.owner = null;

@@ -10,25 +10,25 @@ function joined(...seats: number[]): Lobby {
 describe("the lobby", () => {
   it("gives each star to one player only", () => {
     const lobby = joined(1, 2);
-    expect(lobby.pick(1, "echeverri")).toBe(true);
-    expect(lobby.pick(2, "echeverri")).toBe(false);
-    expect(lobby.taken(2)).toEqual(["echeverri"]);
+    expect(lobby.pick(1, "playmaker")).toBe(true);
+    expect(lobby.pick(2, "playmaker")).toBe(false);
+    expect(lobby.taken(2)).toEqual(["playmaker"]);
   });
 
   it("frees a star while its player is away, and takes it back from them if someone grabs it", () => {
     const lobby = joined(1, 2);
-    lobby.pick(1, "brandao");
+    lobby.pick(1, "striker");
     lobby.disconnect(1);
-    expect(lobby.pick(2, "brandao")).toBe(true);
+    expect(lobby.pick(2, "striker")).toBe(true);
     lobby.connect(1);
     expect(lobby.seats.get(1)!.pick).toBeNull();
   });
 
   it("puts ready players on the smaller side, and the host can move them", () => {
     const lobby = joined(1, 2, 3);
-    lobby.pick(1, "echeverri");
-    lobby.pick(2, "brandao");
-    lobby.pick(3, "okemba");
+    lobby.pick(1, "playmaker");
+    lobby.pick(2, "striker");
+    lobby.pick(3, "allrounder");
     for (const seat of [1, 2, 3]) lobby.setReady(seat, true);
     expect([1, 2, 3].map((s) => lobby.seats.get(s)!.team)).toEqual([0, 1, 0]);
     expect(lobby.setTeam(3, 1)).toBe(true);
@@ -37,7 +37,7 @@ describe("the lobby", () => {
 
   it("never puts more than three on a side", () => {
     const lobby = joined(1, 2, 3, 4);
-    const stars = ["echeverri", "brandao", "okemba", "serrano"] as const;
+    const stars = ["playmaker", "striker", "allrounder", "defender"] as const;
     stars.forEach((star, i) => {
       lobby.pick(i + 1, star);
       lobby.setTeam(i + 1, 0);
@@ -48,20 +48,20 @@ describe("the lobby", () => {
 
   it("fills each side to three with computer players in the stars nobody picked", () => {
     const lobby = joined(1);
-    lobby.pick(1, "echeverri");
+    lobby.pick(1, "playmaker");
     lobby.setReady(1, true);
     const lineup = lobby.entrants();
     expect(lineup).toHaveLength(6);
     expect(lineup.filter((e) => e.team === 0)).toHaveLength(3);
-    expect(lineup[0]).toEqual({ team: 0, character: "echeverri", seat: 1 });
-    expect(new Set(lineup.map((e) => e.character)).size).toBe(6);
+    expect(lineup[0]).toEqual({ team: 0, build: "playmaker", seat: 1 });
+    expect(new Set(lineup.map((e) => e.build)).size).toBe(6);
     expect(lineup.filter((e) => e.seat === null)).toHaveLength(5);
   });
 
   it("leaves out players who are not ready yet", () => {
     const lobby = joined(1, 2);
-    lobby.pick(1, "echeverri");
-    lobby.pick(2, "brandao");
+    lobby.pick(1, "playmaker");
+    lobby.pick(2, "striker");
     lobby.setReady(1, true);
     expect(lobby.players).toEqual([1]);
   });
@@ -69,10 +69,10 @@ describe("the lobby", () => {
   it("with computer players off, fields only the people: one on one", () => {
     const lobby = joined(1, 2);
     lobby.setBots(false);
-    lobby.pick(1, "echeverri");
+    lobby.pick(1, "playmaker");
     lobby.setReady(1, true);
     expect(lobby.startBlock()).toBe("oneSided");
-    lobby.pick(2, "brandao");
+    lobby.pick(2, "striker");
     lobby.setReady(2, true);
     const lineup = lobby.entrants();
     expect(lineup).toHaveLength(2);
@@ -84,7 +84,7 @@ describe("the lobby", () => {
   it("with computer players off, lets one side have more players than the other", () => {
     const lobby = joined(1, 2, 3);
     lobby.setBots(false);
-    (["echeverri", "brandao", "okemba"] as const).forEach((star, i) => {
+    (["playmaker", "striker", "allrounder"] as const).forEach((star, i) => {
       lobby.pick(i + 1, star);
       lobby.setTeam(i + 1, i === 2 ? 1 : 0);
       lobby.setReady(i + 1, true);
@@ -97,8 +97,8 @@ describe("the lobby", () => {
 
   it("lets the host pick roles, swapping with whoever had the role", () => {
     const lobby = joined(1, 2);
-    lobby.pick(1, "echeverri");
-    lobby.pick(2, "brandao");
+    lobby.pick(1, "playmaker");
+    lobby.pick(2, "striker");
     lobby.setTeam(1, 1);
     lobby.setTeam(2, 1);
     lobby.setReady(1, true);

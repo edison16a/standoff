@@ -1,4 +1,4 @@
-import type { Kit, Look } from "./roster";
+import type { Kit, Look } from "./looks";
 
 export type TeamId = 0 | 1;
 export const TEAM_IDS: readonly TeamId[] = [0, 1];

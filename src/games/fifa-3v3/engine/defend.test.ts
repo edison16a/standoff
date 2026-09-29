@@ -8,12 +8,12 @@ import type { MatchState } from "./types";
 import { dist } from "./vec";
 
 const LINEUP: Entrant[] = [
-  { team: 0, character: "echeverri", seat: 1 },
-  { team: 0, character: "brandao", seat: null },
-  { team: 0, character: "okemba", seat: null },
-  { team: 1, character: "holmvik", seat: null },
-  { team: 1, character: "lacerda", seat: null },
-  { team: 1, character: "serrano", seat: null },
+  { team: 0, build: "playmaker", seat: 1 },
+  { team: 0, build: "striker", seat: null },
+  { team: 0, build: "allrounder", seat: null },
+  { team: 1, build: "keeper", seat: null },
+  { team: 1, build: "winger", seat: null },
+  { team: 1, build: "defender", seat: null },
 ];
 
 function inPlay(level: "easy" | "hard" | "training", seed = 2): MatchState {

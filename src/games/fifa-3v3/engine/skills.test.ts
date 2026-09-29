@@ -7,12 +7,12 @@ import { MATCH, STEP } from "./tuning";
 import type { MatchState, SkillKind } from "./types";
 
 const LINEUP: Entrant[] = [
-  { team: 0, character: "echeverri", seat: 1 },
-  { team: 0, character: "brandao", seat: null },
-  { team: 0, character: "okemba", seat: null },
-  { team: 1, character: "holmvik", seat: 2 },
-  { team: 1, character: "lacerda", seat: null },
-  { team: 1, character: "serrano", seat: null },
+  { team: 0, build: "playmaker", seat: 1 },
+  { team: 0, build: "striker", seat: null },
+  { team: 0, build: "allrounder", seat: null },
+  { team: 1, build: "keeper", seat: 2 },
+  { team: 1, build: "winger", seat: null },
+  { team: 1, build: "defender", seat: null },
 ];
 
 /** Red's phone player on the ball facing Blue's goal, Blue's phone player `gap` metres in front. */
@@ -55,7 +55,7 @@ describe("picking a skill move", () => {
 
   it("goes to the side for a crossover, or an elastico for the best dribblers", () => {
     expect(pickSkill(red, { x: 0, z: 1 }).kind).toBe("elastico");
-    const plain = { ...red, dribbling: 0.8 };
+    const plain = { ...red, attrs: { ...red.attrs, dribbling: 0.8 } };
     expect(pickSkill(plain, { x: 0.2, z: -1 }).kind).toBe("crossover");
   });
 });

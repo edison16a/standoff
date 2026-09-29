@@ -90,7 +90,7 @@ function guard(state: MatchState, k: Keeper, dt: number): void {
     if (carrier && carrier.team !== k.team && d < 3) {
       step(k, ball.pos, KEEPER.speed, dt);
       // Down at the striker's feet: better dribblers slip round more often, and nobody for long.
-      if (d < 0.9 && ball.heldFor > 0.25 && state.rng.chance(dt * (3.2 - 2.2 * carrier.dribbling))) return claim(state, k);
+      if (d < 0.9 && ball.heldFor > 0.25 && state.rng.chance(dt * (3.2 - 2.2 * carrier.attrs.dribbling))) return claim(state, k);
       return;
     }
   }

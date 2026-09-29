@@ -10,12 +10,12 @@ import type { MatchState } from "./types";
 
 const HL = PITCH.halfLength;
 const LINEUP: Entrant[] = [
-  { team: 0, character: "echeverri", seat: 1 },
-  { team: 0, character: "brandao", seat: null },
-  { team: 0, character: "okemba", seat: null },
-  { team: 1, character: "holmvik", seat: null },
-  { team: 1, character: "lacerda", seat: null },
-  { team: 1, character: "serrano", seat: null },
+  { team: 0, build: "playmaker", seat: 1 },
+  { team: 0, build: "striker", seat: null },
+  { team: 0, build: "allrounder", seat: null },
+  { team: 1, build: "keeper", seat: null },
+  { team: 1, build: "winger", seat: null },
+  { team: 1, build: "defender", seat: null },
 ];
 
 /** A match in play with the computer players standing still, so a scene can be set by hand. */
@@ -105,7 +105,7 @@ describe("a shot into a crowd", () => {
 
 describe("the knee slide", () => {
   it("slides across the grass, slows to a stop, and stays inside the boards", () => {
-    const a = makeAthlete(0, 0, 0, "echeverri", null);
+    const a = makeAthlete(0, 0, 0, "playmaker", null);
     a.pos = { x: 10, z: 8 };
     a.vel = { x: 0, z: 7.5 };
     a.facing = Math.PI / 2;
