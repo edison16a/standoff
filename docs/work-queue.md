@@ -58,6 +58,10 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
    * A shared kit piece, so both games use the same one.
 5. **Subway Runner keyboard mode:** play with the arrow keys or WASD (left and right switch lanes, up jumps, down rolls) as well as the camera.
 
+6. **Soccer 3v3 fixes from play testing:**
+   * Free kick curve changes only how much the ball bends (from a straight kick to a wide curve). It must never move the aim.
+   * The keeper is still a brick wall: make the goal about 1.5 times bigger and keep the keeper exactly the same size, reach and speed, so scoring is fair.
+
 ### Last
 
 1. **Final check that everything works:** every game played end to end in a real browser with a host page and phone pages (lobby, calibration, a full round, results, back home, a second game without a reload), and the live site's connections checked after the deploy: iPhones on WebSockets, Chrome's fallback, room loss noticed and Regenerate room working. Fix anything found before the media pass.
