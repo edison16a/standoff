@@ -133,6 +133,8 @@ export class RoundPlay {
   }
 
   private showResults(): void {
+    // The match is over, so its admin shortcuts go. Rematch lists them again.
+    this.admin.end();
     this.board.results();
     this.room.setPlaying(false);
     this.sound.music.play("menu");

@@ -5,7 +5,7 @@ import type { Round } from "./round";
 /**
  * The host's hidden admin shortcuts while a round runs: an autopilot for
  * each player, so one tester can play a 1v1 race alone. They are listed
- * from the start of a round until it ends or the game closes.
+ * from the start of a round until its results show or the game closes.
  */
 export class RoundAdmin {
   private round: Round | null = null;
@@ -34,11 +34,6 @@ export class RoundAdmin {
     this.unregister = null;
     this.round = null;
     this.pilots.clear();
-  }
-
-  /** True if a player is on autopilot, for tests. */
-  piloted(slot: number): boolean {
-    return this.pilots.has(slot);
   }
 
   toggle(slot: number): void {
