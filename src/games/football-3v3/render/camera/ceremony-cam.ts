@@ -9,7 +9,7 @@ export const CRANE_END = 8.8;
 /** The trophy's top sits this far up the screen (-1 bottom to 1 top), under the names across the top third. */
 const TOP_AT = 0.2;
 /** Once the stats are up the side stands in the left of the picture, clear of the card on the right. */
-const SIDE_AT = -0.42;
+const SIDE_AT = -0.5;
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 const smooth = (v: number) => {

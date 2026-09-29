@@ -27,8 +27,25 @@
   animation: fb-rise 700ms 0.1s ease-out both;
 }
 
+/* Narrower than the centred card, so it tightens to keep every line on one row. */
 .fb-results--aside .fb-results__card {
-  width: min(760px, 56vw);
+  gap: 4px;
+  width: min(820px, 62vw);
+  padding: 16px 20px;
+}
+
+.fb-results--aside .fb-results__title {
+  font-size: 40px;
+}
+
+.fb-results--aside .fb-results__table th,
+.fb-results--aside .fb-results__table td {
+  padding: 4px 6px;
+  white-space: nowrap;
+}
+
+.fb-results--aside .fb-results__table td {
+  font-size: 15px;
 }
 
 @keyframes fb-rise {
