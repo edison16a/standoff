@@ -4,11 +4,43 @@ American football for 2 to 6 players, with phones held sideways as controllers. 
 
 ## Playing it
 
-1. **Join.** Everyone scans the code on the big screen and picks one of the six stars on their phone, with the star turning in 3D beside their stats. Then Ready.
+1. **Join.** Everyone scans the code on the big screen and picks one of six builds on their phone, a way to play (see Builds below). The build turns in 3D in the side's uniform beside its rating bars. Then Ready. The name each player typed is who they are everywhere: on the back of their jersey, their tag on the field, the strip along the top, the callouts, the winners' names and the stats.
 2. **Lobby.** Ready puts a player on the smaller side. On the big screen the host moves players between Storm, Blaze and the bench, picks each side's QB with the QB and Runner chips (the old QB becomes a runner), and sets the computer difficulty: Easy, Medium, Hard or Training. Computer players fill every empty place: the QB of a side with nobody on it, and runners up to two a side. A side with people always has a person at QB. One ready player is enough to kick off. The teams move right to stay clear of the join code in the corner.
 3. **The game.** The big screen shows the broadcast: the score bug along the bottom, a callout above it for big moments (Touchdown, Field goal, Interception, Sack, First down), the phones' players along the top, and a name tag over each of them on the field.
 4. **Touchdowns** are celebrated live, then replayed (see below), then the try.
-5. **The end screen** has the winners and the score, the player of the game, and every star's passing, rushing and receiving yards, touchdowns, tackles and interceptions. Play again keeps the teams; Change teams goes back to the lobby.
+5. **The trophy.** A few seconds after the final whistle the broadcast cuts to midfield for the presentation (see below). Then the end screen slides in on the right: the winners and the score, the player of the game, and every player's passing, rushing and receiving yards, touchdowns, tackles and interceptions. Play again keeps the teams; Change teams goes back to the lobby. After a tie there is no trophy and the end screen comes at once.
+
+## Builds
+
+A build is a way to play, not a person. Each one can be taken by one player, and the computer fills the rest with the builds nobody picked, a QB build at QB when one is free. Anyone can play anywhere; the host still picks the QB.
+
+* **Gunslinger QB.** Stands tall in the pocket and fires. Arm 10: the fastest, tightest throws and the longest kicks.
+* **Scrambler QB.** Escapes the rush and makes plays on the run. Agility 9, speed 8, a good arm.
+* **Speedster.** Speed 10. Takes the top off the defence.
+* **Power Back.** Power 10. Runs through arm tackles and slips the linemen's grabs.
+* **Route Runner.** Hands 10 and agility 9. Sharp cuts, and catches anything near him.
+* **Lockdown.** Cover 10 and power 8. Reads the throw, jumps the route and finishes tackles.
+
+Every rating runs from 1 to 10 and changes play (`engine/build-effects.ts`, and `engine/body.ts` for running):
+
+* **Speed** sets top speed.
+* **Agility** sets how sharply a player turns and how soon they can juke again.
+* **Power** sets how quickly a player gets going, how far a tackle reaches, and how often a ball carrier breaks a tackle that reached him or slips a lineman's grab. Only the stronger man breaks one, and never more than two in five.
+* **Hands** set how far from the body a pass can be caught, for receivers and for defenders picking it off.
+* **Arm** sets the speed and spiral of a throw and how far the QB kicks.
+* **Cover** sets how wide a defender reads the throw: how far from the catch spot he jumps the route, how close to the ball's path he picks it off, and how often a computer defender knocks a pass down.
+
+## The trophy presentation
+
+The model is Soccer 3v3's World Cup ceremony, made for football from the victory kit (`src/games/kit/victory`).
+
+1. **The cut** (`engine/ceremony.ts`). The winners celebrate where they stand for a few seconds, then the scene cuts to the star at midfield. The captain, the winners' best player on the day, holds the trophy at his chest. The runners stand either side and the linemen behind, with nobody straight behind him. The beaten side stands well back, heads down.
+2. **The lift.** He looks down at it, kisses it, dips at the knees and drives it over his head, then pumps it and turns to show it round (`render/anim/trophy-poses.ts`). The trophy is placed between his hands every frame, so it rises with the real lift. His team claps, then leaps with fists up and crowds in close.
+3. **The trophy** (`render/ceremony/trophy.ts`). Built in code: a silver regulation football with its seams and raised laces, set on a kicking tee in kicking position, over a faceted stand that sweeps in from a wide foot, on a black plinth.
+4. **The set.** Spotlights fade up with the cut and flare as the trophy goes up. Confetti in the winners' colours fires from five cannons behind the team, then rains for the rest of the scene.
+5. **The cameras** (`render/camera/ceremony-cam.ts`). A low hero shot in front of the captain that drifts round, pushes in and tilts up with the lift; a cut wide as the trophy goes up and a crane that rises across the front; then the kit's slow orbit. The top third stays clear for the names, and once the stats come in the team slides to the left of the picture.
+6. **The names.** As the trophy goes up the winners' own names come up huge across the top in their colours, the captain first, with the score under them (the kit's `VictoryOverlay`). A side of computer players only is named by its team. A Stats button in the corner skips ahead.
+7. **The sound.** The winners' fanfare at the whistle, quiet under the lift, then the stadium horn, the touchdown fanfare and the cannons as the trophy goes up, and the tailgate groove for the stats.
 
 ## The phone
 
@@ -44,14 +76,14 @@ Everything is synthesised through the audio engine, with no crowd: the brass and
 
 * **Prime Time**, the game's theme: a big brass and drums broadcast theme in D major at 138, with trumpets on the fanfare, horns on the answer, trombones and tuba, driving strings, a marching snare that rolls into every turn, timpani and a crash on each section.
 * **Tailgate**, the lobby and results: a laid back soul groove in F at 82 with a vibraphone, an electric piano, a round bass and brushes.
-* **Stings:** a touchdown fanfare over a timpani roll, a lift for a good kick, a sinking line for a turnover or a miss, a bumper at the end of a quarter, and the winners' fanfare.
+* **Stings:** a touchdown fanfare over a timpani roll, a lift for a good kick, a sinking line for a turnover or a miss, a bumper at the end of a quarter, the winners' fanfare, and the horn and fanfare as the trophy goes up.
 * **Effects:** the officials' pealess whistle (one blast for a dead ball, a long one for a score, two short and a long for a quarter), pads cracking, bodies hitting the turf, the kick thump, the snap, the throw, the catch, cleats cutting, the stadium horn, and a soft chime for a first down.
 
 ## The host
 
 `host/football-host.ts` is the session for one room: the lobby, the game, the replays, the sound and the phones. `host/inputs.ts` routes the room's events and the phones' messages; `host/match-driver.ts` runs the fixed steps; `host/publish.ts` writes the store for the big screen and each phone's state. The big screen is plain React over the 3D canvas in `host/components`.
 
-**Admin shortcuts** (three quick taps on the settings gear), for the team with the ball: Touchdown, Field goal and Two point try. They go through the real rules.
+**Admin shortcuts** (three quick taps on the settings gear), for the team with the ball: Touchdown, Field goal, Two point try and Win the game, which goes straight to the trophy presentation. They go through the real rules.
 
 **Browser tests** can set `window.__footballTest` before the page loads (development only): `lowGpu`, `quarterSeconds`, `target` and `catchUp`. The host session is on `window.__football` and a phone's on `window.__footballPhone`.
 
@@ -129,7 +161,7 @@ const pad = seatStatus(match, seat); // which controls a phone should show
 * A phone that drops is played by the computer with `setAuto`.
 * `admin.ts` has the shortcuts for the host's admin panel: `adminTouchdown`, `adminFieldGoal` and `adminTwoPoint`. They go through the real rules.
 
-Files: `field` and `downs` for the field and the rules of downs, `motion` and `body` for running, `juke`, `tackle`, `guard` and `linemen` for contact, `flight`, `aim`, `passing` and `catching` for the ball in the air, `kick` and `kick-flight` for kicking, `whistle`, `score` and `phases` for how plays end and what comes next, `bots/` for the computer players.
+Files: `field` and `downs` for the field and the rules of downs, `motion` and `body` for running, `juke`, `tackle`, `guard` and `linemen` for contact, `flight`, `aim`, `passing` and `catching` for the ball in the air, `kick` and `kick-flight` for kicking, `whistle`, `score` and `phases` for how plays end and what comes next, `build-effects` for what each rating does, `ceremony` for the trophy presentation, `bots/` for the computer players.
 
 ## Drawing the game
 
@@ -152,7 +184,7 @@ const board = scoreboard(view); // for <Scoreboard board={board} />
 
 ### The players
 
-* **Looks.** A jointed body with a helmet, shoulder pads under a printed jersey with big numbers front and back and the name across the back, pants with a stripe, socks and cleats. Size follows height and weight. Each star has their own touches on top of the roster look: mask style (open, cage or tinted visor), sleeves, towels, neck rolls, locks under the helmet and eye black. Linemen share one big build.
+* **Looks.** A jointed body with a helmet, shoulder pads under a printed jersey with big numbers front and back and the player's own name across the back (shrunk to fit a long one; the computer's players wear none), pants with a stripe, socks and cleats. Size follows height and weight. Each build has its own touches on top of its look: mask style (open, cage or tinted visor), sleeves, towels, neck rolls, locks under the helmet and eye black. Linemen share one big build.
 * **Animation.** Every frame a figure picks a target pose from the engine's view, eases toward it, then stands itself on the turf: its lowest point touches the grass and its hips sit over the player's spot. So stances, dives and tackles land right without hand tuned heights. Action poses run on the engine's own action clock, so the body and the ball agree.
 * **Moves.** Three point stances for linemen, the center's snap, the QB in the shotgun, receivers in a two point stance, the drop back, the throwing motion, running with the ball tucked under the arm, cuts, the spin, back move and side step, dives, tackle lunges, lying on the ground, rolling over and getting up, linemen locked together driving their legs, and reaching for a pass. Strides match the ground speed so the feet do not skate.
 * **The throw.** The QB closes the chest with the ball by the right ear and the left shoulder at the target, steps, turns through, and finishes with the hand across the body by the left hip.
@@ -167,7 +199,7 @@ const board = scoreboard(view); // for <Scoreboard board={board} />
 * **Behind the play.** High behind the team with the ball, looking downfield. Before the snap and while the QB is in the pocket it keeps the whole formation in the picture, receivers split wide included: `camera/fit.ts` backs it straight up its line of sight until they fit, so a narrow screen sees the same players as a wide one. Once someone runs with the ball it comes in tighter behind them. It backs up and rises a little as a pass goes deep, turns round after a turnover and glides rather than jerks.
 * **Phone sticks.** `renderer.director.groundForward()` is the way up the screen on the ground, in field space, for turning a phone's stick into a field direction that matches the camera.
 * **Kicks.** Low behind the kicker through the posts, then up and after the ball.
-* **Touchdowns.** A slow orbit round the scorer. At the final whistle, a wide orbit of the winners.
+* **Touchdowns.** A slow orbit round the scorer. At the final whistle, a wide orbit of the winners until the trophy presentation takes over with its own shots.
 * A big hit shakes it a little. Any move that would sweep across the field cuts instead, like the lobby giving way to the game or the ball spotted far downfield.
 
 ### The scoreboard
@@ -176,7 +208,7 @@ const board = scoreboard(view); // for <Scoreboard board={board} />
 
 ### The showcase
 
-`showcase/` plays a seeded bot match under the lights with the score bug. The poster is the first pass of that game at the top of its arc from the broadcast camera, and the icon the QB just before he lets it go, close up and low, facing the camera as he winds up, both frozen (`showcase/stills.ts`). For development: `?seed=` and `?seek=` (seconds to jump ahead), `?quality=low`, `?cam=x,y,z,lookX,lookY,lookZ,fov` to pin the camera, and `?lab=<move>` for the animation lab, where all six stars do one move on a loop next to a pair of linemen. The moves are idle, run, tuck, ready, throw, kick, spin, back, side, dive, lunge, down, tackled, celebrate, spike, stance, block and catch. A spin turns the whole body round, as the engine does in a game.
+`showcase/` plays a seeded bot match under the lights with the score bug. The poster is the first pass of that game at the top of its arc from the broadcast camera, and the icon the QB just before he lets it go, close up and low, facing the camera as he winds up, both frozen (`showcase/stills.ts`). For development: `?seed=` and `?seek=` (seconds to jump ahead), `?quality=low`, `?cam=x,y,z,lookX,lookY,lookZ,fov` to pin the camera, `?trophy` to end the game at once and watch the trophy presentation (add `&seek=` to jump into it), and `?lab=<move>` for the animation lab, where all six builds do one move on a loop next to a pair of linemen. The moves are idle, run, tuck, ready, throw, kick, spin, back, side, dive, lunge, down, tackled, celebrate, spike, stance, block and catch. A spin turns the whole body round, as the engine does in a game.
 
 ## Tests
 
