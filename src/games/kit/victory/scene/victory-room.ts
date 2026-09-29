@@ -51,14 +51,14 @@ export class VictoryRoom {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     const background = options.background ?? "#07070c";
     this.scene.background = new THREE.Color(background);
     this.scene.fog = new THREE.Fog(background, 12, 30);
     this.environment = studioEnvironment(this.renderer);
     this.scene.environment = this.environment;
     this.scene.environmentIntensity = 0.55;
-    this.scene.add(stageFloor(14, options.floorColour));
+    this.scene.add(stageFloor(40, options.floorColour));
     this.scene.add(new THREE.HemisphereLight("#b9c6ff", "#1a1320", 0.5));
     const key = new THREE.DirectionalLight("#fff4e0", 1.2);
     key.position.set(3, 8, 6);

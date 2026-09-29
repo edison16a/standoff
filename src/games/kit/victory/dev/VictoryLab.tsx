@@ -66,7 +66,7 @@ export function VictoryLab({ show }: { show: LabShow }) {
   return (
     <div style={{ position: "fixed", inset: 0, background: "#000" }}>
       <div ref={holder} style={{ position: "absolute", inset: 0 }} />
-      <VictoryOverlay eyebrow="Victory kit" names={[{ name: "Edison", colour: "#ef4444" }]} subtitle="Every trophy, the belt and the podium" />
+      <VictoryOverlay eyebrow="Victory kit" names={[{ name: "Edison", colour: "#ef4444" }]} subtitle="Every trophy, the belt and the podium" align={show === "all" ? "top" : "bottom"} />
     </div>
   );
 }
