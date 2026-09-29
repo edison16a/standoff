@@ -10,8 +10,10 @@ const GONE = 410;
 /**
  * Without Redis, a post can land on a server instance that does not hold
  * our stream, which answers 410 too. Each retry is routed afresh, so a few
- * of them usually find the right one. With Redis, 410 is final and this
- * costs a handful of quick requests once.
+ * of them usually find the right one. With a shared store a 410 means the
+ * stream is gone, so these retries go out at once rather than after a
+ * wait: they cost a handful of quick requests, and a pause would only
+ * delay the reconnect.
  */
 const MISROUTED_RETRIES = 5;
 

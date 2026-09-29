@@ -1,5 +1,5 @@
-import type { ProbeFailure, ServerEnvelope } from "@/platform/protocol";
-import { openChannel } from "./open-channel";
+import type { ProbeFailure } from "@/platform/protocol";
+import { openChannel, readEnvelope } from "./open-channel";
 
 /** Longer than the relay's own wait for the echo, so the relay's answer normally comes first. */
 const PROBE_TIMEOUT_MS = 5000;
@@ -41,20 +41,12 @@ export function probeRoom(room: { code: string; token: string }, { stream, timeo
     const timer = setTimeout(() => finish({ ok: false, reason: "timeout" }), timeoutMs);
     channel.onopen = () => channel.send(JSON.stringify({ type: "probe:room", code: room.code, token: room.token, nonce }));
     channel.onmessage = (event: MessageEvent<string>) => {
-      const message = parse(event.data);
+      const message = readEnvelope(event.data);
       if (message?.type !== "probe:result" || message.nonce !== nonce) return;
       finish(message.ok ? { ok: true } : { ok: false, reason: message.reason ?? "no-echo" });
     };
     channel.onclose = () => finish({ ok: false, reason: "transport" });
   });
-}
-
-function parse(raw: string): ServerEnvelope | null {
-  try {
-    return JSON.parse(raw) as ServerEnvelope;
-  } catch {
-    return null;
-  }
 }
 
 /** 24 random characters from the set the relay accepts. */

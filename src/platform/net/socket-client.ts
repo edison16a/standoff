@@ -1,24 +1,15 @@
-import type { ClientEnvelope, ServerEnvelope } from "@/platform/protocol";
-import { Handover } from "./handover";
-import { OPEN, openChannel, streamRequested, type Channel } from "./open-channel";
-import type { SocketHandlers } from "./socket-types";
+import type { ClientEnvelope } from "@/platform/protocol";
+import { Backoff } from "./backoff";
+import { FINAL, HANDSHAKES, Handover } from "./handover";
+import { OPEN, openChannel, readEnvelope, streamRequested, type Channel } from "./open-channel";
+import type { SocketHandlers, SocketOptions } from "./socket-types";
 
 export type { SocketHandlers, SocketStatus } from "./socket-types";
 
-const MIN_BACKOFF_MS = 400;
-const MAX_BACKOFF_MS = 4000;
-/** After this many failed tries in a row the UI says the server cannot be reached. */
-const UNREACHABLE_AFTER = 4;
-/**
- * If this much is still waiting to go out, the network is behind. Motion
- * frames are dropped rather than queued, since a stale sword angle is
- * worse than a missing one.
- */
+/** This much still waiting to go out means the network is behind, so motion frames are dropped. */
 const CONGESTED_BYTES = 8 * 1024;
 /** Close code the relay uses when a newer socket took this one's seat. */
 const REPLACED = 4000;
-/** The replies that mean a new socket has taken over the seat or the room. */
-const HANDSHAKES = new Set<ServerEnvelope["type"]>(["phone:joined", "room:resumed", "room:created"]);
 
 /**
  * A WebSocket that keeps itself connected. Phones lock, walk out of range
@@ -33,20 +24,27 @@ const HANDSHAKES = new Set<ServerEnvelope["type"]>(["phone:joined", "room:resume
  * doubled and the match never sees a disconnect.
  *
  * If a WebSocket fails before it ever opens, every channel after it is an
- * HTTP stream instead (see StreamChannel). That is what Chrome needs on
- * Vercel today, and it reaches the same relay.
+ * HTTP stream (see StreamChannel), as Chrome needs on Vercel today.
  */
 export class SocketClient {
   private current: Channel | null = null;
   private next: Channel | null = null;
-  private useStream = streamRequested();
+  private useStream: boolean;
   private readonly handover = new Handover();
-  private backoff = MIN_BACKOFF_MS;
-  private failures = 0;
-  private retry: ReturnType<typeof setTimeout> | null = null;
+  private readonly backoff = new Backoff();
   private stopped = false;
 
-  constructor(private readonly handlers: SocketHandlers) {}
+  constructor(
+    private readonly handlers: SocketHandlers,
+    options: SocketOptions = {},
+  ) {
+    this.useStream = options.stream === true || streamRequested();
+  }
+
+  /** True once this client talks over the HTTP stream, so helpers can use the same. */
+  get usesStream(): boolean {
+    return this.useStream;
+  }
 
   connect(): void {
     // Already connected or reconnecting: a second socket would fight the first for the seat.
@@ -83,10 +81,8 @@ export class SocketClient {
    */
   redial(): void {
     if (this.stopped) return;
-    // A reconnect already waiting out its backoff would dial a second socket.
-    if (this.retry) clearTimeout(this.retry);
-    this.retry = null;
-    this.backoff = MIN_BACKOFF_MS;
+    this.backoff.cancel();
+    this.backoff.shorten();
     const old = this.current;
     this.abandonNext();
     this.current = this.dial();
@@ -95,7 +91,8 @@ export class SocketClient {
 
   close(): void {
     this.stopped = true;
-    if (this.retry) clearTimeout(this.retry);
+    this.backoff.cancel();
+    this.handover.stop();
     this.current?.close(1000);
     this.next?.close(1000);
     this.current = this.next = null;
@@ -111,7 +108,9 @@ export class SocketClient {
     };
     channel.onmessage = (event: MessageEvent<string>) => this.onMessage(channel, event.data);
     channel.onclose = (event: CloseEvent) => {
-      if (!opened) this.useStream = true;
+      // Only a socket we still wanted counts against WebSockets. One we
+      // closed ourselves while it was connecting, on a redial, says nothing.
+      if (!opened && (channel === this.current || channel === this.next) && !this.stopped) this.useStream = true;
       this.onClose(channel, event.code);
     };
     return channel;
@@ -119,28 +118,26 @@ export class SocketClient {
 
   private onOpen(socket: Channel): void {
     if (socket === this.current) {
-      this.failures = 0;
-      this.backoff = MIN_BACKOFF_MS;
+      this.backoff.reset();
       this.handlers.onStatus("open");
     }
-    if (socket === this.next) this.handover.announced();
-    this.handlers.onOpen((message) => {
+    const handover = socket === this.next;
+    if (handover) this.handover.announced();
+    const send = (message: ClientEnvelope) => {
       if (socket.readyState === OPEN) socket.send(JSON.stringify(message));
-    });
+    };
+    this.handlers.onOpen(send, { handover });
   }
 
   private onMessage(socket: Channel, raw: string): void {
-    let message: ServerEnvelope;
-    try {
-      message = JSON.parse(raw) as ServerEnvelope;
-    } catch {
-      return;
-    }
+    const message = readEnvelope(raw);
+    if (!message) return;
     if (socket === this.next) {
+      if (FINAL.has(message.type)) return this.handlers.onMessage(message);
       // Until it confirms the seat, the new socket's traffic is also
       // arriving on the old one, so only the confirmation counts.
       if (!HANDSHAKES.has(message.type)) {
-        if (message.type === "room:error") this.abandonNext();
+        if (message.type === "room:error") this.refusedHandover();
         // Its own time will run out too, so move on again once it takes over.
         if (message.type === "server:rotate") this.handover.rotateAfter = true;
         return;
@@ -149,10 +146,24 @@ export class SocketClient {
     }
     if (socket !== this.current) return;
     if (message.type === "server:rotate") {
+      this.handover.rotating();
       if (!this.stopped && !this.next) this.next = this.dial();
       return;
     }
     this.handlers.onMessage(message);
+  }
+
+  /**
+   * The new socket could not take over, maybe because it landed where the
+   * room is not known. The old one still works until it is cut, so the
+   * owner hears of it and the handover is tried again shortly.
+   */
+  private refusedHandover(): void {
+    this.abandonNext();
+    this.handlers.onHandoverFailed?.();
+    this.handover.retryLater(() => {
+      if (!this.stopped && !this.next && this.current?.readyState === OPEN) this.next = this.dial();
+    });
   }
 
   private onClose(socket: Channel, code: number): void {
@@ -168,20 +179,16 @@ export class SocketClient {
       this.takeOver(this.next);
       return;
     }
-    // The seat moved to a newer socket, most likely this page open in a
-    // second tab. Reconnecting would only take it back and start a tug of
-    // war. Unless the newer socket was our own handover, which then died.
+    // The seat moved to a newer socket, most likely this page in a second
+    // tab, unless it was our own handover that then died. Reconnecting
+    // would only start a tug of war.
     if (code === REPLACED && !this.handover.causedKick()) {
       this.current = null;
       this.handlers.onStatus("replaced");
       return;
     }
-    this.failures += 1;
-    this.handlers.onStatus(this.failures >= UNREACHABLE_AFTER ? "unreachable" : "reconnecting");
-    this.retry = setTimeout(() => {
-      this.current = this.dial();
-    }, this.backoff);
-    this.backoff = Math.min(MAX_BACKOFF_MS, this.backoff * 2);
+    this.backoff.schedule(() => (this.current = this.dial()));
+    this.handlers.onStatus(this.backoff.unreachable ? "unreachable" : "reconnecting");
   }
 
   /** The new socket holds the seat now. The old one is retired quietly. */
@@ -210,3 +217,4 @@ export class SocketClient {
     if (this.current?.readyState === OPEN) for (const data of messages) this.current.send(data);
   }
 }
+

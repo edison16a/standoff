@@ -1,4 +1,4 @@
-import { SOCKET_PATH } from "@/platform/protocol";
+import { SOCKET_PATH, type ServerEnvelope } from "@/platform/protocol";
 import { StreamChannel } from "./stream-channel";
 
 /** A WebSocket, or the HTTP stream that stands in for one. */
@@ -19,5 +19,14 @@ export function streamRequested(): boolean {
     return localStorage.getItem("standoff:transport") === "stream";
   } catch {
     return false;
+  }
+}
+
+/** One message from the relay, or null for anything that is not JSON. */
+export function readEnvelope(raw: string): ServerEnvelope | null {
+  try {
+    return JSON.parse(raw) as ServerEnvelope;
+  } catch {
+    return null;
   }
 }
