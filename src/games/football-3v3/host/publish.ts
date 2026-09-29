@@ -1,7 +1,6 @@
 import type { Player } from "@/platform/games/game-api";
 import type { RoomPhase } from "../protocol";
 import { scoreboard } from "../render/hud/board";
-import { computerName } from "../builds";
 import { useFootballStore as store, type Callout } from "./host-store";
 import type { Lobby } from "./lobby";
 import type { MatchDriver } from "./match-driver";
@@ -44,7 +43,6 @@ export function publish(c: PublishContext): void {
     const s = c.lobby.seats.get(p.seat);
     return { seat: p.seat, name: p.name, connected: p.connected, pick: s?.pick ?? null, ready: s?.ready ?? false, team: s?.team ?? null, role: s?.role ?? null };
   });
-  const holder = m?.carrier()?.id ?? null;
   store.setState({
     phase: c.phase,
     seats,
@@ -60,18 +58,6 @@ export function publish(c: PublishContext): void {
     over: m && m.phase === "over" ? { winner: m.winner } : null,
     results: m && m.phase === "over" ? resultRows(m, names) : [],
     ceremony: m ? presentation(m, names, c.statsEarly) : null,
-    strip: m
-      ? m.athletes.filter((a) => a.seat !== null && a.build).map((a) => ({
-          id: a.id,
-          seat: a.seat!,
-          name: names.get(a.seat!) ?? computerName(a.build!),
-          team: a.team,
-          build: a.build!,
-          role: a.role === "qb" ? ("qb" as const) : ("runner" as const),
-          hasBall: holder === a.id,
-          away: a.auto,
-        }))
-      : [],
   });
   const votes = c.replay.active ? c.replay.votes : null;
   for (const seat of c.lobby.connectedSeats) {

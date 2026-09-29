@@ -34,10 +34,14 @@ export class Names {
     return this.own(id) ?? computerName(a.build);
   }
 
-  /** The tag over a phone's player while their phone is in, or null. */
+  /**
+   * The tag over a phone's player, or null for the computer's. It is the
+   * only place names show in play, so a dropped phone says so on the tag.
+   */
   tag(id: number): Tag | null {
     const a = this.match()?.athlete(id);
-    if (!a || a.seat === null || a.auto) return null;
-    return { name: this.called(id), colour: playerColor(a.seat) };
+    if (!a || a.seat === null) return null;
+    const name = this.called(id);
+    return { name: a.auto ? `${name} (CPU)` : name, colour: playerColor(a.seat) };
   }
 }
