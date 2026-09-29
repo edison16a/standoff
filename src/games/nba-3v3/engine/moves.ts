@@ -1,4 +1,5 @@
-import { airborne, charOf, topSpeed } from "./athlete";
+import { airborne, buildOf, topSpeed } from "./athlete";
+import { readEdge } from "./build-effects";
 import type { Match } from "./match";
 import { basketDir, nearestDefender, pickMove, rightOf } from "./move-pick";
 import { switchHands } from "./dribble";
@@ -136,11 +137,11 @@ function resolveMove(m: Match, a: Athlete, act: Move): void {
     return;
   }
   if (!d || airborne(d) || d.action.kind === "stumble") return;
-  const ds = charOf(d).stats;
-  const hs = charOf(a).stats;
+  const ds = buildOf(d).stats;
+  const hs = buildOf(a).stats;
   const bit = d.action.kind === "steal" || d.whiff > 0 ? 0.3 : 0;
   const lunging = (d.vx * (a.x - d.x) + d.vz * (a.z - d.z)) / Math.max(0.3, dist2(a, d)) > 2 && act.move !== "stepback" ? 0.12 : 0;
-  const chance = clamp(MOVES[act.move].beat + (hs.speed - ds.speed) * 0.035 + bit + lunging - Math.max(0, a.moveHeat - 1) * 0.1, 0.05, 0.85);
+  const chance = clamp(MOVES[act.move].beat + (hs.speed - ds.speed) * 0.035 - readEdge(ds.defence) + bit + lunging - Math.max(0, a.moveHeat - 1) * 0.1, 0.05, 0.85);
   if (m.rng() >= chance) return;
   const hard = m.rng() < 0.2 + bit;
   if (hard) d.action = { kind: "stumble", t: 0, dur: 0.6 };

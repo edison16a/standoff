@@ -1,4 +1,4 @@
-import { CHARACTERS, type Character, type CharacterId } from "../roster";
+import { BUILDS, type BuildSpec, type BuildId } from "../builds";
 import { clampToCourt } from "./court";
 import type { MatchEvent } from "./events";
 import { steer } from "./steer";
@@ -6,9 +6,9 @@ import { MOVE } from "./tuning";
 import type { Athlete, TeamId } from "./types";
 import { angleDiff, clamp, yawOf } from "./vec";
 
-export function createAthlete(id: number, team: TeamId, slot: number, character: CharacterId, seat: number | null): Athlete {
+export function createAthlete(id: number, team: TeamId, slot: number, build: BuildId, seat: number | null): Athlete {
   return {
-    id, team, slot, character, seat, auto: seat === null,
+    id, team, slot, build, seat, auto: seat === null,
     x: 0, z: 8, vx: 0, vz: 0, y: 0, yaw: Math.PI,
     move: { x: 0, z: 0 },
     stick: { x: 0, z: 0 },
@@ -21,10 +21,10 @@ export function createAthlete(id: number, team: TeamId, slot: number, character:
   };
 }
 
-export const charOf = (a: Athlete): Character => CHARACTERS[a.character];
+export const buildOf = (a: Athlete): BuildSpec => BUILDS[a.build];
 
 export function topSpeed(a: Athlete, withBall: boolean): number {
-  const base = MOVE.baseSpeed + charOf(a).stats.speed * MOVE.perSpeed;
+  const base = MOVE.baseSpeed + buildOf(a).stats.speed * MOVE.perSpeed;
   // Off balance after a whiff or a beaten move, and still gathering after a landing, a player is slow.
   const hurt = (a.whiff > 0 ? 0.45 : 1) * (a.recover > 0 ? 0.55 : 1);
   return base * (withBall ? MOVE.withBall : 1) * hurt * (a.onFire ? 1.06 : 1);
@@ -32,14 +32,14 @@ export function topSpeed(a: Athlete, withBall: boolean): number {
 
 /** How high a hand gets standing flat footed: roughly 1.33 times height, more for long arms. */
 export function standingReach(a: Athlete): number {
-  const c = charOf(a);
-  return c.build.height * (1.27 + c.build.reach * 0.06);
+  const c = buildOf(a);
+  return c.body.height * (1.27 + c.body.reach * 0.06);
 }
 
 /** Heavier players win contact: strength counts most, then sheer size. */
 export function mass(a: Athlete): number {
-  const c = charOf(a);
-  return 1 + c.stats.strength * 0.12 + (c.build.bulk - 1) * 0.8 + (c.build.height - 2) * 0.6;
+  const c = buildOf(a);
+  return 1 + c.stats.strength * 0.12 + (c.body.bulk - 1) * 0.8 + (c.body.height - 2) * 0.6;
 }
 
 /**
@@ -51,7 +51,7 @@ export function heft(a: Athlete): number {
 }
 
 export function bodyRadius(a: Athlete): number {
-  return MOVE.radius * (0.9 + charOf(a).build.width * 0.12);
+  return MOVE.radius * (0.9 + buildOf(a).body.width * 0.12);
 }
 
 /** Legs are free unless the player is shooting, flying at the rim or on the floor. */

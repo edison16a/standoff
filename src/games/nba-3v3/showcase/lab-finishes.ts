@@ -13,9 +13,9 @@ import { dir2, type V2 } from "../engine/vec";
 export const FINISH_SCENES = ["reverse", "contact", "stepback", "gesture"] as const;
 export type FinishScene = (typeof FINISH_SCENES)[number];
 
-const ASHBY = 0;
+const SHOOTER = 0;
 
-/** Where the six stand at the start: Ashby, two teammates, then Whitlock, Zupan and Crane. */
+/** Where the six stand at the start: the Shooter, two teammates, then the Lockdown defender, the Playmaker and the All Rounder. */
 export const FINISH_SPOTS: Record<FinishScene, [number, number][]> = {
   reverse: [[5.2, 1.3], [-6, 6], [4, 9], [6.2, 2.6], [-5, 10], [5, 10.5]],
   contact: [[0, 6.4], [-6, 3], [6, 3], [-5, 10], [0, 3.3], [5, 10]],
@@ -24,18 +24,18 @@ export const FINISH_SPOTS: Record<FinishScene, [number, number][]> = {
 };
 
 export function steerFinish(scene: FinishScene, m: Match, t: number, once: (key: string) => boolean): void {
-  const a = m.athletes[ASHBY]!;
+  const a = m.athletes[SHOOTER]!;
   if (scene === "gesture") {
     const i = Math.floor((t - 0.3) / 1.9);
     if (t > 0.3 && i < GESTURES.length && once(`g${i}`)) a.action = { kind: "celebrate", t: 0, dur: 1.6, gesture: GESTURES[i]! };
     return;
   }
   if (scene === "stepback") {
-    if (t > 0.4 && once("shoot")) m.press(ASHBY, "shoot");
-    if (t > 0.4 + GREEN_MS / 1000 && once("release")) m.release(ASHBY, GREEN_MS);
+    if (t > 0.4 && once("shoot")) m.press(SHOOTER, "shoot");
+    if (t > 0.4 + GREEN_MS / 1000 && once("release")) m.release(SHOOTER, GREEN_MS);
     return;
   }
-  if (a.action.kind === "drive" || m.ball.holder !== ASHBY) {
+  if (a.action.kind === "drive" || m.ball.holder !== SHOOTER) {
     a.move = { x: 0, z: 0 };
     return;
   }
@@ -47,6 +47,6 @@ export function steerFinish(scene: FinishScene, m: Match, t: number, once: (key:
   const ready = scene === "reverse" ? a.x < 0.9 : near < 2.9;
   if (t > 0.4 && ready && once("finish")) {
     m.forced = "bank";
-    m.press(ASHBY, "shoot");
+    m.press(SHOOTER, "shoot");
   }
 }

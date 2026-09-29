@@ -3,12 +3,12 @@ import type { PhoneRoomApi, PhoneRoomEvent } from "@/platform/games/game-api";
 import { tone } from "@/platform/audio/voices";
 import type { Button } from "../engine/types";
 import { hostMessageSchema, type HostMessage, type PhoneMessage } from "../protocol";
-import type { CharacterId } from "../roster";
+import type { BuildId } from "../builds";
 import { useControllerStore as store, type SetupStep } from "./controller-store";
 import { buzz, toneOf } from "./haptics";
 
 /**
- * Basketball 3v3 on the phone. It walks the player through picking a star,
+ * Basketball 3v3 on the phone. It walks the player through picking a build,
  * then becomes a controller: the kit's thumb stick and buttons stream to
  * the host, and Shoot also times its own hold, so the host can judge the
  * release free of network lag. It makes no game decisions.
@@ -37,10 +37,10 @@ export class NbaPhone {
     this.click();
   }
 
-  pick(character: CharacterId): void {
-    store.setState({ wanted: character });
+  pick(build: BuildId): void {
+    store.setState({ wanted: build });
     this.click();
-    this.send({ kind: "pick", character });
+    this.send({ kind: "pick", build });
   }
 
   setReady(ready: boolean): void {
@@ -108,7 +108,7 @@ export class NbaPhone {
   /** After a reconnect or a host reload, tell the host what we had chosen. */
   private resendChoices(): void {
     const { wanted, host } = store.getState();
-    if (wanted) this.send({ kind: "pick", character: wanted });
+    if (wanted) this.send({ kind: "pick", build: wanted });
     if (host?.ready) this.send({ kind: "ready", ready: true });
   }
 

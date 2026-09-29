@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import type { Character, Team } from "../../roster";
+import type { BuildSpec } from "../../builds";
+import type { Team } from "../../roster";
 import { ball, box, cyl, lathe, limb, merge, paint } from "./geo";
 import { buildHead, shade } from "./head";
 import { jerseyTexture } from "./jersey";
@@ -56,11 +57,12 @@ const group = (name: string, parent?: THREE.Object3D, at: [number, number, numbe
  * A stylised athlete on a simple skeleton: pelvis, torso, neck, and two
  * arms and legs of two segments each. Proportions come from the
  * player's height, shoulder width, bulk and reach; the look from their
- * skin, hair, beard and gear, in their team's jersey with their number.
+ * skin, hair, beard and gear, in their team's jersey with their number
+ * and `backName` across the back: the player's own name.
  */
-export function buildAthlete(c: Character, team: Team, bodyMat: THREE.Material): AthleteModel {
-  const H = c.build.height;
-  const { bulk, width, reach } = c.build;
+export function buildAthlete(c: BuildSpec, team: Team, bodyMat: THREE.Material, backName: string = c.name): AthleteModel {
+  const H = c.body.height;
+  const { bulk, width, reach } = c.body;
   const skin = c.look.skin;
   const s = H / 2;
   const ankle = 0.075;
@@ -98,7 +100,7 @@ export function buildAthlete(c: Character, team: Team, bodyMat: THREE.Material):
   ]));
 
   // Torso: a jersey with the number printed round it, and bare shoulders and neck.
-  const jersey = jerseyTexture(team, c.number, c.short);
+  const jersey = jerseyTexture(team, c.number, backName);
   textures.push(jersey);
   const jerseyMat = new THREE.MeshStandardMaterial({ map: jersey, roughness: 0.62, side: THREE.DoubleSide });
   materials.push(jerseyMat);

@@ -1,6 +1,7 @@
 "use client";
 import { lazy, Suspense } from "react";
 import { useNbaStore } from "../host-store";
+import { Champions } from "./Champions";
 import { Hud } from "./Hud";
 import { Lobby } from "./Lobby";
 import { ReplayBar } from "./ReplayBar";
@@ -11,20 +12,23 @@ const CourtCanvas = lazy(() => import("./CourtCanvas"));
 
 /**
  * Basketball 3v3 on the big screen. The arena is always there: a demo game
- * behind the team picker, then the real game. The lobby, the scoreboard
- * and the results are ordinary React on top.
+ * behind the team picker, then the real game and its trophy ceremony.
+ * The lobby, the scoreboard, the winners' names and the results are
+ * ordinary React on top.
  */
 export function Stage() {
   const phase = useNbaStore((state) => state.phase);
-  // A slow computer can take longer over the winners' moment than the results take to fade in.
+  // The results wait for the replay of the winning basket, then the trophy ceremony.
   const replayDue = useNbaStore((state) => state.replayDue);
+  const ceremony = useNbaStore((state) => state.ceremony?.stage ?? null);
   return (
     <div className="nba-stage">
       <Suspense fallback={null}>
         <CourtCanvas />
       </Suspense>
-      {phase === "lobby" ? <Lobby /> : phase === "replay" ? <ReplayBar /> : <Hud />}
-      {phase === "over" && !replayDue && <Results />}
+      {phase === "lobby" ? <Lobby /> : phase === "replay" ? <ReplayBar /> : ceremony ? null : <Hud />}
+      {phase === "over" && ceremony && ceremony !== "stats" && <Champions />}
+      {phase === "over" && !replayDue && (!ceremony || ceremony === "stats") && <Results />}
     </div>
   );
 }

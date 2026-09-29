@@ -8,10 +8,11 @@ import { dist2 } from "../engine/vec";
 import { Arena } from "./arena/arena";
 import { AthleteView } from "./athlete-view";
 import { BallView } from "./ball-view";
-import { freeThrowShot } from "./free-throw-camera";
+import { CeremonyStage } from "./ceremony/ceremony-stage";
+import type { Ceremony } from "../engine/ceremony";
 import { Referee } from "./referee";
 import { Effects } from "./effects/effects";
-import { lineScene, pressureOn } from "./scene-read";
+import { broadcastShot, lineScene, pressureOn } from "./scene-read";
 import { TvCamera, type Shot } from "./tv-camera";
 
 const tmp = new THREE.Vector3();
@@ -54,6 +55,10 @@ export class CourtRenderer {
   private readonly maxPixelRatio: number;
   private readonly pixel = new Uint8Array(4);
   private readonly replayCam = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 50 };
+  private readonly ceremony = new CeremonyStage();
+  private readonly keyLight: number;
+  /** The name across a player's back, or null for the build's own. The host sets it to people's names. */
+  jerseyName: (a: Athlete) => string | null = () => null;
 
   constructor(canvas: HTMLCanvasElement, quality: Quality = {}) {
     const { antialias = true, shadows = true, reflections = true, maxPixelRatio = 1.75 } = quality;
@@ -71,8 +76,9 @@ export class CourtRenderer {
     this.scene.background = new THREE.Color("#060812");
     this.scene.fog = new THREE.FogExp2("#060812", 0.014);
     this.effects = new Effects(this.arena, this.tv);
-    this.scene.add(this.arena.group, this.players, this.ball.mesh, this.effects.group);
+    this.scene.add(this.arena.group, this.players, this.ball.mesh, this.effects.group, this.ceremony.scene.group);
     this.referee = new Referee(this.bodyMat, this.players);
+    this.keyLight = this.arena.key.intensity;
   }
 
   resize(width: number, height: number, dpr: number): void {
@@ -86,7 +92,7 @@ export class CourtRenderer {
   setMatch(match: Match, intro = false): void {
     if (match === this.match) return;
     for (const view of this.views) view.dispose(this.players);
-    this.views = match.athletes.map((a) => new AthleteView(a, this.bodyMat, this.players));
+    this.views = match.athletes.map((a) => new AthleteView(a, this.bodyMat, this.players, this.jerseyName(a) ?? undefined));
     this.match = match;
     this.effects.reset();
     this.ball.reset();
@@ -104,6 +110,13 @@ export class CourtRenderer {
     this.replayCam.look.set(cam.look.x, cam.look.y, cam.look.z);
     this.replayCam.fov = cam.fov;
     this.tv.fixed = this.replayCam;
+  }
+
+  /** The trophy ceremony to show, run by the host, or null. It takes over the camera while it runs. */
+  setCeremony(run: Ceremony | null): void {
+    this.ceremony.set(run);
+    if (run) this.tv.fixed = this.ceremony.camera;
+    else if (this.tv.fixed === this.ceremony.camera) this.tv.fixed = null;
   }
 
   onEvent(event: MatchEvent): void {
@@ -132,8 +145,13 @@ export class CourtRenderer {
       const guarding = !!onBall && onBall.team !== a.team && m.phase === "live" && dist2(a, onBall) < 2.6 && a.action.kind === "none";
       const incoming = b.mode === "flight" && b.passTo === a.id && a.action.kind === "none" ? 1 - Math.hypot(b.pos.x - a.x, b.pos.z - a.z) / 3 : 0;
       const line = lineScene(m, a);
-      view.update(a, { holding: holder === a.id, chest, receiving: Math.max(0, incoming), guarding, pressure: holder === a.id ? pressure : 0, ...line, winner }, dt);
+      const ceremony = this.ceremony.roleOf(a.id);
+      view.update(a, { holding: holder === a.id, chest, receiving: Math.max(0, incoming), guarding, pressure: holder === a.id ? pressure : 0, ...line, winner, ceremony }, dt);
     }
+    this.ceremony.update(this.views, dt, this.time);
+    // The ball is put away for the ceremony, and the arena's lights come down under the spotlights.
+    this.ball.mesh.visible = !this.ceremony.active;
+    this.arena.key.intensity = this.keyLight * (1 - this.ceremony.scene.dim);
     this.ball.update(b, holder !== null ? (this.views[holder] ?? null) : null, chest, dt);
     this.referee.update(m, dt);
     if (this.intro !== null) {
@@ -172,19 +190,13 @@ export class CourtRenderer {
   }
 
   private shot(m: Match): Shot {
-    const b = m.ball;
-    const dunker = m.athletes.find((a) => a.action.kind === "drive" && a.action.dunk && a.action.t > a.action.takeoff * 0.5);
-    let winners: Shot["winners"] = null;
-    if (m.phase === "over" && m.winner !== null && m.phaseT > 1.5) {
-      const side = m.athletes.filter((a: Athlete) => a.team === m.winner);
-      winners = { x: side.reduce((s, a) => s + a.x, 0) / side.length, z: side.reduce((s, a) => s + a.z, 0) / side.length };
-    }
-    return { focus: b.pos, dunker: dunker ? { x: dunker.x, z: dunker.z } : null, winners, intro: this.intro, freeThrow: freeThrowShot(m) };
+    return broadcastShot(m, this.intro);
   }
 
   dispose(): void {
     for (const view of this.views) view.dispose(this.players);
     this.referee.dispose();
+    this.ceremony.dispose();
     this.arena.dispose();
     this.ball.dispose();
     this.effects.dispose();

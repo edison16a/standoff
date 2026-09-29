@@ -2,7 +2,7 @@ import type { AudioEngine } from "@/platform/audio/audio-engine";
 import { GAME_SONG } from "./game-song";
 import { LOBBY_SONG } from "./lobby-song";
 import type { Song } from "./score";
-import { winnersFanfare } from "./stings";
+import { trophyLift, winnersFanfare } from "./stings";
 
 /** The lobby and results get the late night tune, the game gets the arena song. */
 export const TUNES = { lobby: LOBBY_SONG, play: GAME_SONG } as const satisfies Record<string, Song>;
@@ -43,6 +43,12 @@ export class Music {
     gain.connect(this.warmth);
     this.current = { name, gain, step: 0, nextAt: this.engine.now + 0.1 };
     this.timer ??= setInterval(() => this.schedule(), WAKE_MS);
+  }
+
+  /** The trophy going up, with the loop stepping aside for it. */
+  lift(): void {
+    this.dip(0.12, 4);
+    trophyLift(this.engine, this.warmth);
   }
 
   /** A brass fanfare for the winners, with the loop stepping aside for it. */

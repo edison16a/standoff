@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { CHARACTER_IDS } from "../roster";
+import { BUILD_IDS } from "../builds";
 import { cheerFor, startCheer } from "./celebrate";
 import { Match, type Entry } from "./match";
 import type { ShotInfo } from "./types";
 
-const ENTRIES: Entry[] = CHARACTER_IDS.slice(0, 6).map((character, i) => ({ team: (i % 2) as 0 | 1, character, seat: null }));
+const ENTRIES: Entry[] = BUILD_IDS.slice(0, 6).map((build, i) => ({ team: (i % 2) as 0 | 1, build, seat: null }));
 
 function shot(patch: Partial<ShotInfo>): ShotInfo {
   return { shooter: 0, team: 0, points: 2, kind: "jumper", dunk: null, grade: "good", outcome: "swish", made: true, counted: true, touchedRim: false, assist: null, contest: 0, distance: 4, ...patch };

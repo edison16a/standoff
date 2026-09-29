@@ -14,7 +14,7 @@ const LEAD: Record<ShowcaseView, number> = { loop: -2.7, poster: 0, icon: 0 };
 
 /**
  * The poster and the icon are single frames, so the film is run this far
- * ahead without drawing and then held: Varelas at the rim in his windmill.
+ * ahead without drawing and then held: the Dunker at the rim in his windmill.
  */
 const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 2.4, icon: 2.42 };
 
@@ -80,6 +80,8 @@ export class ShowcaseDirector {
     this.script = this.dev.film ?? new HighlightScript(LEAD[view]);
     this.renderer.setMatch(this.script.match);
     this.renderer.tv.fixed = this.dev.film ? null : (STILL_CAMERA[view] ?? null);
+    // A film of the ceremony hands the camera to the ceremony's own shots.
+    this.renderer.setCeremony(this.script.ceremony ?? null);
     const cam = params.get("cam");
     if (cam) {
       const [x = 0, y = 0, z = 0, lx = 0, ly = 0, lz = 0, fov = 40] = cam.split(",").map(Number);
@@ -135,7 +137,8 @@ export class ShowcaseDirector {
       this.carry -= STEP;
       this.elapsed += STEP;
       this.script.steer(this.elapsed);
-      m.step(STEP);
+      if (this.script.stepCeremony) this.script.stepCeremony(STEP);
+      else m.step(STEP);
       if (this.dev.follow) followCamera(this.renderer.tv, m, this.dev.follow);
       for (const e of m.drainEvents()) {
         this.renderer.onEvent(e);

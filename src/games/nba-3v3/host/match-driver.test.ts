@@ -3,12 +3,12 @@ import type { MatchEvent } from "../engine/events";
 import { MatchDriver } from "./match-driver";
 
 const ENTRIES = [
-  { team: 0 as const, character: "ashby" as const, seat: 1 },
-  { team: 0 as const, character: "varelas" as const, seat: null },
-  { team: 0 as const, character: "zupan" as const, seat: null },
-  { team: 1 as const, character: "whitlock" as const, seat: 2 },
-  { team: 1 as const, character: "zupan" as const, seat: null },
-  { team: 1 as const, character: "delacroix" as const, seat: null },
+  { team: 0 as const, build: "shooter" as const, seat: 1 },
+  { team: 0 as const, build: "dunker" as const, seat: null },
+  { team: 0 as const, build: "playmaker" as const, seat: null },
+  { team: 1 as const, build: "lockdown" as const, seat: 2 },
+  { team: 1 as const, build: "playmaker" as const, seat: null },
+  { team: 1 as const, build: "big" as const, seat: null },
 ];
 
 describe("the match driver", () => {
@@ -25,12 +25,12 @@ describe("the match driver", () => {
 
   it("moves a phone's player with its stick once the game is live", () => {
     const driver = new MatchDriver(ENTRIES, 1);
-    const ashby = driver.match.athletes[0]!;
-    const start = ashby.z;
+    const shooter = driver.match.athletes[0]!;
+    const start = shooter.z;
     for (let i = 0; i < 300; i++) driver.tick(1 / 60, (seat) => (seat === 1 ? { x: 0, y: 1 } : { x: 0, y: 0 }));
     expect(driver.match.phase).toBe("live");
     for (let i = 0; i < 30; i++) driver.tick(1 / 60, (seat) => (seat === 1 ? { x: 0, y: 1 } : { x: 0, y: 0 }));
-    expect(ashby.z).toBeLessThan(start - 0.5);
+    expect(shooter.z).toBeLessThan(start - 0.5);
   });
 
   it("hands a dropped phone's player to the computer and back", () => {

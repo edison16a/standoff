@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CHARACTER_IDS } from "../roster";
+import { BUILD_IDS } from "../builds";
 import type { MatchEvent } from "./events";
 import { callFoul } from "./foul-call";
 import { LINE } from "./free-throw-plan";
@@ -8,7 +8,7 @@ import { GREEN_MS } from "./shot-model";
 import { COURT, STEP } from "./tuning";
 
 /** Player 0 is on a phone in seat 1; everyone else is a computer. */
-const ENTRIES: Entry[] = CHARACTER_IDS.slice(0, 6).map((character, i) => ({ team: (i % 2) as 0 | 1, character, seat: i === 0 ? 1 : null }));
+const ENTRIES: Entry[] = BUILD_IDS.slice(0, 6).map((build, i) => ({ team: (i % 2) as 0 | 1, build, seat: i === 0 ? 1 : null }));
 
 /** A live match where defender 1 has just fouled player `victim` of team 0. */
 function fouled(victim: number, seed = 3): { m: Match; events: MatchEvent[] } {

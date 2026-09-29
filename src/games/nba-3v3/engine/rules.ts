@@ -97,6 +97,13 @@ function scoreFreeThrow(m: Match, shooter: Athlete): void {
   startDead(m, shooter.team === 0 ? 1 : 0);
 }
 
+/** Ends the game at once with `team` a point clear at the target. For the admin panel's Win now. */
+export function winNow(m: Match, team: TeamId): void {
+  if (m.phase === "over") return;
+  m.score = team === 0 ? [m.target, Math.min(m.score[1], m.target - 1)] : [Math.min(m.score[0], m.target - 1), m.target];
+  gameOver(m, team);
+}
+
 /** Ends the game once a team reaches the target, and marks game point on the way. True when it is over. */
 function gameOver(m: Match, team: TeamId): boolean {
   if (m.score[team] >= m.target) {

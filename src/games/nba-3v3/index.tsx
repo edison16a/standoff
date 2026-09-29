@@ -14,6 +14,7 @@ import "./styles/lobby-short.css";
 import "./styles/bots-toggle.css";
 import "./styles/hud.css";
 import "./styles/results.css";
+import "./styles/champions.css";
 import "./styles/replay.css";
 import "./styles/phone.css";
 import "./styles/phone-ready.css";

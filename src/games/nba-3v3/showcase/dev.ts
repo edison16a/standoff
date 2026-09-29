@@ -1,9 +1,11 @@
 import * as THREE from "three";
+import type { Ceremony } from "../engine/ceremony";
 import type { Match } from "../engine/match";
 import type { TvCamera } from "../render/tv-camera";
 import { DUNK_STYLES, type DunkStyle } from "../roster";
 import { BotFilm } from "./bot-film";
 import { LAB_SCENES, LabFilm, type LabScene } from "./lab";
+import { CeremonyFilm } from "./lab-ceremony";
 
 declare global {
   interface Window {
@@ -17,11 +19,14 @@ export interface Film {
   readonly match: Match;
   steer(t: number): void;
   slowFor(e: import("../engine/events").MatchEvent): { scale: number; seconds: number } | null;
+  /** The trophy ceremony, for a film of it: it is stepped in place of the match. */
+  readonly ceremony?: Ceremony;
+  stepCeremony?(dt: number): void;
 }
 
 /**
  * The development aids read from the address: `?bots=seed` films a
- * computer game, `?lab=scene&style=dunk` a lab scene, `?step=1` hands
+ * computer game, `?lab=scene&style=dunk` a lab scene (`?lab=ceremony` the trophy ceremony), `?step=1` hands
  * the clock to `window.__nbaStep` for frame by frame review, and
  * `?follow=id,angle,dist` keeps a close camera on one player.
  */
@@ -36,7 +41,8 @@ export function readDev(params: URLSearchParams): DevOptions {
   const lab = params.get("lab") as LabScene | null;
   const style = params.get("style") as DunkStyle | null;
   let film: Film | null = null;
-  if (lab && LAB_SCENES.includes(lab)) film = new LabFilm(lab, style && DUNK_STYLES.includes(style) ? style : null);
+  if (params.get("lab") === "ceremony") film = new CeremonyFilm();
+  else if (lab && LAB_SCENES.includes(lab)) film = new LabFilm(lab, style && DUNK_STYLES.includes(style) ? style : null);
   else if (bots !== null) film = new BotFilm(Number(bots) || 1);
   const f = params.get("follow");
   let follow: DevOptions["follow"] = null;

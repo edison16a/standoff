@@ -1,6 +1,6 @@
 import type { MatchEvent } from "../engine/events";
 import { Match } from "../engine/match";
-import { CHARACTER_IDS } from "../roster";
+import { BUILD_IDS } from "../builds";
 
 /**
  * A development aid for looking at the animation: a whole game between
@@ -15,7 +15,7 @@ export class BotFilm {
     this.match = new Match({
       seed,
       firstOffence: 0,
-      entries: CHARACTER_IDS.slice(0, 6).map((character, i) => ({ team: (i % 2) as 0 | 1, character, seat: null })),
+      entries: BUILD_IDS.slice(0, 6).map((build, i) => ({ team: (i % 2) as 0 | 1, build, seat: null })),
     });
   }
 

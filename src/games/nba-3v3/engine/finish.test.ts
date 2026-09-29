@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { CHARACTER_IDS } from "../roster";
+import { BUILD_IDS } from "../builds";
 import { Match, type Entry } from "./match";
 import { RIM, STEP } from "./tuning";
 
-const ENTRIES: Entry[] = CHARACTER_IDS.slice(0, 6).map((character, i) => ({ team: (i % 2) as 0 | 1, character, seat: i === 0 ? 1 : null }));
+const ENTRIES: Entry[] = BUILD_IDS.slice(0, 6).map((build, i) => ({ team: (i % 2) as 0 | 1, build, seat: i === 0 ? 1 : null }));
 
 /** A live match with the first player holding the ball at a spot, one defender at `d` (or far off), everyone else far off. */
-function setup(x: number, z: number, d: { x: number; z: number } | null = null, character = ENTRIES[0]!.character): Match {
-  const m = new Match({ entries: ENTRIES.map((e, i) => (i === 0 ? { ...e, character } : e)), seed: 3, firstOffence: 0, botLevel: "training" });
+function setup(x: number, z: number, d: { x: number; z: number } | null = null, build = ENTRIES[0]!.build): Match {
+  const m = new Match({ entries: ENTRIES.map((e, i) => (i === 0 ? { ...e, build } : e)), seed: 3, firstOffence: 0, botLevel: "training" });
   while (m.phase !== "live") m.step(STEP);
   m.athletes.forEach((a, i) => {
     a.x = i === 0 ? x : -6 + i * 0.5;
@@ -33,7 +33,7 @@ describe("finishing at the rim", () => {
   });
 
   it("lays it up through a defender who is in the way, and says so with a bump", () => {
-    const m = setup(0, 3.4, { x: 0, z: 2.6 }, "ashby");
+    const m = setup(0, 3.4, { x: 0, z: 2.6 }, "shooter");
     m.athletes[0]!.vz = -4;
     m.press(0, "shoot");
     const act = m.athletes[0]!.action;
@@ -51,7 +51,7 @@ describe("finishing at the rim", () => {
   });
 
   it("hangs on the rim with the body dropping under the hands, then lets go", () => {
-    const m = setup(0, 3.2, null, "whitlock");
+    const m = setup(0, 3.2, null, "lockdown");
     m.forcedDunk = "rimhang";
     m.athletes[0]!.vz = -4;
     m.press(0, "shoot");

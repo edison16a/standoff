@@ -1,4 +1,4 @@
-import { airborne, charOf, standingReach } from "./athlete";
+import { airborne, buildOf, standingReach } from "./athlete";
 import { RIM_SPOT, rimDistance } from "./court";
 import { chooseDunk } from "./dunk-style";
 import { finishSpot, layupKind, releaseHand } from "./finish";
@@ -16,7 +16,7 @@ import { clamp, dir2, dist2, lerp, segmentDistance, yawOf } from "./vec";
  * a layup through the contact. Under the rim it becomes a reverse.
  */
 export function startDrive(m: Match, a: Athlete): void {
-  const c = charOf(a);
+  const c = buildOf(a);
   const d = rimDistance(a);
   const defenders = m.opponents(a.team);
   const open = defenders.every((o) => dist2(o, a) > 2);
@@ -27,7 +27,7 @@ export function startDrive(m: Match, a: Athlete): void {
     .sort((p, q) => dist2(p, a) - dist2(q, a))[0];
   let contact: Athlete | null = null;
   if (inWay) {
-    const edge = c.stats.strength - charOf(inWay).stats.strength;
+    const edge = c.stats.strength - buildOf(inWay).stats.strength;
     if (edge >= 2) {
       // Too much muscle: the defender is sent sprawling.
       const push = dir2(a, inWay);
@@ -59,7 +59,7 @@ export function startDrive(m: Match, a: Athlete): void {
   };
   a.yaw = driveYaw(a);
   if (contact) {
-    const power = clamp(0.4 + (charOf(contact).stats.strength - c.stats.strength) * 0.08, 0.3, 0.9);
+    const power = clamp(0.4 + (buildOf(contact).stats.strength - c.stats.strength) * 0.08, 0.3, 0.9);
     m.emit({ type: "bump", a: a.id, b: contact.id, power });
   }
   m.emit({ type: "gather", id: a.id, kind: dunk ? "dunk" : "layup" });

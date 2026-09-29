@@ -1,14 +1,14 @@
 import type { Entry } from "../engine/match";
 import type { TeamId } from "../engine/types";
 import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
-import { CHARACTER_IDS, type CharacterId } from "../roster";
+import { BUILD_IDS, type BuildId } from "../builds";
 import { freeRole, nextRole, type Role } from "./roles";
 
 export const TEAM_SIZE = 3;
 
 export interface SeatState {
   connected: boolean;
-  pick: CharacterId | null;
+  pick: BuildId | null;
   ready: boolean;
   team: TeamId | null;
   /** When they were put on their team, so a swap moves the newest arrival. */
@@ -21,13 +21,13 @@ export interface SeatState {
 export interface Spot {
   team: TeamId;
   seat: number | null;
-  character: CharacterId;
+  build: BuildId;
   role: Role;
 }
 
 /**
- * Who is in the room, which star each player picked, and which team the
- * person at the computer put them on. Each star can be taken once. New
+ * Who is in the room, which build each player picked, and which team the
+ * person at the computer put them on. Each build can be taken once. New
  * players land on the smaller team; the host moves them with the mouse,
  * and a full team swaps its newest member across so it stays three a
  * side. Computer players fill whatever spots are left, unless the host
@@ -66,9 +66,9 @@ export class Lobby {
     this.state(seat).connected = false;
   }
 
-  pick(seat: number, character: CharacterId): boolean {
-    if (this.taken(seat).includes(character)) return false;
-    this.state(seat).pick = character;
+  pick(seat: number, build: BuildId): boolean {
+    if (this.taken(seat).includes(build)) return false;
+    this.state(seat).pick = build;
     return true;
   }
 
@@ -97,8 +97,8 @@ export class Lobby {
   }
 
   /** Characters held by connected players other than `seat`. */
-  taken(seat: number): CharacterId[] {
-    const out: CharacterId[] = [];
+  taken(seat: number): BuildId[] {
+    const out: BuildId[] = [];
     for (const [other, s] of this.seats) if (other !== seat && s.connected && s.pick) out.push(s.pick);
     return out;
   }
@@ -145,18 +145,18 @@ export class Lobby {
 
   /**
    * The spots, team by team: every ready player on their team, then
-   * computer players in the stars nobody picked, up to three a side when
+   * computer players in the builds nobody picked, up to three a side when
    * they are on. Players who are still choosing sit this game out.
    */
   spots(): Spot[] {
     const used = new Set(this.readySeats.map((seat) => this.state(seat).pick!));
-    const spare = CHARACTER_IDS.filter((id) => !used.has(id));
+    const spare = BUILD_IDS.filter((id) => !used.has(id));
     const out: Spot[] = [];
     for (const team of [0, 1] as const) {
       const players = this.readySeats.filter((seat) => this.state(seat).team === team).slice(0, TEAM_SIZE);
-      const side: Spot[] = players.map((seat) => ({ team, seat, character: this.state(seat).pick!, role: this.state(seat).role }));
+      const side: Spot[] = players.map((seat) => ({ team, seat, build: this.state(seat).pick!, role: this.state(seat).role }));
       if (this.bots) {
-        for (let i = players.length; i < TEAM_SIZE; i++) side.push({ team, seat: null, character: spare.shift()!, role: freeRole(side.map((s) => s.role)) });
+        for (let i = players.length; i < TEAM_SIZE; i++) side.push({ team, seat: null, build: spare.shift()!, role: freeRole(side.map((s) => s.role)) });
       }
       out.push(...side.sort((a, b) => a.role - b.role));
     }
@@ -164,7 +164,7 @@ export class Lobby {
   }
 
   entries(): Entry[] {
-    return this.spots().map((s) => ({ team: s.team, character: s.character, seat: s.seat, slot: s.role }));
+    return this.spots().map((s) => ({ team: s.team, build: s.build, seat: s.seat, slot: s.role }));
   }
 
   private members(team: TeamId): number[] {

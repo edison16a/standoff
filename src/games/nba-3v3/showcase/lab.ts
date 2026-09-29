@@ -12,10 +12,10 @@ import { FINISH_SCENES, FINISH_SPOTS, steerFinish, type FinishScene } from "./la
 export const LAB_SCENES = ["moves", "run", "dunk", "block", "free", ...FINISH_SCENES] as const;
 export type LabScene = (typeof LAB_SCENES)[number];
 
-const ASHBY = 0;
-const VARELAS = 1;
+const SHOOTER = 0;
+const DUNKER = 1;
 const HOLLOWAY = 5;
-const WHITLOCK = 3;
+const LOCKDOWN = 3;
 
 /** What the stick does at a moment of the moves scene: the Dribble button with an aim. */
 type Cue = readonly [at: number, aim: "back" | "left" | "right" | "fwd" | "none"];
@@ -40,12 +40,12 @@ export class LabFilm {
       seed: 7,
       firstOffence: 0,
       entries: [
-        { team: 0, character: "ashby", seat: null },
-        { team: 0, character: "varelas", seat: null },
-        { team: 0, character: "delacroix", seat: null },
-        { team: 1, character: "whitlock", seat: null },
-        { team: 1, character: "zupan", seat: null },
-        { team: 1, character: "crane", seat: null },
+        { team: 0, build: "shooter", seat: null },
+        { team: 0, build: "dunker", seat: null },
+        { team: 0, build: "big", seat: null },
+        { team: 1, build: "lockdown", seat: null },
+        { team: 1, build: "playmaker", seat: null },
+        { team: 1, build: "allround", seat: null },
       ],
     });
     const m = this.match;
@@ -60,13 +60,13 @@ export class LabFilm {
       ...FINISH_SPOTS,
     };
     spots[scene].forEach(([x, z], id) => Object.assign(m.athletes[id]!, { x, z, yaw: Math.PI }));
-    // In the gesture scene Ashby celebrates with his hands free.
-    m.ball.holder = scene === "dunk" || scene === "gesture" ? VARELAS : ASHBY;
+    // In the gesture scene the Shooter celebrates with his hands free.
+    m.ball.holder = scene === "dunk" || scene === "gesture" ? DUNKER : SHOOTER;
     m.brains.reset();
-    const star = m.athletes[m.ball.holder]!;
-    // At the line the computer shoots for the star, as it would for anyone.
-    star.auto = scene === "free";
-    if (scene === "free") callFoul(m, m.athletes[WHITLOCK]!, star);
+    const holder = m.athletes[m.ball.holder]!;
+    // At the line the computer shoots for the holder, as it would for anyone.
+    holder.auto = scene === "free";
+    if (scene === "free") callFoul(m, m.athletes[LOCKDOWN]!, holder);
   }
 
   steer(t: number): void {
@@ -85,28 +85,28 @@ export class LabFilm {
 
   private moves(t: number): void {
     const m = this.match;
-    const a = m.athletes[ASHBY]!;
+    const a = m.athletes[SHOOTER]!;
     a.move = t > 6.4 ? toward(a, RIM_SPOT, 1) : { x: 0, z: 0 };
     const cue = MOVE_CUES[this.fired];
     if (!cue || t < cue[0]) return;
     this.fired++;
     a.moveHeat = 0;
-    m.press(ASHBY, "defend", aimFor(a, cue[1]));
+    m.press(SHOOTER, "defend", aimFor(a, cue[1]));
   }
 
   private run(t: number): void {
     const m = this.match;
-    const a = m.athletes[ASHBY]!;
+    const a = m.athletes[SHOOTER]!;
     const legs: [number, V2][] = [[0.3, { x: 0, z: 0 }], [1.6, { x: 1, z: 0 }], [2.6, { x: -1, z: 0 }], [3.6, { x: 0.3, z: -1 }], [4.4, { x: 0, z: 0 }]];
     const leg = legs.find(([until]) => t < until);
     a.move = leg ? leg[1] : { x: 0, z: 0 };
-    if (t > 5 && this.once("pass")) m.press(ASHBY, "pass", dir2(a, m.athletes[VARELAS]!));
+    if (t > 5 && this.once("pass")) m.press(SHOOTER, "pass", dir2(a, m.athletes[DUNKER]!));
   }
 
   private dunk(t: number): void {
     const m = this.match;
-    const a = m.athletes[VARELAS]!;
-    if (m.ball.holder !== VARELAS || a.action.kind === "drive") {
+    const a = m.athletes[DUNKER]!;
+    if (m.ball.holder !== DUNKER || a.action.kind === "drive") {
       a.move = { x: 0, z: 0 };
       return;
     }
@@ -114,7 +114,7 @@ export class LabFilm {
     if (t > 0.6 && Math.hypot(a.x - RIM_SPOT.x, a.z - RIM_SPOT.z) < 3.1 && this.once("dunk")) {
       m.forced = "swish";
       m.forcedDunk = this.style ?? DUNK_STYLES[0];
-      m.press(VARELAS, "shoot");
+      m.press(DUNKER, "shoot");
     }
   }
 
@@ -122,9 +122,9 @@ export class LabFilm {
     const m = this.match;
     if (t > 0.4 && this.once("shoot")) {
       m.forced = "rimOut";
-      m.press(ASHBY, "shoot");
+      m.press(SHOOTER, "shoot");
     }
-    if (t > 0.4 + GREEN_MS / 1000 && this.once("release")) m.release(ASHBY, GREEN_MS);
+    if (t > 0.4 + GREEN_MS / 1000 && this.once("release")) m.release(SHOOTER, GREEN_MS);
     if (t > 0.62 && this.once("block")) m.press(HOLLOWAY, "defend");
   }
 

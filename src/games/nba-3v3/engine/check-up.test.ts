@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { CHARACTER_IDS } from "../roster";
+import { BUILD_IDS } from "../builds";
 import type { MatchEvent } from "./events";
 import { Match, type Entry } from "./match";
 import { CHECK, COURT, RULES, STEP } from "./tuning";
 
 /** Team 0 has a phone player in seat 1; team 1 has one in seat 2 on its second slot. */
-const ENTRIES: Entry[] = CHARACTER_IDS.slice(0, 6).map((character, i) => ({ team: (i % 2) as 0 | 1, character, seat: i === 0 ? 1 : i === 3 ? 2 : null }));
+const ENTRIES: Entry[] = BUILD_IDS.slice(0, 6).map((build, i) => ({ team: (i % 2) as 0 | 1, build, seat: i === 0 ? 1 : i === 3 ? 2 : null }));
 
 /** A live match where player 0 scores a sure basket from close in. */
 function scored(checkBeat = true): { m: Match; events: MatchEvent[] } {

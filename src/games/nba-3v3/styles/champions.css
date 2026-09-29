@@ -1,0 +1,20 @@
+/*
+  Over the trophy ceremony: the kit's names across the top, and a small
+  button to bring the box scores in early. The picture stays clear.
+*/
+
+.nba-champions {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.nba-champions__skip {
+  position: absolute;
+  right: clamp(12px, 2.5vw, 32px);
+  bottom: clamp(12px, 3vh, 32px);
+  background: rgba(8, 10, 20, 0.55);
+  color: #ffffff;
+  pointer-events: auto;
+  animation: nba-fade 500ms 1.2s ease-out both;
+}

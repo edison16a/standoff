@@ -1,10 +1,12 @@
 import * as THREE from "three";
 import type { Athlete } from "../engine/types";
-import { CHARACTERS, TEAMS } from "../roster";
+import { BUILDS } from "../builds";
+import { TEAMS } from "../roster";
 import { blockPose, landPose, passPose, shootPose, stealPose, stumblePose } from "./anim/actions";
 import { celebratePose, dejectedPose } from "./anim/celebrations";
 import { dunkPose, dunkSpin } from "./anim/dunks";
 import { gesturePose } from "./anim/gestures";
+import { captainPose, matePose } from "./anim/trophy-poses";
 import { layupPose } from "./anim/layups";
 import { basePose, type AthleteScene } from "./anim/base";
 import { setShotPose } from "./anim/line";
@@ -50,8 +52,9 @@ export class AthleteView {
   private ahead = 0;
   private side = 0;
 
-  constructor(readonly athlete: Athlete, bodyMat: THREE.Material, parent: THREE.Object3D) {
-    this.model = buildAthlete(CHARACTERS[athlete.character], TEAMS[athlete.team], bodyMat);
+  /** `backName` goes across the jersey: the player's own name, or the build's for a computer player. */
+  constructor(readonly athlete: Athlete, bodyMat: THREE.Material, parent: THREE.Object3D, backName?: string) {
+    this.model = buildAthlete(BUILDS[athlete.build], TEAMS[athlete.team], bodyMat, backName);
     this.seed = athlete.id * 1.7;
     this.placement = new Placement(athlete);
     parent.add(this.model.joints.root);
@@ -59,7 +62,7 @@ export class AthleteView {
 
   update(a: Athlete, s: AthleteScene, dt: number): void {
     this.time += dt;
-    const c = CHARACTERS[a.character];
+    const c = BUILDS[a.build];
     const speed = Math.hypot(a.vx, a.vz);
     this.stride(a, s, speed, dt);
     this.feelMomentum(a, dt);
@@ -121,7 +124,9 @@ export class AthleteView {
         target = s.holding ? base : blend(base, act.gesture ? gesturePose(act.gesture, act.t) : celebratePose(c.celebration, act.t), ease(act.t / 0.25) * ease((act.dur - act.t) / 0.3), { ...base });
         break;
       case "none": {
-        if (s.winner !== null) target = s.winner === a.team ? celebratePose(c.celebration, this.time) : dejectedPose(this.time);
+        const part = s.ceremony;
+        if (part) target = part.role === "captain" ? captainPose(part.t) : part.role === "mate" ? matePose(part.t, part.phase) : dejectedPose(this.time);
+        else if (s.winner !== null) target = s.winner === a.team ? celebratePose(c.celebration, this.time) : dejectedPose(this.time);
         else if (this.time - this.landAt < 0.4) target = landPose(this.time - this.landAt, this.hardLand, base);
         // Coming out of an action the limbs settle gently instead of snapping back to the run.
         rate = 7 + 9 * ease((this.time - this.endedAt) / RECOVER);

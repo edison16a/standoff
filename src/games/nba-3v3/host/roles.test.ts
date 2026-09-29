@@ -2,18 +2,18 @@ import { describe, expect, it } from "vitest";
 import { Match } from "../engine/match";
 import { Lobby } from "./lobby";
 
-function readyPlayer(lobby: Lobby, seat: number, character: Parameters<Lobby["pick"]>[1]): void {
+function readyPlayer(lobby: Lobby, seat: number, build: Parameters<Lobby["pick"]>[1]): void {
   lobby.connect(seat);
-  lobby.pick(seat, character);
+  lobby.pick(seat, build);
   lobby.setReady(seat, true);
 }
 
 describe("roles and difficulty in the lobby", () => {
   it("gives each new teammate the next free role and fills the rest with computers", () => {
     const lobby = new Lobby();
-    readyPlayer(lobby, 1, "ashby");
-    readyPlayer(lobby, 2, "whitlock");
-    readyPlayer(lobby, 3, "crane");
+    readyPlayer(lobby, 1, "shooter");
+    readyPlayer(lobby, 2, "lockdown");
+    readyPlayer(lobby, 3, "allround");
     expect(lobby.seats.get(1)!.role).toBe(0);
     expect(lobby.seats.get(3)!.role).toBe(1);
     const home = lobby.spots().filter((s) => s.team === 0);
@@ -22,8 +22,8 @@ describe("roles and difficulty in the lobby", () => {
 
   it("swaps roles when the host hands one that a teammate has", () => {
     const lobby = new Lobby();
-    readyPlayer(lobby, 1, "ashby");
-    readyPlayer(lobby, 2, "whitlock");
+    readyPlayer(lobby, 1, "shooter");
+    readyPlayer(lobby, 2, "lockdown");
     lobby.setTeam(2, 0);
     expect(lobby.seats.get(2)!.role).toBe(1);
     lobby.cycleRole(1);
@@ -33,7 +33,7 @@ describe("roles and difficulty in the lobby", () => {
 
   it("puts the role into the match as the player's slot", () => {
     const lobby = new Lobby();
-    readyPlayer(lobby, 1, "ashby");
+    readyPlayer(lobby, 1, "shooter");
     lobby.cycleRole(1);
     lobby.cycleRole(1);
     const entries = lobby.entries();

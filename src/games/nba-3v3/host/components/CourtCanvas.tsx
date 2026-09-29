@@ -25,6 +25,8 @@ export default function CourtCanvas() {
     // Without a graphics card the full picture runs at a frame or two a second, so it draws lighter.
     const renderer = new CourtRenderer(canvas, softwareWebGl() ? LOW_QUALITY : {});
     const tags = new Tags(layer);
+    // People wear their own name on their backs; computer players wear their build's.
+    renderer.jerseyName = (a) => (a.seat !== null ? session.nameOf(a.id) || null : null);
     const fit = () => renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
     fit();
     const observer = new ResizeObserver(fit);
@@ -45,10 +47,12 @@ export default function CourtCanvas() {
       renderer.setMatch(match, session.phase === "countdown");
       const replayCam = session.replayCamera();
       renderer.setReplayCamera(replayCam);
+      renderer.setCeremony(session.driver?.ceremony ?? null);
       renderer.render(dt);
       renderer.tv.camera.getWorldDirection(forward);
       if (!replayCam) session.setView({ x: forward.x, z: forward.z });
-      if (session.driver && !replayCam) {
+      // The ceremony has the winners' names over it instead of tags.
+      if (session.driver && !replayCam && !session.driver.ceremony) {
         tags.update(match, renderer, (id) => {
           const a = match.athletes[id]!;
           return { name: session.nameOf(id), colour: a.seat !== null ? playerColor(a.seat) : null };

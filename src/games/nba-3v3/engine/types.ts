@@ -1,4 +1,5 @@
-import type { CharacterId, DunkStyle } from "../roster";
+import type { BuildId } from "../builds";
+import type { DunkStyle } from "../roster";
 import type { Flight } from "./flight";
 import type { Grade, Outcome, ShotKind } from "./shot-model";
 import type { V2, V3 } from "./vec";
@@ -78,7 +79,7 @@ export interface Athlete {
   team: TeamId;
   /** 0 to 2 within the team, which sets where they line up. */
   slot: number;
-  character: CharacterId;
+  build: BuildId;
   /** The phone playing this athlete, or null for a computer player. */
   seat: number | null;
   /** True while the computer plays them: every computer player, and humans whose phone dropped. */

@@ -6,7 +6,8 @@ import { guardStatus } from "../engine/guard";
 import { greenHalfMs, GREEN_MS } from "../engine/shot-model";
 import { RULES, SHOT } from "../engine/tuning";
 import type { CourtState, Phase, PhoneState } from "../protocol";
-import { CHARACTERS } from "../roster";
+import { BUILDS, cpuName } from "../builds";
+import { ceremonyCard } from "./ceremony-card";
 import { useNbaStore as store, type ResultRow } from "./host-store";
 import type { Lobby } from "./lobby";
 import type { MatchDriver } from "./match-driver";
@@ -18,6 +19,8 @@ export interface PublishContext {
   lobby: Lobby;
   driver: MatchDriver | null;
   phones: PhoneLink;
+  /** The host asked for the box scores before the ceremony brought them in. */
+  statsNow: boolean;
 }
 
 export function phaseOf(driver: MatchDriver | null): Phase {
@@ -34,12 +37,12 @@ export function replayVotes(driver: MatchDriver | null, players: readonly Player
   return r.voters.map((seat) => ({ seat, name: nameFor(driver.match, driver.athleteBySeat.get(seat) ?? -1, players) || "Player", done: r.skipped.has(seat) }));
 }
 
-/** The name a player goes by on screen: their own for people, the star's for computer players. */
+/** The name a player goes by on screen: their own for people, CPU and the build for computer players, like CPU Shooter. */
 export function nameFor(m: Match, id: number, players: readonly Player[]): string {
   const a = m.athletes[id];
   if (!a) return "";
   const person = a.seat !== null ? players.find((p) => p.seat === a.seat) : undefined;
-  return person?.name || CHARACTERS[a.character].short;
+  return person?.name || cpuName(a.build);
 }
 
 /** What the scoreboard says during free throws, or null the rest of the time. */
@@ -68,7 +71,7 @@ export function courtState(m: Match, id: number, players: readonly Player[]): Co
     guard: guardStatus(m, a),
     freeThrow: ft ? { mine, n: ft.shot, of: ft.shots, ready: mine && ft.stage === "set" } : null,
     // At the line the green band is wider: a set shot with nobody in the face.
-    meter: { fullMs: SHOT.meterMs, greenMs: GREEN_MS, halfMs: greenHalfMs(CHARACTERS[a.character].stats.shooting, a.onFire, mine) },
+    meter: { fullMs: SHOT.meterMs, greenMs: GREEN_MS, halfMs: greenHalfMs(BUILDS[a.build].stats.shooting, a.onFire, mine) },
     onFire: a.onFire,
     // The whole break counts, from the basket to the check, so the phone never shows a loose ball meanwhile.
     checking: m.phase === "dead" || m.phase === "check",
@@ -84,7 +87,7 @@ function lineOf(a: Athlete): { points: number; rebounds: number; assists: number
 
 function results(m: Match, players: readonly Player[]): ResultRow[] {
   return m.athletes.map((a) => ({
-    id: a.id, team: a.team, name: nameFor(m, a.id, players), seat: a.seat, character: a.character,
+    id: a.id, team: a.team, name: nameFor(m, a.id, players), seat: a.seat, build: a.build,
     points: a.box.points, rebounds: a.box.rebounds, assists: a.box.assists, steals: a.box.steals, blocks: a.box.blocks, made: a.box.made, attempts: a.box.attempts,
   }));
 }
@@ -97,13 +100,15 @@ export function publish(c: PublishContext): void {
     const s = c.lobby.seats.get(p.seat);
     return { seat: p.seat, name: p.name, connected: p.connected, pick: s?.pick ?? null, ready: s?.ready ?? false, team: s?.team ?? null };
   });
-  const spots = c.lobby.spots().map((s) => ({ ...s, name: s.seat === null ? "Computer" : (c.players.find((p) => p.seat === s.seat)?.name ?? "Player") }));
+  const spots = c.lobby.spots().map((s) => ({ ...s, name: s.seat === null ? cpuName(s.build) : (c.players.find((p) => p.seat === s.seat)?.name ?? "Player") }));
   const inGame = new Set(c.driver ? [...c.driver.athleteBySeat.keys()] : []);
   const votes = replayVotes(c.driver, c.players);
   const replay = c.driver?.replays.replay;
   store.setState({
     replay: replay ? { view: replay.view, scorer: nameFor(replay.ghost, replay.scorer, c.players), votes: votes.map(({ name, done }) => ({ name, done })) } : null,
-    replayDue: !!c.driver?.replays.pending,
+    // The results wait for the replay and then the trophy ceremony.
+    replayDue: !!m && m.phase === "over" && !c.driver?.ceremony,
+    ceremony: m && c.driver ? ceremonyCard(m, c.driver.ceremony, (id) => nameFor(m, id, c.players), c.statsNow) : null,
     phase,
     seats,
     spots,
@@ -132,6 +137,7 @@ export function publish(c: PublishContext): void {
     const state: PhoneState = {
       kind: "state",
       phase: early ? "live" : phase,
+      name: c.players.find((p) => p.seat === seat)?.name ?? "",
       taken: c.lobby.taken(seat),
       pick: s.pick,
       ready: s.ready,

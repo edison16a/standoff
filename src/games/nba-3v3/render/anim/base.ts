@@ -1,5 +1,6 @@
 import { palmHold, spinCarry } from "../../engine/dribble-ball";
 import type { Athlete, TeamId } from "../../engine/types";
+import type { CeremonyRole } from "../ceremony/ceremony-stage";
 import { balance } from "./balance";
 import { CHEST_HOLD, RECEIVE, SPIN_PULL } from "./holding";
 import { foulPose, lanePose, type LaneStance } from "./line";
@@ -23,6 +24,8 @@ export interface AthleteScene {
   fouled: number;
   /** Set once the game is won: winners celebrate, losers hang their heads. */
   winner: TeamId | null;
+  /** This player's part in the trophy ceremony, while it runs. */
+  ceremony?: CeremonyRole | null;
 }
 
 /** What the view knows of the legs and the body's momentum this frame. */

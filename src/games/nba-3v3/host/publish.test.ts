@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import { callFoul } from "../engine/foul-call";
 import { Match, type Entry } from "../engine/match";
 import { STEP } from "../engine/tuning";
-import { CHARACTER_IDS } from "../roster";
+import { BUILD_IDS } from "../builds";
 import { courtState, freeThrowText } from "./publish";
 
-const ENTRIES: Entry[] = CHARACTER_IDS.slice(0, 6).map((character, i) => ({ team: (i % 2) as 0 | 1, character, seat: i < 2 ? i + 1 : null }));
+const ENTRIES: Entry[] = BUILD_IDS.slice(0, 6).map((build, i) => ({ team: (i % 2) as 0 | 1, build, seat: i < 2 ? i + 1 : null }));
 const PLAYERS = [
   { seat: 1, name: "Ana", connected: true },
   { seat: 2, name: "Ben", connected: true },

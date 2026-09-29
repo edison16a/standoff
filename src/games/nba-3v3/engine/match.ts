@@ -78,7 +78,7 @@ export class Match {
     this.target = options.target ?? RULES.target;
     this.bots = botTuning(options.botLevel ?? "easy");
     const slots: [number, number] = [0, 0];
-    this.athletes = options.entries.map((entry, id) => createAthlete(id, entry.team, entry.slot ?? slots[entry.team]++, entry.character, entry.seat));
+    this.athletes = options.entries.map((entry, id) => createAthlete(id, entry.team, entry.slot ?? slots[entry.team]++, entry.build, entry.seat));
     this.offence = options.firstOffence ?? (this.rng() < 0.5 ? 0 : 1);
     this.nextOffence = this.offence;
     this.ball = restingBall();

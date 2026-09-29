@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { CHARACTER_IDS } from "../roster";
+import { BUILD_IDS } from "../builds";
 import { updateDribbleHand } from "./dribble";
 import { Match, type Entry } from "./match";
 import { STEP } from "./tuning";
 
-const ENTRIES: Entry[] = CHARACTER_IDS.slice(0, 6).map((character, i) => ({ team: (i % 2) as 0 | 1, character, seat: i === 0 ? 1 : null }));
+const ENTRIES: Entry[] = BUILD_IDS.slice(0, 6).map((build, i) => ({ team: (i % 2) as 0 | 1, build, seat: i === 0 ? 1 : null }));
 
 /** Player 0 dribbling at the top facing the rim, with one defender at a chosen side and the rest far off. */
 function setup(defenderX: number): Match {

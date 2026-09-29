@@ -1,4 +1,4 @@
-import { charOf } from "./athlete";
+import { buildOf } from "./athlete";
 import { releaseSpread } from "./bot/shot-value";
 import { handTo } from "./check-plan";
 import { walkTo } from "./check-up";
@@ -120,7 +120,7 @@ export function ready(m: Match, ft: FreeThrows): void {
 }
 
 function botShoot(m: Match, ft: FreeThrows, shooter: Athlete): void {
-  const st = charOf(shooter).stats;
+  const st = buildOf(shooter).stats;
   startJumper(m, shooter, true);
   ft.botRelease = GREEN_MS + gaussian(m.rng, releaseSpread(st.shooting) * 0.8 * m.bots.spread);
   stage(ft, "shooting");

@@ -1,4 +1,4 @@
-import { charOf } from "./athlete";
+import { buildOf } from "./athlete";
 import { holdAtChest, stepToss } from "./check-toss";
 import { ready } from "./free-throw";
 import type { Match } from "./match";
@@ -44,7 +44,7 @@ function bounceAtLine(m: Match): void {
   const a = m.athletes[ft.shooter]!;
   const before = a.dribble;
   a.dribble = ((ft.t / FT.bounces) * 2) % 1;
-  const h = charOf(a).build.height;
+  const h = buildOf(a).body.height;
   const drop = 1 - Math.abs(1 - 2 * a.dribble);
   const side = 0.3 * a.dribbleSide;
   const fwd = 0.3;

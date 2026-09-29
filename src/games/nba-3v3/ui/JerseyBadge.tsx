@@ -1,12 +1,13 @@
 import type { TeamId } from "../engine/types";
-import { CHARACTERS, TEAMS, type CharacterId } from "../roster";
+import { BUILDS, type BuildId } from "../builds";
+import { TEAMS } from "../roster";
 
 /**
- * A little jersey in team colours with the star's number, and their skin
+ * A little jersey in team colours with the build's number, and their skin
  * and hair above it, as a flat picture for lists and cards.
  */
-export function JerseyBadge({ character, team, size = 56 }: { character: CharacterId; team: TeamId | null; size?: number }) {
-  const c = CHARACTERS[character];
+export function JerseyBadge({ build, team, size = 56 }: { build: BuildId; team: TeamId | null; size?: number }) {
+  const c = BUILDS[build];
   const t = team === null ? { color: "#64748b", dark: "#334155", trim: "#e2e8f0" } : TEAMS[team];
   const bald = c.look.hair === "bald" || c.look.hair === "buzz";
   return (

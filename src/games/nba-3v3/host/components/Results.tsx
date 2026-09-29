@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { playerColor } from "@/games/kit/players";
-import { CHARACTERS, TEAMS } from "../../roster";
+import { BUILDS } from "../../builds";
+import { TEAMS } from "../../roster";
 import { JerseyBadge } from "../../ui/JerseyBadge";
 import { statLine } from "../../ui/stat-line";
 import { useNbaStore, type ResultRow } from "../host-store";
@@ -35,7 +35,7 @@ function BoxScore({ rows, team }: { rows: ResultRow[]; team: 0 | 1 }) {
             <th scope="row">
               <span className="nba-box__dot" style={{ background: r.seat !== null ? playerColor(r.seat) : "#94a3b8" }} />
               {r.name}
-              {r.seat !== null && <small>{CHARACTERS[r.character].short}</small>}
+              {r.seat !== null && <small>{BUILDS[r.build].name}</small>}
             </th>
             <td className="nba-box__pts">{r.points}</td>
             <td>{r.rebounds}</td>
@@ -54,7 +54,7 @@ function BoxScore({ rows, team }: { rows: ResultRow[]; team: 0 | 1 }) {
 
 /**
  * The final whistle: the winners, the game's MVP and both box scores,
- * after a moment for the confetti. Play again keeps the teams; Change
+ * over the end of the trophy ceremony. Play again keeps the teams; Change
  * teams goes back to the lobby.
  */
 export function Results() {
@@ -64,12 +64,7 @@ export function Results() {
   const score = useNbaStore((s) => s.score);
   // A player who left can leave a team empty with computers off: then only Change teams works.
   const blocked = useNbaStore((s) => s.startBlock !== null);
-  const [shown, setShown] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => setShown(true), 2600);
-    return () => clearTimeout(timer);
-  }, []);
-  if (!shown || winner === null) return null;
+  if (winner === null) return null;
   const mvp = mvpOf(results, winner);
   const loser = winner === 0 ? 1 : 0;
   return (
@@ -84,7 +79,7 @@ export function Results() {
         </header>
         {mvp && (
           <div className="nba-results__mvp">
-            <JerseyBadge character={mvp.character} team={mvp.team} size={72} />
+            <JerseyBadge build={mvp.build} team={mvp.team} size={72} />
             <div>
               <span className="nba-results__eyebrow">MVP</span>
               <strong>{mvp.name}</strong>

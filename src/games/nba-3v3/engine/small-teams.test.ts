@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { CHARACTER_IDS } from "../roster";
+import { BUILD_IDS } from "../builds";
 import type { MatchEvent } from "./events";
 import { callFoul } from "./foul-call";
 import { Match, type Entry } from "./match";
 import { STEP } from "./tuning";
 import type { TeamId } from "./types";
 
-/** `home` players on team 0 and `away` on team 1, each a different star. */
+/** `home` players on team 0 and `away` on team 1, each a different build. */
 function teams(home: number, away: number, seats = false): Entry[] {
   const sides: TeamId[] = [...Array<TeamId>(home).fill(0), ...Array<TeamId>(away).fill(1)];
-  return sides.map((team, i) => ({ team, character: CHARACTER_IDS[i]!, seat: seats ? i + 1 : null }));
+  return sides.map((team, i) => ({ team, build: BUILD_IDS[i]!, seat: seats ? i + 1 : null }));
 }
 
 function playOut(entries: Entry[], seed: number, maxSeconds = 1500): { match: Match; events: MatchEvent[] } {

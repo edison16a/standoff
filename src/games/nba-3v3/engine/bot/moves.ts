@@ -1,4 +1,4 @@
-import { charOf } from "../athlete";
+import { buildOf } from "../athlete";
 import { rimDistance } from "../court";
 import type { Match } from "../match";
 import { basketDir, nearestDefender, rightOf, sideOf } from "../move-pick";
@@ -25,7 +25,7 @@ export function tryMove(m: Match, a: Athlete, s: BotState, jumper: number): bool
   const f = basketDir(a);
   const ahead = (d.x - a.x) * f.x + (d.z - a.z) * f.z;
   if (ahead < 0.2) return false;
-  const st = charOf(a).stats;
+  const st = buildOf(a).stats;
   const roll = m.rng();
   const away = -sideOf(a, d);
   const r = rightOf(f);
