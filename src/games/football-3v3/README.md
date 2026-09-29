@@ -102,13 +102,17 @@ const board = scoreboard(view); // for <Scoreboard board={board} />
 * **Looks.** A jointed body with a helmet, shoulder pads under a printed jersey with big numbers front and back and the name across the back, pants with a stripe, socks and cleats. Size follows height and weight. Each star has their own touches on top of the roster look: mask style (open, cage or tinted visor), sleeves, towels, neck rolls, locks under the helmet and eye black. Linemen share one big build.
 * **Animation.** Every frame a figure picks a target pose from the engine's view, eases toward it, then stands itself on the turf: its lowest point touches the grass and its hips sit over the player's spot. So stances, dives and tackles land right without hand tuned heights. Action poses run on the engine's own action clock, so the body and the ball agree.
 * **Moves.** Three point stances for linemen, the center's snap, the QB in the shotgun, receivers in a two point stance, the drop back, the throwing motion, running with the ball tucked under the arm, cuts, the spin, back move and side step, dives, tackle lunges, lying on the ground, rolling over and getting up, linemen locked together driving their legs, and reaching for a pass. Strides match the ground speed so the feet do not skate.
-* **Rings.** A yellow ring pulses under the receiver the throw stick is on. A thin ring in team trim marks each player a person controls.
+* **The throw.** The QB closes the chest with the ball by the right ear and the left shoulder at the target, steps, turns through, and finishes with the hand across the body by the left hip.
+* **The line.** From the snap to the whistle each pair of linemen is locked together, low and driving. The engine marks them `blocked` for that, so the drawing never guesses.
+* **Reaching.** The target and nearby defenders go up for a pass. The passer's own linemen leave it alone.
+* **Rings.** A yellow ring pulses under the receiver the throw stick is on, and stays lit on the receiver the ball was thrown to until it arrives. A thin ring in team trim marks each player a person controls.
 * **The ball.** A laced football that follows the engine's flight: its long axis, the wobble and the spiral spin, or the tumble of a kick. Held, it sits in the carrier's hands.
 * **Touchdowns.** The scorer spikes it if that is their style, and the ball bounces away. Everyone else celebrates their own way: a dance, a flex, a salute, a leap or a point to the crowd. At the end the winners celebrate and the losers hang their heads.
 
 ### The camera
 
-* **Behind the play.** High behind the team with the ball, looking downfield. It backs up and rises as a pass goes deep, turns round after a turnover and glides rather than jerks.
+* **Behind the play.** High behind the team with the ball, looking downfield. Before the snap and while the QB is in the pocket it keeps the whole formation in the picture, receivers split wide included: `camera/fit.ts` backs it straight up its line of sight until they fit, so a narrow screen sees the same players as a wide one. Once someone runs with the ball it comes in tighter behind them. It backs up and rises a little as a pass goes deep, turns round after a turnover and glides rather than jerks.
+* **Phone sticks.** `renderer.director.groundForward()` is the way up the screen on the ground, in field space, for turning a phone's stick into a field direction that matches the camera.
 * **Kicks.** Low behind the kicker through the posts, then up and after the ball.
 * **Touchdowns.** A slow orbit round the scorer. At the final whistle, a wide orbit of the winners.
 * A big hit shakes it a little. A shot change that would sweep across the field cuts instead.
@@ -119,7 +123,7 @@ const board = scoreboard(view); // for <Scoreboard board={board} />
 
 ### The showcase
 
-`showcase/` plays a seeded bot match under the lights with the score bug. For development: `?seed=` and `?seek=` (seconds to jump ahead), `?quality=low`, `?cam=x,y,z,lookX,lookY,lookZ,fov` to pin the camera, and `?lab=<move>` for the animation lab, where all six stars do one move on a loop next to a pair of linemen. The moves are idle, run, tuck, ready, throw, kick, spin, back, side, dive, lunge, down, tackled, celebrate, spike, stance, block and catch.
+`showcase/` plays a seeded bot match under the lights with the score bug. For development: `?seed=` and `?seek=` (seconds to jump ahead), `?quality=low`, `?cam=x,y,z,lookX,lookY,lookZ,fov` to pin the camera, and `?lab=<move>` for the animation lab, where all six stars do one move on a loop next to a pair of linemen. The moves are idle, run, tuck, ready, throw, kick, spin, back, side, dive, lunge, down, tackled, celebrate, spike, stance, block and catch. A spin turns the whole body round, as the engine does in a game.
 
 ## Tests
 
