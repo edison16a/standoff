@@ -113,6 +113,18 @@ describe("picking a pose from the view", () => {
     expect(reachFor({ ...a, targeted: false, x: 30 }, coming).reach).toBe(0);
   });
 
+  it("leaves a pass over the line to the defence, not the passer's own linemen", () => {
+    const v = freshView();
+    const overhead = { ...v.ball, state: "pass" as const, x: 9, y: 2.2, z: 0, vx: 15, vy: 0, vz: 0 };
+    const s = { ...scene(v), ball: overhead };
+    const line = { ...v.athletes.find((a) => a.role === "lineman" && a.team === 0)!, x: 10, z: 0, action: "none" as const, blocked: false };
+    const own = choosePose(line, s, body).pose;
+    const theirs = choosePose({ ...line, team: 1 }, s, body).pose;
+    // A reach raises the arms: the shoulders swing well forward and up.
+    expect(own.shRX).toBeGreaterThan(-1);
+    expect(theirs.shRX).toBeLessThan(own.shRX - 0.5);
+  });
+
   it("plays every action without producing a broken number", () => {
     const v = freshView();
     const kinds = ["stance", "juke", "dive", "lunge", "throw", "kick", "down", "celebrate", "none"] as const;

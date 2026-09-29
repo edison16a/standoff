@@ -60,8 +60,8 @@ function stance(a: AthleteView, s: PoseScene): Pose {
 
 /**
  * How far a pass has come toward this receiver, 0 to 1, and how high
- * it will arrive, for raising the hands in time. Only the target and a
- * defender right under the ball reach for it.
+ * it will arrive, for raising the hands in time. Only the target and
+ * players right under the ball reach for it.
  */
 export function reachFor(a: AthleteView, ball: BallView): { reach: number; high: number } {
   if (ball.state !== "pass") return { reach: 0, high: 0 };
@@ -111,7 +111,8 @@ export function choosePose(a: AthleteView, s: PoseScene, b: BodyScene): Chosen {
   if (a.role === "lineman" && s.phase === "live" && a.blocked) {
     return { pose: blockPose(b.time, b.seed, a.team === s.offense ? -0.2 : 0.2), rate: 12, hand };
   }
-  const { reach, high } = reachFor(a, s.ball);
+  // Teammates of the passer leave it to the receiver; only the target and the defence go up for it.
+  const { reach, high } = a.targeted || a.team !== s.offense ? reachFor(a, s.ball) : { reach: 0, high: 0 };
   const pose = reach > 0 ? catchPose(run(), reach, high) : run();
   return { pose, rate: reach > 0 ? 18 : 14, hand };
 }
