@@ -19,7 +19,8 @@ const LINEUP: Entrant[] = [
   { team: 1, build: "allrounder", seat: null },
   { team: 1, build: "winger", seat: null },
 ];
-const SEED = 10;
+/** Seeded so the match holds the goal the showcase wants: a charged strike just after a skill move beats a man. */
+const SEED = 15;
 /** The capture tool warms up for three seconds before it films. */
 export const WARMUP = 3;
 /** A shot this hard fills the charge bar into the red, which reads well on screen. */
