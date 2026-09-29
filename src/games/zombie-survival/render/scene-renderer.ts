@@ -15,11 +15,13 @@ import { lowQuality } from "./quality";
 import type { SceneSource, TargetPoint } from "./scene-source";
 import { CameraRig, sailed } from "./camera-rig";
 import { ChopperView } from "./chopper-view";
+import { CrosshairLayer } from "./crosshair/crosshair-layer";
 import { Effects } from "./effects/effects";
 import { EscapeHorde } from "./escape-horde";
-import { FirstPerson, type Shooter } from "./first-person";
+import { FirstPerson } from "./first-person";
 import { ageIdle, lobbySetting, lobbyZombies, settingFor } from "./idle-zombies";
 import { setGunEnvironment } from "./models/guns/gun-kit";
+import { aimAll } from "./sights";
 import { World } from "./world/world";
 import { ZombieLayer } from "./zombie-layer";
 
@@ -38,6 +40,7 @@ export class SurvivalRenderer implements SurvivalView {
   private readonly zombies = new ZombieLayer();
   private readonly effects: Effects;
   private readonly guns: FirstPerson;
+  private readonly crosshairs: CrosshairLayer;
   private readonly chopper: ChopperView;
   private readonly caster: AimCaster;
   private readonly env: THREE.Texture;
@@ -68,6 +71,7 @@ export class SurvivalRenderer implements SurvivalView {
     this.scene.add(this.camera);
     this.atmosphere = new Atmosphere(this.scene, this.camera);
     this.guns = new FirstPerson(this.camera);
+    this.crosshairs = new CrosshairLayer(this.camera);
     this.chopper = new ChopperView(this.scene);
     this.caster = new AimCaster(this.camera);
     this.scene.add(this.atmosphere.group, this.world.group, this.zombies.group, this.effects.group, this.guns.lasers);
@@ -108,9 +112,10 @@ export class SurvivalRenderer implements SurvivalView {
     this.world.sailShip(sailed(game.phase === "escaped" ? 16 + game.phaseTime : game.cutscene === "escape" ? game.phaseTime : 0));
     this.scene.updateMatrixWorld();
 
-    const shooters = this.shooters(nowMs);
+    const { shooters, sights } = aimAll(this.source, this.caster, [...this.zombies.proxies(), ...this.world.solids()], nowMs);
     const armed = game.phase !== "cutscene" && game.phase !== "escaped";
     this.guns.update(shooters, dt, time, armed);
+    this.crosshairs.update(sights, dt, armed);
     this.effects.update(dt);
     this.renderer.render(this.scene, this.camera);
   }
@@ -132,6 +137,7 @@ export class SurvivalRenderer implements SurvivalView {
     const rig = this.guns.rig(seat);
     const results = this.pending.get(seat) ?? [];
     this.pending.delete(seat);
+    this.crosshairs.fire(seat);
     if (!rig) return;
     rig.fire();
     const at = new THREE.Vector3();
@@ -181,6 +187,7 @@ export class SurvivalRenderer implements SurvivalView {
     this.zombies.dispose();
     this.world.dispose();
     this.guns.dispose();
+    this.crosshairs.dispose();
     this.chopper.dispose();
     this.effects.dispose();
     setGunEnvironment(null);
@@ -196,15 +203,5 @@ export class SurvivalRenderer implements SurvivalView {
     if (this.camera.fov === shot.fov) return;
     this.camera.fov = shot.fov;
     this.camera.updateProjectionMatrix();
-  }
-
-  /** Every player with a gun, and where their laser lands. */
-  private shooters(nowMs: number): Shooter[] {
-    const targets = [...this.zombies.proxies(), ...this.world.solids()];
-    return this.source.armed().map(({ seat, weapon }) => {
-      const point = this.source.aimAt(seat, nowMs);
-      const aim = point ? this.caster.cast(point, { x: 0, y: 0 }, targets, () => undefined).point : null;
-      return { seat, weapon, aim };
-    });
   }
 }
