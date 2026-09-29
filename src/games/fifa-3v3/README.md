@@ -103,6 +103,8 @@ A pick is a build, not a person. Your own name is who you are: it is on your tag
 | Sweeper Keeper | 1 | Reach, reflexes | Keeper's gloves out on the pitch: blocks shots and cuts out passes. |
 | All Rounder | 8 | Everything | Good at everything, best at nothing, no weak spot. |
 
+A computer player also plays its build's way. When the other side has the ball a striker stays up for the break, a winger a little behind him, and a defender and above all a sweeper keeper drop deep behind the rest.
+
 Every build has ten ratings from 0 to 99, shown as bars on the phone, with its own two highlighted. The totals are close, so no build is simply better. What each rating does in a match (`engine/build-effects.ts` and where it is used):
 
 * **Finishing:** the chance a shot is on target and beats the keeper, and how much a far post shot curls.
