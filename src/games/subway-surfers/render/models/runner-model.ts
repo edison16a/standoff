@@ -8,20 +8,22 @@ export interface Look {
   name: string;
   skin: number;
   hair: number;
+  /** The hoodie, and the lining of its hood and cuffs. */
   top: number;
   topTrim: number;
   pants: number;
   pantsTrim: number;
   shoes: number;
   soles: number;
+  /** The cap's crown and its peak. */
+  cap: number;
+  capPeak: number;
   pack: number;
   packTrim: number;
   /** Kai wears a cap backwards. Mia has a bun and a headband. */
   style: "cap" | "bun";
   /** The colour of their hoverboard. */
   board: [number, number];
-  /** Their neon: soles, cuffs, drawstrings and the strip across the backpack. */
-  neon: number;
 }
 
 /** Two looks for the runner. The game and the showcase use Kai; Mia is kept as a spare look. */
@@ -29,18 +31,19 @@ export const LOOKS: readonly Look[] = [
   {
     name: "Kai",
     skin: 0xe7b48a,
-    hair: 0x3b2417,
-    top: 0xe8312a,
-    topTrim: 0xffffff,
-    pants: 0x3a5fb4,
-    pantsTrim: 0x7fa2e6,
+    hair: 0x4a2c1a,
+    top: 0xe8342c,
+    topTrim: 0xf2f2ee,
+    pants: 0x3f68b8,
+    pantsTrim: 0x88a8e0,
     shoes: 0xffffff,
-    soles: 0xe8312a,
+    soles: 0xe8342c,
+    cap: 0x1f5fd6,
+    capPeak: 0xffc21a,
     pack: 0xffc21a,
-    packTrim: 0x1f5fd6,
+    packTrim: 0x2a2d38,
     style: "cap",
-    board: [0xff4757, 0xffd21f],
-    neon: 0x21f3ff,
+    board: [0x2fa8ff, 0xffc21a],
   },
   {
     name: "Mia",
@@ -52,11 +55,12 @@ export const LOOKS: readonly Look[] = [
     pantsTrim: 0xb18cff,
     shoes: 0xffd21f,
     soles: 0xffffff,
+    cap: 0xff4db8,
+    capPeak: 0xff4db8,
     pack: 0xff4db8,
     packTrim: 0x2a1d45,
     style: "bun",
     board: [0x2ed573, 0x4db8ff],
-    neon: 0xff2bd6,
   },
 ];
 
@@ -76,7 +80,7 @@ export const RUNNER_DIMS: BodyDims = {
 const matte = (color: number) => ({ color, finish: "matte" as const });
 const satin = (color: number) => ({ color, finish: "satin" as const });
 
-/** Builds a runner: a teen in a hoodie or tracksuit, with a backpack, jeans or leggings and big sneakers. */
+/** Builds a runner: a cartoon kid in a hoodie and a cap, baggy jeans, big sneakers and a backpack with a spray can. */
 export function buildRunner(look: Look): Rig {
   const rig = makeRig(RUNNER_DIMS);
   const dress = new Dresser(rig);
@@ -86,38 +90,40 @@ export function buildRunner(look: Look): Rig {
   dressHead(dress, look);
   dress.on("neck").post(0.058, 0.12, matte(look.skin), [0, 0.03, 0]);
 
-  // The chest: the top, its hood or collar, and the backpack everyone behind sees.
+  // The chest: the hoodie, its hood bunched at the back and drawstrings, and the backpack everyone behind sees.
   const chest = dress.on("chest");
   chest.box(0.43, 0.32, 0.26, top, [0, 0.1, 0], undefined, 0.12);
   chest.sphere(0.088, top, [-0.2, 0.19, 0]).sphere(0.088, top, [0.2, 0.19, 0]);
   if (look.style === "cap") {
-    // A hoodie: the hood bunched at the back of the neck and drawstrings at the front.
     chest.sphere(0.13, top, [0, 0.22, 0.1], [1.3, 0.7, 0.85], 14);
+    chest.sphere(0.09, trim, [0, 0.24, 0.07], [1.2, 0.55, 0.7], 12);
     for (const x of [-0.045, 0.045]) {
-      chest.box(0.014, 0.13, 0.014, glow(look.neon), [x, 0.13, -0.132]);
-      chest.sphere(0.016, glow(look.neon), [x, 0.06, -0.132]);
+      chest.box(0.014, 0.13, 0.014, trim, [x, 0.13, -0.132]);
+      chest.sphere(0.018, trim, [x, 0.06, -0.132]);
     }
+    // A big front pocket across the belly.
+    chest.box(0.26, 0.1, 0.02, satin(shadeOf(look.top, 0.82)), [0, -0.02, -0.13], undefined, 0.01);
   } else {
-    // A track jacket: a zip, a stand up collar and stripes down the sleeves.
-    chest.box(0.02, 0.3, 0.012, gloss(0xd9dde4), [0, 0.1, -0.13]);
+    chest.box(0.02, 0.3, 0.012, satin(0xd9dde4), [0, 0.1, -0.13]);
     chest.box(0.2, 0.06, 0.2, trim, [0, 0.265, 0], undefined, 0.025);
   }
-  // A proper backpack: rounded, with a front pocket, a grab loop and a charm.
+  // A proper backpack: rounded, with a front pocket, a grab loop, a reflective strip and straps.
   chest.box(0.32, 0.38, 0.17, satin(look.pack), [0, 0.07, 0.2], undefined, 0.08);
   chest.box(0.24, 0.15, 0.06, satin(look.packTrim), [0, -0.03, 0.29], undefined, 0.028);
-  chest.box(0.26, 0.025, 0.02, glow(look.neon), [0, 0.04, 0.315]);
+  chest.box(0.26, 0.025, 0.02, satin(0xf2f2ee), [0, 0.04, 0.315]);
   for (const x of [-1, 1]) chest.box(0.05, 0.16, 0.12, satin(look.packTrim), [x * 0.175, -0.02, 0.2], undefined, 0.02);
   chest.add(new THREE.TorusGeometry(0.045, 0.012, 6, 14, Math.PI), satin(look.packTrim), [0, 0.26, 0.2]);
   for (const x of [-0.11, 0.11]) chest.box(0.055, 0.3, 0.03, satin(look.packTrim), [x, 0.11, -0.135], undefined, 0.012);
-  chest.sphere(0.04, gloss(0xffd21f), [0.1, -0.14, 0.3]);
+  sprayCan(dress, look);
 
   const spine = dress.on("spine");
   spine.box(0.37, 0.25, 0.24, top, [0, 0.09, 0], undefined, 0.1);
-  if (look.style === "cap") spine.box(0.24, 0.1, 0.02, satin(shadeOf(look.top, 0.8)), [0, 0.05, -0.12], undefined, 0.01);
+  // The hoodie's ribbed hem.
+  spine.box(0.38, 0.05, 0.25, satin(shadeOf(look.top, 0.82)), [0, -0.02, 0], undefined, 0.02);
   const hips = dress.on("hips");
   hips.box(0.36, 0.17, 0.23, satin(look.pants), [0, -0.03, 0], undefined, 0.08);
   hips.box(0.37, 0.04, 0.24, matte(0x2a2d35), [0, 0.045, 0], undefined, 0.012);
-  hips.box(0.05, 0.035, 0.02, gloss(0xd9dde4), [0, 0.045, -0.122]);
+  hips.box(0.05, 0.035, 0.02, satin(0xd9dde4), [0, 0.045, -0.122]);
 
   for (const side of ["L", "R"] as const) {
     const sx = side === "L" ? -1 : 1;
@@ -130,26 +136,32 @@ export function buildRunner(look: Look): Rig {
       upper.box(0.022, 0.22, 0.02, trim, [sx * 0.068, -0.13, 0]);
       forearm.box(0.022, 0.18, 0.02, trim, [sx * 0.06, -0.09, 0]);
     }
-    forearm.post(0.068, 0.05, trim, [0, -0.21, 0]);
-    forearm.post(0.07, 0.015, glow(look.neon), [0, -0.19, 0]);
+    forearm.post(0.068, 0.05, trim, [0, -0.2, 0]);
     // Big mitten hands with a thumb, easy to read in motion.
     const hand = dress.on(`hand${side}`);
     hand.sphere(0.066, matte(look.skin), [0, -0.05, 0], [0.9, 1.1, 1], 12);
     hand.sphere(0.03, matte(look.skin), [-sx * 0.045, -0.03, -0.035], [1, 1.3, 1], 8);
     const thigh = dress.on(`hip${side}`);
-    thigh.capsule(0.095, 0.24, satin(look.pants), [0, -0.19, 0]);
+    thigh.capsule(0.1, 0.24, satin(look.pants), [0, -0.19, 0]);
     const shin = dress.on(`knee${side}`);
-    shin.sphere(0.088, satin(look.pants), [0, 0, 0], [1, 1, 1], 10);
-    shin.capsule(0.082, 0.24, satin(look.pants), [0, -0.18, 0]);
-    // Rolled up cuffs over the sneakers.
-    shin.post(0.092, 0.07, satin(look.pantsTrim), [0, -0.33, 0], 14, 0.088);
-    sneaker(dress.on(`ankle${side}`), look.shoes, 0, 0.04, -0.05, look.soles, look.pack, look.neon);
+    shin.sphere(0.092, satin(look.pants), [0, 0, 0], [1, 1, 1], 10);
+    shin.capsule(0.088, 0.22, satin(look.pants), [0, -0.17, 0]);
+    // Baggy jeans rolled up over the sneakers.
+    shin.post(0.098, 0.08, satin(look.pantsTrim), [0, -0.33, 0], 14, 0.094);
+    sneaker(dress.on(`ankle${side}`), look.shoes, 0, 0.04, -0.05, look.soles, look.cap);
   }
   return dress.finish();
 }
 
-const gloss = (color: number) => ({ color, finish: "gloss" as const });
-const glow = (color: number) => ({ color, finish: "glow" as const });
+/** A spray can poking out of the backpack's side pocket, cap up. */
+function sprayCan(dress: Dresser, look: Look): void {
+  const chest = dress.on("chest");
+  const tilt: [number, number, number] = [0.25, 0, -0.35];
+  chest.post(0.042, 0.2, satin(0xff4d6d), [0.2, 0.1, 0.22], 12, 0.042, tilt);
+  chest.post(0.043, 0.03, satin(0xf2f2ee), [0.2, 0.06, 0.22], 12, 0.043, tilt);
+  chest.sphere(0.036, satin(0xf2f2ee), [0.235, 0.2, 0.245], [1, 0.8, 1], 10);
+  chest.box(0.02, 0.025, 0.02, satin(look.packTrim), [0.245, 0.235, 0.25]);
+}
 
 function shadeOf(color: number, k: number): number {
   return new THREE.Color(color).multiplyScalar(k).getHex();

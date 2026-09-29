@@ -50,9 +50,9 @@ function cap(dress: Dresser, look: Look): void {
   // Hair shows at the sides and back under a backwards cap.
   head.sphere(R + 0.004, hair, [0, CY + 0.02, 0.014], [1.02, 1, 1.02], 18);
   for (const x of [-1, 1]) head.box(0.03, 0.09, 0.07, hair, [x * (R - 0.01), CY - 0.02, -0.03], undefined, 0.012);
-  head.sphere(R + 0.012, satin(look.top), [0, CY + 0.06, 0.005], [1, 0.74, 1.02], 22);
-  head.box(0.26, 0.035, 0.18, satin(look.pack), [0, CY + 0.035, R + 0.07], [-0.22, 0, 0], 0.016);
-  head.sphere(0.024, satin(look.pack), [0, CY + R * 0.74 + 0.07, 0.005]);
+  head.sphere(R + 0.012, satin(look.cap), [0, CY + 0.06, 0.005], [1, 0.74, 1.02], 22);
+  head.box(0.26, 0.035, 0.18, satin(look.capPeak), [0, CY + 0.035, R + 0.07], [-0.22, 0, 0], 0.016);
+  head.sphere(0.024, satin(look.capPeak), [0, CY + R * 0.74 + 0.07, 0.005]);
   // The strap and its snaps show at the front, since the cap is on backwards.
   head.box(0.1, 0.028, 0.02, matte(0x2a2d35), [0, CY + 0.045, -R + 0.005], [0.35, 0, 0], 0.008);
   // Headphones round the neck, a splash of colour from behind.
@@ -68,8 +68,8 @@ function bun(dress: Dresser, look: Look): void {
   head.sphere(0.075, hair, [0.075, CY + 0.12, -0.09], [1.2, 0.5, 0.8], 12);
   // The bun on top, and headbands in her pack's colour.
   head.sphere(0.09, hair, [0, CY + 0.22, 0.07], [1, 0.95, 1], 16);
-  head.add(bandGeometry(0.092), satin(look.pack), [0, CY + 0.22, 0.07], [0.2, 0, 0]);
-  head.add(bandGeometry(R + 0.008), satin(look.pack), [0, CY + 0.075, 0.01], [-0.35, 0, 0]);
+  head.add(bandGeometry(0.092), satin(look.cap), [0, CY + 0.22, 0.07], [0.2, 0, 0]);
+  head.add(bandGeometry(R + 0.008), satin(look.cap), [0, CY + 0.075, 0.01], [-0.35, 0, 0]);
   for (const x of [-1, 1]) head.sphere(0.02, gloss(0xffd21f), [x * (R + 0.01), CY - 0.045, -0.005]);
 }
 
