@@ -156,13 +156,22 @@ export type ServerEnvelope =
   | ({ type: "phone:joined"; seat: Seat; token: string; hostHere: boolean; name: string } & RoomInfo)
   | { type: "host:message"; payload: Payload }
   | { type: "host:away" }
-  | { type: "host:back" }
+  /**
+   * `rejoin` means the host's room was made again on this server instance,
+   * which knows the phones' seats but not their connections, so each phone
+   * sends its join again over the socket it has.
+   */
+  | { type: "host:back"; rejoin?: boolean }
   /** The room ended. `lost` means its host never came back, rather than ending the game. */
   | { type: "room:closed"; lost?: boolean }
   /** The host moved to a new room, and phones follow its code. Also the answer to a join on a moved room. */
   | { type: "room:moved"; code: string }
-  /** The answer to host:retire. `found` is false when no room matched the code and token. */
-  | { type: "room:retired"; code: string; found: boolean }
+  /**
+   * The answer to host:retire. `found` is false when no room matched the
+   * code and token. `instance` names the server instance that answered,
+   * since without a shared store the room may simply live on another one.
+   */
+  | { type: "room:retired"; code: string; found: boolean; instance?: string }
   /** Someone holding the host's token is checking the room. The host answers with host:echo. */
   | { type: "room:probe"; nonce: string }
   /** The answer to probe:room. The relay closes the connection right after. */

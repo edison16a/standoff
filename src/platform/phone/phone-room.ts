@@ -145,6 +145,8 @@ export class PhoneRoom {
       case "host:back":
         this.search.stop();
         this.store.setState({ hostAway: false });
+        // The room was made again where this socket is: sit again, or the host sees nobody.
+        if (message.rejoin) this.socket.send(this.request.message());
         this.sendProfile();
         this.events.emit({ type: "rejoined" });
         return;

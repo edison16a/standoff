@@ -37,7 +37,7 @@ describe("retiring a room by its token", () => {
     expect(host.socket.closedWith).toBe(4000);
     // The sender hosts the new room and is never kicked.
     expect(fresh.socket.closedWith).toBeNull();
-    expect(fresh.socket.last("room:retired")).toEqual({ type: "room:retired", code, found: true });
+    expect(fresh.socket.last("room:retired")).toMatchObject({ type: "room:retired", code, found: true });
   });
 
   it("answers a late join on the old code with the new one, and counts no miss", async () => {
@@ -63,7 +63,7 @@ describe("retiring a room by its token", () => {
     const { phones, code } = await roomWithPhones();
     const stranger = connect();
     await stranger.send({ type: "host:retire", code, token: "x".repeat(24), movedTo: "WXYZ" });
-    expect(stranger.socket.last("room:retired")).toEqual({ type: "room:retired", code, found: false });
+    expect(stranger.socket.last("room:retired")).toMatchObject({ type: "room:retired", code, found: false });
     expect(phones[0]!.socket.last("room:moved")).toBeUndefined();
     expect(await backend.store.get(code)).toMatchObject({ closed: false });
   });

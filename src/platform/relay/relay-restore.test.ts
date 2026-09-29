@@ -102,12 +102,34 @@ describe("a room following its host to another instance", () => {
     expect(await a.store.get(code)).not.toBeNull();
   });
 
+  it("has phones whose sockets sit where the room is made again take their seats back", async () => {
+    const { host, ann, code, annToken, resume } = await roomOnA();
+    // A forgot the room, say after a migrate, and the host then came back to A.
+    await a.store.delete(code);
+    await host.drop();
+    const back = on(a);
+    await back.send(resume);
+    expect(back.socket.last("room:resumed")).toMatchObject({ restored: true, connected: [false, false] });
+    expect(ann.socket.last("host:back")).toEqual({ type: "host:back", rejoin: true });
+    await ann.send({ type: "phone:join", code, token: annToken, name: "Ann", reconnect: true });
+    expect(ann.socket.last("phone:joined")).toMatchObject({ seat: 1, name: "Ann" });
+    expect(back.socket.last("peer:joined")).toMatchObject({ seat: 1, rejoined: true });
+    expect((await a.store.get(code))?.seats[0]?.conn).not.toBeNull();
+  });
+
+  it("asks for no rejoin when the host simply comes back to its room", async () => {
+    const { host, ann, resume } = await roomOnA();
+    await host.drop();
+    await on(a).send(resume);
+    expect(ann.socket.last("host:back")).toEqual({ type: "host:back" });
+  });
+
   it("still tells the phones where to go when the record is gone but this socket hosts the room", async () => {
     const { host, ann, code, token } = await roomOnA();
     await a.store.delete(code);
     await host.send({ type: "host:retire", code, token, movedTo: "WXYZ" });
     expect(ann.socket.last("room:moved")).toEqual({ type: "room:moved", code: "WXYZ" });
-    expect(host.socket.last("room:retired")).toEqual({ type: "room:retired", code, found: false });
+    expect(host.socket.last("room:retired")).toMatchObject({ type: "room:retired", code, found: false, instance: "a" });
   });
 });
 

@@ -76,7 +76,8 @@ export async function resumeHost(c: RoomsContext, request: Envelope<"host:resume
   await c.place.take({ kind: "host", code, seats });
   const channel = c.room({ code, seats });
   if (outcome.replaced) channel.kickHost(outcome.replaced);
-  channel.toPhones({ type: "host:back" });
+  // A restored room knows its seats but none of their connections, so the phones here sit again.
+  channel.toPhones(restored ? { type: "host:back", rejoin: true } : { type: "host:back" });
   const [connected, names] = [connectedSeats(room), seatNames(room)];
   const instance = c.ctx.instance ?? instanceId();
   c.send({ type: "room:resumed", code, game, seats, joinUrl, connected, names, sharedRooms: c.ctx.sharedRooms, restored, instance });
@@ -143,7 +144,7 @@ export async function retireRoom(c: RoomsContext, { code, token, movedTo }: Enve
       c.room(role).toPhones(movedTo ? { type: "room:moved", code: movedTo } : { type: "room:closed" });
       await c.drop();
     }
-    return c.send({ type: "room:retired", code, found: false });
+    return c.send({ type: "room:retired", code, found: false, instance: c.ctx.instance ?? instanceId() });
   }
   const channel = c.room({ code, seats: outcome.seats });
   if (!outcome.repeat) {
@@ -151,5 +152,5 @@ export async function retireRoom(c: RoomsContext, { code, token, movedTo }: Enve
   }
   if (outcome.oldHost && outcome.oldHost !== c.id) channel.kickHost(outcome.oldHost);
   if (role?.kind === "host" && role.code === code) await c.drop();
-  c.send({ type: "room:retired", code, found: true });
+  c.send({ type: "room:retired", code, found: true, instance: c.ctx.instance ?? instanceId() });
 }
