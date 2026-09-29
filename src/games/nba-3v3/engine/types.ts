@@ -100,6 +100,8 @@ export interface Athlete {
   guard: boolean;
   /** Where the shadow has got to. It trails the ideal spot, which is how a dribble move leaves it behind. */
   guardAim: V2 | null;
+  /** The man Guard locked on to, kept through passes and turnovers until it is let go. */
+  guardMan: number | null;
   action: Action;
   stealCd: number;
   blockCd: number;

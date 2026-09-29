@@ -173,10 +173,11 @@ export const DEFENCE = {
 
 /** Holding Guard on defence: the auto shadow of a player's man. */
 export const GUARD = {
-  /** Beyond this from the man, Guard does nothing until the defender runs back in. */
+  /** Beyond this from the man, Guard sprints to catch up rather than shadowing. */
   range: 5,
-  /** Share of top speed the shadow runs at, a little under a player running it themselves. */
+  /** Share of top speed the shadow runs at, a little under a player running it themselves, and the catch up sprint. */
   pace: 0.8,
+  chasePace: 1,
   /** Metres off the ball handler, toward the rim, and off a man without the ball. */
   gap: 1.0,
   offGap: 1.6,

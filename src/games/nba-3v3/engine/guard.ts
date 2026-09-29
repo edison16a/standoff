@@ -11,15 +11,18 @@ import { dir2, dist2, lerp, type V2 } from "./vec";
  * staying between him and the rim a set gap off, a touch slower than a
  * player running flat out. The shadow reads the ball handler late: a
  * dribble drags it, a crossover or a spin leaves it behind, so the stick
- * is needed to catch up. Pushing the stick always takes over, and past
- * the range nothing happens until the defender runs back into it.
+ * is needed to catch up. Pushing the stick always takes over. Guard
+ * never gives up: past the range it sprints back to the man, and it
+ * keeps the same man through passes and turnovers until let go.
  */
 
-export type GuardStatus = "off" | "on" | "far";
+export type GuardStatus = "off" | "on" | "chase";
 
-/** Who this defender guards: the opponent in the same role, else the computer's matchup, else the nearest. */
+/** Who this defender guards: the man already locked on to, else the opponent in the same role, the computer's matchup, or the nearest. */
 export function guardTarget(m: Match, a: Athlete): Athlete | null {
   const opponents = m.opponents(a.team);
+  const locked = a.guardMan === null ? undefined : opponents.find((o) => o.id === a.guardMan);
+  if (locked) return locked;
   const same = opponents.find((o) => o.slot === a.slot);
   if (same) return same;
   const man = m.brains.manFor(a.id);
@@ -31,7 +34,8 @@ export function guardTarget(m: Match, a: Athlete): Athlete | null {
 export function guardStatus(m: Match, a: Athlete): GuardStatus {
   if (!a.guard || m.phase !== "live" || m.offence === a.team) return "off";
   const man = guardTarget(m, a);
-  return man && dist2(a, man) <= GUARD.range ? "on" : "far";
+  if (!man) return "off";
+  return dist2(a, man) <= GUARD.range ? "on" : "chase";
 }
 
 /** The spot to hold: tight between the ball handler and the rim, sagging toward the ball off it. */
@@ -55,11 +59,13 @@ function trackRate(m: Match, man: Athlete): number {
 
 /** Steers a guarding player for one step, unless the stick is being used. */
 export function steerGuard(m: Match, a: Athlete, dt: number): void {
-  const man = guardStatus(m, a) === "on" ? guardTarget(m, a) : null;
+  const status = guardStatus(m, a);
+  const man = status === "off" ? null : guardTarget(m, a);
   if (!man) {
     a.guardAim = null;
     return;
   }
+  a.guardMan = man.id;
   const want = guardSpot(m, man);
   const aim = a.guardAim ?? { x: a.x, z: a.z };
   const k = 1 - Math.exp(-trackRate(m, man) * guardScale(buildOf(a).stats.defence) * dt);
@@ -72,7 +78,7 @@ export function steerGuard(m: Match, a: Athlete, dt: number): void {
     a.move = { x: 0, z: 0 };
     return;
   }
-  // Eases in on arrival so the defender settles into a stance rather than jittering.
-  const pace = Math.min(1, d / 0.6) * GUARD.pace;
+  // Eases in on arrival so the defender settles into a stance rather than jittering; far off it sprints.
+  const pace = Math.min(1, d / 0.6) * (status === "chase" ? GUARD.chasePace : GUARD.pace);
   a.move = { x: (dx / d) * pace, z: (dz / d) * pace };
 }

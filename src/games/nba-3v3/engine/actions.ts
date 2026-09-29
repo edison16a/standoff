@@ -49,7 +49,8 @@ export function pressPass(m: Match, a: Athlete, aim: V2 | null): void {
     if (target) throwPass(m, a, target);
     return;
   }
-  if (holder && holder.team !== a.team) return pressJump(a);
+  // On defence Pass is Block, even while the attackers' pass is in the air.
+  if (m.defending(a)) return pressJump(a);
   if (holder && holder.team === a.team && m.time - a.calledAt > 0.8) {
     a.calledAt = m.time;
     m.emit({ type: "call", id: a.id });

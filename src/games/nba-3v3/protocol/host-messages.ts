@@ -24,10 +24,10 @@ export const courtSchema = z.object({
   canSteal: z.boolean(),
   /** Close enough that a swipe would get there. */
   stealReach: z.boolean(),
-  /** The other team has the ball: Shoot is Guard and Pass is Block. */
+  /** The other team has the possession: Shoot is Guard and Pass is Block, through their passes too. */
   defending: z.boolean(),
-  /** Guard held and shadowing (on), held but too far from the man (far), or not held. */
-  guard: z.enum(["off", "on", "far"]),
+  /** Guard held and shadowing (on), held and sprinting back to the man (chase), or not held. */
+  guard: z.enum(["off", "on", "chase"]),
   /**
    * Free throws after a foul: whether this player shoots them, which one
    * is next of how many, and whether the shooter is set at the line.

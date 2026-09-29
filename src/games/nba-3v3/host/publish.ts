@@ -67,7 +67,8 @@ export function courtState(m: Match, id: number, players: readonly Player[]): Co
     mustClear: m.needsClear && m.offence === a.team,
     canSteal: canSteal(m, a),
     stealReach: stealInReach(m, a),
-    defending: m.phase === "live" && m.defending(a),
+    // The check up counts too, so the defence can take hold of Guard before play starts.
+    defending: (m.phase === "live" || m.phase === "check") && m.defending(a),
     guard: guardStatus(m, a),
     freeThrow: ft ? { mine, n: ft.shot, of: ft.shots, ready: mine && ft.stage === "set" } : null,
     // At the line the green band is wider: a set shot with nobody in the face.

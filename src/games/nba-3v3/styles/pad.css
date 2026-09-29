@@ -298,7 +298,7 @@
   box-shadow: 0 0 8px #bbf7d0;
 }
 
-.nba-guard--far {
+.nba-guard--chase {
   background: color-mix(in srgb, #f59e0b 30%, var(--bg-muted));
   color: #ffffff;
 }
