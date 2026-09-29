@@ -15,7 +15,7 @@ The running list of what is being built, so work can pick up again after a break
 | Work | Workflow | State |
 | --- | --- | --- |
 | **Room reliability (top priority):** find why rooms fail about every other time and fix the cause, a host watchdog that checks the room like a phone would and fully remakes it when broken, the QR code hidden until the room passes its check, and a Regenerate room button right under the QR code | wf_3938ab23-6cc | four investigations (live site repro, local multi instance repro, client audit, relay audit), two designs and a judge, one build, then stress, code and production reviews with fix rounds |
-| Basketball 3v3 part 2 review, Football 3v3 step 3 then review | wf_ad70b8e4-601 | two chains in their existing worktrees |
+| Batch E part 3: Basketball and Football trophy ceremonies and builds instead of named characters | wf_4cb6c277-e26 | build then review each |
 | Batch F part 2: Cube Game portals (sideways, unskippable), two Demon levels, camera, per level leaderboard; Soccer free kick curve and a 1.5 to 2 times bigger goal | wf_6594b3f2-bb2 | build then review each |
 
 **Room root cause, found and reproduced on the live site:** production has no shared Redis store (every room:created says sharedRooms:false). Rooms live in one Vercel instance's memory, a game's own traffic makes Vercel add a second instance within about 1.5 s, and then joins, POSTs and hand overs land on an instance without the room: "Room not found". Every deploy to main also wipes open rooms. **Owner action:** add a Redis store to the Vercel project (Storage, Create Database, for example Upstash for Redis), connect it to Production, redeploy. The code reads REDIS_URL, KV_URL or UPSTASH_REDIS_URL. Keep deploys to main batched so they strand fewer rooms.
@@ -89,6 +89,8 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ## Done recently
 
+* Basketball 3v3 part 2: torus rim and backboard physics with spin, real ball sounds, slower momentum, layups, dunks and stepbacks, the winning basket replay with a skip vote, celebrations, box scores.
+* Football 3v3, a new game: full field, Madden style camera, QB and runners plus bot linemen, hike window, assisted throws, jukes, dives, tackles, guard, kicking bars, extra point or two, touchdown replay, celebrations, NFL style music, sideways phones.
 * Soccer 3v3: the World Cup ceremony (the captain lifts the cup, confetti cannons, CHAMPIONS and the names), and builds with ten ratings each instead of named stars, under each player's username.
 * Winner scenes for Blade Clash (sword raised, loser kneeling), Paintball Battle (the splattered team lifts a cup) and Cube Game (podium or pedestal).
 * Subway Runner: keyboard mode (arrows or WASD), a Demon level, score multipliers per level (Easy x1 to Demon x3), coins and power ups in the score, and a leaderboard on each computer that shows your rank after every run (src/games/kit/leaderboard). Settings has Clear leaderboards.
