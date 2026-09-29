@@ -24,6 +24,16 @@ describe("songs", () => {
     });
   }
 
+  it("gives every level its own tempo, key and style", () => {
+    const songs = LEVELS.map(({ info }) => SONGS[info.theme]!);
+    const distinct = (values: unknown[]) => new Set(values.map((v) => JSON.stringify(v))).size;
+    expect(distinct(songs.map((s) => s.bpm))).toBe(songs.length);
+    // The home chord's root, as a pitch class, is the key's tonic.
+    expect(distinct(songs.map((s) => s.chords[0]![0]! % 12))).toBe(songs.length);
+    expect(distinct(songs.map((s) => [s.drums.kick, s.drums.hat]))).toBe(songs.length);
+    expect(distinct(songs.map((s) => [s.leadVoice, s.leadBVoice, s.bassStyle, s.arpVoice, s.swing]))).toBe(songs.length);
+  });
+
   it("gives the menu song a hook and an answer, each played twice", () => {
     const menu = SONGS.menu!;
     const leads = [0, 16, 32, 48].map((beat) => (sectionAt(menu, beat).parts.has("lead") ? "A" : "B"));
