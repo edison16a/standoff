@@ -23,7 +23,7 @@
   backdrop-filter: blur(6px);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
   /* Everything inside is sized from this, so the panel shrinks with the screen. */
-  font-size: clamp(10px, min(1.05vw, 1.75vh), 16px);
+  font-size: clamp(8px, min(1.05vw, 1.75vh), 16px);
 }
 
 .bx-results__best {
@@ -101,8 +101,8 @@ th.bx-results__won {
   font-size: 1.35em;
 }
 
-/* A short screen keeps the scorecards, punches landed and knockdowns. */
-@media (max-height: 640px) {
+/* A small screen keeps the scorecards, punches landed and knockdowns. */
+@media (max-height: 640px), (max-width: 1000px) {
   .bx-results__minor {
     display: none;
   }

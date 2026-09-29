@@ -33,7 +33,7 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
   color: #fff;
   /* Everything inside is sized from this, so the panel shrinks with the screen. */
-  font-size: clamp(11px, min(1.1vw, 1.8vh), 17px);
+  font-size: clamp(8px, min(1.1vw, 1.8vh), 17px);
 }
 
 .bb-rank {
