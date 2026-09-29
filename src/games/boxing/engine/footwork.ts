@@ -40,6 +40,8 @@ export class Footwork {
   private downed: FighterId | null = null;
   private readonly movers: [Mover, Mover] = [mover(0), mover(2.1)];
   private trapped: { id: FighterId; until: number } | null = null;
+  /** A Training partner holds its spot in a round, so it is an easy target. */
+  anchored: FighterId | null = null;
 
   constructor(
     private readonly random: Random,
@@ -116,7 +118,7 @@ export class Footwork {
       case "fight": {
         const pinned = this.pinned(now);
         if (pinned !== null) this.pin(pinned, dt);
-        else for (const id of [0, 1] as const) stepInFight(this.spots[id], this.spots[other(id)], this.styles[id], this.movers[id], dt, now, this.random);
+        else for (const id of [0, 1] as const) if (id !== this.anchored) stepInFight(this.spots[id], this.spots[other(id)], this.styles[id], this.movers[id], dt, now, this.random);
       }
     }
   }

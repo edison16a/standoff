@@ -44,6 +44,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.settings__hint {
+  margin-top: -6px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
 @keyframes settings-in {
   from {
     opacity: 0;

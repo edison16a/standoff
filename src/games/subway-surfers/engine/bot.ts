@@ -3,7 +3,7 @@ import { Hands, type Action } from "./hands";
 import { JETPACK_HEIGHT } from "./powers";
 import { stepRunner, type Abilities, type RunnerInput, type RunnerState } from "./runner";
 import type { Run } from "./run";
-import { JUMP, LANES, laneX, speedAt, STEP_S, type Lane } from "./tuning";
+import { JUMP, LANES, laneX, STEP_S, type Lane } from "./tuning";
 import type { Coin, Obstacle } from "./types";
 
 interface Plan {
@@ -84,11 +84,11 @@ export class Bot {
   }
 
   private ability(run: Run, s: RunnerState): Abilities {
-    return { speed: speedAt(s.distance), jumpHeight: run.powers.has("boots") ? JUMP.bootsHeight : JUMP.height, fly: run.powers.has("jetpack") ? JETPACK_HEIGHT : null };
+    return { speed: run.paceAt(s.distance), jumpHeight: run.powers.has("boots") ? JUMP.bootsHeight : JUMP.height, fly: run.powers.has("jetpack") ? JETPACK_HEIGHT : null };
   }
 
   private think(run: Run, s: RunnerState, single = false): Plan {
-    const reach = HORIZON_S * speedAt(s.distance) + 4;
+    const reach = HORIZON_S * run.paceAt(s.distance) + 4;
     run.course.near(s.distance, reach, this.near);
     const coins = run.course.coins.filter((c) => c.z > s.distance - 1 && c.z < s.distance + reach);
     // Power ups count as a pile of coins, so the bot goes for them.
@@ -104,7 +104,7 @@ export class Bot {
         if (action !== "none" && ability.fly !== null) continue;
         // A person makes one move at a time: a step to the side, or a jump or a duck where they stand.
         if (single && action !== "none" && lane !== s.lane) continue;
-        const { value, alive } = this.score(s, lane, action, coins, ability, run.powers.has("hoverboard"));
+        const { value, alive } = this.score(run, s, lane, action, coins, ability);
         if (action === "none") waiting.set(lane, alive);
         if (!best || value > best.value) best = { lane, action, value };
       }
@@ -114,14 +114,15 @@ export class Bot {
     return best!;
   }
 
-  private score(start: RunnerState, lane: Lane, action: Action, coins: readonly Coin[], ability: Abilities, board: boolean): { value: number; alive: number } {
+  private score(run: Run, start: RunnerState, lane: Lane, action: Action, coins: readonly Coin[], ability: Abilities): { value: number; alive: number } {
+    const board = run.powers.has("hoverboard");
     const s: RunnerState = { ...start };
     const input: RunnerInput = { lane, jump: action === "jump", duck: action === "duck", ducking: action === "duck" };
     const taken = new Set<number>();
     let value = 0;
     let alive = HORIZON_S;
     for (let t = 0; t < HORIZON_S; t += SIM_S) {
-      const result = stepRunner(s, input, this.near, { ...ability, speed: speedAt(s.distance) }, SIM_S);
+      const result = stepRunner(s, input, this.near, { ...ability, speed: run.paceAt(s.distance) }, SIM_S);
       input.jump = false;
       input.duck = false;
       if (t > 0.3) input.ducking = false;

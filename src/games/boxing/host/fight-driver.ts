@@ -1,4 +1,6 @@
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import { ComputerBoxer } from "../engine/ai";
+import { boxerSkill } from "../engine/ai-difficulty";
 import type { MatchEvent } from "../engine/events";
 import { Match } from "../engine/match";
 import { seeded } from "../engine/random";
@@ -29,6 +31,8 @@ export interface DriverOptions {
   styles?: readonly [string, string];
   /** Touch gloves before each round, on unless a test turns it off. */
   touch?: boolean;
+  /** How sharp the computer boxer is. Easy unless chosen. */
+  botLevel?: BotLevel;
 }
 
 /**
@@ -55,7 +59,9 @@ export class FightDriver {
     this.match = new Match({ seed: options.seed, roundMs: options.roundMs, introMs: options.introMs, styles: options.styles, touch: options.touch });
     this.slots = options.slots;
     const cpu = options.slots.findIndex((slot) => slot === null);
-    this.computer = cpu >= 0 ? new ComputerBoxer(cpu as FighterId, seeded(options.seed * 7 + 3)) : null;
+    const skill = boxerSkill(options.botLevel ?? DEFAULT_BOT_LEVEL);
+    this.computer = cpu >= 0 ? new ComputerBoxer(cpu as FighterId, seeded(options.seed * 7 + 3), skill.levelFor, skill.acts) : null;
+    if (cpu >= 0 && !skill.acts) this.match.footwork.anchored = cpu as FighterId;
   }
 
   listen(listener: (event: MatchEvent) => void): () => void {

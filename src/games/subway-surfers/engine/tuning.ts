@@ -78,7 +78,7 @@ export const SPEED = {
   rise: 1400,
 };
 
-/** The speed is a function of distance, so two players on one seed face the same pace at the same place. */
+/** The speed is a function of distance, so a run keeps the same pace at the same place however it is drawn. */
 export function speedAt(distance: number): number {
   return SPEED.start + (SPEED.max - SPEED.start) * (1 - Math.exp(-Math.max(0, distance) / SPEED.rise));
 }

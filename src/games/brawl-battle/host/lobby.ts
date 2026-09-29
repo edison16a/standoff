@@ -1,3 +1,4 @@
+import { DEFAULT_BOT_LEVEL } from "@/games/kit/difficulty/difficulty";
 import type { Difficulty } from "../engine/bots/brain";
 import type { Entrant } from "../engine/match";
 import { CHARACTER_IDS, type CharacterId } from "../roster";
@@ -25,7 +26,7 @@ export type Slot =
 export class Lobby {
   readonly seats = new Map<number, SeatState>();
   bots = 1;
-  difficulty: Difficulty = "normal";
+  difficulty: Difficulty = DEFAULT_BOT_LEVEL;
 
   private state(seat: number): SeatState {
     let s = this.seats.get(seat);

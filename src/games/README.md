@@ -10,7 +10,7 @@ The platform (`src/platform`) runs the room, the same way for every game:
 * The QR code: big in the middle until someone joins, then bottom left until the game calls `room.setPlaying(true)`. A game can ask for it in the corner from the start (`join: "corner"`) or not at all (`join: "hidden"`, for camera games).
 * The Standoff logo top left, which always goes home, and the tool bar top right.
 * On the phone: the name screen, joining, reconnecting, and the header bar. Join is the one tap that unlocks sound, motion access and the wake lock, so a game's phone screen starts with all three ready.
-* Seats, names and reconnects. A phone that drops and comes back keeps its seat.
+* Seats, names and reconnects. Names are unique in a room. A phone that drops and comes back keeps its seat, and so does one reloaded at its own address or reconnecting under its name. The host hears a `joined` event with `rejoined: true`, so keep that seat's player and their score, and send the phone its state again.
 
 ## What a game provides
 

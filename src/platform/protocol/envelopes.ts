@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { NAME_MAX } from "../profile";
 
 /**
  * The outer layer every frame is wrapped in. The relay reads the envelope
@@ -39,10 +40,22 @@ export const clientEnvelopeSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("host:resume"), code: roomCode, token }),
   /** The computer ending the game for good. */
   z.object({ type: z.literal("host:close") }),
+  /** The computer swapping its room for a fresh one with the same game, taking every phone along. */
+  z.object({ type: z.literal("host:remake") }),
   /** The computer talking to one phone or all of them. */
   z.object({ type: z.literal("host:send"), to: z.union([seat, z.literal("all")]), payload: payloadSchema }),
-  /** A phone joining, or rejoining with the token it was given last time. */
-  z.object({ type: z.literal("phone:join"), code: roomCode, token: token.optional() }),
+  /**
+   * A phone joining, or rejoining with the token it was given last time.
+   * `name` must be unique in the room. `reconnect` takes back the seat that
+   * name holds instead of making a new player.
+   */
+  z.object({
+    type: z.literal("phone:join"),
+    code: roomCode,
+    token: token.optional(),
+    name: z.string().min(1).max(NAME_MAX).optional(),
+    reconnect: z.boolean().optional(),
+  }),
   /** A phone talking to the host. */
   z.object({ type: z.literal("phone:send"), payload: payloadSchema }),
 ]);
@@ -51,8 +64,18 @@ export type ClientEnvelope = z.infer<typeof clientEnvelopeSchema>;
 
 /* Server to client */
 
-/** `unavailable` is a server side failure, worth retrying on a fresh connection. */
-export type JoinErrorReason = "not-found" | "full" | "closed" | "unavailable";
+/**
+ * `unavailable` is a server side failure, worth retrying on a fresh
+ * connection. The rest are about names (see NameClash).
+ */
+export type JoinErrorReason = "not-found" | "full" | "closed" | "unavailable" | NameClash;
+
+/**
+ * `name-taken`: a connected player has the name. `name-away`: the name
+ * belongs to a player who dropped, and the phone may reconnect as them.
+ * `no-seat`: a reconnect found no seat with that name.
+ */
+export type NameClash = "name-taken" | "name-away" | "no-seat";
 
 /** What every client learns about the room it is in. */
 export interface RoomInfo {
@@ -68,17 +91,21 @@ export interface RoomInfo {
  */
 export type ServerEnvelope =
   | ({ type: "room:created"; token: string; joinUrl: string; sharedRooms: boolean } & RoomInfo)
-  | ({ type: "room:resumed"; joinUrl: string; connected: boolean[]; sharedRooms: boolean } & RoomInfo)
+  /** `names` holds each seat's player name, null for a seat nobody took. */
+  | ({ type: "room:resumed"; joinUrl: string; connected: boolean[]; names: (string | null)[]; sharedRooms: boolean } & RoomInfo)
   | { type: "room:error"; reason: JoinErrorReason }
-  | { type: "peer:joined"; seat: Seat; rejoined: boolean }
+  | { type: "peer:joined"; seat: Seat; rejoined: boolean; name: string }
   | { type: "peer:left"; seat: Seat }
   | { type: "peer:message"; seat: Seat; payload: Payload }
   /** `hostHere` settles the "host away" state afresh, in case a notice was missed while offline. */
-  | ({ type: "phone:joined"; seat: Seat; token: string; hostHere: boolean } & RoomInfo)
+  /** `name` is the player's unique name in the room, as the relay settled it. */
+  | ({ type: "phone:joined"; seat: Seat; token: string; hostHere: boolean; name: string } & RoomInfo)
   | { type: "host:message"; payload: Payload }
   | { type: "host:away" }
   | { type: "host:back" }
   | { type: "room:closed" }
+  /** The host remade its lobby. Phones follow to the new room's code. */
+  | { type: "room:moved"; code: string }
   /**
    * This socket is about to hit the server's time limit. The client should
    * open a new one and rejoin on it before this one is cut.

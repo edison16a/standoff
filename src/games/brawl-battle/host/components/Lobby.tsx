@@ -1,14 +1,12 @@
 "use client";
 import { Icon } from "@/components/ui/Icon";
-import { DIFFICULTIES } from "../../engine/bots/brain";
+import { DifficultyPicker } from "@/games/kit/difficulty/DifficultyPicker";
 import { fighterColours } from "../../render/colors";
 import { CHARACTERS } from "../../roster";
 import { Portrait } from "../../ui/Portrait";
 import { useBrawlStore, type SlotView } from "../host-store";
 import { MAX_FIGHTERS } from "../lobby";
 import { useSession } from "./session-context";
-
-const LEVEL_NAMES = { easy: "Easy", normal: "Normal", hard: "Hard" } as const;
 
 function SlotCard({ slot, colour, index }: { slot: SlotView; colour: string; index: number }) {
   if (slot.kind === "open") {
@@ -59,21 +57,13 @@ function BotStepper() {
   );
 }
 
-function DifficultyPicker() {
+/** The shared difficulty row, shown while there are computer fighters to tune. */
+function BotSkill() {
   const session = useSession();
   const difficulty = useBrawlStore((s) => s.difficulty);
-  return (
-    <div className="bb-option">
-      <span className="bb-option__label">Computer skill</span>
-      <div className="bb-segments" role="group" aria-label="Computer skill">
-        {DIFFICULTIES.map((level) => (
-          <button key={level} type="button" aria-pressed={difficulty === level} onClick={() => session.setDifficulty(level)}>
-            {LEVEL_NAMES[level]}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
+  const bots = useBrawlStore((s) => s.slots.some((slot) => slot.kind === "bot"));
+  if (!bots) return null;
+  return <DifficultyPicker level={difficulty} onChange={(level) => session.setDifficulty(level)} />;
 }
 
 /**
@@ -114,7 +104,7 @@ export function Lobby() {
       </ol>
       <footer className="bb-lobby__footer">
         <BotStepper />
-        <DifficultyPicker />
+        <BotSkill />
         <p className="bb-lobby__note">{note}</p>
         <button type="button" className="btn btn--primary btn--lg bb-lobby__start" disabled={!canStart} onClick={() => session.start()}>
           <Icon name="play" />

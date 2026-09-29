@@ -9,13 +9,14 @@ import { PhoneRoom } from "./phone-room";
 const audio = vi.hoisted(() => ({ closes: 0 }));
 vi.mock("@/platform/audio/audio-engine", () => ({
   AudioEngine: class {
+    ctx = Object.assign(new EventTarget(), { state: "running", resume: async () => {} });
     async unlock() {}
     close() {
       audio.closes += 1;
     }
   },
 }));
-const navigation = vi.hoisted(() => ({ push: vi.fn() }));
+const navigation = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => navigation }));
 // The header's buttons are beside the point here.
 vi.mock("@/components/ui/HomeLink", () => ({ HomeLink: () => null }));
@@ -57,7 +58,7 @@ class FakeSocket {
 }
 
 const last = () => FakeSocket.all.at(-1)!;
-const joined = (code: string, game: string): ServerEnvelope => ({ type: "phone:joined", code, game, seats: 2, seat: 1, token: "t".repeat(20), hostHere: true });
+const joined = (code: string, game: string, name = "Player 1"): ServerEnvelope => ({ type: "phone:joined", code, game, seats: 2, seat: 1, token: "t".repeat(20), hostHere: true, name });
 
 beforeEach(() => {
   FakeSocket.all = [];
@@ -184,11 +185,32 @@ describe("PhoneApp", () => {
     expect(host.querySelector(".phone__notice")).toBeNull();
   });
 
+  it("follows the host to a remade lobby and joins it without the name screen", async () => {
+    show("GGGG");
+    await joinWith(joined("GGGG", "tiny"));
+    await act(async () => last().receive({ type: "room:moved", code: "HHHH" }));
+    expect(navigation.replace).toHaveBeenCalledWith("/join/HHHH");
+    expect(text()).toContain("Moving to the new room");
+    // The router then shows the new code in the same page.
+    show("HHHH");
+    await act(async () => undefined);
+    await act(async () => last().open());
+    expect(last().sent[0]).toMatchObject({ type: "phone:join", code: "HHHH" });
+    expect(button("Skip")).toBeUndefined();
+  });
+
   it("says the game did not load instead of Loading forever", async () => {
     show("DDDD");
     await joinWith(joined("DDDD", "unknown-game"));
     await act(async () => undefined);
     expect(text()).toContain("The game did not load");
     expect(button("Try again")).toBeDefined();
+  });
+
+  it("moves to the player's own address once seated, without leaving the page", async () => {
+    show("GGGG");
+    await joinWith(joined("GGGG", "tiny", "Mary Jo"));
+    expect(window.location.pathname).toBe("/play/GGGG/Mary%20Jo");
+    expect(FakeSocket.all).toHaveLength(1);
   });
 });
