@@ -38,12 +38,14 @@ export function BoxingCeremony() {
     stopFight(fight.match, 0);
     for (const event of fight.step(20)) director.onEvent(event, fight.match);
     const start = performance.now();
-    // `?step` moves the clock a thirtieth of a second per frame, so slow software rendering still shows every stage of the lift.
-    const stepped = new URLSearchParams(window.location.search).has("step");
+    // `?step` moves the clock a thirtieth of a second per frame, so slow software rendering still shows every stage of the lift. `?step=0.1` moves it that many seconds.
+    const params = new URLSearchParams(window.location.search);
+    const stepped = params.has("step");
+    const stepMs = Math.min(100, Number(params.get("step")) * 1000 || 1000 / 30);
     let frame = 0;
     let frames = 0;
     const loop = (real: number) => {
-      const now = stepped ? start + ++frames * (1000 / 30) : real;
+      const now = stepped ? start + ++frames * stepMs : real;
       director.frame({ match: fight.match, shot: "ceremony", shotMs: now - start, humans: [true, false], mirrors: [null, null] }, now);
       frame = requestAnimationFrame(loop);
     };
