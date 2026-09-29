@@ -108,7 +108,7 @@ export function choosePose(a: AthleteView, s: PoseScene, b: BodyScene): Chosen {
     return { pose: s.winner === a.team ? celebratePose(style, s.phaseT, false) : dejectedPose(b.time, b.seed), rate: 8, hand };
   }
   if (s.center && s.ball.state === "snap") return { pose: snapPose(s.phaseT), rate: 30, hand };
-  if (a.role === "lineman" && s.phase === "live" && a.blocked) {
+  if (a.role === "lineman" && a.blocked) {
     return { pose: blockPose(b.time, b.seed, a.team === s.offense ? -0.2 : 0.2), rate: 12, hand };
   }
   // Teammates of the passer leave it to the receiver; only the target and the defence go up for it.

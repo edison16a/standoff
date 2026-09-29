@@ -41,7 +41,7 @@ export interface AthleteView {
   targeted: boolean;
   guarding: number | null;
   rushing: boolean;
-  /** In contact with an opposing lineman. */
+  /** In contact with an opposing lineman; for a lineman, locked up with the one across. */
   blocked: boolean;
 }
 

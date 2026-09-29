@@ -75,6 +75,8 @@ export function updateLinemen(m: Match, dt: number): void {
       a.z = p.z;
       a.vx = moved;
       a.vz = 0;
+      // Locked up with the man across: the view draws the two of them driving into each other.
+      a.blocked = 0.15;
       // Each lineman faces the other: the offense's way for its own, back the other way for the defence.
       a.yaw = -side * s > 0 ? Math.PI / 2 : -Math.PI / 2;
     }

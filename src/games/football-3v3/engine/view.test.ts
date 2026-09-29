@@ -41,6 +41,15 @@ describe("the view", () => {
     expect(v.athletes[wr.id]!.targeted).toBe(true);
   });
 
+  it("shows the linemen locked up once the ball is snapped, and not before", () => {
+    const m = peopleMatch();
+    const linemen = (v: ReturnType<typeof buildView>) => v.athletes.filter((a) => a.role === "lineman");
+    expect(linemen(buildView(m)).some((a) => a.blocked)).toBe(false);
+    snap(m);
+    run(m, 0.5);
+    expect(linemen(buildView(m)).every((a) => a.blocked)).toBe(true);
+  });
+
   it("blends two stills half way", () => {
     const m = peopleMatch();
     snap(m);
