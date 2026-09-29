@@ -86,7 +86,8 @@ function RoomScreen({ code, resumeAs, onRetry }: { code: string; resumeAs: strin
 
   return (
     <div className="phone">
-      <PhoneBar>{seat && <span className={`pill ${seat === 1 ? "pill--accent" : ""}`}>{name}</span>}</PhoneBar>
+      {/* Once the game has ended the old seat means nothing, so its name goes too. */}
+      <PhoneBar>{seat && stage !== "error" && <span className={`pill ${seat === 1 ? "pill--accent" : ""}`}>{name}</span>}</PhoneBar>
       {offline && (
         <div className="phone__notice phone__notice--action" role="status">
           <span>
