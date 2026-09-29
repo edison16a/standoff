@@ -1,7 +1,8 @@
 /*
   The winner's scene: the pedestal fills the screen, the victory kit's
   name goes across the top, and the table of fighters and the buttons
-  sit in the bottom left corner.
+  sit in the bottom right corner. The room's QR code takes the bottom
+  left while the results are up, so late phones can still join.
 */
 
 .bb-results {
@@ -19,7 +20,7 @@
 
 .bb-results__panel {
   position: absolute;
-  left: clamp(12px, 2.5vw, 32px);
+  right: clamp(12px, 2.5vw, 32px);
   bottom: clamp(12px, 3vh, 32px);
   display: flex;
   flex-direction: column;

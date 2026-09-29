@@ -339,7 +339,7 @@ room.dispose();   // frees the canvas and everything in the scene. Take out shar
 
 ### Leave room for the names
 
-The names and the subtitle take about the top third of the screen. Stand the camera back until the winner's highest point, a raised trophy included, stays under the subtitle all through the shot, hop and bob included. Put a game's own tables and buttons in a bottom corner panel rather than along the bottom middle, so the winner has the middle to themselves. Boxing and Brawl Battle do this; Magic Kart's podium is wide, so its places run along the bottom under it.
+The names and the subtitle take about the top third of the screen. Stand the camera back until the winner's highest point, a raised trophy included, stays under the subtitle all through the shot, hop and bob included. Put a game's own tables and buttons in a bottom corner panel rather than along the bottom middle, so the winner has the middle to themselves. In a game played with phones the room's QR code comes back to the bottom left once the match is over, so use the bottom right. Brawl Battle does this, and Boxing, which has no phones, uses the bottom left; Magic Kart's podium is wide, so its places run along the bottom under it.
 
 ### Names over the scene
 

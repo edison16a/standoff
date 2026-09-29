@@ -55,7 +55,7 @@ export function Results() {
         names={[{ name: champ ? champ.name : "A draw", colour: champ?.colour }]}
         subtitle={champ ? `${CHARACTERS[champ.character].name}, last one standing` : undefined}
       />
-      {/* In the bottom left corner, so the champion on the pedestal has the middle to themselves. */}
+      {/* In the bottom right corner, so the champion has the middle and the room's QR code keeps the bottom left. */}
       <div className="bb-results__panel">
         <table className="bb-rank">
           <thead>
