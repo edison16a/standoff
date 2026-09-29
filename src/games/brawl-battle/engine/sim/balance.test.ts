@@ -21,8 +21,8 @@ const seed = Number(process.env.BRAWL_BALANCE_SEED ?? 1);
 const pairGames = Math.max(20, Math.round(games / 5));
 
 describe.skipIf(!on)("balance", () => {
-  // Easy bots dither too much to say anything about the fighters.
-  for (const difficulty of DIFFICULTIES.filter((d) => d !== "easy")) {
+  // Easy bots dither too much to say anything about the fighters, and training bots never fight.
+  for (const difficulty of DIFFICULTIES.filter((d) => d === "medium" || d === "hard")) {
     it(`gives every fighter a fair share of four bot wins on ${difficulty}`, () => {
       const tally = fourWay(games, difficulty, seed);
       console.log(`${difficulty}, four bots\n${describeTally(tally)}`);

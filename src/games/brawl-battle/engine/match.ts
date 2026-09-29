@@ -16,7 +16,7 @@ export interface Entrant {
   seat: number | null;
 }
 
-export const DEFAULT_OPTIONS: MatchOptions = { seed: 1, stage: "dojo-rooftop", stocks: RULES.stocks, difficulty: "normal" };
+export const DEFAULT_OPTIONS: MatchOptions = { seed: 1, stage: "dojo-rooftop", stocks: RULES.stocks, difficulty: "medium" };
 
 const IDLE: Command = { x: 0, y: 0 };
 
@@ -98,5 +98,7 @@ function setPhase(state: MatchState, phase: MatchState["phase"]): void {
 export function setBot(state: MatchState, id: number, bot: boolean): void {
   const f = state.fighters[id];
   if (!f) return;
-  f.brain = bot ? (f.brain ?? makeBrain(state.options.difficulty, f.slot)) : null;
+  // A dropped player's fighter keeps fighting even in Training, where only the computers stand still.
+  const level = state.options.difficulty === "training" ? "medium" : state.options.difficulty;
+  f.brain = bot ? (f.brain ?? makeBrain(level, f.slot)) : null;
 }

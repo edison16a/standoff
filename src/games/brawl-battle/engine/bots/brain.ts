@@ -1,3 +1,4 @@
+import { BOT_LEVELS, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { ChargeButton } from "../types";
 
 /**
@@ -6,8 +7,9 @@ import type { ChargeButton } from "../types";
  * frames, and a harder bot looks more often and chooses better.
  */
 
-export const DIFFICULTIES = ["easy", "normal", "hard"] as const;
-export type Difficulty = (typeof DIFFICULTIES)[number];
+/** The shared lobby levels. Training bots stand still and never act. */
+export const DIFFICULTIES = BOT_LEVELS;
+export type Difficulty = BotLevel;
 
 export interface Skill {
   /** Frames between decisions. Lower is sharper. */
@@ -28,8 +30,10 @@ export interface Skill {
 
 export const SKILLS: Record<Difficulty, Skill> = {
   easy: { reaction: 26, aggression: 0.4, shield: 0, judgement: 0.35, recovery: 0.6, dither: 0.35, charge: 0.04 },
-  normal: { reaction: 13, aggression: 0.7, shield: 0.2, judgement: 0.65, recovery: 0.9, dither: 0.12, charge: 0.08 },
+  medium: { reaction: 13, aggression: 0.7, shield: 0.2, judgement: 0.65, recovery: 0.9, dither: 0.12, charge: 0.08 },
   hard: { reaction: 6, aggression: 0.9, shield: 0.45, judgement: 0.9, recovery: 1, dither: 0.03, charge: 0.1 },
+  // Never read: botCommand stops a training bot before it thinks.
+  training: { reaction: 60, aggression: 0, shield: 0, judgement: 0, recovery: 0, dither: 1, charge: 0 },
 };
 
 export interface BotBrain {
