@@ -147,6 +147,7 @@ export function resetFighter(f: Fighter, pos: V2, look: number, spot: number): v
   f.alive = true;
   f.brain = { stance: "hide", spot, route: [], timer: 0, held: 0, sincePlan: Infinity, peekAt: null, out: 0 };
   f.trigger = { held: false, pulls: 0, pulledAt: -Infinity };
+  f.crouchHeld = false;
   f.hitAt = -Infinity;
   f.shotAt = -Infinity;
   f.diedAt = -Infinity;

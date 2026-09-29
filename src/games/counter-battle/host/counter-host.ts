@@ -208,6 +208,9 @@ export class CounterHost {
       case "reload":
         this.driver?.reload(seat);
         return;
+      case "crouch":
+        this.driver?.crouch(seat, message.down);
+        break;
       case "gun":
         this.lobby.setGun(seat, message.gun);
         break;

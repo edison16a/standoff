@@ -58,6 +58,20 @@ describe("the match driver", () => {
     expect(me.trigger.held).toBe(true);
   });
 
+  it("holds a crouch until it is turned off or a new round starts", () => {
+    const d = oneOnOne();
+    const me = d.fighterOf(1)!;
+    d.crouch(1, true);
+    expect(me.crouchHeld).toBe(true);
+    d.crouch(1, false);
+    expect(me.crouchHeld).toBe(false);
+    d.crouch(1, true);
+    // The other side goes down, and the next round stands everyone up.
+    for (const f of d.battle.fighters) if (f.team !== me.team) f.alive = false;
+    while (d.battle.match.round === 1) d.advance(0.1);
+    expect(me.crouchHeld).toBe(false);
+  });
+
   it("steps the battle at its own rate, faster with turbo, and never runs away after a stall", () => {
     const d = oneOnOne();
     d.advance(0.05, 2);

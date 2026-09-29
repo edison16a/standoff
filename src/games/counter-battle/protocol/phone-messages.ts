@@ -19,6 +19,9 @@ export const triggerSchema = z.object({ kind: z.literal("trigger"), down: z.bool
 
 export const reloadSchema = z.object({ kind: z.literal("reload") });
 
+/** Crouch on or off: on, the fighter stays down behind cover until it is turned off or Shoot is pressed. */
+export const crouchSchema = z.object({ kind: z.literal("crouch"), down: z.boolean() });
+
 /** Sent once as the phone's screen starts, so the host sends it everything even if earlier messages came too soon. */
 export const helloSchema = z.object({ kind: z.literal("hello") });
 
@@ -27,6 +30,7 @@ export const phoneMessageSchema = z.discriminatedUnion("kind", [
   readySchema,
   triggerSchema,
   reloadSchema,
+  crouchSchema,
   helloSchema,
 ]);
 

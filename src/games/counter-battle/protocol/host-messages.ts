@@ -50,6 +50,8 @@ export const phoneStateSchema = z.object({
   reloadLeft: z.number().min(0).max(10),
   /** The fight is on, so the trigger works. */
   armed: z.boolean(),
+  /** The fighter is holding down behind cover on this player's Crouch. */
+  crouched: z.boolean(),
   round: z.number().int().min(0).max(ROUND_MAX),
   /** Round wins: this player's side first. */
   score: z.tuple([score, score]),

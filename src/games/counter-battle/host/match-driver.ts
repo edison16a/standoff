@@ -70,6 +70,12 @@ export class MatchDriver {
     if (!down || this.battle.match.phase === "fight") this.battle.setTrigger(f.id, down);
   }
 
+  /** Crouch on or off. It holds through the countdown too, and a new round stands everyone up. */
+  crouch(seat: number, down: boolean): void {
+    const f = this.fighterOf(seat);
+    if (f?.alive) this.battle.setCrouch(f.id, down);
+  }
+
   reload(seat: number): void {
     const f = this.fighterOf(seat);
     if (f) this.battle.reload(f.id);

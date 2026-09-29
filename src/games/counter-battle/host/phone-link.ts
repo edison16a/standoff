@@ -18,7 +18,7 @@ export class PhoneLink {
   sendState(seat: number, state: PhoneState, nowMs: number): void {
     const json = JSON.stringify(state);
     const z = state.zone;
-    const urgent = `${state.phase}|${state.team}|${state.gun}|${state.ready}|${state.playing}|${z?.x},${z?.y},${z?.w}|${state.ammo}|${state.reloading}|${state.health}|${state.alive}|${state.armed}|${state.score.join()}|${state.banner}`;
+    const urgent = `${state.phase}|${state.team}|${state.gun}|${state.ready}|${state.playing}|${z?.x},${z?.y},${z?.w}|${state.ammo}|${state.reloading}|${state.health}|${state.alive}|${state.armed}|${state.crouched}|${state.score.join()}|${state.banner}`;
     const prev = this.last.get(seat);
     if (prev?.json === json) return;
     if (prev && prev.urgent === urgent && nowMs - prev.at < MIN_GAP_MS) return;

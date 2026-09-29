@@ -138,6 +138,7 @@ function phoneState(c: PublishContext, seat: number, phase: RoomPhase, lobbyView
     reloading: gun?.reloading ?? false,
     reloadLeft: gun ? Math.min(10, Math.round(gun.reloadLeftSeconds * 10) / 10) : 0,
     armed: !!f && f.alive && m?.phase === "fight",
+    crouched: !!f && f.alive && f.crouchHeld,
     // Draws can run a match past ten rounds; the phone's count stops there.
     round: Math.min(ROUND_MAX, m?.round ?? 0),
     score: m ? [clampScore(m.score[mine]), clampScore(m.score[1 - mine]!)] : [0, 0],

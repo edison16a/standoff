@@ -71,6 +71,8 @@ export class CounterPhone {
   pressTrigger(): void {
     if (this.held) return;
     this.held = true;
+    // Shooting from a crouch stands the fighter up to take the shot.
+    if (store.getState().host?.crouched) this.send({ kind: "crouch", down: false });
     this.aim.fire();
     this.send({ kind: "trigger", down: true });
   }
@@ -79,6 +81,12 @@ export class CounterPhone {
     if (!this.held) return;
     this.held = false;
     this.send({ kind: "trigger", down: false });
+  }
+
+  /** Crouch toggles: down behind cover, or back up to look out. */
+  toggleCrouch(): void {
+    this.click();
+    this.send({ kind: "crouch", down: !store.getState().host?.crouched });
   }
 
   reload(): void {

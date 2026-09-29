@@ -38,9 +38,10 @@ function Status({ host }: { host: PhoneState }) {
 
 /**
  * The phone as the gun: aim by pointing it at your view, Shoot under
- * the thumb (hold it for an automatic, tap for the others), Reload, and
- * Centre to put the aim back in the middle if it drifts. Phones without
- * motion sensors aim by dragging round the trigger.
+ * the thumb (hold it for an automatic, tap for the others), Crouch to
+ * stay down behind cover, Reload, and Centre to put the aim back in the
+ * middle if it drifts. Phones without motion sensors aim by dragging
+ * round the trigger.
  */
 export function Controller({ host, seat }: { host: PhoneState; seat: number }) {
   const session = usePhone();
@@ -76,6 +77,16 @@ export function Controller({ host, seat }: { host: PhoneState; seat: number }) {
       <Magazine host={host} />
       <div className="cb-play__trigger">{touch ? <AimPad aim={session.aim}>{trigger}</AimPad> : trigger}</div>
       <div className="cb-play__buttons">
+        <button
+          type="button"
+          className={`cb-crouch ${host.crouched ? "cb-crouch--on" : ""}`}
+          aria-pressed={host.crouched}
+          disabled={!host.alive}
+          onClick={() => session.toggleCrouch()}
+        >
+          Crouch
+          <small>{host.crouched ? "Shoot to rise" : "Stay in cover"}</small>
+        </button>
         <button type="button" className={`cb-reload ${host.ammo === 0 && !host.reloading ? "cb-reload--urgent" : ""}`} disabled={!host.alive} onClick={() => session.reload()}>
           Reload
         </button>

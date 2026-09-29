@@ -21,6 +21,7 @@ const STATE: PhoneState = {
   reloading: false,
   reloadLeft: 0,
   armed: true,
+  crouched: false,
   round: 3,
   score: [2, 1],
   kills: 4,
@@ -36,6 +37,7 @@ describe("the messages", () => {
     expect(phoneMessageSchema.parse({ kind: "gun", gun: "sniper" })).toEqual({ kind: "gun", gun: "sniper" });
     expect(phoneMessageSchema.parse({ kind: "trigger", down: true }).kind).toBe("trigger");
     for (const kind of ["reload", "hello"]) expect(phoneMessageSchema.parse({ kind }).kind).toBe(kind);
+    expect(phoneMessageSchema.parse({ kind: "crouch", down: true })).toEqual({ kind: "crouch", down: true });
     expect(phoneMessageSchema.parse({ kind: "ready", ready: false }).kind).toBe("ready");
   });
 
@@ -49,7 +51,7 @@ describe("the messages", () => {
   });
 
   it("never use a kind the platform or the aim kit keeps for itself", () => {
-    for (const kind of ["state", "buzz", "gun", "ready", "trigger", "reload", "hello"]) {
+    for (const kind of ["state", "buzz", "gun", "ready", "trigger", "reload", "crouch", "hello"]) {
       expect(RESERVED_KINDS).not.toContain(kind);
       expect(isAimKind(kind)).toBe(false);
     }
