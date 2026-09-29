@@ -4,9 +4,9 @@ import { SurvivalGame } from "./game";
 import { CLEAR_SECONDS, STORY_CLEAR_SECONDS } from "./pacing";
 import type { CastFn } from "./shooting";
 import { inFlight } from "./chopper";
-import { CHOPPER_STAGE, stage, STAGE_COUNT } from "./stages";
+import { CHOPPER_STAGE, stage, STAGE_COUNT, STAGES } from "./stages";
 import { alive } from "./zombie";
-import { KINDS } from "./zombie-kinds";
+import { BOSS_KINDS, KINDS } from "./zombie-kinds";
 
 const DT = 1 / 60;
 
@@ -85,7 +85,7 @@ describe("a run", () => {
   });
 
   it("beats every boss stage with steady aim on the weak points", () => {
-    for (const stage of [2, 6, 10, 13, 15]) {
+    for (const stage of STAGES.filter((s) => s.bosses.length > 0).map((s) => s.index)) {
       const game = new SurvivalGame();
       game.start([{ seat: 1, weapon: "rifle" }, { seat: 2, weapon: "shotgun" }], stage);
       run(game, 20);
@@ -146,6 +146,27 @@ describe("a run", () => {
     expect(widest).toBeLessThan(0.75);
   });
 
+  it("fires where the gun points, which is the aim plus what is left of its kick", () => {
+    const game = new SurvivalGame(() => 0.5);
+    game.start([{ seat: 1, weapon: "ak47" }]);
+    run(game, 20);
+    const seen: { x: number; y: number }[][] = [];
+    const record: CastFn = (offsets) => {
+      seen.push(offsets.map((o) => ({ ...o })));
+      return offsets.map(() => null);
+    };
+    game.fire(1, record);
+    run(game, 0.2);
+    game.fire(1, record);
+    // The first shot leaves on the aim, give or take the spread. The second rides the kick.
+    expect(Math.abs(seen[0]![0]!.y)).toBeLessThan(0.01);
+    expect(seen[1]![0]!.y).toBeGreaterThan(0.01);
+    // Given time, the gun comes back to the aim.
+    run(game, 2);
+    game.fire(1, record);
+    expect(Math.abs(seen[2]![0]!.y)).toBeLessThan(0.01);
+  });
+
   it("lets a player leave and come back with their stats", () => {
     const game = new SurvivalGame();
     game.start([{ seat: 1, weapon: "rifle" }, { seat: 2, weapon: "smg" }]);
@@ -158,8 +179,6 @@ describe("a run", () => {
   });
 
   it("keeps the boss table sane", () => {
-    for (const kind of ["butcher", "tank", "juggernaut", "behemoth"] as const) {
-      expect(KINDS[kind].weakPoints.length).toBeGreaterThan(0);
-    }
+    for (const kind of BOSS_KINDS) expect(KINDS[kind].weakPoints.length).toBeGreaterThan(0);
   });
 });

@@ -1,4 +1,4 @@
-import type { BotLevel } from "@/games/kit/difficulty/difficulty";
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { Seat } from "@/platform/protocol";
 import { Achievements } from "./achievements";
 import { HELIPAD, inFlight } from "./chopper";
@@ -45,11 +45,11 @@ export class SurvivalGame {
 
   /**
    * `random` spreads each shot's bullets. The showcase seeds it, so its fights replay exactly.
-   * `level` bends the zombies' speed and harm. Medium is the run as tuned.
+   * `level` bends the zombies' speed and harm. Easy, the default, is the run as written.
    */
   constructor(
     private readonly random: () => number = Math.random,
-    readonly level: BotLevel = "medium",
+    readonly level: BotLevel = DEFAULT_BOT_LEVEL,
   ) {}
 
   get running(): boolean {
