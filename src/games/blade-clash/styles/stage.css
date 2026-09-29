@@ -186,6 +186,11 @@
   width: 150px;
   transform: translateX(-50%);
   pointer-events: none;
+  transition: opacity 200ms ease-out;
+}
+
+.hud-map--away {
+  opacity: 0;
 }
 
 /* A calibration target in a player's half, big enough to find from the sofa. */

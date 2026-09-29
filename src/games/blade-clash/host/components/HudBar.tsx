@@ -55,15 +55,20 @@ function PlayerHud({ slot }: { slot: Slot }) {
   );
 }
 
-/** Both players' bars, and the little map of who plays in which half between them. */
+/**
+ * Both players' bars, and the little map of who plays in which half
+ * between them. The map steps aside for the hit moment, whose letterbox
+ * bar would otherwise cut it in half.
+ */
 export function HudBar() {
   const names = useBladeStore((state) => state.names);
+  const moment = useBladeStore((state) => state.hud?.phase === "point" || state.hud?.phase === "finish");
   const panes = SLOTS.map((slot) => ({ name: names[slot], color: playerColor(slot), rect: VIEWS[slot] }));
   return (
     <>
       <PlayerHud slot={1} />
       <PlayerHud slot={2} />
-      <div className="hud-map">
+      <div className={`hud-map ${moment ? "hud-map--away" : ""}`}>
         <SplitMap panes={panes} />
       </div>
     </>
