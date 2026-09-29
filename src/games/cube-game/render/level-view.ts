@@ -34,8 +34,8 @@ export class LevelView {
     const spike = spikeGeometry();
     this.geometries.push(box, spike);
     const blockMat = blockMaterial(theme.fill, theme.edge);
-    const groundMat = blockMaterial(new THREE.Color(theme.fill).multiplyScalar(0.7).getHex(), theme.edge, 1.1);
-    groundMat.uniforms.tile!.value = 0.05;
+    const groundMat = blockMaterial(new THREE.Color(theme.fill).multiplyScalar(0.7).getHex(), theme.edge, 0.85);
+    groundMat.uniforms.tile!.value = 0.03;
     const spikeMat = spikeMaterial(theme.fill, theme.spike);
     this.materials.push(blockMat, groundMat, spikeMat);
     for (const material of this.materials) setFog(material, theme.skyLow, 0.004);

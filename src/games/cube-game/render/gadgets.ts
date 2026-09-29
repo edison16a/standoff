@@ -8,7 +8,7 @@ const ORB_COLOUR = 0xffd21f;
 /** A portal ring's radius, in cubes. Runs nearly always cross portals on the floor. */
 const PORTAL_SIZE = 1.6;
 
-/** A colour pushed past white, so the bloom makes it glow. */
+/** A colour a little past white, so the bloom gives it a soft glow. */
 function bright(hex: number, strength: number): THREE.Color {
   return new THREE.Color(hex).multiplyScalar(strength);
 }
@@ -47,12 +47,12 @@ export class Gadgets {
     padGeometry.rotateX(Math.PI / 2);
     padGeometry.rotateZ(Math.PI / 2);
     padGeometry.scale(1, 0.35, 1);
-    const padMaterial = new THREE.MeshBasicMaterial({ color: bright(PAD_COLOUR, 2.2) });
+    const padMaterial = new THREE.MeshBasicMaterial({ color: bright(PAD_COLOUR, 1.3) });
     for (const pad of level.pads) {
       const mesh = new THREE.Mesh(padGeometry, padMaterial);
       mesh.position.set(pad.x + 0.5, pad.y, 0);
       if (pad.dir === -1) mesh.rotation.z = Math.PI;
-      const halo = new THREE.Sprite(additive(this.glow, PAD_COLOUR, 0.8));
+      const halo = new THREE.Sprite(additive(this.glow, PAD_COLOUR, 0.45));
       halo.scale.set(2.2, 1.4, 1);
       halo.position.set(pad.x + 0.5, pad.y + pad.dir * 0.2, 0.3);
       this.pads.push({ pad, mesh, halo });
@@ -61,14 +61,14 @@ export class Gadgets {
 
     const ringGeometry = new THREE.TorusGeometry(0.42, 0.075, 10, 36);
     const coreGeometry = new THREE.SphereGeometry(0.2, 16, 12);
-    const orbMaterial = new THREE.MeshBasicMaterial({ color: bright(ORB_COLOUR, 2.4) });
-    const coreMaterial = new THREE.MeshBasicMaterial({ color: bright(0xfff6c0, 1.6) });
+    const orbMaterial = new THREE.MeshBasicMaterial({ color: bright(ORB_COLOUR, 1.35) });
+    const coreMaterial = new THREE.MeshBasicMaterial({ color: bright(0xfff6c0, 1.1) });
     for (const orb of level.orbs) {
       const ring = new THREE.Mesh(ringGeometry, orbMaterial);
       ring.position.set(orb.x, orb.y, 0);
       const core = new THREE.Mesh(coreGeometry, coreMaterial);
       core.position.copy(ring.position);
-      const halo = new THREE.Sprite(additive(this.glow, ORB_COLOUR, 0.9));
+      const halo = new THREE.Sprite(additive(this.glow, ORB_COLOUR, 0.5));
       halo.position.set(orb.x, orb.y, 0.4);
       halo.scale.setScalar(2.6);
       this.orbs.push({ orb, ring, halo });
@@ -82,11 +82,11 @@ export class Gadgets {
       const colour = MODE_COLOURS[portal.mode];
       const frame = new THREE.Group();
       frame.position.set(portal.x, PORTAL_SIZE + 0.1, 0);
-      const ring = new THREE.Mesh(portalRing, new THREE.MeshBasicMaterial({ color: bright(colour, 1.7) }));
+      const ring = new THREE.Mesh(portalRing, new THREE.MeshBasicMaterial({ color: bright(colour, 1.1) }));
       ring.scale.setScalar(PORTAL_SIZE);
-      const inner = new THREE.Mesh(portalRing, new THREE.MeshBasicMaterial({ color: bright(colour, 1.0) }));
+      const inner = new THREE.Mesh(portalRing, new THREE.MeshBasicMaterial({ color: bright(colour, 0.7) }));
       inner.scale.setScalar(PORTAL_SIZE * 0.72);
-      const fog = new THREE.Sprite(additive(this.glow, colour, 0.3));
+      const fog = new THREE.Sprite(additive(this.glow, colour, 0.14));
       fog.scale.setScalar(PORTAL_SIZE * 3.2);
       frame.add(ring, inner, fog);
       this.spinners.push(inner);
@@ -96,7 +96,7 @@ export class Gadgets {
 
     const chevronGeometry = chevron();
     for (const gate of level.speeds) {
-      const material = new THREE.MeshBasicMaterial({ color: bright(gate.faster ? 0xff4fd8 : 0x4fb8ff, 2.2) });
+      const material = new THREE.MeshBasicMaterial({ color: bright(gate.faster ? 0xff4fd8 : 0x4fb8ff, 1.2) });
       this.disposables.push(material);
       const count = gate.faster ? 3 : 1;
       for (let i = 0; i < count; i++) {
@@ -106,10 +106,10 @@ export class Gadgets {
       }
     }
 
-    const finish = new THREE.Sprite(additive(this.glow, theme.edge, 0.35));
+    const finish = new THREE.Sprite(additive(this.glow, theme.edge, 0.2));
     finish.scale.set(4, 40, 1);
     finish.position.set(level.endX, 10, -0.5);
-    const beam = new THREE.Mesh(new THREE.BoxGeometry(0.1, 40, 0.1), new THREE.MeshBasicMaterial({ color: bright(theme.edge, 1.6) }));
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(0.1, 40, 0.1), new THREE.MeshBasicMaterial({ color: bright(theme.edge, 1.1) }));
     beam.position.set(level.endX, 20, 0);
     this.group.add(finish, beam);
     this.disposables.push(padGeometry, padMaterial, ringGeometry, coreGeometry, orbMaterial, coreMaterial, portalRing, chevronGeometry);
@@ -120,9 +120,9 @@ export class Gadgets {
   update(time: number, pulse: number): void {
     for (const { ring, halo } of this.orbs) {
       ring.rotation.y = time * 2.4;
-      halo.scale.setScalar(2.4 + pulse * 0.8);
+      halo.scale.setScalar(2.2 + pulse * 0.3);
     }
-    for (const { halo } of this.pads) halo.material.opacity = 0.55 + pulse * 0.45;
+    for (const { halo } of this.pads) halo.material.opacity = 0.35 + pulse * 0.15;
     for (const spinner of this.spinners) spinner.rotation.y = Math.sin(time * 3) * 0.6;
   }
 
@@ -131,7 +131,7 @@ export class Gadgets {
     for (const { orb, ring, halo } of this.orbs) {
       const spent = !!used?.orbs.has(orb);
       ring.scale.setScalar(spent ? 1.5 : 1);
-      halo.material.opacity = spent ? 0.25 : 0.9;
+      halo.material.opacity = spent ? 0.15 : 0.5;
     }
     for (const { pad, mesh } of this.pads) mesh.scale.y = used?.pads.has(pad) ? 0.6 : 1;
   }

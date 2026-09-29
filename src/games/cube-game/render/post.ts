@@ -47,7 +47,7 @@ class SplitPass extends Pass {
   }
 }
 
-/** The finish: bloom so every neon edge glows past itself, then tone mapping. */
+/** The finish: a soft, faint bloom that only catches the brightest edges, then tone mapping. */
 export class Post {
   private readonly composer: EffectComposer;
   private readonly split: SplitPass;
@@ -57,7 +57,7 @@ export class Post {
     const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType });
     this.composer = new EffectComposer(renderer, target);
     this.split = new SplitPass(scene);
-    this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.55, 0.4, 0.8);
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.22, 0.25, 0.92);
     this.composer.addPass(this.split);
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());

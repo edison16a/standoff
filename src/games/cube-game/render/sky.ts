@@ -50,20 +50,20 @@ export class Sky {
           float h = clamp((vPlace.y - horizon) / 45.0, 0.0, 1.0);
           vec3 colour = mix(low * 0.85, high, pow(h, 0.5));
           // A band of haze glowing along the horizon.
-          colour += low * exp(-max(vPlace.y - horizon, 0.0) / 5.0) * 0.45;
+          colour += low * exp(-max(vPlace.y - horizon, 0.0) / 5.0) * 0.25;
           vec2 d = vPlace - sunAt;
           float r = length(d) / sunSize;
           // The sun is cut by stripes that thicken toward its foot.
           float stripes = step(0.0, sin((vPlace.y - sunAt.y) * 1.4 + time * 0.8)) + step(0.25, (vPlace.y - sunAt.y) / sunSize + 0.2);
           float disc = (1.0 - smoothstep(0.98, 1.0, r)) * clamp(stripes, 0.0, 1.0);
-          vec3 sunColour = mix(sunLow, sun, clamp(d.y / sunSize * 0.8 + 0.5, 0.0, 1.0)) * 0.95;
+          vec3 sunColour = mix(sunLow, sun, clamp(d.y / sunSize * 0.8 + 0.5, 0.0, 1.0)) * 0.72;
           colour = mix(colour, sunColour, disc);
-          colour += mix(sunLow, sun, 0.5) * exp(-max(r - 1.0, 0.0) * 3.2) * (0.16 + pulse * 0.1) * (1.0 - disc);
+          colour += mix(sunLow, sun, 0.5) * exp(-max(r - 1.0, 0.0) * 3.2) * (0.08 + pulse * 0.03) * (1.0 - disc);
           vec2 cell = floor(vPlace * 0.35);
           vec2 spot = fract(vPlace * 0.35) - 0.25 - 0.5 * vec2(hash(cell + 1.7), hash(cell + 5.3));
           float twinkle = 0.6 + 0.4 * sin(time * 2.0 + hash(cell + 3.0) * 20.0);
           float star = step(0.9, hash(cell)) * smoothstep(0.08, 0.0, length(spot)) * smoothstep(0.3, 0.8, h) * twinkle;
-          colour += vec3(star) * 0.9;
+          colour += vec3(star) * 0.5;
           gl_FragColor = vec4(colour, 1.0);
         }
       `,

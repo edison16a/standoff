@@ -94,7 +94,7 @@ export function blockMaterial(fill: number, edge: number, glow = 1): THREE.Shade
         float shade = n.y > 0.5 ? (vNormal2.y > 0.0 ? 1.5 : 0.55) : n.x > 0.5 ? 0.7 : 1.0;
         float lift = 0.75 + 0.35 * clamp(uv.y / max(halfSize.y, 0.001) * 0.5 + 0.5, 0.0, 1.0);
         vec3 colour = fill * shade * lift;
-        colour += edge * glow * (rim * (1.15 + pulse * 1.0) + halo * (0.22 + pulse * 0.35) + tiles * tile);
+        colour += edge * glow * (rim * (0.7 + pulse * 0.25) + halo * (0.07 + pulse * 0.06) + tiles * tile);
         if (windows > 0.0 && vNormal2.z > 0.5) {
           // Lit windows in the skyline's towers, a few flickering with the beat.
           vec2 grid = vec2(vWorld.x * 1.2, vWorld.y * 0.9);
@@ -103,7 +103,7 @@ export function blockMaterial(fill: number, edge: number, glow = 1): THREE.Shade
           float pane = step(0.25, inCell.x) * step(inCell.x, 0.75) * step(0.3, inCell.y) * step(inCell.y, 0.75);
           float lit = step(0.62, hash(cell + floor(vWorld.z)));
           float inside = step(0.4, e);
-          colour += windowColour * pane * lit * inside * windows * (0.8 + pulse * 0.4 * step(0.9, hash(cell * 1.7)));
+          colour += windowColour * pane * lit * inside * windows * (0.6 + pulse * 0.15 * step(0.9, hash(cell * 1.7)));
         }
         gl_FragColor = vec4(fogged(colour, vDepth), 1.0);
       }
@@ -168,7 +168,7 @@ export function spikeMaterial(fill: number, edge: number, rim = 0.06): THREE.Sha
         float e = min(vMark.x, min(vMark.y, vMark.z));
         float rim = 1.0 - smoothstep(rimWidth * 0.5, rimWidth * 1.5, e);
         float light = 0.55 + 0.45 * max(0.0, dot(vNormal2, normalize(vec3(-0.3, 0.8, 0.6))));
-        vec3 colour = fill * light * 1.4 + edge * glow * (rim * (1.9 + pulse * 1.4) + exp(-e * 0.6 / rimWidth) * 0.3);
+        vec3 colour = fill * light * 1.5 + edge * glow * (rim * (0.95 + pulse * 0.3) + exp(-e * 0.6 / rimWidth) * 0.12);
         gl_FragColor = vec4(fogged(colour, vDepth), 1.0);
       }
     `,
