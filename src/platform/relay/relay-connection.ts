@@ -6,6 +6,7 @@ import { Membership } from "./membership";
 import { RoomChannel } from "./room-channel";
 import { makeToken } from "./room-code";
 import { RoomOps } from "./room-ops";
+import { echoProbe, RoomProbe } from "./relay-probe";
 import { createRoom, joinAsPhone, remakeRoom, resumeHost, retireRoom, type RoomsContext } from "./relay-rooms";
 import { rotateLead, type RelayContext, type SocketLike } from "./relay-types";
 
@@ -29,6 +30,7 @@ export class RelayConnection {
   private readonly watch: HostWatch;
   private readonly rooms: RoomsContext;
   private rotateTimer: ReturnType<typeof setTimeout> | null = null;
+  private probe: RoomProbe | null = null;
 
   constructor(
     private readonly socket: SocketLike,
@@ -62,6 +64,7 @@ export class RelayConnection {
 
   disconnect(): void {
     if (this.rotateTimer) clearTimeout(this.rotateTimer);
+    this.probe?.cancel();
     this.enqueue(() => this.leave());
   }
 
@@ -85,6 +88,14 @@ export class RelayConnection {
         return this.handshake(() => joinAsPhone(this.rooms, envelope));
       case "host:retire":
         return retireRoom(this.rooms, envelope);
+      case "probe:room":
+        // One check per connection: it is a throwaway, closed once answered.
+        if (this.probe || role) return;
+        this.probe = new RoomProbe(this.ops, this.ctx.backend.bus, this.ctx.now, (reply) => this.send(reply), (code) => this.socket.close(code));
+        return this.probe.run(envelope);
+      case "host:echo":
+        if (role?.kind === "host") echoProbe(this.ctx.backend.bus, envelope.nonce);
+        return;
       case "host:close":
         if (role?.kind === "host" && (await this.ops.closeByHost(role.code, this.id))) {
           this.room(role).toPhones({ type: "room:closed" });

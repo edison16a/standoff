@@ -1,0 +1,64 @@
+import type { ProbeFailure, ServerEnvelope } from "@/platform/protocol";
+import { openChannel } from "./open-channel";
+
+/** Longer than the relay's own wait for the echo, so the relay's answer normally comes first. */
+const PROBE_TIMEOUT_MS = 5000;
+const NONCE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+
+/**
+ * `timeout` means no answer came in time, `transport` that the connection
+ * closed first. Both may be a blip, where the relay's own answers are
+ * about the room itself.
+ */
+export type ProbeOutcome = { ok: true } | { ok: false; reason: ProbeFailure | "timeout" | "transport" };
+
+export interface ProbeOptions {
+  /** Use the HTTP stream, as the host's own connection does where WebSockets fail. */
+  stream: boolean;
+  timeoutMs?: number;
+}
+
+/**
+ * Checks a room the way a phone would reach it: over a fresh connection,
+ * which on Vercel may land on any server instance. The relay answers once
+ * the host has echoed, and then closes the connection itself.
+ */
+export function probeRoom(room: { code: string; token: string }, { stream, timeoutMs = PROBE_TIMEOUT_MS }: ProbeOptions): Promise<ProbeOutcome> {
+  return new Promise((resolve) => {
+    const nonce = makeNonce();
+    const channel = openChannel(stream);
+    let settled = false;
+    const finish = (outcome: ProbeOutcome) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      channel.onopen = null;
+      channel.onmessage = null;
+      channel.onclose = null;
+      channel.close(1000);
+      resolve(outcome);
+    };
+    const timer = setTimeout(() => finish({ ok: false, reason: "timeout" }), timeoutMs);
+    channel.onopen = () => channel.send(JSON.stringify({ type: "probe:room", code: room.code, token: room.token, nonce }));
+    channel.onmessage = (event: MessageEvent<string>) => {
+      const message = parse(event.data);
+      if (message?.type !== "probe:result" || message.nonce !== nonce) return;
+      finish(message.ok ? { ok: true } : { ok: false, reason: message.reason ?? "no-echo" });
+    };
+    channel.onclose = () => finish({ ok: false, reason: "transport" });
+  });
+}
+
+function parse(raw: string): ServerEnvelope | null {
+  try {
+    return JSON.parse(raw) as ServerEnvelope;
+  } catch {
+    return null;
+  }
+}
+
+/** 24 random characters from the set the relay accepts. */
+export function makeNonce(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(24));
+  return Array.from(bytes, (byte) => NONCE_CHARS[byte % NONCE_CHARS.length]).join("");
+}

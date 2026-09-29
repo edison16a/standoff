@@ -26,6 +26,8 @@ const roomCode = z
 const token = z.string().min(16).max(64);
 const seat = z.number().int().min(1).max(MAX_SEATS);
 export const gameIdSchema = z.string().regex(/^[a-z0-9-]{1,32}$/);
+/** Random, so nobody can answer a check they did not see. */
+const probeNonce = z.string().regex(/^[A-Za-z0-9_-]{16,40}$/);
 
 /** Any game message: an object with a short `kind`. The relay's size cap bounds the rest. */
 export const payloadSchema = z.object({ kind: z.string().min(1).max(32) }).passthrough();
@@ -49,6 +51,14 @@ export const clientEnvelopeSchema = z.discriminatedUnion("type", [
    * is dead or sits on another server instance.
    */
   z.object({ type: z.literal("host:retire"), code: roomCode, token, movedTo: roomCode.optional() }),
+  /**
+   * The host checking its own room from a throwaway connection, the way a
+   * phone would reach it: the room must exist, and a message must get to
+   * the host and back.
+   */
+  z.object({ type: z.literal("probe:room"), code: roomCode, token, nonce: probeNonce }),
+  /** The host answering a room:probe, which proves it still hears its room. */
+  z.object({ type: z.literal("host:echo"), nonce: probeNonce }),
   /** The computer talking to one phone or all of them. */
   z.object({ type: z.literal("host:send"), to: z.union([seat, z.literal("all")]), payload: payloadSchema }),
   /**
@@ -85,6 +95,13 @@ export type JoinErrorReason = "not-found" | "full" | "closed" | "unavailable" | 
  */
 export type NameClash = "name-taken" | "name-away" | "no-seat";
 
+/**
+ * Why a room check failed. `not-found` covers a wrong token too, so a
+ * check reveals nothing to someone guessing. `no-host` means nobody
+ * listens on the room, and `no-echo` that the host never answered.
+ */
+export type ProbeFailure = "not-found" | "closed" | "moved" | "no-host" | "no-echo";
+
 /** What every client learns about the room it is in. */
 export interface RoomInfo {
   code: string;
@@ -116,6 +133,10 @@ export type ServerEnvelope =
   | { type: "room:moved"; code: string }
   /** The answer to host:retire. `found` is false when no room matched the code and token. */
   | { type: "room:retired"; code: string; found: boolean }
+  /** Someone holding the host's token is checking the room. The host answers with host:echo. */
+  | { type: "room:probe"; nonce: string }
+  /** The answer to probe:room. The relay closes the connection right after. */
+  | { type: "probe:result"; nonce: string; ok: boolean; reason?: ProbeFailure }
   /**
    * This socket is about to hit the server's time limit. The client should
    * open a new one and rejoin on it before this one is cut.

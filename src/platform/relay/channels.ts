@@ -6,6 +6,8 @@ export const channels = {
   seat: (code: string, seat: Seat) => `standoff:room:${code}:seat:${seat}`,
   /** What an HTTP fallback client posted, on its way to whichever instance holds its stream. */
   inbox: (conn: string) => `standoff:conn:${conn}:in`,
+  /** Where the host's echo goes back to whichever connection is checking the room. */
+  probe: (nonce: string) => `standoff:probe:${nonce}`,
 };
 
 /**
