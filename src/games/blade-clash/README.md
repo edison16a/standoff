@@ -9,7 +9,7 @@ Status: ready. A sword duel for two players, or one against the computer, in an 
    * **Calibrate.** A picture shows the grip: the phone held like the handle of a sword, top edge toward the big screen. Then a target appears on the phone and in the player's own half of the big screen: the middle, then each corner. Point at it and hold still. A ring fills and the reading is taken by itself, with a buzz and a chime. Nothing to tap. **Skip corners** keeps the usual spans. Last, the player shows a relaxed guard the same way. Then the sword appears and copies the phone, on the phone and on the big screen, so it is plain it worked. **Redo** starts the targets again.
    * **Fighter.** Pick one of four. A fighter the other player has is marked taken.
    * **Ready.** Tap Ready, or **Play the computer** to fight alone.
-3. Fight. Every slash that lands scores a point. The first to five points wins, then the winner screen, then **Rematch** or **Menu** on the phone.
+3. Fight. Every slash that lands scores a point. The first to five points wins, and the countdown says so. Then the winner screen, then **Rematch** or **Menu** on the phone.
    * **The hit moment.** When a slash lands, play stops. The game drops into slow motion, both cameras close in, and the screen shows who slashed whom, name to name, with the score. Then both fighters go back to their start marks and the fight picks up again.
    * **Swing** by moving the phone. The sword follows it in 3D: point up for a high guard, down for a low one, turn the phone to angle the edge.
    * **Thrust** by pointing from your guard straight at the opponent. Pointing at the middle of your view stretches the arm out, and the guard pulls it back in.
