@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import type { MatchView } from "../../engine/view";
+import { ceremonyAim } from "./ceremony-cam";
 import { fitWidth } from "./fit";
 import { replayAim, type ReplayShot } from "./replay-shots";
 import { aimFor, type Aim } from "./shots";
@@ -68,18 +69,23 @@ export class CameraDirector {
       return;
     }
     // Narrow screens see less of the field side to side, so the fit backs the camera up for them.
-    const aim = this.replay ? replayAim(view, this.replay) : fitWidth(aimFor(view, time), cam.aspect);
+    const aim = this.replay
+      ? replayAim(view, this.replay)
+      : view.ceremony
+        ? ceremonyAim(view.ceremony.t, cam.aspect)
+        : fitWidth(aimFor(view, time), cam.aspect);
     const target = new THREE.Vector3(aim.pos.x, aim.pos.y, aim.pos.z);
     const look = new THREE.Vector3(aim.look.x, aim.look.y, aim.look.z);
     // Far from the shot means a new scene, like the lobby's demo giving way to the game or the ball spotted downfield: cut to it.
-    const cut = this.kind === null || this.pos.distanceTo(target) > CUT_DISTANCE;
+    // The trophy presentation opens on a cut too, as the broadcast switches to it.
+    const cut = this.kind === null || this.pos.distanceTo(target) > CUT_DISTANCE || (aim.kind === "ceremony" && this.kind !== "ceremony");
     this.kind = aim.kind;
     const k = cut ? 1 : 1 - Math.exp(-aim.rate * dt);
     this.pos.lerp(target, k);
     this.look.lerp(look, cut ? 1 : 1 - Math.exp(-aim.rate * 1.6 * dt));
     this.fov += (aim.fov - this.fov) * k;
     cam.position.copy(this.pos);
-    if (this.shake > 0.001) {
+    if (this.shake > 0.001 && aim.kind !== "ceremony") {
       const s = this.shake * 0.12;
       cam.position.x += Math.sin(time * 71) * s;
       cam.position.y += Math.sin(time * 53 + 1) * s;

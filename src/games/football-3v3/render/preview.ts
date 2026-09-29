@@ -115,7 +115,7 @@ export class StarPreview {
       const angle = this.turntable.rotation.y;
       const front = Math.round(angle / (Math.PI * 2)) * Math.PI * 2;
       this.turntable.rotation.y = celebrating !== null ? angle + (front - angle) * (1 - Math.exp(-dt * 6)) : angle + dt * 0.8;
-      const scene: PoseScene = { phase: "live", phaseT: t, offense: shown.team, ball: BALL, winner: null, center: false, kicker: null };
+      const scene: PoseScene = { phase: "live", phaseT: t, offense: shown.team, ball: BALL, winner: null, center: false, kicker: null, ceremonyT: null };
       this.figure.update(still(shown.build, shown.team, celebrating), scene, dt, now / 1000);
       this.renderer.render(this.scene, this.camera);
     }

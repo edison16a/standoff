@@ -55,7 +55,7 @@ export class Squad {
     const kicker = view.kick?.kicker ?? null;
     const scene: PoseScene = {
       phase: view.phase, phaseT: view.phaseT, offense: view.drive.offense, ball: view.ball,
-      winner: view.winner, center: false, kicker,
+      winner: view.winner, center: false, kicker, ceremonyT: view.ceremony?.t ?? null,
     };
     let targeted: AthleteView | null = null;
     for (const a of view.athletes) {

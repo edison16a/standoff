@@ -13,7 +13,7 @@ import { TACKLE } from "../../engine/tuning";
 const body = { phase: 0.25, build: 0.3, time: 1, seed: 1 };
 
 function scene(v = freshView()): PoseScene {
-  return { phase: "live", phaseT: 1, offense: 0, ball: v.ball, winner: null, center: false, kicker: null };
+  return { phase: "live", phaseT: 1, offense: 0, ball: v.ball, winner: null, center: false, kicker: null, ceremonyT: null };
 }
 
 function player(over: Partial<AthleteView> = {}): AthleteView {
