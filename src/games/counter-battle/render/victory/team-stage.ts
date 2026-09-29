@@ -28,6 +28,10 @@ const SPACING = 1.3;
 const TURN_IN = 0.28;
 /** The stage the team stands on. */
 export const STAGE = { radius: 1.9, height: 0.32 };
+/** How far left of the middle the team stands, as a share of the screen's width, leaving the bottom right corner to the results. */
+export const SHIFT = 0.12;
+/** The cup's size, and how far its base sits over the lifting wrist, on top of the fist. */
+export const CUP = { scale: 1.25, aboveWrist: 0.07 };
 
 /**
  * The winners side by side across the middle, top scorer first. That one
@@ -43,13 +47,13 @@ export function standSpots(count: number): StandSpot[] {
 
 /**
  * The circling shot round the team: back far enough that the cup held
- * overhead stays under the names across the top, swinging a little
- * either way.
+ * overhead stays under the names across the top and everyone's boots
+ * stay in the picture, swinging a little either way.
  */
 export function teamShot(count: number): Partial<OrbitShot> {
   // One winner's name is bigger, so their subtitle sits lower and the camera looks higher to bring the cup under it.
   const solo = count === 1;
-  return { centre: { x: 0, y: STAGE.height, z: 0 }, radius: solo ? 7.3 : 7.1, height: 1.55, lookHeight: solo ? 2.25 : 2.05, startAngle: 0, speed: 0.12, arc: 0.35, introS: 2.4, pullBack: 1.45, rise: 1.6, bob: 0.12 };
+  return { centre: { x: 0, y: STAGE.height, z: 0 }, radius: solo ? 8.3 : 7.5, height: 1.55, lookHeight: solo ? 2.3 : 2.05, startAngle: 0, speed: 0.12, arc: 0.35, introS: 2.4, pullBack: 1.45, rise: 1.6, bob: 0.12 };
 }
 
 /** A seeded 0 to 1 random source, so the paint lands the same way every time. */

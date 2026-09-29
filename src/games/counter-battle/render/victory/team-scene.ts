@@ -11,7 +11,7 @@ import { Splats } from "../effects/splats";
 import { buildCharacter, type CharacterModel } from "../models/character";
 import { buildGun, type GunModel } from "../models/guns";
 import { paintTheScene } from "./team-paint";
-import { celebrating, STAGE, standSpots, teamShot, type StandSpot } from "./team-stage";
+import { celebrating, CUP, SHIFT, STAGE, standSpots, teamShot, type StandSpot } from "./team-stage";
 
 /** One winner as the results know them. */
 export interface TeamWinner {
@@ -31,10 +31,6 @@ interface Member {
 }
 
 const NO_PUSH = { x: 0, z: -1 };
-/** How far left of the middle the team stands, as a share of the screen's width. */
-const SHIFT = 0.12;
-/** The cup's base sits this far over the wrist, on top of the fist. */
-const ABOVE_WRIST = 0.07;
 
 /**
  * The winning team together on a low stage, spattered with paint from
@@ -65,7 +61,7 @@ export class TeamScene {
     this.room.scene.add(createPedestal({ radius: STAGE.radius, height: STAGE.height, colour: "#231b3b" }), this.floor.mesh, this.team, this.cup);
     // The fighters stand on the stage; the animator places each on the floor of this group.
     this.team.position.y = STAGE.height;
-    this.cup.scale.setScalar(1.25);
+    this.cup.scale.setScalar(CUP.scale);
     const spots = standSpots(winners.length);
     winners.forEach((w, i) => {
       const model = buildCharacter(w.character, { team: own.color, dark: own.dark, player: w.colour });
@@ -112,7 +108,7 @@ export class TeamScene {
     if (lifter) {
       lifter.model.rig.handL.getWorldPosition(this.wrist);
       this.cup.position.copy(this.wrist);
-      this.cup.position.y += ABOVE_WRIST;
+      this.cup.position.y += CUP.aboveWrist;
     }
     this.floor.update(time);
   }

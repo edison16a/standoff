@@ -1,14 +1,46 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
+import { orbitPose, type OrbitShot } from "@/games/kit/victory";
 import { CHARACTER_IDS } from "../../roster";
 import { Animator } from "../anim/animator";
 import { liftTrophy } from "../anim/victory";
 import { buildCharacter } from "../models/character";
 import { buildGun } from "../models/guns";
-import { celebrating, floorSplats, STAGE, standSpots } from "./team-stage";
+import { celebrating, CUP, floorSplats, SHIFT, STAGE, standSpots, teamShot } from "./team-stage";
 
 const COLOURS = { team: "#ff3fc8", dark: "#6d0d56", player: "#2ed573" };
 const at = (o: THREE.Object3D) => new THREE.Vector3().setFromMatrixPosition(o.matrixWorld);
+/** The kit's cup is this tall before it is scaled. */
+const CUP_HEIGHT = 0.41;
+
+/**
+ * The top of the lifted cup and the lifter's boots on screen over a long
+ * look, as device coordinates (1 the top edge, -1 the bottom), through
+ * the victory room's lens on a 16:9 screen, after the opening.
+ */
+function framing(character: (typeof CHARACTER_IDS)[number], count: number): { cup: number; boots: number } {
+  const model = buildCharacter(character, COLOURS);
+  const animator = new Animator(model.rig, buildGun("smg", COLOURS.team), character, 1, null);
+  const spot = standSpots(count)[0]!;
+  const camera = new THREE.PerspectiveCamera(34, 16 / 9, 0.1, 120);
+  camera.setViewOffset(1, 1, SHIFT, 0, 1, 1);
+  const shot = { ...teamShot(count) } as OrbitShot;
+  const seen = { cup: -1, boots: 1 };
+  for (let i = 0; i < 30 * 30; i++) {
+    const t = i / 30;
+    animator.update(celebrating("smg", spot, t), 1 / 30, { x: 0, z: -1 }, liftTrophy(character, t));
+    if (t < shot.introS) continue;
+    model.rig.root.updateMatrixWorld(true);
+    const { position: p, target: look } = orbitPose(shot, t);
+    camera.position.set(p.x, p.y, p.z);
+    camera.lookAt(look.x, look.y, look.z);
+    camera.updateMatrixWorld();
+    const cup = at(model.rig.handL).add(new THREE.Vector3(0, STAGE.height + CUP.aboveWrist + CUP_HEIGHT * CUP.scale, 0));
+    seen.cup = Math.max(seen.cup, cup.project(camera).y);
+    seen.boots = Math.min(seen.boots, new THREE.Vector3(spot.x, STAGE.height, spot.z).project(camera).y);
+  }
+  return seen;
+}
 
 describe("the winners' stage", () => {
   it("stands one winner in the middle with the trophy", () => {
@@ -57,6 +89,18 @@ describe("the winners' stage", () => {
       model.rig.root.updateMatrixWorld(true);
       expect(at(model.rig.handL).y).toBeGreaterThan(at(model.rig.head).y + 0.15);
       expect(at(model.rig.handR).distanceTo(at(gun.root))).toBeLessThan(0.05);
+    });
+  }
+
+  for (const character of CHARACTER_IDS) {
+    it(`${character}: keeps the lifted cup under the names and the boots in the picture, alone or with a teammate`, () => {
+      // One winner's name is bigger, so the names reach further down: to about 38% of the screen, or 33% for a team.
+      const alone = framing(character, 1);
+      expect(alone.cup).toBeLessThan(0.2);
+      expect(alone.boots).toBeGreaterThan(-0.96);
+      const team = framing(character, 2);
+      expect(team.cup).toBeLessThan(0.3);
+      expect(team.boots).toBeGreaterThan(-0.96);
     });
   }
 });
