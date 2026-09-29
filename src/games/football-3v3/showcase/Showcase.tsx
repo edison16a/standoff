@@ -7,6 +7,7 @@ import { Scoreboard } from "../render/hud/Scoreboard";
 import { scoreboard, type Board } from "../render/hud/board";
 import { isLabMove, labView } from "./lab";
 import { ShowcaseScene } from "./scene";
+import { STILLS } from "./stills";
 
 /**
  * Football 3v3 playing itself: a seeded match of computer players under
@@ -32,12 +33,21 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     const params = new URLSearchParams(window.location.search);
     const quality = params.get("quality");
     const renderer = new MatchRenderer(canvas, { quality: quality === "low" || quality === "high" ? quality : "film", scale: view === "loop" ? 0.8 : 1 });
-    const scene = new ShowcaseScene(Number(params.get("seed") ?? 11), Number(params.get("seek") ?? 0));
+    // The icon and poster are frozen moments of the same game; the loop plays it.
+    const still = STILLS[view] ?? null;
+    const scene = new ShowcaseScene(Number(params.get("seed") ?? 11), Number(params.get("seek") ?? still?.seek ?? 0));
     const lab = params.get("lab");
     const cam = params.get("cam")?.split(",").map(Number);
+    const shot = still?.camera?.(scene.view);
     if (cam && cam.length === 7) renderer.director.setFixed(new THREE.Vector3(cam[0], cam[1], cam[2]), new THREE.Vector3(cam[3], cam[4], cam[5]), cam[6]!);
     else if (isLabMove(lab)) renderer.director.setFixed(new THREE.Vector3(-9, 1.6, 0), new THREE.Vector3(0, 0.9, 0), 55);
-    const fit = () => renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
+    else if (shot) renderer.director.setFixed(shot.pos, shot.look, shot.fov);
+    // A frozen still is drawn once per size, not on every tick of the capture tool's clock.
+    let draws = 1;
+    const fit = () => {
+      renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
+      draws = 1;
+    };
     fit();
     const observer = new ResizeObserver(fit);
     observer.observe(canvas);
@@ -48,6 +58,13 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
       if (first < 0) first = now;
       if (isLabMove(lab)) {
         renderer.draw(labView(scene.view, lab, (now - first) / 1000), now);
+      } else if (still) {
+        if (draws > 0) {
+          // Ease every body into its pose for the moment before the one picture is taken.
+          renderer.settle(scene.view, now, 1.5);
+          renderer.draw(scene.view, now);
+          draws--;
+        }
       } else {
         for (const event of scene.tick(now)) renderer.onEvent(event);
         renderer.draw(scene.view, now);
