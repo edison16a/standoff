@@ -1,4 +1,5 @@
 import { brake, footPoint } from "./athlete";
+import { foulRisk, recovery, stealReach, tackleEdge } from "./build-effects";
 import { commitFoul } from "./foul";
 import type { Athlete, MatchState } from "./types";
 import { clamp, dist, dot, fromAngle, len, norm, sub, type Vec2 } from "./vec";
@@ -50,7 +51,7 @@ export function startSteal(state: MatchState, a: Athlete): void {
   a.actionDir = dir;
   a.facing = Math.atan2(dir.z, dir.x);
   a.vel = { x: dir.x * STEAL.lunge, z: dir.z * STEAL.lunge };
-  a.defendWait = STEAL.wait;
+  a.defendWait = STEAL.wait * recovery(a);
   a.slideDone = false;
 }
 
@@ -61,13 +62,13 @@ export function updateSteal(state: MatchState, a: Athlete, before: number, dt: n
   const owner = state.ball.owner;
   const victim = owner?.kind === "athlete" ? state.athletes[owner.id] : undefined;
   const boot = { x: a.pos.x + a.actionDir.x * 0.7, z: a.pos.z + a.actionDir.z * 0.7 };
-  if (!victim || victim.team === a.team || victim.action === "hurdle" || dist(boot, state.ball.pos) > STEAL.reach) {
+  if (!victim || victim.team === a.team || victim.action === "hurdle" || dist(boot, state.ball.pos) > STEAL.reach * stealReach(a)) {
     a.actionLen += STEAL.missPenalty;
     return;
   }
   const behind = Math.max(0, dot(a.actionDir, fromAngle(victim.facing)));
   const chance = clamp(
-    0.44 + 0.45 * (a.strength - victim.strength) - 0.4 * (victim.dribbling - 0.75) - 0.3 * behind + (a.guard.on ? 0.12 : 0) - (victim.action === "skill" ? 0.25 : 0),
+    0.44 + tackleEdge(a, victim) - 0.4 * (victim.attrs.dribbling - 0.75) - 0.3 * behind + (a.guard.on ? 0.12 : 0) - (victim.action === "skill" ? 0.25 : 0),
     0.08,
     0.82,
   );
@@ -85,7 +86,7 @@ export function updateSteal(state: MatchState, a: Athlete, before: number, dt: n
     return;
   }
   // Through the back of him, or clumsy and late: the referee may see it.
-  const foul = 0.08 + 0.32 * behind + 0.08 * Math.max(0, victim.strength - a.strength);
+  const foul = (0.08 + 0.32 * behind + 0.08 * Math.max(0, victim.attrs.strength - a.attrs.strength)) * foulRisk(a);
   if (state.rng.chance(foul)) return commitFoul(state, a, victim, "steal");
   a.actionLen += STEAL.missPenalty;
   state.events.push({ type: "steal", athlete: a.id, victim: victim.id, won: false });
@@ -96,7 +97,7 @@ export function startJump(state: MatchState, a: Athlete): void {
   a.action = "jump";
   a.actionT = 0;
   a.actionLen = JUMP.length;
-  a.defendWait = JUMP.wait;
+  a.defendWait = JUMP.wait * recovery(a);
   a.charging = false;
   state.events.push({ type: "jump", athlete: a.id });
   // Leaping into a dribbler at close range is a foul now and then.

@@ -1,6 +1,6 @@
 import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { Entrant } from "../engine/match";
-import { CHARACTER_IDS, type CharacterId } from "../roster";
+import { BUILD_IDS, type BuildId } from "../builds";
 import type { TeamId } from "../teams";
 import { ROLES, slotFor, type Role } from "../roles";
 
@@ -8,7 +8,7 @@ export const TEAM_SIZE = 3;
 
 export interface SeatState {
   connected: boolean;
-  pick: CharacterId | null;
+  pick: BuildId | null;
   ready: boolean;
   team: TeamId | null;
   /** The place the host gave them in the side. */
@@ -21,10 +21,11 @@ export interface LineupEntry extends Entrant {
 }
 
 /**
- * Who is in the room, which star each picked, and which side the host
- * put them on. Each star can be taken by one player only. A phone that
- * drops keeps its choices for when it comes back, but while it is away
- * its star is free for someone else. Computer players fill the empty
+ * Who is in the room, which build each picked, and which side the host
+ * put them on. Each build can be taken by one player only, so the six
+ * on the pitch are always different. A phone that drops keeps its
+ * choices for when it comes back, but while it is away its build is
+ * free for someone else. Computer players fill the empty
  * places unless the host turns them off; then the sides are just the
  * people, and one side may have more than the other.
  */
@@ -47,7 +48,7 @@ export class Lobby {
   connect(seat: number): void {
     const state = this.state(seat);
     state.connected = true;
-    // Someone else took this star while the phone was away.
+    // Someone else took this build while the phone was away.
     if (state.pick && this.taken(seat).includes(state.pick)) {
       state.pick = null;
       state.ready = false;
@@ -60,10 +61,10 @@ export class Lobby {
     this.state(seat).connected = false;
   }
 
-  /** Refused (false) when another player already has that star. */
-  pick(seat: number, character: CharacterId): boolean {
-    if (this.taken(seat).includes(character)) return false;
-    this.state(seat).pick = character;
+  /** Refused (false) when another player already has that build. */
+  pick(seat: number, build: BuildId): boolean {
+    if (this.taken(seat).includes(build)) return false;
+    this.state(seat).pick = build;
     return true;
   }
 
@@ -115,9 +116,9 @@ export class Lobby {
     state.role = ROLES.find((r) => !used.has(r)) ?? null;
   }
 
-  /** Stars held by connected players other than `seat`. */
-  taken(seat: number): CharacterId[] {
-    const out: CharacterId[] = [];
+  /** Builds held by connected players other than `seat`. */
+  taken(seat: number): BuildId[] {
+    const out: BuildId[] = [];
     for (const [other, s] of this.seats) if (other !== seat && s.connected && s.pick) out.push(s.pick);
     return out;
   }
@@ -150,10 +151,15 @@ export class Lobby {
     return [...this.seats.entries()].filter(([, s]) => s.connected).map(([seat]) => seat).sort((a, b) => a - b);
   }
 
-  /** Stars nobody picked, in roster order, for the computer players. */
-  spareStars(): CharacterId[] {
-    const used = new Set([...this.seats.values()].filter((s) => s.connected && s.pick).map((s) => s.pick));
-    return CHARACTER_IDS.filter((id) => !used.has(id));
+  /**
+   * Builds for the computer players: first those nobody picked, then
+   * those held by someone who is not in this match, so no two on the
+   * pitch ever share a build.
+   */
+  spareBuilds(): BuildId[] {
+    const held = new Set([...this.seats.values()].filter((s) => s.connected && s.pick).map((s) => s.pick));
+    const playing = new Set(this.players.map((seat) => this.seats.get(seat)!.pick));
+    return [...BUILD_IDS.filter((id) => !held.has(id)), ...BUILD_IDS.filter((id) => held.has(id) && !playing.has(id))];
   }
 
   setBots(on: boolean): void {
@@ -177,22 +183,22 @@ export class Lobby {
 
   /**
    * The line up: each side's players in the roles the host gave them,
-   * then computer players in the stars nobody picked filling the other
+   * then computer players in the builds nobody picked filling the other
    * roles, up to three a side when they are on. Each side is listed in
    * the order of its places on the pitch, which is how the match hands
    * them out. The keepers are always the computer's.
    */
   lineup(): LineupEntry[] {
-    const spare = this.spareStars();
+    const spare = this.spareBuilds();
     const out: LineupEntry[] = [];
     for (const team of [0, 1] as const) {
       const humans = this.players.filter((seat) => this.seats.get(seat)!.team === team).slice(0, TEAM_SIZE);
       const side: LineupEntry[] = humans.map((seat) => {
         const s = this.seats.get(seat)!;
-        return { team, character: s.pick!, seat, role: s.role ?? "striker" };
+        return { team, build: s.pick!, seat, role: s.role ?? "striker" };
       });
       if (this.bots) {
-        for (const role of ROLES) if (!side.some((e) => e.role === role)) side.push({ team, character: spare.shift() ?? "echeverri", seat: null, role });
+        for (const role of ROLES) if (!side.some((e) => e.role === role)) side.push({ team, build: spare.shift() ?? "allrounder", seat: null, role });
       }
       side.sort((x, y) => slotFor(team, x.role) - slotFor(team, y.role) || (x.seat ?? 99) - (y.seat ?? 99));
       out.push(...side);
@@ -201,6 +207,6 @@ export class Lobby {
   }
 
   entrants(): Entrant[] {
-    return this.lineup().map(({ team, character, seat }) => ({ team, character, seat }));
+    return this.lineup().map(({ team, build, seat }) => ({ team, build, seat }));
   }
 }

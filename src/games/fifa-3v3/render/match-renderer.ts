@@ -5,6 +5,7 @@ import type { MatchView } from "../engine/view";
 import { TEAMS } from "../teams";
 import { Arena } from "./arena/arena";
 import { CameraDirector, type Shot } from "./camera/director";
+import { CeremonyScene } from "./ceremony/ceremony-scene";
 import { Effects } from "./effects/effects";
 import { AimLine } from "./figures/aim-line";
 import { AimMarker } from "./figures/aim-marker";
@@ -43,6 +44,9 @@ export class MatchRenderer {
   private readonly refMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.62, metalness: 0.02 });
   private readonly aim = new AimLine();
   private readonly marker = new AimMarker();
+  private readonly ceremony = new CeremonyScene();
+  private readonly handL = new THREE.Vector3();
+  private readonly handR = new THREE.Vector3();
   private markerAt: { x: number; y: number; z: number } | null = null;
   private readonly environment: THREE.Texture;
   private last = 0;
@@ -68,7 +72,7 @@ export class MatchRenderer {
     this.ball = new BallModel(this.arena.glow);
     this.squad = new Squad(this.arena.glow);
     this.referee = new RefereeFigure(this.refMaterial);
-    this.scene.add(this.arena.group, this.effects.group, this.ball.group, this.squad.group, this.referee.group, this.aim.group, this.marker.group);
+    this.scene.add(this.arena.group, this.effects.group, this.ball.group, this.squad.group, this.referee.group, this.aim.group, this.marker.group, this.ceremony.group);
   }
 
   /** The replay's target on the goal, shown through the strike, or null to hide it. */
@@ -134,9 +138,12 @@ export class MatchRenderer {
     this.last = nowMs;
     const time = nowMs / 1000;
     this.squad.update(view, dt, time, tags && shot !== "replay-kicker" && shot !== "replay-keeper");
+    const captain = view.ceremony?.captain ?? null;
+    const holding = captain !== null && this.squad.hands(captain, this.handL, this.handR);
+    this.ceremony.update(view.ceremony, holding ? this.handL : null, holding ? this.handR : null, dt, time);
     this.marker.update(this.markerAt, time);
-    // No referee on the lobby's kick about.
-    this.referee.group.visible = shot !== "lobby";
+    // No referee on the lobby's kick about, and he leaves the trophy to the players.
+    this.referee.group.visible = shot !== "lobby" && !view.ceremony;
     this.referee.update(view.referee, view.ball, dt, time);
     this.aim.update(view.setPiece, time);
     this.ball.update(view.ball, dt);
@@ -155,6 +162,7 @@ export class MatchRenderer {
   }
 
   dispose(): void {
+    this.ceremony.dispose();
     this.squad.dispose();
     this.referee.dispose();
     this.refMaterial.dispose();

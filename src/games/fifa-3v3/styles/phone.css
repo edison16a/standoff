@@ -1,5 +1,5 @@
 /*
-  Soccer 3v3 on the phone: picking a star and getting ready. Built for the
+  Soccer 3v3 on the phone: picking a build and getting ready. Built for the
   phone held sideways, and still usable upright.
 */
 
@@ -24,34 +24,52 @@
   font-size: 22px;
 }
 
-/* Sideways the stats pair up and the roster is one tight grid, so the pick fits one short screen. */
+/* Sideways the ratings pair up and the builds are one tight grid, so the pick fits one short screen. */
 @media (orientation: landscape) and (max-height: 500px) {
   .fifa-phone .kit-steps__title {
     font-size: 18px;
   }
 
+  .fifa-phone .fifa-pick__side {
+    gap: 6px;
+  }
+
   .fifa-phone .fifa-pick__stats {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 4px 14px;
+    gap: 0 14px;
   }
 
   .fifa-phone .fifa-stat {
-    grid-template-columns: 64px minmax(0, 1fr) 22px;
+    grid-template-columns: 66px minmax(0, 1fr) 20px;
     gap: 6px;
-    font-size: 12px;
+    font-size: 10.5px;
+    line-height: 1.25;
+  }
+
+  .fifa-phone .fifa-stat__bar {
+    height: 6px;
   }
 
   .fifa-phone .fifa-pick__list {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
   }
 
   .fifa-phone .fifa-pick__card {
-    padding: 3px 6px;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 4px 7px;
   }
 
   .fifa-phone .fifa-pick__number {
     font-size: 15px;
+  }
+
+  .fifa-phone .fifa-pick__caption span {
+    font-size: 11px;
   }
 
   .fifa-phone .fifa-pick__stage {
@@ -59,7 +77,7 @@
   }
 }
 
-/* The picker: the star in 3D beside their stats and the roster. */
+/* The picker: the build in 3D beside its ratings and the six builds. */
 
 .fifa-pick,
 .fifa-ready {
@@ -123,7 +141,7 @@
 .fifa-pick__stats {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 3px;
 }
 
 .fifa-stat {
@@ -135,8 +153,22 @@
 }
 
 .fifa-stat__label {
+  overflow: hidden;
   font-weight: 700;
   color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The two ratings a build is made around stand out from the rest. */
+.fifa-stat--lead .fifa-stat__label,
+.fifa-stat--lead .fifa-stat__value {
+  color: var(--text);
+  font-weight: 900;
+}
+
+.fifa-stat--lead .fifa-stat__bar {
+  box-shadow: 0 0 0 1px var(--accent);
 }
 
 .fifa-stat__bar {
@@ -166,9 +198,10 @@
   text-align: right;
 }
 
+/* Two rows of three, wide enough that every build's name reads in full. */
 .fifa-pick__list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -204,14 +237,19 @@
   line-height: 1;
 }
 
+/* A long name like Sweeper Keeper wraps onto a second line rather than being cut short. */
 .fifa-pick__name {
+  display: -webkit-box;
   overflow: hidden;
+  min-width: 0;
   max-width: 100%;
   font-size: 11px;
   font-weight: 900;
-  letter-spacing: 0.04em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .fifa-pick__taken {

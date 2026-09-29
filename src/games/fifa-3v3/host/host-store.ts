@@ -1,9 +1,10 @@
 import { create } from "zustand";
 import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { Role } from "../roles";
-import type { CharacterId } from "../roster";
+import type { BuildId } from "../builds";
 import type { RoomPhase } from "../protocol";
 import type { TeamId } from "../teams";
+import type { CeremonyCard } from "./ceremony-card";
 import type { StrikeFacts } from "./replay-facts";
 import type { ReplayStage } from "./replay-script";
 
@@ -11,7 +12,7 @@ export interface SeatView {
   seat: number;
   name: string;
   connected: boolean;
-  pick: CharacterId | null;
+  pick: BuildId | null;
   ready: boolean;
   team: TeamId | null;
   role: Role | null;
@@ -20,7 +21,7 @@ export interface SeatView {
 /** A computer player filling a place in the lobby's team columns. */
 export interface BotView {
   team: TeamId;
-  character: CharacterId;
+  build: BuildId;
   role: Role;
 }
 
@@ -55,8 +56,8 @@ export interface ResultRow {
   id: number;
   team: TeamId;
   name: string;
-  /** The star played, or null for a keeper. */
-  character: CharacterId | null;
+  /** The build played, or null for a computer keeper in goal. */
+  build: BuildId | null;
   seat: number | null;
   goals: number;
   shots: number;
@@ -90,9 +91,11 @@ export interface FifaHostState {
   replayCard: ReplayCard | null;
   skip: SkipView[];
   winner: TeamId | null;
+  /** The trophy ceremony's names and where it is, once the scene has cut to it. */
+  ceremony: CeremonyCard | null;
   results: ResultRow[];
   /** Phones' players in the match, for the strip along the bottom. */
-  roster: { id: number; seat: number; name: string; team: TeamId; character: CharacterId; hasBall: boolean; away: boolean }[];
+  roster: { id: number; seat: number; name: string; team: TeamId; build: BuildId; hasBall: boolean; away: boolean }[];
 }
 
 export const useFifaStore = create<FifaHostState>(() => ({
@@ -110,6 +113,7 @@ export const useFifaStore = create<FifaHostState>(() => ({
   replayCard: null,
   skip: [],
   winner: null,
+  ceremony: null,
   results: [],
   roster: [],
 }));

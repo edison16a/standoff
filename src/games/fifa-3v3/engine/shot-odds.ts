@@ -7,8 +7,10 @@ export interface ShotContext {
   distance: number;
   /** Radians off straight on, see shotAngle. */
   angle: number;
-  /** The shooter's shooting stat, 0 to 1. */
+  /** The shooter's finishing, 0 to 1. */
   shooting: number;
+  /** The shooter's shot power, 0 to 1. A big striker's full strike is harder to stop and to hold. */
+  strike?: number;
   /** 0 with nobody near, 1 with a defender right on the shooter. */
   pressure: number;
   /** 0 with the keeper set in position, 1 with the keeper stranded or on the floor. */
@@ -58,10 +60,11 @@ export function shotOdds(c: ShotContext): Odds {
   const onTarget = Math.max(0.2, 1 - over - woodwork - wide);
   // Placing it in the open corner pays off only when the shot goes where it was aimed.
   const aimed = 0.1 * (c.placement ?? 0) * (1 - spread);
-  const goalShare = c.beaten ? 1 : clamp(0.36 * quality + 0.25 * c.keeperOff + 0.12 * c.power + aimed, 0.05, 0.85);
+  const heavy = ((c.strike ?? 0.75) - 0.75) * c.power;
+  const goalShare = c.beaten ? 1 : clamp(0.36 * quality + 0.25 * c.keeperOff + 0.12 * c.power + 0.2 * heavy + aimed, 0.05, 0.85);
   const goal = onTarget * goalShare;
   const save = onTarget - goal;
-  const parry = clamp(0.2 + 0.45 * c.power, 0.15, 0.7);
+  const parry = clamp(0.2 + 0.45 * c.power + 0.3 * heavy, 0.15, 0.75);
   const total = goal + save + woodwork + over + wide;
   return {
     goal: goal / total,

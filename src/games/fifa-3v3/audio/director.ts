@@ -1,4 +1,5 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
+import { CEREMONY } from "../engine/ceremony";
 import type { MatchEvent } from "../engine/events";
 import { Music } from "./music";
 import { Sfx } from "./sfx";
@@ -21,6 +22,8 @@ export class SoundDirector {
   readonly sfx: Sfx;
   readonly music: Music;
   private later: ReturnType<typeof setTimeout> | null = null;
+  /** The cup was up at the last look, so its moment sounds once. */
+  private cupUp = false;
 
   constructor(private readonly engine: AudioEngine) {
     this.sfx = new Sfx(engine);
@@ -99,14 +102,13 @@ export class SoundDirector {
         this.sfx.tackle(event.won);
         break;
       case "fulltime":
+        // The fanfare, then quiet under the ceremony until the cup goes up (see trophy).
         this.music.fanfare();
         this.cancelLater();
-        // The results get the beach tune back once the fanfare has rung out.
         this.later = setTimeout(() => {
           this.later = null;
-          this.engine.setLevels(LOBBY_LEVELS);
-          this.music.play("lobby");
-        }, 4500);
+          this.music.play(null);
+        }, 3000);
         break;
       case "miss":
       case "skillResult":
@@ -124,6 +126,25 @@ export class SoundDirector {
 
   firework(): void {
     this.sfx.firework();
+  }
+
+  /** Every frame with the ceremony's clock, or null outside it: the moment the cup goes up sounds once. */
+  ceremony(t: number | null): void {
+    const up = t !== null && t >= CEREMONY.up;
+    if (up && !this.cupUp) this.trophy();
+    this.cupUp = up;
+  }
+
+  /** The cup goes up: the big chord and a volley of fireworks, then the beach tune for the stats. */
+  private trophy(): void {
+    this.cancelLater();
+    this.music.trophySting();
+    for (const ms of [0, 220, 520]) setTimeout(() => this.sfx.firework(), ms);
+    this.later = setTimeout(() => {
+      this.later = null;
+      this.engine.setLevels(LOBBY_LEVELS);
+      this.music.play("lobby");
+    }, 3200);
   }
 
   private cancelLater(): void {

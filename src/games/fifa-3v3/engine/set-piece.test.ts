@@ -8,12 +8,12 @@ import { MATCH, PITCH, STEP } from "./tuning";
 import type { Command, MatchState, SetPiece } from "./types";
 
 const LINEUP: Entrant[] = [
-  { team: 0, character: "echeverri", seat: 1 },
-  { team: 0, character: "brandao", seat: null },
-  { team: 0, character: "okemba", seat: null },
-  { team: 1, character: "holmvik", seat: null },
-  { team: 1, character: "lacerda", seat: null },
-  { team: 1, character: "serrano", seat: null },
+  { team: 0, build: "playmaker", seat: 1 },
+  { team: 0, build: "striker", seat: null },
+  { team: 0, build: "allrounder", seat: null },
+  { team: 1, build: "keeper", seat: null },
+  { team: 1, build: "winger", seat: null },
+  { team: 1, build: "defender", seat: null },
 ];
 
 /** A set piece for Red, whose first player is a phone, fouled at a spot. */
@@ -92,7 +92,7 @@ describe("free kick", () => {
   it("stands the taker off to the side of his kicking foot, so the run comes in at an angle", () => {
     const state = setPiece("free", { x: PITCH.halfLength - 18, z: 0 });
     const taker = state.athletes[state.setPiece!.taker]!;
-    // Echeverri is left footed and Red attacks +x, so his right is +z.
+    // The Playmaker is left footed and Red attacks +x, so his right is +z.
     expect(taker.pos.x).toBeLessThan(state.setPiece!.spot.x - 1.5);
     expect(taker.pos.z).toBeGreaterThan(0.8);
   });

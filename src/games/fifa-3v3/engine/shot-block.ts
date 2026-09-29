@@ -1,8 +1,9 @@
+import { blockLane, blockSharpness } from "./build-effects";
 import { JUMP } from "./defend";
 import type { Athlete, MatchState } from "./types";
 import { clamp, clamp01, type Vec3 } from "./vec";
 
-/** How far to the side of the ball's line a defender can still throw a leg or the body in. */
+/** How far to the side of the ball's line an ordinary defender can still throw a leg or the body in. Reach stretches it. */
 const REACH = 0.95;
 /** The nearest and furthest along the line a block can happen, in metres from the ball. */
 const NEAR = 1.1;
@@ -21,7 +22,8 @@ export interface BlockPlan {
  * Every opponent near the line from the ball to the target gets a roll:
  * the more central in the lane, the closer to the shooter and the harder
  * the chance (a low quality shot through a crowd), the likelier the
- * block. The ball is then struck at the body, and blockers.ts bounces it
+ * block. Long reach widens the lane a body covers, and quick reflexes
+ * get it there more often. The ball is then struck at the body, and blockers.ts bounces it
  * off with real physics.
  */
 export function planBlock(state: MatchState, shooter: Athlete, from: Vec3, target: Vec3, quality: number, speed: number): BlockPlan | null {
@@ -41,11 +43,12 @@ export function planBlock(state: MatchState, shooter: Athlete, from: Vec3, targe
     // Solving the kick needs the body to be ahead along the pitch, not level with the ball.
     if (Math.abs(o.pos.x - from.x) < 0.9) continue;
     const across = rx * uz - rz * ux;
-    if (Math.abs(across) > REACH) continue;
+    const reach = REACH * blockLane(o);
+    if (Math.abs(across) > reach) continue;
     // Central in the lane and close to the boot gives the defender the most time and the biggest target.
-    const lane = 1 - Math.abs(across) / REACH;
+    const lane = 1 - Math.abs(across) / reach;
     const close = 1 - (along - NEAR) / (FAR - NEAR);
-    const chance = clamp01(lane * (0.25 + 0.55 * (1 - quality)) * (0.55 + 0.45 * close) + (o.action === "jump" ? 0.15 : 0));
+    const chance = clamp01(lane * (0.25 + 0.55 * (1 - quality)) * (0.55 + 0.45 * close) * blockSharpness(o) + (o.action === "jump" ? 0.15 : 0));
     if (!state.rng.chance(chance)) continue;
     if (!best || along < best.along) best = { a: o, along, across };
   }

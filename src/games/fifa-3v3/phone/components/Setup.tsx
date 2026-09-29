@@ -1,7 +1,7 @@
 "use client";
 import { lazy, Suspense } from "react";
 import { StepShell } from "@/games/kit/steps/StepShell";
-import { ROSTER } from "../../roster";
+import { BUILDS } from "../../builds";
 import { TEAMS } from "../../teams";
 import { usePhoneStore } from "../phone-store";
 import { PickStep } from "./PickStep";
@@ -9,14 +9,14 @@ import { usePhone } from "./session-context";
 
 const Preview = lazy(() => import("./PreviewCanvas"));
 
-const STEPS = ["Star", "Ready"] as const;
-const INDEX = { star: 0, ready: 1 } as const;
-const TITLES = { star: "Pick your star", ready: "Ready to play" } as const;
+const STEPS = ["Build", "Ready"] as const;
+const INDEX = { build: 0, ready: 1 } as const;
+const TITLES = { build: "Pick your build", ready: "Ready to play" } as const;
 
 function ReadyStep() {
   const host = usePhoneStore((s) => s.host);
   if (!host || !host.pick) return null;
-  const star = ROSTER[host.pick];
+  const build = BUILDS[host.pick];
   const team = host.team !== null ? TEAMS[host.team] : null;
   const matchOn = host.phase !== "lobby" && !host.playing;
   const note = matchOn
@@ -27,16 +27,18 @@ function ReadyStep() {
         ? `You are on ${team.name}. The match starts from the big screen.`
         : "You are in. The host is picking the teams.";
   return (
-    <div className="fifa-ready" style={{ "--kit": star.look.kit.shirt, "--team": team?.color ?? "#94a3b8" } as React.CSSProperties}>
+    <div className="fifa-ready" style={{ "--kit": build.look.kit.shirt, "--team": team?.color ?? "#94a3b8" } as React.CSSProperties}>
       <div className="fifa-ready__stage">
         <Suspense fallback={null}>
-          <Preview character={host.pick} />
+          <Preview build={host.pick} name={host.name} />
         </Suspense>
       </div>
       <div className="fifa-ready__side">
         <div className="fifa-ready__card">
-          <strong>{star.name}</strong>
-          <span>Number {star.number}</span>
+          <strong>{host.name || "You"}</strong>
+          <span>
+            {build.name}, number {build.number}
+          </span>
         </div>
         <div className={`fifa-ready__team ${team ? "fifa-ready__team--on" : ""}`}>{team ? `${team.name} team` : "No team yet"}</div>
         <p className={`fifa-ready__note ${host.ready ? "fifa-ready__note--on" : ""}`}>{note}</p>
@@ -47,8 +49,9 @@ function ReadyStep() {
 }
 
 /**
- * The phone's setup, one step per page in the kit's frame: pick a star,
- * then say ready. The platform already asked for a name before this.
+ * The phone's setup, one step per page in the kit's frame: pick a build,
+ * then say ready. The platform already asked for a name before this, and
+ * that name is who the player is on the pitch.
  */
 export function Setup() {
   const phone = usePhone();
@@ -58,13 +61,13 @@ export function Setup() {
   const ready = host?.ready ?? false;
 
   const footer =
-    step === "star" ? (
+    step === "build" ? (
       <button type="button" className="btn btn--primary btn--lg kit-grow" disabled={!confirmed} onClick={() => phone.goTo("ready")}>
         Next
       </button>
     ) : (
       <>
-        <button type="button" className="btn btn--ghost btn--lg" disabled={ready} onClick={() => phone.goTo("star")}>
+        <button type="button" className="btn btn--ghost btn--lg" disabled={ready} onClick={() => phone.goTo("build")}>
           Back
         </button>
         <button type="button" className={`btn btn--lg kit-grow ${ready ? "btn--ghost" : "btn--primary"}`} disabled={!confirmed} onClick={() => phone.setReady(!ready)}>
@@ -75,7 +78,7 @@ export function Setup() {
 
   return (
     <StepShell steps={STEPS} current={INDEX[step]} title={TITLES[step]} footer={footer}>
-      {step === "star" ? <PickStep /> : <ReadyStep />}
+      {step === "build" ? <PickStep /> : <ReadyStep />}
     </StepShell>
   );
 }

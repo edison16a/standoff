@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import type { Look } from "../../roster";
+import type { Look } from "../../looks";
 import { ball, blend, cone, cyl, paint, shade, type V3 } from "./geo";
 
 /**
- * Every star's hair, built round a head of radius `R` centred on the
+ * Every player's hair, built round a head of radius `R` centred on the
  * origin, face down +z. A cap hugs the skull; volumes, curls, twists and
  * tufts on top give each style its silhouette, which is what you
  * recognise first from the stands.

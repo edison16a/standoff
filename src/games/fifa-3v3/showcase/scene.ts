@@ -12,14 +12,15 @@ import { attackSign } from "../teams";
 import { FollowCam } from "./follow-cam";
 
 const LINEUP: Entrant[] = [
-  { team: 0, character: "brandao", seat: null },
-  { team: 0, character: "echeverri", seat: null },
-  { team: 0, character: "serrano", seat: null },
-  { team: 1, character: "holmvik", seat: null },
-  { team: 1, character: "okemba", seat: null },
-  { team: 1, character: "lacerda", seat: null },
+  { team: 0, build: "striker", seat: null },
+  { team: 0, build: "playmaker", seat: null },
+  { team: 0, build: "defender", seat: null },
+  { team: 1, build: "keeper", seat: null },
+  { team: 1, build: "allrounder", seat: null },
+  { team: 1, build: "winger", seat: null },
 ];
-const SEED = 10;
+/** Seeded so the match holds the goal the showcase wants: a charged strike just after a skill move beats a man. */
+const SEED = 15;
 /** The capture tool warms up for three seconds before it films. */
 export const WARMUP = 3;
 /** A shot this hard fills the charge bar into the red, which reads well on screen. */

@@ -1,8 +1,10 @@
 import * as THREE from "three";
-import type { Kit } from "../../roster";
+import type { Kit } from "../../looks";
 
 const W = 512;
 const H = 256;
+/** The widest a name on the back may print, in canvas pixels. */
+const NAME_WIDTH = 150;
 
 /**
  * The shirt, printed on a canvas that wraps round the torso. The torso
@@ -68,9 +70,15 @@ function printBack(ctx: CanvasRenderingContext2D, kit: Kit, name: string, number
   const x = 0.25 * W;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  const size = name.length > 8 ? 22 : 26;
+  // A long name shrinks to fit across the shoulders.
+  const text = name.toUpperCase();
+  let size = 26;
   ctx.font = `800 ${size}px Arial, Helvetica, sans-serif`;
-  outlined(ctx, name, x, 44, kit, 4);
+  while (size > 12 && ctx.measureText(text).width > NAME_WIDTH) {
+    size -= 1;
+    ctx.font = `800 ${size}px Arial, Helvetica, sans-serif`;
+  }
+  if (text) outlined(ctx, text, x, 44, kit, 4);
   ctx.font = "900 118px Arial Black, Arial, Helvetica, sans-serif";
   outlined(ctx, String(number), x, 138, kit, 8);
 }

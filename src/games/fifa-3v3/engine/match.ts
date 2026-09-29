@@ -1,8 +1,9 @@
-import type { CharacterId } from "../roster";
+import type { BuildId } from "../builds";
 import type { TeamId } from "../teams";
 import { makeAthlete } from "./athlete";
 import { newBall } from "./ball";
 import { celebrateGoal, celebrateWin, goalPhaseLength } from "./celebrate";
+import { CEREMONY, stageCeremony, stepCeremony } from "./ceremony";
 import { makeKeeper } from "./keeper";
 import { stepFoul } from "./foul";
 import { updateKeeper, updateKeeperFacing } from "./keeper-update";
@@ -16,7 +17,7 @@ import type { Command, MatchOptions, MatchState } from "./types";
 
 export interface Entrant {
   team: TeamId;
-  character: CharacterId;
+  build: BuildId;
   /** The phone playing them, or null for a computer player. */
   seat: number | null;
 }
@@ -33,7 +34,7 @@ export const DEFAULT_OPTIONS: MatchOptions = {
 export function createMatch(entrants: readonly Entrant[], options: Partial<MatchOptions> = {}): MatchState {
   const opts = { ...DEFAULT_OPTIONS, ...options };
   const slots: [number, number] = [0, 0];
-  const athletes = entrants.map((e, id) => makeAthlete(id, e.team, slots[e.team]++, e.character, e.seat));
+  const athletes = entrants.map((e, id) => makeAthlete(id, e.team, slots[e.team]++, e.build, e.seat));
   const state: MatchState = {
     phase: "kickoff",
     phaseT: 0,
@@ -56,6 +57,7 @@ export function createMatch(entrants: readonly Entrant[], options: Partial<Match
     referee: makeReferee(),
     foul: null,
     setPiece: null,
+    ceremony: null,
   };
   setupKickoff(state);
   return state;
@@ -105,7 +107,12 @@ export function stepMatch(state: MatchState, commands: ReadonlyMap<number, Comma
       if (state.phaseT >= MATCH.replay) endReplay(state);
       return;
     case "fulltime":
-      celebrateWin(state, dt);
+      // The winners celebrate where they are, then the scene cuts to the trophy.
+      if (state.phaseT < CEREMONY.cut) celebrateWin(state, dt);
+      else {
+        if (!state.ceremony) stageCeremony(state);
+        stepCeremony(state, dt);
+      }
       ballOnly(state, dt);
       return;
   }

@@ -2,7 +2,7 @@ import type { AudioEngine } from "@/platform/audio/audio-engine";
 import { LOBBY_SONG } from "./lobby-song";
 import { MATCH_SONG } from "./match-song";
 import type { Song } from "./score";
-import { fanfare, goalSting } from "./stings";
+import { fanfare, goalSting, trophySting } from "./stings";
 
 /** The lobby and results get the warm up bossa, the match gets the stadium anthem. */
 export const TUNES = { lobby: LOBBY_SONG, play: MATCH_SONG } as const satisfies Record<string, Song>;
@@ -49,6 +49,12 @@ export class Music {
   fanfare(): void {
     this.dip(0.1, 4);
     fanfare(this.engine, this.warmth);
+  }
+
+  /** The chord as the cup goes up. */
+  trophySting(): void {
+    this.dip(0.1, 3);
+    trophySting(this.engine, this.warmth);
   }
 
   /** A rising brass sting for a goal. */

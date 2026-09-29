@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import type { Kit, Look } from "../../roster";
+import type { Kit, Look } from "../../looks";
 import { ball, box, capsule, cyl, lathe, merge, paint, shade, torus } from "./geo";
 import { headGeometry } from "./head";
 import { jerseyTexture } from "./kit-texture";
@@ -110,8 +110,10 @@ export function buildBody(spec: BodySpec, shared: THREE.Material): Rig {
     ]));
     const elbow = joint(shoulder, 0, -upper);
     const forearm = spec.keeper ? kit.shirt : look.skin;
-    const glove = spec.keeper ? kit.trim : look.skin;
-    const hand = spec.keeper ? 1.55 : 1;
+    // A sweeper keeper wears gloves with a short sleeve: white palms, a cuff in the trim.
+    const gloved = spec.keeper || look.gloves === true;
+    const glove = spec.keeper ? kit.trim : gloved ? "#eef2f7" : look.skin;
+    const hand = spec.keeper ? 1.55 : gloved ? 1.4 : 1;
     mesh(elbow, merge([
       paint(ball(r * 0.82, 10, 8), forearm),
       paint(ball(r * 0.86, 10, 8), forearm, { at: [0, -fore * 0.3, r * 0.05], scale: [1, 1.9, 1] }),
@@ -119,7 +121,7 @@ export function buildBody(spec: BodySpec, shared: THREE.Material): Rig {
       // A mitten of a hand, thumb tucked along the front.
       paint(ball(r * 0.78 * hand, 12, 10), glove, { at: [0, -fore - r * 0.7 * hand, r * 0.1], scale: [0.85, 1.35, 0.62] }),
       paint(ball(r * 0.32 * hand, 8, 6), glove, { at: [side * -r * 0.35, -fore - r * 0.4 * hand, r * 0.45 * hand], scale: [0.8, 1.4, 0.8] }),
-      ...(spec.keeper ? [paint(cyl(r * 0.9, r * 0.9, r * 0.9, 12), "#1b1b1b", { at: [0, -fore, 0] })] : []),
+      ...(gloved ? [paint(cyl(r * 0.9, r * 0.9, r * 0.9, 12), spec.keeper ? "#1b1b1b" : kit.trim, { at: [0, -fore, 0] })] : []),
     ]));
     const handJoint = joint(elbow, 0, -fore - r);
     return { shoulder, elbow, hand: handJoint };

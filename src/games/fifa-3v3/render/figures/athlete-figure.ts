@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { shotWindup } from "../../engine/kick";
 import { PASS } from "../../engine/tuning";
 import type { AthleteView, BallView } from "../../engine/view";
-import { ROSTER, type Character, type Kit } from "../../roster";
+import type { Kit } from "../../looks";
 import { celebration, cheer, dejected } from "../anim/celebrations";
 import { guardStance, jumpPose, stealPose, wallPose } from "../anim/defend-poses";
 import { smooth, type Context, type Frame } from "../anim/frame";
@@ -12,22 +12,25 @@ import { buildOf, LEFT, RIGHT, solveLeg, type Build, type Side } from "../anim/l
 import { getUp, hurdle, slide, stumble } from "../anim/moves";
 import { applyPose, blendPoses, neutral, type Pose } from "../anim/pose";
 import { beatenFrame, skillFrame } from "../anim/skill-poses";
+import { captainPose, matePose } from "../anim/trophy-poses";
 import { buildBody, type Rig } from "../models/body";
 import { FootLock } from "./foot-locks";
+import { figureOf, type FigureSpec } from "./figure-spec";
 import { keepAboveTurf } from "./turf";
 
 /** How long a new move takes to blend in: kicks and tackles snap in, the rest ease. */
 const QUICK = new Set(["shoot", "pass", "slide", "stumble", "skill", "beaten", "jump", "steal"]);
 
 /**
- * One footballer on the pitch: their body in the team's kit. Each frame
+ * One footballer on the pitch: their body in the team's kit, their own
+ * name on the back of the shirt. Each frame
  * the move they are in gives a pose and where the feet go; the legs are
  * solved to put the feet there, and a change of move cross fades from
  * the last pose shown, so nothing snaps and nothing lags.
  */
 export class AthleteFigure {
   readonly rig: Rig;
-  readonly character: Character;
+  readonly spec: FigureSpec;
   private readonly shown: Pose = neutral();
   private from: Pose = neutral();
   private key = "";
@@ -43,11 +46,11 @@ export class AthleteFigure {
   /** The move the remembered ball belongs to. */
   private ballKick = "";
 
-  /** `character` stands in for the roster, for someone who is not one of the stars, like the referee. */
-  constructor(view: AthleteView, kit: Kit, material: THREE.Material, character: Character = ROSTER[view.character]) {
-    this.character = character;
-    const c = this.character;
-    this.rig = buildBody({ look: c.look, kit, name: c.short, number: c.number }, material);
+  /** `spec` is the build with the player's name, or someone who plays no build, like the referee. */
+  constructor(view: AthleteView, kit: Kit, material: THREE.Material, spec: FigureSpec = figureOf(view.build, "")) {
+    this.spec = spec;
+    const c = spec;
+    this.rig = buildBody({ look: c.look, kit, name: c.name, number: c.number }, material);
     this.phase = view.id * 1.7;
     this.build = buildOf(c.look.height, c.look.build);
     this.lead = c.foot === "left" ? LEFT : RIGHT;
@@ -64,7 +67,7 @@ export class AthleteFigure {
     const right = this.locks.right.resolve(frame.right, root, this.build, dt);
     if (left) solveLeg(frame.pose, LEFT, left, this.build);
     if (right) solveLeg(frame.pose, RIGHT, right, this.build);
-    const key = `${view.action}/${view.signature}`;
+    const key = `${view.action}/${view.signature}/${view.ceremony}`;
     if (key !== this.key) {
       this.from = { ...this.shown };
       this.key = key;
@@ -144,7 +147,10 @@ export class AthleteFigure {
       case "beaten":
         return beatenFrame(v.actionT, v.actionLen, v.stride, v.speed, v.skillSide, ctx, time, v.id);
       case "celebrate":
-        return fk(v.signature ? celebration(this.character.celebration, v.actionT) : cheer(v.actionT, this.phase));
+        // At the trophy ceremony the action's clock started at the cut, so it is the ceremony's clock.
+        if (v.ceremony === "captain") return fk(captainPose(v.actionT));
+        if (v.ceremony === "mate") return fk(matePose(v.actionT, this.phase));
+        return fk(v.signature ? celebration(this.spec.celebration, v.actionT) : cheer(v.actionT, this.phase));
       case "dejected":
         return dejected(run(), v.actionT, this.phase);
     }

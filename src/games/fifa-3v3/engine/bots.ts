@@ -110,7 +110,8 @@ function decideWithBall(state: MatchState, a: Athlete, command: Command): void {
   }
   const foe = other(a.team);
   const d = toGoal(a.pos, foe);
-  const range = 12 + 7 * a.shooting;
+  // A finisher backs himself from further out, and a big shot adds a little.
+  const range = 11 + 5 * a.attrs.finishing + 2 * a.attrs.power;
   let pressure = 0;
   for (const o of state.athletes) if (o.team === foe) pressure = Math.max(pressure, clamp((2.4 - dist(o.pos, a.pos)) / 1.8, 0, 1));
   if (d < range && shotAngle(a.pos, foe) < 1.05) {
@@ -121,7 +122,8 @@ function decideWithBall(state: MatchState, a: Athlete, command: Command): void {
   if (brain.passWait > 0) return;
   if (pressure > 0.35 || brain.carried > 2.4) {
     const target = choosePassTarget(state, a, null);
-    if (target && openness(state, target) > 2 && rng.chance(0.55)) {
+    // A player with vision looks up and finds the pass more often.
+    if (target && openness(state, target) > 2 && rng.chance(0.3 + 0.35 * a.attrs.vision)) {
       command.passTo = target.id;
       brain.passWait = rng.range(1, 2);
     }

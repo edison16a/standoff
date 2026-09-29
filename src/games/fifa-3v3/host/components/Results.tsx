@@ -1,15 +1,16 @@
 "use client";
 import { playerColor } from "@/games/kit/players";
-import { ROSTER } from "../../roster";
+import { BUILDS } from "../../builds";
 import { TEAMS } from "../../teams";
 import { useFifaStore } from "../host-store";
 import { useSession } from "./session-context";
 
 /**
- * The final whistle: the winners and the score, the player of the
- * match, everyone's goals, shots, passes, tackles and saves (blocked
- * shots for outfield players, a line each for the keepers), and the ways
- * back in: the same teams again, or back to pick new ones.
+ * The stats after the trophy ceremony: the winners and the score, the
+ * player of the match, everyone's goals, shots, passes, tackles and saves
+ * (blocked shots for outfield players, a line each for the keepers), and
+ * the ways back in: the same teams again, or back to pick new ones. The
+ * card sits on the right while the winners celebrate on the left.
  */
 export function Results() {
   const session = useSession();
@@ -39,7 +40,7 @@ export function Results() {
           <thead>
             <tr>
               <th scope="col">Player</th>
-              <th scope="col">Star</th>
+              <th scope="col">Build</th>
               <th scope="col">Goals</th>
               <th scope="col">Shots</th>
               <th scope="col">Passes</th>
@@ -49,16 +50,16 @@ export function Results() {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className={r.character === null ? "fifa-results__keeper" : undefined} style={{ "--row": r.seat !== null ? playerColor(r.seat) : TEAMS[r.team].color } as React.CSSProperties}>
+              <tr key={r.id} className={r.build === null ? "fifa-results__keeper" : undefined} style={{ "--row": r.seat !== null ? playerColor(r.seat) : TEAMS[r.team].color } as React.CSSProperties}>
                 <td className="fifa-results__name">
                   <span className="fifa-results__side" style={{ background: TEAMS[r.team].color }} />
-                  {r.character === null ? r.name : r.seat !== null ? r.name : "Computer"}
+                  {r.name}
                 </td>
-                <td>{r.character === null ? "Keeper" : ROSTER[r.character].short}</td>
-                <td className="fifa-results__goals">{r.character === null ? "" : r.goals}</td>
-                <td>{r.character === null ? "" : r.shots}</td>
-                <td>{r.character === null ? "" : r.passes}</td>
-                <td>{r.character === null ? "" : r.tackles}</td>
+                <td>{r.build === null ? "Goalkeeper" : BUILDS[r.build].name}</td>
+                <td className="fifa-results__goals">{r.build === null ? "" : r.goals}</td>
+                <td>{r.build === null ? "" : r.shots}</td>
+                <td>{r.build === null ? "" : r.passes}</td>
+                <td>{r.build === null ? "" : r.tackles}</td>
                 <td>{r.saves}</td>
               </tr>
             ))}

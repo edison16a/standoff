@@ -32,7 +32,7 @@ export function pickSkill(a: Athlete, stick: Vec2): { kind: SkillKind; exit: Vec
   const toward = exit.x * attackSign(a.team);
   if (toward > SKILL.forward) return { kind: "rainbow", exit };
   if (toward < -SKILL.forward) return { kind: "dragback", exit };
-  return { kind: a.dribbling >= SKILL.elastico ? "elastico" : "crossover", exit };
+  return { kind: a.attrs.dribbling >= SKILL.elastico ? "elastico" : "crossover", exit };
 }
 
 /** Starts a skill move the way the stick points. Only with the ball, on the feet, off cooldown. */
@@ -64,7 +64,7 @@ function spinSide(state: MatchState, a: Athlete, from: Vec2): 1 | -1 {
 
 function frame(a: Athlete): MoveFrame {
   const sk = a.skill;
-  const top = topSpeed(a) * (MOVE.withBall + 0.1 * a.dribbling);
+  const top = topSpeed(a) * (MOVE.withBall + 0.1 * a.attrs.dribbling);
   return { kind: sk.kind ?? "roulette", from: sk.from, exit: sk.exit, side: sk.side, pace: sk.pace, top };
 }
 
@@ -128,7 +128,7 @@ function testDefender(state: MatchState, a: Athlete): void {
   const d = nearestFoe(state, a);
   if (!d || dist(d.pos, a.pos) > SKILL.reach) return;
   const risk = skillRisk(a, d);
-  const beat = clamp(0.62 + 1.1 * (a.dribbling - 0.85) - 0.6 * (d.speed - 0.85), 0.3, 0.9);
+  const beat = clamp(0.62 + 1.1 * (a.attrs.dribbling - 0.85) - 0.6 * (d.attrs.pace - 0.85), 0.3, 0.9);
   const roll = state.rng.next();
   if (roll < risk) return loseBall(state, a, d);
   if (roll > risk + (1 - risk) * beat) return;
@@ -163,7 +163,7 @@ export function skillRisk(a: Athlete, d: Athlete): number {
   const into = a.skill.kind === "rainbow" ? gap < 0.7 : gap < 1.4 && dot(norm(to), a.skill.exit) > 0.85;
   const spam = Math.max(0, a.skill.heat - 1.5) * 0.16;
   const slide = d.action === "slide" ? 0.35 : 0;
-  return clamp(SKILL.risk + spam + (into ? 0.3 : 0) + slide - 0.2 * (a.dribbling - 0.85), 0.02, 0.8);
+  return clamp(SKILL.risk + spam + (into ? 0.3 : 0) + slide - 0.2 * (a.attrs.dribbling - 0.85), 0.02, 0.8);
 }
 
 function loseBall(state: MatchState, a: Athlete, d: Athlete): void {

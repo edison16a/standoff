@@ -1,3 +1,4 @@
+import { CEREMONY } from "../engine/ceremony";
 import { FixedStepClock } from "../engine/clock";
 import type { MatchEvent } from "../engine/events";
 import { createMatch, stepMatch, type Entrant } from "../engine/match";
@@ -5,17 +6,17 @@ import type { MatchState } from "../engine/types";
 import { buildView, type MatchView } from "../engine/view";
 
 const LINEUP: Entrant[] = [
-  { team: 0, character: "echeverri", seat: null },
-  { team: 0, character: "okemba", seat: null },
-  { team: 0, character: "lacerda", seat: null },
-  { team: 1, character: "brandao", seat: null },
-  { team: 1, character: "holmvik", seat: null },
-  { team: 1, character: "serrano", seat: null },
+  { team: 0, build: "playmaker", seat: null },
+  { team: 0, build: "allrounder", seat: null },
+  { team: 0, build: "winger", seat: null },
+  { team: 1, build: "striker", seat: null },
+  { team: 1, build: "keeper", seat: null },
+  { team: 1, build: "defender", seat: null },
 ];
 
 /**
  * Computer players having a kick about behind the lobby, so the big
- * screen shows the game while everyone picks their stars. When it ends
+ * screen shows the game while everyone picks their builds. When it ends
  * another starts.
  */
 export class DemoMatch {
@@ -39,7 +40,8 @@ export class DemoMatch {
       stepMatch(this.state);
       events.push(...this.state.events);
     }
-    if (this.state.phase === "fulltime" && this.state.phaseT > 4) this.state = this.fresh();
+    // A new kick about before the trophy ceremony: that is for real matches only.
+    if (this.state.phase === "fulltime" && this.state.phaseT > CEREMONY.cut - 0.4) this.state = this.fresh();
     this.view = buildView(this.state);
     return events;
   }

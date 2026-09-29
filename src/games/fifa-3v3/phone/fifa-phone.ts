@@ -3,7 +3,7 @@ import type { Stick } from "@/games/kit/pad/stick-math";
 import type { PhoneRoomApi, PhoneRoomEvent } from "@/platform/games/game-api";
 import { tone } from "@/platform/audio/voices";
 import { BUTTONS, hostMessageSchema, type HostMessage, type PhoneMessage } from "../protocol";
-import type { CharacterId } from "../roster";
+import type { BuildId } from "../builds";
 import { buzz } from "./haptics";
 import { usePhoneStore as store, type SetupStep } from "./phone-store";
 
@@ -34,10 +34,10 @@ export class FifaPhone {
     this.click();
   }
 
-  pick(character: CharacterId): void {
-    store.setState({ wanted: character });
+  pick(build: BuildId): void {
+    store.setState({ wanted: build });
     this.click();
-    this.send({ kind: "pick", character });
+    this.send({ kind: "pick", build });
   }
 
   setReady(ready: boolean): void {
@@ -111,7 +111,7 @@ export class FifaPhone {
   /** After a reconnect or a host reload, tell the host what we had chosen. */
   private resendChoices(): void {
     const { wanted, host } = store.getState();
-    if (wanted) this.send({ kind: "pick", character: wanted });
+    if (wanted) this.send({ kind: "pick", build: wanted });
     if (host?.ready) this.send({ kind: "ready", ready: true });
   }
 

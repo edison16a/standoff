@@ -4,14 +4,15 @@ import { commitFoul } from "./foul";
 import { goalX } from "./goal";
 import { markOf } from "./guard";
 import { outward } from "./keeper";
+import { fullTime } from "./rules";
 import { setupSetPiece } from "./set-piece";
 import type { Athlete, MatchState, SetPieceKind } from "./types";
 import { dist } from "./vec";
 
 /**
- * Test shortcuts for the host's hidden admin panel: a foul, a free kick
- * or a penalty on demand, so each can be tried without playing for it.
- * They only work while the ball is in play or about to be.
+ * Test shortcuts for the host's hidden admin panel: a foul, a free kick,
+ * a penalty or the final whistle on demand, so each can be tried without
+ * playing for it. They only work while the ball is in play or about to be.
  */
 function ready(state: MatchState): boolean {
   return state.phase === "play" || state.phase === "kickoff" || state.phase === "restart";
@@ -50,5 +51,18 @@ export function adminSetPiece(state: MatchState, kind: SetPieceKind): boolean {
   const at = kind === "penalty" ? { x: goalX(defending), z: 0 } : { x: goalX(defending) + outward(defending) * 13, z: state.rng.range(-4, 4) };
   state.foul = { by: by.id, victim: victim.id, at, kind: "admin", penalty: kind === "penalty", team, carded: true };
   setupSetPiece(state, kind, team);
+  return true;
+}
+
+/** The final whistle now, with the tester's side a goal up, straight into the trophy ceremony. */
+export function adminWin(state: MatchState): boolean {
+  if (!ready(state) || !state.athletes.length) return false;
+  const team = testSide(state);
+  state.score[team] = Math.max(state.score[team], state.score[other(team)] + 1);
+  state.winner = team;
+  state.foul = null;
+  state.setPiece = null;
+  state.flight = null;
+  fullTime(state);
   return true;
 }
