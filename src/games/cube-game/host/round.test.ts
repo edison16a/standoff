@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { LevelBuilder } from "../engine/builder";
+import { RACE_GRACE } from "./race";
 import { Round, type SongSync } from "./round";
 
 const INFO = { id: "test", name: "Test", difficulty: 1, bpm: 120, theme: "test" } as const;
@@ -98,5 +99,47 @@ describe("a round", () => {
     expect(round.run(2)!.player.x).toBe(0);
     round.setAway(2, false);
     expect(round.status(2)).toBe("run");
+  });
+
+  it("gives the race to the first over the line while the other keeps going", () => {
+    const sync = new FakeSync();
+    const round = new Round(level(), 2, false, sync);
+    // Player 2 misses the jump, crashes and comes back on a beat.
+    play(round, sync, 13, { 1: [4] });
+    expect(round.status(1)).toBe("done");
+    expect(round.status(2)).not.toBe("done");
+    expect(round.places()).toEqual([1, null]);
+    expect(round.over).toBe(false);
+    expect(round.graceLeft()).toBeGreaterThan(RACE_GRACE - 2);
+    play(round, sync, 30, { 2: [4] });
+    expect(round.status(2)).toBe("done");
+    expect(round.places()).toEqual([1, 2]);
+    expect(round.over).toBe(true);
+  });
+
+  it("calls a dead heat when both cross on the same step", () => {
+    const sync = new FakeSync();
+    const round = new Round(level(), 2, false, sync);
+    play(round, sync, 13, { 1: [4], 2: [4] });
+    expect(round.places()).toEqual([1, 1]);
+  });
+
+  it("ends the race when the grace time runs out", () => {
+    const sync = new FakeSync();
+    const round = new Round(level(), 2, false, sync);
+    play(round, sync, 13, { 1: [4] });
+    expect(round.places()).toEqual([1, null]);
+    expect(round.over).toBe(false);
+    play(round, sync, 13 + RACE_GRACE);
+    expect(round.graceLeft()).toBe(0);
+    expect(round.over).toBe(true);
+  });
+
+  it("has no race for one player", () => {
+    const sync = new FakeSync();
+    const round = new Round(level(), 1, false, sync);
+    play(round, sync, 13, { 1: [4] });
+    expect(round.places()).toEqual([null]);
+    expect(round.graceLeft()).toBeNull();
   });
 });

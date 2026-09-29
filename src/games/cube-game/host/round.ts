@@ -2,6 +2,7 @@ import type { PlayerEvent } from "../engine/player";
 import { Run } from "../engine/run";
 import { DEATH_PAUSE } from "../engine/tuning";
 import type { Level } from "../engine/types";
+import { graceLeft, places } from "./race";
 
 /** How the round keeps each run in step with the music. */
 export interface SongSync {
@@ -26,6 +27,8 @@ interface Seat {
   restarted: boolean;
   /** Out of the camera's view. Kept apart from the status, since a player can step out while crashed. */
   away: boolean;
+  /** Song time this player crossed the line, for the race. */
+  finishedAt: number | null;
 }
 
 /** How long a player gets to settle after stepping back into view. */
@@ -34,8 +37,9 @@ const RESUME_LEAD = 1.5;
 /**
  * One go at a level for one or two players. Each has their own run of
  * the same level. With one player the song restarts with every attempt.
- * With two, the song plays on and a player who crashes comes back on the
- * next beat, so the obstacles always land on the music.
+ * With two it is a race: the song plays on, a player who crashes comes
+ * back on the next beat so the obstacles always land on the music, and
+ * the first over the line wins while the other keeps going for a while.
  */
 export class Round {
   readonly seats: Seat[];
@@ -48,15 +52,26 @@ export class Round {
     private readonly sync: SongSync,
   ) {
     this.spb = 60 / level.bpm;
-    this.seats = Array.from({ length: players }, () => ({ run: new Run(level, practice), status: "run" as Status, offset: 0, deadAt: 0, restarted: true, away: false }));
+    this.seats = Array.from({ length: players }, () => ({ run: new Run(level, practice), status: "run" as Status, offset: 0, deadAt: 0, restarted: true, away: false, finishedAt: null }));
   }
 
   get solo(): boolean {
     return this.seats.length === 1;
   }
 
+  /** Everyone is over the line, or in a race the others ran out of time. */
   get over(): boolean {
-    return this.seats.every((seat) => seat.status === "done");
+    return this.seats.every((seat) => seat.status === "done") || this.graceLeft() === 0;
+  }
+
+  /** Each player's place in the race, or null while still racing. One player has no race. */
+  places(): (number | null)[] {
+    return this.solo ? [null] : places(this.seats.map((seat) => seat.finishedAt));
+  }
+
+  /** Seconds the others have left once someone has won, or null before that and for one player. */
+  graceLeft(): number | null {
+    return this.solo ? null : graceLeft(this.seats.map((seat) => seat.finishedAt), this.sync.songTime());
   }
 
   status(slot: number): Status {
@@ -107,7 +122,10 @@ export class Round {
         if (seat.run.dead) {
           seat.status = "dead";
           seat.deadAt = now;
-        } else if (seat.run.finished) seat.status = "done";
+        } else if (seat.run.finished) {
+          seat.status = "done";
+          seat.finishedAt = seat.offset + (seat.run.finishTime ?? seat.run.time);
+        }
       } else if (seat.status === "dead" && now - seat.deadAt >= DEATH_PAUSE) {
         const from = seat.run.respawn();
         // Someone who stepped out while crashed waits at the start instead of crashing over and over.
