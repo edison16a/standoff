@@ -1,5 +1,5 @@
 import type { TeamId } from "../teams";
-import { kickPath } from "./set-piece-kick";
+import { kickPath, penaltyTarget } from "./set-piece-kick";
 import type { FoulKind, MatchState, RefereeAction, SetPieceKind, SetPieceStage } from "./types";
 import { angleDiff, len, type Vec3 } from "./vec";
 
@@ -23,6 +23,8 @@ export interface SetPieceView {
   spot: { x: number; z: number };
   /** The planned flight, drawn on the pitch and in the air, until the kick is taken. */
   path: Vec3[] | null;
+  /** A penalty's spot on the goal while it is lined up, for the target marker. */
+  target: Vec3 | null;
   aimX: number;
   aimY: number;
   curve: number;
@@ -58,6 +60,7 @@ export function setPieceView(state: MatchState): SetPieceView | null {
     stage: sp.stage,
     spot: { ...sp.spot },
     path: lining ? kickPath(sp) : null,
+    target: lining && sp.kind === "penalty" ? penaltyTarget(sp) : null,
     aimX: sp.aimX,
     aimY: sp.aimY,
     curve: sp.curve,

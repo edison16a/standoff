@@ -36,9 +36,9 @@ export default function PitchCanvas() {
       const script = session.replayScript;
       const angle = replay && script ? { camera: replay.segment.camera, kicker: script.kicker, keeperTeam: script.keeperTeam } : null;
       const framing = frameFor(view, { lobby: !session.driver, replay: angle });
-      // The target on the goal shows through the slow motion strike and the ball's flight.
+      // The target on the goal shows through the replay's slow motion strike and the ball's flight, and while a penalty is aimed.
       const aiming = replay && (replay.segment.stage === "strike" || replay.segment.stage === "flight");
-      renderer.setMarker(aiming ? (script?.target ?? null) : null);
+      renderer.setMarker(aiming ? (script?.target ?? null) : (view.setPiece?.target ?? null));
       renderer.draw(view, framing.shot, now, framing.focus, framing.tags);
       frame = requestAnimationFrame(loop);
     };

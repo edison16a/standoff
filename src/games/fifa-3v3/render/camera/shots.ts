@@ -27,7 +27,8 @@ export function frameFor(view: MatchView, options: { lobby?: boolean; replay?: R
   if (options.replay) return replayFraming(view, options.replay);
   // A foul: follow the referee in, then close on the card. Then the set piece, from behind the ball.
   if (view.phase === "foul") return { shot: view.foul?.carded ? "card" : "foul", tags: false };
-  if (view.phase === "setpiece") return { shot: "setpiece", tags: true };
+  // No name tags over the set piece: from behind the ball they stack into a tower over the goal.
+  if (view.phase === "setpiece") return { shot: "setpiece", tags: false };
   if (view.phase === "play" && view.setPiece?.launched && view.setPiece.struckT < 1.6) return { shot: "setpiece-follow", tags: false };
   if (view.phase === "goal" && view.phaseT > 0.9) {
     const scorer = view.scorer !== null ? view.athletes[view.scorer] : undefined;
