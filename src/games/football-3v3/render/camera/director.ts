@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import type { MatchView } from "../../engine/view";
+import { fitWidth } from "./fit";
 import { aimFor, type Aim } from "./shots";
 
 /**
@@ -41,12 +42,10 @@ export class CameraDirector {
       this.setFov(this.fixed.fov);
       return;
     }
-    const aim = aimFor(view, time);
+    // Narrow screens see less of the field side to side, so the fit backs the camera up for them.
+    const aim = fitWidth(aimFor(view, time), cam.aspect);
     const target = new THREE.Vector3(aim.pos.x, aim.pos.y, aim.pos.z);
     const look = new THREE.Vector3(aim.look.x, aim.look.y, aim.look.z);
-    // Narrow screens see less of the field side to side, so back up a touch.
-    const narrow = Math.max(0, 1.6 - cam.aspect) * 0.35;
-    target.lerp(look, -narrow);
     const cut = this.kind === null || (aim.kind !== this.kind && this.pos.distanceTo(target) > 25);
     this.kind = aim.kind;
     const k = cut ? 1 : 1 - Math.exp(-aim.rate * dt);

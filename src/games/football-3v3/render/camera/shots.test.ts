@@ -1,7 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { POSTS } from "../../engine/field";
 import { freshView, viewWhen } from "../test-views";
-import { aimFor, behind, closeup, kickCam, playSign } from "./shots";
+import { fitWidth, sideReach } from "./fit";
+import { aimFor, behind, closeup, kickCam, playSign, type Aim, type Vec } from "./shots";
+
+/** How far off the middle of the picture a point sits, as a share of the half width. */
+function across(aim: Aim, p: Vec, aspect: number): number {
+  const d = { x: aim.look.x - aim.pos.x, y: aim.look.y - aim.pos.y, z: aim.look.z - aim.pos.z };
+  const l = Math.hypot(d.x, d.y, d.z);
+  const f = Math.hypot(d.x, d.z);
+  const r = { x: p.x - aim.pos.x, y: p.y - aim.pos.y, z: p.z - aim.pos.z };
+  const depth = (r.x * d.x + r.y * d.y + r.z * d.z) / l;
+  const side = (r.x * -d.z + r.z * d.x) / f;
+  return Math.abs(side) / depth / sideReach(aim.fov, aspect);
+}
 
 describe("camera shots", () => {
   it("sits behind the offense and looks downfield past the line", () => {
@@ -51,5 +63,35 @@ describe("camera shots", () => {
     const scorer = v!.athletes.find((x) => x.id === v!.scorer)!;
     expect(Math.hypot(a.pos.x - scorer.x, a.pos.z - scorer.z)).toBeLessThan(9);
     expect(aimFor(v!, 0).kind).toBe("closeup");
+  });
+
+  it("backs up before the snap until the receivers split wide are in the picture", () => {
+    const v = freshView();
+    const aim = behind(v);
+    const wide = aim.keep!.reduce((m, p) => (Math.abs(p.z) > Math.abs(m.z) ? p : m));
+    expect(Math.abs(wide.z)).toBeGreaterThan(10);
+    for (const aspect of [16 / 9, 4 / 3]) {
+      const fitted = fitWidth(aim, aspect);
+      for (const p of aim.keep!) expect(across(fitted, p, aspect)).toBeLessThan(0.9);
+      // Straight back along the line of sight: the tilt and the middle of the picture stay put.
+      const tilt = (a: Aim) => (a.pos.y - a.look.y) / Math.hypot(a.pos.x - a.look.x, a.pos.z - a.look.z);
+      expect(tilt(fitted)).toBeCloseTo(tilt(aim));
+    }
+    expect(fitWidth(aim, 4 / 3).pos.x).toBeLessThan(fitWidth(aim, 16 / 9).pos.x);
+  });
+
+  it("comes in tighter behind a runner than behind the QB in the pocket", () => {
+    const v = freshView();
+    v.phase = "live";
+    const qb = v.athletes.find((a) => a.role === "qb" && a.team === 0)!;
+    const runner = v.athletes.find((a) => a.role === "runner" && a.team === 0)!;
+    runner.x = v.drive.losX + 15;
+    v.ball = { ...v.ball, state: "held", holder: qb.id, x: qb.x, z: qb.z };
+    const pocket = behind(v);
+    v.ball = { ...v.ball, state: "held", holder: runner.id, x: runner.x, z: runner.z };
+    const run = behind(v);
+    const gap = (a: Aim, x: number) => x - a.pos.x;
+    expect(gap(run, runner.x)).toBeLessThan(gap(pocket, qb.x));
+    expect(pocket.keep!.length).toBeGreaterThan(1);
   });
 });
