@@ -31,6 +31,15 @@ function trainComing(run: Run): boolean {
   return run.course.obstacles.some((o) => o.drift > 0 && o.lane !== run.runner.lane && frontAt(o, d) - d > 18 && frontAt(o, d) - d < 45);
 }
 
+/** Nothing standing within a few metres of the runner, where a camera close by would end up inside it. */
+function clearAround(run: Run): boolean {
+  const d = run.runner.distance;
+  return !run.course.obstacles.some((o) => {
+    const front = frontAt(o, d);
+    return front < d + 10 && front + o.length > d - 8;
+  });
+}
+
 /** The top of a jump, with a line of coins arcing on ahead. */
 function leap(run: Run): void {
   const s = run.runner;
@@ -65,7 +74,7 @@ export const SHOTS: Record<"loop" | "icon" | "poster", Shot> = {
   loop: { seed: 20, look: 0, warmup: 12.5, pickups: "boots", powerSeconds: 5, cuts: [[0, "chase"], [6.8, "side"], [9.4, "chase"]], pace: 1 },
   // Seed 7 meets a train rolling in on the next track at about 23 seconds. The runner leaps as it comes.
   poster: { seed: 7, look: 0, warmup: 20, moment: (run) => run.runner.grounded && trainComing(run), stage: leap, pickups: null, cuts: [[0, "chase"]], pace: 0.005 },
-  icon: { seed: 11, look: 0, warmup: 14, moment: (run) => run.runner.grounded && run.runner.lane === 0, stage: hoverLeap, pickups: null, cuts: [[0, "hero"]], pace: 0.005 },
+  icon: { seed: 11, look: 0, warmup: 14, moment: (run) => run.runner.grounded && run.runner.lane === 0 && clearAround(run), stage: hoverLeap, pickups: null, cuts: [[0, "hero"]], pace: 0.005 },
 };
 
 /** Where each camera sits and looks, from the runner's feet: [x, y, z] then the point it looks at. */
