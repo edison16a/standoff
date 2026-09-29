@@ -8,7 +8,7 @@ import { createFighter, eyeOf, isBot, resetFighter, type Fighter, type FighterSe
 import type { GunEvent } from "./gun-state";
 import { newMatch, sideOf, tickMatch, type MatchState } from "./match";
 import { Rng } from "./rng";
-import { duckDown } from "./peek";
+import { duckDown, steppingOut } from "./peek";
 import { coneOf, resolveShot } from "./shooting";
 import { pressureAt } from "./tactics";
 import { STEP } from "./tuning";
@@ -163,8 +163,8 @@ export class Battle {
 
   private humanTrigger(f: Fighter, events: BattleEvent[]): void {
     const t = f.trigger;
-    // Still rising out of cover: a shot now would only paint the bunker.
-    if (f.crouch > UP_ENOUGH) {
+    // Still rising out of low cover, or stepping out round tall cover: a shot now would only paint the bunker.
+    if (f.crouch > UP_ENOUGH || steppingOut(f)) {
       if (this.time - t.pulledAt > PULL_KEEP) t.pulls = 0;
       return;
     }

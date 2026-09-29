@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Battle } from "./battle";
 import type { BattleEvent } from "./events";
 import type { FighterSetup } from "./fighter";
+import { steppingOut } from "./peek";
 
 /** One player against one computer player that stands still, so nothing but the player moves the fight. */
 function range(gun: FighterSetup["gun"] = "rifle"): Battle {
@@ -57,6 +58,35 @@ describe("taking cover", { timeout: 60_000 }, () => {
     b.setTrigger(0, true);
     run(b, 1);
     expect(me.brain.stance).toBe("peek");
+  });
+
+  it("holds a shot fired from behind a wall until the fighter has stepped out", () => {
+    const b = range();
+    const me = b.fighters[0]!;
+    // Behind each tall spot in turn until one peeks round the side.
+    let stepped = false;
+    for (const spot of b.graph.spots.filter((s) => s.tall)) {
+      me.pos = { ...spot.pos };
+      Object.assign(me.brain, { stance: "hide", spot: spot.id, route: [], timer: 10, sincePlan: 0, held: 0 });
+      b.setTrigger(0, true);
+      run(b, 1);
+      if (me.brain.stance === "peek" && me.brain.peekAt) {
+        stepped = true;
+        break;
+      }
+      b.setTrigger(0, false);
+    }
+    expect(stepped).toBe(true);
+    // No paint while the body is still behind the wall; it flies once out.
+    let firstShot = -1;
+    for (let i = 0; i < 60 && firstShot < 0; i++) {
+      // The brain moves the fighter before the trigger is read, so this is where the shot left from.
+      if (shots(b.step(), 0) > 0) {
+        expect(steppingOut(me)).toBe(false);
+        firstShot = i;
+      }
+    }
+    expect(firstShot).toBeGreaterThan(3);
   });
 
   it("ducks to reload", () => {

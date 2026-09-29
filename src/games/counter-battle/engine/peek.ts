@@ -41,6 +41,18 @@ export function startPeek(f: Fighter, w: BrainWorld): void {
   if (!clear && !canPeek(spot, target.pos, w.pieces)) b.held += 3;
 }
 
+/** How near its peek point a fighter must be to count as out from behind tall cover, metres. */
+const OUT_BY = 0.15;
+
+/**
+ * Whether a fighter is still stepping out from behind tall cover to the
+ * side they peek from. A shot fired now would only paint the wall.
+ */
+export function steppingOut(f: Fighter): boolean {
+  const b = f.brain;
+  return b.stance === "peek" && b.peekAt !== null && dist(f.pos, b.peekAt) > OUT_BY;
+}
+
 /** Back down behind cover for a while, as after a burst or to reload. */
 export function duckDown(f: Fighter, w: BrainWorld): void {
   const b = f.brain;
