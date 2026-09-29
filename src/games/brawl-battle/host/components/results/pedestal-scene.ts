@@ -31,7 +31,7 @@ const CUP_HEIGHT = 0.5;
  */
 function framing(d: Dims): { radius: number; height: number; lookHeight: number } {
   const k = (d.hipY + d.torso + d.upper + d.fore + CUP_HEIGHT) / KARATE_REACH;
-  return { radius: 8.1 * k, height: PEDESTAL_TOP + 1.3 * k, lookHeight: PEDESTAL_TOP + 1.75 * k };
+  return { radius: 8.1 * k, height: PEDESTAL_TOP + 1.3 * k, lookHeight: PEDESTAL_TOP + 1.9 * k };
 }
 
 /**
