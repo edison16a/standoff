@@ -5,23 +5,14 @@ import type { CrashCause, RunEvent } from "./events";
 import { startBurst } from "./motion";
 import { flightHeight, Powers } from "./powers";
 import { Points } from "./points";
+import type { RunOptions } from "./run-options";
 import { newRunner, stepRunner, type Abilities, type Contact, type RunnerInput, type RunnerState } from "./runner";
 import { TrainWatch } from "./trains";
 import { COIN, JUMP, MAX_LEVEL, STEP_S, TRAIN, ZONE_LENGTH, type Lane } from "./tuning";
 import type { Obstacle, PowerKind } from "./types";
-import { USUAL_YARD, yardSpeed, type Yard } from "./yard";
+import { USUAL_YARD, yardSpeed } from "./yard";
 
-export interface RunOptions {
-  /** The tutorial: an empty yard at a gentle jog. */
-  practice?: boolean;
-  lane?: Lane;
-  /** Metres of head start on the pace and the yard's busyness. See `difficulty.ts`. */
-  headStart?: number;
-  /** How hard the yard pushes past the head start. See `yard.ts`. */
-  yard?: Yard;
-  /** The difficulty's score multiplier, on every point. */
-  scoreScale?: number;
-}
+export type { RunOptions } from "./run-options";
 
 const PRACTICE_SPEED = 5;
 /** Seconds of passing through things after landing from a jetpack: a person on camera needs about this to see what they landed among and move. */

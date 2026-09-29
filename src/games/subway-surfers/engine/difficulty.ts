@@ -1,4 +1,4 @@
-import type { RunOptions } from "./run";
+import type { RunOptions } from "./run-options";
 import { MOVE_GAP_S } from "./tuning";
 import { USUAL_YARD, type Yard } from "./yard";
 
