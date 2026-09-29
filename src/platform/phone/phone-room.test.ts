@@ -194,6 +194,14 @@ describe("PhoneApp", () => {
     expect(text()).not.toContain("The game has ended");
   });
 
+  it("says plainly when the room was lost, with the code field ready for the new one", async () => {
+    show("LLLL");
+    await joinWith(joined("LLLL", "tiny"), { type: "room:closed", lost: true });
+    expect(text()).toContain("The room was lost");
+    expect(text()).toContain("Join the new room");
+    expect(host.querySelector("input")).not.toBeNull();
+  });
+
   it("joins the room it now shows when the code changes in place", async () => {
     show("AAAA");
     show("BBBB");
