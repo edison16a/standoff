@@ -51,10 +51,11 @@ export function labView(base: MatchView, move: LabMove, time: number): MatchView
   const a = act(move);
   const cycle = Math.max(1.6, a.dur + 1);
   const t = a.dur > 0 ? Math.min(a.dur, time % cycle) : time;
-  const yaw = -Math.PI / 2;
+  // The engine turns a spinning runner right round over the juke, so the lab does too.
+  const yaw = -Math.PI / 2 + (move === "spin" ? (Math.PI * 2 * t) / a.dur : 0);
   const athletes: AthleteView[] = CHARACTER_IDS.map((id, i) => ({
     ...base.athletes[0]!, id: i, team: i < 3 ? 0 : 1, role: i === 0 || i === 3 ? "qb" : "runner", character: id, number: CHARACTERS[id].number,
-    seat: null, x: 0, z: (i - 2.5) * 2.6, yaw, vx: -Math.sin(-yaw) * a.speed, vz: 0, speed: a.speed,
+    seat: null, x: 0, z: (i - 2.5) * 2.6, yaw, vx: -a.speed, vz: 0, speed: a.speed,
     action: a.action, actionT: t, actionDur: a.dur, juke: a.juke ?? null, side: 1, spike: !!a.spike,
     hasBall: false, targeted: move === "catch", guarding: null, rushing: false, blocked: false, downCause: a.downCause ?? null,
   }));
