@@ -1,7 +1,6 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 import type { Run } from "../engine/run";
 import { frontAt } from "../engine/types";
-import { Drone } from "./drone";
 import { vary } from "./vary";
 import { noise, tone } from "./voices";
 
@@ -45,22 +44,42 @@ export function trainNearness(run: Run): number {
 }
 
 /**
- * The low rumble of trains coming in: a band of noise down in the bass
- * that swells as the nearest train closes in, loudest as it goes by.
+ * The low rumble of trains coming in: noise through two low passes, so
+ * it is all weight and no hiss, swelling as the nearest train closes in
+ * and loudest as it goes by.
  */
 export class Rumble {
-  private readonly drone: Drone;
+  private readonly gain: GainNode;
+  private readonly source: AudioBufferSourceNode;
 
   constructor(engine: AudioEngine, pan: number) {
-    this.drone = new Drone(engine, 85, pan, 0.7);
+    const ctx = engine.ctx;
+    this.source = ctx.createBufferSource();
+    this.source.buffer = engine.noiseBuffer();
+    this.source.loop = true;
+    let node: AudioNode = this.source;
+    for (const frequency of [150, 150]) {
+      const filter = ctx.createBiquadFilter();
+      filter.type = "lowpass";
+      filter.frequency.value = frequency;
+      filter.Q.value = 0.9;
+      node = node.connect(filter);
+    }
+    this.gain = ctx.createGain();
+    this.gain.gain.value = 0;
+    const panner = ctx.createStereoPanner();
+    panner.pan.value = pan;
+    node.connect(this.gain).connect(panner).connect(engine.bus("sfx"));
+    this.source.start();
   }
 
   /** `near` is from `trainNearness`: squared, so the rumble creeps in, then swells. */
   set(near: number, at: number): void {
-    this.drone.set(0.6 * near * near, at);
+    this.gain.gain.setTargetAtTime(1.1 * near * near, at, 0.15);
   }
 
   stop(): void {
-    this.drone.stop();
+    this.source.stop();
+    this.gain.disconnect();
   }
 }
