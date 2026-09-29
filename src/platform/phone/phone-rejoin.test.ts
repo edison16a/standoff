@@ -132,6 +132,21 @@ describe("PhoneRoom names", () => {
     vi.advanceTimersByTime(10_000);
     expect(FakeSocket.all).toHaveLength(before + 1);
   });
+
+  it("sits again on its own socket when the host's room was made again where that socket is", async () => {
+    const room = new PhoneRoom("ABCD");
+    await room.join("Ann");
+    last().open();
+    last().receive(seated("Ann"));
+    const joins = () => last().sent.filter((message) => message.type === "phone:join").length;
+    last().receive({ type: "host:back" });
+    expect(joins()).toBe(1);
+    last().receive({ type: "host:back", rejoin: true });
+    expect(joins()).toBe(2);
+    expect(FakeSocket.all).toHaveLength(1);
+    expect(last().sent.filter((message) => message.type === "phone:join").at(-1)).toMatchObject({ code: "ABCD", token: TOKEN, name: "Ann", reconnect: true });
+    room.dispose();
+  });
 });
 
 describe("play paths", () => {

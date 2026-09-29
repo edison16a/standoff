@@ -5,8 +5,11 @@ import { RelayConnection } from "../relay-connection";
 import type { RelayContext } from "../relay-types";
 import { parseBatch } from "./batch";
 
-/** A comment line now and then stops proxies from closing a quiet stream. */
-const KEEPALIVE_MS = 15_000;
+/**
+ * A ping now and then stops proxies from closing a quiet stream, and lets
+ * the client tell a quiet stream from a dead one (see StreamChannel).
+ */
+export const KEEPALIVE_MS = 15_000;
 
 /**
  * The downstream half of the HTTP fallback: a Server-Sent Events stream
@@ -37,13 +40,13 @@ export function openEventStream(ctx: RelayContext, signal: AbortSignal): Respons
             finish();
           },
         },
-        ctx,
+        { ...ctx, transport: "stream" },
       );
       const limiter = new RateLimiter();
       const unsubscribe = await ctx.backend.bus.subscribe(channels.inbox(id), (batch) => {
         for (const envelope of parseBatch(batch)) if (limiter.take()) relay.receive(envelope);
       });
-      const keepalive = setInterval(() => write(": keepalive\n\n"), KEEPALIVE_MS);
+      const keepalive = setInterval(() => write("event: ping\ndata: \n\n"), KEEPALIVE_MS);
 
       finish = () => {
         if (!open) return;

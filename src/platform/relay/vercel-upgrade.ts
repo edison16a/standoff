@@ -21,8 +21,8 @@ function runtimeUpgradeHook(): UpgradeHook | null {
  * Chrome can connect at all.
  *
  * Chrome and Firefox open a WebSocket over the page's existing HTTP/2
- * connection when the server allows it (RFC 8441), and Vercel's edge does.
- * An HTTP/2 WebSocket has no Sec-WebSocket-Key, so the request the edge
+ * connection when the server allows it (RFC 8441), which Vercel's edge has
+ * done at times (it did not when last checked). An HTTP/2 WebSocket has no Sec-WebSocket-Key, so the request the edge
  * hands the function has none either, and `ws` refuses to finish a
  * handshake without one. The edge then answers the browser with a 502 and
  * the game sits on "Connecting". Filling in the missing handshake headers

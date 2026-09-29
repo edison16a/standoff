@@ -6,9 +6,10 @@ import { openEventStream } from "@/platform/relay/stream/event-stream";
 
 /**
  * The HTTP fallback for clients whose WebSocket will not open. Chrome and
- * Firefox send WebSockets over HTTP/2 wherever they can, and Vercel's edge
- * currently answers those with a 502. GET opens an event stream that
- * carries messages down, and POST carries a batch of messages up.
+ * Firefox send WebSockets over HTTP/2 wherever the edge offers it, and
+ * Vercel's edge answered those with a 502 when it did. It did not offer it
+ * when last checked, so few clients should need this. GET opens an event
+ * stream that carries messages down, and POST carries a batch of messages up.
  *
  * Unlike the socket route this one also runs locally, inside the custom
  * server's process, where it shares the same rooms.

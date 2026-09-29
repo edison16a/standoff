@@ -11,10 +11,11 @@ const MESSAGES: Record<PhoneError, string> = {
   unavailable: "The server is busy",
   replaced: "Open in another tab",
   load: "The game did not load",
+  lost: "The room was lost",
 };
 
-/** A room that ended or never existed is not coming back, so reloading it only fails again. */
-const GONE = new Set<PhoneError>(["closed", "not-found"]);
+/** A room that ended, was lost or never existed is not coming back, so reloading it only fails again. */
+const GONE = new Set<PhoneError>(["closed", "not-found", "lost"]);
 
 interface ErrorScreenProps {
   error: PhoneError;
@@ -25,7 +26,7 @@ interface ErrorScreenProps {
 }
 
 export function ErrorScreen({ error, code, onRetry }: ErrorScreenProps) {
-  if (GONE.has(error)) return <NextRoom title={MESSAGES[error]} current={code} onRetry={onRetry} />;
+  if (GONE.has(error)) return <NextRoom title={MESSAGES[error]} lost={error === "lost"} current={code} onRetry={onRetry} />;
   return (
     <section className="phone-hero">
       <h1 className="phone-title">{MESSAGES[error]}</h1>
@@ -39,10 +40,11 @@ export function ErrorScreen({ error, code, onRetry }: ErrorScreenProps) {
 }
 
 /**
- * When the host ends the game or leaves, every phone lands here: join the
- * host's next game from this same tab by typing its code or scanning it.
+ * When the host ends the game, leaves or loses the room, every phone lands
+ * here: join the host's next game from this same tab by typing its code or
+ * scanning it.
  */
-function NextRoom({ title, current, onRetry }: { title: string; current: string; onRetry(): void }) {
+function NextRoom({ title, lost, current, onRetry }: { title: string; lost: boolean; current: string; onRetry(): void }) {
   const router = useRouter();
 
   const go = (code: string) => {
@@ -55,8 +57,10 @@ function NextRoom({ title, current, onRetry }: { title: string; current: string;
   return (
     <section className="phone-hero phone-hero--join">
       <span className="label">{title}</span>
-      <h1 className="phone-title">Join a new game</h1>
-      <p className="muted phone-hero__lead">Type the code on the big screen, or scan its QR code.</p>
+      <h1 className="phone-title">{lost ? "Join the new room" : "Join a new game"}</h1>
+      <p className="muted phone-hero__lead">
+        {lost ? "The big screen will show a new code. Type it here, or scan its QR code." : "Type the code on the big screen, or scan its QR code."}
+      </p>
       <JoinForm onCode={go} />
     </section>
   );

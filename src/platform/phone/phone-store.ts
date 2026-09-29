@@ -8,9 +8,10 @@ export type PhoneStage = "name" | "joining" | "playing" | "error";
 
 /**
  * `replaced` means this seat was taken over by the same page in another
- * tab, and `load` that the game's own code would not load.
+ * tab, `load` that the game's own code would not load, and `lost` that
+ * the room this phone sat in is gone, so it waits for the host's new code.
  */
-export type PhoneError = Exclude<JoinErrorReason, NameClash> | "replaced" | "load";
+export type PhoneError = Exclude<JoinErrorReason, NameClash | "limit"> | "replaced" | "load" | "lost";
 
 /**
  * What the platform's phone screens render. Each game keeps its own store
@@ -25,6 +26,8 @@ export interface PhoneState {
   /** The game this room plays, known once seated. */
   game: string | null;
   hostAway: boolean;
+  /** A seated phone trying to get back into its room after a join failed. */
+  rejoining: boolean;
   /** Everyone in the room, as the host last reported. */
   players: Player[];
   /** The new room's code, once the host remade its lobby. The page follows it. */
@@ -46,6 +49,7 @@ export function createPhoneStore(): StoreApi<PhoneState> {
     seat: null,
     game: null,
     hostAway: false,
+    rejoining: false,
     players: [],
     movedTo: null,
     clash: null,

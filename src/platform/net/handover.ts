@@ -1,5 +1,15 @@
+import type { ServerEnvelope } from "@/platform/protocol";
+
 /** A kick this soon after our own new socket announced itself was caused by it. */
 const OWN_KICK_MS = 10_000;
+/** A refused handover is tried again this much later, a few times per rotation, while the old socket lives. */
+const RETRY_MS = 3000;
+const RETRIES = 2;
+
+/** The replies that mean a new socket has taken over the seat or the room. */
+export const HANDSHAKES = new Set<ServerEnvelope["type"]>(["phone:joined", "room:resumed", "room:created"]);
+/** Final whichever socket carries them, so a handover socket passes them on too. */
+export const FINAL = new Set<ServerEnvelope["type"]>(["room:moved", "room:retired"]);
 
 /**
  * Bookkeeping for moving to a fresh socket before the old one is cut (see
@@ -11,8 +21,35 @@ const OWN_KICK_MS = 10_000;
 export class Handover {
   private sent: string[] = [];
   private announcedAt = -Infinity;
+  private retries = 0;
+  private retryTimer: ReturnType<typeof setTimeout> | null = null;
   /** The new socket was told to rotate before it confirmed. */
   rotateAfter = false;
+
+  /** The server asked for a move: a fresh rotation gets its own retries. */
+  rotating(): void {
+    this.retries = 0;
+  }
+
+  /**
+   * A handover was refused, maybe on a server instance that does not know
+   * the room. `dial` runs a little later, a couple of times per rotation.
+   */
+  retryLater(dial: () => void): boolean {
+    if (this.retries >= RETRIES) return false;
+    this.retries += 1;
+    this.stop();
+    this.retryTimer = setTimeout(() => {
+      this.retryTimer = null;
+      dial();
+    }, RETRY_MS);
+    return true;
+  }
+
+  stop(): void {
+    if (this.retryTimer) clearTimeout(this.retryTimer);
+    this.retryTimer = null;
+  }
 
   announced(): void {
     this.announcedAt = Date.now();

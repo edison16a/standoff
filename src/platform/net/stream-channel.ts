@@ -8,19 +8,45 @@ const ABNORMAL = 1006;
 /** The server's answer when no instance it reached holds our stream. */
 const GONE = 410;
 /**
- * Without Redis, a post can land on a server instance that does not hold
- * our stream, which answers 410 too. Each retry is routed afresh, so a few
- * of them usually find the right one. With Redis, 410 is final and this
- * costs a handful of quick requests once.
+ * Without a shared store, a post can land on a server instance that does
+ * not hold our stream, which answers 410. Each retry is routed afresh, so
+ * one of a few usually finds the right one. One retry goes at once, since
+ * the very next request is the likeliest to be routed elsewhere. Any more
+ * wait their turn like any post and take along whatever queued meanwhile:
+ * five instant retries could make six requests of one batch, and requests
+ * are what make Vercel add instances. This many misses in a row end the
+ * stream.
  */
 const MISROUTED_RETRIES = 5;
+/**
+ * Posts start at least this far apart, so a busy phone sends ten a second
+ * at most. Every post is a request of its own, and a flood of them is what
+ * makes Vercel add server instances, which splits rooms up.
+ */
+export const POST_GAP_MS = 100;
+/**
+ * Motion frames and other replaceable state wait longer, since only the
+ * newest counts. An input like a strike still goes after POST_GAP_MS and
+ * takes the waiting frames along.
+ */
+export const LOSSY_GAP_MS = 200;
+/**
+ * The relay pings every 15 s. A stream silent for this long is dead, even
+ * if nothing in between said so, like one whose server instance vanished.
+ */
+export const SILENT_MS = 40_000;
+
+interface Queued {
+  data: string;
+  /** A later message with the same key replaces this one while it waits. */
+  key?: string;
+}
 
 /**
- * The HTTP fallback for when a WebSocket will not open, as on Chrome
- * against Vercel (see app/api/stream). An event stream brings messages
- * down. Messages going up are batched into POSTs, one request at a time
- * so they arrive in order, with whatever queued meanwhile riding in the
- * next one.
+ * The HTTP fallback for when a WebSocket will not open (see
+ * app/api/stream). An event stream brings messages down. Messages going up
+ * are batched into POSTs, one at a time so they arrive in order, and
+ * spaced out, with whatever queued meanwhile riding in the next one.
  *
  * It copies the parts of the WebSocket interface the socket client uses,
  * events included, so the client handles both the same way.
@@ -30,19 +56,30 @@ export class StreamChannel {
   onopen: ((event: Event) => void) | null = null;
   onmessage: ((event: MessageEvent<string>) => void) | null = null;
   onclose: ((event: CloseEvent) => void) | null = null;
+  /** How many POSTs went out, for tests and the stress runs. */
+  posts = 0;
   private readonly source = new EventSource(STREAM_PATH);
   private id = "";
-  private queue: string[] = [];
-  private queuedBytes = 0;
+  private queue: Queued[] = [];
   private sendingBytes = 0;
+  private lastPost = -Infinity;
+  /** Posts in a row that reached an instance without our stream. */
+  private misses = 0;
+  private timer: ReturnType<typeof setTimeout> | null = null;
+  private heard = Date.now();
+  private readonly watch = setInterval(() => {
+    if (Date.now() - this.heard > SILENT_MS) this.finish(ABNORMAL);
+  }, SILENT_MS / 4);
 
   constructor() {
+    this.source.addEventListener("ping", () => (this.heard = Date.now()));
     this.source.addEventListener("hello", (event: MessageEvent<string>) => {
       this.id = event.data;
       this.readyState = OPEN;
       this.onopen?.(new Event("open"));
     });
     this.source.onmessage = (event: MessageEvent<string>) => {
+      this.heard = Date.now();
       if (this.readyState === OPEN) this.onmessage?.(new MessageEvent("message", { data: event.data }));
     };
     this.source.addEventListener("close", (event: MessageEvent<string>) => this.finish(Number(event.data) || 1000));
@@ -53,47 +90,86 @@ export class StreamChannel {
 
   /** Bytes not yet delivered, like a WebSocket's, so congestion checks work the same. */
   get bufferedAmount(): number {
-    return this.queuedBytes + this.sendingBytes;
+    return this.queue.reduce((sum, item) => sum + item.data.length, 0) + this.sendingBytes;
   }
 
-  send(data: string): void {
+  /**
+   * Queues a message for the next POST. With a `key`, like a motion
+   * frame's kind, only the newest of that key still waiting goes out.
+   */
+  send(data: string, key?: string): void {
     if (this.readyState !== OPEN) return;
-    this.queue.push(data);
-    this.queuedBytes += data.length;
-    if (this.sendingBytes === 0) void this.flush();
+    if (key !== undefined) this.queue = this.queue.filter((item) => item.key !== key);
+    this.queue.push({ data, key });
+    this.schedule();
   }
 
   close(code = 1000): void {
     this.finish(code);
   }
 
-  private async flush(): Promise<void> {
-    while (this.queue.length > 0 && this.readyState === OPEN) {
-      const body = `[${this.queue.join(",")}]`;
-      this.queue = [];
-      this.queuedBytes = 0;
-      this.sendingBytes = body.length;
-      try {
-        let status = GONE;
-        for (let attempt = 0; status === GONE && attempt <= MISROUTED_RETRIES; attempt++) {
-          status = (await fetch(`${STREAM_PATH}?s=${this.id}`, { method: "POST", body })).status;
-        }
-        // Still gone, or anything else unexpected: start over on a fresh channel.
-        if (status >= 300) return this.finish(ABNORMAL);
-      } catch {
-        return this.finish(ABNORMAL);
-      } finally {
-        this.sendingBytes = 0;
+  /** Posts now if the last one is done and far enough back, or once it is. */
+  private schedule(): void {
+    if (this.sendingBytes > 0 || this.queue.length === 0) return;
+    const gap = this.queue.some((item) => item.key === undefined) ? POST_GAP_MS : LOSSY_GAP_MS;
+    const wait = this.lastPost + gap - Date.now();
+    // An input arriving behind motion frames brings the post forward.
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = null;
+    if (wait <= 0) return void this.post();
+    this.timer = setTimeout(() => {
+      this.timer = null;
+      this.schedule();
+    }, wait);
+  }
+
+  private async post(): Promise<void> {
+    if (this.readyState !== OPEN) return;
+    const batch = this.queue;
+    const body = `[${batch.map((item) => item.data).join(",")}]`;
+    this.queue = [];
+    this.sendingBytes = body.length;
+    this.lastPost = Date.now();
+    try {
+      let status = await this.deliver(body);
+      if (status === GONE && this.misses < MISROUTED_RETRIES) {
+        this.misses += 1;
+        status = await this.deliver(body);
       }
+      if (status === GONE && this.misses < MISROUTED_RETRIES) {
+        this.misses += 1;
+        this.requeue(batch);
+      } else if (status >= 300) {
+        // Still gone, or anything else unexpected: start over on a fresh channel.
+        return this.finish(ABNORMAL);
+      } else this.misses = 0;
+    } catch {
+      return this.finish(ABNORMAL);
+    } finally {
+      this.sendingBytes = 0;
     }
+    this.schedule();
+  }
+
+  private async deliver(body: string): Promise<number> {
+    this.posts += 1;
+    return (await fetch(`${STREAM_PATH}?s=${this.id}`, { method: "POST", body })).status;
+  }
+
+  /** A missed batch goes first again, less any frame a newer one of its kind replaced meanwhile. */
+  private requeue(batch: Queued[]): void {
+    const newer = new Set(this.queue.map((item) => item.key).filter((key) => key !== undefined));
+    this.queue = [...batch.filter((item) => item.key === undefined || !newer.has(item.key)), ...this.queue];
   }
 
   private finish(code: number): void {
     if (this.readyState === CLOSED) return;
     this.readyState = CLOSED;
+    clearInterval(this.watch);
     this.source.close();
     this.queue = [];
-    this.queuedBytes = 0;
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = null;
     this.onclose?.(new CloseEvent("close", { code }));
   }
 }

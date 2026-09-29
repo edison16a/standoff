@@ -4,6 +4,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ClientEnvelope, ServerEnvelope } from "@/platform/protocol";
 import { PhoneApp } from "./components/PhoneApp";
+import { webSocketOpened } from "@/platform/net/transport-choice";
 import { PhoneRoom } from "./phone-room";
 
 const audio = vi.hoisted(() => ({ closes: 0 }));
@@ -60,10 +61,18 @@ class FakeSocket {
 const last = () => FakeSocket.all.at(-1)!;
 const joined = (code: string, game: string, name = "Player 1"): ServerEnvelope => ({ type: "phone:joined", code, game, seats: 2, seat: 1, token: "t".repeat(20), hostHere: true, name });
 
+/** An event stream that never opens, for a WebSocket that falls back. */
+class QuietSource {
+  addEventListener() {}
+  close() {}
+}
+
 beforeEach(() => {
   FakeSocket.all = [];
   audio.closes = 0;
+  webSocketOpened();
   vi.stubGlobal("WebSocket", FakeSocket);
+  vi.stubGlobal("EventSource", QuietSource);
 });
 afterEach(() => {
   vi.useRealTimers();
@@ -71,21 +80,71 @@ afterEach(() => {
 });
 
 describe("PhoneRoom", () => {
-  it("stops for good once a join cannot find the room, rather than rejoining it on every drop", async () => {
+  it("tries a missing room a few more times, spaced out, then stops for good", async () => {
     vi.useFakeTimers();
     const room = new PhoneRoom("ABCD");
     await room.join(null);
-    // The first try and six fresh sockets all miss.
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 5; i++) {
       last().open();
       last().receive({ type: "room:error", reason: "not-found" });
+      // Never an instant redial: the next socket waits its turn.
+      expect(FakeSocket.all).toHaveLength(i + 1);
+      vi.advanceTimersByTime(4000);
     }
-    expect(FakeSocket.all).toHaveLength(7);
-    // Whether the phone closed it or the relay's miss cap did, nothing dials again.
-    last().close(1008);
+    expect(FakeSocket.all).toHaveLength(5);
+    expect(room.store.getState()).toMatchObject({ stage: "error", error: "not-found" });
     vi.advanceTimersByTime(60_000);
-    expect(FakeSocket.all).toHaveLength(7);
+    expect(FakeSocket.all).toHaveLength(5);
     expect(last().readyState).toBe(3);
+  });
+
+  it("keeps a seated phone's game while it tries to get back in, then says the room was lost", async () => {
+    vi.useFakeTimers();
+    const room = new PhoneRoom("ABCD");
+    await room.join(null);
+    last().open();
+    last().receive(joined("ABCD", "tiny"));
+    last().close(1006);
+    for (let i = 0; i < 12 && room.store.getState().stage !== "error"; i++) {
+      vi.advanceTimersByTime(4000);
+      last().open();
+      last().receive({ type: "room:error", reason: "not-found" });
+      if (room.store.getState().stage !== "error") expect(room.store.getState()).toMatchObject({ stage: "playing", rejoining: true });
+    }
+    expect(room.store.getState()).toMatchObject({ stage: "error", error: "lost" });
+  });
+
+  it("says the room was lost when its host never came back", async () => {
+    const room = new PhoneRoom("ABCD");
+    await room.join(null);
+    last().open();
+    last().receive(joined("ABCD", "tiny"));
+    last().receive({ type: "room:closed", lost: true });
+    expect(room.store.getState()).toMatchObject({ stage: "error", error: "lost" });
+  });
+
+  it("looks for its host on a fresh socket when the host goes away, keeping the old one", async () => {
+    vi.useFakeTimers();
+    const room = new PhoneRoom("ABCD");
+    await room.join(null);
+    last().open();
+    last().receive(joined("ABCD", "tiny"));
+    const first = last();
+    first.receive({ type: "host:away" });
+    vi.advanceTimersByTime(2000);
+    expect(FakeSocket.all).toHaveLength(2);
+    expect(first.readyState).toBe(1);
+    last().open();
+    expect(last().sent[0]).toMatchObject({ type: "phone:join", code: "ABCD", reconnect: true });
+    room.dispose();
+  });
+
+  it("follows a move that answers its join", async () => {
+    const room = new PhoneRoom("ABCD");
+    await room.join(null);
+    last().open();
+    last().receive({ type: "room:moved", code: "WXYZ" });
+    expect(room.store.getState().movedTo).toBe("WXYZ");
   });
 
   it("closes its sound once when a room that ended is disposed again by its page", async () => {
@@ -149,6 +208,14 @@ describe("PhoneApp", () => {
     show("BBBB");
     expect(text()).toContain("Room BBBB");
     expect(text()).not.toContain("The game has ended");
+  });
+
+  it("says plainly when the room was lost, with the code field ready for the new one", async () => {
+    show("LLLL");
+    await joinWith(joined("LLLL", "tiny"), { type: "room:closed", lost: true });
+    expect(text()).toContain("The room was lost");
+    expect(text()).toContain("Join the new room");
+    expect(host.querySelector("input")).not.toBeNull();
   });
 
   it("joins the room it now shows when the code changes in place", async () => {

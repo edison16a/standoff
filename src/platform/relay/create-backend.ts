@@ -13,8 +13,11 @@ const holder = globalThis as { [SHARED]?: Promise<Backend> | null };
 /**
  * Picks where rooms live, once per process. With a Redis URL in the
  * environment, rooms and messages go through Redis so any number of server
- * instances can share them, which is what Vercel needs. Without one,
- * everything stays in this process, which is all a laptop on a LAN needs.
+ * instances can share them. Without one, everything stays in this process.
+ * That is the normal setup, on a laptop and on Vercel alike: a WebSocket
+ * stays on the instance that took it, and a room is lost only when Vercel
+ * adds an instance or a deploy lands, which the host notices and recovers
+ * from (see RoomWatchdog).
  *
  * The result is cached so every socket a Vercel instance holds shares one
  * pair of Redis connections instead of opening two each.
@@ -44,10 +47,25 @@ async function open(): Promise<Backend> {
   return { store: new MemoryStore(), bus: new MemoryBus(), label: "memory (this process only)", shared: false };
 }
 
-/** Marketplace integrations name the variable differently, so check the usual ones. */
-export function findRedisUrl(): string | null {
-  const candidates = [process.env.REDIS_URL, process.env.KV_URL, process.env.UPSTASH_REDIS_URL];
-  return candidates.find((value) => value && /^rediss?:\/\//.test(value)) ?? null;
+type Env = Record<string, string | undefined>;
+const REDIS_URL = /^rediss?:\/\//;
+
+/**
+ * Only the three usual names, and only a redis:// URL. Anything else, like
+ * a leftover Marketplace variable under another name, keeps rooms in
+ * memory, so a project never moves to Redis without someone meaning it.
+ */
+export function findRedisUrl(env: Env = process.env): string | null {
+  const candidates = [env.REDIS_URL, env.KV_URL, env.UPSTASH_REDIS_URL];
+  return candidates.find((value) => value !== undefined && REDIS_URL.test(value)) ?? null;
+}
+
+/**
+ * True when every server instance sees the same rooms. A laptop runs one
+ * process, so its memory counts. On Vercel only Redis does.
+ */
+export function sharedStore(env: Env = process.env): boolean {
+  return !env.VERCEL || findRedisUrl(env) !== null;
 }
 
 /**

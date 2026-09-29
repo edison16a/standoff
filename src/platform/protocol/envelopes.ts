@@ -26,6 +26,8 @@ const roomCode = z
 const token = z.string().min(16).max(64);
 const seat = z.number().int().min(1).max(MAX_SEATS);
 export const gameIdSchema = z.string().regex(/^[a-z0-9-]{1,32}$/);
+/** Random, so nobody can answer a check they did not see. */
+const probeNonce = z.string().regex(/^[A-Za-z0-9_-]{16,40}$/);
 
 /** Any game message: an object with a short `kind`. The relay's size cap bounds the rest. */
 export const payloadSchema = z.object({ kind: z.string().min(1).max(32) }).passthrough();
@@ -36,12 +38,44 @@ export type Payload = z.infer<typeof payloadSchema>;
 export const clientEnvelopeSchema = z.discriminatedUnion("type", [
   /** The computer opening a new room for a game, with this many seats. */
   z.object({ type: z.literal("host:create"), game: gameIdSchema, seats: seat }),
-  /** The computer reclaiming its room after a page reload. */
-  z.object({ type: z.literal("host:resume"), code: roomCode, token }),
-  /** The computer ending the game for good. */
+  /**
+   * The computer reclaiming its room after a reload or on a new socket.
+   * The game, seat count and names let a server instance that never had
+   * the room make it again from the signed token.
+   */
+  z.object({
+    type: z.literal("host:resume"),
+    code: roomCode,
+    token,
+    game: gameIdSchema.optional(),
+    seats: seat.optional(),
+    names: z.array(z.string().max(NAME_MAX).nullable()).max(MAX_SEATS).optional(),
+  }),
+  /**
+   * Sent on the host's old socket once its new one resumed the room on
+   * another server instance: the old instance lets the room go and tells
+   * its phones to move to a fresh socket, which lands where the host is.
+   */
+  z.object({ type: z.literal("host:migrate"), code: roomCode, token }),
+  /** The computer ending the game for good. Only tabs from before host:retire send it. */
   z.object({ type: z.literal("host:close") }),
-  /** The computer swapping its room for a fresh one with the same game, taking every phone along. */
+  /** The computer swapping its room for a fresh one with the same game. Only older tabs send it. */
   z.object({ type: z.literal("host:remake") }),
+  /**
+   * Ends a room by its token, from any connection, and says where its
+   * phones go if the host moved on. The token proves ownership rather than
+   * the connection, so this works even when the socket that made the room
+   * is dead or sits on another server instance.
+   */
+  z.object({ type: z.literal("host:retire"), code: roomCode, token, movedTo: roomCode.optional() }),
+  /**
+   * The host checking its own room from a throwaway connection, the way a
+   * phone would reach it: the room must exist, and a message must get to
+   * the host and back.
+   */
+  z.object({ type: z.literal("probe:room"), code: roomCode, token, nonce: probeNonce }),
+  /** The host answering a room:probe, which proves it still hears its room. */
+  z.object({ type: z.literal("host:echo"), nonce: probeNonce }),
   /** The computer talking to one phone or all of them. */
   z.object({ type: z.literal("host:send"), to: z.union([seat, z.literal("all")]), payload: payloadSchema }),
   /**
@@ -66,9 +100,10 @@ export type ClientEnvelope = z.infer<typeof clientEnvelopeSchema>;
 
 /**
  * `unavailable` is a server side failure, worth retrying on a fresh
- * connection. The rest are about names (see NameClash).
+ * connection. `limit` refuses a host that made too many rooms this
+ * minute, and never reaches a phone. The rest are about names (see NameClash).
  */
-export type JoinErrorReason = "not-found" | "full" | "closed" | "unavailable" | NameClash;
+export type JoinErrorReason = "not-found" | "full" | "closed" | "unavailable" | "limit" | NameClash;
 
 /**
  * `name-taken`: a connected player has the name. `name-away`: the name
@@ -76,6 +111,13 @@ export type JoinErrorReason = "not-found" | "full" | "closed" | "unavailable" | 
  * `no-seat`: a reconnect found no seat with that name.
  */
 export type NameClash = "name-taken" | "name-away" | "no-seat";
+
+/**
+ * Why a room check failed. `not-found` covers a wrong token too, so a
+ * check reveals nothing to someone guessing. `no-host` means nobody
+ * listens on the room, and `no-echo` that the host never answered.
+ */
+export type ProbeFailure = "not-found" | "closed" | "moved" | "no-host" | "no-echo";
 
 /** What every client learns about the room it is in. */
 export interface RoomInfo {
@@ -90,9 +132,21 @@ export interface RoomInfo {
  * an instance that has never heard of the room.
  */
 export type ServerEnvelope =
-  | ({ type: "room:created"; token: string; joinUrl: string; sharedRooms: boolean } & RoomInfo)
-  /** `names` holds each seat's player name, null for a seat nobody took. */
-  | ({ type: "room:resumed"; joinUrl: string; connected: boolean[]; names: (string | null)[]; sharedRooms: boolean } & RoomInfo)
+  /** `instance` names the server instance that answered, so the host can tell when it moved. */
+  | ({ type: "room:created"; token: string; joinUrl: string; sharedRooms: boolean; instance?: string } & RoomInfo)
+  /**
+   * `names` holds each seat's player name, null for a seat nobody took.
+   * `restored` means this instance made the room again from its token.
+   */
+  | ({
+      type: "room:resumed";
+      joinUrl: string;
+      connected: boolean[];
+      names: (string | null)[];
+      sharedRooms: boolean;
+      restored?: boolean;
+      instance?: string;
+    } & RoomInfo)
   | { type: "room:error"; reason: JoinErrorReason }
   | { type: "peer:joined"; seat: Seat; rejoined: boolean; name: string }
   | { type: "peer:left"; seat: Seat }
@@ -102,10 +156,26 @@ export type ServerEnvelope =
   | ({ type: "phone:joined"; seat: Seat; token: string; hostHere: boolean; name: string } & RoomInfo)
   | { type: "host:message"; payload: Payload }
   | { type: "host:away" }
-  | { type: "host:back" }
-  | { type: "room:closed" }
-  /** The host remade its lobby. Phones follow to the new room's code. */
+  /**
+   * `rejoin` means the host's room was made again on this server instance,
+   * which knows the phones' seats but not their connections, so each phone
+   * sends its join again over the socket it has.
+   */
+  | { type: "host:back"; rejoin?: boolean }
+  /** The room ended. `lost` means its host never came back, rather than ending the game. */
+  | { type: "room:closed"; lost?: boolean }
+  /** The host moved to a new room, and phones follow its code. Also the answer to a join on a moved room. */
   | { type: "room:moved"; code: string }
+  /**
+   * The answer to host:retire. `found` is false when no room matched the
+   * code and token. `instance` names the server instance that answered,
+   * since without a shared store the room may simply live on another one.
+   */
+  | { type: "room:retired"; code: string; found: boolean; instance?: string }
+  /** Someone holding the host's token is checking the room. The host answers with host:echo. */
+  | { type: "room:probe"; nonce: string }
+  /** The answer to probe:room. The relay closes the connection right after. */
+  | { type: "probe:result"; nonce: string; ok: boolean; reason?: ProbeFailure }
   /**
    * This socket is about to hit the server's time limit. The client should
    * open a new one and rejoin on it before this one is cut.

@@ -1,21 +1,20 @@
-import { AudioEngine } from "@/platform/audio/audio-engine";
-import { startAudioSoon } from "@/platform/audio/autoplay";
-import { RESERVED_KINDS, type PhoneRoomApi, type PhoneRoomEvent } from "@/platform/games/game-api";
+import { RESERVED_KINDS, type PhoneRoomApi } from "@/platform/games/game-api";
 import { SocketClient } from "@/platform/net/socket-client";
-import { defaultName, saveName } from "@/platform/profile";
+import { saveName } from "@/platform/profile";
 import { playersSchema, type Payload, type ServerEnvelope } from "@/platform/protocol";
 import { isNameClash, JoinRequest, TAKEN_RETRY_MS } from "./join-request";
+import { HostSearch } from "./host-search";
+import { createPhoneApi } from "./phone-api";
+import { PhoneAudio } from "./phone-audio";
+import { planJoinError } from "./join-retry";
+import { PhoneEvents } from "./phone-events";
 import { requestMotion } from "./permissions";
 import { createPhoneStore, type PhoneError } from "./phone-store";
 import { ScreenAwake } from "./screen-awake";
-import { rememberMove } from "./room-move";
+import { rememberMoveAs } from "./room-move";
 import { writeToken } from "./seat-token";
 
-/** Fresh sockets to try when a join cannot find the room. */
-const JOIN_RETRIES = 6;
 const reserved = new Set<string>(RESERVED_KINDS);
-/** Host messages kept while the game is still loading. The newest matter most. */
-const BACKLOG_LIMIT = 50;
 
 /**
  * The phone's side of the platform: joining the room under a unique name,
@@ -28,16 +27,18 @@ export class PhoneRoom {
   readonly store = createPhoneStore();
   private readonly socket: SocketClient;
   private readonly awake = new ScreenAwake();
-  private readonly listeners = new Set<(event: PhoneRoomEvent) => void>();
+  private readonly events = new PhoneEvents();
   private readonly request: JoinRequest;
-  private audio: AudioEngine | null = null;
-  private stopAudioWait: (() => void) | null = null;
+  private readonly audio = new PhoneAudio();
   private motion: PhoneRoomApi["motion"] = "unavailable";
   private joinRetries = 0;
   private current: PhoneRoomApi | null = null;
-  private backlog: PhoneRoomEvent[] = [];
   private active = false;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly search = new HostSearch(
+    () => this.store.getState().hostAway,
+    () => this.socket.rotateNow(),
+  );
 
   constructor(
     private readonly code: string,
@@ -68,12 +69,7 @@ export class PhoneRoom {
     this.request.name = name;
     this.request.reconnect = reconnect;
     this.store.setState({ name: name ?? "", stage: "joining", clash: null });
-    this.audio ??= new AudioEngine();
-    const audio = this.audio;
-    // Inside the Join tap this starts sound at once. A phone moved to a new
-    // room had no tap, so its sound waits for the next touch instead.
-    this.stopAudioWait?.();
-    this.stopAudioWait = startAudioSoon(audio.ctx, window, { resume: () => audio.unlock() });
+    this.audio.wake();
     this.motion = await requestMotion();
     this.start();
   }
@@ -85,11 +81,7 @@ export class PhoneRoom {
   resume(): void {
     if (this.active || !this.request.name) return;
     this.store.setState({ name: this.request.name, stage: "joining" });
-    this.audio ??= new AudioEngine();
-    const audio = this.audio;
-    // A reload has no tap, so sound starts on the next touch.
-    this.stopAudioWait?.();
-    this.stopAudioWait = startAudioSoon(audio.ctx, window, { resume: () => audio.unlock() });
+    this.audio.wake();
     // Without a tap iOS cannot grant motion, so a resume there goes through Join (see PhoneApp).
     void requestMotion().then((motion) => (this.motion = motion));
     this.start();
@@ -104,11 +96,10 @@ export class PhoneRoom {
   dispose(): void {
     this.active = false;
     if (this.retryTimer) clearTimeout(this.retryTimer);
+    this.search.stop();
     this.awake.stop();
     this.socket.close();
-    this.stopAudioWait?.();
-    this.audio?.close();
-    this.audio = null;
+    this.audio.close();
   }
 
   /**
@@ -131,28 +122,33 @@ export class PhoneRoom {
     switch (message.type) {
       case "phone:joined": {
         this.joinRetries = 0;
+        this.store.setState({ rejoining: false });
         writeToken(this.code, message.token);
         this.request.seated(message.name);
         const first = this.current === null;
         if (first) this.current = this.makeApi(message.seat, message.seats);
         this.store.setState({ stage: "playing", seat: message.seat, game: message.game, name: message.name, error: null, clash: null, hostAway: !message.hostHere });
         this.sendProfile();
-        if (!first) this.emit({ type: "rejoined" });
+        if (!first) this.events.emit({ type: "rejoined" });
         return;
       }
       case "room:error":
         return this.onJoinError(message.reason);
       case "room:closed":
-        return this.fail("closed");
+        // A host that never came back lost the room, which the phone says plainly.
+        return this.fail(message.lost ? "lost" : "closed");
       case "room:moved":
         return this.moveTo(message.code);
       case "host:away":
         this.store.setState({ hostAway: true });
-        return;
+        return this.search.start();
       case "host:back":
+        this.search.stop();
         this.store.setState({ hostAway: false });
+        // The room was made again where this socket is: sit again, or the host sees nobody.
+        if (message.rejoin) this.socket.send(this.request.message());
         this.sendProfile();
-        this.emit({ type: "rejoined" });
+        this.events.emit({ type: "rejoined" });
         return;
       case "host:message":
         return this.onHost(message.payload);
@@ -162,8 +158,7 @@ export class PhoneRoom {
   /** The host remade its lobby. This page follows to the new room with the same name. */
   private moveTo(code: string): void {
     const { name, seat } = this.store.getState();
-    const chosen = name && !(seat && name === defaultName(seat)) ? name : null;
-    rememberMove({ code, name: chosen });
+    rememberMoveAs(code, name, seat);
     this.store.setState({ stage: "joining", movedTo: code });
     this.dispose();
   }
@@ -180,20 +175,17 @@ export class PhoneRoom {
       this.store.setState({ stage: "name", clash: { reason, name: this.request.name ?? "" } });
       return;
     }
-    // Without a shared room store, a socket can land on a server instance
-    // that has never heard of the room, and a server side failure may
-    // pass. Either way, try a few fresh sockets.
-    const retry = reason === "not-found" || reason === "unavailable";
-    if (retry && this.joinRetries < JOIN_RETRIES) {
-      this.joinRetries += 1;
-      this.socket.redial();
-      return;
-    }
-    this.fail(reason);
+    // A seated phone keeps its game screen while it tries again.
+    const seated = this.request.reconnect;
+    const plan = planJoinError(reason, this.joinRetries, seated);
+    if (plan.kind === "fail") return this.fail(plan.error);
+    this.joinRetries += 1;
+    if (seated) this.store.setState({ rejoining: true });
+    this.retryTimer = setTimeout(() => this.socket.redial(), plan.wait);
   }
 
   private onHost(payload: Payload): void {
-    if (!reserved.has(payload.kind)) return this.emit({ type: "message", payload });
+    if (!reserved.has(payload.kind)) return this.events.emit({ type: "message", payload });
     const players = playersSchema.safeParse(payload);
     if (players.success) this.store.setState({ players: players.data.players });
   }
@@ -207,38 +199,9 @@ export class PhoneRoom {
     this.socket.send({ type: "phone:send", payload });
   }
 
-  /**
-   * The game loads after the phone is seated, and the host starts talking
-   * straight away. Until the game listens, messages wait here.
-   */
-  private emit(event: PhoneRoomEvent): void {
-    if (this.listeners.size === 0) {
-      this.backlog = [...this.backlog, event].slice(-BACKLOG_LIMIT);
-      return;
-    }
-    for (const listener of [...this.listeners]) listener(event);
-  }
-
   private makeApi(seat: number, seats: number): PhoneRoomApi {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias -- motion may settle after the seat does
-    const room = this;
-    return {
-      code: this.code,
-      seat,
-      seats,
-      audio: this.audio ?? new AudioEngine(),
-      get motion() {
-        return room.motion;
-      },
-      send: (payload) => this.send(payload),
-      sendLossy: (payload) => this.socket.sendLossy({ type: "phone:send", payload }),
-      on: (listener) => {
-        this.listeners.add(listener);
-        const waiting = this.backlog;
-        this.backlog = [];
-        queueMicrotask(() => waiting.forEach(listener));
-        return () => this.listeners.delete(listener);
-      },
-    };
+    const sendLossy = (payload: Payload) => this.socket.sendLossy({ type: "phone:send", payload });
+    const [send, on] = [(payload: Payload) => this.send(payload), this.events.on.bind(this.events)];
+    return createPhoneApi({ code: this.code, seat, seats, audio: this.audio.get(), motion: () => this.motion, send, sendLossy, on });
   }
 }

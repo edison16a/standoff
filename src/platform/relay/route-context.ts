@@ -1,5 +1,5 @@
 import type { Backend } from "./backend";
-import { findRedisUrl } from "./create-backend";
+import { sharedStore } from "./create-backend";
 import type { RelayContext } from "./relay-types";
 
 /** Set by the local server, which knows the network address phones must use. */
@@ -20,9 +20,17 @@ export function routeContext(request: Request, backend: Backend, deadline: numbe
     joinUrlFor: (code) => `${origin}/join/${code}`,
     now: Date.now,
     client: clientAddress(request.headers),
-    sharedRooms: local !== undefined || findRedisUrl() !== null,
+    sharedRooms: simulatedInstances() ? false : local !== undefined || sharedStore(),
     deadline,
   };
+}
+
+/**
+ * Set by a local run that stands in for several Vercel instances, each
+ * with rooms of its own, so clients act as they would there.
+ */
+export function simulatedInstances(): boolean {
+  return process.env.STANDOFF_SIMULATE_INSTANCES === "1";
 }
 
 /** Called by the local server before Next starts. */

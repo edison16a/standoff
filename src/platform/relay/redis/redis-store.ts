@@ -2,7 +2,7 @@ import type { Redis } from "ioredis";
 import type { RoomStore } from "../backend";
 import { logFailure } from "../log";
 import { makeToken } from "../room-code";
-import { HOST_GRACE_MS, type RoomRecord } from "../room-state";
+import { HOST_GRACE_MS, TOMBSTONE_MS, type RoomRecord } from "../room-state";
 
 /** Rooms expire this long after their last change, so abandoned ones clean themselves up. */
 const ROOM_TTL_S = 6 * 60 * 60;
@@ -12,6 +12,8 @@ const ROOM_TTL_S = 6 * 60 * 60;
  * hold on to their codes for hours, and the code space is not that big.
  */
 const HOSTLESS_TTL_S = Math.ceil(HOST_GRACE_MS / 1000) + 30;
+/** An ended room is kept as a tombstone, so late phones hear it ended or moved. */
+const TOMBSTONE_TTL_S = TOMBSTONE_MS / 1000;
 /** A lock is released by its holder, or expires on its own if that holder dies. */
 const LOCK_TTL_MS = 3000;
 const LOCK_WAIT_MS = 4000;
@@ -30,7 +32,7 @@ const WRITE_IF_LOCKED = `if redis.call("get", KEYS[1]) == ARGV[1] then redis.cal
 /** Counts a hit, starting the minute on the first one. */
 const BUMP = `local n = redis.call("incr", KEYS[1]) if n == 1 then redis.call("expire", KEYS[1], 60) end return n`;
 
-const ttlFor = (room: RoomRecord) => (room.hostConn === null ? HOSTLESS_TTL_S : ROOM_TTL_S);
+const ttlFor = (room: RoomRecord) => (room.closed ? TOMBSTONE_TTL_S : room.hostConn === null ? HOSTLESS_TTL_S : ROOM_TTL_S);
 
 /**
  * Rooms as JSON values in Redis. Room changes are rare (joins, drops,

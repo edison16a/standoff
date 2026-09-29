@@ -4,6 +4,12 @@ import type { Seat } from "@/platform/protocol";
 export const HOST_GRACE_MS = 30_000;
 /** How long a phone keeps its seat after dropping off the network. */
 export const SEAT_GRACE_MS = 60_000;
+/**
+ * How long an ended room is kept as a tombstone. A phone that slept
+ * through the end, or through a move to a new code, still hears "ended"
+ * or the new code when it wakes, instead of "Room not found".
+ */
+export const TOMBSTONE_MS = 600_000;
 
 export interface SeatRecord {
   token: string;
@@ -34,6 +40,10 @@ export interface RoomRecord {
   hostConn: string | null;
   hostAwaySince: number | null;
   closed: boolean;
+  /** When the room ended. Optional because rooms saved before tombstones have none. */
+  closedAt?: number | null;
+  /** The room the host moved to, so a late phone can follow. */
+  movedTo?: string | null;
   /** One entry per seat, seat 1 first. Its length is how many phones the room takes. */
   seats: (SeatRecord | null)[];
 }
@@ -51,6 +61,18 @@ export function newRoom({ seats, ...room }: NewRoom): RoomRecord {
   return { ...room, hostAwaySince: null, closed: false, seats: Array.from({ length: seats }, () => null) };
 }
 
+/**
+ * The same room made again on a server instance that never had it, from
+ * the host's signed token. Its seats wait for their phones, under the
+ * names the host remembers, and each phone takes its own back with its
+ * signed seat token (see claimSeat).
+ */
+export function restoredRoom(room: NewRoom, names: (string | null)[], now: number): RoomRecord {
+  const fresh = newRoom(room);
+  const seats = fresh.seats.map((_, i): SeatRecord | null => (names[i] ? { token: "", conn: null, awaySince: now, name: names[i] } : null));
+  return { ...fresh, seats };
+}
+
 /** True once the host has been gone longer than the grace period. */
 export function hostExpired(room: RoomRecord, now: number): boolean {
   return room.hostConn === null && room.hostAwaySince !== null && now - room.hostAwaySince > HOST_GRACE_MS;
@@ -61,8 +83,26 @@ export function isDead(room: RoomRecord, now: number): boolean {
   return room.closed || hostExpired(room, now);
 }
 
-/** Marks a seat away, but only if this connection still holds it. */
+/**
+ * Ends a room for the holder of its token. Allowed on a room that already
+ * ended, so a retire that was sent twice, or after a close, still answers.
+ */
+export function retire(room: RoomRecord, token: string, movedTo: string | null, now: number): RoomRecord | null {
+  if (token !== room.hostToken) return null;
+  return { ...room, closed: true, closedAt: room.closedAt ?? now, movedTo: movedTo ?? room.movedTo ?? null, hostConn: null };
+}
+
+/** An ended room with nothing left but its tombstone. */
+export function tombstone(room: RoomRecord, now: number): RoomRecord {
+  return { ...room, closed: true, closedAt: room.closedAt ?? now };
+}
+
+/**
+ * Marks a seat away, but only if this connection still holds it. An ended
+ * room is left alone, so a late disconnect never rewrites its tombstone.
+ */
 export function releaseSeat(room: RoomRecord, seat: Seat, conn: string, now: number): RoomRecord | null {
+  if (room.closed) return null;
   const held = room.seats[seat - 1];
   if (!held || held.conn !== conn) return null;
   return withSeat(room, seat, { ...held, conn: null, awaySince: now });
@@ -70,6 +110,7 @@ export function releaseSeat(room: RoomRecord, seat: Seat, conn: string, now: num
 
 /** Empties a seat this connection holds, for a join whose token never reached the phone. */
 export function vacateSeat(room: RoomRecord, seat: Seat, conn: string): RoomRecord | null {
+  if (room.closed) return null;
   if (room.seats[seat - 1]?.conn !== conn) return null;
   return withSeat(room, seat, null);
 }
@@ -85,9 +126,9 @@ export function claimHost(
   return { room: { ...room, hostConn: conn, hostAwaySince: null }, replaced: room.hostConn };
 }
 
-/** Marks the host away, but only if this connection is still the host. */
+/** Marks the host away, but only if this connection is still the host of a live room. */
 export function releaseHost(room: RoomRecord, conn: string, now: number): RoomRecord | null {
-  if (room.hostConn !== conn) return null;
+  if (room.closed || room.hostConn !== conn) return null;
   return { ...room, hostConn: null, hostAwaySince: now };
 }
 

@@ -21,6 +21,20 @@ export interface RelayContext {
    * Vercel ends every function at its maximum duration, sockets included.
    */
   deadline: number | null;
+  /** Signs room tokens. Every instance of one deployment shares it (see roomSecret). */
+  secret?: string;
+  /** Names this server instance, so a host can tell its new socket landed on another. */
+  instance?: string;
+  /** How the client reached us, for the log. */
+  transport?: "ws" | "stream";
+}
+
+const INSTANCE = Symbol.for("standoff.instance");
+
+/** A random name for this process, the same for every module copy in it. */
+export function instanceId(): string {
+  const holder = globalThis as { [INSTANCE]?: string };
+  return (holder[INSTANCE] ??= Math.random().toString(36).slice(2, 10));
 }
 
 /** How long before the deadline the client is asked to move to a new socket. */
