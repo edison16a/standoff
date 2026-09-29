@@ -174,7 +174,10 @@ export class Lobby {
    * two a side.
    */
   lineup(): Entry[] {
-    const spare = this.spareStars();
+    // Stars nobody picked go first; if they run out, the stars of people not in this game are free too.
+    const playing = new Set(this.players.map((seat) => this.seats.get(seat)!.pick));
+    const free = this.spareStars();
+    const spare = [...free, ...CHARACTER_IDS.filter((id) => !playing.has(id) && !free.includes(id))];
     const star = () => spare.shift() ?? CHARACTER_IDS[0];
     const out: Entry[] = [];
     for (const team of [0, 1] as const) {

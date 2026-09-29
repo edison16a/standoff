@@ -28,7 +28,7 @@ export function ChoosePad({ host }: { host: PhoneState }) {
         {choose.options.map((option) => {
           const words = option === "kick" && convert ? { title: "Kick for 1", sub: "An extra point from the 15" } : WORDS[option];
           return (
-            <button key={option} type="button" className={`fb-choose__option fb-choose__option--${option}`} onClick={() => phone.call(option)}>
+            <button key={option} type="button" className={`fb-choose__option fb-choose__option--${option}`} aria-label={words.title} onClick={() => phone.call(option)}>
               <strong>{words.title}</strong>
               <span>{words.sub}</span>
             </button>

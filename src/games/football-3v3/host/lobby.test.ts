@@ -71,6 +71,15 @@ describe("the football lobby", () => {
     expect(new Set(stars).size).toBe(6);
   });
 
+  it("never fields the same star twice, lending out the stars of people not in the game", () => {
+    const lobby = readyLobby([[1, "reed"], [2, "banks"]]);
+    lobby.setTeam(2, 0);
+    lobby.setReady(2, false);
+    const stars = lobby.lineup().map((e) => e.character);
+    expect(new Set(stars).size).toBe(6);
+    expect(stars).toContain("banks");
+  });
+
   it("puts a ready runner at QB when the side's QB is not ready yet", () => {
     const lobby = readyLobby([[1, "reed"], [2, "banks"]]);
     lobby.setTeam(2, 0);

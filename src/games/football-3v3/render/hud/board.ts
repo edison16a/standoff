@@ -50,7 +50,9 @@ function situation(view: MatchView): string {
     case "kick":
       return view.kick?.fieldGoal ? (view.drive.conversion ? "Extra point" : "Field goal") : "Punt";
     default:
-      return view.drive.conversion ? "Two point try" : view.drive.text;
+      if (!view.drive.conversion) return view.drive.text;
+      // The walk back after a kicked extra point still belongs to the try, but it was not a two point one.
+      return view.phase === "dead" && (view.lastEnd === "fieldGoal" || view.lastEnd === "missedKick") ? "Extra point" : "Two point try";
   }
 }
 

@@ -23,8 +23,9 @@ function CalloutBar() {
 /** Along the top: each phone's player, their star and role, and who has the ball. */
 function PlayerStrip() {
   const strip = useFootballStore((s) => s.strip);
-  const over = useFootballStore((s) => s.phase === "over");
-  if (strip.length === 0 || over) return null;
+  // At the final whistle the end screen lists everyone, and in a replay the REPLAY tag takes the top.
+  const hidden = useFootballStore((s) => s.phase === "over" || s.phase === "replay");
+  if (strip.length === 0 || hidden) return null;
   return (
     <ul className="fb-strip">
       {strip.map((p) => (

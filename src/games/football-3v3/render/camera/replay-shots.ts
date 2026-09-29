@@ -39,9 +39,9 @@ export function replayAim(view: MatchView, shot: ReplayShot): Aim {
     const dir = flat(to.x - passer.x, to.z - passer.z, downfield);
     const right = { x: -dir.z, z: dir.x };
     return {
-      pos: { x: passer.x - dir.x * 3.4 + right.x * 0.9, y: 2.5, z: passer.z - dir.z * 3.4 + right.z * 0.9 },
-      look: { x: passer.x + dir.x * 16, y: 1.1, z: passer.z + dir.z * 16 },
-      fov: 44, rate: 5, kind: "replay-qb",
+      pos: { x: passer.x - dir.x * 5.2 + right.x * 1.3, y: 3, z: passer.z - dir.z * 5.2 + right.z * 1.3 },
+      look: { x: passer.x + dir.x * 18, y: 0.9, z: passer.z + dir.z * 18 },
+      fov: 46, rate: 5, kind: "replay-qb",
     };
   }
   if (shot.camera === "ball") {

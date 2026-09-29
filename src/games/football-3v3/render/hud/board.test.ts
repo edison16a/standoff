@@ -48,6 +48,16 @@ describe("scoreboard", () => {
     expect(scoreboard(v).period).toBe("OT");
   });
 
+  it("calls a try by what it was, even in the walk back after it", () => {
+    const v = freshView();
+    v.drive = { ...v.drive, conversion: true };
+    v.phase = "presnap";
+    expect(scoreboard(v).situation).toBe("Two point try");
+    v.phase = "dead";
+    v.lastEnd = "fieldGoal";
+    expect(scoreboard(v).situation).toBe("Extra point");
+  });
+
   it("rounds the clock up so it never shows 0:00 with time left", () => {
     expect(clockText(0.2)).toBe("0:01");
     expect(clockText(150)).toBe("2:30");
