@@ -30,12 +30,16 @@ describe("a whole game of computer players", () => {
     expect(total).toEqual(m.score);
   });
 
-  it("throws, catches and tackles along the way", () => {
-    const count = (type: MatchEvent["type"]) => events.filter((e) => e.type === type).length;
-    expect(count("hike")).toBeGreaterThan(3);
-    expect(count("throw")).toBeGreaterThan(2);
-    expect(count("catch")).toBeGreaterThan(1);
-    expect(count("tackle") + count("incomplete")).toBeGreaterThan(1);
+  it("throws, pitches, catches and tackles along the way", () => {
+    // A few games, so one lopsided game cannot hide a missing piece.
+    const all = [events, ...[2, 3].map((seed) => playOut(seed).events)].flat();
+    const count = (type: MatchEvent["type"]) => all.filter((e) => e.type === type).length;
+    expect(count("hike")).toBeGreaterThan(9);
+    expect(count("throw")).toBeGreaterThan(6);
+    expect(count("pitch")).toBeGreaterThan(0);
+    expect(count("takePitch")).toBeGreaterThan(0);
+    expect(count("catch")).toBeGreaterThan(3);
+    expect(count("tackle") + count("incomplete")).toBeGreaterThan(3);
   });
 
   it("keeps the stats in step with the plays", () => {
