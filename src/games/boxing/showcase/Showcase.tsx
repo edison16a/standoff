@@ -7,7 +7,7 @@ import { ShoulderCamera } from "../render/cameras/shoulder-camera";
 import { TvCamera } from "../render/cameras/tv-camera";
 import { FightRenderer, FULL } from "../render/fight-renderer";
 import { FightScene } from "../render/fight-scene";
-import { LOOKS } from "../render/models/looks";
+import { boxerLook } from "../render/models/looks";
 import { iconShot, posterShot, trailerShot } from "./shots";
 import { CYCLE_S, Trailer } from "./trailer";
 import "../styles/showcase.css";
@@ -31,7 +31,7 @@ export function Showcase({ view }: { view: ShowcaseView }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const renderer = new FightRenderer(canvas, { preserve: true });
-    const scene = new FightScene(renderer.renderer, [LOOKS[0]!, LOOKS[2]!]);
+    const scene = new FightScene(renderer.renderer, [boxerLook("counter-puncher", "Player 1"), boxerLook("out-boxer", "Player 2")]);
     const tv = new TvCamera();
     const shoulder = new ShoulderCamera(52);
     let trailer = new Trailer();

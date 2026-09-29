@@ -31,7 +31,7 @@ export class FaceTexture {
     this.level = next;
     const ctx = this.canvas.getContext("2d");
     if (!ctx) return;
-    const random = seeded(this.look.id.length * 977 + 13);
+    const random = seeded([...this.look.body].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 13));
     paintSkin(ctx, this.look);
     paintHair(ctx, this.look, random);
     paintBeard(ctx, this.look, random);

@@ -5,9 +5,9 @@ import type { Look } from "./looks";
 /** The third man in the ring. Only the face, hair and shoes come from the look. */
 export const REFEREE_LOOK: Look = {
   id: "referee",
+  body: "referee",
   name: "Referee",
   nickname: "",
-  from: "",
   skin: "#d5a383",
   skinShade: "#a87458",
   hair: "#3d3834",
