@@ -74,7 +74,8 @@
 
 .zs-toasts {
   position: absolute;
-  top: 76px;
+  /* Under the top strip, which reaches this corner while a boss is up. */
+  top: 120px;
   right: 20px;
   display: flex;
   flex-direction: column;
