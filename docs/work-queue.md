@@ -57,6 +57,15 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
    * Settings gets a button to wipe the leaderboards.
    * A shared kit piece, so both games use the same one.
 5. **Subway Runner keyboard mode:** play with the arrow keys or WASD (left and right switch lanes, up jumps, down rolls) as well as the camera.
+   * **Subway Runner Demon difficulty:** a fourth level after Hard, very difficult (faster start, denser obstacles, less reaction time).
+   * **Score multipliers by difficulty:** each level carries its own multiplier (for example Easy 1x, Medium 1.5x, Hard 2x, Demon 3x; tune by playing), shown before the run and on the score.
+   * **Coins add to the score:** every coin and pickup raises the score (on top of distance), also scaled by the multiplier. The leaderboard stores the final score.
+
+6. **Soccer 3v3 fixes from play testing:**
+   * Free kick curve changes only how much the ball bends (from a straight kick to a wide curve). It must never move the aim.
+   * The keeper is still a brick wall: make the goal 1.5 to 2 times bigger (tune within that range by playing until shots beat the keeper often enough to be fun) and keep the keeper exactly the same size, reach and speed, so scoring is fair.
+
+7. **No duplicate name boxes:** in every game where each player's name already shows on or above their character, remove the separate boxes along the bottom of the big screen that just repeat names like "Edison Law". Audit every game. If a box also carries something useful (health, score, ammo), move that onto the name tag or the main HUD instead of losing it.
 
 ### Last
 
@@ -66,6 +75,15 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
    * Paintball Battle: close ups of a player running then sliding, then a 3v3 firefight seen from one player's view.
    * Basketball 3v3: a cinematic dunk, then an iso play into a three that banks in, then the team celebrating as champions, looping smoothly.
    * Every other game gets the same treatment with its own best moments (Soccer goals and the SUI, Football touchdowns, Kart drifts and glides, Blade Clash slashes, Boxing knockdowns and the belt, and so on).
+   * Zombie Survival: the team riding in the back of a car or truck, zombies bursting out and chasing them, then a cut to gameplay.
+4. **Cinematic game icons for every game, like movie posters or key art** (almost photo like, very tough, the single most exciting moment, drawn from the real game in 3D with the stylised title). Examples from the owner:
+   * Basketball 3v3: one player dunking on another.
+   * Boxing: one boxer landing a punch and the other falling, knocked out.
+   * Soccer 3v3: a player jumping over a slide tackle with the ball.
+   * Zombie Survival: third person, not first person: the team on a car being chased by zombies.
+   * Paintball Battle: one player crouched behind a wall, facing the camera, paintballs flying past him, the other team shooting in the background.
+   * Shooting Gallery and every other game get the same treatment with their own most cinematic moment.
+5. **Home screen tiles (app icons) 1.2 times bigger.**
 
 ## Done recently
 
