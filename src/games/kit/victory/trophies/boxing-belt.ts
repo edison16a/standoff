@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { bannerTexture, leatherTexture } from "./belt-textures";
+import { bannerTexture, leatherTextures } from "./belt-textures";
 import { gem, metal, satinMetal } from "./materials";
 import { add } from "./shapes";
 
@@ -62,9 +62,20 @@ function addStrap(group: THREE.Group, colour: string, place: (x: number, z: numb
     position.setXYZ(i, p.x, position.getY(i), p.z);
   }
   geometry.computeVertexNormals();
-  const map = leatherTexture();
-  if (map) map.repeat.set(1, 1);
-  const leather = new THREE.MeshPhysicalMaterial({ color: colour, map, bumpMap: map, bumpScale: 1.5, roughness: 0.5, sheen: 0.4, sheenColor: new THREE.Color("#ffffff"), clearcoat: 0.3, clearcoatRoughness: 0.4 });
+  const textures = leatherTextures(colour);
+  // Low sheen and a soft coat: bright white sheen washed dark leather out to grey under spotlights.
+  const leather = new THREE.MeshPhysicalMaterial({
+    color: textures ? "#ffffff" : colour,
+    map: textures?.map ?? null,
+    bumpMap: textures?.bump ?? null,
+    bumpScale: 1.5,
+    roughness: 0.55,
+    sheen: 0.15,
+    sheenColor: new THREE.Color(colour).lerp(new THREE.Color("#ffffff"), 0.25),
+    sheenRoughness: 0.6,
+    clearcoat: 0.12,
+    clearcoatRoughness: 0.5,
+  });
   add(group, geometry, leather);
 }
 

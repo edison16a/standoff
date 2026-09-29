@@ -10,22 +10,20 @@ function canvas(width: number, height: number): [HTMLCanvasElement, CanvasRender
 }
 
 /**
- * The strap's leather: a grain of fine creases, with a row of stitches
- * along each edge. Returned as a colour map (tinted by the material) and
- * a bump map made from the same drawing.
+ * Draws the strap's leather: a grain of fine creases and a row of
+ * stitches along each edge. `paint` false draws it in greys for the bump
+ * map; true draws it in the leather's colour with gold thread, since a
+ * tint on the whole map would darken the thread along with the leather.
  */
-export function leatherTexture(): THREE.Texture | null {
-  const made = canvas(1024, 128);
-  if (!made) return null;
-  const [c, ctx] = made;
-  ctx.fillStyle = "#cfcfcf";
+function drawLeather(ctx: CanvasRenderingContext2D, colour: string, paint: boolean): void {
+  ctx.fillStyle = paint ? colour : "#cfcfcf";
   ctx.fillRect(0, 0, 1024, 128);
   let s = 5;
   const random = () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646;
-  // Grain: many short faint creases.
+  // Grain: many short faint creases, darker or lighter than the leather.
   for (let i = 0; i < 2400; i++) {
-    const v = 170 + random() * 70;
-    ctx.strokeStyle = `rgba(${v},${v},${v},0.5)`;
+    const v = paint ? (random() < 0.5 ? 0 : 255) : 170 + random() * 70;
+    ctx.strokeStyle = `rgba(${v},${v},${v},${paint ? 0.08 : 0.5})`;
     ctx.lineWidth = 1;
     const x = random() * 1024;
     const y = random() * 128;
@@ -34,17 +32,30 @@ export function leatherTexture(): THREE.Texture | null {
     ctx.lineTo(x + (random() - 0.5) * 10, y + (random() - 0.5) * 4);
     ctx.stroke();
   }
-  // Stitches: a dashed light thread in a dark groove near each edge.
+  // Stitches: a dashed thread in a pressed groove near each edge.
   for (const y of [14, 114]) {
-    ctx.fillStyle = "#6a6a6a";
+    ctx.fillStyle = paint ? "rgba(0,0,0,0.35)" : "#6a6a6a";
     ctx.fillRect(0, y - 3, 1024, 6);
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = paint ? "#d9b45a" : "#ffffff";
     for (let x = 4; x < 1024; x += 16) ctx.fillRect(x, y - 2, 10, 4);
   }
-  const texture = new THREE.CanvasTexture(c);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.wrapS = THREE.RepeatWrapping;
-  return texture;
+}
+
+/**
+ * The strap's leather in `colour` with gold stitching, and a matching
+ * bump map in greys. Null where there is no document.
+ */
+export function leatherTextures(colour: string): { map: THREE.Texture; bump: THREE.Texture } | null {
+  const painted = canvas(1024, 128);
+  const grey = canvas(1024, 128);
+  if (!painted || !grey) return null;
+  drawLeather(painted[1], colour, true);
+  drawLeather(grey[1], colour, false);
+  const map = new THREE.CanvasTexture(painted[0]);
+  map.colorSpace = THREE.SRGBColorSpace;
+  const bump = new THREE.CanvasTexture(grey[0]);
+  for (const texture of [map, bump]) texture.wrapS = THREE.RepeatWrapping;
+  return { map, bump };
 }
 
 /** A banner's lettering: gold capitals on dark enamel. */
