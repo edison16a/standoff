@@ -1,3 +1,4 @@
+import { ROSTER } from "../roster";
 import { attackSign, other, type TeamId } from "../teams";
 import { isHuman } from "./athlete";
 import { newBall } from "./ball";
@@ -11,8 +12,8 @@ import type { Athlete, MatchState, SetPiece, SetPieceKind } from "./types";
 import { add, type Vec2 } from "./vec";
 import { behindBall, formWall, place, wallLine } from "./wall";
 
-/** How far behind the ball each taker waits for the run up. */
-const RUN_UP = { free: 2.2, penalty: 1.8 } as const;
+/** How far behind the ball each taker waits for the run up, and how far off to the side of the kicking foot. */
+const RUN_UP = { free: { back: 2.1, side: 1.2 }, penalty: { back: 1.9, side: 1 } } as const;
 
 /**
  * Who takes it: the player who was fouled, unless a phone's player on
@@ -43,7 +44,9 @@ export function setupSetPiece(state: MatchState, kind: SetPieceKind = state.foul
   const spot = kind === "penalty" ? penaltySpot(defending) : { ...(state.foul?.at ?? { x: 0, z: 0 }) };
   const taker = pickTaker(state, team, fouled);
   for (const a of state.athletes) reset(a);
-  place(taker, behindBall(spot, defending, RUN_UP[kind]), spot);
+  // A right footer comes in from the left of the ball, a left footer from the right.
+  const run = RUN_UP[kind];
+  place(taker, behindBall(spot, defending, run.back, ROSTER[taker.character].foot === "left" ? run.side : -run.side), spot);
   const wall = kind === "free" ? formWall(state, defending, spot) : [];
   placeOthers(state, taker, wall, spot, defending, kind);
   const ball = newBall();

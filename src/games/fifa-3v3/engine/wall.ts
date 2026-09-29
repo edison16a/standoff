@@ -74,8 +74,14 @@ export function place(a: Athlete, at: Vec2, facing: Vec2): void {
   a.facing = Math.atan2(to.z, to.x);
 }
 
-/** A spot `back` metres behind the ball on the line from the goal, for the taker's run up. */
-export function behindBall(spot: Vec2, defending: TeamId, back: number): Vec2 {
+/**
+ * Where the taker waits for the run up: `back` metres behind the ball on
+ * the line from the goal and `side` metres to the kicker's right (left
+ * when negative), so the run comes in at an angle onto the kicking foot
+ * and the camera behind the ball sees the ball and the white line.
+ */
+export function behindBall(spot: Vec2, defending: TeamId, back: number, side = 0): Vec2 {
   const toward = norm(sub({ x: goalX(defending), z: 0 }, spot));
-  return add(spot, scale(toward, -back));
+  const right = { x: -toward.z, z: toward.x };
+  return add(add(spot, scale(toward, -back)), right, side);
 }

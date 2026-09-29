@@ -8,10 +8,11 @@ import { botSetPiece } from "./set-piece-bot";
 import { AIM_RATE, takerInput, type TakerInput } from "./set-piece-input";
 import { SET_KICK, strikeKick } from "./set-piece-kick";
 import { judgeFreeKick, judgePenalty, penaltyDive } from "./set-piece-save";
+import { goalX } from "./goal";
 import { planDive } from "./keeper";
 import { TOUCH } from "./tuning";
 import type { Command, MatchState, SetPiece } from "./types";
-import { clamp, dist, len, norm, scale, sub } from "./vec";
+import { add, clamp, dist, len, norm, scale, sub } from "./vec";
 
 /** A taker who leaves a stage alone this long has it made for them, so a match never stalls. */
 export const STAGE_TIMEOUT = 15;
@@ -88,7 +89,9 @@ function runUp(state: MatchState, sp: SetPiece, dt: number): void {
     taker.actionT = 0;
     taker.power = sp.power;
     taker.actionLen = shotWindup(sp.power) + 0.4;
-    taker.actionDir = norm(sub(sp.spot, taker.pos));
+    // Coming in at an angle, the body opens halfway to the goal, which leaves the ball on the kicking foot's side.
+    const toGoal = norm(sub({ x: goalX(other(sp.team)), z: 0 }, sp.spot));
+    taker.actionDir = norm(add(norm(sub(sp.spot, taker.pos)), toGoal));
   }
   turnToward(taker, Math.atan2(taker.actionDir.z, taker.actionDir.x), 12 * dt);
   if (taker.actionT >= shotWindup(sp.power)) launch(state, sp);
