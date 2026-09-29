@@ -60,6 +60,20 @@ describe("ConfettiSim", () => {
     expect(sim.state.filter((s) => s === FLYING).length).toBe(3);
   });
 
+  it("keeps raining after a big burst by lifting the longest landed piece first", () => {
+    const sim = new ConfettiSim(6, seeded(9), { restS: 100 });
+    sim.spawn(4, { kind: "rain", at: { x: 0, y: 0.05, z: 0 }, radius: 1 });
+    for (let t = 0; t < 1; t += 0.1) sim.step(0.1);
+    sim.spawn(2, { kind: "rain", at: { x: 0, y: 0.05, z: 0 }, radius: 1 });
+    for (let t = 0; t < 0.5; t += 0.1) sim.step(0.1);
+    const landedAges = [...sim.age].map((a, i) => ({ a, i })).filter(({ i }) => sim.state[i] === LANDED);
+    expect(landedAges.length).toBe(6);
+    const longest = landedAges.reduce((x, y) => (y.a > x.a ? y : x)).i;
+    sim.spawn(1, { kind: "rain", at: { x: 0, y: 8, z: 0 }, radius: 1 });
+    expect(sim.state[longest]).toBe(FLYING);
+    expect(sim.flying).toBe(1);
+  });
+
   it("a cannon carries several metres up before the air takes it", () => {
     const sim = new ConfettiSim(40, seeded(9), { floorY: -100 });
     sim.spawn(40, { kind: "burst", at: { x: 0, y: 0, z: 0 }, direction: { x: 0, y: 1, z: 0 }, speed: 12, spread: 0.1 });

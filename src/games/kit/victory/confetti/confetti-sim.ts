@@ -87,7 +87,11 @@ export class ConfettiSim {
     return n;
   }
 
-  /** Puts `n` pieces into the air. Free pieces go first, then ones that have lain long enough, so a long party never runs dry. */
+  /**
+   * Puts `n` pieces into the air. Free pieces go first, then ones that
+   * have lain long enough, then the one that has lain longest, so a long
+   * party never runs dry. Pieces in the air are never taken.
+   */
   spawn(n: number, emitter: Emitter): void {
     for (let k = 0; k < n; k++) {
       const i = this.pick();
@@ -153,13 +157,18 @@ export class ConfettiSim {
   }
 
   private pick(): number {
+    let oldest = -1;
     for (let tries = 0; tries < this.count; tries++) {
       const i = this.next;
       this.next = (this.next + 1) % this.count;
       if (this.state[i] === FREE) return i;
-      if (this.state[i] === LANDED && this.age[i]! >= this.physics.restS) return i;
+      if (this.state[i] === LANDED) {
+        if (this.age[i]! >= this.physics.restS) return i;
+        if (oldest < 0 || this.age[i]! > this.age[oldest]!) oldest = i;
+      }
     }
-    return -1;
+    // Everything is in the air or only just landed: lift the piece that has lain longest, so a rain never stalls after a big burst.
+    return oldest;
   }
 
   private launch(i: number, e: Emitter): void {
