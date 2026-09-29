@@ -74,6 +74,7 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ## Conventions
 
+* Calibration point counts are settled: 6 hold points for sword games (Fruit Slicer, Blade Clash), 3 for shooters. More points add waiting without adding accuracy, since the fit only learns the middle and four edge spans.
 * Commits end with the co-author and session trailers; the helper `commit.sh` in the session scratchpad adds them. Many small commits, pushed to main.
 * Writing: no em dashes, no double hyphens, no hyphens used as punctuation, no midline dots or bullet characters inside sentences, no arrows standing in for words, short plain sentences.
 * Code: production level, files under about 200 lines, short comments that say why.
