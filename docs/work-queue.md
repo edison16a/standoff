@@ -15,7 +15,6 @@ The running list of what is being built, so work can pick up again after a break
 | Work | Workflow | State |
 | --- | --- | --- |
 | **Room reliability (top priority):** find why rooms fail about every other time and fix the cause, a host watchdog that checks the room like a phone would and fully remakes it when broken, the QR code hidden until the room passes its check, and a Regenerate room button right under the QR code | wf_3938ab23-6cc | four investigations (live site repro, local multi instance repro, client audit, relay audit), two designs and a judge, one build, then stress, code and production reviews with fix rounds |
-| Batch F part 1: Subway Runner keyboard mode, Demon difficulty, score multipliers, coins in the score, and the shared local leaderboard with a wipe button in Settings | wf_3b3788e1-4d9 | build then review |
 | Batch C and D, finishing what the restart interrupted, in the same worktrees, two at a time | wf_9713e4a2-c2a | Basketball part 2, then Football 3v3 steps 2 and 3, each reviewed |
 | Batch E part 2: Soccer World Cup trophy scene and builds instead of stars; winner scenes for Blade Clash, Paintball Battle and Cube Game | wf_60afdf28-2d3 | build then review each |
 
@@ -44,7 +43,7 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
    * Difficulty comes from speed, not numbers. Zombies are fast from the start (1x), about 10 percent faster each round, capped at 2x.
    * A big slow boss every 5 rounds, with fast zombies rushing in behind it. A mini boss every other round.
 
-### Batch F: the second to last changes, after Batch E and before the final steps
+### Batch F: the second to last changes, after Batch E and before the final steps (Subway keyboard mode, Demon, multipliers, coin score and the shared leaderboard are done; the rest waits for the Cube Game and Soccer winner work to land)
 
 1. **Cube Game portals:**
    * Turned sideways, like Geometry Dash, each showing a picture of what the player becomes (ship, ball and so on).
@@ -88,6 +87,7 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ## Done recently
 
+* Subway Runner: keyboard mode (arrows or WASD), a Demon level, score multipliers per level (Easy x1 to Demon x3), coins and power ups in the score, and a leaderboard on each computer that shows your rank after every run (src/games/kit/leaderboard). Settings has Clear leaderboards.
 * Subway Runner overhaul: no neon, a sunny rail yard with graffiti trains, ramps and barriers, a cartoon runner chased by the inspector and his dog, snappy lanes, real jump arcs, rolls and stumbles, working power ups, a new song and sounds.
 * Zombie Survival rework: a crosshair and a real trade off per weapon, recoil that springs back to the aim, short rounds of at most 10 early and about 20 late, 10 percent faster each round up to double, big bosses every 5 rounds with runners behind them and mini bosses between.
 * Hold to calibrate in every pointing game: 6 targets for sword games, 5 for shooters, Magic Kart holds the middle dot for a second, pointers stay at the edge.
@@ -121,6 +121,7 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ## Conventions
 
+* Disk: the session has a fixed disk allowance. Every check in, delete `.next` folders in worktrees whose work is merged or idle, and anything big left in /dev/shm or /tmp.
 * Calibration is always the modern hold to calibrate (point, hold still, it fills and moves on, no button) in every pointing game, with 4 to 6 targets as the owner asked: 6 for sword games (Fruit Slicer, Blade Clash), 5 for shooters (the middle and all four corners). Never go back to 3, and never add more than 6: the fit only learns the middle and four edge spans, so extra holds add waiting without accuracy.
 * Commits end with the co-author and session trailers; the helper `commit.sh` in the session scratchpad adds them. Many small commits, pushed to main.
 * Writing: no em dashes, no double hyphens, no hyphens used as punctuation, no midline dots or bullet characters inside sentences, no arrows standing in for words, short plain sentences.
