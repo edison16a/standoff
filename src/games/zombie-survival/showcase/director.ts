@@ -36,6 +36,8 @@ const STEP = 1 / 60;
 const WEAK_FLOOR = 20;
 /** The stagger's push back takes this long, so the boss reels rather than jumps. */
 const REEL = 0.35;
+/** A computer player fires again once its gun's kick is back within this, in radians. */
+const SETTLED = 0.006;
 
 /**
  * The game playing itself for the home screen. It runs the real engine
@@ -113,6 +115,8 @@ export class ShowcaseDirector implements SceneSource {
     for (const bot of this.bots) {
       const target = picks.get(bot.seat);
       if (!bot.track(target, dt, this.clock) || !target || blocked(target, bot.aim, targets)) continue;
+      // Like a steady hand, each waits for its gun to settle from the last kick.
+      if ((this.game.squad.get(bot.seat)?.gun.recoil.size ?? 0) > SETTLED) continue;
       const cast = (offsets: Parameters<typeof view.cast>[2]) =>
         view.cast(bot.seat, bot.aim, offsets).map((hit) => (hit && hit.zombie !== target.zombie ? null : hit));
       if (!this.game.fire(bot.seat, cast)) continue;
