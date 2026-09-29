@@ -122,7 +122,7 @@ Every build has ten ratings from 0 to 99, shown as bars on the phone, with its o
 
 ## The trophy ceremony
 
-At the final whistle the winners celebrate where they stand for a few seconds. Then the picture cuts to the whole winning side on the centre spot, their keeper with them. The captain, their top scorer (a phone's player before a computer on a tie), holds a World Cup style trophy from the victory kit at his chest.
+At the final whistle the winners celebrate where they stand for a few seconds. Then the picture cuts to the whole winning side on the centre spot, their keeper with them. The captain, their top scorer (a phone's player before a computer on a tie), holds a World Cup style trophy from the victory kit in front of him, low enough that his face shows over it.
 
 1. **The cup:** a low shot in front of the side drifts round and pushes in. The team mates clap, the captain looks down at the cup and gives it a kiss. Spotlights fade up over them.
 2. **The lift:** he dips at the knees and drives it up over his head with both hands. The cup is held between his hands every frame, so it rises with the lift. The camera sinks and tilts up with it.
