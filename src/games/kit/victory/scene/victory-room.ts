@@ -77,6 +77,11 @@ export class VictoryRoom {
     this.resize = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(() => this.fit());
     this.resize?.observe(holder);
     this.fit();
+    // In development a test driver can find every open room and run it forward, since software rendering is slow.
+    if (process.env.NODE_ENV !== "production" && typeof window !== "undefined") {
+      const dev = window as unknown as { __victoryRooms?: Set<VictoryRoom> };
+      (dev.__victoryRooms ??= new Set()).add(this);
+    }
   }
 
   /** Called every frame before drawing, with seconds since the last frame and since the start. */
@@ -92,7 +97,14 @@ export class VictoryRoom {
     this.frame = requestAnimationFrame(this.draw);
   }
 
+  /** Runs the scene `seconds` forward in small steps without drawing, to open part way through. */
+  advance(seconds: number): void {
+    const step = 1 / 30;
+    for (let left = seconds; left > 1e-6; left -= step) this.step(Math.min(step, left));
+  }
+
   dispose(): void {
+    if (typeof window !== "undefined") (window as unknown as { __victoryRooms?: Set<VictoryRoom> }).__victoryRooms?.delete(this);
     cancelAnimationFrame(this.frame);
     this.frame = 0;
     this.resize?.disconnect();
@@ -109,15 +121,18 @@ export class VictoryRoom {
 
   private readonly draw = (now: number) => {
     this.frame = requestAnimationFrame(this.draw);
-    const dt = Math.min(0.1, Math.max(0, (now - this.last) / 1000));
+    this.step(Math.min(0.1, Math.max(0, (now - this.last) / 1000)));
     this.last = now;
+    this.renderer.render(this.scene, this.camera);
+  };
+
+  private step(dt: number): void {
     this.time += dt;
     for (const listener of this.listeners) listener(dt, this.time);
     this.lights.update(this.time, dt);
     this.confetti.update(dt);
     this.orbit.update(dt);
-    this.renderer.render(this.scene, this.camera);
-  };
+  }
 
   private fit(): void {
     const width = Math.max(1, this.holder.clientWidth);

@@ -36,7 +36,9 @@ export class VictoryConfetti {
   readonly sim: ConfettiSim;
   private readonly paper: THREE.InstancedMesh;
   private readonly foil: THREE.InstancedMesh;
-  private readonly split: number;
+  /** Which mesh draws each piece (1 for foil) and its slot there. Foil is spread through the pieces, since the sim hands them out in order. */
+  private readonly isFoil: Uint8Array;
+  private readonly slot: Uint32Array;
   private readonly scales: Float32Array;
   private readonly size: number;
   private readonly random: () => number;
@@ -53,14 +55,18 @@ export class VictoryConfetti {
     this.size = options.size ?? 0.05;
     this.random = mulberry(options.seed ?? 7);
     this.sim = new ConfettiSim(count, this.random, options.physics);
-    this.split = Math.round(count * (1 - (options.foil ?? 0.2)));
+    const spread = spreadFoil(count, options.foil ?? 0.2);
+    this.isFoil = spread.isFoil;
+    this.slot = spread.slot;
+    const paperSlots = spread.paper;
+    const foilSlots = spread.foil;
     const geometry = curledCard();
-    this.paper = new THREE.InstancedMesh(geometry, new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, roughness: 0.55, metalness: 0.05 }), this.split);
-    this.foil = new THREE.InstancedMesh(geometry, new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, roughness: 0.22, metalness: 0.9 }), Math.max(1, count - this.split));
+    this.paper = new THREE.InstancedMesh(geometry, new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, roughness: 0.55, metalness: 0.05 }), Math.max(1, paperSlots));
+    this.foil = new THREE.InstancedMesh(geometry, new THREE.MeshStandardMaterial({ side: THREE.DoubleSide, roughness: 0.22, metalness: 0.9 }), Math.max(1, foilSlots));
     const colour = new THREE.Color();
     const paperColours = options.colours ?? PAPER_COLOURS;
-    for (let i = 0; i < this.split; i++) this.paper.setColorAt(i, colour.set(paperColours[i % paperColours.length]!));
-    for (let i = 0; i < count - this.split; i++) this.foil.setColorAt(i, colour.set(FOIL_COLOURS[i % FOIL_COLOURS.length]!));
+    for (let i = 0; i < paperSlots; i++) this.paper.setColorAt(i, colour.set(paperColours[i % paperColours.length]!));
+    for (let i = 0; i < foilSlots; i++) this.foil.setColorAt(i, colour.set(FOIL_COLOURS[i % FOIL_COLOURS.length]!));
     this.scales = new Float32Array(count * 2);
     for (let i = 0; i < count; i++) {
       // About a third are long strips, the rest squares and oblongs.
@@ -127,8 +133,8 @@ export class VictoryConfetti {
     this.sim.step(dt);
     const { position, rotation, state } = this.sim;
     for (let i = 0; i < this.sim.count; i++) {
-      const mesh = i < this.split ? this.paper : this.foil;
-      const index = i < this.split ? i : i - this.split;
+      const mesh = this.isFoil[i] ? this.foil : this.paper;
+      const index = this.slot[i]!;
       if (state[i] === FREE) {
         mesh.setMatrixAt(index, VictoryConfetti.HIDDEN);
         continue;
@@ -158,6 +164,24 @@ export class VictoryConfetti {
       mesh.instanceMatrix.needsUpdate = true;
     }
   }
+}
+
+/**
+ * Which pieces are foil and where each is drawn. Every 1 / share pieces
+ * one is foil, so a cannon or a rain gets its share of foil wherever in
+ * the pieces it starts. `slot` is each piece's index in its own mesh.
+ */
+export function spreadFoil(count: number, share: number): { isFoil: Uint8Array; slot: Uint32Array; paper: number; foil: number } {
+  const f = Math.min(1, Math.max(0, share));
+  const isFoil = new Uint8Array(count);
+  const slot = new Uint32Array(count);
+  let paper = 0;
+  let foil = 0;
+  for (let i = 0; i < count; i++) {
+    isFoil[i] = Math.floor((i + 1) * f) > Math.floor(i * f) ? 1 : 0;
+    slot[i] = isFoil[i] ? foil++ : paper++;
+  }
+  return { isFoil, slot, paper, foil };
 }
 
 /** A small seeded random, so every celebration can look the same in a capture. */
