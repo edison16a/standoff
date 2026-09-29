@@ -84,7 +84,7 @@ export function Lobby() {
   };
   const note =
     humans === 0
-      ? "Scan the code to join. Your phone is your gun."
+      ? "Scan the code to join. Your phone is your paint marker."
       : choosing.length > 0
         ? `Setting up: ${choosing.join(", ")}. Anyone not ready sits the match out.`
         : "Everyone is ready. Click a player to switch sides.";
