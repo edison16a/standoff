@@ -38,6 +38,9 @@ export function jerseyTexture(kit: KitSpec): THREE.CanvasTexture {
   printNumber(ctx, n, 0.25 * W, 162, numberFont, kit);
   if (kit.name) {
     ctx.font = `800 26px "Arial Black", Impact, sans-serif`;
+    // A long name shrinks to fit across the shoulders rather than running off the back.
+    const fit = Math.max(12, Math.min(26, (26 * 0.42 * W) / Math.max(1, ctx.measureText(kit.name).width)));
+    ctx.font = `800 ${fit.toFixed(1)}px "Arial Black", Impact, sans-serif`;
     ctx.fillStyle = kit.trim;
     ctx.fillText(kit.name, 0.25 * W, 66);
   }

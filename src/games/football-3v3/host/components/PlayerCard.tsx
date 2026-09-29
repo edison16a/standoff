@@ -1,7 +1,7 @@
 "use client";
 import { playerColor } from "@/games/kit/players";
 import { ROLE_NAMES, ROLE_SHORT, ROLES, type LobbyRole } from "../../roles";
-import { CHARACTERS } from "../../roster";
+import { BUILDS } from "../../builds";
 import { TEAMS, other, type TeamId } from "../../teams";
 import type { SeatView } from "../host-store";
 import { useSession } from "./session-context";
@@ -22,20 +22,20 @@ function RolePicker({ seat }: { seat: SeatView }) {
 }
 
 /**
- * One person in the lobby: their name in their colour, the star they
+ * One person in the lobby: their name in their colour, the build they
  * picked on their phone, whether they are ready, their role, and the
  * buttons the host uses to move them between the sides and the bench.
  */
 export function PlayerCard({ seat, full }: { seat: SeatView; full: (team: TeamId) => boolean }) {
   const session = useSession();
-  const star = seat.pick ? CHARACTERS[seat.pick] : null;
+  const build = seat.pick ? BUILDS[seat.pick] : null;
   const move = (team: TeamId | null) => session.setTeam(seat.seat, team);
   return (
     <li className={`fb-card ${seat.ready ? "fb-card--ready" : ""}`} style={{ "--player": playerColor(seat.seat) } as React.CSSProperties}>
       <span className="fb-card__dot" />
       <span className="fb-card__who">
         <strong>{seat.name}</strong>
-        <span>{star ? `${star.name}, ${star.number}` : "Choosing a star"}</span>
+        <span>{build ? `${build.name}, ${build.number}` : "Choosing a build"}</span>
       </span>
       <span className={`fb-card__state ${seat.ready ? "fb-card__state--on" : ""}`}>{seat.ready ? "Ready" : "Setting up"}</span>
       <span className="fb-card__moves">

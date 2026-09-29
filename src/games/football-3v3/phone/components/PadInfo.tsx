@@ -1,6 +1,6 @@
 "use client";
 import { ROLE_NAMES } from "../../roles";
-import { CHARACTERS } from "../../roster";
+import { BUILDS } from "../../builds";
 import { TEAMS } from "../../teams";
 import type { PhoneState } from "../../protocol";
 
@@ -39,7 +39,7 @@ export function statusOf(host: PhoneState): string | null {
  */
 export function PadInfo({ host }: { host: PhoneState }) {
   const team = host.team !== null ? TEAMS[host.team] : TEAMS[0];
-  const star = host.pick ? CHARACTERS[host.pick] : null;
+  const build = host.pick ? BUILDS[host.pick] : null;
   const status = statusOf(host);
   return (
     <div className="fb-info">
@@ -58,7 +58,7 @@ export function PadInfo({ host }: { host: PhoneState }) {
         <span className="fb-info__team" style={{ background: team.color }}>
           {team.name}
         </span>
-        {star && <span>{star.short}</span>}
+        {build && <span>{build.short}</span>}
         {host.role && <span>{ROLE_NAMES[host.role]}</span>}
       </div>
       {status && <div className={`fb-info__status ${host.withBall ? "fb-info__status--ball" : ""}`}>{status}</div>}

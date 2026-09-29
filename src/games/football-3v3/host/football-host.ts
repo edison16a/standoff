@@ -8,7 +8,7 @@ import type { V2 } from "../engine/vec";
 import type { MatchView } from "../engine/view";
 import { isPadButton, type RoomPhase } from "../protocol";
 import type { LobbyRole } from "../roles";
-import { CHARACTERS } from "../roster";
+import { computerName } from "../builds";
 import type { TeamId } from "../teams";
 import { registerFootballAdmin } from "./admin";
 import { AimSticks } from "./aim-sticks";
@@ -104,12 +104,18 @@ export class FootballHost implements InputTarget {
     return this.room.players();
   }
 
-  /** How a player is called out: a phone's player by their name, a computer by the star's. */
+  /** How a player is called out: a phone's player by their own name, a computer as "CPU" and its build. */
   nameOf(id: number): string {
     const a = this.driver?.match.athlete(id);
-    if (!a?.character) return "";
-    const player = a.seat !== null ? this.room.players().find((p) => p.seat === a.seat) : undefined;
-    return player?.name ?? CHARACTERS[a.character].short;
+    if (!a?.build) return "";
+    return this.jerseyName(id) ?? computerName(a.build);
+  }
+
+  /** A phone's player's own name, for their jersey and everywhere else; null for the computer's. */
+  jerseyName(id: number): string | null {
+    const a = this.driver?.match.athlete(id);
+    if (!a || a.seat === null) return null;
+    return this.room.players().find((p) => p.seat === a.seat)?.name ?? null;
   }
 
   /** The tag over a phone's player, or null for the computer's. */

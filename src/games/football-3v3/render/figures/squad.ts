@@ -1,10 +1,10 @@
 import * as THREE from "three";
 import type { AthleteView, MatchView } from "../../engine/view";
-import { LINEMAN_NUMBERS } from "../../roster";
+import { LINEMAN_NUMBERS } from "../../builds";
 import { TEAMS } from "../../teams";
 import { SPIKE_RELEASE } from "../anim/celebrations";
 import type { PoseScene } from "../anim/choose";
-import { characterKit, linemanKit, type KitSpec } from "../models/kit";
+import { buildKit, linemanKit, type KitSpec } from "../models/kit";
 import { BallModel } from "./ball-view";
 import { Figure } from "./figure";
 import { Ring } from "./rings";
@@ -19,15 +19,18 @@ export function centerOf(view: MatchView): number | null {
   return best?.id ?? null;
 }
 
-function kitOf(a: AthleteView): KitSpec {
-  if (a.character) return characterKit(a.team, a.character);
+/** The name across the back of a player's jersey, or null for none. */
+export type JerseyName = (id: number) => string | null;
+
+function kitOf(a: AthleteView, name: string | null): KitSpec {
+  if (a.build) return buildKit(a.team, a.build, name);
   const slot = Math.max(0, LINEMAN_NUMBERS[a.team].indexOf(a.number));
   return linemanKit(a.team, a.number, slot);
 }
 
 /**
  * Every player and the ball. Figures are built the first time a player
- * shows up in a view and rebuilt only if their character changes, so a
+ * shows up in a view and rebuilt only if their build changes, so a
  * lineup set in the lobby costs nothing per frame.
  */
 export class Squad {
@@ -36,6 +39,8 @@ export class Squad {
   private readonly figures = new Map<number, { figure: Figure; key: string; seat: Ring }>();
   private readonly target = new Ring("#fff27a", 0.55, 0.85);
   private readonly material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0.05 });
+  /** Who wears which name on their back; the players' own names, set by the host. */
+  jerseyName: JerseyName = () => null;
 
   constructor() {
     this.group.add(this.ball.group, this.target.mesh);
@@ -69,7 +74,8 @@ export class Squad {
   }
 
   private ensure(a: AthleteView) {
-    const key = `${a.team}:${a.character ?? "line"}:${a.number}`;
+    const name = a.build ? this.jerseyName(a.id) : null;
+    const key = `${a.team}:${a.build ?? "line"}:${a.number}:${name ?? ""}`;
     const have = this.figures.get(a.id);
     if (have && have.key === key) return have;
     if (have) {
@@ -77,7 +83,7 @@ export class Squad {
       have.seat.mesh.removeFromParent();
       have.seat.dispose();
     }
-    const figure = new Figure(kitOf(a), this.material, a.id);
+    const figure = new Figure(kitOf(a, name), this.material, a.id);
     const seat = new Ring(TEAMS[a.team].color, 0.62, 0.74);
     this.group.add(figure.root, seat.mesh);
     const entry = { figure, key, seat };

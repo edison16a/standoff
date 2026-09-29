@@ -1,7 +1,7 @@
 "use client";
 import { playerColor } from "@/games/kit/players";
 import { ROLE_SHORT } from "../../roles";
-import { CHARACTERS } from "../../roster";
+import { BUILDS } from "../../builds";
 import { TEAMS } from "../../teams";
 import { useFootballStore } from "../host-store";
 import { playerOfTheGame } from "../results";
@@ -11,7 +11,7 @@ const COLUMNS = ["Pass yds", "Rush yds", "Rec yds", "TD", "Tackles", "INT"] as c
 
 /**
  * The final whistle: the winners and the score, the player of the game,
- * and every star's passing, rushing and receiving yards, touchdowns,
+ * and every player's passing, rushing and receiving yards, touchdowns,
  * tackles and interceptions. Then the ways back in: the same teams
  * again, or back to the lobby to change them.
  */
@@ -44,7 +44,7 @@ export function Results() {
           <thead>
             <tr>
               <th scope="col">Player</th>
-              <th scope="col">Star</th>
+              <th scope="col">Build</th>
               {COLUMNS.map((c) => (
                 <th key={c} scope="col">
                   {c}
@@ -57,10 +57,10 @@ export function Results() {
               <tr key={r.id} style={{ "--row": r.seat !== null ? playerColor(r.seat) : TEAMS[r.team].color } as React.CSSProperties}>
                 <td className="fb-results__name">
                   <span className="fb-results__side" style={{ background: TEAMS[r.team].color }} />
-                  {r.seat !== null ? r.name : "Computer"}
+                  {r.name}
                 </td>
                 <td>
-                  {CHARACTERS[r.character].short}, {ROLE_SHORT[r.role]}
+                  {BUILDS[r.build].short}, {ROLE_SHORT[r.role]}
                 </td>
                 <td>{r.passYards}</td>
                 <td>{r.rushYards}</td>

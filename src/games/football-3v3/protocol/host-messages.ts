@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ROLES } from "../roles";
-import { CHARACTER_IDS } from "../roster";
+import { BUILD_IDS } from "../builds";
 
 /** Where the room is, as a phone sees it: the lobby, one of the match's phases, or the touchdown replay. */
 export const PHASES = ["lobby", "choose", "presnap", "live", "kick", "dead", "touchdown", "convert", "over", "replay"] as const;
@@ -32,9 +32,11 @@ export const statLineSchema = z.object({
 export const phoneStateSchema = z.object({
   kind: z.literal("state"),
   phase: z.enum(PHASES),
-  /** Stars other connected players already have. */
-  taken: z.array(z.enum(CHARACTER_IDS)),
-  pick: z.enum(CHARACTER_IDS).nullable(),
+  /** The name this player typed, which is who they are everywhere in the game. */
+  name: z.string().max(40),
+  /** Builds other connected players already have. */
+  taken: z.array(z.enum(BUILD_IDS)),
+  pick: z.enum(BUILD_IDS).nullable(),
   ready: z.boolean(),
   /** The side the host put this player on, or null while unassigned. */
   team: team.nullable(),

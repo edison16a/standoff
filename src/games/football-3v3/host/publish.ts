@@ -1,7 +1,7 @@
 import type { Player } from "@/platform/games/game-api";
 import type { RoomPhase } from "../protocol";
 import { scoreboard } from "../render/hud/board";
-import { CHARACTERS } from "../roster";
+import { computerName } from "../builds";
 import { useFootballStore as store, type Callout } from "./host-store";
 import type { Lobby } from "./lobby";
 import type { MatchDriver } from "./match-driver";
@@ -38,7 +38,7 @@ export function publish(c: PublishContext): void {
   store.setState({
     phase: c.phase,
     seats,
-    bots: c.lobby.lineup().filter((e) => e.seat === null).map((e) => ({ team: e.team, character: e.character, role: e.role })),
+    bots: c.lobby.lineup().filter((e) => e.seat === null).map((e) => ({ team: e.team, build: e.build, role: e.role })),
     level: c.lobby.level,
     startBlock: c.lobby.startBlock(),
     // The live score, never the replay's: the replay shows a moment already on the board.
@@ -50,12 +50,12 @@ export function publish(c: PublishContext): void {
     over: m && m.phase === "over" ? { winner: m.winner } : null,
     results: m && m.phase === "over" ? resultRows(m, names) : [],
     strip: m
-      ? m.athletes.filter((a) => a.seat !== null && a.character).map((a) => ({
+      ? m.athletes.filter((a) => a.seat !== null && a.build).map((a) => ({
           id: a.id,
           seat: a.seat!,
-          name: names.get(a.seat!) ?? CHARACTERS[a.character!].short,
+          name: names.get(a.seat!) ?? computerName(a.build!),
           team: a.team,
-          character: a.character!,
+          build: a.build!,
           role: a.role === "qb" ? ("qb" as const) : ("runner" as const),
           hasBall: holder === a.id,
           away: a.auto,
@@ -64,7 +64,7 @@ export function publish(c: PublishContext): void {
   });
   const votes = c.replay.active ? c.replay.votes : null;
   for (const seat of c.lobby.connectedSeats) {
-    const state = phoneState({ phase: c.phase, seat: c.lobby.seats.get(seat)!, taken: c.lobby.taken(seat), match: m, callout: c.callout, votes }, seat);
+    const state = phoneState({ phase: c.phase, name: names.get(seat) ?? "", seat: c.lobby.seats.get(seat)!, taken: c.lobby.taken(seat), match: m, callout: c.callout, votes }, seat);
     c.phones.sendState(seat, state, c.nowMs);
   }
 }
