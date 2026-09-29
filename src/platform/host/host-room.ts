@@ -82,6 +82,16 @@ export class HostRoom {
     this.keeper.create((message) => this.socket.send(message), game, seats);
   }
 
+  /**
+   * Remake lobby: a fresh room for the same game, with every phone moved
+   * to it. For when phones cannot find the room, and as a clean restart.
+   */
+  remake(): void {
+    const room = useHostStore.getState().room;
+    if (!room || useHostStore.getState().status !== "open") return;
+    this.keeper.remake((message) => this.socket.send(message), room.game, room.seats);
+  }
+
   /** Ends the room for everyone and goes back to the home screen. */
   leave(): void {
     this.keeper.close((message) => this.socket.send(message));

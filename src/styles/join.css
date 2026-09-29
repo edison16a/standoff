@@ -1,0 +1,113 @@
+/*
+  A phone's join screen and the one after a game ends: the code field,
+  the scan button, and the full screen camera view for scanning.
+*/
+
+.phone-hero--join {
+  width: 100%;
+  max-width: 420px;
+  margin: auto;
+  gap: 14px;
+}
+
+.phone-hero--join .phone-hero__mark svg {
+  width: 88px;
+}
+
+.phone-hero__lead {
+  margin: -6px 0 4px;
+  font-size: 15px;
+}
+
+.phone-hero__aside {
+  font-size: 14px;
+}
+
+.join-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.join-form__code {
+  font-size: 28px;
+  letter-spacing: 0.3em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.join-form__code::placeholder {
+  color: var(--border-strong);
+}
+
+.qr-scan {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: #000;
+  color: #fff;
+}
+
+.qr-scan__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* A square window with a dark surround, so it is clear where the code goes. */
+.qr-scan__frame {
+  position: relative;
+  width: min(70vw, 70vh, 300px);
+  aspect-ratio: 1;
+  border: 3px solid #fff;
+  border-radius: 24px;
+  box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.5);
+}
+
+.qr-scan__hint {
+  position: absolute;
+  top: calc(24px + env(safe-area-inset-top));
+  left: 16px;
+  right: 16px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: center;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.qr-scan__close {
+  position: absolute;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.phone__notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.loader--page {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+/* Sideways, the join screen tightens so it still fits without scrolling. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .phone-hero--join .phone-hero__mark,
+  .phone-hero--join .phone-hero__lead {
+    display: none;
+  }
+
+  .phone-hero--join {
+    gap: 8px;
+  }
+}

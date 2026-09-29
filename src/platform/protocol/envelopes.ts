@@ -39,6 +39,8 @@ export const clientEnvelopeSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("host:resume"), code: roomCode, token }),
   /** The computer ending the game for good. */
   z.object({ type: z.literal("host:close") }),
+  /** The computer swapping its room for a fresh one with the same game, taking every phone along. */
+  z.object({ type: z.literal("host:remake") }),
   /** The computer talking to one phone or all of them. */
   z.object({ type: z.literal("host:send"), to: z.union([seat, z.literal("all")]), payload: payloadSchema }),
   /** A phone joining, or rejoining with the token it was given last time. */
@@ -79,6 +81,8 @@ export type ServerEnvelope =
   | { type: "host:away" }
   | { type: "host:back" }
   | { type: "room:closed" }
+  /** The host remade its lobby. Phones follow to the new room's code. */
+  | { type: "room:moved"; code: string }
   /**
    * This socket is about to hit the server's time limit. The client should
    * open a new one and rejoin on it before this one is cut.

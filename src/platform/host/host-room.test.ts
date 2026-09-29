@@ -68,4 +68,17 @@ describe("HostRoom", () => {
     // Every phone hears the new line up.
     expect(socket.sent).toContainEqual({ type: "host:send", to: "all", payload: expect.objectContaining({ kind: "players" }) });
   });
+
+  it("remakes the lobby as a fresh room for the same game", async () => {
+    const { host, socket } = await openRoom();
+    useHostStore.setState({ status: "open" });
+    const before = host.api;
+    host.remake();
+    expect(socket.sent).toContainEqual({ type: "host:remake" });
+    socket.receive({ type: "room:created", code: "WXYZ", game: "blade-clash", seats: 2, token: "u".repeat(20), joinUrl: "https://x/join/WXYZ", sharedRooms: true });
+    expect(useHostStore.getState().room?.code).toBe("WXYZ");
+    // A new room means a fresh game, not the old one carried over.
+    expect(host.api === before).toBe(false);
+    expect(host.api?.code).toBe("WXYZ");
+  });
 });

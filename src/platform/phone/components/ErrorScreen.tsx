@@ -1,9 +1,8 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
 import { Icon } from "@/components/ui/Icon";
-import { ROOM_CODE_LENGTH, ROOM_CODE_PATTERN } from "@/platform/protocol";
 import type { PhoneError } from "../phone-store";
+import { JoinForm } from "./JoinForm";
 
 const MESSAGES: Record<PhoneError, string> = {
   "not-found": "Room not found",
@@ -39,18 +38,13 @@ export function ErrorScreen({ error, code, onRetry }: ErrorScreenProps) {
 }
 
 /**
- * The way on to the host's next game from this same tab: scan the new QR
- * code, or type the code printed under it.
+ * When the host ends the game or leaves, every phone lands here: join the
+ * host's next game from this same tab by typing its code or scanning it.
  */
 function NextRoom({ title, current, onRetry }: { title: string; current: string; onRetry(): void }) {
   const router = useRouter();
-  const [typed, setTyped] = useState("");
-  const code = typed.trim();
-  const valid = ROOM_CODE_PATTERN.test(code);
 
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    if (!valid) return;
+  const go = (code: string) => {
     // Opening this same page again would change nothing, so the room starts over in place.
     if (code === current) return onRetry();
     // The join page makes a fresh room for the new code, so nothing from this one comes along.
@@ -58,25 +52,11 @@ function NextRoom({ title, current, onRetry }: { title: string; current: string;
   };
 
   return (
-    <form className="phone-hero" onSubmit={submit}>
-      <h1 className="phone-title">{title}</h1>
-      <label className="name-field">
-        <span className="name-field__label">Scan the new code, or type it here</span>
-        <input
-          className="name-field__input mono"
-          value={typed}
-          onChange={(event) => setTyped(event.target.value.toUpperCase())}
-          maxLength={ROOM_CODE_LENGTH}
-          autoCapitalize="characters"
-          autoComplete="off"
-          spellCheck={false}
-          enterKeyHint="go"
-          placeholder="Code"
-        />
-      </label>
-      <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={!valid}>
-        Join
-      </button>
-    </form>
+    <section className="phone-hero phone-hero--join">
+      <span className="label">{title}</span>
+      <h1 className="phone-title">Join a new game</h1>
+      <p className="muted phone-hero__lead">Type the code on the big screen, or scan its QR code.</p>
+      <JoinForm onCode={go} />
+    </section>
   );
 }

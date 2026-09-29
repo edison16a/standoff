@@ -10,7 +10,7 @@ Play it at [standoffgames.vercel.app](https://standoffgames.vercel.app).
 
 ## Screenshots
 
-The home screen works like a console menu. Big tiles show each game, and the chosen one grows and gets a ring in its own colour. A looping clip of the game really being played fills the screen behind it, with lobby music and menu sounds. The gear at the top right sets the music and sound effect volume.
+The home screen works like a console menu. Big tiles show each game, and the chosen one grows and gets a ring in its own colour. A looping clip of the game really being played fills the screen behind it, with a warm, bouncy lobby tune and menu sounds. The music starts as the page opens. Browsers hold sound back until you first interact with a page, so if yours does, it starts on your first click, tap or key press. The gear at the top right sets the music and sound effect volume.
 
 <img src="docs/screenshots/home.jpg" alt="The home screen in dark mode with Magic Kart chosen in the row of game tiles and a clip of the race behind" width="100%" />
 
@@ -81,6 +81,10 @@ It runs on Vercel for play from anywhere, or on your own computer over WiFi.
 ## How to play
 
 On the computer, pick a game and press **Host Game**. Scan the QR code with each phone, type a name and tap **Join**, or tap **Skip**. Every game walks the phone through the same steps, each on its own page: calibrate, the game's own choice, then **Ready**. Every phone page fits the screen without scrolling.
+
+Opening the site on a phone goes straight to the join screen, since phones are the controllers. Type the four letter code from the big screen, or tap **Scan QR code** where the browser can read QR codes (Chrome on Android does; elsewhere the button stays hidden and the phone's own camera app works too). The Standoff logo on a phone always leads back there. When the host ends a game or leaves, every phone lands on **Join a new game** with the same code field and scanner.
+
+If phones say "Room not found" while the big screen still shows a code, open the gear on the big screen and press **Remake lobby**. It opens a fresh room for the same game and moves every phone to it, names and all.
 
 Camera games have no phones. Stand where the camera sees you from the waist up, hold still while your head line is set, and play with your body. Your head going up out of its band is a jump, and going down is a duck or roll.
 
@@ -155,6 +159,8 @@ Public and guest WiFi usually stop devices from reaching each other, so on those
 ### The platform and the games
 
 `src/platform` is the console: the home screen, rooms, joining, names, reconnects, and the frame around every game. Each game is a folder in `src/games` that plugs in through one contract, `src/platform/games/game-api.ts`. A game supplies a host screen for the computer and a phone screen, and exchanges messages of its own design with its phones. It never imports another game, so several games can be built at once without touching the same files. `src/games/README.md` explains how to add one.
+
+A remade lobby is one relay message: the host sends `host:remake`, the relay opens a new room for the same game, tells the old room's phones `room:moved` with the new code, and closes the old room. A phone joining a room whose host is gone for good is told `closed`, not `not-found`, so it stops retrying a dead room at once.
 
 The platform keeps two message kinds for itself. A phone sends `profile` with its player's name, and the host sends every phone `players`, the line up. Games never see either.
 

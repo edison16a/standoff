@@ -1,4 +1,5 @@
 import { AudioEngine } from "@/platform/audio/audio-engine";
+import { startAudioSoon } from "@/platform/audio/autoplay";
 import { RESERVED_KINDS, type PhoneRoomApi, type PhoneRoomEvent } from "@/platform/games/game-api";
 import { SocketClient } from "@/platform/net/socket-client";
 import { defaultName, saveName } from "@/platform/profile";
@@ -6,6 +7,7 @@ import { playersSchema, type Payload, type ServerEnvelope } from "@/platform/pro
 import { requestMotion } from "./permissions";
 import { createPhoneStore, type PhoneError } from "./phone-store";
 import { ScreenAwake } from "./screen-awake";
+import { rememberMove } from "./room-move";
 import { readToken, writeToken } from "./seat-token";
 
 /** Fresh sockets to try when a join cannot find the room. */
@@ -27,6 +29,7 @@ export class PhoneRoom {
   private readonly awake = new ScreenAwake();
   private readonly listeners = new Set<(event: PhoneRoomEvent) => void>();
   private audio: AudioEngine | null = null;
+  private stopAudioWait: (() => void) | null = null;
   private motion: PhoneRoomApi["motion"] = "unavailable";
   private joinRetries = 0;
   private current: PhoneRoomApi | null = null;
@@ -53,8 +56,11 @@ export class PhoneRoom {
     // Skipping the name keeps whatever was saved before, and the seat number stands in for it.
     if (name) saveName(name);
     this.store.setState({ name: name ?? "", stage: "joining" });
-    this.audio = new AudioEngine();
-    void this.audio.unlock();
+    const audio = new AudioEngine();
+    this.audio = audio;
+    // Inside the Join tap this starts sound at once. A phone moved to a new
+    // room had no tap, so its sound waits for the next touch instead.
+    this.stopAudioWait = startAudioSoon(audio.ctx, window, { resume: () => audio.unlock() });
     this.motion = await requestMotion();
     void this.awake.start();
     this.socket.connect();
@@ -64,6 +70,7 @@ export class PhoneRoom {
   dispose(): void {
     this.awake.stop();
     this.socket.close();
+    this.stopAudioWait?.();
     this.audio?.close();
     this.audio = null;
   }
@@ -105,6 +112,8 @@ export class PhoneRoom {
       }
       case "room:closed":
         return this.fail("closed");
+      case "room:moved":
+        return this.moveTo(message.code);
       case "host:away":
         this.store.setState({ hostAway: true });
         return;
@@ -116,6 +125,15 @@ export class PhoneRoom {
       case "host:message":
         return this.onHost(message.payload);
     }
+  }
+
+  /** The host remade its lobby. This page follows to the new room with the same name. */
+  private moveTo(code: string): void {
+    const { name, seat } = this.store.getState();
+    const chosen = name && !(seat && name === defaultName(seat)) ? name : null;
+    rememberMove({ code, name: chosen });
+    this.store.setState({ stage: "joining", movedTo: code });
+    this.dispose();
   }
 
   private onHost(payload: Payload): void {

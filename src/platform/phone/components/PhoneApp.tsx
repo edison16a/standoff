@@ -1,14 +1,15 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useStore } from "zustand";
-import { GitHubButton } from "@/components/ui/GitHubButton";
-import { HomeLink } from "@/components/ui/HomeLink";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { Loader, Spinner } from "@/components/ui/Loader";
 import { loadGame } from "@/games/catalog";
 import type { PhoneGame } from "@/platform/games/game-api";
 import { PhoneRoom } from "../phone-room";
+import { forgetMove, moveInto } from "../room-move";
 import { ErrorScreen } from "./ErrorScreen";
 import { NameScreen } from "./NameScreen";
+import { PhoneBar } from "./PhoneBar";
 
 /**
  * The page a phone opens from the QR code, for every game: name, join,
@@ -22,12 +23,27 @@ export function PhoneApp({ code }: { code: string }) {
 }
 
 function RoomScreen({ code, onRetry }: { code: string; onRetry(): void }) {
+  const router = useRouter();
   // Browser only (see PhoneEntry), so the room can be made up front.
   const [room] = useState(() => new PhoneRoom(code));
-  const { stage, error, name, seat, game: gameId, status, hostAway } = useStore(room.store);
+  const { stage, error, name, seat, game: gameId, status, hostAway, movedTo } = useStore(room.store);
   const [game, setGame] = useState<PhoneGame | null>(null);
+  // Read once, so a moved phone never flashes the name screen before its join starts.
+  const [moving] = useState(() => moveInto(code) !== null);
 
-  useEffect(() => () => room.dispose(), [room]);
+  // The host remade its lobby: this phone joins the new room, skipping the name screen.
+  // Joining again after a development remount is safe, since dispose only closes the socket.
+  useEffect(() => {
+    const move = moveInto(code);
+    if (move) void room.join(move.name);
+    return () => room.dispose();
+  }, [room, code]);
+  useEffect(() => {
+    if (stage === "playing") forgetMove(code);
+  }, [stage, code]);
+  useEffect(() => {
+    if (movedTo) router.replace(`/join/${movedTo}`);
+  }, [movedTo, router]);
 
   // Seated: load this room's game and let it take over the screen.
   useEffect(() => {
@@ -54,20 +70,18 @@ function RoomScreen({ code, onRetry }: { code: string; onRetry(): void }) {
 
   return (
     <div className="phone">
-      <header className="phone__bar">
-        <HomeLink />
-        <div className="phone__bar-actions">
-          {seat && <span className={`pill ${seat === 1 ? "pill--accent" : ""}`}>{name}</span>}
-          <ThemeToggle />
-          <GitHubButton compact />
-        </div>
-      </header>
-      {offline && <p className="phone__notice">{hostAway ? "The host is reconnecting." : "Reconnecting to the game."}</p>}
+      <PhoneBar>{seat && <span className={`pill ${seat === 1 ? "pill--accent" : ""}`}>{name}</span>}</PhoneBar>
+      {offline && (
+        <p className="phone__notice">
+          <Spinner /> {hostAway ? "The host is reconnecting." : "Reconnecting to the game."}
+        </p>
+      )}
       <main className="phone__body">
-        {stage === "name" && <NameScreen code={code} onJoin={(chosen) => room.join(chosen)} />}
-        {stage === "joining" && <p className="muted phone__waiting">Joining room {code}</p>}
+        {stage === "name" && moving && <Loader label="Moving to the new room" />}
+        {stage === "name" && !moving && <NameScreen code={code} onJoin={(chosen) => room.join(chosen)} />}
+        {stage === "joining" && <Loader label={movedTo ? "Moving to the new room" : `Joining room ${code}`} />}
         {stage === "error" && error && <ErrorScreen error={error} code={code} onRetry={onRetry} />}
-        {stage === "playing" && (game ? <game.Screen /> : <p className="muted phone__waiting">Loading</p>)}
+        {stage === "playing" && (game ? <game.Screen /> : <Loader label="Loading the game" />)}
       </main>
     </div>
   );
