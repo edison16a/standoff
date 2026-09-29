@@ -44,9 +44,14 @@ describe("reading a jump for Cube Game", () => {
     }
   });
 
-  it("ignores hard bouncing on the knees, even with the heels leaving the floor a little", () => {
-    const bounce: PoseKey[] = Array.from({ length: 30 }, (_, i) => ({ at: i * 100, pose: { crouch: i % 2 ? 0.4 : 0, lift: i % 2 ? 0 : 0.035 } }));
-    for (const fps of [15, 30, 60]) expect(eventsOf(readMoves(bounce, {}, { smooth: true, fps, tuning: JUMP_TUNING }), "jump")).toHaveLength(0);
+  it("ignores bouncing on the knees for a whole song, even with the heels leaving the floor a little", () => {
+    // 20 seconds of it. Before, the head line crept down with every bob until bobs read as jumps.
+    const bounce: PoseKey[] = Array.from({ length: 170 }, (_, i) => ({ at: i * 120, pose: { crouch: i % 2 ? 0.35 : 0, lift: i % 2 ? 0 : 0.025 } }));
+    for (const fps of [15, 30, 60]) {
+      const frames = readMoves(bounce, {}, { smooth: true, fps, tuning: JUMP_TUNING });
+      expect(eventsOf(frames, "jump")).toHaveLength(0);
+      expect(Math.abs(frames.at(-1)!.state.line!.y - frames[0]!.state.line!.y)).toBeLessThan(0.01);
+    }
   });
 
   it("keeps up when the camera gives only 15 frames a second", () => {
