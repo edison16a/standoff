@@ -6,7 +6,11 @@ import { tryControl } from "./control";
 import { goalX, outAt, scoredIn } from "./goal";
 import { makeSave } from "./keeper";
 import { updateKeeper } from "./keeper-update";
+import { blockBall } from "./body-block";
 import { applyButtons } from "./buttons";
+import { steerGuard } from "./guard";
+import { updateJump } from "./jump";
+import { updateSteal } from "./steal";
 import { owns, progressKick } from "./kick";
 import { fullTime, onGoal, onOut } from "./rules";
 import { coolSkill, updateBeaten, updateSkill } from "./skills";
@@ -32,11 +36,15 @@ export function playStep(state: MatchState, commands: ReadonlyMap<number, Comman
     // During a skill move the move itself places the ball.
     const carrier = state.athletes[owner.id]!;
     if (carrier.action !== "skill") carryBall(carrier, ball, dt);
-  } else if (!owner) stepLooseBall(state, dt);
+  } else if (!owner) {
+    stepLooseBall(state, dt);
+    blockBall(state);
+  }
   for (const k of state.keepers) updateKeeper(state, k, dt);
   if (owner?.kind === "keeper") ball.heldFor += dt;
   updateFlight(state, dt);
-  if (live) {
+  // A foul given this step stops play at once: nobody gathers the ball after the whistle.
+  if (live && state.phase === "play") {
     tryControl(state);
     challenges(state, dt);
   }
@@ -77,10 +85,15 @@ function updateAction(state: MatchState, a: Athlete, c: Command, dt: number): vo
   const before = a.actionT;
   a.actionT += dt;
   a.noTouch = Math.max(0, a.noTouch - dt);
+  a.defendWait = Math.max(0, a.defendWait - dt);
   coolSkill(a, dt);
   const has = owns(state, a);
   switch (a.action) {
     case "free":
+      // Holding Guard with the stick left alone, the shadow does the running.
+      if (a.guarding && isHuman(a) && steerGuard(state, a, c.move, dt)) return;
+      moveAthlete(a, c.move, dt, has);
+      return;
     case "celebrate":
     case "dejected":
       moveAthlete(a, c.move, dt, has);
@@ -106,6 +119,15 @@ function updateAction(state: MatchState, a: Athlete, c: Command, dt: number): vo
     case "stumble":
       brake(a, dt);
       break;
+    case "steal":
+      updateSteal(state, a, before, dt);
+      break;
+    case "jump":
+      updateJump(a, dt);
+      break;
+    case "wall":
+      brake(a, dt);
+      return;
   }
   if (a.actionT >= a.actionLen) {
     a.action = "free";

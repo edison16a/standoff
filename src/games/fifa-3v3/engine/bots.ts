@@ -1,5 +1,6 @@
 import { attackSign, other } from "../teams";
 import { closestOfTeam, markSpot, markTarget, shapeSpot, supportSpot, throwSpot } from "./bot-shape";
+import { FOUL } from "./defence-tuning";
 import { goalX, shotAngle, toGoal } from "./goal";
 import { owns } from "./kick";
 import { aimError, botSkill, thinkDelay } from "./bot-level";
@@ -8,7 +9,7 @@ import { laneOf } from "./lanes";
 import { choosePassTarget, openness } from "./passing";
 import { PITCH } from "./tuning";
 import type { Athlete, Command, MatchState } from "./types";
-import { add, clamp, dist, dot, len, norm, scale, sub, type Vec2 } from "./vec";
+import { add, clamp, dist, dot, fromAngle, len, norm, scale, sub, type Vec2 } from "./vec";
 
 const STILL: Vec2 = { x: 0, z: 0 };
 
@@ -135,6 +136,9 @@ function decideWithout(state: MatchState, a: Athlete, command: Command): void {
   const d = dist(a.pos, carrier.pos);
   if (d > 2.6 || d < 0.5 || carrier.action === "skill" || !closestOfTeam(state, a, carrier.pos)) return;
   if (!state.rng.chance(0.3)) return;
+  // A good defender will not go through the back of a man; a sloppy one sometimes does, and gives a foul away.
+  const behind = dot(norm(sub(carrier.pos, a.pos)), fromAngle(carrier.facing)) > FOUL.behind;
+  if (behind && state.rng.chance(botSkill(state).accuracy)) return;
   const aim = add(state.ball.pos, carrier.vel, 0.3);
   command.move = norm(sub(aim, a.pos));
   command.slide = true;

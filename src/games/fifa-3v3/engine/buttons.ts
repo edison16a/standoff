@@ -3,6 +3,8 @@ import { planPass, shotAimZ } from "./assist";
 import { autoShootAt, chargeLevel, isTap } from "./charge";
 import { botPass, owns, startKick, startShot } from "./kick";
 import { startSkill } from "./skills";
+import { startJump } from "./jump";
+import { startSteal } from "./steal";
 import { startSlide } from "./tackle";
 import { SHOOT } from "./tuning";
 import type { Athlete, Command, MatchState } from "./types";
@@ -39,11 +41,28 @@ export function applyButtons(state: MatchState, a: Athlete, c: Command, dt: numb
     else if (a.charge >= autoShootAt()) shootNow(state, a, c.move, a.charge);
   }
   if (c.passTo !== undefined && has && free) botPass(state, a, c.passTo);
+  defend(state, a, c, has);
   if (c.slide && a.action === "free") {
     if (has) startSkill(state, a, c.move);
     else startSlide(state, a, c.move);
   }
   a.buffered = Math.max(0, a.buffered - dt);
+}
+
+/**
+ * The defending buttons. On defence Shoot/Pass is Guard, held to
+ * shadow your man; Steal pokes at the ball at any time; and while
+ * guarding, Jump goes up to block.
+ */
+function defend(state: MatchState, a: Athlete, c: Command, has: boolean): void {
+  if (c.guard === true) a.guarding = true;
+  if (c.guard === false) {
+    a.guarding = false;
+    a.guardSpot = null;
+  }
+  if (has) return;
+  if (c.steal) startSteal(state, a);
+  else if (c.jump && a.guarding && a.action === "free" && a.defendWait <= 0) startJump(state, a);
 }
 
 /** Shoot/Pass let go: a pass or a shot now, or remembered for a first time kick. */

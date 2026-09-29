@@ -14,7 +14,13 @@ export type AthleteAction =
   /** Wrong footed by a skill move: a brief stagger before turning to chase. */
   | "beaten"
   | "celebrate"
-  | "dejected";
+  | "dejected"
+  /** A standing poke at the dribbler's ball. */
+  | "steal"
+  /** Off the ground to block: a guarding defender, or the wall as a free kick is struck. */
+  | "jump"
+  /** Standing in the wall at a free kick, hands in front. */
+  | "wall";
 
 /**
  * The skill moves, picked by the stick against the goal the player
@@ -110,6 +116,12 @@ export interface Athlete {
   skill: SkillState;
   /** A slide has already met the ball or the man, so it cannot win twice. */
   slideDone: boolean;
+  /** Guard is held: the player shadows the opponent they mark (see guard.ts). */
+  guarding: boolean;
+  /** Where the shadow is heading, easing after the man so a quick move leaves it behind. */
+  guardSpot: Vec2 | null;
+  /** Seconds before another steal or jump. */
+  defendWait: number;
   /** 0 to 1, from the roster. */
   speed: number;
   shooting: number;
