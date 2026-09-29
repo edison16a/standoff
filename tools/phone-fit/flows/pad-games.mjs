@@ -103,7 +103,7 @@ export async function nba3v3(ctx) {
   await ctx.phone.locator(".nba-pad").waitFor({ state: "attached", timeout: 5000 });
   await ctx.snap("pad");
   // On defence: Guard, Block and Steal, with the light that says Guard has his man.
-  const defence = { ...court, hasBall: false, attacking: false, holder: "Crane", canSteal: true, stealReach: true, defending: true, guard: "on" };
+  const defence = { ...court, hasBall: false, attacking: false, holder: "CPU Lockdown", canSteal: true, stealReach: true, defending: true, guard: "on" };
   await ctx.fake("state", { phase: "live", team: 0, playing: true, court: defence });
   await ctx.snap("defend");
   await ctx.fake("state", { phase: "live", team: 0, playing: true, court: { ...court, freeThrow: { mine: true, n: 1, of: 2, ready: true } } });

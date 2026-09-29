@@ -25,7 +25,7 @@ describe("builds", () => {
   it("names computer players by their build", () => {
     expect(cpuName("big")).toBe("CPU Big Man");
     expect(isBuildId("shooter")).toBe(true);
-    expect(isBuildId("ashby")).toBe(false);
+    expect(isBuildId("center")).toBe(false);
   });
 });
 
