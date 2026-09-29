@@ -15,7 +15,7 @@ export interface Aim {
   fov: number;
   /** How quickly the camera chases this aim, per second. */
   rate: number;
-  kind: "behind" | "kick" | "closeup" | "wide";
+  kind: "behind" | "kick" | "closeup" | "wide" | "replay-qb" | "replay-ball" | "replay-runner";
   /** Points that must stay in the picture side to side; the director backs the camera up to fit them. */
   keep?: Vec[];
 }

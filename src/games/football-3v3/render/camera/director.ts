@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type { MatchView } from "../../engine/view";
 import { fitWidth } from "./fit";
+import { replayAim, type ReplayShot } from "./replay-shots";
 import { aimFor, type Aim } from "./shots";
 
 /**
@@ -18,6 +19,7 @@ export class CameraDirector {
   private kind: Aim["kind"] | null = null;
   private shake = 0;
   private fixed: { pos: THREE.Vector3; look: THREE.Vector3; fov: number } | null = null;
+  private replay: ReplayShot | null = null;
 
   setAspect(aspect: number): void {
     this.camera.aspect = aspect;
@@ -27,6 +29,16 @@ export class CameraDirector {
   /** Pins the camera, for looking closely at the models in the showcase. */
   setFixed(pos: THREE.Vector3, look: THREE.Vector3, fov: number): void {
     this.fixed = { pos: pos.clone(), look: look.clone(), fov };
+  }
+
+  /**
+   * Films the touchdown replay's angles instead of the live shots, or
+   * goes back to them with null. Going in or out of a replay is a cut,
+   * like the broadcast's swoosh, never a sweep across the field.
+   */
+  setReplay(shot: ReplayShot | null): void {
+    if ((shot === null) !== (this.replay === null)) this.kind = null;
+    this.replay = shot;
   }
 
   /**
@@ -54,7 +66,7 @@ export class CameraDirector {
       return;
     }
     // Narrow screens see less of the field side to side, so the fit backs the camera up for them.
-    const aim = fitWidth(aimFor(view, time), cam.aspect);
+    const aim = this.replay ? replayAim(view, this.replay) : fitWidth(aimFor(view, time), cam.aspect);
     const target = new THREE.Vector3(aim.pos.x, aim.pos.y, aim.pos.z);
     const look = new THREE.Vector3(aim.look.x, aim.look.y, aim.look.z);
     const cut = this.kind === null || (aim.kind !== this.kind && this.pos.distanceTo(target) > 25);

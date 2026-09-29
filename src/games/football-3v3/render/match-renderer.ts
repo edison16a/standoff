@@ -3,9 +3,11 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import type { MatchEvent } from "../engine/events";
 import type { MatchView } from "../engine/view";
 import { CameraDirector } from "./camera/director";
+import { BallTrace, type TracePoint } from "./effects/ball-trace";
 import { ScrimmageLines } from "./field/scrimmage-lines";
 import { Stadium } from "./field/stadium";
 import { Squad } from "./figures/squad";
+import { NameTags, type TagOf } from "./figures/tags";
 
 export interface RendererOptions {
   /**
@@ -27,6 +29,11 @@ export interface RendererOptions {
 export class MatchRenderer {
   readonly director = new CameraDirector();
   readonly squad = new Squad();
+  /** The replay's traced ball path. */
+  readonly trace = new BallTrace();
+  private readonly tags = new NameTags();
+  private tagOf: TagOf | null = null;
+  private traceAt: number | null = null;
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene = new THREE.Scene();
   private readonly stadium: Stadium;
@@ -67,7 +74,7 @@ export class MatchRenderer {
     this.sun.shadow.bias = -0.0005;
     this.scene.add(this.sun, this.sun.target);
     this.stadium = new Stadium(this.low, this.renderer.capabilities.getMaxAnisotropy());
-    this.scene.add(this.stadium.group, this.lines.group, this.squad.group);
+    this.scene.add(this.stadium.group, this.lines.group, this.squad.group, this.trace.group, this.tags.group);
   }
 
   resize(width: number, height: number, dpr: number): void {
@@ -75,6 +82,17 @@ export class MatchRenderer {
     this.renderer.setPixelRatio(ratio);
     this.renderer.setSize(width, height, false);
     this.director.setAspect(width / Math.max(1, height));
+  }
+
+  /** Who gets a name tag over their helmet: the players people control. */
+  setTags(tagOf: TagOf | null): void {
+    this.tagOf = tagOf;
+  }
+
+  /** The replay's ball path and the match time the replay is at, or null outside a replay. */
+  setTrace(points: readonly TracePoint[] | null, time: number | null): void {
+    this.trace.set(points);
+    this.traceAt = time;
   }
 
   onEvent(event: MatchEvent): void {
@@ -112,6 +130,8 @@ export class MatchRenderer {
     this.squad.update(view, dt, time);
     this.lines.update(view, dt);
     this.director.update(view, dt, time);
+    this.trace.update(this.traceAt);
+    this.tags.update(view, this.tagOf, this.squad, this.director.camera.fov);
     this.stadium.crowd?.setExcitement(view.phase === "over" ? 0.8 : this.excitement);
     this.stadium.update(time, dt);
     // The shadow box follows the action so its detail is spent where the camera looks.
@@ -127,6 +147,8 @@ export class MatchRenderer {
 
   dispose(): void {
     this.squad.dispose();
+    this.trace.dispose();
+    this.tags.dispose();
     this.lines.dispose();
     this.stadium.dispose();
     this.environment.dispose();
