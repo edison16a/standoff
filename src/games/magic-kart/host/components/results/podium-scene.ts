@@ -29,7 +29,7 @@ export class PodiumScene {
       floorColour: "#1d1638",
       lights: { count: 4, colours: ["#fff1d6", "#ffd27a", "#bfe3ff", "#ffd27a"], radius: 6, height: 10, intensity: 900, angle: 0.24, beamStrength: 0.22 },
       confetti: { count: 1800, size: 0.09, seed: 11 },
-      orbit: { centre: { x: 0, y: 0, z: 0 }, radius: 9.5, height: 3.2, lookHeight: 1.6, startAngle: 0, speed: 0.12, arc: 0.4, introS: 2.4, pullBack: 1.45, rise: 2.2, bob: 0.2 },
+      orbit: { centre: { x: 0, y: 0, z: 0 }, radius: 12.5, height: 3.9, lookHeight: 2.05, startAngle: 0, speed: 0.12, arc: 0.4, introS: 2.4, pullBack: 1.45, rise: 2.2, bob: 0.2 },
     });
     const podium = createPodium({ width: STEP, height: 1.3 });
     this.room.scene.add(podium.object);
