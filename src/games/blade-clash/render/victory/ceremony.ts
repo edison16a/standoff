@@ -63,6 +63,8 @@ export class Ceremony {
     this.lights.object.visible = false;
     this.lights.setLevel(0);
     this.confetti?.clear();
+    // Hidden too, so the duel never draws its thousands of empty pieces.
+    if (this.confetti) this.confetti.object.visible = false;
   }
 
   /** Where the ceremony stands a fighter, or null outside it. */
@@ -91,6 +93,7 @@ export class Ceremony {
   private confettiFor(winner: Slot, floor: number): VictoryConfetti {
     if (this.confetti && this.winner === winner) {
       this.confetti.clear();
+      this.confetti.object.visible = true;
       return this.confetti;
     }
     if (this.confetti) {
