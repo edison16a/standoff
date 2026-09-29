@@ -3,6 +3,7 @@ import type { TeamId } from "../teams";
 import { makeAthlete } from "./athlete";
 import { newBall } from "./ball";
 import { celebrateGoal, celebrateWin, goalPhaseLength } from "./celebrate";
+import { CEREMONY, stageCeremony, stepCeremony } from "./ceremony";
 import { makeKeeper } from "./keeper";
 import { stepFoul } from "./foul";
 import { updateKeeper, updateKeeperFacing } from "./keeper-update";
@@ -56,6 +57,7 @@ export function createMatch(entrants: readonly Entrant[], options: Partial<Match
     referee: makeReferee(),
     foul: null,
     setPiece: null,
+    ceremony: null,
   };
   setupKickoff(state);
   return state;
@@ -105,7 +107,12 @@ export function stepMatch(state: MatchState, commands: ReadonlyMap<number, Comma
       if (state.phaseT >= MATCH.replay) endReplay(state);
       return;
     case "fulltime":
-      celebrateWin(state, dt);
+      // The winners celebrate where they are, then the scene cuts to the trophy.
+      if (state.phaseT < CEREMONY.cut) celebrateWin(state, dt);
+      else {
+        if (!state.ceremony) stageCeremony(state);
+        stepCeremony(state, dt);
+      }
       ballOnly(state, dt);
       return;
   }

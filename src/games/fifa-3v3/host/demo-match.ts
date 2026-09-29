@@ -1,3 +1,4 @@
+import { CEREMONY } from "../engine/ceremony";
 import { FixedStepClock } from "../engine/clock";
 import type { MatchEvent } from "../engine/events";
 import { createMatch, stepMatch, type Entrant } from "../engine/match";
@@ -39,7 +40,8 @@ export class DemoMatch {
       stepMatch(this.state);
       events.push(...this.state.events);
     }
-    if (this.state.phase === "fulltime" && this.state.phaseT > 4) this.state = this.fresh();
+    // A new kick about before the trophy ceremony: that is for real matches only.
+    if (this.state.phase === "fulltime" && this.state.phaseT > CEREMONY.cut - 0.4) this.state = this.fresh();
     this.view = buildView(this.state);
     return events;
   }

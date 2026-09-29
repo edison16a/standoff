@@ -117,6 +117,8 @@ export interface MatchState {
   foul: Foul | null;
   /** The free kick or penalty being lined up, and for a moment after it is struck. */
   setPiece: SetPiece | null;
+  /** The trophy ceremony at full time, once the scene has cut to it: who lifts the cup. */
+  ceremony: { captain: number | null } | null;
 }
 
 /** One player's controls for one step, from a phone or a computer brain. */

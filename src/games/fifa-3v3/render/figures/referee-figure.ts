@@ -85,5 +85,6 @@ function asAthlete(r: RefereeView | null): AthleteView {
     signature: false,
     guarding: false,
     wall: false,
+    ceremony: null,
   };
 }
