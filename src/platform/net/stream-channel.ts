@@ -20,6 +20,11 @@ const MISROUTED_RETRIES = 5;
  * makes Vercel add server instances, which splits rooms up.
  */
 export const POST_GAP_MS = 100;
+/**
+ * The relay pings every 15 s. A stream silent for this long is dead, even
+ * if nothing in between said so, like one whose server instance vanished.
+ */
+export const SILENT_MS = 40_000;
 
 interface Queued {
   data: string;
@@ -49,14 +54,20 @@ export class StreamChannel {
   private sendingBytes = 0;
   private lastPost = -Infinity;
   private timer: ReturnType<typeof setTimeout> | null = null;
+  private heard = Date.now();
+  private readonly watch = setInterval(() => {
+    if (Date.now() - this.heard > SILENT_MS) this.finish(ABNORMAL);
+  }, SILENT_MS / 4);
 
   constructor() {
+    this.source.addEventListener("ping", () => (this.heard = Date.now()));
     this.source.addEventListener("hello", (event: MessageEvent<string>) => {
       this.id = event.data;
       this.readyState = OPEN;
       this.onopen?.(new Event("open"));
     });
     this.source.onmessage = (event: MessageEvent<string>) => {
+      this.heard = Date.now();
       if (this.readyState === OPEN) this.onmessage?.(new MessageEvent("message", { data: event.data }));
     };
     this.source.addEventListener("close", (event: MessageEvent<string>) => this.finish(Number(event.data) || 1000));
@@ -121,6 +132,7 @@ export class StreamChannel {
   private finish(code: number): void {
     if (this.readyState === CLOSED) return;
     this.readyState = CLOSED;
+    clearInterval(this.watch);
     this.source.close();
     this.queue = [];
     if (this.timer) clearTimeout(this.timer);

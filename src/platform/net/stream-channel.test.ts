@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { POST_GAP_MS, StreamChannel } from "./stream-channel";
+import { POST_GAP_MS, SILENT_MS, StreamChannel } from "./stream-channel";
 
 /** An event stream the test opens by hand. */
 class FakeSource {
@@ -14,7 +14,10 @@ class FakeSource {
     this.listeners.set(type, listener);
   }
   hello() {
-    this.listeners.get("hello")?.({ data: "id" } as MessageEvent<string>);
+    this.emit("hello", "id");
+  }
+  emit(type: string, data = "") {
+    this.listeners.get(type)?.({ data } as MessageEvent<string>);
   }
   close() {}
 }
@@ -73,6 +76,20 @@ describe("StreamChannel", () => {
     vi.advanceTimersByTime(POST_GAP_MS);
     await settle();
     expect(bodies[1]).toBe('[{"strike":1},{"motion":2}]');
+  });
+
+  it("gives up on a stream that has gone silent, but not on one the relay pings", () => {
+    const closed = vi.fn();
+    const channel = openChannel();
+    channel.onclose = closed;
+    const source = FakeSource.last;
+    for (let i = 0; i < 4; i++) {
+      vi.advanceTimersByTime(15_000);
+      source.emit("ping");
+    }
+    expect(closed).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(SILENT_MS + 10_000);
+    expect(closed).toHaveBeenCalledTimes(1);
   });
 
   it("tries a misrouted post again at once, then gives up on the stream", async () => {
