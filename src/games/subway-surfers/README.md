@@ -90,6 +90,8 @@ await page.evaluate(() => window.__cameraKit.inject(1, null));          // step 
 await page.evaluate(() => window.__subwaySurfers.playWithKeys());       // skip the camera and run with the arrow keys
 ```
 
+While a run is going, the host's hidden admin panel (three quick taps on the settings gear) can start any power up or skip to the next zone (`host/admin.ts`).
+
 ## Home screen media
 
 `showcase/` plays a seeded run with a computer runner and a director that picks the camera, so every capture is the same. The tile shows the runner on a hoverboard by a graffiti wall above the logo, from a spot with nothing standing close by, the poster has a train rolling in, and the clip is eight seconds of the yard: lane changes, coins picked up as the runner touches them, super sneakers for a few seconds with a high flip seen from the side, then a roll. The showcase turns every power up on its course into super sneakers (or clears them), since the magnets the yard lays early on pull coins in from afar.
