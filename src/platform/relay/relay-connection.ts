@@ -6,8 +6,9 @@ import { Membership } from "./membership";
 import { RoomChannel } from "./room-channel";
 import { makeToken } from "./room-code";
 import { RoomOps } from "./room-ops";
+import { RoomSigner } from "./room-sign";
 import { echoProbe, RoomProbe } from "./relay-probe";
-import { createRoom, joinAsPhone, remakeRoom, resumeHost, retireRoom, type RoomsContext } from "./relay-rooms";
+import { createRoom, joinAsPhone, migrateRoom, remakeRoom, resumeHost, retireRoom, type RoomsContext } from "./relay-rooms";
 import { rotateLead, type RelayContext, type SocketLike } from "./relay-types";
 
 export type { RelayContext, SocketLike } from "./relay-types";
@@ -36,7 +37,7 @@ export class RelayConnection {
     private readonly socket: SocketLike,
     private readonly ctx: RelayContext,
   ) {
-    this.ops = new RoomOps(ctx.backend.store, ctx.now);
+    this.ops = new RoomOps(ctx.backend.store, ctx.now, new RoomSigner(ctx.secret));
     this.place = new Membership(this.id, this.ops, ctx.backend.bus, (raw) => this.onBus(raw));
     this.watch = new HostWatch(this.ops, ctx.backend.bus);
     this.rooms = {
@@ -83,7 +84,9 @@ export class RelayConnection {
       case "host:create":
         return this.handshake(() => createRoom(this.rooms, envelope.game, envelope.seats));
       case "host:resume":
-        return this.handshake(() => resumeHost(this.rooms, envelope.code, envelope.token));
+        return this.handshake(() => resumeHost(this.rooms, envelope));
+      case "host:migrate":
+        return migrateRoom(this.rooms, envelope);
       case "phone:join":
         return this.handshake(() => joinAsPhone(this.rooms, envelope));
       case "host:retire":

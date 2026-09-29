@@ -61,6 +61,18 @@ export function newRoom({ seats, ...room }: NewRoom): RoomRecord {
   return { ...room, hostAwaySince: null, closed: false, seats: Array.from({ length: seats }, () => null) };
 }
 
+/**
+ * The same room made again on a server instance that never had it, from
+ * the host's signed token. Its seats wait for their phones, under the
+ * names the host remembers, and each phone takes its own back with its
+ * signed seat token (see claimSeat).
+ */
+export function restoredRoom(room: NewRoom, names: (string | null)[], now: number): RoomRecord {
+  const fresh = newRoom(room);
+  const seats = fresh.seats.map((_, i): SeatRecord | null => (names[i] ? { token: "", conn: null, awaySince: now, name: names[i] } : null));
+  return { ...fresh, seats };
+}
+
 /** True once the host has been gone longer than the grace period. */
 export function hostExpired(room: RoomRecord, now: number): boolean {
   return room.hostConn === null && room.hostAwaySince !== null && now - room.hostAwaySince > HOST_GRACE_MS;

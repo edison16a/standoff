@@ -38,8 +38,25 @@ export type Payload = z.infer<typeof payloadSchema>;
 export const clientEnvelopeSchema = z.discriminatedUnion("type", [
   /** The computer opening a new room for a game, with this many seats. */
   z.object({ type: z.literal("host:create"), game: gameIdSchema, seats: seat }),
-  /** The computer reclaiming its room after a page reload. */
-  z.object({ type: z.literal("host:resume"), code: roomCode, token }),
+  /**
+   * The computer reclaiming its room after a reload or on a new socket.
+   * The game, seat count and names let a server instance that never had
+   * the room make it again from the signed token.
+   */
+  z.object({
+    type: z.literal("host:resume"),
+    code: roomCode,
+    token,
+    game: gameIdSchema.optional(),
+    seats: seat.optional(),
+    names: z.array(z.string().max(NAME_MAX).nullable()).max(MAX_SEATS).optional(),
+  }),
+  /**
+   * Sent on the host's old socket once its new one resumed the room on
+   * another server instance: the old instance lets the room go and tells
+   * its phones to move to a fresh socket, which lands where the host is.
+   */
+  z.object({ type: z.literal("host:migrate"), code: roomCode, token }),
   /** The computer ending the game for good. Only tabs from before host:retire send it. */
   z.object({ type: z.literal("host:close") }),
   /** The computer swapping its room for a fresh one with the same game. Only older tabs send it. */
@@ -115,9 +132,21 @@ export interface RoomInfo {
  * an instance that has never heard of the room.
  */
 export type ServerEnvelope =
-  | ({ type: "room:created"; token: string; joinUrl: string; sharedRooms: boolean } & RoomInfo)
-  /** `names` holds each seat's player name, null for a seat nobody took. */
-  | ({ type: "room:resumed"; joinUrl: string; connected: boolean[]; names: (string | null)[]; sharedRooms: boolean } & RoomInfo)
+  /** `instance` names the server instance that answered, so the host can tell when it moved. */
+  | ({ type: "room:created"; token: string; joinUrl: string; sharedRooms: boolean; instance?: string } & RoomInfo)
+  /**
+   * `names` holds each seat's player name, null for a seat nobody took.
+   * `restored` means this instance made the room again from its token.
+   */
+  | ({
+      type: "room:resumed";
+      joinUrl: string;
+      connected: boolean[];
+      names: (string | null)[];
+      sharedRooms: boolean;
+      restored?: boolean;
+      instance?: string;
+    } & RoomInfo)
   | { type: "room:error"; reason: JoinErrorReason }
   | { type: "peer:joined"; seat: Seat; rejoined: boolean; name: string }
   | { type: "peer:left"; seat: Seat }

@@ -6,3 +6,8 @@
 export function logFailure(what: string, error: unknown): void {
   console.error(what, error instanceof Error ? error.message : String(error));
 }
+
+/** A line about how the relay is used. Kept out of test output. */
+export function logInfo(text: string): void {
+  if (!process.env.VITEST) console.info(text);
+}

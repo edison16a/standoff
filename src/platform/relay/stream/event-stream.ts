@@ -40,7 +40,7 @@ export function openEventStream(ctx: RelayContext, signal: AbortSignal): Respons
             finish();
           },
         },
-        ctx,
+        { ...ctx, transport: "stream" },
       );
       const limiter = new RateLimiter();
       const unsubscribe = await ctx.backend.bus.subscribe(channels.inbox(id), (batch) => {

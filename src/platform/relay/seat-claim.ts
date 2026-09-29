@@ -14,6 +14,8 @@ export interface SeatRequest {
   name?: string;
   /** Only take back the seat this name holds, never a new one. */
   reconnect?: boolean;
+  /** The seat `token` was signed for, which a restored room trusts (see RoomSigner). */
+  signedSeat?: Seat | null;
 }
 
 function seatFree(seat: SeatRecord | null, now: number): boolean {
@@ -47,12 +49,13 @@ export function claimSeat(
   room: RoomRecord,
   request: SeatRequest,
   conn: string,
-  newToken: string,
+  newToken: string | ((seat: Seat) => string),
   now: number,
 ): { room: RoomRecord; claim: SeatClaim } {
   const refuse = (reason: Extract<SeatClaim, { ok: false }>["reason"]) => ({ room, claim: { ok: false, reason } as SeatClaim });
   if (isDead(room, now)) return refuse("closed");
   const { token, name } = request;
+  const tokenFor = (index: number) => (typeof newToken === "string" ? newToken : newToken(index + 1));
   const known = token ? room.seats.findIndex((seat) => seat?.token === token) : -1;
   if (token && known >= 0) {
     const held = room.seats[known]!;
@@ -60,18 +63,25 @@ export function claimSeat(
     const kept = name && seatNamed(room, name, known) < 0 ? name : (held.name ?? uniqueDefault(room, known + 1));
     return take(room, known, { token, conn, name: kept }, true, held.conn);
   }
+  // A restored room's seat is empty or waiting (no token), and the phone's signed token names it.
+  const signed = request.signedSeat ? request.signedSeat - 1 : -1;
+  const waiting = room.seats[signed];
+  if (token && signed >= 0 && signed < room.seats.length && (!waiting || waiting.token === "")) {
+    const kept = name && seatNamed(room, name, signed) < 0 ? name : (waiting?.name ?? uniqueDefault(room, signed + 1));
+    return take(room, signed, { token, conn, name: kept }, true, null);
+  }
   const named = name ? seatNamed(room, name) : -1;
   if (named >= 0) {
     const held = room.seats[named]!;
     if (held.conn !== null) return refuse("name-taken");
     if (!request.reconnect) return refuse("name-away");
     // The old token is lost with the tab, so the seat gets a fresh one.
-    return take(room, named, { token: newToken, conn, name: held.name! }, true, null);
+    return take(room, named, { token: tokenFor(named), conn, name: held.name! }, true, null);
   }
   if (request.reconnect) return refuse("no-seat");
   const free = room.seats.findIndex((seat) => seatFree(seat, now));
   if (free < 0) return refuse("full");
-  return take(room, free, { token: newToken, conn, name: name ?? uniqueDefault(room, free + 1) }, false, null);
+  return take(room, free, { token: tokenFor(free), conn, name: name ?? uniqueDefault(room, free + 1) }, false, null);
 }
 
 function take(

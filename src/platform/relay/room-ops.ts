@@ -1,6 +1,7 @@
 import type { Seat } from "@/platform/protocol";
 import type { RoomStore } from "./backend";
-import { makeRoomCode, makeToken } from "./room-code";
+import { makeRoomCode } from "./room-code";
+import { RoomSigner } from "./room-sign";
 import * as rules from "./room-state";
 import { claimSeat, type SeatClaim, type SeatRequest } from "./seat-claim";
 
@@ -19,6 +20,14 @@ const RELEASE_ATTEMPTS = 3;
 /** A join's outcome: a seat claim, or the room the host moved to. */
 export type JoinOutcome = { moved: string } | { claim: SeatClaim; hostHere: boolean; game: string; seats: number };
 
+/** What a host resuming on an instance without its room sends to make it again. */
+export interface RestoreRequest {
+  game: string;
+  seats: number;
+  names: (string | null)[];
+  joinUrl: string;
+}
+
 /**
  * The room rules applied through the store. Each method is one atomic
  * read, change and write of a room, so two instances racing to seat two
@@ -28,6 +37,7 @@ export class RoomOps {
   constructor(
     private readonly store: RoomStore,
     private readonly now: () => number,
+    private readonly signer: RoomSigner = new RoomSigner(),
   ) {}
 
   /** Makes a room with a fresh code. Null if no free code turned up. */
@@ -39,7 +49,8 @@ export class RoomOps {
   ): Promise<rules.RoomRecord | null> {
     for (let attempt = 0; attempt < CODE_ATTEMPTS; attempt++) {
       const code = makeRoomCode();
-      const room = rules.newRoom({ code, hostToken: makeToken(), joinUrl: joinUrlFor(code), hostConn: conn, game, seats });
+      const hostToken = this.signer.hostToken(code, game, seats);
+      const room = rules.newRoom({ code, hostToken, joinUrl: joinUrlFor(code), hostConn: conn, game, seats });
       if (await this.store.create(room)) return room;
     }
     return null;
@@ -89,21 +100,36 @@ export class RoomOps {
     return (await this.store.bump(`miss:${client}`)) <= MISSES_PER_MINUTE;
   }
 
-  resumeHost(code: string, token: string, conn: string) {
+  /**
+   * The host takes its room back. Where this instance never had the room,
+   * a token this deployment signed for it makes the same room again, which
+   * is how a room follows Vercel onto a new instance. An ended room, or
+   * another room under the same code, is never replaced.
+   */
+  async resumeHost(code: string, token: string, conn: string, restore?: RestoreRequest) {
     const now = this.now();
-    return this.store.update(code, (room) => {
-      const claimed = rules.claimHost(room, token, conn, now);
-      return claimed ? { room: claimed.room, result: claimed } : { room: null, result: null };
+    const claimed = await this.store.update(code, (room) => {
+      const claim = rules.claimHost(room, token, conn, now);
+      return claim ? { room: claim.room, result: { ...claim, restored: false } } : { room: null, result: null };
     });
+    if (claimed || !restore || !this.signer.checkHost(token, code, restore.game, restore.seats)) return claimed;
+    if (await this.store.get(code)) return null;
+    const room = rules.restoredRoom({ code, hostToken: token, joinUrl: restore.joinUrl, hostConn: conn, game: restore.game, seats: restore.seats }, restore.names, now);
+    return (await this.store.create(room)) ? { room, replaced: null, restored: true } : null;
+  }
+
+  /** Lets a room go from this instance without a trace, once its host moved it to another. */
+  forget(code: string): Promise<void> {
+    return this.store.delete(code);
   }
 
   /** Seats a phone. A room that moved sends the phone on, as `moved`, and seats nobody. */
   joinSeat(code: string, request: SeatRequest, conn: string): Promise<JoinOutcome | null> {
     const now = this.now();
-    const newToken = makeToken();
     return this.store.update<JoinOutcome>(code, (room) => {
       if (room.closed && room.movedTo) return { room: null, result: { moved: room.movedTo } };
-      const { room: next, claim } = claimSeat(room, request, conn, newToken, now);
+      const signed = { ...request, signedSeat: this.signer.seatOf(request.token, room) };
+      const { room: next, claim } = claimSeat(room, signed, conn, (seat) => this.signer.seatToken(room, seat), now);
       return {
         room: claim.ok ? next : null,
         result: { claim, hostHere: room.hostConn !== null, game: room.game, seats: room.seats.length },

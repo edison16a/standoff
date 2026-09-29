@@ -42,9 +42,18 @@ export interface Connected {
   drop(): Promise<void>;
 }
 
-export function connectTo(backend: Backend, now: () => number, client = "test"): Connected {
+/** Where a test connection lands: an instance with its own rooms, and the deployment's secret. */
+export interface KitPlace {
+  client?: string;
+  sharedRooms?: boolean;
+  secret?: string;
+  instance?: string;
+}
+
+export function connectTo(backend: Backend, now: () => number, place: string | KitPlace = "test"): Connected {
   const socket = new RecordingSocket();
-  const ctx = { backend, joinUrlFor: (code: string) => `https://game.test/join/${code}`, now, client, sharedRooms: true, deadline: null };
+  const { client = "test", sharedRooms = true, secret, instance } = typeof place === "string" ? { client: place } : place;
+  const ctx = { backend, joinUrlFor: (code: string) => `https://game.test/join/${code}`, now, client, sharedRooms, deadline: null, secret, instance };
   const connection = new RelayConnection(socket, ctx);
   return {
     socket,
