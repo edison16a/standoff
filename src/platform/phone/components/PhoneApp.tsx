@@ -33,7 +33,7 @@ function RoomScreen({ code, resumeAs, onRetry }: { code: string; resumeAs: strin
   const [room] = useState(() => new PhoneRoom(code, resumeAs));
   // iOS only grants motion inside a tap, so there a reload asks for one first.
   const [tapFirst] = useState(() => resumeAs !== null && motionNeedsTap());
-  const { stage, error, name, seat, game: gameId, status, hostAway, movedTo, clash } = useStore(room.store);
+  const { stage, error, name, seat, game: gameId, status, hostAway, rejoining, movedTo, clash } = useStore(room.store);
   const [game, setGame] = useState<PhoneGame | null>(null);
   // Read once, so a moved phone never flashes the name screen before its join starts.
   const [moving] = useState(() => moveInto(code) !== null);
@@ -80,7 +80,7 @@ function RoomScreen({ code, resumeAs, onRetry }: { code: string; resumeAs: strin
   }, [room, gameId]);
 
   // A first join that falls back to the stream is briefly "reconnecting", which is no news while joining.
-  const offline = (stage === "playing" && (status !== "open" || hostAway)) || (stage === "joining" && status === "unreachable");
+  const offline = (stage === "playing" && (status !== "open" || hostAway || rejoining)) || (stage === "joining" && status === "unreachable");
   const lost = offline && !hostAway;
   const retry = clash ?? (tapFirst && stage === "name" ? { reason: "resume" as const, name: resumeAs ?? "" } : null);
 
