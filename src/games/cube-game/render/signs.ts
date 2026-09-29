@@ -18,7 +18,7 @@ export class Signs {
   readonly group = new THREE.Group();
   private readonly signs: Sign[] = [];
   private readonly diamond = new THREE.OctahedronGeometry(0.32, 0);
-  private readonly diamondMaterial = new THREE.MeshBasicMaterial({ color: new THREE.Color(DIAMOND).multiplyScalar(2) });
+  private readonly diamondMaterial = new THREE.MeshBasicMaterial({ color: new THREE.Color(DIAMOND).multiplyScalar(1.3) });
 
   private sign(player: number): Sign {
     let sign = this.signs[player];

@@ -125,10 +125,17 @@ function diving(state: MatchState, k: Keeper): void {
     if (landed > 0.25) setAction(k, holding ? "hold" : "set");
     return;
   }
-  if (landed > 0.55) {
+  // Down on the turf: a keeper with the ball bounces up, one who pushed it away or missed it takes a while.
+  if (landed > (holding ? 0.55 : KEEPER.grounded)) {
     k.pos.z = dive.toZ + dive.dir * KEEPER.middle;
     setAction(k, "getup");
   }
+}
+
+/** While a set piece is lined up the keepers hold their spots and watch the ball. */
+export function updateKeeperFacing(state: MatchState, k: Keeper, dt: number): void {
+  k.actionT += dt;
+  face(k, Math.atan2(state.ball.pos.z - k.pos.z, state.ball.pos.x - k.pos.x), dt);
 }
 
 /** Plays the ball out to the most open team mate, rolled along the turf. */

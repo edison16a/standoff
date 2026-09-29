@@ -23,7 +23,7 @@ import "./styles/phone.css";
 import "./styles/play.css";
 
 /**
- * Counter Battle, as the platform sees it. Each room gets one session,
+ * Paintball Battle, as the platform sees it. Each room gets one session,
  * and every piece the platform renders is wrapped so it can reach it.
  */
 export const game: GameModule = {

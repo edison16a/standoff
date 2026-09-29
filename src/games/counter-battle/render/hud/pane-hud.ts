@@ -60,7 +60,7 @@ export class PaneHud {
     this.owned.push(mat);
     this.vignette = new THREE.Mesh(plane, mat);
     // All see through, so they draw in render order after the vignette: outline, then colour, then markers.
-    const dark = new THREE.MeshBasicMaterial({ color: "#05060a", transparent: true, opacity: 0.8, depthTest: false, depthWrite: false, toneMapped: false });
+    const dark = new THREE.MeshBasicMaterial({ color: "#05060a", transparent: true, opacity: 0.6, depthTest: false, depthWrite: false, toneMapped: false });
     const bright = new THREE.MeshBasicMaterial({ color: colour, transparent: true, depthTest: false, depthWrite: false, toneMapped: false });
     this.owned.push(dark, bright);
     // Four ticks and a dot, each over a dark outline so it reads on sky and turf alike.
@@ -124,7 +124,7 @@ export class PaneHud {
         const a = Math.PI / 4 + (i * Math.PI) / 2;
         const r = gap + size * 0.9;
         m.position.set(aim.x + Math.cos(a) * r, aim.y + Math.sin(a) * r, 0);
-        m.scale.set(size, Math.max(2, h * 0.004), 1);
+        m.scale.set(size, Math.max(1.5, h * 0.0028), 1);
       });
     }
     renderer.clearDepth();
@@ -132,14 +132,16 @@ export class PaneHud {
   }
 
   private layoutCross(aim: { x: number; y: number }, gap: number, h: number): void {
-    const len = Math.max(9, h * 0.03);
-    const thick = Math.max(2.5, h * 0.006);
+    // Fine lines with a hairline outline: easy to aim through, still clear on sky and turf.
+    const len = Math.max(7, h * 0.02);
+    const thick = Math.max(1.25, h * 0.0024);
+    const dot = Math.max(1.5, h * 0.003);
     for (const bar of this.bars) {
       const { tick, outline } = bar.userData as { tick: number; outline: boolean };
-      const pad = outline ? 3 : 0;
+      const pad = outline ? Math.max(1.5, thick) : 0;
       if (tick === 4) {
         bar.position.set(aim.x, aim.y, 0);
-        bar.scale.set(thick + pad, thick + pad, 1);
+        bar.scale.set(dot + pad, dot + pad, 1);
         continue;
       }
       const a = (tick * Math.PI) / 2;

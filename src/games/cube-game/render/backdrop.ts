@@ -75,7 +75,7 @@ export class Backdrop {
     boxMaterial.uniforms.windows!.value = theme.skyline === "clouds" ? 0 : 0.55;
     (boxMaterial.uniforms.windowColour!.value as THREE.Color).set(theme.sun);
     const peakMaterial = spikeMaterial(new THREE.Color(theme.fill).multiplyScalar(0.6).getHex(), theme.accent, 0.012);
-    peakMaterial.uniforms.glow!.value = 0.55;
+    peakMaterial.uniforms.glow!.value = 0.35;
     for (const material of [boxMaterial, peakMaterial]) {
       // Fogged toward the dark of the sky, so the skyline stands as a silhouette against the glow at the horizon.
       setFog(material, new THREE.Color(theme.skyHigh).lerp(new THREE.Color(theme.skyLow), 0.25).getHex(), 0.012);

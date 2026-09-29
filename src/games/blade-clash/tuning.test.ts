@@ -11,9 +11,9 @@ describe("clampTuning", () => {
   });
 
   it("pulls out of range and broken values back", () => {
-    const clamped = clampTuning({ ...DEFAULT_TUNING, hitSpeed: 0, hitCooldownMs: 1e9, sfxVolume: Number.NaN });
+    const clamped = clampTuning({ ...DEFAULT_TUNING, hitSpeed: 0, clashSpeed: 1e9, sfxVolume: Number.NaN });
     expect(clamped.hitSpeed).toBe(1);
-    expect(clamped.hitCooldownMs).toBe(1500);
+    expect(clamped.clashSpeed).toBe(8);
     expect(clamped.sfxVolume).toBe(DEFAULT_TUNING.sfxVolume);
   });
 });

@@ -73,8 +73,8 @@ function drawLines(ctx: CanvasRenderingContext2D, w: number, h: number): void {
   ctx.beginPath();
   ctx.arc(cx, cy, m(PITCH.centreRadius), 0, Math.PI * 2);
   ctx.stroke();
-  // The centre spot and a penalty spot six metres out from each goal.
-  for (const [x, r] of [[cx, 0.16], [m(6), 0.11], [w - m(6), 0.11]] as const) {
+  // The centre spot and the penalty spots.
+  for (const [x, r] of [[cx, 0.16], [m(PITCH.penaltySpot), 0.11], [w - m(PITCH.penaltySpot), 0.11]] as const) {
     ctx.beginPath();
     ctx.arc(x, cy, m(r), 0, Math.PI * 2);
     ctx.fill();

@@ -1,4 +1,5 @@
 "use client";
+import { DifficultyPicker } from "@/games/kit/difficulty/DifficultyPicker";
 import { playerColor } from "@/games/kit/players";
 import { WEAPONS } from "../../engine/weapons";
 import { useSurvivalStore } from "../host-store";
@@ -6,12 +7,14 @@ import { useSession } from "./session-context";
 
 /**
  * Before the run: who has joined, their guns, who is ready, and a Start
- * button for when not everyone wants to wait. The run also starts on its
+ * button for when not everyone wants to wait, and how fast and hard the
+ * zombies come. The run also starts on its
  * own once everyone here is ready.
  */
 export function LobbyPanel() {
   const session = useSession();
   const seats = useSurvivalStore((s) => s.hud.seats);
+  const level = useSurvivalStore((s) => s.level);
   const here = seats.filter((s) => s.connected);
   const ready = here.filter((s) => s.ready).length;
   if (here.length === 0) return null;
@@ -29,6 +32,7 @@ export function LobbyPanel() {
           </li>
         ))}
       </ul>
+      <DifficultyPicker level={level} onChange={(next) => session.setLevel(next)} />
       <button type="button" className="btn btn--primary btn--lg zs-lobby__start" disabled={ready === 0} onClick={() => session.start()}>
         {ready === 0 ? "Waiting for someone to be ready" : ready === here.length ? "Start" : `Start with ${ready} ready`}
       </button>

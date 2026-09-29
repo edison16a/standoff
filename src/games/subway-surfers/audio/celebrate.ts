@@ -61,7 +61,7 @@ function shout(engine: AudioEngine, out: AudioNode, at: number, length: number):
   voice.onended = () => gain.disconnect();
 }
 
-/** A cheer and applause, bigger when there is a winner or a new best. */
+/** A cheer and applause, bigger for a new best. */
 export function cheer(engine: AudioEngine, out: AudioNode, big: boolean): void {
   const at = engine.now + 0.4;
   const length = big ? 2.6 : 1.8;

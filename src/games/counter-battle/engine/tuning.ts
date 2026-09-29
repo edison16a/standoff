@@ -15,7 +15,7 @@ export const RULES = {
    * health left. Pressure makes it rare; this only stops a round that
    * somehow stalls from running forever.
    */
-  roundLimit: 150,
+  roundLimit: 180,
 } as const;
 
 /**
@@ -35,8 +35,15 @@ export const BODY = {
   crouchEye: 0.86,
 } as const;
 
+/**
+ * How fast a paintball is shown flying, metres per second. The engine
+ * lands every hit at once; the picture and the pop of the burst follow
+ * the ball, so they agree with each other.
+ */
+export const BALL_FLIGHT = { ball: 110, pellet: 90 } as const;
+
 /** Seconds the movement brain waits between fresh plans, unless something forces one sooner. */
-export const PLAN_EVERY = 0.5;
+export const PLAN_EVERY = 0.8;
 
 /** How much the hunt tightens over a round: none at `start`, full by `full` seconds. */
-export const PRESSURE = { start: 12, full: 70 } as const;
+export const PRESSURE = { start: 20, full: 90 } as const;

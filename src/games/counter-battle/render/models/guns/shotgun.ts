@@ -1,48 +1,48 @@
 import * as THREE from "three";
-import { ball, box, paint, roundBox, shade } from "../../geo";
+import { box, paint, roundBox, shade } from "../../geo";
 import { GRIP_R, GunPiece, handFrame, marker, tubeZ, type GunModel } from "./gun-kit";
+import { airTank, hopper, portedBarrel } from "./paint-kit";
 
-const STEEL = "#2c2f35";
-const WOOD = "#7a4a26";
+const WHITE = "#eef1f4";
+const POLY = "#2b3038";
+const INK = "#15171b";
 
 /**
- * The pump shotgun: a steel receiver with a loading port underneath, a
- * long barrel over the magazine tube, a ribbed pump the left hand works
- * after every shot, and a wooden stock with a team stripe.
+ * The paint shotgun: a pump marker with a wide barrel that throws nine
+ * balls at once, over a paint tube the shells load into, a ribbed pump
+ * the left hand works after every shot, a small hopper and the air tank
+ * as its stock.
  */
 export function buildShotgun(accent: string): GunModel {
   const root = new THREE.Group();
   const body = new GunPiece();
-  body.add("metal", paint(roundBox(0.048, 0.08, 0.24, 0.01), STEEL, { at: [0, 0.062, 0.02] }));
-  body.add("metal", paint(box(0.008, 0.02, 0.08), "#0d0e10", { at: [-0.025, 0.07, 0.03] }));
-  body.add("metal", paint(box(0.03, 0.006, 0.05), "#0d0e10", { at: [0, 0.021, 0.06] }));
-  // Barrel with a vent rib and a bead, over the magazine tube.
-  body.add("metal", paint(tubeZ(0.014, 0.013, 0.5), STEEL, { at: [0, 0.086, 0.39] }));
-  body.add("metal", paint(box(0.01, 0.006, 0.5), "#1a1c20", { at: [0, 0.103, 0.39] }));
-  body.add("metal", paint(ball(0.005, 8, 6), "#e8e2cf", { at: [0, 0.11, 0.63] }));
-  body.add("metal", paint(tubeZ(0.013, 0.013, 0.42), STEEL, { at: [0, 0.056, 0.35] }));
-  body.add("metal", paint(tubeZ(0.015, 0.015, 0.02), "#1a1c20", { at: [0, 0.056, 0.565] }));
-  body.add("metal", paint(box(0.034, 0.05, 0.014), STEEL, { at: [0, 0.07, 0.57] }));
-  // Trigger guard and the stock with its pistol grip, one piece of wood.
-  body.add("metal", paint(box(0.008, 0.006, 0.07), STEEL, { at: [0, 0.012, 0.03] }));
-  body.add("poly", paint(roundBox(0.036, 0.1, 0.05, 0.014), WOOD, { at: [0, -0.02, -0.04], rot: [0.35, 0, 0] }));
-  body.add("poly", paint(roundBox(0.042, 0.075, 0.2, 0.018), WOOD, { at: [0, 0.035, -0.19], rot: [0.12, 0, 0] }));
-  body.add("poly", paint(roundBox(0.044, 0.11, 0.1, 0.02), WOOD, { at: [0, 0.02, -0.27], rot: [0.05, 0, 0] }));
-  body.add("poly", paint(box(0.046, 0.02, 0.1), accent, { at: [0, 0.06, -0.2], rot: [0.1, 0, 0] }));
-  body.add("poly", paint(roundBox(0.046, 0.13, 0.022, 0.01), "#15161a", { at: [0, 0.02, -0.33] }));
-  // Spare shells in a carrier on the left of the receiver.
+  body.add("poly", paint(roundBox(0.05, 0.08, 0.24, 0.014), WHITE, { at: [0, 0.062, 0.02] }));
+  body.add("poly", paint(box(0.052, 0.016, 0.16), accent, { at: [0, 0.04, 0.02] }));
+  body.add("metal", paint(box(0.03, 0.006, 0.05), INK, { at: [0, 0.021, 0.06] }));
+  // A wide ported barrel over the paint tube.
+  portedBarrel(body, 0.086, 0.14, 0.66, 0.016, INK);
+  body.add("metal", paint(tubeZ(0.013, 0.013, 0.42), POLY, { at: [0, 0.052, 0.35] }));
+  body.add("metal", paint(tubeZ(0.015, 0.015, 0.02), INK, { at: [0, 0.052, 0.565] }));
+  body.add("metal", paint(box(0.034, 0.05, 0.014), POLY, { at: [0, 0.068, 0.57] }));
+  // Trigger guard, pistol grip, and the air tank as the stock.
+  body.add("metal", paint(box(0.008, 0.006, 0.07), INK, { at: [0, 0.012, 0.03] }));
+  body.add("poly", paint(roundBox(0.036, 0.1, 0.05, 0.014), POLY, { at: [0, -0.02, -0.04], rot: [0.35, 0, 0] }));
+  airTank(body, 0, 0.05, -0.11, 0.2, 0.034);
+  body.add("poly", paint(roundBox(0.046, 0.13, 0.022, 0.01), INK, { at: [0, 0.03, -0.33] }));
+  hopper(body, 0, 0.104, -0.02, accent, 0.8);
+  // Spare paint shells in a carrier on the left of the receiver.
   for (let i = 0; i < 4; i++) body.add("poly", paint(tubeZ(0.009, 0.009, 0.06, 8), "#b3261e", { at: [0.031, 0.06, i * 0.022], rot: [Math.PI / 2, 0, 0] }));
   const geos = body.build(root);
 
-  // The pump: a ribbed forend round the magazine tube.
+  // The pump: a ribbed forend round the paint tube.
   const pump = new THREE.Group();
   const p = new GunPiece();
-  p.add("poly", paint(roundBox(0.05, 0.05, 0.19, 0.02), shade(WOOD, -0.15), { at: [0, 0.058, 0.25] }));
-  for (let z = 0.18; z < 0.33; z += 0.025) p.add("poly", paint(box(0.052, 0.052, 0.006), shade(WOOD, -0.45), { at: [0, 0.058, z] }));
+  p.add("poly", paint(roundBox(0.05, 0.05, 0.19, 0.02), POLY, { at: [0, 0.058, 0.25] }));
+  for (let z = 0.18; z < 0.33; z += 0.025) p.add("poly", paint(box(0.052, 0.052, 0.006), shade(accent, -0.3), { at: [0, 0.058, z] }));
   geos.push(...p.build(pump));
   root.add(pump);
 
-  const muzzle = marker("muzzle", 0, 0.086, 0.645);
+  const muzzle = marker("muzzle", 0, 0.086, 0.66);
   root.add(muzzle);
   return {
     root,

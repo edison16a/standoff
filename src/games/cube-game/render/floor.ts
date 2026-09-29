@@ -12,7 +12,8 @@ const NOTCH = 2.5;
 /**
  * The glowing grid the level runs on, stretching away behind the play
  * like an old synthwave cover. Lines sit on whole blocks in the world,
- * so they scroll past as the camera follows, and they flare on the beat.
+ * so they scroll past as the camera follows, and they lift a little on
+ * the beat.
  * Pits leave a gap in it, with a faint glow down in the dark.
  */
 export class Floor {
@@ -50,7 +51,7 @@ export class Floor {
           float grid = max(lines.x, lines.y);
           float near = clamp(-vWorld.z / ${GRID.toFixed(1)}, 0.0, 1.0);
           float far = clamp(-vWorld.z / ${REACH.toFixed(1)}, 0.0, 1.0);
-          vec3 colour = base + line * grid * (0.8 + pulse * 1.1) * pow(1.0 - near, 1.5);
+          vec3 colour = base + line * grid * (0.4 + pulse * 0.25) * pow(1.0 - near, 1.5);
           colour = mix(colour, haze, smoothstep(0.2, 1.0, far) * 0.9);
           gl_FragColor = vec4(colour, 1.0);
         }

@@ -25,6 +25,7 @@ export class MatchDriver {
   readonly bySeat = new Map<number, number>();
   /** Which players hold the shoot button, whatever the match is doing. */
   private readonly held = new Set<number>();
+  private readonly ducked = new Set<number>();
   private carry = 0;
 
   constructor(lineup: Lineup, seed: number, roundsToWin?: number) {
@@ -75,11 +76,22 @@ export class MatchDriver {
     if (f) this.battle.reload(f.id);
   }
 
+  /** The crouch button. Held through a new round, it keeps the fighter down from the start. */
+  crouch(seat: number, down: boolean): void {
+    const f = this.fighterOf(seat);
+    if (!f) return;
+    if (down) this.ducked.add(seat);
+    else this.ducked.delete(seat);
+    this.battle.setCrouch(f.id, down);
+  }
+
   /** A phone dropped or came back: the computer shoots for it meanwhile. */
   setOnline(seat: number, online: boolean): void {
     const f = this.fighterOf(seat);
     if (!f) return;
     this.held.delete(seat);
+    this.ducked.delete(seat);
+    this.battle.setCrouch(f.id, false);
     this.battle.setAutopilot(f.id, !online);
   }
 
@@ -101,6 +113,10 @@ export class MatchDriver {
     for (const seat of this.held) {
       const f = this.fighterOf(seat);
       if (f?.alive && !f.trigger.held) this.battle.setTrigger(f.id, true);
+    }
+    for (const seat of this.ducked) {
+      const f = this.fighterOf(seat);
+      if (f?.alive && !f.duck) this.battle.setCrouch(f.id, true);
     }
   }
 }

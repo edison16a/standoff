@@ -10,7 +10,7 @@ import type { MatchState } from "./types";
 const FOUR: Entrant[] = CHARACTER_IDS.map((character) => ({ character, seat: null }));
 
 /** Plays a match of bots to the results, or gives up after five minutes. */
-function playOut(entrants: Entrant[], seed: number, stage: StageId, difficulty: Difficulty = "normal"): { state: MatchState; events: MatchEvent[] } {
+function playOut(entrants: Entrant[], seed: number, stage: StageId, difficulty: Difficulty = "medium"): { state: MatchState; events: MatchEvent[] } {
   const state = createMatch(entrants, { seed, stage, difficulty });
   const events: MatchEvent[] = [];
   while (state.phase !== "over" && state.frame < 60 * 300) {

@@ -6,10 +6,10 @@ import { buildView, type MatchView } from "../engine/view";
 
 const LINEUP: Entrant[] = [
   { team: 0, character: "echeverri", seat: null },
-  { team: 0, character: "ashworth", seat: null },
-  { team: 0, character: "mansour", seat: null },
+  { team: 0, character: "okemba", seat: null },
+  { team: 0, character: "lacerda", seat: null },
   { team: 1, character: "brandao", seat: null },
-  { team: 1, character: "pritchard", seat: null },
+  { team: 1, character: "holmvik", seat: null },
   { team: 1, character: "serrano", seat: null },
 ];
 

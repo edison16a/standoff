@@ -49,6 +49,8 @@ export class SocketClient {
   constructor(private readonly handlers: SocketHandlers) {}
 
   connect(): void {
+    // Already connected or reconnecting: a second socket would fight the first for the seat.
+    if (!this.stopped && this.current) return;
     this.stopped = false;
     this.current = this.dial();
     this.handlers.onStatus("connecting");
@@ -81,6 +83,10 @@ export class SocketClient {
    */
   redial(): void {
     if (this.stopped) return;
+    // A reconnect already waiting out its backoff would dial a second socket.
+    if (this.retry) clearTimeout(this.retry);
+    this.retry = null;
+    this.backoff = MIN_BACKOFF_MS;
     const old = this.current;
     this.abandonNext();
     this.current = this.dial();

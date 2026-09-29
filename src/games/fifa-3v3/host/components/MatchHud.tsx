@@ -3,6 +3,7 @@ import { playerColor } from "@/games/kit/players";
 import { ROSTER } from "../../roster";
 import { TEAMS } from "../../teams";
 import { useFifaStore } from "../host-store";
+import { ReplayOverlay } from "./ReplayOverlay";
 
 function clock(seconds: number): string {
   const s = Math.max(0, seconds);
@@ -23,26 +24,29 @@ function Scoreboard() {
         </div>
       ))}
       <div className={`fifa-bug__clock ${golden ? "fifa-bug__clock--golden" : ""}`}>{golden ? "GOLDEN GOAL" : clock(time)}</div>
+      <MomentTag />
     </div>
   );
 }
 
-/** The big words for goals, saves and the woodwork. Keyed so each one plays its entrance. */
-function BannerView() {
-  const banner = useFifaStore((s) => s.banner);
-  if (!banner) return null;
+/** A stoppage under the score: the foul and the booking, then the free kick or penalty. */
+function MomentTag() {
+  const moment = useFifaStore((s) => s.moment);
+  if (!moment) return null;
   return (
-    <div key={banner.id} className="fifa-banner" style={{ "--banner": banner.colour } as React.CSSProperties} aria-live="assertive">
-      <strong className="fifa-banner__text">{banner.text}</strong>
-      {banner.sub && <span className="fifa-banner__sub">{banner.sub}</span>}
+    <div className="fifa-bug__moment" style={{ "--moment": moment.colour } as React.CSSProperties} aria-live="polite">
+      {moment.card && <span className="fifa-bug__card" aria-label="Yellow card" />}
+      <strong>{moment.text}</strong>
+      {moment.sub && <span>{moment.sub}</span>}
     </div>
   );
 }
 
-/** Along the bottom: each phone's player, their star and side, and who has the ball. */
+/** Along the bottom: each phone's player, their star and side, and who has the ball. Gone at full time, where the results card lists everyone. */
 function PlayerStrip() {
   const roster = useFifaStore((s) => s.roster);
-  if (roster.length === 0) return null;
+  const over = useFifaStore((s) => s.phase === "fulltime");
+  if (roster.length === 0 || over) return null;
   return (
     <ul className="fifa-strip">
       {roster.map((p) => (
@@ -60,18 +64,12 @@ function PlayerStrip() {
   );
 }
 
+/** No banners across the picture: goals and fouls are told by the score bug and the 3D scene. */
 export function MatchHud() {
-  const replay = useFifaStore((s) => s.replay);
   return (
     <div className="fifa-hud">
       <Scoreboard />
-      {replay && (
-        <div className="fifa-replay" aria-label="Replay">
-          <span className="fifa-replay__dot" />
-          REPLAY
-        </div>
-      )}
-      <BannerView />
+      <ReplayOverlay />
       <PlayerStrip />
     </div>
   );

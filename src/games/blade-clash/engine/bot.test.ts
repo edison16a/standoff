@@ -18,18 +18,18 @@ function seeded(seed: number): () => number {
 describe("Bot", () => {
   it("steps in and lands hits on a player who just stands there", () => {
     const { engine, events } = makeEngine();
-    const bot = new Bot(2, seeded(3));
+    const bot = new Bot(2, { random: seeded(3) });
     toLive(engine);
     runUntil(engine, () => events.some((e) => e.type === "hit" && e.attacker === 2), 20_000, () => {
       engine.control(1, { ...hold(-1, -1.1), move: 0 });
       bot.drive(engine);
     });
-    expect(engine.fighters[1].health).toBeLessThan(5);
+    expect(engine.match.score[2]).toBeGreaterThan(0);
   });
 
   it("wins a whole fight against a player who never moves, then asks for a rematch", () => {
     const { engine, events } = makeEngine();
-    const bot = new Bot(2, seeded(11));
+    const bot = new Bot(2, { random: seeded(11) });
     toLive(engine);
     runUntil(engine, () => engine.phase === "matchOver", 180_000, () => {
       engine.control(1, { ...hold(-1, -1.1), move: 0 });
@@ -42,7 +42,7 @@ describe("Bot", () => {
 
   it("fights itself to a finish, with clashes along the way", () => {
     const { engine, events } = makeEngine({ 1: "block", 2: "star" });
-    const bots = [new Bot(1, seeded(5)), new Bot(2, seeded(9))];
+    const bots = [new Bot(1, { random: seeded(5), level: () => "hard" }), new Bot(2, { random: seeded(9), level: () => "hard" })];
     toLive(engine);
     runUntil(engine, () => engine.phase === "matchOver", 300_000, () => bots.forEach((bot) => bot.drive(engine)));
     expect(events.some((e) => e.type === "clash")).toBe(true);

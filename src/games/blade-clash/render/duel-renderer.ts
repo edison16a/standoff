@@ -102,13 +102,14 @@ export class DuelRenderer {
     if (event.type === "hit") {
       this.cameras[event.victim].shake(event.final ? 0.09 : 0.05, wallNow);
       this.cameras[event.attacker].shake(0.02, wallNow);
-      if (event.final) {
-        const at = new THREE.Vector3(event.at.x, event.at.y + floor, event.at.z);
-        for (const slot of SLOTS) this.cameras[slot].closeIn(at);
-        this.wash.colour.set(PLAYER_COLOURS[event.attacker]);
-        this.wash.target = 0.6;
-      }
+      // Every slash that lands is a moment: both cameras close in on it under the scorer's colour.
+      const at = new THREE.Vector3(event.at.x, event.at.y + floor, event.at.z);
+      for (const slot of SLOTS) this.cameras[slot].closeIn(at);
+      this.wash.colour.set(PLAYER_COLOURS[event.attacker]);
+      this.wash.target = event.final ? 0.6 : 0.4;
     }
+    // Both fighters are back on their marks: cut to the start, so nothing streaks across the gap.
+    if (event.type === "reset") this.reset();
     if (event.type === "clash") for (const slot of SLOTS) this.cameras[slot].shake(0.02 + 0.04 * event.strength, wallNow);
     if (event.type === "finish") {
       for (const slot of SLOTS) this.cameras[slot].closeIn(null);

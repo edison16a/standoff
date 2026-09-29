@@ -7,6 +7,10 @@ import { goalX, outAt, scoredIn } from "./goal";
 import { makeSave } from "./keeper";
 import { updateKeeper } from "./keeper-update";
 import { applyButtons } from "./buttons";
+import { blockBall } from "./blockers";
+import { coolDefend, updateJump, updateSteal } from "./defend";
+import { guardStep } from "./guard";
+import { followPlay } from "./referee";
 import { owns, progressKick } from "./kick";
 import { fullTime, onGoal, onOut } from "./rules";
 import { coolSkill, updateBeaten, updateSkill } from "./skills";
@@ -36,13 +40,29 @@ export function playStep(state: MatchState, commands: ReadonlyMap<number, Comman
   for (const k of state.keepers) updateKeeper(state, k, dt);
   if (owner?.kind === "keeper") ball.heldFor += dt;
   updateFlight(state, dt);
-  if (live) {
+  // A foul given this step stops play at once: nobody may pick the dead ball up.
+  if (state.phase === "play") {
+    blockBall(state);
     tryControl(state);
     challenges(state, dt);
+    followPlay(state, dt);
+    settleSetPiece(state, dt);
   }
   separate(state.athletes);
   checkBall(state);
   if (live && state.phase === "play") runClock(state, dt);
+}
+
+/** The camera stays with a free kick or penalty for a moment after it is struck, then play is just play. */
+function settleSetPiece(state: MatchState, dt: number): void {
+  const sp = state.setPiece;
+  if (!sp) return;
+  sp.struckT += dt;
+  const done = state.flight === null || state.flight.resolved;
+  if (sp.struckT > 2.6 || (done && sp.struckT > 1.4)) {
+    state.setPiece = null;
+    state.foul = null;
+  }
 }
 
 /** Moves a loose ball and turns what it hits into events. */
@@ -78,13 +98,23 @@ function updateAction(state: MatchState, a: Athlete, c: Command, dt: number): vo
   a.actionT += dt;
   a.noTouch = Math.max(0, a.noTouch - dt);
   coolSkill(a, dt);
+  coolDefend(a, dt);
   const has = owns(state, a);
+  if (a.action !== "free") a.guard.on = false;
   switch (a.action) {
     case "free":
+      if (!guardStep(state, a, c, dt)) moveAthlete(a, c.move, dt, has);
+      return;
     case "celebrate":
     case "dejected":
       moveAthlete(a, c.move, dt, has);
       return;
+    case "jump":
+      updateJump(a, dt);
+      break;
+    case "steal":
+      updateSteal(state, a, before, dt);
+      break;
     case "hurdle":
       moveAthlete(a, c.move, dt, has);
       break;

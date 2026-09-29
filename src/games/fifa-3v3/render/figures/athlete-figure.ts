@@ -4,6 +4,7 @@ import { PASS } from "../../engine/tuning";
 import type { AthleteView, BallView } from "../../engine/view";
 import { ROSTER, type Character, type Kit } from "../../roster";
 import { celebration, cheer, dejected } from "../anim/celebrations";
+import { guardStance, jumpPose, stealPose, wallPose } from "../anim/defend-poses";
 import { smooth, type Context, type Frame } from "../anim/frame";
 import { gait } from "../anim/gait";
 import { coilFrame, passFrame, shotFrame } from "../anim/kicks";
@@ -16,7 +17,7 @@ import { FootLock } from "./foot-locks";
 import { keepAboveTurf } from "./turf";
 
 /** How long a new move takes to blend in: kicks and tackles snap in, the rest ease. */
-const QUICK = new Set(["shoot", "pass", "slide", "stumble", "skill", "beaten"]);
+const QUICK = new Set(["shoot", "pass", "slide", "stumble", "skill", "beaten", "jump", "steal"]);
 
 /**
  * One footballer on the pitch: their body in the team's kit. Each frame
@@ -42,8 +43,9 @@ export class AthleteFigure {
   /** The move the remembered ball belongs to. */
   private ballKick = "";
 
-  constructor(view: AthleteView, kit: Kit, material: THREE.Material) {
-    this.character = ROSTER[view.character];
+  /** `character` stands in for the roster, for someone who is not one of the stars, like the referee. */
+  constructor(view: AthleteView, kit: Kit, material: THREE.Material, character: Character = ROSTER[view.character]) {
+    this.character = character;
     const c = this.character;
     this.rig = buildBody({ look: c.look, kit, name: c.short, number: c.number }, material);
     this.phase = view.id * 1.7;
@@ -118,7 +120,13 @@ export class AthleteFigure {
     const run = () => gait(v.stride, v.speed, v.hasBall, ctx, time, this.phase);
     switch (v.action) {
       case "free":
-        return v.bar ? coilFrame(v.stride, v.speed, v.charge, ctx, time, this.phase) : run();
+        if (v.wall) return fk(wallPose(time, this.phase));
+        if (v.bar) return coilFrame(v.stride, v.speed, v.charge, ctx, time, this.phase);
+        return v.guarding ? guardStance(run()) : run();
+      case "jump":
+        return fk(jumpPose(v.actionT, v.actionLen, v.wall));
+      case "steal":
+        return fk(stealPose(v.actionT, this.lead));
       case "shoot":
         return shotFrame(v.actionT, this.windup(v), v.power, ctx);
       case "pass":

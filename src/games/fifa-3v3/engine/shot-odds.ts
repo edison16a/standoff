@@ -1,3 +1,4 @@
+import { redness } from "./shot-plan";
 import type { ShotOutcome } from "./types";
 import { clamp, clamp01 } from "./vec";
 
@@ -39,8 +40,8 @@ export function shotQuality(c: ShotContext): number {
 
 /**
  * The chance of every outcome, adding up to 1. A placed shot is about
- * one in twenty off the woodwork and one in twenty over; power sprays
- * that, and a red bar balloons it over or drags it wide far more often.
+ * one in twenty off the woodwork and hardly ever over; power sprays it
+ * wider, and only a red bar balloons it over the bar.
  * Of the shots on target, the chance, the keeper's position and the
  * pace decide goal or save, and hard shots are parried more than caught.
  */
@@ -49,7 +50,9 @@ export function shotOdds(c: ShotContext): Odds {
   const spread = c.spread ?? 0.2;
   const range = Math.max(0, (c.distance - 14) / 12);
   const touch = 1.35 - c.shooting * 0.7;
-  const over = clamp((0.036 * (1 + c.pressure * 0.8 + range) + 0.3 * spread * spread) * touch, 0.015, 0.4);
+  // The aim is in 3D: below the red zone a shot is struck to stay under the bar, and only a scuff under pressure or from range skies it.
+  const red = redness(c.power);
+  const over = clamp((0.01 * (1 + c.pressure * 0.8 + range) + 0.42 * red * (0.4 + 0.6 * red)) * touch, 0.004, 0.4);
   const woodwork = clamp(0.045 * (0.85 + 0.3 * (1 - quality)) + 0.02 * spread, 0.03, 0.075);
   const wide = clamp(0.015 + 0.08 * (1 - quality) + (c.angle > 0.95 ? 0.04 : 0) + 0.16 * spread * spread * touch, 0.01, 0.3);
   const onTarget = Math.max(0.2, 1 - over - woodwork - wide);

@@ -70,7 +70,7 @@ export class Particles {
         void main() {
           float a = texture2D(map, gl_PointCoord).a * vAlpha * fade;
           if (a < 0.01) discard;
-          gl_FragColor = vec4(vColour * a * 2.0, a);
+          gl_FragColor = vec4(vColour * a * 1.2, a);
         }
       `,
     });

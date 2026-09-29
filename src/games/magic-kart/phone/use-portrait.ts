@@ -1,14 +1,34 @@
 "use client";
 import { useEffect, useState } from "react";
+import { watchPortrait } from "./orientation-watch";
 
-/** True while the page is taller than it is wide, which for a phone means held upright. */
-export function usePortrait(): boolean {
+/**
+ * How long the page must stay upright before the race hides the pedals.
+ * A hard turn of the wheel can swing the page upright for a moment, and
+ * hiding the pedals then would drop the thumb on Drive.
+ */
+export const PORTRAIT_SETTLE_MS = 900;
+
+/**
+ * True while the page is taller than it is wide, which for a phone means
+ * held upright. With `settleMs`, upright only counts once it has lasted
+ * that long, while sideways counts at once.
+ */
+export function usePortrait(settleMs = 0): boolean {
   const [portrait, setPortrait] = useState(false);
+
   useEffect(() => {
-    const check = () => setPortrait(window.innerHeight > window.innerWidth);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const stop = watchPortrait(window, (upright) => {
+      clearTimeout(timer);
+      if (!upright || settleMs <= 0) setPortrait(upright);
+      else timer = setTimeout(() => setPortrait(true), settleMs);
+    });
+    return () => {
+      stop();
+      clearTimeout(timer);
+    };
+  }, [settleMs]);
+
   return portrait;
 }

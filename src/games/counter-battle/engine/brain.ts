@@ -1,11 +1,11 @@
 import type { Piece } from "./arena";
 import type { CoverGraph } from "./cover";
 import type { Fighter } from "./fighter";
-import { pathBlocked, sightBlocked } from "./geometry";
-import { canPeek, chooseSpot, peekPoints } from "./plan";
+import { duckDown, nearest, startPeek } from "./peek";
+import { chooseSpot } from "./plan";
 import type { Rng } from "./rng";
 import { STYLES } from "./tactics";
-import { BODY, PLAN_EVERY } from "./tuning";
+import { PLAN_EVERY } from "./tuning";
 import { dist, len, turnTo, yawOf, type V2 } from "./vec";
 
 export interface BrainWorld {
@@ -18,70 +18,85 @@ export interface BrainWorld {
   rng: Rng;
   /** True while the fighter is trading fire, which holds a peek open a little longer. */
   engaged: boolean;
+  /** Multiplier on running speed, below 1 for easier computer players. */
+  pace: number;
 }
 
 /** Longest a peek can be stretched by a fighter who keeps shooting. */
 const MAX_OUT = 4;
 /** How fast the body turns toward the fight, radians per second. */
 const TURN = 6;
-/** How fast a fighter drops into or rises from a crouch, per second. */
-const CROUCH_RATE = 7;
+/** How fast a fighter drops into or rises from a crouch, per second. Slow enough to read as a real duck. */
+const CROUCH_RATE = 5;
 /** A peek cut short by a hit ducks back after this long, so hits matter. */
 const FLINCH = 0.18;
+/** Holding Crouch keeps a player at their spot this long before the brain moves them on anyway. */
+const MAX_DOWN = 5;
+/** Moving between spots is a crouched jog, not a sprint: part of the gun's full speed. */
+const JOG = 0.85;
 
 /**
  * The movement brain every fighter runs, human or computer. Players never
  * steer: the brain runs cover to cover along the cover graph, hides,
- * peeks, and picks new cover as the fight moves. Humans only aim and
- * shoot, and their shooting holds a peek open.
+ * rises to peek, and picks new cover as the fight moves. Everyone ducks
+ * to reload. A player holding Crouch stays down, and a shot or letting go
+ * of Crouch brings them up to fire.
  */
 export function updateBrain(f: Fighter, w: BrainWorld, now: number, dt: number): void {
   const b = f.brain;
   const style = STYLES[f.gun.id];
   const spots = w.graph.spots;
+  const ducking = f.duck || (f.gun.reloading && b.stance !== "move");
+  b.down = f.duck && b.stance !== "move" ? b.down + dt : 0;
   b.sincePlan += dt;
   if (b.stance !== "move") b.held += dt;
   const hurt = now - f.hitAt < dt * 1.5;
-  const due = b.stance !== "move" && (b.sincePlan >= PLAN_EVERY || (hurt && b.stance === "hide"));
+  const holding = f.duck && b.down < MAX_DOWN;
+  const due = b.stance !== "move" && !holding && (b.sincePlan >= PLAN_EVERY || (hurt && b.stance === "hide"));
   if (due) replan(f, w);
 
   const from = { ...f.pos };
+  const speed = f.gun.spec.speed * w.pace;
   if (b.stance === "move") {
     const next = b.route[0];
     if (next === undefined) arrive(f, w);
-    else if (walk(f, spots[next]!.pos, f.gun.spec.speed * dt)) {
+    else if (walk(f, spots[next]!.pos, speed * JOG * dt)) {
       b.route.shift();
       if (b.route.length === 0) arrive(f, w);
       // Each spot on the way is a chance to change plan as the fight moves.
       else if (b.sincePlan >= PLAN_EVERY || hurt) replan(f, w);
     }
   } else if (b.stance === "hide") {
-    walk(f, spots[b.spot]!.pos, f.gun.spec.speed * 0.6 * dt);
+    walk(f, spots[b.spot]!.pos, speed * 0.6 * dt);
     b.timer -= dt;
+    if (ducking) b.timer = Math.max(b.timer, 0.25);
+    else if (f.rise) b.timer = 0;
     if (b.timer <= 0) startPeek(f, w);
   } else {
-    walk(f, b.peekAt ?? spots[b.spot]!.pos, f.gun.spec.speed * 0.6 * dt);
+    walk(f, b.peekAt ?? spots[b.spot]!.pos, speed * 0.6 * dt);
     b.timer -= dt;
     b.out += dt;
-    if (w.engaged && b.timer < 0.3 && b.out < MAX_OUT) b.timer = 0.3;
+    if ((w.engaged || f.rise) && b.timer < 0.5 && b.out < MAX_OUT) b.timer = 0.5;
     if (hurt) b.timer = Math.min(b.timer, FLINCH);
-    if (b.timer <= 0) {
+    if (ducking) duckDown(f, w);
+    else if (b.timer <= 0) {
       b.stance = "hide";
       b.timer = w.rng.range(...style.hide);
     }
   }
+  f.rise = false;
   f.vel = { x: (f.pos.x - from.x) / dt, z: (f.pos.z - from.z) / dt };
-  f.pose = poseOf(f, w);
+  f.pose = poseOf(f, w, ducking);
   const low = f.pose === "crouch" ? 1 : 0;
   f.crouch += Math.sign(low - f.crouch) * Math.min(Math.abs(low - f.crouch), CROUCH_RATE * dt);
   face(f, w, dt);
 }
 
-function poseOf(f: Fighter, w: BrainWorld): Fighter["pose"] {
+function poseOf(f: Fighter, w: BrainWorld, ducking: boolean): Fighter["pose"] {
   const b = f.brain;
   if (b.stance === "move") return len(f.vel) > 0.3 ? "run" : "stand";
   if (b.stance === "peek") return "peek";
-  return w.graph.spots[b.spot]!.tall ? "stand" : "crouch";
+  return ducking || !w.graph.spots[b.spot]!.tall ? "crouch" : "stand";
 }
 
 function replan(f: Fighter, w: BrainWorld): void {
@@ -104,32 +119,8 @@ function arrive(f: Fighter, w: BrainWorld): void {
   const b = f.brain;
   b.stance = "hide";
   b.held = 0;
-  // Arriving shooters look out soon: a spot is taken to fight from.
-  b.timer = w.rng.range(0.2, STYLES[f.gun.id].hide[0]);
-}
-
-function startPeek(f: Fighter, w: BrainWorld): void {
-  const b = f.brain;
-  const spot = w.graph.spots[b.spot]!;
-  const target = nearest(f.pos, w.enemies);
-  b.stance = "peek";
-  b.out = 0;
-  b.timer = w.rng.range(...STYLES[f.gun.id].peek);
-  b.peekAt = null;
-  if (!target) return;
-  // Out of this gun's reach a look is only a glance, and the spot gets old fast, so the fighter moves up.
-  if (dist(f.pos, target.pos) > STYLES[f.gun.id].range + STYLES[f.gun.id].band * 1.5) {
-    b.timer = Math.min(b.timer, 0.45);
-    b.held += 1.5;
-  }
-  const eye = (p: V2) => ({ x: p.x, y: BODY.standEye, z: p.z });
-  const chest = { x: target.pos.x, y: BODY.standTop * 0.7, z: target.pos.z };
-  const options = peekPoints(spot, target.pos).filter((p) => p === spot.pos || !pathBlocked(spot.pos, p, w.pieces, BODY.radius));
-  const clear = options.find((p) => !sightBlocked(eye(p), chest, w.pieces));
-  const pick = clear ?? options[0] ?? spot.pos;
-  b.peekAt = pick === spot.pos ? null : pick;
-  // Nothing to see from here at all: this spot is done, look for a better one.
-  if (!clear && !canPeek(spot, target.pos, w.pieces)) b.held += 3;
+  // Settle in behind the new cover for a moment before the first look.
+  b.timer = w.rng.range(0.5, STYLES[f.gun.id].hide[0]);
 }
 
 /** Steps toward a point. Returns true once there. */
@@ -141,12 +132,6 @@ function walk(f: Fighter, to: V2, step: number): boolean {
   }
   f.pos = { x: f.pos.x + ((to.x - f.pos.x) / d) * step, z: f.pos.z + ((to.z - f.pos.z) / d) * step };
   return false;
-}
-
-function nearest(p: V2, fighters: readonly Fighter[]): Fighter | null {
-  let best: Fighter | null = null;
-  for (const o of fighters) if (!best || dist(p, o.pos) < dist(p, best.pos)) best = o;
-  return best;
 }
 
 /** Turns the body and camera toward the nearest enemy, smoothly. */

@@ -44,7 +44,21 @@ export class SoundDirector {
   event(event: MatchEvent): void {
     switch (event.type) {
       case "whistle":
-        this.sfx.whistle(event.long, event.long ? 3 : 1);
+        this.sfx.whistle(event.long ? "fulltime" : "kickoff");
+        break;
+      case "foul":
+        this.sfx.whistle("foul");
+        this.sfx.tackle(true);
+        break;
+      case "steal":
+        this.sfx.tackle(event.won);
+        break;
+      case "block":
+        this.sfx.block(event.speed);
+        break;
+      case "wallJump":
+      case "jump":
+        this.sfx.scuff();
         break;
       case "pass":
         // A lofted ball is struck with the laces, so it sounds like a soft kick.
@@ -102,6 +116,8 @@ export class SoundDirector {
       case "throw":
       case "control":
       case "stumble":
+      case "card":
+      case "setpiece":
         break;
     }
   }

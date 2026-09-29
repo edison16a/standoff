@@ -1,3 +1,4 @@
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { CharacterId } from "../roster";
 import { Gun } from "./gun-state";
 import type { GunId } from "./guns";
@@ -5,7 +6,6 @@ import { BODY, RULES } from "./tuning";
 import type { V2, V3 } from "./vec";
 
 export type TeamId = 0 | 1;
-export type Difficulty = "easy" | "normal" | "hard";
 
 /**
  * What the body is doing, which decides the hit boxes and the animation.
@@ -32,6 +32,8 @@ export interface Brain {
   peekAt: V2 | null;
   /** Seconds out in the current peek, which caps how long shooting can hold it open. */
   out: number;
+  /** Seconds a player has held Crouch, which stops them hiding for ever. */
+  down: number;
 }
 
 export interface Fighter {
@@ -41,7 +43,8 @@ export interface Fighter {
   seat: number | null;
   name: string;
   character: CharacterId;
-  difficulty: Difficulty;
+  /** How well the computer plays this fighter: always for a bot, and for a player whose phone dropped. */
+  difficulty: BotLevel;
   gun: Gun;
   pos: V2;
   /** Floor velocity, for the run cycle and the moving spread. */
@@ -58,6 +61,10 @@ export interface Fighter {
   brain: Brain;
   /** The shoot button, for a human: held for automatic guns, pulls counted for the others. */
   trigger: { held: boolean; pulls: number; pulledAt: number };
+  /** A player holding Crouch: stay down behind cover. */
+  duck: boolean;
+  /** A wish to come up out of cover now, from a shot or letting go of Crouch. The brain takes it on its next step. */
+  rise: boolean;
   /** Game time of the last hit taken, fired shot and death, for animation. */
   hitAt: number;
   shotAt: number;
@@ -74,7 +81,7 @@ export interface FighterSetup {
   name: string;
   character: CharacterId;
   gun: GunId;
-  difficulty?: Difficulty;
+  difficulty?: BotLevel;
 }
 
 export function createFighter(id: number, setup: FighterSetup): Fighter {
@@ -84,7 +91,7 @@ export function createFighter(id: number, setup: FighterSetup): Fighter {
     seat: setup.seat,
     name: setup.name,
     character: setup.character,
-    difficulty: setup.difficulty ?? "normal",
+    difficulty: setup.difficulty ?? DEFAULT_BOT_LEVEL,
     gun: new Gun(setup.gun),
     pos: { x: 0, z: 0 },
     vel: { x: 0, z: 0 },
@@ -94,8 +101,10 @@ export function createFighter(id: number, setup: FighterSetup): Fighter {
     crouch: 0,
     health: RULES.health,
     alive: true,
-    brain: { stance: "hide", spot: 0, route: [], timer: 0, held: 0, sincePlan: Infinity, peekAt: null, out: 0 },
+    brain: freshBrain(0),
     trigger: { held: false, pulls: 0, pulledAt: -Infinity },
+    duck: false,
+    rise: false,
     hitAt: -Infinity,
     shotAt: -Infinity,
     diedAt: -Infinity,
@@ -104,6 +113,10 @@ export function createFighter(id: number, setup: FighterSetup): Fighter {
     headshots: 0,
     damage: 0,
   };
+}
+
+function freshBrain(spot: number): Brain {
+  return { stance: "hide", spot, route: [], timer: 0, held: 0, sincePlan: Infinity, peekAt: null, out: 0, down: 0 };
 }
 
 export const isBot = (f: Fighter): boolean => f.seat === null;
@@ -140,8 +153,10 @@ export function resetFighter(f: Fighter, pos: V2, look: number, spot: number): v
   f.crouch = 0;
   f.health = RULES.health;
   f.alive = true;
-  f.brain = { stance: "hide", spot, route: [], timer: 0, held: 0, sincePlan: Infinity, peekAt: null, out: 0 };
+  f.brain = freshBrain(spot);
   f.trigger = { held: false, pulls: 0, pulledAt: -Infinity };
+  f.duck = false;
+  f.rise = false;
   f.hitAt = -Infinity;
   f.shotAt = -Infinity;
   f.diedAt = -Infinity;

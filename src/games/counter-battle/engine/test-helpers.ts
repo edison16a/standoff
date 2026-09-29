@@ -1,9 +1,10 @@
+import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { CharacterId } from "../roster";
-import { createFighter, type Difficulty, type Fighter, type TeamId } from "./fighter";
+import { createFighter, type Fighter, type TeamId } from "./fighter";
 import type { GunId } from "./guns";
 
 /** A fighter standing at a point, for tests. */
-export function fighterAt(id: number, team: TeamId, x: number, z: number, gun: GunId = "rifle", difficulty: Difficulty = "normal"): Fighter {
+export function fighterAt(id: number, team: TeamId, x: number, z: number, gun: GunId = "rifle", difficulty: BotLevel = "medium"): Fighter {
   const characters: CharacterId[] = ["pro", "operator", "runner", "heavy"];
   const f = createFighter(id, { team, seat: null, name: `F${id}`, character: characters[id % 4]!, gun, difficulty });
   f.pos = { x, z };

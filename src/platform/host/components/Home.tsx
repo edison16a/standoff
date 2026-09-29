@@ -1,8 +1,10 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import { FullscreenButton } from "@/components/ui/FullscreenButton";
 import { GitHubButton } from "@/components/ui/GitHubButton";
 import { HomeLink } from "@/components/ui/HomeLink";
 import { Icon } from "@/components/ui/Icon";
+import { Spinner } from "@/components/ui/Loader";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { GAMES } from "@/games/catalog";
 import { SettingsButton } from "@/platform/settings/SettingsButton";
@@ -94,9 +96,17 @@ export function Home() {
         <div className="home__tools">
           <SettingsButton />
           <ThemeToggle />
+          <FullscreenButton />
           <GitHubButton />
         </div>
       </header>
+      {!note && (resuming || status === "connecting" || status === "reconnecting") && (
+        <div className="home__note home__note--wait" role="status">
+          <span>
+            <Spinner /> {resuming ? "Getting your room back" : "Connecting to the game server"}
+          </span>
+        </div>
+      )}
       {note && (
         <div className="home__note" role="status">
           <span>{note}</span>

@@ -1,6 +1,7 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 import type { Battle } from "../engine/battle";
 import type { BattleEvent } from "../engine/events";
+import { BALL_FLIGHT } from "../engine/tuning";
 import type { RoomPhase } from "../protocol";
 import { Announcer } from "./announcer";
 import { Crowd } from "./crowd";
@@ -88,9 +89,11 @@ export class SoundDirector {
         this.guns.shot(e.gun, place(e.from, ears, b.fighters, e.shooter));
         this.heat = Math.min(1, this.heat + 0.015);
         // One or two strikes per shot is plenty, even for nine pellets.
+        const speed = e.traces.length > 1 ? BALL_FLIGHT.pellet : BALL_FLIGHT.ball;
         for (const t of e.traces.slice(0, 2)) {
-          if (t.hit.type === "cover") this.sfx.impact(b.pieces[t.hit.piece]!.kind, place(t.to, ears, b.fighters));
-          else if (t.hit.type === "floor") this.sfx.turf(place(t.to, ears, b.fighters));
+          const flight = Math.hypot(t.to.x - e.from.x, t.to.y - e.from.y, t.to.z - e.from.z) / speed;
+          if (t.hit.type === "cover") this.sfx.impact(b.pieces[t.hit.piece]!.kind, place(t.to, ears, b.fighters), flight);
+          else if (t.hit.type === "floor") this.sfx.turf(place(t.to, ears, b.fighters), flight);
         }
         return;
       }

@@ -2,10 +2,13 @@ import type { CharacterId } from "../roster";
 import type { TeamId } from "../teams";
 import { makeAthlete } from "./athlete";
 import { newBall } from "./ball";
-import { celebrateGoal, celebrateWin } from "./celebrate";
+import { celebrateGoal, celebrateWin, goalPhaseLength } from "./celebrate";
 import { makeKeeper } from "./keeper";
-import { updateKeeper } from "./keeper-update";
+import { stepFoul } from "./foul";
+import { updateKeeper, updateKeeperFacing } from "./keeper-update";
 import { playStep, stepLooseBall } from "./play";
+import { makeReferee } from "./referee";
+import { stepSetPiece } from "./set-piece-step";
 import { Rng } from "./rng";
 import { fullTime, restartFromKeeper, setupKickoff, startPlay } from "./rules";
 import { MATCH, STEP } from "./tuning";
@@ -23,6 +26,7 @@ export const DEFAULT_OPTIONS: MatchOptions = {
   seconds: MATCH.seconds,
   goalsToWin: MATCH.goalsToWin,
   replays: true,
+  level: "hard",
 };
 
 /** A match ready to kick off. Entrants fill the slots of their team in order. */
@@ -49,6 +53,9 @@ export function createMatch(entrants: readonly Entrant[], options: Partial<Match
     options: opts,
     time: 0,
     shotCount: 0,
+    referee: makeReferee(),
+    foul: null,
+    setPiece: null,
   };
   setupKickoff(state);
   return state;
@@ -71,6 +78,13 @@ export function stepMatch(state: MatchState, commands: ReadonlyMap<number, Comma
     case "play":
       playStep(state, commands, dt);
       return;
+    case "foul":
+      for (const k of state.keepers) updateKeeperFacing(state, k, dt);
+      stepFoul(state, dt);
+      return;
+    case "setpiece":
+      stepSetPiece(state, commands, dt);
+      return;
     case "restart":
       playStep(state, new Map(), dt);
       if (state.phase === "restart" && state.phaseT >= MATCH.outWait) restartFromKeeper(state);
@@ -78,7 +92,8 @@ export function stepMatch(state: MatchState, commands: ReadonlyMap<number, Comma
     case "goal":
       celebrateGoal(state, dt);
       ballOnly(state, dt);
-      if (state.phaseT < MATCH.celebrate) return;
+      // The celebration landing starts the replay.
+      if (state.phaseT < goalPhaseLength(state)) return;
       if (state.winner !== null) return fullTime(state);
       if (state.options.replays) {
         state.phase = "replay";
@@ -86,13 +101,19 @@ export function stepMatch(state: MatchState, commands: ReadonlyMap<number, Comma
       } else setupKickoff(state);
       return;
     case "replay":
-      if (state.phaseT >= MATCH.replay) setupKickoff(state);
+      // The host ends the replay when it has played or everyone skipped; this only guards against it never doing so.
+      if (state.phaseT >= MATCH.replay) endReplay(state);
       return;
     case "fulltime":
       celebrateWin(state, dt);
       ballOnly(state, dt);
       return;
   }
+}
+
+/** The replay is over, played through or skipped: back to the kick off. */
+export function endReplay(state: MatchState): void {
+  if (state.phase === "replay") setupKickoff(state);
 }
 
 /** The ball keeps settling in the net while everyone celebrates. */

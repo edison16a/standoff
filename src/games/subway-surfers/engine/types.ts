@@ -7,7 +7,7 @@ export type ObstacleKind = "low" | "high" | "train" | "ramp";
  * along the track in metres. A standing thing sits at `z`. A moving train
  * rolls toward the runner at `drift` times their speed, and its front
  * reaches `z` exactly when the runner does, so where it is depends only
- * on how far the runner has come. Two players on one seed see it alike.
+ * on how far the runner has come, and a replay sees it alike.
  */
 export interface Obstacle {
   id: number;

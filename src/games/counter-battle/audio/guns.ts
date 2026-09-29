@@ -4,10 +4,11 @@ import type { GunId } from "../engine/guns";
 import { sendTo, vary, type Placed } from "./mix";
 
 /**
- * Every gun sound, synthesised, each gun with its own voice: the rifle a
- * clean crack, the shotgun a deep boom and a pump, the SMG a quick snap
- * and the sniper a huge crack that rolls round the field before the bolt
- * works. Far shots lose their top, so distance is heard as well as seen.
+ * Every paint marker sound, synthesised, each with its own voice: the
+ * rifle a clean thwup, the shotgun a big whump and a pump, the SMG a
+ * quick light pop and the sniper a sharp crack of air with a long hiss
+ * before it is cocked again. Far shots lose their top, so distance is
+ * heard as well as seen.
  */
 export class GunSounds {
   constructor(private readonly engine: AudioEngine) {}
@@ -23,43 +24,49 @@ export class GunSounds {
     return dull;
   }
 
+  /**
+   * A paint marker's shot: no bang, a pneumatic thwup. A burst of air
+   * through the barrel (band passed noise), a soft low thump as the ball
+   * leaves, and a hiss of gas after. Each gun pitches and sizes it.
+   */
   shot(gun: GunId, p: Placed): void {
     const e = this.engine;
     const at = e.now;
-    const v = vary(1, 0.06);
+    const v = vary(1, 0.07);
+    const air = (out: AudioNode, freq: number, decay: number, peak: number) => noise(e, out, at, { filter: "bandpass", frequency: freq * v, q: 1.4, sweepTo: freq * 0.55 * v, decay, peak });
+    const thump = (out: AudioNode, freq: number, decay: number, peak: number) => tone(e, out, at, { frequency: freq * v, glideTo: freq * 0.45, decay, peak });
+    const hiss = (out: AudioNode, delay: number, decay: number, peak: number) => noise(e, out, at + delay, { filter: "highpass", frequency: 5200, attack: 0.01, decay, peak });
     switch (gun) {
       case "rifle": {
-        const out = this.out(p, 0.9);
-        noise(e, out, at, { filter: "highpass", frequency: 2400 * v, decay: 0.06, peak: 0.6 });
-        noise(e, out, at, { filter: "lowpass", frequency: 1700 * v, decay: 0.15, peak: 0.55 });
-        tone(e, out, at, { frequency: 130 * v, glideTo: 50, decay: 0.12, peak: 0.45 });
-        noise(e, out, at + 0.09, { filter: "bandpass", frequency: 560 * v, q: 0.8, decay: 0.5, peak: 0.08 });
+        const out = this.out(p, 0.8);
+        air(out, 1250, 0.07, 0.55);
+        thump(out, 190, 0.08, 0.5);
+        hiss(out, 0.02, 0.12, 0.07);
         return;
       }
       case "shotgun": {
-        const out = this.out(p, 1, 4);
-        noise(e, out, at, { filter: "highpass", frequency: 2200, decay: 0.05, peak: 0.55 });
-        noise(e, out, at, { filter: "lowpass", frequency: 1200 * v, decay: 0.42, peak: 1 });
-        tone(e, out, at, { frequency: 74 * v, glideTo: 30, decay: 0.38, peak: 0.9 });
-        noise(e, out, at + 0.1, { filter: "bandpass", frequency: 380 * v, q: 0.8, decay: 1, peak: 0.18 });
+        const out = this.out(p, 1, 3);
+        air(out, 820, 0.14, 0.75);
+        noise(e, out, at, { filter: "lowpass", frequency: 900 * v, decay: 0.16, peak: 0.45 });
+        thump(out, 120, 0.16, 0.75);
+        hiss(out, 0.04, 0.3, 0.1);
         this.pump(p, at + 0.36);
         return;
       }
       case "smg": {
-        const out = this.out(p, 0.75);
-        noise(e, out, at, { filter: "highpass", frequency: 1900 * v, decay: 0.04, peak: 0.5 });
-        noise(e, out, at, { filter: "bandpass", frequency: 1050 * v, q: 1.2, decay: 0.07, peak: 0.36 });
-        tone(e, out, at, { type: "square", frequency: 210 * v, glideTo: 95, decay: 0.04, peak: 0.1 });
+        const out = this.out(p, 0.7);
+        air(out, 1550, 0.05, 0.45);
+        thump(out, 240, 0.05, 0.35);
+        hiss(out, 0.01, 0.06, 0.05);
         return;
       }
       case "sniper": {
-        const out = this.out(p, 1.1, 5);
-        noise(e, out, at, { filter: "highpass", frequency: 3000 * v, decay: 0.09, peak: 0.8 });
-        noise(e, out, at, { filter: "lowpass", frequency: 2000 * v, decay: 0.3, peak: 0.85 });
-        tone(e, out, at, { frequency: 95 * v, glideTo: 34, decay: 0.45, peak: 0.95 });
-        // The crack coming back off the hills, twice.
-        noise(e, out, at + 0.22, { filter: "bandpass", frequency: 480, q: 0.7, decay: 1.2, peak: 0.16 });
-        noise(e, out, at + 0.55, { filter: "bandpass", frequency: 360, q: 0.7, decay: 1.4, peak: 0.08 });
+        const out = this.out(p, 1, 4);
+        // A long barrel: a sharper crack of air, a deeper thump and a longer hiss.
+        noise(e, out, at, { filter: "highpass", frequency: 2600 * v, decay: 0.03, peak: 0.4 });
+        air(out, 950, 0.12, 0.7);
+        thump(out, 150, 0.14, 0.7);
+        hiss(out, 0.03, 0.45, 0.1);
         this.bolt(p, at + 0.55);
         return;
       }
