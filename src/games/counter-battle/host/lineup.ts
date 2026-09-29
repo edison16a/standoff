@@ -1,5 +1,6 @@
 import { playerColor } from "@/games/kit/players";
-import type { Difficulty, FighterSetup, TeamId } from "../engine/fighter";
+import type { BotLevel } from "@/games/kit/difficulty/difficulty";
+import type { FighterSetup, TeamId } from "../engine/fighter";
 import { GUN_IDS, type GunId } from "../engine/guns";
 import { Rng } from "../engine/rng";
 import { assignCharacters } from "../roster";
@@ -26,7 +27,7 @@ export interface Lineup {
  * teammates do not have, so each side mixes its ranges, and a name and
  * colour nobody else is using.
  */
-export function buildLineup(entries: readonly LineupEntry[], nameOf: (seat: number) => string, difficulty: Difficulty, seed: number): Lineup {
+export function buildLineup(entries: readonly LineupEntry[], nameOf: (seat: number) => string, difficulty: BotLevel, seed: number): Lineup {
   const rng = new Rng(seed);
   const characters = assignCharacters(entries.length, rng);
   // A call sign a player already goes by would put two of one name in the feed and on the tags.

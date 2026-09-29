@@ -12,7 +12,7 @@ export interface Flash {
   tone: "good" | "bad";
 }
 
-/** What Counter Battle's phone screens render. The host's messages land here. */
+/** What Paintball Battle's phone screens render. The host's messages land here. */
 export interface PhoneStore {
   step: SetupStep;
   calibrated: boolean;

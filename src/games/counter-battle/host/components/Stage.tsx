@@ -11,7 +11,7 @@ import { useSession } from "./session-context";
 const BattleCanvas = lazy(() => import("./BattleCanvas"));
 
 /**
- * Counter Battle on the big screen. The field is always there: computer
+ * Paintball Battle on the big screen. The field is always there: computer
  * players fighting behind the lobby, then the match split into a view
  * per player. The lobby, the HUD and the results are ordinary React on
  * top, and the aim kit's layer shows each player's calibration targets

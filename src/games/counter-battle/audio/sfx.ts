@@ -21,11 +21,21 @@ export class Sfx {
     return sendTo(this.engine, this.engine.bus("sfx"), gain * p.gain, p.pan, 2);
   }
 
-  /** A shot striking cover: an inflatable's thwap, a knock on wood or a ping off a drum. */
-  impact(kind: PieceKind, p: Placed): void {
+  /** A paintball bursting: a sharp wet pap and a short spatter. */
+  private pop(out: AudioNode, at: number, peak: number): void {
+    const e = this.engine;
+    noise(e, out, at, { filter: "bandpass", frequency: vary(2300, 0.2), q: 1.8, decay: 0.025, peak: peak });
+    tone(e, out, at, { type: "triangle", frequency: vary(520, 0.15), glideTo: 180, decay: 0.035, peak: peak * 0.5 });
+    noise(e, out, at + 0.012, { filter: "lowpass", frequency: vary(1600, 0.2), decay: 0.07, peak: peak * 0.45 });
+  }
+
+  /** A ball bursting on cover: the paint pop, over an inflatable's thwap, a knock on wood or a ping off a drum. */
+  impact(kind: PieceKind, p: Placed, flight = 0): void {
     const e = this.engine;
     const out = this.out(p, 0.55);
-    const at = e.now + Math.min(0.12, p.distance / 340);
+    // Heard when the ball lands, a moment after the shot, plus the sound's own trip to the ear.
+    const at = e.now + Math.min(1, flight) + Math.min(0.12, p.distance / 340);
+    this.pop(out, at, 0.45);
     switch (MATERIAL[kind]) {
       case "air":
         tone(e, out, at, { frequency: vary(170, 0.15), glideTo: 90, decay: 0.12, peak: 0.4 });
@@ -43,9 +53,12 @@ export class Sfx {
     }
   }
 
-  /** A shot into the turf: a soft puff of dirt. */
-  turf(p: Placed): void {
-    noise(this.engine, this.out(p, 0.35), this.engine.now, { filter: "lowpass", frequency: vary(700, 0.2), decay: 0.07, peak: 0.3 });
+  /** A ball bursting on the turf: a softer pop and a puff of dirt. */
+  turf(p: Placed, flight = 0): void {
+    const out = this.out(p, 0.35);
+    const at = this.engine.now + Math.min(1, flight);
+    this.pop(out, at, 0.3);
+    noise(this.engine, out, at, { filter: "lowpass", frequency: vary(700, 0.2), decay: 0.07, peak: 0.25 });
   }
 
   /** The hit marker's sound, for the player who landed it. */
