@@ -66,7 +66,7 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 **Football 3v3**
 1. **Defense controls stay on screen:** a defender's pad must never disappear while the offense picks kick or throw. Defense does not choose, so its controls stay up the whole time.
 2. **QB movement:** a normal joystick for moving, like the other players.
-3. **QB speed and throwing accuracy:** the QB runs as fast as anyone. Throw accuracy depends on how still he is when he lets go: standing still gives a clean, accurate pass; throwing on the run is often off target and more likely to be blocked or picked. That makes a juke and run a real choice.
+3. **QB speed and RUN (owner changed this, it replaces the earlier accuracy idea):** the QB is clearly slower than the other players, especially early in the play, and can shuffle back while throwing with the same accuracy every time (no accuracy penalty for moving). A **RUN** button turns the QB into a runner: from then on he can't throw, and he moves like a normal player at normal runner speed. Remove the "accuracy depends on standing still" logic if it was built.
 4. **New play call, Run the ball:** besides Kick and Throw, the QB can pick Run. One runner automatically lines up close to the QB, and after the hike the QB presses Pass to toss that runner a short lob (a pitch) to start the run.
 5. **Clearer throw target:** the ring under the receiver being thrown to turns a completely different colour (for example red) and stands out on screen, so it is obvious who the pass is going to.
 
