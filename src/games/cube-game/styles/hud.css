@@ -140,6 +140,16 @@
   animation: cg-banner 1.6s ease-out forwards;
 }
 
+/* A crash's new best shows as the view jumps back to the start, so it sits between the Attempt sign there and Get ready. */
+.cg-hud--solo .cg-banner {
+  top: 28%;
+}
+
+.cg-hud--top .cg-banner,
+.cg-hud--bottom .cg-banner {
+  top: 41%;
+}
+
 .cg-finish {
   font-size: 64px;
   color: #3dff6e;
