@@ -4,6 +4,7 @@ import { SoundDirector } from "../audio/sound-director";
 import type { RunEvent } from "../engine/events";
 import type { Run } from "../engine/run";
 import { ShowRun } from "../showcase/show-run";
+import { Autopilot } from "./autopilot";
 import { Controls } from "./controls";
 import { Countdown } from "./countdown";
 import { HEAD_START } from "../engine/difficulty";
@@ -32,6 +33,8 @@ export class SurfSession {
   kit: CameraKit | null = null;
   round: Round | null = null;
   private controls: Controls | null = null;
+  /** The test bot playing the player's runs, from the console in development. */
+  private pilot: Autopilot | null = null;
   // A computer runner plays behind the menus. A short warmup keeps opening the room quick.
   private demo = new ShowRun(3, 6);
   private readonly best = new BestStore();
@@ -78,6 +81,11 @@ export class SurfSession {
     this.dropKit();
     this.useControls(null);
     this.beginRound();
+  }
+
+  /** Development: hands the player's runs to the test bot, or takes them back. */
+  autopilot(on = true, flair = false): void {
+    this.pilot = on ? new Autopilot(flair) : null;
   }
 
   /** The camera and the model are ready. */
@@ -141,7 +149,7 @@ export class SurfSession {
       this.tickCountdown(wall);
     } else if (phase === "tutorial" || phase === "running" || phase === "results") {
       const round = this.round;
-      round.update(dt, this.controls?.take() ?? null);
+      round.update(dt, this.pilot ? this.pilot.drive(round) : (this.controls?.take() ?? null));
       this.sound.frame([round.run], [round.paused]);
       this.watch.update(this.kit, round, phase === "running");
       if (phase === "tutorial" && round.tutorial.finished) {
