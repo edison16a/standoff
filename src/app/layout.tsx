@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import type { ReactNode } from "react";
+import { SiteAnalytics } from "@/platform/analytics/SiteAnalytics";
 import { SITE } from "@/platform/site";
 import "./globals.css";
 import "@/styles/ui.css";
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           {themeBootScript}
         </Script>
         {children}
+        <SiteAnalytics />
       </body>
     </html>
   );

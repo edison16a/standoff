@@ -3,6 +3,7 @@ import type { Baseline } from "../engine/calibration";
 import type { MoveEvent, MoveState } from "../engine/gestures/moves";
 import type { MoveTuning } from "../engine/gestures/options";
 import type { Pose } from "../engine/landmarks";
+import type { SmoothingOptions } from "../engine/smoothing";
 import { spotsFor, type Spot } from "../engine/spots";
 import { PoseTracker, type TrackFrame } from "../engine/tracker";
 import type { ModelVariant } from "../model/model-files";
@@ -20,6 +21,8 @@ export interface CameraKitOptions {
   delegate?: Delegate;
   /** Thresholds for any move, for example `{ lane: { lanes: 5 } }`. */
   moves?: MoveTuning;
+  /** How much the points are steadied. A game that needs moves to land sooner can steady them less. */
+  smoothing?: SmoothingOptions;
   /** No camera and no model: poses come only from the test hooks. Off unless a test asks for it. */
   fake?: boolean;
 }
@@ -53,7 +56,7 @@ export class CameraKit {
     this.spots = spotsFor(this.players);
     const fake = options.fake ?? wantsFakeCamera();
     this.store = new StatusStore(initialStatus(this.players, options.model === "lite" ? "lite" : "full", fake));
-    this.tracker = new PoseTracker({ slots: this.players, moves: options.moves });
+    this.tracker = new PoseTracker({ slots: this.players, moves: options.moves, smoothing: options.smoothing });
     this.frame = { time: 0, aspect: 16 / 9, bodies: this.tracker.latest(), moves: [], events: [] };
     const onPoses = (poses: Pose[], time: number) => this.process(poses, time);
     this.runner = fake ? null : new ModelRunner(this.store, { model: options.model ?? "auto", delegate: options.delegate ?? "GPU" }, onPoses);

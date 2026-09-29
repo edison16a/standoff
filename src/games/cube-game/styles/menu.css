@@ -40,8 +40,8 @@
 }
 
 .cg-level {
-  --level: #3ee6ff;
-  --level-2: #7a6bff;
+  --level: #5fc6dc;
+  --level-2: #8a80d0;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -69,13 +69,8 @@
   border-color: var(--level);
   transform: translateY(-6px);
   box-shadow:
-    inset 0 0 26px color-mix(in srgb, var(--level) 35%, transparent),
-    0 0 28px color-mix(in srgb, var(--level) 55%, transparent);
-}
-
-.cg-level--locked {
-  cursor: not-allowed;
-  filter: grayscale(0.85) brightness(0.6);
+    inset 0 0 18px color-mix(in srgb, var(--level) 22%, transparent),
+    0 0 16px color-mix(in srgb, var(--level) 30%, transparent);
 }
 
 .cg-level__number {
@@ -152,7 +147,7 @@
   display: block;
   height: 100%;
   background: linear-gradient(90deg, var(--level-2), var(--level));
-  box-shadow: 0 0 10px var(--level);
+  box-shadow: 0 0 5px color-mix(in srgb, var(--level) 60%, transparent);
 }
 
 .cg-level__percent {
@@ -187,8 +182,8 @@
 
 .cg-toggle button[aria-pressed="true"] {
   color: #12052e;
-  background: #3ee6ff;
-  box-shadow: 0 0 18px rgba(62, 230, 255, 0.6);
+  background: #5fc6dc;
+  box-shadow: 0 0 10px rgba(95, 198, 220, 0.3);
 }
 
 .cg-check {
@@ -206,13 +201,13 @@
 .cg-check__box {
   width: 22px;
   height: 22px;
-  border: 3px solid #3ee6ff;
+  border: 3px solid #5fc6dc;
   border-radius: 6px;
 }
 
 .cg-check[aria-pressed="true"] .cg-check__box {
-  background: #3ee6ff;
-  box-shadow: inset 0 0 0 3px #12052e, 0 0 12px #3ee6ff;
+  background: #5fc6dc;
+  box-shadow: inset 0 0 0 3px #12052e, 0 0 6px rgba(95, 198, 220, 0.5);
 }
 
 .cg-play {
@@ -221,8 +216,8 @@
   padding: 16px 64px;
   font: 900 32px/1 "Arial Black", Arial, var(--font-ui);
   color: #12052e;
-  background: linear-gradient(180deg, #d9ffb0, #3dff6e 55%, #19c24a);
-  box-shadow: 0 7px 0 #12052e, 0 0 36px rgba(61, 255, 110, 0.45);
+  background: linear-gradient(180deg, #d4f5bc, #5fd98a 55%, #2fa860);
+  box-shadow: 0 7px 0 #12052e, 0 0 16px rgba(61, 255, 110, 0.2);
   cursor: pointer;
   transition: transform 0.1s ease, box-shadow 0.1s ease;
 }

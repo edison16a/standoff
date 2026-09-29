@@ -92,7 +92,8 @@ describe("a round", () => {
     play(round, sync, 4.4, { 1: [4] });
     expect(round.status(2)).toBe("dead");
     round.setAway(2, true);
-    play(round, sync, 12, { 1: [4] });
+    // Short of the end, since player 1 finishing would decide the race.
+    play(round, sync, 11, { 1: [4] });
     expect(round.status(2)).toBe("away");
     expect(round.run(2)!.attempt).toBe(2);
     expect(round.run(2)!.player.x).toBe(0);
