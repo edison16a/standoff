@@ -79,6 +79,15 @@ export class Squad {
     view.keepers.forEach((k, i) => this.keepers[i]!.update(k, dt, time));
   }
 
+  /** Where a player's hands are in the world, for the cup in the captain's grip. False if there is no such player. */
+  hands(id: number, left: THREE.Vector3, right: THREE.Vector3): boolean {
+    const figure = this.athletes[id];
+    if (!figure) return false;
+    figure.rig.handL.getWorldPosition(left);
+    figure.rig.handR.getWorldPosition(right);
+    return true;
+  }
+
   fitTags(fov: number): void {
     for (const tag of this.tags) tag?.fit(fov);
     for (const bar of this.bars) bar.fit(fov);
