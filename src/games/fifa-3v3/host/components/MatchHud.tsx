@@ -64,11 +64,12 @@ function PlayerStrip() {
   );
 }
 
-/** No banners across the picture: goals and fouls are told by the score bug and the 3D scene. */
+/** No banners across the picture: goals and fouls are told by the score bug and the 3D scene. The ceremony has its own names instead. */
 export function MatchHud() {
+  const ceremony = useFifaStore((s) => s.ceremony !== null);
   return (
     <div className="fifa-hud">
-      <Scoreboard />
+      {!ceremony && <Scoreboard />}
       <ReplayOverlay />
       <PlayerStrip />
     </div>

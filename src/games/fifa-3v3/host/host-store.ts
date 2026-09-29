@@ -4,6 +4,7 @@ import type { Role } from "../roles";
 import type { BuildId } from "../builds";
 import type { RoomPhase } from "../protocol";
 import type { TeamId } from "../teams";
+import type { CeremonyCard } from "./ceremony-card";
 import type { StrikeFacts } from "./replay-facts";
 import type { ReplayStage } from "./replay-script";
 
@@ -90,6 +91,8 @@ export interface FifaHostState {
   replayCard: ReplayCard | null;
   skip: SkipView[];
   winner: TeamId | null;
+  /** The trophy ceremony's names and where it is, once the scene has cut to it. */
+  ceremony: CeremonyCard | null;
   results: ResultRow[];
   /** Phones' players in the match, for the strip along the bottom. */
   roster: { id: number; seat: number; name: string; team: TeamId; build: BuildId; hasBall: boolean; away: boolean }[];
@@ -110,6 +113,7 @@ export const useFifaStore = create<FifaHostState>(() => ({
   replayCard: null,
   skip: [],
   winner: null,
+  ceremony: null,
   results: [],
   roster: [],
 }));

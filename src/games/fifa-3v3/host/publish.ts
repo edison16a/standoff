@@ -5,6 +5,7 @@ import { useFifaStore as store, type ResultRow } from "./host-store";
 import type { Lobby } from "./lobby";
 import type { MatchDriver } from "./match-driver";
 import type { PhoneLink } from "./phone-link";
+import { ceremonyCard, type CeremonyCard } from "./ceremony-card";
 import { momentOf } from "./moment";
 import { nameOf } from "./names";
 import { phoneState } from "./phone-state";
@@ -20,6 +21,8 @@ export interface PublishContext {
   replay: ReplayDirector;
   /** How a player is called on screen. */
   nameOf(id: number): string;
+  /** The host asked for the stats before the ceremony brought them in. */
+  statsNow: boolean;
 }
 
 /**
@@ -50,6 +53,7 @@ export function publish(c: PublishContext): void {
     replayCard: c.driver ? c.replay.card(c.driver, (id) => c.nameOf(id)) : null,
     skip: c.replay.skipList((seat) => names.get(seat) ?? `Player ${seat + 1}`),
     winner: match?.winner ?? null,
+    ceremony: match ? withStats(ceremonyCard(match, names), c.statsNow) : null,
     results: match && match.phase === "fulltime" ? results(c.driver!, names) : [],
     roster: match
       ? match.athletes.filter((a) => a.seat !== null).map((a) => ({
@@ -95,4 +99,9 @@ function results(driver: MatchDriver, names: ReadonlyMap<number, string>): Resul
     saves: k.saves,
   }));
   return [...players, ...keepers];
+}
+
+/** The stats come in on their own at the end of the ceremony, or at once when the host asks. */
+function withStats(card: CeremonyCard | null, now: boolean): CeremonyCard | null {
+  return card && now ? { ...card, stage: "stats" } : card;
 }

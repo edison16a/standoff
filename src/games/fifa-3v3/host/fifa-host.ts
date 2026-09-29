@@ -1,14 +1,13 @@
 import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import { HostPad } from "@/games/kit/pad/host-pad";
-import { playerColor } from "@/games/kit/players";
 import type { HostRoomApi, HostRoomEvent } from "@/platform/games/game-api";
 import { SoundDirector } from "../audio/director";
+import { ceremonyTime } from "../engine/ceremony";
 import type { MatchEvent } from "../engine/events";
 import type { MatchView } from "../engine/view";
 import { phoneMessageSchema, type PhoneMessage, type RoomPhase } from "../protocol";
 import type { Label } from "../render/match-renderer";
-import { computerName } from "../builds";
-import { TEAMS, type TeamId } from "../teams";
+import type { TeamId } from "../teams";
 import type { Role } from "../roles";
 import { registerSoccerAdmin } from "./admin";
 import { DemoMatch } from "./demo-match";
@@ -16,7 +15,7 @@ import { buzzFor } from "./buzz";
 import { useFifaStore as store } from "./host-store";
 import { Lobby } from "./lobby";
 import { MatchDriver } from "./match-driver";
-import { nameOf } from "./names";
+import { nameOf, tagOf } from "./names";
 import { PhoneLink } from "./phone-link";
 import { publish } from "./publish";
 import type { ReplayFrame } from "./replay";
@@ -44,6 +43,8 @@ export class FifaHost {
   private lastHud = 0;
   private seed = Math.floor(Math.random() * 1e6);
   private unadmin: (() => void) | null = null;
+  /** The host asked for the stats before the ceremony brought them in. */
+  private statsNow = false;
 
   constructor(private readonly room: HostRoomApi) {
     store.setState({ ...store.getInitialState() });
@@ -94,18 +95,9 @@ export class FifaHost {
     return a ? nameOf(a, this.names()) : "";
   }
 
-  /**
-   * The tag over a player on the pitch, and the name on their shirt. A
-   * phone's player keeps their name while away, in a computer's quieter
-   * tag, since a computer plays for them until they are back.
-   */
+  /** The tag over a player on the pitch, and the name on their shirt. */
   label(id: number): Label {
-    const a = this.view.athletes[id];
-    if (!a) return { name: "", colour: "#ffffff", human: false };
-    const seat = this.driver?.state.athletes[id]?.seat ?? null;
-    if (seat === null) return { name: computerName(a.build), colour: TEAMS[a.team].color, human: false };
-    const name = nameOf({ seat, build: a.build }, this.names());
-    return { name, colour: a.seat !== null ? playerColor(seat) : TEAMS[a.team].color, human: a.seat !== null, shirt: name };
+    return tagOf(this.view, this.driver?.state ?? null, this.names(), id);
   }
 
   private names(): Map<number, string> {
@@ -139,6 +131,7 @@ export class FifaHost {
   startMatch(): void {
     if (this.lobby.startBlock()) return;
     this.driver = new MatchDriver(this.lobby.entrants(), this.seed++, this.lobby.level);
+    this.statsNow = false;
     this.unadmin?.();
     this.unadmin = registerSoccerAdmin(() => this.driver);
     this.replays.stop();
@@ -150,11 +143,19 @@ export class FifaHost {
   /** From the results: back to the team picker, keeping everyone's choices. */
   backToLobby(): void {
     this.driver = null;
+    this.statsNow = false;
     this.unadmin?.();
     this.unadmin = null;
     this.replays.stop();
     this.room.setPlaying(false);
     this.audio.lobby();
+    this.refresh(performance.now());
+  }
+
+  /** From the ceremony: straight to the stats, without waiting for them. */
+  showStats(): void {
+    if (this.phase !== "fulltime") return;
+    this.statsNow = true;
     this.refresh(performance.now());
   }
 
@@ -167,6 +168,7 @@ export class FifaHost {
     if (driver) {
       for (const event of events) this.onMatchEvent(event, driver);
       changed = this.replays.update(driver);
+      this.audio.ceremony(ceremonyTime(driver.state));
     }
     if (changed || this.phase !== before || nowMs - this.lastHud >= HUD_MS) this.refresh(nowMs);
     return events;
@@ -243,6 +245,6 @@ export class FifaHost {
   private refresh(nowMs: number): void {
     this.lastHud = nowMs;
     const nameOf = (id: number) => this.calledName(id);
-    publish({ nowMs, phase: this.phase, players: this.room.players(), lobby: this.lobby, driver: this.driver, phones: this.phones, replay: this.replays, nameOf });
+    publish({ nowMs, phase: this.phase, players: this.room.players(), lobby: this.lobby, driver: this.driver, phones: this.phones, replay: this.replays, nameOf, statsNow: this.statsNow });
   }
 }

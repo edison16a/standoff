@@ -1,7 +1,22 @@
 /*
-  Full time: a card over the celebrating winners, their fireworks and
-  confetti still going behind it.
+  Full time: the trophy ceremony's corner button, then the stats card on
+  the right over the celebrating winners, their confetti still falling.
 */
+
+.fifa-champions {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.fifa-champions__skip {
+  position: absolute;
+  right: clamp(12px, 2.5vw, 32px);
+  bottom: clamp(12px, 3vh, 32px);
+  background: rgba(8, 10, 20, 0.55);
+  pointer-events: auto;
+  animation: fifa-fade 500ms 1.2s ease-out both;
+}
 
 .fifa-results {
   position: absolute;
@@ -11,7 +26,7 @@
   justify-content: flex-end;
   padding: 90px 48px 40px;
   pointer-events: none;
-  animation: fifa-fade 700ms 1.4s ease-out both;
+  animation: fifa-fade 700ms 0.1s ease-out both;
 }
 
 @keyframes fifa-fade {

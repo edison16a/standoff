@@ -6,10 +6,11 @@ import { useFifaStore } from "../host-store";
 import { useSession } from "./session-context";
 
 /**
- * The final whistle: the winners and the score, the player of the
- * match, everyone's goals, shots, passes, tackles and saves (blocked
- * shots for outfield players, a line each for the keepers), and the ways
- * back in: the same teams again, or back to pick new ones.
+ * The stats after the trophy ceremony: the winners and the score, the
+ * player of the match, everyone's goals, shots, passes, tackles and saves
+ * (blocked shots for outfield players, a line each for the keepers), and
+ * the ways back in: the same teams again, or back to pick new ones. The
+ * card sits on the right while the winners celebrate on the left.
  */
 export function Results() {
   const session = useSession();
