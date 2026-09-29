@@ -34,7 +34,8 @@ export function heatDrag(a: Athlete): number {
 /** Top speed right now, from the player's speed, role, ball, rush and tired legs. */
 export function topSpeed(a: Athlete, withBall: boolean): number {
   const base = MOVE.baseSpeed + statsOf(a).speed * MOVE.perSpeed;
-  const role = a.role === "qb" ? MOVE.qbSpeed : a.role === "lineman" ? 0.7 : 1;
+  // The QB runs as fast as anyone; running costs him accuracy instead (engine/accuracy.ts).
+  const role = a.role === "lineman" ? 0.7 : 1;
   const rush = a.rushT > 0 ? RUSH.boost : 1;
   return base * role * (withBall ? MOVE.withBall : 1) * rush * heatDrag(a);
 }

@@ -5,7 +5,7 @@ import { botSkill } from "./bots/skill";
 import { stepFlight, type Flight } from "./flight";
 import type { Match } from "./match";
 import { endPlay } from "./whistle";
-import { PASS } from "./tuning";
+import { ON_THE_RUN, PASS } from "./tuning";
 import type { Athlete } from "./types";
 import { dist2, dist3, norm2, type V2, type V3 } from "./vec";
 
@@ -19,13 +19,13 @@ const canPlayBall = (d: Athlete) => d.role !== "lineman" && !isDown(d) && d.guar
  * A defender standing in front of the target when the ball is thrown:
  * near the catch spot and between it and the QB. They get the ball.
  */
-export function jumpingDefender(m: Match, qb: Athlete, from: V3, spot: V2, target: Athlete): Athlete | null {
+export function jumpingDefender(m: Match, qb: Athlete, from: V3, spot: V2, target: Athlete, wider = 1): Athlete | null {
   const dir = norm2({ x: spot.x - from.x, z: spot.z - from.z });
   const along = (p: V2) => (p.x - from.x) * dir.x + (p.z - from.z) * dir.z;
   let best: Athlete | null = null;
   for (const d of m.athletes) {
     if (d.team === qb.team || !canPlayBall(d)) continue;
-    if (dist2(d, spot) > PASS.jumpRadius * coverReach(statsOf(d)) || along(d) >= along(target)) continue;
+    if (dist2(d, spot) > PASS.jumpRadius * coverReach(statsOf(d)) * wider || along(d) >= along(target)) continue;
     if (!best || dist2(d, spot) < dist2(best, spot)) best = d;
   }
   return best;
@@ -47,7 +47,8 @@ export function assistPass(m: Match, dt: number): void {
   // The spot is where the ball comes down as thrown; each nudge moves it by about the nudge times the time left.
   const need = { x: (want.x - pass.spot.x) / left, z: (want.z - pass.spot.z) / left };
   const push = norm2(need);
-  const amount = Math.min(Math.hypot(need.x, need.z), PASS.assist * dt);
+  // A loose throw was never going there, so it bends less.
+  const amount = Math.min(Math.hypot(need.x, need.z), PASS.assist * (1 - pass.loose) * dt);
   f.vel.x += push.x * amount;
   f.vel.z += push.z * amount;
   pass.spot = { x: pass.spot.x + push.x * amount * left, z: pass.spot.z + push.z * amount * left };
@@ -115,15 +116,17 @@ export function updatePass(m: Match, dt: number): void {
     const d = m.athlete(pass.interceptor);
     if (d && !isDown(d) && reachable(f.pos, d, PASS.catchRadius * 1.4 * catchReach(statsOf(d)))) return intercepted(m, d, pass.from);
   } else {
+    const wider = 1 + pass.loose * ON_THE_RUN.readWider;
     for (const d of m.athletes) {
-      if (d.team === m.offense || !canPlayBall(d)) continue;
-      const near = f.pos.y > 0.3 && f.pos.y < PASS.maxCatchY && dist2(d, f.pos) < PASS.pickRadius * coverReach(statsOf(d));
+      if (pass.pitch || d.team === m.offense || !canPlayBall(d)) continue;
+      const near = f.pos.y > 0.3 && f.pos.y < PASS.maxCatchY && dist2(d, f.pos) < PASS.pickRadius * coverReach(statsOf(d)) * wider;
       // Only a defender a person steers, not the computer and not Guard, can jump into the path.
       if (near && !d.auto) return intercepted(m, d, pass.from);
       // A computer defender in the way gets one swipe at it: knocked down, never caught.
       if (near && !pass.swiped.includes(d.id)) {
         pass.swiped.push(d.id);
-        if (m.rng.chance(Math.min(0.9, botSkill(m.level).accuracy * 0.45 * swatFactor(statsOf(d))))) return breakUp(m, d, f);
+        const swat = botSkill(m.level).accuracy * 0.45 * swatFactor(statsOf(d)) * (1 + pass.loose * ON_THE_RUN.swatMore);
+        if (m.rng.chance(Math.min(0.9, swat))) return breakUp(m, d, f);
       }
     }
     const r = m.athlete(pass.to);

@@ -5,7 +5,7 @@ import { FIELD, YARD, yardToX } from "../field";
 import { startJuke } from "../juke";
 import type { Match } from "../match";
 import { receivers, throwTo } from "../passing";
-import { PASS } from "../tuning";
+import { ON_THE_RUN, PASS } from "../tuning";
 import { startDive } from "../tackle";
 import type { Athlete } from "../types";
 import { dist2, type V2 } from "../vec";
@@ -44,6 +44,11 @@ export function readField(m: Match, qb: Athlete, skill: FootballSkill): void {
       }
     }
     if (best && (bestOpen >= 3 || pressure || t > qb.bot.readAt + 1.2)) {
+      // Set the feet first unless the rush is on him: a throw on the run sprays.
+      if (!pressure && Math.hypot(qb.vx, qb.vz) > ON_THE_RUN.still) {
+        qb.bot.goal = { x: 0, z: 0 };
+        return;
+      }
       qb.aim = { x: best.x - qb.x, z: best.z - qb.z };
       throwTo(m, qb, best.id);
       qb.aim = null;

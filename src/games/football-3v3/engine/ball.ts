@@ -21,6 +21,10 @@ export interface PassInfo {
   at: number;
   /** Computer defenders who already had their one swipe at it. */
   swiped: number[];
+  /** How loose the throw was, 0 with set feet to 1 flat out: it bends less and is easier to break up. */
+  loose: number;
+  /** A short lob back to a runner on a run play, not a forward pass: nobody picks it off. */
+  pitch: boolean;
 }
 
 /**

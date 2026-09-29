@@ -36,8 +36,6 @@ export const MOVE = {
   /** Top speed from speed 0 to 10: about 7.6 to 9.6 metres a second. */
   baseSpeed: 7.6,
   perSpeed: 0.2,
-  /** The QB is slower than a runner. */
-  qbSpeed: 0.86,
   withBall: 0.93,
   /** Push at a standstill for a 95 kg player, fading to nothing at top speed. */
   push: 7.2,
@@ -110,6 +108,25 @@ export const PASS = {
   /** The ball bends toward a receiver who changes course, up to this acceleration. */
   assist: 5,
   spin: 62,
+} as const;
+
+/**
+ * Throwing on the run. Set feet give a clean pass; the faster the QB is
+ * moving at the release, the more it sprays, the less it bends after the
+ * receiver, and the easier it is to knock down or pick off.
+ */
+export const ON_THE_RUN = {
+  /** At or under this speed the QB counts as set. */
+  still: 1.2,
+  /** At this speed and over the throw is as loose as it gets. */
+  full: 6.5,
+  /** Spread of the miss at full looseness: a base plus a share of the pass length. */
+  missBase: 1.4,
+  missPerMetre: 0.1,
+  /** How much wider defenders read, and how much more often they swat, a loose throw. */
+  readWider: 0.5,
+  swatMore: 1,
+  wobble: 0.12,
 } as const;
 
 export const KICK = {
