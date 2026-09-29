@@ -11,6 +11,7 @@ import { Controls } from "./controls";
 import { JUMP_SMOOTHING, JUMP_TUNING } from "./jump-tuning";
 import { loadProgress } from "./progress";
 import { Round } from "./round";
+import { RoundAdmin } from "./round-admin";
 import { SongClock } from "./song-clock";
 import { initialCubeState, useCubeStore as store, type Phase } from "./store";
 import { Scoreboard } from "./scoreboard";
@@ -31,6 +32,7 @@ export class CubeSession {
   round: Round | null = null;
   private readonly clock: SongClock;
   private readonly board = new Scoreboard();
+  private readonly admin = new RoundAdmin();
   private controls: Controls | null = null;
   private demo: Autoplay;
   private demoRestarted = true;
@@ -147,6 +149,7 @@ export class CubeSession {
     if (this.round && (this.phase === "play" || this.phase === "results")) {
       const round = this.round;
       // Behind the results the runs stand still, so an unfinished player makes no more noise.
+      if (this.phase === "play") this.admin.tick();
       const updates = this.phase === "play" ? round.update() : round.seats.map(() => ({ events: [], restarted: false }));
       updates.forEach(({ events }, i) => this.hear(i + 1, events));
       this.board.update(round, now);
@@ -193,6 +196,7 @@ export class CubeSession {
     const round = new Round(level, players, practice, this.clock);
     this.round = round;
     this.board.begin(round, levelId);
+    this.admin.begin(round);
     this.sound.setPlayers(players);
     this.controls = new Controls(
       input === "camera" ? this.kit : null,
@@ -215,6 +219,7 @@ export class CubeSession {
   private endRound(): void {
     if (this.resultsTimer) clearTimeout(this.resultsTimer);
     this.resultsTimer = null;
+    this.admin.end();
     this.controls?.dispose();
     this.controls = null;
     this.round = null;
