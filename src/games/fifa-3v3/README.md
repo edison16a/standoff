@@ -2,7 +2,7 @@
 
 Status: ready.
 
-Three on three football on a big floodlit pitch (48 by 30 metres, with a 5.8 metre goal) for up to six phones. A computer goalkeeper stands in each goal, and computer players fill any empty places. Turn them off to play one on one, two on two or uneven sides, still with both keepers. Each player picks one of six builds, a way to play with its own ratings, and plays under their own name. The winners lift a World Cup style trophy on the pitch.
+Three on three football on a big floodlit pitch (48 by 30 metres, with a big 8.1 by 2.9 metre goal) for up to six phones. A computer goalkeeper stands in each goal, and computer players fill any empty places. Turn them off to play one on one, two on two or uneven sides, still with both keepers. Each player picks one of six builds, a way to play with its own ratings, and plays under their own name. The winners lift a World Cup style trophy on the pitch.
 
 ## How to play
 
@@ -44,6 +44,8 @@ The phone buzzes for kicks, passes, tackles, fouls and goals, and shows your tea
 
 ## Shots, blocks and the keeper
 
+The goal is 8.1 metres wide and 2.9 high, about 1.75 times the face of the old 5.8 by 2.3 metre one, with a deeper net. The keeper is the same size and just as quick, so his full dive and stretch no longer cover it all. The part he cannot reach is room to score, and it adds to every shot's chance of beating him, most for a clean chance. In play tests with computer players about four shots in ten now go in, up from about one in four.
+
 A shot's outcome is rolled when it is struck, and the harder the chance, the likelier a defender gets in the way. Every opponent standing near the line from the ball to the goal gets a roll: more central, closer to the shooter and a worse chance (long range, a tight angle, a man on you) all make the block likelier. A blocked shot is struck into the defender, who leaps into its path, and the ball comes off the body with physics: it keeps a share of its pace, glances off the curve of the body, pops up and spins. The keeper stays on his feet for it.
 
 A save that is pushed away is a real bounce off the gloves. The palms face out of the goal, tilted toward the side of the dive and up over a high ball, so the ball comes back into the field off them, slower and spinning. A keeper who dives and does not end up holding the ball lies on the turf for a second, head up to follow it, then rolls onto the front and pushes himself up. That is the moment for a follow up.
@@ -78,9 +80,9 @@ Outside the box it is a free kick. Three defenders form a wall ten yards (9.15 m
 2. **Curve:** the stick bends the line, from a straight strike to a wide curve either way. The curve never moves the aim: the kick still ends on the target, only its path bends. A wide curve sets off outside the wall and bends back in. The bend is about the same share of the distance from close in or far out.
 3. **Power:** hold Kick and let go. The line is drawn at a middle power that dips under the bar. More is faster and higher, but all of yellow still comes in under the bar from any range; deep in the red it flies over. Less is slower and lower: into the wall from close in, a looping ball from far out.
 
-Inside the box it is a penalty: the keeper on his line, everyone else outside the box, and the taker aims at a spot on the goal with the stick (across and up), shown by a glowing target in the goal mouth, then sets the power. The keeper has to guess a side as it is struck.
+Inside the box it is a penalty: the keeper on his line, everyone else outside the box, and the taker aims at a spot on the goal with the stick (across and up), shown by a glowing target in the goal mouth, then sets the power. The keeper has to guess a side as it is struck. When he goes he picks the right side a little over half the time.
 
-The ball then flies with the match's own physics. The keeper saves what he can reach in time, better the closer and softer it is. A computer taker goes through the same stages on screen. A taker who leaves a stage alone for fifteen seconds has it done for them.
+The ball then flies with the match's own physics. The keeper saves what he can reach in time, better the closer and softer it is. With the big goal the free kick keeper shades further over and reads a kick he can reach a little better, so free kicks still go in about half the time and penalties about four times in five. A computer taker goes through the same stages on screen. A taker who leaves a stage alone for fifteen seconds has it done for them.
 
 The host's hidden admin panel (three quick taps on the settings gear) has Foul, Free kick, Penalty and Win now while a match runs, to try each without playing for it. Win now blows full time with the tester's side a goal up, straight into the trophy ceremony.
 
