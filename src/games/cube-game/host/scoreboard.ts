@@ -1,3 +1,5 @@
+import { recordFinish } from "./level-board";
+import { nameOf } from "./names";
 import { record, saveProgress } from "./progress";
 import type { Round } from "./round";
 import { useCubeStore as store, type HudPlayer, type ResultRow } from "./store";
@@ -6,8 +8,8 @@ const HUD_MS = 100;
 
 /**
  * Keeps score for a round: the HUD numbers, a banner for each new best,
- * and the saved progress. Bests are saved the moment they happen, so
- * leaving mid round never loses one.
+ * the saved progress and the level's leaderboard. Bests and finishes are
+ * saved the moment they happen, so leaving mid round never loses one.
  */
 export class Scoreboard {
   private round: Round | null = null;
@@ -29,13 +31,14 @@ export class Scoreboard {
   }
 
   /** A player's attempt ended, by a crash or the finish. Says if it was a new best. */
-  ended(slot: number, onBest: (text: string | null) => void): void {
+  ended(slot: number, onBest: (text: string | null) => void, pilot = false): void {
     const run = this.round?.run(slot);
     if (!run || !this.round) return;
     const { progress, practice } = store.getState();
     const before = progress.best[this.levelId] ?? 0;
     const percent = run.percent;
     if (practice) return onBest(null);
+    if (run.finished) this.finished({ slot, seconds: run.totalTime ?? run.time, attempts: run.attempt, pilot });
     const next = record(progress, this.levelId, percent, false);
     if (next !== progress) {
       saveProgress(next);
@@ -46,6 +49,13 @@ export class Scoreboard {
       store.setState({ banner: { slot, text, key: ++this.banners } });
       onBest(text);
     } else onBest(null);
+  }
+
+  /** Puts a finish on this computer's leaderboard for the level. Practice never gets here. */
+  private finished(run: { slot: number; seconds: number; attempts: number; pilot: boolean }): void {
+    const { names, placed } = store.getState();
+    const { place, entries } = recordFinish(this.levelId, { ...run, name: nameOf(names, run.slot) });
+    store.setState({ board: entries, placed: [...placed.filter((p) => p.slot !== run.slot), place] });
   }
 
   /** The round's rows for the results screen. */

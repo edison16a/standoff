@@ -8,6 +8,7 @@ import { standFor } from "../../render/victory/finish-stage";
 import { headline } from "../headline";
 import { nameOf } from "../names";
 import { useCubeStore } from "../store";
+import { BoardPanel } from "./results/BoardPanel";
 import { useSession } from "./session-context";
 
 // The celebration's 3D scene loads with the results, not with the level.
@@ -66,6 +67,7 @@ export function Results() {
         </table>
         {race && winner === null && !rows.some((row) => row.finished) && <p className="cg-results__note">Nobody reached the end, so the order is by how far each got.</p>}
         {practice && <p className="cg-results__note">Practice runs do not count toward your best.</p>}
+        <BoardPanel />
         <div className="cg-results__actions">
           <button type="button" className="cg-button cg-button--quiet" onClick={() => session.toMenu()}>
             Levels

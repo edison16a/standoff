@@ -5,6 +5,7 @@ import type { Level } from "../engine/types";
 import { LEVELS, levelById } from "../levels";
 import type { DrawInput } from "../render/game-renderer";
 import { beatPulse } from "../render/pulse";
+import { loadBoard, syncBoard } from "./board-sync";
 import { JUMP_SMOOTHING, JUMP_TUNING } from "./jump-tuning";
 import { MenuDemo } from "./menu-demo";
 import { loadProgress } from "./progress";
@@ -26,6 +27,7 @@ export class CubeSession {
   private readonly play: RoundPlay;
   private readonly demo: MenuDemo;
   private lastFrame = 0;
+  private readonly stopBoard: () => void;
 
   constructor(private readonly room: HostRoomApi) {
     this.sound = new SoundDirector(room.audio);
@@ -33,6 +35,7 @@ export class CubeSession {
     this.play = new RoundPlay(room, this.sound, this.clock);
     store.setState({ ...initialCubeState(), progress: loadProgress() });
     this.demo = new MenuDemo(store.getState().levelId);
+    this.stopBoard = syncBoard();
     this.clock.restart(0, 0.3);
     if (process.env.NODE_ENV === "development") Object.assign(window, { __cubeGame: this });
   }
@@ -61,6 +64,7 @@ export class CubeSession {
     if (index < 0 || id === store.getState().levelId) return;
     this.sound.sfx.select();
     store.setState({ levelId: id });
+    loadBoard(id);
     this.demo.load(id);
     this.clock.restart(0, 0.3);
   }
@@ -120,7 +124,8 @@ export class CubeSession {
     const index = LEVELS.findIndex((l) => l.info.id === store.getState().levelId);
     const next = LEVELS[index + 1];
     if (!next) return this.toMenu();
-    store.setState({ levelId: next.info.id });
+    store.setState({ levelId: next.info.id, placed: [] });
+    loadBoard(next.info.id);
     this.demo.load(next.info.id);
     this.beginRound();
   }
@@ -148,6 +153,7 @@ export class CubeSession {
   }
 
   dispose(): void {
+    this.stopBoard();
     this.play.end();
     this.kit?.dispose();
     this.sound.dispose();

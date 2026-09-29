@@ -8,6 +8,7 @@ import "./styles/host.css";
 import "./styles/menu.css";
 import "./styles/hud.css";
 import "./styles/results.css";
+import "./styles/board.css";
 import "./styles/showcase.css";
 
 // The showcase brings three.js and every level with it, so it loads only on the capture page.

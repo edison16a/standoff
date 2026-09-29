@@ -10,10 +10,13 @@ import type { Round } from "./round";
 export class RoundAdmin {
   private round: Round | null = null;
   private readonly pilots = new Map<number, Pilot>();
+  /** Seats the autopilot flew at any point this round, so their finishes are marked on the leaderboard. */
+  private readonly flown = new Set<number>();
   private unregister: (() => void) | null = null;
 
   begin(round: Round): void {
     this.end();
+    this.flown.clear();
     this.round = round;
     this.publish();
   }
@@ -39,8 +42,16 @@ export class RoundAdmin {
   toggle(slot: number): void {
     if (!this.round) return;
     if (this.pilots.has(slot)) this.pilots.delete(slot);
-    else this.pilots.set(slot, new Pilot(this.round.level));
+    else {
+      this.pilots.set(slot, new Pilot(this.round.level));
+      this.flown.add(slot);
+    }
     this.publish();
+  }
+
+  /** Whether the autopilot played any of this seat's round. */
+  flew(slot: number): boolean {
+    return this.flown.has(slot);
   }
 
   private publish(): void {
