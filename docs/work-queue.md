@@ -15,7 +15,7 @@ The running list of what is being built, so work can pick up again after a break
 | Work | Workflow | State |
 | --- | --- | --- |
 | **Room reliability (top priority):** find why rooms fail about every other time and fix the cause, a host watchdog that checks the room like a phone would and fully remakes it when broken, the QR code hidden until the room passes its check, and a Regenerate room button right under the QR code | wf_3938ab23-6cc | four investigations (live site repro, local multi instance repro, client audit, relay audit), two designs and a judge, one build, then stress, code and production reviews with fix rounds |
-| Batch E part 1: Subway Runner overhaul (the real Subway Surfers look, feel and sound) and the Zombie Survival rework (crosshairs, recoil, short fast rounds, bosses) | wf_e5046812-6a8 | build then review each; Subway is two builds in one worktree |
+| Batch F part 1: Subway Runner keyboard mode, Demon difficulty, score multipliers, coins in the score, and the shared local leaderboard with a wipe button in Settings | wf_3b3788e1-4d9 | build then review |
 | Batch C and D, finishing what the restart interrupted, in the same worktrees, two at a time | wf_9713e4a2-c2a | Basketball part 2, then Football 3v3 steps 2 and 3, each reviewed |
 | Batch E part 2: Soccer World Cup trophy scene and builds instead of stars; winner scenes for Blade Clash, Paintball Battle and Cube Game | wf_60afdf28-2d3 | build then review each |
 
@@ -32,12 +32,12 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ### Batch E: items 1 and 5 running; items 2 to 4 start when the victory kit, Basketball and the sports builds are on main
 
-1. **(running)** **Subway Runner overhaul:** drop the neon look and make it look, move and sound like the real Subway Surfers: bright daytime rail yard, graffiti trains, the real feel of lane switches, jumps, rolls, hoverboards and the chase. Much better graphics, physics and sounds.
+1. **(done)** **Subway Runner overhaul:** drop the neon look and make it look, move and sound like the real Subway Surfers: bright daytime rail yard, graffiti trains, the real feel of lane switches, jumps, rolls, hoverboards and the chase. Much better graphics, physics and sounds.
 2. **Sports winner scenes:** Basketball team lifting an NBA style trophy with names and confetti, Soccer team lifting a World Cup style trophy, Football with a trophy too. Use the victory kit from Batch D.
 3. **Builds instead of characters** in Basketball (Shooter, Dunker, and so on), Soccer and Football: each pick is a stat build and the username stays the displayed name.
 4. **Winner scenes** for the other games with a clear winner: Blade Clash, Paintball Battle, Cube Game 1v1.
 
-5. **(running)** **Zombie Survival rework:**
+5. **(done)** **Zombie Survival rework:**
    * Each weapon gets its own crosshair and a real trade off (the shotgun has a wide spread and short range, and so on).
    * Recoil kicks the gun, which springs back to where the player points. The aim itself never moves.
    * Shorter, faster waves: at most 10 zombies a round early on and about 20 in late rounds.
@@ -88,6 +88,8 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ## Done recently
 
+* Subway Runner overhaul: no neon, a sunny rail yard with graffiti trains, ramps and barriers, a cartoon runner chased by the inspector and his dog, snappy lanes, real jump arcs, rolls and stumbles, working power ups, a new song and sounds.
+* Zombie Survival rework: a crosshair and a real trade off per weapon, recoil that springs back to the aim, short rounds of at most 10 early and about 20 late, 10 percent faster each round up to double, big bosses every 5 rounds with runners behind them and mini bosses between.
 * Hold to calibrate in every pointing game: 6 targets for sword games, 5 for shooters, Magic Kart holds the middle dot for a second, pointers stay at the edge.
 * The victory kit (confetti, spotlights, trophies and a belt made in code), with winner scenes for Boxing (belt overhead), Magic Kart (podium) and Brawl Battle (pedestal), and Boxing builds with stat bars under the player's own name.
 * Cube Game: calmer look, a quicker camera jump, every level open, a song per level, and 2 players race 1v1 in split screen.
