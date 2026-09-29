@@ -48,7 +48,7 @@ export class ReplayRecorder {
   /** Cuts the replay once the frames after the goal are in. */
   cut(): boolean {
     if (this.goalAt === null) return false;
-    const from = this.goalAt - BEFORE_S;
+    const from = Math.max(this.goalAt - BEFORE_S, lastStoppage(this.frames, this.goalAt));
     const to = this.goalAt + AFTER_S;
     this.clip = this.frames.filter((f) => f.time >= from && f.time <= to);
     this.goalAt = null;
@@ -82,4 +82,24 @@ export class ReplayRecorder {
     this.script = null;
     this.lastAt = -Infinity;
   }
+}
+
+/**
+ * When play last got going again before the goal. A goal from a free
+ * kick or a penalty is replayed from the taker's run up, never from the
+ * foul, the booking or the lining up that came before it.
+ */
+function lastStoppage(frames: readonly MatchView[], goalAt: number): number {
+  let start = -Infinity;
+  let still = false;
+  for (const f of frames) {
+    if (f.time >= goalAt) break;
+    const moving = f.phase === "play" || (f.phase === "setpiece" && f.setPiece?.stage === "struck");
+    if (!moving) still = true;
+    else if (still) {
+      start = f.time;
+      still = false;
+    }
+  }
+  return start;
 }

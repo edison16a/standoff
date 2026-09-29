@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { adminSetPiece } from "../engine/admin";
 import { createMatch, stepMatch, type Entrant } from "../engine/match";
 import { STEP } from "../engine/tuning";
 import { buildView } from "../engine/view";
@@ -63,6 +64,31 @@ describe("the goal replay", () => {
     expect(a.segment.stage).toBe("strike");
     expect(b.time - a.time).toBeCloseTo(0.2 * strike.rate, 5);
     expect(recorder.at(before + 0.1)?.segment.stage).toBe("strike");
+  });
+});
+
+describe("a set piece goal's replay", () => {
+  it("starts at the taker's run up, not at the lining up before it", () => {
+    let checked = 0;
+    for (let seed = 1; seed <= 12 && checked < 2; seed++) {
+      const state = createMatch(LINEUP, { seed });
+      const recorder = new ReplayRecorder();
+      // Read through a function: the steps change the phase behind the type checker's back.
+      const phase = (): string => state.phase;
+      while (phase() !== "play") stepMatch(state);
+      for (let t = 0; t < 3; t += STEP) stepMatch(state);
+      adminSetPiece(state, "penalty");
+      for (let t = 0; t < 30 && phase() !== "replay"; t += STEP) {
+        stepMatch(state);
+        if (state.events.some((e) => e.type === "goal")) recorder.markGoal(state.time);
+        recorder.record(buildView(state));
+      }
+      if (phase() !== "replay" || !recorder.cut()) continue;
+      checked++;
+      const first = recorder.at(0)!.view;
+      expect(first.phase === "play" || first.setPiece?.stage === "struck").toBe(true);
+    }
+    expect(checked).toBeGreaterThan(0);
   });
 });
 
