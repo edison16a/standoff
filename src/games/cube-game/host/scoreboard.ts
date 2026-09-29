@@ -62,8 +62,9 @@ export class Scoreboard {
       jumps: seat.run.jumps,
       place: places[i]!,
     }));
-    // The tags behind the results say the same places as the table.
-    store.setState({ results: rows, winner: round.winner, hud: this.hud(round, places) });
+    // The tags behind the results say the same places and bests as the table.
+    const hud = this.hud(round, places).map((player, i) => ({ ...player, best: rows[i]!.best }));
+    store.setState({ results: rows, winner: round.winner, hud });
   }
 
   private hud(round: Round, places = round.places()): HudPlayer[] {
