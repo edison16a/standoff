@@ -18,11 +18,12 @@ describe("the train rumble", () => {
   });
 
   it("swells as a train rolls in, and is loudest alongside", () => {
-    const run = withTrain(0.5, 60);
+    // It meets the runner at 40 metres, rolling in at half their speed.
+    const run = withTrain(0.5, 40);
     const far = trainNearness(run);
-    run.runner.distance = 40;
+    run.runner.distance = 20;
     const closer = trainNearness(run);
-    run.runner.distance = 62;
+    run.runner.distance = 41;
     expect(far).toBeGreaterThan(0);
     expect(closer).toBeGreaterThan(far);
     expect(trainNearness(run)).toBe(1);
