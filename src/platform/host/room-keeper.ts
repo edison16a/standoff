@@ -126,11 +126,11 @@ export class RoomKeeper {
         // Nobody is waiting for this room, say a create answered after its
         // retry had already been answered. Left open it would be a ghost.
         if (!this.pending) return this.retire({ code, token });
+        const deferred = this.deferred;
         this.stopCreate();
         this.shared = message.sharedRooms;
         this.memory.remember({ code, token, game, seats });
-        this.deferred?.({ type: "host:resume", code, token });
-        this.deferred = null;
+        deferred?.({ type: "host:resume", code, token });
         return this.events.opened({ ...message, connected: null, names: null });
       }
       case "room:resumed": {

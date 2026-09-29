@@ -36,6 +36,7 @@ export class HostRoom {
   /** The room on screen, or the one a reload remembered, to make again if it is lost. */
   private last: RememberedRoom | null = null;
   private hiddenAt: number | null = null;
+  private shared = true;
   private readonly unwatchStore: () => void;
   private readonly keeperEvents: RoomKeeperEvents = {
     opened: (room) => this.onOpened(room),
@@ -58,6 +59,7 @@ export class HostRoom {
       snapshot: () => this.last,
       joined: () => this.players.joined,
       phonesConnected: () => this.players.connected,
+      shared: () => this.shared,
       makeCandidate: () => new RoomCandidate(),
       swap: (candidate, room, old) => this.swap(candidate, room, old),
       goHome: (error) => this.goHome(error),
@@ -167,6 +169,7 @@ export class HostRoom {
       this.current = this.makeApi(code, seats);
     }
     this.last = { code, token: room.token, game, seats };
+    this.shared = room.sharedRooms;
     set({ screen: "room", room: { code, joinUrl, game, seats }, players, resuming: false, opening: false, error: null });
     this.guard.opened(code, same);
     if (same) {

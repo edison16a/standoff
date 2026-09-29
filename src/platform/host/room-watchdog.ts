@@ -1,4 +1,4 @@
-import type { ProbeOutcome } from "@/platform/net/room-probe";
+import { definitive, type ProbeOutcome } from "@/platform/net/room-probe";
 
 /** How often a lobby is checked, and how often once it has passed for a while. */
 export const LOBBY_EVERY_MS = 20_000;
@@ -7,8 +7,6 @@ export const SETTLED_AFTER_MS = 5 * 60_000;
 /** A check that failed for a reason that may pass is tried again this soon. */
 export const RECHECK_MS = 2000;
 
-/** Answers about the room itself, which no second look will change. */
-const DEFINITIVE = new Set<string>(["not-found", "closed", "moved"]);
 
 export interface WatchdogDeps {
   probe(code: string): Promise<ProbeOutcome>;
@@ -19,6 +17,8 @@ export interface WatchdogDeps {
   /** Playing, the code hidden, or the tab in the background: checks wait. */
   paused(): boolean;
   online(): boolean;
+  /** Every server instance sees the same rooms, so "not found" is final. */
+  shared(): boolean;
   now(): number;
 }
 
@@ -114,7 +114,7 @@ export class RoomWatchdog {
     // Mid match, or offline, a failed check proves nothing worth a remake.
     if (this.deps.paused() || !this.deps.online()) return this.schedule(this.cadence());
     this.okSince = null;
-    if (DEFINITIVE.has(outcome.reason)) return this.fail(code, outcome.reason);
+    if (definitive(outcome.reason, this.deps.shared())) return this.fail(code, outcome.reason);
     this.strikes += 1;
     const limit = this.deps.phonesConnected() > 0 ? 3 : 2;
     if (this.strikes >= limit) return this.fail(code, outcome.reason);

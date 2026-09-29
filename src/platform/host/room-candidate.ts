@@ -1,4 +1,4 @@
-import { probeRoom, type ProbeOutcome } from "@/platform/net/room-probe";
+import { definitive, probeRoom, type ProbeOutcome } from "@/platform/net/room-probe";
 import { SocketClient } from "@/platform/net/socket-client";
 import type { ServerEnvelope } from "@/platform/protocol";
 import { HandlerSwitch, type LinkPart } from "./host-link";
@@ -10,7 +10,6 @@ import { RECHECK_MS } from "./room-watchdog";
 export const CANDIDATE_MS = 15_000;
 /** How long a discarded room's socket waits for its retire to be confirmed. */
 const DISCARD_WAIT_MS = 3000;
-const DEFINITIVE = new Set<string>(["not-found", "closed", "moved"]);
 
 export type CandidateResult = { ok: true; room: OpenedRoom } | { ok: false; reason: string };
 
@@ -108,7 +107,7 @@ export class RoomCandidate {
     const outcome = await probe(room);
     if (!this.settle) return;
     if (outcome.ok) return this.finish({ ok: true, room });
-    if (DEFINITIVE.has(outcome.reason) || blips + 1 >= 2) return this.finish({ ok: false, reason: outcome.reason });
+    if (definitive(outcome.reason, room.sharedRooms) || blips + 1 >= 2) return this.finish({ ok: false, reason: outcome.reason });
     this.recheck = setTimeout(() => void this.verify(room, blips + 1), RECHECK_MS);
   }
 

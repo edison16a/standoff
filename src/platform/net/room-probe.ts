@@ -50,6 +50,16 @@ export function probeRoom(room: { code: string; token: string }, { stream = pref
   });
 }
 
+/**
+ * True when a failed check is about the room itself, which no second look
+ * will change. Where each server instance keeps its own rooms, "not found"
+ * may only mean the check landed on another instance, as a phone's join
+ * can, and a phone tries again too. So there it is only a strike.
+ */
+export function definitive(reason: string, shared: boolean): boolean {
+  return reason === "closed" || reason === "moved" || (shared && reason === "not-found");
+}
+
 /** 24 random characters from the set the relay accepts. */
 export function makeNonce(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(24));

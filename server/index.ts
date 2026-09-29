@@ -7,7 +7,7 @@ import { loadCertificate } from "./certificates";
 import { readConfig } from "./config";
 import { findLanAddress } from "./network";
 import { createBackend } from "../src/platform/relay/create-backend";
-import { setLocalPhoneOrigin } from "../src/platform/relay/route-context";
+import { setLocalPhoneOrigin, simulatedInstances } from "../src/platform/relay/route-context";
 import { createSocketServer } from "./realtime/socket-server";
 
 /**
@@ -29,8 +29,9 @@ async function main() {
     backend,
     joinUrlFor: (code) => `${phoneOrigin}/join/${code}`,
     now: Date.now,
-    // One process holds every socket, so memory is as shared as it gets.
-    sharedRooms: true,
+    // One process holds every socket, so memory is as shared as it gets,
+    // unless this process is one of several standing in for Vercel's instances.
+    sharedRooms: !simulatedInstances(),
   }, config.socketLifetimeMs);
   const certificate = await loadCertificate(lanAddress);
 

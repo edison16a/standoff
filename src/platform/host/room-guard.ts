@@ -13,6 +13,8 @@ export interface GuardDeps {
   /** A phone has sat in this room, so its players must hear about a new one. */
   joined(): boolean;
   phonesConnected(): number;
+  /** The relay said every server instance sees the same rooms. */
+  shared(): boolean;
   makeCandidate(): RoomCandidate;
   /** A new room passed its check: the host moves over to it. */
   swap(candidate: RoomCandidate, room: OpenedRoom, old: RememberedRoom): void;
@@ -47,8 +49,10 @@ export class RoomGuard {
       broken: () => this.trouble("unreachable"),
       phonesConnected: () => deps.phonesConnected(),
       // Mid match a check proves nothing worth a remake, and a hidden code needs no checking.
-      paused: () => get().playing || get().joinHidden || (typeof document !== "undefined" && document.hidden),
+      // A background tab waits too, once its room has passed: the first check never does, or the code would stay hidden.
+      paused: () => get().playing || get().joinHidden || (get().health !== "checking" && typeof document !== "undefined" && document.hidden),
       online: () => get().status === "open",
+      shared: () => deps.shared(),
       now: Date.now,
     });
     this.remaker = new RoomRemaker<RoomCandidate>({
