@@ -59,7 +59,8 @@ describe("the shot odds", () => {
     const far = shotOdds({ ...typical, distance: 20 });
     const pressed = shotOdds({ ...typical, pressure: 1 });
     expect(close.goal).toBeGreaterThan(0.25);
-    expect(far.goal).toBeLessThan(0.15);
+    // The big goal leaves a long shot some room past the keeper, but not much.
+    expect(far.goal).toBeLessThan(0.2);
     expect(far.goal).toBeLessThan(close.goal / 2);
     expect(pressed.goal).toBeLessThan(shotOdds(typical).goal);
   });

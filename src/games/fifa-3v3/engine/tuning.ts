@@ -7,6 +7,13 @@
 /** The simulation runs at a fixed 60 steps a second so it plays the same on any screen. */
 export const STEP = 1 / 60;
 
+/**
+ * The goal grew from 5.8 by 2.3 metres after play tests found the keeper
+ * a brick wall. The keeper stayed exactly the same, so the extra room is
+ * what lets shots past him. The face is about 1.75 times the old one.
+ */
+export const GOAL_GROWTH = { wide: 1.4, high: 1.25 } as const;
+
 export const PITCH = {
   /** From the centre spot to each goal line. */
   halfLength: 24,
@@ -14,10 +21,10 @@ export const PITCH = {
   halfWidth: 15,
   boardHeight: 1,
   /** From the middle of the goal to the centre of each post. */
-  goalHalfWidth: 2.9,
-  /** To the centre of the crossbar. A big goal, so the keeper has more to cover. */
-  goalHeight: 2.3,
-  goalDepth: 1.4,
+  goalHalfWidth: 2.9 * GOAL_GROWTH.wide,
+  /** To the centre of the crossbar. */
+  goalHeight: 2.3 * GOAL_GROWTH.high,
+  goalDepth: 1.8,
   postRadius: 0.06,
   /** The keeper's area, a half circle around the goal. */
   boxRadius: 8,

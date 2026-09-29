@@ -1,3 +1,4 @@
+import { OPEN_MOUTH } from "./goal-mouth";
 import { redness } from "./shot-plan";
 import type { ShotOutcome } from "./types";
 import { clamp, clamp01 } from "./vec";
@@ -26,6 +27,9 @@ export interface ShotContext {
 }
 
 export type Odds = Record<ShotOutcome, number>;
+
+/** How much the open goal mouth adds to a shot's chance of beating the keeper. */
+const MOUTH = 0.45;
 
 export const OUTCOMES: readonly ShotOutcome[] = ["goal", "catch", "parry", "post", "bar", "over", "wide"];
 
@@ -61,7 +65,9 @@ export function shotOdds(c: ShotContext): Odds {
   // Placing it in the open corner pays off only when the shot goes where it was aimed.
   const aimed = 0.1 * (c.placement ?? 0) * (1 - spread);
   const heavy = ((c.strike ?? 0.75) - 0.75) * c.power;
-  const goalShare = c.beaten ? 1 : clamp(0.36 * quality + 0.25 * c.keeperOff + 0.12 * c.power + 0.2 * heavy + aimed, 0.05, 0.85);
+  // The part of the goal beyond the keeper's dive and stretch is room to score, most for a clean chance.
+  const room = MOUTH * OPEN_MOUTH * (0.5 + 0.5 * quality);
+  const goalShare = c.beaten ? 1 : clamp(0.36 * quality + 0.25 * c.keeperOff + 0.12 * c.power + 0.2 * heavy + aimed + room, 0.05, 0.85);
   const goal = onTarget * goalShare;
   const save = onTarget - goal;
   const parry = clamp(0.2 + 0.45 * c.power + 0.3 * heavy, 0.15, 0.75);
