@@ -135,6 +135,8 @@ export class Match {
     const a = this.athletes[id];
     if (!a) return;
     if (this.phase === "freeThrow" && button === "shoot") return pressFreeThrow(this, a);
+    // Guard can be held through the check up, so it takes the man the moment play goes live.
+    if (this.phase === "check" && button === "shoot" && this.defending(a)) return this.setGuard(id, true);
     if (this.phase !== "live") return;
     // On defence Shoot is Guard, held for as long as the thumb stays down. It is armed
     // on offence too, so a turnover mid hold turns the held button straight into Guard.

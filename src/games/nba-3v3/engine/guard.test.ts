@@ -95,6 +95,15 @@ describe("guard", () => {
     expect(guardStatus(m, a)).not.toBe("off");
   });
 
+  it("takes a Guard held through the check up", () => {
+    const m = setup();
+    m.phase = "check";
+    m.press(3, "shoot");
+    expect(m.athletes[3]!.guard).toBe(true);
+    m.phase = "live";
+    expect(guardStatus(m, m.athletes[3]!)).not.toBe("off");
+  });
+
   it("picks its man again on a fresh hold", () => {
     const m = setup();
     const d = m.athletes[3]!;
