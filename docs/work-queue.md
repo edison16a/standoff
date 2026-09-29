@@ -55,7 +55,10 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 ### Last
 
 1. **Final README:** every new feature and game, Football 3v3 and Paintball Battle, new screenshots.
-2. **New home screen clips** for every updated game (Soccer, Basketball, Football, Cube, Subway, Blade, Paintball, Kart and others changed in Batch C).
+2. **New home screen clips for every game, cut like wordless game trailers** (think Fortnite ads): only the high intensity best moments, cinematic cameras, a smooth seamless loop, no text. Examples from the owner:
+   * Paintball Battle: close ups of a player running then sliding, then a 3v3 firefight seen from one player's view.
+   * Basketball 3v3: a cinematic dunk, then an iso play into a three that banks in, then the team celebrating as champions, looping smoothly.
+   * Every other game gets the same treatment with its own best moments (Soccer goals and the SUI, Football touchdowns, Kart drifts and glides, Blade Clash slashes, Boxing knockdowns and the belt, and so on).
 
 ## Done recently
 
