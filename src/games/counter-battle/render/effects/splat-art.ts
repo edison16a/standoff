@@ -122,7 +122,7 @@ function drips(cx: number, cy: number, r: number, seed: number): Drip[] {
   for (let i = 0; i < count; i++) {
     const x = cx + (rand() * 2 - 1) * r * 0.75;
     const top = cy + r * (0.2 + rand() * 0.4);
-    out.push({ x, top, length: (CELL - 10 - top) * (0.35 + rand() * 0.65), width: r * (0.07 + rand() * 0.07) });
+    out.push({ x, top, length: (CELL - 10 - top) * (0.55 + rand() * 0.45), width: r * (0.09 + rand() * 0.08) });
   }
   return out;
 }

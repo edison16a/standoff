@@ -70,8 +70,8 @@ export class Paintballs {
       const d = this.drawn[n]!;
       d.at.copy(b.from).addScaledVector(b.dir, Math.max(0, travelled));
       d.turn.setFromUnitVectors(Y, b.dir);
-      // Stretched by how far it moves in a sixtieth of a second, as a camera shutter would.
-      d.stretch = Math.max(1, (b.speed / 60) * 0.35 / RADIUS);
+      // Stretched a little along its flight, as a camera shutter would, but still a ball.
+      d.stretch = Math.min(4, Math.max(1, ((b.speed / 60) * 0.03) / RADIUS));
       this.mesh.setColorAt(n, b.colour);
       n += 1;
     }
