@@ -4,9 +4,9 @@ import type { Round } from "./round";
 
 /**
  * Keeps an eye on a round while it runs. A camera that fails mid run
- * sends no frames, so nobody is ever seen leaving. Every run waits until
- * it works again, then each player in view is counted back in. The
- * music dulls while every run still going is waiting for its player.
+ * sends no frames, so the player is never seen leaving. The run waits
+ * until it works again, then counts the player back in if they are in
+ * view. The music dulls while the run waits for its player.
  */
 export class RunWatch {
   private trouble = false;
@@ -22,12 +22,9 @@ export class RunWatch {
   update(kit: CameraKit | null, round: Round, running: boolean): void {
     const status = kit?.getSnapshot();
     const trouble = !!status && (!!status.camera.problem || status.model.state === "problem");
-    if (status && trouble !== this.trouble && running) {
-      round.seats.forEach((_, i) => round.setAway(i + 1, trouble || !status.present[i]));
-    }
+    if (status && trouble !== this.trouble && running) round.setAway(trouble || !status.present[0]);
     this.trouble = trouble;
-    const waiting = running && round.seats.every((seat, i) => seat.run.crashed || round.paused(i + 1));
-    const muffle = waiting && round.seats.some((seat) => !seat.run.crashed);
+    const muffle = running && round.paused && !round.run.crashed;
     if (muffle !== this.muffled) this.sound.muffle(muffle);
     this.muffled = muffle;
   }

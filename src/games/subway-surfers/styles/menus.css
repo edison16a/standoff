@@ -32,14 +32,24 @@
   text-align: center;
 }
 
-.ss-lobby__count {
+/* Easy, Medium or Hard, with a line on what the chosen one means. */
+.ss-level {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.ss-level__chips {
   display: flex;
   gap: 12px;
 }
 
-.ss-lobby__names {
-  display: flex;
-  gap: 14px;
+.ss-level__hint {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  opacity: 0.85;
 }
 
 .ss-name {
@@ -47,7 +57,7 @@
   flex-direction: column;
   gap: 6px;
   padding: 10px 12px 12px;
-  border: 3px solid;
+  border: 3px solid #ff4757;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.1);
 }
@@ -59,6 +69,7 @@
   font-size: 14px;
   font-weight: 900;
   text-transform: uppercase;
+  background: #ff4757;
 }
 
 .ss-name__input {
@@ -167,11 +178,6 @@
   text-shadow: 0 5px 0 #1a0b3d, 0 0 28px rgba(255, 43, 214, 0.75);
 }
 
-.ss-results__rows {
-  display: flex;
-  gap: 16px;
-}
-
 .ss-result {
   display: flex;
   flex-direction: column;
@@ -179,14 +185,9 @@
   gap: 4px;
   min-width: 190px;
   padding: 16px 20px;
-  border: 4px solid var(--pc);
+  border: 4px solid #ff4757;
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.12);
-}
-
-.ss-result--win {
-  background: rgba(255, 210, 31, 0.25);
-  transform: scale(1.06);
 }
 
 .ss-result__name {

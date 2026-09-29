@@ -11,6 +11,8 @@ export interface RunOptions {
   /** The tutorial: an empty yard at a gentle jog. */
   practice?: boolean;
   lane?: Lane;
+  /** Metres of head start on the pace and the yard's busyness. See `difficulty.ts`. */
+  headStart?: number;
 }
 
 const PRACTICE_SPEED = 5;
@@ -44,7 +46,7 @@ export class Run {
     readonly seed: number,
     readonly options: RunOptions = {},
   ) {
-    this.course = new Course(seed, { empty: options.practice });
+    this.course = new Course(seed, { empty: options.practice, headStart: options.headStart });
     this.runner = newRunner(0, options.lane ?? 0);
     this.pending.lane = options.lane ?? 0;
     this.course.ensure(0);
@@ -52,7 +54,12 @@ export class Run {
 
   get speed(): number {
     if (this.crashed) return 0;
-    return this.options.practice ? PRACTICE_SPEED : speedAt(this.runner.distance);
+    return this.options.practice ? PRACTICE_SPEED : this.paceAt(this.runner.distance);
+  }
+
+  /** The running speed at a distance along this run, head start included. */
+  paceAt(distance: number): number {
+    return speedAt(distance + (this.options.headStart ?? 0));
   }
 
   get multiplier(): number {

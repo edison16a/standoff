@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { DEFAULT_BOT_LEVEL } from "@/games/kit/difficulty/difficulty";
 import type { Difficulty } from "../engine/bots/brain";
 import type { RoomPhase } from "../protocol";
 import type { CharacterId } from "../roster";
@@ -62,7 +63,7 @@ export const useBrawlStore = create<BrawlHostState>(() => ({
   seats: [],
   slots: [],
   bots: 1,
-  difficulty: "normal",
+  difficulty: DEFAULT_BOT_LEVEL,
   canStart: false,
   stageName: "",
   fighters: [],

@@ -4,6 +4,7 @@ import type { PhoneRoomApi, PhoneRoomEvent } from "@/platform/games/game-api";
 import { tone } from "@/platform/audio/voices";
 import type { CharacterId } from "../characters";
 import { hostMessageSchema, type HostMessage, type PhoneMessage } from "../protocol";
+import { loadMemory, saveMemory } from "./controller-memory";
 import { useControllerStore as store } from "./controller-store";
 import { buzz } from "./haptics";
 import { screenAngle, steerFromWheel, tiltOf, wheelAngle, type Tilt } from "./tilt";
@@ -34,12 +35,16 @@ export class KartPhone {
   private angle = 90;
   private wheelSteer = 0;
   private pedals: Pedals = { drive: false, brake: false, left: false, right: false };
+  /** A driver remembered from before a reload, sent again if the host has lost it. */
+  private resumePick: CharacterId | null = null;
+  private saved = "";
   private readonly stopSensors: (() => void) | null;
   private readonly unsubscribe: () => void;
+  private readonly stopMemory: () => void;
   private readonly timer: ReturnType<typeof setInterval>;
 
   constructor(private readonly room: PhoneRoomApi) {
-    store.setState({ ...store.getInitialState() });
+    this.resume();
     const onQuat = (q: Quat) => {
       this.angle = wheelAngle(screenAngle(), this.angle);
       this.tilt = tiltOf(q, this.angle);
@@ -49,6 +54,9 @@ export class KartPhone {
     // With no sensors there is nothing to calibrate, so the setup must not wait for it.
     if (room.motion !== "granted") store.setState({ steerMode: "buttons", calibrated: true });
     this.unsubscribe = room.on((event) => this.onRoom(event));
+    // Every change is kept at once, since a reload gives no warning.
+    this.stopMemory = store.subscribe(() => this.remember());
+    this.remember();
     this.timer = setInterval(() => this.stream(false), SEND_MS);
     this.send({ kind: "hello" });
   }
@@ -57,6 +65,7 @@ export class KartPhone {
     clearInterval(this.timer);
     this.stopSensors?.();
     this.unsubscribe();
+    this.stopMemory();
   }
 
   /** Steering from -1 to 1, from the wheel or the arrow buttons. */
@@ -74,6 +83,7 @@ export class KartPhone {
     this.zero = this.tilt?.wheel ?? 0;
     this.wheelSteer = 0;
     store.setState({ calibrated: true });
+    this.remember();
     this.click();
   }
 
@@ -129,6 +139,8 @@ export class KartPhone {
 
   private onHost(message: HostMessage): void {
     if (message.kind === "buzz") return buzz(message.event);
+    if (this.resumePick && !message.pick && !message.racing) this.send({ kind: "pick", character: this.resumePick });
+    this.resumePick = null;
     const { wanted } = store.getState();
     // The host refused the pick (someone else got there first), so show what it has.
     const refused = wanted !== null && message.pick !== wanted && message.taken.includes(wanted);
@@ -140,6 +152,36 @@ export class KartPhone {
     const { wanted, host } = store.getState();
     if (wanted) this.send({ kind: "pick", character: wanted });
     if (host?.ready) this.send({ kind: "ready", ready: true });
+  }
+
+  /**
+   * Starts from what this phone had before a reload, or from scratch.
+   * Buttons the player chose over working sensors stay chosen. The wheel's
+   * calibration only carries over from a phone that steered by tilting,
+   * and a wheel that needs calibrating again sends setup back to that step.
+   * The constructor then falls back to buttons if there are no sensors.
+   */
+  private resume(): void {
+    const memory = loadMemory(this.room.code, this.room.seat);
+    const tilted = memory?.steerMode === "tilt";
+    this.zero = tilted ? memory.zero : 0;
+    this.resumePick = memory?.wanted ?? null;
+    store.setState({ ...store.getInitialState() });
+    if (!memory) return;
+    const chose = memory.steerMode === "buttons" && memory.sensors;
+    // Without sensors there is no wheel to calibrate, so the step holds.
+    const calibrated = this.room.motion !== "granted" || chose || (tilted && memory.calibrated);
+    store.setState({ step: calibrated ? memory.step : "calibrate", wanted: memory.wanted, calibrated, steerMode: chose ? "buttons" : "tilt" });
+  }
+
+  /** Saves the setup when it changed. Host updates stream in all race long and leave it alone. */
+  private remember(): void {
+    const { step, steerMode, calibrated, wanted } = store.getState();
+    const memory = { step, steerMode, calibrated, wanted, zero: this.zero, sensors: this.room.motion === "granted" };
+    const text = JSON.stringify(memory);
+    if (text === this.saved) return;
+    this.saved = text;
+    saveMemory(this.room.code, this.room.seat, memory);
   }
 
   private send(payload: PhoneMessage): void {

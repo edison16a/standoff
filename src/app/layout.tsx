@@ -11,6 +11,8 @@ import "@/styles/home-tiles.css";
 import "@/styles/shell.css";
 import "@/styles/settings.css";
 import "@/styles/phone.css";
+import "@/styles/loader.css";
+import "@/styles/join.css";
 
 export const metadata: Metadata = {
   title: SITE.name,

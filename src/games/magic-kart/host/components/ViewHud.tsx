@@ -1,4 +1,5 @@
 "use client";
+import { SplitFinish } from "@/games/kit/split/SplitFinish";
 import { ITEM_NAMES } from "../../engine/items";
 import type { ViewRect } from "../../render/layout";
 import { CubeGlyph, ItemIcon } from "../../ui/icons";
@@ -40,7 +41,9 @@ export function ViewHud({ hud, rect, countdown, laps }: { hud: Hud; rect: ViewRe
         </div>
       )}
       {hud.wrongWay && !hud.finished && <div className="mk-view__warn">Wrong way</div>}
-      {hud.banner && !hud.wrongWay && <div key={hud.banner} className={`mk-view__banner ${hud.finished ? "mk-view__banner--finish" : ""}`}>{hud.banner}</div>}
+      {/* Over the line: this pane says who and what place, while the others race on. */}
+      {hud.finished && <SplitFinish name={hud.name} place={hud.place} color={hud.color} />}
+      {hud.banner && !hud.wrongWay && !hud.finished && <div key={hud.banner} className="mk-view__banner">{hud.banner}</div>}
     </div>
   );
 }

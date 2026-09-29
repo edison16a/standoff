@@ -237,3 +237,7 @@ node tools/testing/camera-e2e.mjs --clip clip.mjpeg --timeline clip.json --out s
 ## Split screen map
 
 `split/SplitMap.tsx` draws a small picture of the split screen with each player's name written big in the pane they play in, in their colour, inside a frame with four corner marks. Pass it the same rects the renderer uses (`{ name, color, rect: { x, y, w, h } }` as fractions of the screen) and put it in the game's side panel. It draws nothing for a single view.
+
+## Split screen finish
+
+`split/SplitFinish.tsx` is the card a player sees in their own pane once they cross the line, for example "Edison Law got 1st place!", while the other panes keep racing. Render `<SplitFinish name={name} place={place} color={color} />` inside the pane's positioned box and it centres itself. A HUD that only knows who has finished, not their place, can get places from `useFinishPlaces(finished)`, which numbers players in the order they finished and starts over when a new round clears them. The words and the order live in `split/finish.ts`, tested on their own. Magic Kart and Cube Game use it. Subway Runner has no finish line, so it does not.
