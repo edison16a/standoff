@@ -9,6 +9,7 @@ import {
   type AudioSettings,
 } from "@/platform/audio/audio-settings";
 import { FrameRateSection } from "./FrameRateSection";
+import { RoomSection } from "./RoomSection";
 
 const ROWS: { key: keyof AudioSettings; label: string }[] = [
   { key: "music", label: "Music" },
@@ -45,6 +46,7 @@ export function SettingsPanel() {
         );
       })}
       <FrameRateSection />
+      <RoomSection />
     </>
   );
 }

@@ -40,7 +40,12 @@ export function HoldButton({ className, label, onHold, children }: HoldButtonPro
       aria-pressed={held}
       className={`${className} ${held ? "is-held" : ""}`}
       onPointerDown={(event: PointerEvent<HTMLButtonElement>) => {
-        event.currentTarget.setPointerCapture(event.pointerId);
+        // A touch the browser already cancelled, as it may mid rotation, cannot be captured. The press still counts.
+        try {
+          event.currentTarget.setPointerCapture(event.pointerId);
+        } catch {
+          // Without capture, pointer up on the button still lets go.
+        }
         setHeld(true);
       }}
       onPointerUp={() => setHeld(false)}

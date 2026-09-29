@@ -31,6 +31,14 @@ export function saveName(name: string): void {
   }
 }
 
+/**
+ * What makes two names the same player: case and spaces never count, so
+ * "Ann", "ann" and "A nn" all clash in one room.
+ */
+export function nameKey(name: string): string {
+  return cleanName(name).toLowerCase().replace(/\s+/g, "");
+}
+
 export function defaultName(seat: number): string {
   return `Player ${seat}`;
 }

@@ -1,8 +1,9 @@
 import { AudioEngine } from "@/platform/audio/audio-engine";
 import { RESERVED_KINDS, type HostRoomApi, type HostRoomEvent, type Player } from "@/platform/games/game-api";
 import { SocketClient, type SocketStatus } from "@/platform/net/socket-client";
-import { defaultName } from "@/platform/profile";
+import { defaultName, nameKey } from "@/platform/profile";
 import { profileSchema, type Payload, type Seat, type ServerEnvelope } from "@/platform/protocol";
+import { createHostApi } from "./host-api";
 import { useHostStore } from "./host-store";
 import { RoomKeeper, type OpenedRoom } from "./room-keeper";
 
@@ -82,6 +83,16 @@ export class HostRoom {
     this.keeper.create((message) => this.socket.send(message), game, seats);
   }
 
+  /**
+   * Remake lobby: a fresh room for the same game, with every phone moved
+   * to it. For when phones cannot find the room, and as a clean restart.
+   */
+  remake(): void {
+    const room = useHostStore.getState().room;
+    if (!room || useHostStore.getState().status !== "open") return;
+    this.keeper.remake((message) => this.socket.send(message), room.game, room.seats);
+  }
+
   /** Ends the room for everyone and goes back to the home screen. */
   leave(): void {
     this.keeper.close((message) => this.socket.send(message));
@@ -102,14 +113,15 @@ export class HostRoom {
     this.emit({ type: "online", online: status === "open" });
   }
 
-  private onOpened({ code, joinUrl, game, seats, connected }: OpenedRoom): void {
+  private onOpened({ code, joinUrl, game, seats, connected, names }: OpenedRoom): void {
     const state = useHostStore.getState();
     // The room already on screen means the socket reconnected or moved,
     // not a page reload. The game keeps running and is told to resync.
     const same = connected !== null && state.room?.code === code;
     const players = Array.from({ length: seats }, (_, i): Player => ({
       seat: i + 1,
-      name: (same && state.players[i]?.name) || defaultName(i + 1),
+      // The relay keeps every name, so even a reloaded host has them at once.
+      name: names?.[i] || (same && state.players[i]?.name) || defaultName(i + 1),
       connected: connected?.[i] ?? false,
     }));
     if (!same) {
@@ -132,7 +144,7 @@ export class HostRoom {
       case "room:error":
         return this.keeper.handle(message);
       case "peer:joined":
-        this.updatePlayer(message.seat, { connected: true });
+        this.updatePlayer(message.seat, { connected: true, ...(message.name ? { name: message.name } : {}) });
         return this.emit({ type: "joined", seat: message.seat, rejoined: message.rejoined });
       case "peer:left":
         this.updatePlayer(message.seat, { connected: false });
@@ -145,7 +157,11 @@ export class HostRoom {
   private onPhone(seat: Seat, payload: Payload): void {
     if (!reserved.has(payload.kind)) return this.emit({ type: "message", seat, payload });
     const profile = profileSchema.safeParse(payload);
-    if (profile.success) this.updatePlayer(seat, { name: profile.data.name });
+    if (!profile.success) return;
+    // The relay keeps names unique. A stale phone repeating someone else's name is ignored.
+    const key = nameKey(profile.data.name);
+    const clash = useHostStore.getState().players.some((player) => player.seat !== seat && nameKey(player.name) === key);
+    if (!clash) this.updatePlayer(seat, { name: profile.data.name });
   }
 
   private updatePlayer(seat: Seat, change: Partial<Player>): void {
@@ -172,32 +188,27 @@ export class HostRoom {
     for (const listener of [...this.listeners]) listener(event);
   }
 
+  private subscribe(listener: (event: HostRoomEvent) => void): () => void {
+    this.listeners.add(listener);
+    // A game usually subscribes several parts at once, so the backlog
+    // goes out once they have all had the chance to listen.
+    if (this.backlog.length > 0) {
+      queueMicrotask(() => {
+        const waiting = this.backlog;
+        this.backlog = [];
+        for (const event of waiting) this.emit(event);
+      });
+    }
+    return () => this.listeners.delete(listener);
+  }
+
   private makeApi(code: string, seats: number): HostRoomApi {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias -- the getter below needs the live engine
-    const host = this;
-    return {
-      code,
-      seats,
-      get audio() {
-        return host.audio;
-      },
-      players: () => useHostStore.getState().players,
-      on: (listener) => {
-        this.listeners.add(listener);
-        // A game usually subscribes several parts at once, so the backlog
-        // goes out once they have all had the chance to listen.
-        if (this.backlog.length > 0) {
-          queueMicrotask(() => {
-            const waiting = this.backlog;
-            this.backlog = [];
-            for (const event of waiting) this.emit(event);
-          });
-        }
-        return () => this.listeners.delete(listener);
-      },
+    return createHostApi(code, seats, {
+      audio: () => this.audio,
+      subscribe: (listener) => this.subscribe(listener),
       send: (to, payload) => this.send(to, payload),
-      setPlaying: (playing) => useHostStore.setState({ playing }),
       leave: () => this.leave(),
-    };
+      live: (api) => this.current === api,
+    });
   }
 }

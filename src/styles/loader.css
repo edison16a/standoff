@@ -1,0 +1,138 @@
+/*
+  Loading states. The big loader hops the logo's triangles in turn over a
+  sliding bar in the brand's blue, pink and purple. The spinner is the
+  same colours as a ring, sized to sit inside a line of text.
+*/
+.loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin: auto;
+  padding: 24px;
+  text-align: center;
+}
+
+.loader__mark {
+  width: 96px;
+  height: auto;
+  overflow: visible;
+}
+
+.loader__shape {
+  transform-box: fill-box;
+  transform-origin: 50% 80%;
+  animation: loader-hop 1.2s cubic-bezier(0.3, 0.7, 0.4, 1) infinite;
+}
+
+.loader__shape--2 {
+  animation-delay: 0.15s;
+}
+
+.loader__shape--3 {
+  animation-delay: 0.3s;
+}
+
+.loader__bar {
+  position: relative;
+  width: 140px;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--bg-muted);
+}
+
+.loader__bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 45%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #2d8cff, #f5145f, #a855f7);
+  animation: loader-slide 1.2s ease-in-out infinite;
+}
+
+.loader__label {
+  color: var(--text-muted);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.spinner {
+  display: inline-block;
+  flex: none;
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  background: conic-gradient(from 90deg, transparent 10%, #2d8cff, #f5145f, #a855f7);
+  /* A ring, not a disc: the middle is masked out. */
+  mask: radial-gradient(farthest-side, transparent calc(100% - 0.18em), #000 calc(100% - 0.17em));
+  animation: spinner-turn 0.8s linear infinite;
+  vertical-align: -0.15em;
+}
+
+/* The host's room while its game downloads: centred on the stage. */
+.shell__loader {
+  position: absolute;
+  inset: 0;
+  justify-content: center;
+}
+
+.shell__notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The home screen's connecting note waits a moment, so a quick connect never flashes it. */
+.home__note--wait {
+  justify-content: center;
+  animation: loader-fade-in 300ms ease-out 600ms both;
+}
+
+.home__note--wait span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@keyframes loader-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The triangles stay solid, like the logo. Only the hop moves them. */
+@keyframes loader-hop {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  25% {
+    transform: translateY(-18%) scale(1.08);
+  }
+}
+
+@keyframes loader-slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(225%);
+  }
+}
+
+@keyframes spinner-turn {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader__shape,
+  .loader__bar::after,
+  .spinner {
+    animation-duration: 2.4s;
+  }
+}

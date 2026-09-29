@@ -1,34 +1,31 @@
 import { isNamed, type BestEntry } from "../engine/best-scores";
+import type { Difficulty } from "../engine/difficulty";
 import type { BestStore } from "./best-store";
 import type { Round } from "./round";
 import type { ResultRow } from "./store";
 
 /**
- * The end of a round: each player's run, the winner when two ran, and
- * the runs that may go on the best scores table. Only players whose name
- * was typed go on it, since "Player 2" means someone else next week.
+ * The end of a run: the row for the results card, and the entry for the
+ * best scores table. Only a typed name goes on the table, since
+ * "Player 1" means someone else next week.
  */
-export function resultsOf(round: Round, names: readonly string[], at = Date.now()): { rows: ResultRow[]; winner: number | null; entries: { slot: number; entry: BestEntry }[] } {
-  const rows: ResultRow[] = round.seats.map((seat, i) => ({
-    slot: i + 1,
-    name: names[i]?.trim() || `Player ${i + 1}`,
-    score: Math.floor(seat.run.score),
-    coins: seat.run.coins,
-    distance: Math.floor(seat.run.runner.distance),
+export function resultOf(round: Round, name: string, difficulty: Difficulty, at = Date.now()): { row: ResultRow; entry: BestEntry | null } {
+  const run = round.run;
+  const row: ResultRow = {
+    name: name.trim() || "Player 1",
+    difficulty,
+    score: Math.floor(run.score),
+    coins: run.coins,
+    distance: Math.floor(run.runner.distance),
     best: null,
-  }));
-  let winner: number | null = null;
-  if (rows.length === 2 && rows[0]!.score !== rows[1]!.score) winner = rows[0]!.score > rows[1]!.score ? 1 : 2;
-  const entries = rows
-    .filter((row) => isNamed(names[row.slot - 1] ?? "", row.slot))
-    .map((row) => ({ slot: row.slot, entry: { name: row.name, score: row.score, coins: row.coins, distance: row.distance, at } }));
-  return { rows, winner, entries };
+  };
+  const entry = isNamed(name, 1) ? { name: row.name, score: row.score, coins: row.coins, distance: row.distance, at } : null;
+  return { row, entry };
 }
 
-/** Works out the results and writes the named runs to the best table, marking each row's place on it. */
-export function recordResults(round: Round, names: readonly string[], best: BestStore): { rows: ResultRow[]; winner: number | null } {
-  const { rows, winner, entries } = resultsOf(round, names);
-  const places = best.add(entries.map((e) => e.entry));
-  entries.forEach((e, i) => (rows[e.slot - 1]!.best = places[i] ?? null));
-  return { rows, winner };
+/** Works out the result and writes a named run to the best table, marking its place on it. */
+export function recordResult(round: Round, name: string, difficulty: Difficulty, best: BestStore): ResultRow {
+  const { row, entry } = resultOf(round, name, difficulty);
+  if (entry) row.best = best.add([entry])[0] ?? null;
+  return row;
 }

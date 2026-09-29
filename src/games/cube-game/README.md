@@ -11,7 +11,7 @@ A rhythm platformer in the spirit of Geometry Dash, played with your body in fro
 
 **Play with the keyboard** skips the camera: Space (or W) jumps for player 1, Enter (or the up arrow) for player 2. Space also works alongside the camera, for testing and for anyone who cannot jump.
 
-Two players get the screen split top and bottom, player 1 on top. Player 1 stands on the left of the camera picture. Each runs the same level on their own, and sees the other as a ghost.
+Two players get the screen split top and bottom, player 1 on top. Player 1 stands on the left of the camera picture. Each runs the same level on their own, and sees the other as a ghost. Whoever finishes first sees "Player 1 got 1st place!" in their half while the other keeps going.
 
 ## The three modes
 
