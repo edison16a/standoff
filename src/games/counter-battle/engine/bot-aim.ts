@@ -28,8 +28,10 @@ export interface Skill {
 }
 
 export const SKILLS: Record<Difficulty, Skill> = {
+  // Training bots never aim or shoot, so this row only fills the table.
+  training: { reaction: 99, error: 0.2, settle: 0.5, turn: 1, headChance: 0, comp: 0, burst: [1, 1], pause: [1, 1], tap: 1 },
   easy: { reaction: 0.75, error: 0.1, settle: 1.5, turn: 2.4, headChance: 0.08, comp: 0.15, burst: [2, 4], pause: [0.45, 0.8], tap: 0.4 },
-  normal: { reaction: 0.45, error: 0.06, settle: 2.5, turn: 3.8, headChance: 0.22, comp: 0.5, burst: [3, 6], pause: [0.3, 0.55], tap: 0.2 },
+  medium: { reaction: 0.45, error: 0.06, settle: 2.5, turn: 3.8, headChance: 0.22, comp: 0.5, burst: [3, 6], pause: [0.3, 0.55], tap: 0.2 },
   hard: { reaction: 0.27, error: 0.035, settle: 3.8, turn: 5.5, headChance: 0.4, comp: 0.8, burst: [4, 8], pause: [0.18, 0.35], tap: 0.08 },
 };
 

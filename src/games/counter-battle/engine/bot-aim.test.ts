@@ -61,7 +61,7 @@ describe("computer players", () => {
   });
 
   it("fire automatic guns in bursts, not one endless spray", () => {
-    const { shots } = duel("normal", "smg", 12, 4);
+    const { shots } = duel("medium", "smg", 12, 4);
     expect(shots).toBeGreaterThan(10);
     expect(shots).toBeLessThan(4 * 13 * 0.8);
   });

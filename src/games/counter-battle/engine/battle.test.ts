@@ -177,6 +177,17 @@ describe("a human's gun", () => {
   });
 });
 
+describe("training", () => {
+  it("keeps computer players standing where they start, never shooting", () => {
+    const b = new Battle([{ team: 0, seat: 1, name: "Me", character: "pro", gun: "rifle" }, { team: 1, seat: null, name: "Dummy", character: "heavy", gun: "sniper", difficulty: "training" }], 4);
+    const start = { ...b.fighters[1]!.pos };
+    let shots = 0;
+    for (let i = 0; i < 60 * 20; i++) shots += b.step().filter((e) => e.type === "shot").length;
+    expect(shots).toBe(0);
+    expect(b.fighters[1]!.pos).toEqual(start);
+  });
+});
+
 // Whole rounds of fighting take a while on a busy machine, so these get a minute.
 describe("a match run by the host", () => {
   it("can be shortened for a quick test match", () => {

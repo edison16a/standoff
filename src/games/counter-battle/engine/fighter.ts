@@ -1,3 +1,4 @@
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { CharacterId } from "../roster";
 import { Gun } from "./gun-state";
 import type { GunId } from "./guns";
@@ -5,7 +6,8 @@ import { BODY, RULES } from "./tuning";
 import type { V2, V3 } from "./vec";
 
 export type TeamId = 0 | 1;
-export type Difficulty = "easy" | "normal" | "hard";
+/** How good a computer player is: the kit's shared levels. Training bots stand still. */
+export type Difficulty = BotLevel;
 
 /**
  * What the body is doing, which decides the hit boxes and the animation.
@@ -84,7 +86,7 @@ export function createFighter(id: number, setup: FighterSetup): Fighter {
     seat: setup.seat,
     name: setup.name,
     character: setup.character,
-    difficulty: setup.difficulty ?? "normal",
+    difficulty: setup.difficulty ?? DEFAULT_BOT_LEVEL,
     gun: new Gun(setup.gun),
     pos: { x: 0, z: 0 },
     vel: { x: 0, z: 0 },

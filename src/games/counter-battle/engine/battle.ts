@@ -1,3 +1,4 @@
+import { BOT_SKILL } from "@/games/kit/difficulty/difficulty";
 import { PIECES, spawnPoints, type Piece } from "./arena";
 import { BotAim } from "./bot-aim";
 import { updateBrain } from "./brain";
@@ -126,6 +127,11 @@ export class Battle {
       const claimed: V2[] = mates.map((o) => this.graph.spots[o.brain.spot]!.pos);
       const others = living.filter((o) => o.id !== f.id && o.alive).map((o) => o.pos);
       const bot = this.bots.get(f.id);
+      // Training: computer players stand where they start and never shoot, for practice.
+      if (bot && isBot(f) && !BOT_SKILL[f.difficulty].acts) {
+        f.vel = { x: 0, z: 0 };
+        continue;
+      }
       const engaged = bot ? this.engaged.has(f.id) : f.trigger.held || this.time - f.shotAt < ENGAGED_FOR;
       updateBrain(f, { graph: this.graph, pieces: this.pieces, enemies, claimed, others, pressure, rng: this.rng, engaged }, this.time, STEP);
       if (bot) {

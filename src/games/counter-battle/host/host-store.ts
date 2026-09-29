@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { DEFAULT_BOT_LEVEL } from "@/games/kit/difficulty/difficulty";
 import type { SplitPane } from "@/games/kit/split/SplitMap";
 import type { Difficulty, TeamId } from "../engine/fighter";
 import type { GunId } from "../engine/guns";
@@ -102,7 +103,7 @@ export interface CounterHostState {
 export const useCounterStore = create<CounterHostState>(() => ({
   phase: "lobby",
   mode: "1v1",
-  difficulty: "normal",
+  difficulty: DEFAULT_BOT_LEVEL,
   spots: [],
   bench: [],
   choosing: [],
