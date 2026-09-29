@@ -46,6 +46,17 @@ describe("a run", () => {
     run.advanceTo(13);
     expect(run.finished).toBe(true);
   });
+
+  it("keeps the step the finish line was crossed on, not the end of a long frame", () => {
+    const run = new Run(level());
+    expect(run.finishTime).toBeNull();
+    run.press(4);
+    run.press(8);
+    run.advanceTo(30);
+    expect(run.time).toBe(30);
+    expect(run.finishTime).toBeGreaterThan(8);
+    expect(run.finishTime).toBeLessThan(13);
+  });
 });
 
 describe("the computer player", () => {
