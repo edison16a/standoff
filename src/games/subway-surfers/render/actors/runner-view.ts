@@ -1,10 +1,12 @@
 import * as THREE from "three";
 import type { RunEvent } from "../../engine/events";
 import type { Run } from "../../engine/run";
-import { launchSpeed } from "../../engine/motion";
+import type { RunnerState } from "../../engine/runner";
+import { airTime, launchSpeed } from "../../engine/motion";
 import { JUMP, ROLL, SIDE } from "../../engine/tuning";
-import { boardPose, cheerPose, crashPose, flyPose, idlePose, jumpPose, rollPose, runPose, stumblePose } from "../anim/gaits";
+import { boardPose, cheerPose, crashPose, flyPose, idlePose, jumpPose, rollPose, runPose } from "../anim/gaits";
 import { Pose } from "../anim/pose";
+import { Reactions } from "../anim/reactions";
 import { addOutline } from "../outline";
 import { MeshBuilder } from "../mesh-builder";
 import { hoverboard } from "../models/pickups";
@@ -16,9 +18,6 @@ import { shadowFloor } from "./shadow-floor";
 
 /** Metres of track per full stride, left and right foot. */
 const STRIDE = 2.9;
-/** How long a stumble shakes the body, and how long a landing squashes it, in seconds. */
-const STUMBLE_S = 0.6;
-const LAND_S = 0.2;
 
 export type Mood = "run" | "idle" | "cheer";
 
@@ -33,7 +32,7 @@ export class RunnerView {
   readonly rig: Rig;
   private readonly pose = new Pose();
   private readonly target = new Pose();
-  private readonly jolt = new Pose();
+  private readonly reactions = new Reactions();
   private readonly board: THREE.Group;
   private readonly jetpack: THREE.Group;
   private readonly boots: THREE.Group[] = [];
@@ -42,10 +41,6 @@ export class RunnerView {
   private lean = 0;
   private flip = 0;
   private clock = 0;
-  private stumbleAt = -Infinity;
-  private stumbleSide = 1;
-  private landAt = -Infinity;
-  private landForce = 0;
 
   constructor(look: number) {
     const style = LOOKS[look % LOOKS.length]!;
@@ -77,19 +72,12 @@ export class RunnerView {
     this.lastX = run.runner.x;
     this.lean = 0;
     this.flip = 0;
-    this.stumbleAt = -Infinity;
-    this.landAt = -Infinity;
+    this.reactions.reset();
   }
 
   /** The moments the body reacts to on top of its pose: a knock off a train, a heavy landing. */
-  onEvent(event: RunEvent): void {
-    if (event.type === "stumble") {
-      this.stumbleAt = this.clock;
-      this.stumbleSide = event.side;
-    } else if (event.type === "land") {
-      this.landAt = this.clock;
-      this.landForce = Math.min(1, event.speed / 14);
-    }
+  onEvent(event: RunEvent, runner?: RunnerState): void {
+    this.reactions.onEvent(event, this.clock, runner);
   }
 
   /** Poses the runner from their run. `mood` is for the moments with no run going. */
@@ -99,7 +87,7 @@ export class RunnerView {
     const powers = run?.powers;
     const x = s?.x ?? 0;
     const y = s?.y ?? 0;
-    this.root.position.set(x, y, -(s?.distance ?? 0));
+    this.root.position.set(x + this.reactions.shove(time), y, -(s?.distance ?? 0));
     const vx = dt > 0 ? (x - this.lastX) / dt : 0;
     this.lastX = x;
     this.lean += (vx / SIDE.maxSpeed - this.lean) * (1 - Math.exp(-14 * dt));
@@ -132,8 +120,11 @@ export class RunnerView {
       const top = launchSpeed(powers!.has("boots") ? JUMP.bootsHeight : JUMP.height);
       jumpPose(this.target, Math.max(-1, Math.min(1, s!.vy / top)));
       rate = 14;
-      // Super sneakers throw in a front flip.
-      if (powers!.has("boots") && s!.vy < top * 0.95) spin = -Math.PI * 2 * Math.min(1, s!.airTime / 1.05);
+      // Super sneakers throw in a front flip, eased in and out, done before the feet come down.
+      if (powers!.has("boots") && s!.vy < top * 0.95) {
+        const t = Math.min(1, s!.airTime / (airTime(JUMP.bootsHeight) * 0.8));
+        spin = -Math.PI * 2 * t * t * (3 - 2 * t);
+      }
     } else if (board) {
       boardPose(this.target, time);
       rate = 10;
@@ -142,7 +133,7 @@ export class RunnerView {
       rate = 22;
       running = true;
     }
-    this.react(running || board, time);
+    this.reactions.apply(this.target, running || board, time);
     // Leaning into a lane change, body and head turning the way they go.
     const lean = Math.max(-1, Math.min(1, this.lean));
     this.target.add("spine", 0, 0, -0.35 * lean).add("hips", 0, -0.3 * lean, 0).add("head", 0, -0.3 * lean, 0.2 * lean);
@@ -165,22 +156,6 @@ export class RunnerView {
     this.shadow.position.y = ground - y + 0.04;
     this.shadow.scale.setScalar(Math.max(0.35, 1 - height * 0.12));
     this.shadow.visible = height < 6;
-  }
-
-  /** Lays a stumble's jolt and a landing's squash over the pose, fading out as each passes. */
-  private react(onFeet: boolean, time: number): void {
-    const since = time - this.stumbleAt;
-    if (since >= 0 && since < STUMBLE_S) {
-      const fade = 1 - since / STUMBLE_S;
-      stumblePose(this.jolt, this.stumbleSide, since);
-      this.target.blend(this.jolt, Math.min(1, fade * 1.6));
-    }
-    const landed = time - this.landAt;
-    if (onFeet && landed >= 0 && landed < LAND_S) {
-      const squash = Math.sin((landed / LAND_S) * Math.PI) * (0.4 + 0.6 * this.landForce);
-      this.target.add("hipL", 0.35 * squash).add("hipR", 0.35 * squash).add("kneeL", -0.7 * squash).add("kneeR", -0.7 * squash).add("spine", -0.2 * squash);
-      this.target.lift -= 0.14 * squash;
-    }
   }
 
   dispose(): void {
