@@ -20,6 +20,9 @@ export const helloSchema = z.object({ kind: z.literal("hello") });
  */
 export const releaseSchema = z.object({ kind: z.literal("release"), heldMs: z.number().finite().min(0).max(5000) });
 
-export const phoneMessageSchema = z.discriminatedUnion("kind", [pickSchema, readySchema, helloSchema, releaseSchema]);
+/** A vote to skip the replay of the winning basket. */
+export const skipSchema = z.object({ kind: z.literal("skip") });
+
+export const phoneMessageSchema = z.discriminatedUnion("kind", [pickSchema, readySchema, helloSchema, releaseSchema, skipSchema]);
 
 export type PhoneMessage = z.infer<typeof phoneMessageSchema>;

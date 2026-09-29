@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { callFoul } from "../engine/free-throw";
+import { callFoul } from "../engine/foul-call";
 import { Match, type Entry } from "../engine/match";
 import { STEP } from "../engine/tuning";
 import { CHARACTER_IDS } from "../roster";
@@ -24,9 +24,12 @@ function live(gap: number): Match {
 }
 
 describe("what the phones are told", () => {
-  it("offers Steal only right next to the ball handler", () => {
-    expect(courtState(live(0.9), 1, PLAYERS).canSteal).toBe(true);
-    expect(courtState(live(1.5), 1, PLAYERS).canSteal).toBe(false);
+  it("offers Steal on defence always, lit up only within reach, with Guard on Shoot", () => {
+    expect(courtState(live(0.9), 1, PLAYERS)).toMatchObject({ canSteal: true, stealReach: true, defending: true, guard: "off" });
+    expect(courtState(live(1.5), 1, PLAYERS)).toMatchObject({ canSteal: true, stealReach: false });
+    const held = live(1.5);
+    held.press(1, "shoot");
+    expect(courtState(held, 1, PLAYERS).guard).toBe("on");
     // The ball handler's own third button is Dribble, never Steal.
     const m = live(0.9);
     expect(courtState(m, 0, PLAYERS)).toMatchObject({ hasBall: true, canSteal: false });
@@ -36,11 +39,11 @@ describe("what the phones are told", () => {
     const m = live(0.9);
     const normal = courtState(m, 0, PLAYERS).meter.halfMs;
     callFoul(m, m.athletes[1]!, m.athletes[0]!);
-    expect(courtState(m, 0, PLAYERS).freeThrow).toEqual({ mine: true, n: 1, ready: false });
-    expect(courtState(m, 1, PLAYERS).freeThrow).toEqual({ mine: false, n: 1, ready: false });
+    expect(courtState(m, 0, PLAYERS).freeThrow).toEqual({ mine: true, n: 1, of: 2, ready: false });
+    expect(courtState(m, 1, PLAYERS).freeThrow).toEqual({ mine: false, n: 1, of: 2, ready: false });
     for (let t = 0; t < 6 && !courtState(m, 0, PLAYERS).freeThrow?.ready; t += STEP) m.step(STEP);
     const mine = courtState(m, 0, PLAYERS);
-    expect(mine.freeThrow).toEqual({ mine: true, n: 1, ready: true });
+    expect(mine.freeThrow).toEqual({ mine: true, n: 1, of: 2, ready: true });
     expect(mine.checking).toBe(false);
     // The green band is wider at the line.
     expect(mine.meter.halfMs).toBeGreaterThan(normal);

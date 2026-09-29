@@ -2,8 +2,8 @@ import { other } from "../teams";
 import { chargeLevel } from "./charge";
 import { sloppiness } from "./difficulty";
 import { goalX } from "./goal";
-import { fly } from "./shot-aim";
-import { freeKick, SET_KICK, spotBall } from "./set-piece-kick";
+import { yawToward } from "./free-kick";
+import { SET_KICK } from "./set-piece-aim";
 import { AIM_RATE, type TakerInput } from "./set-piece-input";
 import { PITCH } from "./tuning";
 import type { MatchState, SetPiece } from "./types";
@@ -24,8 +24,8 @@ const LINGER = 0.9;
 
 /**
  * A computer player taking a set piece, through the same stages a phone
- * goes through. A free kick is aimed outside the far post and curled
- * back in; a penalty picks a corner. Sloppier levels miss their marks.
+ * goes through. A free kick is aimed inside the far post and curled
+ * round the wall to it; a penalty picks a corner. Sloppier levels miss their marks.
  */
 export function botSetPiece(state: MatchState, sp: SetPiece, dt: number): TakerInput {
   let plan = plans.get(sp);
@@ -75,26 +75,9 @@ function planFreeKick(state: MatchState, sp: SetPiece): Plan {
   const d = norm(sub({ x: goalX(other(sp.team)), z: 0 }, sp.spot));
   const bendRight = -far * Math.sign(d.x || 1);
   const curve = bendRight * rng.range(0.35, 0.85);
-  const aimX = bestYaw(sp, curve, targetZ) + rng.range(-1, 1) * 0.06 * slop;
+  const aimX = yawToward(sp, targetZ) + rng.range(-1, 1) * 0.06 * slop;
   const power = clamp(SET_KICK.nominal + rng.range(-0.06, 0.1) + rng.range(-0.1, 0.25) * slop, 0.3, 0.95);
   return { aimX, aimY: 0, curve, power, down: false };
-}
-
-/** The turn that sends the kick, with this curve, across the goal line at `targetZ`. */
-function bestYaw(sp: SetPiece, curve: number, targetZ: number): number {
-  let best = 0;
-  let bestErr = Infinity;
-  const line = goalX(other(sp.team));
-  for (let i = 0; i <= 40; i++) {
-    const yaw = -SET_KICK.maxYaw + (i / 40) * SET_KICK.maxYaw * 2;
-    const hit = fly(spotBall(sp), freeKick({ ...sp, aimX: yaw, curve }, SET_KICK.nominal), line);
-    const err = hit ? Math.abs(hit.z - targetZ) : Infinity;
-    if (err < bestErr) {
-      bestErr = err;
-      best = yaw;
-    }
-  }
-  return best;
 }
 
 function planPenalty(state: MatchState): Plan {

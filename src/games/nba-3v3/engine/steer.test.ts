@@ -31,22 +31,41 @@ function runFor(a: Athlete, stick: { x: number; z: number }, seconds: number): v
 const speedOf = (a: Athlete) => Math.hypot(a.vx, a.vz);
 
 describe("running with momentum", () => {
-  it("bursts off the mark but takes about half a second to reach top speed", () => {
+  it("bursts off the mark but builds up to top speed over most of a second", () => {
     const a = runner();
     const top = topSpeed(a, false);
     const first = runUntil(a, { x: 1, z: 0 }, (p) => speedOf(p) >= top * 0.3);
-    expect(first).toBeLessThan(0.14);
+    expect(first).toBeLessThan(0.2);
     const full = runUntil(runner(), { x: 1, z: 0 }, (p) => speedOf(p) >= top * 0.95);
-    expect(full).toBeGreaterThan(0.4);
-    expect(full).toBeLessThan(0.65);
+    expect(full).toBeGreaterThan(0.55);
+    expect(full).toBeLessThan(1.1);
   });
 
-  it("stops quickly but not instantly once the stick is let go", () => {
+  it("slows over a step or two once the stick is let go", () => {
     const a = runner();
-    runFor(a, { x: 1, z: 0 }, 0.9);
+    runFor(a, { x: 1, z: 0 }, 1.2);
     const stop = runUntil(a, { x: 0, z: 0 }, (p) => speedOf(p) < 0.05);
-    expect(stop).toBeGreaterThan(0.15);
-    expect(stop).toBeLessThan(0.45);
+    expect(stop).toBeGreaterThan(0.25);
+    expect(stop).toBeLessThan(0.6);
+  });
+
+  it("gets a light guard going quicker than a heavy big man", () => {
+    const light = createAthlete(0, 0, 0, "ashby", null);
+    const heavy = createAthlete(1, 0, 1, "zupan", null);
+    for (const a of [light, heavy]) Object.assign(a, { x: -6, z: 6, yaw: Math.PI / 2 });
+    const tLight = runUntil(light, { x: 1, z: 0 }, (p) => speedOf(p) >= 3);
+    const tHeavy = runUntil(heavy, { x: 1, z: 0 }, (p) => speedOf(p) >= 3);
+    expect(tHeavy).toBeGreaterThan(tLight);
+  });
+
+  it("takes the ball handler longer to change direction than a runner without it", () => {
+    const turn = (hasBall: boolean) => {
+      const a = runner();
+      a.move = { x: 1, z: 0 };
+      for (let t = 0; t < 1.2; t += STEP) moveAthlete(a, STEP, hasBall, null, []);
+      return runUntil(a, { x: 0, z: -1 }, (p) => p.vz < -2.5, [], hasBall);
+    };
+    expect(turn(true)).toBeGreaterThan(turn(false) * 1.15);
   });
 
   it("plants and cuts on a reversal instead of snapping round, with a squeak", () => {

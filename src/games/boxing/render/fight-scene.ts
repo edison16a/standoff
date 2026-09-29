@@ -7,9 +7,10 @@ import type { AnimMode, MirrorInput } from "./anim/anim-input";
 import { BoxerAnimator } from "./anim/boxer-animator";
 import { RefereeAnimator } from "./anim/referee-animator";
 import { Arena } from "./arena/arena";
-import { Confetti } from "./fx/confetti";
+import { VictoryConfetti } from "@/games/kit/victory";
 import { HitFx } from "./fx/hit-fx";
 import { BoxerModel } from "./models/boxer-model";
+import { Ceremony } from "./victory/ceremony";
 import type { Look } from "./models/looks";
 
 /** From the middle of the face down to the middle of the body, where body shots dig in. */
@@ -34,7 +35,8 @@ export class FightScene {
   readonly scene = new THREE.Scene();
   readonly arena = new Arena();
   readonly fx = new HitFx();
-  readonly confetti = new Confetti();
+  readonly confetti = new VictoryConfetti({ count: 1600, size: 0.045, seed: 77 });
+  readonly ceremony = new Ceremony();
   readonly referee = new RefereeAnimator();
   models: [BoxerModel, BoxerModel];
   animators: [BoxerAnimator, BoxerAnimator];
@@ -45,6 +47,7 @@ export class FightScene {
   private readonly bodies: [THREE.Vector3, THREE.Vector3] = [new THREE.Vector3(), new THREE.Vector3()];
   private readonly touchAt = new THREE.Vector3();
   private readonly tmp = new THREE.Vector3();
+  private readonly gloveAt = new THREE.Vector3();
 
   constructor(renderer: THREE.WebGLRenderer, looks: readonly [Look, Look]) {
     this.scene.background = new THREE.Color("#05060b");
@@ -54,7 +57,7 @@ export class FightScene {
     pmrem.dispose();
     this.scene.environment = this.environment;
     this.scene.environmentIntensity = 0.25;
-    this.scene.add(this.arena.group, this.fx.group, this.confetti.mesh, this.referee.model.root);
+    this.scene.add(this.arena.group, this.fx.group, this.confetti.object, this.ceremony.group, this.referee.model.root);
     this.models = [new BoxerModel(looks[0]), new BoxerModel(looks[1])];
     this.animators = [new BoxerAnimator(this.models[0], 0), new BoxerAnimator(this.models[1], 1)];
     for (const model of this.models) this.scene.add(model.root);
@@ -63,7 +66,7 @@ export class FightScene {
   /** Swaps in new boxers, as after the players pick theirs. */
   setLooks(looks: readonly [Look, Look]): void {
     ([0, 1] as const).forEach((id) => {
-      if (this.models[id].look.id === looks[id].id) return;
+      if (this.models[id].look.id === looks[id].id && this.models[id].look.name === looks[id].name) return;
       this.scene.remove(this.models[id].root);
       this.models[id].dispose();
       this.models[id] = new BoxerModel(looks[id]);
@@ -78,6 +81,22 @@ export class FightScene {
     this.referee.reset();
     this.fx.clear();
     this.confetti.clear();
+    this.ceremony.stop();
+  }
+
+  /**
+   * The winner's ceremony: a cut to the champion in the middle of the
+   * ring with the belt and the loser on the ropes, confetti from the
+   * corner posts, and spotlights. `time` is the scene clock in seconds.
+   */
+  startCeremony(winner: FighterId, time: number): void {
+    this.ceremony.start(winner, time);
+    for (const animator of this.animators) animator.snapFeet();
+    this.fx.clear();
+    this.confetti.cannons({ x: 0, y: 1.3, z: 0 }, { ring: 3.7, cannons: 4, count: 240, speed: 13 });
+    this.confetti.startRain({ x: 0, y: 7.5, z: 0 }, 3.2, 110);
+    this.excite = 1;
+    this.arena.burst(40);
   }
 
   update(match: Match, input: SceneInput, time: number, dt: number): void {
@@ -95,26 +114,30 @@ export class FightScene {
       const fighter = match.fighters[id];
       const them = match.fighters[other(id)];
       const spot = match.footwork.spots[id];
+      const staged = this.ceremony.stage(id, time);
       this.animators[id].update({
         opponentBody: this.bodies[other(id)],
-        seated: match.breakStage === "rest" && match.footwork.inCorner(id),
+        seated: !staged && match.breakStage === "rest" && match.footwork.inCorner(id),
         touchAt: touching && (touched || fighter.input.reach) ? this.touchAt : null,
         now: match.now,
         time,
         dt,
-        x: spot.x,
-        z: spot.z,
-        facing: match.footwork.facing(id),
+        x: staged?.x ?? spot.x,
+        z: staged?.z ?? spot.z,
+        facing: staged?.facing ?? match.footwork.facing(id),
         fighter,
         damageTaken: them.stats.damage,
         round: match.round,
         opponentFace: this.faces[other(id)],
         opponentBlocking: them.guarding(match.now),
-        mode: modeFor(match, id),
+        mode: staged?.mode ?? modeFor(match, id),
         mirror: input.mirrors[id],
         telegraph: input.telegraph[id],
+        ceremony: staged ? this.ceremony.seconds(time) : null,
       });
     }
+    const champion = this.ceremony.winner;
+    if (champion !== null) this.ceremony.update(time, dt, this.glove(champion, "left", this.tmp), this.glove(champion, "right", this.gloveAt));
     this.referee.update(match, time, dt);
     this.excite += (0.2 - this.excite) * Math.min(1, dt * 0.5);
     this.animate(time, dt);
@@ -124,7 +147,7 @@ export class FightScene {
   animate(time: number, dt: number): void {
     this.arena.update(time, dt, this.excite);
     this.fx.update(dt);
-    this.confetti.update(dt, time);
+    this.confetti.update(dt);
   }
 
   onEvent(event: MatchEvent): void {
@@ -174,12 +197,12 @@ export class FightScene {
     this.arena.dispose();
     this.fx.dispose();
     this.confetti.dispose();
+    this.ceremony.dispose();
     for (const model of this.models) model.dispose();
     this.referee.dispose();
     this.environment.dispose();
   }
 }
-
 
 function modeFor(match: Match, id: FighterId): AnimMode {
   if (match.phase === "break") return "corner";

@@ -9,10 +9,10 @@ import { locate } from "./replay-script";
 import { SkipVotes } from "./replay-skip";
 
 const LINEUP: Entrant[] = [
-  { team: 0, character: "brandao", seat: null },
-  { team: 0, character: "okemba", seat: null },
-  { team: 1, character: "holmvik", seat: null },
-  { team: 1, character: "lacerda", seat: null },
+  { team: 0, build: "striker", seat: null },
+  { team: 0, build: "allrounder", seat: null },
+  { team: 1, build: "keeper", seat: null },
+  { team: 1, build: "winger", seat: null },
 ];
 
 /** Plays computer players until a goal with every shot rigged to go in, recording as the host does. */

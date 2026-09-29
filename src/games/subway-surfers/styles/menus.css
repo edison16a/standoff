@@ -1,4 +1,4 @@
-/* The lobby, the best runs table and the results, over the 3D view. */
+/* The lobby and the results, over the 3D view. The leaderboard and the level chips are in board.css. */
 
 .ss-lobby {
   position: absolute;
@@ -8,7 +8,7 @@
   justify-content: center;
   gap: 32px;
   padding: 90px 24px 24px;
-  background: radial-gradient(ellipse at center, rgba(8, 4, 26, 0.25), rgba(8, 4, 26, 0.6));
+  background: radial-gradient(ellipse at center, rgba(12, 36, 72, 0.1), rgba(12, 36, 72, 0.5));
 }
 
 .ss-lobby__card,
@@ -19,10 +19,10 @@
   gap: 18px;
   max-width: 560px;
   padding: 36px 44px;
-  border: 4px solid #21f3ff;
+  border: 5px solid #ffffff;
   border-radius: 36px;
-  background: linear-gradient(160deg, rgba(70, 18, 110, 0.94), rgba(14, 8, 44, 0.94));
-  box-shadow: 0 0 0 2px rgba(255, 43, 214, 0.6), 0 0 36px rgba(33, 243, 255, 0.7), 0 30px 60px rgba(0, 0, 0, 0.45);
+  background: linear-gradient(180deg, rgba(64, 170, 245, 0.96), rgba(28, 104, 206, 0.96));
+  box-shadow: 0 0 0 4px #14254a, 0 12px 0 4px #14254a, 0 30px 60px rgba(0, 0, 0, 0.3);
 }
 
 .ss-lobby__tagline {
@@ -32,7 +32,7 @@
   text-align: center;
 }
 
-/* Easy, Medium or Hard, with a line on what the chosen one means. */
+/* Camera or Keyboard, then Easy to Demon, with a line on what the chosen level means. */
 .ss-level {
   display: flex;
   flex-direction: column;
@@ -57,9 +57,9 @@
   flex-direction: column;
   gap: 6px;
   padding: 10px 12px 12px;
-  border: 3px solid #ff4757;
+  border: 3px solid #ffffff;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(20, 37, 74, 0.25);
 }
 
 .ss-name__tag {
@@ -69,7 +69,8 @@
   font-size: 14px;
   font-weight: 900;
   text-transform: uppercase;
-  background: #ff4757;
+  color: #14254a;
+  background: #ffc21a;
 }
 
 .ss-name__input {
@@ -78,7 +79,7 @@
   border-radius: 10px;
   padding: 10px 12px;
   font: 800 20px/1 var(--font-ui);
-  color: #1a0b3d;
+  color: #14254a;
   background: #ffffff;
 }
 
@@ -101,59 +102,8 @@
 .ss-lobby__how b {
   display: block;
   font-size: 20px;
-  color: #21f3ff;
-  text-shadow: 0 0 12px rgba(33, 243, 255, 0.7);
-}
-
-.ss-best {
-  min-width: 300px;
-  padding: 20px 24px;
-  border: 4px solid #ff2bd6;
-  border-radius: 28px;
-  box-shadow: 0 0 28px rgba(255, 43, 214, 0.75);
-  background: rgba(14, 8, 38, 0.82);
-}
-
-.ss-best__title {
-  margin: 0 0 10px;
-  font: 900 24px/1 "Arial Black", var(--font-ui);
-  color: #ffd21f;
-}
-
-.ss-best__list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.ss-best__row {
-  display: grid;
-  grid-template-columns: 32px 1fr auto;
-  gap: 10px;
-  padding: 6px 8px;
-  border-radius: 10px;
-  font-size: 19px;
-  font-weight: 700;
-}
-
-.ss-best__row--new {
-  color: #1a0b3d;
-  background: #ffd21f;
-  animation: ss-glow 0.8s ease-in-out infinite alternate;
-}
-
-.ss-best__place {
-  opacity: 0.7;
-}
-
-.ss-best__score {
-  font-variant-numeric: tabular-nums;
-}
-
-@keyframes ss-glow {
-  to {
-    box-shadow: 0 0 18px #ffd21f;
-  }
+  color: #ffc21a;
+  text-shadow: 0 2px 0 #14254a;
 }
 
 .ss-results {
@@ -165,7 +115,7 @@
   justify-content: center;
   gap: 32px;
   padding: 24px;
-  background: rgba(8, 4, 26, 0.45);
+  background: rgba(12, 36, 72, 0.35);
   animation: ss-fade 0.4s ease-out;
 }
 
@@ -173,9 +123,9 @@
   margin: 0;
   font: 900 56px/1 "Arial Black", var(--font-ui);
   color: #ffd21f;
-  -webkit-text-stroke: 3px #1a0b3d;
+  -webkit-text-stroke: 3px #14254a;
   paint-order: stroke fill;
-  text-shadow: 0 5px 0 #1a0b3d, 0 0 28px rgba(255, 43, 214, 0.75);
+  text-shadow: 0 5px 0 #14254a;
 }
 
 .ss-result {
@@ -185,9 +135,9 @@
   gap: 4px;
   min-width: 190px;
   padding: 16px 20px;
-  border: 4px solid #ff4757;
+  border: 4px solid #ffffff;
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(20, 37, 74, 0.3);
 }
 
 .ss-result__name {
@@ -215,7 +165,7 @@
   border-radius: 999px;
   font-size: 15px;
   font-weight: 900;
-  color: #1a0b3d;
+  color: #14254a;
   background: #ffd21f;
 }
 
@@ -254,13 +204,20 @@
   }
 }
 
-/* Small windows: the best table drops away and the cards tighten up, so everything fits without scrolling. */
-@media (max-width: 1000px), (max-height: 720px) {
-  .ss-lobby .ss-best,
-  .ss-results .ss-best {
-    display: none;
+/* Laptop heights: the lobby card, with its Camera or Keyboard row, tightens so it fits with the how to list. */
+@media (max-height: 940px) {
+  .ss-lobby {
+    padding-top: 70px;
   }
 
+  .ss-lobby__card {
+    gap: 12px;
+    padding: 24px 36px;
+  }
+}
+
+/* Small windows: the cards tighten up and the how to list goes, so everything fits without scrolling. */
+@media (max-width: 1000px), (max-height: 820px) {
   .ss-lobby__card,
   .ss-results__card {
     gap: 12px;

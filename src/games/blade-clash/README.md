@@ -9,7 +9,7 @@ Status: ready. A sword duel for two players, or one against the computer, in an 
    * **Calibrate.** A picture shows the grip: the phone held like the handle of a sword, top edge toward the big screen. Then a target appears on the phone and in the player's own half of the big screen: the middle, then each corner. Point at it and hold still. A ring fills and the reading is taken by itself, with a buzz and a chime. Nothing to tap. **Skip corners** keeps the usual spans. Last, the player shows a relaxed guard the same way. Then the sword appears and copies the phone, on the phone and on the big screen, so it is plain it worked. **Redo** starts the targets again.
    * **Fighter.** Pick one of four. A fighter the other player has is marked taken.
    * **Ready.** Tap Ready, or **Play the computer** to fight alone.
-3. Fight. Every slash that lands scores a point. The first to five points wins, and the countdown says so. Then the winner screen, then **Rematch** or **Menu** on the phone.
+3. Fight. Every slash that lands scores a point. The first to five points wins, and the countdown says so. Then the winner's ceremony, then **Rematch** or **Menu** on the phone.
    * **The hit moment.** When a slash lands, play stops. The game drops into slow motion, both cameras close in, and the screen shows who slashed whom, name to name, with the score. Then both fighters go back to their start marks and the fight picks up again.
    * **Swing** by moving the phone. The sword follows it in 3D: point up for a high guard, down for a low one, turn the phone to angle the edge.
    * **Thrust** by pointing from your guard straight at the opponent. Pointing at the middle of your view stretches the arm out, and the guard pulls it back in.
@@ -34,9 +34,20 @@ Each blade has its own length and width, which is all that changes play. Each al
 ## Look and feel
 
 * **The arena.** A round open air arena: a stone dais on raked sand with a line of gold down the middle where the fighters walk, a full house on stone tiers all round, a great gate at each end of the line with the player's banner and flags, braziers at the dais's corners and torches and banners round the wall. By day a summer sky and the sun's shadows; by night stars, firelight and a hard spotlight over the dais, following the platform's light and dark theme.
-* **Animation.** One skeleton for all four. The sword hand is placed exactly on the engine's grip and the arm reaches it by inverse kinematics; the body leans and turns into a reach, sinks for a low guard and the two handed swords take the free hand onto the grip whenever it can reach. The feet step on their own and stay planted on the floor between steps. A hit snaps the head, the body or the knees back depending on where it landed, a clash rocks both fighters, the loser of the fight stumbles, falls flat and drops the sword, and the winner raises theirs overhead.
-* **Effects.** A glowing trail per blade, a shower of sparks in the blades' colours on every clash, a flash and ring where a hit lands, the body lighting up in the hitter's colour, and bloom on everything that glows. Every point slows the game down, closes both cameras in and washes the screen in the scorer's colour, under letterbox bars and the names of who slashed whom. The winning slash does the same in gold, then bursts, and the winner's camera swings round to face them under confetti.
+* **Animation.** One skeleton for all four. The sword hand is placed exactly on the engine's grip and the arm reaches it by inverse kinematics; the body leans and turns into a reach, sinks for a low guard and the two handed swords take the free hand onto the grip whenever it can reach. The feet step on their own and stay planted on the floor between steps. A hit snaps the head, the body or the knees back depending on where it landed, a clash rocks both fighters, the loser of the fight stumbles, falls flat and drops the sword, and the winner raises theirs overhead. For the ceremony the loser is up on one knee, the sword laid on the floor in front, head bowed and shoulders heaving.
+* **Effects.** A glowing trail per blade, a shower of sparks in the blades' colours on every clash, a flash and ring where a hit lands, the body lighting up in the hitter's colour, and bloom on everything that glows. Every point slows the game down, closes both cameras in and washes the screen in the scorer's colour, under letterbox bars and the names of who slashed whom. The winning slash does the same in gold, then bursts.
 * **The screen.** Each half has its player's card along the top: their fighter's emblem, name and five slanted point blades that light up one at a time as they score. The split map between them shows who plays where.
+
+## The ceremony
+
+The winning slash plays out in slow motion and bursts. Then the split screen gives way to one shot across the whole screen, using the shared victory kit.
+
+* **The champion** stands in the middle of the dais with the sword held high, pumping the air. The camera opens wide and high, eases in and swings slowly either way round them.
+* **The loser** kneels on their own side of the line behind the champion, facing them, the sword laid on the floor.
+* **The light.** Four spotlights fade up over the dais and drift, with soft beams through the haze. They show best by night.
+* **Confetti** in the champion's colour and gold fires from a ring of cannons, then keeps falling for as long as the ceremony lasts.
+* **The names.** The champion's name drops in big across the top, letter by letter in gold, with their fighter and the score under it. The players' bars and the split map step aside.
+* **The result.** Once the name has landed, a panel comes up in the bottom right: both fighters with their points, the rematch votes from the phones and **Menu**. Both phones voting for a rematch starts it at once.
 
 ## Swords in the world
 
@@ -45,7 +56,7 @@ Hits come only from the swords themselves. There are no jab or parry gestures.
 * **The hold.** The phone sends how the sword is held: turned left or right, raised or lowered, the edge's turn, and how far the arm reaches. The computer puts the hand and blade in the world from that, with the hand moving the way an arm does: up toward the head for a high guard, down to the hip for a low one, across the body for a blade swung across, out toward the opponent for a thrust.
 * **Hits.** A blade that passes through the other fighter's head, body or legs lands a hit, but only if the part that touched was moving fast enough. Resting a sword on someone does nothing. The swing is tested all along its path, cut into steps no longer than a blade is thick, so a swing too fast to see in any one frame still hits what it passed through. Only the first slash of an exchange counts: the moment it lands, play stops for the point.
 * **Clashes.** At every step blade on blade is tested before blade on body, so a blade held in the way stops a swing before it reaches the body. Blades that meet fast enough clash: sparks, a clang, and both swords are thrown back. The faster blade rebounds the way it came and a still blade is shoved along. For a moment the sword ignores the phone, then eases back into wherever the phone is by then, so it never jumps. A thrown sword cannot hit or clash until it is back in the hand.
-* **The finish.** The winning point plays in slow motion like every other. The loser goes down and the winner cheers under confetti.
+* **The finish.** The winning point plays in slow motion like every other. The loser goes down, and then the ceremony begins.
 
 ## Calibration
 
@@ -80,8 +91,8 @@ Every value worth adjusting by feel is in the tuning drawer (the sliders icon at
 
 * `engine/`: the duel as pure logic. `sword.ts` puts the hold in the world, `sweep.ts` runs the swept blade tests, `sword-driver.ts` follows the phone and throws the sword after a clash, `combat.ts` settles each tick, `match.ts` keeps the score and phases, including the pause for each point, `bot.ts` is the computer opponent and `bot-tactics.ts` maps the difficulty levels onto it. Unit tested.
 * `motion/`: the phone's sensor maths with no browser in sight: the grip, the calibration from the targets, and the mapping from where the phone points to the hold.
-* `render/`: three.js. `duel-renderer.ts` draws the arena twice through scissored viewports, one shoulder camera per player, each through its own bloom (`post.ts`). `arena/` is the arena. `fighter/` has the skeleton and inverse kinematics (`rig/`), the animation (`anim/`), the characters' costumes (`characters/`) and weapons (`blades/`). `effects/` has the trails, sparks, flashes and confetti.
+* `render/`: three.js. `duel-renderer.ts` draws the arena twice through scissored viewports, one shoulder camera per player, each through its own bloom (`post.ts`). `arena/` is the arena. `fighter/` has the skeleton and inverse kinematics (`rig/`), the animation (`anim/`), the characters' costumes (`characters/`) and weapons (`blades/`). `effects/` has the trails, sparks and flashes. `victory/` is the ceremony: `staging.ts` says where both fighters stand and where the camera opens, and `ceremony.ts` runs the victory kit's spotlights, confetti and circling camera on the dais.
 * `host/`, `phone/`, `protocol/`, `audio/`: the session on the computer, the phone's setup pages and controller, the messages between them, and the synthesised sound.
-* `showcase/`: the game playing itself for the home screen media, a scripted duel through the real engine.
+* `showcase/`: the game playing itself for the home screen media, a scripted duel through the real engine. `?ceremony` on the showcase page stays on the Knight's ceremony after the duel, names and result included, for looking it over. `?at=` runs it forward first, in milliseconds.
 
 `?fq=low` on the host's address draws the arena cheaply, for browser tests on software rendering. `?bdebug` puts the session on `window.__bladeClash`.

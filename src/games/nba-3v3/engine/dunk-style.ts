@@ -1,6 +1,6 @@
 import type { DunkStyle } from "../roster";
 import { charOf } from "./athlete";
-import { weighted, type Rng } from "./rng";
+import { between, weighted, type Rng } from "./rng";
 import { RIM } from "./tuning";
 import type { Athlete } from "./types";
 
@@ -45,6 +45,7 @@ export function chooseDunk(rng: Rng, a: Athlete, open: boolean, forced: DunkStyl
       clutch: 0.3,
     });
   }
-  const rimHang = style === "rimhang" ? 0.55 : GRABS.includes(style) && rng() < 0.35 ? 0.28 : 0;
+  // Power dunks often ride the rim down for a beat, arms taking the weight, before letting go.
+  const rimHang = style === "rimhang" ? 0.55 : GRABS.includes(style) && rng() < 0.5 ? between(rng, 0.3, 0.45) : 0;
   return { style, air: AIR[style], rimHang };
 }

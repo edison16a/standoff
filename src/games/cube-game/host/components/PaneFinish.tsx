@@ -1,7 +1,8 @@
 "use client";
 import { playerColor } from "@/games/kit/players";
 import { SplitFinish } from "@/games/kit/split/SplitFinish";
-import type { HudPlayer } from "../store";
+import { nameOf } from "../names";
+import { useCubeStore, type HudPlayer } from "../store";
 import { Confetti } from "./Confetti";
 
 interface PaneFinishProps {
@@ -16,6 +17,7 @@ interface PaneFinishProps {
  * gets the confetti.
  */
 export function PaneFinish({ slot, hud }: PaneFinishProps) {
+  const names = useCubeStore((s) => s.names);
   const me = hud[slot - 1];
   if (!me || (me.status !== "done" && me.status !== "beaten")) return null;
   if (hud.length === 1) {
@@ -30,7 +32,7 @@ export function PaneFinish({ slot, hud }: PaneFinishProps) {
   const won = me.status === "done" && me.place === 1;
   return (
     <>
-      <SplitFinish name={`Player ${slot}`} place={me.place} color={playerColor(slot)} />
+      <SplitFinish name={nameOf(names, slot)} place={me.place} color={playerColor(slot)} />
       {won && <Confetti />}
     </>
   );

@@ -9,7 +9,25 @@ const LAND = JUMPER.takeoff + JUMPER.air;
  * forehead, rise, and at the release the shooting arm snaps straight
  * with the wrist flicked through, held until the feet are down.
  */
-export function shootPose(t: number, releasedAt: number | null, base: Pose): Pose {
+export function shootPose(t: number, releasedAt: number | null, base: Pose, stepback = false): Pose {
+  const p = rawShootPose(t, releasedAt, base);
+  return stepback ? hop(t, p) : p;
+}
+
+/**
+ * The stepback's hop through the dip: pushed off the front foot, the
+ * body leaning back from the defender, the trailing leg reaching back
+ * to plant, both feet landing together just in time to rise.
+ */
+const HOP: PosePatch = { torsoX: -0.12, legLLift: 0.75, kneeL: 0.7, legRLift: -0.3, kneeR: 0.45, footR: 0.3, hipY: -0.08, neckX: -0.1 };
+
+function hop(t: number, p: Pose): Pose {
+  if (t >= TAKEOFF) return p;
+  const k = Math.sin(Math.PI * Math.min(1, t / (TAKEOFF * 0.85)));
+  return blend(p, HOP, Math.max(0, k), { ...p });
+}
+
+function rawShootPose(t: number, releasedAt: number | null, base: Pose): Pose {
   const p = keyed(
     [
       [0, { hipY: -0.05, kneeL: 0.35, kneeR: 0.35, legLLift: 0.18, legRLift: 0.18, armLRaise: 0.95, armRRaise: 1.0, elbowL: 1.5, elbowR: 1.6, armLSpread: 0.25, armRSpread: 0.05, torsoX: 0.12, legLSpread: 0.08, legRSpread: 0.08 }],
@@ -34,22 +52,6 @@ export interface DriveTiming {
   land: number;
   /** Seconds hanging on the rim after the slam, 0 for none. */
   rimHang: number;
-}
-
-/** A layup: a long gather stride, off one foot with the other knee driving up, the ball laid up at full stretch. */
-export function layupPose(t: number, d: DriveTiming, base: Pose): Pose {
-  return keyed(
-    [
-      [0, { legLLift: 0.7, kneeL: 0.5, legRLift: -0.4, kneeR: 0.9, hipY: -0.08, torsoX: 0.3, armLRaise: 1.0, armRRaise: 1.05, elbowL: 1.7, elbowR: 1.8, armLSpread: 0.25 }],
-      [d.takeoff, { legLLift: 0.1, kneeL: 0.6, legRLift: 0.6, kneeR: 1.3, hipY: -0.12, torsoX: 0.2 }],
-      [d.takeoff + 0.1, { legLLift: -0.15, kneeL: 0.25, footL: 0.6, legRLift: 1.45, kneeR: 1.8, hipY: 0, torsoX: 0.05, armRRaise: 2.0, elbowR: 1.3, armLRaise: 1.5, elbowL: 1.2, armLSpread: 0.6 }],
-      [d.finish, { armRRaise: 2.75, elbowR: 0.15, wristR: 0.7, armLRaise: 1.3, neckX: -0.3 }],
-      [d.land - 0.08, { legLLift: 0.3, kneeL: 0.4, legRLift: 0.45, kneeR: 0.6, footL: 0.2, armRRaise: 2.2, elbowR: 0.5 }],
-      [d.land + 0.1, { hipY: -0.12, kneeL: 0.8, kneeR: 0.8, legLLift: 0.45, legRLift: 0.45, footL: 0, armRRaise: 0.4, elbowR: 0.5, armLRaise: 0.4 }],
-    ],
-    t,
-    base,
-  );
 }
 
 /** A two hand chest pass, snapped out from the chest. */

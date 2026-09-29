@@ -41,11 +41,14 @@ export default function CourtCanvas() {
     const loop = (now: number) => {
       const dt = session.tick(now);
       const match = session.match;
-      renderer.setMatch(match, session.driver !== null);
+      // The opening sweep is for a new game; the replay's stand in and the return from it cut straight in.
+      renderer.setMatch(match, session.phase === "countdown");
+      const replayCam = session.replayCamera();
+      renderer.setReplayCamera(replayCam);
       renderer.render(dt);
       renderer.tv.camera.getWorldDirection(forward);
-      session.setView({ x: forward.x, z: forward.z });
-      if (session.driver) {
+      if (!replayCam) session.setView({ x: forward.x, z: forward.z });
+      if (session.driver && !replayCam) {
         tags.update(match, renderer, (id) => {
           const a = match.athletes[id]!;
           return { name: session.nameOf(id), colour: a.seat !== null ? playerColor(a.seat) : null };

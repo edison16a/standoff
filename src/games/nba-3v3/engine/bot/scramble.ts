@@ -28,6 +28,8 @@ export function chaseSpot(m: Match): V2 {
  * hold their ground so nobody leaves the floor empty.
  */
 export function thinkScramble(m: Match, a: Athlete): void {
+  const b0 = m.ball;
+  if (b0.mode === "flight" && b0.shot?.kind === "free") return boxOut(m, a);
   const spot = chaseSpot(m);
   const side = m.athletes.filter((o) => o.team === a.team).sort((p, q) => dist2(p, spot) - dist2(q, spot));
   const rank = side.indexOf(a);
@@ -40,4 +42,27 @@ export function thinkScramble(m: Match, a: Athlete): void {
   const near = Math.hypot(b.pos.x - a.x, b.pos.z - a.z) < 1.1;
   const reach = standingReach(a);
   if (near && b.vel.y < 0 && b.pos.y > reach - 0.1 && b.pos.y < reach + 0.9) m.press(a.id, "defend");
+}
+
+/**
+ * The last free throw in the air, everyone off the lane. A defender
+ * steps across into the nearest attacker and sits on him with his back
+ * to him, between him and the rim; an attacker tries to get round the
+ * inside. Once the ball comes off the iron it is a scramble like any.
+ */
+export function boxOut(m: Match, a: Athlete): void {
+  const shooter = m.ball.shot ? m.athletes[m.ball.shot.shooter] : null;
+  if (a === shooter) return goTo(a, { x: a.x, z: a.z - 0.6 }, 0.5);
+  const others = m.opponents(a.team).filter((o) => o !== shooter);
+  const man = others.sort((p, q) => dist2(p, a) - dist2(q, a))[0];
+  if (!man) return;
+  const defending = !!shooter && shooter.team !== a.team;
+  if (defending) {
+    // Seal: half a body in front of him on the way to the rim.
+    const d = Math.hypot(RIM_SPOT.x - man.x, RIM_SPOT.z - man.z) || 1;
+    return goTo(a, { x: man.x + ((RIM_SPOT.x - man.x) / d) * 0.6, z: man.z + ((RIM_SPOT.z - man.z) / d) * 0.6 }, 0.85);
+  }
+  // Attackers swim to the inside, toward the middle of the lane under the rim.
+  const inside: V2 = { x: a.x * 0.45, z: Math.max(1.4, a.z - 0.9) };
+  goTo(a, inside, 0.9);
 }

@@ -22,22 +22,41 @@ export const RUNNER = {
   halfDepth: 0.28,
   height: 1.7,
   rollHeight: 0.8,
-  /** Sideways speed while changing lanes: a lane in about 0.16 seconds. */
-  sideSpeed: 16,
   /** A lip this high is stepped onto rather than run into. */
   stepUp: 0.5,
 };
 
+/**
+ * A lane change: flat out across most of the gap, then easing into the
+ * new track, so it snaps like the real game and still lands softly. A
+ * lane takes about 0.15 seconds. See `sideStep` in `motion.ts`.
+ */
+export const SIDE = {
+  maxSpeed: 26,
+  /** Near the new track the speed is this many times the distance left. */
+  rate: 26,
+  /** The last few centimetres still close quickly. */
+  minSpeed: 4,
+};
+
+/**
+ * The jump. Gravity is gentler on the way up than on the way down, so a
+ * jump pops, hangs for a moment at the top, then snaps back down, about
+ * 0.7 seconds in all. It clears a low barrier and, from a ramp or with
+ * super sneakers, lands on a train roof.
+ */
 export const JUMP = {
-  gravity: 20,
-  /** An ordinary jump clears the low barriers, and lasts long enough for a camera to catch up. */
-  height: 1.6,
-  /** Jump boots reach a train roof. */
-  bootsHeight: 3.9,
-  /** Ducking in the air slams back down at this speed. */
-  slam: 24,
+  rise: 20,
+  fall: 30,
+  height: 1.5,
+  /** Super sneakers clear a train and come down on its roof. */
+  bootsHeight: 4,
+  /** Ducking in the air drops back down at this speed. */
+  slam: 30,
   /** A jump asked for this long before landing still happens on landing. */
-  bufferS: 0.25,
+  bufferS: 0.2,
+  /** A jump asked for this soon after running off an edge still happens, as if the foot were still on it. */
+  coyoteS: 0.1,
 };
 
 export const ROLL = {
@@ -76,6 +95,9 @@ export const SPEED = {
   max: 36,
   /** Metres over which the speed rises most of the way to the top: about 23 m/s after a minute, 31 after two. */
   rise: 1400,
+  /** At GO the runner bursts from this share of the pace up to all of it, over `burstS` seconds. */
+  burstFrom: 0.4,
+  burstS: 0.6,
 };
 
 /** The speed is a function of distance, so a run keeps the same pace at the same place however it is drawn. */

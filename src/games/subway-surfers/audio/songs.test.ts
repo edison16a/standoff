@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { TUNES } from "./music";
-import { bars, heldFor, note } from "./score";
+import { bars, heldFor, hits, note } from "./score";
 
 describe("subway songs", () => {
   it("loops each song on sixteen whole bars", () => {
     for (const song of Object.values(TUNES)) expect(song.steps).toBe(16 * 16);
   });
 
-  it("runs the disco faster than the lounge tune", () => {
+  it("runs the beat faster than the lounge tune", () => {
     expect(TUNES.run.bpm).toBeGreaterThan(TUNES.menu.bpm);
   });
 
@@ -17,5 +17,12 @@ describe("subway songs", () => {
     expect(bar!.melody).toHaveLength(8);
     expect(heldFor(bar!.melody, 0)).toBe(3);
     expect(heldFor(bar!.melody, 3)).toBe(5);
+  });
+});
+
+describe("drum rows", () => {
+  it("read a row of sixteen steps into the steps that hit", () => {
+    expect([...hits("x...x.....x....x")]).toEqual([0, 4, 10, 15]);
+    expect(() => hits("x...x")).toThrow();
   });
 });

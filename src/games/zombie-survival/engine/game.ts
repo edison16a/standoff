@@ -1,4 +1,4 @@
-import type { BotLevel } from "@/games/kit/difficulty/difficulty";
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { Seat } from "@/platform/protocol";
 import { Achievements } from "./achievements";
 import { HELIPAD, inFlight } from "./chopper";
@@ -45,11 +45,11 @@ export class SurvivalGame {
 
   /**
    * `random` spreads each shot's bullets. The showcase seeds it, so its fights replay exactly.
-   * `level` bends the zombies' speed and harm. Medium is the run as tuned.
+   * `level` bends the zombies' speed and harm. Easy, the default, is the run as written.
    */
   constructor(
     private readonly random: () => number = Math.random,
-    readonly level: BotLevel = "medium",
+    readonly level: BotLevel = DEFAULT_BOT_LEVEL,
   ) {}
 
   get running(): boolean {
@@ -101,6 +101,18 @@ export class SurvivalGame {
     // Guns only run while the team is on its feet, so a reload asked for when down or after the escape waits for nothing.
     if (this.phase === "lobby" || this.phase === "down" || this.phase === "escaped") return;
     if (member?.present) member.gun.startReload();
+  }
+
+  /** A test shortcut: walk straight to a stage's checkpoint, as if every fight before it was won. */
+  jumpTo(stage: number): void {
+    if (!this.running || this.phase === "escaped") return;
+    // A team that fell gets back up as it would on a retry, or the first swing would drop it again.
+    if (this.phase === "down") {
+      this.health = Math.max(this.health, RETRY_FLOOR);
+      this.squad.refill();
+    }
+    this.cutscene = null;
+    this.travelTo(Math.max(1, Math.min(STAGE_COUNT, stage)));
   }
 
   /** From the game over screen: the same fight again, from its checkpoint. */

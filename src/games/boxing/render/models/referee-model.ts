@@ -7,7 +7,6 @@ export const REFEREE_LOOK: Look = {
   id: "referee",
   name: "Referee",
   nickname: "",
-  from: "",
   skin: "#d5a383",
   skinShade: "#a87458",
   hair: "#3d3834",

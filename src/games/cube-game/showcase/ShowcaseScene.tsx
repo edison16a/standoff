@@ -1,15 +1,26 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ShowcaseView } from "@/platform/games/game-api";
 import { PLANS, ShowcaseDirector, type Plan } from "./director";
+import { FinishPreview, type FinishSample } from "./FinishPreview";
 import { Logo } from "./Logo";
+
+const SAMPLES: readonly string[] = ["solo", "race", "tie", "early"];
 
 /**
  * Cube Game playing itself for the home screen's captured media. The
  * icon adds the name as a logo. Everything moves from animation frames
- * alone, so the capture tool can step it.
+ * alone, so the capture tool can step it. `?finish=solo`, `race`, `tie`
+ * or `early` shows the results' celebration instead, for looking it over.
  */
 export default function ShowcaseScene({ view }: { view: ShowcaseView }) {
+  // The showcase only ever mounts in the browser, so the address can be read straight away.
+  const [finish] = useState(() => new URLSearchParams(window.location.search).get("finish"));
+  if (finish && SAMPLES.includes(finish)) return <FinishPreview sample={finish as FinishSample} />;
+  return <Run view={view} />;
+}
+
+function Run({ view }: { view: ShowcaseView }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {

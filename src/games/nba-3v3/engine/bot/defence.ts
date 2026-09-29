@@ -33,10 +33,10 @@ export function thinkDefence(m: Match, a: Athlete, s: BotState, man: Athlete | n
     else {
       s.jumpAt = null;
       if (s.decideIn <= 0) {
-        s.decideIn = 0.2 + m.rng() * 0.15;
+        s.decideIn = 0.2 + m.rng() * 0.15 + m.bots.think;
         // Two reaches are free; after that the whistle is a risk, so a third is rare and a fourth never comes.
         const tries = m.stealLog.count(a.id, holder.id);
-        const reachy = (charOf(a).stats.speed >= 8 ? 0.08 : 0.055) * (tries < 2 ? 1 : tries === 2 ? 0.2 : 0);
+        const reachy = m.bots.reach * (charOf(a).stats.speed >= 8 ? 0.08 : 0.055) * (tries < 2 ? 1 : tries === 2 ? 0.2 : 0);
         if (inStealRange(a, holder) && act.kind === "none" && m.rng() < reachy) m.press(a.id, "defend");
       }
     }
@@ -65,7 +65,7 @@ export function thinkDefence(m: Match, a: Athlete, s: BotState, man: Athlete | n
 /** Jump so the hands are at their highest as the ball leaves: a reaction delay, then up. */
 function contestJumper(m: Match, a: Athlete, s: BotState, shooter: Athlete): void {
   if (shooter.action.kind !== "shoot") return;
-  if (s.jumpAt === null) s.jumpAt = 0.22 + gaussian(m.rng, 0.09) + (charOf(a).stats.speed < 6 ? 0.05 : 0);
+  if (s.jumpAt === null) s.jumpAt = 0.22 + gaussian(m.rng, 0.09) + (charOf(a).stats.speed < 6 ? 0.05 : 0) + m.bots.lateJump;
   if (shooter.action.t >= s.jumpAt && dist2(a, shooter) < 2.4) {
     m.press(a.id, "defend");
     s.jumpAt = 99;

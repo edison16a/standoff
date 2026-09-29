@@ -1,17 +1,18 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
-import { ROSTER, type CharacterId } from "../roster";
+import { BUILDS, type BuildId } from "../builds";
 import { celebration } from "./anim/celebrations";
 import { idle } from "./anim/moves";
 import { applyPose, ease, neutral, type Pose } from "./anim/pose";
 import { buildBody, type Rig } from "./models/body";
 
 /**
- * The star turning on a spotlit podium on the phone's picker, in their
- * own signature kit. Every few seconds they break into their goal
- * celebration. It owns a small renderer and stops drawing when disposed.
+ * The build turning on a spotlit podium on the phone's picker, in its
+ * own kit with the player's name on the back. Every few seconds it
+ * breaks into its goal celebration. It owns a small renderer and stops
+ * drawing when disposed.
  */
-export class StarPreview {
+export class BuildPreview {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene = new THREE.Scene();
   private readonly camera = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
@@ -21,7 +22,8 @@ export class StarPreview {
   private readonly canvas: HTMLCanvasElement;
   private readonly environment: THREE.Texture;
   private rig: Rig | null = null;
-  private character: CharacterId | null = null;
+  private build: BuildId | null = null;
+  private shown = "";
   private readonly pose: Pose = neutral();
   private frame = 0;
   private last = 0;
@@ -57,15 +59,17 @@ export class StarPreview {
     this.frame = requestAnimationFrame(this.draw);
   }
 
-  show(character: CharacterId): void {
-    if (this.character === character) return;
-    this.character = character;
+  show(build: BuildId, name: string): void {
+    const key = `${build}/${name}`;
+    if (this.shown === key) return;
+    this.shown = key;
+    this.build = build;
     if (this.rig) {
       this.turntable.remove(this.rig.root);
       this.rig.dispose();
     }
-    const c = ROSTER[character];
-    this.rig = buildBody({ look: c.look, kit: c.look.kit, name: c.short, number: c.number }, this.material);
+    const c = BUILDS[build];
+    this.rig = buildBody({ look: c.look, kit: c.look.kit, name, number: c.number }, this.material);
     this.turntable.add(this.rig.root);
     this.ring.material.color.set(c.look.kit.shirt);
     this.shownAt = this.last;
@@ -93,7 +97,7 @@ export class StarPreview {
     this.last = now;
     const width = this.canvas.clientWidth;
     const height = this.canvas.clientHeight;
-    if (width > 0 && height > 0 && this.rig && this.character) {
+    if (width > 0 && height > 0 && this.rig && this.build) {
       const size = this.renderer.getSize(new THREE.Vector2());
       if (size.x !== width || size.y !== height) {
         this.renderer.setSize(width, height, false);
@@ -105,7 +109,7 @@ export class StarPreview {
       const cycle = t % 6;
       const celebrating = cycle > 3.2;
       const angle = this.turntable.rotation.y;
-      const kind = ROSTER[this.character].celebration;
+      const kind = BUILDS[this.build].celebration;
       // The SUI turns half way round in the air, so it starts with the back to the phone and lands facing it.
       const want = kind === "sui" ? Math.PI : 0;
       const front = want + Math.round((angle - want) / (Math.PI * 2)) * Math.PI * 2;

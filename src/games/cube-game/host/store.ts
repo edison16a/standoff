@@ -1,5 +1,7 @@
 import { create } from "zustand";
+import type { LeaderEntry } from "@/games/kit/leaderboard";
 import type { Mode } from "../engine/types";
+import type { BoardPlace } from "./level-board";
 import { EMPTY_PROGRESS, type Progress } from "./progress";
 import type { Status } from "./round";
 
@@ -44,6 +46,12 @@ export interface CubeState {
   results: ResultRow[];
   /** Who won the race, or null alone, on a dead heat, or when ended early. */
   winner: number | null;
+  /** What each player is called, seat 1 first, from the room when it has names. */
+  names: string[];
+  /** The level's leaderboard on this computer, quickest first. */
+  board: LeaderEntry[];
+  /** Where each finish this round landed on it. */
+  placed: BoardPlace[];
 }
 
 export const initialCubeState = (): CubeState => ({
@@ -57,6 +65,9 @@ export const initialCubeState = (): CubeState => ({
   banner: null,
   results: [],
   winner: null,
+  names: ["Player 1", "Player 2"],
+  board: [],
+  placed: [],
 });
 
 /** The host's UI state. The game loop writes it a few times a second at most, never per frame. */

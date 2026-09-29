@@ -1,7 +1,7 @@
 /*
   Blade Clash on the computer: the split screen, each player's bar with
-  their health, the calibration targets, the big word in the middle, the
-  result and the tuning drawer.
+  their health, the calibration targets, the big word in the middle and
+  the tuning drawer. The ceremony's result is in victory.css.
 */
 
 .stage {
@@ -266,39 +266,6 @@
     transform: translateX(-50%) skewX(-6deg) scale(0.6);
     opacity: 0;
   }
-}
-
-.over {
-  position: absolute;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  box-shadow: var(--shadow);
-  white-space: nowrap;
-}
-
-.over__votes {
-  display: inline-flex;
-  gap: 6px;
-}
-
-.over {
-  padding: 10px 10px 10px 24px;
-  border-radius: var(--radius-lg);
-}
-
-.over__title {
-  font-size: 20px;
-  letter-spacing: -0.02em;
-}
-
-.over__score {
-  color: var(--text-muted);
 }
 
 .drawer {

@@ -5,6 +5,7 @@ import { info as counterBattle } from "./counter-battle/info";
 import { info as cubeGame } from "./cube-game/info";
 import { info as bladeClash } from "./blade-clash/info";
 import { info as fifa3v3 } from "./fifa-3v3/info";
+import { info as football3v3 } from "./football-3v3/info";
 import { info as fruitNinja } from "./fruit-ninja/info";
 import { info as magicKart } from "./magic-kart/info";
 import { info as nba3v3 } from "./nba-3v3/info";
@@ -26,6 +27,7 @@ export const GAMES: readonly GameInfo[] = [
   subwaySurfers,
   nba3v3,
   fifa3v3,
+  football3v3,
   cubeGame,
   bladeClash,
   brawlBattle,
@@ -45,6 +47,7 @@ const LOADERS: Record<string, () => Promise<GameModule>> = {
   "magic-kart": () => import("./magic-kart").then((mod) => mod.game),
   "nba-3v3": () => import("./nba-3v3").then((mod) => mod.game),
   "fifa-3v3": () => import("./fifa-3v3").then((mod) => mod.game),
+  "football-3v3": () => import("./football-3v3").then((mod) => mod.game),
   "cube-game": () => import("./cube-game").then((mod) => mod.game),
   "subway-surfers": () => import("./subway-surfers").then((mod) => mod.game),
   "brawl-battle": () => import("./brawl-battle").then((mod) => mod.game),

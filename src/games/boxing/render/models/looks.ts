@@ -1,13 +1,15 @@
-/** The four boxers to choose from. Each has its own build, face, hair and kit. */
+import { buildFor, type BuildId } from "../../engine/builds";
+
+/**
+ * How the boxers look. Each build has its own body, face, hair and kit
+ * colours, but no name of its own: the player's name goes on the
+ * waistband and over the health bar.
+ */
 export type HairStyle = "buzz" | "bald" | "spikes" | "curls";
 export type BeardStyle = "none" | "stubble" | "full" | "moustache";
 
-export interface Look {
+export interface Body {
   id: string;
-  name: string;
-  nickname: string;
-  /** Where they fight out of, for the introductions. */
-  from: string;
   skin: string;
   /** A deeper tone for lips, creases and shading painted on the face. */
   skinShade: string;
@@ -26,12 +28,15 @@ export interface Look {
   height: number;
 }
 
-export const LOOKS: readonly Look[] = [
+/** A body dressed for a fight: the player's name, and the build's name as the smaller word. */
+export interface Look extends Body {
+  name: string;
+  nickname: string;
+}
+
+const BODY_LIST: readonly Body[] = [
   {
-    id: "rocco",
-    name: "Rocco Vance",
-    nickname: "The Hammer",
-    from: "Philadelphia",
+    id: "slugger",
     skin: "#dca07a",
     skinShade: "#b77a5c",
     hair: "#3a2618",
@@ -48,10 +53,7 @@ export const LOOKS: readonly Look[] = [
     height: 1.0,
   },
   {
-    id: "marcus",
-    name: "Marcus Cole",
-    nickname: "Night Train",
-    from: "Detroit",
+    id: "counter-puncher",
     skin: "#6b4029",
     skinShade: "#44261a",
     hair: "#17100c",
@@ -68,10 +70,7 @@ export const LOOKS: readonly Look[] = [
     height: 1.03,
   },
   {
-    id: "kenji",
-    name: "Kenji Sato",
-    nickname: "Lightning",
-    from: "Osaka",
+    id: "out-boxer",
     skin: "#e2ad84",
     skinShade: "#b98a66",
     hair: "#0e0e12",
@@ -88,10 +87,7 @@ export const LOOKS: readonly Look[] = [
     height: 0.98,
   },
   {
-    id: "diego",
-    name: "Diego Reyes",
-    nickname: "El Toro",
-    from: "Guadalajara",
+    id: "swarmer",
     skin: "#b57a52",
     skinShade: "#85523a",
     hair: "#1c120c",
@@ -109,6 +105,11 @@ export const LOOKS: readonly Look[] = [
   },
 ];
 
-export function lookFor(index: number): Look {
-  return LOOKS[((index % LOOKS.length) + LOOKS.length) % LOOKS.length]!;
+/** Each build's body, by build id. */
+export const BODIES: Readonly<Record<BuildId, Body>> = Object.fromEntries(BODY_LIST.map((b) => [b.id, b])) as Record<BuildId, Body>;
+
+/** The body for a build, by its place in the list of builds, dressed with a name. */
+export function lookFor(index: number, name: string): Look {
+  const build = buildFor(index);
+  return { ...BODIES[build.id], name, nickname: build.name };
 }

@@ -6,11 +6,13 @@ import { Logo } from "../../showcase/Logo";
 import { useCubeStore } from "../store";
 import { useSession } from "./session-context";
 
-const DIFFICULTY = ["Easy", "Normal", "Hard", "Harder", "Insane"] as const;
+const DIFFICULTY = ["Easy", "Normal", "Hard", "Harder", "Insane", "Demon"] as const;
+/** Five stars at most. A Demon level fills all five, drawn in red. */
+const STARS = 5;
 const css = (hex: number) => `#${hex.toString(16).padStart(6, "0")}`;
 
 /**
- * The level select: five cards from easy to insane, each with its best
+ * The level select: seven cards from easy to the two Demon levels, each with its best
  * percent, then one player or a 1v1 race, and how to play. The chosen level's
  * song and a computer run of it play behind.
  */
@@ -31,7 +33,7 @@ export function LevelSelect() {
             <li key={info.id}>
               <button
                 type="button"
-                className={`cg-level${info.id === levelId ? " cg-level--chosen" : ""}`}
+                className={`cg-level${info.id === levelId ? " cg-level--chosen" : ""}${info.difficulty > STARS ? " cg-level--demon" : ""}`}
                 style={style}
                 aria-pressed={info.id === levelId}
                 aria-label={`${info.name}, ${DIFFICULTY[info.difficulty - 1]}, best ${best}%`}
@@ -42,8 +44,8 @@ export function LevelSelect() {
                 <span className="cg-level__name">{info.name}</span>
                 <span className={`cg-level__face cg-level__face--${info.difficulty}`}>{DIFFICULTY[info.difficulty - 1]}</span>
                 <span className="cg-level__stars" aria-hidden="true">
-                  {"★".repeat(info.difficulty)}
-                  <span className="cg-level__stars-off">{"★".repeat(5 - info.difficulty)}</span>
+                  {"★".repeat(Math.min(STARS, info.difficulty))}
+                  <span className="cg-level__stars-off">{"★".repeat(Math.max(0, STARS - info.difficulty))}</span>
                 </span>
                 <span className="cg-level__best">
                   <span className="cg-level__bar">

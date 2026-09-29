@@ -1,8 +1,9 @@
 import { Block } from "./block";
 import { openingCoins, PATTERNS, type PatternEntry } from "./patterns";
 import { Rng } from "./rng";
-import { MOVE_GAP_S, speedAt, type Lane } from "./tuning";
+import type { Lane } from "./tuning";
 import { frontAt, type Coin, type Obstacle, type Pickup, type PowerKind } from "./types";
+import { stretchGapS, USUAL_YARD, yardSpeed, type Yard } from "./yard";
 
 /** The run up before the first obstacle, while the guard gives chase. */
 const FIRST_BLOCK = 60;
@@ -24,6 +25,8 @@ export interface CourseOptions {
   empty?: boolean;
   /** Metres the pace and the busyness start ahead, for a harder run. */
   headStart?: number;
+  /** How hard the yard pushes. See `yard.ts`. */
+  yard?: Yard;
 }
 
 /**
@@ -43,6 +46,7 @@ export class Course {
   private nextPickup: number;
   private last = "";
   private readonly headStart: number;
+  private readonly yard: Yard;
 
   constructor(
     readonly seed: number,
@@ -50,9 +54,10 @@ export class Course {
   ) {
     this.rng = new Rng(seed);
     this.headStart = options.headStart ?? 0;
+    this.yard = options.yard ?? USUAL_YARD;
     this.nextPickup = 160 + this.rng.range(0, 80);
     if (!options.empty) {
-      const opening = new Block(speedAt(this.headStart), () => 0);
+      const opening = new Block(yardSpeed(this.yard, this.headStart), () => 0, this.yard.moveGap);
       openingCoins(opening);
       this.commit(opening, 0);
     }
@@ -93,9 +98,9 @@ export class Course {
     // Spaced for the pace a little way in, since the runner speeds up while crossing the stretch.
     // The head start moves the pace and the patterns on, but not the first power ups.
     const pace = this.cursor + this.headStart;
-    const speed = speedAt(pace + SPEED_AHEAD);
-    const level = Math.min(1, Math.max(0, (pace - 150) / 1600));
-    const block = new Block(speed, () => this.rng.int(0, 7));
+    const speed = yardSpeed(this.yard, pace + SPEED_AHEAD);
+    const level = Math.min(this.yard.busiest, Math.max(0, (pace - 150) / 1600));
+    const block = new Block(speed, () => this.rng.int(0, 7), this.yard.moveGap);
     if (this.cursor >= this.nextPickup) {
       this.pickupBlock(block);
       this.nextPickup = this.cursor + 300 + this.rng.range(0, 180);
@@ -106,7 +111,7 @@ export class Course {
     }
     this.commit(block, this.cursor);
     // The gap before the next stretch shrinks from about 1.4 to 0.9 seconds of running, never under a move and a breath.
-    const gap = Math.max(12, speed * Math.max(MOVE_GAP_S + 0.25, 1.4 - 0.5 * level));
+    const gap = Math.max(12, speed * stretchGapS(this.yard, level));
     this.cursor += block.end + gap;
   }
 

@@ -58,12 +58,12 @@ function fakeView(director: ShowcaseDirector) {
       if (!z.weak.length) return [{ zombie: z.id, part: "head", weak: null, y: 0.2, ...at }];
       return z.weak.map((_, i) => ({ zombie: z.id, part: "weak", weak: i, y: 0.1 * i, ...at }));
     });
-  // Every pellet strikes the nearest hit shape under the aim, as the renderer's raycast would.
-  const cast = (_seat: number, aim: { x: number; y: number }, offsets: readonly unknown[]) => {
+  // A pellet strikes the nearest hit shape under the aim, as the renderer's raycast would, unless its spread or the gun's kick carries it wide.
+  const cast = (_seat: number, aim: { x: number; y: number }, offsets: readonly { x: number; y: number }[]) => {
     const under = targets()
       .filter((t) => Math.hypot(t.x - aim.x, t.y - aim.y) < 0.06)
       .sort((a, b) => a.distance - b.distance)[0];
-    return offsets.map(() => (under ? { zombie: under.zombie, part: under.part, weak: under.weak } : null));
+    return offsets.map((o) => (under && Math.hypot(o.x, o.y) * under.distance < 0.3 ? { zombie: under.zombie, part: under.part, weak: under.weak } : null));
   };
   return { targets, cast, shotFx: () => undefined };
 }

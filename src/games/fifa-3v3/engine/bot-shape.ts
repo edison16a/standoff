@@ -1,3 +1,4 @@
+import { BUILDS } from "../builds";
 import { attackSign, other } from "../teams";
 import { goalX } from "./goal";
 import { laneOf } from "./lanes";
@@ -26,9 +27,11 @@ export function shapeSpot(state: MatchState, a: Athlete): Vec2 {
   const s = attackSign(a.team);
   const b = state.ball.pos;
   const own = goalX(a.team);
-  if (a.slot === 0) return onPitch({ x: lerp(b.x, s * 2.5, 0.35) + s * 2, z: b.z * 0.45 });
+  // Each build keeps its own depth: a striker stays up for the break, a sweeper keeper drops deep.
+  const depth = s * BUILDS[a.build].depth;
+  if (a.slot === 0) return onPitch({ x: lerp(b.x, s * 2.5, 0.35) + s * 2 + depth, z: b.z * 0.45 });
   const side = laneOf(state, a);
-  const x = lerp(own + s * 8.5, b.x, 0.5);
+  const x = lerp(own + s * 8.5, b.x, 0.5) + depth;
   return onPitch({ x, z: side * 6 + b.z * 0.3 });
 }
 

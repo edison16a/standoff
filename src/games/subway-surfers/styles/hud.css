@@ -25,16 +25,16 @@
   font-weight: 800;
   white-space: nowrap;
   text-overflow: ellipsis;
-  text-shadow: 0 2px 0 #1a0b3d, 0 0 8px rgba(0, 0, 0, 0.9);
+  text-shadow: 0 2px 0 #14254a, 0 0 8px rgba(0, 0, 0, 0.9);
 }
 
 .ss-score__value,
 .ss-coins span {
   font: 900 44px/1 "Arial Black", var(--font-ui);
   font-variant-numeric: tabular-nums;
-  -webkit-text-stroke: 3px #1a0b3d;
+  -webkit-text-stroke: 3px #14254a;
   paint-order: stroke fill;
-  text-shadow: 0 4px 0 #1a0b3d, 0 0 18px rgba(33, 243, 255, 0.7);
+  text-shadow: 0 4px 0 #14254a;
 }
 
 .ss-mult {
@@ -42,14 +42,15 @@
   border: 3px solid #ffffff;
   border-radius: 14px;
   font: 900 26px/1 "Arial Black", var(--font-ui);
-  color: #1a0b3d;
+  color: #14254a;
   background: #ffffff;
 }
 
 .ss-mult--hot {
-  background: #ff2bd6;
+  border-color: #ffffff;
+  background: #ff8a1f;
   color: #ffffff;
-  box-shadow: 0 0 18px rgba(255, 43, 214, 0.75);
+  box-shadow: 0 4px 0 #14254a;
 }
 
 .ss-coins {
@@ -86,7 +87,7 @@
   padding: 12px;
   border-radius: 50%;
   background:
-    radial-gradient(circle, rgba(14, 8, 38, 0.9) 58%, transparent 60%),
+    radial-gradient(circle, rgba(20, 50, 100, 0.9) 58%, transparent 60%),
     conic-gradient(var(--power) calc(var(--left) * 360deg), rgba(255, 255, 255, 0.2) 0);
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.3);
 }
@@ -107,8 +108,9 @@
   font: 900 34px/1 "Arial Black", var(--font-ui);
   white-space: nowrap;
   color: #ffffff;
-  background: linear-gradient(90deg, #ff2bd6, #8a5bff);
-  box-shadow: 0 6px 0 #1a0b3d, 0 0 30px rgba(255, 43, 214, 0.75);
+  background: linear-gradient(180deg, #ffd24a, #ff9a1f);
+  text-shadow: 0 3px 0 #14254a;
+  box-shadow: 0 6px 0 #14254a;
   transform: translateX(-50%);
   animation: ss-pop 1.6s ease-out forwards;
 }
@@ -147,12 +149,12 @@
   border-radius: 26px;
   font: 900 30px/1.1 "Arial Black", var(--font-ui);
   text-align: center;
-  background: rgba(14, 8, 38, 0.88);
+  background: rgba(20, 50, 100, 0.9);
   transform: translate(-50%, -50%);
 }
 
 .ss-away--ready {
-  background: rgba(120, 30, 160, 0.9);
+  background: rgba(31, 111, 214, 0.92);
 }
 
 .ss-crashed {
@@ -172,16 +174,15 @@
   top: 42%;
   font: 900 180px/1 "Arial Black", var(--font-ui);
   color: #ffffff;
-  -webkit-text-stroke: 8px #1a0b3d;
+  -webkit-text-stroke: 8px #14254a;
   paint-order: stroke fill;
-  text-shadow: 0 10px 0 #1a0b3d, 0 0 60px rgba(33, 243, 255, 0.7);
+  text-shadow: 0 10px 0 #14254a;
   transform: translate(-50%, -50%);
   animation: ss-count 1s ease-out forwards;
 }
 
 .ss-count--go {
-  color: #ff2bd6;
-  text-shadow: 0 10px 0 #1a0b3d, 0 0 70px rgba(255, 43, 214, 0.75);
+  color: #ffc21a;
 }
 
 @keyframes ss-count {
@@ -209,9 +210,9 @@
   font: 900 72px/1 "Arial Black", var(--font-ui);
   text-align: center;
   color: #ffd21f;
-  -webkit-text-stroke: 5px #1a0b3d;
+  -webkit-text-stroke: 5px #14254a;
   paint-order: stroke fill;
-  text-shadow: 0 6px 0 #1a0b3d;
+  text-shadow: 0 6px 0 #14254a;
 }
 
 .ss-tut__hint {
@@ -223,7 +224,10 @@
   font-size: 24px;
   font-weight: 800;
   text-align: center;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  /* A hard navy edge keeps the hint readable over bright sky and pale walls. */
+  -webkit-text-stroke: 4px #14254a;
+  paint-order: stroke fill;
+  text-shadow: 0 3px 0 #14254a;
 }
 
 .ss-tut__list {
@@ -245,7 +249,7 @@
   font-size: 18px;
   font-weight: 800;
   white-space: nowrap;
-  background: rgba(14, 8, 38, 0.7);
+  background: rgba(20, 50, 100, 0.75);
 }
 
 .ss-tut__list .ss-tut__now {
@@ -254,7 +258,7 @@
 }
 
 .ss-tut__list .ss-tut__done {
-  color: #1a0b3d;
+  color: #14254a;
   border-color: #ffffff;
   background: #3ddc84;
 }

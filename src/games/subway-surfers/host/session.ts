@@ -4,14 +4,15 @@ import { SoundDirector } from "../audio/sound-director";
 import type { RunEvent } from "../engine/events";
 import type { Run } from "../engine/run";
 import { ShowRun } from "../showcase/show-run";
+import { Autopilot } from "./autopilot";
 import { Controls } from "./controls";
 import { Countdown } from "./countdown";
-import { HEAD_START } from "../engine/difficulty";
 import { recordResult } from "./results";
 import { Round } from "./round";
+import { RunBoard } from "./run-board";
 import { RunWatch } from "./run-watch";
 import { initialSurfState, shownName, useSurfStore as store, type Phase } from "./store";
-import { BestStore } from "./best-store";
+import { Timers } from "./timers";
 
 const HUD_MS = 80;
 const COUNT_S = 3;
@@ -25,22 +26,25 @@ export interface Lane3D {
 /**
  * Subway Runner on the computer, for one room. It owns the camera kit,
  * walks the player through setup, runs the rounds and directs the
- * sound. The canvas asks it every frame what to draw.
+ * sound. The canvas asks it every frame what to draw. In keyboard mode
+ * there is no camera: Start goes straight to the countdown.
  */
 export class SurfSession {
   readonly sound: SoundDirector;
   kit: CameraKit | null = null;
   round: Round | null = null;
   private controls: Controls | null = null;
+  /** The test bot playing the player's runs, from the console in development. */
+  private pilot: Autopilot | null = null;
   // A computer runner plays behind the menus. A short warmup keeps opening the room quick.
   private demo = new ShowRun(3, 6);
-  private readonly best = new BestStore();
+  private readonly board: RunBoard;
   private readonly listeners = new Set<(event: RunEvent) => void>();
   private unlistenRound: () => void = () => undefined;
   private unlistenMoves: () => void = () => undefined;
   /** Once the tutorial is done or skipped, later runs go straight to the countdown. */
   private tutorialDone = false;
-  private readonly timers = new Set<ReturnType<typeof setTimeout>>();
+  private readonly timers = new Timers();
   private readonly watch: RunWatch;
   private countdown = new Countdown(0);
   private resultsAt = 0;
@@ -50,7 +54,8 @@ export class SurfSession {
   constructor(private readonly room: HostRoomApi) {
     this.sound = new SoundDirector(room.audio);
     this.watch = new RunWatch(this.sound);
-    store.setState({ ...initialSurfState(), best: this.best.current });
+    store.setState(initialSurfState());
+    this.board = new RunBoard((board) => store.setState({ board }));
     this.sound.play("menu");
     if (process.env.NODE_ENV === "development") Object.assign(window, { __subwaySurfers: this });
   }
@@ -65,19 +70,26 @@ export class SurfSession {
     return () => this.listeners.delete(listener);
   }
 
-  /** From the lobby: open the camera. */
+  /** From the lobby: open the camera, or go straight to the countdown with the keyboard. */
   start(): void {
+    if (store.getState().input === "keyboard") return this.playWithKeys();
     // A small hop jumps, so the runner reacts as soon as the player does.
     this.kit ??= new CameraKit({ players: 1, moves: SMALL_JUMP });
     this.useControls(this.kit);
     store.setState({ phase: "camera" });
   }
 
-  /** Without a camera: the arrow keys, for trying it out. */
+  /** Keyboard mode: the arrow keys or WASD, with no camera. Also the way out when the camera will not start. */
   playWithKeys(): void {
+    store.setState({ input: "keyboard" });
     this.dropKit();
     this.useControls(null);
     this.beginRound();
+  }
+
+  /** Development: hands the player's runs to the test bot, or takes them back. */
+  autopilot(on = true, flair = false): void {
+    this.pilot = on ? new Autopilot(flair) : null;
   }
 
   /** The camera and the model are ready. */
@@ -124,7 +136,7 @@ export class SurfSession {
     const phase = this.phase;
     if (!this.round || phase === "lobby" || phase === "camera" || phase === "calibrate") return { run: this.demo.run, mood: "run" };
     // A new best is worth a cheer at the results.
-    const cheer = phase === "results" && store.getState().result?.best === 1;
+    const cheer = phase === "results" && !!store.getState().result?.best;
     return { run: this.round.run, mood: phase === "countdown" || this.round.paused ? "idle" : cheer ? "cheer" : "run" };
   }
 
@@ -141,7 +153,7 @@ export class SurfSession {
       this.tickCountdown(wall);
     } else if (phase === "tutorial" || phase === "running" || phase === "results") {
       const round = this.round;
-      round.update(dt, this.controls?.take() ?? null);
+      round.update(dt, this.pilot ? this.pilot.drive(round) : (this.controls?.take() ?? null));
       this.sound.frame([round.run], [round.paused]);
       this.watch.update(this.kit, round, phase === "running");
       if (phase === "tutorial" && round.tutorial.finished) {
@@ -158,8 +170,8 @@ export class SurfSession {
   }
 
   dispose(): void {
-    for (const timer of this.timers) clearTimeout(timer);
     this.timers.clear();
+    this.board.dispose();
     this.unlistenRound();
     this.dropKit();
     this.controls?.dispose();
@@ -179,11 +191,10 @@ export class SurfSession {
   }
 
   private beginRound(): void {
-    const headStart = HEAD_START[store.getState().difficulty];
-    this.setRound(new Round(Math.floor(Math.random() * 1e9), { headStart }));
+    this.setRound(new Round(Math.floor(Math.random() * 1e9), { difficulty: store.getState().difficulty }));
     this.countdown = new Countdown(COUNT_S);
     this.sound.play(null);
-    this.sound.sfx.countdown(false);
+    this.sound.count(COUNT_S);
     store.setState({ phase: "countdown", countdown: COUNT_S, result: null, jumpToReplay: false });
   }
 
@@ -201,7 +212,7 @@ export class SurfSession {
   private tickCountdown(dt: number): void {
     const count = this.countdown.tick(dt);
     if (count === null) return;
-    this.sound.sfx.countdown(count === 0);
+    this.sound.count(count);
     if (count > 0) {
       store.setState({ countdown: count });
       return;
@@ -213,27 +224,19 @@ export class SurfSession {
     // Out of view at GO waits, like stepping away mid run.
     if (this.kit && !this.kit.getSnapshot().present[0]) this.round?.setAway(true);
     store.setState({ phase: "running", countdown: 0 });
-    this.later(700, () => store.getState().countdown === 0 && store.setState({ countdown: null }));
+    this.timers.later(700, () => store.getState().countdown === 0 && store.setState({ countdown: null }));
   }
 
   private finish(): void {
-    const { name, difficulty } = store.getState();
-    const result = recordResult(this.round!, name, difficulty, this.best);
+    const { name, input } = store.getState();
+    // Saving the run tells the board to reload, so the list comes back with this run in it.
+    const result = recordResult(this.round!, name, input);
     this.room.setPlaying(false);
     this.sound.play(null);
-    this.sound.celebrate(result.best === 1);
+    this.sound.celebrate(result.best);
     this.resultsAt = performance.now();
-    store.setState({ phase: "results", result, best: this.best.current, jumpToReplay: false });
-    this.later(3000, () => this.phase === "results" && this.sound.play("menu"));
-  }
-
-  /** A timer that dies with the session, so nothing sounds after the room closes. */
-  private later(ms: number, fn: () => void): void {
-    const timer = setTimeout(() => {
-      this.timers.delete(timer);
-      fn();
-    }, ms);
-    this.timers.add(timer);
+    store.setState({ phase: "results", result, jumpToReplay: false });
+    this.timers.later(3000, () => this.phase === "results" && this.sound.play("menu"));
   }
 
   private onMove(event: MoveEvent): void {

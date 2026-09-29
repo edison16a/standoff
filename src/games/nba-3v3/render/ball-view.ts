@@ -73,7 +73,16 @@ export class BallView {
     this.offset.multiplyScalar(Math.exp(-dt * 14));
     this.mesh.position.copy(target).add(this.offset);
 
-    // Roll with the motion: spin about the axis across the direction of travel.
+    // A shot or a loose ball turns with its real spin, backspin, the kick off the iron and the roll on the floor.
+    const w = ball.w;
+    const real = Math.hypot(w.x, w.y, w.z);
+    if (!held && ball.mode !== "held" && real > 0.3) {
+      axis.set(w.x / real, w.y / real, w.z / real);
+      spinQ.setFromAxisAngle(axis, real * dt);
+      this.mesh.quaternion.premultiply(spinQ);
+      return;
+    }
+    // Otherwise it rolls with the motion: spin about the axis across the direction of travel.
     const speed = Math.hypot(ball.vel.x, ball.vel.z);
     // Held, it turns with the hands rather than rolling.
     if (!held && (speed > 0.05 || Math.abs(ball.spin) > 0.1)) {

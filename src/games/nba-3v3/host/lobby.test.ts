@@ -12,7 +12,7 @@ describe("the team lobby", () => {
     const lobby = new Lobby();
     readyPlayer(lobby, 1, "ashby");
     readyPlayer(lobby, 2, "whitlock");
-    readyPlayer(lobby, 3, "vukmir");
+    readyPlayer(lobby, 3, "zupan");
     const spots = lobby.spots();
     expect(spots).toHaveLength(6);
     expect(spots.filter((s) => s.team === 0 && s.seat !== null)).toHaveLength(2);
@@ -32,7 +32,7 @@ describe("the team lobby", () => {
 
   it("keeps three a side when the host moves a player onto a full team", () => {
     const lobby = new Lobby();
-    const stars = ["ashby", "whitlock", "crane", "varelas", "vukmir", "zupan"] as const;
+    const stars = ["ashby", "whitlock", "crane", "varelas", "delacroix", "zupan"] as const;
     stars.forEach((star, i) => readyPlayer(lobby, i + 1, star));
     const team0 = () => lobby.connectedSeats.filter((s) => lobby.seats.get(s)!.team === 0);
     expect(team0()).toHaveLength(3);
@@ -45,19 +45,19 @@ describe("the team lobby", () => {
 
   it("leaves a player who is still choosing out of the game", () => {
     const lobby = new Lobby();
-    readyPlayer(lobby, 1, "fontaine");
+    readyPlayer(lobby, 1, "crane");
     lobby.connect(2);
     expect(lobby.spots().filter((s) => s.seat !== null).map((s) => s.seat)).toEqual([1]);
   });
 
   it("remembers a dropped player's team and pick", () => {
     const lobby = new Lobby();
-    readyPlayer(lobby, 1, "mensah");
+    readyPlayer(lobby, 1, "varelas");
     lobby.setTeam(1, 1);
     lobby.disconnect(1);
     lobby.connect(1);
     expect(lobby.seats.get(1)!.team).toBe(1);
-    expect(lobby.seats.get(1)!.pick).toBe("mensah");
+    expect(lobby.seats.get(1)!.pick).toBe("varelas");
   });
 
   it("with computer players off, fields only the people: one on one", () => {

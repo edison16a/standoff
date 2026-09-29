@@ -1,5 +1,5 @@
 import type { MoveEvent, MoveState } from "@/games/kit/camera";
-import { LOOKS } from "../render/models/looks";
+import { BUILDS } from "../engine/builds";
 
 /** How long the guard must be held to lock in a boxer. */
 export const LOCK_MS = 900;
@@ -75,7 +75,7 @@ export class PickControl {
 
   step(id: 0 | 1, direction: number): void {
     if (this.state.locked[id]) return;
-    const count = LOOKS.length;
+    const count = BUILDS.length;
     let next = (this.state.picks[id] + direction + count) % count;
     // Two people cannot be the same boxer, so a taken one is skipped.
     if (next === this.state.picks[id === 0 ? 1 : 0] && this.humans[id === 0 ? 1 : 0]) next = (next + direction + count) % count;
@@ -100,9 +100,9 @@ export class PickControl {
     const other = keep === 0 ? 1 : 0;
     if (this.state.picks[other] !== this.state.picks[keep]) return;
     if (this.state.locked[other] && this.humans[other]) {
-      this.state.picks[keep] = (this.state.picks[keep] + 1) % LOOKS.length;
+      this.state.picks[keep] = (this.state.picks[keep] + 1) % BUILDS.length;
       return;
     }
-    this.state.picks[other] = (this.state.picks[other] + 1) % LOOKS.length;
+    this.state.picks[other] = (this.state.picks[other] + 1) % BUILDS.length;
   }
 }

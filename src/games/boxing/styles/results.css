@@ -1,43 +1,34 @@
 /*
-  The results card over the winner's celebration.
+  The numbers and buttons along the bottom of the ceremony. The
+  champion's name across the top comes from the victory kit.
 */
 
+/*
+  Tucked into the bottom left corner, so the champion and the belt fill
+  the middle. The loser always slumps on the right of the picture, since
+  the champion turns off the line the same way whoever wins.
+*/
 .bx-results {
   position: absolute;
-  right: 48px;
-  top: 50%;
+  left: clamp(12px, 2.5vw, 32px);
+  bottom: clamp(12px, 3vh, 32px);
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-  width: min(560px, 46vw);
-  padding: 30px 34px;
-  border: 2px solid rgba(245, 197, 66, 0.6);
-  border-radius: 26px;
-  background: rgba(8, 8, 16, 0.86);
-  transform: translateY(-50%);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
-  animation: bx-rise 500ms ease-out;
-}
-
-.bx-results__title {
-  margin: 0;
-  font-family: var(--bx-display);
-  font-size: 56px;
-  font-style: italic;
-  line-height: 1;
-}
-
-.bx-results__how {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--bx-gold);
+  align-items: center;
+  gap: 0.7em;
+  padding: 0.85em 1.3em 1em;
+  border: 1px solid rgba(245, 197, 66, 0.35);
+  border-radius: 20px;
+  background: rgba(8, 8, 16, 0.78);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  /* Everything inside is sized from this, so the panel shrinks with the screen. */
+  font-size: clamp(8px, min(1.05vw, 1.75vh), 16px);
 }
 
 .bx-results__best {
   margin: 0;
-  padding: 4px 14px;
+  padding: 0.3em 1em;
   border-radius: 999px;
   background: #4ade80;
   color: #062010;
@@ -45,60 +36,74 @@
 }
 
 .bx-results__table {
-  width: 100%;
   border-collapse: collapse;
-  font-size: 17px;
+  font-size: 1em;
 }
 
-.bx-results__table th {
-  padding: 6px 0;
-  font-size: 15px;
-  color: rgba(255, 255, 255, 0.75);
+/* Each boxer's name heads their column, over a bar in their colour. */
+.bx-results__table thead th {
+  min-width: 6.8em;
+  padding: 0 0.7em 0.4em;
+  border-bottom: 3px solid var(--who, transparent);
+  font-size: 1.07em;
+  font-weight: 900;
+}
+
+.bx-results__table tbody th {
+  padding: 0.27em 1.2em 0.27em 0.15em;
+  text-align: left;
+  font-size: 0.8em;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .bx-results__table td {
-  padding: 5px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.2em 0.7em;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   text-align: center;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
-.bx-results__table td:nth-child(2) {
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.65);
-}
-
-.bx-results__cards td:not(:nth-child(2)) {
+.bx-results__card td {
   font-family: var(--bx-display);
-  font-size: 30px;
+  font-size: 1.7em;
+  color: var(--bx-gold);
+}
+
+th.bx-results__won {
   color: var(--bx-gold);
 }
 
 .bx-results__records {
   margin: 0;
-  font-size: 15px;
+  font-size: 1em;
   color: rgba(255, 255, 255, 0.7);
 }
 
 .bx-results__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 8px;
-}
-@keyframes bx-rise {
-  from {
-    opacity: 0;
-    transform: translateY(-40%);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(-50%);
-  }
+  justify-content: center;
+  gap: 0.85em;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .bx-results {
-    animation: none;
+/* Smaller than on the menus, so the corner panel stays clear of the champion. */
+.bx-results .bx-button {
+  padding: 0.7em 1.4em;
+  font-size: 1.15em;
+}
+
+.bx-results .bx-button--big {
+  padding: 0.85em 2em;
+  font-size: 1.35em;
+}
+
+/* A small screen keeps the scorecards, punches landed and knockdowns. */
+@media (max-height: 640px), (max-width: 1000px) {
+  .bx-results__minor {
+    display: none;
   }
 }

@@ -32,7 +32,7 @@ export function trySkill(state: MatchState, a: Athlete, command: Command): boole
   const d = blocker(state, a);
   if (!d) return false;
   const rng = state.rng;
-  if (!rng.chance(0.2 + 1.2 * (a.dribbling - 0.78))) {
+  if (!rng.chance(0.2 + 1.2 * (a.attrs.dribbling - 0.78))) {
     a.brain.skillWait = 0.6;
     return false;
   }
@@ -46,7 +46,7 @@ export function trySkill(state: MatchState, a: Athlete, command: Command): boole
     const side = Math.abs(a.pos.z) > 2 ? -Math.sign(a.pos.z) : rng.sign();
     const r = rng.next();
     // Over him, round him, or now and then a drag back to turn out of trouble and keep the ball.
-    if (a.dribbling >= 0.85 && r < 0.35) move = { x: s, z: 0 };
+    if (a.attrs.dribbling >= 0.85 && r < 0.35) move = { x: s, z: 0 };
     else if (r > 0.8) move = norm({ x: -s, z: side * 0.3 });
     else move = norm({ x: s * 0.3, z: side });
   } else if (rng.chance(0.4)) {

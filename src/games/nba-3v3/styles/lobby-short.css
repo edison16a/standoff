@@ -1,0 +1,47 @@
+/*
+  A laptop screen with the browser's bars is often only 650 pixels tall.
+  The lobby tightens up there so the Start button stays on screen under
+  the difficulty picker.
+*/
+@media (max-height: 760px) {
+  .nba-lobby {
+    gap: 12px;
+    padding-top: 64px;
+    padding-bottom: 18px;
+  }
+
+  .nba-lobby__logo {
+    font-size: clamp(40px, 9vh, 64px);
+  }
+
+  .nba-lobby__title p {
+    margin-top: 6px;
+    font-size: 17px;
+  }
+
+  .nba-team {
+    gap: 8px;
+    padding: 12px 14px;
+  }
+
+  .nba-team__name {
+    font-size: 28px;
+  }
+
+  .nba-team__spots {
+    gap: 6px;
+  }
+
+  .nba-spot--bot,
+  .nba-spot__button {
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+}
+
+/* Shorter still, the line under the logo goes. The join card already says to scan in. */
+@media (max-height: 600px) {
+  .nba-lobby__title p {
+    display: none;
+  }
+}

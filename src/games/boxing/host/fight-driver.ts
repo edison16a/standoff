@@ -1,9 +1,11 @@
 import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import { ComputerBoxer } from "../engine/ai";
 import { boxerSkill } from "../engine/ai-difficulty";
+import type { BuildId } from "../engine/builds";
 import type { MatchEvent } from "../engine/events";
 import { Match } from "../engine/match";
 import { seeded } from "../engine/random";
+import { stopFight } from "../engine/shortcuts";
 import { styleFor, type DefenseInput, type FighterId, type Hand, type Level } from "../engine/types";
 import { REPLAY_LENGTH } from "../render/replay";
 
@@ -27,8 +29,8 @@ export interface DriverOptions {
   slots: readonly [number | null, number | null];
   roundMs?: number;
   introMs?: number;
-  /** Each boxer's footwork style, by the id of the boxer chosen. */
-  styles?: readonly [string, string];
+  /** Each boxer's build, red corner first. */
+  builds?: readonly [BuildId, BuildId];
   /** Touch gloves before each round, on unless a test turns it off. */
   touch?: boolean;
   /** How sharp the computer boxer is. Easy unless chosen. */
@@ -56,7 +58,7 @@ export class FightDriver {
   private readonly listeners = new Set<(event: MatchEvent) => void>();
 
   constructor(options: DriverOptions) {
-    this.match = new Match({ seed: options.seed, roundMs: options.roundMs, introMs: options.introMs, styles: options.styles, touch: options.touch });
+    this.match = new Match({ seed: options.seed, roundMs: options.roundMs, introMs: options.introMs, builds: options.builds, touch: options.touch });
     this.slots = options.slots;
     const cpu = options.slots.findIndex((slot) => slot === null);
     const skill = boxerSkill(options.botLevel ?? DEFAULT_BOT_LEVEL);
@@ -144,6 +146,11 @@ export class FightDriver {
       this.computer?.update(this.match);
       this.dispatch(this.match.update(STEP_MS), now);
     }
+  }
+
+  /** A test shortcut: the fight ends now with `winner` on top, for the admin panel. */
+  finishFor(winner: FighterId): void {
+    if (stopFight(this.match, winner)) this.flush();
   }
 
   /** Skips the replay or the celebration, straight to the results. */

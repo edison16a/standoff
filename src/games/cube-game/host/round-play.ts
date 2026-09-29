@@ -5,6 +5,7 @@ import type { PlayerEvent } from "../engine/player";
 import type { Level } from "../engine/types";
 import type { DrawPlayer } from "../render/game-renderer";
 import { Controls } from "./controls";
+import { playerNames } from "./names";
 import { Round } from "./round";
 import { RoundAdmin } from "./round-admin";
 import { Scoreboard } from "./scoreboard";
@@ -65,7 +66,7 @@ export class RoundPlay {
     );
     this.clock.restart(0, START_LEAD);
     this.room.setPlaying(true);
-    store.setState({ phase: "play", results: [], winner: null, banner: null });
+    store.setState({ phase: "play", results: [], winner: null, banner: null, placed: [], names: playerNames(this.room.players()) });
     // Anyone out of view at the start waits, as if they had stepped out. This needs the play phase set first.
     kit?.getSnapshot().present.forEach((seen, i) => !seen && this.presence(i + 1, false));
   }
@@ -121,7 +122,7 @@ export class RoundPlay {
       if (event.type === "death" && this.round?.solo) this.sound.music.stop(0.08);
       // The first finish ends a race too, so the song stops under the fanfare either way.
       if (event.type === "finish") this.sound.music.stop(0.6);
-      if (event.type === "death" || event.type === "finish") this.board.ended(slot, (text) => text && this.sound.sfx.newBest());
+      if (event.type === "death" || event.type === "finish") this.board.ended(slot, (text) => text && this.sound.sfx.newBest(), this.admin.flew(slot));
     }
   }
 

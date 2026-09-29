@@ -1,4 +1,5 @@
 import { attackSign, other } from "../teams";
+import { passRange, leadShare } from "./build-effects";
 import { goalX } from "./goal";
 import { choosePassTarget, leadFor } from "./passing";
 import { ASSIST, PITCH } from "./tuning";
@@ -26,11 +27,11 @@ export function planPass(state: MatchState, a: Athlete, stick: Vec2 | null): Kic
   const from = { x: a.pos.x, y: 0, z: a.pos.z };
   if (!pushed) {
     const mate = choosePassTarget(state, a, null);
-    if (mate) return { kind: "pass", to: mate.id, air: needsAir(state, a, leadFor(from, mate)) };
+    if (mate) return { kind: "pass", to: mate.id, air: needsAir(state, a, leadFor(from, mate, leadShare(a))) };
     return space(state, a, { x: attackSign(a.team), z: 0 });
   }
   const mate = mateInCone(state, a, angleOf(pushed));
-  if (mate) return { kind: "pass", to: mate.athlete.id, air: needsAir(state, a, leadFor(from, mate.athlete)) };
+  if (mate) return { kind: "pass", to: mate.athlete.id, air: needsAir(state, a, leadFor(from, mate.athlete, leadShare(a))) };
   return space(state, a, pushed);
 }
 
@@ -65,7 +66,7 @@ function mateInCone(state: MatchState, a: Athlete, aim: number): { athlete: Athl
     if (m.team !== a.team || m.id === a.id) continue;
     const to = sub(m.pos, a.pos);
     const d = len(to);
-    if (d < 1.5 || d > ASSIST.passReach) continue;
+    if (d < 1.5 || d > ASSIST.passReach * passRange(a)) continue;
     const off = Math.abs(angleDiff(aim, angleOf(to)));
     if (off > ASSIST.mateCone) continue;
     // Distance first: at the edge of the cone a mate counts as twice as far away as one dead ahead.

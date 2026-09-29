@@ -1,4 +1,5 @@
-import type { CharacterId } from "../roster";
+import type { Attributes } from "../attributes";
+import type { BuildId } from "../builds";
 import type { TeamId } from "../teams";
 import type { Vec2 } from "./vec";
 
@@ -86,7 +87,7 @@ export interface Athlete {
   id: number;
   team: TeamId;
   slot: number;
-  character: CharacterId;
+  build: BuildId;
   /** The phone driving this player, or null for a computer player. */
   seat: number | null;
   /** False while that phone is away. A computer plays for them until it comes back. */
@@ -127,11 +128,8 @@ export interface Athlete {
   skill: SkillState;
   /** A slide has already met the ball or the man, so it cannot win twice. */
   slideDone: boolean;
-  /** 0 to 1, from the roster. */
-  speed: number;
-  shooting: number;
-  strength: number;
-  dribbling: number;
+  /** The build's ratings as 0 to 1, which every formula in the match reads. */
+  attrs: Attributes;
   brain: Brain;
   stats: AthleteStats;
   guard: GuardState;

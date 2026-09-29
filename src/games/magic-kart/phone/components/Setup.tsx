@@ -52,15 +52,18 @@ function ReadyStep() {
  */
 export function Setup() {
   const session = useController();
-  const { step, calibrated, host } = useControllerStore();
+  const { step, steerMode, host } = useControllerStore();
   const confirmed = host?.pick ?? null;
   const ready = host?.ready ?? false;
 
+  // A tilting phone calibrates by holding the dot in the middle and moves on by itself, so only the arrows need Next.
   const footer =
     step === "calibrate" ? (
-      <button type="button" className="btn btn--primary btn--lg kit-grow" disabled={!calibrated} onClick={() => session.goTo("kart")}>
-        Next
-      </button>
+      steerMode === "buttons" && (
+        <button type="button" className="btn btn--primary btn--lg kit-grow" onClick={() => session.goTo("kart")}>
+          Next
+        </button>
+      )
     ) : step === "kart" ? (
       <>
         <button type="button" className="btn btn--ghost btn--lg" onClick={() => session.goTo("calibrate")}>

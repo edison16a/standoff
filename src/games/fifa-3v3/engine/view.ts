@@ -1,5 +1,6 @@
-import type { CharacterId } from "../roster";
+import type { BuildId } from "../builds";
 import type { TeamId } from "../teams";
+import { ceremonyTime } from "./ceremony";
 import { chargeLevel, isTap } from "./charge";
 import type { Athlete, AthleteAction, Dive, KeeperAction, MatchState, Phase, SkillKind } from "./types";
 import { angleDiff, len } from "./vec";
@@ -15,7 +16,7 @@ export type { FoulView, RefereeView, SetPieceView };
 export interface AthleteView {
   id: number;
   team: TeamId;
-  character: CharacterId;
+  build: BuildId;
   seat: number | null;
   x: number;
   z: number;
@@ -40,6 +41,17 @@ export interface AthleteView {
   guarding: boolean;
   /** Standing in a free kick wall, hands in front, waiting for the kick. */
   wall: boolean;
+  /** At the trophy ceremony: the captain lifting the cup, a team mate, or one of the beaten side. */
+  ceremony: CeremonyRole | null;
+}
+
+export type CeremonyRole = "captain" | "mate" | "beaten";
+
+/** The trophy ceremony, from the cut to it: seconds in, who has the cup, and whose side won. */
+export interface CeremonyView {
+  t: number;
+  captain: number | null;
+  team: TeamId;
 }
 
 export interface KeeperView {
@@ -91,6 +103,7 @@ export interface MatchView {
   setPiece: SetPieceView | null;
   foul: FoulView | null;
   shot: ShotView | null;
+  ceremony: CeremonyView | null;
 }
 
 export function buildView(state: MatchState): MatchView {
@@ -99,6 +112,7 @@ export function buildView(state: MatchState): MatchView {
   const celebrating = state.phase === "goal" || state.phase === "replay";
   const b = state.ball;
   const wall = state.setPiece?.wall ?? [];
+  const ceremony = ceremonyOf(state);
   return {
     time: state.time,
     phase: state.phase,
@@ -110,7 +124,7 @@ export function buildView(state: MatchState): MatchView {
     athletes: state.athletes.map((a) => ({
       id: a.id,
       team: a.team,
-      character: a.character,
+      build: a.build,
       seat: a.online ? a.seat : null,
       x: a.pos.x,
       z: a.pos.z,
@@ -129,6 +143,7 @@ export function buildView(state: MatchState): MatchView {
       signature: celebrating && a.id === scorer,
       guarding: a.guard.on,
       wall: wall.includes(a.id) && (state.phase === "setpiece" || a.action === "jump"),
+      ceremony: !ceremony ? null : a.id === ceremony.captain ? "captain" : a.team === ceremony.team ? "mate" : "beaten",
     })),
     keepers: [keeperView(state, 0), keeperView(state, 1)],
     scorer,
@@ -137,7 +152,14 @@ export function buildView(state: MatchState): MatchView {
     setPiece: setPieceView(state),
     foul: foulView(state),
     shot: state.flight ? { shooter: state.flight.shooter, x: state.flight.target.x, y: state.flight.target.y, z: state.flight.target.z } : null,
+    ceremony,
   };
+}
+
+function ceremonyOf(state: MatchState): CeremonyView | null {
+  const t = ceremonyTime(state);
+  if (t === null || !state.ceremony || state.winner === null) return null;
+  return { t, captain: state.ceremony.captain, team: state.winner };
 }
 
 function barOf(a: Athlete, hasBall: boolean): { bar: boolean; charge: number } {

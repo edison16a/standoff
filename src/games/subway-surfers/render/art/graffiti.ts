@@ -67,6 +67,34 @@ export function drawGraffiti(ctx: CanvasRenderingContext2D, seed: number, x: num
   ctx.restore();
 }
 
+const TAGS = ["KZ", "RYO", "ACE", "MOJO", "ZED", "BBOY", "JAX", "NOVA", "TOTO", "YUKI"];
+const MARKERS = ["#1f2138", "#ffffff", "#e8312a", "#1f6fd6", "#16a34a", "#8a4be8"];
+
+/** A quick tag: a name in one marker colour, slanted, with a flourish under it, like the ones on every wall. */
+export function drawTag(ctx: CanvasRenderingContext2D, seed: number, x: number, y: number, size = 30): void {
+  const rng = new Rng(seed * 104729 + 7);
+  const word = TAGS[rng.int(0, TAGS.length - 1)]!;
+  const color = MARKERS[rng.int(0, MARKERS.length - 1)]!;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rng.range(-0.35, 0.15));
+  ctx.transform(1, 0, -0.3, 1, 0, 0);
+  ctx.font = `900 ${size}px ${DISPLAY_FONT}`;
+  ctx.lineJoin = "round";
+  ctx.lineWidth = size * 0.14;
+  ctx.strokeStyle = color === "#ffffff" ? "#1f2138" : "#ffffff";
+  ctx.strokeText(word, 0, 0);
+  ctx.fillStyle = color;
+  ctx.fillText(word, 0, 0);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = size * 0.08;
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.2, size * 0.25);
+  ctx.quadraticCurveTo(size, size * 0.55, size * word.length * 0.7, size * 0.1);
+  ctx.stroke();
+  ctx.restore();
+}
+
 function blob(ctx: CanvasRenderingContext2D, rng: Rng, cx: number, cy: number, rx: number, ry: number): void {
   ctx.beginPath();
   const points = 14;

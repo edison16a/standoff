@@ -1,21 +1,25 @@
 import { describe, expect, it } from "vitest";
 import { CHARACTER_IDS } from "../roster";
 import type { MatchEvent } from "./events";
-import { foulChance } from "./fouls";
+import { forceFoul } from "./foul-call";
+import { frontness, handChance, inFront, shotsFor } from "./fouls";
 import { Match, type Entry } from "./match";
 import { gainPossession } from "./rules";
 import { DEFENCE, STEP } from "./tuning";
 
 const ENTRIES: Entry[] = CHARACTER_IDS.slice(0, 6).map((character, i) => ({ team: (i % 2) as 0 | 1, character, seat: null }));
 
-/** A live match with player 0 holding the ball at the top and defender 1 right on them. */
-function onBall(seed: number, gap = 0.9): Match {
+/**
+ * A live match with player 0 holding the ball at the top facing the rim, and defender 1
+ * `gap` away: square in front (toward the rim) or beside him.
+ */
+function onBall(seed: number, gap = 0.9, side = false): Match {
   const m = new Match({ entries: ENTRIES, seed, firstOffence: 0 });
   // Straight to live play: the countdown only costs time here.
   m.phase = "live";
   m.athletes.forEach((a, i) => Object.assign(a, { x: -6 + i * 2.4, z: 10.5, vx: 0, vz: 0, y: 0, auto: false, move: { x: 0, z: 0 }, action: { kind: "none" } }));
   Object.assign(m.athletes[0]!, { x: 0, z: 8, yaw: Math.PI });
-  Object.assign(m.athletes[1]!, { x: 0, z: 8 - gap, yaw: 0 });
+  Object.assign(m.athletes[1]!, side ? { x: gap, z: 8, yaw: -Math.PI / 2 } : { x: 0, z: 8 - gap, yaw: 0 });
   m.ball.holder = 0;
   m.ball.mode = "held";
   return m;
@@ -35,49 +39,56 @@ function swipe(m: Match): MatchEvent[] {
   return events;
 }
 
-describe("steals and the foul count", () => {
-  it("gives the chances in the rules: none, none, 20, 40, then 60 percent", () => {
-    expect([1, 2, 3, 4, 5, 6, 9].map(foulChance)).toEqual([0, 0, 0.2, 0.4, 0.6, 0.6, 0.6]);
+function foulRate(side: boolean, before: number, n = 200): number {
+  let fouls = 0;
+  for (let seed = 1; seed <= n; seed++) {
+    const m = onBall(seed, 0.9, side);
+    for (let i = 0; i < before; i++) m.stealLog.attempt(1, 0);
+    if (swipe(m).some((e) => e.type === "foul")) fouls++;
+  }
+  return fouls / n;
+}
+
+describe("reaching in and fouls", () => {
+  it("knows in front from beside and behind", () => {
+    const m = onBall(1);
+    const h = m.athletes[0]!;
+    expect(frontness({ x: 0, z: 7 }, h)).toBeCloseTo(1);
+    expect(inFront({ x: 0, z: 7 }, h)).toBe(true);
+    expect(inFront({ x: 1, z: 8 }, h)).toBe(false);
+    expect(inFront({ x: 0, z: 9 }, h)).toBe(false);
   });
 
-  it("only swipes from right next to the ball handler; further off it is a jump", () => {
-    const near = onBall(1, 0.9);
-    near.press(1, "defend");
-    expect(near.athletes[1]!.action.kind).toBe("steal");
-    const far = onBall(1, DEFENCE.stealRange + 0.3);
-    far.press(1, "defend");
-    expect(far.athletes[1]!.action.kind).toBe("block");
+  it("catches the hand more often with every reach in a possession", () => {
+    expect(handChance(0)).toBe(0);
+    expect(handChance(1)).toBeCloseTo(0.28);
+    expect(handChance(3)).toBeGreaterThan(handChance(2));
+    expect(handChance(20)).toBe(0.6);
   });
 
-  it("never fouls on the first two attempts", () => {
-    for (let seed = 1; seed <= 60; seed++) {
-      const m = onBall(seed);
-      m.stealLog.attempt(1, 0);
-      const events = swipe(m);
-      expect(events.some((e) => e.type === "foul")).toBe(false);
-      // Counted, unless the swipe won the ball and the slate was wiped.
-      if (!events.some((e) => e.type === "steal")) expect(m.stealLog.count(1, 0)).toBe(2);
-    }
+  it("gives two shots for a reach in, one after a made basket and three on a missed three", () => {
+    expect(shotsFor(false, 2)).toBe(2);
+    expect(shotsFor(true, 2)).toBe(1);
+    expect(shotsFor(false, 3)).toBe(3);
   });
 
-  it("fouls on about one third attempt in five, and more after", () => {
-    const rate = (before: number) => {
-      let fouls = 0;
-      const n = 300;
-      for (let seed = 1; seed <= n; seed++) {
-        const m = onBall(seed);
-        for (let i = 0; i < before; i++) m.stealLog.attempt(1, 0);
-        if (swipe(m).some((e) => e.type === "foul")) fouls++;
-      }
-      return fouls / n;
-    };
-    expect(rate(2)).toBeGreaterThan(0.13);
-    expect(rate(2)).toBeLessThan(0.27);
-    expect(rate(3)).toBeGreaterThan(0.31);
-    expect(rate(3)).toBeLessThan(0.49);
-    expect(rate(6)).toBeGreaterThan(0.5);
-    expect(rate(6)).toBeLessThan(0.7);
+  it("never fouls from square in front", () => {
+    expect(foulRate(false, 4, 80)).toBe(0);
+  });
+
+  it("fouls from the side when the swipe catches the hand", () => {
+    const first = foulRate(true, 0);
+    expect(first).toBeGreaterThan(0.18);
+    expect(first).toBeLessThan(0.4);
+    expect(foulRate(true, 3)).toBeGreaterThan(first);
   }, 30000);
+
+  it("swipes at air from too far and counts nothing", () => {
+    const far = onBall(1, DEFENCE.stealRange + 0.6);
+    const events = swipe(far);
+    expect(events.some((e) => e.type === "whiff")).toBe(true);
+    expect(far.stealLog.count(1, 0)).toBe(0);
+  });
 
   it("wipes the count when the other team gets the ball", () => {
     const m = onBall(3);
@@ -89,14 +100,12 @@ describe("steals and the foul count", () => {
     expect(m.stealLog.count(1, 0)).toBe(0);
   });
 
-  it("counts each defender on each ball handler on its own", () => {
-    const m = onBall(4);
-    m.stealLog.attempt(1, 0);
-    m.stealLog.attempt(1, 0);
-    m.stealLog.attempt(3, 0);
-    m.stealLog.attempt(1, 2);
-    expect(m.stealLog.count(1, 0)).toBe(2);
-    expect(m.stealLog.count(3, 0)).toBe(1);
-    expect(m.stealLog.count(1, 2)).toBe(1);
+  it("sends the ball handler to the line with the whistle and the referee", () => {
+    const m = onBall(5);
+    expect(forceFoul(m)).toBe(true);
+    expect(m.phase).toBe("freeThrow");
+    expect(m.freeThrows).toMatchObject({ shooter: 0, shots: 2, stage: "whistle" });
+    expect(m.foulCall).toMatchObject({ kind: "reach", victim: 0 });
+    expect(m.drainEvents().some((e) => e.type === "foul")).toBe(true);
   });
 });

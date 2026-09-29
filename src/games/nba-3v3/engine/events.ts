@@ -27,10 +27,12 @@ export type MatchEvent =
   | { type: "shake"; id: number; victim: number; hard: boolean }
   /** A dribble move went wrong and the ball got away, knocked by `by` if a defender was on top. */
   | { type: "fumble"; id: number; by: number | null }
-  /** Reaching in once too often: a foul on `id`, and two shots for `victim`. */
-  | { type: "foul"; id: number; victim: number; attempt: number }
-  /** A free throw is ready to shoot: shot `n` of 2. */
-  | { type: "freeThrow"; id: number; n: 1 | 2 }
+  /** The whistle: a foul on `id` against `victim`, a reach in or contact on a shot. */
+  | { type: "foul"; id: number; victim: number; attempt: number; shooting: boolean }
+  /** A fouled shot went in: the basket counts, and one free throw. */
+  | { type: "andOne"; id: number }
+  /** A free throw is ready to shoot: shot `n` of `of`. */
+  | { type: "freeThrow"; id: number; n: number; of: number }
   | { type: "miss"; id: number }
   | { type: "block"; id: number; victim: number }
   | { type: "steal"; id: number; victim: number }

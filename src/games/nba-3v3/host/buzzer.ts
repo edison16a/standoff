@@ -59,11 +59,14 @@ export class Buzzer {
         if (e.by !== null) send(e.by, "steal", "Poked it!");
         return;
       case "foul":
-        send(e.id, "whistle", "Foul");
-        send(e.victim, "whistle", "Fouled! Two shots");
+        send(e.id, "whistle", "Foul on you");
+        send(e.victim, "whistle", e.shooting ? "Fouled on the shot" : "Fouled! Two shots");
+        return;
+      case "andOne":
+        send(e.id, "score", "And one!");
         return;
       case "freeThrow":
-        send(e.id, "ball", `Free throw ${e.n} of 2`);
+        send(e.id, "ball", `Free throw ${e.n} of ${e.of}`);
         return;
       case "violation":
         for (const seat of athleteBySeat.keys()) this.phones.buzz(seat, "whistle", e.reason === "clock" ? "Shot clock" : "Out of bounds");

@@ -1,0 +1,166 @@
+/*
+  The replay of the winning basket: a replay bug in the corner, a
+  letterbox frame, and the skip vote along the bottom on the big
+  screen; a big Skip button on the phone.
+*/
+
+.nba-replay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  animation: nba-fade 0.4s ease-out both;
+}
+
+.nba-replay__frame {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 9vh 0 rgba(0, 0, 0, 0.82), inset 0 -9vh 0 rgba(0, 0, 0, 0.82);
+}
+
+.nba-replay__bug {
+  position: absolute;
+  top: calc(9vh + 18px);
+  left: 24px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 8px 12px;
+  border-radius: 10px;
+  background: rgba(8, 10, 24, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 15px;
+}
+
+.nba-replay__bug strong {
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: 22px;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.nba-replay__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 12px #ef4444;
+  animation: nba-replay-blink 1s steps(2, start) infinite;
+}
+
+@keyframes nba-replay-blink {
+  to {
+    visibility: hidden;
+  }
+}
+
+.nba-replay__skip {
+  position: absolute;
+  right: 0;
+  bottom: calc(9vh - 52px);
+  left: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 15px;
+}
+
+.nba-replay__votes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nba-replay__votes li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 700;
+}
+
+.nba-replay__votes li.is-done {
+  background: #16a34a;
+  border-color: #22c55e;
+  color: #fff;
+}
+
+.nba-replay__votes svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* On the phone: the whole screen is the skip button. */
+
+.nba-skip {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 0;
+  padding: 12px;
+  text-align: center;
+}
+
+.nba-skip__button {
+  display: grid;
+  place-items: center;
+  width: min(62vw, 360px);
+  height: min(34vh, 150px);
+  border: 0;
+  border-radius: 24px;
+  background: var(--team, #ff7a18);
+  color: #fff;
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 10px 0 rgba(0, 0, 0, 0.35);
+  touch-action: manipulation;
+}
+
+.nba-skip__button:active {
+  transform: translateY(4px);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.35);
+}
+
+.nba-skip__button:disabled {
+  background: #16a34a;
+  box-shadow: none;
+}
+
+.nba-skip__votes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.nba-skip__votes li {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.nba-skip__votes li.is-done {
+  background: #16a34a;
+}

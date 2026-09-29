@@ -70,7 +70,9 @@ export function playCue(e: MatchEvent, m: Match, kit: CueKit): void {
       if (e.reason === "clock") return arena.shotClockBuzzer();
       return sfx.whistle();
     case "foul":
-      return sfx.whistle();
+      return sfx.foulWhistle();
+    case "andOne":
+      return kit.stab("charge", 64);
     case "shake":
       return sfx.squeak(e.hard ? 1 : 0.6);
     case "fumble":

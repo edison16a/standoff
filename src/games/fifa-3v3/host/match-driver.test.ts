@@ -12,8 +12,8 @@ const PAD = { stick: () => ({ x: 0, y: 0 }), isHeld: () => false } as unknown as
 function driver(): { d: MatchDriver; run: (seconds: number) => MatchEvent[] } {
   const d = new MatchDriver(
     [
-      { team: 0, character: "echeverri", seat: 1 },
-      { team: 1, character: "holmvik", seat: null },
+      { team: 0, build: "playmaker", seat: 1 },
+      { team: 1, build: "keeper", seat: null },
     ],
     3,
   );

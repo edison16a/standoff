@@ -5,7 +5,7 @@ import { MatchDriver } from "./match-driver";
 const ENTRIES = [
   { team: 0 as const, character: "ashby" as const, seat: 1 },
   { team: 0 as const, character: "varelas" as const, seat: null },
-  { team: 0 as const, character: "vukmir" as const, seat: null },
+  { team: 0 as const, character: "zupan" as const, seat: null },
   { team: 1 as const, character: "whitlock" as const, seat: 2 },
   { team: 1 as const, character: "zupan" as const, seat: null },
   { team: 1 as const, character: "delacroix" as const, seat: null },

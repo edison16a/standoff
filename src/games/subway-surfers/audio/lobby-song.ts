@@ -4,7 +4,7 @@ import { bars, heldFor, swung, type Song } from "./score";
 
 /**
  * "Night Platform": the menus, a slow late night groove in F major at
- * 100, the disco band's lounge cousin. Sixteen bars: a soft gliding lead
+ * 100, the run beat's lounge cousin. Sixteen bars: a soft gliding lead
  * floats over the A section and the electric piano sings the B section,
  * over a breathing pad that never stops, a round bass and a padded kit.
  */

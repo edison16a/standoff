@@ -1,5 +1,5 @@
 import { KNEE_SLIDE, SUI } from "../../engine/celebrate-moves";
-import type { Celebration } from "../../roster";
+import type { Celebration } from "../../looks";
 import type { Frame } from "./frame";
 import { neutral, type Pose } from "./pose";
 

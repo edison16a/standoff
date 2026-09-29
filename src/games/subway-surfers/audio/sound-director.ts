@@ -7,6 +7,7 @@ import { Drone } from "./drone";
 import { Hype } from "./hype";
 import { Music, type TuneName } from "./music";
 import { Sfx } from "./sfx";
+import { Rumble, trainNearness } from "./yard";
 
 interface Voice {
   pan: number;
@@ -16,6 +17,7 @@ interface Voice {
   guard: boolean;
   jet: Drone;
   board: Drone;
+  rumble: Rumble;
 }
 
 /**
@@ -41,7 +43,7 @@ export class SoundDirector {
     this.stopVoices();
     this.voices = Array.from({ length: count }, (_, i) => {
       const pan = count === 1 ? 0 : i === 0 ? -0.55 : 0.55;
-      return { pan, stride: 0, left: false, guard: false, jet: new Drone(this.engine, 700, pan), board: new Drone(this.engine, 2400, pan) };
+      return { pan, stride: 0, left: false, guard: false, jet: new Drone(this.engine, 700, pan), board: new Drone(this.engine, 2400, pan), rumble: new Rumble(this.engine, pan) };
     });
   }
 
@@ -59,6 +61,16 @@ export class SoundDirector {
     this.engine.duck("music", 0.3, 3);
     fanfare(this.engine, this.engine.bus("sfx"), big);
     cheer(this.engine, this.engine.bus("crowd"), big);
+  }
+
+  /**
+   * One count of the countdown: a tick, or the horn blast of GO. Under it
+   * the kid shakes a spray can on three and two, and tags the train on one.
+   */
+  count(count: number): void {
+    this.sfx.countdown(count === 0);
+    if (count === 3 || count === 2) this.sfx.rattle(0);
+    if (count === 1) this.sfx.spray(0, 0.85);
   }
 
   panFor(slot: number): number {
@@ -127,6 +139,7 @@ export class SoundDirector {
       voice.guard = guard;
       voice.jet.set(live && run.powers.has("jetpack") ? 0.3 : 0, now);
       voice.board.set(live && run.powers.has("hoverboard") ? 0.05 : 0, now);
+      voice.rumble.set(live ? trainNearness(run) : 0, now);
       if (live) fastest = Math.max(fastest, run.paceAt(run.runner.distance));
     });
     // The beat quickens by up to a tenth as the runners reach top speed.
@@ -144,6 +157,7 @@ export class SoundDirector {
     for (const voice of this.voices) {
       voice.jet.stop();
       voice.board.stop();
+      voice.rumble.stop();
     }
     this.voices = [];
   }

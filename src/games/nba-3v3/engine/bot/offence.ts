@@ -37,7 +37,7 @@ export function thinkWithBall(m: Match, a: Athlete, s: BotState, dt: number): vo
   }
   if (s.target) goTo(a, s.target);
   if (s.decideIn > 0) return;
-  s.decideIn = 0.14 + m.rng() * 0.16;
+  s.decideIn = 0.14 + m.rng() * 0.16 + m.bots.think;
   decide(m, a, s);
 }
 
@@ -109,7 +109,7 @@ function shoot(m: Match, a: Athlete, s: BotState, d: number): void {
   }
   a.move = { x: 0, z: 0 };
   s.target = null;
-  s.shotAt = GREEN_MS + gaussian(m.rng, releaseSpread(st.shooting)) + (a.onFire ? 0 : 6);
+  s.shotAt = GREEN_MS + gaussian(m.rng, releaseSpread(st.shooting) * m.bots.spread) + (a.onFire ? 0 : 6);
   m.press(a.id, "shoot");
   s.holdFor = 0;
 }

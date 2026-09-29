@@ -1,6 +1,6 @@
 "use client";
 import { playerColor } from "@/games/kit/players";
-import { ROSTER } from "../../roster";
+import { BUILDS } from "../../builds";
 import { TEAMS } from "../../teams";
 import { useFifaStore } from "../host-store";
 import { ReplayOverlay } from "./ReplayOverlay";
@@ -42,7 +42,7 @@ function MomentTag() {
   );
 }
 
-/** Along the bottom: each phone's player, their star and side, and who has the ball. Gone at full time, where the results card lists everyone. */
+/** Along the bottom: each phone's player, their build and side, and who has the ball. Gone at full time, where the results card lists everyone. */
 function PlayerStrip() {
   const roster = useFifaStore((s) => s.roster);
   const over = useFifaStore((s) => s.phase === "fulltime");
@@ -57,18 +57,19 @@ function PlayerStrip() {
         >
           <span className="fifa-strip__dot" />
           <span className="fifa-strip__name">{p.name}</span>
-          <span className="fifa-strip__star">{p.away ? "Computer playing" : ROSTER[p.character].short}</span>
+          <span className="fifa-strip__star">{p.away ? "Computer playing" : BUILDS[p.build].name}</span>
         </li>
       ))}
     </ul>
   );
 }
 
-/** No banners across the picture: goals and fouls are told by the score bug and the 3D scene. */
+/** No banners across the picture: goals and fouls are told by the score bug and the 3D scene. The ceremony has its own names instead. */
 export function MatchHud() {
+  const ceremony = useFifaStore((s) => s.ceremony !== null);
   return (
     <div className="fifa-hud">
-      <Scoreboard />
+      {!ceremony && <Scoreboard />}
       <ReplayOverlay />
       <PlayerStrip />
     </div>

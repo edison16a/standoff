@@ -1,6 +1,7 @@
 "use client";
-import type { CSSProperties } from "react";
+import { lazy, Suspense, type CSSProperties } from "react";
 import { Icon } from "@/components/ui/Icon";
+import { VictoryOverlay } from "@/games/kit/victory/ui/VictoryOverlay";
 import type { TeamId } from "../../engine/fighter";
 import { GUNS } from "../../engine/guns";
 import { CHARACTERS } from "../../roster";
@@ -9,24 +10,8 @@ import { GunIcon } from "../../ui/GunIcon";
 import { useCounterStore, type ResultRow } from "../host-store";
 import { useSession } from "./session-context";
 
-/** Paint confetti falling over the card in the winners' colour and the field's lime. Fixed positions, so it never jumps between renders. */
-function Confetti({ colours }: { colours: string[] }) {
-  return (
-    <div className="cb-confetti" aria-hidden="true">
-      {Array.from({ length: 42 }, (_, i) => (
-        <span
-          key={i}
-          style={{
-            left: `${(i * 37) % 100}%`,
-            background: colours[i % colours.length],
-            animationDelay: `${(i % 9) * 0.21}s`,
-            animationDuration: `${2.5 + (i % 5) * 0.35}s`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
+// The winners' 3D scene loads with the results, not with the match.
+const TeamCanvas = lazy(() => import("./results/TeamCanvas"));
 
 function Row({ r }: { r: ResultRow }) {
   return (
@@ -38,9 +23,8 @@ function Row({ r }: { r: ResultRow }) {
         </span>
       </th>
       <td>
-        <span className="cb-rank__gun">
-          <GunIcon gun={r.gun} size={52} />
-          <small>{GUNS[r.gun].name}</small>
+        <span className="cb-rank__gun" title={GUNS[r.gun].name}>
+          <GunIcon gun={r.gun} size={40} />
         </span>
       </td>
       <td>{r.kills}</td>
@@ -52,9 +36,11 @@ function Row({ r }: { r: ResultRow }) {
 }
 
 /**
- * The results: the winning side with confetti in its colour, then every
- * fighter team by team with kills, deaths, head shots and damage. Play
- * again keeps the teams and guns; Menu goes back to the lobby.
+ * The winners' scene: the winning team together on a stage spattered
+ * with paint, the top scorer lifting the cup, their names big across the
+ * top. Once the names have landed, every fighter's kills, deaths, head
+ * shots and damage come up in the bottom right corner, winners first.
+ * Play again keeps the teams and guns; Menu goes back to the lobby.
  */
 export function Results() {
   const session = useSession();
@@ -63,22 +49,24 @@ export function Results() {
   const score = useCounterStore((s) => s.score);
   const canStart = useCounterStore((s) => s.canStart);
   const team: TeamId = winner ?? 0;
-  const winners = results.filter((r) => r.team === team);
-  const title = winners.length === 1 ? `${winners[0]!.name} wins` : `${TEAMS[team].name} team wins`;
+  const other: TeamId = team === 0 ? 1 : 0;
+  // Top scorer first: they lift the cup, on the left, and their name leads.
+  const winners = results.filter((r) => r.team === team).sort((a, b) => b.kills - a.kills || b.damage - a.damage);
   const sorted = [...results].sort((a, b) => (a.team === team ? 0 : 1) - (b.team === team ? 0 : 1) || b.kills - a.kills);
   return (
     <div className="cb-results" style={{ "--team": TEAMS[team].color } as CSSProperties}>
-      <Confetti colours={[TEAMS[team].color, "#b8f400", "#ffffff", ...winners.map((w) => w.colour)]} />
-      <div className="cb-results__card">
-        <header className="cb-results__head">
-          <span className="cb-results__eyebrow">Match over</span>
-          <h2>{title}</h2>
-          <p className="cb-results__score">
-            <span style={{ color: TEAMS[0].color }}>{score[0]}</span>
-            <span aria-hidden="true">:</span>
-            <span style={{ color: TEAMS[1].color }}>{score[1]}</span>
-          </p>
-        </header>
+      {winners.length > 0 && (
+        <Suspense fallback={null}>
+          <TeamCanvas team={team} winners={winners.map((w) => ({ character: w.character, gun: w.gun, colour: w.colour }))} />
+        </Suspense>
+      )}
+      <VictoryOverlay
+        eyebrow={winners.length > 1 ? `${TEAMS[team].name} team wins` : "Winner"}
+        names={winners.map((w) => ({ name: w.name, colour: w.colour }))}
+        subtitle={`${TEAMS[team].name} team, ${score[team]} rounds to ${score[other]}`}
+      />
+      {/* In the bottom right corner, so the winners have the middle and the room's QR code keeps the bottom left. */}
+      <div className="cb-results__panel">
         <table className="cb-rank">
           <thead>
             <tr>

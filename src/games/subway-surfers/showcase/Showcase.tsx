@@ -23,7 +23,7 @@ export function Showcase({ view }: { view: ShowcaseView }) {
     if (!canvas) return;
     const shot = SHOTS[view];
     const renderer = new Renderer(canvas, { preserve: true });
-    const scene = new RunScene(shot.seed, shot.look, renderer.environment);
+    const scene = new RunScene(shot.seed, shot.look);
     const director = new Director(shot, scene);
     const fit = () => renderer.resize(canvas.clientWidth, canvas.clientHeight, 1);
     fit();

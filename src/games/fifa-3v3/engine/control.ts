@@ -1,5 +1,6 @@
 import { canPlay, footPoint } from "./athlete";
 import { ballSpeed } from "./ball";
+import { heavyTouch, takeRange } from "./build-effects";
 import { firstTime } from "./buttons";
 import { TOUCH } from "./tuning";
 import type { Athlete, MatchState } from "./types";
@@ -7,8 +8,8 @@ import { dist } from "./vec";
 
 /**
  * A loose ball near a player's feet is brought under control by the
- * nearest one who can play it. A hard ball may bounce off a poor first
- * touch. A player who pressed Shoot as it arrived hits it first time.
+ * nearest one who can play it, and long legs reach it from further. A
+ * hard ball may bounce off a poor first touch; quick reflexes kill it. A player who pressed Shoot as it arrived hits it first time.
  */
 export function tryControl(state: MatchState): void {
   const ball = state.ball;
@@ -19,14 +20,14 @@ export function tryControl(state: MatchState): void {
   for (const a of state.athletes) {
     if (a.noTouch > 0 || !canPlay(a)) continue;
     const d = dist(footPoint(a), ball.pos);
-    if (d < TOUCH.controlRange + 0.18 * a.dribbling && d < bestD) {
+    if (d < TOUCH.controlRange + takeRange(a) && d < bestD) {
       best = a;
       bestD = d;
     }
   }
   if (!best) return;
   const speed = ballSpeed(ball);
-  if (speed > TOUCH.hardBall && state.rng.chance(0.5 - 0.35 * best.dribbling)) {
+  if (speed > TOUCH.hardBall && state.rng.chance(heavyTouch(best))) {
     // A heavy touch: the ball cannons off the boot.
     ball.vel.x = -ball.vel.x * 0.25 + state.rng.range(-2, 2);
     ball.vel.z = -ball.vel.z * 0.25 + state.rng.range(-2, 2);

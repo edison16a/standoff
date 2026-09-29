@@ -29,14 +29,16 @@ const OUT_BOXER: RingStyle = { range: 1.3, stalk: 0.14, circle: 0.8, switchMs: [
 /** A swarmer: right in your chest, bobbing, never still. */
 const SWARMER: RingStyle = { range: 0.98, stalk: 0.62, circle: 0.36, switchMs: [900, 2000], cut: 0.7, retreat: 0.1, rhythm: 0.07 };
 
-const BY_NAME: Record<string, RingStyle> = {
-  rocco: PRESSURE,
-  marcus: BOXER_PUNCHER,
-  kenji: OUT_BOXER,
-  diego: SWARMER,
+export type FootworkName = "pressure" | "boxer-puncher" | "out-boxer" | "swarmer";
+
+const BY_NAME: Record<FootworkName, RingStyle> = {
+  pressure: PRESSURE,
+  "boxer-puncher": BOXER_PUNCHER,
+  "out-boxer": OUT_BOXER,
+  swarmer: SWARMER,
 };
 
-/** The footwork for a boxer, by the id of the boxer chosen. Anyone unknown boxes in the middle of the road. */
+/** The footwork by its name, as a build names it. Anything else boxes in the middle of the road. */
 export function ringStyleFor(name: string | undefined): RingStyle {
-  return (name && BY_NAME[name]) || BOXER_PUNCHER;
+  return (name && BY_NAME[name as FootworkName]) || BOXER_PUNCHER;
 }

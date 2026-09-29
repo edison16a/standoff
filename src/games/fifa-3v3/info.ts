@@ -6,7 +6,7 @@ import poster from "./media/poster.jpg";
 export const info: GameInfo = {
   id: "fifa-3v3",
   title: "Soccer 3v3",
-  tagline: "Three on three football with the stars and a keeper in each goal. Slide in and shoot.",
+  tagline: "Three on three football. Pick a build, play under your own name, and lift the cup.",
   status: "ready",
   players: [1, 2, 3, 4, 5, 6],
   color: "#14b8a6",

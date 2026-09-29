@@ -1,6 +1,8 @@
 import type { Player } from "@/platform/games/game-api";
 import type { Match } from "../engine/match";
-import { canSteal } from "../engine/defend";
+import type { Athlete } from "../engine/types";
+import { canSteal, stealInReach } from "../engine/defend";
+import { guardStatus } from "../engine/guard";
 import { greenHalfMs, GREEN_MS } from "../engine/shot-model";
 import { RULES, SHOT } from "../engine/tuning";
 import type { CourtState, Phase, PhoneState } from "../protocol";
@@ -21,7 +23,15 @@ export interface PublishContext {
 export function phaseOf(driver: MatchDriver | null): Phase {
   const m = driver?.match;
   if (!m) return "lobby";
+  if (driver.replays.replay) return "replay";
   return m.phase === "countdown" ? "countdown" : m.phase === "over" ? "over" : "live";
+}
+
+/** Who has voted to skip the replay, by name, in the order they play. */
+export function replayVotes(driver: MatchDriver | null, players: readonly Player[]): { seat: number; name: string; done: boolean }[] {
+  const r = driver?.replays.replay;
+  if (!r || !driver) return [];
+  return r.voters.map((seat) => ({ seat, name: nameFor(driver.match, driver.athleteBySeat.get(seat) ?? -1, players) || "Player", done: r.skipped.has(seat) }));
 }
 
 /** The name a player goes by on screen: their own for people, the star's for computer players. */
@@ -35,7 +45,7 @@ export function nameFor(m: Match, id: number, players: readonly Player[]): strin
 /** What the scoreboard says during free throws, or null the rest of the time. */
 export function freeThrowText(m: Match): string | null {
   const ft = m.phase === "freeThrow" ? m.freeThrows : null;
-  return ft ? `Free throw ${ft.shot} of 2` : null;
+  return ft ? `Free throw ${ft.shot} of ${ft.shots}` : null;
 }
 
 /** What one phone's controller shows for its player. */
@@ -53,7 +63,10 @@ export function courtState(m: Match, id: number, players: readonly Player[]): Co
     holder: holder ? nameFor(m, holder.id, players) : null,
     mustClear: m.needsClear && m.offence === a.team,
     canSteal: canSteal(m, a),
-    freeThrow: ft ? { mine, n: ft.shot, ready: mine && ft.stage === "set" } : null,
+    stealReach: stealInReach(m, a),
+    defending: m.phase === "live" && m.defending(a),
+    guard: guardStatus(m, a),
+    freeThrow: ft ? { mine, n: ft.shot, of: ft.shots, ready: mine && ft.stage === "set" } : null,
     // At the line the green band is wider: a set shot with nobody in the face.
     meter: { fullMs: SHOT.meterMs, greenMs: GREEN_MS, halfMs: greenHalfMs(CHARACTERS[a.character].stats.shooting, a.onFire, mine) },
     onFire: a.onFire,
@@ -61,6 +74,12 @@ export function courtState(m: Match, id: number, players: readonly Player[]): Co
     checking: m.phase === "dead" || m.phase === "check",
     countdown: m.phase === "countdown" ? Math.max(0, Math.ceil(RULES.countdown - m.phaseT)) : null,
   };
+}
+
+/** A player's line on the phone at the end. */
+function lineOf(a: Athlete): { points: number; rebounds: number; assists: number; steals: number; blocks: number } {
+  const b = a.box;
+  return { points: b.points, rebounds: b.rebounds, assists: b.assists, steals: b.steals, blocks: b.blocks };
 }
 
 function results(m: Match, players: readonly Player[]): ResultRow[] {
@@ -80,11 +99,16 @@ export function publish(c: PublishContext): void {
   });
   const spots = c.lobby.spots().map((s) => ({ ...s, name: s.seat === null ? "Computer" : (c.players.find((p) => p.seat === s.seat)?.name ?? "Player") }));
   const inGame = new Set(c.driver ? [...c.driver.athleteBySeat.keys()] : []);
+  const votes = replayVotes(c.driver, c.players);
+  const replay = c.driver?.replays.replay;
   store.setState({
+    replay: replay ? { view: replay.view, scorer: nameFor(replay.ghost, replay.scorer, c.players), votes: votes.map(({ name, done }) => ({ name, done })) } : null,
+    replayDue: !!c.driver?.replays.pending,
     phase,
     seats,
     spots,
     bots: c.lobby.bots,
+    level: c.lobby.level,
     startBlock: c.lobby.startBlock(),
     score: m ? [m.score[0], m.score[1]] : [0, 0],
     shotClock: m ? Math.max(0, Math.ceil(m.shotClock)) : RULES.shotClock,
@@ -99,20 +123,23 @@ export function publish(c: PublishContext): void {
     results: m && m.phase === "over" ? results(m, c.players) : [],
     waiting: c.driver ? seats.filter((s) => s.connected && !inGame.has(s.seat)).map((s) => s.name) : [],
   });
+  // Until the replay rolls the phones keep the controller up, rather than flash the result before the Skip button.
+  const early = !!c.driver?.replays.pending;
   for (const seat of c.lobby.connectedSeats) {
     const s = c.lobby.seats.get(seat)!;
     const id = c.driver?.athleteBySeat.get(seat);
     const athlete = m && id !== undefined ? m.athletes[id] : undefined;
     const state: PhoneState = {
       kind: "state",
-      phase,
+      phase: early ? "live" : phase,
       taken: c.lobby.taken(seat),
       pick: s.pick,
       ready: s.ready,
       team: s.team,
       playing: !!athlete,
       court: m && athlete ? courtState(m, athlete.id, c.players) : null,
-      result: m && athlete && m.phase === "over" ? { won: m.winner === athlete.team, points: athlete.box.points, rebounds: athlete.box.rebounds, assists: athlete.box.assists } : null,
+      replay: replay && athlete ? { voted: replay.skipped.has(seat), votes: votes.map(({ name, done }) => ({ name, done })) } : null,
+      result: m && athlete && m.phase === "over" && !early ? { won: m.winner === athlete.team, ...lineOf(athlete) } : null,
     };
     c.phones.sendState(seat, state, c.nowMs);
   }

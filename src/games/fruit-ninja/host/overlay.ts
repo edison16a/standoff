@@ -100,7 +100,10 @@ export class Overlay {
       if (tag.textContent !== name) tag.textContent = name;
       tag.classList.toggle("fn-tag--stunned", blade.stunned);
       const { left, top } = this.toPixels(blade.x, blade.y);
-      tag.style.transform = `translate(${left + 18}px, ${top - 34}px)`;
+      // A blade held at the screen's edge keeps its name in sight: it flips below or to the left of the tip.
+      const x = left + 18 + tag.offsetWidth > this.root.clientWidth ? left - 18 - tag.offsetWidth : left + 18;
+      const y = top - 34 < 4 ? top + 14 : top - 34;
+      tag.style.transform = `translate(${x}px, ${y}px)`;
     }
     for (const [seat, tag] of this.labels) {
       if (seen.has(seat)) continue;

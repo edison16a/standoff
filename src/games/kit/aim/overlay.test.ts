@@ -61,8 +61,13 @@ describe("the aim overlay", () => {
     HTMLCanvasElement.prototype.getContext = (() => recordingContext(calls)) as unknown as HTMLCanvasElement["getContext"];
     Object.defineProperty(HTMLCanvasElement.prototype, "clientWidth", { get: () => 800, configurable: true });
     Object.defineProperty(HTMLCanvasElement.prototype, "clientHeight", { get: () => 400, configurable: true });
+    // The game's box the overlay draws in, which fills the page here.
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ left: 0, top: 0, width: 800, height: 400 } as DOMRect);
   });
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
 
   it("shows each player's targets inside their zone, then their dot, and no dots once asked not to", () => {
     const { room, say } = fakeRoom();
@@ -99,6 +104,61 @@ describe("the aim overlay", () => {
     expect(calls.some((c) => c.name === "clearRect")).toBe(true);
     expect(calls.some((c) => c.name === "createRadialGradient")).toBe(false);
     act(() => root.unmount());
+    aim.dispose();
+  });
+
+  it("gives a game that draws its own pointer the dot only while the aim is held at the edge", () => {
+    const { room, say } = fakeRoom();
+    const aim = new HostAim(room);
+    const host = document.createElement("div");
+    const root = createRoot(host);
+    let clock = performance.now();
+    vi.spyOn(performance, "now").mockImplementation(() => clock);
+    act(() => root.render(createElement(AimOverlay, { aim, players: () => PLAYERS, dots: false })));
+    say(1, { kind: "aim", x: 0.5, y: 0.2 });
+    say(2, { kind: "aim", x: 1.15, y: 1.15 });
+    // Half a second of frames, for the drawn dot to reach the edge.
+    for (let i = 0; i < 10; i++) {
+      clock += 50;
+      calls.length = 0;
+      step();
+    }
+    // Only Ben, pointing past the top right corner, gets a dot, drawn whole just inside the corner and with no name.
+    const glows = calls.filter((c) => c.name === "createRadialGradient");
+    expect(glows).toHaveLength(1);
+    const [x, y] = glows[0]!.args as number[];
+    expect(x).toBeGreaterThan(770);
+    expect(x).toBeLessThanOrEqual(786);
+    expect(y).toBeGreaterThanOrEqual(14);
+    expect(y).toBeLessThan(30);
+    expect(calls.some((c) => c.name === "fillText")).toBe(false);
+    // Back in, it fades out over a moment rather than blinking off, so a hand shaking at the edge never makes it flicker.
+    say(2, { kind: "aim", x: 0.9, y: 0.9 });
+    const glowsAfter = (ms: number) => {
+      clock += ms;
+      calls.length = 0;
+      step();
+      return calls.filter((c) => c.name === "createRadialGradient").length;
+    };
+    expect(glowsAfter(100)).toBe(1);
+    expect(glowsAfter(200)).toBe(0);
+    act(() => root.unmount());
+    aim.dispose();
+  });
+
+  it("sits on top of the page, over the join card, but draws in the box of the game it is placed in", () => {
+    const { room, say } = fakeRoom();
+    const aim = new HostAim(room);
+    const host = document.createElement("div");
+    const root = createRoot(host);
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ left: 100, top: 50, width: 800, height: 400 } as DOMRect);
+    act(() => root.render(createElement(AimOverlay, { aim, players: () => PLAYERS })));
+    expect(document.body.querySelector(":scope > canvas.aim-overlay")).not.toBeNull();
+    say(1, { kind: "aim-step", step: "center" });
+    step();
+    expect(calls.find((c) => c.name === "translate")?.args).toEqual([100, 50]);
+    act(() => root.unmount());
+    expect(document.body.querySelector("canvas.aim-overlay")).toBeNull();
     aim.dispose();
   });
 });

@@ -1,0 +1,112 @@
+/*
+  The lobby over the stadium: the logo, two team columns with the
+  players the host put on each side and their roles, the bench, the
+  computer difficulty and the kick off button.
+*/
+
+.fb-lobby {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 72px 48px 28px;
+  background: radial-gradient(ellipse at 50% 40%, rgba(5, 7, 15, 0.35), rgba(5, 7, 15, 0.82));
+  overflow-y: auto;
+}
+
+.fb-lobby__title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.fb-lobby__logo {
+  font-family: var(--fb-display);
+  font-size: clamp(48px, 6vw, 88px);
+  font-style: italic;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+}
+
+.fb-lobby__logo em {
+  display: inline-block;
+  margin-left: 0.15em;
+  padding: 0 0.16em 0.04em;
+  transform: skewX(-8deg);
+  border-radius: 0.12em;
+  background: linear-gradient(135deg, #1e5bd8 0 48%, #e2412b 52% 100%);
+  font-style: italic;
+}
+
+.fb-lobby__title p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 18px;
+}
+
+.fb-lobby__teams {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: start;
+  gap: 24px;
+  width: min(1180px, 100%);
+}
+
+.fb-lobby__vs {
+  align-self: center;
+  font-family: var(--fb-display);
+  font-size: 44px;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.fb-team {
+  border-top: 6px solid var(--team);
+  border-radius: 14px;
+  background: var(--fb-glass);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+}
+
+.fb-team__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px 8px;
+}
+
+.fb-team__head h2 {
+  flex: 1;
+  margin: 0;
+  font-family: var(--fb-display);
+  font-size: 30px;
+  font-style: italic;
+  text-transform: uppercase;
+}
+
+.fb-team__badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: var(--team);
+  font-family: var(--fb-display);
+  font-size: 16px;
+}
+
+.fb-team__count {
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 700;
+}
+
+.fb-team__list,
+.fb-bench ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 14px 16px;
+  list-style: none;
+}

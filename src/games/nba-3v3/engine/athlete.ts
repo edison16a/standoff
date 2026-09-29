@@ -11,9 +11,12 @@ export function createAthlete(id: number, team: TeamId, slot: number, character:
     id, team, slot, character, seat, auto: seat === null,
     x: 0, z: 8, vx: 0, vz: 0, y: 0, yaw: Math.PI,
     move: { x: 0, z: 0 },
+    stick: { x: 0, z: 0 },
+    guard: false,
+    guardAim: null,
     action: { kind: "none" },
     stealCd: 0, blockCd: 0, grabCd: 0, whiff: 0, squeakCd: 0, plant: 0, recover: 0, moveCd: 0, moveHeat: 0,
-    streak: 0, onFire: false, dribble: 0, dribbleHand: 1, dribbleSide: 1, crossCd: 0, crossArmed: true, pocket: 0, calledAt: -99,
+    streak: 0, onFire: false, dribble: 0, dribbleHand: 1, dribbleSide: 1, crossCd: 0, crossArmed: true, pocket: 0, calledAt: -99, cheer: null,
     box: { points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0, made: 0, attempts: 0, threes: 0, dunks: 0, freeMade: 0, freeAttempts: 0 },
   };
 }
@@ -39,6 +42,14 @@ export function mass(a: Athlete): number {
   return 1 + c.stats.strength * 0.12 + (c.build.bulk - 1) * 0.8 + (c.build.height - 2) * 0.6;
 }
 
+/**
+ * How a player's weight changes how fast they get going, stop and turn:
+ * a light guard is quicker off the mark than a big man at the same speed.
+ */
+export function heft(a: Athlete): number {
+  return clamp(1 / Math.sqrt(mass(a) / 1.9), 0.82, 1.15);
+}
+
 export function bodyRadius(a: Athlete): number {
   return MOVE.radius * (0.9 + charOf(a).build.width * 0.12);
 }
@@ -53,8 +64,12 @@ export function airborne(a: Athlete): boolean {
   return a.y > 0.08;
 }
 
-/** A dribble move carries the player itself, and a jump keeps the run it left the floor with. */
-const carried = (a: Athlete) => a.action.kind === "move" || (a.action.kind === "block" && a.y > 0.02);
+/** The stepback hop runs through most of the dip before the rise, then the feet plant. */
+const STEPBACK_HOP = 0.24;
+
+/** A dribble move carries the player itself, a jump keeps the run it left the floor with, and so does a stepback hop. */
+const carried = (a: Athlete) =>
+  a.action.kind === "move" || (a.action.kind === "block" && a.y > 0.02) || (a.action.kind === "shoot" && !!a.action.step && a.action.t < STEPBACK_HOP);
 
 /** Runs toward the stick with momentum (see `steer.ts`), and turns the body to match. */
 export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: { x: number; z: number } | null, events: MatchEvent[]): void {
@@ -67,7 +82,8 @@ export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: { x:
     const tx = free ? a.move.x * speed : 0;
     const tz = free ? a.move.z * speed : 0;
     // Stopping to shoot is a jump stop, sharper than a run, so jumpers go up on balance.
-    const { planted } = steer(a, tx, tz, speed, dt, hasBall ? MOVE.ballPush : 1, free ? 1 : 1.5);
+    const k = heft(a);
+    const { planted } = steer(a, tx, tz, speed, dt, (hasBall ? MOVE.ballPush : 1) * k, free ? 1 : 1.5, (hasBall ? MOVE.ballGrip : 1) * k);
     if (planted && a.squeakCd <= 0) {
       events.push({ type: "squeak", id: a.id });
       a.squeakCd = 0.4;
@@ -86,7 +102,8 @@ export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: { x:
   let want = a.yaw;
   if (face) want = yawOf(face.x - a.x, face.z - a.z);
   else if (moving > 0.6) want = yawOf(a.vx, a.vz);
-  const turnRate = (a.action.kind === "none" ? 10 : 6) * dt;
+  // The body comes round quick; with the ball the dribble has to come round too.
+  const turnRate = (a.action.kind !== "none" ? 6 : hasBall ? 7.5 : 10) * dt;
   a.yaw += clamp(angleDiff(a.yaw, want), -turnRate, turnRate);
 }
 

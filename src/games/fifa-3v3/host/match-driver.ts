@@ -1,6 +1,6 @@
 import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { HostPad } from "@/games/kit/pad/host-pad";
-import { adminFoul, adminSetPiece } from "../engine/admin";
+import { adminFoul, adminSetPiece, adminWin } from "../engine/admin";
 import { FixedStepClock } from "../engine/clock";
 import type { MatchEvent } from "../engine/events";
 import { createMatch, endReplay, stepMatch, type Entrant } from "../engine/match";
@@ -64,6 +64,11 @@ export class MatchDriver {
 
   setPiece(kind: "free" | "penalty"): boolean {
     return this.admin(() => adminSetPiece(this.state, kind));
+  }
+
+  /** Full time now, the tester's side winning, for the trophy ceremony. */
+  win(): boolean {
+    return this.admin(() => adminWin(this.state));
   }
 
   /** The goal replay has played, or everyone skipped it: on to the kick off. */

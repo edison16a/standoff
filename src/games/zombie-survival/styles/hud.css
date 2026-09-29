@@ -130,6 +130,13 @@
   gap: 6px;
 }
 
+/* On a laptop sized screen the full strip would run under the tool bar in the corner, so the boss card drops its hint. */
+@media (max-width: 1500px) {
+  .zs-boss span {
+    display: none;
+  }
+}
+
 .zs-boss__point {
   width: 16px;
   height: 16px;

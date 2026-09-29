@@ -1,8 +1,12 @@
 // The games played on an on screen pad: Magic Kart's wheel, the sports
 // games' sticks and buttons, and Brawl Battle's pad.
 
-/** Tries a few ways of holding the phone until the game takes one as held upright. */
-async function holdUpright(ctx, button) {
+/**
+ * Tries a few ways of holding the phone sideways and upright, each with
+ * the level's dot in the middle, until one is held long enough to set
+ * straight ahead and the page moves on by itself.
+ */
+async function holdLevel(ctx) {
   const holds = [
     { alpha: 0, beta: 0, gamma: -90 },
     { alpha: 0, beta: 0, gamma: 90 },
@@ -11,8 +15,11 @@ async function holdUpright(ctx, button) {
   ];
   for (const hold of holds) {
     await ctx.phone.evaluate((h) => Object.assign(window.__sensors, h), hold);
-    await ctx.phone.waitForTimeout(500);
-    if (await button.isEnabled()) return true;
+    const done = await ctx.phone
+      .locator(".mk-level--done")
+      .waitFor({ timeout: 4000 })
+      .then(() => true, () => false);
+    if (done) return true;
   }
   return false;
 }
@@ -21,15 +28,11 @@ export async function magicKart(ctx) {
   await ctx.phone.locator(".mk-setup").waitFor();
   await ctx.phone.waitForTimeout(800);
   await ctx.snap("calibrate");
-  // Calibrating needs the phone sideways and upright, like a wheel.
+  // Calibrating needs the phone sideways and upright, like a wheel, with the dot held in the middle.
   await ctx.hold("landscape");
-  const calibrate = ctx.phone.getByRole("button", { name: "Calibrate", exact: true });
-  if (!(await holdUpright(ctx, calibrate))) throw new Error("No way of holding the phone let it calibrate");
-  await ctx.snap("calibrate-live");
-  await calibrate.evaluate((el) => el.click());
-  await ctx.phone.waitForTimeout(400);
-  await ctx.snap("calibrated");
-  await ctx.tap("Next");
+  if (!(await holdLevel(ctx))) throw new Error("No way of holding the phone let it calibrate");
+  // Straight ahead is set with no button, and the driver step comes up on its own.
+  await ctx.phone.locator(".mk-pick__card").first().waitFor({ timeout: 10000 });
   await ctx.hold("portrait");
   await race(ctx);
 }
@@ -90,7 +93,8 @@ export async function nba3v3(ctx) {
   await pickStar(ctx, ".nba-pick__card");
   const court = {
     team: 0, score: [12, 9], shotClock: 14, hasBall: true, attacking: true, holder: "P1", mustClear: false,
-    canSteal: false, freeThrow: null, meter: { fullMs: 900, greenMs: 620, halfMs: 60 }, onFire: false, checking: false, countdown: null,
+    canSteal: false, stealReach: false, defending: false, guard: "off",
+    freeThrow: null, meter: { fullMs: 900, greenMs: 620, halfMs: 60 }, onFire: false, checking: false, countdown: null,
   };
   await ctx.fake("state", { phase: "countdown", team: 0, playing: true, court: { ...court, countdown: 3 } });
   await ctx.snap("countdown");
@@ -98,7 +102,21 @@ export async function nba3v3(ctx) {
   // The phone drops a message its schema refuses, so a fake that drifted from it would leave the ready page up.
   await ctx.phone.locator(".nba-pad").waitFor({ state: "attached", timeout: 5000 });
   await ctx.snap("pad");
-  await ctx.fake("state", { phase: "over", team: 0, playing: true, court, result: { won: true, points: 14, rebounds: 5, assists: 3 } });
+  // On defence: Guard, Block and Steal, with the light that says Guard has his man.
+  const defence = { ...court, hasBall: false, attacking: false, holder: "Crane", canSteal: true, stealReach: true, defending: true, guard: "on" };
+  await ctx.fake("state", { phase: "live", team: 0, playing: true, court: defence });
+  await ctx.snap("defend");
+  await ctx.fake("state", { phase: "live", team: 0, playing: true, court: { ...court, freeThrow: { mine: true, n: 1, of: 2, ready: true } } });
+  await ctx.snap("free-throw");
+  // The replay's skip vote: first this phone has not pressed, then it waits on P3.
+  const votes = [{ name: "P1", done: false }, { name: "P2", done: true }, { name: "P3", done: false }];
+  await ctx.fake("state", { phase: "replay", team: 0, playing: true, court, replay: { voted: false, votes } });
+  await ctx.snap("replay-skip");
+  votes[0].done = true;
+  await ctx.fake("state", { phase: "replay", team: 0, playing: true, court, replay: { voted: true, votes } });
+  await ctx.snap("replay-waiting");
+  const result = { won: true, points: 14, rebounds: 5, assists: 3, steals: 2, blocks: 1 };
+  await ctx.fake("state", { phase: "over", team: 0, playing: true, court, replay: null, result });
   await ctx.snap("result");
 }
 
@@ -108,7 +126,7 @@ export async function fifa3v3(ctx) {
   await ctx.fake("state", { ...match, phase: "play", hasBall: true, banner: null });
   await ctx.phone.locator(".fifa-pad").waitFor({ state: "attached", timeout: 5000 });
   await ctx.snap("pad");
-  const guard = { mark: "HOLMVIK", distance: 4, inRange: true, on: true };
+  const guard = { mark: "CPU Sweeper Keeper", distance: 4, inRange: true, on: true };
   await ctx.fake("state", { ...match, phase: "play", hasBall: false, banner: null, defending: true, guard });
   await ctx.snap("defend");
   await ctx.fake("state", { ...match, phase: "setpiece", hasBall: false, defending: false, guard: null, setPiece: { kind: "free", part: "taker", stage: "curve" } });

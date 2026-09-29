@@ -41,6 +41,9 @@ export interface Portal {
   mode: Mode;
   /** The corridor's ceiling from here, or null for open sky. */
   ceiling: number | null;
+  /** The ring's opening. Walls close the column above and below it, so every run goes through. */
+  bottom: number;
+  top: number;
 }
 
 /** Where the speed changes. The level is drawn with a gate there. */
@@ -55,8 +58,8 @@ export interface SpeedGate {
 export interface LevelInfo {
   id: string;
   name: string;
-  /** 1 easy to 5 hardest. */
-  difficulty: 1 | 2 | 3 | 4 | 5;
+  /** 1 easy to 5 insane, and 6 for the Demon levels past them. */
+  difficulty: 1 | 2 | 3 | 4 | 5 | 6;
   /** Beats per minute of the level's song. Obstacles sit on its beat. */
   bpm: number;
   /** Which theme draws it and which song plays. Both are keyed by the level id. */

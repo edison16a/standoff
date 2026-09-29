@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { INK } from "./toon";
 
 const VERTEX = /* glsl */ `
   uniform float thickness;
@@ -18,6 +19,7 @@ const FRAGMENT = /* glsl */ `
   #include <fog_pars_fragment>
   void main() {
     gl_FragColor = vec4(color, 1.0);
+    #include <colorspace_fragment>
     #include <fog_fragment>
   }
 `;
@@ -27,7 +29,7 @@ let material: THREE.ShaderMaterial | null = null;
 /** One dark ink material for every outline, pushed out along the normals and drawn inside out. */
 function ink(): THREE.ShaderMaterial {
   material ??= new THREE.ShaderMaterial({
-    uniforms: THREE.UniformsUtils.merge([THREE.UniformsLib.fog, { thickness: { value: 0.011 }, color: { value: new THREE.Color(0x1b1530) } }]),
+    uniforms: THREE.UniformsUtils.merge([THREE.UniformsLib.fog, { thickness: { value: 0.012 }, color: { value: new THREE.Color(INK) } }]),
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
     side: THREE.BackSide,
@@ -46,8 +48,8 @@ export function addOutline(root: THREE.Object3D): void {
   const meshes: THREE.Mesh[] = [];
   root.traverse((node) => {
     const mesh = node as THREE.Mesh;
-    // Glowing bits, like the glint in an eye, stay unlined.
-    if (mesh.isMesh && !mesh.userData.outline && !(mesh.material instanceof THREE.MeshBasicMaterial)) meshes.push(mesh);
+    // Glowing bits and painted on features, like eyes and brows, stay unlined.
+    if (mesh.isMesh && !mesh.userData.outline && !mesh.userData.noOutline && !(mesh.material instanceof THREE.MeshBasicMaterial)) meshes.push(mesh);
   });
   for (const mesh of meshes) {
     const twin = new THREE.Mesh(mesh.geometry, ink());

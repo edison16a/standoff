@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { CHARACTER_IDS } from "../roster";
 import type { MatchEvent } from "./events";
-import { callFoul } from "./free-throw";
+import { callFoul } from "./foul-call";
 import { LINE } from "./free-throw-plan";
 import { Match, type Entry } from "./match";
 import { GREEN_MS } from "./shot-model";
@@ -102,6 +102,22 @@ describe("a foul and its free throws", () => {
     expect(m.phase).toBe("live");
     expect(m.score).toEqual([0, 0]);
     expect(events.some((e) => e.type === "rebound")).toBe(true);
+  });
+
+  it("boxes out on the last shot: defenders seal the attackers away from the rim", () => {
+    const { m, events } = fouled(2);
+    m.forced = "rimOut";
+    until(m, events, () => events.filter((e) => e.type === "freeThrow").length === 2);
+    m.forced = "rimOut";
+    until(m, events, () => m.phase === "live");
+    until(m, events, () => m.ball.mode !== "flight", 0.7);
+    const rim = (a: { x: number; z: number }) => Math.hypot(a.x, a.z - 1.575);
+    const shooter = m.athletes[2]!;
+    const attackers = m.athletes.filter((a) => a.team === 0 && a !== shooter);
+    for (const d of m.athletes.filter((a) => a.team === 1)) {
+      const man = attackers.sort((p, q) => Math.hypot(p.x - d.x, p.z - d.z) - Math.hypot(q.x - d.x, q.z - d.z))[0]!;
+      if (Math.hypot(man.x - d.x, man.z - d.z) < 1.6) expect(rim(d)).toBeLessThan(rim(man) + 0.1);
+    }
   });
 
   it("ends the game when a free throw reaches the target", () => {

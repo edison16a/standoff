@@ -13,6 +13,11 @@
   animation: nba-fade 0.5s ease-out both;
 }
 
+/* The join code comes back to the bottom left on the results, so the card keeps clear of it, padded evenly to stay centred. */
+body:has(.join--corner) .nba-results {
+  padding-inline: 212px;
+}
+
 @keyframes nba-fade {
   from {
     opacity: 0;

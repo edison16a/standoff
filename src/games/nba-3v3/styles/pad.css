@@ -261,3 +261,67 @@
     transform: translate(-50%, -80%) scale(1);
   }
 }
+
+/* Steal from too far away still swipes, but only at air: the button shows it. */
+.nba-pad__defend--faint .kit-pad-btn {
+  opacity: 0.55;
+}
+
+/* The guard range on defence: a dot that lights green while Guard is shadowing the man. */
+.nba-guard {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--bg-muted);
+  color: var(--text-muted, rgba(255, 255, 255, 0.75));
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.nba-guard i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+.nba-guard--on {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+.nba-guard--on i {
+  opacity: 1;
+  box-shadow: 0 0 8px #bbf7d0;
+}
+
+.nba-guard--far {
+  background: color-mix(in srgb, #f59e0b 30%, var(--bg-muted));
+  color: #ffffff;
+}
+
+/* At the line: only Shoot, with a tall meter beside it to time the release. */
+.nba-pad--line .nba-pad__pass,
+.nba-pad--line .nba-pad__defend {
+  visibility: hidden;
+}
+
+.nba-pad--line .nba-pad__shoot {
+  grid-column: 1 / span 2;
+  grid-row: 1 / span 2;
+  justify-content: center;
+  gap: 18px;
+}
+
+.nba-pad--line .nba-meter {
+  position: relative;
+  left: 0;
+  top: 0;
+  width: 30px;
+  height: min(62vmin, 250px);
+  transform: none;
+  border-radius: 12px;
+}

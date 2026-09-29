@@ -38,7 +38,7 @@ export class DemoGame {
   }
 
   private make(): MatchDriver {
-    const driver = new MatchDriver(lineup(this.round++));
+    const driver = new MatchDriver(lineup(this.round++), undefined, undefined, false);
     driver.listen(this.onEvent);
     return driver;
   }

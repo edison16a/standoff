@@ -44,9 +44,20 @@ export function planCheck(m: Match, team: TeamId): CheckPlan {
   const order = [checker, ...side.filter((a) => a !== checker)];
   const spots = new Map<number, V2>();
   order.forEach((a, i) => spots.set(a.id, OFFENCE_SPOTS[i] ?? OFFENCE_SPOTS[0]!));
+  // Each defender picks up the attacker in the same role, so a Guard checks the Guard.
   const guards = m.athletes.filter((a) => a.team !== team).sort((a, b) => a.slot - b.slot);
-  guards.forEach((g, i) => spots.set(g.id, guardSpot(OFFENCE_SPOTS[i] ?? OFFENCE_SPOTS[0]!, i === 0 ? 1.3 : 1.8)));
-  return { checker: checker.id, defender: guards[0]?.id ?? checker.id, spots };
+  const free = [...guards];
+  const matched = order.map((o) => {
+    const i = free.findIndex((g) => g.slot === o.slot);
+    return i >= 0 ? free.splice(i, 1)[0]! : null;
+  });
+  const paired = matched.map((g) => g ?? free.shift() ?? null);
+  paired.forEach((g, i) => {
+    if (g) spots.set(g.id, guardSpot(OFFENCE_SPOTS[i] ?? OFFENCE_SPOTS[0]!, i === 0 ? 1.3 : 1.8));
+  });
+  // Spare defenders on an uneven floor sit in the paint.
+  free.forEach((g, i) => spots.set(g.id, guardSpot(OFFENCE_SPOTS[paired.length + i] ?? OFFENCE_SPOTS[0]!, 1.8)));
+  return { checker: checker.id, defender: paired[0]?.id ?? guards[0]?.id ?? checker.id, spots };
 }
 
 /** The possession starts fresh: a new shot clock, nothing to take back, the bots' plans forgotten. */

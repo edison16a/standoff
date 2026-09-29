@@ -1,5 +1,6 @@
+import { startCheer } from "./celebrate";
 import { RIM_SPOT, rimDistance } from "./court";
-import { updateBlock, updateSteal } from "./defend";
+import { pressJump, updateBlock, updateSteal } from "./defend";
 import { startDrive, updateDrive } from "./drive";
 import type { Match } from "./match";
 import { canShootOutOf, updateMove } from "./moves";
@@ -48,6 +49,7 @@ export function pressPass(m: Match, a: Athlete, aim: V2 | null): void {
     if (target) throwPass(m, a, target);
     return;
   }
+  if (holder && holder.team !== a.team) return pressJump(a);
   if (holder && holder.team === a.team && m.time - a.calledAt > 0.8) {
     a.calledAt = m.time;
     m.emit({ type: "call", id: a.id });
@@ -59,6 +61,8 @@ export function updateAction(m: Match, a: Athlete, dt: number): void {
   const act = a.action;
   switch (act.kind) {
     case "none":
+      // A gesture owed for a big basket starts once the shooter has landed.
+      if (a.cheer) startCheer(a, false);
       return;
     case "shoot": {
       const before = act.t;

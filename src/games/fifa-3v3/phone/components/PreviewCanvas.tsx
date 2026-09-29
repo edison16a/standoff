@@ -1,17 +1,17 @@
 "use client";
 import { useEffect, useRef } from "react";
-import { StarPreview } from "../../render/preview";
-import type { CharacterId } from "../../roster";
+import { BuildPreview } from "../../render/preview";
+import type { BuildId } from "../../builds";
 
-/** The chosen star in 3D, turning on a podium. */
-export default function PreviewCanvas({ character }: { character: CharacterId }) {
+/** The chosen build in 3D, turning on a podium, with the player's name on the shirt. */
+export default function PreviewCanvas({ build, name }: { build: BuildId; name: string }) {
   const holderRef = useRef<HTMLDivElement>(null);
-  const previewRef = useRef<StarPreview | null>(null);
+  const previewRef = useRef<BuildPreview | null>(null);
 
   useEffect(() => {
     const holder = holderRef.current;
     if (!holder) return;
-    const preview = new StarPreview(holder);
+    const preview = new BuildPreview(holder);
     previewRef.current = preview;
     return () => {
       preview.dispose();
@@ -20,8 +20,8 @@ export default function PreviewCanvas({ character }: { character: CharacterId })
   }, []);
 
   useEffect(() => {
-    previewRef.current?.show(character);
-  }, [character]);
+    previewRef.current?.show(build, name);
+  }, [build, name]);
 
   return <div ref={holderRef} className="fifa-preview" />;
 }

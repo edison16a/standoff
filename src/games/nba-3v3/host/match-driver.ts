@@ -1,9 +1,11 @@
+import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { Stick } from "@/games/kit/pad/stick-math";
 import type { MatchEvent } from "../engine/events";
 import { Match, type Entry } from "../engine/match";
 import { STEP } from "../engine/tuning";
 import type { Button } from "../engine/types";
 import type { V2 } from "../engine/vec";
+import { ReplayDirector } from "./replay-director";
 
 /** A frame longer than this is a stall; the game does not try to catch up past it. */
 const MAX_FRAME = 0.25;
@@ -12,11 +14,14 @@ const MAX_FRAME = 0.25;
  * Runs one game on the host: turns each phone's stick into a direction
  * on the court as the camera sees it, steps the match at a fixed rate,
  * slows time for the big moments, and hands every event to whoever
- * listens (the sound, the effects and the phones).
+ * listens (the sound, the effects and the phones). After the winning
+ * basket it plays the replay (see `replay-director.ts`) before the
+ * game carries on to the results.
  */
 export class MatchDriver {
   readonly match: Match;
   readonly athleteBySeat = new Map<number, number>();
+  readonly replays: ReplayDirector;
   private readonly listeners = new Set<(event: MatchEvent) => void>();
   private carry = 0;
   private slowLeft = 0;
@@ -24,8 +29,10 @@ export class MatchDriver {
   /** The camera's forward direction on the floor, so up on the stick is up the screen. */
   private forward: V2 = { x: 0, z: -1 };
 
-  constructor(entries: readonly Entry[], seed?: number) {
-    this.match = new Match({ entries, seed });
+  /** `replay` is off for the demo behind the lobby, which just starts a new game. */
+  constructor(entries: readonly Entry[], seed?: number, botLevel?: BotLevel, private readonly replay = true) {
+    this.match = new Match({ entries, seed, botLevel });
+    this.replays = new ReplayDirector(entries);
     entries.forEach((entry, id) => {
       if (entry.seat !== null) this.athleteBySeat.set(entry.seat, id);
     });
@@ -34,6 +41,11 @@ export class MatchDriver {
   listen(listener: (event: MatchEvent) => void): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
+  }
+
+  /** The game on screen: the replay's stand in while it plays, else the real one. */
+  get view(): Match {
+    return this.replays.replay?.ghost ?? this.match;
   }
 
   setView(forward: V2): void {
@@ -56,6 +68,9 @@ export class MatchDriver {
   /** Steps the game by a real frame and returns how much game time passed, for the animation. */
   tick(realDt: number, stickOf: (seat: number) => Stick): number {
     const frame = Math.min(MAX_FRAME, Math.max(0, realDt));
+    // While the replay rolls the real game waits.
+    const replayed = this.replays.tick(frame);
+    if (replayed !== null) return replayed;
     const scale = this.slowLeft > 0 ? this.slowScale : 1;
     this.slowLeft = Math.max(0, this.slowLeft - frame);
     for (const [seat, id] of this.athleteBySeat) {
@@ -66,18 +81,29 @@ export class MatchDriver {
     while (this.carry >= STEP) {
       this.carry -= STEP;
       this.match.step(STEP);
-      for (const event of this.match.drainEvents()) for (const listener of this.listeners) listener(event);
+      const events = this.match.drainEvents();
+      if (this.replay) this.replays.record(this.match, events);
+      for (const event of events) for (const listener of this.listeners) listener(event);
     }
+    if (this.replay) this.replays.update(this.match, () => this.voters());
     return dt;
   }
 
+  /** The phones still in the game, who must all agree to skip the replay. */
+  voters(): number[] {
+    return [...this.athleteBySeat].filter(([, id]) => !this.match.athletes[id]?.auto).map(([seat]) => seat);
+  }
+
   press(seat: number, button: Button, stick: Stick): void {
+    // During the replay any button is a vote to skip it.
+    if (this.replays.replay) return this.replays.skip(seat);
     const id = this.athleteBySeat.get(seat);
     if (id === undefined || this.match.athletes[id]?.auto) return;
     this.match.press(id, button, this.toCourt(stick));
   }
 
   release(seat: number, heldMs?: number): void {
+    if (this.replays.replay) return;
     const id = this.athleteBySeat.get(seat);
     if (id !== undefined) this.match.release(id, heldMs);
   }

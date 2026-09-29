@@ -1,4 +1,4 @@
-import { ROSTER } from "../roster";
+import { BUILDS } from "../builds";
 import { attackSign } from "../teams";
 import { brake, moveAthlete, separate } from "./athlete";
 import { celebrationLength, celebrationSpot, stepCelebration } from "./celebrate-moves";
@@ -21,7 +21,7 @@ export function goalPhaseLength(state: MatchState): number {
   const scorer = state.lastGoal?.scorer ?? null;
   if (scorer === null) return MATCH.celebrate;
   const a = state.athletes[scorer];
-  return a ? RUN_OFF + celebrationLength(ROSTER[a.character].celebration) + HOLD : MATCH.celebrate;
+  return a ? RUN_OFF + celebrationLength(BUILDS[a.build].celebration) + HOLD : MATCH.celebrate;
 }
 /**
  * Where team mates join the scorer: one on each side and a step behind,
@@ -40,7 +40,7 @@ export function celebrateGoal(state: MatchState, dt: number): void {
   if (!goal) return;
   const scorer = goal.scorer !== null ? state.athletes[goal.scorer] : undefined;
   const s = attackSign(goal.team);
-  const kind = scorer ? ROSTER[scorer.character].celebration : "sui";
+  const kind = scorer ? BUILDS[scorer.build].celebration : "sui";
   const corner: Vec2 = scorer ? celebrationSpot(kind, goal.team) : { x: s * (PITCH.halfLength - 4), z: PITCH.halfWidth - 2.2 };
   for (const a of state.athletes) {
     a.actionT += dt;

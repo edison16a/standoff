@@ -7,6 +7,7 @@ import type { Hud, HudFighter } from "./host-store";
 
 /** The picture's shot for each stage of a fight. */
 export function shotOf(stage: Stage): Shot {
+  if (stage === "results") return "ceremony";
   return stage === "fight" ? "fight" : stage === "replay" ? "replay" : "celebrate";
 }
 

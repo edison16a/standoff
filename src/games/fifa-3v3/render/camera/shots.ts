@@ -19,8 +19,9 @@ export interface ReplayAngle {
 
 /**
  * The broadcast director's choices: the high camera for play, a cut to
- * a close up of the scorer once the ball is in, the replay's angles, and
- * a slow orbit of the winners at the final whistle.
+ * a close up of the scorer once the ball is in, the replay's angles, a
+ * slow orbit of the winners at the final whistle, and then the trophy
+ * ceremony's own cinematic shots.
  */
 export function frameFor(view: MatchView, options: { lobby?: boolean; replay?: ReplayAngle | null } = {}): Framing {
   if (options.lobby) return { shot: "lobby", tags: true };
@@ -34,6 +35,7 @@ export function frameFor(view: MatchView, options: { lobby?: boolean; replay?: R
     const scorer = view.scorer !== null ? view.athletes[view.scorer] : undefined;
     if (scorer) return { shot: "closeup", focus: new THREE.Vector3(scorer.x, 0, scorer.z), tags: false };
   }
+  if (view.ceremony) return { shot: "ceremony", tags: false };
   if (view.phase === "fulltime" && view.phaseT > 1.2 && view.winner !== null) {
     const winners = view.athletes.filter((a) => a.team === view.winner);
     const focus = new THREE.Vector3();
