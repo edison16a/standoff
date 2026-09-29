@@ -1,6 +1,7 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 import type { Battle } from "../engine/battle";
 import type { BattleEvent } from "../engine/events";
+import { flightTime } from "../paint-flight";
 import type { RoomPhase } from "../protocol";
 import { Announcer } from "./announcer";
 import { Crowd } from "./crowd";
@@ -11,7 +12,7 @@ import { Sfx } from "./sfx";
 import { Footsteps } from "./steps";
 import { FINAL_TUNE, LOBBY_TUNE, MATCH_TUNE } from "./tunes";
 
-/** The mix in the lobby, and in a match where the gunfire comes first. */
+/** The mix in the lobby, and in a match where the markers come first. */
 const LOBBY_LEVELS = { music: 0.55, crowd: 0.45, sfx: 0.9 };
 const MATCH_LEVELS = { music: 0.3, crowd: 0.6, sfx: 1 };
 /** Reloads and dry clicks further than this from every player are not worth hearing. */
@@ -19,7 +20,7 @@ const NEAR = 18;
 
 /**
  * Decides what the field sounds like: the lobby tune, the match theme
- * (lifted for a match point), every gun, bullet and footstep placed for
+ * (lifted for a match point), every marker, paintball and footstep placed for
  * the players on the couch, the hit ticks each player earns, the crowd
  * rising with the fighting, and the announcer. Everything goes through
  * the room's buses; the music steps aside for kills and the voice.
@@ -87,10 +88,17 @@ export class SoundDirector {
       case "shot": {
         this.guns.shot(e.gun, place(e.from, ears, b.fighters, e.shooter));
         this.heat = Math.min(1, this.heat + 0.015);
-        // One or two strikes per shot is plenty, even for nine pellets.
+        // One or two strikes per shot is plenty, even for nine pellets. Each pops as its ball lands.
         for (const t of e.traces.slice(0, 2)) {
-          if (t.hit.type === "cover") this.sfx.impact(b.pieces[t.hit.piece]!.kind, place(t.to, ears, b.fighters));
-          else if (t.hit.type === "floor") this.sfx.turf(place(t.to, ears, b.fighters));
+          const hit = t.hit;
+          if (hit.type === "none") continue;
+          const p = place(t.to, ears, b.fighters);
+          const flight = flightTime(Math.hypot(t.to.x - e.from.x, t.to.y - e.from.y, t.to.z - e.from.z));
+          this.later(flight * 1000, () => {
+            this.guns.pop(p, hit.type === "floor");
+            if (hit.type === "cover") this.sfx.impact(b.pieces[hit.piece]!.kind, p);
+            else if (hit.type === "floor") this.sfx.turf(p);
+          });
         }
         return;
       }

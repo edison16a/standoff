@@ -19,7 +19,7 @@ export class Music {
   private readonly warmth: BiquadFilterNode;
 
   constructor(private readonly engine: AudioEngine) {
-    // Rolls off the top so the music sits under the gunfire and never bites.
+    // Rolls off the top so the music sits under the markers and never bites.
     this.warmth = engine.ctx.createBiquadFilter();
     this.warmth.type = "lowpass";
     this.warmth.frequency.value = 3400;

@@ -3,13 +3,13 @@ import { midi, noise, tone } from "@/platform/audio/voices";
 import type { PieceKind } from "../engine/arena";
 import { sendTo, vary, type Placed } from "./mix";
 
-/** What each kind of cover is made of, which is what a bullet hitting it sounds like. */
+/** What each kind of cover is made of, which is what a paintball hitting it sounds like. */
 const MATERIAL: Record<PieceKind, "air" | "wood" | "metal"> = {
   can: "air", dorito: "air", cake: "air", brick: "air", snake: "air", tower: "wood", barrel: "metal", wall: "wood",
 };
 
 /**
- * The rest of the match's sounds: bullets striking cover and turf, the
+ * The rest of the match's sounds: paintballs striking cover and turf, the
  * tick of a hit landing (a bright ding for the head, a crunch for a
  * kill), the thud of being hit, footsteps on the turf, and the count in
  * and horn that start each round.
