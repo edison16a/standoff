@@ -110,4 +110,16 @@
   .phone-hero--join {
     gap: 8px;
   }
+
+  /* Join and Scan share a row, so the form is one button shorter. */
+  .join-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .join-form > .name-field,
+  .join-form > .btn:only-of-type {
+    grid-column: 1 / -1;
+  }
 }
