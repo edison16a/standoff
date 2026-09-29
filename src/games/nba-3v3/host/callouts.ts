@@ -11,7 +11,8 @@ const pick = <T,>(options: readonly T[], n: number): T => options[Math.abs(n) % 
  * The banner across the big screen, for the moments that change the
  * game: the tip, a block or a steal, a turnover, game point and the
  * win. Baskets get no banner; the arena answers them and the
- * scoreboard ticks over. `nameOf` gives the name the room knows a
+ * scoreboard ticks over. Jukes get none either: the beaten defender's
+ * stumble says it. `nameOf` gives the name the room knows a
  * player by, and `n` varies the wording.
  */
 export function banner(e: MatchEvent, m: Match, nameOf: (id: number) => string, n: number): BannerText | null {
@@ -29,8 +30,6 @@ export function banner(e: MatchEvent, m: Match, nameOf: (id: number) => string, 
       return { text: e.shooting ? "SHOOTING FOUL" : "FOUL", sub: `${nameOf(e.id)} on ${nameOf(e.victim)}`, tone: "red" };
     case "andOne":
       return { text: "AND ONE!", sub: nameOf(e.id), tone: tone(e.id) };
-    case "shake":
-      return e.hard ? { text: pick(["ANKLES!", "SHOOK HIM!", "BROKE HIS ANKLES!"], n), sub: nameOf(e.id), tone: tone(e.id) } : null;
     case "violation":
       return { text: e.reason === "clock" ? "SHOT CLOCK" : "OUT OF BOUNDS", sub: null, tone: "red" };
     case "gamePoint":
