@@ -129,7 +129,8 @@ function countdown(m: Match): number | null {
 export function buildView(m: Match): MatchView {
   const b = m.ball;
   const f = b.flight;
-  const target = m.play?.target ?? null;
+  // While the ball is in the air the ring stays on the receiver it was thrown to.
+  const target = b.state === "pass" && b.pass ? b.pass.to : (m.play?.target ?? null);
   return {
     time: m.time, phase: m.phase, phaseT: m.phaseT, quarter: m.quarter, clock: m.clock, overtime: m.overtime,
     score: [m.score[0], m.score[1]], target: m.target, drive: driveView(m), kick: kickView(m),

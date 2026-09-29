@@ -26,6 +26,21 @@ describe("the view", () => {
     expect(v.athletes[qb.id]!.hasBall).toBe(true);
   });
 
+  it("keeps the ring on the receiver while the pass is in the air", () => {
+    const m = peopleMatch();
+    snap(m);
+    const qb = bySeat(m, 0);
+    const wr = bySeat(m, 1);
+    m.setAim(qb.id, { x: wr.x - qb.x, z: wr.z - qb.z });
+    run(m, 0.05);
+    m.setAim(qb.id, null);
+    // Past the throwing motion, with the stick let go, the ball is still on its way.
+    run(m, 1, () => m.ball.state === "pass" && qb.action.kind === "none");
+    const v = buildView(m);
+    expect(v.ball.state).toBe("pass");
+    expect(v.athletes[wr.id]!.targeted).toBe(true);
+  });
+
   it("blends two stills half way", () => {
     const m = peopleMatch();
     snap(m);
