@@ -14,7 +14,7 @@ The big screen shows both teams, pink and cyan, with each player's name in their
 
 Each phone takes three steps:
 
-1. **Aim.** Hold the phone like a remote and point it at your own view on the big screen. Your targets show inside your view, outlined in your colour. Point at the middle one and hold still until its ring fills and turns green. The top left and the bottom right follow by themselves. Sweep round to check the dot follows you and press Looks good. A phone without motion sensors aims by dragging instead, so it only checks the drag here.
+1. **Aim.** Hold the phone like a remote and point it at your own view on the big screen. Your targets show inside your view, outlined in your colour. Point at the middle one and hold still until its ring fills and turns green. Each of the four corners follows by itself, with no button to press. Pointing past the edge of your view keeps your dot at the edge. Sweep round to check the dot follows you and press Looks good. A phone without motion sensors aims by dragging instead, so it only checks the drag here.
 2. **Gun.** Pick one of the four and take it.
 3. **Ready.** The match starts when the host says so.
 
