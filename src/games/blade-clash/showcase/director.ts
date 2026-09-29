@@ -45,6 +45,8 @@ export class ShowcaseDirector {
   private wallNow = 0;
   private picks: PerSlot<CharacterId> = { 1: "knight", 2: "star" };
   private readonly skip: number;
+  /** Stays on the winner's ceremony after the duel rather than starting over. */
+  private readonly stay: boolean;
 
   constructor(canvas: HTMLCanvasElement, view: ShowcaseView) {
     const params = new URLSearchParams(window.location.search);
@@ -53,8 +55,10 @@ export class ShowcaseDirector {
     if (pair.length === 2) this.picks = { 1: pair[0]!, 2: pair[1]! };
     this.renderer = new DuelRenderer(canvas, { quality: view === "loop" ? CLIP : HIGH, preserve: true });
     this.renderer.setTheme(params.get("theme") !== "light");
+    // `?ceremony` stays on the ceremony once the Knight has won, for looking it over.
+    this.stay = params.has("ceremony");
     // `?at=` starts the loop that many milliseconds in, played through without drawing, for looking over one moment.
-    this.skip = Math.max(0, Math.min(CYCLE_MS - FRAME_MS, Number(params.get("at")) || 0));
+    this.skip = Math.max(0, Math.min(this.stay ? 60000 : CYCLE_MS - FRAME_MS, Number(params.get("at")) || 0));
     this.begin();
     this.cycle = 0;
     if (view !== "loop") {
@@ -89,7 +93,7 @@ export class ShowcaseDirector {
     if (now - this.last < FRAME_MS * 0.9) return;
     this.last = now;
     const wall = now - this.start;
-    const cycle = Math.floor(wall / CYCLE_MS);
+    const cycle = this.stay ? 0 : Math.floor(wall / CYCLE_MS);
     if (cycle !== this.cycle) {
       this.cycle = cycle;
       this.begin();

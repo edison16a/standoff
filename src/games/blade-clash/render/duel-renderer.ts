@@ -12,7 +12,8 @@ import { PLAYER_COLOURS } from "./player-colours";
 import { SplitPost } from "./post";
 import { readQuality, type Quality } from "./quality";
 import { ShoulderCamera } from "./shoulder-camera";
-import { VIEWS, type ViewRect } from "./split";
+import { FULL, pixels, VIEWS, type ViewRect } from "./split";
+import { Ceremony } from "./victory/ceremony";
 
 /** A part of the screen and the camera drawn into it. */
 export interface View {
@@ -23,8 +24,9 @@ export interface View {
 /**
  * Draws the duel as a split screen: one WebGL canvas, the same arena
  * drawn twice through scissored viewports, each half with its own camera
- * over its own fighter's shoulder. It never decides anything; it shows
- * what the engine says and reacts to the same events as the sound.
+ * over its own fighter's shoulder. Once the match is won it cuts to the
+ * winner's ceremony across the whole screen. It never decides anything;
+ * it shows what the engine says and reacts to the same events as the sound.
  */
 export class DuelRenderer {
   private readonly renderer: THREE.WebGLRenderer;
@@ -32,6 +34,7 @@ export class DuelRenderer {
   private readonly fighters: Record<Slot, FighterView> = { 1: new FighterView(1), 2: new FighterView(2) };
   readonly cameras: Record<Slot, ShoulderCamera> = { 1: new ShoulderCamera(), 2: new ShoulderCamera() };
   private readonly effects = new Effects();
+  private readonly ceremony = new Ceremony();
   private readonly quality: Quality;
   private readonly blades: Blades;
   private readonly post: SplitPost | null;
@@ -55,7 +58,7 @@ export class DuelRenderer {
     this.renderer.shadowMap.autoUpdate = false;
     this.renderer.setScissorTest(true);
     this.post = this.quality.post ? new SplitPost(this.renderer, this.scene, this.quality.antialias ? 4 : 0) : null;
-    this.scene.add(this.fighters[1].group, this.fighters[2].group, this.fighters[1].light, this.fighters[2].light, this.effects.group);
+    this.scene.add(this.fighters[1].group, this.fighters[2].group, this.fighters[1].light, this.fighters[2].light, this.effects.group, this.ceremony.group);
     this.blades = {
       tip: { 1: this.fighters[1].tip, 2: this.fighters[2].tip },
       mid: { 1: this.fighters[1].mid, 2: this.fighters[2].mid },
@@ -96,7 +99,7 @@ export class DuelRenderer {
   /** A game event, as it happens. */
   react(event: GameEvent, wallNow = performance.now()): void {
     const floor = this.arena?.floor ?? 0;
-    this.effects.react(event, this.blades, this.lastGame, wallNow, floor);
+    this.effects.react(event, this.blades, this.lastGame, floor);
     this.arena?.react(event, wallNow);
     for (const slot of SLOTS) this.fighters[slot].react(event);
     if (event.type === "hit") {
@@ -115,13 +118,18 @@ export class DuelRenderer {
       for (const slot of SLOTS) this.cameras[slot].closeIn(null);
       this.wash.target = 0;
     }
-    if (event.type === "matchWon") this.cameras[event.winner].setCelebrating(true);
+    if (event.type === "matchWon") {
+      // A cut to the ceremony: the fight's trails and sparks stay behind.
+      this.effects.reset();
+      this.ceremony.start(event.winner, floor);
+    }
     if (event.type === "countdown" && event.remaining === 3) this.reset();
   }
 
   /** A new match or bout: clear the last one's effects and put the cameras back. */
   reset(): void {
     this.effects.reset();
+    this.ceremony.stop();
     for (const slot of SLOTS) this.cameras[slot].snap();
     this.wash.target = this.wash.amount = 0;
   }
@@ -142,7 +150,7 @@ export class DuelRenderer {
 
     const bySlot = { 1: frame.fighters.find((f) => f.slot === 1), 2: frame.fighters.find((f) => f.slot === 2) };
     for (const slot of SLOTS) {
-      this.fighters[slot].update(bySlot[slot], arena.floor, frame.t);
+      this.fighters[slot].update(bySlot[slot], arena.floor, frame.t, this.ceremony.place(slot));
       this.blades.style[slot] = this.fighters[slot].trail;
     }
     this.effects.track(this.blades, { 1: this.fighters[1].visible, 2: this.fighters[2].visible }, frame.t);
@@ -154,23 +162,22 @@ export class DuelRenderer {
     }
     this.wash.amount += (this.wash.target - this.wash.amount) * (1 - Math.exp(-dt / 250));
     this.post?.setWash(this.wash.colour, this.wash.amount);
-    this.effects.update(frame.t, wallNow);
+    this.effects.update(frame.t);
+    this.ceremony.update(dt / 1000);
   }
 
-  /** Draws the state `update` left, into each view. */
+  /** Draws the state `update` left, into each view: by default the two halves, or the ceremony once the match is won. */
   draw(views?: readonly View[]): void {
     this.renderer.shadowMap.needsUpdate = true;
-    for (const view of views ?? SLOTS.map((slot) => ({ rect: VIEWS[slot], camera: this.cameras[slot].camera }))) {
+    const split = () => SLOTS.map((slot) => ({ rect: VIEWS[slot], camera: this.cameras[slot].camera }));
+    for (const view of views ?? (this.ceremony.active ? [{ rect: FULL, camera: this.ceremony.camera }] : split())) {
       this.effects.face(view.camera);
       this.drawView(view);
     }
   }
 
   private drawView({ rect, camera }: View): void {
-    const x = Math.round(rect.x * this.width);
-    const w = Math.round(rect.w * this.width);
-    const h = Math.round(rect.h * this.height);
-    const y = Math.round((1 - rect.y - rect.h) * this.height);
+    const { x, y, w, h } = pixels(rect, this.width, this.height);
     this.renderer.setViewport(x, y, w, h);
     this.renderer.setScissor(x, y, w, h);
     const aspect = w / Math.max(1, h);
@@ -178,18 +185,16 @@ export class DuelRenderer {
       camera.aspect = aspect;
       camera.updateProjectionMatrix();
     }
-    if (this.post) {
-      this.post.setSize(w, h, this.renderer.getPixelRatio());
-      this.post.draw(camera);
-    } else {
-      this.renderer.render(this.scene, camera);
-    }
+    if (!this.post) return this.renderer.render(this.scene, camera);
+    this.post.setSize(w, h, this.renderer.getPixelRatio());
+    this.post.draw(camera);
   }
 
   dispose(): void {
     this.fighters[1].dispose();
     this.fighters[2].dispose();
     this.effects.dispose();
+    this.ceremony.dispose();
     this.arena?.dispose();
     this.environment?.dispose();
     this.post?.dispose();
