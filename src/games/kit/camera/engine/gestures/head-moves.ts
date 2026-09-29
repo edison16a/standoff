@@ -17,6 +17,13 @@ export interface HeadMoveOptions {
   settleDownMs: number;
   /** A move also needs this many frames before it can settle. A slow machine may see a whole jump in two frames far apart. */
   settleFrames: number;
+  /**
+   * Head and shoulders rising at least this fast, in shoulder widths a
+   * second, count as a jump once past `rushShare` of `up`, a frame or two
+   * before the band's top. Off (Infinity) unless a game wants it.
+   */
+  rushSpeed: number;
+  rushShare: number;
 }
 
 export const DEFAULT_HEAD: HeadMoveOptions = {
@@ -29,7 +36,12 @@ export const DEFAULT_HEAD: HeadMoveOptions = {
   settleUpMs: 2500,
   settleDownMs: 5000,
   settleFrames: 12,
+  rushSpeed: Infinity,
+  rushShare: 0.6,
 };
+
+/** A rush is only read between frames at most this far apart, about 20 frames a second or more. */
+const RUSH_FRAME_MS = 50;
 
 export interface HeadMoves {
   jumping: boolean;
@@ -62,6 +74,8 @@ export class HeadMoveDetector {
   private movedAt = -Infinity;
   /** Frames seen since the move under way began. */
   private movedFrames = 0;
+  private lastLift = 0;
+  private lastTime = -Infinity;
 
   constructor(private options: HeadMoveOptions = DEFAULT_HEAD) {}
 
@@ -74,6 +88,7 @@ export class HeadMoveDetector {
     this.restAt = this.landedAt = this.movedAt = -Infinity;
     this.wasNear = false;
     this.belowSince = null;
+    this.lastTime = -Infinity;
   }
 
   /**
@@ -82,7 +97,14 @@ export class HeadMoveDetector {
    * nod or a shrug never counts even with a low `up`.
    */
   update(rise: number, time: number, lift = rise): HeadMoves {
-    const { up, down, riseMs, duckMs, release, landingMs, settleUpMs, settleDownMs, settleFrames } = this.options;
+    const { up, down, riseMs, duckMs, release, landingMs, settleUpMs, settleDownMs, settleFrames, rushSpeed, rushShare } = this.options;
+    // Rising speed since the last frame. A take off is far quicker than any bob, so it may fire early.
+    // Frames far apart blur a quick bob into one fast step, so only close frames are trusted.
+    const gap = time - this.lastTime;
+    const speed = gap > 0 && gap <= RUSH_FRAME_MS ? (lift - this.lastLift) / (gap / 1000) : 0;
+    this.lastLift = lift;
+    this.lastTime = time;
+    const over = lift >= up || (lift >= up * rushShare && speed >= rushSpeed);
     const near = lift < up * release && rise > -down * release;
     // From near the line to over the band in one frame is quick however long the frame took, which
     // keeps jumps working on a machine that tracks only a few frames a second.
@@ -106,7 +128,7 @@ export class HeadMoveDetector {
       this.jumping = false;
       this.landedAt = time;
       out.landed = true;
-    } else if (!this.jumping && !this.ducking && lift >= up && quick) {
+    } else if (!this.jumping && !this.ducking && over && quick) {
       this.jumping = out.jumped = true;
       this.movedAt = time;
       this.movedFrames = 0;

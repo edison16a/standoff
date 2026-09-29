@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { eventsOf, readMoves, type ReadFrame } from "../sequence";
 import type { PoseSpec } from "../synthetic";
 import { MOVES, type PoseKey } from "../timeline";
-import { HeadMoveDetector } from "./head-moves";
+import { DEFAULT_HEAD, HeadMoveDetector } from "./head-moves";
 
 const kinds = (frames: ReadFrame[]) => frames.flatMap((f) => f.events.map((e) => e.type)).filter((type) => type !== "back");
 const firstTime = (frames: ReadFrame[], type: "jump" | "duck") => eventsOf(frames, type)[0]?.time ?? Infinity;
@@ -114,5 +114,32 @@ describe("bobbing and landing", () => {
     expect(at(-0.45, 780).ducked).toBe(true);
     expect(at(-0.3, 800).ducking).toBe(true);
     expect(at(-0.1, 833).stood).toBe(true);
+  });
+});
+
+describe("a rush: jumping early on a fast rise", () => {
+  const rushing = () => new HeadMoveDetector({ ...DEFAULT_HEAD, up: 0.14, rushSpeed: 3, rushShare: 0.6 });
+
+  it("jumps a frame early when head and shoulders rise fast", () => {
+    const detector = rushing();
+    detector.update(0, 0);
+    // 0.1 shoulder widths in 33 ms is 3 a second: under the band's top, but fast enough.
+    expect(detector.update(0.1, 33).jumped).toBe(true);
+  });
+
+  it("waits for the band's top when the rise is slow or the frames far apart", () => {
+    const slow = rushing();
+    slow.update(0.04, 0);
+    expect(slow.update(0.1, 33).jumped).toBe(false);
+    const sparse = rushing();
+    sparse.update(0, 0);
+    expect(sparse.update(0.12, 70).jumped).toBe(false);
+    expect(sparse.update(0.15, 140).jumped).toBe(true);
+  });
+
+  it("is off by default", () => {
+    const detector = new HeadMoveDetector({ ...DEFAULT_HEAD, up: 0.14 });
+    detector.update(0, 0);
+    expect(detector.update(0.1, 33).jumped).toBe(false);
   });
 });
