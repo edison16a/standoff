@@ -1,56 +1,52 @@
 "use client";
 import { playerColor } from "@/games/kit/players";
-import { LOOKS } from "../../render/models/looks";
+import { NAME_MAX } from "@/platform/profile";
+import { BUILD_LIST, buildAt } from "../../engine/builds";
 import { useBoxingStore } from "../host-store";
+import { COMPUTER_NAME } from "../names";
+import { BuildCard, StatBars } from "./BuildCard";
 import { useSession } from "./session-context";
 
 /**
- * Choosing boxers. Each player leans left or right to browse and holds
- * their guard up to lock in; the mouse works too. With one player the
- * computer takes a different boxer. The chosen boxers are already in
- * the ring behind.
+ * Choosing builds. Each player leans left or right to browse and holds
+ * their guard up to lock in; the mouse works too. Each player's name
+ * heads their column and can be typed over. With one player the
+ * computer takes a different build.
  */
 export function PickScreen() {
   const session = useSession();
   const players = useBoxingStore((state) => state.players);
   const picks = useBoxingStore((state) => state.picks);
+  const names = useBoxingStore((state) => state.names);
   const locked = useBoxingStore((state) => state.locked);
   const holding = useBoxingStore((state) => state.holding);
   const sides = players === 2 ? ([0, 1] as const) : ([0] as const);
+  const cpu = buildAt(picks[1]);
   return (
     <section className="bx-pick">
       <header className="bx-pick__head">
-        <h2>Choose your boxer</h2>
+        <h2>Choose your build</h2>
         <p>Lean left or right to browse. Hold your guard up to lock in.</p>
       </header>
       <div className={`bx-pick__sides bx-pick__sides--${players}`}>
         {sides.map((id) => (
           <div key={id} className="bx-pick__side" style={{ ["--who" as string]: playerColor(id + 1) }}>
             <div className="bx-pick__label">
-              <span className="bx-pick__who">Player {id + 1}</span>
+              <input
+                className="bx-pick__name"
+                aria-label={`Player ${id + 1} name`}
+                defaultValue={names[id]}
+                maxLength={NAME_MAX}
+                spellCheck={false}
+                onBlur={(event) => session.rename(id, event.currentTarget.value)}
+                onKeyDown={(event) => event.key === "Enter" && event.currentTarget.blur()}
+              />
               <span className="bx-pick__state">{locked[id] ? "Ready" : holding[id] > 0 ? "Hold it" : "Choosing"}</span>
             </div>
             <div className="bx-pick__cards">
-              {LOOKS.map((look, index) => {
-                const mine = picks[id] === index;
-                const theirs = players === 2 && picks[id === 0 ? 1 : 0] === index;
-                return (
-                  <button
-                    type="button"
-                    key={look.id}
-                    className={`bx-card${mine ? " bx-card--on" : ""}${mine && locked[id] ? " bx-card--locked" : ""}`}
-                    disabled={locked[id] || theirs}
-                    onClick={() => session.choose(id, index)}
-                    style={{ ["--trunks" as string]: look.trunks, ["--gloves" as string]: look.gloves, ["--trim" as string]: look.trim }}
-                  >
-                    <span className="bx-card__stripe" aria-hidden="true" />
-                    <span className="bx-card__nick">{look.nickname}</span>
-                    <span className="bx-card__name">{look.name}</span>
-                    <span className="bx-card__from">{look.from}</span>
-                    {mine && !locked[id] && holding[id] > 0 && <span className="bx-card__hold" style={{ width: `${Math.round(holding[id] * 100)}%` }} />}
-                  </button>
-                );
-              })}
+              {BUILD_LIST.map((build, index) => (
+                <BuildCard key={build.id} build={build} on={picks[id] === index} locked={locked[id]} holding={picks[id] === index ? holding[id] : 0} onChoose={() => session.choose(id, index)} />
+              ))}
             </div>
             <button type="button" className="bx-button" disabled={locked[id]} onClick={() => session.lock(id)}>
               {locked[id] ? "Locked in" : "Lock in"}
@@ -60,8 +56,9 @@ export function PickScreen() {
         {players === 1 && (
           <div className="bx-pick__versus">
             <span className="bx-pick__vs">VS</span>
-            <span className="bx-pick__cpu">{LOOKS[picks[1]]!.name}</span>
-            <span className="bx-pick__cpu-nick">{LOOKS[picks[1]]!.nickname}, the computer</span>
+            <span className="bx-pick__cpu">{COMPUTER_NAME}</span>
+            <span className="bx-pick__cpu-nick">{cpu.name}</span>
+            <StatBars bars={cpu.bars} />
           </div>
         )}
       </div>

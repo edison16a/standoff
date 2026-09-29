@@ -33,10 +33,17 @@ describe("choosing boxers", () => {
     expect(pick.update([guard(true), null], LOCK_MS * 4 + 20)).toEqual([0]);
   });
 
-  it("does not let two players take the same boxer", () => {
+  it("lets two players take the same build", () => {
     const pick = new PickControl([0, 1], [true, true]);
     pick.step(0, 1);
-    expect(pick.state.picks).toEqual([2, 1]);
+    expect(pick.state.picks).toEqual([1, 1]);
+  });
+
+  it("keeps the computer on a different build from its opponent", () => {
+    const pick = new PickControl([0, 1], [true, false]);
+    pick.choose(0, 1);
+    expect(pick.state.picks[0]).toBe(1);
+    expect(pick.state.picks[1]).not.toBe(1);
   });
 
   it("ignores a second lean straight after the first", () => {

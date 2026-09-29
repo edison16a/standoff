@@ -25,8 +25,8 @@ export interface DriverOptions {
   slots: readonly [number | null, number | null];
   roundMs?: number;
   introMs?: number;
-  /** Each boxer's footwork style, by the id of the boxer chosen. */
-  styles?: readonly [string, string];
+  /** Each boxer's build, by id. */
+  builds?: readonly [string, string];
   /** Touch gloves before each round, on unless a test turns it off. */
   touch?: boolean;
 }
@@ -52,7 +52,7 @@ export class FightDriver {
   private readonly listeners = new Set<(event: MatchEvent) => void>();
 
   constructor(options: DriverOptions) {
-    this.match = new Match({ seed: options.seed, roundMs: options.roundMs, introMs: options.introMs, styles: options.styles, touch: options.touch });
+    this.match = new Match({ seed: options.seed, roundMs: options.roundMs, introMs: options.introMs, builds: options.builds, touch: options.touch });
     this.slots = options.slots;
     const cpu = options.slots.findIndex((slot) => slot === null);
     this.computer = cpu >= 0 ? new ComputerBoxer(cpu as FighterId, seeded(options.seed * 7 + 3)) : null;

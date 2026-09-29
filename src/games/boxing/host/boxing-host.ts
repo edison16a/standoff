@@ -4,12 +4,14 @@ import { BoxingAudio } from "../audio/boxing-audio";
 import type { MatchEvent } from "../engine/events";
 import type { Match } from "../engine/match";
 import type { DirectorInput } from "../render/director";
-import { lookFor, type Look } from "../render/models/looks";
+import { buildAt } from "../engine/builds";
+import { boxerLook, type Look } from "../render/models/looks";
 import { Banners } from "./banners";
 import { FightDriver } from "./fight-driver";
 import { useBoxingStore as store } from "./host-store";
 import { hudFrom, shotOf } from "./hud";
 import { MenuDemo } from "./menu-demo";
+import { COMPUTER_NAME, loadNames, nameOrDefault, saveNames } from "./names";
 import { PickControl } from "./pick-control";
 import { levelOf } from "./player-input";
 import { PlayersFeed } from "./players-feed";
@@ -43,16 +45,26 @@ export class BoxingHost {
 
   constructor(private readonly room: HostRoomApi) {
     this.audio = new BoxingAudio(room.audio);
-    store.setState({ ...store.getInitialState(), records: loadRecords() });
+    store.setState({ ...store.getInitialState(), records: loadRecords(), names: loadNames(room) });
   }
 
   get humans(): [boolean, boolean] {
     return [true, store.getState().players === 2];
   }
 
+  /** Each boxer's build and name as drawn. With one player the second boxer is the computer. */
   looks(): [Look, Look] {
-    const [a, b] = store.getState().picks;
-    return [lookFor(a), lookFor(b)];
+    const { picks, names, players } = store.getState();
+    const [a, b] = [buildAt(picks[0]).id, buildAt(picks[1]).id];
+    return [boxerLook(a, names[0]), boxerLook(b, players === 2 ? names[1] : COMPUTER_NAME, a === b)];
+  }
+
+  /** A player typed their name on the pick screen. It is kept in this browser for next time. */
+  rename(id: 0 | 1, raw: string): void {
+    const names: [string, string] = [...store.getState().names];
+    names[id] = nameOrDefault(raw, id === 0 ? 1 : 2);
+    saveNames(names);
+    store.setState({ names });
   }
 
   listen(listener: (event: MatchEvent, match: Match) => void): () => void {
@@ -98,7 +110,9 @@ export class BoxingHost {
     const humans = this.humans;
     this.stopDriver?.();
     const [red, blue] = this.looks();
-    this.driver = new FightDriver({ seed: Math.floor(Math.random() * 1e9), slots: [1, humans[1] ? 2 : null], roundMs: testRoundMs(), styles: [red.id, blue.id] });
+    const picks = store.getState().picks;
+    const builds: [string, string] = [buildAt(picks[0]).id, buildAt(picks[1]).id];
+    this.driver = new FightDriver({ seed: Math.floor(Math.random() * 1e9), slots: [1, humans[1] ? 2 : null], roundMs: testRoundMs(), builds });
     this.stopDriver = this.driver.listen((event) => this.onMatchEvent(event, this.driver!.match));
     this.banners.clear();
     this.audio.setPlayers(humans);

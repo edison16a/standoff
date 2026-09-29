@@ -76,8 +76,10 @@ export interface Records {
 export interface BoxingState {
   screen: Screen;
   players: 1 | 2;
-  /** The chosen look for each boxer, as an index into LOOKS. */
+  /** The chosen build for each boxer, as an index into BUILD_LIST. */
   picks: [number, number];
+  /** Each player's name, which is who they are everywhere in the game. The second is the computer's with one player. */
+  names: [string, string];
   locked: [boolean, boolean];
   /** How far each player's guard hold has filled toward locking in, 0 to 1. */
   holding: [number, number];
@@ -92,6 +94,7 @@ export const useBoxingStore = create<BoxingState>(() => ({
   screen: "players",
   players: 1,
   picks: [0, 1],
+  names: ["Player 1", "Player 2"],
   locked: [false, false],
   holding: [0, 0],
   hud: null,

@@ -1,7 +1,7 @@
 import type { MoveEvent, MoveState } from "@/games/kit/camera";
-import { LOOKS } from "../render/models/looks";
+import { BUILD_LIST } from "../engine/builds";
 
-/** How long the guard must be held to lock in a boxer. */
+/** How long the guard must be held to lock in a build. */
 export const LOCK_MS = 900;
 /** Leans closer together than this browse only once. */
 const LEAN_REPEAT_MS = 450;
@@ -14,9 +14,9 @@ export interface PickState {
 }
 
 /**
- * Choosing boxers with the body: lean left or right to browse, and hold
- * your guard up to lock your boxer in. The mouse works too. Players are
- * camera slots; slot 1 picks boxer 0 and slot 2 boxer 1.
+ * Choosing builds with the body: lean left or right to browse, and hold
+ * your guard up to lock your build in. The mouse works too. Players are
+ * camera slots; slot 1 picks for boxer 0 and slot 2 for boxer 1.
  */
 export class PickControl {
   readonly state: PickState;
@@ -75,12 +75,9 @@ export class PickControl {
 
   step(id: 0 | 1, direction: number): void {
     if (this.state.locked[id]) return;
-    const count = LOOKS.length;
-    let next = (this.state.picks[id] + direction + count) % count;
-    // Two people cannot be the same boxer, so a taken one is skipped.
-    if (next === this.state.picks[id === 0 ? 1 : 0] && this.humans[id === 0 ? 1 : 0]) next = (next + direction + count) % count;
-    this.state.picks[id] = next;
-    this.avoidSame();
+    const count = BUILD_LIST.length;
+    this.state.picks[id] = (this.state.picks[id] + direction + count) % count;
+    this.avoidSame(id);
   }
 
   choose(id: 0 | 1, index: number): void {
@@ -95,14 +92,16 @@ export class PickControl {
     this.avoidSame(id);
   }
 
-  /** The computer, or a player who has not locked in, never shares a boxer with the other. */
+  /**
+   * Two players may pick the same build; the second wears another kit.
+   * The computer always takes a different build from its opponent, so a
+   * fight against it shows off two styles.
+   */
   private avoidSame(keep: 0 | 1 = 0): void {
     const other = keep === 0 ? 1 : 0;
     if (this.state.picks[other] !== this.state.picks[keep]) return;
-    if (this.state.locked[other] && this.humans[other]) {
-      this.state.picks[keep] = (this.state.picks[keep] + 1) % LOOKS.length;
-      return;
-    }
-    this.state.picks[other] = (this.state.picks[other] + 1) % LOOKS.length;
+    const computer = !this.humans[other] ? other : !this.humans[keep] ? keep : null;
+    if (computer === null) return;
+    this.state.picks[computer] = (this.state.picks[computer] + 1) % BUILD_LIST.length;
   }
 }

@@ -1,5 +1,5 @@
 /*
-  Choosing boxers: a column of cards per player, over the ring behind.
+  Choosing builds: a column of cards per player, over the ring behind.
 */
 
 .bx-pick {
@@ -33,11 +33,11 @@
 }
 
 .bx-pick__sides--1 {
-  grid-template-columns: minmax(0, 420px) auto;
+  grid-template-columns: minmax(0, 560px) auto;
 }
 
 .bx-pick__sides--2 {
-  grid-template-columns: repeat(2, minmax(0, 420px));
+  grid-template-columns: repeat(2, minmax(0, 560px));
 }
 
 .bx-pick__side {
@@ -52,12 +52,23 @@
   gap: 12px;
 }
 
-.bx-pick__who {
-  padding: 5px 14px;
+/* The player's name, typed over in place: a pill in their colour. */
+.bx-pick__name {
+  width: 12ch;
+  padding: 6px 16px;
+  border: 3px solid transparent;
   border-radius: 999px;
   background: var(--who);
   color: #10101a;
+  font: inherit;
+  font-size: 20px;
   font-weight: 900;
+  outline: none;
+}
+
+.bx-pick__name:focus {
+  border-color: #ffffff;
+  background: #ffffff;
 }
 
 .bx-pick__state {
@@ -74,7 +85,6 @@
   position: relative;
   display: grid;
   grid-template-columns: 14px 1fr auto;
-  grid-template-rows: auto auto;
   column-gap: 14px;
   align-items: center;
   padding: 12px 16px 12px 12px;
@@ -107,7 +117,6 @@
 }
 
 .bx-card__stripe {
-  grid-row: span 2;
   align-self: stretch;
   border-radius: 6px;
   background: linear-gradient(180deg, var(--gloves) 0 45%, var(--trim) 45% 55%, var(--trunks) 55% 100%);
@@ -121,17 +130,58 @@
   color: var(--bx-gold);
 }
 
-.bx-card__name {
-  grid-column: 2;
-  font-size: 16px;
-  font-weight: 800;
+.bx-card__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 }
 
-.bx-card__from {
-  grid-column: 3;
-  grid-row: 1 / span 2;
+.bx-card__blurb {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+  line-height: 1.25;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* Stat bars: a label and five pips per row, filled in the gold of the belt. */
+.bx-stats {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+}
+
+.bx-stats__row {
+  display: grid;
+  grid-template-columns: 62px auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.bx-stats dt {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.bx-stats dd {
+  display: flex;
+  gap: 3px;
+  margin: 0;
+}
+
+.bx-stats__pip {
+  width: 16px;
+  height: 8px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.bx-stats__pip--on {
+  background: linear-gradient(180deg, #ffe38a, var(--bx-gold));
+  box-shadow: 0 0 6px rgba(245, 197, 66, 0.45);
 }
 
 .bx-card__hold {
