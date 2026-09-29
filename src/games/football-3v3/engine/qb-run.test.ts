@@ -134,7 +134,6 @@ describe("the Run button", () => {
 
   it("is used by a computer QB when nobody gets open", () => {
     const m = new Match({ entries: BOTS.filter((e) => e.role === "qb"), seed: 5, firstOffense: 0 });
-    const qb = m.qbOf(0);
     // A computer QB calls and hikes by itself once its windows run out.
     run(m, 25, (mm) => mm.phase === "live");
     expect(m.play?.call).toBe("throw");
