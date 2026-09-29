@@ -2,7 +2,60 @@
 
 American football for 2 to 6 players, with phones held sideways as controllers. Each team has a QB, up to two runners, and three computer linemen who fight it out at the line. First to 14 points wins, or the higher score when four quarters run out.
 
-This folder is built in steps. The engine, the rules and the 3D drawing are done. The host screens, the phones, audio and registration come next.
+## Playing it
+
+1. **Join.** Everyone scans the code on the big screen and picks one of the six stars on their phone, with the star turning in 3D beside their stats. Then Ready.
+2. **Lobby.** Ready puts a player on the smaller side. On the big screen the host moves players between Storm, Blaze and the bench, picks each side's QB with the QB and Runner chips (the old QB becomes a runner), and sets the computer difficulty: Easy, Medium, Hard or Training. Computer players fill every empty place: the QB of a side with nobody on it, and runners up to two a side. A side with people always has a person at QB. One ready player is enough to kick off.
+3. **The game.** The big screen shows the broadcast: the score bug along the bottom, a callout above it for big moments (Touchdown, Field goal, Interception, Sack, First down), the phones' players along the top, and a name tag over each of them on the field.
+4. **Touchdowns** are celebrated live, then replayed (see below), then the try.
+5. **The end screen** has the winners and the score, the player of the game, and every star's passing, rushing and receiving yards, touchdowns, tackles and interceptions. Play again keeps the teams; Change teams goes back to the lobby.
+
+## The phone
+
+Held sideways, like a controller: moving under the left thumb, the ball and the buttons under the right, and the score, the clock, the down and a status line in the middle. The layout follows what the player is doing right now, straight from the engine's `seatStatus`, and every change of layout lets go of anything held.
+
+* **The call.** Before each play the QB gets two big tiles, Throw and Kick, with the seconds left. After a touchdown: Kick for 1 or Go for 2.
+* **The QB.** A move bar on the left: slide across to move in the pocket, a shorter push up to step up or scramble, down to drop back. Before the snap the middle is one big Hike button with the seconds left of the 5 second window. On the right the throw stick: hold it and push toward a receiver on the big screen, the one nearest that line lights up, and let go to throw. Juke sits in the middle after the snap.
+* **A runner** (and the QB once past the line): the run stick, Dive and Juke.
+* **The defence:** the move stick, Rush, Guard (held) and Tackle. After an interception the QB defends too.
+* **The kicker:** a marker sweeps across the accuracy bar, stop it in the green; then one climbs the power bar, stop it high. The phone draws both meters on its own clock and sends the reading it showed, so lag never moves the kick.
+* **Replay:** one Skip button and the tally.
+
+**Sticks follow the camera.** A phone's stick is on the screen's axes. The host turns it into a field direction with the way up the screen from the camera (`renderer.director.groundForward()` through `host/steer.ts`), so up always runs up the screen and right runs right, even after the camera turns round for a turnover. The throw stick works the same way.
+
+The pad buttons go through the gamepad kit. The play call, the kick readings and the throw stick are the game's own messages (`protocol/phone-messages.ts`): the throw stick streams while held and the release is sent reliably with its last reading.
+
+## The touchdown replay
+
+After the celebration the game waits and the big screen replays the play, cut into stages like a network replay (`host/replay/`):
+
+1. **Aim**, from behind the QB over his shoulder, at a little under full speed.
+2. **Throw**, in deep slow motion, with the ball's speed and the spiral's turns a minute on the card.
+3. **Flight**, chasing the ball from behind with its path traced in a glowing line into the catcher's hands, with the air yards and the hang time.
+4. **Run**, at full speed from behind the scorer as he runs and dodges into the end zone, with the yards after the catch and his top speed.
+
+A touchdown on the ground is just the run. Any button on a phone is a vote to skip, and it takes everyone in the game; a phone that drops stops counting. The music steps back under it, with the broadcast swoosh in and out.
+
+`MatchDriver` keeps every step's still for the last 16 seconds and holds the match at the end of the celebration. `scriptReplay` reads the clip for the snap, the throw, the catch and the score, and `ReplayDirector` plays it on the animation clock, blending stills for the slow motion.
+
+## Sound
+
+Everything is synthesised through the audio engine, with no crowd: the brass and the whistles carry the big moments.
+
+* **Prime Time**, the game's theme: a big brass and drums broadcast theme in D major at 138, with trumpets on the fanfare, horns on the answer, trombones and tuba, driving strings, a marching snare that rolls into every turn, timpani and a crash on each section.
+* **Tailgate**, the lobby and results: a laid back soul groove in F at 82 with a vibraphone, an electric piano, a round bass and brushes.
+* **Stings:** a touchdown fanfare over a timpani roll, a lift for a good kick, a sinking line for a turnover or a miss, a bumper at the end of a quarter, and the winners' fanfare.
+* **Effects:** the officials' pealess whistle (one blast for a dead ball, a long one for a score, two short and a long for a quarter), pads cracking, bodies hitting the turf, the kick thump, the snap, the throw, the catch, cleats cutting, the stadium horn, and a soft chime for a first down.
+
+## The host
+
+`host/football-host.ts` is the session for one room: the lobby, the game, the replays, the sound and the phones. `host/inputs.ts` routes the room's events and the phones' messages; `host/match-driver.ts` runs the fixed steps; `host/publish.ts` writes the store for the big screen and each phone's state. The big screen is plain React over the 3D canvas in `host/components`.
+
+**Admin shortcuts** (three quick taps on the settings gear), for the team with the ball: Touchdown, Field goal and Two point try. They go through the real rules.
+
+**Browser tests** can set `window.__footballTest` before the page loads (development only): `lowGpu`, `quarterSeconds`, `target` and `catchUp`. The host session is on `window.__football` and a phone's on `window.__footballPhone`.
+
+**Phone pages** fit one iPhone 16 screen: `node tools/phone-fit.mjs --games football-3v3` walks every layout.
 
 ## The rules
 
@@ -123,7 +176,7 @@ const board = scoreboard(view); // for <Scoreboard board={board} />
 
 ### The showcase
 
-`showcase/` plays a seeded bot match under the lights with the score bug. For development: `?seed=` and `?seek=` (seconds to jump ahead), `?quality=low`, `?cam=x,y,z,lookX,lookY,lookZ,fov` to pin the camera, and `?lab=<move>` for the animation lab, where all six stars do one move on a loop next to a pair of linemen. The moves are idle, run, tuck, ready, throw, kick, spin, back, side, dive, lunge, down, tackled, celebrate, spike, stance, block and catch. A spin turns the whole body round, as the engine does in a game.
+`showcase/` plays a seeded bot match under the lights with the score bug. The poster is the first pass of that game at the top of its arc from the broadcast camera, and the icon the QB just before he lets it go, from low in front, both frozen (`showcase/stills.ts`). For development: `?seed=` and `?seek=` (seconds to jump ahead), `?quality=low`, `?cam=x,y,z,lookX,lookY,lookZ,fov` to pin the camera, and `?lab=<move>` for the animation lab, where all six stars do one move on a loop next to a pair of linemen. The moves are idle, run, tuck, ready, throw, kick, spin, back, side, dive, lunge, down, tackled, celebrate, spike, stance, block and catch. A spin turns the whole body round, as the engine does in a game.
 
 ## Tests
 
