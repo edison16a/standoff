@@ -1,0 +1,95 @@
+/*
+  The broadcast score bug: a dark bar along the bottom of the big
+  screen with a team colour block for each side.
+*/
+
+.fb-board {
+  --fb-display: "Arial Black", Impact, "Helvetica Neue", Arial, sans-serif;
+  position: absolute;
+  left: 50%;
+  bottom: clamp(12px, 3vh, 32px);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: stretch;
+  height: clamp(40px, 6vh, 64px);
+  font-family: var(--fb-display);
+  color: #fff;
+  background: linear-gradient(#1b2436, #0c1220);
+  border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  pointer-events: none;
+  font-size: clamp(14px, 2.3vh, 24px);
+  white-space: nowrap;
+}
+
+.fb-board__team {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0 0.7em;
+  background: linear-gradient(var(--team), color-mix(in srgb, var(--team) 70%, #000));
+}
+
+.fb-board__code {
+  letter-spacing: 0.06em;
+}
+
+.fb-board__score {
+  min-width: 1.4em;
+  text-align: center;
+  font-size: 1.35em;
+}
+
+.fb-board__ball {
+  width: 0.45em;
+  height: 0.3em;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.fb-board__ball--on {
+  background: #b5652a;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.fb-board__time,
+.fb-board__down,
+.fb-board__target {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0 0.9em;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.fb-board__period {
+  color: #f5c518;
+}
+
+.fb-board__clock {
+  font-variant-numeric: tabular-nums;
+}
+
+.fb-board__situation {
+  color: #fff;
+}
+
+.fb-board__spot {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.8em;
+}
+
+.fb-board__play {
+  display: flex;
+  align-items: center;
+  padding: 0 0.7em;
+  color: #111;
+  background: #f5c518;
+  font-variant-numeric: tabular-nums;
+}
+
+.fb-board__target {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.75em;
+}
