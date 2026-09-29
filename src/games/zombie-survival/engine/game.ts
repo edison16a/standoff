@@ -103,6 +103,13 @@ export class SurvivalGame {
     if (member?.present) member.gun.startReload();
   }
 
+  /** A test shortcut: walk straight to a stage's checkpoint, as if every fight before it was won. */
+  jumpTo(stage: number): void {
+    if (!this.running || this.phase === "escaped") return;
+    this.cutscene = null;
+    this.travelTo(Math.max(1, Math.min(STAGE_COUNT, stage)));
+  }
+
   /** From the game over screen: the same fight again, from its checkpoint. */
   retry(): void {
     if (this.phase !== "down") return;

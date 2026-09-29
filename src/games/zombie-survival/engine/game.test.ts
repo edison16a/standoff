@@ -178,6 +178,15 @@ describe("a run", () => {
     expect(game.squad.get(2)!.stats.shots).toBe(1);
   });
 
+  it("jumps ahead to a stage for the admin panel", () => {
+    const game = new SurvivalGame();
+    game.start([{ seat: 1, weapon: "rifle" }]);
+    game.jumpTo(10);
+    run(game, 30, undefined, () => game.phase === "fight");
+    expect(game.stage).toBe(10);
+    expect(game.encounter?.spec.bosses).toEqual(["tank"]);
+  });
+
   it("keeps the boss table sane", () => {
     for (const kind of BOSS_KINDS) expect(KINDS[kind].weakPoints.length).toBeGreaterThan(0);
   });

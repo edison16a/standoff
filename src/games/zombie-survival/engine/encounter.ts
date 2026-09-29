@@ -64,6 +64,19 @@ export class Encounter {
     return this.zombies.find((z) => z.id === id);
   }
 
+  /** A test shortcut: every zombie still to come stays away and every one standing drops. */
+  wipe(): void {
+    this.spawner.cancel();
+    for (const z of this.zombies) {
+      if (!alive(z)) continue;
+      z.hp = 0;
+      z.weak = z.weak.map(() => 0);
+      z.state = "dead";
+      z.stateTime = 0;
+      z.death = { head: false, seat: 0 };
+    }
+  }
+
   /** Advances the fight. Returns the damage the team took this step. */
   update(dt: number, emit: (event: GameEvent) => void): number {
     const standing = this.zombies.filter(alive);

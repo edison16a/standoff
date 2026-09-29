@@ -76,4 +76,13 @@ describe("an encounter", () => {
     const sides = runners.map((z) => z.targetSide);
     expect(Math.max(...sides) - Math.min(...sides)).toBeGreaterThan(1);
   });
+
+  it("ends at once when wiped, for the admin panel's shortcut", () => {
+    const encounter = new Encounter(stage(14), 2, 5, 1);
+    for (let t = 0; t < 10; t += DT) encounter.update(DT, () => undefined);
+    expect(encounter.done).toBe(false);
+    encounter.wipe();
+    expect(encounter.remaining).toBe(0);
+    expect(encounter.done).toBe(true);
+  });
 });

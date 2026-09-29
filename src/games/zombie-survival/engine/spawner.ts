@@ -76,6 +76,13 @@ export class Spawner {
     return this.total - this.spawned + this.spec.bosses.length - this.bossesOut;
   }
 
+  /** Nobody else comes. */
+  cancel(): void {
+    this.spawned = this.total;
+    this.bossesOut = this.spec.bosses.length;
+    this.rushIn = null;
+  }
+
   step(dt: number, field: Field): SpawnOrder[] {
     const out: SpawnOrder[] = [];
     this.spawnIn -= dt;
