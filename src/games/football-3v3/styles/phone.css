@@ -271,16 +271,41 @@
     gap: 6px;
   }
 
+  /* The stats tighten and the six stars sit in one row, so the pick fits beside the preview. */
+  .fb-pick__stats {
+    gap: 2px 10px;
+  }
+
   .fb-stat {
-    font-size: 12px;
+    grid-template-columns: 46px minmax(0, 1fr) 16px;
+    gap: 4px;
+    font-size: 11px;
+  }
+
+  .fb-stat__bar {
+    height: 6px;
+  }
+
+  .fb-pick__list {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 4px;
   }
 
   .fb-pick__card {
-    padding: 3px 8px;
+    min-height: 40px;
+    padding: 3px 5px;
   }
 
   .fb-pick__number {
     font-size: 15px;
+  }
+
+  .fb-pick__name {
+    font-size: 9px;
+  }
+
+  .fb-pick__caption span {
+    display: none;
   }
 
   .fb-pick__stage,
