@@ -15,7 +15,10 @@ The running list of what is being built, so work can pick up again after a break
 | Work | Workflow | State |
 | --- | --- | --- |
 | **Room reliability (top priority):** find why rooms fail about every other time and fix the cause, a host watchdog that checks the room like a phone would and fully remakes it when broken, the QR code hidden until the room passes its check, and a Regenerate room button right under the QR code | wf_3938ab23-6cc | four investigations (live site repro, local multi instance repro, client audit, relay audit), two designs and a judge, one build, then stress, code and production reviews with fix rounds |
-| Batch C and D, finishing what the restart interrupted, in the same worktrees, two at a time | wf_9713e4a2-c2a | reviews for Soccer, Blade Clash and Paintball Battle; finish and review Cube Game 1v1, hold to calibrate, winner scenes and Boxing builds, Basketball part 2, Football 3v3 steps 2 and 3 |
+| Batch E part 1: Subway Runner overhaul (the real Subway Surfers look, feel and sound) and the Zombie Survival rework (crosshairs, recoil, short fast rounds, bosses) | wf_e5046812-6a8 | build then review each; Subway is two builds in one worktree |
+| Batch C and D, finishing what the restart interrupted, in the same worktrees, two at a time | wf_9713e4a2-c2a | finish and review Cube Game 1v1, hold to calibrate, winner scenes and Boxing builds, Basketball part 2, Football 3v3 steps 2 and 3 |
+
+**Room root cause, found and reproduced on the live site:** production has no shared Redis store (every room:created says sharedRooms:false). Rooms live in one Vercel instance's memory, a game's own traffic makes Vercel add a second instance within about 1.5 s, and then joins, POSTs and hand overs land on an instance without the room: "Room not found". Every deploy to main also wipes open rooms. **Owner action:** add a Redis store to the Vercel project (Storage, Create Database, for example Upstash for Redis), connect it to Production, redeploy. The code reads REDIS_URL, KV_URL or UPSTASH_REDIS_URL. Keep deploys to main batched so they strand fewer rooms.
 
 A resume after the container restart went wrong: with a changed script, finished steps ran again inside other builds' worktrees. It was stopped, every branch was put back to its state before the resume, and the duplicate work was kept on `salvage/*` branches. Lesson: resume a workflow only with its script unchanged.
 
@@ -26,14 +29,14 @@ A resume after the container restart went wrong: with a changed script, finished
 Every Computer player game gets Easy (default), Medium, Hard and Training (bots stand still). Sports games get 6 characters, host picked roles, a winner and stats screen, and replays that skip only when everyone agrees.
 
 
-### Batch E: starts when Batch C's Subway and sports work is on main
+### Batch E: items 1 and 5 running; items 2 to 4 start when the victory kit, Basketball and the sports builds are on main
 
-1. **Subway Runner overhaul:** drop the neon look and make it look, move and sound like the real Subway Surfers: bright daytime rail yard, graffiti trains, the real feel of lane switches, jumps, rolls, hoverboards and the chase. Much better graphics, physics and sounds.
+1. **(running)** **Subway Runner overhaul:** drop the neon look and make it look, move and sound like the real Subway Surfers: bright daytime rail yard, graffiti trains, the real feel of lane switches, jumps, rolls, hoverboards and the chase. Much better graphics, physics and sounds.
 2. **Sports winner scenes:** Basketball team lifting an NBA style trophy with names and confetti, Soccer team lifting a World Cup style trophy, Football with a trophy too. Use the victory kit from Batch D.
 3. **Builds instead of characters** in Basketball (Shooter, Dunker, and so on), Soccer and Football: each pick is a stat build and the username stays the displayed name.
 4. **Winner scenes** for the other games with a clear winner: Blade Clash, Paintball Battle, Cube Game 1v1.
 
-5. **Zombie Survival rework:**
+5. **(running)** **Zombie Survival rework:**
    * Each weapon gets its own crosshair and a real trade off (the shotgun has a wide spread and short range, and so on).
    * Recoil kicks the gun, which springs back to where the player points. The aim itself never moves.
    * Shorter, faster waves: at most 10 zombies a round early on and about 20 in late rounds.
@@ -50,6 +53,9 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ## Done recently
 
+* Soccer 3v3: Guard, fouls with a referee and yellow card, free kicks with a jumping wall and aimed curve, penalties, bigger pitch and goals, shot auto aim with blocks, smart passing, keeper saves that bounce out, FIFA style replays with a skip vote, the SUI, no banners, six stars, host roles, difficulty.
+* Blade Clash: no voice, a slow motion hit moment on every point, then both fighters reset; difficulty picker.
+* Paintball Battle (was Counter Battle): paint markers and splats, thin crosshair, Shoot and Crouch buttons, closer camera, slower fight from cover, shared difficulty.
 * Unique names in a room, a Reconnect button, and each controller at its own /play/CODE/name address so a refresh takes it back to its seat.
 * Magic Kart: turning the phone no longer loses the controls, and a reloaded controller keeps its setup.
 * Subway Runner: Easy, Medium and Hard starts, no two player mode, the name beside the score in plain text.
