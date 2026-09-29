@@ -138,6 +138,14 @@
 }
 
 @media (max-height: 620px) {
+  .bx-pick {
+    padding-top: 56px;
+  }
+
+  .bx-pick__head h2 {
+    font-size: 36px;
+  }
+
   .bx-pick__head p {
     display: none;
   }
