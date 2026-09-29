@@ -25,6 +25,13 @@ const APART = 2.4;
 const OFF_LINE = 0.7;
 
 /**
+ * The swing is centred this far round from the champion's front, toward
+ * the loser's open side. Swung the other way the loser tucks in behind
+ * the champion and the camera brushes past a corner post's lamp.
+ */
+const SWING_BIAS = 0.16;
+
+/**
  * The circling shot, round the champion at the middle of the dais. It
  * stands back far enough that the sword held high stays under the names
  * across the top, and swings only a little either way so the kneeling
@@ -32,11 +39,11 @@ const OFF_LINE = 0.7;
  * dais's, added by the ceremony.
  */
 export const SHOT: Omit<OrbitShot, "centre" | "startAngle"> = {
-  radius: 8.2,
+  radius: 8.6,
   height: 1.8,
-  lookHeight: 2.5,
+  lookHeight: 2.55,
   speed: 0.1,
-  arc: 0.42,
+  arc: 0.3,
   introS: 2.6,
   pullBack: 1.5,
   rise: 1.8,
@@ -62,7 +69,7 @@ export function stageCeremony(winner: Slot): Staging {
   return {
     winner: { x: 0, z: 0, yaw },
     loser: { x: side * APART, z: 0, yaw: toward },
-    // A model facing yaw is seen from the front from this kit angle.
-    startAngle: yaw + Math.PI / 2,
+    // A model facing yaw is seen from the front from this kit angle, then a little toward the loser's open side.
+    startAngle: yaw + Math.PI / 2 + SWING_BIAS,
   };
 }

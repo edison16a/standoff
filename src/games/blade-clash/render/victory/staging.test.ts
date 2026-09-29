@@ -47,7 +47,8 @@ describe("the ceremony's staging", () => {
         const toChamp = unit(-c.x, -c.z);
         const toLoser = unit(loser.x - c.x, loser.z - c.z);
         const apart = Math.acos(Math.min(1, toChamp.x * toLoser.x + toChamp.z * toLoser.z));
-        expect(apart).toBeGreaterThan(0.06);
+        // About the champion's own width at this distance, so the two never overlap.
+        expect(apart).toBeGreaterThan(0.1);
       }
     });
   }
