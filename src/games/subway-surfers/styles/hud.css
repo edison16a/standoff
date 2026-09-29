@@ -224,7 +224,10 @@
   font-size: 24px;
   font-weight: 800;
   text-align: center;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  /* A hard navy edge keeps the hint readable over bright sky and pale walls. */
+  -webkit-text-stroke: 4px #14254a;
+  paint-order: stroke fill;
+  text-shadow: 0 3px 0 #14254a;
 }
 
 .ss-tut__list {
