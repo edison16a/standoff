@@ -37,7 +37,7 @@ export const LOOKS: readonly Look[] = [
     pants: 0x3f68b8,
     pantsTrim: 0x88a8e0,
     shoes: 0xffffff,
-    soles: 0xe8342c,
+    soles: 0xf2f2ee,
     cap: 0x1f5fd6,
     capPeak: 0xffc21a,
     pack: 0xffc21a,
@@ -148,7 +148,7 @@ export function buildRunner(look: Look): Rig {
     shin.capsule(0.088, 0.22, satin(look.pants), [0, -0.17, 0]);
     // Baggy jeans rolled up over the sneakers.
     shin.post(0.098, 0.08, satin(look.pantsTrim), [0, -0.33, 0], 14, 0.094);
-    sneaker(dress.on(`ankle${side}`), look.shoes, 0, 0.04, -0.05, look.soles, look.cap);
+    sneaker(dress.on(`ankle${side}`), look.shoes, 0, 0.04, -0.05, look.soles, look.top);
   }
   return dress.finish();
 }

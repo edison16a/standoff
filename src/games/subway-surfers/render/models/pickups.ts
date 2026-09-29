@@ -25,6 +25,10 @@ export function coinGeometry(grow = 0): THREE.BufferGeometry {
   ].map(([x, y]) => new THREE.Vector2(x, y));
   const geometry = new THREE.LatheGeometry(profile, 24);
   geometry.rotateX(Math.PI / 2);
+  // The face picture is laid straight on from the front, so the rim takes the edge of the picture.
+  const pos = geometry.attributes.position as THREE.BufferAttribute;
+  const uv = geometry.attributes.uv as THREE.BufferAttribute;
+  for (let i = 0; i < pos.count; i++) uv.setXY(i, 0.5 + pos.getX(i) / (2 * r), 0.5 + pos.getY(i) / (2 * r));
   return geometry;
 }
 
@@ -32,9 +36,42 @@ let coinMat: THREE.MeshToonMaterial | null = null;
 
 export function coinMaterial(): THREE.MeshToonMaterial {
   // A warm glow of its own keeps the shaded side gold rather than brown.
-  coinMat ??= toon({ color: 0xffcc22, emissive: 0x8a5200, emissiveIntensity: 0.9 });
+  coinMat ??= toon({ map: coinFace(), emissive: 0x6a4200, emissiveIntensity: 0.8 });
   coinMat.userData.shared = true;
   return coinMat;
+}
+
+/** A gold coin face: a dark rim, a bright face with a raised star and a shine across it. */
+function coinFace(): THREE.Texture {
+  return painted("coin-face", 128, 128, (ctx, w, h) => {
+    const c = w / 2;
+    ctx.fillStyle = "#d98f00";
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = "#ffc21a";
+    ctx.beginPath();
+    ctx.arc(c, c, w * 0.46, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#ffd84a";
+    ctx.beginPath();
+    ctx.arc(c, c, w * 0.34, 0, Math.PI * 2);
+    ctx.fill();
+    const starAt = (dx: number, dy: number, fill: string) => {
+      ctx.fillStyle = fill;
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const a = (i / 10) * Math.PI * 2 - Math.PI / 2;
+        const r = i % 2 === 0 ? w * 0.22 : w * 0.1;
+        ctx.lineTo(c + dx + Math.cos(a) * r, c + dy + Math.sin(a) * r);
+      }
+      ctx.fill();
+    };
+    starAt(3, 3, "#d98f00");
+    starAt(0, 0, "#fff3b0");
+    ctx.fillStyle = "rgba(255,255,255,0.45)";
+    ctx.beginPath();
+    ctx.ellipse(c - w * 0.18, c - w * 0.2, w * 0.08, w * 0.2, 0.7, 0, Math.PI * 2);
+    ctx.fill();
+  });
 }
 
 export const POWER_COLORS: Record<PowerKind, number> = {
@@ -90,8 +127,8 @@ function buildPickup(kind: PowerKind): THREE.Group {
       break;
   }
   const group = b.build(`pickup-${kind}`);
-  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color: tint, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.9 }));
-  halo.scale.setScalar(2.1);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color: tint, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.6 }));
+  halo.scale.setScalar(1.5);
   halo.material.userData.shared = true;
   group.add(halo);
   const ring = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.05, 8, 36), new THREE.MeshBasicMaterial({ color: tint, toneMapped: false }));

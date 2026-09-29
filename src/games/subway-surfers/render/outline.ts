@@ -48,8 +48,8 @@ export function addOutline(root: THREE.Object3D): void {
   const meshes: THREE.Mesh[] = [];
   root.traverse((node) => {
     const mesh = node as THREE.Mesh;
-    // Glowing bits, like the glint in an eye, stay unlined.
-    if (mesh.isMesh && !mesh.userData.outline && !(mesh.material instanceof THREE.MeshBasicMaterial)) meshes.push(mesh);
+    // Glowing bits and painted on features, like eyes and brows, stay unlined.
+    if (mesh.isMesh && !mesh.userData.outline && !mesh.userData.noOutline && !(mesh.material instanceof THREE.MeshBasicMaterial)) meshes.push(mesh);
   });
   for (const mesh of meshes) {
     const twin = new THREE.Mesh(mesh.geometry, ink());

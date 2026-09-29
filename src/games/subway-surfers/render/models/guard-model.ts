@@ -46,13 +46,15 @@ export function buildGuard(): Rig {
   dress.on("neck").post(0.07, 0.1, matte(SKIN), [0, 0.02, 0]);
 
   const head = dress.on("head");
+  const face = dress.detail("head");
   const cy = 0.14;
   head.sphere(0.15, matte(SKIN), [0, cy, 0], [1, 1.05, 1], 20);
+  // A big red nose and a bushy moustache, painted on with the eyes and brows.
   head.sphere(0.035, matte(0xf29a8c), [0, cy - 0.01, -0.15], [1, 0.9, 1], 10);
-  head.sphere(0.06, matte(0x6b4a33), [0, cy - 0.06, -0.125], [1.5, 0.5, 0.6], 12);
+  face.sphere(0.06, matte(0x6b4a33), [0, cy - 0.06, -0.125], [1.5, 0.5, 0.6], 12);
   for (const x of [-1, 1]) {
-    head.sphere(0.018, gloss(0x1b1320), [x * 0.05, cy + 0.035, -0.135], [1, 1, 0.6], 8);
-    head.box(0.06, 0.02, 0.02, satin(0x5a3a26), [x * 0.055, cy + 0.07, -0.132], [0, 0, x * 0.25], 0.008);
+    face.sphere(0.018, gloss(0x1b1320), [x * 0.05, cy + 0.035, -0.135], [1, 1, 0.6], 8);
+    face.box(0.06, 0.02, 0.02, satin(0x5a3a26), [x * 0.055, cy + 0.07, -0.132], [0, 0, x * 0.25], 0.008);
     head.sphere(0.036, matte(SKIN), [x * 0.15, cy, 0], [0.6, 1, 0.9], 8);
   }
   // The peaked cap with its badge.
