@@ -112,8 +112,8 @@
 
 .fifa-card {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-areas: "dot who state" "moves moves moves";
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-areas: "dot who role state" "moves moves moves moves";
   align-items: center;
   gap: 6px 12px;
   padding: 12px 14px;
@@ -123,7 +123,7 @@
 }
 
 .fifa-card--bot {
-  grid-template-areas: "dot who state";
+  grid-template-areas: "dot who role state";
   border-left-color: rgba(255, 255, 255, 0.15);
   opacity: 0.72;
 }

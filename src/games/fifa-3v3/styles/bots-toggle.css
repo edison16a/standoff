@@ -53,3 +53,40 @@
 .fifa-bots__segments button:focus-visible {
   outline: 3px solid #ffd23f;
 }
+
+/* The computer switch and how good they are, side by side under the teams. */
+.fifa-lobby__settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px 24px;
+}
+
+/* A player's place on their side. The host clicks it to hand out the next one. */
+.fifa-role {
+  grid-area: role;
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.fifa-role:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.fifa-role:focus-visible {
+  outline: 3px solid #ffd23f;
+}
+
+.fifa-role--fixed {
+  border-color: rgba(255, 255, 255, 0.2);
+  cursor: default;
+}

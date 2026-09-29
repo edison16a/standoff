@@ -1,12 +1,25 @@
 "use client";
 import { Icon } from "@/components/ui/Icon";
+import { DifficultyPicker } from "@/games/kit/difficulty/DifficultyPicker";
 import { playerColor } from "@/games/kit/players";
+import { ROLE_NAMES, type Role } from "../../engine/roles";
 import { ROSTER } from "../../roster";
 import { TEAMS, other, type TeamId } from "../../teams";
 import { useFifaStore, type SeatView } from "../host-store";
 import { TEAM_SIZE } from "../lobby";
 import { BotsToggle, matchSize } from "./BotsToggle";
 import { useSession } from "./session-context";
+
+/** The role on a card. On a side, the host clicks it to hand the player the next one. */
+function RoleTag({ role, name, onClick }: { role: Role; name?: string; onClick?(): void }) {
+  const text = ROLE_NAMES[role];
+  if (!onClick) return <span className="fifa-role fifa-role--fixed">{text}</span>;
+  return (
+    <button type="button" className="fifa-role" aria-label={`${name ?? "Player"} plays ${text}. Change role`} onClick={onClick}>
+      {text}
+    </button>
+  );
+}
 
 function PlayerCard({ seat, full }: { seat: SeatView; full: (team: TeamId) => boolean }) {
   const session = useSession();
@@ -19,6 +32,7 @@ function PlayerCard({ seat, full }: { seat: SeatView; full: (team: TeamId) => bo
         <strong>{seat.name}</strong>
         <span>{star ? `${star.name}, ${star.number}` : "Choosing a star"}</span>
       </span>
+      {seat.team !== null && <RoleTag role={seat.role} name={seat.name} onClick={() => session.cycleRole(seat.seat)} />}
       <span className={`fifa-card__state ${seat.ready ? "fifa-card__state--on" : ""}`}>{seat.ready ? "Ready" : "Setting up"}</span>
       <span className="fifa-card__moves">
         {seat.team === null ? (
@@ -78,6 +92,7 @@ function TeamColumn({ team }: { team: TeamId }) {
               <strong>{ROSTER[bot.character].name}</strong>
               <span>Computer player</span>
             </span>
+            <RoleTag role={bot.role} />
           </li>
         ))}
       </ul>
@@ -95,6 +110,7 @@ export function Lobby() {
   const session = useSession();
   const seats = useFifaStore((s) => s.seats);
   const botsOn = useFifaStore((s) => s.botsOn);
+  const level = useFifaStore((s) => s.level);
   const block = useFifaStore((s) => s.startBlock);
   const joined = seats.filter((s) => s.connected);
   const bench = joined.filter((s) => s.team === null);
@@ -139,7 +155,10 @@ export function Lobby() {
       )}
       <footer className="fifa-lobby__foot">
         <p className="fifa-lobby__note">{note}</p>
-        <BotsToggle on={botsOn} onChange={(on) => session.setBots(on)} />
+        <div className="fifa-lobby__settings">
+          <BotsToggle on={botsOn} onChange={(on) => session.setBots(on)} />
+          {botsOn && <DifficultyPicker level={level} onChange={(next) => session.setLevel(next)} />}
+        </div>
         <button type="button" className="fifa-start" disabled={block !== null} onClick={() => session.startMatch()}>
           <Icon name="play" />
           Kick off

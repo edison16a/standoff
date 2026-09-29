@@ -53,7 +53,7 @@ describe("the lobby", () => {
     const lineup = lobby.entrants();
     expect(lineup).toHaveLength(6);
     expect(lineup.filter((e) => e.team === 0)).toHaveLength(3);
-    expect(lineup[0]).toEqual({ team: 0, character: "echeverri", seat: 1 });
+    expect(lineup[0]).toEqual({ team: 0, character: "echeverri", seat: 1, slot: 0 });
     expect(new Set(lineup.map((e) => e.character)).size).toBe(6);
     expect(lineup.filter((e) => e.seat === null)).toHaveLength(5);
   });

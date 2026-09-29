@@ -1,4 +1,6 @@
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { Entrant } from "../engine/match";
+import { freeRole, nextRole, type Role } from "../engine/roles";
 import { CHARACTER_IDS, type CharacterId } from "../roster";
 import type { TeamId } from "../teams";
 
@@ -9,6 +11,8 @@ export interface SeatState {
   pick: CharacterId | null;
   ready: boolean;
   team: TeamId | null;
+  /** The place the host gave them on their side: Striker, Left wing or Right wing. */
+  role: Role;
 }
 
 /**
@@ -23,11 +27,13 @@ export class Lobby {
   readonly seats = new Map<number, SeatState>();
   /** Whether computer players fill the empty places. */
   bots = true;
+  /** How good the computer players are. Easy unless the host picks another. */
+  level: BotLevel = DEFAULT_BOT_LEVEL;
 
   private state(seat: number): SeatState {
     let state = this.seats.get(seat);
     if (!state) {
-      state = { connected: false, pick: null, ready: false, team: null };
+      state = { connected: false, pick: null, ready: false, team: null, role: 0 };
       this.seats.set(seat, state);
     }
     return state;
@@ -59,7 +65,7 @@ export class Lobby {
   setReady(seat: number, ready: boolean): void {
     const state = this.state(seat);
     state.ready = ready && state.pick !== null && state.connected;
-    if (state.ready && state.team === null) state.team = this.smallerTeam(seat);
+    if (state.ready && state.team === null) this.join(seat, this.smallerTeam(seat));
   }
 
   /** The host moves a player to a side, if there is room on it. */
@@ -67,8 +73,34 @@ export class Lobby {
     const state = this.seats.get(seat);
     if (!state) return false;
     if (team !== null && this.teamCount(team, seat) >= TEAM_SIZE) return false;
-    state.team = team;
+    this.join(seat, team);
     return true;
+  }
+
+  /** Joining a side takes the first role free there; the host can change it. */
+  private join(seat: number, team: TeamId | null): void {
+    const state = this.state(seat);
+    if (team !== null && team !== state.team) state.role = freeRole(this.members(team, seat).map((o) => this.state(o).role));
+    state.team = team;
+  }
+
+  /** The host gives a player the next role; a team mate who had it takes theirs in exchange. */
+  cycleRole(seat: number): void {
+    const state = this.seats.get(seat);
+    if (!state || state.team === null) return;
+    const want = nextRole(state.role);
+    const holder = this.members(state.team, seat).find((o) => this.state(o).role === want);
+    if (holder !== undefined) this.state(holder).role = state.role;
+    state.role = want;
+  }
+
+  setLevel(level: BotLevel): void {
+    this.level = level;
+  }
+
+  /** Connected players on a side, not counting `except`. */
+  private members(team: TeamId, except: number): number[] {
+    return [...this.seats.entries()].filter(([seat, s]) => seat !== except && s.connected && s.team === team).map(([seat]) => seat);
   }
 
   /** Stars held by connected players other than `seat`. */
@@ -128,18 +160,25 @@ export class Lobby {
   }
 
   /**
-   * The line up: each side's players in seat order, then computer
-   * players in the stars nobody picked, up to three a side when they
-   * are on. The keepers are always the computer's.
+   * The line up: each side's players with the roles the host gave them,
+   * then computer players in the stars nobody picked and the roles left
+   * over, up to three a side when they are on. Each side is listed in
+   * role order. The keepers are always the computer's.
    */
   entrants(): Entrant[] {
     const spare = this.spareStars();
     const out: Entrant[] = [];
     for (const team of [0, 1] as const) {
       const humans = this.players.filter((seat) => this.seats.get(seat)!.team === team).slice(0, TEAM_SIZE);
-      for (const seat of humans) out.push({ team, character: this.seats.get(seat)!.pick!, seat });
-      if (!this.bots) continue;
-      for (let i = humans.length; i < TEAM_SIZE; i++) out.push({ team, character: spare.shift() ?? "echeverri", seat: null });
+      const side: Entrant[] = [];
+      // Two players left on the same role (one joined while the other was away) share it by seat order.
+      for (const seat of humans) {
+        const s = this.seats.get(seat)!;
+        const clash = side.some((e) => e.slot === s.role);
+        side.push({ team, character: s.pick!, seat, slot: clash ? freeRole(side.map((e) => e.slot ?? 0)) : s.role });
+      }
+      if (this.bots) for (let i = humans.length; i < TEAM_SIZE; i++) side.push({ team, character: spare.shift() ?? "echeverri", seat: null, slot: freeRole(side.map((e) => e.slot ?? 0)) });
+      out.push(...side.sort((a, b) => (a.slot ?? 0) - (b.slot ?? 0)));
     }
     return out;
   }

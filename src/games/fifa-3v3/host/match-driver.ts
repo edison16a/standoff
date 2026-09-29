@@ -1,3 +1,4 @@
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { HostPad } from "@/games/kit/pad/host-pad";
 import { FixedStepClock } from "../engine/clock";
 import type { MatchEvent } from "../engine/events";
@@ -31,10 +32,10 @@ export class MatchDriver {
   private readonly presses = new Map<number, Press[]>();
   private readonly held = new Map<number, number>();
 
-  constructor(readonly entrants: readonly Entrant[], seed: number) {
+  constructor(readonly entrants: readonly Entrant[], seed: number, botLevel: BotLevel = DEFAULT_BOT_LEVEL) {
     const hooks = testHooks();
     this.clock = new FixedStepClock(hooks.catchUp);
-    this.state = createMatch(entrants, { seed, ...(hooks.seconds ? { seconds: hooks.seconds } : {}), ...(hooks.goalsToWin ? { goalsToWin: hooks.goalsToWin } : {}) });
+    this.state = createMatch(entrants, { seed, botLevel, ...(hooks.seconds ? { seconds: hooks.seconds } : {}), ...(hooks.goalsToWin ? { goalsToWin: hooks.goalsToWin } : {}) });
     for (const a of this.state.athletes) if (a.seat !== null) this.athleteBySeat.set(a.seat, a.id);
     this.view = buildView(this.state);
   }

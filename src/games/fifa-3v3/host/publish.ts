@@ -1,4 +1,5 @@
 import type { Player } from "@/platform/games/game-api";
+import { roleOf } from "../engine/roles";
 import { ROSTER } from "../roster";
 import type { PhoneState, RoomPhase } from "../protocol";
 import type { Banners } from "./banners";
@@ -28,14 +29,15 @@ export function publish(c: PublishContext): void {
   const owner = match?.ball.owner;
   const seats = c.players.map((p) => {
     const s = c.lobby.seats.get(p.seat);
-    return { seat: p.seat, name: p.name, connected: p.connected, pick: s?.pick ?? null, ready: s?.ready ?? false, team: s?.team ?? null };
+    return { seat: p.seat, name: p.name, connected: p.connected, pick: s?.pick ?? null, ready: s?.ready ?? false, team: s?.team ?? null, role: s?.role ?? 0 };
   });
   const lineup = c.lobby.entrants();
   store.setState({
     phase: c.phase,
     seats,
-    bots: lineup.filter((e) => e.seat === null).map((e) => ({ team: e.team, character: e.character })),
+    bots: lineup.filter((e) => e.seat === null).map((e) => ({ team: e.team, character: e.character, role: roleOf(e.slot) })),
     botsOn: c.lobby.bots,
+    level: c.lobby.level,
     startBlock: c.lobby.startBlock(),
     score: match ? [match.score[0], match.score[1]] : [0, 0],
     clock: match ? Math.ceil(match.clock) : 0,

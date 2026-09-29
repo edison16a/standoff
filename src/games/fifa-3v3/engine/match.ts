@@ -16,6 +16,8 @@ export interface Entrant {
   character: CharacterId;
   /** The phone playing them, or null for a computer player. */
   seat: number | null;
+  /** The role the host gave them (see roles.ts). Left out, the entry order decides. */
+  slot?: number;
 }
 
 export const DEFAULT_OPTIONS: MatchOptions = {
@@ -28,8 +30,7 @@ export const DEFAULT_OPTIONS: MatchOptions = {
 /** A match ready to kick off. Entrants fill the slots of their team in order. */
 export function createMatch(entrants: readonly Entrant[], options: Partial<MatchOptions> = {}): MatchState {
   const opts = { ...DEFAULT_OPTIONS, ...options };
-  const slots: [number, number] = [0, 0];
-  const athletes = entrants.map((e, id) => makeAthlete(id, e.team, slots[e.team]++, e.character, e.seat));
+  const athletes = entrants.map((e, id) => makeAthlete(id, e.team, slotOf(entrants, id), e.character, e.seat));
   const state: MatchState = {
     phase: "kickoff",
     phaseT: 0,
@@ -52,6 +53,16 @@ export function createMatch(entrants: readonly Entrant[], options: Partial<Match
   };
   setupKickoff(state);
   return state;
+}
+
+/**
+ * A player's slot on their side: their rank by role, so a side of one
+ * or two always has a Striker (slot 0) to take the kick off and lead.
+ */
+function slotOf(entrants: readonly Entrant[], id: number): number {
+  const me = entrants[id]!;
+  const rank = (e: Entrant, i: number) => (e.slot ?? i) * 100 + i;
+  return entrants.filter((e, i) => e.team === me.team && rank(e, i) < rank(me, id)).length;
 }
 
 /**

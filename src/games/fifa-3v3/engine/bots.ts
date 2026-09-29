@@ -2,6 +2,7 @@ import { attackSign, other } from "../teams";
 import { closestOfTeam, markSpot, markTarget, shapeSpot, supportSpot, throwSpot } from "./bot-shape";
 import { goalX, shotAngle, toGoal } from "./goal";
 import { owns } from "./kick";
+import { aimError, botSkill, thinkDelay } from "./bot-level";
 import { trySkill } from "./bot-skill";
 import { laneOf } from "./lanes";
 import { choosePassTarget, openness } from "./passing";
@@ -25,12 +26,14 @@ export function botCommand(state: MatchState, a: Athlete, dt: number): Command {
   brain.callFor -= dt;
   const carrying = owns(state, a);
   brain.carried = carrying ? brain.carried + dt : 0;
-  if (state.phase !== "play") return { move: STILL };
+  const skill = botSkill(state);
+  // In Training the computer players stand still and never act, so people can practise.
+  if (state.phase !== "play" || !skill.acts) return { move: STILL };
   const target = carrying ? dribbleSpot(state, a) : runSpot(state, a);
-  const command: Command = { move: approach(a, target) };
+  const command: Command = { move: scale(approach(a, target), skill.speed) };
   // Mid charge the shot is already decided; it goes when the bar gets there.
   if (brain.thinkIn > 0 || a.action !== "free" || a.charging) return command;
-  brain.thinkIn = state.rng.range(0.12, 0.24);
+  brain.thinkIn = state.rng.range(0.12, 0.24) + thinkDelay(skill);
   if (carrying) decideWithBall(state, a, command);
   else decideWithout(state, a, command);
   return command;
@@ -147,7 +150,7 @@ function aimShot(state: MatchState, a: Athlete, command: Command, d: number): vo
   const rng = state.rng;
   const kz = state.keepers[other(a.team)].pos.z;
   const side = Math.abs(kz) < 0.3 ? rng.sign() : -Math.sign(kz);
-  a.aimZ = side * rng.range(0.9, PITCH.goalHalfWidth - 0.4);
+  a.aimZ = side * rng.range(0.9, PITCH.goalHalfWidth - 0.4) + rng.range(-1, 1) * aimError(botSkill(state));
   if (d < 9) command.shoot = rng.range(0.15, 0.5);
   else if (d < 14) command.shoot = rng.range(0.45, 0.78);
   else command.shoot = rng.range(0.65, 0.95);

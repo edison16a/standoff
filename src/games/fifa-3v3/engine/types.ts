@@ -1,3 +1,4 @@
+import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { TeamId } from "../teams";
 import type { Athlete } from "./athlete-types";
 import type { MatchEvent } from "./events";
@@ -78,6 +79,8 @@ export interface MatchOptions {
   goalsToWin: number;
   /** Shows a goal replay after each celebration. */
   replays: boolean;
+  /** How good the computer players are. Training leaves them standing still. Left out, they play at full strength. */
+  botLevel?: BotLevel;
   /** Lets the showcase decide some shots' outcomes. Return null to roll the dice. */
   rig?: (shotNumber: number, team: TeamId) => ShotOutcome | null;
 }
