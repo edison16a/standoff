@@ -37,8 +37,8 @@ export const phoneMessageSchema = z.discriminatedUnion("kind", [pickSchema, read
 
 export type PhoneMessage = z.infer<typeof phoneMessageSchema>;
 
-/** The gamepad's buttons, as named to the kit. Guard is held; the rest are pressed. Pass is the pitch on a run call. */
-export const PAD_BUTTONS = ["hike", "juke", "dive", "rush", "tackle", "guard", "pass"] as const;
+/** The gamepad's buttons, as named to the kit. Guard is held; the rest are pressed. Pass is the pitch on a run call; Run makes the QB a runner. */
+export const PAD_BUTTONS = ["hike", "juke", "dive", "rush", "tackle", "guard", "pass", "run"] as const;
 export type PadButton = (typeof PAD_BUTTONS)[number];
 
 export function isPadButton(value: string): value is PadButton {

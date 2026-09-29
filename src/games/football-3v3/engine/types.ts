@@ -11,8 +11,8 @@ export type Role = "qb" | "runner" | "lineman";
 export type JukeKind = "spin" | "back" | "side";
 
 /** Buttons on the phones. Guard is held; the rest are presses. */
-/** Pass is the QB's pitch to the back on a run call. */
-export const BUTTONS = ["hike", "juke", "dive", "rush", "tackle", "guard", "kick", "pass"] as const;
+/** Pass is the QB's pitch to the back on a run call; Run turns the QB into a runner. */
+export const BUTTONS = ["hike", "juke", "dive", "rush", "tackle", "guard", "kick", "pass", "run"] as const;
 export type Button = (typeof BUTTONS)[number];
 
 /**

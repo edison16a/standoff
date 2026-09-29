@@ -64,6 +64,8 @@ export const phoneStateSchema = z.object({
   /** A run call: the QB gets Pass for the pitch in place of the throw stick. */
   runPlay: z.boolean(),
   canPitch: z.boolean(),
+  /** The QB can press Run to become the runner for the rest of the play. */
+  canRun: z.boolean(),
   jukeReady: z.boolean(),
   rushReady: z.boolean(),
   guarding: z.boolean(),

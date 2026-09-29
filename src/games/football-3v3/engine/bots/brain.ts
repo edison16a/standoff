@@ -38,10 +38,10 @@ function decide(m: Match, a: Athlete, skill: FootballSkill): void {
   }
   if (a.team === attacking) {
     const play = m.play;
-    if (carrier && (play?.caughtBy !== null || play?.pitched || play?.intercepted || play?.crossed)) return escort(m, a, carrier);
+    if (carrier && (play?.caughtBy !== null || play?.pitched || play?.intercepted || play?.qbRun)) return escort(m, a, carrier);
     return runRoute(m, a);
   }
-  if (carrier && (carrier.role !== "qb" || m.play?.crossed || m.play?.intercepted)) return pursue(m, a, carrier, skill);
+  if (carrier && (carrier.role !== "qb" || m.play?.qbRun || m.play?.intercepted)) return pursue(m, a, carrier, skill);
   if (a.bot.cover === null) return a.bot.rush ? rushQb(m, a, skill) : safety(m, a);
   return cover(m, a, skill);
 }

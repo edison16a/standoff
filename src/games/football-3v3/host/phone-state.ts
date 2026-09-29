@@ -71,6 +71,7 @@ export function phoneState(c: PhoneContext, seatNo: number): PhoneState {
     canThrow: status?.canThrow ?? false,
     runPlay: status?.runPlay ?? false,
     canPitch: status?.canPitch ?? false,
+    canRun: status?.canRun ?? false,
     jukeReady: status?.jukeReady ?? false,
     rushReady: status?.rushReady ?? false,
     guarding: status?.guarding ?? false,
