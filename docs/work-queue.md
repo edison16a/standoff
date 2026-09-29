@@ -60,7 +60,7 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 6. **Soccer 3v3 fixes from play testing:**
    * Free kick curve changes only how much the ball bends (from a straight kick to a wide curve). It must never move the aim.
-   * The keeper is still a brick wall: make the goal about 1.5 times bigger and keep the keeper exactly the same size, reach and speed, so scoring is fair.
+   * The keeper is still a brick wall: make the goal 1.5 to 2 times bigger (tune within that range by playing until shots beat the keeper often enough to be fun) and keep the keeper exactly the same size, reach and speed, so scoring is fair.
 
 ### Last
 
