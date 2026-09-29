@@ -97,6 +97,10 @@ describe("rooms across server instances", () => {
     for (const name of ["Ann", "Bob"]) await openPhone(next, name);
     await run(1000);
     expect(state().players.filter((p) => p.connected).map((p) => p.name)).toEqual(["Ann", "Bob"]);
+    // The players are in the new room, so losing it asks the big screen first.
+    cluster.deploy();
+    await run(30_000);
+    expect(state()).toMatchObject({ health: "lost", problem: "lost" });
   });
 
   it("makes a new room by itself when a deploy takes the room before anyone joined", async () => {
