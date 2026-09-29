@@ -41,6 +41,9 @@ export interface Portal {
   mode: Mode;
   /** The corridor's ceiling from here, or null for open sky. */
   ceiling: number | null;
+  /** The ring's opening. Walls close the column above and below it, so every run goes through. */
+  bottom: number;
+  top: number;
 }
 
 /** Where the speed changes. The level is drawn with a gate there. */
