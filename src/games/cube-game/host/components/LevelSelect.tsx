@@ -11,7 +11,7 @@ const css = (hex: number) => `#${hex.toString(16).padStart(6, "0")}`;
 
 /**
  * The level select: five cards from easy to insane, each with its best
- * percent, then how many players and how to play. The chosen level's
+ * percent, then one player or a 1v1 race, and how to play. The chosen level's
  * song and a computer run of it play behind.
  */
 export function LevelSelect() {
@@ -60,7 +60,7 @@ export function LevelSelect() {
         <div className="cg-toggle" role="group" aria-label="Players">
           {([1, 2] as const).map((n) => (
             <button key={n} type="button" aria-pressed={players === n} onClick={() => session.setPlayers(n)}>
-              {n === 1 ? "1 player" : "2 players"}
+              {n === 1 ? "1 player" : "1v1"}
             </button>
           ))}
         </div>
@@ -76,7 +76,7 @@ export function LevelSelect() {
         </button>
       </div>
       <p className="cg-menu__hint">
-        Jump for real to jump. The camera only needs you from the waist up.{players === 2 ? " Player 1 stands on the left." : ""}
+        Jump for real to jump. The camera only needs you from the waist up.{players === 2 ? " Race each other to the end. Player 1 stands on the left." : ""}
       </p>
     </div>
   );

@@ -52,17 +52,20 @@ export class Scoreboard {
   results(): void {
     const round = this.round;
     if (!round) return;
+    const places = round.places(true);
     const rows: ResultRow[] = round.seats.map((seat, i) => ({
       slot: i + 1,
       finished: seat.run.finished,
       best: seat.run.finished ? 100 : seat.run.best,
       attempts: seat.run.attempt,
       jumps: seat.run.jumps,
+      place: places[i]!,
     }));
-    store.setState({ results: rows, hud: this.hud(round) });
+    store.setState({ results: rows, winner: round.winner, hud: this.hud(round) });
   }
 
   private hud(round: Round): HudPlayer[] {
+    const places = round.places();
     return round.seats.map((seat, i) => ({
       attempt: seat.run.attempt,
       percent: seat.run.percent,
@@ -70,6 +73,7 @@ export class Scoreboard {
       status: seat.status,
       waiting: seat.status === "run" && round.levelTime(i + 1) < seat.run.time - 0.02,
       mode: seat.run.player.mode,
+      place: places[i]!,
     }));
   }
 }

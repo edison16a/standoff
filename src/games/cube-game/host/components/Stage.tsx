@@ -41,7 +41,7 @@ export function Stage() {
   );
 }
 
-/** The tool bar buttons: end a two player round early, and back to the level select. */
+/** The tool bar buttons: end a 1v1 race early, and back to the level select. */
 export function Tools() {
   const session = useSession();
   const phase = useCubeStore((s) => s.phase);
@@ -49,7 +49,7 @@ export function Tools() {
   if (phase === "menu") return null;
   return (
     <>
-      {phase === "play" && players > 1 && <IconButton icon="trophy" label="End the round" onClick={() => session.endEarly()} />}
+      {phase === "play" && players > 1 && <IconButton icon="trophy" label="End the race" onClick={() => session.endEarly()} />}
       <IconButton icon="leave" label="Back to the levels" onClick={() => session.toMenu()} />
     </>
   );

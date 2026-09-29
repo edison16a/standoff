@@ -1,25 +1,39 @@
 "use client";
 import { playerColor } from "@/games/kit/players";
 import { LEVELS } from "../../levels";
-import { useCubeStore } from "../store";
+import { placeName } from "../race";
+import { useCubeStore, type ResultRow } from "../store";
 import { useSession } from "./session-context";
 
-/** After a round: each player's best, attempts and jumps, and where to go next. */
+/** The results card's headline: the level alone, or who won the race. */
+function title(results: readonly ResultRow[], winner: number | null): string {
+  if (results.length === 1) return results[0]!.finished ? "Level complete" : "Round over";
+  if (winner) return `Player ${winner} wins`;
+  return results.filter((row) => row.finished).length > 1 ? "Dead heat" : "Round over";
+}
+
+/** After a round: who won, each player's best, attempts and jumps, and where to go next. */
 export function Results() {
   const session = useSession();
-  const { results, levelId, practice } = useCubeStore();
+  const { results, winner, levelId, practice } = useCubeStore();
   const index = LEVELS.findIndex((l) => l.info.id === levelId);
   const level = LEVELS[index]?.info;
   const hasNext = index + 1 < LEVELS.length;
-  const everyone = results.every((row) => row.finished);
+  const race = results.length > 1;
+  // The race's order, leader first. Alone there is one row.
+  const rows = [...results].sort((a, b) => a.place - b.place || a.slot - b.slot);
   return (
     <div className="cg-center">
       <section className="cg-results" aria-label="Results">
-        <p className="cg-results__level">{level?.name}</p>
-        <h2 className="cg-results__title">{everyone ? "Level complete" : "Round over"}</h2>
+        <p className="cg-results__level">{race ? `1v1 on ${level?.name ?? ""}` : level?.name}</p>
+        <h2 className="cg-results__title" style={winner ? { color: playerColor(winner) } : undefined}>
+          {title(results, winner)}
+        </h2>
+        {race && !winner && <p className="cg-results__note">Nobody reached the end first, so the order is by how far each got.</p>}
         <table className="cg-results__table">
           <thead>
             <tr>
+              {race && <th scope="col">Place</th>}
               <th scope="col">Player</th>
               <th scope="col">Best</th>
               <th scope="col">Attempts</th>
@@ -27,8 +41,9 @@ export function Results() {
             </tr>
           </thead>
           <tbody>
-            {results.map((row) => (
-              <tr key={row.slot}>
+            {rows.map((row) => (
+              <tr key={row.slot} className={race && row.slot === winner ? "cg-results__winner" : undefined}>
+                {race && <td>{placeName(row.place)}</td>}
                 <th scope="row">
                   <span className="cg-dot" style={{ background: playerColor(row.slot) }} aria-hidden="true" />
                   Player {row.slot}
@@ -46,7 +61,7 @@ export function Results() {
             Levels
           </button>
           <button type="button" className="cg-button cg-button--quiet" onClick={() => session.retry()}>
-            Play again
+            {race ? "Rematch" : "Play again"}
           </button>
           {hasNext && (
             <button type="button" className="cg-button" onClick={() => session.next()}>

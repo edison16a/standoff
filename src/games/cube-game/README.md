@@ -5,13 +5,17 @@ A rhythm platformer in the spirit of Geometry Dash, played with your body in fro
 ## How to play
 
 1. Host Cube Game from the home screen. No phones are needed.
-2. On the level select, pick any level with the mouse, choose 1 or 2 players, and tick Practice if you like. Every level is open from the start.
+2. On the level select, pick any level with the mouse, choose 1 player or 1v1, and tick Practice if you like. Every level is open from the start.
 3. Press **Play**. Allow the camera and stand in your outline. The camera only needs you from the waist up, so there is no need to step back until your feet show. Stand tall and still while your ring fills: that sets your head line. Then jump once so the game can see it.
 4. Jump on the beat. Your head going up over its line is a jump, and that is the only move. A small hop is enough, while bobbing to the music and nodding do not count.
 
 **Play with the keyboard** skips the camera: Space (or W) jumps for player 1, Enter (or the up arrow) for player 2. Space also works alongside the camera, for testing and for anyone who cannot jump.
 
-Two players get the screen split top and bottom, player 1 on top. Player 1 stands on the left of the camera picture. Each runs the same level on their own, and sees the other as a ghost.
+## 1v1
+
+Two players race. The screen splits top and bottom, player 1 on top, and each pane has its own cube and its own camera following it. Player 1 stands on the left of the camera picture and player 2 on the right, and the camera kit tracks each of them on their own side, so each jumps only their own cube. Each sees the other as a ghost, and a place tag in each pane shows who is ahead once someone is.
+
+A player who crashes restarts from the start, or in practice from their last checkpoint, and comes back on the next beat while the other keeps going. The first over the line wins. Their pane says You win with confetti, the other pane says 2nd and who got there first, and both runs stop. The results then show the winner and each player's place, best, attempts and jumps. Two crossings on the very same physics step are a dead heat. The trophy button ends a race nobody can finish, and then the order is by how far each got. Rematch plays the same level again, and Next level goes on.
 
 ## The three modes
 
@@ -33,7 +37,7 @@ Portals change the mode mid level: green for the cube, orange for the UFO, red f
 
 Each level has its own song, synthesised in the browser, with the obstacles on its beat, and its own look: a night city, a sunset desert, a violet sky of floating blocks, a green circuit town and red volcanic spires. The colours are a little muted and the glow is light, so the picture stays calm and easy to read. The world pulses gently on every beat.
 
-Crashing restarts that player at once from the start, with the attempt counter going up. With one player the song restarts too, as in the original. With two, the song plays on and a crashed player comes back on the next beat, so the obstacles always land on the music. A progress bar shows the percent through the level and a gold mark for the best. Finishing plays a fanfare with confetti, and Next level goes straight on. Bests are kept in this browser's localStorage. Saves from when levels had to be opened one by one still load. Practice saves a checkpoint every two seconds on safe ground, marked by a green diamond, and does not count toward bests.
+Crashing restarts that player at once from the start, with the attempt counter going up. With one player the song restarts too, as in the original. In a 1v1 the song plays on and a crashed player comes back on the next beat, so the obstacles always land on the music. A progress bar shows the percent through the level and a gold mark for the best. Finishing plays a fanfare with confetti, and Next level goes straight on. Bests are kept in this browser's localStorage. Saves from when levels had to be opened one by one still load. Practice saves a checkpoint every two seconds on safe ground, marked by a green diamond, and does not count toward bests.
 
 If a player steps out of the camera's view, even while crashed or before the start, their run pauses, and with one player the song stops too. It picks up on the beat a moment after they come back.
 
@@ -46,7 +50,7 @@ If a player steps out of the camera's view, even while crashed or before the sta
   * The songs keep their tempo, length and sections, which are keyed to each level's beats, so the music stays on the obstacles. They play through the platform's music bus and start on the beat the run is on, as before. Leads are two detuned oscillators under a closing low pass, so they sound wide and warm instead of buzzy. The main hook is doubled an octave up on a quiet bell so it sticks. Hats and snares vary a little in level. The calm menu song on the camera steps is "Neon Drift", F major at 84 a minute: a flute over electric piano chords and a pad that washes from bar to bar, with a soft kick, a rim and a shaker. It has no plucks, no crashes and no pumping, so it stays calm. Its A section and the B answer run sixteen bars in all, with the kick dropping out for the last four. A 9 kHz low pass takes the fizz off the top of every song. Measured at the mixer's output in the full part of each song, the level songs sit around an RMS of 0.045 to 0.06, with peaks under 0.6.
   * Effects are layered and nudged in pitch on every repeat: the jump has a puff of air, the flip a soft thump, the pad a springy thump, orbs pick a pentatonic note so a chain of them sings, and the crash scatters glassy shards. Finishing a level plays the fanfare with a crowd cheer and applause on the crowd bus (`cheer.ts`), and the music ducks under it.
 * `render/`: three.js. Neon shaders for blocks and spikes (`neon.ts`), the grid floor, the sky, the skyline, pads, orbs and portals, the avatars, sparks and debris, and a light bloom over one or two stacked views (`post.ts`). The bloom is weak with a high threshold, so only the brightest edges glow, and only a little. `catch-up.ts` lets the cube rise over a few frames to where a replayed jump puts it.
-* `host/`: the session that runs a room, the round that keeps each run on the song (`round.ts`), the controls, progress in localStorage, and the React screens.
+* `host/`: the session that runs a room, the round that keeps each run on the song and decides a race (`round.ts`), race places and the winner from exact crossing times (`race.ts`), the controls, progress in localStorage, and the React screens.
 * `showcase/`: the game playing itself for the home screen's media.
 
 ### Reading the jump
@@ -66,6 +70,6 @@ On the kit's sample jumps the press now lands within about 20 ms of the head sta
 
 ### Testing
 
-`levels.test.ts`, `physics.test.ts`, `run.test.ts`, `rewind.test.ts`, `round.test.ts`, `jump-tuning.test.ts`, `jump-latency.test.ts`, `catch-up.test.ts` and the song tests run with `npx vitest run src/games/cube-game`. In development the session is on `window.__cubeGame`, with `pressAt(slot, songTime)` for exact presses and `presses` recording when each press landed, and the kit's pose injection drives it from Playwright with the fake camera. `window.__cubeGameRenderScale` draws at a fraction of the resolution on a slow machine. The showcase takes `?plan={...}` to show any moment of any level.
+`levels.test.ts`, `physics.test.ts`, `run.test.ts`, `rewind.test.ts`, `round.test.ts`, `round-race.test.ts`, `race.test.ts`, `jump-tuning.test.ts`, `jump-latency.test.ts`, `catch-up.test.ts` and the song tests run with `npx vitest run src/games/cube-game`. In development the session is on `window.__cubeGame`, with `pressAt(slot, songTime)` for exact presses and `presses` recording when each press landed, and the kit's pose injection drives it from Playwright with the fake camera. `window.__cubeGameRenderScale` draws at a fraction of the resolution on a slow machine. The showcase takes `?plan={...}` to show any moment of any level.
 
 Every level has been played to the finish in the browser: by exact presses, by the space and Enter keys, and by injected camera jumps, with one player and with two. A camera or model that fails shows what went wrong, with a button to try again and one to play with the keyboard instead.

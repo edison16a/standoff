@@ -16,6 +16,8 @@ export interface HudPlayer {
   /** Waiting for their start after a crash or stepping back in. */
   waiting: boolean;
   mode: Mode;
+  /** Place in a race, 1 for the leader. Equal racers share one. */
+  place: number;
 }
 
 export interface ResultRow {
@@ -24,6 +26,8 @@ export interface ResultRow {
   best: number;
   attempts: number;
   jumps: number;
+  /** Place in a race: by the finish, or by how far each got if it ended early. */
+  place: number;
 }
 
 export interface CubeState {
@@ -38,6 +42,8 @@ export interface CubeState {
   /** A short message over one player's view, like a new best. Keyed so the same text can show twice. */
   banner: { slot: number; text: string; key: number } | null;
   results: ResultRow[];
+  /** Who won the race, or null alone, on a dead heat, or when ended early. */
+  winner: number | null;
 }
 
 export const initialCubeState = (): CubeState => ({
@@ -50,6 +56,7 @@ export const initialCubeState = (): CubeState => ({
   hud: [],
   banner: null,
   results: [],
+  winner: null,
 });
 
 /** The host's UI state. The game loop writes it a few times a second at most, never per frame. */
