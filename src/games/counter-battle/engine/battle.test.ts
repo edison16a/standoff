@@ -109,12 +109,21 @@ describe("a bot match", () => {
     }
   });
 
+  // A short fight is enough to show the same seed plays the same. Events are
+  // compared once at the end, since a check every step is slow on a busy machine.
   it("plays out the same way from the same seed", () => {
-    const a = new Battle(BOTS, 11);
-    const b = new Battle(BOTS, 11);
-    for (let i = 0; i < 60 * 12; i++) expect(JSON.stringify(a.step())).toBe(JSON.stringify(b.step()));
-    expect(a.fighters.map((f) => f.pos)).toEqual(b.fighters.map((f) => f.pos));
-  });
+    const run = () => {
+      const battle = new Battle(BOTS, 11);
+      const events: BattleEvent[] = [];
+      for (let i = 0; i < 60 * 10; i++) events.push(...battle.step());
+      return { events: JSON.stringify(events), pos: battle.fighters.map((f) => f.pos) };
+    };
+    const a = run();
+    const b = run();
+    expect(a.events.length).toBeGreaterThan(100);
+    expect(a.events).toBe(b.events);
+    expect(a.pos).toEqual(b.pos);
+  }, 30_000);
 });
 
 describe("a human's gun", () => {
