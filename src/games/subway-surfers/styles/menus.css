@@ -204,8 +204,20 @@
   }
 }
 
-/* Small windows: the cards tighten up, so everything fits without scrolling. */
-@media (max-width: 1000px), (max-height: 720px) {
+/* Laptop heights: the lobby card, with its Camera or Keyboard row, tightens so it fits with the how to list. */
+@media (max-height: 940px) {
+  .ss-lobby {
+    padding-top: 70px;
+  }
+
+  .ss-lobby__card {
+    gap: 12px;
+    padding: 24px 36px;
+  }
+}
+
+/* Small windows: the cards tighten up and the how to list goes, so everything fits without scrolling. */
+@media (max-width: 1000px), (max-height: 820px) {
   .ss-lobby__card,
   .ss-results__card {
     gap: 12px;
