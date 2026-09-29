@@ -37,7 +37,8 @@ export function footstep(engine: AudioEngine, out: AudioNode, at: number, left: 
 
 export function jump(engine: AudioEngine, out: AudioNode, at: number, boots: boolean): void {
   const p = vary(0.05);
-  // The push off: a scuff, then air rushing past, then a rising spring.
+  // The push off: a thump and a scuff, then air rushing past, then a rising spring.
+  tone(engine, out, at, { frequency: 120 * p, glideTo: 70, decay: 0.08, peak: 0.22 });
   noise(engine, out, at, { filter: "lowpass", frequency: 900, decay: 0.05, peak: 0.16 });
   noise(engine, out, at, { filter: "bandpass", frequency: 500 * p, sweepTo: 2600 * p, q: 1.4, decay: 0.24, peak: 0.2 });
   tone(engine, out, at, { frequency: (boots ? 260 : 330) * p, glideTo: (boots ? 1300 : 720) * p, decay: boots ? 0.4 : 0.18, peak: 0.1 });
