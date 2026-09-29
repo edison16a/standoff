@@ -13,8 +13,11 @@ const holder = globalThis as { [SHARED]?: Promise<Backend> | null };
 /**
  * Picks where rooms live, once per process. With a Redis URL in the
  * environment, rooms and messages go through Redis so any number of server
- * instances can share them, which is what Vercel needs. Without one,
- * everything stays in this process, which is all a laptop on a LAN needs.
+ * instances can share them. Without one, everything stays in this process.
+ * That is the normal setup, on a laptop and on Vercel alike: a WebSocket
+ * stays on the instance that took it, and a room is lost only when Vercel
+ * adds an instance or a deploy lands, which the host notices and recovers
+ * from (see RoomWatchdog).
  *
  * The result is cached so every socket a Vercel instance holds shares one
  * pair of Redis connections instead of opening two each.
@@ -41,7 +44,6 @@ async function open(): Promise<Backend> {
     const { createRedisBackend } = await import("./redis/redis-backend");
     return createRedisBackend(redisUrl);
   }
-  warnUnshared();
   return { store: new MemoryStore(), bus: new MemoryBus(), label: "memory (this process only)", shared: false };
 }
 
@@ -68,24 +70,6 @@ export function findRedisUrl(env: Env = process.env): string | null {
  */
 export function sharedStore(env: Env = process.env): boolean {
   return !env.VERCEL || findRedisUrl(env) !== null;
-}
-
-let warned = false;
-
-/** Says loudly, once, that a Vercel deploy has no shared room store, which breaks rooms at random. */
-function warnUnshared(env: Env = process.env): void {
-  if (!env.VERCEL || warned) return;
-  warned = true;
-  const rest = Object.keys(env).filter((name) => /_REST_/.test(name) && /(REDIS|KV)/.test(name));
-  const hint = rest.length > 0 ? ` Found only REST variables (${rest.join(", ")}), which cannot be used: connect a store that also sets a redis:// URL.` : "";
-  console.error(
-    `No Redis URL on this Vercel deploy, so rooms live in each server instance alone and phones will often get Room not found. Checked ${KNOWN_NAMES.join(", ")} and any variable ending in REDIS_URL or KV_URL.${hint}`,
-  );
-}
-
-/** For tests: lets the warning fire again. */
-export function resetUnsharedWarning(): void {
-  warned = false;
 }
 
 /**

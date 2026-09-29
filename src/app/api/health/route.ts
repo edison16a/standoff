@@ -1,9 +1,9 @@
 import { createBackend, findRedisUrl, sharedStore } from "@/platform/relay/create-backend";
 
 /**
- * Says where rooms live on this deploy, so anyone can check at a glance
- * that Vercel has its Redis: `store` should read "redis" and `shared`
- * true. It never names the Redis host.
+ * Says where rooms live on this deploy and which deployment answered,
+ * which helps tell a deploy that ended the open rooms from a bug. Memory is
+ * the normal store. It never names a Redis host.
  */
 export const dynamic = "force-dynamic";
 

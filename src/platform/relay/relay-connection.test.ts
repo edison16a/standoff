@@ -176,7 +176,8 @@ describe("RelayConnection over the memory backend", () => {
     vi.advanceTimersByTime(HOST_GRACE_MS + 2000);
     await phone.connection.settled();
     await flush();
-    expect(phone.socket.has("room:closed")).toBe(true);
+    // Lost, not ended: the phone says so and waits for the host's next code.
+    expect(phone.socket.last("room:closed")).toEqual({ type: "room:closed", lost: true });
     // Kept as a tombstone, so a phone that slept through it hears the game ended.
     expect(await backend.store.get(code)).toMatchObject({ closed: true });
   });
@@ -198,7 +199,7 @@ describe("RelayConnection over the memory backend", () => {
     await phone.send({ type: "host:close" });
     expect(await backend.store.get(code)).not.toBeNull();
     await host.send({ type: "host:close" });
-    expect(phone.socket.has("room:closed")).toBe(true);
+    expect(phone.socket.last("room:closed")).toEqual({ type: "room:closed" });
     expect(await backend.store.get(code)).toMatchObject({ closed: true, closedAt: clock });
     const late = connect();
     await late.send({ type: "phone:join", code });

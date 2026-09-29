@@ -33,7 +33,7 @@ export class HostWatch {
 
   private async check(code: string, seats: number): Promise<void> {
     try {
-      if (await this.ops.closeIfHostGone(code)) new RoomChannel(this.bus, code, seats).toPhones({ type: "room:closed" });
+      if (await this.ops.closeIfHostGone(code)) new RoomChannel(this.bus, code, seats).toPhones({ type: "room:closed", lost: true });
     } catch (error) {
       // Look again later rather than leave the phones waiting on a host forever.
       logFailure("Host check failed", error);

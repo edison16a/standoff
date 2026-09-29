@@ -128,7 +128,8 @@ export type ServerEnvelope =
   | { type: "host:message"; payload: Payload }
   | { type: "host:away" }
   | { type: "host:back" }
-  | { type: "room:closed" }
+  /** The room ended. `lost` means its host never came back, rather than ending the game. */
+  | { type: "room:closed"; lost?: boolean }
   /** The host moved to a new room, and phones follow its code. Also the answer to a join on a moved room. */
   | { type: "room:moved"; code: string }
   /** The answer to host:retire. `found` is false when no room matched the code and token. */
