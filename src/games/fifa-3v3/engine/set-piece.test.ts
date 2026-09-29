@@ -79,6 +79,24 @@ describe("free kick", () => {
     expect(height(0.3)).toBeLessThan(height(SET_KICK.nominal));
   });
 
+  it("keeps all of yellow under the bar from any range, and only red flies over", () => {
+    const under = PITCH.goalHeight - 0.15;
+    for (const back of [10, 18, 26]) {
+      const sp: SetPiece = setPiece("free", { x: PITCH.halfLength - back, z: 3 }).setPiece!;
+      const height = (power: number) => fly(spotBall(sp), freeKick(sp, power), PITCH.halfLength)!.y;
+      expect(height(0.75)).toBeLessThan(under);
+      expect(height(0.98)).toBeGreaterThan(PITCH.goalHeight + 0.2);
+    }
+  });
+
+  it("stands the taker off to the side of his kicking foot, so the run comes in at an angle", () => {
+    const state = setPiece("free", { x: PITCH.halfLength - 18, z: 0 });
+    const taker = state.athletes[state.setPiece!.taker]!;
+    // Echeverri is left footed and Red attacks +x, so his right is +z.
+    expect(taker.pos.x).toBeLessThan(state.setPiece!.spot.x - 1.5);
+    expect(taker.pos.z).toBeGreaterThan(0.8);
+  });
+
   it("draws a line from the ball to the goal", () => {
     const sp = setPiece("free").setPiece!;
     const path = kickPath(sp);

@@ -1,6 +1,6 @@
 import { attackSign, other } from "../teams";
 import { newBall, stepBall } from "./ball";
-import { shotSpread } from "./charge";
+import { CHARGE, shotSpread } from "./charge";
 import { goalX } from "./goal";
 import { fly, solveKick, type Kick } from "./shot-aim";
 import { BALL, PITCH, STEP } from "./tuning";
@@ -22,9 +22,13 @@ export const SET_KICK = {
   penMax: 30,
   /** Sidespin at full curve, in radians a second. */
   spin: 34,
-  /** At this power a free kick aimed at the goal dips in under the bar. */
+  /** At this power a free kick aimed at the goal dips in under the bar, at this height. */
   nominal: 0.55,
   crossHeight: 1.7,
+  /** Where an empty bar, the top of yellow and a full red bar cross the line (the bar is at 2.3 m). */
+  lowHeight: 0.3,
+  topYellow: 2.02,
+  overHeight: 2.95,
   /** How far the aim may turn off the middle of the goal, and a penalty's aim across and up. */
   maxYaw: 0.5,
   penWide: PITCH.goalHalfWidth + 0.5,
@@ -44,22 +48,35 @@ export function spotBall(sp: SetPiece): Vec3 {
 let cache: { key: string; angle: number } | null = null;
 
 /**
- * The lift a free kick needs so that, at the nominal power and with the
- * chosen turn and curve, it dips under the bar at the goal line. More
- * power then sends it higher, less keeps it low into the wall.
+ * How high a free kick struck at `power` crosses the goal line. The
+ * nominal power dips in under the bar, a softer one stays low into the
+ * wall, all of yellow still comes in under the bar, and only the red
+ * climbs over it, from any distance.
  */
-function elevation(sp: SetPiece, dirX: number, dirZ: number, spinY: number): number {
-  const key = `${sp.spot.x.toFixed(2)},${sp.spot.z.toFixed(2)},${dirX.toFixed(3)},${dirZ.toFixed(3)},${spinY.toFixed(2)}`;
+export function crossHeight(power: number): number {
+  const p = clamp(power, 0, 1);
+  const { nominal, crossHeight: mid, lowHeight, topYellow, overHeight } = SET_KICK;
+  if (p <= nominal) return lowHeight + (mid - lowHeight) * (p / nominal);
+  if (p <= CHARGE.red) return mid + (topYellow - mid) * ((p - nominal) / (CHARGE.red - nominal));
+  return topYellow + (overHeight - topYellow) * ((p - CHARGE.red) / (1 - CHARGE.red));
+}
+
+/**
+ * The lift that sends a free kick at `speed`, with the chosen turn and
+ * curve, across the goal line at `height`. Solved for each power, so the
+ * same bar reads the same from ten metres out or thirty.
+ */
+function elevation(sp: SetPiece, dirX: number, dirZ: number, spinY: number, speed: number, height: number): number {
+  const key = `${sp.spot.x.toFixed(2)},${sp.spot.z.toFixed(2)},${dirX.toFixed(3)},${dirZ.toFixed(3)},${spinY.toFixed(2)},${speed.toFixed(2)},${height.toFixed(2)}`;
   if (cache?.key === key) return cache.angle;
   const from = spotBall(sp);
-  const speed = SET_KICK.freeMin + (SET_KICK.freeMax - SET_KICK.freeMin) * SET_KICK.nominal;
   const line = goalX(other(sp.team));
   let lo = 0.02;
   let hi = 0.75;
   for (let i = 0; i < 18; i++) {
     const mid = (lo + hi) / 2;
     const hit = fly(from, launch(dirX, dirZ, speed, mid, spinY), line);
-    if (!hit || hit.y < SET_KICK.crossHeight) lo = mid;
+    if (!hit || hit.y < height) lo = mid;
     else hi = mid;
   }
   cache = { key, angle: (lo + hi) / 2 };
@@ -84,7 +101,7 @@ export function freeKick(sp: SetPiece, power: number): Kick {
   const dirZ = d.z * Math.cos(yaw) + right.z * Math.sin(yaw);
   const spinY = -clamp(sp.curve, -1, 1) * SET_KICK.spin;
   const speed = SET_KICK.freeMin + (SET_KICK.freeMax - SET_KICK.freeMin) * clamp(power, 0, 1);
-  return launch(dirX, dirZ, speed, elevation(sp, dirX, dirZ, spinY), spinY);
+  return launch(dirX, dirZ, speed, elevation(sp, dirX, dirZ, spinY, speed, crossHeight(power)), spinY);
 }
 
 /** Where a penalty is aimed on the goal line, in the world. */
