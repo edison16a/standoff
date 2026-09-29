@@ -101,7 +101,7 @@ export class Match {
     this.ball = {
       pos: { x: 0, y: 1, z: 9 }, vel: { x: 0, y: 0, z: 0 }, mode: "held", holder: null,
       flight: null, flightT: 0, flightSeg: -1, flightKind: null, passTo: null, passRolled: [],
-      shot: null, lastTouch: null, spin: 0, rimCd: 0,
+      shot: null, lastTouch: null, spin: 0, w: { x: 0, y: 0, z: 0 }, rimCd: 0,
     };
     this.brains = new Brains(this);
     placeForCheck(this, this.offence);
