@@ -29,3 +29,13 @@ export function winnersFanfare(engine: AudioEngine, out: AudioNode): void {
     noise(engine, out, at + b * beat, { filter: "bandpass", frequency: 1800, q: 0.7, decay: 0.2, peak: 0.12 });
   }
 }
+
+/** The trophy goes up: a timpani roll into a huge Eb major chord that swells and rings, with a crash on top. */
+export function trophyLift(engine: AudioEngine, out: AudioNode): void {
+  const at = engine.now + 0.03;
+  for (let i = 0; i < 8; i++) tone(engine, out, at - 0.4 + i * 0.05, { frequency: midi(39), glideTo: midi(38), decay: 0.25, peak: 0.08 + i * 0.02 });
+  brass(engine, out, at, [51, 55, 58, 63, 67, 70], 3.2, 0.02);
+  tone(engine, out, at, { frequency: midi(27), attack: 0.02, decay: 3, peak: 0.4 });
+  noise(engine, out, at, { filter: "highpass", frequency: 4200, attack: 0.01, decay: 2.6, peak: 0.16 });
+  for (const b of [0.9, 1.8]) brass(engine, out, at + b, [63, 67, 70, 75], 1.2, 0.012);
+}

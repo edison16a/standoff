@@ -8,6 +8,7 @@ import { ArenaBeat } from "./arena-beat";
 import { playCue } from "./cues";
 import { Music } from "./music";
 import { Sfx } from "./sfx";
+import { CEREMONY } from "../engine/ceremony";
 
 /**
  * The mix in the lobby and under a game. The crowd bus stays silent: a
@@ -38,6 +39,7 @@ export class SoundDirector {
   private phase: Phase | null = null;
   private play: PlayPhase | null = null;
   private beeped = 99;
+  private trophyUp = false;
   private stabAt = -99;
   /** Delayed music cues, cleared on stop so nothing plays after the game has closed. */
   private readonly timers = new Set<ReturnType<typeof setTimeout>>();
@@ -93,6 +95,17 @@ export class SoundDirector {
     // The building goes quiet for the shooter at the line.
     if (e.type === "freeThrow") this.stopBeat();
     playCue(e, m, { engine: this.engine, sfx: this.sfx, arena: this.arena, stab: (stab, key) => this.stab(stab, m, key) });
+  }
+
+  /** Every frame with the ceremony's clock, or null outside it: the moment the trophy goes up sounds once. */
+  ceremony(t: number | null): void {
+    const up = t !== null && t >= CEREMONY.up;
+    if (up && !this.trophyUp) {
+      this.music.lift();
+      // The confetti cannons go off with the horn.
+      this.arena.gameHorn(false);
+    }
+    this.trophyUp = up;
   }
 
   /** Called after the green of a perfect release, for the host's own chime. */

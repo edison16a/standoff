@@ -47,10 +47,12 @@ export default function CourtCanvas() {
       renderer.setMatch(match, session.phase === "countdown");
       const replayCam = session.replayCamera();
       renderer.setReplayCamera(replayCam);
+      renderer.setCeremony(session.driver?.ceremony ?? null);
       renderer.render(dt);
       renderer.tv.camera.getWorldDirection(forward);
       if (!replayCam) session.setView({ x: forward.x, z: forward.z });
-      if (session.driver && !replayCam) {
+      // The ceremony has the winners' names over it instead of tags.
+      if (session.driver && !replayCam && !session.driver.ceremony) {
         tags.update(match, renderer, (id) => {
           const a = match.athletes[id]!;
           return { name: session.nameOf(id), colour: a.seat !== null ? playerColor(a.seat) : null };

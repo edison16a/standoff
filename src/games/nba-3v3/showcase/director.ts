@@ -79,6 +79,7 @@ export class ShowcaseDirector {
     this.dev = readDev(params);
     this.script = this.dev.film ?? new HighlightScript(LEAD[view]);
     this.renderer.setMatch(this.script.match);
+    this.renderer.setCeremony(this.script.ceremony ?? null);
     this.renderer.tv.fixed = this.dev.film ? null : (STILL_CAMERA[view] ?? null);
     const cam = params.get("cam");
     if (cam) {
@@ -135,7 +136,8 @@ export class ShowcaseDirector {
       this.carry -= STEP;
       this.elapsed += STEP;
       this.script.steer(this.elapsed);
-      m.step(STEP);
+      if (this.script.stepCeremony) this.script.stepCeremony(STEP);
+      else m.step(STEP);
       if (this.dev.follow) followCamera(this.renderer.tv, m, this.dev.follow);
       for (const e of m.drainEvents()) {
         this.renderer.onEvent(e);

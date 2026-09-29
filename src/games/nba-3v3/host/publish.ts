@@ -7,6 +7,7 @@ import { greenHalfMs, GREEN_MS } from "../engine/shot-model";
 import { RULES, SHOT } from "../engine/tuning";
 import type { CourtState, Phase, PhoneState } from "../protocol";
 import { BUILDS, cpuName } from "../builds";
+import { ceremonyCard } from "./ceremony-card";
 import { useNbaStore as store, type ResultRow } from "./host-store";
 import type { Lobby } from "./lobby";
 import type { MatchDriver } from "./match-driver";
@@ -18,6 +19,8 @@ export interface PublishContext {
   lobby: Lobby;
   driver: MatchDriver | null;
   phones: PhoneLink;
+  /** The host asked for the box scores before the ceremony brought them in. */
+  statsNow: boolean;
 }
 
 export function phaseOf(driver: MatchDriver | null): Phase {
@@ -103,7 +106,9 @@ export function publish(c: PublishContext): void {
   const replay = c.driver?.replays.replay;
   store.setState({
     replay: replay ? { view: replay.view, scorer: nameFor(replay.ghost, replay.scorer, c.players), votes: votes.map(({ name, done }) => ({ name, done })) } : null,
-    replayDue: !!c.driver?.replays.pending,
+    // The results wait for the replay and then the trophy ceremony.
+    replayDue: !!m && m.phase === "over" && !c.driver?.ceremony,
+    ceremony: m && c.driver ? ceremonyCard(m, c.driver.ceremony, (id) => nameFor(m, id, c.players), c.statsNow) : null,
     phase,
     seats,
     spots,

@@ -1,5 +1,6 @@
 import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { Stick } from "@/games/kit/pad/stick-math";
+import { Ceremony } from "../engine/ceremony";
 import type { MatchEvent } from "../engine/events";
 import { Match, type Entry } from "../engine/match";
 import { STEP } from "../engine/tuning";
@@ -9,19 +10,23 @@ import { ReplayDirector } from "./replay-director";
 
 /** A frame longer than this is a stall; the game does not try to catch up past it. */
 const MAX_FRAME = 0.25;
+/** Seconds after the win before the ceremony may start, once any replay is done. */
+const CEREMONY_AFTER = 2.4;
 
 /**
  * Runs one game on the host: turns each phone's stick into a direction
  * on the court as the camera sees it, steps the match at a fixed rate,
  * slows time for the big moments, and hands every event to whoever
  * listens (the sound, the effects and the phones). After the winning
- * basket it plays the replay (see `replay-director.ts`) before the
- * game carries on to the results.
+ * basket it plays the replay (see `replay-director.ts`), then the
+ * trophy ceremony (see `engine/ceremony.ts`), then the results.
  */
 export class MatchDriver {
   readonly match: Match;
   readonly athleteBySeat = new Map<number, number>();
   readonly replays: ReplayDirector;
+  /** The trophy ceremony once it has started. It stays to the end, under the box scores. */
+  ceremony: Ceremony | null = null;
   private readonly listeners = new Set<(event: MatchEvent) => void>();
   private carry = 0;
   private slowLeft = 0;
@@ -71,6 +76,15 @@ export class MatchDriver {
     // While the replay rolls the real game waits.
     const replayed = this.replays.tick(frame);
     if (replayed !== null) return replayed;
+    // The ceremony takes over from the game once the winners have had their replay.
+    if (this.replay && !this.ceremony && this.ceremonyDue()) {
+      this.ceremony = new Ceremony(this.match);
+      this.ceremony.stage(this.match);
+    }
+    if (this.ceremony) {
+      this.ceremony.step(this.match, frame);
+      return frame;
+    }
     const scale = this.slowLeft > 0 ? this.slowScale : 1;
     this.slowLeft = Math.max(0, this.slowLeft - frame);
     for (const [seat, id] of this.athleteBySeat) {
@@ -87,6 +101,11 @@ export class MatchDriver {
     }
     if (this.replay) this.replays.update(this.match, () => this.voters());
     return dt;
+  }
+
+  private ceremonyDue(): boolean {
+    const m = this.match;
+    return m.phase === "over" && m.winner !== null && m.phaseT >= CEREMONY_AFTER && !this.replays.pending && !this.replays.replay;
   }
 
   /** The phones still in the game, who must all agree to skip the replay. */

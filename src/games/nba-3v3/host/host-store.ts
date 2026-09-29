@@ -3,6 +3,7 @@ import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficu
 import type { TeamId } from "../engine/types";
 import type { Phase } from "../protocol";
 import type { BuildId } from "../builds";
+import type { CeremonyCard } from "./ceremony-card";
 import type { Role } from "./roles";
 
 export interface SeatView {
@@ -74,8 +75,10 @@ export interface NbaHostState {
   winner: TeamId | null;
   /** The replay of the winning basket while it plays: whose view, who scored, and who has voted to skip. */
   replay: { view: "scorer" | "defender"; scorer: string; votes: { name: string; done: boolean }[] } | null;
-  /** Someone has won and the replay is still to roll, so the results wait. */
+  /** Someone has won and the replay or the trophy ceremony is still to come, so the results wait. */
   replayDue: boolean;
+  /** The trophy ceremony's names and where it is, once it has started. */
+  ceremony: CeremonyCard | null;
   results: ResultRow[];
   /** Players whose phones joined during the game, waiting for the next one. */
   waiting: string[];
@@ -100,6 +103,7 @@ export const useNbaStore = create<NbaHostState>(() => ({
   winner: null,
   replay: null,
   replayDue: false,
+  ceremony: null,
   results: [],
   waiting: [],
 }));

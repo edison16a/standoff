@@ -46,6 +46,8 @@ export class NbaHost {
   private lastPhase: Phase = "lobby";
   /** The game is over and the replay is done with, so the join code can show again. */
   private settled = false;
+  /** The host asked for the box scores before the ceremony brought them in. */
+  private statsNow = false;
   private readonly demo: DemoGame;
   /** Browser tests on slow machines run the game faster than real time. Always 1 in play. */
   turbo = 1;
@@ -87,6 +89,12 @@ export class NbaHost {
   /** The game on screen: the real one (or its replay), or the demo behind the lobby. */
   get match(): Match {
     return this.driver?.view ?? this.demo.match;
+  }
+
+  /** From the ceremony: straight to the box scores. */
+  showStats(): void {
+    this.statsNow = true;
+    this.refresh(performance.now());
   }
 
   /** Where the replay's camera is while it plays, or null for the broadcast camera. */
@@ -144,6 +152,7 @@ export class NbaHost {
     this.unlistenMatch?.();
     const driver = new MatchDriver(this.lobby.entries(), undefined, this.lobby.level);
     this.driver = driver;
+    this.statsNow = false;
     const unlisten = driver.listen((event) => this.fanout.live(event, driver));
     const unreplay = driver.replays.listen((event, ghost) => this.fanout.replay(event, ghost));
     this.unlistenMatch = () => {
@@ -182,6 +191,7 @@ export class NbaHost {
       dt = 0;
       for (let i = 0; i < this.turbo; i++) dt += this.driver.tick(realDt, (seat) => this.pad.stick(seat, nowMs));
       this.audio.frame(this.driver.match);
+      this.audio.ceremony(this.driver.ceremony?.t ?? null);
     } else dt = this.demo.tick(realDt);
     const phase = this.phase;
     if (phase !== this.lastPhase) {
@@ -199,6 +209,6 @@ export class NbaHost {
 
   private refresh(nowMs: number): void {
     this.lastHud = nowMs;
-    publish({ nowMs, players: this.room.players(), lobby: this.lobby, driver: this.driver, phones: this.phones });
+    publish({ nowMs, players: this.room.players(), lobby: this.lobby, driver: this.driver, phones: this.phones, statsNow: this.statsNow });
   }
 }
