@@ -67,6 +67,20 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 7. **No duplicate name boxes:** in every game where each player's name already shows on or above their character, remove the separate boxes along the bottom of the big screen that just repeat names like "Edison Law". Audit every game. If a box also carries something useful (health, score, ammo), move that onto the name tag or the main HUD instead of losing it.
 
+### Batch G: right before the final builds (owner play test notes)
+
+**Football 3v3**
+1. **Defense controls stay on screen:** a defender's pad must never disappear while the offense picks kick or throw. Defense does not choose, so its controls stay up the whole time.
+2. **QB movement:** a normal joystick for moving, like the other players.
+3. **QB speed and throwing accuracy:** the QB runs as fast as anyone. Throw accuracy depends on how still he is when he lets go: standing still gives a clean, accurate pass; throwing on the run is often off target and more likely to be blocked or picked. That makes a juke and run a real choice.
+4. **New play call, Run the ball:** besides Kick and Throw, the QB can pick Run. One runner automatically lines up close to the QB, and after the hike the QB presses Pass to toss that runner a short lob (a pitch) to start the run.
+5. **Clearer throw target:** the ring under the receiver being thrown to turns a completely different colour (for example red) and stands out on screen, so it is obvious who the pass is going to.
+
+**Basketball 3v3**
+6. **Controls always on:** a player's controls never grey out when the ball is passed between teammates. They stay active the whole time.
+7. **Guard keeps following:** holding Guard always follows your assigned man, through passes and every change of possession on the same play.
+8. **Stronger jukes:** a juke (crossover and so on) is more powerful, and the beaten defender is visibly stunned for a moment (a stumble or off balance animation). No big text announcement for jukes.
+
 ### Last (in this order: README, clips, icons and tiles first, then the final check)
 
 **Push checkpoints (owner request, in case usage runs out):** before the final builds start, every finished game change must already be merged and pushed to main. After the final builds (README, clips, icons, tiles) pass their checks, push them to main right away, before the final check starts.
