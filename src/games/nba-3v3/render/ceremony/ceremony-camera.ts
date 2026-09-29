@@ -49,7 +49,7 @@ export function lookUnderNames(pos: Point, fov: number): Point {
 function hero(t: number): CameraPlace {
   const s = smooth(t / CEREMONY.up);
   const lift = smooth((t - CEREMONY.raise) / (CEREMONY.up - CEREMONY.raise));
-  const pos = around(-0.5 + 0.55 * s, 5.4 - 1.3 * s, 1.6 - 0.8 * lift);
+  const pos = around(-0.5 + 0.55 * s, 5.4 - 1.3 * s, 1.75 - 0.95 * lift);
   return { pos, look: { x: CEREMONY_SPOT.x, y: 1.45 + 1.0 * lift, z: CEREMONY_SPOT.z }, fov: 32 };
 }
 

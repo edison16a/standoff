@@ -1,14 +1,14 @@
 import * as THREE from "three";
 import { createBasketballTrophy, disposeTree } from "@/games/kit/victory";
 
-/** Bigger than life, so the trophy reads from a camera across the floor: about 90 centimetres tall. */
-const SCALE = 1.45;
+/** Bigger than life, so the trophy reads from a camera across the floor: about 80 centimetres tall. */
+const SCALE = 1.3;
 /**
  * How far up its own height the hands hold it. Cradled, high on the
  * column so it sits low and his face shows over it; raised, lower down,
  * so it stands tall above his hands.
  */
-const GRIP_CRADLE = 0.5;
+const GRIP_CRADLE = 0.56;
 const GRIP_RAISED = 0.28;
 /** The arena is lit for basketball, not for gold, so the trophy reflects its surroundings harder. */
 const SHINE = 2.6;
