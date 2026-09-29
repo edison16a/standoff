@@ -49,7 +49,7 @@ export function PickStep() {
         <div className="fifa-pick__caption">
           <strong>{star.name}</strong>
           <span>
-            {star.role}. Celebrates with: {star.celebrationName.toLowerCase()}.
+            {star.role}. Goal celebration: {star.celebrationName}.
           </span>
         </div>
       </div>

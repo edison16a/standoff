@@ -9,18 +9,20 @@ export const STEP = 1 / 60;
 
 export const PITCH = {
   /** From the centre spot to each goal line. */
-  halfLength: 21,
+  halfLength: 24,
   /** From the centre spot to each side board. */
-  halfWidth: 13,
+  halfWidth: 15,
   boardHeight: 1,
   /** From the middle of the goal to the centre of each post. */
-  goalHalfWidth: 2.5,
-  /** To the centre of the crossbar. */
-  goalHeight: 2.1,
+  goalHalfWidth: 2.9,
+  /** To the centre of the crossbar. A big goal, so the keeper has more to cover. */
+  goalHeight: 2.3,
   goalDepth: 1.4,
   postRadius: 0.06,
   /** The keeper's area, a half circle around the goal. */
-  boxRadius: 7,
+  boxRadius: 8,
+  /** From the goal line to the penalty spot. */
+  penaltySpot: 6.5,
   centreRadius: 3.8,
   /** A tall catch net behind each goal stops balls that go over the boards. */
   catchNet: 3.4,
@@ -35,6 +37,8 @@ export const BALL = {
   magnus: 0.011,
   /** How much a bounce off the turf keeps. */
   bounce: 0.52,
+  /** How much of the slip between the ball's surface and the turf a bounce takes out. */
+  grip: 0.14,
   /** Slowing of a rolling ball on the turf, metres per second squared. */
   roll: 1.9,
   boardBounce: 0.62,
@@ -134,7 +138,10 @@ export const KEEPER = {
   claimRange: 0.95,
   /** The closest a keeper stands to the goal line, in front of it. */
   lineGap: 0.3,
-  getUp: 0.7,
+  /** Rising from the turf after a dive. */
+  getUp: 0.95,
+  /** Lying on the turf after a dive that did not end with the ball in the gloves. */
+  grounded: 1.1,
 } as const;
 
 export const MATCH = {
@@ -142,7 +149,8 @@ export const MATCH = {
   goalsToWin: 5,
   kickoffWait: 1.6,
   celebrate: 3.4,
-  replay: 5.8,
+  /** The longest a goal replay can run, if the host never ends it. */
+  replay: 20,
   outWait: 1.3,
   fullTimeWait: 1,
 } as const;

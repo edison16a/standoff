@@ -1,11 +1,14 @@
 "use client";
 import { Icon } from "@/components/ui/Icon";
+import { DifficultyPicker } from "@/games/kit/difficulty/DifficultyPicker";
 import { playerColor } from "@/games/kit/players";
 import { ROSTER } from "../../roster";
+import { ROLE_NAMES } from "../../roles";
 import { TEAMS, other, type TeamId } from "../../teams";
 import { useFifaStore, type SeatView } from "../host-store";
 import { TEAM_SIZE } from "../lobby";
 import { BotsToggle, matchSize } from "./BotsToggle";
+import { RolePicker } from "./RolePicker";
 import { useSession } from "./session-context";
 
 function PlayerCard({ seat, full }: { seat: SeatView; full: (team: TeamId) => boolean }) {
@@ -19,6 +22,7 @@ function PlayerCard({ seat, full }: { seat: SeatView; full: (team: TeamId) => bo
         <strong>{seat.name}</strong>
         <span>{star ? `${star.name}, ${star.number}` : "Choosing a star"}</span>
       </span>
+      {seat.team !== null && <RolePicker name={seat.name} role={seat.role} onPick={(role) => session.setRole(seat.seat, role)} />}
       <span className={`fifa-card__state ${seat.ready ? "fifa-card__state--on" : ""}`}>{seat.ready ? "Ready" : "Setting up"}</span>
       <span className="fifa-card__moves">
         {seat.team === null ? (
@@ -76,7 +80,7 @@ function TeamColumn({ team }: { team: TeamId }) {
             <span className="fifa-card__cpu">CPU</span>
             <span className="fifa-card__who">
               <strong>{ROSTER[bot.character].name}</strong>
-              <span>Computer player</span>
+              <span>Computer, {ROLE_NAMES[bot.role].toLowerCase()}</span>
             </span>
           </li>
         ))}
@@ -95,6 +99,7 @@ export function Lobby() {
   const session = useSession();
   const seats = useFifaStore((s) => s.seats);
   const botsOn = useFifaStore((s) => s.botsOn);
+  const level = useFifaStore((s) => s.level);
   const block = useFifaStore((s) => s.startBlock);
   const joined = seats.filter((s) => s.connected);
   const bench = joined.filter((s) => s.team === null);
@@ -139,7 +144,10 @@ export function Lobby() {
       )}
       <footer className="fifa-lobby__foot">
         <p className="fifa-lobby__note">{note}</p>
-        <BotsToggle on={botsOn} onChange={(on) => session.setBots(on)} />
+        <div className="fifa-lobby__options">
+          <BotsToggle on={botsOn} onChange={(on) => session.setBots(on)} />
+          {botsOn && <DifficultyPicker level={level} onChange={(next) => session.setLevel(next)} />}
+        </div>
         <button type="button" className="fifa-start" disabled={block !== null} onClick={() => session.startMatch()}>
           <Icon name="play" />
           Kick off

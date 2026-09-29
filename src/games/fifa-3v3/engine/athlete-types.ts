@@ -14,7 +14,11 @@ export type AthleteAction =
   /** Wrong footed by a skill move: a brief stagger before turning to chase. */
   | "beaten"
   | "celebrate"
-  | "dejected";
+  | "dejected"
+  /** Off the ground to block a shot or a pass, or a free kick wall leaping as it is struck. */
+  | "jump"
+  /** A standing poke at the dribbler's ball. */
+  | "steal";
 
 /**
  * The skill moves, picked by the stick against the goal the player
@@ -63,6 +67,19 @@ export interface AthleteStats {
   shots: number;
   tackles: number;
   passes: number;
+  fouls: number;
+  /** Shots charged down with the body. */
+  blocks: number;
+}
+
+/** Holding Guard on defence: the player shadows the opponent they mark. */
+export interface GuardState {
+  /** The Guard button is down. */
+  held: boolean;
+  /** Guard is steering the player this step: held, in range, and the stick left alone. */
+  on: boolean;
+  /** Where the guard is heading, which trails a dribbler so a skill move leaves it behind. */
+  lag: Vec2;
 }
 
 export interface Athlete {
@@ -117,4 +134,7 @@ export interface Athlete {
   dribbling: number;
   brain: Brain;
   stats: AthleteStats;
+  guard: GuardState;
+  /** Seconds before another steal or jump. */
+  defendWait: number;
 }

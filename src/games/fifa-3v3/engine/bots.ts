@@ -4,10 +4,12 @@ import { goalX, shotAngle, toGoal } from "./goal";
 import { owns } from "./kick";
 import { trySkill } from "./bot-skill";
 import { laneOf } from "./lanes";
+import { botSkill, sloppiness, thinkScale } from "./difficulty";
 import { choosePassTarget, openness } from "./passing";
+import { autoAimZ } from "./shot-plan";
 import { PITCH } from "./tuning";
 import type { Athlete, Command, MatchState } from "./types";
-import { add, clamp, dist, dot, len, norm, scale, sub, type Vec2 } from "./vec";
+import { add, clamp, dist, dot, fromAngle, len, norm, scale, sub, type Vec2 } from "./vec";
 
 const STILL: Vec2 = { x: 0, z: 0 };
 
@@ -25,12 +27,14 @@ export function botCommand(state: MatchState, a: Athlete, dt: number): Command {
   brain.callFor -= dt;
   const carrying = owns(state, a);
   brain.carried = carrying ? brain.carried + dt : 0;
-  if (state.phase !== "play") return { move: STILL };
+  const skill = botSkill(state);
+  // Training: the computer players stand where they are and do nothing.
+  if (state.phase !== "play" || !skill.acts) return { move: STILL };
   const target = carrying ? dribbleSpot(state, a) : runSpot(state, a);
-  const command: Command = { move: approach(a, target) };
+  const command: Command = { move: scale(approach(a, target), skill.speed) };
   // Mid charge the shot is already decided; it goes when the bar gets there.
   if (brain.thinkIn > 0 || a.action !== "free" || a.charging) return command;
-  brain.thinkIn = state.rng.range(0.12, 0.24);
+  brain.thinkIn = state.rng.range(0.12, 0.24) * thinkScale(state);
   if (carrying) decideWithBall(state, a, command);
   else decideWithout(state, a, command);
   return command;
@@ -131,11 +135,23 @@ function decideWithout(state: MatchState, a: Athlete, command: Command): void {
   if (carrier.team === a.team || carrier.action === "hurdle") return;
   const d = dist(a.pos, carrier.pos);
   if (d > 2.6 || d < 0.5 || carrier.action === "skill" || !closestOfTeam(state, a, carrier.pos)) return;
-  if (!state.rng.chance(0.3)) return;
+  const rng = state.rng;
+  const sharp = botSkill(state).accuracy;
+  // Close enough to poke at it: a steal, better timed by a sharper player, and not through his back.
+  const behind = dot(norm(sub(carrier.pos, a.pos)), fromAngle(carrier.facing)) > 0.4;
+  if (d < 1.5 && a.defendWait <= 0 && !(behind && rng.chance(0.6 + 0.4 * sharp)) && rng.chance(0.1 + 0.25 * sharp)) {
+    command.steal = true;
+    a.brain.slideWait = rng.range(1.2, 2.4);
+    return;
+  }
+  if (!rng.chance(0.12 + 0.12 * sharp)) return;
   const aim = add(state.ball.pos, carrier.vel, 0.3);
-  command.move = norm(sub(aim, a.pos));
+  const dir = norm(sub(aim, a.pos));
+  // A sharp player will not go through the back of a man; a sloppy one sometimes does.
+  if (dot(dir, fromAngle(carrier.facing)) > 0.5 && rng.chance(0.8 + 0.2 * sharp)) return;
+  command.move = dir;
   command.slide = true;
-  a.brain.slideWait = state.rng.range(2.5, 4.5);
+  a.brain.slideWait = rng.range(2.5, 4.5);
 }
 
 /**
@@ -145,9 +161,11 @@ function decideWithout(state: MatchState, a: Athlete, command: Command): void {
  */
 function aimShot(state: MatchState, a: Athlete, command: Command, d: number): void {
   const rng = state.rng;
-  const kz = state.keepers[other(a.team)].pos.z;
-  const side = Math.abs(kz) < 0.3 ? rng.sign() : -Math.sign(kz);
-  a.aimZ = side * rng.range(0.9, PITCH.goalHalfWidth - 0.4);
+  // The same corner a player's shot would pick by itself: far post from the side, unless the keeper has it.
+  const side = Math.sign(autoAimZ(a.pos, state.keepers[other(a.team)].pos)) || 1;
+  // A sloppier level drifts off its corner.
+  const drift = rng.range(-1, 1) * 1.2 * sloppiness(state);
+  a.aimZ = clamp(side * rng.range(0.9, PITCH.goalHalfWidth - 0.4) + drift, -PITCH.goalHalfWidth - 0.6, PITCH.goalHalfWidth + 0.6);
   if (d < 9) command.shoot = rng.range(0.15, 0.5);
   else if (d < 14) command.shoot = rng.range(0.45, 0.78);
   else command.shoot = rng.range(0.65, 0.95);

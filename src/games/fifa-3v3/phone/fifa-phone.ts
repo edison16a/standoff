@@ -76,8 +76,22 @@ export class FifaPhone {
   }
 
   slide(down: boolean): void {
-    if (down) this.pad.press(BUTTONS.slide);
-    else this.pad.release(BUTTONS.slide);
+    this.press("slide", down);
+  }
+
+  /** Guard is held; Steal and Jump are pressed. The host reads each by name. */
+  press(button: "slide" | "guard" | "steal" | "jump", down: boolean): void {
+    if (down) this.pad.press(BUTTONS[button]);
+    else this.pad.release(BUTTONS[button]);
+  }
+
+  /**
+   * The buttons on screen changed (attacking, defending, a set piece):
+   * whatever was held under the old layout is let go, so nothing sticks.
+   */
+  letGo(): void {
+    for (const button of Object.values(BUTTONS)) this.pad.release(button);
+    store.setState({ shootSince: null });
   }
 
   private onRoom(event: PhoneRoomEvent): void {

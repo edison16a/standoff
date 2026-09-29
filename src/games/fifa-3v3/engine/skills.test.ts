@@ -12,7 +12,7 @@ const LINEUP: Entrant[] = [
   { team: 0, character: "okemba", seat: null },
   { team: 1, character: "holmvik", seat: 2 },
   { team: 1, character: "lacerda", seat: null },
-  { team: 1, character: "ashworth", seat: null },
+  { team: 1, character: "serrano", seat: null },
 ];
 
 /** Red's phone player on the ball facing Blue's goal, Blue's phone player `gap` metres in front. */

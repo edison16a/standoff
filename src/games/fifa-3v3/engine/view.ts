@@ -3,6 +3,9 @@ import type { TeamId } from "../teams";
 import { chargeLevel, isTap } from "./charge";
 import type { Athlete, AthleteAction, Dive, KeeperAction, MatchState, Phase, SkillKind } from "./types";
 import { angleDiff, len } from "./vec";
+import { blendReferee, foulView, refereeView, setPieceView, type FoulView, type RefereeView, type SetPieceView } from "./view-extra";
+
+export type { FoulView, RefereeView, SetPieceView };
 
 /**
  * A still of the match for drawing: plain numbers, no references back
@@ -33,6 +36,10 @@ export interface AthleteView {
   skillSide: 1 | -1;
   /** The goal scorer does their own celebration, team mates a plain cheer. */
   signature: boolean;
+  /** Guard is shadowing a man: a low, square defensive stance. */
+  guarding: boolean;
+  /** Standing in a free kick wall, hands in front, waiting for the kick. */
+  wall: boolean;
 }
 
 export interface KeeperView {
@@ -53,7 +60,19 @@ export interface BallView {
   vx: number;
   vy: number;
   vz: number;
+  /** Angular velocity in radians a second, for the replay's spin reading. */
+  spin: number;
+  /** Sidespin about the vertical, which is the curl. */
+  curl: number;
   held: boolean;
+}
+
+/** The shot in the air: who struck it and where on the goal it was aimed. */
+export interface ShotView {
+  shooter: number;
+  x: number;
+  y: number;
+  z: number;
 }
 
 export interface MatchView {
@@ -68,6 +87,10 @@ export interface MatchView {
   keepers: [KeeperView, KeeperView];
   scorer: number | null;
   winner: TeamId | null;
+  referee: RefereeView;
+  setPiece: SetPieceView | null;
+  foul: FoulView | null;
+  shot: ShotView | null;
 }
 
 export function buildView(state: MatchState): MatchView {
@@ -75,6 +98,7 @@ export function buildView(state: MatchState): MatchView {
   const scorer = state.lastGoal?.scorer ?? null;
   const celebrating = state.phase === "goal" || state.phase === "replay";
   const b = state.ball;
+  const wall = state.setPiece?.wall ?? [];
   return {
     time: state.time,
     phase: state.phase,
@@ -82,7 +106,7 @@ export function buildView(state: MatchState): MatchView {
     clock: state.clock,
     golden: state.golden,
     score: [state.score[0], state.score[1]],
-    ball: { x: b.pos.x, y: b.pos.y, z: b.pos.z, vx: b.vel.x, vy: b.vel.y, vz: b.vel.z, held: owner !== null },
+    ball: { x: b.pos.x, y: b.pos.y, z: b.pos.z, vx: b.vel.x, vy: b.vel.y, vz: b.vel.z, spin: Math.hypot(b.spin.x, b.spin.y, b.spin.z), curl: b.spin.y, held: owner !== null },
     athletes: state.athletes.map((a) => ({
       id: a.id,
       team: a.team,
@@ -101,11 +125,18 @@ export function buildView(state: MatchState): MatchView {
       ...barOf(a, owner?.kind === "athlete" && owner.id === a.id),
       skill: a.action === "skill" ? a.skill.kind : null,
       skillSide: a.skill.side,
-      signature: state.phase === "fulltime" || (celebrating && a.id === scorer),
+      // At full time the winners bounce and cheer together; the SUI and the slide are for goals.
+      signature: celebrating && a.id === scorer,
+      guarding: a.guard.on,
+      wall: wall.includes(a.id) && (state.phase === "setpiece" || a.action === "jump"),
     })),
     keepers: [keeperView(state, 0), keeperView(state, 1)],
     scorer,
     winner: state.winner,
+    referee: refereeView(state),
+    setPiece: setPieceView(state),
+    foul: foulView(state),
+    shot: state.flight ? { shooter: state.flight.shooter, x: state.flight.target.x, y: state.flight.target.y, z: state.flight.target.z } : null,
   };
 }
 
@@ -161,5 +192,6 @@ export function blendViews(a: MatchView, b: MatchView, t: number): MatchView {
       const to = b.keepers[i] ?? p;
       return { ...p, x: mix(from.x, to.x, t), z: mix(from.z, to.z, t), facing: mixAngle(from.facing, to.facing, t), actionT: from.action === to.action ? mix(from.actionT, to.actionT, t) : p.actionT };
     }) as [KeeperView, KeeperView],
+    referee: blendReferee(a.referee, b.referee, t),
   };
 }
