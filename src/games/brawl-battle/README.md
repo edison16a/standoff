@@ -9,7 +9,7 @@ A platform fighter for 1 to 4 players on one big screen, with phones as controll
 1. Open Brawl Battle on the computer. Everyone scans the code with their phone.
 2. On the phone, after the name, pick a fighter, tap Next, then tap Ready. Two players may pick the same fighter. Each is tinted in their own player colour.
 3. On the computer, the host sets how many computer fighters join and how good they are with Computer difficulty: Easy (the default), Medium, Hard or Training, then starts. In Training the computer fighters stand still and never press anything, so players can practise moves on them. A player alone always gets one computer fighter to face. The computer picks one of four stages at random.
-4. The phone is now a controller. It works held sideways or upright:
+4. The phone is now a controller. It works held sideways or upright. Turning it mid fight centres the stick, so a thumb held on it through the turn never reads as a push. Put the thumb down again to move. Held buttons stay held.
    * **Stick**: push it to move. Push it up to jump. Let it come back toward the middle and push up again in the air to double jump. Hold down in the air to fall faster. Flick down on a floating platform to drop through it.
    * **Direction**: the stick picks each move's variant. It snaps to the nearest of four directions, so right and a little up is still right. Only a stick left near the middle is neutral.
    * **Attack**: tap for a quick move. What it does depends on the direction: neutral, side, up or down on the ground, and an aerial in the air (neutral, up or down).
