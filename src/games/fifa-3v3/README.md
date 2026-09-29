@@ -36,7 +36,7 @@ Hold the phone sideways.
 
 On defence (the other side has the ball) the big button becomes **Guard**, with **Jump** beside it:
 
-* **Guard (hold):** your player shadows the opponent you mark (the one in the same place in the line up), goal side of him at a marking distance, a little slower than you can run. It only takes over within 7 metres of him; the phone shows his name, how far he is, and Too far, In range or Guarding. A dribbler leaves Guard trailing, and a skill move leaves it well behind, so push the stick to take over and catch up. Any push on the stick is manual control.
+* **Guard (hold):** your player shadows the opponent you mark (the one in the same place in the line up), goal side of him at a marking distance, a little slower than you can run. It only takes over within 7 metres of him; the phone shows his name as the big screen tags him, how far he is, and Too far, In range or Guarding. A dribbler leaves Guard trailing, and a skill move leaves it well behind, so push the stick to take over and catch up. Any push on the stick is manual control.
 * **Jump:** up to block a shot or a pass. The ball comes off the body with real physics rather than stopping dead. Jumping into a dribbler can be a foul.
 * Steal and Slide work as always.
 
@@ -64,19 +64,21 @@ The replay is cut like a television replay, each stage at its own speed and from
 4. **The dive**, slowing right down again as the keeper leaves the ground.
 5. **The net**, nearly at full speed.
 
+A goal from a free kick or a penalty is replayed from the taker's run up, not from the lining up before it.
+
 Any button on any phone votes to skip, but the replay only ends early when every player in the match has pressed. The big screen shows each player's name with a tick once they have agreed, and each phone shows the count. A player who leaves stops counting.
 
 ## Fouls, free kicks and penalties
 
-A slide through the back of a man is nearly always a foul. Taking the man before the ball often is, and so is a clumsy steal or a jump into a dribbler. The referee blows a pea whistle (a sharp pip and a long blast), play stops, and the fouled player goes down. The referee, who trails play on the far side all match, sprints to the spot, faces the offender and holds the yellow card up. The cards are for show: nobody is sent off. The score bug shows the foul and who was booked. Then the scene cuts to the set piece, filmed from behind the ball.
+A slide through the back of a man is nearly always a foul. Taking the man before the ball often is, and so is a clumsy steal or a jump into a dribbler. The referee blows a pea whistle (a sharp pip and a long blast), play stops, and the fouled player goes down. The referee, who trails play on the far side all match, sprints to the spot, faces the offender and holds the yellow card up, filmed side on to the two of them. The cards are for show: nobody is sent off. The score bug shows the foul and who was booked. Then the scene cuts to the set piece, filmed from high behind the ball with no name tags in the way. The taker waits a few steps back and off to the side of his kicking foot, so the ball and the line stay in view, and the run up comes in at an angle.
 
 Outside the box it is a free kick. Three defenders form a wall ten yards (9.15 metres) from the ball, covering the near post, the keeper shades the far side, and the wall jumps as the ball is struck. A low kick can go under a jumping wall. The taker lines it up in stages on the phone:
 
 1. **Aim:** the stick swings a white line left or right. The line shows the ball's path through the air and its shadow on the pitch.
 2. **Curve:** the stick bends the line. Aim outside the far post and curl it back in.
-3. **Power:** hold Kick and let go. The line is drawn at a middle power that dips under the bar; more sends it higher and faster, and deep in the red it flies over. Less keeps it low, into the wall.
+3. **Power:** hold Kick and let go. The line is drawn at a middle power that dips under the bar. More is faster and higher, but all of yellow still comes in under the bar from any range; deep in the red it flies over. Less is slower and lower: into the wall from close in, a looping ball from far out.
 
-Inside the box it is a penalty: the keeper on his line, everyone else outside the box, and the taker aims at a spot on the goal with the stick (across and up), then sets the power. The keeper has to guess a side as it is struck.
+Inside the box it is a penalty: the keeper on his line, everyone else outside the box, and the taker aims at a spot on the goal with the stick (across and up), shown by a glowing target in the goal mouth, then sets the power. The keeper has to guess a side as it is struck.
 
 The ball then flies with the match's own physics. The keeper saves what he can reach in time, better the closer and softer it is. A computer taker goes through the same stages on screen. A taker who leaves a stage alone for fifteen seconds has it done for them.
 
