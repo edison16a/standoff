@@ -92,7 +92,7 @@ describe("free kick", () => {
   it("stands the taker off to the side of his kicking foot, so the run comes in at an angle", () => {
     const state = setPiece("free", { x: PITCH.halfLength - 18, z: 0 });
     const taker = state.athletes[state.setPiece!.taker]!;
-    // Echeverri is left footed and Red attacks +x, so his right is +z.
+    // The Playmaker is left footed and Red attacks +x, so his right is +z.
     expect(taker.pos.x).toBeLessThan(state.setPiece!.spot.x - 1.5);
     expect(taker.pos.z).toBeGreaterThan(0.8);
   });
