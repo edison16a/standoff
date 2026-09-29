@@ -16,7 +16,8 @@ import { usePhone } from "./session-context";
  */
 export function Controller({ host }: { host: PhoneState }) {
   const phone = usePhone();
-  const layout = `${host.pad}:${host.phase === "presnap"}`;
+  // Skip coming and going counts too: a vote pressed as the replay ends must not stay held into the next one.
+  const layout = `${host.pad}:${host.phase === "presnap"}:${host.skip !== null}`;
 
   useEffect(() => {
     phone.controlling(true);
