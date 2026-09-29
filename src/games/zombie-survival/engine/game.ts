@@ -106,6 +106,11 @@ export class SurvivalGame {
   /** A test shortcut: walk straight to a stage's checkpoint, as if every fight before it was won. */
   jumpTo(stage: number): void {
     if (!this.running || this.phase === "escaped") return;
+    // A team that fell gets back up as it would on a retry, or the first swing would drop it again.
+    if (this.phase === "down") {
+      this.health = Math.max(this.health, RETRY_FLOOR);
+      this.squad.refill();
+    }
     this.cutscene = null;
     this.travelTo(Math.max(1, Math.min(STAGE_COUNT, stage)));
   }

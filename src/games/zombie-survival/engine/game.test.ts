@@ -187,6 +187,19 @@ describe("a run", () => {
     expect(game.encounter?.spec.bosses).toEqual(["tank"]);
   });
 
+  it("gets a fallen team back up when the admin panel jumps ahead", () => {
+    const game = new SurvivalGame();
+    game.start([{ seat: 1, weapon: "rifle" }]);
+    run(game, 30, undefined, () => game.phase === "fight");
+    // Nobody shoots, and the first swing to land drops the team.
+    game.health = 0.01;
+    run(game, 60, undefined, () => game.phase === "down");
+    expect(game.phase).toBe("down");
+    game.jumpTo(5);
+    expect(game.phase).toBe("travel");
+    expect(game.health).toBeGreaterThanOrEqual(50);
+  });
+
   it("keeps the boss table sane", () => {
     for (const kind of BOSS_KINDS) expect(KINDS[kind].weakPoints.length).toBeGreaterThan(0);
   });

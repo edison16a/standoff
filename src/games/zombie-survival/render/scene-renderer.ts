@@ -115,7 +115,8 @@ export class SurvivalRenderer implements SurvivalView {
     const { shooters, sights } = aimAll(this.source, this.caster, [...this.zombies.proxies(), ...this.world.solids()], nowMs);
     const armed = game.phase !== "cutscene" && game.phase !== "escaped";
     this.guns.update(shooters, dt, time, armed);
-    this.crosshairs.update(sights, dt, armed);
+    // A fallen team's trigger is off, so its crosshairs leave the end card clear.
+    this.crosshairs.update(sights, dt, armed && game.phase !== "down");
     this.effects.update(dt);
     this.renderer.render(this.scene, this.camera);
   }

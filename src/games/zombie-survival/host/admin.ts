@@ -14,8 +14,14 @@ export function registerRunAdmin(game: () => SurvivalGame): () => void {
     const next = STAGES.find((s) => s.index > g.stage && s.bosses.length > 0);
     if (next) g.jumpTo(next.index);
   };
+  // A team that fell stands up at its checkpoint first, so the win still counts.
+  const win = () => {
+    const g = game();
+    if (g.phase === "down") g.retry();
+    g.encounter?.wipe();
+  };
   return registerAdminActions("zombie-survival", [
-    { id: "win", label: "Win this stage", run: () => game().encounter?.wipe() },
+    { id: "win", label: "Win this stage", run: win },
     { id: "boss", label: "Skip to the next boss", run: nextBoss },
     { id: "heal", label: "Full health", run: () => void (game().health = MAX_HEALTH) },
   ]);
