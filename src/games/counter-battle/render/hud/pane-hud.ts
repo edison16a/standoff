@@ -124,7 +124,7 @@ export class PaneHud {
         const a = Math.PI / 4 + (i * Math.PI) / 2;
         const r = gap + size * 0.9;
         m.position.set(aim.x + Math.cos(a) * r, aim.y + Math.sin(a) * r, 0);
-        m.scale.set(size, Math.max(2, h * 0.004), 1);
+        m.scale.set(size, Math.max(1.5, h * 0.0028), 1);
       });
     }
     renderer.clearDepth();
@@ -132,14 +132,16 @@ export class PaneHud {
   }
 
   private layoutCross(aim: { x: number; y: number }, gap: number, h: number): void {
-    const len = Math.max(9, h * 0.03);
-    const thick = Math.max(2.5, h * 0.006);
+    // Thin lines with a one pixel dark edge: easy to read, never covering the target.
+    const len = Math.max(7, h * 0.022);
+    const thick = Math.max(1.5, h * 0.0022);
     for (const bar of this.bars) {
       const { tick, outline } = bar.userData as { tick: number; outline: boolean };
-      const pad = outline ? 3 : 0;
+      const pad = outline ? 2 : 0;
       if (tick === 4) {
+        const dot = thick * 1.2;
         bar.position.set(aim.x, aim.y, 0);
-        bar.scale.set(thick + pad, thick + pad, 1);
+        bar.scale.set(dot + pad, dot + pad, 1);
         continue;
       }
       const a = (tick * Math.PI) / 2;
