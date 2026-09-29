@@ -147,29 +147,6 @@
   animation: cg-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1);
 }
 
-.cg-finish {
-  text-align: center;
-}
-
-.cg-finish__text,
-.cg-finish__note {
-  margin: 0;
-}
-
-/* The line under a race result: who won, in plain small type. */
-.cg-finish__note {
-  margin-top: 12px;
-  font: 800 20px/1.1 var(--font-ui);
-  color: #ffffff;
-  -webkit-text-stroke: 0;
-  text-shadow: 0 2px 0 #12052e;
-}
-
-.cg-finish--lost {
-  color: #d4cff0;
-  text-shadow: 0 6px 0 #12052e;
-}
-
 /* The race leader's place tag, in gold so the lead reads at a glance. */
 .cg-tag--lead {
   color: #12052e;

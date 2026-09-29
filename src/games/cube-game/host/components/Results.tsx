@@ -1,7 +1,7 @@
 "use client";
 import { playerColor } from "@/games/kit/players";
+import { ordinal } from "@/games/kit/split/finish";
 import { LEVELS } from "../../levels";
-import { placeName } from "../race";
 import { useCubeStore, type ResultRow } from "../store";
 import { useSession } from "./session-context";
 
@@ -43,7 +43,7 @@ export function Results() {
           <tbody>
             {rows.map((row) => (
               <tr key={row.slot} className={race && row.slot === winner ? "cg-results__winner" : undefined}>
-                {race && <td>{placeName(row.place)}</td>}
+                {race && <td>{ordinal(row.place)}</td>}
                 <th scope="row">
                   <span className="cg-dot" style={{ background: playerColor(row.slot) }} aria-hidden="true" />
                   Player {row.slot}

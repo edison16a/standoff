@@ -35,10 +35,3 @@ export function raceWinner(entries: readonly RaceEntry[]): number | null {
   const firsts = places.flatMap((place, i) => (place === 1 ? [i + 1] : []));
   return firsts.length === 1 ? firsts[0]! : null;
 }
-
-/** Short place words for the HUD and results: 1st, 2nd and so on. */
-export function placeName(place: number): string {
-  const tens = place % 100;
-  if (tens >= 11 && tens <= 13) return `${place}th`;
-  return `${place}${["th", "st", "nd", "rd"][place % 10] ?? "th"}`;
-}

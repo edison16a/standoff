@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { placeName, racePlaces, raceWinner } from "./race";
+import { racePlaces, raceWinner } from "./race";
 
 describe("racePlaces", () => {
   it("puts the runner further along first", () => {
@@ -34,11 +34,5 @@ describe("raceWinner", () => {
 
   it("calls a dead heat no win", () => {
     expect(raceWinner([{ finishAt: 30, x: 500 }, { finishAt: 30, x: 500 }])).toBeNull();
-  });
-});
-
-describe("placeName", () => {
-  it("writes places the short way", () => {
-    expect([1, 2, 3, 4, 11, 12, 13, 21, 22].map(placeName)).toEqual(["1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "22nd"]);
   });
 });
