@@ -93,7 +93,8 @@ export class RunnerView {
     this.lean += (vx / SIDE.maxSpeed - this.lean) * (1 - Math.exp(-14 * dt));
     const board = !!powers?.has("hoverboard") && !run?.crashed;
     const flying = !!powers?.has("jetpack") && !run?.crashed;
-    this.board.visible = board;
+    // The board is put away while the jetpack flies, and comes back for the landing.
+    this.board.visible = board && !flying;
     this.jetpack.visible = flying;
     // Safe for a moment after a save or a flight: the body blinks, the way the real game shows it.
     const safe = !!s && s.ghost > 0 && !flying && !run?.crashed;
