@@ -12,6 +12,7 @@ import { buildOf, LEFT, RIGHT, solveLeg, type Build, type Side } from "../anim/l
 import { getUp, hurdle, slide, stumble } from "../anim/moves";
 import { applyPose, blendPoses, neutral, type Pose } from "../anim/pose";
 import { beatenFrame, skillFrame } from "../anim/skill-poses";
+import { captainPose, matePose } from "../anim/trophy-poses";
 import { buildBody, type Rig } from "../models/body";
 import { FootLock } from "./foot-locks";
 import { figureOf, type FigureSpec } from "./figure-spec";
@@ -66,7 +67,7 @@ export class AthleteFigure {
     const right = this.locks.right.resolve(frame.right, root, this.build, dt);
     if (left) solveLeg(frame.pose, LEFT, left, this.build);
     if (right) solveLeg(frame.pose, RIGHT, right, this.build);
-    const key = `${view.action}/${view.signature}`;
+    const key = `${view.action}/${view.signature}/${view.ceremony}`;
     if (key !== this.key) {
       this.from = { ...this.shown };
       this.key = key;
@@ -146,6 +147,9 @@ export class AthleteFigure {
       case "beaten":
         return beatenFrame(v.actionT, v.actionLen, v.stride, v.speed, v.skillSide, ctx, time, v.id);
       case "celebrate":
+        // At the trophy ceremony the action's clock started at the cut, so it is the ceremony's clock.
+        if (v.ceremony === "captain") return fk(captainPose(v.actionT));
+        if (v.ceremony === "mate") return fk(matePose(v.actionT, this.phase));
         return fk(v.signature ? celebration(this.spec.celebration, v.actionT) : cheer(v.actionT, this.phase));
       case "dejected":
         return dejected(run(), v.actionT, this.phase);
