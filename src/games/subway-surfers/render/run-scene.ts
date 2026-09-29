@@ -9,17 +9,18 @@ import { RunEffects } from "./effects/run-effects";
 import { CollectibleView } from "./world/collectibles";
 import { ObstacleView } from "./world/obstacle-view";
 import { Scenery } from "./world/scenery";
-import { Sky } from "./world/sky";
-import { tickHolograms } from "./world/hologram";
+import { Sky, SUN_DIR } from "./world/sky";
 import { lightAt, newLight } from "./world/themes";
 
-const FOG_NEAR = 30;
-const FOG_FAR = 180;
+const FOG_NEAR = 45;
+const FOG_FAR = 200;
+/** In a tunnel the air goes dim and warm, lit by the lamps. */
+const TUNNEL_FOG = new THREE.Color(0x3a3328);
 
 /**
- * Everything the player sees: the yard, their runner, the guard, the
- * sparks and the camera behind them. The showcase makes its own, sharing
- * every model and material.
+ * Everything the player sees: the sunny yard, their runner, the inspector
+ * and his dog, the sparkle and the camera behind them. The showcase makes
+ * its own, sharing every model and material.
  */
 export class RunScene {
   readonly scene = new THREE.Scene();
@@ -31,29 +32,20 @@ export class RunScene {
   private readonly obstacles = new ObstacleView();
   private readonly collectibles = new CollectibleView();
   private readonly sky = new Sky();
-  private readonly sun = new THREE.DirectionalLight(0xffffff, 2.5);
-  /** The signs ahead, catching the edges of the runner, the trains and the barriers in the zone's colour. */
-  private readonly rim = new THREE.DirectionalLight(0xffffff, 1.4);
-  private readonly hemi = new THREE.HemisphereLight(0xffffff, 0x886644, 1.2);
+  private readonly sun = new THREE.DirectionalLight(0xffffff, 1.7);
+  /** Blue sky above and warm ground below: most of the light on the shaded side of things. */
+  private readonly hemi = new THREE.HemisphereLight(0xffffff, 0xd8c4a0, 2.1);
   private readonly fog = new THREE.Fog(0xffffff, FOG_NEAR, FOG_FAR);
   private readonly light = newLight();
   private dark = 0;
   run: Run | null = null;
 
-  constructor(
-    seed: number,
-    look: number,
-    environment: THREE.Texture | null,
-  ) {
+  constructor(seed: number, look: number) {
     this.scenery = new Scenery(seed);
     this.chase.ceiling = (distance, x) => this.scenery.ceilingAt(distance, x);
     this.runner = new RunnerView(look);
     this.scene.fog = this.fog;
-    this.scene.environment = environment;
-    // The neon street reflected in every glossy surface is most of the night light.
-    this.scene.environmentIntensity = 0.9;
-    this.sun.position.set(6, 12, 4);
-    this.scene.add(this.sky.mesh, this.sun, this.sun.target, this.rim, this.rim.target, this.hemi);
+    this.scene.add(this.sky.mesh, this.sun, this.sun.target, this.hemi);
     this.scene.add(this.scenery.group, this.obstacles.group, this.collectibles.group, this.runner.root, this.guard.root, this.effects.group);
   }
 
@@ -70,6 +62,7 @@ export class RunScene {
   onEvent(event: RunEvent): void {
     if (!this.run) return;
     this.effects.onEvent(event, this.run);
+    this.runner.onEvent(event);
     if (event.type === "crash") this.chase.bump(1.4);
     if (event.type === "stumble") this.chase.bump(0.6);
     if (event.type === "saved") this.chase.bump(0.9);
@@ -91,29 +84,23 @@ export class RunScene {
     const eye = this.chase.camera.position;
     this.scenery.fade.update({ y: eye.y, z: eye.z }, { y: headAbove(run.runner.y), z: -d }, dt);
     this.relight(d, dt);
-    this.sky.follow(this.chase.camera);
-    tickHolograms(time);
-    // The moon and the sign light keep pace with the runner so they fall the same way all along the track.
-    this.sun.position.set(run.runner.x + 8, 14, -d + 6);
-    this.sun.target.position.set(run.runner.x, 0, -d - 6);
-    this.rim.position.set(run.runner.x - 7, 5, -d - 16);
-    this.rim.target.position.set(run.runner.x, 1, -d);
+    this.sky.follow(this.chase.camera, time);
+    // The sun keeps pace with the runner, so it falls the same way all along the track.
+    this.sun.target.position.set(run.runner.x, 0, -d);
+    this.sun.position.copy(this.sun.target.position).addScaledVector(SUN_DIR, 20);
   }
 
   private relight(distance: number, dt: number): void {
     const l = lightAt(distance, this.light);
     const inside = this.scenery.tunnelAt(distance + 2) ? 1 : 0;
     this.dark += (inside - this.dark) * (1 - Math.exp(-5 * dt));
-    const k = 1 - 0.55 * this.dark;
-    this.sky.set(l.skyTop, l.skyHorizon, l.sun, l.neon);
-    this.fog.color.copy(l.fog).lerp(TUNNEL_FOG, this.dark * 0.8);
+    this.sky.set(l.skyTop, l.skyHorizon, l.sun);
+    this.fog.color.copy(l.fog).lerp(TUNNEL_FOG, this.dark * 0.85);
     this.sun.color.copy(l.sun);
-    this.sun.intensity = l.sunIntensity * k;
-    this.rim.color.copy(l.neon);
-    this.rim.intensity = 1.4 * k;
+    this.sun.intensity = l.sunIntensity * (1 - 0.7 * this.dark);
     this.hemi.color.copy(l.hemiSky);
     this.hemi.groundColor.copy(l.hemiGround);
-    this.hemi.intensity = 1.25 * (1 - 0.35 * this.dark);
+    this.hemi.intensity = 2.1 * (1 - 0.45 * this.dark);
   }
 
   dispose(): void {
@@ -122,9 +109,8 @@ export class RunScene {
     this.effects.dispose();
     this.collectibles.dispose();
     this.scenery.dispose();
+    this.obstacles.clear();
     this.sky.dispose();
     this.scene.clear();
   }
 }
-
-const TUNNEL_FOG = new THREE.Color(0x120e22);
