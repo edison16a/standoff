@@ -20,7 +20,7 @@ export interface Limbs {
 }
 
 /**
- * Arms and legs. Sleeves are bare, short or long in the character's
+ * Arms and legs. Sleeves are bare, short or long in the build's
  * accent colour; gloves match the accent. Pants run to just below the
  * knee with a team stripe down the side, then socks and cleats.
  */

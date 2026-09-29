@@ -1,4 +1,4 @@
-import type { CharacterId } from "../roster";
+import type { BuildId } from "../builds";
 import { downText, goalToGo, toGo } from "./downs";
 import type { PlayEnd } from "./events";
 import { yardToX } from "./field";
@@ -18,7 +18,7 @@ export interface AthleteView {
   id: number;
   team: TeamId;
   role: Role;
-  character: CharacterId | null;
+  build: BuildId | null;
   number: number;
   seat: number | null;
   x: number;
@@ -143,7 +143,7 @@ export function buildView(m: Match): MatchView {
     athletes: m.athletes.map((a) => {
       const act = a.action;
       return {
-        id: a.id, team: a.team, role: a.role, character: a.character, number: a.number, seat: a.auto ? null : a.seat,
+        id: a.id, team: a.team, role: a.role, build: a.build, number: a.number, seat: a.auto ? null : a.seat,
         x: a.x, z: a.z, yaw: a.yaw, vx: a.vx, vz: a.vz, speed: Math.hypot(a.vx, a.vz),
         action: act.kind, actionT: "t" in act ? act.t : 0, actionDur: "dur" in act ? act.dur : 0,
         juke: act.kind === "juke" ? act.juke : null, side: act.kind === "juke" ? act.side : 1,

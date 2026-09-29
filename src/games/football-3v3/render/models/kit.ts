@@ -1,10 +1,10 @@
-import { CHARACTERS, LINEMAN_BUILD, type CharacterId, type Look } from "../../roster";
+import { BUILDS, LINEMAN_FRAME, type BuildId, type Look } from "../../builds";
 import { TEAMS, type TeamId } from "../../teams";
 
 /**
  * Everything the model builder needs for one player: the team kit, the
- * character's own look, and the extra touches the renderer adds so the
- * six stars read apart at a glance, even from the high camera.
+ * build's own look, and the extra touches the renderer adds so the
+ * six builds read apart at a glance, even from the high camera.
  */
 export interface KitSpec {
   jersey: string;
@@ -33,14 +33,14 @@ export interface KitSpec {
   eyeBlack: boolean;
 }
 
-/** Per character touches on top of the roster's look. */
-const EXTRAS: Record<CharacterId, Pick<KitSpec, "sleeves" | "neckRoll" | "towel" | "locks" | "eyeBlack">> = {
-  reed: { sleeves: "short", neckRoll: false, towel: true, locks: null, eyeBlack: true },
-  banks: { sleeves: "bare", neckRoll: false, towel: true, locks: "#1a120c", eyeBlack: false },
-  kowalski: { sleeves: "bare", neckRoll: true, towel: false, locks: null, eyeBlack: true },
-  ortiz: { sleeves: "long", neckRoll: false, towel: false, locks: "#2a1a10", eyeBlack: false },
-  lindqvist: { sleeves: "short", neckRoll: false, towel: false, locks: "#d8b26a", eyeBlack: false },
-  fields: { sleeves: "long", neckRoll: true, towel: false, locks: null, eyeBlack: true },
+/** Per build touches on top of its look. */
+const EXTRAS: Record<BuildId, Pick<KitSpec, "sleeves" | "neckRoll" | "towel" | "locks" | "eyeBlack">> = {
+  gunslinger: { sleeves: "short", neckRoll: false, towel: true, locks: null, eyeBlack: true },
+  scrambler: { sleeves: "long", neckRoll: false, towel: false, locks: "#2a1a10", eyeBlack: false },
+  speedster: { sleeves: "bare", neckRoll: false, towel: true, locks: "#1a120c", eyeBlack: false },
+  powerback: { sleeves: "bare", neckRoll: true, towel: false, locks: null, eyeBlack: true },
+  routerunner: { sleeves: "short", neckRoll: false, towel: true, locks: "#120c08", eyeBlack: true },
+  lockdown: { sleeves: "long", neckRoll: true, towel: false, locks: null, eyeBlack: true },
 };
 
 /** Linemen share a build and a plain look, with the skin changing by slot so the line is not a row of clones. */
@@ -57,18 +57,19 @@ function teamKit(team: TeamId): Pick<KitSpec, "jersey" | "trim" | "pants" | "hel
   return { jersey: t.color, trim: t.trim, pants: team === 0 ? "#d9b54a" : "#f1f1ef", helmet: t.dark, stripe: t.trim, socks: t.dark };
 }
 
-export function characterKit(team: TeamId, id: CharacterId): KitSpec {
-  const c = CHARACTERS[id];
+/** A build in a side's uniform, with `name` across the back: the player's own name, or none. */
+export function buildKit(team: TeamId, id: BuildId, name: string | null = null): KitSpec {
+  const c = BUILDS[id];
   return {
-    ...teamKit(team), ...EXTRAS[id], number: c.number, name: c.short.toUpperCase(), look: c.look,
-    height: c.build.height, build: buildFor(c.build.height, c.build.weight),
+    ...teamKit(team), ...EXTRAS[id], number: c.number, name: name ? name.toUpperCase() : null, look: c.look,
+    height: c.frame.height, build: buildFor(c.frame.height, c.frame.weight),
   };
 }
 
 export function linemanKit(team: TeamId, number: number, slot: number): KitSpec {
   const look: Look = { skin: LINEMAN_SKIN[slot % 3]!, mask: "cage", visor: null, accent: TEAMS[team].dark, cleats: "#111111" };
   return {
-    ...teamKit(team), look, number, name: null, height: LINEMAN_BUILD.height, build: buildFor(LINEMAN_BUILD.height, LINEMAN_BUILD.weight),
+    ...teamKit(team), look, number, name: null, height: LINEMAN_FRAME.height, build: buildFor(LINEMAN_FRAME.height, LINEMAN_FRAME.weight),
     sleeves: "bare", neckRoll: slot === 1, towel: false, locks: null, eyeBlack: false,
   };
 }

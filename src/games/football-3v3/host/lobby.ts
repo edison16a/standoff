@@ -1,14 +1,14 @@
 import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
-import { MAX_PER_TEAM, MAX_RUNNERS, type Entry } from "../engine/lineup";
+import { MAX_PER_TEAM, MAX_RUNNERS, takeSpare, type Entry } from "../engine/lineup";
 import type { LobbyRole } from "../roles";
-import { CHARACTER_IDS, type CharacterId } from "../roster";
+import { BUILD_IDS, type BuildId } from "../builds";
 import type { TeamId } from "../teams";
 
 export const TEAM_SIZE = MAX_PER_TEAM;
 
 export interface SeatState {
   connected: boolean;
-  pick: CharacterId | null;
+  pick: BuildId | null;
   ready: boolean;
   team: TeamId | null;
   /** QB or runner, which the host hands out. Null off a team. */
@@ -16,10 +16,10 @@ export interface SeatState {
 }
 
 /**
- * Who is in the room, which star each picked, which side the host put
- * them on and who plays QB. Each star can be taken by one player only.
+ * Who is in the room, which build each picked, which side the host put
+ * them on and who plays QB. Each build can be taken by one player only.
  * A phone that drops keeps its choices for when it comes back, but while
- * it is away its star is free for someone else. Computer players always
+ * it is away its build is free for someone else. Computer players always
  * fill the places nobody took: a QB for a side with no people, and
  * runners up to two a side.
  */
@@ -40,7 +40,7 @@ export class Lobby {
   connect(seat: number): void {
     const state = this.state(seat);
     state.connected = true;
-    // Someone else took this star while the phone was away.
+    // Someone else took this build while the phone was away.
     if (state.pick && this.taken(seat).includes(state.pick)) {
       state.pick = null;
       state.ready = false;
@@ -54,10 +54,10 @@ export class Lobby {
     this.fitRoles();
   }
 
-  /** Refused (false) when another player already has that star. */
-  pick(seat: number, character: CharacterId): boolean {
-    if (this.taken(seat).includes(character)) return false;
-    this.state(seat).pick = character;
+  /** Refused (false) when another player already has that build. */
+  pick(seat: number, build: BuildId): boolean {
+    if (this.taken(seat).includes(build)) return false;
+    this.state(seat).pick = build;
     return true;
   }
 
@@ -118,9 +118,9 @@ export class Lobby {
       .sort((a, b) => a - b);
   }
 
-  /** Stars held by connected players other than `seat`. */
-  taken(seat: number): CharacterId[] {
-    const out: CharacterId[] = [];
+  /** Builds held by connected players other than `seat`. */
+  taken(seat: number): BuildId[] {
+    const out: BuildId[] = [];
     for (const [other, s] of this.seats) if (other !== seat && s.connected && s.pick) out.push(s.pick);
     return out;
   }
@@ -139,7 +139,7 @@ export class Lobby {
     return blaze < storm ? 1 : 0;
   }
 
-  /** Connected, ready, with a star, and placed on a side: in the next match. */
+  /** Connected, ready, with a build, and placed on a side: in the next match. */
   get players(): number[] {
     return [...this.seats.entries()]
       .filter(([, s]) => s.connected && s.ready && s.pick && s.team !== null)
@@ -151,10 +151,10 @@ export class Lobby {
     return [...this.seats.entries()].filter(([, s]) => s.connected).map(([seat]) => seat).sort((a, b) => a - b);
   }
 
-  /** Stars nobody picked, in roster order, for the computer players. */
-  spareStars(): CharacterId[] {
+  /** Builds nobody picked, in order, for the computer players. */
+  spareBuilds(): BuildId[] {
     const used = new Set([...this.seats.values()].filter((s) => s.connected && s.pick).map((s) => s.pick));
-    return CHARACTER_IDS.filter((id) => !used.has(id));
+    return BUILD_IDS.filter((id) => !used.has(id));
   }
 
   setLevel(level: BotLevel): void {
@@ -169,24 +169,23 @@ export class Lobby {
   /**
    * The line up. On each side the ready person the host made QB plays
    * it (or the first ready person, if the QB is not ready yet), the other
-   * ready people run, and computer players in the stars nobody picked
+   * ready people run, and computer players in the builds nobody picked
    * fill the rest: the QB of a side with nobody on it, and runners up to
-   * two a side.
+   * two a side. A computer QB takes a QB build when one is free.
    */
   lineup(): Entry[] {
-    // Stars nobody picked go first; if they run out, the stars of people not in this game are free too.
+    // Builds nobody picked go first; if they run out, the builds of people not in this game are free too.
     const playing = new Set(this.players.map((seat) => this.seats.get(seat)!.pick));
-    const free = this.spareStars();
-    const spare = [...free, ...CHARACTER_IDS.filter((id) => !playing.has(id) && !free.includes(id))];
-    const star = () => spare.shift() ?? CHARACTER_IDS[0];
+    const free = this.spareBuilds();
+    const spare = [...free, ...BUILD_IDS.filter((id) => !playing.has(id) && !free.includes(id))];
     const out: Entry[] = [];
     for (const team of [0, 1] as const) {
       const people = this.players.filter((seat) => this.seats.get(seat)!.team === team).slice(0, TEAM_SIZE);
       const qb = people.find((seat) => this.seats.get(seat)!.role === "qb") ?? people[0];
-      out.push(qb !== undefined ? { team, role: "qb", character: this.seats.get(qb)!.pick!, seat: qb } : { team, role: "qb", character: star(), seat: null });
+      out.push(qb !== undefined ? { team, role: "qb", build: this.seats.get(qb)!.pick!, seat: qb } : { team, role: "qb", build: takeSpare(spare, "qb"), seat: null });
       const runners = people.filter((seat) => seat !== qb);
-      for (const seat of runners) out.push({ team, role: "runner", character: this.seats.get(seat)!.pick!, seat });
-      for (let n = runners.length; n < MAX_RUNNERS; n++) out.push({ team, role: "runner", character: star(), seat: null });
+      for (const seat of runners) out.push({ team, role: "runner", build: this.seats.get(seat)!.pick!, seat });
+      for (let n = runners.length; n < MAX_RUNNERS; n++) out.push({ team, role: "runner", build: takeSpare(spare, "runner"), seat: null });
     }
     return out;
   }

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CHARACTER_IDS } from "../roster";
+import { BUILD_IDS } from "../builds";
 import { CALLS } from "./host-messages";
 
 /**
@@ -10,7 +10,7 @@ import { CALLS } from "./host-messages";
 
 const axis = z.number().min(-1).max(1);
 
-export const pickSchema = z.object({ kind: z.literal("pick"), character: z.enum(CHARACTER_IDS) });
+export const pickSchema = z.object({ kind: z.literal("pick"), build: z.enum(BUILD_IDS) });
 
 export const readySchema = z.object({ kind: z.literal("ready"), ready: z.boolean() });
 

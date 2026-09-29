@@ -1,6 +1,6 @@
 import type { AthleteView, BallView } from "../../engine/view";
 import type { Phase, TeamId } from "../../engine/types";
-import { CHARACTERS } from "../../roster";
+import { BUILDS } from "../../builds";
 import { celebratePose, dejectedPose } from "./celebrations";
 import { divePose, downPose, lungePose } from "./contact";
 import { gait, type Carry } from "./gait";
@@ -97,14 +97,14 @@ export function choosePose(a: AthleteView, s: PoseScene, b: BodyScene): Chosen {
     case "down":
       return { pose: downPose(t, a.actionDur, a.downCause ?? "dive", a.id), rate: 18, hand: "R" };
     case "celebrate": {
-      const style = a.character ? CHARACTERS[a.character].celebration : "point";
+      const style = a.build ? BUILDS[a.build].celebration : "point";
       return { pose: celebratePose(style, t, a.spike), rate: 14, hand: "R" };
     }
     case "none":
       break;
   }
   if (s.phase === "over" && s.winner !== null && a.role !== "lineman") {
-    const style = a.character ? CHARACTERS[a.character].celebration : "point";
+    const style = a.build ? BUILDS[a.build].celebration : "point";
     return { pose: s.winner === a.team ? celebratePose(style, s.phaseT, false) : dejectedPose(b.time, b.seed), rate: 8, hand };
   }
   if (s.center && s.ball.state === "snap") return { pose: snapPose(s.phaseT), rate: 30, hand };

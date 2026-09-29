@@ -1,4 +1,4 @@
-import { CHARACTERS } from "../roster";
+import { BUILDS } from "../builds";
 import { other } from "../teams";
 import { advance, newDrive, type Drive } from "./downs";
 import type { PlayEnd } from "./events";
@@ -56,7 +56,7 @@ function touchdown(m: Match, carrier: Athlete): void {
 function celebrate(m: Match, scorer: Athlete): void {
   for (const a of m.athletes) {
     if (a.team !== scorer.team || a.role === "lineman") continue;
-    const spike = a === scorer && a.character !== null && CHARACTERS[a.character].celebration === "spike";
+    const spike = a === scorer && a.build !== null && BUILDS[a.build].celebration === "spike";
     a.action = { kind: "celebrate", t: 0, dur: RULES.touchdownSeconds, spike };
   }
 }

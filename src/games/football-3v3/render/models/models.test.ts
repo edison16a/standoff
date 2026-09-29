@@ -1,8 +1,8 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
-import { CHARACTER_IDS } from "../../roster";
+import { BUILD_IDS } from "../../builds";
 import { BALL_HALF, BALL_RADIUS, orientBall, profile } from "./football";
-import { buildFor, characterKit, linemanKit } from "./kit";
+import { buildFor, buildKit, linemanKit } from "./kit";
 
 describe("the football", () => {
   it("is fat in the middle and pointed at the ends", () => {
@@ -25,17 +25,18 @@ describe("the football", () => {
 });
 
 describe("kits", () => {
-  it("gives every star a different look", () => {
-    const looks = CHARACTER_IDS.map((id) => {
-      const k = characterKit(0, id);
+  it("gives every build a different look", () => {
+    const looks = BUILD_IDS.map((id) => {
+      const k = buildKit(0, id);
       return `${k.look.mask}:${k.look.visor}:${k.sleeves}:${k.locks}:${k.neckRoll}:${k.towel}:${k.look.skin}`;
     });
-    expect(new Set(looks).size).toBe(CHARACTER_IDS.length);
+    expect(new Set(looks).size).toBe(BUILD_IDS.length);
   });
 
   it("dresses the teams in their own colours", () => {
-    expect(characterKit(0, "reed").jersey).not.toBe(characterKit(1, "reed").jersey);
-    expect(characterKit(1, "banks").name).toBe("BANKS");
+    expect(buildKit(0, "gunslinger").jersey).not.toBe(buildKit(1, "gunslinger").jersey);
+    expect(buildKit(1, "speedster", "Sam").name).toBe("SAM");
+    expect(buildKit(1, "speedster").name).toBeNull();
     expect(linemanKit(1, 91, 0).name).toBeNull();
   });
 

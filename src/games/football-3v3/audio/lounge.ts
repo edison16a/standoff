@@ -6,7 +6,7 @@ import { vary } from "./mix";
  * The tailgate band for the lobby: an electric piano with a slow
  * tremolo, a vibraphone for the tune, a round bass and a soft kit
  * played with brushes. Every voice is gentle at the front, so the lobby
- * sits back while everyone picks their stars.
+ * sits back while everyone picks their builds.
  */
 
 /** An electric piano chord: a sine body, a bell partial that dies fast, and a lazy tremolo. */

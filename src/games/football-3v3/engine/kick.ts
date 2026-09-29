@@ -1,4 +1,5 @@
 import { statsOf } from "./body";
+import { kickLeg } from "./build-effects";
 import { botSkill } from "./bots/skill";
 import { kickIsFieldGoal } from "./formation";
 import { bestFieldGoalPower, launchKick, updateKickFlight } from "./kick-flight";
@@ -96,7 +97,7 @@ export function updateKick(m: Match, dt: number): void {
     if (act.kind === "kick") act.t += dt;
     if (k.t >= KICK.windup) {
       if (act.kind === "kick") act.released = true;
-      launchKick(m, k, kicker, statsOf(kicker).leg);
+      launchKick(m, k, kicker, kickLeg(statsOf(kicker)));
       k.stage = "flight";
       k.t = 0;
     }

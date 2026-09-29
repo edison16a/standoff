@@ -1,4 +1,5 @@
 import { statsOf } from "./body";
+import { breakChance } from "./build-effects";
 import { dodging } from "./juke";
 import type { Match } from "./match";
 import { endPlay } from "./whistle";
@@ -78,7 +79,8 @@ export function updateLunge(m: Match, a: Athlete, dt: number): void {
   // Early in the lunge the arms still reach after a runner who keeps going, but not after a juke.
   if (carrier && carrier.team !== a.team && act.t < 0.25 && !dodging(carrier)) home(a, carrier, dt);
   if (m.phase === "live" && carrier && carrier.team !== a.team && act.t > 0.04 && dist2(a, carrier) < TACKLE.contact) {
-    if (dodging(carrier)) {
+    // A juke makes the lunge miss; a stronger carrier may run straight through it.
+    if (dodging(carrier) || m.rng.chance(breakChance(statsOf(carrier), statsOf(a)))) {
       knockDown(a, TACKLE.missedDown, "missed");
       m.emit({ type: "missedTackle", id: carrier.id, by: a.id });
     } else {

@@ -1,5 +1,6 @@
 import { attackSign } from "../teams";
 import { statsOf } from "./body";
+import { kickLeg } from "./build-effects";
 import { newDrive, type Drive } from "./downs";
 import type { PlayEnd } from "./events";
 import { FIELD, POSTS, spotZ, xToYard, YARD } from "./field";
@@ -39,7 +40,7 @@ const kickFrom = (kicker: Athlete, sign: 1 | -1): V3 => ({ x: kicker.x + sign * 
 /** The least power that makes a straight kick good, plus a margin: what a computer kicker aims for. */
 export function bestFieldGoalPower(m: Match, kicker: Athlete): number {
   const sign = attackSign(kicker.team);
-  const leg = statsOf(kicker).leg;
+  const leg = kickLeg(statsOf(kicker));
   for (let p = 0.3; p <= 1.001; p += 0.05) {
     const f = kickFlight(kickFrom(kicker, sign), sign, true, p, 0, leg);
     let verdict: "good" | "miss" | null = null;

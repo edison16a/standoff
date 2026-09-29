@@ -5,8 +5,8 @@ import type { Athlete } from "./types";
 
 const DT = 1 / 60;
 
-function runner(character: "banks" | "kowalski" = "banks"): Athlete {
-  return createAthlete(0, 0, "runner", 0, character, null);
+function runner(build: "speedster" | "powerback" = "speedster"): Athlete {
+  return createAthlete(0, 0, "runner", 0, build, null);
 }
 
 function run(a: Athlete, seconds: number, move = { x: 1, z: 0 }): void {
@@ -25,8 +25,8 @@ describe("heavy running", () => {
   });
 
   it("gets a heavy player going slower than a light one", () => {
-    const light = runner("banks");
-    const heavy = runner("kowalski");
+    const light = runner("speedster");
+    const heavy = runner("powerback");
     run(light, 0.6);
     run(heavy, 0.6);
     expect(Math.hypot(heavy.vx, heavy.vz)).toBeLessThan(Math.hypot(light.vx, light.vz));

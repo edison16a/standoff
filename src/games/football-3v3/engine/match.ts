@@ -78,8 +78,8 @@ export class Match {
     for (const team of [0, 1] as const) {
       const side = options.entries.filter((e) => e.team === team);
       const qb = side.find((e) => e.role === "qb")!;
-      athletes.push(createAthlete(athletes.length, team, "qb", 0, qb.character, qb.seat));
-      side.filter((e) => e.role === "runner").forEach((e, slot) => athletes.push(createAthlete(athletes.length, team, "runner", slot, e.character, e.seat)));
+      athletes.push(createAthlete(athletes.length, team, "qb", 0, qb.build, qb.seat));
+      side.filter((e) => e.role === "runner").forEach((e, slot) => athletes.push(createAthlete(athletes.length, team, "runner", slot, e.build, e.seat)));
       for (let slot = 0; slot < 3; slot++) athletes.push(createAthlete(athletes.length, team, "lineman", slot, null, null));
     }
     this.athletes = athletes;
