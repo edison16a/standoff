@@ -8,11 +8,11 @@ import { approach } from "../anim/curves";
 import type { CameraPose } from "./aim-ray";
 
 /** Where the camera sits from the fighter's eye: to the right, above and behind, metres. */
-const RIGHT = 0.62;
-const UP_STAND = 0.28;
+const RIGHT = 0.5;
+const UP_STAND = 0.2;
 /** Crouched it rises further over the eye, so the player still sees over low cover. */
-const UP_CROUCH = 0.6;
-const BACK = 2.25;
+const UP_CROUCH = 0.5;
+const BACK = 1.45;
 const PITCH = -0.07;
 const FOV = 60;
 /** The sniper's view narrows while it looks out, like a scope. */
