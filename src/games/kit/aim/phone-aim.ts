@@ -15,7 +15,7 @@ export interface AimSnapshot {
   point: ScreenPoint;
   source: AimSource;
   calibrated: boolean;
-  /** A reading has arrived, so Set can be pressed. */
+  /** A reading has arrived, so a target can be taken. */
   ready: boolean;
 }
 
@@ -117,17 +117,6 @@ export class PhoneAim {
     // The middle alone gives default spans for the whole screen, so they are scaled down to this zone.
     this.apply(measured ? fit : scaleSpans(fit, this.zone, true), last && measured);
     return true;
-  }
-
-  /** The classic first step: the middle, starting afresh. */
-  setCenter(): boolean {
-    this.restartCalibration();
-    return this.capture("center");
-  }
-
-  /** The classic corners. After the bottom right, the spans are kept. */
-  setCorner(which: "top-left" | "bottom-right"): boolean {
-    return this.samples.length > 0 && this.capture(which, which === "bottom-right");
   }
 
   /** Skips the targets left, reusing the spans this phone measured last time if no corner was taken yet. */

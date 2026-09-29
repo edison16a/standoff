@@ -42,11 +42,11 @@ describe("the phone's aim", () => {
     const { room, sent, lossy } = fakeRoom();
     aim = new PhoneAim(room);
     point(40, 2);
-    expect(aim.setCenter()).toBe(true);
+    expect(aim.capture("center")).toBe(true);
     point(25, 10);
-    aim.setCorner("top-left");
+    aim.capture("top-left");
     point(58, -7);
-    aim.setCorner("bottom-right");
+    aim.capture("bottom-right", true);
 
     point(40, 2);
     vi.advanceTimersByTime(1000);
@@ -92,11 +92,11 @@ describe("the phone's aim", () => {
     const { room } = fakeRoom();
     aim = new PhoneAim(room);
     point(0, 0);
-    aim.setCenter();
+    aim.capture("center");
     point(-16, 9);
-    aim.setCorner("top-left");
+    aim.capture("top-left");
     point(16, -9);
-    aim.setCorner("bottom-right");
+    aim.capture("bottom-right", true);
     settle(-8, 0);
     expect(aim.current.x).toBeCloseTo(-TARGET_INSET / 2, 1);
     aim.dispose();
@@ -105,7 +105,7 @@ describe("the phone's aim", () => {
     aim = new PhoneAim(fakeRoom().room);
     aim.setZone({ x: 0, y: 0, w: 0.5, h: 1 });
     point(0, 0);
-    aim.setCenter();
+    aim.capture("center");
     aim.useQuick();
     settle(-8, 0);
     expect(aim.current.x).toBeCloseTo(-TARGET_INSET, 1);
@@ -118,7 +118,7 @@ describe("the phone's aim", () => {
     const { room } = fakeRoom();
     aim = new PhoneAim(room);
     point(0, 0);
-    aim.setCenter();
+    aim.capture("center");
     aim.useQuick();
     for (let i = 0; i < 60; i++) {
       vi.advanceTimersByTime(16);
