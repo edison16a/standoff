@@ -12,6 +12,7 @@ import { ControllerContext } from "./phone/components/session-context";
 import { Showcase } from "./showcase/Showcase";
 import "./styles/stage.css";
 import "./styles/moment.css";
+import "./styles/moment-anim.css";
 import "./styles/phone.css";
 import "./styles/phone-setup.css";
 import "./styles/phone-pick.css";
