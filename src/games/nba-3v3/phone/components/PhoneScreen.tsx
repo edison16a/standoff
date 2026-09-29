@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { TEAMS } from "../../roster";
+import { statLine } from "../../ui/stat-line";
 import { useControllerStore } from "../controller-store";
 import { Controller } from "./Controller";
 import { ReplaySkip } from "./ReplaySkip";
@@ -51,7 +52,7 @@ export function PhoneScreen() {
           {host.court?.score[host.team] ?? 0} <small>to</small> {host.court?.score[host.team === 0 ? 1 : 0] ?? 0}
         </strong>
         <span className="nba-result__line">
-          {r.points} points, {r.rebounds} rebounds, {r.assists} assists, {r.steals} steals, {r.blocks} blocks
+          {statLine(r)}
         </span>
         <span className="muted">Play again or change teams on the big screen.</span>
       </div>

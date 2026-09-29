@@ -4,6 +4,7 @@ import { Icon } from "@/components/ui/Icon";
 import { playerColor } from "@/games/kit/players";
 import { CHARACTERS, TEAMS } from "../../roster";
 import { JerseyBadge } from "../../ui/JerseyBadge";
+import { statLine } from "../../ui/stat-line";
 import { useNbaStore, type ResultRow } from "../host-store";
 import { useSession } from "./session-context";
 
@@ -87,9 +88,7 @@ export function Results() {
             <div>
               <span className="nba-results__eyebrow">MVP</span>
               <strong>{mvp.name}</strong>
-              <span>
-                {mvp.points} points, {mvp.rebounds} rebounds, {mvp.assists} assists
-              </span>
+              <span>{statLine({ points: mvp.points, rebounds: mvp.rebounds, assists: mvp.assists })}</span>
             </div>
           </div>
         )}
