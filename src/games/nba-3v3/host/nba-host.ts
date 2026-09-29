@@ -44,6 +44,8 @@ export class NbaHost {
   private lastHud = 0;
   private lastFrame = 0;
   private lastPhase: Phase = "lobby";
+  /** The game is over and the replay is done with, so the join code can show again. */
+  private settled = false;
   private readonly demo: DemoGame;
   /** Browser tests on slow machines run the game faster than real time. Always 1 in play. */
   turbo = 1;
@@ -185,10 +187,12 @@ export class NbaHost {
     if (phase !== this.lastPhase) {
       this.lastPhase = phase;
       this.audio.setPhase(phase);
-      // The results are a good moment for someone new to scan in for the next game.
-      if (phase === "over") this.room.setPlaying(false);
       this.refresh(nowMs);
     }
+    // The results are a good moment for someone new to scan in, once the replay has had the screen.
+    const settled = phase === "over" && !this.driver?.replays.pending;
+    if (settled && !this.settled) this.room.setPlaying(false);
+    this.settled = settled;
     if (nowMs - this.lastHud >= HUD_MS) this.refresh(nowMs);
     return dt;
   }

@@ -76,11 +76,16 @@ describe("the driver after the winning basket", () => {
     driver.setOnline(2, false);
     driver.match.score = [driver.match.target - 1, driver.match.target - 1];
     let replayed = false;
+    let waited = false;
     for (let t = 0; t < 120 && !replayed; t += 1 / 30) {
       driver.tick(1 / 30, () => ({ x: 0, y: 0 }));
       replayed = driver.replays.replay !== null;
+      // Between the win and the replay the winners have their moment, and the replay is still to come.
+      if (driver.match.phase === "over" && !replayed) waited ||= driver.replays.pending;
     }
     expect(replayed).toBe(true);
+    expect(waited).toBe(true);
+    expect(driver.replays.pending).toBe(false);
     expect(driver.view).toBe(driver.replays.replay!.ghost);
     // Nobody is left to vote, so it plays out on its own.
     for (let t = 0; t < 40 && driver.replays.replay; t += 1 / 30) driver.tick(1 / 30, () => ({ x: 0, y: 0 }));

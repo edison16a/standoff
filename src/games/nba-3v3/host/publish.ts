@@ -122,13 +122,15 @@ export function publish(c: PublishContext): void {
     results: m && m.phase === "over" ? results(m, c.players) : [],
     waiting: c.driver ? seats.filter((s) => s.connected && !inGame.has(s.seat)).map((s) => s.name) : [],
   });
+  // Until the replay rolls the phones keep the controller up, rather than flash the result before the Skip button.
+  const early = !!c.driver?.replays.pending;
   for (const seat of c.lobby.connectedSeats) {
     const s = c.lobby.seats.get(seat)!;
     const id = c.driver?.athleteBySeat.get(seat);
     const athlete = m && id !== undefined ? m.athletes[id] : undefined;
     const state: PhoneState = {
       kind: "state",
-      phase,
+      phase: early ? "live" : phase,
       taken: c.lobby.taken(seat),
       pick: s.pick,
       ready: s.ready,
@@ -136,7 +138,7 @@ export function publish(c: PublishContext): void {
       playing: !!athlete,
       court: m && athlete ? courtState(m, athlete.id, c.players) : null,
       replay: replay && athlete ? { voted: replay.skipped.has(seat), votes: votes.map(({ name, done }) => ({ name, done })) } : null,
-      result: m && athlete && m.phase === "over" ? { won: m.winner === athlete.team, ...lineOf(athlete) } : null,
+      result: m && athlete && m.phase === "over" && !early ? { won: m.winner === athlete.team, ...lineOf(athlete) } : null,
     };
     c.phones.sendState(seat, state, c.nowMs);
   }

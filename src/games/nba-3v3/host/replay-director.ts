@@ -25,6 +25,11 @@ export class ReplayDirector {
 
   constructor(private readonly entries: readonly Entry[]) {}
 
+  /** Someone has won and the replay has not rolled yet: the winners are still having their moment. */
+  get pending(): boolean {
+    return this.winning !== null && !this.started;
+  }
+
   /** Events of the replay as it plays, for the sound and the effects. */
   listen(listener: (event: MatchEvent, ghost: Match) => void): () => void {
     this.listeners.add(listener);
