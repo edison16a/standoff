@@ -9,11 +9,11 @@ describe("difficulty", () => {
   it("defaults to easy, which starts from a standstill as before", () => {
     expect(DEFAULT_DIFFICULTY).toBe("easy");
     expect(HEAD_START.easy).toBe(0);
-    expect(new Run(1).speed).toBe(SPEED.start);
+    expect(new Run(1).paceAt(0)).toBe(SPEED.start);
   });
 
   it("starts each harder level faster, with the score at zero", () => {
-    const speeds = DIFFICULTIES.map((level) => new Run(1, { headStart: HEAD_START[level] }).speed);
+    const speeds = DIFFICULTIES.map((level) => new Run(1, { headStart: HEAD_START[level] }).paceAt(0));
     expect(speeds[1]!).toBeGreaterThan(speeds[0]! + 10);
     expect(speeds[2]!).toBeGreaterThan(speeds[1]!);
     expect(new Run(1, { headStart: HEAD_START.hard }).score).toBe(0);

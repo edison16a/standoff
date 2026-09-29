@@ -2,6 +2,7 @@ import { Chase } from "./chase";
 import { collectCoins, collectPickup } from "./collect";
 import { Course } from "./course";
 import type { CrashCause, RunEvent } from "./events";
+import { startBurst } from "./motion";
 import { JETPACK_HEIGHT, Powers } from "./powers";
 import { newRunner, stepRunner, type Contact, type RunnerInput, type RunnerState } from "./runner";
 import { COIN, JUMP, laneX, MAX_LEVEL, speedAt, STEP_S, TRAIN, ZONE_LENGTH, type Lane } from "./tuning";
@@ -54,7 +55,8 @@ export class Run {
 
   get speed(): number {
     if (this.crashed) return 0;
-    return this.options.practice ? PRACTICE_SPEED : this.paceAt(this.runner.distance);
+    const pace = this.options.practice ? PRACTICE_SPEED : this.paceAt(this.runner.distance);
+    return pace * startBurst(this.time);
   }
 
   /** The running speed at a distance along this run, head start included. */

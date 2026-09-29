@@ -47,8 +47,8 @@ describe("round", () => {
   });
 
   it("starts at the chosen difficulty's pace", () => {
-    expect(new Round(42).run.speed).toBe(SPEED.start);
-    expect(new Round(42, { headStart: HEAD_START.hard }).run.speed).toBeGreaterThan(SPEED.start + 15);
+    expect(new Round(42).run.paceAt(0)).toBe(SPEED.start);
+    expect(new Round(42, { headStart: HEAD_START.hard }).run.paceAt(0)).toBeGreaterThan(SPEED.start + 15);
   });
 
   it("feeds camera moves to the tutorial in order", () => {
