@@ -2,7 +2,7 @@
 
 American football for 2 to 6 players, with phones held sideways as controllers. Each team has a QB, up to two runners, and three computer linemen who fight it out at the line. First to 14 points wins, or the higher score when four quarters run out.
 
-This folder is built in steps. The engine and the rules are done. The 3D field and players, the host screens, the phones, audio and registration come next.
+This folder is built in steps. The engine, the rules and the 3D drawing are done. The host screens, the phones, audio and registration come next.
 
 ## The rules
 
@@ -77,6 +77,49 @@ const pad = seatStatus(match, seat); // which controls a phone should show
 * `admin.ts` has the shortcuts for the host's admin panel: `adminTouchdown`, `adminFieldGoal` and `adminTwoPoint`. They go through the real rules.
 
 Files: `field` and `downs` for the field and the rules of downs, `motion` and `body` for running, `juke`, `tackle`, `guard` and `linemen` for contact, `flight`, `aim`, `passing` and `catching` for the ball in the air, `kick` and `kick-flight` for kicking, `whistle`, `score` and `phases` for how plays end and what comes next, `bots/` for the computer players.
+
+## Drawing the game
+
+`render/` draws the match with three.js. It reads only `buildView` stills, so live play and slow motion replays draw the same way.
+
+```ts
+const renderer = new MatchRenderer(canvas, { quality: "high" });
+renderer.resize(width, height, devicePixelRatio);
+for (const event of match.drainEvents()) renderer.onEvent(event);
+renderer.draw(buildView(match), performance.now());
+const board = scoreboard(view); // for <Scoreboard board={board} />
+```
+
+### The stadium
+
+* **Field.** One painted texture: grass mowed in 5 yard bands, yard lines, hash marks at every yard, the numbers 10 to 50 facing their sideline, both end zones in team colours with the team name, a star at midfield and the white border. The layout is plain data in `field/marks.ts`.
+* **Goal posts.** Yellow slingshot posts on both end lines, with the crossbar and uprights where the engine scores kicks, and a ribbon on each tip.
+* **Around it.** Team benches, a bowl of stands, a crowd of thousands in team colours that bounce harder after a score, four light towers and a night sky.
+* **TV lines.** The blue line of scrimmage and the yellow first down line sit on the grass under the players. They glide to the new spot between plays and hide at goal to go.
+
+### The players
+
+* **Looks.** A jointed body with a helmet, shoulder pads under a printed jersey with big numbers front and back and the name across the back, pants with a stripe, socks and cleats. Size follows height and weight. Each star has their own touches on top of the roster look: mask style (open, cage or tinted visor), sleeves, towels, neck rolls, locks under the helmet and eye black. Linemen share one big build.
+* **Animation.** Every frame a figure picks a target pose from the engine's view, eases toward it, then stands itself on the turf: its lowest point touches the grass and its hips sit over the player's spot. So stances, dives and tackles land right without hand tuned heights. Action poses run on the engine's own action clock, so the body and the ball agree.
+* **Moves.** Three point stances for linemen, the center's snap, the QB in the shotgun, receivers in a two point stance, the drop back, the throwing motion, running with the ball tucked under the arm, cuts, the spin, back move and side step, dives, tackle lunges, lying on the ground, rolling over and getting up, linemen locked together driving their legs, and reaching for a pass. Strides match the ground speed so the feet do not skate.
+* **Rings.** A yellow ring pulses under the receiver the throw stick is on. A thin ring in team trim marks each player a person controls.
+* **The ball.** A laced football that follows the engine's flight: its long axis, the wobble and the spiral spin, or the tumble of a kick. Held, it sits in the carrier's hands.
+* **Touchdowns.** The scorer spikes it if that is their style, and the ball bounces away. Everyone else celebrates their own way: a dance, a flex, a salute, a leap or a point to the crowd. At the end the winners celebrate and the losers hang their heads.
+
+### The camera
+
+* **Behind the play.** High behind the team with the ball, looking downfield. It backs up and rises as a pass goes deep, turns round after a turnover and glides rather than jerks.
+* **Kicks.** Low behind the kicker through the posts, then up and after the ball.
+* **Touchdowns.** A slow orbit round the scorer. At the final whistle, a wide orbit of the winners.
+* A big hit shakes it a little. A shot change that would sweep across the field cuts instead.
+
+### The scoreboard
+
+`render/hud` has the broadcast score bug for the big screen: both teams with their scores and a dot for the side with the ball, the quarter and clock, down and distance with the spot, the play clock while a pick or a hike is due, and the target score. `scoreboard(view)` turns a view into its text.
+
+### The showcase
+
+`showcase/` plays a seeded bot match under the lights with the score bug. For development: `?seed=` and `?seek=` (seconds to jump ahead), `?quality=low`, `?cam=x,y,z,lookX,lookY,lookZ,fov` to pin the camera, and `?lab=<move>` for the animation lab, where all six stars do one move on a loop next to a pair of linemen. The moves are idle, run, tuck, ready, throw, kick, spin, back, side, dive, lunge, down, tackled, celebrate, spike, stance, block and catch.
 
 ## Tests
 
