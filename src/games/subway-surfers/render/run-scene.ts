@@ -65,11 +65,16 @@ export class RunScene {
   onEvent(event: RunEvent): void {
     if (!this.run) return;
     this.effects.onEvent(event, this.run);
-    this.runner.onEvent(event);
-    if (event.type === "crash") this.chase.bump(1.4);
-    if (event.type === "stumble") this.chase.bump(0.6);
-    if (event.type === "saved") this.chase.bump(0.9);
-    if (event.type === "land" && event.speed > 12) this.chase.bump(0.3);
+    this.runner.onEvent(event, this.run.runner);
+    const chase = this.chase;
+    if (event.type === "crash") chase.bump(1.4);
+    if (event.type === "stumble") chase.bump(0.6);
+    if (event.type === "saved") chase.bump(0.9);
+    if (event.type === "land" && event.speed > 10) chase.bump(Math.min(0.5, event.speed / 40));
+    // Big moments kick the view wider for a beat, like a burst of speed.
+    if (event.type === "power") chase.kick(event.kind === "jetpack" ? 9 : 4);
+    if (event.type === "jump" && event.boots) chase.kick(4);
+    if (event.type === "level") chase.kick(5);
   }
 
   /** Moves everything to where the run is now. `mood` poses a runner with no run going. */
