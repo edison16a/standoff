@@ -45,16 +45,21 @@ export class ShowcaseDirector {
   private wallNow = 0;
   private picks: PerSlot<CharacterId> = { 1: "knight", 2: "star" };
   private readonly skip: number;
+  /** Stays on the winner's ceremony after the duel rather than starting over. */
+  private readonly stay: boolean;
 
-  constructor(canvas: HTMLCanvasElement, view: ShowcaseView) {
+  /** `onWon` hears the duel won, for the ceremony's names over the page. */
+  constructor(canvas: HTMLCanvasElement, view: ShowcaseView, private readonly onWon: (winner: 1 | 2) => void = () => undefined) {
     const params = new URLSearchParams(window.location.search);
     // `?pair=samurai,block` puts other fighters in the duel, for looking them over; the media keeps the default pair.
     const pair = (params.get("pair") ?? "").split(",").filter(isCharacterId);
     if (pair.length === 2) this.picks = { 1: pair[0]!, 2: pair[1]! };
     this.renderer = new DuelRenderer(canvas, { quality: view === "loop" ? CLIP : HIGH, preserve: true });
     this.renderer.setTheme(params.get("theme") !== "light");
+    // `?ceremony` stays on the ceremony once the Knight has won, for looking it over.
+    this.stay = params.has("ceremony");
     // `?at=` starts the loop that many milliseconds in, played through without drawing, for looking over one moment.
-    this.skip = Math.max(0, Math.min(CYCLE_MS - FRAME_MS, Number(params.get("at")) || 0));
+    this.skip = Math.max(0, Math.min(this.stay ? 60000 : CYCLE_MS - FRAME_MS, Number(params.get("at")) || 0));
     this.begin();
     this.cycle = 0;
     if (view !== "loop") {
@@ -89,7 +94,7 @@ export class ShowcaseDirector {
     if (now - this.last < FRAME_MS * 0.9) return;
     this.last = now;
     const wall = now - this.start;
-    const cycle = Math.floor(wall / CYCLE_MS);
+    const cycle = this.stay ? 0 : Math.floor(wall / CYCLE_MS);
     if (cycle !== this.cycle) {
       this.cycle = cycle;
       this.begin();
@@ -108,6 +113,7 @@ export class ShowcaseDirector {
     this.choreography = new Choreography();
     this.driver.listen((event: GameEvent) => {
       if (event.type === "clash") this.clashAt.set(event.at.x, event.at.y + FLOOR, event.at.z);
+      if (event.type === "matchWon" && this.stay) this.onWon(event.winner);
       this.renderer.react(event, this.wallNow);
     });
     this.driver.start();

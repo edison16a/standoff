@@ -5,8 +5,10 @@ import type { SwordControl, SwordPose } from "./sword";
 /**
  * What a fighter is doing beyond walking and holding their sword. "hit"
  * is the flinch after taking a hit, "stagger" the shake after a clash.
+ * Once the match is over the winner holds "victory" and the loser, who
+ * went down in "defeat", gets up to "kneel" for the ceremony.
  */
-export type FighterAction = "idle" | "hit" | "stagger" | "defeat" | "victory";
+export type FighterAction = "idle" | "hit" | "stagger" | "defeat" | "victory" | "kneel";
 
 /**
  * One fighter at one instant, holding everything the renderer needs. The

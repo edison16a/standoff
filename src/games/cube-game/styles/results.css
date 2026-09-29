@@ -1,0 +1,112 @@
+/*
+  The results: the finish celebration filling the screen, the kit's
+  names across the top, and the table with the ways on in the bottom
+  left corner, clear of the camera's picture in the bottom right.
+*/
+
+.cg-results {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #0a0620;
+  animation: cg-results-in 500ms ease-out both;
+}
+
+@keyframes cg-results-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.cg-results__scene {
+  position: absolute;
+  inset: 0;
+}
+
+.cg-results__panel {
+  position: absolute;
+  left: clamp(12px, 2.5vw, 32px);
+  bottom: clamp(12px, 3vh, 32px);
+  width: min(480px, calc(100% - 24px));
+  padding: 14px 18px 16px;
+  border: 3px solid #5fc6dc;
+  border-radius: 20px;
+  text-align: center;
+  background: linear-gradient(170deg, rgba(40, 20, 110, 0.9), rgba(8, 4, 32, 0.92));
+  box-shadow: 0 0 20px rgba(95, 198, 220, 0.2);
+  animation: cg-panel-in 600ms 2.6s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
+@keyframes cg-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+.cg-results__table {
+  width: 100%;
+  border-collapse: collapse;
+  font: 700 16px/1.2 var(--font-ui);
+}
+
+.cg-results__table th,
+.cg-results__table td {
+  padding: 8px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.cg-results__table thead th {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.cg-results__table tbody th {
+  overflow: hidden;
+  max-width: 160px;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The race winner's row, lifted a little so the result reads before the numbers. */
+.cg-results__winner {
+  background: rgba(255, 210, 31, 0.12);
+}
+
+.cg-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 8px;
+  border-radius: 3px;
+  vertical-align: -1px;
+}
+
+.cg-results__note {
+  margin: 8px 0 0;
+  font: 600 13px/1.3 var(--font-ui);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.cg-results__actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+/* A little smaller than on the menus, so all three fit in one row in the corner. */
+.cg-results__actions .cg-button {
+  padding: 11px 20px;
+  font-size: 19px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cg-results__panel {
+    animation: none;
+  }
+}

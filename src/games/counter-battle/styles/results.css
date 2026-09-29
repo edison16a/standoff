@@ -1,16 +1,15 @@
 /*
-  The results over the field: confetti in the winners' colour, the
-  score, and a line per fighter team by team.
+  The results over the field: the winning team's 3D scene filling the
+  screen, the kit's names across the top, and every fighter's numbers in
+  the bottom right corner once the names have landed.
 */
 
 .cb-results {
   position: absolute;
   inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 72px 24px 24px;
-  background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--team) 30%, transparent), rgba(11, 13, 24, 0.9) 70%);
-  animation: cb-fade 400ms ease-out both;
+  overflow: hidden;
+  background: #0c0a1a;
+  animation: cb-fade 500ms ease-out both;
 }
 
 @keyframes cb-fade {
@@ -19,88 +18,49 @@
   }
 }
 
-.cb-confetti {
+.cb-results__scene {
   position: absolute;
   inset: 0;
-  overflow: hidden;
-  pointer-events: none;
 }
 
-.cb-confetti span {
+.cb-results__panel {
   position: absolute;
-  top: -20px;
-  width: 10px;
-  height: 16px;
-  border-radius: 3px;
-  animation: cb-confetti linear infinite;
+  right: clamp(12px, 2.5vw, 32px);
+  bottom: clamp(12px, 3vh, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px 12px;
+  border-radius: 20px;
+  background: rgba(12, 10, 26, 0.84);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5), inset 0 4px 0 var(--team);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  animation: cb-panel-in 600ms 2.8s cubic-bezier(0.2, 0.9, 0.2, 1) both;
 }
 
-@keyframes cb-confetti {
-  to {
-    transform: translateY(110vh) rotate(540deg);
+@keyframes cb-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
   }
 }
 
-.cb-results__card {
-  position: relative;
-  display: grid;
-  gap: 18px;
-  width: min(760px, 100%);
-  padding: 26px 30px;
-  border-radius: 26px;
-  background: rgba(11, 13, 24, 0.92);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), inset 0 5px 0 var(--team);
-}
-
-.cb-results__head {
-  display: grid;
-  justify-items: center;
-  gap: 4px;
-  text-align: center;
-}
-
-.cb-results__eyebrow {
-  color: var(--cb-lime);
-  font-size: 14px;
-  font-weight: 900;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.cb-results__head h2 {
-  margin: 0;
-  color: var(--team);
-  font-family: var(--cb-display);
-  font-size: clamp(40px, 5vw, 64px);
-  font-style: italic;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.cb-results__score {
-  display: flex;
-  gap: 10px;
-  margin: 0;
-  font-family: var(--cb-display);
-  font-size: 38px;
-}
-
 .cb-rank {
-  width: 100%;
   border-collapse: collapse;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .cb-rank th,
 .cb-rank td {
-  padding: 7px 10px;
+  padding: 4px 8px;
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
 
 .cb-rank thead th {
   color: rgba(255, 255, 255, 0.6);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -115,6 +75,7 @@
 }
 
 .cb-rank tbody th {
+  padding-left: 12px;
   text-align: left;
 }
 
@@ -124,20 +85,23 @@
 }
 
 .cb-rank__name {
+  overflow: hidden;
+  max-width: 160px;
   color: var(--player);
   font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .cb-rank small {
   color: rgba(255, 255, 255, 0.6);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
 }
 
 .cb-rank__gun {
   display: grid;
   justify-items: center;
-  font-weight: 700;
 }
 
 .cb-rank td {
@@ -146,7 +110,18 @@
 
 .cb-results__actions {
   display: flex;
-  justify-content: center;
-  gap: 14px;
-  pointer-events: auto;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.cb-results__actions .btn {
+  height: 2.9em;
+  padding: 0 1.2em;
+  font-size: 15px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cb-results__panel {
+    animation: none;
+  }
 }

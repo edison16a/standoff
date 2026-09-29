@@ -5,6 +5,7 @@ import { BODY, BONES, type BoneName } from "./skeleton";
 import { emptyTorso, torsoFrame, wristFor } from "./torso-frame";
 
 const Y = new THREE.Vector3(0, 1, 0);
+const DOWN = new THREE.Vector3(0, -1, 0);
 /** Elbows bend down and out, knees forward and a touch out. */
 const ELBOW_R = new THREE.Vector3(-0.25, -1, 0.6);
 const ELBOW_L = new THREE.Vector3(-0.25, -1, -0.6);
@@ -71,10 +72,11 @@ export class BodyRig {
       placeLimb(bones[`thigh${s}`], hip, leg.joint, leg.bend);
       placeLimb(bones[`shin${s}`], leg.joint, leg.end, leg.bend);
       // The foot stays flat while the shin stands, and turns its sole forward as the leg lies down.
+      // A shin lying kneecap down, as in a kneel, tucks the toes under instead.
       const shinUp = c.copy(leg.joint).sub(leg.end).normalize();
       const lying = THREE.MathUtils.clamp((0.6 - shinUp.y) / 0.6, 0, 1);
       const footUp = shinUp.lerp(Y, 1 - lying).normalize();
-      const toes = knee.set(Math.cos(toe), 0, -Math.sin(toe)).lerp(Y, lying);
+      const toes = knee.set(Math.cos(toe), 0, -Math.sin(toe)).lerp(leg.bend.y < 0 ? DOWN : Y, lying);
       placeUpright(bones[`foot${s}`], leg.end, flatten(toes, footUp, toes), footUp);
     }
   }

@@ -6,6 +6,7 @@ import { emptyPose, type Pose } from "../rig/pose";
 import { leanIntoReach, offHandPlaces, type OffHand } from "./arms";
 import { Finale } from "./finales";
 import { Footwork, STANCE } from "./footwork";
+import { kneel } from "./kneel";
 import { Spring } from "./spring";
 
 /** A jump along the line bigger than this is a new bout starting, not a step. */
@@ -17,7 +18,8 @@ const TELEPORT = 0.6;
  * engine, and everything else follows them. Springs carry the spine, hips
  * and head, so the body settles into each new guard, and kicks to those
  * springs are how a hit or a clash knocks it about. The feet step on
- * their own (see footwork) and the endings are laid on top (see finales).
+ * their own (see footwork) and the endings are laid on top (see finales
+ * and kneel).
  */
 export class Animator {
   readonly pose: Pose = emptyPose();
@@ -47,7 +49,9 @@ export class Animator {
   update(frame: FighterFrame, dtMs: number): Pose {
     const dt = Math.min(0.1, Math.max(0, dtMs / 1000));
     this.clock += dt;
-    const fresh = !this.last || Math.abs(frame.x - this.last.x) > TELEPORT || (this.last.action === "defeat" && frame.action !== "defeat");
+    // Getting up from the floor, or off a knee, starts afresh too.
+    const floored = this.last && (this.last.action === "defeat" || this.last.action === "kneel") && frame.action !== this.last.action;
+    const fresh = !this.last || Math.abs(frame.x - this.last.x) > TELEPORT || floored;
     if (fresh) this.snap(frame);
     const started = !this.last || frame.action !== this.last.action || frame.actionMs < this.last.actionMs;
     if (started) this.onAction(frame.action);
@@ -62,7 +66,7 @@ export class Animator {
     const walk = Math.max(-1, Math.min(1, frame.speed / 1.7));
     const breathe = Math.sin(this.clock * 1.8);
 
-    if (frame.action !== "defeat") this.footwork.update(frame.x, frame.facing, frame.speed, dt);
+    if (frame.action !== "defeat" && frame.action !== "kneel") this.footwork.update(frame.x, frame.facing, frame.speed, dt);
     const stride = this.footwork.stride;
     pose.lean = this.lean.update(0.07 + 0.14 * reach + 0.06 * walk + 0.01 * breathe, dt);
     pose.twist = this.twist.update(clamp(0.22 + 0.6 * (hf - 0.33) + 0.75 * (0.2 - hr), -0.5, 1), dt);
@@ -87,6 +91,7 @@ export class Animator {
 
     if (frame.action === "defeat") this.finale.defeat(pose, frame.actionMs);
     if (frame.action === "victory") this.finale.victory(pose, frame.actionMs);
+    if (frame.action === "kneel") kneel(pose, frame.actionMs);
     return pose;
   }
 

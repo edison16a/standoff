@@ -4,6 +4,7 @@ import type { GameEvent } from "@/games/blade-clash/engine/events";
 import type { FighterFrame } from "@/games/blade-clash/engine/frames";
 import { otherSlot, type Slot } from "@/games/blade-clash/players";
 import { PLAYER_COLOURS } from "../player-colours";
+import type { Placement } from "../victory/staging";
 import { Animator } from "./anim/animator";
 import type { TrailStyle } from "./characters";
 import { FighterModel } from "./model/fighter-model";
@@ -40,6 +41,8 @@ export class FighterView {
   private lastFrame: FighterFrame | null = null;
   private readonly lastTip = new THREE.Vector3();
   private readonly bladeWorld = new THREE.Vector3();
+  private readonly origin = new THREE.Vector3();
+  private readonly local = new THREE.Vector3();
 
   constructor(readonly slot: Slot) {
     this.flashColour = new THREE.Color(PLAYER_COLOURS[otherSlot(slot)]);
@@ -62,7 +65,8 @@ export class FighterView {
     this.flashAt = event.t;
   }
 
-  update(frame: FighterFrame | undefined, floor: number, t: number): void {
+  /** `place` stands the fighter somewhere other than their mark on the line, as the ceremony does. */
+  update(frame: FighterFrame | undefined, floor: number, t: number, place: Placement | null = null): void {
     this.visible = Boolean(frame);
     this.group.visible = this.visible;
     if (!frame) {
@@ -77,15 +81,20 @@ export class FighterView {
     this.lastFrame = frame;
     const pose = this.animator!.update(frame, dt);
     model.rig.update(pose);
-    model.root.position.set(frame.x, floor, 0);
-    model.root.rotation.y = frame.facing === 1 ? 0 : Math.PI;
+    const at = place ?? { x: frame.x, z: 0, yaw: frame.facing === 1 ? 0 : Math.PI };
+    model.root.position.set(at.x, floor, at.z);
+    model.root.rotation.y = at.yaw;
 
     // The blade in the world, from the pose, which is the engine's sword unless an ending has taken it.
     const length = CHARACTERS[frame.characterId].blade.length;
-    const toWorld = (v: THREE.Vector3, out: THREE.Vector3) => out.set(frame.x + v.x * frame.facing, floor + v.y, v.z * frame.facing);
-    toWorld(pose.grip, this.mid).addScaledVector(this.worldBlade(pose.blade, frame.facing), length * 0.55);
-    toWorld(pose.grip, this.tip).addScaledVector(this.worldBlade(pose.blade, frame.facing), length);
-    this.chest.set(frame.x + pose.hips.x * frame.facing, floor + pose.hips.y + 0.3, 0);
+    const [cos, sin] = [Math.cos(at.yaw), Math.sin(at.yaw)];
+    // The fighter's own +x is the way they face and +z their sword side, turned by the yaw.
+    const turn = (v: THREE.Vector3, out: THREE.Vector3) => out.set(v.x * cos + v.z * sin, v.y, v.z * cos - v.x * sin);
+    const toWorld = (v: THREE.Vector3, out: THREE.Vector3) => turn(v, out).add(this.origin.set(at.x, floor, at.z));
+    turn(pose.blade, this.bladeWorld);
+    toWorld(pose.grip, this.mid).addScaledVector(this.bladeWorld, length * 0.55);
+    toWorld(pose.grip, this.tip).addScaledVector(this.bladeWorld, length);
+    toWorld(this.local.set(pose.hips.x, pose.hips.y + 0.3, 0), this.chest);
     this.tipSpeed = dt > 0 ? (this.tip.distanceTo(this.lastTip) / dt) * 1000 : this.tipSpeed;
     this.lastTip.copy(this.tip);
 
@@ -95,7 +104,7 @@ export class FighterView {
       const swing = Math.min(1, this.tipSpeed / 8);
       model.energy.shimmer(t, swing);
       this.light.position.copy(this.mid);
-      this.light.intensity = frame.action === "defeat" ? 0.4 : 1.6 + swing * 1.2;
+      this.light.intensity = frame.action === "defeat" || frame.action === "kneel" ? 0.4 : 1.6 + swing * 1.2;
     } else {
       this.light.intensity = 0;
     }
@@ -104,10 +113,6 @@ export class FighterView {
   dispose(): void {
     this.drop();
     this.light.dispose();
-  }
-
-  private worldBlade(blade: THREE.Vector3, facing: 1 | -1): THREE.Vector3 {
-    return this.bladeWorld.set(blade.x * facing, blade.y, blade.z * facing);
   }
 
   private swap(characterId: CharacterId): void {
