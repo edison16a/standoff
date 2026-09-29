@@ -1,11 +1,11 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { StarPreview } from "../../render/preview";
-import type { CharacterId } from "../../roster";
+import type { BuildId } from "../../builds";
 import type { TeamId } from "../../teams";
 
-/** The chosen star in 3D, turning on a podium in their side's uniform. */
-export default function PreviewCanvas({ character, team }: { character: CharacterId; team: TeamId }) {
+/** The chosen build in 3D, turning on a podium in their side's uniform. */
+export default function PreviewCanvas({ build, team }: { build: BuildId; team: TeamId }) {
   const holderRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<StarPreview | null>(null);
 
@@ -21,8 +21,8 @@ export default function PreviewCanvas({ character, team }: { character: Characte
   }, []);
 
   useEffect(() => {
-    previewRef.current?.show(character, team);
-  }, [character, team]);
+    previewRef.current?.show(build, team);
+  }, [build, team]);
 
   return <div ref={holderRef} className="fb-preview" />;
 }

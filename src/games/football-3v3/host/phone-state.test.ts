@@ -4,10 +4,10 @@ import { phoneStateSchema } from "../protocol";
 import { phoneState, type PhoneContext } from "./phone-state";
 import { SkipVotes } from "./replay/skip";
 
-const seat = { connected: true, pick: "reed" as const, ready: true, team: 0 as const, role: "qb" as const };
+const seat = { connected: true, pick: "gunslinger" as const, ready: true, team: 0 as const, role: "qb" as const };
 
 function context(over: Partial<PhoneContext>): PhoneContext {
-  return { phase: "lobby", seat, taken: [], match: null, callout: null, votes: null, ...over };
+  return { phase: "lobby", name: "Sam", seat, taken: [], match: null, callout: null, votes: null, ...over };
 }
 
 describe("a phone's screen state", () => {

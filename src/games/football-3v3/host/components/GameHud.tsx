@@ -2,7 +2,7 @@
 import { playerColor } from "@/games/kit/players";
 import { Scoreboard } from "../../render/hud/Scoreboard";
 import { ROLE_SHORT } from "../../roles";
-import { CHARACTERS } from "../../roster";
+import { BUILDS } from "../../builds";
 import { TEAMS } from "../../teams";
 import { useFootballStore } from "../host-store";
 import { ReplayOverlay } from "./ReplayOverlay";
@@ -20,7 +20,7 @@ function CalloutBar() {
   );
 }
 
-/** Along the top: each phone's player, their star and role, and who has the ball. */
+/** Along the top: each phone's player by name, their build and role, and who has the ball. */
 function PlayerStrip() {
   const strip = useFootballStore((s) => s.strip);
   // At the final whistle the end screen lists everyone, and in a replay the REPLAY tag takes the top.
@@ -36,7 +36,7 @@ function PlayerStrip() {
         >
           <span className="fb-strip__dot" />
           <span className="fb-strip__name">{p.name}</span>
-          <span className="fb-strip__star">{p.away ? "Computer playing" : `${ROLE_SHORT[p.role]}, ${CHARACTERS[p.character].short}`}</span>
+          <span className="fb-strip__star">{p.away ? "Computer playing" : `${ROLE_SHORT[p.role]}, ${BUILDS[p.build].name}`}</span>
         </li>
       ))}
     </ul>
@@ -46,11 +46,13 @@ function PlayerStrip() {
 /** The broadcast graphics over the game: nothing pops up across the picture. */
 export function GameHud() {
   const board = useFootballStore((s) => s.board);
+  // The trophy presentation has its own names; the score bug would sit on the scene.
+  const ceremony = useFootballStore((s) => s.ceremony !== null);
   return (
     <div className="fb-hud">
       <PlayerStrip />
       <CalloutBar />
-      {board && <Scoreboard board={board} />}
+      {board && !ceremony && <Scoreboard board={board} />}
       <ReplayOverlay />
     </div>
   );

@@ -3,6 +3,7 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import type { MatchEvent } from "../engine/events";
 import type { MatchView } from "../engine/view";
 import { CameraDirector } from "./camera/director";
+import { CeremonyScene } from "./ceremony/ceremony-scene";
 import { BallTrace, type TracePoint } from "./effects/ball-trace";
 import { ScrimmageLines } from "./field/scrimmage-lines";
 import { Stadium } from "./field/stadium";
@@ -38,6 +39,10 @@ export class MatchRenderer {
   private readonly scene = new THREE.Scene();
   private readonly stadium: Stadium;
   private readonly lines = new ScrimmageLines();
+  /** The trophy, lights and confetti of the presentation at the end. */
+  private readonly ceremony = new CeremonyScene();
+  private readonly handL = new THREE.Vector3();
+  private readonly handR = new THREE.Vector3();
   private readonly sun: THREE.DirectionalLight;
   private readonly environment: THREE.Texture;
   private readonly low: boolean;
@@ -74,7 +79,7 @@ export class MatchRenderer {
     this.sun.shadow.bias = -0.0005;
     this.scene.add(this.sun, this.sun.target);
     this.stadium = new Stadium(this.low, this.renderer.capabilities.getMaxAnisotropy());
-    this.scene.add(this.stadium.group, this.lines.group, this.squad.group, this.trace.group, this.tags.group);
+    this.scene.add(this.stadium.group, this.lines.group, this.squad.group, this.trace.group, this.tags.group, this.ceremony.group);
   }
 
   resize(width: number, height: number, dpr: number): void {
@@ -131,6 +136,8 @@ export class MatchRenderer {
     this.lines.update(view, dt);
     this.director.update(view, dt, time);
     this.trace.update(this.traceAt);
+    const holding = this.captainHands(view);
+    this.ceremony.update(view.ceremony, holding ? this.handL : null, holding ? this.handR : null, dt, time);
     this.tags.update(view, this.tagOf, this.squad, this.director.camera.fov);
     this.stadium.crowd?.setExcitement(view.phase === "over" ? 0.8 : this.excitement);
     this.stadium.update(time, dt);
@@ -140,6 +147,16 @@ export class MatchRenderer {
     this.sun.position.set(at.x - 25, 60, at.z + 30);
   }
 
+  /** Where the captain's hands are, into handL and handR, while he has the trophy. */
+  private captainHands(view: MatchView): boolean {
+    const id = view.ceremony?.captain ?? null;
+    const figure = id !== null ? this.squad.figure(id) : null;
+    if (!figure) return false;
+    figure.rig.handL.getWorldPosition(this.handL);
+    figure.rig.handR.getWorldPosition(this.handR);
+    return true;
+  }
+
   /** Plays a frozen moment forward without drawing, so eased poses settle before a still. */
   settle(view: MatchView, nowMs: number, seconds: number): void {
     for (let t = 0; t < seconds; t += 1 / 30) this.squad.update(view, 1 / 30, (nowMs - (seconds - t) * 1000) / 1000);
@@ -147,6 +164,7 @@ export class MatchRenderer {
 
   dispose(): void {
     this.squad.dispose();
+    this.ceremony.dispose();
     this.trace.dispose();
     this.tags.dispose();
     this.lines.dispose();

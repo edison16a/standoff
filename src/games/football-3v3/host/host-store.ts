@@ -3,15 +3,16 @@ import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficu
 import type { RoomPhase } from "../protocol";
 import type { Board } from "../render/hud/board";
 import type { LobbyRole } from "../roles";
-import type { CharacterId } from "../roster";
+import type { BuildId } from "../builds";
 import type { TeamId } from "../teams";
+import type { CeremonyCard } from "./ceremony-card";
 import type { ReplayCard } from "./replay/director";
 
 export interface SeatView {
   seat: number;
   name: string;
   connected: boolean;
-  pick: CharacterId | null;
+  pick: BuildId | null;
   ready: boolean;
   team: TeamId | null;
   role: LobbyRole | null;
@@ -20,7 +21,7 @@ export interface SeatView {
 /** A computer player filling a place in the lobby's team columns. */
 export interface BotView {
   team: TeamId;
-  character: CharacterId;
+  build: BuildId;
   role: LobbyRole;
 }
 
@@ -44,7 +45,7 @@ export interface ResultRow {
   id: number;
   team: TeamId;
   name: string;
-  character: CharacterId;
+  build: BuildId;
   seat: number | null;
   role: LobbyRole;
   passYards: number;
@@ -61,7 +62,7 @@ export interface StripPlayer {
   seat: number;
   name: string;
   team: TeamId;
-  character: CharacterId;
+  build: BuildId;
   role: LobbyRole;
   hasBall: boolean;
   away: boolean;
@@ -89,6 +90,8 @@ export interface FootballHostState {
   over: { winner: TeamId | null } | null;
   results: ResultRow[];
   strip: StripPlayer[];
+  /** The winners' names over the trophy presentation, or null outside it. */
+  ceremony: CeremonyCard | null;
 }
 
 export const useFootballStore = create<FootballHostState>(() => ({
@@ -105,4 +108,5 @@ export const useFootballStore = create<FootballHostState>(() => ({
   over: null,
   results: [],
   strip: [],
+  ceremony: null,
 }));

@@ -1,3 +1,5 @@
+import { statsOf } from "./body";
+import { jukeRecovery } from "./build-effects";
 import type { MatchEvent } from "./events";
 import { JUKE } from "./tuning";
 import type { Athlete, JukeKind } from "./types";
@@ -51,7 +53,7 @@ export function startJuke(a: Athlete, emit: (e: MatchEvent) => void): boolean {
     a.vx *= spec.speed;
     a.vz *= spec.speed;
   }
-  a.jukeCd = JUKE.cooldown * slow;
+  a.jukeCd = JUKE.cooldown * slow * jukeRecovery(statsOf(a));
   a.jukeHeat += JUKE.heatPerJuke;
   emit({ type: "juke", id: a.id, juke });
   return true;

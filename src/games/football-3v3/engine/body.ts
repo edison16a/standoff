@@ -1,19 +1,19 @@
-import { CHARACTERS, LINEMAN_BUILD, LINEMAN_NUMBERS, type CharacterId, type Stats as CharStats } from "../roster";
+import { BUILDS, LINEMAN_FRAME, LINEMAN_NUMBERS, type BuildId, type Stats as CharStats } from "../builds";
 import { attackSign, type TeamId } from "../teams";
 import { JUKE, MOVE, RUSH } from "./tuning";
 import { emptyStats, type Athlete, type Role } from "./types";
 
 /** Linemen play as a steady, average athlete with a lot of weight. */
-const LINEMAN_STATS: CharStats = { speed: 3, agility: 3, power: 9, hands: 3, arm: 2, leg: 2 };
+const LINEMAN_STATS: CharStats = { speed: 3, agility: 3, power: 9, hands: 3, arm: 2, cover: 2 };
 
-export function createAthlete(id: number, team: TeamId, role: Role, slot: number, character: CharacterId | null, seat: number | null): Athlete {
-  const c = character ? CHARACTERS[character] : null;
+export function createAthlete(id: number, team: TeamId, role: Role, slot: number, build: BuildId | null, seat: number | null): Athlete {
+  const c = build ? BUILDS[build] : null;
   return {
-    id, team, role, slot, character, seat, auto: seat === null,
+    id, team, role, slot, build, seat, auto: seat === null,
     number: c ? c.number : (LINEMAN_NUMBERS[team][slot] ?? 60 + slot),
     x: 0, z: 0, vx: 0, vz: 0,
     yaw: attackSign(team) > 0 ? Math.PI / 2 : -Math.PI / 2,
-    mass: c ? c.build.weight : LINEMAN_BUILD.weight,
+    mass: c ? c.frame.weight : LINEMAN_FRAME.weight,
     move: { x: 0, z: 0 }, aim: null,
     action: { kind: "none" },
     jukeCd: 0, jukeHeat: 0, tackleCd: 0, rushT: 0, rushCd: 0, guard: null, blocked: 0,
@@ -23,7 +23,7 @@ export function createAthlete(id: number, team: TeamId, role: Role, slot: number
 }
 
 export function statsOf(a: Athlete): CharStats {
-  return a.character ? CHARACTERS[a.character].stats : LINEMAN_STATS;
+  return a.build ? BUILDS[a.build].stats : LINEMAN_STATS;
 }
 
 /** Spamming jukes wears a player out: past a little heat, they run slower. */

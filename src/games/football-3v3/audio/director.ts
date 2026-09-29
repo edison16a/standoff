@@ -1,4 +1,5 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
+import { CEREMONY } from "../engine/ceremony";
 import type { MatchEvent } from "../engine/events";
 import { Music } from "./music";
 import { Sfx } from "./sfx";
@@ -21,6 +22,7 @@ export class SoundDirector {
   readonly sfx: Sfx;
   readonly music: Music;
   private later: ReturnType<typeof setTimeout> | null = null;
+  private trophyUp = false;
 
   constructor(private readonly engine: AudioEngine) {
     this.sfx = new Sfx(engine);
@@ -102,21 +104,46 @@ export class SoundDirector {
       case "overtime":
         return music.sting("bumper");
       case "win":
-        return this.final();
+        return this.final(event.team !== null);
       default:
         return;
     }
   }
 
-  /** The final whistle: the fanfare, then the tailgate groove back for the results. */
-  private final(): void {
+  /**
+   * The final whistle: the fanfare. With a winner the music then waits
+   * for the trophy to go up (see `ceremony`); after a tie the tailgate
+   * groove comes back for the results.
+   */
+  private final(winner: boolean): void {
     this.music.sting("fanfare", 0.1, 4);
     this.cancelLater();
     this.later = setTimeout(() => {
       this.later = null;
+      if (winner) return this.music.play(null);
       this.engine.setLevels(LOBBY_LEVELS);
       this.music.play("lobby");
-    }, 4500);
+    }, winner ? 3400 : 4500);
+  }
+
+  /** Every frame with the presentation's clock, or null outside it: the moment the trophy goes up sounds once. */
+  ceremony(t: number | null): void {
+    const up = t !== null && t >= CEREMONY.up;
+    if (up && !this.trophyUp) this.trophy();
+    this.trophyUp = up;
+  }
+
+  /** The trophy goes up: the stadium horn, the touchdown fanfare and the cannons, then the groove for the stats. */
+  private trophy(): void {
+    this.cancelLater();
+    this.sfx.horn();
+    this.music.sting("touchdown", 0.15, 3);
+    for (const ms of [0, 160, 380]) setTimeout(() => this.sfx.kick(0.9, true), ms);
+    this.later = setTimeout(() => {
+      this.later = null;
+      this.engine.setLevels(LOBBY_LEVELS);
+      this.music.play("lobby");
+    }, 3400);
   }
 
   private cancelLater(): void {

@@ -1,11 +1,11 @@
-import { CHARACTER_IDS, type CharacterId } from "../roster";
+import { BUILD_IDS, BUILDS, type BuildId } from "../builds";
 import type { TeamId } from "../teams";
 
 /** One player the match should field. Linemen are added by the match itself. */
 export interface Entry {
   team: TeamId;
   role: "qb" | "runner";
-  character: CharacterId;
+  build: BuildId;
   /** The phone playing them, or null for a computer player. */
   seat: number | null;
 }
@@ -14,7 +14,7 @@ export interface Entry {
 export interface Signup {
   seat: number;
   team: TeamId;
-  character: CharacterId;
+  build: BuildId;
   qb?: boolean;
 }
 
@@ -36,26 +36,34 @@ export function lineupProblem(entries: readonly Entry[]): string | null {
 }
 
 /**
+ * Takes a computer player's build out of `spare`: one made for the
+ * place (a QB build for QB, any other for a runner) when there is one,
+ * else the first left, else the first build of all.
+ */
+export function takeSpare(spare: BuildId[], role: "qb" | "runner"): BuildId {
+  const fits = (id: BuildId) => (BUILDS[id].best === "qb") === (role === "qb");
+  const at = Math.max(0, spare.findIndex(fits));
+  return spare.splice(at, 1)[0] ?? BUILD_IDS[0];
+}
+
+/**
  * Turns the lobby into a lineup. On each team the person who asked to
  * play QB does (else the first to sign up), the other people run, and
- * computer runners fill the team up to `runners` with players nobody on
- * that team picked.
+ * computer players fill the team up to `runners` in builds nobody
+ * picked, a QB build at QB when one is free.
  */
 export function buildLineup(signups: readonly Signup[], runners = MAX_RUNNERS): Entry[] {
   const entries: Entry[] = [];
+  // Nobody's pick is copied, on either side, while there are builds to spare.
+  const used = new Set(signups.map((p) => p.build));
+  const free = BUILD_IDS.filter((c) => !used.has(c));
   for (const team of [0, 1] as const) {
     const people = signups.filter((s) => s.team === team).slice(0, MAX_PER_TEAM);
     const qb = people.find((s) => s.qb) ?? people[0];
-    const used = new Set(people.map((p) => p.character));
-    const spare = () => {
-      const pick = CHARACTER_IDS.find((c) => !used.has(c)) ?? CHARACTER_IDS[entries.length % CHARACTER_IDS.length]!;
-      used.add(pick);
-      return pick;
-    };
-    entries.push(qb ? { team, role: "qb", character: qb.character, seat: qb.seat } : { team, role: "qb", character: spare(), seat: null });
+    entries.push(qb ? { team, role: "qb", build: qb.build, seat: qb.seat } : { team, role: "qb", build: takeSpare(free, "qb"), seat: null });
     const humans = people.filter((p) => p !== qb);
-    for (const p of humans) entries.push({ team, role: "runner", character: p.character, seat: p.seat });
-    for (let n = humans.length; n < Math.min(MAX_RUNNERS, runners); n++) entries.push({ team, role: "runner", character: spare(), seat: null });
+    for (const p of humans) entries.push({ team, role: "runner", build: p.build, seat: p.seat });
+    for (let n = humans.length; n < Math.min(MAX_RUNNERS, runners); n++) entries.push({ team, role: "runner", build: takeSpare(free, "runner"), seat: null });
   }
   return entries;
 }

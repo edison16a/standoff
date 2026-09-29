@@ -1,0 +1,56 @@
+/*
+  The trophy presentation: the winners' names over the 3D scene come
+  from the victory kit; here are the Stats button and the end screen
+  moved aside so the winners stay in the left of the picture.
+*/
+
+.fb-champions {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.fb-champions__skip {
+  position: absolute;
+  right: clamp(12px, 2.5vw, 32px);
+  bottom: clamp(12px, 3vh, 32px);
+  background: rgba(8, 10, 20, 0.55);
+  pointer-events: auto;
+  animation: fb-rise 500ms 1.2s ease-out both;
+}
+
+/* After a presentation the stats sit on the right, over a shade that leaves the winners lit on the left. */
+.fb-results--aside {
+  justify-content: flex-end;
+  padding-right: clamp(20px, 3vw, 48px);
+  background: linear-gradient(90deg, rgba(5, 7, 15, 0) 30%, rgba(5, 7, 15, 0.65) 70%);
+  animation: fb-rise 700ms 0.1s ease-out both;
+}
+
+/* Narrower than the centred card, so it tightens to keep every line on one row. */
+.fb-results--aside .fb-results__card {
+  gap: 4px;
+  width: min(820px, 62vw);
+  padding: 16px 20px;
+}
+
+.fb-results--aside .fb-results__title {
+  font-size: 40px;
+}
+
+.fb-results--aside .fb-results__table th,
+.fb-results--aside .fb-results__table td {
+  padding: 4px 6px;
+  white-space: nowrap;
+}
+
+.fb-results--aside .fb-results__table td {
+  font-size: 15px;
+}
+
+@keyframes fb-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}

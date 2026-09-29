@@ -1,3 +1,5 @@
+import { statsOf } from "./body";
+import { breakChance } from "./build-effects";
 import { yardToX } from "./field";
 import { dodging } from "./juke";
 import type { Match } from "./match";
@@ -99,6 +101,7 @@ export function lineContact(m: Match): void {
 
 function grab(m: Match, l: Athlete, a: Athlete): void {
   l.tackleCd = 1;
-  if (dodging(a) || !m.rng.chance(TACKLE.linemanGrab)) return;
+  // A strong carrier slips more of the big men's grabs.
+  if (dodging(a) || !m.rng.chance(TACKLE.linemanGrab * (1 - breakChance(statsOf(a), statsOf(l))))) return;
   tackle(m, a, l);
 }

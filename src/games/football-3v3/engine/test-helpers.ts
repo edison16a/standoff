@@ -9,20 +9,20 @@ import type { Athlete } from "./types";
 
 /** Four people and no computer runners, so tests steer every skill player themselves. */
 export const PEOPLE: Entry[] = [
-  { team: 0, role: "qb", character: "reed", seat: 0 },
-  { team: 0, role: "runner", character: "banks", seat: 1 },
-  { team: 1, role: "qb", character: "lindqvist", seat: 2 },
-  { team: 1, role: "runner", character: "fields", seat: 3 },
+  { team: 0, role: "qb", build: "gunslinger", seat: 0 },
+  { team: 0, role: "runner", build: "speedster", seat: 1 },
+  { team: 1, role: "qb", build: "scrambler", seat: 2 },
+  { team: 1, role: "runner", build: "lockdown", seat: 3 },
 ];
 
 /** Computer players only: two full teams. */
 export const BOTS: Entry[] = [
-  { team: 0, role: "qb", character: "reed", seat: null },
-  { team: 0, role: "runner", character: "banks", seat: null },
-  { team: 0, role: "runner", character: "ortiz", seat: null },
-  { team: 1, role: "qb", character: "lindqvist", seat: null },
-  { team: 1, role: "runner", character: "fields", seat: null },
-  { team: 1, role: "runner", character: "kowalski", seat: null },
+  { team: 0, role: "qb", build: "gunslinger", seat: null },
+  { team: 0, role: "runner", build: "speedster", seat: null },
+  { team: 0, role: "runner", build: "routerunner", seat: null },
+  { team: 1, role: "qb", build: "scrambler", seat: null },
+  { team: 1, role: "runner", build: "lockdown", seat: null },
+  { team: 1, role: "runner", build: "powerback", seat: null },
 ];
 
 export function peopleMatch(options: Partial<MatchOptions> = {}): Match {

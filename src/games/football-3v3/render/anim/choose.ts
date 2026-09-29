@@ -1,6 +1,6 @@
 import type { AthleteView, BallView } from "../../engine/view";
 import type { Phase, TeamId } from "../../engine/types";
-import { CHARACTERS } from "../../roster";
+import { BUILDS } from "../../builds";
 import { celebratePose, dejectedPose } from "./celebrations";
 import { divePose, downPose, lungePose } from "./contact";
 import { gait, type Carry } from "./gait";
@@ -8,6 +8,7 @@ import { jukePose } from "./jukes";
 import { clamp01, type Pose } from "./pose";
 import { blockPose, breathe, CENTER, KICK_SET, READY, SHOTGUN, snapPose, THREE_POINT, TWO_POINT } from "./stance";
 import { catchPose, kickPose, throwPose } from "./throwing";
+import { captainPose, matePose } from "./trophy-poses";
 
 /** What a figure knows about the play around it this frame. */
 export interface PoseScene {
@@ -20,6 +21,8 @@ export interface PoseScene {
   center: boolean;
   /** Who is lined up to kick, if anyone. */
   kicker: number | null;
+  /** Seconds into the trophy presentation, or null outside it. */
+  ceremonyT: number | null;
 }
 
 /** What the figure knows about its own legs. */
@@ -75,12 +78,20 @@ export function reachFor(a: AthleteView, ball: BallView): { reach: number; high:
   return { reach: clamp01(1 - (eta - 0.15) / 0.5), high: clamp01((ball.y - 1.6) / 0.9) };
 }
 
+/** At the trophy presentation: the captain lifts it, the winners jump, the beaten side hangs its heads. */
+function ceremonyPose(a: AthleteView, t: number, b: BodyScene): Pose {
+  if (a.ceremony === "captain") return captainPose(t);
+  if (a.ceremony === "mate") return matePose(t, b.seed, a.role === "lineman");
+  return dejectedPose(b.time, b.seed);
+}
+
 /** Picks the body's target pose from the engine's view of this player. Pure, so tests can check it. */
 export function choosePose(a: AthleteView, s: PoseScene, b: BodyScene): Chosen {
   const carry = carryOf(a, s);
   const hand: Chosen["hand"] = carry === "ready" ? "both" : "R";
   const run = () => gait({ speed: a.speed, ahead: aheadSpeed(a), phase: b.phase, carry, build: b.build, time: b.time, seed: b.seed });
   const t = a.actionT;
+  if (a.ceremony && s.ceremonyT !== null) return { pose: ceremonyPose(a, s.ceremonyT, b), rate: 12, hand: "both" };
   switch (a.action) {
     case "stance":
       return { pose: breathe(stance(a, s), b.time, b.seed), rate: 8, hand };
@@ -97,14 +108,14 @@ export function choosePose(a: AthleteView, s: PoseScene, b: BodyScene): Chosen {
     case "down":
       return { pose: downPose(t, a.actionDur, a.downCause ?? "dive", a.id), rate: 18, hand: "R" };
     case "celebrate": {
-      const style = a.character ? CHARACTERS[a.character].celebration : "point";
+      const style = a.build ? BUILDS[a.build].celebration : "point";
       return { pose: celebratePose(style, t, a.spike), rate: 14, hand: "R" };
     }
     case "none":
       break;
   }
   if (s.phase === "over" && s.winner !== null && a.role !== "lineman") {
-    const style = a.character ? CHARACTERS[a.character].celebration : "point";
+    const style = a.build ? BUILDS[a.build].celebration : "point";
     return { pose: s.winner === a.team ? celebratePose(style, s.phaseT, false) : dejectedPose(b.time, b.seed), rate: 8, hand };
   }
   if (s.center && s.ball.state === "snap") return { pose: snapPose(s.phaseT), rate: 30, hand };

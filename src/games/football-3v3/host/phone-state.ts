@@ -9,6 +9,8 @@ import type { SkipVotes } from "./replay/skip";
 
 export interface PhoneContext {
   phase: RoomPhase;
+  /** The player's own name. */
+  name: string;
   seat: SeatState;
   taken: PhoneState["taken"];
   match: Match | null;
@@ -48,6 +50,7 @@ export function phoneState(c: PhoneContext, seatNo: number): PhoneState {
   return {
     kind: "state",
     phase: c.phase,
+    name: c.name.slice(0, 40),
     taken: c.taken,
     pick: c.seat.pick,
     ready: c.seat.ready,

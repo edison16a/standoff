@@ -1,5 +1,5 @@
 import type { Match } from "../engine/match";
-import { CHARACTERS } from "../roster";
+import { computerName } from "../builds";
 import type { ResultRow } from "./host-store";
 
 /** Total yards gained with the ball: thrown, run and caught. */
@@ -13,13 +13,13 @@ export const yardsOf = (r: ResultRow) => r.passYards + r.rushYards + r.recYards;
 export function resultRows(m: Match, names: ReadonlyMap<number, string>): ResultRow[] {
   const rows: ResultRow[] = [];
   for (const a of m.athletes) {
-    if (a.role === "lineman" || !a.character) continue;
+    if (a.role === "lineman" || !a.build) continue;
     const s = a.stats;
     rows.push({
       id: a.id,
       team: a.team,
-      name: a.seat !== null ? (names.get(a.seat) ?? CHARACTERS[a.character].short) : CHARACTERS[a.character].name,
-      character: a.character,
+      name: (a.seat !== null ? names.get(a.seat) : undefined) ?? computerName(a.build),
+      build: a.build,
       seat: a.seat,
       role: a.role === "qb" ? "qb" : "runner",
       passYards: s.passYards,

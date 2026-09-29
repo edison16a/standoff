@@ -1,11 +1,11 @@
 import type { AthleteView, MatchView } from "../engine";
 import { KICK, PASS, TACKLE } from "../engine/tuning";
 import type { ActionKind, JukeKind } from "../engine/types";
-import { CHARACTER_IDS, CHARACTERS, LINEMAN_NUMBERS } from "../roster";
+import { BUILD_IDS, BUILDS, LINEMAN_NUMBERS } from "../builds";
 
 /**
  * A development stage for looking closely at the models and one
- * animation at a time: all six stars in a row doing the same thing on
+ * animation at a time: all six builds in a row doing the same thing on
  * a loop, with a pair of linemen alongside. Pick it with ?lab=<move>.
  */
 export const LAB_MOVES = ["idle", "run", "tuck", "ready", "throw", "kick", "spin", "back", "side", "dive", "lunge", "down", "tackled", "celebrate", "spike", "stance", "block", "catch"] as const;
@@ -53,8 +53,8 @@ export function labView(base: MatchView, move: LabMove, time: number): MatchView
   const t = a.dur > 0 ? Math.min(a.dur, time % cycle) : time;
   // The engine turns a spinning runner right round over the juke, so the lab does too.
   const yaw = -Math.PI / 2 + (move === "spin" ? (Math.PI * 2 * t) / a.dur : 0);
-  const athletes: AthleteView[] = CHARACTER_IDS.map((id, i) => ({
-    ...base.athletes[0]!, id: i, team: i < 3 ? 0 : 1, role: i === 0 || i === 3 ? "qb" : "runner", character: id, number: CHARACTERS[id].number,
+  const athletes: AthleteView[] = BUILD_IDS.map((id, i) => ({
+    ...base.athletes[0]!, id: i, team: i < 3 ? 0 : 1, role: i === 0 || i === 3 ? "qb" : "runner", build: id, number: BUILDS[id].number,
     seat: null, x: 0, z: (i - 2.5) * 2.6, yaw, vx: -a.speed, vz: 0, speed: a.speed,
     action: a.action, actionT: t, actionDur: a.dur, juke: a.juke ?? null, side: 1, spike: !!a.spike,
     hasBall: false, targeted: move === "catch", guarding: null, rushing: false, blocked: false, downCause: a.downCause ?? null,
@@ -62,7 +62,7 @@ export function labView(base: MatchView, move: LabMove, time: number): MatchView
   // Two linemen at the end of the row, squared up against each other.
   for (const team of [0, 1] as const) {
     athletes.push({
-      ...athletes[0]!, id: athletes.length, team, role: "lineman", character: null, number: LINEMAN_NUMBERS[team][1]!,
+      ...athletes[0]!, id: athletes.length, team, role: "lineman", build: null, number: LINEMAN_NUMBERS[team][1]!,
       x: team === 0 ? 0.55 : -0.55, z: 10.5, yaw: team === 0 ? -Math.PI / 2 : Math.PI / 2, vx: 0, speed: 0,
       action: move === "stance" ? "stance" : "none", blocked: move === "block", targeted: false, spike: false,
     });

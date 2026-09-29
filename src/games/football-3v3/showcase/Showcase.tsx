@@ -17,7 +17,8 @@ import { STILLS } from "./stills";
  *
  * Development options in the address: seed and seek (seconds to jump
  * ahead), quality (high, low or film), cam=x,y,z,lookX,lookY,lookZ,fov
- * to pin the camera, and lab=<move> for the animation lab.
+ * to pin the camera, lab=<move> for the animation lab, and trophy to
+ * end the game at once and watch the trophy presentation.
  */
 export default function Showcase({ view }: { view: ShowcaseView }) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -35,7 +36,7 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     const renderer = new MatchRenderer(canvas, { quality: quality === "low" || quality === "high" ? quality : "film", scale: view === "loop" ? 0.8 : 1 });
     // The icon and poster are frozen moments of the same game; the loop plays it.
     const still = STILLS[view] ?? null;
-    const scene = new ShowcaseScene(Number(params.get("seed") ?? 11), Number(params.get("seek") ?? still?.seek ?? 0));
+    const scene = new ShowcaseScene(Number(params.get("seed") ?? 11), Number(params.get("seek") ?? still?.seek ?? 0), params.has("trophy"));
     const lab = params.get("lab");
     const cam = params.get("cam")?.split(",").map(Number);
     const shot = still?.camera?.(scene.view);

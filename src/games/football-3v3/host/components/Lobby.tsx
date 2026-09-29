@@ -3,7 +3,7 @@ import { Icon } from "@/components/ui/Icon";
 import { DifficultyPicker } from "@/games/kit/difficulty/DifficultyPicker";
 import { RULES } from "../../engine/tuning";
 import { ROLE_NAMES } from "../../roles";
-import { CHARACTERS } from "../../roster";
+import { BUILDS, computerName } from "../../builds";
 import { TEAMS, type TeamId } from "../../teams";
 import { useFootballStore, type SeatView } from "../host-store";
 import { TEAM_SIZE } from "../lobby";
@@ -31,11 +31,11 @@ function TeamColumn({ team, full }: { team: TeamId; full: (team: TeamId) => bool
           <PlayerCard key={seat.seat} seat={seat} full={full} />
         ))}
         {fillers.map((bot) => (
-          <li key={bot.character} className="fb-card fb-card--bot">
+          <li key={bot.build} className="fb-card fb-card--bot">
             <span className="fb-card__cpu">CPU</span>
             <span className="fb-card__who">
-              <strong>{CHARACTERS[bot.character].name}</strong>
-              <span>Computer {ROLE_NAMES[bot.role].toLowerCase()}</span>
+              <strong>{computerName(bot.build)}</strong>
+              <span>{BUILDS[bot.build].name}, {ROLE_NAMES[bot.role].toLowerCase()}</span>
             </span>
           </li>
         ))}
@@ -48,13 +48,13 @@ function noteFor(joined: SeatView[]): string {
   const playing = joined.filter((s) => s.ready && s.pick && s.team !== null).length;
   const waiting = joined.filter((s) => !s.ready).length;
   if (joined.length === 0) return "Scan the code with your phone to join. Up to six players.";
-  if (playing === 0) return "Pick a star on your phone, then tap Ready.";
+  if (playing === 0) return "Pick a build on your phone, then tap Ready.";
   if (waiting > 0) return `${playing} ready. ${waiting} still choosing.`;
   return `${playing} ready. Computers fill the empty places.`;
 }
 
 /**
- * The lobby on the big screen: players pick their star on their phones,
+ * The lobby on the big screen: players pick their build on their phones,
  * and here the host puts them on a side, picks each side's QB, and sets
  * how sharp the computer players are. Kick off when everyone is ready.
  */

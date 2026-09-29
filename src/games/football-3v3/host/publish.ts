@@ -1,7 +1,7 @@
 import type { Player } from "@/platform/games/game-api";
 import type { RoomPhase } from "../protocol";
 import { scoreboard } from "../render/hud/board";
-import { CHARACTERS } from "../roster";
+import { computerName } from "../builds";
 import { useFootballStore as store, type Callout } from "./host-store";
 import type { Lobby } from "./lobby";
 import type { MatchDriver } from "./match-driver";
@@ -9,6 +9,8 @@ import type { PhoneLink } from "./phone-link";
 import { phoneState } from "./phone-state";
 import type { ReplayDirector } from "./replay/director";
 import { resultRows } from "./results";
+import { ceremonyCard, type CeremonyCard } from "./ceremony-card";
+import type { Match } from "../engine/match";
 
 export interface PublishContext {
   nowMs: number;
@@ -21,6 +23,14 @@ export interface PublishContext {
   replay: ReplayDirector;
   /** How a player is called on screen. */
   nameOf(id: number): string;
+  /** The host asked for the stats before the presentation brought them in. */
+  statsEarly: boolean;
+}
+
+/** The presentation's card, moved straight to the stats when the host asked for them early. */
+function presentation(m: Match, names: ReadonlyMap<number, string>, early: boolean): CeremonyCard | null {
+  const card = ceremonyCard(m, names);
+  return card && early ? { ...card, stage: "stats" } : card;
 }
 
 /**
@@ -38,7 +48,7 @@ export function publish(c: PublishContext): void {
   store.setState({
     phase: c.phase,
     seats,
-    bots: c.lobby.lineup().filter((e) => e.seat === null).map((e) => ({ team: e.team, character: e.character, role: e.role })),
+    bots: c.lobby.lineup().filter((e) => e.seat === null).map((e) => ({ team: e.team, build: e.build, role: e.role })),
     level: c.lobby.level,
     startBlock: c.lobby.startBlock(),
     // The live score, never the replay's: the replay shows a moment already on the board.
@@ -49,13 +59,14 @@ export function publish(c: PublishContext): void {
     score: m ? [m.score[0], m.score[1]] : [0, 0],
     over: m && m.phase === "over" ? { winner: m.winner } : null,
     results: m && m.phase === "over" ? resultRows(m, names) : [],
+    ceremony: m ? presentation(m, names, c.statsEarly) : null,
     strip: m
-      ? m.athletes.filter((a) => a.seat !== null && a.character).map((a) => ({
+      ? m.athletes.filter((a) => a.seat !== null && a.build).map((a) => ({
           id: a.id,
           seat: a.seat!,
-          name: names.get(a.seat!) ?? CHARACTERS[a.character!].short,
+          name: names.get(a.seat!) ?? computerName(a.build!),
           team: a.team,
-          character: a.character!,
+          build: a.build!,
           role: a.role === "qb" ? ("qb" as const) : ("runner" as const),
           hasBall: holder === a.id,
           away: a.auto,
@@ -64,7 +75,7 @@ export function publish(c: PublishContext): void {
   });
   const votes = c.replay.active ? c.replay.votes : null;
   for (const seat of c.lobby.connectedSeats) {
-    const state = phoneState({ phase: c.phase, seat: c.lobby.seats.get(seat)!, taken: c.lobby.taken(seat), match: m, callout: c.callout, votes }, seat);
+    const state = phoneState({ phase: c.phase, name: names.get(seat) ?? "", seat: c.lobby.seats.get(seat)!, taken: c.lobby.taken(seat), match: m, callout: c.callout, votes }, seat);
     c.phones.sendState(seat, state, c.nowMs);
   }
 }

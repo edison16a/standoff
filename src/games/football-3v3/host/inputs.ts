@@ -58,7 +58,7 @@ export function routePhone(t: InputTarget, seat: number, message: PhoneMessage):
   const d = t.driver;
   switch (message.kind) {
     case "pick":
-      t.lobby.pick(seat, message.character);
+      t.lobby.pick(seat, message.build);
       return true;
     case "ready":
       t.lobby.setReady(seat, message.ready);

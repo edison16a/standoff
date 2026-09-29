@@ -1,14 +1,15 @@
 import { Match, STEP, buildView, type MatchEvent, type MatchView } from "../engine";
+import { adminWin } from "../engine/admin";
 import type { Entry } from "../engine/lineup";
 
-/** Two full teams of computer players, one of every star. */
+/** Two full teams of computer players, one of every build. */
 export const SHOWCASE_TEAMS: Entry[] = [
-  { team: 0, role: "qb", character: "reed", seat: null },
-  { team: 0, role: "runner", character: "banks", seat: null },
-  { team: 0, role: "runner", character: "ortiz", seat: null },
-  { team: 1, role: "qb", character: "lindqvist", seat: null },
-  { team: 1, role: "runner", character: "fields", seat: null },
-  { team: 1, role: "runner", character: "kowalski", seat: null },
+  { team: 0, role: "qb", build: "gunslinger", seat: null },
+  { team: 0, role: "runner", build: "speedster", seat: null },
+  { team: 0, role: "runner", build: "routerunner", seat: null },
+  { team: 1, role: "qb", build: "scrambler", seat: null },
+  { team: 1, role: "runner", build: "lockdown", seat: null },
+  { team: 1, role: "runner", build: "powerback", seat: null },
 ];
 
 /**
@@ -22,8 +23,10 @@ export class ShowcaseScene {
   private carry = 0;
   private last = -1;
 
-  constructor(seed: number, seek = 0) {
+  /** `trophy` ends the game at once with a Storm win, to look at the trophy presentation. */
+  constructor(seed: number, seek = 0, trophy = false) {
     this.match = new Match({ entries: SHOWCASE_TEAMS, seed, level: "hard", firstOffense: 0 });
+    if (trophy) adminWin(this.match, 0);
     // Development peeks can jump ahead without drawing every frame on the way.
     for (let t = 0; t < seek; t += STEP) this.match.step(STEP);
     this.match.drainEvents();

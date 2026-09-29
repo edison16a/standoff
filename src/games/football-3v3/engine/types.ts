@@ -1,4 +1,4 @@
-import type { CharacterId } from "../roster";
+import type { BuildId } from "../builds";
 import type { TeamId } from "../teams";
 import type { V2 } from "./vec";
 
@@ -83,7 +83,7 @@ export interface Athlete {
   /** 0 to 2 within the role and team, which sets where they line up. */
   slot: number;
   /** Null for linemen, who share one build. */
-  character: CharacterId | null;
+  build: BuildId | null;
   number: number;
   /** The phone playing this athlete, or null for a computer player. */
   seat: number | null;

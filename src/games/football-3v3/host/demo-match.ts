@@ -5,19 +5,19 @@ import { STEP } from "../engine/tuning";
 import { buildView, type MatchView } from "../engine/view";
 import { StepClock } from "./step-clock";
 
-/** Two full teams of computer players, one of every star. */
+/** Two full teams of computer players, one of every build. */
 const LINEUP: Entry[] = [
-  { team: 0, role: "qb", character: "reed", seat: null },
-  { team: 0, role: "runner", character: "banks", seat: null },
-  { team: 0, role: "runner", character: "ortiz", seat: null },
-  { team: 1, role: "qb", character: "lindqvist", seat: null },
-  { team: 1, role: "runner", character: "fields", seat: null },
-  { team: 1, role: "runner", character: "kowalski", seat: null },
+  { team: 0, role: "qb", build: "gunslinger", seat: null },
+  { team: 0, role: "runner", build: "speedster", seat: null },
+  { team: 0, role: "runner", build: "routerunner", seat: null },
+  { team: 1, role: "qb", build: "scrambler", seat: null },
+  { team: 1, role: "runner", build: "lockdown", seat: null },
+  { team: 1, role: "runner", build: "powerback", seat: null },
 ];
 
 /**
  * Computer players having a game behind the lobby, so the big screen
- * shows football while everyone picks their stars. When it ends another
+ * shows football while everyone picks their builds. When it ends another
  * starts.
  */
 export class DemoMatch {

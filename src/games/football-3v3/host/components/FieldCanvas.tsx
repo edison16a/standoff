@@ -22,7 +22,8 @@ export default function FieldCanvas() {
     fit();
     const observer = new ResizeObserver(fit);
     observer.observe(canvas);
-    renderer.setTags((id) => session.tag(id));
+    renderer.setTags((id) => session.names.tag(id));
+    renderer.squad.jerseyName = (id) => session.names.own(id);
     // Browser tests read the game from here to steer the test phones. Development builds only.
     if (process.env.NODE_ENV === "development") Object.assign(window, { __football: session });
 

@@ -1,4 +1,5 @@
-import { isDown } from "./body";
+import { isDown, statsOf } from "./body";
+import { catchReach, coverReach, swatFactor } from "./build-effects";
 import { inBounds, xToYard } from "./field";
 import { botSkill } from "./bots/skill";
 import { stepFlight, type Flight } from "./flight";
@@ -24,7 +25,7 @@ export function jumpingDefender(m: Match, qb: Athlete, from: V3, spot: V2, targe
   let best: Athlete | null = null;
   for (const d of m.athletes) {
     if (d.team === qb.team || !canPlayBall(d)) continue;
-    if (dist2(d, spot) > PASS.jumpRadius || along(d) >= along(target)) continue;
+    if (dist2(d, spot) > PASS.jumpRadius * coverReach(statsOf(d)) || along(d) >= along(target)) continue;
     if (!best || dist2(d, spot) < dist2(best, spot)) best = d;
   }
   return best;
@@ -112,22 +113,23 @@ export function updatePass(m: Match, dt: number): void {
   assistPass(m, dt);
   if (pass.interceptor !== null) {
     const d = m.athlete(pass.interceptor);
-    if (d && !isDown(d) && reachable(f.pos, d, PASS.catchRadius * 1.4)) return intercepted(m, d, pass.from);
+    if (d && !isDown(d) && reachable(f.pos, d, PASS.catchRadius * 1.4 * catchReach(statsOf(d)))) return intercepted(m, d, pass.from);
   } else {
     for (const d of m.athletes) {
       if (d.team === m.offense || !canPlayBall(d)) continue;
-      const near = f.pos.y > 0.3 && f.pos.y < PASS.maxCatchY && dist2(d, f.pos) < PASS.pickRadius;
+      const near = f.pos.y > 0.3 && f.pos.y < PASS.maxCatchY && dist2(d, f.pos) < PASS.pickRadius * coverReach(statsOf(d));
       // Only a defender a person steers, not the computer and not Guard, can jump into the path.
       if (near && !d.auto) return intercepted(m, d, pass.from);
       // A computer defender in the way gets one swipe at it: knocked down, never caught.
       if (near && !pass.swiped.includes(d.id)) {
         pass.swiped.push(d.id);
-        if (m.rng.chance(botSkill(m.level).accuracy * 0.45)) return breakUp(m, d, f);
+        if (m.rng.chance(Math.min(0.9, botSkill(m.level).accuracy * 0.45 * swatFactor(statsOf(d))))) return breakUp(m, d, f);
       }
     }
     const r = m.athlete(pass.to);
     if (r && !isDown(r)) {
-      const radius = r.action.kind === "dive" ? PASS.diveCatchRadius : PASS.catchRadius;
+      // Good hands reach farther round the body, diving or not.
+      const radius = (r.action.kind === "dive" ? PASS.diveCatchRadius : PASS.catchRadius) * catchReach(statsOf(r));
       if (reachable(f.pos, r, radius)) return caught(m, r);
     }
   }

@@ -1,14 +1,13 @@
 import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import { HostPad } from "@/games/kit/pad/host-pad";
-import { playerColor } from "@/games/kit/players";
 import type { HostRoomApi, Player } from "@/platform/games/game-api";
 import { SoundDirector } from "../audio/director";
+import { ceremonyTime } from "../engine/ceremony";
 import type { MatchEvent } from "../engine/events";
 import type { V2 } from "../engine/vec";
 import type { MatchView } from "../engine/view";
 import { isPadButton, type RoomPhase } from "../protocol";
 import type { LobbyRole } from "../roles";
-import { CHARACTERS } from "../roster";
 import type { TeamId } from "../teams";
 import { registerFootballAdmin } from "./admin";
 import { AimSticks } from "./aim-sticks";
@@ -21,18 +20,13 @@ import { routeRoom, type InputTarget } from "./inputs";
 import { Lobby } from "./lobby";
 import { MatchDriver } from "./match-driver";
 import { PhoneLink } from "./phone-link";
+import { Names } from "./names";
 import { publish } from "./publish";
 import { ReplayDirector, type ReplayFrame } from "./replay/director";
 import { DEFAULT_FORWARD } from "./steer";
 
 /** The overlay and the phones are refreshed this often; the canvas every frame. */
 const HUD_MS = 100;
-
-/** A tag over a player on the field: a phone's player by name in their colour. */
-export interface Tag {
-  name: string;
-  colour: string;
-}
 
 /**
  * Football 3v3 on the computer, for one room. It keeps the lobby, runs
@@ -50,6 +44,8 @@ export class FootballHost implements InputTarget {
   forward: V2 = DEFAULT_FORWARD;
   readonly phones: PhoneLink;
   readonly aims = new AimSticks();
+  /** Who each player is on screen: the phones' players by their own names. */
+  readonly names: Names;
   private readonly pad: HostPad;
   private readonly offRoom: () => void;
   private readonly offPress: () => void;
@@ -57,11 +53,14 @@ export class FootballHost implements InputTarget {
   private lastHud = 0;
   private seed = Math.floor(Math.random() * 1e6);
   private offAdmin: (() => void) | null = null;
+  /** The host tapped Stats during the trophy presentation. */
+  private statsEarly = false;
 
   constructor(private readonly room: HostRoomApi) {
     store.setState({ ...store.getInitialState() });
     this.audio = new SoundDirector(room.audio);
     this.phones = new PhoneLink(room);
+    this.names = new Names(() => this.driver?.match ?? null, () => room.players());
     this.pad = new HostPad(room);
     this.offPress = this.pad.onPress((seat, button, down, stick) => {
       if (this.vote(seat, down)) return;
@@ -104,19 +103,9 @@ export class FootballHost implements InputTarget {
     return this.room.players();
   }
 
-  /** How a player is called out: a phone's player by their name, a computer by the star's. */
+  /** How a player is called out: their own name, or "CPU" and the build. */
   nameOf(id: number): string {
-    const a = this.driver?.match.athlete(id);
-    if (!a?.character) return "";
-    const player = a.seat !== null ? this.room.players().find((p) => p.seat === a.seat) : undefined;
-    return player?.name ?? CHARACTERS[a.character].short;
-  }
-
-  /** The tag over a phone's player, or null for the computer's. */
-  tag(id: number): Tag | null {
-    const a = this.driver?.match.athlete(id);
-    if (!a || a.seat === null || a.auto) return null;
-    return { name: this.nameOf(id), colour: playerColor(a.seat) };
+    return this.names.called(id);
   }
 
   setTeam(seat: number, team: TeamId | null): void {
@@ -141,6 +130,7 @@ export class FootballHost implements InputTarget {
     this.replays.stop();
     this.aims.clear();
     this.callout = null;
+    this.statsEarly = false;
     this.room.setPlaying(true);
     this.audio.gameStart();
     this.refresh(performance.now());
@@ -149,11 +139,18 @@ export class FootballHost implements InputTarget {
   /** From the end screen: back to the team picker, keeping everyone's choices. */
   backToLobby(): void {
     this.driver = null;
+    this.statsEarly = false;
     this.offAdmin?.();
     this.offAdmin = null;
     this.replays.stop();
     this.room.setPlaying(false);
     this.audio.lobby();
+    this.refresh(performance.now());
+  }
+
+  /** From the trophy presentation: straight to the stats, without waiting for them. */
+  showStats(): void {
+    this.statsEarly = true;
     this.refresh(performance.now());
   }
 
@@ -169,6 +166,7 @@ export class FootballHost implements InputTarget {
       events = driver.tick(nowMs, { move: (s) => this.pad.stick(s, nowMs), aim: (s) => this.aims.get(s), forward: this.forward });
       for (const event of events) this.onMatchEvent(event, driver, nowMs);
       if (driver.held) this.startReplay(driver, nowMs);
+      this.audio.ceremony(ceremonyTime(driver.match));
     }
     if (this.callout && nowMs > this.callout.until) this.callout = null;
     if (this.phase !== before || nowMs - this.lastHud >= HUD_MS) this.refresh(nowMs);
@@ -210,6 +208,7 @@ export class FootballHost implements InputTarget {
     publish({
       nowMs, phase: this.phase, players: this.room.players(), lobby: this.lobby, driver: this.driver,
       callout: this.callout?.value ?? null, phones: this.phones, replay: this.replays, nameOf: (id) => this.nameOf(id),
+      statsEarly: this.statsEarly,
     });
   }
 }

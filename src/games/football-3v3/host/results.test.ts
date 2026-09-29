@@ -18,11 +18,11 @@ describe("the end screen's stats", () => {
     expect(playerOfTheGame(rows)!.id).toBe(1);
   });
 
-  it("names a phone's player by their name and a computer's by the star", () => {
+  it("names a phone's player by their own name and a computer by its build", () => {
     const m = new Match({ entries: BOTS.map((e, i) => (i === 0 ? { ...e, seat: 3 } : e)), seed: 1 });
     const rows = resultRows(m, new Map([[3, "Sam"]]));
     expect(rows.find((r) => r.seat === 3)!.name).toBe("Sam");
-    expect(rows.find((r) => r.character === "banks")!.name).toBe("Tyrell Banks");
+    expect(rows.find((r) => r.build === "speedster")!.name).toBe("CPU Speedster");
   });
 
   it("has no player of the game when nobody did anything", () => {

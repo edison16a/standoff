@@ -1,4 +1,4 @@
-import type { TeamId } from "../teams";
+import { other, type TeamId } from "../teams";
 import { newDrive } from "./downs";
 import { yardToX } from "./field";
 import type { Match } from "./match";
@@ -28,6 +28,18 @@ export function adminTouchdown(m: Match, team: TeamId): void {
   m.ball.flight = null;
   m.ball.pass = null;
   endPlay(m, "touchdown");
+}
+
+/** `team` wins the game now, a score clear, and the end of the game and its trophy presentation follow. */
+export function adminWin(m: Match, team: TeamId): void {
+  if (m.phase === "over") return;
+  m.score[team] = Math.max(m.score[team], m.score[other(team)] + 7);
+  m.winner = team;
+  m.phase = "over";
+  m.phaseT = 0;
+  m.play = null;
+  m.kick = null;
+  m.emit({ type: "win", team });
 }
 
 /** `team` lines up for a 37 yard field goal and starts the meters. */

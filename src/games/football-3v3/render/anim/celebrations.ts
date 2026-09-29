@@ -1,4 +1,4 @@
-import type { Celebration } from "../../roster";
+import type { Celebration } from "../../builds";
 import { bump, keyed, neutral, over, smooth, type Pose } from "./pose";
 
 /**
