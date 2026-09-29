@@ -13,10 +13,11 @@ export const CALLS = ["throw", "kick", "two"] as const;
 const team = z.union([z.literal(0), z.literal(1)]);
 const count = z.number().int().min(0).max(999);
 
-/** A player's line on the results: the five numbers the end screen shows. */
+/** A player's line on the results: yards passing, running and catching, touchdowns, tackles and picks. */
 export const statLineSchema = z.object({
   passYards: z.number().int().min(-999).max(9999),
   rushYards: z.number().int().min(-999).max(9999),
+  recYards: z.number().int().min(-999).max(9999),
   touchdowns: count,
   tackles: count,
   interceptions: count,
