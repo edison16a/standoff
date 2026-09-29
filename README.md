@@ -10,7 +10,7 @@ Play it at [standoffgames.vercel.app](https://standoffgames.vercel.app).
 
 ## Screenshots
 
-The home screen works like a console menu. Big tiles show each game, and the chosen one grows and gets a ring in its own colour. A looping clip of the game really being played fills the screen behind it, with lobby music and menu sounds. The gear at the top right sets the music and sound effect volume.
+The home screen works like a console menu. Big tiles show each game, and the chosen one grows and gets a ring in its own colour. A looping clip of the game really being played fills the screen behind it, with lobby music and menu sounds. The gear at the top right sets the music and sound effect volume. Three quick taps on it open a hidden admin panel for testing, with the shortcuts the running game offers, a frame rate readout and a reload button.
 
 <img src="docs/screenshots/home.jpg" alt="The home screen in dark mode with Magic Kart chosen in the row of game tiles and a clip of the race behind" width="100%" />
 

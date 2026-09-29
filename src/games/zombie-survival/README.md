@@ -11,7 +11,7 @@ Status: ready. A co-op, first person, on rails shooter for 1 to 4 players. Each 
    * **Submachine Gun**: fast and forgiving, light hits, big magazine, quick reload.
    * **Assault Rifle**: accurate and steady, puts every bullet where you point.
    * **AK-47**: heavy rounds, slower, kicks hard, long reload.
-4. Say **Ready**. The run starts when everyone connected is ready, or when someone presses Start on the big screen. Late players set up and drop straight into the run.
+4. Say **Ready**. The run starts when everyone connected is ready, or when someone presses Start on the big screen. The lobby card on the big screen also sets the difficulty: Easy (the default) zombies walk slower and hit softer, Medium is the run as first tuned, and Hard ones are faster and hit harder. In Training they rise and stand still, never walking or swinging, so the team can practise its aim. Late players set up and drop straight into the run.
 5. In the run the phone shows a big Shoot button (hold it with an automatic gun), Reload, the rounds left and a Recenter button for when the aim drifts. Phones without motion sensors aim by dragging on a pad around the button.
 
 Precision matters more than speed. Walkers fall to one bullet anywhere early on. Later they need two light rounds, brutes soak up several body hits but drop fast to head shots, riot zombies shrug off body shots but not head shots. Bosses only hurt through the glowing weak points on their joints, so the team has to aim together. Zombies that reach the team hurt the shared health. At zero, the team retries the stage from its checkpoint with its stats kept.
