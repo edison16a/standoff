@@ -127,18 +127,29 @@ function drips(cx: number, cy: number, r: number, seed: number): Drip[] {
   return out;
 }
 
-/** Draws a drip as beads down its path, `value` giving each bead's grey from its distance down. */
-function drawDrip(ctx: Draw, d: Drip, value: (t: number) => string): void {
+/**
+ * Draws a drip as beads down its path, `value` giving each bead's grey
+ * from its distance down. `pad` widens every bead by that many pixels.
+ */
+function drawDrip(ctx: Draw, d: Drip, value: (t: number) => string, pad = 0): void {
   for (let y = 0; y <= d.length; y += 1) {
     const t = y / d.length;
     // Thinner as it runs, with a fat bead where it stops.
     const w = d.width * (1 - 0.35 * t) + (t > 0.93 ? d.width * 0.6 * Math.sin(((t - 0.93) / 0.07) * Math.PI) : 0);
     ctx.fillStyle = value(t);
     ctx.beginPath();
-    ctx.arc(d.x + Math.sin(y * 0.05 + d.x) * 1.2, d.top + y, Math.max(0.8, w), 0, Math.PI * 2);
+    ctx.arc(d.x + Math.sin(y * 0.05 + d.x) * 1.2, d.top + y, Math.max(0.8, w) + pad, 0, Math.PI * 2);
     ctx.fill();
   }
 }
+
+/**
+ * The drip order is drawn a few pixels wider than the paint. Its soft
+ * edge then falls outside the drip, so every painted pixel carries its
+ * true distance down. Left soft, the edge of a bead read as near the top
+ * and showed as a hollow ring before the drip reached it.
+ */
+const ORDER_PAD = 3;
 
 function layer(): [HTMLCanvasElement, Draw] {
   const c = document.createElement("canvas");
@@ -176,7 +187,7 @@ export function splatAtlas(): THREE.CanvasTexture {
       const at = { ...d, x: d.x + t.ox, top: d.top + t.oy };
       drawDrip(cc, at, () => "#fff");
       drawDrip(tc, at, () => "rgba(255,255,255,0.5)");
-      drawDrip(dc, at, (k) => `rgb(${Math.round(12 + k * 243)},0,0)`);
+      drawDrip(dc, at, (k) => `rgb(${Math.round(12 + k * 243)},0,0)`, ORDER_PAD);
     }
   }
   return combine(read(cover), read(drip), read(thick), body);
