@@ -9,6 +9,7 @@ Shared code that games may import. The kit never imports a game, and games still
 * `motion/orientation.ts`: `subscribeOrientation`, the phone's orientation as a quaternion on every reading.
 * `steps/StepShell.tsx`: the frame for a game's phone setup. Every game uses the same order: the platform asks for a name (or Skip), then the game shows **Calibrate**, then its own choices (weapon, kart, blade), then **Ready**. Each step is its own page.
 * `aim/`: pointing the phone at the big screen, for Fruit Slicer, Zombie Survival and Shooting Gallery.
+* `victory/`: winner scenes: confetti, spotlights, an orbit camera, trophies made in code, a podium and the winners' names.
 
 ## Aiming
 
@@ -237,3 +238,111 @@ node tools/testing/camera-e2e.mjs --clip clip.mjpeg --timeline clip.json --out s
 ## Split screen map
 
 `split/SplitMap.tsx` draws a small picture of the split screen with each player's name written big in the pane they play in, in their colour, inside a frame with four corner marks. Pass it the same rects the renderer uses (`{ name, color, rect: { x, y, w, h } }` as fractions of the screen) and put it in the game's side panel. It draws nothing for a single view.
+
+## Victory scenes
+
+`victory/` holds the pieces for a winner scene in three.js: lots of confetti, stage spotlights, a camera that circles the winner, trophies built in code and a big overlay with the winners' names. Everything is a plain class or function, so a game adds the pieces to its own scene. Boxing, Magic Kart and Brawl Battle use them.
+
+```ts
+import { VictoryConfetti, StageLights, OrbitCamera, createBoxingBelt, HELD_BEND, studioEnvironment } from "@/games/kit/victory";
+import { VictoryNames } from "@/games/kit/victory/overlay/VictoryNames";
+```
+
+Try every piece at `/dev/victory` (development only). Add `?show=belt`, `basketball`, `world` or `podium` for one piece close up.
+
+### Confetti
+
+Paper and shiny foil pieces in two instanced meshes, so a few thousand cost two draws. Air drag holds paper to a slow fall, so a cannon blast shoots up a few metres as a tight clump, then opens out, sways, tumbles and settles flat on the floor. When every piece is out, the oldest are reused.
+
+```ts
+const confetti = new VictoryConfetti({ count: 3000, foil: 0.3, colours: ["#f5c542", "#ffffff", teamColour] });
+scene.add(confetti.group);
+confetti.cannon({ from: { x: -3, y: 0.3, z: 2 }, direction: { x: 0.4, y: 1, z: -0.2 }, spread: 0.3, speed: 16, count: 700 });
+confetti.shower({ centre: { x: 0, y: 0, z: 0 }, radius: 4, height: 6, count: 1500 });   // from the roof
+confetti.update(dt, time);     // every frame, seconds
+confetti.clear();              // a new round
+confetti.dispose();
+```
+
+Options: `count` (2400), `colours`, `foil` (share of shiny pieces, 0.3), `size` in metres (0.045), `seed`, and `tuning` for the physics: `gravity`, `terminal` fall speed (0.9 metres a second), `flutter` sway, `wind` and the `floor` height. `ConfettiSim` is the physics alone, with no three.js, for tests.
+
+### Lights
+
+`StageLights` hangs spotlights, each with a soft visible shaft through hazy air. Aim them all at the winner with `follow`, or one at a time with `aim`.
+
+```ts
+const lights = new StageLights();
+scene.add(lights.group);
+lights.addSpot({ from: { x: -3, y: 9, z: 4 }, at: winnerSpot, colour: "#fff1d6", intensity: 500, angle: 0.2, shadows: true });
+lights.addSpot({ from: { x: 4, y: 8, z: 2 }, at: winnerSpot, colour: "#9fc4ff", sway: { radius: 0.5, speed: 0.7 } });
+lights.follow(winner.position);   // every spot keeps on the winner
+lights.setLevel(0.5);             // fade them up or down together
+lights.update(dt, time);          // every frame
+```
+
+Spot options: `colour`, `intensity` in candela (400), `angle` (half the cone, 0.22 radians), `penumbra`, `beam` (the shaft, on by default), `haze` (how strong the shaft reads, 0.5), `shadows` and `sway`.
+
+Polished metal only looks like metal when it has something to reflect. `studioEnvironment(renderer)` bakes a dark stage with a few softboxes and a ring of warm lamps into an environment map. Set it as `scene.environment` when your scene has none, and dispose it with the scene.
+
+### Camera
+
+`orbitPose(shot, seconds)` is where a victory camera is at a moment: it eases in from wide and high over `introS` seconds, then circles slowly. It is pure, so it plays the same at any frame rate. `OrbitCamera` drives a three.js camera with it.
+
+```ts
+const orbit = new OrbitCamera(camera, { centre: { x: 0, z: 0 }, radius: 4, height: 1.8, lookHeight: 1.4, angle: 0, speed: 0.14 });
+orbit.update(dt);            // every frame
+orbit.shot = { ...orbit.shot, centre: newSpot };   // follow the winner somewhere else
+orbit.restart();             // play the opening move again
+```
+
+More shot options: `pullBack` (how many times further out it starts, 1.8), `rise` (how much higher it starts, 1.5 metres) and `bob` (a slow rise and fall, 0.06 metres).
+
+### Trophies
+
+Each is built true to size in metres, stands on y 0 and faces +z. Pass `height` to scale it and `materials` to share one set of finishes between several.
+
+```ts
+const materials = trophyMaterials();                                   // gold, satin gold, silver, green stone, plinth
+const nba = createBasketballTrophy({ height: 0.6, materials });       // gold ball in a hoop on a tall tapered net and base
+const cup = createWorldTrophy({ height: 0.37, materials });           // two spiral figures holding a globe, green bands at the base
+scene.add(nba.group);
+nba.grip;       // where hands take hold to lift it, in the group's space
+nba.height;
+nba.dispose();  // disposes the materials too when it made them itself
+```
+
+The boxing belt has a stitched leather strap that bends like leather, a crested gold centre plate with an enamel ring, a star and an engraved title, two gold side plates each side and gems all round.
+
+```ts
+const belt = createBoxingBelt({ strap: "#141418", enamel: "#c8102e", title: "CHAMPION", bend: HELD_BEND });
+belt.group;          // the strap runs along x, the centre plate faces +z
+belt.hands.left;     // where each hand holds it, just outside the centre plate
+```
+
+`HELD_BEND` curls the ends back over the hands, as a belt lifted overhead. `DISPLAY_BEND` is a gentle curve, as a belt stood on a table. Make your own with `{ flat, radius }`: the flat half width in the middle and how tight the ends curl.
+
+### Podium and a whole stage
+
+`createPodium({ places: 3 })` builds a podium with first in the middle, second on the audience's left and third on the right, each with a gold, silver or bronze band and its number on the front. `places: 1` makes a single pedestal. `podium.spots` gives the top of each step, first place first.
+
+For a game whose results sit apart from play, `VictoryStage` is the whole scene on its own canvas: a dark stage with a glossy floor, the studio environment, `lights`, `confetti` and an `orbit` camera. Add the winners, then start it.
+
+```ts
+const stage = new VictoryStage(canvas, { shot: { centre: { x: 0, z: 0 }, radius: 6, height: 2.4, lookHeight: 1.4 } });
+stage.scene.add(podium.group);
+stage.start((dt, time) => animateWinners(dt, time));
+stage.dispose();
+```
+
+### Names
+
+`VictoryNames` puts the winners' names across the screen in big gold letters that rise in one by one, each with a glow in the player's colour. Put it in a positioned parent that covers the screen. Long names and teams get smaller letters so the line always fits.
+
+```tsx
+<VictoryNames
+  eyebrow="Champion"
+  names={[{ name: "Ann", colour: playerColor(1) }]}     // one winner, or a whole team
+  detail="By knockout in round 3"
+  place="bottom"                                        // "bottom", "top" or "center"
+/>
+```
