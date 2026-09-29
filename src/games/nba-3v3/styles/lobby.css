@@ -1,7 +1,8 @@
 /*
   The lobby on the big screen: the game's logo, two team columns to
   drag players between, and the start button. The join card sits in the
-  bottom left corner, so the panel keeps clear of it.
+  bottom left corner, so the panel keeps clear of it, with the same
+  padding on the right so everything stays centred on the screen.
 */
 
 .nba-lobby {
@@ -10,11 +11,13 @@
   display: grid;
   grid-template-rows: auto 1fr auto auto;
   gap: 18px;
-  padding: 72px 32px 28px 220px;
+  padding: 72px 220px 28px;
   background: linear-gradient(180deg, rgba(6, 8, 18, 0.2), rgba(6, 8, 18, 0.72) 55%, rgba(6, 8, 18, 0.9));
 }
 
 .nba-lobby__title {
+  justify-self: center;
+  text-align: center;
   text-shadow: 0 3px 16px rgba(0, 0, 0, 0.6);
 }
 
@@ -163,10 +166,12 @@
   color: rgba(255, 255, 255, 0.6);
 }
 
+/* Centred like the rest of the lobby: the join note on its own line, the buttons under it. */
 .nba-lobby__footer {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 12px;
   max-width: 1100px;
   width: 100%;
@@ -174,7 +179,9 @@
 }
 
 .nba-lobby__note {
-  flex: 1;
+  flex-basis: 100%;
+  margin: 0;
+  text-align: center;
   color: rgba(255, 255, 255, 0.8);
   font-size: 16px;
 }
