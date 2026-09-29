@@ -1,3 +1,6 @@
+import type { JoinErrorReason } from "@/platform/protocol";
+import type { PhoneError } from "./phone-store";
+
 /**
  * How long a phone waits before trying a failed join again, and when it
  * stops. Rooms live in one server instance's memory, so a fresh socket
@@ -26,4 +29,19 @@ export function joinRetryDelay(reason: RetryReason, attempt: number, seated: boo
   const waits = seated ? SEATED : reason === "not-found" ? FIRST_NOT_FOUND : UNAVAILABLE;
   const wait = waits[attempt];
   return wait === undefined ? null : Math.round(wait * (0.7 + random() * 0.6));
+}
+
+export type JoinErrorPlan = { kind: "redial"; wait: number } | { kind: "fail"; error: PhoneError };
+
+/**
+ * What a failed join leads to, for any reason but a name clash. A socket
+ * can land on a server instance that has never heard of the room, and a
+ * server side failure may pass, so a few spaced tries go out on fresh
+ * sockets. Past them a seated phone's room is gone, and it says so.
+ */
+export function planJoinError(reason: Exclude<JoinErrorReason, "name-taken" | "name-away" | "no-seat">, attempt: number, seated: boolean): JoinErrorPlan {
+  const wait = reason === "not-found" || reason === "unavailable" ? joinRetryDelay(reason, attempt, seated) : null;
+  if (wait !== null) return { kind: "redial", wait };
+  if (reason === "not-found" && seated) return { kind: "fail", error: "lost" };
+  return { kind: "fail", error: reason === "limit" ? "unavailable" : reason };
 }

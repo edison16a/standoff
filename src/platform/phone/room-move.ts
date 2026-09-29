@@ -1,3 +1,5 @@
+import { defaultName } from "@/platform/profile";
+
 /**
  * When the host remakes its lobby, every phone is told the new room's
  * code and goes straight there, name and all, without the name screen.
@@ -14,6 +16,11 @@ let pending: PendingMove | null = null;
 
 export function rememberMove(move: PendingMove): void {
   pending = move;
+}
+
+/** The move for a phone seated as `name` in `seat`. A seat's default name is not carried over. */
+export function rememberMoveAs(code: string, name: string, seat: number | null): void {
+  rememberMove({ code, name: name && !(seat && name === defaultName(seat)) ? name : null });
 }
 
 /** The move into this room, if the phone is on its way there. */

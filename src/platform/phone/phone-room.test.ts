@@ -123,6 +123,22 @@ describe("PhoneRoom", () => {
     expect(room.store.getState()).toMatchObject({ stage: "error", error: "lost" });
   });
 
+  it("looks for its host on a fresh socket when the host goes away, keeping the old one", async () => {
+    vi.useFakeTimers();
+    const room = new PhoneRoom("ABCD");
+    await room.join(null);
+    last().open();
+    last().receive(joined("ABCD", "tiny"));
+    const first = last();
+    first.receive({ type: "host:away" });
+    vi.advanceTimersByTime(2000);
+    expect(FakeSocket.all).toHaveLength(2);
+    expect(first.readyState).toBe(1);
+    last().open();
+    expect(last().sent[0]).toMatchObject({ type: "phone:join", code: "ABCD", reconnect: true });
+    room.dispose();
+  });
+
   it("follows a move that answers its join", async () => {
     const room = new PhoneRoom("ABCD");
     await room.join(null);

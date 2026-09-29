@@ -1,16 +1,17 @@
-import { AudioEngine } from "@/platform/audio/audio-engine";
-import { startAudioSoon } from "@/platform/audio/autoplay";
 import { RESERVED_KINDS, type PhoneRoomApi } from "@/platform/games/game-api";
 import { SocketClient } from "@/platform/net/socket-client";
-import { defaultName, saveName } from "@/platform/profile";
+import { saveName } from "@/platform/profile";
 import { playersSchema, type Payload, type ServerEnvelope } from "@/platform/protocol";
 import { isNameClash, JoinRequest, TAKEN_RETRY_MS } from "./join-request";
-import { joinRetryDelay } from "./join-retry";
+import { HostSearch } from "./host-search";
+import { createPhoneApi } from "./phone-api";
+import { PhoneAudio } from "./phone-audio";
+import { planJoinError } from "./join-retry";
 import { PhoneEvents } from "./phone-events";
 import { requestMotion } from "./permissions";
 import { createPhoneStore, type PhoneError } from "./phone-store";
 import { ScreenAwake } from "./screen-awake";
-import { rememberMove } from "./room-move";
+import { rememberMoveAs } from "./room-move";
 import { writeToken } from "./seat-token";
 
 const reserved = new Set<string>(RESERVED_KINDS);
@@ -28,13 +29,16 @@ export class PhoneRoom {
   private readonly awake = new ScreenAwake();
   private readonly events = new PhoneEvents();
   private readonly request: JoinRequest;
-  private audio: AudioEngine | null = null;
-  private stopAudioWait: (() => void) | null = null;
+  private readonly audio = new PhoneAudio();
   private motion: PhoneRoomApi["motion"] = "unavailable";
   private joinRetries = 0;
   private current: PhoneRoomApi | null = null;
   private active = false;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly search = new HostSearch(
+    () => this.store.getState().hostAway,
+    () => this.socket.rotateNow(),
+  );
 
   constructor(
     private readonly code: string,
@@ -65,7 +69,7 @@ export class PhoneRoom {
     this.request.name = name;
     this.request.reconnect = reconnect;
     this.store.setState({ name: name ?? "", stage: "joining", clash: null });
-    this.wakeAudio();
+    this.audio.wake();
     this.motion = await requestMotion();
     this.start();
   }
@@ -77,7 +81,7 @@ export class PhoneRoom {
   resume(): void {
     if (this.active || !this.request.name) return;
     this.store.setState({ name: this.request.name, stage: "joining" });
-    this.wakeAudio();
+    this.audio.wake();
     // Without a tap iOS cannot grant motion, so a resume there goes through Join (see PhoneApp).
     void requestMotion().then((motion) => (this.motion = motion));
     this.start();
@@ -92,11 +96,10 @@ export class PhoneRoom {
   dispose(): void {
     this.active = false;
     if (this.retryTimer) clearTimeout(this.retryTimer);
+    this.search.stop();
     this.awake.stop();
     this.socket.close();
-    this.stopAudioWait?.();
-    this.audio?.close();
-    this.audio = null;
+    this.audio.close();
   }
 
   /**
@@ -107,16 +110,6 @@ export class PhoneRoom {
   fail(error: PhoneError): void {
     this.store.setState({ stage: "error", error });
     this.dispose();
-  }
-
-  /**
-   * Inside the Join tap this starts sound at once. A reload, or a phone
-   * moved to a new room, had no tap, so sound waits for the next touch.
-   */
-  private wakeAudio(): void {
-    const audio = (this.audio ??= new AudioEngine());
-    this.stopAudioWait?.();
-    this.stopAudioWait = startAudioSoon(audio.ctx, window, { resume: () => audio.unlock() });
   }
 
   private start(): void {
@@ -148,8 +141,9 @@ export class PhoneRoom {
         return this.moveTo(message.code);
       case "host:away":
         this.store.setState({ hostAway: true });
-        return;
+        return this.search.start();
       case "host:back":
+        this.search.stop();
         this.store.setState({ hostAway: false });
         this.sendProfile();
         this.events.emit({ type: "rejoined" });
@@ -162,8 +156,7 @@ export class PhoneRoom {
   /** The host remade its lobby. This page follows to the new room with the same name. */
   private moveTo(code: string): void {
     const { name, seat } = this.store.getState();
-    const chosen = name && !(seat && name === defaultName(seat)) ? name : null;
-    rememberMove({ code, name: chosen });
+    rememberMoveAs(code, name, seat);
     this.store.setState({ stage: "joining", movedTo: code });
     this.dispose();
   }
@@ -180,20 +173,13 @@ export class PhoneRoom {
       this.store.setState({ stage: "name", clash: { reason, name: this.request.name ?? "" } });
       return;
     }
-    // A socket can land on a server instance that has never heard of the
-    // room, and a server side failure may pass, so a few spaced tries go
-    // out on fresh sockets. A seated phone keeps its game screen meanwhile.
+    // A seated phone keeps its game screen while it tries again.
     const seated = this.request.reconnect;
-    const wait = reason === "not-found" || reason === "unavailable" ? joinRetryDelay(reason, this.joinRetries, seated) : null;
-    if (wait !== null) {
-      this.joinRetries += 1;
-      if (seated) this.store.setState({ rejoining: true });
-      this.retryTimer = setTimeout(() => this.socket.redial(), wait);
-      return;
-    }
-    // Past its tries a seated phone's room is gone: it says so and waits for the new code.
-    if (reason === "not-found" && seated) return this.fail("lost");
-    this.fail(reason === "limit" ? "unavailable" : reason);
+    const plan = planJoinError(reason, this.joinRetries, seated);
+    if (plan.kind === "fail") return this.fail(plan.error);
+    this.joinRetries += 1;
+    if (seated) this.store.setState({ rejoining: true });
+    this.retryTimer = setTimeout(() => this.socket.redial(), plan.wait);
   }
 
   private onHost(payload: Payload): void {
@@ -212,19 +198,8 @@ export class PhoneRoom {
   }
 
   private makeApi(seat: number, seats: number): PhoneRoomApi {
-    // eslint-disable-next-line @typescript-eslint/no-this-alias -- motion may settle after the seat does
-    const room = this;
-    return {
-      code: this.code,
-      seat,
-      seats,
-      audio: this.audio ?? new AudioEngine(),
-      get motion() {
-        return room.motion;
-      },
-      send: (payload) => this.send(payload),
-      sendLossy: (payload) => this.socket.sendLossy({ type: "phone:send", payload }),
-      on: (listener) => this.events.on(listener),
-    };
+    const sendLossy = (payload: Payload) => this.socket.sendLossy({ type: "phone:send", payload });
+    const [send, on] = [(payload: Payload) => this.send(payload), this.events.on.bind(this.events)];
+    return createPhoneApi({ code: this.code, seat, seats, audio: this.audio.get(), motion: () => this.motion, send, sendLossy, on });
   }
 }
