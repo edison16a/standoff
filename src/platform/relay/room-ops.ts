@@ -1,18 +1,23 @@
 import type { Seat } from "@/platform/protocol";
 import type { RoomStore } from "./backend";
-import { logFailure } from "./log";
 import { makeRoomCode, makeToken } from "./room-code";
 import * as rules from "./room-state";
-import { claimSeat, type SeatRequest } from "./seat-claim";
+import { claimSeat, type SeatClaim, type SeatRequest } from "./seat-claim";
 
 /** Tries before giving up on finding an unused room code. */
 const CODE_ATTEMPTS = 20;
 /** Rooms one address may create a minute. A real host makes one, maybe two. */
 const CREATES_PER_MINUTE = 10;
-/** Wrong room codes one address may try a minute, typos and retries included. */
-const MISSES_PER_MINUTE = 20;
+/**
+ * Wrong room codes one address may try a minute. A household shares one
+ * address, and phones look again for a while after a room goes missing.
+ */
+const MISSES_PER_MINUTE = 40;
 /** Giving a seat back matters enough to try more than once. */
 const RELEASE_ATTEMPTS = 3;
+
+/** A join's outcome: a seat claim, or the room the host moved to. */
+export type JoinOutcome = { moved: string } | { claim: SeatClaim; hostHere: boolean; game: string; seats: number };
 
 /**
  * The room rules applied through the store. Each method is one atomic
@@ -49,8 +54,29 @@ export class RoomOps {
     const old = await this.store.get(code);
     if (!old || old.hostConn !== conn) return null;
     const room = await this.create(conn, joinUrlFor, old.game, old.seats.length);
-    if (room) await this.closeByHost(code, conn);
+    // The old room points at the new one, so a phone that slept through the move still follows.
+    if (room) await this.closeIf(code, (current) => current.hostConn === conn, room.code);
     return room;
+  }
+
+  /**
+   * Ends a room for whoever holds its token. `oldHost` is the connection
+   * that was hosting it, to be kicked. `repeat` means the room had already
+   * ended the same way, so its phones were told before.
+   */
+  async retire(code: string, token: string, movedTo: string | null) {
+    const now = this.now();
+    return this.store.update(code, (room) => {
+      const next = rules.retire(room, token, movedTo, now);
+      if (!next) return { room: null, result: null };
+      const repeat = room.closed && (room.movedTo ?? null) === next.movedTo;
+      return { room: next, result: { seats: room.seats.length, oldHost: room.hostConn, repeat, movedTo: next.movedTo ?? null } };
+    });
+  }
+
+  /** The room as stored, tombstones included, without changing it. */
+  peek(code: string): Promise<rules.RoomRecord | null> {
+    return this.store.get(code);
   }
 
   /** False once this address has made too many rooms this minute. */
@@ -71,10 +97,12 @@ export class RoomOps {
     });
   }
 
-  joinSeat(code: string, request: SeatRequest, conn: string) {
+  /** Seats a phone. A room that moved sends the phone on, as `moved`, and seats nobody. */
+  joinSeat(code: string, request: SeatRequest, conn: string): Promise<JoinOutcome | null> {
     const now = this.now();
     const newToken = makeToken();
-    return this.store.update(code, (room) => {
+    return this.store.update<JoinOutcome>(code, (room) => {
+      if (room.closed && room.movedTo) return { room: null, result: { moved: room.movedTo } };
       const { room: next, claim } = claimSeat(room, request, conn, newToken, now);
       return {
         room: claim.ok ? next : null,
@@ -129,14 +157,16 @@ export class RoomOps {
     }
   }
 
-  private async closeIf(code: string, test: (room: rules.RoomRecord) => boolean): Promise<boolean> {
+  /**
+   * Ends the room but keeps it as a tombstone, which the store expires by
+   * itself (see TOMBSTONE_MS). Deleting it at once turned a phone that
+   * slept through the end into a "Room not found".
+   */
+  private async closeIf(code: string, test: (room: rules.RoomRecord) => boolean, movedTo: string | null = null): Promise<boolean> {
+    const now = this.now();
     const closed = await this.store.update(code, (room) =>
-      test(room) ? { room: { ...room, closed: true }, result: true } : { room: null, result: false },
+      test(room) ? { room: { ...rules.tombstone(room, now), movedTo: movedTo ?? room.movedTo ?? null }, result: true } : { room: null, result: false },
     );
-    if (!closed) return false;
-    // The room is already marked closed and expires by itself, so a failed
-    // delete must not stop everyone being told.
-    await this.store.delete(code).catch((error: unknown) => logFailure("Room delete failed", error));
-    return true;
+    return closed === true;
   }
 }

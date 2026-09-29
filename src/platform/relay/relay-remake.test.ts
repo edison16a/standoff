@@ -66,12 +66,14 @@ describe("remaking a lobby", () => {
     expect(host.socket.last("peer:joined")).toMatchObject({ seat: 1 });
   });
 
-  it("closes the old room, so nobody lands in it by mistake", async () => {
+  it("closes the old room, and sends a phone that slept through the move on to the new one", async () => {
     const { host, code } = await roomWithPhone();
     await host.send({ type: "host:remake" });
+    const next = host.socket.last("room:created")!.code;
     const late = connect();
     await late.send({ type: "phone:join", code });
-    expect(late.socket.last("room:error")).toBeDefined();
+    expect(late.socket.last("phone:joined")).toBeUndefined();
+    expect(late.socket.last("room:moved")).toEqual({ type: "room:moved", code: next });
   });
 
   it("ignores a remake from anyone but the host", async () => {

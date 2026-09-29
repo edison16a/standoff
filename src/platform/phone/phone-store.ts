@@ -10,7 +10,7 @@ export type PhoneStage = "name" | "joining" | "playing" | "error";
  * `replaced` means this seat was taken over by the same page in another
  * tab, and `load` that the game's own code would not load.
  */
-export type PhoneError = Exclude<JoinErrorReason, NameClash> | "replaced" | "load";
+export type PhoneError = Exclude<JoinErrorReason, NameClash | "limit"> | "replaced" | "load";
 
 /**
  * What the platform's phone screens render. Each game keeps its own store

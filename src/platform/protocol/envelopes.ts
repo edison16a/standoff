@@ -38,10 +38,17 @@ export const clientEnvelopeSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("host:create"), game: gameIdSchema, seats: seat }),
   /** The computer reclaiming its room after a page reload. */
   z.object({ type: z.literal("host:resume"), code: roomCode, token }),
-  /** The computer ending the game for good. */
+  /** The computer ending the game for good. Only tabs from before host:retire send it. */
   z.object({ type: z.literal("host:close") }),
-  /** The computer swapping its room for a fresh one with the same game, taking every phone along. */
+  /** The computer swapping its room for a fresh one with the same game. Only older tabs send it. */
   z.object({ type: z.literal("host:remake") }),
+  /**
+   * Ends a room by its token, from any connection, and says where its
+   * phones go if the host moved on. The token proves ownership rather than
+   * the connection, so this works even when the socket that made the room
+   * is dead or sits on another server instance.
+   */
+  z.object({ type: z.literal("host:retire"), code: roomCode, token, movedTo: roomCode.optional() }),
   /** The computer talking to one phone or all of them. */
   z.object({ type: z.literal("host:send"), to: z.union([seat, z.literal("all")]), payload: payloadSchema }),
   /**
@@ -66,9 +73,10 @@ export type ClientEnvelope = z.infer<typeof clientEnvelopeSchema>;
 
 /**
  * `unavailable` is a server side failure, worth retrying on a fresh
- * connection. The rest are about names (see NameClash).
+ * connection. `limit` refuses a host that made too many rooms this
+ * minute, and never reaches a phone. The rest are about names (see NameClash).
  */
-export type JoinErrorReason = "not-found" | "full" | "closed" | "unavailable" | NameClash;
+export type JoinErrorReason = "not-found" | "full" | "closed" | "unavailable" | "limit" | NameClash;
 
 /**
  * `name-taken`: a connected player has the name. `name-away`: the name
@@ -104,8 +112,10 @@ export type ServerEnvelope =
   | { type: "host:away" }
   | { type: "host:back" }
   | { type: "room:closed" }
-  /** The host remade its lobby. Phones follow to the new room's code. */
+  /** The host moved to a new room, and phones follow its code. Also the answer to a join on a moved room. */
   | { type: "room:moved"; code: string }
+  /** The answer to host:retire. `found` is false when no room matched the code and token. */
+  | { type: "room:retired"; code: string; found: boolean }
   /**
    * This socket is about to hit the server's time limit. The client should
    * open a new one and rejoin on it before this one is cut.

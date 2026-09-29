@@ -77,6 +77,7 @@ describe.skipIf(!url)("Relay over Redis across two instances", () => {
 
     host.connection.receive({ type: "host:close" });
     await again.socket.waitFor("room:closed");
-    expect(await instanceB.store.get(code)).toBeNull();
+    // Kept as a tombstone that expires by itself, so late phones hear it ended.
+    expect(await instanceB.store.get(code)).toMatchObject({ closed: true });
   });
 });

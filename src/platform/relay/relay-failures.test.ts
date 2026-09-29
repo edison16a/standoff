@@ -64,13 +64,13 @@ describe("relay failures and limits", () => {
     const host = connect(backend);
     for (let i = 0; i < 12; i++) await host.send({ type: "host:create", game: "blade-clash", seats: 2 });
     expect(host.socket.inbox.filter((m) => m.type === "room:created")).toHaveLength(10);
-    expect(host.socket.errors).toEqual(["unavailable", "unavailable"]);
+    expect(host.socket.errors).toEqual(["limit", "limit"]);
   });
 
   it("cuts off a connection that keeps guessing room codes", async () => {
     const backend: Backend = { store: new MemoryStore(), bus: new MemoryBus(), label: "test", shared: true };
     const guesser = connect(backend);
-    for (let i = 0; i < 20; i++) await guesser.send({ type: "phone:join", code: "ZZZZ" });
+    for (let i = 0; i < 40; i++) await guesser.send({ type: "phone:join", code: "ZZZZ" });
     expect(guesser.socket.closedWith).toBeNull();
     await guesser.send({ type: "phone:join", code: "ZZZZ" });
     expect(guesser.socket.closedWith).toBe(1008);

@@ -177,7 +177,8 @@ describe("RelayConnection over the memory backend", () => {
     await phone.connection.settled();
     await flush();
     expect(phone.socket.has("room:closed")).toBe(true);
-    expect(await backend.store.get(code)).toBeNull();
+    // Kept as a tombstone, so a phone that slept through it hears the game ended.
+    expect(await backend.store.get(code)).toMatchObject({ closed: true });
   });
 
   it("rejects a resume with the wrong token and a join to a missing room", async () => {
@@ -198,6 +199,9 @@ describe("RelayConnection over the memory backend", () => {
     expect(await backend.store.get(code)).not.toBeNull();
     await host.send({ type: "host:close" });
     expect(phone.socket.has("room:closed")).toBe(true);
-    expect(await backend.store.get(code)).toBeNull();
+    expect(await backend.store.get(code)).toMatchObject({ closed: true, closedAt: clock });
+    const late = connect();
+    await late.send({ type: "phone:join", code });
+    expect(late.socket.last("room:error").reason).toBe("closed");
   });
 });

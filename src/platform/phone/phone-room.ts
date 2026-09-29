@@ -189,7 +189,7 @@ export class PhoneRoom {
       this.socket.redial();
       return;
     }
-    this.fail(reason);
+    this.fail(reason === "limit" ? "unavailable" : reason);
   }
 
   private onHost(payload: Payload): void {
