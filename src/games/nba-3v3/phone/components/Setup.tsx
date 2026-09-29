@@ -1,21 +1,22 @@
 "use client";
 import { lazy, Suspense } from "react";
 import { StepShell } from "@/games/kit/steps/StepShell";
-import { CHARACTERS, TEAMS } from "../../roster";
+import { BUILDS } from "../../builds";
+import { TEAMS } from "../../roster";
 import { useControllerStore } from "../controller-store";
 import { useController } from "./session-context";
-import { StarStep } from "./StarStep";
+import { BuildStep } from "./BuildStep";
 
 const Preview = lazy(() => import("./PreviewCanvas"));
 
-const STEPS = ["Star", "Ready"] as const;
-const INDEX = { star: 0, ready: 1 } as const;
-const TITLES = { star: "Pick your star", ready: "Ready to play" } as const;
+const STEPS = ["Build", "Ready"] as const;
+const INDEX = { build: 0, ready: 1 } as const;
+const TITLES = { build: "Pick your build", ready: "Ready to play" } as const;
 
 function ReadyStep() {
   const host = useControllerStore((s) => s.host);
   if (!host?.pick) return null;
-  const c = CHARACTERS[host.pick];
+  const c = BUILDS[host.pick];
   const team = host.team;
   const gameOn = host.phase !== "lobby" && !host.playing;
   const note = gameOn
@@ -27,12 +28,14 @@ function ReadyStep() {
     <div className="nba-ready" style={{ "--team": team === null ? "#64748b" : TEAMS[team].color } as React.CSSProperties}>
       <div className="nba-ready__stage">
         <Suspense fallback={null}>
-          <Preview character={host.pick} team={team} />
+          <Preview build={host.pick} team={team} name={host.name} />
         </Suspense>
       </div>
       <div className="nba-ready__info">
-        <strong className="nba-ready__name">{c.name}</strong>
-        <span className="nba-ready__team">{team === null ? "No team yet" : `Team ${TEAMS[team].name}`}</span>
+        <strong className="nba-ready__name">{host.name || c.name}</strong>
+        <span className="nba-ready__team">
+          {c.name}, {team === null ? "no team yet" : `Team ${TEAMS[team].name}`}
+        </span>
         <p className={`nba-ready__note ${host.ready ? "nba-ready__note--on" : ""}`}>{note}</p>
       </div>
     </div>
@@ -40,7 +43,7 @@ function ReadyStep() {
 }
 
 /**
- * The phone's setup, one step per page in the kit's frame: pick a star,
+ * The phone's setup, one step per page in the kit's frame: pick a build,
  * then say ready. The platform already asked for a name before this.
  */
 export function Setup() {
@@ -50,13 +53,13 @@ export function Setup() {
   const ready = host?.ready ?? false;
 
   const footer =
-    step === "star" ? (
+    step === "build" ? (
       <button type="button" className="btn btn--primary btn--lg kit-grow" disabled={!confirmed || confirmed !== wanted} onClick={() => session.goTo("ready")}>
         Next
       </button>
     ) : (
       <>
-        <button type="button" className="btn btn--ghost btn--lg" disabled={ready} onClick={() => session.goTo("star")}>
+        <button type="button" className="btn btn--ghost btn--lg" disabled={ready} onClick={() => session.goTo("build")}>
           Back
         </button>
         <button type="button" className={`btn btn--lg kit-grow ${ready ? "btn--ghost" : "btn--primary"}`} disabled={!confirmed} onClick={() => session.setReady(!ready)}>
@@ -67,7 +70,7 @@ export function Setup() {
 
   return (
     <StepShell steps={STEPS} current={INDEX[step]} title={TITLES[step]} footer={footer}>
-      {step === "star" ? <StarStep /> : <ReadyStep />}
+      {step === "build" ? <BuildStep /> : <ReadyStep />}
     </StepShell>
   );
 }

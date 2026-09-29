@@ -1,14 +1,15 @@
 import * as THREE from "three";
 import { softwareWebGl } from "@/games/kit/camera/model/gpu-check";
 import type { TeamId } from "../engine/types";
-import { CHARACTERS, TEAMS, type CharacterId } from "../roster";
+import { BUILDS, type BuildId } from "../builds";
+import { TEAMS } from "../roster";
 import { locomotion } from "./anim/locomotion";
 import { applyPose } from "./anim/pose";
 import { buildAthlete, type AthleteModel } from "./models/athlete-model";
 import { ballTexture } from "./textures";
 
 /**
- * The star on the phone's picker: the very same model the big screen
+ * The build on the phone's picker: the very same model the big screen
  * plays with, dribbling on a little spotlit stand and turning slowly.
  * It owns its own small renderer and releases its context when disposed.
  */
@@ -51,18 +52,18 @@ export class AthletePreview {
     this.frame = requestAnimationFrame(this.draw);
   }
 
-  show(character: CharacterId, team: TeamId | null): void {
-    const key = `${character}:${team}`;
+  show(build: BuildId, team: TeamId | null, name = ""): void {
+    const key = `${build}:${team}:${name}`;
     if (this.shown === key) return;
     this.shown = key;
     if (this.model) {
       this.turntable.remove(this.model.joints.root);
       this.model.dispose();
     }
-    const kit = team === null ? { name: "Stars", color: "#475569", dark: "#1e293b", trim: "#e2e8f0" } : TEAMS[team];
-    this.model = buildAthlete(CHARACTERS[character], kit, this.bodyMat);
+    const kit = team === null ? { name: "Standoff", color: "#475569", dark: "#1e293b", trim: "#e2e8f0" } : TEAMS[team];
+    this.model = buildAthlete(BUILDS[build], kit, this.bodyMat, name || BUILDS[build].name);
     this.turntable.add(this.model.joints.root);
-    const h = CHARACTERS[character].build.height;
+    const h = BUILDS[build].body.height;
     this.camera.position.set(0, h * 0.62, h * 2.35);
     this.camera.lookAt(0, h * 0.5, 0);
   }

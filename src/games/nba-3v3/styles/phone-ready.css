@@ -21,7 +21,7 @@
 @media (orientation: portrait) {
   .nba-ready {
     grid-template-columns: 1fr;
-    /* The star shrinks first on a short screen, and never grows past a good size. */
+    /* The preview shrinks first on a short screen, and never grows past a good size. */
     grid-template-rows: minmax(0, 340px) auto;
     align-content: start;
   }

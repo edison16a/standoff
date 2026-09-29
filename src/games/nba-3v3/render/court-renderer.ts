@@ -54,6 +54,8 @@ export class CourtRenderer {
   private readonly maxPixelRatio: number;
   private readonly pixel = new Uint8Array(4);
   private readonly replayCam = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 50 };
+  /** The name across a player's back, or null for the build's own. The host sets it to people's names. */
+  jerseyName: (a: Athlete) => string | null = () => null;
 
   constructor(canvas: HTMLCanvasElement, quality: Quality = {}) {
     const { antialias = true, shadows = true, reflections = true, maxPixelRatio = 1.75 } = quality;
@@ -86,7 +88,7 @@ export class CourtRenderer {
   setMatch(match: Match, intro = false): void {
     if (match === this.match) return;
     for (const view of this.views) view.dispose(this.players);
-    this.views = match.athletes.map((a) => new AthleteView(a, this.bodyMat, this.players));
+    this.views = match.athletes.map((a) => new AthleteView(a, this.bodyMat, this.players, this.jerseyName(a) ?? undefined));
     this.match = match;
     this.effects.reset();
     this.ball.reset();

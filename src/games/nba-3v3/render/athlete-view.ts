@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type { Athlete } from "../engine/types";
-import { CHARACTERS, TEAMS } from "../roster";
+import { BUILDS } from "../builds";
+import { TEAMS } from "../roster";
 import { blockPose, landPose, passPose, shootPose, stealPose, stumblePose } from "./anim/actions";
 import { celebratePose, dejectedPose } from "./anim/celebrations";
 import { dunkPose, dunkSpin } from "./anim/dunks";
@@ -50,8 +51,9 @@ export class AthleteView {
   private ahead = 0;
   private side = 0;
 
-  constructor(readonly athlete: Athlete, bodyMat: THREE.Material, parent: THREE.Object3D) {
-    this.model = buildAthlete(CHARACTERS[athlete.character], TEAMS[athlete.team], bodyMat);
+  /** `backName` goes across the jersey: the player's own name, or the build's for a computer player. */
+  constructor(readonly athlete: Athlete, bodyMat: THREE.Material, parent: THREE.Object3D, backName?: string) {
+    this.model = buildAthlete(BUILDS[athlete.build], TEAMS[athlete.team], bodyMat, backName);
     this.seed = athlete.id * 1.7;
     this.placement = new Placement(athlete);
     parent.add(this.model.joints.root);
@@ -59,7 +61,7 @@ export class AthleteView {
 
   update(a: Athlete, s: AthleteScene, dt: number): void {
     this.time += dt;
-    const c = CHARACTERS[a.character];
+    const c = BUILDS[a.build];
     const speed = Math.hypot(a.vx, a.vz);
     this.stride(a, s, speed, dt);
     this.feelMomentum(a, dt);
