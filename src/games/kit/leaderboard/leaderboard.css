@@ -1,0 +1,91 @@
+/*
+  A game's leaderboard list. A game gives it its own look by setting
+  these variables on the class it passes in:
+  --board-bg, --board-fg, --board-accent (the title), --board-me-bg and
+  --board-me-fg (the lit row), --board-height (the list's most height).
+*/
+
+.kit-board {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: var(--board-bg, rgba(10, 12, 30, 0.85));
+  color: var(--board-fg, #ffffff);
+}
+
+.kit-board__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--board-accent, #ffd23f);
+}
+
+.kit-board__empty {
+  margin: 0;
+  font-size: 16px;
+  opacity: 0.75;
+}
+
+.kit-board__list {
+  /* Relative, so a row's offsetTop is measured from the list when scrolling it into view. */
+  position: relative;
+  max-height: var(--board-height, 360px);
+  margin: 0;
+  padding: 0 4px 0 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+  scrollbar-width: thin;
+}
+
+.kit-board__row {
+  display: grid;
+  grid-template-columns: 3.2em minmax(0, 1fr) auto auto;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.kit-board__row--me {
+  background: var(--board-me-bg, #ffd23f);
+  color: var(--board-me-fg, #0a0c1e);
+}
+
+.kit-board__rank {
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
+.kit-board__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kit-board__tag {
+  grid-column: 3;
+  font-size: 13px;
+  font-weight: 800;
+  opacity: 0.75;
+  white-space: nowrap;
+}
+
+.kit-board__value {
+  grid-column: 4;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.kit-board__gap {
+  padding: 4px 8px;
+  font-size: 14px;
+  font-weight: 700;
+  opacity: 0.6;
+  text-align: center;
+}
