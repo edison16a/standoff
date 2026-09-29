@@ -4,34 +4,36 @@ import { keyed, mix, neutral, over, smooth, type Keys, type Pose } from "./pose"
 /**
  * The throwing motion, timed to the engine's own clock so the ball
  * leaves the hand exactly as the engine releases it (at PASS.windup).
- * The ball comes back by the right ear, the left foot steps at the
- * target, the hips and then the shoulders turn through, and the arm
- * whips over and follows through across the body.
+ * The chest turns away with the ball back by the right ear and the
+ * left shoulder at the target, the left foot steps, then the shoulders
+ * turn through and the arm whips over and follows through across the
+ * body. A positive twist turns the chest to the thrower's left.
  */
 const base = neutral();
 const SET = over(base, {
-  spineY: 0.15, pitch: 0.05,
+  spineY: -0.15, pitch: 0.05,
   hipLX: -0.25, hipRX: 0.1, kneeL: 0.35, kneeR: 0.4,
   shLX: -0.55, shRX: -0.55, elL: -1.55, elR: -1.45, shLY: 0.55, shRY: 0.5, shLZ: 0.28, shRZ: 0.3,
 });
 const LOADED = over(base, {
-  spineY: 0.75, spineZ: -0.12, pitch: -0.05, neckY: -0.65,
+  spineY: -0.75, spineZ: -0.12, pitch: -0.05, neckY: 0.65,
   hipLX: -0.55, hipRX: 0.25, kneeL: 0.25, kneeR: 0.55,
   // The ball up behind the ear, the elbow at shoulder height; the left arm points at the target.
   shRX: -0.25, shRZ: 1.45, elR: -1.75, shRY: -0.6,
   shLX: -1.35, shLZ: 0.35, elL: -0.35, shLY: 0.2,
 });
 const RELEASE = over(base, {
-  spineY: -0.35, spineX: 0.25, pitch: 0.18, neckY: 0.3,
+  spineY: 0.35, spineX: 0.25, pitch: 0.18, neckY: -0.3,
   hipLX: -0.6, hipRX: 0.45, kneeL: 0.35, kneeR: 0.35,
   shRX: -1.9, shRZ: 0.55, elR: -0.35, shRY: 0.2,
   shLX: -0.4, shLZ: 0.25, elL: -1.4, shLY: 0.6,
 });
+// The throwing hand finishes down across the body by the left hip, the way a passer's thumb ends up pointing down.
 const FOLLOW = over(base, {
-  spineY: -0.6, spineX: 0.35, pitch: 0.22, neckY: 0.45,
+  spineY: 0.7, spineX: 0.4, pitch: 0.24, neckY: -0.45,
   hipLX: -0.5, hipRX: 0.3, kneeL: 0.4, kneeR: 0.9,
-  shRX: -0.6, shRZ: 0.1, elR: -0.5, shRY: 0.9,
-  shLX: 0.25, shLZ: 0.35, elL: -1.1,
+  shRX: -1.0, shRZ: -0.35, elR: -0.3, shRY: 0.7,
+  shLX: 0.35, shLZ: 0.35, elL: -1.1,
 });
 
 const THROW_KEYS: Keys = [
