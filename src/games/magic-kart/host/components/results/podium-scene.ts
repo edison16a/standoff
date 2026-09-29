@@ -29,7 +29,8 @@ export class PodiumScene {
       floorColour: "#1d1638",
       lights: { count: 4, colours: ["#fff1d6", "#ffd27a", "#bfe3ff", "#ffd27a"], radius: 6, height: 10, intensity: 900, angle: 0.24, beamStrength: 0.22 },
       confetti: { count: 1800, size: 0.09, seed: 11 },
-      orbit: { centre: { x: 0, y: 0, z: 0 }, radius: 12.5, height: 3.9, lookHeight: 2.05, startAngle: 0, speed: 0.12, arc: 0.4, introS: 2.4, pullBack: 1.45, rise: 2.2, bob: 0.2 },
+      // Far enough back that Pip's antenna at the top of a hop stays under the name, and the step numbers above the places, from 1280 by 720 up.
+      orbit: { centre: { x: 0, y: 0, z: 0 }, radius: 14.25, height: 3.5, lookHeight: 2.25, startAngle: 0, speed: 0.12, arc: 0.3, introS: 2.4, pullBack: 1.45, rise: 2.2, bob: 0.2 },
     });
     const podium = createPodium({ width: STEP, height: 1.3 });
     this.room.scene.add(podium.object);
@@ -68,7 +69,7 @@ export class PodiumScene {
     for (const kart of this.karts) {
       const root = kart.model.root;
       // The winner hops every couple of seconds; the others idle with a little steer wiggle.
-      const hop = kart.place === 1 ? Math.max(0, Math.sin(time * 3.2)) ** 6 * 0.35 : 0;
+      const hop = kart.place === 1 ? Math.max(0, Math.sin(time * 3.2)) ** 6 * 0.25 : 0;
       root.position.y = kart.baseY + hop;
       kart.model.animate(0, Math.sin(time * 1.4 + kart.phase) * 0.35, dt, time, 0);
     }
