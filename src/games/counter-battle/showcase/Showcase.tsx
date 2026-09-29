@@ -1,7 +1,8 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ShowcaseView } from "@/platform/games/game-api";
 import { ShowcaseDirector } from "./director";
+import { WinnersPreview } from "./WinnersPreview";
 
 /**
  * Paintball Battle playing itself for the home screen's media: the loop
@@ -9,9 +10,17 @@ import { ShowcaseDirector } from "./director";
  * takes a kill, the poster holds a shotgun blast at close range, and the
  * icon is the same moment closer, under the logo. Driven by
  * requestAnimationFrame and performance.now, so the capture tool can
- * step it frame by frame and get the same film.
+ * step it frame by frame and get the same film. `?winners=1` or `2`
+ * shows the results' winners' scene instead, for looking it over.
  */
 export function Showcase({ view }: { view: ShowcaseView }) {
+  // The showcase only ever mounts in the browser, so the address can be read straight away.
+  const [winners] = useState(() => new URLSearchParams(window.location.search).get("winners"));
+  if (winners === "1" || winners === "2") return <WinnersPreview count={winners === "2" ? 2 : 1} />;
+  return <Duel view={view} />;
+}
+
+function Duel({ view }: { view: ShowcaseView }) {
   const boxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
