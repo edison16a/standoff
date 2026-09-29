@@ -32,7 +32,6 @@ export interface PublishContext {
 export function publish(c: PublishContext): void {
   const names = new Map(c.players.map((p) => [p.seat, p.name]));
   const match = c.driver?.state ?? null;
-  const owner = match?.ball.owner;
   const seats = c.players.map((p) => {
     const s = c.lobby.seats.get(p.seat);
     return { seat: p.seat, name: p.name, connected: p.connected, pick: s?.pick ?? null, ready: s?.ready ?? false, team: s?.team ?? null, role: s?.role ?? null };
@@ -55,17 +54,6 @@ export function publish(c: PublishContext): void {
     winner: match?.winner ?? null,
     ceremony: match ? withStats(ceremonyCard(match, names), c.statsNow) : null,
     results: match && match.phase === "fulltime" ? results(c.driver!, names) : [],
-    roster: match
-      ? match.athletes.filter((a) => a.seat !== null).map((a) => ({
-          id: a.id,
-          seat: a.seat!,
-          name: nameOf(a, names),
-          team: a.team,
-          build: a.build,
-          hasBall: owner?.kind === "athlete" && owner.id === a.id,
-          away: !a.online,
-        }))
-      : [],
   });
   for (const seat of c.lobby.connectedSeats) c.phones.sendState(seat, phoneState(c, seat), c.nowMs);
 }
