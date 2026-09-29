@@ -1,4 +1,5 @@
 "use client";
+import { DIFFICULTY, multiplierText } from "../../engine/difficulty";
 import { POWER_NAMES } from "../../engine/powers";
 import { STEP_TEXT, TUTORIAL_STEPS } from "../../engine/tutorial";
 import { POWER_COLORS } from "../../render/models/pickups";
@@ -46,6 +47,7 @@ export function RunHud() {
 }
 
 function Scoreboard({ h }: { h: RunnerHud }) {
+  const level = DIFFICULTY[h.difficulty];
   return (
     <>
       <div className="ss-score">
@@ -53,11 +55,20 @@ function Scoreboard({ h }: { h: RunnerHud }) {
         <span className="ss-score__name">{h.name}</span>
         <span className="ss-score__value">{h.score.toLocaleString()}</span>
         <span className={`ss-mult${h.multiplier > 1 ? " ss-mult--hot" : ""}`}>x{h.multiplier}</span>
+        {/* The level's own multiplier, on top of the zone's. */}
+        <span className={`ss-diff ss-diff--${h.difficulty}`} title={`${level.label} multiplies every point`}>
+          {level.label} {multiplierText(level.multiplier)}
+        </span>
       </div>
       <div className="ss-coins">
         <CoinIcon />
         <span>{h.coins}</span>
       </div>
+      {h.gain && (
+        <div key={h.gain.id} className="ss-gain">
+          +{Math.round(h.gain.amount).toLocaleString()}
+        </div>
+      )}
       <div className="ss-powers">
         {h.powers.map((p) => (
           <div key={p.kind} className="ss-power" style={{ ["--power" as string]: `#${POWER_COLORS[p.kind].toString(16).padStart(6, "0")}`, ["--left" as string]: p.share }} title={POWER_NAMES[p.kind]}>

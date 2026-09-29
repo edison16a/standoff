@@ -85,6 +85,10 @@ export class HostAudio {
           this.zombies.growl(spot(event.zombie), 0.4, 2.5, 2);
         }
         return;
+      case "rush":
+        // A pack of runners breaks out behind the boss: shrieks across the road, high and short.
+        for (const side of [-5, 0, 5]) this.zombies.growl({ side, ahead: 20 }, 1.5 + side * 0.02, 0.7, 1.6);
+        return;
       case "swing":
         return this.zombies.swipe(spot(event.zombie), isBoss(event.kind));
       case "radio":

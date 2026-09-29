@@ -14,6 +14,7 @@ const punch = (windup: number): ActivePunch => ({
   endAt: 1000 + windup + 140 + 320,
   counter: false,
   tired: false,
+  reach: 1,
   resolved: false,
 });
 

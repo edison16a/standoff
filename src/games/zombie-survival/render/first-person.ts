@@ -9,7 +9,7 @@ import { GunRig } from "./gun-rig";
 export interface Shooter {
   seat: Seat;
   weapon: WeaponId;
-  /** Where the player's laser lands in the world, or null when they are not aiming. */
+  /** Where the gun points in the world, kick included, or null when the player is not aiming. */
   aim: THREE.Vector3 | null;
 }
 
@@ -61,7 +61,7 @@ export class FirstPerson {
       rig.holder.visible = visible;
       rig.holder.updateMatrixWorld(true);
       const from = rig.laserOrigin(new THREE.Vector3());
-      laser.update(from, visible ? shooter.aim : null, this.camera.position, time);
+      laser.update(from, visible ? shooter.aim : null);
     });
     for (const seat of [...this.rigs.keys()]) if (!seen.has(seat)) this.drop(seat);
   }

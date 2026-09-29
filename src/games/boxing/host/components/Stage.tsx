@@ -29,7 +29,7 @@ export function Stage() {
       {screen === "players" && <PlayersMenu />}
       {screen === "setup" && <Setup />}
       {screen === "pick" && <PickScreen />}
-      {(screen === "fight" || screen === "results") && <FightHud />}
+      {screen === "fight" && <FightHud />}
       {screen === "results" && <Results />}
       {(screen === "pick" || screen === "fight") && session.kit && <CornerPreview kit={session.kit} corner="bottom-right" width={240} />}
       {screen !== "players" && screen !== "setup" && session.kit && <CameraTrouble kit={session.kit} />}

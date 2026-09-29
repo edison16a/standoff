@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { collectCoins, touchesCoin } from "./collect";
+import { collectCoins, skyTrail, touchesCoin } from "./collect";
+import { DESCENT, JETPACK_HEIGHT, POWER_SECONDS } from "./powers";
 import { Course } from "./course";
 import { newRunner } from "./runner";
 import { COIN, laneX, RUNNER, SPEED, STEP_S } from "./tuning";
@@ -84,5 +85,21 @@ describe("the home screen clip", () => {
       }
     }
     expect(coins).toBeGreaterThan(5);
+  });
+});
+
+describe("a jetpack flight", () => {
+  it("lays its sky trail within reach of the flight, ending where it starts to sink", () => {
+    const course = new Course(1, { empty: true });
+    skyTrail(course, 100, 20);
+    expect(course.coins.length).toBeGreaterThan(20);
+    const flight = { ...newRunner(0), y: JETPACK_HEIGHT };
+    for (const coin of course.coins) {
+      flight.distance = coin.z;
+      flight.x = coin.x;
+      expect(touchesCoin(coin, flight)).toBe(true);
+    }
+    const last = Math.max(...course.coins.map((c) => c.z));
+    expect(last).toBeLessThanOrEqual(100 + 20 * (POWER_SECONDS.jetpack - DESCENT.seconds));
   });
 });

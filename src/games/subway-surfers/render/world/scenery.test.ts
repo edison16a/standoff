@@ -27,9 +27,42 @@ describe("scenery plan", () => {
   });
 
   it("opens every tunnel with a portal", () => {
-    for (let k = 1; k < 400; k++) {
-      const plan = planChunk(k, 3);
-      if (plan.tunnel && !planChunk(k - 1, 3).tunnel) expect(plan.mouth).toBe(true);
+    let mouths = 0;
+    for (const seed of [1, 2, 3, 4, 5, 6, 7, 8]) {
+      for (let k = 1; k < 400; k++) {
+        const plan = planChunk(k, seed);
+        const opens = plan.tunnel && !planChunk(k - 1, seed).tunnel;
+        expect(plan.mouth).toBe(opens);
+        if (opens) mouths++;
+      }
+    }
+    expect(mouths).toBeGreaterThan(8);
+  });
+
+  it("hangs signals only out in the open, never inside a tunnel", () => {
+    let gantries = 0;
+    let posts = 0;
+    for (let k = 0; k < 400; k++) {
+      const plan = planChunk(k, 6);
+      if (plan.signals !== null) gantries++;
+      if (plan.post) posts++;
+      if (plan.tunnel) {
+        expect(plan.signals).toBeNull();
+        expect(plan.post).toBeNull();
+      }
+      // A gantry and a lineside signal never crowd the same chunk.
+      expect(plan.signals !== null && plan.post !== null).toBe(false);
+    }
+    expect(gantries).toBeGreaterThan(20);
+    expect(posts).toBeGreaterThan(20);
+  });
+
+  it("keeps every zone in daylight, with a sky brighter at the horizon than overhead", () => {
+    for (const theme of THEMES) {
+      const luma = (hex: number) => ((hex >> 16) & 255) * 0.3 + ((hex >> 8) & 255) * 0.59 + (hex & 255) * 0.11;
+      expect(luma(theme.skyHorizon)).toBeGreaterThan(luma(theme.skyTop));
+      expect(luma(theme.skyTop)).toBeGreaterThan(100);
+      expect(luma(theme.fog)).toBeGreaterThan(200);
     }
   });
 

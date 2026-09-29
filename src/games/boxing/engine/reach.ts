@@ -36,7 +36,10 @@ export function contactOf(punch: ActivePunch, head: HeadSpot): Contact {
   const dx = (head.x - punch.aim.x) * (punch.style === "hook" ? RULES.hookSweep : 1);
   const dy = head.y - punch.aim.y;
   const off = Math.hypot(dx, dy);
-  const amount = off <= RULES.cleanRadius ? 1 : Math.max(0, 1 - (off - RULES.cleanRadius) / (RULES.missRadius - RULES.cleanRadius));
+  // Long arms chase a moving head further, so the head has to travel further to get away.
+  const clean = RULES.cleanRadius * punch.reach;
+  const miss = RULES.missRadius * punch.reach;
+  const amount = off <= clean ? 1 : Math.max(0, 1 - (off - clean) / (miss - clean));
   if (amount >= GRAZE) return { amount, dodge: null };
   // Named by the way the head went: down under it, or off to the side.
   return { amount: 0, dodge: Math.abs(dy) >= Math.abs(dx) && dy < 0 ? "duck" : "slip" };

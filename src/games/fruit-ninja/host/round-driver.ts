@@ -70,7 +70,7 @@ export class RoundDriver {
     for (const input of drawn) {
       let blade = this.blades.get(input.seat);
       if (!blade) this.blades.set(input.seat, (blade = new Blade()));
-      blade.move({ x: input.point!.x * this.halfWidth, y: input.point!.y * HALF_HEIGHT }, this.clock);
+      blade.move(bladeAt(input.point!, this.halfWidth), this.clock);
     }
 
     let events: MatchEvent[];
@@ -99,4 +99,22 @@ export class RoundDriver {
     events.push(...this.practice.step(dt, this.blades, (seat) => ready.has(seat)));
     return events;
   }
+}
+
+/** How far inside the screen's edge the blade tip stops, in world units, so its glow shows whole. */
+const EDGE_INSET = 0.3;
+
+/**
+ * Where a phone's aim puts the blade in the world. The kit already holds
+ * the aim at the screen's edge when the phone points past it; this keeps
+ * the tip just inside, so it stays in sight and moves on smoothly once the
+ * phone points back in.
+ */
+export function bladeAt(point: ScreenPoint, halfWidth: number): { x: number; y: number } {
+  const limitX = halfWidth - EDGE_INSET;
+  const limitY = HALF_HEIGHT - EDGE_INSET;
+  return {
+    x: Math.max(-limitX, Math.min(limitX, point.x * halfWidth)),
+    y: Math.max(-limitY, Math.min(limitY, point.y * HALF_HEIGHT)),
+  };
 }

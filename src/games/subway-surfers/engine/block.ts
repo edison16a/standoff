@@ -1,4 +1,5 @@
-import { BARRIER, COIN, JUMP, laneX, RAMP_LENGTH, TRAIN, trainLength, type Lane } from "./tuning";
+import { arcHeight, fallTime, riseTime } from "./motion";
+import { BARRIER, COIN, JUMP, laneX, MOVE_GAP_S, RAMP_LENGTH, TRAIN, trainLength, type Lane } from "./tuning";
 import type { Obstacle, ObstacleKind, PowerKind } from "./types";
 
 /** How far ahead the fog lets a player see a train coming. */
@@ -22,6 +23,8 @@ export class Block {
   constructor(
     readonly speed: number,
     private readonly style: () => number,
+    /** The least seconds between two moves this stretch may ask for. */
+    readonly moveGap = MOVE_GAP_S,
   ) {}
 
   sec(seconds: number): number {
@@ -76,13 +79,14 @@ export class Block {
     this.reach(to);
   }
 
-  /** Coins along the path of a jump that tops out over `z`. */
+  /** Coins along the path of a jump that tops out over `z`: a longer rise before it, a quicker fall after. */
   coinArc(lane: Lane, z: number, base = 0, height = JUMP.height): void {
-    const half = this.sec(Math.sqrt((2 * height) / JUMP.gravity));
+    const up = riseTime(height);
+    const air = up + fallTime(height);
     const count = 7;
     for (let i = 0; i < count; i++) {
-      const t = (i / (count - 1)) * 2 - 1;
-      this.coins.push({ x: laneX(lane), y: base + COIN.y + height * (1 - t * t), z: z + t * half });
+      const t = (i / (count - 1)) * air;
+      this.coins.push({ x: laneX(lane), y: base + COIN.y + arcHeight(height, t), z: z + this.sec(t - up) });
     }
   }
 

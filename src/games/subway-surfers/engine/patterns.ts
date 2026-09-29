@@ -1,6 +1,6 @@
 import type { Block } from "./block";
 import type { Rng } from "./rng";
-import { LANES, MOVE_GAP_S, RAMP_LENGTH, TRAIN, trainLength, type Lane } from "./tuning";
+import { LANES, RAMP_LENGTH, TRAIN, trainLength, type Lane } from "./tuning";
 
 /**
  * The course is strung together from these patterns. Each lays out one
@@ -80,7 +80,7 @@ const bridge: Pattern = (b, rng) => {
 const slalom: Pattern = (b, rng) => {
   const first = rng.pick([-1, 1] as const);
   // They overlap long enough that the roll comes well after the last moment to step out of the second train's lane.
-  const overlap = Math.max(b.sec(2 * (MOVE_GAP_S + 0.1)), trainLength(1) * 0.7);
+  const overlap = Math.max(b.sec(2 * (b.moveGap + 0.1)), trainLength(1) * 0.7);
   const endA = b.train(first, 0, Math.max(cars(rng, 1, 2), Math.ceil((overlap + b.sec(0.6)) / (TRAIN.car + TRAIN.gap))));
   const startC = endA - overlap;
   const endC = b.train(-first as Lane, startC, cars(rng, 1, 2));
@@ -94,7 +94,7 @@ const slalom: Pattern = (b, rng) => {
 /** A corridor between two trains: jump the first barrier, then roll under the next. */
 const jumpRoll: Pattern = (b, rng) => {
   // The jump comes a full move after the last moment to step into the corridor.
-  const first = b.sec(MOVE_GAP_S + 0.15);
+  const first = b.sec(b.moveGap + 0.15);
   const second = first + b.sec(1.45);
   const length = Math.max(2, Math.ceil((second + b.sec(0.6)) / (TRAIN.car + TRAIN.gap)));
   b.train(-1, 0, length);
@@ -129,7 +129,7 @@ const twoOncoming: Pattern = (b, rng, level) => {
   b.coinLine(open, meet - b.sec(1.2), meet + b.sec(0.8));
   if (rng.chance(0.5)) {
     // Well after the last moment to step into the open lane, so the two moves never crowd each other.
-    b.barrier(open, meet + b.sec(MOVE_GAP_S + 0.15), rng.chance(0.5));
+    b.barrier(open, meet + b.sec(b.moveGap + 0.15), rng.chance(0.5));
   }
 };
 

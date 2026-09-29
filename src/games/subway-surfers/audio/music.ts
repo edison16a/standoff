@@ -3,14 +3,14 @@ import { LOBBY_SONG } from "./lobby-song";
 import { RUN_SONG } from "./run-song";
 import type { Song } from "./score";
 
-/** The menus get the lounge tune, the run gets the disco. */
+/** The menus get the lounge tune, the run gets the hip hop beat. */
 export const TUNES = { menu: LOBBY_SONG, run: RUN_SONG } as const satisfies Record<string, Song>;
 export type TuneName = keyof typeof TUNES;
 
 const WAKE_MS = 25;
 const LOOKAHEAD_S = 0.12;
 
-/** Where the low pass sits: warm enough to stay out of the way of the effects. */
+/** Where the low pass sits unless a tune asks for more: warm enough to stay out of the way of the effects. */
 export const OPEN_HZ = 3400;
 const MUFFLED_HZ = 650;
 
@@ -24,6 +24,8 @@ export class Music {
   private timer: ReturnType<typeof setInterval> | null = null;
   private readonly tone: BiquadFilterNode;
   private tempo = 1;
+  /** Where the low pass sits for the tune playing. */
+  private open = OPEN_HZ;
 
   constructor(private readonly engine: AudioEngine) {
     this.tone = engine.ctx.createBiquadFilter();
@@ -38,6 +40,8 @@ export class Music {
     this.fadeOut();
     this.tempo = 1;
     if (!name) return;
+    this.open = TUNES[name].open ?? OPEN_HZ;
+    this.tone.frequency.setTargetAtTime(this.open, this.engine.now, 0.3);
     const gain = this.engine.ctx.createGain();
     gain.gain.value = 0.0001;
     gain.gain.setTargetAtTime(1, this.engine.now, 0.3);
@@ -53,7 +57,7 @@ export class Music {
 
   /** Muffles the music, as when a run is paused or has just ended. */
   muffle(on: boolean): void {
-    this.tone.frequency.setTargetAtTime(on ? MUFFLED_HZ : OPEN_HZ, this.engine.now, 0.15);
+    this.tone.frequency.setTargetAtTime(on ? MUFFLED_HZ : this.open, this.engine.now, 0.15);
   }
 
   stop(): void {

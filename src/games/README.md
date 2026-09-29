@@ -53,7 +53,7 @@ Keep the host as the referee. Phones send raw input and draw what the host tells
 
 Fruit Slicer, Zombie Survival and Shooting Gallery all aim the same way. Where the player points their phone at the screen is where they aim.
 
-* **Calibrate** with the kit's `AimCalibrate`: the middle of the screen, then the top left and bottom right targets.
+* **Calibrate** with the kit's `AimCalibrate`: point and hold still at the middle of the screen, then each corner. No button to press; each target fills and the next comes up by itself.
 * **Aim:** from then on, swinging left and right moves the aim across the screen and tilting moves it up and down.
 * **Laser dot:** each player's aim shows on screen in real time as a laser dot in their colour, so they always see where they are pointing.
 * **Gun or blade:** the shooters draw the front of each player's gun in 3D at the bottom of the screen, turned to point at that player's dot. It is a BB gun in Shooting Gallery, and the weapon the player chose in Zombie Survival. Fruit Slicer shows a blade instead.

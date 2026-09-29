@@ -1,0 +1,146 @@
+/*
+  One build to choose: a stripe in its kit colours, its name, what it
+  does, and a bar of five pips for each stat.
+*/
+
+.bx-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  grid-template-rows: auto auto auto;
+  column-gap: 14px;
+  row-gap: 4px;
+  align-items: center;
+  padding: 10px 16px 12px 12px;
+  overflow: hidden;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  background: var(--bx-panel);
+  color: #ffffff;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease;
+}
+
+.bx-card:disabled {
+  cursor: default;
+}
+
+.bx-card:not(.bx-card--on):disabled {
+  opacity: 0.4;
+}
+
+.bx-card--on {
+  transform: translateX(10px);
+  border-color: var(--who, var(--bx-orange));
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.bx-card--locked {
+  border-color: #4ade80;
+}
+
+.bx-card__stripe {
+  grid-row: span 3;
+  align-self: stretch;
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--gloves) 0 45%, var(--trim) 45% 55%, var(--trunks) 55% 100%);
+}
+
+.bx-card__name {
+  grid-column: 2;
+  font-family: var(--bx-display);
+  font-size: 26px;
+  font-style: italic;
+  line-height: 1;
+  color: var(--bx-gold);
+}
+
+.bx-card__from {
+  grid-column: 2;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.bx-card__stats {
+  grid-column: 2;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.bx-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.bx-stat__label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.bx-stat__bar {
+  display: flex;
+  gap: 2px;
+}
+
+.bx-stat__pip {
+  flex: 1;
+  height: 7px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.bx-stat__pip--on {
+  background: linear-gradient(180deg, #ffe08a, var(--bx-gold));
+  box-shadow: 0 0 6px rgba(255, 200, 80, 0.45);
+}
+
+.bx-card__hold {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 5px;
+  background: #4ade80;
+}
+
+/* A 720p screen: tighter cards, so all four and Lock in stay above Back. */
+@media (max-height: 820px) {
+  .bx-card {
+    row-gap: 2px;
+    padding: 6px 14px 8px 10px;
+  }
+
+  .bx-card__name {
+    font-size: 21px;
+  }
+
+  .bx-card__from {
+    font-size: 12.5px;
+  }
+
+  .bx-card__stats {
+    margin-top: 2px;
+  }
+
+  .bx-stat__label {
+    font-size: 9px;
+  }
+
+  .bx-stat__pip {
+    height: 6px;
+  }
+}
+
+/* Shorter still, the stat bars say it all. */
+@media (max-height: 620px) {
+  .bx-card__from {
+    display: none;
+  }
+}

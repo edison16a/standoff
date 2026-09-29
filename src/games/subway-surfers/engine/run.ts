@@ -1,21 +1,22 @@
 import { Chase } from "./chase";
-import { collectCoins, collectPickup } from "./collect";
+import { collectCoins, collectPickup, skyTrail } from "./collect";
 import { Course } from "./course";
 import type { CrashCause, RunEvent } from "./events";
-import { JETPACK_HEIGHT, Powers } from "./powers";
-import { newRunner, stepRunner, type Contact, type RunnerInput, type RunnerState } from "./runner";
-import { COIN, JUMP, laneX, MAX_LEVEL, speedAt, STEP_S, TRAIN, ZONE_LENGTH, type Lane } from "./tuning";
-import { frontAt, type Obstacle } from "./types";
+import { startBurst } from "./motion";
+import { flightHeight, Powers } from "./powers";
+import { Points } from "./points";
+import type { RunOptions } from "./run-options";
+import { newRunner, stepRunner, type Abilities, type Contact, type RunnerInput, type RunnerState } from "./runner";
+import { TrainWatch } from "./trains";
+import { COIN, JUMP, MAX_LEVEL, STEP_S, TRAIN, ZONE_LENGTH, type Lane } from "./tuning";
+import type { Obstacle, PowerKind } from "./types";
+import { USUAL_YARD, yardSpeed } from "./yard";
 
-export interface RunOptions {
-  /** The tutorial: an empty yard at a gentle jog. */
-  practice?: boolean;
-  lane?: Lane;
-  /** Metres of head start on the pace and the yard's busyness. See `difficulty.ts`. */
-  headStart?: number;
-}
+export type { RunOptions } from "./run-options";
 
 const PRACTICE_SPEED = 5;
+/** Seconds of passing through things after landing from a jetpack: a person on camera needs about this to see what they landed among and move. */
+const LANDING_GHOST_S = 1;
 
 /**
  * One player's endless run: their runner, their copy of the yard, power
@@ -27,8 +28,8 @@ export class Run {
   readonly runner: RunnerState;
   readonly powers = new Powers();
   readonly chase = new Chase();
+  readonly points: Points;
   time = 0;
-  score = 0;
   coins = 0;
   streak = 0;
   level = 1;
@@ -39,14 +40,14 @@ export class Run {
   private carry = 0;
   private lastCoin = -10;
   private readonly near: Obstacle[] = [];
-  private readonly horned = new Set<number>();
-  private readonly passed = new Set<number>();
+  private readonly trains = new TrainWatch();
 
   constructor(
     readonly seed: number,
     readonly options: RunOptions = {},
   ) {
-    this.course = new Course(seed, { empty: options.practice, headStart: options.headStart });
+    this.course = new Course(seed, { empty: options.practice, headStart: options.headStart, yard: options.yard });
+    this.points = new Points(options.scoreScale);
     this.runner = newRunner(0, options.lane ?? 0);
     this.pending.lane = options.lane ?? 0;
     this.course.ensure(0);
@@ -54,16 +55,31 @@ export class Run {
 
   get speed(): number {
     if (this.crashed) return 0;
+    return this.pace * startBurst(this.time);
+  }
+
+  /** The running pace here, before the burst off the line. */
+  private get pace(): number {
     return this.options.practice ? PRACTICE_SPEED : this.paceAt(this.runner.distance);
   }
 
   /** The running speed at a distance along this run, head start included. */
   paceAt(distance: number): number {
-    return speedAt(distance + (this.options.headStart ?? 0));
+    return yardSpeed(this.options.yard ?? USUAL_YARD, distance + (this.options.headStart ?? 0));
+  }
+
+  /** Every point so far, multipliers included. */
+  get score(): number {
+    return this.points.total;
   }
 
   get multiplier(): number {
     return this.level * (this.powers.has("double") ? 2 : 1);
+  }
+
+  /** What the runner can do at a speed: how high they jump, and how high a jetpack holds them. */
+  abilities(speed: number): Abilities {
+    return { speed, jumpHeight: this.powers.has("boots") ? JUMP.bootsHeight : JUMP.height, fly: flightHeight(this.powers) };
   }
 
   /** Where the player wants to be, and the moves they just made. Moves wait for the next step. */
@@ -102,8 +118,7 @@ export class Run {
     const before = s.distance;
     this.course.ensure(s.distance);
     this.course.near(s.distance, 14, this.near);
-    const jetpack = this.powers.has("jetpack");
-    const ability = { speed: this.speed, jumpHeight: this.powers.has("boots") ? JUMP.bootsHeight : JUMP.height, fly: jetpack ? JETPACK_HEIGHT : null };
+    const ability = this.abilities(this.speed);
     const input = this.pending;
     const result = stepRunner(s, input, this.near, ability, dt);
     input.jump = false;
@@ -114,13 +129,13 @@ export class Run {
     if (result.laneFrom !== null) this.emit({ type: "lane", from: result.laneFrom, to: s.lane });
     if (result.landed !== null) {
       this.emit({ type: "land", speed: result.landed, roof: s.y > 1 });
-      // Coming down from a jetpack: a moment more of passing through, then solid again.
-      if (s.ghost > 0.4) s.ghost = 0.4;
+      // Coming down from a jetpack lands anywhere, so passing through lasts long enough for one move.
+      if (s.ghost > LANDING_GHOST_S) s.ghost = LANDING_GHOST_S;
     }
     if (result.contact) this.onContact(result.contact);
     if (this.crashed) return;
 
-    this.score += (s.distance - before) * this.multiplier;
+    this.points.ran(s.distance - before, this.multiplier);
     const level = Math.min(MAX_LEVEL, 1 + Math.floor(s.distance / ZONE_LENGTH));
     if (level !== this.level && !this.options.practice) {
       this.level = level;
@@ -132,7 +147,7 @@ export class Run {
       // Falling from a jetpack's height passes through everything until the landing.
       if (kind === "jetpack") s.ghost = 3;
     }
-    this.watchTrains();
+    this.trains.check(this.course.obstacles, s, (event) => this.emit(event));
     this.course.prune(s.distance);
   }
 
@@ -177,40 +192,19 @@ export class Run {
       this.streak = this.time - this.lastCoin < COIN.streakS ? this.streak + 1 : 1;
       this.lastCoin = this.time;
       this.coins++;
-      this.score += COIN.points * this.multiplier;
+      this.points.coin(this.multiplier);
       this.emit({ type: "coin", streak: this.streak, x: coin.x, y: coin.y, z: coin.z, pulled });
     }
     const pickup = collectPickup(this.course, s);
     if (!pickup) return;
-    this.powers.start(pickup.kind);
-    this.emit({ type: "power", kind: pickup.kind });
-    if (pickup.kind === "jetpack") this.skyCoins();
+    this.points.power(this.multiplier);
+    this.grant(pickup.kind);
   }
 
-  /** A trail of coins in the sky, for the length of a jetpack flight. */
-  private skyCoins(): void {
-    const s = this.runner;
-    const length = this.speed * 6.5;
-    for (let z = 18; z < length; z += 3.2) {
-      const lane = Math.round(Math.sin((s.distance + z) / 22) * 1.4);
-      this.course.addCoin(laneX(Math.max(-1, Math.min(1, lane))), JETPACK_HEIGHT + 0.9, s.distance + z);
-    }
-  }
-
-  /** Horns for trains coming at the runner, and a rush of air as they pass. */
-  private watchTrains(): void {
-    const s = this.runner;
-    for (const o of this.course.obstacles) {
-      if (!o.drift) continue;
-      const gap = frontAt(o, s.distance) - s.distance;
-      if (gap < 75 && gap > 0 && !this.horned.has(o.id)) {
-        this.horned.add(o.id);
-        this.emit({ type: "horn", lane: o.lane, obstacleId: o.id });
-      }
-      if (gap < 0 && !this.passed.has(o.id)) {
-        this.passed.add(o.id);
-        this.emit({ type: "passBy", side: laneX(o.lane) < s.x ? -1 : 1 });
-      }
-    }
+  /** Starts a power up, as when one is picked up: a jetpack lays its trail of sky coins too. */
+  grant(kind: PowerKind): void {
+    this.powers.start(kind);
+    this.emit({ type: "power", kind });
+    if (kind === "jetpack") skyTrail(this.course, this.runner.distance, this.pace);
   }
 }

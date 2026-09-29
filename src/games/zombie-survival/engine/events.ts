@@ -28,6 +28,7 @@ export type GameEvent =
   | { type: "weak-broken"; seat: Seat; zombie: number; weak: number; left: number }
   | { type: "kill"; seat: Seat; zombie: number; kind: ZombieKind; head: boolean }
   | { type: "spawn"; zombie: number; kind: ZombieKind }
+  | { type: "rush"; count: number }
   | { type: "swing"; zombie: number; kind: ZombieKind; damage: number }
   | { type: "phase"; phase: Phase; stage: number }
   | { type: "radio"; line: RadioLine }

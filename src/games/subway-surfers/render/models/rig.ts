@@ -78,25 +78,42 @@ export function makeRig(d: BodyDims): Rig {
 /** Collects each bone's parts, then merges them per bone, so a whole figure draws in a few dozen calls. */
 export class Dresser {
   private readonly builders = new Map<Bone, MeshBuilder>();
+  private readonly details = new Map<Bone, MeshBuilder>();
 
   constructor(private readonly rig: Rig) {}
 
   on(bone: Bone): MeshBuilder {
-    let builder = this.builders.get(bone);
-    if (!builder) {
-      builder = new MeshBuilder();
-      this.builders.set(bone, builder);
-    }
-    return builder;
+    return take(this.builders, bone);
+  }
+
+  /** Fine features, like eyes, brows and a mouth, drawn with no ink line so they read as painted on. */
+  detail(bone: Bone): MeshBuilder {
+    return take(this.details, bone);
   }
 
   finish(): Rig {
     for (const [bone, builder] of this.builders) {
       if (!builder.empty) this.rig.bones[bone].add(builder.build(`${bone}-skin`));
     }
+    for (const [bone, builder] of this.details) {
+      if (builder.empty) continue;
+      const features = builder.build(`${bone}-features`);
+      features.traverse((node) => (node.userData.noOutline = true));
+      this.rig.bones[bone].add(features);
+    }
     this.builders.clear();
+    this.details.clear();
     return this.rig;
   }
+}
+
+function take(builders: Map<Bone, MeshBuilder>, bone: Bone): MeshBuilder {
+  let builder = builders.get(bone);
+  if (!builder) {
+    builder = new MeshBuilder();
+    builders.set(bone, builder);
+  }
+  return builder;
 }
 
 /** Every joint back to its rest pose, before a new frame's pose is laid on. */

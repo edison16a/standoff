@@ -3,7 +3,7 @@ import type { HostAudio } from "../audio/host-audio";
 import type { GameEvent } from "../engine/events";
 import type { SurvivalGame } from "../engine/game";
 import { stage, storyBeat } from "../engine/stages";
-import { isBoss, KINDS } from "../engine/zombie-kinds";
+import { isBoss, isMiniBoss, KINDS } from "../engine/zombie-kinds";
 import type { BuzzEvent } from "../protocol/messages";
 import { useSurvivalStore, type Toast } from "./host-store";
 import type { PhoneLink } from "./phone-link";
@@ -54,7 +54,7 @@ export class EventRouter {
         useSurvivalStore.setState({ checkpoint: null });
         return;
       case "spawn":
-        if (isBoss(event.kind)) this.banner(KINDS[event.kind].name, "Shoot the glowing joints", "boss");
+        if (isBoss(event.kind)) this.banner(KINDS[event.kind].name, isMiniBoss(event.kind) ? "Mini boss. Shoot the glowing joints" : "Shoot the glowing joints", "boss");
         return;
       case "stage-clear":
         // Only the story's big moments stop the show. Any other checkpoint is a quick note, and on you go.

@@ -9,6 +9,8 @@ Shared code that games may import. The kit never imports a game, and games still
 * `motion/orientation.ts`: `subscribeOrientation`, the phone's orientation as a quaternion on every reading.
 * `steps/StepShell.tsx`: the frame for a game's phone setup. Every game uses the same order: the platform asks for a name (or Skip), then the game shows **Calibrate**, then its own choices (weapon, kart, blade), then **Ready**. Each step is its own page.
 * `aim/`: pointing the phone at the big screen, for Fruit Slicer, Zombie Survival and Shooting Gallery.
+* `victory/`: winners' scenes. Confetti, spotlights, a circling camera, trophies and a belt made in code, podiums, and the winners' names over it all. See Victory scenes below.
+* `leaderboard/`: local leaderboards that keep every finished run on this computer, and the list that shows them. See Leaderboards below.
 
 ## Aiming
 
@@ -18,7 +20,7 @@ Phone side:
 
 ```ts
 const aim = new PhoneAim(room);           // reads the sensors, or falls back to dragging
-<AimCalibrate aim={aim} colour={playerColor(seat)} onDone={next} />
+<AimCalibrate aim={aim} colour={playerColor(seat)} onDone={next} />   // plan="sword" for six targets
 aim.stream(true);                         // while playing, streams the aim at up to 60 Hz
 <FireButton label="Fire" onFire={() => aim.fire()} onRelease={stopAuto} />   // onRelease also fires if it turns disabled while held
 aim.recenter();                           // a small button for when the gyro drifts
@@ -26,7 +28,9 @@ aim.recenter();                           // a small button for when the gyro dr
 aim.dispose();
 ```
 
-Calibration shows three targets on the big screen in turn (middle, top left, bottom right). From them the phone learns how far this player turns to cross the screen from where they sit, left, right, up and down separately. Skip corners reuses the spans this phone measured last time. The measured spans are kept on the phone only.
+Calibration is hold to calibrate, the kit's standard. Targets show on the big screen and the phone in turn. The player points at each and holds still: a ring fills, the target turns green and the next one comes up by itself. No button, so a tap never nudges the aim. A target only fills once the phone has turned away from the last one, and the first only once the phone has moved from how the page found it, so a phone lying still while the player reads is never taken as pointing at the middle. Pick how many with `plan`: `"shooter"` (the default) takes the middle and all four corners; `"sword"` takes the middle, all four corners and the middle again, for games that swing all over the screen. From them the phone learns how far this player turns to cross the screen from where they sit, left, right, up and down separately (`aim-fit.ts`). Skip the rest reuses the spans this phone measured last time. `kit/motion/steady-hold.ts` has the hold meter for any other hold to confirm page.
+
+Pointing past the edge of the screen keeps the aim at the edge, dot and all, and it moves on smoothly the moment the phone points back in. `HostAim` pins every point and shot a touch inside its zone (`EDGE`), so a laser dot a game draws in 3D still shows whole enough to see, and every pointing game gets this. `AimOverlay` also draws its own dots and names fully inside the zone. It sits on top of the page, so a corner target stays in sight over the join card and a dot at the edge over the tool bar, while it still draws in the box of the element it is placed in. A game that draws its own pointer (`dots={false}`) still gets the kit's dot, with no name, while the aim is held at the edge (`HostAim.atEdge`), so the tool bar or the game's own scoreboard never hides it there. The measured spans are kept on the phone only.
 
 Host side:
 
@@ -241,3 +245,141 @@ node tools/testing/camera-e2e.mjs --clip clip.mjpeg --timeline clip.json --out s
 ## Split screen finish
 
 `split/SplitFinish.tsx` is the card a player sees in their own pane once they cross the line, for example "Edison Law got 1st place!", while the other panes keep racing. Render `<SplitFinish name={name} place={place} color={color} />` inside the pane's positioned box and it centres itself. A HUD that only knows who has finished, not their place, can get places from `useFinishPlaces(finished)`, which numbers players in the order they finished and starts over when a new round clears them. The words and the order live in `split/finish.ts`, tested on their own. Magic Kart and Cube Game use it. Subway Runner has no finish line, so it does not.
+
+## Leaderboards
+
+`leaderboard/` keeps every finished run on this computer, in localStorage, ranked by one number. Nothing is ever sent anywhere. A board belongs to one game and has a name of its own, so a game can keep one board (Subway Runner's runs) or many (one per level for finish times). Every run is kept, however low, so the board never ends.
+
+```ts
+import { LeaderboardList, readBoard, recordEntry, onBoardsChange, type BoardRef } from "@/games/kit/leaderboard";
+
+const RUNS: BoardRef = { game: "subway-surfers", board: "runs", order: "high" };   // "low" ranks times, quickest first
+const placed = recordEntry(RUNS, { name: "Edison", value: 12400, tag: "Hard" });
+placed.rank;   // 3, for "#3 on this computer"
+placed.best;   // true when it beats every earlier run. A tie does not, since the older run keeps its place.
+placed.entry.id;   // to light up the row
+
+<LeaderboardList entries={placed.entries} highlight={placed.entry.id} title="Leaderboard" format={(v) => `${v.toFixed(1)} s`} />
+onBoardsChange(() => setEntries(readBoard(RUNS)));   // redraw after a clear, or a run saved in another tab
+```
+
+* The list scrolls, with the lit row brought to its middle. A board of thousands draws its top, a line saying how many runs are left out, and the runs around the lit one.
+* The tag is a short note beside the value, like the difficulty. A name or tag past 40 characters is cut to fit, and a blank name is saved as Player, so a saved run always reads back.
+* Give the list a game's look with a class that sets `--board-bg`, `--board-fg`, `--board-accent`, `--board-me-bg`, `--board-me-fg` and `--board-height`.
+* Keys look like `standoff:board:<game>:<board>`. `clearBoards()` wipes every game's boards, which the host's Settings panel does with **Clear leaderboards**. `clearBoards(game)` wipes one game's.
+* Where site data is blocked the boards live in memory until the tab closes. When storage is full a board keeps its best 2,000 runs.
+* The logic is tested on its own in `board.test.ts`, `rows.test.ts` and `store.test.ts`, with an in memory storage from `memoryBoards()`.
+
+## Victory scenes
+
+`victory/` has everything for a winners' scene in three.js, and the names that go over it. Each piece works on its own, in a game's own scene. Units are metres, y is up, and trophies stand on their origin. Boxing, Magic Kart and Brawl Battle use it. `/dev/victory` (development only) shows every piece; add `?show=basketball`, `worldcup`, `belt`, `cup` or `podium` for one.
+
+```ts
+import { VictoryConfetti, StageLights, OrbitCamera, createBoxingBelt, studioEnvironment } from "@/games/kit/victory";
+import { VictoryOverlay } from "@/games/kit/victory/ui/VictoryOverlay";
+```
+
+### Metal needs something to reflect
+
+Gold and silver only show what they reflect. Without an environment a trophy looks like a dark lump. If the scene has none, give it one:
+
+```ts
+scene.environment = studioEnvironment(renderer);   // dispose the texture with the scene
+```
+
+### Confetti
+
+Paper and foil cards with a slight curl, some square and some long strips. They fall with real air drag: flat to the fall they float, edge on they drop, and a tilted card skates sideways. A cannon's load leaves as a clump and opens out, so it carries high before it drifts down. Pieces tumble, catch the light and settle flat on the floor. Two instanced meshes draw them all.
+
+```ts
+const confetti = new VictoryConfetti({ count: 1600, size: 0.05, colours, foil: 0.2, physics: { floorY: 0 }, seed: 7 });
+scene.add(confetti.object);
+confetti.burst({ x, y, z }, { direction: { x: 0, y: 1, z: 0 }, count: 260, speed: 11, spread: 0.35 });
+confetti.cannons({ x: 0, y: 1.2, z: 0 }, { ring: 3.5, cannons: 4 });   // a ring of cannons angled in over a spot
+confetti.startRain({ x: 0, y: 8, z: 0 }, 4, 100);                      // keeps falling over a disc, per second
+confetti.update(dt);                                                   // every frame
+confetti.clear();
+```
+
+`size` is the side of a square piece. Pieces that lie on the floor longer than `physics.restS` are reused, so rain can run for as long as the scene is up. `foil` is the share of metal foil pieces, spread evenly through all of them (`spreadFoil`), so a rain that follows the cannons is as colourful as they were. The physics alone is `ConfettiSim`, with tests.
+
+### Spotlights
+
+Lamps in a ring high overhead, all aimed at one spot, with soft visible beams through the haze. Their aims drift slowly round the spot.
+
+```ts
+const lights = new StageLights({ count: 4, colours: ["#fff1d6", "#ffd27a"], radius: 5, height: 9, intensity: 260, angle: 0.22, beamStrength: 0.3, sweep: 0.35 });
+scene.add(lights.object);
+lights.aimAt(point);      // snaps; focus(point) slides over
+lights.setLevel(0.5);     // 0 dark to 1 full, for a fade up
+lights.update(time, dt);
+```
+
+`intensity` is in candela with physical falloff. Scenes lit brighter need more, as Boxing's arena does at 650. A lamp costs shading on every lit pixel even at level 0, so in a game's own scene hide `lights.object` until the celebration starts, as Boxing does. The first show compiles the scene's shaders for the extra lamps once.
+
+### Circling camera
+
+It opens wide and high, eases in, then circles the subject with a gentle rise and fall, or swings back and forth on an arc.
+
+```ts
+const orbit = new OrbitCamera(camera, { centre, radius: 4, height: 1.6, lookHeight: 1.2, startAngle, speed: 0.12, arc: 0.5, introS: 2.4, pullBack: 1.8, rise: 1.6, bob: 0.2 });
+orbit.play({ startAngle });   // starts the shot from its opening
+orbit.update(dt);
+```
+
+`startAngle` is round +y from +z, so a subject facing angle `a` is seen from the front with `startAngle: a`. `orbitPose(shot, t)` is the same shot as plain numbers.
+
+### Trophies
+
+Each returns a `THREE.Group` with its own materials. `userData.height` is its height. Free one with `disposeTree(group)`.
+
+* `createBasketballTrophy({ metal })`: a gold ball dunked into a rim, a diamond net that tapers into a tall column, on a black plinth. About 0.6 m.
+* `createWorldCupTrophy({ metal })`: two gold figures spiral up out of the base and hold a globe with raised continents. Two green stone bands round the base. About 0.37 m.
+* `createBoxingBelt({ strap, enamel, gems, title, bend })`: a stitched leather strap, a big gold scalloped centre plate with a crown, a star on enamel ringed by gems and a lettered banner, and four gold side plates with gems. It runs along x with the plate facing +z, origin at the plate's middle. `userData.grips` holds the two points hands hold it by, 0.61 m apart. `bend` curls the strap back.
+* `createCupTrophy({ metal })`: a two handled cup on a plinth, in `gold`, `silver` or `bronze`. About 0.41 m.
+
+`metal`, `satinMetal`, `gem`, `lacquer` and `malachite` are the materials, for a game's own pieces.
+
+### Podium and pedestal
+
+```ts
+const podium = createPodium({ width: 1.4, height: 0.9 });   // first in the middle, second on its left, third on its right, from the front (+z)
+scene.add(podium.object);
+scene.updateMatrixWorld();
+kart.position.copy(podium.topOf(1));
+const pedestal = createPedestal({ radius: 0.8, height: 0.7 });   // one winner; its top is at userData.top
+```
+
+### A ready made room
+
+For a game whose own renderer cannot host the scene, as on a results screen over the game, `VictoryRoom` makes its own canvas filling a holder, with a dark glossy stage, the studio environment, a key light with shadows, spotlights, confetti and the circling camera. Add models to `room.scene`, then start it.
+
+```ts
+const room = new VictoryRoom(holder, { background, floorColour, lights, confetti, orbit });
+room.scene.add(winner, trophy);
+room.onFrame((dt, time) => animate(dt, time));
+room.start();
+room.dispose();   // frees the canvas and everything in the scene. Take out shared geometry first.
+```
+
+`room.advance(seconds)` runs the scene forward without drawing, to open part way through. Software rendering in a headless browser runs far below real time, so in development every open room is also listed on `window.__victoryRooms`; a test driver can advance them all and then take its screenshot.
+
+### Leave room for the names
+
+The names and the subtitle take about the top third of the screen. Stand the camera back until the winner's highest point, a raised trophy included, stays under the subtitle all through the shot, hop and bob included. Put a game's own tables and buttons in a bottom corner panel rather than along the bottom middle, so the winner has the middle to themselves. In a game played with phones the room's QR code comes back to the bottom left once the match is over, so use the bottom right. Brawl Battle does this, and Boxing, which has no phones, uses the bottom left; Magic Kart's podium is wide, so its places run along the bottom under it.
+
+### Names over the scene
+
+`VictoryOverlay` fills its positioned parent and keeps the middle clear. The names drop in letter by letter in gold, each with its player's colour under it.
+
+```tsx
+<VictoryOverlay
+  eyebrow="Champion"
+  names={[{ name: "Edison", colour: playerColor(1) }]}      // one winner, or a whole team
+  subtitle="Wins by knockout in round 3"
+  placings={[{ place: 1, name, colour, detail: "1:23.45" }]}   // optional
+  align="top"                                                // or "bottom"
+>
+  <button>Play again</button>                                // anything, in a row along the bottom
+</VictoryOverlay>
+```

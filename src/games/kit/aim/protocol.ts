@@ -16,7 +16,7 @@ export const aimSchema = z.object({ kind: z.literal("aim"), x: coord, y: coord }
 export const aimFireSchema = z.object({ kind: z.literal("aim-fire"), x: coord, y: coord });
 
 /** Which calibration target this player is looking for, so the big screen can show it. */
-export const AIM_STEPS = ["center", "top-left", "bottom-right", "test", "done"] as const;
+export const AIM_STEPS = ["center", "top-left", "top-right", "bottom-right", "bottom-left", "test", "done"] as const;
 export type AimStep = (typeof AIM_STEPS)[number];
 export const aimStepSchema = z.object({ kind: z.literal("aim-step"), step: z.enum(AIM_STEPS) });
 

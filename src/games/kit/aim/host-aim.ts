@@ -1,6 +1,7 @@
 import type { HostRoomApi } from "@/platform/games/game-api";
 import type { Seat } from "@/platform/protocol";
 import { rezone, WHOLE_SCREEN, type AimZone, type ScreenPoint } from "./aim-math";
+import { AIM_TARGETS } from "./aim-targets";
 import { aimFireSchema, aimSchema, aimStepSchema, type AimStep } from "./protocol";
 
 interface SeatAim {
@@ -24,7 +25,23 @@ const EASE_RATE = 28;
 /** A phone that has not sent its aim for this long is not aiming right now. */
 const STALE_MS = 1200;
 
-const TARGET_STEPS: readonly AimStep[] = ["center", "top-left", "bottom-right"];
+const TARGET_STEPS: readonly AimStep[] = AIM_TARGETS;
+
+/**
+ * How far out an aim may go, in zone units. A touch inside the true edge,
+ * so a laser dot a game draws in 3D, centred on the aim, still shows
+ * rather than sitting half off the screen.
+ */
+export const EDGE = 0.96;
+
+/**
+ * Holds a point at the edge of its zone. Pointing past the edge leaves the
+ * dot there, still in sight, and as the phone comes back in it moves on
+ * from the edge smoothly, with no jump. Every pointing game gets this.
+ */
+export function pinToEdge(point: ScreenPoint): ScreenPoint {
+  return { x: Math.max(-EDGE, Math.min(EDGE, point.x)), y: Math.max(-EDGE, Math.min(EDGE, point.y)) };
+}
 
 /**
  * The host side of the aim kit. It listens for every phone's aim, trigger
@@ -100,6 +117,18 @@ export class HostAim {
     return this.toZone(seat, aim.shown);
   }
 
+  /**
+   * Whether a seat's aim is held at the edge of its zone right now, the
+   * phone pointing at or past it. Uses the phone's latest point, not the
+   * eased one, so it lets go the moment the aim comes back in.
+   */
+  atEdge(seat: Seat, nowMs = performance.now()): boolean {
+    const aim = this.seats.get(seat);
+    if (!aim || nowMs - aim.seenAt > STALE_MS) return false;
+    const at = this.toZone(seat, aim.target);
+    return Math.max(Math.abs(at.x), Math.abs(at.y)) >= EDGE;
+  }
+
   /** The calibration target a seat is looking for, if it is calibrating. */
   step(seat: Seat): AimStep | null {
     return this.seats.get(seat)?.step ?? null;
@@ -113,7 +142,7 @@ export class HostAim {
   /** A point as the phone sent it, in the zone it calibrated in, mapped into the seat's zone now. */
   private toZone(seat: Seat, point: ScreenPoint): ScreenPoint {
     const from = this.seats.get(seat)?.calibratedIn;
-    return from ? rezone(point, from, this.zone(seat)) : point;
+    return pinToEdge(from ? rezone(point, from, this.zone(seat)) : point);
   }
 
   dispose(): void {
@@ -134,7 +163,8 @@ export class HostAim {
   private update(seat: Seat, point: ScreenPoint): void {
     const aim = this.entry(seat);
     const fresh = performance.now() - aim.seenAt > STALE_MS;
-    aim.target = { x: point.x, y: point.y };
+    // Pinned before easing, so a dot held at the edge sets off again the moment the aim comes back in.
+    aim.target = pinToEdge(point);
     // A dot reappearing after a pause starts where it is, not sliding in from where it was.
     if (fresh) aim.shown = aim.target;
     aim.seenAt = performance.now();
@@ -144,6 +174,13 @@ export class HostAim {
 /** Screen space to CSS pixels in a box of the given size. */
 export function toPixels(point: ScreenPoint, width: number, height: number): { x: number; y: number } {
   return { x: ((point.x + 1) / 2) * width, y: ((1 - point.y) / 2) * height };
+}
+
+/** A pixel point moved just inside a box, so a dot held at the edge of its zone shows whole. */
+export function insideBox(at: { x: number; y: number }, box: { x: number; y: number; w: number; h: number }, margin: number): { x: number; y: number } {
+  const mx = Math.min(margin, box.w / 2);
+  const my = Math.min(margin, box.h / 2);
+  return { x: Math.min(Math.max(at.x, box.x + mx), box.x + box.w - mx), y: Math.min(Math.max(at.y, box.y + my), box.y + box.h - my) };
 }
 
 /** A point in a zone's space to CSS pixels on a screen of the given size. */

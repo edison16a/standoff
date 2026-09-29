@@ -20,7 +20,7 @@ const GUARD_DIMS: BodyDims = {
   forearm: 0.28,
 };
 
-const UNIFORM = 0x2b4c9b;
+const UNIFORM = 0x2a4a8c;
 const DARK = 0x1c2a52;
 const SKIN = 0xf0b894;
 
@@ -35,8 +35,9 @@ export function buildGuard(): Rig {
   chest.box(0.1, 0.06, 0.02, gloss(0xffd21f), [0.12, 0.2, -0.17], undefined, 0.01);
   chest.box(0.02, 0.3, 0.01, matte(0xffd21f), [0, 0.1, -0.172]);
   for (const y of [0.02, 0.12, 0.22]) chest.sphere(0.018, gloss(0xffd21f), [0, y, -0.175]);
-  // Hi-vis stripes, so he reads from far down the track.
-  chest.box(0.54, 0.05, 0.36, satin(0xd8ff3a), [0, 0.02, 0], undefined, 0.02);
+  // A red tie and gold epaulettes, so he reads as the inspector from far down the track.
+  chest.box(0.07, 0.2, 0.02, satin(0xe8312a), [0.06, 0.12, -0.175], undefined, 0.01);
+  for (const x of [-0.25, 0.25]) chest.box(0.14, 0.03, 0.12, gloss(0xffc21a), [x, 0.33, 0], undefined, 0.01);
   const spine = dress.on("spine");
   spine.sphere(0.25, uniform, [0, 0.08, -0.04], [1.02, 0.9, 1]);
   spine.box(0.48, 0.07, 0.4, matte(0x1d1d24), [0, -0.02, -0.02], undefined, 0.03);
@@ -45,13 +46,15 @@ export function buildGuard(): Rig {
   dress.on("neck").post(0.07, 0.1, matte(SKIN), [0, 0.02, 0]);
 
   const head = dress.on("head");
+  const face = dress.detail("head");
   const cy = 0.14;
   head.sphere(0.15, matte(SKIN), [0, cy, 0], [1, 1.05, 1], 20);
+  // A big red nose and a bushy moustache, painted on with the eyes and brows.
   head.sphere(0.035, matte(0xf29a8c), [0, cy - 0.01, -0.15], [1, 0.9, 1], 10);
-  head.sphere(0.06, matte(0x6b4a33), [0, cy - 0.06, -0.125], [1.5, 0.5, 0.6], 12);
+  face.sphere(0.06, matte(0x6b4a33), [0, cy - 0.06, -0.125], [1.5, 0.5, 0.6], 12);
   for (const x of [-1, 1]) {
-    head.sphere(0.018, gloss(0x1b1320), [x * 0.05, cy + 0.035, -0.135], [1, 1, 0.6], 8);
-    head.box(0.06, 0.02, 0.02, satin(0x5a3a26), [x * 0.055, cy + 0.07, -0.132], [0, 0, x * 0.25], 0.008);
+    face.sphere(0.018, gloss(0x1b1320), [x * 0.05, cy + 0.035, -0.135], [1, 1, 0.6], 8);
+    face.box(0.06, 0.02, 0.02, satin(0x5a3a26), [x * 0.055, cy + 0.07, -0.132], [0, 0, x * 0.25], 0.008);
     head.sphere(0.036, matte(SKIN), [x * 0.15, cy, 0], [0.6, 1, 0.9], 8);
   }
   // The peaked cap with its badge.
@@ -65,7 +68,7 @@ export function buildGuard(): Rig {
     const forearm = dress.on(`elbow${side}`);
     forearm.sphere(0.08, uniform, [0, 0, 0], [1, 1, 1], 10);
     forearm.capsule(0.075, 0.17, uniform, [0, -0.12, 0]);
-    forearm.post(0.08, 0.04, satin(0xd8ff3a), [0, -0.22, 0]);
+    forearm.post(0.08, 0.04, satin(0xffc21a), [0, -0.22, 0]);
     dress.on(`hand${side}`).sphere(0.075, matte(SKIN), [0, -0.055, 0], [0.9, 1.1, 1], 12);
     dress.on(`hip${side}`).capsule(0.11, 0.24, satin(DARK), [0, -0.2, 0]);
     const shin = dress.on(`knee${side}`);

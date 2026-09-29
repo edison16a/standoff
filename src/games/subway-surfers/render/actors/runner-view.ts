@@ -1,14 +1,19 @@
 import * as THREE from "three";
+import type { RunEvent } from "../../engine/events";
 import type { Run } from "../../engine/run";
-import { JUMP, ROLL, RUNNER } from "../../engine/tuning";
-import { cheerPose, crashPose, flyPose, idlePose, jumpPose, rollPose, runPose, boardPose } from "../anim/gaits";
+import type { RunnerState } from "../../engine/runner";
+import { airTime, launchSpeed } from "../../engine/motion";
+import { JUMP, ROLL, SIDE } from "../../engine/tuning";
+import { boardPose, cheerPose, crashPose, flyPose, idlePose, jumpPose, rollPose, runPose } from "../anim/gaits";
 import { Pose } from "../anim/pose";
+import { Reactions } from "../anim/reactions";
 import { addOutline } from "../outline";
 import { MeshBuilder } from "../mesh-builder";
 import { hoverboard } from "../models/pickups";
 import type { Rig } from "../models/rig";
 import { buildRunner, LOOKS } from "../models/runner-model";
 import { shadowPaint } from "../models/train";
+import { buildJetpack } from "./jetpack";
 import { shadowFloor } from "./shadow-floor";
 
 /** Metres of track per full stride, left and right foot. */
@@ -18,14 +23,16 @@ export type Mood = "run" | "idle" | "cheer";
 
 /**
  * One runner on screen: the rigged character, their hoverboard, jetpack
- * and glowing boots when they have them, and a soft shadow. Each frame it
- * reads the run and eases the body toward the pose for what is happening.
+ * and glowing sneakers when they have them, and a soft shadow. Each frame
+ * it reads the run and eases the body toward the pose for what is
+ * happening, with a jolt laid over it for a stumble and a squash on landing.
  */
 export class RunnerView {
   readonly root = new THREE.Group();
   readonly rig: Rig;
   private readonly pose = new Pose();
   private readonly target = new Pose();
+  private readonly reactions = new Reactions();
   private readonly board: THREE.Group;
   private readonly jetpack: THREE.Group;
   private readonly boots: THREE.Group[] = [];
@@ -33,6 +40,7 @@ export class RunnerView {
   private lastX = 0;
   private lean = 0;
   private flip = 0;
+  private clock = 0;
 
   constructor(look: number) {
     const style = LOOKS[look % LOOKS.length]!;
@@ -59,33 +67,45 @@ export class RunnerView {
     this.root.add(this.shadow);
   }
 
-  /** A new run starts from where it stands, with no lean or flip left over from the last. */
+  /** A new run starts from where it stands, with no lean, flip or stumble left over from the last. */
   reset(run: Run): void {
     this.lastX = run.runner.x;
     this.lean = 0;
     this.flip = 0;
+    this.reactions.reset();
+  }
+
+  /** The moments the body reacts to on top of its pose: a knock off a train, a heavy landing. */
+  onEvent(event: RunEvent, runner?: RunnerState): void {
+    this.reactions.onEvent(event, this.clock, runner);
   }
 
   /** Poses the runner from their run. `mood` is for the moments with no run going. */
   update(run: Run | null, dt: number, time: number, mood: Mood = "run"): void {
+    this.clock = time;
     const s = run?.runner;
     const powers = run?.powers;
     const x = s?.x ?? 0;
     const y = s?.y ?? 0;
-    this.root.position.set(x, y, -(s?.distance ?? 0));
+    this.root.position.set(x + this.reactions.shove(time), y, -(s?.distance ?? 0));
     const vx = dt > 0 ? (x - this.lastX) / dt : 0;
     this.lastX = x;
-    this.lean += (vx / RUNNER.sideSpeed - this.lean) * (1 - Math.exp(-14 * dt));
+    this.lean += (vx / SIDE.maxSpeed - this.lean) * (1 - Math.exp(-14 * dt));
     const board = !!powers?.has("hoverboard") && !run?.crashed;
     const flying = !!powers?.has("jetpack") && !run?.crashed;
-    this.board.visible = board;
+    // The board is put away while the jetpack flies, and comes back for the landing.
+    this.board.visible = board && !flying;
     this.jetpack.visible = flying;
+    // Safe for a moment after a save or a flight: the body blinks, the way the real game shows it.
+    const safe = !!s && s.ghost > 0 && !flying && !run?.crashed;
+    this.rig.root.visible = !safe || Math.floor(time * 16) % 2 === 0;
     for (const glow of this.boots) glow.visible = !!powers?.has("boots");
     const flame = this.jetpack.getObjectByName("flame");
     if (flame) flame.scale.set(1, 0.8 + 0.4 * Math.abs(Math.sin(time * 40)), 1);
 
     let rate = 16;
     let spin = 0;
+    let running = false;
     if (!run || mood !== "run") {
       if (mood === "cheer") cheerPose(this.target, time);
       else idlePose(this.target, time);
@@ -101,18 +121,23 @@ export class RunnerView {
       rate = 30;
       spin = -Math.PI * 2 * Math.min(1, s!.rollAge / ROLL.minS);
     } else if (!s!.grounded && s!.airTime > 0.04) {
-      const top = Math.sqrt(2 * JUMP.gravity * (powers!.has("boots") ? JUMP.bootsHeight : JUMP.height));
+      const top = launchSpeed(powers!.has("boots") ? JUMP.bootsHeight : JUMP.height);
       jumpPose(this.target, Math.max(-1, Math.min(1, s!.vy / top)));
       rate = 14;
-      // Jump boots throw in a front flip.
-      if (powers!.has("boots") && s!.vy < top * 0.95) spin = -Math.PI * 2 * Math.min(1, s!.airTime / 1.05);
+      // Super sneakers throw in a front flip, eased in and out, done before the feet come down.
+      if (powers!.has("boots") && s!.vy < top * 0.95) {
+        const t = Math.min(1, s!.airTime / (airTime(JUMP.bootsHeight) * 0.8));
+        spin = -Math.PI * 2 * t * t * (3 - 2 * t);
+      }
     } else if (board) {
       boardPose(this.target, time);
       rate = 10;
     } else {
       runPose(this.target, (s!.distance / STRIDE) * Math.PI * 2, 1);
       rate = 22;
+      running = true;
     }
+    this.reactions.apply(this.target, running || board, time);
     // Leaning into a lane change, body and head turning the way they go.
     const lean = Math.max(-1, Math.min(1, this.lean));
     this.target.add("spine", 0, 0, -0.35 * lean).add("hips", 0, -0.3 * lean, 0).add("head", 0, -0.3 * lean, 0.2 * lean);
@@ -145,23 +170,4 @@ export class RunnerView {
     });
     this.shadow.geometry.dispose();
   }
-}
-
-function buildJetpack(): THREE.Group {
-  const b = new MeshBuilder();
-  for (const x of [-0.1, 0.1]) {
-    b.capsule(0.08, 0.26, { color: 0xff8a1f, finish: "gloss" }, [x, 0, 0.06]);
-    b.post(0.06, 0.08, { color: 0x3a3f4b, finish: "metal" }, [x, -0.24, 0.06], 10, 0.08);
-  }
-  b.box(0.3, 0.3, 0.1, { color: 0x3a3f4b, finish: "satin" }, [0, 0.02, -0.02], undefined, 0.03);
-  const group = b.build("jetpack");
-  const flame = new MeshBuilder();
-  for (const x of [-0.1, 0.1]) {
-    flame.add(new THREE.ConeGeometry(0.07, 0.5, 10), { color: 0xffe14d, finish: "glow" }, [x, -0.5, 0.06], [Math.PI, 0, 0]);
-    flame.add(new THREE.ConeGeometry(0.04, 0.3, 8), { color: 0xffffff, finish: "glow" }, [x, -0.42, 0.06], [Math.PI, 0, 0]);
-  }
-  const fire = flame.build("flame");
-  fire.name = "flame";
-  group.add(fire);
-  return group;
 }

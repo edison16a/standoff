@@ -3,7 +3,7 @@ import type { Look } from "./looks";
 
 /**
  * The boxers' kit drawn on canvases: trunks with stripes down the sides,
- * a waistband with the boxer's nickname, and gloves with a trim band and
+ * a waistband with the player's name, and gloves with a trim band and
  * a star on the back of the hand. Sculpted parts put the front at the
  * middle of the texture and the sides at a quarter and three quarters.
  */
@@ -54,13 +54,16 @@ export function waistbandTexture(look: Look): THREE.CanvasTexture {
     ctx.fillRect(0, 12, 1024, 10);
     ctx.fillRect(0, 106, 1024, 10);
     ctx.fillStyle = look.trunks;
-    ctx.font = "900 64px Impact, 'Arial Black', sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(look.nickname.toUpperCase(), 512, 66);
-    ctx.font = "900 44px Impact, 'Arial Black', sans-serif";
-    ctx.fillText((look.name.split(" ")[1] ?? look.name).toUpperCase(), 0, 66);
-    ctx.fillText((look.name.split(" ")[1] ?? look.name).toUpperCase(), 1024, 66);
+    // The player's own name across the front, shrunk to fit a long one, and the build round the sides.
+    let size = 64;
+    ctx.font = `900 ${size}px Impact, 'Arial Black', sans-serif`;
+    while (ctx.measureText(look.name.toUpperCase()).width > 400 && size > 30) ctx.font = `900 ${(size -= 4)}px Impact, 'Arial Black', sans-serif`;
+    ctx.fillText(look.name.toUpperCase(), 512, 66);
+    ctx.font = "900 40px Impact, 'Arial Black', sans-serif";
+    ctx.fillText(look.nickname.toUpperCase(), 0, 66);
+    ctx.fillText(look.nickname.toUpperCase(), 1024, 66);
   });
 }
 

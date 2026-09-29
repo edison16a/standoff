@@ -1,31 +1,31 @@
 import * as THREE from "three";
 import { ZONE_LENGTH } from "../../engine/tuning";
 
-export type SideKind = "wall" | "buildings" | "platform" | "containers" | "fence" | "neon" | "holo";
+export type SideKind = "wall" | "woodFence" | "metalFence" | "platform" | "buildings" | "trees" | "containers";
 
 /**
- * One look for the neon city. Every zone is night, lit by signs, and the
- * palette changes every zone, as the pace and the multiplier step up, so
- * a long run travels somewhere new.
+ * One stretch of the sunny rail yard. Every zone is bright daytime; what
+ * lines the tracks changes every zone, as the pace and the multiplier
+ * step up, so a long run travels somewhere new.
  */
 export interface Theme {
   name: string;
   skyTop: number;
   skyHorizon: number;
-  /** The haze, close to the horizon so the city fades into its glow. */
+  /** The haze far down the track, close to the horizon so the yard fades into the sky. */
   fog: number;
-  /** Moonlight, the one direct light. */
   sun: number;
   sunIntensity: number;
   hemiSky: number;
   hemiGround: number;
-  /** The wet ground beyond the tracks. */
-  verge: number;
+  /** The ground past the gravel: dusty earth, or grass by the parks. */
+  ground: number;
+  /** Concrete for the walls the graffiti goes on. */
   wall: string;
-  /** Facades, dark so their lit windows and signs stand out. */
+  /** Facades of the blocks of flats and shops. */
   buildings: readonly string[];
-  /** The zone's neon: the rails and trims first, then the signs and holograms. */
-  neon: readonly [number, number, number];
+  /** Bright paint for awnings, canopies, pillars and benches. */
+  accent: readonly [number, number, number];
   /** What lines the sides, by weight. */
   sides: readonly (readonly [SideKind, number])[];
   /** Share of the zone spent in tunnels. */
@@ -34,68 +34,68 @@ export interface Theme {
 
 export const THEMES: readonly Theme[] = [
   {
-    name: "Neon downtown",
-    skyTop: 0x05041a,
-    skyHorizon: 0x6a1f86,
-    fog: 0x341a5c,
-    sun: 0xc4b6ff,
-    sunIntensity: 1.8,
-    hemiSky: 0xb3a6ff,
-    hemiGround: 0x3a2050,
-    verge: 0x17142a,
-    wall: "#2b2548",
-    buildings: ["#1d1838", "#261d4a", "#17223f"],
-    neon: [0x21f3ff, 0xff2bd6, 0xffd21f],
-    sides: [["neon", 3], ["buildings", 2], ["holo", 2], ["wall", 2], ["platform", 1.5]],
-    tunnels: 0.15,
+    name: "Downtown yard",
+    skyTop: 0x2d8ff0,
+    skyHorizon: 0xc4ebff,
+    fog: 0xcdeeff,
+    sun: 0xfff6e6,
+    sunIntensity: 1.7,
+    hemiSky: 0xe8f6ff,
+    hemiGround: 0xd8c4a0,
+    ground: 0xb89f7c,
+    wall: "#cfc7b8",
+    buildings: ["#d8704c", "#e9c27c", "#8fb4d6", "#e79a7c"],
+    accent: [0xe8312a, 0x1f6fd6, 0xffc21a],
+    sides: [["wall", 3], ["woodFence", 2], ["buildings", 2], ["platform", 1.5], ["trees", 1]],
+    tunnels: 0.14,
   },
   {
-    name: "Cyan harbour",
-    skyTop: 0x020b1c,
-    skyHorizon: 0x11587a,
-    fog: 0x123a55,
-    sun: 0xa8ecff,
-    sunIntensity: 1.8,
-    hemiSky: 0x9fdcff,
-    hemiGround: 0x142a36,
-    verge: 0x101c26,
-    wall: "#1f3342",
-    buildings: ["#12263a", "#18304a", "#1d2540"],
-    neon: [0xff8a1f, 0x21f3ff, 0xff2bd6],
-    sides: [["containers", 3], ["holo", 2], ["fence", 2], ["neon", 2]],
+    name: "Harbour sidings",
+    skyTop: 0x2596e6,
+    skyHorizon: 0xc8f2ff,
+    fog: 0xd2f3ff,
+    sun: 0xfff8ec,
+    sunIntensity: 1.7,
+    hemiSky: 0xe4f8ff,
+    hemiGround: 0xc8bca4,
+    ground: 0xaa9b84,
+    wall: "#c4c8c8",
+    buildings: ["#7fb0c8", "#e6d4a8", "#c9785a", "#9cc49a"],
+    accent: [0xff8a1f, 0x1f8fb0, 0xe8312a],
+    sides: [["containers", 3], ["metalFence", 2], ["wall", 2], ["trees", 1]],
     tunnels: 0.12,
   },
   {
-    name: "Acid arcade",
-    skyTop: 0x08021c,
-    skyHorizon: 0x44157a,
-    fog: 0x2a1450,
-    sun: 0xd6ffc0,
+    name: "Park lane",
+    skyTop: 0x3399f0,
+    skyHorizon: 0xd2f0ff,
+    fog: 0xd4f0ff,
+    sun: 0xfff4dc,
     sunIntensity: 1.7,
-    hemiSky: 0xc6b8ff,
-    hemiGround: 0x2a1a3e,
-    verge: 0x151226,
-    wall: "#2d2150",
-    buildings: ["#1f1640", "#2a1a50", "#162a3a"],
-    neon: [0x9dff2b, 0xa24bff, 0x21f3ff],
-    sides: [["neon", 4], ["holo", 2], ["platform", 2], ["wall", 1.5]],
-    tunnels: 0.22,
+    hemiSky: 0xecf8ff,
+    hemiGround: 0xa8c47c,
+    ground: 0x7fbf4c,
+    wall: "#d2cabb",
+    buildings: ["#e0a36c", "#f0d78c", "#a7c7e0", "#d98878"],
+    accent: [0x3fb54a, 0xffc21a, 0x1f6fd6],
+    sides: [["trees", 3], ["woodFence", 2], ["platform", 1.5], ["buildings", 1.5]],
+    tunnels: 0.2,
   },
   {
-    name: "Ultraviolet heights",
-    skyTop: 0x0c0218,
-    skyHorizon: 0x8a1f5a,
-    fog: 0x44173f,
-    sun: 0xffc0e0,
-    sunIntensity: 1.8,
-    hemiSky: 0xffb8e8,
-    hemiGround: 0x3a1a34,
-    verge: 0x1c1224,
-    wall: "#3a2040",
-    buildings: ["#2a1436", "#1e1a44", "#34183a"],
-    neon: [0xff2bd6, 0xff5a1f, 0x8a5bff],
-    sides: [["buildings", 3], ["holo", 2], ["neon", 2], ["fence", 1.5], ["wall", 1.5]],
-    tunnels: 0.18,
+    name: "Uptown heights",
+    skyTop: 0x3a88e6,
+    skyHorizon: 0xffe8c8,
+    fog: 0xf6ead8,
+    sun: 0xffecc8,
+    sunIntensity: 1.75,
+    hemiSky: 0xfff2e0,
+    hemiGround: 0xd8b890,
+    ground: 0xbfa27c,
+    wall: "#d6cab4",
+    buildings: ["#c86a4c", "#e8b86c", "#8c9fc8", "#f0c8a0"],
+    accent: [0x8a4be8, 0xff5a5f, 0xffc21a],
+    sides: [["buildings", 3], ["platform", 2], ["wall", 2], ["metalFence", 1]],
+    tunnels: 0.16,
   },
 ];
 
@@ -123,7 +123,6 @@ export function lightAt(distance: number, out: Light): Light {
   mix(before.sun, now.sun, out.sun);
   mix(before.hemiSky, now.hemiSky, out.hemiSky);
   mix(before.hemiGround, now.hemiGround, out.hemiGround);
-  mix(before.neon[1], now.neon[1], out.neon);
   out.sunIntensity = before.sunIntensity + (now.sunIntensity - before.sunIntensity) * t;
   return out;
 }
@@ -138,11 +137,9 @@ export interface Light {
   sunIntensity: number;
   hemiSky: THREE.Color;
   hemiGround: THREE.Color;
-  /** The zone's sign colour, which tints the city glow along the horizon. */
-  neon: THREE.Color;
 }
 
 export function newLight(): Light {
   const c = () => new THREE.Color();
-  return { skyTop: c(), skyHorizon: c(), fog: c(), sun: c(), sunIntensity: 1, hemiSky: c(), hemiGround: c(), neon: c() };
+  return { skyTop: c(), skyHorizon: c(), fog: c(), sun: c(), sunIntensity: 1, hemiSky: c(), hemiGround: c() };
 }

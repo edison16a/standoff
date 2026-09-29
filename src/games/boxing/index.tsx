@@ -7,6 +7,7 @@ import { Showcase } from "./showcase/Showcase";
 import "./styles/host.css";
 import "./styles/menus.css";
 import "./styles/pick.css";
+import "./styles/build-card.css";
 import "./styles/hud.css";
 import "./styles/map.css";
 import "./styles/overlays.css";

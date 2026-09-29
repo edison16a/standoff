@@ -31,7 +31,8 @@ export function SetupSteps() {
   if (step === "calibrate") {
     return (
       <StepShell steps={STEPS} current={0} title="Calibrate">
-        <AimCalibrate aim={session.aim} colour={colour} onDone={() => session.goTo("blade")} />
+        {/* The blade sweeps the whole screen, so it takes the six target sword plan for accuracy everywhere. */}
+        <AimCalibrate aim={session.aim} colour={colour} plan="sword" onDone={() => session.goTo("blade")} />
       </StepShell>
     );
   }

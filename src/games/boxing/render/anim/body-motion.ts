@@ -76,7 +76,9 @@ export class BodyMotion {
 
   update(input: AnimInput, pose: RigPose, shape: PunchShape, punch: { hand: Hand; style: PunchStyle } | null): void {
     const { fighter, dt, time, now } = input;
-    const rocked = fighter.staggered(now);
+    const ceremony = input.ceremony !== null;
+    const rocked = !ceremony && fighter.staggered(now);
+    const down = !ceremony && !!fighter.down;
     // The head goes where the match judges it, players and computer alike, so what is seen is what is hit.
     const head = fighter.input.head;
     this.guard.update(fighter.input.guard && !fighter.punching(now) ? 1 : 0, dt, 5);
@@ -84,15 +86,16 @@ export class BodyMotion {
     this.slip.update(clamp(-head.x / SLIP_SIDE, -1.4, 1.4), dt, 16);
     this.rise.update(clamp(head.y, 0, 0.2), dt, 16);
     this.stagger.update(rocked ? 1 : 0, dt, 3);
-    this.corner.update(input.mode === "corner" ? 1 : 0, dt, 1.2);
+    this.corner.update(input.mode === "corner" || input.mode === "ropes" ? 1 : 0, dt, 1.2);
     this.seat.update(input.seated ? 1 : 0, dt, 2.5);
-    this.cheer.update(input.mode === "win" ? 1 : 0, dt, 1.5);
-    this.slump.update(input.mode === "lose" && !fighter.down ? 1 : 0, dt, 1);
+    this.cheer.update(input.mode === "win" || input.mode === "champion" ? 1 : 0, dt, 1.5);
+    this.slump.update((input.mode === "lose" || input.mode === "ropes") && !down ? 1 : 0, dt, 1);
     const duck = this.duck.value;
     const slip = this.slip.value;
     const stagger = this.stagger.value;
     const seat = this.seat.value;
-    const resting = Math.max(this.corner.value, this.slump.value);
+    // A champion stands square to show the belt, not side on in a fighting stance.
+    const resting = Math.max(this.corner.value, this.slump.value, input.mode === "champion" ? this.cheer.value : 0);
 
     // A boxer's bounce on the balls of the feet, calmer when covered up or resting.
     const bounce = Math.sin(time * Math.PI * 2 * 1.6 + this.phase) * 0.013 * (1 - 0.6 * this.guard.value) * (1 - resting);
@@ -139,7 +142,8 @@ export class BodyMotion {
   }
 
   private applyFall(input: AnimInput, pose: RigPose): void {
-    const down = input.fighter.down;
+    // The ceremony stands everyone back up, whatever the fight left them doing.
+    const down = input.ceremony === null ? input.fighter.down : null;
     let fall = 0;
     if (down) {
       fall = smooth01((input.now - down.since) / 1100);

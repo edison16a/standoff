@@ -10,6 +10,7 @@ import type { Offset, PelletHit } from "../engine/shooting";
 import type { WeaponId } from "../engine/weapons";
 import { phoneMessageSchema, type PhoneMessage } from "../protocol/messages";
 import { lowQuality } from "../render/quality";
+import { registerRunAdmin } from "./admin";
 import { debugStage, exposeForTests } from "./debug";
 import { EventRouter } from "./event-router";
 import { emptyHud, useSurvivalStore } from "./host-store";
@@ -45,6 +46,7 @@ export class SurvivalHost {
   private readonly offFire: () => void;
   private lastTick = 0;
   private healed = 0;
+  private offAdmin: (() => void) | null = null;
 
   constructor(private readonly room: HostRoomApi) {
     this.aim = new HostAim(room);
@@ -75,6 +77,7 @@ export class SurvivalHost {
   }
 
   dispose(): void {
+    this.offAdmin?.();
     this.unsubscribe();
     this.offFire();
     this.aim.dispose();
@@ -103,6 +106,7 @@ export class SurvivalHost {
     this.game.start(players, debugStage());
     this.room.setPlaying(true);
     this.audio.onStart();
+    this.offAdmin ??= registerRunAdmin(() => this.game);
   }
 
   setLevel(level: BotLevel): void {
@@ -116,6 +120,8 @@ export class SurvivalHost {
 
   /** Ends the run and goes back to the weapon pick, keeping the room. */
   backToLobby(): void {
+    this.offAdmin?.();
+    this.offAdmin = null;
     this.game = new SurvivalGame();
     this.lobby.clearReady();
     this.room.setPlaying(false);

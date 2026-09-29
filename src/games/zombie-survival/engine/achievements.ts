@@ -1,6 +1,7 @@
 import type { Seat } from "@/platform/protocol";
 import type { GameEvent } from "./events";
 import type { PlayerStats } from "./stats";
+import { isBoss } from "./zombie-kinds";
 
 interface Award {
   id: string;
@@ -60,7 +61,7 @@ export class Achievements {
       this.personal(event.seat, "headhunter", s.headshots >= 10);
       this.personal(event.seat, "exterminator", s.kills >= 50);
       this.personal(event.seat, "centurion", s.kills >= 100);
-      this.personal(event.seat, "giantSlayer", event.kind === "butcher" || event.kind === "tank" || event.kind === "juggernaut" || event.kind === "behemoth");
+      this.personal(event.seat, "giantSlayer", isBoss(event.kind));
       const key = `${event.seat}:${shotId}`;
       // A shot's kills arrive together, so only the latest shot needs counting.
       this.shotKills = this.shotKills.key === key ? { key, count: this.shotKills.count + 1 } : { key, count: 1 };
