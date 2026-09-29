@@ -44,6 +44,8 @@ export class Ceremony {
     this.lights = new StageLights({ count: 4, colours: ["#fff3dc", "#ffd27a"], radius: 4.2, height: 8.5, intensity: 650, angle: 0.2, beamStrength: 0.16, sweep: 0.2 });
     this.lights.setLevel(0);
     this.lights.aimAt(new THREE.Vector3(0, 0, 0));
+    // Hidden lamps drop out of every shader, so the fight never pays for four spotlights it does not use.
+    this.lights.object.visible = false;
     this.group.add(this.belt, this.lights.object);
   }
 
@@ -56,11 +58,13 @@ export class Ceremony {
     this.startedAt = time;
     this.level = 0;
     this.belt.visible = true;
+    this.lights.object.visible = true;
   }
 
   stop(): void {
     this.winner = null;
     this.belt.visible = false;
+    this.lights.object.visible = false;
     this.lights.setLevel(0);
   }
 
