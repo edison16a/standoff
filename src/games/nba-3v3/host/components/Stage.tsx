@@ -16,13 +16,15 @@ const CourtCanvas = lazy(() => import("./CourtCanvas"));
  */
 export function Stage() {
   const phase = useNbaStore((state) => state.phase);
+  // A slow computer can take longer over the winners' moment than the results take to fade in.
+  const replayDue = useNbaStore((state) => state.replayDue);
   return (
     <div className="nba-stage">
       <Suspense fallback={null}>
         <CourtCanvas />
       </Suspense>
       {phase === "lobby" ? <Lobby /> : phase === "replay" ? <ReplayBar /> : <Hud />}
-      {phase === "over" && <Results />}
+      {phase === "over" && !replayDue && <Results />}
     </div>
   );
 }

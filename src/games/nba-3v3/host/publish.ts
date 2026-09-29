@@ -103,6 +103,7 @@ export function publish(c: PublishContext): void {
   const replay = c.driver?.replays.replay;
   store.setState({
     replay: replay ? { view: replay.view, scorer: nameFor(replay.ghost, replay.scorer, c.players), votes: votes.map(({ name, done }) => ({ name, done })) } : null,
+    replayDue: !!c.driver?.replays.pending,
     phase,
     seats,
     spots,

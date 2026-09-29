@@ -74,6 +74,8 @@ export interface NbaHostState {
   winner: TeamId | null;
   /** The replay of the winning basket while it plays: whose view, who scored, and who has voted to skip. */
   replay: { view: "scorer" | "defender"; scorer: string; votes: { name: string; done: boolean }[] } | null;
+  /** Someone has won and the replay is still to roll, so the results wait. */
+  replayDue: boolean;
   results: ResultRow[];
   /** Players whose phones joined during the game, waiting for the next one. */
   waiting: string[];
@@ -97,6 +99,7 @@ export const useNbaStore = create<NbaHostState>(() => ({
   banner: null,
   winner: null,
   replay: null,
+  replayDue: false,
   results: [],
   waiting: [],
 }));
