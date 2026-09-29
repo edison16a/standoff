@@ -14,20 +14,21 @@ export class Autopilot {
   private run: Run | null = null;
 
   constructor(private readonly flair = false) {
-    this.bot = this.fresh();
+    this.bot = this.fresh(MOVE_GAP_S);
   }
 
   /** Steers this frame. Returns no input of its own, since the bot feeds the run directly. */
   drive(round: Round): null {
     if (this.run !== round.run) {
       this.run = round.run;
-      this.bot = this.fresh();
+      // The level's own gap between moves, as in the tests, since Demon asks for moves closer together.
+      this.bot = this.fresh(round.run.options.yard?.moveGap ?? MOVE_GAP_S);
     }
     if (!round.paused) this.bot.drive(round.run);
     return null;
   }
 
-  private fresh(): Bot {
-    return new Bot({ flair: this.flair, human: { lagS: REACTION.cameraS, gapS: MOVE_GAP_S } });
+  private fresh(gapS: number): Bot {
+    return new Bot({ flair: this.flair, human: { lagS: REACTION.cameraS, gapS } });
   }
 }
