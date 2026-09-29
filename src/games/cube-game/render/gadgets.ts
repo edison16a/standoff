@@ -1,12 +1,11 @@
 import * as THREE from "three";
 import type { Level, Orb, Pad } from "../engine/types";
 import { glowSprite } from "./textures";
-import { MODE_COLOURS, type Theme } from "./themes";
+import { Portals } from "./portals";
+import type { Theme } from "./themes";
 
 const PAD_COLOUR = 0xffe14d;
 const ORB_COLOUR = 0xffd21f;
-/** A portal ring's radius, in cubes. Runs nearly always cross portals on the floor. */
-const PORTAL_SIZE = 1.6;
 
 /** How much of each glow's push past white is kept. Lower keeps the parts lit but calm. */
 const CALM = 0.45;
@@ -43,7 +42,7 @@ export class Gadgets {
   private readonly disposables: { dispose(): void }[] = [this.glow];
   private readonly orbs: { orb: Orb; ring: THREE.Mesh; halo: THREE.Sprite }[] = [];
   private readonly pads: { pad: Pad; mesh: THREE.Mesh; halo: THREE.Sprite }[] = [];
-  private readonly spinners: THREE.Object3D[] = [];
+  private readonly portals: Portals;
 
   constructor(level: Level, theme: Theme) {
     const padGeometry = new THREE.CylinderGeometry(0.42, 0.42, 0.9, 24, 1, false, 0, Math.PI);
@@ -78,24 +77,8 @@ export class Gadgets {
       this.group.add(ring, core, halo);
     }
 
-    // Round, and standing on the floor where runs cross it. Only crossing
-    // its x switches the mode, so the ring's size is looks alone.
-    const portalRing = new THREE.TorusGeometry(1, 0.12, 10, 56);
-    for (const portal of level.portals) {
-      const colour = MODE_COLOURS[portal.mode];
-      const frame = new THREE.Group();
-      frame.position.set(portal.x, PORTAL_SIZE + 0.1, 0);
-      const ring = new THREE.Mesh(portalRing, new THREE.MeshBasicMaterial({ color: bright(colour, 1.7) }));
-      ring.scale.setScalar(PORTAL_SIZE);
-      const inner = new THREE.Mesh(portalRing, new THREE.MeshBasicMaterial({ color: bright(colour, 1.0) }));
-      inner.scale.setScalar(PORTAL_SIZE * 0.72);
-      const fog = new THREE.Sprite(additive(this.glow, colour, 0.18));
-      fog.scale.setScalar(PORTAL_SIZE * 3.2);
-      frame.add(ring, inner, fog);
-      this.spinners.push(inner);
-      this.disposables.push(ring.material, inner.material, fog.material);
-      this.group.add(frame);
-    }
+    this.portals = new Portals(level.portals, this.glow);
+    this.group.add(this.portals.group);
 
     const chevronGeometry = chevron();
     for (const gate of level.speeds) {
@@ -115,7 +98,7 @@ export class Gadgets {
     const beam = new THREE.Mesh(new THREE.BoxGeometry(0.1, 40, 0.1), new THREE.MeshBasicMaterial({ color: bright(theme.edge, 1.6) }));
     beam.position.set(level.endX, 20, 0);
     this.group.add(finish, beam);
-    this.disposables.push(padGeometry, padMaterial, ringGeometry, coreGeometry, orbMaterial, coreMaterial, portalRing, chevronGeometry);
+    this.disposables.push(padGeometry, padMaterial, ringGeometry, coreGeometry, orbMaterial, coreMaterial, chevronGeometry, this.portals);
     this.disposables.push(finish.material, beam.geometry, beam.material as THREE.Material);
     for (const { halo } of [...this.orbs, ...this.pads]) this.disposables.push(halo.material);
   }
@@ -126,7 +109,7 @@ export class Gadgets {
       halo.scale.setScalar(2.4 + pulse * 0.8);
     }
     for (const { halo } of this.pads) halo.material.opacity = 0.35 + pulse * 0.15;
-    for (const spinner of this.spinners) spinner.rotation.y = Math.sin(time * 3) * 0.6;
+    this.portals.update(time, pulse);
   }
 
   /** Dims what the player in this view has already used, the way the original does. */
