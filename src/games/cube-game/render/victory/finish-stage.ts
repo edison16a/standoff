@@ -1,5 +1,11 @@
 import type { Metal, OrbitShot } from "@/games/kit/victory";
 
+/** Half a cube's side: it rests this far over the surface under it. */
+export const HALF = 0.46;
+/** The race's podium, and the round pedestal for one player or a dead heat, in metres. */
+export const PODIUM = { width: 1.8, height: 1.2 };
+export const PEDESTAL = { radius: 1.35, height: 0.85 };
+
 /** One player's end of the round, as the results know it. */
 export interface Finisher {
   slot: number;
@@ -46,21 +52,32 @@ export function hop(t: number): { lift: number; angle: number } {
 
 /**
  * The circling shot. It stands back so the top of a hop stays under the
- * names across the top, and the podium's steps show under the cubes.
+ * names across the top all through the swing, and the podium's steps
+ * show under the cubes.
  */
 export function finishShot(stand: Stand): Partial<OrbitShot> {
   const podium = stand.kind === "podium";
   return {
     centre: { x: 0, y: 0, z: 0 },
-    radius: podium ? 8.4 : 7,
-    height: podium ? 2.3 : 1.9,
-    lookHeight: podium ? 2.15 : 1.95,
+    radius: podium ? 10 : 8.4,
+    height: podium ? 2.6 : 2.2,
+    lookHeight: podium ? 2.45 : 2.2,
     startAngle: 0,
     speed: 0.1,
-    arc: 0.35,
+    arc: podium ? 0.25 : 0.28,
     introS: 2.4,
     pullBack: 1.45,
     rise: 1.8,
     bob: 0.15,
   };
+}
+
+/**
+ * How far the picture slides right, as a share of its width, so the
+ * results in the bottom left corner hide as little of it as they can.
+ * The podium is wide and its runner up stands on the left, so it slides
+ * further.
+ */
+export function finishShift(stand: Stand): number {
+  return stand.kind === "podium" ? 0.17 : 0.1;
 }

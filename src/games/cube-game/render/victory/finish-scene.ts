@@ -4,7 +4,7 @@ import type { PlayerState } from "../../engine/player";
 import { Avatar } from "../avatar";
 import { SKINS } from "../game-renderer";
 import { themeFor } from "../themes";
-import { finishShot, hop, type Stand } from "./finish-stage";
+import { finishShift, finishShot, HALF, hop, PEDESTAL, PODIUM, type Stand } from "./finish-stage";
 
 interface Cube {
   avatar: Avatar;
@@ -17,8 +17,12 @@ interface Cube {
   airborne: boolean;
 }
 
-/** Half the cube's side: it rests this far over the surface under it. */
-const HALF = 0.46;
+/**
+ * Where each place's cube and cup stand across its step. The runner up's
+ * cube sits in toward the middle, clear of the results in the corner,
+ * with its cup on the outside.
+ */
+const ON_STEP = { 1: { cube: 0, cup: 0.55 }, 2: { cube: 0.3, cup: -0.62 } } as const;
 const hex = (colour: number) => `#${colour.toString(16).padStart(6, "0")}`;
 
 function standing(): PlayerState {
@@ -49,7 +53,7 @@ export class FinishScene {
     if (stand.kind === "podium") this.podium(stand.places);
     else this.pedestal(stand.slots, stand.cup);
     // The celebration sits a little right of the middle, leaving the bottom left corner to the results.
-    this.room.camera.setViewOffset(1, 1, stand.kind === "podium" ? -0.12 : -0.06, 0, 1, 1);
+    this.room.camera.setViewOffset(1, 1, -finishShift(stand), 0, 1, 1);
     this.room.lights.aimAt(new THREE.Vector3(0, 1, 0));
     if (cheering) {
       this.room.confetti.cannons({ x: 0, y: 0, z: 0 }, { ring: 4.2, cannons: 4, count: 260, speed: 14 });
@@ -69,24 +73,26 @@ export class FinishScene {
 
   /** The race: the winner on the top step and the other second, each with a cup when anyone finished. */
   private podium(places: Extract<Stand, { kind: "podium" }>["places"]): void {
-    const podium = createPodium({ width: 1.8, height: 1.2 });
+    const podium = createPodium(PODIUM);
     this.room.scene.add(podium.object);
     this.room.scene.updateMatrixWorld(true);
     for (const p of places) {
       const top = podium.topOf(p.place);
-      this.cube(p.slot, top.clone().add(new THREE.Vector3(0, HALF, -0.2)), p.place === 1, 0);
-      if (p.cup) this.cup(p.cup, top.clone().add(new THREE.Vector3(0.55, 0, 0.5)), p.place === 1 ? 1.6 : 1.3);
+      const on = ON_STEP[p.place];
+      // Only a winner who made it to the end hops; a race ended early just stands.
+      this.cube(p.slot, top.clone().add(new THREE.Vector3(on.cube, HALF, -0.2)), p.place === 1 && p.cup !== null, 0);
+      if (p.cup) this.cup(p.cup, top.clone().add(new THREE.Vector3(on.cup, 0, 0.5)), p.place === 1 ? 1.6 : 1.3);
     }
   }
 
   /** One player alone, or a dead heat side by side, on a round pedestal with the gold cup in front. */
   private pedestal(slots: readonly number[], cup: boolean): void {
-    const pedestal = createPedestal({ radius: 1.35, height: 0.85 });
+    const pedestal = createPedestal(PEDESTAL);
     this.room.scene.add(pedestal);
     const top = pedestal.userData.top as number;
     slots.forEach((slot, i) => {
       const x = slots.length === 1 ? 0 : i === 0 ? -0.62 : 0.62;
-      this.cube(slot, new THREE.Vector3(x, top + HALF, -0.25), true, i * 0.8);
+      this.cube(slot, new THREE.Vector3(x, top + HALF, -0.25), cup, i * 0.8);
     });
     if (cup) this.cup("gold", new THREE.Vector3(slots.length === 1 ? 0.62 : 0, top, 0.55), 1.6);
   }
