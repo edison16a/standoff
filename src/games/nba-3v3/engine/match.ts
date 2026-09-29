@@ -124,7 +124,9 @@ export class Match {
     const a = this.athletes[id];
     if (!a) return;
     a.guard = on;
-    if (!on) a.guardAim = null;
+    if (on) return;
+    a.guardAim = null;
+    a.guardMan = null;
   }
 
   press(id: number, button: Button, aim: V2 | null = null): void {
@@ -147,10 +149,13 @@ export class Match {
     releaseShot(this, a, heldMs);
   }
 
-  /** The other team has the ball, so this player is on defence. */
+  /**
+   * The other team has the possession, so this player is on defence. It
+   * goes by possession, not by who holds the ball, so a pass between
+   * attackers or a loose ball never flips the phone's buttons mid play.
+   */
   defending(a: Athlete): boolean {
-    const holder = this.holder;
-    return !!holder && holder.team !== a.team;
+    return this.offence !== a.team;
   }
 
   /** A human's phone dropped or came back. The computer plays for them meanwhile. */
