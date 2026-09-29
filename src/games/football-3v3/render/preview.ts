@@ -8,7 +8,7 @@ import { Figure } from "./figures/figure";
 import { buildKit } from "./models/kit";
 
 const BALL: BallView = {
-  x: 0, y: 0, z: 9, vx: 0, vy: 0, vz: 0, axis: { x: 1, y: 0, z: 0 }, roll: 0, spin: 0, style: "spiral", state: "dead", holder: null,
+  x: 0, y: 0, z: 9, vx: 0, vy: 0, vz: 0, axis: { x: 1, y: 0, z: 0 }, roll: 0, spin: 0, style: "spiral", state: "dead", holder: null, pitch: false,
 };
 
 /** The build standing on the podium, or celebrating `celebrating` seconds in. */

@@ -4,14 +4,15 @@ import { usePhone } from "./session-context";
 
 const WORDS: Record<Call, { title: string; sub: string }> = {
   throw: { title: "Throw", sub: "Hike it and pass or run" },
+  run: { title: "Run", sub: "Pitch it to the runner by you" },
   kick: { title: "Kick", sub: "Field goal in range, else punt" },
   two: { title: "Go for 2", sub: "One play from the two" },
 };
 
 /**
- * The QB's call before each play: throw or kick, and after a touchdown
- * kick for one or go for two. Two big tiles, with the seconds left
- * before the call is made for them.
+ * The QB's call before each play: throw, run or kick, and after a
+ * touchdown kick for one or go for two. Big tiles side by side, with
+ * the seconds left before the call is made for them.
  */
 export function ChoosePad({ host }: { host: PhoneState }) {
   const phone = usePhone();

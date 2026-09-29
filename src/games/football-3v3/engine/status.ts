@@ -1,6 +1,7 @@
 import { isDown } from "./body";
 import type { Match } from "./match";
 import { canThrow } from "./passing";
+import { canPitch } from "./run-play";
 import { RULES } from "./tuning";
 import type { ConversionCall, Phase, PlayCall, Role, TeamId } from "./types";
 
@@ -26,6 +27,9 @@ export interface SeatStatus {
   meter: { stage: "aim" | "power"; t: number } | null;
   withBall: boolean;
   canThrow: boolean;
+  /** This play is a run call: the QB has Pass for the pitch instead of the throw stick. */
+  runPlay: boolean;
+  canPitch: boolean;
   jukeReady: boolean;
   rushReady: boolean;
   guarding: boolean;
@@ -53,7 +57,7 @@ export function seatStatus(m: Match, seat: number): SeatStatus | null {
   const withBall = m.carrier()?.id === a.id;
   const pad = padFor(m, a.id, onOffense, withBall);
   const k = m.kick;
-  const options: readonly (PlayCall | ConversionCall)[] = m.phase === "convert" ? ["kick", "two"] : ["throw", "kick"];
+  const options: readonly (PlayCall | ConversionCall)[] = m.phase === "convert" ? ["kick", "two"] : ["throw", "run", "kick"];
   return {
     athlete: a.id, team: a.team, role: a.role, onOffense, phase: m.phase, pad,
     choose: pad === "choose" ? { options, left: Math.max(0, RULES.chooseSeconds - m.phaseT) } : null,
@@ -61,6 +65,8 @@ export function seatStatus(m: Match, seat: number): SeatStatus | null {
     meter: pad === "kicker" && k && (k.stage === "aim" || k.stage === "power") ? { stage: k.stage, t: k.t } : null,
     withBall,
     canThrow: canThrow(m, a),
+    runPlay: m.play?.call === "run",
+    canPitch: canPitch(m, a),
     jukeReady: a.jukeCd <= 0,
     rushReady: a.rushCd <= 0,
     guarding: a.guard !== null,

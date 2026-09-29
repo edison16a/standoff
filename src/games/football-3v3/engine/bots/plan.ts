@@ -1,12 +1,14 @@
 import type { Match } from "../match";
 import { callRoutes, routePoints, STOPS } from "../routes";
+import { sweepRoute } from "../run-play";
 import type { Athlete } from "../types";
 import { dist2 } from "../vec";
 import { botSkill } from "./skill";
 
 /**
  * The play call before the snap. Every receiver gets a route (a person
- * who drops out mid play runs it too), the QB a moment to throw, and the
+ * who drops out mid play runs it too), the QB a moment to throw or
+ * pitch, the back on a run call a sweep, and the
  * computer defenders a man to cover, nearest first. A defender left over
  * rushes the QB.
  */
@@ -23,6 +25,13 @@ export function planPlay(m: Match): void {
   const qb = m.qbOf(m.offense);
   // Sharper QBs read the field sooner.
   qb.bot.readAt = m.rng.range(1.3, 2.4) + (1 - skill.accuracy) * 0.8;
+  const back = m.play?.call === "run" ? m.athlete(m.play.back ?? -1) : null;
+  if (back) {
+    // On a run call the back sweeps wide and the QB pitches soon after the snap.
+    back.bot.route = sweepRoute(back, qb, m.sign);
+    back.bot.stop = false;
+    qb.bot.readAt = m.rng.range(0.6, 0.9);
+  }
   assignCoverage(m, receivers);
   for (const a of m.athletes) a.bot.wait = 0;
 }

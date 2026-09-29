@@ -54,8 +54,13 @@ export function assistPass(m: Match, dt: number): void {
   pass.spot = { x: pass.spot.x + push.x * amount * left, z: pass.spot.z + push.z * amount * left };
 }
 
+/** Keeps a forward pass for the replay's numbers; a pitch is part of a run. */
+function keepPass(m: Match): void {
+  if (m.ball.pass && !m.ball.pass.pitch) m.lastPass = m.ball.pass;
+}
+
 function give(m: Match, a: Athlete): void {
-  m.lastPass = m.ball.pass;
+  keepPass(m);
   m.ball.state = "held";
   m.ball.holder = a.id;
   m.ball.flight = null;
@@ -63,7 +68,7 @@ function give(m: Match, a: Athlete): void {
 }
 
 function incomplete(m: Match, id: number | null): void {
-  m.lastPass = m.ball.pass;
+  keepPass(m);
   m.ball.state = "loose";
   m.ball.pass = null;
   m.emit({ type: "incomplete", id });
@@ -80,7 +85,9 @@ function breakUp(m: Match, d: Athlete, f: Flight): void {
 
 function caught(m: Match, r: Athlete): void {
   if (!inBounds(r)) return incomplete(m, r.id);
+  const pitch = m.ball.pass?.pitch ?? false;
   give(m, r);
+  if (pitch) return m.emit({ type: "takePitch", id: r.id });
   m.play!.caughtBy = r.id;
   m.qbOf(r.team).stats.completions++;
   r.stats.catches++;

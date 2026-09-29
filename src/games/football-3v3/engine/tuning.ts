@@ -129,6 +129,17 @@ export const ON_THE_RUN = {
   wobble: 0.12,
 } as const;
 
+/** The pitch on a run call: a short soft lob to the back beside the QB. */
+export const PITCH = {
+  /** Hang time: slow enough to see, quick enough that the rush cannot get there. */
+  time: 0.5,
+  releaseHeight: 1.5,
+  spin: 30,
+  /** The back lines up this far outside the QB, and a yard deeper. */
+  wide: 2.6,
+  deeper: 1,
+} as const;
+
 export const KICK = {
   /** Accuracy swings left to right and power up and down, in these periods. */
   aimPeriod: 1.3,

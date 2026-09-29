@@ -3,20 +3,25 @@ import type { Match } from "../match";
 import { RULES } from "../tuning";
 import type { ConversionCall, PlayCall } from "../types";
 
+/** Throw or run on a play the bot goes for: runs now and then, and more when only a yard or two is needed. */
+function throwOrRun(m: Match): PlayCall {
+  return m.rng.chance(toGo(m.drive) <= 3 ? 0.5 : 0.25) ? "run" : "throw";
+}
+
 /**
- * A computer QB's pick before a play. It throws on early downs and
- * kicks on fourth: a field goal in range, a punt otherwise, except on
- * fourth and short past midfield, where it goes for it. Late in the game
- * and down by three or less, it takes the points.
+ * A computer QB's pick before a play. It throws or runs on early downs
+ * and kicks on fourth: a field goal in range, a punt otherwise, except
+ * on fourth and short past midfield, where it goes for it. Late in the
+ * game and down by three or less, it takes the points.
  */
 export function botPlayCall(m: Match): PlayCall {
   const d = m.drive;
   const lead = m.score[d.offense] - m.score[m.defense];
   const late = m.quarter >= RULES.quarters && m.clock < 25;
   if (late && lead <= 0 && lead >= -3 && inFieldGoalRange(d)) return "kick";
-  if (d.down < 4) return "throw";
+  if (d.down < 4) return throwOrRun(m);
   if (inFieldGoalRange(d) && toGo(d) > 2) return "kick";
-  if (toGo(d) <= 2 && d.los >= 45) return "throw";
+  if (toGo(d) <= 2 && d.los >= 45) return throwOrRun(m);
   // Late and behind by more than a score's worth of kicks, a punt gives up; keep throwing.
   if (late && lead < -3) return "throw";
   return "kick";

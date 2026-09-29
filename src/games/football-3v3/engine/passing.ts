@@ -4,6 +4,7 @@ import { isDown, statsOf } from "./body";
 import { launch } from "./flight";
 import { jumpingDefender } from "./catching";
 import type { Match } from "./match";
+import { canPitch, releasePitch } from "./run-play";
 import { ON_THE_RUN, PASS } from "./tuning";
 import type { Athlete } from "./types";
 import { dist2, len3, type V3 } from "./vec";
@@ -11,7 +12,8 @@ import { dist2, len3, type V3 } from "./vec";
 /** Only the QB throws, once a play, from behind the line, with the ball in hand. */
 export function canThrow(m: Match, a: Athlete): boolean {
   const play = m.play;
-  if (m.phase !== "live" || !play || play.passed || play.crossed) return false;
+  // A run call has no forward pass: the QB pitches to the back instead (run-play.ts).
+  if (m.phase !== "live" || !play || play.call === "run" || play.passed || play.crossed) return false;
   return a.role === "qb" && a.team === m.offense && m.carrier()?.id === a.id && (a.action.kind === "none" || a.action.kind === "juke");
 }
 
@@ -27,6 +29,11 @@ export function updateTarget(m: Match): void {
   const qb = m.qbOf(m.offense);
   // Through the throwing motion the ring stays on the receiver the ball is going to.
   if (qb.action.kind === "throw") return;
+  // On a run call the ring shows who the pitch is going to.
+  if (canPitch(m, qb)) {
+    play.target = play.back;
+    return;
+  }
   if (!qb.aim || !canThrow(m, qb)) {
     play.target = null;
     return;
@@ -38,7 +45,7 @@ export function updateTarget(m: Match): void {
 export function throwTo(m: Match, a: Athlete, to: number): boolean {
   if (!canThrow(m, a) || m.athlete(to)?.team !== a.team) return false;
   m.play!.target = to;
-  a.action = { kind: "throw", t: 0, dur: PASS.throwTime, released: false, to };
+  a.action = { kind: "throw", t: 0, dur: PASS.throwTime, released: false, to, lob: false };
   return true;
 }
 
@@ -88,7 +95,8 @@ export function updateThrow(m: Match, a: Athlete, dt: number): void {
   act.t += dt;
   if (!act.released && act.t >= PASS.windup) {
     act.released = true;
-    release(m, a, act.to);
+    if (act.lob) releasePitch(m, a, act.to);
+    else release(m, a, act.to);
   }
   if (act.t >= act.dur) a.action = { kind: "none" };
 }

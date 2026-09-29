@@ -69,6 +69,8 @@ export function phoneState(c: PhoneContext, seatNo: number): PhoneState {
     meter: status?.meter && !replay ? { stage: status.meter.stage, fieldGoal: kick?.fieldGoal ?? true } : null,
     withBall: status?.withBall ?? false,
     canThrow: status?.canThrow ?? false,
+    runPlay: status?.runPlay ?? false,
+    canPitch: status?.canPitch ?? false,
     jukeReady: status?.jukeReady ?? false,
     rushReady: status?.rushReady ?? false,
     guarding: status?.guarding ?? false,

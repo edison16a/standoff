@@ -1,5 +1,7 @@
 import type { Match } from "../match";
 import { canThrow } from "../passing";
+import { canPitch } from "../run-play";
+import { pitchRead } from "./run";
 import type { Athlete } from "../types";
 import { cover, pursue, rushQb, safety } from "./defense";
 import { carry, escort, readField, runRoute } from "./offense";
@@ -30,12 +32,13 @@ function decide(m: Match, a: Athlete, skill: FootballSkill): void {
   const carrier = m.carrier();
   const attacking = carrier ? carrier.team : m.offense;
   if (carrier === a) {
+    if (a.role === "qb" && canPitch(m, a)) return pitchRead(m, a);
     if (a.role === "qb" && canThrow(m, a)) return readField(m, a, skill);
     return carry(m, a, skill);
   }
   if (a.team === attacking) {
     const play = m.play;
-    if (carrier && (play?.caughtBy !== null || play?.intercepted || play?.crossed)) return escort(m, a, carrier);
+    if (carrier && (play?.caughtBy !== null || play?.pitched || play?.intercepted || play?.crossed)) return escort(m, a, carrier);
     return runRoute(m, a);
   }
   if (carrier && (carrier.role !== "qb" || m.play?.crossed || m.play?.intercepted)) return pursue(m, a, carrier, skill);

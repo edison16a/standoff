@@ -10,6 +10,7 @@ import { newKick } from "./kick";
 import { engageLine, setLine } from "./linemen";
 import type { Match } from "./match";
 import { newPlay } from "./play";
+import { pickBack } from "./run-play";
 import { endOfRegulation } from "./score";
 import { PASS, RULES } from "./tuning";
 import type { ConversionCall, PlayCall } from "./types";
@@ -56,11 +57,12 @@ export function startConvert(m: Match): void {
   m.emit({ type: "choose", team: m.offense, qb: m.qbOf(m.offense).id, conversion: true });
 }
 
-function startPresnap(m: Match): void {
+function startPresnap(m: Match, call: "throw" | "run"): void {
   enter(m, "presnap");
-  m.play = newPlay("throw", m.time);
+  const back = call === "run" ? pickBack(m.athletes, m.offense) : null;
+  m.play = newPlay(call, m.time, back);
   // The defence keeps the spots it moved to during the call.
-  lineUp(m.athletes.filter((a) => a.team === m.offense || a.role === "lineman"), m.drive, "throw");
+  lineUp(m.athletes.filter((a) => a.team === m.offense || a.role === "lineman"), m.drive, call, back);
   setLine(m);
   deadBall(m);
   for (const a of m.athletes) if (a.team === m.offense || a.role === "lineman") a.action = { kind: "stance", t: 0 };
@@ -80,13 +82,13 @@ function startKickPlay(m: Match): void {
   m.ball.pos = { x: kicker.x + m.sign * 0.6, y: 0.2, z: kicker.z };
 }
 
-/** The QB's pick, before a play or for the try after a touchdown. Only the offense's QB decides. */
+/** The QB's pick, before a play (throw, run or kick) or for the try after a touchdown. Only the offense's QB decides. */
 export function chooseCall(m: Match, id: number, call: PlayCall | ConversionCall): void {
   const qb = m.qbOf(m.offense);
   if (qb.id !== id) return;
-  if (m.phase === "choose" && (call === "throw" || call === "kick")) {
+  if (m.phase === "choose" && (call === "throw" || call === "run" || call === "kick")) {
     m.emit({ type: "call", team: m.offense, call });
-    return call === "kick" ? startKickPlay(m) : startPresnap(m);
+    return call === "kick" ? startKickPlay(m) : startPresnap(m, call);
   }
   if (m.phase === "convert" && (call === "kick" || call === "two")) {
     m.emit({ type: "call", team: m.offense, call });
@@ -94,7 +96,7 @@ export function chooseCall(m: Match, id: number, call: PlayCall | ConversionCall
       m.drive = { ...m.drive, los: RULES.kickTrySpot };
       return startKickPlay(m);
     }
-    return startPresnap(m);
+    return startPresnap(m, "throw");
   }
 }
 

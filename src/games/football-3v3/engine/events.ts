@@ -32,6 +32,9 @@ export type MatchEvent =
   | { type: "missedTackle"; id: number; by: number }
   | { type: "tackle"; id: number; by: number; sack: boolean }
   | { type: "throw"; id: number; to: number; speed: number; spin: number; air: number; intercepting: boolean }
+  /** The QB's pitch to the back on a run call, and the back taking it. */
+  | { type: "pitch"; id: number; to: number }
+  | { type: "takePitch"; id: number }
   | { type: "catch"; id: number; yards: number }
   | { type: "intercept"; id: number; from: number }
   | { type: "incomplete"; id: number | null }

@@ -18,14 +18,18 @@ export interface Play {
   intercepted: boolean;
   /** The receiver the throw stick picks right now, whose ring lights up. */
   target: number | null;
+  /** On a run call, the runner lined up beside the QB for the pitch. */
+  back: number | null;
+  /** The pitch has left the QB's hand; there is one a play. */
+  pitched: boolean;
   /** Match time the play went live, for replays. */
   startedAt: number;
   over: boolean;
 }
 
-export function newPlay(call: PlayCall, time: number): Play {
+export function newPlay(call: PlayCall, time: number, back: number | null = null): Play {
   return {
     call, sinceSnap: null, rushOn: false, passed: false, crossed: false,
-    caughtBy: null, intercepted: false, target: null, startedAt: time, over: false,
+    caughtBy: null, intercepted: false, target: null, back, pitched: false, startedAt: time, over: false,
   };
 }

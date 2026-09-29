@@ -22,7 +22,8 @@ const colourOf = (host: PhoneState) => TEAMS[host.team ?? 0].color;
 
 /**
  * The QB: the same move stick as everyone under the left thumb, the
- * throw stick under the right. Before the snap the middle is one big Hike button with the
+ * throw stick under the right, or on a run call a big Pass button for
+ * the pitch. Before the snap the middle is one big Hike button with the
  * seconds left; after it, Juke.
  */
 export function QbPad({ host }: { host: PhoneState }) {
@@ -47,7 +48,11 @@ export function QbPad({ host }: { host: PhoneState }) {
         )}
       </div>
       <div className="fb-pad__right">
-        <ThrowStick disabled={!host.canThrow} onAim={(stick) => phone.aim(stick)} onThrow={(stick) => phone.throwBall(stick)} />
+        {host.runPlay ? (
+          <Hold button="pass" icon="ball" text="Pass" colour="#9333ea" size="lg" disabled={!host.canPitch} />
+        ) : (
+          <ThrowStick disabled={!host.canThrow} onAim={(stick) => phone.aim(stick)} onThrow={(stick) => phone.throwBall(stick)} />
+        )}
       </div>
     </div>
   );

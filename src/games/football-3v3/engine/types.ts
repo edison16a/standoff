@@ -11,7 +11,8 @@ export type Role = "qb" | "runner" | "lineman";
 export type JukeKind = "spin" | "back" | "side";
 
 /** Buttons on the phones. Guard is held; the rest are presses. */
-export const BUTTONS = ["hike", "juke", "dive", "rush", "tackle", "guard", "kick"] as const;
+/** Pass is the QB's pitch to the back on a run call. */
+export const BUTTONS = ["hike", "juke", "dive", "rush", "tackle", "guard", "kick", "pass"] as const;
 export type Button = (typeof BUTTONS)[number];
 
 /**
@@ -27,7 +28,8 @@ export type Action =
   | { kind: "juke"; t: number; dur: number; juke: JukeKind; side: 1 | -1; dir: V2; speed: number; dodge: [number, number] }
   | { kind: "dive"; t: number; dur: number; dir: V2 }
   | { kind: "lunge"; t: number; dur: number; dir: V2; target: number }
-  | { kind: "throw"; t: number; dur: number; released: boolean; to: number }
+  /** A forward pass, or with `lob` the pitch to the back on a run call. */
+  | { kind: "throw"; t: number; dur: number; released: boolean; to: number; lob: boolean }
   | { kind: "kick"; t: number; dur: number; released: boolean }
   /** On the ground, then getting up for the last TACKLE.getUp seconds. */
   | { kind: "down"; t: number; dur: number; cause: DownCause }
@@ -117,7 +119,7 @@ export interface Athlete {
 export type BallState = "dead" | "held" | "snap" | "pass" | "kick" | "loose";
 
 export type Phase =
-  /** The QB picks kick or throw. */
+  /** The QB picks throw, run or kick. */
   | "choose"
   /** Lined up, the hike window running. */
   | "presnap"
@@ -131,5 +133,6 @@ export type Phase =
   | "convert"
   | "over";
 
-export type PlayCall = "throw" | "kick";
+/** Throw, run (the QB pitches to a back beside him) or kick. */
+export type PlayCall = "throw" | "run" | "kick";
 export type ConversionCall = "kick" | "two";

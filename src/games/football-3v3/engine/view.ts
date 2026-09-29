@@ -66,6 +66,8 @@ export interface BallView extends V3 {
   style: SpinStyle;
   state: BallState;
   holder: number | null;
+  /** In the air as a pitch on a run call, not a forward pass. */
+  pitch: boolean;
 }
 
 export interface DriveView {
@@ -156,7 +158,7 @@ export function buildView(m: Match): MatchView {
       x: b.pos.x, y: b.pos.y, z: b.pos.z,
       vx: f?.vel.x ?? 0, vy: f?.vel.y ?? 0, vz: f?.vel.z ?? 0,
       axis: f ? { ...f.axis } : { x: 1, y: 0, z: 0 }, roll: f?.roll ?? 0, spin: f?.spin ?? 0, style: f?.style ?? "spiral",
-      state: b.state, holder: b.state === "held" ? b.holder : null,
+      state: b.state, holder: b.state === "held" ? b.holder : null, pitch: b.state === "pass" && !!b.pass?.pitch,
     },
     athletes: m.athletes.map((a) => {
       const act = a.action;
