@@ -29,7 +29,7 @@ export class Ceremony {
   private time = 0;
 
   constructor() {
-    this.lights = new StageLights({ count: 4, colours: ["#fff1d6", "#ffd27a"], radius: 4.4, height: 9, intensity: 140, angle: 0.2, beamStrength: 0.16, sweep: 0.25 });
+    this.lights = new StageLights({ count: 4, colours: ["#fff1d6", "#ffd27a"], radius: 4.4, height: 9, intensity: 110, angle: 0.2, beamStrength: 0.16, sweep: 0.25 });
     this.lights.setLevel(0);
     // Hidden lamps drop out of every shader, so the duel never pays for four spotlights it does not use.
     this.lights.object.visible = false;

@@ -48,7 +48,8 @@ export class ShowcaseDirector {
   /** Stays on the winner's ceremony after the duel rather than starting over. */
   private readonly stay: boolean;
 
-  constructor(canvas: HTMLCanvasElement, view: ShowcaseView) {
+  /** `onWon` hears the duel won, for the ceremony's names over the page. */
+  constructor(canvas: HTMLCanvasElement, view: ShowcaseView, private readonly onWon: (winner: 1 | 2) => void = () => undefined) {
     const params = new URLSearchParams(window.location.search);
     // `?pair=samurai,block` puts other fighters in the duel, for looking them over; the media keeps the default pair.
     const pair = (params.get("pair") ?? "").split(",").filter(isCharacterId);
@@ -112,6 +113,7 @@ export class ShowcaseDirector {
     this.choreography = new Choreography();
     this.driver.listen((event: GameEvent) => {
       if (event.type === "clash") this.clashAt.set(event.at.x, event.at.y + FLOOR, event.at.z);
+      if (event.type === "matchWon" && this.stay) this.onWon(event.winner);
       this.renderer.react(event, this.wallNow);
     });
     this.driver.start();

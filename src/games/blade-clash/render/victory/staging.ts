@@ -34,7 +34,7 @@ const OFF_LINE = 0.7;
 export const SHOT: Omit<OrbitShot, "centre" | "startAngle"> = {
   radius: 8.2,
   height: 1.8,
-  lookHeight: 2.35,
+  lookHeight: 2.5,
   speed: 0.1,
   arc: 0.42,
   introS: 2.6,
