@@ -4,11 +4,15 @@ import * as THREE from "three";
 const SCREEN_HEIGHT = 0.034;
 /** The pill's height on the canvas; the pointer below it is extra. */
 const PILL_PX = 52;
+/** The quieter second word on a tag, such as the player's build. */
+const DETAIL_FONT = "700 24px Arial, Helvetica, sans-serif";
+const DETAIL_GAP = 14;
 
 /**
  * A name tag floating over a player: the name on a dark pill with a bar
  * in their colour, drawn once to a canvas. Phones' players get a bright
- * tag and a pointer; computer players a quieter one.
+ * tag and a pointer; computer players a quieter one. An optional
+ * detail, like the build, follows the name in a smaller, dimmer type.
  */
 export class NameTag {
   readonly sprite: THREE.Sprite;
@@ -16,13 +20,17 @@ export class NameTag {
   private readonly aspect: number;
   private readonly canvasHeight: number;
 
-  constructor(name: string, colour: string, human: boolean) {
+  constructor(name: string, colour: string, human: boolean, detail = "") {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d")!;
     const font = `${human ? 800 : 700} 34px Arial, Helvetica, sans-serif`;
     ctx.font = font;
     const text = name.toUpperCase();
-    const width = Math.ceil(ctx.measureText(text).width) + 58;
+    const nameWidth = Math.ceil(ctx.measureText(text).width);
+    ctx.font = DETAIL_FONT;
+    // The build rides after the name, so the tag says who and what they play in one line.
+    const extra = detail ? Math.ceil(ctx.measureText(detail).width) + DETAIL_GAP : 0;
+    const width = nameWidth + extra + 58;
     canvas.width = width;
     canvas.height = human ? 72 : 56;
     ctx.font = font;
@@ -48,6 +56,11 @@ export class NameTag {
     ctx.fillStyle = human ? "#ffffff" : "rgba(255,255,255,0.82)";
     ctx.textBaseline = "middle";
     ctx.fillText(text, 30, h / 2 + 1);
+    if (detail) {
+      ctx.font = DETAIL_FONT;
+      ctx.fillStyle = "rgba(255,255,255,0.62)";
+      ctx.fillText(detail, 30 + nameWidth + DETAIL_GAP, h / 2 + 2);
+    }
     this.texture = new THREE.CanvasTexture(canvas);
     this.texture.colorSpace = THREE.SRGBColorSpace;
     const material = new THREE.SpriteMaterial({ map: this.texture, sizeAttenuation: false, depthTest: false, transparent: true });

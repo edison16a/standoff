@@ -94,8 +94,6 @@ export interface FifaHostState {
   /** The trophy ceremony's names and where it is, once the scene has cut to it. */
   ceremony: CeremonyCard | null;
   results: ResultRow[];
-  /** Phones' players in the match, for the strip along the bottom. */
-  roster: { id: number; seat: number; name: string; team: TeamId; build: BuildId; hasBall: boolean; away: boolean }[];
 }
 
 export const useFifaStore = create<FifaHostState>(() => ({
@@ -115,5 +113,4 @@ export const useFifaStore = create<FifaHostState>(() => ({
   winner: null,
   ceremony: null,
   results: [],
-  roster: [],
 }));
