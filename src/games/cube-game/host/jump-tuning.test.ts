@@ -16,10 +16,37 @@ const hop = (base: PoseSpec = {}): PoseKey[] => [
   { at: 400, pose: base },
 ];
 
+/** A jump with a dip to push off. The head passes its standing height at 300 ms, the take off. */
+const pushOff: PoseKey[] = [
+  { at: 0, pose: {} },
+  { at: 150, pose: { crouch: 0.35 } },
+  { at: 250, pose: { crouch: 0.12 } },
+  { at: 300, pose: {} },
+  { at: 340, pose: { lift: 0.07 } },
+  { at: 400, pose: { lift: 0.13 } },
+  { at: 480, pose: { lift: 0.16 } },
+  { at: 640, pose: {} },
+  { at: 720, pose: { crouch: 0.3 } },
+  { at: 900, pose: {} },
+];
+
 describe("reading a jump for Cube Game", () => {
   it("sees a jump within 120 ms of the take off", () => {
     const [first] = starts(MOVES.jump());
     expect(first).toBeLessThanOrEqual(120);
+  });
+
+  it("sees a push off within 40 ms of the head passing its standing height", () => {
+    for (const fps of [30, 60]) {
+      const jumps = eventsOf(readMoves(pushOff, {}, { smooth: true, fps, tuning: JUMP_TUNING }), "jump");
+      expect(jumps).toHaveLength(1);
+      expect(jumps[0]!.time - 300).toBeLessThanOrEqual(40);
+    }
+  });
+
+  it("ignores hard bouncing on the knees, even with the heels leaving the floor a little", () => {
+    const bounce: PoseKey[] = Array.from({ length: 30 }, (_, i) => ({ at: i * 100, pose: { crouch: i % 2 ? 0.4 : 0, lift: i % 2 ? 0 : 0.035 } }));
+    for (const fps of [15, 30, 60]) expect(eventsOf(readMoves(bounce, {}, { smooth: true, fps, tuning: JUMP_TUNING }), "jump")).toHaveLength(0);
   });
 
   it("keeps up when the camera gives only 15 frames a second", () => {
