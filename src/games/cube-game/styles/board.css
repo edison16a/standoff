@@ -45,7 +45,7 @@
   --board-accent: #5fc6dc;
   --board-me-bg: #ffd21f;
   --board-me-fg: #10091f;
-  --board-height: min(18vh, 150px);
+  --board-height: min(15vh, 130px);
   gap: 6px;
   padding: 10px 12px;
   border: 1px solid rgba(95, 198, 220, 0.35);
