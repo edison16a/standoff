@@ -16,7 +16,8 @@ import { isOffstage, recover } from "./recover";
  */
 export function botCommand(state: MatchState, f: Fighter): Command {
   const brain = f.brain;
-  if (!brain) return { x: 0, y: 0 };
+  // A Training dummy never moves, not even off its respawn platform, which drops it in time anyway.
+  if (!brain || !SKILLS[brain.difficulty].acts) return { x: 0, y: 0 };
   if (f.action === "respawn") return leavePlatform(f);
   if (f.action === "dead" || f.action === "out") return { x: 0, y: 0 };
   if (brain.hold) return holdCharge(f);

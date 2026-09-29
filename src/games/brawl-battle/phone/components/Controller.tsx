@@ -1,6 +1,7 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Joystick } from "@/games/kit/pad/Joystick";
+import { CENTER } from "@/games/kit/pad/stick-math";
 import { PadButton } from "@/games/kit/pad/PadButton";
 import { playerColor } from "@/games/kit/players";
 import { RULES } from "../../engine/tuning";
@@ -10,6 +11,35 @@ import { heatColour } from "../../ui/heat";
 import { usePhoneStore } from "../phone-store";
 import { ChargeButton } from "./ChargeButton";
 import { useController } from "./session-context";
+
+/**
+ * Counts page turns. A thumb held on the stick through a turn would read
+ * the turned coordinates as a big push, so each turn centres the stick
+ * and starts it afresh. The buttons do not care where the thumb is and
+ * stay held.
+ */
+function useTurns(onTurn: () => void): number {
+  const [turns, setTurns] = useState(0);
+  const latest = useRef(onTurn);
+  useEffect(() => {
+    latest.current = onTurn;
+  }, [onTurn]);
+  // Centred once the fresh stick is in, so a move the old one heard late cannot undo it.
+  useEffect(() => {
+    if (turns > 0) latest.current();
+  }, [turns]);
+  useEffect(() => {
+    const turned = () => setTurns((n) => n + 1);
+    const orientation = typeof screen === "undefined" ? undefined : screen.orientation;
+    orientation?.addEventListener?.("change", turned);
+    window.addEventListener("orientationchange", turned);
+    return () => {
+      orientation?.removeEventListener?.("change", turned);
+      window.removeEventListener("orientationchange", turned);
+    };
+  }, []);
+  return turns;
+}
 
 /** The Ult button with its charge as a ring round it. It only works once the ring is full. */
 function UltButton({ ult }: { ult: number }) {
@@ -75,13 +105,14 @@ export function Controller({ host, seat }: { host: PhoneState; seat: number }) {
     session.stream(true);
     return () => session.stream(false);
   }, [session]);
+  const turns = useTurns(() => session.setStick(CENTER));
   const colour = playerColor(seat);
 
   return (
     <div className="bb-pad">
       <Status host={host} seat={seat} />
       <div className="bb-pad__stick" style={{ "--pad-colour": colour } as React.CSSProperties}>
-        <Joystick alwaysShown colour={colour} onChange={(stick) => session.setStick(stick)} />
+        <Joystick key={turns} alwaysShown colour={colour} onChange={(stick) => session.setStick(stick)} />
       </div>
       <div className="bb-pad__buttons">
         <div className="bb-pad__ult">

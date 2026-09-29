@@ -1,7 +1,7 @@
 "use client";
 import { ordinal } from "../../ui/format";
 import { useControllerStore } from "../controller-store";
-import { usePortrait } from "../use-portrait";
+import { PORTRAIT_SETTLE_MS, usePortrait } from "../use-portrait";
 import { DrivePad } from "./DrivePad";
 import { ROTATION_LOCK } from "./CalibrateStep";
 import { Setup } from "./Setup";
@@ -13,7 +13,8 @@ import { Setup } from "./Setup";
  */
 export function PhoneScreen() {
   const host = useControllerStore((state) => state.host);
-  const portrait = usePortrait();
+  // Only a page that stays upright hides the pedals. A brief flip mid turn must not lift a thumb off Drive.
+  const portrait = usePortrait(PORTRAIT_SETTLE_MS);
   const racing = host?.racing ?? false;
 
   if (host && racing && (host.phase === "countdown" || host.phase === "racing")) {

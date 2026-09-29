@@ -1,3 +1,4 @@
+import { cleanName } from "@/platform/profile";
 import type { ClientEnvelope, Payload, Seat, ServerEnvelope } from "@/platform/protocol";
 import { decode } from "./channels";
 import { HostWatch } from "./host-watch";
@@ -6,7 +7,7 @@ import { Membership } from "./membership";
 import { RoomChannel } from "./room-channel";
 import { makeToken } from "./room-code";
 import { RoomOps } from "./room-ops";
-import { connectedSeats } from "./room-state";
+import { connectedSeats, seatNames, type RoomRecord } from "./room-state";
 import { rotateLead, type RelayContext, type SocketLike } from "./relay-types";
 
 export type { RelayContext, SocketLike } from "./relay-types";
@@ -69,12 +70,15 @@ export class RelayConnection {
       case "host:resume":
         return this.handshake(() => this.resumeHost(envelope.code, envelope.token));
       case "phone:join":
-        return this.handshake(() => this.joinAsPhone(envelope.code, envelope.token));
+        return this.handshake(() => this.joinAsPhone(envelope));
       case "host:close":
         if (role?.kind === "host" && (await this.ops.closeByHost(role.code, this.id))) {
           this.room(role).toPhones({ type: "room:closed" });
           await this.drop();
         }
+        return;
+      case "host:remake":
+        if (role?.kind === "host") return this.handshake(() => this.remakeRoom(role));
         return;
       case "host:send":
         if (role?.kind === "host") this.relayFromHost(this.room(role), envelope.to, envelope.payload);
@@ -110,8 +114,29 @@ export class RelayConnection {
       return;
     }
     await this.place.take({ kind: "host", code: room.code, seats });
-    const { sharedRooms } = this.ctx;
-    this.send({ type: "room:created", code: room.code, game, seats, token: room.hostToken, joinUrl: room.joinUrl, sharedRooms });
+    this.sendCreated(room);
+  }
+
+  /**
+   * A fresh room for the same game, for when phones cannot find the old
+   * one. The phones still in the old room are told the new code and follow.
+   */
+  private async remakeRoom(old: { code: string; seats: number }): Promise<void> {
+    const allowed = await this.ops.allowCreate(this.ctx.client);
+    const room = allowed ? await this.ops.remake(old.code, this.id, this.ctx.joinUrlFor) : null;
+    // The old room is untouched on a refusal, so the host simply stays in it.
+    if (!room) return this.send({ type: "room:error", reason: "unavailable" });
+    await this.drop();
+    // The host listens on the new room and knows its code before any phone
+    // is told, so no phone's join can arrive before the host is there.
+    await this.place.take({ kind: "host", code: room.code, seats: room.seats.length });
+    this.sendCreated(room);
+    this.room(old).toPhones({ type: "room:moved", code: room.code });
+  }
+
+  private sendCreated(room: RoomRecord): void {
+    const { code, game, hostToken: token, joinUrl } = room;
+    this.send({ type: "room:created", code, game, seats: room.seats.length, token, joinUrl, sharedRooms: this.ctx.sharedRooms });
   }
 
   private async resumeHost(code: string, token: string): Promise<void> {
@@ -127,16 +152,22 @@ export class RelayConnection {
     if (outcome.replaced) channel.kickHost(outcome.replaced);
     channel.toPhones({ type: "host:back" });
     const connected = connectedSeats(outcome.room);
+    const names = seatNames(outcome.room);
     const { sharedRooms } = this.ctx;
-    this.send({ type: "room:resumed", code, game, seats, joinUrl: outcome.room.joinUrl, connected, sharedRooms });
+    this.send({ type: "room:resumed", code, game, seats, joinUrl: outcome.room.joinUrl, connected, names, sharedRooms });
   }
 
-  private async joinAsPhone(code: string, token: string | undefined): Promise<void> {
+  private async joinAsPhone({ code, token, name, reconnect }: Extract<ClientEnvelope, { type: "phone:join" }>): Promise<void> {
     await this.leave();
-    const outcome = await this.ops.joinSeat(code, token, this.id);
+    const request = { token, name: cleanName(name ?? "") || undefined, reconnect };
+    const outcome = await this.ops.joinSeat(code, request, this.id);
     if (!outcome || !outcome.claim.ok) {
-      const full = outcome && !outcome.claim.ok && outcome.claim.reason === "full";
-      this.send({ type: "room:error", reason: full ? "full" : "not-found" });
+      // A room that exists but has ended says so. Calling it "not found" made
+      // phones retry a dead room and then blame the code.
+      const reason = outcome && !outcome.claim.ok ? outcome.claim.reason : "not-found";
+      this.send({ type: "room:error", reason });
+      // The room is real when only the name is wrong, so that is no miss.
+      if (reason !== "closed" && reason !== "not-found") return;
       // Room codes are short, so wrong guesses from one address are capped.
       if (!(await this.ops.allowMiss(this.ctx.client))) this.socket.close(1008, "too many attempts");
       return;
@@ -146,8 +177,8 @@ export class RelayConnection {
     await this.place.take({ kind: "phone", code, seats, seat });
     const channel = this.room({ code, seats });
     if (replaced) channel.kickSeat(seat, replaced);
-    channel.toHost({ type: "peer:joined", seat, rejoined });
-    this.send({ type: "phone:joined", code, game, seats, seat, token: outcome.claim.token, hostHere });
+    channel.toHost({ type: "peer:joined", seat, rejoined, name: outcome.claim.name });
+    this.send({ type: "phone:joined", code, game, seats, seat, token: outcome.claim.token, hostHere, name: outcome.claim.name });
     if (!hostHere) this.watch.start(code, seats);
   }
 
@@ -182,7 +213,7 @@ export class RelayConnection {
     if (this.place.role?.kind === "phone") {
       if (envelope.type === "host:away") this.watch.start(this.place.role.code, this.place.role.seats);
       if (envelope.type === "host:back") this.watch.stop();
-      if (envelope.type === "room:closed") this.enqueue(() => this.drop());
+      if (envelope.type === "room:closed" || envelope.type === "room:moved") this.enqueue(() => this.drop());
     }
     this.send(envelope);
   }

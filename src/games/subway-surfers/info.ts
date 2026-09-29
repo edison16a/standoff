@@ -8,7 +8,7 @@ export const info: GameInfo = {
   title: "Subway Runner",
   tagline: "Run the neon rails from the waist up. Jump, roll and dodge for a high score.",
   status: "ready",
-  players: [1, 2],
+  players: [1],
   color: "#ff2bd6",
   input: "camera",
   Cover,

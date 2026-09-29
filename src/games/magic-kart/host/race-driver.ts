@@ -1,3 +1,4 @@
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { RaceEvent } from "../engine/events";
 import { FixedStepClock } from "../engine/fixed-step";
 import type { KartInput } from "../engine/kart";
@@ -26,8 +27,9 @@ export class RaceDriver {
     readonly def: TrackDef,
     entrants: readonly Entrant[],
     random: () => number = Math.random,
+    botLevel: BotLevel = DEFAULT_BOT_LEVEL,
   ) {
-    this.world = new RaceWorld(def, entrants, random);
+    this.world = new RaceWorld(def, entrants, random, botLevel);
     entrants.forEach((entrant, kartId) => {
       if (entrant.seat !== null) this.kartBySeat.set(entrant.seat, kartId);
     });

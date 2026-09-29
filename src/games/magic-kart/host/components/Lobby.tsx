@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { Icon } from "@/components/ui/Icon";
+import { DifficultyPicker } from "@/games/kit/difficulty/DifficultyPicker";
 import { playerColor } from "@/games/kit/players";
 import { CHARACTERS } from "../../characters";
 import { drawThumbnail } from "../../render/thumbnail";
@@ -43,12 +44,14 @@ function Players() {
 /**
  * The lobby on the big screen: pick the map with the mouse while the
  * chosen map's demo race runs behind, see who has joined and who is
- * ready, choose whether computer karts fill the grid, and start.
+ * ready, choose whether computer karts fill the grid and how well they
+ * drive, and start.
  */
 export function Lobby() {
   const session = useSession();
   const mapId = useKartStore((state) => state.mapId);
   const computers = useKartStore((state) => state.computers);
+  const botLevel = useKartStore((state) => state.botLevel);
   const seats = useKartStore((state) => state.seats);
   const ready = seats.filter((s) => s.connected && s.ready).length;
   const waiting = seats.filter((s) => s.connected && !s.ready).length;
@@ -74,6 +77,7 @@ export function Lobby() {
           <span className="mk-switch__track" />
           <span>Fill the grid with computer karts</span>
         </label>
+        {computers && <DifficultyPicker level={botLevel} onChange={(level) => session.setBotLevel(level)} />}
         <p className="mk-lobby__note">
           {ready === 0 ? "Players tap Ready on their phones." : waiting > 0 ? `${ready} ready. ${waiting} still setting up and will join the next race.` : `${ready} ready. Two laps.`}
         </p>
