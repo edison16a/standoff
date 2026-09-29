@@ -93,6 +93,7 @@ export function Controller({ court }: { court: CourtState }) {
   const ft = court.freeThrow;
   const dead = ft !== null;
   const canShoot = ft ? ft.ready : true;
+  // The meter only runs for a real shot, so Shoot held without the ball stays quiet.
   // At the line the shooter gets a big meter and only Shoot.
   const atLine = court.freeThrow?.mine ?? false;
 
@@ -122,7 +123,7 @@ export function Controller({ court }: { court: CourtState }) {
             size="lg"
             colour={defending ? "#16a34a" : "#ff7a18"}
             disabled={!canShoot}
-            onDown={() => session.press("shoot", !defending)}
+            onDown={() => session.press("shoot", ft ? ft.ready : !defending && court.hasBall)}
             onUp={() => session.release("shoot")}
           >
             {defending ? <GuardIcon /> : <ShootIcon />}
