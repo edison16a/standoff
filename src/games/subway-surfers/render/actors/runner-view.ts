@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import type { RunEvent } from "../../engine/events";
 import type { Run } from "../../engine/run";
-import { JUMP, ROLL, RUNNER } from "../../engine/tuning";
+import { launchSpeed } from "../../engine/motion";
+import { JUMP, ROLL, SIDE } from "../../engine/tuning";
 import { boardPose, cheerPose, crashPose, flyPose, idlePose, jumpPose, rollPose, runPose, stumblePose } from "../anim/gaits";
 import { Pose } from "../anim/pose";
 import { addOutline } from "../outline";
@@ -101,7 +102,7 @@ export class RunnerView {
     this.root.position.set(x, y, -(s?.distance ?? 0));
     const vx = dt > 0 ? (x - this.lastX) / dt : 0;
     this.lastX = x;
-    this.lean += (vx / RUNNER.sideSpeed - this.lean) * (1 - Math.exp(-14 * dt));
+    this.lean += (vx / SIDE.maxSpeed - this.lean) * (1 - Math.exp(-14 * dt));
     const board = !!powers?.has("hoverboard") && !run?.crashed;
     const flying = !!powers?.has("jetpack") && !run?.crashed;
     this.board.visible = board;
@@ -128,7 +129,7 @@ export class RunnerView {
       rate = 30;
       spin = -Math.PI * 2 * Math.min(1, s!.rollAge / ROLL.minS);
     } else if (!s!.grounded && s!.airTime > 0.04) {
-      const top = Math.sqrt(2 * JUMP.gravity * (powers!.has("boots") ? JUMP.bootsHeight : JUMP.height));
+      const top = launchSpeed(powers!.has("boots") ? JUMP.bootsHeight : JUMP.height);
       jumpPose(this.target, Math.max(-1, Math.min(1, s!.vy / top)));
       rate = 14;
       // Super sneakers throw in a front flip.
