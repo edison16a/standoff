@@ -30,6 +30,8 @@ export class Run {
   time = 0;
   /** Jumps made this attempt, for the results. */
   jumps = 0;
+  /** Level time the finish line was crossed, exact to the step. Null until then. */
+  finishTime: number | null = null;
   private checkpoints: Checkpoint[] = [];
   private lastCheckpoint = 0;
   /** Level times of jumps not yet used, oldest first. */
@@ -156,6 +158,8 @@ export class Run {
   private note(event: PlayerEvent): void {
     if (event.type === "jump" || event.type === "flap" || event.type === "flip" || event.type === "orb") this.jumps += 1;
     if (event.type === "death" || event.type === "finish") this.best = Math.max(this.best, this.percent);
+    // The clock runs on past the line for the fanfare, so a race needs the moment itself.
+    if (event.type === "finish") this.finishTime = this.time;
   }
 
   /** Saves a checkpoint if one is due and the player is safely placed. Says if it did. */
