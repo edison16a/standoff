@@ -73,7 +73,7 @@ export const WEAPONS: Record<WeaponId, WeaponSpec> = {
   smg: {
     id: "smg",
     name: "Submachine Gun",
-    blurb: "Sprays a huge magazine and forgives a shaky hand. Light rounds that fade with range.",
+    blurb: "Sprays a huge magazine, fast. Light rounds that fade with range.",
     damage: 0.6,
     pellets: 1,
     spread: 0.022,
