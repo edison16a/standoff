@@ -47,21 +47,17 @@ async function open(): Promise<Backend> {
   return { store: new MemoryStore(), bus: new MemoryBus(), label: "memory (this process only)", shared: false };
 }
 
-const KNOWN_NAMES = ["REDIS_URL", "KV_URL", "UPSTASH_REDIS_URL"];
 type Env = Record<string, string | undefined>;
 const REDIS_URL = /^rediss?:\/\//;
 
 /**
- * Marketplace integrations name the variable differently, and some add a
- * prefix of their own (STORAGE_REDIS_URL), so the usual names come first
- * and then any variable ending the same way. REST URLs cannot be used.
+ * Only the three usual names, and only a redis:// URL. Anything else, like
+ * a leftover Marketplace variable under another name, keeps rooms in
+ * memory, so a project never moves to Redis without someone meaning it.
  */
 export function findRedisUrl(env: Env = process.env): string | null {
-  for (const name of KNOWN_NAMES) if (REDIS_URL.test(env[name] ?? "")) return env[name]!;
-  const other = Object.keys(env)
-    .sort()
-    .find((name) => /(REDIS_URL|KV_URL)$/.test(name) && REDIS_URL.test(env[name] ?? ""));
-  return other ? env[other]! : null;
+  const candidates = [env.REDIS_URL, env.KV_URL, env.UPSTASH_REDIS_URL];
+  return candidates.find((value) => value !== undefined && REDIS_URL.test(value)) ?? null;
 }
 
 /**

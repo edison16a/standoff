@@ -9,10 +9,11 @@ import { upgradeOnVercel } from "@/platform/relay/vercel-upgrade";
  * itself before Next sees it, so this route only ever runs on Vercel,
  * where the runtime hands over the raw connection (see relay/vercel-upgrade).
  *
- * Each socket may land on a different function instance, so rooms and
- * messages go through Redis (see relay/create-backend). Vercel also ends
+ * Rooms live in the memory of the instance that holds the host's socket,
+ * or in Redis when a URL is set (see relay/create-backend). Vercel ends
  * every function at its maximum duration, sockets included, so the relay
- * asks clients to move to a fresh socket shortly before that.
+ * asks clients to move to a fresh socket shortly before that, and a room
+ * follows its host to whichever instance that lands on (see RoomSigner).
  */
 export const dynamic = "force-dynamic";
 /** The most every plan allows. Pro can raise this, and the relay adapts to whatever it is. */
