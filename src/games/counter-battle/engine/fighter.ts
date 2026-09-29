@@ -60,6 +60,8 @@ export interface Fighter {
   brain: Brain;
   /** The shoot button, for a human: held for automatic guns, pulls counted for the others. */
   trigger: { held: boolean; pulls: number; pulledAt: number };
+  /** The crouch button, for a human: held, the fighter stays down behind cover. */
+  crouchHeld: boolean;
   /** Game time of the last hit taken, fired shot and death, for animation. */
   hitAt: number;
   shotAt: number;
@@ -98,6 +100,7 @@ export function createFighter(id: number, setup: FighterSetup): Fighter {
     alive: true,
     brain: { stance: "hide", spot: 0, route: [], timer: 0, held: 0, sincePlan: Infinity, peekAt: null, out: 0 },
     trigger: { held: false, pulls: 0, pulledAt: -Infinity },
+    crouchHeld: false,
     hitAt: -Infinity,
     shotAt: -Infinity,
     diedAt: -Infinity,

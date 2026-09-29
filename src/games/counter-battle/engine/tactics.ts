@@ -23,10 +23,10 @@ export interface Style {
 }
 
 export const STYLES: Record<GunId, Style> = {
-  rifle: { range: 23, band: 9, restless: 0.09, flank: 0.35, safety: 1.6, hide: [0.9, 1.8], peek: [1.4, 2.4] },
-  sniper: { range: 31, band: 11, restless: 0.06, flank: 0.1, safety: 1.9, hide: [1.3, 2.4], peek: [1.6, 2.8] },
-  smg: { range: 13, band: 6, restless: 0.2, flank: 0.6, safety: 1.2, hide: [0.6, 1.2], peek: [1, 1.7] },
-  shotgun: { range: 6, band: 4, restless: 0.16, flank: 1.3, safety: 1.3, hide: [0.5, 1.1], peek: [0.7, 1.3] },
+  rifle: { range: 23, band: 9, restless: 0.045, flank: 0.35, safety: 1.8, hide: [2.6, 4.2], peek: [1.1, 1.8] },
+  sniper: { range: 31, band: 11, restless: 0.03, flank: 0.1, safety: 2.1, hide: [3, 4.6], peek: [1.3, 2.2] },
+  smg: { range: 13, band: 6, restless: 0.09, flank: 0.6, safety: 1.4, hide: [2, 3.2], peek: [0.9, 1.5] },
+  shotgun: { range: 6, band: 4, restless: 0.08, flank: 1.3, safety: 1.5, hide: [1.8, 3], peek: [0.8, 1.2] },
 };
 
 /**

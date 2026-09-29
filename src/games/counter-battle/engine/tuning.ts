@@ -15,7 +15,7 @@ export const RULES = {
    * health left. Pressure makes it rare; this only stops a round that
    * somehow stalls from running forever.
    */
-  roundLimit: 150,
+  roundLimit: 180,
 } as const;
 
 /**
@@ -39,4 +39,4 @@ export const BODY = {
 export const PLAN_EVERY = 0.5;
 
 /** How much the hunt tightens over a round: none at `start`, full by `full` seconds. */
-export const PRESSURE = { start: 12, full: 70 } as const;
+export const PRESSURE = { start: 20, full: 100 } as const;

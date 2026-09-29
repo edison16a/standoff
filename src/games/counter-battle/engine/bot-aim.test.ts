@@ -80,6 +80,6 @@ describe("computer players", () => {
     const bot = fighterAt(0, 0, 0, 0, "rifle");
     bot.gun.ammo = 5;
     const intent = new BotAim().update(bot, [], [], new Rng(1), 0, DT);
-    expect(intent).toEqual({ pull: false, reload: true, engaged: false });
+    expect(intent).toEqual({ pull: false, reload: true, engaged: false, duck: false });
   });
 });

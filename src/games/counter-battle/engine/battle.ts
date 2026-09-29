@@ -1,7 +1,7 @@
 import { BOT_SKILL } from "@/games/kit/difficulty/difficulty";
 import { PIECES, spawnPoints, type Piece } from "./arena";
 import { BotAim } from "./bot-aim";
-import { updateBrain } from "./brain";
+import { duck as duckBehindCover, updateBrain } from "./brain";
 import { buildCover, nearestSpot, type CoverGraph } from "./cover";
 import type { BattleEvent } from "./events";
 import { createFighter, eyeOf, isBot, resetFighter, type Fighter, type FighterSetup, type TeamId } from "./fighter";
@@ -11,12 +11,8 @@ import { Rng } from "./rng";
 import { coneOf, resolveShot } from "./shooting";
 import { pressureAt } from "./tactics";
 import { STEP } from "./tuning";
+import { humanEngaged, humanTrigger, type FireResult } from "./trigger";
 import type { V2, V3 } from "./vec";
-
-/** A tapped shot that comes a moment early still fires once the gun is ready. */
-const PULL_KEEP = 0.3;
-/** A human who shot this recently is still in the fight, which holds a peek open. */
-const ENGAGED_FOR = 0.5;
 
 let sharedGraph: CoverGraph | null = null;
 
@@ -80,6 +76,13 @@ export class Battle {
     if (on) this.bots.set(id, new BotAim());
     else this.bots.delete(id);
     f.trigger = { held: false, pulls: 0, pulledAt: -Infinity };
+    f.crouchHeld = false;
+  }
+
+  /** The crouch button: held, the fighter stays down behind cover; let go, they look out again. */
+  setCrouch(id: number, down: boolean): void {
+    const f = this.get(id);
+    if (f && !this.bots.has(id)) f.crouchHeld = down;
   }
 
   /** The shoot button. A press always counts as one pull, and a held automatic keeps firing. */
@@ -132,31 +135,25 @@ export class Battle {
         f.vel = { x: 0, z: 0 };
         continue;
       }
-      const engaged = bot ? this.engaged.has(f.id) : f.trigger.held || this.time - f.shotAt < ENGAGED_FOR;
-      updateBrain(f, { graph: this.graph, pieces: this.pieces, enemies, claimed, others, pressure, rng: this.rng, engaged }, this.time, STEP);
+      const engaged = bot ? this.engaged.has(f.id) : humanEngaged(f, this.time);
+      // A player pressing Shoot behind cover rises to take the shot, unless they hold Crouch.
+      const duck = !bot && f.crouchHeld;
+      const rise = !bot && (f.trigger.held || f.trigger.pulls > 0);
+      updateBrain(f, { graph: this.graph, pieces: this.pieces, enemies, claimed, others, pressure, rng: this.rng, engaged, duck, rise }, this.time, STEP);
       if (bot) {
         const intent = bot.update(f, enemies, this.pieces, this.rng, this.time, STEP);
         if (intent.engaged) this.engaged.add(f.id);
         else this.engaged.delete(f.id);
         if (intent.reload) f.gun.startReload();
         if (intent.pull) this.fire(f, events);
+        if (intent.duck) duckBehindCover(f, this.rng);
       } else {
-        this.humanTrigger(f, events);
+        humanTrigger(f, this.time, () => this.fire(f, events));
       }
     }
   }
 
-  private humanTrigger(f: Fighter, events: BattleEvent[]): void {
-    const t = f.trigger;
-    if (t.pulls > 0) {
-      if (this.fire(f, events) !== "wait") t.pulls = 0;
-      else if (this.time - t.pulledAt > PULL_KEEP) t.pulls = 0;
-      return;
-    }
-    if (t.held && f.gun.spec.auto) this.fire(f, events);
-  }
-
-  private fire(f: Fighter, events: BattleEvent[]): "fired" | "dry" | "wait" {
+  private fire(f: Fighter, events: BattleEvent[]): FireResult {
     // The shot goes where the barrel points now; its own kick lands after.
     const aim = { yaw: f.aim.yaw + f.gun.kick.yaw, pitch: f.aim.pitch + f.gun.kick.pitch };
     const cone = coneOf(f);

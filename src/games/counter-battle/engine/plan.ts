@@ -31,6 +31,8 @@ export interface Plan {
 const SPREAD = 7.5;
 /** Runs the enemy can see cost this much more per metre. */
 const EXPOSED_RUN = 0.9;
+/** How much a fighter likes the cover they already hold, so the fight settles into cover. */
+const STAY = 1.4;
 
 const standEye = (p: V2): V3 => ({ x: p.x, y: BODY.standEye, z: p.z });
 const chest = (p: V2, crouched: boolean): V3 => ({ x: p.x, y: (crouched ? BODY.crouchTop : BODY.standTop) * 0.7, z: p.z });
@@ -129,7 +131,7 @@ function scoreSpot(spot: Spot, cost: number, input: PlanInput, want: number, eye
     if (d < SPREAD) score -= ((SPREAD - d) / SPREAD) * 1.7;
   }
   if (input.others.some((o) => dist(spot.pos, o) < 1.3)) score -= 4;
-  if (spot.id === f.brain.spot) score += 0.7 - style.restless * f.brain.held;
+  if (spot.id === f.brain.spot) score += STAY * (1 - 0.6 * pressure) - style.restless * f.brain.held;
   else if (dist(spot.pos, input.graph.spots[f.brain.spot]!.pos) < 2.5) score -= 0.5;
   // Closing in: as pressure builds, nearer spots win outright.
   score -= (pressure * near) / 12;

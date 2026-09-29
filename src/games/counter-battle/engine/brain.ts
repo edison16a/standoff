@@ -18,10 +18,16 @@ export interface BrainWorld {
   rng: Rng;
   /** True while the fighter is trading fire, which holds a peek open a little longer. */
   engaged: boolean;
+  /** A player holding Crouch: stay down behind cover and never look out. */
+  duck: boolean;
+  /** A player pressing Shoot while hidden: rise and look out now. */
+  rise: boolean;
 }
 
 /** Longest a peek can be stretched by a fighter who keeps shooting. */
-const MAX_OUT = 4;
+const MAX_OUT = 2.6;
+/** A fighter who just ran in settles behind cover at least this long before looking out. */
+const SETTLE = 0.7;
 /** How fast the body turns toward the fight, radians per second. */
 const TURN = 6;
 /** How fast a fighter drops into or rises from a crouch, per second. */
@@ -57,21 +63,19 @@ export function updateBrain(f: Fighter, w: BrainWorld, now: number, dt: number):
     }
   } else if (b.stance === "hide") {
     walk(f, spots[b.spot]!.pos, f.gun.spec.speed * 0.6 * dt);
-    b.timer -= dt;
-    if (b.timer <= 0) startPeek(f, w);
+    // Holding Crouch keeps the fighter down for as long as it is held.
+    if (!w.duck) b.timer -= dt;
+    if (!w.duck && (b.timer <= 0 || w.rise)) startPeek(f, w);
   } else {
     walk(f, b.peekAt ?? spots[b.spot]!.pos, f.gun.spec.speed * 0.6 * dt);
     b.timer -= dt;
     b.out += dt;
     if (w.engaged && b.timer < 0.3 && b.out < MAX_OUT) b.timer = 0.3;
     if (hurt) b.timer = Math.min(b.timer, FLINCH);
-    if (b.timer <= 0) {
-      b.stance = "hide";
-      b.timer = w.rng.range(...style.hide);
-    }
+    if (b.timer <= 0 || w.duck) duck(f, w.rng);
   }
   f.vel = { x: (f.pos.x - from.x) / dt, z: (f.pos.z - from.z) / dt };
-  f.pose = poseOf(f, w);
+  f.pose = w.duck && b.stance !== "move" ? "crouch" : poseOf(f, w);
   const low = f.pose === "crouch" ? 1 : 0;
   f.crouch += Math.sign(low - f.crouch) * Math.min(Math.abs(low - f.crouch), CROUCH_RATE * dt);
   face(f, w, dt);
@@ -82,6 +86,17 @@ function poseOf(f: Fighter, w: BrainWorld): Fighter["pose"] {
   if (b.stance === "move") return len(f.vel) > 0.3 ? "run" : "stand";
   if (b.stance === "peek") return "peek";
   return w.graph.spots[b.spot]!.tall ? "stand" : "crouch";
+}
+
+/**
+ * Back down behind cover after a look out. Bots call this after a burst,
+ * so they rise, fire and drop again rather than standing in the open.
+ */
+export function duck(f: Fighter, rng: Rng): void {
+  const b = f.brain;
+  if (b.stance !== "peek") return;
+  b.stance = "hide";
+  b.timer = rng.range(...STYLES[f.gun.id].hide);
 }
 
 function replan(f: Fighter, w: BrainWorld): void {
@@ -104,8 +119,8 @@ function arrive(f: Fighter, w: BrainWorld): void {
   const b = f.brain;
   b.stance = "hide";
   b.held = 0;
-  // Arriving shooters look out soon: a spot is taken to fight from.
-  b.timer = w.rng.range(0.2, STYLES[f.gun.id].hide[0]);
+  // Arriving shooters settle in, then look out: a spot is taken to fight from.
+  b.timer = w.rng.range(SETTLE, STYLES[f.gun.id].hide[0]);
 }
 
 function startPeek(f: Fighter, w: BrainWorld): void {
