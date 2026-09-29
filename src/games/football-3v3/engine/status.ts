@@ -36,7 +36,8 @@ function padFor(m: Match, id: number, onOffense: boolean, withBall: boolean): Pa
   const a = m.athlete(id)!;
   const k = m.kick;
   if (m.phase === "kick") return k && k.kicker === id && (k.stage === "aim" || k.stage === "power") ? "kicker" : "wait";
-  if (m.phase === "choose" || m.phase === "convert") return onOffense && a.role === "qb" ? "choose" : "wait";
+  // The defence never picks, so its pad stays up while the offense calls the play.
+  if (m.phase === "choose" || m.phase === "convert") return !onOffense ? "defense" : a.role === "qb" ? "choose" : "wait";
   if (m.phase !== "presnap" && m.phase !== "live") return "wait";
   if (withBall && a.role !== "qb") return "runner";
   if (withBall || (onOffense && a.role === "qb")) return "qb";

@@ -59,7 +59,8 @@ export function startConvert(m: Match): void {
 function startPresnap(m: Match): void {
   enter(m, "presnap");
   m.play = newPlay("throw", m.time);
-  lineUp(m.athletes, m.drive, "throw");
+  // The defence keeps the spots it moved to during the call.
+  lineUp(m.athletes.filter((a) => a.team === m.offense || a.role === "lineman"), m.drive, "throw");
   setLine(m);
   deadBall(m);
   for (const a of m.athletes) if (a.team === m.offense || a.role === "lineman") a.action = { kind: "stance", t: 0 };

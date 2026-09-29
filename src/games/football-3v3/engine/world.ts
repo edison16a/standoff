@@ -39,12 +39,18 @@ function act(m: Match, a: Athlete, dt: number): void {
   }
 }
 
-/** Who may move now: in the break between plays and during a kick everyone waits. */
+/**
+ * Who may move now. The defence sets itself while the offense calls the
+ * play and lines up; in the break between plays and during a kick
+ * everyone waits.
+ */
 function frozen(m: Match, a: Athlete): boolean {
   if (m.phase === "live" || m.phase === "touchdown") return false;
-  if (m.phase === "presnap") return a.team === m.offense;
+  if (settingUp(m)) return a.team === m.offense;
   return true;
 }
+
+const settingUp = (m: Match) => m.phase === "presnap" || m.phase === "choose" || m.phase === "convert";
 
 /** The checks that end a live play: a score, stepping out, and the QB running past the line. */
 function liveChecks(m: Match): void {
@@ -83,7 +89,7 @@ export function stepWorld(m: Match, dt: number): void {
     else if (live && a.guard !== null) a.move = guardMove(m, a, a.guard);
     moveAthlete(a, dt, holder === a.id, face);
     a.move = stick;
-    if (m.phase === "presnap") holdOnside(a, m.drive);
+    if (settingUp(m)) holdOnside(a, m.drive);
   }
   updateLinemen(m, dt);
   if (live) lineContact(m);

@@ -67,7 +67,7 @@ describe("phone status", () => {
   it("gives each phone the right controls through a play", () => {
     const m = peopleMatch();
     expect(seatStatus(m, 0)?.pad).toBe("choose");
-    expect(seatStatus(m, 2)?.pad).toBe("wait");
+    expect(seatStatus(m, 2)?.pad).toBe("defense");
     m.choose(bySeat(m, 0).id, "throw");
     expect(seatStatus(m, 0)?.pad).toBe("qb");
     expect(seatStatus(m, 0)?.hikeLeft).toBeGreaterThan(4);
