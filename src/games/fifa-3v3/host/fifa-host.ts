@@ -5,7 +5,7 @@ import { SoundDirector } from "../audio/director";
 import { ceremonyTime } from "../engine/ceremony";
 import type { MatchEvent } from "../engine/events";
 import type { MatchView } from "../engine/view";
-import { phoneMessageSchema, type PhoneMessage, type RoomPhase } from "../protocol";
+import type { RoomPhase } from "../protocol";
 import type { Label } from "../render/match-renderer";
 import type { TeamId } from "../teams";
 import type { Role } from "../roles";
@@ -18,6 +18,7 @@ import { MatchDriver } from "./match-driver";
 import { nameOf, tagOf } from "./names";
 import { PhoneLink } from "./phone-link";
 import { publish } from "./publish";
+import { onRoomEvent } from "./room-events";
 import type { ReplayFrame } from "./replay";
 import { ReplayDirector } from "./replay-director";
 import type { ReplayScript } from "./replay-script";
@@ -192,54 +193,8 @@ export class FifaHost {
   }
 
   private onRoom(event: HostRoomEvent): void {
-    switch (event.type) {
-      case "joined":
-        this.lobby.connect(event.seat);
-        this.driver?.setOnline(event.seat, true);
-        this.phones.forget(event.seat);
-        break;
-      case "left":
-        this.lobby.disconnect(event.seat);
-        this.driver?.setOnline(event.seat, false);
-        if (this.driver) this.replays.left(this.driver, event.seat);
-        break;
-      case "message": {
-        const parsed = phoneMessageSchema.safeParse(event.payload);
-        if (parsed.success) this.onPhone(event.seat, parsed.data);
-        return;
-      }
-      case "resync":
-        for (const player of this.room.players()) {
-          if (player.connected) this.lobby.connect(player.seat);
-          else this.lobby.disconnect(player.seat);
-          this.driver?.setOnline(player.seat, player.connected);
-        }
-        this.phones.forget();
-        break;
-      case "players":
-      case "online":
-        break;
-    }
-    this.refresh(performance.now());
-  }
-
-  private onPhone(seat: number, message: PhoneMessage): void {
-    switch (message.kind) {
-      case "pick":
-        this.lobby.pick(seat, message.build);
-        break;
-      case "ready":
-        this.lobby.setReady(seat, message.ready);
-        break;
-      case "hello":
-        this.phones.forget(seat);
-        break;
-      case "release":
-        // Mid match only, and nothing on screen changes, so no refresh either.
-        this.driver?.noteHeld(seat, message.heldMs / 1000);
-        return;
-    }
-    this.refresh(performance.now());
+    const seats = { lobby: this.lobby, driver: this.driver, phones: this.phones, replays: this.replays, players: () => this.room.players() };
+    if (onRoomEvent(event, seats)) this.refresh(performance.now());
   }
 
   private refresh(nowMs: number): void {
