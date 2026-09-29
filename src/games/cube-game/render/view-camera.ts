@@ -9,6 +9,8 @@ const YAW = THREE.MathUtils.degToRad(7);
  * which puts the horizon low: a band of floor grid under a big sky.
  */
 const EYE_DROP = 1.6;
+/** Where across the view the player runs in play, as a share of its width from the left. */
+const ACROSS = 0.38;
 
 /**
  * One view's camera: a long lens looking at the level from the side, so
@@ -64,9 +66,9 @@ export class ViewCamera {
     const width = this.height * this.camera.aspect;
     const bottom = this.framing?.floor ?? 1.4;
     const floorView = this.height / 2 - bottom;
-    const px = state?.x ?? this.x - width * 0.2;
+    const px = state?.x ?? this.x - width * (0.5 - ACROSS);
     const py = state?.y ?? 0.5;
-    const targetX = px + width * (0.5 - (this.framing?.across ?? 0.3));
+    const targetX = px + width * (0.5 - (this.framing?.across ?? ACROSS));
     // Stay put near the floor, and follow only when the player climbs into the top part of the view.
     const targetY = Math.max(floorView, py - this.height * 0.18);
     if (!this.ready) {

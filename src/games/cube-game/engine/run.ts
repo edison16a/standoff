@@ -32,6 +32,10 @@ export class Run {
   jumps = 0;
   /** Level time the finish line was crossed, exact to the step. Null until then. */
   finishTime: number | null = null;
+  /** Level time spent on attempts that ended in a crash, for the whole run's time on the leaderboard. */
+  private spent = 0;
+  /** Level time the current attempt set off from: the start, or a practice checkpoint. */
+  private setOff = 0;
   private checkpoints: Checkpoint[] = [];
   private lastCheckpoint = 0;
   /** Level times of jumps not yet used, oldest first. */
@@ -61,6 +65,15 @@ export class Run {
   get percent(): number {
     if (this.player.finished) return 100;
     return Math.max(0, Math.min(99, Math.floor((this.player.x / this.level.endX) * 100)));
+  }
+
+  /**
+   * Seconds from the first attempt's start to the finish, counting every
+   * crashed attempt, or null before the finish. Every clean finish of a
+   * level takes the same time, so it is the crashes that set runs apart.
+   */
+  get totalTime(): number | null {
+    return this.finishTime === null ? null : this.spent + this.finishTime - this.setOff;
   }
 
   /** Practice checkpoints so far, for drawing their diamonds. */
@@ -99,6 +112,7 @@ export class Run {
   /** Back to the start, or in practice to a safe checkpoint. Returns the level time it resumes from. */
   respawn(): number {
     const deathTime = this.time;
+    this.spent += deathTime - this.setOff;
     this.attempt += 1;
     this.jumps = 0;
     this.pending = [];
@@ -115,6 +129,7 @@ export class Run {
       this.time = 0;
     }
     this.lastCheckpoint = this.time;
+    this.setOff = this.time;
     return this.time;
   }
 

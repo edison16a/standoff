@@ -1,9 +1,11 @@
+import { DEMON_SONGS } from "./demon-songs";
 import { song, type Song } from "./song";
 
 /**
  * One song per level plus the menu's. Each level has its own key, tempo
  * and style, matched to its look: city pop, nu disco, trance, electro
- * chiptune and a dark breakbeat. Each is four bars of chords with a hook
+ * chiptune and a dark breakbeat, then psy trance and drumstep for the
+ * two Demon levels (`demon-songs.ts`). Each is four bars of chords with a hook
  * on top, arranged on the level's own beats: the lead changes where the
  * mode changes, and the drums drop out to float through the UFO.
  */
@@ -131,4 +133,6 @@ export const SONGS: Record<string, Song> = {
     sections: [[0, "kick hat bass pad"], [8, FULL], [27, "kick clap hat open bass arp pad leadB"], [43, "kick snare clap hat bass arp pad leadB"], [56, "kick snare clap hat open bass arp pad lead"], [75, "half clap hat bass pad leadB"], [89, "kick snare clap hat bass arp pad leadB"], [101, "kick snare clap hat open bass arp pad lead"], [120, "pad arp"]],
     length: 124,
   }),
+
+  ...DEMON_SONGS,
 };

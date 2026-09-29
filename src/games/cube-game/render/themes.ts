@@ -91,6 +91,33 @@ export const THEMES: Record<string, Theme> = {
     spike: 0xf5e2d6,
     skyline: "spires",
   },
+  // The Demon levels: deeper skies and hotter edges than anything before, so they feel like a step up.
+  "neon-abyss": {
+    skyLow: 0x3a1060,
+    skyHigh: 0x06020f,
+    sun: 0xf08ad8,
+    sunLow: 0x6a2aa8,
+    sunSize: 12,
+    fill: 0x140828,
+    edge: 0xc868e0,
+    grid: 0x8a48d0,
+    accent: 0x48d0dc,
+    spike: 0xf5e2fa,
+    skyline: "circuits",
+  },
+  "inferno-gate": {
+    skyLow: 0x4a0a30,
+    skyHigh: 0x0a0208,
+    sun: 0xf0606a,
+    sunLow: 0x9a1a50,
+    sunSize: 18,
+    fill: 0x1c0610,
+    edge: 0xf05070,
+    grid: 0xc02a58,
+    accent: 0xf0b040,
+    spike: 0xffe4ec,
+    skyline: "spires",
+  },
 };
 
 export function themeFor(id: string): Theme {

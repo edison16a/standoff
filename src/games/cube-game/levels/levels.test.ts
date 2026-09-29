@@ -12,11 +12,27 @@ const SLACK: Record<number, { early: number; late: number }> = {
   3: { early: 0.06, late: 0.07 },
   4: { early: 0.05, late: 0.06 },
   5: { early: 0.04, late: 0.05 },
+  // Demon: the tightest yet, still wider than a camera jump's usual error once it is timed from take off.
+  6: { early: 0.035, late: 0.04 },
 };
 
 describe("every level", () => {
   it("comes in order of difficulty", () => {
     expect(LEVELS.map((l) => l.info.difficulty)).toEqual([...LEVELS.map((l) => l.info.difficulty)].sort());
+  });
+
+  it("makes each Demon level faster, busier and more changeable than every level before", () => {
+    const built = LEVELS.map((l) => levelById(l.info.id));
+    const top = (l: Level) => Math.max(l.startSpeed, ...l.speeds.map((s) => s.speed));
+    const pace = (l: Level) => l.solution.length / ((l.beats * 60) / l.bpm);
+    const demons = built.filter((l) => l.difficulty === 6);
+    const others = built.filter((l) => l.difficulty < 6);
+    expect(demons).toHaveLength(2);
+    for (const demon of demons) {
+      expect(top(demon)).toBeGreaterThan(Math.max(...others.map(top)));
+      expect(pace(demon)).toBeGreaterThan(Math.max(...others.map(pace)));
+      expect(demon.portals.length).toBeGreaterThan(Math.max(...others.map((l) => l.portals.length)));
+    }
   });
 
   for (const entry of LEVELS) {

@@ -1,5 +1,6 @@
+import { portalFrame, RING_MIN } from "./portal-frame";
 import { trace, type TracePoint } from "./trace";
-import { CUBE } from "./tuning";
+import { CUBE, HALF } from "./tuning";
 import type { Level, LevelInfo, Mode, Orb, Pad, Portal, Solid, SpeedGate, Spike } from "./types";
 
 /** Corridor heights when a portal does not say. */
@@ -67,7 +68,8 @@ export class LevelBuilder {
   }
 
   portal(beat: number, mode: Mode, ceiling: number | null = CEILING[mode]): this {
-    this.portalList.push({ x: this.x(beat), mode, ceiling });
+    // Framed when the level is built, once every jump of the perfect run is known.
+    this.portalList.push({ x: this.x(beat), mode, ceiling, bottom: 0, top: ceiling ?? RING_MIN });
     return this;
   }
 
@@ -111,7 +113,27 @@ export class LevelBuilder {
   }
 
   build(): Level {
+    this.framePortals();
     return this.assemble(this.x(this.endBeat));
+  }
+
+  /**
+   * Closes the way over and under every portal a run crosses, in order,
+   * each around the path the perfect run takes through it. A portal at
+   * the start only sets the mode, so it needs no frame.
+   */
+  private framePortals(): void {
+    const portals = [...this.portalList].sort((a, b) => a.x - b.x);
+    portals.forEach((portal, i) => {
+      if (portal.x <= 1 + HALF) return;
+      const before = portals[i - 1]?.ceiling ?? null;
+      const roofs = [before, portal.ceiling].filter((c): c is number => c !== null);
+      const roof = roofs.length ? Math.min(...roofs) : null;
+      const frame = portalFrame(this.path(portal.x + 2), portal.x, roof);
+      portal.bottom = frame.bottom;
+      portal.top = frame.top;
+      for (const wall of frame.walls) this.block(wall.x, wall.y, wall.w, wall.h);
+    });
   }
 
   /** The level with its finish at endX. */

@@ -38,6 +38,18 @@ describe("a run", () => {
     expect(run.finished).toBe(true);
   });
 
+  it("times the whole run to the finish, crashed attempts included", () => {
+    const run = new Run(level());
+    run.advanceTo(10);
+    expect(run.totalTime).toBeNull();
+    run.respawn();
+    run.press(4);
+    run.press(8);
+    run.advanceTo(20);
+    // Ten seconds on the crashed attempt, then the level's twelve.
+    expect(run.totalTime).toBeCloseTo(22, 1);
+  });
+
   it("takes a press at the exact time it was made, however late the frame", () => {
     const run = new Run(level());
     run.press(4);
