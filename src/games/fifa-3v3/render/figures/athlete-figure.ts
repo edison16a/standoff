@@ -10,13 +10,14 @@ import { coilFrame, passFrame, shotFrame } from "../anim/kicks";
 import { buildOf, LEFT, RIGHT, solveLeg, type Build, type Side } from "../anim/leg-ik";
 import { getUp, hurdle, slide, stumble } from "../anim/moves";
 import { applyPose, blendPoses, neutral, type Pose } from "../anim/pose";
+import { guardCrouch, jump, steal, wall } from "../anim/defence-poses";
 import { beatenFrame, skillFrame } from "../anim/skill-poses";
 import { buildBody, type Rig } from "../models/body";
 import { FootLock } from "./foot-locks";
 import { keepAboveTurf } from "./turf";
 
 /** How long a new move takes to blend in: kicks and tackles snap in, the rest ease. */
-const QUICK = new Set(["shoot", "pass", "slide", "stumble", "skill", "beaten"]);
+const QUICK = new Set(["shoot", "pass", "slide", "stumble", "skill", "beaten", "steal", "jump"]);
 
 /**
  * One footballer on the pitch: their body in the team's kit. Each frame
@@ -41,6 +42,7 @@ export class AthleteFigure {
   private ball = { x: 0, y: 0, z: 0.5 };
   /** The move the remembered ball belongs to. */
   private ballKick = "";
+  private walled = false;
 
   constructor(view: AthleteView, kit: Kit, material: THREE.Material) {
     this.character = ROSTER[view.character];
@@ -62,6 +64,9 @@ export class AthleteFigure {
     const right = this.locks.right.resolve(frame.right, root, this.build, dt);
     if (left) solveLeg(frame.pose, LEFT, left, this.build);
     if (right) solveLeg(frame.pose, RIGHT, right, this.build);
+    // A jump straight out of the wall keeps the hands in front, as walls do.
+    if (view.action === "wall") this.walled = true;
+    else if (view.action !== "jump") this.walled = false;
     const key = `${view.action}/${view.signature}`;
     if (key !== this.key) {
       this.from = { ...this.shown };
@@ -118,7 +123,14 @@ export class AthleteFigure {
     const run = () => gait(v.stride, v.speed, v.hasBall, ctx, time, this.phase);
     switch (v.action) {
       case "free":
-        return v.bar ? coilFrame(v.stride, v.speed, v.charge, ctx, time, this.phase) : run();
+        if (v.bar) return coilFrame(v.stride, v.speed, v.charge, ctx, time, this.phase);
+        return v.guard === "on" ? guardCrouch(run(), 1) : run();
+      case "steal":
+        return fk(steal(v.actionT, v.actionLen, this.lead));
+      case "jump":
+        return fk(jump(v.actionT, v.actionLen, v.lift, this.walled ? "tucked" : "up"));
+      case "wall":
+        return fk(wall(time, this.phase));
       case "shoot":
         return shotFrame(v.actionT, this.windup(v), v.power, ctx);
       case "pass":
