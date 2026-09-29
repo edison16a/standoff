@@ -1,6 +1,7 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 import { noise, tone } from "@/platform/audio/voices";
 import { createRoom, vary, type Room } from "./mix";
+import { blowWhistle, WHISTLES } from "./whistle";
 
 /**
  * The sounds of the ball and the players, all synthesised: the thump
@@ -102,36 +103,16 @@ export class Sfx {
     noise(this.engine, this.out, this.at, { filter: "bandpass", frequency: vary(700, 0.1), q: 1.5, decay: 0.07, peak: 0.38 });
   }
 
-  /**
-   * The referee's whistle: a pea whistle's trill, a warble of two close
-   * pitches. Long for full time, and full time gets three blasts.
-   */
-  whistle(long: boolean, blasts = 1): void {
-    const { ctx } = this.engine;
-    for (let b = 0; b < blasts; b++) {
-      const at = this.at + b * (long ? 0.55 : 0.3);
-      const length = long && b === blasts - 1 ? 1.1 : long ? 0.35 : 0.28;
-      const osc = ctx.createOscillator();
-      const trill = ctx.createOscillator();
-      const depth = ctx.createGain();
-      const gain = ctx.createGain();
-      osc.frequency.value = vary(2750, 0.02);
-      trill.frequency.value = vary(28, 0.1);
-      depth.gain.value = 160;
-      trill.connect(depth).connect(osc.frequency);
-      gain.gain.setValueAtTime(0.0001, at);
-      gain.gain.linearRampToValueAtTime(0.2, at + 0.02);
-      gain.gain.setValueAtTime(0.2, at + length - 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.0001, at + length);
-      osc.connect(gain).connect(this.out);
-      gain.connect(this.wet);
-      osc.start(at);
-      trill.start(at);
-      osc.stop(at + length + 0.05);
-      trill.stop(at + length + 0.05);
-      osc.onended = () => gain.disconnect();
-      noise(this.engine, this.out, at, { filter: "bandpass", frequency: 2800, q: 3, attack: 0.02, decay: length, peak: 0.05 });
-    }
+  /** The referee's whistle, blown in one of his calls (see whistle.ts). */
+  whistle(call: keyof typeof WHISTLES): void {
+    blowWhistle(this.engine, this.out, this.wet, this.at, WHISTLES[call]);
+  }
+
+  /** The ball thudding off a body: a dull, soft smack, no ring. */
+  block(speed: number): void {
+    const level = Math.min(1, speed / 16);
+    tone(this.engine, this.out, this.at, { frequency: vary(120, 0.1), glideTo: 60, decay: 0.12, peak: 0.55 * level });
+    noise(this.engine, this.out, this.at, { filter: "lowpass", frequency: vary(1100, 0.1), decay: 0.08, peak: 0.45 * level });
   }
 
   /** A firework: a crack, a rolling boom, and the echo round the stands. */

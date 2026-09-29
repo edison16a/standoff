@@ -142,5 +142,6 @@ export function setupSetPiece(state: MatchState, foul: Foul): void {
   state.foul = null;
   state.phase = "setpiece";
   state.phaseT = 0;
-  state.events.push({ type: "whistle", long: false }, { type: "setpiece", kind: sp.kind, team: sp.team, taker: taker.id });
+  // A short blast (played for this event) tells the taker to go.
+  state.events.push({ type: "setpiece", kind: sp.kind, team: sp.team, taker: taker.id });
 }

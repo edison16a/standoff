@@ -47,7 +47,8 @@ export function commitFoul(state: MatchState, offender: Athlete, victim: Athlete
     victim.actionLen = SLIDE.stumble;
   }
   callFoul(state.referee, at, offender.id);
-  state.events.push({ type: "whistle", long: false }, { type: "foul", offender: offender.id, victim: victim.id, team: victim.team, kind, at });
+  // The foul event is the whistle: the sound plays its own sharp blast for it.
+  state.events.push({ type: "foul", offender: offender.id, victim: victim.id, team: victim.team, kind, at });
 }
 
 /** Whether the referee's card is up yet: once he has arrived, or late anyway if he is far away. */
