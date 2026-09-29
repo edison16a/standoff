@@ -17,7 +17,7 @@ export function statusOf(host: PhoneState): string | null {
   switch (host.phase) {
     case "choose":
     case "convert":
-      return host.offense ? "The QB is calling the play" : "They are picking a play. Set up";
+      return host.offense ? "The QB is calling the play" : "They are picking a play";
     case "presnap":
       return host.offense ? "Waiting for the snap" : "Line up. Rush at the snap";
     case "kick":
