@@ -111,7 +111,7 @@
     font-size: 9px;
   }
 
-  .fb-pick__caption span {
+  .fb-pick__style {
     display: none;
   }
 
@@ -169,4 +169,21 @@
 /* While the turn card shows, the pad under it must not widen the page. */
 .fb-phone--pad:has(> .fb-turn) > :not(.fb-turn) {
   display: none;
+}
+
+/* The build's best place, as a small chip over its name. */
+.fb-pick__caption .fb-pick__best {
+  align-self: flex-start;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--kit);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 1;
+}
+
+.fb-stat--low .fb-stat__bar span {
+  background: #ef4444;
 }
