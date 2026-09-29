@@ -18,7 +18,7 @@ Phone side:
 
 ```ts
 const aim = new PhoneAim(room);           // reads the sensors, or falls back to dragging
-<AimCalibrate aim={aim} colour={playerColor(seat)} onDone={next} />
+<AimCalibrate aim={aim} colour={playerColor(seat)} onDone={next} />   // plan="sword" for six targets
 aim.stream(true);                         // while playing, streams the aim at up to 60 Hz
 <FireButton label="Fire" onFire={() => aim.fire()} onRelease={stopAuto} />   // onRelease also fires if it turns disabled while held
 aim.recenter();                           // a small button for when the gyro drifts
@@ -26,7 +26,9 @@ aim.recenter();                           // a small button for when the gyro dr
 aim.dispose();
 ```
 
-Calibration shows three targets on the big screen in turn (middle, top left, bottom right). From them the phone learns how far this player turns to cross the screen from where they sit, left, right, up and down separately. Skip corners reuses the spans this phone measured last time. The measured spans are kept on the phone only.
+Calibration is hold to calibrate, the kit's standard. Targets show on the big screen and the phone in turn. The player points at each and holds still: a ring fills, the target turns green and the next one comes up by itself. No button, so a tap never nudges the aim. A target only fills once the phone has turned away from the last one, and the first only once the phone has moved from how the page found it, so a phone lying still while the player reads is never taken as pointing at the middle. Pick how many with `plan`: `"shooter"` (the default) takes the middle and all four corners; `"sword"` takes the middle, all four corners and the middle again, for games that swing all over the screen. From them the phone learns how far this player turns to cross the screen from where they sit, left, right, up and down separately (`aim-fit.ts`). Skip the rest reuses the spans this phone measured last time. `kit/motion/steady-hold.ts` has the hold meter for any other hold to confirm page.
+
+Pointing past the edge of the screen keeps the aim at the edge, dot and all, and it moves on smoothly the moment the phone points back in. `HostAim` pins every point and shot a touch inside its zone (`EDGE`), so a laser dot a game draws in 3D still shows whole enough to see, and every pointing game gets this. `AimOverlay` also draws its own dots and names fully inside the zone. It sits on top of the page, so a corner target stays in sight over the join card and a dot at the edge over the tool bar, while it still draws in the box of the element it is placed in. A game that draws its own pointer (`dots={false}`) still gets the kit's dot, with no name, while the aim is held at the edge (`HostAim.atEdge`), so the tool bar or the game's own scoreboard never hides it there. The measured spans are kept on the phone only.
 
 Host side:
 

@@ -2,6 +2,8 @@
 // ready, then the phone is the gun until the result. Runs with motion
 // sensors and without, where a drag pad does the aiming.
 
+import { holdTargets } from "./aim-hold.mjs";
+
 async function calibrate(ctx) {
   if (!ctx.sensors) {
     await ctx.until("Looks good");
@@ -9,12 +11,7 @@ async function calibrate(ctx) {
     await ctx.tap("Looks good");
     return;
   }
-  await ctx.until("Set middle");
-  await ctx.snap("aim-middle");
-  await ctx.tap("Set middle");
-  await ctx.snap("aim-top-left");
-  await ctx.tap("Set top left");
-  await ctx.tap("Set bottom right");
+  await holdTargets(ctx);
   await ctx.snap("aim-test");
   await ctx.tap("Looks good");
 }

@@ -6,7 +6,7 @@ Status: ready. A fairground duck shoot for 1 to 4 players. Stand still, aim well
 
 1. Open Shooting Gallery on the computer and scan the code with each phone.
 2. On the phone, set up in three steps, one page each:
-   * **Calibrate:** hold the phone flat like a remote and point its top edge at the targets the big screen shows. Middle first, then two corners (or skip the corners).
+   * **Calibrate:** hold the phone flat like a remote and point its top edge at the targets the big screen shows. Point at each one and hold still. A ring fills, turns green and the next comes up by itself: the middle, then the four corners (or skip the rest). No button to press. Pointing past the edge keeps the dot at the edge.
    * **Gun:** your own BB gun turns on a stand in 3D. Pick a finish: Walnut, Cherry, Midnight, Birch, Forest or Showman. Drag to turn it.
    * **Ready:** tap Ready.
 3. The round starts once every connected phone is ready, or when someone presses Start on the computer. The computer also picks the round length: 20, 30 or 45 seconds.

@@ -2,7 +2,9 @@
 // the kit's calibration page, then each has its own pick, ready and play.
 // Each also runs without motion sensors, where a drag pad does the aiming.
 
-/** The kit's calibration: the middle, both corners, then the test view. */
+import { holdTargets } from "./aim-hold.mjs";
+
+/** The kit's calibration: point and hold at each target, then the test view. */
 async function calibrateAim(ctx) {
   // A phone with no sensors goes straight to the drag pad.
   if (!ctx.sensors) {
@@ -11,13 +13,7 @@ async function calibrateAim(ctx) {
     await ctx.tap("Looks good");
     return;
   }
-  await ctx.until("Set middle");
-  await ctx.snap("aim-middle");
-  await ctx.tap("Set middle");
-  await ctx.snap("aim-top-left");
-  await ctx.tap("Set top left");
-  await ctx.snap("aim-bottom-right");
-  await ctx.tap("Set bottom right");
+  await holdTargets(ctx);
   await ctx.snap("aim-test");
   await ctx.tap("Looks good");
 }

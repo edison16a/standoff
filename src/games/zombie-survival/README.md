@@ -5,7 +5,7 @@ Status: ready. A co-op, first person, on rails shooter for 1 to 4 players. Each 
 ## How to play
 
 1. Open the game on the computer and scan the code with each phone. Type a name or skip.
-2. On the phone, **Calibrate**: hold the phone flat, top edge toward the screen, and point at the middle, then at the two corner targets (or skip the corners).
+2. On the phone, **Calibrate**: hold the phone flat, top edge toward the screen, and point at the middle, then at the four corner targets, holding still on each until its ring fills and turns green. The next target comes up by itself (or skip the rest). Pointing past the edge keeps the dot at the edge.
 3. Pick a **Weapon**. Each turns in 3D with its numbers:
    * **Shotgun**: eight pellets, pump action, six shells loaded one at a time. Brutal up close, and buckshot tears weak points open.
    * **Submachine Gun**: fast and forgiving, light hits, big magazine, quick reload.
