@@ -6,7 +6,7 @@ function mapStore(): MemoryStore & { data: Map<string, string> } {
   return { data, getItem: (k) => data.get(k) ?? null, setItem: (k, v) => void data.set(k, v) };
 }
 
-const SAVED: ControllerMemory = { step: "ready", steerMode: "tilt", calibrated: true, zero: 0.12, wanted: "nova" };
+const SAVED: ControllerMemory = { step: "ready", steerMode: "tilt", sensors: true, calibrated: true, zero: 0.12, wanted: "nova" };
 
 describe("the controller memory", () => {
   it("gives back what was saved for the same room and seat", () => {

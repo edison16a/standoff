@@ -12,6 +12,8 @@ import { CHARACTER_IDS } from "../characters";
 const memorySchema = z.object({
   step: z.enum(["calibrate", "kart", "ready"]),
   steerMode: z.enum(["tilt", "buttons"]),
+  /** Whether the phone could read its sensors, so buttons were the player's own choice. */
+  sensors: z.boolean().default(false),
   calibrated: z.boolean(),
   /** The wheel angle taken as straight ahead, in radians. */
   zero: z.number().finite(),

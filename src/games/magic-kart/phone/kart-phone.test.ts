@@ -135,7 +135,25 @@ describe("the kart phone", () => {
     phone.goTo("kart");
     phone.dispose();
     phone = new KartPhone(fakeRoom("granted").room);
-    expect(useControllerStore.getState()).toMatchObject({ step: "kart", steerMode: "tilt", calibrated: false });
+    // The wheel was never calibrated, so setup goes back to that step.
+    expect(useControllerStore.getState()).toMatchObject({ step: "calibrate", steerMode: "tilt", calibrated: false });
+  });
+
+  it("keeps the step of a phone that never had sensors", () => {
+    phone = new KartPhone(fakeRoom("unavailable").room);
+    phone.goTo("ready");
+    phone.dispose();
+    phone = new KartPhone(fakeRoom("unavailable").room);
+    expect(useControllerStore.getState()).toMatchObject({ step: "ready", steerMode: "buttons", calibrated: true });
+  });
+
+  it("keeps the arrows a player chose over working sensors", () => {
+    phone = new KartPhone(fakeRoom("granted").room);
+    phone.useButtons();
+    phone.goTo("ready");
+    phone.dispose();
+    phone = new KartPhone(fakeRoom("granted").room);
+    expect(useControllerStore.getState()).toMatchObject({ step: "ready", steerMode: "buttons", calibrated: true });
   });
 
   it("starts fresh in a different room", () => {

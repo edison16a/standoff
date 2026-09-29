@@ -155,24 +155,29 @@ export class KartPhone {
   }
 
   /**
-   * Starts from what this phone had before a reload, or from scratch. The
-   * wheel's calibration only carries over from a phone that steered by
-   * tilting, so a page that had no sensors last time gets the wheel back
-   * once it has them. The constructor then falls back to buttons if not.
+   * Starts from what this phone had before a reload, or from scratch.
+   * Buttons the player chose over working sensors stay chosen. The wheel's
+   * calibration only carries over from a phone that steered by tilting,
+   * and a wheel that needs calibrating again sends setup back to that step.
+   * The constructor then falls back to buttons if there are no sensors.
    */
   private resume(): void {
     const memory = loadMemory(this.room.code, this.room.seat);
     const tilted = memory?.steerMode === "tilt";
     this.zero = tilted ? memory.zero : 0;
     this.resumePick = memory?.wanted ?? null;
-    const kept = memory ? { step: memory.step, wanted: memory.wanted, calibrated: tilted && memory.calibrated } : {};
-    store.setState({ ...store.getInitialState(), ...kept });
+    store.setState({ ...store.getInitialState() });
+    if (!memory) return;
+    const chose = memory.steerMode === "buttons" && memory.sensors;
+    // Without sensors there is no wheel to calibrate, so the step holds.
+    const calibrated = this.room.motion !== "granted" || chose || (tilted && memory.calibrated);
+    store.setState({ step: calibrated ? memory.step : "calibrate", wanted: memory.wanted, calibrated, steerMode: chose ? "buttons" : "tilt" });
   }
 
   /** Saves the setup when it changed. Host updates stream in all race long and leave it alone. */
   private remember(): void {
     const { step, steerMode, calibrated, wanted } = store.getState();
-    const memory = { step, steerMode, calibrated, wanted, zero: this.zero };
+    const memory = { step, steerMode, calibrated, wanted, zero: this.zero, sensors: this.room.motion === "granted" };
     const text = JSON.stringify(memory);
     if (text === this.saved) return;
     this.saved = text;
