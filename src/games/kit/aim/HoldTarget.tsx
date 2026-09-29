@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { HoldProgress, SteadyWindow } from "@/games/kit/motion/steady-hold";
 import type { AimZone, Pointing } from "./aim-math";
-import { movedOn, pointingDistance, type AimTarget } from "./aim-targets";
+import { pointingDistance, TargetGate, type AimTarget } from "./aim-targets";
 import type { PhoneAim } from "./phone-aim";
 import { PointGuide } from "./PointGuide";
 
@@ -14,7 +14,7 @@ interface HoldTargetProps {
   target: AimTarget;
   colour: string;
   zone?: AimZone;
-  /** Where the last target was taken. The phone must turn away from it before this one fills. */
+  /** Where the last target was taken. The phone must turn away from it before this one fills. Null for the first. */
   after: Pointing | null;
   /** Which target this is of how many, such as "2 of 6". */
   count: string;
@@ -56,6 +56,7 @@ export function HoldTarget({ aim, target, colour, zone, after, count, onHeld }: 
   useEffect(() => {
     const still = new SteadyWindow<Pointing>(pointingDistance);
     const hold = new HoldProgress();
+    const gate = new TargetGate(after);
     const started = performance.now();
     let frame = 0;
     let last: State = "point";
@@ -63,7 +64,9 @@ export function HoldTarget({ aim, target, colour, zone, after, count, onHeld }: 
       frame = requestAnimationFrame(draw);
       const reading = aim.pointing;
       if (doneRef.current || !reading) return;
-      const progress = hold.update(still.update(reading, now) && movedOn(reading, after), now);
+      // Both see every reading, so the gate knows how the page found the phone before it ever settles.
+      const open = gate.open(reading);
+      const progress = hold.update(still.update(reading, now) && open, now);
       const ring = ringRef.current;
       if (ring) ring.style.strokeDashoffset = String(Number(ring.getAttribute("stroke-dasharray")) * (1 - progress));
       const next: State = progress > 0.05 ? "holding" : "point";

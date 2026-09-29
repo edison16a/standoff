@@ -28,7 +28,11 @@ export async function holdTargets(ctx) {
     const place = whereOf(title);
     if (!place) throw new Error(`No target in the title "${title}"`);
     const [heading, up] = AIM[place];
-    await phone.evaluate(([a, b]) => Object.assign(window.__sensors, { alpha: -a, beta: b, gamma: 0 }), [heading, up]);
+    const aim = ([a, b]) => Object.assign(window.__sensors, { alpha: -a, beta: b, gamma: 0 });
+    // A hand swings over to the target: the first one waits for the phone to move from how the page found it.
+    await phone.evaluate(aim, [heading + 6, up + 4]);
+    await phone.waitForTimeout(700);
+    await phone.evaluate(aim, [heading, up]);
     const count = await phone.locator(".kit-hold__count").textContent();
     // Taken: the ring closes and the words turn green, then the next target or the test view replaces it.
     taken++;

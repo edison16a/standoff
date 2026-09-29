@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { quatFromDeviceEuler } from "@/games/kit/motion/math3d";
 import { fitCalibration, type AimSample } from "./aim-fit";
 import { cornerCalibration, DEFAULT_SPAN, pointing, toScreen } from "./aim-math";
-import { AIM_PLANS, movedOn, TARGET_POINTS, type AimTarget } from "./aim-targets";
+import { AIM_PLANS, movedOn, TARGET_POINTS, TargetGate, type AimTarget } from "./aim-targets";
 
 /** A phone lying screen up with its top edge pointing at the given compass heading and elevation. */
 const phone = (headingDeg: number, upDeg: number) => pointing(quatFromDeviceEuler(-headingDeg, upDeg, 0));
@@ -70,5 +70,21 @@ describe("moving on to the next target", () => {
     expect(movedOn(phone(10, 0), null)).toBe(true);
     expect(movedOn(phone(10.5, 0.5), phone(10, 0))).toBe(false);
     expect(movedOn(phone(16, 4), phone(10, 0))).toBe(true);
+  });
+
+  it("keeps a later target shut while the phone still points at the last one", () => {
+    const gate = new TargetGate(phone(10, 0));
+    expect(gate.open(phone(10.5, 0))).toBe(false);
+    expect(gate.open(phone(-10, 5))).toBe(true);
+  });
+
+  it("opens the first target only once the phone has moved from how the page found it", () => {
+    const gate = new TargetGate(null);
+    // Lying still where the page found it, even pointing straight at the middle, takes nothing.
+    expect(gate.open(phone(0, 0))).toBe(false);
+    expect(gate.open(phone(0.5, 0.5))).toBe(false);
+    expect(gate.open(phone(8, 6))).toBe(true);
+    // Back where it started is fine once it has moved.
+    expect(gate.open(phone(0, 0))).toBe(true);
   });
 });

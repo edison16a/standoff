@@ -42,3 +42,28 @@ export const MOVE_TO_NEXT = (2.5 * Math.PI) / 180;
 export function movedOn(reading: Pointing, last: Pointing | null): boolean {
   return !last || pointingDistance(reading, last) >= MOVE_TO_NEXT;
 }
+
+/**
+ * Whether a target may fill yet. A later target waits until the phone
+ * has turned away from the last one taken. The first waits until the
+ * phone has moved at all from how it was held when the page opened, so a
+ * phone lying still while the player reads is never taken as pointing at
+ * the middle. Once it has moved, pointing back there is fine.
+ */
+export class TargetGate {
+  private opening: Pointing | null = null;
+  private moved: boolean;
+
+  constructor(private readonly after: Pointing | null) {
+    this.moved = after !== null;
+  }
+
+  open(reading: Pointing): boolean {
+    if (!this.moved) {
+      this.opening ??= reading;
+      this.moved = movedOn(reading, this.opening);
+      if (!this.moved) return false;
+    }
+    return movedOn(reading, this.after);
+  }
+}
