@@ -1,11 +1,11 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 
-/** A looping hiss through a filter, for the jetpack's roar and the board's hum. */
+/** A looping hiss through a filter, for the jetpack's roar, the board's hum and the trains' rumble. */
 export class Drone {
   private readonly gain: GainNode;
   private readonly source: AudioBufferSourceNode;
 
-  constructor(engine: AudioEngine, frequency: number, pan: number) {
+  constructor(engine: AudioEngine, frequency: number, pan: number, q = 0.8) {
     const ctx = engine.ctx;
     this.source = ctx.createBufferSource();
     this.source.buffer = engine.noiseBuffer();
@@ -13,7 +13,7 @@ export class Drone {
     const filter = ctx.createBiquadFilter();
     filter.type = "bandpass";
     filter.frequency.value = frequency;
-    filter.Q.value = 0.8;
+    filter.Q.value = q;
     this.gain = ctx.createGain();
     this.gain.gain.value = 0;
     const panner = ctx.createStereoPanner();

@@ -191,7 +191,7 @@ export class SurfSession {
     this.setRound(new Round(Math.floor(Math.random() * 1e9), { headStart }));
     this.countdown = new Countdown(COUNT_S);
     this.sound.play(null);
-    this.sound.sfx.countdown(false);
+    this.sound.count(COUNT_S);
     store.setState({ phase: "countdown", countdown: COUNT_S, result: null, jumpToReplay: false });
   }
 
@@ -209,7 +209,7 @@ export class SurfSession {
   private tickCountdown(dt: number): void {
     const count = this.countdown.tick(dt);
     if (count === null) return;
-    this.sound.sfx.countdown(count === 0);
+    this.sound.count(count);
     if (count > 0) {
       store.setState({ countdown: count });
       return;
