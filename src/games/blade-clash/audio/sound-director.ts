@@ -1,28 +1,24 @@
-import { CHARACTERS, type CharacterId } from "@/games/blade-clash/characters";
+import type { CharacterId } from "@/games/blade-clash/characters";
 import type { GameEvent } from "@/games/blade-clash/engine/events";
 import type { StageFrame } from "@/games/blade-clash/engine/frames";
-import { SLOTS, type PerSlot, type Slot } from "@/games/blade-clash/players";
+import { SLOTS, type PerSlot } from "@/games/blade-clash/players";
 import type { MatchPhase } from "@/games/blade-clash/protocol";
 import type { Tuning } from "@/games/blade-clash/tuning";
 import type { AudioEngine } from "../../../platform/audio/audio-engine";
-import { Announcer } from "./announcer";
 import { Crowd } from "./crowd";
 import { FrameSounds } from "./frame-sounds";
 import { Music } from "./music";
 import { Sfx } from "./sfx";
 
-/** A clash this strong or more is a big one: the crowd gasps and the announcer says so. */
+/** A clash this strong or more is a big one: the crowd gasps. */
 const BIG_CLASH = 0.65;
-/** The announcer calls a big clash at most this often. */
-const CLASH_CALL_GAP_MS = 6000;
-const CLASH_CALLS = ["What a clash!", "Steel on steel!", "Blocked!", "Huge clash!"];
 
 /**
  * Decides what the duel sounds like. It listens to the same event stream
  * as the renderer, so every whoosh, clang and hit lands on the frame its
  * picture does, and reads every frame for the sounds that follow the
- * fighters: the energy blade's hum and the armour on each step. The
- * announcer calls the start, the big clashes and the winner.
+ * fighters: the energy blade's hum and the armour on each step. There is
+ * no spoken voice on purpose: the music and the hall carry the mood.
  *
  * Cheers are rationed on purpose. Ordinary hits get a thump and
  * applause. Only a big clash or the final hit gets a cheer, and never
@@ -32,29 +28,19 @@ export class SoundDirector {
   readonly sfx: Sfx;
   private readonly crowd: Crowd;
   private readonly music: Music;
-  private readonly announcer: Announcer;
   private readonly frames: FrameSounds;
   private readonly characters: PerSlot<CharacterId | null> = { 1: null, 2: null };
   private lastCheerAt = -Infinity;
-  private lastClashCallAt = -Infinity;
-  private clashCall = 0;
   private afterFanfare: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private readonly engine: AudioEngine,
     private readonly tuning: () => Tuning,
-    /** What each player is called, so the announcer can crown the winner by name. */
-    private readonly name: (slot: Slot) => string = (slot) => `Player ${slot}`,
   ) {
     this.sfx = new Sfx(engine);
     this.crowd = new Crowd(engine);
     this.music = new Music(engine);
     this.frames = new FrameSounds(engine, this.sfx);
-    // The arena hushes a little while the announcer speaks.
-    this.announcer = new Announcer(() => {
-      this.engine.duck("music", 0.6, 0.9);
-      this.engine.duck("crowd", 0.6, 0.9);
-    });
     this.applyLevels();
   }
 
@@ -82,7 +68,6 @@ export class SoundDirector {
         this.music.play("match");
         this.crowd.startMurmur();
         this.engine.holdDuck("music", 1);
-        this.announcer.say(this.matchup());
         break;
       case "paused":
         this.engine.holdDuck("music", 0.35);
@@ -107,7 +92,6 @@ export class SoundDirector {
         break;
       case "fight":
         this.sfx.gong();
-        this.announcer.say("Fight!", 1.1);
         break;
       case "swing": {
         const character = this.characters[event.slot];
@@ -133,9 +117,6 @@ export class SoundDirector {
         this.sfx.chime();
         this.cheer(1, true);
         break;
-      case "matchWon":
-        this.announcer.say(`${this.name(event.winner)} wins!`);
-        break;
     }
   }
 
@@ -143,24 +124,13 @@ export class SoundDirector {
     this.cancelFanfare();
     this.music.stop();
     this.crowd.stopMurmur();
-    this.announcer.stop();
     this.frames.stop();
     this.sfx.dispose();
-  }
-
-  /** The call as a fight starts: who faces whom, or just a call to arms. */
-  private matchup(): string {
-    const [a, b] = [this.characters[1], this.characters[2]];
-    return a && b ? `${CHARACTERS[a].name} against ${CHARACTERS[b].name}. Blades ready!` : "Blades ready!";
   }
 
   private bigClash(): void {
     this.crowd.gasp();
     this.cheer(0.5);
-    const now = performance.now();
-    if (now - this.lastClashCallAt < CLASH_CALL_GAP_MS) return;
-    this.lastClashCallAt = now;
-    this.announcer.say(CLASH_CALLS[this.clashCall++ % CLASH_CALLS.length]!, 1.15);
   }
 
   private cancelFanfare(): void {

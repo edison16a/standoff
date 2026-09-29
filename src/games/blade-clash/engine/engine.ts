@@ -8,7 +8,7 @@ import { Fighter } from "./fighter";
 import { FixedStepClock, TICK_MS } from "./fixed-step";
 import type { SceneFrame } from "./frames";
 import { Match } from "./match";
-import { LINE_HALF_LENGTH, MIN_GAP } from "./rules";
+import { LINE_HALF_LENGTH, MIN_GAP, POINT_RESET_MS } from "./rules";
 import type { SwordControl } from "./sword";
 
 export interface EngineListener {
@@ -35,6 +35,8 @@ export class Engine {
   private clock = 0;
   private readonly stepper = new FixedStepClock();
   private lastCountdown: number | null = null;
+  /** Whether the fighters went back to their marks yet in this point's pause. */
+  private backOnMarks = false;
 
   constructor(
     characters: PerSlot<CharacterId>,
@@ -84,6 +86,13 @@ export class Engine {
     for (let i = 0; i < steps; i++) this.tick();
   }
 
+  /** Test shortcut: `attacker` lands a clean cut right now, scored and staged like any other. */
+  landSlash(attacker: Slot): void {
+    if (this.match.phase !== "live") return;
+    this.combat.strike(this.fighters, this.match, attacker, this.clock).forEach((event) => this.emit(event));
+    if (this.match.phase !== "live") this.onEnter(this.match.phase);
+  }
+
   scene(): SceneFrame {
     return { t: this.clock, fighters: [this.fighters[1].frame(this.clock), this.fighters[2].frame(this.clock)] };
   }
@@ -101,6 +110,7 @@ export class Engine {
     this.keepApart();
     if (live) this.fight();
     if (phase === "countdown") this.announceCountdown();
+    if (phase === "point") this.returnAfterPoint();
     const entered = this.match.update(this.clock);
     if (entered) this.onEnter(entered);
   }
@@ -114,7 +124,8 @@ export class Engine {
     events.forEach((event) => this.emit(event));
     // A hit pushes the fighter back, which may need the line's ends again.
     this.keepApart();
-    if (this.match.phase === "finish") this.onEnter("finish");
+    // A slash that landed stopped play, for a point or for the win.
+    if (this.match.phase !== "live") this.onEnter(this.match.phase);
   }
 
   /** Nobody walks through the other or off the end of the line. */
@@ -132,6 +143,19 @@ export class Engine {
     right.x += overlap * (1 - share);
   }
 
+  /** Once the hit has played out, both fighters go back onto their marks, before play resumes. */
+  private returnAfterPoint(): void {
+    if (this.backOnMarks || this.match.elapsed(this.clock) < POINT_RESET_MS) return;
+    this.backOnMarks = true;
+    this.toMarks();
+    this.emit({ type: "reset", t: this.clock });
+  }
+
+  private toMarks(): void {
+    for (const slot of SLOTS) this.fighters[slot].reset();
+    this.combat.reset();
+  }
+
   private announceCountdown(): void {
     const remaining = this.match.countdown(this.clock);
     if (remaining !== null && remaining !== this.lastCountdown && remaining > 0) {
@@ -143,12 +167,10 @@ export class Engine {
   /** Side effects of entering a phase. */
   private onEnter(phase: MatchPhase): void {
     if (phase === "countdown") {
-      for (const slot of SLOTS) {
-        this.fighters[slot].reset();
-        this.fighters[slot].health = this.match.health[slot];
-      }
-      this.combat.reset();
+      this.toMarks();
       this.lastCountdown = null;
+    } else if (phase === "point") {
+      this.backOnMarks = false;
     } else if (phase === "live") {
       this.emit({ type: "fight", t: this.clock });
     } else if (phase === "matchOver") {

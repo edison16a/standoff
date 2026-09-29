@@ -1,6 +1,6 @@
 import { CHARACTERS } from "@/games/blade-clash/characters";
 import type { FighterFrame, StageFrame } from "@/games/blade-clash/engine/frames";
-import { MAX_HEALTH, START_X } from "@/games/blade-clash/engine/rules";
+import { START_X } from "@/games/blade-clash/engine/rules";
 import { GUARD, swordPose, type SwordControl } from "@/games/blade-clash/engine/sword";
 import { SLOTS, type PerSlot } from "@/games/blade-clash/players";
 import type { SeatState } from "./lobby";
@@ -25,7 +25,6 @@ export function lobbyScene(seats: PerSlot<SeatState>, holds: PerSlot<SwordContro
       x,
       facing,
       speed: 0,
-      health: MAX_HEALTH,
       action: "idle",
       actionMs: 0,
       control,

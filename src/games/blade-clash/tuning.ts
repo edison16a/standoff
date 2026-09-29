@@ -10,8 +10,6 @@
 export interface Tuning {
   /** How fast (m/s) the part of the blade that touches must move to count as a hit. */
   hitSpeed: number;
-  /** After landing a hit, a blade cannot land another for this long. */
-  hitCooldownMs: number;
   /** How fast (m/s) two blades must meet, one against the other, to clash. */
   clashSpeed: number;
   /** How far (degrees) a clash throws both blades. */
@@ -30,7 +28,6 @@ export interface Tuning {
 
 export const DEFAULT_TUNING: Tuning = {
   hitSpeed: 3,
-  hitCooldownMs: 450,
   clashSpeed: 1.6,
   knockAngle: 38,
   knockOutMs: 150,
@@ -62,7 +59,6 @@ export interface TuningField {
  */
 export const TUNING_FIELDS: readonly TuningField[] = [
   { key: "hitSpeed", label: "Hit speed", group: "Swords", min: 1, max: 10, step: 0.1, unit: "m/s" },
-  { key: "hitCooldownMs", label: "Hit cooldown", group: "Swords", min: 150, max: 1500, step: 10, unit: "ms" },
   { key: "clashSpeed", label: "Clash speed", group: "Swords", min: 0.5, max: 8, step: 0.1, unit: "m/s" },
   { key: "knockAngle", label: "Clash knockback", group: "Swords", min: 5, max: 90, step: 1, unit: "°" },
   { key: "knockOutMs", label: "Knockback time", group: "Swords", min: 50, max: 500, step: 10, unit: "ms" },
