@@ -24,7 +24,8 @@ const colourOf = (host: PhoneState) => TEAMS[host.team ?? 0].color;
  * The QB: the same move stick as everyone under the left thumb, the
  * throw stick under the right, or on a run call a big Pass button for
  * the pitch. Before the snap the middle is one big Hike button with the
- * seconds left; after it, Juke.
+ * seconds left; after it, Juke and Run. Run hands him the runner's pad
+ * for the rest of the play (engine/qb-run.ts).
  */
 export function QbPad({ host }: { host: PhoneState }) {
   const phone = usePhone();
@@ -44,6 +45,7 @@ export function QbPad({ host }: { host: PhoneState }) {
         ) : (
           <div className="fb-pad__row" key="juke">
             <Hold button="juke" icon="juke" text="Juke" colour="#a855f7" disabled={host.phase !== "live" || !host.jukeReady || host.grounded} />
+            <Hold button="run" icon="run" text="Run" colour="#0d9488" disabled={!host.canRun || host.grounded} />
           </div>
         )}
       </div>
@@ -58,7 +60,7 @@ export function QbPad({ host }: { host: PhoneState }) {
   );
 }
 
-/** A runner, or the QB once past the line: the run stick, Dive and Juke. */
+/** A runner, or the QB once he pressed Run or crossed the line: the run stick, Dive and Juke. */
 export function RunnerPad({ host }: { host: PhoneState }) {
   const phone = usePhone();
   const live = host.phase === "live" && !host.grounded;

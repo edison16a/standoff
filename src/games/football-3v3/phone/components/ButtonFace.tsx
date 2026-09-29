@@ -74,6 +74,16 @@ function Kick() {
   );
 }
 
+/** A runner mid stride: the QB tucks it and goes. */
+function Run() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="15" cy="4.2" r="2.2" fill="currentColor" />
+      <path d="M13.5 8.5 10 13l3.5 2.5-1.5 5.5M13.5 8.5l3 3.5 3.5-.5M10 13l-4.5 1M13.5 8.5 9 8l-2.5 2.5" {...stroke} />
+    </svg>
+  );
+}
+
 /** Fast forward. */
 function Skip() {
   return (
@@ -83,7 +93,7 @@ function Skip() {
   );
 }
 
-const ICONS = { ball: Ball, juke: Juke, dive: Dive, rush: Rush, tackle: Tackle, guard: Guard, kick: Kick, skip: Skip } as const;
+const ICONS = { ball: Ball, juke: Juke, dive: Dive, rush: Rush, tackle: Tackle, guard: Guard, kick: Kick, run: Run, skip: Skip } as const;
 export type FaceIcon = keyof typeof ICONS;
 
 export function ButtonFace({ icon, text }: { icon: FaceIcon; text: string }) {
