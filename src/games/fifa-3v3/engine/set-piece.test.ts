@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { MatchEvent } from "./events";
 import { createMatch, stepMatch, type Entrant } from "./match";
 import { setupSetPiece } from "./set-piece";
-import { freeKick, kickPath, SET_KICK, spotBall } from "./set-piece-kick";
+import { aimSpot, freeKick, kickPath, SET_KICK, spotBall } from "./set-piece-kick";
 import { fly } from "./shot-aim";
 import { MATCH, PITCH, STEP } from "./tuning";
 import type { Command, MatchState, SetPiece } from "./types";
@@ -62,13 +62,47 @@ describe("free kick", () => {
     expect(events.some((e) => e.type === "wallJump")).toBe(true);
   });
 
-  it("bends the way the curve is set", () => {
+  it("bends the way the curve is set, and still ends at the aimed spot", () => {
     const state = setPiece("free", { x: PITCH.halfLength - 18, z: 0 });
     const sp = state.setPiece!;
-    const cross = (curve: number) => fly(spotBall(sp), freeKick({ ...sp, curve }, SET_KICK.nominal), PITCH.halfLength)!.z;
-    // Red attacks toward +x, so the taker's right is +z.
-    expect(cross(1)).toBeGreaterThan(cross(0) + 1);
-    expect(cross(-1)).toBeLessThan(cross(0) - 1);
+    sp.aimX = 0.1;
+    const aim = aimSpot(sp);
+    const cross = (curve: number) => fly(spotBall(sp), freeKick({ ...sp, curve }, SET_KICK.nominal), PITCH.halfLength)!;
+    // Halfway there, a kick bent to the right (Red attacks +x, so +z) is still out on the left.
+    const middle = (curve: number) => {
+      const path = kickPath({ ...sp, curve });
+      return path[Math.floor(path.length / 2)]!.z;
+    };
+    for (const curve of [-1, -0.5, 0, 0.5, 1]) {
+      expect(cross(curve).z).toBeCloseTo(aim.z, 1);
+      expect(cross(curve).y).toBeCloseTo(SET_KICK.crossHeight, 1);
+    }
+    expect(middle(1)).toBeLessThan(middle(0) - 0.8);
+    expect(middle(-1)).toBeGreaterThan(middle(0) + 0.8);
+    expect(middle(0.5)).toBeLessThan(middle(0) - 0.3);
+    expect(middle(0.5)).toBeGreaterThan(middle(1));
+  });
+
+  it("lands full curve on the aim from close in and from far out, at every power", () => {
+    for (const [back, z] of [[9, 4], [18, -3], [28, 6]] as const) {
+      const sp = setPiece("free", { x: PITCH.halfLength - back, z }).setPiece!;
+      for (const aimX of [-0.3, 0, 0.3])
+        for (const curve of [-1, 1])
+          for (const power of [0.3, SET_KICK.nominal, 0.75]) {
+            const aimed = { ...sp, aimX, curve };
+            const hit = fly(spotBall(sp), freeKick(aimed, power), PITCH.halfLength)!;
+            expect(Math.abs(hit.z - aimSpot(aimed).z)).toBeLessThan(0.06);
+          }
+    }
+  });
+
+  it("aims where the straight line meets the goal line, and never off along it", () => {
+    const state = setPiece("free", { x: PITCH.halfLength - 18, z: 0 });
+    const sp = state.setPiece!;
+    expect(aimSpot({ ...sp, aimX: 0 }).z).toBeCloseTo(0, 5);
+    expect(aimSpot({ ...sp, aimX: 0.2 }).z).toBeCloseTo(18 * Math.tan(0.2), 3);
+    const wide = setPiece("free", { x: PITCH.halfLength - 1, z: 9 }).setPiece!;
+    expect(Math.abs(aimSpot({ ...wide, aimX: -0.5 }).z)).toBeLessThanOrEqual(PITCH.goalHalfWidth + SET_KICK.aimWide);
   });
 
   it("dips under the bar at the nominal power and climbs with more", () => {

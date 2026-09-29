@@ -35,7 +35,7 @@ export function SetPieceCoach({ sp }: { sp: NonNullable<PhoneState["setPiece"]> 
   }
   const tips = {
     aim: sp.kind === "penalty" ? "Stick moves the target. Tap Set." : "Stick left or right aims the line. Tap Set.",
-    curve: "Stick left or right bends the line. Tap Set.",
+    curve: "Stick bends the path. It still ends on your aim. Tap Set.",
     power: "Hold Kick for power. Let go to shoot.",
     struck: "Here it goes.",
   } as const;
