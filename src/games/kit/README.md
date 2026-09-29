@@ -274,7 +274,7 @@ confetti.update(dt);                                                   // every 
 confetti.clear();
 ```
 
-`size` is the side of a square piece. Pieces that lie on the floor longer than `physics.restS` are reused, so rain can run for as long as the scene is up. The physics alone is `ConfettiSim`, with tests.
+`size` is the side of a square piece. Pieces that lie on the floor longer than `physics.restS` are reused, so rain can run for as long as the scene is up. `foil` is the share of metal foil pieces, spread evenly through all of them (`spreadFoil`), so a rain that follows the cannons is as colourful as they were. The physics alone is `ConfettiSim`, with tests.
 
 ### Spotlights
 
@@ -334,6 +334,12 @@ room.onFrame((dt, time) => animate(dt, time));
 room.start();
 room.dispose();   // frees the canvas and everything in the scene. Take out shared geometry first.
 ```
+
+`room.advance(seconds)` runs the scene forward without drawing, to open part way through. Software rendering in a headless browser runs far below real time, so in development every open room is also listed on `window.__victoryRooms`; a test driver can advance them all and then take its screenshot.
+
+### Leave room for the names
+
+The names and the subtitle take about the top third of the screen. Stand the camera back until the winner's highest point, a raised trophy included, stays under the subtitle all through the shot, hop and bob included. Put a game's own tables and buttons in a bottom corner panel rather than along the bottom middle, so the winner has the middle to themselves. Boxing and Brawl Battle do this; Magic Kart's podium is wide, so its places run along the bottom under it.
 
 ### Names over the scene
 
