@@ -72,9 +72,9 @@ describe("open play", () => {
     const shot = inPlay();
     clearAround(shot);
     shot.ball.owner = null;
-    shot.ball.pos = { x: HL - 4, y: 2.5, z: 0.5 };
+    shot.ball.pos = { x: HL - 4, y: PITCH.goalHeight + 0.3, z: 0.5 };
     shot.ball.vel = { x: 18, y: 1, z: 0 };
-    shot.flight = { shooter: 0, team: 0, outcome: "over", t: 0, target: { x: HL, y: 3, z: 0.5 }, keeperX: HL - 1, power: 0.5, resolved: false };
+    shot.flight = { shooter: 0, team: 0, outcome: "over", t: 0, target: { x: HL, y: PITCH.goalHeight + 0.6, z: 0.5 }, keeperX: HL - 1, power: 0.5, resolved: false };
     const shotEvents = run(shot, 0.5);
     expect(shotEvents).toContainEqual({ type: "miss", team: 0, kind: "over" });
     expect(shotEvents).toContainEqual({ type: "out", team: 1 });
@@ -82,7 +82,7 @@ describe("open play", () => {
     const clearance = inPlay();
     clearAround(clearance);
     clearance.ball.owner = null;
-    clearance.ball.pos = { x: HL - 4, y: 2.5, z: 7 };
+    clearance.ball.pos = { x: HL - 4, y: 2.5, z: PITCH.goalHalfWidth + 3 };
     clearance.ball.vel = { x: 18, y: 1, z: 0 };
     const events = run(clearance, 0.5);
     expect(events).toContainEqual({ type: "out", team: 1 });
