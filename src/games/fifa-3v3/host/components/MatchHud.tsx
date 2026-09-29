@@ -42,10 +42,11 @@ function MomentTag() {
   );
 }
 
-/** Along the bottom: each phone's player, their star and side, and who has the ball. */
+/** Along the bottom: each phone's player, their star and side, and who has the ball. Gone at full time, where the results card lists everyone. */
 function PlayerStrip() {
   const roster = useFifaStore((s) => s.roster);
-  if (roster.length === 0) return null;
+  const over = useFifaStore((s) => s.phase === "fulltime");
+  if (roster.length === 0 || over) return null;
   return (
     <ul className="fifa-strip">
       {roster.map((p) => (
