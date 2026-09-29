@@ -13,13 +13,14 @@ const METHOD: Record<string, string> = {
   Draw: "",
 };
 
-const ROWS: readonly [string, string][] = [
-  ["landed", "Landed"],
-  ["thrown", "Thrown"],
-  ["blocked", "Blocks"],
-  ["dodged", "Dodges"],
-  ["counters", "Counters"],
-  ["knockdowns", "Knockdowns"],
+/** Each boxer's numbers. Minor rows drop out on a short screen, so the panel never covers the champion. */
+const ROWS: readonly (readonly [key: string, label: string, minor: boolean])[] = [
+  ["landed", "Landed", false],
+  ["thrown", "Thrown", true],
+  ["blocked", "Blocks", true],
+  ["dodged", "Dodges", true],
+  ["counters", "Counters", true],
+  ["knockdowns", "Knockdowns", false],
 ];
 
 /**
@@ -62,8 +63,8 @@ export function Results() {
               <td>{result.totals[0]}</td>
               <td>{result.totals[1]}</td>
             </tr>
-            {ROWS.map(([key, label]) => (
-              <tr key={key}>
+            {ROWS.map(([key, label, minor]) => (
+              <tr key={key} className={minor ? "bx-results__minor" : undefined}>
                 <th scope="row">{label}</th>
                 <td>{result.stats[0][key]}</td>
                 <td>{result.stats[1][key]}</td>
