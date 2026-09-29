@@ -62,7 +62,7 @@ export const KINDS: Record<ZombieKind, KindSpec> = {
     ...boss,
     name: "The Behemoth",
     speed: 0.48,
-    reach: 3.6,
+    reach: 4.1,
     damage: 18,
     attackEvery: 3,
     knockback: 1.2,
