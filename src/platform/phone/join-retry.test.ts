@@ -4,8 +4,8 @@ import { joinRetryDelay } from "./join-retry";
 const middle = () => 0.5;
 
 describe("joinRetryDelay", () => {
-  it("gives a typed code two quick tries, then stops", () => {
-    expect([0, 1, 2].map((n) => joinRetryDelay("not-found", n, false, middle))).toEqual([400, 1200, null]);
+  it("gives a typed code a few quick tries, then stops", () => {
+    expect([0, 1, 2, 3, 4].map((n) => joinRetryDelay("not-found", n, false, middle))).toEqual([400, 800, 1600, 2400, null]);
   });
 
   it("gives a seated phone about nine seconds to get back in", () => {

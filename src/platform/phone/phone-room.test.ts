@@ -80,21 +80,21 @@ afterEach(() => {
 });
 
 describe("PhoneRoom", () => {
-  it("tries a missing room twice more, spaced out, then stops for good", async () => {
+  it("tries a missing room a few more times, spaced out, then stops for good", async () => {
     vi.useFakeTimers();
     const room = new PhoneRoom("ABCD");
     await room.join(null);
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 5; i++) {
       last().open();
       last().receive({ type: "room:error", reason: "not-found" });
       // Never an instant redial: the next socket waits its turn.
       expect(FakeSocket.all).toHaveLength(i + 1);
-      vi.advanceTimersByTime(2000);
+      vi.advanceTimersByTime(4000);
     }
-    expect(FakeSocket.all).toHaveLength(3);
+    expect(FakeSocket.all).toHaveLength(5);
     expect(room.store.getState()).toMatchObject({ stage: "error", error: "not-found" });
     vi.advanceTimersByTime(60_000);
-    expect(FakeSocket.all).toHaveLength(3);
+    expect(FakeSocket.all).toHaveLength(5);
     expect(last().readyState).toBe(3);
   });
 

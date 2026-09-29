@@ -6,8 +6,11 @@
  * rather than retrying a dead room for ever.
  */
 
-/** A first join to a code nobody has: a typo shows quickly. */
-const FIRST_NOT_FOUND = [400, 1200];
+/**
+ * A first join to a code nobody has. Each try may reach another server
+ * instance, so a few are worth it, and a typo still shows in about 5 s.
+ */
+const FIRST_NOT_FOUND = [400, 800, 1600, 2400];
 /** The server failed part way, which usually passes. */
 const UNAVAILABLE = [500, 1000, 2000, 4000, 4000];
 /** A phone that was seated in this room: about 9 s, then the room is lost. */
