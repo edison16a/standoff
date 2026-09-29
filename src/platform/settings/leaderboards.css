@@ -1,0 +1,29 @@
+/* The Clear leaderboards confirm: a line of warning, then Clear and Cancel side by side. */
+.settings__confirm {
+  display: grid;
+  gap: 10px;
+}
+
+.settings__confirm-text {
+  font-size: 14px;
+}
+
+.settings__confirm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.settings__confirm-actions .btn {
+  flex: 1 1 0;
+}
+
+.settings__danger {
+  border-color: #d93a3a;
+  background: #d93a3a;
+  color: #ffffff;
+}
+
+.settings__danger:hover {
+  border-color: #b82e2e;
+  background: #b82e2e;
+}
