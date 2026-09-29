@@ -9,8 +9,8 @@ import { vary } from "./vary";
 /** A metallic clang and a grunt as the runner glances off a train. */
 export function stumble(engine: AudioEngine, out: AudioNode, at: number): void {
   const p = vary(0.05);
-  noise(engine, out, at, { filter: "highpass", frequency: 1800, decay: 0.15, peak: 0.28 });
-  tone(engine, out, at, { frequency: 150 * p, glideTo: 60, decay: 0.15, peak: 0.25 });
+  noise(engine, out, at, { filter: "bandpass", frequency: 2400, q: 0.8, decay: 0.15, peak: 0.2 });
+  tone(engine, out, at, { frequency: 150 * p, glideTo: 60, decay: 0.15, peak: 0.3 });
   for (const f of [640, 1010, 1470]) tone(engine, out, at, { type: "triangle", frequency: f * p, decay: 0.4, peak: 0.055 });
   tone(engine, out, at + 0.04, { type: "sawtooth", frequency: 190 * p, glideTo: 120, decay: 0.16, peak: 0.05 });
 }
@@ -36,17 +36,24 @@ export function saved(engine: AudioEngine, out: AudioNode, at: number): void {
   tone(engine, out, at, { frequency: 200, glideTo: 70, decay: 0.3, peak: 0.3 });
 }
 
-/** A chord on a train horn, dropping a little as it comes on, through a soft low pass. */
+/**
+ * A train horn: two honks on a chord, the second held, dropping a little
+ * as the train rushes on. A soft low pass keeps the reeds from buzzing.
+ */
 export function horn(engine: AudioEngine, out: AudioNode, at: number): void {
   const filter = engine.ctx.createBiquadFilter();
   filter.type = "lowpass";
-  filter.frequency.value = 1800;
+  filter.frequency.value = 1300;
+  filter.Q.value = 0.8;
   filter.connect(out);
   const p = vary(0.02);
-  for (const f of [311, 370, 466]) {
-    tone(engine, filter, at, { type: "sawtooth", frequency: f * p, glideTo: f * p * 0.94, attack: 0.05, decay: 0.9, peak: 0.065 });
+  for (const [start, length] of [[0, 0.22], [0.3, 0.9]] as const) {
+    for (const f of [311, 370, 466]) {
+      tone(engine, filter, at + start, { type: "sawtooth", frequency: f * p, glideTo: f * p * 0.95, attack: 0.04, decay: length, peak: 0.04 });
+      tone(engine, filter, at + start, { type: "triangle", frequency: f * p, glideTo: f * p * 0.95, attack: 0.04, decay: length, peak: 0.06 });
+    }
   }
-  setTimeout(() => filter.disconnect(), (at - engine.now + 1.5) * 1000);
+  setTimeout(() => filter.disconnect(), (at - engine.now + 2) * 1000);
 }
 
 /** The rush of air from a train going by, with the clack of its wheels. */
