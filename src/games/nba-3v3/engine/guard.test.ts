@@ -86,6 +86,23 @@ describe("guard", () => {
     expect(guardStatus(m, d)).toBe("on");
   });
 
+  it("turns a Shoot held on offence into Guard when the ball is turned over", () => {
+    const m = setup();
+    const a = m.athletes[1]!;
+    m.press(1, "shoot");
+    expect(guardStatus(m, a)).toBe("off");
+    m.offence = 1;
+    expect(guardStatus(m, a)).not.toBe("off");
+  });
+
+  it("picks its man again on a fresh hold", () => {
+    const m = setup();
+    const d = m.athletes[3]!;
+    d.guardMan = 2;
+    m.press(3, "shoot");
+    expect(guardTarget(m, d)?.id).toBe(0);
+  });
+
   it("lags behind a dribble move, which the stick has to make up", () => {
     const lagAfter = (move: boolean): number => {
       const m = setup();

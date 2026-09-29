@@ -123,6 +123,8 @@ export class Match {
   setGuard(id: number, on: boolean): void {
     const a = this.athletes[id];
     if (!a) return;
+    // A fresh hold picks its man again, so a lock never outlives the play it was made on.
+    if (on && !a.guard) a.guardMan = null;
     a.guard = on;
     if (on) return;
     a.guardAim = null;
@@ -134,8 +136,10 @@ export class Match {
     if (!a) return;
     if (this.phase === "freeThrow" && button === "shoot") return pressFreeThrow(this, a);
     if (this.phase !== "live") return;
-    // On defence Shoot is Guard, held for as long as the thumb stays down.
-    if (button === "shoot" && this.defending(a)) return this.setGuard(id, true);
+    // On defence Shoot is Guard, held for as long as the thumb stays down. It is armed
+    // on offence too, so a turnover mid hold turns the held button straight into Guard.
+    if (button === "shoot") this.setGuard(id, true);
+    if (button === "shoot" && this.defending(a)) return;
     if (button === "shoot") pressShoot(this, a);
     else if (button === "pass") pressPass(this, a, aim);
     else pressDefend(this, a, aim);
