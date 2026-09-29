@@ -1,40 +1,40 @@
 import * as THREE from "three";
 import { tunnelTileTexture } from "../art/scenery-art";
 import { MeshBuilder } from "../mesh-builder";
+import { prefab, repeated, textured } from "../prefabs";
 import { brickTexture } from "../textures";
-import type { Theme } from "../world/themes";
+import { toon } from "../toon";
 import { TUNNEL_TOP, VAULT_HALF, VAULT_SPRING } from "./overhead";
-import { cached, CHUNK, glow, repeated, textured } from "./track";
+import { CHUNK, glow, lampGlow } from "./track";
 
-/** One chunk of tunnel: dark tiled walls, strips of neon along them and down the crown, a vault over all three tracks. */
-export function tunnel(theme: Theme): THREE.Group {
-  const [strip, crown] = theme.neon;
-  return cached(`tunnel-${strip}-${crown}`, () => {
+const LAMP = 0xffd98a;
+
+/** One chunk of tunnel: tiled walls with a coloured band, cables, warm lamps in cages and a vault over all three tracks. */
+export function tunnel(): THREE.Group {
+  return prefab("tunnel", () => {
     const b = new MeshBuilder();
-    const wall = textured("tunnel-wall", () => new THREE.MeshLambertMaterial({ map: repeated(tunnelTileTexture(), "tunnel-wall", 6, 1), color: 0x6a6480 }));
+    const wall = textured("tunnel-wall", () => toon({ map: repeated(tunnelTileTexture(), "tunnel-wall", 6, 1), side: THREE.DoubleSide }));
+    const vault = textured("tunnel-vault", () => toon({ color: 0x8a8378, side: THREE.DoubleSide }));
     for (const side of [-1, 1]) {
-      b.panel(CHUNK, 7, wall, [side * 5.4, 3.5, -CHUNK / 2], [0, -side * Math.PI / 2, 0]);
-      b.box(0.5, 0.6, CHUNK, { color: 0x1f1d2a, finish: "matte" }, [side * 5.1, 0.3, -CHUNK / 2]);
-      // Two long tubes of light down each wall: what lights the way, and what a runner steers by.
-      b.box(0.08, 0.08, CHUNK, glow(strip), [side * 5.3, 1.1, -CHUNK / 2]);
-      b.box(0.08, 0.08, CHUNK, glow(crown), [side * 5.3, 4.2, -CHUNK / 2]);
-    }
-    b.add(vaultGeometry(), { color: 0x3a3548, finish: "matte" });
-    for (let z = -2; z > -CHUNK; z -= 6) {
-      b.box(10.8, 0.25, 0.4, { color: 0x25222f, finish: "satin" }, [0, TUNNEL_TOP - 0.3, z]);
-      b.box(10.2, 0.05, 0.05, glow(z % 12 === -2 ? strip : crown), [0, TUNNEL_TOP - 0.45, z + 0.2]);
-    }
-    const inside = b.build("tunnel");
-    // Backfaces show from inside, so the vault is drawn double sided.
-    inside.traverse((node) => {
-      const mesh = node as THREE.Mesh;
-      if (mesh.isMesh && !Array.isArray(mesh.material) && (mesh.material as THREE.MeshLambertMaterial).vertexColors && !(mesh.material instanceof THREE.MeshBasicMaterial)) {
-        const own = (mesh.material as THREE.MeshLambertMaterial).clone();
-        own.side = THREE.DoubleSide;
-        own.userData.shared = true;
-        mesh.material = own;
+      b.panel(CHUNK, 7, wall, [side * 5.4, 3.5, -CHUNK / 2], [0, (-side * Math.PI) / 2, 0]);
+      b.box(0.5, 0.6, CHUNK, { color: 0x9a948a, finish: "matte" }, [side * 5.1, 0.3, -CHUNK / 2]);
+      // A bundle of cables along each wall, and lamps in cages every few metres.
+      for (const y of [4.6, 4.8, 5.0]) b.tube(0.05, CHUNK, { color: y === 4.8 ? 0x3b3f4a : 0x23252c, finish: "satin" }, [side * 5.3, y, -CHUNK / 2], 6);
+      for (let z = -3; z > -CHUNK; z -= 7.5) {
+        b.box(0.2, 0.5, 0.7, { color: 0x3b3f4a, finish: "metal" }, [side * 5.28, 3.6, z], undefined, 0.05);
+        b.box(0.1, 0.34, 0.54, glow(LAMP), [side * 5.2, 3.6, z]);
       }
-    });
+    }
+    b.add(vaultGeometry(), vault);
+    for (let z = -2; z > -CHUNK; z -= 6) b.box(10.8, 0.3, 0.45, { color: 0x6e685f, finish: "matte" }, [0, TUNNEL_TOP - 0.3, z]);
+    const inside = b.build("tunnel");
+    for (let z = -3; z > -CHUNK; z -= 7.5) {
+      for (const side of [-1, 1]) {
+        const halo = lampGlow(2.4, LAMP, 0.45);
+        halo.position.set(side * 5.05, 3.6, z);
+        inside.add(halo);
+      }
+    }
     return inside;
   });
 }
@@ -55,12 +55,11 @@ export function vaultGeometry(): THREE.BufferGeometry {
   return vault.applyMatrix4(place);
 }
 
-/** The mouth of a tunnel, a dark brick portal facing the runner at z = 0, its arch traced in neon. */
-export function portal(theme: Theme): THREE.Group {
-  const [edge, sign] = theme.neon;
-  return cached(`portal-${edge}-${sign}`, () => {
+/** The mouth of a tunnel: a red brick portal facing the runner at z = 0, a stone arch round the opening and a name plate. */
+export function portal(): THREE.Group {
+  return prefab("portal", () => {
     const b = new MeshBuilder();
-    const brick = textured("portal-brick", () => new THREE.MeshLambertMaterial({ map: repeated(brickTexture(), "portal-brick", 5, 3), color: 0x5a5068 }));
+    const brick = textured("portal-brick", () => toon({ map: repeated(brickTexture(), "portal-brick", 5, 3) }));
     const shape = new THREE.Shape();
     shape.moveTo(-16, 0);
     shape.lineTo(16, 0);
@@ -78,12 +77,14 @@ export function portal(theme: Theme): THREE.Group {
     const uv = face.attributes.uv as THREE.BufferAttribute;
     for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) / 32, uv.getY(i) / 13);
     b.add(face, brick, [0, 0, -1.2]);
-    b.box(33, 0.8, 1.8, { color: 0x2a2636, finish: "matte" }, [0, 13, -0.6]);
-    // The arch and its jambs, outlined in light.
-    b.add(new THREE.TorusGeometry(5.7, 0.1, 8, 40, Math.PI), glow(edge), [0, 7, 0.05]);
-    for (const x of [-5.7, 5.7]) b.box(0.2, 7, 0.2, glow(edge), [x, 3.5, 0.05]);
-    b.box(3.4, 1.2, 0.3, glow(sign), [0, 11.2, 0.1]);
-    b.box(3.8, 1.5, 0.3, { color: 0x14121c, finish: "satin" }, [0, 11.2, -0.05]);
+    const stone = { color: 0xd8cfbf, finish: "matte" as const };
+    b.outline(0.05);
+    b.box(33, 0.8, 1.8, stone, [0, 13, -0.6]);
+    b.add(new THREE.TorusGeometry(5.75, 0.35, 8, 40, Math.PI), stone, [0, 7, 0.05]);
+    for (const x of [-5.75, 5.75]) b.box(0.7, 7, 0.5, stone, [x, 3.5, 0.05]);
+    b.box(4.4, 1.3, 0.3, { color: 0x1f6fd6, finish: "satin" }, [0, 11.2, 0.1], undefined, 0.1);
+    b.outline(0);
+    b.box(3.9, 0.9, 0.05, { color: 0xffffff, finish: "matte" }, [0, 11.2, 0.27]);
     return b.build("portal");
   });
 }

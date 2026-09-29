@@ -33,9 +33,7 @@ export interface Overhang {
 }
 
 /** A signal gantry's frame and signal heads, from their beam down. See gantry() in track.ts. */
-export const GANTRY = { depth: 0.4, low: 5.5, high: 7.1 };
-/** The contact wires, running a whole chunk over each track. See wires() in track.ts. */
-export const WIRES = { low: 5.85, high: 6.55 };
+export const GANTRY = { depth: 0.5, low: 5.3, high: 7.15 };
 
 /** Where a runner's head is, for the line from the camera to them. */
 export const headAbove = (y: number) => y + RUNNER.height;
