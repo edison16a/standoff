@@ -36,9 +36,9 @@ export function stepLoose(b: Body, dt: number, contacts: Contact[]): void {
   // Only near the hoop is there thin iron to skip through; out in the open two steps a frame are plenty.
   const p = b.pos;
   const near = p.y > 2 && Math.abs(p.x - RIM.x) < 1.6 && p.z < RIM.z + 1.6;
-  const n = near ? SUBSTEPS : 2;
-  const h = dt / n;
-  for (let i = 0; i < n; i++) substep(b, b.w, h, contacts);
+  const steps = near ? SUBSTEPS : 2;
+  const h = dt / steps;
+  for (let i = 0; i < steps; i++) substep(b, b.w, h, contacts);
 }
 
 function substep(b: Body, w: V3, h: number, contacts: Contact[]): void {

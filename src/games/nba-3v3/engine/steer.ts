@@ -14,7 +14,7 @@ export interface SteerResult {
 /**
  * Pushes on toward the speed the stick asks for with momentum. From a
  * standstill the first steps are explosive, then the push fades as top
- * speed nears, so full speed takes about half a second. Slowing and
+ * speed nears, so full speed takes most of a second. Slowing and
  * turning use the grip of the shoes, split into the part along the run
  * and the part across it, so a sprinter curves rather than snapping
  * round, and a hard cut plants the outside foot and bleeds speed first.
