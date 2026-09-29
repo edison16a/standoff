@@ -1,19 +1,18 @@
-import { looseness, missSpot } from "./accuracy";
-import { leadPass, pickTarget, solveLaunch, type Lead } from "./aim";
+import { leadPass, pickTarget } from "./aim";
 import { isDown, statsOf } from "./body";
 import { launch } from "./flight";
 import { jumpingDefender } from "./catching";
 import type { Match } from "./match";
 import { canPitch, releasePitch } from "./run-play";
-import { ON_THE_RUN, PASS } from "./tuning";
+import { PASS } from "./tuning";
 import type { Athlete } from "./types";
 import { dist2, len3, type V3 } from "./vec";
 
-/** Only the QB throws, once a play, from behind the line, with the ball in hand. */
+/** Only the QB throws, once a play, with the ball in hand, and never after he turned runner (qb-run.ts). */
 export function canThrow(m: Match, a: Athlete): boolean {
   const play = m.play;
   // A run call has no forward pass: the QB pitches to the back instead (run-play.ts).
-  if (m.phase !== "live" || !play || play.call === "run" || play.passed || play.crossed) return false;
+  if (m.phase !== "live" || !play || play.call === "run" || play.passed || play.qbRun) return false;
   return a.role === "qb" && a.team === m.offense && m.carrier()?.id === a.id && (a.action.kind === "none" || a.action.kind === "juke");
 }
 
@@ -55,13 +54,6 @@ function wobbleFor(m: Match, a: Athlete): number {
   return 0.025 + (10 - statsOf(a).arm) * 0.006 + pressure + Math.min(0.06, a.jukeHeat * 0.015);
 }
 
-/** A loose throw comes down off the lead spot in the same time. */
-function spray(m: Match, from: V3, lead: Lead, loose: number): Lead {
-  if (loose <= 0) return lead;
-  const spot = missSpot(lead.spot, from, loose, m.rng);
-  return { spot, time: lead.time, vel: solveLaunch(from, { x: spot.x, y: PASS.catchHeight, z: spot.z }, lead.time, "spiral", PASS.spin) };
-}
-
 /** Lets the ball go: leads the target, or the defender who has jumped the route. */
 function release(m: Match, a: Athlete, to: number): void {
   const play = m.play!;
@@ -69,20 +61,19 @@ function release(m: Match, a: Athlete, to: number): void {
   if (!target || m.carrier()?.id !== a.id) return;
   const from: V3 = { x: a.x + Math.sin(a.yaw) * 0.3, y: PASS.releaseHeight, z: a.z + Math.cos(a.yaw) * 0.3 };
   const arm = statsOf(a).arm;
-  // Measured at the release: set feet throw clean, a throw on the run sprays.
-  const loose = looseness(a);
-  let lead = spray(m, from, leadPass(from, target, { x: target.vx, z: target.vz }, arm), loose);
-  // A defender standing in front of where the ball comes down steps in and takes it. Loose throws are easier to read.
-  const jumper = jumpingDefender(m, a, from, lead.spot, target, 1 + loose * ON_THE_RUN.readWider);
+  // The QB's accuracy is the same on every throw, moving or not.
+  let lead = leadPass(from, target, { x: target.vx, z: target.vz }, arm);
+  // A defender standing in front of the receiver steps in and takes the ball.
+  const jumper = jumpingDefender(m, a, from, lead.spot, target);
   if (jumper) lead = leadPass(from, jumper, { x: jumper.vx, z: jumper.vz }, arm);
   const spin = PASS.spin * (0.85 + arm * 0.02);
   m.ball.state = "pass";
   m.ball.holder = null;
-  m.ball.flight = launch(from, lead.vel, "spiral", spin, wobbleFor(m, a) + loose * ON_THE_RUN.wobble);
+  m.ball.flight = launch(from, lead.vel, "spiral", spin, wobbleFor(m, a));
   const speed = len3(lead.vel);
   m.ball.pass = {
     from: a.id, to: target.id, interceptor: jumper?.id ?? null, spot: lead.spot, arrive: lead.time, t: 0,
-    speed, rps: spin / (Math.PI * 2), release: from, at: m.time, swiped: [], loose, pitch: false,
+    speed, rps: spin / (Math.PI * 2), release: from, at: m.time, swiped: [], pitch: false,
   };
   play.passed = true;
   a.stats.attempts++;

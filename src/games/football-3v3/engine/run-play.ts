@@ -39,10 +39,10 @@ export function sweepRoute(back: V2, qb: V2, sign: 1 | -1): V2[] {
   }));
 }
 
-/** The QB may pitch once, on a run call, from behind the line, with the ball and the back on his feet. */
+/** The QB may pitch once, on a run call, while still a passer, with the ball and the back on his feet. */
 export function canPitch(m: Match, a: Athlete): boolean {
   const play = m.play;
-  if (m.phase !== "live" || !play || play.call !== "run" || play.pitched || play.crossed || play.back === null) return false;
+  if (m.phase !== "live" || !play || play.call !== "run" || play.pitched || play.qbRun || play.back === null) return false;
   const back = m.athlete(play.back);
   if (!back || isDown(back)) return false;
   return a.role === "qb" && a.team === m.offense && m.carrier()?.id === a.id && (a.action.kind === "none" || a.action.kind === "juke");
@@ -69,7 +69,7 @@ export function releasePitch(m: Match, a: Athlete, to: number): void {
   m.ball.flight = launch(from, vel, "spiral", PITCH.spin, 0.08);
   m.ball.pass = {
     from: a.id, to, interceptor: null, spot, arrive: PITCH.time, t: 0, speed: len3(vel),
-    rps: PITCH.spin / (Math.PI * 2), release: from, at: m.time, swiped: [], loose: 0, pitch: true,
+    rps: PITCH.spin / (Math.PI * 2), release: from, at: m.time, swiped: [], pitch: true,
   };
   m.play!.pitched = true;
   m.emit({ type: "pitch", id: a.id, to });
