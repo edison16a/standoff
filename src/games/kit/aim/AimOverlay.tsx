@@ -14,6 +14,8 @@ const TARGETS: Partial<Record<AimStep, ScreenPoint>> = TARGET_POINTS;
 
 /** A dot held at the edge is drawn this far inside it, so all of it stays in sight. */
 const DOT_MARGIN = 14;
+/** For a game with its own pointer, the dot at the edge fades out over this long once the aim comes back in, so a hand shaking right at the edge never makes it blink. */
+const EDGE_FADE_MS = 250;
 
 interface AimOverlayProps {
   aim: HostAim;
@@ -62,6 +64,7 @@ export function AimOverlay({ aim, players, dots = true, targets = true }: AimOve
     const stage = anchorRef.current?.parentElement;
     if (!canvas || !ctx || !stage) return;
     let frame = 0;
+    const lastAtEdge = new Map<number, number>();
     const draw = (now: number) => {
       // The next frame is booked first, so one frame that fails never stops the layer.
       frame = requestAnimationFrame(draw);
@@ -96,13 +99,16 @@ export function AimOverlay({ aim, players, dots = true, targets = true }: AimOve
         }
       }
       for (const player of everyone) {
-        if (!dots && !aim.atEdge(player.seat, now)) continue;
+        if (!dots && aim.atEdge(player.seat, now)) lastAtEdge.set(player.seat, now);
+        const fade = dots ? 1 : 1 - (now - (lastAtEdge.get(player.seat) ?? -Infinity)) / EDGE_FADE_MS;
+        if (fade <= 0) continue;
         const point = aim.point(player.seat, now);
         if (!point) continue;
         const zone = aim.zone(player.seat);
         const box = { x: zone.x * width, y: zone.y * height, w: zone.w * width, h: zone.h * height };
+        const at = insideBox(zonePixels(point, zone, width, height), box, DOT_MARGIN);
         // A game with its own pointer says whose it is its own way, so its dot at the edge needs no name.
-        drawDot(ctx, insideBox(zonePixels(point, zone, width, height), box, DOT_MARGIN), playerColor(player.seat), dots ? player.name : "", box);
+        drawDot(ctx, at, playerColor(player.seat), dots ? player.name : "", box, Math.min(1, fade));
       }
     };
     frame = requestAnimationFrame(draw);

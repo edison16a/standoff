@@ -132,10 +132,16 @@ describe("the aim overlay", () => {
     expect(y).toBeGreaterThanOrEqual(14);
     expect(y).toBeLessThan(30);
     expect(calls.some((c) => c.name === "fillText")).toBe(false);
+    // Back in, it fades out over a moment rather than blinking off, so a hand shaking at the edge never makes it flicker.
     say(2, { kind: "aim", x: 0.9, y: 0.9 });
-    calls.length = 0;
-    step();
-    expect(calls.some((c) => c.name === "createRadialGradient")).toBe(false);
+    const glowsAfter = (ms: number) => {
+      clock += ms;
+      calls.length = 0;
+      step();
+      return calls.filter((c) => c.name === "createRadialGradient").length;
+    };
+    expect(glowsAfter(100)).toBe(1);
+    expect(glowsAfter(200)).toBe(0);
     act(() => root.unmount());
     aim.dispose();
   });

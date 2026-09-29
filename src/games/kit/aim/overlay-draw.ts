@@ -57,18 +57,18 @@ export function drawTarget(ctx: CanvasRenderingContext2D, at: { x: number; y: nu
   ctx.restore();
 }
 
-/** A player's laser dot: a glow, a ring in their colour round a white core, and their name if given. */
-export function drawDot(ctx: CanvasRenderingContext2D, at: { x: number; y: number }, colour: string, name: string, box: Box): void {
+/** A player's laser dot: a glow, a ring in their colour round a white core, and their name if given. `alpha` fades all of it. */
+export function drawDot(ctx: CanvasRenderingContext2D, at: { x: number; y: number }, colour: string, name: string, box: Box, alpha = 1): void {
   ctx.save();
   const glow = ctx.createRadialGradient(at.x, at.y, 0, at.x, at.y, 28);
   glow.addColorStop(0, colour);
   glow.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = glow;
-  ctx.globalAlpha = 0.55;
+  ctx.globalAlpha = 0.55 * alpha;
   ctx.beginPath();
   ctx.arc(at.x, at.y, 28, 0, Math.PI * 2);
   ctx.fill();
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = alpha;
   ctx.fillStyle = "#ffffff";
   ctx.beginPath();
   ctx.arc(at.x, at.y, 5, 0, Math.PI * 2);
