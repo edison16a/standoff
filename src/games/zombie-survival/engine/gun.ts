@@ -1,3 +1,4 @@
+import { Recoil } from "./recoil";
 import { WEAPONS, type WeaponId, type WeaponSpec } from "./weapons";
 
 export type TriggerResult = "fired" | "dry" | "wait";
@@ -16,12 +17,14 @@ const DRY_PAUSE = 0.35;
 const SHELL_START = 0.35;
 
 /**
- * One player's gun: the magazine, the reload and the rate of fire. The
- * host runs it, so a phone can only ask to shoot. Times are in game
- * seconds from the engine's clock.
+ * One player's gun: the magazine, the reload, the rate of fire and the
+ * kick. The host runs it, so a phone can only ask to shoot. Times are in
+ * game seconds from the engine's clock.
  */
 export class Gun {
   readonly spec: WeaponSpec;
+  /** Where the muzzle points off the player's aim after its shots. */
+  readonly recoil: Recoil;
   ammo: number;
   /** Seconds left on a magazine reload, or until the next shell. Null when not reloading. */
   private reloadLeft: number | null = null;
@@ -32,6 +35,7 @@ export class Gun {
 
   constructor(readonly weapon: WeaponId) {
     this.spec = WEAPONS[weapon];
+    this.recoil = new Recoil(this.spec.recoil);
     this.ammo = this.spec.magazine;
   }
 
@@ -86,11 +90,13 @@ export class Gun {
     this.ammo = this.spec.magazine;
     this.reloadLeft = null;
     this.clicked = false;
+    this.recoil.reset();
     // A reload asked for just before the refill must not play out on a full gun.
     this.pending = [];
   }
 
   update(dt: number): GunEvent[] {
+    this.recoil.update(dt);
     if (this.reloadLeft !== null) {
       this.reloadLeft -= dt;
       if (this.reloadLeft <= 0) this.finishStep();
