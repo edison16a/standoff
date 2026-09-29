@@ -65,9 +65,10 @@ function decide(m: Match, a: Athlete, s: BotState): void {
     .teammates(a)
     .map((t) => ({ t, value: threat(m, t) }))
     .sort((p, q) => q.value - p.value)[0];
-  // Hold it a moment before moving it on, so the ball does not ping around without purpose.
+  // Hold it a moment before moving it on, so the ball does not ping around without purpose. Good passers look for the pass more.
   const settled = s.holdFor > 0.7 || open < 0.9;
-  if (settled && mate && mate.value > mine + 0.25 && m.rng() < 0.22 + s.holdFor * 0.1 + (mate.t.auto ? 0 : 0.2)) {
+  const vision = (st.passing - 5) * 0.03;
+  if (settled && mate && mate.value > mine + 0.25 - vision && m.rng() < 0.22 + vision + s.holdFor * 0.1 + (mate.t.auto ? 0 : 0.2)) {
     return m.press(a.id, "pass", { x: mate.t.x - a.x, z: mate.t.z - a.z });
   }
   if (s.holdFor > 4 && mate && m.rng() < 0.4) return m.press(a.id, "pass", { x: mate.t.x - a.x, z: mate.t.z - a.z });
