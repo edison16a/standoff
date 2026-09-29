@@ -2,7 +2,7 @@ import { z } from "zod";
 import { CHARACTER_IDS } from "../roster";
 
 /** Where the room is, as a phone sees it. */
-export const PHASES = ["lobby", "kickoff", "play", "goal", "replay", "restart", "fulltime"] as const;
+export const PHASES = ["lobby", "kickoff", "play", "goal", "replay", "restart", "fulltime", "foul", "setpiece"] as const;
 export type RoomPhase = (typeof PHASES)[number];
 
 const team = z.union([z.literal(0), z.literal(1)]);

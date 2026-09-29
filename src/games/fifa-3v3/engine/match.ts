@@ -6,7 +6,10 @@ import { celebrateGoal, celebrateWin } from "./celebrate";
 import { makeKeeper } from "./keeper";
 import { updateKeeper } from "./keeper-update";
 import { playStep, stepLooseBall } from "./play";
+import { stepFoul } from "./foul-step";
+import { makeReferee, updateReferee } from "./referee";
 import { Rng } from "./rng";
+import { stepSetPiece } from "./set-piece-step";
 import { fullTime, restartFromKeeper, setupKickoff, startPlay } from "./rules";
 import { MATCH, STEP } from "./tuning";
 import type { Command, MatchOptions, MatchState } from "./types";
@@ -50,6 +53,9 @@ export function createMatch(entrants: readonly Entrant[], options: Partial<Match
     options: opts,
     time: 0,
     shotCount: 0,
+    foul: null,
+    setPiece: null,
+    referee: makeReferee(),
   };
   setupKickoff(state);
   return state;
@@ -74,6 +80,7 @@ export function stepMatch(state: MatchState, commands: ReadonlyMap<number, Comma
   state.events = [];
   state.time += dt;
   state.phaseT += dt;
+  updateReferee(state, dt);
   switch (state.phase) {
     case "kickoff":
       for (const k of state.keepers) updateKeeper(state, k, dt);
@@ -98,6 +105,12 @@ export function stepMatch(state: MatchState, commands: ReadonlyMap<number, Comma
       return;
     case "replay":
       if (state.phaseT >= MATCH.replay) setupKickoff(state);
+      return;
+    case "foul":
+      stepFoul(state, dt);
+      return;
+    case "setpiece":
+      stepSetPiece(state, commands, dt);
       return;
     case "fulltime":
       celebrateWin(state, dt);

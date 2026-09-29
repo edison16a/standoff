@@ -51,6 +51,7 @@ export function aimPoint(outcome: ShotOutcome, defending: TeamId, keeper: Keeper
       // A red bar balloons it well over.
       return { x, y: GH + rng.range(0.7, 2.2 + 3.5 * spread), z: clamp((aimZ ?? rng.range(-GW, GW)) + rng.range(-0.6, 0.6) * (1 + spread), -GW, GW) * 0.9 };
     case "wide":
+    case "blocked":
       return { x, y: rng.range(0.2, 1.6 + spread), z: side * (GW + rng.range(0.5, 1.5 + 2 * spread)) };
   }
 }

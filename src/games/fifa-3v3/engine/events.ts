@@ -1,6 +1,6 @@
 import type { TeamId } from "../teams";
-import type { ShotOutcome, SkillKind } from "./types";
-import type { Vec3 } from "./vec";
+import type { SetPieceKind, ShotOutcome, SkillKind } from "./types";
+import type { Vec2, Vec3 } from "./vec";
 
 /**
  * What happened in a step, for the sound, the banners, the effects and
@@ -28,6 +28,16 @@ export type MatchEvent =
   /** A skill move met a defender: beat them, or gave the ball away. */
   | { type: "skillResult"; athlete: number; defender: number; result: "beat" | "lost" }
   | { type: "throw"; team: TeamId }
+  /** The referee gives a foul: a free kick or a penalty to `team`. */
+  | { type: "foul"; offender: number; victim: number; team: TeamId; kind: SetPieceKind; at: Vec2 }
+  /** The yellow card goes up. For show: nobody is sent off. */
+  | { type: "card"; offender: number }
+  /** The kick is lined up and the taker may go. */
+  | { type: "setpiece"; kind: SetPieceKind; team: TeamId; taker: number }
+  /** A defender's body, or the wall, got in the way of the ball. */
+  | { type: "block"; athlete: number; speed: number; at: Vec3 }
+  | { type: "steal"; athlete: number; victim: number; won: boolean }
+  | { type: "jump"; athlete: number }
   | { type: "golden" }
   | { type: "fulltime"; winner: TeamId | null };
 

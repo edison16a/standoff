@@ -18,6 +18,8 @@ function kickoffSpot(state: MatchState, a: Athlete, kicking: boolean): { x: numb
 export function setupKickoff(state: MatchState): void {
   state.ball = newBall();
   state.flight = null;
+  state.foul = null;
+  state.setPiece = null;
   for (const a of state.athletes) {
     const kicking = a.team === state.kickoffTeam && a.slot === 0;
     a.pos = kickoffSpot(state, a, kicking);
@@ -31,6 +33,9 @@ export function setupKickoff(state: MatchState): void {
     a.buffered = 0;
     a.skill.kind = null;
     a.noTouch = 0;
+    a.guarding = false;
+    a.guardSpot = null;
+    a.defendWait = 0;
     a.brain.thinkIn = 0.4;
   }
   // Fresh keepers in position, keeping their save counts for the results.

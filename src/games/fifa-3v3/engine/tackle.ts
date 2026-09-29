@@ -1,4 +1,6 @@
 import { footPoint, integrate } from "./athlete";
+import { FOUL } from "./defence-tuning";
+import { commitFoul } from "./fouls";
 import { SLIDE } from "./tuning";
 import type { Athlete, MatchState } from "./types";
 import { clamp, dist, dot, fromAngle, len, norm, type Vec2 } from "./vec";
@@ -67,6 +69,8 @@ function contact(state: MatchState, a: Athlete): void {
 function resolve(state: MatchState, a: Athlete, victim: Athlete): void {
   a.slideDone = true;
   const fromBehind = Math.max(0, dot(a.actionDir, fromAngle(victim.facing)));
+  // Through the back of the man: the referee blows, whether the ball was won or not.
+  if (fromBehind > FOUL.behind && state.rng.chance(FOUL.slideFromBehind)) return commitFoul(state, a, victim);
   const chance = clamp(0.62 + 0.4 * (a.strength - victim.strength) - 0.35 * (victim.dribbling - 0.75) - 0.15 * fromBehind, 0.2, 0.9);
   const ball = state.ball;
   if (state.rng.chance(chance)) {

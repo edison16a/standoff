@@ -2,7 +2,13 @@ import type { CharacterId } from "../roster";
 import type { TeamId } from "../teams";
 import { chargeLevel, isTap } from "./charge";
 import type { Athlete, AthleteAction, Dive, KeeperAction, MatchState, Phase, SkillKind } from "./types";
-import { angleDiff, len } from "./vec";
+import { len } from "./vec";
+import { jumpLift } from "./jump";
+import { guardStatus, type GuardStatus } from "./guard";
+import { refereeView, setPieceView, type RefereeView, type SetPieceView } from "./view-extras";
+
+export { blendViews } from "./view-blend";
+export type { RefereeView, SetPieceView } from "./view-extras";
 
 /**
  * A still of the match for drawing: plain numbers, no references back
@@ -33,6 +39,10 @@ export interface AthleteView {
   skillSide: 1 | -1;
   /** The goal scorer does their own celebration, team mates a plain cheer. */
   signature: boolean;
+  /** How high the boots are off the turf, in a jump. */
+  lift: number;
+  /** Guard is held, and whether it is shadowing the man now. */
+  guard: GuardStatus;
 }
 
 export interface KeeperView {
@@ -68,6 +78,11 @@ export interface MatchView {
   keepers: [KeeperView, KeeperView];
   scorer: number | null;
   winner: TeamId | null;
+  referee: RefereeView;
+  /** The free kick or penalty being lined up, with the guide line. */
+  setPiece: SetPieceView | null;
+  /** Who a foul was on and who gave it away, from the whistle until the kick. */
+  foul: { offender: number; victim: number; x: number; z: number } | null;
 }
 
 export function buildView(state: MatchState): MatchView {
@@ -102,10 +117,15 @@ export function buildView(state: MatchState): MatchView {
       skill: a.action === "skill" ? a.skill.kind : null,
       skillSide: a.skill.side,
       signature: state.phase === "fulltime" || (celebrating && a.id === scorer),
+      lift: a.action === "jump" ? jumpLift(a.actionT) : 0,
+      guard: guardStatus(state, a),
     })),
     keepers: [keeperView(state, 0), keeperView(state, 1)],
     scorer,
     winner: state.winner,
+    referee: refereeView(state.referee),
+    setPiece: setPieceView(state),
+    foul: state.foul ? { offender: state.foul.offender, victim: state.foul.victim, x: state.foul.at.x, z: state.foul.at.z } : null,
   };
 }
 
@@ -126,40 +146,5 @@ function keeperView(state: MatchState, team: TeamId): KeeperView {
     actionT: k.actionT,
     dive: k.dive ? { ...k.dive } : null,
     holding: owner?.kind === "keeper" && owner.team === team,
-  };
-}
-
-const mix = (a: number, b: number, t: number) => a + (b - a) * t;
-const mixAngle = (a: number, b: number, t: number) => a + angleDiff(a, b) * t;
-
-/**
- * A still part way between two, for smooth slow motion replays.
- * Positions blend; states like the action switch at the halfway mark.
- */
-export function blendViews(a: MatchView, b: MatchView, t: number): MatchView {
-  const pick = t < 0.5 ? a : b;
-  return {
-    ...pick,
-    time: mix(a.time, b.time, t),
-    ball: { ...pick.ball, x: mix(a.ball.x, b.ball.x, t), y: mix(a.ball.y, b.ball.y, t), z: mix(a.ball.z, b.ball.z, t) },
-    athletes: pick.athletes.map((p, i) => {
-      const from = a.athletes[i] ?? p;
-      const to = b.athletes[i] ?? p;
-      const sameAction = from.action === to.action;
-      return {
-        ...p,
-        x: mix(from.x, to.x, t),
-        z: mix(from.z, to.z, t),
-        facing: mixAngle(from.facing, to.facing, t),
-        speed: mix(from.speed, to.speed, t),
-        stride: mix(from.stride, to.stride, t),
-        actionT: sameAction ? mix(from.actionT, to.actionT, t) : p.actionT,
-      };
-    }),
-    keepers: pick.keepers.map((p, i) => {
-      const from = a.keepers[i] ?? p;
-      const to = b.keepers[i] ?? p;
-      return { ...p, x: mix(from.x, to.x, t), z: mix(from.z, to.z, t), facing: mixAngle(from.facing, to.facing, t), actionT: from.action === to.action ? mix(from.actionT, to.actionT, t) : p.actionT };
-    }) as [KeeperView, KeeperView],
   };
 }

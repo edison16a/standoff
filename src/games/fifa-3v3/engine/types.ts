@@ -3,9 +3,11 @@ import type { TeamId } from "../teams";
 import type { Athlete } from "./athlete-types";
 import type { MatchEvent } from "./events";
 import type { Rng } from "./rng";
+import type { Foul, Referee, SetPiece } from "./set-piece-types";
 import type { Vec2, Vec3 } from "./vec";
 
 export * from "./athlete-types";
+export * from "./set-piece-types";
 
 export type KeeperAction = "set" | "dive" | "catch" | "hold" | "throw" | "getup" | "cheer";
 
@@ -38,7 +40,8 @@ export interface Keeper {
   saves: number;
 }
 
-export type ShotOutcome = "goal" | "catch" | "parry" | "post" | "bar" | "over" | "wide";
+/** "blocked" is a shot that a defender or the wall got in the way of. It is never rolled by the dice. */
+export type ShotOutcome = "goal" | "catch" | "parry" | "post" | "bar" | "over" | "wide" | "blocked";
 
 /** A shot on its way. Its outcome was decided when it was struck and physics plays it out. */
 export interface Flight {
@@ -71,7 +74,8 @@ export interface Ball {
   heldFor: number;
 }
 
-export type Phase = "kickoff" | "play" | "goal" | "replay" | "restart" | "fulltime";
+/** "foul" is the whistle and the referee's card; "setpiece" the free kick or penalty being lined up. */
+export type Phase = "kickoff" | "play" | "goal" | "replay" | "restart" | "fulltime" | "foul" | "setpiece";
 
 export interface MatchOptions {
   seed: number;
@@ -107,6 +111,11 @@ export interface MatchState {
   options: MatchOptions;
   time: number;
   shotCount: number;
+  /** The foul being given, from the whistle until the kick is taken. */
+  foul: Foul | null;
+  /** The free kick or penalty being lined up. */
+  setPiece: SetPiece | null;
+  referee: Referee;
 }
 
 /** One player's controls for one step, from a phone or a computer brain. */
@@ -125,4 +134,10 @@ export interface Command {
   passTo?: number;
   /** A computer player's shot: it holds Shoot until the bar reaches this level. */
   shoot?: number;
+  /** On defence the Shoot button is Guard: true as it goes down, false as it comes up. */
+  guard?: boolean;
+  /** A standing poke at the dribbler's ball. */
+  steal?: boolean;
+  /** Jump to block, while guarding. */
+  jump?: boolean;
 }

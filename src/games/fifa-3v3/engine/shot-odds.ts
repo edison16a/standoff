@@ -22,9 +22,11 @@ export interface ShotContext {
   placement?: number;
 }
 
-export type Odds = Record<ShotOutcome, number>;
+/** The outcomes the dice choose between. A block is never rolled: bodies in the way make it. */
+export type RolledOutcome = Exclude<ShotOutcome, "blocked">;
+export type Odds = Record<RolledOutcome, number>;
 
-export const OUTCOMES: readonly ShotOutcome[] = ["goal", "catch", "parry", "post", "bar", "over", "wide"];
+export const OUTCOMES: readonly RolledOutcome[] = ["goal", "catch", "parry", "post", "bar", "over", "wide"];
 
 /**
  * How good a chance is, 0 to 1, before the keeper: close, central, a
