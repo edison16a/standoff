@@ -26,11 +26,12 @@ export class ScrimmageLines {
     const geo = new THREE.PlaneGeometry(0.32, FIELD.halfWidth * 2);
     geo.rotateX(-Math.PI / 2);
     const make = (color: string) => {
-      const m = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
+      // Lifted clear of the grass rather than pulled forward with a polygon offset, which at a low camera drew the line over the players' shins.
+      const m = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.9, depthWrite: false });
       this.materials.push(m);
       const mesh = new THREE.Mesh(geo, m);
       mesh.renderOrder = 1;
-      mesh.position.y = 0.02;
+      mesh.position.y = 0.025;
       this.group.add(mesh);
       return mesh;
     };
