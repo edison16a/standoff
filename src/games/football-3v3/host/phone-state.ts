@@ -21,6 +21,13 @@ export function statLine(a: Athlete): StatLine {
   return { passYards: s.passYards, rushYards: s.rushYards, recYards: s.recYards, touchdowns: s.touchdowns, tackles: s.tackles, interceptions: s.interceptions };
 }
 
+/** The controls to show: the engine's pick, except that after an interception the QB defends like everyone else on his side. */
+function padFor(m: Match | null, status: ReturnType<typeof seatStatus>, replay: boolean): PhoneState["pad"] {
+  if (!status || replay) return "wait";
+  if (status.pad === "qb" && !status.withBall && m?.play?.intercepted) return "defense";
+  return status.pad;
+}
+
 function result(m: Match, a: Athlete): PhoneState["result"] {
   if (m.phase !== "over") return null;
   return m.winner === null ? "tie" : m.winner === a.team ? "win" : "lose";
@@ -53,7 +60,7 @@ export function phoneState(c: PhoneContext, seatNo: number): PhoneState {
     clock: m ? Math.ceil(m.clock) : 0,
     down: m ? downText(m.drive) : "",
     offense: !!m && !!a && a.team === m.offense,
-    pad: status && !replay ? status.pad : "wait",
+    pad: padFor(m, status, replay),
     choose: status?.choose && !replay ? { options: [...status.choose.options], left: Math.ceil(status.choose.left) } : null,
     hikeLeft: status?.hikeLeft != null && !replay ? Math.ceil(status.hikeLeft) : null,
     meter: status?.meter && !replay ? { stage: status.meter.stage, fieldGoal: kick?.fieldGoal ?? true } : null,
