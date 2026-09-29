@@ -90,7 +90,8 @@ export async function nba3v3(ctx) {
   await pickStar(ctx, ".nba-pick__card");
   const court = {
     team: 0, score: [12, 9], shotClock: 14, hasBall: true, attacking: true, holder: "P1", mustClear: false,
-    canSteal: false, freeThrow: null, meter: { fullMs: 900, greenMs: 620, halfMs: 60 }, onFire: false, checking: false, countdown: null,
+    canSteal: false, stealReach: false, defending: false, guard: "off",
+    freeThrow: null, meter: { fullMs: 900, greenMs: 620, halfMs: 60 }, onFire: false, checking: false, countdown: null,
   };
   await ctx.fake("state", { phase: "countdown", team: 0, playing: true, court: { ...court, countdown: 3 } });
   await ctx.snap("countdown");
@@ -98,7 +99,21 @@ export async function nba3v3(ctx) {
   // The phone drops a message its schema refuses, so a fake that drifted from it would leave the ready page up.
   await ctx.phone.locator(".nba-pad").waitFor({ state: "attached", timeout: 5000 });
   await ctx.snap("pad");
-  await ctx.fake("state", { phase: "over", team: 0, playing: true, court, result: { won: true, points: 14, rebounds: 5, assists: 3 } });
+  // On defence: Guard, Block and Steal, with the light that says Guard has his man.
+  const defence = { ...court, hasBall: false, attacking: false, holder: "Crane", canSteal: true, stealReach: true, defending: true, guard: "on" };
+  await ctx.fake("state", { phase: "live", team: 0, playing: true, court: defence });
+  await ctx.snap("defend");
+  await ctx.fake("state", { phase: "live", team: 0, playing: true, court: { ...court, freeThrow: { mine: true, n: 1, of: 2, ready: true } } });
+  await ctx.snap("free-throw");
+  // The replay's skip vote: first this phone has not pressed, then it waits on P3.
+  const votes = [{ name: "P1", done: false }, { name: "P2", done: true }, { name: "P3", done: false }];
+  await ctx.fake("state", { phase: "replay", team: 0, playing: true, court, replay: { voted: false, votes } });
+  await ctx.snap("replay-skip");
+  votes[0].done = true;
+  await ctx.fake("state", { phase: "replay", team: 0, playing: true, court, replay: { voted: true, votes } });
+  await ctx.snap("replay-waiting");
+  const result = { won: true, points: 14, rebounds: 5, assists: 3, steals: 2, blocks: 1 };
+  await ctx.fake("state", { phase: "over", team: 0, playing: true, court, replay: null, result });
   await ctx.snap("result");
 }
 
