@@ -8,7 +8,7 @@ import { spotLabel } from "./field";
 import { kickKind } from "./kick";
 import { aimMeter, powerMeter } from "./meters";
 import { MATCH } from "./tuning";
-import type { AthleteAction, BallMode, DownKind, JukeKind, KickState, LinemanAction, MatchState, Phase, PlayCall, KickKind, ScoreKind } from "./types";
+import type { AthleteAction, BallMode, DownKind, JukeKind, KickKind, KickState, LastScore, LinemanAction, MatchState, Phase, PlayCall } from "./types";
 import { len, len3, type Vec3 } from "./vec";
 
 /**
@@ -115,7 +115,7 @@ export interface MatchView {
   ball: BallView;
   kick: KickView | null;
   winner: TeamId | null;
-  lastScore: { team: TeamId; kind: ScoreKind; by: number | null; thrower: number | null } | null;
+  lastScore: LastScore | null;
 }
 
 function timeLeft(state: MatchState): number {

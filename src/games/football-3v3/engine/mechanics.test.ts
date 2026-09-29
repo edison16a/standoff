@@ -3,6 +3,7 @@ import { seatControls } from "./controls";
 import { newDrive } from "./downs";
 import { xFromGoal } from "./field";
 import { beginCall } from "./flow";
+import { setOnline } from "./index";
 import { DEFAULT_OPTIONS } from "./match";
 import { bySeat, cmd, game, place, run, snapped } from "./test-kit";
 import type { MatchState } from "./types";
@@ -101,6 +102,20 @@ describe("controls and views", () => {
     expect(v.spotText).toBe("OWN 25");
     expect(v.firstDown - v.los).toBeCloseTo(10);
     expect(v.linemen).toHaveLength(6);
+  });
+});
+
+describe("dropped phones", () => {
+  it("hand the player to the computer until the phone is back", () => {
+    const s = game("easy");
+    setOnline(s, 1, false);
+    snapped(s);
+    const r = bySeat(s, 1);
+    const from = { ...r.pos };
+    run(s, 1.5);
+    expect(dist(r.pos, from)).toBeGreaterThan(3);
+    setOnline(s, 1, true);
+    expect(r.online).toBe(true);
   });
 });
 

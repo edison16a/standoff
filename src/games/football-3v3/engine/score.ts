@@ -1,7 +1,9 @@
+import type { TeamId } from "../teams";
 import { setAction } from "./athlete";
 import { MATCH } from "./tuning";
-import type { MatchState, ScoreKind } from "./types";
-import type { TeamId } from "../teams";
+import type { Celebration, MatchState, ScoreKind } from "./types";
+
+const CELEBRATIONS: readonly Celebration[] = ["spike", "dance"];
 
 export const POINTS: Record<ScoreKind, number> = { touchdown: 6, fieldgoal: 3, pat: 1, twopoint: 2, safety: 2 };
 
@@ -12,7 +14,8 @@ export const POINTS: Record<ScoreKind, number> = { touchdown: 6, fieldgoal: 3, p
 export function addScore(state: MatchState, team: TeamId, kind: ScoreKind, by: number | null, thrower: number | null = null): void {
   const points = POINTS[kind];
   state.score[team] += points;
-  state.lastScore = { team, kind, by, thrower };
+  const celebration = kind === "touchdown" && by !== null ? state.rng.pick(CELEBRATIONS) : null;
+  state.lastScore = { team, kind, by, thrower, celebration };
   state.events.push({ type: "score", team, kind, points, by });
   if (state.overtime || state.score[team] >= state.options.pointsToWin) state.winner = team;
   state.phase = "score";
