@@ -16,7 +16,8 @@ The running list of what is being built, so work can pick up again after a break
 | --- | --- | --- |
 | **Room reliability (top priority):** find why rooms fail about every other time and fix the cause, a host watchdog that checks the room like a phone would and fully remakes it when broken, the QR code hidden until the room passes its check, and a Regenerate room button right under the QR code | wf_3938ab23-6cc | four investigations (live site repro, local multi instance repro, client audit, relay audit), two designs and a judge, one build, then stress, code and production reviews with fix rounds |
 | Batch E part 1: Subway Runner overhaul (the real Subway Surfers look, feel and sound) and the Zombie Survival rework (crosshairs, recoil, short fast rounds, bosses) | wf_e5046812-6a8 | build then review each; Subway is two builds in one worktree |
-| Batch C and D, finishing what the restart interrupted, in the same worktrees, two at a time | wf_9713e4a2-c2a | finish and review hold to calibrate, winner scenes and Boxing builds, Basketball part 2, Football 3v3 steps 2 and 3 |
+| Batch C and D, finishing what the restart interrupted, in the same worktrees, two at a time | wf_9713e4a2-c2a | Basketball part 2, then Football 3v3 steps 2 and 3, each reviewed |
+| Batch E part 2: Soccer World Cup trophy scene and builds instead of stars; winner scenes for Blade Clash, Paintball Battle and Cube Game | wf_60afdf28-2d3 | build then review each |
 
 **Room root cause, found and reproduced on the live site:** production has no shared Redis store (every room:created says sharedRooms:false). Rooms live in one Vercel instance's memory, a game's own traffic makes Vercel add a second instance within about 1.5 s, and then joins, POSTs and hand overs land on an instance without the room: "Room not found". Every deploy to main also wipes open rooms. **Owner action:** add a Redis store to the Vercel project (Storage, Create Database, for example Upstash for Redis), connect it to Production, redeploy. The code reads REDIS_URL, KV_URL or UPSTASH_REDIS_URL. Keep deploys to main batched so they strand fewer rooms.
 
@@ -87,6 +88,8 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ## Done recently
 
+* Hold to calibrate in every pointing game: 6 targets for sword games, 5 for shooters, Magic Kart holds the middle dot for a second, pointers stay at the edge.
+* The victory kit (confetti, spotlights, trophies and a belt made in code), with winner scenes for Boxing (belt overhead), Magic Kart (podium) and Brawl Battle (pedestal), and Boxing builds with stat bars under the player's own name.
 * Cube Game: calmer look, a quicker camera jump, every level open, a song per level, and 2 players race 1v1 in split screen.
 * Vercel Web Analytics, with room codes and player names taken out of page addresses.
 * Soccer 3v3: Guard, fouls with a referee and yellow card, free kicks with a jumping wall and aimed curve, penalties, bigger pitch and goals, shot auto aim with blocks, smart passing, keeper saves that bounce out, FIFA style replays with a skip vote, the SUI, no banners, six stars, host roles, difficulty.
