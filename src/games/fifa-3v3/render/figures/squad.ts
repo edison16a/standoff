@@ -21,6 +21,8 @@ export interface Label {
   human: boolean;
   /** The name printed on the back of the shirt, for a phone's player. Computer players have just a number. */
   shirt?: string;
+  /** A short word after the name on the tag, such as the build or Away. */
+  detail?: string;
 }
 
 /**
@@ -153,7 +155,7 @@ export class Squad {
   private refreshLabels(view: MatchView): void {
     const labels = view.athletes.map((a) => {
       const l = this.labelOf(a);
-      return `${l.name}|${l.colour}|${l.human}`;
+      return `${l.name}|${l.colour}|${l.human}|${l.detail ?? ""}`;
     });
     const key = labels.join(",");
     if (key === this.labels) return;
@@ -172,7 +174,7 @@ export class Squad {
     this.markers = [];
     for (const a of view.athletes) {
       const l = this.labelOf(a);
-      const tag = new NameTag(l.name, l.colour, l.human);
+      const tag = new NameTag(l.name, l.colour, l.human, l.detail);
       this.tags.push(tag);
       this.group.add(tag.sprite);
       const marker = l.human ? new Marker(l.colour) : null;
