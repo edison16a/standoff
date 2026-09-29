@@ -8,8 +8,8 @@ import type { ZombieMaterials } from "./zombie-materials";
 /**
  * The two newer mini bosses. The Surgeon is tall and gaunt, still in his
  * scrubs, cap and mask, a bone saw in one hand and blades for fingers on
- * the other. The Hook is a hulking dock hand in an oilskin coat and a
- * woollen hat, dragging a cargo hook on a chain.
+ * the other. The Hook is a hulking dock hand in a leather coat with hi
+ * vis stripes and a woollen hat, a cargo hook in his fist.
  */
 
 /** Scrubs, a cap and a mask, a bone saw and scalpel fingers. */
@@ -40,11 +40,11 @@ export function dressSurgeon(dress: Dresser, d: BodyDims, m: ZombieMaterials, ra
   for (let f = 0; f < 3; f++) dress.on("handL").add(new THREE.ConeGeometry(0.012, 0.22, 4), m.steel, [(f - 1) * 0.035, -d.hand - 0.1, 0.04], [Math.PI - 0.25, 0, 0]);
 }
 
-/** An oilskin coat with hi vis stripes, a woollen hat, a chain round one arm and a cargo hook. */
+/** A leather dock coat with hi vis stripes, a woollen hat, a chain round one arm and a cargo hook. */
 export function dressHook(dress: Dresser, d: BodyDims, m: ZombieMaterials, rand: () => number): void {
   const o = outfitMaterials();
   const skin = m.skins[2]!;
-  const coat = o.hardHat;
+  const coat = m.leather;
   dressHead(dress, d, m, { skin, hair: "stitched", rotten: true }, rand);
   dressTorso(dress, d, m, { skin, shirt: m.shirts[4]!, pants: m.pants[0]!, ribs: false, belly: 0.6 }, rand);
   dressLimbs(dress, d, m, { skin, sleeve: coat, pants: m.pants[0]!, shoes: true }, rand);
@@ -53,14 +53,14 @@ export function dressHook(dress: Dresser, d: BodyDims, m: ZombieMaterials, rand:
   const head = dress.on("head");
   head.sphere(h * 0.52, m.shirts[1]!, [0, h * 0.8, -h * 0.05], [0.95, 0.7, 1.02], 14);
   head.add(new THREE.TorusGeometry(h * 0.46, h * 0.07, 6, 18), m.shirts[1]!, [0, h * 0.66, -h * 0.03], [Math.PI / 2, 0, 0]);
-  // The oilskin: open down the front, its tails hanging to the knee, two silver stripes round it.
+  // The coat hangs open over the shirt, its tails stopping above the knee so the weak points there show.
   const spine = dress.on("spine");
-  for (const s of [-1, 1]) {
-    spine.box(d.torsoW * 0.56, d.torso * 0.96, d.torsoD * 1.14, coat, [s * d.torsoW * 0.3, d.torso * 0.5, 0], undefined, 0.05);
-    dress.on("hips").box(d.torsoW * 0.54, 0.62, 0.04, coat, [s * d.torsoW * 0.3, -0.28, d.torsoD * 0.56], [0.05, 0, s * 0.05]);
-    dress.on("hips").box(d.torsoW * 0.54, 0.62, 0.04, coat, [s * d.torsoW * 0.3, -0.28, -d.torsoD * 0.56], [-0.05, 0, s * 0.05]);
+  spine.box(d.torsoW * 1.08, d.torso * 0.92, d.torsoD * 1.12, coat, [0, d.torso * 0.5, -0.01], undefined, 0.05);
+  spine.box(d.torsoW * 0.34, d.torso * 0.9, 0.02, m.shirts[4]!, [0, d.torso * 0.5, d.torsoD * 0.57]);
+  for (const s of [-1, 1]) dress.on("hips").box(d.torsoW * 0.5, 0.34, 0.04, coat, [s * d.torsoW * 0.28, -0.14, d.torsoD * 0.56], [0.06, 0, s * 0.04]);
+  for (const y of [0.4, 0.62]) {
+    for (const s of [-1, 1]) spine.box(d.torsoW * 0.36, 0.045, 0.02, o.reflective, [s * d.torsoW * 0.36, d.torso * y, d.torsoD * 0.57]);
   }
-  for (const y of [0.4, 0.62]) spine.box(d.torsoW * 1.16, 0.045, d.torsoD * 1.18, o.reflective, [0, d.torso * y, 0]);
   // A chain wound round the left forearm, its end hanging loose.
   for (let i = 0; i < 5; i++) dress.on("elbowL").add(new THREE.TorusGeometry(d.arm * 0.5, 0.014, 5, 12), m.steel, [0, -0.06 - i * 0.05, 0], [Math.PI / 2 + (i % 2) * 0.3, 0, 0.15 * (i % 2 ? 1 : -1)]);
   for (let i = 0; i < 4; i++) dress.on("handL").add(new THREE.TorusGeometry(0.035, 0.012, 5, 10), m.steel, [0, -0.12 - i * 0.06, 0.02], [0, (i % 2) * Math.PI / 2, 0]);
