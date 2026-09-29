@@ -164,3 +164,16 @@ export function updateClock(m: Match, dt: number): void {
     turnover(m, to, "out");
   }
 }
+
+/** The count before the tip: each whole second once, then play is live. */
+export function updateCountdown(m: Match): void {
+  const shown = Math.ceil(RULES.countdown - m.phaseT);
+  if (shown > 0 && shown !== m.countShown) {
+    m.countShown = shown;
+    m.emit({ type: "countdown", count: shown });
+  }
+  if (shown > 0) return;
+  m.phase = "live";
+  m.phaseT = 0;
+  m.emit({ type: "go", team: m.offence });
+}

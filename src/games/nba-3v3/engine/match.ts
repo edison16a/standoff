@@ -1,5 +1,4 @@
-import type { BotLevel } from "@/games/kit/difficulty/difficulty";
-import type { CharacterId, DunkStyle } from "../roster";
+import type { DunkStyle } from "../roster";
 import { pressDefend, pressPass, pressShoot, releaseShot, updateAction } from "./actions";
 import { createAthlete, moveAthlete, separate } from "./athlete";
 import { updateBall } from "./ball";
@@ -12,35 +11,18 @@ import type { MatchEvent } from "./events";
 import type { FoulCall, PendingFoul } from "./foul-call";
 import { StealLog } from "./fouls";
 import { pressFreeThrow, stepFreeThrowBall, updateFreeThrows, type FreeThrows } from "./free-throw";
+import { restingBall, type MatchOptions } from "./match-options";
 import { tickMoves } from "./moves";
 import { seeded, type Rng } from "./rng";
 import type { Outcome } from "./shot-model";
 import { placeForCheck } from "./check-plan";
 import { stepCheckBall, updateCheck, updateDead, type CheckUp } from "./check-up";
-import { updateClock } from "./rules";
+import { updateClock, updateCountdown } from "./rules";
 import { RULES } from "./tuning";
 import type { Athlete, Ball, Button, Phase, TeamId } from "./types";
 import type { V2 } from "./vec";
 
-export interface Entry {
-  team: TeamId;
-  character: CharacterId;
-  /** The phone playing this athlete, or null for a computer player. */
-  seat: number | null;
-  /** The role the host gave them: 0 Guard, 1 Wing, 2 Big. In entry order when left out. */
-  slot?: number;
-}
-
-export interface MatchOptions {
-  entries: readonly Entry[];
-  seed?: number;
-  /** Who has the ball first. Drawn from the seed when left out. */
-  firstOffence?: TeamId;
-  /** Points to win. */
-  target?: number;
-  /** How good the computer players are. Easy unless the lobby says otherwise. */
-  botLevel?: BotLevel;
-}
+export type { Entry, MatchOptions } from "./match-options";
 
 /**
  * One game of three on three, as pure data and rules. The host feeds it
@@ -88,7 +70,8 @@ export class Match {
   readonly bumpCd = new Map<string, number>();
   readonly brains: Brains;
   private readonly queue: MatchEvent[] = [];
-  private lastCount = 0;
+  /** The last whole second the countdown showed. */
+  countShown = 0;
 
   constructor(options: MatchOptions) {
     this.rng = seeded(options.seed ?? Math.floor(Math.random() * 2 ** 31));
@@ -98,11 +81,7 @@ export class Match {
     this.athletes = options.entries.map((entry, id) => createAthlete(id, entry.team, entry.slot ?? slots[entry.team]++, entry.character, entry.seat));
     this.offence = options.firstOffence ?? (this.rng() < 0.5 ? 0 : 1);
     this.nextOffence = this.offence;
-    this.ball = {
-      pos: { x: 0, y: 1, z: 9 }, vel: { x: 0, y: 0, z: 0 }, mode: "held", holder: null,
-      flight: null, flightT: 0, flightSeg: -1, flightKind: null, passTo: null, passRolled: [],
-      shot: null, lastTouch: null, spin: 0, w: { x: 0, y: 0, z: 0 }, rimCd: 0,
-    };
+    this.ball = restingBall();
     this.brains = new Brains(this);
     placeForCheck(this, this.offence);
   }
@@ -189,7 +168,7 @@ export class Match {
     this.time += dt;
     this.phaseT += dt;
     for (const [key, left] of this.bumpCd) this.bumpCd.set(key, left - dt);
-    if (this.phase === "countdown") this.countdown();
+    if (this.phase === "countdown") updateCountdown(this);
     if (this.phase === "countdown" || this.phase === "over") for (const a of this.athletes) a.move = { x: 0, z: 0 };
     if (this.phase === "live") this.brains.think(dt);
     if (this.phase === "live") for (const a of this.athletes) if (a.guard && !a.auto) steerGuard(this, a, dt);
@@ -209,17 +188,5 @@ export class Match {
     separate(this.athletes, this.queue, this.bumpCd);
     if (!stepCheckBall(this, dt) && !stepFreeThrowBall(this, dt)) updateBall(this, dt);
     if (this.phase === "live") updateClock(this, dt);
-  }
-
-  private countdown(): void {
-    const shown = Math.ceil(RULES.countdown - this.phaseT);
-    if (shown > 0 && shown !== this.lastCount) {
-      this.lastCount = shown;
-      this.emit({ type: "countdown", count: shown });
-    }
-    if (shown > 0) return;
-    this.phase = "live";
-    this.phaseT = 0;
-    this.emit({ type: "go", team: this.offence });
   }
 }

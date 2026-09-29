@@ -8,10 +8,9 @@ import type { TeamId } from "../engine/types";
 import type { V2 } from "../engine/vec";
 import type { Phase } from "../protocol";
 import { registerTestActions } from "./admin";
-import { BannerBoard, REPLAY_SOUNDS, slowForMoment } from "./banners";
 import { Buzzer } from "./buzzer";
-import { banner } from "./callouts";
 import { DemoGame } from "./demo";
+import { EventFanout } from "./event-fanout";
 import { useNbaStore as store } from "./host-store";
 import { Lobby } from "./lobby";
 import { MatchDriver } from "./match-driver";
@@ -36,13 +35,12 @@ export class NbaHost {
   private readonly pad: HostPad;
   private readonly phones: PhoneLink;
   private readonly buzzer: Buzzer;
-  private readonly banners = new BannerBoard();
+  private readonly fanout: EventFanout;
   private readonly unsubscribe: () => void;
   private readonly unpress: () => void;
   private unlistenMatch: (() => void) | null = null;
   /** Removes this game's shortcuts from the host's hidden admin panel. */
   private unadmin: (() => void) | null = null;
-  private readonly matchListeners = new Set<(event: MatchEvent) => void>();
   private lastHud = 0;
   private lastFrame = 0;
   private lastPhase: Phase = "lobby";
@@ -51,16 +49,18 @@ export class NbaHost {
   turbo = 1;
 
   constructor(private readonly room: HostRoomApi) {
-    this.demo = new DemoGame((event) => {
-      if (!this.driver) for (const listener of this.matchListeners) listener(event);
-    });
     this.audio = new SoundDirector(room.audio);
     this.pad = new HostPad(room);
     this.phones = new PhoneLink(room);
     this.buzzer = new Buzzer(this.phones);
+    const refresh = () => this.refresh(performance.now());
+    this.fanout = new EventFanout({ audio: this.audio, buzzer: this.buzzer, nameOf: (id) => this.nameOf(id), refresh });
+    this.demo = new DemoGame((event) => {
+      if (!this.driver) this.fanout.demo(event);
+    });
     store.setState({ ...store.getInitialState() });
     for (const player of room.players()) if (player.connected) this.lobby.connect(player.seat);
-    const input = new RoomInput({ room, lobby: this.lobby, phones: this.phones, driver: () => this.driver, refresh: () => this.refresh(performance.now()) });
+    const input = new RoomInput({ room, lobby: this.lobby, phones: this.phones, driver: () => this.driver, refresh });
     this.unsubscribe = room.on((event) => input.onRoom(event));
     this.unpress = this.pad.onPress((seat, button, down, stick) => input.onPress(seat, button, down, stick));
     this.audio.setPhase("lobby");
@@ -73,7 +73,7 @@ export class NbaHost {
     this.pad.dispose();
     this.unlistenMatch?.();
     this.unadmin?.();
-    this.banners.dispose();
+    this.fanout.dispose();
     this.audio.stop();
     this.room.setPlaying(false);
   }
@@ -94,8 +94,7 @@ export class NbaHost {
 
   /** Match events for the renderer's effects. */
   listen(listener: (event: MatchEvent) => void): () => void {
-    this.matchListeners.add(listener);
-    return () => this.matchListeners.delete(listener);
+    return this.fanout.listen(listener);
   }
 
   /** The name a player is shown by: their own for people, the star's for computers. */
@@ -143,8 +142,8 @@ export class NbaHost {
     this.unlistenMatch?.();
     const driver = new MatchDriver(this.lobby.entries(), undefined, this.lobby.level);
     this.driver = driver;
-    const unlisten = driver.listen((event) => this.onMatchEvent(event));
-    const unreplay = driver.replays.listen((event, ghost) => this.onReplayEvent(event, ghost));
+    const unlisten = driver.listen((event) => this.fanout.live(event, driver));
+    const unreplay = driver.replays.listen((event, ghost) => this.fanout.replay(event, ghost));
     this.unlistenMatch = () => {
       unlisten();
       unreplay();
@@ -192,27 +191,6 @@ export class NbaHost {
     }
     if (nowMs - this.lastHud >= HUD_MS) this.refresh(nowMs);
     return dt;
-  }
-
-  private onMatchEvent(event: MatchEvent): void {
-    const driver = this.driver;
-    if (!driver) return;
-    const m = driver.match;
-    this.audio.event(event, m);
-    for (const listener of this.matchListeners) listener(event);
-    this.buzzer.onEvent(event, m, driver.athleteBySeat);
-    slowForMoment(event, driver);
-    if (event.type === "shot" && event.grade === "perfect" && m.athletes[event.id]?.seat !== null) this.audio.green();
-    const shown = banner(event, m, (id) => this.nameOf(id), this.banners.count);
-    if (shown) this.banners.show(shown);
-    const prompt = ["score", "win", "go", "check", "checkUp", "foul", "andOne", "freeThrow"] as const;
-    if ((prompt as readonly string[]).includes(event.type)) this.refresh(performance.now());
-  }
-
-  /** The replay replays the ball's and the players' sounds and the effects, and nothing that changes the game. */
-  private onReplayEvent(event: MatchEvent, ghost: Match): void {
-    if (REPLAY_SOUNDS.has(event.type)) this.audio.event(event, ghost);
-    for (const listener of this.matchListeners) listener(event);
   }
 
   private refresh(nowMs: number): void {
