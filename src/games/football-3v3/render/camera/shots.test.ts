@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { POSTS } from "../../engine/field";
 import { freshView, viewWhen } from "../test-views";
+import { CameraDirector } from "./director";
 import { fitWidth, sideReach } from "./fit";
 import { aimFor, behind, closeup, kickCam, playSign, type Aim, type Vec } from "./shots";
 
@@ -93,5 +94,17 @@ describe("camera shots", () => {
     const gap = (a: Aim, x: number) => x - a.pos.x;
     expect(gap(run, runner.x)).toBeLessThan(gap(pocket, qb.x));
     expect(pocket.keep!.length).toBeGreaterThan(1);
+  });
+});
+
+describe("the director", () => {
+  it("says which way up the screen is on the ground, for the phone sticks", () => {
+    const d = new CameraDirector();
+    const v = freshView();
+    d.update(v, 1 / 60, 0);
+    const f = d.groundForward();
+    // Behind Storm, who attack toward +x, up the screen is downfield.
+    expect(f.x).toBeGreaterThan(0.9);
+    expect(Math.hypot(f.x, f.z)).toBeCloseTo(1);
   });
 });

@@ -29,6 +29,17 @@ export class CameraDirector {
     this.fixed = { pos: pos.clone(), look: look.clone(), fov };
   }
 
+  /**
+   * Which way is up the screen on the ground, as a unit vector in field
+   * space. A phone's stick pushed up means this way, so the controls
+   * follow the camera as it turns round after a turnover.
+   */
+  groundForward(): { x: number; z: number } {
+    const d = this.camera.getWorldDirection(new THREE.Vector3());
+    const l = Math.hypot(d.x, d.z);
+    return l > 1e-3 ? { x: d.x / l, z: d.z / l } : { x: 1, z: 0 };
+  }
+
   /** A jolt, 0 to 1, that dies away over half a second. */
   bump(amount: number): void {
     this.shake = Math.max(this.shake, amount);
