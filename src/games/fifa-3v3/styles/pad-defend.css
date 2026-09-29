@@ -1,0 +1,148 @@
+/*
+  The controller's defending buttons and read outs, and the free kick
+  guide. Sized to fit a phone held sideways alongside the stick.
+*/
+
+.fifa-pad__buttons--defend {
+  grid-template-rows: 1.25fr 1fr;
+}
+
+.fifa-pad__row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.fifa-pad__row .kit-pad-btn--md {
+  width: min(19vmin, 76px);
+  height: min(19vmin, 76px);
+}
+
+.fifa-pad__row .fifa-face svg {
+  width: 22px;
+  height: 22px;
+}
+
+.fifa-pad__row .fifa-face__text {
+  font-size: 11px;
+}
+
+/* Guard glows while it is marking the man, and dims when he is out of range. */
+.fifa-pad__guard .kit-pad-btn {
+  transition: box-shadow 120ms ease, filter 120ms ease;
+}
+
+.fifa-pad__guard--on .kit-pad-btn {
+  box-shadow: 0 0 0 4px #ffffff, 0 0 18px 4px rgba(14, 165, 233, 0.8);
+}
+
+.fifa-pad__guard--far .kit-pad-btn {
+  filter: saturate(0.3);
+}
+
+/* How far away your man is: the left half of the track is Guard's range. */
+.fifa-guard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  max-width: 200px;
+}
+
+.fifa-guard__track {
+  position: relative;
+  width: 100%;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 5px;
+  background: var(--bg-muted);
+}
+
+.fifa-guard__range {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: rgba(34, 197, 94, 0.25);
+}
+
+.fifa-guard__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 5px;
+  background: #94a3b8;
+  transition: width 120ms linear;
+}
+
+.fifa-guard--in .fifa-guard__fill {
+  background: #22c55e;
+}
+
+.fifa-guard__label {
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.fifa-guard__label small {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.fifa-guard--on .fifa-guard__label {
+  color: #38bdf8;
+}
+
+/* The free kick and penalty guide. */
+.fifa-kick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  max-width: 230px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--bg-muted);
+  text-align: center;
+}
+
+.fifa-kick strong {
+  font-size: 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.fifa-kick span {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.fifa-curve {
+  position: relative;
+  width: 150px;
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #38bdf8, rgba(255, 255, 255, 0.15) 50%, #f472b6);
+}
+
+.fifa-curve__mid {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  left: 50%;
+  width: 2px;
+  background: #ffffff;
+}
+
+.fifa-curve__knob {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}

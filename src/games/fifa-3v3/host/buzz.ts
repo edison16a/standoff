@@ -25,6 +25,15 @@ export function buzzFor(event: MatchEvent, state: MatchState): [number, BuzzKind
       return event.result === "beat" ? one(event.athlete, "pass") : [...one(event.athlete, "tackled"), ...one(event.defender, "tackle")];
     case "tackle":
       return [...one(event.athlete, "tackle"), ...one(event.victim, "tackled")];
+    case "steal":
+      return event.won ? [...one(event.athlete, "tackle"), ...one(event.victim, "tackled")] : [];
+    case "block":
+      return one(event.athlete, "tackled");
+    case "foul":
+      return humans.map((a) => [a.seat!, a.id === event.victim ? "tackled" : "whistle"]);
+    case "setpiece":
+      // The taker's phone wakes up for the kick.
+      return one(event.taker, "ball");
     case "goal":
       return humans.map((a) => [a.seat!, a.team === event.team ? "goal" : "conceded"]);
     case "whistle":

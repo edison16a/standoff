@@ -9,6 +9,7 @@ import { phoneMessageSchema, type PhoneMessage, type RoomPhase } from "../protoc
 import type { Label } from "../render/match-renderer";
 import { ROSTER } from "../roster";
 import { TEAMS, type TeamId } from "../teams";
+import { registerTestActions } from "./admin";
 import { Banners } from "./banners";
 import { DemoMatch } from "./demo-match";
 import { buzzFor } from "./buzz";
@@ -36,6 +37,8 @@ export class FifaHost {
   private readonly banners: Banners;
   private readonly unsubscribe: () => void;
   private readonly unpress: () => void;
+  /** Removes this game's shortcuts from the host's hidden admin panel. */
+  private unadmin: (() => void) | null = null;
   private lastHud = 0;
   private seed = Math.floor(Math.random() * 1e6);
   private replaying = false;
@@ -59,6 +62,7 @@ export class FifaHost {
     this.unsubscribe();
     this.unpress();
     this.pad.dispose();
+    this.unadmin?.();
     this.audio.stop();
     this.room.setPlaying(false);
   }
@@ -130,6 +134,8 @@ export class FifaHost {
   startMatch(): void {
     if (this.lobby.startBlock()) return;
     this.driver = new MatchDriver(this.lobby.entrants(), this.seed++, this.lobby.level);
+    this.unadmin?.();
+    this.unadmin = registerTestActions(this.driver);
     this.replaying = false;
     this.goals = 0;
     this.banners.clear();
@@ -141,6 +147,8 @@ export class FifaHost {
   /** From the results: back to the team picker, keeping everyone's choices. */
   backToLobby(): void {
     this.driver = null;
+    this.unadmin?.();
+    this.unadmin = null;
     this.replaying = false;
     this.banners.clear();
     this.room.setPlaying(false);

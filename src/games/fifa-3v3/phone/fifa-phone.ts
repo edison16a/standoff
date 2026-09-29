@@ -76,8 +76,13 @@ export class FifaPhone {
   }
 
   slide(down: boolean): void {
-    if (down) this.pad.press(BUTTONS.slide);
-    else this.pad.release(BUTTONS.slide);
+    this.button(BUTTONS.slide, down);
+  }
+
+  /** The defending buttons, and any other plain press and release. */
+  button(name: string, down: boolean): void {
+    if (down) this.pad.press(name);
+    else this.pad.release(name);
   }
 
   private onRoom(event: PhoneRoomEvent): void {

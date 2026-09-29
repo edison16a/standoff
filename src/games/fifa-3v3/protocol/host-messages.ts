@@ -8,6 +8,26 @@ export type RoomPhase = (typeof PHASES)[number];
 const team = z.union([z.literal(0), z.literal(1)]);
 
 /**
+ * What the controller is for right now: attacking (Shoot/Pass and
+ * Skill), defending (Guard, Slide, Steal and Jump), taking a free kick
+ * or penalty, or waiting while someone else takes one.
+ */
+export const PAD_MODES = ["attack", "defend", "kick", "wait"] as const;
+export type PadMode = (typeof PAD_MODES)[number];
+
+/** The free kick or penalty this phone's player is taking, and the stage of it. */
+export const kickSchema = z.object({
+  kind: z.enum(["free", "penalty"]),
+  stage: z.enum(["aim", "curve", "power", "runup"]),
+  /** A free kick's bend, -1 to 1, for the read out. */
+  curve: z.number().min(-1).max(1),
+  /** This phone's player is taking it; otherwise they watch. */
+  taker: z.boolean(),
+  /** The side taking it. */
+  team,
+});
+
+/**
  * Everything one phone needs to draw its screen. The host sends each
  * phone its own copy whenever something on it changed, rather than
  * patches, because it is small and a phone that reconnects mid match is
@@ -34,6 +54,12 @@ export const phoneStateSchema = z.object({
   result: z.enum(["win", "lose"]).nullable(),
   /** A word for the moment, like Goal or Save. */
   banner: z.string().max(24).nullable(),
+  mode: z.enum(PAD_MODES),
+  /** Guard held: shadowing ("on"), or too far from the man to do anything ("far"). */
+  guard: z.enum(["off", "on", "far"]),
+  /** Metres to the man this player marks, while defending. */
+  markDistance: z.number().min(0).max(99).nullable(),
+  kick: kickSchema.nullable(),
 });
 
 export const BUZZ_KINDS = ["kick", "pass", "ball", "tackle", "tackled", "goal", "conceded", "whistle", "win", "lose"] as const;
@@ -45,4 +71,5 @@ export const buzzSchema = z.object({ kind: z.literal("buzz"), event: z.enum(BUZZ
 export const hostMessageSchema = z.discriminatedUnion("kind", [phoneStateSchema, buzzSchema]);
 
 export type PhoneState = z.infer<typeof phoneStateSchema>;
+export type KickState = z.infer<typeof kickSchema>;
 export type HostMessage = z.infer<typeof hostMessageSchema>;

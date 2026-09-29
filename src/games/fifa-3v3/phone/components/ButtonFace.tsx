@@ -3,6 +3,7 @@
  * the word, so the second button's change from Slide to Skill is
  * obvious at a glance.
  */
+import { BackIcon, GuardIcon, JumpIcon, SetIcon, StealIcon } from "./defence-icons";
 
 function BallIcon() {
   return (
@@ -30,7 +31,7 @@ function SkillIcon() {
   );
 }
 
-const ICONS = { ball: BallIcon, slide: SlideIcon, skill: SkillIcon } as const;
+const ICONS = { ball: BallIcon, slide: SlideIcon, skill: SkillIcon, guard: GuardIcon, steal: StealIcon, jump: JumpIcon, set: SetIcon, back: BackIcon } as const;
 
 export function ButtonFace({ icon, text }: { icon: keyof typeof ICONS; text: string }) {
   const Icon = ICONS[icon];

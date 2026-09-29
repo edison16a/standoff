@@ -6,17 +6,9 @@ import { createMatch, stepMatch, type Entrant } from "../engine/match";
 import type { Command, MatchState } from "../engine/types";
 import { buildView, type MatchView } from "../engine/view";
 import { BUTTONS } from "../protocol";
+import { applyPress, type Press } from "./press-command";
 import { ReplayRecorder } from "./replay";
 import { testHooks } from "./test-hooks";
-
-interface Press {
-  button: string;
-  down: boolean;
-  x: number;
-  y: number;
-  /** For a release of Shoot/Pass, how long the phone saw it held. */
-  held?: number;
-}
 
 /**
  * Runs one match for the host: fixed steps from the animation clock,
@@ -31,6 +23,9 @@ export class MatchDriver {
   private readonly clock: FixedStepClock;
   private readonly presses = new Map<number, Press[]>();
   private readonly held = new Map<number, number>();
+  /** Players whose big button went down as Guard, so its release ends Guard. */
+  private readonly guarding = new Set<number>();
+  private readonly pending: ((state: MatchState) => void)[] = [];
 
   constructor(readonly entrants: readonly Entrant[], seed: number, botLevel: BotLevel = DEFAULT_BOT_LEVEL) {
     const hooks = testHooks();
@@ -50,6 +45,11 @@ export class MatchDriver {
     this.presses.set(seat, list);
   }
 
+  /** Something to do to the match after the next step, for the admin panel's shortcuts. */
+  queue(action: (state: MatchState) => void): void {
+    this.pending.push(action);
+  }
+
   /** The phone's own measure of a Shoot/Pass hold, which comes just before its release. */
   noteHeld(seat: number, seconds: number): void {
     if (this.athleteBySeat.has(seat)) this.held.set(seat, seconds);
@@ -67,6 +67,8 @@ export class MatchDriver {
     const steps = this.clock.stepsFor(nowMs);
     for (let i = 0; i < steps; i++) {
       stepMatch(this.state, this.commands(pad, nowMs));
+      // Test shortcuts run between steps, so what they cause (a whistle, say) is heard like anything else.
+      for (const action of this.pending.splice(0)) action(this.state);
       events.push(...this.state.events);
       for (const event of this.state.events) if (event.type === "goal") this.replay.markGoal(this.state.time);
       if (this.replay.wants(this.state.time)) this.replay.record(buildView(this.state));
@@ -88,18 +90,7 @@ export class MatchDriver {
       const queued = this.presses.get(seat);
       // One press per step keeps a quick tap's down and up in order.
       const next = queued?.shift();
-      if (next) {
-        const aim = { x: next.x, z: -next.y };
-        if (next.button === BUTTONS.shoot) {
-          if (next.down) command.shootDown = true;
-          else command.shootUp = true;
-          command.aim = aim;
-          if (next.held !== undefined) command.held = next.held;
-        } else if (next.button === BUTTONS.slide && next.down) {
-          command.slide = true;
-          if (Math.hypot(aim.x, aim.z) > 0.2) command.move = aim;
-        }
-      }
+      if (next) applyPress(this.state, this.state.athletes[id]!, next, command, this.guarding);
       out.set(id, command);
     }
     return out;

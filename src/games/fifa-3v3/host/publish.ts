@@ -1,5 +1,6 @@
 import type { Player } from "@/platform/games/game-api";
 import { roleOf } from "../engine/roles";
+import { padFields } from "./pad-state";
 import { ROSTER } from "../roster";
 import type { PhoneState, RoomPhase } from "../protocol";
 import type { Banners } from "./banners";
@@ -98,5 +99,6 @@ function phoneState(c: PublishContext, seat: number): PhoneState {
     goals: athlete?.stats.goals ?? 0,
     result: over ? (match.winner === athlete.team ? "win" : "lose") : null,
     banner: c.banners.current?.text ?? null,
+    ...padFields(match, athlete),
   };
 }

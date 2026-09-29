@@ -17,7 +17,7 @@ export class PhoneLink {
 
   sendState(seat: number, state: PhoneState, nowMs: number): void {
     const json = JSON.stringify(state);
-    const urgent = `${state.phase}|${state.pick}|${state.ready}|${state.team}|${state.score}|${state.hasBall}|${state.result}|${state.banner}|${state.taken}`;
+    const urgent = `${state.phase}|${state.pick}|${state.ready}|${state.team}|${state.score}|${state.hasBall}|${state.result}|${state.banner}|${state.taken}|${state.mode}|${state.guard}|${state.kick?.stage}`;
     const prev = this.last.get(seat);
     if (prev?.json === json) return;
     if (prev && prev.urgent === urgent && nowMs - prev.at < MIN_GAP_MS) return;
