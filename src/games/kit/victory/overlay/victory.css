@@ -1,0 +1,112 @@
+/*
+  The winners' names over a victory scene. Games place it in a
+  positioned parent that covers the screen.
+*/
+
+.kit-victory {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6vmin;
+  padding: 0 4vw;
+  pointer-events: none;
+  text-align: center;
+}
+
+.kit-victory--bottom {
+  bottom: 6vh;
+}
+
+.kit-victory--top {
+  top: 5vh;
+}
+
+.kit-victory--center {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.kit-victory__eyebrow {
+  margin: 0;
+  padding: 0.5vmin 2.4vmin;
+  border: 2px solid rgba(245, 197, 66, 0.75);
+  border-radius: 999px;
+  background: rgba(10, 8, 4, 0.6);
+  color: #ffe8a3;
+  font-size: clamp(14px, 2.6vmin, 30px);
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  animation: kit-victory-fade 500ms ease-out both;
+}
+
+.kit-victory__names {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 4vmin;
+}
+
+.kit-victory__name {
+  margin: 0;
+  font-family: "Arial Black", Impact, system-ui, sans-serif;
+  font-size: var(--kit-victory-size, 14vmin);
+  font-style: italic;
+  font-weight: 900;
+  line-height: 1.02;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.kit-victory__name span {
+  display: inline-block;
+  background: linear-gradient(180deg, #fffbe6 0%, #ffe07a 38%, #e3a52b 62%, #fff0b0 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0.4vmin 0 #5a3a08) drop-shadow(0 0 2.2vmin var(--kit-victory-glow)) drop-shadow(0 1vmin 2vmin rgba(0, 0, 0, 0.8));
+  animation: kit-victory-letter 650ms cubic-bezier(0.2, 1.5, 0.4, 1) both;
+}
+
+.kit-victory__detail {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(16px, 3vmin, 34px);
+  font-weight: 800;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+  animation: kit-victory-fade 600ms 500ms ease-out both;
+}
+
+@keyframes kit-victory-letter {
+  from {
+    opacity: 0;
+    transform: translateY(0.6em) scale(0.6) rotate(-6deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes kit-victory-fade {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kit-victory__name span,
+  .kit-victory__eyebrow,
+  .kit-victory__detail {
+    animation: none;
+  }
+}
