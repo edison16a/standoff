@@ -135,6 +135,15 @@ export const STAGES: readonly StageSpec[] = ROWS.map((row, i) => {
   };
 });
 
+/**
+ * The most zombies a stage ever sends, bosses included, whatever the size
+ * of the team: ten early on, rising to about twenty at the end. More guns
+ * make a round quicker, never longer.
+ */
+export function roundCap(index: number): number {
+  return index <= BOSS_EVERY ? 10 : Math.min(22, Math.round(10 + (10 * (index - BOSS_EVERY)) / 8));
+}
+
 /** Fights that end in a big moment of the story: the chopper on the roof and the ship at the pier. */
 export function storyBeat(index: number): boolean {
   return index === CHOPPER_STAGE || index === STAGE_COUNT;

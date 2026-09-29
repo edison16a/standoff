@@ -1,5 +1,5 @@
 import type { Rng } from "./rng";
-import { HALF_WIDTH, type StageSpec } from "./stages";
+import { HALF_WIDTH, roundCap, type StageSpec } from "./stages";
 import type { ZombieKind } from "./zombie-kinds";
 
 /** One zombie to put on the road: what it is, how far ahead and how far off the middle. */
@@ -22,9 +22,10 @@ export interface Field {
 /** Once the big boss is down, the rest of its runners come this soon, so the fight never stalls. */
 const HURRY = 1.2;
 
-/** How many ordinary zombies a stage sends at a team of this size. A few more per gun, never a long wave. */
+/** How many ordinary zombies a stage sends at a team of this size. A few more per gun, never past the stage's cap. */
 export function teamCount(spec: StageSpec, players: number): number {
-  return Math.round(spec.count * (1 + 0.25 * Math.max(0, players - 1)));
+  const wanted = Math.round(spec.count * (1 + 0.25 * Math.max(0, players - 1)));
+  return Math.min(wanted, Math.max(spec.count, roundCap(spec.index) - spec.bosses.length));
 }
 
 export function teamMaxAlive(spec: StageSpec, players: number): number {

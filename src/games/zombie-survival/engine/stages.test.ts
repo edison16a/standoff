@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { teamCount } from "./spawner";
-import { BOSS_EVERY, CHOPPER_STAGE, STAGE_COUNT, STAGES, stageSpeed } from "./stages";
+import { BOSS_EVERY, CHOPPER_STAGE, roundCap, STAGE_COUNT, STAGES, stageSpeed } from "./stages";
 import { isMiniBoss } from "./zombie-kinds";
 
 /** Everything a single player has to put down on a stage, bosses included. */
@@ -64,10 +64,17 @@ describe("the stages", () => {
     for (const s of STAGES) expect(total(s.index)).toBeLessThanOrEqual(22);
   });
 
-  it("gives a bigger team a few more of the dead, never a second wave", () => {
+  it("gives a bigger team a few more of the dead where there is room, never past the cap", () => {
     for (const s of STAGES) {
-      expect(teamCount(s, 4)).toBeGreaterThan(teamCount(s, 1));
-      expect(teamCount(s, 4)).toBeLessThan(teamCount(s, 1) * 2);
+      for (const players of [2, 3, 4]) {
+        const team = teamCount(s, players) + s.bosses.length;
+        expect(teamCount(s, players)).toBeGreaterThanOrEqual(teamCount(s, 1));
+        expect(team, `stage ${s.index} with ${players}`).toBeLessThanOrEqual(Math.max(total(s.index), roundCap(s.index)));
+      }
     }
+    // Four players still see ten at most early on and about twenty at the end.
+    for (let i = 1; i <= 5; i++) expect(teamCount(STAGES[i - 1]!, 4) + STAGES[i - 1]!.bosses.length).toBeLessThanOrEqual(10);
+    for (let i = 13; i <= 15; i++) expect(teamCount(STAGES[i - 1]!, 4) + STAGES[i - 1]!.bosses.length).toBeLessThanOrEqual(22);
+    expect(teamCount(STAGES[0]!, 4)).toBeGreaterThan(teamCount(STAGES[0]!, 1));
   });
 });
