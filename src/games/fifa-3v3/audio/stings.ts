@@ -3,7 +3,8 @@ import { midi, noise, tone } from "@/platform/audio/voices";
 
 /**
  * One off musical moments on top of the loop: a brassy victory fanfare
- * with timpani for the winners, and a rising sting for a goal.
+ * with timpani for the winners, a rising sting for a goal, and the big
+ * chord as the cup goes up.
  */
 
 /** A brass chord: detuned saws through a warm filter that opens on the attack. */
@@ -45,4 +46,17 @@ export function goalSting(engine: AudioEngine, out: AudioNode): void {
   [60, 64, 67, 72].forEach((n, i) => brass(engine, out, at + i * 0.07, [n, n + 12], 0.35, 0.03));
   brass(engine, out, at + 0.3, [60, 67, 72, 76], 1.2, 0.028);
   timpani(engine, out, at + 0.3, 36, 0.35);
+}
+
+/**
+ * The cup goes up: a timpani roll that swells into a held brass chord in
+ * D major, lifted a fourth on top, with a cymbal wash over it.
+ */
+export function trophySting(engine: AudioEngine, out: AudioNode): void {
+  const at = engine.now + 0.02;
+  for (let i = 0; i < 8; i++) timpani(engine, out, at + i * 0.045, 38, 0.12 + i * 0.03);
+  brass(engine, out, at + 0.36, [50, 57, 62, 66, 69], 2.8, 0.03);
+  brass(engine, out, at + 0.95, [62, 66, 69, 74], 2.4, 0.026);
+  timpani(engine, out, at + 0.36, 38, 0.45);
+  noise(engine, out, at + 0.36, { filter: "highpass", frequency: 5500, decay: 2.6, peak: 0.13 });
 }
