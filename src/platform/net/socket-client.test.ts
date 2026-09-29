@@ -191,6 +191,20 @@ describe("SocketClient opening", () => {
     expect(first.readyState).toBe(1);
   });
 
+  it("retries a refused handover for a page with no handover handler too", () => {
+    vi.useFakeTimers();
+    // Phones pass no onHandoverFailed, and the retry once sat inside that optional call.
+    const client = track(new SocketClient(quiet()));
+    client.connect();
+    const first = FakeSocket.all[0]!;
+    first.open();
+    first.receive({ type: "server:rotate" });
+    FakeSocket.all[1]!.open();
+    FakeSocket.all[1]!.receive({ type: "room:error", reason: "not-found" });
+    vi.advanceTimersByTime(3000);
+    expect(FakeSocket.all).toHaveLength(3);
+  });
+
   it("goes to the stream at once where no WebSocket ever opened, and tries one again later", async () => {
     vi.useFakeTimers();
     const sources = stubStream({ opens: true });

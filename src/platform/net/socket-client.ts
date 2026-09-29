@@ -148,7 +148,9 @@ export class SocketClient {
   /** Refused, maybe where the room is not known. The old socket works till its cut, so it is tried again. */
   private refusedHandover(): void {
     this.abandonNext();
-    this.handlers.onHandoverFailed?.({ final: !this.retryHandover() });
+    // Retried first: inside the optional call it would never run for a page with no handler.
+    const retrying = this.retryHandover();
+    this.handlers.onHandoverFailed?.({ final: !retrying });
   }
 
   private retryHandover(): boolean {
