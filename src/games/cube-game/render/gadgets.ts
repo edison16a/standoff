@@ -82,9 +82,9 @@ export class Gadgets {
       const colour = MODE_COLOURS[portal.mode];
       const frame = new THREE.Group();
       frame.position.set(portal.x, PORTAL_SIZE + 0.1, 0);
-      const ring = new THREE.Mesh(portalRing, new THREE.MeshBasicMaterial({ color: bright(colour, 1.1) }));
+      const ring = new THREE.Mesh(portalRing, new THREE.MeshBasicMaterial({ color: bright(colour, 0.9) }));
       ring.scale.setScalar(PORTAL_SIZE);
-      const inner = new THREE.Mesh(portalRing, new THREE.MeshBasicMaterial({ color: bright(colour, 0.7) }));
+      const inner = new THREE.Mesh(portalRing, new THREE.MeshBasicMaterial({ color: bright(colour, 0.6) }));
       inner.scale.setScalar(PORTAL_SIZE * 0.72);
       const fog = new THREE.Sprite(additive(this.glow, colour, 0.14));
       fog.scale.setScalar(PORTAL_SIZE * 3.2);
