@@ -31,11 +31,13 @@ export function heatDrag(a: Athlete): number {
   return Math.max(0.6, 1 - 0.1 * Math.max(0, a.jukeHeat - JUKE.heatFree));
 }
 
-/** Top speed right now, from the player's speed, role, ball, rush and tired legs. */
-export function topSpeed(a: Athlete, withBall: boolean): number {
+/**
+ * Top speed right now, from the player's speed, role, ball, rush and
+ * tired legs. `pace` scales it for a QB who is still a passer (qb-run.ts).
+ */
+export function topSpeed(a: Athlete, withBall: boolean, pace = 1): number {
   const base = MOVE.baseSpeed + statsOf(a).speed * MOVE.perSpeed;
-  // The QB runs as fast as anyone; running costs him accuracy instead (engine/accuracy.ts).
-  const role = a.role === "lineman" ? 0.7 : 1;
+  const role = (a.role === "lineman" ? 0.7 : 1) * pace;
   const rush = a.rushT > 0 ? RUSH.boost : 1;
   return base * role * (withBall ? MOVE.withBall : 1) * rush * heatDrag(a);
 }

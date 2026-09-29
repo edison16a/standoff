@@ -12,8 +12,8 @@ export interface Play {
   rushOn: boolean;
   /** A forward pass has left the QB's hand; there is only one per play. */
   passed: boolean;
-  /** The QB ran past the line and can no longer throw. */
-  crossed: boolean;
+  /** The QB pressed Run or crossed the line: a runner for the rest of the play, with no throw and no pitch. */
+  qbRun: boolean;
   caughtBy: number | null;
   intercepted: boolean;
   /** The receiver the throw stick picks right now, whose ring lights up. */
@@ -29,7 +29,7 @@ export interface Play {
 
 export function newPlay(call: PlayCall, time: number, back: number | null = null): Play {
   return {
-    call, sinceSnap: null, rushOn: false, passed: false, crossed: false,
+    call, sinceSnap: null, rushOn: false, passed: false, qbRun: false,
     caughtBy: null, intercepted: false, target: null, back, pitched: false, startedAt: time, over: false,
   };
 }

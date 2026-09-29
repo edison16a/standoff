@@ -111,22 +111,16 @@ export const PASS = {
 } as const;
 
 /**
- * Throwing on the run. Set feet give a clean pass; the faster the QB is
- * moving at the release, the more it sprays, the less it bends after the
- * receiver, and the easier it is to knock down or pick off.
+ * The QB as a passer is clearly slower than everyone else, slowest just
+ * after the snap while he sets up, then picking up a little. Once he
+ * presses Run (or crosses the line) he moves like any runner.
  */
-export const ON_THE_RUN = {
-  /** At or under this speed the QB counts as set. */
-  still: 1.2,
-  /** At this speed and over the throw is as loose as it gets. */
-  full: 6.5,
-  /** Spread of the miss at full looseness: a base plus a share of the pass length. */
-  missBase: 1.4,
-  missPerMetre: 0.1,
-  /** How much wider defenders read, and how much more often they swat, a loose throw. */
-  readWider: 0.5,
-  swatMore: 1,
-  wobble: 0.12,
+export const QB_PACE = {
+  /** Share of a normal top speed at the snap, and once he is settled. */
+  early: 0.55,
+  late: 0.78,
+  /** Seconds after the snap to go from early to late. */
+  ramp: 3,
 } as const;
 
 /** The pitch on a run call: a short soft lob to the back beside the QB. */
