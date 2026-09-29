@@ -10,10 +10,9 @@ import { AthleteView } from "./athlete-view";
 import { BallView } from "./ball-view";
 import { CeremonyStage } from "./ceremony/ceremony-stage";
 import type { Ceremony } from "../engine/ceremony";
-import { freeThrowShot } from "./free-throw-camera";
 import { Referee } from "./referee";
 import { Effects } from "./effects/effects";
-import { lineScene, pressureOn } from "./scene-read";
+import { broadcastShot, lineScene, pressureOn } from "./scene-read";
 import { TvCamera, type Shot } from "./tv-camera";
 
 const tmp = new THREE.Vector3();
@@ -191,14 +190,7 @@ export class CourtRenderer {
   }
 
   private shot(m: Match): Shot {
-    const b = m.ball;
-    const dunker = m.athletes.find((a) => a.action.kind === "drive" && a.action.dunk && a.action.t > a.action.takeoff * 0.5);
-    let winners: Shot["winners"] = null;
-    if (m.phase === "over" && m.winner !== null && m.phaseT > 1.5) {
-      const side = m.athletes.filter((a: Athlete) => a.team === m.winner);
-      winners = { x: side.reduce((s, a) => s + a.x, 0) / side.length, z: side.reduce((s, a) => s + a.z, 0) / side.length };
-    }
-    return { focus: b.pos, dunker: dunker ? { x: dunker.x, z: dunker.z } : null, winners, intro: this.intro, freeThrow: freeThrowShot(m) };
+    return broadcastShot(m, this.intro);
   }
 
   dispose(): void {
