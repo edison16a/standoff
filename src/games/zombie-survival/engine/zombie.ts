@@ -99,7 +99,8 @@ export function stepZombie(z: Zombie, dt: number): number {
     setState(z, z.ahead <= spec.reach ? "attack" : "walk");
   }
   const drift = z.targetSide - z.side;
-  z.side += Math.sign(drift) * Math.min(Math.abs(drift), DRIFT * dt);
+  // A zombie with no pace (Training) stands where it rose.
+  if (z.speed > 0) z.side += Math.sign(drift) * Math.min(Math.abs(drift), DRIFT * dt);
   const room = sideRoom(z.ahead);
   z.side = Math.max(-room, Math.min(room, z.side));
   if (z.state === "walk") {

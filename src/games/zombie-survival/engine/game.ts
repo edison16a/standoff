@@ -1,7 +1,9 @@
+import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { Seat } from "@/platform/protocol";
 import { Achievements } from "./achievements";
 import { HELIPAD, inFlight } from "./chopper";
 import { Encounter } from "./encounter";
+import { hordeStage } from "./horde-level";
 import type { Cutscene, GameEvent, Phase } from "./events";
 import { CHOPPER_LINES, ESCAPE_LINES, radioFor } from "./radio";
 import { CHECKPOINT_HEAL, CLEAR_SECONDS, CUTSCENE_SECONDS, FLY_SPEED, MAX_HEALTH, RETRY_FLOOR, STORY_CLEAR_SECONDS, WALK_SPEED } from "./pacing";
@@ -41,8 +43,14 @@ export class SurvivalGame {
   private stageHurt = false;
   private lowest = MAX_HEALTH;
 
-  /** `random` spreads each shot's bullets. The showcase seeds it, so its fights replay exactly. */
-  constructor(private readonly random: () => number = Math.random) {}
+  /**
+   * `random` spreads each shot's bullets. The showcase seeds it, so its fights replay exactly.
+   * `level` is the lobby's difficulty. Left out, the run plays as first tuned.
+   */
+  constructor(
+    private readonly random: () => number = Math.random,
+    private readonly level: BotLevel = "medium",
+  ) {}
 
   get running(): boolean {
     return this.phase !== "lobby";
@@ -194,7 +202,7 @@ export class SurvivalGame {
   }
 
   private beginFight(): void {
-    const spec = stageSpec(this.stage);
+    const spec = hordeStage(stageSpec(this.stage), this.level);
     this.checkpoint = { stage: this.stage, health: this.health };
     this.encounter = new Encounter(spec, this.squad.size, spec.index * 7919 + 17, this.nextZombieId);
     this.nextZombieId += 1000;
