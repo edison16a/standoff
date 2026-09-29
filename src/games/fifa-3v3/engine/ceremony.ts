@@ -27,21 +27,23 @@ export const CEREMONY_SPOT: Vec2 = { x: 0, z: 0 };
 export const CEREMONY_FACING = Math.PI / 2;
 
 /**
- * Where the rest of the side stands, beside and behind the captain, in
- * order: the outfield players first, the keeper after them. Before the
- * lift they give him room; once it is up they crowd in.
+ * Where the rest of the side stands in a shallow arc either side of the
+ * captain, a little back, in order: the outfield players first, the
+ * keeper after them. Nobody stands straight behind him, so from the
+ * front every face shows. Before the lift they give him room; once it
+ * is up they crowd in.
  */
 const AROUND: readonly Vec2[] = [
-  { x: -1.4, z: -0.5 },
-  { x: 1.4, z: -0.45 },
-  { x: -0.6, z: -1.45 },
-  { x: 0.65, z: -1.4 },
+  { x: -1.35, z: -0.4 },
+  { x: 1.35, z: -0.4 },
+  { x: -2.4, z: -1.0 },
+  { x: 2.4, z: -1.0 },
 ];
 const CROWDED: readonly Vec2[] = [
-  { x: -0.95, z: -0.4 },
-  { x: 0.95, z: -0.35 },
-  { x: -0.45, z: -1.0 },
-  { x: 0.5, z: -0.98 },
+  { x: -0.95, z: -0.3 },
+  { x: 0.95, z: -0.3 },
+  { x: -1.8, z: -0.75 },
+  { x: 1.8, z: -0.75 },
 ];
 
 /** Where the losers stand, off behind the winners and to the sides, heads down. */
@@ -106,7 +108,7 @@ export function stageCeremony(state: MatchState): void {
   const ball = state.ball;
   ball.owner = null;
   ball.inGoal = null;
-  ball.pos = { x: CEREMONY_SPOT.x + 2.6, y: BALL.radius, z: CEREMONY_SPOT.z + 0.9 };
+  ball.pos = { x: CEREMONY_SPOT.x + 3.2, y: BALL.radius, z: CEREMONY_SPOT.z - 1.8 };
   ball.vel = { x: 0, y: 0, z: 0 };
   ball.spin = { x: 0, y: 0, z: 0 };
   state.flight = null;

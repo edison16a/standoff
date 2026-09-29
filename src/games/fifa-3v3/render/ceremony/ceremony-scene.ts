@@ -5,6 +5,15 @@ import type { CeremonyView } from "../../engine/view";
 import { TEAMS } from "../../teams";
 import { TrophyGrip } from "./trophy-grip";
 
+/** Where the cannons stand round the side, behind it and off its flanks. */
+const CANNONS: readonly { x: number; z: number }[] = [
+  { x: -4.6, z: -1.2 },
+  { x: 4.6, z: -1.2 },
+  { x: -2.6, z: -3.6 },
+  { x: 2.6, z: -3.6 },
+  { x: 0, z: -4.4 },
+];
+
 /** Where the spotlights point: the captain's chest, where the cup starts. */
 const AIM = new THREE.Vector3(CEREMONY_SPOT.x, 1.2, CEREMONY_SPOT.z);
 
@@ -57,7 +66,7 @@ export class CeremonyScene {
     this.active = true;
     this.fired = false;
     const team = TEAMS[ceremony.team];
-    this.confetti = new VictoryConfetti({ count: 2600, size: 0.07, colours: [team.kit.shirt, team.kit.trim, team.color, "#ffd166", ...PAPER_COLOURS.slice(0, 2)], foil: 0.3, physics: { floorY: 0 }, seed: 11 });
+    this.confetti = new VictoryConfetti({ count: 2200, size: 0.055, colours: [team.kit.shirt, team.kit.trim, team.color, "#ffd166", ...PAPER_COLOURS.slice(0, 2)], foil: 0.3, physics: { floorY: 0 }, seed: 11 });
     this.group.add(this.confetti.object);
     this.lights.object.visible = true;
     this.lights.aimAt(AIM);
@@ -65,12 +74,20 @@ export class CeremonyScene {
     this.confetti.startRain({ x: CEREMONY_SPOT.x, y: 9, z: CEREMONY_SPOT.z }, 4.5, 30);
   }
 
-  /** The cup is up: every cannon at once, and the rain gets heavy. */
+  /**
+   * The cup is up: every cannon at once, and the rain gets heavy. The
+   * cannons stand behind the side and off to its flanks, angled up and in
+   * over it, so none fires across the cameras in front.
+   */
   private fire(): void {
     this.fired = true;
-    const at = { x: CEREMONY_SPOT.x, y: 0.2, z: CEREMONY_SPOT.z - 0.4 };
-    this.confetti?.cannons(at, { ring: 4.2, cannons: 6, count: 300, speed: 14 });
-    this.confetti?.startRain({ x: CEREMONY_SPOT.x, y: 10, z: CEREMONY_SPOT.z }, 5, 140);
+    const confetti = this.confetti;
+    if (!confetti) return;
+    for (const c of CANNONS) {
+      const at = { x: CEREMONY_SPOT.x + c.x, y: 0.2, z: CEREMONY_SPOT.z + c.z };
+      confetti.burst(at, { direction: { x: -c.x * 0.09, y: 1, z: -c.z * 0.06 + 0.12 }, count: 280, speed: 14, spread: 0.3 });
+    }
+    confetti.startRain({ x: CEREMONY_SPOT.x, y: 10, z: CEREMONY_SPOT.z - 0.5 }, 5, 100);
   }
 
   private stop(): void {

@@ -40,7 +40,7 @@ describe("the ceremony camera", () => {
       expect(Math.abs(cup.x)).toBeLessThan(0.25);
       expect(Math.abs(cup.y)).toBeLessThan(0.3);
       const place = ceremonyCamera(t, 16 / 9);
-      expect(Math.hypot(place.pos.x, place.pos.z)).toBeLessThan(3.6);
+      expect(Math.hypot(place.pos.x, place.pos.z)).toBeLessThan(5);
     }
   });
 

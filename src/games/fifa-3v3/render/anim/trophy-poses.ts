@@ -14,7 +14,7 @@ const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 const UP = -2.95;
 
 /** The two holds on the cup: cradled at the chest, and right up over the head. */
-const CRADLE = { shX: -0.62, shZ: -0.08, shY: 0.62, el: -1.55 };
+const CRADLE = { shX: -0.3, shZ: -0.06, shY: 0.6, el: -1.25 };
 const RAISED = { shX: UP, shZ: 0.2, shY: 0.05, el: -0.28 };
 
 /**
@@ -35,8 +35,8 @@ export function captainPose(t: number): Pose {
   p.elL = p.elR = mix(CRADLE.el, RAISED.el, lift) - 0.55 * pump;
   // A kiss for the cup: the head and shoulders lean in to it.
   const kiss = bump(t, 0.7, 1.7);
-  p.spineX = 0.16 * kiss - 0.14 * lift;
-  p.neckX = mix(0.38 + 0.25 * kiss, -0.5, lift);
+  p.spineX = 0.24 * kiss - 0.14 * lift;
+  p.neckX = mix(0.3 + 0.3 * kiss, -0.5, lift);
   // A dip at the knees to drive it up, and a bounce on the toes with every pump.
   const dip = bump(t, CEREMONY.raise - 0.3, CEREMONY.raise + 0.35);
   p.kneeL = p.kneeR = 0.4 * dip + 0.12 * pump;
@@ -59,11 +59,12 @@ export function matePose(t: number, phase: number): Pose {
   const go = smooth((t - CEREMONY.up + 0.05 - 0.12 * Math.sin(phase * 2.3)) / 0.25);
   const clap = Math.sin(t * 13 + phase);
   const bounce = Math.abs(Math.sin(t * 4.5 + phase));
-  // Clapping: hands meet in front of the chest and part, over and over.
-  p.shLX = p.shRX = mix(-0.95, UP * 0.92, go);
-  p.shLZ = p.shRZ = mix(0.02 + 0.2 * (0.5 + 0.5 * clap), 0.42, go);
-  p.shLY = p.shRY = mix(0.55, 0, go);
-  p.elL = p.elR = mix(-1.05, -0.75 + 0.35 * Math.sin(t * 9 + phase), go);
+  // Clapping: forearms swing in across the chest till the hands meet, and part, over and over.
+  const meet = 0.5 + 0.5 * clap;
+  p.shLX = p.shRX = mix(-0.7, UP * 0.92, go);
+  p.shLZ = p.shRZ = mix(-0.08 + 0.12 * meet, 0.42, go);
+  p.shLY = p.shRY = mix(0.95 - 0.35 * meet, 0, go);
+  p.elL = p.elR = mix(-1.35, -0.75 + 0.35 * Math.sin(t * 9 + phase), go);
   p.lift = mix(0.03 * bounce, 0, go);
   p.neckX = mix(0.05, -0.35, go);
   // Jumping: up off both feet with the knees tucked, down, and up again.

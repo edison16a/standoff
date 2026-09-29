@@ -21,7 +21,7 @@ export const CRANE_END = 8.6;
 /** The cup's top sits this far up the screen (-1 bottom to 1 top), under the names across the top third. */
 const TOP_AT = 0.22;
 /** Once the stats are up the side stands in the left of the picture, clear of the card on the right. */
-const SIDE_AT = -0.36;
+const SIDE_AT = -0.42;
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 const smooth = (v: number) => {
@@ -48,15 +48,15 @@ function lookUnderNames(pos: Point, fov: number): Point {
 }
 
 /**
- * Before the lift: low and close on the captain with the cup at his
- * chest, drifting round in front of him, then sinking and tilting up to
- * follow the cup as it goes over his head.
+ * Before the lift: low in front of the captain with the cup at his
+ * chest and his team mates either side, drifting round and pushing in,
+ * then sinking and tilting up to follow the cup as it goes over his head.
  */
 function hero(t: number): CameraPlace {
   const s = smooth(t / CEREMONY.up);
   const lift = smooth((t - CEREMONY.raise) / (CEREMONY.up - CEREMONY.raise));
-  const pos = around(0.5 - 0.42 * s, 3.4 - 0.7 * s, 1.2 - 0.5 * lift);
-  return { pos, look: { x: CEREMONY_SPOT.x, y: 1.25 + 0.95 * lift, z: CEREMONY_SPOT.z }, fov: 30 };
+  const pos = around(0.45 - 0.4 * s, 4.9 - 1.2 * s, 1.15 - 0.45 * lift);
+  return { pos, look: { x: CEREMONY_SPOT.x, y: 1.3 + 0.75 * lift, z: CEREMONY_SPOT.z }, fov: 30 };
 }
 
 /** The reveal: a cut wide as the cup goes up, then a crane that rises and swings across the front. */
