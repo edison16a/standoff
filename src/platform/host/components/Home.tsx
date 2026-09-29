@@ -37,15 +37,15 @@ const OWNS_KEYS = "input, textarea, select, button, a, [contenteditable]";
  */
 export function Home() {
   const host = useHostRoom();
-  const { status, resuming, error } = useHostStore();
-  const [starting, setStarting] = useState(false);
+  const { status, resuming, error, opening } = useHostStore();
   const [selected, setSelected] = useState(firstChoice);
   // The catalog is never empty, and every index here comes from wrapping round it.
   const game = GAMES[selected] ?? GAMES[0]!;
   // The clip behind waits for the choice to settle, so a held arrow key stays smooth.
   const backdrop = useSettled(game, 180);
   const replaced = status === "replaced";
-  const canPlay = status === "open" && !resuming && !starting;
+  // Locked from the click until the room exists, so a second click cannot make a second room.
+  const canPlay = status === "open" && !resuming && !opening;
 
   const sounds = useHomeAudio(useCallback(() => host.audio, [host]));
 
@@ -59,9 +59,7 @@ export function Home() {
   const play = async () => {
     if (!canPlay || game.status !== "ready") return;
     sounds.start();
-    setStarting(true);
     await host.create(game.id, Math.max(...game.players));
-    setStarting(false);
   };
 
   // Arrows and Enter work from anywhere on the page, like a controller, unless a control has focus.
@@ -121,7 +119,7 @@ export function Home() {
       {/* The tile size is worked out from how many games there are, see home.css. */}
       <main className="home__main" style={{ "--count": GAMES.length } as React.CSSProperties}>
         <GameTiles games={GAMES} selected={selected} onSelect={choose} onHost={() => void play()} />
-        <GameDetails game={game} canPlay={canPlay} starting={starting} onHost={() => void play()} />
+        <GameDetails game={game} canPlay={canPlay} starting={opening} onHost={() => void play()} />
       </main>
     </div>
   );

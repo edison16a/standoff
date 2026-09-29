@@ -1,31 +1,30 @@
 "use client";
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import { Icon } from "@/components/ui/Icon";
+import { Spinner } from "@/components/ui/Loader";
 import { HostContext } from "@/platform/host/components/host-context";
-import { useHostStore } from "@/platform/host/host-store";
+import { useHostStore, type RoomHealth } from "@/platform/host/host-store";
 
-const REMAKE_WAIT_MS = 6000;
+const CHECK: Record<RoomHealth, string> = {
+  idle: "not started",
+  checking: "running",
+  ok: "passed",
+  fixing: "making a new room",
+  lost: "failed",
+};
 
 /**
- * Remake lobby, shown only while a room is open. It opens a fresh room for
- * the same game and moves every phone to it. If phones say "Room not
- * found" while the big screen still shows a code, this gets everyone back
- * together without anyone typing a new code.
+ * Remake lobby, shown only while a room is open. It is the same full
+ * remake as Regenerate room under the QR code: a fresh connection and a
+ * new room for the same game, with every phone that can still hear the old
+ * room moved to it, names and all.
  */
 export function RoomSection() {
   const host = useContext(HostContext);
   const room = useHostStore((state) => state.room);
-  const online = useHostStore((state) => state.status === "open");
-  const [asked, setAsked] = useState<string | null>(null);
-  // A refused remake leaves the code as it was, so the button frees itself after a while.
-  useEffect(() => {
-    if (!asked) return;
-    const timer = setTimeout(() => setAsked(null), REMAKE_WAIT_MS);
-    return () => clearTimeout(timer);
-  }, [asked]);
+  const health = useHostStore((state) => state.health);
   if (!host || !room) return null;
-  // The button waits while its request is out. A new code means it landed.
-  const busy = asked === room.code;
+  const busy = health === "fixing";
 
   return (
     <>
@@ -33,19 +32,12 @@ export function RoomSection() {
         <Icon name="users" />
         Room {room.code}
       </p>
-      <button
-        type="button"
-        className="btn btn--block"
-        disabled={!online || busy}
-        onClick={() => {
-          setAsked(room.code);
-          host.remake();
-        }}
-      >
-        <Icon name="refresh" />
-        {busy ? "Remaking lobby" : "Remake lobby"}
+      <button type="button" className="btn btn--block" disabled={busy} onClick={() => host.regenerate()}>
+        {busy ? <Spinner /> : <Icon name="refresh" />}
+        {busy ? "Making a new room" : "Remake lobby"}
       </button>
       <span className="settings__hint">Opens a new room and moves every phone to it.</span>
+      <span className="settings__hint">Room check: {CHECK[health]}</span>
     </>
   );
 }

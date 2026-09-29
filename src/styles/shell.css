@@ -1,6 +1,7 @@
 /*
   The frame around every game on the computer: the logo at the top left,
-  the tool bar at the top right, the notice under it, and the join card.
+  the tool bar at the top right and the notice under it. The join card
+  and the lost room alert are in room-card.css.
 */
 
 .shell {
@@ -101,115 +102,6 @@
   color: var(--accent-text);
   font-size: 13px;
   white-space: nowrap;
-}
-
-.join {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 20px;
-  border-radius: var(--radius-lg);
-  background: #ffffff;
-  color: #111214;
-  box-shadow: var(--shadow);
-}
-
-.join--center {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -54%);
-  width: min(320px, 56vh);
-}
-
-.join--corner {
-  left: 20px;
-  bottom: 20px;
-  width: 168px;
-  padding: 12px;
-  gap: 8px;
-}
-
-.join__qr {
-  width: 100%;
-  aspect-ratio: 1;
-}
-
-.join__qr svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.join__head {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.join__label {
-  color: #6b7078;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.join__title {
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.join__code {
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-}
-
-.join--corner .join__head {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.join__label {
-  color: #6b7078;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.join__title {
-  font-size: 24px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.join__code {
-  font-size: 16px;
-}
-
-.join__extra {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #d4d6db;
-  border-radius: var(--radius);
-  background: #ffffff;
-  color: #111214;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.join__extra:hover {
-  border-color: var(--accent);
-  color: var(--accent);
 }
 
 /* The capture page for a game's showcase: the scene and nothing else. */
