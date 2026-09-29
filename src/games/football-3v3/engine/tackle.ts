@@ -54,7 +54,7 @@ export function stepLunge(state: MatchState, a: Athlete, dt: number): void {
 /** The chance a carrier shrugs off a clean hit: strength against strength, a little more at full tilt. */
 export function breakChance(tackler: Athlete, carrier: Athlete): number {
   const momentum = (len(carrier.vel) * carrier.mass) / (10 * 100);
-  return clamp(TACKLE.breakBase + TACKLE.breakStrength * (carrier.strength - tackler.strength) + 0.1 * momentum, 0.02, 0.45);
+  return clamp(TACKLE.breakBase + TACKLE.breakStrength * (carrier.strength - tackler.strength) + 0.1 * momentum, 0, 0.45);
 }
 
 /**

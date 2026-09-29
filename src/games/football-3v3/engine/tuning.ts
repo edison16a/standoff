@@ -51,7 +51,7 @@ export const JUKE = {
   evadeTo: 0.75,
   cooldown: 0.75,
   /** Every juke adds heat, which cools off; hot players juke and run slower. */
-  heatDecay: 0.55,
+  heatDecay: 0.3,
   heatCooldown: 0.7,
   heatLength: 0.22,
   heatSlow: 0.07,
