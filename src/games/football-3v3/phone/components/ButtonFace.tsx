@@ -64,12 +64,12 @@ function Guard() {
   );
 }
 
-/** A boot swinging through. */
+/** A kicking boot with its studs. */
 function Kick() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M6 3v9l-3 4h9l3-3" {...stroke} />
-      <ellipse cx="19" cy="9" rx="3" ry="2" transform="rotate(-35 19 9)" {...stroke} />
+      <path d="M4 3h6v8l6 2.2c1.8.6 2.8 1.6 2.8 3.3V18H4Z" fill="currentColor" />
+      <path d="M6 21h2M11 21h2M16 21h2" {...stroke} strokeWidth={1.8} />
     </svg>
   );
 }
