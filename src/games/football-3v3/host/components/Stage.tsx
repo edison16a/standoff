@@ -15,8 +15,9 @@ import { Results } from "./Results";
 export function Stage() {
   const phase = useFootballStore((state) => state.phase);
   const stage = useFootballStore((state) => state.ceremony?.stage ?? null);
-  // With a winner the stats wait for the presentation; after a tie they come at once.
-  const results = phase === "over" && (stage === null || stage === "stats");
+  const tie = useFootballStore((state) => state.over !== null && state.over.winner === null);
+  // With a winner the stats wait for the presentation, even through the celebration before its cut; after a tie they come at once.
+  const results = phase === "over" && (tie || stage === "stats");
   return (
     <div className="fb-stage">
       <FieldCanvas />
