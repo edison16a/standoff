@@ -111,7 +111,7 @@ export async function fifa3v3(ctx) {
   await ctx.fake("state", { ...match, phase: "play", hasBall: true, banner: null });
   await ctx.phone.locator(".fifa-pad").waitFor({ state: "attached", timeout: 5000 });
   await ctx.snap("pad");
-  const guard = { mark: "HOLMVIK", distance: 4, inRange: true, on: true };
+  const guard = { mark: "CPU Sweeper Keeper", distance: 4, inRange: true, on: true };
   await ctx.fake("state", { ...match, phase: "play", hasBall: false, banner: null, defending: true, guard });
   await ctx.snap("defend");
   await ctx.fake("state", { ...match, phase: "setpiece", hasBall: false, defending: false, guard: null, setPiece: { kind: "free", part: "taker", stage: "curve" } });
