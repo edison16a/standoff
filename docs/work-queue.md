@@ -62,6 +62,8 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
    * Free kick curve changes only how much the ball bends (from a straight kick to a wide curve). It must never move the aim.
    * The keeper is still a brick wall: make the goal 1.5 to 2 times bigger (tune within that range by playing until shots beat the keeper often enough to be fun) and keep the keeper exactly the same size, reach and speed, so scoring is fair.
 
+7. **No duplicate name boxes:** in every game where each player's name already shows on or above their character, remove the separate boxes along the bottom of the big screen that just repeat names like "Edison Law". Audit every game. If a box also carries something useful (health, score, ammo), move that onto the name tag or the main HUD instead of losing it.
+
 ### Last
 
 1. **Final check that everything works:** every game played end to end in a real browser with a host page and phone pages (lobby, calibration, a full round, results, back home, a second game without a reload), and the live site's connections checked after the deploy: iPhones on WebSockets, Chrome's fallback, room loss noticed and Regenerate room working. Fix anything found before the media pass.
