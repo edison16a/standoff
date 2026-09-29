@@ -1,4 +1,5 @@
 import { Match, STEP, buildView, type MatchEvent, type MatchView } from "../engine";
+import { adminWin } from "../engine/admin";
 import type { Entry } from "../engine/lineup";
 
 /** Two full teams of computer players, one of every build. */
@@ -22,8 +23,10 @@ export class ShowcaseScene {
   private carry = 0;
   private last = -1;
 
-  constructor(seed: number, seek = 0) {
+  /** `trophy` ends the game at once with a Storm win, to look at the trophy presentation. */
+  constructor(seed: number, seek = 0, trophy = false) {
     this.match = new Match({ entries: SHOWCASE_TEAMS, seed, level: "hard", firstOffense: 0 });
+    if (trophy) adminWin(this.match, 0);
     // Development peeks can jump ahead without drawing every frame on the way.
     for (let t = 0; t < seek; t += STEP) this.match.step(STEP);
     this.match.drainEvents();
