@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Gun } from "./gun";
+import { pelletOffsets } from "./shooting";
 import { reach, weaponBars, weaponFacts } from "./weapon-card";
 import { falloff, WEAPON_IDS, WEAPONS } from "./weapons";
 
@@ -115,5 +116,17 @@ describe("the weapon card", () => {
     expect(weaponFacts("shotgun").range).toBe("Up close");
     expect(weaponFacts("rifle").range).toBe("Long");
     expect(weaponBars("rifle").range).toBe(1);
+  });
+});
+
+describe("a shot's spread", () => {
+  it("keeps every bullet and pellet inside its gun's cone, the size its crosshair shows", () => {
+    let seed = 1;
+    const random = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+    for (const id of WEAPON_IDS) {
+      for (let shot = 0; shot < 200; shot++) {
+        for (const o of pelletOffsets(WEAPONS[id], random)) expect(Math.hypot(o.x, o.y), id).toBeLessThanOrEqual(WEAPONS[id].spread + 1e-12);
+      }
+    }
   });
 });

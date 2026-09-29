@@ -38,8 +38,8 @@ export function pelletOffsets(spec: WeaponSpec, random: () => number): Offset[] 
   const out: Offset[] = [];
   const turn = random() * Math.PI * 2;
   for (let i = 0; i < spec.pellets; i++) {
-    // A sunflower pattern: even coverage, no clumps, no holes in the middle.
-    const r = spec.spread * Math.sqrt((i + 0.5) / spec.pellets) * (0.85 + random() * 0.3);
+    // A sunflower pattern: even coverage, no clumps, no holes in the middle. None strays past the cone, which the crosshair's ring shows.
+    const r = Math.min(spec.spread, spec.spread * Math.sqrt((i + 0.5) / spec.pellets) * (0.85 + random() * 0.3));
     const a = turn + i * 2.39996;
     out.push({ x: Math.cos(a) * r, y: Math.sin(a) * r });
   }
