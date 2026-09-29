@@ -16,7 +16,7 @@ The running list of what is being built, so work can pick up again after a break
 | --- | --- | --- |
 | **Room reliability (top priority):** find why rooms fail about every other time and fix the cause, a host watchdog that checks the room like a phone would and fully remakes it when broken, the QR code hidden until the room passes its check, and a Regenerate room button right under the QR code | wf_3938ab23-6cc | four investigations (live site repro, local multi instance repro, client audit, relay audit), two designs and a judge, one build, then stress, code and production reviews with fix rounds |
 | Basketball 3v3 part 2 review, Football 3v3 step 3 then review | wf_ad70b8e4-601 | two chains in their existing worktrees |
-| Batch E part 2: Soccer World Cup trophy scene and builds instead of stars; winner scenes for Blade Clash, Paintball Battle and Cube Game | wf_60afdf28-2d3 | build then review each |
+| Batch F part 2: Cube Game portals (sideways, unskippable), two Demon levels, camera, per level leaderboard; Soccer free kick curve and a 1.5 to 2 times bigger goal | wf_6594b3f2-bb2 | build then review each |
 
 **Room root cause, found and reproduced on the live site:** production has no shared Redis store (every room:created says sharedRooms:false). Rooms live in one Vercel instance's memory, a game's own traffic makes Vercel add a second instance within about 1.5 s, and then joins, POSTs and hand overs land on an instance without the room: "Room not found". Every deploy to main also wipes open rooms. **Owner action:** add a Redis store to the Vercel project (Storage, Create Database, for example Upstash for Redis), connect it to Production, redeploy. The code reads REDIS_URL, KV_URL or UPSTASH_REDIS_URL. Keep deploys to main batched so they strand fewer rooms.
 
@@ -89,6 +89,8 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ## Done recently
 
+* Soccer 3v3: the World Cup ceremony (the captain lifts the cup, confetti cannons, CHAMPIONS and the names), and builds with ten ratings each instead of named stars, under each player's username.
+* Winner scenes for Blade Clash (sword raised, loser kneeling), Paintball Battle (the splattered team lifts a cup) and Cube Game (podium or pedestal).
 * Subway Runner: keyboard mode (arrows or WASD), a Demon level, score multipliers per level (Easy x1 to Demon x3), coins and power ups in the score, and a leaderboard on each computer that shows your rank after every run (src/games/kit/leaderboard). Settings has Clear leaderboards.
 * Subway Runner overhaul: no neon, a sunny rail yard with graffiti trains, ramps and barriers, a cartoon runner chased by the inspector and his dog, snappy lanes, real jump arcs, rolls and stumbles, working power ups, a new song and sounds.
 * Zombie Survival rework: a crosshair and a real trade off per weapon, recoil that springs back to the aim, short rounds of at most 10 early and about 20 late, 10 percent faster each round up to double, big bosses every 5 rounds with runners behind them and mini bosses between.
