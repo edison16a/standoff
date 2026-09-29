@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { HostRoomEvent } from "@/platform/games/game-api";
-import type { ServerEnvelope } from "@/platform/protocol";
+import type { ClientEnvelope, ServerEnvelope } from "@/platform/protocol";
 import { HostRoom } from "./host-room";
 import { useHostStore } from "./host-store";
+import { sessionMemory } from "./room-memory";
 
 // Hosting a room unlocks sound, which a test has no speakers for.
 vi.mock("@/platform/audio/audio-engine", () => ({
@@ -13,41 +14,72 @@ vi.mock("@/platform/audio/audio-engine", () => ({
   },
 }));
 
-/** Just enough of a browser WebSocket to drive the host by hand. */
+/** Just enough of a browser WebSocket to drive the host by hand. Every socket opens at once. */
 class FakeSocket {
-  static last: FakeSocket;
-  readyState = 1;
+  static all: FakeSocket[] = [];
+  readyState = 0;
   bufferedAmount = 0;
-  readonly sent: unknown[] = [];
+  readonly sent: ClientEnvelope[] = [];
   onopen: (() => void) | null = null;
   onmessage: ((event: { data: string }) => void) | null = null;
   onclose: ((event: { code: number }) => void) | null = null;
   constructor() {
-    FakeSocket.last = this;
-    queueMicrotask(() => this.onopen?.());
+    FakeSocket.all.push(this);
+    queueMicrotask(() => {
+      this.readyState = 1;
+      this.onopen?.();
+    });
   }
   send(data: string) {
-    this.sent.push(JSON.parse(data));
+    this.sent.push(JSON.parse(data) as ClientEnvelope);
   }
-  close() {}
+  close(code = 1000) {
+    if (this.readyState === 3) return;
+    this.readyState = 3;
+    this.onclose?.({ code });
+  }
   receive(message: ServerEnvelope) {
     this.onmessage?.({ data: JSON.stringify(message) });
   }
+  said(type: ClientEnvelope["type"]) {
+    return this.sent.filter((message) => message.type === type);
+  }
 }
 
+const TOKEN = "t".repeat(20);
+const created = (code: string, token = TOKEN): ServerEnvelope => ({ type: "room:created", code, game: "blade-clash", seats: 2, token, joinUrl: `https://x/join/${code}`, sharedRooms: true });
+const tick = async () => {
+  for (let i = 0; i < 5; i++) await Promise.resolve();
+};
+
+/** Answers every room check sent so far, as the relay would. */
+function answerChecks(ok: boolean) {
+  for (const socket of FakeSocket.all) {
+    for (const check of socket.said("probe:room")) {
+      if (check.type === "probe:room") socket.receive(ok ? { type: "probe:result", nonce: check.nonce, ok } : { type: "probe:result", nonce: check.nonce, ok, reason: "not-found" });
+    }
+  }
+}
+
+let host: HostRoom;
+
 async function openRoom() {
-  const host = new HostRoom();
+  host = new HostRoom();
   host.connect();
-  await Promise.resolve();
-  const socket = FakeSocket.last;
-  socket.receive({ type: "room:created", code: "ABCD", game: "blade-clash", seats: 2, token: "t".repeat(20), joinUrl: "https://x/join/ABCD", sharedRooms: true });
+  await tick();
+  const socket = FakeSocket.all[0]!;
+  await host.create("blade-clash", 2);
+  socket.receive(created("ABCD"));
   const events: HostRoomEvent[] = [];
   host.api!.on((event) => events.push(event));
-  return { host, socket, events };
+  return { socket, events };
 }
 
 describe("HostRoom", () => {
   beforeEach(() => {
+    FakeSocket.all = [];
+    sessionMemory.forget();
+    useHostStore.setState(useHostStore.getInitialState(), true);
     Object.assign(globalThis, {
       WebSocket: FakeSocket,
       location: { protocol: "http:", host: "localhost" },
@@ -57,14 +89,34 @@ describe("HostRoom", () => {
     });
   });
   afterEach(() => {
+    host.dispose();
     for (const key of ["location", "window", "localStorage", "sessionStorage"]) Reflect.deleteProperty(globalThis, key);
   });
 
-  it("opens the room screen with an empty seat per player", async () => {
+  it("hides the code until the room passes its check", async () => {
     await openRoom();
-    const state = useHostStore.getState();
-    expect(state.screen).toBe("room");
-    expect(state.players.map((player) => player.name)).toEqual(["Player 1", "Player 2"]);
+    expect(useHostStore.getState()).toMatchObject({ screen: "room", health: "checking", opening: false });
+    expect(useHostStore.getState().players.map((player) => player.name)).toEqual(["Player 1", "Player 2"]);
+    await tick();
+    answerChecks(true);
+    await tick();
+    expect(useHostStore.getState().health).toBe("ok");
+  });
+
+  it("sends one create however many times Host Game is pressed", async () => {
+    host = new HostRoom();
+    host.connect();
+    await tick();
+    await Promise.all([host.create("blade-clash", 2), host.create("blade-clash", 2)]);
+    await host.create("blade-clash", 2);
+    expect(FakeSocket.all[0]!.said("host:create")).toHaveLength(1);
+    expect(useHostStore.getState().opening).toBe(true);
+  });
+
+  it("answers the relay's room check from its own socket", async () => {
+    const { socket } = await openRoom();
+    socket.receive({ type: "room:probe", nonce: "n".repeat(20) });
+    expect(socket.sent).toContainEqual({ type: "host:echo", nonce: "n".repeat(20) });
   });
 
   it("names a player from their phone and keeps that message from the game", async () => {
@@ -74,51 +126,83 @@ describe("HostRoom", () => {
     socket.receive({ type: "peer:message", seat: 1, payload: { kind: "pick", characterId: "vale" } });
     expect(useHostStore.getState().players[0]).toEqual({ seat: 1, name: "Edison", connected: true });
     expect(events.filter((event) => event.type === "message")).toEqual([{ type: "message", seat: 1, payload: { kind: "pick", characterId: "vale" } }]);
-    // Every phone hears the new line up.
     expect(socket.sent).toContainEqual({ type: "host:send", to: "all", payload: expect.objectContaining({ kind: "players" }) });
   });
 
-  it("remakes the lobby as a fresh room for the same game", async () => {
-    const { host, socket } = await openRoom();
-    useHostStore.setState({ status: "open" });
-    const before = host.api;
-    host.remake();
-    expect(socket.sent).toContainEqual({ type: "host:remake" });
-    socket.receive({ type: "room:created", code: "WXYZ", game: "blade-clash", seats: 2, token: "u".repeat(20), joinUrl: "https://x/join/WXYZ", sharedRooms: true });
-    expect(useHostStore.getState().room?.code).toBe("WXYZ");
-    // A new room means a fresh game, not the old one carried over.
-    expect(host.api === before).toBe(false);
-    expect(host.api?.code).toBe("WXYZ");
-  });
-
-  it("takes names from the relay, and ignores a phone repeating someone else's", async () => {
+  it("regenerates on a fresh connection and moves the phones once the new room passes", async () => {
     const { socket } = await openRoom();
     socket.receive({ type: "peer:joined", seat: 1, rejoined: false, name: "Ann" });
-    socket.receive({ type: "peer:joined", seat: 2, rejoined: false, name: "Bob" });
-    socket.receive({ type: "peer:message", seat: 2, payload: { kind: "profile", name: "ann" } });
-    expect(useHostStore.getState().players.map((player) => player.name)).toEqual(["Ann", "Bob"]);
+    const before = host.api;
+    host.regenerate();
+    expect(useHostStore.getState().health).toBe("fixing");
+    await tick();
+    const fresh = FakeSocket.all.find((s) => s.said("host:create").length > 0 && s !== socket)!;
+    fresh.receive(created("WXYZ", "u".repeat(20)));
+    await tick();
+    // The old room is untouched until the new one passes its check.
+    expect(useHostStore.getState().room?.code).toBe("ABCD");
+    answerChecks(true);
+    await tick();
+    expect(useHostStore.getState()).toMatchObject({ room: { code: "WXYZ" }, health: "ok" });
+    expect(host.api === before).toBe(false);
+    expect(socket.sent).toContainEqual({ type: "host:retire", code: "ABCD", token: TOKEN, movedTo: "WXYZ" });
+    expect(fresh.sent).toContainEqual({ type: "host:retire", code: "ABCD", token: TOKEN, movedTo: "WXYZ" });
+  });
+
+  it("makes a new room by itself when the room is lost before anyone joined", async () => {
+    vi.useFakeTimers();
+    const { socket } = await openRoom();
+    socket.close(1006);
+    await vi.advanceTimersByTimeAsync(500);
+    // Every fresh socket's resume is refused, so the room is lost.
+    for (let i = 0; i < 8 && useHostStore.getState().health !== "fixing"; i++) {
+      FakeSocket.all.at(-1)!.receive({ type: "room:error", reason: "not-found" });
+      await vi.advanceTimersByTimeAsync(3500);
+    }
+    expect(useHostStore.getState().health).toBe("fixing");
+    vi.useRealTimers();
+  });
+
+  it("asks the big screen before remaking a lost room with players in it", async () => {
+    vi.useFakeTimers();
+    const { socket } = await openRoom();
+    socket.receive({ type: "peer:joined", seat: 1, rejoined: false, name: "Ann" });
+    socket.close(1006);
+    await vi.advanceTimersByTimeAsync(500);
+    for (let i = 0; i < 8 && useHostStore.getState().health !== "lost"; i++) {
+      FakeSocket.all.at(-1)!.receive({ type: "room:error", reason: "not-found" });
+      await vi.advanceTimersByTimeAsync(3500);
+    }
+    expect(useHostStore.getState()).toMatchObject({ health: "lost", problem: "lost", roomGone: true, screen: "room" });
+    vi.useRealTimers();
+  });
+
+  it("ends a room it never asked for", async () => {
+    const { socket } = await openRoom();
+    socket.receive(created("QQQQ", "q".repeat(20)));
+    expect(socket.sent).toContainEqual({ type: "host:retire", code: "QQQQ", token: "q".repeat(20) });
+    expect(useHostStore.getState().room?.code).toBe("ABCD");
   });
 
   it("opens a second room after leaving the first, with nothing of the first left over", async () => {
-    const { host, socket } = await openRoom();
+    const { socket } = await openRoom();
     socket.receive({ type: "peer:joined", seat: 1, rejoined: false, name: "Ann" });
     host.leave();
-    expect(socket.sent).toContainEqual({ type: "host:close" });
-    expect(useHostStore.getState()).toMatchObject({ screen: "home", room: null, players: [] });
+    expect(socket.sent).toContainEqual({ type: "host:retire", code: "ABCD", token: TOKEN });
+    expect(useHostStore.getState()).toMatchObject({ screen: "home", room: null, players: [], health: "idle" });
     await host.create("blade-clash", 2);
     expect(socket.sent.at(-1)).toEqual({ type: "host:create", game: "blade-clash", seats: 2 });
-    socket.receive({ type: "room:created", code: "WXYZ", game: "blade-clash", seats: 2, token: "u".repeat(20), joinUrl: "https://x/join/WXYZ", sharedRooms: true });
-    expect(useHostStore.getState().room?.code).toBe("WXYZ");
+    socket.receive(created("WXYZ", "u".repeat(20)));
     expect(host.api?.code).toBe("WXYZ");
     expect(useHostStore.getState().players.map((player) => player.name)).toEqual(["Player 1", "Player 2"]);
   });
 
   it("keeps a game left over from the last room away from the next one", async () => {
-    const { host, socket } = await openRoom();
+    const { socket } = await openRoom();
     const stale = host.api!;
     host.leave();
     await host.create("blade-clash", 2);
-    socket.receive({ type: "room:created", code: "WXYZ", game: "blade-clash", seats: 2, token: "u".repeat(20), joinUrl: "https://x/join/WXYZ", sharedRooms: true });
+    socket.receive(created("WXYZ", "u".repeat(20)));
     const sent = socket.sent.length;
     stale.send("all", { kind: "late" });
     stale.setPlaying(true);

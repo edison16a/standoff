@@ -4,6 +4,18 @@ import type { SocketStatus } from "@/platform/net/socket-client";
 
 export type HostScreen = "home" | "room";
 
+/**
+ * Whether phones can reach the room: being checked, passed, being made
+ * again, or lost, which asks the player to make a new one. Idle with no room.
+ */
+export type RoomHealth = "idle" | "checking" | "ok" | "fixing" | "lost";
+
+/**
+ * Why the room needs remaking: the server lost it, phones cannot reach it,
+ * or a new room could not be made.
+ */
+export type RoomProblem = "lost" | "unreachable" | "not-made";
+
 export interface OpenRoom {
   code: string;
   joinUrl: string;
@@ -26,6 +38,14 @@ export interface HostState {
   error: string | null;
   /** A reload is getting its room back. */
   resuming: boolean;
+  health: RoomHealth;
+  problem: RoomProblem | null;
+  /** The server no longer has the room at all, so there is nothing to keep. */
+  roomGone: boolean;
+  /** A room is on its way, so Host Game waits. */
+  opening: boolean;
+  /** The game keeps its join code hidden, so there is nothing to check yet. */
+  joinHidden: boolean;
 }
 
 export const useHostStore = create<HostState>(() => ({
@@ -36,4 +56,9 @@ export const useHostStore = create<HostState>(() => ({
   playing: false,
   error: null,
   resuming: false,
+  health: "idle",
+  problem: null,
+  roomGone: false,
+  opening: false,
+  joinHidden: false,
 }));
