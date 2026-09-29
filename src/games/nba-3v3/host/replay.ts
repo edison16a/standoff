@@ -49,7 +49,10 @@ export class Replay {
     this.clock = frames[0]?.time ?? 0;
     this.ghost = this.makeGhost();
     this.done = frames.length < 2;
-    if (!this.done) this.apply();
+    if (this.done) return;
+    this.apply();
+    // The camera is placed now, so the first frame drawn is already the replay's and not a flash of the broadcast view.
+    this.cam = replayCamera(this.view, this.ghost, cast, null, 0);
   }
 
   get scorer(): number {

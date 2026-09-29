@@ -56,6 +56,12 @@ describe("the replay", () => {
     expect(r.camera()).not.toBeNull();
   });
 
+  it("has its camera placed before the first frame is drawn", () => {
+    const { m, tape } = taped(3);
+    const r = new Replay({ entries: ENTRIES, scorer: 0, defender: 3, voters: () => [] }, tape.clip(m.time - 1, m.time), () => {});
+    expect(r.camera()).not.toBeNull();
+  });
+
   it("is skipped only once every player has pressed a button", () => {
     const { m, tape } = taped(3);
     const r = new Replay({ entries: ENTRIES, scorer: 0, defender: 3, voters: () => [1, 2] }, tape.clip(m.time - 2, m.time), () => undefined);
