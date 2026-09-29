@@ -11,10 +11,10 @@ import type { PowerKind } from "../engine/types";
  */
 
 const POWER_LINES: Record<PowerKind, readonly string[]> = {
-  boots: ["Jump boots!", "Sky high!"],
+  boots: ["Super sneakers!", "Sky high!"],
   hoverboard: ["Hoverboard!", "Board up!"],
   magnet: ["Coin magnet!", "Magnet!"],
-  double: ["Double score!", "Double up!"],
+  double: ["Score multiplier!", "Double up!"],
   jetpack: ["Jetpack!", "Blast off!"],
 };
 

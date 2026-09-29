@@ -10,10 +10,10 @@ export const POWER_SECONDS: Record<PowerKind, number> = {
 };
 
 export const POWER_NAMES: Record<PowerKind, string> = {
-  boots: "Jump boots",
+  boots: "Super sneakers",
   hoverboard: "Hoverboard",
   magnet: "Coin magnet",
-  double: "Double score",
+  double: "Score multiplier",
   jetpack: "Jetpack",
 };
 
