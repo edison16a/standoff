@@ -40,6 +40,8 @@ export class Footwork {
   private downed: FighterId | null = null;
   private readonly movers: [Mover, Mover] = [mover(0), mover(2.1)];
   private trapped: { id: FighterId; until: number } | null = null;
+  /** A boxer who never steps in a round, as the computer in Training. */
+  private held: FighterId | null = null;
 
   constructor(
     private readonly random: Random,
@@ -81,6 +83,11 @@ export class Footwork {
     this.trapped = { id, until };
   }
 
+  /** Keeps a boxer on their spot through the rounds. They still walk to the corners and back. */
+  hold(id: FighterId | null): void {
+    this.held = id;
+  }
+
   threw(id: FighterId, now: number): void {
     noteThrow(this.movers[id], now);
   }
@@ -116,7 +123,7 @@ export class Footwork {
       case "fight": {
         const pinned = this.pinned(now);
         if (pinned !== null) this.pin(pinned, dt);
-        else for (const id of [0, 1] as const) stepInFight(this.spots[id], this.spots[other(id)], this.styles[id], this.movers[id], dt, now, this.random);
+        else for (const id of [0, 1] as const) if (id !== this.held) stepInFight(this.spots[id], this.spots[other(id)], this.styles[id], this.movers[id], dt, now, this.random);
       }
     }
   }

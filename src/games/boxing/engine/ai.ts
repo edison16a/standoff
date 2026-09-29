@@ -26,6 +26,8 @@ export const AI_LEVELS: readonly AiLevel[] = [
   { windup: [620, 740], gap: [1200, 2100], block: 0.38, dodge: 0.15, counter: 0.45, combo: 0.28, getUp: [[3, 5], [5, 8]] },
   { windup: [540, 650], gap: [1000, 1800], block: 0.45, dodge: 0.2, counter: 0.55, combo: 0.4, getUp: [[2, 4], [4, 7]] },
   { windup: [500, 600], gap: [900, 1600], block: 0.5, dodge: 0.22, counter: 0.6, combo: 0.45, getUp: [[2, 4], [4, 7]] },
+  // Only Hard reaches this one, in the last round.
+  { windup: [460, 560], gap: [800, 1400], block: 0.56, dodge: 0.26, counter: 0.66, combo: 0.5, getUp: [[2, 3], [3, 6]] },
 ];
 
 const PUNCH_CHOICES: readonly (readonly [readonly [Hand, PunchStyle, Level], number])[] = [
@@ -59,7 +61,9 @@ export class ComputerBoxer {
   constructor(
     readonly id: FighterId,
     private readonly random: Random,
-    private readonly level: (round: number) => AiLevel = (round) => AI_LEVELS[Math.min(AI_LEVELS.length, round) - 1]!,
+    private readonly level: (round: number) => AiLevel = (round) => AI_LEVELS[Math.min(4, round) - 1]!,
+    /** False in Training: no punches, no defence, no bobbing. It still touches gloves and gets up. */
+    private readonly acts = true,
   ) {
     this.nextAttack = between(random, 900, 1600);
   }
@@ -68,7 +72,7 @@ export class ComputerBoxer {
   hear(event: MatchEvent, match: Match): void {
     const level = this.level(match.round);
     const now = match.now;
-    if (event.type === "throw" && event.fighter === other(this.id)) {
+    if (event.type === "throw" && event.fighter === other(this.id) && this.acts) {
       const roll = this.random();
       const until = event.impactAt + 160;
       const side = otherHand(event.hand);
@@ -104,7 +108,7 @@ export class ComputerBoxer {
     const them = match.fighters[other(this.id)];
     const input = this.defend(match);
     match.setInput(this.id, input);
-    if (match.phase !== "fight" || now < this.nextAttack || input.guard || !me.canPunch(now)) return;
+    if (!this.acts || match.phase !== "fight" || now < this.nextAttack || input.guard || !me.canPunch(now)) return;
 
     const level = this.level(match.round);
     const pressing = them.staggered(now) || them.rocked(now) || match.footwork.pinned(now) === other(this.id);
@@ -125,7 +129,8 @@ export class ComputerBoxer {
     const down = match.fighters[this.id].down;
     // A little bob and weave while nothing is coming, so it is never a still target.
     const weave: Partial<Posture> = { slip: 0.2 * Math.sin(now / 430 + this.id * 2), duck: 0.12 * (1 + Math.sin(now / 610 + this.id)) };
-    const posture: Partial<Posture> = this.defense?.posture ?? (now < this.coverUntil ? { shell: "guard" } : weave);
+    const idle = this.acts ? weave : {};
+    const posture: Partial<Posture> = this.defense?.posture ?? (now < this.coverUntil && this.acts ? { shell: "guard" } : idle);
     const input = defenseOf(posture);
     if (down) input.raise = down.count >= this.getUpAt;
     if (match.phase === "touch") input.reach = now - match.phaseSince > TOUCH_AFTER_MS;
