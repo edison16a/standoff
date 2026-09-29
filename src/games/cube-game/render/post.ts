@@ -15,6 +15,12 @@ export interface Viewport {
 }
 
 /**
+ * Kept low with a high threshold: only the brightest edges bloom, and
+ * only a little, so the picture stays calm and readable.
+ */
+const BLOOM = { strength: 0.22, radius: 0.3, threshold: 0.9 };
+
+/**
  * Draws every viewport into one picture, so the bloom and tone mapping
  * run once over the whole split screen instead of once per player.
  */
@@ -47,7 +53,7 @@ class SplitPass extends Pass {
   }
 }
 
-/** The finish: bloom so every neon edge glows past itself, then tone mapping. */
+/** The finish: a light bloom so the bright edges glow softly without washing out, then tone mapping. */
 export class Post {
   private readonly composer: EffectComposer;
   private readonly split: SplitPass;
@@ -57,7 +63,7 @@ export class Post {
     const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType });
     this.composer = new EffectComposer(renderer, target);
     this.split = new SplitPass(scene);
-    this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.55, 0.4, 0.8);
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), BLOOM.strength, BLOOM.radius, BLOOM.threshold);
     this.composer.addPass(this.split);
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());

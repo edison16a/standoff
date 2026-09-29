@@ -1,46 +1,44 @@
 import * as THREE from "three";
 import type { GunId } from "../../engine/guns";
-import { flashTexture } from "../textures";
+import { dotTexture } from "../textures";
 
-/** How big each gun's flash is, metres, and how long it lasts, seconds. */
-const SIZE: Record<GunId, number> = { rifle: 0.45, smg: 0.34, shotgun: 0.75, sniper: 0.8 };
-const LIFE = 0.06;
-/** Turns the side flame from facing the barrel to lying along it. */
-const ALONG = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI / 2, 0));
+/** How big each gun's puff of air grows, metres, and how long it hangs, seconds. */
+const SIZE: Record<GunId, number> = { rifle: 0.22, smg: 0.18, shotgun: 0.42, sniper: 0.34 };
+const LIFE = 0.28;
 
-interface Flash {
+interface Puff {
   gun: THREE.Object3D;
   sprite: THREE.Sprite;
-  side: THREE.Mesh;
+  at: THREE.Vector3;
   born: number;
   size: number;
 }
 
 /**
- * Muzzle flashes: a bright star facing the viewer and a flame along the
- * barrel for the side view, both following the gun for the instant they
- * last. Pooled per fighter, one at a time each.
+ * A paint marker has no flame: each shot blows a small puff of air out of
+ * the barrel, a pale cloud that swells and thins as it drifts forward.
+ * Pooled per fighter, one at a time each.
  */
 export class Flashes {
   readonly group = new THREE.Group();
-  private readonly texture = flashTexture();
-  private readonly spriteMat = new THREE.SpriteMaterial({ map: this.texture, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
-  private readonly sideMat = new THREE.MeshBasicMaterial({ map: this.texture, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, side: THREE.DoubleSide });
-  private readonly plane = new THREE.PlaneGeometry(1, 1);
-  private readonly flashes = new Map<number, Flash>();
+  private readonly texture = dotTexture();
+  private readonly puffs = new Map<number, Puff>();
 
-  /** A flash at `muzzle` (an object on the gun, so the flash rides the recoil). */
+  /** A puff at `muzzle`, left behind where the shot went off. */
   fire(id: number, muzzle: THREE.Object3D, gun: GunId, now: number, spin: number): void {
-    let f = this.flashes.get(id);
+    let f = this.puffs.get(id);
     if (!f) {
-      const sprite = new THREE.Sprite(this.spriteMat.clone());
-      const side = new THREE.Mesh(this.plane, this.sideMat);
+      const mat = new THREE.SpriteMaterial({ map: this.texture, color: "#eef3f6", transparent: true, depthWrite: false, opacity: 0 });
+      const sprite = new THREE.Sprite(mat);
       sprite.renderOrder = 7;
-      side.renderOrder = 7;
-      f = { gun: muzzle, sprite, side, born: now, size: SIZE[gun] };
-      this.flashes.set(id, f);
-      this.group.add(sprite, side);
+      f = { gun: muzzle, sprite, at: new THREE.Vector3(), born: now, size: SIZE[gun] };
+      this.puffs.set(id, f);
+      this.group.add(sprite);
     }
+    muzzle.updateWorldMatrix(true, false);
+    muzzle.getWorldPosition(f.at);
+    // Just ahead of the barrel, so it never hides inside the gun.
+    f.at.add(new THREE.Vector3(0, 0, 0.06).applyQuaternion(muzzle.getWorldQuaternion(new THREE.Quaternion())));
     f.gun = muzzle;
     f.born = now;
     f.size = SIZE[gun] * (0.85 + 0.3 * spin);
@@ -48,37 +46,24 @@ export class Flashes {
   }
 
   update(now: number): void {
-    for (const f of this.flashes.values()) {
+    for (const f of this.puffs.values()) {
       const t = (now - f.born) / LIFE;
       const on = t >= 0 && t < 1;
       f.sprite.visible = on;
-      f.side.visible = on;
       if (!on) continue;
-      const k = 1 - t * 0.5;
-      f.gun.updateWorldMatrix(true, false);
-      f.gun.getWorldPosition(f.sprite.position);
-      f.sprite.scale.setScalar(f.size * k);
-      // The side flame lies along the barrel, just ahead of the muzzle.
-      f.gun.getWorldQuaternion(f.side.quaternion);
-      f.side.quaternion.multiply(ALONG);
-      f.side.position.copy(f.sprite.position);
-      f.side.translateX(-f.size * 0.45 * k);
-      f.side.scale.set(f.size * 1.3 * k, f.size * 0.55 * k, 1);
+      f.sprite.position.copy(f.at);
+      f.sprite.position.y += t * 0.05;
+      f.sprite.scale.setScalar(f.size * (0.35 + 0.65 * Math.sqrt(t)));
+      f.sprite.material.opacity = 0.55 * (1 - t) * (1 - t);
     }
   }
 
   clear(): void {
-    for (const f of this.flashes.values()) {
-      f.sprite.visible = false;
-      f.side.visible = false;
-    }
+    for (const f of this.puffs.values()) f.sprite.visible = false;
   }
 
   dispose(): void {
-    for (const f of this.flashes.values()) f.sprite.material.dispose();
+    for (const f of this.puffs.values()) f.sprite.material.dispose();
     this.texture.dispose();
-    this.spriteMat.dispose();
-    this.sideMat.dispose();
-    this.plane.dispose();
   }
 }

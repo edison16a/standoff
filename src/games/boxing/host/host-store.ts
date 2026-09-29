@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { MatchResult } from "../engine/events";
 import type { OwnView } from "../render/views";
 import type { Stage } from "./fight-driver";
@@ -76,6 +77,8 @@ export interface Records {
 export interface BoxingState {
   screen: Screen;
   players: 1 | 2;
+  /** How sharp the computer boxer is, for one player fights. */
+  botLevel: BotLevel;
   /** The chosen look for each boxer, as an index into LOOKS. */
   picks: [number, number];
   locked: [boolean, boolean];
@@ -91,6 +94,7 @@ export interface BoxingState {
 export const useBoxingStore = create<BoxingState>(() => ({
   screen: "players",
   players: 1,
+  botLevel: DEFAULT_BOT_LEVEL,
   picks: [0, 1],
   locked: [false, false],
   holding: [0, 0],

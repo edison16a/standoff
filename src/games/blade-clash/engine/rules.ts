@@ -13,8 +13,15 @@ export const START_X = 1.75;
 export const MIN_GAP = 1.05;
 /** Walking speed with Forward or Back held. */
 export const WALK_SPEED = 1.7;
-/** Hits a fighter can take. The last one ends the fight. */
-export const MAX_HEALTH = 5;
+/** Every slash that lands scores a point. This many wins the fight. */
+export const POINTS_TO_WIN = 5;
+/**
+ * Engine time from a point to play resuming. The host plays the start of
+ * it in slow motion, so on screen it lasts about three seconds.
+ */
+export const POINT_MS = 1900;
+/** Partway through, both fighters go back to their marks, so they stand ready before play resumes. */
+export const POINT_RESET_MS = 1300;
 /** Seconds counted down before the fight starts. */
 export const COUNTDOWN_SECONDS = 3;
 /**

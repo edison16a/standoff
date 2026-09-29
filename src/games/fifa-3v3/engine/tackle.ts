@@ -1,4 +1,5 @@
 import { footPoint, integrate } from "./athlete";
+import { commitFoul } from "./foul";
 import { SLIDE } from "./tuning";
 import type { Athlete, MatchState } from "./types";
 import { clamp, dist, dot, fromAngle, len, norm, type Vec2 } from "./vec";
@@ -43,7 +44,7 @@ function contact(state: MatchState, a: Athlete): void {
   if (owner?.kind === "athlete") {
     const victim = state.athletes[owner.id];
     if (!victim || victim.team === a.team || victim.action === "hurdle") return;
-    if (dist(boot, ball.pos) < SLIDE.contact || dist(boot, victim.pos) < SLIDE.contact) resolve(state, a, victim);
+    if (dist(boot, ball.pos) < SLIDE.contact || dist(boot, victim.pos) < SLIDE.contact) resolve(state, a, victim, dist(boot, ball.pos) > SLIDE.contact);
     return;
   }
   const shotLive = state.flight !== null && !state.flight.resolved;
@@ -64,9 +65,10 @@ function contact(state: MatchState, a: Athlete): void {
  * the ball squirts loose and the dribbler goes down. Lost, the dribbler
  * hops over the sliding boot and carries on.
  */
-function resolve(state: MatchState, a: Athlete, victim: Athlete): void {
+function resolve(state: MatchState, a: Athlete, victim: Athlete, manFirst: boolean): void {
   a.slideDone = true;
   const fromBehind = Math.max(0, dot(a.actionDir, fromAngle(victim.facing)));
+  if (state.rng.chance(foulChance(fromBehind, manFirst))) return commitFoul(state, a, victim, "slide");
   const chance = clamp(0.62 + 0.4 * (a.strength - victim.strength) - 0.35 * (victim.dribbling - 0.75) - 0.15 * fromBehind, 0.2, 0.9);
   const ball = state.ball;
   if (state.rng.chance(chance)) {
@@ -85,6 +87,16 @@ function resolve(state: MatchState, a: Athlete, victim: Athlete): void {
     victim.actionLen = SLIDE.hurdle;
     state.events.push({ type: "tackle", athlete: a.id, victim: victim.id, won: false });
   }
+}
+
+/**
+ * How likely the referee gives a foul for a slide. Through the back of
+ * the man it nearly always is; taking the man before the ball often is;
+ * a clean slide at the ball from the front or side almost never.
+ */
+export function foulChance(fromBehind: number, manFirst: boolean): number {
+  if (fromBehind > 0.5) return clamp(0.6 + (fromBehind - 0.5) * 0.8, 0, 0.95);
+  return manFirst ? 0.2 : 0.03;
 }
 
 function knockDown(state: MatchState, victim: Athlete): void {

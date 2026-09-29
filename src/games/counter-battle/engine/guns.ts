@@ -50,8 +50,8 @@ export interface GunSpec {
 export const GUNS: Record<GunId, GunSpec> = {
   rifle: {
     id: "rifle",
-    name: "Assault Rifle",
-    blurb: "Steady and accurate. Holds the long lanes.",
+    name: "Paint Rifle",
+    blurb: "Steady and accurate. Holds the long lanes from cover.",
     damage: 20,
     pellets: 1,
     rate: 8.5,
@@ -69,8 +69,8 @@ export const GUNS: Record<GunId, GunSpec> = {
   },
   shotgun: {
     id: "shotgun",
-    name: "Shotgun",
-    blurb: "Nine pellets a shot. Flanks in and ends fights up close.",
+    name: "Paint Shotgun",
+    blurb: "Nine paintballs a shot. Flanks in and splats them up close.",
     damage: 13,
     pellets: 9,
     rate: 1.3,
@@ -88,8 +88,8 @@ export const GUNS: Record<GunId, GunSpec> = {
   },
   smg: {
     id: "smg",
-    name: "SMG",
-    blurb: "Sprays fast and moves the most. Deadly at mid range.",
+    name: "Paint SMG",
+    blurb: "Sprays paint fast and moves the most. Deadly at mid range.",
     damage: 14,
     pellets: 1,
     rate: 13,
@@ -107,8 +107,8 @@ export const GUNS: Record<GunId, GunSpec> = {
   },
   sniper: {
     id: "sniper",
-    name: "Sniper",
-    blurb: "One shot to the head ends it. Slow bolt, huge kick.",
+    name: "Paint Sniper",
+    blurb: "One ball to the mask ends it. Slow to cock, big kick.",
     damage: 90,
     pellets: 1,
     rate: 0.8,

@@ -41,15 +41,17 @@ export function Stage() {
   );
 }
 
-/** The tool bar buttons: end a two player round early, and back to the level select. */
+/** The tool bar buttons: end a 1v1 race early, and back to the level select. */
 export function Tools() {
   const session = useSession();
   const phase = useCubeStore((s) => s.phase);
   const players = useCubeStore((s) => s.hud.length);
+  // Once someone is over the line the race is decided and the results are on their way.
+  const decided = useCubeStore((s) => s.hud.some((p) => p.status === "done" || p.status === "beaten"));
   if (phase === "menu") return null;
   return (
     <>
-      {phase === "play" && players > 1 && <IconButton icon="trophy" label="End the round" onClick={() => session.endEarly()} />}
+      {phase === "play" && players > 1 && !decided && <IconButton icon="trophy" label="End the race" onClick={() => session.endEarly()} />}
       <IconButton icon="leave" label="Back to the levels" onClick={() => session.toMenu()} />
     </>
   );

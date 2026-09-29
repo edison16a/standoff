@@ -43,12 +43,14 @@ async function fight(ctx, sensors) {
   await ctx.snap("ready");
   await ctx.tap("Ready");
   await ctx.snap("ready-on");
-  const match = { health: [4, 2], connected: [true, true], countdown: null, winner: null };
+  const match = { score: [1, 3], pointsToWin: 5, scorer: null, connected: [true, true], countdown: null, winner: null };
   await ctx.fake("state", { ...match, phase: "countdown", countdown: 3 });
   await ctx.snap("countdown");
   await ctx.fake("state", { ...match, phase: "live" });
   await ctx.snap("live");
-  await ctx.fake("state", { ...match, phase: "matchOver", health: [3, 0], winner: 1 });
+  await ctx.fake("state", { ...match, phase: "point", scorer: 1, score: [2, 3] });
+  await ctx.snap("point");
+  await ctx.fake("state", { ...match, phase: "matchOver", score: [5, 3], winner: 1 });
   await ctx.snap("match-over");
 }
 

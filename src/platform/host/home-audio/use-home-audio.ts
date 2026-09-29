@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo } from "react";
 import type { AudioEngine } from "@/platform/audio/audio-engine";
+import { startAudioSoon } from "@/platform/audio/autoplay";
 import { LobbyMusic } from "./lobby-music";
 import { playChime, playPop, playStart } from "./menu-sounds";
 
@@ -14,31 +15,23 @@ export interface HomeAudio {
 }
 
 /**
- * The lobby music and menu sounds. Browsers keep sound off until the
- * first tap or key press, so the music waits for that, then loops until
- * the home screen goes away. Volume and mute come from the settings button.
+ * The lobby music and menu sounds. The music starts the moment the home
+ * screen opens. Browsers hold sound back until the visitor interacts with
+ * the page (see audio/autoplay), so if this one does, the tune waits on a
+ * paused audio clock and plays from its first note on the first tap, click,
+ * key or touch. It loops until the home screen goes away. Volume and mute
+ * come from the settings button.
  */
 export function useHomeAudio(getEngine: () => AudioEngine): HomeAudio {
   useEffect(() => {
     // The host remakes its engine after a dev remount, so read it fresh here.
     const engine = getEngine();
     const music = new LobbyMusic(engine);
-    const begin = () => {
-      void engine.unlock().then(() => {
-        if (!engine.unlocked) return;
-        music.start();
-        window.removeEventListener("pointerdown", begin);
-        window.removeEventListener("keydown", begin);
-      });
-    };
-    if (engine.unlocked) music.start();
-    else {
-      window.addEventListener("pointerdown", begin);
-      window.addEventListener("keydown", begin);
-    }
+    // Scheduling against a suspended context is safe: its clock stands still, so nothing piles up.
+    music.start();
+    const stopWaiting = startAudioSoon(engine.ctx, window, { resume: () => engine.unlock() });
     return () => {
-      window.removeEventListener("pointerdown", begin);
-      window.removeEventListener("keydown", begin);
+      stopWaiting();
       music.stop();
     };
   }, [getEngine]);

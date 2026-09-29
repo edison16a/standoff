@@ -1,11 +1,14 @@
 import type { Player } from "@/platform/games/game-api";
 import { ROSTER } from "../roster";
-import type { PhoneState, RoomPhase } from "../protocol";
-import type { Banners } from "./banners";
+import type { RoomPhase } from "../protocol";
+import { TEAMS } from "../teams";
 import { useFifaStore as store, type ResultRow } from "./host-store";
 import type { Lobby } from "./lobby";
 import type { MatchDriver } from "./match-driver";
 import type { PhoneLink } from "./phone-link";
+import { momentOf } from "./moment";
+import { phoneState } from "./phone-state";
+import type { ReplayDirector } from "./replay-director";
 
 export interface PublishContext {
   nowMs: number;
@@ -13,9 +16,10 @@ export interface PublishContext {
   players: readonly Player[];
   lobby: Lobby;
   driver: MatchDriver | null;
-  banners: Banners;
   phones: PhoneLink;
-  replay: boolean;
+  replay: ReplayDirector;
+  /** How a player is called on screen. */
+  nameOf(id: number): string;
 }
 
 /**
@@ -28,22 +32,24 @@ export function publish(c: PublishContext): void {
   const owner = match?.ball.owner;
   const seats = c.players.map((p) => {
     const s = c.lobby.seats.get(p.seat);
-    return { seat: p.seat, name: p.name, connected: p.connected, pick: s?.pick ?? null, ready: s?.ready ?? false, team: s?.team ?? null };
+    return { seat: p.seat, name: p.name, connected: p.connected, pick: s?.pick ?? null, ready: s?.ready ?? false, team: s?.team ?? null, role: s?.role ?? null };
   });
-  const lineup = c.lobby.entrants();
+  const lineup = c.lobby.lineup();
   store.setState({
     phase: c.phase,
     seats,
-    bots: lineup.filter((e) => e.seat === null).map((e) => ({ team: e.team, character: e.character })),
+    bots: lineup.filter((e) => e.seat === null).map((e) => ({ team: e.team, character: e.character, role: e.role })),
     botsOn: c.lobby.bots,
+    level: c.lobby.level,
+    moment: match ? momentOf(match, (id) => c.nameOf(id)) : null,
     startBlock: c.lobby.startBlock(),
     score: match ? [match.score[0], match.score[1]] : [0, 0],
     clock: match ? Math.ceil(match.clock) : 0,
     golden: match?.golden ?? false,
-    replay: c.replay,
-    banner: c.banners.current,
+    replay: c.replay.active,
+    replayCard: c.driver ? c.replay.card(c.driver, (id) => c.nameOf(id)) : null,
+    skip: c.replay.skipList((seat) => names.get(seat) ?? `Player ${seat + 1}`),
     winner: match?.winner ?? null,
-    saves: match ? [match.keepers[0].saves, match.keepers[1].saves] : [0, 0],
     results: match && match.phase === "fulltime" ? results(c.driver!, names) : [],
     roster: match
       ? match.athletes.filter((a) => a.seat !== null).map((a) => ({
@@ -60,41 +66,33 @@ export function publish(c: PublishContext): void {
   for (const seat of c.lobby.connectedSeats) c.phones.sendState(seat, phoneState(c, seat), c.nowMs);
 }
 
+/** Every player's line at full time, best first, then each side's keeper with their saves. */
 function results(driver: MatchDriver, names: ReadonlyMap<number, string>): ResultRow[] {
-  return driver.state.athletes
+  const players: ResultRow[] = driver.state.athletes
     .map((a) => ({
       id: a.id,
       team: a.team,
       name: a.seat !== null ? (names.get(a.seat) ?? ROSTER[a.character].short) : ROSTER[a.character].name,
       character: a.character,
       seat: a.seat,
-      ...a.stats,
+      goals: a.stats.goals,
+      shots: a.stats.shots,
+      tackles: a.stats.tackles,
+      passes: a.stats.passes,
+      saves: a.stats.blocks,
     }))
     .sort((x, y) => y.goals - x.goals || y.tackles - x.tackles || x.id - y.id);
-}
-
-function phoneState(c: PublishContext, seat: number): PhoneState {
-  const s = c.lobby.seats.get(seat)!;
-  const match = c.driver?.state ?? null;
-  const id = c.driver?.athleteBySeat.get(seat);
-  const athlete = match && id !== undefined ? match.athletes[id] : undefined;
-  const owner = match?.ball.owner;
-  const team = athlete?.team ?? s.team;
-  const over = match?.phase === "fulltime" && athlete;
-  return {
-    kind: "state",
-    phase: c.phase,
-    taken: c.lobby.taken(seat),
-    pick: s.pick,
-    ready: s.ready,
-    team,
-    playing: athlete !== undefined,
-    score: match ? [match.score[0], match.score[1]] : [0, 0],
-    clock: match ? Math.ceil(match.clock) : 0,
-    golden: match?.golden ?? false,
-    hasBall: !!athlete && owner?.kind === "athlete" && owner.id === athlete.id,
-    goals: athlete?.stats.goals ?? 0,
-    result: over ? (match.winner === athlete.team ? "win" : "lose") : null,
-    banner: c.banners.current?.text ?? null,
-  };
+  const keepers: ResultRow[] = driver.state.keepers.map((k) => ({
+    id: -1 - k.team,
+    team: k.team,
+    name: `${TEAMS[k.team].name} keeper`,
+    character: null,
+    seat: null,
+    goals: 0,
+    shots: 0,
+    tackles: 0,
+    passes: 0,
+    saves: k.saves,
+  }));
+  return [...players, ...keepers];
 }

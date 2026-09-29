@@ -1,12 +1,13 @@
 "use client";
 import { useEffect } from "react";
 import { Joystick } from "@/games/kit/pad/Joystick";
-import { PadButton } from "@/games/kit/pad/PadButton";
 import type { PhoneState } from "../../protocol";
+import { ROLE_NAMES } from "../../roles";
 import { ROSTER } from "../../roster";
 import { TEAMS } from "../../teams";
-import { ButtonFace } from "./ButtonFace";
 import { ChargeBar } from "./ChargeBar";
+import { PadButtons, padMode } from "./PadButtons";
+import { GuardMeter, SetPieceCoach } from "./PadHelp";
 import { usePhone } from "./session-context";
 
 function clock(seconds: number): string {
@@ -15,25 +16,28 @@ function clock(seconds: number): string {
 
 /**
  * The phone as a controller, held sideways: the thumb stick on the left
- * moves your player (and dribbles), two buttons on the right. Shoot/Pass
- * passes on a tap and shoots on a hold, with the charge bar setting the
- * power. The second button slides without the ball and does a skill
- * move with it. The middle shows your side, the score and the clock.
+ * moves your player (and dribbles, and aims set pieces), the buttons on
+ * the right change with the play (see PadButtons). The middle shows your
+ * side, the score and the clock, Guard's range while defending, and the
+ * stages of a free kick or penalty.
  */
 export function Controller({ host }: { host: PhoneState }) {
   const phone = usePhone();
   const team = host.team !== null ? TEAMS[host.team] : TEAMS[0];
   const star = host.pick ? ROSTER[host.pick] : null;
+  const mode = padMode(host);
 
   useEffect(() => {
     phone.controlling(true);
     return () => phone.controlling(false);
   }, [phone]);
 
-  const status = host.banner ?? (host.hasBall ? "You have the ball" : host.phase === "replay" ? "Replay" : host.phase === "kickoff" ? "Kick off" : null);
-  // The host only reads the buttons in open play. Pressed at a kick off or a replay they would fill
-  // the charge bar for a shot that never comes, so they wait, and let go of anything held.
-  const live = host.phase === "play";
+  // A new layout of buttons lets go of anything held under the old one.
+  useEffect(() => phone.letGo(), [phone, mode]);
+
+  const skip = host.skip ? `Replay. Skip: ${host.skip.count} of ${host.skip.total}` : null;
+  const status = skip ?? host.banner ?? (host.hasBall ? "You have the ball" : host.phase === "replay" ? "Replay" : host.phase === "kickoff" ? "Kick off" : host.phase === "foul" ? "Foul" : null);
+  const power = host.setPiece?.part === "taker" && host.setPiece.stage === "power";
 
   return (
     <div className="fifa-pad" style={{ "--team": team.color } as React.CSSProperties}>
@@ -52,23 +56,19 @@ export function Controller({ host }: { host: PhoneState }) {
         <div className="fifa-pad__me">
           <span className="fifa-pad__team">{team.name}</span>
           {star && <span>{star.short}</span>}
+          {host.role && <span>{ROLE_NAMES[host.role]}</span>}
           {host.goals > 0 && <span>{host.goals === 1 ? "1 goal" : `${host.goals} goals`}</span>}
         </div>
-        {status && <div className={`fifa-pad__status ${host.hasBall && !host.banner ? "fifa-pad__status--ball" : ""}`}>{status}</div>}
-        <ChargeBar hasBall={host.hasBall} />
+        {host.setPiece ? (
+          <SetPieceCoach sp={host.setPiece} />
+        ) : mode === "defend" && host.guard ? (
+          <GuardMeter guard={host.guard} />
+        ) : (
+          status && <div className={`fifa-pad__status ${host.hasBall && !host.banner ? "fifa-pad__status--ball" : ""}`}>{status}</div>
+        )}
+        <ChargeBar hasBall={host.hasBall || power} />
       </div>
-      <div className="fifa-pad__buttons">
-        <div className="fifa-pad__shoot">
-          <PadButton label="Shoot/Pass" size="lg" colour="#ef4444" disabled={!live} onDown={() => phone.shoot(true)} onUp={() => phone.shoot(false)}>
-            <ButtonFace icon="ball" text="Shoot/Pass" />
-          </PadButton>
-        </div>
-        <div className={`fifa-pad__slide ${host.hasBall ? "fifa-pad__slide--skill" : ""}`}>
-          <PadButton label={host.hasBall ? "Skill" : "Slide"} size="md" colour={host.hasBall ? "#a855f7" : "#f59e0b"} disabled={!live} onDown={() => phone.slide(true)} onUp={() => phone.slide(false)}>
-            <ButtonFace icon={host.hasBall ? "skill" : "slide"} text={host.hasBall ? "Skill" : "Slide"} />
-          </PadButton>
-        </div>
-      </div>
+      <PadButtons host={host} />
     </div>
   );
 }

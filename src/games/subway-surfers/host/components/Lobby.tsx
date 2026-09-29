@@ -1,55 +1,35 @@
 "use client";
-import { playerColor } from "@/games/kit/players";
 import { Logo } from "../../showcase/Logo";
-import { setName, setPlayers, useSurfStore } from "../store";
+import { setName, useSurfStore } from "../store";
 import { BestTable } from "./BestTable";
+import { DifficultyChips } from "./DifficultyChips";
 import { useSession } from "./session-context";
 
 /**
- * The first screen, over the demo run: one or two players, their names
- * for the best scores table, how to play, and Start.
+ * The first screen, over the demo run: how hard to start, a name for
+ * the best scores table, how to play, and Start.
  */
 export function Lobby() {
   const session = useSession();
-  const players = useSurfStore((s) => s.players);
-  const names = useSurfStore((s) => s.names);
+  const name = useSurfStore((s) => s.name);
   const best = useSurfStore((s) => s.best);
   return (
     <div className="ss-lobby">
       <div className="ss-lobby__card">
         <Logo />
         <p className="ss-lobby__tagline">Run the rails from the waist up. No phones needed.</p>
-        <div className="ss-lobby__count" role="radiogroup" aria-label="Players">
-          {([1, 2] as const).map((n) => (
-            <button
-              key={n}
-              type="button"
-              role="radio"
-              aria-checked={players === n}
-              className={`ss-chip${players === n ? " ss-chip--on" : ""}`}
-              onClick={() => setPlayers(n)}
-            >
-              {n === 1 ? "1 player" : "2 players"}
-            </button>
-          ))}
-        </div>
-        <div className="ss-lobby__names">
-          {Array.from({ length: players }, (_, i) => (
-            <label key={i} className="ss-name" style={{ borderColor: playerColor(i + 1) }}>
-              <span className="ss-name__tag" style={{ background: playerColor(i + 1) }}>
-                {players === 2 ? (i === 0 ? "Left" : "Right") : "Runner"}
-              </span>
-              <input
-                className="ss-name__input"
-                value={names[i]}
-                maxLength={20}
-                placeholder={`Player ${i + 1}`}
-                aria-label={`Player ${i + 1} name`}
-                onChange={(e) => setName(i + 1, e.target.value)}
-              />
-            </label>
-          ))}
-        </div>
+        <DifficultyChips />
+        <label className="ss-name">
+          <span className="ss-name__tag">Runner</span>
+          <input
+            className="ss-name__input"
+            value={name}
+            maxLength={20}
+            placeholder="Player 1"
+            aria-label="Your name"
+            onChange={(e) => setName(e.target.value)}
+          />
+        </label>
         <p className="ss-lobby__note">Type a name to go on the best scores.</p>
         <button type="button" className="ss-button ss-button--go" onClick={() => session.start()}>
           Start

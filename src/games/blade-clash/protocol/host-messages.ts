@@ -16,8 +16,11 @@ const pair = <T extends z.ZodType>(item: T) => z.tuple([item, item]);
 export const controllerStateSchema = z.object({
   kind: z.literal("state"),
   phase: z.enum(MATCH_PHASES),
-  health: pair(z.number().int().min(0)),
-  maxHealth: z.number().int().min(1),
+  /** Points each. The first to `pointsToWin` wins. */
+  score: pair(z.number().int().min(0)),
+  pointsToWin: z.number().int().min(1),
+  /** Who scored the latest point. */
+  scorer: slotSchema.nullable(),
   /** What each player is called, as typed on their phone. */
   names: pair(z.string().max(NAME_MAX)),
   picks: pair(z.enum(CHARACTER_IDS).nullable()),

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import type { ReactNode } from "react";
+import { SiteAnalytics } from "@/platform/analytics/SiteAnalytics";
 import { SITE } from "@/platform/site";
 import "./globals.css";
 import "@/styles/ui.css";
@@ -11,6 +12,8 @@ import "@/styles/home-tiles.css";
 import "@/styles/shell.css";
 import "@/styles/settings.css";
 import "@/styles/phone.css";
+import "@/styles/loader.css";
+import "@/styles/join.css";
 
 export const metadata: Metadata = {
   title: SITE.name,
@@ -48,6 +51,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           {themeBootScript}
         </Script>
         {children}
+        <SiteAnalytics />
       </body>
     </html>
   );

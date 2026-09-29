@@ -1,6 +1,7 @@
 import { botPedals } from "./bot-pedals";
+import { FULL_SKILL, type KartBotSkill } from "./bot-skill";
 import type { Cube } from "./pickups";
-import type { Kart, KartInput } from "./kart";
+import { NO_INPUT, type Kart, type KartInput } from "./kart";
 import type { Obstacle } from "./obstacles";
 import { nearestAhead } from "./projectiles";
 import { wrapAngle } from "@/games/kit/motion/math3d";
@@ -78,8 +79,18 @@ function wantsItem(kart: Kart, view: BotView): boolean {
  * A simple, readable computer driver. It steers at a point a little way
  * down its chosen lane, drifts or lifts off for bends, weaves for item cubes
  * and around obstacles, and uses items when they are likely to help.
+ * The skill sets how sharp it is. Top speed is held back in the world.
  */
-export function think(kart: Kart, brain: BotBrain, view: BotView, time: number, dt: number, random: () => number): { input: KartInput; use: boolean } {
+export function think(
+  kart: Kart,
+  brain: BotBrain,
+  view: BotView,
+  time: number,
+  dt: number,
+  random: () => number,
+  skill: KartBotSkill = FULL_SKILL,
+): { input: KartInput; use: boolean } {
+  if (!skill.acts) return { input: NO_INPUT, use: false };
   const { track } = view;
   brain.laneTimer -= dt;
   if (brain.laneTimer <= 0) {
@@ -92,7 +103,7 @@ export function think(kart: Kart, brain: BotBrain, view: BotView, time: number, 
   const aim = track.pointAt(kart.loc.s + look, lane);
   const wanted = Math.atan2(aim.x - kart.x, aim.z - kart.z);
   const diff = wrapAngle(wanted - kart.heading);
-  const steer = Math.max(-1, Math.min(1, -diff * 2.4));
+  const steer = Math.max(-1, Math.min(1, -diff * 2.4 * skill.steer));
 
   const { throttle, brake } = botPedals(kart, track, steer, speed);
 
@@ -101,7 +112,7 @@ export function think(kart: Kart, brain: BotBrain, view: BotView, time: number, 
     brain.itemTimer -= dt;
     if (brain.itemTimer <= 0) {
       use = wantsItem(kart, view);
-      brain.itemTimer = use ? 1.5 + random() * 3 : 0.7;
+      brain.itemTimer = (use ? 1.5 + random() * 3 : 0.7) * skill.itemPatience;
     }
   }
   return { input: { steer, throttle, brake }, use };

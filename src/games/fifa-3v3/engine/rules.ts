@@ -3,6 +3,7 @@ import { newBall } from "./ball";
 import { goalX } from "./goal";
 import { hands, makeKeeper, outward } from "./keeper";
 import { laneOf } from "./lanes";
+import { makeReferee } from "./referee";
 import { PITCH } from "./tuning";
 import type { Athlete, MatchState } from "./types";
 import { dist } from "./vec";
@@ -18,6 +19,9 @@ function kickoffSpot(state: MatchState, a: Athlete, kicking: boolean): { x: numb
 export function setupKickoff(state: MatchState): void {
   state.ball = newBall();
   state.flight = null;
+  state.foul = null;
+  state.setPiece = null;
+  state.referee = makeReferee();
   for (const a of state.athletes) {
     const kicking = a.team === state.kickoffTeam && a.slot === 0;
     a.pos = kickoffSpot(state, a, kicking);
@@ -31,6 +35,7 @@ export function setupKickoff(state: MatchState): void {
     a.buffered = 0;
     a.skill.kind = null;
     a.noTouch = 0;
+    a.guard.on = false;
     a.brain.thinkIn = 0.4;
   }
   // Fresh keepers in position, keeping their save counts for the results.
@@ -66,6 +71,8 @@ export function onGoal(state: MatchState, team: TeamId): void {
   if (scorer !== null) state.athletes[scorer]!.stats.goals++;
   state.lastGoal = { team: scoring, scorer };
   if (state.flight) state.flight.resolved = true;
+  state.setPiece = null;
+  state.foul = null;
   if (state.golden || state.score[scoring] >= state.options.goalsToWin) state.winner = scoring;
   state.kickoffTeam = team;
   state.phase = "goal";
@@ -87,6 +94,8 @@ export function onOut(state: MatchState, team: TeamId): void {
     state.events.push({ type: "miss", team: flight.team, kind: over ? "over" : "wide" });
     flight.resolved = true;
   }
+  state.setPiece = null;
+  state.foul = null;
   state.restartTeam = team;
   state.phase = "restart";
   state.phaseT = 0;

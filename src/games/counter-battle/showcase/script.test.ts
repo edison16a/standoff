@@ -41,7 +41,7 @@ describe("showcase script", () => {
     const still = STILL_AT.poster;
     const blast = log.find((l) => l.e.type === "kill" && l.e.gun === "shotgun" && l.at > FILM_START);
     expect(blast).toBeDefined();
-    // The muzzle flash lasts six hundredths of a second, so the still falls just after the shot.
+    // The still falls just after the shot, with the puff of air at the barrel and the balls in flight.
     expect(still - blast!.at).toBeGreaterThanOrEqual(0);
     expect(still - blast!.at).toBeLessThan(0.05);
     expect(STILL_AT.icon).toBe(still);

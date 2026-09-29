@@ -2,12 +2,16 @@ import { create } from "zustand";
 import type { PerSlot, Slot } from "@/games/blade-clash/players";
 import type { CalibrationStep, MatchPhase } from "@/games/blade-clash/protocol";
 import { DEFAULT_TUNING, type Tuning } from "@/games/blade-clash/tuning";
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { SeatState } from "./lobby";
 
 /** The slice of match state the overlays on top of the canvas draw. */
 export interface MatchHud {
   phase: MatchPhase;
-  health: PerSlot<number>;
+  /** Points each, first to POINTS_TO_WIN. */
+  score: PerSlot<number>;
+  /** Who scored the latest point, for the hit moment. */
+  scorer: Slot | null;
   countdown: number | null;
   winner: Slot | null;
   rematchVotes: PerSlot<boolean>;
@@ -27,6 +31,8 @@ export interface BladeHostState {
   hud: MatchHud | null;
   tuning: Tuning;
   tuningOpen: boolean;
+  /** How hard the computer fencer plays. Kept for the whole visit, so a rematch keeps it. */
+  botLevel: BotLevel;
 }
 
 const emptySeat = (): SeatState => ({ connected: false, pick: null, ready: false, computer: false });
@@ -38,6 +44,7 @@ export const useBladeStore = create<BladeHostState>(() => ({
   hud: null,
   tuning: DEFAULT_TUNING,
   tuningOpen: false,
+  botLevel: DEFAULT_BOT_LEVEL,
 }));
 
 /** Shallow compare, so the per frame HUD sync only writes when something changed. */

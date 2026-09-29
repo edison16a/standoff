@@ -7,7 +7,7 @@ import { BUTTONS } from "../protocol";
 import { MatchDriver } from "./match-driver";
 
 /** A pad with the stick at rest: the presses under test are fed in by hand. */
-const PAD = { stick: () => ({ x: 0, y: 0 }) } as unknown as HostPad;
+const PAD = { stick: () => ({ x: 0, y: 0 }), isHeld: () => false } as unknown as HostPad;
 
 function driver(): { d: MatchDriver; run: (seconds: number) => MatchEvent[] } {
   const d = new MatchDriver(

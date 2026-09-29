@@ -1,4 +1,3 @@
-import { LEVELS } from "../levels";
 import { record, saveProgress } from "./progress";
 import type { Round } from "./round";
 import { useCubeStore as store, type HudPlayer, type ResultRow } from "./store";
@@ -37,12 +36,10 @@ export class Scoreboard {
     const before = progress.best[this.levelId] ?? 0;
     const percent = run.percent;
     if (practice) return onBest(null);
-    const index = LEVELS.findIndex((l) => l.info.id === this.levelId);
-    const next = record(progress, this.levelId, index, percent, false);
+    const next = record(progress, this.levelId, percent, false);
     if (next !== progress) {
       saveProgress(next);
-      const opened = next.unlocked > progress.unlocked ? LEVELS[next.unlocked - 1]?.info.name ?? null : null;
-      store.setState({ progress: next, unlockedNow: opened ?? store.getState().unlockedNow });
+      store.setState({ progress: next });
     }
     if (percent > before && percent < 100) {
       const text = `New best ${percent}%`;
@@ -55,17 +52,22 @@ export class Scoreboard {
   results(): void {
     const round = this.round;
     if (!round) return;
+    const places = round.places(true);
     const rows: ResultRow[] = round.seats.map((seat, i) => ({
       slot: i + 1,
       finished: seat.run.finished,
-      best: seat.run.finished ? 100 : seat.run.best,
+      // A racer stopped by the other's finish counts how far they got, as their place does.
+      best: seat.run.finished ? 100 : Math.max(seat.run.best, seat.run.percent),
       attempts: seat.run.attempt,
       jumps: seat.run.jumps,
+      place: places[i]!,
     }));
-    store.setState({ results: rows, hud: this.hud(round) });
+    // The tags behind the results say the same places and bests as the table.
+    const hud = this.hud(round, places).map((player, i) => ({ ...player, best: rows[i]!.best }));
+    store.setState({ results: rows, winner: round.winner, hud });
   }
 
-  private hud(round: Round): HudPlayer[] {
+  private hud(round: Round, places = round.places()): HudPlayer[] {
     return round.seats.map((seat, i) => ({
       attempt: seat.run.attempt,
       percent: seat.run.percent,
@@ -73,6 +75,7 @@ export class Scoreboard {
       status: seat.status,
       waiting: seat.status === "run" && round.levelTime(i + 1) < seat.run.time - 0.02,
       mode: seat.run.player.mode,
+      place: places[i]!,
     }));
   }
 }

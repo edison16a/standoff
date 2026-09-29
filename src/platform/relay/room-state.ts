@@ -11,6 +11,11 @@ export interface SeatRecord {
   conn: string | null;
   /** When the phone dropped, so the seat can be freed after the grace period. */
   awaySince: number | null;
+  /**
+   * The player's name, unique in the room, so a phone can come back as it.
+   * Optional because rooms saved before names lived here have none.
+   */
+  name?: string | null;
 }
 
 /**
@@ -18,6 +23,7 @@ export interface SeatRecord {
  * enough to store as one JSON value, which is what lets the same rules run
  * against an in-memory map on a laptop and against Redis on Vercel, where
  * the host and the phones may be connected to different server instances.
+ * Seating rules live in seat-claim.ts.
  */
 export interface RoomRecord {
   code: string;
@@ -31,10 +37,6 @@ export interface RoomRecord {
   /** One entry per seat, seat 1 first. Its length is how many phones the room takes. */
   seats: (SeatRecord | null)[];
 }
-
-export type SeatClaim =
-  | { ok: true; seat: Seat; token: string; rejoined: boolean; replaced: string | null }
-  | { ok: false; reason: "full" | "closed" };
 
 export interface NewRoom {
   code: string;
@@ -57,36 +59,6 @@ export function hostExpired(room: RoomRecord, now: number): boolean {
 /** A room nobody can join or resume any more. */
 export function isDead(room: RoomRecord, now: number): boolean {
   return room.closed || hostExpired(room, now);
-}
-
-function seatFree(seat: SeatRecord | null, now: number): boolean {
-  return seat === null || (seat.conn === null && seat.awaySince !== null && now - seat.awaySince > SEAT_GRACE_MS);
-}
-
-/**
- * Seats a phone. A known token gets its old seat back, and whichever
- * connection held it before is reported so it can be closed. Otherwise the
- * phone takes the lowest free seat, which is how join order decides who is
- * player one. A seat whose phone has been gone past the grace period
- * counts as free.
- */
-export function claimSeat(
-  room: RoomRecord,
-  token: string | undefined,
-  conn: string,
-  newToken: string,
-  now: number,
-): { room: RoomRecord; claim: SeatClaim } {
-  if (isDead(room, now)) return { room, claim: { ok: false, reason: "closed" } };
-  const known = token ? room.seats.findIndex((seat) => seat?.token === token) : -1;
-  if (token && known >= 0) {
-    const next = withSeat(room, known + 1, { token, conn, awaySince: null });
-    return { room: next, claim: { ok: true, seat: known + 1, token, rejoined: true, replaced: room.seats[known]!.conn } };
-  }
-  const free = room.seats.findIndex((seat) => seatFree(seat, now));
-  if (free < 0) return { room, claim: { ok: false, reason: "full" } };
-  const next = withSeat(room, free + 1, { token: newToken, conn, awaySince: null });
-  return { room: next, claim: { ok: true, seat: free + 1, token: newToken, rejoined: false, replaced: null } };
 }
 
 /** Marks a seat away, but only if this connection still holds it. */
@@ -124,6 +96,11 @@ export function connectedSeats(room: RoomRecord): boolean[] {
   return room.seats.map((seat) => Boolean(seat?.conn));
 }
 
-function withSeat(room: RoomRecord, seat: Seat, record: SeatRecord | null): RoomRecord {
+/** Each seat's player name, seat 1 first, null where nobody has sat. */
+export function seatNames(room: RoomRecord): (string | null)[] {
+  return room.seats.map((seat) => seat?.name ?? null);
+}
+
+export function withSeat(room: RoomRecord, seat: Seat, record: SeatRecord | null): RoomRecord {
   return { ...room, seats: room.seats.map((current, i) => (i === seat - 1 ? record : current)) };
 }

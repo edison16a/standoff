@@ -50,6 +50,16 @@
   text-align: center;
 }
 
+/* A dropped controller: the notice carries its own Reconnect button. */
+.phone__notice--action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px 12px;
+  padding-block: 8px;
+}
+
 .phone__body {
   flex: 1;
   display: flex;

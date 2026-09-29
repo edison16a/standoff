@@ -31,7 +31,7 @@ export function CameraStep({ kit }: { kit: CameraKit }) {
 
 /**
  * Over the game when the camera or the body tracking stops mid run, as
- * when the camera is unplugged. Every run waits, and the card says what
+ * when the camera is unplugged. The run waits, and the card says what
  * went wrong with a way to try again.
  */
 export function CameraTrouble({ kit }: { kit: CameraKit }) {
@@ -54,15 +54,15 @@ export function CameraTrouble({ kit }: { kit: CameraKit }) {
   );
 }
 
-/** Each player finds their spot and stands tall and still while their ring fills. */
+/** The player finds their spot and stands tall and still while the ring fills. */
 export function CalibrateStep({ kit }: { kit: CameraKit }) {
   const session = useSession();
   return (
     <div className="ss-calibrate">
       <CameraCalibrate
         kit={kit}
-        names={session.names()}
-        onPlayerDone={(slot) => session.sound.sfx.tick(session.sound.panFor(slot))}
+        names={[session.name()]}
+        onPlayerDone={() => session.sound.sfx.tick(0)}
         onDone={() => session.calibrated()}
       />
       <button type="button" className="ss-button ss-button--quiet ss-calibrate__back" onClick={() => session.toLobby()}>

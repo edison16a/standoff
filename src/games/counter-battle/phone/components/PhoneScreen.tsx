@@ -5,7 +5,7 @@ import { ResultCard } from "./ResultCard";
 import { Setup } from "./Setup";
 
 /**
- * Counter Battle on the phone: the setup pages, then the gun while this
+ * Paintball Battle on the phone: the setup pages, then the gun while this
  * player is in the match, then their result. A player who joins mid match
  * sets up and waits for the next one; one whose phone reloaded aims again
  * and drops straight back in.

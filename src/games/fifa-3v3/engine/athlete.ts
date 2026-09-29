@@ -41,7 +41,9 @@ export function makeAthlete(id: number, team: TeamId, slot: number, character: C
     strength: unit(stats.strength),
     dribbling: unit(stats.dribbling),
     brain: { thinkIn: 0, target: v2(), slideWait: 0, passWait: 0, skillWait: 0, carried: 0, caller: null, callFor: 0 },
-    stats: { goals: 0, shots: 0, tackles: 0, passes: 0 },
+    stats: { goals: 0, shots: 0, tackles: 0, passes: 0, fouls: 0, blocks: 0 },
+    guard: { held: false, on: false, lag: v2() },
+    defendWait: 0,
   };
 }
 

@@ -36,7 +36,7 @@ export class DemoBattle {
   private fresh(): Battle {
     this.seed = (this.seed * 1103515245 + 12345) >>> 0;
     const entries = [0, 0, 1, 1].map((team) => ({ team: team as 0 | 1, seat: null, gun: null }));
-    const lineup = buildLineup(entries, () => "", "normal", this.seed);
+    const lineup = buildLineup(entries, () => "", "medium", this.seed);
     this.labels = lineup.setups.map((s, i) => ({ name: s.name, color: lineup.colours[i] ?? playerColor(i + 1) }));
     return new Battle(lineup.setups, this.seed);
   }

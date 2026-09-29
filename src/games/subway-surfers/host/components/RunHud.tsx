@@ -1,45 +1,36 @@
 "use client";
-import { playerColor } from "@/games/kit/players";
 import { POWER_NAMES } from "../../engine/powers";
 import { STEP_TEXT, TUTORIAL_STEPS } from "../../engine/tutorial";
 import { POWER_COLORS } from "../../render/models/pickups";
 import { useSurfStore, type RunnerHud } from "../store";
 import { CoinIcon, PowerIcon } from "./icons";
-import { PlayerMap } from "./PlayerMap";
 import { useSession } from "./session-context";
-import { useScreenAspect } from "./use-screen-aspect";
 
 const CRASH_TEXT = { caught: "Caught by the guard!", train: "Crashed into a train!", low: "Tripped on a barrier!", high: "Hit a barrier!", ramp: "Crashed!" } as const;
 
-/** The overlay on each player's half: score, coins, power up timers, shouts and the tutorial. */
+/** The overlay on the run: name and score, coins, power up timers, shouts and the tutorial. */
 export function RunHud() {
-  const hud = useSurfStore((s) => s.hud);
+  const h = useSurfStore((s) => s.hud);
   const phase = useSurfStore((s) => s.phase);
   const countdown = useSurfStore((s) => s.countdown);
   const session = useSession();
-  // The map's height follows the screen's shape, so what sits under it needs that shape too.
-  const aspect = useScreenAspect();
+  if (!h) return null;
   return (
-    <div className={`ss-hud ss-hud--${hud.length}`} style={{ ["--ss-screen-hw" as string]: 1 / aspect }}>
-      {hud.map((h, i) => (
-        // Named by side, not by child order: the countdown, Skip and the map come after the views.
-        <section key={h.slot} className={`ss-view ss-view--${i === 0 ? "left" : "right"}`} style={{ ["--pc" as string]: playerColor(h.slot) }} aria-label={h.name}>
-          {phase === "tutorial" ? <TutorialPanel h={h} /> : <Scoreboard h={h} />}
-          {h.banner && (
-            <div key={h.banner.id} className="ss-banner">
-              {h.banner.text}
-            </div>
-          )}
-          {h.away && <div className="ss-away">{hud.length > 1 ? `${h.name}, step back into view` : "Step back into view"}</div>}
-          {!h.away && h.resume !== null && <div className="ss-away ss-away--ready">Get ready {h.resume}</div>}
-          {h.crashed && phase === "running" && (
-            <div className="ss-crashed">
-              <strong>{CRASH_TEXT[h.crashed]}</strong>
-              <span>{h.score.toLocaleString()} points</span>
-            </div>
-          )}
-        </section>
-      ))}
+    <div className="ss-hud" aria-label={h.name}>
+      {phase === "tutorial" ? <TutorialPanel h={h} /> : <Scoreboard h={h} />}
+      {h.banner && (
+        <div key={h.banner.id} className="ss-banner">
+          {h.banner.text}
+        </div>
+      )}
+      {h.away && <div className="ss-away">Step back into view</div>}
+      {!h.away && h.resume !== null && <div className="ss-away ss-away--ready">Get ready {h.resume}</div>}
+      {h.crashed && phase === "running" && (
+        <div className="ss-crashed">
+          <strong>{CRASH_TEXT[h.crashed]}</strong>
+          <span>{h.score.toLocaleString()} points</span>
+        </div>
+      )}
       {countdown !== null && (
         <div key={countdown} className={`ss-count${countdown === 0 ? " ss-count--go" : ""}`}>
           {countdown === 0 ? "GO!" : countdown}
@@ -50,7 +41,6 @@ export function RunHud() {
           Skip
         </button>
       )}
-      {hud.length > 1 && phase !== "results" && <PlayerMap hud={hud} />}
     </div>
   );
 }
@@ -58,8 +48,9 @@ export function RunHud() {
 function Scoreboard({ h }: { h: RunnerHud }) {
   return (
     <>
-      <div className="ss-tag">{h.name}</div>
       <div className="ss-score">
+        {/* The name reads as plain text beside the score, so the corner stays one line. */}
+        <span className="ss-score__name">{h.name}</span>
         <span className="ss-score__value">{h.score.toLocaleString()}</span>
         <span className={`ss-mult${h.multiplier > 1 ? " ss-mult--hot" : ""}`}>x{h.multiplier}</span>
       </div>
@@ -82,9 +73,8 @@ function TutorialPanel({ h }: { h: RunnerHud }) {
   const step = TUTORIAL_STEPS[h.tutorial];
   return (
     <div className="ss-tut">
-      <div className="ss-tag">{h.name}</div>
       <h2 className="ss-tut__title">{step ? STEP_TEXT[step].title : "Ready!"}</h2>
-      <p className="ss-tut__hint">{step ? STEP_TEXT[step].hint : "Waiting for everyone"}</p>
+      <p className="ss-tut__hint">{step ? STEP_TEXT[step].hint : "Get set"}</p>
       <ol className="ss-tut__list">
         {TUTORIAL_STEPS.map((s, i) => (
           <li key={s} className={i < h.tutorial ? "ss-tut__done" : i === h.tutorial ? "ss-tut__now" : ""}>

@@ -45,7 +45,7 @@ describe("what the screens are told", () => {
 
   it("gives players in a match their own side's score first, and never a round past ten", () => {
     const lobby = readyLobby();
-    const d = new MatchDriver(buildLineup(lobby.entries(), (s) => players[s - 1]!.name, "normal", 3), 3);
+    const d = new MatchDriver(buildLineup(lobby.entries(), (s) => players[s - 1]!.name, "medium", 3), 3);
     const m = d.battle.match;
     m.score = [1, 3];
     // Draws can run a match long; the phones' count stops at ten.

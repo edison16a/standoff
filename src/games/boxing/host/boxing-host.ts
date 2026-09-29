@@ -98,7 +98,7 @@ export class BoxingHost {
     const humans = this.humans;
     this.stopDriver?.();
     const [red, blue] = this.looks();
-    this.driver = new FightDriver({ seed: Math.floor(Math.random() * 1e9), slots: [1, humans[1] ? 2 : null], roundMs: testRoundMs(), styles: [red.id, blue.id] });
+    this.driver = new FightDriver({ seed: Math.floor(Math.random() * 1e9), slots: [1, humans[1] ? 2 : null], roundMs: testRoundMs(), styles: [red.id, blue.id], botLevel: store.getState().botLevel });
     this.stopDriver = this.driver.listen((event) => this.onMatchEvent(event, this.driver!.match));
     this.banners.clear();
     this.audio.setPlayers(humans);
