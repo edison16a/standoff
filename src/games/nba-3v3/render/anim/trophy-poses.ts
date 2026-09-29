@@ -10,8 +10,8 @@ const smooth = (v: number) => {
 const bump = (t: number, from: number, to: number) => Math.sin(Math.PI * clamp01((t - from) / (to - from)));
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 
-/** The two holds on the trophy: hugged at the chest by its column, and straight up over the head. */
-const CRADLE = { raise: 0.62, spread: -0.42, twist: 0.35, elbow: 1.55 };
+/** The two holds on the trophy: held low in front by its column so his face shows over it, and straight up over the head. */
+const CRADLE = { raise: 0.12, spread: -0.55, twist: 0.3, elbow: 0.95 };
 const RAISED = { raise: 2.95, spread: -0.2, twist: 0.1, elbow: 0.3 };
 
 /**
@@ -33,7 +33,7 @@ export function captainPose(t: number): Pose {
   // A kiss for the trophy: head and shoulders lean in to it.
   const kiss = bump(t, 0.7, 1.8);
   p.torsoX = 0.05 + 0.22 * kiss - 0.12 * lift;
-  p.neckX = mix(0.35 + 0.25 * kiss, -0.55, lift) - 0.1 * pump;
+  p.neckX = mix(0.18 + 0.2 * kiss, -0.55, lift) - 0.1 * pump;
   // A dip at the knees to drive it up, and a bounce with every pump.
   const dip = bump(t, CEREMONY.raise - 0.35, CEREMONY.raise + 0.35);
   const bend = 0.45 * dip + 0.14 * pump;
@@ -57,11 +57,11 @@ export function matePose(t: number, phase: number): Pose {
   const meet = 0.5 + 0.5 * Math.sin(t * 12 + phase);
   const clapSpread = -0.1 - 0.35 * meet;
   const shake = Math.sin(t * 9 + phase) * 0.25;
-  p.armLRaise = p.armRRaise = mix(0.95, 2.75, go);
+  p.armLRaise = p.armRRaise = mix(0.7, 2.75, go);
   p.armLSpread = p.armRSpread = mix(clapSpread, 0.45, go);
   p.armLTwist = p.armRTwist = mix(0.3, 0, go);
-  p.elbowL = mix(1.25, 0.55 + shake, go);
-  p.elbowR = mix(1.25, 0.55 - shake, go);
+  p.elbowL = mix(1.45, 0.55 + shake, go);
+  p.elbowR = mix(1.45, 0.55 - shake, go);
   p.neckX = mix(0.05, -0.4, go);
   p.torsoX = mix(0.08, -0.12, go);
   // Knees tuck a little in the air and soak up each landing.

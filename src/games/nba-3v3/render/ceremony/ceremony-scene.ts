@@ -65,7 +65,8 @@ export class CeremonyScene {
     this.lights.update(time, dt);
     this.dim = Math.min(1, t / 1.2) * 0.55;
     this.confetti?.update(dt);
-    if (left && right) this.grip.hold(left, right, t);
+    const lift = Math.max(0, Math.min(1, (t - CEREMONY.raise) / (CEREMONY.up - CEREMONY.raise)));
+    if (left && right) this.grip.hold(left, right, t, lift * lift * (3 - 2 * lift));
     this.grip.object.visible = !!(left && right);
   }
 

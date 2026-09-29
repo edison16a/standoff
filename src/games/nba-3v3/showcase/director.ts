@@ -79,8 +79,9 @@ export class ShowcaseDirector {
     this.dev = readDev(params);
     this.script = this.dev.film ?? new HighlightScript(LEAD[view]);
     this.renderer.setMatch(this.script.match);
-    this.renderer.setCeremony(this.script.ceremony ?? null);
     this.renderer.tv.fixed = this.dev.film ? null : (STILL_CAMERA[view] ?? null);
+    // A film of the ceremony hands the camera to the ceremony's own shots.
+    this.renderer.setCeremony(this.script.ceremony ?? null);
     const cam = params.get("cam");
     if (cam) {
       const [x = 0, y = 0, z = 0, lx = 0, ly = 0, lz = 0, fov = 40] = cam.split(",").map(Number);
