@@ -9,7 +9,6 @@ import type { V2 } from "../engine/vec";
 import type { MatchView } from "../engine/view";
 import { isPadButton, type RoomPhase } from "../protocol";
 import type { LobbyRole } from "../roles";
-import { computerName } from "../builds";
 import type { TeamId } from "../teams";
 import { registerFootballAdmin } from "./admin";
 import { AimSticks } from "./aim-sticks";
@@ -22,18 +21,13 @@ import { routeRoom, type InputTarget } from "./inputs";
 import { Lobby } from "./lobby";
 import { MatchDriver } from "./match-driver";
 import { PhoneLink } from "./phone-link";
+import { Names } from "./names";
 import { publish } from "./publish";
 import { ReplayDirector, type ReplayFrame } from "./replay/director";
 import { DEFAULT_FORWARD } from "./steer";
 
 /** The overlay and the phones are refreshed this often; the canvas every frame. */
 const HUD_MS = 100;
-
-/** A tag over a player on the field: a phone's player by name in their colour. */
-export interface Tag {
-  name: string;
-  colour: string;
-}
 
 /**
  * Football 3v3 on the computer, for one room. It keeps the lobby, runs
@@ -51,6 +45,8 @@ export class FootballHost implements InputTarget {
   forward: V2 = DEFAULT_FORWARD;
   readonly phones: PhoneLink;
   readonly aims = new AimSticks();
+  /** Who each player is on screen: the phones' players by their own names. */
+  readonly names: Names;
   private readonly pad: HostPad;
   private readonly offRoom: () => void;
   private readonly offPress: () => void;
@@ -65,6 +61,7 @@ export class FootballHost implements InputTarget {
     store.setState({ ...store.getInitialState() });
     this.audio = new SoundDirector(room.audio);
     this.phones = new PhoneLink(room);
+    this.names = new Names(() => this.driver?.match ?? null, () => room.players());
     this.pad = new HostPad(room);
     this.offPress = this.pad.onPress((seat, button, down, stick) => {
       if (this.vote(seat, down)) return;
@@ -107,25 +104,9 @@ export class FootballHost implements InputTarget {
     return this.room.players();
   }
 
-  /** How a player is called out: a phone's player by their own name, a computer as "CPU" and its build. */
+  /** How a player is called out: their own name, or "CPU" and the build. */
   nameOf(id: number): string {
-    const a = this.driver?.match.athlete(id);
-    if (!a?.build) return "";
-    return this.jerseyName(id) ?? computerName(a.build);
-  }
-
-  /** A phone's player's own name, for their jersey and everywhere else; null for the computer's. */
-  jerseyName(id: number): string | null {
-    const a = this.driver?.match.athlete(id);
-    if (!a || a.seat === null) return null;
-    return this.room.players().find((p) => p.seat === a.seat)?.name ?? null;
-  }
-
-  /** The tag over a phone's player, or null for the computer's. */
-  tag(id: number): Tag | null {
-    const a = this.driver?.match.athlete(id);
-    if (!a || a.seat === null || a.auto) return null;
-    return { name: this.nameOf(id), colour: playerColor(a.seat) };
+    return this.names.called(id);
   }
 
   setTeam(seat: number, team: TeamId | null): void {
