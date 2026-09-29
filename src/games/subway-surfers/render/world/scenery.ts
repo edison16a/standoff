@@ -30,17 +30,22 @@ export interface ChunkPlan {
   post: { side: -1 | 1; lit: number } | null;
 }
 
+/** Whether run `run` of chunks is a tunnel. A whole run is tunnel or none of it, and never across a change of zone. */
+function tunnelRun(run: number, seed: number): boolean {
+  const start = run * TUNNEL_RUN * CHUNK;
+  const zoneStart = Math.floor(start / ZONE_LENGTH) * ZONE_LENGTH;
+  // No tunnel at the very start, or across a change of zone, where the new look should be seen.
+  const fits = start >= zoneStart + CHUNK * 2 && start + TUNNEL_RUN * CHUNK <= zoneStart + ZONE_LENGTH;
+  return run * TUNNEL_RUN >= 6 && fits && hash(run, seed + 17) < THEMES[themeIndexAt(start)]!.tunnels * 2.2;
+}
+
 /** The plan for chunk `k`. Pure and seeded, so it is the same every time the chunk is rebuilt. */
 export function planChunk(k: number, seed: number): ChunkPlan {
   const start = k * CHUNK;
   const theme = themeIndexAt(start);
   const t = THEMES[theme]!;
   const run = Math.floor(k / TUNNEL_RUN);
-  // No tunnel at the very start, or across a change of zone, where the new look should be seen.
-  const zoneStart = Math.floor(start / ZONE_LENGTH) * ZONE_LENGTH;
-  const runStart = run * TUNNEL_RUN * CHUNK;
-  const fits = runStart >= zoneStart + CHUNK * 2 && runStart + TUNNEL_RUN * CHUNK <= zoneStart + ZONE_LENGTH;
-  const inTunnel = k >= 6 && fits && hash(run, seed + 17) < t.tunnels * 2.2;
+  const inTunnel = tunnelRun(run, seed);
   const block = Math.floor(k / 3);
   const pick = (salt: number): SideKind => {
     const total = t.sides.reduce((sum, [, w]) => sum + w, 0);
@@ -54,7 +59,8 @@ export function planChunk(k: number, seed: number): ChunkPlan {
   return {
     theme,
     tunnel: inTunnel,
-    mouth: inTunnel && k % TUNNEL_RUN === 0,
+    // Only the first chunk of a tunnel has a portal, not the join between two runs of tunnel.
+    mouth: inTunnel && k % TUNNEL_RUN === 0 && !tunnelRun(run - 1, seed),
     left: pick(1),
     right: pick(2),
     variant: Math.floor(hash(k, seed + 5) * 4),

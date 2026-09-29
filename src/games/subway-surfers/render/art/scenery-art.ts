@@ -120,22 +120,31 @@ export function stationSignTexture(name: string): THREE.Texture {
   });
 }
 
-/** Glazed subway tiles with a coloured band, grimy near the floor, for the tunnels. */
+/**
+ * A tunnel wall: plain concrete up high, a bold blue band, and big glazed
+ * tiles below, grimy near the floor. The tiles are large so they still read
+ * as tiles when the wall streams past at a glancing angle.
+ */
 export function tunnelTileTexture(): THREE.Texture {
   return painted("tunnel-tiles", 512, 256, (ctx, w, h) => {
     const rng = new Rng(21);
-    ctx.fillStyle = "#6f6a60";
+    ctx.fillStyle = "#c9c1b2";
     ctx.fillRect(0, 0, w, h);
-    const tw = 32;
-    const th = 16;
-    for (let y = 0; y < h; y += th) {
-      for (let x = (y / th) % 2 ? -tw / 2 : 0; x < w; x += tw) {
-        const band = y >= h * 0.44 && y < h * 0.56;
+    ctx.fillStyle = "rgba(90,80,60,0.12)";
+    for (let i = 0; i < 60; i++) ctx.fillRect(rng.range(0, w), rng.range(0, h * 0.4), rng.range(10, 60), rng.range(4, 14));
+    ctx.fillStyle = "#1f6fd6";
+    ctx.fillRect(0, h * 0.42, w, h * 0.1);
+    ctx.fillStyle = "#6f6a60";
+    ctx.fillRect(0, h * 0.52, w, h * 0.48);
+    const tw = 64;
+    const th = 32;
+    for (let y = h * 0.52; y < h; y += th) {
+      for (let x = Math.round((y - h * 0.52) / th) % 2 ? -tw / 2 : 0; x < w; x += tw) {
         const shade = rng.int(-10, 10);
-        ctx.fillStyle = band ? `rgb(${31 + shade},${95 + shade},${214 + shade})` : `rgb(${236 + shade},${230 + shade},${214 + shade})`;
-        ctx.fillRect(x + 1, y + 1, tw - 2, th - 2);
-        ctx.fillStyle = "rgba(255,255,255,0.35)";
-        ctx.fillRect(x + 3, y + 2, tw * 0.4, 2);
+        ctx.fillStyle = `rgb(${236 + shade},${232 + shade},${218 + shade})`;
+        ctx.fillRect(x + 2, y + 2, tw - 4, th - 4);
+        ctx.fillStyle = "rgba(255,255,255,0.4)";
+        ctx.fillRect(x + 5, y + 4, tw * 0.4, 3);
       }
     }
     const grime = ctx.createLinearGradient(0, h * 0.6, 0, h);

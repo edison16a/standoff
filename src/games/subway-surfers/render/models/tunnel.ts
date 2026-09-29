@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { tunnelTileTexture } from "../art/scenery-art";
+import { stationSignTexture, tunnelTileTexture } from "../art/scenery-art";
 import { MeshBuilder } from "../mesh-builder";
 import { prefab, repeated, textured } from "../prefabs";
 import { brickTexture } from "../textures";
@@ -67,11 +67,13 @@ export function portal(): THREE.Group {
     shape.lineTo(-16, 13);
     shape.lineTo(-16, 0);
     const hole = new THREE.Path();
-    hole.moveTo(-5.4, 0);
-    hole.lineTo(-5.4, 7);
-    hole.absarc(0, 7, 5.4, Math.PI, 0, true);
-    hole.lineTo(5.4, 0);
-    hole.lineTo(-5.4, 0);
+    // The opening follows the vault behind it, so no sky shows between the arch and the roof.
+    const rise = TUNNEL_TOP - VAULT_SPRING;
+    hole.moveTo(-VAULT_HALF, 0);
+    hole.lineTo(-VAULT_HALF, VAULT_SPRING);
+    hole.absellipse(0, VAULT_SPRING, VAULT_HALF, rise, Math.PI, 0, true, 0);
+    hole.lineTo(VAULT_HALF, 0);
+    hole.lineTo(-VAULT_HALF, 0);
     shape.holes.push(hole);
     const face = new THREE.ExtrudeGeometry(shape, { depth: 1.2, bevelEnabled: false });
     const uv = face.attributes.uv as THREE.BufferAttribute;
@@ -80,11 +82,12 @@ export function portal(): THREE.Group {
     const stone = { color: 0xd8cfbf, finish: "matte" as const };
     b.outline(0.05);
     b.box(33, 0.8, 1.8, stone, [0, 13, -0.6]);
-    b.add(new THREE.TorusGeometry(5.75, 0.35, 8, 40, Math.PI), stone, [0, 7, 0.05]);
-    for (const x of [-5.75, 5.75]) b.box(0.7, 7, 0.5, stone, [x, 3.5, 0.05]);
-    b.box(4.4, 1.3, 0.3, { color: 0x1f6fd6, finish: "satin" }, [0, 11.2, 0.1], undefined, 0.1);
+    b.add(new THREE.TorusGeometry(VAULT_HALF + 0.35, 0.35, 8, 40, Math.PI), stone, [0, VAULT_SPRING, 0.05], [0, 0, 0], [1, (rise + 0.35) / (VAULT_HALF + 0.35), 1]);
+    for (const x of [-1, 1]) b.box(0.7, VAULT_SPRING, 0.5, stone, [x * (VAULT_HALF + 0.35), VAULT_SPRING / 2, 0.05]);
+    b.box(5.4, 1.3, 0.3, { color: 0x1f6fd6, finish: "satin" }, [0, 11.4, 0.1], undefined, 0.1);
     b.outline(0);
-    b.box(3.9, 0.9, 0.05, { color: 0xffffff, finish: "matte" }, [0, 11.2, 0.27]);
+    const plate = textured("tunnel-plate", () => toon({ map: stationSignTexture("CITY LINE") }));
+    b.panel(5, 0.94, plate, [0, 11.4, 0.27]);
     return b.build("portal");
   });
 }
