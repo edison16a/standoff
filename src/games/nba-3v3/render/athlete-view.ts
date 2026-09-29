@@ -6,6 +6,7 @@ import { blockPose, landPose, passPose, shootPose, stealPose, stumblePose } from
 import { celebratePose, dejectedPose } from "./anim/celebrations";
 import { dunkPose, dunkSpin } from "./anim/dunks";
 import { gesturePose } from "./anim/gestures";
+import { captainPose, matePose } from "./anim/trophy-poses";
 import { layupPose } from "./anim/layups";
 import { basePose, type AthleteScene } from "./anim/base";
 import { setShotPose } from "./anim/line";
@@ -123,7 +124,9 @@ export class AthleteView {
         target = s.holding ? base : blend(base, act.gesture ? gesturePose(act.gesture, act.t) : celebratePose(c.celebration, act.t), ease(act.t / 0.25) * ease((act.dur - act.t) / 0.3), { ...base });
         break;
       case "none": {
-        if (s.winner !== null) target = s.winner === a.team ? celebratePose(c.celebration, this.time) : dejectedPose(this.time);
+        const part = s.ceremony;
+        if (part) target = part.role === "captain" ? captainPose(part.t) : part.role === "mate" ? matePose(part.t, part.phase) : dejectedPose(this.time);
+        else if (s.winner !== null) target = s.winner === a.team ? celebratePose(c.celebration, this.time) : dejectedPose(this.time);
         else if (this.time - this.landAt < 0.4) target = landPose(this.time - this.landAt, this.hardLand, base);
         // Coming out of an action the limbs settle gently instead of snapping back to the run.
         rate = 7 + 9 * ease((this.time - this.endedAt) / RECOVER);
