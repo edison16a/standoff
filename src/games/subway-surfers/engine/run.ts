@@ -4,10 +4,12 @@ import { Course } from "./course";
 import type { CrashCause, RunEvent } from "./events";
 import { startBurst } from "./motion";
 import { flightHeight, Powers } from "./powers";
+import { Points } from "./points";
 import { newRunner, stepRunner, type Abilities, type Contact, type RunnerInput, type RunnerState } from "./runner";
 import { TrainWatch } from "./trains";
-import { COIN, JUMP, MAX_LEVEL, speedAt, STEP_S, TRAIN, ZONE_LENGTH, type Lane } from "./tuning";
+import { COIN, JUMP, MAX_LEVEL, STEP_S, TRAIN, ZONE_LENGTH, type Lane } from "./tuning";
 import type { Obstacle, PowerKind } from "./types";
+import { USUAL_YARD, yardSpeed, type Yard } from "./yard";
 
 export interface RunOptions {
   /** The tutorial: an empty yard at a gentle jog. */
@@ -15,6 +17,10 @@ export interface RunOptions {
   lane?: Lane;
   /** Metres of head start on the pace and the yard's busyness. See `difficulty.ts`. */
   headStart?: number;
+  /** How hard the yard pushes past the head start. See `yard.ts`. */
+  yard?: Yard;
+  /** The difficulty's score multiplier, on every point. */
+  scoreScale?: number;
 }
 
 const PRACTICE_SPEED = 5;
@@ -31,8 +37,8 @@ export class Run {
   readonly runner: RunnerState;
   readonly powers = new Powers();
   readonly chase = new Chase();
+  readonly points: Points;
   time = 0;
-  score = 0;
   coins = 0;
   streak = 0;
   level = 1;
@@ -49,7 +55,8 @@ export class Run {
     readonly seed: number,
     readonly options: RunOptions = {},
   ) {
-    this.course = new Course(seed, { empty: options.practice, headStart: options.headStart });
+    this.course = new Course(seed, { empty: options.practice, headStart: options.headStart, yard: options.yard });
+    this.points = new Points(options.scoreScale);
     this.runner = newRunner(0, options.lane ?? 0);
     this.pending.lane = options.lane ?? 0;
     this.course.ensure(0);
@@ -67,7 +74,12 @@ export class Run {
 
   /** The running speed at a distance along this run, head start included. */
   paceAt(distance: number): number {
-    return speedAt(distance + (this.options.headStart ?? 0));
+    return yardSpeed(this.options.yard ?? USUAL_YARD, distance + (this.options.headStart ?? 0));
+  }
+
+  /** Every point so far, multipliers included. */
+  get score(): number {
+    return this.points.total;
   }
 
   get multiplier(): number {
@@ -132,7 +144,7 @@ export class Run {
     if (result.contact) this.onContact(result.contact);
     if (this.crashed) return;
 
-    this.score += (s.distance - before) * this.multiplier;
+    this.points.ran(s.distance - before, this.multiplier);
     const level = Math.min(MAX_LEVEL, 1 + Math.floor(s.distance / ZONE_LENGTH));
     if (level !== this.level && !this.options.practice) {
       this.level = level;
@@ -189,11 +201,13 @@ export class Run {
       this.streak = this.time - this.lastCoin < COIN.streakS ? this.streak + 1 : 1;
       this.lastCoin = this.time;
       this.coins++;
-      this.score += COIN.points * this.multiplier;
+      this.points.coin(this.multiplier);
       this.emit({ type: "coin", streak: this.streak, x: coin.x, y: coin.y, z: coin.z, pulled });
     }
     const pickup = collectPickup(this.course, s);
-    if (pickup) this.grant(pickup.kind);
+    if (!pickup) return;
+    this.points.power(this.multiplier);
+    this.grant(pickup.kind);
   }
 
   /** Starts a power up, as when one is picked up: a jetpack lays its trail of sky coins too. */
