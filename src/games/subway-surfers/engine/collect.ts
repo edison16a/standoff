@@ -1,5 +1,5 @@
 import type { Course } from "./course";
-import { MAGNET_AHEAD } from "./powers";
+import { DESCENT, JETPACK_HEIGHT, MAGNET_AHEAD, POWER_SECONDS } from "./powers";
 import { bodyHeight, type RunnerState } from "./runner";
 import { COIN, laneX, RUNNER } from "./tuning";
 import type { Coin, Pickup } from "./types";
@@ -10,6 +10,8 @@ const PULL = { speed: 10, gain: 50 };
 const CHEST = 0.9;
 /** A flying coin is taken once it is this near the chest, which is on the body. */
 const CATCH = 0.45;
+/** Seconds a jetpack takes to climb from the ground to within reach of its sky coins. */
+const SKY_CLIMB_S = 0.9;
 /** Along the track, a power up is taken as its floating model meets the body. */
 const PICKUP_REACH = RUNNER.halfDepth + 0.4;
 
@@ -69,4 +71,18 @@ export function collectPickup(course: Course, s: RunnerState): Pickup | null {
   if (index < 0) return null;
   const [pickup] = course.pickups.splice(index, 1);
   return pickup ?? null;
+}
+
+/**
+ * A trail of coins in the sky for a jetpack flight taken at `distance`,
+ * weaving slowly between the tracks for as far as the flight cruises at `pace`.
+ * It starts once the climb is nearly done and ends where the jetpack starts
+ * to sink, so no coin is left out of reach, even at top speed.
+ */
+export function skyTrail(course: Course, distance: number, pace: number): void {
+  const length = pace * (POWER_SECONDS.jetpack - DESCENT.seconds);
+  for (let z = Math.max(18, pace * SKY_CLIMB_S); z < length; z += 3.2) {
+    const lane = Math.round(Math.sin((distance + z) / 22) * 1.4);
+    course.addCoin(laneX(Math.max(-1, Math.min(1, lane))), JETPACK_HEIGHT + 0.9, distance + z);
+  }
 }

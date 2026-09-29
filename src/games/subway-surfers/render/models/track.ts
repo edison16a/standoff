@@ -1,142 +1,105 @@
 import * as THREE from "three";
 import { LANES, laneX } from "../../engine/tuning";
-import { wetGroundTexture } from "../art/night-art";
 import { MeshBuilder } from "../mesh-builder";
-import { glowTexture, painted } from "../textures";
+import { prefab, repeated, textured } from "../prefabs";
+import { glowTexture, gravelTexture } from "../textures";
+import { toon } from "../toon";
 import type { Theme } from "../world/themes";
 
 /** Scenery is laid in chunks of this many metres, each built from shared prefabs. */
 export const CHUNK = 30;
+/** Half the width of the gravel bed. The sides start just past it. */
+export const BED = 5.3;
 const GAUGE = 0.72;
-
-const prefabs = new Map<string, THREE.Group>();
-const materials = new Map<string, THREE.Material>();
-
-export function cached(key: string, build: () => THREE.Group): THREE.Group {
-  let prefab = prefabs.get(key);
-  if (!prefab) {
-    prefab = build();
-    prefab.userData.sharedGeometry = true;
-    prefab.traverse((node) => (node.userData.sharedGeometry = true));
-    prefabs.set(key, prefab);
-  }
-  return prefab.clone();
-}
-
-export function textured(key: string, make: () => THREE.Material): THREE.Material {
-  let material = materials.get(key);
-  if (!material) {
-    material = make();
-    material.userData.shared = true;
-    materials.set(key, material);
-  }
-  return material;
-}
-
-export function repeated(texture: THREE.Texture, key: string, x: number, y: number): THREE.Texture {
-  const copy = texture.clone();
-  copy.repeat.set(x, y);
-  copy.needsUpdate = true;
-  copy.userData.shared = true;
-  copy.name = key;
-  return copy;
-}
 
 export const glow = (color: number) => ({ color, finish: "glow" as const });
 
-/** A soft line of light across its width, for the glow a rail casts on the wet ground. */
-function stripTexture(): THREE.Texture {
-  return painted("strip-glow", 64, 8, (ctx, w, h) => {
-    const g = ctx.createLinearGradient(0, 0, w, 0);
-    g.addColorStop(0, "rgba(255,255,255,0)");
-    g.addColorStop(0.5, "rgba(255,255,255,1)");
-    g.addColorStop(1, "rgba(255,255,255,0)");
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, w, h);
-  });
-}
-
-/** Light added onto the ground in a colour: the glow under a rail, or a sign's reflection in a puddle. */
-export function spill(color: number, opacity = 0.5): THREE.Material {
-  return textured(`spill-${color}-${opacity}`, () => new THREE.MeshBasicMaterial({ map: stripTexture(), color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
-}
-
-/** A soft pool of coloured light on the wet ground, as a sign's reflection. */
-export function pool(color: number, opacity = 0.35): THREE.Material {
-  return textured(`pool-${color}-${opacity}`, () => new THREE.MeshBasicMaterial({ map: glowTexture(), color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
-}
+const WOOD = { color: 0x7a5234, finish: "matte" as const };
+const STEEL = { color: 0x707885, finish: "metal" as const };
+const RAIL_HEAD = { color: 0xdfe5ec, finish: "metal" as const };
 
 /**
- * One chunk of the three tracks, from z = 0 back to -30: wet ground that
- * shines, dark sleepers and rails whose heads glow in the zone's colour,
- * each casting a soft line of light on the ground either side.
+ * One chunk of the three tracks, from z = 0 back to -30: warm gravel,
+ * wooden sleepers and bright steel rails, a concrete cable trough down
+ * each side, and the theme's ground beyond.
  */
 export function trackTile(theme: Theme): THREE.Group {
-  const rail = theme.neon[0];
-  return cached(`track-${theme.verge}-${rail}`, () => {
+  return prefab(`track-${theme.ground}`, () => {
     const b = new MeshBuilder();
-    const bed = textured("wet-bed", () => new THREE.MeshStandardMaterial({ map: repeated(wetGroundTexture(), "wet-bed", 4, 12), roughness: 0.3, metalness: 0.35 }));
-    b.panel(9.6, CHUNK, bed, [0, 0, -CHUNK / 2], [-Math.PI / 2, 0, 0]);
-    for (const side of [-1, 1]) b.panel(60, CHUNK, { color: theme.verge, finish: "gloss" }, [side * 34.8, -0.02, -CHUNK / 2], [-Math.PI / 2, 0, 0]);
-    const sleeper = { color: 0x2c2838, finish: "matte" as const };
-    const steel = { color: 0x3a3f4b, finish: "metal" as const };
+    const bed = textured("gravel-bed", () => toon({ map: repeated(gravelTexture(), "gravel-bed", 5, 14) }));
+    b.panel(BED * 2, CHUNK, bed, [0, 0, -CHUNK / 2], [-Math.PI / 2, 0, 0]);
+    for (const side of [-1, 1]) {
+      b.panel(60, CHUNK, { color: theme.ground, finish: "matte" }, [side * (BED + 30), -0.01, -CHUNK / 2], [-Math.PI / 2, 0, 0]);
+      b.box(0.5, 0.22, CHUNK, { color: 0xb9b4aa, finish: "matte" }, [side * (BED - 0.2), 0.11, -CHUNK / 2]);
+      b.box(0.36, 0.04, CHUNK, { color: 0x8d887f, finish: "matte" }, [side * (BED - 0.2), 0.23, -CHUNK / 2]);
+    }
     for (const lane of LANES) {
       const x = laneX(lane);
-      for (let z = -0.3; z > -CHUNK; z -= 0.75) b.box(1.95, 0.1, 0.24, sleeper, [x, 0.05, z]);
+      for (let z = -0.35; z > -CHUNK; z -= 0.75) b.box(2.15, 0.12, 0.28, WOOD, [x, 0.06, z]);
       for (const g of [-GAUGE, GAUGE]) {
-        b.box(0.16, 0.04, CHUNK, steel, [x + g, 0.12, -CHUNK / 2]);
-        b.box(0.07, 0.1, CHUNK, steel, [x + g, 0.17, -CHUNK / 2]);
-        b.box(0.075, 0.035, CHUNK, glow(rail), [x + g, 0.235, -CHUNK / 2]);
-        b.panel(0.9, CHUNK, spill(rail, 0.45), [x + g, 0.015, -CHUNK / 2], [-Math.PI / 2, 0, 0]);
+        b.box(0.16, 0.03, CHUNK, STEEL, [x + g, 0.135, -CHUNK / 2]);
+        b.box(0.06, 0.1, CHUNK, STEEL, [x + g, 0.2, -CHUNK / 2]);
+        b.box(0.11, 0.05, CHUNK, RAIL_HEAD, [x + g, 0.27, -CHUNK / 2]);
       }
     }
     return b.build("track");
   });
 }
 
-/** A gantry over the tracks carrying the wires, with signal lamps over each track on some and a neon strip under its beam. */
-export function gantry(signals: number | null, neon: number): THREE.Group {
-  return cached(`gantry-${signals}-${neon}`, () => {
+const POLE = { color: 0x4b5260, finish: "metal" as const };
+const BLACK = { color: 0x23252c, finish: "satin" as const };
+const LAMP_OFF = [0x5a1f1f, 0x5a4a1a, 0x1f4a2a] as const;
+const LAMP_ON = [0xff3b30, 0xffc21a, 0x3ddc84] as const;
+
+/** The lamps of a signal head, top to bottom red, yellow and green, with `lit` glowing. */
+function signalHead(b: MeshBuilder, x: number, y: number, z: number, lit: number, face = 1): void {
+  b.outline(0.025).box(0.44, 1.05, 0.3, BLACK, [x, y, z], undefined, 0.08).outline(0);
+  for (let i = 0; i < 3; i++) {
+    const ly = y + 0.3 - i * 0.3;
+    b.box(0.3, 0.05, 0.16, BLACK, [x, ly + 0.12, z + face * 0.2]);
+    b.sphere(0.1, i === lit ? glow(LAMP_ON[i]!) : { color: LAMP_OFF[i]!, finish: "gloss" }, [x, ly, z + face * 0.15], [1, 1, 0.5], 12);
+  }
+}
+
+/** A signal on a post beside the tracks, facing the runner, showing red, yellow or green. */
+export function signalPost(side: -1 | 1, lit: number): THREE.Group {
+  return prefab(`signal-${side}-${lit}`, () => {
     const b = new MeshBuilder();
-    const steel = { color: 0x2f3442, finish: "metal" as const };
-    const dark = { color: 0x16171f, finish: "satin" as const };
-    for (const x of [-5.1, 5.1]) {
-      b.box(0.34, 7, 0.34, steel, [x, 3.5, 0], undefined, 0.04);
-      b.box(0.7, 0.3, 0.7, { color: 0x3a3848, finish: "matte" }, [x, 0.15, 0]);
-      b.box(0.06, 6.6, 0.06, glow(neon), [x, 3.5, 0.18]);
+    const x = side * (BED - 0.5);
+    b.outline(0.02).post(0.08, 4.2, POLE, [x, 2.1, 0], 10);
+    b.box(0.5, 0.3, 0.5, { color: 0x9a968c, finish: "matte" }, [x, 0.15, 0]);
+    b.box(0.5, 0.06, 0.08, POLE, [x - side * 0.2, 3.1, 0]).outline(0);
+    signalHead(b, x - side * 0.42, 3.5, 0, lit);
+    return b.build("signal");
+  });
+}
+
+/** A steel gantry over all three tracks, with a signal head over each track: green, or red over one blocked ahead. */
+export function gantry(signals: number): THREE.Group {
+  return prefab(`gantry-${signals}`, () => {
+    const b = new MeshBuilder();
+    const steel = { color: 0x6a7a8e, finish: "metal" as const };
+    b.outline(0.03);
+    for (const x of [-BED, BED]) {
+      b.box(0.32, 7, 0.32, steel, [x, 3.5, 0], undefined, 0.03);
+      b.box(0.7, 0.3, 0.7, { color: 0xa39e94, finish: "matte" }, [x, 0.15, 0]);
     }
-    b.box(10.6, 0.36, 0.3, steel, [0, 6.9, 0], undefined, 0.04);
-    b.box(10.4, 0.06, 0.06, glow(neon), [0, 6.7, 0.16]);
+    b.box(BED * 2 + 0.6, 0.4, 0.34, steel, [0, 6.9, 0], undefined, 0.03);
+    b.outline(0);
+    // Diagonal braces at the corners, so it reads as a real piece of steelwork.
+    for (const x of [-1, 1]) b.box(0.12, 1.6, 0.12, steel, [x * (BED - 0.55), 6.2, 0], [0, 0, x * 0.75]);
     for (const lane of LANES) {
       const x = laneX(lane);
-      b.box(0.05, 0.9, 0.05, dark, [x, 6.3, 0]);
-      if (signals === null) continue;
-      // Signal heads hang over each track: green, or red over a track that is blocked ahead.
-      b.box(0.5, 1.1, 0.34, dark, [x, 6.1, 0.1], undefined, 0.08);
-      const red = (signals >> (lane + 1)) & 1;
-      b.sphere(0.13, { color: red ? 0xff3b30 : 0x3a1a1a, finish: red ? "glow" : "satin" }, [x, 6.38, 0.28]);
-      b.sphere(0.13, { color: red ? 0x1a3a1a : 0x3ddc84, finish: red ? "satin" : "glow" }, [x, 5.9, 0.28]);
+      b.box(0.06, 0.4, 0.06, BLACK, [x, 6.55, 0]);
+      signalHead(b, x, 5.9, 0.05, (signals >> (lane + 1)) & 1 ? 0 : 2);
     }
     return b.build("gantry");
   });
 }
 
-/** The contact wires over each track, the whole chunk long, apart from the gantry so each can fade on its own. */
-export function wires(): THREE.Group {
-  return cached("wires", () => {
-    const b = new MeshBuilder();
-    const dark = { color: 0x16171f, finish: "satin" as const };
-    for (const lane of LANES) {
-      b.box(0.04, 0.04, CHUNK, dark, [laneX(lane), 5.9, -CHUNK / 2]);
-      b.box(0.03, 0.03, CHUNK, dark, [laneX(lane), 6.5, -CHUNK / 2]);
-    }
-    return b.build("wires");
-  });
-}
-
 const lampMaterials = new Map<string, THREE.SpriteMaterial>();
 
-/** A halo round a lamp or a sign, which reads as light in the haze and the tunnels. */
+/** A halo round a lamp, which reads as light in the dim tunnels. */
 export function lampGlow(size = 2.4, color = 0xffe2a8, opacity = 0.6): THREE.Sprite {
   const key = `${color}-${opacity}`;
   let material = lampMaterials.get(key);

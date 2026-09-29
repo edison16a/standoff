@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: #0b0620;
+  background: #7cc8f5;
 }
 
 .ss-showcase__canvas {
@@ -11,13 +11,13 @@
   height: 100%;
 }
 
-/* The icon darkens toward the foot, so the name reads over the city like the other tiles. */
+/* The icon darkens toward the foot, so the name reads over the yard like the other tiles. */
 .ss-showcase--icon::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(0deg, rgba(12, 4, 40, 0.78) 0%, rgba(12, 4, 40, 0.32) 30%, transparent 48%);
+  background: linear-gradient(0deg, rgba(11, 26, 54, 0.72) 0%, rgba(11, 26, 54, 0.28) 30%, transparent 48%);
 }
 
 .ss-showcase--icon .ss-logo {
@@ -30,7 +30,7 @@
   font-size: 18vmin;
 }
 
-/* Fat rounded letters with a thick outline, a hard drop shadow and a neon glow, like a sign. */
+/* Fat rounded letters with a thick navy outline and a hard drop shadow, like a sticker. */
 .ss-logo {
   display: flex;
   flex-direction: column;
@@ -50,25 +50,23 @@
 
 .ss-logo__word {
   display: block;
-  color: #ffd21f;
-  -webkit-text-stroke: 0.08em #1a0b3d;
+  color: #ffc21a;
+  -webkit-text-stroke: 0.08em #14254a;
   paint-order: stroke fill;
   text-shadow:
-    0 0.07em 0 #1a0b3d,
-    0 0.12em 0 #0c0424,
-    0 0 0.35em rgba(255, 43, 214, 0.75),
-    0 0.2em 0.25em rgba(0, 0, 0, 0.45);
+    0 0.07em 0 #14254a,
+    0 0.12em 0 #0b1a36,
+    0 0.2em 0.25em rgba(0, 0, 0, 0.35);
 }
 
 .ss-logo__word--top {
-  color: #21f3ff;
+  color: #ffffff;
   font-size: 0.78em;
   text-shadow:
-    0 0.07em 0 #1a0b3d,
-    0 0.12em 0 #0c0424,
-    0 0 0.35em rgba(33, 243, 255, 0.7);
+    0 0.07em 0 #14254a,
+    0 0.12em 0 #0b1a36;
 }
 
 .ss-logo__word--bottom {
-  color: #ff2bd6;
+  color: #ffc21a;
 }

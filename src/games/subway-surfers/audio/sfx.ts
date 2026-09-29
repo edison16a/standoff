@@ -3,12 +3,13 @@ import type { PowerKind } from "../engine/types";
 import * as cues from "./cues";
 import * as hits from "./hits";
 import * as moves from "./moves";
+import * as yard from "./yard";
 
 /**
  * Every one shot sound of the run, synthesised on the spot. `pan` puts a
  * sound across the stereo field, as a lane change swishes the way the
  * runner moved. The sounds themselves live in
- * `moves`, `hits` and `cues`; this keeps the panners and the clock.
+ * `moves`, `hits`, `cues` and `yard`; this keeps the panners and the clock.
  */
 export class Sfx {
   private readonly panners = new Map<number, StereoPannerNode>();
@@ -99,6 +100,15 @@ export class Sfx {
 
   level(pan: number): void {
     cues.level(this.engine, this.out(pan), this.at);
+  }
+
+  /** Shaking the spray can, then tagging the train, while the countdown runs. */
+  rattle(pan: number): void {
+    yard.rattle(this.engine, this.out(pan), this.at);
+  }
+
+  spray(pan: number, length: number): void {
+    yard.spray(this.engine, this.out(pan), this.at, length);
   }
 
   countdown(go: boolean): void {

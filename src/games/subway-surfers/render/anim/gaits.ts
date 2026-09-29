@@ -5,21 +5,48 @@ import type { Pose } from "./pose";
  * stride in radians: one full turn is a left and a right step.
  */
 
-/** A sprint: long strides, knees high, arms pumping, leaning into it. */
+/**
+ * A cartoon sprint: long strides with the knee of the swinging leg folding
+ * high, a push off the toes behind, arms pumping against the legs, the
+ * body leaning in and bouncing twice a stride, lowest as each foot lands.
+ */
 export function runPose(p: Pose, phase: number, effort = 1): Pose {
   const s = Math.sin(phase);
   const c = Math.cos(phase);
-  const reach = 0.75 * effort;
+  const reach = 0.85 * effort;
+  // A leg swings forward while cos is positive for the left; the knee folds most mid swing.
+  const foldL = Math.pow(Math.max(0, c), 0.7);
+  const foldR = Math.pow(Math.max(0, -c), 0.7);
   p.clear();
-  p.set("hipL", 0.25 + reach * s).set("hipR", 0.25 - reach * s);
-  // A knee folds most as its leg swings through, and straightens to land.
-  p.set("kneeL", -0.35 - 1.25 * Math.max(0, c)).set("kneeR", -0.35 - 1.25 * Math.max(0, -c));
-  p.set("ankleL", 0.25 * s).set("ankleR", -0.25 * s);
-  p.set("shoulderL", -0.8 * s * effort, 0, -0.12).set("shoulderR", 0.8 * s * effort, 0, 0.12);
-  p.set("elbowL", 1.35 + 0.35 * s).set("elbowR", 1.35 - 0.35 * s);
-  p.set("spine", -0.22, 0.22 * s).set("chest", -0.06, 0.12 * s).set("neck", 0.12).set("head", 0.08, -0.2 * s);
-  p.set("hips", 0, -0.18 * s);
-  p.lift = -0.05 + 0.07 * Math.abs(c);
+  p.set("hipL", 0.2 + reach * s).set("hipR", 0.2 - reach * s);
+  p.set("kneeL", -0.25 - 1.55 * foldL * effort - 0.2 * Math.max(0, -c)).set("kneeR", -0.25 - 1.55 * foldR * effort - 0.2 * Math.max(0, c));
+  // Toes point down on the push off behind, and flex up as the foot reaches forward to land.
+  p.set("ankleL", -0.15 + 0.4 * s).set("ankleR", -0.15 - 0.4 * s);
+  p.set("shoulderL", -0.95 * s * effort, 0, -0.14).set("shoulderR", 0.95 * s * effort, 0, 0.14);
+  p.set("elbowL", 1.45 + 0.35 * s).set("elbowR", 1.45 - 0.35 * s);
+  p.set("hips", 0, -0.2 * s, 0.07 * s);
+  p.set("spine", -0.26, 0.22 * s).set("chest", -0.05, 0.1 * s).set("neck", 0.14).set("head", 0.06 + 0.04 * Math.abs(c), -0.24 * s);
+  p.lift = -0.07 + 0.1 * Math.abs(c) * effort;
+  return p;
+}
+
+/**
+ * Knocked sideways off a train: the body jolts away from the hit, the
+ * arm on that side flies up, the knees buckle and the head whips round.
+ * `side` is where the train was, 1 on the right. `t` is seconds since.
+ */
+export function stumblePose(p: Pose, side: number, t: number): Pose {
+  const jolt = Math.min(1, t / 0.08) * Math.exp(-t * 3);
+  const wobble = Math.sin(t * 24) * Math.exp(-t * 5);
+  p.clear();
+  p.set("spine", -0.45 * jolt, 0.3 * side * jolt, side * 0.5 * jolt + 0.1 * wobble).set("chest", -0.1, 0, side * 0.2 * jolt);
+  p.set("neck", 0.2 * jolt, 0, -side * 0.3 * jolt).set("head", 0.15 * jolt, -side * 0.4 * jolt + 0.2 * wobble, 0);
+  p.set(side > 0 ? "shoulderR" : "shoulderL", 2.3 * jolt, 0, side * (1.1 + 0.3 * wobble) * jolt);
+  p.set(side > 0 ? "shoulderL" : "shoulderR", 0.9 * jolt, 0, -side * 0.9 * jolt);
+  p.set("elbowL", 0.7).set("elbowR", 0.7);
+  p.set("hipL", 0.7 * jolt).set("hipR", -0.3 * jolt);
+  p.set("kneeL", -1.3 * jolt).set("kneeR", -0.5 * jolt);
+  p.lift = -0.16 * jolt;
   return p;
 }
 

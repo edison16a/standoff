@@ -1,14 +1,15 @@
 import * as THREE from "three";
 import { hash } from "../../engine/rng";
 import { ZONE_LENGTH } from "../../engine/tuning";
-import { GANTRY, tunnelCeilingAt, WIRES } from "../models/overhead";
+import { GANTRY, tunnelCeilingAt } from "../models/overhead";
 import { sidePiece } from "../models/sides";
-import { CHUNK, gantry, lampGlow, trackTile, wires } from "../models/track";
+import { CHUNK, gantry, signalPost, trackTile } from "../models/track";
 import { portal, tunnel } from "../models/tunnel";
+import { release } from "../prefabs";
 import { OverheadFade } from "./overhead-fade";
 import { THEMES, themeIndexAt, type SideKind } from "./themes";
 
-/** How far ahead scenery is built. The fog hides the edge. */
+/** How far ahead scenery is built. The haze hides the edge. */
 const AHEAD = 190;
 const BEHIND = 24;
 /** Tunnels come in runs of this many chunks. */
@@ -23,8 +24,19 @@ export interface ChunkPlan {
   left: SideKind;
   right: SideKind;
   variant: number;
-  /** A signal gantry, with a bit per track for a red light. */
+  /** A signal gantry over the tracks, with a bit per track for a red light, or null for none. */
   signals: number | null;
+  /** A signal on a post beside the tracks: which side, and which lamp is lit. */
+  post: { side: -1 | 1; lit: number } | null;
+}
+
+/** Whether run `run` of chunks is a tunnel. A whole run is tunnel or none of it, and never across a change of zone. */
+function tunnelRun(run: number, seed: number): boolean {
+  const start = run * TUNNEL_RUN * CHUNK;
+  const zoneStart = Math.floor(start / ZONE_LENGTH) * ZONE_LENGTH;
+  // No tunnel at the very start, or across a change of zone, where the new look should be seen.
+  const fits = start >= zoneStart + CHUNK * 2 && start + TUNNEL_RUN * CHUNK <= zoneStart + ZONE_LENGTH;
+  return run * TUNNEL_RUN >= 6 && fits && hash(run, seed + 17) < THEMES[themeIndexAt(start)]!.tunnels * 2.2;
 }
 
 /** The plan for chunk `k`. Pure and seeded, so it is the same every time the chunk is rebuilt. */
@@ -33,11 +45,7 @@ export function planChunk(k: number, seed: number): ChunkPlan {
   const theme = themeIndexAt(start);
   const t = THEMES[theme]!;
   const run = Math.floor(k / TUNNEL_RUN);
-  // No tunnel at the very start, or across a change of zone, where the new look should be seen.
-  const zoneStart = Math.floor(start / ZONE_LENGTH) * ZONE_LENGTH;
-  const runStart = run * TUNNEL_RUN * CHUNK;
-  const fits = runStart >= zoneStart + CHUNK * 2 && runStart + TUNNEL_RUN * CHUNK <= zoneStart + ZONE_LENGTH;
-  const inTunnel = k >= 6 && fits && hash(run, seed + 17) < t.tunnels * 2.2;
+  const inTunnel = tunnelRun(run, seed);
   const block = Math.floor(k / 3);
   const pick = (salt: number): SideKind => {
     const total = t.sides.reduce((sum, [, w]) => sum + w, 0);
@@ -51,27 +59,27 @@ export function planChunk(k: number, seed: number): ChunkPlan {
   return {
     theme,
     tunnel: inTunnel,
-    mouth: inTunnel && k % TUNNEL_RUN === 0,
+    // Only the first chunk of a tunnel has a portal, not the join between two runs of tunnel.
+    mouth: inTunnel && k % TUNNEL_RUN === 0 && !tunnelRun(run - 1, seed),
     left: pick(1),
     right: pick(2),
     variant: Math.floor(hash(k, seed + 5) * 4),
-    signals: k % 3 === 0 ? Math.floor(hash(k, seed + 9) * 8) : null,
+    signals: !inTunnel && k % 4 === 0 ? Math.floor(hash(k, seed + 9) * 8) : null,
+    post: !inTunnel && k % 4 === 2 ? { side: hash(k, seed + 11) < 0.5 ? -1 : 1, lit: Math.floor(hash(k, seed + 13) * 3) } : null,
   };
 }
 
 /**
- * The scenery around one run: track, gantries, walls, buildings and
- * tunnels, built chunk by chunk ahead of the runner and dropped behind.
- * Every piece is a clone of a shared prefab, so a chunk costs a handful
- * of draw calls and no new geometry.
+ * The scenery around one run: track, signals, fences, stations, flats,
+ * trees and tunnels, laid chunk by chunk ahead of the runner and given
+ * back behind. Every piece is a pooled copy of a shared prefab, so a
+ * chunk costs a handful of draw calls and no new geometry.
  */
 export class Scenery {
   readonly group = new THREE.Group();
-  /** Fades the gantries and wires that come between the camera and the runner. */
+  /** Fades the gantries that come between the camera and the runner. */
   readonly fade = new OverheadFade();
   private readonly chunks = new Map<number, THREE.Group>();
-  /** Each chunk's pieces that fade, to let go of with the chunk. */
-  private readonly overhead = new Map<number, THREE.Object3D[]>();
 
   constructor(private seed: number) {
     this.group.name = "scenery";
@@ -81,10 +89,7 @@ export class Scenery {
   reseed(seed: number): void {
     if (seed === this.seed) return;
     this.seed = seed;
-    this.group.clear();
-    this.chunks.clear();
-    this.overhead.clear();
-    this.fade.clear();
+    for (const k of [...this.chunks.keys()]) this.drop(k);
   }
 
   /** Whether the runner is inside a tunnel at this distance, for the light and the sound. */
@@ -101,13 +106,7 @@ export class Scenery {
   update(distance: number): void {
     const first = Math.floor((distance - BEHIND) / CHUNK);
     const last = Math.floor((distance + AHEAD) / CHUNK);
-    for (const [k, chunk] of this.chunks) {
-      if (k >= first && k <= last) continue;
-      this.group.remove(chunk);
-      this.chunks.delete(k);
-      for (const piece of this.overhead.get(k) ?? []) this.fade.drop(piece);
-      this.overhead.delete(k);
-    }
+    for (const k of [...this.chunks.keys()]) if (k < first || k > last) this.drop(k);
     // Two chunks before the start, so the camera behind the runner never sees the edge of the world.
     for (let k = Math.max(-2, first); k <= last; k++) if (!this.chunks.has(k)) this.build(k);
   }
@@ -119,36 +118,43 @@ export class Scenery {
     chunk.position.z = -k * CHUNK;
     chunk.add(trackTile(theme));
     if (plan.tunnel) {
-      chunk.add(tunnel(theme));
-      if (plan.mouth) chunk.add(portal(theme));
-      for (let z = -3; z > -CHUNK; z -= 7.5) {
-        for (const side of [-1, 1]) {
-          const glow = lampGlow(2.6, theme.neon[1], 0.4);
-          glow.position.set(side * 5.1, 4.2, z);
-          chunk.add(glow);
-        }
-      }
+      chunk.add(tunnel());
+      if (plan.mouth) chunk.add(portal());
     } else {
-      const z = -k * CHUNK;
-      const frame = gantry(plan.signals, theme.neon[1]);
-      const lines = wires();
-      this.fade.adopt(frame, { near: z + GANTRY.depth / 2, far: z - GANTRY.depth / 2, low: GANTRY.low, high: GANTRY.high });
-      this.fade.adopt(lines, { near: z, far: z - CHUNK, low: WIRES.low, high: WIRES.high });
-      this.overhead.set(k, [frame, lines]);
-      chunk.add(frame, lines);
       chunk.add(sidePiece(plan.left, -1, plan.variant, theme, plan.theme));
       chunk.add(sidePiece(plan.right, 1, plan.variant + 1, theme, plan.theme));
+      if (plan.post) {
+        const post = signalPost(plan.post.side, plan.post.lit);
+        post.position.z = -12;
+        chunk.add(post);
+      }
+      if (plan.signals !== null) {
+        const frame = gantry(plan.signals);
+        frame.position.z = -2;
+        const z = -k * CHUNK - 2;
+        this.fade.adopt(frame, { near: z + GANTRY.depth / 2, far: z - GANTRY.depth / 2, low: GANTRY.low, high: GANTRY.high });
+        chunk.add(frame);
+      }
     }
     chunk.updateMatrixWorld(true);
     this.chunks.set(k, chunk);
     this.group.add(chunk);
   }
 
+  /** Gives a chunk's pieces back to the pool. */
+  private drop(k: number): void {
+    const chunk = this.chunks.get(k);
+    if (!chunk) return;
+    for (const piece of [...chunk.children]) {
+      this.fade.drop(piece);
+      release(piece);
+    }
+    chunk.removeFromParent();
+    this.chunks.delete(k);
+  }
+
   dispose(): void {
-    // Every piece is a clone of a shared prefab. Only the gantries' fading materials and the wires' are their own.
+    for (const k of [...this.chunks.keys()]) this.drop(k);
     this.fade.clear();
-    this.group.clear();
-    this.chunks.clear();
-    this.overhead.clear();
   }
 }
