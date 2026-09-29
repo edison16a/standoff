@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { HostRoomApi, HostRoomEvent } from "@/platform/games/game-api";
-import { HostAim, zonePixels } from "./host-aim";
+import { HostAim, insideBox, pinToEdge, zonePixels } from "./host-aim";
 
 /** A room that lets a test play phone messages into the host. */
 function fakeRoom() {
@@ -115,5 +115,20 @@ describe("the host's aim", () => {
     aim.setZone(4, null);
     expect(aim.zone(4)).toEqual({ x: 0, y: 0, w: 1, h: 1 });
     aim.dispose();
+  });
+});
+
+describe("keeping the pointer in sight at the edge", () => {
+  it("pins a point past the edge to the edge and leaves one inside alone", () => {
+    expect(pinToEdge({ x: 1.15, y: -1.4 })).toEqual({ x: 1, y: -1 });
+    expect(pinToEdge({ x: -0.3, y: 0.99 })).toEqual({ x: -0.3, y: 0.99 });
+  });
+
+  it("draws a dot at the edge far enough inside that all of it shows", () => {
+    const box = { x: 100, y: 0, w: 400, h: 300 };
+    expect(insideBox({ x: 500, y: 0 }, box, 14)).toEqual({ x: 486, y: 14 });
+    expect(insideBox({ x: 250, y: 150 }, box, 14)).toEqual({ x: 250, y: 150 });
+    // A zone too small for the margin keeps the dot in its middle rather than past either side.
+    expect(insideBox({ x: 0, y: 0 }, { x: 0, y: 0, w: 10, h: 10 }, 14)).toEqual({ x: 5, y: 5 });
   });
 });
