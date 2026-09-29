@@ -30,7 +30,8 @@ export class AimCaster {
     this.raycaster.far = 150;
   }
 
-  cast(point: ScreenPoint, offset: Offset, targets: readonly THREE.Object3D[], zombie: (id: number) => Zombie | undefined): CastResult {
+  /** `pierce` is a round that goes through riot vests, so it strikes flesh there rather than armour. */
+  cast(point: ScreenPoint, offset: Offset, targets: readonly THREE.Object3D[], zombie: (id: number) => Zombie | undefined, pierce = false): CastResult {
     this.raycaster.setFromCamera(new THREE.Vector2(point.x, point.y), this.camera);
     const ray = this.raycaster.ray;
     if (offset.x !== 0 || offset.y !== 0) {
@@ -45,7 +46,7 @@ export class AimCaster {
     if (data.zombie === undefined || !data.part) return { hit: null, point: found.point, normal, impact: "world" };
     const z = zombie(data.zombie);
     const impact: Impact =
-      data.part === "weak" ? "weak" : z && (isBoss(z.kind) || (z.kind === "armored" && data.part === "body")) ? "armor" : "flesh";
+      data.part === "weak" ? "weak" : z && (isBoss(z.kind) || (z.kind === "armored" && data.part === "body" && !pierce)) ? "armor" : "flesh";
     return { hit: { zombie: data.zombie, part: data.part, weak: data.weak ?? null }, point: found.point, normal: ray.direction.clone().negate(), impact };
   }
 }
