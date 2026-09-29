@@ -103,7 +103,7 @@ export class CubeSession {
   toMenu(): void {
     this.endRound();
     this.sound.sfx.back();
-    store.setState({ phase: "menu", hud: [], banner: null });
+    store.setState({ phase: "menu", hud: [], grace: null, banner: null });
     this.demoRestarted = true;
     this.demo.restart();
     this.clock.restart(0, 0.3);
@@ -146,8 +146,8 @@ export class CubeSession {
     const pulse = beatPulse(time, this.level.bpm);
     if (this.round && (this.phase === "play" || this.phase === "results")) {
       const round = this.round;
-      // Behind the results the runs stand still, so an unfinished player makes no more noise.
-      const updates = this.phase === "play" ? round.update() : round.seats.map(() => ({ events: [], restarted: false }));
+      // Behind the results, and once a race's time is up, the runs stand still, so an unfinished player makes no more noise.
+      const updates = this.phase === "play" && !round.over ? round.update() : round.seats.map(() => ({ events: [], restarted: false }));
       updates.forEach(({ events }, i) => this.hear(i + 1, events));
       this.board.update(round, now);
       if (this.phase === "play" && round.over && !this.resultsTimer) this.finishRound();

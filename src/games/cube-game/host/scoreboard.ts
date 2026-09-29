@@ -19,13 +19,14 @@ export class Scoreboard {
     this.round = round;
     this.levelId = levelId;
     this.lastHud = 0;
-    store.setState({ hud: this.hud(round) });
+    store.setState({ hud: this.hud(round), grace: null });
   }
 
   update(round: Round, now: number): void {
     if (now - this.lastHud < HUD_MS) return;
     this.lastHud = now;
-    store.setState({ hud: this.hud(round) });
+    const left = round.graceLeft();
+    store.setState({ hud: this.hud(round), grace: left === null ? null : Math.ceil(left) });
   }
 
   /** A player's attempt ended, by a crash or the finish. Says if it was a new best. */
@@ -52,17 +53,20 @@ export class Scoreboard {
   results(): void {
     const round = this.round;
     if (!round) return;
+    const places = round.places();
     const rows: ResultRow[] = round.seats.map((seat, i) => ({
       slot: i + 1,
       finished: seat.run.finished,
       best: seat.run.finished ? 100 : seat.run.best,
       attempts: seat.run.attempt,
       jumps: seat.run.jumps,
+      place: places[i] ?? null,
     }));
     store.setState({ results: rows, hud: this.hud(round) });
   }
 
   private hud(round: Round): HudPlayer[] {
+    const places = round.places();
     return round.seats.map((seat, i) => ({
       attempt: seat.run.attempt,
       percent: seat.run.percent,
@@ -70,6 +74,7 @@ export class Scoreboard {
       status: seat.status,
       waiting: seat.status === "run" && round.levelTime(i + 1) < seat.run.time - 0.02,
       mode: seat.run.player.mode,
+      place: places[i] ?? null,
     }));
   }
 }

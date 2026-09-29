@@ -16,6 +16,8 @@ export interface HudPlayer {
   /** Waiting for their start after a crash or stepping back in. */
   waiting: boolean;
   mode: Mode;
+  /** Place in a two player race once over the line, or null. */
+  place: number | null;
 }
 
 export interface ResultRow {
@@ -24,6 +26,8 @@ export interface ResultRow {
   best: number;
   attempts: number;
   jumps: number;
+  /** Place in a two player race, or null for one player or someone who did not finish. */
+  place: number | null;
 }
 
 export interface CubeState {
@@ -35,6 +39,8 @@ export interface CubeState {
   input: "camera" | "keys";
   progress: Progress;
   hud: HudPlayer[];
+  /** Whole seconds the others have left to finish once someone has won a race, or null. */
+  grace: number | null;
   /** A short message over one player's view, like a new best. Keyed so the same text can show twice. */
   banner: { slot: number; text: string; key: number } | null;
   results: ResultRow[];
@@ -48,6 +54,7 @@ export const initialCubeState = (): CubeState => ({
   input: "camera",
   progress: EMPTY_PROGRESS,
   hud: [],
+  grace: null,
   banner: null,
   results: [],
 });
