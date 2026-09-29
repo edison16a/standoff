@@ -103,7 +103,8 @@ export class RoomCandidate {
 
   /** One pass is enough. One answer about the room itself, or two blips, and it is not used. */
   private async verify(room: OpenedRoom, blips: number): Promise<void> {
-    const probe = this.options.probe ?? ((target) => probeRoom(target));
+    // Over the transport its own socket uses, which is known to work here.
+    const probe = this.options.probe ?? ((target) => probeRoom(target, { stream: this.client.usesStream }));
     const outcome = await probe(room);
     if (!this.settle) return;
     if (outcome.ok) return this.finish({ ok: true, room });

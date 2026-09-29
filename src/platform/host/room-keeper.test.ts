@@ -45,7 +45,8 @@ describe("RoomKeeper", () => {
     expect(handover).toEqual([]);
     keeper.handle(created());
     expect(sent.filter((m) => m.type === "host:create")).toHaveLength(1);
-    expect(handover).toEqual([{ type: "host:resume", code: "ABCD", token: TOKEN }]);
+    // With the game and seats, so an instance that never had the room can make it again.
+    expect(handover).toEqual([{ type: "host:resume", code: "ABCD", token: TOKEN, game: "tiny", seats: 2 }]);
   });
 
   it("ignores a second create while one is on its way", () => {

@@ -12,9 +12,10 @@ export type RoomHealth = "idle" | "checking" | "ok" | "fixing" | "lost";
 
 /**
  * Why the room needs remaking: the server lost it, phones cannot reach it,
- * or a new room could not be made.
+ * its server is about to go and the room cannot move with it, or a new
+ * room could not be made.
  */
-export type RoomProblem = "lost" | "unreachable" | "not-made";
+export type RoomProblem = "lost" | "unreachable" | "ending" | "not-made";
 
 export interface OpenRoom {
   code: string;

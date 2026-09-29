@@ -12,6 +12,10 @@ const TEXT: Record<RoomProblem, { title: string; body: string }> = {
     title: "Phones can't reach this room",
     body: "New phones may get Room not found. Make a new room, and the players already in move over with it.",
   },
+  ending: {
+    title: "This room is about to close",
+    body: "Its server is going away. Make a new room now, and the players move over with it.",
+  },
   "not-made": {
     title: "Could not make a new room",
     body: "Check the connection and try again.",
@@ -27,7 +31,8 @@ export function RoomAlert() {
   const host = useHostRoom();
   const health = useHostStore((state) => state.health);
   const problem = useHostStore((state) => state.problem);
-  const gone = useHostStore((state) => state.roomGone);
+  // A room that is gone, or going, has nothing to keep.
+  const gone = useHostStore((state) => state.roomGone || state.problem === "ending");
   if (health !== "lost" || !problem) return null;
   const { title, body } = TEXT[problem];
   return (

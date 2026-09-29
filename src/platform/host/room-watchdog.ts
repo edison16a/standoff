@@ -7,12 +7,13 @@ export const SETTLED_AFTER_MS = 5 * 60_000;
 /** A check that failed for a reason that may pass is tried again this soon. */
 export const RECHECK_MS = 2000;
 
-
 export interface WatchdogDeps {
   probe(code: string): Promise<ProbeOutcome>;
   /** The check passed, or a phone joined, which proves the same. */
   passed(code: string): void;
   broken(code: string, reason: string): void;
+  /** A check could not find the room, where each instance keeps its own: worth following the new connections. */
+  notFound?(code: string): void;
   phonesConnected(): number;
   /** Playing, the code hidden, or the tab in the background: checks wait. */
   paused(): boolean;
@@ -119,6 +120,7 @@ export class RoomWatchdog {
     if (this.deps.paused() || !this.deps.online()) return this.schedule(this.cadence());
     this.okSince = null;
     if (definitive(outcome.reason, this.deps.shared())) return this.fail(code, outcome.reason);
+    if (outcome.reason === "not-found") this.deps.notFound?.(code);
     this.strikes += 1;
     const limit = this.deps.phonesConnected() > 0 ? 3 : 2;
     if (this.strikes >= limit) return this.fail(code, outcome.reason);

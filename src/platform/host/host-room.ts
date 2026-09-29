@@ -1,33 +1,30 @@
 import type { AudioEngine } from "@/platform/audio/audio-engine";
 import type { HostRoomApi } from "@/platform/games/game-api";
-import { probeRoom } from "@/platform/net/room-probe";
 import type { SocketStatus } from "@/platform/net/socket-client";
 import type { Payload, Seat, ServerEnvelope } from "@/platform/protocol";
 import { createHostApi } from "./host-api";
 import { HostAudio } from "./host-audio";
+import { HostConnection } from "./host-connection";
 import { HostEvents } from "./host-events";
-import { HostLink } from "./host-link";
 import { HostPlayers } from "./host-players";
 import { useHostStore } from "./host-store";
 import { RoomCandidate } from "./room-candidate";
 import { RoomGuard } from "./room-guard";
-import { RoomKeeper, type OpenedRoom, type RoomKeeperEvents } from "./room-keeper";
-import { sessionMemory, type RememberedRoom } from "./room-memory";
+import type { OpenedRoom } from "./room-keeper";
+import type { RememberedRoom } from "./room-memory";
 
 const set = useHostStore.setState;
 const get = useHostStore.getState;
 
 /**
  * The computer's side of the platform. It keeps the connection and the
- * room, tracks who sits where, and hands the game a HostRoomApi to talk to
- * its phones. It knows nothing about any particular game. The room is
- * checked and remade when it breaks (see RoomGuard), and a remade room
- * arrives on its own fresh connection, which then becomes the host's.
+ * room (see HostConnection), tracks who sits where, and hands the game a
+ * HostRoomApi to talk to its phones. It knows nothing about any particular
+ * game. The room is checked and remade when it breaks (see RoomGuard).
  */
 export class HostRoom {
   private readonly sound = new HostAudio();
-  private readonly link: HostLink;
-  private keeper: RoomKeeper;
+  private readonly connection: HostConnection;
   private readonly events = new HostEvents();
   private readonly players: HostPlayers;
   private readonly guard: RoomGuard;
@@ -36,35 +33,41 @@ export class HostRoom {
   private last: RememberedRoom | null = null;
   private shared = true;
   private detach: () => void = () => undefined;
-  private readonly keeperEvents: RoomKeeperEvents = {
-    opened: (room) => this.onOpened(room),
-    lost: ({ old }) => this.onLost(old),
-    failed: () => this.goHome("Could not open a room. Check the connection and try again."),
-  };
 
   constructor() {
-    this.link = new HostLink({
-      onOpen: (send, info) => this.keeper.announce(send, info),
-      onMessage: (message) => this.onMessage(message),
-      onStatus: (status) => this.onStatus(status),
-      // A new socket that cannot find the room is the first sign a deploy or a new instance took it.
-      onHandoverFailed: () => this.guard.watchdog.checkNow(),
+    this.connection = new HostConnection({
+      room: {
+        opened: (room) => this.onOpened(room),
+        doubt: () => this.guard.doubt(),
+        lost: ({ old }) => this.onLost(old),
+        failed: () => this.goHome("Could not open a room. Check the connection and try again."),
+      },
+      message: (message) => this.onMessage(message),
+      status: (status) => this.onStatus(status),
+      // Any instance of this deployment can take the room over, so a refusal
+      // means a deploy: check now, and once the tries are spent, say it is closing.
+      handoverFailed: ({ final }) => (final && get().room ? this.guard.trouble("ending") : this.guard.watchdog.checkNow()),
+      names: () => this.players.names(),
+      shared: () => this.shared,
     });
-    this.keeper = new RoomKeeper(sessionMemory, { send: (m) => this.link.send(m), redial: () => this.link.redial() }, this.keeperEvents);
     this.players = new HostPlayers({ emit: (event) => this.events.emit(event), send: (to, payload) => this.send(to, payload) });
     this.guard = new RoomGuard({
-      probe: (code) => probeRoom({ code, token: this.keeper.memory.recall()?.token ?? "" }),
+      probe: (code) => this.connection.check(code),
+      follow: () => this.connection.mover.follow(),
       snapshot: () => this.last,
       joined: () => this.players.joined,
       phonesConnected: () => this.players.connected,
       shared: () => this.shared,
       makeCandidate: () => new RoomCandidate(),
-      swap: (candidate, room, old) => this.swap(candidate, room, old),
+      swap: (candidate, room, old) => {
+        this.connection.swap(candidate, room, old);
+        this.onOpened(room);
+      },
       goHome: (error) => this.goHome(error),
     });
-    this.last = this.keeper.memory.recall();
+    this.last = this.connection.remembered;
     // A reload resumes its room. Creating another meanwhile would race it.
-    set({ resuming: this.keeper.holding });
+    set({ resuming: this.last !== null });
   }
 
   get audio(): AudioEngine {
@@ -79,14 +82,13 @@ export class HostRoom {
   connect(): void {
     this.sound.listen();
     this.detach = this.guard.attach();
-    this.link.connect();
+    this.connection.connect();
   }
 
   dispose(): void {
     this.detach();
     this.guard.stop();
-    this.keeper.dispose();
-    this.link.close();
+    this.connection.close();
     this.sound.close();
   }
 
@@ -97,7 +99,7 @@ export class HostRoom {
     if (state.opening || state.room || state.resuming) return;
     set({ opening: true, error: null });
     await this.audio.unlock();
-    this.keeper.create(game, seats);
+    this.connection.create(game, seats);
   }
 
   /** Regenerate room and Remake lobby: a new room for the same game, with the phones moved to it. */
@@ -110,12 +112,9 @@ export class HostRoom {
     this.guard.keep();
   }
 
-  /** Ends the room for everyone and goes back to the home screen. */
+  /** Ends the room for everyone, confirmed by the relay so no phone is left in it, and goes home. */
   leave(): void {
-    const room = this.keeper.memory.recall();
-    // Sent again until the relay confirms, so no phone is left in the old game.
-    if (room) this.keeper.retire(room);
-    this.keeper.forget();
+    this.connection.leave();
     this.goHome(null);
   }
 
@@ -124,6 +123,7 @@ export class HostRoom {
     this.last = null;
     this.events.clear();
     this.guard.stop();
+    this.connection.mover.stop();
     set({ screen: "home", room: null, players: [], playing: false, resuming: false, opening: false, error, health: "idle", problem: null, roomGone: false, joinHidden: false });
   }
 
@@ -162,46 +162,20 @@ export class HostRoom {
     if (!this.guard.regenerate("auto")) this.goHome(old ? "The room was lost. Host the game again." : null);
   }
 
-  /** The new room passed its check. Its socket becomes the host's, and the old room sends its phones on. */
-  private swap(candidate: RoomCandidate, room: OpenedRoom, old: RememberedRoom): void {
-    const previous = this.link.adopt(candidate.handOver());
-    this.keeper.dispose();
-    this.keeper = candidate.keeper;
-    this.keeper.memory = sessionMemory;
-    this.keeper.events = this.keeperEvents;
-    this.keeper.adopt(room);
-    this.onOpened(room);
-    // Through the new socket, which any instance with the store can act on,
-    // and once through the old one, which sits where the old room lives.
-    this.keeper.retire(old, room.code);
-    if (old.token) previous.client.send({ type: "host:retire", code: old.code, token: old.token, movedTo: room.code });
-    this.link.retireOld(previous);
-  }
-
   private onMessage(message: ServerEnvelope): void {
-    switch (message.type) {
-      case "room:created":
-      case "room:resumed":
-      case "room:error":
-      case "room:retired":
-        return this.keeper.handle(message);
-      case "room:probe":
-        return this.link.send({ type: "host:echo", nonce: message.nonce });
-      case "peer:joined":
-        this.players.arrived(message.seat, message.name);
-        // A phone got in, which is the best check there is.
-        this.guard.watchdog.passed();
-        return this.events.emit({ type: "joined", seat: message.seat, rejoined: message.rejoined });
-      case "peer:left":
-        this.players.left(message.seat);
-        return this.events.emit({ type: "left", seat: message.seat });
-      case "peer:message":
-        return this.players.fromPhone(message.seat, message.payload);
+    if (message.type !== "peer:joined" && message.type !== "peer:left" && message.type !== "peer:message") return;
+    const { mover } = this.connection;
+    if (message.type === "peer:joined") {
+      mover.back(message.seat);
+      // A phone got in, which is the best check there is.
+      this.guard.watchdog.passed();
     }
+    if (message.type === "peer:left") mover.left(message.seat);
+    this.players.receive(message);
   }
 
   private send(to: Seat | "all", payload: Payload): void {
-    this.link.send({ type: "host:send", to, payload });
+    this.connection.send({ type: "host:send", to, payload });
   }
 
   private makeApi(code: string, seats: number): HostRoomApi {

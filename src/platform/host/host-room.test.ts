@@ -1,9 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { HostRoomEvent } from "@/platform/games/game-api";
-import type { ClientEnvelope, ServerEnvelope } from "@/platform/protocol";
+import { answerChecks, clearHostPage, created, FakeSocket, resetHostPage, tick as harnessTick, TOKEN } from "@/platform/testing/host-harness";
 import { HostRoom } from "./host-room";
 import { useHostStore } from "./host-store";
-import { sessionMemory } from "./room-memory";
 
 // Hosting a room unlocks sound, which a test has no speakers for.
 vi.mock("@/platform/audio/audio-engine", () => ({
@@ -14,52 +13,7 @@ vi.mock("@/platform/audio/audio-engine", () => ({
   },
 }));
 
-/** Just enough of a browser WebSocket to drive the host by hand. Every socket opens at once. */
-class FakeSocket {
-  static all: FakeSocket[] = [];
-  readyState = 0;
-  bufferedAmount = 0;
-  readonly sent: ClientEnvelope[] = [];
-  onopen: (() => void) | null = null;
-  onmessage: ((event: { data: string }) => void) | null = null;
-  onclose: ((event: { code: number }) => void) | null = null;
-  constructor() {
-    FakeSocket.all.push(this);
-    queueMicrotask(() => {
-      this.readyState = 1;
-      this.onopen?.();
-    });
-  }
-  send(data: string) {
-    this.sent.push(JSON.parse(data) as ClientEnvelope);
-  }
-  close(code = 1000) {
-    if (this.readyState === 3) return;
-    this.readyState = 3;
-    this.onclose?.({ code });
-  }
-  receive(message: ServerEnvelope) {
-    this.onmessage?.({ data: JSON.stringify(message) });
-  }
-  said(type: ClientEnvelope["type"]) {
-    return this.sent.filter((message) => message.type === type);
-  }
-}
-
-const TOKEN = "t".repeat(20);
-const created = (code: string, token = TOKEN): ServerEnvelope => ({ type: "room:created", code, game: "blade-clash", seats: 2, token, joinUrl: `https://x/join/${code}`, sharedRooms: true });
-const tick = async () => {
-  for (let i = 0; i < 5; i++) await Promise.resolve();
-};
-
-/** Answers every room check sent so far, as the relay would. */
-function answerChecks(ok: boolean) {
-  for (const socket of FakeSocket.all) {
-    for (const check of socket.said("probe:room")) {
-      if (check.type === "probe:room") socket.receive(ok ? { type: "probe:result", nonce: check.nonce, ok } : { type: "probe:result", nonce: check.nonce, ok, reason: "not-found" });
-    }
-  }
-}
+const tick = harnessTick;
 
 let host: HostRoom;
 
@@ -76,21 +30,10 @@ async function openRoom() {
 }
 
 describe("HostRoom", () => {
-  beforeEach(() => {
-    FakeSocket.all = [];
-    sessionMemory.forget();
-    useHostStore.setState(useHostStore.getInitialState(), true);
-    Object.assign(globalThis, {
-      WebSocket: FakeSocket,
-      location: { protocol: "http:", host: "localhost" },
-      window: { addEventListener() {}, removeEventListener() {} },
-      localStorage: { getItem: () => null, setItem() {} },
-      sessionStorage: { getItem: () => null, setItem() {}, removeItem() {} },
-    });
-  });
+  beforeEach(resetHostPage);
   afterEach(() => {
     host.dispose();
-    for (const key of ["location", "window", "localStorage", "sessionStorage"]) Reflect.deleteProperty(globalThis, key);
+    clearHostPage();
   });
 
   it("hides the code until the room passes its check", async () => {

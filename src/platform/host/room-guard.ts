@@ -20,6 +20,12 @@ export interface GuardDeps {
   swap(candidate: RoomCandidate, room: OpenedRoom, old: RememberedRoom): void;
   /** Nothing is on screen to fall back on. */
   goHome(error: string): void;
+  /**
+   * A check could not find the room: new connections now go to a server
+   * instance that does not have it. The host moves its own socket there,
+   * which makes the room again and brings its phones along (see HostRoom).
+   */
+  follow(): void;
 }
 
 /** Back from the background after this long, the room is checked again at once. */
@@ -39,13 +45,18 @@ export class RoomGuard {
   private readonly remaker: RoomRemaker<RoomCandidate>;
   /** The swap opens the new room, which has just passed its check already. */
   private swapping = false;
+  /** The room the player chose to keep despite failed checks: only a stronger sign alerts again. */
+  private kept: string | null = null;
 
   constructor(private readonly deps: GuardDeps) {
     this.watchdog = new RoomWatchdog({
       probe: (code) => deps.probe(code),
+      // A pass also clears an alert about checks, since the room works again.
       passed: () => {
-        if (get().health === "checking") set({ health: "ok" });
+        const { health, problem, roomGone } = get();
+        if (health === "checking" || (health === "lost" && problem === "unreachable" && !roomGone)) set({ health: "ok", problem: null });
       },
+      notFound: () => deps.follow(),
       // A check that fails may still leave the players already in it playing,
       // since a fresh connection can land on another server instance.
       broken: () => this.trouble("unreachable"),
@@ -101,20 +112,40 @@ export class RoomGuard {
     };
   }
 
-  /** A room is on screen: a new one is checked at once, one that came back carries on. */
+  /**
+   * A room is on screen: a new one is checked at once. One that came back
+   * carries on, and a handover every few minutes must not push its next
+   * check back each time, so a passed room keeps its schedule.
+   */
   opened(code: string, same: boolean): void {
     if (this.swapping) return;
-    if (same && get().health !== "idle") return this.watchdog.watch(code, { checked: get().health === "ok" });
+    const { health } = get();
+    if (same && health === "ok" && this.watchdog.watching === code) return;
+    if (same && health !== "idle") return this.watchdog.watch(code, { checked: health === "ok" });
+    this.kept = null;
     set({ health: "checking", problem: null, roomGone: false });
     this.watchdog.watch(code);
   }
 
+  /** The room may be gone and is being looked for again: its code hides until it is back. */
+  doubt(): void {
+    const { room, health } = get();
+    if (!room || this.remaker.busy || (health !== "ok" && health !== "checking")) return;
+    this.watchdog.stop();
+    set({ health: "checking" });
+  }
+
   /** Something says the room is broken. Fixed at once while nobody is in it, or the player is asked. */
   trouble(problem: RoomProblem): void {
+    const code = get().room?.code ?? null;
     if (this.remaker.busy) return;
     this.watchdog.stop();
     if (problem === "lost") set({ roomGone: true });
     if (!this.deps.joined() && this.regenerate("auto")) return;
+    // Checks go on after an alert about them, so it clears once the room works again.
+    if (problem === "unreachable" && code) this.watchdog.watch(code, { checked: true });
+    // The player kept this room once already: failed checks alone do not ask again.
+    if (problem === "unreachable" && code === this.kept) return;
     set({ health: "lost", problem });
   }
 
@@ -132,8 +163,9 @@ export class RoomGuard {
   keep(): void {
     const room = get().room;
     if (!room || get().roomGone) return;
-    set({ health: "checking", problem: null });
-    this.watchdog.watch(room.code);
+    this.kept = room.code;
+    set({ health: "ok", problem: null });
+    this.watchdog.watch(room.code, { checked: true });
   }
 
   stop(): void {

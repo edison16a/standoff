@@ -1,5 +1,5 @@
 import { SocketClient, type SocketHandlers, type SocketStatus } from "@/platform/net/socket-client";
-import type { OpenInfo } from "@/platform/net/socket-types";
+import type { HandoverFailure, OpenInfo } from "@/platform/net/socket-types";
 import type { ClientEnvelope, ServerEnvelope } from "@/platform/protocol";
 
 /** How long an old room's socket stays after a swap, for its retire to be confirmed. */
@@ -11,6 +11,8 @@ const OLD_SOCKET_MS = 3000;
  * room passes, without a reconnect.
  */
 export class HandlerSwitch implements SocketHandlers {
+  /** The socket's latest status, so whoever it is pointed at next hears where it stands. */
+  status: SocketStatus = "connecting";
   constructor(public target: SocketHandlers) {}
   onOpen(send: (message: ClientEnvelope) => void, info: OpenInfo): void {
     this.target.onOpen(send, info);
@@ -19,10 +21,14 @@ export class HandlerSwitch implements SocketHandlers {
     this.target.onMessage(message);
   }
   onStatus(status: SocketStatus): void {
+    this.status = status;
     this.target.onStatus(status);
   }
-  onHandoverFailed(): void {
-    this.target.onHandoverFailed?.();
+  onHandoverFailed(info: HandoverFailure): void {
+    this.target.onHandoverFailed?.(info);
+  }
+  onHandedOver(confirmation: ServerEnvelope, sendOld: (message: ClientEnvelope) => void): void {
+    this.target.onHandedOver?.(confirmation, sendOld);
   }
 }
 
@@ -65,11 +71,22 @@ export class HostLink {
     this.part.client.redial();
   }
 
-  /** Makes a checked socket the host's own. Returns the old one, to retire. */
+  /** Moves to a fresh socket now, keeping the old one till it confirms (see SocketClient). */
+  rotateNow(): boolean {
+    return this.part.client.rotateNow();
+  }
+
+  /**
+   * Makes a checked socket the host's own. Its status is passed on, since
+   * the host may still hold the old socket's, like "reconnecting", which
+   * would hide the new room's code and keep Host Game locked after leaving.
+   * Returns the old one, to retire.
+   */
   adopt(next: LinkPart): LinkPart {
     const old = this.part;
     next.handlers.target = this.handlers;
     this.part = next;
+    this.handlers.onStatus(next.handlers.status);
     return old;
   }
 

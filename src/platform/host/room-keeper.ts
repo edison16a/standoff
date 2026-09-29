@@ -1,44 +1,23 @@
 import type { OpenInfo } from "@/platform/net/socket-types";
-import type { ClientEnvelope, ServerEnvelope } from "@/platform/protocol";
+import type { ClientEnvelope } from "@/platform/protocol";
+import type { CreateFailure, KeeperLink, RoomKeeperEvents, RoomMessage, Send } from "./keeper-types";
 import { RetireQueue } from "./retire-queue";
 import type { RememberedRoom, RoomMemory } from "./room-memory";
+
+export type { CreateFailure, KeeperLink, OpenedRoom, RoomKeeperEvents, RoomMessage, Send } from "./keeper-types";
 
 /** How long a create may take before a fresh socket tries again, and how many tries in all. */
 export const CREATE_WAIT_MS = 8000;
 export const CREATE_TRIES = 3;
 /**
- * Waits before each fresh socket a failed resume tries, about 9 s in all.
- * Rooms live in one server instance's memory, so a fresh socket may reach
- * the instance that has the room. Past that the room is lost, and the host
- * should know soon rather than show a dead code.
+ * Waits before each fresh socket a failed resume tries. Any instance of
+ * the deployment makes the room again from its signed token, so "not
+ * found" means another deployment or an ended room, and one more look is
+ * enough. A server side failure gets a little longer. Past that the room
+ * is lost, and the host should know within seconds, not show a dead code.
  */
-export const RESUME_DELAYS = [400, 800, 1600, 3000, 3000];
-
-export type Send = (message: ClientEnvelope) => void;
-export type RoomMessage = Extract<ServerEnvelope, { type: "room:created" | "room:resumed" | "room:error" | "room:retired" }>;
-export type CreateFailure = "timeout" | "limit" | "unavailable";
-
-export interface OpenedRoom extends RememberedRoom {
-  joinUrl: string;
-  sharedRooms: boolean;
-  /** Which seats already have a phone, and their names. Only known when resuming. */
-  connected: boolean[] | null;
-  names: (string | null)[] | null;
-}
-
-export interface RoomKeeperEvents {
-  opened(room: OpenedRoom): void;
-  /** The room is gone for good. `old` is what was remembered, so it can be made again. */
-  lost(info: { old: RememberedRoom | null }): void;
-  /** A create never got its room. */
-  failed(reason: CreateFailure): void;
-}
-
-/** The connection a keeper talks through: the current socket, and a way to get a fresh one. */
-export interface KeeperLink {
-  send: Send;
-  redial(): void;
-}
+export const RESUME_DELAYS = [500, 1500, 3000];
+const NOT_FOUND_TRIES = 2;
 
 /**
  * Holds on to the host's room across page reloads, dropped sockets and
@@ -54,8 +33,10 @@ export class RoomKeeper {
   private readonly retires: RetireQueue;
   private createTries = 0;
   private resumeTries = 0;
-  /** Null until the relay has said whether rooms are shared. */
-  private shared: boolean | null = null;
+  /** The server instance that last answered for the room, to tell when a new socket lands on another. */
+  instance: string | null = null;
+  /** Each seat's player name, for making the room again where it is not known. */
+  names: (() => (string | null)[]) | null = null;
   private createTimer: ReturnType<typeof setTimeout> | null = null;
   private resumeTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -80,7 +61,7 @@ export class RoomKeeper {
   announce(send: Send, { handover }: OpenInfo): void {
     for (const message of this.retires.pending()) send(message);
     const saved = this.memory.recall();
-    if (saved) send({ type: "host:resume", code: saved.code, token: saved.token });
+    if (saved) send(this.resume(saved));
     // A second create on a handover socket would make a second room.
     else if (this.pending && handover) this.deferred = send;
     else if (this.pending) send({ type: "host:create", ...this.pending });
@@ -128,14 +109,14 @@ export class RoomKeeper {
         if (!this.pending) return this.retire({ code, token });
         const deferred = this.deferred;
         this.stopCreate();
-        this.shared = message.sharedRooms;
+        this.instance = message.instance ?? null;
         this.memory.remember({ code, token, game, seats });
-        deferred?.({ type: "host:resume", code, token });
+        deferred?.(this.resume({ code, token, game, seats }));
         return this.events.opened({ ...message, connected: null, names: null });
       }
       case "room:resumed": {
         this.stopResume();
-        this.shared = message.sharedRooms;
+        this.instance = message.instance ?? null;
         const token = this.memory.recall()?.token ?? "";
         // An older tab saved no game, and a lost room needs it to be made again.
         if (token) this.memory.remember({ code: message.code, token, game: message.game, seats: message.seats });
@@ -153,17 +134,21 @@ export class RoomKeeper {
     }
   }
 
-  /**
-   * A resume that cannot find the room may just have landed on the wrong
-   * server instance, so a few fresh sockets try, spaced out. With a shared
-   * store "not found" is final, and one quick look again is enough.
-   */
+  /** What a socket says to take the room back, with enough to make it again where it is not known. */
+  resume(room: RememberedRoom): Extract<ClientEnvelope, { type: "host:resume" }> {
+    const { code, token, game, seats } = room;
+    if (!game || !seats) return { type: "host:resume", code, token };
+    const names = this.names?.();
+    return { type: "host:resume", code, token, game, seats, ...(names ? { names } : {}) };
+  }
+
+  /** A few fresh sockets try, spaced out, before the room is called lost. */
   private resumeFailed(reason: string): void {
-    const delays = this.shared === true && reason === "not-found" ? RESUME_DELAYS.slice(0, 1) : RESUME_DELAYS;
-    if (this.resumeTries < delays.length) {
-      const wait = delays[this.resumeTries]!;
+    const tries = reason === "not-found" ? NOT_FOUND_TRIES : RESUME_DELAYS.length;
+    if (this.resumeTries < tries) {
+      if (this.resumeTries === 0) this.events.doubt?.();
+      this.resumeTimer = setTimeout(() => this.link.redial(), RESUME_DELAYS[this.resumeTries]!);
       this.resumeTries += 1;
-      this.resumeTimer = setTimeout(() => this.link.redial(), wait);
       return;
     }
     const old = this.memory.recall();
