@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { MatchResult } from "../engine/events";
 import type { OwnView } from "../render/views";
 import type { Stage } from "./fight-driver";
@@ -86,6 +87,8 @@ export interface BoxingState {
   records: Records;
   /** A new best set by the fight just finished, to celebrate on the results. */
   newBest: string | null;
+  /** How well the computer boxer fights. */
+  botLevel: BotLevel;
 }
 
 export const useBoxingStore = create<BoxingState>(() => ({
@@ -98,4 +101,5 @@ export const useBoxingStore = create<BoxingState>(() => ({
   result: null,
   records: { wins: 0, losses: 0, fastestKo: null, streak: 0 },
   newBest: null,
+  botLevel: DEFAULT_BOT_LEVEL,
 }));

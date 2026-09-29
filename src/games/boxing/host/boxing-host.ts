@@ -1,4 +1,5 @@
 import { CameraKit, type MoveEvent } from "@/games/kit/camera";
+import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { HostRoomApi } from "@/platform/games/game-api";
 import { BoxingAudio } from "../audio/boxing-audio";
 import type { MatchEvent } from "../engine/events";
@@ -82,6 +83,11 @@ export class BoxingHost {
     store.setState({ screen: "pick" });
   }
 
+  setBotLevel(level: BotLevel): void {
+    this.audio.tick();
+    store.setState({ botLevel: level });
+  }
+
   choose(id: 0 | 1, index: number): void {
     this.pick?.choose(id, index);
     this.audio.tick();
@@ -98,7 +104,7 @@ export class BoxingHost {
     const humans = this.humans;
     this.stopDriver?.();
     const [red, blue] = this.looks();
-    this.driver = new FightDriver({ seed: Math.floor(Math.random() * 1e9), slots: [1, humans[1] ? 2 : null], roundMs: testRoundMs(), styles: [red.id, blue.id] });
+    this.driver = new FightDriver({ seed: Math.floor(Math.random() * 1e9), slots: [1, humans[1] ? 2 : null], roundMs: testRoundMs(), styles: [red.id, blue.id], level: store.getState().botLevel });
     this.stopDriver = this.driver.listen((event) => this.onMatchEvent(event, this.driver!.match));
     this.banners.clear();
     this.audio.setPlayers(humans);

@@ -1,4 +1,5 @@
 "use client";
+import { DifficultyPicker } from "@/games/kit/difficulty/DifficultyPicker";
 import { playerColor } from "@/games/kit/players";
 import { LOOKS } from "../../render/models/looks";
 import { useBoxingStore } from "../host-store";
@@ -16,6 +17,7 @@ export function PickScreen() {
   const picks = useBoxingStore((state) => state.picks);
   const locked = useBoxingStore((state) => state.locked);
   const holding = useBoxingStore((state) => state.holding);
+  const botLevel = useBoxingStore((state) => state.botLevel);
   const sides = players === 2 ? ([0, 1] as const) : ([0] as const);
   return (
     <section className="bx-pick">
@@ -62,6 +64,7 @@ export function PickScreen() {
             <span className="bx-pick__vs">VS</span>
             <span className="bx-pick__cpu">{LOOKS[picks[1]]!.name}</span>
             <span className="bx-pick__cpu-nick">{LOOKS[picks[1]]!.nickname}, the computer</span>
+            <DifficultyPicker level={botLevel} onChange={(level) => session.setBotLevel(level)} />
           </div>
         )}
       </div>
