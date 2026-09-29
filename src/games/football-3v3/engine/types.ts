@@ -50,6 +50,8 @@ export interface Brain {
   react: number;
   /** A computer quarterback's plan: when it throws, or when it gives up and runs. */
   throwAt: number;
+  /** The quarterback has given up on the pass and tucked it to run. */
+  scramble: boolean;
 }
 
 export interface AthleteStats {

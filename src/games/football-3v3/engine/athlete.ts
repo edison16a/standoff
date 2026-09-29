@@ -36,7 +36,7 @@ export function makeAthlete(id: number, team: TeamId, role: Role, character: Cha
     agility: unit(c.stats.agility),
     arm: unit(c.stats.arm),
     hands: unit(c.stats.hands),
-    brain: { thinkIn: 0, target: v2(), react: 0, throwAt: 0 },
+    brain: { thinkIn: 0, target: v2(), react: 0, throwAt: 0, scramble: false },
     stats: { passYards: 0, rushYards: 0, recYards: 0, touchdowns: 0, tackles: 0, interceptions: 0, sacks: 0, attempts: 0, completions: 0, catches: 0 },
   };
 }
