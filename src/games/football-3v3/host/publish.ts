@@ -9,6 +9,8 @@ import type { PhoneLink } from "./phone-link";
 import { phoneState } from "./phone-state";
 import type { ReplayDirector } from "./replay/director";
 import { resultRows } from "./results";
+import { ceremonyCard, type CeremonyCard } from "./ceremony-card";
+import type { Match } from "../engine/match";
 
 export interface PublishContext {
   nowMs: number;
@@ -21,6 +23,14 @@ export interface PublishContext {
   replay: ReplayDirector;
   /** How a player is called on screen. */
   nameOf(id: number): string;
+  /** The host asked for the stats before the presentation brought them in. */
+  statsEarly: boolean;
+}
+
+/** The presentation's card, moved straight to the stats when the host asked for them early. */
+function presentation(m: Match, names: ReadonlyMap<number, string>, early: boolean): CeremonyCard | null {
+  const card = ceremonyCard(m, names);
+  return card && early ? { ...card, stage: "stats" } : card;
 }
 
 /**
@@ -49,6 +59,7 @@ export function publish(c: PublishContext): void {
     score: m ? [m.score[0], m.score[1]] : [0, 0],
     over: m && m.phase === "over" ? { winner: m.winner } : null,
     results: m && m.phase === "over" ? resultRows(m, names) : [],
+    ceremony: m ? presentation(m, names, c.statsEarly) : null,
     strip: m
       ? m.athletes.filter((a) => a.seat !== null && a.build).map((a) => ({
           id: a.id,

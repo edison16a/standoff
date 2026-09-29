@@ -3,6 +3,7 @@ import { HostPad } from "@/games/kit/pad/host-pad";
 import { playerColor } from "@/games/kit/players";
 import type { HostRoomApi, Player } from "@/platform/games/game-api";
 import { SoundDirector } from "../audio/director";
+import { ceremonyTime } from "../engine/ceremony";
 import type { MatchEvent } from "../engine/events";
 import type { V2 } from "../engine/vec";
 import type { MatchView } from "../engine/view";
@@ -57,6 +58,8 @@ export class FootballHost implements InputTarget {
   private lastHud = 0;
   private seed = Math.floor(Math.random() * 1e6);
   private offAdmin: (() => void) | null = null;
+  /** The host tapped Stats during the trophy presentation. */
+  private statsEarly = false;
 
   constructor(private readonly room: HostRoomApi) {
     store.setState({ ...store.getInitialState() });
@@ -147,6 +150,7 @@ export class FootballHost implements InputTarget {
     this.replays.stop();
     this.aims.clear();
     this.callout = null;
+    this.statsEarly = false;
     this.room.setPlaying(true);
     this.audio.gameStart();
     this.refresh(performance.now());
@@ -155,11 +159,18 @@ export class FootballHost implements InputTarget {
   /** From the end screen: back to the team picker, keeping everyone's choices. */
   backToLobby(): void {
     this.driver = null;
+    this.statsEarly = false;
     this.offAdmin?.();
     this.offAdmin = null;
     this.replays.stop();
     this.room.setPlaying(false);
     this.audio.lobby();
+    this.refresh(performance.now());
+  }
+
+  /** From the trophy presentation: straight to the stats, without waiting for them. */
+  showStats(): void {
+    this.statsEarly = true;
     this.refresh(performance.now());
   }
 
@@ -175,6 +186,7 @@ export class FootballHost implements InputTarget {
       events = driver.tick(nowMs, { move: (s) => this.pad.stick(s, nowMs), aim: (s) => this.aims.get(s), forward: this.forward });
       for (const event of events) this.onMatchEvent(event, driver, nowMs);
       if (driver.held) this.startReplay(driver, nowMs);
+      this.audio.ceremony(ceremonyTime(driver.match));
     }
     if (this.callout && nowMs > this.callout.until) this.callout = null;
     if (this.phase !== before || nowMs - this.lastHud >= HUD_MS) this.refresh(nowMs);
@@ -216,6 +228,7 @@ export class FootballHost implements InputTarget {
     publish({
       nowMs, phase: this.phase, players: this.room.players(), lobby: this.lobby, driver: this.driver,
       callout: this.callout?.value ?? null, phones: this.phones, replay: this.replays, nameOf: (id) => this.nameOf(id),
+      statsEarly: this.statsEarly,
     });
   }
 }

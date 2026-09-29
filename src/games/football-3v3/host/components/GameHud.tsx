@@ -46,11 +46,13 @@ function PlayerStrip() {
 /** The broadcast graphics over the game: nothing pops up across the picture. */
 export function GameHud() {
   const board = useFootballStore((s) => s.board);
+  // The trophy presentation has its own names; the score bug would sit on the scene.
+  const ceremony = useFootballStore((s) => s.ceremony !== null);
   return (
     <div className="fb-hud">
       <PlayerStrip />
       <CalloutBar />
-      {board && <Scoreboard board={board} />}
+      {board && !ceremony && <Scoreboard board={board} />}
       <ReplayOverlay />
     </div>
   );

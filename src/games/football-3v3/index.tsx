@@ -13,6 +13,7 @@ import "./styles/lobby.css";
 import "./styles/lobby-cards.css";
 import "./styles/replay.css";
 import "./styles/results.css";
+import "./styles/ceremony.css";
 import "./styles/scoreboard.css";
 import "./styles/phone.css";
 import "./styles/phone-ready.css";

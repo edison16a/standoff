@@ -10,7 +10,8 @@ import { useSession } from "./session-context";
 const COLUMNS = ["Pass yds", "Rush yds", "Rec yds", "TD", "Tackles", "INT"] as const;
 
 /**
- * The final whistle: the winners and the score, the player of the game,
+ * The final whistle, after the trophy presentation when there is a
+ * winner: the winners and the score, the player of the game,
  * and every player's passing, rushing and receiving yards, touchdowns,
  * tackles and interceptions. Then the ways back in: the same teams
  * again, or back to the lobby to change them.
@@ -22,12 +23,14 @@ export function Results() {
   const rows = useFootballStore((s) => s.results);
   // A player who left can leave nobody ready: then only Change teams works.
   const blocked = useFootballStore((s) => s.startBlock !== null);
+  // After the trophy presentation the card sits to one side of the winners.
+  const aside = useFootballStore((s) => s.ceremony !== null);
   if (!over || rows.length === 0) return null;
   const winner = over.winner;
   const best = playerOfTheGame(rows);
   const colour = winner === null ? "#f5c518" : TEAMS[winner].color;
   return (
-    <div className="fb-results" role="dialog" aria-label="Final" style={{ "--team": colour } as React.CSSProperties}>
+    <div className={`fb-results ${aside ? "fb-results--aside" : ""}`} role="dialog" aria-label="Final" style={{ "--team": colour } as React.CSSProperties}>
       <section className="fb-results__card">
         <p className="fb-results__kicker">Final</p>
         <h2 className="fb-results__title">{winner === null ? "It is a tie" : `${TEAMS[winner].name} win`}</h2>

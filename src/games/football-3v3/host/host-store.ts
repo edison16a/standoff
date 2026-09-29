@@ -5,6 +5,7 @@ import type { Board } from "../render/hud/board";
 import type { LobbyRole } from "../roles";
 import type { BuildId } from "../builds";
 import type { TeamId } from "../teams";
+import type { CeremonyCard } from "./ceremony-card";
 import type { ReplayCard } from "./replay/director";
 
 export interface SeatView {
@@ -89,6 +90,8 @@ export interface FootballHostState {
   over: { winner: TeamId | null } | null;
   results: ResultRow[];
   strip: StripPlayer[];
+  /** The winners' names over the trophy presentation, or null outside it. */
+  ceremony: CeremonyCard | null;
 }
 
 export const useFootballStore = create<FootballHostState>(() => ({
@@ -105,4 +108,5 @@ export const useFootballStore = create<FootballHostState>(() => ({
   over: null,
   results: [],
   strip: [],
+  ceremony: null,
 }));

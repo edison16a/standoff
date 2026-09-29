@@ -1,5 +1,5 @@
 import type { BotLevel } from "@/games/kit/difficulty/difficulty";
-import { adminFieldGoal, adminTouchdown, adminTwoPoint } from "../engine/admin";
+import { adminFieldGoal, adminTouchdown, adminTwoPoint, adminWin } from "../engine/admin";
 import type { MatchEvent } from "../engine/events";
 import type { Entry } from "../engine/lineup";
 import { Match } from "../engine/match";
@@ -86,11 +86,12 @@ export class MatchDriver {
   }
 
   /** Admin panel shortcuts, for the team with the ball. Their events come out on the next tick. */
-  admin(kind: "touchdown" | "fieldGoal" | "twoPoint"): void {
+  admin(kind: "touchdown" | "fieldGoal" | "twoPoint" | "win"): void {
     if (this.held) return;
     const team = this.match.offense;
     if (kind === "touchdown") adminTouchdown(this.match, team);
     else if (kind === "fieldGoal") adminFieldGoal(this.match, team);
+    else if (kind === "win") adminWin(this.match, team);
     else adminTwoPoint(this.match, team);
     this.view = buildView(this.match);
   }
