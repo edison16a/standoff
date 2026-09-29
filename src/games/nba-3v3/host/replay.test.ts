@@ -42,7 +42,7 @@ describe("the replay", () => {
     const { m, tape } = taped(5);
     const frames = tape.clip(m.time - 2, m.time);
     const heard: MatchEvent[] = [];
-    const r = new Replay({ entries: ENTRIES, scorer: 0, defender: 3, voters: [] }, frames, (e) => heard.push(e));
+    const r = new Replay({ entries: ENTRIES, scorer: 0, defender: 3, voters: () => [] }, frames, (e) => heard.push(e));
     const views = new Set<string>();
     let real = 0;
     while (!r.done && real < 30) {
@@ -58,13 +58,32 @@ describe("the replay", () => {
 
   it("is skipped only once every player has pressed a button", () => {
     const { m, tape } = taped(3);
-    const r = new Replay({ entries: ENTRIES, scorer: 0, defender: 3, voters: [1, 2] }, tape.clip(m.time - 2, m.time), () => undefined);
+    const r = new Replay({ entries: ENTRIES, scorer: 0, defender: 3, voters: () => [1, 2] }, tape.clip(m.time - 2, m.time), () => undefined);
     r.skip(1);
     expect(r.done).toBe(false);
     r.skip(7);
     expect(r.done).toBe(false);
     r.skip(2);
     expect(r.done).toBe(true);
+  });
+
+  it("asks only the phones still in the game", () => {
+    const { m, tape } = taped(3);
+    let voters = [1, 2];
+    const r = new Replay({ entries: ENTRIES, scorer: 0, defender: 3, voters: () => voters }, tape.clip(m.time - 2, m.time), () => undefined);
+    r.skip(1);
+    // Player 2's phone drops: the one left has agreed, so it skips.
+    voters = [1];
+    r.tick(1 / 30);
+    expect(r.done).toBe(true);
+    // A phone that comes back mid replay gets a say before it can skip.
+    let back = [1];
+    const again = new Replay({ entries: ENTRIES, scorer: 0, defender: 3, voters: () => back }, tape.clip(m.time - 2, m.time), () => undefined);
+    back = [1, 2];
+    again.skip(1);
+    expect(again.done).toBe(false);
+    again.skip(2);
+    expect(again.done).toBe(true);
   });
 });
 

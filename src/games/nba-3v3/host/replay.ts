@@ -15,8 +15,12 @@ export interface ReplayCast {
   entries: readonly Entry[];
   scorer: number;
   defender: number;
-  /** Seats that must all press a button before the replay can be skipped. */
-  voters: readonly number[];
+  /**
+   * Seats that must all press a button before the replay can be skipped:
+   * the phones in the game right now, so one that drops stops holding it
+   * up and one that comes back gets a say.
+   */
+  voters: () => readonly number[];
 }
 
 /**
@@ -54,17 +58,25 @@ export class Replay {
 
   /** Every voter has pressed skip, or there are none and the replay just plays. */
   get voters(): readonly number[] {
-    return this.cast.voters;
+    return this.cast.voters();
   }
 
   skip(seat: number): void {
-    if (!this.cast.voters.includes(seat)) return;
+    if (!this.voters.includes(seat)) return;
     this.skipped.add(seat);
-    if (this.cast.voters.every((s) => this.skipped.has(s))) this.done = true;
+    this.count();
+  }
+
+  /** Done once every voter has pressed. With nobody left to vote it just plays out. */
+  private count(): void {
+    const voters = this.voters;
+    if (voters.length > 0 && voters.every((s) => this.skipped.has(s))) this.done = true;
   }
 
   /** Moves the replay on by a real frame. Returns the slowed time, for the animation. */
   tick(realDt: number): number {
+    // The last one holding out may have left.
+    this.count();
     if (this.done) return 0;
     const dt = realDt * REPLAY_SPEED;
     this.clock += dt;

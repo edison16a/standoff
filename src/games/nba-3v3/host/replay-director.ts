@@ -47,7 +47,7 @@ export class ReplayDirector {
   }
 
   /** Rolls the replay once the winners have had their moment. `voters` are the seats that must agree to skip. */
-  update(m: Match, voters: () => number[]): void {
+  update(m: Match, voters: () => readonly number[]): void {
     const win = this.winning;
     if (this.started || !win || m.phase !== "over" || m.phaseT < DELAY) return;
     this.started = true;
@@ -55,7 +55,7 @@ export class ReplayDirector {
     if (frames.length < 10) return;
     const atGather = frames.find((f) => f.time >= gather) ?? frames[0]!;
     const defender = nearestOpponent(atGather, win.id, this.entries);
-    this.replay = new Replay({ entries: this.entries, scorer: win.id, defender, voters: voters() }, frames, (e, ghost) => {
+    this.replay = new Replay({ entries: this.entries, scorer: win.id, defender, voters }, frames, (e, ghost) => {
       for (const listener of this.listeners) listener(e, ghost);
     });
   }
