@@ -72,7 +72,7 @@ export function judgeFreeKick(state: MatchState, sp: SetPiece, kick: Kick, keepe
 
 /**
  * A penalty: the keeper must pick a side as it is struck. When he goes
- * he picks the right side a little over half the time, and now and then
+ * he picks the right side about six times in ten, and now and then
  * he stays up the middle. Guessing right, he saves what he can reach in time; a ball
  * tucked in by the post or struck hard is still beyond him.
  */
