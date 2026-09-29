@@ -86,6 +86,8 @@ Opening the site on a phone goes straight to the join screen, since phones are t
 
 If phones say "Room not found" while the big screen still shows a code, open the gear on the big screen and press **Remake lobby**. It opens a fresh room for the same game and moves every phone to it, names and all.
 
+Names are unique in a room, whatever the case or spacing. A phone that picks a name someone is using is asked for another. Once seated, the phone moves to its own address, `/play/<CODE>/<name>`. Reload it, or close the tab and open it again, and you land back in your seat with your score. If a phone loses its connection, it shows a **Reconnect** button. A new phone that types the name of a player who dropped is offered **Reconnect** too, and takes over that player rather than joining as someone new.
+
 Camera games have no phones. Stand where the camera sees you from the waist up, hold still while your head line is set, and play with your body. Your head going up out of its band is a jump, and going down is a duck or roll.
 
 * **Magic Kart:** hold the phone sideways like a wheel and turn it to steer (full lock at about 50 degrees). Hold **Drive** to go, **Brake** to slow and drift, and tap the round button to use a power up. Off a big jump a glider opens, and you steer it the same way.
@@ -170,7 +172,7 @@ Inside a game, the computer is the referee. Phones send raw input, and everythin
 
 Between the computer and the phones sits a relay that makes no game decisions. It seats players, remembers who holds which seat, and passes messages along. It checks only that a message has a `kind` and fits the size cap, so a new game needs nothing from it. Locally, one Node process (`server/index.ts`) serves the pages and accepts sockets at `/api/ws`, and rooms live in memory. On Vercel, a Next.js route at `src/app/api/ws/route.ts` takes over each socket from the runtime, and rooms live in Redis. A second route, `/api/stream`, carries the same relay over plain HTTP for browsers whose WebSocket cannot open.
 
-The seat rules are plain functions over a small room record (`src/platform/relay/room-state.ts`): the lowest free seat goes to the next phone, up to the one to six seats the game asked for, a known seat token gets its old seat back, and a seat or a room is kept for a grace period after its player drops. Two things sit under those rules:
+The seat rules are plain functions over a small room record (`src/platform/relay/room-state.ts` and `seat-claim.ts`): the lowest free seat goes to the next phone, up to the one to six seats the game asked for, a known seat token gets its old seat back, and a seat or a room is kept for a grace period after its player drops. Each seat keeps its player's name. A join with a name a connected player has is refused. A join with the name of a player who dropped is refused too, unless it asks to reconnect, and then it takes that same seat, so the game hears a rejoin and keeps the player's state. Two things sit under those rules:
 
 * A **store** that updates one room atomically. In memory that is free. In Redis each update takes a short lock on the room, reads the record, applies the same rules and writes it back, so two instances racing to seat two phones can never both put them in seat one.
 * A **bus** for messages. In memory it is a local pub/sub. In Redis it is Redis pub/sub, with one subscriber connection per instance that fans messages out to the sockets it holds.
@@ -220,7 +222,7 @@ The tuning drawer (the sliders icon at the top right) holds the hit and clash sp
 ```
 server/                   Local entry: Next, HTTPS for phones, upgrades to the relay
 src/
-  app/                    Next routes: the home page, /join/[code], /api/ws and /api/stream
+  app/                    Next routes: the home page, /join/[code], /play/[code]/[name], /api/ws and /api/stream
   platform/               The console, shared by every game
     games/                The contract between the platform and a game
     host/                 Home screen, room shell, join card, the host's room

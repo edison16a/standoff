@@ -16,6 +16,8 @@ export interface OpenedRoom {
   sharedRooms: boolean;
   /** Which seats already have a phone. Only known when resuming. */
   connected: boolean[] | null;
+  /** Each seat's player name. Only known when resuming. */
+  names: (string | null)[] | null;
 }
 
 export interface RoomKeeperEvents {
@@ -77,13 +79,15 @@ export class RoomKeeper {
       case "room:created": {
         rememberRoom({ code: message.code, token: message.token });
         const { code, game, seats, joinUrl, sharedRooms } = message;
-        this.events.opened({ code, game, seats, joinUrl, sharedRooms, connected: null });
+        this.events.opened({ code, game, seats, joinUrl, sharedRooms, connected: null, names: null });
         return;
       }
       case "room:resumed": {
         this.retries = 0;
         const { code, game, seats, joinUrl, sharedRooms, connected } = message;
-        this.events.opened({ code, game, seats, joinUrl, sharedRooms, connected });
+        // A relay from before names were kept sends none.
+        const names = message.names ?? null;
+        this.events.opened({ code, game, seats, joinUrl, sharedRooms, connected, names });
         return;
       }
       case "room:error":

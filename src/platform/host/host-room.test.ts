@@ -1,8 +1,17 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { HostRoomEvent } from "@/platform/games/game-api";
 import type { ServerEnvelope } from "@/platform/protocol";
 import { HostRoom } from "./host-room";
 import { useHostStore } from "./host-store";
+
+// Hosting a room unlocks sound, which a test has no speakers for.
+vi.mock("@/platform/audio/audio-engine", () => ({
+  AudioEngine: class {
+    unlocked = true;
+    async unlock() {}
+    close() {}
+  },
+}));
 
 /** Just enough of a browser WebSocket to drive the host by hand. */
 class FakeSocket {
@@ -60,7 +69,7 @@ describe("HostRoom", () => {
 
   it("names a player from their phone and keeps that message from the game", async () => {
     const { socket, events } = await openRoom();
-    socket.receive({ type: "peer:joined", seat: 1, rejoined: false });
+    socket.receive({ type: "peer:joined", seat: 1, rejoined: false, name: "Player 1" });
     socket.receive({ type: "peer:message", seat: 1, payload: { kind: "profile", name: "Edison" } });
     socket.receive({ type: "peer:message", seat: 1, payload: { kind: "pick", characterId: "vale" } });
     expect(useHostStore.getState().players[0]).toEqual({ seat: 1, name: "Edison", connected: true });
@@ -80,5 +89,41 @@ describe("HostRoom", () => {
     // A new room means a fresh game, not the old one carried over.
     expect(host.api === before).toBe(false);
     expect(host.api?.code).toBe("WXYZ");
+  });
+
+  it("takes names from the relay, and ignores a phone repeating someone else's", async () => {
+    const { socket } = await openRoom();
+    socket.receive({ type: "peer:joined", seat: 1, rejoined: false, name: "Ann" });
+    socket.receive({ type: "peer:joined", seat: 2, rejoined: false, name: "Bob" });
+    socket.receive({ type: "peer:message", seat: 2, payload: { kind: "profile", name: "ann" } });
+    expect(useHostStore.getState().players.map((player) => player.name)).toEqual(["Ann", "Bob"]);
+  });
+
+  it("opens a second room after leaving the first, with nothing of the first left over", async () => {
+    const { host, socket } = await openRoom();
+    socket.receive({ type: "peer:joined", seat: 1, rejoined: false, name: "Ann" });
+    host.leave();
+    expect(socket.sent).toContainEqual({ type: "host:close" });
+    expect(useHostStore.getState()).toMatchObject({ screen: "home", room: null, players: [] });
+    await host.create("blade-clash", 2);
+    expect(socket.sent.at(-1)).toEqual({ type: "host:create", game: "blade-clash", seats: 2 });
+    socket.receive({ type: "room:created", code: "WXYZ", game: "blade-clash", seats: 2, token: "u".repeat(20), joinUrl: "https://x/join/WXYZ", sharedRooms: true });
+    expect(useHostStore.getState().room?.code).toBe("WXYZ");
+    expect(host.api?.code).toBe("WXYZ");
+    expect(useHostStore.getState().players.map((player) => player.name)).toEqual(["Player 1", "Player 2"]);
+  });
+
+  it("keeps a game left over from the last room away from the next one", async () => {
+    const { host, socket } = await openRoom();
+    const stale = host.api!;
+    host.leave();
+    await host.create("blade-clash", 2);
+    socket.receive({ type: "room:created", code: "WXYZ", game: "blade-clash", seats: 2, token: "u".repeat(20), joinUrl: "https://x/join/WXYZ", sharedRooms: true });
+    const sent = socket.sent.length;
+    stale.send("all", { kind: "late" });
+    stale.setPlaying(true);
+    stale.leave();
+    expect(socket.sent).toHaveLength(sent);
+    expect(useHostStore.getState()).toMatchObject({ screen: "room", playing: false, room: { code: "WXYZ" } });
   });
 });

@@ -3,6 +3,7 @@ import type { RoomStore } from "./backend";
 import { logFailure } from "./log";
 import { makeRoomCode, makeToken } from "./room-code";
 import * as rules from "./room-state";
+import { claimSeat, type SeatRequest } from "./seat-claim";
 
 /** Tries before giving up on finding an unused room code. */
 const CODE_ATTEMPTS = 20;
@@ -70,11 +71,11 @@ export class RoomOps {
     });
   }
 
-  joinSeat(code: string, token: string | undefined, conn: string) {
+  joinSeat(code: string, request: SeatRequest, conn: string) {
     const now = this.now();
     const newToken = makeToken();
     return this.store.update(code, (room) => {
-      const { room: next, claim } = rules.claimSeat(room, token, conn, newToken, now);
+      const { room: next, claim } = claimSeat(room, request, conn, newToken, now);
       return {
         room: claim.ok ? next : null,
         result: { claim, hostHere: room.hostConn !== null, game: room.game, seats: room.seats.length },

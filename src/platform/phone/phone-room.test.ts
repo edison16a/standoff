@@ -58,7 +58,7 @@ class FakeSocket {
 }
 
 const last = () => FakeSocket.all.at(-1)!;
-const joined = (code: string, game: string): ServerEnvelope => ({ type: "phone:joined", code, game, seats: 2, seat: 1, token: "t".repeat(20), hostHere: true });
+const joined = (code: string, game: string, name = "Player 1"): ServerEnvelope => ({ type: "phone:joined", code, game, seats: 2, seat: 1, token: "t".repeat(20), hostHere: true, name });
 
 beforeEach(() => {
   FakeSocket.all = [];
@@ -205,5 +205,12 @@ describe("PhoneApp", () => {
     await act(async () => undefined);
     expect(text()).toContain("The game did not load");
     expect(button("Try again")).toBeDefined();
+  });
+
+  it("moves to the player's own address once seated, without leaving the page", async () => {
+    show("GGGG");
+    await joinWith(joined("GGGG", "tiny", "Mary Jo"));
+    expect(window.location.pathname).toBe("/play/GGGG/Mary%20Jo");
+    expect(FakeSocket.all).toHaveLength(1);
   });
 });

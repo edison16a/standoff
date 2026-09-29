@@ -1,7 +1,7 @@
 import { createStore, type StoreApi } from "zustand/vanilla";
 import type { Player } from "@/platform/games/game-api";
 import type { SocketStatus } from "@/platform/net/socket-client";
-import type { JoinErrorReason } from "@/platform/protocol";
+import type { JoinErrorReason, NameClash } from "@/platform/protocol";
 
 /** Where the phone is in joining a room. */
 export type PhoneStage = "name" | "joining" | "playing" | "error";
@@ -10,7 +10,7 @@ export type PhoneStage = "name" | "joining" | "playing" | "error";
  * `replaced` means this seat was taken over by the same page in another
  * tab, and `load` that the game's own code would not load.
  */
-export type PhoneError = JoinErrorReason | "replaced" | "load";
+export type PhoneError = Exclude<JoinErrorReason, NameClash> | "replaced" | "load";
 
 /**
  * What the platform's phone screens render. Each game keeps its own store
@@ -29,6 +29,8 @@ export interface PhoneState {
   players: Player[];
   /** The new room's code, once the host remade its lobby. The page follows it. */
   movedTo: string | null;
+  /** Why the name screen is back: the name is in use, or its player dropped and can reconnect. */
+  clash: { reason: NameClash; name: string } | null;
 }
 
 /**
@@ -46,5 +48,6 @@ export function createPhoneStore(): StoreApi<PhoneState> {
     hostAway: false,
     players: [],
     movedTo: null,
+    clash: null,
   }));
 }
