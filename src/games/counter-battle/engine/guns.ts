@@ -1,5 +1,5 @@
 /**
- * The four guns. Each trades damage, speed and handling differently, and
+ * The four paintball markers. Each trades damage, speed and handling differently, and
  * each makes its fighter play a different game: the rifle and sniper hold
  * long lanes, the SMG roams mid range, the shotgun flanks in close.
  */
@@ -50,7 +50,7 @@ export interface GunSpec {
 export const GUNS: Record<GunId, GunSpec> = {
   rifle: {
     id: "rifle",
-    name: "Assault Rifle",
+    name: "Marker Rifle",
     blurb: "Steady and accurate. Holds the long lanes.",
     damage: 14,
     pellets: 1,
@@ -69,8 +69,8 @@ export const GUNS: Record<GunId, GunSpec> = {
   },
   shotgun: {
     id: "shotgun",
-    name: "Shotgun",
-    blurb: "Nine pellets a shot. Flanks in and ends fights up close.",
+    name: "Scatter Pump",
+    blurb: "Nine small balls of paint a shot. Flanks in and ends fights up close.",
     damage: 12,
     pellets: 9,
     rate: 1.3,
@@ -88,8 +88,8 @@ export const GUNS: Record<GunId, GunSpec> = {
   },
   smg: {
     id: "smg",
-    name: "SMG",
-    blurb: "Sprays fast and moves the most. Deadly at mid range.",
+    name: "Speedball",
+    blurb: "Sprays paint fast and moves the most. Deadly at mid range.",
     damage: 10,
     pellets: 1,
     rate: 13,
@@ -107,8 +107,8 @@ export const GUNS: Record<GunId, GunSpec> = {
   },
   sniper: {
     id: "sniper",
-    name: "Sniper",
-    blurb: "One shot to the head ends it. Slow bolt, huge kick.",
+    name: "Scope Marker",
+    blurb: "One shot to the head ends it. Slow bolt, big kick.",
     damage: 64,
     pellets: 1,
     rate: 0.8,

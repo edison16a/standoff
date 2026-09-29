@@ -38,7 +38,7 @@ export class FighterView {
     const team = TEAMS[f.team];
     this.model = buildCharacter(f.character, { team: team.color, dark: team.dark, player: label.color });
     this.gun = buildGun(f.gun.id, team.color);
-    this.shell = new THREE.Mesh(paint(tubeZ(0.011, 0.011, 0.065, 8), "#b3261e", { rot: [Math.PI / 2, 0, 0], at: [0, -0.07, 0.03] }), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5 }));
+    this.shell = new THREE.Mesh(paint(tubeZ(0.011, 0.011, 0.065, 8), team.color, { rot: [Math.PI / 2, 0, 0], at: [0, -0.07, 0.03] }), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5 }));
     this.animator = new Animator(this.model.rig, this.gun, f.character, id * 7 + 3, this.shell);
     this.tag = new NameTag(label.name, label.color, team.color);
     scene.add(this.model.rig.root, this.tag.group);

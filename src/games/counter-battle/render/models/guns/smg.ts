@@ -1,50 +1,50 @@
 import * as THREE from "three";
-import { box, cyl, paint, roundBox, rod } from "../../geo";
+import { box, cyl, paint, roundBox, shade } from "../../geo";
 import { GRIP_R, GunPiece, handFrame, marker, tubeZ, type GunModel } from "./gun-kit";
+import { airTank, paintMag, portedBarrel } from "./paint-parts";
 
-const BLACK = "#1b1d21";
-const GREY = "#3a3e46";
+const BODY = "#e8ebf0";
+const DARK = "#1e2127";
 
 /**
- * The SMG: a stubby receiver, a long ventilated shroud over the barrel, a
- * vertical foregrip, a wire stock folded out and a straight magazine with
- * a team coloured base.
+ * The speedball marker: a short, bright tournament marker that sprays
+ * fast. A white body with milled pockets in the team colour, a short
+ * vented barrel, a vertical foregrip, a stubby tank for a stock and a
+ * straight magazine of paint.
  */
 export function buildSmg(accent: string): GunModel {
   const root = new THREE.Group();
   const body = new GunPiece();
-  body.add("poly", paint(roundBox(0.05, 0.085, 0.25, 0.012), GREY, { at: [0, 0.06, 0.03] }));
-  body.add("metal", paint(box(0.026, 0.01, 0.2), BLACK, { at: [0, 0.108, 0.04] }));
-  body.add("metal", paint(tubeZ(0.022, 0.022, 0.2, 16), BLACK, { at: [0, 0.07, 0.25] }));
-  for (let z = 0.18; z < 0.34; z += 0.03) body.add("metal", paint(box(0.046, 0.008, 0.01), "#0b0c0e", { at: [0, 0.07, z] }));
-  body.add("metal", paint(tubeZ(0.012, 0.012, 0.03), BLACK, { at: [0, 0.07, 0.36] }));
-  // Grip, trigger guard, and the vertical foregrip.
-  body.add("poly", paint(roundBox(0.03, 0.095, 0.04, 0.01), BLACK, { at: [0, -0.02, -0.03], rot: [0.3, 0, 0] }));
-  body.add("metal", paint(box(0.008, 0.006, 0.06), BLACK, { at: [0, 0.015, 0.02] }));
-  body.add("poly", paint(cyl(0.017, 0.015, 0.1, 12), BLACK, { at: [0, -0.02, 0.21] }));
-  // The folding wire stock and its pad.
-  for (const x of [-0.018, 0.018]) body.add("metal", rod([x, 0.08, -0.08], [x, 0.06, -0.28], 0.005, BLACK, 6));
-  body.add("metal", rod([-0.018, 0.02, -0.28], [0.018, 0.02, -0.28], 0.005, BLACK, 6));
-  body.add("poly", paint(roundBox(0.04, 0.09, 0.02, 0.008), BLACK, { at: [0, 0.05, -0.29] }));
-  body.add("poly", paint(box(0.052, 0.014, 0.08), accent, { at: [0, 0.06, -0.01] }));
+  body.add("metal", paint(roundBox(0.05, 0.086, 0.25, 0.016), BODY, { at: [0, 0.06, 0.03] }));
+  for (const z of [-0.04, 0.02, 0.08]) for (const x of [-1, 1]) body.add("metal", paint(roundBox(0.004, 0.034, 0.04, 0.002), accent, { at: [x * 0.025, 0.065, z] }));
+  body.add("metal", paint(box(0.026, 0.01, 0.2), DARK, { at: [0, 0.108, 0.04] }));
+  portedBarrel(body, 0.15, 0.37, 0.07, 0.016, DARK);
+  // Grip, trigger guard and the vertical foregrip.
+  body.add("poly", paint(roundBox(0.03, 0.095, 0.04, 0.01), DARK, { at: [0, -0.02, -0.03], rot: [0.3, 0, 0] }));
+  body.add("metal", paint(box(0.008, 0.006, 0.06), DARK, { at: [0, 0.015, 0.02] }));
+  body.add("metal", paint(box(0.005, 0.022, 0.012), accent, { at: [0, 0.028, 0.012], rot: [0.2, 0, 0] }));
+  body.add("poly", paint(cyl(0.017, 0.015, 0.1, 12), DARK, { at: [0, -0.02, 0.21] }));
+  // A short tank for a stock, with a small pad.
+  airTank(body, -0.1, -0.26, 0.05, 0.03, shade(accent, -0.25));
+  body.add("poly", paint(roundBox(0.044, 0.09, 0.02, 0.008), DARK, { at: [0, 0.05, -0.29] }));
   // A small holographic sight.
-  body.add("metal", paint(roundBox(0.03, 0.03, 0.05, 0.006), BLACK, { at: [0, 0.128, 0.05] }));
+  body.add("metal", paint(roundBox(0.03, 0.03, 0.05, 0.006), DARK, { at: [0, 0.128, 0.05] }));
   body.add("glass", paint(box(0.024, 0.022, 0.002), "#3a1010", { at: [0, 0.132, 0.076] }));
+  body.add("metal", paint(tubeZ(0.006, 0.006, 0.03), accent, { at: [0.03, 0.09, -0.06] }));
   const geos = body.build(root);
 
   const mag = new THREE.Group();
   const m = new GunPiece();
-  m.add("metal", paint(box(0.024, 0.19, 0.036), BLACK, { at: [0, -0.095, 0], rot: [-0.08, 0, 0] }));
-  m.add("poly", paint(box(0.03, 0.014, 0.042), accent, { at: [0, -0.19, 0.008], rot: [-0.08, 0, 0] }));
+  paintMag(m, 0.19, 0.046, accent, -0.08);
   geos.push(...m.build(mag));
   mag.position.set(0, 0.03, 0.08);
   root.add(mag);
 
   const bolt = new THREE.Group();
-  geos.push(...new GunPiece().add("metal", paint(box(0.012, 0.012, 0.03), GREY, { at: [0.03, 0.085, 0.14] })).build(bolt));
+  geos.push(...new GunPiece().add("metal", paint(box(0.012, 0.012, 0.03), accent, { at: [0.03, 0.085, 0.14] })).build(bolt));
   root.add(bolt);
 
-  const muzzle = marker("muzzle", 0, 0.07, 0.38);
+  const muzzle = marker("muzzle", 0, 0.07, 0.375);
   root.add(muzzle);
   return {
     root,
