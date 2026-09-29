@@ -18,8 +18,7 @@ type Mode = "settings" | "admin";
 /**
  * The gear in the top right tools. The panel is drawn in a portal with a
  * fixed position because the tools capsule clips anything that spills out
- * of it. In full screen it goes inside the full screen element, since
- * anything outside that element is hidden.
+ * of it. Full screen covers the whole page, so the body is always shown.
  *
  * Three quick taps open the hidden admin panel instead. A single tap
  * still opens settings straight away, so nobody waits on the count.
@@ -91,7 +90,7 @@ export function SettingsButton() {
           >
             {mode === "admin" ? <AdminPanel /> : <SettingsPanel />}
           </div>,
-          document.fullscreenElement ?? document.body,
+          document.body,
         )}
       <FrameMeterBadge />
     </>

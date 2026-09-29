@@ -33,8 +33,12 @@ function Badge() {
   }, []);
 
   // Anything outside the full screen element is hidden, so follow it there.
+  // When the whole page is full screen the body is inside it and stays put.
   useEffect(() => {
-    const place = () => setTarget(document.fullscreenElement ?? document.body);
+    const place = () => {
+      const full = document.fullscreenElement;
+      setTarget(full && full !== document.documentElement ? full : document.body);
+    };
     place();
     document.addEventListener("fullscreenchange", place);
     return () => document.removeEventListener("fullscreenchange", place);

@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import { FullscreenButton } from "@/components/ui/FullscreenButton";
 import { GitHubButton } from "@/components/ui/GitHubButton";
 import { HomeLink } from "@/components/ui/HomeLink";
 import { Icon } from "@/components/ui/Icon";
@@ -95,6 +96,7 @@ export function Home() {
         <div className="home__tools">
           <SettingsButton />
           <ThemeToggle />
+          <FullscreenButton />
           <GitHubButton />
         </div>
       </header>
