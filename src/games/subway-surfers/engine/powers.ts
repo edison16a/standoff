@@ -1,3 +1,4 @@
+import { TRAIN } from "./tuning";
 import type { PowerKind } from "./types";
 
 /** How long each power up lasts, in seconds. The hoverboard also ends when it saves you. */
@@ -19,6 +20,9 @@ export const POWER_NAMES: Record<PowerKind, string> = {
 
 /** The jetpack's cruising height, above every train and under the tunnel roofs. */
 export const JETPACK_HEIGHT = 7.2;
+
+/** In its last moments the jetpack eases down to just over the roofs, so the drop to land is short and soft. */
+export const DESCENT = { seconds: 0.8, height: TRAIN.height + 0.4 };
 
 /** The magnet pulls coins in from every lane, from just behind to this far ahead. */
 export const MAGNET_AHEAD = 14;
@@ -65,4 +69,10 @@ export class Powers {
   active(): PowerKind[] {
     return [...this.left.keys()];
   }
+}
+
+/** How high a jetpack holds the runner now: cruising, or easing down as it runs out. Null on foot. */
+export function flightHeight(powers: Powers): number | null {
+  if (!powers.has("jetpack")) return null;
+  return powers.remaining("jetpack") > DESCENT.seconds ? JETPACK_HEIGHT : DESCENT.height;
 }

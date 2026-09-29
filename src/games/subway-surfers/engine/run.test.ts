@@ -114,6 +114,16 @@ describe("a run", () => {
     expect(run.coins).toBeGreaterThanOrEqual(4);
   });
 
+  it("eases down to just over the roofs as the jetpack runs out", () => {
+    const run = yard();
+    give(run, "jetpack");
+    go(run, POWER_SECONDS.jetpack - 0.5);
+    expect(run.runner.y).toBeGreaterThan(JETPACK_HEIGHT - 0.5);
+    go(run, 0.45);
+    expect(run.runner.y).toBeLessThan(JETPACK_HEIGHT - 1.5);
+    expect(run.runner.y).toBeGreaterThan(TRAIN.height);
+  });
+
   it("raises the multiplier every stretch of scenery", () => {
     const run = new Run(3);
     run.runner.distance = ZONE_LENGTH - 1;

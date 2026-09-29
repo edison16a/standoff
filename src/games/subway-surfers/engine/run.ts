@@ -3,8 +3,8 @@ import { collectCoins, collectPickup } from "./collect";
 import { Course } from "./course";
 import type { CrashCause, RunEvent } from "./events";
 import { startBurst } from "./motion";
-import { JETPACK_HEIGHT, Powers } from "./powers";
-import { newRunner, stepRunner, type Contact, type RunnerInput, type RunnerState } from "./runner";
+import { flightHeight, JETPACK_HEIGHT, Powers } from "./powers";
+import { newRunner, stepRunner, type Abilities, type Contact, type RunnerInput, type RunnerState } from "./runner";
 import { COIN, JUMP, laneX, MAX_LEVEL, speedAt, STEP_S, TRAIN, ZONE_LENGTH, type Lane } from "./tuning";
 import { frontAt, type Obstacle } from "./types";
 
@@ -17,6 +17,8 @@ export interface RunOptions {
 }
 
 const PRACTICE_SPEED = 5;
+/** Seconds of passing through things after landing from a jetpack: a person on camera needs about this to see what they landed among and move. */
+const LANDING_GHOST_S = 1;
 
 /**
  * One player's endless run: their runner, their copy of the yard, power
@@ -68,6 +70,11 @@ export class Run {
     return this.level * (this.powers.has("double") ? 2 : 1);
   }
 
+  /** What the runner can do at a speed: how high they jump, and how high a jetpack holds them. */
+  abilities(speed: number): Abilities {
+    return { speed, jumpHeight: this.powers.has("boots") ? JUMP.bootsHeight : JUMP.height, fly: flightHeight(this.powers) };
+  }
+
   /** Where the player wants to be, and the moves they just made. Moves wait for the next step. */
   input(lane: Lane, moves: { jump?: boolean; duck?: boolean; ducking?: boolean } = {}): void {
     this.pending.lane = lane;
@@ -104,8 +111,7 @@ export class Run {
     const before = s.distance;
     this.course.ensure(s.distance);
     this.course.near(s.distance, 14, this.near);
-    const jetpack = this.powers.has("jetpack");
-    const ability = { speed: this.speed, jumpHeight: this.powers.has("boots") ? JUMP.bootsHeight : JUMP.height, fly: jetpack ? JETPACK_HEIGHT : null };
+    const ability = this.abilities(this.speed);
     const input = this.pending;
     const result = stepRunner(s, input, this.near, ability, dt);
     input.jump = false;
@@ -116,8 +122,8 @@ export class Run {
     if (result.laneFrom !== null) this.emit({ type: "lane", from: result.laneFrom, to: s.lane });
     if (result.landed !== null) {
       this.emit({ type: "land", speed: result.landed, roof: s.y > 1 });
-      // Coming down from a jetpack: a moment more of passing through, then solid again.
-      if (s.ghost > 0.4) s.ghost = 0.4;
+      // Coming down from a jetpack lands anywhere, so passing through lasts long enough for one move.
+      if (s.ghost > LANDING_GHOST_S) s.ghost = LANDING_GHOST_S;
     }
     if (result.contact) this.onContact(result.contact);
     if (this.crashed) return;

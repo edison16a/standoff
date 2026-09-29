@@ -1,9 +1,8 @@
 import { touchesCoin } from "./collect";
 import { Hands, type Action } from "./hands";
-import { JETPACK_HEIGHT } from "./powers";
 import { stepRunner, type Abilities, type RunnerInput, type RunnerState } from "./runner";
 import type { Run } from "./run";
-import { JUMP, LANES, laneX, STEP_S, type Lane } from "./tuning";
+import { LANES, laneX, STEP_S, type Lane } from "./tuning";
 import type { Coin, Obstacle } from "./types";
 
 interface Plan {
@@ -84,7 +83,7 @@ export class Bot {
   }
 
   private ability(run: Run, s: RunnerState): Abilities {
-    return { speed: run.paceAt(s.distance), jumpHeight: run.powers.has("boots") ? JUMP.bootsHeight : JUMP.height, fly: run.powers.has("jetpack") ? JETPACK_HEIGHT : null };
+    return run.abilities(run.paceAt(s.distance));
   }
 
   private think(run: Run, s: RunnerState, single = false): Plan {

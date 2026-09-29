@@ -95,6 +95,9 @@ export class RunnerView {
     const flying = !!powers?.has("jetpack") && !run?.crashed;
     this.board.visible = board;
     this.jetpack.visible = flying;
+    // Safe for a moment after a save or a flight: the body blinks, the way the real game shows it.
+    const safe = !!s && s.ghost > 0 && !flying && !run?.crashed;
+    this.rig.root.visible = !safe || Math.floor(time * 16) % 2 === 0;
     for (const glow of this.boots) glow.visible = !!powers?.has("boots");
     const flame = this.jetpack.getObjectByName("flame");
     if (flame) flame.scale.set(1, 0.8 + 0.4 * Math.abs(Math.sin(time * 40)), 1);
