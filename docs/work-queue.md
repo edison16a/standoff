@@ -15,12 +15,12 @@ The running list of what is being built, so work can pick up again after a break
 | Work | Workflow | State |
 | --- | --- | --- |
 | **Room reliability (top priority):** find why rooms fail about every other time and fix the cause, a host watchdog that checks the room like a phone would and fully remakes it when broken, the QR code hidden until the room passes its check, and a Regenerate room button right under the QR code | wf_3938ab23-6cc | four investigations (live site repro, local multi instance repro, client audit, relay audit), two designs and a judge, one build, then stress, code and production reviews with fix rounds |
-| Batch C and D, finishing what the restart interrupted, in the same worktrees, two at a time | wf_9713e4a2-c2a | Basketball part 2, then Football 3v3 steps 2 and 3, each reviewed |
+| Basketball 3v3 part 2 review, Football 3v3 step 3 then review | wf_ad70b8e4-601 | two chains in their existing worktrees |
 | Batch E part 2: Soccer World Cup trophy scene and builds instead of stars; winner scenes for Blade Clash, Paintball Battle and Cube Game | wf_60afdf28-2d3 | build then review each |
 
 **Room root cause, found and reproduced on the live site:** production has no shared Redis store (every room:created says sharedRooms:false). Rooms live in one Vercel instance's memory, a game's own traffic makes Vercel add a second instance within about 1.5 s, and then joins, POSTs and hand overs land on an instance without the room: "Room not found". Every deploy to main also wipes open rooms. **Owner action:** add a Redis store to the Vercel project (Storage, Create Database, for example Upstash for Redis), connect it to Production, redeploy. The code reads REDIS_URL, KV_URL or UPSTASH_REDIS_URL. Keep deploys to main batched so they strand fewer rooms.
 
-A resume after the container restart went wrong: with a changed script, finished steps ran again inside other builds' worktrees. It was stopped, every branch was put back to its state before the resume, and the duplicate work was kept on `salvage/*` branches. Lesson: resume a workflow only with its script unchanged.
+A resume after the container restart went wrong: with a changed script, finished steps ran again inside other builds' worktrees. It was stopped, every branch was put back to its state before the resume, and the duplicate work was kept on `salvage/*` branches. Lesson: resume a workflow only with its script unchanged, and never resume one whose agents are started by a concurrency limiter (their order changes, so the cache misses and finished steps run again). After the second restart that workflow was stopped and replaced by a small one for what was left.
 
 ## Queue, in order
 
