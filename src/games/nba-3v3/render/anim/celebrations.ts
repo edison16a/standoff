@@ -11,7 +11,11 @@ export function celebratePose(style: Celebration, t: number): Pose {
   const beat = Math.sin(t * 9);
   const slow = Math.sin(t * 4);
   const patch: Record<Celebration, PosePatch> = {
-    night: { armLRaise: 1.9, armRRaise: 1.9, armLSpread: -0.55, armRSpread: 0.65, elbowL: 2.4, elbowR: 2.3, neckZ: 0.45, neckX: 0.1, torsoZ: 0.1 },
+    // Both palms pressed together under the right cheek, the head laid on them.
+    night: {
+      armLRaise: 1.66, armLSpread: -1.17, armLTwist: -0.85, elbowL: 1.94, wristL: 0.15,
+      armRRaise: 0.9, armRSpread: 0.32, armRTwist: 0.26, elbowR: 2.65, wristR: 0.31, neckZ: 0.5, neckX: 0.12, torsoZ: 0.1,
+    },
     roar: { armLSpread: 1.25, armRSpread: 1.25, armLRaise: 0.3, armRRaise: 0.3, elbowL: 1.8 + beat * 0.15, elbowR: 1.8 + beat * 0.15, torsoX: -0.25, neckX: -0.5, hipY: -0.06, kneeL: 0.4, kneeR: 0.4 },
     flex: { armLRaise: 1.5, armRRaise: 1.5, armLSpread: 1.2, armRSpread: 1.2, elbowL: 2.3 + beat * 0.1, elbowR: 2.3 - beat * 0.1, torsoX: -0.1, neckX: -0.3, hipY: -0.05, legLSpread: 0.25, legRSpread: 0.25 },
     shrug: { armLRaise: 0.5, armRRaise: 0.5, armLSpread: 0.75, armRSpread: 0.75, elbowL: 1.3, elbowR: 1.3, armLTwist: -0.8, armRTwist: -0.8, neckZ: 0.3 + slow * 0.1, torsoX: -0.05 },

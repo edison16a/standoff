@@ -1,4 +1,6 @@
+import { cheerFor, startCheer } from "./celebrate";
 import { startDead } from "./check-up";
+import { settleShootingFoul } from "./foul-call";
 import { beyondArc, outOfBounds } from "./court";
 import { POCKET } from "./dribble-ball";
 import type { Match } from "./match";
@@ -75,8 +77,12 @@ export function scoreShot(m: Match): void {
     o.streak = 0;
   }
   m.emit({ type: "score", team: shot.team, points: shot.points, id: shooter.id, kind: shot.kind, outcome: shot.outcome, assist, streak: shooter.streak, dunk: shot.dunk });
-  shooter.action = shooter.action.kind === "none" ? { kind: "celebrate", t: 0, dur: 1.3 } : shooter.action;
-  if (!gameOver(m, shot.team)) startDead(m, shot.team === 0 ? 1 : 0);
+  // A big basket earns a gesture, played as soon as the feet are down (see `celebrate.ts`).
+  shooter.cheer = cheerFor(m, shot, shooter, m.pendingFoul?.victim === shooter.id);
+  startCheer(shooter, true);
+  if (gameOver(m, shot.team)) return;
+  // Fouled on the way up and it still went in: the basket counts and one more from the line.
+  if (!settleShootingFoul(m, shooter.id, true)) startDead(m, shot.team === 0 ? 1 : 0);
 }
 
 /**
@@ -98,6 +104,7 @@ function gameOver(m: Match, team: TeamId): boolean {
     m.phaseT = 0;
     m.winner = team;
     m.freeThrows = null;
+    m.pendingFoul = null;
     m.emit({ type: "win", team });
     return true;
   }
@@ -119,6 +126,7 @@ export function missShot(m: Match): void {
   if (shooter.onFire) m.emit({ type: "fireOut", id: shooter.id });
   shooter.onFire = false;
   m.emit({ type: "miss", id: shooter.id });
+  settleShootingFoul(m, shooter.id, false);
 }
 
 function turnover(m: Match, to: TeamId, reason: "clock" | "out"): void {
@@ -155,4 +163,17 @@ export function updateClock(m: Match, dt: number): void {
     const to: TeamId = last ? (last.team === 0 ? 1 : 0) : m.offence === 0 ? 1 : 0;
     turnover(m, to, "out");
   }
+}
+
+/** The count before the tip: each whole second once, then play is live. */
+export function updateCountdown(m: Match): void {
+  const shown = Math.ceil(RULES.countdown - m.phaseT);
+  if (shown > 0 && shown !== m.countShown) {
+    m.countShown = shown;
+    m.emit({ type: "countdown", count: shown });
+  }
+  if (shown > 0) return;
+  m.phase = "live";
+  m.phaseT = 0;
+  m.emit({ type: "go", team: m.offence });
 }

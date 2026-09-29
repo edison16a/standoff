@@ -57,3 +57,13 @@ export function StealIcon() {
     </svg>
   );
 }
+
+/** Guard: a defender's stance, arms wide, between the man and the hoop. */
+export function GuardIcon() {
+  return (
+    <svg className="nba-icon" viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="24" cy="10" r="5" fill="currentColor" />
+      <path d="M24 16v14M8 20l16 4 16-4M24 30l-8 12M24 30l8 12" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

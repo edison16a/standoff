@@ -1,12 +1,12 @@
 /**
- * The ten stars, in one place so the roster is easy to edit. Each is a
+ * The six stars, in one place so the roster is easy to edit. Each is a
  * stylised athlete, recognisable by build, skin tone, hair, beard and a
  * signature detail, never a photographic likeness. Stats run 1 to 10 and
  * follow each player's style: Ashby shoots, Varelas bullies, Delacroix
  * reaches everything.
  */
 
-export const CHARACTER_IDS = ["ashby", "whitlock", "crane", "varelas", "vukmir", "zupan", "fontaine", "mensah", "holloway", "delacroix"] as const;
+export const CHARACTER_IDS = ["ashby", "whitlock", "crane", "varelas", "zupan", "delacroix"] as const;
 export type CharacterId = (typeof CHARACTER_IDS)[number];
 
 export const DUNK_STYLES = ["scoop", "tomahawk", "reverse", "hammer", "rimhang", "flush", "cockback", "clutch", "spin360", "windmill"] as const;
@@ -98,14 +98,6 @@ export const CHARACTERS: Record<CharacterId, Character> = {
     look: { skin: "#4b2e1e", hair: "buzz", hairColor: "#120d0b", beard: "short", headband: null, sleeve: null, wristband: "#00471b", shoe: "#00471b", shoeAccent: "#eee1c6", sock: "#ffffff", mouthguard: false },
     dunk: "hammer", dunkName: "Two hand hammer", celebration: "flex",
   },
-  vukmir: {
-    id: "vukmir", name: "Stefan Vukmir", short: "Vukmir", number: 15, position: "Center",
-    blurb: "Soft touch, no look passes and a body nobody moves.",
-    stats: { speed: 4, shooting: 8, strength: 9 },
-    build: { height: 2.11, width: 1.2, bulk: 1.28, reach: 0.98 },
-    look: { skin: "#e8c3a2", hair: "short", hairColor: "#5a3b22", beard: "stubble", headband: null, sleeve: null, wristband: null, shoe: "#0e2240", shoeAccent: "#fec524", sock: "#ffffff", mouthguard: false },
-    dunk: "rimhang", dunkName: "Rim hang", celebration: "shrug",
-  },
   zupan: {
     id: "zupan", name: "Tomaz Zupan", short: "Zupan", number: 77, position: "Guard",
     blurb: "Step back threes and a strong frame that bumps you off.",
@@ -113,30 +105,6 @@ export const CHARACTERS: Record<CharacterId, Character> = {
     build: { height: 2.01, width: 1.1, bulk: 1.15, reach: 1.0 },
     look: { skin: "#ecc6a3", hair: "swept", hairColor: "#6a4527", beard: "short", headband: null, sleeve: null, wristband: null, shoe: "#1d1d1f", shoeAccent: "#38bdf8", sock: "#ffffff", mouthguard: false },
     dunk: "flush", dunkName: "One hand flush", celebration: "shimmy",
-  },
-  fontaine: {
-    id: "fontaine", name: "Andre Fontaine", short: "Fontaine", number: 2, position: "Guard",
-    blurb: "Silky footwork, a deadly midrange and quick hands.",
-    stats: { speed: 9, shooting: 9, strength: 5 },
-    build: { height: 1.98, width: 0.96, bulk: 0.86, reach: 1.04 },
-    look: { skin: "#6a432d", hair: "twists", hairColor: "#16100c", beard: "none", headband: null, sleeve: null, wristband: "#ffffff", shoe: "#f5f5f4", shoeAccent: "#ef3b24", sock: "#111111", mouthguard: false },
-    dunk: "cockback", dunkName: "Cock back slam", celebration: "wrist",
-  },
-  mensah: {
-    id: "mensah", name: "Kofi Mensah", short: "Mensah", number: 0, position: "Forward",
-    blurb: "A smooth scorer from anywhere with size on the wing.",
-    stats: { speed: 7, shooting: 8, strength: 7 },
-    build: { height: 2.03, width: 1.02, bulk: 0.98, reach: 1.02 },
-    look: { skin: "#7a4e34", hair: "short", hairColor: "#17110d", beard: "short", headband: null, sleeve: { side: 1, color: "#ffffff" }, wristband: null, shoe: "#007a33", shoeAccent: "#ffffff", sock: "#ffffff", mouthguard: false },
-    dunk: "clutch", dunkName: "Double clutch", celebration: "pound",
-  },
-  holloway: {
-    id: "holloway", name: "Darius Holloway", short: "Holloway", number: 5, position: "Guard",
-    blurb: "Explosive, fearless and always hunting a poster.",
-    stats: { speed: 9, shooting: 7, strength: 8 },
-    build: { height: 1.93, width: 1.1, bulk: 1.12, reach: 1.0 },
-    look: { skin: "#583924", hair: "waves", hairColor: "#110c09", beard: "goatee", headband: null, sleeve: null, wristband: "#78be20", shoe: "#0c2340", shoeAccent: "#78be20", sock: "#ffffff", mouthguard: false },
-    dunk: "spin360", dunkName: "Three sixty", celebration: "scream",
   },
   delacroix: {
     id: "delacroix", name: "Mathis Delacroix", short: "Delacroix", number: 1, position: "Center",

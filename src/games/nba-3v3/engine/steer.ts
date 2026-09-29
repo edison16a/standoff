@@ -14,13 +14,15 @@ export interface SteerResult {
 /**
  * Pushes on toward the speed the stick asks for with momentum. From a
  * standstill the first steps are explosive, then the push fades as top
- * speed nears, so full speed takes about half a second. Slowing and
+ * speed nears, so full speed takes most of a second. Slowing and
  * turning use the grip of the shoes, split into the part along the run
  * and the part across it, so a sprinter curves rather than snapping
  * round, and a hard cut plants the outside foot and bleeds speed first.
- * `push` scales the push (lower with the ball), `stop` the braking.
+ * `push` scales the push (lower with the ball and for heavy players),
+ * `stop` the braking, and `grip` the turning and braking together, which
+ * is lower for a heavy body and for a ball handler.
  */
-export function steer(a: Athlete, tx: number, tz: number, top: number, dt: number, push = 1, stop = 1): SteerResult {
+export function steer(a: Athlete, tx: number, tz: number, top: number, dt: number, push = 1, stop = 1, grip = 1): SteerResult {
   const speed = Math.hypot(a.vx, a.vz);
   const want = Math.hypot(tx, tz);
   const dvx = tx - a.vx;
@@ -42,10 +44,10 @@ export function steer(a: Athlete, tx: number, tz: number, top: number, dt: numbe
   const turn = want > 0.5 ? Math.acos(clamp((tx * ux + tz * uz) / want, -1, 1)) : 0;
   const planted = turn > CUT_ANGLE && speed > CUT_SPEED;
   if (planted) a.plant = MOVE.plantTime;
-  const grip = a.plant > 0 ? MOVE.plantGrip : MOVE.grip;
+  const hold = (a.plant > 0 ? MOVE.plantGrip : MOVE.grip) * grip;
   // Speeding up is the push; slowing down is the brakes, harder still with a foot planted.
-  const alongLimit = (along > 0 ? drive : Math.max(MOVE.brake, grip) * stop) * dt;
-  const acrossLimit = grip * stop * dt;
+  const alongLimit = (along > 0 ? drive : Math.max(MOVE.brake * grip, hold) * stop) * dt;
+  const acrossLimit = hold * stop * dt;
   const da = clamp(along, -alongLimit, alongLimit);
   const dc = clamp(across, -acrossLimit, acrossLimit);
   a.vx += ux * da - uz * dc;

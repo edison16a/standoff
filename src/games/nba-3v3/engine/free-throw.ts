@@ -2,7 +2,7 @@ import { charOf } from "./athlete";
 import { releaseSpread } from "./bot/shot-value";
 import { handTo } from "./check-plan";
 import { walkTo } from "./check-up";
-import { holdAtChest, returnToss, stepToss, type Toss } from "./check-toss";
+import { returnToss, type Toss } from "./check-toss";
 import { lineUp } from "./free-throw-plan";
 import type { Match } from "./match";
 import { gaussian } from "./rng";
@@ -12,13 +12,16 @@ import { CHECK, FREE_THROW as FT, RULES } from "./tuning";
 import type { Athlete } from "./types";
 import type { V2 } from "./vec";
 
+export { lineBouncing, stepFreeThrowBall } from "./free-throw-ball";
+
 /**
- * A foul and its two free throws. The whistle stops the clock and
- * everyone where they are; then the fouled player walks to the line
- * and the rest line up along the lane. Each shot uses the shot meter:
- * the player's own on their phone, or a computer's steady hand. The
- * first comes back to the shooter whatever happens. The second is
- * live: play restarts as it leaves the hand, so a miss is a rebound.
+ * The free throws after a foul. The whistle stops everyone where they
+ * are while the referee makes the call; then the fouled player walks to
+ * the line, the ball comes back to them, and the rest line up along the
+ * lane. Each shot uses the shot meter: the player's own on their phone,
+ * or a computer's steady hand. Every shot but the last comes back to
+ * the shooter. The last is live: play restarts as it leaves the hand,
+ * so a miss is anyone's rebound.
  */
 
 export type FreeThrowStage = "whistle" | "walk" | "set" | "shooting" | "result" | "return";
@@ -26,29 +29,30 @@ export type FreeThrowStage = "whistle" | "walk" | "set" | "shooting" | "result" 
 export interface FreeThrows {
   shooter: number;
   fouler: number;
-  /** Which of the two shots is next, or in the air. */
-  shot: 1 | 2;
+  /** Which shot is next, or in the air, from 1. */
+  shot: number;
+  /** How many there are: one after an and one, two, or three for a fouled three. */
+  shots: 1 | 2 | 3;
   stage: FreeThrowStage;
   /** Seconds into the stage. */
   t: number;
+  /** How long everyone holds still for the referee before walking. */
+  whistle: number;
   spots: Map<number, V2>;
   toss: Toss | null;
   /** How long a computer holds Shoot, in milliseconds, once it has started its shot. */
   botRelease: number | null;
 }
 
-/** The whistle: the ball dies in the fouled player's hands and the clock stops. */
-export function callFoul(m: Match, fouler: Athlete, victim: Athlete): void {
-  const attempt = fouler.action.kind === "steal" ? fouler.action.attempt : 0;
-  fouler.action = { kind: "none" };
-  if (victim.action.kind === "move") victim.action = { kind: "none" };
-  handTo(m, victim.id);
+/** Stops play for free throws. The ball finishes what it was doing until the walk to the line. */
+export function startFreeThrows(m: Match, fouler: Athlete, victim: Athlete, shots: 1 | 2 | 3, whistle: number): void {
+  for (const a of [fouler, victim]) if (a.action.kind === "steal" || a.action.kind === "move") a.action = { kind: "none" };
   // The fouled team restarts from the line, so there is nothing left to clear.
   m.needsClear = false;
+  m.offence = victim.team;
   m.phase = "freeThrow";
   m.phaseT = 0;
-  m.freeThrows = { shooter: victim.id, fouler: fouler.id, shot: 1, stage: "whistle", t: 0, spots: lineUp(m, victim), toss: null, botRelease: null };
-  m.emit({ type: "foul", id: fouler.id, victim: victim.id, attempt });
+  m.freeThrows = { shooter: victim.id, fouler: fouler.id, shot: 1, shots, stage: "whistle", t: 0, whistle, spots: lineUp(m, victim), toss: null, botRelease: null };
 }
 
 function stage(ft: FreeThrows, next: FreeThrowStage): void {
@@ -70,12 +74,17 @@ export function updateFreeThrows(m: Match, dt: number): void {
   }
   switch (ft.stage) {
     case "whistle":
-      if (ft.t >= FT.whistle) stage(ft, "walk");
-      return;
+      if (ft.t < ft.whistle) return;
+      m.foulCall = null;
+      // The ball comes back to the shooter from wherever the play left it.
+      if (m.ball.holder !== shooter.id) ft.toss = returnToss(m, shooter);
+      return stage(ft, "walk");
     case "walk":
-      if (!settled && ft.t < FT.maxWalk) return;
+      if ((!settled || ft.toss) && ft.t < FT.maxWalk) return;
       // Anyone still on the way is put on their spot, so a crowd in the lane never stalls the game.
       if (!settled) for (const a of m.athletes) placeOn(a, ft.spots.get(a.id)!);
+      if (m.ball.holder !== shooter.id) handTo(m, shooter.id);
+      ft.toss = null;
       return ready(m, ft);
     case "set":
       if (shooter.action.kind === "shoot") return stage(ft, "shooting");
@@ -100,19 +109,20 @@ function shooting(m: Match, ft: FreeThrows, shooter: Athlete): void {
   if (act.kind === "shoot" && !act.released && ft.botRelease !== null && act.t * 1000 >= ft.botRelease) releaseJumper(m, shooter, ft.botRelease);
   if (m.ball.mode !== "flight") return;
   ft.botRelease = null;
-  if (ft.shot === 2) return goLive(m);
+  if (ft.shot >= ft.shots) return goLive(m);
   stage(ft, "result");
 }
 
-function ready(m: Match, ft: FreeThrows): void {
+/** The shooter is set at the line with the ball. */
+export function ready(m: Match, ft: FreeThrows): void {
   stage(ft, "set");
-  m.emit({ type: "freeThrow", id: ft.shooter, n: ft.shot });
+  m.emit({ type: "freeThrow", id: ft.shooter, n: ft.shot, of: ft.shots });
 }
 
 function botShoot(m: Match, ft: FreeThrows, shooter: Athlete): void {
   const st = charOf(shooter).stats;
   startJumper(m, shooter, true);
-  ft.botRelease = GREEN_MS + gaussian(m.rng, releaseSpread(st.shooting) * 0.8);
+  ft.botRelease = GREEN_MS + gaussian(m.rng, releaseSpread(st.shooting) * 0.8 * m.bots.spread);
   stage(ft, "shooting");
 }
 
@@ -141,47 +151,4 @@ function placeOn(a: Athlete, spot: V2): void {
   a.z = spot.z;
   a.vx = a.vz = 0;
   if (a.action.kind !== "shoot") a.action = { kind: "none" };
-}
-
-/**
- * Moves the ball while the free throws own it: at the shooter's chest
- * before each shot, and tossed back after the first. Returns false when
- * the shot and its flight are left to the normal ball.
- */
-export function stepFreeThrowBall(m: Match, dt: number): boolean {
-  const ft = m.phase === "freeThrow" ? m.freeThrows : null;
-  if (!ft) return false;
-  if (ft.stage === "return" && ft.toss) {
-    if (stepToss(m, ft.toss, dt)) {
-      ft.toss = null;
-      ft.shot = 2;
-      m.emit({ type: "catch", id: ft.shooter });
-      ready(m, ft);
-    }
-    return true;
-  }
-  if (ft.stage === "shooting" || ft.stage === "result") return false;
-  if (lineBouncing(m)) bounceAtLine(m, ft);
-  else holdAtChest(m);
-  return true;
-}
-
-/** True while the shooter bounces the ball at the line, settling before the shot. */
-export function lineBouncing(m: Match): boolean {
-  const ft = m.phase === "freeThrow" ? m.freeThrows : null;
-  return !!ft && ft.stage === "set" && ft.t < FT.bounces && m.holder?.action.kind === "none";
-}
-
-/** Two easy bounces in front of the feet, the ball back in the hand as the routine ends. */
-function bounceAtLine(m: Match, ft: FreeThrows): void {
-  const a = m.athletes[ft.shooter]!;
-  const before = a.dribble;
-  a.dribble = ((ft.t / FT.bounces) * 2) % 1;
-  const h = charOf(a).build.height;
-  const drop = 1 - Math.abs(1 - 2 * a.dribble);
-  const side = 0.3 * a.dribbleSide;
-  const fwd = 0.3;
-  m.ball.pos = { x: a.x + Math.sin(a.yaw) * fwd - Math.cos(a.yaw) * side, y: 0.12 + (h * 0.44 - 0.12) * (1 - drop * drop), z: a.z + Math.cos(a.yaw) * fwd + Math.sin(a.yaw) * side };
-  m.ball.vel = { x: 0, y: 0, z: 0 };
-  if (before < 0.5 && a.dribble >= 0.5) m.emit({ type: "bounce", id: a.id, x: m.ball.pos.x, z: m.ball.pos.z, power: 0.45 });
 }

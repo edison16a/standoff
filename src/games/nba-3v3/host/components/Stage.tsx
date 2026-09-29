@@ -3,6 +3,7 @@ import { lazy, Suspense } from "react";
 import { useNbaStore } from "../host-store";
 import { Hud } from "./Hud";
 import { Lobby } from "./Lobby";
+import { ReplayBar } from "./ReplayBar";
 import { Results } from "./Results";
 
 // three.js and the models load after the room opens, so the game's own code arrives first.
@@ -15,13 +16,15 @@ const CourtCanvas = lazy(() => import("./CourtCanvas"));
  */
 export function Stage() {
   const phase = useNbaStore((state) => state.phase);
+  // A slow computer can take longer over the winners' moment than the results take to fade in.
+  const replayDue = useNbaStore((state) => state.replayDue);
   return (
     <div className="nba-stage">
       <Suspense fallback={null}>
         <CourtCanvas />
       </Suspense>
-      {phase === "lobby" ? <Lobby /> : <Hud />}
-      {phase === "over" && <Results />}
+      {phase === "lobby" ? <Lobby /> : phase === "replay" ? <ReplayBar /> : <Hud />}
+      {phase === "over" && !replayDue && <Results />}
     </div>
   );
 }

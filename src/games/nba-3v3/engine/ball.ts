@@ -40,6 +40,7 @@ function holdBall(m: Match, dt: number): void {
   const f = frame(a);
   const act = a.action;
   b.vel = { x: a.vx, y: 0, z: a.vz };
+  b.w.x = b.w.y = b.w.z = 0;
   if (act.kind === "shoot" || act.kind === "drive") {
     // Both hands bring it up: to the set point for a jumper, to full stretch at the rim.
     const lift = act.kind === "shoot" ? clamp(act.t / JUMPER.takeoff, 0, 1) : clamp(act.t / act.finish, 0, 1);
@@ -81,7 +82,10 @@ function flyBall(m: Match, dt: number): void {
   const current = idx === -1 ? f.segments.length - 1 : idx;
   while (b.flightSeg < current) {
     b.flightSeg++;
-    for (const e of f.segments[b.flightSeg]!.events) onFlightEvent(m, e);
+    const seg = f.segments[b.flightSeg]!;
+    // A shot flown on the physics carries its real spin, which changes at every touch of the iron or the glass.
+    if (seg.type === "track") b.w = { ...seg.spin };
+    for (const e of seg.events) onFlightEvent(m, e);
   }
   if (b.flightKind === "pass" && passCaught(m)) return;
   if (idx !== -1) return;
@@ -92,6 +96,7 @@ function flyBall(m: Match, dt: number): void {
   b.passTo = null;
   if (f.exit) {
     b.vel = { ...f.exit.v };
+    b.w = f.exit.spin ? { ...f.exit.spin } : { x: 0, y: 0, z: 0 };
     for (const e of f.exit.events) onFlightEvent(m, e);
   }
   if ((kind === "shot" || kind === "block") && b.shot && !b.shot.made) missShot(m);

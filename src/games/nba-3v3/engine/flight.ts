@@ -41,13 +41,28 @@ export interface OrbitSeg {
   events: FlightEvent[];
 }
 
-export type Segment = ArcSeg | OrbitSeg;
+/**
+ * A stretch of a shot flown on the real ball physics ahead of time
+ * (see `shot-trace.ts`): positions every `step` seconds, from one
+ * contact with the iron or the glass to the next, with the spin it has.
+ */
+export interface TrackSeg {
+  type: "track";
+  dur: number;
+  step: number;
+  /** x, y, z of each sample in turn, the first at the start of the segment. */
+  pts: number[];
+  spin: V3;
+  events: FlightEvent[];
+}
+
+export type Segment = ArcSeg | OrbitSeg | TrackSeg;
 
 export interface Flight {
   segments: Segment[];
   total: number;
-  /** The velocity the ball leaves with when the chain ends, and what happens at that instant. */
-  exit: { v: V3; events: FlightEvent[] } | null;
+  /** The velocity (and spin) the ball leaves with when the chain ends, and what happens at that instant. */
+  exit: { v: V3; spin?: V3; events: FlightEvent[] } | null;
 }
 
 export function flight(segments: Segment[], exit: Flight["exit"] = null): Flight {
@@ -82,6 +97,7 @@ const ease = (u: number) => 1 - (1 - u) * (1 - u);
 
 /** Where the ball is `s` seconds into a segment, and how fast it moves. */
 export function sampleSegment(seg: Segment, s: number, pos: V3, vel: V3): void {
+  if (seg.type === "track") return sampleTrack(seg, s, pos, vel);
   if (seg.type === "arc") {
     const g = GRAVITY * seg.g;
     pos.x = seg.p.x + seg.v.x * s;
@@ -105,6 +121,29 @@ export function sampleSegment(seg: Segment, s: number, pos: V3, vel: V3): void {
   vel.x = dr * c - r * sn * da;
   vel.y = (seg.y1 - seg.y0) / seg.dur;
   vel.z = dr * sn + r * c * da;
+}
+
+/** Between two recorded samples the ball moves in a straight line, which at sixty a second is smooth. */
+function sampleTrack(seg: TrackSeg, s: number, pos: V3, vel: V3): void {
+  const count = seg.pts.length / 3;
+  const f = Math.max(0, s / seg.step);
+  const i = Math.min(count - 2, Math.floor(f));
+  if (i < 0) {
+    pos.x = seg.pts[0]!;
+    pos.y = seg.pts[1]!;
+    pos.z = seg.pts[2]!;
+    vel.x = vel.y = vel.z = 0;
+    return;
+  }
+  const u = Math.min(1, f - i);
+  const p = seg.pts;
+  const j = i * 3;
+  vel.x = (p[j + 3]! - p[j]!) / seg.step;
+  vel.y = (p[j + 4]! - p[j + 1]!) / seg.step;
+  vel.z = (p[j + 5]! - p[j + 2]!) / seg.step;
+  pos.x = p[j]! + vel.x * seg.step * u;
+  pos.y = p[j + 1]! + vel.y * seg.step * u;
+  pos.z = p[j + 2]! + vel.z * seg.step * u;
 }
 
 /**

@@ -48,6 +48,12 @@ export class NbaPhone {
     this.send({ kind: "ready", ready });
   }
 
+  /** A vote to skip the replay of the winning basket. */
+  skipReplay(): void {
+    this.click();
+    this.send({ kind: "skip" });
+  }
+
   /** Streams the stick while the controller is on screen. */
   stream(on: boolean): void {
     this.pad.stream(on);
@@ -59,8 +65,9 @@ export class NbaPhone {
     store.setState({ flash: null, aimingSince: null });
   }
 
-  press(button: Button): void {
-    if (button === "shoot") {
+  /** A button down. Shoot only runs the meter when it shoots; on defence it is Guard, held with no meter. */
+  press(button: Button, meter = true): void {
+    if (button === "shoot" && meter) {
       this.shootAt = performance.now();
       store.setState({ aimingSince: this.shootAt });
     }

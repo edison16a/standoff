@@ -8,6 +8,8 @@ import { dist2 } from "../engine/vec";
 import { Arena } from "./arena/arena";
 import { AthleteView } from "./athlete-view";
 import { BallView } from "./ball-view";
+import { freeThrowShot } from "./free-throw-camera";
+import { Referee } from "./referee";
 import { Effects } from "./effects/effects";
 import { lineScene, pressureOn } from "./scene-read";
 import { TvCamera, type Shot } from "./tv-camera";
@@ -44,12 +46,14 @@ export class CourtRenderer {
   private readonly players = new THREE.Group();
   private readonly environment: THREE.Texture;
   private views: AthleteView[] = [];
+  private readonly referee: Referee;
   private match: Match | null = null;
   private intro: number | null = null;
   private time = 0;
   private height = 1;
   private readonly maxPixelRatio: number;
   private readonly pixel = new Uint8Array(4);
+  private readonly replayCam = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 50 };
 
   constructor(canvas: HTMLCanvasElement, quality: Quality = {}) {
     const { antialias = true, shadows = true, reflections = true, maxPixelRatio = 1.75 } = quality;
@@ -68,6 +72,7 @@ export class CourtRenderer {
     this.scene.fog = new THREE.FogExp2("#060812", 0.014);
     this.effects = new Effects(this.arena, this.tv);
     this.scene.add(this.arena.group, this.players, this.ball.mesh, this.effects.group);
+    this.referee = new Referee(this.bodyMat, this.players);
   }
 
   resize(width: number, height: number, dpr: number): void {
@@ -87,6 +92,18 @@ export class CourtRenderer {
     this.ball.reset();
     this.intro = intro ? 0 : null;
     this.tv.snap(this.shot(match));
+  }
+
+  /** Hands the camera to the replay (a position, a point to look at and a lens), or back to the broadcast camera with null. */
+  setReplayCamera(cam: { pos: { x: number; y: number; z: number }; look: { x: number; y: number; z: number }; fov: number } | null): void {
+    if (!cam) {
+      if (this.tv.fixed === this.replayCam) this.tv.fixed = null;
+      return;
+    }
+    this.replayCam.pos.set(cam.pos.x, cam.pos.y, cam.pos.z);
+    this.replayCam.look.set(cam.look.x, cam.look.y, cam.look.z);
+    this.replayCam.fov = cam.fov;
+    this.tv.fixed = this.replayCam;
   }
 
   onEvent(event: MatchEvent): void {
@@ -118,6 +135,7 @@ export class CourtRenderer {
       view.update(a, { holding: holder === a.id, chest, receiving: Math.max(0, incoming), guarding, pressure: holder === a.id ? pressure : 0, ...line, winner }, dt);
     }
     this.ball.update(b, holder !== null ? (this.views[holder] ?? null) : null, chest, dt);
+    this.referee.update(m, dt);
     if (this.intro !== null) {
       this.intro += dt;
       if (this.intro > 2.8) this.intro = null;
@@ -161,11 +179,12 @@ export class CourtRenderer {
       const side = m.athletes.filter((a: Athlete) => a.team === m.winner);
       winners = { x: side.reduce((s, a) => s + a.x, 0) / side.length, z: side.reduce((s, a) => s + a.z, 0) / side.length };
     }
-    return { focus: b.pos, dunker: dunker ? { x: dunker.x, z: dunker.z } : null, winners, intro: this.intro };
+    return { focus: b.pos, dunker: dunker ? { x: dunker.x, z: dunker.z } : null, winners, intro: this.intro, freeThrow: freeThrowShot(m) };
   }
 
   dispose(): void {
     for (const view of this.views) view.dispose(this.players);
+    this.referee.dispose();
     this.arena.dispose();
     this.ball.dispose();
     this.effects.dispose();

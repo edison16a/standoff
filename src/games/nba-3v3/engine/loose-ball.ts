@@ -1,11 +1,14 @@
+import { bounce, rimRestitution } from "./contact";
 import { BALL, BOARD, NET, RIM } from "./tuning";
 import { clamp, type V3 } from "./vec";
 
 /**
- * A loose ball under real physics: gravity, bounces off the floor, the
- * glass and the iron, and a drag through the net. It runs in small sub
- * steps, because at game speeds a ball could skip clean through the thin
- * rim in a single frame.
+ * A free ball under real physics: gravity, air drag and the lift of its
+ * spin, and bounces off the floor, the glass and the iron that trade
+ * sliding for spin (see `contact.ts`). The rim is a torus, a tube bent
+ * round the ring, so the ball meets it wherever it really would. Every
+ * shot is flown on this same physics, so the iron and the glass behave
+ * the same in a shot and in a scramble after it.
  */
 
 export type ContactKind = "floor" | "rim" | "board" | "through";
@@ -19,54 +22,85 @@ export interface Contact {
 export interface Body {
   pos: V3;
   vel: V3;
+  /** Angular velocity, radians per second about each axis. Left out, the ball has no spin. */
+  w?: V3;
 }
 
-const SUBSTEPS = 4;
+/** Small steps: a ball at game speeds could skip clean through the thin rim in a single frame. */
+const SUBSTEPS = 6;
 const TOUCH = BALL.radius + RIM.tube;
+const n = { x: 0, y: 0, z: 0 };
 
 export function stepLoose(b: Body, dt: number, contacts: Contact[]): void {
-  const h = dt / SUBSTEPS;
-  for (let i = 0; i < SUBSTEPS; i++) substep(b, h, contacts);
+  b.w ??= { x: 0, y: 0, z: 0 };
+  // Only near the hoop is there thin iron to skip through; out in the open two steps a frame are plenty.
+  const p = b.pos;
+  const near = p.y > 2 && Math.abs(p.x - RIM.x) < 1.6 && p.z < RIM.z + 1.6;
+  const steps = near ? SUBSTEPS : 2;
+  const h = dt / steps;
+  for (let i = 0; i < steps; i++) substep(b, b.w, h, contacts);
 }
 
-function substep(b: Body, h: number, contacts: Contact[]): void {
+function substep(b: Body, w: V3, h: number, contacts: Contact[]): void {
   const { pos, vel } = b;
   const wasAbove = pos.y > RIM.y;
-  vel.y -= BALL.gravity * h;
-  pos.x += vel.x * h;
-  pos.y += vel.y * h;
-  pos.z += vel.z * h;
+  airStep(pos, vel, w, h);
 
-  inNet(b, h);
-  rim(b, contacts);
-  board(b, contacts);
-  floor(b, h, contacts);
+  inNet(b, w, h);
+  rim(b, w, contacts);
+  board(b, w, contacts);
+  floor(b, w, h, contacts);
 
   const fromAxis = Math.hypot(pos.x - RIM.x, pos.z - RIM.z);
   if (wasAbove && pos.y <= RIM.y && vel.y < 0 && fromAxis < RIM.radius - BALL.radius * 0.5) contacts.push({ kind: "through", power: -vel.y });
 }
 
-function floor(b: Body, h: number, contacts: Contact[]): void {
+/**
+ * The flight through the air for `h` seconds: gravity, drag against the
+ * air, and the Magnus lift of the spin, which floats a backspun shot a
+ * touch. The position takes the half step of acceleration too, so a
+ * path comes out the same whatever the step size, which is what lets a
+ * shot be aimed in big steps and flown in small ones.
+ */
+export function airStep(pos: V3, vel: V3, w: V3, h: number): void {
+  const speed = Math.hypot(vel.x, vel.y, vel.z);
+  const drag = BALL.drag * speed;
+  const ax = BALL.magnus * (w.y * vel.z - w.z * vel.y) - drag * vel.x;
+  const ay = BALL.magnus * (w.z * vel.x - w.x * vel.z) - drag * vel.y - BALL.gravity;
+  const az = BALL.magnus * (w.x * vel.y - w.y * vel.x) - drag * vel.z;
+  pos.x += (vel.x + 0.5 * ax * h) * h;
+  pos.y += (vel.y + 0.5 * ay * h) * h;
+  pos.z += (vel.z + 0.5 * az * h) * h;
+  vel.x += ax * h;
+  vel.y += ay * h;
+  vel.z += az * h;
+}
+
+function floor(b: Body, w: V3, h: number, contacts: Contact[]): void {
   const { pos, vel } = b;
   if (pos.y > BALL.radius) return;
   pos.y = BALL.radius;
-  if (vel.y >= 0) return;
+  n.x = 0;
+  n.y = 1;
+  n.z = 0;
   const impact = -vel.y;
   if (impact > 0.35) {
-    vel.y = impact * BALL.floorBounce;
-    vel.x *= 0.88;
-    vel.z *= 0.88;
+    bounce(vel, w, n, BALL.radius, BALL.floorBounce, BALL.floorGrip);
     if (impact > 0.6) contacts.push({ kind: "floor", power: impact });
-  } else {
-    // Too slow to bounce: it rolls, losing speed to the floor.
-    vel.y = 0;
-    const keep = Math.pow(BALL.rollKeep, h);
-    vel.x *= keep;
-    vel.z *= keep;
+    return;
   }
+  // Too slow to bounce: it rolls without slipping, losing speed to the floor, and the spin follows the roll.
+  vel.y = Math.max(0, vel.y);
+  const keep = Math.pow(BALL.rollKeep, h);
+  vel.x *= keep;
+  vel.z *= keep;
+  w.x = vel.z / BALL.radius;
+  w.z = -vel.x / BALL.radius;
+  w.y *= keep;
 }
 
-function rim(b: Body, contacts: Contact[]): void {
+/** The ring as a torus: the nearest point on the tube's centre circle, and the ball kept a tube and a ball away from it. */
+function rim(b: Body, w: V3, contacts: Contact[]): void {
   const { pos, vel } = b;
   const hx = pos.x - RIM.x;
   const hz = pos.z - RIM.z;
@@ -79,22 +113,18 @@ function rim(b: Body, contacts: Contact[]): void {
   const dz = pos.z - qz;
   const d = Math.hypot(dx, dy, dz);
   if (d >= TOUCH || d < 1e-6) return;
-  const nx = dx / d;
-  const ny = dy / d;
-  const nz = dz / d;
-  pos.x = qx + nx * TOUCH;
-  pos.y = RIM.y + ny * TOUCH;
-  pos.z = qz + nz * TOUCH;
-  const vn = vel.x * nx + vel.y * ny + vel.z * nz;
-  if (vn >= 0) return;
-  const push = (1 + BALL.rimBounce) * vn;
-  vel.x = (vel.x - push * nx) * 0.94;
-  vel.y = (vel.y - push * ny) * 0.94;
-  vel.z = (vel.z - push * nz) * 0.94;
-  if (-vn > 0.4) contacts.push({ kind: "rim", power: -vn });
+  n.x = dx / d;
+  n.y = dy / d;
+  n.z = dz / d;
+  pos.x = qx + n.x * TOUCH;
+  pos.y = RIM.y + n.y * TOUCH;
+  pos.z = qz + n.z * TOUCH;
+  const vn = -(vel.x * n.x + vel.y * n.y + vel.z * n.z);
+  const hit = bounce(vel, w, n, BALL.radius, rimRestitution(BALL.rimBounce, vn), BALL.rimGrip);
+  if (hit && hit.impact > 0.4) contacts.push({ kind: "rim", power: hit.impact });
 }
 
-function board(b: Body, contacts: Contact[]): void {
+function board(b: Body, w: V3, contacts: Contact[]): void {
   const { pos, vel } = b;
   const cx = clamp(pos.x, RIM.x - BOARD.halfWidth, RIM.x + BOARD.halfWidth);
   const cy = clamp(pos.y, BOARD.bottom, BOARD.top);
@@ -104,23 +134,18 @@ function board(b: Body, contacts: Contact[]): void {
   const dz = pos.z - cz;
   const d = Math.hypot(dx, dy, dz);
   if (d >= BALL.radius || d < 1e-6) return;
-  const nx = dx / d;
-  const ny = dy / d;
-  const nz = dz / d;
-  pos.x = cx + nx * BALL.radius;
-  pos.y = cy + ny * BALL.radius;
-  pos.z = cz + nz * BALL.radius;
-  const vn = vel.x * nx + vel.y * ny + vel.z * nz;
-  if (vn >= 0) return;
-  const push = (1 + BALL.boardBounce) * vn;
-  vel.x -= push * nx;
-  vel.y -= push * ny;
-  vel.z -= push * nz;
-  if (-vn > 0.4) contacts.push({ kind: "board", power: -vn });
+  n.x = dx / d;
+  n.y = dy / d;
+  n.z = dz / d;
+  pos.x = cx + n.x * BALL.radius;
+  pos.y = cy + n.y * BALL.radius;
+  pos.z = cz + n.z * BALL.radius;
+  const hit = bounce(vel, w, n, BALL.radius, BALL.boardBounce, BALL.boardGrip);
+  if (hit && hit.impact > 0.4) contacts.push({ kind: "board", power: hit.impact });
 }
 
-/** Inside the net the cords slow the ball and steer it down the middle. */
-function inNet(b: Body, h: number): void {
+/** Inside the net the cords slow the ball, take its spin, and steer it down the middle. */
+function inNet(b: Body, w: V3, h: number): void {
   const { pos, vel } = b;
   if (pos.y > RIM.y || pos.y < RIM.y - NET.depth) return;
   const hx = pos.x - RIM.x;
@@ -130,12 +155,22 @@ function inNet(b: Body, h: number): void {
   if (hl > RIM.radius - BALL.radius * 0.4) return;
   const depth = (RIM.y - pos.y) / NET.depth;
   const room = RIM.radius * (1 - depth * 0.35) - BALL.radius * 0.6;
-  const keep = Math.pow(0.08, h);
+  // The cords soak up nearly all the sideways speed in the fraction of a second the ball spends in them.
+  const keep = Math.pow(0.002, h);
   vel.x *= keep;
   vel.z *= keep;
+  w.x *= keep;
+  w.y *= keep;
+  w.z *= keep;
   vel.y = Math.max(vel.y, -3.2);
   if (hl > room && hl > 1e-6) {
     pos.x = RIM.x + (hx / hl) * room;
     pos.z = RIM.z + (hz / hl) * room;
+    // The net wall stops the ball going any further out.
+    const out = (vel.x * hx + vel.z * hz) / hl;
+    if (out > 0) {
+      vel.x -= (out * hx) / hl;
+      vel.z -= (out * hz) / hl;
+    }
   }
 }

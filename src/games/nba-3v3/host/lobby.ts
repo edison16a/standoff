@@ -1,6 +1,8 @@
 import type { Entry } from "../engine/match";
 import type { TeamId } from "../engine/types";
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import { CHARACTER_IDS, type CharacterId } from "../roster";
+import { freeRole, nextRole, type Role } from "./roles";
 
 export const TEAM_SIZE = 3;
 
@@ -11,6 +13,8 @@ export interface SeatState {
   team: TeamId | null;
   /** When they were put on their team, so a swap moves the newest arrival. */
   placedAt: number;
+  /** The role the host gave them on their team: Guard, Wing or Big. */
+  role: Role;
 }
 
 /** One spot in a team column: a player, or a computer filling in. */
@@ -18,6 +22,7 @@ export interface Spot {
   team: TeamId;
   seat: number | null;
   character: CharacterId;
+  role: Role;
 }
 
 /**
@@ -33,12 +38,14 @@ export class Lobby {
   readonly seats = new Map<number, SeatState>();
   /** Whether computer players fill the empty spots. */
   bots = true;
+  /** How good the computer players are. */
+  level: BotLevel = DEFAULT_BOT_LEVEL;
   private clock = 0;
 
   private state(seat: number): SeatState {
     let s = this.seats.get(seat);
     if (!s) {
-      s = { connected: false, pick: null, ready: false, team: null, placedAt: 0 };
+      s = { connected: false, pick: null, ready: false, team: null, placedAt: 0, role: 0 };
       this.seats.set(seat, s);
     }
     return s;
@@ -111,6 +118,20 @@ export class Lobby {
     this.bots = on;
   }
 
+  setLevel(level: BotLevel): void {
+    this.level = level;
+  }
+
+  /** The host gives a player the next role; a teammate who had it takes theirs in exchange. */
+  cycleRole(seat: number): void {
+    const s = this.seats.get(seat);
+    if (!s || s.team === null) return;
+    const want = nextRole(s.role);
+    const other = this.members(s.team).find((o) => o !== seat && this.state(o).role === want);
+    if (other !== undefined) this.state(other).role = s.role;
+    s.role = want;
+  }
+
   /**
    * Why a game cannot start yet, or null when it can. With computer
    * players on, one person is enough; without them each team needs someone.
@@ -133,15 +154,17 @@ export class Lobby {
     const out: Spot[] = [];
     for (const team of [0, 1] as const) {
       const players = this.readySeats.filter((seat) => this.state(seat).team === team).slice(0, TEAM_SIZE);
-      for (const seat of players) out.push({ team, seat, character: this.state(seat).pick! });
-      if (!this.bots) continue;
-      for (let i = players.length; i < TEAM_SIZE; i++) out.push({ team, seat: null, character: spare.shift()! });
+      const side: Spot[] = players.map((seat) => ({ team, seat, character: this.state(seat).pick!, role: this.state(seat).role }));
+      if (this.bots) {
+        for (let i = players.length; i < TEAM_SIZE; i++) side.push({ team, seat: null, character: spare.shift()!, role: freeRole(side.map((s) => s.role)) });
+      }
+      out.push(...side.sort((a, b) => a.role - b.role));
     }
     return out;
   }
 
   entries(): Entry[] {
-    return this.spots().map((s) => ({ team: s.team, character: s.character, seat: s.seat }));
+    return this.spots().map((s) => ({ team: s.team, character: s.character, seat: s.seat, slot: s.role }));
   }
 
   private members(team: TeamId): number[] {
@@ -156,6 +179,8 @@ export class Lobby {
 
   private place(seat: number, team: TeamId): void {
     const s = this.state(seat);
+    // Joining a team takes the first role free there; the host can change it.
+    if (s.team !== team) s.role = freeRole(this.members(team).filter((o) => o !== seat).map((o) => this.state(o).role));
     s.team = team;
     s.placedAt = ++this.clock;
   }

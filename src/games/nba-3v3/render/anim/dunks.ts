@@ -35,22 +35,29 @@ export function dunkSpin(style: DunkStyle, t: number, d: DriveTiming): number {
 }
 
 /**
- * A dunk from gather to landing: a two foot gather, the style's flight,
- * the slam at the rim, a hang for those who hang, then the drop.
+ * A dunk from gather to landing: the last two steps, the ball pulled
+ * in, a deep load onto both feet with the arms swung down and back,
+ * the rise with the arms driving up, the style's flight, the slam at
+ * the rim, a hang for those who hang, then the drop.
  */
 export function dunkPose(style: DunkStyle, t: number, d: DriveTiming, base: Pose): Pose {
   const air = d.finish - d.takeoff;
   const hang = d.rimHang;
+  const g = d.takeoff;
   const keys: Key[] = [
-    [0, { legLLift: 0.6, kneeL: 0.6, legRLift: -0.2, kneeR: 0.8, hipY: -0.06, torsoX: 0.3, armLRaise: 1.0, armRRaise: 1.05, elbowL: 1.7, elbowR: 1.8, armLSpread: 0.25 }],
-    [d.takeoff * 0.85, { legLLift: 0.7, legRLift: 0.7, kneeL: 1.25, kneeR: 1.25, hipY: -0.2, torsoX: 0.4, armLRaise: 0.4, armRRaise: 0.45, elbowL: 0.6, elbowR: 0.6 }],
-    ...STYLES[style].map(([s, patch]) => [d.takeoff + s * air, patch] as const),
+    [0, { legRLift: 0.75, kneeR: 0.55, legLLift: -0.35, kneeL: 0.8, hipY: -0.06, torsoX: 0.3, armLRaise: 1.0, armRRaise: 1.05, elbowL: 1.7, elbowR: 1.8, armLSpread: 0.25 }],
+    [g * 0.4, { legRLift: 0.05, kneeR: 0.5, legLLift: 0.85, kneeL: 0.55, hipY: -0.1, torsoX: 0.32, armLRaise: 0.9, armRRaise: 0.95, elbowL: 1.8, elbowR: 1.8 }],
+    // The load: both feet down, hips low, the ball swung down past the knees to throw the arms up with.
+    [g * 0.85, { legLLift: 0.8, legRLift: 0.75, kneeL: 1.4, kneeR: 1.35, hipY: -0.24, torsoX: 0.5, armLRaise: 0.15, armRRaise: 0.2, elbowL: 0.45, elbowR: 0.45, armLSpread: 0.15, armRSpread: 0.15, neckX: -0.25 }],
+    [g + 0.02, { legLLift: -0.05, legRLift: 0.1, kneeL: 0.15, kneeR: 0.25, footL: 0.6, footR: 0.6, hipY: 0, torsoX: 0.05, armLRaise: 2.2, armRRaise: 2.2, elbowL: 0.9, elbowR: 0.9 }],
+    ...STYLES[style].map(([s, patch]) => [d.takeoff + Math.max(0.1, s) * air, patch] as const),
   ];
   if (hang > 0) {
-    // Hanging on the rim: arms up holding on, legs swinging under.
-    keys.push([d.finish + 0.08, { armLRaise: 2.95, armRRaise: 2.95, elbowL: 0.1, elbowR: 0.1, wristL: 0.9, wristR: 0.9, legLLift: 0.3, legRLift: 0.1, kneeL: 0.6, kneeR: 0.4, torsoX: -0.05 }]);
-    keys.push([d.finish + hang * 0.6, { legLLift: -0.1, legRLift: -0.2, kneeL: 0.3, kneeR: 0.2 }]);
-    keys.push([d.finish + hang, { legLLift: 0.3, legRLift: 0.2, kneeL: 0.5, kneeR: 0.4 }]);
+    // Hanging on the rim: arms straight up holding on, the body dropping a hand's length, legs swinging under and settling.
+    keys.push([d.finish + 0.1, { armLRaise: 3.0, armRRaise: 3.0, elbowL: 0.05, elbowR: 0.05, wristL: 0.9, wristR: 0.9, armLSpread: 0.22, armRSpread: 0.22, legLLift: 0.45, legRLift: 0.2, kneeL: 0.8, kneeR: 0.5, torsoX: -0.12, neckX: -0.15 }]);
+    keys.push([d.finish + hang * 0.45, { legLLift: -0.25, legRLift: -0.3, kneeL: 0.35, kneeR: 0.25, torsoX: 0.08 }]);
+    keys.push([d.finish + hang * 0.8, { legLLift: 0.15, legRLift: 0.05, kneeL: 0.45, kneeR: 0.35, torsoX: -0.02 }]);
+    keys.push([d.finish + hang, { legLLift: 0.3, legRLift: 0.2, kneeL: 0.5, kneeR: 0.4, armLRaise: 2.7, armRRaise: 2.7 }]);
   } else {
     keys.push([d.finish + 0.1, { torsoX: 0.2, legLLift: 0.35, legRLift: 0.35, kneeL: 0.6, kneeR: 0.6 }]);
   }

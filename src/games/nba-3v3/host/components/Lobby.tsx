@@ -1,15 +1,29 @@
 "use client";
 import { useState } from "react";
 import { Icon } from "@/components/ui/Icon";
+import { DifficultyPicker } from "@/games/kit/difficulty/DifficultyPicker";
 import { playerColor } from "@/games/kit/players";
 import type { TeamId } from "../../engine/types";
 import { CHARACTERS, TEAMS } from "../../roster";
 import { JerseyBadge } from "../../ui/JerseyBadge";
 import { useNbaStore, type SpotView } from "../host-store";
+import { ROLE_NAMES } from "../roles";
 import { BotsToggle, matchSize } from "./BotsToggle";
 import { useSession } from "./session-context";
 
-function SpotCard({ spot, onMove }: { spot: SpotView; onMove(seat: number): void }) {
+/** The role on a card. The host clicks a player's role to hand them the next one. */
+function RoleTag({ spot, onRole }: { spot: SpotView; onRole?(seat: number): void }) {
+  const name = ROLE_NAMES[spot.role];
+  if (!onRole || spot.seat === null) return <span className="nba-role nba-role--fixed">{name}</span>;
+  const seat = spot.seat;
+  return (
+    <button type="button" className="nba-role" aria-label={`${spot.name} plays ${name}. Change role`} onClick={() => onRole(seat)}>
+      {name}
+    </button>
+  );
+}
+
+function SpotCard({ spot, onMove, onRole }: { spot: SpotView; onMove(seat: number): void; onRole(seat: number): void }) {
   const c = CHARACTERS[spot.character];
   const human = spot.seat !== null;
   const style = human ? ({ "--player": playerColor(spot.seat!) } as React.CSSProperties) : undefined;
@@ -27,9 +41,16 @@ function SpotCard({ spot, onMove }: { spot: SpotView; onMove(seat: number): void
       )}
     </>
   );
-  if (!human) return <li className="nba-spot nba-spot--bot">{body}</li>;
+  if (!human)
+    return (
+      <li className="nba-spot nba-spot--bot">
+        {body}
+        <RoleTag spot={spot} />
+      </li>
+    );
   return (
     <li className="nba-spot nba-spot--human" style={style}>
+      <RoleTag spot={spot} onRole={onRole} />
       <button
         type="button"
         className="nba-spot__button"
@@ -44,7 +65,15 @@ function SpotCard({ spot, onMove }: { spot: SpotView; onMove(seat: number): void
   );
 }
 
-function TeamColumn({ team, spots, onDrop, onMove }: { team: TeamId; spots: SpotView[]; onDrop(seat: number, team: TeamId): void; onMove(seat: number): void }) {
+interface ColumnProps {
+  team: TeamId;
+  spots: SpotView[];
+  onDrop(seat: number, team: TeamId): void;
+  onMove(seat: number): void;
+  onRole(seat: number): void;
+}
+
+function TeamColumn({ team, spots, onDrop, onMove, onRole }: ColumnProps) {
   const [over, setOver] = useState(false);
   const t = TEAMS[team];
   return (
@@ -67,7 +96,7 @@ function TeamColumn({ team, spots, onDrop, onMove }: { team: TeamId; spots: Spot
       <h2 className="nba-team__name">{t.name}</h2>
       <ul className="nba-team__spots">
         {spots.map((spot, i) => (
-          <SpotCard key={spot.seat ?? `bot-${i}`} spot={spot} onMove={onMove} />
+          <SpotCard key={spot.seat ?? `bot-${i}`} spot={spot} onMove={onMove} onRole={onRole} />
         ))}
         {spots.length === 0 && <li className="nba-spot nba-spot--empty">Move a player here</li>}
       </ul>
@@ -79,13 +108,15 @@ function TeamColumn({ team, spots, onDrop, onMove }: { team: TeamId; spots: Spot
  * The lobby on the big screen: two team columns with everyone who is
  * ready, and computer players in the empty spots unless they are turned
  * off. Click a player to send them to the other side or drag them
- * across, then start.
+ * across, click a role to hand out Guard, Wing and Big, pick how good
+ * the computer is, then start.
  */
 export function Lobby() {
   const session = useSession();
   const spots = useNbaStore((state) => state.spots);
   const seats = useNbaStore((state) => state.seats);
   const bots = useNbaStore((state) => state.bots);
+  const level = useNbaStore((state) => state.level);
   const block = useNbaStore((state) => state.startBlock);
   const choosing = seats.filter((s) => s.connected && !s.ready);
   const humans = spots.filter((s) => s.seat !== null).length;
@@ -105,9 +136,13 @@ export function Lobby() {
         <p>{matchSize(bots, home.length, away.length)} Pick your star on your phone.</p>
       </header>
       <div className="nba-lobby__teams">
-        <TeamColumn team={0} spots={home} onDrop={(seat, team) => session.setTeam(seat, team)} onMove={move} />
+        <TeamColumn team={0} spots={home} onDrop={(seat, team) => session.setTeam(seat, team)} onMove={move} onRole={(seat) => session.cycleRole(seat)} />
         <span className="nba-lobby__vs">VS</span>
-        <TeamColumn team={1} spots={away} onDrop={(seat, team) => session.setTeam(seat, team)} onMove={move} />
+        <TeamColumn team={1} spots={away} onDrop={(seat, team) => session.setTeam(seat, team)} onMove={move} onRole={(seat) => session.cycleRole(seat)} />
+      </div>
+      <div className="nba-lobby__options">
+        <BotsToggle on={bots} onChange={(on) => session.setBots(on)} />
+        {bots && <DifficultyPicker level={level} onChange={(next) => session.setLevel(next)} />}
       </div>
       <footer className="nba-lobby__footer">
         <p className="nba-lobby__note">
@@ -117,9 +152,8 @@ export function Lobby() {
               ? "Scan the code to join. Up to six players."
               : block === "oneSided"
                 ? "With computer players off, each team needs a player."
-                : "Click a player to switch sides, or drag them across."}
+                : "Click a player to switch sides. Click a role to change it."}
         </p>
-        <BotsToggle on={bots} onChange={(on) => session.setBots(on)} />
         <button type="button" className="btn btn--lg nba-lobby__shuffle" disabled={humans < 2} onClick={() => session.shuffle()}>
           <Icon name="refresh" />
           Shuffle teams

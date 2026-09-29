@@ -66,8 +66,14 @@ export class Brains {
   think(dt: number): void {
     const m = this.m;
     const b = m.ball;
+    const tuning = m.bots;
     for (const a of m.athletes) {
       if (!a.auto) continue;
+      // Training: computer players stand still so people can practise against them.
+      if (!tuning.acts && a.seat === null) {
+        a.move = { x: 0, z: 0 };
+        continue;
+      }
       const s = this.state(a.id);
       if (b.mode === "loose" || (b.mode === "flight" && b.flightKind !== "pass")) {
         s.holdFor = 0;
@@ -80,6 +86,7 @@ export class Brains {
       } else {
         thinkDefence(m, a, s, this.manFor(a.id), dt);
       }
+      if (a.seat === null) a.move = { x: a.move.x * tuning.pace, z: a.move.z * tuning.pace };
     }
   }
 

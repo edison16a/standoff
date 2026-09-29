@@ -52,7 +52,8 @@ export class SoundDirector {
   }
 
   setPhase(phase: Phase): void {
-    if (phase === this.phase) return;
+    // The replay sits inside the end of the game: the winners' fanfare has played and the music carries on under it.
+    if (phase === this.phase || phase === "replay") return;
     this.phase = phase;
     if (phase === "lobby") {
       this.stopBeat();

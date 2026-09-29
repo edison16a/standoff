@@ -14,20 +14,36 @@ export const DRIBBLE_MOVES = ["stepback", "crossover", "spin", "hesitation", "be
 export type DribbleMove = (typeof DRIBBLE_MOVES)[number];
 
 /**
+ * How a layup is finished: off the fingers in front of the rim, a
+ * reverse under it on the far side, or through a defender's body.
+ */
+export const LAYUPS = ["finger", "reverse", "contact"] as const;
+export type LayupKind = (typeof LAYUPS)[number];
+
+/** The small gestures after a big basket: patting down a smaller man, the sleep sign, the shush, the flex. */
+export const GESTURES = ["tooSmall", "sleep", "shush", "flex"] as const;
+export type Gesture = (typeof GESTURES)[number];
+
+/**
  * What a player is busy doing. Only "none" and "pass" leave the legs
  * free. Every action carries its own clock `t`, in seconds, which the
  * animation reads, so the body and the ball always agree.
  */
 export type Action =
   | { kind: "none" }
-  /** A jumper, or a free throw (`free`), which is a set shot with no jump. */
-  | { kind: "shoot"; t: number; three: boolean; released: boolean; free: boolean }
+  /**
+   * A jumper, or a free throw (`free`), which is a set shot with no jump.
+   * `step` is the velocity of a stepback hop before the rise, when a
+   * defender was right on the shooter, or null for a straight up jumper.
+   */
+  | { kind: "shoot"; t: number; three: boolean; released: boolean; free: boolean; step: V2 | null }
   /**
    * A layup or a dunk. `takeoff`, `finish` (the ball leaves the hand or is
    * slammed) and `land` are times on `t`; a dunk hangs on the rim for
    * `rimHang` seconds after the slam, and `style` is the dunk thrown.
+   * `layup` is how a layup is finished, null for a dunk.
    */
-  | { kind: "drive"; t: number; dunk: boolean; style: DunkStyle | null; from: V2; to: V2; takeoff: number; finish: number; rimHang: number; land: number; peak: number; released: boolean }
+  | { kind: "drive"; t: number; dunk: boolean; style: DunkStyle | null; layup: LayupKind | null; from: V2; to: V2; takeoff: number; finish: number; rimHang: number; land: number; peak: number; released: boolean }
   | { kind: "pass"; t: number }
   /** A jump with the arms up: a crouch for `gather` seconds, then `air` seconds off the floor. */
   | { kind: "block"; t: number; peak: number; gather: number; air: number }
@@ -40,7 +56,8 @@ export type Action =
   /** A swipe at the ball of `victim`, the defender's `attempt`th on them this possession. */
   | { kind: "steal"; t: number; resolved: boolean; victim: number; attempt: number }
   | { kind: "stumble"; t: number; dur: number }
-  | { kind: "celebrate"; t: number; dur: number };
+  /** After a make: a gesture for a big basket, or the player's own celebration when `gesture` is null. */
+  | { kind: "celebrate"; t: number; dur: number; gesture: Gesture | null };
 
 export interface BoxScore {
   points: number;
@@ -74,8 +91,14 @@ export interface Athlete {
   y: number;
   /** Facing: 0 looks toward the camera, pi toward the hoop. */
   yaw: number;
-  /** Where the stick asks to go, in court space, length up to 1. */
+  /** Where the player is steered, in court space, length up to 1: the stick, or Guard, or the computer. */
   move: V2;
+  /** The phone's own stick, kept apart from `move` so Guard knows when the thumb takes over. */
+  stick: V2;
+  /** Guard is held: shadow the man on defence (see `guard.ts`). */
+  guard: boolean;
+  /** Where the shadow has got to. It trails the ideal spot, which is how a dribble move leaves it behind. */
+  guardAim: V2 | null;
   action: Action;
   stealCd: number;
   blockCd: number;
@@ -107,6 +130,8 @@ export interface Athlete {
   pocket: number;
   /** When they last asked for the ball, in match seconds. */
   calledAt: number;
+  /** A gesture owed for a big basket, played as soon as the feet are down. */
+  cheer: Gesture | null;
   box: BoxScore;
 }
 
@@ -124,6 +149,9 @@ export interface ShotInfo {
   counted: boolean;
   touchedRim: boolean;
   assist: number | null;
+  /** How hard the shot was contested as it left the hand, 0 to 1, and how far out it was. */
+  contest: number;
+  distance: number;
 }
 
 export type BallMode = "held" | "flight" | "loose";
@@ -145,6 +173,8 @@ export interface Ball {
   lastTouch: number | null;
   /** Spin for drawing, radians per second around the axis the flight gives it. */
   spin: number;
+  /** The real spin, radians per second about each axis, which the bounces off the iron, the glass and the floor use. */
+  w: V3;
   rimCd: number;
 }
 

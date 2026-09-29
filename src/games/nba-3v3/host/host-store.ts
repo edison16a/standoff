@@ -1,7 +1,9 @@
 import { create } from "zustand";
+import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { TeamId } from "../engine/types";
 import type { Phase } from "../protocol";
 import type { CharacterId } from "../roster";
+import type { Role } from "./roles";
 
 export interface SeatView {
   seat: number;
@@ -18,6 +20,7 @@ export interface SpotView {
   seat: number | null;
   name: string;
   character: CharacterId;
+  role: Role;
 }
 
 export interface Banner {
@@ -53,6 +56,8 @@ export interface NbaHostState {
   spots: SpotView[];
   /** Whether computer players fill the empty spots. */
   bots: boolean;
+  /** The Computer difficulty picked in the lobby. */
+  level: BotLevel;
   /** Why the game cannot start yet, or null when it can. */
   startBlock: "empty" | "oneSided" | null;
   score: [number, number];
@@ -67,6 +72,10 @@ export interface NbaHostState {
   gamePoint: [boolean, boolean];
   banner: Banner | null;
   winner: TeamId | null;
+  /** The replay of the winning basket while it plays: whose view, who scored, and who has voted to skip. */
+  replay: { view: "scorer" | "defender"; scorer: string; votes: { name: string; done: boolean }[] } | null;
+  /** Someone has won and the replay is still to roll, so the results wait. */
+  replayDue: boolean;
   results: ResultRow[];
   /** Players whose phones joined during the game, waiting for the next one. */
   waiting: string[];
@@ -77,6 +86,7 @@ export const useNbaStore = create<NbaHostState>(() => ({
   seats: [],
   spots: [],
   bots: true,
+  level: DEFAULT_BOT_LEVEL,
   startBlock: "empty",
   score: [0, 0],
   shotClock: 12,
@@ -88,6 +98,8 @@ export const useNbaStore = create<NbaHostState>(() => ({
   gamePoint: [false, false],
   banner: null,
   winner: null,
+  replay: null,
+  replayDue: false,
   results: [],
   waiting: [],
 }));

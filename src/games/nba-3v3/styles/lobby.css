@@ -8,7 +8,7 @@
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr auto auto;
   gap: 18px;
   padding: 72px 32px 28px 220px;
   background: linear-gradient(180deg, rgba(6, 8, 18, 0.2), rgba(6, 8, 18, 0.72) 55%, rgba(6, 8, 18, 0.9));
@@ -150,8 +150,11 @@
 }
 
 .nba-spot__star {
+  overflow: hidden;
   color: rgba(255, 255, 255, 0.72);
   font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .nba-spot__move {
@@ -186,4 +189,71 @@
   min-width: 200px;
   font-size: 20px;
   font-weight: 900;
+}
+
+.nba-lobby__options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 12px 28px;
+  max-width: 1100px;
+  width: 100%;
+  justify-self: center;
+}
+
+/* The role on a player card: Guard, Wing or Big. On a person it is a button the host clicks to change it. */
+.nba-spot--human {
+  position: relative;
+}
+
+/* The role tag and the move arrow sit over the card's right end, so the name keeps the rest of the row. */
+.nba-spot--human .nba-spot__button {
+  padding-right: 124px;
+}
+
+.nba-spot--human .nba-spot__move {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  /* Centred by margin: the card flips the arrow with its own transform for the right hand team. */
+  margin-top: -11px;
+  pointer-events: none;
+}
+
+.nba-role {
+  flex: none;
+  min-width: 64px;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(10, 12, 30, 0.75);
+  color: #ffffff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.nba-spot--human .nba-role {
+  position: absolute;
+  top: 50%;
+  right: 42px;
+  z-index: 1;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.nba-spot--human .nba-role:hover {
+  background: #ffffff;
+  color: #0a0c1e;
+}
+
+.nba-spot--human .nba-role:focus-visible {
+  outline: 3px solid #ffd23f;
+}
+
+.nba-role--fixed {
+  margin-left: auto;
+  opacity: 0.8;
 }
