@@ -3,6 +3,7 @@ import { playerColor } from "@/games/kit/players";
 import { LEVELS } from "../../levels";
 import { useCubeStore, type HudPlayer } from "../store";
 import { Confetti } from "./Confetti";
+import { RaceClock, RaceFinish } from "./RacePane";
 
 const MODE_NAME = { cube: "Cube", ufo: "UFO", ball: "Ball" } as const;
 
@@ -35,17 +36,24 @@ function PlayerHud({ slot, hud, players, stored }: { slot: number; hud: HudPlaye
       )}
       {hud.status === "away" && <p className="cg-hud__notice">Step back into view</p>}
       {hud.status === "run" && hud.waiting && <p className="cg-hud__notice cg-hud__notice--soft">Get ready</p>}
-      {hud.status === "done" && !results && (
+      {hud.status === "done" && hud.place === null && !results && (
         <>
           <p className="cg-finish">Level complete</p>
           <Confetti />
         </>
       )}
+      {hud.status === "done" && hud.place !== null && !results && (
+        <>
+          <RaceFinish slot={slot} place={hud.place} />
+          {hud.place === 1 && !results && <Confetti />}
+        </>
+      )}
+      {hud.status !== "done" && players > 1 && <RaceClock slot={slot} />}
     </section>
   );
 }
 
-/** The HUD over each player's half: progress, best, mode, and messages. */
+/** The HUD over each player's half: progress, best, mode, messages, and a racer's place. */
 export function Hud() {
   const hud = useCubeStore((s) => s.hud);
   const levelId = useCubeStore((s) => s.levelId);

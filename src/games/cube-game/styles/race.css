@@ -1,0 +1,71 @@
+/*
+  The two player race: the finish card in a racer's pane, the clock in
+  the other pane once someone has won, and the winner on the results.
+*/
+
+.cg-race-finish {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 34px 18px;
+  border: 4px solid var(--finish);
+  border-radius: 22px;
+  transform: translate(-50%, -50%);
+  background: rgba(8, 4, 32, 0.82);
+  box-shadow: 0 0 28px color-mix(in srgb, var(--finish) 35%, transparent);
+  white-space: nowrap;
+  animation: cg-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.cg-race-finish__place {
+  font: 900 72px/1 "Arial Black", Arial, var(--font-ui);
+  color: #c8ecc0;
+  -webkit-text-stroke: 2px #12052e;
+  text-shadow: 0 5px 0 #12052e;
+}
+
+.cg-race-finish--won .cg-race-finish__place {
+  color: #ffd21f;
+  text-shadow: 0 5px 0 #12052e, 0 0 26px rgba(255, 210, 31, 0.35);
+}
+
+.cg-race-finish__text {
+  font: 800 26px/1.1 var(--font-ui);
+  color: #fff;
+}
+
+.cg-race-clock {
+  position: absolute;
+  left: 50%;
+  top: 62px;
+  margin: 0;
+  padding: 8px 18px;
+  border-radius: 999px;
+  transform: translateX(-50%);
+  font: 800 20px/1.2 var(--font-ui);
+  white-space: nowrap;
+  color: #fff;
+  background: rgba(6, 3, 24, 0.78);
+}
+
+.cg-results__row--won th,
+.cg-results__row--won td {
+  color: #ffd21f;
+}
+
+.cg-results__trophy {
+  margin-left: 8px;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cg-race-finish {
+    animation: none;
+  }
+}
