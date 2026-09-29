@@ -94,7 +94,7 @@ A ball over the end boards is a goal kick: the keeper rolls it out to a team mat
 
 ## Builds
 
-A pick is a build, not a person. Your own name is who you are: it is on your tag, on the back of your shirt, on the score bug when you score, in the replay, on the trophy ceremony and in the stats. Computer players are called CPU and their build, like CPU Winger. Each build can be taken by one player, so the six on the pitch always differ.
+A pick is a build, not a person. Your own name is who you are: it is on your tag, on the back of your shirt, on the score bug when you score, in the replay, on the trophy ceremony and in the stats. Computer players are called CPU and their build, like CPU Winger. The tag over a phone's player also names their build in smaller type, or says Away while a computer plays for them. There is no separate row of names along the bottom of the big screen, since every name already floats over its player. Each build can be taken by one player, so the six on the pitch always differ.
 
 | Build | Number | Made around | How it plays |
 | --- | --- | --- | --- |

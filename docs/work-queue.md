@@ -14,12 +14,7 @@ The running list of what is being built, so work can pick up again after a break
 
 | Work | Workflow | State |
 | --- | --- | --- |
-| **Room reliability (top priority):** find why rooms fail about every other time and fix the cause, a host watchdog that checks the room like a phone would and fully remakes it when broken, the QR code hidden until the room passes its check, and a Regenerate room button right under the QR code | wf_3938ab23-6cc | four investigations (live site repro, local multi instance repro, client audit, relay audit), two designs and a judge, one build, then stress, code and production reviews with fix rounds |
-| Batch E part 3: Basketball and Football trophy ceremonies and builds instead of named characters | wf_4cb6c277-e26 | build then review each |
-
-**Room root cause, found and reproduced on the live site:** production has no shared Redis store (every room:created says sharedRooms:false). Rooms live in one Vercel instance's memory, a game's own traffic makes Vercel add a second instance within about 1.5 s, and then joins, POSTs and hand overs land on an instance without the room: "Room not found". Every deploy to main also wipes open rooms. **Owner action:** add a Redis store to the Vercel project (Storage, Create Database, for example Upstash for Redis), connect it to Production, redeploy. The code reads REDIS_URL, KV_URL or UPSTASH_REDIS_URL. Keep deploys to main batched so they strand fewer rooms.
-
-A resume after the container restart went wrong: with a changed script, finished steps ran again inside other builds' worktrees. It was stopped, every branch was put back to its state before the resume, and the duplicate work was kept on `salvage/*` branches. Lesson: resume a workflow only with its script unchanged, and never resume one whose agents are started by a concurrency limiter (their order changes, so the cache misses and finished steps run again). After the second restart that workflow was stopped and replaced by a small one for what was left.
+| Duplicate name boxes removed (every game except Basketball and Football), and Batch G for Football 3v3 and Basketball 3v3 | wf_6cee9a77-61a | three builds, each then reviewed |
 
 ## Queue, in order
 
@@ -71,7 +66,7 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 **Football 3v3**
 1. **Defense controls stay on screen:** a defender's pad must never disappear while the offense picks kick or throw. Defense does not choose, so its controls stay up the whole time.
 2. **QB movement:** a normal joystick for moving, like the other players.
-3. **QB speed and throwing accuracy:** the QB runs as fast as anyone. Throw accuracy depends on how still he is when he lets go: standing still gives a clean, accurate pass; throwing on the run is often off target and more likely to be blocked or picked. That makes a juke and run a real choice.
+3. **QB speed and RUN (owner changed this, it replaces the earlier accuracy idea):** the QB is clearly slower than the other players, especially early in the play, and can shuffle back while throwing with the same accuracy every time (no accuracy penalty for moving). A **RUN** button turns the QB into a runner: from then on he can't throw, and he moves like a normal player at normal runner speed. Remove the "accuracy depends on standing still" logic if it was built.
 4. **New play call, Run the ball:** besides Kick and Throw, the QB can pick Run. One runner automatically lines up close to the QB, and after the hike the QB presses Pass to toss that runner a short lob (a pitch) to start the run.
 5. **Clearer throw target:** the ring under the receiver being thrown to turns a completely different colour (for example red) and stands out on screen, so it is obvious who the pass is going to.
 
@@ -102,6 +97,8 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ## Done recently
 
+* Room reliability: signed room tokens so any Vercel instance can rebuild a room with the same code and players, a host room check over a fresh connection, QR hidden until the room passes, Regenerate room under the QR, phones that follow a moved room, WebSockets first with a leaner stream fallback, and the client bugs from the investigation fixed.
+* Basketball 3v3 and Football 3v3: trophy ceremonies, and builds instead of named characters under each player's username.
 * Cube Game: sideways portals with a picture of the next form, walls so no portal can be skipped, two Demon levels with their own songs, the cube further right, and a leaderboard per level.
 * Soccer 3v3: free kick curve only bends the path (the kick always ends on the aim), and the goal is 1.75 times bigger with the keeper unchanged.
 * Basketball 3v3 part 2: torus rim and backboard physics with spin, real ball sounds, slower momentum, layups, dunks and stepbacks, the winning basket replay with a skip vote, celebrations, box scores.
