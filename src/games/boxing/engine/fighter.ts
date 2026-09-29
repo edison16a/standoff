@@ -1,3 +1,4 @@
+import { modsFor, type BuildMods } from "./builds";
 import { Fatigue } from "./fatigue";
 import { RULES } from "./rules";
 import { copyDefense, NO_DEFENSE, type DefenseInput, type FighterId, type Hand, type HeadSpot, type Level, type PunchStyle } from "./types";
@@ -78,7 +79,11 @@ export class Fighter {
   /** Whether the last hit taken came in from this boxer's left or right, for the head snapping away. */
   lastHit: { at: number; hand: Hand; style: PunchStyle; level: Level; damage: number } | null = null;
 
-  constructor(readonly id: FighterId) {}
+  constructor(
+    readonly id: FighterId,
+    /** What this boxer's build changes in the rules. */
+    readonly mods: BuildMods = modsFor(undefined),
+  ) {}
 
   setInput(input: DefenseInput): void {
     this.input = copyDefense(input);
@@ -125,7 +130,7 @@ export class Fighter {
   recover(now: number, dtMs: number): void {
     this.fatigue.update(dtMs, this.health);
     if (this.punching(now) || this.down) return;
-    this.stamina = Math.min(RULES.maxStamina, this.stamina + (RULES.staminaRegen * dtMs) / 1000);
+    this.stamina = Math.min(RULES.maxStamina, this.stamina + (RULES.staminaRegen * this.mods.staminaRegen * dtMs) / 1000);
   }
 
   /** Clears the moment to moment state as a round ends, keeping health, stats and knockdowns. */

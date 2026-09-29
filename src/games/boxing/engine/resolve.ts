@@ -16,9 +16,9 @@ export type Outcome =
  * squarely it found the head.
  */
 export function judge(punch: ActivePunch, attacker: Fighter, defender: Fighter, now: number): Outcome {
-  const contact = contactOf(punch, defender.input.head);
+  const contact = contactOf(punch, defender.input.head, attacker.mods.aim);
   if (contact.dodge) return { kind: "miss", dodge: contact.dodge };
-  const cover = coverOf(punch, defender, now);
+  const cover = Math.min(1, coverOf(punch, defender, now) * defender.mods.guard);
   if (cover >= RULES.blockAt) return { kind: "block" };
   const hit = damageOf(punch, attacker, defender, now);
   // A glancing blow and partial cover each take some of the sting out.
@@ -33,11 +33,12 @@ export function judge(punch: ActivePunch, attacker: Fighter, defender: Fighter, 
 export function damageOf(punch: ActivePunch, attacker: Fighter, defender: Fighter, now: number): { damage: number; heavy: boolean; canStun: boolean } {
   const spec = PUNCHES[punch.style];
   const head = punch.level === "head";
-  let damage = spec.damage * (head ? RULES.headDamage : 1) * (0.8 + 0.4 * clamp01(punch.power));
+  let damage = spec.damage * (head ? RULES.headDamage : 1) * (0.8 + 0.4 * clamp01(punch.power)) * attacker.mods.damage;
   if (punch.tired) damage *= RULES.tiredDamage;
   const counterJab = punch.counter && punch.style === "jab";
   if (counterJab) damage *= RULES.counterJab;
   else if (punch.counter) damage *= RULES.counterOther;
+  if (punch.counter) damage *= attacker.mods.counterDamage;
   if (defender.staggered(now)) damage *= RULES.staggerTaken;
   // A boxer who is gassed or worn down hits softer, even before they run dry.
   damage *= (0.75 + 0.25 * (attacker.stamina / RULES.maxStamina)) * attacker.fatigue.weak;

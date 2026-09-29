@@ -1,3 +1,4 @@
+import { modsFor } from "./builds";
 import { finishStoppage, stepCount, knockDown, type Stoppage } from "./count";
 import type { MatchEvent, MatchResult } from "./events";
 import { Fighter } from "./fighter";
@@ -23,8 +24,8 @@ export interface MatchOptions {
   introMs?: number;
   /** Touch gloves before each round. Off, the boxers start face to face and the bell goes at once. */
   touch?: boolean;
-  /** Each boxer's footwork style, by the id of the boxer chosen. */
-  styles?: readonly [string | undefined, string | undefined];
+  /** Each boxer's build, by id: how hard, fast and far they punch, how they defend and how they move. */
+  builds?: readonly [string | undefined, string | undefined];
 }
 
 /**
@@ -36,7 +37,7 @@ export interface MatchOptions {
  * browser.
  */
 export class Match {
-  readonly fighters: [Fighter, Fighter] = [new Fighter(0), new Fighter(1)];
+  readonly fighters: [Fighter, Fighter];
   readonly footwork: Footwork;
   readonly random: Random;
   readonly rounds: number;
@@ -61,12 +62,13 @@ export class Match {
 
   constructor(options: MatchOptions) {
     this.random = seeded(options.seed);
+    this.fighters = [new Fighter(0, modsFor(options.builds?.[0])), new Fighter(1, modsFor(options.builds?.[1]))];
     this.rounds = options.rounds ?? RULES.rounds;
     this.roundMs = options.roundMs ?? RULES.roundMs;
     this.breakMs = options.breakMs ?? RULES.breakMs;
     this.touchGloves = options.touch ?? true;
     this.phaseEnds = options.introMs ?? RULES.introMs;
-    this.footwork = new Footwork(this.random, options.styles);
+    this.footwork = new Footwork(this.random, options.builds);
     this.footwork.place(this.touchGloves);
     if (this.touchGloves) this.footwork.setMode("centre");
   }
@@ -106,10 +108,11 @@ export class Match {
     const fighter = this.fighters[id];
     if (this.phase !== "fight" || this.paused || !fighter.canPunch(this.now)) return false;
     const spec = PUNCHES[style];
-    const tired = fighter.stamina < spec.stamina;
-    // Out of stamina or worn down by punishment, the punch takes longer to get there and back.
-    const slow = (tired ? 1.3 : 1) * fighter.fatigue.slow;
-    fighter.stamina = Math.max(0, fighter.stamina - spec.stamina);
+    const cost = spec.stamina * fighter.mods.staminaCost;
+    const tired = fighter.stamina < cost;
+    // Out of stamina or worn down by punishment, the punch takes longer to get there and back. The build sets the pace.
+    const slow = (tired ? 1.3 : 1) * fighter.fatigue.slow * fighter.mods.punchTime;
+    fighter.stamina = Math.max(0, fighter.stamina - cost);
     const counter = fighter.counterOpen(this.now);
     if (counter) fighter.counterUntil = -Infinity;
     const launchAt = this.now + windupMs;
@@ -180,7 +183,7 @@ export class Match {
     punch.resolved = true;
     if (defender.down) return;
     const facts = { fighter: attacker.id, hand: punch.hand, style: punch.style, level: punch.level };
-    if (this.footwork.distance() > FIGHT_RANGE + REACH_SPARE) {
+    if (this.footwork.distance() > FIGHT_RANGE + REACH_SPARE + attacker.mods.reach) {
       // Still walking in from the corners: it falls short, and earns nobody a counter.
       this.emit({ type: "miss", ...facts, target: defender.id, dodge: null });
       return;

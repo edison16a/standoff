@@ -31,12 +31,15 @@ export function followAim(punch: ActivePunch, head: HeadSpot, now: number, dtMs:
  * ducking under it does. The body stays where it is, so a body shot
  * always gets there, and only the elbows stop it.
  */
-export function contactOf(punch: ActivePunch, head: HeadSpot): Contact {
+export function contactOf(punch: ActivePunch, head: HeadSpot, aim = 1): Contact {
   if (punch.level === "body") return { amount: 1, dodge: null };
   const dx = (head.x - punch.aim.x) * (punch.style === "hook" ? RULES.hookSweep : 1);
   const dy = head.y - punch.aim.y;
   const off = Math.hypot(dx, dy);
-  const amount = off <= RULES.cleanRadius ? 1 : Math.max(0, 1 - (off - RULES.cleanRadius) / (RULES.missRadius - RULES.cleanRadius));
+  // A longer reach finds the head over a wider spot, so a slip has to go further.
+  const clean = RULES.cleanRadius * aim;
+  const miss = RULES.missRadius * aim;
+  const amount = off <= clean ? 1 : Math.max(0, 1 - (off - clean) / (miss - clean));
   if (amount >= GRAZE) return { amount, dodge: null };
   // Named by the way the head went: down under it, or off to the side.
   return { amount: 0, dodge: Math.abs(dy) >= Math.abs(dx) && dy < 0 ? "duck" : "slip" };

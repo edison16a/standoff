@@ -31,7 +31,7 @@ export function applyOutcome(outcome: Outcome, punch: ActivePunch, attacker: Fig
       defender.health = Math.max(1, defender.health - PUNCHES[punch.style].damage * RULES.blockDamage);
       emit({ type: "block", ...facts, target: defender.id });
     }
-    defender.counterUntil = at.now + RULES.counterMs;
+    defender.counterUntil = at.now + RULES.counterMs * defender.mods.counterWindow;
     defender.counterFrom = outcome.kind === "miss" ? "dodge" : "block";
     emit({ type: "counter", fighter: defender.id, from: defender.counterFrom });
     return false;
