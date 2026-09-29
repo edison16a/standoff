@@ -1,147 +1,143 @@
 import type * as THREE from "three";
+import { Rng } from "../../engine/rng";
 import { painted } from "../textures";
-import { DISPLAY_FONT, drawGraffiti } from "./graffiti";
+import { DISPLAY_FONT, drawGraffiti, drawTag } from "./graffiti";
 
 export interface Livery {
   body: number;
-  stripe: number;
-  trim: number;
-  /** The glowing strips along the car. */
-  neon: number;
+  /** The lighter band along the top of the sides. */
+  light: number;
+  /** The dark skirt along the bottom. */
+  skirt: number;
 }
 
-/** Night paint jobs: deep bodies that make the neon trims and lit windows sing. */
+/** The four paint jobs of the yard's commuter trains: red, blue, yellow and green. */
 export const LIVERIES: readonly Livery[] = [
-  { body: 0x1f2a5a, stripe: 0x21f3ff, trim: 0x10142a, neon: 0x21f3ff },
-  { body: 0x5a1a4a, stripe: 0xff2bd6, trim: 0x220a1c, neon: 0xff2bd6 },
-  { body: 0x2a2a38, stripe: 0xffd21f, trim: 0x14141c, neon: 0xffb020 },
-  { body: 0x163f3a, stripe: 0x9dff2b, trim: 0x0a1c1a, neon: 0x9dff2b },
-  { body: 0xc9ccd8, stripe: 0x8a5bff, trim: 0x2a2640, neon: 0x8a5bff },
-  { body: 0x3a1f66, stripe: 0x21f3ff, trim: 0x160c2a, neon: 0xff2bd6 },
-  { body: 0x6a1c1c, stripe: 0xff8a1f, trim: 0x240a0a, neon: 0xff5a1f },
-  { body: 0x0f4a5a, stripe: 0xffffff, trim: 0x0a1f26, neon: 0x21f3ff },
+  { body: 0xe23b2e, light: 0xf2745f, skirt: 0x8c1f18 },
+  { body: 0x2e78d8, light: 0x62a4f0, skirt: 0x1a3f80 },
+  { body: 0xffbf1a, light: 0xffdb6a, skirt: 0xa86f00 },
+  { body: 0x34a84a, light: 0x72d17e, skirt: 0x1d6a2c },
 ];
+
+/** Graffiti pieces per livery, stacked down one texture, so a whole train draws its sides in one call. */
+export const PIECES = 3;
 
 const hex = (n: number) => `#${n.toString(16).padStart(6, "0")}`;
 
-/** Where the doors and the windows between them sit along a car side, as shares of its length. */
+/** Where the doors sit along a car side, as shares of its length. */
 const DOORS = [0.17, 0.5, 0.83];
-const SPANS = [[0.025, 0.115], [0.225, 0.445], [0.555, 0.775], [0.885, 0.975]] as const;
-const DOOR_W = 88;
+const DOOR_W = 84;
+
+/** Glass that catches the sky: pale at the top, deep blue below, with a bright streak across. */
+export function glass(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r = 8): void {
+  ctx.fillStyle = "#2a2d38";
+  roundRect(ctx, x - 4, y - 4, w + 8, h + 8, r + 3);
+  const g = ctx.createLinearGradient(x, y, x, y + h);
+  g.addColorStop(0, "#bfe8ff");
+  g.addColorStop(0.55, "#5ea6e0");
+  g.addColorStop(1, "#2f5f9c");
+  ctx.fillStyle = g;
+  roundRect(ctx, x, y, w, h, r);
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+  ctx.clip();
+  ctx.fillStyle = "rgba(255,255,255,0.45)";
+  ctx.beginPath();
+  ctx.moveTo(x + w * 0.15, y);
+  ctx.lineTo(x + w * 0.4, y);
+  ctx.lineTo(x + w * 0.1, y + h);
+  ctx.lineTo(x - w * 0.15, y + h);
+  ctx.fill();
+  ctx.restore();
+}
 
 /**
- * One side of a car: the paint, a stripe, doors, a row of lit windows
- * and a fleet number. Some cars carry a graffiti piece too.
+ * The sides of every car in one paint job: bold colour, a row of windows
+ * between the doors, a white stripe and graffiti over the lower half, a
+ * different piece in each of the stacked rows.
  */
-export function carSideTexture(livery: number, graffiti: number | null): THREE.Texture {
+export function carSideTexture(livery: number): THREE.Texture {
   const l = LIVERIES[livery % LIVERIES.length]!;
-  return painted(`car-${livery}-${graffiti}`, 1024, 256, (ctx, w, h) => {
-    ctx.fillStyle = hex(l.body);
-    ctx.fillRect(0, 0, w, h);
-    // Shading from the roof down, so the flat side reads as rounded.
-    const shade = ctx.createLinearGradient(0, 0, 0, h);
-    shade.addColorStop(0, "rgba(255,255,255,0.22)");
-    shade.addColorStop(0.5, "rgba(255,255,255,0)");
-    shade.addColorStop(1, "rgba(0,0,0,0.3)");
-    ctx.fillStyle = shade;
-    ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = hex(l.stripe);
-    ctx.fillRect(0, h * 0.7, w, h * 0.06);
-    ctx.fillStyle = hex(l.trim);
-    ctx.fillRect(0, h * 0.9, w, h * 0.1);
-    for (const d of DOORS) door(ctx, d * w, h, l);
-    windows(ctx, w, h, "#ffe2a8");
-    ctx.font = `900 ${h * 0.09}px ${DISPLAY_FONT}`;
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
-    ctx.fillText(String(4000 + livery * 137 + (graffiti ?? 0) * 11), w * 0.03, h * 0.86);
-    if (graffiti !== null) drawGraffiti(ctx, graffiti, w * 0.2, h * 0.2, w * 0.6, h * 0.62);
+  return painted(`car-side-${livery % LIVERIES.length}`, 1024, 256 * PIECES, (ctx, w, full) => {
+    const h = full / PIECES;
+    for (let piece = 0; piece < PIECES; piece++) {
+      ctx.save();
+      ctx.translate(0, piece * h);
+      side(ctx, w, h, l, livery * PIECES + piece);
+      ctx.restore();
+    }
   });
 }
 
-/** What glows on a car side at night: the windows and the stripe. The same for every car, so one texture serves all. */
-export function carGlowTexture(): THREE.Texture {
-  return painted("car-glow", 1024, 256, (ctx, w, h) => {
-    ctx.fillStyle = "#000000";
-    ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, h * 0.7, w, h * 0.06);
-    windows(ctx, w, h, "#ffffff");
-  });
-}
-
-function windows(ctx: CanvasRenderingContext2D, w: number, h: number, light: string): void {
-  // Windows fill the panels between the doors, two to a long panel.
-  for (const [a, b] of SPANS) {
+function side(ctx: CanvasRenderingContext2D, w: number, h: number, l: Livery, seed: number): void {
+  const rng = new Rng(seed * 31 + 9);
+  ctx.fillStyle = hex(l.body);
+  ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = hex(l.light);
+  ctx.fillRect(0, 0, w, h * 0.1);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, h * 0.54, w, h * 0.05);
+  ctx.fillStyle = hex(l.skirt);
+  ctx.fillRect(0, h * 0.9, w, h * 0.1);
+  // Windows fill the spans between the doors, two to a long span.
+  const spans = [[0.02, 0.12], [0.22, 0.45], [0.55, 0.78], [0.88, 0.98]] as const;
+  for (const [a, b] of spans) {
     const count = b - a > 0.15 ? 2 : 1;
-    const width = (b - a - 0.015 * (count - 1)) / count;
-    for (let i = 0; i < count; i++) window_(ctx, (a + i * (width + 0.015)) * w, h * 0.24, width * w, h * 0.34, light);
+    const width = (b - a - 0.02 * (count - 1)) / count;
+    for (let i = 0; i < count; i++) glass(ctx, (a + i * (width + 0.02)) * w, h * 0.17, width * w, h * 0.3);
   }
   for (const d of DOORS) {
     const cx = d * w;
-    window_(ctx, cx - DOOR_W / 2 + 8, h * 0.24, DOOR_W / 2 - 12, h * 0.3, light);
-    window_(ctx, cx + 4, h * 0.24, DOOR_W / 2 - 12, h * 0.3, light);
+    ctx.fillStyle = "rgba(0,0,0,0.3)";
+    ctx.fillRect(cx - DOOR_W / 2 - 3, h * 0.12, DOOR_W + 6, h * 0.8);
+    ctx.fillStyle = hex(l.body);
+    ctx.fillRect(cx - DOOR_W / 2, h * 0.13, DOOR_W, h * 0.78);
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.fillRect(cx - 1.5, h * 0.13, 3, h * 0.78);
+    glass(ctx, cx - DOOR_W / 2 + 8, h * 0.18, DOOR_W / 2 - 14, h * 0.34, 6);
+    glass(ctx, cx + 6, h * 0.18, DOOR_W / 2 - 14, h * 0.34, 6);
   }
+  // The graffiti: two big pieces across the lower half, over doors and all, and tags round them.
+  drawGraffiti(ctx, seed * 2, w * 0.03, h * 0.46, w * 0.46, h * 0.46);
+  drawGraffiti(ctx, seed * 2 + 1, w * 0.51, h * 0.46, w * 0.46, h * 0.46);
+  for (let i = 0; i < 4; i++) drawTag(ctx, seed * 5 + i, rng.range(0, w * 0.9), rng.range(h * 0.12, h * 0.5), rng.range(20, 30));
+  ctx.font = `900 ${h * 0.07}px ${DISPLAY_FONT}`;
+  ctx.fillStyle = "rgba(255,255,255,0.9)";
+  ctx.fillText(String(2100 + seed * 17), w * 0.93, h * 0.08);
 }
 
-function door(ctx: CanvasRenderingContext2D, cx: number, h: number, l: Livery): void {
-  ctx.fillStyle = "rgba(0,0,0,0.35)";
-  ctx.fillRect(cx - DOOR_W / 2 - 3, h * 0.16, DOOR_W + 6, h * 0.74);
-  ctx.fillStyle = hex(l.body);
-  ctx.fillRect(cx - DOOR_W / 2, h * 0.17, DOOR_W, h * 0.72);
-  ctx.fillStyle = "rgba(0,0,0,0.25)";
-  ctx.fillRect(cx - 1.5, h * 0.17, 3, h * 0.72);
-  ctx.fillStyle = hex(l.stripe);
-  ctx.fillRect(cx - DOOR_W / 2, h * 0.17, DOOR_W, 5);
-}
-
-/** A lit window: warm light inside, a darker band where the seats are. */
-function window_(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, light: string): void {
-  ctx.fillStyle = light;
-  roundRect(ctx, x, y, w, h, 9);
-  if (light !== "#ffffff") {
-    ctx.fillStyle = "rgba(60,30,80,0.35)";
-    ctx.fillRect(x, y + h * 0.62, w, h * 0.38);
-  }
+/** The cab end: a wide windscreen under a destination sign, a stripe, a number and a tag. */
+export function cabTexture(livery: number): THREE.Texture {
+  const l = LIVERIES[livery % LIVERIES.length]!;
+  return painted(`cab-${livery % LIVERIES.length}`, 256, 256, (ctx, w, h) => {
+    ctx.fillStyle = hex(l.body);
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = hex(l.light);
+    ctx.fillRect(0, 0, w, h * 0.08);
+    ctx.fillStyle = "#1f2138";
+    roundRect(ctx, w * 0.2, h * 0.1, w * 0.6, h * 0.1, 6);
+    ctx.fillStyle = "#ffc21a";
+    ctx.font = `900 ${h * 0.07}px ${DISPLAY_FONT}`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("CITY LOOP", w / 2, h * 0.155);
+    glass(ctx, w * 0.1, h * 0.25, w * 0.8, h * 0.3, 14);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, h * 0.62, w, h * 0.05);
+    ctx.fillStyle = hex(l.skirt);
+    ctx.fillRect(0, h * 0.88, w, h * 0.12);
+    ctx.fillStyle = "#ffffff";
+    roundRect(ctx, w * 0.4, h * 0.7, w * 0.2, h * 0.09, 5);
+    ctx.fillStyle = "#1f2138";
+    ctx.font = `900 ${h * 0.065}px ${DISPLAY_FONT}`;
+    ctx.fillText(String(10 + livery * 7), w / 2, h * 0.748);
+    drawTag(ctx, livery * 3 + 1, w * 0.62, h * 0.84, 18);
+  });
 }
 
 export function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number): void {
   ctx.beginPath();
   ctx.roundRect(x, y, w, h, r);
   ctx.fill();
-}
-
-/** The cab end: a wide windscreen, a lit destination sign and the lamps. */
-export function cabTexture(livery: number): THREE.Texture {
-  const l = LIVERIES[livery % LIVERIES.length]!;
-  return painted(`cab-${livery}`, 256, 256, (ctx, w, h) => {
-    ctx.fillStyle = hex(l.body);
-    ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = hex(l.stripe);
-    ctx.fillRect(0, h * 0.7, w, h * 0.06);
-    ctx.fillStyle = hex(l.trim);
-    ctx.fillRect(0, h * 0.9, w, h * 0.1);
-    cabLights(ctx, w, h, false);
-    ctx.fillStyle = "#1a1d26";
-    roundRect(ctx, w * 0.4, h * 0.8, w * 0.2, h * 0.08, 4);
-  });
-}
-
-/** What glows on a cab: the destination sign and the windscreen. */
-export function cabGlowTexture(): THREE.Texture {
-  return painted("cab-glow", 256, 256, (ctx, w, h) => {
-    ctx.fillStyle = "#000000";
-    ctx.fillRect(0, 0, w, h);
-    cabLights(ctx, w, h, true);
-  });
-}
-
-function cabLights(ctx: CanvasRenderingContext2D, w: number, h: number, glow: boolean): void {
-  ctx.fillStyle = glow ? "#000000" : "#11151f";
-  roundRect(ctx, w * 0.1, h * 0.1, w * 0.8, h * 0.13, 8);
-  ctx.fillStyle = "#ffb627";
-  ctx.font = `900 ${h * 0.09}px ${DISPLAY_FONT}`;
-  ctx.textAlign = "center";
-  ctx.fillText("EXPRESS", w / 2, h * 0.2);
-  ctx.fillStyle = glow ? "#3a3f60" : "#1a2030";
-  roundRect(ctx, w * 0.09, h * 0.28, w * 0.82, h * 0.33, 12);
 }
