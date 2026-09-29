@@ -29,16 +29,19 @@ const PATCHES: Record<Exclude<Gesture, "flex">, (t: number) => PosePatch> = {
     };
   },
   sleep: (t) => {
+    // The left hand crosses over so both palms press together under the right cheek, and the head lies on them.
     const sway = Math.sin(t * 2.4) * 0.06;
     return {
-      armLRaise: 1.9, armRRaise: 1.9, armLSpread: -0.55, armRSpread: 0.65, elbowL: 2.45, elbowR: 2.35,
+      armLRaise: 1.66, armLSpread: -1.17, armLTwist: -0.85, elbowL: 1.94, wristL: 0.15,
+      armRRaise: 0.9, armRSpread: 0.32, armRTwist: 0.26, elbowR: 2.65, wristR: 0.31,
       neckZ: 0.5 + sway, neckX: 0.12, torsoZ: 0.12 + sway, torsoX: 0.02, kneeL: 0.18, kneeR: 0.18,
     };
   },
   shush: (t) => {
+    // The index finger rises to the lips with the elbow down in front, the other arm out to the side.
     const hold = Math.min(1, t / 0.3);
     return {
-      armRRaise: 1.35 * hold, armRSpread: -0.3, elbowR: 2.6 * hold, wristR: 0.2,
+      armRRaise: 1.06 * hold, armRSpread: -0.13, armRTwist: -0.73 * hold, elbowR: 2.41 * hold, wristR: -0.18,
       armLRaise: 0.5, armLSpread: 0.9, elbowL: 0.3,
       neckX: -0.2, torsoX: -0.08, hipY: -0.02,
     };
