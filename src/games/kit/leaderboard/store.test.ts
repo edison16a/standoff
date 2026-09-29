@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { TEXT_MAX } from "./board";
 import { boardKey, clearBoards, countRuns, memoryBoards, readBoard, recordEntry, type BoardRef, type BoardStorage } from "./store";
 
 const RUNS: BoardRef = { game: "runner", board: "runs", order: "high" };
@@ -35,6 +36,15 @@ describe("a game's board on this computer", () => {
     expect(quicker.rank).toBe(1);
     expect(readBoard(RUNS, storage)).toHaveLength(1);
     expect(readBoard({ ...LEVEL, board: "level-2" }, storage)).toEqual([]);
+  });
+
+  it("cuts a long name or tag to fit, so the run still reads back", () => {
+    const storage = memoryBoards();
+    const placed = recordEntry(RUNS, { name: `  ${"N".repeat(60)} `, value: 5, tag: "T".repeat(50) }, storage);
+    const [saved] = readBoard(RUNS, storage);
+    expect(saved).toMatchObject({ id: placed.entry.id, name: "N".repeat(TEXT_MAX), tag: "T".repeat(TEXT_MAX) });
+    expect(recordEntry(RUNS, { name: "   ", value: 1 }, storage).entry.name).toBe("Player");
+    expect(readBoard(RUNS, storage)).toHaveLength(2);
   });
 
   it("reads a board broken by hand as empty, and writes over it", () => {

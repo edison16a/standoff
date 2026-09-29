@@ -1,4 +1,4 @@
-import { newEntryId, parseBoard, placeEntry, type BoardOrder, type LeaderEntry, type Placement } from "./board";
+import { newEntry, parseBoard, placeEntry, type BoardOrder, type LeaderEntry, type Placement } from "./board";
 
 /** Every board's key starts with this, so all of them can be found and cleared together. */
 export const BOARD_PREFIX = "standoff:board:";
@@ -50,8 +50,7 @@ export function recordEntry(
   run: { name: string; value: number; tag?: string; at?: number },
   storage: BoardStorage = localBoards(),
 ): Placement {
-  const at = run.at ?? Date.now();
-  const entry: LeaderEntry = { id: newEntryId(at), name: run.name, value: run.value, at, ...(run.tag ? { tag: run.tag } : {}) };
+  const entry = newEntry({ ...run, at: run.at ?? Date.now() });
   // Read again first, in case another tab on this computer saved a run meanwhile.
   const placement = placeEntry(readBoard(ref, storage), entry, ref.order);
   write(storage, boardKey(ref), placement.entries);

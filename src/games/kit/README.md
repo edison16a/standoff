@@ -264,7 +264,7 @@ onBoardsChange(() => setEntries(readBoard(RUNS)));   // redraw after a clear, or
 ```
 
 * The list scrolls, with the lit row brought to its middle. A board of thousands draws its top, a line saying how many runs are left out, and the runs around the lit one.
-* The tag is a short note beside the value, like the difficulty.
+* The tag is a short note beside the value, like the difficulty. A name or tag past 40 characters is cut to fit, and a blank name is saved as Player, so a saved run always reads back.
 * Give the list a game's look with a class that sets `--board-bg`, `--board-fg`, `--board-accent`, `--board-me-bg`, `--board-me-fg` and `--board-height`.
 * Keys look like `standoff:board:<game>:<board>`. `clearBoards()` wipes every game's boards, which the host's Settings panel does with **Clear leaderboards**. `clearBoards(game)` wipes one game's.
 * Where site data is blocked the boards live in memory until the tab closes. When storage is full a board keeps its best 2,000 runs.

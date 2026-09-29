@@ -1,4 +1,4 @@
-export { newEntryId, parseBoard, placeEntry, rankEntries, type BoardOrder, type LeaderEntry, type Placement } from "./board";
+export { newEntry, newEntryId, parseBoard, placeEntry, rankEntries, TEXT_MAX, type BoardOrder, type LeaderEntry, type Placement } from "./board";
 export { boardLines, type BoardLine } from "./rows";
 export {
   BOARD_PREFIX,

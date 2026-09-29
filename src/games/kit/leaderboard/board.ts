@@ -9,13 +9,16 @@ import { z } from "zod";
 /** "high" ranks bigger first, for scores. "low" ranks smaller first, for finish times. */
 export type BoardOrder = "high" | "low";
 
+/** The longest name and tag a board keeps. Longer ones are cut to fit when a run is saved. */
+export const TEXT_MAX = 40;
+
 const entrySchema = z.object({
   id: z.string().min(1).max(64),
-  name: z.string().min(1).max(40),
+  name: z.string().min(1).max(TEXT_MAX),
   value: z.number().finite(),
   /** When it was set, milliseconds since 1970. */
   at: z.number().finite(),
-  tag: z.string().max(40).optional(),
+  tag: z.string().max(TEXT_MAX).optional(),
 });
 
 export interface LeaderEntry {
@@ -69,6 +72,16 @@ export function parseBoard(raw: unknown, order: BoardOrder): LeaderEntry[] {
     return parsed.success ? [parsed.data] : [];
   });
   return rankEntries(entries, order);
+}
+
+/**
+ * A run as it will be saved: the name and tag cut to fit, a blank name
+ * as "Player", so a saved run always reads back rather than vanishing.
+ */
+export function newEntry(run: { name: string; value: number; tag?: string; at: number }, random: () => number = Math.random): LeaderEntry {
+  const name = run.name.trim().slice(0, TEXT_MAX) || "Player";
+  const tag = run.tag?.trim().slice(0, TEXT_MAX);
+  return { id: newEntryId(run.at, random), name, value: run.value, at: run.at, ...(tag ? { tag } : {}) };
 }
 
 /** A fresh id for a run: its time plus a little randomness, so two runs in one millisecond still differ. */
