@@ -72,7 +72,7 @@ export class ChaseCamera {
     // Rises with the runner onto a roof, but only follows a jump a little so the world stays steady.
     // A jetpack flight is followed all the way up.
     const flying = run.powers.has("jetpack") && !run.crashed;
-    const floor = flying ? s.y - 0.6 : s.grounded ? s.y : Math.min(s.y, Math.max(this.y, s.y * 0.35));
+    const floor = flying ? s.y - 0.6 : s.grounded ? s.y : Math.min(s.y, Math.max(this.y, s.y * 0.25));
     this.y += (floor - this.y) * (1 - Math.exp(-(flying ? 2 : 4.5) * dt));
     const fast = run.crashed ? 0 : THREE.MathUtils.clamp((run.speed - SPEED.start) / (SPEED.max - SPEED.start), 0, 1);
     this.feel.update(dt, time, fast, flying ? 5 : 0);

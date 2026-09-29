@@ -18,7 +18,7 @@ export function adminShortcuts(current: () => Run | null): AdminAction[] {
     if (run && !run.crashed) act(run);
   };
   return [
-    ...POWER_KINDS.map((kind) => ({ id: `power-${kind}`, label: POWER_NAMES[kind], run: live((run) => run.powers.start(kind)) })),
+    ...POWER_KINDS.map((kind) => ({ id: `power-${kind}`, label: POWER_NAMES[kind], run: live((run) => run.grant(kind)) })),
     {
       id: "next-zone",
       label: "Next zone",

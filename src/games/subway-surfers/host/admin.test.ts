@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { JETPACK_HEIGHT } from "../engine/powers";
 import { Run } from "../engine/run";
 import { ZONE_LENGTH } from "../engine/tuning";
 import { adminShortcuts } from "./admin";
@@ -13,6 +14,9 @@ describe("admin shortcuts", () => {
     find(actions, "power-double").run();
     expect(run.powers.has("jetpack")).toBe(true);
     expect(run.powers.has("double")).toBe(true);
+    // Just as when one is picked up: a trail of coins in the sky, and the fanfare.
+    expect(run.course.coins.some((c) => c.y > JETPACK_HEIGHT)).toBe(true);
+    expect(run.drain().filter((e) => e.type === "power")).toHaveLength(2);
   });
 
   it("jump to the start of the next zone, passing through anything there", () => {

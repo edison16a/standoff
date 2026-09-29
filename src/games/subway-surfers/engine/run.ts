@@ -6,7 +6,7 @@ import { startBurst } from "./motion";
 import { flightHeight, JETPACK_HEIGHT, Powers } from "./powers";
 import { newRunner, stepRunner, type Abilities, type Contact, type RunnerInput, type RunnerState } from "./runner";
 import { COIN, JUMP, laneX, MAX_LEVEL, speedAt, STEP_S, TRAIN, ZONE_LENGTH, type Lane } from "./tuning";
-import { frontAt, type Obstacle } from "./types";
+import { frontAt, type Obstacle, type PowerKind } from "./types";
 
 export interface RunOptions {
   /** The tutorial: an empty yard at a gentle jog. */
@@ -189,10 +189,14 @@ export class Run {
       this.emit({ type: "coin", streak: this.streak, x: coin.x, y: coin.y, z: coin.z, pulled });
     }
     const pickup = collectPickup(this.course, s);
-    if (!pickup) return;
-    this.powers.start(pickup.kind);
-    this.emit({ type: "power", kind: pickup.kind });
-    if (pickup.kind === "jetpack") this.skyCoins();
+    if (pickup) this.grant(pickup.kind);
+  }
+
+  /** Starts a power up, as when one is picked up: a jetpack lays its trail of sky coins too. */
+  grant(kind: PowerKind): void {
+    this.powers.start(kind);
+    this.emit({ type: "power", kind });
+    if (kind === "jetpack") this.skyCoins();
   }
 
   /** A trail of coins in the sky, for the length of a jetpack flight. */
