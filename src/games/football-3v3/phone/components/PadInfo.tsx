@@ -13,7 +13,7 @@ export function statusOf(host: PhoneState): string | null {
   if (host.skip) return `Replay. Skip: ${host.skip.count} of ${host.skip.total}`;
   if (host.banner) return host.banner;
   if (host.grounded) return "Getting up";
-  if (host.withBall) return host.canThrow ? "Find a receiver" : "Run it in";
+  if (host.withBall) return host.canPitch ? "Press Pass to pitch" : host.canThrow ? "Find a receiver" : "Run it in";
   switch (host.phase) {
     case "choose":
     case "convert":
