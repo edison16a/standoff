@@ -75,12 +75,14 @@ export function heroAt(time: number): number {
 export const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 89.42, icon: 89.42 };
 
 /**
- * The stills' television shots, world metres, side on to the fight:
- * Blaze's shotgun going off into Vex four paces away, the balls in the
- * air between them. The square icon stands further back to hold both,
- * and looks lower so they stand above the logo.
+ * The stills' television shots, world metres, low on the far side of the
+ * fight: Blaze on the right, his shotgun going off into Vex four paces
+ * away on the left, paint bursting on Vex's mask. The big round bunker
+ * stands behind them, not in front where it hid Vex. The square icon
+ * stands further back to hold both, and looks lower so they stand above
+ * the logo.
  */
 export const STILL_CAMERA: Partial<Record<ShowcaseView, { from: THREE.Vector3; at: THREE.Vector3 }>> = {
-  poster: { from: new THREE.Vector3(-0.6, 1.5, -8.9), at: new THREE.Vector3(-0.95, 1.1, -14.1) },
-  icon: { from: new THREE.Vector3(-0.6, 1.35, -7.4), at: new THREE.Vector3(-0.95, 0.75, -14.1) },
+  poster: { from: new THREE.Vector3(-2.2, 1.6, -18.9), at: new THREE.Vector3(-0.9, 1.1, -14.1) },
+  icon: { from: new THREE.Vector3(-2.6, 1.45, -21.6), at: new THREE.Vector3(-0.9, 0.75, -14.1) },
 };
