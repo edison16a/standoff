@@ -10,7 +10,8 @@ import { clamp, v2, v3, type Vec2 } from "./vec";
 /** Runners split out this wide, and defenders line up this deep. */
 const SPLIT = 9;
 const COVER_DEPTH = 6;
-const SAFETY_DEPTH = 10;
+/** The spare defender sets up just off the ball, where he can rush or drop back. */
+const SPARE_DEPTH = 3.5;
 const SHOTGUN = 5;
 
 export function offenseOf(state: MatchState): Athlete[] {
@@ -39,6 +40,7 @@ function reset(a: Athlete, pos: Vec2, facing: number): void {
   a.tackleWait = 0;
   a.guard = { held: false, mark: null };
   a.rush = false;
+  a.block = { held: 0, through: false };
   a.route = null;
   a.brain.thinkIn = 0;
   a.brain.react = 0;
@@ -50,7 +52,7 @@ const wide = (z: number) => clamp(z, -FIELD.halfWidth + 3, FIELD.halfWidth - 3);
 /**
  * Everyone in their spots for the next snap: the linemen at the ball, the
  * quarterback in the shotgun, runners split wide either side, and on
- * defence a man over each runner with a safety deep over the middle.
+ * defence a man over each runner with the spare man just off the ball.
  */
 export function setFormation(state: MatchState): void {
   const { offense, los, ballZ } = state.drive;
@@ -68,11 +70,11 @@ export function setFormation(state: MatchState): void {
     return spot;
   });
   const defenders = defenseOf(state);
-  // The defence's runners cover first, the quarterback plays safety.
+  // The defence's runners cover first; the quarterback is the spare man, set to rush or drop.
   const covers = [...defenders.filter((d) => d.role === "runner"), ...defenders.filter((d) => d.role === "qb")];
   covers.forEach((d, i) => {
     const spot = spots[i];
-    const pos = spot ? v2(los + s * COVER_DEPTH, spot.z) : v2(los + s * (SAFETY_DEPTH + (i - spots.length) * 3), ballZ);
+    const pos = spot ? v2(los + s * COVER_DEPTH, spot.z) : v2(los + s * (SPARE_DEPTH + (i - spots.length) * 4), ballZ);
     reset(d, pos, face + Math.PI);
   });
   setLinemen(state);

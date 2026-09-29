@@ -1,9 +1,13 @@
+import type { TeamId } from "../teams";
 import { isDown } from "./athlete";
 import { BODY, LINE } from "./tuning";
 import type { MatchState } from "./types";
 import { dot, scale, sub, type Vec2 } from "./vec";
 
 interface Body {
+  /** A defender who has shed his block passes the linemen by. */
+  through: boolean;
+  team: TeamId;
   pos: Vec2;
   vel: Vec2;
   mass: number;
@@ -17,18 +21,16 @@ const LINEMAN_RADIUS = 0.55;
 /**
  * Bodies bump and shove instead of passing through each other. Overlap
  * is split by mass, and the closing speed is shared as in a dead hit, so
- * a big back running into a small corner keeps going. A rusher leaning in
- * with Rush counts as heavier against a blocker, which is what lets him
- * push through. Players on the grass are stepped over.
+ * a big back running into a small corner keeps going. A rusher who has
+ * shed his block slips past the linemen. Players on the grass are stepped over.
  */
 export function collide(state: MatchState): void {
   const bodies: Body[] = [];
   for (const a of state.athletes) {
     if (isDown(a)) continue;
-    const rushing = a.rush && a.team !== state.drive.offense;
-    bodies.push({ pos: a.pos, vel: a.vel, mass: rushing ? a.mass * 2.4 : a.mass, radius: BODY.radius, anchored: false });
+    bodies.push({ through: a.block.through, team: a.team, pos: a.pos, vel: a.vel, mass: a.mass, radius: BODY.radius, anchored: false });
   }
-  for (const l of state.linemen) bodies.push({ pos: l.pos, vel: l.vel, mass: LINE.mass, radius: LINEMAN_RADIUS, anchored: true });
+  for (const l of state.linemen) bodies.push({ through: false, team: l.team, pos: l.pos, vel: l.vel, mass: LINE.mass, radius: LINEMAN_RADIUS, anchored: true });
   for (let i = 0; i < bodies.length; i++) {
     for (let j = i + 1; j < bodies.length; j++) separate(bodies[i]!, bodies[j]!);
   }
@@ -36,6 +38,9 @@ export function collide(state: MatchState): void {
 
 function separate(a: Body, b: Body): void {
   if (a.anchored && b.anchored) return;
+  if ((a.anchored && b.through) || (b.anchored && a.through)) return;
+  // Players slip past their own linemen, who are busy with the man across from them.
+  if ((a.anchored || b.anchored) && a.team === b.team) return;
   const d = sub(b.pos, a.pos);
   const gap = Math.hypot(d.x, d.z);
   const overlap = a.radius + b.radius - gap;

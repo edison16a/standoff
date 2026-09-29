@@ -55,6 +55,8 @@ describe("assisted throwing", () => {
     place(qb, s.drive.los - 5, 0);
     place(r, s.drive.los + 10, 0);
     place(d, s.drive.los + 8.6, 0.3);
+    // The other side's quarterback sets up over the ball; keep him out of this.
+    place(bySeat(s, 2), s.drive.los + 30, 20);
     run(s, 1 / 60, cmd(qb.id, { aim: v2(1, 0) }));
     const events = run(s, 2, cmd(qb.id, { throw: true }));
     const pick = events.find((e) => e.type === "interception");

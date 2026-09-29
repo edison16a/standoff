@@ -130,8 +130,22 @@ export function stepPass(state: MatchState, dt: number): void {
     tip(state, a);
   }
   const target = state.athletes[pass.target];
-  if (target && !pass.tipped && inHands(state, target, THROW.catchReach)) return catchBall(state, target, false);
+  if (target && !pass.tipped && inHands(state, target, THROW.catchReach)) {
+    const contest = contester(state, target);
+    if (contest && state.rng.chance(breakupChance(target))) return tip(state, contest);
+    return catchBall(state, target, false);
+  }
   if (state.ball.pos.y <= 0.12) endIncomplete(state);
+}
+
+/** A defender draped on the receiver as the ball arrives, who can knock it away. Guard tails, it does not contest. */
+function contester(state: MatchState, r: Athlete): Athlete | null {
+  return state.athletes.find((d) => d.team !== r.team && !isDown(d) && !d.guard.held && dist(d.pos, r.pos) < THROW.contest) ?? null;
+}
+
+/** The chance a close defender breaks up a catch: sure hands hold on more often. */
+export function breakupChance(r: Athlete): number {
+  return THROW.breakup * (1.25 - r.hands);
 }
 
 /** A hand gets to it: the ball pops up and away, and nobody can catch it now. */

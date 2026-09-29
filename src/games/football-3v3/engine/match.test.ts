@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { MatchEvent } from "./events";
 import { createMatch, endReplay, stepMatch } from "./match";
-import type { MatchState } from "./types";
+import type { MatchOptions, MatchState } from "./types";
 
 /** Plays a game of computer players to the end, or gives up after an hour of game time. */
-function playOut(seed: number, level: "easy" | "hard" = "hard", quarterSeconds?: number): { state: MatchState; events: MatchEvent[] } {
-  const state = createMatch([], { seed, level, replays: true, ...(quarterSeconds ? { quarterSeconds } : {}) });
+function playOut(seed: number, level: "easy" | "hard" = "hard", extra: Partial<MatchOptions> = {}): { state: MatchState; events: MatchEvent[] } {
+  const state = createMatch([], { seed, level, replays: true, ...extra });
   const events: MatchEvent[] = [];
   for (let t = 0; t < 3600 && state.phase !== "final"; t += 1 / 60) {
     stepMatch(state);
@@ -63,7 +63,8 @@ describe("a game of computer players", () => {
   });
 
   it("ends on the clock when nobody gets to 14, with overtime for a tie", () => {
-    const { state, events } = playOut(5, "easy", 8);
+    // Short quarters and an unreachable target, so only the clock can end it.
+    const { state, events } = playOut(5, "easy", { quarterSeconds: 8, pointsToWin: 99 });
     expect(state.phase).toBe("final");
     expect(events.some((e) => e.type === "quarter" && e.quarter === 4)).toBe(true);
     // A tie after four goes to sudden death, so there is always a winner, and ahead.

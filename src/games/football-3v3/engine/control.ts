@@ -81,5 +81,5 @@ function defend(state: MatchState, a: Athlete, cmd: Command, dt: number, pace: n
   if (!a.guard.held) a.guard.mark = null;
   if (cmd.tackle && pressTackle(state, a)) return stepLunge(state, a, dt);
   const stick = a.guard.held ? guardStick(state, a) : cmd.move;
-  runToward(state, a, stick, dt, pace * blockedPace(state, a));
+  runToward(state, a, stick, dt, pace * blockedPace(state, a, dt));
 }

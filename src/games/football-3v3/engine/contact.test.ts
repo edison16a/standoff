@@ -73,7 +73,10 @@ describe("tackles", () => {
     giveBall(s, r.id);
     place(r, s.drive.los + 6, 0, 6, 0);
     place(d, s.drive.los + 9.5, 0);
-    const events = run(s, 0.6, (t) => new Map([[r.id, { move: v2(0, 1), juke: t < 0.05 }], [d.id, { move: v2(), tackle: t > 0.1 }]]));
+    // The other side's quarterback sets up over the ball; keep him out of this.
+    place(bySeat(s, 2), s.drive.los + 30, 20);
+    // The runner sees the lunge coming and side steps it.
+    const events = run(s, 0.6, () => new Map([[r.id, { move: v2(0, 1), juke: d.action === "lunge" }], [d.id, { move: v2(), tackle: true }]]));
     expect(events.find((e) => e.type === "tackle")).toMatchObject({ athlete: d.id, result: "missed" });
     expect(d.action).toBe("down");
     expect(d.downKind).toBe("missed");

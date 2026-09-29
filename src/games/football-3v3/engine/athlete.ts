@@ -30,6 +30,7 @@ export function makeAthlete(id: number, team: TeamId, role: Role, character: Cha
     tackleWait: 0,
     guard: { held: false, mark: null },
     rush: false,
+    block: { held: 0, through: false },
     route: null,
     speed: unit(c.stats.speed),
     strength: unit(c.stats.strength),

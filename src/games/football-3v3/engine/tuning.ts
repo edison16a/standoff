@@ -101,7 +101,12 @@ export const LINE = {
   pickUp: 2.4,
   /** A rusher held by a block keeps this share of speed, more when rushing. */
   held: 0.3,
-  heldRush: 0.72,
+  heldRush: 0.6,
+  /** Seconds tied up before a defender sheds the block and is through: far quicker with Rush. */
+  shed: 2.4,
+  shedRush: 0.55,
+  /** A blocker this close has hold of him. */
+  contact: 1.35,
 } as const;
 
 export const THROW = {
@@ -124,6 +129,9 @@ export const THROW = {
   touchReach: 0.95,
   /** How high a jumping player reaches. */
   jumpReach: 3.2,
+  /** A defender this close to the receiver as the ball arrives may knock it away. */
+  contest: 1.3,
+  breakup: 0.55,
   /** A defender this close to the catch point, in front of the target, takes it every time. */
   pickZone: 2.4,
   pickLine: 1.5,

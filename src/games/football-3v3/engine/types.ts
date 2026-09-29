@@ -96,6 +96,8 @@ export interface Athlete {
   guard: { held: boolean; mark: number | null };
   /** Holding Rush: through the line more easily. */
   rush: boolean;
+  /** Seconds tied up with a blocker, and whether he has shed the block and is through. */
+  block: { held: number; through: boolean };
   route: RouteState | null;
   /** 0 to 1, from the roster. */
   speed: number;

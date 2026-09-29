@@ -76,19 +76,31 @@ export function linemanStride(l: Lineman): number {
 }
 
 /**
- * How much of a defender's pace survives the offensive line: a rusher
- * running into a blocker is held up, far less when holding Rush. The
- * blocker turns to take him on, which the renderer shows.
+ * How much of a defender's pace survives the offensive line. A blocker
+ * who gets hold of him slows him right down until he sheds the block;
+ * holding Rush he keeps more pace and sheds it far sooner, then he is
+ * through and the line no longer touches him.
  */
-export function blockedPace(state: MatchState, a: Athlete): number {
+export function blockedPace(state: MatchState, a: Athlete, dt: number): number {
   if (a.team === state.drive.offense || state.phase !== "live") return 1;
-  let pace = 1;
+  let near = false;
   for (const l of state.linemen) {
     if (l.team !== state.drive.offense) continue;
-    if (l.blocking === a.id && dist(l.pos, a.pos) > LINE.pickUp) l.blocking = null;
-    if (dist(l.pos, a.pos) > LINE.pickUp * 0.55) continue;
-    l.blocking = a.id;
-    pace = Math.min(pace, a.rush ? LINE.heldRush : LINE.held);
+    const gap = dist(l.pos, a.pos);
+    if (gap < LINE.contact && !a.block.through) {
+      near = true;
+      l.blocking = a.id;
+    } else if (l.blocking === a.id && gap > LINE.pickUp) l.blocking = null;
   }
-  return pace;
+  if (!near) {
+    // Clear of the line: the next block starts from scratch.
+    if (!state.linemen.some((l) => l.team === state.drive.offense && dist(l.pos, a.pos) < LINE.pickUp)) a.block = { held: 0, through: false };
+    return 1;
+  }
+  a.block.held += dt;
+  if (a.block.held >= (a.rush ? LINE.shedRush : LINE.shed)) {
+    a.block.through = true;
+    return 1;
+  }
+  return a.rush ? LINE.heldRush : LINE.held;
 }
