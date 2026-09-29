@@ -10,8 +10,10 @@ const GONE = 410;
 /**
  * Without a shared store, a post can land on a server instance that does
  * not hold our stream, which answers 410. Each retry is routed afresh, so
- * one of a few usually finds the right one. They go at once: a pause would
- * only hold up everything queued behind.
+ * one of a few usually finds the right one. A retry waits its turn like
+ * any post and takes along whatever queued meanwhile: instant retries
+ * doubled the requests where half the posts missed, and requests are what
+ * make Vercel add instances. This many misses in a row end the stream.
  */
 const MISROUTED_RETRIES = 5;
 /**
@@ -59,6 +61,8 @@ export class StreamChannel {
   private queue: Queued[] = [];
   private sendingBytes = 0;
   private lastPost = -Infinity;
+  /** Posts in a row that reached an instance without our stream. */
+  private misses = 0;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private heard = Date.now();
   private readonly watch = setInterval(() => {
@@ -119,24 +123,33 @@ export class StreamChannel {
 
   private async post(): Promise<void> {
     if (this.readyState !== OPEN) return;
-    const body = `[${this.queue.map((item) => item.data).join(",")}]`;
+    const batch = this.queue;
+    const body = `[${batch.map((item) => item.data).join(",")}]`;
     this.queue = [];
     this.sendingBytes = body.length;
     this.lastPost = Date.now();
     try {
-      let status = GONE;
-      for (let attempt = 0; status === GONE && attempt <= MISROUTED_RETRIES; attempt++) {
-        this.posts += 1;
-        status = (await fetch(`${STREAM_PATH}?s=${this.id}`, { method: "POST", body })).status;
-      }
-      // Still gone, or anything else unexpected: start over on a fresh channel.
-      if (status >= 300) return this.finish(ABNORMAL);
+      this.posts += 1;
+      const { status } = await fetch(`${STREAM_PATH}?s=${this.id}`, { method: "POST", body });
+      if (status === GONE && this.misses < MISROUTED_RETRIES) {
+        this.misses += 1;
+        this.requeue(batch);
+      } else if (status >= 300) {
+        // Still gone, or anything else unexpected: start over on a fresh channel.
+        return this.finish(ABNORMAL);
+      } else this.misses = 0;
     } catch {
       return this.finish(ABNORMAL);
     } finally {
       this.sendingBytes = 0;
     }
     this.schedule();
+  }
+
+  /** A missed batch goes first again, less any frame a newer one of its kind replaced meanwhile. */
+  private requeue(batch: Queued[]): void {
+    const newer = new Set(this.queue.map((item) => item.key).filter((key) => key !== undefined));
+    this.queue = [...batch.filter((item) => item.key === undefined || !newer.has(item.key)), ...this.queue];
   }
 
   private finish(code: number): void {

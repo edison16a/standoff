@@ -110,19 +110,40 @@ describe("StreamChannel", () => {
     expect(closed).toHaveBeenCalledTimes(1);
   });
 
-  it("tries a misrouted post again at once, then gives up on the stream", async () => {
+  it("tries a misrouted post again on the next beat with what queued meanwhile, then gives up on the stream", async () => {
     const closed = vi.fn();
     const channel = openChannel();
     channel.onclose = closed;
-    statuses = [410, 410, 204];
-    channel.send("{}");
+    statuses = [410, 204];
+    channel.send('{"n":1}');
     await settle();
-    expect(bodies).toHaveLength(3);
+    // A retry waits its turn like any post, so misses never add requests.
+    expect(bodies).toHaveLength(1);
+    channel.send('{"n":2}');
+    vi.advanceTimersByTime(POST_GAP_MS);
+    await settle();
+    expect(bodies[1]).toBe('[{"n":1},{"n":2}]');
     expect(closed).not.toHaveBeenCalled();
     statuses = Array.from({ length: 6 }, () => 410);
     vi.advanceTimersByTime(POST_GAP_MS);
     channel.send("{}");
-    for (let i = 0; i < 6; i++) await settle();
+    for (let i = 0; i < 6; i++) {
+      await settle();
+      vi.advanceTimersByTime(POST_GAP_MS);
+    }
+    await settle();
     expect(closed).toHaveBeenCalledTimes(1);
+    expect(channel.posts).toBe(8);
+  });
+
+  it("drops a missed motion frame that a newer one replaced", async () => {
+    const channel = openChannel();
+    statuses = [410];
+    channel.send('{"motion":1}', "motion");
+    await settle();
+    channel.send('{"motion":2}', "motion");
+    vi.advanceTimersByTime(LOSSY_GAP_MS);
+    await settle();
+    expect(bodies).toEqual(['[{"motion":1}]', '[{"motion":2}]']);
   });
 });
