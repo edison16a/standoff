@@ -1,6 +1,7 @@
 import { CameraKit, type MoveEvent } from "@/games/kit/camera";
 import type { HostRoomApi } from "@/platform/games/game-api";
 import { BoxingAudio } from "../audio/boxing-audio";
+import { buildFor } from "../engine/builds";
 import type { MatchEvent } from "../engine/events";
 import type { Match } from "../engine/match";
 import type { DirectorInput } from "../render/director";
@@ -16,6 +17,7 @@ import { PlayersFeed } from "./players-feed";
 import { loadRecords } from "./records";
 import { testRoundMs } from "./dev-overrides";
 import { finishFight } from "./results";
+import { fightShortcuts } from "./admin";
 
 const HUD_MS = 100;
 
@@ -37,6 +39,7 @@ export class BoxingHost {
   private readonly listeners = new Set<(event: MatchEvent, match: Match) => void>();
   private stopKit: (() => void) | null = null;
   private stopDriver: (() => void) | null = null;
+  private stopAdmin: (() => void) | null = null;
   private lastHud = 0;
   private lastTick = 0;
   private lastStage = "";
@@ -50,9 +53,17 @@ export class BoxingHost {
     return [true, store.getState().players === 2];
   }
 
+  /** Who is boxing: each player's own name from the room, and the computer. */
+  names(): [string, string] {
+    const players = this.room.players();
+    const nameOf = (seat: number) => players[seat - 1]?.name || `Player ${seat}`;
+    return [nameOf(1), this.humans[1] ? nameOf(2) : "Computer"];
+  }
+
   looks(): [Look, Look] {
     const [a, b] = store.getState().picks;
-    return [lookFor(a), lookFor(b)];
+    const [red, blue] = this.names();
+    return [lookFor(a, red), lookFor(b, blue)];
   }
 
   listen(listener: (event: MatchEvent, match: Match) => void): () => void {
@@ -97,12 +108,14 @@ export class BoxingHost {
   startFight(): void {
     const humans = this.humans;
     this.stopDriver?.();
-    const [red, blue] = this.looks();
-    this.driver = new FightDriver({ seed: Math.floor(Math.random() * 1e9), slots: [1, humans[1] ? 2 : null], roundMs: testRoundMs(), styles: [red.id, blue.id], botLevel: store.getState().botLevel });
+    const [a, b] = store.getState().picks;
+    this.driver = new FightDriver({ seed: Math.floor(Math.random() * 1e9), slots: [1, humans[1] ? 2 : null], roundMs: testRoundMs(), builds: [buildFor(a).id, buildFor(b).id], botLevel: store.getState().botLevel });
     this.stopDriver = this.driver.listen((event) => this.onMatchEvent(event, this.driver!.match));
+    this.stopAdmin?.();
+    this.stopAdmin = fightShortcuts(this.names(), () => this.driver);
     this.banners.clear();
     this.audio.setPlayers(humans);
-    this.audio.setNames([red.name, blue.name]);
+    this.audio.setNames(this.names());
     this.audio.screen("fight");
     this.fightId++;
     this.feed.reset();
@@ -162,6 +175,7 @@ export class BoxingHost {
 
   dispose(): void {
     this.stopDriver?.();
+    this.stopAdmin?.();
     this.dropKit();
     this.audio.stop();
     this.room.setPlaying(false);
@@ -190,6 +204,8 @@ export class BoxingHost {
   private leaveFight(): void {
     this.stopDriver?.();
     this.stopDriver = null;
+    this.stopAdmin?.();
+    this.stopAdmin = null;
     this.driver = null;
     this.lastStage = "";
     this.audio.replay(false);

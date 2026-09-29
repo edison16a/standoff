@@ -2,8 +2,12 @@ import type * as THREE from "three";
 import type { Fighter } from "../../engine/fighter";
 import type { Hand } from "../../engine/types";
 
-/** What a boxer is doing around the fight, beyond punching and defending. */
-export type AnimMode = "fight" | "corner" | "win" | "lose";
+/**
+ * What a boxer is doing around the fight, beyond punching and defending.
+ * "champion" lifts the belt in the ceremony, and "ropes" slumps back on
+ * the ropes in the corner while the other boxer celebrates.
+ */
+export type AnimMode = "fight" | "corner" | "win" | "lose" | "champion" | "ropes";
 
 /**
  * A player's own arms from the camera, ready for their boxer to copy:
@@ -45,4 +49,9 @@ export interface AnimInput {
   mirror: MirrorInput | null;
   /** Light the gloves while winding up, for the computer boxer. */
   telegraph: boolean;
+  /**
+   * Seconds into the winner's ceremony, or null outside it. In the
+   * ceremony the fight's own states, like being down, no longer show.
+   */
+  ceremony: number | null;
 }

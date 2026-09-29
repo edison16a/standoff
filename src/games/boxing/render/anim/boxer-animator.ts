@@ -5,6 +5,7 @@ import type { Hand } from "../../engine/types";
 import type { BoxerModel } from "../models/boxer-model";
 import { LID_OPEN } from "../models/head";
 import { BoxerRig } from "../rig/boxer-rig";
+import { championHand } from "../victory/champion-hands";
 import { stance, type RigPose } from "../rig/pose";
 import type { AnimInput } from "./anim-input";
 import { BodyMotion, fallParts } from "./body-motion";
@@ -60,6 +61,11 @@ export class BoxerAnimator {
     return this.model.head.localToWorld(out.copy(FACE_OFFSET));
   }
 
+  /** After a cut to a new spot, the feet plant afresh instead of striding across the ring. */
+  snapFeet(): void {
+    this.feet.reset();
+  }
+
   /** The current punch's shape, for effects like the whoosh and the glint. */
   get punchShape(): PunchShape {
     return this.shape;
@@ -89,6 +95,7 @@ export class BoxerAnimator {
     const pose: HandPose = { target: this.rig.chestToModel(held.target, new THREE.Vector3()), pole: this.rig.chestToModel(held.pole, new THREE.Vector3()) };
     blendHand(pose, ROOT_POSES.ropes[hand], body.corner.value * (1 - body.seat.value));
     blendHand(pose, ROOT_POSES.knees[hand], body.seat.value);
+    if (input.mode === "champion" && input.ceremony !== null) blendHand(pose, championHand(hand, input.ceremony), body.cheer.value);
     const shoulder = this.rig.shoulder(hand, new THREE.Vector3());
     const mirror = input.mirror;
     const reach = mirror?.reach[hand];

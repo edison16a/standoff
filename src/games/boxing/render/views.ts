@@ -14,7 +14,7 @@ export const LEFT: ViewRect = { x: 0, y: 0, w: 0.5, h: 1 };
 export const RIGHT: ViewRect = { x: 0.5, y: 0, w: 0.5, h: 1 };
 
 /** Where the fight is, as far as the cameras care. */
-export type Shot = "menu" | "fight" | "replay" | "celebrate";
+export type Shot = "menu" | "fight" | "replay" | "celebrate" | "ceremony";
 
 /** One player's own view over their boxer's shoulder, and where it sits on screen. */
 export interface OwnView {

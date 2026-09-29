@@ -22,13 +22,14 @@ export class Commentator {
   private names: [string, string] = ["Red", "Blue"];
   private lastColour = 0;
 
-  /** Full names of the two boxers, red corner first. */
+  /** The two players' names, red corner first. */
   setNames(names: [string, string]): void {
     this.names = names;
   }
 
   event(event: MatchEvent): void {
-    const surname = (id: FighterId) => this.names[id].split(" ").pop()!;
+    // Players go by their own names, short already, so the whole name is called.
+    const surname = (id: FighterId) => this.names[id];
     switch (event.type) {
       case "intro":
         return this.say(`${this.names[0]} versus ${this.names[1]}. Let's get it on!`, "cut");
