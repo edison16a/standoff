@@ -14,7 +14,7 @@ const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 const UP = -2.95;
 
 /** The two holds on the cup: cradled at the chest, and right up over the head. */
-const CRADLE = { shX: -0.3, shZ: -0.06, shY: 0.6, el: -1.25 };
+const CRADLE = { shX: -0.2, shZ: -0.06, shY: 0.6, el: -0.95 };
 const RAISED = { shX: UP, shZ: 0.2, shY: 0.05, el: -0.28 };
 
 /**
@@ -35,7 +35,7 @@ export function captainPose(t: number): Pose {
   p.elL = p.elR = mix(CRADLE.el, RAISED.el, lift) - 0.55 * pump;
   // A kiss for the cup: the head and shoulders lean in to it.
   const kiss = bump(t, 0.7, 1.7);
-  p.spineX = 0.24 * kiss - 0.14 * lift;
+  p.spineX = 0.3 * kiss - 0.14 * lift;
   p.neckX = mix(0.3 + 0.3 * kiss, -0.5, lift);
   // A dip at the knees to drive it up, and a bounce on the toes with every pump.
   const dip = bump(t, CEREMONY.raise - 0.3, CEREMONY.raise + 0.35);

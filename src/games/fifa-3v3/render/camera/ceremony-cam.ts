@@ -55,7 +55,8 @@ function lookUnderNames(pos: Point, fov: number): Point {
 function hero(t: number): CameraPlace {
   const s = smooth(t / CEREMONY.up);
   const lift = smooth((t - CEREMONY.raise) / (CEREMONY.up - CEREMONY.raise));
-  const pos = around(0.45 - 0.4 * s, 4.9 - 1.2 * s, 1.15 - 0.45 * lift);
+  // Near his eye line while he cradles it, so the cup in front does not hide his face; then down low for the lift.
+  const pos = around(0.45 - 0.4 * s, 4.9 - 1.2 * s, 1.4 - 0.65 * lift);
   return { pos, look: { x: CEREMONY_SPOT.x, y: 1.3 + 0.75 * lift, z: CEREMONY_SPOT.z }, fov: 30 };
 }
 
