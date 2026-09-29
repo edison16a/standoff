@@ -2,7 +2,7 @@ import type { GameEvent } from "./events";
 import { Rng } from "./rng";
 import { Spawner, type SpawnOrder } from "./spawner";
 import { HALF_WIDTH, type StageSpec } from "./stages";
-import { alive, makeZombie, sideRoom, stepZombie, type Zombie } from "./zombie";
+import { alive, BOSS_LANE, makeZombie, roomFor, stepZombie, type Zombie } from "./zombie";
 import { isBoss, weakPointHp } from "./zombie-kinds";
 
 export { teamCount, teamGap, teamMaxAlive, teamRush } from "./spawner";
@@ -105,8 +105,9 @@ export class Encounter {
   private add(order: SpawnOrder, emit: (event: GameEvent) => void): void {
     const half = HALF_WIDTH[this.spec.zone];
     const front = Math.min(half - 0.6, 3.2);
-    // A rusher keeps to its lane, so the pack fans out across the front line.
-    const targetSide = order.rush ? Math.max(-front, Math.min(front, order.side)) : this.rng.range(-front, front);
+    // A rusher keeps to its lane, so the pack fans out across the front line. A boss keeps to the middle.
+    const lane = isBoss(order.kind) ? BOSS_LANE : front;
+    const targetSide = order.rush ? Math.max(-front, Math.min(front, order.side)) : this.rng.range(-lane, lane);
     const z = makeZombie(this.nextId++, order.kind, order.ahead, order.side, targetSide, {
       hpScale: this.spec.tough,
       speedScale: this.spec.speed,
@@ -120,7 +121,7 @@ export class Encounter {
 
   /** A side position kept on the street and on screen. */
   private keepInView(z: Zombie, side: number): number {
-    const room = Math.min(HALF_WIDTH[this.spec.zone], sideRoom(z.ahead));
+    const room = Math.min(HALF_WIDTH[this.spec.zone], roomFor(z));
     return Math.max(-room, Math.min(room, side));
   }
 

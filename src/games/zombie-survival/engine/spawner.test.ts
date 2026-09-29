@@ -4,8 +4,8 @@ import type { GameEvent } from "./events";
 import { Rng } from "./rng";
 import { Spawner, teamCount, teamRush, type SpawnOrder } from "./spawner";
 import { stage } from "./stages";
-import { alive } from "./zombie";
-import { isBoss } from "./zombie-kinds";
+import { alive, BOSS_LANE } from "./zombie";
+import { isBoss, KINDS } from "./zombie-kinds";
 
 const DT = 1 / 30;
 
@@ -75,6 +75,27 @@ describe("an encounter", () => {
     const runners = encounter.zombies.filter((z) => alive(z) && z.kind === "runner");
     const sides = runners.map((z) => z.targetSide);
     expect(Math.max(...sides) - Math.min(...sides)).toBeGreaterThan(1);
+  });
+
+  it("keeps every boss in the middle of the road, even with runners shoving past", () => {
+    for (const index of [2, 5, 10, 14, 15]) {
+      for (const seed of [1, 2, 3, 4]) {
+        const encounter = new Encounter(stage(index), 4, seed, 1);
+        let widest = 0;
+        let closest = Infinity;
+        for (let t = 0; t < 90; t += DT) {
+          encounter.update(DT, () => undefined);
+          for (const z of encounter.zombies.filter((z) => alive(z) && isBoss(z.kind))) {
+            widest = Math.max(widest, Math.abs(z.side));
+            closest = Math.min(closest, z.ahead - KINDS[z.kind].reach);
+          }
+        }
+        // A wide boss near the edge would carry its outer joints off screen, out of every player's reach.
+        expect(widest, `stage ${index} seed ${seed}`).toBeLessThanOrEqual(BOSS_LANE + 1e-9);
+        // Checked up close too, where the crowd at the front pushes hardest.
+        expect(closest, `stage ${index} seed ${seed}`).toBeLessThan(3);
+      }
+    }
   });
 
   it("ends at once when wiped, for the admin panel's shortcut", () => {

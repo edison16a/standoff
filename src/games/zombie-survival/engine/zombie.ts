@@ -48,6 +48,18 @@ export function sideRoom(ahead: number): number {
   return Math.max(1.1, ahead * 0.7);
 }
 
+/**
+ * How far off the middle a boss may walk. A boss is metres wide, so one
+ * that closed in near the edge would carry its outer joints off screen,
+ * where nobody could shoot them and the fight could never be won.
+ */
+export const BOSS_LANE = 0.6;
+
+/** The side room for this zombie where it stands now: a boss keeps to the middle. */
+export function roomFor(z: Pick<Zombie, "kind" | "ahead">): number {
+  return isBoss(z.kind) ? BOSS_LANE : sideRoom(z.ahead);
+}
+
 export function makeZombie(id: number, kind: ZombieKind, ahead: number, side: number, targetSide: number, opts: { hpScale: number; speedScale: number; harm: number; weakHp: number; seed: number }): Zombie {
   const spec = KINDS[kind];
   const boss = isBoss(kind);
@@ -101,7 +113,7 @@ export function stepZombie(z: Zombie, dt: number): number {
   const drift = z.targetSide - z.side;
   // A Training zombie, with no pace at all, holds its spot sideways too.
   if (z.speed > 0) z.side += Math.sign(drift) * Math.min(Math.abs(drift), DRIFT * dt);
-  const room = sideRoom(z.ahead);
+  const room = roomFor(z);
   z.side = Math.max(-room, Math.min(room, z.side));
   if (z.state === "walk") {
     z.ahead -= walkSpeed(z) * dt;
