@@ -176,9 +176,16 @@
   cursor: default;
 }
 
+/*
+  Targets and dots are pointers, so they sit over everything the frame
+  puts on the big screen: a corner target stays in sight over the join
+  card, and a dot held at the edge over the tool bar. Dialogs such as
+  settings still open over them.
+*/
 .aim-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
+  z-index: 4;
   width: 100%;
   height: 100%;
   pointer-events: none;

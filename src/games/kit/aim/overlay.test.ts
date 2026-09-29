@@ -61,8 +61,13 @@ describe("the aim overlay", () => {
     HTMLCanvasElement.prototype.getContext = (() => recordingContext(calls)) as unknown as HTMLCanvasElement["getContext"];
     Object.defineProperty(HTMLCanvasElement.prototype, "clientWidth", { get: () => 800, configurable: true });
     Object.defineProperty(HTMLCanvasElement.prototype, "clientHeight", { get: () => 400, configurable: true });
+    // The game's box the overlay draws in, which fills the page here.
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ left: 0, top: 0, width: 800, height: 400 } as DOMRect);
   });
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
 
   it("shows each player's targets inside their zone, then their dot, and no dots once asked not to", () => {
     const { room, say } = fakeRoom();
@@ -99,6 +104,22 @@ describe("the aim overlay", () => {
     expect(calls.some((c) => c.name === "clearRect")).toBe(true);
     expect(calls.some((c) => c.name === "createRadialGradient")).toBe(false);
     act(() => root.unmount());
+    aim.dispose();
+  });
+
+  it("sits on top of the page, over the join card, but draws in the box of the game it is placed in", () => {
+    const { room, say } = fakeRoom();
+    const aim = new HostAim(room);
+    const host = document.createElement("div");
+    const root = createRoot(host);
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ left: 100, top: 50, width: 800, height: 400 } as DOMRect);
+    act(() => root.render(createElement(AimOverlay, { aim, players: () => PLAYERS })));
+    expect(document.body.querySelector(":scope > canvas.aim-overlay")).not.toBeNull();
+    say(1, { kind: "aim-step", step: "center" });
+    step();
+    expect(calls.find((c) => c.name === "translate")?.args).toEqual([100, 50]);
+    act(() => root.unmount());
+    expect(document.body.querySelector("canvas.aim-overlay")).toBeNull();
     aim.dispose();
   });
 });

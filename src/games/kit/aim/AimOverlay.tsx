@@ -1,6 +1,7 @@
 "use client";
 import "./aim.css";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import type { Player } from "@/platform/games/game-api";
 import { playerColor } from "@/games/kit/players";
 import { sameZone, WHOLE_SCREEN, type AimZone, type ScreenPoint } from "./aim-math";
@@ -24,15 +25,23 @@ interface AimOverlayProps {
 
 type Box = { x: number; y: number; w: number; h: number };
 
+const noSubscribe = () => () => undefined;
+
 /**
  * A see through layer over the whole game screen. While a player
  * calibrates it shows the target they should point at, ringed in their
  * colour with their name. During play it draws every player's laser dot.
  * A seat given a zone (see HostAim.setZone) sees its targets inside it,
  * with the zone outlined in its colour, and its dot moves within it.
+ * Targets and dots are pointers, so the layer sits on top of the page,
+ * over the join card and the tool bar, while still drawing in the box of
+ * the element it is placed in.
  */
 export function AimOverlay({ aim, players, dots = true, targets = true }: AimOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const anchorRef = useRef<HTMLSpanElement>(null);
+  // The page only exists in the browser, so the layer is added there.
+  const client = useSyncExternalStore(noSubscribe, () => true, () => false);
   // Read through refs, so new props on a render never restart the drawing loop.
   const playersRef = useRef(players);
   const showRef = useRef({ dots, targets });
@@ -44,19 +53,22 @@ export function AimOverlay({ aim, players, dots = true, targets = true }: AimOve
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
-    if (!canvas || !ctx) return;
+    // The game's own box: the element the overlay is placed in.
+    const stage = anchorRef.current?.parentElement;
+    if (!canvas || !ctx || !stage) return;
     let frame = 0;
     const draw = (now: number) => {
       // The next frame is booked first, so one frame that fails never stops the layer.
       frame = requestAnimationFrame(draw);
       const { dots, targets } = showRef.current;
       const dpr = window.devicePixelRatio || 1;
-      const width = canvas.clientWidth;
-      const height = canvas.clientHeight;
-      if (canvas.width !== Math.round(width * dpr)) canvas.width = Math.round(width * dpr);
-      if (canvas.height !== Math.round(height * dpr)) canvas.height = Math.round(height * dpr);
+      const page = { w: canvas.clientWidth, h: canvas.clientHeight };
+      if (canvas.width !== Math.round(page.w * dpr)) canvas.width = Math.round(page.w * dpr);
+      if (canvas.height !== Math.round(page.h * dpr)) canvas.height = Math.round(page.h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, width, height);
+      ctx.clearRect(0, 0, page.w, page.h);
+      const { left, top, width, height } = stage.getBoundingClientRect();
+      ctx.translate(left, top);
       const everyone = playersRef.current().filter((player) => player.connected);
       // Players looking for the same target in the same zone share it, their names stacked under it.
       const waiting = new Map<string, { at: { x: number; y: number }; zone: AimZone; who: Player[] }>();
@@ -90,9 +102,14 @@ export function AimOverlay({ aim, players, dots = true, targets = true }: AimOve
     };
     frame = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(frame);
-  }, [aim]);
+  }, [aim, client]);
 
-  return <canvas ref={canvasRef} className="aim-overlay" aria-hidden="true" />;
+  return (
+    <>
+      <span ref={anchorRef} hidden />
+      {client && createPortal(<canvas ref={canvasRef} className="aim-overlay" aria-hidden="true" />, document.body)}
+    </>
+  );
 }
 
 /** The outline of a player's zone while they calibrate in it, so they can see which part of the screen is theirs. */
