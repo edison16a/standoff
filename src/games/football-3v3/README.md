@@ -4,9 +4,9 @@ American football for 2 to 6 players, with phones held sideways as controllers. 
 
 ## Playing it
 
-1. **Join.** Everyone scans the code on the big screen and picks one of six builds on their phone, a way to play (see Builds below). The build turns in 3D in the side's uniform beside its rating bars. Then Ready. The name each player typed is who they are everywhere: on the back of their jersey, their tag on the field, the strip along the top, the callouts, the winners' names and the stats.
+1. **Join.** Everyone scans the code on the big screen and picks one of six builds on their phone, a way to play (see Builds below). The build turns in 3D in the side's uniform beside its rating bars. Then Ready. The name each player typed is who they are everywhere: on the back of their jersey, their tag on the field, the callouts, the winners' names and the stats.
 2. **Lobby.** Ready puts a player on the smaller side. On the big screen the host moves players between Storm, Blaze and the bench, picks each side's QB with the QB and Runner chips (the old QB becomes a runner), and sets the computer difficulty: Easy, Medium, Hard or Training. Computer players fill every empty place: the QB of a side with nobody on it, and runners up to two a side. A side with people always has a person at QB. One ready player is enough to kick off. The teams move right to stay clear of the join code in the corner.
-3. **The game.** The big screen shows the broadcast: the score bug along the bottom, a callout above it for big moments (Touchdown, Field goal, Interception, Sack, First down), the phones' players along the top, and a name tag over each of them on the field.
+3. **The game.** The big screen shows the broadcast: the score bug along the bottom, a callout above it for big moments (Touchdown, Field goal, Interception, Sack, First down), and a name tag over each phone's player on the field. The tags are the only names in play, so there is no second row of name boxes. A player whose phone dropped keeps the tag with (CPU) after the name while the computer plays for them.
 4. **Touchdowns** are celebrated live, then replayed (see below), then the try.
 5. **The trophy.** A few seconds after the final whistle the broadcast cuts to midfield for the presentation (see below). Then the end screen slides in on the right: the winners and the score, the player of the game, and every player's passing, rushing and receiving yards, touchdowns, tackles and interceptions. Play again keeps the teams; Change teams goes back to the lobby. After a tie there is no trophy and the end screen comes at once.
 
@@ -46,10 +46,10 @@ The model is Soccer 3v3's World Cup ceremony, made for football from the victory
 
 Held sideways, like a controller: moving under the left thumb, the ball and the buttons under the right, and the score, the clock, the down and a status line in the middle. The layout follows what the player is doing right now, straight from the engine's `seatStatus`, and every change of layout lets go of anything held.
 
-* **The call.** Before each play the QB gets two big tiles, Throw and Kick, with the seconds left. After a touchdown: Kick for 1 or Go for 2.
-* **The QB.** A move bar on the left: slide across to move in the pocket, a shorter push up to step up or scramble, down to drop back. Before the snap the middle is one big Hike button with the seconds left of the 5 second window. On the right the throw stick: hold it and push toward a receiver on the big screen, the one nearest that line lights up, and let go to throw. Juke sits in the middle after the snap.
+* **The call.** Before each play the QB gets three big tiles, Throw, Run and Kick, with the seconds left. After a touchdown: Kick for 1 or Go for 2.
+* **The QB.** The same move stick as everyone on the left. Before the snap the middle is one big Hike button with the seconds left of the 5 second window. On the right the throw stick: hold it and push toward a receiver on the big screen, the one nearest that line lights up, and let go to throw. On a run call a big Pass button takes its place for the pitch. Juke sits in the middle after the snap.
 * **A runner** (and the QB once past the line): the run stick, Dive and Juke.
-* **The defence:** the move stick, Rush, Guard (held) and Tackle. After an interception the QB defends too.
+* **The defence:** the move stick, Rush, Guard (held) and Tackle. The defence never picks a play, so its pad stays up while the offense calls one, and defenders can move to set up (never across the line before the snap). After an interception the QB defends too.
 * **The kicker:** a marker sweeps across the accuracy bar, stop it in the green; then one climbs the power bar, stop it high. The phone draws both meters on its own clock and sends the reading it showed, so lag never moves the kick.
 * **Replay:** one Skip button and the tally.
 
@@ -99,7 +99,7 @@ Everything is synthesised through the audio engine, with no crowd: the brass and
 
 ## A play
 
-1. **Pick.** The QB picks kick or throw. A kick in range (58 yards or less) goes for the posts, anything longer is a punt. Ten seconds with no pick means throw.
+1. **Pick.** The QB picks throw, run or kick. A kick in range (58 yards or less) goes for the posts, anything longer is a punt. Ten seconds with no pick means throw. The defence can move while the offense decides.
 2. **Hike.** The QB has 5 seconds to hike. After that the ball is snapped anyway. Nobody on defence crosses the line before the snap. The rush starts at the snap.
 3. **Live.** The QB drops back and throws, or runs. Receivers run routes. Linemen crash together and push, and the defence slowly wins, so the pocket closes.
 4. **Whistle.** A tackle, stepping out, an incomplete pass, a dive landing, or a score.
@@ -109,6 +109,12 @@ Everything is synthesised through the audio engine, with no crowd: the brass and
 The throw stick draws an invisible aim line from the QB. The receiver nearest that line is the target and its ring lights up. Letting go throws. The throw leads the receiver's run and bends gently after a receiver who changes course, so a good throw does not miss. It can still be picked off: a defender standing in front of the target at the throw takes the ball, and a defender a person steers into the ball's path picks it off. A defender on Guard, or a computer defender, never jumps into the path.
 
 The QB throws once a play, from behind the line. Past the line the QB is a runner.
+
+**On the run.** The QB is as fast as any player, but how still he is at the release sets how clean the throw is (`engine/accuracy.ts`). Set feet give an accurate pass that bends after the receiver. Flat out, the ball comes down well off the lead spot, more on a long pass, bends less, and defenders read it wider and knock it down more often, so it is often off target, broken up or picked. A big arm steadies it a little. Computer QBs set their feet before they throw unless the rush is on them. The numbers are in `ON_THE_RUN` in `engine/tuning.ts`.
+
+### Running the ball
+
+On a run call one runner lines up beside the QB and a yard deeper, on the side with more room: a person's runner if there is one, so a player gets the carry. After the snap the QB presses Pass and lobs him the ball, a short soft pitch that leads his run (`engine/run-play.ts`). The ring shows who it is going to. There is no forward pass on a run call. A pitch counts as a run: nobody can pick it off, the yards are rushing yards, and one that hits the turf is dead where the play started. The QB can still keep it and run himself. Computer backs sweep wide and turn upfield, and computer QBs pitch a beat after the snap.
 
 ### Running and defending
 
@@ -132,9 +138,10 @@ A spiral spins about its long axis, its nose tips over to follow the arc, and it
 
 Difficulty comes from `src/games/kit/difficulty`: Easy (the default), Medium, Hard and Training. It sets how quickly bots react, how well they read the field, tackle and kick, and how hard they run. In Training they stand still.
 
-* The QB drops back, reads the receivers, throws to the most open one, and avoids throwing into a defender sat in front. With nobody open, it runs.
+* The QB drops back, reads the receivers, sets his feet, throws to the most open one, and avoids throwing into a defender sat in front. With nobody open, it runs.
 * Receivers run slants, gos, outs, curls, drags and posts, and go to meet the ball.
 * Defenders cover a receiver from over the top. A spare one rushes the QB on about half the plays and sits deep as a safety on the rest. A computer defender next to a pass can knock it down, but never catches it. Once someone has the ball they chase and tackle.
+* It calls a run on about one play in four, and on half of them with three yards or less to go.
 * On fourth down the bot kicks, a field goal in range or a punt, unless it is fourth and short past midfield.
 
 ## The engine
@@ -145,9 +152,9 @@ Difficulty comes from `src/games/kit/difficulty`: Easy (the default), Medium, Ha
 const match = new Match({ entries: buildLineup(signups), seed, level: "easy" });
 match.setMove(id, { x, z });      // the move stick, in field space
 match.setAim(id, { x, z });       // the throw stick while held; null lets go and throws
-match.press(id, "juke");          // hike, juke, dive, rush, tackle, guard, kick
+match.press(id, "juke");          // hike, juke, dive, rush, tackle, guard, kick, pass (the pitch)
 match.release(id, "guard");
-match.choose(id, "throw");        // throw or kick; after a touchdown, kick or two
+match.choose(id, "throw");        // throw, run or kick; after a touchdown, kick or two
 match.step(STEP);
 const view = buildView(match);    // everything the renderer and HUD need
 const events = match.drainEvents(); // hikes, throws, catches, tackles, kicks, scores
@@ -161,7 +168,7 @@ const pad = seatStatus(match, seat); // which controls a phone should show
 * A phone that drops is played by the computer with `setAuto`.
 * `admin.ts` has the shortcuts for the host's admin panel: `adminTouchdown`, `adminFieldGoal` and `adminTwoPoint`. They go through the real rules.
 
-Files: `field` and `downs` for the field and the rules of downs, `motion` and `body` for running, `juke`, `tackle`, `guard` and `linemen` for contact, `flight`, `aim`, `passing` and `catching` for the ball in the air, `kick` and `kick-flight` for kicking, `whistle`, `score` and `phases` for how plays end and what comes next, `build-effects` for what each rating does, `ceremony` for the trophy presentation, `bots/` for the computer players.
+Files: `field` and `downs` for the field and the rules of downs, `motion` and `body` for running, `juke`, `tackle`, `guard` and `linemen` for contact, `flight`, `aim`, `passing`, `accuracy` and `catching` for the ball in the air, `run-play` for the run call and the pitch, `kick` and `kick-flight` for kicking, `whistle`, `score` and `phases` for how plays end and what comes next, `build-effects` for what each rating does, `ceremony` for the trophy presentation, `bots/` for the computer players.
 
 ## Drawing the game
 
@@ -190,7 +197,7 @@ const board = scoreboard(view); // for <Scoreboard board={board} />
 * **The throw.** The QB closes the chest with the ball by the right ear and the left shoulder at the target, steps, turns through, and finishes with the hand across the body by the left hip.
 * **The line.** From the snap to the whistle each pair of linemen is locked together, low and driving. The engine marks them `blocked` for that, so the drawing never guesses.
 * **Reaching.** The target and nearby defenders go up for a pass. The passer's own linemen leave it alone.
-* **Rings.** A yellow ring pulses under the receiver the throw stick is on, and stays lit on the receiver the ball was thrown to until it arrives. A thin ring in team trim marks each player a person controls.
+* **Rings.** A bold magenta ring with a white edge pulses under the receiver the throw stick is on (or the back on a run call), and stays lit on the receiver the ball was thrown to until it arrives. No team or seat wears magenta, so it is never mistaken for another ring. A thin ring in team trim marks each player a person controls.
 * **The ball.** A laced football that follows the engine's flight: its long axis, the wobble and the spiral spin, or the tumble of a kick. Held, it sits in the carrier's hands.
 * **Touchdowns.** The scorer spikes it if that is their style, and the ball bounces away. Everyone else celebrates their own way: a dance, a flex, a salute, a leap or a point to the crowd. At the end the winners celebrate and the losers hang their heads.
 
