@@ -110,40 +110,45 @@ describe("StreamChannel", () => {
     expect(closed).toHaveBeenCalledTimes(1);
   });
 
-  it("tries a misrouted post again on the next beat with what queued meanwhile, then gives up on the stream", async () => {
+  it("tries a misrouted post once at once, then on the next beat with what queued meanwhile, then gives up on the stream", async () => {
     const closed = vi.fn();
     const channel = openChannel();
     channel.onclose = closed;
     statuses = [410, 204];
     channel.send('{"n":1}');
     await settle();
-    // A retry waits its turn like any post, so misses never add requests.
-    expect(bodies).toHaveLength(1);
+    expect(bodies).toEqual(['[{"n":1}]', '[{"n":1}]']);
+    statuses = [410, 410, 204];
+    vi.advanceTimersByTime(POST_GAP_MS);
     channel.send('{"n":2}');
+    await settle();
+    // No more than two requests for one batch: the rest wait their turn.
+    expect(bodies).toHaveLength(4);
+    channel.send('{"n":3}');
     vi.advanceTimersByTime(POST_GAP_MS);
     await settle();
-    expect(bodies[1]).toBe('[{"n":1},{"n":2}]');
+    expect(bodies[4]).toBe('[{"n":2},{"n":3}]');
     expect(closed).not.toHaveBeenCalled();
     statuses = Array.from({ length: 6 }, () => 410);
     vi.advanceTimersByTime(POST_GAP_MS);
     channel.send("{}");
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 4; i++) {
       await settle();
       vi.advanceTimersByTime(POST_GAP_MS);
     }
     await settle();
     expect(closed).toHaveBeenCalledTimes(1);
-    expect(channel.posts).toBe(8);
+    expect(channel.posts).toBe(11);
   });
 
   it("drops a missed motion frame that a newer one replaced", async () => {
     const channel = openChannel();
-    statuses = [410];
+    statuses = [410, 410];
     channel.send('{"motion":1}', "motion");
     await settle();
     channel.send('{"motion":2}', "motion");
     vi.advanceTimersByTime(LOSSY_GAP_MS);
     await settle();
-    expect(bodies).toEqual(['[{"motion":1}]', '[{"motion":2}]']);
+    expect(bodies).toEqual(['[{"motion":1}]', '[{"motion":1}]', '[{"motion":2}]']);
   });
 });

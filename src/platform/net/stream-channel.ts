@@ -10,10 +10,12 @@ const GONE = 410;
 /**
  * Without a shared store, a post can land on a server instance that does
  * not hold our stream, which answers 410. Each retry is routed afresh, so
- * one of a few usually finds the right one. A retry waits its turn like
- * any post and takes along whatever queued meanwhile: instant retries
- * doubled the requests where half the posts missed, and requests are what
- * make Vercel add instances. This many misses in a row end the stream.
+ * one of a few usually finds the right one. One retry goes at once, since
+ * the very next request is the likeliest to be routed elsewhere. Any more
+ * wait their turn like any post and take along whatever queued meanwhile:
+ * five instant retries could make six requests of one batch, and requests
+ * are what make Vercel add instances. This many misses in a row end the
+ * stream.
  */
 const MISROUTED_RETRIES = 5;
 /**
@@ -129,8 +131,11 @@ export class StreamChannel {
     this.sendingBytes = body.length;
     this.lastPost = Date.now();
     try {
-      this.posts += 1;
-      const { status } = await fetch(`${STREAM_PATH}?s=${this.id}`, { method: "POST", body });
+      let status = await this.deliver(body);
+      if (status === GONE && this.misses < MISROUTED_RETRIES) {
+        this.misses += 1;
+        status = await this.deliver(body);
+      }
       if (status === GONE && this.misses < MISROUTED_RETRIES) {
         this.misses += 1;
         this.requeue(batch);
@@ -144,6 +149,11 @@ export class StreamChannel {
       this.sendingBytes = 0;
     }
     this.schedule();
+  }
+
+  private async deliver(body: string): Promise<number> {
+    this.posts += 1;
+    return (await fetch(`${STREAM_PATH}?s=${this.id}`, { method: "POST", body })).status;
   }
 
   /** A missed batch goes first again, less any frame a newer one of its kind replaced meanwhile. */
