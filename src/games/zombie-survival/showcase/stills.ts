@@ -19,10 +19,10 @@ export interface Still {
  */
 export const STILLS: Record<"icon" | "poster", Still> = {
   icon: {
-    story: 6.365,
+    story: 6.27,
     runUp: 0.6,
     seed: 21,
-    camera: (t) => ({ position: [t.x + 0.8, 2.5, t.z + 7.4], lookAt: [t.x - 0.1, 1.05, t.z + 2.2], fov: 46, roll: 0.04 }),
+    camera: (t) => ({ position: [t.x + 4.6, 1.2, t.z + 8.6], lookAt: [t.x - 0.2, 1.3, t.z + 3.2], fov: 50, roll: 0.03 }),
   },
   poster: {
     story: 2.305,
