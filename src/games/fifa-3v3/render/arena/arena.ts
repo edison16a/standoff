@@ -22,6 +22,7 @@ export class Arena {
   readonly goals: [GoalModel, GoalModel];
   readonly crowd: Crowd;
   readonly key: THREE.DirectionalLight;
+  readonly ambient = new THREE.HemisphereLight("#9fb2ff", "#10281a", 0.42);
   readonly glow: THREE.CanvasTexture;
   private readonly net: THREE.CanvasTexture;
   private readonly parts: { dispose(): void }[] = [];
@@ -41,7 +42,7 @@ export class Arena {
     if (!lite) this.group.add(this.crowd.mesh);
     this.group.add(this.catchNets());
 
-    this.group.add(new THREE.HemisphereLight("#9fb2ff", "#10281a", 0.42));
+    this.group.add(this.ambient);
     // The key light comes from high on the camera's side, so the faces the broadcast sees are lit.
     this.key = new THREE.DirectionalLight("#fff4e2", 2.4);
     this.key.position.set(-14, 34, 22);

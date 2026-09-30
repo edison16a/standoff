@@ -27,6 +27,14 @@ export interface RendererOptions {
   scale?: number;
 }
 
+/** How the showcase grades its film: its own lights, the ground's soft and key light scaled, and how near the haze starts, in metres. */
+export interface CinemaLook {
+  lights?: readonly THREE.Object3D[];
+  ambient?: number;
+  key?: number;
+  haze?: number;
+}
+
 /**
  * Draws the match: the floodlit ground, the players and keepers, the
  * ball, the effects and the broadcast camera. It only ever reads match
@@ -73,6 +81,21 @@ export class MatchRenderer {
     this.squad = new Squad(this.arena.glow);
     this.referee = new RefereeFigure(this.refMaterial);
     this.scene.add(this.arena.group, this.effects.group, this.ball.group, this.squad.group, this.referee.group, this.aim.group, this.marker.group, this.ceremony.group);
+  }
+
+  /**
+   * The showcase's film look: the stands and sky sunk in haze, less soft
+   * light, a hotter exposure, and boards with no words, since a trailer
+   * carries no captions. A still adds its own lights and darkens further.
+   */
+  cinematic(look: CinemaLook = {}): void {
+    const { lights = [], ambient = 0.5, key = 1, haze = 55 } = look;
+    this.scene.add(...lights);
+    this.arena.ambient.intensity *= ambient;
+    this.arena.key.intensity *= key;
+    this.arena.boards.wordless();
+    this.renderer.toneMappingExposure = 1.05;
+    this.scene.fog = new THREE.Fog("#070a16", haze * 0.35, haze * 2.2);
   }
 
   /** The replay's target on the goal, shown through the strike, or null to hide it. */

@@ -25,6 +25,7 @@ export class Boards {
   private readonly meshes: THREE.Mesh[] = [];
   private flashFor = 0;
   private scroll = 0;
+  private words = true;
 
   constructor() {
     this.canvas.width = PANEL_PX * ADS.length;
@@ -63,14 +64,21 @@ export class Boards {
 
   private drawAds(): void {
     const ctx = this.canvas.getContext("2d")!;
-    ADS.forEach((ad, i) => panel(ctx, i, ad.text, ad.bg, ad.fg));
+    ADS.forEach((ad, i) => panel(ctx, i, this.words ? ad.text : "", ad.bg, ad.fg));
   }
 
-  /** GOAL in the scorer's colour on every board for a few seconds. */
+  /** The adverts' colours without their words, for the showcase's wordless trailer. */
+  wordless(): void {
+    this.words = false;
+    this.drawAds();
+    this.refresh();
+  }
+
+  /** GOAL in the scorer's colour on every board for a few seconds; without words, the boards light up in it. */
   flash(colour: string, text = "GOAL"): void {
     this.flashFor = 5;
     const ctx = this.canvas.getContext("2d")!;
-    for (let i = 0; i < ADS.length; i++) panel(ctx, i, text, "#050505", colour);
+    for (let i = 0; i < ADS.length; i++) panel(ctx, i, this.words ? text : "", this.words ? "#050505" : colour, colour);
     this.refresh();
   }
 
