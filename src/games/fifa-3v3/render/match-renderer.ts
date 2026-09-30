@@ -7,6 +7,7 @@ import { Arena } from "./arena/arena";
 import { CameraDirector, type Shot } from "./camera/director";
 import { CeremonyScene } from "./ceremony/ceremony-scene";
 import { Effects } from "./effects/effects";
+import { applyFilmLook, type CinemaLook } from "./film-look";
 import { AimLine } from "./figures/aim-line";
 import { AimMarker } from "./figures/aim-marker";
 import { RefereeFigure } from "./figures/referee-figure";
@@ -25,14 +26,6 @@ export interface RendererOptions {
   quality?: "high" | "low" | "film";
   /** Draws at this share of the screen's resolution. The showcase's clip uses less, to film in time. */
   scale?: number;
-}
-
-/** How the showcase grades its film: its own lights, the ground's soft and key light scaled, and how near the haze starts, in metres. */
-export interface CinemaLook {
-  lights?: readonly THREE.Object3D[];
-  ambient?: number;
-  key?: number;
-  haze?: number;
 }
 
 /**
@@ -83,19 +76,9 @@ export class MatchRenderer {
     this.scene.add(this.arena.group, this.effects.group, this.ball.group, this.squad.group, this.referee.group, this.aim.group, this.marker.group, this.ceremony.group);
   }
 
-  /**
-   * The showcase's film look: the stands and sky sunk in haze, less soft
-   * light, a hotter exposure, and boards with no words, since a trailer
-   * carries no captions. A still adds its own lights and darkens further.
-   */
+  /** The showcase's film look (film-look.ts). */
   cinematic(look: CinemaLook = {}): void {
-    const { lights = [], ambient = 0.5, key = 1, haze = 55 } = look;
-    if (lights.length) this.scene.add(...lights);
-    this.arena.ambient.intensity *= ambient;
-    this.arena.key.intensity *= key;
-    this.arena.boards.wordless();
-    this.renderer.toneMappingExposure = 1.05;
-    this.scene.fog = new THREE.Fog("#070a16", haze * 0.35, haze * 2.2);
+    applyFilmLook(this.scene, this.renderer, this.arena, look);
   }
 
   /** The replay's target on the goal, shown through the strike, or null to hide it. */
