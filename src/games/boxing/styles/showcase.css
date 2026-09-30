@@ -10,10 +10,20 @@
   background: #05060b;
 }
 
+/* A harder, film like grade than the live fight: deeper blacks and richer colour. */
 .bx-show__canvas {
   width: 100%;
   height: 100%;
   display: block;
+  filter: contrast(1.14) saturate(1.1);
+}
+
+.bx-show--loop::after,
+.bx-show--poster::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.5) 100%);
 }
 
 .bx-show--icon::after {

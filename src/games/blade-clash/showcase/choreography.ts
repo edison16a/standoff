@@ -31,7 +31,7 @@ export const DUEL: readonly Beat[] = [
   { at: 0, slot: 1, kind: "walk", ms: 620, move: 1 },
   { at: 0, slot: 2, kind: "walk", ms: 560, move: 1 },
   { at: 900, slot: 1, kind: "attack", attack: "overhead" },
-  { at: 1080, slot: 2, kind: "block", ms: 520 },
+  { at: 1080, slot: 2, kind: "block", ms: 590 },
   { at: 1900, slot: 2, kind: "hold", ms: 700, control: DROPPED },
   { at: 2050, slot: 1, kind: "attack", attack: "cut from the left" },
   // The point stops play here; the fighters are back on their marks by the time these start.

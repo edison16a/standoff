@@ -1,52 +1,100 @@
 import type * as THREE from "three";
 import type { Match } from "../engine/match";
 import type { ShoulderCamera } from "../render/cameras/shoulder-camera";
-import type { TvCamera } from "../render/cameras/tv-camera";
+import type { Spot, TvCamera } from "../render/cameras/tv-camera";
+import type { Ceremony } from "../render/victory/ceremony";
+import { CEREMONY_AT, CYCLE_S, JUMP_AT } from "./timeline";
+
+/** What a shot can frame: the fight, both cameras and the ceremony. */
+export interface ShotRig {
+  match: Match;
+  tv: TvCamera;
+  shoulder: ShoulderCamera;
+  ceremony: Ceremony;
+}
+
+interface Shot {
+  /** The shot runs until this many seconds into the loop. */
+  until: number;
+  /** Places the camera. `k` runs 0 to 1 through the shot, for slow pushes. */
+  place(rig: ShotRig, k: number, dt: number, cut: boolean): THREE.PerspectiveCamera;
+}
+
+const CENTRE: Spot = { x: 0, z: 0 };
+
+/** A broadcast camera placement, side on to the boxers and pushed through `k`. */
+function side(fov: number, swing: number, distance: number, height: number, lookY: number, bias: number) {
+  return ({ match, tv }: ShotRig, _k: number, dt: number): THREE.PerspectiveCamera => {
+    const [a, b] = match.footwork.spots;
+    tv.setFov(fov);
+    tv.sideOn(a, b, swing, distance, height, lookY, bias);
+    tv.finish(dt);
+    return tv.camera;
+  };
+}
+
+/** The red corner's own view over his shoulder, as the player sees the fight. */
+function shoulderView({ match, shoulder }: ShotRig, _k: number, dt: number, cut: boolean): THREE.PerspectiveCamera {
+  const [a, b] = match.footwork.spots;
+  shoulder.camera.fov = 48;
+  shoulder.camera.updateProjectionMatrix();
+  shoulder.update(a, b, dt, 0, cut);
+  return shoulder.camera;
+}
 
 /**
- * The trailer's cuts, by seconds into the loop: a low tracking shot of
- * the exchange, the player's own view over the red corner's shoulder,
- * a tight low angle on the knockout blow, and a crane up over the ring
- * as the blue corner lies on the canvas.
+ * The trailer, cut by cut. Close and low through the exchange so every
+ * punch fills the frame, the red corner's own view for the counter, the
+ * body shot and the first knockdown from low down, a cut over the count
+ * back to the player's view, a push in on the red boxer's face as he
+ * loads the hook, the blow itself tight in slow motion, the fall from
+ * the canvas, and a low angle up at the champion as the belt goes over
+ * his head.
  */
-export function trailerShot(cycle: number, match: Match, tv: TvCamera, shoulder: ShoulderCamera, dt: number, cut: boolean): THREE.PerspectiveCamera {
-  const [a, b] = match.footwork.spots;
-  if (cycle < 2.35) {
-    tv.setFov(32);
-    tv.sideOn(a, b, 0.3 + cycle * 0.06, 3.0, 1.5, 1.3);
-    tv.finish(dt);
-    return tv.camera;
-  }
-  if (cycle < 4.55) {
-    shoulder.camera.fov = 52;
-    shoulder.camera.updateProjectionMatrix();
-    shoulder.update(a, b, dt, 0, cut);
-    return shoulder.camera;
-  }
-  if (cycle < 6.55) {
-    tv.setFov(30);
-    tv.sideOn(a, b, -0.6 + (cycle - 4.55) * 0.08, 2.4, 1.15, 1.35, 0.62);
-    tv.finish(dt);
-    return tv.camera;
-  }
+const SHOTS: readonly Shot[] = [
+  { until: 1.25, place: (rig, k, dt) => side(28, 0.35 + k * 0.12, 2.3, 1.05, 1.5, 0.4)(rig, k, dt) },
+  { until: 2.45, place: shoulderView },
+  { until: 3.2, place: (rig, k, dt) => side(34, Math.PI - 0.5 + k * 0.1, 2.5, 0.55, 1.3, 0.55)(rig, k, dt) },
+  { until: JUMP_AT, place: (rig, k, dt) => side(32, 0.5 + k * 0.12, 2.5, 0.45, 1.2 - k * 0.25, 0.62)(rig, k, dt) },
+  { until: 5.45, place: shoulderView },
+  { until: 6.15, place: (rig, k, dt) => side(27 - k * 3, -0.95 + k * 0.1, 2.3 - k * 0.3, 1.35, 1.55, 0.3)(rig, k, dt) },
+  { until: 7.0, place: (rig, k, dt) => side(24, 0.2 + k * 0.05, 1.7, 1.45, 1.52, 0.78)(rig, k, dt) },
+  { until: CEREMONY_AT, place: (rig, k, dt) => side(36, -1.05 + k * 0.15, 2.6, 0.35, 0.9, 0.9)(rig, k, dt) },
+  {
+    until: Infinity,
+    place: ({ tv, ceremony }, k, dt) => {
+      tv.setFov(38);
+      tv.orbit(CENTRE, ceremony.front + 0.25 - k * 0.3, 3.3 - k * 0.6, 0.75, 1.75);
+      tv.finish(dt);
+      return tv.camera;
+    },
+  },
+];
+
+/** Which cut is on screen at `cycle` seconds into the loop, or -1 before it starts. */
+export function shotIndex(cycle: number): number {
+  if (cycle < 0) return -1;
+  return SHOTS.findIndex((shot) => cycle < shot.until);
+}
+
+/** Places the trailer's camera for `cycle` seconds into the loop. `cut` is true on a shot's first frame. */
+export function trailerShot(cycle: number, rig: ShotRig, dt: number, cut: boolean): THREE.PerspectiveCamera {
+  const index = shotIndex(cycle);
+  const from = index > 0 ? SHOTS[index - 1]!.until : 0;
+  const to = Math.min(SHOTS[index]!.until, CYCLE_S);
+  return SHOTS[index]!.place(rig, Math.min(1, (cycle - from) / (to - from)), dt, cut);
+}
+
+/** The icon's key art: low over the puncher's shoulder, the glove on the jaw and the other boxer's face as it snaps round. */
+export function iconShot([a, b]: readonly [Spot, Spot], tv: TvCamera): THREE.PerspectiveCamera {
   tv.setFov(36);
-  tv.orbit(b, 0.8 + (cycle - 6.55) * 0.25, 4.2, 3.4, 0.5);
-  tv.finish(dt);
+  tv.sideOn(a, b, 2.75, 2.3, 0.6, 1.35, 0.68);
   return tv.camera;
 }
 
-/** The icon's square key art: low and close as the hook lands, looking up at both boxers. */
-export function iconShot(match: Match, tv: TvCamera): THREE.PerspectiveCamera {
-  const [a, b] = match.footwork.spots;
-  tv.setFov(42);
-  tv.sideOn(a, b, -0.22, 1.85, 1.15, 1.52, 0.6);
-  return tv.camera;
-}
-
-/** The poster: the knockout blow, side on and wide enough to see the ring and the crowd. */
-export function posterShot(match: Match, tv: TvCamera): THREE.PerspectiveCamera {
-  const [a, b] = match.footwork.spots;
-  tv.setFov(32);
-  tv.sideOn(a, b, 0.15, 2.9, 1.3, 1.35, 0.55);
+/** The poster: the knockout blow from ringside, low enough to look up at both boxers with the arena dark behind. */
+export function posterShot([a, b]: readonly [Spot, Spot], tv: TvCamera): THREE.PerspectiveCamera {
+  tv.setFov(30);
+  tv.sideOn(a, b, 0.2, 2.5, 0.65, 1.42, 0.6);
   return tv.camera;
 }

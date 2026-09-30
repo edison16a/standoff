@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
-import type * as THREE from "three";
+import * as THREE from "three";
 import type { ShowcaseView } from "@/platform/games/game-api";
 import type { MatchEvent } from "../engine/events";
 import { ShoulderCamera } from "../render/cameras/shoulder-camera";
@@ -8,21 +8,24 @@ import { TvCamera } from "../render/cameras/tv-camera";
 import { FightRenderer, FULL } from "../render/fight-renderer";
 import { FightScene } from "../render/fight-scene";
 import { lookFor } from "../render/models/looks";
-import { iconShot, posterShot, trailerShot } from "./shots";
-import { CYCLE_S, Trailer } from "./trailer";
+import { Kicker } from "./kicker";
+import { playStep, STEP } from "./playback";
+import { shotIndex, trailerShot, type ShotRig } from "./shots";
+import { stageStill } from "./still";
+import { CEREMONY_AT, CYCLE_S, Trailer } from "./trailer";
 import "../styles/showcase.css";
 
-const INPUT = { mirrors: [null, null], telegraph: [false, false] } as const;
-/** The stills freeze this long after the knockout hook lands, in slow motion seconds, with the sparks in the air. */
-const STILL_AFTER = 0.45;
-const STEP = 1 / 60;
+/** The ceremony starts this far in, so the belt is already at the champion's chest on the cut. */
+const CEREMONY_LEAD_S = 0.4;
+const STEPS_PER_S = Math.round(1 / STEP);
 
 /**
- * Boxing playing itself for the home screen's media: a scripted
- * exchange that ends in a slow motion knockout, cut like a trailer.
- * Everything runs from requestAnimationFrame and performance.now, with a
- * scripted fight and seeded effects, so the capture tool can step the
- * clock frame by frame and the loop repeats exactly every eight seconds.
+ * Boxing playing itself for the home screen's media, cut like a trailer:
+ * a scripted exchange, a first knockdown, a slow motion knockout, the
+ * fall, and the champion lifting the belt. Everything runs from requestAnimationFrame and
+ * performance.now, with a scripted fight and seeded effects, so the
+ * capture tool can step the clock frame by frame and the loop repeats
+ * exactly every eleven seconds.
  */
 export function Showcase({ view }: { view: ShowcaseView }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -32,9 +35,10 @@ export function Showcase({ view }: { view: ShowcaseView }) {
     if (!canvas) return;
     const renderer = new FightRenderer(canvas, { preserve: true });
     const scene = new FightScene(renderer.renderer, [lookFor(0, "Slugger"), lookFor(1, "Out Boxer")]);
-    const tv = new TvCamera();
-    const shoulder = new ShoulderCamera(52);
+    const kicker = new Kicker(scene.scene);
+    let tv = new TvCamera();
     let trailer = new Trailer();
+    const rig: ShotRig = { match: trailer.match, tv, shoulder: new ShoulderCamera(52), ceremony: scene.ceremony };
     renderer.resize(canvas.clientWidth, canvas.clientHeight, 1);
     let clock = 0;
     const hear = (events: MatchEvent[]) => {
@@ -44,65 +48,69 @@ export function Showcase({ view }: { view: ShowcaseView }) {
         if (event.type === "knockdown") scene.arena.burst(45);
       }
     };
+    const draw = (camera: THREE.PerspectiveCamera) => {
+      kicker.aim(camera, subject(scene));
+      // The referee steps out of the ceremony, as in the real results, and out of the stills.
+      scene.referee.model.root.visible = view === "loop" && !scene.ceremony.active;
+      settle(renderer, scene, camera);
+    };
 
     let frame = 0;
     if (view !== "loop") {
-      // Plays the trailer forward without drawing to just after the knockout blow lands, then holds it.
-      let landed = Infinity;
-      for (let c = 0; c <= Math.min(CYCLE_S, landed + STILL_AFTER); c += STEP) {
-        const events = trailer.advanceTo(c);
-        if (events.some((e) => e.type === "knockdown")) landed = c;
-        hear(events);
-        clock += STEP * Trailer.speed(c);
-        scene.update(trailer.match, INPUT, clock, STEP * Trailer.speed(c));
-      }
-      const camera = view === "icon" ? iconShot(trailer.match, tv) : posterShot(trailer.match, tv);
-      settle(renderer, scene, camera);
+      const camera = stageStill(view, scene, tv, hear);
+      draw(camera);
       // A still only needs drawing again if the window changes size.
       let drawn = "";
-      const draw = () => {
+      const redraw = () => {
         const size = `${canvas.clientWidth}x${canvas.clientHeight}`;
         if (size !== drawn) {
           drawn = size;
           renderer.resize(canvas.clientWidth, canvas.clientHeight, 1);
-          renderer.render(scene, [{ rect: FULL, camera }]);
+          draw(camera);
         }
-        frame = requestAnimationFrame(draw);
+        frame = requestAnimationFrame(redraw);
       };
-      frame = requestAnimationFrame(draw);
+      frame = requestAnimationFrame(redraw);
     } else {
       // The clip plays behind the home screen and is compressed anyway, so it is drawn a little
       // under full resolution, which a slow machine capturing it needs.
       renderer.resize(canvas.clientWidth, canvas.clientHeight, 0.8);
-      settle(renderer, scene, trailerShot(0, trailer.match, tv, shoulder, 0, true));
+      draw(trailerShot(0, rig, 0, true));
       const start = performance.now();
-      let last = start;
-      let lastCycle = -1;
+      let last = -Infinity;
+      // The film runs on a fixed grid of 1/60 s steps from the start of each pass, whatever the frame
+      // times, so every pass through the loop is the same to the pixel and the clip's ends meet.
+      let sim = 0;
+      let camera = trailerShot(0, rig, 0, true);
       const loop = () => {
         const now = performance.now();
         // The clip is 30 frames a second, so a frame much closer than that to the last one is not drawn.
         // A slow machine capturing the clip then draws each frame once instead of twice.
-        // Page frames come every 16 ms, so two of them are 32 ms apart, a little under 1/30 s.
         if (now - last < (1000 / 30) * 0.9) {
           frame = requestAnimationFrame(loop);
           return;
         }
-        const dt = Math.min(0.1, (now - last) / 1000);
         last = now;
-        const cycle = ((now - start) / 1000) % CYCLE_S;
-        if (cycle < lastCycle) {
+        // Whole steps, counted as integers, so a pass lands its cuts on exactly the same frames as the last.
+        const step = Math.floor(((now - start) / 1000) * STEPS_PER_S + 1e-6) % (CYCLE_S * STEPS_PER_S);
+        if (step < sim) {
           trailer = new Trailer();
+          // Fresh cameras and clock too: the shake's wobble and the shoulder view's easing would otherwise carry over.
+          tv = new TvCamera();
+          Object.assign(rig, { match: trailer.match, tv, shoulder: new ShoulderCamera(52) });
           scene.resetAnimation();
+          sim = 0;
+          clock = 0;
         }
-        const cut = shotIndex(cycle) !== shotIndex(lastCycle);
-        lastCycle = cycle;
-        hear(trailer.advanceTo(cycle));
-        const speed = Trailer.speed(cycle);
-        clock += dt * speed;
-        scene.update(trailer.match, INPUT, clock, dt * speed);
-        // Each frame is finished before the next is started, so a slow machine never queues
-        // up frames behind the one the capture tool is waiting to take.
-        settle(renderer, scene, trailerShot(cycle, trailer.match, tv, shoulder, dt, cut));
+        while (sim < step) {
+          sim++;
+          const at = sim / STEPS_PER_S;
+          const cut = shotIndex(at) !== shotIndex(at - STEP);
+          if (at >= CEREMONY_AT && !scene.ceremony.active) scene.startCeremony(0, clock - CEREMONY_LEAD_S);
+          clock = playStep(trailer, scene, at, clock, hear);
+          camera = trailerShot(at, rig, STEP, cut);
+        }
+        draw(camera);
         frame = requestAnimationFrame(loop);
       };
       frame = requestAnimationFrame(loop);
@@ -126,6 +134,14 @@ export function Showcase({ view }: { view: ShowcaseView }) {
   );
 }
 
+/** Where the back light points: between the two faces in the fight, the champion in the ceremony. */
+function subject(scene: FightScene): THREE.Vector3 {
+  const champion = scene.ceremony.winner;
+  if (champion !== null) return scene.animators[champion].face(new THREE.Vector3());
+  const a = scene.animators[0].face(new THREE.Vector3());
+  return a.add(scene.animators[1].face(new THREE.Vector3())).multiplyScalar(0.5);
+}
+
 /**
  * Draws one frame and waits for the GPU to finish it before the page
  * carries on. The first frame compiles every shader, which on a slow
@@ -135,8 +151,4 @@ function settle(renderer: FightRenderer, scene: FightScene, camera: THREE.Perspe
   renderer.render(scene, [{ rect: FULL, camera }]);
   const gl = renderer.renderer.getContext();
   gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
-}
-
-function shotIndex(cycle: number): number {
-  return cycle < 0 ? -1 : cycle < 2.35 ? 0 : cycle < 4.55 ? 1 : cycle < 6.55 ? 2 : 3;
 }
