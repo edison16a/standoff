@@ -94,7 +94,8 @@
 .home__main {
   --edge: 48px;
   --gap: clamp(12px, 1.2vw, 20px);
-  --tile: clamp(96px, min(10.5vw, 19.5vh), 180px);
+  /* 1.2 times the old clamp(96px, min(10.5vw, 19.5vh), 180px), so the art reads from the sofa. */
+  --tile: clamp(115px, min(12.6vw, 23.4vh), 216px);
   --tile-on: calc(var(--tile) * 1.22);
   position: relative;
   display: flex;
@@ -198,8 +199,8 @@
 
   .home__main {
     --edge: 16px;
-    --tile: 112px;
-    --tile-on: 136px;
+    --tile: 134px;
+    --tile-on: 163px;
     padding: 8px 16px 32px;
   }
 

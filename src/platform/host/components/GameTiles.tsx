@@ -69,7 +69,7 @@ export function GameTiles({ games, selected, onSelect, onHost }: GameTilesProps)
               }}
             >
               <span className="game-tile__art">
-                {game.media ? <Image className="cover__art" src={game.media.icon} alt="" fill sizes="180px" /> : <Cover />}
+                {game.media ? <Image className="cover__art" src={game.media.icon} alt="" fill sizes="270px" /> : <Cover />}
               </span>
             </button>
           );

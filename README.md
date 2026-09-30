@@ -1,104 +1,149 @@
 # Standoff
 
-Standoff is the games console of the web. Open it on any computer, and everyone's phone becomes a controller that tracks how they move. Some games use the computer's camera instead and read you from the waist up. Play with up to six friends across eleven games, each one its own world.
+**Standoff turns any computer into a games console, and every phone in the room into a controller.**
 
-I loved the Wii, the PS5 and the Xbox, but there were never enough controllers, and I can't bring my Xbox everywhere. Standoff runs on any computer and uses everyone's phones as controllers. There is nothing to install and no account to make: pick a game, everyone scans the QR code, types a name, and you play.
+Open it on a laptop or a TV. Everyone scans the QR code, types a name, and plays. There is nothing to install and no account to make. Race karts by turning your phone like a wheel. Swing it like a sword. Aim it like a paint marker. Or put the phone down, step in front of the camera and box with your own fists. Up to six friends, thirteen games, one big screen.
 
-Camera games track movement with a pose model that downloads once and runs on your own computer. The camera picture never leaves it. Phones send their moves through the game server as you play, and nothing is ever saved there: close the game and it is gone.
+**Play it now at [standoffgames.vercel.app](https://standoffgames.vercel.app).**
 
-Play it at [standoffgames.vercel.app](https://standoffgames.vercel.app).
+I loved the Wii, the PS5 and the Xbox, but there were never enough controllers, and I can't bring my Xbox everywhere. Everyone already carries a phone full of motion sensors, and almost every laptop has a camera. Standoff puts them to work.
 
-## Screenshots
+<img src="docs/screenshots/home.jpg" alt="The Standoff home screen in dark mode, with Magic Kart chosen in the row of game tiles and its race clip playing behind" width="100%" />
 
-The home screen works like a console menu. Big tiles show each game, and the chosen one grows and gets a ring in its own colour. A looping clip of the game really being played fills the screen behind it, with a warm, bouncy lobby tune and menu sounds. The music starts as the page opens. Browsers hold sound back until you first interact with a page, so if yours does, it starts on your first click, tap or key press. The gear at the top right sets the music and sound effect volume.
-
-<img src="docs/screenshots/home.jpg" alt="The home screen in dark mode with Magic Kart chosen in the row of game tiles and a clip of the race behind" width="100%" />
-
-### Magic Kart
-
-<img src="docs/screenshots/magic-kart.jpg" alt="Karts gliding over the lagoon on Sunny Shores" width="100%" />
-
-### Fruit Slicer
-
-<img src="docs/screenshots/fruit-ninja.jpg" alt="Blade trails slicing fruit over the wooden board" width="100%" />
-
-### Zombie Survival
-
-<img src="docs/screenshots/zombie-survival.jpg" alt="Players shooting different zombies in a night street" width="100%" />
-
-### Shooting Gallery
-
-<img src="docs/screenshots/shooting-gallery.jpg" alt="BB guns aiming at ducks and targets in the fairground booth" width="100%" />
-
-### Boxing
-
-<img src="docs/screenshots/boxing.jpg" alt="Two boxers trading punches in the ring" width="100%" />
-
-### Subway Runner
-
-<img src="docs/screenshots/subway-surfers.jpg" alt="A runner on the neon rails of the night city" width="100%" />
-
-### Basketball 3v3
-
-<img src="docs/screenshots/nba-3v3.jpg" alt="A dunk at the top of the jump in the arena" width="100%" />
-
-### Soccer 3v3
-
-<img src="docs/screenshots/fifa-3v3.jpg" alt="Three on three football on the big pitch" width="100%" />
-
-### Cube Game
-
-<img src="docs/screenshots/cube-game.jpg" alt="The cube jumping spikes in a neon level" width="100%" />
-
-### Blade Clash
-
-<img src="docs/screenshots/blade-clash.jpg" alt="The Knight and the Star Knight throwing sparks as their blades clash, one half of the screen for each" width="100%" />
-
-### Brawl Battle
-
-<img src="docs/screenshots/brawl-battle.jpg" alt="Karate releasing a charged Dragon Flight on the temple stage" width="100%" />
-
-## The games
-
-In the order the home screen shows them:
-
-* **Magic Kart:** a kart racer for up to four in split screen. Hold the phone like a steering wheel, grab power ups, and glide over the big jumps.
-* **Fruit Slicer:** up to four players slice fruit on one board by pointing their phones at the screen, and dodge the bombs.
-* **Zombie Survival:** up to four players aim their phones like guns and fight together through 25 stages to the ship.
-* **Shooting Gallery:** a fairground duck shoot. Point, shoot, top score in 20 seconds wins.
-* **Boxing:** stand in front of the camera and fight. Your arms and head drive your boxer, so real blocks and dodges work.
-* **Subway Runner:** run the neon rails with your body. Lean to change lanes, jump and roll, and survive as it speeds up.
-* **Basketball 3v3:** three on three with the stars for up to six phones. Dribble moves, a shot meter, dunks and free throws.
-* **Soccer 3v3:** three on three football for up to six phones. Hold to power a shot, tap to pass, and beat defenders with skill moves.
-* **Cube Game:** jump for real to jump the cube through five levels of rhythm and spikes.
-* **Blade Clash:** a split screen sword duel for two. Your phone is the sword in full 3D. Swing, block and clash until one fighter has taken five hits.
-* **Brawl Battle:** a four fighter platform brawl. Charge up attacks, pile on the damage and knock everyone off the stage.
-
-Empty spots are filled by computer players. Each game lives in its own folder under `src/games`, with a README of its own.
-
-It runs on Vercel for play from anywhere, or on your own computer over WiFi.
+The home screen works like a console menu. Big tiles show each game, and the chosen one grows and gets a ring in its own colour. A clip of the game really being played fills the screen behind it, with a warm lobby tune and menu sounds. Arrow keys, clicks or taps move along the row, and it loops round like a carousel.
 
 ## How to play
 
-On the computer, pick a game and press **Host Game**. Scan the QR code with each phone, type a name and tap **Join**, or tap **Skip**. Every game walks the phone through the same steps, each on its own page: calibrate, the game's own choice, then **Ready**. Every phone page fits the screen without scrolling.
+1. **Pick a game** on the computer and press **Host Game**.
+2. **Join with your phone.** Scan the QR code, or open the site on the phone and type the four letter code. Type a name and tap **Join**.
+3. **Set up.** Each phone walks through the same few pages: calibrate, the game's own choice (a kart, a gun, a build, a fighter), then **Ready**. Every page fits one phone screen without scrolling.
+4. **Play.** The computer is the big screen and the referee. The phones are the controllers.
 
-Opening the site on a phone goes straight to the join screen, since phones are the controllers. Type the four letter code from the big screen, or tap **Scan QR code** where the browser can read QR codes (Chrome on Android does; elsewhere the button stays hidden and the phone's own camera app works too). The Standoff logo on a phone always leads back there. When the host ends a game or leaves, every phone lands on **Join a new game** with the same code field and scanner.
+**Phone games** use the phone in one of four ways:
 
-The big screen checks each new room before it shows the code, so for a moment the QR code reads **Checking the room**. Right under the code sits **Regenerate room**. It opens a fresh room for the same game on a fresh connection and moves every phone that can still hear the old room to it, names and all. **Remake lobby** in the gear menu does the same. If a room is lost, see *When a room is lost* below.
+* **As a pointer.** Hold it flat like a remote and aim at the screen: Fruit Slicer, Zombie Survival, Shooting Gallery and Paintball Battle.
+* **As a sword.** Hold it like the handle and swing: Blade Clash.
+* **As a wheel.** Hold it sideways and turn it: Magic Kart.
+* **As a gamepad.** Hold it sideways with a stick under the left thumb and buttons under the right: Basketball 3v3, Soccer 3v3, Football 3v3 and Brawl Battle.
 
-Names are unique in a room, whatever the case or spacing. A phone that picks a name someone is using is asked for another. Once seated, the phone moves to its own address, `/play/<CODE>/<name>`. Reload it, or close the tab and open it again, and you land back in your seat with your score. If a phone loses its connection, it shows a **Reconnect** button. A new phone that types the name of a player who dropped is offered **Reconnect** too, and takes over that player rather than joining as someone new.
+**Camera games** need no phones at all: Boxing, Subway Runner and Cube Game. Stand where the computer's camera sees you from the waist up and play with your body. A pose model downloads once and runs on your own computer, and the camera picture never leaves it.
 
-Camera games have no phones. Stand where the camera sees you from the waist up, hold still while your head line is set, and play with your body. Your head going up out of its band is a jump, and going down is a duck or roll.
+Empty places are filled by computer players, so one person can always play.
 
-* **Magic Kart:** hold the phone sideways like a wheel and turn it to steer (full lock at about 50 degrees). Hold **Drive** to go, **Brake** to slow and drift, and tap the round button to use a power up. Off a big jump a glider opens, and you steer it the same way.
-* **Fruit Slicer, Zombie Survival and Shooting Gallery:** hold the phone flat like a remote and point it at the screen. Calibrate by pointing at the targets shown. Sweep fast to slice, or tap **Shoot**. Phones without motion sensors aim by dragging on a pad.
-* **Boxing:** punch straight or hook with your arms. Keep your gloves where the punch is coming to block it, and duck or lean to make it miss. Head shots hurt more and can stun. Touch gloves by holding your arms out.
-* **Subway Runner:** lean or step left and right to change lanes, jump to jump and dip to roll.
-* **Basketball 3v3:** the joystick moves. Hold **Shoot** and let go in the green. With the ball the third button is **Dribble**: back is a stepback, sideways a crossover, forward a spin. Without it, it is **Steal** or **Block**. Reach in too often on one player and you may foul.
-* **Soccer 3v3:** the joystick moves and aims. Tap **Shoot/Pass** to pass, or hold it to fill the power bar. Green is placed, red is powerful but wild. With the ball the second button is **Skill**: forward is a rainbow flick, sideways a crossover, back a drag back, centred a 360.
-* **Cube Game:** jump for real to jump the cube.
-* **Blade Clash:** hold the phone like the handle of a sword and calibrate by pointing at the targets. The sword on screen copies it in 3D. A hit only counts when a moving blade really touches the other fighter, and a blade held in the way blocks it. Hold **Forward** or **Back** to move. To fight alone, tap **Play the computer**.
-* **Brawl Battle:** the joystick moves, and pushing up jumps (push up again in the air to double jump). Attacks change with the direction you hold. Hold an attack past 0.4 seconds to charge a stronger move, and use the Ult when its ring is full. Two lives each, and more damage means you fly further.
+## The games
+
+In the order the home screen shows them.
+
+### Magic Kart
+
+<img src="docs/screenshots/magic-kart.jpg" alt="Four karts gliding under their wings above the Star Ring road" width="100%" />
+
+Split screen kart racing for up to four. Turn your phone like a steering wheel, brake into a bend to drift, and fire a blue, orange or purple mini turbo out of it. Grab Star Orbs, Nitro, Ice Blasts, Vanish and Shields from the glowing cubes. Launch off the big jump on every map and a glider unfolds over your kart, so you steer through the air. Four wild maps: Sunny Shores, Star Ring, Neo City and Magma Peak. The top three lift their cups on a podium under confetti.
+
+### Fruit Slicer
+
+<img src="docs/screenshots/fruit-ninja.jpg" alt="A lightning blade bursting a giant melon beside a glowing dragonfruit on the wooden board" width="100%" />
+
+Up to four blades on one board. Point your phone at the screen and swing fast to slice. Chain combos, crack giant melons with several hits, chase rare star fruit and glowing dragonfruit, and dodge the bombs. Pick your slash from seven styles, from Plasma to Gold. Top score when the clock runs out wins.
+
+### Zombie Survival
+
+<img src="docs/screenshots/zombie-survival.jpg" alt="The team firing from the back of a truck at zombies in a night street" width="100%" />
+
+A team shooter on rails for up to four. Each phone is a gun: Shotgun, Submachine Gun, Assault Rifle or AK-47, each with its own crosshair and kick. Fight through fifteen stages of a foggy dead city, shoot the glowing weak points on the Butcher, the Surgeon and the Juggernaut, get lifted off the hospital roof by helicopter at stage 10, and make it to the ship at stage 15.
+
+### Shooting Gallery
+
+<img src="docs/screenshots/shooting-gallery.jpg" alt="A BB gun and lasers aimed at rubber ducks and a bullseye in the fairground booth" width="100%" />
+
+A fairground duck shoot for up to four. Point your phone, tap Shoot, and pump your BB gun between shots. Ducks are 10, a bullseye's red centre 40, plates on the top rail 30 and the rare golden duck 50. Everything speeds up as the round goes on. The best scores stay on this computer.
+
+### Boxing
+
+<img src="docs/screenshots/boxing.jpg" alt="A boxer landing a jab under the lights of the ring" width="100%" />
+
+Stand in front of the camera and fight. Jabs, crosses, hooks and body shots come straight from your arms. Block with your real gloves, duck and slip with your real head, then counter. Four builds (Slugger, Out Boxer, Counter Puncher, Swarmer), stuns and knockdowns, four rounds with breaks on the stool, and a championship belt raised under cannons of confetti. Fight a friend side by side in split screen, or the computer.
+
+### Subway Runner
+
+<img src="docs/screenshots/subway-surfers.jpg" alt="The runner jumping over the tracks with the inspector and his dog behind" width="100%" />
+
+An endless runner played with your body. Lean to change tracks, jump over barriers, duck to roll under them, and run along the roofs of the trains while the inspector and his dog give chase. Pick Easy, Medium, Hard or Demon for a bigger score multiplier, or play with the keyboard. Every run goes on the leaderboard on this computer.
+
+### Basketball 3v3
+
+<img src="docs/screenshots/nba-3v3.jpg" alt="A dunk at the rim in the Basketball 3v3 arena" width="100%" />
+
+Three on three half court for up to six phones. Pick one of six builds, hold Shoot and let go in the green, and break ankles with stepbacks, crossovers and spins. Dunks, reverse layups, blocks at the top of the jump, steals, fouls and free throws. First to 11 wins, the winning basket replays in slow motion, and the captain lifts the trophy at centre court.
+
+### Soccer 3v3
+
+<img src="docs/screenshots/fifa-3v3.jpg" alt="A striker shooting past a sliding defender toward the keeper" width="100%" />
+
+Three on three football on a big floodlit pitch with a keeper in each goal. Tap to pass, hold to fill the power bar and shoot, and let the curl bend it round the keeper. Beat your man with a rainbow flick, a crossover, a drag back or a 360. Slide tackles, free kicks, penalties, goal replays and golden goal, then the winners lift a World Cup style trophy.
+
+### Football 3v3
+
+<img src="docs/screenshots/football-3v3.jpg" alt="A diving tackle at the goal line in Football 3v3" width="100%" />
+
+Three on three American football under the lights, with computer linemen battling at the line. The QB calls Throw, Run or Kick, hikes it and throws a spiral with the throw stick. Runners juke and dive, defenders rush, cover and tackle. Touchdowns replay like a TV broadcast, and the captain lifts a silver football on a kicking tee at midfield. First to 14 wins, or the lead after four quarters.
+
+### Cube Game
+
+<img src="docs/screenshots/cube-game.jpg" alt="The UFO flying through a green portal in a neon city level" width="100%" />
+
+A rhythm platformer played by jumping for real. Your jump is the cube's jump, on the beat of each level's own song. Portals turn you into a UFO or a ball that flips gravity. Seven levels from First Light up to two Demon levels, a practice mode with checkpoints, a split screen 1v1 race, and a leaderboard for every level.
+
+### Blade Clash
+
+<img src="docs/screenshots/blade-clash.jpg" alt="The Knight and the Star Knight throwing sparks as their blades clash in the arena" width="100%" />
+
+A sword duel where your phone is the sword. It moves in full 3D on screen as you move it: swing, thrust, and hold your blade in the way to block. Blades that meet clash in sparks. Four fighters (the Knight, the Samurai, the Block Hero and the Star Knight), a split screen view over each shoulder, slow motion on every hit, and first to five wins. Play a friend or the computer.
+
+### Brawl Battle
+
+<img src="docs/screenshots/brawl-battle.jpg" alt="The Samurai leaping over the Bear and Karate on the Floating Temple at sunset" width="100%" />
+
+A platform fighter for up to four. Karate, Samurai, Mage and Bear each have quick moves, specials, five charged moves and an ult. Pile on the damage, then knock everyone off one of four stages: Dojo Rooftop, Floating Temple, Crystal Cave and Forest Treetop. Two lives each, last fighter standing wins.
+
+### Paintball Battle
+
+<img src="docs/screenshots/counter-battle.jpg" alt="Two paintball players trading shots across a bunker, one splattered in pink paint" width="100%" />
+
+Team paintball for up to four, one or two a side. Your fighter runs from bunker to bunker by itself. You point your phone to aim, hold Crouch to hide, and rise to splat the other team with a Paint Rifle, Shotgun, SMG or Sniper. Each player gets their own split screen view. First team to five rounds wins.
+
+## The controls
+
+* **Magic Kart:** hold the phone sideways like a wheel and turn it to steer (full lock at about 50 degrees). Hold **Drive** to go, **Brake** to slow and drift, and tap the round button to use a power up. In the air you steer the glider the same way.
+* **Fruit Slicer, Zombie Survival and Shooting Gallery:** hold the phone flat like a remote and point it at the screen. Sweep fast to slice, or tap **Shoot**. **Recenter** fixes drifting aim. Phones without motion sensors aim by dragging on a pad.
+* **Boxing:** punch straight or hook with your arms. Keep your gloves where the punch is coming to block it, and duck or lean to make it miss. Touch gloves by holding your arms out.
+* **Subway Runner:** lean or step left and right to change tracks, jump to jump and dip to roll. Or use the arrow keys.
+* **Basketball 3v3:** the stick moves. Hold **Shoot** and let go in the green. With the ball the third button is **Dribble**: back is a stepback, sideways a crossover, forward a spin. On defence the buttons become **Guard**, **Block** and **Steal**.
+* **Soccer 3v3:** the stick moves and aims. Tap **Shoot/Pass** to pass, or hold it to fill the power bar. With the ball the other button is **Skill**: forward is a rainbow flick, sideways a crossover, back a drag back, centred a 360. On defence it is **Guard**, **Jump**, **Steal** and **Slide**.
+* **Football 3v3:** the QB picks **Throw**, **Run** or **Kick**, taps **Hike**, then holds the throw stick toward a receiver and lets go. Runners have the run stick, **Dive** and **Juke**. Defenders have **Rush**, **Guard** and **Tackle**. Kicks stop a marker in the green, then high on the power bar.
+* **Cube Game:** jump for real to jump the cube. Space works too.
+* **Blade Clash:** hold the phone like the handle of a sword. The sword on screen copies it in 3D. Hold **Forward** or **Back** to move.
+* **Brawl Battle:** the stick moves, and pushing up jumps (push up again in the air to double jump). Attacks change with the direction you hold. Hold an attack past 0.4 seconds to charge it, and use the Ult when its ring is full.
+* **Paintball Battle:** point the phone at your own view to aim. Hold or tap **Shoot**, hold **Crouch** to stay behind cover, and **Reload** when you run low.
+
+## The console
+
+Everything around the games is shared, so every game works the same way.
+
+* **Hold to calibrate.** No calibrate button to tap. Point at each target on the big screen and hold still: a ring fills, turns green, and the next target comes up by itself. Camera games do the same with your head line: stand tall and still while your ring fills.
+* **Rooms that heal.** The big screen checks each room before it shows the QR code. **Regenerate room**, right under the code, opens a fresh room for the same game and moves every phone to it, names and all. If a room is lost, the big screen makes a new one by itself before anyone joins, or offers one big Regenerate room button after.
+* **Reconnect.** A phone that loses its connection shows a **Reconnect** button and takes back its own seat and score. A new phone that types the name of a player who dropped is offered Reconnect too.
+* **Unique names and /play links.** Names are unique in a room, whatever the case or spacing. Once seated, each phone moves to its own address, `/play/<CODE>/<name>`. Reload it, or close the tab and open it again, and you land back in your seat.
+* **Bot difficulty.** Games with computer players offer Easy (the default), Medium, Hard or Training in the lobby. In Training the computer players stand still, so you can practise your moves on them. Basketball and Soccer can turn them off for one on one.
+* **Leaderboards.** Subway Runner and every Cube Game level keep a leaderboard on this computer, and Shooting Gallery keeps its best scores. Nothing is sent to a server.
+* **Full screen** from the button in the tool bar, on the home screen and in every game.
+* **Settings** behind the gear: music and sound effect volume, a frame rate cap (Max by default), Clear leaderboards, and Remake lobby while a room is open. The sun button switches between light and dark mode.
+* **Admin panel.** Three quick taps on the settings gear open a hidden testing panel. Games add their own shortcuts while a match runs, like winning a stage or putting both teams one basket from the end, and there is a frame rate meter and a reload button.
+* **Sound.** Every game has its own music and effects, all synthesized in the browser with the Web Audio API. The music starts as the home screen opens, or on your first click, tap or key press where the browser holds sound back.
+
+Opening the site on a phone goes straight to the join screen. Type the code from the big screen, or tap **Scan QR code** where the browser can read QR codes. When the host ends a game, every phone lands on **Join a new game**.
+
+Camera games track movement with a pose model that runs on your own computer, and the camera picture never leaves it. Phones send their moves through the game server as you play, and nothing is ever saved there: close the game and it is gone.
 
 ## Running it
 
@@ -224,55 +269,55 @@ The stream (`src/platform/net/stream-channel.ts`) is a Server-Sent Events stream
 
 A phone only sends a motion frame when the reading actually changed, plus a keepalive four times a second. Strikes go out the instant they are detected.
 
-## Blade Clash
+### Inside the games
 
-Everything in this section lives in `src/games/blade-clash`, and its own README goes further.
+Each game is its own project with a README of its own in `src/games/<id>`: how it plays, its engine, its drawing, its sound, and how its home screen media are captured. Folder ids stay as they were when the games were first built: `fruit-ninja` is Fruit Slicer, `subway-surfers` is Subway Runner, `nba-3v3` is Basketball 3v3, `fifa-3v3` is Soccer 3v3 and `counter-battle` is Paintball Battle.
 
-### The sword
+Shared pieces live in `src/games/kit`, which any game may use: phone aiming and hold to calibrate (`aim`), the camera and body tracking (`camera`), motion reading (`motion`), the sideways gamepad (`pad`), the setup pages (`steps`), split screen layouts (`split`), bot difficulty (`difficulty`), leaderboards (`leaderboard`) and the trophy scenes (`victory`). `src/games/kit/README.md` explains each one.
 
-Each phone is the handle of a sword. It reads its orientation (`deviceorientation`) and learns the grip at calibration: the player points at the middle of their half of the screen, then at each corner, then shows a relaxed guard. From then on the phone sends how the sword is held, turned, raised, the edge's angle and how far the arm reaches. The computer puts the hand and the blade in the world from that, so the sword on screen moves in full 3D with the phone. Footwork is two hold buttons, **Forward** and **Back**, which leaves the sensors free for the sword.
-
-### Hits and clashes
-
-There are no gestures. A hit is a moving blade passing through the other fighter's head, body or legs. Each swing is tested along its whole path in steps no longer than a blade is thick, so a swing too fast to see in one frame still hits what it went through. Blade against blade is tested first, so a blade held in the way stops a swing. Blades that meet fast enough clash: sparks, a clang, and both swords are thrown back before they ease into the hand again. Each fighter can take five hits.
-
-### The look
-
-The screen is split down the middle, one shoulder camera per player, each with its own bloom. Four fighters share one skeleton with inverse kinematics: the Knight with a longsword, the Samurai with a katana, the Block Hero with a pixel sword and the Star Knight with a glowing energy blade. The arena is an open air stone dais under a full house. Blades leave trails, clashes throw sparks in the blades' colours, and the last hit plays in slow motion before the winner raises their sword under confetti. Each half has its player's card with five health blades, with the split map between them.
-
-### Sound
-
-All of it is synthesized with the Web Audio API through four buses (music, crowd, effects, interface). There is lobby and fight music, a whoosh, clash and hit in each weapon's own voice, the energy blade's hum, clanking armour, and a crowd that gasps at big clashes and cheers the finish.
-
-### Tuning
-
-The tuning drawer (the sliders icon at the top right) holds the hit and clash speeds, the knockback, the cooldowns and the mix. Nothing is saved.
+Every game's tile, poster and looping clip are captured from the game itself: a `Showcase` plays it with computer players and no room, and `tools/media/capture.mjs` records it frame by frame. The pictures in this README come from the same scenes.
 
 ## Project layout
 
 ```
 server/                   Local entry: Next, HTTPS for phones, upgrades to the relay
 src/
-  app/                    Next routes: the home page, /join/[code], /play/[code]/[name], /api/ws and /api/stream
+  app/                    Next routes: the home page, /join/[code], /play/[code]/[name], /showcase/[game], /api/ws and /api/stream
   platform/               The console, shared by every game
     games/                The contract between the platform and a game
-    host/                 Home screen, room shell, join card, the host's room
+    host/                 Home screen, tile row, room shell, join card, the host's room and its checks
     phone/                Name screen, joining, the phone's room, permissions
     relay/                Rooms and message routing, in memory or in Redis
     net/                  Socket client with reconnects, the handover and the HTTP fallback
     protocol/             The envelopes every frame travels in
-    audio/                The Web Audio engine
+    audio/                The Web Audio engine and its buses
+    settings/             The gear panel: volume, frame rate, leaderboards, Remake lobby
+    admin/                The hidden admin panel and its test shortcuts
+    frame-rate/           The frame rate cap
+    analytics/            Page views with room codes and names taken out
+    showcase/             The page that plays a game by itself for its media
   games/
-    catalog.ts            Every game and how to load it
-    kit/                  Shared code games may use: phone aiming, setup steps, seat colours
-    blade-clash/          Sword duel in split screen, three.js
-    fruit-ninja/          Slicing on a wooden board, three.js
-    magic-kart/           Kart racing in split screen, three.js
-    zombie-survival/      Co-op zombie shooter over 25 stages, three.js
-    shooting-gallery/     Fairground duck shoot, three.js
+    catalog.ts            Every game, in home screen order, and how to load it
+    kit/                  Shared code games may use: aiming, camera, gamepad, steps, split screen, difficulty, leaderboards, trophies
+    magic-kart/           Split screen kart racing with gliders
+    fruit-ninja/          Fruit Slicer, slicing on a wooden board
+    zombie-survival/      Team zombie shooter over 15 stages
+    shooting-gallery/     Fairground duck shoot
+    boxing/               Camera boxing with builds and a title belt
+    subway-surfers/       Subway Runner, the camera endless runner
+    nba-3v3/              Basketball 3v3
+    fifa-3v3/             Soccer 3v3
+    football-3v3/         Football 3v3, American football
+    cube-game/            Camera rhythm platformer
+    blade-clash/          Split screen sword duel
+    brawl-battle/         Four fighter platform brawler
+    counter-battle/       Paintball Battle, split screen team paintball
   components/             Shared interface pieces
   styles/                 The platform's stylesheets. Each game keeps its own.
+tools/                    Media capture, the phone fit check and camera test helpers
 ```
+
+Every game is drawn with three.js and plays its own synthesized music and sound.
 
 ## Tests
 
@@ -280,7 +325,9 @@ src/
 npm test
 ```
 
-The suite covers the relay (seating up to six, ordering, kicks, grace periods, closing, store failures and rate limits), both Vercel routes, the socket handover, the platform's host room and names, the game catalog, and for Blade Clash the motion pipeline fed with synthetic sensor data, calibration and aiming, the swept blade tests, clashes and knockback, the engine playing whole exchanges, match flow with the slow motion finish, the computer opponent, the rig, footwork and endings, the lobby, and the showcase's beats. The kit's aim math and phone aiming are tested too. Each three.js game tests its own engine: Fruit Slicer's blade sweeps and scoring, Magic Kart's laps, checkpoints, items and whole computer races on every map, Zombie Survival's guns, stages and a bot team playing all 25 stages, and Shooting Gallery's rounds, hit tests and best scores.
+The suite covers the relay (seating up to six, ordering, kicks, grace periods, closing, store failures and rate limits), both Vercel routes, the socket handover, the platform's host room, names, room checks and remakes, the home screen's tile row, the admin panel's shortcuts, and the game catalog. The kit's aim math, calibration, camera moves, difficulty and leaderboards are tested too.
+
+Every game tests its own engine as pure code with no drawing: whole computer races on every Magic Kart map, a bot team playing all 15 Zombie Survival stages on every level, Fruit Slicer's blade sweeps, Shooting Gallery's hit tests, Boxing's punches, blocks and builds, Subway Runner's pace and moves, every Cube Game level finished by its own computer player, whole computer games of Basketball played to 11, Soccer's and Football's matches and rules, Blade Clash's swept blades and clashes, Brawl Battle's moves and knockback, and Paintball Battle's rounds.
 
 Rooms are tested end to end too. `src/platform/testing/fake-cluster.ts` runs several relay instances in one test, each with rooms of its own, and routes the real client's WebSockets, event streams and posts across them. On it the real host and phones play game after game in one tab, over WebSockets and over the stream, regenerate a room with players in it, and live through a deploy that takes the room, before anyone joined and after. They also end a game while the host's next connection lands on another instance, and keep phones seated after the host moved instances and new connections went back to the old one.
 
