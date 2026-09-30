@@ -24,19 +24,12 @@ const ease = (v: number) => {
  * shoots it, never the broadcast view.
  */
 const AIMS: Record<TrailerCam, Aim> = {
-  // Low over his shoulder as the ball comes to him, the tackler lining him up.
-  receive: (s, u, g, out) => {
-    const a = s.athletes[STRIKER]!.pos;
-    out.pos.set(a.x - 2.4 + ease(u / 0.5) * 0.4, 0.45, a.z + 1.7);
-    out.look.set(a.x + 1.0, 0.7, a.z - 0.9);
-    out.fov = 42;
-  },
   // Down on the grass as the slide comes straight at us and he hops over it.
   hurdle: (s, u, g, out) => {
     const a = s.athletes[STRIKER]!.pos;
-    out.pos.set(a.x + 1.4, 0.28, a.z - 3.1);
-    out.look.set(a.x, 0.55, a.z + 0.3);
-    out.fov = 44;
+    out.pos.set(a.x + 1.5, 0.3, a.z - 3.6);
+    out.look.set(a.x, 0.85, a.z + 0.3);
+    out.fov = 48;
   },
   // Low behind him as he strikes, the goal and the keeper ahead.
   strike: (s, u, g, out) => {
@@ -54,9 +47,9 @@ const AIMS: Record<TrailerCam, Aim> = {
   // Low in front of him in the corner: the run away, the leap and the half turn, landing facing us.
   sui: (s, u, g, out) => {
     const a = s.athletes[STRIKER]!.pos;
-    out.pos.set(a.x + 0.7, 0.45, a.z + 4.2 - ease(u / 1.8) * 0.6);
-    out.look.set(a.x, 1.1, a.z);
-    out.fov = 40;
+    out.pos.set(a.x + 1.4, 0.45, a.z + 3.5 - ease(u / 1.8) * 0.4);
+    out.look.set(a.x, 1.2, a.z);
+    out.fov = 42;
   },
   // Low in front of the captain as the cup goes up over his head.
   lift: (s, u, g, out) => {
@@ -80,7 +73,7 @@ const AIMS: Record<TrailerCam, Aim> = {
 };
 
 /** Cameras that follow a player are eased toward their aim, so a stride never jolts the picture. */
-const FOLLOW: Partial<Record<TrailerCam, number>> = { receive: 6, hurdle: 7, strike: 6, sui: 5 };
+const FOLLOW: Partial<Record<TrailerCam, number>> = { hurdle: 7, strike: 6, sui: 5 };
 
 const want: Pose = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 40 };
 

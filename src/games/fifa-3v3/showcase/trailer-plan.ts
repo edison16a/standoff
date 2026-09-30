@@ -7,7 +7,7 @@
  */
 export type TrailerFilmKind = "match" | "ceremony";
 
-export type TrailerCam = "receive" | "hurdle" | "strike" | "net" | "sui" | "lift" | "crane";
+export type TrailerCam = "hurdle" | "strike" | "net" | "sui" | "lift" | "crane";
 
 export interface SlowWindow {
   from: number;
@@ -40,8 +40,7 @@ export const RAMP = 0.12;
 export const CUTS: readonly Cut[] = [
   // The last second of the crane, so the capture's cross fade from the end back to the start blends a shot into itself.
   { film: "ceremony", from: CRANE_TO - 1, to: CRANE_TO, cam: "crane" },
-  { film: "match", from: 65.45, to: 66.0, cam: "receive" },
-  { film: "match", from: 66.0, to: 66.55, cam: "hurdle", slow: { from: 66.06, to: 66.4, scale: 0.3 } },
+  { film: "match", from: 65.8, to: 66.6, cam: "hurdle", slow: { from: 66.06, to: 66.4, scale: 0.3 } },
   { film: "match", from: 68.45, to: 69.05, cam: "strike", slow: { from: 68.84, to: 68.98, scale: 0.3 } },
   { film: "match", from: 69.12, to: 69.55, cam: "net" },
   { film: "match", from: 70.45, to: 71.6, cam: "sui", slow: { from: 70.75, to: 71.35, scale: 0.45 } },

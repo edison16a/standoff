@@ -74,11 +74,11 @@ export class Boards {
     this.refresh();
   }
 
-  /** GOAL in the scorer's colour on every board for a few seconds; without words, the boards light up in it. */
+  /** GOAL in the scorer's colour on every board for a few seconds; without words, just the colour's edges. */
   flash(colour: string, text = "GOAL"): void {
     this.flashFor = 5;
     const ctx = this.canvas.getContext("2d")!;
-    for (let i = 0; i < ADS.length; i++) panel(ctx, i, this.words ? text : "", this.words ? "#050505" : colour, colour);
+    for (let i = 0; i < ADS.length; i++) panel(ctx, i, this.words ? text : "", "#050505", colour);
     this.refresh();
   }
 

@@ -22,7 +22,7 @@ function trailerFrames(renderer: MatchRenderer, params: URLSearchParams): { fram
 /** The icon and the poster: the match frozen at its moment, lit hard and posed. */
 function stillFrames(renderer: MatchRenderer, view: Exclude<ShowcaseView, "loop">, params: URLSearchParams): { frame: Frame; resized(): void } {
   const still = stillScene(view);
-  renderer.cinematic({ lights: stillLights(still.subject), ambient: 0.3, key: 0.6, haze: 40 });
+  renderer.cinematic({ lights: stillLights(still.subject), ambient: 0.25, key: 0.5, haze: 40 });
   const { pos, look, fov } = still.pose;
   // Development: pin the camera anywhere, to try framings: cam=x,y,z,lookX,lookY,lookZ,fov.
   const cam = params.get("cam")?.split(",").map(Number);

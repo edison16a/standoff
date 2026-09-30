@@ -22,12 +22,12 @@ interface Still {
 const STILLS: Record<Exclude<ShowcaseView, "loop">, Still> = {
   icon: {
     at: 66.27,
-    pose: { pos: new THREE.Vector3(2.5, 0.32, -7.7), look: new THREE.Vector3(0.95, 0.8, -5.3), fov: 42 },
+    pose: { pos: new THREE.Vector3(2.4, 0.35, -9.4), look: new THREE.Vector3(0.9, 1.0, -5.2), fov: 44 },
     subject: new THREE.Vector3(0.95, 0.8, -5.4),
   },
   poster: {
-    at: 68.95,
-    pose: { pos: new THREE.Vector3(10.2, 0.65, -5.4), look: new THREE.Vector3(18.5, 1.1, -1.6), fov: 44 },
+    at: 69.0,
+    pose: { pos: new THREE.Vector3(10.8, 0.6, -7.2), look: new THREE.Vector3(17, 1.0, -1.8), fov: 46 },
     subject: new THREE.Vector3(13.1, 0.9, -3.2),
   },
 };

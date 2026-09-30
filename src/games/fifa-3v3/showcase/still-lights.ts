@@ -15,7 +15,7 @@ function spot(color: string, intensity: number, from: THREE.Vector3, at: THREE.V
  */
 export function stillLights(subject: THREE.Vector3): THREE.Object3D[] {
   return [
-    ...spot("#ffdcae", 60, new THREE.Vector3(subject.x - 6, 7, subject.z - 3), subject, 0.3),
-    ...spot("#86b6ff", 120, new THREE.Vector3(subject.x + 3, 6.5, subject.z + 5), subject, 0.4),
+    ...spot("#ffdcae", 90, new THREE.Vector3(subject.x - 6, 7, subject.z - 3), subject, 0.3),
+    ...spot("#86b6ff", 170, new THREE.Vector3(subject.x + 3, 6.5, subject.z + 5), subject, 0.4),
   ];
 }
