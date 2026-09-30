@@ -79,4 +79,32 @@ describe("fighter poses match the engine's hit boxes", () => {
     }
     expect(lowest).toBeGreaterThan(model.rig.size.ankle - 0.03);
   });
+
+  for (const character of CHARACTER_IDS) {
+    it(`${character}: moves crouched with the head kept low and the feet stepping on the turf`, () => {
+      const { model, animator, f } = rigFor(character, "rifle");
+      f.crouch = 1;
+      f.pose = "crouch";
+      f.brain.stance = "move";
+      // A crouched walk forward, the way the body faces.
+      f.vel = { x: Math.sin(f.look) * 2.1, z: Math.cos(f.look) * 2.1 };
+      settle(animator, f);
+      const match = newMatch();
+      match.phase = "fight";
+      let lowest = Infinity;
+      let highHead = -Infinity;
+      const along: number[] = [];
+      for (let i = 0; i < 60; i++) {
+        animator.update(readFighter(f, 6 + i / 60, match, null), 1 / 60, { x: 0, z: -1 });
+        lowest = Math.min(lowest, worldY(model.rig.ankleL), worldY(model.rig.ankleR));
+        highHead = Math.max(highHead, worldY(model.rig.head));
+        const foot = new THREE.Vector3().setFromMatrixPosition(model.rig.ankleL.matrixWorld);
+        along.push(foot.x * Math.sin(f.look) + foot.z * Math.cos(f.look));
+      }
+      expect(lowest).toBeGreaterThan(model.rig.size.ankle - 0.03);
+      expect(highHead).toBeLessThan(BODY.crouchHead + 0.25);
+      // The feet really step, rather than sliding in a kneel.
+      expect(Math.max(...along) - Math.min(...along)).toBeGreaterThan(0.25);
+    });
+  }
 });

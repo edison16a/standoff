@@ -37,6 +37,8 @@ describe("the messages", () => {
     expect(phoneMessageSchema.parse({ kind: "trigger", down: true }).kind).toBe("trigger");
     for (const kind of ["reload", "hello"]) expect(phoneMessageSchema.parse({ kind }).kind).toBe(kind);
     expect(phoneMessageSchema.parse({ kind: "ready", ready: false }).kind).toBe("ready");
+    for (const dir of [-1, 0, 1]) expect(phoneMessageSchema.parse({ kind: "move", dir })).toEqual({ kind: "move", dir });
+    expect(phoneMessageSchema.safeParse({ kind: "move", dir: 2 }).success).toBe(false);
   });
 
   it("refuse unknown guns and values out of range", () => {

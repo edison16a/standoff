@@ -89,7 +89,7 @@ describe("taking cover", { timeout: 60_000 }, () => {
     expect(firstShot).toBeGreaterThan(3);
   });
 
-  it("ducks to reload", () => {
+  it("keeps a player up to reload unless they hold Crouch", () => {
     const b = range();
     const me = b.fighters[0]!;
     b.setTrigger(0, true);
@@ -98,8 +98,21 @@ describe("taking cover", { timeout: 60_000 }, () => {
     b.reload(0);
     run(b, 45);
     expect(me.gun.reloading).toBe(true);
-    expect(me.brain.stance === "hide" || me.brain.stance === "move").toBe(true);
-    if (me.brain.stance === "hide") expect(me.pose).toBe("crouch");
+    expect(me.pose).not.toBe("crouch");
+    expect(me.crouch).toBe(0);
+  });
+
+  it("never crouches a player behind low cover by themselves", () => {
+    const b = range();
+    const me = b.fighters[0]!;
+    const low = b.graph.spots.find((s) => !s.tall && s.piece >= 0)!;
+    me.pos = { ...low.pos };
+    Object.assign(me.brain, { stance: "hide", spot: low.id, last: low.id, route: [], timer: 10, sincePlan: 0, held: 0, anchor: null });
+    run(b, 120);
+    expect(me.crouch).toBe(0);
+    b.setCrouch(0, true);
+    run(b, 30);
+    expect(me.crouch).toBe(1);
   });
 });
 

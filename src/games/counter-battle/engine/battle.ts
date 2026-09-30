@@ -1,10 +1,11 @@
 import { BOT_SKILL } from "@/games/kit/difficulty/difficulty";
 import { PIECES, spawnPoints, type Piece } from "./arena";
+import { anglesTo, clampAim } from "./aim";
 import { BotAim } from "./bot-aim";
 import { updateBrain, type BrainWorld } from "./brain";
 import { buildCover, nearestSpot, type CoverGraph } from "./cover";
 import type { BattleEvent } from "./events";
-import { createFighter, eyeOf, isBot, resetFighter, type Fighter, type FighterSetup, type TeamId } from "./fighter";
+import { aimEye, createFighter, eyeOf, isBot, resetFighter, type Fighter, type FighterSetup, type MoveInput, type TeamId } from "./fighter";
 import type { GunEvent } from "./gun-state";
 import { newMatch, sideOf, tickMatch, type MatchState } from "./match";
 import { Rng } from "./rng";
@@ -60,17 +61,21 @@ export class Battle {
   /** Where a human aims, as world yaw and pitch. */
   setAim(id: number, yaw: number, pitch: number): void {
     const f = this.get(id);
-    if (f) f.aim = { yaw, pitch: Math.max(-1.2, Math.min(1.2, pitch)) };
+    if (!f) return;
+    f.aim = clampAim(yaw, pitch);
+    f.aimPoint = null;
   }
 
-  /** Aims a fighter's gun at a point in the world, from its own eye. */
+  /**
+   * Aims a player's gun at a point in the world. The angles come from the
+   * standing eye, so a crouch never swings them; the shot itself is aimed
+   * from wherever the eye is when it goes.
+   */
   aimAt(id: number, point: V3): void {
     const f = this.get(id);
     if (!f) return;
-    const eye = eyeOf(f);
-    const dx = point.x - eye.x;
-    const dz = point.z - eye.z;
-    this.setAim(id, Math.atan2(dx, dz), Math.atan2(point.y - eye.y, Math.hypot(dx, dz)));
+    f.aim = anglesTo(aimEye(f), point);
+    f.aimPoint = { ...point };
   }
 
   /**
@@ -103,6 +108,12 @@ export class Battle {
     if (!f || isBot(f) || f.duck === down) return;
     f.duck = down;
     if (!down) f.rise = true;
+  }
+
+  /** ADVANCE (1) or RETREAT (-1) held, or 0 to hold where they are. Only players steer. */
+  setMove(id: number, move: MoveInput): void {
+    const f = this.get(id);
+    if (f && !isBot(f)) f.move = move;
   }
 
   reload(id: number): void {
@@ -146,7 +157,9 @@ export class Battle {
       }
       const engaged = bot ? this.engaged.has(f.id) : f.trigger.held || this.time - f.shotAt < ENGAGED_FOR;
       const pace = isBot(f) ? BOT_SKILL[f.difficulty].speed : 1;
-      const world: BrainWorld = { graph: this.graph, pieces: this.pieces, enemies, claimed, others, pressure, rng: this.rng, engaged, pace };
+      // A player moves themselves, unless the computer has taken over for a dropped phone.
+      const steer = !isBot(f) && !bot;
+      const world: BrainWorld = { graph: this.graph, pieces: this.pieces, enemies, claimed, others, pressure, rng: this.rng, engaged, pace, steer };
       updateBrain(f, world, this.time, STEP);
       if (bot) {
         const intent = bot.update(f, enemies, this.pieces, this.rng, this.time, STEP);
@@ -178,7 +191,9 @@ export class Battle {
 
   private fire(f: Fighter, events: BattleEvent[]): "fired" | "dry" | "wait" {
     // The shot goes where the barrel points now; its own kick lands after.
-    const aim = { yaw: f.aim.yaw + f.gun.kick.yaw, pitch: f.aim.pitch + f.gun.kick.pitch };
+    // A player's phone picked a point, so the shot heads there from the eye as it is now.
+    const base = f.aimPoint && !this.bots.has(f.id) ? anglesTo(eyeOf(f), f.aimPoint) : f.aim;
+    const aim = { yaw: base.yaw + f.gun.kick.yaw, pitch: base.pitch + f.gun.kick.pitch };
     const cone = coneOf(f);
     const result = f.gun.trigger(this.time, this.rng);
     if (result === "fired") events.push(...resolveShot(f, aim, cone, { pieces: this.pieces, fighters: this.fighters, rng: this.rng, now: this.time }));

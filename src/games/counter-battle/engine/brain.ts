@@ -4,6 +4,7 @@ import type { Fighter } from "./fighter";
 import { duckDown, nearest, startPeek } from "./peek";
 import { chooseSpot } from "./plan";
 import type { Rng } from "./rng";
+import { steer, walk } from "./steer";
 import { STYLES } from "./tactics";
 import { PLAN_EVERY } from "./tuning";
 import { dist, len, turnTo, yawOf, type V2 } from "./vec";
@@ -20,6 +21,8 @@ export interface BrainWorld {
   engaged: boolean;
   /** Multiplier on running speed, below 1 for easier computer players. */
   pace: number;
+  /** A player steering with ADVANCE and RETREAT, who only goes low when they hold Crouch. */
+  steer: boolean;
 }
 
 /** Longest a peek can be stretched by a fighter who keeps shooting. */
@@ -34,46 +37,46 @@ const FLINCH = 0.18;
 const MAX_DOWN = 5;
 /** Moving between spots is a crouched jog, not a sprint: part of the gun's full speed. */
 const JOG = 0.85;
+/** A player holding Crouch on the move goes at this share of the jog. */
+const CRAWL = 0.55;
 
 /**
- * The movement brain every fighter runs, human or computer. Players never
- * steer: the brain runs cover to cover along the cover graph, hides,
- * rises to peek, and picks new cover as the fight moves. Everyone ducks
- * to reload. A player holding Crouch stays down, and a shot or letting go
- * of Crouch brings them up to fire.
+ * The movement brain every fighter runs. For the computer it runs cover
+ * to cover along the cover graph, hides, rises to peek, picks new cover
+ * as the fight moves and ducks to reload. A player picks where to go with
+ * ADVANCE and RETREAT (`steer.ts`) and only goes low while holding
+ * Crouch, on the move too. A shot or letting go of Crouch brings them up.
  */
 export function updateBrain(f: Fighter, w: BrainWorld, now: number, dt: number): void {
   const b = f.brain;
   const style = STYLES[f.gun.id];
   const spots = w.graph.spots;
-  const ducking = f.duck || (f.gun.reloading && b.stance !== "move");
+  // Players only go low when they hold Crouch; the computer also ducks to reload.
+  const ducking = f.duck || (!w.steer && f.gun.reloading && b.stance !== "move");
   b.down = f.duck && b.stance !== "move" ? b.down + dt : 0;
   b.sincePlan += dt;
   if (b.stance !== "move") b.held += dt;
   const hurt = now - f.hitAt < dt * 1.5;
   const holding = f.duck && b.down < MAX_DOWN;
-  const due = b.stance !== "move" && !holding && (b.sincePlan >= PLAN_EVERY || (hurt && b.stance === "hide"));
+  const due = !w.steer && b.stance !== "move" && !holding && (b.sincePlan >= PLAN_EVERY || (hurt && b.stance === "hide"));
   if (due) replan(f, w);
 
   const from = { ...f.pos };
   const speed = f.gun.spec.speed * w.pace;
-  if (b.stance === "move") {
-    const next = b.route[0];
-    if (next === undefined) arrive(f, w);
-    else if (walk(f, spots[next]!.pos, speed * JOG * dt)) {
-      b.route.shift();
-      if (b.route.length === 0) arrive(f, w);
-      // Each spot on the way is a chance to change plan as the fight moves.
-      else if (b.sincePlan >= PLAN_EVERY || hurt) replan(f, w);
-    }
-  } else if (b.stance === "hide") {
-    walk(f, spots[b.spot]!.pos, speed * 0.6 * dt);
+  // A step that starts on the run only runs, as it always has, so the computer's timing never shifts.
+  const running = b.stance === "move";
+  if (w.steer) steer(f, w, speed * JOG * (f.duck ? CRAWL : 1) * dt);
+  else if (running) runRoute(f, w, speed * JOG * dt, hurt);
+  if (!running && b.stance === "hide") {
+    walk(f, b.anchor ?? spots[b.spot]!.pos, speed * 0.6 * dt);
     b.timer -= dt;
     if (ducking) b.timer = Math.max(b.timer, 0.25);
     else if (f.rise) b.timer = 0;
+    // A player stays put until they shoot; only the computer looks out on its own.
+    else if (w.steer) b.timer = Math.max(b.timer, 0.25);
     if (b.timer <= 0) startPeek(f, w);
-  } else {
-    walk(f, b.peekAt ?? spots[b.spot]!.pos, speed * 0.6 * dt);
+  } else if (!running && b.stance === "peek") {
+    walk(f, b.peekAt ?? b.anchor ?? spots[b.spot]!.pos, speed * 0.6 * dt);
     b.timer -= dt;
     b.out += dt;
     if ((w.engaged || f.rise) && b.timer < 0.5 && b.out < MAX_OUT) b.timer = 0.5;
@@ -94,9 +97,27 @@ export function updateBrain(f: Fighter, w: BrainWorld, now: number, dt: number):
 
 function poseOf(f: Fighter, w: BrainWorld, ducking: boolean): Fighter["pose"] {
   const b = f.brain;
-  if (b.stance === "move") return len(f.vel) > 0.3 ? "run" : "stand";
+  if (b.stance === "move") {
+    if (f.duck) return "crouch";
+    return len(f.vel) > 0.3 ? "run" : "stand";
+  }
   if (b.stance === "peek") return "peek";
-  return ducking || !w.graph.spots[b.spot]!.tall ? "crouch" : "stand";
+  // The computer kneels behind low cover by itself; a player only when they hold Crouch.
+  if (ducking) return "crouch";
+  return w.steer || w.graph.spots[b.spot]!.tall ? "stand" : "crouch";
+}
+
+/** The computer's run along its planned route, re-planning at each spot on the way. */
+function runRoute(f: Fighter, w: BrainWorld, step: number, hurt: boolean): void {
+  const b = f.brain;
+  const next = b.route[0];
+  if (next === undefined) return arrive(f, w);
+  if (!walk(f, w.graph.spots[next]!.pos, step)) return;
+  b.last = next;
+  b.route.shift();
+  if (b.route.length === 0) arrive(f, w);
+  // Each spot on the way is a chance to change plan as the fight moves.
+  else if (b.sincePlan >= PLAN_EVERY || hurt) replan(f, w);
 }
 
 function replan(f: Fighter, w: BrainWorld): void {
@@ -113,6 +134,7 @@ function replan(f: Fighter, w: BrainWorld): void {
   b.spot = plan.spot;
   b.stance = "move";
   b.peekAt = null;
+  b.anchor = null;
 }
 
 function arrive(f: Fighter, w: BrainWorld): void {
@@ -121,17 +143,6 @@ function arrive(f: Fighter, w: BrainWorld): void {
   b.held = 0;
   // Settle in behind the new cover for a moment before the first look.
   b.timer = w.rng.range(0.5, STYLES[f.gun.id].hide[0]);
-}
-
-/** Steps toward a point. Returns true once there. */
-function walk(f: Fighter, to: V2, step: number): boolean {
-  const d = dist(f.pos, to);
-  if (d <= step || d < 1e-6) {
-    f.pos = { ...to };
-    return true;
-  }
-  f.pos = { x: f.pos.x + ((to.x - f.pos.x) / d) * step, z: f.pos.z + ((to.z - f.pos.z) / d) * step };
-  return false;
 }
 
 /** Turns the body and camera toward the nearest enemy, smoothly. */

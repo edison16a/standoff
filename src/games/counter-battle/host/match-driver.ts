@@ -1,6 +1,6 @@
 import { Battle } from "../engine/battle";
 import type { BattleEvent } from "../engine/events";
-import type { Fighter } from "../engine/fighter";
+import type { Fighter, MoveInput } from "../engine/fighter";
 import { STEP } from "../engine/tuning";
 import { aimTarget, type CameraPose, type PanePoint } from "../render/camera/aim-ray";
 import type { Label } from "../render/fighter-view";
@@ -26,6 +26,7 @@ export class MatchDriver {
   /** Which players hold the shoot button, whatever the match is doing. */
   private readonly held = new Set<number>();
   private readonly ducked = new Set<number>();
+  private readonly moving = new Map<number, MoveInput>();
   private carry = 0;
 
   constructor(lineup: Lineup, seed: number, roundsToWin?: number) {
@@ -85,13 +86,24 @@ export class MatchDriver {
     this.battle.setCrouch(f.id, down);
   }
 
-  /** A phone dropped or came back: the computer shoots for it meanwhile. */
+  /** ADVANCE or RETREAT held, or neither. Held through a new round, it moves the fighter from the start. */
+  move(seat: number, dir: MoveInput): void {
+    const f = this.fighterOf(seat);
+    if (!f) return;
+    if (dir === 0) this.moving.delete(seat);
+    else this.moving.set(seat, dir);
+    this.battle.setMove(f.id, dir);
+  }
+
+  /** A phone dropped or came back: the computer plays for it meanwhile. */
   setOnline(seat: number, online: boolean): void {
     const f = this.fighterOf(seat);
     if (!f) return;
     this.held.delete(seat);
     this.ducked.delete(seat);
+    this.moving.delete(seat);
     this.battle.setCrouch(f.id, false);
+    this.battle.setMove(f.id, 0);
     this.battle.setAutopilot(f.id, !online);
   }
 
@@ -107,7 +119,7 @@ export class MatchDriver {
     return events;
   }
 
-  /** Pulls every trigger held down while the fight is on, as the fight starts or a player comes back. */
+  /** Pulls every trigger and button held down while the fight is on, as the fight starts or a player comes back. */
   private pullHeld(): void {
     if (this.battle.match.phase !== "fight") return;
     for (const seat of this.held) {
@@ -117,6 +129,10 @@ export class MatchDriver {
     for (const seat of this.ducked) {
       const f = this.fighterOf(seat);
       if (f?.alive && !f.duck) this.battle.setCrouch(f.id, true);
+    }
+    for (const [seat, dir] of this.moving) {
+      const f = this.fighterOf(seat);
+      if (f?.alive && f.move !== dir) this.battle.setMove(f.id, dir);
     }
   }
 }

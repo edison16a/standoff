@@ -7,7 +7,7 @@ import { approach, kick, smooth } from "./curves";
 import { Fall } from "./death";
 import { afterShot, idleAction, reloadAction, type GunAction, type GunPoints } from "./gun-actions";
 import { handPoint, holdGun } from "./hold";
-import { blankLegs, blendLegs, kneelLegs, runLegs, standLegs } from "./legs";
+import { blankLegs, blendLegs, kneelLegs, LOW_STRIDE, lowWalkLegs, runLegs, standLegs } from "./legs";
 import { blankUpper, poseArms, poseLegs, poseTorso } from "./rig-pose";
 import { celebrate, type Celebration } from "./victory";
 import { GunParts } from "./gun-parts";
@@ -30,10 +30,10 @@ const HAND_RATE = 20;
 
 /**
  * Drives one fighter's rig from the engine's state each frame: legs from
- * the movement (standing, running any way, kneeling behind cover), the
- * torso turned to the aim, the gun in the hands with recoil, reloads and
- * pump or bolt work, flinches from hits, the fall on death and a
- * celebration for a win. Everything is read from the fighter, so any
+ * the movement (standing, running any way, kneeling behind cover, moving
+ * crouched), the torso turned to the aim, the gun in the hands with
+ * recoil, reloads and pump or bolt work, flinches from hits, the fall on
+ * death and a celebration for a win. Everything is read from the fighter, so any
  * moment of a replayed match poses the same way.
  */
 export class Animator {
@@ -44,6 +44,7 @@ export class Animator {
   private readonly offL = new THREE.Vector3();
   private readonly offR = new THREE.Vector3();
   private readonly legs = blankLegs();
+  private readonly low = blankLegs();
   private readonly fall = new Fall();
   readonly parts: GunParts;
   private readonly points: GunPoints;
@@ -73,16 +74,18 @@ export class Animator {
     if (this.fall.started) this.fall.reset(rig);
     rig.root.updateMatrixWorld(true);
 
-    // Lower body: standing, running and kneeling, blended.
-    this.phase += (a.speed * dt) / (1.2 + 0.32 * a.speed);
+    // Lower body: standing and running, blended with kneeling and the low walk as the body goes down.
+    const kneel = smooth(a.crouch);
+    const stride = 1.2 + 0.32 * a.speed;
+    this.phase += (a.speed * dt) / (stride + (LOW_STRIDE * s - stride) * kneel);
     this.runW = approach(this.runW, Math.min(1, Math.max(0, (a.speed - 0.3) / 1.5)), 10, dt);
     this.raise = approach(this.raise, a.raise, 9, dt);
     this.lean = approach(this.lean, a.lean, 7, dt);
     const ankle = rig.size.ankle;
     const breath = Math.sin(a.now * 1.9 + this.seed);
-    const kneel = smooth(a.crouch);
     blendLegs(this.legs, standLegs(s, ankle, breath), runLegs(s, ankle, this.phase, a.speed, a.dir), this.runW);
-    blendLegs(this.legs, this.legs, kneelLegs(s, ankle), kneel);
+    blendLegs(this.low, kneelLegs(s, ankle), lowWalkLegs(s, ankle, this.phase, a.dir), this.runW);
+    blendLegs(this.legs, this.legs, this.low, kneel);
     this.legs.hipX += 0.07 * s * this.lean;
 
     const party = celebration ?? (a.wonAt !== null ? celebrate(this.character, a.now - a.wonAt) : null);

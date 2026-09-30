@@ -1,11 +1,20 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
+
+interface HoldButtonProps {
+  className: string;
+  label: string;
+  disabled: boolean;
+  onChange(down: boolean): void;
+  children: ReactNode;
+}
 
 /**
- * Hold to stay down behind cover, let go to rise and shoot. It acts on
- * the finger going down and up, not on a click, so a duck is instant.
+ * A button that acts while it is held: Crouch, Advance and Retreat. It
+ * works on the finger going down and up, not on a click, so it answers at
+ * once, and each keeps its own finger so two can be held together.
  */
-export function CrouchButton({ disabled, onChange }: { disabled: boolean; onChange(down: boolean): void }) {
+export function HoldButton({ className, label, disabled, onChange, children }: HoldButtonProps) {
   const held = useRef(false);
   const change = useRef(onChange);
   useEffect(() => {
@@ -25,9 +34,9 @@ export function CrouchButton({ disabled, onChange }: { disabled: boolean; onChan
   return (
     <button
       type="button"
-      className="cb-crouch"
+      className={`cb-hold ${className}`}
       disabled={disabled}
-      aria-label="Crouch. Hold to stay behind cover"
+      aria-label={label}
       onPointerDown={(event) => {
         event.preventDefault();
         if (disabled || held.current) return;
@@ -40,8 +49,7 @@ export function CrouchButton({ disabled, onChange }: { disabled: boolean; onChan
       onLostPointerCapture={release}
       onContextMenu={(event) => event.preventDefault()}
     >
-      <span className="cb-crouch__word">Crouch</span>
-      <small>Hold</small>
+      {children}
     </button>
   );
 }

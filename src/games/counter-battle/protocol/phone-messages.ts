@@ -19,8 +19,11 @@ export const triggerSchema = z.object({ kind: z.literal("trigger"), down: z.bool
 
 export const reloadSchema = z.object({ kind: z.literal("reload") });
 
-/** The crouch button going down or up: held, the fighter stays behind cover; let go, they rise to shoot. */
+/** The crouch button going down or up: held, the fighter stays low, still or on the move; let go, they rise to shoot. */
 export const crouchSchema = z.object({ kind: z.literal("crouch"), down: z.boolean() });
+
+/** ADVANCE (1) or RETREAT (-1) held, or 0 with neither: the fighter runs that way along the cover, or holds. */
+export const moveSchema = z.object({ kind: z.literal("move"), dir: z.union([z.literal(-1), z.literal(0), z.literal(1)]) });
 
 /** Sent once as the phone's screen starts, so the host sends it everything even if earlier messages came too soon. */
 export const helloSchema = z.object({ kind: z.literal("hello") });
@@ -31,6 +34,7 @@ export const phoneMessageSchema = z.discriminatedUnion("kind", [
   triggerSchema,
   reloadSchema,
   crouchSchema,
+  moveSchema,
   helloSchema,
 ]);
 

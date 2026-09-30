@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import type { Battle } from "../engine/battle";
-import { eyeOf, type Fighter } from "../engine/fighter";
+import { aimEye, type Fighter } from "../engine/fighter";
 import { sightBlocked } from "../engine/geometry";
 import { castRay, MAX_RANGE } from "../engine/hit";
 import { coneOf } from "../engine/shooting";
@@ -13,12 +13,13 @@ const head = new THREE.Vector3();
 /**
  * Where a fighter's next shot would land, drawn as the crosshair in their
  * view: along their aim with the kick added, stopped by the first thing
- * in the way. `gap` opens with the spread. Pixels from the pane's bottom
+ * in the way, from the standing eye so a crouch never moves it off what
+ * it was on. `gap` opens with the spread. Pixels from the pane's bottom
  * left, or null when it points behind the camera.
  */
 export function crosshair(f: Fighter, b: Battle, camera: THREE.PerspectiveCamera, w: number, h: number): { at: { x: number; y: number }; gap: number } | null {
   const d = dir3(f.aim.yaw + f.gun.kick.yaw, f.aim.pitch + f.gun.kick.pitch);
-  const hit = castRay(eyeOf(f), d, b.pieces, b.fighters, f.id, MAX_RANGE);
+  const hit = castRay(aimEye(f), d, b.pieces, b.fighters, f.id, MAX_RANGE);
   v.set(hit.trace.to.x, hit.trace.to.y, hit.trace.to.z).project(camera);
   if (v.z > 1) return null;
   const halfFov = (camera.fov * Math.PI) / 360;
