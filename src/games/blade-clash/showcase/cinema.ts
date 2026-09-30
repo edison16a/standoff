@@ -80,11 +80,11 @@ export function trailerCamera(camera: THREE.PerspectiveCamera, stage: Stage, t: 
 
 /**
  * The icon, a cover: in front of the Knight, low beside the Star Knight's
- * shoulder, so the Knight faces us as the blades first meet and the
- * sparks burst over his head.
+ * shoulder and tight, so the Knight fills the frame facing us as the
+ * blades first meet and the sparks burst over his head.
  */
 export function iconCamera(camera: THREE.PerspectiveCamera, stage: Stage): THREE.PerspectiveCamera {
-  return tryCamera(camera, stage, [2.6, 0.45, 1.3, 0.45, 1.5, 0, 40]);
+  return tryCamera(camera, stage, [2.6, 0.45, 1.3, 0.35, 1.35, 0, 32]);
 }
 
 /** A camera from `[x, y, z, lx, ly, lz, fov]`, both x measured from the Knight, as the icon and the `?cam=` tuning aid use. */
