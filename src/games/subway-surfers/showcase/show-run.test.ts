@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { SHOTS } from "./director";
 import { ShowRun } from "./show-run";
+import { TRAILER } from "./trailer";
 
 describe("showcase run", () => {
   it("adds up frames shorter than a step, so a fast display still moves it", () => {
@@ -18,23 +18,17 @@ describe("showcase run", () => {
     expect(b.run.score).toBe(a.run.score);
   });
 
-  it("takes the clip's coins by touch, with jump boots for a short part", () => {
-    const loop = SHOTS.loop;
-    const show = new ShowRun(loop.seed, loop.warmup, { pickups: loop.pickups, powerSeconds: loop.powerSeconds });
-    let touched = 0;
-    let bootsS = 0;
-    // The clip is captured from 3 to 12 seconds in.
-    for (let t = 0; t < 12; t += 1 / 60) {
-      for (const e of show.advance(1 / 60)) {
-        expect(e.type === "power" ? e.kind : "boots").toBe("boots");
-        if (e.type === "coin" && t > 3 && !e.pulled) touched++;
+  it("plays every trailer cut clean, with its power up and the chase where the cut wants them", () => {
+    for (const cut of TRAILER) {
+      const show = new ShowRun(cut.seed, cut.from, { pickups: cut.pickups ?? null });
+      if (cut === TRAILER[0]) expect(show.run.chase.close).toBe(true);
+      const powers = new Set<string>();
+      for (let t = 0; t < cut.seconds * (cut.rate ?? 1); t += 1 / 60) {
+        show.advance(1 / 60);
+        for (const kind of show.run.powers.active()) powers.add(kind);
       }
-      if (show.run.powers.has("boots")) bootsS += 1 / 60;
-      expect(show.run.powers.has("magnet")).toBe(false);
+      expect(show.run.crashed, `seed ${cut.seed} at ${cut.from}`).toBeFalsy();
+      if (cut.pickups) expect(powers.has(cut.pickups), `seed ${cut.seed} at ${cut.from}`).toBe(true);
     }
-    expect(show.run.crashed).toBeFalsy();
-    expect(touched).toBeGreaterThan(15);
-    expect(bootsS).toBeGreaterThan(3);
-    expect(bootsS).toBeLessThan(6);
   });
 });
