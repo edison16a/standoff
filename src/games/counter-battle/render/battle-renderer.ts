@@ -33,7 +33,8 @@ export interface Quality {
  */
 export class BattleRenderer {
   private readonly renderer: THREE.WebGLRenderer;
-  private readonly scene = new THREE.Scene();
+  /** The world drawn; the showcase adds its film lights to it. */
+  readonly scene = new THREE.Scene();
   private arena: Arena | null = null;
   private effects: Effects | null = null;
   private fighters: FighterViews | null = null;
@@ -42,6 +43,8 @@ export class BattleRenderer {
   private readonly huds = new Map<number, PaneHud>();
   private labels = new Map<number, Label>();
   readonly show = new ShowCamera();
+  /** Name tags over heads; the trailer turns them off, as it has no words. */
+  tags = true;
   private readonly environment: THREE.Texture;
   private width = 1;
   private height = 1;
@@ -166,6 +169,7 @@ export class BattleRenderer {
       if (!cam) this.show.setAspect(w / h);
       const camera = cam?.camera ?? this.show.camera;
       showTags(fighters.views, b, f ?? null, camera);
+      if (!this.tags) for (const v of fighters.views.values()) v.tag.group.visible = false;
       this.effects.setView(camera, h * px);
       this.renderer.render(this.scene, camera);
       if (!f || !cam) continue;

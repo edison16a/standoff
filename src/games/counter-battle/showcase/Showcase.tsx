@@ -6,9 +6,9 @@ import { WinnersPreview } from "./WinnersPreview";
 
 /**
  * Paintball Battle playing itself for the home screen's media: the loop
- * cuts over the shoulders of a seeded 2v2 of computer players as each
- * takes a kill, the poster holds a shotgun blast at close range, and the
- * icon is the same moment closer, under the logo. Driven by
+ * is a wordless trailer cut from a seeded 2v2 of computer players, the
+ * poster holds a shotgun blast at close range, and the icon is the paint
+ * hitting its target from down on the grass, under the logo. Driven by
  * requestAnimationFrame and performance.now, so the capture tool can
  * step it frame by frame and get the same film. `?winners=1` or `2`
  * shows the results' winners' scene instead, for looking it over.
@@ -51,7 +51,7 @@ function Duel({ view }: { view: ShowcaseView }) {
   }, [view]);
 
   return (
-    <div className="cb-showcase">
+    <div className={`cb-showcase cb-showcase--${view}`}>
       <div ref={boxRef} className="cb-showcase__box" />
       {view === "icon" && (
         <div className="cb-showcase__logo" aria-hidden="true">

@@ -6,8 +6,10 @@ import type { BattleEvent } from "../engine/events";
 import { STEP } from "../engine/tuning";
 import { BattleRenderer } from "../render/battle-renderer";
 import { splitPanes, type Pane } from "../render/layout";
+import { TrailerFilm } from "./film";
+import { FilmLights } from "./film-lights";
 import { Lab } from "./lab";
-import { heroAt, LOOP_LEAD, PREROLL, SEED, showcaseBattle, STILL_AT, STILL_CAMERA } from "./script";
+import { PREROLL, SEED, showcaseBattle, STILL_AT, STILL_CAMERA } from "./script";
 
 /** A frame the software renderer took ages over counts as one filmed frame, so the film never skips. */
 const STALL = 0.05;
@@ -21,8 +23,8 @@ const LAB_CAMERA = { from: new THREE.Vector3(4.6, 2.2, -22.4), at: new THREE.Vec
 /**
  * Runs the showcase: a seeded 2v2 of computer players, stepped at the
  * engine's fixed rate from performance.now and drawn by the real
- * renderer, so the same seed films the same fight. The loop cuts from
- * one fighter's shoulder to the next as each takes a kill; the poster
+ * renderer, so the same seed films the same fight. The loop plays the
+ * trailer cut from it (trailer.ts); the poster
  * and the icon hold one moment from a pinned television camera.
  * Development aids: ?panes=4 (or 2, 1) shows the split screen with a
  * camera behind each fighter, ?lab=1 swaps the fight for the animation
@@ -37,6 +39,10 @@ export class ShowcaseDirector {
   /** The split screen asked for with ?panes, or null for the film's own views. */
   private readonly split: Pane[] | null;
   private readonly still: boolean;
+  /** The trailer, for the loop; null for the lab, a split or a still. */
+  private readonly film: TrailerFilm | null;
+  private readonly lights: FilmLights | null;
+  private readonly review: boolean;
   private last = -1;
   private carry = 0;
   private drawn = false;
@@ -60,9 +66,20 @@ export class ShowcaseDirector {
     this.renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
     const at = Number(params.get("at")) || (this.lab ? 0 : STILL_AT[view]);
     this.still = at > 0;
-    const lead = this.still ? at : this.lab ? 0 : LOOP_LEAD;
-    for (let t = 0; t < lead; t += FILMED_FRAME) this.draw(FILMED_FRAME, false);
-    if (this.still) this.exposeFilm();
+    // The media have no words, so the name tags go, and they are lit like a film.
+    const filmed = !this.lab && !this.split;
+    this.renderer.tags = !filmed;
+    this.lights = filmed ? new FilmLights(this.renderer.scene) : null;
+    this.film = this.lights && !this.still ? new TrailerFilm(this.battle, this.renderer, this.lights) : null;
+    // ?review=1 leaves the trailer still for a script, which moves it on with window.__cbTrailer(seconds).
+    this.review = this.film !== null && params.has("review");
+    if (this.review) Object.assign(window, { __cbTrailer: (t: number) => (this.film?.frame(t, FILMED_FRAME), this.renderer.finish()) });
+    const fixed = this.renderer.show.fixed;
+    if (fixed) this.lights?.aim(fixed.from, fixed.at);
+    if (this.still) {
+      for (let t = 0; t < at; t += FILMED_FRAME) this.draw(FILMED_FRAME, false);
+      this.exposeFilm();
+    }
   }
 
   /**
@@ -97,6 +114,15 @@ export class ShowcaseDirector {
     const real = gap > STALL ? FILMED_FRAME : gap;
     if (window.__showcaseReady) this.sinceReady += real;
     this.sinceDraw += real;
+    if (this.review) return;
+    if (this.film) {
+      // The capture's warm up is never filmed, so the film starts, and is drawn, only after it.
+      if (this.sinceReady < PREROLL || this.sinceDraw < DRAW_EVERY) return;
+      this.film.frame(this.sinceReady - PREROLL, this.sinceDraw);
+      this.sinceDraw = 0;
+      this.renderer.finish();
+      return;
+    }
     // The capture's warm up is never filmed, so only the frames after it are drawn.
     const show = (this.lab !== null || this.sinceReady >= PREROLL) && this.sinceDraw >= DRAW_EVERY;
     this.draw(real, show);
@@ -108,8 +134,7 @@ export class ShowcaseDirector {
   /** The views to draw now: a split asked for, the lab's television shot, or the film's hero. */
   private panes(): Pane[] {
     if (this.split) return this.split;
-    if (this.lab || this.view !== "loop") return [{ fighter: null, rect: FULL }];
-    return [{ fighter: heroAt(this.battle.time), rect: FULL }];
+    return [{ fighter: null, rect: FULL }];
   }
 
   /** Steps the battle by a slice of time and draws it (or only animates, for frames nobody sees). */
@@ -127,6 +152,7 @@ export class ShowcaseDirector {
   }
 
   dispose(): void {
+    this.lights?.dispose();
     this.renderer.dispose();
   }
 }
