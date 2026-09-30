@@ -16,7 +16,24 @@
   height: 100%;
 }
 
+/* The stills darken toward the edges like a film frame, and the icon toward its foot, so the logo reads at any size. */
+.nba-showcase--poster::after,
+.nba-showcase--icon::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 42%, transparent 55%, rgba(2, 3, 8, 0.55) 100%);
+}
+
+.nba-showcase--icon::after {
+  background:
+    linear-gradient(to top, rgba(2, 3, 8, 0.85) 0%, rgba(2, 3, 8, 0.4) 22%, transparent 40%),
+    radial-gradient(ellipse at 50% 40%, transparent 55%, rgba(2, 3, 8, 0.55) 100%);
+}
+
 .nba-showcase__logo {
+  z-index: 1;
   position: absolute;
   left: 0;
   right: 0;
