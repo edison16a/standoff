@@ -52,6 +52,8 @@ export class CinemaSet {
   private story: number | null = null;
   private readonly lastShot = new Map<number, number>();
   private readonly hits = new Map<number, number>();
+  /** Key art picks who each seat is on, so every gun points out at the dead and none across the team. */
+  private aims: Readonly<Record<number, number>> = {};
 
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
@@ -80,6 +82,16 @@ export class CinemaSet {
     this.renderer.setSize(width, height, false);
     this.camera.aspect = width / Math.max(1, height);
     this.camera.updateProjectionMatrix();
+  }
+
+  /** Holds each listed seat on one chaser, by id, in place of the story's own pick. */
+  aim(aims: Readonly<Record<number, number>>): void {
+    this.aims = aims;
+  }
+
+  /** Sets the soft key from the camera. Key art lights the faces harder than the moving clip. */
+  key(intensity: number): void {
+    this.atmosphere.flashlight.intensity = intensity;
   }
 
   /** Starts a new shot: no sparks carried over from the last, and the same sprays each time. Call it before the first draw. */
@@ -113,7 +125,7 @@ export class CinemaSet {
     this.crew.update(
       s,
       (seat) => {
-        const target = targetFor(seat, s);
+        const target = this.aims[seat] ?? targetFor(seat, s);
         return target === null ? null : this.horde.chest(target, new THREE.Vector3());
       },
       (seat) => this.lastShot.get(seat) ?? -9,
@@ -163,7 +175,9 @@ export class CinemaSet {
     this.renderer.dispose();
   }
 
-  private fire(shot: Shot): void {
+  private fire(story: Shot): void {
+    const held = story.kill ? undefined : this.aims[story.seat];
+    const shot = held === undefined ? story : { ...story, target: held };
     if (!this.crew.muzzle(shot.seat, at, dir)) return;
     this.lastShot.set(shot.seat, shot.at);
     this.hits.set(shot.target, shot.at);

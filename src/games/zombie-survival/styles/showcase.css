@@ -18,7 +18,7 @@
   position: absolute;
   left: 50%;
   bottom: 3%;
-  width: 94%;
+  width: 84%;
   transform: translateX(-50%);
   overflow: visible;
   /* Its own layer, painted once, so the filters are not redrawn with every frame of the scene. */

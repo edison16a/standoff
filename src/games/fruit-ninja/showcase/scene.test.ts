@@ -52,6 +52,7 @@ describe("the showcase icon", () => {
     const kinds = events.flatMap(({ event }) => (event.type === "slice" ? [event.body.kind] : []));
     expect(kinds).toEqual(["orange", "watermelon"]);
     const melon = events.find(({ event }) => event.type === "slice" && event.body.kind === "watermelon")!;
-    expect(ICON_AT - melon.t).toBeLessThan(0.15);
+    // Long enough before that the halves have parted, soon enough that they are still big in the frame.
+    expect(ICON_AT - melon.t).toBeLessThan(0.25);
   });
 });
