@@ -218,7 +218,7 @@ const board = scoreboard(view); // for <Scoreboard board={board} />
 `showcase/` makes the home screen media from a seeded game of computer players (seed 11) and its trophy presentation, drawn by the real renderer. `reel.ts` records every still of the game, so any moment can be shown at any speed and from any camera.
 
 * The loop is a wordless eight second trailer (`trailer.ts`, cameras in `film-cams.ts`). The QB winds up and throws in slow motion from low in front of him. A camera rides the spiral. The receiver catches it, then side steps a diving tackler. A corner flies in and buries a runner on a juke, deep in slow motion. The captain lifts the trophy. The film runs in a circle, so its last frame cuts straight into its first and the clip loops with no seam.
-* The icon holds that big hit from down on the turf, the tackler in the air, under the FOOTBALL 3v3 logo. The poster is the diving tackler reaching for the receiver as he leaps clear.
+* The icon is a cover: the runner in the big hit shot drives straight at the viewer with the ball, a beat before contact, the tackler flying in over his shoulder, from low on the turf under the FOOTBALL 3v3 logo. The still turns up the warm key light, so his front reads at a glance. The poster is the diving tackler reaching for the receiver as he leaps clear.
 * `film-lights.ts` dims the stadium's fill and adds a hard rim light and a warm key that follow the camera, and the page grades the picture with more contrast and a vignette.
 
 `trailer.test.ts` fails if an engine or bot change moves these moments, as a reminder to film again. To film them, with the dev server running:
