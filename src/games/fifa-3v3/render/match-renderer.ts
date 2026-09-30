@@ -90,7 +90,7 @@ export class MatchRenderer {
    */
   cinematic(look: CinemaLook = {}): void {
     const { lights = [], ambient = 0.5, key = 1, haze = 55 } = look;
-    this.scene.add(...lights);
+    if (lights.length) this.scene.add(...lights);
     this.arena.ambient.intensity *= ambient;
     this.arena.key.intensity *= key;
     this.arena.boards.wordless();

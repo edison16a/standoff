@@ -128,7 +128,7 @@ export class CourtRenderer {
    */
   cinematic(look: CinemaLook = {}): void {
     const { lights = [], fill = 0.45, key = 1, haze = 0.028 } = look;
-    this.scene.add(...lights);
+    if (lights.length) this.scene.add(...lights);
     this.keyLight *= key;
     this.arena.fill.intensity *= fill;
     this.arena.rim.intensity *= 2.6;
