@@ -14,7 +14,7 @@ The running list of what is being built, so work can pick up again after a break
 
 | Work | Workflow | State |
 | --- | --- | --- |
-| Final check: sports, action, pointer and camera games end to end, plus rooms, WebSockets, Regenerate room and the live site | wf_9aea4a07-c59 | check and fix, then review each group |
+| Final check: sports, action, pointer and camera games end to end, plus rooms, WebSockets, Regenerate room and the live site | wf_9aea4a07-c59 | resumed after a container restart: sports and action checks done, their reviews next; pointer, camera and rooms checks restarted |
 
 All final builds are on main: cover icons, sports phone controls, Paintball Battle controls, Subway camera still, 1.2x tiles, final README. Next: the final check (every game end to end, live WebSockets, Regenerate room).
 
