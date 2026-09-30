@@ -9,26 +9,20 @@ import { useControllerStore } from "../controller-store";
 import { useController } from "./session-context";
 import { ShotMeter } from "./ShotMeter";
 
+/**
+ * The middle of the pad: your side, whose ball it is and anything you
+ * must act on now. The score and the shot clock stay on the big screen,
+ * so the buttons get the room.
+ */
 function Status({ court }: { court: CourtState }) {
   const flash = useControllerStore((s) => s.flash);
   const mine = TEAMS[court.team];
-  const other = TEAMS[court.team === 0 ? 1 : 0];
   const ft = court.freeThrow;
   const line = ft ? (ft.mine ? `Your free throw, ${ft.n} of ${ft.of}` : `Free throw ${ft.n} of ${ft.of}`) : null;
   const ball = line ?? (court.checking ? (court.hasBall ? "Check ball" : "Check up") : court.hasBall ? "Your ball" : court.holder ? `${court.holder} has it` : "Loose ball");
   return (
     <div className="nba-status">
       <span className="nba-status__team">{mine.name}</span>
-      <div className="nba-status__score">
-        <b style={{ color: mine.color }}>{court.score[court.team]}</b>
-        <span>:</span>
-        <b style={{ color: other.color }}>{court.score[court.team === 0 ? 1 : 0]}</b>
-      </div>
-      {court.countdown !== null && court.countdown > 0 ? (
-        <strong className="nba-status__count">{court.countdown}</strong>
-      ) : (
-        <span className={`nba-status__clock ${court.shotClock <= 5 ? "nba-status__clock--late" : ""}`}>{court.shotClock}</span>
-      )}
       <span className={`nba-status__ball ${court.hasBall ? "nba-status__ball--mine" : ""}`}>{ball}</span>
       {court.mustClear && <span className="nba-status__warn">Take it back past the arc</span>}
       {court.defending && !ft && <GuardRange state={court.guard} />}
@@ -72,7 +66,7 @@ function defendFace(court: CourtState): Face {
 /**
  * The phone as a controller, held sideways: the thumb stick on the
  * left moves your player the way the big screen shows, dribbling on its
- * own; on the right, Shoot with its meter, Pass (or Call for the ball)
+ * own; on the right, Shoot (the biggest) with its meter, Pass (or Call for the ball)
  * and a third button that changes with the play: Dribble with the ball,
  * a move picked by the stick, and Block anywhere else. On defence the
  * three become Guard (held), Block and Steal. At the free throw line
