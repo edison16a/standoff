@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import type { RunScene } from "../render/run-scene";
+import { clearLens } from "./director";
 import { ShowRun } from "./show-run";
 import { continues, placeAt, spotAt, type Cut } from "./timeline";
 
@@ -40,6 +41,7 @@ export class TrailerDirector {
     const dt = Math.max(0, spot.runTime - this.runTime);
     this.runTime = spot.runTime;
     for (const event of this.show!.advance(dt)) this.scene.onEvent(event);
+    if (spot.cut.clearLens) clearLens(this.show!.run);
     this.scene.update(dt, spot.runTime);
   }
 
@@ -71,6 +73,7 @@ export class TrailerDirector {
       const dt = Math.min(1 / 30, settle - t);
       this.runTime += dt;
       for (const event of this.show.advance(dt)) this.scene.onEvent(event);
+      if (cut.clearLens) clearLens(this.show.run);
       this.scene.update(dt, this.runTime);
     }
     this.runTime = cut.from;

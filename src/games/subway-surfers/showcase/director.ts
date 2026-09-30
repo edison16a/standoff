@@ -4,7 +4,7 @@ import { frontAt, type PowerKind } from "../engine/types";
 import type { RunScene } from "../render/run-scene";
 import { ShowRun } from "./show-run";
 
-type Angle = "chase" | "front" | "side" | "hero";
+type Angle = "chase" | "front" | "side" | "hero" | "pursuit" | "pursuitWide";
 
 export interface Shot {
   seed: number;
@@ -51,30 +51,20 @@ function leap(run: Run): void {
   for (let i = 0; i < 8; i++) run.course.addCoin(s.x, 0.95 + Math.max(0, 1.6 - i * 0.3), s.distance + 7 + i * 3);
 }
 
-/** The icon's moment: up in the air on the hoverboard, in a shower of coins. */
-function hoverLeap(run: Run): void {
-  const s = run.runner;
-  s.y = 1.4;
-  s.vy = 0.4;
-  s.grounded = false;
-  s.airTime = 0.4;
-  s.rollLeft = 0;
-  run.powers.start("hoverboard");
-  // An arc of coins sweeps up behind them on the far side, away from the lens.
-  for (let i = 0; i < 9; i++) {
-    const t = i / 8;
-    run.course.addCoin(s.x - 1.5 + t * 0.6, 0.9 + Math.sin(t * Math.PI) * 2.6, s.distance - 9 + t * 8);
-  }
+/** A leap with the inspector and his dog close behind, and a line of coins arcing on ahead. */
+function chasedLeap(run: Run): void {
+  leap(run);
+  run.chase.gap = 2.3;
+  run.runner.y = 1.8;
 }
 
 export const SHOTS: Record<"loop" | "icon" | "poster", Shot> = {
-  // The capture tool lets the scene settle for 3 seconds first, so the clip runs from about 3 to 12.
-  // Coins are taken by touch, in the open city with no tunnel. Seed 20 grabs super sneakers at 6 seconds,
-  // leaps high with a flip at 7.4 seen from the side, lands and rolls, and loses the sneakers at 11.
-  loop: { seed: 20, look: 0, warmup: 12.5, pickups: "boots", powerSeconds: 5, cuts: [[0, "chase"], [6.8, "side"], [9.4, "chase"]], pace: 1 },
-  // Seed 7 meets a train rolling in on the next track at about 23 seconds. The runner leaps as it comes.
-  poster: { seed: 7, look: 0, warmup: 20, moment: (run) => run.runner.grounded && trainComing(run), stage: leap, pickups: null, cuts: [[0, "chase"]], pace: 0.005 },
-  icon: { seed: 11, look: 0, warmup: 14, moment: (run) => run.runner.grounded && run.runner.lane === 0 && clearAround(run), stage: hoverLeap, pickups: null, cuts: [[0, "hero"]], pace: 0.005 },
+  // The loop is the trailer's cuts (see trailer.ts). This only dresses its scene.
+  loop: { seed: 7, look: 0, warmup: 0, pickups: null, cuts: [[0, "chase"]], pace: 1 },
+  // Seed 7 meets a train rolling in on the next track at about 23 seconds. The runner leaps as it comes, chased.
+  poster: { seed: 7, look: 0, warmup: 20, moment: (run) => run.runner.grounded && trainComing(run), stage: chasedLeap, pickups: null, cuts: [[0, "pursuitWide"]], pace: 0.005 },
+  // Seed 11 in the open yard, with nothing standing close: the runner leaps high over the lens, the inspector and dog behind.
+  icon: { seed: 11, look: 0, warmup: 14, moment: (run) => run.runner.grounded && run.runner.lane === 0 && clearAround(run), stage: chasedLeap, pickups: null, cuts: [[0, "pursuit"]], pace: 0.005 },
 };
 
 /** Where each camera sits and looks, from the runner's feet: [x, y, z] then the point it looks at. */
@@ -85,6 +75,10 @@ const PLACES: Record<Exclude<Angle, "chase">, { at: [number, number, number]; lo
   side: { at: [4.2, 1.8, -3.5], look: [0, 1.1, -1.5], fov: 48 },
   // Close and below, so the runner towers over the lens. It looks low, so the runner rides high above the icon's logo.
   hero: { at: [1.5, 0.45, -3.1], look: [0.1, 0.5, 0], fov: 52 },
+  // Low ahead, looking back up at a leap, with whoever chases it in the frame behind.
+  pursuit: { at: [1.2, -1.25, -2.9], look: [-0.3, 0.1, 2], fov: 68 },
+  // The same, pulled back and wider for the poster.
+  pursuitWide: { at: [-1.8, 0.35, -4.4], look: [0.2, 1.2, 2.5], fov: 52 },
 };
 
 /**
@@ -140,7 +134,7 @@ export class Director {
 }
 
 /** Takes away coins right in front of a still's camera, which would fill the frame. */
-function clearLens(run: Run): void {
+export function clearLens(run: Run): void {
   const d = run.runner.distance;
   const coins = run.course.coins;
   for (let i = coins.length - 1; i >= 0; i--) if (coins[i]!.z > d - 1 && coins[i]!.z < d + 6) coins.splice(i, 1);

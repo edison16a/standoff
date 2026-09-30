@@ -18,6 +18,8 @@ export interface Cut {
   rate?: number;
   /** What every power up on the course becomes, or null for none. See ShowRun. */
   pickups?: PowerKind | null;
+  /** Takes away the coins just ahead of the runner, which would fill a camera placed in front. */
+  clearLens?: boolean;
   /** The game's own chase camera, or a camera placed by hand. */
   angle: "chase" | Place;
   /** Where a placed camera has moved to by the end, for a push or a swing round. */
