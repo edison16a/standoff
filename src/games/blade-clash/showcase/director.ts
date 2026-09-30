@@ -9,7 +9,7 @@ import { DuelRenderer } from "../render/duel-renderer";
 import { CLIP, HIGH } from "../render/quality";
 import { FULL } from "../render/split";
 import { Choreography, OPENING_SCORE } from "./choreography";
-import { iconCamera, posterCamera, trailerCamera, type Stage } from "./cinema";
+import { iconCamera, posterCamera, trailerCamera, tryCamera, type Stage } from "./cinema";
 import { CYCLE_S, duelAt } from "./edit";
 
 /** Frames are drawn at the clip's rate, so a slow machine capturing it draws each once. */
@@ -64,9 +64,12 @@ export class ShowcaseDirector {
     this.begin();
     if (view !== "loop") {
       // Stills play the duel forward, moving everything on but drawing nothing, then hold the moment.
-      this.playTo(STILL_AT_MS[view]);
+      // `?still=ms&cam=x,y,z,lx,ly,lz,fov` (x relative to the Knight) try other stills, in development only.
+      const dev = process.env.NODE_ENV === "development";
+      this.playTo((dev && Number(params.get("still"))) || STILL_AT_MS[view]);
       const place = view === "icon" ? iconCamera : posterCamera;
-      this.still = place(this.camera, this.stage());
+      const cam = dev ? params.get("cam")?.split(",").map(Number) : undefined;
+      this.still = cam?.length === 7 ? tryCamera(this.camera, this.stage(), cam) : place(this.camera, this.stage());
     }
   }
 
