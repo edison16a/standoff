@@ -1,12 +1,7 @@
 "use client";
 import { ROLE_NAMES } from "../../roles";
-import { BUILDS } from "../../builds";
 import { TEAMS } from "../../teams";
 import type { PhoneState } from "../../protocol";
-
-function clock(seconds: number): string {
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-}
 
 /** The QB with the ball who has not turned runner: what he can do right now. */
 function qbStatus(host: PhoneState): string {
@@ -45,31 +40,19 @@ export function statusOf(host: PhoneState): string | null {
 }
 
 /**
- * The middle of the controller: the score, the quarter and clock, the
- * down and distance, this player's side and role, and a status line.
+ * The middle of the controller: this player's side and role, and a
+ * status line saying what to do. The score, the clock and the down are
+ * left to the big screen, so the buttons get the room.
  */
 export function PadInfo({ host }: { host: PhoneState }) {
   const team = host.team !== null ? TEAMS[host.team] : TEAMS[0];
-  const build = host.pick ? BUILDS[host.pick] : null;
   const status = statusOf(host);
   return (
     <div className="fb-info">
-      <div className="fb-info__score" aria-label={`${TEAMS[0].name} ${host.score[0]}, ${TEAMS[1].name} ${host.score[1]}`}>
-        <span style={{ color: TEAMS[0].color }}>{TEAMS[0].code}</span>
-        <strong>
-          {host.score[0]} : {host.score[1]}
-        </strong>
-        <span style={{ color: TEAMS[1].color }}>{TEAMS[1].code}</span>
-      </div>
-      <div className="fb-info__clock">
-        {host.overtime ? "OT" : `Q${host.quarter}`} {clock(host.clock)}
-        {host.down && <span>{host.down}</span>}
-      </div>
       <div className="fb-info__me">
         <span className="fb-info__team" style={{ background: team.color }}>
           {team.name}
         </span>
-        {build && <span>{build.short}</span>}
         {host.role && <span>{ROLE_NAMES[host.role]}</span>}
       </div>
       {status && <div className={`fb-info__status ${host.withBall ? "fb-info__status--ball" : ""}`}>{status}</div>}

@@ -1,8 +1,8 @@
 /*
   The controller, held sideways: moving on the left under one thumb,
-  the ball and the action buttons on the right under the other, and the
-  score and a status line in the middle, readable at a glance while the
-  player watches the big screen.
+  the ball and the action buttons on the right under the other, and a
+  slim status line in the middle. The score and the clock stay on the
+  big screen, so the buttons get the room.
 */
 
 .fb-phone--pad {
@@ -21,9 +21,14 @@
 .fb-pad {
   display: grid;
   flex: 1;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.95fr) minmax(0, 1.1fr);
-  gap: 8px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.6fr) minmax(0, 1.4fr);
+  gap: 10px;
   min-height: 0;
+}
+
+/* The QB's middle holds Hike, or Juke and Run, so it keeps more width. */
+.fb-pad--qb {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .fb-pad--wait {
@@ -43,79 +48,90 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
   text-align: center;
 }
 
+/* Sized from its own box, so the buttons grow into whatever room the phone gives. */
 .fb-pad__right {
   display: flex;
   align-items: center;
   justify-content: center;
+  min-width: 0;
   min-height: 0;
+  container-type: size;
 }
 
 .fb-pad__buttons {
   display: grid;
+  gap: 4cqh 5cqw;
+}
+
+/* Juke up and in, Dive the biggest, low and out under the thumb. */
+.fb-pad__buttons--two {
   grid-template-columns: auto auto;
+  grid-template-rows: 1fr;
+  align-content: stretch;
+  justify-content: center;
+}
+
+.fb-pad__buttons--two > :nth-child(1) {
+  align-self: start;
+  margin-top: 6cqh;
+}
+
+.fb-pad__buttons--two > :nth-child(2) {
+  align-self: end;
+  margin-bottom: 4cqh;
+}
+
+/* Rush over Guard in an arc, Tackle the biggest beside them. */
+.fb-pad__buttons--three {
+  grid-template-columns: auto auto;
+  grid-template-areas: "rush tackle" "guard tackle";
   align-content: center;
   justify-content: center;
   align-items: center;
-  gap: 6px 10px;
-}
-
-.fb-pad__buttons--three {
-  grid-template-columns: auto auto;
-  grid-template-areas: "rush guard" "tackle tackle";
 }
 
 .fb-pad__buttons--three > :nth-child(3) {
   grid-area: tackle;
-  justify-self: center;
+}
+
+.fb-pad__right .kit-pad-btn--lg {
+  width: min(60cqh, 50cqw, 176px);
+  height: min(60cqh, 50cqw, 176px);
+}
+
+.fb-pad__right .kit-pad-btn--md {
+  width: min(44cqh, 38cqw, 128px);
+  height: min(44cqh, 38cqw, 128px);
 }
 
 .fb-pad__row {
   display: flex;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
 }
 
-/* The score, the clock, who you are and what is happening. */
+.fb-pad__middle .kit-pad-btn--md {
+  width: min(27vmin, 112px);
+  height: min(27vmin, 112px);
+}
+
+.fb-pad__middle .kit-pad-btn--lg {
+  width: min(38vmin, 150px);
+  height: min(38vmin, 150px);
+}
+
+/* Who you are and what to do now. */
 
 .fb-info {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-}
-
-.fb-info__score {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  font-family: "Arial Black", Impact, Arial, sans-serif;
-  font-size: 14px;
-}
-
-.fb-info__score strong {
-  font-size: 26px;
-  font-variant-numeric: tabular-nums;
-}
-
-.fb-info__clock {
-  display: flex;
-  gap: 8px;
-  padding: 2px 10px;
-  border-radius: 6px;
-  background: var(--bg-muted);
-  font-weight: 800;
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.fb-info__clock span {
-  color: var(--text-muted);
+  gap: 6px;
 }
 
 .fb-info__me {

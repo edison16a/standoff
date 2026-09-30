@@ -44,7 +44,9 @@ The model is Soccer 3v3's World Cup ceremony, made for football from the victory
 
 ## The phone
 
-Held sideways, like a controller: moving under the left thumb, the ball and the buttons under the right, and the score, the clock, the down and a status line in the middle. The layout follows what the player is doing right now, straight from the engine's `seatStatus`, and every change of layout lets go of anything held.
+Held sideways, like a controller: moving under the left thumb, the ball and the buttons under the right, and a slim middle with the player's side, role and a status line. The score, the clock and the down stay on the big screen, so the buttons on the right take that room: they size themselves to the space the phone has, with the main action the biggest. The layout follows what the player is doing right now, straight from the engine's `seatStatus`, and every change of layout lets go of any button held.
+
+The QB, runner and defence pads share one move stick that stays on screen between them (`phone/pad-layout.ts`). A thumb steering the QB keeps steering him through the switch when he presses Run, with no reset.
 
 * **The call.** Before each play the QB gets three big tiles, Throw, Run and Kick, with the seconds left. After a touchdown: Kick for 1 or Go for 2.
 * **The QB.** The same move stick as everyone on the left. Before the snap the middle is one big Hike button with the seconds left of the 5 second window. On the right the throw stick: hold it and push toward a receiver on the big screen, the one nearest that line lights up, and let go to throw. On a run call a big Pass button takes its place for the pitch. Juke and Run sit in the middle after the snap.
