@@ -8,9 +8,10 @@ import "../styles/showcase.css";
 /**
  * Blade Clash playing itself for the home screen's media: the loop is a
  * trailer cut from a scripted duel, the icon a low shot of the blades
- * meeting under the title, the poster the winning cut. Driven by requestAnimationFrame and
- * performance.now, with a scripted duel, so the capture tool can step it
- * frame by frame and get the same film every time. With `?ceremony` it
+ * meeting under the title, the poster the same clash a beat later.
+ * Driven by requestAnimationFrame and performance.now, with a scripted
+ * duel, so the capture tool can step it frame by frame and get the same
+ * film every time. With `?ceremony` it
  * stays on the winner's ceremony, names and all, for looking it over.
  */
 export function Showcase({ view }: { view: ShowcaseView }) {
