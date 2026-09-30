@@ -23,9 +23,11 @@ const std = (p: THREE.MeshStandardMaterialParameters) => new THREE.MeshStandardM
  * route runs. Headlights throw real light up the street and the tail
  * lights wash the dead chasing it in red.
  */
-export function buildTruck(): Truck {
+export function buildTruck(env: THREE.Texture): Truck {
   const w = worldMaterials();
-  const paint = std({ color: 0x3f4a2e, metalness: 0.45, roughness: 0.55 });
+  // Its own reflections, so the paint and glass catch light like metal in the dark street.
+  const paint = std({ color: 0x3f4a2e, metalness: 0.45, roughness: 0.5, envMap: env, envMapIntensity: 0.35 });
+  const glass = std({ color: 0x0b1118, metalness: 0.9, roughness: 0.08, envMap: env, envMapIntensity: 0.6 });
   const primer = std({ color: 0x2a2c26, roughness: 0.9, metalness: 0.1 });
   const rust = w.rust;
   const b = new MeshBuilder();
@@ -33,9 +35,13 @@ export function buildTruck(): Truck {
   b.box(2.04, 0.62, 5.3, paint, [0, 0.86, 0], undefined, 0.08);
   b.box(1.96, 0.3, 1.7, paint, [0, 1.3, -1.72], [-0.05, 0, 0], 0.1);
   b.box(1.9, 0.78, 1.46, paint, [0, 1.56, -0.28], undefined, 0.12);
-  b.box(1.78, 0.52, 0.06, w.glass, [0, 1.6, -1.02], [-0.42, 0, 0]);
+  b.box(1.78, 0.52, 0.06, glass, [0, 1.6, -1.02], [-0.42, 0, 0]);
   for (const s of [-1, 1]) {
-    b.box(0.05, 0.46, 1.1, w.glass, [s * 0.96, 1.62, -0.3]);
+    b.box(0.05, 0.46, 1.1, glass, [s * 0.96, 1.62, -0.3]);
+    // Door pillars and frames, so the cab reads as a cab and not a block.
+    for (const z of [-0.92, -0.3, 0.36]) b.box(0.08, 0.5, 0.08, paint, [s * 0.97, 1.62, z]);
+    b.box(0.03, 0.02, 1.3, w.darkMetal, [s * 1.03, 1.06, -0.3]);
+    b.box(0.04, 0.05, 0.16, w.chrome, [s * 1.03, 1.2, 0.05]);
     b.box(0.12, 0.44, 2.2, paint, [s * (BED.halfWidth + 0.08), 1.36, (BED.front + BED.rear) / 2], undefined, 0.03);
     // Wheel arches, flared and dark.
     for (const z of [-1.62, 1.72]) b.box(0.18, 0.2, 1.24, primer, [s * 1.02, 1.08, z], undefined, 0.06);
@@ -88,6 +94,7 @@ export function buildTruck(): Truck {
         if (o instanceof THREE.Sprite) o.material.dispose();
       });
       paint.dispose();
+      glass.dispose();
       primer.dispose();
       lamp.dispose();
       tail.dispose();
@@ -123,8 +130,9 @@ function lights(body: THREE.Group): void {
     body.add(flare(0xfff2dc, [s * 0.72, 1.22, -2.72], 1.3));
     body.add(flare(0xff2a18, [s * 0.95, 1.3, BED.rear + 0.1], 0.7));
   }
-  const red = new THREE.PointLight(0xff2412, 14, 16, 1.4);
-  red.position.set(0, 1.2, BED.rear + 0.6);
+  const red = new THREE.PointLight(0xff2412, 12, 16, 1.4);
+  // Out behind the tailgate, so it washes the road and the chasers rather than the truck.
+  red.position.set(0, 1.0, BED.rear + 1.4);
   body.add(red);
   for (let i = 0; i < 4; i++) body.add(flare(0xfff2dc, [(i - 1.5) * 0.36, 2.5, BED.front - 0.1], 0.9));
 }

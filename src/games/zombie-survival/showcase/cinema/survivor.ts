@@ -62,8 +62,14 @@ export function buildSurvivor(seat: number, look: Look, weapon: WeaponId): Survi
   head.sphere(h * 0.5, skin, [0, h * 0.62, -h * 0.02], [0.86, 1, 0.98], 16);
   head.sphere(h * 0.3, skin, [0, h * 0.34, h * 0.12], [1.05, 0.9, 1], 12);
   head.add(new THREE.ConeGeometry(h * 0.07, h * 0.18, 6), skin, [0, h * 0.5, h * 0.46], [0.3, 0, 0], [1, 1, 0.8]);
-  for (const s of [-1, 1]) head.sphere(h * 0.045, m.eye, [s * h * 0.15, h * 0.6, h * 0.42], [1, 0.8, 0.6], 8);
-  head.box(h * 0.5, h * 0.04, h * 0.05, m.hair, [0, h * 0.7, h * 0.44], [0.2, 0, 0]);
+  // Eyes under a set brow, ears, a jaw and a hard line of a mouth: a face that reads at a distance.
+  for (const s of [-1, 1]) {
+    head.sphere(h * 0.05, m.eye, [s * h * 0.15, h * 0.58, h * 0.42], [1, 0.75, 0.6], 8);
+    head.box(h * 0.2, h * 0.05, h * 0.06, m.hair, [s * h * 0.15, h * 0.68, h * 0.44], [0.15, 0, s * -0.18], h * 0.02);
+    head.sphere(h * 0.08, skin, [s * h * 0.44, h * 0.55, 0], [0.4, 1, 0.7], 8);
+  }
+  head.sphere(h * 0.26, skin, [0, h * 0.26, h * 0.16], [1.1, 0.7, 1], 12);
+  head.box(h * 0.2, h * 0.025, h * 0.03, m.eye, [0, h * 0.34, h * 0.43], undefined, h * 0.01);
   gear(head, h, look.headgear, jacket, team, m);
   limb(dress.on("neck"), h * 0.2, h * 0.22, d.neck + 0.08, skin, d.neck + 0.05, 1, 10);
 

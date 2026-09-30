@@ -5,7 +5,8 @@ describe("the trailer's edit", () => {
   it("covers every moment of the loop with exactly one shot", () => {
     const covered = CUTS.reduce((sum, cut) => sum + (cut.to - cut.from), 0);
     expect(covered).toBeCloseTo(PERIOD, 6);
-    for (let t = 0; t < PERIOD; t += 0.05) {
+    for (let i = 0; i < PERIOD * 20; i++) {
+      const t = (i + 0.5) / 20;
       const hits = CUTS.filter((cut) => [t, t + PERIOD].some((at) => at >= cut.from && at < cut.to));
       expect(hits).toHaveLength(1);
     }

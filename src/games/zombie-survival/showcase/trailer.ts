@@ -66,8 +66,8 @@ export const CUTS: readonly Cut[] = [
     // Low and wide, swinging from the headlights round to the team firing back.
     kind: "chase", from: 8.8, to: 11.3, seed: 11, story: ramp(0.2, [[0, 1]]),
     camera: (u, t) => {
-      const a = -0.75 - u * 0.36;
-      const r = 6.8 - u * 0.4;
+      const a = -0.45 - u * 0.26;
+      const r = 7.6 - u * 0.4;
       return { position: [t.x + Math.sin(a) * r, 0.62 + u * 0.08, t.z + 1.2 - Math.cos(a) * r], lookAt: [t.x, 1.55, t.z + 2.2], fov: 44, roll: -0.04 };
     },
   },
@@ -77,17 +77,17 @@ export const CUTS: readonly Cut[] = [
     camera: (u) => ({ position: [4.3 + u * 0.1, 0.42, -46.5], lookAt: [3.4 - u * 0.4, 1.25, -38], fov: 48, roll: 0.05 }),
   },
   {
-    // Over the team's shoulders in the bed, the pack filling the road behind.
+    // Over the team's shoulders from beside the bed, the pack filling the road behind.
     kind: "chase", from: 2.7, to: 3.9, seed: 13, story: ramp(4.85, [[0, 1]]),
     camera: (u, t) => {
       const [sx, sy] = shake(u, 0.04);
-      return { position: [t.x + 0.05 + sx, 2.35 + sy, t.z + 0.15], lookAt: [t.x - 0.4, 1.1, t.z + 14], fov: 50 };
+      return { position: [t.x + 1.35 + sx, 2.45 + sy, t.z + 0.9], lookAt: [t.x - 0.5, 1.2, t.z + 14], fov: 48 };
     },
   },
   {
-    // Beside the tailgate as a runner leaps for it, and the shotgun meets it in the air.
+    // Low on the road behind a runner as it leaps for the tailgate, and the shotgun meets it in the air.
     kind: "chase", from: 3.9, to: 5.1, seed: 14, story: ramp(5.72, [[0, 1], [0.45, 0.2], [0.8, 0.2], [1.0, 0.9]]),
-    camera: (u, t) => ({ position: [t.x + 3.1, 0.95 + u * 0.1, t.z + 4.6], lookAt: [t.x - 0.2, 1.5, t.z + 3.9], fov: 42, roll: -0.03 }),
+    camera: (u, t) => ({ position: [t.x + 1.1, 0.7 + u * 0.1, t.z + 8.6 - u * 0.3], lookAt: [t.x - 0.1, 1.9, t.z + 3.2], fov: 44, roll: -0.03 }),
   },
   // Then the game itself: the team's guns, the lasers and the Butcher in his alley.
   { kind: "play", from: 5.1, to: 8.8, seed: 15, clock: ramp(0, [[0, 1]]) },

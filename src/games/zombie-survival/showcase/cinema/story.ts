@@ -41,8 +41,8 @@ export const LEAP_HIT = 0.36;
 
 export const CHASERS: readonly ChaserSpec[] = [
   { id: 1, seed: 0.21, lane: -1.2, gap: 3.2, dies: 2.3 },
-  { id: 2, seed: 0.47, lane: 0.9, gap: 4.2 },
-  { id: 3, seed: 0.73, lane: -0.2, gap: 5.4, leap: 6.0 },
+  { id: 2, seed: 0.47, lane: 1.8, gap: 4.2 },
+  { id: 3, seed: 0.73, lane: -0.2, gap: 3.4, leap: 6.0 },
   { id: 4, seed: 0.33, lane: 2.1, gap: 6.8, dies: 4.1 },
   { id: 5, seed: 0.59, lane: -2.3, gap: 7.8 },
   { id: 6, seed: 0.88, lane: 0.4, gap: 9.6 },

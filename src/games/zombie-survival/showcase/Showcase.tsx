@@ -32,8 +32,9 @@ function stillScene(canvas: HTMLCanvasElement, view: "icon" | "poster"): Scene {
   return {
     resize: (w, h, dpr) => set.resize(w, h, dpr),
     frame: () => {
-      // The run up is drawn only once. After that the same frame is shown again.
-      for (let i = posed ? steps : 0; i <= steps; i++) set.draw(still.story - still.runUp + (i * still.runUp) / steps, still.camera, i ? 1 / 30 : 0);
+      // The run up plays once. After that the same moment is drawn again, flashes and all.
+      if (posed) set.redraw();
+      else for (let i = 0; i <= steps; i++) set.draw(still.story - still.runUp + (i * still.runUp) / steps, still.camera, i ? 1 / 30 : 0);
       posed = true;
       set.finish();
     },

@@ -7,6 +7,7 @@ import { Atmosphere } from "../../render/atmosphere";
 import { Effects } from "../../render/effects/effects";
 import { setGunEnvironment } from "../../render/models/guns/gun-kit";
 import { World } from "../../render/world/world";
+import { Blooms } from "./blooms";
 import { Crew } from "./crew";
 import { Horde } from "./horde";
 import { shotsBetween, targetFor, truckAt, type Shot } from "./story";
@@ -43,7 +44,9 @@ export class CinemaSet {
   private readonly truck: Truck;
   private readonly crew: Crew;
   private readonly horde = new Horde();
+  private readonly blooms = new Blooms();
   private readonly env: THREE.Texture;
+  private readonly rim: THREE.DirectionalLight;
   private effects: Effects;
   private rng = new Rng(1);
   private story: number | null = null;
@@ -53,7 +56,7 @@ export class CinemaSet {
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.15;
+    this.renderer.toneMappingExposure = 1.3;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     const pmrem = new THREE.PMREMGenerator(this.renderer);
     this.env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
@@ -61,12 +64,15 @@ export class CinemaSet {
     this.scene.add(this.camera);
     this.atmosphere = new Atmosphere(this.scene, this.camera);
     // Outside the team's eyes, the flashlight becomes a soft key from the camera.
-    this.atmosphere.flashlight.intensity = 22;
+    this.atmosphere.flashlight.intensity = 12;
     this.atmosphere.gunLight.intensity = 0;
-    this.truck = buildTruck();
+    this.truck = buildTruck(this.env);
+    // A hard cold light from up the road: it rims the team and lights the faces of the dead coming after them.
+    this.rim = new THREE.DirectionalLight(0xa8c0ff, 1.6);
+    this.scene.add(this.rim, this.rim.target);
     this.crew = new Crew(this.truck.body);
     this.effects = new Effects(() => this.rng.next());
-    this.scene.add(this.atmosphere.group, this.world.group, this.truck.root, this.horde.group, this.effects.group);
+    this.scene.add(this.atmosphere.group, this.world.group, this.truck.root, this.horde.group, this.blooms.group, this.effects.group);
   }
 
   resize(width: number, height: number, dpr: number): void {
@@ -85,6 +91,7 @@ export class CinemaSet {
     this.scene.add(this.effects.group);
     this.story = null;
     this.lastShot.clear();
+    this.blooms.clear();
     this.hits.clear();
     // The gun materials are shared with the game's own renderer, which sets its own reflections.
     setGunEnvironment(this.env, 0.5);
@@ -94,6 +101,8 @@ export class CinemaSet {
   draw(s: number, shot: (truck: THREE.Vector3) => CameraShot, step: number): void {
     const distance = truckAt(s);
     this.truck.root.position.set(0, 0, -distance);
+    this.rim.position.set(-6, 9, -distance - 24);
+    this.rim.target.position.set(0, 1, -distance + 6);
     for (const wheel of this.truck.wheels) wheel.rotation.x = -distance / WHEEL_RADIUS;
     // The body rides the potholes on its springs.
     this.truck.body.position.y = 0.03 * Math.sin(s * 13) + 0.02 * Math.sin(s * 23 + 1);
@@ -115,6 +124,7 @@ export class CinemaSet {
     if (s > from) for (const shot of shotsBetween(from, s)) this.fire(shot);
     this.story = s;
     this.effects.update(step);
+    this.blooms.update(s);
 
     const frame = shot(this.truck.root.position);
     this.camera.position.set(...frame.position);
@@ -127,6 +137,11 @@ export class CinemaSet {
     this.camera.updateMatrixWorld();
     this.world.update(segmentAt(distance).index, this.camera.position, s, true);
     this.atmosphere.follow(this.camera.position);
+    this.redraw();
+  }
+
+  /** Draws the same moment again, with nothing moved on, so a still holds its flashes. */
+  redraw(): void {
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -140,6 +155,7 @@ export class CinemaSet {
     this.effects.dispose();
     this.world.dispose();
     this.horde.dispose();
+    this.blooms.dispose();
     this.crew.dispose();
     this.truck.dispose();
     setGunEnvironment(null);
@@ -153,6 +169,7 @@ export class CinemaSet {
     this.hits.set(shot.target, shot.at);
     const big = this.crew.weapon(shot.seat) === "shotgun";
     this.effects.muzzle(at, dir, big);
+    this.blooms.spawn(at, big, shot.at);
     this.horde.chest(shot.target, hit);
     // Every round lands a little off the chest, as real fire would.
     hit.x += (this.rng.next() - 0.5) * 0.3;

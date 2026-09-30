@@ -12,22 +12,22 @@ export interface Still {
 }
 
 /**
- * The key art. The icon is the moment a runner leaping at the tailgate
- * meets the shotgun, seen low from the road behind with the pack around
- * the camera. The poster is the wide chase: the truck head on through
- * the fog, the team firing back, the dead pouring after it.
+ * The key art. The icon looks down the road over the pack at the team
+ * firing back from the truck, the moment a runner leaping at the
+ * tailgate meets the shotgun. The poster is the wide chase from the side
+ * of the road, as the rifle drops the nearest runner.
  */
 export const STILLS: Record<"icon" | "poster", Still> = {
   icon: {
-    story: 6.38,
+    story: 6.365,
     runUp: 0.6,
     seed: 21,
-    camera: (t) => ({ position: [t.x + 1.7, 0.75, t.z + 8.2], lookAt: [t.x - 0.1, 1.75, t.z + 2.2], fov: 50, roll: 0.05 }),
+    camera: (t) => ({ position: [t.x + 0.8, 2.5, t.z + 7.4], lookAt: [t.x - 0.1, 1.05, t.z + 2.2], fov: 46, roll: 0.04 }),
   },
   poster: {
-    story: 2.32,
+    story: 2.305,
     runUp: 0.6,
     seed: 22,
-    camera: (t) => ({ position: [t.x - 4.6, 0.7, t.z - 3.4], lookAt: [t.x + 0.3, 1.6, t.z + 3.4], fov: 40, roll: -0.03 }),
+    camera: (t) => ({ position: [t.x - 7.2, 0.9, t.z + 3.6], lookAt: [t.x, 1.6, t.z + 4.4], fov: 50, roll: -0.03 }),
   },
 };

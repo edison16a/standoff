@@ -4,7 +4,7 @@ import { poseZombie } from "../../render/models/zombies/animate";
 import { buildCommoner } from "../../render/models/zombies/commoners";
 import type { Rig } from "../../render/models/zombies/rig";
 import { glowTexture } from "../../render/textures";
-import { chaserAt, CHASERS, type ChaserPose } from "./story";
+import { chaserAt, CHASERS } from "./story";
 
 interface View {
   rig: Rig;
@@ -55,7 +55,12 @@ export class Horde {
       body.age = s + spec.seed * 5;
       body.death = pose.state === "dead" ? { head: false, seat: 1 } : null;
       poseZombie(rig, body, flinch(spec.id), pose.run / view.stride);
-      if (pose.state === "leap") pounce(rig, pose);
+      if (pose.state === "leap") pounce(rig, pose.time);
+      // Shot out of the air, it keeps its pounce and is flung over backwards until it lands.
+      if (spec.leap !== undefined && pose.state === "dead" && pose.y > 0) {
+        pounce(rig, 1);
+        rig.body.rotation.x = 0.5 - Math.min(1, pose.time / 0.3) * 1.9;
+      }
       for (const eye of rig.eyes) eye.visible = pose.state !== "dead";
     }
   }
@@ -79,15 +84,15 @@ export class Horde {
 }
 
 /** Arms thrown forward, legs tucked under, flying at the tailgate jaws first. */
-function pounce(rig: Rig, pose: ChaserPose): void {
+function pounce(rig: Rig, time: number): void {
   const b = rig.bones;
-  const k = Math.min(1, pose.time / 0.25);
+  const k = Math.min(1, time / 0.25);
   rig.body.rotation.x = 0.5 * k;
   b.spine.rotation.x = 0.35 + 0.3 * k;
   b.head.rotation.x = -0.5 * k;
   b.jaw.rotation.x = 0.75;
-  b.shoulderL.rotation.set(-2.5 * k - 0.4, 0, 0.45);
-  b.shoulderR.rotation.set(-2.3 * k - 0.4, 0, -0.45);
+  b.shoulderL.rotation.set(-1.4 * k - 0.3, 0, 0.35);
+  b.shoulderR.rotation.set(-1.6 * k - 0.3, 0, -0.35);
   b.elbowL.rotation.x = b.elbowR.rotation.x = -0.35;
   b.hipL.rotation.set(-1.1 * k, 0, 0.1);
   b.hipR.rotation.set(0.4 * k, 0, -0.1);
