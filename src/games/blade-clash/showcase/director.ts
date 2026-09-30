@@ -78,7 +78,9 @@ export class ShowcaseDirector {
     if (now - this.last < FRAME_MS * 0.9) return;
     this.last = now;
     // `?ceremony` runs the duel on to its end and stays there; the trailer loops its edit.
-    const t = this.stay ? (now - this.start) / 1000 : ((now - this.start) / 1000) % CYCLE_S;
+    // Whole frames, counted as integers, so every pass through the loop cuts on exactly the same frames.
+    const frames = Math.floor(((now - this.start) * 30) / 1000 + 1e-6);
+    const t = (this.stay ? frames : frames % (CYCLE_S * 30)) / 30;
     if (t < this.lastT) this.begin();
     this.lastT = t;
     this.playTo(this.stay ? t * 1000 : duelAt(t) * 1000);
