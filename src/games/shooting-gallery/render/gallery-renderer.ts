@@ -57,6 +57,8 @@ export class GalleryRenderer {
     if (options.labels === false) this.effects.hideLabels();
     this.adaptive = options.adaptive ?? true;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
+    // A canvas reused after an earlier renderer keeps that one's GL state, and a stale blend mode washes out the first frame.
+    this.renderer.resetState();
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 0.95;
     this.renderer.shadowMap.enabled = true;
