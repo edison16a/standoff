@@ -18,6 +18,8 @@ The running list of what is being built, so work can pick up again after a break
 | --- | --- | --- |
 | Final media: trailer style clips, cinematic icons and posters for every game, in six groups (Basketball and Soccer; Football and Paintball; Zombie and Gallery; Boxing and Blade; Kart and Brawl; Cube, Subway and Fruit) | wf_2190cb1d-8a7 | build then review each group, two at a time |
 
+**Icon pass (owner feedback with reference covers):** after the media groups finish and before they merge, redo every icon following scratchpad/icon-refs/DIRECTION.md: Paintball like Fortnite key art, Basketball like the NBA 2K19 cover (player facing forward), Soccer like the FIFA 23 cover, Zombie with every gun aimed at zombies (not teammates), and the same cover principles for every other game.
+
 After the media merges: tiles 1.2 times bigger and the final README with new screenshots (the task text is saved in the final-media script's FINAL constant), push, then the final check.
 
 ## Queue, in order
