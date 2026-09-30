@@ -153,3 +153,30 @@
 .fn-ghost:hover {
   background: rgba(240, 210, 156, 0.4);
 }
+
+/* A laptop sized screen: tighter rows so Start fits without scrolling the card. */
+@media (max-height: 820px) {
+  .fn-players {
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+
+  .fn-player {
+    padding: 5px 12px;
+  }
+
+  .fn-choice {
+    margin-bottom: 8px;
+  }
+
+  .fn-choice__option {
+    height: 32px;
+  }
+}
+
+/* A narrow screen: the title centres in the space left of the card rather than running under it. */
+@media (max-width: 1500px) {
+  .fn-title {
+    left: calc((100% - 408px) / 2);
+  }
+}
