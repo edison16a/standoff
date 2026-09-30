@@ -19,8 +19,8 @@ const FLY_BY: Place = { at: [2.6, -0.6, -2.4], look: [0, 0.9, 0], fov: 55 };
  */
 export const TRAILER: readonly Cut[] = [
   { seed: 7, from: 1, seconds: 1.5, clearLens: true, angle: PURSUIT, to: { at: [-1.2, 0.45, -3.4], look: [0.2, 1.4, 2], fov: 52 } },
-  { seed: 7, from: 4.15, seconds: 0.35, clearLens: true, angle: SIDE },
-  { seed: 7, from: 4.5, seconds: 1, rate: 0.3, clearLens: true, angle: SIDE, to: SIDE_AHEAD },
+  { seed: 7, from: 4.15, seconds: 0.35, angle: SIDE },
+  { seed: 7, from: 4.5, seconds: 1, rate: 0.3, angle: SIDE, to: SIDE_AHEAD },
   { seed: 20, from: 19.5, seconds: 0.4, pickups: "boots", angle: HERO },
   { seed: 20, from: 19.9, seconds: 1.2, rate: 0.35, pickups: "boots", angle: HERO, to: SIDE_AHEAD },
   { seed: 7, from: 20.4, seconds: 1.4, angle: "chase" },

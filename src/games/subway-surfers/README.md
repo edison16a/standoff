@@ -121,10 +121,13 @@ While a run is going, the host's hidden admin panel (three quick taps on the set
 
 ## Home screen media
 
-`showcase/` plays a seeded run with a computer runner and a director that picks the camera, so every capture is the same. The tile shows the runner on a hoverboard by a graffiti wall above the logo, from a spot with nothing standing close by, the poster has a train rolling in, and the clip is eight seconds of the yard: lane changes, coins picked up as the runner touches them, super sneakers for a few seconds with a high flip seen from the side, then a roll. The showcase turns every power up on its course into super sneakers (or clears them), since the magnets the yard lays early on pull coins in from afar.
+`showcase/` films computer runners on seeded runs, so every capture is the same. The clip is a wordless eight second trailer cut together from several runs (`showcase/trailer.ts`): the inspector and his dog on the runner's heels seen from low ahead, a leap over the rails that slows right down as the camera swings round, super sneakers flipping high in slow motion, a run along the train roofs from the game's own camera, a jetpack flight past the rooftops from below, and one last leap. Each cut is a run played unseen up to its moment and filmed from its own camera, with an eased push. Slow motion runs the game slower, so poses and sparkle slow too. The cuts add up to exactly eight seconds and repeat, and everything moves on run time, so the clip loops without a seam. Cuts with a camera in front take away the coins just ahead of the runner, which would fill the lens.
+
+The icon is the runner leaping high over a low lens with the inspector and dog right behind, over the logo. The poster is the same chase from further back as a train rolls in on the next track. Both are graded a little like a film still: more contrast and colour and a dark edge. `?cut={...}` on `/showcase/subway-surfers` films any one moment of any seed, in development only. To capture again, with the dev server running:
 
 ```sh
-node tools/media/capture.mjs subway-surfers --url http://localhost:3000 --ffmpeg ffmpeg --size 960x540
+node tools/media/capture.mjs subway-surfers --url http://localhost:3000 --ffmpeg ffmpeg --size 1280x720
 ```
 
-The clip in `public/games/subway-surfers/` is kept at the capture size, 960 by 540, so both files stay under 4 MB.
+The clip in `public/games/subway-surfers/` is kept at 1280 by 720, so both files stay under 3.9 MB.
+
