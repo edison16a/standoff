@@ -13,15 +13,17 @@ const STEP = 1 / 60;
  * puncher is held at `hold`, the hook at full stretch, while the fight
  * runs on to `after` for the other boxer's knees to go.
  */
-const STILLS = { icon: { hold: 30, after: 300 }, poster: { hold: 30, after: 280 } } as const;
+const STILLS = { icon: { hold: 30, after: 450 }, poster: { hold: 30, after: 420 } } as const;
 /** The glove's centre stops this short of the middle of the face, so the leather sits on the jaw, in metres. */
 const GAP = 0.07;
+/** The jaw sits this far under the middle of the face, in metres, and that is where the glove goes. */
+const JAW = 0.05;
 
 /**
  * Plays the trailer forward without drawing to the knockout, then poses
  * it as key art: the puncher held at full stretch, the other boxer
- * carried on into his fall and slid back onto the glove, since the fall
- * drifts him away from it, and a fresh burst of sparks off the jaw.
+ * carried on into his fall and moved back onto the glove, since the fall
+ * drops him and drifts him away from it, and a fresh burst of sparks off the jaw.
  * `?hold=` and `?after=` on the showcase page change the moment, for
  * looking it over. Returns the camera to draw it with.
  */
@@ -49,8 +51,10 @@ export function stageStill(view: "icon" | "poster", scene: FightScene, tv: TvCam
   restore?.();
   const glove = scene.glove(0, "right", new THREE.Vector3());
   const face = scene.animators[1].face(new THREE.Vector3());
-  const slide = glove.sub(face).setY(0);
-  slide.addScaledVector(slide.clone().normalize(), -GAP);
+  // Lifted as well as slid, so the glove still meets the jaw once the knees have gone; the feet are out of frame.
+  const slide = glove.sub(face);
+  slide.addScaledVector(slide.clone().setY(0).normalize(), -GAP);
+  slide.y = Math.max(0, slide.y + JAW);
   scene.models[1].root.position.add(slide);
   scene.models[1].root.updateMatrixWorld(true);
   scene.fx.clear();
