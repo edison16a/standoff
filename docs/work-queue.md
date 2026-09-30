@@ -12,9 +12,13 @@ The running list of what is being built, so work can pick up again after a break
 
 ## Running now
 
+**Checkpoint reached: every game change is merged and pushed to main.** The final builds are running.
+
 | Work | Workflow | State |
 | --- | --- | --- |
-| Duplicate name boxes removed (every game except Basketball and Football), and Batch G for Football 3v3 and Basketball 3v3 | wf_6cee9a77-61a | three builds, each then reviewed |
+| Final media: trailer style clips, cinematic icons and posters for every game, in six groups (Basketball and Soccer; Football and Paintball; Zombie and Gallery; Boxing and Blade; Kart and Brawl; Cube, Subway and Fruit) | wf_2190cb1d-8a7 | build then review each group, two at a time |
+
+After the media merges: tiles 1.2 times bigger and the final README with new screenshots (the task text is saved in the final-media script's FINAL constant), push, then the final check.
 
 ## Queue, in order
 
@@ -97,6 +101,7 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ## Done recently
 
+* Batch G: Football (defence pad stays, normal QB stick, slower QB with a RUN button, Run the ball call with a pitch, magenta target ring, no player strip) and Basketball (buttons always lit, Guard sticks to your man, stronger jukes with a stun), and no duplicate name boxes (Soccer's strip removed).
 * Room reliability: signed room tokens so any Vercel instance can rebuild a room with the same code and players, a host room check over a fresh connection, QR hidden until the room passes, Regenerate room under the QR, phones that follow a moved room, WebSockets first with a leaner stream fallback, and the client bugs from the investigation fixed.
 * Basketball 3v3 and Football 3v3: trophy ceremonies, and builds instead of named characters under each player's username.
 * Cube Game: sideways portals with a picture of the next form, walls so no portal can be skipped, two Demon levels with their own songs, the cube further right, and a leaderboard per level.
