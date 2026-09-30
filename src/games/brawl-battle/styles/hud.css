@@ -89,8 +89,12 @@
   white-space: nowrap;
 }
 
+/* A tag on the card's top edge, so it never squeezes the name or gets cut off. The body's transform makes it the anchor. */
 .bb-card__name em {
-  margin-left: 6px;
+  position: absolute;
+  top: -21px;
+  right: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
   padding: 1px 6px;
   border-radius: 6px;
   background: #f59e0b;
