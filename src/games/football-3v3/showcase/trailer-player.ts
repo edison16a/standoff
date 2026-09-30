@@ -39,8 +39,10 @@ export class TrailerPlayer {
   /** The film's frame at `t` seconds, and its camera. */
   spot(t: number): { spot: FilmSpot; view: MatchView; cam: FilmCam } {
     const spot = filmAt(t);
-    const view = this.reels[spot.shot.reel].at(spot.time);
-    return { spot, view, cam: filmCam(spot.shot.camera, view, spot.u) };
+    const reel = this.reels[spot.shot.reel];
+    const view = reel.at(spot.time);
+    const span = { first: reel.at(spot.shot.from), last: reel.at(spot.shot.to) };
+    return { spot, view, cam: filmCam(spot.shot.camera, view, spot.u, span) };
   }
 
   /** Draws the film at `t`, easing the players into their poses first when it is a new shot. */
@@ -81,6 +83,8 @@ export class TrailerPlayer {
     this.lastNow = now;
     if (now - this.lastDraw < DRAW_EVERY) return;
     const t = this.readyAt < 0 ? 0 : now - this.readyAt - WARMUP;
+    // The capture's warm up is never filmed, so after one frame to build the shaders it is not drawn.
+    if (t < -0.1 && this.lastDraw >= 0) return;
     this.draw(t, this.lastDraw < 0 ? dt : Math.min(0.1, now - this.lastDraw));
     this.lastDraw = now;
   }

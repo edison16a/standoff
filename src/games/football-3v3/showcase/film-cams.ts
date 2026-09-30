@@ -35,12 +35,25 @@ function around(at: { x: number; z: number }, dir: { x: number; z: number }, ahe
   return { x: at.x + dir.x * ahead - dir.z * side, y: up, z: at.z + dir.z * ahead + dir.x * side };
 }
 
+/** The shot's first and last stills: a runner's line over the whole shot steers the camera, not his every step. */
+export interface Span {
+  first: MatchView;
+  last: MatchView;
+}
+
+/** Which way a player goes over the shot, flat. Swerves and jukes inside it do not swing the camera. */
+function course(span: Span, id: number): { x: number; z: number } {
+  const a = who(span.first, id);
+  const b = who(span.last, id);
+  return flat(b.x - a.x, b.z - a.z, flat(a.vx, a.vz));
+}
+
 /**
  * The trailer's cameras. Most sit low, below the players' eyes, so they
  * stand tall against the stadium lights, and each creeps in over its
  * shot so even slow motion keeps moving.
  */
-export function filmCam(camera: ShotCamera, view: MatchView, u: number): FilmCam {
+export function filmCam(camera: ShotCamera, view: MatchView, u: number, span: Span): FilmCam {
   const e = ease(u);
   switch (camera) {
     case "qbLow": {
@@ -58,20 +71,20 @@ export function filmCam(camera: ShotCamera, view: MatchView, u: number): FilmCam
     case "catch": {
       // Low in front of the receiver, the ball dropping in over his shoulder.
       const r = who(view, CATCHER);
-      const dir = flat(r.vx, r.vz);
+      const dir = course(span, CATCHER);
       return { pos: around(r, dir, 4.2, mix(1.6, 1.2, e), 0.7), look: { x: r.x, y: 1.5, z: r.z }, fov: 38 };
     }
     case "juke": {
       // Low at the side, tracking the runner as he steps round the tackler.
       const r = who(view, CATCHER);
-      const dir = flat(r.vx, r.vz);
+      const dir = course(span, CATCHER);
       return { pos: around(r, dir, mix(2.5, 0.5, e), 4.8, 0.55), look: { x: r.x + dir.x * 0.8, y: 1.1, z: r.z + dir.z * 0.8 }, fov: 40 };
     }
     case "hit": {
       // Down on the turf just ahead of the runner, the tackler flying in from behind him.
       const r = who(view, JUKER);
       const t = who(view, TACKLER);
-      const dir = flat(r.vx, r.vz);
+      const dir = course(span, JUKER);
       const mid = { x: (r.x + t.x) / 2, z: (r.z + t.z) / 2 };
       return { pos: around(mid, dir, mix(3.4, 2.8, e), mix(-3.2, -2.6, e), 0.5), look: { x: mid.x, y: 0.9, z: mid.z }, fov: 40 };
     }

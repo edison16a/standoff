@@ -36,8 +36,8 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     const player = labScene ? null : new TrailerPlayer(renderer, renderer.scene);
     const held = params.get("t");
     const still = held !== null ? Number(held) : view === "loop" ? null : (STILLS[view] ?? null);
-    // With t held, a review script can move the hold to any moment and look at a sheet of them.
-    if (held !== null && player) Object.assign(window, { __fbHold: (t: number) => player.hold(t) });
+    // On a still, a review script can move the hold to any moment, through the still's own camera, and look at a sheet of them.
+    if (still !== null && player) Object.assign(window, { __fbHold: (t: number) => player.hold(typeof still === "number" ? t : { ...still, t }) });
     // A still is drawn once per size, not on every tick of the capture tool's clock.
     let draws = 1;
     const fit = () => {

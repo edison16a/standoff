@@ -37,24 +37,37 @@
   background: linear-gradient(to top, rgba(5, 7, 15, 0.88) 0%, rgba(5, 7, 15, 0.4) 28%, transparent 48%);
 }
 
+/* The title as key art: heavy italic chrome letters with a gold edge, and 3v3 on a gold plate. */
 .fb-logo {
-  z-index: 1;
+  z-index: 2;
   position: absolute;
   left: 50%;
-  bottom: 6%;
+  bottom: 5%;
   display: flex;
-  align-items: baseline;
-  gap: 0.14em;
-  transform: translateX(-50%) skewX(-8deg);
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(-50%) skewX(-10deg);
   font-family: "Arial Black", Impact, "Helvetica Neue", Arial, sans-serif;
   font-weight: 900;
-  font-size: 12vmin;
-  line-height: 1;
-  color: #fff;
-  text-shadow: 0 0.06em 0.2em rgba(0, 0, 0, 0.6);
+  line-height: 0.9;
+  filter: drop-shadow(0 0.5vmin 1.6vmin rgba(0, 0, 0, 0.85));
+}
+
+.fb-logo__word {
+  font-size: 15.5vmin;
+  letter-spacing: -0.02em;
+  background: linear-gradient(to bottom, #ffffff 0%, #e9eef8 45%, #9aa6bd 52%, #f4f6fb 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 0.5vmin #f5c518;
 }
 
 .fb-logo__vs {
-  color: #f5c518;
-  font-size: 0.8em;
+  margin-top: 1.6vmin;
+  padding: 0.6vmin 3.2vmin 1vmin;
+  font-size: 7.5vmin;
+  color: #0b1330;
+  background: linear-gradient(to bottom, #ffe066, #f5c518 55%, #c99a06);
+  border-radius: 1vmin;
 }
