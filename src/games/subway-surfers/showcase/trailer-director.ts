@@ -5,6 +5,9 @@ import { ShowRun } from "./show-run";
 import { continues, placeAt, spotAt, type Cut } from "./timeline";
 import { unblock } from "./unblock";
 
+/** Half the width of open track, in metres. Platforms start at 5.4 and walls near 6. */
+const CORRIDOR = 4.8;
+
 /**
  * Cuts seeded runs together like a trailer. Each hard cut plays a fresh
  * run up to its moment unseen, then films it from its angle, at its
@@ -61,7 +64,8 @@ export class TrailerDirector {
     const cam = this.own;
     cam.aspect = aspect;
     cam.fov = place.fov;
-    cam.position.set(s.x + place.at[0], s.y + place.at[1], z + place.at[2]);
+    // Kept between the station platforms and walls, so a camera beside an outer lane never ends up inside them.
+    cam.position.set(THREE.MathUtils.clamp(s.x + place.at[0], -CORRIDOR, CORRIDOR), s.y + place.at[1], z + place.at[2]);
     this.target.set(s.x + place.look[0], s.y + place.look[1], z + place.look[2]);
     cam.updateProjectionMatrix();
     cam.lookAt(this.target);
