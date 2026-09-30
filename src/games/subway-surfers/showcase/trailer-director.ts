@@ -3,6 +3,7 @@ import type { RunScene } from "../render/run-scene";
 import { clearLens } from "./director";
 import { ShowRun } from "./show-run";
 import { continues, placeAt, spotAt, type Cut } from "./timeline";
+import { unblock } from "./unblock";
 
 /**
  * Cuts seeded runs together like a trailer. Each hard cut plays a fresh
@@ -18,6 +19,8 @@ export class TrailerDirector {
   private cut: Cut;
   private progress = 0;
   private runTime = 0;
+  private aspect = 16 / 9;
+  private readonly middle = new THREE.Vector3();
 
   constructor(
     private readonly cuts: readonly Cut[],
@@ -42,10 +45,12 @@ export class TrailerDirector {
     this.runTime = spot.runTime;
     for (const event of this.show!.advance(dt)) this.scene.onEvent(event);
     if (spot.cut.clearLens) clearLens(this.show!.run);
+    this.scene.coinScale = this.unblocker();
     this.scene.update(dt, spot.runTime);
   }
 
   camera(aspect: number): THREE.PerspectiveCamera {
+    this.aspect = aspect;
     const place = placeAt(this.cut, this.progress);
     if (!place) {
       this.scene.chase.setAspect(aspect);
@@ -61,6 +66,16 @@ export class TrailerDirector {
     cam.updateProjectionMatrix();
     cam.lookAt(this.target);
     return cam;
+  }
+
+  /**
+   * Keeps coins off the runner and out of the lens for a placed camera, in the drawing only.
+   * The chase camera sits behind and above, as in play, so it needs none.
+   */
+  private unblocker() {
+    if (this.cut.angle === "chase") return null;
+    const s = this.show!.run.runner;
+    return unblock(this.camera(this.aspect), this.middle.set(s.x, s.y + 1, -s.distance));
   }
 
   /** A hard cut: the run from scratch, played unseen up to the cut's moment, with a moment more for the camera to settle. */

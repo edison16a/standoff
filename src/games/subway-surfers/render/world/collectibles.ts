@@ -5,6 +5,9 @@ import { coinGeometry, coinMaterial, pickupModel } from "../models/pickups";
 import { release } from "../prefabs";
 import { inkMaterial } from "../toon";
 
+/** How big to draw a coin at a world position, from 0 (hidden) to 1. */
+export type CoinScale = (at: THREE.Vector3) => number;
+
 const MAX_COINS = 360;
 const VISIBLE = 170;
 /** How much bigger the coin's ink hull is, in metres. */
@@ -25,6 +28,7 @@ export class CollectibleView {
   private readonly quat = new THREE.Quaternion();
   private readonly pos = new THREE.Vector3();
   private readonly one = new THREE.Vector3(1, 1, 1);
+  private readonly size = new THREE.Vector3();
   private readonly up = new THREE.Vector3(0, 1, 0);
 
   constructor() {
@@ -40,14 +44,17 @@ export class CollectibleView {
     }
   }
 
-  update(course: Course, distance: number, time: number): void {
+  /** `scale` shrinks a coin by where it sits, so a showcase camera can keep coins off its subject. */
+  update(course: Course, distance: number, time: number, scale?: CoinScale): void {
     this.quat.setFromAxisAngle(this.up, time * 3.2);
     let count = 0;
     for (const coin of course.coins) {
       const ahead = coin.z - distance;
       if (ahead < -6 || ahead > VISIBLE || count >= MAX_COINS) continue;
       this.pos.set(coin.x, coin.y + Math.sin(time * 4 + coin.z * 0.4) * 0.06, -coin.z);
-      this.matrix.compose(this.pos, this.quat, this.one);
+      const k = scale ? scale(this.pos) : 1;
+      if (k <= 0.01) continue;
+      this.matrix.compose(this.pos, this.quat, k < 1 ? this.size.setScalar(k) : this.one);
       this.coins.setMatrixAt(count++, this.matrix);
     }
     this.coins.count = count;

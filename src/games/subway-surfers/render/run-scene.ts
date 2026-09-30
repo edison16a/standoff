@@ -6,7 +6,7 @@ import { RunnerView, type Mood } from "./actors/runner-view";
 import { ChaseCamera } from "./chase-camera";
 import { headAbove } from "./models/overhead";
 import { RunEffects } from "./effects/run-effects";
-import { CollectibleView } from "./world/collectibles";
+import { CollectibleView, type CoinScale } from "./world/collectibles";
 import { ObstacleView } from "./world/obstacle-view";
 import { Scenery } from "./world/scenery";
 import { Sky, SUN_DIR } from "./world/sky";
@@ -42,6 +42,8 @@ export class RunScene {
   private readonly light = newLight();
   private dark = 0;
   run: Run | null = null;
+  /** Showcase only: shrinks coins that would block its camera's view. */
+  coinScale: CoinScale | null = null;
 
   constructor(seed: number, look: number) {
     this.scenery = new Scenery(seed);
@@ -88,7 +90,7 @@ export class RunScene {
     const d = run.runner.distance;
     this.scenery.update(d);
     this.obstacles.update(run.course, d, dt);
-    this.collectibles.update(run.course, d, time);
+    this.collectibles.update(run.course, d, time, this.coinScale ?? undefined);
     this.runner.update(run, dt, time, mood);
     this.guard.update(run, dt, time);
     this.effects.frame(run, dt, time);
