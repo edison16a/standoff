@@ -17,6 +17,7 @@ import "../styles/showcase.css";
 const INPUT = { mirrors: [null, null], telegraph: [false, false] } as const;
 /** The ceremony starts this far in, so the belt is already at the champion's chest on the cut. */
 const CEREMONY_LEAD_S = 0.4;
+const STEP = 1 / 60;
 
 /**
  * Boxing playing itself for the home screen's media, cut like a trailer:
@@ -35,7 +36,7 @@ export function Showcase({ view }: { view: ShowcaseView }) {
     const renderer = new FightRenderer(canvas, { preserve: true });
     const scene = new FightScene(renderer.renderer, [lookFor(0, "Slugger"), lookFor(1, "Out Boxer")]);
     const kicker = new Kicker(scene.scene);
-    const tv = new TvCamera();
+    let tv = new TvCamera();
     let trailer = new Trailer();
     const rig: ShotRig = { match: trailer.match, tv, shoulder: new ShoulderCamera(52), ceremony: scene.ceremony };
     renderer.resize(canvas.clientWidth, canvas.clientHeight, 1);
@@ -76,8 +77,11 @@ export function Showcase({ view }: { view: ShowcaseView }) {
       renderer.resize(canvas.clientWidth, canvas.clientHeight, 0.8);
       draw(trailerShot(0, rig, 0, true));
       const start = performance.now();
-      let last = start;
-      let lastCycle = -1;
+      let last = -Infinity;
+      // The film runs on a fixed grid of 1/60 s steps from the start of each pass, whatever the frame
+      // times, so every pass through the loop is the same to the pixel and the clip's ends meet.
+      let sim = 0;
+      let camera = trailerShot(0, rig, 0, true);
       const loop = () => {
         const now = performance.now();
         // The clip is 30 frames a second, so a frame much closer than that to the last one is not drawn.
@@ -86,22 +90,28 @@ export function Showcase({ view }: { view: ShowcaseView }) {
           frame = requestAnimationFrame(loop);
           return;
         }
-        const dt = Math.min(0.1, (now - last) / 1000);
         last = now;
         const cycle = ((now - start) / 1000) % CYCLE_S;
-        if (cycle < lastCycle) {
+        if (cycle < sim) {
           trailer = new Trailer();
-          rig.match = trailer.match;
+          // Fresh cameras and clock too: the shake's wobble and the shoulder view's easing would otherwise carry over.
+          tv = new TvCamera();
+          Object.assign(rig, { match: trailer.match, tv, shoulder: new ShoulderCamera(52) });
           scene.resetAnimation();
+          sim = 0;
+          clock = 0;
         }
-        if (cycle >= CEREMONY_AT && !scene.ceremony.active) scene.startCeremony(0, clock - CEREMONY_LEAD_S);
-        const cut = shotIndex(cycle) !== shotIndex(lastCycle);
-        lastCycle = cycle;
-        hear(trailer.advanceTo(cycle));
-        const speed = Trailer.speed(cycle);
-        clock += dt * speed;
-        scene.update(trailer.match, INPUT, clock, dt * speed);
-        draw(trailerShot(cycle, rig, dt, cut));
+        while (sim + STEP <= cycle) {
+          const cut = shotIndex(sim + STEP) !== shotIndex(sim);
+          sim += STEP;
+          if (sim >= CEREMONY_AT && !scene.ceremony.active) scene.startCeremony(0, clock - CEREMONY_LEAD_S);
+          hear(trailer.advanceTo(sim));
+          const speed = Trailer.speed(sim);
+          clock += STEP * speed;
+          scene.update(trailer.match, INPUT, clock, STEP * speed);
+          camera = trailerShot(sim, rig, STEP, cut);
+        }
+        draw(camera);
         frame = requestAnimationFrame(loop);
       };
       frame = requestAnimationFrame(loop);
