@@ -36,3 +36,18 @@ export const useControllerStore = create<ControllerStore>(() => ({
   game: null,
   flash: null,
 }));
+
+/** Which page the phone shows. */
+export type PhonePage = "setup" | "calibrate" | "match";
+
+/**
+ * A phone that rejoins mid match in a fresh page has lost its
+ * calibration, and an uncalibrated sword sends nothing. So it aims again
+ * first and drops straight back in. After the match it only needs the
+ * Rematch and Menu buttons.
+ */
+export function phonePage(state: Pick<ControllerStore, "game" | "calibrated">): PhonePage {
+  const phase = state.game?.phase ?? "lobby";
+  if (phase === "lobby") return "setup";
+  return state.calibrated || phase === "matchOver" ? "match" : "calibrate";
+}
