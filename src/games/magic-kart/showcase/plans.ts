@@ -36,19 +36,19 @@ export const PLANS: Record<ShowcaseView, Plan> = {
       // Half speed, low in front of Blaze: the orb hits, and the pack launches off the ramp overhead.
       { ...LAVA, from: 20.15, length: 1.5, rate: 0.5, rig: { kind: "hero", kart: 0, angle: 0.35, dist: 7, height: 0.2, aim: 1.5, fov: 55, road: true } },
       // Under Blaze's wing, circling, the sunset behind.
-      { ...LAVA, from: 20.9, length: 1.3, rig: { kind: "hero", kart: 0, angle: -1.2, dist: 5, height: -1.6, aim: 0.8, fov: 55, road: true, orbit: 0.6 } },
+      { ...LAVA, from: 20.9, length: 1.1, rig: { kind: "hero", kart: 0, angle: -1.1, dist: 5, height: -1.6, aim: 0.8, fov: 55, road: true, orbit: 0.4 } },
       // Half speed: Pip's orb knocks Mochi about under the wing.
       { ...LAVA, from: 21.25, length: 0.9, rate: 0.5, rig: { kind: "hero", kart: 3, angle: 0.9, dist: 5, height: 0.6, aim: 0.8, fov: 50, road: true } },
       // Pip sliding through a neon bend into a turbo.
-      { ...NEON, from: 7.3, length: 1.2, rig: { kind: "hero", kart: 1, angle: 2.5, dist: 4.5, height: 0.4, aim: 0.6, fov: 52, road: true } },
+      { ...NEON, from: 7.1, length: 1.4, rig: { kind: "hero", kart: 1, angle: 2.5, dist: 4.5, height: 0.4, aim: 0.6, fov: 52, road: true } },
       // Behind the pack as the gliders open among the stars.
-      { ...STARS, from: 18.6, length: 1, rig: { kind: "chase", back: 8, side: 2, height: 1.5, fov: 60 } },
+      { ...STARS, from: 18.75, length: 1, rig: { kind: "chase", back: 8, side: 2, height: 1.5, fov: 60 } },
       // Under the four wings, circling slowly past the ringed planet.
       { ...STARS, from: 19.4, length: 1.3, rig: { kind: "hero", kart: 3, angle: -2.2, dist: 6, height: -1.2, aim: 1.2, fov: 58, road: true, orbit: 0.3 } },
     ],
   },
-  // The pack launching off the ramp over the camera, frozen as the orb's stars burst over Blaze.
-  poster: { shots: [{ ...LAVA, from: 20.15, length: 3, rig: { kind: "hero", kart: 0, angle: 0.35, dist: 7, height: 0.2, aim: 1.5, fov: 55, road: true } }], freeze: 0.3 },
-  // Blaze under the wing over the lava, seen from below against the sunset.
-  icon: { shots: [{ ...LAVA, from: 20.9, length: 3, rig: { kind: "hero", kart: 0, angle: -0.9, dist: 5, height: -1.6, aim: 0.8, fov: 55, road: true } }], freeze: 0.6 },
+  // All four gliders among the stars, seen from below, the ringed planet behind.
+  poster: { shots: [{ ...STARS, from: 19.4, length: 3, rig: { kind: "hero", kart: 3, angle: -2.2, dist: 8, height: -1.2, aim: 1.2, fov: 58, road: true } }], freeze: 0.5 },
+  // Blaze dazed by an orb under the wing over the lava, seen from below against the sunset.
+  icon: { shots: [{ ...LAVA, from: 20.5, length: 3, rig: { kind: "hero", kart: 0, angle: 0.5, dist: 5.5, height: -1.2, aim: 0.3, fov: 62, road: true } }], freeze: 0.6 },
 };
