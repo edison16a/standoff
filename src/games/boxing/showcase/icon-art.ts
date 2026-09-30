@@ -8,17 +8,20 @@ import { CYCLE_S, KNOCKDOWNS, Trailer } from "./trailer";
 
 /**
  * The icon's moments, in match milliseconds after the knockout hook
- * lands: the champion is held at `hold`, as the hook comes round, and
- * the fight runs on to `after` so the other boxer is well into his fall.
+ * lands: the champion is held at `hold`, the arm level and coming round
+ * so it reads as a hook and his face still shows, and the fight runs on
+ * to `after` so the other boxer's knees have gone.
  */
-const MOMENT = { hold: -65, after: 380 };
+const MOMENT = { hold: -180, after: 500 };
 
-/** Where the fallen boxer goes, in metres from the champion: this far behind him and this far to his left. */
-const BEHIND = 1.5;
-const ASIDE = 1.05;
+/** Where the fallen boxer goes, in metres from the champion: this far behind him and this far to his left (negative is his right). */
+const BEHIND = 1.2;
+const ASIDE = -0.7;
+/** The fallen boxer's face is lifted to at least this height, in metres, so his sag shows above the title. */
+const FALLEN_FACE_Y = 1.55;
 
 /** The lens: this far in front of the champion, this high, aimed at this height on him, and this far to his left. */
-const LENS = { distance: 2.05, height: 0.95, lookY: 1.3, aside: -0.3, fov: 42 };
+const LENS = { distance: 1.75, height: 0.9, lookY: 1.3, aside: -0.8, fov: 42 };
 
 export interface IconArt {
   camera: THREE.PerspectiveCamera;
@@ -27,8 +30,8 @@ export interface IconArt {
 }
 
 /**
- * The icon as a fight poster: the red champion big and close, facing the
- * lens as his right hook comes round, a flare of sparks off
+ * The icon as a fight poster: the red champion big and close, three
+ * quarters to the lens as his right hook comes round level, a flare of sparks off
  * the glove, and the blue boxer behind him on his way to the canvas.
  * It is two moments of the real trailer put together, as key art is:
  * the champion held as he throws the knockout hook, and the other boxer a
@@ -66,6 +69,10 @@ export function stageIconArt(scene: FightScene, tv: TvCamera, hear: (events: Mat
   blue.rotateOnWorldAxis(new THREE.Vector3(0, 1, 0), Math.PI);
   // Keep whatever drift the fall gave him along the line, so he still reads as knocked back.
   blue.position.addScaledVector(ahead, -Math.max(0, off.dot(ahead) - 1));
+  blue.updateMatrixWorld(true);
+  // Lifted, as the poster lifts him, since the fall takes him below the title; his feet are out of sight.
+  const face = scene.animators[1].face(new THREE.Vector3());
+  blue.position.y += Math.max(0, FALLEN_FACE_Y - face.y);
   blue.updateMatrixWorld(true);
   red.updateMatrixWorld(true);
 
