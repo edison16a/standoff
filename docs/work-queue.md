@@ -14,9 +14,10 @@ The running list of what is being built, so work can pick up again after a break
 
 | Work | Workflow | State |
 | --- | --- | --- |
-| Icon pass: every icon redone as a real game cover following scratchpad/icon-refs/DIRECTION.md (five groups, each reviewed) | wf_4720b2c8-9bb | build then review each group |
+| Sports phone controls: Football joystick keeps steering through RUN; no score on Basketball, Soccer and Football phones, bigger right hand buttons | wf_65c893e2-002 | build then review |
+| Home tiles 1.2 times bigger and the final README with new screenshots | wf_65c893e2-002 | build then review |
 
-Next: tiles 1.2 times bigger and the final README with new screenshots (task text in the final-media script's FINAL constant), push, then the final check.
+Cover icons for all 13 games are merged and pushed (4ce01de). Next: merge these two branches after the checks, push, then the final check.
 
 ## Queue, in order
 
