@@ -36,49 +36,49 @@ In the order the home screen shows them.
 
 ### Magic Kart
 
-<img src="docs/screenshots/magic-kart.jpg" alt="Magic Kart racing on the real track" width="100%" />
+<img src="docs/screenshots/magic-kart.jpg" alt="Four karts gliding under their wings above the Star Ring road" width="100%" />
 
 Split screen kart racing for up to four. Turn your phone like a steering wheel, brake into a bend to drift, and fire a blue, orange or purple mini turbo out of it. Grab Star Orbs, Nitro, Ice Blasts, Vanish and Shields from the glowing cubes. Launch off the big jump on every map and a glider unfolds over your kart, so you steer through the air. Four wild maps: Sunny Shores, Star Ring, Neo City and Magma Peak. The top three lift their cups on a podium under confetti.
 
 ### Fruit Slicer
 
-<img src="docs/screenshots/fruit-ninja.jpg" alt="Fruit Slicer blades cutting fruit over the wooden board" width="100%" />
+<img src="docs/screenshots/fruit-ninja.jpg" alt="A lightning blade bursting a giant melon beside a glowing dragonfruit on the wooden board" width="100%" />
 
 Up to four blades on one board. Point your phone at the screen and swing fast to slice. Chain combos, crack giant melons with several hits, chase rare star fruit and glowing dragonfruit, and dodge the bombs. Pick your slash from seven styles, from Plasma to Gold. Top score when the clock runs out wins.
 
 ### Zombie Survival
 
-<img src="docs/screenshots/zombie-survival.jpg" alt="Zombie Survival in the dead city at night" width="100%" />
+<img src="docs/screenshots/zombie-survival.jpg" alt="The team firing from the back of a truck at zombies in a night street" width="100%" />
 
 A team shooter on rails for up to four. Each phone is a gun: Shotgun, Submachine Gun, Assault Rifle or AK-47, each with its own crosshair and kick. Fight through fifteen stages of a foggy dead city, shoot the glowing weak points on the Butcher, the Surgeon and the Juggernaut, get lifted off the hospital roof by helicopter at stage 10, and make it to the ship at stage 15.
 
 ### Shooting Gallery
 
-<img src="docs/screenshots/shooting-gallery.jpg" alt="The fairground booth with ducks, targets and BB guns" width="100%" />
+<img src="docs/screenshots/shooting-gallery.jpg" alt="A BB gun and lasers aimed at rubber ducks and a bullseye in the fairground booth" width="100%" />
 
 A fairground duck shoot for up to four. Point your phone, tap Shoot, and pump your BB gun between shots. Ducks are 10, a bullseye's red centre 40, plates on the top rail 30 and the rare golden duck 50. Everything speeds up as the round goes on. The best scores stay on this computer.
 
 ### Boxing
 
-<img src="docs/screenshots/boxing.jpg" alt="Two boxers in the ring" width="100%" />
+<img src="docs/screenshots/boxing.jpg" alt="A boxer landing a jab under the lights of the ring" width="100%" />
 
 Stand in front of the camera and fight. Jabs, crosses, hooks and body shots come straight from your arms. Block with your real gloves, duck and slip with your real head, then counter. Four builds (Slugger, Out Boxer, Counter Puncher, Swarmer), stuns and knockdowns, four rounds with breaks on the stool, and a championship belt raised under cannons of confetti. Fight a friend side by side in split screen, or the computer.
 
 ### Subway Runner
 
-<img src="docs/screenshots/subway-surfers.jpg" alt="The runner racing down the rail yard" width="100%" />
+<img src="docs/screenshots/subway-surfers.jpg" alt="The runner jumping over the tracks with the inspector and his dog behind" width="100%" />
 
 An endless runner played with your body. Lean to change tracks, jump over barriers, duck to roll under them, and run along the roofs of the trains while the inspector and his dog give chase. Pick Easy, Medium, Hard or Demon for a bigger score multiplier, or play with the keyboard. Every run goes on the leaderboard on this computer.
 
 ### Basketball 3v3
 
-<img src="docs/screenshots/nba-3v3.jpg" alt="Basketball 3v3 in the arena" width="100%" />
+<img src="docs/screenshots/nba-3v3.jpg" alt="A dunk at the rim in the Basketball 3v3 arena" width="100%" />
 
 Three on three half court for up to six phones. Pick one of six builds, hold Shoot and let go in the green, and break ankles with stepbacks, crossovers and spins. Dunks, reverse layups, blocks at the top of the jump, steals, fouls and free throws. First to 11 wins, the winning basket replays in slow motion, and the captain lifts the trophy at centre court.
 
 ### Soccer 3v3
 
-<img src="docs/screenshots/fifa-3v3.jpg" alt="Soccer 3v3 on the floodlit pitch" width="100%" />
+<img src="docs/screenshots/fifa-3v3.jpg" alt="A striker shooting past a sliding defender toward the keeper" width="100%" />
 
 Three on three football on a big floodlit pitch with a keeper in each goal. Tap to pass, hold to fill the power bar and shoot, and let the curl bend it round the keeper. Beat your man with a rainbow flick, a crossover, a drag back or a 360. Slide tackles, free kicks, penalties, goal replays and golden goal, then the winners lift a World Cup style trophy.
 
@@ -90,7 +90,7 @@ Three on three American football under the lights, with computer linemen battlin
 
 ### Cube Game
 
-<img src="docs/screenshots/cube-game.jpg" alt="The cube in a neon level" width="100%" />
+<img src="docs/screenshots/cube-game.jpg" alt="The UFO flying through a green portal in a neon city level" width="100%" />
 
 A rhythm platformer played by jumping for real. Your jump is the cube's jump, on the beat of each level's own song. Portals turn you into a UFO or a ball that flips gravity. Seven levels from First Light up to two Demon levels, a practice mode with checkpoints, a split screen 1v1 race, and a leaderboard for every level.
 
