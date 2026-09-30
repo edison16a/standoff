@@ -1,6 +1,7 @@
 import { rimDistance, RIM_SPOT } from "../engine/court";
 import type { MatchEvent } from "../engine/events";
 import { Match } from "../engine/match";
+import type { Entry as MatchEntry } from "../engine/match-options";
 import { basketDir, rightOf } from "../engine/move-pick";
 import { GREEN_MS } from "../engine/shot-model";
 import type { Athlete } from "../engine/types";
@@ -22,13 +23,24 @@ const OPENING: readonly [number, number, number][] = [
   [5, 4.9, 2.4],
 ];
 
-type Stage = "setup" | "cross" | "drive" | "dunked" | "check" | "stepback" | "shot" | "done";
+/** Who plays in the highlight, so the trailer's trophy ceremony can crown the same team. */
+export const HIGHLIGHT_LINEUP: readonly MatchEntry[] = [
+  { team: 0, build: "shooter", seat: null },
+  { team: 0, build: "dunker", seat: null },
+  { team: 0, build: "big", seat: null },
+  { team: 1, build: "lockdown", seat: null },
+  { team: 1, build: "playmaker", seat: null },
+  { team: 1, build: "allround", seat: null },
+];
+
+type Stage = "setup" | "cross" | "drive" | "dunked" | "check" | "iso" | "stepback" | "shot" | "done";
 
 /**
  * The highlight the showcase films, all of it live play with nothing
  * skipped: the Dunker crosses the Lockdown defender over on the wing, bursts to the rim
  * with the new momentum and throws down a windmill. Then the real check
- * up at the top of the key, the Playmaker bringing it up, and his stepback three.
+ * up at the top of the key, and the Playmaker's iso: a crossover, a
+ * stepback, and a three off the glass.
  * The two leads are steered like players on phones; everyone else plays as
  * the computer would, only without stealing or blocking the scripted
  * plays. Outcomes are forced, so every capture films the same moments.
@@ -42,14 +54,7 @@ export class HighlightScript {
     this.match = new Match({
       seed: 4,
       firstOffence: 0,
-      entries: [
-        { team: 0, build: "shooter", seat: null },
-        { team: 0, build: "dunker", seat: null },
-        { team: 0, build: "big", seat: null },
-        { team: 1, build: "lockdown", seat: null },
-        { team: 1, build: "playmaker", seat: null },
-        { team: 1, build: "allround", seat: null },
-      ],
+      entries: [...HIGHLIGHT_LINEUP],
     });
     const m = this.match;
     m.phase = "live";
@@ -106,6 +111,14 @@ export class HighlightScript {
         if (m.phase === "live" && m.ball.holder === PLAYMAKER) {
           playmaker.auto = false;
           playmaker.move = { x: 0, z: 0 };
+          this.next("iso", s, () => m.press(PLAYMAKER, "defend", side(playmaker, 1)));
+        }
+        break;
+      case "iso":
+        // A jab across his man, then back out beyond the arc once the crossover's breather is over.
+        playmaker.move = toward(playmaker, { x: 1.4, z: 8.9 }, 0.5);
+        if (playmaker.moveCd <= 0 && playmaker.action.kind === "none") {
+          playmaker.move = { x: 0, z: 0 };
           this.next("stepback", s, () => m.press(PLAYMAKER, "defend", side(playmaker, 0)));
         }
         break;
@@ -113,7 +126,7 @@ export class HighlightScript {
         playmaker.move = { x: 0, z: 0 };
         // Shoot as he lands, as a player on a phone would.
         if (s - this.at > 0.36) {
-          m.forced = "swish";
+          m.forced = "bank";
           m.press(PLAYMAKER, "shoot");
           this.next("shot", s);
         }
