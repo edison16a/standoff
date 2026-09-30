@@ -9,24 +9,23 @@ import { FightRenderer, FULL } from "../render/fight-renderer";
 import { FightScene } from "../render/fight-scene";
 import { lookFor } from "../render/models/looks";
 import { Kicker } from "./kicker";
+import { playStep, STEP } from "./playback";
 import { shotIndex, trailerShot, type ShotRig } from "./shots";
 import { stageStill } from "./still";
 import { CEREMONY_AT, CYCLE_S, Trailer } from "./trailer";
 import "../styles/showcase.css";
 
-const INPUT = { mirrors: [null, null], telegraph: [false, false] } as const;
 /** The ceremony starts this far in, so the belt is already at the champion's chest on the cut. */
 const CEREMONY_LEAD_S = 0.4;
-const STEPS_PER_S = 60;
-const STEP = 1 / STEPS_PER_S;
+const STEPS_PER_S = Math.round(1 / STEP);
 
 /**
  * Boxing playing itself for the home screen's media, cut like a trailer:
- * a scripted exchange, a slow motion knockout, the fall, and the champion
- * lifting the belt. Everything runs from requestAnimationFrame and
+ * a scripted exchange, a first knockdown, a slow motion knockout, the
+ * fall, and the champion lifting the belt. Everything runs from requestAnimationFrame and
  * performance.now, with a scripted fight and seeded effects, so the
  * capture tool can step the clock frame by frame and the loop repeats
- * exactly every ten seconds.
+ * exactly every eleven seconds.
  */
 export function Showcase({ view }: { view: ShowcaseView }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -108,10 +107,7 @@ export function Showcase({ view }: { view: ShowcaseView }) {
           const at = sim / STEPS_PER_S;
           const cut = shotIndex(at) !== shotIndex(at - STEP);
           if (at >= CEREMONY_AT && !scene.ceremony.active) scene.startCeremony(0, clock - CEREMONY_LEAD_S);
-          hear(trailer.advanceTo(at));
-          const speed = Trailer.speed(at);
-          clock += STEP * speed;
-          scene.update(trailer.match, INPUT, clock, STEP * speed);
+          clock = playStep(trailer, scene, at, clock, hear);
           camera = trailerShot(at, rig, STEP, cut);
         }
         draw(camera);

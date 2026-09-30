@@ -2,12 +2,11 @@ import * as THREE from "three";
 import type { MatchEvent } from "../engine/events";
 import type { Spot, TvCamera } from "../render/cameras/tv-camera";
 import type { FightScene } from "../render/fight-scene";
+import { playStep, STEP } from "./playback";
 import { holdPose } from "./pose-hold";
 import { iconShot, posterShot } from "./shots";
-import { CYCLE_S, Trailer } from "./trailer";
+import { CYCLE_S, KNOCKDOWNS, Trailer } from "./trailer";
 
-const INPUT = { mirrors: [null, null], telegraph: [false, false] } as const;
-const STEP = 1 / 60;
 /**
  * The stills, in match milliseconds after the knockout hook lands: the
  * puncher is held at `hold`, the hook at full stretch, while the fight
@@ -37,12 +36,11 @@ export function stageStill(view: "icon" | "poster", scene: FightScene, tv: TvCam
   let restore: (() => void) | null = null;
   // Where both stood as the hook landed: the puncher sets off for a neutral corner straight after.
   let spots: [Spot, Spot] = [{ x: -0.5, z: 0 }, { x: 0.5, z: 0 }];
-  for (let c = 0; c <= CYCLE_S && trailer.match.now < landedAt + after; c += STEP) {
-    const events = trailer.advanceTo(c);
-    if (events.some((e) => e.type === "knockdown")) landedAt = trailer.match.now;
-    hear(events);
-    clock += STEP * Trailer.speed(c);
-    scene.update(trailer.match, INPUT, clock, STEP * Trailer.speed(c));
+  for (let step = 1; step <= CYCLE_S / STEP && trailer.match.now < landedAt + after; step++) {
+    clock = playStep(trailer, scene, step * STEP, clock, (events) => {
+      if (events.some((e) => e.type === "knockdown" && e.knockdowns === KNOCKDOWNS)) landedAt = trailer.match.now;
+      hear(events);
+    });
     if (!restore && trailer.match.now >= landedAt + hold) {
       restore = holdPose(scene.models[0].root);
       spots = [{ ...trailer.match.footwork.spots[0] }, { ...trailer.match.footwork.spots[1] }];
