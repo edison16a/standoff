@@ -41,11 +41,12 @@ export const TRAILER: readonly Cut[] = [
 ];
 
 /**
- * The stills. The icon is the cube bursting out of Inferno Gate's orb
- * high above the red sun, from low and close with a tilt. The poster is Neon Abyss's UFO
- * slipping through its portal back into a cube.
+ * The stills. The icon is a game cover: the cube big and close, its face
+ * to us, leaping Inferno Gate's first spikes against the red sun, from
+ * low with a tilt. The poster is Neon Abyss's UFO slipping through its
+ * portal back into a cube.
  */
 export const STILLS: Record<Exclude<ShowcaseView, "loop">, Cut> = {
-  icon: { level: "inferno-gate", from: 9.14, seconds: 1, angle: { height: 5, across: 0.6, floor: -1.3, yaw: 24, drop: 2.2, roll: 8 } },
+  icon: { level: "inferno-gate", from: 3.24, seconds: 1, settle: true, angle: { height: 4.5, across: 0.44, floor: 1.95, yaw: 8, drop: 1, roll: 4 } },
   poster: { level: "neon-abyss", from: 19.75, seconds: 1, angle: { height: 6.5, across: 0.42, floor: 1.4, yaw: -16, drop: 2.2 } },
 };

@@ -8,11 +8,14 @@ import * as THREE from "three";
  * lit like a poster whichever way it looks. The page grades the picture
  * on top.
  */
+/** The warm key's strength in the film. A still may scale it. */
+const KEY = 0.9;
+
 export class FilmLights {
   // Its reach ends just past the subject, so it never pools on the turf between them and the lens.
   private readonly rim = new THREE.SpotLight("#cfe0ff", 1700, 9.5, 0.42, 0.5, 1.5);
   // A spot from the camera's side would pool on the turf in front of the lens, so the key is a directional light.
-  private readonly key = new THREE.DirectionalLight("#ffc590", 0.9);
+  private readonly key = new THREE.DirectionalLight("#ffc590", KEY);
   private readonly dimmed: { light: THREE.Light; was: number }[] = [];
   private readonly back = new THREE.Vector3();
   private readonly envWas: number;
@@ -29,6 +32,11 @@ export class FilmLights {
     this.envWas = scene.environmentIntensity;
     scene.environmentIntensity *= 0.5;
     scene.add(this.rim, this.rim.target, this.key, this.key.target);
+  }
+
+  /** Scales the warm key, so a still can light the hero's front brighter than the film does. */
+  setKey(scale: number): void {
+    this.key.intensity = KEY * scale;
   }
 
   /** Places the lights for a camera at `pos` looking at `look`. */

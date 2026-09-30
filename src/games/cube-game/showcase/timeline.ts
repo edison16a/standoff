@@ -13,6 +13,12 @@ export interface Cut {
   angle: Framing;
   /** Where the camera has pushed to by the end, for a slow dolly in or out. */
   to?: Partial<Framing>;
+  /**
+   * Holds the cut's own framing through the preroll too. The camera eases
+   * up and down, and a still never moves on, so without this it keeps the
+   * height of play's framing.
+   */
+  settle?: boolean;
 }
 
 /** Where the trailer is at one moment. */

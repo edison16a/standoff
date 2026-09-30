@@ -7,23 +7,34 @@ export interface Still {
   /** Seconds into the trailer. */
   t: number;
   camera?: (view: MatchView) => FilmCam;
+  /** How strong the warm key light is, against the film's. */
+  key?: number;
+}
+
+/** The juker and the corner who dives at him, by id in the seeded game. */
+const RUNNER = 2;
+const TACKLER = 8;
+
+/**
+ * Low and just ahead of the runner, looking back up his line, so he
+ * drives straight at the viewer like a cover star. The camera sits a
+ * little to his left, which puts the diving tackler over his shoulder.
+ */
+function coverCam(view: MatchView): FilmCam {
+  const r = view.athletes.find((a) => a.id === RUNNER)!;
+  const t = view.athletes.find((a) => a.id === TACKLER)!;
+  const l = Math.hypot(r.vx, r.vz) || 1;
+  const d = { x: r.vx / l, z: r.vz / l };
+  const ahead = 2;
+  const side = -0.5;
+  // Aimed a fifth of the way to the tackler, so both fit with the runner still in front.
+  const look = { x: r.x + (t.x - r.x) * 0.2, y: 1.35, z: r.z + (t.z - r.z) * 0.2 };
+  return { pos: { x: r.x + d.x * ahead - d.z * side, y: 0.5, z: r.z + d.z * ahead + d.x * side }, look, fov: 56 };
 }
 
 /** The home screen's stills, held from the trailer. */
 export const STILLS: Partial<Record<ShowcaseView, Still>> = {
   poster: { t: 4.1 },
-  icon: {
-    t: 5.45,
-    camera: (view) => {
-      const r = view.athletes.find((a) => a.id === 2)!;
-      const t = view.athletes.find((a) => a.id === 8)!;
-      const mid = { x: (r.x + t.x) / 2, z: (r.z + t.z) / 2 };
-      const dx = r.x - t.x;
-      const dz = r.z - t.z;
-      const l = Math.hypot(dx, dz) || 1;
-      // Square on to the line of the hit, down on the turf, looking up so both stand against the night.
-      const side = { x: -dz / l, z: dx / l };
-      return { pos: { x: mid.x - side.x * 3.8 + (dx / l) * 2, y: 0.3, z: mid.z - side.z * 3.8 + (dz / l) * 2 }, look: { x: mid.x, y: 0.6, z: mid.z }, fov: 46 };
-    },
-  },
+  // The juke in the big hit shot, a beat before contact: the runner and the ball at us, the tackler flying in behind.
+  icon: { t: 5.36, key: 2.5, camera: coverCam },
 };
