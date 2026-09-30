@@ -14,10 +14,8 @@ The running list of what is being built, so work can pick up again after a break
 
 | Work | Workflow | State |
 | --- | --- | --- |
-| Sports phone controls: Football joystick keeps steering through RUN; no score on Basketball, Soccer and Football phones, bigger right hand buttons | wf_65c893e2-002 | build then review |
-| Home tiles 1.2 times bigger and the final README with new screenshots | wf_65c893e2-002 | build then review |
 
-Cover icons for all 13 games are merged and pushed (4ce01de). Next: merge these two branches after the checks, push, then the final check.
+All final builds are on main: cover icons, sports phone controls, Paintball Battle controls, Subway camera still, 1.2x tiles, final README. Next: the final check (every game end to end, live WebSockets, Regenerate room).
 
 ## Queue, in order
 
