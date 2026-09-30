@@ -2,11 +2,22 @@
 import { useEffect, useRef } from "react";
 import type { ShowcaseView } from "@/platform/games/game-api";
 import { ShowcaseDirector } from "./director";
+import { TrailerDirector } from "./trailer";
+
+/** The development films and pinned cameras of dev.ts play on the plain director; the loop is otherwise the trailer. */
+const DEV_KEYS = ["lab", "bots", "cam", "at", "step", "follow"];
+
+function pickDirector(canvas: HTMLCanvasElement, view: ShowcaseView): ShowcaseDirector | TrailerDirector {
+  const params = new URLSearchParams(window.location.search);
+  if (view !== "loop" || DEV_KEYS.some((k) => params.has(k))) return new ShowcaseDirector(canvas, view);
+  const t = params.get("t");
+  return new TrailerDirector(canvas, t === null ? null : Number(t));
+}
 
 /**
  * Basketball 3v3 playing itself for the home screen's media: the loop is a
- * highlight from the broadcast camera, the poster one great frame, and
- * the icon a close hero shot under the logo. Driven by
+ * wordless trailer of the game's best moments, the poster one great
+ * frame, and the icon a dramatic hero shot over the logo. Driven by
  * requestAnimationFrame and performance.now, with seeded randomness, so
  * the capture tool can step it frame by frame and get the same film.
  */
@@ -16,7 +27,7 @@ export function Showcase({ view }: { view: ShowcaseView }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const director = new ShowcaseDirector(canvas, view);
+    const director = pickDirector(canvas, view);
     const fit = () => director.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
     fit();
     const observer = new ResizeObserver(fit);
@@ -37,7 +48,7 @@ export function Showcase({ view }: { view: ShowcaseView }) {
   }, [view]);
 
   return (
-    <div className="nba-showcase">
+    <div className={`nba-showcase nba-showcase--${view}`}>
       <canvas ref={canvasRef} className="nba-showcase__canvas" />
       {view === "icon" && (
         <div className="nba-showcase__logo" aria-hidden="true">

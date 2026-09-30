@@ -12,6 +12,7 @@ import { CeremonyStage } from "./ceremony/ceremony-stage";
 import type { Ceremony } from "../engine/ceremony";
 import { Referee } from "./referee";
 import { Effects } from "./effects/effects";
+import { applyFilmLook, type CinemaLook } from "./film-look";
 import { broadcastShot, lineScene, pressureOn } from "./scene-read";
 import { TvCamera, type Shot } from "./tv-camera";
 
@@ -56,7 +57,7 @@ export class CourtRenderer {
   private readonly pixel = new Uint8Array(4);
   private readonly replayCam = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 50 };
   private readonly ceremony = new CeremonyStage();
-  private readonly keyLight: number;
+  private keyLight: number;
   /** The name across a player's back, or null for the build's own. The host sets it to people's names. */
   jerseyName: (a: Athlete) => string | null = () => null;
 
@@ -110,6 +111,11 @@ export class CourtRenderer {
     this.replayCam.look.set(cam.look.x, cam.look.y, cam.look.z);
     this.replayCam.fov = cam.fov;
     this.tv.fixed = this.replayCam;
+  }
+
+  /** The showcase's film look (film-look.ts). */
+  cinematic(look: CinemaLook = {}): void {
+    this.keyLight *= applyFilmLook(this.scene, this.renderer, this.arena, look);
   }
 
   /** The trophy ceremony to show, run by the host, or null. It takes over the camera while it runs. */

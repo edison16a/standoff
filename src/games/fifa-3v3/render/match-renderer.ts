@@ -7,6 +7,7 @@ import { Arena } from "./arena/arena";
 import { CameraDirector, type Shot } from "./camera/director";
 import { CeremonyScene } from "./ceremony/ceremony-scene";
 import { Effects } from "./effects/effects";
+import { applyFilmLook, type CinemaLook } from "./film-look";
 import { AimLine } from "./figures/aim-line";
 import { AimMarker } from "./figures/aim-marker";
 import { RefereeFigure } from "./figures/referee-figure";
@@ -73,6 +74,11 @@ export class MatchRenderer {
     this.squad = new Squad(this.arena.glow);
     this.referee = new RefereeFigure(this.refMaterial);
     this.scene.add(this.arena.group, this.effects.group, this.ball.group, this.squad.group, this.referee.group, this.aim.group, this.marker.group, this.ceremony.group);
+  }
+
+  /** The showcase's film look (film-look.ts). */
+  cinematic(look: CinemaLook = {}): void {
+    applyFilmLook(this.scene, this.renderer, this.arena, look);
   }
 
   /** The replay's target on the goal, shown through the strike, or null to hide it. */

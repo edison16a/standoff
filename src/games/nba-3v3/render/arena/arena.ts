@@ -16,6 +16,10 @@ export class Arena {
   readonly hoop = new Hoop();
   readonly crowd: Crowd;
   readonly key: THREE.DirectionalLight;
+  readonly fill: THREE.HemisphereLight;
+  readonly rim: THREE.DirectionalLight;
+  /** The scrolling LED ribbons, which the showcase's trailer hides because they carry words. */
+  readonly ribbons = new THREE.Group();
   private readonly leds: THREE.Texture[] = [];
   private readonly textures: THREE.Texture[] = [];
   private readonly owned: THREE.Material[] = [];
@@ -46,8 +50,8 @@ export class Arena {
     this.bowl();
     this.group.add(this.hoop.group);
 
-    const hemi = new THREE.HemisphereLight("#cfe0ff", "#3a2616", 0.9);
-    this.group.add(hemi);
+    this.fill = new THREE.HemisphereLight("#cfe0ff", "#3a2616", 0.9);
+    this.group.add(this.fill);
     this.key = new THREE.DirectionalLight("#fff4e6", 2.6);
     this.key.position.set(5, 22, 14);
     this.key.target.position.set(0, 0, 4);
@@ -65,9 +69,9 @@ export class Arena {
     this.key.shadow.radius = 3;
     this.group.add(this.key, this.key.target);
     // A cool rim light from behind the basket separates the players from the floor.
-    const back = new THREE.DirectionalLight("#9cc3ff", 1.1);
-    back.position.set(-6, 10, -12);
-    this.group.add(back);
+    this.rim = new THREE.DirectionalLight("#9cc3ff", 1.1);
+    this.rim.position.set(-6, 10, -12);
+    this.group.add(this.rim);
   }
 
   /** LED ribbons along the front of each stand, scrolling. */
@@ -81,9 +85,10 @@ export class Arena {
       const m = new THREE.Mesh(new THREE.PlaneGeometry(w, 0.7), mat);
       m.position.set(x, 0.42, z);
       m.rotation.y = yaw;
-      this.group.add(m);
+      this.ribbons.add(m);
     };
     tex.repeat.set(2, 1);
+    this.group.add(this.ribbons);
     strip(34, 0, -4.75, 0);
     strip(24, -11.35, 6, Math.PI / 2);
     strip(24, 11.35, 6, -Math.PI / 2);

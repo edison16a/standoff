@@ -3,6 +3,8 @@ import type { ShowcaseView } from "@/platform/games/game-api";
 import { STEP } from "../engine/tuning";
 import { CourtRenderer } from "../render/court-renderer";
 import { followCamera, readDev, type DevOptions, type Film } from "./dev";
+import { FILMED_FRAME, FilmClock } from "./film-clock";
+import { stillLights } from "./still-lights";
 import { HighlightScript } from "./script";
 
 /**
@@ -14,28 +16,10 @@ const LEAD: Record<ShowcaseView, number> = { loop: -2.7, poster: 0, icon: 0 };
 
 /**
  * The poster and the icon are single frames, so the film is run this far
- * ahead without drawing and then held: the Dunker at the rim in his windmill.
+ * ahead without drawing and then held: the Dunker at the top of his
+ * windmill, the Lockdown defender reaching up under him.
  */
-const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 2.4, icon: 2.42 };
-
-/**
- * The capture tool lets the scene run three seconds after the page says
- * it is ready, then films. Nobody sees those frames, so the loop steps
- * through them without drawing, which saves a long wait on a computer
- * that renders in software.
- */
-const PREROLL = 2.95;
-
-/**
- * The tool's fake clock keeps running in real time as well, so a frame
- * that takes the software renderer twenty seconds would race the film
- * ahead. A gap longer than a normal frame is taken as one filmed frame.
- */
-const STALL = 0.05;
-const FILMED_FRAME = 1 / 30;
-
-/** Drawn at most once per filmed frame: the page's own frames come twice as often. */
-const DRAW_EVERY = FILMED_FRAME * 0.9;
+const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 2.6, icon: 2.6 };
 
 /**
  * The loop plays behind the home screen, so it draws a little under full
@@ -46,11 +30,14 @@ const LOOP_PIXELS = 0.8;
 /** A held still is drawn once, and again after a resize, so the capture waits on as little as possible. */
 const STILL_DRAWS = 1;
 
-/** The stills' hero angles: low on the floor by the lane, looking up at the dunk. */
+/** The stills' hero angles: low in front of the lane, looking up at the dunk over the defender. */
 const STILL_CAMERA: Partial<Record<ShowcaseView, { pos: THREE.Vector3; look: THREE.Vector3; fov: number }>> = {
-  poster: { pos: new THREE.Vector3(2.9, 1.2, 5.9), look: new THREE.Vector3(-0.4, 2.25, 1.9), fov: 46 },
-  icon: { pos: new THREE.Vector3(1.3, 0.9, 3.7), look: new THREE.Vector3(-0.25, 2.4, 1.9), fov: 56 },
+  poster: { pos: new THREE.Vector3(-3.4, 0.75, 5.4), look: new THREE.Vector3(-0.2, 2.25, 1.9), fov: 44 },
+  icon: { pos: new THREE.Vector3(-1.9, 0.7, 3.8), look: new THREE.Vector3(-0.45, 2.15, 2.0), fov: 54 },
 };
+
+/** Where the stills' spotlights point: the Dunker in the air by the rim. */
+const STILL_SUBJECT = new THREE.Vector3(-0.5, 2.3, 1.9);
 
 /**
  * Runs the showcase: the scripted highlight stepped at the engine's
@@ -62,17 +49,16 @@ export class ShowcaseDirector {
   private readonly script: Film;
   private readonly dev: DevOptions;
   private readonly still: boolean;
-  private last = -1;
+  private readonly clock = new FilmClock(STEP);
   private carry = 0;
   private elapsed = 0;
   private slowLeft = 0;
   private slowScale = 1;
   private draws = 0;
-  private sinceReady = 0;
-  private sinceDraw = Infinity;
 
   constructor(canvas: HTMLCanvasElement, readonly view: ShowcaseView) {
     this.renderer = new CourtRenderer(canvas);
+    if (view !== "loop") this.renderer.cinematic({ lights: stillLights(STILL_SUBJECT), fill: 0.25, key: 0.55, haze: 0.05 });
     // Development aids: ?cam=x,y,z,lookX,lookY,lookZ,fov pins the camera for close looks at the models,
     // ?at=seconds holds a still at another moment of the film, and dev.ts reads the rest.
     const params = new URLSearchParams(window.location.search);
@@ -113,17 +99,9 @@ export class ShowcaseDirector {
       }
       return;
     }
-    const gap = this.last < 0 ? STEP : (now - this.last) / 1000;
-    this.last = now;
-    const real = gap > STALL ? FILMED_FRAME : gap;
-    if (window.__showcaseReady) this.sinceReady += real;
-    this.sinceDraw += real;
-    const draw = this.sinceReady >= PREROLL && this.sinceDraw >= DRAW_EVERY;
+    const { real, draw } = this.clock.tick(now, window.__showcaseReady === true);
     this.renderer.render(this.advance(real), draw);
-    if (draw) {
-      this.sinceDraw = 0;
-      this.renderer.finish();
-    }
+    if (draw) this.renderer.finish();
   }
 
   /** Steps the film by a slice of real time and returns the game time that passed. */

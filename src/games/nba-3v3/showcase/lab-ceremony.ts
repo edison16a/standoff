@@ -1,5 +1,6 @@
 import { Ceremony } from "../engine/ceremony";
 import { Match } from "../engine/match";
+import type { Entry as MatchEntry } from "../engine/match-options";
 import { BUILD_IDS } from "../builds";
 
 /**
@@ -12,14 +13,16 @@ export class CeremonyFilm {
   readonly match: Match;
   readonly ceremony: Ceremony;
 
-  constructor() {
-    this.match = new Match({ seed: 5, entries: BUILD_IDS.map((build, i) => ({ team: (i % 2) as 0 | 1, build, seat: null })) });
+  /** By default a mixed lineup with the third player as captain; the trailer passes its highlight's team. */
+  constructor(lineup?: readonly MatchEntry[], captain = 2) {
+    const entries = lineup ? [...lineup] : BUILD_IDS.map((build, i) => ({ team: (i % 2) as 0 | 1, build, seat: null }));
+    this.match = new Match({ seed: 5, entries });
     const m = this.match;
     m.phase = "over";
-    m.winner = 0;
-    m.score = [11, 8];
-    // The Playmaker scored the most, so he lifts it.
-    m.athletes[2]!.box.points = 6;
+    m.winner = m.athletes[captain]!.team;
+    m.score = m.winner === 0 ? [11, 8] : [8, 11];
+    // The top scorer lifts it.
+    m.athletes[captain]!.box.points = 6;
     this.ceremony = new Ceremony(m);
     this.ceremony.stage(m);
   }
