@@ -29,7 +29,8 @@ export class ShotCamera {
     this.fresh = true;
   }
 
-  aim(world: RaceWorld, rig: Rig, dt: number): void {
+  /** Frames the shot. `t` is race seconds since the shot began, for rigs that move through it. */
+  aim(world: RaceWorld, rig: Rig, dt: number, t = 0): void {
     const focus = packFocus(world);
     const f = world.track.frameAt(focus.lead.loc.s);
     let fov: number;
@@ -53,8 +54,11 @@ export class ShotCamera {
       }
       case "hero": {
         const kart = world.karts[rig.kart] ?? focus.lead;
-        const a = kart.heading + rig.angle;
-        wantPos.set(kart.x + Math.sin(a) * rig.dist, kart.y + rig.height, kart.z + Math.cos(a) * rig.dist);
+        // Measured from the road rather than the kart's nose, a kart spun by a hit does not whirl the camera round.
+        const road = world.track.frameAt(kart.loc.s);
+        const a = (rig.road ? Math.atan2(road.tx, road.tz) : kart.heading) + rig.angle + (rig.orbit ?? 0) * t;
+        const dist = rig.dist + (rig.push ?? 0) * t;
+        wantPos.set(kart.x + Math.sin(a) * dist, kart.y + rig.height, kart.z + Math.cos(a) * dist);
         wantLook.set(kart.x, kart.y + rig.aim, kart.z);
         fov = rig.fov;
         break;

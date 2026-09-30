@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useRef } from "react";
 import type { ShowcaseView } from "@/platform/games/game-api";
+import { devPlan } from "./dev-plan";
 import { ShowcaseDirector } from "./director";
 import { Logo } from "./Logo";
-import { PLANS } from "./shots";
+import { PLANS } from "./plans";
 import "../styles/showcase.css";
 
 /**
@@ -18,7 +19,7 @@ export default function ShowcaseScene({ view }: { view: ShowcaseView }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const director = new ShowcaseDirector(canvas, PLANS[view]);
+    const director = new ShowcaseDirector(canvas, devPlan() ?? PLANS[view]);
     // Tuning scripts pin the showcase to a moment through this. Development builds only.
     if (process.env.NODE_ENV === "development") Object.assign(window, { __magicKartShowcase: director });
     const fit = () => director.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
