@@ -63,6 +63,7 @@ export class Stage {
   private readonly composer: EffectComposer;
   private readonly bloom: UnrealBloomPass;
   private readonly key: DirectionalLight;
+  private readonly fill: HemisphereLight;
   /** Half the width of the flight plane in world units. */
   halfWidth = HALF_HEIGHT * (16 / 9);
   private quality = 0;
@@ -85,7 +86,8 @@ export class Stage {
     this.scene.environmentIntensity = 0.4;
     pmrem.dispose();
 
-    this.scene.add(new HemisphereLight(0xfff1dc, 0x5a3418, 0.55));
+    this.fill = new HemisphereLight(0xfff1dc, 0x5a3418, 0.55);
+    this.scene.add(this.fill);
     this.key = new DirectionalLight(0xfff0d8, 3.2);
     this.key.position.set(-7, 9, 16);
     this.key.target.position.set(0, 0, -BOARD_DEPTH);
@@ -132,6 +134,19 @@ export class Stage {
     this.camera.aspect = width / Math.max(1, height);
     this.camera.updateProjectionMatrix();
     this.halfWidth = HALF_HEIGHT * this.camera.aspect;
+  }
+
+  /**
+   * Hard light for the showcase's key art: one strong low key light
+   * raking across from the top left, little fill, so the fruit stand out
+   * glossy against deep shadow like a studio photo.
+   */
+  dramatic(): void {
+    this.key.position.set(-16, 6, 7);
+    this.key.intensity = 6.5;
+    this.fill.intensity = 0.06;
+    this.scene.environmentIntensity = 0.2;
+    this.renderer.toneMappingExposure = 1.05;
   }
 
   /** Steps down one quality level. Returns false when already at the lowest. */

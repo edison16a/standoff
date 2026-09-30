@@ -23,6 +23,8 @@ export interface RendererOptions {
    * off: its clock is stepped by hand, so real frame times mean nothing.
    */
   adaptive?: boolean;
+  /** Hard, low studio light for key art, instead of the game's soft light. */
+  dramatic?: boolean;
 }
 
 /**
@@ -46,6 +48,7 @@ export class FruitRenderer {
   constructor(canvas: HTMLCanvasElement, options: RendererOptions = {}) {
     this.stage = new Stage(canvas);
     this.quality = options.adaptive === false ? null : new QualityWatch(this.stage);
+    if (options.dramatic) this.stage.dramatic();
     const { scene } = this.stage;
     this.views = new FruitViews(scene, this.library);
     this.pieces = new Pieces(scene);

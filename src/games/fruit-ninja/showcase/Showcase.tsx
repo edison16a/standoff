@@ -34,7 +34,7 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     const canvas = document.createElement("canvas");
     canvas.className = "fn-stage__canvas";
     box.appendChild(canvas);
-    const renderer = new FruitRenderer(canvas, { adaptive: false });
+    const renderer = new FruitRenderer(canvas, { adaptive: false, dramatic: shot.dramatic });
     if (shot.camera) renderer.aim(shot.camera.x, shot.camera.y, shot.camera.zoom);
     let frozen = false;
     const fit = () => {

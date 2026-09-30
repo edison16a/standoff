@@ -15,6 +15,8 @@ export interface Shot {
   camera?: { x: number; y: number; zoom: number };
   /** Whether the players' name tags and the points show. */
   labels: boolean;
+  /** Hard studio light instead of the game's own, for key art. */
+  dramatic?: boolean;
   /** Cuts through the script like a trailer, from `start` on. */
   film?: readonly Cut[];
 }
@@ -46,6 +48,6 @@ const TRAILER: readonly Cut[] = [
  */
 export const SHOTS: Record<ShowcaseView, Shot> = {
   loop: { script: LOOP, start: 16, labels: false, film: TRAILER },
-  poster: { script: LOOP, start: 17.44, freeze: 17.44, labels: true },
-  icon: { script: ICON, start: ICON_AT, freeze: ICON_AT, camera: { x: 0, y: 1, zoom: 1.35 }, labels: false },
+  poster: { script: LOOP, start: 20.2, freeze: 20.2, camera: { x: -0.4, y: -0.5, zoom: 1.35 }, labels: false },
+  icon: { script: ICON, start: ICON_AT, freeze: ICON_AT, camera: { x: 0, y: 1, zoom: 1.35 }, labels: false, dramatic: true },
 };

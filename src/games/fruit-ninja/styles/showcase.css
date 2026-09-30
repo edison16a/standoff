@@ -3,8 +3,14 @@
   chunky juicy logo over it, cut clean through like a fruit.
 */
 
+/* Key art: the edges and the foot fall away into deep shadow, so the cut fruit glows like a studio photo. */
 .fn-showcase--icon .fn-stage__vignette {
-  background: radial-gradient(ellipse at 50% 35%, rgba(0, 0, 0, 0) 40%, rgba(24, 8, 0, 0.7) 100%);
+  background: linear-gradient(0deg, rgba(14, 5, 0, 0.75) 0%, rgba(14, 5, 0, 0.2) 38%, transparent 55%),
+    radial-gradient(ellipse at 50% 32%, rgba(0, 0, 0, 0) 32%, rgba(14, 5, 0, 0.85) 100%);
+}
+
+.fn-showcase--icon .fn-stage__canvas {
+  filter: contrast(1.12) saturate(1.12);
 }
 
 .fn-logo {
