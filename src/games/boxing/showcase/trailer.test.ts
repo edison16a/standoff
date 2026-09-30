@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { MatchEvent } from "../engine/events";
 import { ofType } from "../engine/test-helpers";
-import { CYCLE_S, Trailer } from "./trailer";
+import { CEREMONY_AT, CYCLE_S, Trailer } from "./trailer";
 
 describe("the showcase trailer", () => {
   it("plays a block, a slip, a counter, a duck, a body shot and ends in a knockdown", () => {
@@ -24,5 +24,16 @@ describe("the showcase trailer", () => {
       if (ofType(trailer.advanceTo(c), "knockdown").length) at = c;
     }
     expect(Trailer.speed(at)).toBeLessThan(0.5);
+  });
+
+  it("lets the fall play out before the cut to the belt", () => {
+    const trailer = new Trailer();
+    let downAt = -1;
+    for (let c = 0; c < CEREMONY_AT; c += 1 / 60) {
+      if (ofType(trailer.advanceTo(c), "knockdown").length) downAt = trailer.match.now;
+    }
+    expect(downAt).toBeGreaterThan(0);
+    // The fall takes a little over a second of match time.
+    expect(trailer.match.now - downAt).toBeGreaterThan(1_000);
   });
 });

@@ -5,12 +5,14 @@ import { defenseOf, type Posture } from "../engine/stance";
 import type { FighterId, Hand, Level, PunchStyle } from "../engine/types";
 
 /** The trailer repeats every this many seconds, so the captured clip loops cleanly. */
-export const CYCLE_S = 8;
+export const CYCLE_S = 10;
+/** Real seconds into the loop where the fight cuts to the champion lifting the belt. */
+export const CEREMONY_AT = 7.3;
 /** Walking in from the corners before the first punch, in match milliseconds. */
 const PREROLL_MS = 1_300;
 /** Real seconds of the cycle where the knockout blow plays in slow motion. */
 const SLOW_FROM = 5.15;
-const SLOW_TO = 6.1;
+const SLOW_TO = 6.3;
 const SLOW = 0.18;
 
 interface Throw {
@@ -77,13 +79,12 @@ export class Trailer {
     const normal = Math.min(cycle, SLOW_FROM);
     const slow = Math.max(0, Math.min(cycle, SLOW_TO) - SLOW_FROM);
     const after = Math.max(0, cycle - SLOW_TO);
-    return (normal + slow * SLOW + after * 0.75) * 1000;
+    return (normal + slow * SLOW + after) * 1000;
   }
 
   /** How fast time runs at this point of the loop, for the particles and the crowd. */
   static speed(cycle: number): number {
-    if (cycle >= SLOW_FROM && cycle < SLOW_TO) return SLOW;
-    return cycle >= SLOW_TO ? 0.75 : 1;
+    return cycle >= SLOW_FROM && cycle < SLOW_TO ? SLOW : 1;
   }
 
   /** Moves the fight to `cycle` seconds into the loop. Returns what happened on the way. */
