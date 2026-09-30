@@ -8,6 +8,7 @@ import { TvCamera } from "../render/cameras/tv-camera";
 import { FightRenderer, FULL } from "../render/fight-renderer";
 import { FightScene } from "../render/fight-scene";
 import { lookFor } from "../render/models/looks";
+import { stageIconArt } from "./icon-art";
 import { Kicker } from "./kicker";
 import { playStep, STEP } from "./playback";
 import { shotIndex, trailerShot, type ShotRig } from "./shots";
@@ -48,8 +49,10 @@ export function Showcase({ view }: { view: ShowcaseView }) {
         if (event.type === "knockdown") scene.arena.burst(45);
       }
     };
+    // The icon lights its champion alone; everything else lights the space between the two faces.
+    let hero: THREE.Vector3 | null = null;
     const draw = (camera: THREE.PerspectiveCamera) => {
-      kicker.aim(camera, subject(scene));
+      kicker.aim(camera, hero ?? subject(scene));
       // The referee steps out of the ceremony, as in the real results, and out of the stills.
       scene.referee.model.root.visible = view === "loop" && !scene.ceremony.active;
       settle(renderer, scene, camera);
@@ -57,7 +60,9 @@ export function Showcase({ view }: { view: ShowcaseView }) {
 
     let frame = 0;
     if (view !== "loop") {
-      const camera = stageStill(view, scene, tv, hear);
+      const art = view === "icon" ? stageIconArt(scene, tv, hear) : null;
+      hero = art?.hero ?? null;
+      const camera = art?.camera ?? stageStill(view, scene, tv, hear);
       draw(camera);
       // A still only needs drawing again if the window changes size.
       let drawn = "";
