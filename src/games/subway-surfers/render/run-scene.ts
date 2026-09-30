@@ -75,7 +75,6 @@ export class RunScene {
       chase.bump(0.9);
       chase.kick(4);
     }
-    if (event.type === "land" && event.speed > 10) chase.bump(Math.min(0.5, event.speed / 40));
     // Big moments kick the view wider for a beat, like a burst of speed.
     if (event.type === "power") chase.kick(event.kind === "jetpack" ? 9 : 4);
     if (event.type === "jump" && event.boots) chase.kick(4);
