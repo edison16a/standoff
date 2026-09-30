@@ -74,7 +74,7 @@ export class KeyArt {
     f.pose = r.crouch > 0.5 ? "crouch" : r.stance === "peek" ? "peek" : "stand";
     f.brain.stance = r.stance;
     f.vel = r.run ? { ...r.run } : { x: 0, z: 0 };
-    // Nobody falls in the cover shot: hits flinch and splat, but never take a fighter out.
+    // Hits flinch and splat but never take a fighter out: only the scripted `down` falls.
     f.health = 1e6;
   }
 

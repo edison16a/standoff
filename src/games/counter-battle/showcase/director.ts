@@ -57,8 +57,8 @@ export class ShowcaseDirector {
     // ?lite=1 draws without shadows or smoothing at a lower resolution, for reviews on a slow machine.
     this.renderer = new BattleRenderer(canvas, params.get("lite") ? { antialias: false, shadows: false, maxPixelRatio: 0.75 } : {});
     // The icon is staged like a game cover rather than cut from the fight; ?fight=1 shows the old frame.
-    const keyArt = view === "icon" && !params.has("fight");
-    this.lab = params.get("lab") ? new Lab() : keyArt ? new KeyArt() : null;
+    const keyArt = view === "icon" && !params.has("fight") && !params.get("lab");
+    this.lab = keyArt ? new KeyArt() : params.get("lab") ? new Lab() : null;
     this.battle = this.lab?.battle ?? showcaseBattle(Number(params.get("seed")) || SEED);
     this.renderer.setBattle(this.battle, (id) => ({ name: this.battle.fighters[id]!.name, color: playerColor(id + 1) }));
     const count = Number(params.get("panes")) || 0;
