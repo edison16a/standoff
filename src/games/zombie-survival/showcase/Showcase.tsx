@@ -27,6 +27,8 @@ function stillScene(canvas: HTMLCanvasElement, view: "icon" | "poster"): Scene {
   const set = new CinemaSet(canvas);
   const still = STILLS[view];
   set.cut(still.seed);
+  if (still.aims) set.aim(still.aims);
+  if (still.key) set.key(still.key);
   const steps = Math.round(still.runUp * 30);
   let posed = false;
   return {

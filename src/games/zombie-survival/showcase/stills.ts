@@ -8,21 +8,28 @@ export interface Still {
   /** Seconds of the chase played before the moment, so flashes and sprays are in flight. */
   runUp: number;
   seed: number;
+  /** Seats held on one chaser each, by id, so every gun points out at the dead. */
+  aims?: Readonly<Record<number, number>>;
+  /** How hard the key from the camera lights the scene, when brighter than the clip's. */
+  key?: number;
   camera: (truck: Point) => CameraShot;
 }
 
 /**
- * The key art. The icon looks down the road over the pack at the team
- * firing back from the truck, the moment a runner leaping at the
- * tailgate meets the shotgun. The poster is the wide chase from the side
- * of the road, as the rifle drops the nearest runner.
+ * The key art. The icon is a cover: from low in the road behind the pack,
+ * the team faces the viewer from the back of the truck, every gun turned
+ * down on the dead crowding the tailgate, each at one on its own side so
+ * none points across the team. The poster is the wide chase from the
+ * side of the road, as the rifle drops the nearest runner.
  */
 export const STILLS: Record<"icon" | "poster", Still> = {
   icon: {
-    story: 6.27,
+    story: 7.12,
     runUp: 0.6,
     seed: 21,
-    camera: (t) => ({ position: [t.x + 4.6, 1.2, t.z + 8.6], lookAt: [t.x - 0.2, 1.3, t.z + 3.2], fov: 50, roll: 0.03 }),
+    aims: { 1: 14, 2: 10, 3: 13, 4: 2 },
+    key: 32,
+    camera: (t) => ({ position: [t.x + 0.3, 1.8, t.z + 16], lookAt: [t.x - 0.05, 1.6, t.z + 2.1], fov: 17, roll: 0.03 }),
   },
   poster: {
     story: 2.305,
