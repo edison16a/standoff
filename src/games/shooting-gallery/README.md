@@ -69,12 +69,16 @@ All synthesised with Web Audio through the room's buses, so the player's music a
 
 ## Home screen media
 
-The tile, the poster and the looping clip behind the home screen are captured from `showcase/`. It runs the real round and the real renderer with four computer players on the guns and no room. Each bot picks a target on its side of the booth, swings its laser onto it and fires once the dot settles, now and then just off the edge. A golden duck is planted to cross the booth and is only shot at its cue. The round, the bots and the effects all run on seeded randomness and a fixed step, so every capture is the same.
+The tile, the poster and the looping clip behind the home screen are captured from `showcase/`. It runs the real round and the real renderer with four computer players on the guns and no room. Each bot picks a target on its side of the booth, swings its laser over and fires once the dot settles, now and then just off the edge. A golden duck is planted to cross the booth and is only shot at its cue. The round, the bots and the effects all run on seeded randomness and a fixed step of 1/600 s, so every capture is the same and slow motion still moves on every frame. The showcase hides the floating points, so the media carry no text.
 
-`showcase/shots.ts` holds the plan for each view: the round, the moment and the camera. The loop's camera sways on an 8 second beat so the clip joins up. In development, `?at=` on the showcase page holds on another moment, which is how the shots were picked. With the dev server running:
+* **Loop**: a wordless nine second trailer of trick shots, cut from one round with slow motion on each hit. A plate picked off the top rail as the camera pans with it, a bull seen from right beside the target, the whole booth firing from low behind the guns, the view down a barrel as it drops a bullseye, and the golden duck ridden alongside as every laser closes in and the BB lands.
+* **Icon**: the golden duck the instant the BB hits it, low and close, with the name as a fairground sign.
+* **Poster**: the same moment from behind the four guns.
+
+`showcase/trailer.ts` is the edit. Each shot names the hit it is built around, and `showcase/stage.test.ts` checks that every one lands on cue inside its shot. Shots jump about in the round, so each starts a fresh round played up to it. The edit repeats exactly on its nine seconds and its first shot runs across the join, so the clip loops mid shot. `showcase/shots.ts` holds the round and the stills. In development, `?at=` on the showcase page opens the loop that many seconds into the edit. With the dev server running:
 
 ```bash
-node tools/media/capture.mjs shooting-gallery --url http://localhost:3000 --ffmpeg /path/to/ffmpeg
+node tools/media/capture.mjs shooting-gallery --seconds 9 --url http://localhost:3000 --ffmpeg /path/to/ffmpeg
 ```
 
 Then copy `media/poster.jpg` over `cover.jpg`, which the drawn cover still uses.
