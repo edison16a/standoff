@@ -129,9 +129,11 @@ export class GalleryPhone {
 
   /** After a reconnect or a host reload, tells the host everything chosen so far. */
   private resend(): void {
-    const { step, finish, ready } = this.store.getState();
+    const { step, finish, ready, game } = this.store.getState();
     this.room.send({ kind: "setup", step });
     this.room.send({ kind: "gun", finish });
-    if (ready) this.room.send({ kind: "ready", ready });
+    // Ready from before a round is stale once it starts: the host clears it at the end, maybe while this phone was away.
+    const stale = game?.phase === "countdown" || game?.phase === "playing";
+    if (ready && !stale) this.room.send({ kind: "ready", ready });
   }
 }
