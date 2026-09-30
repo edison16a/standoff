@@ -1,10 +1,12 @@
 import * as THREE from "three";
 import type { Run } from "../engine/run";
+import { launchSpeed } from "../engine/motion";
+import { JUMP } from "../engine/tuning";
 import { frontAt, type PowerKind } from "../engine/types";
 import type { RunScene } from "../render/run-scene";
 import { ShowRun } from "./show-run";
 
-type Angle = "chase" | "front" | "side" | "hero" | "pursuit" | "pursuitWide";
+type Angle = "chase" | "front" | "side" | "hero" | "pursuit" | "pursuitWide" | "cover";
 
 export interface Shot {
   seed: number;
@@ -31,12 +33,12 @@ function trainComing(run: Run): boolean {
   return run.course.obstacles.some((o) => o.drift > 0 && o.lane !== run.runner.lane && frontAt(o, d) - d > 18 && frontAt(o, d) - d < 45);
 }
 
-/** Nothing standing within a few metres of the runner, where a camera close by would end up inside it. */
-function clearAround(run: Run): boolean {
+/** Nothing standing in the runner's lane within a few metres, where a camera close by would end up inside it. */
+function laneClear(run: Run): boolean {
   const d = run.runner.distance;
   return !run.course.obstacles.some((o) => {
     const front = frontAt(o, d);
-    return front < d + 10 && front + o.length > d - 8;
+    return o.lane === run.runner.lane && front < d + 12 && front + o.length > d - 8;
   });
 }
 
@@ -49,6 +51,22 @@ function leap(run: Run): void {
   s.airTime = 0.4;
   s.rollLeft = 0;
   for (let i = 0; i < 8; i++) run.course.addCoin(s.x, 0.95 + Math.max(0, 1.6 - i * 0.3), s.distance + 7 + i * 3);
+}
+
+/** The cover's backdrop: the runner's lane clear, and a train on the next track from beside them back. */
+function trainBeside(run: Run): boolean {
+  const d = run.runner.distance;
+  return laneClear(run) && run.course.obstacles.some((o) => o.kind === "train" && o.lane === 1 && frontAt(o, d) < d - 1 && frontAt(o, d) > d - 10);
+}
+
+/** The cover's leap: up on the hoverboard, the inspector and his dog right behind. */
+function boardLeap(run: Run): void {
+  chasedLeap(run);
+  run.powers.start("hoverboard");
+  run.chase.gap = 2.0;
+  run.runner.y = 2.0;
+  // Still rising fast, so the pose flings the arms up and tucks a knee: a burst, not a float.
+  run.runner.vy = launchSpeed(JUMP.height) * 0.9;
 }
 
 /** A leap with the inspector and his dog close behind, and a line of coins arcing on ahead. */
@@ -64,7 +82,7 @@ export const SHOTS: Record<"loop" | "icon" | "poster", Shot> = {
   // Seed 7 meets a train rolling in on the next track at about 23 seconds. The runner leaps as it comes, chased.
   poster: { seed: 7, look: 0, warmup: 20, moment: (run) => run.runner.grounded && trainComing(run), stage: chasedLeap, pickups: null, cuts: [[0, "pursuitWide"]], pace: 0.005 },
   // Seed 11 in the open yard, with nothing standing close: the runner leaps high over the lens, the inspector and dog behind.
-  icon: { seed: 11, look: 0, warmup: 14, moment: (run) => run.runner.grounded && run.runner.lane === 0 && clearAround(run), stage: chasedLeap, pickups: null, cuts: [[0, "pursuit"]], pace: 0.005 },
+  icon: { seed: 11, look: 0, warmup: 14, moment: (run) => run.runner.grounded && run.runner.lane === 0 && trainBeside(run), stage: boardLeap, pickups: null, cuts: [[0, "cover"]], pace: 0.005 },
 };
 
 /** Where each camera sits and looks, from the runner's feet: [x, y, z] then the point it looks at. */
@@ -77,6 +95,8 @@ const PLACES: Record<Exclude<Angle, "chase">, { at: [number, number, number]; lo
   hero: { at: [1.5, 0.45, -3.1], look: [0.1, 0.5, 0], fov: 52 },
   // Low ahead, looking back up at a leap, with whoever chases it in the frame behind.
   pursuit: { at: [1.2, -1.25, -2.9], look: [-0.3, 0.1, 2], fov: 68 },
+  // Straight ahead and a little low, so the runner bursts out at the viewer with the chase behind.
+  cover: { at: [-0.8, -0.5, -3.1], look: [0.3, 0.7, 4], fov: 60 },
   // The same, pulled back and wider for the poster.
   pursuitWide: { at: [-1.8, 0.35, -4.4], look: [0.2, 1.2, 2.5], fov: 52 },
 };
