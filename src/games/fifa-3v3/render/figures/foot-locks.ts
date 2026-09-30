@@ -26,8 +26,10 @@ export class FootLock {
         // Settle onto the turf if it was planted from the air.
         local.y += (b.ground - local.y) * Math.min(1, dt * 25);
         const spot = { x: local.x, y: local.y, z: local.z, toe: 0 };
-        this.locked.copy(root.localToWorld(this.v.copy(local)));
-        if (Math.hypot(local.x, local.z) < 0.6 * b.s) return spot;
+        // `local` is the scratch vector turned back into the world below, so the reach is measured first.
+        const inReach = Math.hypot(spot.x, spot.z) < 0.6 * b.s;
+        this.locked.copy(root.localToWorld(local));
+        if (inReach) return spot;
         // A step too far: let go and step again with the move.
         this.letGo();
       }
