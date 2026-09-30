@@ -1,7 +1,8 @@
 /*
-  The controller: the stick on the left, the score and the ball status
-  in the middle, and the three big buttons on the right, placed like a
-  console pad so thumbs find them without looking.
+  The controller: the stick on the left, a slim status column in the
+  middle, and the three big buttons on the right, placed like a console
+  pad so thumbs find them without looking. The score and the shot clock
+  stay on the big screen, so the buttons get the room.
 */
 
 .nba-phone--pad {
@@ -11,8 +12,8 @@
 .nba-pad {
   display: grid;
   flex: 1;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.8fr) minmax(0, 1.25fr);
-  gap: 8px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.6fr) minmax(0, 1.5fr);
+  gap: 10px;
   min-height: 0;
   user-select: none;
   -webkit-user-select: none;
@@ -29,13 +30,24 @@
   min-height: 100%;
 }
 
+/*
+  Pass up top over Shoot, the third button beside Shoot, and Shoot the
+  biggest, low and out under the thumb. Sized from the box itself, so
+  they grow into whatever room the phone gives. The column gap leaves
+  room for the shot meter beside Shoot.
+*/
 .nba-pad__buttons {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto auto;
+  align-content: center;
+  justify-content: center;
   align-items: center;
   justify-items: center;
-  gap: 4px;
+  gap: 5cqh 34px;
+  min-width: 0;
+  min-height: 0;
+  container-type: size;
 }
 
 .nba-pad__pass {
@@ -46,6 +58,7 @@
 .nba-pad__defend {
   grid-column: 1;
   grid-row: 2;
+  align-self: start;
 }
 
 .nba-pad__shoot {
@@ -54,6 +67,16 @@
   grid-row: 2;
   display: flex;
   align-items: center;
+}
+
+.nba-pad__buttons .kit-pad-btn--lg {
+  width: min(53cqh, 46cqw, 176px);
+  height: min(53cqh, 46cqw, 176px);
+}
+
+.nba-pad__buttons .kit-pad-btn--md {
+  width: min(38cqh, 32cqw, 128px);
+  height: min(38cqh, 32cqw, 128px);
 }
 
 .nba-pad .kit-pad-btn {
@@ -68,19 +91,23 @@
 }
 
 .nba-pad .kit-pad-btn span {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
+}
+
+.nba-pad .kit-pad-btn--lg span {
+  font-size: 15px;
 }
 
 /* Fixed sizes: a percentage inside the button's auto grid resolves to almost nothing. */
 .nba-icon {
-  width: clamp(26px, 9vmin, 40px);
-  height: clamp(26px, 9vmin, 40px);
+  width: clamp(28px, 10vmin, 44px);
+  height: clamp(28px, 10vmin, 44px);
 }
 
 .kit-pad-btn--lg .nba-icon {
-  width: clamp(34px, 12vmin, 54px);
-  height: clamp(34px, 12vmin, 54px);
+  width: clamp(36px, 13vmin, 58px);
+  height: clamp(36px, 13vmin, 58px);
 }
 
 .nba-meter {
@@ -88,7 +115,7 @@
   left: -26px;
   top: 50%;
   width: 16px;
-  height: min(26vmin, 120px);
+  height: min(48cqh, 150px);
   overflow: hidden;
   border: 2px solid var(--border-strong);
   border-radius: 8px;
@@ -128,179 +155,9 @@
   border-top: 3px solid #ff7a18;
 }
 
-.nba-status {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  min-width: 0;
-  text-align: center;
-}
-
-.nba-status__team {
-  padding: 2px 12px;
-  border-radius: 999px;
-  background: var(--team);
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.nba-status__score {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  font-family: Impact, "Arial Black", sans-serif;
-  font-size: 40px;
-  line-height: 1;
-}
-
-.nba-status__clock {
-  min-width: 48px;
-  padding: 2px 8px;
-  border-radius: 8px;
-  background: #0b0d18;
-  color: #ffb020;
-  font-family: "Courier New", monospace;
-  font-size: 24px;
-  font-weight: 900;
-}
-
-.nba-status__clock--late {
-  color: #ff3b3b;
-}
-
-.nba-status__count {
-  font-family: Impact, "Arial Black", sans-serif;
-  font-size: 44px;
-  line-height: 1;
-}
-
-.nba-status__ball {
-  overflow: hidden;
-  max-width: 100%;
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.nba-status__ball--mine {
-  color: #ff7a18;
-  font-weight: 900;
-}
-
-.nba-status__warn {
-  padding: 2px 8px;
-  border-radius: 8px;
-  background: #fef3c7;
-  color: #92400e;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.nba-status__fire {
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #ff3d00, #ffb300);
-  color: #1a0400;
-  font-size: 12px;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-/* Above the score, so the score stays readable while the word fades. */
-.nba-flash {
-  position: absolute;
-  top: 12%;
-  left: 50%;
-  z-index: 2;
-  padding: 6px 14px;
-  border-radius: 12px;
-  font-size: 22px;
-  font-weight: 900;
-  white-space: nowrap;
-  pointer-events: none;
-  animation: nba-flash 1.1s ease-out both;
-}
-
-.nba-flash--good {
-  background: #22c55e;
-  color: #052e16;
-}
-
-.nba-flash--bad {
-  background: #ef4444;
-  color: #ffffff;
-}
-
-.nba-flash--info {
-  background: #3b82f6;
-  color: #ffffff;
-}
-
-@keyframes nba-flash {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(1.6);
-  }
-  15% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  75% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -80%) scale(1);
-  }
-}
-
 /* Steal from too far away still swipes, but only at air: the button shows it. */
 .nba-pad__defend--faint .kit-pad-btn {
   opacity: 0.55;
-}
-
-/* The guard range on defence: a dot that lights green while Guard is shadowing the man. */
-.nba-guard {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: var(--bg-muted);
-  color: var(--text-muted, rgba(255, 255, 255, 0.75));
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.nba-guard i {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.5;
-}
-
-.nba-guard--on {
-  background: #16a34a;
-  color: #ffffff;
-}
-
-.nba-guard--on i {
-  opacity: 1;
-  box-shadow: 0 0 8px #bbf7d0;
-}
-
-.nba-guard--chase {
-  background: color-mix(in srgb, #f59e0b 30%, var(--bg-muted));
-  color: #ffffff;
 }
 
 /* At the line: only Shoot, with a tall meter beside it to time the release. */
@@ -321,7 +178,7 @@
   left: 0;
   top: 0;
   width: 30px;
-  height: min(62vmin, 250px);
+  height: min(86cqh, 250px);
   transform: none;
   border-radius: 12px;
 }

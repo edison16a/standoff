@@ -19,6 +19,7 @@ import "./styles/replay.css";
 import "./styles/phone.css";
 import "./styles/phone-ready.css";
 import "./styles/pad.css";
+import "./styles/pad-status.css";
 import "./styles/showcase.css";
 
 /**

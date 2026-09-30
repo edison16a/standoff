@@ -26,9 +26,9 @@
   position: relative;
   display: grid;
   place-items: center;
-  width: min(150px, 58vh);
-  height: min(150px, 58vh);
-  max-height: 100%;
+  /* Sized from the right hand box, leaving room for the label under it. */
+  width: min(74cqh, 84cqw, 200px);
+  height: min(74cqh, 84cqw, 200px);
   border: 3px solid #f5c518;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(245, 197, 24, 0.2), rgba(245, 197, 24, 0.05));
@@ -75,16 +75,27 @@
   white-space: nowrap;
 }
 
-/* Sideways with Safari's bars, height is tight: the buttons and the rings come down a size. */
+/* The bigger buttons on the right get a bigger face to match. */
+.fb-pad__right .fb-face svg {
+  width: 34px;
+  height: 34px;
+}
+
+.fb-pad__right .fb-face__text {
+  font-size: 14px;
+}
+
+/* Sideways with Safari's bars, height is tight: the middle and kick buttons come down a size. The right hand ones size from their own box. */
 @media (orientation: landscape) and (max-height: 360px) {
-  .fb-controller .kit-pad-btn--lg {
-    width: 90px;
-    height: 90px;
+  .fb-pad__middle .kit-pad-btn--lg,
+  .fb-kick__button .kit-pad-btn--lg {
+    width: 100px;
+    height: 100px;
   }
 
-  .fb-controller .kit-pad-btn--md {
-    width: 66px;
-    height: 66px;
+  .fb-pad__middle .kit-pad-btn--md {
+    width: 80px;
+    height: 80px;
   }
 
   .fb-info__me {
