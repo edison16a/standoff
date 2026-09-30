@@ -12,26 +12,27 @@ function hang(id: string, kind: BodyKind, x: number, y: number, lean = 0): Throw
 }
 
 /**
- * Key art for the store tile: a watermelon cut in two by a blazing blade,
- * with a glowing dragonfruit and more fruit hanging around it, all in the
- * top of a square frame so the logo has room below.
+ * Key art for the store tile, built like a game cover: one hero, the
+ * watermelon, big in the middle and cut in two by a blazing blade, with
+ * a glowing dragonfruit and more fruit hanging round it as a frame, all
+ * in the top of a square picture so the logo has room below.
  */
 export const ICON: Script = {
   period: 30,
   throws: [
-    hang("melon", "watermelon", -0.2, 1.9, 0.6),
-    hang("dragon", "dragonfruit", 2.5, 3.2, -1),
-    hang("orange", "orange", -3.1, 3.4, 1),
-    hang("berry", "strawberry", -3.1, 0.5, 0.5),
-    hang("pineapple", "pineapple", 3, 0.9, -0.5),
-    hang("lime", "lime", 0.2, 4, 0.4),
+    hang("melon", "watermelon", -0.1, 2.25, 0.6),
+    hang("dragon", "dragonfruit", 1.95, 3.15, -1),
+    hang("orange", "orange", -2.05, 3.3, 1),
+    hang("berry", "strawberry", -2.45, 0.9, 0.5),
+    hang("pineapple", "pineapple", 2.5, 0.85, -0.5),
+    hang("lime", "lime", 0.85, 3.8, 0.4),
   ],
   bots: [
     {
       seat: 1,
       name: "",
       blade: "fire",
-      moves: [rest(1.6, -4, 4.2), slash(ICON_AT - 0.09, "melon", -30, 2.4, 0.1), rest(5, 3, -3)],
+      moves: [rest(1.6, -4, 4.2), slash(ICON_AT - 0.15, "melon", -24, 1.9, 0.1), rest(5, 3, -3)],
     },
     {
       // A moment earlier another blade opened the orange, so its halves and juice have spread.

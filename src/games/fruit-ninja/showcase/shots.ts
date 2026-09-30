@@ -49,5 +49,5 @@ const TRAILER: readonly Cut[] = [
 export const SHOTS: Record<ShowcaseView, Shot> = {
   loop: { script: LOOP, start: 16, labels: false, film: TRAILER },
   poster: { script: LOOP, start: 20.2, freeze: 20.2, camera: { x: -0.4, y: -0.5, zoom: 1.35 }, labels: false },
-  icon: { script: ICON, start: ICON_AT, freeze: ICON_AT, camera: { x: 0, y: 1, zoom: 1.35 }, labels: false, dramatic: true },
+  icon: { script: ICON, start: ICON_AT, freeze: ICON_AT, camera: { x: 0, y: 1.3, zoom: 1.65 }, labels: false, dramatic: true },
 };
