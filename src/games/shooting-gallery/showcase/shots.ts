@@ -65,11 +65,13 @@ export interface Still {
 }
 
 /**
- * The key art. The icon is the golden duck the instant the BB hits it,
- * low and close, with the flecks flying and the lasers crossing in. The
- * poster is the same moment from behind the four guns.
+ * The key art. The icon is a cover: down at the counter between the
+ * guns, the cherry pump gun big in the foreground firing its BB at the
+ * golden duck, the gold gun aimed in from the other side, and the
+ * bullseye and striped canvas behind. Every gun points down the range.
+ * The poster is the same moment from behind the four guns.
  */
 export const STILLS: Record<"icon" | "poster", Still> = {
-  icon: { time: 39.24, camera: { position: [goldenX(39.24) - 0.62, 1.1, -0.6], lookAt: [goldenX(39.24) + 0.05, 1.08, -1.62], fov: 46 } },
+  icon: { time: 39.24, camera: { position: [-0.1, 1.1, 5.1], lookAt: [goldenX(39.24) - 0.2, 0.94, -1.62], fov: 38 } },
   poster: { time: 39.24, camera: { position: [0.35, 1.34, 4.4], lookAt: [goldenX(39.24), 1.12, -1.62], fov: 27 } },
 };
