@@ -43,9 +43,13 @@ Slices and swishes are layered and vary in pitch, so a flurry never sounds robot
 
 ## Home screen media
 
-`showcase/` plays the game by itself for the home screen's icon, poster and clip. Four computer players follow a script on the real board, with the real arena, fruit, blades, effects and popups. `loop-script.ts` is eight seconds that repeat: a three fruit combo, a giant melon smashed by every blade in turn, a dragonfruit, a bomb and a star fruit. `icon-script.ts` hangs fruit around a watermelon cut by a fire blade, under a sliced logo. Each hand's slashes are timed to meet their fruit, it glides between them, and it only cuts during a slash.
+`showcase/` plays the game by itself for the home screen's icon, poster and clip. Four computer players follow a script on the real board, with the real arena, fruit, blades and effects. `loop-script.ts` is eight seconds that repeat: a three fruit combo, a giant melon smashed by every blade in turn, a dragonfruit, a bomb and a star fruit. Each hand's slashes are timed to meet their fruit, it glides between them, and it only cuts during a slash.
 
-Random draws are seeded and time comes only from the frame clock, so every capture is the same. A test checks that the loop cuts every throw and repeats exactly. Add `&at=20` to `/showcase/fruit-ninja?view=poster` to look at another moment. To capture again, with the dev server running:
+The clip films that script like a wordless trailer (`showcase/film.ts`, with the cuts in `shots.ts`). The camera cuts in close on each moment and pushes in: the combo sweeps through in slow motion, the blades pile onto the giant melon until it bursts in slow motion, then the glowing dragonfruit, the bomb going off and a last flurry pulled wide. Cuts may skip ahead in the script but never back, a skip plays out unseen so no blade streaks across it, and one pass of the cuts moves the script on by exactly one period, so the clip loops without a seam. The trailer shows no name tags or points.
+
+The icon, from `icon-script.ts`, hangs fruit around a watermelon cut by a fire blade under a sliced logo. It is lit like a studio photo: one hard low key light raking across the board with almost no fill, long shadows, and dark edges (`Stage.dramatic`). The poster is the giant melon bursting apart under a lightning blade next to the glowing dragonfruit.
+
+Random draws are seeded and time comes only from the frame clock, so every capture is the same. Tests check that the loop cuts every throw and repeats exactly, and that the trailer runs one period and only moves forward. Add `&at=20` to `/showcase/fruit-ninja?view=poster` to look at another moment. To capture again, with the dev server running:
 
 ```bash
 node tools/media/capture.mjs fruit-ninja --url http://localhost:3000 --ffmpeg ffmpeg

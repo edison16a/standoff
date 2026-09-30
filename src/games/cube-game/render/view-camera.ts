@@ -23,6 +23,12 @@ export interface Framing {
   height: number;
   across: number;
   floor: number;
+  /** Degrees the camera swings round to see the play from ahead (plus) or behind. Play uses 7. */
+  yaw?: number;
+  /** How far the eye sits below the middle of the view. More looks up at the play, like a low angle. */
+  drop?: number;
+  /** A dutch tilt in degrees, for a tense shot. */
+  roll?: number;
 }
 
 export class ViewCamera {
@@ -86,8 +92,11 @@ export class ViewCamera {
     const d = this.distance * (1 - punch);
     const jitterX = Math.sin(time * 71) * shake;
     const jitterY = Math.cos(time * 53) * shake;
-    this.camera.position.set(this.x - d * Math.tan(YAW) + jitterX, this.y - EYE_DROP + jitterY, d);
+    const yaw = this.framing?.yaw === undefined ? YAW : THREE.MathUtils.degToRad(this.framing.yaw);
+    const drop = this.framing?.drop ?? EYE_DROP;
+    this.camera.position.set(this.x - d * Math.tan(yaw) + jitterX, this.y - drop + jitterY, d);
     this.camera.lookAt(this.x + jitterX, this.y + jitterY, 0);
+    if (this.framing?.roll) this.camera.rotateZ(THREE.MathUtils.degToRad(this.framing.roll));
   }
 
   get centerX(): number {

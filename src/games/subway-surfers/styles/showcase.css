@@ -17,7 +17,22 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(0deg, rgba(11, 26, 54, 0.72) 0%, rgba(11, 26, 54, 0.28) 30%, transparent 48%);
+  background: linear-gradient(0deg, rgba(11, 26, 54, 0.72) 0%, rgba(11, 26, 54, 0.28) 30%, transparent 48%),
+    radial-gradient(120% 100% at 50% 35%, transparent 55%, rgba(8, 16, 36, 0.55) 100%);
+}
+
+/* Key art is graded like a film still: punchier contrast and colour, and a dark edge that pulls the eye in. */
+.ss-showcase--icon .ss-showcase__canvas,
+.ss-showcase--poster .ss-showcase__canvas {
+  filter: contrast(1.12) saturate(1.18);
+}
+
+.ss-showcase--poster::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(110% 100% at 50% 45%, transparent 60%, rgba(8, 16, 36, 0.45) 100%);
 }
 
 .ss-showcase--icon .ss-logo {
