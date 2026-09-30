@@ -1,10 +1,11 @@
 import { BOT_SKILL } from "@/games/kit/difficulty/difficulty";
 import { PIECES, spawnPoints, type Piece } from "./arena";
+import { anglesTo, clampAim } from "./aim";
 import { BotAim } from "./bot-aim";
 import { updateBrain, type BrainWorld } from "./brain";
 import { buildCover, nearestSpot, type CoverGraph } from "./cover";
 import type { BattleEvent } from "./events";
-import { aimEye, createFighter, eyeOf, isBot, resetFighter, type Fighter, type FighterSetup, type TeamId } from "./fighter";
+import { aimEye, createFighter, eyeOf, isBot, resetFighter, type Fighter, type FighterSetup, type MoveInput, type TeamId } from "./fighter";
 import type { GunEvent } from "./gun-state";
 import { newMatch, sideOf, tickMatch, type MatchState } from "./match";
 import { Rng } from "./rng";
@@ -109,6 +110,12 @@ export class Battle {
     if (!down) f.rise = true;
   }
 
+  /** ADVANCE (1) or RETREAT (-1) held, or 0 to hold where they are. Only players steer. */
+  setMove(id: number, move: MoveInput): void {
+    const f = this.get(id);
+    if (f && !isBot(f)) f.move = move;
+  }
+
   reload(id: number): void {
     const f = this.get(id);
     if (f?.alive && this.match.phase === "fight") f.gun.startReload();
@@ -150,7 +157,9 @@ export class Battle {
       }
       const engaged = bot ? this.engaged.has(f.id) : f.trigger.held || this.time - f.shotAt < ENGAGED_FOR;
       const pace = isBot(f) ? BOT_SKILL[f.difficulty].speed : 1;
-      const world: BrainWorld = { graph: this.graph, pieces: this.pieces, enemies, claimed, others, pressure, rng: this.rng, engaged, pace };
+      // A player moves themselves, unless the computer has taken over for a dropped phone.
+      const steer = !isBot(f) && !bot;
+      const world: BrainWorld = { graph: this.graph, pieces: this.pieces, enemies, claimed, others, pressure, rng: this.rng, engaged, pace, steer };
       updateBrain(f, world, this.time, STEP);
       if (bot) {
         const intent = bot.update(f, enemies, this.pieces, this.rng, this.time, STEP);
@@ -206,14 +215,6 @@ export class Battle {
     }
     for (const bot of this.bots.values()) bot.reset();
   }
-}
-
-const clampAim = (yaw: number, pitch: number) => ({ yaw, pitch: Math.max(-1.2, Math.min(1.2, pitch)) });
-
-function anglesTo(eye: V3, point: V3): { yaw: number; pitch: number } {
-  const dx = point.x - eye.x;
-  const dz = point.z - eye.z;
-  return clampAim(Math.atan2(dx, dz), Math.atan2(point.y - eye.y, Math.hypot(dx, dz)));
 }
 
 function gunEvent(f: Fighter, e: GunEvent): BattleEvent {
