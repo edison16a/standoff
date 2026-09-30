@@ -4,35 +4,35 @@ import type { PhoneState } from "../../protocol";
 import { TEAMS } from "../../teams";
 import { ChoosePad } from "./ChoosePad";
 import { KickPad } from "./KickPad";
-import { DefensePad, QbPad, RunnerPad, WaitPad } from "./PlayPads";
+import { hasMoveStick, layoutKey } from "../pad-layout";
+import { StickPad, WaitPad } from "./PlayPads";
 import { usePhone } from "./session-context";
 
 /**
  * The phone as a controller, held sideways. The layout follows what
  * this player is doing right now, as the host says: the QB's call, the
  * QB's bar and throw stick, a runner's stick, the defence's buttons, or
- * the kick meters. Changing layout lets go of anything held, so no
- * button sticks on across a change.
+ * the kick meters. Changing layout lets go of any button held, so none
+ * sticks on across a change. The QB, runner and defence pads share one
+ * move stick that stays mounted between them, so a thumb steering the
+ * QB keeps steering him the moment he presses Run.
  */
 export function Controller({ host }: { host: PhoneState }) {
   const phone = usePhone();
-  // Skip coming and going counts too: a vote pressed as the replay ends must not stay held into the next one.
-  // The snap only changes the QB's buttons; a defender's stick stays held through the call and the snap.
-  const layout = `${host.pad}:${host.pad === "qb" && host.phase === "presnap"}:${host.skip !== null}`;
+  const layout = layoutKey(host);
+  const stick = hasMoveStick(host.pad);
 
   useEffect(() => {
     phone.controlling(true);
     return () => phone.controlling(false);
   }, [phone]);
 
-  useEffect(() => phone.letGo(), [phone, layout]);
+  useEffect(() => phone.letGo({ keepStick: stick }), [phone, layout, stick]);
 
   const team = TEAMS[host.team ?? 0];
   return (
     <div className="fb-controller" style={{ "--team": team.color } as React.CSSProperties}>
-      {host.pad === "qb" && <QbPad host={host} />}
-      {host.pad === "runner" && <RunnerPad host={host} />}
-      {host.pad === "defense" && <DefensePad host={host} />}
+      {stick && <StickPad host={host} />}
       {host.pad === "choose" && <ChoosePad host={host} />}
       {host.pad === "kicker" && <KickPad host={host} />}
       {host.pad === "wait" && <WaitPad host={host} />}

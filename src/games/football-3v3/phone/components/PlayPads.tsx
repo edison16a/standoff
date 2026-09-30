@@ -21,20 +21,16 @@ function Hold({ button, icon, text, colour, size = "md", disabled }: { button: B
 const colourOf = (host: PhoneState) => TEAMS[host.team ?? 0].color;
 
 /**
- * The QB: the same move stick as everyone under the left thumb, the
- * throw stick under the right, or on a run call a big Pass button for
- * the pitch. Before the snap the middle is one big Hike button with the
- * seconds left; after it, Juke and Run. Run hands him the runner's pad
- * for the rest of the play (engine/qb-run.ts).
+ * The QB's middle and right: before the snap one big Hike button with
+ * the seconds left, after it Juke and Run. On the right the throw stick,
+ * or on a run call a big Pass button for the pitch. Run hands him the
+ * runner's pad for the rest of the play (engine/qb-run.ts).
  */
-export function QbPad({ host }: { host: PhoneState }) {
+function QbControls({ host }: { host: PhoneState }) {
   const phone = usePhone();
   const presnap = host.phase === "presnap";
   return (
-    <div className="fb-pad fb-pad--qb">
-      <div className="fb-pad__left">
-        <Joystick alwaysShown colour={colourOf(host)} onChange={(stick) => phone.move(stick)} />
-      </div>
+    <>
       <div className="fb-pad__middle">
         <PadInfo host={host} />
         {presnap ? (
@@ -56,39 +52,31 @@ export function QbPad({ host }: { host: PhoneState }) {
           <ThrowStick disabled={!host.canThrow} onAim={(stick) => phone.aim(stick)} onThrow={(stick) => phone.throwBall(stick)} />
         )}
       </div>
-    </div>
+    </>
   );
 }
 
-/** A runner, or the QB once he pressed Run or crossed the line: the run stick, Dive and Juke. */
-export function RunnerPad({ host }: { host: PhoneState }) {
-  const phone = usePhone();
+/** A runner, or the QB once he pressed Run or crossed the line: Juke, and Dive biggest under the thumb. */
+function RunnerControls({ host }: { host: PhoneState }) {
   const live = host.phase === "live" && !host.grounded;
   return (
-    <div className="fb-pad fb-pad--runner">
-      <div className="fb-pad__left">
-        <Joystick alwaysShown colour={colourOf(host)} onChange={(stick) => phone.move(stick)} />
-      </div>
+    <>
       <div className="fb-pad__middle">
         <PadInfo host={host} />
       </div>
-      <div className="fb-pad__right fb-pad__buttons">
+      <div className="fb-pad__right fb-pad__buttons fb-pad__buttons--two">
         <Hold button="juke" icon="juke" text="Juke" colour="#a855f7" disabled={!live || !host.jukeReady} />
         <Hold button="dive" icon="dive" text="Dive" colour="#ef4444" size="lg" disabled={!live} />
       </div>
-    </div>
+    </>
   );
 }
 
-/** The defence: the move stick, Tackle, Rush, and Guard held to tail the nearest receiver. */
-export function DefensePad({ host }: { host: PhoneState }) {
-  const phone = usePhone();
+/** The defence: Rush, Guard held to tail the nearest receiver, and Tackle biggest under the thumb. */
+function DefenseControls({ host }: { host: PhoneState }) {
   const live = host.phase === "live" && !host.grounded;
   return (
-    <div className="fb-pad fb-pad--defense">
-      <div className="fb-pad__left">
-        <Joystick alwaysShown colour={colourOf(host)} onChange={(stick) => phone.move(stick)} />
-      </div>
+    <>
       <div className="fb-pad__middle">
         <PadInfo host={host} />
       </div>
@@ -97,11 +85,31 @@ export function DefensePad({ host }: { host: PhoneState }) {
         <Hold button="guard" icon="guard" text={host.guarding ? "Guarding" : "Guard"} colour="#2563eb" disabled={!live} />
         <Hold button="tackle" icon="tackle" text="Tackle" colour="#dc2626" size="lg" disabled={!live} />
       </div>
+    </>
+  );
+}
+
+/**
+ * The QB, a runner and the defence. The move stick is always the first
+ * child of the same element, so switching between these pads (the QB
+ * pressing Run) never remounts it: the thumb holding it keeps its touch
+ * and keeps steering. Only the buttons beside it change.
+ */
+export function StickPad({ host }: { host: PhoneState }) {
+  const phone = usePhone();
+  return (
+    <div className={`fb-pad fb-pad--${host.pad}`}>
+      <div className="fb-pad__left">
+        <Joystick alwaysShown colour={colourOf(host)} onChange={(stick) => phone.move(stick)} />
+      </div>
+      {host.pad === "qb" && <QbControls host={host} />}
+      {host.pad === "runner" && <RunnerControls host={host} />}
+      {host.pad === "defense" && <DefenseControls host={host} />}
     </div>
   );
 }
 
-/** Between plays, or while someone else acts: the score and what is going on, and Skip during a replay. */
+/** Between plays, or while someone else acts: what is going on, and Skip during a replay. */
 export function WaitPad({ host }: { host: PhoneState }) {
   const agreed = host.skip?.agreed ?? false;
   return (

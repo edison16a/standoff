@@ -95,11 +95,16 @@ export class FootballPhone {
     this.send({ kind: "kick", value: Math.max(-1, Math.min(1, tap.value)) });
   }
 
-  /** The buttons on screen changed: whatever was held under the old layout is let go, so nothing sticks. */
-  letGo(): void {
+  /**
+   * The buttons on screen changed: whatever was held under the old layout
+   * is let go, so nothing sticks. The move stick is kept when it stays on
+   * screen, so a thumb steering through a switch (the QB pressing Run)
+   * keeps running.
+   */
+  letGo({ keepStick = false }: { keepStick?: boolean } = {}): void {
     for (const button of [...PAD_BUTTONS, "skip"]) this.pad.release(button);
     this.stopAim();
-    this.pad.setStick({ x: 0, y: 0 });
+    if (!keepStick) this.pad.setStick({ x: 0, y: 0 });
   }
 
   private sendAim(): void {
