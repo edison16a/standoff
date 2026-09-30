@@ -72,6 +72,9 @@ export class BrawlRenderer {
     if (state === this.match) return;
     this.clear();
     this.match = state;
+    // Each match runs its own clock from zero, so a filmed one looks the same however many came before.
+    this.time = 0;
+    this.cam.reset();
     this.stage = new StageScene(state.stage);
     this.scene.fog = this.stage.fog;
     this.world.add(this.stage.group);

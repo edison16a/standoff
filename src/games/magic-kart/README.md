@@ -76,7 +76,13 @@ The host draws every player's view with one WebGLRenderer and scissored viewport
 
 ## Home screen media
 
-The home screen's tile, still and looping clip are captured from `showcase/`, which plays real races with four computer karts and no room. Each shot is a seeded race, so it plays out the same way every time, and the computer karts are held in a tight pack so the camera always has close racing to show. The clip is one unbroken take on Sunny Shores with no cuts. A chase camera stays behind the pack the whole time. It swings wide as all four power slide through the bends with turbos firing, tucks in low as they hit the boost pads together, then climbs behind them as all four gliders open over the lagoon. Its last second fades into its first, so it loops without a jump. The race was picked from 200 seeds as the one where the pack stays closest. The camera's path is a list of keys in `showcase/shots.ts`, each a framing at a race time, and it glides from one to the next. The capture tool warms up for 3 seconds before it records, so the take starts that much early. Changing the driving model changes every seeded race, so the shots must be picked again after any change to `engine/`. The icon is Blaze under the wing over the lagoon, below the logo, and the poster is Nova and Blaze gliding side by side.
+The home screen's tile, still and looping clip are captured from `showcase/`, which plays real races with four computer karts and no room. Each shot is a seeded race, so it plays out the same way every time, and the computer karts are held in a tight pack so the camera always has close racing to show.
+
+The clip is a wordless trailer of fast cuts, each landing on a big moment. On Magma Peak the pack roars past the boost pads with flames out. In slow motion, low beside the pack, an orb hits Blaze as they launch off the ramp over the lava. The camera circles under Blaze's wing against the sunset, then Mochi takes an orb in mid air, again at half speed. Pip slides through a neon bend in Neo City into a turbo and is frozen solid by an ice throw, and the clip ends under all four gliders among the stars of Star Ring, which cuts back to the start. The plan runs exactly the 8 seconds the tool records, so the second it fades over the start is the start again and the loop has no seam. Cameras are close and low, and angles are measured from the road, so a kart spun by a hit does not whirl the camera round. A film grade and a vignette give the light more bite.
+
+The icon is Blaze, dazed by the orb, gliding over the lava, seen from below against the sunset above the logo. The poster is all four gliders among the stars with the ringed planet behind.
+
+The shots live in `showcase/plans.ts`: a map and seed, the race time a shot starts, how long it runs on screen, an optional slow motion rate and a camera rig. `showcase/shots.ts` holds the rig types and works out which shot is on at any moment. The capture tool warms up for 3 seconds before it records, so the loop starts its first shot then. Changing the driving model changes every seeded race, so the shots must be picked again after any change to `engine/`.
 
 With the dev server running:
 
@@ -84,4 +90,4 @@ With the dev server running:
 node tools/media/capture.mjs magic-kart --ffmpeg /path/to/ffmpeg
 ```
 
-The showcase clock ticks 60 times a second, as animation frames do. The capture tool records 30 frames a second, so every recorded frame shows a new moment and none is held. To change a shot, edit `showcase/shots.ts` and look at it at `/showcase/magic-kart?view=loop`.
+The showcase clock ticks 60 times a second, as animation frames do. The capture tool records 30 frames a second, so every recorded frame shows a new moment and none is held, and a half speed shot moves the race exactly one step a frame. To change a shot, edit `showcase/plans.ts` and look at it at `/showcase/magic-kart?view=loop`. In development, `?plan=` with a plan as JSON plays that plan instead, and `window.__magicKartShowcase.pin(seconds)` holds any moment.

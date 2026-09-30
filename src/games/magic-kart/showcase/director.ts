@@ -6,10 +6,8 @@ import { GameRenderer } from "../render/game-renderer";
 import { findTrack } from "../tracks";
 import { keepPackTogether } from "./pack";
 import { ShotCamera } from "./shot-camera";
-import { planLength, type Plan, type Shot } from "./shots";
+import { shotAt, type Plan, type Shot } from "./shots";
 
-/** A still starts playing this long before the moment it stops on, so sparks and the camera have settled. */
-const LEAD = 1.2;
 /** More steps than this in one frame is a jump in time, whose events would all burst at once. */
 const CATCH_UP = 6;
 /**
@@ -31,7 +29,6 @@ const FPS = 60;
 export class ShowcaseDirector {
   private readonly renderer: GameRenderer;
   private readonly rig = new ShotCamera();
-  private readonly length: number;
   private shot: Shot | null = null;
   private world: RaceWorld | null = null;
   private steps = 0;
@@ -47,7 +44,6 @@ export class ShowcaseDirector {
   constructor(canvas: HTMLCanvasElement, private readonly plan: Plan) {
     this.renderer = new GameRenderer(canvas);
     this.renderer.tags = false;
-    this.length = planLength(plan);
   }
 
   resize(width: number, height: number, dpr: number): void {
@@ -58,7 +54,7 @@ export class ShowcaseDirector {
   frame(nowMs: number): void {
     this.start ??= nowMs;
     const elapsed = this.pinned ?? Math.floor(((nowMs - this.start) / 1000) * FPS + 1e-6) / FPS;
-    const { shot, time } = this.at(elapsed);
+    const { shot, time } = shotAt(this.plan, elapsed);
     const target = Math.round(time / STEP);
     // A new shot, or the same one come round again in a loop of one.
     if (shot !== this.shot || target < this.steps) this.begin(shot);
@@ -72,7 +68,7 @@ export class ShowcaseDirector {
     if (time === this.drawn) return;
     const dt = this.drawn < 0 ? 0 : time - this.drawn;
     this.drawn = time;
-    this.rig.aim(world, shot.rig, dt);
+    this.rig.aim(world, shot.rig, dt, time);
     this.renderer.render([{ kartId: null, rect: { x: 0, y: 0, w: 1, h: 1 }, camera: this.rig.camera }], (shot.from + time) * 1000);
     // The capture tool steps its fake clock as fast as the page allows. Without waiting for each
     // frame to be drawn, a machine with no graphics card falls minutes behind and screenshots time out.
@@ -88,18 +84,6 @@ export class ShowcaseDirector {
   dispose(): void {
     Math.random = this.random;
     this.renderer.dispose();
-  }
-
-  /** Which shot is on and how far into it, for this long since the showcase began. */
-  private at(elapsed: number): { shot: Shot; time: number } {
-    const first = this.plan.shots[0]!;
-    if (this.plan.freeze !== undefined) return { shot: first, time: Math.min(this.plan.freeze, Math.max(0, this.plan.freeze - LEAD) + elapsed) };
-    let phase = elapsed % this.length;
-    for (const shot of this.plan.shots) {
-      if (phase < shot.length) return { shot, time: phase };
-      phase -= shot.length;
-    }
-    return { shot: first, time: 0 };
   }
 
   /**
