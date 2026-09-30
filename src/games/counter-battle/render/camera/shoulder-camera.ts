@@ -24,8 +24,8 @@ const MIN_WIDE = 70;
  * The over the shoulder camera for one player's view. It follows the way
  * the fighter faces (the brain turns them to the fight), stays clear of
  * cover by pulling in when a bunker is behind, and shows the gun's kick.
- * `pose` is the camera without the kick, which aiming uses, so recoil
- * never feeds back into where the player points.
+ * `pose` is the camera without the kick or the crouch, which aiming
+ * uses, so neither recoil nor a duck ever moves what the player points at.
  */
 export class ShoulderCamera {
   readonly camera = new THREE.PerspectiveCamera(FOV, 1, 0.08, 900);
@@ -95,7 +95,8 @@ export class ShoulderCamera {
     const wide = Math.max(1, (2 * Math.atan(Math.tan((MIN_WIDE * Math.PI) / 360) / this.pose.aspect) * 180) / Math.PI / FOV);
     this.pose.fov = approach(this.pose.fov, (FOV + (SCOPE_FOV - FOV) * scoped) * wide, 5, dt);
     this.pose.x = pivot.x - fx * this.boom;
-    this.pose.y = pivot.y;
+    // Aiming keeps the standing height: ducking lowers the view, never the aim.
+    this.pose.y = eyeHeight(0) + lift;
     this.pose.z = pivot.z - fz * this.boom;
     this.pose.yaw = yaw;
     this.pose.pitch = PITCH - out * 0.4;
@@ -104,10 +105,10 @@ export class ShoulderCamera {
     const jitter = this.shake * this.shake * 0.02;
     const kickPitch = f.gun.kick.pitch * 0.45 + Math.sin(time * 71) * jitter;
     const kickYaw = f.gun.kick.yaw * 0.35 + Math.sin(time * 53) * jitter;
-    this.camera.position.set(this.pose.x, this.pose.y, this.pose.z);
+    this.camera.position.set(this.pose.x, pivot.y, this.pose.z);
     const p = this.pose.pitch + kickPitch;
     const y = yaw + kickYaw;
-    this.camera.lookAt(this.pose.x + Math.sin(y) * Math.cos(p), this.pose.y + Math.sin(p), this.pose.z + Math.cos(y) * Math.cos(p));
+    this.camera.lookAt(this.pose.x + Math.sin(y) * Math.cos(p), pivot.y + Math.sin(p), this.pose.z + Math.cos(y) * Math.cos(p));
     if (Math.abs(this.camera.fov - this.pose.fov) > 0.01) {
       this.camera.fov = this.pose.fov;
       this.camera.updateProjectionMatrix();

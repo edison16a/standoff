@@ -53,6 +53,8 @@ export interface Fighter {
   look: number;
   /** Where the player is aiming, before the kick: world yaw and pitch. */
   aim: { yaw: number; pitch: number };
+  /** The point a player's phone picked in the world, or null when aimed by angles (a bot). */
+  aimPoint: V3 | null;
   pose: Pose;
   /** 0 standing to 1 crouched, eased so the body never snaps. */
   crouch: number;
@@ -97,6 +99,7 @@ export function createFighter(id: number, setup: FighterSetup): Fighter {
     vel: { x: 0, z: 0 },
     look: 0,
     aim: { yaw: 0, pitch: 0 },
+    aimPoint: null,
     pose: "stand",
     crouch: 0,
     health: RULES.health,
@@ -137,6 +140,15 @@ export function eyeOf(f: Fighter): V3 {
   return { x: f.pos.x, y: mix(BODY.standEye, BODY.crouchEye, f.crouch), z: f.pos.z };
 }
 
+/**
+ * The eye a player's aim and crosshair are worked out from: always at
+ * standing height, so ducking never moves what the crosshair is on. A
+ * crouched player cannot shoot until they are up anyway.
+ */
+export function aimEye(f: Fighter): V3 {
+  return { x: f.pos.x, y: BODY.standEye, z: f.pos.z };
+}
+
 /** Points a shooter looks for: chest and head. */
 export function targetPoints(f: Fighter): { chest: V3; head: V3 } {
   const { top, head } = hitShape(f);
@@ -149,6 +161,7 @@ export function resetFighter(f: Fighter, pos: V2, look: number, spot: number): v
   f.vel = { x: 0, z: 0 };
   f.look = look;
   f.aim = { yaw: look, pitch: 0 };
+  f.aimPoint = null;
   f.pose = "stand";
   f.crouch = 0;
   f.health = RULES.health;

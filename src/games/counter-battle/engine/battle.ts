@@ -4,7 +4,7 @@ import { BotAim } from "./bot-aim";
 import { updateBrain, type BrainWorld } from "./brain";
 import { buildCover, nearestSpot, type CoverGraph } from "./cover";
 import type { BattleEvent } from "./events";
-import { createFighter, eyeOf, isBot, resetFighter, type Fighter, type FighterSetup, type TeamId } from "./fighter";
+import { aimEye, createFighter, eyeOf, isBot, resetFighter, type Fighter, type FighterSetup, type TeamId } from "./fighter";
 import type { GunEvent } from "./gun-state";
 import { newMatch, sideOf, tickMatch, type MatchState } from "./match";
 import { Rng } from "./rng";
@@ -60,17 +60,21 @@ export class Battle {
   /** Where a human aims, as world yaw and pitch. */
   setAim(id: number, yaw: number, pitch: number): void {
     const f = this.get(id);
-    if (f) f.aim = { yaw, pitch: Math.max(-1.2, Math.min(1.2, pitch)) };
+    if (!f) return;
+    f.aim = clampAim(yaw, pitch);
+    f.aimPoint = null;
   }
 
-  /** Aims a fighter's gun at a point in the world, from its own eye. */
+  /**
+   * Aims a player's gun at a point in the world. The angles come from the
+   * standing eye, so a crouch never swings them; the shot itself is aimed
+   * from wherever the eye is when it goes.
+   */
   aimAt(id: number, point: V3): void {
     const f = this.get(id);
     if (!f) return;
-    const eye = eyeOf(f);
-    const dx = point.x - eye.x;
-    const dz = point.z - eye.z;
-    this.setAim(id, Math.atan2(dx, dz), Math.atan2(point.y - eye.y, Math.hypot(dx, dz)));
+    f.aim = anglesTo(aimEye(f), point);
+    f.aimPoint = { ...point };
   }
 
   /**
@@ -178,7 +182,9 @@ export class Battle {
 
   private fire(f: Fighter, events: BattleEvent[]): "fired" | "dry" | "wait" {
     // The shot goes where the barrel points now; its own kick lands after.
-    const aim = { yaw: f.aim.yaw + f.gun.kick.yaw, pitch: f.aim.pitch + f.gun.kick.pitch };
+    // A player's phone picked a point, so the shot heads there from the eye as it is now.
+    const base = f.aimPoint && !this.bots.has(f.id) ? anglesTo(eyeOf(f), f.aimPoint) : f.aim;
+    const aim = { yaw: base.yaw + f.gun.kick.yaw, pitch: base.pitch + f.gun.kick.pitch };
     const cone = coneOf(f);
     const result = f.gun.trigger(this.time, this.rng);
     if (result === "fired") events.push(...resolveShot(f, aim, cone, { pieces: this.pieces, fighters: this.fighters, rng: this.rng, now: this.time }));
@@ -200,6 +206,14 @@ export class Battle {
     }
     for (const bot of this.bots.values()) bot.reset();
   }
+}
+
+const clampAim = (yaw: number, pitch: number) => ({ yaw, pitch: Math.max(-1.2, Math.min(1.2, pitch)) });
+
+function anglesTo(eye: V3, point: V3): { yaw: number; pitch: number } {
+  const dx = point.x - eye.x;
+  const dz = point.z - eye.z;
+  return clampAim(Math.atan2(dx, dz), Math.atan2(point.y - eye.y, Math.hypot(dx, dz)));
 }
 
 function gunEvent(f: Fighter, e: GunEvent): BattleEvent {
