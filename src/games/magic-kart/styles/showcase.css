@@ -23,12 +23,7 @@
   pointer-events: none;
 }
 
-.mk-showcase--icon .mk-showcase .mk-canvas {
-  /* A film grade: harder contrast and richer colour, for dramatic light. */
-  filter: contrast(1.14) saturate(1.18);
-}
-
-.mk-showcase__shade {
+.mk-showcase--icon .mk-showcase__shade {
   background: linear-gradient(0deg, rgba(12, 6, 36, 0.82) 0%, rgba(12, 6, 36, 0.35) 30%, transparent 48%),
     radial-gradient(110% 90% at 50% 40%, transparent 55%, rgba(8, 5, 26, 0.5) 100%);
 }
