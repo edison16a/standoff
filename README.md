@@ -19,7 +19,7 @@ The home screen works like a console menu. Big tiles show each game, and the cho
 3. **Set up.** Each phone walks through the same few pages: calibrate, the game's own choice (a kart, a gun, a build, a fighter), then **Ready**. Every page fits one phone screen without scrolling.
 4. **Play.** The computer is the big screen and the referee. The phones are the controllers.
 
-**Phone games** use the phone in one of three ways:
+**Phone games** use the phone in one of four ways:
 
 * **As a pointer.** Hold it flat like a remote and aim at the screen: Fruit Slicer, Zombie Survival, Shooting Gallery and Paintball Battle.
 * **As a sword.** Hold it like the handle and swing: Blade Clash.
