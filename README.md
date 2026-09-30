@@ -8,7 +8,7 @@ Open it on a laptop or a TV. Everyone scans the QR code, types a name, and plays
 
 I loved the Wii, the PS5 and the Xbox, but there were never enough controllers, and I can't bring my Xbox everywhere. Everyone already carries a phone full of motion sensors, and almost every laptop has a camera. Standoff puts them to work.
 
-<img src="docs/screenshots/home.jpg" alt="The Standoff home screen in dark mode, with a row of game tiles along the top and the chosen game's clip playing behind" width="100%" />
+<img src="docs/screenshots/home.jpg" alt="The Standoff home screen in dark mode, with Magic Kart chosen in the row of game tiles and its race clip playing behind" width="100%" />
 
 The home screen works like a console menu. Big tiles show each game, and the chosen one grows and gets a ring in its own colour. A clip of the game really being played fills the screen behind it, with a warm lobby tune and menu sounds. Arrow keys, clicks or taps move along the row, and it loops round like a carousel.
 
@@ -96,7 +96,7 @@ A rhythm platformer played by jumping for real. Your jump is the cube's jump, on
 
 ### Blade Clash
 
-<img src="docs/screenshots/blade-clash.jpg" alt="Two fighters crossing swords in the arena" width="100%" />
+<img src="docs/screenshots/blade-clash.jpg" alt="The Knight and the Star Knight throwing sparks as their blades clash in the arena" width="100%" />
 
 A sword duel where your phone is the sword. It moves in full 3D on screen as you move it: swing, thrust, and hold your blade in the way to block. Blades that meet clash in sparks. Four fighters (the Knight, the Samurai, the Block Hero and the Star Knight), a split screen view over each shoulder, slow motion on every hit, and first to five wins. Play a friend or the computer.
 
