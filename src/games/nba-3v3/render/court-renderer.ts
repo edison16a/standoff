@@ -12,6 +12,7 @@ import { CeremonyStage } from "./ceremony/ceremony-stage";
 import type { Ceremony } from "../engine/ceremony";
 import { Referee } from "./referee";
 import { Effects } from "./effects/effects";
+import { applyFilmLook, type CinemaLook } from "./film-look";
 import { broadcastShot, lineScene, pressureOn } from "./scene-read";
 import { TvCamera, type Shot } from "./tv-camera";
 
@@ -25,14 +26,6 @@ export interface Quality {
   reflections?: boolean;
   /** The most device pixels drawn per CSS pixel. */
   maxPixelRatio?: number;
-}
-
-/** How the showcase grades its film: its own lights, the arena's fill and key scaled, and the haze's density. */
-export interface CinemaLook {
-  lights?: readonly THREE.Object3D[];
-  fill?: number;
-  key?: number;
-  haze?: number;
 }
 
 /** For computers that draw WebGL in software: a smaller picture without antialiasing or shadows. */
@@ -120,21 +113,9 @@ export class CourtRenderer {
     this.tv.fixed = this.replayCam;
   }
 
-  /**
-   * The showcase's film look: less fill and a harder rim light, so the
-   * players stand out of a darker arena, thicker haze to sink the stands,
-   * and no LED ribbons, whose words would read as captions in a wordless
-   * trailer. A still adds its own lights and darkens further.
-   */
+  /** The showcase's film look (film-look.ts). */
   cinematic(look: CinemaLook = {}): void {
-    const { lights = [], fill = 0.45, key = 1, haze = 0.028 } = look;
-    if (lights.length) this.scene.add(...lights);
-    this.keyLight *= key;
-    this.arena.fill.intensity *= fill;
-    this.arena.rim.intensity *= 2.6;
-    this.arena.ribbons.visible = false;
-    this.renderer.toneMappingExposure = 1.12;
-    this.scene.fog = new THREE.FogExp2("#060812", haze);
+    this.keyLight *= applyFilmLook(this.scene, this.renderer, this.arena, look);
   }
 
   /** The trophy ceremony to show, run by the host, or null. It takes over the camera while it runs. */
