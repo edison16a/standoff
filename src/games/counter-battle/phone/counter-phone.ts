@@ -17,6 +17,9 @@ export class CounterPhone {
   readonly aim: PhoneAim;
   private held = false;
   private ducked = false;
+  /** Which of ADVANCE and RETREAT are held; both at once cancel out. */
+  private readonly steps = { advance: false, retreat: false };
+  private dir = 0;
   private flashKey = 0;
   private readonly unsubscribe: () => void;
 
@@ -28,8 +31,7 @@ export class CounterPhone {
   }
 
   dispose(): void {
-    this.releaseTrigger();
-    this.crouch(false);
+    this.releaseAll();
     this.aim.dispose();
     this.unsubscribe();
   }
@@ -91,6 +93,25 @@ export class CounterPhone {
     this.send({ kind: "crouch", down });
   }
 
+  /** ADVANCE or RETREAT going down or up. The host hears only the way the fighter should go. */
+  step(which: "advance" | "retreat", down: boolean): void {
+    if (this.steps[which] === down) return;
+    this.steps[which] = down;
+    if (down) buzz("tap");
+    const dir = (this.steps.advance ? 1 : 0) - (this.steps.retreat ? 1 : 0);
+    if (dir === this.dir) return;
+    this.dir = dir;
+    this.send({ kind: "move", dir: dir as -1 | 0 | 1 });
+  }
+
+  /** Lets go of every held button, as when the page loses focus. */
+  releaseAll(): void {
+    this.releaseTrigger();
+    this.crouch(false);
+    this.step("advance", false);
+    this.step("retreat", false);
+  }
+
   reload(): void {
     this.click();
     this.send({ kind: "reload" });
@@ -117,8 +138,7 @@ export class CounterPhone {
     const before = store.getState().host;
     // Back in the lobby after a match: pick up at the gun, still calibrated.
     if (before && before.phase !== "lobby" && message.phase === "lobby") {
-      this.releaseTrigger();
-      this.crouch(false);
+      this.releaseAll();
       store.setState({ step: store.getState().calibrated ? 2 : 0 });
     }
     if (!before && message.gun) store.setState({ wanted: message.gun });
