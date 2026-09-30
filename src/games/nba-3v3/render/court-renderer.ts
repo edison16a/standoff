@@ -27,6 +27,14 @@ export interface Quality {
   maxPixelRatio?: number;
 }
 
+/** How the showcase grades its film: its own lights, the arena's fill and key scaled, and the haze's density. */
+export interface CinemaLook {
+  lights?: readonly THREE.Object3D[];
+  fill?: number;
+  key?: number;
+  haze?: number;
+}
+
 /** For computers that draw WebGL in software: a smaller picture without antialiasing or shadows. */
 export const LOW_QUALITY: Quality = { antialias: false, shadows: false, maxPixelRatio: 0.6 };
 
@@ -56,7 +64,7 @@ export class CourtRenderer {
   private readonly pixel = new Uint8Array(4);
   private readonly replayCam = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 50 };
   private readonly ceremony = new CeremonyStage();
-  private readonly keyLight: number;
+  private keyLight: number;
   /** The name across a player's back, or null for the build's own. The host sets it to people's names. */
   jerseyName: (a: Athlete) => string | null = () => null;
 
@@ -110,6 +118,23 @@ export class CourtRenderer {
     this.replayCam.look.set(cam.look.x, cam.look.y, cam.look.z);
     this.replayCam.fov = cam.fov;
     this.tv.fixed = this.replayCam;
+  }
+
+  /**
+   * The showcase's film look: less fill and a harder rim light, so the
+   * players stand out of a darker arena, thicker haze to sink the stands,
+   * and no LED ribbons, whose words would read as captions in a wordless
+   * trailer. A still adds its own lights and darkens further.
+   */
+  cinematic(look: CinemaLook = {}): void {
+    const { lights = [], fill = 0.45, key = 1, haze = 0.028 } = look;
+    this.scene.add(...lights);
+    this.keyLight *= key;
+    this.arena.fill.intensity *= fill;
+    this.arena.rim.intensity *= 2.6;
+    this.arena.ribbons.visible = false;
+    this.renderer.toneMappingExposure = 1.12;
+    this.scene.fog = new THREE.FogExp2("#060812", haze);
   }
 
   /** The trophy ceremony to show, run by the host, or null. It takes over the camera while it runs. */
