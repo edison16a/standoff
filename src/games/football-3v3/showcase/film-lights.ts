@@ -31,6 +31,11 @@ export class FilmLights {
     scene.add(this.rim, this.rim.target, this.key, this.key.target);
   }
 
+  /** Scales the warm key, so a still can light the hero's front brighter than the film does. */
+  setKey(scale: number): void {
+    this.key.intensity = 0.9 * scale;
+  }
+
   /** Places the lights for a camera at `pos` looking at `look`. */
   aim(pos: THREE.Vector3, look: THREE.Vector3): void {
     this.back.subVectors(look, pos).setY(0);

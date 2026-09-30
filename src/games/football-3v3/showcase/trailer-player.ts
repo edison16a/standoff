@@ -71,6 +71,7 @@ export class TrailerPlayer {
     this.pos.set(cam.pos.x, cam.pos.y, cam.pos.z);
     this.look.set(cam.look.x, cam.look.y, cam.look.z);
     this.renderer.director.setFixed(this.pos, this.look, cam.fov);
+    this.lights.setKey(typeof still === "number" ? 1 : (still.key ?? 1));
     this.lights.aim(this.pos, this.look);
     this.renderer.draw(view, this.anim * 1000);
   }
