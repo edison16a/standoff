@@ -126,7 +126,7 @@ While a run is going, the host's hidden admin panel (three quick taps on the set
 The icon is the runner leaping high over a low lens with the inspector and dog right behind, over the logo. The poster is the same chase from further back as a train rolls in on the next track. Both are graded a little like a film still: more contrast and colour and a dark edge. `?cut={...}` on `/showcase/subway-surfers` films any one moment of any seed, in development only. To capture again, with the dev server running:
 
 ```sh
-node tools/media/capture.mjs subway-surfers --url http://localhost:3000 --ffmpeg ffmpeg --size 1280x720
+node tools/media/capture.mjs subway-surfers --url http://localhost:3000 --ffmpeg ffmpeg --size 1280x720 --max-mb 3.7
 ```
 
-The clip in `public/games/subway-surfers/` is kept at 1280 by 720, so both files stay under 3.9 MB.
+The clip in `public/games/subway-surfers/` is kept at 1280 by 720, and the tool counts its cap in MiB, so `--max-mb 3.7` keeps both files under 3.9 MB.
