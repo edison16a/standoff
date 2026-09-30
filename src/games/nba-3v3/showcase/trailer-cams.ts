@@ -46,10 +46,10 @@ const AIMS: Record<TrailerCam, Aim> = {
     out.look.set(cx, 0.95, cz);
     out.fov = 40;
   },
-  // On the floor by the baseline, on his side of the rim, looking up as he leaves the ground.
+  // On the floor under the glass, looking up and out as he leaves the ground.
   rise: (m, u, g, out) => {
-    between(out.pos, [-2.6, 0.45, 0.7], [-2.25, 0.5, 0.95], ease(u / 1.2));
-    out.look.set(-0.5, 2.3, 2.2);
+    between(out.pos, [0.95, 0.42, 0.25], [0.75, 0.48, 0.45], ease(u / 1.2));
+    out.look.set(-0.7, 2.2, 2.4);
     out.fov = 54;
   },
   // Round the other side, level with the rim, as the windmill comes down.
