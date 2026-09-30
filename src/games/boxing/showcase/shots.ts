@@ -3,7 +3,7 @@ import type { Match } from "../engine/match";
 import type { ShoulderCamera } from "../render/cameras/shoulder-camera";
 import type { Spot, TvCamera } from "../render/cameras/tv-camera";
 import type { Ceremony } from "../render/victory/ceremony";
-import { CYCLE_S } from "./trailer";
+import { CEREMONY_AT, CYCLE_S, JUMP_AT } from "./timeline";
 
 /** What a shot can frame: the fight, both cameras and the ceremony. */
 export interface ShotRig {
@@ -33,29 +33,33 @@ function side(fov: number, swing: number, distance: number, height: number, look
   };
 }
 
+/** The red corner's own view over his shoulder, as the player sees the fight. */
+function shoulderView({ match, shoulder }: ShotRig, _k: number, dt: number, cut: boolean): THREE.PerspectiveCamera {
+  const [a, b] = match.footwork.spots;
+  shoulder.camera.fov = 48;
+  shoulder.camera.updateProjectionMatrix();
+  shoulder.update(a, b, dt, 0, cut);
+  return shoulder.camera;
+}
+
 /**
  * The trailer, cut by cut. Close and low through the exchange so every
- * punch fills the frame, the red corner's own view for the counter, a
- * push in on the red boxer's face as he loads the hook, the blow itself
- * tight in slow motion, the fall from the canvas, and a low angle up at
- * the champion as the belt goes over his head.
+ * punch fills the frame, the red corner's own view for the counter, the
+ * body shot and the first knockdown from low down, a cut over the count
+ * back to the player's view, a push in on the red boxer's face as he
+ * loads the hook, the blow itself tight in slow motion, the fall from
+ * the canvas, and a low angle up at the champion as the belt goes over
+ * his head.
  */
 const SHOTS: readonly Shot[] = [
   { until: 1.25, place: (rig, k, dt) => side(28, 0.35 + k * 0.12, 2.3, 1.05, 1.5, 0.4)(rig, k, dt) },
-  {
-    until: 2.45,
-    place: ({ match, shoulder }, _k, dt, cut) => {
-      const [a, b] = match.footwork.spots;
-      shoulder.camera.fov = 48;
-      shoulder.camera.updateProjectionMatrix();
-      shoulder.update(a, b, dt, 0, cut);
-      return shoulder.camera;
-    },
-  },
-  { until: 3.55, place: (rig, k, dt) => side(34, Math.PI - 0.5 + k * 0.1, 2.5, 0.55, 1.3, 0.55)(rig, k, dt) },
-  { until: 5.15, place: (rig, k, dt) => side(27 - k * 3, -0.95 + k * 0.1, 2.3 - k * 0.3, 1.35, 1.55, 0.3)(rig, k, dt) },
-  { until: 5.95, place: (rig, k, dt) => side(24, 0.2 + k * 0.05, 1.7, 1.45, 1.52, 0.78)(rig, k, dt) },
-  { until: 7.3, place: (rig, k, dt) => side(36, -1.05 + k * 0.15, 2.6, 0.35, 0.9, 0.9)(rig, k, dt) },
+  { until: 2.45, place: shoulderView },
+  { until: 3.2, place: (rig, k, dt) => side(34, Math.PI - 0.5 + k * 0.1, 2.5, 0.55, 1.3, 0.55)(rig, k, dt) },
+  { until: JUMP_AT, place: (rig, k, dt) => side(32, 0.5 + k * 0.12, 2.5, 0.45, 1.2 - k * 0.25, 0.62)(rig, k, dt) },
+  { until: 5.45, place: shoulderView },
+  { until: 6.15, place: (rig, k, dt) => side(27 - k * 3, -0.95 + k * 0.1, 2.3 - k * 0.3, 1.35, 1.55, 0.3)(rig, k, dt) },
+  { until: 7.0, place: (rig, k, dt) => side(24, 0.2 + k * 0.05, 1.7, 1.45, 1.52, 0.78)(rig, k, dt) },
+  { until: CEREMONY_AT, place: (rig, k, dt) => side(36, -1.05 + k * 0.15, 2.6, 0.35, 0.9, 0.9)(rig, k, dt) },
   {
     until: Infinity,
     place: ({ tv, ceremony }, k, dt) => {
