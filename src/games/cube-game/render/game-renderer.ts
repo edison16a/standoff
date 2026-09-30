@@ -87,6 +87,11 @@ export class GameRenderer {
     this.effects.clear();
   }
 
+  /** Clears sparks and trails, for a showcase cut to another moment of the same level. */
+  clearEffects(): void {
+    this.effects.clear();
+  }
+
   /** Showcase shots frame the players closer than play does. */
   setFraming(framing: Framing | null): void {
     for (const camera of this.cameras) camera.framing = framing;

@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { ShowcaseView } from "@/platform/games/game-api";
-import { PLANS, ShowcaseDirector, type Plan } from "./director";
+import { STILLS, TRAILER } from "./cuts";
+import { ShowcaseDirector } from "./director";
 import { FinishPreview, type FinishSample } from "./FinishPreview";
 import { Logo } from "./Logo";
+import type { Cut } from "./timeline";
 
 const SAMPLES: readonly string[] = ["solo", "race", "tie", "early"];
 
@@ -26,9 +28,11 @@ function Run({ view }: { view: ShowcaseView }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    // Tuning scripts can pick any moment of any level with ?plan={...}. Development builds only.
+    // Tuning scripts can film any moment of any level with ?plan={...}, as one cut. Development builds only.
     const custom = process.env.NODE_ENV === "development" ? new URLSearchParams(window.location.search).get("plan") : null;
-    const director = new ShowcaseDirector(canvas, custom ? { ...PLANS[view], ...(JSON.parse(custom) as Partial<Plan>) } : PLANS[view]);
+    const base: Cut = view === "loop" ? { ...TRAILER[0]!, seconds: 60 } : STILLS[view];
+    const cuts = custom ? [{ ...base, ...(JSON.parse(custom) as Partial<Cut>) }] : view === "loop" ? TRAILER : [base];
+    const director = new ShowcaseDirector(canvas, cuts, view !== "loop");
     const fit = () => director.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
     fit();
     const observer = new ResizeObserver(fit);
