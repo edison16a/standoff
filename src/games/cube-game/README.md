@@ -86,7 +86,7 @@ While a round runs, three quick taps on the settings gear open the host's admin 
 
 The clip is a wordless eight second trailer of the demon levels, cut from a computer player's perfect runs (`showcase/cuts.ts`). It opens on Inferno Gate's speed arrows, catches the pad and orb in slow motion, flips into Neon Abyss's ball mode, dives through Core Meltdown's UFO portal from a low tilted angle, slows right down as Inferno Gate's UFO hits its ball portal, lands the UFO back as a cube in Neon Abyss and pulls wide on one last portal. Each cut sets its own camera: how close, a swing ahead or behind, a low eye and a tilt, with an eased push in or out (`render/view-camera.ts` takes these for the showcase only). The cuts add up to exactly eight seconds and repeat, so the clip loops without a seam. Slow motion slows the sparks and the beat too, since they run on level time.
 
-The icon is the cube bursting out of Inferno Gate's orb high above the red sun, from low with a tilt, over the logo. The poster is Neon Abyss's UFO slipping through its green portal between the towers. To capture again, with the dev server running:
+The icon works as a game cover: the cube big and close with its face to us, leaping Inferno Gate's first spikes in front of the red sun, from low with a tilt, over the logo. The cut sets `settle`, so the camera holds the icon's own framing through the preroll and a still never keeps play's height. The poster is Neon Abyss's UFO slipping through its green portal between the towers. To capture again, with the dev server running:
 
 ```sh
 node tools/media/capture.mjs cube-game --url http://localhost:3000 --ffmpeg ffmpeg
