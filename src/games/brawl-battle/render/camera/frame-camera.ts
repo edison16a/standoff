@@ -12,6 +12,20 @@ export interface Subject {
 }
 
 /**
+ * A directed shot for the showcase: the point to look at, how far back
+ * to stand, and optionally a turn off the side view (`yaw`, radians), a
+ * rise or drop of the camera in metres (`lift`) and a field of view.
+ */
+export interface FixedShot {
+  x: number;
+  y: number;
+  distance: number;
+  yaw?: number;
+  lift?: number;
+  fov?: number;
+}
+
+/**
  * The side on camera. It frames every fighter still in play and zooms
  * smoothly as they spread out or bunch up. It opens wide and swoops in
  * for the countdown, closes in on the winner at the end, and shakes on
@@ -29,12 +43,19 @@ export class FrameCamera {
   /** The share of the screen's height the HUD covers along the bottom, kept clear of fighters. */
   hidden = 0;
   /** A fixed shot for the showcase's hero frames, or null to follow the fight. */
-  fixed: { x: number; y: number; distance: number } | null = null;
+  fixed: FixedShot | null = null;
 
   setAspect(aspect: number): void {
     this.aspect = aspect;
     this.camera.aspect = aspect;
     this.camera.updateProjectionMatrix();
+  }
+
+  /** Forgets shake, push in and the shake clock, so a new match starts calm and a filmed one starts the same every time. */
+  reset(): void {
+    this.trauma = 0;
+    this.punchPower = 0;
+    this.time = 0;
   }
 
   /** Adds screen shake, 0 to 1. Shakes add up but never past full. */
@@ -56,7 +77,8 @@ export class FrameCamera {
     this.time += dt;
     const want = this.fixed ?? fit(frameBox(subjects, stage, opts.close ? 7 : undefined), FOV, this.aspect, this.hidden);
     const distance = this.fixed ? want.distance : want.distance * (opts.zoom ?? 1);
-    const k = opts.snap ? 1 : 1 - Math.exp(-(opts.close ? 1.6 : 2.6) * dt);
+    // A directed shot is placed exactly where the showcase asks; only the fight camera eases.
+    const k = opts.snap || this.fixed ? 1 : 1 - Math.exp(-(opts.close ? 1.6 : 2.6) * dt);
     this.at.x += (want.x - this.at.x) * k;
     this.at.y += (want.y - this.at.y) * k;
     this.distance += (distance - this.distance) * k;
@@ -70,7 +92,13 @@ export class FrameCamera {
     const t = this.time;
     const sx = (Math.sin(t * 73) + Math.sin(t * 131) * 0.5) * shake * 0.5;
     const sy = (Math.cos(t * 67) + Math.sin(t * 117) * 0.5) * shake * 0.5;
-    this.camera.position.set(lookX + sx, lookY + dist * TILT + sy, dist);
+    const yaw = this.fixed?.yaw ?? 0;
+    const fov = this.fixed?.fov ?? FOV;
+    if (this.camera.fov !== fov) {
+      this.camera.fov = fov;
+      this.camera.updateProjectionMatrix();
+    }
+    this.camera.position.set(lookX + sx + Math.sin(yaw) * dist, lookY + dist * TILT + (this.fixed?.lift ?? 0) + sy, Math.cos(yaw) * dist);
     this.camera.lookAt(lookX + sx * 0.5, lookY + sy * 0.5, 0);
     this.camera.rotateZ(Math.sin(t * 41) * shake * 0.02);
   }
