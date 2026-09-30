@@ -32,7 +32,7 @@ export function LobbyPanel() {
           </li>
         ))}
       </ul>
-      <DifficultyPicker level={level} onChange={(next) => session.setLevel(next)} />
+      <DifficultyPicker label="Zombie difficulty" level={level} onChange={(next) => session.setLevel(next)} />
       <button type="button" className="btn btn--primary btn--lg zs-lobby__start" disabled={ready === 0} onClick={() => session.start()}>
         {ready === 0 ? "Waiting for someone to be ready" : ready === here.length ? "Start" : `Start with ${ready} ready`}
       </button>
