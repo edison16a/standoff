@@ -4,7 +4,7 @@ import * as THREE from "three";
 import type { ShowcaseView } from "@/platform/games/game-api";
 import { buildView } from "../engine/view";
 import { MatchRenderer } from "../render/match-renderer";
-import { stillLights } from "./still-lights";
+import { iconLights, stillLights } from "./still-lights";
 import { stillScene } from "./stills";
 import { Trailer } from "./trailer";
 
@@ -22,7 +22,8 @@ function trailerFrames(renderer: MatchRenderer, params: URLSearchParams): { fram
 /** The icon and the poster: the match frozen at its moment, lit hard and posed. */
 function stillFrames(renderer: MatchRenderer, view: Exclude<ShowcaseView, "loop">, params: URLSearchParams): { frame: Frame; resized(): void } {
   const still = stillScene(view);
-  renderer.cinematic({ lights: stillLights(still.subject), ambient: 0.25, key: 0.5, haze: 40 });
+  const lights = still.facing ? iconLights(still.subject, still.facing) : stillLights(still.subject);
+  renderer.cinematic({ lights, ambient: 0.25, key: 0.5, haze: still.haze });
   const { pos, look, fov } = still.pose;
   // Development: pin the camera anywhere, to try framings: cam=x,y,z,lookX,lookY,lookZ,fov.
   const cam = params.get("cam")?.split(",").map(Number);
