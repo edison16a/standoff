@@ -16,20 +16,22 @@ export interface Still {
 }
 
 /**
- * The key art. The icon is a cover: from low in the road behind the pack,
- * the team faces the viewer from the back of the truck, every gun turned
- * down on the dead crowding the tailgate, each at one on its own side so
- * none points across the team. The poster is the wide chase from the
- * side of the road, as the rifle drops the nearest runner.
+ * The key art. The icon is a cover: from low on the road just off the
+ * tailgate, the team faces the viewer as a runner leaps at the truck and
+ * meets the shotgun in the air. The others are each held on a runner on
+ * their own side, so every gun points out at the dead and none across
+ * the team. The poster is the wide chase from the side of the road, as
+ * the rifle drops the nearest runner.
  */
 export const STILLS: Record<"icon" | "poster", Still> = {
   icon: {
-    story: 7.12,
+    story: 6.365,
     runUp: 0.6,
     seed: 21,
-    aims: { 1: 14, 2: 10, 3: 13, 4: 2 },
-    key: 32,
-    camera: (t) => ({ position: [t.x + 0.3, 1.8, t.z + 16], lookAt: [t.x - 0.05, 1.6, t.z + 2.1], fov: 17, roll: 0.03 }),
+    // The shotgun keeps the story's own kill on the leaper. The right hand guns take the runner reaching in on the right.
+    aims: { 2: 10, 3: 13, 4: 10 },
+    key: 40,
+    camera: (t) => ({ position: [t.x + 2.4, 0.3, t.z + 6], lookAt: [t.x - 0.3, 1.5, t.z + 2], fov: 52, roll: 0.06 }),
   },
   poster: {
     story: 2.305,
