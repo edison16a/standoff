@@ -19,3 +19,19 @@ export function stillLights(subject: THREE.Vector3): THREE.Object3D[] {
     ...spot("#7fb2ff", 110, new THREE.Vector3(subject.x + 2.5, 6.5, subject.z - 4.5), subject, 0.42),
   ];
 }
+
+/**
+ * The icon's lighting, for a player running at the camera along `facing`
+ * (a flat unit direction): the warm key comes from high in front of him,
+ * a little to one side, to light his face and chest, and two cold spots
+ * from behind cut a rim along both shoulders.
+ */
+export function iconLights(subject: THREE.Vector3, facing: { x: number; z: number }): THREE.Object3D[] {
+  const at = (ahead: number, side: number, up: number) =>
+    new THREE.Vector3(subject.x + facing.x * ahead - facing.z * side, subject.y + up, subject.z + facing.z * ahead + facing.x * side);
+  return [
+    ...spot("#ffd6a0", 70, at(5, 2, 4.5), subject, 0.3),
+    ...spot("#7fb2ff", 150, at(-5, 3.5, 4.5), subject, 0.4),
+    ...spot("#9fc4ff", 110, at(-5, -3.5, 4), subject, 0.4),
+  ];
+}

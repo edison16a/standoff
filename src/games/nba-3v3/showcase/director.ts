@@ -5,6 +5,7 @@ import { CourtRenderer } from "../render/court-renderer";
 import { followCamera, readDev, type DevOptions, type Film } from "./dev";
 import { FILMED_FRAME, FilmClock } from "./film-clock";
 import { stillLights } from "./still-lights";
+import { ICON_AT, ICON_CAMERA, IconFilm, iconLook } from "./icon-film";
 import { HighlightScript } from "./script";
 
 /**
@@ -16,10 +17,10 @@ const LEAD: Record<ShowcaseView, number> = { loop: -2.7, poster: 0, icon: 0 };
 
 /**
  * The poster and the icon are single frames, so the film is run this far
- * ahead without drawing and then held: the Dunker at the top of his
- * windmill, the Lockdown defender reaching up under him.
+ * ahead without drawing and then held. The poster is the Dunker at the
+ * top of his windmill; the icon has its own film (icon-film.ts).
  */
-const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 2.6, icon: 2.6 };
+const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 2.6, icon: ICON_AT };
 
 /**
  * The loop plays behind the home screen, so it draws a little under full
@@ -30,13 +31,13 @@ const LOOP_PIXELS = 0.8;
 /** A held still is drawn once, and again after a resize, so the capture waits on as little as possible. */
 const STILL_DRAWS = 1;
 
-/** The stills' hero angles: low in front of the lane, looking up at the dunk over the defender. */
+/** The poster's hero angle is low in front of the lane, looking up at the dunk over the defender. */
 const STILL_CAMERA: Partial<Record<ShowcaseView, { pos: THREE.Vector3; look: THREE.Vector3; fov: number }>> = {
   poster: { pos: new THREE.Vector3(-3.4, 0.75, 5.4), look: new THREE.Vector3(-0.2, 2.25, 1.9), fov: 44 },
-  icon: { pos: new THREE.Vector3(-1.9, 0.7, 3.8), look: new THREE.Vector3(-0.45, 2.15, 2.0), fov: 54 },
+  icon: ICON_CAMERA,
 };
 
-/** Where the stills' spotlights point: the Dunker in the air by the rim. */
+/** Where the poster's spotlights point: the Dunker in the air by the rim. */
 const STILL_SUBJECT = new THREE.Vector3(-0.5, 2.3, 1.9);
 
 /**
@@ -58,12 +59,13 @@ export class ShowcaseDirector {
 
   constructor(canvas: HTMLCanvasElement, readonly view: ShowcaseView) {
     this.renderer = new CourtRenderer(canvas);
-    if (view !== "loop") this.renderer.cinematic({ lights: stillLights(STILL_SUBJECT), fill: 0.25, key: 0.55, haze: 0.05 });
+    if (view === "poster") this.renderer.cinematic({ lights: stillLights(STILL_SUBJECT), fill: 0.25, key: 0.55, haze: 0.05 });
+    if (view === "icon") this.renderer.cinematic(iconLook());
     // Development aids: ?cam=x,y,z,lookX,lookY,lookZ,fov pins the camera for close looks at the models,
     // ?at=seconds holds a still at another moment of the film, and dev.ts reads the rest.
     const params = new URLSearchParams(window.location.search);
     this.dev = readDev(params);
-    this.script = this.dev.film ?? new HighlightScript(LEAD[view]);
+    this.script = this.dev.film ?? (view === "icon" ? new IconFilm() : new HighlightScript(LEAD[view]));
     this.renderer.setMatch(this.script.match);
     this.renderer.tv.fixed = this.dev.film ? null : (STILL_CAMERA[view] ?? null);
     // A film of the ceremony hands the camera to the ceremony's own shots.
