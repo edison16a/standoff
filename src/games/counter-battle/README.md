@@ -79,13 +79,13 @@ The host gives the aim kit a zone per seat (`HostAim.setZone`), the lobby's spli
 
 ### The showcase and the home screen media
 
-`showcase/` is the game playing itself, a seeded 2v2 of hard computer players, for the home screen's media. `script.ts` names the moments; `script.test.ts` fails if an engine change moves them, as a reminder to film again.
+`showcase/` is the game playing itself, a seeded 2v2 of hard computer players (seed 7), for the home screen's media. The media have no words: the name tags are off, `film-lights.ts` turns the sky's fill down and adds a hard rim light and a warm key that follow the camera, and the page grades the picture with more contrast and a vignette.
 
-* The loop is eight seconds of round four, cut over two shoulders. Nova rises from his bunker and paints Kite's mask from the far end of the field. Then Blaze runs the flank at Vex, who is busy spraying, and splats him with the shotgun at a few paces. Each fighter is cut to only once, so every shoulder camera starts in place.
-* The poster holds Blaze's shotgun going off into Vex four paces away, paint bursting on Vex's mask. It looks from low on the far side, so the big round bunker stands behind them and hides neither.
-* The icon is the same moment from further back, square, under the Paintball Battle logo.
+* The loop is a wordless trailer cut from round four (`trailer.ts`, cameras in `lenses.ts`, played by `film.ts`). Blaze sprints up the flank toward a low lens with paint cracking off him. Nova rises from behind his bunker and fires past the camera. Over Nova's shoulder, as the players see the game, he paints Kite's mask from the far end, and Kite goes down in slow motion. Then Blaze's own view as he charges Vex through a spray of paint, the shotgun blast that ends it in slow motion from low beside the bunker, and Blaze standing over the fallen Vex as the round is won. The fight only ever runs forward: a cut may skip ahead, and slow motion is half speed, one engine step to each filmed frame, so no frame is held. The capture blends the last second over the first, so the clip loops smoothly.
+* The poster holds Blaze's shotgun going off into Vex four paces away, paint bursting on Vex's mask, from low on the near side with the big round bunker between them.
+* The icon is down on the grass in front of Vex as he rises beside that bunker and the paint hits him, under the Paintball Battle logo.
 
-The clip, poster and icon on the home screen were filmed before the paintball rework and still need filming again from these moments. To film them again, with the dev server running:
+`trailer.test.ts` and `script.test.ts` fail if an engine or bot change moves these moments, as a reminder to film again. To film them, with the dev server running:
 
 ```bash
 node tools/media/capture.mjs counter-battle --url http://localhost:3000 --ffmpeg /path/to/ffmpeg
@@ -97,4 +97,4 @@ In development the host exposes `window.__cb` (the session) and `window.__cbRend
 
 ### Looking around in development
 
-`/showcase/counter-battle` plays the loop. `?view=poster` and `?view=icon` show the stills. `?panes=4` (or 2, or 1) splits the screen with a camera behind each fighter, `?seed=` plays another fight, `?at=seconds` holds a still at that moment, `?cam=x,y,z,tx,ty,tz` pins the television camera, and `?lite=1` draws without shadows at a lower resolution, which a software renderer on a busy machine can manage. `?lab=1` swaps the fight for the animation lab: the four characters in a row, each with a different gun, standing, running forward, sideways and back, kneeling, standing up to fire, reloading, taking two hits, falling and celebrating, on a 24 second loop. On a still, `window.__cbFilm(seconds)` steps on and draws, so a script can take a frame sequence at any rate. `?winners=2` (or 1) shows the results with sample players instead: the winners' scene, their names and the panel, for looking it over.
+`/showcase/counter-battle` plays the loop, and `?review=1` holds it for a script, which moves it on with `window.__cbTrailer(seconds)`. `?view=poster` and `?view=icon` show the stills. `?panes=4` (or 2, or 1) splits the screen with a camera behind each fighter, `?seed=` plays another fight, `?at=seconds` holds a still at that moment, `?cam=x,y,z,tx,ty,tz` pins the television camera, and `?lite=1` draws without shadows at a lower resolution, which a software renderer on a busy machine can manage. `?lab=1` swaps the fight for the animation lab: the four characters in a row, each with a different gun, standing, running forward, sideways and back, kneeling, standing up to fire, reloading, taking two hits, falling and celebrating, on a 24 second loop. On a still, `window.__cbFilm(seconds)` steps on and draws, so a script can take a frame sequence at any rate. `?winners=2` (or 1) shows the results with sample players instead: the winners' scene, their names and the panel, for looking it over.
