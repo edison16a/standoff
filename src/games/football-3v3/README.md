@@ -215,7 +215,19 @@ const board = scoreboard(view); // for <Scoreboard board={board} />
 
 ### The showcase
 
-`showcase/` plays a seeded bot match under the lights with the score bug. The poster is the first pass of that game at the top of its arc from the broadcast camera, and the icon the QB just before he lets it go, close up and low, facing the camera as he winds up, both frozen (`showcase/stills.ts`). For development: `?seed=` and `?seek=` (seconds to jump ahead), `?quality=low`, `?cam=x,y,z,lookX,lookY,lookZ,fov` to pin the camera, `?trophy` to end the game at once and watch the trophy presentation (add `&seek=` to jump into it), and `?lab=<move>` for the animation lab, where all six builds do one move on a loop next to a pair of linemen. The moves are idle, run, tuck, ready, throw, kick, spin, back, side, dive, lunge, down, tackled, celebrate, spike, stance, block and catch. A spin turns the whole body round, as the engine does in a game.
+`showcase/` makes the home screen media from a seeded game of computer players (seed 11) and its trophy presentation, drawn by the real renderer. `reel.ts` records every still of the game, so any moment can be shown at any speed and from any camera.
+
+* The loop is a wordless eight second trailer (`trailer.ts`, cameras in `film-cams.ts`). The QB winds up and throws in slow motion from low in front of him. A camera rides the spiral. The receiver catches it, then side steps a diving tackler. A corner flies in and buries a runner on a juke, deep in slow motion. The captain lifts the trophy. The film runs in a circle, so its last frame cuts straight into its first and the clip loops with no seam.
+* The icon holds that big hit from down on the turf, the tackler in the air, under the FOOTBALL 3v3 logo. The poster is the diving tackler reaching for the receiver as he leaps clear.
+* `film-lights.ts` dims the stadium's fill and adds a hard rim light and a warm key that follow the camera, and the page grades the picture with more contrast and a vignette.
+
+`trailer.test.ts` fails if an engine or bot change moves these moments, as a reminder to film again. To film them, with the dev server running:
+
+```bash
+node tools/media/capture.mjs football-3v3 --url http://localhost:3000 --ffmpeg /path/to/ffmpeg
+```
+
+For development: `?t=<seconds>` holds the trailer at that moment, and on a still `window.__fbHold(seconds)` moves the hold, for a review script. `?lab=<move>` shows the animation lab, where all six builds do one move on a loop next to a pair of linemen. The moves are idle, run, tuck, ready, throw, kick, spin, back, side, dive, lunge, down, tackled, celebrate, spike, stance, block and catch. A spin turns the whole body round, as the engine does in a game.
 
 ## Tests
 

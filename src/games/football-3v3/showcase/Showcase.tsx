@@ -1,28 +1,25 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import type { ShowcaseView } from "@/platform/games/game-api";
 import { MatchRenderer } from "../render/match-renderer";
-import { Scoreboard } from "../render/hud/Scoreboard";
-import { scoreboard, type Board } from "../render/hud/board";
 import { isLabMove, labView } from "./lab";
 import { ShowcaseScene } from "./scene";
 import { STILLS } from "./stills";
+import { TrailerPlayer } from "./trailer-player";
 
 /**
- * Football 3v3 playing itself: a seeded match of computer players under
- * the lights, with the broadcast score bug. It runs only from
- * requestAnimationFrame and its clock, so a capture steps it frame by
- * frame and gets the same film every time.
+ * Football 3v3's home screen media, drawn by the real renderer from a
+ * seeded game of computer players: the loop is a wordless trailer cut
+ * from its best moments, and the icon and poster hold its biggest ones.
+ * It runs only from requestAnimationFrame and its clock, so a capture
+ * steps it frame by frame and gets the same film every time.
  *
- * Development options in the address: seed and seek (seconds to jump
- * ahead), quality (high, low or film), cam=x,y,z,lookX,lookY,lookZ,fov
- * to pin the camera, lab=<move> for the animation lab, and trophy to
- * end the game at once and watch the trophy presentation.
+ * Development options in the address: t=<seconds> holds the trailer at
+ * that moment, and lab=<move> shows the animation lab.
  */
 export default function Showcase({ view }: { view: ShowcaseView }) {
   const stageRef = useRef<HTMLDivElement>(null);
-  const [board, setBoard] = useState<Board | null>(null);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -32,18 +29,16 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     canvas.className = "fb-showcase__canvas";
     stage.prepend(canvas);
     const params = new URLSearchParams(window.location.search);
-    const quality = params.get("quality");
-    const renderer = new MatchRenderer(canvas, { quality: quality === "low" || quality === "high" ? quality : "film", scale: view === "loop" ? 0.8 : 1 });
-    // The icon and poster are frozen moments of the same game; the loop plays it.
-    const still = STILLS[view] ?? null;
-    const scene = new ShowcaseScene(Number(params.get("seed") ?? 11), Number(params.get("seek") ?? still?.seek ?? 0), params.has("trophy"));
+    const renderer = new MatchRenderer(canvas, { quality: "film", scale: view === "loop" ? 0.8 : 1 });
     const lab = params.get("lab");
-    const cam = params.get("cam")?.split(",").map(Number);
-    const shot = still?.camera?.(scene.view);
-    if (cam && cam.length === 7) renderer.director.setFixed(new THREE.Vector3(cam[0], cam[1], cam[2]), new THREE.Vector3(cam[3], cam[4], cam[5]), cam[6]!);
-    else if (isLabMove(lab)) renderer.director.setFixed(new THREE.Vector3(-9, 1.6, 0), new THREE.Vector3(0, 0.9, 0), 55);
-    else if (shot) renderer.director.setFixed(shot.pos, shot.look, shot.fov);
-    // A frozen still is drawn once per size, not on every tick of the capture tool's clock.
+    const labScene = isLabMove(lab) ? new ShowcaseScene(11) : null;
+    if (labScene) renderer.director.setFixed(new THREE.Vector3(-9, 1.6, 0), new THREE.Vector3(0, 0.9, 0), 55);
+    const player = labScene ? null : new TrailerPlayer(renderer, renderer.scene);
+    const held = params.get("t");
+    const still = held !== null ? Number(held) : view === "loop" ? null : (STILLS[view] ?? null);
+    // On a still, a review script can move the hold to any moment, through the still's own camera, and look at a sheet of them.
+    if (still !== null && player) Object.assign(window, { __fbHold: (t: number) => player.hold(typeof still === "number" ? t : { ...still, t }) });
+    // A still is drawn once per size, not on every tick of the capture tool's clock.
     let draws = 1;
     const fit = () => {
       renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
@@ -54,35 +49,24 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     observer.observe(canvas);
     let frame = 0;
     let first = -1;
-    let shown = "";
-    const loop = (now: number) => {
+    // performance.now rather than the frame's timestamp: the capture tool fakes the former.
+    const loop = () => {
+      const now = performance.now();
       if (first < 0) first = now;
-      if (isLabMove(lab)) {
-        renderer.draw(labView(scene.view, lab, (now - first) / 1000), now);
-      } else if (still) {
+      if (labScene && isLabMove(lab)) renderer.draw(labView(labScene.view, lab, (now - first) / 1000), now);
+      else if (player && still !== null) {
         if (draws > 0) {
-          // Ease every body into its pose for the moment before the one picture is taken.
-          renderer.settle(scene.view, now, 1.5);
-          renderer.draw(scene.view, now);
+          player.hold(still);
           draws--;
         }
-      } else {
-        for (const event of scene.tick(now)) renderer.onEvent(event);
-        renderer.draw(scene.view, now);
-        const next = scoreboard(scene.view);
-        // Only touch React when the text changes, not every frame.
-        const key = JSON.stringify(next);
-        if (key !== shown) {
-          shown = key;
-          setBoard(next);
-        }
-      }
+      } else player?.frame(now);
       frame = requestAnimationFrame(loop);
     };
     frame = requestAnimationFrame(loop);
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
+      player?.dispose();
       renderer.dispose();
       canvas.remove();
     };
@@ -90,7 +74,6 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
 
   return (
     <div ref={stageRef} className={`fb-showcase fb-showcase--${view}`}>
-      {view === "loop" && board && <Scoreboard board={board} />}
       {view === "icon" && (
         <div className="fb-logo" aria-label="Football 3v3">
           <span className="fb-logo__word">FOOTBALL</span>

@@ -36,7 +36,8 @@ export class MatchRenderer {
   private tagOf: TagOf | null = null;
   private traceAt: number | null = null;
   private readonly renderer: THREE.WebGLRenderer;
-  private readonly scene = new THREE.Scene();
+  /** The world drawn; the showcase adds its film lights to it. */
+  readonly scene = new THREE.Scene();
   private readonly stadium: Stadium;
   private readonly lines = new ScrimmageLines();
   /** The trophy, lights and confetti of the presentation at the end. */

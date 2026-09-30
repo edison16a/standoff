@@ -1,28 +1,29 @@
-import * as THREE from "three";
 import type { ShowcaseView } from "@/platform/games/game-api";
 import type { MatchView } from "../engine";
+import type { FilmCam } from "./film-cams";
 
-/** A frozen moment of the showcase match, and the camera it is seen from (null for the broadcast camera). */
+/** A frozen moment of the trailer, and its own camera when the film's is not the one for a still. */
 export interface Still {
-  seek: number;
-  camera: ((view: MatchView) => { pos: THREE.Vector3; look: THREE.Vector3; fov: number }) | null;
+  /** Seconds into the trailer. */
+  t: number;
+  camera?: (view: MatchView) => FilmCam;
 }
 
-/**
- * The home screen's stills, from the showcase's seeded game (seed 11).
- * The poster is the first pass of the game at the top of its arc, seen
- * from the broadcast camera behind the play. The icon is the QB a beat
- * before he lets that same pass go, from low and to the side where he
- * faces as he winds up, a heroic close up for the square tile.
- */
+/** The home screen's stills, held from the trailer. */
 export const STILLS: Partial<Record<ShowcaseView, Still>> = {
-  poster: { seek: 5.5, camera: null },
+  poster: { t: 4.1 },
   icon: {
-    seek: 4.99,
+    t: 5.45,
     camera: (view) => {
-      const qb = view.athletes.find((a) => a.role === "qb" && a.team === view.drive.offense)!;
-      // Cocked to throw, the QB has turned side on, so the camera behind the line sees his face and the ball.
-      return { pos: new THREE.Vector3(qb.x - 3.4, 1.05, qb.z + 2.6), look: new THREE.Vector3(qb.x - 0.2, 1.45, qb.z), fov: 44 };
+      const r = view.athletes.find((a) => a.id === 2)!;
+      const t = view.athletes.find((a) => a.id === 8)!;
+      const mid = { x: (r.x + t.x) / 2, z: (r.z + t.z) / 2 };
+      const dx = r.x - t.x;
+      const dz = r.z - t.z;
+      const l = Math.hypot(dx, dz) || 1;
+      // Square on to the line of the hit, down on the turf, looking up so both stand against the night.
+      const side = { x: -dz / l, z: dx / l };
+      return { pos: { x: mid.x - side.x * 3.8 + (dx / l) * 2, y: 0.3, z: mid.z - side.z * 3.8 + (dz / l) * 2 }, look: { x: mid.x, y: 0.6, z: mid.z }, fov: 46 };
     },
   },
 };

@@ -12,8 +12,8 @@ export class ShowCamera {
   private readonly target = new THREE.Vector3();
   private radius = 30;
   private started = false;
-  /** A fixed shot for stills: where the camera sits and what it looks at. */
-  fixed: { from: THREE.Vector3; at: THREE.Vector3 } | null = null;
+  /** A fixed shot for stills and the trailer: where the camera sits, what it looks at, and the lens if not the usual. */
+  fixed: { from: THREE.Vector3; at: THREE.Vector3; fov?: number } | null = null;
 
   setAspect(aspect: number): void {
     if (Math.abs(this.camera.aspect - aspect) < 1e-4) return;
@@ -29,6 +29,11 @@ export class ShowCamera {
     if (this.fixed) {
       this.camera.position.copy(this.fixed.from);
       this.camera.lookAt(this.fixed.at);
+      const fov = this.fixed.fov ?? 42;
+      if (fov !== this.camera.fov) {
+        this.camera.fov = fov;
+        this.camera.updateProjectionMatrix();
+      }
       return;
     }
     const alive = fighters.filter((f) => f.alive);
