@@ -102,13 +102,13 @@ A sword duel where your phone is the sword. It moves in full 3D on screen as you
 
 ### Brawl Battle
 
-<img src="docs/screenshots/brawl-battle.jpg" alt="Fighters on a floating stage in Brawl Battle" width="100%" />
+<img src="docs/screenshots/brawl-battle.jpg" alt="The Samurai leaping over the Bear and Karate on the Floating Temple at sunset" width="100%" />
 
 A platform fighter for up to four. Karate, Samurai, Mage and Bear each have quick moves, specials, five charged moves and an ult. Pile on the damage, then knock everyone off one of four stages: Dojo Rooftop, Floating Temple, Crystal Cave and Forest Treetop. Two lives each, last fighter standing wins.
 
 ### Paintball Battle
 
-<img src="docs/screenshots/counter-battle.jpg" alt="Paintball Battle with fighters behind the bunkers" width="100%" />
+<img src="docs/screenshots/counter-battle.jpg" alt="Two paintball players trading shots across a bunker, one splattered in pink paint" width="100%" />
 
 Team paintball for up to four, one or two a side. Your fighter runs from bunker to bunker by itself. You point your phone to aim, hold Crouch to hide, and rise to splat the other team with a Paint Rifle, Shotgun, SMG or Sniper. Each player gets their own split screen view. First team to five rounds wins.
 
