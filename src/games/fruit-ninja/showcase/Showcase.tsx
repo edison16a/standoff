@@ -7,6 +7,7 @@ import { FruitRenderer } from "../render/fruit-renderer";
 import { PopupClock } from "./popup-clock";
 import { ShowcaseScene } from "./scene";
 import { seedRandom } from "./seeded-random";
+import { spotAt } from "./film";
 import { SHOTS, type Shot } from "./shots";
 
 /** The engine's fixed step. The film is the same however the frames fall. */
@@ -59,22 +60,35 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
         }
       }
     };
-    // Play through to the first frame unseen, so the board is already busy when the film starts.
-    // The picture moves on in coarser steps, except just before the start where the blade trails form.
-    let unseen = 0;
-    while (scene.time < shot.start) {
-      play(scene.step(STEP));
-      unseen += STEP;
-      if (unseen < 1 / 30 && scene.time < shot.start - 0.4) continue;
-      renderer.render(scene.frame(), unseen, false);
-      unseen = 0;
-    }
+    // Plays on unseen, so the board is already busy when the film starts or cuts ahead.
+    // The picture moves on in coarser steps, except just before the end where the blade trails form.
+    const skipTo = (until: number) => {
+      let unseen = 0;
+      while (scene.time < until) {
+        play(scene.step(STEP));
+        unseen += STEP;
+        if (unseen < 1 / 30 && scene.time < until - 0.4) continue;
+        renderer.render(scene.frame(), unseen, false);
+        unseen = 0;
+      }
+    };
+    skipTo(shot.start + (shot.film?.[0]!.from ?? 0));
 
     let origin = -1;
     let frame = 0;
+    let cut = 0;
     const loop = (now: number) => {
       if (origin < 0) origin = now;
-      const target = Math.min(shot.start + (now - origin) / 1000, shot.freeze ?? Number.POSITIVE_INFINITY);
+      const elapsed = (now - origin) / 1000;
+      const spot = shot.film ? spotAt(shot.film, shot.script.period, elapsed) : null;
+      let target = Math.min(shot.start + elapsed, shot.freeze ?? Number.POSITIVE_INFINITY);
+      if (spot) {
+        target = shot.start + spot.scriptTime;
+        // A cut ahead in the script plays the gap unseen, so no blade streaks across the jump.
+        if (spot.index !== cut && target - scene.time > 0.1) skipTo(target - 0.05);
+        cut = spot.index;
+        renderer.aim(spot.aim.x, spot.aim.y, spot.aim.zoom);
+      }
       let dt = 0;
       while (scene.time + STEP / 2 < target) {
         play(scene.step(STEP));
