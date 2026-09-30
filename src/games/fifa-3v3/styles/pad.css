@@ -1,7 +1,7 @@
 /*
-  The controller: the stick on the left half, the two buttons on the
-  right, and the score in the middle, readable at a glance while the
-  player watches the big screen.
+  The controller: the stick on the left, the buttons big on the right,
+  and a slim column in the middle for your side and what to do now. The
+  score and the clock stay on the big screen, so the buttons get the room.
 */
 
 .fifa-phone--pad {
@@ -11,8 +11,8 @@
 .fifa-pad {
   display: grid;
   flex: 1;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.9fr) minmax(0, 1fr);
-  gap: 8px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.75fr) minmax(0, 1.4fr);
+  gap: 10px;
   min-height: 0;
   user-select: none;
   -webkit-user-select: none;
@@ -31,34 +31,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  text-align: center;
-}
-
-.fifa-pad__score {
-  display: flex;
-  align-items: baseline;
   gap: 8px;
-  font-family: "Arial Black", Impact, Arial, sans-serif;
-  font-size: 15px;
-}
-
-.fifa-pad__score strong {
-  font-size: 30px;
-  font-variant-numeric: tabular-nums;
-}
-
-.fifa-pad__clock {
-  padding: 2px 10px;
-  border-radius: 6px;
-  background: var(--bg-muted);
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-
-.fifa-pad__clock--golden {
-  background: #f59e0b;
-  color: #1a1203;
+  min-width: 0;
+  text-align: center;
 }
 
 .fifa-pad__me {
@@ -99,12 +74,21 @@
   }
 }
 
+/* Sized from its own box, so the buttons grow into whatever room the phone gives. */
 .fifa-pad__buttons {
   display: grid;
   grid-template-columns: 1fr;
   grid-template-rows: 1.3fr 1fr;
   place-items: center;
   gap: 4px;
+  min-width: 0;
+  min-height: 0;
+  container-type: size;
+}
+
+.fifa-pad__buttons .kit-pad-btn--lg {
+  width: min(56cqh, 50cqw, 180px);
+  height: min(56cqh, 50cqw, 180px);
 }
 
 .fifa-pad__shoot {
@@ -195,90 +179,19 @@
 }
 
 .fifa-face svg {
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
+}
+
+.kit-pad-btn--lg .fifa-face svg {
+  width: 38px;
+  height: 38px;
 }
 
 .fifa-face__text {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 900;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   white-space: nowrap;
-}
-
-/* The shot's charge bar: green, yellow and red zones with a white fill sweeping across. */
-.fifa-charge {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  width: 100%;
-  max-width: 220px;
-  opacity: 0;
-  transform: translateY(6px) scale(0.96);
-  transition: opacity 90ms ease, transform 90ms ease;
-  pointer-events: none;
-}
-
-.fifa-charge--on {
-  opacity: 1;
-  transform: none;
-}
-
-.fifa-charge__track {
-  position: relative;
-  display: flex;
-  width: 100%;
-  height: 18px;
-  overflow: hidden;
-  border-radius: 9px;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85), 0 2px 8px rgba(0, 0, 0, 0.35);
-}
-
-.fifa-charge__zone {
-  height: 100%;
-  opacity: 0.45;
-}
-
-.fifa-charge__zone--green {
-  background: #22c55e;
-}
-
-.fifa-charge__zone--yellow {
-  background: #facc15;
-}
-
-.fifa-charge__zone--red {
-  background: #ef4444;
-}
-
-.fifa-charge__fill {
-  position: absolute;
-  inset: 0;
-  clip-path: inset(0 100% 0 0);
-}
-
-.fifa-charge__needle {
-  position: absolute;
-  top: -2px;
-  bottom: -2px;
-  left: 0;
-  width: 4px;
-  margin-left: -2px;
-  border-radius: 2px;
-  background: #ffffff;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
-}
-
-.fifa-charge__label {
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.fifa-charge[data-zone="red"] .fifa-charge__label {
-  color: #ef4444;
 }

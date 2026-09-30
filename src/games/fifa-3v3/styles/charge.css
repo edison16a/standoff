@@ -1,0 +1,80 @@
+/*
+  The shot's charge bar in the controller's middle column: it shows
+  while the player has the ball and fills while Shoot is held.
+*/
+
+/* Green, yellow and red zones with a white fill sweeping across. */
+.fifa-charge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  max-width: 220px;
+  opacity: 0;
+  transform: translateY(6px) scale(0.96);
+  transition: opacity 90ms ease, transform 90ms ease;
+  pointer-events: none;
+}
+
+.fifa-charge--on {
+  opacity: 1;
+  transform: none;
+}
+
+.fifa-charge__track {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 18px;
+  overflow: hidden;
+  border-radius: 9px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.85), 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.fifa-charge__zone {
+  height: 100%;
+  opacity: 0.45;
+}
+
+.fifa-charge__zone--green {
+  background: #22c55e;
+}
+
+.fifa-charge__zone--yellow {
+  background: #facc15;
+}
+
+.fifa-charge__zone--red {
+  background: #ef4444;
+}
+
+.fifa-charge__fill {
+  position: absolute;
+  inset: 0;
+  clip-path: inset(0 100% 0 0);
+}
+
+.fifa-charge__needle {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  left: 0;
+  width: 4px;
+  margin-left: -2px;
+  border-radius: 2px;
+  background: #ffffff;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
+}
+
+.fifa-charge__label {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.fifa-charge[data-zone="red"] .fifa-charge__label {
+  color: #ef4444;
+}

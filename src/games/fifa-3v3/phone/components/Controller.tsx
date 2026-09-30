@@ -3,28 +3,23 @@ import { useEffect } from "react";
 import { Joystick } from "@/games/kit/pad/Joystick";
 import type { PhoneState } from "../../protocol";
 import { ROLE_NAMES } from "../../roles";
-import { BUILDS } from "../../builds";
 import { TEAMS } from "../../teams";
 import { ChargeBar } from "./ChargeBar";
 import { PadButtons, padMode } from "./PadButtons";
 import { GuardMeter, SetPieceCoach } from "./PadHelp";
 import { usePhone } from "./session-context";
 
-function clock(seconds: number): string {
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
-}
-
 /**
  * The phone as a controller, held sideways: the thumb stick on the left
  * moves your player (and dribbles, and aims set pieces), the buttons on
  * the right change with the play (see PadButtons). The middle shows your
- * side, the score and the clock, Guard's range while defending, and the
- * stages of a free kick or penalty.
+ * side and role, a status line, Guard's range while defending, and the
+ * stages of a free kick or penalty. The score and the clock stay on the
+ * big screen, so the buttons get the room.
  */
 export function Controller({ host }: { host: PhoneState }) {
   const phone = usePhone();
   const team = host.team !== null ? TEAMS[host.team] : TEAMS[0];
-  const build = host.pick ? BUILDS[host.pick] : null;
   const mode = padMode(host);
 
   useEffect(() => {
@@ -45,19 +40,9 @@ export function Controller({ host }: { host: PhoneState }) {
         <Joystick alwaysShown colour={team.color} onChange={(stick) => phone.stick(stick)} />
       </div>
       <div className="fifa-pad__middle">
-        <div className="fifa-pad__score" aria-label={`${TEAMS[0].name} ${host.score[0]}, ${TEAMS[1].name} ${host.score[1]}`}>
-          <span style={{ color: TEAMS[0].color }}>{TEAMS[0].code}</span>
-          <strong>
-            {host.score[0]} : {host.score[1]}
-          </strong>
-          <span style={{ color: TEAMS[1].color }}>{TEAMS[1].code}</span>
-        </div>
-        <div className={`fifa-pad__clock ${host.golden ? "fifa-pad__clock--golden" : ""}`}>{host.golden ? "Golden goal" : clock(host.clock)}</div>
         <div className="fifa-pad__me">
           <span className="fifa-pad__team">{team.name}</span>
-          {build && <span>{build.name}</span>}
           {host.role && <span>{ROLE_NAMES[host.role]}</span>}
-          {host.goals > 0 && <span>{host.goals === 1 ? "1 goal" : `${host.goals} goals`}</span>}
         </div>
         {host.setPiece ? (
           <SetPieceCoach sp={host.setPiece} />

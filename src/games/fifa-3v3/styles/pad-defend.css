@@ -4,26 +4,22 @@
   set piece for the taker.
 */
 
+/* Two by two: the big button top right, the small ones in an arc under and beside it. */
 .fifa-pad__buttons--four {
   grid-template-columns: auto auto;
   grid-template-rows: auto auto;
   align-content: center;
-  justify-content: end;
-  gap: 6px 10px;
+  justify-content: center;
+  gap: 3cqh 5cqw;
 }
 
 .fifa-pad__buttons--one {
   grid-template-rows: 1fr;
 }
 
-.fifa-pad__small .kit-pad-btn--md {
-  width: min(19vmin, 80px);
-  height: min(19vmin, 80px);
-}
-
-.fifa-pad__small .fifa-face svg {
-  width: 22px;
-  height: 22px;
+.fifa-pad__buttons--four .kit-pad-btn--md {
+  width: min(38cqh, 36cqw, 124px);
+  height: min(38cqh, 36cqw, 124px);
 }
 
 .fifa-guard {

@@ -40,7 +40,7 @@ On defence (the other side has the ball) the big button becomes **Guard**, with 
 * **Jump:** up to block a shot or a pass. The ball comes off the body with real physics rather than stopping dead. Jumping into a dribbler can be a foul.
 * Steal and Slide work as always.
 
-The phone buzzes for kicks, passes, tackles, fouls and goals, and shows your team, the score and the clock. The buttons rest during kick offs and goals, when the host is not reading them. During a replay the phone shows one big Skip button and how many players want to skip.
+The phone buzzes for kicks, passes, tackles, fouls and goals. Its middle shows only your team, your role and what is going on. The score and the clock stay on the big screen, so the buttons on the right take that room: they size themselves to the space the phone has, with Shoot/Pass (or Guard) the biggest. The buttons rest during kick offs and goals, when the host is not reading them. During a replay the phone shows one big Skip button and how many players want to skip.
 
 ## Shots, blocks and the keeper
 
