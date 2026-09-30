@@ -12,15 +12,11 @@ The running list of what is being built, so work can pick up again after a break
 
 ## Running now
 
-**Checkpoint reached: every game change is merged and pushed to main.** The final builds are running.
-
 | Work | Workflow | State |
 | --- | --- | --- |
-| Final media: trailer style clips, cinematic icons and posters for every game, in six groups (Basketball and Soccer; Football and Paintball; Zombie and Gallery; Boxing and Blade; Kart and Brawl; Cube, Subway and Fruit) | wf_2190cb1d-8a7 | build then review each group, two at a time |
+| Icon pass: every icon redone as a real game cover following scratchpad/icon-refs/DIRECTION.md (five groups, each reviewed) | wf_4720b2c8-9bb | build then review each group |
 
-**Icon pass (owner feedback with reference covers):** after the media groups finish and before they merge, redo every icon following scratchpad/icon-refs/DIRECTION.md: Paintball like Fortnite key art, Basketball like the NBA 2K19 cover (player facing forward), Soccer like the FIFA 23 cover, Zombie with every gun aimed at zombies (not teammates), and the same cover principles for every other game.
-
-After the media merges: tiles 1.2 times bigger and the final README with new screenshots (the task text is saved in the final-media script's FINAL constant), push, then the final check.
+Next: tiles 1.2 times bigger and the final README with new screenshots (task text in the final-media script's FINAL constant), push, then the final check.
 
 ## Queue, in order
 
@@ -103,6 +99,7 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ## Done recently
 
+* Trailer style home clips and posters for all 13 games (six media groups, each reviewed), on main.
 * Batch G: Football (defence pad stays, normal QB stick, slower QB with a RUN button, Run the ball call with a pitch, magenta target ring, no player strip) and Basketball (buttons always lit, Guard sticks to your man, stronger jukes with a stun), and no duplicate name boxes (Soccer's strip removed).
 * Room reliability: signed room tokens so any Vercel instance can rebuild a room with the same code and players, a host room check over a fresh connection, QR hidden until the room passes, Regenerate room under the QR, phones that follow a moved room, WebSockets first with a leaner stream fallback, and the client bugs from the investigation fixed.
 * Basketball 3v3 and Football 3v3: trophy ceremonies, and builds instead of named characters under each player's username.
