@@ -34,7 +34,16 @@ export interface Brain {
   out: number;
   /** Seconds a player has held Crouch, which stops them hiding for ever. */
   down: number;
+  /** The spot last stood at or passed, which RETREAT heads back to from partway along a run. */
+  last: number;
+  /** Which way a player's current run goes: 1 advancing, -1 retreating. */
+  heading: 1 | -1;
+  /** Where a player stopped partway along a run, or null when they hold at a spot. */
+  anchor: V2 | null;
 }
+
+/** A player's ADVANCE (1) or RETREAT (-1) button, or 0 with neither held. */
+export type MoveInput = -1 | 0 | 1;
 
 export interface Fighter {
   id: number;
@@ -63,8 +72,10 @@ export interface Fighter {
   brain: Brain;
   /** The shoot button, for a human: held for automatic guns, pulls counted for the others. */
   trigger: { held: boolean; pulls: number; pulledAt: number };
-  /** A player holding Crouch: stay down behind cover. */
+  /** A player holding Crouch: stay down behind cover, or move crouched. */
   duck: boolean;
+  /** A player holding ADVANCE or RETREAT. */
+  move: MoveInput;
   /** A wish to come up out of cover now, from a shot or letting go of Crouch. The brain takes it on its next step. */
   rise: boolean;
   /** Game time of the last hit taken, fired shot and death, for animation. */
@@ -107,6 +118,7 @@ export function createFighter(id: number, setup: FighterSetup): Fighter {
     brain: freshBrain(0),
     trigger: { held: false, pulls: 0, pulledAt: -Infinity },
     duck: false,
+    move: 0,
     rise: false,
     hitAt: -Infinity,
     shotAt: -Infinity,
@@ -119,7 +131,7 @@ export function createFighter(id: number, setup: FighterSetup): Fighter {
 }
 
 function freshBrain(spot: number): Brain {
-  return { stance: "hide", spot, route: [], timer: 0, held: 0, sincePlan: Infinity, peekAt: null, out: 0, down: 0 };
+  return { stance: "hide", spot, route: [], timer: 0, held: 0, sincePlan: Infinity, peekAt: null, out: 0, down: 0, last: spot, heading: 1, anchor: null };
 }
 
 export const isBot = (f: Fighter): boolean => f.seat === null;
@@ -169,6 +181,7 @@ export function resetFighter(f: Fighter, pos: V2, look: number, spot: number): v
   f.brain = freshBrain(spot);
   f.trigger = { held: false, pulls: 0, pulledAt: -Infinity };
   f.duck = false;
+  f.move = 0;
   f.rise = false;
   f.hitAt = -Infinity;
   f.shotAt = -Infinity;

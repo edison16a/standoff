@@ -25,7 +25,8 @@ export function startPeek(f: Fighter, w: BrainWorld): void {
   b.out = 0;
   b.timer = w.rng.range(...style.peek);
   b.peekAt = null;
-  if (!target) return;
+  // Stopped out in the open, there is no cover to look round: up where they are.
+  if (!target || b.anchor) return;
   // Out of this gun's reach a look is only a glance, and the spot gets old fast, so the fighter moves up.
   if (dist(f.pos, target.pos) > style.range + style.band * 1.5) {
     b.timer = Math.min(b.timer, 0.6);
