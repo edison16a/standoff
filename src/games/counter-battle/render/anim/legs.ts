@@ -108,3 +108,41 @@ export function runLegs(s: number, ankle: number, phase: number, speed: number, 
   f.poleR = [-0.2, 0, 1];
   return f;
 }
+
+/** How far each foot reaches fore and aft moving crouched, per unit of body size. Four reaches make one stride. */
+const LOW_REACH = 0.22;
+/** The ground one full crouched stride covers, per unit of body size, so the feet never slide. */
+export const LOW_STRIDE = LOW_REACH * 4;
+
+/**
+ * Moving crouched: a low, wide stance with short, flat steps along the
+ * way the body travels, the knees well bent and the hips kept low and
+ * level, so the head stays down near the crouched hit box.
+ */
+export function lowWalkLegs(s: number, ankle: number, phase: number, dir: { x: number; z: number }): LegFrame {
+  const f = blankLegs();
+  const reach = LOW_REACH * s;
+  const lift = 0.06 * s;
+  const side = (q: number, x: number): [number, number, number, number] => {
+    const a = Math.cos(q * Math.PI * 2);
+    const up = Math.max(0, -Math.sin(q * Math.PI * 2));
+    // Toes stay near flat: a crouched step rolls heel to toe rather than pushing off.
+    return [x + dir.x * reach * a, ankle + lift * up, 0.04 * s + dir.z * reach * a, up * (a < 0 ? 0.3 : -0.15)];
+  };
+  const q = phase - Math.floor(phase);
+  const l = side(q, 0.16 * s);
+  const r = side((q + 0.5) % 1, -0.16 * s);
+  f.footL = [l[0], l[1], l[2]];
+  f.footR = [r[0], r[1], r[2]];
+  f.toeL = l[3];
+  f.toeR = r[3];
+  const bob = Math.abs(Math.cos(q * Math.PI * 2));
+  f.hipY = (0.5 - 0.015 * bob) * s;
+  f.hipPitch = 0.28;
+  f.hipYaw = Math.cos(q * Math.PI * 2) * 0.08;
+  f.hipRoll = -0.05 * dir.x;
+  // Knees out over the toes, as a low walk is done.
+  f.poleL = [0.35, 0.1, 1];
+  f.poleR = [-0.35, 0.1, 1];
+  return f;
+}
