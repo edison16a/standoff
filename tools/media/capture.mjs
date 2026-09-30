@@ -71,7 +71,8 @@ async function open(view, size) {
     await page.clock.runFor(50);
     // With the clock paused, the page's own scripts still load in real time.
     await page.waitForTimeout(100);
-    if (await page.evaluate(() => window.__showcaseReady === true)) break;
+    // A lazily loaded scene mounts after the flag, and only as the clock moves, so it is waited for too.
+    if (await page.evaluate(() => window.__showcaseReady === true && document.querySelector(".showcase")?.childElementCount > 0)) break;
     if (i === 599) throw new Error(`the ${view} showcase never became ready`);
   }
   for (let t = 0; t < warmup * 1000; t += 50) await page.clock.runFor(50);

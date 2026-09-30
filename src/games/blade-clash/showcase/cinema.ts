@@ -78,9 +78,19 @@ export function trailerCamera(camera: THREE.PerspectiveCamera, stage: Stage, t: 
   return SHOTS[index]!.place(camera, stage, Math.min(1, (t - from) / (to - from)));
 }
 
-/** The icon: low and in front as the blades first meet, both fighters looming over the spray of sparks. */
+/**
+ * The icon, a cover: in front of the Knight, low beside the Star Knight's
+ * shoulder and tight, so the Knight fills the frame facing us as the
+ * blades first meet and the sparks burst over his head.
+ */
 export function iconCamera(camera: THREE.PerspectiveCamera, stage: Stage): THREE.PerspectiveCamera {
-  return aim(camera, 44, mid(stage) + 0.25, 0.5, 2.3, mid(stage), 1.55, 0);
+  return tryCamera(camera, stage, [2.6, 0.45, 1.3, 0.35, 1.35, 0, 32]);
+}
+
+/** A camera from `[x, y, z, lx, ly, lz, fov]`, both x measured from the Knight, as the icon and the `?cam=` tuning aid use. */
+export function tryCamera(camera: THREE.PerspectiveCamera, stage: Stage, v: readonly number[]): THREE.PerspectiveCamera {
+  const [x = 0, y = 1, z = 3, lx = 0, ly = 1.5, lz = 0, fov = 40] = v;
+  return aim(camera, fov, stage.x1 + x, y, z, stage.x1 + lx, ly, lz);
 }
 
 /** The poster: the first clash from low at the side of the dais, both fighters and the spray of sparks between them. */

@@ -11,6 +11,9 @@ const LAVA = { map: "volcano", seed: 7 } as const;
 /** Neo City, seed 26: three karts power slide through the first bend together and fire their turbos, then an ice throw freezes Pip. */
 const NEON = { map: "city", seed: 26 } as const;
 
+/** Magma Peak, seed 30: Blaze leads out of a long power slide on a turbo, with Nova and Pip right behind him. */
+const COVER = { map: "volcano", seed: 30 } as const;
+
 /** Star Ring, seed 6: all four gliders open within a tenth of a second, in front of the ringed planet. */
 const STARS = { map: "space", seed: 6 } as const;
 
@@ -50,6 +53,6 @@ export const PLANS: Record<ShowcaseView, Plan> = {
   },
   // All four gliders among the stars, seen from below, the ringed planet behind.
   poster: { shots: [{ ...STARS, from: 19.4, length: 3, rig: { kind: "hero", kart: 3, angle: -2.2, dist: 8, height: -1.2, aim: 1.2, fov: 58, road: true } }], freeze: 0.5 },
-  // Blaze dazed by an orb under the wing over the lava, seen from below against the sunset.
-  icon: { shots: [{ ...LAVA, from: 20.5, length: 3, rig: { kind: "hero", kart: 0, angle: 0.5, dist: 5.5, height: -1.2, aim: 0.3, fov: 62, road: true } }], freeze: 0.6 },
+  // The cover: Blaze bursting at the viewer on a turbo, flames out, Nova and Pip on his tail, the volcano behind.
+  icon: { shots: [{ ...COVER, from: 15.3, length: 3, rig: { kind: "hero", kart: 0, angle: 0.5, dist: 4, height: 0.9, aim: 0.3, fov: 58, road: true } }], freeze: 1 },
 };

@@ -32,7 +32,7 @@
   position: absolute;
   bottom: 3%;
   left: 50%;
-  width: 92%;
+  width: 80%;
   transform: translateX(-50%);
   font-family: "DejaVu Sans", "Arial Black", "Helvetica Neue", Arial, sans-serif;
   filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.45));

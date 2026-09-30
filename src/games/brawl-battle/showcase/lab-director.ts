@@ -1,12 +1,28 @@
 import { stepMatch } from "../engine/match";
 import { STEP } from "../engine/tuning";
 import { BrawlRenderer } from "../render/brawl-renderer";
+import type { FixedShot } from "../render/camera/frame-camera";
 import type { Lab } from "./lab";
 
+/** The moment a lab still holds, seconds from the match's start, and its camera. */
+export interface LabStill {
+  at: number;
+  cam?: FixedShot;
+}
+
+/** `?at=seconds&cam=x,y,distance[,yaw,lift,fov]` from the address, for the move lab. */
+export function stillFromParams(params: URLSearchParams): LabStill {
+  const at = Number(params.get("at")) || 1;
+  const cam = params.get("cam");
+  if (!cam) return { at };
+  const [x = 0, y = 0, distance = 20, yaw, lift, fov] = cam.split(",").map(Number);
+  return { at, cam: { x, y, distance, yaw, lift, fov } };
+}
+
 /**
- * Shows the move lab (see lab.ts) as a still, for reviewing animation in
- * development. `?at=seconds` holds another moment and `?cam=x,y,distance`
- * pins the camera. `window.__brawlFilm(seconds)` moves the still on by
+ * Shows the move lab (see lab.ts), or the icon's staged cover (see
+ * cover.ts), as a still: the match played on to `still.at` and framed
+ * by `still.cam`. `window.__brawlFilm(seconds)` moves the still on by
  * that much and draws it, so a script can take a frame every 1/30 of a
  * second, and `window.__brawlLab` lists when each move starts.
  */
@@ -15,15 +31,12 @@ export class LabDirector {
   private carry = 0;
   private drawn = false;
 
-  constructor(canvas: HTMLCanvasElement, private readonly lab: Lab, params: URLSearchParams) {
+  constructor(canvas: HTMLCanvasElement, private readonly lab: Lab, still: LabStill) {
     this.renderer = new BrawlRenderer(canvas);
     this.renderer.setMatch(lab.match);
-    const at = Number(params.get("at")) || 1;
-    for (let t = 0; t < at; t += STEP) this.renderer.render(this.advance(STEP), 1, false);
-    const cam = params.get("cam");
-    if (cam) {
-      const [x = 0, y = 0, distance = 20] = cam.split(",").map(Number);
-      this.renderer.cam.fixed = { x, y, distance };
+    for (let t = 0; t < still.at; t += STEP) this.renderer.render(this.advance(STEP), 1, false);
+    if (still.cam) {
+      this.renderer.cam.fixed = still.cam;
       this.renderer.cam.update(lab.match.stage, [], 0, { snap: true });
     }
     const w = window as unknown as Record<string, unknown>;

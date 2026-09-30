@@ -14,9 +14,10 @@ const WARMUP = 3;
  * and the samurai's win to close. It runs exactly the eight seconds the
  * tool records, so the second it fades over the start is the start
  * again and the loop has no seam. Fighters: 0 karate, 1 samurai, 2 mage,
- * 3 bear.
+ * 3 bear. Only the loop and the poster are filmed. The icon is staged
+ * instead, in cover.ts.
  */
-export const PLANS: Record<ShowcaseView, Plan> = {
+export const PLANS: Record<Exclude<ShowcaseView, "icon">, Plan> = {
   loop: {
     lead: WARMUP,
     shots: [
@@ -38,6 +39,4 @@ export const PLANS: Record<ShowcaseView, Plan> = {
   },
   // The bear's ult: shockwave rings, the samurai and the karate launched off the rooftop.
   poster: { shots: [{ seed: SEED, from: 26.45, length: 3, rig: { kind: "follow", id: 3, distance: 10, dy: -0.8, yaw: -0.3, lift: -1 } }], freeze: 0.2 },
-  // The samurai's final cut: the bear thrown upside down over him, high in the square above the logo.
-  icon: { shots: [{ seed: SEED, from: 45.75, length: 3, rig: { kind: "follow", id: 1, distance: 9, dy: -2.2, yaw: -0.4, lift: 0.8, fov: 34 } }], freeze: 0.35 },
 };
