@@ -28,3 +28,11 @@ export const useControllerStore = create<ControllerStore>(() => ({
   wanted: null,
   host: null,
 }));
+
+/**
+ * Whether the pad shows the arrows. A phone that rejoins mid race skips
+ * setup, so one with no tilt readings would otherwise have no way to steer.
+ */
+export function steersWithArrows(state: Pick<ControllerStore, "steerMode" | "sensorsLive">): boolean {
+  return state.steerMode === "buttons" || !state.sensorsLive;
+}
