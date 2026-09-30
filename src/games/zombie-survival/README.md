@@ -39,14 +39,20 @@ Speed makes it hard, not numbers. On the first stage the dead come at their own 
 * `phone/`: the phone session, the hold to fire trigger and the setup and play screens.
 * `render/`: three.js. `models/` holds the guns, the zombies and bosses, and the chopper and ship. `world/` builds the city segment by segment around the team. `crosshair/` draws each gun's crosshair where the gun points, kick included. The renderer also raycasts every shot from the camera through the player's aim.
 * `audio/`: the sound, from the same events that drive the picture.
-* `showcase/`: the game playing itself for the home screen's media. Four computer players hold the Butcher's alley, stage 2, against the Butcher and his escort, with the real engine, city, models and effects. Every random number comes from one seed, and on every beat the team's fire staggers the boss back to the same spot, so the clip loops. The icon adds the name as a logo drawn in SVG.
+* `showcase/`: the game's home screen media, a trailer made from the game itself (see below).
 
 ## Home screen media
 
-`media/icon.jpg`, `media/poster.jpg` and `public/games/zombie-survival/backdrop.webm` and `.mp4` are captured from the showcase. With the dev server running:
+`media/icon.jpg`, `media/poster.jpg` and `public/games/zombie-survival/backdrop.webm` and `.mp4` are captured from `showcase/`, all drawn with the game's own city, zombies, guns and effects.
+
+* **Loop**: a wordless ten second trailer. The team rides a pickup up the first street with a pack of runners on its tail. The edit cuts from a low swing round the truck to a curb where doorways burst open behind it, over the team's shoulders as they fire back, and a runner leaping at the tailgate shot down in slow motion. Then it cuts into the game itself: the four guns, the lasers and the Butcher staggering under the team's fire in his alley.
+* **Icon**: looking over the pack at the team firing back from the truck, the moment the leaping runner meets the shotgun, with the name as a logo drawn in SVG.
+* **Poster**: the chase from the side of the road as the rifle drops the nearest runner.
+
+The chase outside is pure functions of story time in `showcase/cinema/story.ts`, so any shot can start anywhere and replay exactly. `showcase/cinema/` also holds the truck, the team (the zombies' skeleton with living faces, vests in the player colours and the game's guns), the pack and the set that draws them. `showcase/trailer.ts` is the edit, with slow motion as speed ramps. It repeats exactly on its ten seconds and its first shot runs across the join, so the clip loops mid shot. The game's own view is a fresh fight from `showcase/director.ts` each time it cuts in. In development, `?at=` on the showcase page opens the loop that many seconds into the edit. With the dev server running:
 
 ```bash
-node tools/media/capture.mjs zombie-survival --ffmpeg /path/to/ffmpeg
+node tools/media/capture.mjs zombie-survival --seconds 10 --ffmpeg /path/to/ffmpeg
 ```
 
 Then copy the new poster over `cover.jpg`, the fallback art.
