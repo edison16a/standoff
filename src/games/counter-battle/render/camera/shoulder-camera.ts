@@ -10,8 +10,6 @@ import type { CameraPose } from "./aim-ray";
 /** Where the camera sits from the fighter's eye: to the right, above and behind, metres. Close in, so the fighter fills the view. */
 const RIGHT = 0.5;
 const UP_STAND = 0.16;
-/** Crouched it rises further over the eye, so the player still sees over low cover. */
-const UP_CROUCH = 0.52;
 const BACK = 1.45;
 const PITCH = -0.07;
 const FOV = 60;
@@ -24,14 +22,15 @@ const MIN_WIDE = 70;
  * The over the shoulder camera for one player's view. It follows the way
  * the fighter faces (the brain turns them to the fight), stays clear of
  * cover by pulling in when a bunker is behind, and shows the gun's kick.
- * `pose` is the camera without the kick or the crouch, which aiming
- * uses, so neither recoil nor a duck ever moves what the player points at.
+ * It stays at standing height through a crouch (the body drops in the
+ * picture instead), so a duck never moves the view or the crosshair on
+ * screen. `pose` is the camera without the kick, which aiming uses, so
+ * recoil never feeds back into where the player points.
  */
 export class ShoulderCamera {
   readonly camera = new THREE.PerspectiveCamera(FOV, 1, 0.08, 900);
   readonly pose: CameraPose = { x: 0, y: 0, z: 0, yaw: 0, pitch: PITCH, fov: FOV, aspect: 1 };
   private yaw: number | null = null;
-  private height = 0;
   private boom = BACK;
   private shake = 0;
   /** Which shoulder the camera wants, 1 right or -1 left, and where it is on its way between them. */
@@ -59,13 +58,11 @@ export class ShoulderCamera {
   update(f: Fighter, pieces: readonly Piece[], dt: number, time: number): void {
     if (this.yaw === null) {
       this.yaw = f.look;
-      this.height = eyeHeight(f.crouch);
       this.boom = BACK;
       this.shoulder = 1;
       this.side = 1;
     }
     this.yaw += turnTo(this.yaw, f.look) * (1 - Math.exp(-7 * dt));
-    this.height = approach(this.height, eyeHeight(f.crouch), 6, dt);
     // Down, the camera rises and swings back over the body, timed from the fall so a still shows it too.
     const out = f.alive ? 0 : Math.min(1, Math.max(0, time - f.diedAt) / 1.5);
     const yaw = this.yaw + out * 0.6;
@@ -73,7 +70,7 @@ export class ShoulderCamera {
     const lift = out * 2.2;
     const fx = Math.sin(yaw);
     const fz = Math.cos(yaw);
-    const head = { x: f.pos.x, y: this.height + lift, z: f.pos.z };
+    const head = { x: f.pos.x, y: BODY.standEye + UP_STAND + lift, z: f.pos.z };
     // Over the right shoulder, unless cover close on the right would fill the view and the left is clear.
     const open = (s: number) => rayPieces(head, { x: fx * 0.8 - fz * 0.6 * s, y: 0, z: fz * 0.8 + fx * 0.6 * s }, pieces, 4)?.t ?? 4;
     const openR = open(1);
@@ -95,8 +92,7 @@ export class ShoulderCamera {
     const wide = Math.max(1, (2 * Math.atan(Math.tan((MIN_WIDE * Math.PI) / 360) / this.pose.aspect) * 180) / Math.PI / FOV);
     this.pose.fov = approach(this.pose.fov, (FOV + (SCOPE_FOV - FOV) * scoped) * wide, 5, dt);
     this.pose.x = pivot.x - fx * this.boom;
-    // Aiming keeps the standing height: ducking lowers the view, never the aim.
-    this.pose.y = eyeHeight(0) + lift;
+    this.pose.y = pivot.y;
     this.pose.z = pivot.z - fz * this.boom;
     this.pose.yaw = yaw;
     this.pose.pitch = PITCH - out * 0.4;
@@ -105,17 +101,13 @@ export class ShoulderCamera {
     const jitter = this.shake * this.shake * 0.02;
     const kickPitch = f.gun.kick.pitch * 0.45 + Math.sin(time * 71) * jitter;
     const kickYaw = f.gun.kick.yaw * 0.35 + Math.sin(time * 53) * jitter;
-    this.camera.position.set(this.pose.x, pivot.y, this.pose.z);
+    this.camera.position.set(this.pose.x, this.pose.y, this.pose.z);
     const p = this.pose.pitch + kickPitch;
     const y = yaw + kickYaw;
-    this.camera.lookAt(this.pose.x + Math.sin(y) * Math.cos(p), pivot.y + Math.sin(p), this.pose.z + Math.cos(y) * Math.cos(p));
+    this.camera.lookAt(this.pose.x + Math.sin(y) * Math.cos(p), this.pose.y + Math.sin(p), this.pose.z + Math.cos(y) * Math.cos(p));
     if (Math.abs(this.camera.fov - this.pose.fov) > 0.01) {
       this.camera.fov = this.pose.fov;
       this.camera.updateProjectionMatrix();
     }
   }
-}
-
-function eyeHeight(crouch: number): number {
-  return BODY.standEye + UP_STAND + (BODY.crouchEye + UP_CROUCH - BODY.standEye - UP_STAND) * crouch;
 }

@@ -3,6 +3,7 @@ import { Battle } from "../../engine/battle";
 import { aimEye } from "../../engine/fighter";
 import { castRay } from "../../engine/hit";
 import { dir3, dist3, type V3 } from "../../engine/vec";
+import { crosshair } from "../pane-view";
 import { aimTarget, type PanePoint } from "./aim-ray";
 import { ShoulderCamera } from "./shoulder-camera";
 
@@ -33,11 +34,13 @@ function setup() {
 }
 
 /** What the phone's point lands on, and where the crosshair then sits in the world. */
-function aimThrough(s: ReturnType<typeof setup>, p: PanePoint): { target: V3; cross: V3 } {
+function aimThrough(s: ReturnType<typeof setup>, p: PanePoint): { target: V3; cross: V3; screen: { x: number; y: number } } {
   const target = aimTarget(s.cam.pose, p, s.b.pieces, s.b.fighters, s.me.id);
   s.b.aimAt(s.me.id, target);
   const cross = castRay(aimEye(s.me), dir3(s.me.aim.yaw, s.me.aim.pitch), s.b.pieces, s.b.fighters, s.me.id).trace.to;
-  return { target, cross };
+  s.cam.camera.updateMatrixWorld();
+  const screen = crosshair(s.me, s.b, s.cam.camera, 1600, 900)!.at;
+  return { target, cross, screen };
 }
 
 describe("aim through a crouch", { timeout: 60_000 }, () => {
@@ -50,8 +53,8 @@ describe("aim through a crouch", { timeout: 60_000 }, () => {
     s.b.setCrouch(s.me.id, true);
     s.settle();
     expect(s.me.crouch).toBe(1);
-    // The view still drops with the body, so the duck shows.
-    expect(s.cam.camera.position.y).toBeLessThan(eyeUp - 0.2);
+    // The view holds its height; the body drops in the picture instead.
+    expect(s.cam.camera.position.y).toBeCloseTo(eyeUp, 6);
     const crouched = points.map((p) => aimThrough(s, p));
 
     s.b.setCrouch(s.me.id, false);
@@ -62,6 +65,8 @@ describe("aim through a crouch", { timeout: 60_000 }, () => {
       expect(dist3(crouched[i]!.target, standing[i]!.target)).toBeLessThan(1e-6);
       expect(dist3(crouched[i]!.cross, standing[i]!.cross)).toBeLessThan(1e-6);
       expect(dist3(back[i]!.cross, standing[i]!.cross)).toBeLessThan(1e-6);
+      // And the crosshair holds its place on screen, the pixel the player was on.
+      expect(Math.hypot(crouched[i]!.screen.x - standing[i]!.screen.x, crouched[i]!.screen.y - standing[i]!.screen.y)).toBeLessThan(0.5);
     }
   });
 });
