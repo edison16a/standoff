@@ -21,6 +21,8 @@ export interface RendererOptions {
    * frame would look slow.
    */
   adaptive?: boolean;
+  /** Whether the points float up over hits. The showcase turns them off, so its media carry no text. */
+  labels?: boolean;
 }
 
 /** The most pixels per CSS pixel drawn. Past this a laptop spends its frame budget on detail nobody sees. */
@@ -52,6 +54,7 @@ export class GalleryRenderer {
     options: RendererOptions = {},
   ) {
     this.effects = new Effects(options.random);
+    if (options.labels === false) this.effects.hideLabels();
     this.adaptive = options.adaptive ?? true;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;

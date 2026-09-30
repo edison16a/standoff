@@ -1,8 +1,13 @@
-import type { ShowcaseView } from "@/platform/games/game-api";
-
 type Triple = readonly [number, number, number];
 
-/** Where the showcase camera stands at a moment, `t` seconds into the scene. */
+/**
+ * The round advances in steps this long, whatever the frame rate, so
+ * every run plays out the same. Fine enough that a shot slowed to a
+ * sixth of real time still moves on every filmed frame.
+ */
+export const STEP_S = 1 / 600;
+
+/** Where the showcase camera stands for one frame. */
 export interface CameraShot {
   position: Triple;
   lookAt: Triple;
@@ -19,57 +24,52 @@ export interface GoldenCue {
   shootAt: number;
 }
 
-/** One view of the showcase: which round, which moment, and the camera. */
-export interface ShowcasePlan {
+/** The round the showcase plays: its seed, when the players open fire, and the golden duck. */
+export interface RoundPlan {
   seed: number;
-  /** The round time the scene opens on. Everything before it plays out unseen, so the booth is already busy. */
-  start: number;
   /**
    * When the players start shooting. Four good shots clear ducks faster
-   * than the lanes bring them, so they wait until just before the scene
-   * and the booth is full when it opens.
+   * than the lanes bring them, so they wait until just before the action
+   * and the booth is full.
    */
   openFire: number;
-  /** Stills hold on their first moment. The loop plays on. */
-  hold: boolean;
   golden: GoldenCue | null;
-  camera(t: number): CameraShot;
 }
 
 /**
- * The capture tool films the loop from about 3 seconds in, for 8 seconds,
- * then fades the next second over the start. The camera sways on an 8
- * second beat, so the join lands where it began.
+ * Every view films the same round, so the trailer's moments and the
+ * stills are the same shots. Its seed and cue put a bull, a plate off
+ * the top rail and the golden duck exactly where the edit wants them.
  */
-const LOOP_S = 8;
+export const ROUND: RoundPlan = {
+  seed: 11,
+  openFire: 28.5,
+  // Rides in from the left, crosses the booth, and is shot at about 39.23 seconds.
+  golden: { lane: "back", at: 33.4, x: -5.4, shootAt: 38.6 },
+};
+
+/** Where the golden duck is at a round time, near its moment. It rides the back lane at a steady pace. */
+export function goldenX(time: number): number {
+  return 1.012 + 1.084 * (time - 39);
+}
+
+/** Where the plate shot down at about 33.16 seconds is on its rail. */
+export function plateX(time: number): number {
+  return -0.72 + 2.62 * (time - 33);
+}
+
+/** One still: the round time it holds on and the camera. */
+export interface Still {
+  time: number;
+  camera: CameraShot;
+}
 
 /**
- * The stills share one round, with a golden duck crossing the middle.
- * The players open fire just before, so the booth is still full.
+ * The key art. The icon is the golden duck the instant the BB hits it,
+ * low and close, with the flecks flying and the lasers crossing in. The
+ * poster is the same moment from behind the four guns.
  */
-const STILL = {
-  seed: 11,
-  openFire: 32.5,
-  hold: true,
-  golden: { lane: "back", at: 33, x: -1.6, shootAt: 34.3 },
-} as const;
-
-export const PLANS: Record<ShowcaseView, ShowcasePlan> = {
-  loop: {
-    seed: 11,
-    start: 30,
-    openFire: 28.5,
-    hold: false,
-    // Rides in from the left early in the clip, crosses the booth, and is shot near the end.
-    golden: { lane: "back", at: 33.4, x: -5.4, shootAt: 38.6 },
-    camera(t) {
-      const sway = Math.sin((t / LOOP_S) * Math.PI * 2);
-      const breathe = Math.cos((t / LOOP_S) * Math.PI * 2);
-      return { position: [0.3 * sway, 1.96, 6.05 + 0.15 * breathe], lookAt: [0.12 * sway, 1.66, -1], fov: 40 };
-    },
-  },
-  // Four lasers and a dot on the golden duck just before it is hit. The players open fire later, so the booth is fuller.
-  poster: { ...STILL, openFire: 34.6, start: 35.62, camera: () => ({ position: [0, 1.92, 6.0], lookAt: [0, 1.6, -1], fov: 38 }) },
-  // A laser dot on the golden duck, seen close, just before it is shot at about 35.65 seconds.
-  icon: { ...STILL, start: 35.6, camera: () => ({ position: [0.75, 1.5, 0.9], lookAt: [0.85, 0.8, -1.62], fov: 50 }) },
+export const STILLS: Record<"icon" | "poster", Still> = {
+  icon: { time: 39.24, camera: { position: [goldenX(39.24) - 0.62, 1.1, -0.6], lookAt: [goldenX(39.24) + 0.05, 1.08, -1.62], fov: 46 } },
+  poster: { time: 39.24, camera: { position: [0.35, 1.34, 4.4], lookAt: [goldenX(39.24), 1.12, -1.62], fov: 27 } },
 };

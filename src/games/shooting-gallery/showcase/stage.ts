@@ -7,7 +7,7 @@ import { GalleryCamera } from "../render/camera";
 import type { FinishId } from "../render/models/finishes";
 import type { Shooter, StageEvent, StageSource } from "../render/stage-source";
 import { Bot, rayThrough } from "./bots";
-import type { ShowcasePlan } from "./shots";
+import type { RoundPlan } from "./shots";
 
 /** Four players, each with a different gun, spread across the booth. */
 const CREW: readonly { seat: Seat; finish: FinishId; side: number }[] = [
@@ -35,7 +35,7 @@ export class ShowcaseStage implements StageSource {
   private golden: Target | null = null;
   private lastMs: number | null = null;
 
-  constructor(private readonly plan: ShowcasePlan) {
+  constructor(private readonly plan: RoundPlan) {
     // Long enough that the buzzer never goes on camera.
     this.live = new Round({ seats: CREW.map((c) => c.seat), seconds: 90, seed: plan.seed });
     this.bots = CREW.map((c, i) => new Bot(c.seat, c.side, plan.seed * 7 + i * 101, plan.openFire));

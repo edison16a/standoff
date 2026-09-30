@@ -52,6 +52,11 @@ export class Effects {
     this.object.add(this.tracers.object, this.puffs.object, this.chips.object, this.popups.object, this.dents.object, this.confetti.object);
   }
 
+  /** Leaves out the floating points, for the showcase's wordless trailer and key art. */
+  hideLabels(): void {
+    this.popups.object.visible = false;
+  }
+
   shot(shot: ShotEffect, now: number): void {
     this.puffs.spawn(shot.from, now, { colour: "#fff1c9", size: 0.1, grow: 1.8, life: 0.07, alpha: 0.95, glow: true, drift: new THREE.Vector3() });
     for (let i = 0; i < 3; i++) {
