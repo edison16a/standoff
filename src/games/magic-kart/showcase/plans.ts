@@ -8,7 +8,7 @@ import type { Plan } from "./shots";
  */
 const LAVA = { map: "volcano", seed: 7 } as const;
 
-/** Neo City, seed 26: three karts power slide through the first bend together and fire their turbos. */
+/** Neo City, seed 26: three karts power slide through the first bend together and fire their turbos, then an ice throw freezes Pip. */
 const NEON = { map: "city", seed: 26 } as const;
 
 /** Star Ring, seed 6: all four gliders open within a tenth of a second, in front of the ringed planet. */
@@ -33,18 +33,19 @@ export const PLANS: Record<ShowcaseView, Plan> = {
     shots: [
       // Low beside the boost pads as the pack roars past with flames out.
       { ...LAVA, from: 19.4, length: 0.8, rig: { kind: "post", at: 0.432, d: 8, height: 0.6, frame: 14 } },
-      // Half speed, low in front of Blaze: the orb hits, and the pack launches off the ramp overhead.
-      { ...LAVA, from: 20.15, length: 1.5, rate: 0.5, rig: { kind: "hero", kart: 0, angle: 0.35, dist: 7, height: 0.2, aim: 1.5, fov: 55, road: true } },
-      // Under Blaze's wing, circling, the sunset behind.
-      { ...LAVA, from: 20.9, length: 1.1, rig: { kind: "hero", kart: 0, angle: -1.1, dist: 5, height: -1.6, aim: 0.8, fov: 55, road: true, orbit: 0.4 } },
+      // Half speed, low beside the pack: the orb hits Blaze as they launch off the ramp over the lava.
+      // Kept clear of the ramp, which a camera in front of Blaze would sit inside.
+      { ...LAVA, from: 20.15, length: 1, rate: 0.5, rig: { kind: "hero", kart: 0, angle: 1, dist: 7, height: 1.5, aim: 1.2, fov: 55, road: true } },
+      // Under Blaze's wing, circling, the sunset behind. It cuts before he drops out of the picture.
+      { ...LAVA, from: 20.65, length: 0.9, rig: { kind: "hero", kart: 0, angle: -1.1, dist: 5, height: -1.6, aim: 0.8, fov: 55, road: true, orbit: 0.4 } },
       // Half speed: Pip's orb knocks Mochi about under the wing.
       { ...LAVA, from: 21.25, length: 0.9, rate: 0.5, rig: { kind: "hero", kart: 3, angle: 0.9, dist: 5, height: 0.6, aim: 0.8, fov: 50, road: true } },
-      // Pip sliding through a neon bend into a turbo.
-      { ...NEON, from: 7.1, length: 1.4, rig: { kind: "hero", kart: 1, angle: 2.5, dist: 4.5, height: 0.4, aim: 0.6, fov: 52, road: true } },
+      // Pip sliding through a neon bend into a turbo, then frozen solid by an ice throw.
+      { ...NEON, from: 7.1, length: 1.9, rig: { kind: "hero", kart: 1, angle: 2.5, dist: 4.5, height: 0.4, aim: 0.6, fov: 52, road: true } },
       // Behind the pack as the gliders open among the stars.
       { ...STARS, from: 18.75, length: 1, rig: { kind: "chase", back: 8, side: 2, height: 1.5, fov: 60 } },
       // Under the four wings, circling slowly past the ringed planet.
-      { ...STARS, from: 19.4, length: 1.3, rig: { kind: "hero", kart: 3, angle: -2.2, dist: 6, height: -1.2, aim: 1.2, fov: 58, road: true, orbit: 0.3 } },
+      { ...STARS, from: 19.4, length: 1.5, rig: { kind: "hero", kart: 3, angle: -2.2, dist: 6, height: -1.2, aim: 1.2, fov: 58, road: true, orbit: 0.3 } },
     ],
   },
   // All four gliders among the stars, seen from below, the ringed planet behind.
