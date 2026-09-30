@@ -17,7 +17,8 @@ import "../styles/showcase.css";
 const INPUT = { mirrors: [null, null], telegraph: [false, false] } as const;
 /** The ceremony starts this far in, so the belt is already at the champion's chest on the cut. */
 const CEREMONY_LEAD_S = 0.4;
-const STEP = 1 / 60;
+const STEPS_PER_S = 60;
+const STEP = 1 / STEPS_PER_S;
 
 /**
  * Boxing playing itself for the home screen's media, cut like a trailer:
@@ -91,8 +92,9 @@ export function Showcase({ view }: { view: ShowcaseView }) {
           return;
         }
         last = now;
-        const cycle = ((now - start) / 1000) % CYCLE_S;
-        if (cycle < sim) {
+        // Whole steps, counted as integers, so a pass lands its cuts on exactly the same frames as the last.
+        const step = Math.floor(((now - start) / 1000) * STEPS_PER_S + 1e-6) % (CYCLE_S * STEPS_PER_S);
+        if (step < sim) {
           trailer = new Trailer();
           // Fresh cameras and clock too: the shake's wobble and the shoulder view's easing would otherwise carry over.
           tv = new TvCamera();
@@ -101,15 +103,16 @@ export function Showcase({ view }: { view: ShowcaseView }) {
           sim = 0;
           clock = 0;
         }
-        while (sim + STEP <= cycle) {
-          const cut = shotIndex(sim + STEP) !== shotIndex(sim);
-          sim += STEP;
-          if (sim >= CEREMONY_AT && !scene.ceremony.active) scene.startCeremony(0, clock - CEREMONY_LEAD_S);
-          hear(trailer.advanceTo(sim));
-          const speed = Trailer.speed(sim);
+        while (sim < step) {
+          sim++;
+          const at = sim / STEPS_PER_S;
+          const cut = shotIndex(at) !== shotIndex(at - STEP);
+          if (at >= CEREMONY_AT && !scene.ceremony.active) scene.startCeremony(0, clock - CEREMONY_LEAD_S);
+          hear(trailer.advanceTo(at));
+          const speed = Trailer.speed(at);
           clock += STEP * speed;
           scene.update(trailer.match, INPUT, clock, STEP * speed);
-          camera = trailerShot(sim, rig, STEP, cut);
+          camera = trailerShot(at, rig, STEP, cut);
         }
         draw(camera);
         frame = requestAnimationFrame(loop);
