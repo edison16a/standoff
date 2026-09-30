@@ -40,7 +40,7 @@ export function pressTackle(m: Match, a: Athlete, carrier: Athlete): boolean {
 
 /** Brings the carrier down: the play is over where they fall. */
 export function tackle(m: Match, carrier: Athlete, by: Athlete): void {
-  const sack = carrier.role === "qb" && carrier.team === m.offense && !m.play?.passed && !m.play?.crossed;
+  const sack = carrier.role === "qb" && carrier.team === m.offense && !m.play?.passed && !m.play?.qbRun;
   knockDown(carrier, 1.5, "tackled");
   if (by.role !== "lineman") knockDown(by, 1.2, "tackler");
   by.stats.tackles++;

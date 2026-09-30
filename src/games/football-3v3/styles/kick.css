@@ -34,7 +34,8 @@
 .fb-choose__options {
   display: grid;
   flex: 1;
-  grid-template-columns: 1fr 1fr;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
   gap: 12px;
   min-height: 0;
 }
@@ -73,6 +74,10 @@
 
 .fb-choose__option--throw {
   background: linear-gradient(135deg, #16a34a, #0f7a36);
+}
+
+.fb-choose__option--run {
+  background: linear-gradient(135deg, #9333ea, #6b21a8);
 }
 
 .fb-choose__option--kick {

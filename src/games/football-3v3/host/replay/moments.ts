@@ -46,7 +46,8 @@ function findPass(clip: readonly MatchView[], snap: number, td: number, scorer: 
   for (let i = snap + 1; i < td; i++) {
     if (clip[i]!.ball.state === "pass" && clip[i - 1]!.ball.state !== "pass") release = i;
   }
-  if (release < 0) return null;
+  // A pitch on a run call is replayed as the run it starts.
+  if (release < 0 || clip[release]!.ball.pitch) return null;
   let caught = -1;
   for (let i = release + 1; i <= td; i++) {
     const b = clip[i]!.ball;

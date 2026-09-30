@@ -15,7 +15,7 @@ describe("a phone's screen state", () => {
     const m = peopleMatch();
     const call = phoneState(context({ phase: m.phase, match: m }), 0);
     expect(call.pad).toBe("choose");
-    expect(call.choose?.options).toEqual(["throw", "kick"]);
+    expect(call.choose?.options).toEqual(["throw", "run", "kick"]);
     m.choose(m.bySeat(0)!.id, "throw");
     const hike = phoneState(context({ phase: m.phase, match: m }), 0);
     expect(hike.pad).toBe("qb");

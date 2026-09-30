@@ -68,60 +68,6 @@
   }
 }
 
-/* The phones' players along the top, between the logo and the tools. */
-
-.fb-strip {
-  position: absolute;
-  top: 16px;
-  left: 50%;
-  display: flex;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  transform: translateX(-50%);
-  list-style: none;
-}
-
-.fb-strip__player {
-  display: grid;
-  grid-template-columns: auto auto;
-  grid-template-rows: auto auto;
-  column-gap: 8px;
-  align-items: center;
-  padding: 6px 14px 6px 10px;
-  border-bottom: 4px solid var(--team);
-  border-radius: 8px;
-  background: var(--fb-glass);
-  transition: transform 160ms ease;
-}
-
-.fb-strip__player--ball {
-  transform: translateY(4px);
-  box-shadow: 0 0 0 2px var(--fb-gold);
-}
-
-.fb-strip__player--away {
-  opacity: 0.55;
-}
-
-.fb-strip__dot {
-  grid-row: span 2;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--player);
-}
-
-.fb-strip__name {
-  font-weight: 800;
-  font-size: 16px;
-}
-
-.fb-strip__star {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.65);
-}
-
 /* The big buttons: Kick off and Play again, and the quieter one beside it. */
 
 .fb-start {

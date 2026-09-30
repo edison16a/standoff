@@ -8,7 +8,7 @@ export type RoomPhase = (typeof PHASES)[number];
 
 /** Which controls the phone shows. See engine/status.ts. */
 export const PADS = ["qb", "runner", "defense", "kicker", "choose", "wait"] as const;
-export const CALLS = ["throw", "kick", "two"] as const;
+export const CALLS = ["throw", "run", "kick", "two"] as const;
 
 const team = z.union([z.literal(0), z.literal(1)]);
 const count = z.number().int().min(0).max(999);
@@ -54,13 +54,18 @@ export const phoneStateSchema = z.object({
   offense: z.boolean(),
   pad: z.enum(PADS),
   /** The QB's pick before a play, and the whole seconds left to make it. */
-  choose: z.object({ options: z.array(z.enum(CALLS)).max(2), left: count }).nullable(),
+  choose: z.object({ options: z.array(z.enum(CALLS)).max(3), left: count }).nullable(),
   /** Whole seconds left to hike, for the QB before the snap. */
   hikeLeft: count.nullable(),
   /** The kick meter this phone stops, and whether it is a field goal or a punt. */
   meter: z.object({ stage: z.enum(["aim", "power"]), fieldGoal: z.boolean() }).nullable(),
   withBall: z.boolean(),
   canThrow: z.boolean(),
+  /** A run call: the QB gets Pass for the pitch in place of the throw stick. */
+  runPlay: z.boolean(),
+  canPitch: z.boolean(),
+  /** The QB can press Run to become the runner for the rest of the play. */
+  canRun: z.boolean(),
   jukeReady: z.boolean(),
   rushReady: z.boolean(),
   guarding: z.boolean(),

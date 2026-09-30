@@ -17,7 +17,7 @@ export const readySchema = z.object({ kind: z.literal("ready"), ready: z.boolean
 /** Sent once as the phone's screen starts, so the host sends it everything even if earlier messages came too soon. */
 export const helloSchema = z.object({ kind: z.literal("hello") });
 
-/** The QB's pick before a play: throw or kick, and after a touchdown kick or two. */
+/** The QB's pick before a play: throw, run or kick, and after a touchdown kick or two. */
 export const callSchema = z.object({ kind: z.literal("call"), call: z.enum(CALLS) });
 
 /**
@@ -37,8 +37,8 @@ export const phoneMessageSchema = z.discriminatedUnion("kind", [pickSchema, read
 
 export type PhoneMessage = z.infer<typeof phoneMessageSchema>;
 
-/** The gamepad's buttons, as named to the kit. Guard is held; the rest are pressed. */
-export const PAD_BUTTONS = ["hike", "juke", "dive", "rush", "tackle", "guard"] as const;
+/** The gamepad's buttons, as named to the kit. Guard is held; the rest are pressed. Pass is the pitch on a run call; Run makes the QB a runner. */
+export const PAD_BUTTONS = ["hike", "juke", "dive", "rush", "tackle", "guard", "pass", "run"] as const;
 export type PadButton = (typeof PAD_BUTTONS)[number];
 
 export function isPadButton(value: string): value is PadButton {

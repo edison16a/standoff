@@ -21,6 +21,8 @@ export interface PassInfo {
   at: number;
   /** Computer defenders who already had their one swipe at it. */
   swiped: number[];
+  /** A short lob back to a runner on a run play, not a forward pass: nobody picks it off. */
+  pitch: boolean;
 }
 
 /**

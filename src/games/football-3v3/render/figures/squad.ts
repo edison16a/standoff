@@ -37,13 +37,15 @@ export class Squad {
   readonly group = new THREE.Group();
   readonly ball = new BallModel();
   private readonly figures = new Map<number, { figure: Figure; key: string; seat: Ring }>();
-  private readonly target = new Ring("#fff27a", 0.55, 0.85);
+  /** Solid magenta with a white edge: no team or seat wears it, so it cannot be mistaken for their rings. */
+  private readonly target = new Ring("#ff1fce", 0.5, 1.05, true);
+  private readonly targetEdge = new Ring("#ffffff", 1.05, 1.18, true);
   private readonly material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0.05 });
   /** Who wears which name on their back; the players' own names, set by the host. */
   jerseyName: JerseyName = () => null;
 
   constructor() {
-    this.group.add(this.ball.group, this.target.mesh);
+    this.group.add(this.ball.group, this.target.mesh, this.targetEdge.mesh);
   }
 
   figure(id: number): Figure | null {
@@ -65,7 +67,9 @@ export class Squad {
       if (a.targeted) targeted = a;
     }
     const aiming = targeted !== null && (view.ball.state === "held" || view.ball.state === "pass");
-    this.target.update(aiming, targeted?.x ?? 0, targeted?.z ?? 0, time, dt, 1, view.ball.state === "held");
+    const pulse = view.ball.state === "held";
+    this.target.update(aiming, targeted?.x ?? 0, targeted?.z ?? 0, time, dt, 0.95, pulse);
+    this.targetEdge.update(aiming, targeted?.x ?? 0, targeted?.z ?? 0, time, dt, 0.9, pulse);
     const holderId = view.ball.holder;
     const holder = holderId !== null ? this.figure(holderId) : null;
     const h = view.athletes.find((a) => a.id === holderId);
@@ -98,6 +102,7 @@ export class Squad {
     }
     this.figures.clear();
     this.target.dispose();
+    this.targetEdge.dispose();
     this.ball.dispose();
     this.material.dispose();
   }

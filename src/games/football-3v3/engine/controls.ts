@@ -4,6 +4,8 @@ import type { Match } from "./match";
 import { pickTarget } from "./aim";
 import { canThrow, receivers, throwTo } from "./passing";
 import { hike } from "./phases";
+import { startRun } from "./qb-run";
+import { startPitch } from "./run-play";
 import { pressTackle, startDive } from "./tackle";
 import { RUSH } from "./tuning";
 import type { Athlete, Button } from "./types";
@@ -78,6 +80,10 @@ export function pressButton(m: Match, id: number, button: Button, value?: number
     if (holder && holder.team !== a.team) pressTackle(m, a, holder);
   } else if (button === "guard") {
     if (!onOffense) a.guard = guardPick(m, a);
+  } else if (button === "pass") {
+    startPitch(m, a);
+  } else if (button === "run") {
+    startRun(m, a);
   }
 }
 

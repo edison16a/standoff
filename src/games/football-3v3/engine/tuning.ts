@@ -36,8 +36,6 @@ export const MOVE = {
   /** Top speed from speed 0 to 10: about 7.6 to 9.6 metres a second. */
   baseSpeed: 7.6,
   perSpeed: 0.2,
-  /** The QB is slower than a runner. */
-  qbSpeed: 0.86,
   withBall: 0.93,
   /** Push at a standstill for a 95 kg player, fading to nothing at top speed. */
   push: 7.2,
@@ -110,6 +108,30 @@ export const PASS = {
   /** The ball bends toward a receiver who changes course, up to this acceleration. */
   assist: 5,
   spin: 62,
+} as const;
+
+/**
+ * The QB as a passer is clearly slower than everyone else, slowest just
+ * after the snap while he sets up, then picking up a little. Once he
+ * presses Run (or crosses the line) he moves like any runner.
+ */
+export const QB_PACE = {
+  /** Share of a normal top speed at the snap, and once he is settled. */
+  early: 0.55,
+  late: 0.78,
+  /** Seconds after the snap to go from early to late. */
+  ramp: 3,
+} as const;
+
+/** The pitch on a run call: a short soft lob to the back beside the QB. */
+export const PITCH = {
+  /** Hang time: slow enough to see, quick enough that the rush cannot get there. */
+  time: 0.5,
+  releaseHeight: 1.5,
+  spin: 30,
+  /** The back lines up this far outside the QB, and a yard deeper. */
+  wide: 2.6,
+  deeper: 1,
 } as const;
 
 export const KICK = {

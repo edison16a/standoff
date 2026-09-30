@@ -4,7 +4,6 @@ import { PadButton } from "@/games/kit/pad/PadButton";
 import type { PadButton as Button, PhoneState } from "../../protocol";
 import { TEAMS } from "../../teams";
 import { ButtonFace, type FaceIcon } from "./ButtonFace";
-import { MoveBar } from "./MoveBar";
 import { PadInfo } from "./PadInfo";
 import { usePhone } from "./session-context";
 import { ThrowStick } from "./ThrowStick";
@@ -22,9 +21,11 @@ function Hold({ button, icon, text, colour, size = "md", disabled }: { button: B
 const colourOf = (host: PhoneState) => TEAMS[host.team ?? 0].color;
 
 /**
- * The QB: the move bar under the left thumb, the throw stick under the
- * right. Before the snap the middle is one big Hike button with the
- * seconds left; after it, Juke.
+ * The QB: the same move stick as everyone under the left thumb, the
+ * throw stick under the right, or on a run call a big Pass button for
+ * the pitch. Before the snap the middle is one big Hike button with the
+ * seconds left; after it, Juke and Run. Run hands him the runner's pad
+ * for the rest of the play (engine/qb-run.ts).
  */
 export function QbPad({ host }: { host: PhoneState }) {
   const phone = usePhone();
@@ -32,7 +33,7 @@ export function QbPad({ host }: { host: PhoneState }) {
   return (
     <div className="fb-pad fb-pad--qb">
       <div className="fb-pad__left">
-        <MoveBar colour={colourOf(host)} onChange={(stick) => phone.move(stick)} />
+        <Joystick alwaysShown colour={colourOf(host)} onChange={(stick) => phone.move(stick)} />
       </div>
       <div className="fb-pad__middle">
         <PadInfo host={host} />
@@ -44,17 +45,22 @@ export function QbPad({ host }: { host: PhoneState }) {
         ) : (
           <div className="fb-pad__row" key="juke">
             <Hold button="juke" icon="juke" text="Juke" colour="#a855f7" disabled={host.phase !== "live" || !host.jukeReady || host.grounded} />
+            <Hold button="run" icon="run" text="Run" colour="#0d9488" disabled={!host.canRun || host.grounded} />
           </div>
         )}
       </div>
       <div className="fb-pad__right">
-        <ThrowStick disabled={!host.canThrow} onAim={(stick) => phone.aim(stick)} onThrow={(stick) => phone.throwBall(stick)} />
+        {host.runPlay ? (
+          <Hold button="pass" icon="ball" text="Pass" colour="#9333ea" size="lg" disabled={!host.canPitch} />
+        ) : (
+          <ThrowStick disabled={!host.canThrow} onAim={(stick) => phone.aim(stick)} onThrow={(stick) => phone.throwBall(stick)} />
+        )}
       </div>
     </div>
   );
 }
 
-/** A runner, or the QB once past the line: the run stick, Dive and Juke. */
+/** A runner, or the QB once he pressed Run or crossed the line: the run stick, Dive and Juke. */
 export function RunnerPad({ host }: { host: PhoneState }) {
   const phone = usePhone();
   const live = host.phase === "live" && !host.grounded;

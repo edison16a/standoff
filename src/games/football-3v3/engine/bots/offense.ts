@@ -5,6 +5,7 @@ import { FIELD, YARD, yardToX } from "../field";
 import { startJuke } from "../juke";
 import type { Match } from "../match";
 import { receivers, throwTo } from "../passing";
+import { startRun } from "../qb-run";
 import { PASS } from "../tuning";
 import { startDive } from "../tackle";
 import type { Athlete } from "../types";
@@ -23,10 +24,17 @@ function openness(m: Match, qb: Athlete, r: Athlete, skill: FootballSkill): numb
   return near + depth * 0.03 - trap + m.rng.gauss((1 - skill.accuracy) * 2);
 }
 
+/** Open grass in front of the QB: nobody within a few metres of a spot just ahead of him. */
+function laneAhead(m: Match, qb: Athlete): boolean {
+  const spot = { x: qb.x + m.sign * 5, z: qb.z };
+  return defendersOf(m, qb).every((d) => dist2(d, spot) > 5);
+}
+
 /**
  * A computer QB: drops back, reads the receivers, and throws to the most
  * open one when the read is done or the pocket closes. With nobody open
- * for long, it tucks the ball and runs.
+ * for long, or with nobody open and grass ahead, it presses Run (the same
+ * button a person has) and carries it.
  */
 export function readField(m: Match, qb: Athlete, skill: FootballSkill): void {
   const t = m.play?.sinceSnap ?? 0;
@@ -43,6 +51,11 @@ export function readField(m: Match, qb: Athlete, skill: FootballSkill): void {
         bestOpen = o;
       }
     }
+    // Nobody open and grass ahead: sometimes he presses Run and takes it himself.
+    if (bestOpen < 3 && laneAhead(m, qb) && m.rng.chance(0.3 * skill.accuracy)) {
+      startRun(m, qb);
+      return carry(m, qb, skill);
+    }
     if (best && (bestOpen >= 3 || pressure || t > qb.bot.readAt + 1.2)) {
       qb.aim = { x: best.x - qb.x, z: best.z - qb.z };
       throwTo(m, qb, best.id);
@@ -51,7 +64,10 @@ export function readField(m: Match, qb: Athlete, skill: FootballSkill): void {
       return;
     }
   }
-  if (options.length === 0 || t > qb.bot.readAt + 3.5) return carry(m, qb, skill);
+  if (options.length === 0 || t > qb.bot.readAt + 3.5) {
+    startRun(m, qb);
+    return carry(m, qb, skill);
+  }
   const drop = { x: yardToX(m.offense, m.drive.los) - m.sign * 7.5 * YARD, z: qb.z };
   headFor(qb, drop, 1.5);
 }

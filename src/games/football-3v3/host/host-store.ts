@@ -56,18 +56,6 @@ export interface ResultRow {
   interceptions: number;
 }
 
-/** A phone's player, for the strip along the bottom of the game. */
-export interface StripPlayer {
-  id: number;
-  seat: number;
-  name: string;
-  team: TeamId;
-  build: BuildId;
-  role: LobbyRole;
-  hasBall: boolean;
-  away: boolean;
-}
-
 /**
  * What Football 3v3's screens on the computer render. The session writes
  * here a few times a second and React reads. The match itself never goes
@@ -89,7 +77,6 @@ export interface FootballHostState {
   /** Set at the final whistle: the winners, or null for a tie. */
   over: { winner: TeamId | null } | null;
   results: ResultRow[];
-  strip: StripPlayer[];
   /** The winners' names over the trophy presentation, or null outside it. */
   ceremony: CeremonyCard | null;
 }
@@ -107,6 +94,5 @@ export const useFootballStore = create<FootballHostState>(() => ({
   score: [0, 0],
   over: null,
   results: [],
-  strip: [],
   ceremony: null,
 }));

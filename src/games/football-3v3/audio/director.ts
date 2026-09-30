@@ -72,7 +72,10 @@ export class SoundDirector {
         return sfx.tackle(event.sack);
       case "throw":
         return sfx.throwBall(event.speed);
+      case "pitch":
+        return sfx.throwBall(8);
       case "catch":
+      case "takePitch":
         return sfx.catchBall();
       case "intercept":
         sfx.catchBall();

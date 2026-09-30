@@ -17,7 +17,8 @@ import { usePhone } from "./session-context";
 export function Controller({ host }: { host: PhoneState }) {
   const phone = usePhone();
   // Skip coming and going counts too: a vote pressed as the replay ends must not stay held into the next one.
-  const layout = `${host.pad}:${host.phase === "presnap"}:${host.skip !== null}`;
+  // The snap only changes the QB's buttons; a defender's stick stays held through the call and the snap.
+  const layout = `${host.pad}:${host.pad === "qb" && host.phase === "presnap"}:${host.skip !== null}`;
 
   useEffect(() => {
     phone.controlling(true);

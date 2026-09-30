@@ -8,6 +8,7 @@ import { updateKick } from "./kick";
 import { lineContact, updateLinemen } from "./linemen";
 import type { Match } from "./match";
 import { moveAthlete } from "./motion";
+import { paceOf } from "./qb-run";
 import { updateTarget, updateThrow } from "./passing";
 import { separate } from "./collide";
 import { updateDive, updateDown, updateLunge } from "./tackle";
@@ -39,12 +40,18 @@ function act(m: Match, a: Athlete, dt: number): void {
   }
 }
 
-/** Who may move now: in the break between plays and during a kick everyone waits. */
+/**
+ * Who may move now. The defence sets itself while the offense calls the
+ * play and lines up; in the break between plays and during a kick
+ * everyone waits.
+ */
 function frozen(m: Match, a: Athlete): boolean {
   if (m.phase === "live" || m.phase === "touchdown") return false;
-  if (m.phase === "presnap") return a.team === m.offense;
+  if (settingUp(m)) return a.team === m.offense;
   return true;
 }
+
+const settingUp = (m: Match) => m.phase === "presnap" || m.phase === "choose" || m.phase === "convert";
 
 /** The checks that end a live play: a score, stepping out, and the QB running past the line. */
 function liveChecks(m: Match): void {
@@ -55,7 +62,8 @@ function liveChecks(m: Match): void {
   if (Math.abs(c.z) > FIELD.halfWidth || Math.abs(c.x) > FIELD.endX) return endPlay(m, "out");
   if (c.role === "qb" && c.team === m.offense && !play.passed) {
     const past = (c.x - yardToX(m.offense, m.drive.los)) * m.sign;
-    if (past > 0.5) play.crossed = true;
+    // Past the line he is a runner for good, as if he had pressed Run.
+    if (past > 0.5) play.qbRun = true;
   }
 }
 
@@ -81,9 +89,9 @@ export function stepWorld(m: Match, dt: number): void {
     const stick = a.move;
     if (frozen(m, a)) a.move = { x: 0, z: 0 };
     else if (live && a.guard !== null) a.move = guardMove(m, a, a.guard);
-    moveAthlete(a, dt, holder === a.id, face);
+    moveAthlete(a, dt, holder === a.id, face, paceOf(m, a));
     a.move = stick;
-    if (m.phase === "presnap") holdOnside(a, m.drive);
+    if (settingUp(m)) holdOnside(a, m.drive);
   }
   updateLinemen(m, dt);
   if (live) lineContact(m);

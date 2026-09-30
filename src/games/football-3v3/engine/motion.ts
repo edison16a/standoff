@@ -49,9 +49,10 @@ export function friction(a: Athlete, decel: number, dt: number): void {
 /**
  * Moves one player for a step. Free legs run toward the stick; a
  * blocked player pushes through a lineman at a fraction of their speed.
- * `face` is a point to look at while standing, such as the ball.
+ * `face` is a point to look at while standing, such as the ball, and
+ * `pace` scales top speed (a QB who is still a passer is slower).
  */
-export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: V2 | null): void {
+export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: V2 | null, pace = 1): void {
   const k = a.action.kind;
   if (k === "stance") {
     a.vx = 0;
@@ -59,7 +60,7 @@ export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: V2 |
   } else if (k === "none" || k === "throw" || k === "celebrate" || k === "kick") {
     const slow = k === "throw" ? 0.55 : k === "kick" ? 0 : 1;
     const through = a.blocked > 0 ? (a.rushT > 0 ? RUSH.rushing : RUSH.blocked) : 1;
-    const top = topSpeed(a, hasBall) * slow * through;
+    const top = topSpeed(a, hasBall, pace) * slow * through;
     steer(a, a.move.x * top, a.move.z * top, top, dt);
   } else if (k === "down") {
     friction(a, 7, dt);

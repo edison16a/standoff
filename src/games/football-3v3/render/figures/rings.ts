@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 /**
- * Glowing rings on the turf. The target ring lights up under the
+ * Glowing rings on the turf. The target ring lights up magenta under the
  * receiver the throw stick is on, and a thin team coloured ring marks
  * each player a person controls, so everyone can find themselves.
  */
@@ -10,8 +10,10 @@ export class Ring {
   private readonly material: THREE.MeshBasicMaterial;
   private glow = 0;
 
-  constructor(color: THREE.ColorRepresentation, inner: number, outer: number) {
-    this.material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending });
+  /** `solid` paints the colour as is; additive glows but washes a strong colour out on the grass. */
+  constructor(color: THREE.ColorRepresentation, inner: number, outer: number, solid = false) {
+    const blending = solid ? THREE.NormalBlending : THREE.AdditiveBlending;
+    this.material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0, depthWrite: false, blending });
     this.mesh = new THREE.Mesh(new THREE.RingGeometry(inner, outer, 48), this.material);
     this.mesh.rotation.x = -Math.PI / 2;
     this.mesh.renderOrder = 2;
