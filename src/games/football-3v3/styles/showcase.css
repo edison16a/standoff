@@ -10,10 +10,22 @@
   background: #05070f;
 }
 
+/* A film grade over the real render: harder contrast and richer colour, like a broadcast trailer. */
 .fb-showcase__canvas {
   display: block;
   width: 100%;
   height: 100%;
+  filter: contrast(1.14) saturate(1.18) brightness(0.96);
+}
+
+/* A vignette pulls the eye to the action in the middle of every shot. */
+.fb-showcase::before {
+  content: "";
+  z-index: 1;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 45%, transparent 45%, rgba(2, 3, 10, 0.55) 100%);
 }
 
 /* The store tile darkens toward the foot, so the logo stands out at any size. */
