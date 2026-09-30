@@ -15,6 +15,12 @@ import { CYCLE_S, duelAt } from "./edit";
 /** Frames are drawn at the clip's rate, so a slow machine capturing it draws each once. */
 const FRAME_MS = 1000 / 30;
 /**
+ * The duel moves on in steps of 1/60 s: a frame drawn 32 or 48 ms after
+ * the last, as the capture tool's clock falls, always shows a new moment.
+ */
+const STEPS_PER_S = 60;
+const STEP_MS = 1000 / STEPS_PER_S;
+/**
  * The stills stop the duel here, in milliseconds: the icon as the blades
  * first meet, the poster a beat later with the sparks spread wide.
  */
@@ -74,13 +80,13 @@ export class ShowcaseDirector {
       this.renderer.draw([{ rect: FULL, camera: this.still }]);
       return;
     }
-    this.start ??= now - this.skip;
     if (now - this.last < FRAME_MS * 0.9) return;
     this.last = now;
     // `?ceremony` runs the duel on to its end and stays there; the trailer loops its edit.
-    // Whole frames, counted as integers, so every pass through the loop cuts on exactly the same frames.
-    const frames = Math.floor(((now - this.start) * 30) / 1000 + 1e-6);
-    const t = (this.stay ? frames : frames % (CYCLE_S * 30)) / 30;
+    this.start ??= now - this.skip;
+    // Whole steps, counted as integers, so every pass through the loop cuts on exactly the same frames.
+    const steps = Math.floor(((now - this.start) * STEPS_PER_S) / 1000 + 1e-6);
+    const t = (this.stay ? steps : steps % (CYCLE_S * STEPS_PER_S)) / STEPS_PER_S;
     if (t < this.lastT) this.begin();
     this.lastT = t;
     this.playTo(this.stay ? t * 1000 : duelAt(t) * 1000);
@@ -110,7 +116,7 @@ export class ShowcaseDirector {
   }
 
   /**
-   * Plays the duel on to `ms`, a frame at a time. The renderer follows
+   * Plays the duel on to `ms`, a step at a time. The renderer follows
    * every step, so its effects and cameras run on the duel's clock even
    * across a cut that jumps it forward.
    */
@@ -120,7 +126,7 @@ export class ShowcaseDirector {
       this.choreography.drive(this.driver.engine, this.driver.engine.now - this.fightAt);
       this.driver.tick(this.duelMs);
       this.renderer.update(this.driver.engine.scene(), this.duelMs);
-      this.duelMs += FRAME_MS;
+      this.duelMs += STEP_MS;
     }
   }
 

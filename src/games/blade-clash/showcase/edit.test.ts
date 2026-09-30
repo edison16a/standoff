@@ -16,7 +16,8 @@ function play(untilS: number): { s: number; event: GameEvent }[] {
   driver.engine.match.score = { ...OPENING_SCORE };
   for (let t = -3200; t <= 0; t += 1000 / 30) driver.tick(t);
   const fightAt = driver.engine.now;
-  for (wall = 0; wall < untilS * 1000; wall += 1000 / 30) {
+  for (let step = 0; step < untilS * 60; step++) {
+    wall = (step * 1000) / 60;
     choreography.drive(driver.engine, driver.engine.now - fightAt);
     driver.tick(wall);
   }
