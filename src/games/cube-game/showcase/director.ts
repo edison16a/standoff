@@ -67,6 +67,7 @@ export class ShowcaseDirector {
     this.bot.advanceTo(Math.max(0, cut.from - PREROLL));
     this.levelTime = Math.max(0, cut.from - PREROLL);
     this.restarted = true;
+    if (cut.settle) this.renderer.setFraming(cut.angle);
     for (let t = this.levelTime + PREROLL_STEP; t < cut.from - 1e-6; t += PREROLL_STEP) this.step(t, false);
   }
 
