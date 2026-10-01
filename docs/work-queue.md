@@ -14,8 +14,6 @@ The running list of what is being built, so work can pick up again after a break
 
 | Work | Workflow | State |
 | --- | --- | --- |
-| Paintball Battle: back to Shoot, Reload and a Crouch toggle, smart auto movement that holds range and circles | wf_186da0db-78b | build then review |
-| Calibration look: every aiming game uses the Blade Clash calibration styling (phone and big screen) | wf_186da0db-78b | build then review |
 
 All final builds are on main: cover icons, sports phone controls, Paintball Battle controls, Subway camera still, 1.2x tiles, final README. Final check done and on main (503ea5b): every game played end to end except the live site, which this machine's browser cannot reach (certificate block). Part 1 fixes: Soccer feet, Kart, Brawl, Blade Clash, Zombie and Gallery rejoin, phone download retry.
 
