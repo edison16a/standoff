@@ -15,7 +15,7 @@
 }
 
 /* Only the pictures give up height; words and buttons keep their size. */
-.kit-cal > :not(.kit-cal__card, .kit-target, .kit-pad) {
+.kit-cal > :not(.kit-cal__card, .kit-target, .kit-pad, .kit-tv, .kit-cal__side) {
   flex-shrink: 0;
 }
 
