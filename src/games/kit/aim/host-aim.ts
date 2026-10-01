@@ -3,6 +3,7 @@ import type { Seat } from "@/platform/protocol";
 import { rezone, WHOLE_SCREEN, type AimZone, type ScreenPoint } from "./aim-math";
 import { AIM_TARGETS } from "./aim-targets";
 import { aimFireSchema, aimSchema, aimStepSchema, type AimStep } from "./protocol";
+import { isNewer, type StepStamp } from "./step-stamp";
 
 interface SeatAim {
   /** The latest point the phone sent. */
@@ -52,6 +53,8 @@ export function pinToEdge(point: ScreenPoint): ScreenPoint {
 export class HostAim {
   private readonly seats = new Map<Seat, SeatAim>();
   private readonly zones = new Map<Seat, AimZone>();
+  /** The last step taken per seat. Kept when a phone leaves, since its late steps can still come in. */
+  private readonly stamps = new Map<Seat, StepStamp>();
   private readonly fireListeners = new Set<(seat: Seat, point: ScreenPoint) => void>();
   private readonly off: () => void;
 
@@ -73,6 +76,10 @@ export class HostAim {
       }
       const step = aimStepSchema.safeParse(payload);
       if (step.success) {
+        const { from, n } = step.data;
+        const stamp = from !== undefined && n !== undefined ? { from, n } : undefined;
+        if (!isNewer(this.stamps.get(seat), stamp)) return;
+        if (stamp) this.stamps.set(seat, stamp);
         const aim = this.entry(seat);
         aim.step = step.data.step;
         if (TARGET_STEPS.includes(aim.step)) aim.calibratedIn = this.zone(seat);
@@ -132,6 +139,17 @@ export class HostAim {
   /** The calibration target a seat is looking for, if it is calibrating. */
   step(seat: Seat): AimStep | null {
     return this.seats.get(seat)?.step ?? null;
+  }
+
+  /**
+   * For a game to call when a seat is marked ready or its round starts.
+   * A phone only gets there past its calibration page, so any target
+   * still up for it is left over from a lost message. Going back to
+   * calibrate sends a new step, which shows as usual.
+   */
+  endCalibration(seat: Seat): void {
+    const aim = this.seats.get(seat);
+    if (aim?.step && TARGET_STEPS.includes(aim.step)) aim.step = null;
   }
 
   /** Seats that have ever aimed or calibrated. */

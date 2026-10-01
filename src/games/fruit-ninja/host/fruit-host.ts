@@ -79,6 +79,8 @@ export class FruitHost {
     this.screen?.calm();
     this.screen?.reset();
     this.driver.start(useFruitStore.getState().settings, seats);
+    // Everyone playing is past calibration, so no target of theirs may stay up through the round.
+    for (const seat of seats) this.aim.endCalibration(seat);
     this.roster = new Map(seats.map((seat) => [seat, this.nameOf(seat)]));
     this.lastCountdown = 0;
     // The join code tucks away as soon as the countdown starts, not when the first fruit flies.
@@ -195,6 +197,8 @@ export class FruitHost {
     if (message.kind === "blade") this.seats.setBlade(seat, message.blade);
     if (message.kind === "ready") {
       this.seats.setReady(seat, message.ready);
+      // Ready comes after calibration, so a target still up is left over from a lost message.
+      if (message.ready) this.aim.endCalibration(seat);
       // A player who dropped out of this round and came back picks up where they left off.
       if (message.ready && this.driver.inRound) this.driver.match?.setActive(seat, true);
     }

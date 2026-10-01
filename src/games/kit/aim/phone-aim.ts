@@ -7,6 +7,7 @@ import { TARGET_POINTS, type AimTarget } from "./aim-targets";
 import { OneEuro } from "./one-euro";
 import { loadSpans, saveSpans } from "./saved-spans";
 import type { AimStep } from "./protocol";
+import { StepSender } from "./step-sender";
 
 /** How the aim is being driven: the motion sensors, or a finger dragging on the phone. */
 export type AimSource = "motion" | "touch";
@@ -49,8 +50,8 @@ export class PhoneAim {
   private readonly listeners = new Set<() => void>();
   private readonly stopSensors: () => void;
   private readonly unlisten: () => void;
-  /** The calibration target last shown for this player, sent again after a reconnect. */
-  private step: AimStep | null = null;
+  /** The calibration target shown for this player, sent again after a reconnect. */
+  private readonly steps: StepSender;
   private timer: ReturnType<typeof setInterval> | null = null;
   private graceTimer: ReturnType<typeof setTimeout> | null = null;
   private lastSent: ScreenPoint | null = null;
@@ -63,7 +64,8 @@ export class PhoneAim {
     if (this.source === "motion") this.graceTimer = setTimeout(() => !this.reading && this.useTouch(), SENSOR_GRACE_MS);
     this.snapshot = this.makeSnapshot();
     // The host forgets a phone's target when it drops, so a player mid calibration would point at nothing.
-    this.unlisten = room.on((event) => event.type === "rejoined" && this.step && this.announce(this.step));
+    this.steps = new StepSender(room);
+    this.unlisten = room.on((event) => event.type === "rejoined" && this.steps.resend());
   }
 
   subscribe = (listener: () => void): (() => void) => {
@@ -79,8 +81,7 @@ export class PhoneAim {
 
   /** Tells the big screen which calibration target to show for this player. */
   announce(step: AimStep): void {
-    this.step = step;
-    this.room.send({ kind: "aim-step", step });
+    this.steps.announce(step);
   }
 
   /**
@@ -161,6 +162,7 @@ export class PhoneAim {
     this.stopSensors();
     this.unlisten();
     if (this.graceTimer) clearTimeout(this.graceTimer);
+    this.steps.cancel();
     this.listeners.clear();
   }
 

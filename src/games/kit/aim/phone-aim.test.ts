@@ -164,7 +164,7 @@ describe("the phone's aim", () => {
     expect(sent).toEqual([]);
     aim.announce("top-left");
     emit({ type: "rejoined" });
-    expect(sent.slice(-1)).toEqual([{ kind: "aim-step", step: "top-left" }]);
+    expect(sent.slice(-1)).toEqual([expect.objectContaining({ kind: "aim-step", step: "top-left" })]);
     expect(sent).toHaveLength(2);
     aim.dispose();
     aim = null;

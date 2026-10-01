@@ -18,7 +18,13 @@ export const aimFireSchema = z.object({ kind: z.literal("aim-fire"), x: coord, y
 /** Which calibration target this player is looking for, so the big screen can show it. */
 export const AIM_STEPS = ["center", "top-left", "top-right", "bottom-right", "bottom-left", "test", "done"] as const;
 export type AimStep = (typeof AIM_STEPS)[number];
-export const aimStepSchema = z.object({ kind: z.literal("aim-step"), step: z.enum(AIM_STEPS) });
+/** `from` and `n` order the steps (see step-stamp.ts). Optional, so an older phone still works. */
+export const aimStepSchema = z.object({
+  kind: z.literal("aim-step"),
+  step: z.enum(AIM_STEPS),
+  from: z.string().max(16).optional(),
+  n: z.number().int().nonnegative().optional(),
+});
 
 export type AimMessage = z.infer<typeof aimSchema> | z.infer<typeof aimFireSchema> | z.infer<typeof aimStepSchema>;
 
