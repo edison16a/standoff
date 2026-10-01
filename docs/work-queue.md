@@ -14,9 +14,9 @@ The running list of what is being built, so work can pick up again after a break
 
 | Work | Workflow | State |
 | --- | --- | --- |
-| Final check, part 2 in short pieces (restarts killed the long run): Fruit and Zombie, Gallery and Boxing, Subway and Cube, rooms locally, the live site, then one review of every fix. If it stops, resume with the same script (final-check-2.js) | wf_54ac2e23-001 | checking |
+| Last fix from the final check: a calibration target can stay on the big screen (shared aim kit, seen in Fruit Slicer and Zombie Survival), plus a Brawl lobby card note | single agent | fixing |
 
-All final builds are on main: cover icons, sports phone controls, Paintball Battle controls, Subway camera still, 1.2x tiles, final README. Final check part 1 fixes are on main (87cc45e): Soccer feet, Kart, Brawl, Blade Clash, Zombie and Gallery rejoin, phone download retry.
+All final builds are on main: cover icons, sports phone controls, Paintball Battle controls, Subway camera still, 1.2x tiles, final README. Final check done and on main (503ea5b): every game played end to end except the live site, which this machine's browser cannot reach (certificate block). Part 1 fixes: Soccer feet, Kart, Brawl, Blade Clash, Zombie and Gallery rejoin, phone download retry.
 
 ## Queue, in order
 
