@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ClientEnvelope, ServerEnvelope } from "@/platform/protocol";
+import { CONNECT_TIMEOUT_MS } from "./open-channel";
 import { SocketClient, type SocketStatus } from "./socket-client";
 import { FALLBACK_AFTER, preferStream, resetTransportChoice, webSocketOpened, WEBSOCKET_RETRY_MS } from "./transport-choice";
 
@@ -332,6 +333,31 @@ describe("SocketClient opening", () => {
     expect(last).toEqual(["phone:joined"]);
     expect(first!.types()).toEqual(["host:echo"]);
     expect(first!.readyState).toBe(3);
+  });
+
+  it("gives up on a connection that hangs and dials again", async () => {
+    vi.useFakeTimers();
+    stubStream();
+    const client = track(new SocketClient(quiet()));
+    client.connect();
+    FakeSocket.all[0]!.open();
+    FakeSocket.all[0]!.close(1006);
+    await vi.advanceTimersByTimeAsync(1000);
+    // Dialled while the server restarted: it neither opens nor fails.
+    const stuck = FakeSocket.all[1]!;
+    await vi.advanceTimersByTimeAsync(CONNECT_TIMEOUT_MS);
+    expect(stuck.readyState).toBe(3);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(FakeSocket.all).toHaveLength(3);
+  });
+
+  it("leaves an open connection alone however long it lasts", async () => {
+    vi.useFakeTimers();
+    const client = track(new SocketClient(quiet()));
+    client.connect();
+    FakeSocket.all[0]!.open();
+    await vi.advanceTimersByTimeAsync(CONNECT_TIMEOUT_MS * 2);
+    expect(FakeSocket.all[0]!.readyState).toBe(1);
   });
 
   it("starts on the stream when asked", () => {

@@ -1,7 +1,7 @@
 import type { ClientEnvelope, ServerEnvelope } from "@/platform/protocol";
 import { Backoff } from "./backoff";
 import { FINAL, HANDSHAKES, Handover } from "./handover";
-import { lossyKey, OPEN, openChannel, readEnvelope, type Channel } from "./open-channel";
+import { closeIfStuck, lossyKey, OPEN, openChannel, readEnvelope, type Channel } from "./open-channel";
 import type { SocketHandlers, SocketOptions } from "./socket-types";
 import { StreamChannel } from "./stream-channel";
 import { preferStream, TransportTally } from "./transport-choice";
@@ -101,14 +101,17 @@ export class SocketClient {
 
   private dial(stream = this.forceStream || preferStream(), standingIn = false): Channel {
     const channel = openChannel(stream);
+    const stopWatch = closeIfStuck(channel);
     let opened = false;
     channel.onopen = () => {
+      stopWatch();
       opened = true;
       this.tally.opened(stream, standingIn);
       this.onOpen(channel);
     };
     channel.onmessage = (event: MessageEvent<string>) => this.onMessage(channel, event.data);
     channel.onclose = (event: CloseEvent) => {
+      stopWatch();
       const wanted = (channel === this.current || channel === this.next) && !this.stopped;
       this.onClose(channel, event.code, opened, this.tally.closed(stream, opened, wanted));
     };
