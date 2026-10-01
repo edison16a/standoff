@@ -50,7 +50,8 @@
   width: min(340px, 90vw);
   height: auto;
   min-height: 0;
-  margin: 0 auto;
+  /* Centred even when a narrow phone makes it a touch wider than the page, as Blade Clash first had it. */
+  align-self: center;
 }
 
 .kit-tv__frame {
