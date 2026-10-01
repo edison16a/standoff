@@ -140,9 +140,11 @@ export class SurvivalPhone {
 
   /** After a reconnect or a host reload, say again what this player chose. */
   private resend(): void {
-    const { weapon, ready, step } = store.getState();
+    const { weapon, ready, step, state } = store.getState();
     if (step >= 2 || ready) this.send({ kind: "weapon", weapon });
-    if (ready) this.send({ kind: "ready", ready });
+    // A ready from the lobby is stale once a run began: it may have ended while this phone was away, and one ready starts the next.
+    const stale = state !== null && state.phase !== "lobby";
+    if (ready && !stale) this.send({ kind: "ready", ready });
   }
 
   private click(): void {
