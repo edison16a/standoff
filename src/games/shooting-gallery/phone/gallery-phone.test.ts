@@ -19,7 +19,8 @@ function fakeRoom() {
     },
   } as unknown as PhoneRoomApi;
   const host = (payload: { kind: string; [key: string]: unknown }) => listener?.({ type: "message", payload });
-  return { room, host };
+  const reconnect = () => listener?.({ type: "rejoined" });
+  return { room, host, reconnect };
 }
 
 function state(phase: GalleryPhase): GalleryState {
@@ -44,5 +45,23 @@ describe("the gallery phone", () => {
     expect(phone.store.getState().scored).toBeNull();
     host(state("countdown"));
     expect(phone.store.getState().scored).toBeNull();
+  });
+
+  it("does not bring a ready from before the round back after a reconnect", () => {
+    const { room, host, reconnect } = fakeRoom();
+    const sent: { kind: string }[] = [];
+    room.send = (payload) => void sent.push(payload as { kind: string });
+    phone = new GalleryPhone(room);
+    phone.setReady(true);
+    // Dropped mid round: the round may have ended, and the host cleared everyone's ready, while it was away.
+    host(state("playing"));
+    sent.length = 0;
+    reconnect();
+    expect(sent.some((m) => m.kind === "ready")).toBe(false);
+    // In the lobby a ready still stands, so it goes back.
+    host({ ...state("lobby"), players: [{ ...state("lobby").players[0]!, ready: true }] });
+    sent.length = 0;
+    reconnect();
+    expect(sent.some((m) => m.kind === "ready")).toBe(true);
   });
 });
