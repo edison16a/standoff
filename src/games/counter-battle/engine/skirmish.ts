@@ -73,11 +73,11 @@ export function updateSkirmish(f: Fighter, w: BrainWorld, now: number, dt: numbe
   face(f, w, dt);
 }
 
-/** A computer player's own duck after a burst: down a moment where it stands, back behind the wall if it was out. */
+/** A computer player's own duck after a burst: low for a moment, at a crawl on the move, or back behind the wall it was out round. */
 export function skirmishDuck(f: Fighter, w: BrainWorld): void {
   const b = f.brain;
-  if (b.stance === "move") return;
   b.low = w.rng.range(...LOW);
+  if (b.stance === "move") return;
   b.stance = "hide";
   b.timer = Math.max(b.timer, b.low);
 }
@@ -85,11 +85,11 @@ export function skirmishDuck(f: Fighter, w: BrainWorld): void {
 function lowNow(f: Fighter, w: BrainWorld, firing: boolean): boolean {
   if (w.human) return f.duck && !firing;
   const b = f.brain;
-  if (b.stance !== "hide") return false;
+  if (b.low > 0) return true;
+  // Reloading, the computer kneels while it waits behind low cover.
+  if (b.stance !== "hide" || !f.gun.reloading) return false;
   const spot = w.graph.spots[b.spot]!;
-  // The computer only kneels behind low cover, never out in the open.
-  const behindLow = spot.piece >= 0 && !spot.tall && dist(f.pos, spot.pos) < 0.3;
-  return behindLow && (b.low > 0 || f.gun.reloading);
+  return spot.piece >= 0 && !spot.tall && dist(f.pos, spot.pos) < 0.3;
 }
 
 /** Runs the route a spot at a time, thinking again at a spot on the way when it is time. */

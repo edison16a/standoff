@@ -51,3 +51,20 @@ export function dir3(yaw: number, pitch: number): V3 {
 }
 
 export const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, v));
+
+/** The nearest distance from a point to the segment a to b. */
+export function pointSegment(p: V2, a: V2, b: V2): number {
+  const dx = b.x - a.x;
+  const dz = b.z - a.z;
+  const l2 = dx * dx + dz * dz;
+  const t = l2 > 1e-12 ? clamp(((p.x - a.x) * dx + (p.z - a.z) * dz) / l2, 0, 1) : 0;
+  return Math.hypot(p.x - (a.x + dx * t), p.z - (a.z + dz * t));
+}
+
+/** The nearest distance between the segments a1 to a2 and b1 to b2; 0 where they cross. */
+export function segmentGap(a1: V2, a2: V2, b1: V2, b2: V2): number {
+  const side = (p: V2, q: V2, r: V2) => (q.x - p.x) * (r.z - p.z) - (q.z - p.z) * (r.x - p.x);
+  const crosses = side(a1, a2, b1) * side(a1, a2, b2) < 0 && side(b1, b2, a1) * side(b1, b2, a2) < 0;
+  if (crosses) return 0;
+  return Math.min(pointSegment(a1, b1, b2), pointSegment(a2, b1, b2), pointSegment(b1, a1, a2), pointSegment(b2, a1, a2));
+}

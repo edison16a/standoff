@@ -5,7 +5,7 @@ import { routesFrom, routeTo } from "./path";
 import { canPeek } from "./plan";
 import { engageRange, STYLES } from "./tactics";
 import { BODY } from "./tuning";
-import { dist, turnTo, type V2 } from "./vec";
+import { dist, segmentGap, turnTo, type V2 } from "./vec";
 
 /** The next stretch of a fighter's skirmish: the spot to run to and the route there along the cover graph. */
 export interface Hop {
@@ -36,6 +36,8 @@ const RANGE = 1.4;
 const SPREAD = 8;
 /** A spot this close to anyone else is taken. */
 const TAKEN = 1.3;
+/** A run passing this close to a teammate's own run would cross it. */
+const CROSSING = 2.5;
 /** Nearer than this to an enemy is charging in. */
 const TOO_CLOSE = 3.5;
 
@@ -85,7 +87,11 @@ export function pickHop(f: Fighter, w: BrainWorld, here: number, backing: boolea
     if (!(cost >= MIN_HOP && cost <= MAX_HOP)) continue;
     if (w.others.some((o) => dist(o, s.pos) < TAKEN)) continue;
     const arc = turnTo(from, bearing(centre, s.pos)) * f.brain.orbit * ((r0 + dist(s.pos, centre)) / 2);
-    const score = scoreSpot(s, w, { want, band, backing, crowd }) + CIRCLE * Math.min(MAX_ARC, arc) - (Math.abs(cost - IDEAL_HOP) / IDEAL_HOP) * 0.6 - (s.id === f.brain.from ? 1.5 : 0) + w.rng.range(0, 0.3);
+    let score = scoreSpot(s, w, { want, band, backing, crowd }) + CIRCLE * Math.min(MAX_ARC, arc);
+    score -= (Math.abs(cost - IDEAL_HOP) / IDEAL_HOP) * 0.6 + (s.id === f.brain.from ? 1.5 : 0);
+    // Two teammates running across each other's path bunch up halfway.
+    if (w.mates.some((m, i) => segmentGap(start, s.pos, m, w.claimed[i] ?? m) < CROSSING)) score -= 2.5;
+    score += w.rng.range(0, 0.3);
     if (score > bestScore) {
       bestScore = score;
       best = { spot: s.id, route: [], arc, inRange };
