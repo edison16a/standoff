@@ -27,7 +27,7 @@ export function showcaseBattle(seed: number): Battle {
     gun: l.gun,
     difficulty: "hard",
   }));
-  return new Battle(setups, seed);
+  return new Battle(setups, seed, { movement: "cover" });
 }
 
 /**

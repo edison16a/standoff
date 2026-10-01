@@ -24,6 +24,8 @@ export interface PhoneStore {
   flash: Flash | null;
   /** The running reload on this phone's clock: when it began and when it will end. */
   reload: { from: number; to: number } | null;
+  /** Crouch is switched on: the fighter stays low until it is tapped again. */
+  crouched: boolean;
 }
 
 export const usePhoneStore = create<PhoneStore>(() => ({
@@ -33,4 +35,5 @@ export const usePhoneStore = create<PhoneStore>(() => ({
   host: null,
   flash: null,
   reload: null,
+  crouched: false,
 }));

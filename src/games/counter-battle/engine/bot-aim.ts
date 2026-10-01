@@ -3,6 +3,7 @@ import type { Piece } from "./arena";
 import { eyeOf, targetPoints, type Fighter } from "./fighter";
 import { sightBlocked } from "./geometry";
 import type { Rng } from "./rng";
+import { STYLES } from "./tactics";
 import { dist3, turnTo, type V3 } from "./vec";
 
 /**
@@ -44,6 +45,15 @@ export interface BotIntent {
   duck: boolean;
 }
 
+/**
+ * How far behind a running target each level's aim trails in a skirmish,
+ * in seconds of its run: a fighter who keeps strafing really is harder to
+ * hit, and a better bot leads closer.
+ */
+export const TRAIL: Record<Exclude<BotLevel, "training">, number> = { easy: 0.3, medium: 0.2, hard: 0.12 };
+/** In a skirmish a bot holds its fire past this many times its gun's engagement range, so the fight starts once both sides close in. */
+export const HOLD_FIRE = 1.6;
+
 /** How likely a bot is to drop back into cover after each burst or single shot. */
 const DUCK_AFTER: Record<"auto" | "shotgun" | "sniper", number> = { auto: 0.5, shotgun: 0.55, sniper: 0.9 };
 
@@ -61,6 +71,9 @@ export class BotAim {
   private head = false;
   private burstLeft = 0;
   private waitUntil = 0;
+
+  /** `skirmish`: the aim trails a running target and holds fire out of range. The cover brain's filmed fight aims as it always did. */
+  constructor(private readonly skirmish = false) {}
 
   /** Forgets the last round's target and timing. */
   reset(): void {
@@ -96,7 +109,9 @@ export class BotAim {
     // Being shot shakes a bot's aim, as it would a person's.
     if (now - f.hitAt < dt * 1.5) this.nudge(skill.error * 0.6, rng);
     const points = targetPoints(target);
-    const point = this.head ? points.head : points.chest;
+    const aimed = this.head ? points.head : points.chest;
+    const lag = this.skirmish ? TRAIL[f.difficulty] : 0;
+    const point = { x: aimed.x - target.vel.x * lag, y: aimed.y, z: aimed.z - target.vel.z * lag };
     const true_ = angleTo(eye, point);
     const want = {
       yaw: true_.yaw + this.err.yaw - f.gun.kick.yaw * skill.comp,
@@ -109,7 +124,7 @@ export class BotAim {
     const tolerance = (this.head ? 0.2 : 0.4) / d + 0.012;
     const onTarget = Math.hypot(missYaw * Math.cos(true_.pitch), missPitch) < tolerance;
     // Buckshot at long range only gives away where you are.
-    const inReach = f.gun.spec.pellets === 1 || d <= f.gun.spec.falloff.end;
+    const inReach = (f.gun.spec.pellets === 1 || d <= f.gun.spec.falloff.end) && (!this.skirmish || d <= STYLES[f.gun.id].engage[0] * HOLD_FIRE);
     const pull = this.seen >= skill.reaction && onTarget && inReach && now >= this.waitUntil && f.gun.ready(now);
     const duck = pull && this.fired(f, skill, rng, now);
     return { pull, reload: false, engaged: true, duck };

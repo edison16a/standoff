@@ -78,11 +78,11 @@ describe("a bot match", { timeout: 60_000 }, () => {
     expect(run.watch.events.some((e) => e.type === "reload-start")).toBe(true);
   });
 
-  it("never leaves a fighter in the open for long", () => {
-    expect(run.watch.maxOpen).toBeLessThan(2.5);
+  it("slides from cover to cover, never out in the open for long", () => {
+    expect(run.watch.maxOpen).toBeLessThan(4);
   });
 
-  it("runs, hides, crouches and peeks, and never walks through cover or off the field", () => {
+  it("runs, pauses, crouches and peeks, and never walks through cover or off the field", () => {
     for (const s of ["move", "hide", "peek"] as const) expect(run.watch.stances.has(s)).toBe(true);
     for (const p of ["run", "crouch", "peek"] as const) expect(run.watch.poses.has(p)).toBe(true);
     expect(run.watch.inside).toBe(0);

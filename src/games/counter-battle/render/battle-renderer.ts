@@ -150,11 +150,13 @@ export class BattleRenderer {
     }
   }
 
-  render(panes: readonly Pane[], dt: number, wallTime: number): void {
+  /** Draws every view. `onCameras` runs once the cameras have moved for the frame and before the crosshairs are worked out. */
+  render(panes: readonly Pane[], dt: number, wallTime: number, onCameras?: () => void): void {
     const b = this.battle;
     const fighters = this.fighters;
     if (!b || !fighters || !this.arena || !this.effects) return;
     this.animate(dt, wallTime, panes);
+    onCameras?.();
     this.renderer.shadowMap.needsUpdate = true;
     this.renderer.setScissor(0, 0, this.width, this.height);
     this.renderer.setViewport(0, 0, this.width, this.height);
