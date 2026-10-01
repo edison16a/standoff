@@ -18,6 +18,8 @@ Status: ready. A sword duel for two players, or one against the computer, in an 
 
 Phones without motion sensors get a drag pad: drag a finger to point the sword, lift it to rest in guard.
 
+A phone that drops pauses the fight until it is back. One that comes back in a fresh page has lost its calibration, so it aims at the targets again and then drops straight back into the fight.
+
 ## The computer
 
 While the computer holds a seat, the lobby on the big screen shows **Computer difficulty**: Easy, Medium, Hard or Training. Easy is the default. Harder levels attack more often, swing crisper and block more of your cuts, sooner. **Training** keeps the computer on its mark in guard, standing still, so you can practise your cuts on it. The level is read live and stays for the rematch.

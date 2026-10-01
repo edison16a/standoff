@@ -3,7 +3,7 @@ import { useCallback, type CSSProperties } from "react";
 import type { PhoneState } from "../../protocol";
 import { BrakeIcon, DriveIcon } from "../../ui/icons";
 import { ordinal } from "../../ui/format";
-import { useControllerStore } from "../controller-store";
+import { steersWithArrows, useControllerStore } from "../controller-store";
 import { HoldButton } from "./HoldButton";
 import { PowerButton } from "./PowerButton";
 import { useController } from "./session-context";
@@ -30,7 +30,7 @@ function SteerButtons() {
 
 /** The middle: the countdown, then the place and lap, and anything that just happened. */
 function Status({ host }: { host: PhoneState }) {
-  const steerMode = useControllerStore((state) => state.steerMode);
+  const arrows = useControllerStore(steersWithArrows);
   const counting = host.phase === "countdown";
   const place = host.place ? ordinal(host.place) : "";
   const note = host.wrongWay ? "Wrong way" : host.effect && host.effect !== "boost" ? EFFECTS[host.effect] : null;
@@ -43,7 +43,7 @@ function Status({ host }: { host: PhoneState }) {
         <strong className="mk-pad__place">{place}</strong>
       )}
       <span className="mk-pad__lap">{counting ? `${host.laps} laps` : host.finished ? "Finished" : `Lap ${host.lap} of ${host.laps}`}</span>
-      {steerMode === "buttons" ? <SteerButtons /> : <SteerArc />}
+      {arrows ? <SteerButtons /> : <SteerArc />}
       <span className={`mk-pad__note ${host.wrongWay ? "mk-pad__note--warn" : ""}`}>{counting ? "Press Drive just before Go for a rocket start" : note}</span>
     </div>
   );

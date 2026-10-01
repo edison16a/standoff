@@ -5,6 +5,7 @@ import type { RaceEvent } from "../engine/events";
 import type { RaceWorld } from "../engine/world";
 import { phoneMessageSchema, type Phase, type PhoneMessage } from "../protocol";
 import { findTrack, type TrackId } from "../tracks";
+import { registerRaceAdmin } from "./admin";
 import { Banners } from "./banners";
 import { DemoRace } from "./demo-race";
 import { useKartStore as store } from "./host-store";
@@ -32,6 +33,7 @@ export class KartHost {
   private readonly banners = new Banners();
   private readonly unsubscribe: () => void;
   private unlistenRace: (() => void) | null = null;
+  private unadmin: (() => void) | null = null;
   private readonly raceListeners = new Set<(event: RaceEvent) => void>();
   private lastHud = 0;
 
@@ -50,6 +52,7 @@ export class KartHost {
   dispose(): void {
     this.unsubscribe();
     this.unlistenRace?.();
+    this.unadmin?.();
     this.driver = null;
     this.audio.stop();
     this.room.setPlaying(false);
@@ -103,6 +106,8 @@ export class KartHost {
     this.unlistenRace?.();
     this.driver = new RaceDriver(findTrack(mapId), this.lobby.entrants(computers), Math.random, botLevel);
     this.unlistenRace = this.driver.listen((event) => this.onRaceEvent(event));
+    this.unadmin?.();
+    this.unadmin = registerRaceAdmin(this.driver);
     this.banners.clear();
     this.room.setPlaying(true);
     this.audio.setPhase("countdown");
@@ -113,6 +118,8 @@ export class KartHost {
   backToLobby(): void {
     this.unlistenRace?.();
     this.unlistenRace = null;
+    this.unadmin?.();
+    this.unadmin = null;
     this.driver = null;
     this.room.setPlaying(false);
     this.audio.setPhase("lobby");
