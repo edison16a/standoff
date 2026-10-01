@@ -1,8 +1,12 @@
 "use client";
+import { useEffect, useState } from "react";
 import { playerColor } from "@/games/kit/players";
 import { Icon } from "@/components/ui/Icon";
 import { defaultName } from "@/platform/profile";
 import { useAimSnapshot, usePhone, usePhoneState } from "./session-context";
+
+/** Players are still mashing Shoot at the buzzer, and Play again sits under their thumb. */
+const ARM_MS = 1200;
 
 function ordinal(n: number): string {
   return ["1st", "2nd", "3rd"][n - 1] ?? `${n}th`;
@@ -14,6 +18,11 @@ export function RoundResults() {
   const game = usePhoneState((state) => state.game);
   const ready = usePhoneState((state) => state.ready);
   const { calibrated } = useAimSnapshot();
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setArmed(true), ARM_MS);
+    return () => window.clearTimeout(timer);
+  }, []);
   const me = game?.players.find((p) => p.seat === session.seat);
   if (!game || !me) return null;
   const inRound = game.players.filter((p) => p.inRound);
@@ -45,13 +54,13 @@ export function RoundResults() {
         </ol>
       )}
       {calibrated ? (
-        <button type="button" className={`sg-ready ${ready ? "sg-ready--on" : ""}`} aria-pressed={ready} onClick={() => session.setReady(!ready)}>
+        <button type="button" className={`sg-ready ${ready ? "sg-ready--on" : ""}`} aria-pressed={ready} disabled={!armed} onClick={() => session.setReady(!ready)}>
           <Icon name={ready ? "check" : "refresh"} size={30} />
           {ready ? "Waiting for the others" : "Play again"}
         </button>
       ) : (
         // This phone reloaded during the round, so it has to aim again before it can play.
-        <button type="button" className="sg-ready" onClick={() => session.leaveResults()}>
+        <button type="button" className="sg-ready" disabled={!armed} onClick={() => session.leaveResults()}>
           <Icon name="target" size={30} />
           Calibrate to play again
         </button>
