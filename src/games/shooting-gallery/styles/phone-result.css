@@ -52,6 +52,12 @@
   margin-top: clamp(4px, 1.5vh, 14px);
 }
 
+/* Held for a moment after the buzzer, so a late Shoot tap does not land on it. */
+.sg-result .sg-ready:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
 /* Everyone's score, so a player sees who beat them without looking up. */
 .sg-result__others {
   display: flex;
