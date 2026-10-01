@@ -3,7 +3,7 @@
 // motion sensors and with the drag pad a phone without them swings with.
 
 async function calibrate(ctx, sensors) {
-  await ctx.phone.locator(".setup-page").waitFor();
+  await ctx.phone.locator(".kit-cal").waitFor();
   await ctx.phone.waitForTimeout(800);
   await ctx.snap("hold");
   if (!sensors) {
@@ -14,7 +14,7 @@ async function calibrate(ctx, sensors) {
   }
   await ctx.until("Next");
   await ctx.tap("Next");
-  await ctx.phone.locator(".target-capture").waitFor();
+  await ctx.phone.locator(".kit-target").waitFor();
   await ctx.snap("target");
   // The fake phone holds still, so each target is taken by itself. A slow machine can take the offered shortcut.
   await ctx.phone.waitForFunction(

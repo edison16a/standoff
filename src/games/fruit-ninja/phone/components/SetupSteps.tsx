@@ -29,12 +29,8 @@ export function SetupSteps() {
   const colour = playerColor(seat);
 
   if (step === "calibrate") {
-    return (
-      <StepShell steps={STEPS} current={0} title="Calibrate">
-        {/* The blade sweeps the whole screen, so it takes the six target sword plan for accuracy everywhere. */}
-        <AimCalibrate aim={session.aim} colour={colour} plan="sword" onDone={() => session.goTo("blade")} />
-      </StepShell>
-    );
+    // The blade sweeps the whole screen, so it takes the six target sword plan for accuracy everywhere.
+    return <AimCalibrate aim={session.aim} colour={colour} steps={STEPS} plan="sword" onDone={() => session.goTo("blade")} />;
   }
 
   if (step === "blade") {

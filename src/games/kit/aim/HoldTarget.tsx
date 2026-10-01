@@ -1,10 +1,10 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { HoldProgress, SteadyWindow } from "@/games/kit/motion/steady-hold";
-import type { AimZone, Pointing } from "./aim-math";
-import { pointingDistance, TargetGate, type AimTarget } from "./aim-targets";
+import { WHOLE_SCREEN, type AimZone, type Pointing } from "./aim-math";
+import { pointingDistance, TARGET_POINTS, TargetGate, type AimTarget } from "./aim-targets";
+import { TargetView, type TargetState } from "./look/TargetView";
 import type { PhoneAim } from "./phone-aim";
-import { PointGuide } from "./PointGuide";
 
 /** After this long without a reading taken, offer to take it as it is, for a hand that never settles. */
 const OFFER_ANYWAY_MS = 8000;
@@ -22,17 +22,16 @@ interface HoldTargetProps {
   onHeld(): void;
 }
 
-type State = "point" | "holding" | "done";
-
 /**
  * One calibration target, taken by holding still. The picture shows
  * where to point; holding steady fills a ring round the target, and when
- * it closes the target turns green and the reading is taken, with a buzz.
- * Nothing to tap, so a tap can never nudge the aim off.
+ * it closes the dot pops and the reading is taken, with a buzz. Nothing
+ * to tap, so a tap can never nudge the aim off. It looks the way Blade
+ * Clash first drew it (see look/TargetView).
  */
 export function HoldTarget({ aim, target, colour, zone, after, count, onHeld }: HoldTargetProps) {
   const ringRef = useRef<SVGCircleElement>(null);
-  const [state, setState] = useState<State>("point");
+  const [state, setState] = useState<TargetState>("point");
   const [offer, setOffer] = useState(false);
   const heldRef = useRef(onHeld);
   const doneRef = useRef(false);
@@ -59,7 +58,7 @@ export function HoldTarget({ aim, target, colour, zone, after, count, onHeld }: 
     const gate = new TargetGate(after);
     const started = performance.now();
     let frame = 0;
-    let last: State = "point";
+    let last: TargetState = "point";
     const draw = (now: number) => {
       frame = requestAnimationFrame(draw);
       const reading = aim.pointing;
@@ -69,7 +68,7 @@ export function HoldTarget({ aim, target, colour, zone, after, count, onHeld }: 
       const progress = hold.update(still.update(reading, now) && open, now);
       const ring = ringRef.current;
       if (ring) ring.style.strokeDashoffset = String(Number(ring.getAttribute("stroke-dasharray")) * (1 - progress));
-      const next: State = progress > 0.05 ? "holding" : "point";
+      const next: TargetState = progress > 0.05 ? "holding" : "point";
       if (next !== last) setState((last = next));
       if (progress >= 1) takeRef.current();
       if (now - started > OFFER_ANYWAY_MS) setOffer(true);
@@ -78,19 +77,16 @@ export function HoldTarget({ aim, target, colour, zone, after, count, onHeld }: 
     return () => cancelAnimationFrame(frame);
   }, [aim, after]);
 
-  const hint = state === "done" ? "Got it" : state === "holding" ? "Hold it there" : aim.pointing ? "Point and hold still" : "Waiting for the motion sensors";
   return (
-    <>
-      <PointGuide target={target} colour={colour} zone={zone} ringRef={ringRef} done={state === "done"} />
-      <p className={`kit-hold kit-hold--${state}`} role="status" aria-live="polite">
-        <span className="kit-hold__count">{count}</span>
-        <span>{hint}</span>
-      </p>
-      {offer && state !== "done" && (
-        <button type="button" className="btn btn--ghost btn--block" disabled={!aim.pointing} onClick={() => aim.pointing && take()}>
-          Use where I point now
-        </button>
-      )}
-    </>
+    <TargetView
+      target={TARGET_POINTS[target]}
+      zone={zone ?? WHOLE_SCREEN}
+      colour={colour}
+      state={state}
+      ringRef={ringRef}
+      count={count}
+      hint={aim.pointing || state === "done" ? undefined : "Waiting for the motion sensors"}
+      onAnyway={offer && aim.pointing ? () => aim.pointing && take() : undefined}
+    />
   );
 }

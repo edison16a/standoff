@@ -80,13 +80,16 @@ describe("the aim overlay", () => {
 
     say(1, { kind: "aim-step", step: "center" });
     say(2, { kind: "aim-step", step: "top-left" });
-    step();
+    act(() => step());
     // Ana's middle target is the middle of the left half; Ben's top left target is near the top left of the right half.
-    const rings = calls.filter((c) => c.name === "arc" && c.args[2] === 7);
-    expect(rings.map((c) => [Math.round(c.args[0] as number), Math.round(c.args[1] as number)])).toEqual([
-      [200, 200],
-      [440, 40],
+    const marks = () => [...document.querySelectorAll<HTMLElement>(".calib-target")];
+    expect(marks().map((m) => [m.style.left, m.style.top])).toEqual([
+      ["200px", "200px"],
+      ["440px", "40px"],
     ]);
+    // Each is named for whoever should point there, and Ben's, by the left edge of his view, lines its name up with it.
+    expect(marks().map((m) => m.textContent)).toEqual(["Ana, point here", "Ben, point here"]);
+    expect(marks()[1]!.querySelector(".calib-target__words--start")).not.toBeNull();
     // Both zones are outlined.
     expect(calls.filter((c) => c.name === "setLineDash")).toHaveLength(2);
 
@@ -98,6 +101,8 @@ describe("the aim overlay", () => {
 
     say(1, { kind: "aim-step", step: "done" });
     say(2, { kind: "aim-step", step: "done" });
+    act(() => step());
+    expect(marks()).toHaveLength(0);
     act(() => root.render(createElement(AimOverlay, { aim, players: () => PLAYERS, dots: false })));
     calls.length = 0;
     step();

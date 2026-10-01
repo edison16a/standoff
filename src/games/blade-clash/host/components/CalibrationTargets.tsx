@@ -1,9 +1,9 @@
 "use client";
-import type { CSSProperties } from "react";
 import { CORNER_TARGETS, DEFAULT_GUARD, type AimPoint } from "@/games/blade-clash/motion/sword-aim";
 import { SLOTS, type Slot } from "@/games/blade-clash/players";
 import type { CalibrationStep } from "@/games/blade-clash/protocol";
 import { VIEWS } from "@/games/blade-clash/render/split";
+import { TargetMark, TargetNote } from "@/games/kit/aim/look/TargetMark";
 import { playerColor } from "@/games/kit/players";
 import { useBladeStore } from "../host-store";
 
@@ -19,27 +19,24 @@ const WORDS: Partial<Record<CalibrationStep, string>> = { guard: "Guard", test: 
 
 /**
  * While a phone calibrates, its player's half of the screen shows the
- * target to point at, the same one the phone shows, big enough to find
- * from across the room.
+ * target to point at, the same one the phone shows, drawn the way every
+ * aiming game draws its targets.
  */
 function Target({ slot, step }: { slot: Slot; step: CalibrationStep }) {
   const rect = VIEWS[slot];
   const target = targetFor(step);
-  const style = { "--lamp": playerColor(slot) } as CSSProperties;
+  const colour = playerColor(slot);
+  const word = WORDS[step];
   if (!target) {
     return (
-      <span className="calib-note" style={{ ...style, left: `${(rect.x + rect.w / 2) * 100}%` }}>
-        {WORDS[step] ?? ""}
-      </span>
+      <TargetNote colour={colour} left={`${(rect.x + rect.w / 2) * 100}%`}>
+        {word ?? ""}
+      </TargetNote>
     );
   }
   const left = rect.x + ((target.x + 1) / 2) * rect.w;
   const top = rect.y + ((1 - target.y) / 2) * rect.h;
-  return (
-    <span className="calib-target" style={{ ...style, left: `${left * 100}%`, top: `${top * 100}%` }} role="img" aria-label={`Player ${slot} target`}>
-      {WORDS[step] && <span className="calib-target__word">{WORDS[step]}</span>}
-    </span>
-  );
+  return <TargetMark colour={colour} left={`${left * 100}%`} top={`${top * 100}%`} words={word ? [word] : []} label={`Player ${slot} target`} />;
 }
 
 /** Mid match too: a phone back in a fresh page aims again, and the match start clears the rest. */

@@ -1,57 +1,11 @@
 /*
-  Blade Clash's phone pages held sideways, where height runs out: each
-  setup page puts its picture on the left and its words and buttons on
-  the right, the fighters stand in one row, and during the fight the
-  sword sits beside the footwork buttons.
+  Blade Clash's phone pages held sideways, where height runs out: the
+  fighters stand in one row, the ready card lies on its side, and during
+  the fight the sword sits beside the footwork buttons. The calibration
+  pages turn sideways with the aim kit's look.
 */
 
 @media (orientation: landscape) and (max-height: 500px) {
-  .setup-page {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: repeat(5, min-content) minmax(0, 1fr);
-    gap: 8px 20px;
-    text-align: left;
-  }
-
-  .setup-page > * {
-    grid-column: 2;
-  }
-
-  /* A page of words alone keeps one centred column. */
-  .setup-page:not(:has(> .setup-card, > .target-capture)) {
-    display: flex;
-    justify-content: center;
-    max-width: 560px;
-    margin: 0 auto;
-    text-align: center;
-  }
-
-  .setup-page > .setup-card,
-  .setup-page > .target-capture {
-    grid-row: 1 / -1;
-    grid-column: 1;
-    align-self: stretch;
-    height: auto;
-    max-height: none;
-    min-height: 0;
-    /* Sized by the column, never by its own picture, so the words set the height. */
-    contain: size;
-  }
-
-  .setup-page__lead {
-    font-size: 17px;
-  }
-
-  .setup-card--art {
-    justify-content: center;
-  }
-
-  .target-capture__tv {
-    flex: 1 1 0;
-    width: 100%;
-  }
-
   .picker {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }

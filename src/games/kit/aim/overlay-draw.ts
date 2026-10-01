@@ -18,43 +18,32 @@ export function drawZone(ctx: CanvasRenderingContext2D, box: Box, colour: string
   ctx.restore();
 }
 
-/** A pulsing calibration target, with the name of everyone looking for it stacked on dark pills. */
-export function drawTarget(ctx: CanvasRenderingContext2D, at: { x: number; y: number }, who: Player[], now: number, box: Box): void {
-  const pulse = 1 + Math.sin(now / 220) * 0.08;
-  const colour = playerColor(who[0]!.seat);
-  ctx.save();
-  ctx.lineWidth = 4;
-  for (const [radius, alpha] of [[46, 1], [28, 0.8]] as const) {
-    ctx.globalAlpha = alpha;
-    ctx.strokeStyle = colour;
-    ctx.beginPath();
-    ctx.arc(at.x, at.y, radius * pulse, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = colour;
-  ctx.beginPath();
-  ctx.arc(at.x, at.y, 7, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.font = "600 16px system-ui, sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  who.forEach((player, i) => {
-    const below = at.y + 78 + i * 30;
-    const y = below > box.y + box.h - 24 ? at.y - 70 - i * 30 : below;
-    const text = `${player.name}, point here`;
-    // A dark pill behind the name, so it reads on any game's background.
-    const width = ctx.measureText(text).width + 24;
-    // Kept inside the zone, so a target near its edge never pushes the name off it.
-    const x = Math.min(Math.max(at.x, box.x + width / 2 + 4), box.x + box.w - width / 2 - 4);
-    ctx.fillStyle = "rgba(10, 10, 20, 0.78)";
-    ctx.beginPath();
-    ctx.roundRect(x - width / 2, y - 13, width, 26, 13);
-    ctx.fill();
-    ctx.fillStyle = playerColor(player.seat);
-    ctx.fillText(text, x, y);
-  });
-  ctx.restore();
+/** How a calibration target is drawn on the big screen: its spot, colour and the words under or over it. */
+export interface MarkPlan {
+  key: string;
+  at: { x: number; y: number };
+  colour: string;
+  words: string[];
+  above: boolean;
+  align: "start" | "center" | "end";
+}
+
+/** Room the words need beside a target near a side edge, so they line up with it there instead of running off. */
+const SIDE_ROOM = 110;
+/** Room each line of words needs below a target. */
+const LINE_ROOM = 34;
+
+/**
+ * Plans one calibration target, named for everyone looking for it. The
+ * target itself is the look every aiming game shares (look/TargetMark).
+ * Its words go below it, or above when they would run past the bottom of
+ * the zone, and line up with its side near a side edge.
+ */
+export function planMark(at: { x: number; y: number }, who: Player[], box: Box): MarkPlan {
+  const words = who.map((player) => `${player.name}, point here`);
+  const above = at.y + 48 + words.length * LINE_ROOM > box.y + box.h;
+  const align = at.x - box.x < SIDE_ROOM ? "start" : box.x + box.w - at.x < SIDE_ROOM ? "end" : "center";
+  return { key: `${Math.round(at.x)},${Math.round(at.y)}`, at, colour: playerColor(who[0]!.seat), words, above, align };
 }
 
 /** A player's laser dot: a glow, a ring in their colour round a white core, and their name if given. `alpha` fades all of it. */
