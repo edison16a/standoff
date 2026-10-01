@@ -110,7 +110,7 @@ A platform fighter for up to four. Karate, Samurai, Mage and Bear each have quic
 
 <img src="docs/screenshots/counter-battle.jpg" alt="Two paintball players trading shots across a bunker, one splattered in pink paint" width="100%" />
 
-Team paintball for up to four, one or two a side. Hold Advance or Retreat to run your fighter between the bunkers, and let go to hold your spot. You point your phone to aim, hold Crouch to hide (even on the move) without your aim moving, and rise to splat the other team with a Paint Rifle, Shotgun, SMG or Sniper. Each player gets their own split screen view. First team to five rounds wins.
+Team paintball for up to four, one or two a side. Your fighter moves by themselves: in to their gun's range of the other team, then round and round them from bunker to bunker. You point your phone to aim and splat the other team with a Paint Rifle, Shotgun, SMG or Sniper. Tap Crouch to go low and tap it again to stand; your aim never moves when you do. Each player gets their own split screen view. First team to five rounds wins.
 
 ## The controls
 
@@ -124,7 +124,7 @@ Team paintball for up to four, one or two a side. Hold Advance or Retreat to run
 * **Cube Game:** jump for real to jump the cube. Space works too.
 * **Blade Clash:** hold the phone like the handle of a sword. The sword on screen copies it in 3D. Hold **Forward** or **Back** to move.
 * **Brawl Battle:** the stick moves, and pushing up jumps (push up again in the air to double jump). Attacks change with the direction you hold. Hold an attack past 0.4 seconds to charge it, and use the Ult when its ring is full.
-* **Paintball Battle:** point the phone at your own view to aim. Hold or tap **Shoot**, hold **Advance** or **Retreat** to move between bunkers, hold **Crouch** to stay behind cover, and **Reload** when you run low.
+* **Paintball Battle:** point the phone at your own view to aim. Hold or tap **Shoot**, tap **Crouch** to go low and again to stand, and **Reload** when you run low. Your fighter moves by themselves.
 
 ## The console
 
