@@ -120,6 +120,8 @@ export class GalleryHost implements StageSource {
     const seats = lineUp(this.seats.lobby(this.room.players()));
     if (seats.length === 0) return;
     this.driver.begin(seats, this.store.getState().seconds);
+    // Everyone playing is past calibration, so no target of theirs may stay up through the round.
+    for (const seat of seats) this.aim.endCalibration(seat);
     this.bestPlaces = new Map();
     this.winners = [];
     this.room.setPlaying(true);
@@ -156,7 +158,11 @@ export class GalleryHost implements StageSource {
       // Aim streams in from every phone many times a second. It changes
       // nothing the phones show, so it must not resend everyone's state.
       if (!parsed.success) return;
-      if (this.seats.apply(event.seat, parsed.data)) this.audio.sfx.click();
+      if (this.seats.apply(event.seat, parsed.data)) {
+        this.audio.sfx.click();
+        // Ready comes after calibration, so a target still up is left over from a lost message.
+        this.aim.endCalibration(event.seat);
+      }
       this.afterSetupChange();
     }
     if (event.type === "resync") {

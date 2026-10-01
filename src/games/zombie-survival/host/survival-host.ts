@@ -104,6 +104,8 @@ export class SurvivalHost {
     const players = ready.map((seat) => ({ seat, weapon: this.lobby.get(seat).weapon! }));
     this.game = new SurvivalGame(Math.random, this.lobby.level);
     this.game.start(players, debugStage());
+    // Everyone playing is past calibration, so no target of theirs may stay up through the run.
+    for (const seat of ready) this.aim.endCalibration(seat);
     this.room.setPlaying(true);
     this.audio.onStart();
     this.offAdmin ??= registerRunAdmin(() => this.game);
@@ -171,6 +173,8 @@ export class SurvivalHost {
         return this.lobby.pick(seat, message.weapon);
       case "ready": {
         this.lobby.setReady(seat, message.ready);
+        // Ready comes after calibration, so a target still up is left over from a lost message.
+        if (message.ready) this.aim.endCalibration(seat);
         const weapon = this.lobby.get(seat).weapon;
         if (this.game.running && message.ready && weapon) this.game.join(seat, weapon);
         if (!this.game.running && this.lobby.everyoneReady(this.connectedSeats())) this.start();
