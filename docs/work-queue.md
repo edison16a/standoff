@@ -14,6 +14,8 @@ The running list of what is being built, so work can pick up again after a break
 
 | Work | Workflow | State |
 | --- | --- | --- |
+| Paintball Battle: back to Shoot, Reload and a Crouch toggle, smart auto movement that holds range and circles | wf_62ca7e50-c83 | build then review |
+| Calibration look: every aiming game uses the Blade Clash calibration styling (phone and big screen) | wf_62ca7e50-c83 | build then review |
 
 All final builds are on main: cover icons, sports phone controls, Paintball Battle controls, Subway camera still, 1.2x tiles, final README. Final check done and on main (503ea5b): every game played end to end except the live site, which this machine's browser cannot reach (certificate block). Part 1 fixes: Soccer feet, Kart, Brawl, Blade Clash, Zombie and Gallery rejoin, phone download retry.
 
@@ -141,6 +143,8 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 * `counter-battle/engine/battle.test.ts` (same seed plays out the same) can time out in the full suite on a loaded machine; it passes alone. The Paintball Battle build is fixing it.
 
 ## Conventions
+
+* Calibration look: the Blade Clash calibration UI is the standard for every aiming game (owner, repeated).
 
 * Disk: the session has a fixed disk allowance. Every check in, delete `.next` folders in worktrees whose work is merged or idle, and anything big left in /dev/shm or /tmp.
 * Calibration is always the modern hold to calibrate (point, hold still, it fills and moves on, no button) in every pointing game, with 4 to 6 targets as the owner asked: 6 for sword games (Fruit Slicer, Blade Clash), 5 for shooters (the middle and all four corners). Never go back to 3, and never add more than 6: the fit only learns the middle and four edge spans, so extra holds add waiting without accuracy.
