@@ -8,7 +8,7 @@ Shared code that games may import. The kit never imports a game, and games still
 * `motion/math3d.ts`: the small quaternion and vector helpers.
 * `motion/orientation.ts`: `subscribeOrientation`, the phone's orientation as a quaternion on every reading.
 * `steps/StepShell.tsx`: the frame for a game's phone setup. Every game uses the same order: the platform asks for a name (or Skip), then the game shows **Calibrate**, then its own choices (weapon, kart, blade), then **Ready**. Each step is its own page.
-* `aim/`: pointing the phone at the big screen, for Fruit Slicer, Zombie Survival and Shooting Gallery.
+* `aim/`: pointing the phone at the big screen, for Fruit Slicer, Zombie Survival, Shooting Gallery and Paintball Battle. `aim/look/` is the calibration look every aiming game shares, Blade Clash included.
 * `victory/`: winners' scenes. Confetti, spotlights, a circling camera, trophies and a belt made in code, podiums, and the winners' names over it all. See Victory scenes below.
 * `leaderboard/`: local leaderboards that keep every finished run on this computer, and the list that shows them. See Leaderboards below.
 
@@ -20,7 +20,7 @@ Phone side:
 
 ```ts
 const aim = new PhoneAim(room);           // reads the sensors, or falls back to dragging
-<AimCalibrate aim={aim} colour={playerColor(seat)} onDone={next} />   // plan="sword" for six targets
+<AimCalibrate aim={aim} colour={playerColor(seat)} steps={STEPS} onDone={next} />   // the whole Calibrate step. plan="sword" for six targets
 aim.stream(true);                         // while playing, streams the aim at up to 60 Hz
 <FireButton label="Fire" onFire={() => aim.fire()} onRelease={stopAuto} />   // onRelease also fires if it turns disabled while held
 aim.recenter();                           // a small button for when the gyro drifts
@@ -28,7 +28,15 @@ aim.recenter();                           // a small button for when the gyro dr
 aim.dispose();
 ```
 
-Calibration is hold to calibrate, the kit's standard. Targets show on the big screen and the phone in turn. The player points at each and holds still: a ring fills, the target turns green and the next one comes up by itself. No button, so a tap never nudges the aim. A target only fills once the phone has turned away from the last one, and the first only once the phone has moved from how the page found it, so a phone lying still while the player reads is never taken as pointing at the middle. Pick how many with `plan`: `"shooter"` (the default) takes the middle and all four corners; `"sword"` takes the middle, all four corners and the middle again, for games that swing all over the screen. From them the phone learns how far this player turns to cross the screen from where they sit, left, right, up and down separately (`aim-fit.ts`). Skip the rest reuses the spans this phone measured last time. `kit/motion/steady-hold.ts` has the hold meter for any other hold to confirm page.
+Calibration is hold to calibrate, the kit's standard. `AimCalibrate` draws the whole Calibrate step in its own `StepShell`, so a game passes its step names and no frame of its own. It opens on a page that shows how to hold the phone, with the first target already up on the big screen. Then each target gets its own page, titled with where it is. Targets show on the big screen and the phone in turn. The player points at each and holds still: a ring fills, the dot pops and the next one comes up by itself. No button, so a tap never nudges the aim. A target only fills once the phone has turned away from the last one, and the first only once the phone has moved from how the page found it, so a phone lying still while the player reads is never taken as pointing at the middle. Pick how many with `plan`: `"shooter"` (the default) takes the middle and all four corners; `"sword"` takes the middle, all four corners and the middle again, for games that swing all over the screen. From them the phone learns how far this player turns to cross the screen from where they sit, left, right, up and down separately (`aim-fit.ts`). Skip the rest reuses the spans this phone measured last time. `kit/motion/steady-hold.ts` has the hold meter for any other hold to confirm page.
+
+The look is Blade Clash's, and Blade Clash uses the same pieces from `aim/look/`, so every aiming game calibrates the same way:
+
+* `HoldArt`: the grip picture, the phone flat in the hand aimed at the big screen. `scene` adds a game's own picture on the screen, `zone` lights the player's part of it.
+* `TargetView`: the big screen in miniature, the player's part lit in their colour, the target with the ring that fills as they hold, a count such as 2 of 5 and the hint.
+* `LiveDot`: the same miniature screen with the live aim, for the page that checks it follows.
+* `TargetMark`: a target on the big screen, a pulsing ring in the player's colour with a dark halo and a glow, and words on dark pills under it. `AimOverlay` draws its targets with it, with each player's name.
+* `calibrate.css`: the page layout (`kit-cal`, `kit-cal__lead`, `kit-cal__text`, `kit-cal__card`), with the picture on the left and the words on the right when the phone is sideways.
 
 Pointing past the edge of the screen keeps the aim at the edge, dot and all, and it moves on smoothly the moment the phone points back in. `HostAim` pins every point and shot a touch inside its zone (`EDGE`), so a laser dot a game draws in 3D still shows whole enough to see, and every pointing game gets this. `AimOverlay` also draws its own dots and names fully inside the zone. It sits on top of the page, so a corner target stays in sight over the join card and a dot at the edge over the tool bar, while it still draws in the box of the element it is placed in. A game that draws its own pointer (`dots={false}`) still gets the kit's dot, with no name, while the aim is held at the edge (`HostAim.atEdge`), so the tool bar or the game's own scoreboard never hides it there. The measured spans are kept on the phone only.
 
@@ -45,11 +53,11 @@ Screen points are WebGL clip space, so `raycaster.setFromCamera(new Vector2(poin
 
 ### Aiming inside a zone
 
-For a split screen game, where each player aims into their own view, give each player a zone: their part of the big screen as fractions from the top left, the same shape as a `SplitMap` rect. The calibration targets then show inside the zone, outlined in the player's colour, and the aim's -1 to 1 spans the zone, so a point maps straight onto that player's view.
+For a split screen game, where each player aims into their own view, give each player a zone: their part of the big screen as fractions from the top left, the same shape as a `SplitMap` rect. The calibration targets then show inside the zone, outlined in the player's colour on the big screen and lit in it on the phone, and the aim's -1 to 1 spans the zone, so a point maps straight onto that player's view.
 
 ```ts
 aim.setZone(seat, { x: 0.5, y: 0, w: 0.5, h: 1 });   // host: this seat aims in the right half. null gives back the whole screen
-<AimCalibrate aim={aim} colour={colour} zone={{ x: 0.5, y: 0, w: 0.5, h: 1 }} onDone={next} />   // phone: the same zone, for its pictures
+<AimCalibrate aim={aim} colour={colour} steps={STEPS} zone={{ x: 0.5, y: 0, w: 0.5, h: 1 }} onDone={next} />   // phone: the same zone, for its pictures
 ```
 
 If a zone changes after a player calibrated (someone joins and the halves become quarters), the host maps their points into the new zone, so the aim still lands where they really point. Saved spans are kept as if measured across the whole screen and scaled to the zone when reused. Games without zones are unchanged.
