@@ -2,16 +2,16 @@ import { BOT_SKILL } from "@/games/kit/difficulty/difficulty";
 import { PIECES, spawnPoints, type Piece } from "./arena";
 import { anglesTo, clampAim } from "./aim";
 import { BotAim } from "./bot-aim";
-import { updateBrain, type BrainWorld } from "./brain";
+import type { BrainWorld } from "./brain";
 import { buildCover, nearestSpot, type CoverGraph } from "./cover";
 import type { BattleEvent } from "./events";
 import { aimEye, createFighter, eyeOf, isBot, resetFighter, type Fighter, type FighterSetup, type TeamId } from "./fighter";
 import type { GunEvent } from "./gun-state";
 import { newMatch, sideOf, tickMatch, type MatchState } from "./match";
 import { Rng } from "./rng";
-import { duckDown, steppingOut } from "./peek";
+import { duckFighter, moveFighter, type Movement } from "./movement";
+import { steppingOut } from "./peek";
 import { coneOf, resolveShot } from "./shooting";
-import { skirmishDuck, updateSkirmish } from "./skirmish";
 import { pressureAt } from "./tactics";
 import { STEP } from "./tuning";
 import type { V2, V3 } from "./vec";
@@ -22,14 +22,6 @@ const PULL_KEEP = 0.45;
 const UP_ENOUGH = 0.35;
 /** A human who shot this recently is still in the fight, which holds a peek open. */
 const ENGAGED_FOR = 0.5;
-
-/**
- * How fighters move. Matches skirmish (`skirmish.ts`): everyone keeps
- * moving round the other team at their gun's range. The cover brain
- * (`brain.ts`) hides and peeks from bunker to bunker; the showcase's
- * filmed fight was played with it and keeps it until it is filmed again.
- */
-export type Movement = "skirmish" | "cover";
 
 let sharedGraph: CoverGraph | null = null;
 
@@ -166,16 +158,14 @@ export class Battle {
       // A player crouches only when they say so, unless the computer has taken over for a dropped phone.
       const human = !isBot(f) && !bot;
       const world: BrainWorld = { graph: this.graph, pieces: this.pieces, enemies, claimed, mates: matesAt, others, pressure, rng: this.rng, engaged, pace, human };
-      const skirmish = this.movement === "skirmish";
-      if (skirmish) updateSkirmish(f, world, this.time, STEP);
-      else updateBrain(f, world, this.time, STEP);
+      moveFighter(this.movement, f, world, this.time, STEP);
       if (bot) {
         const intent = bot.update(f, enemies, this.pieces, this.rng, this.time, STEP);
         if (intent.engaged) this.engaged.add(f.id);
         else this.engaged.delete(f.id);
         if (intent.reload) f.gun.startReload();
         if (intent.pull) this.fire(f, events);
-        if (intent.duck) (skirmish ? skirmishDuck : duckDown)(f, world);
+        if (intent.duck) duckFighter(this.movement, f, world);
       } else {
         this.humanTrigger(f, events);
       }
