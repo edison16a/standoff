@@ -189,7 +189,6 @@ export class CounterHost {
         this.lobby.disconnect(event.seat);
         this.driver?.trigger(event.seat, false);
         this.driver?.crouch(event.seat, false);
-        this.driver?.move(event.seat, 0);
         this.driver?.setOnline(event.seat, false);
         break;
       case "message": {
@@ -221,9 +220,6 @@ export class CounterHost {
         return;
       case "crouch":
         this.driver?.crouch(seat, message.down);
-        return;
-      case "move":
-        this.driver?.move(seat, message.dir);
         return;
       case "gun":
         this.lobby.setGun(seat, message.gun);

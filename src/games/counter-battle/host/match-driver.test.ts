@@ -43,17 +43,16 @@ describe("the match driver", () => {
     expect(me.aim).toEqual(before);
   });
 
-  it("moves a player held on Advance from the start of the fight, and lets go when their phone drops", () => {
+  it("keeps a crouch switched on through the start of the fight, and lets go when the phone drops", () => {
     const d = oneOnOne();
     const me = d.fighterOf(1)!;
-    d.move(1, 1);
+    d.crouch(1, true);
     while (d.battle.match.phase !== "fight") d.advance(0.05);
-    const start = { ...me.pos };
-    for (let i = 0; i < 20; i++) d.advance(0.05);
-    expect(me.move).toBe(1);
-    expect(Math.hypot(me.pos.x - start.x, me.pos.z - start.z)).toBeGreaterThan(1);
+    for (let i = 0; i < 10; i++) d.advance(0.05);
+    expect(me.duck).toBe(true);
+    expect(me.crouch).toBeGreaterThan(0.95);
     d.setOnline(1, false);
-    expect(me.move).toBe(0);
+    expect(me.duck).toBe(false);
   });
 
   it("fires only in the fight, pulling a trigger held from before it as the fight starts", () => {

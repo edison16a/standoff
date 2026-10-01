@@ -61,24 +61,9 @@
   opacity: 0.85;
 }
 
-/*
-  Two columns under the trigger: Reload over Crouch on the left, Advance
-  over Retreat on the right, so Crouch and Advance sit under opposite
-  thumbs and can be held together.
-*/
 .cb-play__buttons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-areas:
-    "tools advance"
-    "crouch retreat";
-  gap: 10px;
-}
-
-.cb-play__tools {
   display: flex;
-  grid-area: tools;
-  gap: 8px;
+  gap: 10px;
 }
 
 .cb-reload,
@@ -120,15 +105,16 @@
   }
 }
 
-/* The held buttons: big, bordered, and they never select text or open a menu under a long press. */
-.cb-hold {
+/* Crouch is a switch and the widest, first under the thumb. It never selects text or opens a menu under a long press. */
+.cb-crouch {
   display: grid;
+  flex: 1.3;
   place-content: center;
   min-height: 52px;
   height: clamp(52px, 8vh, 64px);
   border: 2px solid rgba(255, 255, 255, 0.25);
   border-radius: 16px;
-  background: #1f6f5c;
+  background: #1f3a4f;
   color: #ffffff;
   font: inherit;
   line-height: 1.05;
@@ -137,43 +123,43 @@
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
-.cb-hold__word {
+.cb-crouch__word {
   font-size: 19px;
   font-weight: 800;
   letter-spacing: 0.02em;
   text-transform: uppercase;
 }
 
-.cb-hold small {
+.cb-crouch small {
   font-size: 11px;
   opacity: 0.8;
 }
 
-.cb-hold:active {
-  border-color: #ffffff;
-  filter: brightness(1.3);
+.cb-crouch:active {
   transform: scale(0.98);
 }
 
-.cb-hold:disabled {
+/* Switched on: lit up bright with a glow, so a glance says the fighter is low. */
+.cb-crouch--on {
+  border-color: #ffffff;
+  background: #20b486;
+  box-shadow:
+    0 0 0 3px rgba(32, 180, 134, 0.35),
+    0 0 18px rgba(32, 180, 134, 0.55);
+}
+
+.cb-crouch--on small {
+  opacity: 1;
+}
+
+.cb-crouch:disabled {
   opacity: 0.45;
-}
-
-.cb-crouch {
-  grid-area: crouch;
-}
-
-/* Moving is the bold action, so Advance is the brightest; Retreat is the same shape, quieter. */
-.cb-advance {
-  grid-area: advance;
-  background: #2f5fd0;
-}
-
-.cb-retreat {
-  grid-area: retreat;
-  background: #3a3f5c;
 }
 
 .cb-centre {

@@ -7,7 +7,7 @@ import { GUNS } from "../../engine/guns";
 import type { PhoneState } from "../../protocol";
 import { TEAMS } from "../../teams";
 import { usePhoneStore } from "../phone-store";
-import { HoldButton } from "./HoldButton";
+import { CrouchToggle } from "./CrouchToggle";
 import { Magazine } from "./Magazine";
 import { usePhone } from "./session-context";
 
@@ -39,23 +39,22 @@ function Status({ host }: { host: PhoneState }) {
 
 /**
  * The phone as the paint marker: aim by pointing it at your view, Shoot
- * under the thumb (hold it for an automatic, tap for the others), which
- * also brings your fighter up out of cover. Hold Advance or Retreat to
- * run cover to cover, and Crouch to go low, still or on the move; the
- * two sit under opposite thumbs so both can be held. Reload, and Centre
- * to put the aim back in the middle if it drifts. Phones without motion
- * sensors aim by dragging round the trigger.
+ * under the thumb (hold it for an automatic, tap for the others). The
+ * fighter moves by themselves; tap Crouch to go low and again to stand.
+ * Reload, and Centre to put the aim back in the middle if it drifts.
+ * Phones without motion sensors aim by dragging round the trigger.
  */
 export function Controller({ host, seat }: { host: PhoneState; seat: number }) {
   const session = usePhone();
   const aim = useSyncExternalStore(session.aim.subscribe, session.aim.getSnapshot, session.aim.getSnapshot);
   const touch = aim.source === "touch";
   const gun = host.gun ? GUNS[host.gun] : null;
-  const moving = host.alive && host.armed;
+  const crouched = usePhoneStore((s) => s.crouched);
 
   useEffect(() => {
     session.aim.stream(true);
-    const release = () => session.releaseAll();
+    // Crouch is a switch, so only the trigger lets go when the page loses focus.
+    const release = () => session.releaseTrigger();
     window.addEventListener("blur", release);
     document.addEventListener("visibilitychange", release);
     return () => {
@@ -81,28 +80,15 @@ export function Controller({ host, seat }: { host: PhoneState; seat: number }) {
       <Magazine host={host} />
       <div className="cb-play__trigger">{touch ? <AimPad aim={session.aim}>{trigger}</AimPad> : trigger}</div>
       <div className="cb-play__buttons">
-        <div className="cb-play__tools">
-          <button type="button" className={`cb-reload ${host.ammo === 0 && !host.reloading ? "cb-reload--urgent" : ""}`} disabled={!host.alive} onClick={() => session.reload()}>
-            Reload
+        <CrouchToggle on={crouched} disabled={!host.alive || !host.armed} onToggle={() => session.toggleCrouch()} />
+        <button type="button" className={`cb-reload ${host.ammo === 0 && !host.reloading ? "cb-reload--urgent" : ""}`} disabled={!host.alive} onClick={() => session.reload()}>
+          Reload
+        </button>
+        {!touch && (
+          <button type="button" className="cb-centre" onClick={() => session.recenter()} aria-label="Put the aim back in the middle">
+            Centre aim
           </button>
-          {!touch && (
-            <button type="button" className="cb-centre" onClick={() => session.recenter()} aria-label="Put the aim back in the middle">
-              Centre aim
-            </button>
-          )}
-        </div>
-        <HoldButton className="cb-crouch" label="Crouch. Hold to stay low" disabled={!moving} onChange={(down) => session.crouch(down)}>
-          <span className="cb-hold__word">Crouch</span>
-          <small>Hold</small>
-        </HoldButton>
-        <HoldButton className="cb-advance" label="Advance. Hold to move forward" disabled={!moving} onChange={(down) => session.step("advance", down)}>
-          <span className="cb-hold__word">Advance</span>
-          <small>Hold</small>
-        </HoldButton>
-        <HoldButton className="cb-retreat" label="Retreat. Hold to move back" disabled={!moving} onChange={(down) => session.step("retreat", down)}>
-          <span className="cb-hold__word">Retreat</span>
-          <small>Hold</small>
-        </HoldButton>
+        )}
       </div>
       {!host.alive && (
         <div className="cb-play__down">

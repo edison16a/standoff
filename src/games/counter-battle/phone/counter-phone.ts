@@ -10,16 +10,12 @@ import { usePhoneStore as store, type SetupStep } from "./phone-store";
  * Paintball Battle on the phone. It walks the player through aiming at
  * their own view, picking a gun and saying ready, then becomes the gun:
  * it streams the aim through the kit and sends the trigger going down
- * and up, and Reload. It decides nothing: the host says what landed and
+ * and up, the crouch switch, and Reload. It decides nothing: the host says what landed and
  * how many rounds are left.
  */
 export class CounterPhone {
   readonly aim: PhoneAim;
   private held = false;
-  private ducked = false;
-  /** Which of ADVANCE and RETREAT are held; both at once cancel out. */
-  private readonly steps = { advance: false, retreat: false };
-  private dir = 0;
   private flashKey = 0;
   private readonly unsubscribe: () => void;
 
@@ -31,7 +27,8 @@ export class CounterPhone {
   }
 
   dispose(): void {
-    this.releaseAll();
+    this.releaseTrigger();
+    this.setCrouch(false);
     this.aim.dispose();
     this.unsubscribe();
   }
@@ -85,31 +82,16 @@ export class CounterPhone {
     this.send({ kind: "trigger", down: false });
   }
 
-  /** Crouch held or let go. Letting go brings the fighter up to shoot. */
-  crouch(down: boolean): void {
-    if (down === this.ducked) return;
-    this.ducked = down;
-    if (down) buzz("tap");
-    this.send({ kind: "crouch", down });
+  /** Crouch is a switch: a tap goes low, the next stands up. */
+  toggleCrouch(): void {
+    buzz("tap");
+    this.setCrouch(!store.getState().crouched);
   }
 
-  /** ADVANCE or RETREAT going down or up. The host hears only the way the fighter should go. */
-  step(which: "advance" | "retreat", down: boolean): void {
-    if (this.steps[which] === down) return;
-    this.steps[which] = down;
-    if (down) buzz("tap");
-    const dir = (this.steps.advance ? 1 : 0) - (this.steps.retreat ? 1 : 0);
-    if (dir === this.dir) return;
-    this.dir = dir;
-    this.send({ kind: "move", dir: dir as -1 | 0 | 1 });
-  }
-
-  /** Lets go of every held button, as when the page loses focus. */
-  releaseAll(): void {
-    this.releaseTrigger();
-    this.crouch(false);
-    this.step("advance", false);
-    this.step("retreat", false);
+  private setCrouch(on: boolean): void {
+    if (on === store.getState().crouched) return;
+    store.setState({ crouched: on });
+    this.send({ kind: "crouch", down: on });
   }
 
   reload(): void {
@@ -138,7 +120,8 @@ export class CounterPhone {
     const before = store.getState().host;
     // Back in the lobby after a match: pick up at the gun, still calibrated.
     if (before && before.phase !== "lobby" && message.phase === "lobby") {
-      this.releaseAll();
+      this.releaseTrigger();
+      this.setCrouch(false);
       store.setState({ step: store.getState().calibrated ? 2 : 0 });
     }
     if (!before && message.gun) store.setState({ wanted: message.gun });
@@ -160,6 +143,8 @@ export class CounterPhone {
     const { host, wanted, step } = store.getState();
     if (step >= 2 || host?.gun) this.send({ kind: "gun", gun: wanted });
     if (host?.ready) this.send({ kind: "ready", ready: true });
+    // The host let go of everything while we were away; a crouch still switched on goes back on.
+    if (store.getState().crouched) this.send({ kind: "crouch", down: true });
   }
 
   private send(payload: PhoneMessage): void {
