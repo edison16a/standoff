@@ -5,12 +5,13 @@ import { BotAim } from "./bot-aim";
 import { updateBrain, type BrainWorld } from "./brain";
 import { buildCover, nearestSpot, type CoverGraph } from "./cover";
 import type { BattleEvent } from "./events";
-import { aimEye, createFighter, eyeOf, isBot, resetFighter, type Fighter, type FighterSetup, type MoveInput, type TeamId } from "./fighter";
+import { aimEye, createFighter, eyeOf, isBot, resetFighter, type Fighter, type FighterSetup, type TeamId } from "./fighter";
 import type { GunEvent } from "./gun-state";
 import { newMatch, sideOf, tickMatch, type MatchState } from "./match";
 import { Rng } from "./rng";
 import { duckDown, steppingOut } from "./peek";
 import { coneOf, resolveShot } from "./shooting";
+import { skirmishDuck, updateSkirmish } from "./skirmish";
 import { pressureAt } from "./tactics";
 import { STEP } from "./tuning";
 import type { V2, V3 } from "./vec";
@@ -21,6 +22,14 @@ const PULL_KEEP = 0.45;
 const UP_ENOUGH = 0.35;
 /** A human who shot this recently is still in the fight, which holds a peek open. */
 const ENGAGED_FOR = 0.5;
+
+/**
+ * How fighters move. Matches skirmish (`skirmish.ts`): everyone keeps
+ * moving round the other team at their gun's range. The cover brain
+ * (`brain.ts`) hides and peeks from bunker to bunker; the showcase's
+ * filmed fight was played with it and keeps it until it is filmed again.
+ */
+export type Movement = "skirmish" | "cover";
 
 let sharedGraph: CoverGraph | null = null;
 
@@ -45,12 +54,14 @@ export class Battle {
   time = 0;
   private readonly bots = new Map<number, BotAim>();
   private readonly engaged = new Set<number>();
+  private readonly movement: Movement;
 
-  constructor(setups: readonly FighterSetup[], seed: number, options: { roundsToWin?: number } = {}) {
+  constructor(setups: readonly FighterSetup[], seed: number, options: { roundsToWin?: number; movement?: Movement } = {}) {
+    this.movement = options.movement ?? "skirmish";
     this.match = newMatch(options.roundsToWin);
     this.rng = new Rng(seed);
     this.fighters = setups.map((s, i) => createFighter(i, s));
-    for (const f of this.fighters) if (isBot(f)) this.bots.set(f.id, new BotAim());
+    for (const f of this.fighters) if (isBot(f)) this.bots.set(f.id, this.botAim());
     this.resetRound();
   }
 
@@ -85,7 +96,7 @@ export class Battle {
   setAutopilot(id: number, on: boolean): void {
     const f = this.get(id);
     if (!f || isBot(f) || on === this.bots.has(id)) return;
-    if (on) this.bots.set(id, new BotAim());
+    if (on) this.bots.set(id, this.botAim());
     else this.bots.delete(id);
     f.trigger = { held: false, pulls: 0, pulledAt: -Infinity };
   }
@@ -102,18 +113,12 @@ export class Battle {
     f.trigger.held = down;
   }
 
-  /** The crouch button: held, the fighter stays down behind cover; let go, they come up to shoot. */
+  /** The crouch switch: on, the fighter stays low, still or on the move; off, they stand. */
   setCrouch(id: number, down: boolean): void {
     const f = this.get(id);
     if (!f || isBot(f) || f.duck === down) return;
     f.duck = down;
     if (!down) f.rise = true;
-  }
-
-  /** ADVANCE (1) or RETREAT (-1) held, or 0 to hold where they are. Only players steer. */
-  setMove(id: number, move: MoveInput): void {
-    const f = this.get(id);
-    if (f && !isBot(f)) f.move = move;
   }
 
   reload(id: number): void {
@@ -148,6 +153,7 @@ export class Battle {
       if (enemies.length === 0) break;
       const mates = living.filter((o) => o.team === f.team && o.id !== f.id && o.alive);
       const claimed: V2[] = mates.map((o) => this.graph.spots[o.brain.spot]!.pos);
+      const matesAt: V2[] = mates.map((o) => o.pos);
       const others = living.filter((o) => o.id !== f.id && o.alive).map((o) => o.pos);
       const bot = this.bots.get(f.id);
       // Training: computer players stand where they started and never shoot.
@@ -157,17 +163,19 @@ export class Battle {
       }
       const engaged = bot ? this.engaged.has(f.id) : f.trigger.held || this.time - f.shotAt < ENGAGED_FOR;
       const pace = isBot(f) ? BOT_SKILL[f.difficulty].speed : 1;
-      // A player moves themselves, unless the computer has taken over for a dropped phone.
-      const steer = !isBot(f) && !bot;
-      const world: BrainWorld = { graph: this.graph, pieces: this.pieces, enemies, claimed, others, pressure, rng: this.rng, engaged, pace, steer };
-      updateBrain(f, world, this.time, STEP);
+      // A player crouches only when they say so, unless the computer has taken over for a dropped phone.
+      const human = !isBot(f) && !bot;
+      const world: BrainWorld = { graph: this.graph, pieces: this.pieces, enemies, claimed, mates: matesAt, others, pressure, rng: this.rng, engaged, pace, human };
+      const skirmish = this.movement === "skirmish";
+      if (skirmish) updateSkirmish(f, world, this.time, STEP);
+      else updateBrain(f, world, this.time, STEP);
       if (bot) {
         const intent = bot.update(f, enemies, this.pieces, this.rng, this.time, STEP);
         if (intent.engaged) this.engaged.add(f.id);
         else this.engaged.delete(f.id);
         if (intent.reload) f.gun.startReload();
         if (intent.pull) this.fire(f, events);
-        if (intent.duck) duckDown(f, world);
+        if (intent.duck) (skirmish ? skirmishDuck : duckDown)(f, world);
       } else {
         this.humanTrigger(f, events);
       }
@@ -201,6 +209,10 @@ export class Battle {
     return result;
   }
 
+  private botAim(): BotAim {
+    return new BotAim(this.movement === "skirmish");
+  }
+
   /** Everyone back to their end for the round now starting, sides swapped from the last. */
   private resetRound(): void {
     this.engaged.clear();
@@ -211,6 +223,9 @@ export class Battle {
       members.forEach((f, i) => {
         const pos = starts[i] ?? starts[0]!;
         resetFighter(f, pos, side === 0 ? 0 : Math.PI, nearestSpot(this.graph, pos, this.pieces));
+        // Teammates circle opposite ways and turn at different times, so they open up the angles between them.
+        f.brain.orbit = (i + this.match.round) % 2 === 0 ? 1 : -1;
+        f.brain.swap = 7 + 2 * i;
       });
     }
     for (const bot of this.bots.values()) bot.reset();
