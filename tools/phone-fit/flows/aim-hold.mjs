@@ -1,15 +1,18 @@
-// The aim kit's hold to calibrate page, driven like a real player: point
-// the fake phone at each target the page asks for and hold still until it
-// is taken and the next one comes up by itself. No buttons are pressed.
+// The aim kit's hold to calibrate pages, driven like a real player: past
+// the grip page, point the fake phone at each target the page asks for and
+// hold still until it is taken and the next one comes up by itself. No
+// buttons are pressed on the target pages.
 
 /** Where a player sitting square to the screen points for each target: compass heading and elevation, degrees. */
 const AIM = {
-  "the middle": [0, 0],
-  "the top left": [-14, 8],
-  "the top right": [14, 8],
-  "the bottom right": [14, -8],
-  "the bottom left": [-14, -8],
+  middle: [0, 0],
+  "Top left": [-14, 8],
+  "Top right": [14, 8],
+  "Bottom right": [14, -8],
+  "Bottom left": [-14, -8],
 };
+/** The page title once every target is taken. */
+const TEST_TITLE = "Your aim follows";
 
 const whereOf = (title) => Object.keys(AIM).find((place) => title.includes(place));
 
@@ -19,12 +22,17 @@ const whereOf = (title) => Object.keys(AIM).find((place) => title.includes(place
  */
 export async function holdTargets(ctx) {
   const { phone } = ctx;
-  await phone.locator(".kit-hold").waitFor({ timeout: 60000 });
+  // First the grip page, with Next once the sensors are live.
+  await phone.locator(".kit-cal .hold-art").waitFor({ timeout: 60000 });
+  await ctx.snap("aim-hold");
+  await ctx.until("Next");
+  await ctx.tap("Next");
+  await phone.locator(".kit-target").waitFor({ timeout: 60000 });
   await ctx.snap("aim-target");
   let taken = 0;
   for (let guard = 0; guard < 12; guard++) {
-    const title = (await phone.locator(".kit-calibrate__title").textContent()) ?? "";
-    if (title.startsWith("Try it")) return taken;
+    const title = (await phone.locator(".kit-steps__title").textContent()) ?? "";
+    if (title.startsWith(TEST_TITLE)) return taken;
     const place = whereOf(title);
     if (!place) throw new Error(`No target in the title "${title}"`);
     const [heading, up] = AIM[place];
@@ -33,12 +41,12 @@ export async function holdTargets(ctx) {
     await phone.evaluate(aim, [heading + 6, up + 4]);
     await phone.waitForTimeout(700);
     await phone.evaluate(aim, [heading, up]);
-    const count = await phone.locator(".kit-hold__count").textContent();
-    // Taken: the ring closes and the words turn green, then the next target or the test view replaces it.
+    const count = await phone.locator(".kit-target__count").textContent();
+    // Taken: the ring closes and the dot pops, then the next target or the test view replaces it.
     taken++;
     await phone.waitForFunction(
-      (before) => document.querySelector(".kit-hold__count")?.textContent !== before || document.querySelector(".kit-calibrate__title")?.textContent?.startsWith("Try it"),
-      count,
+      ([before, test]) => document.querySelector(".kit-target__count")?.textContent !== before || document.querySelector(".kit-steps__title")?.textContent?.startsWith(test),
+      [count, TEST_TITLE],
       { timeout: 60000 },
     );
   }

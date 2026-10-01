@@ -46,9 +46,10 @@ export function Setup({ seat }: { seat: number }) {
       </>
     ) : undefined;
 
+  // Calibration brings its own pages, in the look every aiming game shares.
+  if (step === 0) return <AimCalibrate aim={session.aim} colour={playerColor(seat)} steps={STEPS} zone={host?.zone ?? undefined} onDone={() => session.calibrated()} />;
   return (
     <StepShell steps={STEPS} current={step} title={TITLES[step] ?? ""} footer={locked ? undefined : footer}>
-      {step === 0 && <AimCalibrate aim={session.aim} colour={playerColor(seat)} zone={host?.zone ?? undefined} onDone={() => session.calibrated()} />}
       {step === 1 && <GunStep />}
       {step === 2 && <ReadyStep seat={seat} />}
     </StepShell>
