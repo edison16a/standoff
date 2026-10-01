@@ -42,10 +42,9 @@ function Target({ slot, step }: { slot: Slot; step: CalibrationStep }) {
   );
 }
 
+/** Mid match too: a phone back in a fresh page aims again, and the match start clears the rest. */
 export function CalibrationTargets() {
   const calibrating = useBladeStore((state) => state.calibrating);
-  const hud = useBladeStore((state) => state.hud);
-  if (hud) return null;
   return (
     <>
       {SLOTS.map((slot) => {
