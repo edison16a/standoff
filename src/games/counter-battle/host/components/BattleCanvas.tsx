@@ -41,7 +41,7 @@ export default function BattleCanvas() {
       renderer.setBattle(scene.battle, (id) => scene.labels[id] ?? { name: "", color: "#ffffff" });
       // Events from a battle that just ended belong to it, not to the one now on screen.
       if (scene.battle === before) renderer.onEvents(events);
-      renderer.render(scene.panes, dt, now / 1000);
+      renderer.render(scene.panes, dt, now / 1000, () => session.aimPlayers(now));
       frame = requestAnimationFrame(loop);
     };
     frame = requestAnimationFrame(loop);

@@ -155,11 +155,7 @@ export class CounterHost {
     let events: BattleEvent[];
     let urgent = false;
     if (d) {
-      // Each player's gun follows their point in their own view, as the camera moves too.
-      for (const f of d.humans) {
-        const point = this.aim.point(f.seat!, nowMs);
-        if (point) d.aim(f.seat!, point, this.camera?.cameraPose(f.id) ?? null);
-      }
+      this.aimPlayers(nowMs);
       events = d.advance(realDt, this.turbo);
       const ears = this.scene.ears;
       this.audio.hear(events, d.battle, ears);
@@ -176,6 +172,21 @@ export class CounterHost {
     }
     if (urgent || nowMs - this.lastHud >= HUD_MS) this.refresh(nowMs);
     return { events, dt: realDt * (d ? this.turbo : 1) };
+  }
+
+  /**
+   * Points each player's gun through their camera at their point in their
+   * own view. The canvas calls it again once the cameras have followed the
+   * fighters for the frame, so the crosshair it draws sits on the phone's
+   * point and never trails a fighter on the move.
+   */
+  aimPlayers(nowMs: number): void {
+    const d = this.driver;
+    if (!d) return;
+    for (const f of d.humans) {
+      const point = this.aim.point(f.seat!, nowMs);
+      if (point) d.aim(f.seat!, point, this.camera?.cameraPose(f.id) ?? null);
+    }
   }
 
   private onRoom(event: HostRoomEvent): void {

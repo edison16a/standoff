@@ -20,7 +20,8 @@ function setup() {
   const me = b.fighters[0]!;
   const low = b.graph.spots.find((s) => !s.tall && s.piece >= 0 && s.pos.z < -5)!;
   me.pos = { ...low.pos };
-  Object.assign(me.brain, { stance: "hide", spot: low.id, last: low.id, route: [], anchor: null });
+  // Held at the bunker for the whole test, so only the crouch changes what the camera sees.
+  Object.assign(me.brain, { stance: "hide", spot: low.id, route: [], timer: 1e9 });
   const cam = new ShoulderCamera();
   cam.setAspect(16 / 9);
   const settle = () => {
