@@ -1,7 +1,8 @@
 /*
   Blade Clash on the computer: the split screen, each player's bar with
-  their health, the calibration targets, the big word in the middle and
-  the tuning drawer. The ceremony's result is in victory.css.
+  their health, the big word in the middle and the tuning drawer. The
+  calibration targets come from the aim kit's look. The ceremony's result
+  is in victory.css.
 */
 
 .stage {
@@ -191,55 +192,6 @@
 
 .hud-map--away {
   opacity: 0;
-}
-
-/* A calibration target in a player's half, big enough to find from the sofa. */
-.calib-target {
-  position: absolute;
-  width: 72px;
-  height: 72px;
-  transform: translate(-50%, -50%);
-  border: 6px solid var(--lamp);
-  border-radius: 50%;
-  box-shadow: 0 0 0 6px rgba(12, 10, 28, 0.55), 0 0 30px var(--lamp);
-  pointer-events: none;
-  animation: calib-pulse 1.2s ease-in-out infinite;
-}
-
-.calib-target::after {
-  content: "";
-  position: absolute;
-  inset: 22px;
-  border-radius: 50%;
-  background: var(--lamp);
-}
-
-.calib-target__word,
-.calib-note {
-  position: absolute;
-  top: calc(100% + 12px);
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: rgba(12, 10, 28, 0.72);
-  color: #ffffff;
-  font-size: 18px;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
-.calib-note {
-  top: auto;
-  bottom: 32px;
-  border: 2px solid var(--lamp);
-  pointer-events: none;
-}
-
-@keyframes calib-pulse {
-  50% {
-    transform: translate(-50%, -50%) scale(1.12);
-  }
 }
 
 .banner {

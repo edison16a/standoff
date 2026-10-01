@@ -5,17 +5,20 @@ import type { Slot } from "@/games/blade-clash/players";
 import type { CalibrationStep } from "@/games/blade-clash/protocol";
 import type { Quat } from "@/games/kit/motion/math3d";
 import { playerColor } from "@/games/kit/players";
+import { HoldArt } from "@/games/kit/aim/look/HoldArt";
 import { StepShell } from "@/games/kit/steps/StepShell";
 import { useControllerStore } from "../../controller-store";
 import { SwordGauge } from "../SwordGauge";
 import { useController } from "../session-context";
-import { HoldArt } from "./HoldArt";
+import { BladeScene } from "./BladeScene";
 import { TargetCapture } from "./TargetCapture";
 
 type Page = "hold" | "center" | Corner | "guard" | "test";
 
 const CORNERS: readonly Corner[] = ["top-left", "top-right", "bottom-right", "bottom-left"];
 const ORDER: readonly Page[] = ["hold", "center", ...CORNERS, "guard", "test"];
+/** Every page between the grip and the test is a target: the middle, the corners and the guard. */
+const TARGETS = ORDER.length - 2;
 
 const TITLES: Record<Page, string> = {
   hold: "Hold it like a sword",
@@ -66,9 +69,9 @@ export function CalibrateStep({ slot, steps, onDone }: { slot: Slot; steps: read
   if (touch) {
     return (
       <StepShell steps={steps} current={0} title="Drag to swing" footer={<Next onClick={done} />}>
-        <div className="setup-page">
-          <p className="setup-page__lead">No motion sensors here, so you swing with your finger.</p>
-          <p className="setup-page__text">During a fight, drag on the pad to point your sword. Let go to rest in guard.</p>
+        <div className="kit-cal">
+          <p className="kit-cal__lead">No motion sensors here, so you swing with your finger.</p>
+          <p className="kit-cal__text">During a fight, drag on the pad to point your sword. Let go to rest in guard.</p>
         </div>
       </StepShell>
     );
@@ -99,14 +102,14 @@ export function CalibrateStep({ slot, steps, onDone }: { slot: Slot; steps: read
 
   return (
     <StepShell steps={steps} current={0} title={TITLES[page]} footer={footers[page] ?? cornerFooter}>
-      <div className="setup-page">
+      <div className="kit-cal">
         {page === "hold" && (
           <>
-            <div className="setup-card setup-card--art">
-              <HoldArt />
+            <div className="kit-cal__card">
+              <HoldArt scene={<BladeScene />} label="Hold the phone like a sword handle, top edge pointing at the big screen" />
             </div>
-            <p className="setup-page__lead">Hold your phone like the handle of a sword.</p>
-            <p className="setup-page__text">Point its top edge at your side of the big screen. Then point where each page asks and hold still.</p>
+            <p className="kit-cal__lead">Hold your phone like the handle of a sword.</p>
+            <p className="kit-cal__text">Point its top edge at your side of the big screen. Then point where each page asks and hold still.</p>
             {!sensorsLive && (
               <button type="button" className="btn btn--ghost btn--block" onClick={() => session.useTouchControls()}>
                 My phone has no motion sensors
@@ -115,14 +118,17 @@ export function CalibrateStep({ slot, steps, onDone }: { slot: Slot; steps: read
           </>
         )}
         {page !== "hold" && page !== "test" && (
-          <TargetCapture key={page} slot={slot} colour={colour} target={page === "center" ? { x: 0, y: 0 } : page === "guard" ? DEFAULT_GUARD : CORNER_TARGETS[page]} onCaptured={capture} />
+          <TargetCapture key={page} slot={slot} colour={colour} target={page === "center" ? { x: 0, y: 0 } : page === "guard" ? DEFAULT_GUARD : CORNER_TARGETS[page]}
+            count={`${ORDER.indexOf(page)} of ${TARGETS}`}
+            onCaptured={capture}
+          />
         )}
-        {page === "guard" && <p className="setup-page__text">Hold the sword the way you rest between swings, tip a little low, elbow bent.</p>}
+        {page === "guard" && <p className="kit-cal__text">Hold the sword the way you rest between swings, tip a little low, elbow bent.</p>}
         {page === "test" && (
           <>
-            <SwordGauge colour={colour} className="setup-card setup-card--gauge" />
-            <p className="setup-page__lead">Point anywhere on your side. The sword goes there.</p>
-            <p className="setup-page__text">Point at your opponent to stretch your arm for a thrust.</p>
+            <SwordGauge colour={colour} className="kit-cal__side blade-gauge" />
+            <p className="kit-cal__lead">Point anywhere on your side. The sword goes there.</p>
+            <p className="kit-cal__text">Point at your opponent to stretch your arm for a thrust.</p>
           </>
         )}
       </div>

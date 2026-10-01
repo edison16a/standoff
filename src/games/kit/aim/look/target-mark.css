@@ -1,0 +1,79 @@
+/*
+  A calibration target on the big screen, big enough to find from the
+  sofa. Every aiming game draws its targets this way.
+*/
+
+.calib-target {
+  position: absolute;
+  width: 72px;
+  height: 72px;
+  transform: translate(-50%, -50%);
+  border: 6px solid var(--lamp);
+  border-radius: 50%;
+  box-shadow: 0 0 0 6px rgba(12, 10, 28, 0.55), 0 0 30px var(--lamp);
+  pointer-events: none;
+  animation: calib-pulse 1.2s ease-in-out infinite;
+}
+
+.calib-target::after {
+  content: "";
+  position: absolute;
+  inset: 22px;
+  border-radius: 50%;
+  background: var(--lamp);
+}
+
+.calib-target__words {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transform: translateX(-50%);
+}
+
+.calib-target__words--above {
+  top: auto;
+  bottom: calc(100% + 12px);
+  flex-direction: column-reverse;
+}
+
+.calib-target__words--start {
+  left: -12px;
+  align-items: flex-start;
+  transform: none;
+}
+
+.calib-target__words--end {
+  right: -12px;
+  left: auto;
+  align-items: flex-end;
+  transform: none;
+}
+
+.calib-target__word,
+.calib-note {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(12, 10, 28, 0.72);
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.calib-note {
+  position: absolute;
+  bottom: 32px;
+  transform: translateX(-50%);
+  border: 2px solid var(--lamp);
+  pointer-events: none;
+}
+
+@keyframes calib-pulse {
+  50% {
+    transform: translate(-50%, -50%) scale(1.12);
+  }
+}

@@ -1,0 +1,199 @@
+/*
+  The calibration look every aiming game shares, first made for Blade
+  Clash: a page of words under one picture, the grip art, and the big
+  screen in miniature with the target to point at. The grip art is in
+  hold-art.css.
+*/
+
+.kit-cal {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: clamp(8px, 1.6vh, 12px);
+  min-height: 0;
+  text-align: center;
+}
+
+/* Only the pictures give up height; words and buttons keep their size. */
+.kit-cal > :not(.kit-cal__card, .kit-target, .kit-pad) {
+  flex-shrink: 0;
+}
+
+.kit-cal__lead {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.kit-cal__text {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.kit-cal__card {
+  display: flex;
+  flex: 0 1 auto;
+  width: 100%;
+  min-height: 0;
+  padding: 14px 10px 6px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, var(--bg-elevated), var(--bg-muted));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), var(--shadow);
+}
+
+/* The big screen in miniature. */
+.kit-tv {
+  display: block;
+  flex: 0 1 auto;
+  width: min(340px, 90vw);
+  height: auto;
+  min-height: 0;
+  margin: 0 auto;
+}
+
+.kit-tv__frame {
+  fill: var(--bg-elevated);
+  stroke: var(--border-strong);
+  stroke-width: 2;
+}
+
+.kit-tv__screen {
+  fill: #1a1440;
+}
+
+.kit-tv__zone {
+  opacity: 0.22;
+}
+
+.kit-tv__split {
+  stroke: #0c0a1c;
+  stroke-width: 3;
+}
+
+.kit-tv__glow {
+  opacity: 0.35;
+}
+
+.kit-tv__ring {
+  fill: none;
+  stroke-width: 3;
+}
+
+.kit-tv__core {
+  fill: #ffffff;
+}
+
+/* A calibration target: the miniature screen, the ring that fills as the player holds, and the hint. */
+.kit-target {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-height: 0;
+}
+
+.kit-target__track {
+  fill: rgba(12, 10, 28, 0.6);
+  stroke: rgba(255, 255, 255, 0.3);
+  stroke-width: 5;
+}
+
+.kit-target__progress {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+/* Taken: the dot pops once before the next target comes up. */
+.kit-target--done .kit-target__dot {
+  animation: kit-target-pop 420ms ease-out;
+}
+
+.kit-target__hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0;
+  min-height: 1.4em;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.kit-target--holding .kit-target__hint,
+.kit-target--done .kit-target__hint {
+  color: var(--text);
+}
+
+.kit-target__count {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+@keyframes kit-target-pop {
+  40% {
+    transform: scale(1.8);
+  }
+}
+
+/* Sideways: the picture on the left, the words and buttons on the right. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .kit-cal {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: repeat(5, min-content) minmax(0, 1fr);
+    gap: 8px 20px;
+    text-align: left;
+  }
+
+  .kit-cal > * {
+    grid-column: 2;
+  }
+
+  /* A page of words alone keeps one centred column. */
+  .kit-cal:not(:has(> .kit-cal__card, > .kit-target, > .kit-tv, > .kit-pad, > .kit-cal__side)) {
+    display: flex;
+    justify-content: center;
+    max-width: 560px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .kit-cal > .kit-cal__card,
+  .kit-cal > .kit-target,
+  .kit-cal > .kit-tv,
+  .kit-cal > .kit-pad,
+  .kit-cal > .kit-cal__side {
+    grid-row: 1 / -1;
+    grid-column: 1;
+    align-self: stretch;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    min-height: 0;
+    /* Sized by the column, never by its own picture, so the words set the height. */
+    contain: size;
+  }
+
+  .kit-cal__lead {
+    font-size: 17px;
+  }
+
+  .kit-cal__card {
+    justify-content: center;
+  }
+
+  .kit-target .kit-tv {
+    flex: 1 1 0;
+    width: 100%;
+  }
+}

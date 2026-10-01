@@ -1,0 +1,101 @@
+/* The grip picture that opens every aiming game's calibration. */
+
+.hold-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  max-height: 100%;
+}
+
+.hold-art__floor {
+  fill: var(--border);
+}
+
+.hold-art__tv {
+  fill: #221b44;
+  stroke: var(--text);
+  stroke-width: 2.5;
+}
+
+.hold-art__stand {
+  fill: var(--text);
+}
+
+.hold-art__zone {
+  opacity: 0.3;
+}
+
+.hold-art__target {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  animation: hold-art-pulse 1.6s ease-in-out infinite;
+}
+
+.hold-art__target-dot {
+  fill: var(--accent);
+}
+
+.hold-art__aim,
+.hold-art__aim-head {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hold-art__aim {
+  stroke-dasharray: 6 7;
+  animation: hold-art-march 1s linear infinite;
+}
+
+.hold-art__skin {
+  fill: #f2c29b;
+  stroke: var(--text);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.hold-art__phone,
+.hold-art__edge {
+  stroke: var(--text);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.hold-art__edge {
+  fill: #3b3656;
+}
+
+.hold-art__glass-a {
+  stop-color: #7c3aed;
+}
+
+.hold-art__glass-b {
+  stop-color: #c084fc;
+}
+
+.hold-art__glass {
+  fill: rgba(255, 255, 255, 0.18);
+}
+
+.hold-art__speaker {
+  stroke: rgba(255, 255, 255, 0.7);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+@keyframes hold-art-pulse {
+  50% {
+    transform: scale(1.25);
+    opacity: 0.6;
+  }
+}
+
+@keyframes hold-art-march {
+  to {
+    stroke-dashoffset: -13;
+  }
+}
