@@ -51,6 +51,9 @@ describe("the match driver", () => {
     for (let i = 0; i < 10; i++) d.advance(0.05);
     expect(me.duck).toBe(true);
     expect(me.crouch).toBeGreaterThan(0.95);
+    // A host resync finds the phone still there: the switch stays on, as it still shows on the phone.
+    d.setOnline(1, true);
+    expect(me.duck).toBe(true);
     d.setOnline(1, false);
     expect(me.duck).toBe(false);
   });

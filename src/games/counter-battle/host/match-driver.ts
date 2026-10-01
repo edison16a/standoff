@@ -26,6 +26,8 @@ export class MatchDriver {
   /** Which players hold the shoot button, whatever the match is doing. */
   private readonly held = new Set<number>();
   private readonly ducked = new Set<number>();
+  /** Seats whose phone has dropped, so a resync that finds a phone still there leaves its buttons alone. */
+  private readonly offline = new Set<number>();
   private carry = 0;
 
   constructor(lineup: Lineup, seed: number, roundsToWin?: number) {
@@ -88,7 +90,9 @@ export class MatchDriver {
   /** A phone dropped or came back: the computer plays for it meanwhile. */
   setOnline(seat: number, online: boolean): void {
     const f = this.fighterOf(seat);
-    if (!f) return;
+    if (!f || online !== this.offline.has(seat)) return;
+    if (online) this.offline.delete(seat);
+    else this.offline.add(seat);
     this.held.delete(seat);
     this.ducked.delete(seat);
     this.battle.setCrouch(f.id, false);
