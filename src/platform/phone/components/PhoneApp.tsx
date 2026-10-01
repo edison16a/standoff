@@ -3,8 +3,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useStore } from "zustand";
 import { Loader, Spinner } from "@/components/ui/Loader";
-import { loadGame } from "@/games/catalog";
 import type { PhoneGame } from "@/platform/games/game-api";
+import { loadWithRetry } from "@/platform/games/load-with-retry";
 import { motionNeedsTap } from "../permissions";
 import { PhoneRoom } from "../phone-room";
 import { showPlayPath } from "../play-path";
@@ -65,8 +65,8 @@ function RoomScreen({ code, resumeAs, onRetry }: { code: string; resumeAs: strin
     if (!api || !gameId) return;
     let made: PhoneGame | null = null;
     let alive = true;
-    // A download that fails, or a game this build does not know, would otherwise say Loading forever.
-    void (loadGame(gameId) ?? Promise.reject(new Error(`Unknown game ${gameId}`)))
+    // A download that fails twice, or a game this build does not know, would otherwise say Loading forever.
+    void loadWithRetry(gameId)
       .then((mod) => {
         if (!alive) return;
         made = mod.createPhone(api);

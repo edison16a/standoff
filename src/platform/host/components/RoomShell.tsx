@@ -7,21 +7,13 @@ import { FullscreenButton } from "@/components/ui/FullscreenButton";
 import { Icon } from "@/components/ui/Icon";
 import { Loader, Spinner } from "@/components/ui/Loader";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
-import { findGame, loadGame } from "@/games/catalog";
-import type { GameModule, HostGame } from "@/platform/games/game-api";
+import { findGame } from "@/games/catalog";
+import type { HostGame } from "@/platform/games/game-api";
+import { loadWithRetry } from "@/platform/games/load-with-retry";
 import { useHostStore } from "../host-store";
 import { useHostRoom } from "./host-context";
 import { JoinPanel } from "./JoinPanel";
 import { RoomAlert } from "./RoomAlert";
-
-/** A game whose code fails to download gets one more try after this long. */
-export const LOAD_RETRY_MS = 1500;
-
-/** Loads a game's code, trying once more if the first download fails. */
-export function loadWithRetry(id: string, wait = LOAD_RETRY_MS): Promise<GameModule> {
-  const load = () => loadGame(id) ?? Promise.reject(new Error(`Unknown game ${id}`));
-  return load().catch(() => new Promise<void>((resolve) => setTimeout(resolve, wait)).then(load));
-}
 
 /**
  * An open room: the game fills the window, and the platform frames it the

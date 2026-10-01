@@ -2,11 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const loads = vi.hoisted(() => ({ results: [] as ("fail" | "ok")[] }));
 vi.mock("@/games/catalog", () => ({
-  findGame: () => undefined,
-  loadGame: () => (loads.results.shift() === "ok" ? Promise.resolve({ createHost: () => null }) : Promise.reject(new Error("chunk"))),
+  loadGame: (id: string) =>
+    id === "unknown" ? undefined : loads.results.shift() === "ok" ? Promise.resolve({ createHost: () => null }) : Promise.reject(new Error("chunk")),
 }));
 
-const { loadWithRetry, LOAD_RETRY_MS } = await import("./RoomShell");
+const { loadWithRetry, LOAD_RETRY_MS } = await import("./load-with-retry");
 
 describe("loadWithRetry", () => {
   beforeEach(() => vi.useFakeTimers());
@@ -25,5 +25,9 @@ describe("loadWithRetry", () => {
     const settled = expect(loading).rejects.toThrow("chunk");
     await vi.advanceTimersByTimeAsync(LOAD_RETRY_MS);
     await settled;
+  });
+
+  it("fails at once for a game this build does not know", async () => {
+    await expect(loadWithRetry("unknown")).rejects.toThrow("Unknown game unknown");
   });
 });
