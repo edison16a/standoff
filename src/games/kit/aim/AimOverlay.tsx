@@ -1,13 +1,14 @@
 "use client";
 import "./aim.css";
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import type { Player } from "@/platform/games/game-api";
 import { playerColor } from "@/games/kit/players";
 import { sameZone, WHOLE_SCREEN, type AimZone, type ScreenPoint } from "./aim-math";
 import { TARGET_POINTS } from "./aim-targets";
 import { insideBox, zonePixels, type HostAim } from "./host-aim";
-import { drawDot, drawTarget, drawZone } from "./overlay-draw";
+import { TargetMark } from "./look/TargetMark";
+import { drawDot, drawZone, planMark, type MarkPlan } from "./overlay-draw";
 import type { AimStep } from "./protocol";
 
 const TARGETS: Partial<Record<AimStep, ScreenPoint>> = TARGET_POINTS;
@@ -34,8 +35,8 @@ const noSubscribe = () => () => undefined;
 
 /**
  * A see through layer over the whole game screen. While a player
- * calibrates it shows the target they should point at, ringed in their
- * colour with their name. During play it draws every player's laser dot.
+ * calibrates it shows the target they should point at, drawn the way
+ * every aiming game draws it (look/TargetMark), with their name. During play it draws every player's laser dot.
  * A seat given a zone (see HostAim.setZone) sees its targets inside it,
  * with the zone outlined in its colour, and its dot moves within it.
  * Games that draw their own pointer still get the dot at the edge, so an
@@ -47,6 +48,8 @@ const noSubscribe = () => () => undefined;
 export function AimOverlay({ aim, players, dots = true, targets = true }: AimOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const anchorRef = useRef<HTMLSpanElement>(null);
+  // Targets are page elements, so they pulse and glow exactly as Blade Clash's do. They change only with a step or a resize.
+  const [marks, setMarks] = useState<MarkPlan[]>([]);
   // The page only exists in the browser, so the layer is added there.
   const client = useSyncExternalStore(noSubscribe, () => true, () => false);
   // Read through refs, so new props on a render never restart the drawing loop.
@@ -64,6 +67,7 @@ export function AimOverlay({ aim, players, dots = true, targets = true }: AimOve
     const stage = anchorRef.current?.parentElement;
     if (!canvas || !ctx || !stage) return;
     let frame = 0;
+    let shown = "";
     const lastAtEdge = new Map<number, number>();
     const draw = (now: number) => {
       // The next frame is booked first, so one frame that fails never stops the layer.
@@ -91,12 +95,20 @@ export function AimOverlay({ aim, players, dots = true, targets = true }: AimOve
         spot.who.push(player);
         waiting.set(key, spot);
       }
+      const plans: MarkPlan[] = [];
       if (targets) {
         for (const { at, zone, who } of waiting.values()) {
           const box = { x: zone.x * width, y: zone.y * height, w: zone.w * width, h: zone.h * height };
           if (!sameZone(zone, WHOLE_SCREEN)) drawZone(ctx, box, playerColor(who[0]!.seat));
-          drawTarget(ctx, at, who, now, box);
+          const plan = planMark(at, who, box);
+          // Whole pixels, so a resize redraws them but float noise never does.
+          plans.push({ ...plan, at: { x: Math.round(left + at.x), y: Math.round(top + at.y) } });
         }
+      }
+      const signature = JSON.stringify(plans.map((p) => [p.at.x, p.at.y, p.colour, p.words, p.above, p.align]));
+      if (signature !== shown) {
+        shown = signature;
+        setMarks(plans);
       }
       for (const player of everyone) {
         if (!dots && aim.atEdge(player.seat, now)) lastAtEdge.set(player.seat, now);
@@ -118,7 +130,18 @@ export function AimOverlay({ aim, players, dots = true, targets = true }: AimOve
   return (
     <>
       <span ref={anchorRef} hidden />
-      {client && createPortal(<canvas ref={canvasRef} className="aim-overlay" aria-hidden="true" />, document.body)}
+      {client &&
+        createPortal(
+          <>
+            <canvas ref={canvasRef} className="aim-overlay" aria-hidden="true" />
+            <div className="aim-overlay">
+              {marks.map((mark) => (
+                <TargetMark key={mark.key} left={`${mark.at.x}px`} top={`${mark.at.y}px`} colour={mark.colour} words={mark.words} wordsAbove={mark.above} align={mark.align} />
+              ))}
+            </div>
+          </>,
+          document.body,
+        )}
     </>
   );
 }
