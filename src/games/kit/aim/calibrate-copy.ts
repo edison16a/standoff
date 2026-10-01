@@ -27,7 +27,7 @@ export const HOLD_COPY = {
 export const TEST_COPY = {
   title: "Your aim follows",
   lead: (zoned: boolean) => `Point anywhere ${zoned ? "in your view" : "on the screen"}. Your dot goes there.`,
-  text: "The dot below and the one on the big screen should follow where you point.",
+  text: "This dot and the one on the big screen should follow where you point.",
   button: "Looks good",
 };
 
