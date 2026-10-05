@@ -8,6 +8,9 @@ export interface BodyHit {
   /** The change of speed each one took. */
   dvA: number;
   dvB: number;
+  /** Before the hit: how fast each was moving into the other, so the referee can see who ran into whom. */
+  intoA: number;
+  intoB: number;
 }
 
 /**
@@ -35,8 +38,10 @@ export function collide(a: Athlete, b: Athlete, ra: number, rb: number): BodyHit
   a.z -= nz * overlap * shareA;
   b.x += nx * overlap * (1 - shareA);
   b.z += nz * overlap * (1 - shareA);
-  const closing = (a.vx - b.vx) * nx + (a.vz - b.vz) * nz;
-  if (closing <= 0) return { closing: 0, dvA: 0, dvB: 0 };
+  const intoA = a.vx * nx + a.vz * nz;
+  const intoB = -(b.vx * nx + b.vz * nz);
+  const closing = intoA + intoB;
+  if (closing <= 0) return { closing: 0, dvA: 0, dvB: 0, intoA, intoB };
   const reduced = 1 / (1 / ma + 1 / mb);
   const j = (1 + CONTACT.restitution) * closing * reduced;
   // Sliding past each other: friction on the sideways part, at most a share of the push.
@@ -48,5 +53,5 @@ export function collide(a: Athlete, b: Athlete, ra: number, rb: number): BodyHit
   a.vz -= (nz * j + tz * jt) / ma;
   b.vx += (nx * j + tx * jt) / mb;
   b.vz += (nz * j + tz * jt) / mb;
-  return { closing, dvA: Math.hypot(j, jt) / ma, dvB: Math.hypot(j, jt) / mb };
+  return { closing, dvA: Math.hypot(j, jt) / ma, dvB: Math.hypot(j, jt) / mb, intoA, intoB };
 }

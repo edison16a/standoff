@@ -1,4 +1,5 @@
 import type { DunkStyle } from "../roster";
+import type { FoulKind } from "./foul-call";
 import type { Grade, Outcome, ShotKind } from "./shot-model";
 import type { DribbleMove, TeamId } from "./types";
 
@@ -28,7 +29,8 @@ export type MatchEvent =
   /** A dribble move went wrong and the ball got away, knocked by `by` if a defender was on top. */
   | { type: "fumble"; id: number; by: number | null }
   /** The whistle: a foul on `id` against `victim`, a reach in or contact on a shot. */
-  | { type: "foul"; id: number; victim: number; attempt: number; shooting: boolean }
+  /** `call` is what the referee signals: a reach in, contact on a shot, a blocking foul or a charge (then `id` is the ball handler). */
+  | { type: "foul"; id: number; victim: number; attempt: number; shooting: boolean; call: FoulKind }
   /** A fouled shot went in: the basket counts, and one free throw. */
   | { type: "andOne"; id: number }
   /** A free throw is ready to shoot: shot `n` of `of`. */

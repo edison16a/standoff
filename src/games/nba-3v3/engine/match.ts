@@ -2,6 +2,7 @@ import type { DunkStyle } from "../roster";
 import { pressDefend, pressPass, pressShoot, releaseShot, updateAction } from "./actions";
 import { createAthlete, moveAthlete, separate } from "./athlete";
 import { updateBall } from "./ball";
+import { endCharge, refereeHit } from "./body/charge";
 import { Brains } from "./bot/brains";
 import { botTuning, type BotTuning } from "./bot/skill";
 import { updateDribbleHand } from "./dribble";
@@ -196,7 +197,8 @@ export class Match {
       moveAthlete(a, dt, this.ball.holder === a.id, facingFor(this, a), this.queue);
       updateDribbleHand(this, a, dt);
     }
-    separate(this.athletes, this.queue, this.bumpCd);
+    separate(this.athletes, this.queue, this.bumpCd, (a, b, hit) => refereeHit(this, a, b, hit));
+    endCharge(this);
     if (!stepCheckBall(this, dt) && !stepFreeThrowBall(this, dt)) updateBall(this, dt);
     if (this.phase === "live") updateClock(this, dt);
   }

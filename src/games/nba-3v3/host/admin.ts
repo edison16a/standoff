@@ -1,4 +1,5 @@
 import { registerAdminActions } from "@/platform/admin/admin-actions";
+import { forceContactFoul } from "../engine/body/charge";
 import { forceFoul } from "../engine/foul-call";
 import { winNow } from "../engine/rules";
 import type { MatchDriver } from "./match-driver";
@@ -19,6 +20,9 @@ export function registerTestActions(driver: MatchDriver): () => void {
     { id: "free-throws", label: "Free throws (straight to the line)", run: () => void forceFoul(m, 2, person(), false) },
     { id: "and-one", label: "And one (one shot)", run: () => void forceFoul(m, 1, person()) },
     { id: "three-shots", label: "Fouled three (three shots)", run: () => void forceFoul(m, 3, person()) },
+    // On whoever has the ball, as these only happen with the ball in play.
+    { id: "charge", label: "Charge (ball to the other team)", run: () => void forceContactFoul(m, false) },
+    { id: "blocking-foul", label: "Blocking foul (two shots)", run: () => void forceContactFoul(m, true) },
     // Both teams one short of the win, so the next basket ends the game and rolls the replay.
     { id: "game-point", label: "Next basket wins (to see the replay)", run: () => void (m.score = [m.target - 1, m.target - 1]) },
     // The tester's team wins on the spot, straight to the trophy ceremony with no replay.

@@ -1,6 +1,6 @@
 import { BUILDS, type BuildSpec, type BuildId } from "../builds";
 import { BODY, CONTACT } from "./body/body-spec";
-import { collide } from "./body/contact";
+import { collide, type BodyHit } from "./body/contact";
 import { powerPerKg } from "./body/mass";
 import { clampToCourt } from "./court";
 import type { MatchEvent } from "./events";
@@ -101,9 +101,9 @@ export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: { x:
  * Players who run into each other: pushed apart by weight and trading
  * momentum (see `body/contact.ts`), so a screen stops a defender and a
  * big man holds his spot. A hard hit leaves the one it rocked with slow
- * legs for a moment.
+ * legs for a moment, and `onHit` hears every real hit, for the referee.
  */
-export function separate(athletes: readonly Athlete[], events: MatchEvent[], bumpCd: Map<string, number>): void {
+export function separate(athletes: readonly Athlete[], events: MatchEvent[], bumpCd: Map<string, number>, onHit?: (a: Athlete, b: Athlete, hit: BodyHit) => void): void {
   for (let i = 0; i < athletes.length; i++) {
     for (let j = i + 1; j < athletes.length; j++) {
       const a = athletes[i]!;
@@ -115,6 +115,7 @@ export function separate(athletes: readonly Athlete[], events: MatchEvent[], bum
       if (!hit || hit.closing <= 0) continue;
       rock(a, hit.dvA);
       rock(b, hit.dvB);
+      onHit?.(a, b, hit);
       const key = `${a.id}:${b.id}`;
       if (hit.closing > 3.2 && (bumpCd.get(key) ?? 0) <= 0) {
         events.push({ type: "bump", a: a.id, b: b.id, power: Math.min(1, hit.closing / 7) });

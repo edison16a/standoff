@@ -60,6 +60,11 @@ export class Buzzer {
         if (e.by !== null) send(e.by, "steal", "Poked it!");
         return;
       case "foul":
+        if (e.call === "charge") {
+          send(e.id, "whistle", "Charge on you");
+          send(e.victim, "steal", "Took the charge!");
+          return;
+        }
         send(e.id, "whistle", "Foul on you");
         send(e.victim, "whistle", e.shooting ? "Fouled on the shot" : "Fouled! Two shots");
         return;
