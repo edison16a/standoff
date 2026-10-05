@@ -138,6 +138,7 @@ export function newBall(): Ball {
     heldFor: 0,
     wobble: 0,
     travel: 0,
+    struckAt: -10,
   };
 }
 

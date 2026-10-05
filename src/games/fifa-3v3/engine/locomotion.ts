@@ -1,7 +1,7 @@
 import type { Athlete } from "./athlete-types";
 import { isTap } from "./charge";
 import { cycleLength } from "./stride";
-import { MOVE, PITCH } from "./tuning";
+import { MOVE, PITCH, STEP } from "./tuning";
 import { angleDiff, clamp, clampLen, len, type Vec2 } from "./vec";
 
 /**
@@ -81,6 +81,17 @@ export function moveAthlete(a: Athlete, want: Vec2, dt: number, carrying: boolea
     const rate = now < RUN.pivot ? 12 : carrying ? MOVE.turnWithBall + 6 * a.attrs.dribbling : MOVE.turnRate;
     turnToward(a, Math.atan2(a.vel.z, a.vel.x), rate * dt);
   }
+}
+
+/**
+ * Where a player running with the ball will be after `seconds` of
+ * holding the stick at `stick`, run with his own legs on a copy of him:
+ * the acceleration, the grip and the braking all count.
+ */
+export function predictRun(a: Athlete, stick: Vec2, seconds: number): { pos: Vec2; vel: Vec2 } {
+  const ghost: Athlete = { ...a, pos: { ...a.pos }, vel: { ...a.vel } };
+  for (let t = 0; t < seconds - 1e-9; t += STEP) moveAthlete(ghost, stick, Math.min(STEP, seconds - t), true);
+  return { pos: ghost.pos, vel: ghost.vel };
 }
 
 /** Players stay on the pitch and out of the goals. */

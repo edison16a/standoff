@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { footPoint } from "./athlete";
 import { markSpot } from "./bot-shape";
 import { jumpHeight, JUMP } from "./defend";
 import { GUARD, markOf } from "./guard";
@@ -29,6 +30,7 @@ function defending(gap: number): MatchState {
   state.ball.owner = { kind: "athlete", id: striker.id };
   state.ball.lastTouch = { team: 1, id: striker.id };
   state.ball.heldFor = 5;
+  state.ball.pos = { ...footPoint(striker), y: 0.11 };
   return state;
 }
 
@@ -99,7 +101,7 @@ describe("guard", () => {
         striker.actionT = 0;
       }
       // Most of a second: a body takes a moment to get going, so the guard needs time to show its lag.
-      hold(state, 0.9, { move: { x: 0, z: 0 }, guard: true });
+      hold(state, 1.2, { move: { x: 0, z: 0 }, guard: true });
       const me = state.athletes[0]!;
       return dist(me.pos, markSpot(me, striker, GUARD.gap));
     };

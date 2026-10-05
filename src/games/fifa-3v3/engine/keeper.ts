@@ -64,6 +64,7 @@ export function makeSave(state: MatchState, k: Keeper): void {
 export function palmSave(state: MatchState, k: Keeper): void {
   const ball = state.ball;
   ball.lastTouch = { team: k.team, id: null };
+  ball.struckAt = state.time;
   ball.passTo = null;
   k.noTouch = Math.max(k.noTouch, 0.6);
   const flight = state.flight;

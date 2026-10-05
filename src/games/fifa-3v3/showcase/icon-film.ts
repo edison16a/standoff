@@ -44,7 +44,11 @@ export function iconMatch(at: number): MatchState {
   striker.pos = { ...ICON_RUN.from };
   striker.facing = Math.atan2(ICON_RUN.dir.z, ICON_RUN.dir.x);
   for (const [id, x, z] of CLEAR) state.athletes[id]!.pos = { x, z };
-  state.ball.pos = { x: ICON_RUN.from.x + 0.5, y: 0.11, z: ICON_RUN.from.z };
+  // Already in full stride, the ball rolling at his boot: bodies take a second or two to get going.
+  const pace = 7;
+  striker.vel = { x: ICON_RUN.dir.x * pace, z: ICON_RUN.dir.z * pace };
+  state.ball.pos = { x: ICON_RUN.from.x + ICON_RUN.dir.x * 0.5, y: 0.11, z: ICON_RUN.from.z + ICON_RUN.dir.z * 0.5 };
+  state.ball.vel = { x: striker.vel.x, y: 0, z: striker.vel.z };
   const run: Command = { move: ICON_RUN.dir };
   const commands = new Map([[STRIKER, run]]);
   let shot = false;

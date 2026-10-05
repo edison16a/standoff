@@ -1,5 +1,5 @@
 import { stepBall, type BallCollider, type Contact } from "./ball";
-import { blockerColliders, onBodyHit } from "./blockers";
+import { bodyColliders, onBodyHit } from "./blockers";
 import { makeSave, palmSave } from "./keeper";
 import { keeperColliders } from "./keeper-body";
 import { PITCH } from "./tuning";
@@ -15,7 +15,7 @@ export function stepLooseBall(state: MatchState, dt: number): void {
   const colliders: BallCollider[] = [];
   const owner = state.ball.owner;
   for (const k of state.keepers) keeperColliders(k, owner?.kind === "keeper" && owner.team === k.team, colliders);
-  blockerColliders(state, colliders);
+  bodyColliders(state, colliders);
   const contacts: Contact[] = [];
   stepBall(state.ball, dt, contacts, { nets: state.nets, colliders });
   for (const c of contacts) {

@@ -108,6 +108,7 @@ function launch(state: MatchState, sp: SetPiece): void {
   ball.wobble = 0;
   ball.travel = 0;
   ball.lastTouch = { team: taker.team, id: taker.id };
+  ball.struckAt = state.time;
   taker.noTouch = TOUCH.afterKick;
   taker.stats.shots++;
   // The spot the taker lined up, for the replay's target; the flight decides the rest.

@@ -1,6 +1,7 @@
 import { attackSign } from "../teams";
 import { brake, integrate, topSpeed, turnToward } from "./athlete";
 import { owns } from "./kick";
+import { atFeet } from "./reach";
 import { ballOffset, moveFacing, moveVelocity, MOVES, type MoveFrame } from "./skill-moves";
 import { BALL, MOVE, PITCH } from "./tuning";
 import type { Athlete, MatchState, SkillKind } from "./types";
@@ -38,7 +39,8 @@ export function pickSkill(a: Athlete, stick: Vec2): { kind: SkillKind; exit: Vec
 /** Starts a skill move the way the stick points. Only with the ball, on the feet, off cooldown. */
 export function startSkill(state: MatchState, a: Athlete, stick: Vec2): boolean {
   const sk = a.skill;
-  if (sk.wait > 0 || a.action !== "free" || !owns(state, a)) return false;
+  // The move starts with the ball at the boot, not a stride ahead between touches.
+  if (sk.wait > 0 || a.action !== "free" || !owns(state, a) || !atFeet(state, a)) return false;
   const { kind, exit } = pickSkill(a, stick);
   const from = fromAngle(a.facing);
   const cross = from.x * exit.z - from.z * exit.x;
@@ -172,6 +174,7 @@ function loseBall(state: MatchState, a: Athlete, d: Athlete): void {
   ball.owner = null;
   ball.vel = { x: toward.x * 3, y: 0.4, z: toward.z * 3 };
   ball.lastTouch = { team: d.team, id: d.id };
+  ball.struckAt = state.time;
   ball.passTo = null;
   a.noTouch = 0.45;
   state.events.push({ type: "skillResult", athlete: a.id, defender: d.id, result: "lost" });

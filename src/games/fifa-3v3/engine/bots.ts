@@ -4,6 +4,7 @@ import { goalX, shotAngle, toGoal } from "./goal";
 import { owns } from "./kick";
 import { trySkill } from "./bot-skill";
 import { laneOf } from "./lanes";
+import { atFeet } from "./reach";
 import { RUN, topSpeed } from "./locomotion";
 import { botSkill, sloppiness, thinkScale } from "./difficulty";
 import { choosePassTarget, openness } from "./passing";
@@ -31,7 +32,10 @@ export function botCommand(state: MatchState, a: Athlete, dt: number): Command {
   const skill = botSkill(state);
   // Training: the computer players stand where they are and do nothing.
   if (state.phase !== "play" || !skill.acts) return { move: STILL };
-  const target = carrying ? dribbleSpot(state, a) : runSpot(state, a);
+  // A dribble a stride or two ahead is chased down before anything else.
+  const ball = state.ball;
+  const loose = carrying && !atFeet(state, a);
+  const target = loose ? add(ball.pos, ball.vel, 0.3) : carrying ? dribbleSpot(state, a) : runSpot(state, a);
   const command: Command = { move: scale(approach(a, target), skill.speed) };
   // Mid charge the shot is already decided; it goes when the bar gets there.
   if (brain.thinkIn > 0 || a.action !== "free" || a.charging) return command;

@@ -85,6 +85,8 @@ export interface Ball {
   wobble: number;
   /** Metres flown since it was last struck, which times the knuckle's swing. */
   travel: number;
+  /** The match time it was last struck or knocked off a body: players need their reaction time to it. */
+  struckAt: number;
 }
 
 /** "foul": the whistle has gone and the referee runs in to book the player. "setpiece": a free kick or a penalty is being lined up. */

@@ -64,6 +64,7 @@ export function strike(state: MatchState, a: Athlete): void {
   ball.wobble = Math.hypot(kick.spin.x, kick.spin.y, kick.spin.z) < 4 && speed > 20 ? rng.range(0.1, Math.PI * 2) : 0;
   ball.travel = 0;
   ball.lastTouch = { team: a.team, id: a.id };
+  ball.struckAt = state.time;
   ball.passTo = null;
   a.noTouch = TOUCH.afterKick;
   a.stats.shots++;

@@ -89,6 +89,7 @@ function kickPass(state: MatchState, a: Athlete): void {
     ball.spin = rollingSpin(ball.vel);
   }
   ball.lastTouch = { team: a.team, id: a.id };
+  ball.struckAt = state.time;
   ball.passTo = receiver?.id ?? null;
   a.noTouch = TOUCH.afterKick;
   a.stats.passes++;

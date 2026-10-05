@@ -1,5 +1,6 @@
 import { brake, carryBall, isHuman, moveAthlete } from "./athlete";
 import { collideBodies } from "./contact";
+import { dribble, dribbleSteer } from "./dribble";
 import { settleNets } from "./ball";
 import { botCommand } from "./bots";
 import { tryControl } from "./control";
@@ -13,7 +14,8 @@ import { followPlay } from "./referee";
 import { owns, progressKick } from "./kick";
 import { fullTime, onGoal, onOut } from "./rules";
 import { coolSkill, updateBeaten, updateSkill } from "./skills";
-import { challenges, updateSlide } from "./tackle";
+import { updateSlide } from "./slide";
+import { challenges } from "./tackle";
 import type { Athlete, Command, MatchState } from "./types";
 import { scale } from "./vec";
 
@@ -22,20 +24,32 @@ const IDLE: Command = { move: { x: 0, z: 0 } };
 /** One step of open play: everyone moves, the ball flies, and the rules are checked. */
 export function playStep(state: MatchState, commands: ReadonlyMap<number, Command>, dt: number): void {
   const live = state.phase === "play";
+  const strides = state.athletes.map((a) => a.stride);
   for (const a of state.athletes) {
     const command = !live ? IDLE : isHuman(a) ? (commands.get(a.id) ?? IDLE) : botCommand(state, a, dt);
+    a.want = command.move;
     if (live) applyButtons(state, a, command, dt);
     updateAction(state, a, command, dt);
   }
   const ball = state.ball;
   const owner = ball.owner;
+  let rolled = false;
   if (owner?.kind === "athlete") {
     ball.heldFor += dt;
-    // During a skill move the move itself places the ball.
     const carrier = state.athletes[owner.id]!;
-    if (carrier.action !== "skill") carryBall(carrier, ball, dt);
-  } else if (!owner) stepLooseBall(state, dt);
-  if (owner) settleNets(state.nets, dt);
+    // A skill move places the ball itself; a kick being wound up gathers it onto the boot.
+    if (carrier.action === "shoot" || carrier.action === "pass") carryBall(carrier, ball, dt);
+    else if (carrier.action !== "skill") {
+      // Between touches the ball rolls free, and can run into anyone.
+      stepLooseBall(state, dt);
+      rolled = true;
+      if (ball.owner && !dribble(state, carrier, strides[carrier.id] ?? carrier.stride, dt)) ball.owner = null;
+    }
+  } else if (!owner) {
+    stepLooseBall(state, dt);
+    rolled = true;
+  }
+  if (!rolled) settleNets(state.nets, dt);
   for (const k of state.keepers) updateKeeper(state, k, dt);
   if (owner?.kind === "keeper") ball.heldFor += dt;
   updateFlight(state, dt);
@@ -46,7 +60,10 @@ export function playStep(state: MatchState, commands: ReadonlyMap<number, Comman
     followPlay(state, dt);
     settleSetPiece(state, dt);
   }
-  collideBodies(state.athletes);
+  for (const [id, shove] of collideBodies(state.athletes)) {
+    const a = state.athletes[id]!;
+    a.shove = Math.max(a.shove, shove);
+  }
   checkBall(state);
   if (live && state.phase === "play") runClock(state, dt);
 }
@@ -73,7 +90,7 @@ function updateAction(state: MatchState, a: Athlete, c: Command, dt: number): vo
   if (a.action !== "free") a.guard.on = false;
   switch (a.action) {
     case "free":
-      if (!guardStep(state, a, c, dt)) moveAthlete(a, c.move, dt, has);
+      if (!guardStep(state, a, c, dt)) moveAthlete(a, has ? dribbleSteer(state, a, c.move) : c.move, dt, has);
       return;
     case "celebrate":
     case "dejected":
@@ -86,7 +103,7 @@ function updateAction(state: MatchState, a: Athlete, c: Command, dt: number): vo
       updateSteal(state, a, before, dt);
       break;
     case "hurdle":
-      moveAthlete(a, c.move, dt, has);
+      moveAthlete(a, has ? dribbleSteer(state, a, c.move) : c.move, dt, has);
       break;
     case "shoot":
     case "pass":

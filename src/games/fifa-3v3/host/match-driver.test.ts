@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { footPoint } from "../engine/athlete";
 import type { HostPad } from "@/games/kit/pad/host-pad";
 import type { MatchEvent } from "../engine/events";
 import { heldFor } from "../engine/charge";
@@ -31,6 +32,8 @@ function driver(): { d: MatchDriver; run: (seconds: number) => MatchEvent[] } {
   d.state.athletes[1]!.pos = { x: -18, z: 10 };
   me.pos = { x: 8, z: 0 };
   d.state.ball.owner = { kind: "athlete", id: 0 };
+  // The ball is a real object: it sits at his boot.
+  d.state.ball.pos = { ...footPoint(me), y: 0.11 };
   return { d, run };
 }
 

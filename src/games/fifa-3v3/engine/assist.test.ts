@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { footPoint } from "./athlete";
 import { needsAir, planPass, shotAimZ } from "./assist";
 import { newBall, stepBall, type Contact } from "./ball";
 import { createMatch, stepMatch, type Entrant } from "./match";
@@ -24,6 +25,7 @@ function scene(me: { x: number; z: number }, mates: { x: number; z: number }[], 
   [b, c].forEach((m, i) => (m!.pos = mates[i] ?? { x: -12, z: -8 + i * 16 }));
   [d, e, f].forEach((o, i) => (o!.pos = foes[i] ?? { x: -14, z: -9 + i * 9 }));
   state.ball.owner = { kind: "athlete", id: 0 };
+  state.ball.pos = { ...footPoint(a!), y: 0.11 };
   return state;
 }
 

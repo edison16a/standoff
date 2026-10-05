@@ -16,8 +16,8 @@ export const READ = {
   /** A penalty: how often he stays up the middle, and how often he picks the right side when he goes. */
   stay: 0.1,
   rightSide: 0.62,
-  /** A penalty keeper who guessed right still only has a rough idea of the spot, metres. */
-  penaltyMisread: 0.32,
+  /** A penalty met in the gloves is held if it comes this slowly, m/s; harder ones are palmed. */
+  penaltyHold: 20,
   /** A free kick: seen this much later than a shot in open play, and read this much worse. */
   freeLate: 0.12,
   freeMisread: 0.18,
@@ -31,9 +31,11 @@ export function freeKickKeeper(state: MatchState, keeper: Keeper): void {
 }
 
 /**
- * The penalty keeper's guess as it is struck, and his dive: the right
- * way, read roughly and early; the wrong way, a full length dive to the
- * side he picked; or standing his ground in the middle.
+ * The penalty keeper's guess as it is struck. Too quick to read, he has
+ * already picked a side and a spot on it, and dives there full length;
+ * or he stands his ground in the middle. The right side gives him a
+ * chance, if the spot he picked is near enough where it goes; the
+ * wrong side only a ball struck at his legs. The glove decides.
  */
 export function penaltyKeeper(state: MatchState, keeper: Keeper): { guess: -1 | 0 | 1; rightWay: boolean } {
   const rng = state.rng;
@@ -42,14 +44,10 @@ export function penaltyKeeper(state: MatchState, keeper: Keeper): { guess: -1 | 
   const guess = guessSide(rng.next(), rng.next(), side);
   const rightWay = side === guess && guess !== 0;
   if (guess === 0) return { guess, rightWay: side === 0 };
-  if (rightWay) {
-    // He goes as it is struck, so he has all the time there is, but only a rough idea of the spot.
-    planDive(state, keeper, { react: 0.04, misread: READ.penaltyMisread });
-    return { guess, rightWay };
-  }
-  const gloveZ = keeper.pos.z + guess * rng.range(1.6, 2.4);
-  const height = rng.range(0.5, 1.4);
-  diveTo(keeper, gloveZ, height, 0.03, KEEPER.diveTime, 0);
+  // His guess of the spot: across and up on the side he went, a fair read of where penalties go.
+  const gloveZ = keeper.pos.z + guess * rng.range(1.8, 3.3);
+  const height = rng.range(0.35, 1.5);
+  diveTo(keeper, gloveZ, height, 0.03, KEEPER.diveTime, READ.penaltyHold);
   return { guess, rightWay };
 }
 

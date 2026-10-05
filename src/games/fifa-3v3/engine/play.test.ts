@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { footPoint } from "./athlete";
 import type { MatchEvent } from "./events";
 import { createMatch, stepMatch, type Entrant } from "./match";
 import { makeSave } from "./keeper";
@@ -46,6 +47,7 @@ describe("open play", () => {
     const me = state.athletes[0]!;
     me.pos = { x: 0, z: PITCH.halfWidth - 1.5 };
     state.ball.owner = { kind: "athlete", id: 0 };
+    state.ball.pos = { ...footPoint(me), y: BALL.radius };
     let widest = 0;
     for (let t = 0; t < 2; t += STEP) {
       stepMatch(state, new Map([[0, { move: { x: 0.2, z: 1 } }]]));
@@ -101,6 +103,7 @@ describe("the keeper", () => {
       // Running at the goal line past the keeper, the way a phone's player might.
       me.pos = { x: HL - 3.5, z: (seed % 5) - 2 };
       state.ball.owner = { kind: "athlete", id: 0 };
+      state.ball.pos = { ...footPoint(me), y: BALL.radius };
       for (let t = 0; t < 3 && state.phase === "play"; t += STEP) {
         stepMatch(state, new Map([[0, { move: { x: 1, z: -me.pos.z * 0.1 } }]]));
         if (state.events.some((e) => e.type === "save" && e.kind === "claim")) smothered++;
