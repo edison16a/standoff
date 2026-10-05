@@ -25,11 +25,11 @@ export function tryControl(state: MatchState): void {
   let best: Athlete | null = null;
   let bestD = Infinity;
   for (const a of state.athletes) {
-    if (a === owner || (owner && a.team === owner.team) || !ready(state, a)) continue;
+    if (a === owner || (owner && a.team === owner.team) || a.action === "header" || !ready(state, a)) continue;
     const d = dist(footPoint(a), ball.pos);
     if (d > TOUCH.controlRange + takeRange(a) || d >= bestD) continue;
-    // Off a dribbler only once it has run out of his reach and he is beaten to it; within it, it is a challenge (tackle.ts).
-    if (owner && (ownerGap < BOOT_REACH || d > ownerGap)) continue;
+    // Off a dribbler only once it has run out of his reach and he is clearly beaten to it; within it, it is a challenge (tackle.ts).
+    if (owner && (ownerGap < BOOT_REACH || d > ownerGap - 0.2)) continue;
     best = a;
     bestD = d;
   }

@@ -21,15 +21,15 @@ export const READ_SHOT = {
   reflex: 0.06,
   reflexReach: 0.6,
   /** Metres off the true line: a base, then per m/s of pace and per radian a second of sidespin. */
-  misread: 0.1,
+  misread: 0.14,
   misreadPace: 0.007,
   misreadCurl: 0.004,
   /** How far the hands chase the ball in the last moment, standing and diving, before any spare time. */
   trackStanding: 0.25,
   trackDiving: 0.12,
-  /** The fastest ball he can hold standing up, and in an easy dive, m/s. */
-  holdStanding: 27,
-  holdDiving: 22,
+  /** The fastest ball he can hold standing up, and in an easy dive: its speed into the gloves, m/s, with his hands driving at it. */
+  holdStanding: 34,
+  holdDiving: 29,
   /**
    * Watching the striker's backswing and body shape, he starts this much
    * before the ball is struck, at the price of reading it a little worse.
@@ -93,7 +93,7 @@ export function planDive(state: MatchState, k: Keeper, opts: ReadOptions = {}): 
   const lateral = clamp(seenZ - k.pos.z, -reach, reach);
   const duration = clamp(hit.t - react, 0.12, KEEPER.diveTime);
   // A stretch for a ball at the edge of his reach is a palm, not a catch.
-  const stretch = clamp01((Math.abs(lateral) / 3.3 - 0.55) / 0.35);
+  const stretch = clamp01((Math.abs(lateral) / 3.3 - 0.65) / 0.3);
   const standing = Math.abs(lateral) < 0.5 && seenY < 1.8;
   diveTo(k, k.pos.z + lateral, seenY, hit.t - duration, duration, standing ? READ_SHOT.holdStanding : READ_SHOT.holdDiving * (1 - stretch));
 }

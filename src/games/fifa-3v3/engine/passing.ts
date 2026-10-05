@@ -13,9 +13,29 @@ export function openness(state: MatchState, a: Athlete, at: Vec2 = a.pos): numbe
 }
 
 /**
+ * Whether an opponent's legs stand in the first few metres of the line
+ * to `to`: too close to chip over, so a ball played there hits him.
+ */
+export function laneBlocked(state: MatchState, a: Athlete, to: Vec2): boolean {
+  const lane = sub(to, a.pos);
+  const length = len(lane);
+  if (length < 0.5) return false;
+  const dir = norm(lane);
+  for (const o of state.athletes) {
+    if (o.team === a.team) continue;
+    const rel = sub(o.pos, a.pos);
+    const along = dot(rel, dir);
+    if (along < 0.3 || along > Math.min(4, length - 0.6)) continue;
+    if (Math.abs(rel.x * dir.z - rel.z * dir.x) < 0.6) return true;
+  }
+  return false;
+}
+
+/**
  * Who a pass goes to. With the stick pushed, the team mate most in that
  * direction, within a cone. With the stick centred, the most open team
- * mate, leaning toward those further up the pitch.
+ * mate, leaning toward those further up the pitch, and never through a
+ * man standing right in the way.
  */
 export function choosePassTarget(state: MatchState, a: Athlete, aim: Vec2 | null): Athlete | null {
   const forward = attackSign(a.team);
@@ -35,6 +55,7 @@ export function choosePassTarget(state: MatchState, a: Athlete, aim: Vec2 | null
     } else {
       score = openness(state, m) * 0.5 + ((m.pos.x - a.pos.x) * forward) * 0.12 - d * 0.05;
     }
+    if (laneBlocked(state, a, m.pos)) score -= pushed ? 0.5 : 3;
     if (score > bestScore) {
       bestScore = score;
       best = m;

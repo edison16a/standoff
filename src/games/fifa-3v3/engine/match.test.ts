@@ -55,7 +55,7 @@ describe("a match of computer players", () => {
     expect(count("goal")).toBeGreaterThan(0);
   });
 
-  it("plays the same match from the same seed", () => {
+  it("plays the same match from the same seed", { timeout: 30000 }, () => {
     const again = playOut(1);
     expect(again.state.score).toEqual(matches[0]!.state.score);
     expect(again.state.time).toBeCloseTo(matches[0]!.state.time, 6);

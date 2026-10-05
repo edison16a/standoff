@@ -7,7 +7,7 @@ import { laneOf } from "./lanes";
 import { atFeet } from "./reach";
 import { RUN, topSpeed } from "./locomotion";
 import { botSkill, sloppiness, thinkScale } from "./difficulty";
-import { choosePassTarget, openness } from "./passing";
+import { choosePassTarget, laneBlocked, openness } from "./passing";
 import { autoAimZ } from "./shot-plan";
 import { PITCH } from "./tuning";
 import type { Athlete, Command, MatchState } from "./types";
@@ -38,7 +38,8 @@ export function botCommand(state: MatchState, a: Athlete, dt: number): Command {
   const target = loose ? add(ball.pos, ball.vel, 0.3) : carrying ? dribbleSpot(state, a) : runSpot(state, a);
   const command: Command = { move: scale(approach(a, target), skill.speed) };
   // Mid charge the shot is already decided; it goes when the bar gets there.
-  if (brain.thinkIn > 0 || a.action !== "free" || a.charging) return command;
+  // With the ball a stride ahead there is nothing to strike yet: he decides as it comes back to his boot.
+  if (brain.thinkIn > 0 || a.action !== "free" || a.charging || loose) return command;
   brain.thinkIn = state.rng.range(0.12, 0.24) * thinkScale(state);
   if (carrying) decideWithBall(state, a, command);
   else decideWithout(state, a, command);
@@ -121,7 +122,7 @@ function decideWithBall(state: MatchState, a: Athlete, command: Command): void {
   let pressure = 0;
   for (const o of state.athletes) if (o.team === foe) pressure = Math.max(pressure, clamp((2.4 - dist(o.pos, a.pos)) / 1.8, 0, 1));
   if (d < range && shotAngle(a.pos, foe) < 1.05) {
-    const p = 0.22 + 0.5 * (1 - d / range) + pressure * 0.2 + (brain.carried > 3 ? 0.2 : 0);
+    const p = 0.3 + 0.5 * (1 - d / range) + pressure * 0.2 + (brain.carried > 3 ? 0.2 : 0);
     if (rng.chance(p)) return aimShot(state, a, command, d);
   }
   if (pressure > 0.2 && trySkill(state, a, command)) return;
@@ -129,7 +130,7 @@ function decideWithBall(state: MatchState, a: Athlete, command: Command): void {
   if (pressure > 0.35 || brain.carried > 2.4) {
     const target = choosePassTarget(state, a, null);
     // A player with vision looks up and finds the pass more often.
-    if (target && openness(state, target) > 2 && rng.chance(0.3 + 0.35 * a.attrs.vision)) {
+    if (target && openness(state, target) > 2 && !laneBlocked(state, a, target.pos) && rng.chance(0.3 + 0.35 * a.attrs.vision)) {
       command.passTo = target.id;
       brain.passWait = rng.range(1, 2);
     }
@@ -173,7 +174,7 @@ function aimShot(state: MatchState, a: Athlete, command: Command, d: number): vo
   const side = Math.sign(autoAimZ(a.pos, state.keepers[other(a.team)].pos)) || 1;
   // A sloppier level drifts off its corner.
   const drift = rng.range(-1, 1) * 1.2 * sloppiness(state);
-  a.aimZ = clamp(side * rng.range(1.1, PITCH.goalHalfWidth - 0.75) + drift, -PITCH.goalHalfWidth - 0.6, PITCH.goalHalfWidth + 0.6);
+  a.aimZ = clamp(side * rng.range(1.3, PITCH.goalHalfWidth - 0.55) + drift, -PITCH.goalHalfWidth - 0.6, PITCH.goalHalfWidth + 0.6);
   if (d < 9) command.shoot = rng.range(0.15, 0.5);
   else if (d < 14) command.shoot = rng.range(0.45, 0.78);
   else command.shoot = rng.range(0.65, 0.95);

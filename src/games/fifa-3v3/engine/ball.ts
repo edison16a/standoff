@@ -98,8 +98,7 @@ function substep(ball: Ball, h: number, elapsed: number, contacts: Contact[], op
     const along = alongRod(shape, p);
     const speed = hitCapsule(ball, shape, c.restitution, c.friction, c.vel);
     if (speed <= 0) continue;
-    // Taken cleanly in the palms rather than off the fingertips: held.
-    const caught = c.grip !== undefined && speed <= c.grip && along > 0.1 && along < 0.8;
+    const caught = speed <= holdingGrip(c, along);
     contacts.push({ type: "body", id: c.id, kind: c.kind, speed, at: { ...p }, caught });
     if (caught) {
       ball.vel = { x: 0, y: 0, z: 0 };
@@ -108,6 +107,20 @@ function substep(ball: Ball, h: number, elapsed: number, contacts: Contact[], op
     }
   }
   return false;
+}
+
+/**
+ * The fastest ball a collider holds where it was met, `along` its rod.
+ * Gloves hold it in the palms; one coming in past the wrists meets the
+ * forearms and chest and is smothered a little less surely; one off the
+ * fingertips is never held. A body gathers a ball below the head.
+ */
+function holdingGrip(c: BallCollider, along: number): number {
+  if (c.grip === undefined) return -1;
+  if (c.kind !== "glove") return along > -0.1 && along < 0.75 ? c.grip : -1;
+  if (along > 0.95) return -1;
+  if (along > 0.05) return c.grip;
+  return along > -0.6 ? c.grip * 0.75 : -1;
 }
 
 /** How far along a rod, 0 to 1, the point nearest `p` lies. */
