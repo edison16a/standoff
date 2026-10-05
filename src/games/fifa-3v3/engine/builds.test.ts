@@ -3,7 +3,7 @@ import { ATTRIBUTE_IDS, ATTRIBUTE_PAIRS, type AttributeId } from "../attributes"
 import { BUILD_IDS, BUILDS, computerName, type BuildId } from "../builds";
 import { makeAthlete, topSpeed } from "./athlete";
 import { blockLane, blockSharpness, foulRisk, heavyTouch, leadShare, passError, passRange, passZip, recovery, stealReach, strikePace, tackleEdge, takeRange } from "./build-effects";
-import { shotOdds, type ShotContext } from "./shot-odds";
+import { mishitChance, strikeSpread, type StrikeContext } from "./shot-error";
 
 const player = (build: BuildId) => makeAthlete(0, 0, 0, build, null);
 const sum = (build: BuildId) => ATTRIBUTE_IDS.reduce((total, id) => total + BUILDS[build].ratings[id], 0);
@@ -50,12 +50,10 @@ describe("what the ratings do", () => {
     expect(Math.min(...speeds)).toBe(topSpeed(player("keeper")));
   });
 
-  it("finishing and shot power: the striker's full strike beats the keeper more often", () => {
-    const shot = (id: BuildId): ShotContext => {
-      const a = player(id);
-      return { distance: 13, angle: 0.2, shooting: a.attrs.finishing, strike: a.attrs.power, pressure: 0, keeperOff: 0, power: 0.9, beaten: false };
-    };
-    expect(shotOdds(shot("striker")).goal).toBeGreaterThan(shotOdds(shot("playmaker")).goal * 1.1);
+  it("finishing and shot power: the striker's strike flies truer and harder", () => {
+    const shot = (id: BuildId): StrikeContext => ({ finishing: player(id).attrs.finishing, spread: 0.3, red: 0.5, pressure: 0, firstTime: false, pace: 0.5, volley: false });
+    expect(strikeSpread(shot("striker"))).toBeLessThan(strikeSpread(shot("playmaker")) * 0.9);
+    expect(mishitChance(shot("striker"))).toBeLessThan(mishitChance(shot("playmaker")));
     expect(strikePace(player("striker"))).toBeGreaterThan(strikePace(player("playmaker")));
   });
 

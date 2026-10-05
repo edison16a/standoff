@@ -1,13 +1,11 @@
-import { other } from "../teams";
 import { brake, carryBall, isHuman, moveAthlete, separate } from "./athlete";
-import { settleNets, stepBall, type Contact } from "./ball";
+import { settleNets } from "./ball";
 import { botCommand } from "./bots";
 import { tryControl } from "./control";
-import { goalX, outAt, scoredIn } from "./goal";
-import { makeSave } from "./keeper";
+import { outAt, scoredIn } from "./goal";
 import { updateKeeper } from "./keeper-update";
 import { applyButtons } from "./buttons";
-import { blockBall } from "./blockers";
+import { stepLooseBall, updateFlight } from "./loose-ball";
 import { coolDefend, updateJump, updateSteal } from "./defend";
 import { guardStep } from "./guard";
 import { followPlay } from "./referee";
@@ -15,7 +13,6 @@ import { owns, progressKick } from "./kick";
 import { fullTime, onGoal, onOut } from "./rules";
 import { coolSkill, updateBeaten, updateSkill } from "./skills";
 import { challenges, updateSlide } from "./tackle";
-import { PITCH } from "./tuning";
 import type { Athlete, Command, MatchState } from "./types";
 import { scale } from "./vec";
 
@@ -43,7 +40,6 @@ export function playStep(state: MatchState, commands: ReadonlyMap<number, Comman
   updateFlight(state, dt);
   // A foul given this step stops play at once: nobody may pick the dead ball up.
   if (state.phase === "play") {
-    blockBall(state);
     tryControl(state);
     challenges(state, dt);
     followPlay(state, dt);
@@ -64,34 +60,6 @@ function settleSetPiece(state: MatchState, dt: number): void {
     state.setPiece = null;
     state.foul = null;
   }
-}
-
-/** Moves a loose ball and turns what it hits into events. */
-export function stepLooseBall(state: MatchState, dt: number): void {
-  const contacts: Contact[] = [];
-  stepBall(state.ball, dt, contacts, { nets: state.nets });
-  for (const c of contacts) {
-    if (c.type === "post" || c.type === "bar") {
-      state.events.push({ type: "woodwork", part: c.type, speed: c.speed, at: c.at });
-      if (state.flight) state.flight.resolved = true;
-    } else if (c.type === "net") state.events.push({ type: "net", team: c.team, speed: c.speed, at: c.at });
-    else if (c.type === "board") {
-      if (c.speed > 1.5) state.events.push({ type: "board", speed: c.speed, at: c.at });
-      endShotOnBoards(state);
-    }
-    else if (c.type === "bounce" && c.speed > 2) state.events.push({ type: "bounce", speed: c.speed });
-  }
-}
-
-/**
- * A shot that hits the boards is over: the ball is live again for
- * anyone to play. Off the end boards it was a miss.
- */
-function endShotOnBoards(state: MatchState): void {
-  const flight = state.flight;
-  if (!flight || flight.resolved) return;
-  flight.resolved = true;
-  if (Math.abs(state.ball.pos.x) > PITCH.halfLength - 1) state.events.push({ type: "miss", team: flight.team, kind: "wide" });
 }
 
 function updateAction(state: MatchState, a: Athlete, c: Command, dt: number): void {
@@ -142,22 +110,6 @@ function updateAction(state: MatchState, a: Athlete, c: Command, dt: number): vo
     a.action = "free";
     a.actionT = 0;
   }
-}
-
-/** Resolves a shot meant to be saved when it reaches the keeper, and times out stray ones. */
-function updateFlight(state: MatchState, dt: number): void {
-  const flight = state.flight;
-  if (!flight || flight.resolved) return;
-  flight.t += dt;
-  const defending = other(flight.team);
-  if (flight.outcome === "catch" || flight.outcome === "parry") {
-    const inward = Math.sign(goalX(defending));
-    if ((state.ball.pos.x - flight.keeperX) * inward >= 0) {
-      makeSave(state, state.keepers[defending], flight.outcome === "parry");
-      flight.resolved = true;
-    }
-  }
-  if (flight.t > 3) flight.resolved = true;
 }
 
 function checkBall(state: MatchState): void {

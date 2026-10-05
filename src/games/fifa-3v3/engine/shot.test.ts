@@ -1,102 +1,53 @@
 import { describe, expect, it } from "vitest";
-import { newBall, stepBall, type Contact } from "./ball";
-import { outAt, scoredIn } from "./goal";
+import type { MatchEvent } from "./events";
+import { startShot } from "./kick";
+import { createMatch, stepMatch, type Entrant } from "./match";
 import { Rng } from "./rng";
-import { shotSpread } from "./charge";
-import { aimPoint, fly, solveKick } from "./shot-aim";
-import { OUTCOMES, pickOutcome, shotOdds, type ShotContext } from "./shot-odds";
-import { BALL, PITCH, STEP } from "./tuning";
-import type { Keeper, ShotOutcome } from "./types";
+import { fly, solveKick } from "./shot-aim";
+import { applyError, strikeError, type StrikeContext } from "./shot-error";
+import { BALL, MATCH, PITCH, STEP } from "./tuning";
+import type { MatchState } from "./types";
 
-const typical: ShotContext = { distance: 11, angle: 0.3, shooting: 0.85, pressure: 0.3, keeperOff: 0, power: 0.4, beaten: false };
+const HL = PITCH.halfLength;
+const GW = PITCH.goalHalfWidth;
+const LINEUP: Entrant[] = [
+  { team: 0, build: "striker", seat: null },
+  { team: 1, build: "defender", seat: null },
+];
 
-function keeperAt(x: number, z: number): Keeper {
-  return { team: 1, pos: { x, z }, vel: { x: 0, z: 0 }, facing: Math.PI, action: "set", actionT: 0, dive: null, holdFor: 0, noTouch: 0, saves: 0 };
+/** A match in play with the computer players standing still, and the keeper set in the middle of his goal. */
+function still(seed: number): MatchState {
+  const state = createMatch(LINEUP, { seed, replays: false, level: "training" });
+  for (let t = 0; t <= MATCH.kickoffWait + STEP; t += STEP) stepMatch(state);
+  state.athletes[1]!.pos = { x: -10, z: 10 };
+  return state;
 }
 
-/** Strikes a ball from `from` with the outcome's aim and plays it out with full physics. */
-function playOut(outcome: ShotOutcome, seed: number, from = { x: PITCH.halfLength - 11, y: BALL.radius, z: 2 }) {
-  const rng = new Rng(seed);
-  const keeper = keeperAt(PITCH.halfLength - 1.2, 0.4);
-  const target = aimPoint(outcome, 1, keeper, rng);
-  const kick = solveKick(from, target, 24, rng.range(-8, 8));
-  const ball = newBall();
-  ball.pos = { ...from };
-  ball.vel = { ...kick.vel };
-  ball.spin = { ...kick.spin };
-  const contacts: Contact[] = [];
-  let scored = false;
-  let out = false;
-  for (let t = 0; t < 3; t += STEP) {
-    stepBall(ball, STEP, contacts);
-    if (scoredIn(ball) === 1) scored = true;
-    if (outAt(ball) !== null) out = true;
-    if (scored || out) break;
+/** The striker shoots from `at` at `aimZ` on the goal with a bar of `power`; returns what happened. */
+function shoot(seed: number, at: { x: number; z: number }, aimZ: number, power: number, rig = false) {
+  const state = still(seed);
+  if (rig) state.options.rig = () => "goal";
+  const me = state.athletes[0]!;
+  me.pos = { ...at };
+  me.facing = 0;
+  me.vel = { x: 0, z: 0 };
+  state.keepers[1].pos = { x: HL - 1.2, z: 0 };
+  state.ball.owner = { kind: "athlete", id: 0 };
+  state.ball.pos = { x: at.x + 0.35, y: BALL.radius, z: at.z };
+  startShot(state, me, power, aimZ);
+  const events: MatchEvent[] = [];
+  for (let t = 0; t < 3 && state.phase === "play"; t += STEP) {
+    stepMatch(state);
+    events.push(...state.events);
   }
-  return { scored, out, contacts, target, kick };
+  const has = (type: MatchEvent["type"]) => events.some((e) => e.type === type);
+  return { goal: has("goal"), save: has("save"), caught: events.some((e) => e.type === "save" && e.kind === "catch"), wood: has("woodwork"), miss: has("miss") || has("out"), state };
 }
-
-describe("the shot odds", () => {
-  it("add up to one", () => {
-    const odds = shotOdds(typical);
-    const sum = OUTCOMES.reduce((total, outcome) => total + odds[outcome], 0);
-    expect(sum).toBeCloseTo(1, 6);
-  });
-
-  it("send about one shot in twenty off the woodwork, and hardly any over below the red zone", () => {
-    const odds = shotOdds(typical);
-    expect(odds.post + odds.bar).toBeGreaterThan(0.035);
-    expect(odds.post + odds.bar).toBeLessThan(0.07);
-    expect(odds.over).toBeGreaterThan(0);
-    expect(odds.over).toBeLessThan(0.03);
-    // Full yellow, just short of red, still keeps it under the bar.
-    expect(shotOdds({ ...typical, power: 0.79, spread: shotSpread(0.79) }).over).toBeLessThan(0.03);
-    expect(shotOdds({ ...typical, power: 1, spread: shotSpread(1) }).over).toBeGreaterThan(0.2);
-  });
-
-  it("make close shots better than long ones, and pressure hurts", () => {
-    const close = shotOdds({ ...typical, distance: 5, angle: 0 });
-    const far = shotOdds({ ...typical, distance: 20 });
-    const pressed = shotOdds({ ...typical, pressure: 1 });
-    expect(close.goal).toBeGreaterThan(0.25);
-    // The big goal leaves a long shot some room past the keeper, but not much.
-    expect(far.goal).toBeLessThan(0.2);
-    expect(far.goal).toBeLessThan(close.goal / 2);
-    expect(pressed.goal).toBeLessThan(shotOdds(typical).goal);
-  });
-
-  it("sprays a red bar shot over and wide far more than a green one", () => {
-    const green = shotOdds({ ...typical, power: 0.2, spread: shotSpread(0.2) });
-    const red = shotOdds({ ...typical, power: 1, spread: shotSpread(1) });
-    expect(red.over).toBeGreaterThan(green.over * 3);
-    expect(red.wide).toBeGreaterThan(green.wide * 2);
-    expect(red.over + red.wide).toBeGreaterThan(0.25);
-    expect(green.over + green.wide).toBeLessThan(0.12);
-  });
-
-  it("rewards a well placed shot only when it goes where it was aimed", () => {
-    const placed = shotOdds({ ...typical, placement: 1, spread: shotSpread(0.3) });
-    const unplaced = shotOdds({ ...typical, placement: 0, spread: shotSpread(0.3) });
-    expect(placed.goal).toBeGreaterThan(unplaced.goal);
-  });
-
-  it("always scores once the keeper is beaten, bar the woodwork and misses", () => {
-    const odds = shotOdds({ ...typical, beaten: true });
-    expect(odds.catch + odds.parry).toBe(0);
-  });
-
-  it("picks every outcome across the range of rolls", () => {
-    const odds = shotOdds(typical);
-    const seen = new Set<ShotOutcome>();
-    for (let roll = 0; roll < 1; roll += 0.001) seen.add(pickOutcome(odds, roll));
-    expect([...seen].sort()).toEqual([...OUTCOMES].sort());
-  });
-});
 
 describe("the shot's flight", () => {
-  it("passes through the chosen point", () => {
+  it("passes through the chosen point before the striker's error", () => {
     const from = { x: 8, y: BALL.radius, z: -4 };
-    const target = { x: PITCH.halfLength, y: 1.2, z: 1.5 };
+    const target = { x: HL, y: 1.2, z: 1.5 };
     const kick = solveKick(from, target, 26, 9);
     const hit = fly(from, kick, target.x);
     expect(hit).not.toBeNull();
@@ -104,35 +55,67 @@ describe("the shot's flight", () => {
     expect(Math.abs(hit!.y - target.y)).toBeLessThan(0.03);
   });
 
-  it("scores when the dice say goal", () => {
-    for (let seed = 1; seed <= 20; seed++) expect(playOut("goal", seed).scored).toBe(true);
+  it("beats the keeper when it is struck clean into a far corner from the edge of the box", () => {
+    for (let seed = 1; seed <= 8; seed++) expect(shoot(seed, { x: HL - 13, z: 2 }, -(GW - 0.6), 0.55, true).goal).toBe(true);
   });
 
-  it("rings the post and stays out when the dice say post", () => {
-    for (let seed = 1; seed <= 20; seed++) {
-      const shot = playOut("post", seed);
-      expect(shot.contacts.some((c) => c.type === "post")).toBe(true);
-      expect(shot.scored).toBe(false);
+  it("is saved by the keeper's gloves when struck at him, held when it is soft", () => {
+    let saves = 0;
+    let held = 0;
+    for (let seed = 1; seed <= 12; seed++) {
+      const shot = shoot(seed, { x: HL - 14, z: 0 }, 0.3, 0.2);
+      if (shot.save) saves++;
+      if (shot.caught) held++;
     }
+    expect(saves).toBeGreaterThan(8);
+    expect(held).toBeGreaterThan(4);
   });
 
-  it("clips the bar and stays out when the dice say bar", () => {
-    for (let seed = 1; seed <= 20; seed++) {
-      const shot = playOut("bar", seed);
-      expect(shot.contacts.some((c) => c.type === "bar")).toBe(true);
-      expect(shot.scored).toBe(false);
+  it("goes in sometimes and is saved sometimes from the same spot, by the strike's error and the keeper's read", () => {
+    let goals = 0;
+    let saves = 0;
+    for (let seed = 1; seed <= 40; seed++) {
+      const shot = shoot(seed, { x: HL - 12, z: -3 }, GW - 1.2, 0.6);
+      if (shot.goal) goals++;
+      if (shot.save) saves++;
     }
+    expect(goals).toBeGreaterThan(6);
+    expect(saves).toBeGreaterThan(6);
   });
+});
 
-  it("flies over and out when the dice say over", () => {
-    for (let seed = 1; seed <= 20; seed++) {
-      const shot = playOut("over", seed);
-      expect(shot.scored).toBe(false);
-      expect(shot.out).toBe(true);
+describe("the strike's error", () => {
+  const base: StrikeContext = { finishing: 0.85, spread: 0.17, red: 0, pressure: 0.2, firstTime: false, pace: 0.4, volley: false };
+  /** Shares of strikes from 14 m that cross inside the posts and under the bar. */
+  function onTarget(c: StrikeContext): { inside: number; over: number } {
+    const rng = new Rng(9);
+    const from = { x: HL - 14, y: BALL.radius, z: 0 };
+    const kick = solveKick(from, { x: HL, y: c.red > 0 ? 2.2 : 0.9, z: 2.6 }, 25, 0);
+    let inside = 0;
+    let over = 0;
+    const n = 300;
+    for (let i = 0; i < n; i++) {
+      const hit = fly(from, applyError(kick, strikeError(c, rng)), HL);
+      if (!hit) continue;
+      if (hit.y > PITCH.goalHeight) over++;
+      else if (Math.abs(hit.z) < GW) inside++;
     }
+    return { inside: inside / n, over: over / n };
+  }
+
+  it("keeps a clean green strike on target nearly every time", () => {
+    expect(onTarget(base).inside).toBeGreaterThan(0.85);
   });
 
-  it("misses the goal when the dice say wide", () => {
-    for (let seed = 1; seed <= 20; seed++) expect(playOut("wide", seed).scored).toBe(false);
+  it("sprays a full red strike wide and over far more often", () => {
+    const red = onTarget({ ...base, spread: 0.75, red: 1 });
+    expect(red.over).toBeGreaterThan(0.15);
+    expect(red.inside).toBeLessThan(onTarget(base).inside - 0.15);
+  });
+
+  it("is worse under pressure, first time and on the volley", () => {
+    const calm = onTarget(base).inside;
+    expect(onTarget({ ...base, pressure: 1 }).inside).toBeLessThan(calm);
+    expect(onTarget({ ...base, firstTime: true, volley: true }).inside).toBeLessThan(calm);
   });
 });

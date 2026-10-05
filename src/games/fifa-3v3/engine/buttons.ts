@@ -84,7 +84,10 @@ export function shootNow(state: MatchState, a: Athlete, stick: Vec2 | null, held
 export function firstTime(state: MatchState, a: Athlete): void {
   if (a.buffered <= 0 || a.charging || a.action !== "free") return;
   if (isTap(a.bufferHeld)) passNow(state, a, a.bufferAim);
-  else shootNow(state, a, a.bufferAim ?? { x: 0, z: 0 }, a.bufferHeld);
+  else {
+    shootNow(state, a, a.bufferAim ?? { x: 0, z: 0 }, a.bufferHeld);
+    a.firstTime = true;
+  }
   a.buffered = 0;
   a.bufferAim = null;
 }

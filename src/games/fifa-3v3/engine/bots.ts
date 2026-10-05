@@ -167,7 +167,7 @@ function aimShot(state: MatchState, a: Athlete, command: Command, d: number): vo
   const side = Math.sign(autoAimZ(a.pos, state.keepers[other(a.team)].pos)) || 1;
   // A sloppier level drifts off its corner.
   const drift = rng.range(-1, 1) * 1.2 * sloppiness(state);
-  a.aimZ = clamp(side * rng.range(0.9, PITCH.goalHalfWidth - 0.4) + drift, -PITCH.goalHalfWidth - 0.6, PITCH.goalHalfWidth + 0.6);
+  a.aimZ = clamp(side * rng.range(1.1, PITCH.goalHalfWidth - 0.75) + drift, -PITCH.goalHalfWidth - 0.6, PITCH.goalHalfWidth + 0.6);
   if (d < 9) command.shoot = rng.range(0.15, 0.5);
   else if (d < 14) command.shoot = rng.range(0.45, 0.78);
   else command.shoot = rng.range(0.65, 0.95);

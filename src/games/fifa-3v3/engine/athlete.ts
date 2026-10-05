@@ -34,6 +34,7 @@ export function makeAthlete(id: number, team: TeamId, slot: number, build: Build
     bufferAim: null,
     bufferHeld: 0,
     power: 0,
+    firstTime: false,
     slideDone: false,
     skill: { kind: null, side: 1, from: v2(1, 0), exit: v2(1, 0), pace: 0, wait: 0, heat: 0, tested: false },
     attrs: units(BUILDS[build].ratings),

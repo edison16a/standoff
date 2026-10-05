@@ -7,7 +7,7 @@ import { clamp } from "./vec";
  * returns a multiplier or an amount the match formulas use. Ratings run
  * from about 0.55 to 0.98, and 0.75 is an ordinary player. Finishing,
  * pace, dribbling and strength are read straight from the ratings where
- * they are used (shot-odds.ts, athlete.ts, skills.ts, tackle.ts).
+ * they are used (shot-error.ts, athlete.ts, skills.ts, tackle.ts).
  */
 type Rated = Pick<Athlete, "attrs">;
 

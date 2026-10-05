@@ -125,6 +125,8 @@ export interface Athlete {
   bufferHeld: number;
   /** How hard the kick being wound up is, 0 to 1: the charge bar's level for a shot. */
   power: number;
+  /** The shot being wound up is hit first time, off the pass, which is harder to keep on target. */
+  firstTime: boolean;
   skill: SkillState;
   /** A slide has already met the ball or the man, so it cannot win twice. */
   slideDone: boolean;

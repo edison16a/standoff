@@ -39,17 +39,24 @@ export interface Keeper {
   holdFor: number;
   noTouch: number;
   saves: number;
+  /** The fastest ball his gloves can hold in the dive or stance he is in, m/s; faster ones are palmed. */
+  grip: number;
 }
 
 export type ShotOutcome = "goal" | "catch" | "parry" | "post" | "bar" | "over" | "wide";
 
-/** A shot on its way. Its outcome was decided when it was struck and physics plays it out. */
+/**
+ * A shot on its way. It was struck at a spot with the striker's error,
+ * and what happens to it is up to the flight: the keeper's gloves, a
+ * body in the way, the woodwork, the net, or nothing at all.
+ */
 export interface Flight {
   shooter: number;
   team: TeamId;
-  outcome: ShotOutcome;
+  /** What became of it, once that is known. */
+  outcome: ShotOutcome | "block" | null;
   t: number;
-  /** Where the ball crosses the goal line, or the woodwork it is aimed at. */
+  /** The spot on the goal the striker went for, before his error. */
   target: Vec3;
   /** The line along the pitch where the keeper meets it, for saves. */
   keeperX: number;

@@ -1,17 +1,12 @@
-import { other } from "../teams";
-import { goalCentre, goalX, shotAngle, toGoal } from "./goal";
-import { planDive } from "./keeper";
+import { goalCentre } from "./goal";
 import { needsAir, type KickPlan } from "./assist";
-import { leadShare, passError, passZip, strikePace } from "./build-effects";
+import { leadShare, passError, passZip } from "./build-effects";
 import { leadFor, loftVelocity, passVelocity, rollingSpin } from "./passing";
-import { shotSpread } from "./charge";
-import { aimPoint, solveKick } from "./shot-aim";
-import { planBlock, throwBodyIn } from "./shot-block";
-import { pickOutcome, shotOdds, shotQuality, type ShotContext } from "./shot-odds";
-import { autoAimZ, autoCurl } from "./shot-plan";
+import { strike } from "./strike";
 import { ASSIST, PASS, PITCH, SHOOT, TOUCH } from "./tuning";
-import type { Athlete, MatchState, ShotOutcome } from "./types";
-import { clamp, clamp01, dist, dot, fromAngle, len, norm, sub, type Vec2 } from "./vec";
+import type { Athlete, MatchState } from "./types";
+import { clamp, clamp01, dist, fromAngle, len, norm, sub, type Vec2 } from "./vec";
+import { other } from "../teams";
 
 export function owns(state: MatchState, a: Athlete): boolean {
   const owner = state.ball.owner;
@@ -32,6 +27,7 @@ export function startShot(state: MatchState, a: Athlete, power: number, aimZ: nu
   a.power = clamp01(power);
   a.actionLen = shotWindup(a.power) + 0.4;
   a.aimZ = aimZ;
+  a.firstTime = false;
   a.charging = false;
   a.charge = 0;
   a.buffered = 0;
@@ -71,83 +67,6 @@ export function progressKick(state: MatchState, a: Athlete, before: number): voi
   if (before >= windup || a.actionT < windup || !owns(state, a)) return;
   if (a.action === "shoot") strike(state, a);
   else kickPass(state, a);
-}
-
-/** How badly placed the keeper is, 0 set to 1 stranded. */
-function keeperOff(state: MatchState, defending: 0 | 1): number {
-  const k = state.keepers[defending];
-  if (k.action === "dive" || k.action === "getup") return 1;
-  const b = state.ball.pos;
-  const gx = goalX(defending);
-  // The keeper should be on the line from the ball to the middle of the goal.
-  const t = (k.pos.x - gx) / (b.x - gx || 1e-6);
-  const lineZ = b.z * clamp(t, 0, 1);
-  return clamp01((Math.abs(k.pos.z - lineZ) - 0.4) / 1.6);
-}
-
-/** The shot itself: the dice choose the outcome from the chance, and physics plays it out. */
-function strike(state: MatchState, a: Athlete): void {
-  const ball = state.ball;
-  const defending = other(a.team);
-  const keeper = state.keepers[defending];
-  let pressure = 0;
-  for (const o of state.athletes) if (o.team !== a.team) pressure = Math.max(pressure, clamp01((2.4 - dist(o.pos, a.pos)) / 1.8));
-  // Left to the game, the shot picks its own corner from where the shooter and the keeper stand.
-  const aimZ = a.aimZ ?? autoAimZ(ball.pos, keeper.pos);
-  const context: ShotContext = {
-    distance: toGoal(ball.pos, defending),
-    angle: shotAngle(ball.pos, defending),
-    shooting: a.attrs.finishing,
-    strike: a.attrs.power,
-    pressure,
-    keeperOff: keeperOff(state, defending),
-    power: a.power,
-    spread: shotSpread(a.power),
-    // Round the keeper, or the keeper is down or busy: nobody can save it. A keeper
-    // right on the ball can still smother or block it.
-    beaten: (rounded(ball.pos, keeper.pos, defending) && dist(ball.pos, keeper.pos) > 1.3) || keeper.action !== "set",
-    placement: placement(aimZ, keeper.pos.z),
-  };
-  const rigged = state.options.rig?.(state.shotCount, a.team) ?? null;
-  let outcome: ShotOutcome = rigged ?? pickOutcome(shotOdds(context), state.rng.next());
-  // A save needs a keeper between the ball and the goal.
-  if (context.beaten && (outcome === "catch" || outcome === "parry")) outcome = "goal";
-  const target = aimPoint(outcome, defending, keeper, state.rng, aimZ, context.spread, a.power);
-  // The bar sets the pace; a long range effort needs a little extra to get there, and a big shot adds its own.
-  const bar = SHOOT.minSpeed + (SHOOT.maxSpeed - SHOOT.minSpeed) * a.power ** 0.85 + context.distance * 0.12;
-  const speed = clamp(bar * strikePace(a), SHOOT.minSpeed, SHOOT.maxSpeed * strikePace(a));
-  // Curl comes from the angle; a touch of random swerve keeps no two strikes the same.
-  const curl = autoCurl(ball.pos, target.z, defending, a.attrs.finishing) + state.rng.range(-1, 1) * 1.2;
-  // A hard chance through a crowd can be charged down before it gets near the keeper.
-  const block = rigged ? null : planBlock(state, a, { ...ball.pos }, target, shotQuality(context), speed);
-  if (block) throwBodyIn(state, block);
-  const kick = solveKick({ ...ball.pos }, block ? block.at : target, speed, curl);
-  ball.owner = null;
-  ball.vel = kick.vel;
-  ball.spin = kick.spin;
-  ball.lastTouch = { team: a.team, id: a.id };
-  ball.passTo = null;
-  a.noTouch = TOUCH.afterKick;
-  a.stats.shots++;
-  state.shotCount++;
-  state.flight = { shooter: a.id, team: a.team, outcome, t: 0, target, keeperX: keeper.pos.x, power: a.power, resolved: false, blocker: block?.id ?? null };
-  planDive(state, keeper);
-  state.events.push({ type: "shot", athlete: a.id, team: a.team, outcome, power: a.power, distance: context.distance });
-}
-
-/** Whether the keeper is no longer between the ball and the goal: level with it or behind it. */
-function rounded(ball: Vec2, keeper: Vec2, defending: 0 | 1): boolean {
-  const goal = { x: goalX(defending), z: 0 };
-  const line = sub(goal, ball);
-  const along = dot(sub(keeper, ball), line) / Math.max(1e-6, dot(line, line));
-  return along < 0.05;
-}
-
-/** Rewards picking the corner the keeper has left open, and punishes shooting at them. */
-function placement(aimZ: number | null, keeperZ: number): number {
-  if (aimZ === null || Math.abs(aimZ) < 0.5) return 0;
-  if (Math.abs(keeperZ) < 0.3) return 0.3;
-  return Math.sign(aimZ) === Math.sign(keeperZ) ? -1 : 1;
 }
 
 function kickPass(state: MatchState, a: Athlete): void {

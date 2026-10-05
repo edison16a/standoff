@@ -1,5 +1,5 @@
 import type { TeamId } from "../teams";
-import type { FoulKind, SetPieceKind, ShotOutcome, SkillKind } from "./types";
+import type { FoulKind, SetPieceKind, SkillKind } from "./types";
 import type { Vec3 } from "./vec";
 
 /**
@@ -9,7 +9,7 @@ import type { Vec3 } from "./vec";
 export type MatchEvent =
   | { type: "whistle"; long: boolean }
   | { type: "kickoff"; team: TeamId }
-  | { type: "shot"; athlete: number; team: TeamId; outcome: ShotOutcome; power: number; distance: number }
+  | { type: "shot"; athlete: number; team: TeamId; power: number; distance: number }
   | { type: "pass"; athlete: number; to: number | null; air: boolean }
   | { type: "control"; athlete: number; team: TeamId; from: TeamId | null }
   | { type: "goal"; team: TeamId; scorer: number | null; golden: boolean }

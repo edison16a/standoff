@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import { makeAthlete } from "./athlete";
 import { newBall, stepBall, type Contact } from "./ball";
 import { KNEE_SLIDE, stepCelebration } from "./celebrate-moves";
-import { makeSave } from "./keeper";
+import type { MatchEvent } from "./events";
+import { stepLooseBall } from "./loose-ball";
+import { diveTo, planDive } from "./keeper-read";
+import { fly } from "./shot-aim";
 import { createMatch, stepMatch, type Entrant } from "./match";
 import { startShot } from "./kick";
 import { BALL, MATCH, PITCH, STEP } from "./tuning";
@@ -26,18 +29,49 @@ function still(seed: number): MatchState {
 }
 
 describe("a parry", () => {
-  it("comes off the gloves back into the field, slower, and stays out of the goal", () => {
-    for (let seed = 1; seed <= 10; seed++) {
+  /** A shot by Red flying at Blue's goal from `from`. */
+  function flying(state: MatchState, from: { x: number; y: number; z: number }, vel: { x: number; y: number; z: number }): void {
+    state.ball.owner = null;
+    state.ball.pos = { ...from };
+    state.ball.vel = { ...vel };
+    state.ball.spin = { x: 0, y: 0, z: 0 };
+    state.flight = { shooter: 0, team: 0, outcome: null, t: 0, target: { x: HL, y: 1, z: 2 }, keeperX: HL - 1.2, power: 0.8, resolved: false };
+  }
+
+  it("comes off the palms back into the field, slower, when the ball is too hot to hold", () => {
+    for (const height of [0.7, 1.4, 2.2]) {
+      const state = still(1);
+      const k = state.keepers[1];
+      k.pos = { x: HL - 1.2, z: 0 };
+      flying(state, { x: HL - 9, y: height, z: 2.2 }, { x: 27, y: 1.4, z: 0 });
+      // The gloves meet the ball's line at full stretch, just as it gets there: a palm, never a catch.
+      const hit = fly({ ...state.ball.pos }, { vel: { ...state.ball.vel }, spin: { x: 0, y: 0, z: 0 }, time: 0 }, k.pos.x)!;
+      diveTo(k, hit.z, hit.y, 0, hit.t, 0);
+      const events: MatchEvent[] = [];
+      for (let t = 0; t < 0.45; t += STEP) {
+        stepLooseBall(state, STEP);
+        k.actionT += STEP;
+        events.push(...state.events);
+        state.events = [];
+      }
+      expect(events.some((e) => e.type === "save" && e.kind === "parry")).toBe(true);
+      expect(state.ball.vel.x).toBeLessThan(0);
+      expect(Math.hypot(state.ball.vel.x, state.ball.vel.y, state.ball.vel.z)).toBeLessThan(15);
+    }
+  });
+
+  it("is held instead when it comes at the keeper gently", () => {
+    for (let seed = 1; seed <= 5; seed++) {
       const state = still(seed);
       const k = state.keepers[1];
-      state.ball.owner = null;
-      state.ball.pos = { x: k.pos.x, y: 1.3, z: k.pos.z + 0.8 };
-      state.ball.vel = { x: 26, y: 0.5, z: 1.5 };
-      makeSave(state, k, true);
-      expect(state.ball.vel.x).toBeLessThan(0);
-      expect(Math.hypot(state.ball.vel.x, state.ball.vel.y, state.ball.vel.z)).toBeLessThan(20);
-      for (let t = 0; t < 1.2; t += STEP) stepBall(state.ball, STEP);
-      expect(state.ball.pos.x).toBeLessThan(HL);
+      k.pos = { x: HL - 1.2, z: 0 };
+      flying(state, { x: HL - 8, y: 0.9, z: 0.2 }, { x: 13, y: 2, z: 0 });
+      planDive(state, k);
+      for (let t = 0; t < 0.8 && state.ball.owner === null; t += STEP) {
+        stepLooseBall(state, STEP);
+        k.actionT += STEP;
+      }
+      expect(state.ball.owner).toEqual({ kind: "keeper", team: 1 });
     }
   });
 });
