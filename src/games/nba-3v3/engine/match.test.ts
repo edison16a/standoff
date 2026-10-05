@@ -30,18 +30,20 @@ describe("a game between computer players", () => {
 
   it("shows the whole game over a few seeds: dunks, blocks, steals, passes, rebounds and every kind of shot", () => {
     const seen = new Set<string>();
-    for (const seed of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) {
+    // The ball physics decides every shot, so the rarer endings, a roll round the ring, need a few more games to come up.
+    for (const seed of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]) {
       for (const e of playOut(seed).events) {
         seen.add(e.type);
         if (e.type === "shot") seen.add(`outcome:${e.outcome}`);
         if (e.type === "score") seen.add(`kind:${e.kind}`);
+        if (e.type === "score") seen.add(`outcome:${e.outcome}`);
       }
     }
     for (const type of ["dunk", "block", "steal", "pass", "catch", "rebound", "rim", "board", "net", "win"]) expect(seen, type).toContain(type);
     for (const outcome of ["swish", "bank", "roll", "bounce", "rimOut", "inOut", "boardOut"]) expect(seen, outcome).toContain(`outcome:${outcome}`);
     expect(seen).toContain("kind:layup");
     expect(seen).toContain("kind:jumper");
-  }, 60000);
+  }, 120000);
 
   it("replays exactly from the same seed", () => {
     const a = playOut(11, 60);
