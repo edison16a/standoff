@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { BUILD_IDS, BUILDS } from "../builds";
 import { createAthlete } from "./athlete";
 import { blockStage, startBlock, updateBlock } from "./block";
+import { BODY } from "./body/body-spec";
+import { hangTime } from "./body/jump";
 import { contestFor } from "./contest";
 import { chooseDunk } from "./dunk-style";
 import { Match, type Entry } from "./match";
@@ -27,8 +29,16 @@ describe("jumping to block", () => {
     // Feet down through the gather, the top of the arc halfway through the air.
     const gatherSteps = Math.floor(JUMP.blockGather / STEP);
     expect(heights.slice(0, gatherSteps).every((y) => y === 0)).toBe(true);
-    expect(peakAt * STEP).toBeCloseTo(JUMP.blockGather + JUMP.blockAir / 2, 1);
+    expect(act.air).toBeCloseTo(hangTime(act.peak), 9);
+    expect(peakAt * STEP).toBeCloseTo(JUMP.blockGather + act.air / 2, 1);
     expect(Math.max(...heights)).toBeGreaterThan(0.4);
+    // In the air it falls at one g, never floating.
+    const airborne = heights.map((y, i) => [y, i] as const).filter(([y]) => y > 0.02).map(([, i]) => i);
+    for (let k = 1; k + 1 < airborne.length; k++) {
+      const i = airborne[k]!;
+      const accel = (heights[i + 1]! - 2 * heights[i]! + heights[i - 1]!) / (STEP * STEP);
+      expect(accel).toBeCloseTo(-BODY.gravity, 1);
+    }
     expect(a.recover).toBeCloseTo(JUMP.blockRecover, 5);
     expect(blockStage({ ...act, t: 0.05 }).stage).toBe("gather");
     expect(blockStage({ ...act, t: JUMP.blockGather + 0.1 }).stage).toBe("rise");
@@ -43,13 +53,14 @@ describe("jumping to block", () => {
       startBlock(d);
       if (d.action.kind !== "block") throw new Error("no jump");
       d.action.t = t;
-      const s = (t - JUMP.blockGather) / JUMP.blockAir;
+      const s = (t - JUMP.blockGather) / d.action.air;
       d.y = d.action.peak * 4 * s * (1 - s);
       return contestFor(shooter, [d], "jumper").blockChance;
     };
-    const top = chanceAt(JUMP.blockGather + JUMP.blockAir / 2);
-    const early = chanceAt(JUMP.blockGather + JUMP.blockAir * 0.12);
-    const late = chanceAt(JUMP.blockGather + JUMP.blockAir * 0.88);
+    const air = hangTime(0.55);
+    const top = chanceAt(JUMP.blockGather + air / 2);
+    const early = chanceAt(JUMP.blockGather + air * 0.12);
+    const late = chanceAt(JUMP.blockGather + air * 0.88);
     expect(top).toBeGreaterThan(early * 1.5);
     expect(top).toBeGreaterThan(late * 1.5);
   });
@@ -102,6 +113,7 @@ describe("dunks", () => {
       if (Math.abs(act.t - act.finish) < STEP / 2 + 1e-9) atSlam = a.y;
       if (Math.abs(act.t - (act.finish + 0.3)) < STEP / 2 + 1e-9) midHang = a.y;
     }
+    expect(atSlam).toBeCloseTo(act.peak, 1);
     expect(atSlam).toBeGreaterThan(0.4);
     // The arms take the weight: a hand's length lower, but still well off the floor.
     expect(midHang).toBeLessThan(atSlam - 0.1);

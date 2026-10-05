@@ -1,4 +1,7 @@
 import { BUILDS, type BuildSpec, type BuildId } from "../builds";
+import { BODY, CONTACT } from "./body/body-spec";
+import { collide } from "./body/contact";
+import { powerPerKg } from "./body/mass";
 import { clampToCourt } from "./court";
 import type { MatchEvent } from "./events";
 import { steer } from "./steer";
@@ -37,20 +40,6 @@ export function standingReach(a: Athlete): number {
   return c.body.height * (1.27 + c.body.reach * 0.06);
 }
 
-/** Heavier players win contact: strength counts most, then sheer size. */
-export function mass(a: Athlete): number {
-  const c = buildOf(a);
-  return 1 + c.stats.strength * 0.12 + (c.body.bulk - 1) * 0.8 + (c.body.height - 2) * 0.6;
-}
-
-/**
- * How a player's weight changes how fast they get going, stop and turn:
- * a light guard is quicker off the mark than a big man at the same speed.
- */
-export function heft(a: Athlete): number {
-  return clamp(1 / Math.sqrt(mass(a) / 1.9), 0.82, 1.15);
-}
-
 export function bodyRadius(a: Athlete): number {
   return MOVE.radius * (0.9 + buildOf(a).body.width * 0.12);
 }
@@ -82,9 +71,9 @@ export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: { x:
     const speed = topSpeed(a, hasBall);
     const tx = free ? a.move.x * speed : 0;
     const tz = free ? a.move.z * speed : 0;
-    // Stopping to shoot is a jump stop, sharper than a run, so jumpers go up on balance.
-    const k = heft(a);
-    const { planted } = steer(a, tx, tz, speed, dt, (hasBall ? MOVE.ballPush : 1) * k, free ? 1 : 1.5, (hasBall ? MOVE.ballGrip : 1) * k);
+    // Stopping to shoot is a jump stop on both feet, which brakes harder than a run, so jumpers go up on balance.
+    const legs = { power: powerPerKg(a) * (hasBall ? BODY.ballPower : 1), grip: hasBall ? BODY.ballGrip : 1, brake: free ? 1 : BODY.plantTraction };
+    const { planted } = steer(a, tx, tz, dt, legs);
     if (planted && a.squeakCd <= 0) {
       events.push({ type: "squeak", id: a.id });
       a.squeakCd = 0.4;
@@ -109,8 +98,10 @@ export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: { x:
 }
 
 /**
- * Pushes overlapping players apart. The heavier player gives less
- * ground, which is how strength wins battles in the post.
+ * Players who run into each other: pushed apart by weight and trading
+ * momentum (see `body/contact.ts`), so a screen stops a defender and a
+ * big man holds his spot. A hard hit leaves the one it rocked with slow
+ * legs for a moment.
  */
 export function separate(athletes: readonly Athlete[], events: MatchEvent[], bumpCd: Map<string, number>): void {
   for (let i = 0; i < athletes.length; i++) {
@@ -120,27 +111,20 @@ export function separate(athletes: readonly Athlete[], events: MatchEvent[], bum
       // A player flying at the rim sails over whoever is below.
       if (a.action.kind === "drive" && airborne(a)) continue;
       if (b.action.kind === "drive" && airborne(b)) continue;
-      const dx = b.x - a.x;
-      const dz = b.z - a.z;
-      const d = Math.hypot(dx, dz);
-      const min = bodyRadius(a) + bodyRadius(b);
-      if (d >= min || d < 1e-6) continue;
-      const overlap = min - d;
-      const ma = mass(a);
-      const mb = mass(b);
-      const nx = dx / d;
-      const nz = dz / d;
-      const shareA = mb / (ma + mb);
-      a.x -= nx * overlap * shareA;
-      a.z -= nz * overlap * shareA;
-      b.x += nx * overlap * (1 - shareA);
-      b.z += nz * overlap * (1 - shareA);
-      const closing = (a.vx - b.vx) * nx + (a.vz - b.vz) * nz;
+      const hit = collide(a, b, bodyRadius(a), bodyRadius(b));
+      if (!hit || hit.closing <= 0) continue;
+      rock(a, hit.dvA);
+      rock(b, hit.dvB);
       const key = `${a.id}:${b.id}`;
-      if (closing > 3.2 && (bumpCd.get(key) ?? 0) <= 0) {
-        events.push({ type: "bump", a: a.id, b: b.id, power: Math.min(1, closing / 7) });
+      if (hit.closing > 3.2 && (bumpCd.get(key) ?? 0) <= 0) {
+        events.push({ type: "bump", a: a.id, b: b.id, power: Math.min(1, hit.closing / 7) });
         bumpCd.set(key, 0.6);
       }
     }
   }
+}
+
+/** A big change of speed in one hit leaves the legs gathering, as after a landing. */
+function rock(a: Athlete, dv: number): void {
+  if (dv > CONTACT.stagger && a.y < 0.02) a.recover = Math.max(a.recover, Math.min(0.35, dv * 0.06));
 }

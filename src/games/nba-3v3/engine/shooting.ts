@@ -1,4 +1,5 @@
 import { buildOf } from "./athlete";
+import { hangTime } from "./body/jump";
 import { contestFor } from "./contest";
 import { isThree, rimDistance } from "./court";
 import { arcTimed, flight } from "./flight";
@@ -17,7 +18,8 @@ import { clamp, type V3 } from "./vec";
 /** A shot fouled in the act goes in this share as often as it would have. */
 const FOULED_MAKE = 0.4;
 
-export const JUMPER = { takeoff: (SHOT.takeoff * SHOT.meterMs) / 1000, air: 0.62, peak: 0.42 } as const;
+/** The air time follows from the jump's height under real gravity. */
+export const JUMPER = { takeoff: (SHOT.takeoff * SHOT.meterMs) / 1000, air: hangTime(0.42), peak: 0.42 } as const;
 
 /** Where the ball leaves the hand on a jumper: above the forehead, a little in front. */
 export function releasePoint(a: Athlete): V3 {
