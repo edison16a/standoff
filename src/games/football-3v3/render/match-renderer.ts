@@ -141,7 +141,7 @@ export class MatchRenderer {
     this.ceremony.update(view.ceremony, holding ? this.handL : null, holding ? this.handR : null, dt, time);
     this.tags.update(view, this.tagOf, this.squad, this.director.camera.fov);
     this.stadium.crowd?.setExcitement(view.phase === "over" ? 0.8 : this.excitement);
-    this.stadium.update(time, dt, view.ball.goal);
+    this.stadium.update(time, dt, view.ball.goal, view.kick !== null);
     // The shadow box follows the action so its detail is spent where the camera looks.
     const at = view.ball;
     this.sun.target.position.set(at.x, 0, at.z);

@@ -61,11 +61,11 @@ export class Stadium {
     this.disposables.push(d);
   }
 
-  /** `goal` is what the ball last hit at either end, for the posts to shake and the nets to bulge. */
-  update(time: number, dt: number, goal: GoalHitView | null = null): void {
+  /** `goal` is what the ball last hit at either end, for the posts to shake and the nets to bulge; the nets go up for kicks. */
+  update(time: number, dt: number, goal: GoalHitView | null = null, kicking = false): void {
     this.crowd?.update(time, dt);
     this.posts.update(goal);
-    this.nets.update(goal);
+    this.nets.update(goal, kicking, dt);
   }
 
   dispose(): void {

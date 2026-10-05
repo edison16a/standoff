@@ -23,15 +23,19 @@ function cordTexture(): THREE.CanvasTexture {
 }
 
 /**
- * The kicking net behind each goal post, hung between two poles. It is
- * where the engine's net is, and it bulges where a kick hits it: a dent
- * that swings out and back and dies away, as cord does.
+ * The kicking net behind each goal post, hung between two poles. As in
+ * a stadium it is raised for kicks and lowered out of sight for the
+ * rest of play. It is where the engine's net is, and it bulges where a
+ * kick hits it: a dent that swings out and back and dies away, as cord
+ * does.
  */
 export class KickNets {
   readonly group = new THREE.Group();
   private readonly nets: { side: 1 | -1; mesh: THREE.Mesh; rest: Float32Array; dented: boolean }[] = [];
   private readonly texture = cordTexture();
   private readonly material: THREE.MeshBasicMaterial;
+  /** 0 lowered out of sight, 1 raised. */
+  private lift = 0;
 
   constructor(poleMaterial: THREE.Material) {
     this.material = new THREE.MeshBasicMaterial({ map: this.texture, transparent: true, alphaTest: 0.15, side: THREE.DoubleSide, depthWrite: false });
@@ -50,8 +54,12 @@ export class KickNets {
     }
   }
 
-  update(goal: GoalHitView | null): void {
+  /** `raised` while a kick is on; the net glides up and down. */
+  update(goal: GoalHitView | null, raised: boolean, dt: number): void {
+    this.lift = Math.max(0, Math.min(1, this.lift + (raised ? 1 : -1) * dt * 1.6));
     for (const net of this.nets) {
+      net.mesh.visible = this.lift > 0.01;
+      net.mesh.position.y = (this.lift - 1) * (HEIGHT + 1);
       const hit = goal && goal.part === "net" && goal.side === net.side && goal.age < 2.5 ? goal : null;
       if (!hit && !net.dented) continue;
       const pos = net.mesh.geometry.getAttribute("position") as THREE.BufferAttribute;
