@@ -101,12 +101,17 @@ export const NET = {
    */
   dampOut: 0.5,
   dampBack: 2.6,
-  /** The furthest a panel can be pushed out. */
+  /** The furthest a panel can be pushed out, in its middle. */
   maxDepth: 0.95,
+  /**
+   * The sheet is tied to the frame: right at it, it gives only this share
+   * of the most, and all of it from `give` metres in. So a ball driven
+   * into a corner is held there and cannot slip out past the frame.
+   */
+  edge: 0.3,
+  give: 0.9,
   /** How much the netting drags on a ball sliding along it, per second. */
   grab: 7,
-  /** Half width of the dent the ball makes, metres. */
-  spread: 0.55,
 } as const;
 
 /** Ball steps per match step: 480 a second, so even a 40 m/s strike moves under a ball's radius per step. */

@@ -70,9 +70,21 @@ export function stepNets(nets: Nets, ball: Ball | null, h: number): number {
   return struck;
 }
 
+/** How far out a sheet can be pushed at (u, v): a little at the frame it is tied to, all the way in the middle. */
+export function reachOut(id: PanelId, u: number, v: number): number {
+  const f = PANELS[id];
+  const fromFrame = Math.max(0, Math.min(u, f.w - u, v, f.h - v));
+  return NET.maxDepth * (NET.edge + (1 - NET.edge) * Math.min(1, fromFrame / NET.give));
+}
+
+/** Past the back of the goal the sheets meet: a side or the roof still holds a ball that pushed the back out, and the back one that pushed a side out. */
+const CORNER = R + NET.maxDepth * NET.edge;
+
 function press(p: NetPanel, id: PanelId, end: -1 | 1, ball: Ball, h: number): number {
   const f = panelFrame(id, end, ball.pos);
-  const near = f.u > -R && f.u < PANELS[id].w + R && f.v > -R && f.v < PANELS[id].h + R && Math.abs(f.s) < 3;
+  const w = PANELS[id].w;
+  const across = id === "back" ? f.u > -CORNER && f.u < w + CORNER : f.u > -R && f.u < w + CORNER;
+  const near = across && f.v > -R && f.v < PANELS[id].h + R && Math.abs(f.s) < 3;
   const rel = f.s - p.depth;
   const was = p.touching;
   p.touching = near && (p.side < 0 ? rel > -R : rel < R);
@@ -100,7 +112,8 @@ function press(p: NetPanel, id: PanelId, end: -1 | 1, ball: Ball, h: number): nu
   }
   // The sheet sits against the ball's surface, as far as it can stretch.
   const wanted = f.s - p.side * R;
-  p.depth = Math.max(-NET.maxDepth, Math.min(NET.maxDepth, wanted));
+  const most = reachOut(id, p.u, p.v);
+  p.depth = Math.max(-most, Math.min(most, wanted));
   if (p.depth !== wanted) {
     // Fully stretched, the sheet holds the ball back: no further out, and none of its pace that way.
     const over = wanted - p.depth;

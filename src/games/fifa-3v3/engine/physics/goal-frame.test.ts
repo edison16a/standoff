@@ -87,6 +87,18 @@ describe("the net", () => {
     expect(shot.ball.pos.z).toBeGreaterThan(GW);
   });
 
+  it("holds a shot driven into a back corner inside the goal: it never slips out past the frame", () => {
+    for (const side of [-1, 1]) {
+      for (const [y, z, vz] of [[0.4, 2.2, 4], [1.2, 3, 6], [2, 3.4, 3], [0.8, 3.7, 8]] as const) {
+        const shot = shoot({ x: HL - 8, y, z: side * (z - 3) }, { x: 26, y: 1.5, z: side * vz }, 3);
+        expect(shot.scored).toBe(true);
+        // Still within the netting: behind the line, inside the sides, and no further back than the net stretches.
+        expect(Math.abs(shot.ball.pos.z)).toBeLessThan(GW + NET.maxDepth * NET.edge);
+        expect(shot.ball.pos.x).toBeLessThan(HL + GD + NET.maxDepth);
+      }
+    }
+  });
+
   it("holds a lob that drops onto the roof up on top of the goal", () => {
     const shot = shoot({ x: HL - 9, y: 1, z: 0 }, { x: 10.2, y: 7.6, z: 0 }, 1.6);
     expect(shot.scored).toBe(false);
