@@ -21,16 +21,16 @@ export interface Shot {
 /**
  * The long touchdown: the QB winds up and lets it go in slow motion, the
  * spiral is chased through the air, the catch, the side step as a
- * tackler dives past. Then a crunching hit on a spin from late in the
+ * tackler dives past. Then a crunching hit on a juke from later in the
  * game, deep in slow motion, and the trophy going up over the captain's
  * head.
  */
 export const SHOTS: readonly Shot[] = [
-  { reel: "game", from: 4.56, to: 5.08, rate: 0.4, camera: "qbLow" },
-  { reel: "game", from: 5.08, to: 5.98, rate: 0.6, camera: "spiral" },
-  { reel: "game", from: 5.98, to: 6.43, rate: 0.45, camera: "catch" },
-  { reel: "game", from: 9.5, to: 10.4, rate: 0.8, camera: "juke" },
-  { reel: "game", from: 87.85, to: 88.48, rate: 0.35, camera: "hit" },
+  { reel: "game", from: 4.23, to: 4.75, rate: 0.4, camera: "qbLow" },
+  { reel: "game", from: 4.75, to: 5.53, rate: 0.6, camera: "spiral" },
+  { reel: "game", from: 5.53, to: 5.98, rate: 0.45, camera: "catch" },
+  { reel: "game", from: 6.3, to: 7.2, rate: 0.8, camera: "juke" },
+  { reel: "game", from: 56.5, to: 57.2, rate: 0.35, camera: "hit" },
   { reel: "trophy", from: 5.4, to: 6.42, rate: 0.8, camera: "lift" },
 ];
 

@@ -44,7 +44,7 @@ export function describePlay(clip: readonly MatchView[], m: PlayMoments): PlayFa
   const runYards = scorer && start ? Math.max(0, Math.round(Math.min(100, xToYard(team, scorer.x)) - xToYard(team, start.x))) : 0;
   return {
     ballMph: ball ? Math.round(speed * MPH) : null,
-    spinRpm: ball ? Math.round((ball.spin / (Math.PI * 2)) * 60 / 10) * 10 : null,
+    spinRpm: ball ? Math.round((Math.abs(ball.spin) / (Math.PI * 2)) * 60 / 10) * 10 : null,
     airYards: release && caught ? Math.round(Math.hypot(caught.ball.x - release.ball.x, caught.ball.z - release.ball.z) / YARD) : null,
     hangTime: pass ? Math.round((pass.catchAt - pass.releaseAt) * 10) / 10 : null,
     runYards,

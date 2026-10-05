@@ -53,8 +53,9 @@ function odds(m: Match, a: Athlete, ball: V3, gap: number, radius: number): numb
   const facing = -(Math.sin(a.yaw) * f.vel.x + Math.cos(a.yaw) * f.vel.z) / s;
   const speed = Math.hypot(f.vel.x - a.vx, f.vel.y, f.vel.z - a.vz);
   // A pitch is a soft toss into hands that see it all the way.
-  const stretch = (gap / radius) * (m.ball.pass?.pitch ? 0.5 : 1);
-  return catchOdds({ stretch, speed, facing, contest: contest(m, a, ball), diving: a.action.kind === "dive", hands: statsOf(a).hands });
+  const pitch = m.ball.pass?.pitch ?? false;
+  const stretch = (gap / radius) * (pitch ? 0.5 : 1);
+  return catchOdds({ stretch, speed, facing: pitch ? 1 : facing, contest: contest(m, a, ball), diving: a.action.kind === "dive", hands: statsOf(a).hands });
 }
 
 /** The ball was knocked about: anyone may go again, and the readers read its new path. */

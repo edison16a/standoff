@@ -12,10 +12,10 @@ export interface FilmCam {
 
 /** The players the film follows, by id in the seeded game: the Storm's QB and the runner he hits. */
 export const QB = 0;
-export const CATCHER = 2;
-/** Late in the game the Storm's other runner spins and the Blaze's power back buries him. */
+export const CATCHER = 1;
+/** Later in the game he jukes again and the Blaze's corner buries him. */
 export const JUKER = 1;
-export const TACKLER = 8;
+export const TACKLER = 7;
 
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 const ease = (t: number) => t * t * (3 - 2 * t);

@@ -65,8 +65,8 @@ export const JUKE = {
   /** Sideways speed a side step or back move pushes off for, metres a second. */
   hop: 4.2,
   /** How hard a planted foot pushes the body, metres a second squared, and what agility adds. */
-  grip: 16,
-  gripPerAgility: 0.6,
+  grip: 22,
+  gripPerAgility: 0.8,
   cooldown: 0.7,
   /** Each juke adds heat; heat cools this fast. Hot jukes are slower and so is the runner. */
   heatPerJuke: 1,

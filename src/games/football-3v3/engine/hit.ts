@@ -15,7 +15,7 @@ import { clamp, type V2 } from "./vec";
  */
 export const HIT = {
   /** The change of speed a carrier of average power and agility stays up through, metres a second. */
-  balance: 2.6,
+  balance: 3.0,
   perPower: 0.18,
   perAgility: 0.06,
   /** A hit from the front counts fully against balance; a shove from behind half. */
