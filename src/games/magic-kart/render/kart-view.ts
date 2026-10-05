@@ -162,13 +162,14 @@ export class KartView {
    * its driver, who still sees a ghost of it. `eye` is where the view's
    * camera is.
    */
-  setViewer(viewerKartId: number | null, eye: THREE.Vector3, tags = true): void {
+  setViewer(viewerKartId: number | null, eye: THREE.Vector3, tags = true, viewScale = 1): void {
     const own = viewerKartId === this.kartId;
     // Another kart right in front of the camera would block the view of your own, so it turns see through.
     const near = !own && viewerKartId !== null ? eye.distanceTo(this.model.root.position) : Infinity;
     const inTheWay = near < 5.5;
     // Beyond a few kart lengths the coarse cut looks the same and costs far less.
-    this.model.setFar(eye.distanceTo(this.model.root.position) > this.farSwitch);
+    // The view's own kart is always drawn in full.
+    this.model.setFar(!own && eye.distanceTo(this.model.root.position) > Math.max(8, this.farSwitch * viewScale));
     this.tag.visible = tags && !own && !this.ghost && near > 9;
     const opacity = this.ghost ? (own ? 0.4 : 0.06) : inTheWay ? Math.max(0.3, Math.min(0.75, 0.3 + (near - 2) * 0.13)) : 1;
     this.model.setOpacity(opacity);

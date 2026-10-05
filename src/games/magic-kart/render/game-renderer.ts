@@ -158,7 +158,8 @@ export class GameRenderer {
       const camera = this.cameras.pick(view, i, w / h, world, time, cameraDt);
       // The show camera rides behind the leader, so that kart is the one this view is about: no tag over it.
       const followed = view.kartId ?? (view.camera ? null : (world.standings[0]?.id ?? null));
-      for (const kv of this.karts.values()) kv.setViewer(followed, camera.position, this.tags);
+      // A smaller view shows a kart smaller, so it can switch to the coarse cut sooner.
+      for (const kv of this.karts.values()) kv.setViewer(followed, camera.position, this.tags, h / 1080);
       this.effects?.setView(h * px, camera.fov);
       stage.follow(camera);
       this.renderer.render(stage.scene, camera);
