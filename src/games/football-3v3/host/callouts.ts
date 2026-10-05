@@ -29,6 +29,12 @@ export function calloutFor(event: MatchEvent, m: Match, nameOf: (id: number) => 
       return { text: "Punt", sub: `${event.yards} yards`, colour: team(event.team) };
     case "intercept":
       return { text: "Interception", sub: nameOf(event.id), colour: team(m.athlete(event.id)?.team ?? 0) };
+    case "fumble":
+      return { text: "Fumble", sub: nameOf(event.id), colour: "#94a3b8" };
+    case "recover":
+      return { text: "Recovered", sub: nameOf(event.id), colour: team(event.team) };
+    case "doink":
+      return { text: event.part === "upright" ? "Off the upright" : "Off the crossbar", sub: null, colour: GOLD };
     case "tackle":
       return event.sack ? { text: "Sack", sub: nameOf(event.by), colour: team(m.athlete(event.by)?.team ?? 0) } : null;
     case "firstDown":

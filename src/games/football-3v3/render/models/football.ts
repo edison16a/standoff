@@ -35,6 +35,22 @@ export function footballGeometry(): THREE.BufferGeometry {
   return merge(parts);
 }
 
+/**
+ * The laces smeared round the ball: copies spread about the long axis,
+ * drawn faint over a fast spiral so the spin reads as a blur the way a
+ * camera sees it, instead of laces jumping about from frame to frame.
+ */
+export function laceBlurGeometry(copies = 10): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+  for (let k = 0; k < copies; k++) {
+    const a = (k / copies) * Math.PI * 2;
+    const r = BALL_RADIUS + 0.003;
+    parts.push(paint(box(0.006, 0.16, 0.004), "#ffffff", { at: [Math.sin(a) * r, 0, Math.cos(a) * r], rot: [0, a, 0] }));
+    for (let i = -3; i <= 3; i += 2) parts.push(paint(box(0.03, 0.006, 0.004), "#ffffff", { at: [Math.sin(a) * r, i * 0.018, Math.cos(a) * r], rot: [0, a, 0] }));
+  }
+  return merge(parts);
+}
+
 const UP = new THREE.Vector3(0, 1, 0);
 const q = new THREE.Quaternion();
 const spin = new THREE.Quaternion();

@@ -1,23 +1,35 @@
 import * as THREE from "three";
 import type { BallView } from "../../engine/view";
-import { footballGeometry, orientBall } from "../models/football";
+import { footballGeometry, laceBlurGeometry, orientBall } from "../models/football";
 import type { Figure } from "./figure";
 
 const pos = new THREE.Vector3();
 const axis = new THREE.Vector3();
+const turn = new THREE.Quaternion();
+const normal = new THREE.Vector3();
+const UP = new THREE.Vector3(0, 1, 0);
+
+/** A knock this hard (newton seconds) flattens the ball by the most it will go. */
+const SQUASH = { impulse: 2.5, most: 0.16, lasts: 0.07 } as const;
 
 /**
- * The football on screen. In the air it follows the engine's flight
- * exactly: its long axis, the wobble, and the spiral spin (or the end
- * over end tumble of a kick). Held, it sits in the carrier's hands as
- * the body animates. A spiked ball is thrown down out of the hand and
- * bounces away on its own, since the engine keeps it with the scorer.
+ * The football on screen. Free, it is exactly the engine's rigid body:
+ * its orientation, the spiral's spin, a duck's wobble, a kick's tumble.
+ * A fast spin smears the laces round the ball the way a camera sees it,
+ * and a hard knock off the turf or the posts squashes it along the hit
+ * for a moment. Held, it sits in the carrier's hands. A spiked ball is
+ * thrown down out of the hand and bounces away on its own.
  */
 export class BallModel {
   readonly group = new THREE.Group();
+  /** Turned so its y is the squash direction; the ball inside is turned back. */
+  private readonly squash = new THREE.Group();
   private readonly mesh: THREE.Mesh;
+  private readonly blur: THREE.Mesh;
   private readonly material: THREE.MeshStandardMaterial;
+  private readonly blurMaterial: THREE.MeshBasicMaterial;
   private readonly shadow: THREE.Mesh;
+  private readonly last = new THREE.Quaternion();
   /** The spiked ball's own little flight: position, velocity and tumble. */
   private spike: { p: THREE.Vector3; v: THREE.Vector3; roll: number; spin: number; dir: THREE.Vector3 } | null = null;
 
@@ -25,30 +37,58 @@ export class BallModel {
     this.material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0.02 });
     this.mesh = new THREE.Mesh(footballGeometry(), this.material);
     this.mesh.castShadow = true;
+    this.blurMaterial = new THREE.MeshBasicMaterial({ color: "#f4efe2", transparent: true, opacity: 0, depthWrite: false });
+    this.blur = new THREE.Mesh(laceBlurGeometry(), this.blurMaterial);
+    this.mesh.add(this.blur);
     // A soft dark spot under the ball keeps its height readable high in the air.
     this.shadow = new THREE.Mesh(
       new THREE.CircleGeometry(0.22, 20),
       new THREE.MeshBasicMaterial({ color: "#000000", transparent: true, opacity: 0.28, depthWrite: false }),
     );
     this.shadow.rotation.x = -Math.PI / 2;
-    this.group.add(this.mesh, this.shadow);
+    this.squash.add(this.mesh);
+    this.group.add(this.squash, this.shadow);
   }
 
   /** `spiking` is true once the holder has let go of a spike. */
   update(ball: BallView, holder: Figure | null, spiking: boolean, dt: number): void {
     if (spiking && holder) return this.spiked(holder, dt);
     this.spike = null;
+    const target = new THREE.Quaternion();
     if (holder) {
       holder.grip(pos, axis);
-      this.mesh.position.copy(pos);
-      orientBall(this.mesh.quaternion, axis, 0);
+      orientBall(target, axis, 0);
     } else {
-      this.mesh.position.set(ball.x, Math.max(ball.y, 0.1), ball.z);
+      pos.set(ball.x, Math.max(ball.y, 0.1), ball.z);
       // A dead ball lies on its side; free, it is exactly as the physics has it.
-      if (ball.state === "dead") orientBall(this.mesh.quaternion, axis.set(1, 0, 0), 0);
-      else this.mesh.quaternion.set(ball.quat.x, ball.quat.y, ball.quat.z, ball.quat.w);
+      if (ball.state === "dead") orientBall(target, axis.set(1, 0, 0), 0);
+      else target.set(ball.quat.x, ball.quat.y, ball.quat.z, ball.quat.w);
     }
-    this.placeShadow();
+    this.place(pos, target, holder ? null : ball, dt);
+  }
+
+  /** Puts the ball at `p` turned to `q`, with the spin blur and the squash of the last knock. */
+  private place(p: THREE.Vector3, q: THREE.Quaternion, ball: BallView | null, dt: number): void {
+    this.squash.position.copy(p);
+    // How far it turned since the last frame: past a third of a turn a frame the eye sees a blur.
+    const swept = 2 * Math.acos(Math.min(1, Math.abs(this.last.dot(q))));
+    this.last.copy(q);
+    const blur = dt > 0 ? THREE.MathUtils.clamp((swept - 0.35) / 0.8, 0, 1) : 0;
+    this.blurMaterial.opacity = blur * 0.32;
+    this.blur.visible = blur > 0.02;
+    const k = ball?.knock;
+    const s = k && k.age < SQUASH.lasts ? Math.min(1, k.power / SQUASH.impulse) * SQUASH.most * (1 - k.age / SQUASH.lasts) : 0;
+    if (s > 0.005 && k) {
+      normal.set(k.n.x, k.n.y, k.n.z).normalize();
+      this.squash.quaternion.setFromUnitVectors(UP, normal);
+      this.squash.scale.set(1 + s * 0.5, 1 - s, 1 + s * 0.5);
+      this.mesh.quaternion.copy(turn.copy(this.squash.quaternion).invert().multiply(q));
+    } else {
+      this.squash.quaternion.identity();
+      this.squash.scale.setScalar(1);
+      this.mesh.quaternion.copy(q);
+    }
+    this.placeShadow(p);
   }
 
   private spiked(holder: Figure, dt: number): void {
@@ -71,25 +111,23 @@ export class BallModel {
       s.spin *= 0.7;
     }
     s.roll += s.spin * step;
-    this.mesh.position.copy(s.p);
-    const up = new THREE.Vector3(0, 1, 0);
-    const side = new THREE.Vector3().crossVectors(s.dir, up);
-    axis.copy(up).applyAxisAngle(side, s.roll);
-    orientBall(this.mesh.quaternion, axis, 0);
-    this.placeShadow();
+    const side = new THREE.Vector3().crossVectors(s.dir, UP);
+    axis.copy(UP).applyAxisAngle(side, s.roll);
+    this.place(s.p, orientBall(new THREE.Quaternion(), axis, 0), null, dt);
   }
 
-  private placeShadow(): void {
-    const h = this.mesh.position.y;
-    this.shadow.position.set(this.mesh.position.x, 0.015, this.mesh.position.z);
-    const k = 1 / (1 + h * 0.15);
+  private placeShadow(p: THREE.Vector3): void {
+    this.shadow.position.set(p.x, 0.015, p.z);
+    const k = 1 / (1 + p.y * 0.15);
     this.shadow.scale.setScalar(k);
     (this.shadow.material as THREE.MeshBasicMaterial).opacity = 0.3 * k;
   }
 
   dispose(): void {
     this.mesh.geometry.dispose();
+    this.blur.geometry.dispose();
     this.material.dispose();
+    this.blurMaterial.dispose();
     this.shadow.geometry.dispose();
     (this.shadow.material as THREE.Material).dispose();
   }

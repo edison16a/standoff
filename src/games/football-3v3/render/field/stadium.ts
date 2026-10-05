@@ -5,7 +5,9 @@ import { box, cyl, merge, paint } from "../models/geo";
 import { BOWL, seat, standsGeometry } from "./bowl";
 import { Crowd } from "./crowd";
 import { fieldTexture, PAINT_H, PAINT_W } from "./field-texture";
-import { buildGoalPosts } from "./goal-posts";
+import type { GoalHitView } from "../../engine/view";
+import { GoalPosts } from "./goal-posts";
+import { KickNets } from "./kick-net";
 
 /**
  * The whole venue: the painted field, the grass round it, both goal
@@ -16,6 +18,8 @@ import { buildGoalPosts } from "./goal-posts";
 export class Stadium {
   readonly group = new THREE.Group();
   readonly crowd: Crowd | null;
+  private readonly posts: GoalPosts;
+  private readonly nets: KickNets;
   private readonly disposables: { dispose(): void }[] = [];
 
   constructor(low: boolean, maxAnisotropy: number) {
@@ -33,7 +37,9 @@ export class Stadium {
     field.rotation.x = -Math.PI / 2;
     field.receiveShadow = true;
     this.add(field);
-    this.group.add(buildGoalPosts(shared));
+    this.posts = new GoalPosts(shared);
+    this.nets = new KickNets(shared);
+    this.group.add(this.posts.group, this.nets.group);
     this.add(new THREE.Mesh(benches(), shared));
     const stands = new THREE.Mesh(standsGeometry(BOWL, low ? 64 : 160), new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, side: THREE.DoubleSide }));
     stands.receiveShadow = !low;
@@ -55,8 +61,11 @@ export class Stadium {
     this.disposables.push(d);
   }
 
-  update(time: number, dt: number): void {
+  /** `goal` is what the ball last hit at either end, for the posts to shake and the nets to bulge. */
+  update(time: number, dt: number, goal: GoalHitView | null = null): void {
     this.crowd?.update(time, dt);
+    this.posts.update(goal);
+    this.nets.update(goal);
   }
 
   dispose(): void {
@@ -68,6 +77,7 @@ export class Stadium {
       }
     });
     for (const d of this.disposables) d.dispose();
+    this.nets.dispose();
     this.crowd?.dispose();
   }
 }

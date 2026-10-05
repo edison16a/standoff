@@ -133,6 +133,7 @@ export function wide(view: MatchView, time: number): Aim {
 export function aimFor(view: MatchView, time: number): Aim {
   if (view.phase === "touchdown") return closeup(view, time);
   if (view.phase === "over") return wide(view, time);
-  if (view.phase === "kick") return kickCam(view);
+  // The kicked ball flies on after the whistle, into the net or down the field: stay with it.
+  if (view.phase === "kick" || (view.phase === "dead" && view.ball.state === "kick" && view.kick)) return kickCam(view);
   return behind(view);
 }
