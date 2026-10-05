@@ -1,103 +1,86 @@
-import * as THREE from "three";
-import { eyes, seatedBody, steeringWheel } from "../driver-parts";
-import { ball, box, cyl, flat, lathe, merge, mirrorX, paint, profile, ring, rod } from "../geo";
+import type * as THREE from "three";
 import type { KartDesign } from "../kart-design";
-import { buildWheel } from "../wheel";
+import { emblemRegion, REGIONS } from "../kit/atlas-layout";
+import { decal } from "../kit/decal";
+import { loft } from "../kit/loft";
+import { part } from "../kit/part";
+import { bar, lathe, plate, rbox, sphere, torus, tube } from "../kit/shapes";
+import { fender, tubing } from "../parts/bodywork";
+import { bucketSeat, exhaust, headlamp, mirror, numberPlate } from "../parts/fittings";
+import { assemble } from "./assemble";
+import { mochiHead } from "./mochi-driver";
 
-const PINK = "#ff86bd";
-const CREAM = "#fff4e4";
-const BERRY = "#d9467f";
+const PINK = "#ff7eb6";
+const CREAM = "#fff1de";
+const BERRY = "#c2417e";
 const BAMBOO = "#8fc93a";
 const DARK = "#2b2530";
 
-/** A little heart, for the badge on the back. */
-function heart(): THREE.Shape {
-  const h = new THREE.Shape();
-  h.moveTo(0, 0);
-  h.bezierCurveTo(-0.5, 0.35, -0.3, 0.75, 0, 0.5);
-  h.bezierCurveTo(0.3, 0.75, 0.5, 0.35, 0, 0);
-  return h;
-}
-
-/** Mochi the panda in the Dumpling Tank: a chunky, rounded bumper car with a steamed bun on the bonnet. */
+/**
+ * Mochi the panda in the Dumpling Tank: a chunky retro bubble car in
+ * pearl pink and cream, with round fenders, chrome bumpers and a smiling
+ * chrome grille, whitewall tyres on chrome hub caps, and a steamed bun
+ * mascot on the bonnet.
+ */
 export function buildMochi(): KartDesign {
-  const body: THREE.BufferGeometry[] = [
-    paint(box(1.3, 0.14, 2.4, 0.06), DARK, { at: [0, 0.28, 0] }),
-    // A tall soft body, all curves, like a bath toy.
-    paint(profile([[1.3, 0.3], [1.34, 0.58], [1.12, 0.78], [0.45, 0.84], [0.1, 0.8], [0.1, 0.3]], 1.4, 0.18, true), PINK),
-    paint(profile([[-0.5, 0.3], [-0.5, 0.86], [-0.95, 0.92], [-1.35, 0.72], [-1.38, 0.3]], 1.45, 0.18, true), PINK),
-    // A cream belly band all the way round.
-    paint(box(1.62, 0.16, 2.7, 0.08), CREAM, { at: [0, 0.4, 0] }),
-    paint(box(1.7, 0.26, 0.3, 0.13), BERRY, { at: [0, 0.34, 1.38] }),
-    paint(box(1.7, 0.26, 0.3, 0.13), BERRY, { at: [0, 0.34, -1.38] }),
-    // The kart's own face on the nose: big friendly eyes and a smile.
-    ...eyes([0, 0.66, 1.3], 0.26, 0.13),
-    paint(ring(0.12, 0.025, 14, 6, Math.PI), DARK, { at: [0, 0.5, 1.37], rot: [0, 0, Math.PI] }),
-    // The dumpling on the bonnet: a squashed bun with pleats on top.
-    paint(ball(0.3, 20, 12), CREAM, { at: [0, 1.0, 0.72], scale: [1, 0.62, 1] }),
-    paint(lathe([[0.001, 0.2], [0.08, 0.14], [0.03, 0]], 10), CREAM, { at: [0, 1.04, 0.72] }),
-    paint(box(0.74, 0.16, 0.62, 0.07), BERRY, { at: [0, 0.5, -0.28] }),
-    paint(box(0.74, 0.7, 0.16, 0.08), BERRY, { at: [0, 0.86, -0.58], rot: [-0.15, 0, 0] }),
-    ...steeringWheel([0, 1.1, 0.32], DARK, PINK),
-    rod([-0.48, 0.9, -0.9], [-0.48, 2.05, -0.9], 0.02, BAMBOO, 6),
-    // The back, which the chase camera sees most: a fluffy tail, a cream heart and a berry bumper stripe.
-    paint(ball(0.16, 12, 10), "#ffffff", { at: [0, 0.78, -1.47] }),
-    paint(flat(heart(), 0.03), CREAM, { at: [0, 0.4, -1.52], rot: [0, Math.PI, 0], scale: 0.5 }),
-    paint(box(1.3, 0.06, 0.05), CREAM, { at: [0, 0.68, -1.45] }),
+  const body = part(loft([
+    { z: -1.42, w: 0.8, y0: 0.34, y1: 0.66, n: 2.6 },
+    { z: -1.22, w: 1.08, y0: 0.27, y1: 0.86, n: 3.2, top: 0.82 },
+    { z: -0.7, w: 1.12, y0: 0.25, y1: 0.92, n: 3.4, top: 0.82 },
+    { z: -0.2, w: 1.12, y0: 0.25, y1: 0.72, n: 3.6, top: 0.86 },
+    { z: 0.4, w: 1.12, y0: 0.25, y1: 0.84, n: 3.4, top: 0.8 },
+    { z: 0.95, w: 1.06, y0: 0.27, y1: 0.82, n: 3.2, top: 0.76 },
+    { z: 1.3, w: 0.92, y0: 0.31, y1: 0.68, n: 2.8, top: 0.8 },
+    { z: 1.5, w: 0.5, y0: 0.38, y1: 0.56, n: 2.4 },
+  ], { around: 40, along: 52 }), PINK, { finish: "pearl" });
+  const centre: THREE.BufferGeometry[] = [
+    body,
+    decal(body, emblemRegion("mochi"), { at: [0, 0.9, 0.62], facing: "up", size: [0.36, 0.36], depth: 0.5 }),
+    // The smiling grille in a chrome surround.
+    part(plate(0.5, 0.17, 0.08, 0.012, 0.006), "#ffffff", { finish: "chrome", region: REGIONS.grille, at: [0, 0.45, 1.53], rot: [-0.2, 0, 0] }),
+    part(torus(0.27, 0.022, 32, 8, Math.PI), "#f2f2f6", { finish: "chrome", at: [0, 0.52, 1.53], rot: [-0.2, 0, Math.PI], scale: [1, 0.45, 1] }),
+    // Chrome bumpers wrapping the nose and tail.
+    ...tubing([[0.66, 0.34, 1.2], [0.56, 0.34, 1.5], [0, 0.34, 1.62], [-0.56, 0.34, 1.5], [-0.66, 0.34, 1.2]], 0.055, "#f2f2f6", "chrome"),
+    ...tubing([[0.66, 0.36, -1.22], [0.56, 0.36, -1.5], [0, 0.36, -1.6], [-0.56, 0.36, -1.5], [-0.66, 0.36, -1.22]], 0.055, "#f2f2f6", "chrome"),
+    // The steamed bun mascot on the bonnet, pleated on top.
+    part(lathe([[0.001, 0], [0.16, 0.01], [0.19, 0.06], [0.16, 0.13], [0.07, 0.18], [0.001, 0.19]], 32), CREAM, { finish: "satin", at: [0, 0.82, 1.06] }),
+    ...bucketSeat([0, 0.62, -0.34], 0.66, CREAM, BERRY),
+    part(rbox(0.4, 0.1, 0.12, 0.04), CREAM, { finish: "pearl", at: [0, 0.94, 0.42], rot: [-0.5, 0, 0] }),
+    ...numberPlate("mochi", [0, 0.56, -1.45], [0.15, Math.PI, 0], 0.32),
+    // Mochi's bamboo antenna, with knuckles.
+    part(bar([-0.46, 0.85, -0.95], [-0.46, 2.1, -0.95], 0.022, 8), BAMBOO, { finish: "satin" }),
   ];
-  for (let i = 0; i < 3; i++) body.push(paint(cyl(0.035, 0.035, 0.02, 8), "#6d9b28", { at: [-0.48, 1.2 + i * 0.3, -0.9] }));
-
+  for (let i = 0; i < 4; i++) centre.push(part(tube(0.03, 0.03, 0.025, 10), "#6d9b28", { finish: "satin", at: [-0.46, 1.1 + i * 0.28, -0.95] }));
+  for (let i = 0; i < 6; i++) centre.push(part(torus(0.04 + i * 0.012, 0.006, 16, 4, Math.PI * 0.6), "#e8d6bc", { finish: "satin", at: [0, 0.99, 1.06], rot: [-Math.PI / 2, 0, i * 1.05] }));
   const sides: THREE.BufferGeometry[] = [
-    // Round fender bubbles over each wheel.
-    paint(new THREE.SphereGeometry(0.5, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), PINK, { at: [0.8, 0.5, 0.85], scale: [0.5, 0.6, 0.95] }),
-    paint(new THREE.SphereGeometry(0.54, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), PINK, { at: [0.82, 0.54, -0.8], scale: [0.5, 0.62, 0.95] }),
-    // Bath toy cheeks either side of the face on the nose.
-    paint(ball(0.09, 10, 8), "#ff5c9a", { at: [0.5, 0.52, 1.36], scale: [1.2, 0.8, 0.5] }),
-    // A bamboo bundle strapped along each side.
-    rod([0.9, 0.62, -0.5], [0.9, 0.62, 0.45], 0.05, BAMBOO, 8),
-    rod([0.92, 0.72, -0.45], [0.92, 0.72, 0.4], 0.04, "#a5dc4e", 8),
-    paint(cyl(0.07, 0.07, 0.05, 10), BERRY, { at: [0.9, 0.66, 0], rot: [Math.PI / 2, 0, 0] }),
-    // Round headlamp housings and chunky exhaust.
-    paint(cyl(0.1, 0.1, 0.08, 16), CREAM, { at: [0.62, 0.42, 1.5], rot: [Math.PI / 2, 0, 0] }),
-    paint(cyl(0.08, 0.1, 0.3, 12), "#bfb6c7", { at: [0.4, 0.42, -1.5], rot: [Math.PI / 2, 0, 0] }),
-  ];
-  const glow = merge(mirrorX([
-    paint(ball(0.08, 12, 8), "#fffbe8", { at: [0.62, 0.42, 1.54], scale: [1, 1, 0.5] }),
-    paint(ball(0.08, 10, 8), "#ff3d6a", { at: [0.62, 0.72, -1.36], scale: [1, 1, 0.5] }),
-  ]));
-
-  const driver: THREE.BufferGeometry[] = [
-    ...seatedBody({ suit: "#fbfbfb", trim: BERRY, glove: DARK }, 0.62),
-    // Panda head: big and round, black ears and eye patches, a small black nose.
-    paint(ball(0.36, 22, 16), "#ffffff", { at: [0, 1.16, 0], scale: [1.05, 0.95, 0.95] }),
-    paint(ball(0.13, 12, 10), DARK, { at: [-0.28, 1.44, -0.02] }),
-    paint(ball(0.13, 12, 10), DARK, { at: [0.28, 1.44, -0.02] }),
-    paint(ball(0.1, 12, 8), DARK, { at: [-0.13, 1.18, 0.28], scale: [0.9, 1.25, 0.5], rot: [0, 0, 0.5] }),
-    paint(ball(0.1, 12, 8), DARK, { at: [0.13, 1.18, 0.28], scale: [0.9, 1.25, 0.5], rot: [0, 0, -0.5] }),
-    ...eyes([0, 1.2, 0.3], 0.13, 0.045),
-    paint(ball(0.13, 12, 8), "#f2ece6", { at: [0, 1.05, 0.28], scale: [1.2, 0.8, 0.8] }),
-    paint(ball(0.045, 10, 8), DARK, { at: [0, 1.1, 0.38], scale: [1.3, 0.8, 1] }),
-    // A bamboo sprig held in the teeth.
-    rod([-0.2, 1.0, 0.35], [0.3, 1.02, 0.32], 0.02, BAMBOO, 6),
-    paint(ball(0.06, 8, 6), "#6cc24a", { at: [0.34, 1.06, 0.32], scale: [1.6, 0.4, 0.8] }),
+    ...fender([0.78, 0.36, 0.86], 0.37, 0.44, [-0.9, 1.6], PINK, "pearl"),
+    ...fender([0.8, 0.4, -0.8], 0.41, 0.48, [-1.6, 0.9], PINK, "pearl"),
+    decal(body, REGIONS.white, { at: [0.56, 0.36, 0], facing: "left", size: [3.0, 0.2], color: CREAM, depth: 0.4 }),
+    decal(body, emblemRegion("mochi"), { at: [0.56, 0.62, -0.25], facing: "left", size: [0.3, 0.3], depth: 0.4 }),
+    // Running boards between the fenders.
+    part(rbox(0.22, 0.04, 0.9, 0.02), "#f2f2f6", { finish: "chrome", at: [0.66, 0.3, 0.05] }),
+    ...headlamp([0.56, 0.68, 1.22], 0.095, [-0.1, 0.2, 0]),
+    part(sphere(0.08, 20, 14), "#ffffff", { finish: "brake", region: REGIONS.tail, at: [0.5, 0.66, -1.3], scale: [1, 1, 0.4] }),
+    part(torus(0.08, 0.014, 24, 6), "#f2f2f6", { finish: "chrome", at: [0.5, 0.66, -1.31] }),
+    ...mirror([0.58, 1.02, 0.3], PINK),
+    ...exhaust([[0.22, 0.3, -0.9], [0.24, 0.27, -1.4], [0.24, 0.26, -1.66]], 0.05),
   ];
 
-  const front = buildWheel({ radius: 0.36, width: 0.36, tire: "#2a2a30", rim: CREAM, hub: BERRY, spokes: 4, balloon: true });
-  const rear = buildWheel({ radius: 0.4, width: 0.42, tire: "#2a2a30", rim: CREAM, hub: BERRY, spokes: 4, balloon: true });
-  return {
-    body: merge([...body, ...mirrorX(sides)]),
-    glow,
-    driver: merge(driver),
-    driverAt: [0, 0.5, -0.3],
-    wheels: [
-      { at: [0.78, 0.36, 0.85], geometry: front, radius: 0.36, front: true },
-      { at: [-0.78, 0.36, 0.85], geometry: front, radius: 0.36, front: true },
-      { at: [0.8, 0.4, -0.8], geometry: rear, radius: 0.4, front: false },
-      { at: [-0.8, 0.4, -0.8], geometry: rear, radius: 0.4, front: false },
-    ],
-    exhausts: [[0.4, 0.42, -1.68], [-0.4, 0.42, -1.68]],
-    flagAt: [-0.48, 2.05, -0.9],
-    length: 3,
-    width: 2,
-  };
+  return assemble({
+    centre,
+    sides,
+    gear: { front: [0.78, 0.36, 0.86], rear: [0.8, 0.4, -0.8], frontWidth: 0.34, rearWidth: 0.4, rail: 0.4, floor: 0.3, spring: BERRY, frame: DARK },
+    front: { tyre: { radius: 0.36, width: 0.34, tread: "rib", sidewall: "mochi", bead: 0.6, balloon: true }, rim: { kind: "dish", color: "#f2f2f6", finish: "chrome", accent: BERRY, spokes: 0, badge: "mochi" } },
+    rear: { tyre: { radius: 0.4, width: 0.4, tread: "rib", sidewall: "mochi", bead: 0.6, balloon: true }, rim: { kind: "dish", color: "#f2f2f6", finish: "chrome", accent: BERRY, spokes: 0, badge: "mochi" } },
+    seat: [0, 0.62, -0.36],
+    wheel: { at: [0, 1.04, 0.26], radius: 0.19, column: 0.85 },
+    suit: { suit: "#fbfbfb", trim: BERRY, glove: DARK, boot: DARK, badge: "mochi", wheelAccent: PINK, wheelRadius: 0.19, build: 1.12 },
+    head: mochiHead,
+    shoulders: [0.27, 0.64],
+    exhausts: [[0.24, 0.26, -1.74], [-0.24, 0.26, -1.74]],
+    lamps: { head: [[0.56, 0.68, 1.33], [-0.56, 0.68, 1.33]], tail: [[0.5, 0.66, -1.36], [-0.5, 0.66, -1.36]] },
+    flagAt: [-0.46, 2.1, -0.95],
+    length: 3.1,
+    width: 2.05,
+  });
 }

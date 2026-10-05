@@ -5,6 +5,7 @@ import type { RaceWorld } from "../engine/world";
 import { ShowCamera } from "./cameras";
 import { ChaseCamera } from "./chase-camera";
 import { Effects } from "./effects/effects";
+import { bakeKartEnvironment, studioFor } from "./kart-env";
 import { KartExtras } from "./kart-extras";
 import { KartView } from "./kart-view";
 import type { ViewRect } from "./layout";
@@ -51,6 +52,8 @@ export class GameRenderer {
   tags = true;
   /** A soft studio light the karts reflect, so their paint shines on every map, night ones included. */
   private readonly environment: THREE.Texture;
+  /** What the karts' paint reflects: this map's sky and road with studio soft boxes, baked per map. */
+  private kartEnvironment: THREE.Texture | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
@@ -83,11 +86,17 @@ export class GameRenderer {
       this.stage.scene.add(this.dynamic);
       this.stage.scene.environment = this.environment;
       this.stage.scene.environmentIntensity = this.stage.theme.reflections;
+      this.kartEnvironment?.dispose();
+      this.kartEnvironment = bakeKartEnvironment(this.renderer, studioFor(this.stage.theme));
     }
     for (const view of this.karts.values()) view.dispose(this.dynamic);
     this.karts = new Map(world.karts.map((kart) => {
       const { name, color } = label(kart.id);
-      return [kart.id, new KartView(kart.id, kart, name, color, this.extras, this.dynamic)];
+      const view = new KartView(kart.id, kart, name, color, this.extras, this.dynamic);
+      view.model.setEnvironment(this.kartEnvironment, 1);
+      // Headlamps burn brighter on the night maps.
+      view.model.setHeadlamps(this.stage!.theme.reflections >= 0.7 ? 1.8 : 1);
+      return [kart.id, view];
     }));
     for (const prop of [this.cubes, this.obstacles, this.effects]) {
       if (!prop) continue;
@@ -207,6 +216,7 @@ export class GameRenderer {
     this.projectiles.dispose();
     this.extras.dispose();
     this.environment.dispose();
+    this.kartEnvironment?.dispose();
     this.stage?.scene.remove(this.dynamic);
     this.stage?.dispose();
     this.renderer.dispose();

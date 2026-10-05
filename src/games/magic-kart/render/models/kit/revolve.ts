@@ -20,7 +20,8 @@ export type RevolveUv = (quad: number, end: 0 | 1, along: number, angle: number,
  * texture tiles (tread blocks) can repeat round the tyre without seams in
  * the shading.
  */
-export function revolve(section: readonly Ring[], segments: number, uv: RevolveUv): THREE.BufferGeometry {
+/** `arc` limits the turn to part of a circle, for mudguards: angle 0 is straight up, positive toward the nose. */
+export function revolve(section: readonly Ring[], segments: number, uv: RevolveUv, arc: readonly [number, number] = [0, Math.PI * 2]): THREE.BufferGeometry {
   const n = section.length;
   // Outward normal in the (r, x) plane from the slope at each point.
   const normals = section.map((_, k) => {
@@ -38,7 +39,7 @@ export function revolve(section: readonly Ring[], segments: number, uv: RevolveU
   const nor: number[] = [];
   const tex: number[] = [];
   const vertex = (k: number, i: number) => {
-    const a = (i / segments) * Math.PI * 2;
+    const a = arc[0] + (i / segments) * (arc[1] - arc[0]);
     const p = section[k]!;
     const m = normals[k]!;
     return {

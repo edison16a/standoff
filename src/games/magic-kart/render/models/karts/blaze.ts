@@ -1,125 +1,112 @@
-import * as THREE from "three";
-import { eyes, seatedBody, steeringWheel } from "../driver-parts";
-import { ball, box, cyl, flat, lathe, merge, mirrorX, paint, profile, rod } from "../geo";
+import type * as THREE from "three";
+import type { V3 } from "../geo";
 import type { KartDesign } from "../kart-design";
-import { buildWheel } from "../wheel";
+import { emblemRegion, REGIONS } from "../kit/atlas-layout";
+import { decal } from "../kit/decal";
+import { loft } from "../kit/loft";
+import { part } from "../kit/part";
+import { bar, lathe, plate, profile, rbox, tube } from "../kit/shapes";
+import { bucketSeat, exhaust, headlamp, mirror, numberPlate, tailLamp } from "../parts/fittings";
+import { assemble } from "./assemble";
+import { blazeHead } from "./blaze-driver";
 
-const RED = "#ff4a1c";
-const DEEP = "#c92a0e";
-const FLAME = "#ffc21a";
-const CHROME = "#d9dde6";
-const DARK = "#26262e";
+const RED = "#e8321a";
+const DEEP = "#8f1608";
+const GOLD = "#ffc21a";
+const DARK = "#1e1e24";
 
-/** A flame decal: three licks of fire, drawn as one flat shape. */
-function flameShape(): THREE.Shape {
-  const s = new THREE.Shape();
-  s.moveTo(0, 0);
-  s.quadraticCurveTo(0.35, 0.12, 0.62, 0.02);
-  s.quadraticCurveTo(0.42, 0.1, 0.5, 0.2);
-  s.quadraticCurveTo(0.3, 0.14, 0.34, 0.3);
-  s.quadraticCurveTo(0.18, 0.18, 0.1, 0.24);
-  s.quadraticCurveTo(0.08, 0.1, 0, 0);
-  return s;
-}
+/** A thin wing section, nose at +z, for the front and rear wings. */
+const AIRFOIL: [number, number][] = [[0.22, 0.01], [0.12, 0.05], [-0.06, 0.05], [-0.22, 0.012], [-0.1, -0.012], [0.12, -0.016]];
 
-/** Blaze the fox in the Flame Rod: a long, low hot rod with chrome pipes and flames down the sides. */
+/**
+ * Blaze the fox in the Flame Rod: a long, low candy red hot rod with an
+ * open supercharged engine, titanium side pipes, a front wing and a big
+ * rear wing, flames licking back along the side pods.
+ */
 export function buildBlaze(): KartDesign {
-  const body: THREE.BufferGeometry[] = [
-    paint(box(1.2, 0.12, 2.6, 0.05), DARK, { at: [0, 0.24, 0] }),
-    // Long hood, low nose.
-    paint(profile([[1.5, 0.28], [1.46, 0.44], [1.15, 0.56], [0.55, 0.68], [0.12, 0.74], [0.12, 0.28]], 0.98, 0.1), RED),
-    paint(box(0.5, 0.06, 1.1, 0.03), DEEP, { at: [0, 0.73, 0.75], rot: [0.12, 0, 0] }),
-    paint(box(1.64, 0.18, 0.26, 0.08), DARK, { at: [0, 0.28, 1.45] }),
-    // A front wing across the nose, with end plates.
-    paint(box(1.7, 0.05, 0.34, 0.02), DEEP, { at: [0, 0.22, 1.58] }),
-    // Rear engine deck behind the seat.
-    paint(profile([[-0.55, 0.3], [-0.55, 0.78], [-0.9, 0.84], [-1.35, 0.72], [-1.4, 0.3]], 1.1, 0.1), RED),
-    paint(box(0.62, 0.2, 0.5, 0.06), CHROME, { at: [0, 0.94, -0.95] }),
-    paint(box(0.52, 0.2, 0.3, 0.05), DARK, { at: [0, 0.4, -1.42] }),
-    // Seat and backrest.
-    paint(box(0.7, 0.14, 0.62, 0.06), DARK, { at: [0, 0.42, -0.28] }),
-    paint(box(0.7, 0.62, 0.14, 0.07), DARK, { at: [0, 0.74, -0.58], rot: [-0.18, 0, 0] }),
-    ...steeringWheel([0, 0.95, 0.3], DARK, FLAME),
-    // Rear wing.
-    paint(box(1.62, 0.06, 0.4, 0.03), DEEP, { at: [0, 1.22, -1.28], rot: [0.12, 0, 0] }),
-    paint(box(1.64, 0.02, 0.06), FLAME, { at: [0, 1.25, -1.1] }),
-    // Antenna for the player's flag.
-    paint(cyl(0.015, 0.02, 1.05, 6), CHROME, { at: [-0.42, 1.25, -0.72] }),
+  const tub = part(loft([
+    { z: -1.5, w: 0.36, y0: 0.3, y1: 0.5, n: 3 },
+    { z: -1.36, w: 0.74, y0: 0.24, y1: 0.62, n: 3.4 },
+    { z: -0.95, w: 0.86, y0: 0.2, y1: 0.68, n: 3.6, top: 0.82 },
+    { z: -0.45, w: 0.92, y0: 0.18, y1: 0.56, n: 3.8, top: 0.86 },
+    { z: 0.05, w: 0.94, y0: 0.18, y1: 0.52, n: 3.8, top: 0.86 },
+    { z: 0.5, w: 0.86, y0: 0.18, y1: 0.68, n: 3.4, top: 0.72 },
+    { z: 0.95, w: 0.64, y0: 0.2, y1: 0.56, n: 3, top: 0.7 },
+    { z: 1.38, w: 0.42, y0: 0.24, y1: 0.42, n: 2.6 },
+    { z: 1.64, w: 0.12, y0: 0.29, y1: 0.34, n: 2.2 },
+  ], { around: 40, along: 64 }), RED, { finish: "metallic" });
+  const pod = part(loft([
+    { z: -0.4, w: 0.18, y0: 0.26, y1: 0.42, x: 0.6, n: 3 },
+    { z: -0.22, w: 0.3, y0: 0.2, y1: 0.5, x: 0.61, n: 3.6, top: 0.8 },
+    { z: 0.25, w: 0.32, y0: 0.2, y1: 0.52, x: 0.6, n: 3.6, top: 0.8 },
+    { z: 0.5, w: 0.3, y0: 0.22, y1: 0.48, x: 0.6, n: 3.2 },
+    { z: 0.57, w: 0.26, y0: 0.24, y1: 0.44, x: 0.6, n: 3 },
+  ], { around: 28, along: 24 }), RED, { finish: "metallic" });
+  const wing = (span: number, chord: number, at: V3, color: string, finish: "metallic" | "carbon") =>
+    part(profile(AIRFOIL.map(([z, y]) => [z * chord, y * chord] as [number, number]), span, 0.01, true), color, { finish, at, region: finish === "carbon" ? REGIONS.carbon : undefined });
+
+  const centre: THREE.BufferGeometry[] = [
+    tub,
+    part(rbox(1.15, 0.04, 2.7, 0.02), "#ffffff", { finish: "carbon", region: REGIONS.carbon, at: [0, 0.16, 0] }),
+    // Gold racing stripes over the nose and the badge in front of the cockpit.
+    decal(tub, REGIONS.white, { at: [0.09, 0.6, 1.0], facing: "up", size: [0.06, 1.3], color: GOLD, depth: 0.6 }),
+    decal(tub, REGIONS.white, { at: [-0.09, 0.6, 1.0], facing: "up", size: [0.06, 1.3], color: GOLD, depth: 0.6 }),
+    decal(tub, emblemRegion("blaze"), { at: [0, 0.6, 1.12], facing: "up", size: [0.26, 0.26], depth: 0.6 }),
+    // Front wing with end plates.
+    wing(1.62, 1, [0, 0.21, 1.56], "#ffffff", "carbon"),
+    part(rbox(0.03, 0.2, 0.42, 0.012), DEEP, { finish: "metallic", at: [0.82, 0.26, 1.54] }),
+    part(rbox(0.03, 0.2, 0.42, 0.012), DEEP, { finish: "metallic", at: [-0.82, 0.26, 1.54] }),
+    // Engine: block, cooling fins, the supercharger and its intake trumpets.
+    part(rbox(0.5, 0.22, 0.52, 0.05), "#3a3a42", { finish: "gunmetal", at: [0, 0.76, -0.95] }),
+    part(rbox(0.36, 0.14, 0.44, 0.04), "#d0d4dc", { finish: "brushed", at: [0, 0.93, -0.95] }),
+    part(rbox(0.38, 0.02, 0.46, 0.01), GOLD, { finish: "metallic", at: [0, 1.0, -0.95] }),
+    ...bucketSeat([0, 0.5, -0.3], 0.62, RED, DARK),
+    // Dash with a lit gauge, and the antenna for the flag.
+    part(rbox(0.36, 0.1, 0.12, 0.04), DARK, { finish: "plastic", at: [0, 0.74, 0.5], rot: [-0.5, 0, 0] }),
+    part(tube(0.035, 0.035, 0.01, 20), "#9ff3ff", { finish: "neon", at: [0.08, 0.77, 0.47], rot: [Math.PI / 2 - 0.5, 0, 0] }),
+    part(tube(0.035, 0.035, 0.01, 20), "#ffd27a", { finish: "neon", at: [-0.08, 0.77, 0.47], rot: [Math.PI / 2 - 0.5, 0, 0] }),
+    part(bar([-0.42, 0.66, -0.75], [-0.42, 1.78, -0.75], 0.012, 8), "#e8e8ee", { finish: "chrome" }),
+    // Rear wing on two struts, a gold gurney strip along its trailing edge.
+    wing(1.5, 1.6, [0, 1.16, -1.32], RED, "metallic"),
+    part(rbox(1.5, 0.05, 0.02, 0.008), GOLD, { finish: "metallic", at: [0, 1.2, -1.66] }),
+    part(bar([0.22, 0.62, -1.24], [0.26, 1.12, -1.3], 0.022), "#c4c8d0", { finish: "brushed" }),
+    part(bar([-0.22, 0.62, -1.24], [-0.26, 1.12, -1.3], 0.022), "#c4c8d0", { finish: "brushed" }),
+    // Tail: diffuser, lamps and the number plate the chase camera sees all race.
+    part(rbox(0.96, 0.08, 0.3, 0.02), "#ffffff", { finish: "carbon", region: REGIONS.carbon, at: [0, 0.22, -1.44], rot: [0.25, 0, 0] }),
+    ...numberPlate("blaze", [0, 0.44, -1.56], [0.1, Math.PI, 0], 0.3),
+    ...tailLamp([0.24, 0.5, -1.47], 0.13, 0.05),
+    ...tailLamp([-0.24, 0.5, -1.47], 0.13, 0.05),
   ];
-  // The tail the chase camera looks at all race: a diffuser with fins, twin tail pipes and a number plate.
-  body.push(paint(box(1.0, 0.1, 0.24, 0.03), DARK, { at: [0, 0.26, -1.42] }));
-  for (const x of [-0.36, -0.12, 0.12, 0.36]) body.push(paint(box(0.03, 0.16, 0.22), "#3a3a44", { at: [x, 0.24, -1.5] }));
-  for (const x of [-0.13, 0.13]) {
-    body.push(paint(cyl(0.075, 0.075, 0.2, 14), CHROME, { at: [x, 0.42, -1.58], rot: [Math.PI / 2, 0, 0] }));
-    body.push(paint(cyl(0.05, 0.05, 0.02, 12), "#111116", { at: [x, 0.42, -1.685], rot: [Math.PI / 2, 0, 0] }));
+  for (const [x, z] of [[-0.09, -1.05], [0.09, -1.05], [-0.09, -0.85], [0.09, -0.85]] as const) {
+    centre.push(part(lathe([[0.035, 0], [0.036, 0.08], [0.05, 0.13], [0.062, 0.15], [0.055, 0.152]], 20), "#f2f2f6", { finish: "chrome", at: [x, 1.0, z] }));
   }
-  body.push(paint(box(0.44, 0.16, 0.02, 0.02), "#ffffff", { at: [0, 0.7, -1.43], rot: [-0.1, 0, 0] }));
-  body.push(paint(box(0.4, 0.035, 0.02), FLAME, { at: [0, 0.7, -1.445], rot: [-0.1, 0, 0] }));
-  // Intake trumpets on the engine.
-  for (const x of [-0.18, 0.06]) body.push(paint(cyl(0.07, 0.09, 0.22, 12, true), CHROME, { at: [x + 0.06, 1.12, -0.95] }));
+  for (let i = 0; i < 4; i++) centre.push(part(rbox(0.56, 0.015, 0.5, 0.006), "#8a8e98", { finish: "brushed", at: [0, 0.69 + i * 0.04, -0.95] }));
 
   const sides: THREE.BufferGeometry[] = [
-    paint(box(0.34, 0.3, 1.36, 0.12), RED, { at: [0.64, 0.4, -0.1] }),
-    paint(box(0.3, 0.08, 1.2, 0.04), DEEP, { at: [0.66, 0.58, -0.1] }),
-    paint(flat(flameShape(), 0.02), FLAME, { at: [0.815, 0.3, 0.45], rot: [0, Math.PI / 2, 0], scale: [1.4, 1, 1] }),
-    paint(cyl(0.012, 0.012, 0.3, 4), CHROME, { at: [0.62, 1.1, -1.28] }),
-    // Chrome side pipes running back and up.
-    paint(cyl(0.065, 0.065, 1.1, 12), CHROME, { at: [0.84, 0.36, -0.35], rot: [Math.PI / 2, 0, 0] }),
-    paint(lathe([[0.065, 0], [0.1, 0.18], [0.11, 0.26]], 14), CHROME, { at: [0.84, 0.36, -0.92], rot: [-Math.PI / 2 - 0.35, 0, 0] }),
-    // Headlight bezel.
-    paint(cyl(0.12, 0.12, 0.08, 16), CHROME, { at: [0.3, 0.46, 1.44], rot: [Math.PI / 2 - 0.3, 0, 0] }),
-    paint(box(0.2, 0.12, 0.06, 0.03), DARK, { at: [0.4, 0.62, -1.44] }),
-    paint(box(0.04, 0.2, 0.36, 0.01), DARK, { at: [0.85, 0.28, 1.58] }),
-    // Race number roundel on each side pod.
-    paint(cyl(0.2, 0.2, 0.02, 20), "#ffffff", { at: [0.815, 0.42, -0.35], rot: [0, 0, Math.PI / 2] }),
-    paint(cyl(0.22, 0.22, 0.015, 20), DARK, { at: [0.81, 0.42, -0.35], rot: [0, 0, Math.PI / 2] }),
-    // Mirror on a stalk.
-    rod([0.42, 0.72, 0.2], [0.58, 0.9, 0.18], 0.015, DARK),
-    paint(box(0.05, 0.12, 0.18, 0.02), DEEP, { at: [0.6, 0.92, 0.18] }),
+    pod,
+    decal(pod, REGIONS.flame, { at: [0.76, 0.36, 0.12], facing: "left", size: [0.78, 0.32], depth: 0.3 }),
+    decal(pod, REGIONS.stickerGrip, { at: [0.76, 0.42, -0.26], facing: "left", size: [0.18, 0.045], depth: 0.3 }),
+    part(plate(0.2, 0.16, 0.05, 0.01, 0.004), "#ffffff", { finish: "gunmetal", region: REGIONS.grille, at: [0.6, 0.36, 0.575] }),
+    part(rbox(0.03, 0.2, 0.52, 0.012), "#ffffff", { finish: "carbon", region: REGIONS.carbon, at: [0.76, 1.15, -1.3] }),
+    ...headlamp([0.2, 0.38, 1.33], 0.065, [0, 0.3, 0]),
+    ...mirror([0.48, 0.82, 0.42], RED),
+    ...exhaust([[0.24, 0.78, -0.78], [0.42, 0.68, -0.82], [0.5, 0.52, -1.02], [0.42, 0.44, -1.42], [0.36, 0.43, -1.62]], 0.045),
   ];
 
-  const glow = merge([
-    ...mirrorX([paint(ball(0.085, 12, 8), "#fff6d5", { at: [0.3, 0.47, 1.49] }), paint(box(0.16, 0.07, 0.04, 0.02), "#ff2d2d", { at: [0.4, 0.62, -1.47] })]),
-    // A thin brake light strip across the tail between the lamps.
-    paint(box(0.5, 0.025, 0.02), "#ff3b3b", { at: [0, 0.56, -1.46] }),
-  ]);
-
-  const driver: THREE.BufferGeometry[] = [
-    ...seatedBody({ suit: "#3a3f5c", trim: FLAME, glove: "#f2f2f2" }, 0.58),
-    // Fox head: orange dome, white cheeks and muzzle, tall ears, goggles up on the brow.
-    paint(ball(0.3, 20, 14), "#ff7b2e", { at: [0, 1.12, 0], scale: [1, 0.95, 0.95] }),
-    paint(ball(0.2, 16, 12), "#fff3e6", { at: [0, 1.0, 0.2], scale: [1.1, 0.75, 1] }),
-    paint(lathe([[0.001, 0], [0.12, 0.02], [0.04, 0.22], [0.001, 0.26]], 12), "#ff7b2e", { at: [0, 1.04, 0.24], rot: [Math.PI / 2, 0, 0] }),
-    paint(ball(0.045, 10, 8), DARK, { at: [0, 1.06, 0.5] }),
-    ...eyes([0, 1.18, 0.2], 0.12, 0.07, "#2d6a1f"),
-    paint(cyl(0.3, 0.3, 0.07, 20, true), "#5a3b22", { at: [0, 1.32, -0.02], rot: [0.2, 0, 0] }),
-    paint(box(0.44, 0.07, 0.3, 0.03), "#5a3b22", { at: [0, 0.83, 0.02] }),
-  ];
-  for (const side of [-1, 1]) {
-    driver.push(paint(cyl(0.09, 0.09, 0.08, 14), "#9fe4ff", { at: [side * 0.12, 1.38, 0.16], rot: [Math.PI / 2 - 0.5, 0, 0] }));
-    driver.push(paint(lathe([[0.12, 0], [0.001, 0.3]], 4), "#ff7b2e", { at: [side * 0.18, 1.32, -0.05], rot: [0, 0, side * -0.3] }));
-    driver.push(paint(lathe([[0.05, 0], [0.001, 0.1]], 4), DARK, { at: [side * 0.24, 1.55, -0.05], rot: [0, 0, side * -0.3] }));
-  }
-  // The bushy tail curls out over the engine deck, the first thing a chase camera sees.
-  driver.push(paint(ball(0.2, 14, 10), "#ff7b2e", { at: [0, 0.8, -0.62], scale: [0.9, 0.9, 1.6], rot: [0.5, 0, 0] }));
-  driver.push(paint(ball(0.14, 12, 8), "#fff3e6", { at: [0, 0.98, -0.9], scale: [0.9, 0.9, 1.2], rot: [0.8, 0, 0] }));
-
-  const front = buildWheel({ radius: 0.3, width: 0.26, tire: "#1c1c22", rim: CHROME, hub: RED, spokes: 5 });
-  const rear = buildWheel({ radius: 0.42, width: 0.44, tire: "#1c1c22", rim: CHROME, hub: RED, spokes: 5 });
-  return {
-    body: merge([...body, ...mirrorX(sides)]),
-    glow,
-    driver: merge(driver),
-    driverAt: [0, 0.36, -0.3],
-    wheels: [
-      { at: [0.8, 0.3, 1.0], geometry: front, radius: 0.3, front: true },
-      { at: [-0.8, 0.3, 1.0], geometry: front, radius: 0.3, front: true },
-      { at: [0.86, 0.42, -0.85], geometry: rear, radius: 0.42, front: false },
-      { at: [-0.86, 0.42, -0.85], geometry: rear, radius: 0.42, front: false },
-    ],
-    exhausts: [[0.9, 0.5, -1.05], [-0.9, 0.5, -1.05]],
-    flagAt: [-0.42, 1.76, -0.72],
-    length: 3,
+  return assemble({
+    centre,
+    sides,
+    gear: { front: [0.8, 0.3, 1.0], rear: [0.86, 0.42, -0.85], frontWidth: 0.26, rearWidth: 0.44, rail: 0.36, floor: 0.24, spring: GOLD, frame: DARK },
+    front: { tyre: { radius: 0.3, width: 0.26, tread: "race", sidewall: "blaze", bead: 0.66 }, rim: { kind: "star", color: "#eceef4", finish: "chrome", accent: RED, spokes: 5, badge: "blaze" } },
+    rear: { tyre: { radius: 0.42, width: 0.44, tread: "race", sidewall: "blaze", bead: 0.64 }, rim: { kind: "star", color: "#eceef4", finish: "chrome", accent: RED, spokes: 5, badge: "blaze" } },
+    seat: [0, 0.5, -0.32],
+    wheel: { at: [0, 0.88, 0.3], radius: 0.19, column: 0.95 },
+    suit: { suit: "#2b3150", trim: GOLD, glove: "#f4f4f4", boot: DARK, badge: "blaze", wheelAccent: GOLD, wheelRadius: 0.19 },
+    head: blazeHead,
+    exhausts: [[0.36, 0.43, -1.72], [-0.36, 0.43, -1.72]],
+    lamps: { head: [[0.2, 0.38, 1.4], [-0.2, 0.38, 1.4]], tail: [[0.24, 0.5, -1.5], [-0.24, 0.5, -1.5]] },
+    flagAt: [-0.42, 1.78, -0.75],
+    length: 3.1,
     width: 1.9,
-  };
+  });
 }

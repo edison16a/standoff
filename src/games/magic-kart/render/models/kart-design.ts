@@ -1,25 +1,27 @@
 import type * as THREE from "three";
 import type { V3 } from "./geo";
+import type { Rig } from "./parts/driver-rig";
 
 /**
  * A built kart, ready to be put in the scene as many times as needed.
  * The kart faces +z with its wheels on y = 0. Geometry is shared by
- * every copy, so four views of the same kart cost nothing extra.
+ * every copy, so four views of the same kart cost nothing extra. Paint,
+ * chrome, rubber and lamps all live in the vertices (see kit/finish.ts),
+ * so the body is one draw call and the driver another.
  */
 export interface KartDesign {
-  /** The chassis and bodywork, lit. */
+  /** Bodywork, frame, engine and suspension: everything that rides on the springs. */
   body: THREE.BufferGeometry;
-  /** Lights, neon and glowing trim, drawn at full brightness. */
-  glow: THREE.BufferGeometry | null;
-  /** The driver, which leans into corners on its own. */
+  /** The driver and the steering wheel, skinned to the bones in `rig`. */
   driver: THREE.BufferGeometry;
-  /** Glowing bits of the driver, like a visor, built around the same point. */
-  driverGlow?: THREE.BufferGeometry;
   /** Where the driver sits. The driver geometry is built around this point. */
   driverAt: V3;
+  rig: Rig;
   wheels: WheelSpot[];
-  /** Where boost flames and exhaust puffs come out. */
+  /** Exhaust tips, where boost flames and puffs come out, pointing back. */
   exhausts: V3[];
+  /** Headlamps and tail lamps, for the glow sprites over them. */
+  lamps: { head: V3[]; tail: V3[] };
   /** The top of the antenna that carries the player's colour flag. */
   flagAt: V3;
   /** Rough footprint, for the soft shadow. */
@@ -31,5 +33,6 @@ export interface WheelSpot {
   at: V3;
   geometry: THREE.BufferGeometry;
   radius: number;
+  width: number;
   front: boolean;
 }

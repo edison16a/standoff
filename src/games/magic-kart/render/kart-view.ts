@@ -27,6 +27,8 @@ export class KartView {
   private readonly ice = new THREE.Group();
   private readonly flames: THREE.Group[] = [];
   private pitch = 0;
+  private lastHeading: number;
+  private yawRate = 0;
   /** Lean into a turn under the glider, eased. */
   private bank = 0;
   /** How far the body is swung round in a drift, radians, eased in and out. */
@@ -40,6 +42,7 @@ export class KartView {
 
   constructor(readonly kartId: number, kart: Kart, name: string, color: string, extras: KartExtras, scene: THREE.Object3D) {
     this.model = new KartModel(kart.character);
+    this.lastHeading = kart.heading;
     const design = kartDesign(kart.character);
     this.shadow = new THREE.Mesh(extras.shadowGeo, extras.shadowMat);
     this.footprint = { w: design.width * 1.35, l: design.length * 1.15 };
@@ -47,7 +50,7 @@ export class KartView {
     const flagShape = new THREE.Shape([new THREE.Vector2(0, 0), new THREE.Vector2(0, -0.42), new THREE.Vector2(-0.7, -0.21)]);
     this.flag = new THREE.Mesh(new THREE.ShapeGeometry(flagShape), new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide }));
     this.flag.position.set(...design.flagAt);
-    this.model.chassis.add(this.flag);
+    this.model.body.add(this.flag);
     this.tag = nameTag(name, color);
     this.tag.position.y = 3.1;
     this.shield = new THREE.Mesh(extras.shieldGeo, extras.shieldMat);
@@ -68,7 +71,7 @@ export class KartView {
       const core = new THREE.Mesh(extras.flameGeo, extras.flameCoreMat);
       core.scale.setScalar(0.55);
       flame.add(core);
-      this.model.chassis.add(flame);
+      this.model.body.add(flame);
       this.flames.push(flame);
     }
     this.glider = new GliderView(kart.character);
@@ -94,7 +97,21 @@ export class KartView {
     this.pitch += (target - this.pitch) * Math.min(1, dt * 10);
     this.model.chassis.rotation.x = this.pitch;
     const speed = speedOf(kart) * Math.sign(Math.sin(kart.heading) * kart.vx + Math.cos(kart.heading) * kart.vz || 1);
-    this.model.animate(speed, kart.steer, dt, time + kart.id, kart.airborne ? 0 : 1);
+    // Heading change since last frame, unwrapped, for how hard the body is cornering.
+    const turn = Math.atan2(Math.sin(kart.heading - this.lastHeading), Math.cos(kart.heading - this.lastHeading));
+    this.lastHeading = kart.heading;
+    this.yawRate += ((dt > 0 ? turn / dt : 0) - this.yawRate) * Math.min(1, dt * 12);
+    this.model.animate(dt, time + kart.id, {
+      speed,
+      steer: kart.steer,
+      yawRate: kart.timers.stun > 0 ? 0 : this.yawRate,
+      vy: kart.vy,
+      airborne: kart.airborne,
+      drift: kart.airborne ? 0 : kart.drift,
+      brake: kart.brakeHeld > 0 ? Math.min(1, 0.4 + kart.brakeHeld * 2) : 0,
+      boost: kart.timers.boost > 0 ? 1 : 0,
+      rough: kart.surface === "offroad" ? 1 : kart.surface === "kerb" ? 0.6 : 0,
+    });
     this.flag.rotation.y = Math.sin(time * 9 + kart.id) * 0.35;
     this.glider.update(kart, time);
 
