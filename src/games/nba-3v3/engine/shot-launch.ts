@@ -66,7 +66,6 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   const launch = forced ? forcedLaunch(m.rng, input, forced) : planRelease(m.rng, input, chance, distance);
   b.vel = launch.vel;
   b.w = launch.spin;
-  b.spin = -input.spinRate;
   // Flown ahead with nobody near, for the sounds and buzzes that want to know early; the live ball decides.
   const ahead = traceShot({ pos: { ...hand }, vel: launch.vel, w: launch.spin });
   m.emit({ type: "shot", id: a.id, kind, three, grade, chance, outcome: ahead.outcome, made: ahead.made, contest: c.contest });

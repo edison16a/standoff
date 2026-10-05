@@ -83,7 +83,6 @@ export function throwPass(m: Match, a: Athlete, target: Athlete): void {
   b.pos = { ...from };
   b.lastTouch = a.id;
   b.hand = "none";
-  b.spin = 10;
   a.action = { kind: "pass", t: 0 };
   m.lastPass = { from: a.id, to: target.id, at: m.time };
   m.emit({ type: "pass", from: a.id, to: target.id, lob });

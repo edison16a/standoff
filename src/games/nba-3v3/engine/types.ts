@@ -187,8 +187,6 @@ export interface Ball {
   passRolled: number[];
   shot: ShotInfo | null;
   lastTouch: number | null;
-  /** Spin for drawing, radians per second. Kept for the renderer until it reads `w`. */
-  spin: number;
   /** The real spin, radians per second about each axis, kept up to date in the hand, on the dribble and in the air. */
   w: V3;
   hand: BallHand;

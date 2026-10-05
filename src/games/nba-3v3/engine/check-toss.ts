@@ -51,7 +51,6 @@ function throwTo(m: Match, start: V3, catcher: Athlete, dur: number, bounce: boo
     b.w = backspin(start, end, 9);
     b.vel = aimTimed(start, end, dur, b.w);
   }
-  b.spin = bounce ? 6 : 9;
 }
 
 /** Lets the ball go from one player toward another's hands. */

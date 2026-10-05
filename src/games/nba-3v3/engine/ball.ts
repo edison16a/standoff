@@ -16,7 +16,6 @@ export function updateBall(m: Match, dt: number): void {
   const b = m.ball;
   b.rimCd = Math.max(0, b.rimCd - dt);
   b.impact.age += dt;
-  b.spin *= Math.pow(0.6, dt);
   if (b.mode === "held") return holdBall(m, dt);
   b.flightT += dt;
   b.hand = "none";

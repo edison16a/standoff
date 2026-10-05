@@ -37,7 +37,6 @@ export function restingBall(): Ball {
     passRolled: [],
     shot: null,
     lastTouch: null,
-    spin: 0,
     w: { x: 0, y: 0, z: 0 },
     hand: "held",
     impact: { power: 0, age: 9, n: { x: 0, y: 1, z: 0 } },
