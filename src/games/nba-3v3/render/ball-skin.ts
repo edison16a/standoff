@@ -85,27 +85,13 @@ export function ballSkin(width = 1024): Skin {
       bump.data[k + 3] = 255;
     }
   }
+  // Clean two tone panels only: no printing on the leather, as the owner asked.
   mctx.putImageData(colour, 0, 0);
   bctx.putImageData(bump, 0, 0);
-  printName(mctx, W, H);
   const map = new THREE.CanvasTexture(mc);
   map.colorSpace = THREE.SRGBColorSpace;
   map.anisotropy = 8;
   const bumpMap = new THREE.CanvasTexture(bc);
   bumpMap.anisotropy = 4;
   return { map, bump: bumpMap };
-}
-
-/** The arena's own name printed small on two of the orange panels, as a maker's mark would be. */
-function printName(ctx: CanvasRenderingContext2D, W: number, H: number): void {
-  ctx.save();
-  ctx.font = `italic 900 ${Math.round(W * 0.03)}px Arial, sans-serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = "rgba(90, 24, 10, 0.55)";
-  for (const x of [W * 0.5, 0]) {
-    ctx.fillText("STANDOFF", x, H * 0.37);
-    if (x === 0) ctx.fillText("STANDOFF", W, H * 0.37);
-  }
-  ctx.restore();
 }
