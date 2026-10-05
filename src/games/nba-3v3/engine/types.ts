@@ -36,8 +36,9 @@ export type Action =
    * A jumper, or a free throw (`free`), which is a set shot with no jump.
    * `step` is the velocity of a stepback hop before the rise, when a
    * defender was right on the shooter, or null for a straight up jumper.
+   * `float` marks a floater, let go early on the way up (see `floater.ts`).
    */
-  | { kind: "shoot"; t: number; three: boolean; released: boolean; free: boolean; step: V2 | null }
+  | { kind: "shoot"; t: number; three: boolean; released: boolean; free: boolean; step: V2 | null; float?: boolean }
   /**
    * A layup or a dunk. `takeoff`, `finish` (the ball leaves the hand or is
    * slammed) and `land` are times on `t`; a dunk hangs on the rim for

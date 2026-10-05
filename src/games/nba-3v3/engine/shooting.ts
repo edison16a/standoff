@@ -35,7 +35,8 @@ export function startJumper(m: Match, a: Athlete, free = false): void {
 
 /** Lets go of a jumper. The phone's hold time is trusted within reason, so lag never costs a green. */
 export function releaseJumper(m: Match, a: Athlete, heldMs?: number): void {
-  if (a.action.kind !== "shoot" || a.action.released) return;
+  // A floater goes on its own, early: letting go of Shoot does nothing to it.
+  if (a.action.kind !== "shoot" || a.action.released || a.action.float) return;
   a.action.released = true;
   // The whistle can go mid motion (a shot clock violation), and then there is no ball to let go of.
   const free = a.action.free;
