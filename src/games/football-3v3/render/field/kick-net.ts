@@ -8,13 +8,17 @@ const N = GOAL.net;
 const WIDTH = N.halfWidth * 2;
 const HEIGHT = N.top - N.bottom;
 
-/** A square mesh of cord, tiled across the net. */
+/**
+ * A square mesh of thin grey cord, tiled across the net. Real kicking
+ * nets are fine and dark, so the stands show through and it reads as a
+ * faint veil rather than a white grid.
+ */
 function cordTexture(): THREE.CanvasTexture {
   const c = document.createElement("canvas");
   c.width = c.height = 32;
   const g = c.getContext("2d")!;
-  g.strokeStyle = "rgba(235,240,250,0.85)";
-  g.lineWidth = 2;
+  g.strokeStyle = "rgba(118,126,140,0.7)";
+  g.lineWidth = 1.5;
   g.strokeRect(1, 1, 30, 30);
   const t = new THREE.CanvasTexture(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
@@ -38,7 +42,7 @@ export class KickNets {
   private lift = 0;
 
   constructor(poleMaterial: THREE.Material) {
-    this.material = new THREE.MeshBasicMaterial({ map: this.texture, transparent: true, alphaTest: 0.15, side: THREE.DoubleSide, depthWrite: false });
+    this.material = new THREE.MeshBasicMaterial({ map: this.texture, transparent: true, opacity: 0.4, side: THREE.DoubleSide, depthWrite: false });
     for (const side of [1, -1] as const) {
       const geo = new THREE.PlaneGeometry(WIDTH, HEIGHT, 36, 32);
       // The plane faces +z; turn it to face along x, standing behind the posts.
