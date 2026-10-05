@@ -33,10 +33,9 @@ export function blazeHead(rig: Rig): THREE.BufferGeometry[] {
     // Brows, angled for a cocky look.
     part(capsule(0.014, 0.07, 8), "#a83c10", { finish: "fur", at: at(0.09, 0.14, 0.2), rot: [0, 0, 1.2] }),
     part(capsule(0.014, 0.07, 8), "#a83c10", { finish: "fur", at: at(-0.09, 0.14, 0.2), rot: [0, 0, -1.2] }),
-    // An open face helmet: a glossy shell over the crown and back, with a gold stripe and a chin strap.
+    // An open face helmet: a glossy shell over the crown and back, with a gold stripe.
     part(new THREE.SphereGeometry(0.255, 36, 18, 0, Math.PI * 2, 0, Math.PI * 0.56), HELMET, { finish: "metallic", at: at(0, 0.01, -0.03), rot: [-0.55, 0, 0] }),
     part(torus(0.257, 0.02, 32, 8, Math.PI * 0.62), GOLD, { finish: "metallic", at: at(0, 0.01, -0.03), rot: [0, Math.PI / 2, Math.PI * 0.12] }),
-    part(torus(0.24, 0.014, 32, 6, Math.PI), "#1c1c22", { finish: "leather", at: at(0, -0.04, 0.02), rot: [0.15, Math.PI / 2, Math.PI] }),
   ];
   for (const side of [-1, 1]) {
     // Tall ears through the helmet: orange outside, cream inside, black tips.

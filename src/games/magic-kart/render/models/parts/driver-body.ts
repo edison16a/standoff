@@ -3,7 +3,7 @@ import type { CharacterId } from "../../../characters";
 import { emblemRegion } from "../kit/atlas-layout";
 import { loft } from "../kit/loft";
 import { part } from "../kit/part";
-import { between, capsule, disc, rbox, sphere, torus, tube } from "../kit/shapes";
+import { between, capsule, disc, pipe, rbox, sphere, torus, tube } from "../kit/shapes";
 import { rigged, type Rig } from "./driver-rig";
 import { gloves, steeringWheel } from "./steering";
 
@@ -66,6 +66,8 @@ export function driverBody(rig: Rig, look: SuitLook): THREE.BufferGeometry[] {
     spine.push(part(sphere(0.085 * b, 18, 14), look.suit, { finish: "cloth", at: [shoulder.x, shoulder.y, shoulder.z] }));
     // Racing stripes down each side of the suit.
     spine.push(part(capsule(0.018, top * 0.6, 8), look.trim, { finish: "cloth", at: [side * 0.235 * b, top * 0.5, -0.02] }));
+    // A harness strap from behind the shoulder, over it and down the chest to the buckle.
+    spine.push(part(pipe([[side * 0.11, top + 0.02, -0.16], [side * 0.12, top + 0.07, -0.02], [side * 0.11, top - 0.02, 0.15], [side * 0.08, top * 0.5, 0.17], [side * 0.03, 0.2, 0.16]], 0.02, 24, 6), "#26262c", { finish: "cloth", scale: [b, 1, 1] }));
   }
   const arms: THREE.BufferGeometry[] = [];
   for (const [upperBone, foreBone, side] of [["upperL", "foreL", 1], ["upperR", "foreR", -1]] as const) {
