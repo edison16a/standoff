@@ -1,11 +1,12 @@
 import { units } from "../attributes";
 import { BUILDS, type BuildId } from "../builds";
 import type { TeamId } from "../teams";
-import { isTap } from "./charge";
-import { cycleLength, touchPush } from "./stride";
+import { touchPush } from "./stride";
 import { MOVE, PITCH, TOUCH, BALL } from "./tuning";
 import type { Athlete, Ball } from "./types";
-import { angleDiff, clamp, clampLen, fromAngle, len, v2, type Vec2 } from "./vec";
+import { clamp, fromAngle, len, v2, type Vec2 } from "./vec";
+
+export { brake, integrate, moveAthlete, topSpeed, turnToward } from "./locomotion";
 
 export function makeAthlete(id: number, team: TeamId, slot: number, build: BuildId, seat: number | null): Athlete {
   return {
@@ -48,67 +49,6 @@ export function makeAthlete(id: number, team: TeamId, slot: number, build: Build
 /** Whether a phone is steering this player right now. Otherwise a computer is. */
 export function isHuman(a: Athlete): boolean {
   return a.seat !== null && a.online;
-}
-
-/** Top running speed in metres per second, from the pace rating. */
-export function topSpeed(a: Athlete): number {
-  // Ratings run from about 60 to 99, so that range spans slowest to fastest.
-  const pace = clamp((a.attrs.pace - 0.6) / 0.4, 0, 1);
-  return MOVE.slowest + (MOVE.fastest - MOVE.slowest) * pace;
-}
-
-/** Players stay on the pitch and out of the goals. */
-function keepOnPitch(p: Vec2): void {
-  p.x = clamp(p.x, -PITCH.halfLength + 0.3, PITCH.halfLength - 0.3);
-  p.z = clamp(p.z, -PITCH.halfWidth + 0.35, PITCH.halfWidth - 0.35);
-}
-
-/**
- * Runs toward the wanted direction. Players speed up and turn quickly
- * but not instantly, a little slower with the ball, and the stride cycle
- * follows the distance covered so feet never skate.
- */
-export function moveAthlete(a: Athlete, want: Vec2, dt: number, carrying: boolean): void {
-  let top = topSpeed(a);
-  if (carrying) top *= MOVE.withBall + 0.1 * a.attrs.dribbling;
-  // Winding up a shot slows the run; holding the button to call for the ball does not.
-  if (a.charging && carrying && !isTap(a.charge)) top *= MOVE.charging;
-  const desired = clampLen(want, 1);
-  const dvx = desired.x * top - a.vel.x;
-  const dvz = desired.z * top - a.vel.z;
-  const dv = Math.hypot(dvx, dvz);
-  const max = MOVE.accel * dt;
-  const k = dv > max ? max / dv : 1;
-  a.vel.x += dvx * k;
-  a.vel.z += dvz * k;
-  integrate(a, dt);
-  const speed = len(a.vel);
-  if (speed > 0.35) {
-    const rate = carrying ? MOVE.turnWithBall + 6 * a.attrs.dribbling : MOVE.turnRate;
-    turnToward(a, Math.atan2(a.vel.z, a.vel.x), rate * dt);
-  }
-}
-
-/** Moves by the current velocity, advancing the stride. */
-export function integrate(a: Athlete, dt: number): void {
-  a.pos.x += a.vel.x * dt;
-  a.pos.z += a.vel.z * dt;
-  keepOnPitch(a.pos);
-  const speed = len(a.vel);
-  a.stride += (speed * dt) / cycleLength(speed);
-}
-
-export function turnToward(a: Athlete, angle: number, maxTurn: number): void {
-  const d = angleDiff(a.facing, angle);
-  a.facing += clamp(d, -maxTurn, maxTurn);
-}
-
-/** Slows a player to a stop, for stumbles and getting up. */
-export function brake(a: Athlete, dt: number, rate = 14): void {
-  const k = Math.exp(-rate * dt);
-  a.vel.x *= k;
-  a.vel.z *= k;
-  integrate(a, dt);
 }
 
 /**

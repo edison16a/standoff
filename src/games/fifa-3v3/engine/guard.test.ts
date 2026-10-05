@@ -98,7 +98,8 @@ describe("guard", () => {
         striker.actionLen = 5;
         striker.actionT = 0;
       }
-      hold(state, 0.35, { move: { x: 0, z: 0 }, guard: true });
+      // Most of a second: a body takes a moment to get going, so the guard needs time to show its lag.
+      hold(state, 0.9, { move: { x: 0, z: 0 }, guard: true });
       const me = state.athletes[0]!;
       return dist(me.pos, markSpot(me, striker, GUARD.gap));
     };

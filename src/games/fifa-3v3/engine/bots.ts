@@ -4,6 +4,7 @@ import { goalX, shotAngle, toGoal } from "./goal";
 import { owns } from "./kick";
 import { trySkill } from "./bot-skill";
 import { laneOf } from "./lanes";
+import { RUN, topSpeed } from "./locomotion";
 import { botSkill, sloppiness, thinkScale } from "./difficulty";
 import { choosePassTarget, openness } from "./passing";
 import { autoAimZ } from "./shot-plan";
@@ -45,7 +46,8 @@ function approach(a: Athlete, target: Vec2): Vec2 {
   const to = sub(target, a.pos);
   const d = len(to);
   if (d < 0.25) return STILL;
-  return scale(norm(to), clamp(d / 1.4, 0.25, 1));
+  // No faster than he can still stop in the room left, so momentum never carries him past the spot.
+  return scale(norm(to), clamp(Math.sqrt(2 * RUN.brake * 0.6 * d) / topSpeed(a), 0.25, 1));
 }
 
 /** Toward goal, swerving round defenders in the way and away from the boards. */

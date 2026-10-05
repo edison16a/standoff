@@ -1,4 +1,5 @@
-import { brake, carryBall, isHuman, moveAthlete, separate } from "./athlete";
+import { brake, carryBall, isHuman, moveAthlete } from "./athlete";
+import { collideBodies } from "./contact";
 import { settleNets } from "./ball";
 import { botCommand } from "./bots";
 import { tryControl } from "./control";
@@ -45,7 +46,7 @@ export function playStep(state: MatchState, commands: ReadonlyMap<number, Comman
     followPlay(state, dt);
     settleSetPiece(state, dt);
   }
-  separate(state.athletes);
+  collideBodies(state.athletes);
   checkBall(state);
   if (live && state.phase === "play") runClock(state, dt);
 }
