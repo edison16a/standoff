@@ -30,8 +30,13 @@ export interface KartDesign {
   /** Rough footprint, for the soft shadow. */
   length: number;
   width: number;
-  /** The same kart cut coarser, drawn when it is far from the camera. */
-  far?: { body: THREE.BufferGeometry; driver: THREE.BufferGeometry; wheels: THREE.BufferGeometry[] };
+}
+
+/** The same kart cut coarser, drawn when it is far from the camera. */
+export interface FarCut {
+  body: THREE.BufferGeometry;
+  driver: THREE.BufferGeometry;
+  wheels: THREE.BufferGeometry[];
 }
 
 export interface WheelSpot {

@@ -102,8 +102,7 @@ export function loft(sections: readonly Section[], options: LoftOptions = {}): T
   skin.setIndex(index);
   // Normals are shared all the way round, then the ends get flat caps of their own.
   skin.computeVertexNormals();
-  const body = skin.toNonIndexed();
-  skin.dispose();
+  const body = skin;
   if (!(options.caps ?? true)) return body;
   const caps: number[] = [];
   const vertex = (k: number) => [positions[k * 3]!, positions[k * 3 + 1]!, positions[k * 3 + 2]!];
@@ -123,6 +122,7 @@ export function loft(sections: readonly Section[], options: LoftOptions = {}): T
   }
   const cap = new THREE.BufferGeometry();
   cap.setAttribute("position", new THREE.Float32BufferAttribute(caps, 3));
+  cap.setIndex(Array.from({ length: caps.length / 3 }, (_, i) => i));
   cap.computeVertexNormals();
   const merged = mergeGeometries([body, cap], false);
   body.dispose();

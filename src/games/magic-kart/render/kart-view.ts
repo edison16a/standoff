@@ -44,7 +44,7 @@ export class KartView {
   private readonly footprint: { w: number; l: number };
 
   constructor(readonly kartId: number, kart: Kart, name: string, color: string, extras: KartExtras, scene: THREE.Object3D) {
-    this.model = new KartModel(kart.character);
+    this.model = new KartModel(kart.character, true);
     this.lastHeading = kart.heading;
     const design = kartDesign(kart.character);
     this.shadow = new THREE.Mesh(extras.shadowGeo, extras.shadowFor(kart.character));

@@ -2,7 +2,7 @@ import * as THREE from "three";
 import type { CharacterId } from "../../characters";
 import { poseDriver } from "./driver-pose";
 import { SuspensionMotion } from "./kart-motion";
-import { kartDesign } from "./karts";
+import { farCut, kartDesign } from "./karts";
 import { kartAtlas } from "./kit/atlas";
 import { kartMaterial, type KartMaterial } from "./kit/kart-material";
 import { makeSkeleton, type BoneName } from "./parts/driver-rig";
@@ -53,19 +53,20 @@ export class KartModel {
   private driftLean = 0;
   private heat = 0;
 
-  constructor(readonly character: CharacterId) {
+  /** `far` also builds the coarse cut, for races where karts are seen from afar. */
+  constructor(readonly character: CharacterId, far = false) {
     const design = kartDesign(character);
     this.material = kartMaterial(kartAtlas());
     this.root.add(this.chassis);
     this.chassis.add(this.body);
     const { bones, skeleton } = makeSkeleton(design.rig);
     this.bones = bones;
-    const far = design.far;
-    this.pair(new THREE.Mesh(design.body, this.material), far && new THREE.Mesh(far.body, this.material), this.body);
+    const coarse = far ? farCut(character) : null;
+    this.pair(new THREE.Mesh(design.body, this.material), coarse && new THREE.Mesh(coarse.body, this.material), this.body);
     // Both drivers follow the one skeleton, so either can be shown without posing twice.
     const driver = this.driverMesh(design.driver, skeleton, design.driverAt);
     driver.add(bones.root);
-    this.pair(driver, far && this.driverMesh(far.driver, skeleton, design.driverAt), this.body);
+    this.pair(driver, coarse && this.driverMesh(coarse.driver, skeleton, design.driverAt), this.body);
     design.wheels.forEach((wheel, i) => {
       const pivot = new THREE.Group();
       pivot.position.set(...wheel.at);
@@ -74,8 +75,8 @@ export class KartModel {
       // Wheels are built with the rim facing +x; the left ones turn round to face out.
       spin.rotation.order = "YXZ";
       spin.rotation.y = side < 0 ? Math.PI : 0;
-      const coarse = far?.wheels[i];
-      this.pair(new THREE.Mesh(wheel.geometry, this.material), coarse && new THREE.Mesh(coarse, this.material), spin);
+      const rough = coarse?.wheels[i];
+      this.pair(new THREE.Mesh(wheel.geometry, this.material), rough && new THREE.Mesh(rough, this.material), spin);
       pivot.add(spin);
       this.chassis.add(pivot);
       if (wheel.front) this.steerPivots.push({ pivot, side });
@@ -94,7 +95,7 @@ export class KartModel {
     return mesh;
   }
 
-  private pair(near: THREE.Object3D, far: THREE.Object3D | undefined, parent: THREE.Object3D): void {
+  private pair(near: THREE.Object3D, far: THREE.Object3D | null | undefined, parent: THREE.Object3D): void {
     parent.add(near);
     this.near.push(near);
     if (!far) return;
@@ -152,6 +153,8 @@ export class KartModel {
       this.material.needsUpdate = true;
     }
     this.material.opacity = opacity;
+    // Sticker edges are cut where the texture is clear; scaled with the fade so a faded kart is not cut away whole.
+    this.material.alphaTest = Math.min(0.5, opacity * 0.5);
     // Still writing depth, so a faded kart shows its outside only, not the driver through the bodywork.
     this.material.depthWrite = true;
   }

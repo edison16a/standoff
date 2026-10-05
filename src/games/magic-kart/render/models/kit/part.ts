@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import type { V3 } from "../geo";
 import { atlasUv, WHITE_UV, type Region } from "./atlas-layout";
 import { FINISHES, type Finish } from "./finish";
@@ -31,30 +31,47 @@ const euler = new THREE.Euler();
 const color = new THREE.Color();
 const KEEP = ["position", "normal", "uv"];
 
-/** Moves a shape into place and paints it. Consumes `geo`. */
+/**
+ * Moves a shape into place and paints it. Consumes `geo`. Parts stay
+ * indexed (a plain list of triangles gets an index of its own), so the
+ * corners three.js already shares stay shared in the merged kart.
+ */
 export function part(geo: THREE.BufferGeometry, hex: THREE.ColorRepresentation, look: Look = {}): THREE.BufferGeometry {
-  const g = geo.index ? geo.toNonIndexed() : geo.clone();
+  const g = geo.clone();
   geo.dispose();
   for (const name of Object.keys(g.attributes)) if (!KEEP.includes(name)) g.deleteAttribute(name);
-  if (!g.getAttribute("normal")) g.computeVertexNormals();
   const count = g.getAttribute("position").count;
+  if (!g.index) g.setIndex(Array.from({ length: count }, (_, i) => i));
+  if (!g.getAttribute("normal")) g.computeVertexNormals();
   const uv = new Float32Array(count * 2);
   const own = g.getAttribute("uv");
   if (look.atlas && own) uv.set(own.array as Float32Array);
-  else for (let i = 0; i < count; i++) {
-    const [u, v] = look.region && own ? atlasUv(look.region, own.getX(i), own.getY(i)) : WHITE_UV;
-    uv[i * 2] = u;
-    uv[i * 2 + 1] = v;
+  else if (look.region && own) {
+    for (let i = 0; i < count; i++) {
+      const [u, v] = atlasUv(look.region, own.getX(i), own.getY(i));
+      uv[i * 2] = u;
+      uv[i * 2 + 1] = v;
+    }
+  } else {
+    for (let i = 0; i < count; i++) {
+      uv[i * 2] = WHITE_UV[0];
+      uv[i * 2 + 1] = WHITE_UV[1];
+    }
   }
   g.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
   place(g, look);
   color.set(hex);
   const colors = new Float32Array(count * 3);
   const finish = new Float32Array(count * 4);
-  const f = FINISHES[look.finish ?? "paint"];
+  const [r, m, c, w] = FINISHES[look.finish ?? "paint"];
   for (let i = 0; i < count; i++) {
-    colors.set([color.r, color.g, color.b], i * 3);
-    finish.set(f, i * 4);
+    colors[i * 3] = color.r;
+    colors[i * 3 + 1] = color.g;
+    colors[i * 3 + 2] = color.b;
+    finish[i * 4] = r;
+    finish[i * 4 + 1] = m;
+    finish[i * 4 + 2] = c;
+    finish[i * 4 + 3] = w;
   }
   g.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   g.setAttribute("finish", new THREE.BufferAttribute(finish, 4));
@@ -88,32 +105,25 @@ export function mirrored(parts: THREE.BufferGeometry[]): THREE.BufferGeometry[] 
   return parts.flatMap((p) => {
     const copy = p.clone();
     copy.applyMatrix4(new THREE.Matrix4().makeScale(-1, 1, 1));
-    const attrs = Object.values(copy.attributes) as THREE.BufferAttribute[];
-    for (let i = 0; i < copy.getAttribute("position").count; i += 3) {
-      for (const attr of attrs) {
-        const n = attr.itemSize;
-        for (let k = 0; k < n; k++) {
-          const a = attr.array[(i + 1) * n + k]!;
-          attr.array[(i + 1) * n + k] = attr.array[(i + 2) * n + k]!;
-          attr.array[(i + 2) * n + k] = a;
-        }
-      }
+    // Flipping one axis turns every triangle inside out; swapping two corners turns it back.
+    const index = copy.index!.array;
+    for (let i = 0; i < index.length; i += 3) {
+      const a = index[i + 1]!;
+      index[i + 1] = index[i + 2]!;
+      index[i + 2] = a;
     }
     return [p, copy];
   });
 }
 
 /**
- * Merges parts into one geometry and frees them. Corners that match in
- * every attribute are then shared, so the graphics card shades each one
- * once rather than once for every triangle that touches it.
+ * Merges parts into one indexed geometry and frees them, so the graphics
+ * card shades each shared corner once rather than once per triangle.
  */
 export function mergeParts(parts: THREE.BufferGeometry[]): THREE.BufferGeometry {
-  const joined = mergeGeometries(parts, false);
+  const merged = mergeGeometries(parts, false);
   for (const p of parts) p.dispose();
-  if (!joined) throw new Error("Kart parts did not merge.");
-  const merged = mergeVertices(joined, 1e-5);
-  joined.dispose();
+  if (!merged) throw new Error("Kart parts did not merge.");
   merged.computeBoundingSphere();
   merged.computeBoundingBox();
   return merged;

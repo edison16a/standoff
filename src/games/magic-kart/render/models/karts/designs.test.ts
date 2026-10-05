@@ -1,7 +1,7 @@
 import type * as THREE from "three";
 import { describe, expect, it } from "vitest";
 import { CHARACTER_IDS } from "../../../characters";
-import { kartDesign } from "./index";
+import { farCut, kartDesign } from "./index";
 
 const triangles = (g: THREE.BufferGeometry) => (g.index ? g.index.count : g.getAttribute("position").count) / 3;
 
@@ -14,7 +14,7 @@ describe("kart designs", () => {
   for (const id of CHARACTER_IDS) {
     it(`${id} builds within budget`, () => {
       const d = kartDesign(id);
-      const far = d.far!;
+      const far = farCut(id);
       for (const g of [d.body, d.driver, ...d.wheels.map((w) => w.geometry), far.body, far.driver, ...far.wheels]) {
         for (const name of ["position", "normal", "uv", "color", "finish"]) expect(g.getAttribute(name), name).toBeTruthy();
         expect(g.index, "shared corners").toBeTruthy();
