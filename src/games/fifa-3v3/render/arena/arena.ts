@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { PITCH } from "../../engine/tuning";
-import type { BallView } from "../../engine/view";
+import type { NetsView } from "../../engine/net-view";
 import { TEAMS } from "../../teams";
 import { Boards } from "./boards";
 import { Crowd } from "./crowd";
@@ -91,10 +91,11 @@ export class Arena {
     return group;
   }
 
-  update(ball: BallView, dt: number, time: number): void {
+  update(nets: NetsView, dt: number, time: number): void {
     this.boards.update(dt, time);
     this.crowd.update(dt, time);
-    for (const goal of this.goals) goal.update(ball, dt);
+    this.goals[0].update(nets[0], dt);
+    this.goals[1].update(nets[1], dt);
   }
 
   dispose(): void {

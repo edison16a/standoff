@@ -104,7 +104,10 @@ export class MatchRenderer {
       this.arena.boards.flash(TEAMS[event.team].color);
       this.director.bump(0.6);
     }
-    if (event.type === "woodwork") this.director.bump(0.5);
+    if (event.type === "woodwork") {
+      this.director.bump(0.5);
+      this.arena.goals[event.at.x < 0 ? 0 : 1].ring(event.speed);
+    }
     if (event.type === "kickoff") {
       this.effects.reset();
       this.arena.boards.calm();
@@ -153,7 +156,7 @@ export class MatchRenderer {
     this.referee.update(view.referee, view.ball, dt, time);
     this.aim.update(view.setPiece, time);
     this.ball.update(view.ball, dt);
-    this.arena.update(view.ball, dt, time);
+    this.arena.update(view.nets, dt, time);
     this.arena.crowd.setExcitement(excitement(view));
     this.effects.frame(view, dt, time);
     this.director.update(view, shot, dt, time, focus);

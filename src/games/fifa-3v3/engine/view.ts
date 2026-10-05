@@ -2,6 +2,7 @@ import type { BuildId } from "../builds";
 import type { TeamId } from "../teams";
 import { ceremonyTime } from "./ceremony";
 import { chargeLevel, isTap } from "./charge";
+import { blendNets, netsView, type NetsView } from "./net-view";
 import type { Athlete, AthleteAction, Dive, KeeperAction, MatchState, Phase, SkillKind } from "./types";
 import { angleDiff, len } from "./vec";
 import { blendReferee, foulView, refereeView, setPieceView, type FoulView, type RefereeView, type SetPieceView } from "./view-extra";
@@ -76,6 +77,10 @@ export interface BallView {
   spin: number;
   /** Sidespin about the vertical, which is the curl. */
   curl: number;
+  /** The spin itself about each axis, radians a second, so the ball is drawn turning as it really does. */
+  sx: number;
+  sy: number;
+  sz: number;
   held: boolean;
 }
 
@@ -104,6 +109,7 @@ export interface MatchView {
   foul: FoulView | null;
   shot: ShotView | null;
   ceremony: CeremonyView | null;
+  nets: NetsView;
 }
 
 export function buildView(state: MatchState): MatchView {
@@ -120,7 +126,8 @@ export function buildView(state: MatchState): MatchView {
     clock: state.clock,
     golden: state.golden,
     score: [state.score[0], state.score[1]],
-    ball: { x: b.pos.x, y: b.pos.y, z: b.pos.z, vx: b.vel.x, vy: b.vel.y, vz: b.vel.z, spin: Math.hypot(b.spin.x, b.spin.y, b.spin.z), curl: b.spin.y, held: owner !== null },
+    ball: { x: b.pos.x, y: b.pos.y, z: b.pos.z, vx: b.vel.x, vy: b.vel.y, vz: b.vel.z, spin: Math.hypot(b.spin.x, b.spin.y, b.spin.z), curl: b.spin.y, sx: b.spin.x, sy: b.spin.y, sz: b.spin.z, held: owner !== null },
+    nets: netsView(state),
     athletes: state.athletes.map((a) => ({
       id: a.id,
       team: a.team,
@@ -215,5 +222,6 @@ export function blendViews(a: MatchView, b: MatchView, t: number): MatchView {
       return { ...p, x: mix(from.x, to.x, t), z: mix(from.z, to.z, t), facing: mixAngle(from.facing, to.facing, t), actionT: from.action === to.action ? mix(from.actionT, to.actionT, t) : p.actionT };
     }) as [KeeperView, KeeperView],
     referee: blendReferee(a.referee, b.referee, t),
+    nets: blendNets(a.nets, b.nets, t),
   };
 }

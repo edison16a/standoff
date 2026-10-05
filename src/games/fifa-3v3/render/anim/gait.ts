@@ -115,14 +115,17 @@ export function gait(stride: number, speed: number, dribbling: boolean, ctx: Con
 
 /**
  * The dribble touch: the lead boot's swing finishes on the back of the
- * ball, just as the simulation pushes it on (stride.ts's TOUCH_AT).
+ * ball, just as the simulation pushes it on (stride.ts's TOUCH_AT). At
+ * pace the ball runs a few strides ahead between touches, so the boot
+ * only goes to it on a stride where it is there to be touched.
  */
 function touchBall(f: Frame, stride: number, ctx: Context): void {
   const q = frac(stride);
-  // Rises over the late swing, holds through the touch, and lets go before the foot lands.
-  const w = smooth((q - 0.8) / 0.1) * (1 - smooth((q - TOUCH_AT - 0.02) / 0.04));
-  if (w <= 0) return;
   const { ball, build: b, lead } = ctx;
+  const there = 1 - smooth((Math.hypot(ball.x, ball.z) - 0.6 * b.s) / (0.25 * b.s));
+  // Rises over the late swing, holds through the touch, and lets go before the foot lands.
+  const w = there * smooth((q - 0.8) / 0.1) * (1 - smooth((q - TOUCH_AT - 0.02) / 0.04));
+  if (w <= 0) return;
   // The instep meets the ball from behind and a touch inside.
   const at: Foot = { x: ball.x + lead * 0.05 * b.s, y: b.ground + 0.03 * b.s, z: ball.z - BALL.radius - 0.09 * b.s, toe: 0.25 };
   steer(f, lead, at, w);
