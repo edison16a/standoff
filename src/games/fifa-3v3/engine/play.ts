@@ -1,4 +1,5 @@
 import { brake, carryBall, isHuman, moveAthlete } from "./athlete";
+import { rise, tryAerial } from "./aerial";
 import { collideBodies } from "./contact";
 import { dribble, dribbleSteer } from "./dribble";
 import { settleNets } from "./ball";
@@ -55,7 +56,8 @@ export function playStep(state: MatchState, commands: ReadonlyMap<number, Comman
   updateFlight(state, dt);
   // A foul given this step stops play at once: nobody may pick the dead ball up.
   if (state.phase === "play") {
-    tryControl(state);
+    rise(state);
+    if (!tryAerial(state)) tryControl(state);
     challenges(state, dt);
     followPlay(state, dt);
     settleSetPiece(state, dt);
@@ -97,7 +99,12 @@ function updateAction(state: MatchState, a: Athlete, c: Command, dt: number): vo
       moveAthlete(a, c.move, dt, has);
       return;
     case "jump":
+    case "header":
       updateJump(a, dt);
+      break;
+    case "chest":
+      // Cushioning it: he goes on, more slowly, while it drops to his feet.
+      moveAthlete(a, scale(c.move, 0.4), dt, has);
       break;
     case "steal":
       updateSteal(state, a, before, dt);

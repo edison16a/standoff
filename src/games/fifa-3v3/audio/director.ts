@@ -69,7 +69,11 @@ export class SoundDirector {
         else this.sfx.pass();
         break;
       case "shot":
-        this.sfx.kick(event.power);
+        // A headed shot already sounded as the header.
+        if (!event.header) this.sfx.kick(event.power);
+        break;
+      case "header":
+        this.sfx.block(event.speed * 0.6);
         break;
       case "goal": {
         this.sfx.horn();

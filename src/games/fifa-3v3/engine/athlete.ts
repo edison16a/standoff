@@ -95,7 +95,7 @@ export function footPoint(a: Athlete): Vec2 {
 
 /** Whether a player is on their feet and able to play the ball. */
 export function canPlay(a: Athlete): boolean {
-  return a.action === "free" || a.action === "shoot" || a.action === "pass" || a.action === "hurdle";
+  return a.action === "free" || a.action === "shoot" || a.action === "pass" || a.action === "hurdle" || a.action === "header";
 }
 
 /**

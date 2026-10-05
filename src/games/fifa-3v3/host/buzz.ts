@@ -18,6 +18,7 @@ export function buzzFor(event: MatchEvent, state: MatchState): [number, BuzzKind
     case "shot":
       return one(event.athlete, "kick");
     case "pass":
+    case "header":
       return one(event.athlete, "pass");
     case "control":
       return one(event.athlete, "ball");

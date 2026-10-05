@@ -4,7 +4,7 @@ import { shotSpread } from "./charge";
 import { strikePace } from "./build-effects";
 import { goalX, toGoal } from "./goal";
 import { planDive, screened } from "./keeper-read";
-import { solveKick } from "./shot-aim";
+import { solveKick, type Kick } from "./shot-aim";
 import { chargeDown } from "./shot-block";
 import { applyError, strikeError } from "./shot-error";
 import { autoAimZ, autoCurl, redness, shotHeight } from "./shot-plan";
@@ -57,11 +57,23 @@ export function strike(state: MatchState, a: Athlete): void {
     );
     kick = applyError(kick, error);
   }
+  sendShot(state, a, kick, target, { rigged, distance, header: false });
+}
+
+/**
+ * The ball leaves the boot (or the head) as a shot: its flight starts,
+ * defenders in its path throw themselves in, the keeper reads it, and
+ * the strike counts in the stats.
+ */
+export function sendShot(state: MatchState, a: Athlete, kick: Kick, target: Vec3, o: { rigged: boolean; distance: number; header: boolean }): void {
+  const ball = state.ball;
+  const keeper = state.keepers[other(a.team)];
+  const from = { ...ball.pos };
   ball.owner = null;
   ball.vel = kick.vel;
   ball.spin = kick.spin;
   // Struck hard with hardly any spin, the ball knuckles: its swing is set here, from the dice.
-  ball.wobble = Math.hypot(kick.spin.x, kick.spin.y, kick.spin.z) < 4 && speed > 20 ? rng.range(0.1, Math.PI * 2) : 0;
+  ball.wobble = Math.hypot(kick.spin.x, kick.spin.y, kick.spin.z) < 4 && len(kick.vel) > 20 ? state.rng.range(0.1, Math.PI * 2) : 0;
   ball.travel = 0;
   ball.lastTouch = { team: a.team, id: a.id };
   ball.struckAt = state.time;
@@ -70,9 +82,9 @@ export function strike(state: MatchState, a: Athlete): void {
   a.stats.shots++;
   state.shotCount++;
   state.flight = { shooter: a.id, team: a.team, outcome: null, t: 0, target, keeperX: keeper.pos.x, power: a.power, resolved: false, blocker: null };
-  if (!rigged) state.flight.blocker = chargeDown(state, a, from, kick, target.x);
+  if (!o.rigged) state.flight.blocker = chargeDown(state, a, from, kick, target.x);
   // Through a crowd the keeper sees the strike late and reads it worse.
   const unsighted = screened(state, keeper, a.team);
-  planDive(state, keeper, rigged ? { short: true } : unsighted ? { misread: 0.25, react: 0.3 } : { windup: true });
-  state.events.push({ type: "shot", athlete: a.id, team: a.team, power: a.power, distance });
+  planDive(state, keeper, o.rigged ? { short: true } : unsighted ? { misread: 0.25, react: 0.3 } : { windup: true });
+  state.events.push({ type: "shot", athlete: a.id, team: a.team, power: a.power, distance: o.distance, ...(o.header ? { header: true } : {}) });
 }

@@ -34,7 +34,8 @@ export const JUMP = {
 
 /** Height of a jumping player's boots, 0 before and after. */
 export function jumpHeight(a: Pick<Athlete, "action" | "actionT" | "actionLen">): number {
-  if (a.action !== "jump" || a.actionT <= 0) return 0;
+  const leap = a.action === "jump" || (a.action === "header" && a.actionLen > 0.5);
+  if (!leap || a.actionT <= 0) return 0;
   const u = clamp(a.actionT / a.actionLen, 0, 1);
   return 4 * JUMP.height * u * (1 - u);
 }

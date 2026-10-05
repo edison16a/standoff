@@ -135,10 +135,11 @@ export function touch(state: MatchState, a: Athlete, kind: TouchKind): void {
   a.touchStride = a.stride;
   a.touchCool = DRIBBLE.cool;
   ball.lastTouch = { team: a.team, id: a.id };
-  ball.pos.y = BALL.radius;
+  // A ball still bouncing is touched down onto the turf, never lifted; it lands on its own.
+  const vy = ball.pos.y > BALL.radius + 0.03 ? Math.min(0, ball.vel.y) : 0;
   if (kind === "stop") {
     // Under the sole: the ball stops with the body.
-    ball.vel = { x: a.vel.x * 0.85, y: 0, z: a.vel.z * 0.85 };
+    ball.vel = { x: a.vel.x * 0.85, y: vy, z: a.vel.z * 0.85 };
     ball.spin = rollingSpin(ball.vel);
     return;
   }
@@ -167,6 +168,6 @@ export function touch(state: MatchState, a: Athlete, kind: TouchKind): void {
   const spread = (DRIBBLE.clean + (DRIBBLE.sloppy - DRIBBLE.clean) * (1 - a.attrs.dribbling)) * (0.4 + pace / top) * (kind === "turn" ? 1.5 : 1) + 0.04 * a.shove;
   const angle = Math.atan2(dz, dx) + rng.gauss() * spread;
   v0 *= 1 + rng.gauss() * spread * 0.8;
-  ball.vel = { x: Math.cos(angle) * v0, y: 0, z: Math.sin(angle) * v0 };
+  ball.vel = { x: Math.cos(angle) * v0, y: vy, z: Math.sin(angle) * v0 };
   ball.spin = rollingSpin(ball.vel);
 }

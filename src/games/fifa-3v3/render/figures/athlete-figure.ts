@@ -3,6 +3,7 @@ import { shotWindup } from "../../engine/kick";
 import { PASS } from "../../engine/tuning";
 import type { AthleteView, BallView } from "../../engine/view";
 import type { Kit } from "../../looks";
+import { chestPose, headerPose } from "../anim/aerial-poses";
 import { celebration, cheer, dejected } from "../anim/celebrations";
 import { guardStance, jumpPose, stealPose, wallPose } from "../anim/defend-poses";
 import { smooth, type Context, type Frame } from "../anim/frame";
@@ -19,7 +20,7 @@ import { figureOf, type FigureSpec } from "./figure-spec";
 import { keepAboveTurf } from "./turf";
 
 /** How long a new move takes to blend in: kicks and tackles snap in, the rest ease. */
-const QUICK = new Set(["shoot", "pass", "slide", "stumble", "skill", "beaten", "jump", "steal"]);
+const QUICK = new Set(["shoot", "pass", "slide", "stumble", "skill", "beaten", "jump", "steal", "header", "chest"]);
 
 /**
  * One footballer on the pitch: their body in the team's kit, their own
@@ -130,6 +131,10 @@ export class AthleteFigure {
         return fk(jumpPose(v.actionT, v.actionLen, v.wall));
       case "steal":
         return fk(stealPose(v.actionT, this.lead));
+      case "header":
+        return fk(headerPose(v.actionT, v.actionLen));
+      case "chest":
+        return fk(chestPose(v.actionT, v.actionLen));
       case "shoot":
         return shotFrame(v.actionT, this.windup(v), v.power, ctx);
       case "pass":

@@ -19,7 +19,11 @@ export type AthleteAction =
   /** Off the ground to block a shot or a pass, or a free kick wall leaping as it is struck. */
   | "jump"
   /** A standing poke at the dribbler's ball. */
-  | "steal";
+  | "steal"
+  /** Heading the ball: a nod where he stands, or a leap to meet it (longer than half a second). */
+  | "header"
+  /** Bringing a dropping ball down on the chest. */
+  | "chest";
 
 /**
  * The skill moves, picked by the stick against the goal the player
