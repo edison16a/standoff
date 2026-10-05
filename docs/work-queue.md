@@ -15,6 +15,7 @@ The running list of what is being built, so work can pick up again after a break
 | Work | Workflow | State |
 | --- | --- | --- |
 | Quality pass, game by game: Magic Kart detailed karts and double item boxes with a two item queue; Basketball, Soccer and Football realistic ball and body physics, athlete graphics and animation, venue, lighting and camera; each chain reviewed in the browser. Resume with scratchpad/quality-pass.js if it stops | wf_4825b851-f89 | building |
+| Basketball is the owner's top priority: FIBA style two tone ball (reference scratchpad/quality/nba-3v3/ref-ball.webp) with visible spin, charges and blocking fouls by contact, clean low drives, clean stepbacks and floaters, accurate defense like NBA 2K. Sent to the Basketball physics builder; after the chain, run a dedicated Basketball feel pass if anything is still short | wf_4825b851-f89 | building |
 
 All final builds are on main: cover icons, sports phone controls, Paintball Battle controls, Subway camera still, 1.2x tiles, final README. Final check done and on main (503ea5b): every game played end to end except the live site, which this machine's browser cannot reach (certificate block). Part 1 fixes: Soccer feet, Kart, Brawl, Blade Clash, Zombie and Gallery rejoin, phone download retry.
 
