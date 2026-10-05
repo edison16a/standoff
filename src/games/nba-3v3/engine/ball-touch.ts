@@ -8,7 +8,7 @@ import { BALL } from "./physics/ball-spec";
 import type { TouchHook } from "./physics/world";
 import { between } from "./rng";
 import { gainPossession, missShot } from "./rules";
-import { PASS, RIM } from "./tuning";
+import { COURT, PASS, RIM } from "./tuning";
 import type { Athlete } from "./types";
 import { clamp } from "./vec";
 
@@ -71,13 +71,14 @@ export function blockHook(m: Match): TouchHook | undefined {
  * any hit, keeping a little of its own speed reversed.
  */
 export function swat(m: Match, body: BallBody): void {
-  const away = { x: body.pos.x - RIM.x, z: body.pos.z - RIM.z };
+  // Back off the shooter's line and into the floor more often than into the stands: toward the middle of the half court.
+  const away = { x: COURT.check.x * 0.3 - body.pos.x * 0.6, z: (RIM.z + COURT.check.z) / 2 - body.pos.z };
   const l = Math.hypot(away.x, away.z) || 1;
   const side = between(m.rng, -0.8, 0.8);
-  const speed = between(m.rng, 1.5, 3.8);
+  const speed = between(m.rng, 1.2, 3.4);
   const hand = { x: ((away.x - side * away.z) / l) * speed, y: between(m.rng, -1.8, 1.4), z: ((away.z + side * away.x) / l) * speed };
   const v = body.vel;
-  const e = 0.2;
+  const e = 0.15;
   body.vel = { x: hand.x + (hand.x - v.x) * e, y: hand.y + (hand.y - v.y) * e, z: hand.z + (hand.z - v.z) * e };
   body.w = { x: body.w.x * 0.3 + between(m.rng, -12, 12), y: between(m.rng, -6, 6), z: body.w.z * 0.3 + between(m.rng, -12, 12) };
 }
