@@ -3,7 +3,7 @@ import { goalCentre, goalX, shotAngle, toGoal } from "./goal";
 import { planDive } from "./keeper";
 import { needsAir, type KickPlan } from "./assist";
 import { leadShare, passError, passZip, strikePace } from "./build-effects";
-import { leadFor, loftVelocity, passVelocity } from "./passing";
+import { leadFor, loftVelocity, passVelocity, rollingSpin } from "./passing";
 import { shotSpread } from "./charge";
 import { aimPoint, solveKick } from "./shot-aim";
 import { planBlock, throwBodyIn } from "./shot-block";
@@ -167,7 +167,7 @@ function kickPass(state: MatchState, a: Athlete): void {
     ball.spin = { x: -a.actionDir.z * 6, y: 0, z: a.actionDir.x * 6 };
   } else {
     ball.vel = passVelocity(ball.pos, to, PASS.arrive * passZip(a));
-    ball.spin = { x: 0, y: 0, z: 0 };
+    ball.spin = rollingSpin(ball.vel);
   }
   ball.lastTouch = { team: a.team, id: a.id };
   ball.passTo = receiver?.id ?? null;

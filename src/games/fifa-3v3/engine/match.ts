@@ -1,7 +1,8 @@
 import type { BuildId } from "../builds";
 import type { TeamId } from "../teams";
 import { makeAthlete } from "./athlete";
-import { newBall } from "./ball";
+import { newBall, settleNets } from "./ball";
+import { newNets } from "./physics/net";
 import { celebrateGoal, celebrateWin, goalPhaseLength } from "./celebrate";
 import { CEREMONY, stageCeremony, stepCeremony } from "./ceremony";
 import { makeKeeper } from "./keeper";
@@ -46,6 +47,7 @@ export function createMatch(entrants: readonly Entrant[], options: Partial<Match
     athletes,
     keepers: [makeKeeper(0), makeKeeper(1)],
     ball: newBall(),
+    nets: newNets(),
     flight: null,
     winner: null,
     lastGoal: null,
@@ -72,6 +74,8 @@ export function stepMatch(state: MatchState, commands: ReadonlyMap<number, Comma
   state.events = [];
   state.time += dt;
   state.phaseT += dt;
+  // The nets keep swinging back while nobody is playing the ball.
+  if (state.phase !== "play" && state.phase !== "restart" && state.phase !== "goal" && state.phase !== "fulltime") settleNets(state.nets, dt);
   switch (state.phase) {
     case "kickoff":
       for (const k of state.keepers) updateKeeper(state, k, dt);

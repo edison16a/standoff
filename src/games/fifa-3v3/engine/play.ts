@@ -1,6 +1,6 @@
 import { other } from "../teams";
 import { brake, carryBall, isHuman, moveAthlete, separate } from "./athlete";
-import { stepBall, type Contact } from "./ball";
+import { settleNets, stepBall, type Contact } from "./ball";
 import { botCommand } from "./bots";
 import { tryControl } from "./control";
 import { goalX, outAt, scoredIn } from "./goal";
@@ -37,6 +37,7 @@ export function playStep(state: MatchState, commands: ReadonlyMap<number, Comman
     const carrier = state.athletes[owner.id]!;
     if (carrier.action !== "skill") carryBall(carrier, ball, dt);
   } else if (!owner) stepLooseBall(state, dt);
+  if (owner) settleNets(state.nets, dt);
   for (const k of state.keepers) updateKeeper(state, k, dt);
   if (owner?.kind === "keeper") ball.heldFor += dt;
   updateFlight(state, dt);
@@ -68,7 +69,7 @@ function settleSetPiece(state: MatchState, dt: number): void {
 /** Moves a loose ball and turns what it hits into events. */
 export function stepLooseBall(state: MatchState, dt: number): void {
   const contacts: Contact[] = [];
-  stepBall(state.ball, dt, contacts);
+  stepBall(state.ball, dt, contacts, { nets: state.nets });
   for (const c of contacts) {
     if (c.type === "post" || c.type === "bar") {
       state.events.push({ type: "woodwork", part: c.type, speed: c.speed, at: c.at });
@@ -161,9 +162,9 @@ function updateFlight(state: MatchState, dt: number): void {
 
 function checkBall(state: MatchState): void {
   if (state.phase !== "play" && state.phase !== "restart") return;
-  const inGoal = scoredIn(state.ball);
+  const inGoal = scoredIn(state.ball, state.nets);
   if (inGoal !== null && state.ball.inGoal === null && state.phase === "play") return onGoal(state, inGoal);
-  const out = outAt(state.ball);
+  const out = outAt(state.ball, state.nets);
   if (out !== null && state.phase === "play") onOut(state, out);
 }
 

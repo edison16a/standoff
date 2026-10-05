@@ -36,22 +36,9 @@ export const PITCH = {
 } as const;
 
 export const BALL = {
+  /** 22 cm across: the physics in physics/ has the rest of the ball. */
   radius: 0.11,
   gravity: 9.81,
-  /** Air drag per metre travelled, so hard shots lose some pace. */
-  drag: 0.009,
-  /** Sideways swerve from spin, the curl on a finesse shot. */
-  magnus: 0.011,
-  /** How much a bounce off the turf keeps. */
-  bounce: 0.52,
-  /** How much of the slip between the ball's surface and the turf a bounce takes out. */
-  grip: 0.14,
-  /** Slowing of a rolling ball on the turf, metres per second squared. */
-  roll: 1.9,
-  boardBounce: 0.62,
-  netBounce: 0.18,
-  postBounce: 0.68,
-  substeps: 4,
 } as const;
 
 export const MOVE = {
