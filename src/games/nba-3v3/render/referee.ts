@@ -35,7 +35,7 @@ const SHOOTING: Keys = [
 ];
 
 /** Both hands on the hips, elbows out. */
-const HIPS: PosePatch = { armLRaise: -0.15, armLSpread: 0.75, armLTwist: 1.2, elbowL: 1.7, armRRaise: -0.15, armRSpread: 0.75, armRTwist: 1.2, elbowR: 1.7, torsoX: -0.02 };
+const HIPS: PosePatch = { armLRaise: -0.3, armLSpread: 0.85, armLTwist: -1.0, elbowL: 1.4, armRRaise: -0.3, armRSpread: 0.85, armRTwist: -0.15, elbowR: 1.4, torsoX: -0.02 };
 
 /** A blocking foul: fist up, both hands on the hips, then the arm held up for the shots. */
 const BLOCK: Keys = [
