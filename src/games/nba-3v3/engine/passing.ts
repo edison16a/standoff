@@ -1,6 +1,6 @@
 import { buildOf } from "./athlete";
 import { passLead, passSpeedScale } from "./build-effects";
-import { clampToCourt } from "./court";
+import { clampToCourt, RIM_SPOT } from "./court";
 import type { Match } from "./match";
 import { aimThrough, aimTimed, backspin } from "./physics/aim";
 import { normal } from "./shot-error";
@@ -62,12 +62,23 @@ export function throwPass(m: Match, a: Athlete, target: Athlete): void {
   a.yaw = yawOf(target.x - a.x, target.z - a.z);
   const from = { x: a.x + Math.sin(a.yaw) * 0.35, y: a.y + buildOf(a).body.height * 0.6, z: a.z + Math.cos(a.yaw) * 0.35 };
   const d = dist2(a, target);
-  const lob = laneBlocked(m, a, target) && d > 3;
   const passing = buildOf(a).stats.passing;
-  const speed = (lob ? PASS.lobSpeed : PASS.speed) * passSpeedScale(passing);
-  const time = Math.max(0.14, d / speed);
-  const ahead = time * passLead(passing);
-  const lead = clampToCourt({ x: target.x + target.vx * ahead, z: target.z + target.vz * ahead }, 0.4);
+  // Where the pass goes: ahead of a runner by how long it flies, which a good passer judges better.
+  const plan = (lob: boolean) => {
+    const time = Math.max(0.14, d / ((lob ? PASS.lobSpeed : PASS.speed) * passSpeedScale(passing)));
+    const ahead = time * passLead(passing);
+    return { time, lead: clampToCourt({ x: target.x + target.vx * ahead, z: target.z + target.vz * ahead }, 0.4) };
+  };
+  const nearHoop = (p: V2) => segmentDistance(RIM_SPOT, a, p).d < 1.5;
+  let lob = laneBlocked(m, a, target) && d > 3;
+  let { time, lead } = plan(lob);
+  // Never lobbed across the hoop, where the ball would meet the iron or the glass: hard and flat under it instead.
+  if (lob && nearHoop(lead)) {
+    lob = false;
+    ({ time, lead } = plan(false));
+  }
+  // The arc of a pass in the air for t seconds rises g t^2 / 8 over the line; near the hoop it stays below the glass.
+  if (nearHoop(lead)) time = Math.max(0.14, Math.min(time, Math.sqrt((8 * Math.max(0.3, 2.55 - from.y)) / 9.81)));
   const off = (0.05 + (10 - passing) * 0.012 + (openness(m, a) < 1.2 ? 0.05 : 0)) * (lob ? 1.5 : 1);
   const to = { x: lead.x + normal(m.rng) * off, y: buildOf(target).body.height * 0.62 + normal(m.rng) * off * 0.5, z: lead.z + normal(m.rng) * off };
   const spin = backspin(from, to, lob ? 9 : 14);

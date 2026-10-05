@@ -31,7 +31,7 @@ function arm(a: Athlete): { x: number; y: number; z: number; reach: number } {
 /** The chance a hand that gets there blocks it: the timing of the jump, the length of the arms and the defence rating. */
 function touchChance(d: Athlete, kind: "jumper" | "layup"): number {
   const long = extraReach(d);
-  const base = kind === "jumper" ? 0.19 + long * 0.25 : 0.3 + long * 0.25;
+  const base = kind === "jumper" ? 0.1 + long * 0.2 : 0.3 + long * 0.25;
   return clamp(base * (0.3 + 0.7 * blockTiming(d)) * contestScale(buildOf(d).stats.defence), 0.03, 0.62);
 }
 
@@ -87,7 +87,7 @@ export function swat(m: Match, body: BallBody): void {
 export function passCaught(m: Match): boolean {
   const b = m.ball;
   const receiver = b.passTo === null ? null : m.athletes[b.passTo];
-  if (receiver && receiver.action.kind !== "drive" && inHands(receiver, b.pos, 0.62)) {
+  if (receiver && receiver.action.kind !== "drive" && inHands(receiver, b.pos, 0.75)) {
     gainPossession(m, receiver);
     receiver.dribble = 0;
     m.emit({ type: "catch", id: receiver.id });
