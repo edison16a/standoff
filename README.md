@@ -1,14 +1,59 @@
-# Standoff
+<p align="center">
+  <img src="assets/brand/standoff-logo.svg" alt="Standoff logo" width="72" />
+</p>
 
-**Standoff turns any computer into a games console, and every phone in the room into a controller.**
+<h1 align="center">Standoff</h1>
+
+<p align="center">
+  Standoff turns any computer into a games console, and every phone in the room into a controller.<br />
+  <a href="https://standoffgames.vercel.app"><b>standoffgames.vercel.app</b></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/license-all%20rights%20reserved-9b45f0" alt="License: all rights reserved" />
+  <img src="https://img.shields.io/badge/node-%3E%3D20.9-9b45f0" alt="Node 20.9 or newer" />
+  <img src="https://img.shields.io/badge/platforms-web%2C%20iOS%2C%20Android-9b45f0" alt="Platforms: web, iOS and Android" />
+</p>
+
+## Screenshots
+
+<img src="docs/screenshots/home.jpg" alt="The Standoff home screen in dark mode, with Magic Kart chosen in the row of game tiles and its race clip playing behind" width="100%" />
+
+<table>
+  <tr>
+    <td width="50%" align="center"><img src="docs/screenshots/magic-kart.jpg" alt="Four karts gliding under their wings above the Star Ring road" width="100%" /><br /><sub><b>Magic Kart</b></sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/fruit-ninja.jpg" alt="A lightning blade bursting a giant melon beside a glowing dragonfruit on the wooden board" width="100%" /><br /><sub><b>Fruit Slicer</b></sub></td>
+  </tr>
+  <tr>
+    <td width="50%" align="center"><img src="docs/screenshots/zombie-survival.jpg" alt="The team firing from the back of a truck at zombies in a night street" width="100%" /><br /><sub><b>Zombie Survival</b></sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/shooting-gallery.jpg" alt="A BB gun and lasers aimed at rubber ducks and a bullseye in the fairground booth" width="100%" /><br /><sub><b>Shooting Gallery</b></sub></td>
+  </tr>
+  <tr>
+    <td width="50%" align="center"><img src="docs/screenshots/boxing.jpg" alt="A boxer landing a jab under the lights of the ring" width="100%" /><br /><sub><b>Boxing</b></sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/subway-surfers.jpg" alt="The runner jumping over the tracks with the inspector and his dog behind" width="100%" /><br /><sub><b>Subway Runner</b></sub></td>
+  </tr>
+  <tr>
+    <td width="50%" align="center"><img src="docs/screenshots/nba-3v3.jpg" alt="A dunk at the rim in the Basketball 3v3 arena" width="100%" /><br /><sub><b>Basketball 3v3</b></sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/fifa-3v3.jpg" alt="A striker shooting past a sliding defender toward the keeper" width="100%" /><br /><sub><b>Soccer 3v3</b></sub></td>
+  </tr>
+  <tr>
+    <td width="50%" align="center"><img src="docs/screenshots/football-3v3.jpg" alt="A diving tackle at the goal line in Football 3v3" width="100%" /><br /><sub><b>Football 3v3</b></sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/cube-game.jpg" alt="The UFO flying through a green portal in a neon city level" width="100%" /><br /><sub><b>Cube Game</b></sub></td>
+  </tr>
+  <tr>
+    <td width="50%" align="center"><img src="docs/screenshots/blade-clash.jpg" alt="The Knight and the Star Knight throwing sparks as their blades clash in the arena" width="100%" /><br /><sub><b>Blade Clash</b></sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/brawl-battle.jpg" alt="The Samurai leaping over the Bear and Karate on the Floating Temple at sunset" width="100%" /><br /><sub><b>Brawl Battle</b></sub></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><img src="docs/screenshots/counter-battle.jpg" alt="Two paintball players trading shots across a bunker, one splattered in pink paint" width="50%" /><br /><sub><b>Paintball Battle</b></sub></td>
+  </tr>
+</table>
+
+## About
 
 Open it on a laptop or a TV. Everyone scans the QR code, types a name, and plays. There is nothing to install and no account to make. Race karts by turning your phone like a wheel. Swing it like a sword. Aim it like a paint marker. Or put the phone down, step in front of the camera and box with your own fists. Up to six friends, thirteen games, one big screen.
 
-**Play it now at [standoffgames.vercel.app](https://standoffgames.vercel.app).**
-
 I loved the Wii, the PS5 and the Xbox, but there were never enough controllers, and I can't bring my Xbox everywhere. Everyone already carries a phone full of motion sensors, and almost every laptop has a camera. Standoff puts them to work.
-
-<img src="docs/screenshots/home.jpg" alt="The Standoff home screen in dark mode, with Magic Kart chosen in the row of game tiles and its race clip playing behind" width="100%" />
 
 The home screen works like a console menu. Big tiles show each game, and the chosen one grows and gets a ring in its own colour. A clip of the game really being played fills the screen behind it, with a warm lobby tune and menu sounds. Arrow keys, clicks or taps move along the row, and it loops round like a carousel.
 
