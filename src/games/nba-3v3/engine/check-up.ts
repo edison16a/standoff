@@ -182,6 +182,6 @@ export function stepCheckBall(m: Match, dt: number): boolean {
     return true;
   }
   if (m.phase !== "check") return false;
-  holdAtChest(m);
+  holdAtChest(m, dt);
   return true;
 }

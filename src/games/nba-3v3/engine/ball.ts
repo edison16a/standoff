@@ -1,4 +1,5 @@
 import { buildOf, standingReach } from "./athlete";
+import { carry } from "./ball-carry";
 import { freeBall } from "./ball-flight";
 import { dribbleBall } from "./dribble-ball";
 import type { Match } from "./match";
@@ -39,14 +40,4 @@ function holdBall(m: Match, dt: number): void {
   const fwd = act.kind === "shoot" ? 0.2 : 0.3;
   const to = { x: a.x + Math.sin(a.yaw) * fwd, y: a.y + lerp(h * 0.62, top, lift), z: a.z + Math.cos(a.yaw) * fwd };
   carry(m, to, dt);
-}
-
-/** Moves the ball with the hands to `to`, its velocity the hands' own and its spin held still. */
-export function carry(m: Match, to: { x: number; y: number; z: number }, dt: number): void {
-  const b = m.ball;
-  const k = dt > 0 ? 1 / dt : 0;
-  b.vel = { x: (to.x - b.pos.x) * k, y: (to.y - b.pos.y) * k, z: (to.z - b.pos.z) * k };
-  b.pos = { ...to };
-  b.w = { x: 0, y: 0, z: 0 };
-  b.hand = "held";
 }

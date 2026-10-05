@@ -22,6 +22,7 @@ function tally(seeds: readonly number[]): Tally {
         if (e.type === "score") add("points", e.points);
         if (e.type === "block") add(`block_${m.ball.shot?.kind ?? "?"}`);
         if (e.type === "violation") add(`violation_${e.reason}`);
+        if (e.type === "fumble" && e.by === null) add("lostDribble");
         for (const k of ["pass", "catch", "intercept", "steal", "foul", "rebound", "fumble", "knockdown"] as const) if (e.type === k) add(k);
       }
     }
