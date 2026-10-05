@@ -24,6 +24,7 @@ export type Finish =
   | "lamp"
   | "neon"
   | "heat"
+  | "core"
   | "brake"
   | "head";
 
@@ -62,6 +63,8 @@ export const FINISHES: Record<Finish, readonly [number, number, number, number]>
   lamp: [0.2, 0, 1, packGlow(2.4)],
   neon: [0.3, 0, 0, packGlow(3.2)],
   heat: [0.35, 0.6, 0, packGlow(4, "heat")],
+  // Dark metal at rest that burns bright on boost: inside exhaust tips and the turbine.
+  core: [0.4, 0.5, 0, packGlow(12, "heat")],
   brake: [0.18, 0, 1, packGlow(3, "brake")],
   head: [0.15, 0, 1, packGlow(2.6, "head")],
 };

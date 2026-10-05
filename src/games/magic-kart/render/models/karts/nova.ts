@@ -48,7 +48,7 @@ export function buildNova(): KartDesign {
     part(lathe([[0.27, 0], [0.33, 0.06], [0.35, 0.2], [0.34, 0.4], [0.29, 0.5]], 40), WHITE, { finish: "pearl", at: [0, 0.62, -1.3], rot: [-Math.PI / 2, 0, 0] }),
     part(torus(0.3, 0.025, 40, 8), "#e8ecf4", { finish: "chrome", at: [0, 0.62, -1.8] }),
     part(disc(0.27, 36), NAVY, { finish: "gunmetal", at: [0, 0.62, -1.74], rot: [0, Math.PI, 0] }),
-    part(disc(0.15, 28), NEON, { finish: "heat", at: [0, 0.62, -1.76], rot: [0, Math.PI, 0] }),
+    part(disc(0.15, 28), "#1e6a8c", { finish: "core", at: [0, 0.62, -1.76], rot: [0, Math.PI, 0] }),
     part(torus(0.2, 0.012, 32, 6), NEON, { finish: "neon", at: [0, 0.62, -1.765] }),
     ...numberPlate("nova", [0, 0.32, -1.5], [0.15, Math.PI, 0], 0.3),
     part(rbox(0.7, 0.035, 0.03, 0.012), "#ffffff", { finish: "brake", region: REGIONS.tail, at: [0, 0.42, -1.43] }),

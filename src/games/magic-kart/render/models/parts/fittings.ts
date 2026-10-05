@@ -32,7 +32,7 @@ export function exhaust(points: readonly V3[], r: number): THREE.BufferGeometry[
     body,
     part(turned(tube(r * 1.25, r * 1.1, 0.1, 18, true), 0.03), "#eef0f5", { finish: "chrome" }),
     part(turned(torus(r * 1.18, r * 0.12, 18, 6).rotateX(Math.PI / 2), 0.08), "#f4f4f8", { finish: "chrome" }),
-    part(turned(tube(r * 0.95, r * 0.95, 0.01, 16), 0.04), "#ff7a1a", { finish: "heat" }),
+    part(turned(tube(r * 0.95, r * 0.95, 0.01, 16), 0.04), "#7a3410", { finish: "core" }),
   ];
 }
 
