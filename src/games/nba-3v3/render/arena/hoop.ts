@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { BOARD, RIM } from "../../engine/tuning";
+import type { Athlete } from "../../engine/types";
 import { Net } from "./net";
+import { RimSpring } from "./rim-spring";
 
 const PAD = "#1d4ed8";
 const STEEL = "#20242e";
@@ -17,17 +19,23 @@ function mesh(geo: THREE.BufferGeometry, mat: THREE.Material, x: number, y: numb
  * The basket: a padded stanchion behind the baseline, the arm out to a
  * glass backboard with its frame, square and edge lights, the orange rim
  * on its bracket, the net, and the shot clock box on top showing the
- * real seconds. The rim shakes when it is hit or dunked on.
+ * real seconds. The ring is hinged at the bracket on a spring: it dips
+ * and rings when the ball hits it, bends down while a dunker hangs on
+ * it, and the net hangs from it as cloth.
  */
 export class Hoop {
   readonly group = new THREE.Group();
   readonly net = new Net();
+  /** The hinge at the bracket the ring flexes about, and the ring on it. */
+  private readonly hinge = new THREE.Group();
   private readonly rim = new THREE.Group();
+  private readonly spring = new RimSpring();
+  private readonly ringMatrix = new THREE.Matrix4();
+  private readonly ballLocal = new THREE.Vector3();
   private readonly edgeMat: THREE.MeshStandardMaterial;
   private readonly clockCanvas = document.createElement("canvas");
   private readonly clockTexture: THREE.CanvasTexture;
   private shownClock = -1;
-  private shake = 0;
   private flash = 0;
   private flashColour = new THREE.Color("#ff2d2d");
 
@@ -85,8 +93,9 @@ export class Hoop {
     this.group.add(screen);
     this.setClock(12);
 
-    // The rim on its bracket, in its own group so it can shake.
-    this.rim.position.set(RIM.x, RIM.y, RIM.z);
+    // The rim on its bracket, hinged where the bracket meets the glass so it can flex.
+    this.hinge.position.set(RIM.x, RIM.y, BOARD.face);
+    this.rim.position.set(0, 0, RIM.z - BOARD.face);
     const ring = new THREE.Mesh(new THREE.TorusGeometry(RIM.radius, RIM.tube * 1.6, 12, 48), orange);
     ring.rotation.x = Math.PI / 2;
     ring.castShadow = true;
@@ -97,9 +106,8 @@ export class Hoop {
       const a = (i / 12) * Math.PI * 2;
       this.rim.add(mesh(new THREE.BoxGeometry(0.012, 0.03, 0.012), orange, Math.cos(a) * RIM.radius, -0.02, Math.sin(a) * RIM.radius, false));
     }
-    this.net.mesh.position.set(0, -RIM.tube, 0);
-    this.rim.add(this.net.mesh);
-    this.group.add(this.rim);
+    this.hinge.add(this.rim);
+    this.group.add(this.hinge, this.net.mesh);
   }
 
   /** Updates the digits only when the whole second changes. */
@@ -120,9 +128,14 @@ export class Hoop {
     this.clockTexture.needsUpdate = true;
   }
 
-  /** The rim and backboard take a hit: a dunk shakes hard, a clank a little. */
+  /** The rim takes a hit where the ball is: a clank at the front dips it most, one to the side rolls it. */
   knock(power: number): void {
-    this.shake = Math.max(this.shake, power);
+    this.spring.knock(power, this.ballLocal.x - RIM.x, this.ballLocal.z - BOARD.face);
+  }
+
+  /** A dunker hanging on the rim bends it down until he lets go. */
+  hold(on: boolean): void {
+    this.spring.hold(on);
   }
 
   /** The glass edge lights up, red for the buzzer, gold for a win. */
@@ -132,17 +145,19 @@ export class Hoop {
   }
 
   update(dt: number, time: number, ball: { x: number; y: number; z: number }): void {
-    this.shake = Math.max(0, this.shake - dt * 1.8);
-    const wobble = this.shake * this.shake;
-    this.rim.rotation.x = Math.sin(time * 38) * 0.05 * wobble;
-    this.rim.rotation.z = Math.cos(time * 31) * 0.03 * wobble;
-    this.rim.position.y = RIM.y - Math.abs(Math.sin(time * 38)) * 0.03 * wobble;
+    this.ballLocal.set(ball.x, ball.y, ball.z);
+    this.group.worldToLocal(this.ballLocal);
+    this.spring.step(dt);
+    this.hinge.rotation.set(this.spring.pitch, 0, this.spring.roll);
     this.flash = Math.max(0, this.flash - dt);
     const on = this.flash > 0 && Math.sin(time * 18) > -0.3;
     if (on) this.edgeMat.emissive.copy(this.flashColour);
     else this.edgeMat.emissive.setRGB(0, 0, 0);
     this.edgeMat.emissiveIntensity = on ? 2.5 : 0;
-    this.net.update(dt, ball);
+    this.hinge.updateMatrix();
+    this.rim.updateMatrix();
+    this.ringMatrix.multiplyMatrices(this.hinge.matrix, this.rim.matrix);
+    this.net.update(dt, this.ballLocal, this.ringMatrix);
   }
 
   dispose(): void {
@@ -154,4 +169,9 @@ export class Hoop {
       (o.material as THREE.Material).dispose();
     });
   }
+}
+
+/** Whether anyone is hanging on the rim after a dunk right now. */
+export function hanging(athletes: readonly Athlete[]): boolean {
+  return athletes.some((a) => a.action.kind === "drive" && a.action.rimHang > 0 && a.action.t > a.action.finish && a.action.t < a.action.finish + a.action.rimHang);
 }

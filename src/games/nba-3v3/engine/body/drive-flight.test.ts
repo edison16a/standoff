@@ -4,7 +4,16 @@ import { BODY } from "./body-spec";
 import { drivePosition, driveHeight, HANG_DROP, landTime } from "./drive-flight";
 
 const H = 1 / 240;
-const plan = (over: Partial<{ takeoff: number; finish: number; rimHang: number; peak: number }> = {}) => ({
+interface Plan {
+  takeoff: number;
+  finish: number;
+  rimHang: number;
+  peak: number;
+  from: { x: number; z: number };
+  to: { x: number; z: number };
+}
+
+const plan = (over: Partial<Plan> = {}): Plan => ({
   takeoff: 0.36,
   finish: 0.84,
   rimHang: 0,

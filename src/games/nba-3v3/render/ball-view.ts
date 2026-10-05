@@ -1,38 +1,48 @@
 import * as THREE from "three";
 import type { Ball } from "../engine/types";
-import { palmHold, spinCarry } from "../engine/dribble-ball";
+import { spinCarry } from "../engine/dribble-ball";
 import { BALL } from "../engine/tuning";
 import type { AthleteView } from "./athlete-view";
-import { ballTexture } from "./textures";
+import { ballSkin } from "./ball-skin";
+import { Squash } from "./ball-squash";
 
-const up = new THREE.Vector3(0, 1, 0);
 const left = new THREE.Vector3();
 const right = new THREE.Vector3();
 const palm = new THREE.Vector3();
 const axis = new THREE.Vector3();
 const spinQ = new THREE.Quaternion();
+const inverse = new THREE.Quaternion();
 
 /** A jump in the engine's ball bigger than this in one frame is a change of hands, eased rather than shown. */
 const JUMP = 0.35;
 
 /**
- * The ball: pebbled leather with black seams, spinning with its flight.
- * In a shot, a dunk or a check it sits between the hands. On the
- * dribble it meets the dribbling palm at the top of every bounce. When
- * it leaves the hands, or changes hands, it eases from where it was
- * onto the engine's path, so a handoff never jumps.
+ * The ball: two tone pebbled leather (see `ball-skin.ts`), turning with
+ * the real spin the physics gives it, so backspin on a jumper, the kick
+ * off the iron and the roll on the floor all show. It flattens for an
+ * instant against whatever it hits. In the hands it sits between them;
+ * on the dribble it rides the drawn palm down and flies free on the
+ * engine's path to the floor and back. Whenever it changes hands it
+ * eases from where it was drawn onto the new path, so it never jumps.
  */
 export class BallView {
-  readonly mesh: THREE.Mesh;
+  /** Placed at the ball, and turned and stretched for the squash. */
+  readonly mesh = new THREE.Group();
+  private readonly leather: THREE.Mesh;
+  private readonly squash = new Squash();
+  /** The ball's own turn, in the world, kept apart from the squash's frame. */
+  private readonly turn = new THREE.Quaternion();
   private readonly offset = new THREE.Vector3();
   private readonly lastTarget = new THREE.Vector3();
-  private wasInHands = false;
+  private lastHand = "";
   private fresh = true;
 
   constructor() {
-    const map = ballTexture();
-    this.mesh = new THREE.Mesh(new THREE.SphereGeometry(BALL.radius, 32, 20), new THREE.MeshStandardMaterial({ map, roughness: 0.62, metalness: 0 }));
-    this.mesh.castShadow = true;
+    const skin = ballSkin();
+    const material = new THREE.MeshStandardMaterial({ map: skin.map, bumpMap: skin.bump, bumpScale: 1.2, roughness: 0.58, metalness: 0 });
+    this.leather = new THREE.Mesh(new THREE.SphereGeometry(BALL.radius, 48, 32), material);
+    this.leather.castShadow = true;
+    this.mesh.add(this.leather);
   }
 
   /** A new game: the ball is drawn straight where it is, not eased over from the last one. */
@@ -43,82 +53,56 @@ export class BallView {
   /** `chest` is true while the holder has it in both hands at the chest, as in a check. */
   update(ball: Ball, holder: AthleteView | null, chest: boolean, dt: number): void {
     const a = holder?.athlete;
-    const act = a?.action;
     const carry = !!a && spinCarry(a);
-    const inHands = !!holder && !!act && !carry && (chest || act.kind === "shoot" || act.kind === "drive" || palmHold(holder.athlete));
+    const hand = carry ? "carry" : chest && holder ? "held" : ball.hand;
     const target = new THREE.Vector3(ball.pos.x, ball.pos.y, ball.pos.z);
-    if (carry && holder && a) {
-      // Pulled round through a spin, the ball rides in the dribbling palm.
+    if (holder && a && (hand === "carry" || hand === "dribble")) {
+      // Pulled round through a spin, or riding the push of a dribble, the ball is under the dribbling palm.
       holder.hand(a.dribbleHand === 1 ? "R" : "L", palm);
       target.copy(palm);
-      target.y -= BALL.radius * 0.8;
-    } else if (inHands && holder) {
+      target.y -= BALL.radius * 0.85;
+    } else if (holder && hand === "held") {
       holder.hand("L", left);
       holder.hand("R", right);
       // Two hands close together hold it between them; as they part it slides into the right palm, never jumping across.
       const apart = Math.min(1, Math.max(0, (left.distanceTo(right) - 0.34) / 0.16));
       target.copy(left).lerp(right, 0.5 + 0.5 * apart * apart * (3 - 2 * apart));
       target.y += 0.02;
-    } else if (holder && (act?.kind === "none" || act?.kind === "move")) this.onDribble(holder, target);
+    }
     const travel = Math.hypot(ball.vel.x, ball.vel.y, ball.vel.z) * dt * 1.5;
-    const held = inHands || carry;
     if (this.fresh) this.offset.set(0, 0, 0);
-    else if (held !== this.wasInHands || target.distanceTo(this.lastTarget) > JUMP + travel) {
+    else if (hand !== this.lastHand || target.distanceTo(this.lastTarget) > JUMP + travel) {
       // Let go, caught, or passed to another hand: start from where the ball was drawn and blend onto the new path.
       this.offset.copy(this.mesh.position).sub(target);
     }
     this.fresh = false;
-    this.wasInHands = held;
+    this.lastHand = hand;
     this.lastTarget.copy(target);
-    this.offset.multiplyScalar(Math.exp(-dt * 14));
+    this.offset.multiplyScalar(Math.exp(-dt * 16));
     this.mesh.position.copy(target).add(this.offset);
-
-    // A shot or a loose ball turns with its real spin, backspin, the kick off the iron and the roll on the floor.
-    const w = ball.w;
-    const real = Math.hypot(w.x, w.y, w.z);
-    if (!held && ball.mode !== "held" && real > 0.3) {
-      axis.set(w.x / real, w.y / real, w.z / real);
-      spinQ.setFromAxisAngle(axis, real * dt);
-      this.mesh.quaternion.premultiply(spinQ);
-      return;
-    }
-    // Otherwise it rolls with the motion: spin about the axis across the direction of travel.
-    const speed = Math.hypot(ball.vel.x, ball.vel.z);
-    // Held, it turns with the hands rather than rolling.
-    if (!held && (speed > 0.05 || Math.abs(ball.spin) > 0.1)) {
-      axis.set(ball.vel.z, 0, -ball.vel.x).normalize();
-      if (axis.lengthSq() < 0.5) axis.copy(up);
-      const rate = ball.mode === "flight" ? ball.spin : speed / BALL.radius;
-      spinQ.setFromAxisAngle(axis, rate * dt);
-      this.mesh.quaternion.premultiply(spinQ);
-    }
+    this.spin(ball, hand, dt);
+    this.squash.update(ball, hand === "none" || hand === "free");
+    this.squash.apply(this.mesh, BALL.radius);
+    // The leather turns in the world whatever way the squash frame points.
+    this.leather.quaternion.copy(inverse.copy(this.mesh.quaternion).invert()).multiply(this.turn);
   }
 
-  /**
-   * The engine bounces the ball between the floor and hip height and
-   * says where it meets the floor. The drawn ball runs in a straight
-   * line from wherever the animation has put the dribbling palm down to
-   * that spot and back up, and tops out right under the palm, so the
-   * hand really pushes it and really catches it.
-   */
-  private onDribble(holder: AthleteView, target: THREE.Vector3): void {
-    const a = holder.athlete;
-    holder.hand("L", left);
-    holder.hand("R", right);
-    const k = Math.min(1, Math.max(0, (a.dribbleSide + 1) / 2));
-    palm.copy(left).lerp(right, k);
-    palm.y -= BALL.radius * 0.9;
-    const drop = 1 - Math.abs(1 - 2 * a.dribble);
-    const floor = BALL.radius;
-    target.x = palm.x + (target.x - palm.x) * drop;
-    target.z = palm.z + (target.z - palm.z) * drop;
-    target.y = floor + (Math.max(floor, palm.y) - floor) * (1 - drop * drop);
+  /** Free, the ball turns with the physics' spin; in the hands it turns with them and does not roll. */
+  private spin(ball: Ball, hand: string, dt: number): void {
+    if (hand === "held" || hand === "carry") return;
+    const w = ball.w;
+    const rate = Math.hypot(w.x, w.y, w.z);
+    if (rate < 0.05) return;
+    axis.set(w.x / rate, w.y / rate, w.z / rate);
+    spinQ.setFromAxisAngle(axis, rate * dt);
+    this.turn.premultiply(spinQ).normalize();
   }
 
   dispose(): void {
-    this.mesh.geometry.dispose();
-    const m = this.mesh.material as THREE.MeshStandardMaterial;
+    this.leather.geometry.dispose();
+    const m = this.leather.material as THREE.MeshStandardMaterial;
     m.map?.dispose();
+    m.bumpMap?.dispose();
     m.dispose();
   }
 }

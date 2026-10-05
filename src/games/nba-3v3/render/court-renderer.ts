@@ -7,6 +7,7 @@ import { lineBouncing } from "../engine/free-throw";
 import { dist2 } from "../engine/vec";
 import { Arena } from "./arena/arena";
 import { AthleteView } from "./athlete-view";
+import { hanging } from "./arena/hoop";
 import { BallView } from "./ball-view";
 import { CeremonyStage } from "./ceremony/ceremony-stage";
 import type { Ceremony } from "../engine/ceremony";
@@ -167,6 +168,7 @@ export class CourtRenderer {
     this.tv.update(this.shot(m), dt, this.time);
     const calm = m.phase === "over" ? 0.6 : m.shotClock < 4 && m.phase === "live" ? 0.45 : 0.18;
     this.arena.hoop.setClock(m.shotClock);
+    this.arena.hoop.hold(hanging(m.athletes));
     this.arena.update(dt, this.time, this.ball.mesh.position, calm);
     this.effects.setView(this.height * this.renderer.getPixelRatio(), this.tv.camera.fov);
     this.effects.frame(m, dt);

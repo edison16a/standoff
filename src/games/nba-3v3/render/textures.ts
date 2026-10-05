@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { seeded } from "../engine/rng";
+import { ballSkin } from "./ball-skin";
 
 function canvas(w: number, h: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
   const c = document.createElement("canvas");
@@ -15,60 +16,11 @@ function finish(c: HTMLCanvasElement, srgb = true): THREE.CanvasTexture {
   return t;
 }
 
-/**
- * The ball's leather, unwrapped: pebbled orange with the black channels
- * of a real basketball, one great circle through the poles, the equator,
- * and the two curved seams on the sides.
- */
+/** The ball's two tone leather (see `ball-skin.ts`), small, for the phone's preview. */
 export function ballTexture(): THREE.CanvasTexture {
-  const [c, ctx] = canvas(512, 256);
-  ctx.fillStyle = "#d8641f";
-  ctx.fillRect(0, 0, 512, 256);
-  const rng = seeded(21);
-  for (let i = 0; i < 9000; i++) {
-    ctx.fillStyle = rng() < 0.5 ? "rgba(120,40,8,0.22)" : "rgba(255,170,110,0.16)";
-    ctx.fillRect(rng() * 512, rng() * 256, 1.6, 1.6);
-  }
-  ctx.strokeStyle = "#1b0f0a";
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.moveTo(0, 128);
-  ctx.lineTo(512, 128);
-  for (const x of [1, 256, 511]) {
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, 256);
-  }
-  ctx.stroke();
-  for (const cx of [128, 384]) {
-    ctx.beginPath();
-    ctx.ellipse(cx, 128, 70, 132, 0, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-  return finish(c);
-}
-
-/** Net cords in a diamond mesh on a clear background, with a solid loop band at the top. */
-export function netTexture(): THREE.CanvasTexture {
-  const [c, ctx] = canvas(512, 256);
-  ctx.clearRect(0, 0, 512, 256);
-  ctx.strokeStyle = "#ffffff";
-  ctx.lineWidth = 7;
-  ctx.lineCap = "round";
-  const cords = 12;
-  const w = 512 / cords;
-  for (let i = -cords; i <= cords * 2; i++) {
-    ctx.beginPath();
-    ctx.moveTo(i * w, 14);
-    ctx.lineTo(i * w + w * 4, 256);
-    ctx.moveTo(i * w, 14);
-    ctx.lineTo(i * w - w * 4, 256);
-    ctx.stroke();
-  }
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, 512, 16);
-  const t = finish(c, true);
-  t.wrapS = THREE.RepeatWrapping;
-  return t;
+  const { map, bump } = ballSkin(512);
+  bump.dispose();
+  return map;
 }
 
 /** A glowing strip for the LED boards: the words scroll along it. */
