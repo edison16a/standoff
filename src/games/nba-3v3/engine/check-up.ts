@@ -31,7 +31,7 @@ export function startDead(m: Match, next: TeamId): void {
   // A pass in the air when the clock ran out just drops.
   if (b.mode === "flight" && b.flightKind === "pass") {
     b.mode = "loose";
-    b.flight = null;
+    b.aim = null;
     b.flightKind = null;
     b.passTo = null;
   }

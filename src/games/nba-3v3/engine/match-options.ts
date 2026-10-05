@@ -30,9 +30,8 @@ export function restingBall(): Ball {
     vel: { x: 0, y: 0, z: 0 },
     mode: "held",
     holder: null,
-    flight: null,
+    aim: null,
     flightT: 0,
-    flightSeg: -1,
     flightKind: null,
     passTo: null,
     passRolled: [],
@@ -40,6 +39,8 @@ export function restingBall(): Ball {
     lastTouch: null,
     spin: 0,
     w: { x: 0, y: 0, z: 0 },
+    hand: "held",
+    impact: { power: 0, age: 9, n: { x: 0, y: 1, z: 0 } },
     rimCd: 0,
   };
 }

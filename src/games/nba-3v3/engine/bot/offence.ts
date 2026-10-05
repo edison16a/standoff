@@ -134,9 +134,9 @@ export function thinkOffBall(m: Match, a: Athlete, s: BotState, heading: (id: nu
   const holder = ballCarrier(m);
   if (!holder) return;
   if (holder === a) {
-    // The pass is coming: step toward it.
-    const f = m.ball.flight?.segments.at(-1);
-    if (f?.type === "arc") goTo(a, { x: f.p.x + f.v.x * f.dur, z: f.p.z + f.v.z * f.dur }, 0.8);
+    // The pass is coming: step to where it was thrown.
+    const aim = m.ball.aim;
+    if (aim) goTo(a, { x: aim.x, z: aim.z }, 0.8);
     return;
   }
   if (s.cutting && s.target) {

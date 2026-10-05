@@ -1,12 +1,12 @@
-import { weighted, type Rng } from "./rng";
 import { SHOT } from "./tuning";
 import { clamp } from "./vec";
 
 /**
- * Whether a shot goes in, and how. The meter timing, the distance, the
+ * How likely a shot is to go in. The meter timing, the distance, the
  * shooter's shooting stat and the nearest defender's contest set the
- * chance. Then the way it goes in or out is drawn from weights, and the
- * flight planner draws a believable path for that outcome.
+ * chance. The chance only sets how far off the release is: the ball
+ * physics decides each shot (see `shot-error.ts`), and names how it
+ * went in or out with the outcomes below.
  */
 
 export type Grade = "perfect" | "good" | "early" | "late";
@@ -51,12 +51,16 @@ export interface ShotContext {
   /** The shooter's strength minus the contesting defender's, for layups and dunks. */
   strengthEdge: number;
   onFire: boolean;
+  /** A floater: a soft, high one hander off the run, released early over a big man. */
+  floater?: boolean;
 }
 
 /** The chance the shot goes in, from 0.02 to 0.99. */
 export function makeChance(c: ShotContext): number {
   if (c.kind === "dunk") return clamp(0.97 - c.contest * Math.max(0, 0.3 - c.strengthEdge * 0.05), 0.5, 0.99);
   if (c.kind === "layup") return clamp(0.8 + c.strengthEdge * 0.03 + c.shooting * 0.01 - c.contest * 0.45, 0.2, 0.97);
+  // Released high and early, a floater beats the contest more than a jumper but is never easy.
+  if (c.floater) return clamp(0.36 + c.shooting * 0.035 + (c.onFire ? 0.1 : 0) - c.contest * 0.2, 0.15, 0.85);
   let chance: number;
   if (c.grade === "perfect") chance = (c.onFire ? 0.99 : 0.96) - c.contest * 0.28;
   else if (c.grade === "good") chance = (0.42 + c.shooting * 0.035 + (c.onFire ? 0.15 : 0)) * (1 - c.contest * 0.5);
@@ -77,17 +81,4 @@ export function bankAngle(side: number, distance: number): number {
   const angle = Math.abs(side);
   const wing = angle > 0.35 && angle < 1.2 ? 1 : 0.25;
   return distance < 6.2 ? wing : wing * 0.35;
-}
-
-/** Draws how a shot goes in or misses. `side` is the shooter's angle off straight on, in radians. */
-export function pickOutcome(rng: Rng, made: boolean, c: ShotContext, side: number): Outcome {
-  const bank = bankAngle(side, c.distance);
-  if (made) {
-    if (c.kind === "layup") return weighted<MakeOutcome>(rng, { bank: 0.3 + 0.35 * bank, roll: 0.3, swish: 0.25, bounce: 0.1 });
-    if (c.grade === "perfect") return weighted<MakeOutcome>(rng, { swish: 0.6, roll: 0.14, bank: 0.14 * bank, bounce: 0.12 });
-    return weighted<MakeOutcome>(rng, { swish: 0.3, roll: 0.26, bank: 0.24 * bank, bounce: 0.2 });
-  }
-  const wild = c.grade === "early" || c.grade === "late" || c.contest > 0.7;
-  if (c.kind === "layup") return weighted<MissOutcome>(rng, { rimOut: 0.5, inOut: 0.25, boardOut: 0.25 });
-  return weighted<MissOutcome>(rng, { rimOut: 0.45, inOut: 0.2, boardOut: 0.12 + 0.12 * bank, airball: wild ? 0.2 : 0.03 });
 }

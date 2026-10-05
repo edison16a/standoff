@@ -67,5 +67,6 @@ export function copyAthlete(a: Athlete): Athlete {
 }
 
 export function copyBall(b: Ball): Ball {
-  return { ...b, pos: { ...b.pos }, vel: { ...b.vel }, w: { ...b.w }, passRolled: [...b.passRolled], shot: b.shot ? { ...b.shot } : null };
+  const shot = b.shot ? { ...b.shot, track: { ...b.shot.track }, rolled: [...b.shot.rolled] } : null;
+  return { ...b, pos: { ...b.pos }, vel: { ...b.vel }, w: { ...b.w }, aim: b.aim ? { ...b.aim } : null, impact: { ...b.impact, n: { ...b.impact.n } }, passRolled: [...b.passRolled], shot };
 }

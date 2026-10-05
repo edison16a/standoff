@@ -1,6 +1,6 @@
 import type { BuildId } from "../builds";
 import type { DunkStyle } from "../roster";
-import type { Flight } from "./flight";
+import type { ShotTrack } from "./physics/shot-watch";
 import type { Grade, Outcome, ShotKind } from "./shot-model";
 import type { V2, V3 } from "./vec";
 
@@ -155,29 +155,44 @@ export interface ShotInfo {
   /** How hard the shot was contested as it left the hand, 0 to 1, and how far out it was. */
   contest: number;
   distance: number;
+  /** What the ball has touched so far, read live off the physics. */
+  track: ShotTrack;
+  /** Defenders who already had their one chance to get a hand on it. */
+  rolled: number[];
 }
 
 export type BallMode = "held" | "flight" | "loose";
+
+/**
+ * Whose hand is on the ball, for the renderer: held in the hands, the
+ * hand riding it on the push of a dribble, free between the hand and the
+ * floor on a dribble, or nobody's (in the air or loose).
+ */
+export type BallHand = "none" | "held" | "dribble" | "free";
 
 export interface Ball {
   pos: V3;
   vel: V3;
   mode: BallMode;
   holder: number | null;
-  flight: Flight | null;
+  /** Seconds since it left the last hand. */
   flightT: number;
-  flightSeg: number;
   /** What the flight is: a shot, a pass to someone, or a blocked shot. */
   flightKind: "shot" | "pass" | "block" | "dunk" | null;
   passTo: number | null;
+  /** Where a pass was thrown to, so the receiver can step to it. */
+  aim: V3 | null;
   /** Defenders who already had their one chance at this pass. */
   passRolled: number[];
   shot: ShotInfo | null;
   lastTouch: number | null;
-  /** Spin for drawing, radians per second around the axis the flight gives it. */
+  /** Spin for drawing, radians per second. Kept for the renderer until it reads `w`. */
   spin: number;
-  /** The real spin, radians per second about each axis, which the bounces off the iron, the glass and the floor use. */
+  /** The real spin, radians per second about each axis, kept up to date in the hand, on the dribble and in the air. */
   w: V3;
+  hand: BallHand;
+  /** The last hard hit on the floor or the iron, for the squash: its speed in metres a second, seconds since, and the surface normal. */
+  impact: { power: number; age: number; n: V3 };
   rimCd: number;
 }
 

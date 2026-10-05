@@ -40,7 +40,7 @@ export function startToss(m: Match, from: Athlete, to: Athlete, bounce: boolean)
   const d = Math.hypot(to.x - from.x, to.z - from.z);
   b.mode = "flight";
   b.holder = null;
-  b.flight = null;
+  b.aim = null;
   b.flightKind = null;
   b.pos = { ...start };
   b.spin = bounce ? 6 : 9;
@@ -59,7 +59,7 @@ export function returnToss(m: Match, to: Athlete): Toss {
   const d = Math.hypot(to.x - from.x, to.z - from.z);
   b.mode = "flight";
   b.holder = null;
-  b.flight = null;
+  b.aim = null;
   b.flightKind = null;
   b.passTo = to.id;
   b.spin = 7;

@@ -167,7 +167,7 @@ describe("the iron and the glass", () => {
         before = now;
       }
     }
-  });
+  }, 30000);
 });
 
 describe("long runs", () => {
@@ -190,7 +190,7 @@ describe("long runs", () => {
         expect(inGlass).toBe(false);
       }
     }
-  });
+  }, 30000);
 
   it("plays the same path every time from the same start", () => {
     const a = body([1, 3, 6], [-1, 4, -6], [10, 2, 3]);

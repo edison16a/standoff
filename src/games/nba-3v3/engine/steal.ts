@@ -81,7 +81,7 @@ export function knockLoose(m: Match, holder: Athlete, dir: V2, speed: number): v
   const spill = m.rng() < 0.5 ? -1 : 1;
   b.mode = "loose";
   b.holder = null;
-  b.flight = null;
+  b.aim = null;
   b.flightKind = null;
   b.shot = null;
   b.pos = { x: holder.x + dir.x * 0.4, y: 0.9, z: holder.z + dir.z * 0.4 };

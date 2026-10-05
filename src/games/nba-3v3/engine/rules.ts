@@ -20,7 +20,7 @@ export function gainPossession(m: Match, a: Athlete): void {
   const shot = b.shot;
   b.mode = "held";
   b.holder = a.id;
-  b.flight = null;
+  b.aim = null;
   b.flightKind = null;
   b.passTo = null;
   b.lastTouch = a.id;
