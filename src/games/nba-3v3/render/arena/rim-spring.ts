@@ -45,3 +45,25 @@ export class RimSpring {
     this.roll = Math.max(-0.08, Math.min(0.08, this.roll));
   }
 }
+
+/**
+ * The whole basket on its stanchion, rocking about its foot: a dunk or a
+ * hard shot off the glass sets it swaying a centimetre or so at the top,
+ * slower and longer than the ring, the way a real one shudders.
+ */
+export class StandSway {
+  angle = 0;
+  private v = 0;
+
+  /** Soft touches barely register; a full power slam rocks it. */
+  knock(power: number): void {
+    this.v -= power * power * 0.09;
+  }
+
+  step(dt: number): void {
+    const h = Math.min(dt, 1 / 30);
+    const w = Math.PI * 2 * 2.6;
+    this.v += (-w * w * this.angle - 2 * 0.06 * w * this.v) * h;
+    this.angle += this.v * h;
+  }
+}

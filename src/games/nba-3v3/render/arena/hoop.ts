@@ -2,9 +2,11 @@ import * as THREE from "three";
 import { BOARD, RIM } from "../../engine/tuning";
 import type { Athlete } from "../../engine/types";
 import { Net } from "./net";
-import { RimSpring } from "./rim-spring";
+import { RimSpring, StandSway } from "./rim-spring";
 
 const PAD = "#1d4ed8";
+/** Where the stanchion stands, behind the baseline; the basket rocks about its foot. */
+const BASE_Z = -1.9;
 const STEEL = "#20242e";
 
 function mesh(geo: THREE.BufferGeometry, mat: THREE.Material, x: number, y: number, z: number, shadow = true): THREE.Mesh {
@@ -30,6 +32,7 @@ export class Hoop {
   private readonly hinge = new THREE.Group();
   private readonly rim = new THREE.Group();
   private readonly spring = new RimSpring();
+  private readonly stand = new StandSway();
   private readonly ringMatrix = new THREE.Matrix4();
   private readonly ballLocal = new THREE.Vector3();
   private readonly edgeMat: THREE.MeshStandardMaterial;
@@ -47,7 +50,7 @@ export class Hoop {
     this.edgeMat = new THREE.MeshStandardMaterial({ color: "#111111", emissive: "#000000", roughness: 0.3 });
 
     // The stanchion stands behind the baseline, padded at the base.
-    const baseZ = -1.9;
+    const baseZ = BASE_Z;
     this.group.add(mesh(new THREE.BoxGeometry(1.5, 1.15, 1.3), pad, 0, 0.575, baseZ - 0.3));
     this.group.add(mesh(new THREE.BoxGeometry(1.52, 0.1, 1.32), white, 0, 1.18, baseZ - 0.3));
     this.group.add(mesh(new THREE.BoxGeometry(0.32, 3.2, 0.32), steel, 0, 2.6, baseZ));
@@ -131,11 +134,20 @@ export class Hoop {
   /** The rim takes a hit where the ball is: a clank at the front dips it most, one to the side rolls it. */
   knock(power: number): void {
     this.spring.knock(power, this.ballLocal.x - RIM.x, this.ballLocal.z - BOARD.face);
+    this.stand.knock(power);
   }
 
   /** A dunker hanging on the rim bends it down until he lets go. */
   hold(on: boolean): void {
     this.spring.hold(on);
+  }
+
+  /** Rocks the whole basket about the foot of the stanchion, which stays put on the floor. */
+  private sway(dt: number): void {
+    this.stand.step(dt);
+    const a = this.stand.angle;
+    this.group.rotation.x = a;
+    this.group.position.set(0, -BASE_Z * Math.sin(a), BASE_Z * (1 - Math.cos(a)));
   }
 
   /** The glass edge lights up, red for the buzzer, gold for a win. */
@@ -149,6 +161,7 @@ export class Hoop {
     this.group.worldToLocal(this.ballLocal);
     this.spring.step(dt);
     this.hinge.rotation.set(this.spring.pitch, 0, this.spring.roll);
+    this.sway(dt);
     this.flash = Math.max(0, this.flash - dt);
     const on = this.flash > 0 && Math.sin(time * 18) > -0.3;
     if (on) this.edgeMat.emissive.copy(this.flashColour);

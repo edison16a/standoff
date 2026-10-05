@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { LOOPS, NetSim, ROWS } from "./net-sim";
-import { RimSpring } from "./rim-spring";
+import { RimSpring, StandSway } from "./rim-spring";
 
 const SHAPE = { origin: { x: 0, y: 3, z: 1.5 }, radius: 0.235, depth: 0.45, taper: 0.4 };
 const H = 1 / 120;
@@ -72,6 +72,27 @@ describe("the rim on its spring", () => {
     }
     expect(lowest).toBeLessThan(-0.02);
     expect(Math.abs(rim.pitch)).toBeLessThan(0.003);
+  });
+
+  it("rocks the whole basket a little on a slam, barely on a soft touch, and settles", () => {
+    const slam = new StandSway();
+    const touch = new StandSway();
+    slam.knock(1);
+    touch.knock(0.2);
+    let most = 0;
+    let least = 0;
+    for (let t = 0; t < 0.5; t += 1 / 60) {
+      slam.step(1 / 60);
+      touch.step(1 / 60);
+      most = Math.max(most, Math.abs(slam.angle));
+      least = Math.max(least, Math.abs(touch.angle));
+    }
+    // A centimetre or two at the top of a stanchion three and a half metres from its foot.
+    expect(most * 3.5).toBeGreaterThan(0.008);
+    expect(most * 3.5).toBeLessThan(0.03);
+    expect(least).toBeLessThan(most / 10);
+    for (let t = 0; t < 6; t += 1 / 60) slam.step(1 / 60);
+    expect(Math.abs(slam.angle)).toBeLessThan(most / 20);
   });
 
   it("stays bent while a dunker hangs and springs back when he lets go", () => {
