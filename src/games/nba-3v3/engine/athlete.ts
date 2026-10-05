@@ -59,7 +59,11 @@ const STEPBACK_HOP = 0.24;
 
 /** A dribble move carries the player itself, a jump keeps the run it left the floor with, and so does a stepback hop. */
 const carried = (a: Athlete) =>
-  a.action.kind === "move" || (a.action.kind === "block" && a.y > 0.02) || (a.action.kind === "shoot" && !!a.action.step && a.action.t < STEPBACK_HOP);
+  a.action.kind === "move" ||
+  (a.action.kind === "block" && a.y > 0.02) ||
+  (a.action.kind === "shoot" && !!a.action.step && a.action.t < STEPBACK_HOP) ||
+  // A floater is let go on the run: in the air the body carries on at the speed it left the floor with.
+  (a.action.kind === "shoot" && !!a.action.float && a.y > 0.02);
 
 /** Runs toward the stick with momentum (see `steer.ts`), and turns the body to match. */
 export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: { x: number; z: number } | null, events: MatchEvent[]): void {
