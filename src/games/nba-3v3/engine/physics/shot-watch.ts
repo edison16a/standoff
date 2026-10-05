@@ -67,7 +67,7 @@ export function missed(t: ShotTrack, b: BallBody): boolean {
   if (t.t > MAX_T) return true;
   const hx = b.pos.x - RIM.x;
   const hz = b.pos.z - RIM.z;
-  const hl = Math.hypot(hx, hz);
+  const hl = Math.sqrt(hx * hx + hz * hz);
   if (b.vel.y < 0 && b.pos.y < RIM.y - 0.3 && hl > RIM.radius + 0.05) return true;
   // Off the iron or the glass and on its way out: a rebound, there for anyone.
   const away = (b.vel.x * hx + b.vel.z * hz) / Math.max(1e-6, hl);

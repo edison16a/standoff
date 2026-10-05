@@ -47,7 +47,7 @@ export function bounce(vel: V3, spin: V3, n: V3, e: number, mu: number, surface:
   const tx = cx - cn * n.x;
   const ty = cy - cn * n.y;
   const tz = cz - cn * n.z;
-  const slide = Math.hypot(tx, ty, tz);
+  const slide = Math.sqrt(tx * tx + ty * ty + tz * tz);
   const jn = Math.max(0, -(1 + e) * vn) + support;
   if (vn < 0) {
     const push = -(1 + e) * vn;

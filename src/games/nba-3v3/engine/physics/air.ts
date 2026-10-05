@@ -18,10 +18,10 @@ export interface BallBody {
  */
 export function airStep(b: BallBody, h: number): void {
   const { pos, vel, w } = b;
-  const speed = Math.hypot(vel.x, vel.y, vel.z);
+  const speed = Math.sqrt(vel.x * vel.x + vel.y * vel.y + vel.z * vel.z);
   const drag = BALL.drag * speed;
   // Lift is about the spin ratio r w / v; past the ceiling it stops growing, so scale the spin down for it.
-  const spinRate = Math.hypot(w.x, w.y, w.z);
+  const spinRate = Math.sqrt(w.x * w.x + w.y * w.y + w.z * w.z);
   const ratio = speed > 1e-6 ? (BALL.radius * spinRate) / speed : 0;
   const lift = ratio > BALL.maxSpinRatio ? (BALL.magnus * BALL.maxSpinRatio) / ratio : BALL.magnus;
   const ax = lift * (w.y * vel.z - w.z * vel.y) - drag * vel.x;

@@ -1,7 +1,10 @@
 import { BOARD } from "../tuning";
 import type { V3 } from "../vec";
 import { airStep, type BallBody } from "./air";
-import { BALL, SUBSTEP } from "./ball-spec";
+import { BALL } from "./ball-spec";
+
+/** Aiming flies the throw in steps twice the live size: the path differs by well under a millimetre, at half the cost. */
+export const AIM_STEP = 1 / 240;
 
 /**
  * Aiming a throw through the real air. The shooter or passer picks the
@@ -25,14 +28,17 @@ export function ballistic(p: V3, t: V3, apex: number): V3 {
 /** Where a free flight crosses the plane y = level coming down, or z = level coming in. */
 export function crossing(from: V3, v: V3, spin: V3, across: "y" | "z", level: number, maxT = 4): V3 | null {
   const b: BallBody = { pos: { ...from }, vel: { ...v }, w: { ...spin } };
-  for (let t = 0; t < maxT; t += SUBSTEP) {
-    const before = across === "y" ? b.pos.y - level : b.pos.z - level;
-    const p = { ...b.pos };
-    airStep(b, SUBSTEP);
-    const after = across === "y" ? b.pos.y - level : b.pos.z - level;
+  const { pos } = b;
+  for (let t = 0; t < maxT; t += AIM_STEP) {
+    const before = across === "y" ? pos.y - level : pos.z - level;
+    const px = pos.x;
+    const py = pos.y;
+    const pz = pos.z;
+    airStep(b, AIM_STEP);
+    const after = across === "y" ? pos.y - level : pos.z - level;
     if (before > 0 && after <= 0 && (across === "z" || b.vel.y < 0)) {
       const u = before / (before - after);
-      return { x: p.x + (b.pos.x - p.x) * u, y: p.y + (b.pos.y - p.y) * u, z: p.z + (b.pos.z - p.z) * u };
+      return { x: px + (pos.x - px) * u, y: py + (pos.y - py) * u, z: pz + (pos.z - pz) * u };
     }
   }
   return null;
@@ -68,7 +74,7 @@ export function aimTimed(from: V3, to: V3, dur: number, spin: V3): V3 {
   const v = { x: (to.x - from.x) / dur, y: (to.y - from.y + 0.5 * g * dur * dur) / dur, z: (to.z - from.z) / dur };
   for (let i = 0; i < 4; i++) {
     const b: BallBody = { pos: { ...from }, vel: { ...v }, w: { ...spin } };
-    const steps = Math.max(1, Math.round(dur / SUBSTEP));
+    const steps = Math.max(1, Math.round(dur / AIM_STEP));
     for (let k = 0; k < steps; k++) airStep(b, dur / steps);
     const ex = to.x - b.pos.x;
     const ey = to.y - b.pos.y;

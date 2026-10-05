@@ -44,7 +44,7 @@ export function floorContact(b: BallBody, h: number, out: Touch[]): void {
   vel.y = Math.max(0, vel.y);
   bounce(vel, w, n, 0, FLOOR.mu, undefined, BALL.gravity * h);
   // Rolling resistance and the pivot friction that stops a spin on the spot.
-  const speed = Math.hypot(vel.x, vel.z);
+  const speed = Math.sqrt(vel.x * vel.x + vel.z * vel.z);
   if (speed > 1e-6) {
     const slow = Math.min(speed, (ROLLING * BALL.gravity * h) / (1 + BALL.inertia));
     vel.x -= (vel.x / speed) * slow;
@@ -60,14 +60,14 @@ export function rimContact(b: BallBody, h: number, out: Touch[]): void {
   const { pos, vel, w } = b;
   const hx = pos.x - RIM.x;
   const hz = pos.z - RIM.z;
-  const hl = Math.hypot(hx, hz);
+  const hl = Math.sqrt(hx * hx + hz * hz);
   if (hl < 1e-6 || Math.abs(pos.y - RIM.y) > TOUCH || Math.abs(hl - RIM.radius) > TOUCH) return;
   const qx = RIM.x + (hx / hl) * RIM.radius;
   const qz = RIM.z + (hz / hl) * RIM.radius;
   const dx = pos.x - qx;
   const dy = pos.y - RIM.y;
   const dz = pos.z - qz;
-  const d = Math.hypot(dx, dy, dz);
+  const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
   if (d >= TOUCH || d < 1e-6) return;
   n.x = dx / d;
   n.y = dy / d;
@@ -89,7 +89,7 @@ function boxContact(b: BallBody, lo: V3, hi: V3, surface: (p: V3) => Surface, ki
   const dx = pos.x - cx;
   const dy = pos.y - cy;
   const dz = pos.z - cz;
-  const d = Math.hypot(dx, dy, dz);
+  const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
   if (d >= BALL.radius || d < 1e-9) return;
   n.x = dx / d;
   n.y = dy / d;

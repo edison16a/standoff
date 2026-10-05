@@ -39,7 +39,7 @@ export function netStep(b: BallBody, h: number): boolean {
   if (wall < 0) return false;
   const hx = pos.x - RIM.x;
   const hz = pos.z - RIM.z;
-  const hl = Math.hypot(hx, hz);
+  const hl = Math.sqrt(hx * hx + hz * hz);
   const inside = hl < wall;
   // Outside the cone and clear of it, or inside and clear of the cords: nothing touches.
   const gap = inside ? wall - hl - BALL.radius : hl - wall - BALL.radius;

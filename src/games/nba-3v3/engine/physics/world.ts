@@ -52,7 +52,7 @@ function substep(b: BallBody, h: number, out: Contact[]): void {
   floorContact(b, h, touches);
   for (const t of touches) out.push(t);
   const { pos, vel } = b;
-  if (above && pos.y <= THROUGH_Y && vel.y < 0 && Math.hypot(pos.x - RIM.x, pos.z - RIM.z) < THROUGH_R) {
+  if (above && pos.y <= THROUGH_Y && vel.y < 0 && Math.sqrt((pos.x - RIM.x) ** 2 + (pos.z - RIM.z) ** 2) < THROUGH_R) {
     out.push({ kind: "through", power: -vel.y, at: { x: pos.x, y: pos.y, z: pos.z } });
   }
 }
