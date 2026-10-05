@@ -23,6 +23,8 @@ const FOULED_MAKE = 0.4;
 function release(m: Match, a: Athlete, kind: ShotKind, hand: V3, distance: number, floater: boolean): ReleaseInput {
   const side = Math.atan2(a.x - RIM.x, a.z - RIM.z);
   if (kind === "layup") {
+    // A reverse is flipped up from under the ring on the far side, high enough to clear the iron.
+    if (a.action.kind === "drive" && a.action.layup === "reverse") return { family: "reverse", from: hand, apex: Math.max(hand.y, RIM.y) + 0.55, spinRate: between(m.rng, 6, 9) };
     // From the wings the glass is the easy way in.
     const family: Family = m.rng() < 0.25 + 0.45 * bankAngle(side, distance) ? "bank" : "layup";
     return { family, from: hand, apex: Math.max(hand.y, RIM.y) + 0.38, spinRate: between(m.rng, 5, 8) };

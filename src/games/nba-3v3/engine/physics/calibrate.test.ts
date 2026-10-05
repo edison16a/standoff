@@ -27,6 +27,7 @@ const FAMILIES: Record<Family, ReleaseInput[]> = {
   free: [{ family: "free", from: { x: 0, y: 2.4, z: 6.05 }, apex: jumperApex(4.475), spinRate: 15 }],
   floater: [{ family: "floater", from: { x: 0.6, y: 2.65, z: 5.0 }, apex: RIM.y + 1.45, spinRate: 5 }],
   layup: [{ family: "layup", from: { x: 0.3, y: 3.0, z: 2.15 }, apex: 3.43, spinRate: 6 }],
+  reverse: [{ family: "reverse", from: { x: 0.35, y: 2.95, z: 1.83 }, apex: RIM.y + 0.55, spinRate: 7 }],
   bank: [{ family: "bank", from: { x: 0.42, y: 3.0, z: 1.98 }, apex: 3.43, spinRate: 6 }],
   bankJumper: [{ family: "bankJumper", from: { x: -2.9, y: 2.7, z: 3.4 }, apex: jumperApex(3.5), spinRate: 15 }],
   dunk: [{ family: "dunk", from: { x: 0.05, y: RIM.y + 0.24, z: RIM.z + 0.12 }, apex: RIM.y + 0.24, spinRate: 0 }],
@@ -52,7 +53,9 @@ function rowFor(input: ReleaseInput): number[] {
 describe.skipIf(!process.env.NBA_CALIBRATE)("shot calibration", () => {
   it("prints the table", () => {
     const lines: string[] = [];
+    const only = process.env.NBA_CALIBRATE_ONLY;
     for (const [family, inputs] of Object.entries(FAMILIES)) {
+      if (only && family !== only) continue;
       const rows = inputs.map((input) => `[${rowFor(input).join(", ")}]`);
       lines.push(family === "jumper" ? `  jumperRows: [\n    ${rows.join(",\n    ")},\n  ],` : `  ${family}: ${rows[0]},`);
     }

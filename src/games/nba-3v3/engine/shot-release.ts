@@ -29,7 +29,7 @@ export interface Launch {
 }
 
 /** Shooters aim a touch past the middle of the ring, where backspin helps a ball on the back iron drop. */
-const AIM_LONG: Record<Family, number> = { jumper: 0.04, free: 0.04, floater: 0.02, layup: 0, bank: 0, bankJumper: 0, dunk: 0 };
+const AIM_LONG: Record<Family, number> = { jumper: 0.04, free: 0.04, floater: 0.02, layup: 0, reverse: 0, bank: 0, bankJumper: 0, dunk: 0 };
 /** A dunk is pushed down through the ring this fast, in seconds from the hand to the rim plane. */
 const SLAM = 0.07;
 const RIM_CENTRE: V3 = { x: RIM.x, y: RIM.y, z: RIM.z };

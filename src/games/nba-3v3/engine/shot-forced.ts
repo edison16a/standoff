@@ -24,7 +24,7 @@ const TRY: Record<Outcome, { spread: number; glass?: boolean }> = {
 };
 
 function glassFamily(family: Family): Family {
-  if (family === "layup" || family === "bank") return "bank";
+  if (family === "layup" || family === "reverse" || family === "bank") return "bank";
   if (family === "dunk" || family === "free") return family;
   return "bankJumper";
 }
