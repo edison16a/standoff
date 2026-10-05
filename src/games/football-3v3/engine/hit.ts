@@ -52,7 +52,7 @@ export function squareness(tackler: Athlete, carrier: Athlete, n: V2): number {
   const run = speed > 0.5 ? { x: carrier.vx / speed, z: carrier.vz / speed } : { x: Math.sin(carrier.yaw), z: Math.cos(carrier.yaw) };
   // n points from tackler to carrier: along the run means from behind.
   const along = n.x * run.x + n.z * run.z;
-  return clamp(0.62 - 0.27 * along, 0.35, 1);
+  return clamp(along < 0 ? 0.62 - 0.38 * along : 0.62 - 0.27 * along, 0.35, 1);
 }
 
 /**

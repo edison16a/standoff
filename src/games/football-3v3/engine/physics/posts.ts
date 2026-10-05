@@ -15,7 +15,7 @@ export const GOAL = {
   barRadius: 0.09,
   steel: { restitution: 0.55, friction: 0.25 },
   /** The net: how far behind the posts, how wide either side and how high it hangs. */
-  net: { behind: 4, halfWidth: 9, bottom: 2.5, top: 14, restitution: 0.08, friction: 0.9 },
+  net: { behind: 4, halfWidth: 9, bottom: 3, top: 20, restitution: 0.08, friction: 0.9 },
 } as const;
 
 export type GoalPart = "upright" | "crossbar" | "net";
