@@ -51,35 +51,7 @@ export class Particles {
     geo.setAttribute("color", new THREE.BufferAttribute(this.col, 3).setUsage(THREE.DynamicDrawUsage));
     geo.setAttribute("size", new THREE.BufferAttribute(this.size, 1).setUsage(THREE.DynamicDrawUsage));
     geo.setAttribute("alpha", new THREE.BufferAttribute(this.alpha, 1).setUsage(THREE.DynamicDrawUsage));
-    this.material = new THREE.ShaderMaterial({
-      transparent: true,
-      depthWrite: false,
-      blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
-      uniforms: { map: { value: map }, scale: { value: 400 } },
-      vertexShader: /* glsl */ `
-        attribute float size;
-        attribute float alpha;
-        attribute vec3 color;
-        varying vec3 vColor;
-        varying float vAlpha;
-        uniform float scale;
-        void main() {
-          vColor = color;
-          vAlpha = alpha;
-          vec4 mv = modelViewMatrix * vec4(position, 1.0);
-          gl_PointSize = size * scale / max(0.1, -mv.z);
-          gl_Position = projectionMatrix * mv;
-        }`,
-      fragmentShader: /* glsl */ `
-        uniform sampler2D map;
-        varying vec3 vColor;
-        varying float vAlpha;
-        void main() {
-          vec4 tex = texture2D(map, gl_PointCoord);
-          gl_FragColor = vec4(vColor * tex.rgb, tex.a * vAlpha);
-          #include <colorspace_fragment>
-        }`,
-    });
+    this.material = pointMaterial(map, additive);
     this.points = new THREE.Points(geo, this.material);
     this.points.frustumCulled = false;
   }
@@ -136,4 +108,50 @@ export class Particles {
     this.points.geometry.dispose();
     this.material.dispose();
   }
+}
+
+/**
+ * Round sprites sized in metres: each point carries its colour, size and
+ * alpha. Shared by the particle pools and the lamp flares.
+ */
+export function pointMaterial(map: THREE.Texture, additive: boolean, directional = false): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    defines: directional ? { DIRECTIONAL: "" } : {},
+    transparent: true,
+    depthWrite: false,
+    blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
+    uniforms: { map: { value: map }, scale: { value: 400 } },
+    vertexShader: /* glsl */ `
+      attribute float size;
+      attribute float alpha;
+      attribute vec3 color;
+      #ifdef DIRECTIONAL
+        attribute vec3 facing;
+      #endif
+      varying vec3 vColor;
+      varying float vAlpha;
+      uniform float scale;
+      void main() {
+        vColor = color;
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        // A sprite right in front of the lens would fill the view with a blur, so it fades out.
+        vAlpha = alpha * smoothstep(0.8, 2.6, -mv.z);
+        #ifdef DIRECTIONAL
+          // A lamp's halo shows from in front of it and fades as you come round to its side.
+          vec3 toEye = normalize(cameraPosition - (modelMatrix * vec4(position, 1.0)).xyz);
+          vAlpha *= smoothstep(-0.05, 0.55, dot(facing, toEye));
+        #endif
+        gl_PointSize = size * scale / max(0.1, -mv.z);
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: /* glsl */ `
+      uniform sampler2D map;
+      varying vec3 vColor;
+      varying float vAlpha;
+      void main() {
+        vec4 tex = texture2D(map, gl_PointCoord);
+        gl_FragColor = vec4(vColor * tex.rgb, tex.a * vAlpha);
+        #include <colorspace_fragment>
+      }`,
+  });
 }

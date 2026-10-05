@@ -22,6 +22,7 @@ export interface DesignParts {
   /** The head, built round the rig's head joint, in driver space. */
   head: (rig: Rig) => THREE.BufferGeometry[];
   exhausts: V3[];
+  flame?: KartDesign["flame"];
   lamps: KartDesign["lamps"];
   flagAt: V3;
   length: number;
@@ -58,6 +59,7 @@ export function assemble(d: DesignParts): KartDesign {
       spot(flip(d.gear.rear), rear, d.rear, false),
     ],
     exhausts: d.exhausts,
+    flame: d.flame ?? "fire",
     lamps: d.lamps,
     flagAt: d.flagAt,
     length: d.length,

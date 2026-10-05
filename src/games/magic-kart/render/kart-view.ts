@@ -5,6 +5,7 @@ import { DRIVE } from "../engine/tuning";
 import { GliderView } from "./glider-view";
 import type { KartExtras } from "./kart-extras";
 import { nameTag } from "./kart-extras";
+import { SHADOW_PAD } from "./kart-shadow";
 import { KartModel } from "./models/kart-model";
 import { kartDesign } from "./models/karts";
 
@@ -44,8 +45,8 @@ export class KartView {
     this.model = new KartModel(kart.character);
     this.lastHeading = kart.heading;
     const design = kartDesign(kart.character);
-    this.shadow = new THREE.Mesh(extras.shadowGeo, extras.shadowMat);
-    this.footprint = { w: design.width * 1.35, l: design.length * 1.15 };
+    this.shadow = new THREE.Mesh(extras.shadowGeo, extras.shadowFor(kart.character));
+    this.footprint = { w: design.width * SHADOW_PAD.w, l: design.length * SHADOW_PAD.l };
     this.shadow.renderOrder = 1;
     const flagShape = new THREE.Shape([new THREE.Vector2(0, 0), new THREE.Vector2(0, -0.42), new THREE.Vector2(-0.7, -0.21)]);
     this.flag = new THREE.Mesh(new THREE.ShapeGeometry(flagShape), new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide }));
@@ -67,9 +68,10 @@ export class KartView {
     for (const at of design.exhausts) {
       const flame = new THREE.Group();
       flame.position.set(...at);
-      flame.add(new THREE.Mesh(extras.flameGeo, extras.flameMat));
-      const core = new THREE.Mesh(extras.flameGeo, extras.flameCoreMat);
-      core.scale.setScalar(0.55);
+      const style = extras.flames[design.flame];
+      flame.add(new THREE.Mesh(extras.flameGeo, style.outer));
+      const core = new THREE.Mesh(extras.flameGeo, style.core);
+      core.scale.set(0.5, 0.5, 0.6);
       flame.add(core);
       this.model.body.add(flame);
       this.flames.push(flame);
@@ -139,7 +141,11 @@ export class KartView {
     const boosting = t.boost > 0;
     this.boosting = boosting;
     for (const flame of this.flames) {
-      if (boosting) flame.scale.set(1, 1, 0.8 + Math.random() * 0.7 + Math.min(1, t.boost) * 0.5);
+      // Longer the more boost is left, with a ragged flicker.
+      if (boosting) {
+        const width = 0.9 + Math.random() * 0.25;
+        flame.scale.set(width, width, 0.7 + Math.random() * 0.3 + Math.min(1, t.boost) * 0.45);
+      }
     }
     this.model.setTint(t.ice > 0 ? "#3fb8ff" : "#ffffff", t.ice > 0 ? 0.35 : t.stun > 0 ? 0.12 * (Math.sin(time * 30) > 0 ? 1 : 0) : 0);
     this.ghost = t.ghost > 0;
@@ -168,6 +174,11 @@ export class KartView {
     // A bubble or flames would give a vanished kart away, so others do not see them.
     this.shield.visible = this.shieldOn && !hidden;
     for (const flame of this.flames) flame.visible = this.boosting && !hidden;
+  }
+
+  /** A point on the sprung body, in the world, for lamps and exhausts that ride with it. */
+  bodyPoint(x: number, y: number, z: number, out: THREE.Vector3): THREE.Vector3 {
+    return out.set(x, y, z).applyMatrix4(this.model.body.matrixWorld);
   }
 
   /** A point on the kart, in the world, for effects to come from. */

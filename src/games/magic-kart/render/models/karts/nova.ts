@@ -82,6 +82,7 @@ export function buildNova(): KartDesign {
     suit: { suit: "#8f9bb3", trim: BLUE, glove: NAVY, boot: NAVY, badge: "nova", wheelAccent: NEON, wheelRadius: 0.18 },
     head: novaHead,
     exhausts: [[0, 0.62, -1.84]],
+    flame: "plasma",
     lamps: { head: [[0.3, 0.36, 1.4], [-0.3, 0.36, 1.4]], tail: [[0.25, 0.42, -1.47], [-0.25, 0.42, -1.47]] },
     flagAt: [-0.42, 1.9, -0.8],
     length: 3.2,

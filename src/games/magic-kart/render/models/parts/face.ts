@@ -35,7 +35,7 @@ export function eyes(e: EyeLook): THREE.BufferGeometry[] {
       const droop = e.droop ?? 0.25;
       // An upper lid: a slightly bigger shell over the top of the eye, tilted down at the inner corner.
       const lid = new THREE.SphereGeometry(e.size * 1.08, 24, 10, 0, Math.PI * 2, 0, Math.PI * (0.32 + droop * 0.5));
-      parts.push(part(lid, e.lid, { finish: "fur", at: [centre.x, centre.y, centre.z], rot: [0.5, yaw, side * -0.18] }));
+      parts.push(part(lid, e.lid, { finish: "fur", at: [centre.x, centre.y, centre.z], rot: [0.18, yaw, side * -0.14] }));
     }
   }
   return parts;

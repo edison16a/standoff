@@ -1,4 +1,5 @@
 import type * as THREE from "three";
+import type { FlameStyle } from "../effects/flame";
 import type { V3 } from "./geo";
 import type { Rig } from "./parts/driver-rig";
 
@@ -20,6 +21,8 @@ export interface KartDesign {
   wheels: WheelSpot[];
   /** Exhaust tips, where boost flames and puffs come out, pointing back. */
   exhausts: V3[];
+  /** Fire from a combustion engine, or the blue plasma of a turbine. */
+  flame: FlameStyle;
   /** Headlamps and tail lamps, for the glow sprites over them. */
   lamps: { head: V3[]; tail: V3[] };
   /** The top of the antenna that carries the player's colour flag. */

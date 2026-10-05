@@ -149,14 +149,14 @@ function drawPlain(ctx: Ctx): void {
   });
   inRegion(ctx, REGIONS.carbon, (w, h) => {
     // Twill weave: each tow a little gradient, alternating direction.
-    const s = 8;
+    const s = 3;
     for (let y = 0; y < h; y += s) {
       for (let x = 0; x < w; x += s) {
         const along = ((x + y) / s) % 4 < 2;
         const g = along ? ctx.createLinearGradient(x, y, x + s, y) : ctx.createLinearGradient(x, y, x, y + s);
-        g.addColorStop(0, "#2a2a2e");
-        g.addColorStop(0.5, "#5c5c64");
-        g.addColorStop(1, "#202024");
+        g.addColorStop(0, "#1c1c20");
+        g.addColorStop(0.5, "#3a3a42");
+        g.addColorStop(1, "#18181c");
         ctx.fillStyle = g;
         ctx.fillRect(x, y, s, s);
       }

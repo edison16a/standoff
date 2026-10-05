@@ -105,7 +105,7 @@ export class GameRenderer {
     }
     this.cubes = new CubeView(world.cubes);
     this.obstacles = new ObstacleView(world.obstacles);
-    this.effects = new Effects(this.stage!.theme.shoulder);
+    this.effects = new Effects(this.stage!.theme.shoulder, this.stage!.theme.reflections >= 0.7);
     this.dynamic.add(this.cubes.group, this.obstacles.group, this.effects.group);
     this.chase = [];
     this.show.reset();
@@ -118,7 +118,7 @@ export class GameRenderer {
 
   onEvent(event: RaceEvent): void {
     if (!this.world) return;
-    this.effects?.onEvent(event, this.world);
+    this.effects?.onEvent(event, this.world, this.karts);
     if (event.type === "hit" || event.type === "fell") this.cameraFor(event.kart)?.bump(event.type === "hit" ? 1 : 0.5);
     if (event.type === "land" && event.airTime > 0.6) this.cameraFor(event.kart)?.bump(0.35);
     if (event.type === "respawn") this.snap.add(event.kart);
@@ -150,6 +150,7 @@ export class GameRenderer {
       return Math.atan2(f.tx, f.tz);
     });
     this.projectiles.update(world.projectiles, time);
+    this.extras.tick(time);
     this.effects?.frame(world, this.karts, dt);
     stage.animate(time);
     this.dynamic.updateMatrixWorld(true);

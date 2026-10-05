@@ -26,7 +26,7 @@ export function blazeHead(rig: Rig): THREE.BufferGeometry[] {
     part(sphere(0.13, 20, 14), CREAM, { finish: "fur", at: at(-0.13, -0.1, 0.1), scale: [1, 0.75, 0.9], rot: [0, 0, 0.4] }),
     // The muzzle, orange on top and cream underneath, and a glossy black nose.
     part(lathe([[0.001, 0], [0.1, 0.03], [0.085, 0.12], [0.045, 0.22], [0.001, 0.25]], 24), FUR, { finish: "fur", at: at(0, -0.04, 0.14), rot: [Math.PI / 2, 0, 0], scale: [1, 1, 0.8] }),
-    part(sphere(0.085, 18, 12), CREAM, { finish: "fur", at: at(0, -0.1, 0.26), scale: [1, 0.6, 1.4] }),
+    part(sphere(0.075, 18, 12), CREAM, { finish: "fur", at: at(0, -0.1, 0.22), scale: [1, 0.55, 1.2] }),
     part(sphere(0.042, 16, 12), "#141418", { finish: "eye", at: at(0, -0.02, 0.4), scale: [1.2, 0.9, 1] }),
     part(torus(0.05, 0.008, 12, 6, Math.PI), "#3a1a10", { finish: "skin", at: at(0, -0.12, 0.3), rot: [Math.PI / 2 + 0.3, 0, Math.PI] }),
     ...eyes({ at: at(0, 0.05, 0.165), spread: 0.1, size: 0.078, iris: "#3fae2a", lid: FUR, droop: 0.12, splay: 0.3 }),
