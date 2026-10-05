@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import type { V3 } from "../geo";
+import { seg as cut } from "./detail";
 
 /**
  * Raw shapes for kart parts, before `part()` paints them. Higher segment
@@ -8,20 +9,20 @@ import type { V3 } from "../geo";
  */
 
 export const rbox = (w: number, h: number, d: number, r: number, segments = 2) =>
-  r > 0 ? new RoundedBoxGeometry(w, h, d, segments, Math.min(r, Math.min(w, h, d) / 2 - 1e-4)) : new THREE.BoxGeometry(w, h, d);
+  r > 0 ? new RoundedBoxGeometry(w, h, d, cut(segments, 1), Math.min(r, Math.min(w, h, d) / 2 - 1e-4)) : new THREE.BoxGeometry(w, h, d);
 
-export const sphere = (r: number, w = 20, h = 14) => new THREE.SphereGeometry(r, w, h);
+export const sphere = (r: number, w = 20, h = 14) => new THREE.SphereGeometry(r, cut(w, 6), cut(h, 4));
 
 /** A cylinder standing on y. */
-export const tube = (top: number, bottom: number, h: number, seg = 20, open = false) => new THREE.CylinderGeometry(top, bottom, h, seg, 1, open);
+export const tube = (top: number, bottom: number, h: number, seg = 20, open = false) => new THREE.CylinderGeometry(top, bottom, h, cut(seg, 6), 1, open);
 
-export const torus = (r: number, t: number, seg = 32, tubeSeg = 10, arc = Math.PI * 2) => new THREE.TorusGeometry(r, t, tubeSeg, seg, arc);
+export const torus = (r: number, t: number, seg = 32, tubeSeg = 10, arc = Math.PI * 2) => new THREE.TorusGeometry(r, t, cut(tubeSeg, 4), cut(seg, 6), arc);
 
-export const capsule = (r: number, length: number, seg = 14) => new THREE.CapsuleGeometry(r, length, 6, seg);
+export const capsule = (r: number, length: number, seg = 14) => new THREE.CapsuleGeometry(r, length, cut(6, 2), cut(seg, 6));
 
 /** A solid of revolution around y from (radius, height) pairs. */
 export const lathe = (points: readonly (readonly [number, number])[], seg = 28) =>
-  new THREE.LatheGeometry(points.map(([r, y]) => new THREE.Vector2(r, y)), seg);
+  new THREE.LatheGeometry(points.map(([r, y]) => new THREE.Vector2(r, y)), cut(seg, 6));
 
 /** Turns a shape standing on y to lie between two points. */
 export function between(geo: THREE.BufferGeometry, a: V3, b: V3): THREE.BufferGeometry {
@@ -39,7 +40,7 @@ export const bar = (a: V3, b: V3, r: number, seg = 12) =>
 /** A pipe bent smoothly through points, for exhaust headers, roll cages and hoses. */
 export function pipe(points: readonly V3[], r: number, seg = 40, radial = 12): THREE.TubeGeometry {
   const curve = new THREE.CatmullRomCurve3(points.map((p) => new THREE.Vector3(...p)), false, "catmullrom", 0.2);
-  return new THREE.TubeGeometry(curve, seg, r, radial, false);
+  return new THREE.TubeGeometry(curve, cut(seg, 6), r, cut(radial, 5), false);
 }
 
 /** A helix along y from 0 to `length`, the path of a coil spring. */
@@ -56,7 +57,7 @@ class Helix extends THREE.Curve<THREE.Vector3> {
 
 /** A coil spring along y from 0 to `length`, for the coilover shocks. */
 export const spring = (radius: number, wire: number, length: number, turns = 6) =>
-  new THREE.TubeGeometry(new Helix(radius, length, turns), turns * 14, wire, 6, false);
+  new THREE.TubeGeometry(new Helix(radius, length, turns), cut(turns * 9, turns * 4), wire, cut(5, 4), false);
 
 /**
  * A flat plate with rounded corners, extruded with a soft edge. Its face
@@ -76,7 +77,7 @@ export function plate(w: number, h: number, radius: number, depth = 0.02, bevel 
   s.quadraticCurveTo(x, y + h, x, y + h - r);
   s.lineTo(x, y + r);
   s.quadraticCurveTo(x, y, x + r, y);
-  const g = new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 2, curveSegments: 6 });
+  const g = new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel, bevelSegments: cut(2, 1), curveSegments: cut(6, 2) });
   return faceUv(g, w + bevel * 2, h + bevel * 2);
 }
 
@@ -94,7 +95,7 @@ export function faceUv(g: THREE.BufferGeometry, w: number, h: number): THREE.Buf
 
 /** A flat disc facing +z with planar texture coordinates, for badges, lenses and hub caps. */
 export function disc(r: number, seg = 32): THREE.BufferGeometry {
-  return faceUv(new THREE.CircleGeometry(r, seg), r * 2, r * 2);
+  return faceUv(new THREE.CircleGeometry(r, cut(seg, 8)), r * 2, r * 2);
 }
 
 /** A side outline (z, y) extruded across x with rounded edges, for wings, fins and plates. */
@@ -102,7 +103,7 @@ export function profile(points: readonly (readonly [number, number])[], width: n
   const corners = points.map(([z, y]) => new THREE.Vector2(z, y));
   const outline = smooth ? new THREE.SplineCurve([...corners, corners[0]!]).getPoints(72) : corners;
   const depth = Math.max(0.005, width - bevel * 2);
-  const g = new THREE.ExtrudeGeometry(new THREE.Shape(outline), { depth, bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 3, curveSegments: 12 });
+  const g = new THREE.ExtrudeGeometry(new THREE.Shape(outline), { depth, bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel, bevelSegments: cut(3, 1), curveSegments: cut(12, 4) });
   g.translate(0, 0, -depth / 2);
   g.rotateY(-Math.PI / 2);
   return fitUv(g);

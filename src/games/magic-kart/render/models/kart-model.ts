@@ -45,7 +45,10 @@ export class KartModel {
   readonly material: KartMaterial;
   private readonly bones: Record<BoneName, THREE.Bone>;
   private readonly steerPivots: { pivot: THREE.Group; side: number }[] = [];
-  private readonly spinners: { mesh: THREE.Mesh; radius: number; side: number }[] = [];
+  private readonly spinners: { spin: THREE.Group; radius: number; side: number }[] = [];
+  /** The full and the coarse meshes, one of each pair shown at a time. */
+  private readonly near: THREE.Object3D[] = [];
+  private readonly far: THREE.Object3D[] = [];
   private readonly motion = new SuspensionMotion();
   private driftLean = 0;
   private heat = 0;
@@ -55,30 +58,55 @@ export class KartModel {
     this.material = kartMaterial(kartAtlas());
     this.root.add(this.chassis);
     this.chassis.add(this.body);
-    this.body.add(new THREE.Mesh(design.body, this.material));
     const { bones, skeleton } = makeSkeleton(design.rig);
     this.bones = bones;
-    const driver = new THREE.SkinnedMesh(design.driver, this.material);
+    const far = design.far;
+    this.pair(new THREE.Mesh(design.body, this.material), far && new THREE.Mesh(far.body, this.material), this.body);
+    // Both drivers follow the one skeleton, so either can be shown without posing twice.
+    const driver = this.driverMesh(design.driver, skeleton, design.driverAt);
     driver.add(bones.root);
-    driver.bind(skeleton, new THREE.Matrix4());
-    // The pose never strays far from rest, so the rest bounds, padded, do for culling.
-    driver.boundingSphere = design.driver.boundingSphere!.clone();
-    driver.boundingSphere.radius *= 1.25;
-    driver.position.set(...design.driverAt);
-    this.body.add(driver);
-    for (const wheel of design.wheels) {
+    this.pair(driver, far && this.driverMesh(far.driver, skeleton, design.driverAt), this.body);
+    design.wheels.forEach((wheel, i) => {
       const pivot = new THREE.Group();
       pivot.position.set(...wheel.at);
-      const mesh = new THREE.Mesh(wheel.geometry, this.material);
+      const spin = new THREE.Group();
       const side = wheel.at[0] < 0 ? -1 : 1;
       // Wheels are built with the rim facing +x; the left ones turn round to face out.
-      mesh.rotation.order = "YXZ";
-      mesh.rotation.y = side < 0 ? Math.PI : 0;
-      pivot.add(mesh);
+      spin.rotation.order = "YXZ";
+      spin.rotation.y = side < 0 ? Math.PI : 0;
+      const coarse = far?.wheels[i];
+      this.pair(new THREE.Mesh(wheel.geometry, this.material), coarse && new THREE.Mesh(coarse, this.material), spin);
+      pivot.add(spin);
       this.chassis.add(pivot);
       if (wheel.front) this.steerPivots.push({ pivot, side });
-      this.spinners.push({ mesh, radius: wheel.radius, side });
-    }
+      this.spinners.push({ spin, radius: wheel.radius, side });
+    });
+    this.setFar(false);
+  }
+
+  private driverMesh(geometry: THREE.BufferGeometry, skeleton: THREE.Skeleton, at: readonly [number, number, number]): THREE.SkinnedMesh {
+    const mesh = new THREE.SkinnedMesh(geometry, this.material);
+    mesh.bind(skeleton, new THREE.Matrix4());
+    // The pose never strays far from rest, so the rest bounds, padded, do for culling.
+    mesh.boundingSphere = geometry.boundingSphere!.clone();
+    mesh.boundingSphere.radius *= 1.25;
+    mesh.position.set(...at);
+    return mesh;
+  }
+
+  private pair(near: THREE.Object3D, far: THREE.Object3D | undefined, parent: THREE.Object3D): void {
+    parent.add(near);
+    this.near.push(near);
+    if (!far) return;
+    parent.add(far);
+    this.far.push(far);
+  }
+
+  /** Shows the coarse cut, for a kart far from the camera drawing this view. */
+  setFar(far: boolean): void {
+    if (this.far.length === 0) return;
+    for (const o of this.near) o.visible = !far;
+    for (const o of this.far) o.visible = far;
   }
 
   /** Poses the kart for a frame. */
@@ -89,7 +117,7 @@ export class KartModel {
       pivot.rotation.y = -pose.steer * 0.42 * (inside ? 1.1 : 0.9);
     }
     // Left wheels are turned round, so the same roll needs the opposite sign.
-    for (const wheel of this.spinners) wheel.mesh.rotation.x += ((pose.speed * dt) / wheel.radius) * wheel.side;
+    for (const wheel of this.spinners) wheel.spin.rotation.x += ((pose.speed * dt) / wheel.radius) * wheel.side;
     this.motion.step({ dt, speed: pose.speed, yawRate: pose.yawRate, vy: pose.vy, airborne: pose.airborne, rough: pose.rough, time });
     this.driftLean += (-pose.drift * 0.045 - this.driftLean) * Math.min(1, dt * 6);
     const roll = this.motion.roll + this.driftLean;

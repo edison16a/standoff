@@ -2,6 +2,7 @@ import type * as THREE from "three";
 import type { V3 } from "../geo";
 import { WHITE_UV } from "../kit/atlas-layout";
 import type { Finish } from "../kit/finish";
+import { seg } from "../kit/detail";
 import { part } from "../kit/part";
 import { revolve } from "../kit/revolve";
 import { pipe, sphere } from "../kit/shapes";
@@ -25,12 +26,12 @@ export function fender(at: V3, radius: number, width: number, arc: readonly [num
     { r: r + 0.06, x: -hw * 0.6 },
     { r: r + 0.03, x: -hw },
     { r: r - 0.01, x: -hw - 0.01 },
-  ], 28, plain, arc);
+  ], seg(28, 8), plain, arc);
   const inner = revolve([
     { r: r + 0.02, x: -hw },
     { r: r + 0.04, x: 0 },
     { r: r + 0.02, x: hw },
-  ], 28, plain, arc);
+  ], seg(28, 8), plain, arc);
   return [part(outer, color, { finish, at }), part(inner, "#2a2a30", { finish: "plastic", at })];
 }
 

@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { seg } from "./detail";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 /**
@@ -66,8 +67,8 @@ function sample(sections: readonly Section[], t: number): Section {
  * shared all round so the paint catches one long highlight.
  */
 export function loft(sections: readonly Section[], options: LoftOptions = {}): THREE.BufferGeometry {
-  const around = options.around ?? 32;
-  const along = options.along ?? Math.max(12, sections.length * 6);
+  const around = seg(options.around ?? 32, 8);
+  const along = seg(options.along ?? Math.max(12, sections.length * 6), sections.length * 2);
   const positions: number[] = [];
   for (let j = 0; j <= along; j++) {
     const s = sample(sections, j / along);

@@ -1,6 +1,7 @@
 import type * as THREE from "three";
 import type { CharacterId } from "../../../characters";
 import { atlasUv, REGIONS, sidewallRegion, WHITE_UV, type Region } from "../kit/atlas-layout";
+import { seg } from "../kit/detail";
 import { part } from "../kit/part";
 import { revolve, type Ring } from "../kit/revolve";
 
@@ -19,6 +20,7 @@ export interface TyreStyle {
 }
 
 const TREADS: Record<Tread, Region> = { race: REGIONS.treadRace, knobby: REGIONS.treadKnobby, rib: REGIONS.treadRib };
+/** Quads round the tyre at full detail; a multiple of the tread tile. */
 const SEGMENTS = 48;
 /** Quads round the tyre per tread tile. */
 const PER_TILE = 4;
@@ -41,7 +43,7 @@ export function buildTyre(s: TyreStyle): THREE.BufferGeometry[] {
     { r: R * shoulder, x: side * hw * (s.balloon ? 0.97 : 0.98) },
   ];
   const crown: Ring[] = [];
-  const steps = 8;
+  const steps = seg(8, 4);
   for (let i = 0; i <= steps; i++) {
     // A rounded crown: square shouldered on a slick, round on a balloon.
     const t = i / steps;
@@ -54,9 +56,10 @@ export function buildTyre(s: TyreStyle): THREE.BufferGeometry[] {
   const sideUv = (region: Region) => (_quad: number, _end: number, _along: number, angle: number, ring: Ring): [number, number] =>
     atlasUv(region, 0.5 + (Math.cos(angle) * ring.r) / (2 * R), 0.5 + (Math.sin(angle) * ring.r) / (2 * R));
   const tread = TREADS[s.tread];
+  const around = Math.max(PER_TILE * 4, Math.round(seg(SEGMENTS) / PER_TILE) * PER_TILE);
   return [
-    part(revolve(outer, SEGMENTS, sideUv(sidewallRegion(s.sidewall))), "#ffffff", { finish: "rubber", atlas: true }),
-    part(revolve(crown, SEGMENTS, (quad, end, along) => atlasUv(tread, ((quad % PER_TILE) + end) / PER_TILE, along)), "#ffffff", { finish: "rubber", atlas: true }),
-    part(revolve([...wall(-1)].reverse(), SEGMENTS, () => WHITE_UV), "#26262b", { finish: "rubber" }),
+    part(revolve(outer, around, sideUv(sidewallRegion(s.sidewall))), "#ffffff", { finish: "rubber", atlas: true }),
+    part(revolve(crown, around, (quad, end, along) => atlasUv(tread, ((quad % PER_TILE) + end) / PER_TILE, along)), "#ffffff", { finish: "rubber", atlas: true }),
+    part(revolve([...wall(-1)].reverse(), around, () => WHITE_UV), "#26262b", { finish: "rubber" }),
   ];
 }

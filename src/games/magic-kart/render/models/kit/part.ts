@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import type { V3 } from "../geo";
 import { atlasUv, WHITE_UV, type Region } from "./atlas-layout";
 import { FINISHES, type Finish } from "./finish";
@@ -103,11 +103,17 @@ export function mirrored(parts: THREE.BufferGeometry[]): THREE.BufferGeometry[] 
   });
 }
 
-/** Merges parts into one geometry and frees them. */
+/**
+ * Merges parts into one geometry and frees them. Corners that match in
+ * every attribute are then shared, so the graphics card shades each one
+ * once rather than once for every triangle that touches it.
+ */
 export function mergeParts(parts: THREE.BufferGeometry[]): THREE.BufferGeometry {
-  const merged = mergeGeometries(parts, false);
+  const joined = mergeGeometries(parts, false);
   for (const p of parts) p.dispose();
-  if (!merged) throw new Error("Kart parts did not merge.");
+  if (!joined) throw new Error("Kart parts did not merge.");
+  const merged = mergeVertices(joined, 1e-5);
+  joined.dispose();
   merged.computeBoundingSphere();
   merged.computeBoundingBox();
   return merged;

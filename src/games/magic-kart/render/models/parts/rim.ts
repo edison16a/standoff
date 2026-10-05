@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { CharacterId } from "../../../characters";
 import { emblemRegion, WHITE_UV } from "../kit/atlas-layout";
 import type { Finish } from "../kit/finish";
+import { seg } from "../kit/detail";
 import { part } from "../kit/part";
 import { revolve } from "../kit/revolve";
 import { disc, lathe, torus, tube } from "../kit/shapes";
@@ -38,7 +39,7 @@ function window(a0: number, a1: number, rIn: number, rOut: number, spoke: number
   const pts: THREE.Vector2[] = [];
   const di = Math.asin(Math.min(0.9, spoke / 2 / rIn));
   const dout = Math.asin(Math.min(0.9, spoke / 2 / rOut));
-  const steps = 6;
+  const steps = seg(6, 3);
   for (let i = 0; i <= steps; i++) {
     const a = a0 + dout + sweep + ((a1 - a0 - 2 * dout) * i) / steps;
     pts.push(new THREE.Vector2(Math.cos(a) * rOut, Math.sin(a) * rOut));
@@ -67,7 +68,7 @@ function face(style: RimStyle, r: number): THREE.BufferGeometry {
       shape.holes.push(window(a0, a1, r * 0.34, r * 0.86, turbine ? r * 0.12 : r * 0.2, turbine ? 0.35 : 0));
     }
   }
-  const g = new THREE.ExtrudeGeometry(shape, { depth: 0.02, bevelEnabled: true, bevelThickness: 0.012, bevelSize: 0.01, bevelSegments: 1, curveSegments: 16 });
+  const g = new THREE.ExtrudeGeometry(shape, { depth: 0.02, bevelEnabled: true, bevelThickness: 0.012, bevelSize: 0.01, bevelSegments: 1, curveSegments: seg(16, 6) });
   g.rotateY(Math.PI / 2);
   return g;
 }
@@ -81,7 +82,7 @@ export function buildRim(style: RimStyle, r: number, width: number, at: number):
   const hw = width / 2;
   const parts = [
     // The barrel, seen from inside through the spokes, closed off behind.
-    part(revolve([{ r: r * 1.02, x: -hw * 0.8 }, { r: r * 1.02, x: hw * 0.8 }], 36, () => WHITE_UV), "#2c2c32", { finish: "gunmetal" }),
+    part(revolve([{ r: r * 1.02, x: -hw * 0.8 }, { r: r * 1.02, x: hw * 0.8 }], seg(36, 10), () => WHITE_UV), "#2c2c32", { finish: "gunmetal" }),
     part(disc(r * 1.02, 36), "#1e1e24", { finish: "gunmetal", at: [-hw * 0.5, 0, 0], rot: [0, Math.PI / 2, 0] }),
     part(torus(r * 1.0, r * 0.05, 32, 6), style.color, { finish: style.finish === "chrome" ? "chrome" : style.finish, at: [at + 0.012, 0, 0], rot: [0, Math.PI / 2, 0] }),
     // Brake disc behind the spokes.

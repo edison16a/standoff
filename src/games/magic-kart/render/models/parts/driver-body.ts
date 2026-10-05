@@ -37,8 +37,9 @@ export function driverBody(rig: Rig, look: SuitLook): THREE.BufferGeometry[] {
   const legs: THREE.BufferGeometry[] = [part(rbox(0.46 * b, 0.22, 0.4, 0.1), look.suit, { finish: "cloth", at: [0, 0.06, 0.02] })];
   for (const side of [1, -1]) {
     const hip = new THREE.Vector3(side * 0.13, 0.06, 0.08);
-    const knee = new THREE.Vector3(side * 0.16, 0.24, Math.max(0.36, wheelZ * 0.72));
-    const ankle = new THREE.Vector3(side * 0.15, 0.03, wheelZ + 0.32);
+    // Knees up under the wheel, feet down in the footwell, out of sight under the cowl.
+    const knee = new THREE.Vector3(side * 0.16, 0.2, Math.max(0.34, wheelZ * 0.7));
+    const ankle = new THREE.Vector3(side * 0.15, -0.14, wheelZ + 0.24);
     legs.push(part(limb(hip, knee, 0.085), look.suit, { finish: "cloth" }));
     legs.push(part(limb(knee, ankle, 0.07), look.suit, { finish: "cloth" }));
     legs.push(part(rbox(0.13, 0.12, 0.24, 0.05), look.boot, { finish: "leather", at: [ankle.x, ankle.y, ankle.z + 0.07] }));
