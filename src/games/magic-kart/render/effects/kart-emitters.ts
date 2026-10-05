@@ -64,9 +64,9 @@ export function boostFire(kart: Kart, view: KartView, p: Pools, plasma: boolean)
   for (const e of design.exhausts) {
     view.bodyPoint(e[0], e[1], e[2] - 0.15, at);
     const hot = plasma ? (Math.random() < 0.5 ? "#7ff0ff" : "#8f6bff") : Math.random() < 0.5 ? "#ffb030" : "#ff5a1f";
-    p.glow.emit({ x: at.x, y: at.y, z: at.z, vx: -kart.vx * 0.15 + rand(1), vy: rand(1) + 0.4, vz: -kart.vz * 0.15 + rand(1), life: 0.22, size: 0.7, grow: 0.4, color: hot });
+    p.glow.emit({ x: at.x, y: at.y, z: at.z, vx: -kart.vx * 0.15 + rand(1), vy: rand(1) + 0.4, vz: -kart.vz * 0.15 + rand(1), life: 0.2, size: 0.42, grow: 0.5, color: hot, alpha: 0.8 });
     behind.set(-Math.sin(kart.heading), 0.25, -Math.cos(kart.heading)).normalize();
-    p.flares.add(at, behind, plasma ? "#6ff4ff" : "#ff9a3a", 1.3 + Math.random() * 0.4, 0.75);
+    p.flares.add(at, behind, plasma ? "#6ff4ff" : "#ff9a3a", 0.75 + Math.random() * 0.25, 0.6);
     if (Math.random() < 0.05) {
       // A backfire: a bright pop and a puff of dark smoke.
       p.glow.emit({ x: at.x, y: at.y, z: at.z, life: 0.12, size: 1.3, color: plasma ? "#e8fdff" : "#fff1b0" });

@@ -51,6 +51,25 @@ A spin out ends with a second of protection, shown by a blink, so hits never cha
 
 Every map has chevron boards on the outside of each tight bend, painted arrows before them, striped kerbs and a clear barrier or drop at the edge.
 
+## The karts
+
+Every kart is its own design, built in code with no model files.
+
+* **Blaze, Flame Rod:** a long candy red hot rod with an open supercharged engine, chrome intake trumpets, heat blued titanium side pipes, a carbon front wing, a big rear wing and flames down the side pods. Chrome five spoke wheels on road slicks.
+* **Pip, Lily Buggy:** a dune buggy on long travel coilovers, with a yellow roll cage, a light bar on the roof, a bull bar, a skid plate, mud flaps and a spare wheel on the back. Yellow beadlock rims on knobbly balloon tyres.
+* **Nova, Comet Glider:** a wide pearl white wedge with a smoked windscreen, blue fins, neon lines that follow the bodywork and a jet turbine in the tail. Turbine wheels with a cyan stripe on the sidewall.
+* **Mochi, Dumpling Tank:** a retro bubble car in pearl pink and cream, with round fenders, chrome bumpers, a smiling chrome grille, big round headlamps, a steamed bun on the bonnet and whitewall tyres on chrome hub caps.
+
+Each kart wears its own badge on the bonnet, the hub caps, the steering wheel and the driver's chest, and its own race number on the back. Tyres have tread and lettering on the sidewall. Rims have hubs, lug nuts and a brake disc behind them. The axle, the wishbones and the coilover springs show under the bodywork.
+
+The paint is clear coated. It reflects the map's own sky and road plus soft boxes like a photo studio's, so long highlights slide over the bodywork as a kart turns. Chrome, brushed metal, carbon, rubber, leather and glass each have their own finish.
+
+The drivers sit in bucket seats in racing suits and gloves. Blaze wears an open face helmet with goggles, Pip a backwards cap, Nova a visor with glowing eyes and Mochi a headband with a bow. Their hands hold the steering wheel and turn it, and their arms bend at the elbow to follow it. They lean into bends, tip forward under braking and look where they are going.
+
+On the move, the wheels spin with the speed and the front ones steer, the inside one a little more. The body rides on springs. It rolls toward the outside of a bend, dips its nose under braking, squats under power, sinks and bounces back on a landing, and jiggles over kerbs and sand. A drifting kart tips into its slide. Brake lights flare while braking and lamps get a soft halo, brighter at night. On boost the exhaust tips glow, pop the odd backfire and puff smoke, and the flames flicker, blue plasma from Nova's turbine. Drift sparks fly as streaks that skip off the road behind the tyres, white at first, then blue, orange and purple as the turbo charges. Each kart has a contact shadow drawn from its own wheels.
+
+A kart's body is one draw, its driver one more and each wheel one, since paint, chrome, rubber and lamps are one material with each part's finish stored in its vertices. Every kart shares one texture with all the tyres, stickers and badges. A kart more than 15 metres from a view's camera is drawn in a coarse cut with about a third of the triangles, so a race draws about as many triangles as it did with the old blocky karts. If a machine still runs below 50 frames a second for a couple of seconds, the race steps down one level at a time: a little less resolution, the coarse cut sooner, then no clear coat (`render/quality.ts`). A frame rate the player capped lower is left alone.
+
 ## Fair play
 
 Laps count by checkpoints in order: only driving through each one forwards counts. A kart that finds its way too far past the next checkpoint, or far back behind the last, is put back on the road. Falling off, or sitting stuck for a few seconds with the pedal down, also puts a kart back. Facing back down the track shows Wrong way.
@@ -65,14 +84,14 @@ Effects are layered and each repeat lands at a slightly different pitch. A glide
 
 * `engine/`: the race as pure code with no drawing: the track geometry, kart physics (the pedals, surge and drift model in `drive.ts`, the glider in `glide.ts`), laps and checkpoints, power ups, throws, obstacles, respawns and the computer drivers. Every number that shapes the feel is in `tuning.ts`. Unit tested.
 * `tracks/`: one file per map, as data.
-* `render/`: three.js. `models/` has the four karts and drivers built from painted primitives and merged per kart, and each driver's glider (`glider.ts`, with the cloth in `glider-sail.ts`), which `glider-view.ts` unfolds, `scenery/` one file per map, `track/` the road, kerbs, barriers and markings, `props/` the cubes, obstacles and throws, `effects/` the particles.
+* `render/`: three.js. `models/` has the four karts in `karts/` (one file per kart and one per driver's head), the parts they share in `parts/` (tyres, rims, suspension, exhausts, lamps, seats, the steering wheel and the rigged driver), the kit they are made with in `kit/` (lofted bodies, projected decals, the shared sticker texture and the one kart material), the springs the body rides on (`kart-motion.ts`), the driver's pose (`driver-pose.ts`), and each driver's glider (`glider.ts`, with the cloth in `glider-sail.ts`), which `glider-view.ts` unfolds, `scenery/` one file per map, `track/` the road, kerbs, barriers and markings, `props/` the cubes, obstacles and throws, `effects/` the particles, spark streaks, boost flames and lamp halos.
 * `host/`: the session on the computer (lobby, race driver, what the phones and the overlay see) and its React screens. While a race runs, the host's hidden admin panel (three quick taps on the settings gear) offers Final lap, which puts every kart on the last lap in the same order, and Finish the race, which sends everyone over the line as they stand, straight to the podium (`host/admin.ts`, `engine/shortcuts.ts`).
 * `phone/`: the controller session, the steering wheel maths and the phone screens. Steering reads where "up" points across the screen, so it holds however far the phone leans and never flips the way Euler angles do. The response is tuned in `phone/tilt.ts`: `FULL_LOCK` is the wheel angle for full lock (50 degrees, fine anywhere from 45 to 60), `DEAD_ZONE` keeps a steady hand going straight, and `LINEAR_SHARE` blends a linear and a cubic curve so small turns stay fine. With these values a braking drift starts from about 25 degrees of wheel. `phone/orientation-watch.ts` tells whether the page is upright from every signal a turn gives, and reads again shortly after, since iOS can report the new size late. `phone/controller-memory.ts` keeps the setup step, steering mode, calibration and driver in session storage per room and seat, so a reload resumes.
 * `audio/`: the synthesized lobby tune and race song (`lobby-song.ts`, `race-song.ts`, played on the instruments in `kart-band.ts`), an engine per kart pitched by speed, every effect, the crowd and the race caller, through the platform's audio buses (see Sound above).
 * `protocol/`: the zod schemas for the messages between the phones and the host.
 * `showcase/`: the game playing itself for the home screen's media (see below).
 
-The host draws every player's view with one WebGLRenderer and scissored viewports. Scenery is instanced, karts are two or three meshes each, and shadows are soft blobs, so four views stay smooth on a laptop.
+The host draws every player's view with one WebGLRenderer and scissored viewports. Scenery is instanced, karts are six draws each and coarse when far away, and shadows are soft pictures under each kart, so four views stay smooth on a laptop.
 
 ## Home screen media
 
