@@ -140,6 +140,14 @@ export class KartModel {
     this.material.envMapIntensity = intensity;
   }
 
+  /** Clear coat on or off, for machines that need the frame time back. */
+  setClearcoat(on: boolean): void {
+    const coat = on ? 1 : 0;
+    if (this.material.clearcoat === coat) return;
+    this.material.clearcoat = coat;
+    this.material.needsUpdate = true;
+  }
+
   /** Headlamp brightness, brighter on night maps. */
   setHeadlamps(level: number): void {
     this.material.userData.head.value = level;

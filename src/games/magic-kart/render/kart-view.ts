@@ -10,8 +10,7 @@ import { KartModel } from "./models/kart-model";
 import { kartDesign } from "./models/karts";
 
 const local = new THREE.Vector3();
-/** Metres from the camera beyond which a kart is drawn in its coarse cut. */
-const FAR_SWITCH = 15;
+
 
 /**
  * One kart as the big screen draws it: the model, posed from the race
@@ -29,6 +28,8 @@ export class KartView {
   private readonly stars = new THREE.Group();
   private readonly ice = new THREE.Group();
   private readonly flames: THREE.Group[] = [];
+  /** Metres from the camera beyond which this kart is drawn in its coarse cut. */
+  farSwitch = 15;
   private pitch = 0;
   private lastHeading: number;
   private yawRate = 0;
@@ -167,7 +168,7 @@ export class KartView {
     const near = !own && viewerKartId !== null ? eye.distanceTo(this.model.root.position) : Infinity;
     const inTheWay = near < 5.5;
     // Beyond a few kart lengths the coarse cut looks the same and costs far less.
-    this.model.setFar(eye.distanceTo(this.model.root.position) > FAR_SWITCH);
+    this.model.setFar(eye.distanceTo(this.model.root.position) > this.farSwitch);
     this.tag.visible = tags && !own && !this.ghost && near > 9;
     const opacity = this.ghost ? (own ? 0.4 : 0.06) : inTheWay ? Math.max(0.3, Math.min(0.75, 0.3 + (near - 2) * 0.13)) : 1;
     this.model.setOpacity(opacity);

@@ -33,7 +33,8 @@ export class KartPreview {
     this.canvas.className = "mk-pick__canvas";
     holder.appendChild(this.canvas);
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: true });
-    this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    // Sharp enough on a phone, and light enough to leave the controller smooth.
+    this.renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
     this.scene.add(new THREE.HemisphereLight("#ffffff", "#6b5a8a", 1.6));
@@ -94,6 +95,9 @@ export class KartPreview {
       if (size.x !== width || size.y !== height) {
         this.renderer.setSize(width, height, false);
         this.camera.aspect = width / height;
+        // A tall card would crop the kart's ends, so the view widens until the whole kart fits across it.
+        const across = Math.tan(THREE.MathUtils.degToRad(19));
+        this.camera.fov = Math.max(32, THREE.MathUtils.radToDeg(2 * Math.atan(across / this.camera.aspect)));
         this.camera.updateProjectionMatrix();
       }
       this.angle += dt * 0.7;
