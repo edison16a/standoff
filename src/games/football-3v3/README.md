@@ -25,8 +25,8 @@ Every rating runs from 1 to 10 and changes play (`engine/build-effects.ts`, and 
 
 * **Speed** sets top speed.
 * **Agility** sets how sharply a player turns and how soon they can juke again.
-* **Power** sets how quickly a player gets going, how far a tackle reaches, and how often a ball carrier breaks a tackle that reached him or slips a lineman's grab. Only the stronger man breaks one, and never more than two in five.
-* **Hands** set how far from the body a pass can be caught, for receivers and for defenders picking it off.
+* **Power** sets how quickly a player gets going, how far a tackle reaches, how hard a tackler's grip holds, and a ball carrier's leg drive and balance, so a strong back runs through arm tackles and stays up through bumps (see The physics).
+* **Hands** set how far from the body a pass can be caught and how surely it is held, for receivers and for defenders picking it off, and how securely a carrier holds the ball in a big hit.
 * **Arm** sets the speed and spiral of a throw and how far the QB kicks.
 * **Cover** sets how wide a defender reads the throw: how far from the catch spot he jumps the route, how close to the ball's path he picks it off, and how often a computer defender knocks a pass down.
 
@@ -104,13 +104,15 @@ Everything is synthesised through the audio engine, with no crowd: the brass and
 1. **Pick.** The QB picks throw, run or kick. A kick in range (58 yards or less) goes for the posts, anything longer is a punt. Ten seconds with no pick means throw. The defence can move while the offense decides.
 2. **Hike.** The QB has 5 seconds to hike. After that the ball is snapped anyway. Nobody on defence crosses the line before the snap. The rush starts at the snap.
 3. **Live.** The QB drops back and throws, or runs. Receivers run routes. Linemen crash together and push, and the defence slowly wins, so the pocket closes.
-4. **Whistle.** A tackle, stepping out, an incomplete pass, a dive landing, or a score.
+4. **Whistle.** A tackle, stepping out, an incomplete pass, a dive landing, or a score. A fumble stays live until someone picks it up, or until it goes out or lies dead, when the side that had it keeps it there.
 
 ### Throwing
 
-The throw stick draws an invisible aim line from the QB. The receiver nearest that line is the target and its ring lights up. Letting go throws. The throw leads the receiver's run and bends gently after a receiver who changes course, so a good throw does not miss. It can still be picked off: a defender standing in front of the target at the throw takes the ball, and a defender a person steers into the ball's path picks it off. A defender on Guard, or a computer defender, never jumps into the path.
+The throw stick draws an invisible aim line from the QB. The receiver nearest that line is the target and its ring lights up. Letting go throws. The throw is solved to lead the receiver's run, then leaves the hand a little off, as a real throw does: the arm sets how far, and a pass rusher in the QB's face makes it worse. From there it is a real ball in the air. Once it is up, the receiver reads it and his legs take him to meet it, a person's receiver too unless he pushes the stick well away.
 
-The QB throws once a play, with the ball in hand, and his accuracy is the same on every throw. He can shuffle back while he throws.
+Who gets it is decided where the ball meets the hands (see The physics). A defender sitting in front of the target at the throw reads it and breaks on the ball, and a defender a person steers can pick it off too. A computer defender only knocks passes down. A defender on Guard never plays the ball.
+
+The QB throws once a play, with the ball in hand. Moving or standing makes no difference to his aim. He can shuffle back while he throws.
 
 **The QB and Run.** As a passer the QB is clearly slower than everyone else, slowest just after the snap while he sets up, then a little quicker a few seconds in (`QB_PACE` in `engine/tuning.ts`). To take off he presses Run. From then on he is the runner for the rest of the play: he cannot throw or pitch, his phone switches to the runner's pad with Juke and Dive, and he moves at a normal runner's speed (`engine/qb-run.ts`). Crossing the line with the ball does the same. Computer QBs press Run too, when nobody is open and there is grass ahead, or when the read goes on too long. A QB brought down after pressing Run is tackled, not sacked.
 
@@ -123,18 +125,41 @@ On a run call one runner lines up beside the QB and a yard deeper, on the side w
 * **Juke.** The stick against the run picks the move: ahead or no stick is a 360 spin, back is a back move, across is a side step. Jukes slow the runner. There is a cooldown, and each juke in quick succession comes out slower and leaves the legs heavier.
 * **Dive.** A burst forward. A ball carrier is down where they land. A receiver can dive for a catch with a longer reach.
 * **Rush.** A short burst that pushes through the line far more easily.
-* **Tackle.** A lunge, only when the ball carrier is close enough. A runner mid juke makes it miss, and the tackler stays down for a while.
+* **Tackle.** A lunge, only when the ball carrier is close enough. A runner mid juke makes it miss, and the tackler stays down for a while. Otherwise the two bodies collide and momentum decides (see The physics).
 * **Guard.** Held, the defender tails the nearest receiver on their own. Trailing like that never puts them in front of the ball.
 
-Everyone runs with weight: a player gets going over a couple of seconds, curves on a wide radius at speed, and needs room to stop. Heavier players get going slower.
+Everyone runs with weight: a player gets going over a couple of seconds and needs room to stop, and heavier players get going slower. A hard cut at speed is a plant and cut: speeding up, braking and turning share the grip of the cleats, so the player brakes and turns at once.
 
 ### Kicking
 
-Two meters. A marker sweeps left and right: stop it in the green for a straight kick. Then a marker climbs and falls: stop it high for a long one. Field goals tumble end over end; punts spiral and bounce.
+Two meters. A marker sweeps left and right: stop it in the green for a straight kick. Then a marker climbs and falls: stop it high for a long one. Field goals tumble end over end and can clang off the posts, in or out; punts spiral and take the hops of a real football.
+
+## The physics
+
+Everything that happens to the ball and the bodies comes from the simulation (`engine/physics/`, `engine/catch/`, `engine/hit.ts`, `engine/fumble.ts`). It is deterministic: the same seed and inputs play the same.
 
 ### The ball
 
-A spiral spins about its long axis, its nose tips over to follow the arc, and it wobbles a little around that line, more for a weak arm or a throw under pressure. Drag is lower nose first than side on, so a tight spiral carries farther than a tumbling kick.
+* **A real football.** A prolate spheroid 28 cm long and 17 cm across, 0.42 kg, with the moments of inertia of a leather shell. It is a rigid body: position, velocity, orientation and angular momentum, stepped 480 times a second.
+* **The air.** Drag rises from nose on to side on. Lift pushes toward where the nose points off the path. The air also tries to turn the ball side on, and that is what a spiral's spin turns into a slow circling of the nose round the path: a good spiral keeps its nose along its arc and drifts a little to one side. Too little spin or too much wobble and the gyroscope cannot hold it: the ball ducks, turns side on and dies short.
+* **Kicks** tumble end over end with the top going back. A kick off the green also picks up a twist, so it wobbles.
+* **Bounces.** The contact is the lowest point of the spheroid. Landing on a tip, the bounce kicks the ball into a spin and up; landing on its side, it skids and rolls. A tiny change of angle sends it another way, as a real football does. Grass slows it and it settles.
+* **The posts and the net.** The uprights and the crossbar are solid steel tubes, so a kick can clang off one and still go through, or bounce back out. A net behind each goal post swallows the kicks that clear. The ball keeps flying after the whistle, into the net or down the field.
+
+### Hands
+
+* **The reach** is a capsule round each player from the hips to a leap over the head, as wide as the arms reach out, wider for good hands, stretched along the turf in a dive.
+* **The catch** happens where the ball passes nearest the hands. The odds come from how it arrives: into the chest or at full stretch, soft or a bullet, seen coming or over the shoulder, with a defender's hands in there or not, and the hands rating. A pitch is a soft toss and is rarely dropped.
+* **Drops and tips.** A ball the hands do not hold is a collision with them: it pops up off soft hands, or is slapped down by a swat, and stays live. Anyone can catch the tip, the receiver too, and every player reads the new path.
+
+### Bodies
+
+* **Running.** The legs push hard from a standstill and fade to nothing at top speed. The cleats' grip is a friction circle, so a hard cut brakes and turns at once.
+* **Jukes** push off a planted foot as hard as the cleats hold (agile players harder), then the stride bends back into the run.
+* **Tackles.** A lunging tackler and the carrier meet in a hard, sticky collision along the line between them, so momentum (mass times speed) is traded and the lighter or slower man is knocked back. A change of speed past the carrier's balance is a big hit: he goes down. Otherwise the tackler's grip, strongest square on and weakest chasing from behind, has to hold the momentum of the carrier's run and his leg drive. A big back at full speed runs through arm tackles; a speedster does not. A broken tackle leaves the carrier shaken for a moment.
+* **Fumbles.** A big hit can jar the ball loose, more the bigger the hit, less with strong hands. The ball flies out with the hit and bounces as a real ball; the first player to it scoops it up.
+* **Blocks.** Each pair of linemen pushes as one body with both men's mass: every surge is a new balance of leg drive, and the pair lurches and settles. A runner who crashes into them shoves them by his momentum and is stopped.
+* **Bumps and piles.** Players who run into each other trade momentum; a big jolt shakes a player's footing. Players on the ground settle apart into a pile and men on their feet step over them.
 
 ## Computer players
 
@@ -142,13 +167,13 @@ Difficulty comes from `src/games/kit/difficulty`: Easy (the default), Medium, Ha
 
 * The QB drops back, reads the receivers, throws to the most open one, and avoids throwing into a defender sat in front. With nobody open and room ahead, or when the read drags on, it presses Run and takes off.
 * Receivers run slants, gos, outs, curls, drags and posts, and go to meet the ball.
-* Defenders cover a receiver from over the top. A spare one rushes the QB on about half the plays and sits deep as a safety on the rest. A computer defender next to a pass can knock it down, but never catches it. Once someone has the ball they chase and tackle.
+* Defenders cover a receiver from over the top. A spare one rushes the QB on about half the plays and sits deep as a safety on the rest. A computer defender next to a pass can knock it down; only one sitting in front of the receiver at the throw reads it well enough to catch it. Once someone has the ball they chase and tackle.
 * It calls a run on about one play in four, and on half of them with three yards or less to go.
 * On fourth down the bot kicks, a field goal in range or a punt, unless it is fourth and short past midfield.
 
 ## The engine
 
-`engine/` is plain TypeScript with no drawing or sound. It steps at a fixed rate (`STEP`, 60 a second) and plays the same way from the same seed and inputs.
+`engine/` is plain TypeScript with no drawing or sound. It steps at a fixed rate (`STEP`, 60 a second) and plays the same way from the same seed and inputs. Inside a step the ball runs in 8 fixed sub steps and the bodies in 2.
 
 ```ts
 const match = new Match({ entries: buildLineup(signups), seed, level: "easy" });
@@ -163,14 +188,14 @@ const events = match.drainEvents(); // hikes, throws, catches, tackles, kicks, s
 const pad = seatStatus(match, seat); // which controls a phone should show
 ```
 
-* `buildView` gives plain numbers: players with their action and its clock, the ball with its axis and spin, the lines of scrimmage and first down, down and distance, the kick meters, the clock and score. `blendViews` mixes two for slow motion replays.
+* `buildView` gives plain numbers: players with their action and its clock and their acceleration, the ball with its orientation, axis and spin and the last thing it hit, the lines of scrimmage and first down, down and distance, the kick meters, the clock and score. `blendViews` mixes two for slow motion replays.
 * `match.lastPass` keeps the last throw's release, speed and spin for the touchdown replay.
 * Sticks come in field space. The host turns a phone's stick into field space for its camera.
 * The kick meters run from `meterAim` and `meterPower`. A phone can draw them itself from `seatStatus(...).meter` and send its own reading with the press.
 * A phone that drops is played by the computer with `setAuto`.
 * `admin.ts` has the shortcuts for the host's admin panel: `adminTouchdown`, `adminFieldGoal` and `adminTwoPoint`. They go through the real rules.
 
-Files: `field` and `downs` for the field and the rules of downs, `motion` and `body` for running, `juke`, `tackle`, `guard` and `linemen` for contact, `flight`, `aim`, `passing` and `catching` for the ball in the air, `qb-run` for the QB's pace and the Run button, `run-play` for the run call and the pitch, `kick` and `kick-flight` for kicking, `whistle`, `score` and `phases` for how plays end and what comes next, `build-effects` for what each rating does, `ceremony` for the trophy presentation, `bots/` for the computer players.
+Files: `field` and `downs` for the field and the rules of downs, `motion`, `body` and `bodies` for running, `juke`, `tackle`, `hit`, `collide`, `guard` and `linemen` for contact, `fumble` for a loose ball, `physics/` for the rigid ball, the air, the turf, the posts and the net, `flight`, `aim`, `throw-error`, `passing`, `catching` and `catch/` for the ball in the air and the hands, `qb-run` for the QB's pace and the Run button, `run-play` for the run call and the pitch, `kick` and `kick-flight` for kicking, `whistle`, `score` and `phases` for how plays end and what comes next, `build-effects` for what each rating does, `ceremony` for the trophy presentation, `bots/` for the computer players.
 
 ## Drawing the game
 
@@ -200,14 +225,15 @@ const board = scoreboard(view); // for <Scoreboard board={board} />
 * **The line.** From the snap to the whistle each pair of linemen is locked together, low and driving. The engine marks them `blocked` for that, so the drawing never guesses.
 * **Reaching.** The target and nearby defenders go up for a pass. The passer's own linemen leave it alone.
 * **Rings.** A bold magenta ring with a white edge pulses under the receiver the throw stick is on (or the back on a run call), and stays lit on the receiver the ball was thrown to until it arrives. No team or seat wears magenta, so it is never mistaken for another ring. A thin ring in team trim marks each player a person controls.
-* **The ball.** A laced football that follows the engine's flight: its long axis, the wobble and the spiral spin, or the tumble of a kick. Held, it sits in the carrier's hands.
+* **The ball.** A laced football drawn exactly as the engine's rigid body is turned: the spiral's spin, a duck's wobble, a kick's tumble. A fast spin smears the laces round the ball the way a camera sees it, and a hard knock off the turf or the posts squashes it along the hit for a moment. Held, it sits in the carrier's hands.
+* **The posts and the nets.** A kick off the steel sets the goal post shaking and dying away. The net behind each goal post bulges where a kick hits it and swings back.
 * **Touchdowns.** The scorer spikes it if that is their style, and the ball bounces away. Everyone else celebrates their own way: a dance, a flex, a salute, a leap or a point to the crowd. At the end the winners celebrate and the losers hang their heads.
 
 ### The camera
 
 * **Behind the play.** High behind the team with the ball, looking downfield. Before the snap and while the QB is in the pocket it keeps the whole formation in the picture, receivers split wide included: `camera/fit.ts` backs it straight up its line of sight until they fit, so a narrow screen sees the same players as a wide one. Once someone runs with the ball it comes in tighter behind them. It backs up and rises a little as a pass goes deep, turns round after a turnover and glides rather than jerks.
 * **Phone sticks.** `renderer.director.groundForward()` is the way up the screen on the ground, in field space, for turning a phone's stick into a field direction that matches the camera.
-* **Kicks.** Low behind the kicker through the posts, then up and after the ball.
+* **Kicks.** Low behind the kicker through the posts, then up and after the ball, staying with it after the whistle as it flies on into the net.
 * **Touchdowns.** A slow orbit round the scorer. At the final whistle, a wide orbit of the winners until the trophy presentation takes over with its own shots.
 * A big hit shakes it a little. Any move that would sweep across the field cuts instead, like the lobby giving way to the game or the ball spotted far downfield.
 
@@ -217,9 +243,9 @@ const board = scoreboard(view); // for <Scoreboard board={board} />
 
 ### The showcase
 
-`showcase/` makes the home screen media from a seeded game of computer players (seed 11) and its trophy presentation, drawn by the real renderer. `reel.ts` records every still of the game, so any moment can be shown at any speed and from any camera.
+`showcase/` makes the home screen media from a seeded game of computer players (`SHOWCASE_SEED` in `scene.ts`) and its trophy presentation, drawn by the real renderer. `reel.ts` records every still of the game, so any moment can be shown at any speed and from any camera.
 
-* The loop is a wordless eight second trailer (`trailer.ts`, cameras in `film-cams.ts`). The QB winds up and throws in slow motion from low in front of him. A camera rides the spiral. The receiver catches it, then side steps a diving tackler. A corner flies in and buries a runner on a juke, deep in slow motion. The captain lifts the trophy. The film runs in a circle, so its last frame cuts straight into its first and the clip loops with no seam.
+* The loop is a wordless eight second trailer (`trailer.ts`, cameras in `film-cams.ts`). The QB winds up and throws in slow motion from low in front of him. A camera rides the spiral. The receiver catches it, then side steps a diving tackler. The power back flies in and buries the other runner as he spins, deep in slow motion. The captain lifts the trophy. The film runs in a circle, so its last frame cuts straight into its first and the clip loops with no seam.
 * The icon is a cover: the runner in the big hit shot drives straight at the viewer with the ball, a beat before contact, the tackler flying in over his shoulder, from low on the turf under the FOOTBALL 3v3 logo. The still turns up the warm key light, so his front reads at a glance. The poster is the diving tackler reaching for the receiver as he leaps clear.
 * `film-lights.ts` dims the stadium's fill and adds a hard rim light and a warm key that follow the camera, and the page grades the picture with more contrast and a vignette.
 
