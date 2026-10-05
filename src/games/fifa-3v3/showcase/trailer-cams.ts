@@ -40,8 +40,8 @@ const AIMS: Record<TrailerCam, Aim> = {
   },
   // Behind the net as the ball bursts into it.
   net: (s, u, g, out) => {
-    out.pos.set(26.4 + ease(u / 0.45) * 0.3, 0.95, 0.4);
-    out.look.set(18, 1.25, 1.6);
+    out.pos.set(26.6 + ease(u / 0.45) * 0.3, 1.05, -3.1);
+    out.look.set(18, 1.2, -1.9);
     out.fov = 48;
   },
   // Low in front of him in the corner: the run away, the leap and the half turn, landing facing us.

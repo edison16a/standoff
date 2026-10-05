@@ -23,7 +23,7 @@ export const STRIKER = 0;
  * from the edge of the box and his SUI. The trailer's timings are read
  * from it (trailer-plan.ts).
  */
-const SEED = 51;
+const SEED = 60;
 
 function match(): MatchState {
   return createMatch(LINEUP, { seed: SEED, replays: false, level: "hard", rig: () => "goal" });

@@ -22,8 +22,8 @@ interface Still {
  * viewer as he winds up to shoot on the run, arms spread and his boot
  * drawn back over the ball, from low in front and to one side with the
  * lit stands behind. The poster is his strike from the edge of the box
- * an instant after the ball leaves his boot, the Winger sliding in too
- * late, the goal ahead.
+ * an instant after the ball leaves his boot, spinning on its way to the
+ * far corner, the goal ahead.
  */
 const STILLS: Record<Exclude<ShowcaseView, "loop">, Still> = {
   icon: {
@@ -34,9 +34,9 @@ const STILLS: Record<Exclude<ShowcaseView, "loop">, Still> = {
     haze: 18,
   },
   poster: {
-    at: 69.0,
-    pose: { pos: new THREE.Vector3(10.8, 0.6, -7.2), look: new THREE.Vector3(17, 1.0, -1.8), fov: 46 },
-    subject: new THREE.Vector3(13.1, 0.9, -3.2),
+    at: 24.15,
+    pose: { pos: new THREE.Vector3(11.0, 0.6, 4.4), look: new THREE.Vector3(17.3, 1.0, -0.6), fov: 46 },
+    subject: new THREE.Vector3(13.4, 0.9, 0.6),
     haze: 40,
   },
 };
