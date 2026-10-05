@@ -1,7 +1,7 @@
 import { Match, STEP, buildView, type MatchView } from "../engine";
 import { adminWin } from "../engine/admin";
 import { blendViews } from "../engine/view-blend";
-import { SHOWCASE_TEAMS } from "./scene";
+import { SHOWCASE_SEED, SHOWCASE_TEAMS } from "./scene";
 
 /**
  * Every still of a seeded match of computer players up to a moment,
@@ -37,13 +37,13 @@ export class Reel {
   }
 }
 
-/** The showcase's own game, seed 11, to 90 seconds: the long touchdown and the dive into the end zone. */
-export function gameReel(seed = 11): Reel {
+/** The showcase's own game to 90 seconds: the long touchdown, and the big hit late on. */
+export function gameReel(seed = SHOWCASE_SEED): Reel {
   return new Reel(new Match({ entries: SHOWCASE_TEAMS, seed, level: "hard", firstOffense: 0 }), 90);
 }
 
 /** The same game won on the spot by the Storm, through its trophy presentation. */
-export function trophyReel(seed = 11): Reel {
+export function trophyReel(seed = SHOWCASE_SEED): Reel {
   const match = new Match({ entries: SHOWCASE_TEAMS, seed, level: "hard", firstOffense: 0 });
   adminWin(match, 0);
   return new Reel(match, 12);

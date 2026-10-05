@@ -4,7 +4,7 @@ import * as THREE from "three";
 import type { ShowcaseView } from "@/platform/games/game-api";
 import { MatchRenderer } from "../render/match-renderer";
 import { isLabMove, labView } from "./lab";
-import { ShowcaseScene } from "./scene";
+import { SHOWCASE_SEED, ShowcaseScene } from "./scene";
 import { STILLS } from "./stills";
 import { TrailerPlayer } from "./trailer-player";
 
@@ -31,7 +31,7 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     const params = new URLSearchParams(window.location.search);
     const renderer = new MatchRenderer(canvas, { quality: "film", scale: view === "loop" ? 0.8 : 1 });
     const lab = params.get("lab");
-    const labScene = isLabMove(lab) ? new ShowcaseScene(11) : null;
+    const labScene = isLabMove(lab) ? new ShowcaseScene(SHOWCASE_SEED) : null;
     if (labScene) renderer.director.setFixed(new THREE.Vector3(-9, 1.6, 0), new THREE.Vector3(0, 0.9, 0), 55);
     const player = labScene ? null : new TrailerPlayer(renderer, renderer.scene);
     const held = params.get("t");

@@ -1,6 +1,6 @@
 import type { ShowcaseView } from "@/platform/games/game-api";
 import type { MatchView } from "../engine";
-import type { FilmCam } from "./film-cams";
+import { JUKER, TACKLER, type FilmCam } from "./film-cams";
 
 /** A frozen moment of the trailer, and its own camera when the film's is not the one for a still. */
 export interface Still {
@@ -11,9 +11,8 @@ export interface Still {
   key?: number;
 }
 
-/** The juker and the corner who dives at him, by id in the seeded game. */
-const RUNNER = 2;
-const TACKLER = 8;
+/** The juker and the tackler who flies at him, by id in the seeded game. */
+const RUNNER = JUKER;
 
 /**
  * Low and just ahead of the runner, looking back up his line, so he
@@ -34,7 +33,7 @@ function coverCam(view: MatchView): FilmCam {
 
 /** The home screen's stills, held from the trailer. */
 export const STILLS: Partial<Record<ShowcaseView, Still>> = {
-  poster: { t: 4.1 },
+  poster: { t: 4.4 },
   // The juke in the big hit shot, a beat before contact: the runner and the ball at us, the tackler flying in behind.
   icon: { t: 5.36, key: 2.5, camera: coverCam },
 };
