@@ -5,7 +5,7 @@ import { SuspensionMotion } from "./kart-motion";
 import { farCut, kartDesign } from "./karts";
 import { kartAtlas } from "./kit/atlas";
 import { kartMaterial, type KartMaterial } from "./kit/kart-material";
-import { makeSkeleton, type BoneName } from "./parts/driver-rig";
+import { makeSkeleton, type BoneName, type Rig } from "./parts/driver-rig";
 
 /** What a kart is doing this frame, for posing it. */
 export interface KartPose {
@@ -44,6 +44,7 @@ export class KartModel {
   readonly body = new THREE.Group();
   readonly material: KartMaterial;
   private readonly bones: Record<BoneName, THREE.Bone>;
+  private readonly rig: Rig;
   private readonly steerPivots: { pivot: THREE.Group; side: number }[] = [];
   private readonly spinners: { spin: THREE.Group; radius: number; side: number }[] = [];
   /** The full and the coarse meshes, one of each pair shown at a time. */
@@ -59,6 +60,7 @@ export class KartModel {
     this.material = kartMaterial(kartAtlas());
     this.root.add(this.chassis);
     this.chassis.add(this.body);
+    this.rig = design.rig;
     const { bones, skeleton } = makeSkeleton(design.rig);
     this.bones = bones;
     const coarse = far ? farCut(character) : null;
@@ -124,7 +126,7 @@ export class KartModel {
     const roll = this.motion.roll + this.driftLean;
     this.body.rotation.set(this.motion.pitch, 0, roll);
     this.body.position.y = this.motion.heave;
-    poseDriver(kartDesign(this.character).rig, this.bones, { steer: pose.steer, roll, brake: pose.brake, boost: pose.boost });
+    poseDriver(this.rig, this.bones, { steer: pose.steer, roll, brake: pose.brake, boost: pose.boost });
     // Exhausts glow up fast on boost and cool off slowly; brake lights flare while braking.
     this.heat += (pose.boost - this.heat) * Math.min(1, dt * (pose.boost > this.heat ? 12 : 1.5));
     this.material.userData.heat.value = this.heat * (0.8 + 0.2 * Math.sin(time * 40));
