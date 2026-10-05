@@ -82,9 +82,10 @@ describe("the run call", () => {
   });
 
   it("is called by computer QBs now and then", () => {
-    const m = new Match({ entries: BOTS, seed: 4, level: "medium", quarterSeconds: 45 });
-    const events = run(m, 240);
-    const calls = events.filter((e) => e.type === "call").map((e) => (e.type === "call" ? e.call : null));
+    const calls = [4, 5, 6].flatMap((seed) => {
+      const m = new Match({ entries: BOTS, seed, level: "medium", quarterSeconds: 45 });
+      return run(m, 240).filter((e) => e.type === "call").map((e) => (e.type === "call" ? e.call : null));
+    });
     expect(calls).toContain("run");
     expect(calls).toContain("throw");
   });

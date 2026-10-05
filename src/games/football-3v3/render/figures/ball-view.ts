@@ -44,10 +44,9 @@ export class BallModel {
       orientBall(this.mesh.quaternion, axis, 0);
     } else {
       this.mesh.position.set(ball.x, Math.max(ball.y, 0.1), ball.z);
-      axis.set(ball.axis.x, ball.axis.y, ball.axis.z);
-      // A dead ball lies on its side; in the air it rolls about its axis, a tumbling kick already turns its axis.
-      if (ball.state === "dead") axis.set(1, 0, 0);
-      orientBall(this.mesh.quaternion, axis, ball.style === "spiral" ? ball.roll : 0);
+      // A dead ball lies on its side; free, it is exactly as the physics has it.
+      if (ball.state === "dead") orientBall(this.mesh.quaternion, axis.set(1, 0, 0), 0);
+      else this.mesh.quaternion.set(ball.quat.x, ball.quat.y, ball.quat.z, ball.quat.w);
     }
     this.placeShadow();
   }

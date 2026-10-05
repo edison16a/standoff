@@ -8,14 +8,19 @@ import { launch, stepFlight, type Flight } from "./flight";
 import type { KickState } from "./kick";
 import type { Match } from "./match";
 import { addScore } from "./score";
-import { BALL, KICK, RULES } from "./tuning";
+import { KICK, RULES } from "./tuning";
 import type { Athlete } from "./types";
 import { lerp, type V3 } from "./vec";
 import { afterScore } from "./whistle";
 
 const inGreen = (aim: number) => Math.abs(aim) <= KICK.green;
 
-/** The kick off the foot: power sets the speed, the accuracy marker how far it hooks off line. */
+/**
+ * The kick off the foot. Power sets the speed, the accuracy marker how
+ * far it hooks off line. A place kick tumbles end over end with the top
+ * going back; a kick off the green also picks up a twist about its long
+ * axis, so it wobbles. A punt is a spiral, tighter for a better strike.
+ */
 export function kickFlight(from: V3, sign: 1 | -1, fieldGoal: boolean, power: number, aim: number, leg: number): Flight {
   const speed = lerp(KICK.minSpeed, KICK.maxSpeed, power) * (0.88 + leg * 0.024);
   const toPosts = Math.atan2(0 - from.z, sign * POSTS.x - from.x);
@@ -25,32 +30,47 @@ export function kickFlight(from: V3, sign: 1 | -1, fieldGoal: boolean, power: nu
   const heading = straight + off;
   const el = fieldGoal ? KICK.fgAngle : KICK.puntAngle;
   const vel = { x: Math.cos(heading) * Math.cos(el) * speed, y: Math.sin(el) * speed, z: Math.sin(heading) * Math.cos(el) * speed };
-  return fieldGoal ? launch(from, vel, "tumble", 13, 0) : launch(from, vel, "spiral", 40, 0.1);
+  if (fieldGoal) return launch(from, vel, "tumble", KICK.tumble + Math.abs(aim) * 4, aim * KICK.twist);
+  return launch(from, vel, "spiral", KICK.puntSpin * (0.6 + 0.4 * power), 0.04 + Math.abs(aim) * 0.3);
 }
 
-/** Good once it crosses the goal line of the posts between the uprights and over the bar. */
+/**
+ * Good once the ball crosses the plane of the posts between the uprights
+ * and over the bar. The posts are solid, so a ball that clips one may
+ * bounce through or back out; on the turf, or back out of reach, it missed.
+ */
 export function judgeFieldGoal(f: Flight, sign: 1 | -1): "good" | "miss" | null {
   if (sign * f.pos.x >= POSTS.x) return Math.abs(f.pos.z) <= POSTS.halfGap && f.pos.y >= POSTS.crossbar ? "good" : "miss";
-  if (f.pos.y <= 0) return "miss";
+  if (f.grounded || f.pos.y <= 0) return "miss";
   return null;
 }
 
 const kickFrom = (kicker: Athlete, sign: 1 | -1): V3 => ({ x: kicker.x + sign * 0.6, y: 0.2, z: kicker.z });
 
+/** Flies a straight kick at this power until the verdict. */
+function straightKickIsGood(kicker: Athlete, sign: 1 | -1, power: number, leg: number): boolean {
+  const f = kickFlight(kickFrom(kicker, sign), sign, true, power, 0, leg);
+  for (let i = 0; i < 600; i++) {
+    stepFlight(f, 1 / 60);
+    const verdict = judgeFieldGoal(f, sign);
+    if (verdict) return verdict === "good";
+  }
+  return false;
+}
+
 /** The least power that makes a straight kick good, plus a margin: what a computer kicker aims for. */
 export function bestFieldGoalPower(m: Match, kicker: Athlete): number {
   const sign = attackSign(kicker.team);
   const leg = kickLeg(statsOf(kicker));
-  for (let p = 0.3; p <= 1.001; p += 0.05) {
-    const f = kickFlight(kickFrom(kicker, sign), sign, true, p, 0, leg);
-    let verdict: "good" | "miss" | null = null;
-    for (let i = 0; i < 900 && verdict === null; i++) {
-      stepFlight(f, 1 / 120);
-      verdict = judgeFieldGoal(f, sign);
-    }
-    if (verdict === "good") return Math.min(1, p + 0.08);
+  if (!straightKickIsGood(kicker, sign, 1, leg)) return 1;
+  let lo = 0.2;
+  let hi = 1;
+  for (let i = 0; i < 7; i++) {
+    const mid = (lo + hi) / 2;
+    if (straightKickIsGood(kicker, sign, mid, leg)) hi = mid;
+    else lo = mid;
   }
-  return 1;
+  return Math.min(1, hi + 0.08);
 }
 
 export function launchKick(m: Match, k: KickState, kicker: Athlete, leg: number): void {
@@ -83,7 +103,7 @@ function fieldGoalResult(m: Match, k: KickState, good: boolean): void {
   finish(m, k, "missedKick", k.conversion ? afterScore(m, d.offense) : newDrive(m.defense, 100 - d.los, d.ballZ));
 }
 
-/** Where a punt comes to rest, after a few bounces, and who gets it there. */
+/** Where a punt comes to rest, after its bounces, and who gets it there. */
 function puntResult(m: Match, k: KickState, f: Flight): void {
   const receiving = m.defense;
   const yl = xToYard(receiving, f.pos.x);
@@ -98,6 +118,7 @@ export function updateKickFlight(m: Match, k: KickState, dt: number): void {
   if (!f) return;
   stepFlight(f, dt);
   m.ball.pos = { ...f.pos };
+  for (const hit of f.hits) if (hit.kind === "upright" || hit.kind === "crossbar") m.emit({ type: "doink", part: hit.kind, power: Math.min(1, hit.impulse / 4) });
   const sign = attackSign(m.offense);
   if (k.fieldGoal) {
     const verdict = judgeFieldGoal(f, sign);
@@ -106,20 +127,15 @@ export function updateKickFlight(m: Match, k: KickState, dt: number): void {
   }
   const out = Math.abs(f.pos.z) > FIELD.halfWidth || Math.abs(f.pos.x) > FIELD.endX;
   if (out) return puntResult(m, k, f);
-  if (f.pos.y > 0) return;
-  // A bounce: the ball kicks up off the turf, losing most of its pace.
-  f.pos.y = 0;
-  f.vel.y = -f.vel.y * BALL.restitution;
-  f.vel.x *= BALL.groundFriction;
-  f.vel.z *= BALL.groundFriction;
-  f.spin *= 0.5;
-  k.bounces++;
-  if (Math.hypot(f.vel.x, f.vel.y, f.vel.z) < 1.5 || k.bounces >= 4) puntResult(m, k, f);
+  k.bounces = f.bounces;
+  // The punt is downed once it has nearly stopped, or after a few hops.
+  const speed = Math.hypot(f.vel.x, f.vel.y, f.vel.z);
+  if (f.grounded && (speed < 1.5 || f.bounces >= 4)) puntResult(m, k, f);
 }
 
 /** How far a punt at this power carries in the air, in yards, for tests and bots. */
 export function puntCarry(power: number, leg: number): number {
   const f = kickFlight({ x: 0, y: 0.2, z: 0 }, 1, false, power, 0, leg);
-  while (f.pos.y > 0) stepFlight(f, 1 / 120);
+  while (!f.grounded && f.t < 10) stepFlight(f, 1 / 60);
   return f.pos.x / YARD;
 }

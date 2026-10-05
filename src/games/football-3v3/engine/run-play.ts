@@ -1,4 +1,5 @@
 import { isDown } from "./body";
+import { tracePath } from "./catch/path";
 import { launch } from "./flight";
 import { solveLaunch } from "./aim";
 import { clampToWorld, FIELD, YARD } from "./field";
@@ -66,10 +67,11 @@ export function releasePitch(m: Match, a: Athlete, to: number): void {
   const vel = solveLaunch(from, { x: spot.x, y: PASS.catchHeight, z: spot.z }, PITCH.time, "spiral", PITCH.spin);
   m.ball.state = "pass";
   m.ball.holder = null;
-  m.ball.flight = launch(from, vel, "spiral", PITCH.spin, 0.08);
+  const flight = launch(from, vel, "spiral", PITCH.spin, 0.08);
+  m.ball.flight = flight;
   m.ball.pass = {
     from: a.id, to, interceptor: null, spot, arrive: PITCH.time, t: 0, speed: len3(vel),
-    rps: PITCH.spin / (Math.PI * 2), release: from, at: m.time, swiped: [], pitch: true,
+    rps: PITCH.spin / (Math.PI * 2), release: from, at: m.time, tried: {}, path: tracePath(flight, m.time), tipped: false, pitch: true,
   };
   m.play!.pitched = true;
   m.emit({ type: "pitch", id: a.id, to });

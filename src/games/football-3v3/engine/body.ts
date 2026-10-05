@@ -11,12 +11,12 @@ export function createAthlete(id: number, team: TeamId, role: Role, slot: number
   return {
     id, team, role, slot, build, seat, auto: seat === null,
     number: c ? c.number : (LINEMAN_NUMBERS[team][slot] ?? 60 + slot),
-    x: 0, z: 0, vx: 0, vz: 0,
+    x: 0, z: 0, vx: 0, vz: 0, ax: 0, az: 0,
     yaw: attackSign(team) > 0 ? Math.PI / 2 : -Math.PI / 2,
     mass: c ? c.frame.weight : LINEMAN_FRAME.weight,
     move: { x: 0, z: 0 }, aim: null,
     action: { kind: "none" },
-    jukeCd: 0, jukeHeat: 0, tackleCd: 0, rushT: 0, rushCd: 0, guard: null, blocked: 0,
+    jukeCd: 0, jukeHeat: 0, tackleCd: 0, rushT: 0, rushCd: 0, guard: null, blocked: 0, stagger: 0,
     bot: { wait: 0, route: [], leg: 0, stop: false, goal: { x: 0, z: 0 }, cover: null, rush: true, readAt: 2 },
     stats: emptyStats(),
   };
@@ -48,7 +48,7 @@ export function pushOf(a: Athlete): number {
   return MOVE.push * power * Math.sqrt(MOVE.refMass / a.mass);
 }
 
-/** Sideways grip, which sets the turning radius: speed squared over grip. */
+/** The cleats' grip: the most a player can speed up, brake and turn at once, metres a second squared. */
 export function gripOf(a: Athlete): number {
   return MOVE.grip + (statsOf(a).agility - 5) * MOVE.gripPerAgility;
 }

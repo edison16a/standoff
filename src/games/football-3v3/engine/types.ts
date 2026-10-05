@@ -24,8 +24,12 @@ export type Action =
   | { kind: "none" }
   /** Set before the snap: linemen and receivers crouched, the QB waiting. */
   | { kind: "stance"; t: number }
-  /** `dodge` is the part of the juke, in seconds on `t`, that makes a tackle miss. */
-  | { kind: "juke"; t: number; dur: number; juke: JukeKind; side: 1 | -1; dir: V2; speed: number; dodge: [number, number] }
+  /**
+   * `dodge` is the part of the juke, in seconds on `t`, that makes a
+   * tackle miss. For the first `plant` seconds a planted foot pushes the
+   * body toward `push`, then the run settles back to `dir` at `speed`.
+   */
+  | { kind: "juke"; t: number; dur: number; juke: JukeKind; side: 1 | -1; dir: V2; speed: number; push: V2; plant: number; dodge: [number, number] }
   | { kind: "dive"; t: number; dur: number; dir: V2 }
   | { kind: "lunge"; t: number; dur: number; dir: V2; target: number }
   /** A forward pass, or with `lob` the pitch to the back on a run call. */
@@ -95,6 +99,9 @@ export interface Athlete {
   z: number;
   vx: number;
   vz: number;
+  /** This step's acceleration, for the drawing to lean into cuts and stops. */
+  ax: number;
+  az: number;
   /** Facing: 0 looks toward +z. */
   yaw: number;
   mass: number;
@@ -112,6 +119,8 @@ export interface Athlete {
   guard: number | null;
   /** Seconds left in contact with an opposing lineman, for slowing and drawing. */
   blocked: number;
+  /** Seconds left of shaky footing after a big jolt or a broken tackle. */
+  stagger: number;
   bot: BotMemory;
   stats: Stats;
 }

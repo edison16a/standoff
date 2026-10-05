@@ -107,21 +107,26 @@ describe("passing", () => {
     expect(qb.stats.completions).toBe(1);
   });
 
-  it("is picked off by a defender standing in front of the target", () => {
-    const m = peopleMatch();
-    snap(m);
-    const qb = bySeat(m, 0);
-    const wr = bySeat(m, 1);
-    const d = bySeat(m, 3);
-    d.x = wr.x - (wr.x - qb.x) * 0.1;
-    d.z = wr.z - (wr.z - qb.z) * 0.1;
-    m.setAim(qb.id, { x: wr.x - qb.x, z: wr.z - qb.z });
-    run(m, 0.05);
-    m.setAim(qb.id, null);
-    const events = run(m, 3, () => m.carrier() !== qb && m.carrier() !== null);
-    expect(events.find((e) => e.type === "throw")).toMatchObject({ intercepting: true });
-    expect(m.carrier()).toBe(d);
-    expect(d.stats.interceptions).toBe(1);
+  it("is mostly picked off, never cleanly caught, with a defender standing in front of the target", () => {
+    let picks = 0;
+    for (let seed = 1; seed <= 10; seed++) {
+      const m = peopleMatch({ seed });
+      snap(m);
+      const qb = bySeat(m, 0);
+      const wr = bySeat(m, 1);
+      const d = bySeat(m, 3);
+      d.x = wr.x - (wr.x - qb.x) * 0.1;
+      d.z = wr.z - (wr.z - qb.z) * 0.1;
+      m.setAim(qb.id, { x: wr.x - qb.x, z: wr.z - qb.z });
+      run(m, 0.05);
+      m.setAim(qb.id, null);
+      const events = run(m, 3, () => m.phase !== "live" || (m.carrier() !== qb && m.carrier() !== null));
+      // He reads it and breaks on the ball; his hands decide, and a ball off them may go anywhere.
+      expect(events.find((e) => e.type === "throw")).toMatchObject({ intercepting: true });
+      if (m.carrier() === d) picks++;
+      expect(events.some((e) => e.type === "catch" && e.id === wr.id && !events.some((t) => t.type === "tip"))).toBe(false);
+    }
+    expect(picks).toBeGreaterThanOrEqual(6);
   });
 
   it("never gives the ball to a defender on Guard", () => {

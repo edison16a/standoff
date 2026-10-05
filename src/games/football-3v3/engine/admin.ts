@@ -27,6 +27,7 @@ export function adminTouchdown(m: Match, team: TeamId): void {
   m.ball.holder = qb.id;
   m.ball.flight = null;
   m.ball.pass = null;
+  m.ball.fumble = null;
   endPlay(m, "touchdown");
 }
 

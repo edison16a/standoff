@@ -1,14 +1,24 @@
 import { isDown } from "./body";
+import { pairMass } from "./linemen";
 import type { Match } from "./match";
 import { MOVE } from "./tuning";
 import type { Athlete } from "./types";
 
-const radius = (a: Athlete) => (a.role === "lineman" ? MOVE.radius * 1.3 : MOVE.radius);
+/** Body radius: a lineman is broad, a man on the ground is a low heap. */
+const radius = (a: Athlete) => (isDown(a) ? MOVE.radius * 0.9 : a.role === "lineman" ? MOVE.radius * 1.3 : MOVE.radius);
+
+/** A locked lineman moves with his pair, so a runner hitting him meets both men's mass. */
+const massOf = (m: Match, a: Athlete) => (a.role === "lineman" ? pairMass(m, a.slot) : a.mass);
 
 /**
- * Pushes overlapping players apart by momentum: the heavier player gives
- * less ground. Linemen locked at the line do not move at all, so runners
- * go round them. Players on the ground are stepped over.
+ * Bodies meeting. Overlaps are pushed apart, the heavier player giving
+ * less ground, and the momentum along the hit is shared in a hard,
+ * sticky collision, so a big man running into a small one carries on
+ * and a hit at speed knocks the lighter man back. A big enough jolt
+ * shakes a player's footing for a moment. Locked linemen are moved only
+ * through their pair, which takes the push. Players on the ground
+ * settle against each other into a pile; men on their feet step over
+ * them.
  */
 export function separate(m: Match, bumpCd: Map<number, number>): void {
   const list = m.athletes;
@@ -17,7 +27,8 @@ export function separate(m: Match, bumpCd: Map<number, number>): void {
       const a = list[i]!;
       const b = list[j]!;
       if (a.role === "lineman" && b.role === "lineman") continue;
-      if (isDown(a) || isDown(b)) continue;
+      const downA = isDown(a);
+      if (downA !== isDown(b)) continue;
       const dx = b.x - a.x;
       const dz = b.z - a.z;
       const d = Math.hypot(dx, dz);
@@ -26,23 +37,28 @@ export function separate(m: Match, bumpCd: Map<number, number>): void {
       const nx = dx / d;
       const nz = dz / d;
       const overlap = min - d;
+      if (downA) {
+        // A pile settles: the bodies ease apart instead of passing through each other.
+        a.x -= nx * overlap * 0.15;
+        a.z -= nz * overlap * 0.15;
+        b.x += nx * overlap * 0.15;
+        b.z += nz * overlap * 0.15;
+        continue;
+      }
       const fixedA = a.role === "lineman";
       const fixedB = b.role === "lineman";
-      const shareA = fixedA ? 0 : fixedB ? 1 : b.mass / (a.mass + b.mass);
+      const ma = massOf(m, a);
+      const mb = massOf(m, b);
+      const shareA = fixedA ? 0 : fixedB ? 1 : mb / (ma + mb);
       a.x -= nx * overlap * shareA;
       a.z -= nz * overlap * shareA;
       b.x += nx * overlap * (1 - shareA);
       b.z += nz * overlap * (1 - shareA);
-      // Momentum along the hit is shared out, so a big man running into a small one carries on.
       const closing = (a.vx - b.vx) * nx + (a.vz - b.vz) * nz;
       if (closing <= 0) continue;
-      const total = (fixedA ? 1e6 : a.mass) + (fixedB ? 1e6 : b.mass);
-      const ja = fixedA ? 0 : (closing * (fixedB ? 1e6 : b.mass)) / total;
-      const jb = fixedB ? 0 : (closing * (fixedA ? 1e6 : a.mass)) / total;
-      a.vx -= nx * ja;
-      a.vz -= nz * ja;
-      b.vx += nx * jb;
-      b.vz += nz * jb;
+      const impulse = (closing * ma * mb) / (ma + mb);
+      push(m, a, -nx * impulse, -nz * impulse, ma);
+      push(m, b, nx * impulse, nz * impulse, mb);
       const key = i * 64 + j;
       if (closing > 3.5 && (bumpCd.get(key) ?? 0) <= m.time) {
         m.emit({ type: "pads", a: a.id, b: b.id, power: Math.min(1, closing / 8) });
@@ -50,4 +66,17 @@ export function separate(m: Match, bumpCd: Map<number, number>): void {
       }
     }
   }
+}
+
+/** Applies an impulse to a player, or to a lineman's pair along the field; a big jolt shakes his footing. */
+function push(m: Match, a: Athlete, jx: number, jz: number, mass: number): void {
+  if (a.role === "lineman") {
+    const pair = m.lines[a.slot];
+    if (pair?.engaged) pair.v += jx / mass;
+    return;
+  }
+  a.vx += jx / mass;
+  a.vz += jz / mass;
+  const jolt = Math.hypot(jx, jz) / mass;
+  if (jolt > MOVE.jolt) a.stagger = Math.max(a.stagger, Math.min(0.6, (jolt - MOVE.jolt) * 0.25 + 0.2));
 }

@@ -24,10 +24,15 @@ export function canJuke(a: Athlete): boolean {
   return a.role !== "lineman" && a.jukeCd <= 0 && a.action.kind === "none";
 }
 
+/** How hard a planted foot can push the body: well past a running stride, more for agile players. */
+const plantGrip = (a: Athlete) => JUKE.grip + (statsOf(a).agility - 5) * JUKE.gripPerAgility;
+
 /**
- * Starts a juke: a 360 spin, a back move or a side step. Each one slows
- * the runner, and each one in quick succession comes out slower and
- * leaves the legs heavier, so spamming the button does not pay.
+ * Starts a juke: a 360 spin, a back move or a side step. The runner
+ * plants a foot and pushes off it toward the new line (the push is as
+ * hard as the cleats hold), then runs out of it. Each one slows the
+ * runner, and each one in quick succession comes out slower and leaves
+ * the legs heavier, so spamming the button does not pay.
  */
 export function startJuke(a: Athlete, emit: (e: MatchEvent) => void): boolean {
   if (!canJuke(a)) return false;
@@ -36,41 +41,46 @@ export function startJuke(a: Athlete, emit: (e: MatchEvent) => void): boolean {
   const { juke, side } = jukeFor(heading, a.move);
   const spec = JUKE[juke];
   const slow = jukeSlow(a);
-  // Left of the heading, for the sideways shove toward the stick.
+  // Left of the heading, for the sideways push toward the stick.
   const left = { x: -heading.z * side, z: heading.x * side };
+  const hop = juke === "side" ? JUKE.hop : juke === "back" ? JUKE.hop * 0.8 : 0;
+  const push = { x: heading.x * speed * spec.speed + left.x * hop, z: heading.z * speed * spec.speed + left.z * hop };
   a.action = {
     kind: "juke", t: 0, dur: spec.dur * slow, juke, side, dir: heading,
-    speed: speed * spec.speed / slow,
+    speed: (speed * spec.speed) / slow, push, plant: spec.plant * slow,
     dodge: [spec.dodge[0] * slow, spec.dodge[1] * slow],
   };
-  if (juke === "side") {
-    a.vx = heading.x * speed * spec.speed + left.x * JUKE.hop;
-    a.vz = heading.z * speed * spec.speed + left.z * JUKE.hop;
-  } else if (juke === "back") {
-    a.vx = heading.x * speed * spec.speed + left.x * JUKE.hop * 0.8;
-    a.vz = heading.z * speed * spec.speed + left.z * JUKE.hop * 0.8;
-  } else {
-    a.vx *= spec.speed;
-    a.vz *= spec.speed;
-  }
   a.jukeCd = JUKE.cooldown * slow * jukeRecovery(statsOf(a));
   a.jukeHeat += JUKE.heatPerJuke;
   emit({ type: "juke", id: a.id, juke });
   return true;
 }
 
-/** Carries a juke along: the shove fades back into the run, and the juke ends on time. */
+/** Drives the velocity toward a target as hard as `grip` allows this step. */
+function pushToward(a: Athlete, want: V2, grip: number, dt: number): void {
+  const dx = want.x - a.vx;
+  const dz = want.z - a.vz;
+  const d = Math.hypot(dx, dz);
+  const k = d < 1e-6 ? 0 : Math.min(d, grip * dt) / d;
+  a.vx += dx * k;
+  a.vz += dz * k;
+  a.ax = (dx * k) / dt;
+  a.az = (dz * k) / dt;
+}
+
+/** Carries a juke along: the push off the planted foot, then running out of it, and the juke ends on time. */
 export function updateJuke(a: Athlete, dt: number): void {
   const act = a.action;
   if (act.kind !== "juke") return;
   act.t += dt;
-  const want = { x: act.dir.x * act.speed, z: act.dir.z * act.speed };
-  // A side step keeps its shove for the first half, then bends back into the run.
-  const settle = act.juke === "spin" ? 5 : act.t < act.dur * 0.5 ? 0.6 : 7;
-  const k = Math.min(1, settle * dt);
-  a.vx += (want.x - a.vx) * k;
-  a.vz += (want.z - a.vz) * k;
-  if (act.juke === "spin") a.yaw += (Math.PI * 2 * dt) / act.dur * act.side;
+  if (act.t < act.plant) pushToward(a, act.push, plantGrip(a), dt);
+  else {
+    // Out of the plant the stride bends back into the run.
+    const want = { x: act.dir.x * act.speed, z: act.dir.z * act.speed };
+    const settle = act.juke === "spin" ? 5 : 7;
+    pushToward(a, want, Math.hypot(want.x - a.vx, want.z - a.vz) * settle, dt);
+  }
+  if (act.juke === "spin") a.yaw += ((Math.PI * 2 * dt) / act.dur) * act.side;
   if (act.t >= act.dur) {
     a.action = { kind: "none" };
     const d = norm2({ x: a.vx, z: a.vz });

@@ -8,14 +8,15 @@ import { Figure } from "./figures/figure";
 import { buildKit } from "./models/kit";
 
 const BALL: BallView = {
-  x: 0, y: 0, z: 9, vx: 0, vy: 0, vz: 0, axis: { x: 1, y: 0, z: 0 }, roll: 0, spin: 0, style: "spiral", state: "dead", holder: null, pitch: false,
+  x: 0, y: 0, z: 9, vx: 0, vy: 0, vz: 0, quat: { x: 0, y: 0, z: 0, w: 1 }, axis: { x: 1, y: 0, z: 0 }, spin: 0, style: "spiral", knock: null, goal: null,
+  state: "dead", holder: null, pitch: false,
 };
 
 /** The build standing on the podium, or celebrating `celebrating` seconds in. */
 function still(build: BuildId, team: TeamId, celebrating: number | null): AthleteView {
   return {
     id: 0, team, role: "runner", build, number: BUILDS[build].number, seat: null,
-    x: 0, z: 0, yaw: 0, vx: 0, vz: 0, speed: 0,
+    x: 0, z: 0, yaw: 0, vx: 0, vz: 0, speed: 0, ax: 0, az: 0, stagger: 0,
     action: celebrating === null ? "none" : "celebrate", actionT: celebrating ?? 0, actionDur: 3,
     juke: null, side: 1, downCause: null, spike: false, hasBall: false, targeted: false, guarding: null, rushing: false, blocked: false, ceremony: null,
   };

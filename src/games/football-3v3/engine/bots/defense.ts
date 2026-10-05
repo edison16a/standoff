@@ -1,3 +1,6 @@
+import { topSpeed } from "../body";
+import { meetPoint } from "../catch/path";
+import { ballTrack } from "../catch/track";
 import { startRush } from "../controls";
 import { FIELD, YARD, yardToX } from "../field";
 import type { Match } from "../match";
@@ -8,12 +11,28 @@ import { clamp, dist2 } from "../vec";
 import { ahead, headFor } from "./goal";
 import type { FootballSkill } from "./skill";
 
-/** Once a pass is up, a defender breaks for where it will come down. */
+/**
+ * Once a pass is up, a defender reads it and breaks for where he can get
+ * to it: the one who jumped the route goes for the ball itself, the rest
+ * for where it comes down.
+ */
 function breakOnBall(m: Match, a: Athlete): boolean {
   const pass = m.ball.pass;
   if (m.ball.state !== "pass" || !pass) return false;
-  headFor(a, pass.spot, 0.5);
+  const track = ballTrack(m, a);
+  if (track) a.bot.goal = track;
+  else {
+    const meet = pass.path ? meetPoint(pass.path, m.time, a, topSpeed(a, false), 0.5) : null;
+    headFor(a, meet?.spot ?? pass.spot, 0.5);
+  }
   return true;
+}
+
+/** A loose ball: everyone goes after it, to where it is heading. */
+export function chaseLoose(m: Match, a: Athlete): void {
+  const f = m.ball.flight;
+  const p = m.ball.pos;
+  headFor(a, f ? { x: p.x + f.vel.x * 0.25, z: p.z + f.vel.z * 0.25 } : p, 0.3);
 }
 
 /**

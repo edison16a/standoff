@@ -1,104 +1,154 @@
-import { BALL } from "./tuning";
-import { cross3, dot3, len3, norm3, type V3 } from "./vec";
+import { BALL_SHAPE, LONG, longAxis, omegaOf } from "./physics/ball-shape";
+import { integrate, SUB } from "./physics/integrate";
+import { touchGoal, type GoalPart } from "./physics/posts";
+import { qFromTo, type Quat } from "./physics/quat";
+import { touchTurf } from "./physics/turf";
+import { cross3, dot3, norm3, type V3 } from "./vec";
 
-/** A thrown spiral spins about its long axis; a place kick tumbles end over end. */
+export { SUB };
+
+/** How the ball left the hand or foot: a spiral about its long axis, or end over end. */
 export type SpinStyle = "spiral" | "tumble";
 
+/** Something the ball hit during a step. */
+export interface FlightHit {
+  kind: "turf" | GoalPart;
+  impulse: number;
+  /** Flight time of the hit. */
+  t: number;
+  side?: 1 | -1;
+  point?: V3;
+}
+
 /**
- * A ball in the air. `nose` is where the long axis points on average and
- * `axis` is where it points this instant, the nose plus a small wobble
- * circling round it. `roll` is how far the ball has turned about its own
- * axis for a spiral, or end over end for a tumble.
+ * A free ball as a rigid body: position, velocity, orientation and
+ * angular momentum, stepped by the real physics in fixed sub steps,
+ * bouncing off the turf, the posts and the net. `hits` lists what it
+ * touched in the last step.
  */
 export interface Flight {
   pos: V3;
   vel: V3;
-  nose: V3;
-  axis: V3;
-  roll: number;
-  /** Radians per second of spin. */
-  spin: number;
-  /** Half angle of the wobble cone, radians. A tight spiral is near zero. */
-  wobble: number;
-  wobblePhase: number;
+  q: Quat;
+  /** Angular momentum, world frame. */
+  L: V3;
   style: SpinStyle;
+  /** Seconds since launch. */
+  t: number;
+  /** Time handed in but not yet stepped, under one sub step. */
+  carry: number;
+  hits: FlightHit[];
+  /** Has touched the turf, and how many real bounces it has made. */
+  grounded: boolean;
+  bounces: number;
+  /** The last hard knock, for the drawing's squash. */
+  knock: { t: number; n: V3; impulse: number } | null;
+  /** The last time it hit the posts or the net, for them to shake. */
+  goal: FlightHit | null;
 }
 
 const UP: V3 = { x: 0, y: 1, z: 0 };
+/** Below this the turf only holds the ball up; above it the ball bounced. */
+const BOUNCE = 0.2;
 
-export function launch(pos: V3, vel: V3, style: SpinStyle, spin: number, wobble: number): Flight {
-  const nose = norm3(vel);
-  return { pos: { ...pos }, vel: { ...vel }, nose, axis: { ...nose }, roll: 0, spin, wobble, wobblePhase: 0, style };
-}
-
-/** Drag per metre now: a nose first spiral slips through the air, a ball side on or tumbling does not. */
-export function dragFactor(f: Flight): number {
-  if (f.style === "tumble") return (BALL.dragNose + BALL.dragSide) * 0.5;
-  const along = Math.abs(dot3(f.axis, norm3(f.vel)));
-  const side = 1 - along * along;
-  return BALL.dragNose + (BALL.dragSide - BALL.dragNose) * side;
-}
-
-/** Turns vector v toward target t by at most `rate` of the way this step. */
-function follow(v: V3, t: V3, rate: number): V3 {
-  return norm3({ x: v.x + (t.x - v.x) * rate, y: v.y + (t.y - v.y) * rate, z: v.z + (t.z - v.z) * rate });
-}
-
-/** A unit vector at right angles to `v`, stable as v changes slowly. */
-function perpendicular(v: V3): V3 {
+/** A unit vector across `v`, level where it can be. */
+function across(v: V3): V3 {
   const c = cross3(v, UP);
-  return len3(c) < 1e-6 ? { x: 1, y: 0, z: 0 } : norm3(c);
+  return Math.hypot(c.x, c.y, c.z) < 1e-6 ? { x: 0, y: 0, z: 1 } : norm3(c);
 }
 
-/** One step of flight: gravity and drag move the ball, then the spin and wobble turn it. */
-export function stepFlight(f: Flight, dt: number): void {
-  const k = dragFactor(f);
-  const speed = len3(f.vel);
-  f.vel.x -= k * speed * f.vel.x * dt;
-  f.vel.y -= (BALL.gravity + k * speed * f.vel.y) * dt;
-  f.vel.z -= k * speed * f.vel.z * dt;
-  f.pos.x += f.vel.x * dt;
-  f.pos.y += f.vel.y * dt;
-  f.pos.z += f.vel.z * dt;
-  f.roll += f.spin * dt;
-  const dir = norm3(f.vel);
-  if (f.style === "tumble") {
-    // End over end about the horizontal line across the flight.
-    const side = perpendicular(dir);
-    const up = cross3(side, dir);
-    f.nose = dir;
-    f.axis = norm3({ x: dir.x * Math.cos(f.roll) + up.x * Math.sin(f.roll), y: dir.y * Math.cos(f.roll) + up.y * Math.sin(f.roll), z: dir.z * Math.cos(f.roll) + up.z * Math.sin(f.roll) });
-    return;
+function fresh(pos: V3, vel: V3, q: Quat, L: V3, style: SpinStyle): Flight {
+  return { pos: { ...pos }, vel: { ...vel }, q, L, style, t: 0, carry: 0, hits: [], grounded: false, bounces: 0, knock: null, goal: null };
+}
+
+/**
+ * Puts a ball in the air. A spiral leaves with its nose along the throw,
+ * spinning `spin` radians a second about its long axis; `wobble` is the
+ * half angle of the cone its nose will circle (a nutation), from a hand
+ * that was not quite behind the ball. A tumble leaves upright on the
+ * tee, leaning back, turning end over end with the top going back.
+ */
+export function launch(pos: V3, vel: V3, style: SpinStyle, spin: number, wobble: number): Flight {
+  const dir = norm3(vel);
+  if (style === "spiral") {
+    const q = qFromTo(LONG, dir);
+    const side = across(dir);
+    const Ls = BALL_SHAPE.iLong * spin;
+    const tilt = Ls * Math.tan(wobble);
+    return fresh(pos, vel, q, { x: dir.x * Ls + side.x * tilt, y: dir.y * Ls + side.y * tilt, z: dir.z * Ls + side.z * tilt }, style);
   }
-  // A good spiral's nose tips over to follow the arc, a little behind it.
-  f.nose = follow(f.nose, dir, Math.min(1, BALL.noseFollow * dt));
-  // The wobble circles the nose (precession) and slowly settles.
-  f.wobblePhase += f.spin * 0.16 * dt;
-  f.wobble *= Math.exp(-0.35 * dt);
-  const a = perpendicular(f.nose);
-  const b = cross3(a, f.nose);
-  const s = Math.sin(f.wobble);
-  const c = Math.cos(f.wobble);
-  const cp = Math.cos(f.wobblePhase);
-  const sp = Math.sin(f.wobblePhase);
-  f.axis = norm3({
-    x: f.nose.x * c + (a.x * cp + b.x * sp) * s,
-    y: f.nose.y * c + (a.y * cp + b.y * sp) * s,
-    z: f.nose.z * c + (a.z * cp + b.z * sp) * s,
-  });
+  const flat = norm3({ x: dir.x, y: 0, z: dir.z });
+  const side = across(flat);
+  const lean = norm3({ x: UP.x - 0.3 * flat.x, y: 1, z: -0.3 * flat.z });
+  const q = qFromTo(LONG, lean);
+  const Lt = BALL_SHAPE.iCross * spin;
+  const Ll = BALL_SHAPE.iLong * spin * wobble;
+  return fresh(pos, vel, q, { x: side.x * Lt + lean.x * Ll, y: side.y * Lt + lean.y * Ll, z: side.z * Lt + lean.z * Ll }, style);
+}
+
+/** One sub step, with whatever the ball touches. */
+function sub(f: Flight): void {
+  integrate(f, SUB);
+  f.t += SUB;
+  const j = touchTurf(f, SUB);
+  if (j > 0) {
+    f.grounded = true;
+    if (j > BOUNCE) {
+      f.bounces++;
+      f.hits.push({ kind: "turf", impulse: j, t: f.t });
+      f.knock = { t: f.t, n: UP, impulse: j };
+    }
+  }
+  const g = touchGoal(f);
+  if (g) {
+    const hit: FlightHit = { kind: g.part, impulse: g.impulse, t: f.t, side: g.side, point: g.point };
+    f.hits.push(hit);
+    f.goal = hit;
+    f.knock = { t: f.t, n: norm3({ x: -g.side, y: 0, z: 0 }), impulse: g.impulse };
+  }
+}
+
+/**
+ * Steps the ball `dt` seconds in fixed sub steps, carrying any remainder
+ * to the next call so the same inputs always fly the same way. `after`
+ * runs after every sub step with where the ball was before it, and
+ * stops the stepping when it returns true (a catch, say).
+ */
+export function stepFlight(f: Flight, dt: number, after?: (from: V3) => boolean): void {
+  f.hits = [];
+  f.carry += dt;
+  while (f.carry >= SUB - 1e-9) {
+    f.carry -= SUB;
+    const from = { ...f.pos };
+    sub(f);
+    if (after?.(from)) {
+      f.carry = 0;
+      return;
+    }
+  }
 }
 
 /** A copy that can be stepped ahead without touching the real ball. */
 export function cloneFlight(f: Flight): Flight {
-  return { ...f, pos: { ...f.pos }, vel: { ...f.vel }, nose: { ...f.nose }, axis: { ...f.axis } };
+  return { ...f, pos: { ...f.pos }, vel: { ...f.vel }, q: { ...f.q }, L: { ...f.L }, hits: [], knock: f.knock && { ...f.knock }, goal: f.goal && { ...f.goal } };
 }
 
-/**
- * Where the ball will be after `time` seconds, stepped with the same
- * physics. Used to aim throws and kicks, and by bots to read the ball.
- */
-export function predict(f: Flight, time: number, dt = 1 / 120): Flight {
+/** Where the ball will be after `time` seconds, stepped with the same physics. */
+export function predict(f: Flight, time: number): Flight {
   const g = cloneFlight(f);
-  for (let t = 0; t < time - 1e-9; t += dt) stepFlight(g, Math.min(dt, time - t));
+  stepFlight(g, time);
   return g;
+}
+
+/** The long axis now, as a unit vector. */
+export const axisOf = (f: Flight): V3 => longAxis(f.q);
+
+/** Spin about the long axis, radians a second. */
+export const spinOf = (f: Flight): number => dot3(omegaOf(f.q, f.L), longAxis(f.q));
+
+/** The angle between the long axis and the path, radians: near zero for a tight spiral. */
+export function yawOf(f: Flight): number {
+  const s = Math.hypot(f.vel.x, f.vel.y, f.vel.z);
+  if (s < 1e-6) return 0;
+  return Math.acos(Math.min(1, Math.abs(dot3(longAxis(f.q), f.vel)) / s));
 }

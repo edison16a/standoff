@@ -25,9 +25,9 @@ export const AIR = {
   /** Lift: cl sin(a) cos(a), largest at 45 degrees. */
   cl: 0.25,
   /** Overturning moment: cm sin(a) cos(a). */
-  cm: 0.4,
+  cm: 0.34,
   /** Damping of a wobble (rotation across the long axis) and of the spin. */
-  wobbleDamp: 0.6,
+  wobbleDamp: 0.03,
   spinDamp: 5e-6,
 } as const;
 

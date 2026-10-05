@@ -1,5 +1,6 @@
 import { attackSign } from "../../teams";
 import { isDown } from "../body";
+import { ballTrack } from "../catch/track";
 import { jumpingDefender } from "../catching";
 import { FIELD, YARD, yardToX } from "../field";
 import { startJuke } from "../juke";
@@ -104,10 +105,13 @@ export function carry(m: Match, a: Athlete, skill: FootballSkill): void {
   runDir(a, dir);
 }
 
-/** A receiver runs the route, or, with the ball in the air to them, goes to meet it. */
+/** A receiver runs the route, or, with the ball in the air to them, reads it and goes to meet it. */
 export function runRoute(m: Match, a: Athlete): void {
-  const pass = m.ball.pass;
-  if (m.ball.state === "pass" && pass && pass.to === a.id) return headFor(a, pass.spot, 0.6);
+  const track = ballTrack(m, a);
+  if (track) {
+    a.bot.goal = track;
+    return;
+  }
   const route = a.bot.route;
   if (route.length === 0) return headFor(a, a, 1);
   while (a.bot.leg < route.length && dist2(a, route[a.bot.leg]!) < 1.3) a.bot.leg++;

@@ -40,6 +40,13 @@ export type MatchEvent =
   | { type: "incomplete"; id: number | null }
   /** A defender knocked the pass down. */
   | { type: "breakUp"; id: number }
+  /** The ball came off someone's hands: a drop, a bobble or a tip, still live. */
+  | { type: "tip"; id: number }
+  /** A big hit jarred the ball out, and whoever got to the loose ball. */
+  | { type: "fumble"; id: number }
+  | { type: "recover"; id: number; team: TeamId; from: number }
+  /** A kick clanged off the posts. */
+  | { type: "doink"; part: "upright" | "crossbar"; power: number }
   | { type: "whistle"; end: PlayEnd; yards: number }
   | { type: "firstDown"; team: TeamId }
   | { type: "turnoverOnDowns"; team: TeamId }

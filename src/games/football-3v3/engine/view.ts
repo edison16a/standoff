@@ -3,12 +3,13 @@ import { ceremonyTime } from "./ceremony";
 import { downText, goalToGo, toGo } from "./downs";
 import type { PlayEnd } from "./events";
 import { yardToX } from "./field";
-import type { SpinStyle } from "./flight";
 import { inGreen, meterAim, meterPower } from "./kick";
 import type { Match } from "./match";
 import { KICK, RULES } from "./tuning";
-import type { ActionKind, BallState, DownCause, JukeKind, Phase, Role, TeamId } from "./types";
-import type { V3 } from "./vec";
+import type { ActionKind, DownCause, JukeKind, Phase, Role, TeamId } from "./types";
+import { ballView, type BallView } from "./view-ball";
+
+export type { BallView, GoalHitView, KnockView } from "./view-ball";
 
 /**
  * A still of the match for drawing: plain numbers, no references back
@@ -28,6 +29,11 @@ export interface AthleteView {
   vx: number;
   vz: number;
   speed: number;
+  /** Acceleration on the ground: the body leans into it, and a hard one is a planted foot. */
+  ax: number;
+  az: number;
+  /** Seconds left of shaky footing after a jolt or a broken tackle. */
+  stagger: number;
   action: ActionKind;
   actionT: number;
   actionDur: number;
@@ -53,21 +59,6 @@ export interface CeremonyView {
   t: number;
   captain: number | null;
   team: TeamId;
-}
-
-export interface BallView extends V3 {
-  vx: number;
-  vy: number;
-  vz: number;
-  /** The long axis as a unit vector, and the spin about it (or the tumble angle). */
-  axis: V3;
-  roll: number;
-  spin: number;
-  style: SpinStyle;
-  state: BallState;
-  holder: number | null;
-  /** In the air as a pitch on a run call, not a forward pass. */
-  pitch: boolean;
 }
 
 export interface DriveView {
@@ -148,23 +139,17 @@ function ceremonyOf(m: Match): CeremonyView | null {
 export function buildView(m: Match): MatchView {
   const b = m.ball;
   const ceremony = ceremonyOf(m);
-  const f = b.flight;
   // While the ball is in the air the ring stays on the receiver it was thrown to.
   const target = b.state === "pass" && b.pass ? b.pass.to : (m.play?.target ?? null);
   return {
     time: m.time, phase: m.phase, phaseT: m.phaseT, quarter: m.quarter, clock: m.clock, overtime: m.overtime,
     score: [m.score[0], m.score[1]], target: m.target, drive: driveView(m), kick: kickView(m),
-    ball: {
-      x: b.pos.x, y: b.pos.y, z: b.pos.z,
-      vx: f?.vel.x ?? 0, vy: f?.vel.y ?? 0, vz: f?.vel.z ?? 0,
-      axis: f ? { ...f.axis } : { x: 1, y: 0, z: 0 }, roll: f?.roll ?? 0, spin: f?.spin ?? 0, style: f?.style ?? "spiral",
-      state: b.state, holder: b.state === "held" ? b.holder : null, pitch: b.state === "pass" && !!b.pass?.pitch,
-    },
+    ball: ballView(b),
     athletes: m.athletes.map((a) => {
       const act = a.action;
       return {
         id: a.id, team: a.team, role: a.role, build: a.build, number: a.number, seat: a.auto ? null : a.seat,
-        x: a.x, z: a.z, yaw: a.yaw, vx: a.vx, vz: a.vz, speed: Math.hypot(a.vx, a.vz),
+        x: a.x, z: a.z, yaw: a.yaw, vx: a.vx, vz: a.vz, speed: Math.hypot(a.vx, a.vz), ax: a.ax, az: a.az, stagger: a.stagger,
         action: act.kind, actionT: "t" in act ? act.t : 0, actionDur: "dur" in act ? act.dur : 0,
         juke: act.kind === "juke" ? act.juke : null, side: act.kind === "juke" ? act.side : 1,
         downCause: act.kind === "down" ? act.cause : null,
