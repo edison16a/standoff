@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { BUILD_IDS } from "../../builds";
 import { createAthlete } from "../athlete";
+import { Match } from "../match";
+import { COURT, STEP } from "../tuning";
 import type { Athlete } from "../types";
 import { BODY } from "./body-spec";
 import { collide } from "./contact";
@@ -84,6 +86,26 @@ describe("bodies running into each other", () => {
     collide(a, b, 0.4, 0.4);
     expect(a.vz).toBeLessThan(4);
   });
+});
+
+describe("bodies over a whole game", () => {
+  it("stay finite, on the court, under a sprinter's speed and never higher than a dunker can jump", () => {
+    const m = new Match({ entries: BUILD_IDS.map((build, i) => ({ team: (i % 2) as 0 | 1, build, seat: null })), seed: 21 });
+    let fastest = 0;
+    let highest = 0;
+    for (let t = 0; t < 240 && m.phase !== "over"; t += STEP) {
+      m.step(STEP);
+      for (const a of m.athletes) {
+        for (const v of [a.x, a.z, a.y, a.vx, a.vz]) expect(Number.isFinite(v)).toBe(true);
+        expect(Math.abs(a.x)).toBeLessThan(COURT.halfWidth + 0.01);
+        expect(a.y).toBeGreaterThanOrEqual(0);
+        fastest = Math.max(fastest, Math.hypot(a.vx, a.vz));
+        highest = Math.max(highest, a.y);
+      }
+    }
+    expect(fastest).toBeLessThan(8);
+    expect(highest).toBeLessThan(1.2);
+  }, 60000);
 });
 
 describe("jumping under real gravity", () => {
