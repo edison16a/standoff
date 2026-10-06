@@ -32,11 +32,11 @@ export const CRANE_TO = 4.9;
 export const RAMP = 0.12;
 
 /**
- * Timings come from the scripted film: the crossover at 0.7 s, the
- * Dunker gathers at 2.05 and puts the Lockdown defender down, takes off
- * at 2.4 and slams at 2.9. The Playmaker is checked the ball at 8.0,
- * crosses, steps back and lets it go at 9.7, and it kisses the glass at
- * 10.9. The ceremony's
+ * Timings come from the scripted film, stepped as the trailer steps it:
+ * the crossover at 0.7 s, the Dunker gathers at 2.05 and puts the
+ * Lockdown defender down, takes off at 2.4 and slams at 2.9. The
+ * Playmaker is checked the ball at 8.9, crosses at once, steps back at
+ * 9.6 and lets it go at 10.6, and it drops through the net at 12.0. The ceremony's
  * captain drives the trophy up between 2.3 and 3.3.
  */
 export const CUTS: readonly Cut[] = [
@@ -45,9 +45,9 @@ export const CUTS: readonly Cut[] = [
   { film: "highlight", from: 0.5, to: 1.95, cam: "ankles" },
   { film: "highlight", from: 2.2, to: 2.65, cam: "rise", slow: { from: 2.4, to: 2.65, scale: 0.3 } },
   { film: "highlight", from: 2.65, to: 3.25, cam: "slam", slow: { from: 2.65, to: 2.95, scale: 0.3 } },
-  { film: "highlight", from: 8.2, to: 9.5, cam: "iso" },
-  { film: "highlight", from: 9.5, to: 10.35, cam: "release" },
-  { film: "highlight", from: 10.5, to: 11.15, cam: "glass", slow: { from: 10.8, to: 11.0, scale: 0.4 } },
+  { film: "highlight", from: 8.85, to: 10.15, cam: "iso" },
+  { film: "highlight", from: 10.15, to: 11.0, cam: "release" },
+  { film: "highlight", from: 11.5, to: 12.15, cam: "glass", slow: { from: 11.8, to: 12.0, scale: 0.4 } },
   { film: "ceremony", from: 2.0, to: CRANE_FROM, cam: "lift", slow: { from: 2.6, to: 3.1, scale: 0.65 } },
   { film: "ceremony", from: CRANE_FROM, to: CRANE_TO, cam: "crane" },
 ];

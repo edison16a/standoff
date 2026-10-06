@@ -75,7 +75,7 @@ const AIMS: Record<TrailerCam, Aim> = {
     out.look.set(b.x * 0.6 + RIM.x * 0.4, Math.min(b.y, 4) * 0.6 + RIM.y * 0.4, b.z * 0.6 + RIM.z * 0.4);
     out.fov = 46;
   },
-  // Close on the glass: the ball kisses the board and drops.
+  // Close on the rim under the glass: the three comes down and drops through the net.
   glass: (m, u, g, out) => {
     between(out.pos, [2.1, 2.55, 4.3], [1.8, 2.7, 3.9], ease(u / 1.1));
     out.look.set(RIM.x + 0.1, RIM.y + 0.25, RIM.z - 0.1);
