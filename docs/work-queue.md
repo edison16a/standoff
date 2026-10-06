@@ -15,7 +15,6 @@ The running list of what is being built, so work can pick up again after a break
 | Work | Workflow | State |
 | --- | --- | --- |
 | Quality pass, remaining steps: Basketball, Soccer and Football venue, lighting and camera, then the Basketball feel pass, then a browser review per game. Physics and athlete steps are done in worktrees wf_4825b851-f89-2 to 4. Each game then re-records its trailer clip, poster and icon before its review, and Magic Kart re-records too. Resume with scratchpad/quality-rest.js if it stops | wf_7d941820-52d | building |
-| Basketball is the owner's top priority: FIBA style two tone ball (reference scratchpad/quality/nba-3v3/ref-ball.webp) with visible spin, charges and blocking fouls by contact, clean low drives, clean stepbacks and floaters, accurate defense like NBA 2K. Sent to the Basketball physics builder; physics done; feel pass running after the venue step | wf_7d941820-52d | building |
 
 All final builds are on main: cover icons, sports phone controls, Paintball Battle controls, Subway camera still, 1.2x tiles, final README. Final check done and on main (503ea5b): every game played end to end except the live site, which this machine's browser cannot reach (certificate block). Part 1 fixes: Soccer feet, Kart, Brawl, Blade Clash, Zombie and Gallery rejoin, phone download retry.
 
@@ -100,6 +99,7 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ## Done recently
 
+* Basketball 3v3 quality pass: real ball physics with torus rim and cloth net, hand driven dribble, charges and blocking fouls, clean drives, stepbacks and floaters, NBA style defence, the cream and orange ball with visible spin, new athletes, arena and camera, re-recorded trailer, icon and poster (c988101), on main.
 * Soccer 3v3 quality pass: real ball physics with spin, curl and giving nets, skinned athletes, roofed stadium with floodlights, broadcast camera, re-recorded trailer, icon and poster (0384347), on main.
 * Magic Kart media: re-recorded trailer, icon and poster with the new karts and double boxes (ff83d1a), on main.
 * Magic Kart quality pass: detailed karts, double item boxes with a two item queue, gold marking only double boxes (7ba15e6), on main.
