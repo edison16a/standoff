@@ -55,7 +55,8 @@ export function labView(base: MatchView, move: LabMove, time: number): MatchView
   const yaw = -Math.PI / 2 + (move === "spin" ? (Math.PI * 2 * t) / a.dur : 0);
   const athletes: AthleteView[] = BUILD_IDS.map((id, i) => ({
     ...base.athletes[0]!, id: i, team: i < 3 ? 0 : 1, role: i === 0 || i === 3 ? "qb" : "runner", build: id, number: BUILDS[id].number,
-    seat: null, x: 0, z: (i - 2.5) * 2.6, yaw, vx: -a.speed, vz: 0, speed: a.speed,
+    // Runners really run, round a loop in front of the camera, so their feet plant on the turf.
+    seat: null, x: a.speed > 0 && move !== "catch" ? 6 - ((time * a.speed) % 12) : 0, z: (i - 2.5) * 2.6, yaw, vx: -a.speed, vz: 0, speed: a.speed,
     action: a.action, actionT: t, actionDur: a.dur, juke: a.juke ?? null, side: 1, spike: !!a.spike,
     hasBall: false, targeted: move === "catch", guarding: null, rushing: false, blocked: false, downCause: a.downCause ?? null,
   }));

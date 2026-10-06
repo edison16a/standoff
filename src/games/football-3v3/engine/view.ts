@@ -40,6 +40,10 @@ export interface AthleteView {
   juke: JukeKind | null;
   /** Which way a juke or side step goes, 1 left of the run and -1 right. */
   side: 1 | -1;
+  /** Seconds a juke pushes off its planted foot, 0 outside a juke: the drawing keeps that foot still. */
+  plant: number;
+  /** A throw that is the soft pitch to the back on a run call, not a pass. */
+  lob: boolean;
   /** Why a player is on the ground, while they are: a tackled carrier lands differently from a diver. */
   downCause: DownCause | null;
   spike: boolean;
@@ -152,6 +156,7 @@ export function buildView(m: Match): MatchView {
         x: a.x, z: a.z, yaw: a.yaw, vx: a.vx, vz: a.vz, speed: Math.hypot(a.vx, a.vz), ax: a.ax, az: a.az, stagger: a.stagger,
         action: act.kind, actionT: "t" in act ? act.t : 0, actionDur: "dur" in act ? act.dur : 0,
         juke: act.kind === "juke" ? act.juke : null, side: act.kind === "juke" ? act.side : 1,
+        plant: act.kind === "juke" ? act.plant : 0, lob: act.kind === "throw" && act.lob,
         downCause: act.kind === "down" ? act.cause : null,
         spike: act.kind === "celebrate" && act.spike,
         hasBall: b.state === "held" && b.holder === a.id,

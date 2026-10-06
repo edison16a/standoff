@@ -5,7 +5,9 @@ import type { Pose } from "./pose";
 export function applyPose(rig: Rig, p: Pose): void {
   rig.body.position.set(p.side, p.lift, p.fwd);
   rig.body.rotation.set(p.pitch, p.yaw, p.roll, "YXZ");
-  rig.spine.rotation.set(p.spineX, p.spineY, p.spineZ, "YXZ");
+  // The pelvis turns under the spine and the spine turns back, so spine angles stay relative to the body.
+  rig.hips.rotation.set(0, p.pelvisY, p.pelvisZ, "YXZ");
+  rig.spine.rotation.set(p.spineX, p.spineY - p.pelvisY, p.spineZ - p.pelvisZ, "YXZ");
   rig.neck.rotation.set(p.neckX, p.neckY, 0, "YXZ");
   // The left side is +x, so spreading it out is a positive turn about z and the right a negative one.
   rig.shoulderL.rotation.set(p.shLX, -p.shLY, p.shLZ, "XZY");

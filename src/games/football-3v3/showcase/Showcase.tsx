@@ -6,6 +6,7 @@ import { MatchRenderer } from "../render/match-renderer";
 import { isLabMove, labView } from "./lab";
 import { SHOWCASE_SEED, ShowcaseScene } from "./scene";
 import { STILLS } from "./stills";
+import { BroadcastPlayer } from "./broadcast-player";
 import { TrailerPlayer } from "./trailer-player";
 
 /**
@@ -16,7 +17,8 @@ import { TrailerPlayer } from "./trailer-player";
  * steps it frame by frame and gets the same film every time.
  *
  * Development options in the address: t=<seconds> holds the trailer at
- * that moment, and lab=<move> shows the animation lab.
+ * that moment, lab=<move> shows the animation lab, and game=<seconds>
+ * plays the seeded game from then through the broadcast camera.
  */
 export default function Showcase({ view }: { view: ShowcaseView }) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -29,7 +31,8 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     canvas.className = "fb-showcase__canvas";
     stage.prepend(canvas);
     const params = new URLSearchParams(window.location.search);
-    const renderer = new MatchRenderer(canvas, { quality: "film", scale: view === "loop" ? 0.8 : 1 });
+    // The broadcast view is the game's own picture, antialiased; the film is captured without.
+    const renderer = new MatchRenderer(canvas, { quality: params.has("game") ? "high" : "film", scale: view === "loop" && !params.has("game") ? 0.8 : 1 });
     const lab = params.get("lab");
     const labScene = isLabMove(lab) ? new ShowcaseScene(SHOWCASE_SEED) : null;
     if (labScene) {
@@ -42,7 +45,10 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     }
     // Review scripts read what a frame draws from here. Development builds only.
     if (process.env.NODE_ENV === "development") Object.assign(window, { __fbRenderer: renderer });
-    const player = labScene ? null : new TrailerPlayer(renderer, renderer.scene);
+    const game = params.get("game");
+    const speed = params.get("speed");
+    const broadcast = !labScene && game !== null ? new BroadcastPlayer(renderer, Number(game) || 0, speed === "step" ? "step" : Number(speed ?? 1)) : null;
+    const player = labScene || broadcast ? null : new TrailerPlayer(renderer, renderer.scene);
     const held = params.get("t");
     const still = held !== null ? Number(held) : view === "loop" ? null : (STILLS[view] ?? null);
     // On a still, a review script can move the hold to any moment, through the still's own camera, and look at a sheet of them.
@@ -63,6 +69,7 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
       const now = performance.now();
       if (first < 0) first = now;
       if (labScene && isLabMove(lab)) renderer.draw(labView(labScene.view, lab, (now - first) / 1000), now);
+      else if (broadcast) broadcast.frame(now);
       else if (player && still !== null) {
         if (draws > 0) {
           player.hold(still);

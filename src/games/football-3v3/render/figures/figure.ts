@@ -4,9 +4,11 @@ import { applyPose } from "../anim/apply";
 import { aheadSpeed, choosePose, type Chosen, type PoseScene } from "../anim/choose";
 import { strideLength } from "../anim/gait";
 import { approach, neutral, type Pose } from "../anim/pose";
+import { Jolt, wobble } from "../anim/reactions";
 import type { AthleteMaterials } from "../materials/athlete-materials";
 import { buildBody, type Rig } from "../models/body";
 import type { KitSpec } from "../models/kit";
+import { Feet } from "./feet";
 
 /** A spot on a joint that can touch the turf, and how far the body sticks out past it. */
 interface Contact {
@@ -30,7 +32,16 @@ export class Figure {
   readonly rig: Rig;
   readonly kit: KitSpec;
   private readonly pose: Pose = neutral();
+  /** The eased pose with this frame's jolts and wobbles on top, as drawn. */
+  private shown: Pose = neutral();
   private readonly contacts: Contact[];
+  private readonly feet = new Feet();
+  private readonly jolt = new Jolt();
+  /** Acceleration along the facing and to the left, eased over a tenth of a second. */
+  private push = 0;
+  private turn = 0;
+  /** Seconds since this player took the ball in his hands, or null without it. */
+  private secured: number | null = null;
   private readonly hipsAnchor: THREE.Object3D;
   private phase = 0;
   private hand: Chosen["hand"] = "R";
@@ -72,19 +83,31 @@ export class Figure {
     const ahead = aheadSpeed(a);
     const dir = ahead < -0.5 ? -1 : 1;
     this.phase = (this.phase + dir * (a.speed * dt) / strideLength(a.speed, this.rig.legLength) + 1) % 1;
-    const chosen = choosePose(a, scene, { phase: this.phase, build: this.kit.build, time, seed: this.seed });
+    // The engine's acceleration in the body's own frame: along the facing and to its left.
+    const push = a.ax * Math.sin(a.yaw) + a.az * Math.cos(a.yaw);
+    const turn = a.ax * Math.cos(a.yaw) - a.az * Math.sin(a.yaw);
+    const ease = 1 - Math.exp(-dt * 10);
+    this.push += (push - this.push) * ease;
+    this.turn += (turn - this.turn) * ease;
+    this.jolt.update(push, turn, this.push, this.turn, dt);
+    this.secured = a.hasBall ? (this.secured ?? 0) + dt : null;
+    const chosen = choosePose(a, scene, { phase: this.phase, build: this.kit.build, time, seed: this.seed, push: this.push, turn: this.turn, secured: this.secured });
     this.hand = chosen.hand;
     approach(this.pose, chosen.pose, chosen.rate, dt);
+    this.shown = { ...this.pose };
+    this.jolt.apply(this.shown);
+    wobble(this.shown, a.stagger, time, this.seed);
     const root = this.rig.root;
     root.position.set(a.x, 0, a.z);
     root.rotation.set(0, a.yaw, 0);
     this.stand();
+    this.feet.update(this.rig, chosen.feet, this.phase, a.speed, dt);
   }
 
   /** Applies the pose, then shifts the body so it rests on the turf with the hips over the spot. */
   private stand(): void {
     const r = this.rig;
-    applyPose(r, this.pose);
+    applyPose(r, this.shown);
     // Measure the body where it stands on its own, then move it into place.
     r.body.position.set(0, 0, 0);
     r.root.updateMatrixWorld(true);
@@ -95,7 +118,7 @@ export class Figure {
       low = Math.min(low, v.y - c.radius);
     }
     this.hipsAnchor.getWorldPosition(w).applyMatrix4(inverse);
-    r.body.position.set(this.pose.side - w.x, this.pose.lift - low, this.pose.fwd - w.z);
+    r.body.position.set(this.shown.side - w.x, this.shown.lift - low, this.shown.fwd - w.z);
     r.root.updateMatrixWorld(true);
   }
 

@@ -1,8 +1,10 @@
 import type { AthleteView, BallView } from "../../engine/view";
 import type { Phase, TeamId } from "../../engine/types";
 import { BUILDS } from "../../builds";
+import { pitchPose, securePose } from "./ball-actions";
 import { celebratePose, dejectedPose } from "./celebrations";
 import { divePose, downPose, lungePose } from "./contact";
+import type { FootMode } from "./foot-lock";
 import { gait, type Carry } from "./gait";
 import { jukePose } from "./jukes";
 import { clamp01, type Pose } from "./pose";
@@ -23,14 +25,21 @@ export interface PoseScene {
   kicker: number | null;
   /** Seconds into the trophy presentation, or null outside it. */
   ceremonyT: number | null;
+  /** Where the player the ball is going to stands, for the QB to turn and pitch to him. */
+  target?: { x: number; z: number } | null;
 }
 
-/** What the figure knows about its own legs. */
+/** What the figure knows about its own body. */
 export interface BodyScene {
   phase: number;
   build: number;
   time: number;
   seed: number;
+  /** Acceleration along the facing and to the left, eased, in m/s². */
+  push?: number;
+  turn?: number;
+  /** Seconds since this player took the ball in his hands, or null. */
+  secured?: number | null;
 }
 
 export interface Chosen {
@@ -39,11 +48,25 @@ export interface Chosen {
   rate: number;
   /** Which hand holds the ball, when this player has it. */
   hand: "L" | "R" | "both";
+  /** Whether the feet are planted by the stride, held for a push off, or free for a set move. */
+  feet: FootMode;
 }
 
 /** Speed along the facing: positive running forward, negative backpedalling. */
 export function aheadSpeed(a: AthleteView): number {
   return a.vx * Math.sin(a.yaw) + a.vz * Math.cos(a.yaw);
+}
+
+/** Speed toward the body's left, as when shuffling across. */
+export function acrossSpeed(a: AthleteView): number {
+  return a.vx * Math.cos(a.yaw) - a.vz * Math.sin(a.yaw);
+}
+
+/** Where the target is, in radians to the left of the player's facing. */
+function towardTarget(a: AthleteView, s: PoseScene): number {
+  if (!s.target) return 0;
+  const want = Math.atan2(s.target.x - a.x, s.target.z - a.z);
+  return Math.atan2(Math.sin(want - a.yaw), Math.cos(want - a.yaw));
 }
 
 /** The QB holds the ball in both hands, ready to throw, until he tucks it and runs. */
@@ -88,42 +111,50 @@ function ceremonyPose(a: AthleteView, t: number, b: BodyScene): Pose {
 /** Picks the body's target pose from the engine's view of this player. Pure, so tests can check it. */
 export function choosePose(a: AthleteView, s: PoseScene, b: BodyScene): Chosen {
   const carry = carryOf(a, s);
-  const hand: Chosen["hand"] = carry === "ready" ? "both" : "R";
-  const run = () => gait({ speed: a.speed, ahead: aheadSpeed(a), phase: b.phase, carry, build: b.build, time: b.time, seed: b.seed });
+  const securing = a.hasBall && b.secured !== undefined && b.secured !== null && b.secured < 0.5 && carry === "tuck";
+  const hand: Chosen["hand"] = carry === "ready" || (securing && b.secured! < 0.3) ? "both" : "R";
+  const run = () => gait({
+    speed: a.speed, ahead: aheadSpeed(a), across: acrossSpeed(a), push: b.push ?? 0, turn: b.turn ?? 0,
+    phase: b.phase, carry, build: b.build, time: b.time, seed: b.seed,
+  });
   const t = a.actionT;
-  if (a.ceremony && s.ceremonyT !== null) return { pose: ceremonyPose(a, s.ceremonyT, b), rate: 12, hand: "both" };
+  const free = (pose: Pose, rate: number, h: Chosen["hand"] = hand): Chosen => ({ pose, rate, hand: h, feet: "free" });
+  if (a.ceremony && s.ceremonyT !== null) return free(ceremonyPose(a, s.ceremonyT, b), 12, "both");
   switch (a.action) {
     case "stance":
-      return { pose: breathe(stance(a, s), b.time, b.seed), rate: 8, hand };
-    case "juke":
-      return { pose: jukePose(a.juke ?? "side", t, a.actionDur, a.side, run()), rate: 20, hand: "R" };
+      return free(breathe(stance(a, s), b.time, b.seed), 8);
+    case "juke": {
+      // The push off foot stays planted while the body drives away from it: off the right foot to go left.
+      const feet: FootMode = t < a.plant ? (a.side > 0 ? "plantR" : "plantL") : "free";
+      return { pose: jukePose(a.juke ?? "side", t, a.actionDur, a.side, run()), rate: 20, hand: "R", feet };
+    }
     case "dive":
-      return { pose: divePose(t, a.actionDur), rate: 22, hand: "R" };
+      return free(divePose(t, a.actionDur), 22, "R");
     case "lunge":
-      return { pose: lungePose(t, a.actionDur), rate: 22, hand };
+      return free(lungePose(t, a.actionDur), 22);
     case "throw":
-      return { pose: throwPose(t, a.actionDur), rate: 30, hand: "R" };
+      return a.lob ? free(pitchPose(t, a.actionDur, towardTarget(a, s)), 30, "both") : free(throwPose(t, a.actionDur), 30, "R");
     case "kick":
-      return { pose: kickPose(t), rate: 26, hand: "both" };
+      return free(kickPose(t), 26, "both");
     case "down":
-      return { pose: downPose(t, a.actionDur, a.downCause ?? "dive", a.id), rate: 18, hand: "R" };
+      return free(downPose(t, a.actionDur, a.downCause ?? "dive", a.id), 18, "R");
     case "celebrate": {
       const style = a.build ? BUILDS[a.build].celebration : "point";
-      return { pose: celebratePose(style, t, a.spike), rate: 14, hand: "R" };
+      return free(celebratePose(style, t, a.spike), 14, "R");
     }
     case "none":
       break;
   }
   if (s.phase === "over" && s.winner !== null && a.role !== "lineman") {
     const style = a.build ? BUILDS[a.build].celebration : "point";
-    return { pose: s.winner === a.team ? celebratePose(style, s.phaseT, false) : dejectedPose(b.time, b.seed), rate: 8, hand };
+    return free(s.winner === a.team ? celebratePose(style, s.phaseT, false) : dejectedPose(b.time, b.seed), 8);
   }
-  if (s.center && s.ball.state === "snap") return { pose: snapPose(s.phaseT), rate: 30, hand };
-  if (a.role === "lineman" && a.blocked) {
-    return { pose: blockPose(b.time, b.seed, a.team === s.offense ? -0.2 : 0.2), rate: 12, hand };
-  }
+  if (s.center && s.ball.state === "snap") return free(snapPose(s.phaseT), 30);
+  if (a.role === "lineman" && a.blocked) return free(blockPose(b.time, b.seed, a.team === s.offense ? -0.2 : 0.2), 12);
   // Teammates of the passer leave it to the receiver; only the target and the defence go up for it.
   const { reach, high } = a.targeted || a.team !== s.offense ? reachFor(a, s.ball) : { reach: 0, high: 0 };
-  const pose = reach > 0 ? catchPose(run(), reach, high) : run();
-  return { pose, rate: reach > 0 ? 18 : 14, hand };
+  let pose = reach > 0 ? catchPose(run(), reach, high) : run();
+  if (securing) pose = securePose(pose, b.secured! / 0.5);
+  // The stride is tracked closely so the planted foot and the legs agree; reaching blends in a touch slower.
+  return { pose, rate: reach > 0 ? 18 : 28, hand, feet: "gait" };
 }

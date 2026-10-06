@@ -42,9 +42,23 @@ describe("poses", () => {
   });
 
   it("swings the legs against each other on the run and pumps the arms against the legs", () => {
-    const p = gait({ speed: 8, ahead: 8, phase: 0.25, carry: "none", build: 0, time: 0, seed: 0 });
-    expect(Math.sign(p.hipLX)).toBe(-Math.sign(p.hipRX));
-    expect(Math.sign(p.shLX)).toBe(-Math.sign(p.hipLX));
+    // Over a whole stride the two thighs move opposite ways, and each arm against its own leg.
+    const corr = (f: (p: ReturnType<typeof gait>) => [number, number]) => {
+      let sum = 0;
+      for (let i = 0; i < 40; i++) {
+        const [a, b] = f(gait({ speed: 8, ahead: 8, phase: i / 40, carry: "none", build: 0, time: 0, seed: 0 }));
+        sum += a * b;
+      }
+      return sum;
+    };
+    const mean = (k: "hipLX" | "hipRX" | "shLX") => {
+      let m = 0;
+      for (let i = 0; i < 40; i++) m += gait({ speed: 8, ahead: 8, phase: i / 40, carry: "none", build: 0, time: 0, seed: 0 })[k] / 40;
+      return m;
+    };
+    const [hl, hr, sl] = [mean("hipLX"), mean("hipRX"), mean("shLX")];
+    expect(corr((p) => [p.hipLX - hl, p.hipRX - hr])).toBeLessThan(0);
+    expect(corr((p) => [p.shLX - sl, p.hipLX - hl])).toBeLessThan(0);
     const still = gait({ speed: 0, ahead: 0, phase: 0.25, carry: "none", build: 0, time: 0, seed: 0 });
     expect(Math.abs(still.hipLX)).toBeLessThan(0.01);
   });

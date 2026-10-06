@@ -55,9 +55,11 @@ export class Squad {
   update(view: MatchView, dt: number, time: number): void {
     const center = centerOf(view);
     const kicker = view.kick?.kicker ?? null;
+    const aimed = view.athletes.find((a) => a.targeted);
     const scene: PoseScene = {
       phase: view.phase, phaseT: view.phaseT, offense: view.drive.offense, ball: view.ball,
       winner: view.winner, center: false, kicker, ceremonyT: view.ceremony?.t ?? null,
+      target: aimed ? { x: aimed.x, z: aimed.z } : null,
     };
     let targeted: AthleteView | null = null;
     for (const a of view.athletes) {
