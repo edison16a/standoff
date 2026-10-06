@@ -1,15 +1,20 @@
 import type { AthleteView, MatchView } from "../engine";
-import { KICK, PASS, TACKLE } from "../engine/tuning";
+import { KICK, PASS, STEP, TACKLE } from "../engine/tuning";
 import type { ActionKind, JukeKind } from "../engine/types";
 import { BUILD_IDS, BUILDS, LINEMAN_NUMBERS } from "../builds";
+import { STAGE_MOVES, STAGES, type StageMove } from "./lab-scenes";
+import { recordStage } from "./lab-stage";
 
 /**
  * A development stage for looking closely at the models and one
  * animation at a time: all six builds in a row doing the same thing on
  * a loop, with a pair of linemen alongside. Pick it with ?lab=<move>.
  */
-export const LAB_MOVES = ["idle", "run", "tuck", "ready", "throw", "kick", "spin", "back", "side", "dive", "lunge", "down", "tackled", "celebrate", "spike", "stance", "block", "catch"] as const;
-export type LabMove = (typeof LAB_MOVES)[number];
+const POSE_MOVES = ["idle", "run", "tuck", "ready", "throw", "kick", "spin", "back", "side", "dive", "lunge", "down", "tackled", "celebrate", "spike", "stance", "block", "catch"] as const;
+type PoseMove = (typeof POSE_MOVES)[number];
+/** The single poses on a row of builds, then the staged tackles, misses and runs (lab-scenes.ts). */
+export const LAB_MOVES = [...POSE_MOVES, ...STAGE_MOVES] as const;
+export type LabMove = PoseMove | StageMove;
 
 export function isLabMove(v: string | null): v is LabMove {
   return v !== null && (LAB_MOVES as readonly string[]).includes(v);
@@ -25,7 +30,7 @@ interface Act {
   spike?: boolean;
 }
 
-function act(move: LabMove): Act {
+function act(move: PoseMove): Act {
   switch (move) {
     case "idle": return { action: "none", dur: 0, speed: 0 };
     case "run": return { action: "none", dur: 0, speed: 8.5 };
@@ -48,7 +53,8 @@ function act(move: LabMove): Act {
 
 /** The lab's still for a moment `time` seconds in: everyone lined up across the field, facing the camera at -x. */
 export function labView(base: MatchView, move: LabMove, time: number): MatchView {
-  const a = act(move);
+  if (move in STAGES) return stageView(base, move as StageMove, time);
+  const a = act(move as PoseMove);
   const cycle = Math.max(1.6, a.dur + 1);
   const t = a.dur > 0 ? Math.min(a.dur, time % cycle) : time;
   // The engine turns a spinning runner right round over the juke, so the lab does too.
@@ -74,4 +80,19 @@ export function labView(base: MatchView, move: LabMove, time: number): MatchView
     ? { ...base.ball, state: "pass" as const, holder: null, x: -3 + ((time * 6) % 4), y: 1.9, z: -6.5, vx: -12, vy: 0, vz: 0 }
     : { ...base.ball, state: holder === null ? ("dead" as const) : ("held" as const), holder, x: 3, y: 0.15, z: 12 };
   return { ...base, phase: move === "stance" ? "presnap" : "live", athletes, ball, kick: null, scorer: null };
+}
+
+const recorded = new Map<StageMove, AthleteView[][]>();
+
+/** A staged moment on a loop, recorded once from the engine pieces. */
+function stageView(base: MatchView, move: StageMove, time: number): MatchView {
+  let frames = recorded.get(move);
+  if (!frames) {
+    frames = recordStage(STAGES[move]);
+    recorded.set(move, frames);
+  }
+  const at = frames[Math.floor(time / STEP) % frames.length]!;
+  const athletes = at.map((a) => ({ ...base.athletes[0]!, ...a }));
+  const ball = { ...base.ball, state: "held" as const, holder: 0 };
+  return { ...base, phase: "live", athletes, ball, kick: null, scorer: null };
 }

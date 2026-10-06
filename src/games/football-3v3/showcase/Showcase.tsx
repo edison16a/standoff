@@ -45,6 +45,19 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     }
     // Review scripts read what a frame draws from here. Development builds only.
     if (process.env.NODE_ENV === "development") Object.assign(window, { __fbRenderer: renderer });
+    // With labstep the lab's clock only moves when a review script steps it, so slow machines still see every frame.
+    const stepped = labScene && isLabMove(lab) && params.has("labstep");
+    let labTime = 0;
+    if (stepped) {
+      Object.assign(window, {
+        __fbLabStep: (dt: number, draw: boolean) => {
+          labTime += dt;
+          const v = labView(labScene.view, lab, labTime);
+          if (draw) renderer.draw(v, labTime * 1000);
+          else renderer.update(v, labTime * 1000);
+        },
+      });
+    }
     const game = params.get("game");
     const speed = params.get("speed");
     const broadcast = !labScene && game !== null ? new BroadcastPlayer(renderer, Number(game) || 0, speed === "step" ? "step" : Number(speed ?? 1), params.has("follow") ? Number(params.get("follow")) : null) : null;
@@ -68,7 +81,9 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     const loop = () => {
       const now = performance.now();
       if (first < 0) first = now;
-      if (labScene && isLabMove(lab)) renderer.draw(labView(labScene.view, lab, (now - first) / 1000), now);
+      if (stepped) {
+        // The review script draws each frame itself.
+      } else if (labScene && isLabMove(lab)) renderer.draw(labView(labScene.view, lab, (now - first) / 1000), now);
       else if (broadcast) broadcast.frame(now);
       else if (player && still !== null) {
         if (draws > 0) {
