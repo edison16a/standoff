@@ -33,7 +33,7 @@ const tmp = new THREE.Vector3();
 export class CourtRenderer {
   private readonly picture: Picture;
   private readonly scene = new THREE.Scene();
-  readonly arena = new Arena();
+  readonly arena: Arena;
   readonly tv = new TvCamera();
   private readonly effects: Effects;
   private readonly ball = new BallView();
@@ -55,9 +55,10 @@ export class CourtRenderer {
   jerseyName: (a: Athlete) => string | null = () => null;
 
   constructor(canvas: HTMLCanvasElement, quality: Quality = {}) {
-    const { reflections = true, athletes = "high" } = quality;
+    const { reflections = true, athletes = "high", mirror = 0.5 } = quality;
     this.athleteMats = new AthleteMaterials(athletes);
     this.picture = new Picture(canvas, quality);
+    this.arena = new Arena(mirror);
     this.environment = arenaEnvironment(this.picture.renderer);
     if (reflections) this.scene.environment = this.environment;
     this.scene.background = new THREE.Color("#060812");
@@ -147,7 +148,7 @@ export class CourtRenderer {
     this.effects.setView(this.height * this.picture.pixelRatio, this.tv.camera.fov);
     this.effects.frame(m, dt);
     this.grade(dt);
-    if (draw) this.picture.draw(this.scene, this.tv.camera);
+    if (draw) this.picture.draw(this.scene, this.tv.camera, () => this.arena.reflect(this.picture.renderer, this.scene, this.tv.camera));
   }
 
   /** The replay and the ceremony have their own grade, with the subject in focus; a cut changes it at once. */

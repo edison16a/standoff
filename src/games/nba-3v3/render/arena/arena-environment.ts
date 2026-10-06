@@ -32,7 +32,7 @@ export function arenaEnvironment(renderer: THREE.WebGLRenderer): THREE.Texture {
   };
   // The bowl: a dark roof and walls, with the stands a dim warm band round the middle.
   add(new THREE.SphereGeometry(40, 32, 16), new THREE.MeshBasicMaterial({ color: "#05070d", side: THREE.BackSide }), 0, 0, 5);
-  add(new THREE.CylinderGeometry(22, 14, 9, 48, 1, true), new THREE.MeshBasicMaterial({ color: new THREE.Color("#3a2f2c").multiplyScalar(0.55), side: THREE.BackSide }), 0, 4.5, 5);
+  add(new THREE.CylinderGeometry(22, 14, 9, 48, 1, true), new THREE.MeshBasicMaterial({ color: new THREE.Color("#8a7468").multiplyScalar(0.5), side: THREE.BackSide }), 0, 4.5, 5);
   // The floor, lit by the lamps, bounces warm light up into the players' undersides.
   add(new THREE.CircleGeometry(16, 48), glow("#c08a55", 0.55), 0, 0, 5, 0, -Math.PI / 2);
   // The LED ribbons: one low ring at courtside, one on the deck's face.

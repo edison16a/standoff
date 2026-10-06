@@ -2,7 +2,8 @@ import * as THREE from "three";
 import { TEAMS } from "../../roster";
 import { ledTexture, suitesTexture } from "../textures";
 import { Crowd } from "./crowd";
-import { FLOOR, floorTexture } from "./floor-texture";
+import { Floor } from "./floor";
+import { FloorMirror } from "./floor-mirror";
 import { Hoop } from "./hoop";
 import { ArenaLights } from "./lighting";
 
@@ -26,21 +27,22 @@ export class Arena {
   private readonly textures: THREE.Texture[] = [];
   private readonly owned: THREE.Material[] = [];
 
-  constructor() {
-    const floorMap = floorTexture();
-    const floorMat = new THREE.MeshStandardMaterial({ map: floorMap, roughness: 0.28, metalness: 0.05 });
-    this.owned.push(floorMat);
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(FLOOR.maxX - FLOOR.minX, FLOOR.maxZ - FLOOR.minZ), floorMat);
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.set((FLOOR.maxX + FLOOR.minX) / 2, 0, (FLOOR.maxZ + FLOOR.minZ) / 2);
-    floor.receiveShadow = true;
-    this.group.add(floor);
+  /** The floor's reflection of the players and lights, drawn before each frame. */
+  readonly mirror: FloorMirror;
+  readonly floor: Floor;
+
+  /** `mirror` is the reflection's size as a share of the picture's; 0 leaves the floor with the environment map alone. */
+  constructor(mirror = 0.5) {
+    this.mirror = new FloorMirror(mirror);
+    this.floor = new Floor(mirror > 0 ? this.mirror : null);
+    this.group.add(this.floor.mesh);
     // Dark floor beyond the painted apron, out to the stands.
     const outer = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.MeshStandardMaterial({ color: "#0a0d1f", roughness: 0.6 }));
     outer.rotation.x = -Math.PI / 2;
     outer.position.y = -0.01;
     outer.receiveShadow = true;
     this.group.add(outer);
+    this.mirror.hidden.push(this.floor.mesh, outer);
 
     this.crowd = new Crowd([
       { x: 0, z: -5.2, yaw: 0, width: 34, rows: 16 },
@@ -50,6 +52,7 @@ export class Arena {
     this.group.add(this.crowd.group);
     this.boards();
     this.bowl();
+    this.mirror.hidden.push(this.crowd.group);
     this.group.add(this.hoop.group);
 
     this.group.add(this.lights.group);
@@ -92,6 +95,7 @@ export class Arena {
     const deck = new THREE.Mesh(new THREE.CylinderGeometry(27, 27, 5.5, 64, 1, true, Math.PI * 0.5, Math.PI * 1.4), deckMat);
     deck.position.set(0, 10.2, 6);
     this.group.add(deck);
+    this.mirror.hidden.push(wall, deck);
     const dots: number[] = [];
     for (let ring = 0; ring < 3; ring++) {
       for (let i = 0; i < 120; i++) {
@@ -104,6 +108,13 @@ export class Arena {
     geo.setAttribute("position", new THREE.Float32BufferAttribute(dots, 3));
     const lights = new THREE.Points(geo, new THREE.PointsMaterial({ color: "#fff1c7", size: 0.35, sizeAttenuation: true, toneMapped: false }));
     this.group.add(lights);
+    this.mirror.hidden.push(lights);
+  }
+
+  /** Draws the floor's reflection for this frame's camera; the shadows must already be drawn. */
+  reflect(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera): void {
+    this.mirror.render(renderer, scene, camera);
+    this.floor.update();
   }
 
   update(dt: number, time: number, ball: { x: number; y: number; z: number }, calm: number): void {
@@ -115,6 +126,8 @@ export class Arena {
   dispose(): void {
     this.hoop.dispose();
     this.crowd.dispose();
+    this.floor.dispose();
+    this.mirror.dispose();
     for (const t of [...this.leds, ...this.textures]) t.dispose();
     for (const m of this.owned) m.dispose();
     this.group.traverse((o) => {
