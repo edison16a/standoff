@@ -81,7 +81,8 @@ export function updateLinemen(m: Match, dt: number): void {
     // Net drive over the pair's mass, against the cleats' hold on the turf.
     const mass = o.mass + d.mass;
     const force = -s * p.surge * LINE.drive;
-    p.v += ((force - LINE.hold * p.v) / mass) * dt;
+    const lurch = (force - LINE.hold * p.v) / mass;
+    p.v += lurch * dt;
     const lo = Math.min(losX - s * 3.5, losX + s * 2.5);
     const hi = Math.max(losX - s * 3.5, losX + s * 2.5);
     const x = clamp(p.x + p.v * dt, lo, hi);
@@ -92,7 +93,8 @@ export function updateLinemen(m: Match, dt: number): void {
       a.z = p.z;
       a.vx = p.v;
       a.vz = 0;
-      a.ax = 0;
+      // The pair's lurch, for the two big bodies to sway with each shove.
+      a.ax = lurch;
       a.az = 0;
       // Locked up with the man across: the view draws the two of them driving into each other.
       a.blocked = 0.15;

@@ -32,7 +32,7 @@ function act(m: Match, a: Athlete, dt: number): void {
   const now = a.action;
   if (now.kind === "juke") {
     updateJuke(a, dt);
-    jukeBeats(m, a, dt);
+    if (m.carrier() === a) jukeBeats(m.athletes, a, dt);
   }
   else if (now.kind === "lunge") updateLunge(m, a, dt);
   else if (now.kind === "dive") updateDive(m, a, dt);

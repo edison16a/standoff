@@ -54,7 +54,7 @@ export function tackle(m: Match, carrier: Athlete, by: Athlete, kind: TackleKind
 }
 
 /** Turns a lunge toward the carrier, no faster than TACKLE.homing radians a second. */
-function home(a: Athlete, carrier: Athlete, dt: number): void {
+export function home(a: Athlete, carrier: Athlete, dt: number): void {
   const speed = Math.hypot(a.vx, a.vz);
   if (speed < 0.5) return;
   const now = Math.atan2(a.vx, a.vz);

@@ -85,10 +85,14 @@ export function bindTackle(kind: TackleKind, carrier: Athlete, tackler: Athlete,
   carrier.yaw = fy + move.carrierYaw;
 }
 
-/** The carrier's drag and drive while a preset has him, or null outside one. */
+/** A tackler who let go skids on his chest and stops quickly. */
+const LET_GO: Slide = { until: Infinity, decel: 11, push: 0 };
+
+/** The drag and drive on a man in a preset: the carrier's slide, or a tackler's skid once let go; null outside one. */
 export function slideOf(a: Athlete): Slide | null {
   const act = a.action;
-  if (act.kind !== "down" || !act.bind || act.bind.role !== "carrier") return null;
+  if (act.kind !== "down" || !act.bind) return null;
+  if (act.bind.role !== "carrier") return LET_GO;
   return slideAt(TACKLE_MOVES[act.bind.kind].slide, act.t);
 }
 
@@ -96,7 +100,8 @@ export function slideOf(a: Athlete): Slide | null {
 export function held(a: Athlete): boolean {
   const act = a.action;
   if (act.kind !== "down" || !act.bind || act.bind.role === "carrier") return false;
-  return act.t < TACKLE_MOVES[act.bind.kind].release;
+  const move = TACKLE_MOVES[act.bind.kind];
+  return act.t < (act.bind.role === "pile" ? move.pileDown : move.release);
 }
 
 /** Moves every held man to his place on the carrier and gives him the carrier's speed. */

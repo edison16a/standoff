@@ -1,9 +1,9 @@
 import { isDown, statsOf } from "./body";
 import { knockDown } from "./down";
-import type { Match } from "./match";
 import { headingOf } from "./tackle-preset";
 import type { Athlete } from "./types";
-import { dist2, dot2, norm2 } from "./vec";
+import { leftOf } from "./tackle-bind";
+import { dist2, dot2, fromYaw, norm2 } from "./vec";
 
 /**
  * A juke beats the men in front of it. As the dodge starts, a heavy
@@ -39,20 +39,20 @@ export function beatBy(runner: Athlete, d: Athlete): "fall" | "stumble" | null {
   return gap < BEAT.fall && statsOf(d).agility < BEAT.steady ? "fall" : "stumble";
 }
 
-/** Called each step of a juke: on the step its dodge opens, the men it fools stumble or fall. */
-export function jukeBeats(m: Match, runner: Athlete, dt: number): void {
+/** Called each step of a ball carrier's juke: on the step its dodge opens, the men it fools stumble or fall. */
+export function jukeBeats(list: readonly Athlete[], runner: Athlete, dt: number): void {
   const act = runner.action;
   if (act.kind !== "juke" || act.t < act.dodge[0] || act.t - dt >= act.dodge[0]) return;
-  if (m.carrier() !== runner) return;
-  // He lurches the way the runner went, as his weight was already moving there.
-  const side: 1 | -1 = act.side;
-  for (const d of m.athletes) {
+  // He bit on the fake: his weight lurches away from the way the runner actually went.
+  const heading = headingOf(runner);
+  const along = dot2(act.push, heading);
+  const across = { x: act.push.x - heading.x * along, z: act.push.z - heading.z * along };
+  for (const d of list) {
     const beat = beatBy(runner, d);
+    const side: 1 | -1 = dot2(across, leftOf(fromYaw(d.yaw))) > 0 ? -1 : 1;
     if (beat === "fall") knockDown(d, BEAT.down, "juked");
-    else if (beat === "stumble") {
-      d.stumble = { t: 0, side };
-      d.stagger = Math.max(d.stagger, BEAT.stumble);
-    }
+    else if (beat === "stumble") d.stagger = Math.max(d.stagger, BEAT.stumble);
+    if (beat) d.stumble = { t: 0, dur: beat === "fall" ? BEAT.down : BEAT.stumble, side };
   }
 }
 
@@ -60,5 +60,5 @@ export function jukeBeats(m: Match, runner: Athlete, dt: number): void {
 export function updateStumble(a: Athlete, dt: number): void {
   if (!a.stumble) return;
   a.stumble.t += dt;
-  if (a.stumble.t >= BEAT.stumble) a.stumble = null;
+  if (a.stumble.t >= a.stumble.dur) a.stumble = null;
 }

@@ -148,8 +148,8 @@ export interface Athlete {
   blocked: number;
   /** Seconds left of shaky footing after a big jolt or a broken tackle. */
   stagger: number;
-  /** A stumble from being juked: seconds into it and which way he lurches, or null. */
-  stumble: { t: number; side: 1 | -1 } | null;
+  /** Fooled by a juke: seconds into it, how long it lasts and which way he lurches, or null. He may be on the turf for it. */
+  stumble: { t: number; dur: number; side: 1 | -1 } | null;
   bot: BotMemory;
   stats: Stats;
 }
