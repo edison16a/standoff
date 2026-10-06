@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import type { MatchEvent } from "../engine/events";
 import type { Match } from "../engine/match";
-import { greenHalfMs, GREEN_MS, type Grade } from "../engine/shot-model";
+import { goldHalfMs, greenHalfMs, GREEN_MS, type Grade } from "../engine/shot-model";
 import { SHOT } from "../engine/tuning";
 import { BUILDS } from "../builds";
 import type { CourtRenderer } from "./court-renderer";
@@ -19,6 +19,7 @@ interface Tag {
   meter: HTMLDivElement;
   fill: HTMLDivElement;
   green: HTMLDivElement;
+  gold: HTMLDivElement;
   text: string;
   grade: Grade | null;
   gradeUntil: number;
@@ -33,6 +34,12 @@ interface Tag {
 const METER_H = 72;
 
 const point = new THREE.Vector3();
+
+/** Places a window centred on the green mark, `half` milliseconds each side, along the meter. */
+function band(el: HTMLDivElement, half: number): void {
+  el.style.bottom = `${((GREEN_MS - half) / SHOT.meterMs) * 100}%`;
+  el.style.height = `${((half * 2) / SHOT.meterMs) * 100}%`;
+}
 
 /**
  * Name tags over every player, in their phone's colour, with a ball
@@ -103,9 +110,9 @@ export class Tags {
     tag.meter.style.display = showing ? "" : "none";
     if (!showing) return false;
     const free = m.phase === "freeThrow" && m.freeThrows?.shooter === id;
-    const half = greenHalfMs(BUILDS[a.build].stats.shooting, a.onFire, free);
-    tag.green.style.bottom = `${((GREEN_MS - half) / SHOT.meterMs) * 100}%`;
-    tag.green.style.height = `${((half * 2) / SHOT.meterMs) * 100}%`;
+    const shooting = BUILDS[a.build].stats.shooting;
+    band(tag.green, greenHalfMs(shooting, a.onFire, free));
+    band(tag.gold, goldHalfMs(shooting, a.onFire, free));
     if (aiming && act.kind === "shoot") {
       tag.fill.style.height = `${Math.min(100, ((act.t * 1000) / SHOT.meterMs) * 100)}%`;
       tag.meter.dataset.grade = "";
@@ -120,14 +127,16 @@ export class Tags {
     meter.className = "nba-tag__meter";
     const green = document.createElement("div");
     green.className = "nba-tag__green";
+    const gold = document.createElement("div");
+    gold.className = "nba-tag__gold";
     const fill = document.createElement("div");
     fill.className = "nba-tag__fill";
-    meter.append(green, fill);
+    meter.append(green, gold, fill);
     const name = document.createElement("span");
     name.className = "nba-tag__name";
     root.append(meter, name);
     this.container.appendChild(root);
-    return { root, name, meter, fill, green, text: "", grade: null, gradeUntil: 0, width: 0, height: 0, lift: 0 };
+    return { root, name, meter, fill, green, gold, text: "", grade: null, gradeUntil: 0, width: 0, height: 0, lift: 0 };
   }
 
   dispose(): void {

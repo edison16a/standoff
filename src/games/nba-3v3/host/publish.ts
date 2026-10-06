@@ -3,7 +3,7 @@ import type { Match } from "../engine/match";
 import type { Athlete } from "../engine/types";
 import { canSteal, stealInReach } from "../engine/defend";
 import { guardStatus } from "../engine/guard";
-import { greenHalfMs, GREEN_MS } from "../engine/shot-model";
+import { goldHalfMs, greenHalfMs, GREEN_MS } from "../engine/shot-model";
 import { RULES, SHOT } from "../engine/tuning";
 import type { CourtState, Phase, PhoneState } from "../protocol";
 import { BUILDS, cpuName } from "../builds";
@@ -51,6 +51,11 @@ export function freeThrowText(m: Match): string | null {
   return ft ? `Free throw ${ft.shot} of ${ft.shots}` : null;
 }
 
+/** The shot meter's windows for a shooter, in milliseconds. */
+function meterOf(shooting: number, onFire: boolean, free: boolean): CourtState["meter"] {
+  return { fullMs: SHOT.meterMs, greenMs: GREEN_MS, halfMs: greenHalfMs(shooting, onFire, free), goldMs: goldHalfMs(shooting, onFire, free) };
+}
+
 /** What one phone's controller shows for its player. */
 export function courtState(m: Match, id: number, players: readonly Player[]): CourtState {
   const a = m.athletes[id]!;
@@ -72,7 +77,7 @@ export function courtState(m: Match, id: number, players: readonly Player[]): Co
     guard: guardStatus(m, a),
     freeThrow: ft ? { mine, n: ft.shot, of: ft.shots, ready: mine && ft.stage === "set" } : null,
     // At the line the green band is wider: a set shot with nobody in the face.
-    meter: { fullMs: SHOT.meterMs, greenMs: GREEN_MS, halfMs: greenHalfMs(BUILDS[a.build].stats.shooting, a.onFire, mine) },
+    meter: meterOf(BUILDS[a.build].stats.shooting, a.onFire, mine),
     onFire: a.onFire,
     // The whole break counts, from the basket to the check, so the phone never shows a loose ball meanwhile.
     checking: m.phase === "dead" || m.phase === "check",

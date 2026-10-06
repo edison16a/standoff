@@ -86,8 +86,11 @@ export const SHOT = {
   /** Where the green window sits along the meter, 0 to 1. */
   greenAt: 0.8,
   /** Half the green window in milliseconds, plus a bit more per shooting point. */
-  greenBase: 46,
-  greenPerShooting: 5,
+  greenBase: 40,
+  greenPerShooting: 4.4,
+  /** The gold window is this share of the green, centred in it, and at least this many ms each side. */
+  goldShare: 0.2,
+  goldMinMs: 11,
   /** A good release is this many green widths from the centre. */
   goodSpread: 2.3,
   /** Holding past a full meter throws the shot anyway, late. */

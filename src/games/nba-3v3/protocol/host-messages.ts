@@ -33,8 +33,8 @@ export const courtSchema = z.object({
    * is next of how many, and whether the shooter is set at the line.
    */
   freeThrow: z.object({ mine: z.boolean(), n: z.number().int().min(1).max(3), of: z.number().int().min(1).max(3), ready: z.boolean() }).nullable(),
-  /** The shot meter for this player: where the green sits and how wide it is, in milliseconds. */
-  meter: z.object({ fullMs: z.number(), greenMs: z.number(), halfMs: z.number() }),
+  /** The shot meter for this player: where the green sits, half its width and half the gold's inside it, in milliseconds. */
+  meter: z.object({ fullMs: z.number(), greenMs: z.number(), halfMs: z.number(), goldMs: z.number() }),
   onFire: z.boolean(),
   /** The ball is being checked at the top; play starts when it is back with the checker. */
   checking: z.boolean(),
@@ -69,7 +69,7 @@ export const phoneStateSchema = z.object({
     .nullable(),
 });
 
-export const BUZZ_KINDS = ["ball", "shot", "green", "score", "dunk", "blocked", "stolen", "block", "steal", "whistle", "win", "lose", "call"] as const;
+export const BUZZ_KINDS = ["ball", "shot", "green", "gold", "score", "dunk", "blocked", "stolen", "block", "steal", "whistle", "win", "lose", "call"] as const;
 export type BuzzKind = (typeof BUZZ_KINDS)[number];
 
 /** Asks a phone to buzz and flash a word, like "Green!" or "Stolen!". */

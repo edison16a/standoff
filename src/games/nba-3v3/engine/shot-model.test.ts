@@ -6,7 +6,7 @@ const open: ShotContext = { kind: "jumper", grade: "perfect", distance: 7, shoot
 
 describe("the shot meter", () => {
   it("greens a release in the middle of the window and grades misses by side", () => {
-    expect(gradeRelease(GREEN_MS, 5).grade).toBe("perfect");
+    expect(gradeRelease(GREEN_MS + greenHalfMs(5) * 0.6, 5).grade).toBe("perfect");
     expect(gradeRelease(GREEN_MS - 400, 5).grade).toBe("early");
     expect(gradeRelease(GREEN_MS + 400, 5).grade).toBe("late");
     expect(gradeRelease(GREEN_MS + greenHalfMs(5) * 1.5, 5).grade).toBe("good");

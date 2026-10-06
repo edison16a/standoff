@@ -9,6 +9,7 @@ const PATTERNS: Record<BuzzKind, number[]> = {
   ball: [22],
   shot: [30],
   green: [20, 40, 60],
+  gold: [20, 30, 20, 30, 120],
   score: [40, 40, 40],
   dunk: [90, 40, 160],
   blocked: [160],
@@ -27,7 +28,8 @@ export function buzz(kind: BuzzKind | "tap"): void {
 }
 
 /** Which way a buzz reads, for the colour of the flashed word. */
-export function toneOf(kind: BuzzKind): "good" | "bad" | "info" {
+export function toneOf(kind: BuzzKind): "good" | "bad" | "info" | "gold" {
+  if (kind === "gold") return "gold";
   if (kind === "blocked" || kind === "stolen" || kind === "lose" || kind === "whistle") return "bad";
   if (kind === "ball" || kind === "call" || kind === "shot") return "info";
   return "good";

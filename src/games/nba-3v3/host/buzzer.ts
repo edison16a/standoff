@@ -3,7 +3,7 @@ import type { Match } from "../engine/match";
 import type { BuzzKind } from "../protocol";
 import type { PhoneLink } from "./phone-link";
 
-const GRADE_WORDS = { perfect: "Green!", good: "Good release", early: "Early", late: "Late" } as const;
+const GRADE_WORDS = { gold: "Gold!", perfect: "Green!", good: "Good release", early: "Early", late: "Late" } as const;
 
 /**
  * Turns game events into buzzes and a flashed word on the phones of the
@@ -21,7 +21,7 @@ export class Buzzer {
     };
     switch (e.type) {
       case "shot":
-        if (e.kind === "jumper" || e.kind === "free") send(e.id, e.grade === "perfect" ? "green" : "shot", GRADE_WORDS[e.grade]);
+        if (e.kind === "jumper" || e.kind === "free") send(e.id, e.grade === "gold" ? "gold" : e.grade === "perfect" ? "green" : "shot", GRADE_WORDS[e.grade]);
         return;
       case "score":
         send(e.id, e.kind === "dunk" ? "dunk" : "score", e.kind === "dunk" ? "Slam!" : `+${e.points}`);

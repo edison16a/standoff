@@ -5,7 +5,8 @@ import { useControllerStore } from "../controller-store";
 
 /**
  * The shot meter beside the Shoot button: it fills while Shoot is held
- * and the green band is where to let go. It runs on the phone's own
+ * and the green band is where to let go, with a thin gold line in its
+ * middle that always swishes. It runs on the phone's own
  * clock from the moment the thumb went down, so what the player sees is
  * exactly what the host judges. At the free throw line it lights up and
  * waits for the shot, its green band a little wider.
@@ -26,11 +27,11 @@ export function ShotMeter({ meter, free = false }: { meter: CourtState["meter"];
     return () => cancelAnimationFrame(frame);
   }, [since, meter.fullMs]);
 
-  const bottom = ((meter.greenMs - meter.halfMs) / meter.fullMs) * 100;
-  const height = ((meter.halfMs * 2) / meter.fullMs) * 100;
+  const band = (half: number) => ({ bottom: `${((meter.greenMs - half) / meter.fullMs) * 100}%`, height: `${((half * 2) / meter.fullMs) * 100}%` });
   return (
     <div className={`nba-meter ${since !== null ? "nba-meter--on" : ""} ${free ? "nba-meter--free" : ""}`} aria-hidden="true">
-      <div className="nba-meter__green" style={{ bottom: `${bottom}%`, height: `${height}%` }} />
+      <div className="nba-meter__green" style={band(meter.halfMs)} />
+      <div className="nba-meter__gold" style={band(meter.goldMs)} />
       <div ref={fillRef} className="nba-meter__fill" />
     </div>
   );

@@ -7,6 +7,7 @@ import { TEAMS } from "../../roster";
 import type { Arena } from "../arena/arena";
 import type { TvCamera } from "../tv-camera";
 import { Confetti } from "./confetti";
+import { GoldRelease } from "./gold-release";
 import { Particles } from "./particles";
 
 /**
@@ -27,6 +28,7 @@ export class Effects {
   private flashes = 0;
   /** Seeded, so a captured showcase looks the same on every run. */
   private readonly rng = seeded(99);
+  private readonly gold = new GoldRelease(this.glow, this.rng);
 
   constructor(
     private readonly arena: Arena,
@@ -45,6 +47,12 @@ export class Effects {
     const crowd = this.arena.crowd;
     const ball = m.ball.pos;
     switch (e.type) {
+      case "shot":
+        if (e.grade !== "gold") return;
+        this.gold.release(m);
+        hoop.light("#ffd23f", 1.4);
+        this.flashes = 0.6;
+        return;
       case "dunk": {
         hoop.knock(1);
         hoop.net.whip(1.2);
@@ -142,6 +150,7 @@ export class Effects {
     if (holder?.onFire || (b.mode === "flight" && shooter?.onFire)) {
       this.glow.burst({ x: b.pos.x, y: b.pos.y, z: b.pos.z, count: 3, colour: this.rng() < 0.5 ? "#ff7a18" : "#ffd23f", speed: [0.2, 0.8], up: 0.9, life: [0.25, 0.5], size: [0.1, 0.2], gravity: -2, drag: 0.3 }, this.rng);
     }
+    this.gold.frame(m);
     if (this.fireworksLeft > 0) {
       this.fireworksLeft -= dt;
       this.nextFirework -= dt;

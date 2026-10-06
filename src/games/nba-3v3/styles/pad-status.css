@@ -85,6 +85,12 @@
   color: #ffffff;
 }
 
+.nba-flash--gold {
+  background: linear-gradient(135deg, #fff1a8, #ffd23f 45%, #ffb703);
+  color: #3b2300;
+  box-shadow: 0 0 24px rgba(255, 210, 63, 0.8);
+}
+
 .nba-flash--info {
   background: #3b82f6;
   color: #ffffff;

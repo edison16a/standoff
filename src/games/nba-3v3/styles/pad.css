@@ -144,6 +144,16 @@
   background: #22c55e;
 }
 
+/* Gold sits in the middle of the green: much thinner, and a sure swish. */
+.nba-meter__gold {
+  position: absolute;
+  left: 0;
+  right: 0;
+  min-height: 2px;
+  background: #ffd23f;
+  box-shadow: 0 0 6px #ffb703;
+}
+
 .nba-meter__fill {
   position: absolute;
   left: 0;

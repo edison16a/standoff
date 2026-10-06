@@ -7,7 +7,7 @@ export type SetupStep = "build" | "ready";
 export interface Flash {
   key: number;
   text: string;
-  tone: "good" | "bad" | "info";
+  tone: "good" | "bad" | "info" | "gold";
 }
 
 /** What Basketball 3v3's phone screens render. */

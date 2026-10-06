@@ -53,18 +53,23 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   if (free) a.box.freeAttempts++;
   else a.box.attempts++;
   letGo(m, a, hand);
-  const forced = m.forced;
+  const scripted = m.forced;
   m.forced = null;
+  // Gold is a sure swish: no hand gets to it, and it goes in clean even through a foul.
+  const gold = grade === "gold";
+  const forced = scripted ?? (gold ? "swish" : null);
   // Contact on the shot is a foul, and a fouled shot flies on and may still drop.
-  const fouler = forced || free ? null : rollShootingFoul(m, a, kind);
+  const fouler = scripted || free ? null : rollShootingFoul(m, a, kind);
   if (fouler) callShootingFoul(m, fouler, a, three ? 3 : 2);
   b.shot = shotInfo(m, a, kind, grade, three ? 3 : free ? 1 : 2, c.contest, distance);
-  // A scripted film, and a fouled shot, fly clear of hands.
+  // A scripted film, a gold release and a fouled shot fly clear of hands.
   if (forced || fouler) b.shot.rolled = m.opponents(a.team).map((o) => o.id);
   const s = buildOf(a).stats;
   const ctx: ShotContext = { kind, grade, distance, shooting: s.shooting, contest: c.contest, strengthEdge: c.edge, onFire: a.onFire, floater };
   const chance = makeChance(ctx) * (fouler ? FOULED_MAKE : 1);
-  const input = release(m, a, kind, hand, distance, floater);
+  const thrown = release(m, a, kind, hand, distance, floater);
+  // A gold jumper goes straight at the ring, never off the glass.
+  const input = gold && thrown.family === "bankJumper" ? { ...thrown, family: "jumper" as const } : thrown;
   const launch = forced ? forcedLaunch(m.rng, input, forced) : planRelease(m.rng, input, chance, distance);
   b.vel = launch.vel;
   b.w = launch.spin;
