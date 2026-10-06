@@ -36,16 +36,22 @@ export class Sfx {
     noise(this.engine, this.out, this.at, { filter: "bandpass", frequency: 600, sweepTo: 5000, q: 1, decay: 0.5, peak: 0.2 });
   }
 
-  /** A sparkly rising arpeggio as a cube breaks. */
-  pickup(level: number): void {
+  /**
+   * A sparkly rising arpeggio as a box breaks. A double box shatters
+   * twice over and its run climbs on a step higher, so a second power up
+   * is heard as well as seen.
+   */
+  pickup(level: number, count = 1): void {
     const at = this.at;
     const v = vary(0.03);
     noise(this.engine, this.out, at, { filter: "highpass", frequency: 3500, decay: 0.05, peak: 0.25 * level });
     tone(this.engine, this.out, at, { frequency: 180 * v, glideTo: 90, decay: 0.12, peak: 0.2 * level });
-    [84, 88, 91, 96].forEach((note, i) => {
+    const notes = count > 1 ? [84, 88, 91, 96, 100, 103] : [84, 88, 91, 96];
+    notes.forEach((note, i) => {
       tone(this.engine, this.out, at + i * 0.045, { type: "triangle", frequency: midi(note) * v, decay: 0.25, peak: 0.11 * level });
     });
     noise(this.engine, this.out, at + 0.05, { filter: "highpass", frequency: 7000, decay: 0.45, peak: 0.07 * level });
+    if (count > 1) noise(this.engine, this.out, at + 0.09, { filter: "highpass", frequency: 4200, decay: 0.06, peak: 0.2 * level });
   }
 
   throwOrb(level: number): void {
