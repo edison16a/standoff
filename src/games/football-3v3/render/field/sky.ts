@@ -35,7 +35,9 @@ void main() {
   c += vec3(0.03, 0.03, 0.035) * cloud * smoothstep(0.05, 0.35, up);
   // A few stars, hidden where the cloud is.
   vec3 cell = floor(d * 220.0);
-  float star = step(0.9975, hash3(cell)) * smoothstep(0.15, 0.5, up) * (1.0 - cloud);
+  // A round point in the middle of its cell, not the whole cell, so stars stay pin sharp.
+  float point = smoothstep(0.3, 0.05, length(fract(d * 220.0) - 0.5));
+  float star = step(0.9975, hash3(cell)) * point * smoothstep(0.15, 0.5, up) * (1.0 - cloud);
   c += vec3(0.5, 0.52, 0.6) * star * hash3(cell + 3.1);
   gl_FragColor = vec4(c, 1.0);
 }
