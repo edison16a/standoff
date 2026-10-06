@@ -19,9 +19,28 @@ Known gaps from step 1:
 * On this machine the host page runs at a quarter of real time in a browser test, so a long hold measured on the phone is clamped by the host's own clock (`releaseJumper`). The unit tests check the hold and the grading; a browser test can only check that a long hold is never let go early.
 * The demo game behind the lobby is always three a side.
 
+## Step 2: shot endings and ball logic
+
+Done:
+
+* Eleven endings in `engine/shot-outcome/presets.ts`: swish, bank, frontRimIn, backRimIn, rattleIn, rollIn (toilet bowl in), rimOut, backIron (long rebound), rollOut (toilet bowl out), glassOut, airball. The coarse `Outcome` that scores and stats read is still named by the physics (`classify`).
+* The picker `pick.ts` decides make or miss from the make chance, then the ending from the meter grade, contest, distance, family and the angle on the glass. Gold is always a swish. Early leans short, late leans long. Tests in `pick.test.ts` (make share equals the chance, swish most common on clean green jumpers, rolls mostly on close layups, back iron on late misses, rare airballs, banks only from the wings).
+* The solver `solve.ts` draws releases from a hand made aim per ending (`recipes.ts`) and flies each ahead through the same stepper as the live ball (`trace.ts`, `flight.ts`) until one ends that way, at most 28 tries. If none does it keeps the nearest with the same make or miss. In bot games a shot costs about 0.3 ms in the middle and under 8 ms at worst on this machine. Tests in `solve.test.ts` and `live.test.ts` (every ending flown in a real match ends the way the look ahead said).
+* The toilet bowl ride `rim-ride.ts`: an authored path over the top of the tube from the first touch, with a hop, a wobble, slowing laps, and a tip in or out, handed back to the physics on the tube. Tests in `rim-ride.test.ts`.
+* `ShotInfo.preset` and `ShotInfo.flight` hold the plan; the `shot` event carries `preset`. A block clears the planned ride (`ball-touch.ts`), so a swat flies on physics alone. `m.forced` takes a preset or an old outcome name (`asPreset`).
+* `physics/bank.ts` finds the bank spot from many more angles (damped Newton with a fresh slope each step). The bank calibration rows were refreshed; the calibration table is now only used for dunks (`planRelease` in `slam`).
+* Lab scenes: `/showcase/nba-3v3?lab=shot-<preset>&step=1`, for example `shot-rollIn`, `shot-backIron`. The two toilet bowls are close layups off a drive with a defender near enough to stop a dunk.
+* `shot-forced.ts` is gone; the solver replaced it.
+
+Known gaps from step 2:
+
+* Bot layups are mostly reverses, which cannot bank, so banks are rare in bot games until step 3 adds more layup variety. The picker never asks a reverse for the glass.
+* Long range rattles are rare in the physics, so the picker gives them little weight from deep, and a failed rattle falls back to another make.
+* The shot event names the ending at release, but the sounds and the phone do not use `preset` yet (a gold, swish or toilet bowl call could).
+
 ## Notes for later steps
 
-* Shot outcome today: `engine/shot-release.ts` plans a release error from the make chance through the calibration table, and `engine/shot-forced.ts` draws errors until the physics gives a chosen ending. Step 2 can build on `forcedLaunch` to fly an authored outcome.
-* A gold release reaches `forcedLaunch(..., "swish")` and sets `shot.rolled` to every defender, so no block can touch it. Keep that true when the outcome picker lands (step 2).
-* Step 2 to 5 are still to do: shot outcome presets, layup and dunk presets, dribble, shake and block presets, then polish and media. The media (README stills, `docs/screenshots/nba-3v3.jpg`, the icon and the trailer) were not redone in step 1 on purpose; step 5 redoes them once the animations land.
+* Shot endings: layups and floaters (step 3) go through `launchShot`, so they get the picker and the solver for free. A new finish only needs a sensible `ReleaseInput` (family, hand point, apex, spin). A finish that must end a set way can call `solvePreset` with that ending.
+* A gold release still sets `shot.rolled` to every defender, so no block can touch it.
+* Step 3 to 5 are still to do: layup and dunk presets, dribble, shake and block presets, then polish and media. The media (README stills, `docs/screenshots/nba-3v3.jpg`, the icon and the trailer) were not redone in step 1 on purpose; step 5 redoes them once the animations land.
 * Layup and dunk poses live in `render/anim/layups.ts` and `render/anim/dunks.ts`; the engine side is `engine/drive.ts`, `engine/finish.ts` and `engine/dunk-style.ts`.
