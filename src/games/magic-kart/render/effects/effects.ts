@@ -1,10 +1,13 @@
 import * as THREE from "three";
 import type { RaceEvent } from "../../engine/events";
 import { speedOf } from "../../engine/kart";
+import { STACK_GAP, type Cube } from "../../engine/pickups";
 import type { RaceWorld } from "../../engine/world";
 import type { KartView } from "../kart-view";
 import { kartDesign } from "../models/karts";
+import { boxTint } from "../props/box-look";
 import { softDot } from "../textures";
+import { BoxShards } from "./box-shards";
 import { Flares } from "./flares";
 import { boostFire, boostPuff, driftSparks, lampFlares, type Pools } from "./kart-emitters";
 import { Particles } from "./particles";
@@ -16,10 +19,11 @@ const at = new THREE.Vector3();
 
 /**
  * All the particles in a race: drift sparks and tyre smoke, boost fire,
- * dust off the road, bursts when cubes break and karts get hit, glows
- * over the lamps, and the trails behind thrown power ups. Glowing and
- * plain sprite pools, a pool of spark streaks and the lamp halos: four
- * draws for everything. The skid marks sliding wheels leave ride along.
+ * dust off the road, glass shards and light when boxes break, bursts
+ * when karts get hit, glows over the lamps, and the trails behind thrown
+ * power ups. Glowing and plain sprite pools, a pool of spark streaks, the
+ * lamp halos and the shards: five draws for everything. The skid marks
+ * sliding wheels leave ride along.
  */
 export class Effects {
   readonly group = new THREE.Group();
@@ -28,13 +32,19 @@ export class Effects {
   private readonly streaks = new Streaks(1600);
   private readonly flares = new Flares(96);
   private readonly marks = new SkidMarks();
+  private readonly shards = new BoxShards();
   private readonly pools: Pools;
 
   constructor(private readonly dust: string, private readonly night = false) {
     this.glow = new Particles(2400, softDot(), true);
     this.smoke = new Particles(1400, softDot("rgba(255,255,255,0.85)", "rgba(255,255,255,0)"), false);
     this.pools = { glow: this.glow, smoke: this.smoke, streaks: this.streaks, flares: this.flares };
-    this.group.add(this.marks.mesh, this.smoke.points, this.glow.points, this.streaks.mesh, this.flares.points);
+    this.group.add(this.marks.mesh, this.shards.mesh, this.smoke.points, this.glow.points, this.streaks.mesh, this.flares.points);
+  }
+
+  /** The map's own sky, for the glass shards to catch. */
+  setEnvironment(environment: THREE.Texture | null): void {
+    this.shards.setEnvironment(environment);
   }
 
   setView(pixels: number, fov: number): void {
@@ -97,20 +107,19 @@ export class Effects {
     this.glow.update(dt);
     this.smoke.update(dt);
     this.streaks.update(dt);
+    this.shards.update(dt);
     this.marks.frame(dt);
   }
 
   /** One off bursts for race events. */
   onEvent(event: RaceEvent, world: RaceWorld, views: ReadonlyMap<number, KartView>): void {
+    if (event.type === "pickup") return this.boxBreak(world, event.cube, event.kart);
     if (!("kart" in event)) return;
     const kart = world.karts[event.kart];
     if (!kart) return;
     const { x, y, z } = kart;
     const view = views.get(kart.id);
     switch (event.type) {
-      case "pickup":
-        this.burst(x, y + 1.2, z, 26, 7, () => RAINBOW[Math.floor(Math.random() * RAINBOW.length)]!, 0.4);
-        break;
       case "hit":
         if (event.by === "ice") this.burst(x, y + 0.8, z, 30, 6, () => (Math.random() < 0.5 ? "#bff3ff" : "#ffffff"), 0.35);
         else {
@@ -143,6 +152,28 @@ export class Effects {
         break;
       default:
         break;
+    }
+  }
+
+  /** A box shatters: glass shards and sparkles in its colour out of every cube, carried on by the kart, and sparks off the road. */
+  private boxBreak(world: RaceWorld, index: number, kartId: number): void {
+    const cube: Cube | undefined = world.cubes[index];
+    if (!cube) return;
+    const kart = world.karts[kartId];
+    const carryX = kart?.vx ?? 0;
+    const carryZ = kart?.vz ?? 0;
+    const tint = boxTint(cube, index);
+    const floor = world.track.groundAt(cube.s, cube.d) ?? -Infinity;
+    for (let level = 0; level < cube.count; level++) {
+      const y = cube.y + level * STACK_GAP;
+      this.shards.burst(cube.x, y, cube.z, floor, tint, cube.count === 2 ? 26 : 32, carryX, carryZ);
+      for (let i = 0; i < 12; i++) {
+        const theta = Math.random() * Math.PI * 2;
+        const out = 2 + Math.random() * 4;
+        const color = Math.random() < 0.6 ? tint : "#ffffff";
+        this.glow.emit({ x: cube.x, y, z: cube.z, vx: Math.cos(theta) * out + carryX * 0.7, vy: Math.random() * 4, vz: Math.sin(theta) * out + carryZ * 0.7, gravity: 6, drag: 0.4, life: 0.5 + Math.random() * 0.3, size: 0.2, color });
+      }
+      this.sparkBurst(cube.x, y, cube.z, 12, 8, "#fff1c2", Number.isFinite(floor) ? floor : y - 40);
     }
   }
 

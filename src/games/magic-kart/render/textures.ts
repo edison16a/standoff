@@ -129,29 +129,6 @@ export function padTexture(color: string): THREE.CanvasTexture {
   return texture;
 }
 
-/** One face of a power up cube: a glassy frame with a white star in the middle. */
-export function cubeFaceTexture(): THREE.CanvasTexture {
-  return canvas(128, 128, (ctx) => {
-    const glass = ctx.createRadialGradient(64, 64, 10, 64, 64, 90);
-    glass.addColorStop(0, "rgba(255,255,255,0.25)");
-    glass.addColorStop(1, "rgba(255,255,255,0.55)");
-    ctx.fillStyle = glass;
-    ctx.fillRect(0, 0, 128, 128);
-    ctx.strokeStyle = "rgba(255,255,255,0.95)";
-    ctx.lineWidth = 8;
-    ctx.strokeRect(4, 4, 120, 120);
-    ctx.fillStyle = "#ffffff";
-    ctx.beginPath();
-    for (let i = 0; i < 10; i++) {
-      const r = i % 2 === 0 ? 40 : 17;
-      const a = (i / 10) * Math.PI * 2 - Math.PI / 2;
-      ctx.lineTo(64 + Math.cos(a) * r, 66 + Math.sin(a) * r);
-    }
-    ctx.closePath();
-    ctx.fill();
-  });
-}
-
 /** Soft round sprite for particles, shadows and glows. */
 export function softDot(inner = "rgba(255,255,255,1)", outer = "rgba(255,255,255,0)"): THREE.CanvasTexture {
   return canvas(64, 64, (ctx) => {

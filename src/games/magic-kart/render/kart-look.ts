@@ -22,6 +22,11 @@ export class KartLook {
     this.night = theme.reflections >= 0.7;
   }
 
+  /** What the map's shiny things reflect, for props like the item boxes that should match the karts. */
+  get reflections(): THREE.Texture | null {
+    return this.environment;
+  }
+
   /** Dresses one kart for the map and the current quality. */
   dress(view: KartView): void {
     const level = this.quality.current;

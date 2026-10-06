@@ -97,9 +97,10 @@ export class GameRenderer {
       this.dynamic.remove(prop.group);
       prop.dispose();
     }
-    this.cubes = new CubeView(world.cubes);
+    this.cubes = new CubeView(world.cubes, world.track, this.look.reflections);
     this.obstacles = new ObstacleView(world.obstacles);
     this.effects = new Effects(this.stage!.theme.shoulder, this.stage!.theme.reflections >= 0.7);
+    this.effects.setEnvironment(this.look.reflections);
     this.dynamic.add(this.cubes.group, this.obstacles.group, this.effects.group);
     this.cameras.reset();
     // A new race may run on its own clock, so the next frame must not measure its time from the old one.
@@ -134,7 +135,7 @@ export class GameRenderer {
     this.last = nowMs;
     const time = nowMs / 1000;
     for (const kart of world.karts) this.karts.get(kart.id)?.update(kart, world.track, dt, time);
-    this.cubes?.update(time);
+    this.cubes?.update(time, world.karts);
     this.obstacles?.update(time, (s) => {
       const f = world.track.frameAt(s);
       return Math.atan2(f.tx, f.tz);
