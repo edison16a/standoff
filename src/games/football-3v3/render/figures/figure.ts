@@ -5,8 +5,8 @@ import { aheadSpeed, choosePose, type Chosen, type PoseScene } from "../anim/cho
 import { strideLength } from "../anim/gait";
 import { approach, neutral, type Pose } from "../anim/pose";
 import { Jolt, wobble } from "../anim/reactions";
-import type { AthleteMaterials } from "../materials/athlete-materials";
-import { buildBody, type Rig } from "../models/body";
+import type { Lod } from "../models/athlete-shapes";
+import { buildBody, type Rig, type Wardrobe } from "../models/body";
 import type { KitSpec } from "../models/kit";
 import { Feet } from "./feet";
 
@@ -47,9 +47,9 @@ export class Figure {
   private hand: Chosen["hand"] = "R";
   private readonly seed: number;
 
-  constructor(kit: KitSpec, materials: AthleteMaterials, readonly id: number) {
+  constructor(kit: KitSpec, wardrobe: Wardrobe, readonly id: number) {
     this.kit = kit;
-    this.rig = buildBody(kit, materials);
+    this.rig = buildBody(kit, wardrobe);
     this.seed = id * 1.37;
     const r = this.rig;
     const d = r.dims;
@@ -145,6 +145,20 @@ export class Figure {
     pos.addScaledVector(axis, 0.04);
     pos.y -= 0.02;
   }
+
+  /**
+   * Picks the level of detail from how tall the player stands on screen,
+   * `fill` being his height over the view's height: the full body for a
+   * close look, the lighter one across the field. A margin either way
+   * stops a player flickering between them at the boundary.
+   */
+  showAt(fill: number): void {
+    if (fill > 0.2) this.lod = "near";
+    else if (fill < 0.16) this.lod = "far";
+    this.rig.setLod(this.lod);
+  }
+
+  private lod: Lod = "near";
 
   /** A point over the head, for the name tag. */
   top(out: THREE.Vector3): THREE.Vector3 {

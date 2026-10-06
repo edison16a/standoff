@@ -1,21 +1,17 @@
 import * as THREE from "three";
-import type { Look } from "../../builds";
 import type { TeamId } from "../../teams";
-import { faceMask, visorGeometry } from "../models/face-mask";
-import { HELMETS, paintHelmet } from "../models/helmet-paint";
-import { shellGeometry, type ShellParts } from "../models/helmet-shell";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { paintHelmet } from "../models/helmet-paint";
 import { knitNormalMap } from "./fabric";
 import { roughFromVertices, skinWrap } from "./shader-patches";
 
 /** How finely players are built and shaded: `high` for a real graphics card, `low` for software drawing and weak devices. */
 export type Detail = "high" | "low";
 
-/** Geometry density and texture size for each detail level. */
+/** Texture sizes for each detail level. */
 export const DETAIL = {
-  high: { mesh: 1, print: 1024, helmet: 1024 },
-  low: { mesh: 0.55, print: 512, helmet: 512 },
-} as const satisfies Record<Detail, { mesh: number; print: number; helmet: number }>;
+  high: { print: 1024, helmet: 1024 },
+  low: { print: 512, helmet: 512 },
+} as const satisfies Record<Detail, { print: number; helmet: number }>;
 
 /**
  * The materials every player shares, made once per renderer: skin that
@@ -32,10 +28,6 @@ export class AthleteMaterials {
   private readonly knit: THREE.DataTexture | null;
   private readonly helmets = new Map<TeamId, { material: THREE.MeshPhysicalMaterial; paint: THREE.Texture }>();
   private readonly visors = new Map<string, THREE.MeshPhysicalMaterial>();
-  /** Shapes every player of a kind shares: the shell, each team's masks, the visor. */
-  private readonly shapes = new Map<string, THREE.BufferGeometry>();
-  private shellCache: ShellParts | null = null;
-
   constructor(readonly detail: Detail, private readonly gloss: THREE.Texture | null) {
     const high = detail === "high";
     this.skin = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, metalness: 0 });
@@ -91,38 +83,6 @@ export class AthleteMaterials {
     return material;
   }
 
-  private shape(key: string, make: () => THREE.BufferGeometry): THREE.BufferGeometry {
-    let g = this.shapes.get(key);
-    if (!g) {
-      g = make();
-      this.shapes.set(key, g);
-    }
-    return g;
-  }
-
-  private shellParts(): ShellParts {
-    if (!this.shellCache) {
-      const m = DETAIL[this.detail].mesh;
-      this.shellCache = shellGeometry({ around: Math.round(64 * m), rings: Math.round(20 * m) });
-    }
-    return this.shellCache;
-  }
-
-  /** The helmet shell's painted outside, the same for everyone; the head's scale sizes it. */
-  shell(): THREE.BufferGeometry {
-    return this.shellParts().outer;
-  }
-
-  /** A team's mask in one style, painted in the team's mask colour, with the shell's lining in the same draw. */
-  faceMask(team: TeamId, look: Look): THREE.BufferGeometry {
-    const style = look.mask === "cage" ? "cage" : "open";
-    return this.shape(`mask:${team}:${style}`, () => mergeGeometries([faceMask(look, { colour: HELMETS[team].mask, detail: DETAIL[this.detail].mesh }), this.shellParts().lining], false)!);
-  }
-
-  visorShape(): THREE.BufferGeometry {
-    return this.shape("visor", visorGeometry);
-  }
-
   /** A tinted visor, mirrored on the outside. */
   visor(colour: string): THREE.MeshPhysicalMaterial {
     let v = this.visors.get(colour);
@@ -146,12 +106,8 @@ export class AthleteMaterials {
       paint.dispose();
     }
     for (const v of this.visors.values()) v.dispose();
-    for (const g of this.shapes.values()) g.dispose();
-    this.shellCache?.outer.dispose();
-    this.shellCache?.lining.dispose();
-    this.shellCache = null;
+
     this.helmets.clear();
     this.visors.clear();
-    this.shapes.clear();
   }
 }

@@ -7,6 +7,7 @@ import type { PoseScene } from "./anim/choose";
 import { Figure } from "./figures/figure";
 import { AthleteMaterials } from "./materials/athlete-materials";
 import { glossEnvironment } from "./materials/gloss-env";
+import { AthleteShapes } from "./models/athlete-shapes";
 import { buildKit } from "./models/kit";
 
 const BALL: BallView = {
@@ -36,6 +37,7 @@ export class StarPreview {
   private readonly camera = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
   private readonly turntable = new THREE.Group();
   private readonly materials: AthleteMaterials;
+  private readonly shapes = new AthleteShapes(true);
   private readonly gloss: THREE.Texture;
   private readonly canvas: HTMLCanvasElement;
   private readonly environment: THREE.Texture;
@@ -79,7 +81,7 @@ export class StarPreview {
     if (this.shown?.build === build && this.shown.team === team) return;
     this.shown = { build, team };
     this.figure?.dispose();
-    this.figure = new Figure(buildKit(team, build), this.materials, 0);
+    this.figure = new Figure(buildKit(team, build), { materials: this.materials, shapes: this.shapes }, 0);
     this.turntable.add(this.figure.root);
     this.shownAt = this.last;
   }
@@ -96,6 +98,7 @@ export class StarPreview {
       }
     });
     this.materials.dispose();
+    this.shapes.dispose();
     this.gloss.dispose();
     this.environment.dispose();
     this.renderer.dispose();

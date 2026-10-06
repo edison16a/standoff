@@ -2,7 +2,7 @@ import * as THREE from "three";
 import type { AthleteView, MatchView } from "../../engine/view";
 import { LINEMAN_NUMBERS } from "../../builds";
 import { TEAMS } from "../../teams";
-import type { AthleteMaterials } from "../materials/athlete-materials";
+import type { Wardrobe } from "../models/body";
 import { SPIKE_RELEASE } from "../anim/celebrations";
 import type { PoseScene } from "../anim/choose";
 import { buildKit, linemanKit, type KitSpec } from "../models/kit";
@@ -18,6 +18,14 @@ export function centerOf(view: MatchView): number | null {
     if (!best || Math.abs(a.z - view.drive.ballZ) < Math.abs(best.z - view.drive.ballZ)) best = a;
   }
   return best?.id ?? null;
+}
+
+const at = new THREE.Vector3();
+
+/** How much of the camera's picture a player of `height` standing at (x, z) fills, top to bottom. */
+function fill(camera: THREE.PerspectiveCamera, x: number, z: number, height: number): number {
+  const d = Math.max(0.1, at.set(x, height / 2, z).distanceTo(camera.position));
+  return height / (2 * d * Math.tan((camera.fov * Math.PI) / 360));
 }
 
 /** The name across the back of a player's jersey, or null for none. */
@@ -44,7 +52,7 @@ export class Squad {
   /** Who wears which name on their back; the players' own names, set by the host. */
   jerseyName: JerseyName = () => null;
 
-  constructor(private readonly materials: AthleteMaterials) {
+  constructor(private readonly wardrobe: Wardrobe) {
     this.group.add(this.ball.group, this.target.mesh, this.targetEdge.mesh);
   }
 
@@ -52,7 +60,8 @@ export class Squad {
     return this.figures.get(id)?.figure ?? null;
   }
 
-  update(view: MatchView, dt: number, time: number): void {
+  /** `camera`, when given, picks each player's level of detail from how big he stands in its picture. */
+  update(view: MatchView, dt: number, time: number, camera: THREE.PerspectiveCamera | null = null): void {
     const center = centerOf(view);
     const kicker = view.kick?.kicker ?? null;
     const aimed = view.athletes.find((a) => a.targeted);
@@ -65,6 +74,7 @@ export class Squad {
     for (const a of view.athletes) {
       const entry = this.ensure(a);
       entry.figure.update(a, { ...scene, center: a.id === center }, dt, time);
+      if (camera) entry.figure.showAt(fill(camera, a.x, a.z, entry.figure.kit.height));
       entry.seat.update(a.seat !== null && view.phase !== "over", a.x, a.z, time, dt, 0.55);
       if (a.targeted) targeted = a;
     }
@@ -89,7 +99,7 @@ export class Squad {
       have.seat.mesh.removeFromParent();
       have.seat.dispose();
     }
-    const figure = new Figure(kitOf(a, name), this.materials, a.id);
+    const figure = new Figure(kitOf(a, name), this.wardrobe, a.id);
     const seat = new Ring(TEAMS[a.team].color, 0.62, 0.74);
     this.group.add(figure.root, seat.mesh);
     const entry = { figure, key, seat };

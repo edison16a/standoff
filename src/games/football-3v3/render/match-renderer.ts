@@ -11,6 +11,7 @@ import { Squad } from "./figures/squad";
 import { NameTags, type TagOf } from "./figures/tags";
 import { AthleteMaterials } from "./materials/athlete-materials";
 import { glossEnvironment } from "./materials/gloss-env";
+import { AthleteShapes } from "./models/athlete-shapes";
 
 export interface RendererOptions {
   /**
@@ -51,6 +52,7 @@ export class MatchRenderer {
   /** What helmets and visors mirror: the floodlights against the night. */
   private readonly gloss: THREE.Texture;
   private readonly materials: AthleteMaterials;
+  private readonly shapes: AthleteShapes;
   private readonly low: boolean;
   private readonly scale: number;
   private last = 0;
@@ -71,7 +73,9 @@ export class MatchRenderer {
     this.scene.environmentIntensity = 0.3;
     this.gloss = glossEnvironment(this.renderer);
     this.materials = new AthleteMaterials(this.low ? "low" : "high", this.gloss);
-    this.squad = new Squad(this.materials);
+    // Software drawing gets the light bodies only; a real card swaps by distance.
+    this.shapes = new AthleteShapes(!this.low);
+    this.squad = new Squad({ materials: this.materials, shapes: this.shapes });
     this.scene.fog = new THREE.Fog("#0b1330", 140, 420);
     // Stadium lights from high above: a cool fill from the sky and one strong key that casts the shadows.
     this.scene.add(new THREE.HemisphereLight("#c9d8ff", "#1f3a1f", 1.1));
@@ -147,7 +151,7 @@ export class MatchRenderer {
     const dt = this.last ? Math.min(0.1, Math.max(0, nowMs - this.last) / 1000) : 1 / 60;
     this.last = nowMs;
     const time = nowMs / 1000;
-    this.squad.update(view, dt, time);
+    this.squad.update(view, dt, time, this.director.camera);
     this.lines.update(view, dt);
     this.director.update(view, dt, time);
     this.trace.update(this.traceAt);
@@ -180,6 +184,7 @@ export class MatchRenderer {
   dispose(): void {
     this.squad.dispose();
     this.materials.dispose();
+    this.shapes.dispose();
     this.gloss.dispose();
     this.ceremony.dispose();
     this.trace.dispose();
