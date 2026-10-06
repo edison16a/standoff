@@ -77,6 +77,13 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
+/* Keyboard mode, a quiet link under the two choices. */
+.bx-menu__keys {
+  align-self: flex-start;
+  margin-top: -14px;
+  padding: 0;
+}
+
 .bx-menu__how {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 300px));

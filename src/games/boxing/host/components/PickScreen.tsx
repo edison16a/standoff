@@ -24,7 +24,7 @@ export function PickScreen() {
     <section className="bx-pick">
       <header className="bx-pick__head">
         <h2>Choose your build</h2>
-        <p>Lean left or right to browse. Hold your guard up to lock in.</p>
+        <p>{session.keys ? "A and D or the arrows to browse. Enter to lock in." : "Lean left or right to browse. Hold your guard up to lock in."}</p>
       </header>
       <div className={`bx-pick__sides bx-pick__sides--${players}`}>
         {sides.map((id) => (

@@ -6,9 +6,9 @@ import { useSession } from "./session-context";
 
 /**
  * The first screen: one player against the computer, or two side by side
- * in front of the camera. Chosen with the mouse, since nobody is
- * calibrated yet. The computer's difficulty is picked here too, for the
- * same reason.
+ * in front of the camera, or one player on the keyboard with no camera.
+ * Chosen with the mouse, since nobody is calibrated yet. The computer's
+ * difficulty is picked here too, for the same reason.
  */
 export function PlayersMenu() {
   const session = useSession();
@@ -35,6 +35,9 @@ export function PlayersMenu() {
           <span className="bx-choice__text">Side by side in front of the camera</span>
         </button>
       </div>
+      <button type="button" className="bx-link bx-menu__keys" onClick={() => session.playWithKeys()}>
+        No camera? Play one player with the keyboard
+      </button>
       <DifficultyPicker level={botLevel} onChange={(level) => useBoxingStore.setState({ botLevel: level })} />
       <ul className="bx-menu__how">
         <li>
