@@ -106,7 +106,7 @@ export function updateLinemen(m: Match, dt: number): void {
 export function lineContact(m: Match): void {
   const carrier = m.carrier();
   for (const l of m.athletes) {
-    if (l.role !== "lineman" || !m.lines[l.slot]?.engaged) continue;
+    if (l.role !== "lineman" || !m.lines[l.slot]?.engaged || l.action.kind === "down") continue;
     for (const a of m.athletes) {
       if (a.role === "lineman" || a.team === l.team) continue;
       const d = dist2(a, l);
@@ -125,6 +125,7 @@ function grab(m: Match, l: Athlete, a: Athlete): void {
   l.tackleCd = 1;
   if (dodging(a) || !m.rng.chance(TACKLE.linemanGrab)) return;
   const hit = resolveHit(l, a, m.rng, LINE.grabWrap);
-  if (hit.down) tackle(m, a, l);
+  // Tripped up by an arm out of the block: he stumbles on and pitches forward, as from a heel clipped.
+  if (hit.down) tackle(m, a, l, "shoestring", hit.n);
   else a.stagger = Math.max(a.stagger, 0.25);
 }

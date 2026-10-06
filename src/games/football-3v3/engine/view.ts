@@ -7,7 +7,8 @@ import { yardToX } from "./field";
 import { inGreen, meterAim, meterPower } from "./kick";
 import type { Match } from "./match";
 import { KICK, RULES } from "./tuning";
-import type { ActionKind, DownCause, JukeKind, Phase, Role, TeamId } from "./types";
+import type { ApproachKind, TackleKind } from "./tackle-preset";
+import type { ActionKind, DownCause, JukeKind, Phase, Role, TackleBind, TeamId } from "./types";
 import { ballView, type BallView } from "./view-ball";
 
 export type { BallView, GoalHitView, KnockView } from "./view-ball";
@@ -48,6 +49,12 @@ export interface AthleteView {
   lob: boolean;
   /** Why a player is on the ground, while they are: a tackled carrier lands differently from a diver. */
   downCause: DownCause | null;
+  /** The tackle preset a lunge was picked as, while lunging. */
+  lunge: ApproachKind | null;
+  /** The tackle preset this man is part of while he is down in one, and his part in it. */
+  tackle: { kind: TackleKind; role: TackleBind["role"]; side: 1 | -1 } | null;
+  /** Fooled by a juke: seconds into the stumble and which way he lurches. */
+  stumble: { t: number; side: 1 | -1 } | null;
   spike: boolean;
   hasBall: boolean;
   /** The throw stick is on this receiver: light up the ring under them. */
@@ -162,6 +169,9 @@ export function buildView(m: Match): MatchView {
         juke: act.kind === "juke" ? act.juke : null, side: act.kind === "juke" ? act.side : 1,
         plant: act.kind === "juke" ? act.plant : 0, lob: act.kind === "throw" && act.lob,
         downCause: act.kind === "down" ? act.cause : null,
+        lunge: act.kind === "lunge" ? act.approach : null,
+        tackle: act.kind === "down" && act.bind ? { kind: act.bind.kind, role: act.bind.role, side: act.bind.side } : null,
+        stumble: a.stumble && { ...a.stumble },
         spike: act.kind === "celebrate" && act.spike,
         hasBall: b.state === "held" && b.holder === a.id,
         targeted: target === a.id, guarding: a.guard, rushing: a.rushT > 0, blocked: a.blocked > 0,

@@ -1,6 +1,7 @@
 import { isDown } from "./body";
 import { pairMass } from "./linemen";
 import type { Match } from "./match";
+import { sameTackle } from "./tackle-bind";
 import { MOVE } from "./tuning";
 import type { Athlete } from "./types";
 
@@ -29,6 +30,8 @@ export function separate(m: Match, bumpCd: Map<number, number>): void {
       if (a.role === "lineman" && b.role === "lineman") continue;
       const downA = isDown(a);
       if (downA !== isDown(b)) continue;
+      // The men of one tackle are posed against each other by its preset.
+      if (downA && sameTackle(a, b)) continue;
       const dx = b.x - a.x;
       const dz = b.z - a.z;
       const d = Math.hypot(dx, dz);

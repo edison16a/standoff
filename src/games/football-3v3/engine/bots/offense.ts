@@ -9,7 +9,7 @@ import { botReading } from "../meter-live";
 import { receivers, throwTo } from "../passing";
 import { startRun } from "../qb-run";
 import { PASS } from "../tuning";
-import { startDive } from "../tackle";
+import { startDive } from "../dive";
 import type { Athlete } from "../types";
 import { dist2, type V2 } from "../vec";
 import { ahead, headFor, runDir } from "./goal";

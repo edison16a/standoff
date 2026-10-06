@@ -1,6 +1,7 @@
 import type { BuildId } from "../builds";
 import type { TeamId } from "../teams";
 import type { PassQuality } from "./pass-meter";
+import type { ApproachKind, TackleKind } from "./tackle-preset";
 import type { V2 } from "./vec";
 
 export type { TeamId };
@@ -32,18 +33,38 @@ export type Action =
    */
   | { kind: "juke"; t: number; dur: number; juke: JukeKind; side: 1 | -1; dir: V2; speed: number; push: V2; plant: number; dodge: [number, number] }
   | { kind: "dive"; t: number; dur: number; dir: V2 }
-  | { kind: "lunge"; t: number; dur: number; dir: V2; target: number }
+  /** `approach` is the tackle preset the lunge was picked as, so the leap already looks like that tackle. */
+  | { kind: "lunge"; t: number; dur: number; dir: V2; target: number; approach: ApproachKind }
   /** A forward pass, or with `lob` the pitch to the back on a run call. `quality` is the throw meter's timing. */
   | { kind: "throw"; t: number; dur: number; released: boolean; to: number; lob: boolean; quality: PassQuality }
   | { kind: "kick"; t: number; dur: number; released: boolean }
-  /** On the ground, then getting up for the last TACKLE.getUp seconds. */
-  | { kind: "down"; t: number; dur: number; cause: DownCause }
+  /** On the ground, then getting up for the last TACKLE.getUp seconds. `bind` ties the men of one tackle together. */
+  | { kind: "down"; t: number; dur: number; cause: DownCause; bind: TackleBind | null }
   | { kind: "celebrate"; t: number; dur: number; spike: boolean };
 
 export type ActionKind = Action["kind"];
 
-/** Why a player went down: tackled with the ball, dodged or whiffed as a tackler, a dive, or making the tackle. */
-export type DownCause = "tackled" | "missed" | "whiff" | "dive" | "tackler";
+/**
+ * Why a player went down: tackled with the ball, making the tackle or
+ * piling on, a dive, or a miss: dodged by a juke, lunging at nothing,
+ * bounced off a carrier who ran through him, or his ankles broken by a
+ * juke he never lunged at.
+ */
+export type DownCause = "tackled" | "tackler" | "pile" | "dive" | "missed" | "whiff" | "shed" | "juked";
+
+/** The men of one tackle, held together through its preset (tackle-bind.ts). */
+export interface TackleBind {
+  kind: TackleKind;
+  role: "carrier" | "tackler" | "pile";
+  /** The carrier, for the tackler and the pile; the tackler, for the carrier. */
+  partner: number;
+  /** The tackle's line on the ground. */
+  f: V2;
+  /** The side of that line the man came from: 1 on its left. */
+  side: 1 | -1;
+  /** Where he was from the carrier when they met, along the line and across it, to ease from. */
+  from: { along: number; across: number };
+}
 
 export interface Stats {
   passYards: number;
@@ -127,6 +148,8 @@ export interface Athlete {
   blocked: number;
   /** Seconds left of shaky footing after a big jolt or a broken tackle. */
   stagger: number;
+  /** A stumble from being juked: seconds into it and which way he lurches, or null. */
+  stumble: { t: number; side: 1 | -1 } | null;
   bot: BotMemory;
   stats: Stats;
 }
