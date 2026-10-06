@@ -7,7 +7,7 @@ const REFRACTORY_MS = 260;
 const KEY_REFRACTORY_MS = 60;
 
 /** Keys for playing without the camera. Space is always player one. */
-const KEYS: Record<string, number> = { Space: 1, KeyW: 1, Enter: 2, ArrowUp: 2, Numpad0: 2 };
+export const KEYS: Record<string, number> = { Space: 1, KeyW: 1, Enter: 2, ArrowUp: 2, Numpad0: 2 };
 
 /**
  * Turns jumps into presses: a real jump seen by the camera, or a key.
