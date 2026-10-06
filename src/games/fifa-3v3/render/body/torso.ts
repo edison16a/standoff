@@ -16,9 +16,9 @@ type Row = readonly [y: number, half: number, front: number, back: number, power
 
 /** The shirt's sections for a 1.8 m player, in metres. Widths at the shoulder come from the skeleton instead. */
 const SHIRT: readonly Row[] = [
-  [0.8, 0.176, 0.118, 0.13, 2.2, 0],
-  [0.87, 0.168, 0.112, 0.126, 2.2, 0],
-  [0.97, 0.156, 0.104, 0.114, 2.3, 0],
+  [0.8, 0.19, 0.12, 0.134, 2.3, 0],
+  [0.87, 0.182, 0.115, 0.131, 2.3, 0],
+  [0.97, 0.163, 0.106, 0.118, 2.3, 0],
   [1.09, 0.16, 0.112, 0.108, 2.4, 0.002],
   [1.21, 0.172, 0.124, 0.11, 2.5, 0.006],
   [1.31, 0.183, 0.121, 0.108, 2.6, 0.004],
@@ -55,10 +55,13 @@ function shirtWeights(c: BodyCtx): (p: THREE.Vector3) => Influence {
   return (p) => {
     const ax = Math.abs(p.x);
     const shoulder = ramp(shoulderX - 0.075 * s, shoulderX + 0.02 * s, ax) * ramp(shY - 0.15 * s, shY - 0.05 * s, p.y);
-    const hips = ramp(1.07 * s, 0.93 * s, p.y);
+    const low = ramp(1.07 * s, 0.93 * s, p.y);
+    // The hem drapes over the thighs front and back, so a lifted knee lifts it a little.
+    const thigh = 0.38 * ramp(0.93 * s, 0.82 * s, p.y) * ramp(0.03 * s, 0.09 * s, Math.abs(p.z)) * (1 - ramp(0.14 * s, 0.2 * s, ax));
+    const hips = low - thigh;
     const chest = 0.75 * bell(p.y, 1.2 * s, 0.12 * s) * (1 - shoulder);
-    const spine = Math.max(0, 1 - shoulder - hips - chest);
-    return [[p.x > 0 ? "shoulderL" : "shoulderR", shoulder], ["hips", hips], ["chest", chest], ["spine", spine]];
+    const spine = Math.max(0, 1 - shoulder - low - chest);
+    return [[p.x > 0 ? "shoulderL" : "shoulderR", shoulder], ["hips", hips], [p.x > 0 ? "hipL" : "hipR", thigh], ["chest", chest], ["spine", spine]];
   };
 }
 

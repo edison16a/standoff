@@ -38,11 +38,12 @@ export class AthleteMaterials {
       vertexColors: true,
       normalMap: this.knit,
       normalScale: new THREE.Vector2(0.45, 0.45),
-      roughness: 0.6,
+      roughness: 0.66,
       metalness: 0,
-      sheen: 0.7,
-      sheenRoughness: 0.42,
-      sheenColor: new THREE.Color(colour).lerp(new THREE.Color("#ffffff"), 0.6),
+      // A sheen in the cloth's own colour, so a red shirt glows red at its edges rather than washing out pink.
+      sheen: 0.4,
+      sheenRoughness: 0.5,
+      sheenColor: new THREE.Color(colour),
       side: THREE.DoubleSide,
     });
   }

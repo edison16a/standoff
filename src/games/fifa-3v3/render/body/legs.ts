@@ -16,8 +16,9 @@ type Row = readonly [dy: number, outer: number, inner: number, front: number, ba
 
 /** The thigh and knee, down from the hip joint. */
 const THIGH: readonly Row[] = [
-  [0.03, 0.084, 0.07, 0.086, 0.092],
-  [-0.08, 0.083, 0.072, 0.087, 0.082],
+  [0.0, 0.05, 0.048, 0.058, 0.062],
+  [-0.06, 0.066, 0.062, 0.076, 0.076],
+  [-0.12, 0.076, 0.069, 0.084, 0.08],
   [-0.2, 0.074, 0.065, 0.078, 0.07],
   [-0.31, 0.06, 0.06, 0.064, 0.058],
   [-0.39, 0.051, 0.05, 0.054, 0.05],
@@ -61,7 +62,8 @@ function legWeights(c: BodyCtx, side: 1 | -1): (p: THREE.Vector3) => Influence {
   const ankleY = c.rest.ankleL.y;
   const s = c.d.s;
   return (p) => {
-    const pelvis = 0.45 * ramp(hipY - 0.05 * s, hipY + 0.04 * s, p.y);
+    // The top of the thigh stays with the pelvis, so a lifted knee bends it under the shorts instead of pushing through them.
+    const pelvis = 0.75 * ramp(hipY - 0.24 * s, hipY - 0.02 * s, p.y);
     const shin = ramp(kneeY + 0.045 * s, kneeY - 0.045 * s, p.y);
     const foot = ramp(ankleY + 0.04 * s, ankleY - 0.01 * s, p.y);
     return [["hips", pelvis], [hip, (1 - pelvis) * (1 - shin)], [knee, shin * (1 - foot)], [ankle, foot]];
