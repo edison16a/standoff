@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { BodyCtx } from "./context";
 import { ATLAS, shirtV, toAtlas } from "./kit-layout";
 import { bell, occlude, ramp, tint, type Influence, type PartList } from "./parts";
+import { thighFollow } from "./legs";
 import { tube, type Key } from "./profile";
 
 /**
@@ -56,12 +57,14 @@ function shirtWeights(c: BodyCtx): (p: THREE.Vector3) => Influence {
     const ax = Math.abs(p.x);
     const shoulder = ramp(shoulderX - 0.075 * s, shoulderX + 0.02 * s, ax) * ramp(shY - 0.15 * s, shY - 0.05 * s, p.y);
     const low = ramp(1.07 * s, 0.93 * s, p.y);
-    // The hem drapes over the thighs front and back, so a lifted knee lifts it a little.
-    const thigh = 0.38 * ramp(0.93 * s, 0.82 * s, p.y) * ramp(0.03 * s, 0.09 * s, Math.abs(p.z)) * (1 - ramp(0.14 * s, 0.2 * s, ax));
+    // The hem drapes over the front of the thighs, so a lifted knee lifts it. Behind, it hangs from the hips: a swinging leg would drag it into the body.
+    // Shared between both thighs across the middle, so the hem rises as one piece of cloth rather than in notches.
+    const thigh = Math.min(0.3, 0.6 * thighFollow(c, p.y)) * ramp(0.03 * s, 0.09 * s, p.z) * (1 - ramp(0.14 * s, 0.2 * s, ax));
+    const left = Math.min(1, Math.max(0, 0.5 + p.x / (0.24 * s)));
     const hips = low - thigh;
     const chest = 0.75 * bell(p.y, 1.2 * s, 0.12 * s) * (1 - shoulder);
     const spine = Math.max(0, 1 - shoulder - low - chest);
-    return [[p.x > 0 ? "shoulderL" : "shoulderR", shoulder], ["hips", hips], [p.x > 0 ? "hipL" : "hipR", thigh], ["chest", chest], ["spine", spine]];
+    return [[p.x > 0 ? "shoulderL" : "shoulderR", shoulder], ["hips", hips], ["hipL", thigh * left], ["hipR", thigh * (1 - left)], ["chest", chest], ["spine", spine]];
   };
 }
 

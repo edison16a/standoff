@@ -51,19 +51,29 @@ function keys(rows: readonly Row[], top: number, x: number, side: 1 | -1, s: num
   }));
 }
 
+/**
+ * How much of the thigh bone's swing a point at height `y` takes: the
+ * top of the thigh stays mostly with the pelvis, so a lifted or trailing
+ * leg bends it under the shorts instead of pushing through them. The
+ * shorts' legs and the shirt's hem share this, so they move as the thigh
+ * under them does and never part from it.
+ */
+export function thighFollow(c: BodyCtx, y: number): number {
+  const hipY = c.rest.hipL.y;
+  return 1 - 0.75 * ramp(hipY - 0.24 * c.d.s, hipY - 0.02 * c.d.s, y);
+}
+
 const bones = (side: 1 | -1) =>
   (side > 0 ? { hip: "hipL", knee: "kneeL", ankle: "ankleL" } : { hip: "hipR", knee: "kneeR", ankle: "ankleR" }) satisfies Record<string, BoneName>;
 
 /** Hips at the top of the thigh, the thigh to the knee, the shin below, each blended across its joint. */
 function legWeights(c: BodyCtx, side: 1 | -1): (p: THREE.Vector3) => Influence {
   const { hip, knee, ankle } = bones(side);
-  const hipY = c.rest.hipL.y;
   const kneeY = c.rest.kneeL.y;
   const ankleY = c.rest.ankleL.y;
   const s = c.d.s;
   return (p) => {
-    // The top of the thigh stays with the pelvis, so a lifted knee bends it under the shorts instead of pushing through them.
-    const pelvis = 0.75 * ramp(hipY - 0.24 * s, hipY - 0.02 * s, p.y);
+    const pelvis = 1 - thighFollow(c, p.y);
     const shin = ramp(kneeY + 0.045 * s, kneeY - 0.045 * s, p.y);
     const foot = ramp(ankleY + 0.04 * s, ankleY - 0.01 * s, p.y);
     return [["hips", pelvis], [hip, (1 - pelvis) * (1 - shin)], [knee, shin * (1 - foot)], [ankle, foot]];

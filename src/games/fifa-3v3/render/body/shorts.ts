@@ -2,12 +2,13 @@ import type * as THREE from "three";
 import type { BodyCtx } from "./context";
 import { ATLAS, SEAT_SHARE, toAtlas } from "./kit-layout";
 import { occlude, ramp, tint, type Influence, type PartList } from "./parts";
+import { thighFollow } from "./legs";
 import { tube, type Key } from "./profile";
 
 /**
  * The shorts: a seat round the pelvis and two loose legs flaring a
  * little to the hem. The waistband hides under the shirt. The legs
- * follow the thighs, lagging a little near the top as cloth does.
+ * follow the thighs exactly as the skin under them does.
  */
 
 type Row = readonly [y: number, outer: number, inner: number, front: number, back: number];
@@ -45,8 +46,8 @@ export function addShorts(kit: PartList, c: BodyCtx): void {
   toAtlas(seat, { v0: ATLAS.shorts.v1 - SEAT_SHARE * (ATLAS.shorts.v1 - ATLAS.shorts.v0), v1: ATLAS.shorts.v1 }, () => 0.5);
   occlude(tint(seat, "#ffffff"), (p) => 0.25 * ramp(0.8 * s, 0.76 * s, p.y));
   kit.weighted(seat, (p): Influence => {
-    // Low down, and over the front and back of each thigh, the seat moves with the leg under it.
-    const low = Math.min(0.6, 0.35 * ramp(0.84 * s, 0.76 * s, p.y) + 0.2 * ramp(0.92 * s, 0.8 * s, p.y) * ramp(0.03 * s, 0.08 * s, Math.abs(p.z)));
+    // Low down, and over the front of each thigh, the seat moves with the leg under it.
+    const low = Math.min(0.6, 0.35 * ramp(0.84 * s, 0.76 * s, p.y) + 0.2 * ramp(0.92 * s, 0.8 * s, p.y) * ramp(0.03 * s, 0.08 * s, p.z));
     return [["hips", 1 - low], [p.x > 0 ? "hipL" : "hipR", low]];
   });
   const legs = { v0: ATLAS.shorts.v0, v1: ATLAS.shorts.v1 - SEAT_SHARE * (ATLAS.shorts.v1 - ATLAS.shorts.v0) };
@@ -57,7 +58,7 @@ export function addShorts(kit: PartList, c: BodyCtx): void {
     occlude(tint(leg, "#ffffff"), (p) => 0.22 * ramp(0.8 * s, 0.86 * s, p.y) + 0.15 * ramp(HEM * s + 0.03 * s, HEM * s, p.y));
     const hip = side > 0 ? "hipL" : "hipR";
     kit.weighted(leg, (p): Influence => {
-      const follow = 0.45 + 0.5 * ramp(0.9 * s, 0.72 * s, p.y);
+      const follow = thighFollow(c, p.y);
       return [["hips", 1 - follow], [hip, follow]];
     });
   }
