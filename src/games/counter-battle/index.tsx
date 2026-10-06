@@ -8,6 +8,7 @@ import { CounterPhone } from "./phone/counter-phone";
 import { PhoneScreen } from "./phone/components/PhoneScreen";
 import { PhoneContext } from "./phone/components/session-context";
 import { Showcase } from "./showcase/Showcase";
+import { keyboard } from "./keyboard";
 import "./styles/host.css";
 import "./styles/corner.css";
 import "./styles/lobby.css";
@@ -56,4 +57,5 @@ export const game: GameModule = {
   },
 
   Showcase,
+  keyboard,
 };
