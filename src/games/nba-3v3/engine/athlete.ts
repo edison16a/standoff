@@ -1,7 +1,7 @@
 import { BUILDS, type BuildSpec, type BuildId } from "../builds";
 import { BODY, CONTACT } from "./body/body-spec";
 import { collide, type BodyHit } from "./body/contact";
-import { powerPerKg } from "./body/mass";
+import { footGrip, powerPerKg, sizeEdge } from "./body/mass";
 import { clampToCourt } from "./court";
 import type { MatchEvent } from "./events";
 import { steer } from "./steer";
@@ -29,7 +29,8 @@ export function createAthlete(id: number, team: TeamId, slot: number, build: Bui
 export const buildOf = (a: Athlete): BuildSpec => BUILDS[a.build];
 
 export function topSpeed(a: Athlete, withBall: boolean): number {
-  const base = MOVE.baseSpeed + buildOf(a).stats.speed * MOVE.perSpeed;
+  // Small players are really faster: that is what they have over the bigs.
+  const base = (MOVE.baseSpeed + buildOf(a).stats.speed * MOVE.perSpeed) * sizeEdge(a);
   // Off balance after a whiff or a beaten move, and still gathering after a landing, a player is slow.
   const hurt = (a.whiff > 0 ? 0.45 : 1) * (a.recover > 0 ? 0.55 : 1);
   return base * (withBall ? MOVE.withBall : 1) * hurt * (a.onFire ? 1.06 : 1);
@@ -74,7 +75,7 @@ export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: { x:
     const tx = free ? a.move.x * speed : 0;
     const tz = free ? a.move.z * speed : 0;
     // Stopping to shoot is a jump stop on both feet, which brakes harder than a run, so jumpers go up on balance.
-    const legs = { power: powerPerKg(a) * (hasBall ? BODY.ballPower : 1), grip: hasBall ? BODY.ballGrip : 1, brake: free ? 1 : BODY.plantTraction };
+    const legs = { power: powerPerKg(a) * (hasBall ? BODY.ballPower : 1), grip: footGrip(a) * (hasBall ? BODY.ballGrip : 1), brake: free ? 1 : BODY.plantTraction };
     const { planted } = steer(a, tx, tz, dt, legs);
     if (planted && a.squeakCd <= 0) {
       events.push({ type: "squeak", id: a.id });
