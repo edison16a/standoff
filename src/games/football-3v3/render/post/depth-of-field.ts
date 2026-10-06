@@ -23,6 +23,32 @@ export const CIRCLE = /* glsl */ `
 `;
 
 /**
+ * Reads the half resolution blur back at full resolution by depth. Of
+ * the four texels round a pixel, those whose own blur (kept in alpha) is
+ * like the pixel's count most, so the soft stands beside a sharp player
+ * never pick up a fringe of his colour.
+ */
+export const UPSAMPLE = /* glsl */ `
+  uniform vec2 uDofTexel;
+  vec3 softAt(sampler2D tex, vec2 uv, float coc) {
+    vec2 p = uv / uDofTexel - 0.5;
+    vec2 f = fract(p);
+    vec2 base = (floor(p) + 0.5) * uDofTexel;
+    vec3 sum = vec3(0.0);
+    float total = 0.0;
+    for (int j = 0; j < 2; j++) {
+      for (int i = 0; i < 2; i++) {
+        vec4 s = texture2D(tex, base + vec2(float(i), float(j)) * uDofTexel);
+        float w = mix(1.0 - f.x, f.x, float(i)) * mix(1.0 - f.y, f.y, float(j)) / (0.02 + abs(s.a - coc));
+        sum += s.rgb * w;
+        total += w;
+      }
+    }
+    return sum / max(total, 1e-5);
+  }
+`;
+
+/**
  * A disc of samples round each pixel, at half resolution. A sample
  * counts only as far as its own blur reaches this pixel, so a sharp
  * player is never smeared over the soft stands behind him.
@@ -37,15 +63,20 @@ const GATHER = /* glsl */ `
   ${CIRCLE}
   const int TAPS = 24;
   void main() {
-    float centre = circle(metres(texture2D(tDepth, vUv).r));
+    float z = metres(texture2D(tDepth, vUv).r);
+    float centre = circle(z);
     vec3 sum = texture2D(tColor, vUv).rgb;
     float total = 1.0;
     for (int i = 1; i < TAPS; i++) {
       float r = sqrt(float(i) / float(TAPS));
       float a = float(i) * 2.39996323;
       vec2 uv = vUv + vec2(cos(a), sin(a)) * r * uRadius * uTexel;
-      float c = circle(metres(texture2D(tDepth, uv).r));
-      float w = smoothstep(r - 0.15, r, max(c, centre * 0.6));
+      float zs = metres(texture2D(tDepth, uv).r);
+      float c = circle(zs);
+      // A sample nearer the lens than this pixel spreads only by its own blur, so a sharp
+      // player in front never bleeds a glowing outline into the soft stands behind him.
+      float reach = zs < z - 0.5 ? c : max(c, centre * 0.6);
+      float w = smoothstep(r - 0.15, r, reach);
       sum += texture2D(tColor, uv).rgb * w;
       total += w;
     }

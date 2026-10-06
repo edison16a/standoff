@@ -68,6 +68,7 @@ export class Finish {
     u.tDof!.value = this.dof.target.texture;
     u.tDepth!.value = this.target.depthTexture;
     (u.uTexel!.value as THREE.Vector2).set(1 / size.x, 1 / size.y);
+    (u.uDofTexel!.value as THREE.Vector2).set(1 / this.dof.target.width, 1 / this.dof.target.height);
     u.uExposure!.value = look.exposure * exposureScale;
     // The levels sum to about five times the light that went in, so it is scaled back.
     u.uBloom!.value = bloom ? look.bloom / Bloom.LEVELS : 0;

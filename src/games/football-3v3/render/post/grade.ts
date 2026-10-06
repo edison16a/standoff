@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { CIRCLE, METRES } from "./depth-of-field";
+import { CIRCLE, METRES, UPSAMPLE } from "./depth-of-field";
 import { passMaterial } from "./fullscreen";
 
 /**
@@ -29,6 +29,7 @@ const FRAGMENT = /* glsl */ `
   varying vec2 vUv;
   ${METRES}
   ${CIRCLE}
+  ${UPSAMPLE}
 
   vec3 fit(vec3 v) {
     vec3 a = v * (v + 0.0245786) - 0.000090537;
@@ -57,8 +58,9 @@ const FRAGMENT = /* glsl */ `
     vec3 c = scene(vUv);
     float blur = 0.0;
     if (uDof > 0.001) {
-      blur = smoothstep(0.03, 0.4, circle(metres(texture2D(tDepth, vUv).r))) * uDof;
-      c = mix(c, texture2D(tDof, vUv).rgb, blur);
+      float coc = circle(metres(texture2D(tDepth, vUv).r));
+      blur = smoothstep(0.03, 0.4, coc) * uDof;
+      c = mix(c, softAt(tDof, vUv, coc), blur);
     }
     vec3 glow = texture2D(tBloom, vUv).rgb * uBloom;
     vec3 col = display(c + glow);
@@ -86,6 +88,7 @@ export function gradeMaterial(): THREE.ShaderMaterial {
     tDof: { value: null },
     tDepth: { value: null },
     uTexel: { value: new THREE.Vector2(1, 1) },
+    uDofTexel: { value: new THREE.Vector2(1, 1) },
     uExposure: { value: 1 },
     uBloom: { value: 0.1 },
     uVignette: { value: 0.2 },
