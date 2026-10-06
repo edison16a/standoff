@@ -14,8 +14,8 @@ The running list of what is being built, so work can pick up again after a break
 
 | Work | Workflow | State |
 | --- | --- | --- |
-| Quality pass, game by game: Magic Kart detailed karts and double item boxes with a two item queue; Basketball, Soccer and Football realistic ball and body physics, athlete graphics and animation, venue, lighting and camera; each chain reviewed in the browser. Resume with scratchpad/quality-pass.js if it stops | wf_4825b851-f89 | building |
-| Basketball is the owner's top priority: FIBA style two tone ball (reference scratchpad/quality/nba-3v3/ref-ball.webp) with visible spin, charges and blocking fouls by contact, clean low drives, clean stepbacks and floaters, accurate defense like NBA 2K. Sent to the Basketball physics builder; after the chain, run a dedicated Basketball feel pass if anything is still short | wf_4825b851-f89 | building |
+| Quality pass, remaining steps: Basketball, Soccer and Football venue, lighting and camera, then the Basketball feel pass, then a browser review per game. Physics and athlete steps are done in worktrees wf_4825b851-f89-2 to 4. Resume with scratchpad/quality-rest.js if it stops | wf_00cb1f8c-119 | building |
+| Basketball is the owner's top priority: FIBA style two tone ball (reference scratchpad/quality/nba-3v3/ref-ball.webp) with visible spin, charges and blocking fouls by contact, clean low drives, clean stepbacks and floaters, accurate defense like NBA 2K. Sent to the Basketball physics builder; physics done; feel pass running after the venue step | wf_00cb1f8c-119 | building |
 
 All final builds are on main: cover icons, sports phone controls, Paintball Battle controls, Subway camera still, 1.2x tiles, final README. Final check done and on main (503ea5b): every game played end to end except the live site, which this machine's browser cannot reach (certificate block). Part 1 fixes: Soccer feet, Kart, Brawl, Blade Clash, Zombie and Gallery rejoin, phone download retry.
 
@@ -100,6 +100,7 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ## Done recently
 
+* Magic Kart quality pass: detailed karts, double item boxes with a two item queue, gold marking only double boxes (7ba15e6), on main.
 * Trailer style home clips and posters for all 13 games (six media groups, each reviewed), on main.
 * Batch G: Football (defence pad stays, normal QB stick, slower QB with a RUN button, Run the ball call with a pitch, magenta target ring, no player strip) and Basketball (buttons always lit, Guard sticks to your man, stronger jukes with a stun), and no duplicate name boxes (Soccer's strip removed).
 * Room reliability: signed room tokens so any Vercel instance can rebuild a room with the same code and players, a host room check over a fresh connection, QR hidden until the room passes, Regenerate room under the QR, phones that follow a moved room, WebSockets first with a leaner stream fallback, and the client bugs from the investigation fixed.
