@@ -52,6 +52,12 @@ describe("football trailer", () => {
     expect(log.find((l) => l.e.type === "touchdown")?.e).toMatchObject({ id: CATCHER, pass: QB });
   });
 
+  it("crosses the goal line in the pylon shot and dances after it", () => {
+    const td = log.find((l) => l.e.type === "touchdown")!.at;
+    expect(inside(td, "pylon")).toBe(true);
+    expect(shot("dance").from).toBeGreaterThan(td);
+  });
+
   it("ends on the trophy going up", () => {
     const lift = shot("lift");
     // The trophy reel starts at the final whistle, so its presentation clock is match time less the cut.
