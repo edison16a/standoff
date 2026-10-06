@@ -100,6 +100,7 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ## Done recently
 
+* Soccer 3v3 quality pass: real ball physics with spin, curl and giving nets, skinned athletes, roofed stadium with floodlights, broadcast camera, re-recorded trailer, icon and poster (0384347), on main.
 * Magic Kart media: re-recorded trailer, icon and poster with the new karts and double boxes (ff83d1a), on main.
 * Magic Kart quality pass: detailed karts, double item boxes with a two item queue, gold marking only double boxes (7ba15e6), on main.
 * Trailer style home clips and posters for all 13 games (six media groups, each reviewed), on main.
