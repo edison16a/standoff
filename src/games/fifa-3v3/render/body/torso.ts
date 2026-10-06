@@ -17,8 +17,8 @@ type Row = readonly [y: number, half: number, front: number, back: number, power
 
 /** The shirt's sections for a 1.8 m player, in metres. Widths at the shoulder come from the skeleton instead. */
 const SHIRT: readonly Row[] = [
-  [0.8, 0.19, 0.12, 0.134, 2.3, 0],
-  [0.87, 0.182, 0.115, 0.131, 2.3, 0],
+  [0.8, 0.206, 0.13, 0.138, 2.3, 0],
+  [0.87, 0.19, 0.122, 0.133, 2.3, 0],
   [0.97, 0.163, 0.106, 0.118, 2.3, 0],
   [1.09, 0.16, 0.112, 0.108, 2.4, 0.002],
   [1.21, 0.172, 0.124, 0.11, 2.5, 0.006],

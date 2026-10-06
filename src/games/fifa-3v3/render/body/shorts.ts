@@ -20,9 +20,10 @@ const SEAT: readonly Row[] = [
   [0.8, 0.179, 0.179, 0.1, 0.12],
 ];
 
+// Up under the shirt the legs stay inside it, so a broad build never pushes the shorts out through the hem.
 const LEG: readonly Row[] = [
-  [0.86, 0.074, 0.066, 0.09, 0.1],
-  [0.8, 0.088, 0.08, 0.1, 0.106],
+  [0.86, 0.064, 0.06, 0.075, 0.09],
+  [0.8, 0.081, 0.076, 0.09, 0.1],
   [0.7, 0.092, 0.082, 0.099, 0.1],
   [0.61, 0.093, 0.083, 0.097, 0.097],
 ];
