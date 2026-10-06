@@ -4,8 +4,12 @@ import type { Cube } from "../../engine/pickups";
 import { starShape } from "../models/geo";
 import { BOX_SIZE } from "./box-motion";
 
-/** Single boxes run through the rainbow along a row; a double box is always gold, to spot from afar. */
-const TINTS = ["#5fd8ff", "#ff7eb6", "#ffd23f", "#6cf08a", "#c77dff", "#ffb347"];
+/**
+ * Single boxes run through the rainbow along a row, with no yellow or
+ * orange in it: gold belongs to the double box alone, so it stands out
+ * from a whole row away.
+ */
+const TINTS = ["#5fd8ff", "#ff7eb6", "#6cf08a", "#c77dff", "#7f9cff"];
 const GOLD = "#ffc23a";
 
 export function boxTint(cube: Cube, index: number): string {
