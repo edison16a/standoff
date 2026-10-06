@@ -28,7 +28,8 @@ export class BallModel {
   private readonly blur: THREE.Mesh;
   private readonly material: THREE.MeshStandardMaterial;
   private readonly blurMaterial: THREE.MeshBasicMaterial;
-  private readonly shadow: THREE.Mesh;
+  /** Out of anyone's hands (loose, in flight or spiked), so it casts its own contact shadow. */
+  free = true;
   private readonly last = new THREE.Quaternion();
   /** The spiked ball's own little flight: position, velocity and tumble. */
   private spike: { p: THREE.Vector3; v: THREE.Vector3; roll: number; spin: number; dir: THREE.Vector3 } | null = null;
@@ -40,18 +41,13 @@ export class BallModel {
     this.blurMaterial = new THREE.MeshBasicMaterial({ color: "#f4efe2", transparent: true, opacity: 0, depthWrite: false });
     this.blur = new THREE.Mesh(laceBlurGeometry(), this.blurMaterial);
     this.mesh.add(this.blur);
-    // A soft dark spot under the ball keeps its height readable high in the air.
-    this.shadow = new THREE.Mesh(
-      new THREE.CircleGeometry(0.22, 20),
-      new THREE.MeshBasicMaterial({ color: "#000000", transparent: true, opacity: 0.28, depthWrite: false }),
-    );
-    this.shadow.rotation.x = -Math.PI / 2;
     this.squash.add(this.mesh);
-    this.group.add(this.squash, this.shadow);
+    this.group.add(this.squash);
   }
 
   /** `spiking` is true once the holder has let go of a spike. */
   update(ball: BallView, holder: Figure | null, spiking: boolean, dt: number): void {
+    this.free = !holder || spiking;
     if (spiking && holder) return this.spiked(holder, dt);
     this.spike = null;
     const target = new THREE.Quaternion();
@@ -88,7 +84,11 @@ export class BallModel {
       this.squash.scale.setScalar(1);
       this.mesh.quaternion.copy(q);
     }
-    this.placeShadow(p);
+  }
+
+  /** Where the ball is drawn, in the world. */
+  get at(): THREE.Vector3 {
+    return this.squash.position;
   }
 
   private spiked(holder: Figure, dt: number): void {
@@ -116,19 +116,10 @@ export class BallModel {
     this.place(s.p, orientBall(new THREE.Quaternion(), axis, 0), null, dt);
   }
 
-  private placeShadow(p: THREE.Vector3): void {
-    this.shadow.position.set(p.x, 0.015, p.z);
-    const k = 1 / (1 + p.y * 0.15);
-    this.shadow.scale.setScalar(k);
-    (this.shadow.material as THREE.MeshBasicMaterial).opacity = 0.3 * k;
-  }
-
   dispose(): void {
     this.mesh.geometry.dispose();
     this.blur.geometry.dispose();
     this.material.dispose();
     this.blurMaterial.dispose();
-    this.shadow.geometry.dispose();
-    (this.shadow.material as THREE.Material).dispose();
   }
 }
