@@ -62,6 +62,8 @@ export function blockHook(m: Match): TouchHook | undefined {
       b.lastTouch = d.id;
       b.flightKind = "block";
       shot.outcome = "airball";
+      // The planned ending is off: the swat flies on the physics alone.
+      shot.flight.ride = null;
       m.emit({ type: "block", id: d.id, victim: shot.shooter, tip, at: { ...body.pos } });
       missShot(m);
       return;

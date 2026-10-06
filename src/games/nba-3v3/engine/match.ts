@@ -16,6 +16,7 @@ import { restingBall, type MatchOptions } from "./match-options";
 import { tickMoves } from "./moves";
 import { seeded, type Rng } from "./rng";
 import type { Outcome } from "./shot-model";
+import type { ShotPreset } from "./shot-outcome/presets";
 import { placeForCheck } from "./check-plan";
 import { stepCheckBall, updateCheck, updateDead, type CheckUp } from "./check-up";
 import { updateClock, updateCountdown } from "./rules";
@@ -61,8 +62,8 @@ export class Match {
   readonly stealLog = new StealLog();
   /** The showcase turns the check up off to keep its highlight short. Real games always check. */
   checkBeat = true;
-  /** The next shot's outcome, set by the showcase to film a sure highlight. Real games leave it alone. */
-  forced: Outcome | null = null;
+  /** The next shot's ending, set by the showcase to film a sure highlight. Real games leave it alone. */
+  forced: ShotPreset | Outcome | null = null;
   /** The dunk thrown on the next drive, set by the showcase for the same reason. */
   forcedDunk: DunkStyle | null = null;
   /** The next hand that gets to a shot blocks it, for the showcase and the lab. */

@@ -1,3 +1,4 @@
+import { copyFlight } from "./shot-outcome/flight";
 import type { MatchEvent } from "./events";
 import type { Match } from "./match";
 import type { Athlete, Ball, Phase, TeamId } from "./types";
@@ -67,6 +68,6 @@ export function copyAthlete(a: Athlete): Athlete {
 }
 
 export function copyBall(b: Ball): Ball {
-  const shot = b.shot ? { ...b.shot, track: { ...b.shot.track }, rolled: [...b.shot.rolled] } : null;
+  const shot = b.shot ? { ...b.shot, track: { ...b.shot.track }, flight: copyFlight(b.shot.flight), rolled: [...b.shot.rolled] } : null;
   return { ...b, pos: { ...b.pos }, vel: { ...b.vel }, w: { ...b.w }, aim: b.aim ? { ...b.aim } : null, impact: { ...b.impact, n: { ...b.impact.n } }, passRolled: [...b.passRolled], shot };
 }

@@ -2,6 +2,7 @@ import { blockHook, grab, passCaught } from "./ball-touch";
 import type { Match } from "./match";
 import { stepBall, type Contact } from "./physics/world";
 import { classify, missed, noteContacts } from "./physics/shot-watch";
+import { onTheRing, stepShotFlight } from "./shot-outcome/flight";
 import { missShot, scoreShot } from "./rules";
 
 /**
@@ -14,7 +15,9 @@ import { missShot, scoreShot } from "./rules";
 export function freeBall(m: Match, dt: number): void {
   const b = m.ball;
   const contacts: Contact[] = [];
-  stepBall(b, dt, contacts, blockHook(m));
+  // A shot flies its planned flight, which may roll round the ring; anything else is plain physics.
+  if (b.mode === "flight" && b.flightKind === "shot" && b.shot) stepShotFlight(b, b.shot.flight, dt, contacts, blockHook(m));
+  else stepBall(b, dt, contacts, blockHook(m));
   for (const c of contacts) hear(m, c);
   if (b.mode === "flight" && b.flightKind === "shot" && b.shot) followShot(m, contacts, dt);
   else if (b.mode === "flight" && b.flightKind === "pass") followPass(m, contacts);
@@ -55,7 +58,7 @@ function followShot(m: Match, contacts: readonly Contact[], dt: number): void {
   const shot = b.shot!;
   shot.track.t += dt;
   if (noteContacts(shot.track, contacts) === "through") return drop(m);
-  if (!missed(shot.track, b)) return;
+  if (onTheRing(shot.flight) || !missed(shot.track, b)) return;
   b.mode = "loose";
   b.flightKind = null;
   shot.outcome = classify(shot.track);

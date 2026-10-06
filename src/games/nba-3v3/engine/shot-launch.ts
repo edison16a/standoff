@@ -7,7 +7,10 @@ import { missShot } from "./rules";
 import type { Match } from "./match";
 import { freshTrack, traceShot } from "./physics/shot-watch";
 import { between } from "./rng";
-import { forcedLaunch } from "./shot-forced";
+import { newFlight } from "./shot-outcome/flight";
+import { pickPreset, type ShotQuality } from "./shot-outcome/pick";
+import { asPreset } from "./shot-outcome/presets";
+import { solvePreset } from "./shot-outcome/solve";
 import { bankAngle, makeChance, type Grade, type ShotContext, type ShotKind } from "./shot-model";
 import { planRelease, type ReleaseInput } from "./shot-release";
 import type { Family } from "./shot-calibration";
@@ -39,9 +42,10 @@ function release(m: Match, a: Athlete, kind: ShotKind, hand: V3, distance: numbe
 
 /**
  * The ball leaves the hand: size up the defence, see if the shot is
- * fouled, work out how well it was released, and throw it for real.
- * Whether it drops is up to the ball physics from here; a defender in
- * the air may still get a hand to it on the way (see `ball-touch.ts`).
+ * fouled, work out how good the release was, pick how it ends, and
+ * throw the real flight that ends that way (`shot-outcome/`). A
+ * defender in the air may still get a hand to it on the way (see
+ * `ball-touch.ts`), and then the physics alone has it.
  */
 export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, hand: V3, floater = false): void {
   const b = m.ball;
@@ -57,25 +61,28 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   m.forced = null;
   // Gold is a sure swish: no hand gets to it, and it goes in clean even through a foul.
   const gold = grade === "gold";
-  const forced = scripted ?? (gold ? "swish" : null);
   // Contact on the shot is a foul, and a fouled shot flies on and may still drop.
   const fouler = scripted || free ? null : rollShootingFoul(m, a, kind);
   if (fouler) callShootingFoul(m, fouler, a, three ? 3 : 2);
   b.shot = shotInfo(m, a, kind, grade, three ? 3 : free ? 1 : 2, c.contest, distance);
   // A scripted film, a gold release and a fouled shot fly clear of hands.
-  if (forced || fouler) b.shot.rolled = m.opponents(a.team).map((o) => o.id);
+  if (scripted || gold || fouler) b.shot.rolled = m.opponents(a.team).map((o) => o.id);
   const s = buildOf(a).stats;
   const ctx: ShotContext = { kind, grade, distance, shooting: s.shooting, contest: c.contest, strengthEdge: c.edge, onFire: a.onFire, floater };
   const chance = makeChance(ctx) * (fouler ? FOULED_MAKE : 1);
-  const thrown = release(m, a, kind, hand, distance, floater);
-  // A gold jumper goes straight at the ring, never off the glass.
-  const input = gold && thrown.family === "bankJumper" ? { ...thrown, family: "jumper" as const } : thrown;
-  const launch = forced ? forcedLaunch(m.rng, input, forced) : planRelease(m.rng, input, chance, distance);
-  b.vel = launch.vel;
-  b.w = launch.spin;
-  // Flown ahead with nobody near, for the sounds and buzzes that want to know early; the live ball decides.
-  const ahead = traceShot({ pos: { ...hand }, vel: launch.vel, w: launch.spin });
-  m.emit({ type: "shot", id: a.id, kind, three, grade, chance, outcome: ahead.outcome, made: ahead.made, contest: c.contest });
+  const input = release(m, a, kind, hand, distance, floater);
+  const side = Math.atan2(a.x - RIM.x, a.z - RIM.z);
+  // A reverse is flipped up from under the ring, with no angle on the glass.
+  const bankable = input.family === "reverse" ? 0 : bankAngle(side, distance);
+  const quality: ShotQuality = { kind, grade, family: input.family, chance, distance, contest: c.contest, bankable };
+  const pick = scripted ? { preset: asPreset(scripted), lean: 0 } : pickPreset(m.rng, quality);
+  const plan = solvePreset(m.rng, input, pick.preset, pick.lean);
+  b.vel = plan.launch.vel;
+  b.w = plan.launch.spin;
+  b.shot.flight = newFlight(plan.ride);
+  b.shot.preset = plan.preset;
+  // The ending is known now, for the sounds and buzzes that want it early; the live ball still flies it out.
+  m.emit({ type: "shot", id: a.id, kind, three, grade, chance, outcome: plan.detail.outcome, preset: plan.preset, made: plan.detail.made, contest: c.contest });
 }
 
 /** The ball leaves the hand. */
@@ -95,7 +102,7 @@ function letGo(m: Match, a: Athlete, at: V3): void {
 function shotInfo(m: Match, a: Athlete, kind: ShotKind, grade: Grade, points: 1 | 2 | 3, contest: number, distance: number): ShotInfo {
   const assist = kind !== "free" && m.lastPass && m.lastPass.to === a.id ? m.lastPass.from : null;
   const dunk = kind === "dunk" ? (a.action.kind === "drive" && a.action.style ? a.action.style : buildOf(a).dunk) : null;
-  return { shooter: a.id, team: a.team, points, kind, dunk, grade, outcome: "swish", made: false, counted: false, touchedRim: kind === "dunk", assist, contest, distance, track: freshTrack(), rolled: [] };
+  return { shooter: a.id, team: a.team, points, kind, dunk, grade, outcome: "swish", preset: "swish", made: false, counted: false, touchedRim: kind === "dunk", assist, contest, distance, track: freshTrack(), flight: newFlight(null), rolled: [] };
 }
 
 /**
@@ -128,7 +135,7 @@ export function slam(m: Match, a: Athlete): void {
   const ctx: ShotContext = { kind: "dunk", grade: "perfect", distance: 0.5, shooting: 5, contest: c.contest, strengthEdge: c.edge, onFire: a.onFire };
   const chance = makeChance(ctx) * (fouler ? FOULED_MAKE + 0.15 : 1);
   const input: ReleaseInput = { family: "dunk", from: top, apex: top.y, spinRate: 0 };
-  const launch = forced ? forcedLaunch(m.rng, input, forced) : planRelease(m.rng, input, chance, 0.5);
+  const launch = forced ? solvePreset(m.rng, input, asPreset(forced)).launch : planRelease(m.rng, input, chance, 0.5);
   b.vel = launch.vel;
   b.w = launch.spin;
   // The hand is on the iron as it goes down: no swish for a dunk.
@@ -140,5 +147,5 @@ export function slam(m: Match, a: Athlete): void {
     m.emit({ type: "dunk", id: a.id, style: b.shot.dunk ?? buildOf(a).dunk, power });
     return;
   }
-  m.emit({ type: "shot", id: a.id, kind: "dunk", three: false, grade: "perfect", chance, outcome: ahead.outcome, made: false, contest: c.contest });
+  m.emit({ type: "shot", id: a.id, kind: "dunk", three: false, grade: "perfect", chance, outcome: ahead.outcome, preset: "rimOut", made: false, contest: c.contest });
 }

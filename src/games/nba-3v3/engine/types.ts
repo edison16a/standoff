@@ -2,6 +2,8 @@ import type { BuildId } from "../builds";
 import type { DunkStyle } from "../roster";
 import type { ShotTrack } from "./physics/shot-watch";
 import type { Grade, Outcome, ShotKind } from "./shot-model";
+import type { ShotFlight } from "./shot-outcome/flight";
+import type { ShotPreset } from "./shot-outcome/presets";
 import type { V2, V3 } from "./vec";
 
 export type TeamId = 0 | 1;
@@ -153,6 +155,8 @@ export interface ShotInfo {
   dunk: DunkStyle | null;
   grade: Grade;
   outcome: Outcome;
+  /** The ending picked at release; a block or a scripted film can still change what really happens. */
+  preset: ShotPreset;
   made: boolean;
   /** Set once the points are on the board, so a shot never counts twice. */
   counted: boolean;
@@ -163,6 +167,8 @@ export interface ShotInfo {
   distance: number;
   /** What the ball has touched so far, read live off the physics. */
   track: ShotTrack;
+  /** The flight the ending was planned on, with any roll round the ring. */
+  flight: ShotFlight;
   /** Defenders who already had their one chance to get a hand on it. */
   rolled: number[];
 }

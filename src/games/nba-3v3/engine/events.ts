@@ -2,6 +2,7 @@ import type { DunkStyle } from "../roster";
 import type { FoulKind } from "./foul-call";
 import type { Grade, Outcome, ShotKind } from "./shot-model";
 import type { DribbleMove, TeamId } from "./types";
+import type { ShotPreset } from "./shot-outcome/presets";
 import type { V3 } from "./vec";
 
 /**
@@ -15,7 +16,7 @@ export type MatchEvent =
   | { type: "squeak"; id: number }
   | { type: "bump"; a: number; b: number; power: number }
   | { type: "gather"; id: number; kind: ShotKind }
-  | { type: "shot"; id: number; kind: ShotKind; three: boolean; grade: Grade; chance: number; outcome: Outcome; made: boolean; contest: number }
+  | { type: "shot"; id: number; kind: ShotKind; three: boolean; grade: Grade; chance: number; outcome: Outcome; preset: ShotPreset; made: boolean; contest: number }
   | { type: "takeoff"; id: number; dunk: boolean }
   | { type: "dunk"; id: number; style: DunkStyle; power: number }
   | { type: "land"; id: number; hard: boolean }
