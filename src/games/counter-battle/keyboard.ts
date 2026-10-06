@@ -114,7 +114,7 @@ export const keyboard: KeyboardBinding = {
       title: "Fight",
       rows: [
         { action: "Aim in your view", keys: ["Mouse"] },
-        { action: "Shoot (hold for automatics)", keys: ["Left click", "Space"] },
+        { action: "Shoot (hold for auto)", keys: ["Left click", "Space"] },
         { action: "Crouch on or off", keys: ["C"] },
         { action: "Reload", keys: ["R"] },
       ],

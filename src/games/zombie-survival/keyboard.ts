@@ -87,7 +87,7 @@ export const keyboard: KeyboardBinding = {
       title: "Survive",
       rows: [
         { action: "Aim", keys: ["Mouse"] },
-        { action: "Shoot (hold for automatics)", keys: ["Left click", "Space"] },
+        { action: "Shoot (hold for auto)", keys: ["Left click", "Space"] },
         { action: "Reload", keys: ["R"] },
       ],
     },
