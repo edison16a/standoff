@@ -1,4 +1,5 @@
 import { palmHold, spinCarry } from "../../engine/dribble-ball";
+import { driving } from "../../engine/dribble-path";
 import type { Athlete, Ball, TeamId } from "../../engine/types";
 import type { CeremonyRole } from "../ceremony/ceremony-stage";
 import { balance } from "./balance";
@@ -76,7 +77,7 @@ export function basePose(a: Athlete, s: AthleteScene, b: BodyState): Pose {
   const pocket = s.holding && !carry && (s.chest || palmHold(a));
   const dribbling = s.holding && free && !pocket && !carry;
   let p = locomotion(
-    { speed: b.speed, phase: b.phase, guarding: s.guarding, ballSide: s.ballSide, dribble: dribbling ? a.dribble : null, dribbleSide: a.dribbleSide, pressure: s.pressure, time: b.time, seed: b.seed, heading: b.heading, leg: b.leg },
+    { speed: b.speed, phase: b.phase, guarding: s.guarding, ballSide: s.ballSide, drive: dribbling && driving(a) ? 1 : 0, dribble: dribbling ? a.dribble : null, dribbleSide: a.dribbleSide, pressure: s.pressure, time: b.time, seed: b.seed, heading: b.heading, leg: b.leg },
     b.stride,
   );
   if (carry) p = blend(p, SPIN_PULL[a.dribbleHand === 1 ? "R" : "L"], 1, p);

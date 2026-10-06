@@ -49,11 +49,11 @@ export function handSpot(a: Athlete, side: number, ahead: number): V3 {
   const tall = act.kind === "move" && act.move === "hesitation" && act.t < 0.26;
   const low = driving(a);
   // The palm is at the hip running, a little lower in a stand still pound, lower still on a drive; the ball hangs under it.
-  const palm = h * (tall ? 0.5 : low ? 0.37 : lerp(0.46, 0.41, still));
+  const palm = h * (tall ? 0.5 : low ? 0.33 : lerp(0.46, 0.41, still));
   let fwd = low ? 0.3 : 0.26;
   // Behind the back the ball goes round behind the hips on its way across.
   if (act.kind === "move" && act.move === "behindBack" && a.crossArmed && Math.sign(side) !== a.dribbleHand) fwd = -0.22;
-  const out = (low ? 0.23 : 0.3) * side;
+  const out = (low ? 0.2 : 0.3) * side;
   const { x, z } = whereAhead(a, ahead);
   return { x: x + fx * fwd - fz * out + a.vx * 0.05, y: palm - 0.1, z: z + fz * fwd + fx * out + a.vz * 0.05 };
 }

@@ -18,6 +18,8 @@ export interface MoveContext {
   pressure: number;
   /** Guarding: which side of him the ball is, + his left, - his right. */
   ballSide?: number;
+  /** 0 to 1 attacking the rim with the ball: down low over a tight dribble. */
+  drive?: number;
   time: number;
   /** A per player offset so idle players do not breathe in step. */
   seed: number;
@@ -86,5 +88,5 @@ export function locomotion(c: MoveContext, out?: Stride): Pose {
     p.torsoX += breathe;
     if (out) out.air = g.air;
   }
-  return c.dribble === null ? p : dribblePose(p, c.dribble, run, c.dribbleSide, c.pressure);
+  return c.dribble === null ? p : dribblePose(p, c.dribble, run, c.dribbleSide, c.pressure, c.drive ?? 0);
 }
