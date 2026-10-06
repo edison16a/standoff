@@ -1,11 +1,11 @@
 import * as THREE from "three";
-import { effectiveCap, loadFrameRate, loadSavedRefresh } from "@/platform/frame-rate/frame-rate-settings";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { MatchEvent } from "../engine/events";
 import type { MatchView } from "../engine/view";
 import { TEAMS } from "../teams";
 import { Arena } from "./arena/arena";
-import { AutoQuality } from "./auto-quality";
+import { excitement } from "./arena/crowd-mood";
+import { AutoQuality, targetFps } from "./auto-quality";
 import { AthleteMaterials } from "./body/materials";
 import { CameraDirector, type Shot } from "./camera/director";
 import { CeremonyScene } from "./ceremony/ceremony-scene";
@@ -174,11 +174,9 @@ export class MatchRenderer {
     this.arena.crowd.setExcitement(excitement(view));
     this.effects.frame(view, dt, time);
     this.director.update(view, shot, dt, time, focus);
-    this.squad.fitTags(this.director.camera.fov);
-    const pixels = this.renderer.domElement.height;
     const fine = this.auto?.fineBodies ?? true;
-    this.squad.fitDetail(this.director.camera, pixels, fine);
-    this.referee.fitDetail(this.director.camera, pixels, fine);
+    this.squad.fitView(this.director.camera, this.renderer.domElement.height, fine);
+    this.referee.fitDetail(this.director.camera, this.renderer.domElement.height, fine);
     this.squad.stackTags(this.director.camera, dt);
   }
 
@@ -207,18 +205,4 @@ export class MatchRenderer {
     this.environment.dispose();
     this.renderer.dispose();
   }
-}
-
-/** The frame rate to hold: sixty, or the player's own cap from the settings when it is lower. */
-function targetFps(): number {
-  const cap = effectiveCap(loadFrameRate().cap, loadSavedRefresh());
-  return Math.min(60, cap ?? 60);
-}
-
-/** How loud and bouncy the crowd is: a hum, rising as the ball nears a goal, and wild for goals. */
-function excitement(view: MatchView): number {
-  if (view.phase === "goal") return 1;
-  if (view.phase === "fulltime") return 0.9;
-  const nearGoal = Math.max(0, (Math.abs(view.ball.x) - 8) / 8);
-  return 0.12 + 0.35 * nearGoal;
 }

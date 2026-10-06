@@ -1,3 +1,5 @@
+import { effectiveCap, loadFrameRate, loadSavedRefresh } from "@/platform/frame-rate/frame-rate-settings";
+
 /**
  * Keeps the match at its frame rate on a weaker graphics card. It
  * watches how long frames really take; if the picture keeps missing the
@@ -56,4 +58,10 @@ export class AutoQuality {
   get fineBodies(): boolean {
     return this.level === 0;
   }
+}
+
+/** The frame rate to hold: sixty, or the player's own cap from the settings when it is lower. */
+export function targetFps(): number {
+  const cap = effectiveCap(loadFrameRate().cap, loadSavedRefresh());
+  return Math.min(60, cap ?? 60);
 }

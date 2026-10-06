@@ -1,5 +1,3 @@
-import { shotWindup } from "../../engine/kick";
-import { PASS } from "../../engine/tuning";
 import type { AthleteView, BallView } from "../../engine/view";
 import type { Kit } from "../../looks";
 import { chestPose, headerPose } from "../anim/aerial-poses";
@@ -16,6 +14,7 @@ import { captainPose, matePose } from "../anim/trophy-poses";
 import { buildBody, type Body } from "../body/athlete-body";
 import type { AthleteMaterials } from "../body/materials";
 import { BodyDynamics } from "./body-dynamics";
+import { BodyFrame, lofted, windupOf } from "./body-frame";
 import { FootLock } from "./foot-locks";
 import { Jolt } from "./jolt";
 import { LodSwitch } from "./lod";
@@ -30,10 +29,10 @@ const LEAN: Partial<Record<AthleteView["action"], number>> = { free: 1, skill: 0
 
 /**
  * One footballer on the pitch: their body in the team's kit, their own
- * name on the back of the shirt. Each frame
- * the move they are in gives a pose and where the feet go; the legs are
- * solved to put the feet there, and a change of move cross fades from
- * the last pose shown, so nothing snaps and nothing lags.
+ * name on the back of the shirt. Each frame the move they are in gives
+ * a pose and where the feet go; momentum, breath and knocks lean it; the
+ * legs are solved to put the feet there; and a change of move cross
+ * fades from the last pose shown, so nothing snaps and nothing lags.
  */
 export class AthleteFigure {
   readonly rig: Body;
@@ -51,11 +50,7 @@ export class AthleteFigure {
   private readonly jolt = new Jolt();
   readonly lod: LodSwitch;
   private facing = 0;
-  private last: { x: number; z: number } | null = null;
-  private readonly move = { x: 0, y: 0, z: 1 };
-  private ball = { x: 0, y: 0, z: 0.5 };
-  /** The move the remembered ball belongs to. */
-  private ballKick = "";
+  private readonly frame = new BodyFrame();
 
   /** `spec` is the build with the player's name, or someone who plays no build, like the referee. */
   constructor(view: AthleteView, kit: Kit, mats: AthleteMaterials, spec: FigureSpec = figureOf(view.build, "")) {
@@ -76,7 +71,7 @@ export class AthleteFigure {
     root.updateWorldMatrix(true, false);
     this.facing = view.facing;
     this.dynamics.track(view.x, view.z, view.facing, dt);
-    const ctx = this.context(view, ball);
+    const ctx: Context = { build: this.build, lead: this.lead, ...this.frame.read(view, ball) };
     const frame = this.target(view, ctx, time);
     // Momentum, breath and knocks go on before the legs are solved, so the feet stay planted under the lean.
     const lean = (LEAN[view.action] ?? 0) * (view.wall ? 0 : view.guarding || view.bar ? 0.7 : 1);
@@ -113,41 +108,6 @@ export class AthleteFigure {
     this.jolt.hit((x * s - z * c) / len, (x * c + z * s) / len, strength);
   }
 
-  /** The ball and the way the body is travelling, in the body's own frame. */
-  private context(v: AthleteView, ball: BallView): Context {
-    const c = Math.cos(v.facing);
-    const s = Math.sin(v.facing);
-    // The way the body travels, from how it moved since the last frame, which also holds in slow motion.
-    if (this.last && v.speed > 0.3) {
-      const dx = v.x - this.last.x;
-      const dz = v.z - this.last.z;
-      const d = Math.hypot(dx, dz);
-      if (d > 1e-5 && d < 1) {
-        this.move.x = (dx * s - dz * c) / d;
-        this.move.z = (dx * c + dz * s) / d;
-      }
-    } else if (v.speed <= 0.3) {
-      this.move.x = 0;
-      this.move.z = 1;
-    }
-    this.last = { x: v.x, z: v.z };
-    const bx = ball.x - v.x;
-    const bz = ball.z - v.z;
-    // Once a kick has sent the ball away, the follow through keeps to where the boot met it.
-    const kicked = (v.action === "shoot" || v.action === "pass") && !v.hasBall;
-    const local = (x: number, y: number, z: number) => ({ x: x * s - z * c, y, z: x * c + z * s });
-    if (!kicked) {
-      this.ball = local(bx, ball.y, bz);
-      this.ballKick = v.action;
-    } else if (this.ballKick !== v.action) {
-      // A still that starts after the strike never saw the ball at the boot: run its flight back to the strike.
-      const since = Math.max(0, v.actionT - this.windup(v));
-      this.ball = local(bx - ball.vx * since, Math.max(0.11, ball.y - ball.vy * since), bz - ball.vz * since);
-      this.ballKick = v.action;
-    }
-    return { build: this.build, lead: this.lead, move: this.move, ball: this.ball };
-  }
-
   private target(v: AthleteView, ctx: Context, time: number): Frame {
     const fk = (pose: Pose): Frame => ({ pose, left: null, right: null });
     const run = () => gait(v.stride, v.speed, v.hasBall, ctx, time, this.phase);
@@ -165,9 +125,9 @@ export class AthleteFigure {
       case "chest":
         return fk(chestPose(v.actionT, v.actionLen));
       case "shoot":
-        return shotFrame(v.actionT, this.windup(v), v.power, ctx);
+        return shotFrame(v.actionT, windupOf(v), v.power, ctx);
       case "pass":
-        return passFrame(v.actionT, this.windup(v), lofted(v), ctx);
+        return passFrame(v.actionT, windupOf(v), lofted(v), ctx);
       case "slide":
         return fk(slide(v.actionT));
       case "getup":
@@ -190,16 +150,7 @@ export class AthleteFigure {
     }
   }
 
-  /** When a kick meets the ball, as the engine times it (engine/kick.ts). */
-  private windup(v: AthleteView): number {
-    if (v.action === "shoot") return shotWindup(v.power);
-    return lofted(v) ? PASS.windup + 0.08 : PASS.windup;
-  }
-
   dispose(): void {
     this.rig.dispose();
   }
 }
-
-/** A lofted pass has the longer wind up, which shows in the action's length. */
-const lofted = (v: AthleteView) => v.action === "pass" && v.actionLen > PASS.windup + 0.34;
