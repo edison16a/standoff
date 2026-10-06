@@ -22,17 +22,22 @@ describe("bodyGeometry", () => {
         // Three draws a player: the budget keeps nine players and their shadows cheap on a laptop. Only close ups use the fine cut.
         const total = parts.reduce((sum, p) => sum + triangles(p), 0);
         expect(total).toBeLessThan(fine ? 48000 : 16000);
+        // One expect per part: an expect per vertex made the fine cut slow enough to time out on a busy machine.
         for (const p of parts) {
           const index = p.getAttribute("skinIndex");
           const weight = p.getAttribute("skinWeight");
+          let topBone = 0;
+          let worstSum = 0;
           for (let i = 0; i < index.count; i++) {
             let sum = 0;
             for (let k = 0; k < 4; k++) {
-              expect(index.getComponent(i, k)).toBeLessThan(BONES.length);
+              topBone = Math.max(topBone, index.getComponent(i, k));
               sum += weight.getComponent(i, k);
             }
-            expect(Math.abs(sum - 1)).toBeLessThan(1e-4);
+            worstSum = Math.max(worstSum, Math.abs(sum - 1));
           }
+          expect(topBone).toBeLessThan(BONES.length);
+          expect(worstSum).toBeLessThan(1e-4);
         }
         // Standing at rest the body is as tall as the look, give or take the hair, and as wide one side as the other.
         const box = new THREE.Box3();
@@ -51,12 +56,14 @@ describe("bodyGeometry", () => {
   it("prints the whole kit from inside the texture", () => {
     const g = bodyGeometry(BUILDS.striker.look, false, false);
     const uv = g.kit.getAttribute("uv");
+    let low = Infinity;
+    let high = -Infinity;
     for (let i = 0; i < uv.count; i++) {
-      expect(uv.getX(i)).toBeGreaterThanOrEqual(0);
-      expect(uv.getX(i)).toBeLessThanOrEqual(1);
-      expect(uv.getY(i)).toBeGreaterThanOrEqual(0);
-      expect(uv.getY(i)).toBeLessThanOrEqual(1);
+      low = Math.min(low, uv.getX(i), uv.getY(i));
+      high = Math.max(high, uv.getX(i), uv.getY(i));
     }
+    expect(low).toBeGreaterThanOrEqual(0);
+    expect(high).toBeLessThanOrEqual(1);
   });
 
   it("builds a look once and shares it", () => {
