@@ -58,7 +58,7 @@ async function race(ctx) {
   await ctx.snap("ready");
   await ctx.tap("Ready");
   await ctx.snap("ready-on");
-  const race = { racing: true, place: 2, karts: 4, lap: 2, laps: 3, item: "nitro", rolling: false, surge: 0.5 };
+  const race = { racing: true, place: 2, karts: 4, lap: 2, laps: 3, item: "nitro", rolling: false, next: "orb", nextRolling: false, surge: 0.5 };
   await ctx.fake("state", { ...race, phase: "countdown", countdown: 3 });
   await ctx.snap("countdown");
   await ctx.fake("state", { ...race, phase: "racing", countdown: null, wrongWay: true });
