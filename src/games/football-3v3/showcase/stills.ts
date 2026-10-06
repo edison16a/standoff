@@ -24,11 +24,11 @@ function coverCam(view: MatchView): FilmCam {
   const t = view.athletes.find((a) => a.id === TACKLER)!;
   const l = Math.hypot(r.vx, r.vz) || 1;
   const d = { x: r.vx / l, z: r.vz / l };
-  const ahead = 2;
+  const ahead = 2.6;
   const side = 1.1;
-  // Aimed a fifth of the way to the tackler, so both fit with the runner still in front.
-  const look = { x: r.x + (t.x - r.x) * 0.2, y: 1.35, z: r.z + (t.z - r.z) * 0.2 };
-  return { pos: { x: r.x + d.x * ahead - d.z * side, y: 0.5, z: r.z + d.z * ahead + d.x * side }, look, fov: 56 };
+  // Aimed low and part way to the tackler, so both sit above the logo with the runner still in front.
+  const look = { x: r.x + (t.x - r.x) * 0.3, y: 0.75, z: r.z + (t.z - r.z) * 0.2 };
+  return { pos: { x: r.x + d.x * ahead - d.z * side, y: 0.5, z: r.z + d.z * ahead + d.x * side }, look, fov: 50 };
 }
 
 /** The home screen's stills, held from the trailer. */
@@ -36,5 +36,5 @@ export const STILLS: Partial<Record<ShowcaseView, Still>> = {
   // The corner flying in at the runner a beat before the hit, the goal posts behind them.
   poster: { t: 6.45 },
   // The juke in the big hit shot, a beat before contact: the runner and the ball at us, the tackler diving in beside him.
-  icon: { t: 6.2, key: 2.5, camera: coverCam },
+  icon: { t: 6.1, key: 2.5, camera: coverCam },
 };
