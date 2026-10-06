@@ -128,7 +128,8 @@ export function gait(g: GaitInput): Pose {
   idle(p, g, 1 - moving);
   // Eyes stay level over everything the body does.
   p.neckX = -p.pitch * 0.85 - p.spineX * 0.8;
-  if (g.carry === "tuck") add(p, { shRX: -p.shRX - 0.1, elR: -1.95 - p.elR, shRY: 0.45, shRZ: -0.02 });
+  // High and tight: the forearm across the ribs, the ball's nose up in the hand, the elbow pinned in.
+  if (g.carry === "tuck") add(p, { shRX: -p.shRX - 0.22, elR: -2.0 - p.elR, shRY: 0.55, shRZ: 0.12 - p.shRZ });
   else if (g.carry === "ready") {
     // Two hands on the ball at the chest; the left hand under it, the right on the laces.
     Object.assign(p, { shLX: -0.55, shRX: -0.55, elL: -1.55, elR: -1.45, shLY: 0.55, shRY: 0.5, shLZ: 0.28, shRZ: 0.3 });
