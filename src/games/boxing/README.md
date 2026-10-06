@@ -57,6 +57,25 @@ Each player's view sits behind and out past their boxer's right shoulder, so the
 
 With two players the screen splits down the middle during the rounds, player 1 on the left. A small map at the top right shows which half is whose, each name in its player's colour. The walk out, the breaks and the end are one wide broadcast picture, with one set of health bars across it.
 
+## Keyboard mode
+
+**No camera? Play one player with the keyboard** under the two choices plays against the computer with no camera, for testing or for anyone without one (`host/keys/`). It skips the camera setup and goes straight to choosing a build: A and D (or the arrows) browse, Enter locks in. The mouse works too. In the fight the keys make the same head, gloves and punches the camera does, so every punch is judged by the same rules.
+
+| Key | Move |
+| --- | --- |
+| J | Jab |
+| K | Cross |
+| L | Hook |
+| I | Body uppercut: the rear hand dug up into the body, the nearest the match has to an uppercut |
+| A or Left, D or Right | Slip left or right, for as long as it is held |
+| S or Down | Duck, for as long as it is held |
+| Space | Dodge: bob under for a moment and come back up |
+| Shift | Block with a high guard while held. Hold it again after a knockdown to get up |
+| F | Cover the body, elbows down, while held |
+| E | Hold the gloves out to touch before a round |
+
+The head eases into a slip or a duck rather than jumping there, so timing a dodge late still matters. The keys go by where they sit, so other layouts play the same. The admin panel's Keyboard player shows these keys on its controls card (`keyboard.ts`).
+
 ## What was built
 
 * `engine/` pure fight logic with tests:
