@@ -3,8 +3,8 @@ import type { CameraIntent } from "./camera-input";
 
 export type KeyMove = "left" | "right" | "jump" | "duck";
 
-/** Keyboard mode: the arrow keys or WASD, by where the keys sit, so other keyboard layouts work the same. */
-export const KEYS: Record<string, KeyMove> = {
+/** Keyboard mode: the arrow keys or WASD, by where the keys sit, so other keyboard layouts work the same. Space jumps too. */
+export const KEYS: Readonly<Record<string, KeyMove>> = {
   ArrowLeft: "left",
   ArrowRight: "right",
   ArrowUp: "jump",
@@ -13,6 +13,7 @@ export const KEYS: Record<string, KeyMove> = {
   KeyD: "right",
   KeyW: "jump",
   KeyS: "duck",
+  Space: "jump",
 };
 
 /**

@@ -7,11 +7,12 @@ import { ShowRun } from "../showcase/show-run";
 import { Autopilot } from "./autopilot";
 import { Controls } from "./controls";
 import { Countdown } from "./countdown";
+import { listenKeyboardSeat } from "./key-messages";
 import { recordResult } from "./results";
 import { Round } from "./round";
 import { RunBoard } from "./run-board";
 import { RunWatch } from "./run-watch";
-import { initialSurfState, shownName, useSurfStore as store, type Phase } from "./store";
+import { initialSurfState, setInput, shownName, useSurfStore as store, type Phase } from "./store";
 import { Timers } from "./timers";
 
 const HUD_MS = 80;
@@ -42,6 +43,7 @@ export class SurfSession {
   private readonly listeners = new Set<(event: RunEvent) => void>();
   private unlistenRound: () => void = () => undefined;
   private unlistenMoves: () => void = () => undefined;
+  private readonly unlistenSeat: () => void;
   /** Once the tutorial is done or skipped, later runs go straight to the countdown. */
   private tutorialDone = false;
   private readonly timers = new Timers();
@@ -57,6 +59,11 @@ export class SurfSession {
     store.setState(initialSurfState());
     this.board = new RunBoard((board) => store.setState({ board }));
     this.sound.play("menu");
+    // The admin panel's Keyboard player plays in keyboard mode, so the lobby switches to it.
+    this.unlistenSeat = listenKeyboardSeat(room, {
+      hello: () => this.phase === "lobby" && setInput("keyboard"),
+      move: (move, down) => this.controls?.remote(move, down),
+    });
     if (process.env.NODE_ENV === "development") Object.assign(window, { __subwaySurfers: this });
   }
 
@@ -171,6 +178,7 @@ export class SurfSession {
 
   dispose(): void {
     this.timers.clear();
+    this.unlistenSeat();
     this.board.dispose();
     this.unlistenRound();
     this.dropKit();

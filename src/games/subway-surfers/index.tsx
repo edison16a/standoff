@@ -3,6 +3,7 @@ import type { GameModule } from "@/platform/games/game-api";
 import { SessionContext } from "./host/components/session-context";
 import { Stage } from "./host/components/Stage";
 import { SurfSession } from "./host/session";
+import { keyboard } from "./keyboard";
 import { Showcase } from "./showcase/Showcase";
 import "./styles/host.css";
 import "./styles/hud.css";
@@ -37,4 +38,5 @@ export const game: GameModule = {
   },
 
   Showcase,
+  keyboard,
 };

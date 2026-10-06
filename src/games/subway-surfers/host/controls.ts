@@ -1,7 +1,7 @@
 import type { CameraKit, MoveEvent } from "@/games/kit/camera";
 import type { Lane } from "../engine/tuning";
 import { CameraInput } from "./camera-input";
-import { KeyInput, KEYS } from "./key-input";
+import { KeyInput, KEYS, type KeyMove } from "./key-input";
 
 /** What the player asks of their runner this frame. */
 export interface Intent {
@@ -86,12 +86,26 @@ export class Controls {
     this.tell(event);
   }
 
+  /**
+   * A move from the admin panel's Keyboard player. It takes the keys on
+   * this page first and sends them here, so each counts once. Keyboard
+   * mode only, as with the keys themselves.
+   */
+  remote(move: KeyMove, down: boolean): void {
+    this.press(move, down, false);
+  }
+
   private onKey(e: KeyboardEvent, down: boolean): void {
     const move = KEYS[e.code];
-    // Typing a name, or a shortcut like Ctrl+R, is not a move.
-    if (!move || !this.keys || e.target instanceof HTMLInputElement || e.ctrlKey || e.metaKey || e.altKey) return;
+    // Typing a name, or a shortcut like Ctrl+R, is not a move. A key the Keyboard player took arrives by `remote`.
+    if (!move || !this.keys || e.defaultPrevented || e.target instanceof HTMLInputElement || e.ctrlKey || e.metaKey || e.altKey) return;
     e.preventDefault();
-    const started = this.keys.press(move, down, e.repeat);
+    this.press(move, down, e.repeat);
+  }
+
+  private press(move: KeyMove, down: boolean, repeat: boolean): void {
+    if (!this.keys) return;
+    const started = this.keys.press(move, down, repeat);
     const time = performance.now();
     if (started === "jump") this.tell({ slot: 1, time, type: "jump", confidence: 1 });
     if (started === "duck") this.tell({ slot: 1, time, type: "duck", confidence: 1 });
