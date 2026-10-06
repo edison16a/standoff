@@ -71,5 +71,6 @@ export const PLANS: Record<ShowcaseView, Plan> = {
   // Three gliders bearing down on the glass double box among the stars.
   poster: { shots: [{ ...SKY, from: 20.4, length: 1, rig: SKY_BOX }], freeze: 0.25 },
   // The cover: Pip bursting out of the double box at the viewer, glass and gold sparks flying, Neo City behind.
-  icon: { shots: [{ ...DOUBLE, from: 5.4, length: 1, rig: DOUBLE_HEAD_ON }], freeze: 0.255 },
+  // Frozen a beat after the burst, once the flash has faded enough for his face to read.
+  icon: { shots: [{ ...DOUBLE, from: 5.4, length: 1, rig: DOUBLE_HEAD_ON }], freeze: 0.3 },
 };
