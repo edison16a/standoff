@@ -15,7 +15,7 @@ const UP = -2.95;
 
 /** The two holds on the cup: cradled at the chest, and right up over the head. */
 const CRADLE = { shX: -0.2, shZ: -0.06, shY: 0.6, el: -0.95 };
-const RAISED = { shX: UP, shZ: 0.2, shY: 0.05, el: -0.28 };
+const RAISED = { shX: UP, shZ: -0.06, shY: 0.05, el: -0.28 };
 
 /**
  * The captain with the cup, `t` seconds into the ceremony. He holds it
