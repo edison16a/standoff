@@ -32,9 +32,14 @@ export const phoneStateSchema = z.object({
   karts: z.number().int().min(0).max(8),
   lap: z.number().int().min(0).max(9),
   laps: z.number().int().min(1).max(9),
+  /** The power up a tap uses, and whether its roulette is still spinning. */
   item: z.enum(ITEM_KINDS).nullable(),
-  /** The item roulette is still spinning. */
   rolling: z.boolean(),
+  /** The one queued behind it, which slides forward once the first is used. */
+  next: z.enum(ITEM_KINDS).nullable(),
+  nextRolling: z.boolean(),
+  /** Power ups used so far, so the phone can tell a slide forward from a fresh pickup. */
+  uses: z.number().int().min(0),
   wrongWay: z.boolean(),
   finished: z.boolean(),
   effect: z.enum(EFFECT_KINDS).nullable(),

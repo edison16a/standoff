@@ -1,9 +1,10 @@
+import { boxLane, wantsItem } from "./bot-items";
 import { botPedals } from "./bot-pedals";
 import { FULL_SKILL, type KartBotSkill } from "./bot-skill";
+import { canUse } from "./item-queue";
 import type { Cube } from "./pickups";
 import { NO_INPUT, type Kart, type KartInput } from "./kart";
 import type { Obstacle } from "./obstacles";
-import { nearestAhead } from "./projectiles";
 import { wrapAngle } from "@/games/kit/motion/math3d";
 import type { Track } from "./track";
 
@@ -29,23 +30,11 @@ export function createBrain(random: () => number): BotBrain {
   return { lane: (random() - 0.5) * 6, laneTimer: 2 + random() * 4, itemTimer: 1 + random() * 3 };
 }
 
-/** The lane to aim for: an item cube when empty handed, and never an obstacle. */
+/** The lane to aim for: a power up box while there is room in hand, and never an obstacle. */
 function chooseLane(kart: Kart, brain: BotBrain, view: BotView): number {
   const { track } = view;
   const room = track.halfWidth - 2.2;
-  let lane = brain.lane;
-  if (!kart.item) {
-    let best = Infinity;
-    for (const cube of view.cubes) {
-      const ahead = track.forward(kart.loc.s, cube.s);
-      if (cube.respawnAt > 0 || ahead < 8 || ahead > 45) continue;
-      const shift = Math.abs(cube.d - kart.loc.d);
-      if (shift < best) {
-        best = shift;
-        lane = cube.d;
-      }
-    }
-  }
+  let lane = boxLane(kart, view) ?? brain.lane;
   for (const o of view.obstacles) {
     const ahead = track.forward(kart.loc.s, o.s);
     if (ahead < 0 || ahead > 34) continue;
@@ -57,28 +46,11 @@ function chooseLane(kart: Kart, brain: BotBrain, view: BotView): number {
   return Math.max(-room, Math.min(room, lane));
 }
 
-function wantsItem(kart: Kart, view: BotView): boolean {
-  switch (kart.item) {
-    case "orb":
-    case "ice": {
-      const target = nearestAhead(kart, view.karts);
-      return target !== null && target.race.progress - kart.race.progress < 90;
-    }
-    case "nitro":
-      return Math.abs(view.track.sharpestAhead(kart.loc.s, 60)) < 0.02;
-    case "shield":
-      return view.chased || kart.timers.shield <= 0;
-    case "ghost":
-      return true;
-    default:
-      return false;
-  }
-}
-
 /**
  * A simple, readable computer driver. It steers at a point a little way
- * down its chosen lane, drifts or lifts off for bends, weaves for item cubes
- * and around obstacles, and uses items when they are likely to help.
+ * down its chosen lane, drifts or lifts off for bends, weaves for item boxes
+ * and around obstacles, and uses items when they are likely to help
+ * (see bot-items.ts for how it plays its two item hand).
  * The skill sets how sharp it is. Top speed is held back in the world.
  */
 export function think(
@@ -108,7 +80,7 @@ export function think(
   const { throttle, brake } = botPedals(kart, track, steer, speed);
 
   let use = false;
-  if (kart.item && time >= kart.itemReadyAt) {
+  if (canUse(kart, time)) {
     brain.itemTimer -= dt;
     if (brain.itemTimer <= 0) {
       use = wantsItem(kart, view);

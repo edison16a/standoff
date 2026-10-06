@@ -1,4 +1,5 @@
 import type { Emit } from "./events";
+import { takeCurrent } from "./item-queue";
 import type { Kart } from "./kart";
 import { launch, nearestAhead, nearestBehind, type Projectile, type ThrownKind } from "./projectiles";
 import type { Track } from "./track";
@@ -30,15 +31,16 @@ export function strike(kart: Kart, by: ThrownKind | "obstacle", from: number | n
 }
 
 /**
- * Fires the held item. Returns a new throw when there is one. The throw
+ * Fires the current item, and the queued one slides forward. Returns a
+ * new throw when there is one. The throw
  * picks the nearest kart ahead it can see; the leader's ice goes back
  * at the kart behind instead, and the leader's orb flies on down the
  * road for anyone in its way.
  */
 export function fireItem(kart: Kart, karts: readonly Kart[], track: Track, nextId: number, time: number, emit: Emit): Projectile | null {
-  const item = kart.item;
-  if (!item || time < kart.itemReadyAt || kart.timers.stun > 0 || kart.race.finished) return null;
-  kart.item = null;
+  if (kart.timers.stun > 0 || kart.race.finished) return null;
+  const item = takeCurrent(kart, time);
+  if (!item) return null;
   emit({ type: "use", kart: kart.id, item });
   switch (item) {
     case "nitro":

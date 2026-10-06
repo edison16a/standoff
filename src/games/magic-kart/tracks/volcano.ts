@@ -29,7 +29,11 @@ export const VOLCANO: TrackDef = {
     { at: 0.2, offset: 0 },
   ],
   cubeRows: [0.12, 0.33, 0.58, 0.84],
-  skyRows: [{ at: 0.475, height: 5.4 }],
+  doubles: [
+    { row: 1, place: 3 },
+    { row: 3, place: 0 },
+  ],
+  skyRows: [{ at: 0.475, height: 5.4, double: 0 }],
   obstacles: [
     { kind: "boulder", at: 0.25, offset: 0, radius: 1.7, sweep: { amplitude: 5, period: 4 } },
     { kind: "pillar", at: 0.63, offset: 4, radius: 1.6 },

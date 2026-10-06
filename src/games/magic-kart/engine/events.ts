@@ -8,7 +8,8 @@ import type { ItemKind } from "./items";
 export type RaceEvent =
   | { type: "countdown"; count: number }
   | { type: "go" }
-  | { type: "pickup"; kart: number; item: ItemKind }
+  /** A box broke: what it gave, in the order they were stowed, and which box it was. */
+  | { type: "pickup"; kart: number; items: ItemKind[]; cube: number }
   | { type: "use"; kart: number; item: ItemKind }
   | { type: "hit"; kart: number; by: "orb" | "ice" | "obstacle"; from: number | null }
   | { type: "blocked"; kart: number }

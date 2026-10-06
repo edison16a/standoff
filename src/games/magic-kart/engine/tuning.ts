@@ -115,6 +115,10 @@ export const EFFECTS = {
   afterSpin: 1,
   /** Seconds the item roulette spins before the item can be used. */
   roulette: 1.3,
+  /** The second item from a double box stops its roulette this much later, so each reveal is seen. */
+  rouletteStagger: 0.35,
+  /** Seconds the queued item takes to slide forward once the one in front is used. */
+  queueSlide: 0.4,
 };
 
 export const RACE = {
