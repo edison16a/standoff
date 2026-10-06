@@ -87,7 +87,7 @@ Everything is synthesised through the audio engine, with no crowd: the brass and
 
 **Admin shortcuts** (three quick taps on the settings gear), for the team with the ball: Touchdown, Field goal, Two point try and Win the game, which goes straight to the trophy presentation. They go through the real rules.
 
-**Browser tests** can set `window.__footballTest` before the page loads (development only): `lowGpu`, `quarterSeconds`, `target` and `catchUp`. The host session is on `window.__football` and a phone's on `window.__footballPhone`.
+**Browser tests** can set `window.__footballTest` before the page loads (development only): `lowGpu`, `fullPicture` (the full broadcast picture held at its top rung, to check the look in software drawing), `quarterSeconds`, `target` and `catchUp`. The host session is on `window.__football` and a phone's on `window.__footballPhone`.
 
 **Phone pages** fit one iPhone 16 screen: `node tools/phone-fit.mjs --games football-3v3` walks every layout.
 

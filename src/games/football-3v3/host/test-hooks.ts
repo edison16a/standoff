@@ -6,6 +6,8 @@
 export interface TestHooks {
   /** A lighter picture: no shadows, no crowd, lower resolution. */
   lowGpu?: boolean;
+  /** The full broadcast picture at its top rung, held there, to check the look in software drawing. */
+  fullPicture?: boolean;
   /** Shorter quarters, in seconds. */
   quarterSeconds?: number;
   /** A lower score to win. */

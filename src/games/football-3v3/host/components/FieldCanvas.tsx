@@ -17,7 +17,8 @@ export default function FieldCanvas() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const renderer = new MatchRenderer(canvas, { quality: testHooks().lowGpu ? "low" : "high" });
+    const hooks = testHooks();
+    const renderer = new MatchRenderer(canvas, { quality: hooks.lowGpu ? "low" : hooks.fullPicture ? "film" : "high" });
     const fit = () => renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
     fit();
     const observer = new ResizeObserver(fit);
