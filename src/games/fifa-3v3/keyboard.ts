@@ -12,6 +12,8 @@ const KEYS: Record<KeyButton, readonly string[]> = {
 
 /** The phone caps a charge at ten seconds, and so does the host's schema. */
 const MAX_HELD_MS = 10000;
+/** An unchanged pad still goes out this often, as the gamepad kit's phone does, so the host never goes stale. */
+const KEEPALIVE_MS = 250;
 
 /**
  * Soccer 3v3 on the keyboard: the keys stand in for the phone's thumb
@@ -26,6 +28,9 @@ export class FifaKeys implements KeyboardPlayer {
   private readonly held = new Map<KeyButton, { pad: PadName; at: number }>();
   /** The pad layout last seen, so a change lets go of everything as the phone does. */
   private layout = "off";
+  /** The last pad streamed and when, so an unchanged one waits for the keepalive as on the phone. */
+  private lastPad = "";
+  private lastPadAt = -Infinity;
 
   constructor(
     private readonly ctx: KeyboardContext,
@@ -47,9 +52,19 @@ export class FifaKeys implements KeyboardPlayer {
     }
     // A button the phone turns off under a held thumb lets go by itself.
     for (const [key, { pad }] of this.held) if (padButtonFor(key, state) !== pad) this.letKeyGo(key);
-    if (!onPad(state)) return;
+    if (!onPad(state)) {
+      this.lastPad = "";
+      return;
+    }
     const { x, y } = this.stick.vector();
-    this.ctx.sendLossy({ kind: "pad", x: round(x), y: round(y), held: this.pads() });
+    const pad = { kind: "pad", x: round(x), y: round(y), held: this.pads() };
+    const key = JSON.stringify(pad);
+    const now = this.now();
+    // Every stream message costs the relay a command, so an idle pad only keeps alive.
+    if (key === this.lastPad && now - this.lastPadAt < KEEPALIVE_MS) return;
+    this.lastPad = key;
+    this.lastPadAt = now;
+    this.ctx.sendLossy(pad);
   }
 
   /** Focus lost: every key up, a held shot let go as a thumb lifting off would. */

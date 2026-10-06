@@ -57,6 +57,20 @@ describe("Soccer keyboard", () => {
     expect(t.lossy.at(-1)).toEqual({ kind: "pad", x: 1, y: 0, held: [] });
   });
 
+  it("sends an unchanged pad only as a keepalive, as the phone does", () => {
+    const t = setup();
+    t.keys.key("KeyD", true);
+    t.keys.tick();
+    t.keys.tick();
+    expect(t.lossy).toHaveLength(1);
+    t.wait(250);
+    t.keys.tick();
+    expect(t.lossy).toHaveLength(2);
+    t.keys.key("KeyW", true);
+    t.keys.tick();
+    expect(t.lossy).toHaveLength(3);
+  });
+
   it("taps Space to pass and holds it to shoot, telling the host how long", () => {
     const t = setup();
     t.keys.tick();
