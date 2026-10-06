@@ -23,12 +23,10 @@ export const keyboard: KeyboardBinding = {
     {
       title: "Punch",
       rows: [
-        { action: "Jab", keys: ["J"] },
-        { action: "Cross", keys: ["K"] },
-        { action: "Left hook", keys: ["U"] },
-        { action: "Right hook", keys: ["I"] },
-        { action: "Left uppercut", keys: ["N"] },
-        { action: "Right uppercut", keys: ["M"] },
+        // Left hand then right, one row per kind of punch, so the card stays short.
+        { action: "Jab, cross", keys: [["J", "K"]] },
+        { action: "Hooks", keys: [["U", "I"]] },
+        { action: "Uppercuts", keys: [["N", "M"]] },
         { action: "To the body", keys: [["S", "punch"]] },
       ],
     },
