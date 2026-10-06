@@ -1,14 +1,13 @@
 import * as THREE from "three";
 import { PITCH } from "../../engine/tuning";
 import type { MatchView } from "../../engine/view";
+import { BroadcastCamera } from "./broadcast";
 import { ceremonyCamera } from "./ceremony-cam";
 import { replayCam } from "./replay-cam";
 import { stoppage } from "./stoppage";
 
 /** Which camera is cutting to: the broadcast view, a close up, a replay angle, or the lobby's slow orbit. */
 export type Shot = "tv" | "closeup" | "replay-kicker" | "replay-keeper" | "winners" | "ceremony" | "lobby" | "fixed" | "foul" | "card" | "setpiece" | "setpiece-follow";
-
-const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 
 /**
  * Directs the one camera like a match broadcast: a high camera on the
@@ -25,6 +24,7 @@ export class CameraDirector {
   private readonly wantLook = new THREE.Vector3();
   private shot: Shot | null = null;
   private readonly fixed = { pos: new THREE.Vector3(0, 10, 20), look: new THREE.Vector3(), fov: 30 };
+  private readonly broadcast = new BroadcastCamera();
   private shake = 0;
   private aspect = 16 / 9;
 
@@ -59,13 +59,12 @@ export class CameraDirector {
     const b = view.ball;
     switch (shot) {
       case "tv": {
-        // Narrow screens need the camera further back to keep the play in frame.
-        const back = clamp(1.7 / this.aspect, 0.85, 1.7);
-        // Panning stops short of each end, so the goal and the box stay in the picture.
-        const HL = PITCH.halfLength;
-        this.wantPos.set(clamp(b.x * 0.7, -HL * 0.62, HL * 0.62), 10 * back, PITCH.halfWidth + 11.5 * back);
-        this.wantLook.set(clamp(b.x * 0.92, -HL * 0.78, HL * 0.78), 0, clamp(b.z * 0.35, -4.5, 4.5) - 0.4);
-        fov = 31;
+        // Smoothed in its own springs (broadcast.ts), so the director follows it exactly.
+        const f = this.broadcast.frame({ ball: b, players: view.athletes }, this.aspect, dt, cut);
+        this.wantPos.set(f.pos.x, f.pos.y, f.pos.z);
+        this.wantLook.set(f.look.x, f.look.y, f.look.z);
+        fov = f.fov;
+        rate = 1000;
         break;
       }
       case "closeup": {
@@ -124,10 +123,11 @@ export class CameraDirector {
         break;
       }
       case "lobby": {
+        // A slow orbit high over the stands and inside the towers, like the blimp shot before kick off.
         const a = time * 0.045 + 0.4;
-        this.wantPos.set(Math.sin(a) * PITCH.halfLength * 1.9, 15, Math.cos(a) * PITCH.halfWidth * 2.5);
+        this.wantPos.set(Math.sin(a) * PITCH.halfLength * 1.25, 21, Math.cos(a) * PITCH.halfWidth * 1.75);
         this.wantLook.set(0, 0, 0);
-        fov = 40;
+        fov = 38;
         rate = 1.5;
         break;
       }
