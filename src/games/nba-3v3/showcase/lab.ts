@@ -9,9 +9,11 @@ import { dir2, type V2 } from "../engine/vec";
 import { DUNK_STYLES, type DunkStyle } from "../roster";
 import { DEFENCE_SCENES, DEFENCE_SEEDS, DEFENCE_SPOTS, setupDefence, steerDefence, type DefenceScene } from "./lab-defence";
 import { FINISH_SCENES, FINISH_SPOTS, steerFinish, type FinishScene } from "./lab-finishes";
+import { SHOT_SCENES, SHOT_SPOTS, isShotScene, setupShot, steerShot, type ShotScene } from "./lab-shots";
 
-export const LAB_SCENES = ["moves", "run", "dunk", "block", "free", ...FINISH_SCENES, ...DEFENCE_SCENES] as const;
-export type LabScene = (typeof LAB_SCENES)[number];
+const PLAYS = ["moves", "run", "dunk", "block", "free"] as const;
+export type LabScene = (typeof PLAYS)[number] | FinishScene | DefenceScene | ShotScene;
+export const LAB_SCENES: readonly LabScene[] = [...PLAYS, ...FINISH_SCENES, ...DEFENCE_SCENES, ...SHOT_SCENES];
 
 const SHOOTER = 0;
 const DUNKER = 1;
@@ -29,7 +31,8 @@ const MOVE_CUES: readonly Cue[] = [[0.6, "back"], [1.7, "left"], [2.6, "right"],
  * `moves` runs every dribble move into a defender, `run` sprints and
  * cuts with the ball then passes, `dunk` throws `&style=` at the rim,
  * `block` jumps at a jumper, and `free` calls a foul for free throws.
- * The finishes and the celebrations are in `lab-finishes.ts`, the defence in `lab-defence.ts`.
+ * The finishes and the celebrations are in `lab-finishes.ts`, the defence in `lab-defence.ts`,
+ * and one scene per shot ending (`shot-swish`, `shot-rollIn` and the rest) in `lab-shots.ts`.
  */
 export class LabFilm {
   readonly match: Match;
@@ -61,6 +64,7 @@ export class LabFilm {
       free: [[0, 7], [-4, 6], [4, 6], [0.4, 6.4], [-5, 9], [5, 9]],
       ...FINISH_SPOTS,
       ...DEFENCE_SPOTS,
+      ...SHOT_SPOTS,
     };
     spots[scene].forEach(([x, z], id) => Object.assign(m.athletes[id]!, { x, z, yaw: Math.PI }));
     // In the gesture scene the Shooter celebrates with his hands free.
@@ -73,6 +77,7 @@ export class LabFilm {
     // The defence stands still where the scene is about the finish, so nobody walls off the drive.
     if (scene === "dunk" || scene === "contact") for (const a of m.athletes) if (a.team === 1) a.auto = false;
     if (defence) setupDefence(scene, m);
+    if (isShotScene(scene)) setupShot(m);
   }
 
   steer(t: number): void {
@@ -88,6 +93,7 @@ export class LabFilm {
     else if (this.scene === "block") this.block(t);
     else if ((FINISH_SCENES as readonly string[]).includes(this.scene)) steerFinish(this.scene as FinishScene, m, t, (key) => this.once(key));
     else if (isDefence(this.scene)) steerDefence(this.scene, m, t, (key) => this.once(key));
+    else if (isShotScene(this.scene)) steerShot(this.scene, m, t, (key) => this.once(key));
   }
 
   private moves(t: number): void {
