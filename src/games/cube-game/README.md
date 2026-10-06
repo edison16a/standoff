@@ -11,6 +11,8 @@ A rhythm platformer in the spirit of Geometry Dash, played with your body in fro
 
 **Play with the keyboard** skips the camera: Space (or W) jumps for player 1, Enter (or the up arrow) for player 2. Space also works alongside the camera, for testing and for anyone who cannot jump.
 
+With the admin panel's **Keyboard player** on (three quick taps on the settings gear), its controls card lists these keys (`keyboard.ts`). The game reads them itself, so the card's binding sends nothing.
+
 ## 1v1
 
 Two players race. The screen splits top and bottom, player 1 on top, and each pane has its own cube and its own camera following it. Player 1 stands on the left of the camera picture and player 2 on the right, and the camera kit tracks each of them on their own side, so each jumps only their own cube. Each sees the other as a ghost, and a place tag in each pane shows who is ahead once someone is. Each pane's Best is that player's own best in the race, since the saved best for the level belongs to nobody in particular.

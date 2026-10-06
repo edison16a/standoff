@@ -18,6 +18,21 @@ Status: ready. A sword duel for two players, or one against the computer, in an 
 
 Phones without motion sensors get a drag pad: drag a finger to point the sword, lift it to rest in guard.
 
+**Keyboard play.** For testing on one computer, turn on the admin panel's **Keyboard player** (three quick taps on the settings gear), then pick a fighter and tap Ready (or Play the computer) on its phone panel with the mouse (`keyboard.ts`).
+
+| Key | Does |
+| --- | --- |
+| Mouse | Points the sword over your own half of the screen, as a finger on the drag pad. A quick flick is a real cut |
+| Left click | Slash from where the blade is, straight through the middle to the other side |
+| Q or E | Cut from high left or high right down across the body |
+| F | Overhead cut |
+| Space | Thrust: straight at the opponent with the arm out, then back |
+| Shift | Parry, held: the blade upright in front of the face, leaning to the mouse's side |
+| W or Up | Step in |
+| S or Down | Step back |
+
+The cuts are paths for the blade to follow, so they land only by passing through fast, like any swing.
+
 A phone that drops pauses the fight until it is back. One that comes back in a fresh page has lost its calibration, so it aims at the targets again and then drops straight back into the fight.
 
 ## The computer

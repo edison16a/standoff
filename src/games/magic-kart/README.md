@@ -30,6 +30,18 @@ Turning the phone never breaks the controller. A hard turn of the wheel can swin
 * **Gliding:** steer with the phone just as on the road. The kart banks into the turn and the wing carries it on a slow, steady descent with a little lift, gentler to turn than on tarmac. Line up for the bend on the far side, or steer through the pair of item boxes floating over the gap, one of them a double. Items still work in the air, and a hit spins you under the wing without closing it. The glider folds away the moment you land. Come up short, or glide off an open edge, and you fall and are put back.
 * Moving obstacles (crabs, asteroids, drones, rolling boulders) spin you out. Static ones just bump you.
 
+### Keyboard play
+
+For testing on one computer, turn on the admin panel's **Keyboard player** (three quick taps on the settings gear). Pick a driver and tap Ready on its phone panel with the mouse, then drive with the keys (`keyboard.ts`), as a phone steering with its arrow buttons.
+
+| Key | Does |
+| --- | --- |
+| A D or Left Right | Steer, full lock |
+| W or Up | Drive |
+| S or Down | Brake, or reverse from a stop |
+| Shift | Brake under the other hand: hold it with Drive into a bend to drift |
+| Space, E or F | Use the power up |
+
 ## Power ups
 
 The item boxes are glass cubes with a glowing star inside, spinning and bobbing over the road in rows. Most are single boxes. A **double box** is two gold cubes stacked, and it gives two power ups. Single boxes come in every colour but gold, so a double stands out down the road. Every map has two double boxes on the ground, out at the edge of a row, and one over the glide jump. Each power up is rolled on its own, with the same odds as a single box. The leader tends to get defence, the back of the pack speed.

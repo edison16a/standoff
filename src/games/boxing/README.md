@@ -57,6 +57,27 @@ Each player's view sits behind and out past their boxer's right shoulder, so the
 
 With two players the screen splits down the middle during the rounds, player 1 on the left. A small map at the top right shows which half is whose, each name in its player's colour. The walk out, the breaks and the end are one wide broadcast picture, with one set of health bars across it.
 
+## Keyboard mode
+
+For testing without a camera, **No camera? Play with the keyboard** under the menu's choices skips the camera and the calibration and goes straight to the builds, one player against the computer (`host/key-input.ts` and `host/key-controls.ts`). The keys go by where they sit on the keyboard, so every layout plays the same, and they make the same defence and punches the camera reads off a body.
+
+| Key | Does |
+| --- | --- |
+| A and D | Browse the builds. Space locks one in |
+| J | Jab |
+| K | Cross |
+| U or I | Left or right hook |
+| S or Down, held while punching | Body shot, as dipping the knees does |
+| A D or Left Right, held | Slip the head left or right |
+| S or Down, held | Duck |
+| Space, held | Block high: both gloves in front of the face |
+| Shift, held | Block the body: elbows down over the ribs |
+| Q or E, held | Pin a glove to that ear against a hook |
+| F, held | Reach both gloves out to touch before a round |
+| Space after a knockdown | Let go, then hold it to raise both gloves and get up |
+
+The boxers have no uppercut, so neither do the keys. With the admin panel's **Keyboard player** on, its controls card lists these keys too (`keyboard.ts`).
+
 ## What was built
 
 * `engine/` pure fight logic with tests:

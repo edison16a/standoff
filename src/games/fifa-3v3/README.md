@@ -42,6 +42,21 @@ On defence (the other side has the ball) the big button becomes **Guard**, with 
 
 The phone buzzes for kicks, passes, tackles, fouls and goals. Its middle shows only your team, your role and what is going on. The score and the clock stay on the big screen, so the buttons on the right take that room: they size themselves to the space the phone has, with Shoot/Pass (or Guard) the biggest. The buttons rest during kick offs and goals, when the host is not reading them. During a replay the phone shows one big Skip button and how many players want to skip.
 
+### Keyboard play
+
+For testing on one computer, turn on the admin panel's **Keyboard player** (three quick taps on the settings gear). Pick a build and tap Ready on its phone panel with the mouse, then play with the keys (`keyboard.ts`). They send exactly what the phone's stick and buttons send.
+
+| Key | Does |
+| --- | --- |
+| W A S D or the arrows | Run, as the stick |
+| Space or J | Shoot/Pass: tap to pass, hold to shoot. Defending, it holds Guard. At a set piece it sets each stage and kicks. In a replay it votes to skip |
+| E or K | Slide, or Skill with the ball |
+| F or L | Steal |
+| Shift | Guard, held, while defending |
+| Q | Jump, while defending |
+
+A key only works where the phone shows that button, and a held key lets go when the buttons change, as a thumb would.
+
 ## Shots, blocks and the keeper
 
 The goal is 8.1 metres wide and 2.9 high, about 1.75 times the face of the old 5.8 by 2.3 metre one, with a deeper net. The keeper is the same size and just as quick, so his full dive and stretch no longer cover it all.
