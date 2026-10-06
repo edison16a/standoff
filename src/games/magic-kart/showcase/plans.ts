@@ -8,11 +8,11 @@ import type { Plan } from "./shots";
  */
 const LAVA = { map: "volcano", seed: 7 } as const;
 
-/** Neo City, seed 26: three karts power slide through the first bend together and fire their turbos, then an ice throw freezes Pip. */
-const NEON = { map: "city", seed: 26 } as const;
+/** Neo City, seed 74: Pip power slides through a neon bend on a turbo, then an ice throw freezes him solid. */
+const NEON = { map: "city", seed: 74 } as const;
 
-/** Magma Peak, seed 30: Blaze leads out of a long power slide on a turbo, with Nova and Pip right behind him. */
-const COVER = { map: "volcano", seed: 30 } as const;
+/** Magma Peak, seed 53: Blaze leads out of a power slide on a turbo, with Pip, Nova and Mochi right behind him. */
+const COVER = { map: "volcano", seed: 53 } as const;
 
 /** Star Ring, seed 6: all four gliders open within a tenth of a second, in front of the ringed planet. */
 const STARS = { map: "space", seed: 6 } as const;
@@ -44,7 +44,7 @@ export const PLANS: Record<ShowcaseView, Plan> = {
       // Half speed: Pip's orb knocks Mochi about under the wing.
       { ...LAVA, from: 21.25, length: 0.9, rate: 0.5, rig: { kind: "hero", kart: 3, angle: 0.9, dist: 5, height: 0.6, aim: 0.8, fov: 50, road: true } },
       // Pip sliding through a neon bend into a turbo, then frozen solid by an ice throw.
-      { ...NEON, from: 7.1, length: 1.9, rig: { kind: "hero", kart: 1, angle: 2.5, dist: 4.5, height: 0.4, aim: 0.6, fov: 52, road: true } },
+      { ...NEON, from: 31.5, length: 1.9, rig: { kind: "hero", kart: 1, angle: 2.5, dist: 4.5, height: 0.4, aim: 0.6, fov: 52, road: true } },
       // Behind the pack as the gliders open among the stars.
       { ...STARS, from: 18.75, length: 1, rig: { kind: "chase", back: 8, side: 2, height: 1.5, fov: 60 } },
       // Under the four wings, circling slowly past the ringed planet.
@@ -53,6 +53,6 @@ export const PLANS: Record<ShowcaseView, Plan> = {
   },
   // All four gliders among the stars, seen from below, the ringed planet behind.
   poster: { shots: [{ ...STARS, from: 19.4, length: 3, rig: { kind: "hero", kart: 3, angle: -2.2, dist: 8, height: -1.2, aim: 1.2, fov: 58, road: true } }], freeze: 0.5 },
-  // The cover: Blaze bursting at the viewer on a turbo, flames out, Nova and Pip on his tail, the volcano behind.
-  icon: { shots: [{ ...COVER, from: 15.3, length: 3, rig: { kind: "hero", kart: 0, angle: 0.5, dist: 4, height: 0.9, aim: 0.3, fov: 58, road: true } }], freeze: 1 },
+  // The cover: Blaze bursting at the viewer on a turbo, the rest of the pack on his tail, the volcano behind.
+  icon: { shots: [{ ...COVER, from: 11.95, length: 3, rig: { kind: "hero", kart: 0, angle: 0.5, dist: 4, height: 0.9, aim: 0.3, fov: 58, road: true } }], freeze: 1 },
 };
