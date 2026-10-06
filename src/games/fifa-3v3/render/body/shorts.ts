@@ -48,7 +48,9 @@ export function addShorts(kit: PartList, c: BodyCtx): void {
   kit.weighted(seat, (p): Influence => {
     // Low down, and over the front of each thigh, the seat moves with the leg under it.
     const low = Math.min(0.6, 0.35 * ramp(0.84 * s, 0.76 * s, p.y) + 0.2 * ramp(0.92 * s, 0.8 * s, p.y) * ramp(0.03 * s, 0.08 * s, p.z));
-    return [["hips", 1 - low], [p.x > 0 ? "hipL" : "hipR", low]];
+    // Shared between the legs across the middle, so one leg lifting does not tear the crotch apart.
+    const left = Math.min(1, Math.max(0, 0.5 + p.x / (0.14 * s)));
+    return [["hips", 1 - low], ["hipL", low * left], ["hipR", low * (1 - left)]];
   });
   const legs = { v0: ATLAS.shorts.v0, v1: ATLAS.shorts.v1 - SEAT_SHARE * (ATLAS.shorts.v1 - ATLAS.shorts.v0) };
   for (const side of [1, -1] as const) {

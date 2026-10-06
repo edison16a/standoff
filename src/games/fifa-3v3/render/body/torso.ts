@@ -55,7 +55,8 @@ function shirtWeights(c: BodyCtx): (p: THREE.Vector3) => Influence {
   const shY = c.rest.shoulderL.y;
   return (p) => {
     const ax = Math.abs(p.x);
-    const shoulder = ramp(shoulderX - 0.075 * s, shoulderX + 0.02 * s, ax) * ramp(shY - 0.15 * s, shY - 0.05 * s, p.y);
+    // Spread over the whole shoulder and down to the armpit, so a raised arm stretches the cloth evenly rather than in one fold.
+    const shoulder = ramp(shoulderX - 0.1 * s, shoulderX + 0.03 * s, ax) * ramp(shY - 0.22 * s, shY - 0.03 * s, p.y);
     const low = ramp(1.07 * s, 0.93 * s, p.y);
     // The hem drapes over the front of the thighs, so a lifted knee lifts it. Behind, it hangs from the hips: a swinging leg would drag it into the body.
     // Shared between both thighs across the middle, so the hem rises as one piece of cloth rather than in notches.

@@ -62,7 +62,7 @@ function ease(keys: readonly Key[], f: Field, i: number, u: number): number {
 }
 
 /** The eased section at a point `u` of the way through key gap `i`. */
-export function sectionAt(keys: readonly Key[], i: number, u: number): Key {
+function sectionAt(keys: readonly Key[], i: number, u: number): Key {
   const out = { y: keys[i]!.y + (keys[i + 1]!.y - keys[i]!.y) * u } as Key;
   for (const f of FIELDS) out[f] = ease(keys, f, i, u);
   return out;
@@ -112,9 +112,4 @@ export function tube(keys: readonly Key[], o: TubeOptions): THREE.BufferGeometry
     caps.end = d.pole;
   }
   return loft(rings, caps);
-}
-
-/** Scales every width and depth of a set of keys, for builds and sizes. */
-export function scaleKeys(keys: readonly Key[], sx: number, sz = sx): Key[] {
-  return keys.map((k) => ({ ...k, l: k.l * sx, r: k.r * sx, f: k.f * sz, b: k.b * sz, x: (k.x ?? 0) * sx, z: (k.z ?? 0) * sz }));
 }

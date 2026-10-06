@@ -14,7 +14,7 @@ const smooth = (t: number) => {
 const bell = (x: number, c: number, w: number) => Math.exp(-(((x - c) / w) ** 2));
 
 /** The hairline's height at azimuth `phi` (0 at the front, ±π at the back). `low` lowers it at the front, for a fringe. */
-export function lineAt(phi: number, low = 0): number {
+function lineAt(phi: number, low = 0): number {
   const a = Math.abs(phi);
   const front = 0.074 - low;
   const side = 0.034;
