@@ -4,6 +4,7 @@ import type { GameModule } from "@/platform/games/game-api";
 import { SessionContext } from "./host/components/session-context";
 import { Stage } from "./host/components/Stage";
 import { NbaHost } from "./host/nba-host";
+import { keyboard } from "./keyboard";
 import { NbaPhone } from "./phone/nba-phone";
 import { PhoneScreen } from "./phone/components/PhoneScreen";
 import { ControllerContext } from "./phone/components/session-context";
@@ -56,4 +57,5 @@ export const game: GameModule = {
   },
 
   Showcase,
+  keyboard,
 };
