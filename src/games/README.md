@@ -60,6 +60,10 @@ Fruit Slicer, Zombie Survival and Shooting Gallery all aim the same way. Where t
 
 All of this is shared in `src/games/kit/aim` (see `kit/README.md`).
 
+## Keyboard play
+
+The admin panel's Keyboard player seats a test player on the host computer, shows the game's phone screen in a small panel for the mouse, and plays with keys and the mouse through the game's `keyboard` binding. To add one, see `src/platform/keyboard/README.md`.
+
 ## Phone pages fit one screen
 
 Every phone page fits the screen with no scrolling, upright and sideways, with Safari's address bar and toolbar showing or not. The platform's frame is exactly the visible height (`100dvh`) and pads for the notch. Inside it:

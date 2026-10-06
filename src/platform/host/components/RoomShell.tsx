@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { findGame } from "@/games/catalog";
 import type { HostGame } from "@/platform/games/game-api";
 import { loadWithRetry } from "@/platform/games/load-with-retry";
+import { KeyboardDock } from "@/platform/keyboard/components/KeyboardDock";
 import { useHostStore } from "../host-store";
 import { useHostRoom } from "./host-context";
 import { JoinPanel } from "./JoinPanel";
@@ -87,6 +88,7 @@ export function RoomShell() {
       {game && <JoinPanel title={info?.title ?? "Standoff"} Extra={game.JoinExtra} placement={game.join} />}
       <Notice status={status} fixing={health === "fixing"} />
       <RoomAlert />
+      <KeyboardDock />
     </div>
   );
 }

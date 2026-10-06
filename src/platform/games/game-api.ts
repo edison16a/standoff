@@ -1,6 +1,7 @@
 import type { StaticImageData } from "next/image";
 import type { ComponentType } from "react";
 import type { AudioEngine } from "@/platform/audio/audio-engine";
+import type { KeyboardBinding } from "@/platform/keyboard/types";
 import type { Payload, Seat } from "@/platform/protocol";
 
 /**
@@ -112,6 +113,11 @@ export interface GameModule {
    * the capture tool can step time frame by frame.
    */
   Showcase?: ComponentType<{ view: ShowcaseView }>;
+  /**
+   * Keys and mouse for the admin panel's Keyboard player, a test seat on
+   * the host computer. See src/platform/keyboard/README.md.
+   */
+  keyboard?: KeyboardBinding;
 }
 
 /** Captured art for the home screen: the tile, a still, and a looping clip. */

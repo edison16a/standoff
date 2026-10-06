@@ -1,0 +1,203 @@
+/*
+  The keyboard player on the host page: the floating phone panel and the
+  controls card. Both sit over the game, under the settings panel.
+*/
+
+.kb-panel {
+  position: fixed;
+  z-index: 90;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  color: var(--text);
+}
+
+.kb-panel__bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 40px;
+  padding: 0 6px 0 12px;
+  border-bottom: 1px solid var(--border);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.kb-panel__bar:active {
+  cursor: grabbing;
+}
+
+.kb-panel__title {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kb-panel__dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.kb-panel__dot[data-on="true"] {
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
+}
+
+.kb-panel__btn {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.kb-panel__btn:hover {
+  border-color: var(--border);
+  background: var(--bg-muted);
+  color: var(--text);
+}
+
+.kb-panel__btn[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.kb-panel__btn--icon {
+  padding: 0;
+}
+
+.kb-panel__screen {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-workspace);
+}
+
+.kb-panel__screen[hidden] {
+  display: none;
+}
+
+/* Laid out at a phone's real size, then scaled, so the game's phone CSS sees a phone. */
+.kb-panel__frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 0;
+  transform-origin: 0 0;
+}
+
+.kb-card {
+  position: fixed;
+  top: 76px;
+  left: 16px;
+  z-index: 89;
+  display: grid;
+  gap: 10px;
+  width: min(300px, calc(100vw - 32px));
+  max-height: calc(100vh - 140px);
+  overflow: auto;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-lg);
+  background: rgba(14, 12, 26, 0.84);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  color: #f3f1ff;
+  font-size: 13px;
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+
+.kb-card__hint,
+.kb-card__foot,
+.kb-card__empty {
+  margin: 0;
+  color: #b8b2d8;
+}
+
+.kb-card__hint {
+  color: #d8b4fe;
+  font-weight: 600;
+}
+
+.kb-card__group {
+  display: grid;
+  gap: 6px;
+}
+
+.kb-card__title {
+  margin: 0;
+  color: #a29cc4;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.kb-card__rows {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.kb-card__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.kb-card__action {
+  font-weight: 500;
+}
+
+.kb-card__keys {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.kb-card__caps {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.kb-card__cap {
+  min-width: 22px;
+  padding: 1px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font: 600 11px/1.6 var(--font-ui);
+  text-align: center;
+}
+
+.kb-card__or {
+  color: #8c86ad;
+  font-size: 11px;
+}
