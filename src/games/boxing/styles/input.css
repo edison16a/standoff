@@ -1,0 +1,62 @@
+/*
+  The menu's camera or keyboard choice, beside the difficulty row and in
+  the same pill, and the two player card greyed out in keyboard mode.
+*/
+
+.bx-menu__options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 28px;
+}
+
+.bx-choice:disabled,
+.bx-choice:disabled:hover {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.bx-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bx-input__label {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.bx-input__segments {
+  display: flex;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  background: rgba(10, 12, 30, 0.8);
+}
+
+.bx-input__segments button {
+  min-width: 56px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.bx-input__segments button[aria-pressed="true"] {
+  background: var(--bx-orange);
+  color: #1a0d02;
+}
+
+.bx-input__segments button:focus-visible {
+  outline: 3px solid var(--bx-gold);
+}
