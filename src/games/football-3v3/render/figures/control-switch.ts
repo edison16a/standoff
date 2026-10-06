@@ -35,14 +35,19 @@ export class ControlSwitch {
   private readonly flights: Flight[] = [];
   /** Players whose ring has just been reached, and seconds left of their pulse. */
   private readonly arrived = new Map<number, number>();
+  /** The last view's match time, to tell a cut (into or out of a replay) from play going on. */
+  private lastTime: number | null = null;
 
   update(view: MatchView, dt: number, time: number): void {
     const seen = new Map<number, AthleteView>();
     for (const a of view.athletes) if (a.seat !== null) seen.set(a.seat, a);
+    // A new play, the final whistle or a cut puts everyone back without a flight: only a switch in play flies.
+    const cut = this.lastTime === null || Math.abs(view.time - this.lastTime) > 0.5;
+    const flies = !cut && view.phase !== "choose" && view.phase !== "convert" && view.phase !== "over";
+    this.lastTime = view.time;
     for (const [seat, a] of seen) {
       const before = this.last.get(seat);
-      // A new play puts everyone back without a flight: only a mid play switch flies.
-      if (before !== undefined && before !== a.id && view.phase !== "choose" && view.phase !== "convert") this.launch(view, seat, before, a);
+      if (flies && before !== undefined && before !== a.id) this.launch(view, seat, before, a);
       this.last.set(seat, a.id);
     }
     for (const seat of [...this.last.keys()]) if (!seen.has(seat)) this.last.delete(seat);
