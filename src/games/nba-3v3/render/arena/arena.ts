@@ -4,6 +4,7 @@ import { ledTexture, suitesTexture } from "../textures";
 import { Crowd } from "./crowd";
 import { FLOOR, floorTexture } from "./floor-texture";
 import { Hoop } from "./hoop";
+import { ArenaLights } from "./lighting";
 
 /**
  * The arena around the court: the glossy floor, the stands packed with
@@ -15,9 +16,10 @@ export class Arena {
   readonly group = new THREE.Group();
   readonly hoop = new Hoop();
   readonly crowd: Crowd;
-  readonly key: THREE.DirectionalLight;
-  readonly fill: THREE.HemisphereLight;
-  readonly rim: THREE.DirectionalLight;
+  readonly lights = new ArenaLights();
+  readonly key = this.lights.key;
+  readonly fill = this.lights.fill;
+  readonly rim = this.lights.rim;
   /** The scrolling LED ribbons, which the showcase's trailer hides because they carry words. */
   readonly ribbons = new THREE.Group();
   private readonly leds: THREE.Texture[] = [];
@@ -50,28 +52,7 @@ export class Arena {
     this.bowl();
     this.group.add(this.hoop.group);
 
-    this.fill = new THREE.HemisphereLight("#cfe0ff", "#3a2616", 0.9);
-    this.group.add(this.fill);
-    this.key = new THREE.DirectionalLight("#fff4e6", 2.6);
-    this.key.position.set(5, 22, 14);
-    this.key.target.position.set(0, 0, 4);
-    this.key.castShadow = true;
-    this.key.shadow.mapSize.set(2048, 2048);
-    const cam = this.key.shadow.camera;
-    cam.left = -11;
-    cam.right = 11;
-    cam.top = 12;
-    cam.bottom = -10;
-    cam.near = 5;
-    cam.far = 50;
-    this.key.shadow.bias = -0.0004;
-    this.key.shadow.normalBias = 0.02;
-    this.key.shadow.radius = 3;
-    this.group.add(this.key, this.key.target);
-    // A cool rim light from behind the basket separates the players from the floor.
-    this.rim = new THREE.DirectionalLight("#9cc3ff", 1.1);
-    this.rim.position.set(-6, 10, -12);
-    this.group.add(this.rim);
+    this.group.add(this.lights.group);
   }
 
   /** LED ribbons along the front of each stand, scrolling. */

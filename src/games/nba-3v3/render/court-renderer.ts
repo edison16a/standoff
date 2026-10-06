@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { MatchEvent } from "../engine/events";
 import type { Match } from "../engine/match";
 import type { Athlete } from "../engine/types";
 import { Arena } from "./arena/arena";
+import { arenaEnvironment } from "./arena/arena-environment";
 import { AthleteMaterials } from "./materials/athlete-materials";
 import type { Quality } from "./quality";
 import { AthleteView } from "./athlete-view";
@@ -58,11 +58,8 @@ export class CourtRenderer {
     const { reflections = true, athletes = "high" } = quality;
     this.athleteMats = new AthleteMaterials(athletes);
     this.picture = new Picture(canvas, quality);
-    const pmrem = new THREE.PMREMGenerator(this.picture.renderer);
-    this.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    pmrem.dispose();
+    this.environment = arenaEnvironment(this.picture.renderer);
     if (reflections) this.scene.environment = this.environment;
-    this.scene.environmentIntensity = 0.32;
     this.scene.background = new THREE.Color("#060812");
     this.scene.fog = new THREE.FogExp2("#060812", 0.014);
     this.effects = new Effects(this.arena, this.tv);
