@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { RIM } from "../engine/tuning";
 import { clamp, lerp } from "../engine/vec";
+import { BroadcastFraming, Spring3, zoomFor } from "./broadcast-framing";
 
 export interface Shot {
   /** Where the play is: the ball, or the player with it. */
@@ -13,6 +14,8 @@ export interface Shot {
   intro: number | null;
   /** The free throw shooter's spot while the free throws are on, for the view from behind him. */
   freeThrow: { x: number; z: number } | null;
+  /** How spread the players are round the play, in metres; the lens widens as it grows. */
+  spread: number;
 }
 
 const BROADCAST = { y: 6.4, z: 17.6, fov: 36 };
@@ -32,8 +35,11 @@ const INTRO_LOOK = new THREE.Vector3(0, 2.2, 1.6);
  */
 export class TvCamera {
   readonly camera = new THREE.PerspectiveCamera(BROADCAST.fov, 16 / 9, 0.1, 160);
-  private readonly pos = new THREE.Vector3(0, BROADCAST.y, BROADCAST.z);
-  private readonly look = new THREE.Vector3(0, 1.6, 4.5);
+  private readonly pos = new Spring3();
+  private readonly look = new Spring3();
+  private readonly framing = new BroadcastFraming();
+  /** The broadcast lens before the dunk, free throw and winners' changes, eased with the spread of play. */
+  private lens: number = BROADCAST.fov;
   private close = 0;
   /** 0 on the broadcast camera, 1 behind the free throw shooter. */
   private line = 0;
@@ -59,7 +65,13 @@ export class TvCamera {
 
   /** Jumps straight to the framing, for the first frame or after a cut. */
   snap(shot: Shot): void {
+    this.framing.reset();
+    this.lens = zoomFor(shot.spread, BROADCAST.fov);
+    // One pass to work out the framing, then the springs jump to it and a still pass places the camera.
     this.update(shot, 10, 0);
+    this.pos.snap(wantPos);
+    this.look.snap(wantLook);
+    this.update(shot, 0, 0);
   }
 
   update(shot: Shot, dt: number, time: number): void {
@@ -73,8 +85,10 @@ export class TvCamera {
     const k = (rate: number) => 1 - Math.exp(-rate * Math.min(dt, 0.25));
     // Narrow screens need to see the corners, so they pull back a little.
     const wide = clamp((16 / 9) / this.aspect, 1, 1.6);
-    const fx = clamp(shot.focus.x * 0.5, -3, 3);
-    const fz = clamp(shot.focus.z, 1.2, 10);
+    // The operator leads the play: aim where it is going, not where it is.
+    const led = this.framing.lead(shot.focus, Math.min(dt, 0.25));
+    const fx = clamp(led.x * 0.5, -3, 3);
+    const fz = clamp(led.z, 1.2, 10);
     const near = clamp((fz - 1.5) / 7.5, 0, 1);
     wantPos.set(fx * 0.75, BROADCAST.y * wide - (1 - near) * 0.6, BROADCAST.z * wide - (1 - near) * 1.2);
     wantLook.set(fx * 0.85, 1.9, lerp(3.4, 5.4, near));
@@ -108,17 +122,21 @@ export class TvCamera {
       wantLook.lerpVectors(INTRO_LOOK, scratch.copy(wantLook), e);
     }
     const rate = shot.winners ? 1.5 : shot.intro !== null ? 20 : 3;
-    this.pos.lerp(wantPos, k(rate));
-    this.look.lerp(wantLook, k(rate * 1.3));
-    this.camera.position.copy(this.pos);
+    // Springs, not lerps: the camera eases into a pan and out of it, as a fluid head on a tripod does.
+    const step = Math.min(dt, 0.25);
+    const pos = this.pos.step(wantPos, 2 / rate, step);
+    const look = this.look.step(wantLook, 2 / (rate * 1.3), step);
+    this.camera.position.set(pos.x, pos.y, pos.z);
     this.shakeLeft = Math.max(0, this.shakeLeft - dt);
     if (this.shakeLeft > 0) {
       const a = this.shakePower * (this.shakeLeft / 0.45) * 0.12;
       this.camera.position.x += Math.sin(time * 71) * a;
       this.camera.position.y += Math.cos(time * 57) * a;
     } else this.shakePower = 0;
-    this.camera.lookAt(this.look);
-    const fov = lerp(lerp(BROADCAST.fov, 44, this.close), 42, this.line) + (shot.winners ? 6 : 0);
+    this.camera.lookAt(look.x, look.y, look.z);
+    // The lens breathes slowly with the play, a few degrees tighter when the players bunch up.
+    this.lens += (zoomFor(shot.spread, BROADCAST.fov) - this.lens) * k(0.8);
+    const fov = lerp(lerp(this.lens, 44, this.close), 42, this.line) + (shot.winners ? 6 : 0);
     if (Math.abs(this.camera.fov - fov) > 0.01) {
       this.camera.fov += (fov - this.camera.fov) * k(4);
       this.camera.updateProjectionMatrix();

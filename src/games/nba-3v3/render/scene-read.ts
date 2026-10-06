@@ -2,6 +2,7 @@ import type { Match } from "../engine/match";
 import type { Athlete } from "../engine/types";
 import { dist2 } from "../engine/vec";
 import type { LaneStance } from "./anim/line";
+import { spreadOf } from "./broadcast-framing";
 import { freeThrowShot } from "./free-throw-camera";
 import type { Shot } from "./tv-camera";
 
@@ -34,5 +35,6 @@ export function broadcastShot(m: Match, intro: number | null): Shot {
     const side = m.athletes.filter((a) => a.team === m.winner);
     winners = { x: side.reduce((s, a) => s + a.x, 0) / side.length, z: side.reduce((s, a) => s + a.z, 0) / side.length };
   }
-  return { focus: m.ball.pos, dunker: dunker ? { x: dunker.x, z: dunker.z } : null, winners, intro, freeThrow: freeThrowShot(m) };
+  const spread = spreadOf(m.athletes, m.ball.pos);
+  return { focus: m.ball.pos, dunker: dunker ? { x: dunker.x, z: dunker.z } : null, winners, intro, freeThrow: freeThrowShot(m), spread };
 }
