@@ -16,12 +16,12 @@ const bell = (x: number, c: number, w: number) => Math.exp(-(((x - c) / w) ** 2)
 /** The hairline's height at azimuth `phi` (0 at the front, ±π at the back). `low` lowers it at the front, for a fringe. */
 export function lineAt(phi: number, low = 0): number {
   const a = Math.abs(phi);
-  const front = 0.066 - low;
+  const front = 0.074 - low;
   const side = 0.034;
   const nape = -0.068;
   let y = a <= Math.PI / 2 ? front + (side - front) * smooth(a / (Math.PI / 2)) : side + (nape - side) * smooth((a - Math.PI / 2) / (Math.PI / 2)) ** 0.8;
-  // Recessed at the temples, down in front of the ears for the sideburns.
-  y += 0.007 * bell(a, 0.62, 0.16);
+  // Recessed at the temples, so the line across the forehead curves rather than cutting straight; down in front of the ears for the sideburns.
+  y += 0.014 * bell(a, 0.6, 0.2) - 0.004 * bell(a, 0, 0.12);
   y = Math.min(y, -0.004 + 0.045 * (1 - bell(a, 1.3, 0.12)));
   return y;
 }

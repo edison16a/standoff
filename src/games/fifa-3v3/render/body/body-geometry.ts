@@ -36,7 +36,8 @@ export function bodyGeometry(look: Look, keeper: boolean, fine: boolean): BodyGe
   addLegs(skin, kit, c, tone);
   addNeck(skin, c, tone);
   addBoots(gear, c);
-  const k = 1 + (c.d.s - 1) * 0.45;
+  // Heads vary less than heights; a touch over life size keeps faces readable from the stands.
+  const k = 1.03 + (c.d.s - 1) * 0.45;
   const head = buildHead({ ...look, skin: tone }, k, fine, shapeOf(look));
   // The head's centre sits over the neck joint, a touch forward of it.
   for (const [geo, list] of [[head.skin, skin], [head.gear, gear]] as const) {

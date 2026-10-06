@@ -21,7 +21,7 @@ export const FACE = {
   noseTipY: -0.03,
   mouthY: -0.056,
   chinY: -0.103,
-  earX: 0.072,
+  earX: 0.0755,
   earY: -0.004,
   earZ: -0.008,
 };
@@ -48,7 +48,7 @@ const base = new THREE.Vector3();
 
 /** The surface point straight out from the centre along unit direction `d`. */
 export function sculpt(d: THREE.Vector3, out: THREE.Vector3, shape: HeadShape = { jaw: 0.5, chin: 0.5 }): THREE.Vector3 {
-  const r = 1 / Math.sqrt((d.x / 0.0755) ** 2 + (d.y / 0.115) ** 2 + (d.z / 0.098) ** 2);
+  const r = 1 / Math.sqrt((d.x / 0.0785) ** 2 + (d.y / 0.115) ** 2 + (d.z / 0.098) ** 2);
   base.copy(d).multiplyScalar(r);
   base.y += 0.011;
   const p = out.copy(base);

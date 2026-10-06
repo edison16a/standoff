@@ -27,9 +27,9 @@ const SHIRT: readonly Row[] = [
 
 /** Over the shoulders: how far past the shoulder joint each section reaches. */
 const YOKE: readonly Row[] = [
-  [1.38, 0.022, 0.108, 0.102, 2.9, 0],
-  [1.43, 0.05, 0.096, 0.094, 3.1, -0.004],
-  [1.465, 0.036, 0.082, 0.084, 2.9, -0.008],
+  [1.38, 0.014, 0.108, 0.102, 2.7, 0],
+  [1.43, 0.038, 0.096, 0.094, 2.8, -0.004],
+  [1.465, 0.026, 0.082, 0.084, 2.6, -0.008],
 ];
 
 /** Up the trapezius to the collar. */
