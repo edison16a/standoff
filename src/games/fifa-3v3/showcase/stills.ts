@@ -44,8 +44,20 @@ const STILLS: Record<Exclude<ShowcaseView, "loop">, Still> = {
 /** The frozen match for a still, and its framing. */
 export function stillScene(view: Exclude<ShowcaseView, "loop">): { state: MatchState } & Still {
   const still = STILLS[view];
-  if (view === "icon") return { state: iconMatch(still.at), ...still };
+  if (view === "icon") return heroFramed(iconMatch(still.at), still);
   const state = makeFilm("match");
   while (state.time < still.at - 1e-6) stepFilm(state);
   return { state, ...still };
+}
+
+/**
+ * The icon's framing follows the Striker: the shot is set up round where
+ * he should be, and if the simulation carries him a little further or
+ * shorter the camera, its target and the lights move with him.
+ */
+function heroFramed(state: MatchState, still: Still): { state: MatchState } & Still {
+  const hero = state.athletes[0]!.pos;
+  const shift = new THREE.Vector3(hero.x - still.subject.x, 0, hero.z - still.subject.z);
+  const pose = { pos: still.pose.pos.clone().add(shift), look: still.pose.look.clone().add(shift), fov: still.pose.fov };
+  return { state, ...still, pose, subject: still.subject.clone().add(shift) };
 }
