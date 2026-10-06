@@ -4,6 +4,7 @@ import { launch } from "./flight";
 import { solveLaunch } from "./aim";
 import { clampToWorld, FIELD, YARD } from "./field";
 import type { Match } from "./match";
+import { handSpot } from "./passer-facing";
 import { PASS, PITCH } from "./tuning";
 import type { Athlete, TeamId } from "./types";
 import { clamp, len3, type V2, type V3 } from "./vec";
@@ -62,7 +63,7 @@ export function startPitch(m: Match, a: Athlete): boolean {
 export function releasePitch(m: Match, a: Athlete, to: number): void {
   const back = m.athlete(to);
   if (!back || m.carrier()?.id !== a.id) return;
-  const from: V3 = { x: a.x + Math.sin(a.yaw) * 0.3, y: PITCH.releaseHeight, z: a.z + Math.cos(a.yaw) * 0.3 };
+  const from: V3 = handSpot(a, back, PITCH.releaseHeight);
   const spot = clampToWorld({ x: back.x + back.vx * PITCH.time, z: back.z + back.vz * PITCH.time });
   const vel = solveLaunch(from, { x: spot.x, y: PASS.catchHeight, z: spot.z }, PITCH.time, "spiral", PITCH.spin);
   m.ball.state = "pass";

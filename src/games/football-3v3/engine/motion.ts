@@ -1,6 +1,6 @@
 import { gripOf, pushOf, topSpeed } from "./body";
 import { clampToWorld } from "./field";
-import { MOVE, RUSH } from "./tuning";
+import { MOVE, PASS, RUSH } from "./tuning";
 import type { Athlete } from "./types";
 import { angleDiff, clamp, yawOf, type V2 } from "./vec";
 
@@ -58,10 +58,11 @@ export function friction(a: Athlete, decel: number, dt: number): void {
 /**
  * Moves one player for a step. Free legs run toward the stick; a
  * blocked player pushes through a lineman at a fraction of their speed.
- * `face` is a point to look at while standing, such as the ball, and
- * `pace` scales top speed (a QB who is still a passer is slower).
+ * `face` is a point to look at while standing, such as the ball,
+ * `pace` scales top speed (a QB who is still a passer is slower) and
+ * `look` is a way to face whatever the legs do, as a passer does.
  */
-export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: V2 | null, pace = 1): void {
+export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: V2 | null, pace = 1, look: V2 | null = null): void {
   const k = a.action.kind;
   if (k === "stance") {
     a.vx = 0;
@@ -84,17 +85,19 @@ export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: V2 |
   if (p.z !== a.z) a.vz = 0;
   a.x = p.x;
   a.z = p.z;
-  turn(a, dt, face);
+  turn(a, dt, face, look);
 }
 
-function turn(a: Athlete, dt: number, face: V2 | null): void {
+function turn(a: Athlete, dt: number, face: V2 | null, look: V2 | null): void {
   const k = a.action.kind;
   if (k === "down" || k === "juke" || k === "dive" || k === "lunge") return;
   const speed = Math.hypot(a.vx, a.vz);
   let want = a.yaw;
   if (a.aim && k !== "kick") want = yawOf(a.aim.x, a.aim.z);
+  else if (look) want = yawOf(look.x, look.z);
   else if (speed > 0.8) want = yawOf(a.vx, a.vz);
   else if (face) want = yawOf(face.x - a.x, face.z - a.z);
-  const rate = MOVE.turnRate * dt;
+  // A passer snaps his shoulders round to the target far quicker than a runner turns.
+  const rate = (k === "throw" ? PASS.turnRate : MOVE.turnRate) * dt;
   a.yaw += clamp(angleDiff(a.yaw, want), -rate, rate);
 }

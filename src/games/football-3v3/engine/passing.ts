@@ -6,6 +6,7 @@ import { tracePath } from "./catch/path";
 import { release } from "./throw-error";
 import type { Match } from "./match";
 import { canPitch, releasePitch } from "./run-play";
+import { handSpot } from "./passer-facing";
 import { PASS } from "./tuning";
 import type { Athlete } from "./types";
 import { len3, type V3 } from "./vec";
@@ -55,7 +56,8 @@ function letGo(m: Match, a: Athlete, to: number): void {
   const play = m.play!;
   const target = m.athlete(to);
   if (!target || m.carrier()?.id !== a.id) return;
-  const from: V3 = { x: a.x + Math.sin(a.yaw) * 0.3, y: PASS.releaseHeight, z: a.z + Math.cos(a.yaw) * 0.3 };
+  // Out toward the target, not along the facing, so the flight never depends on how far he had turned.
+  const from: V3 = handSpot(a, target, PASS.releaseHeight);
   const lead = leadPass(from, target, { x: target.vx, z: target.vz }, statsOf(a).arm);
   // A defender sitting in front of the receiver reads it and breaks on the ball.
   const jumper = jumpingDefender(m, a, from, lead.spot, target);
