@@ -17,14 +17,14 @@ export class LodSwitch {
 
   constructor(private readonly body: Body) {}
 
-  /** `pixels` is the screen's height in drawing pixels. */
-  fit(camera: THREE.PerspectiveCamera, pixels: number): void {
+  /** `pixels` is the screen's height in drawing pixels; `allowFine` false holds the light cut, for a card that cannot keep up. */
+  fit(camera: THREE.PerspectiveCamera, pixels: number, allowFine = true): void {
     this.body.root.getWorldPosition(at);
     at.y += this.body.height * 0.5;
     camera.getWorldPosition(eye);
     const scale = pixels / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)) * camera.zoom;
     const tall = (this.body.height / Math.max(0.1, at.distanceTo(eye))) * scale;
-    const want = this.fine ? tall > DOWN : tall > UP;
+    const want = allowFine && (this.fine ? tall > DOWN : tall > UP);
     if (want === this.fine) return;
     this.fine = want;
     this.body.setFine(want);

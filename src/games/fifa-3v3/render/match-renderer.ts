@@ -1,9 +1,11 @@
 import * as THREE from "three";
+import { effectiveCap, loadFrameRate, loadSavedRefresh } from "@/platform/frame-rate/frame-rate-settings";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { MatchEvent } from "../engine/events";
 import type { MatchView } from "../engine/view";
 import { TEAMS } from "../teams";
 import { Arena } from "./arena/arena";
+import { AutoQuality } from "./auto-quality";
 import { AthleteMaterials } from "./body/materials";
 import { CameraDirector, type Shot } from "./camera/director";
 import { CeremonyScene } from "./ceremony/ceremony-scene";
@@ -27,6 +29,8 @@ export interface RendererOptions {
   quality?: "high" | "low" | "film";
   /** Draws at this share of the screen's resolution. The showcase's clip uses less, to film in time. */
   scale?: number;
+  /** Steps the picture down on a card that cannot hold the frame rate. On by default for "high". */
+  auto?: boolean;
 }
 
 /**
@@ -52,11 +56,15 @@ export class MatchRenderer {
   private markerAt: { x: number; y: number; z: number } | null = null;
   private readonly environment: THREE.Texture;
   private last = 0;
+  /** Steps the picture down on a card that cannot hold the frame rate. Live play only: the showcase is filmed on a fake clock. */
+  private readonly auto: AutoQuality | null;
+  private size = { width: 1, height: 1, dpr: 1 };
   private readonly low: boolean;
   private readonly scale: number;
 
   constructor(canvas: HTMLCanvasElement, options: RendererOptions = {}) {
     this.low = options.quality === "low";
+    this.auto = (options.quality ?? "high") === "high" && options.auto !== false ? new AutoQuality(targetFps) : null;
     this.scale = options.scale ?? 1;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: options.quality !== "low" && options.quality !== "film", powerPreference: "high-performance" });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -89,7 +97,8 @@ export class MatchRenderer {
   }
 
   resize(width: number, height: number, dpr: number): void {
-    const ratio = (this.low ? 0.6 : Math.min(dpr, 1.5)) * this.scale;
+    this.size = { width, height, dpr };
+    const ratio = (this.low ? 0.6 : Math.min(dpr, this.auto?.pixelCap ?? 1.5)) * this.scale;
     this.renderer.setPixelRatio(ratio);
     this.renderer.setSize(width, height, false);
     this.director.setAspect(width / Math.max(1, height));
@@ -146,7 +155,9 @@ export class MatchRenderer {
   }
 
   private advance(view: MatchView, shot: Shot, nowMs: number, focus: THREE.Vector3 | undefined, tags: boolean): void {
-    const dt = this.last ? Math.min(0.1, Math.max(0, nowMs - this.last) / 1000) : 1 / 60;
+    const raw = this.last ? Math.max(0, nowMs - this.last) / 1000 : 0;
+    const dt = this.last ? Math.min(0.1, raw) : 1 / 60;
+    if (this.auto?.frame(raw)) this.resize(this.size.width, this.size.height, this.size.dpr);
     this.last = nowMs;
     const time = nowMs / 1000;
     this.squad.update(view, dt, time, tags && shot !== "replay-kicker" && shot !== "replay-keeper");
@@ -165,8 +176,9 @@ export class MatchRenderer {
     this.director.update(view, shot, dt, time, focus);
     this.squad.fitTags(this.director.camera.fov);
     const pixels = this.renderer.domElement.height;
-    this.squad.fitDetail(this.director.camera, pixels);
-    this.referee.fitDetail(this.director.camera, pixels);
+    const fine = this.auto?.fineBodies ?? true;
+    this.squad.fitDetail(this.director.camera, pixels, fine);
+    this.referee.fitDetail(this.director.camera, pixels, fine);
     this.squad.stackTags(this.director.camera, dt);
   }
 
@@ -195,6 +207,12 @@ export class MatchRenderer {
     this.environment.dispose();
     this.renderer.dispose();
   }
+}
+
+/** The frame rate to hold: sixty, or the player's own cap from the settings when it is lower. */
+function targetFps(): number {
+  const cap = effectiveCap(loadFrameRate().cap, loadSavedRefresh());
+  return Math.min(60, cap ?? 60);
 }
 
 /** How loud and bouncy the crowd is: a hum, rising as the ball nears a goal, and wild for goals. */

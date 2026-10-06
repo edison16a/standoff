@@ -41,8 +41,8 @@ export class RefereeFigure {
     this.figure.rig.handR.add(this.card);
   }
 
-  fitDetail(camera: THREE.PerspectiveCamera, pixels: number): void {
-    this.figure.lod.fit(camera, pixels);
+  fitDetail(camera: THREE.PerspectiveCamera, pixels: number, allowFine: boolean): void {
+    this.figure.lod.fit(camera, pixels, allowFine);
   }
 
   update(view: RefereeView, ball: BallView, dt: number, time: number): void {
