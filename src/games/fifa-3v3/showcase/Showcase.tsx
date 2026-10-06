@@ -4,6 +4,7 @@ import * as THREE from "three";
 import type { ShowcaseView } from "@/platform/games/game-api";
 import { buildView } from "../engine/view";
 import { MatchRenderer } from "../render/match-renderer";
+import { LAB_POSE, labMatch } from "./lab";
 import { iconLights, stillLights } from "./still-lights";
 import { stillScene } from "./stills";
 import { Trailer } from "./trailer";
@@ -43,6 +44,15 @@ function stillFrames(renderer: MatchRenderer, view: Exclude<ShowcaseView, "loop"
   };
 }
 
+/** Development: every build in a row under the match's own lights, for close looks. `cam` pins the camera as for a still. */
+function labFrames(renderer: MatchRenderer, params: URLSearchParams): { frame: Frame; resized(): void } {
+  const cam = params.get("cam")?.split(",").map(Number);
+  if (cam && cam.length === 7) renderer.director.setFixed(new THREE.Vector3(cam[0], cam[1], cam[2]), new THREE.Vector3(cam[3], cam[4], cam[5]), cam[6]!);
+  else renderer.director.setFixed(LAB_POSE.pos, LAB_POSE.look, LAB_POSE.fov);
+  const view0 = buildView(labMatch());
+  return { frame: (now) => renderer.draw(view0, "fixed", now, undefined, false), resized: () => undefined };
+}
+
 /**
  * Soccer 3v3 playing itself for the home screen: the loop is a wordless
  * trailer of one seeded match's best moments and the cup lift, the icon
@@ -64,7 +74,7 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     const params = new URLSearchParams(window.location.search);
     // The clip is filmed a frame at a time in software; a lighter frame keeps each one in time.
     const renderer = new MatchRenderer(canvas, { quality: "film", scale: view === "loop" && !params.has("t") ? 0.75 : 1 });
-    const film = view === "loop" ? trailerFrames(renderer, params) : stillFrames(renderer, view, params);
+    const film = params.has("lab") ? labFrames(renderer, params) : view === "loop" ? trailerFrames(renderer, params) : stillFrames(renderer, view, params);
     const fit = () => {
       renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
       film.resized();
