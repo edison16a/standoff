@@ -1,112 +1,110 @@
 import * as THREE from "three";
-import { ball, box, capsule, cyl, lathe, merge, paint, shade, torus } from "./geo";
-import { buildHelmet } from "./helmet";
-import { joint, type Mesher } from "./joint";
-import { jerseyTexture } from "./jersey-texture";
+import type { AthleteMaterials } from "../materials/athlete-materials";
+import { DETAIL } from "../materials/athlete-materials";
+import { arm, sleeve } from "./arms";
+import { cleat } from "./cleats";
+import { shade } from "./geo";
+import { glove } from "./gloves";
+import { face, neck } from "./head";
+import { printJersey } from "./jersey-print";
 import type { KitSpec } from "./kit";
-import { buildLimbs } from "./limbs";
+import { leg, pelvis } from "./legs";
+import { dress, groups, ramp, weigh, type Weights } from "./parts";
+import { buildBones, dimsFor, type Bones, type Dims } from "./rig";
+import { neckRadius, torso } from "./torso";
 
 /** The joints the animations turn. Every limb segment hangs down its joint's -y. */
-export interface Rig {
+export interface Rig extends Bones {
   root: THREE.Group;
   /** Lifts, tips and rolls the whole body, for stances, dives and tackles. */
   body: THREE.Group;
-  hips: THREE.Object3D;
-  spine: THREE.Object3D;
-  neck: THREE.Object3D;
-  shoulderL: THREE.Object3D;
-  elbowL: THREE.Object3D;
-  shoulderR: THREE.Object3D;
-  elbowR: THREE.Object3D;
-  hipL: THREE.Object3D;
-  kneeL: THREE.Object3D;
-  ankleL: THREE.Object3D;
-  hipR: THREE.Object3D;
-  kneeR: THREE.Object3D;
-  ankleR: THREE.Object3D;
-  handL: THREE.Object3D;
-  handR: THREE.Object3D;
+  dims: Dims;
   /** Hip height standing, in metres. */
   hipHeight: number;
   /** Thigh plus shin, for matching the stride to the ground speed. */
   legLength: number;
+  /** The skinned body, for counting what a frame draws. */
+  mesh: THREE.SkinnedMesh;
   dispose(): void;
 }
 
 /**
- * Builds a football player: helmet, shoulder pads under a printed
- * jersey, pants, socks and cleats, sized by height and build. Colours
- * live in the vertices so every part shares one material, except the
- * jersey, which wears its own printed texture, and a tinted visor.
+ * Builds a football player as one skinned body: skin, gear and the
+ * printed jersey are three materials on one mesh, bent by the bones, so
+ * elbows and knees fold smoothly with no gaps. The helmet, its mask and
+ * visor ride on the neck bone. Shapes come from the player's height and
+ * build; the shared shell, masks and materials come from `materials`.
  */
-export function buildBody(kit: KitSpec, shared: THREE.Material): Rig {
-  const s = kit.height / 1.85;
-  const b = kit.build;
-  const geometries: THREE.BufferGeometry[] = [];
-  const materials: THREE.Material[] = [];
-  const textures: THREE.Texture[] = [];
-  const mesh: Mesher = (parent, geo, material = shared) => {
-    geometries.push(geo);
-    const m = new THREE.Mesh(geo, material);
-    m.castShadow = true;
-    parent.add(m);
-    return m;
-  };
-
+export function buildBody(kit: KitSpec, materials: AthleteMaterials): Rig {
+  const detail = DETAIL[materials.detail].mesh;
+  const d = dimsFor(kit.height, kit.build);
   const root = new THREE.Group();
   const body = new THREE.Group();
   root.add(body);
-  const hipHeight = 0.95 * s;
-  const hips = joint(body, 0, hipHeight);
-  const pelvis = [
-    paint(capsule(0.13 * s, 0.1 * s), kit.pants, { rot: [0, 0, Math.PI / 2], scale: [1, 1.1 + 0.2 * b, 0.95 + 0.1 * b] }),
-    paint(torus(0.15 * s * (1 + 0.12 * b), 0.018 * s, 24, 6), shade(kit.pants, -0.55), { at: [0, 0.08 * s, 0], rot: [Math.PI / 2, 0, 0], scale: [1, 0.72, 1] }),
+  const { bones, list } = buildBones(d, body);
+
+  const skin = [arm(d, kit, 1, detail), arm(d, kit, -1, detail), neck(d, kit, detail), face(d, kit, detail)];
+  const gear = [
+    pelvis(d, kit, detail), leg(d, kit, 1, detail), leg(d, kit, -1, detail),
+    cleat(d, kit, 1, detail), cleat(d, kit, -1, detail), glove(d, kit, 1, detail), glove(d, kit, -1, detail),
   ];
-  if (kit.towel) pelvis.push(paint(box(0.1 * s, 0.2 * s, 0.012 * s), "#f7f7f5", { at: [0.07 * s, -0.02 * s, 0.13 * s], rot: [0.08, 0, 0] }));
-  mesh(hips, merge(pelvis));
+  if (kit.towel) gear.push(towel(d));
+  if (kit.neckRoll) gear.push(neckRoll(d, kit, detail));
+  const jersey = [torso(d, detail), sleeve(d, kit, 1, detail), sleeve(d, kit, -1, detail)];
+  const geometry = groups([skin, gear, jersey]);
+  const print = printJersey(kit, d, kit.team, DETAIL[materials.detail].print);
+  const shirt = materials.jersey(print, kit.jersey);
+  const mesh = new THREE.SkinnedMesh(geometry, [materials.skin, materials.gear, shirt]);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  // A sphere big enough for any pose, so culling never has to measure the bent body.
+  mesh.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, d.hipY, 0), d.height * 1.3);
+  body.add(mesh);
+  root.updateMatrixWorld(true);
+  mesh.bind(new THREE.Skeleton(list));
 
-  const spine = joint(hips, 0, 0.05 * s);
-  const torsoH = 0.56 * s;
-  const w = (1.12 + 0.22 * b) * s;
-  const d = (0.8 + 0.14 * b) * s;
-  // The pads make a football player's chest a wide slab that juts over the arms.
-  const profile = [[0.14, 0], [0.145, 0.12], [0.16, 0.26], [0.19, 0.38], [0.205, 0.45], [0.18, 0.51], [0.08, 0.56]] as const;
-  const torso = lathe(profile.map(([r, y]) => [r, y * (torsoH / 0.56 / s)] as const), 28, Math.PI / 2);
-  torso.scale(w, s, d);
-  const shirtMap = jerseyTexture(kit);
-  textures.push(shirtMap);
-  const shirt = new THREE.MeshStandardMaterial({ map: shirtMap, roughness: 0.62, metalness: 0.02 });
-  materials.push(shirt);
-  mesh(spine, torso, shirt);
-  const padX = (0.19 + 0.03 * b) * s;
-  const pads = [
-    // Pad caps over each shoulder, under the jersey.
-    paint(ball(0.12 * s, 16, 10), kit.jersey, { at: [padX, torsoH - 0.075 * s, 0], scale: [1.05, 0.55, 1.2] }),
-    paint(ball(0.12 * s, 16, 10), kit.jersey, { at: [-padX, torsoH - 0.075 * s, 0], scale: [1.05, 0.55, 1.2] }),
-  ];
-  if (kit.neckRoll) pads.push(paint(torus(0.085 * s, 0.035 * s, 18, 8, Math.PI), shade(kit.jersey, -0.35), { at: [0, torsoH - 0.02 * s, -0.01 * s], rot: [Math.PI / 2, 0, Math.PI] }));
-  mesh(spine, merge(pads));
+  // The helmet rides the neck bone at the middle of the head.
+  const head = new THREE.Group();
+  head.position.set(0, d.head, 0);
+  head.scale.setScalar(d.headScale);
+  bones.neck.add(head);
+  const shell = new THREE.Mesh(materials.shell(), materials.helmet(kit.team));
+  shell.castShadow = true;
+  const mask = new THREE.Mesh(materials.faceMask(kit.team, kit.look), materials.mask);
+  mask.castShadow = true;
+  head.add(shell, mask);
+  if (kit.look.visor) head.add(new THREE.Mesh(materials.visorShape(), materials.visor(kit.look.visor)));
 
-  const neck = joint(spine, 0, torsoH - 0.02 * s);
-  mesh(neck, merge([paint(cyl(0.055 * s, 0.065 * s, 0.12 * s), kit.look.skin, { at: [0, 0.05 * s, 0] })]));
-  const helmet = buildHelmet(kit);
-  const head = mesh(neck, helmet.body);
-  head.position.y = 0.2 * s;
-  head.scale.setScalar(Math.pow(s, 0.5));
-  if (helmet.visor) {
-    const glass = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.08, metalness: 0.7, transparent: true, opacity: 0.88 });
-    materials.push(glass);
-    const visor = mesh(head, helmet.visor, glass);
-    visor.castShadow = false;
-  }
-
-  const limbs = buildLimbs(kit, s, torsoH, spine, hips, mesh);
   return {
-    root, body, hips, spine, neck, ...limbs, hipHeight, legLength: limbs.legLength,
+    ...bones, root, body, dims: d, hipHeight: d.hipY, legLength: d.thigh + d.shin, mesh,
     dispose() {
-      for (const g of geometries) g.dispose();
-      for (const m of materials) m.dispose();
-      for (const t of textures) t.dispose();
+      geometry.dispose();
+      shirt.dispose();
+      print.dispose();
+      mesh.skeleton.dispose();
     },
   };
+}
+
+/** A towel tucked in the front of the waistband, swinging a little with the left leg. */
+function towel(d: Dims): THREE.BufferGeometry {
+  const H = d.height;
+  const W = 1 + 0.2 * d.build;
+  const g = dress(new THREE.BoxGeometry(0.075, 0.17, 0.006, 1, 5, 1), { colour: "#f7f7f5", rough: 0.95 }, {
+    at: [0.05 * H, 0.598 * H - 0.085, 0.073 * H * W + 0.004], rot: [0.08, 0, 0.05],
+  });
+  return weigh(g, (p): Weights => {
+    const swing = 0.45 * ramp(0.598 * H, 0.598 * H - 0.17, p.y);
+    return [["hips", 1 - swing], ["hipL", swing]];
+  });
+}
+
+/** A thick collar sitting on the pads behind the neck, as hitters wear. */
+function neckRoll(d: Dims, kit: KitSpec, detail: number): THREE.BufferGeometry {
+  const H = d.height;
+  const r = neckRadius(d) + 0.02 * H;
+  const g = dress(new THREE.TorusGeometry(r, 0.017 * H, Math.round(10 * detail), Math.round(24 * detail), Math.PI * 1.15), { colour: shade(kit.jersey, -0.3), rough: 0.8 }, {
+    at: [0, 0.842 * H, -0.006 * H], rot: [Math.PI / 2, 0, Math.PI * 0.925],
+  });
+  return weigh(g, () => [["spine", 1]]);
 }

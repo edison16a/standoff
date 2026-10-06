@@ -32,7 +32,16 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     const renderer = new MatchRenderer(canvas, { quality: "film", scale: view === "loop" ? 0.8 : 1 });
     const lab = params.get("lab");
     const labScene = isLabMove(lab) ? new ShowcaseScene(SHOWCASE_SEED) : null;
-    if (labScene) renderer.director.setFixed(new THREE.Vector3(-9, 1.6, 0), new THREE.Vector3(0, 0.9, 0), 55);
+    if (labScene) {
+      // The lab's camera can be moved for close looks: cam=x,y,z and look=x,y,z in metres, fov in degrees.
+      const vec = (key: string, fallback: THREE.Vector3) => {
+        const v = params.get(key)?.split(",").map(Number);
+        return v && v.length === 3 && v.every(Number.isFinite) ? new THREE.Vector3(v[0], v[1], v[2]) : fallback;
+      };
+      renderer.director.setFixed(vec("cam", new THREE.Vector3(-9, 1.6, 0)), vec("look", new THREE.Vector3(0, 0.9, 0)), Number(params.get("fov")) || 55);
+    }
+    // Review scripts read what a frame draws from here. Development builds only.
+    if (process.env.NODE_ENV === "development") Object.assign(window, { __fbRenderer: renderer });
     const player = labScene ? null : new TrailerPlayer(renderer, renderer.scene);
     const held = params.get("t");
     const still = held !== null ? Number(held) : view === "loop" ? null : (STILLS[view] ?? null);

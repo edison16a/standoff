@@ -5,6 +5,8 @@ import { BUILDS, type BuildId } from "../builds";
 import type { TeamId } from "../teams";
 import type { PoseScene } from "./anim/choose";
 import { Figure } from "./figures/figure";
+import { AthleteMaterials } from "./materials/athlete-materials";
+import { glossEnvironment } from "./materials/gloss-env";
 import { buildKit } from "./models/kit";
 
 const BALL: BallView = {
@@ -33,7 +35,8 @@ export class StarPreview {
   private readonly scene = new THREE.Scene();
   private readonly camera = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
   private readonly turntable = new THREE.Group();
-  private readonly material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0.05 });
+  private readonly materials: AthleteMaterials;
+  private readonly gloss: THREE.Texture;
   private readonly canvas: HTMLCanvasElement;
   private readonly environment: THREE.Texture;
   private figure: Figure | null = null;
@@ -55,6 +58,8 @@ export class StarPreview {
     pmrem.dispose();
     this.scene.environment = this.environment;
     this.scene.environmentIntensity = 0.4;
+    this.gloss = glossEnvironment(this.renderer);
+    this.materials = new AthleteMaterials("high", this.gloss);
     this.scene.add(new THREE.HemisphereLight("#dfe8ff", "#1d3a24", 1.3));
     const key = new THREE.DirectionalLight("#fff3dc", 2.6);
     key.position.set(3, 6, 5);
@@ -74,7 +79,7 @@ export class StarPreview {
     if (this.shown?.build === build && this.shown.team === team) return;
     this.shown = { build, team };
     this.figure?.dispose();
-    this.figure = new Figure(buildKit(team, build), this.material, 0);
+    this.figure = new Figure(buildKit(team, build), this.materials, 0);
     this.turntable.add(this.figure.root);
     this.shownAt = this.last;
   }
@@ -82,13 +87,16 @@ export class StarPreview {
   dispose(): void {
     cancelAnimationFrame(this.frame);
     this.figure?.dispose();
+    this.figure = null;
+    // Only the podium is left on the turntable; the figure freed its own parts.
     this.turntable.traverse((o) => {
-      if (o instanceof THREE.Mesh && o.material !== this.material) {
+      if (o instanceof THREE.Mesh) {
         o.geometry.dispose();
         (o.material as THREE.Material).dispose();
       }
     });
-    this.material.dispose();
+    this.materials.dispose();
+    this.gloss.dispose();
     this.environment.dispose();
     this.renderer.dispose();
     // Phones allow only a few live WebGL contexts; moving between steps must not use them up.

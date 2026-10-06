@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { AthleteView, MatchView } from "../../engine/view";
 import { LINEMAN_NUMBERS } from "../../builds";
 import { TEAMS } from "../../teams";
+import type { AthleteMaterials } from "../materials/athlete-materials";
 import { SPIKE_RELEASE } from "../anim/celebrations";
 import type { PoseScene } from "../anim/choose";
 import { buildKit, linemanKit, type KitSpec } from "../models/kit";
@@ -40,11 +41,10 @@ export class Squad {
   /** Solid magenta with a white edge: no team or seat wears it, so it cannot be mistaken for their rings. */
   private readonly target = new Ring("#ff1fce", 0.5, 1.05, true);
   private readonly targetEdge = new Ring("#ffffff", 1.05, 1.18, true);
-  private readonly material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0.05 });
   /** Who wears which name on their back; the players' own names, set by the host. */
   jerseyName: JerseyName = () => null;
 
-  constructor() {
+  constructor(private readonly materials: AthleteMaterials) {
     this.group.add(this.ball.group, this.target.mesh, this.targetEdge.mesh);
   }
 
@@ -87,7 +87,7 @@ export class Squad {
       have.seat.mesh.removeFromParent();
       have.seat.dispose();
     }
-    const figure = new Figure(kitOf(a, name), this.material, a.id);
+    const figure = new Figure(kitOf(a, name), this.materials, a.id);
     const seat = new Ring(TEAMS[a.team].color, 0.62, 0.74);
     this.group.add(figure.root, seat.mesh);
     const entry = { figure, key, seat };
@@ -104,6 +104,5 @@ export class Squad {
     this.target.dispose();
     this.targetEdge.dispose();
     this.ball.dispose();
-    this.material.dispose();
   }
 }

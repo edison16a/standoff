@@ -31,16 +31,20 @@ export interface KitSpec {
   locks: string | null;
   /** Painted under the eyes, visible through an open mask. */
   eyeBlack: boolean;
+  /** White tape spatted over the cleats and ankles. */
+  spats: boolean;
+  /** Whose helmet: its shell, stripe, logo and mask colour. */
+  team: TeamId;
 }
 
 /** Per build touches on top of its look. */
-const EXTRAS: Record<BuildId, Pick<KitSpec, "sleeves" | "neckRoll" | "towel" | "locks" | "eyeBlack">> = {
-  gunslinger: { sleeves: "short", neckRoll: false, towel: true, locks: null, eyeBlack: true },
-  scrambler: { sleeves: "long", neckRoll: false, towel: false, locks: "#2a1a10", eyeBlack: false },
-  speedster: { sleeves: "bare", neckRoll: false, towel: true, locks: "#1a120c", eyeBlack: false },
-  powerback: { sleeves: "bare", neckRoll: true, towel: false, locks: null, eyeBlack: true },
-  routerunner: { sleeves: "short", neckRoll: false, towel: true, locks: "#120c08", eyeBlack: true },
-  lockdown: { sleeves: "long", neckRoll: true, towel: false, locks: null, eyeBlack: true },
+const EXTRAS: Record<BuildId, Pick<KitSpec, "sleeves" | "neckRoll" | "towel" | "locks" | "eyeBlack" | "spats">> = {
+  gunslinger: { sleeves: "short", neckRoll: false, towel: true, locks: null, eyeBlack: true, spats: false },
+  scrambler: { sleeves: "long", neckRoll: false, towel: false, locks: "#2a1a10", eyeBlack: false, spats: false },
+  speedster: { sleeves: "bare", neckRoll: false, towel: true, locks: "#1a120c", eyeBlack: false, spats: true },
+  powerback: { sleeves: "bare", neckRoll: true, towel: false, locks: null, eyeBlack: true, spats: true },
+  routerunner: { sleeves: "short", neckRoll: false, towel: true, locks: "#120c08", eyeBlack: true, spats: true },
+  lockdown: { sleeves: "long", neckRoll: true, towel: false, locks: null, eyeBlack: true, spats: false },
 };
 
 /** Linemen share a build and a plain look, with the skin changing by slot so the line is not a row of clones. */
@@ -61,7 +65,7 @@ function teamKit(team: TeamId): Pick<KitSpec, "jersey" | "trim" | "pants" | "hel
 export function buildKit(team: TeamId, id: BuildId, name: string | null = null): KitSpec {
   const c = BUILDS[id];
   return {
-    ...teamKit(team), ...EXTRAS[id], number: c.number, name: name ? name.toUpperCase() : null, look: c.look,
+    ...teamKit(team), ...EXTRAS[id], team, number: c.number, name: name ? name.toUpperCase() : null, look: c.look,
     height: c.frame.height, build: buildFor(c.frame.height, c.frame.weight),
   };
 }
@@ -69,7 +73,7 @@ export function buildKit(team: TeamId, id: BuildId, name: string | null = null):
 export function linemanKit(team: TeamId, number: number, slot: number): KitSpec {
   const look: Look = { skin: LINEMAN_SKIN[slot % 3]!, mask: "cage", visor: null, accent: TEAMS[team].dark, cleats: "#111111" };
   return {
-    ...teamKit(team), look, number, name: null, height: LINEMAN_FRAME.height, build: buildFor(LINEMAN_FRAME.height, LINEMAN_FRAME.weight),
-    sleeves: "bare", neckRoll: slot === 1, towel: false, locks: null, eyeBlack: false,
+    ...teamKit(team), look, team, number, name: null, height: LINEMAN_FRAME.height, build: buildFor(LINEMAN_FRAME.height, LINEMAN_FRAME.weight),
+    sleeves: "bare", neckRoll: slot === 1, towel: false, locks: null, eyeBlack: false, spats: false,
   };
 }

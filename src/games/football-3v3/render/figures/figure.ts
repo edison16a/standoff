@@ -4,6 +4,7 @@ import { applyPose } from "../anim/apply";
 import { aheadSpeed, choosePose, type Chosen, type PoseScene } from "../anim/choose";
 import { strideLength } from "../anim/gait";
 import { approach, neutral, type Pose } from "../anim/pose";
+import type { AthleteMaterials } from "../materials/athlete-materials";
 import { buildBody, type Rig } from "../models/body";
 import type { KitSpec } from "../models/kit";
 
@@ -35,26 +36,29 @@ export class Figure {
   private hand: Chosen["hand"] = "R";
   private readonly seed: number;
 
-  constructor(kit: KitSpec, material: THREE.Material, readonly id: number) {
+  constructor(kit: KitSpec, materials: AthleteMaterials, readonly id: number) {
     this.kit = kit;
-    this.rig = buildBody(kit, material);
+    this.rig = buildBody(kit, materials);
     this.seed = id * 1.37;
-    const s = kit.height / 1.85;
     const r = this.rig;
+    const d = r.dims;
+    const H = d.height;
     const anchor = (parent: THREE.Object3D, x: number, y: number, z: number, radius: number): Contact => {
       const at = new THREE.Object3D();
       at.position.set(x, y, z);
       parent.add(at);
       return { at, radius };
     };
+    // The heel and the toe of each cleat, the knees, hands and elbows, the seat, the pads and the helmet.
+    const sole = -d.ankleY;
     this.contacts = [
-      anchor(r.ankleL, 0, -0.03 * s, 0.05 * s, 0.05 * s), anchor(r.ankleR, 0, -0.03 * s, 0.05 * s, 0.05 * s),
-      anchor(r.ankleL, 0, -0.03 * s, 0.17 * s, 0.03 * s), anchor(r.ankleR, 0, -0.03 * s, 0.17 * s, 0.03 * s),
-      anchor(r.kneeL, 0, 0, 0.02, 0.08 * s), anchor(r.kneeR, 0, 0, 0.02, 0.08 * s),
-      anchor(r.handL, 0, -0.02, 0, 0.05), anchor(r.handR, 0, -0.02, 0, 0.05),
-      anchor(r.elbowL, 0, 0, 0, 0.06), anchor(r.elbowR, 0, 0, 0, 0.06),
-      anchor(r.hips, 0, 0, 0, 0.15 * s), anchor(r.spine, 0, 0.32 * s, 0, 0.19 * s),
-      anchor(r.neck, 0, 0.2 * s, 0, 0.16 * s),
+      anchor(r.ankleL, 0, sole + 0.02, d.heel + 0.035, 0.02), anchor(r.ankleR, 0, sole + 0.02, d.heel + 0.035, 0.02),
+      anchor(r.ankleL, 0, sole + 0.015, d.toe - 0.03, 0.015), anchor(r.ankleR, 0, sole + 0.015, d.toe - 0.03, 0.015),
+      anchor(r.kneeL, 0, 0, 0.012 * H, 0.04 * H), anchor(r.kneeR, 0, 0, 0.012 * H, 0.04 * H),
+      anchor(r.handL, 0, -0.02, 0, 0.045), anchor(r.handR, 0, -0.02, 0, 0.045),
+      anchor(r.elbowL, 0, 0, 0, 0.035), anchor(r.elbowR, 0, 0, 0, 0.035),
+      anchor(r.hips, 0, -0.02 * H, 0, 0.09 * H), anchor(r.spine, 0, d.shoulderY - d.spineY - 0.04 * H, 0, 0.095 * H),
+      anchor(r.neck, 0, d.head, 0, 0.14 * d.headScale),
     ];
     this.hipsAnchor = r.hips;
   }

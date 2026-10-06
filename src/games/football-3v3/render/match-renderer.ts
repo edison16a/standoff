@@ -9,6 +9,8 @@ import { ScrimmageLines } from "./field/scrimmage-lines";
 import { Stadium } from "./field/stadium";
 import { Squad } from "./figures/squad";
 import { NameTags, type TagOf } from "./figures/tags";
+import { AthleteMaterials } from "./materials/athlete-materials";
+import { glossEnvironment } from "./materials/gloss-env";
 
 export interface RendererOptions {
   /**
@@ -29,7 +31,7 @@ export interface RendererOptions {
  */
 export class MatchRenderer {
   readonly director = new CameraDirector();
-  readonly squad = new Squad();
+  readonly squad: Squad;
   /** The replay's traced ball path. */
   readonly trace = new BallTrace();
   private readonly tags = new NameTags();
@@ -46,6 +48,9 @@ export class MatchRenderer {
   private readonly handR = new THREE.Vector3();
   private readonly sun: THREE.DirectionalLight;
   private readonly environment: THREE.Texture;
+  /** What helmets and visors mirror: the floodlights against the night. */
+  private readonly gloss: THREE.Texture;
+  private readonly materials: AthleteMaterials;
   private readonly low: boolean;
   private readonly scale: number;
   private last = 0;
@@ -64,6 +69,9 @@ export class MatchRenderer {
     pmrem.dispose();
     this.scene.environment = this.environment;
     this.scene.environmentIntensity = 0.3;
+    this.gloss = glossEnvironment(this.renderer);
+    this.materials = new AthleteMaterials(this.low ? "low" : "high", this.gloss);
+    this.squad = new Squad(this.materials);
     this.scene.fog = new THREE.Fog("#0b1330", 140, 420);
     // Stadium lights from high above: a cool fill from the sky and one strong key that casts the shadows.
     this.scene.add(new THREE.HemisphereLight("#c9d8ff", "#1f3a1f", 1.1));
@@ -81,6 +89,12 @@ export class MatchRenderer {
     this.scene.add(this.sun, this.sun.target);
     this.stadium = new Stadium(this.low, this.renderer.capabilities.getMaxAnisotropy());
     this.scene.add(this.stadium.group, this.lines.group, this.squad.group, this.trace.group, this.tags.group, this.ceremony.group);
+  }
+
+  /** What the last frame drew: draw calls, triangles, and the geometries and textures held. */
+  get info(): { calls: number; triangles: number; geometries: number; textures: number } {
+    const i = this.renderer.info;
+    return { calls: i.render.calls, triangles: i.render.triangles, geometries: i.memory.geometries, textures: i.memory.textures };
   }
 
   resize(width: number, height: number, dpr: number): void {
@@ -165,6 +179,8 @@ export class MatchRenderer {
 
   dispose(): void {
     this.squad.dispose();
+    this.materials.dispose();
+    this.gloss.dispose();
     this.ceremony.dispose();
     this.trace.dispose();
     this.tags.dispose();
