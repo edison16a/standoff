@@ -61,6 +61,9 @@ export class Floodlights {
       s.mapSize.set(tier.shadowMap, tier.shadowMap);
       s.map?.dispose();
       s.map = null;
+      // Redrawn once even when it no longer updates: a light left with no map makes three
+      // bind a depth texture with no compare mode, and every lit draw then fails.
+      s.needsUpdate = true;
     }
     // A coarser map wants a little more blur to hide its steps.
     this.key.shadow.radius = tier.shadowMap < 2048 ? 1.8 : 2.6;
