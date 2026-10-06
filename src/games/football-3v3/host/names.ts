@@ -35,13 +35,15 @@ export class Names {
   }
 
   /**
-   * The tag over a phone's player, or null for the computer's. It is the
-   * only place names show in play, so a dropped phone says so on the tag.
+   * The tag over the player a phone steers, or null for the computer's.
+   * It is the only place names show in play, so a dropped phone says so
+   * on the tag, and it moves with the phone to a teammate it passed to.
    */
   tag(id: number): Tag | null {
     const a = this.match()?.athlete(id);
-    if (!a || a.seat === null) return null;
-    const name = this.called(id);
-    return { name: a.auto ? `${name} (CPU)` : name, colour: playerColor(a.seat) };
+    const seat = a?.pilot ?? null;
+    if (!a || seat === null) return null;
+    const name = this.players().find((p) => p.seat === seat)?.name ?? this.called(id);
+    return { name: a.auto ? `${name} (CPU)` : name, colour: playerColor(seat) };
   }
 }

@@ -6,6 +6,7 @@ import { tracePath } from "./catch/path";
 import { release } from "./throw-error";
 import type { Match } from "./match";
 import { canPitch, releasePitch } from "./run-play";
+import { handOver } from "./control";
 import { handSpot } from "./passer-facing";
 import { PASS } from "./tuning";
 import type { Athlete } from "./types";
@@ -76,6 +77,7 @@ function letGo(m: Match, a: Athlete, to: number): void {
   play.passed = true;
   a.stats.attempts++;
   m.emit({ type: "throw", id: a.id, to: target.id, speed, spin: spin / (Math.PI * 2), air: lead.time, intercepting: jumper !== null });
+  handOver(m, a, target);
 }
 
 export function updateThrow(m: Match, a: Athlete, dt: number): void {

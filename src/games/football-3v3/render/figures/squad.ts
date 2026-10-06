@@ -7,6 +7,7 @@ import { SPIKE_RELEASE } from "../anim/celebrations";
 import type { PoseScene } from "../anim/choose";
 import { buildKit, linemanKit, type KitSpec } from "../models/kit";
 import { BallModel } from "./ball-view";
+import { ARRIVE_PULSE, ControlSwitch } from "./control-switch";
 import { Figure } from "./figure";
 import { Ring } from "./rings";
 
@@ -49,11 +50,13 @@ export class Squad {
   /** Solid magenta with a white edge: no team or seat wears it, so it cannot be mistaken for their rings. */
   private readonly target = new Ring("#ff1fce", 0.5, 1.05, true);
   private readonly targetEdge = new Ring("#ffffff", 1.05, 1.18, true);
+  /** The control marker flying to a teammate a phone takes over. */
+  private readonly control = new ControlSwitch();
   /** Who wears which name on their back; the players' own names, set by the host. */
   jerseyName: JerseyName = () => null;
 
   constructor(private readonly wardrobe: Wardrobe) {
-    this.group.add(this.ball.group, this.target.mesh, this.targetEdge.mesh);
+    this.group.add(this.ball.group, this.target.mesh, this.targetEdge.mesh, this.control.group);
   }
 
   figure(id: number): Figure | null {
@@ -71,11 +74,15 @@ export class Squad {
       target: aimed ? { x: aimed.x, z: aimed.z } : null,
     };
     let targeted: AthleteView | null = null;
+    this.control.update(view, dt, time);
     for (const a of view.athletes) {
       const entry = this.ensure(a);
       entry.figure.update(a, { ...scene, center: a.id === center }, dt, time);
       if (camera) entry.figure.showAt(fill(camera, a.x, a.z, entry.figure.kit.height));
-      entry.seat.update(a.seat !== null && view.phase !== "over", a.x, a.z, time, dt, 0.55);
+      // The ring waits for the marker flying in, then pulses brighter for a moment.
+      const pulse = this.control.pulse(a.id) / ARRIVE_PULSE;
+      const ringed = a.seat !== null && view.phase !== "over" && !this.control.incoming(a.id);
+      entry.seat.update(ringed, a.x, a.z, time, dt, 0.55 + 0.45 * pulse, pulse > 0);
       if (a.targeted) targeted = a;
     }
     const aiming = targeted !== null && (view.ball.state === "held" || view.ball.state === "pass");
@@ -115,6 +122,7 @@ export class Squad {
     this.figures.clear();
     this.target.dispose();
     this.targetEdge.dispose();
+    this.control.dispose();
     this.ball.dispose();
   }
 }

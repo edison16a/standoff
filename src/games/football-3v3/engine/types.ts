@@ -93,7 +93,12 @@ export interface Athlete {
   number: number;
   /** The phone playing this athlete, or null for a computer player. */
   seat: number | null;
-  /** True while the computer plays them: bots, and humans whose phone dropped. */
+  /**
+   * The phone steering this athlete right now: its own seat, or a phone
+   * that gave a computer player the ball and took him over (control.ts).
+   */
+  pilot: number | null;
+  /** True while the computer plays them: bots, players lent to a teammate's phone, and humans whose phone dropped. */
   auto: boolean;
   x: number;
   z: number;

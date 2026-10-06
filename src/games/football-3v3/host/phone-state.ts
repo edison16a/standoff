@@ -43,6 +43,8 @@ function result(m: Match, a: Athlete): PhoneState["result"] {
 export function phoneState(c: PhoneContext, seatNo: number): PhoneState {
   const m = c.match;
   const a = m?.bySeat(seatNo) ?? null;
+  // The player steered now: after a pass to a computer teammate, that teammate.
+  const body = (a && m?.steered(seatNo)) ?? a;
   const status = m && a ? seatStatus(m, seatNo) : null;
   const replay = c.phase === "replay";
   const voting = replay && !!c.votes && c.votes.list().some((v) => v.seat === seatNo);
@@ -55,7 +57,7 @@ export function phoneState(c: PhoneContext, seatNo: number): PhoneState {
     pick: c.seat.pick,
     ready: c.seat.ready,
     team: a?.team ?? c.seat.team,
-    role: a ? (a.role === "qb" ? "qb" : "runner") : c.seat.role,
+    role: body ? (body.role === "qb" ? "qb" : "runner") : c.seat.role,
     playing: a !== null,
     score: m ? [m.score[0], m.score[1]] : [0, 0],
     quarter: m?.quarter ?? 1,
@@ -63,6 +65,7 @@ export function phoneState(c: PhoneContext, seatNo: number): PhoneState {
     clock: m ? Math.ceil(m.clock) : 0,
     down: m ? downText(m.drive) : "",
     offense: !!m && !!a && a.team === m.offense,
+    switched: !!a && !!body && body.id !== a.id,
     pad: padFor(m, status, replay),
     choose: status?.choose && !replay ? { options: [...status.choose.options], left: Math.ceil(status.choose.left) } : null,
     hikeLeft: status?.hikeLeft != null && !replay ? Math.ceil(status.hikeLeft) : null,

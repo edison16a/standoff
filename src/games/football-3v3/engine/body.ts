@@ -9,7 +9,7 @@ const LINEMAN_STATS: CharStats = { speed: 3, agility: 3, power: 9, hands: 3, arm
 export function createAthlete(id: number, team: TeamId, role: Role, slot: number, build: BuildId | null, seat: number | null): Athlete {
   const c = build ? BUILDS[build] : null;
   return {
-    id, team, role, slot, build, seat, auto: seat === null,
+    id, team, role, slot, build, seat, pilot: seat, auto: seat === null,
     number: c ? c.number : (LINEMAN_NUMBERS[team][slot] ?? 60 + slot),
     x: 0, z: 0, vx: 0, vz: 0, ax: 0, az: 0,
     yaw: attackSign(team) > 0 ? Math.PI / 2 : -Math.PI / 2,

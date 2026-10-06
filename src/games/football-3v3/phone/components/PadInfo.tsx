@@ -20,6 +20,7 @@ export function statusOf(host: PhoneState): string | null {
   if (host.grounded) return "Getting up";
   if (host.withBall && host.pad === "qb") return qbStatus(host);
   if (host.withBall) return "Run it in";
+  if (host.switched && host.phase === "live") return host.runPlay ? "You have the back" : "You have the receiver";
   switch (host.phase) {
     case "choose":
     case "convert":

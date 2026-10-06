@@ -52,6 +52,8 @@ export const phoneStateSchema = z.object({
   down: z.string().max(24),
   /** This player's side has the ball. */
   offense: z.boolean(),
+  /** This phone passed to a computer teammate and steers him for the rest of the play. */
+  switched: z.boolean(),
   pad: z.enum(PADS),
   /** The QB's pick before a play, and the whole seconds left to make it. */
   choose: z.object({ options: z.array(z.enum(CALLS)).max(3), left: count }).nullable(),

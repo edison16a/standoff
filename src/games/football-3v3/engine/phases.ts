@@ -1,4 +1,5 @@
 import { botConversion, botPlayCall } from "./bots/calls";
+import { restoreControl } from "./control";
 import { planPlay } from "./bots/plan";
 import { botSkill } from "./bots/skill";
 import { tryDrive } from "./downs";
@@ -18,9 +19,13 @@ import type { ConversionCall, PlayCall } from "./types";
 /** Seconds a snap takes from the center's hands to the QB's. */
 export const SNAP_TIME = 0.4;
 
+/** Phases that line up afresh: every phone goes back to its own player. */
+const FRESH: ReadonlySet<Match["phase"]> = new Set(["choose", "convert", "kick", "over"]);
+
 function enter(m: Match, phase: Match["phase"]): void {
   m.phase = phase;
   m.phaseT = 0;
+  if (FRESH.has(phase)) restoreControl(m);
 }
 
 function deadBall(m: Match): void {

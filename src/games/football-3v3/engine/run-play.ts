@@ -4,6 +4,7 @@ import { launch } from "./flight";
 import { solveLaunch } from "./aim";
 import { clampToWorld, FIELD, YARD } from "./field";
 import type { Match } from "./match";
+import { handOver } from "./control";
 import { handSpot } from "./passer-facing";
 import { PASS, PITCH } from "./tuning";
 import type { Athlete, TeamId } from "./types";
@@ -76,4 +77,5 @@ export function releasePitch(m: Match, a: Athlete, to: number): void {
   };
   m.play!.pitched = true;
   m.emit({ type: "pitch", id: a.id, to });
+  handOver(m, a, back);
 }

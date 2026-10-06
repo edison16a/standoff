@@ -3,6 +3,7 @@ import { attackSign, other, type TeamId } from "../teams";
 import { newBall, type Ball, type PassInfo } from "./ball";
 import { createAthlete } from "./body";
 import { think } from "./bots/brain";
+import { setAway, steered } from "./control";
 import { pressButton, releaseButton, setAim, setMove } from "./controls";
 import { newDrive, type Drive } from "./downs";
 import type { MatchEvent, PlayEnd } from "./events";
@@ -66,6 +67,8 @@ export class Match {
   readonly lines: LinePair[];
   /** When each pair of players may next make a pads sound, so one collision is one thud. */
   readonly bumps = new Map<number, number>();
+  /** Phones that dropped: the computer plays whoever they steer until they come back. */
+  readonly away = new Set<number>();
   private readonly queue: MatchEvent[] = [];
 
   constructor(options: MatchOptions) {
@@ -124,9 +127,14 @@ export class Match {
     return this.athletes.find((a) => a.team === team && a.role === "qb")!;
   }
 
-  /** The athlete a phone plays, if any. */
+  /** The athlete a phone owns, if any: its own player, for its name, team and stats. */
   bySeat(seat: number): Athlete | null {
     return this.athletes.find((a) => a.seat === seat) ?? null;
+  }
+
+  /** The athlete a phone steers now, which after a pass to a computer teammate is that teammate. */
+  steered(seat: number): Athlete | null {
+    return steered(this, seat);
   }
 
   /** Which way along x the team with the ball is going. */
@@ -158,14 +166,10 @@ export class Match {
     chooseCall(this, id, call);
   }
 
-  /** A person's phone dropped or came back. The computer plays for them meanwhile. */
+  /** A person's phone dropped or came back, by the athlete it owns. The computer plays for them meanwhile. */
   setAuto(id: number, auto: boolean): void {
     const a = this.athlete(id);
-    if (!a || a.seat === null) return;
-    a.auto = auto;
-    a.move = { x: 0, z: 0 };
-    a.aim = null;
-    a.guard = null;
+    if (a && a.seat !== null) setAway(this, a.seat, auto);
   }
 
   step(dt: number): void {

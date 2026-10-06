@@ -1,4 +1,5 @@
 import type { MatchEvent } from "../engine/events";
+import { piloted } from "../engine/control";
 import type { Match } from "../engine/match";
 import type { BuzzKind } from "../protocol";
 
@@ -8,8 +9,9 @@ import type { BuzzKind } from "../protocol";
  * whistles and the final result.
  */
 export function buzzFor(event: MatchEvent, m: Match): [number, BuzzKind][] {
-  const seatOf = (id: number) => m.athlete(id)?.seat ?? null;
-  const people = m.athletes.filter((a) => a.seat !== null && !a.auto);
+  // A phone that passed to a computer teammate steers him: his buzzes are its buzzes.
+  const seatOf = (id: number) => m.athlete(id)?.pilot ?? m.athlete(id)?.seat ?? null;
+  const people = piloted(m).map((p) => ({ seat: p.seat, team: p.athlete.team }));
   const one = (id: number, kind: BuzzKind): [number, BuzzKind][] => {
     const seat = seatOf(id);
     return seat === null ? [] : [[seat, kind]];
@@ -34,11 +36,11 @@ export function buzzFor(event: MatchEvent, m: Match): [number, BuzzKind][] {
     case "kick":
       return one(event.id, "kick");
     case "touchdown":
-      return people.map((a) => [a.seat!, a.team === event.team ? "touchdown" : "conceded"]);
+      return people.map((a) => [a.seat, a.team === event.team ? "touchdown" : "conceded"]);
     case "whistle":
-      return people.map((a) => [a.seat!, "whistle"]);
+      return people.map((a) => [a.seat, "whistle"]);
     case "win":
-      return people.map((a) => [a.seat!, a.team === event.team ? "win" : "lose"]);
+      return people.map((a) => [a.seat, a.team === event.team ? "win" : "lose"]);
     default:
       return [];
   }

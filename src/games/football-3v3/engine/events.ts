@@ -35,6 +35,8 @@ export type MatchEvent =
   /** The QB's pitch to the back on a run call, and the back taking it. */
   | { type: "pitch"; id: number; to: number }
   | { type: "takePitch"; id: number }
+  /** A phone took over the computer teammate it gave the ball to (control.ts). */
+  | { type: "control"; seat: number; from: number; to: number }
   | { type: "catch"; id: number; yards: number }
   | { type: "intercept"; id: number; from: number }
   | { type: "incomplete"; id: number | null }

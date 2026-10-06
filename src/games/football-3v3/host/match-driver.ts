@@ -47,8 +47,9 @@ export class MatchDriver {
     this.view = buildView(this.match);
   }
 
+  /** The athlete a phone steers now: its own, or the computer teammate it passed to this play. */
   private id(seat: number): number | null {
-    return this.idBySeat.get(seat) ?? null;
+    return this.idBySeat.has(seat) ? (this.match.steered(seat)?.id ?? null) : null;
   }
 
   /** A button went down or up. The stick at that instant goes first, so a juke reads the right way. */
@@ -81,8 +82,8 @@ export class MatchDriver {
 
   /** A phone left or came back. While away, the computer plays for them. */
   setOnline(seat: number, online: boolean): void {
-    const id = this.id(seat);
-    if (id !== null) this.match.setAuto(id, !online);
+    const id = this.idBySeat.get(seat);
+    if (id !== undefined) this.match.setAuto(id, !online);
   }
 
   /** Admin panel shortcuts, for the team with the ball. Their events come out on the next tick. */
@@ -136,7 +137,9 @@ export class MatchDriver {
   }
 
   private steer(sticks: Sticks): void {
-    for (const [seat, id] of this.idBySeat) {
+    for (const seat of this.idBySeat.keys()) {
+      const id = this.id(seat);
+      if (id === null) continue;
       this.match.setMove(id, stickToField(sticks.move(seat), sticks.forward));
       const aim = sticks.aim(seat);
       if (aim) this.match.setAim(id, stickToField(aim, sticks.forward));
