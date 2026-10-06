@@ -52,6 +52,14 @@ export class ShotCamera {
         fov = THREE.MathUtils.clamp(2 * THREE.MathUtils.radToDeg(Math.atan(rig.frame / 2 / dist)), 6, 70);
         break;
       }
+      case "spot": {
+        const p = world.track.pointAt(rig.at * world.track.length, rig.d);
+        const q = world.track.pointAt(rig.look.at * world.track.length, rig.look.d);
+        wantPos.set(p.x, p.y + rig.height, p.z);
+        wantLook.set(q.x, q.y + rig.look.height, q.z);
+        fov = rig.fov;
+        break;
+      }
       case "hero": {
         const kart = world.karts[rig.kart] ?? focus.lead;
         // Measured from the road rather than the kart's nose, a kart spun by a hit does not whirl the camera round.
@@ -64,8 +72,8 @@ export class ShotCamera {
         break;
       }
     }
-    // A close up is held exactly on its kart, which at full speed would outrun any smoothing.
-    if (this.fresh || rig.kind === "hero") {
+    // A close up is held exactly on its kart, which at full speed would outrun any smoothing. A spot never moves.
+    if (this.fresh || rig.kind === "hero" || rig.kind === "spot") {
       this.pos.copy(wantPos);
       this.look.copy(wantLook);
       this.fov = fov;
