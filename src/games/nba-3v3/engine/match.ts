@@ -65,6 +65,8 @@ export class Match {
   forced: Outcome | null = null;
   /** The dunk thrown on the next drive, set by the showcase for the same reason. */
   forcedDunk: DunkStyle | null = null;
+  /** The next hand that gets to a shot blocks it, for the showcase and the lab. */
+  forcedBlock = false;
   gamePoint: [boolean, boolean] = [false, false];
   /** Whose turn it is to bring the ball up, per team, so everyone gets to handle it. */
   readonly checkTurn: [number, number] = [0, 0];

@@ -2,6 +2,7 @@ import type { DunkStyle } from "../roster";
 import type { FoulKind } from "./foul-call";
 import type { Grade, Outcome, ShotKind } from "./shot-model";
 import type { DribbleMove, TeamId } from "./types";
+import type { V3 } from "./vec";
 
 /**
  * Everything worth a sound, an effect or a buzz. The
@@ -36,7 +37,10 @@ export type MatchEvent =
   /** A free throw is ready to shoot: shot `n` of `of`. */
   | { type: "freeThrow"; id: number; n: number; of: number }
   | { type: "miss"; id: number }
-  | { type: "block"; id: number; victim: number }
+  /** A shot blocked: swatted away, or with `tip` only got a fingertip on; `at` is where the hand met the ball. */
+  | { type: "block"; id: number; victim: number; tip: boolean; at: V3 }
+  /** A fingertip on a pass that knocks it loose. */
+  | { type: "tip"; id: number; at: V3 }
   | { type: "steal"; id: number; victim: number }
   | { type: "whiff"; id: number }
   | { type: "intercept"; id: number; victim: number }

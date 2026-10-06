@@ -116,7 +116,7 @@ export function slam(m: Match, a: Athlete): void {
     b.shot.outcome = "airball";
     b.lastTouch = c.blocker.id;
     c.blocker.box.blocks++;
-    m.emit({ type: "block", id: c.blocker.id, victim: a.id });
+    m.emit({ type: "block", id: c.blocker.id, victim: a.id, tip: false, at: { ...top } });
     missShot(m);
     return;
   }

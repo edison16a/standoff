@@ -52,13 +52,17 @@ export function blockHook(m: Match): TouchHook | undefined {
       const s = arm(d);
       if (body.pos.y < s.y || Math.hypot(body.pos.x - s.x, body.pos.y - s.y, body.pos.z - s.z) > s.reach + BALL.radius) continue;
       shot.rolled.push(d.id);
-      if (m.rng() >= touchChance(d, kind)) continue;
-      swat(m, body);
+      if (!m.forcedBlock && m.rng() >= touchChance(d, kind)) continue;
+      m.forcedBlock = false;
+      // A ball whose path runs deep into the reach meets the whole hand and is swatted; one that only grazes it gets fingertips.
+      const tip = closestPass(body, s) > s.reach * TIP_REACH;
+      if (tip) tipShot(m, body);
+      else swat(m, body);
       d.box.blocks++;
       b.lastTouch = d.id;
       b.flightKind = "block";
       shot.outcome = "airball";
-      m.emit({ type: "block", id: d.id, victim: shot.shooter });
+      m.emit({ type: "block", id: d.id, victim: shot.shooter, tip, at: { ...body.pos } });
       missShot(m);
       return;
     }
@@ -81,6 +85,28 @@ export function swat(m: Match, body: BallBody): void {
   const e = 0.15;
   body.vel = { x: hand.x + (hand.x - v.x) * e, y: hand.y + (hand.y - v.y) * e, z: hand.z + (hand.z - v.z) * e };
   body.w = { x: body.w.x * 0.3 + between(m.rng, -12, 12), y: between(m.rng, -6, 6), z: body.w.z * 0.3 + between(m.rng, -12, 12) };
+}
+
+/** Beyond this share of the arm's reach a block is only a fingertip on the ball. */
+const TIP_REACH = 0.7;
+
+/** How near the ball's straight path comes to the shoulder from here on. */
+function closestPass(body: BallBody, s: { x: number; y: number; z: number }): number {
+  const rx = body.pos.x - s.x;
+  const ry = body.pos.y - s.y;
+  const rz = body.pos.z - s.z;
+  const v = body.vel;
+  const vv = v.x * v.x + v.y * v.y + v.z * v.z;
+  const t = vv > 1e-6 ? Math.max(0, -(rx * v.x + ry * v.y + rz * v.z) / vv) : 0;
+  return Math.hypot(rx + v.x * t, ry + v.y * t, rz + v.z * t);
+}
+
+/** A fingertip on a shot: the ball keeps much of its flight but is knocked up and off line, and goes short. */
+function tipShot(m: Match, body: BallBody): void {
+  const v = body.vel;
+  const side = between(m.rng, -1.2, 1.2);
+  body.vel = { x: v.x * 0.45 + side * v.z * 0.15, y: Math.abs(v.y) * 0.25 + between(m.rng, 1.2, 2.4), z: v.z * 0.45 - side * v.x * 0.15 };
+  body.w = { x: between(m.rng, -14, 14), y: between(m.rng, -6, 6), z: between(m.rng, -14, 14) };
 }
 
 /** A pass is caught when it reaches the receiver's hands, or picked off by a defender it passes close to. */
@@ -124,6 +150,7 @@ function tip(m: Match, d: Athlete): void {
   b.passTo = null;
   b.aim = null;
   b.lastTouch = d.id;
+  m.emit({ type: "tip", id: d.id, at: { ...b.pos } });
 }
 
 /** Whether the ball is where this player's hands can take it: in front of the body between the knees and full stretch. */
