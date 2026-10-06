@@ -18,6 +18,8 @@ export function FightHud() {
   const session = useSession();
   if (!hud) return null;
   const split = hud.panes.length === 2;
+  // Keyboard mode names the key where the camera's words say what to do with your body.
+  const keys = session.keys !== null;
   const first = hud.views[0];
   const shown: OwnView[] = hud.panes.length > 0 ? hud.panes : first !== undefined ? [{ id: first, rect: FULL }] : [];
   return (
@@ -34,11 +36,11 @@ export function FightHud() {
         </div>
       )}
       {split && <PlayerMap panes={hud.panes} />}
-      <RoundCallout hud={hud} />
+      <RoundCallout hud={hud} keys={keys} />
       {hud.count && (
         <div className="bx-count" key={hud.count.n}>
           <span className="bx-count__n">{hud.count.n}</span>
-          {!hud.count.rising && hud.fighters[hud.count.fighter].human && <span className="bx-count__hint">Drop your gloves, then raise both to get up!</span>}
+          {!hud.count.rising && hud.fighters[hud.count.fighter].human && <span className="bx-count__hint">{keys ? "Hold Shift to get up!" : "Drop your gloves, then raise both to get up!"}</span>}
         </div>
       )}
       {hud.away.length > 0 && (

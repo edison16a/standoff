@@ -6,7 +6,7 @@ import type { Hud } from "../host-store";
  * who is ready and how long is left, and the break in the corners with
  * the count to the next round.
  */
-export function RoundCallout({ hud }: { hud: Hud }) {
+export function RoundCallout({ hud, keys = false }: { hud: Hud; keys?: boolean }) {
   if (hud.stage !== "fight") return null;
   if (hud.phase === "intro") {
     return (
@@ -15,7 +15,7 @@ export function RoundCallout({ hud }: { hud: Hud }) {
       </div>
     );
   }
-  if (hud.phase === "touch" && !hud.touched) return <TouchPrompt hud={hud} />;
+  if (hud.phase === "touch" && !hud.touched) return <TouchPrompt hud={hud} keys={keys} />;
   if (hud.phase !== "break") return null;
   const next = hud.round + 1;
   const title = hud.breakStage === "walk" ? "Back to your corner" : hud.breakStage === "rest" ? "Rest on the stool" : "Back to the middle";
@@ -28,12 +28,12 @@ export function RoundCallout({ hud }: { hud: Hud }) {
   );
 }
 
-function TouchPrompt({ hud }: { hud: Hud }) {
+function TouchPrompt({ hud, keys }: { hud: Hud; keys: boolean }) {
   const players = hud.views.length;
   return (
     <div className="bx-callout bx-touch">
       <span className="bx-touch__title">Touch gloves</span>
-      <span className="bx-callout__small">Hold both gloves straight out in front of you</span>
+      <span className="bx-callout__small">{keys ? "Hold E to hold your gloves out" : "Hold both gloves straight out in front of you"}</span>
       <div className="bx-touch__who">
         {([0, 1] as const).map((id) => {
           const fighter = hud.fighters[id];

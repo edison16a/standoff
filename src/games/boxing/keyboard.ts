@@ -10,8 +10,8 @@ export const keyboard: KeyboardBinding = {
     {
       title: "Start",
       rows: [
-        { action: "On the first screen, pick", keys: ["Play with the keyboard"] },
-        { action: "Browse builds", keys: [["A", "D"], ["Left", "Right"]] },
+        { action: "First screen", keys: ["Play with the keyboard"] },
+        { action: "Browse builds", keys: [["A", "D"]] },
         { action: "Lock in", keys: ["Enter"] },
       ],
     },
@@ -27,12 +27,12 @@ export const keyboard: KeyboardBinding = {
     {
       title: "Defend",
       rows: [
-        { action: "Slip left or right", keys: [["A", "D"], ["Left", "Right"]] },
+        { action: "Slip", keys: [["A", "D"], ["Left", "Right"]] },
         { action: "Duck (hold)", keys: ["S", "Down"] },
         { action: "Dodge under", keys: ["Space"] },
-        { action: "Block (hold), get up", keys: ["Shift"] },
-        { action: "Block the body (hold)", keys: ["F"] },
-        { action: "Touch gloves (hold)", keys: ["E"] },
+        { action: "Block, get up", keys: ["Shift"] },
+        { action: "Cover the body", keys: ["F"] },
+        { action: "Touch gloves", keys: ["E"] },
       ],
     },
   ],
