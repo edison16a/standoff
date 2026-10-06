@@ -25,12 +25,6 @@
   gap: 10px;
 }
 
-.bx-input__label {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 15px;
-  font-weight: 700;
-}
-
 .bx-input__segments {
   display: flex;
   padding: 3px;
