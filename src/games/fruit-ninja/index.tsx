@@ -7,6 +7,7 @@ import { FruitPhone } from "./phone/fruit-phone";
 import { PhoneScreen } from "./phone/components/PhoneScreen";
 import { PhoneContext } from "./phone/components/session-context";
 import Showcase from "./showcase/Showcase";
+import { keyboard } from "./keyboard";
 import "./styles/host.css";
 import "./styles/lobby.css";
 import "./styles/round.css";
@@ -48,4 +49,5 @@ export const game: GameModule = {
 
   // Loaded with the module, not lazily, so the capture tool never films an empty frame.
   Showcase,
+  keyboard,
 };
