@@ -102,8 +102,8 @@ const BILLBOARD_VERTEX = `
     vec4 centre = modelViewMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
     float size = length(instanceMatrix[0].xyz);
     centre.xy += position.xy * size;
-    // A camera passing right by a box must not be blinded by its light.
-    vFade = smoothstep(1.5, 5.0, -centre.z);
+    // A camera passing right by a box, or chasing a kart through one, must not be blinded by its light.
+    vFade = smoothstep(2.5, 7.0, -centre.z);
     gl_Position = projectionMatrix * centre;
   }`;
 
@@ -122,9 +122,10 @@ export function haloMaterial(): THREE.ShaderMaterial {
       void main() {
         vec2 p = (vUv - 0.5) * 2.0;
         float r = length(p);
-        float glow = exp(-r * r * 5.0) * 0.7 + exp(-r * r * 40.0) * 1.0;
+        // Tight, so the light stays in its box and never washes over a kart driving past.
+        float glow = exp(-r * r * 7.0) * 0.55 + exp(-r * r * 40.0) * 0.9;
         float twinkle = exp(-abs(p.x) * 26.0) * exp(-abs(p.y) * 2.6) + exp(-abs(p.y) * 26.0) * exp(-abs(p.x) * 2.6);
-        vec3 c = vTint * (glow + twinkle * 0.7) + vTint * exp(-r * r * 60.0) * 0.6;
+        vec3 c = vTint * (glow + twinkle * 0.6) + vTint * exp(-r * r * 60.0) * 0.5;
         gl_FragColor = vec4(c * smoothstep(1.0, 0.7, r) * vFade, 1.0);
         #include <colorspace_fragment>
       }`,

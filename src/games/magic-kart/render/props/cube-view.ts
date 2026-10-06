@@ -7,7 +7,7 @@ import { boxTint, glassMaterial, haloMaterial, markGeometry, markMaterial, shell
 import { cubeTurn, popScale, shove, STACK_SCALE, stepWobble, stillWobble, type Wobble } from "./box-motion";
 
 /** Seconds the light inside a broken box flares out for. */
-const FLARE = 0.28;
+const FLARE = 0.22;
 /** A kart this close across the ground is inside the box. */
 const INSIDE = 1.9;
 
@@ -144,8 +144,8 @@ export class CubeView {
       this.mark.setMatrixAt(i, m);
       // The light at its heart flares out as the box breaks.
       const flare = flaring < FLARE ? 1 - flaring / FLARE : 0;
-      const glow = flaring < FLARE ? 0.9 * flare * flare : (0.75 + Math.sin(time * 3.1 + i) * 0.15) * scale;
-      const haloSize = flaring < FLARE ? 2 + (1 - flare) * 1.6 : 2.4 * size;
+      const glow = flaring < FLARE ? 0.6 * flare * flare : (0.75 + Math.sin(time * 3.1 + i) * 0.15) * scale;
+      const haloSize = flaring < FLARE ? 1.8 + (1 - flare) * 1.4 : 1.9 * size;
       m.compose(p, q.identity(), s.setScalar(haloSize));
       this.halo.setMatrixAt(i, m);
       this.halo.setColorAt(i, c.copy(box.tint).multiplyScalar(glow));
