@@ -32,10 +32,11 @@ function bolt(ctx: CanvasRenderingContext2D): void {
 
 /** Three tongues of flame swept back, as if rushing forward. */
 function flame(ctx: CanvasRenderingContext2D): void {
+  // Three tall tongues, the tallest leaning back, over a round base.
   const outer = new Path2D(
-    "M 52 94 C 24 94 12 74 18 54 C 22 40 34 34 32 18 C 46 28 50 40 48 50 C 56 40 58 26 54 8 C 74 22 86 44 82 64 C 80 80 70 94 52 94 Z",
+    "M 50 96 C 26 96 14 80 18 62 C 21 50 30 44 30 30 C 38 38 42 46 42 54 C 46 40 48 24 40 6 C 58 16 70 32 68 50 C 74 44 78 36 76 26 C 88 40 90 62 82 76 C 76 90 64 96 50 96 Z",
   );
-  const inner = new Path2D("M 52 86 C 36 86 28 74 32 62 C 36 54 42 52 42 44 C 50 52 52 58 50 66 C 58 60 62 52 62 42 C 72 54 74 66 70 74 C 66 82 60 86 52 86 Z");
+  const inner = new Path2D("M 52 88 C 38 88 31 78 34 67 C 36 60 41 57 42 50 C 47 56 50 62 50 68 C 54 60 56 50 53 40 C 63 48 68 60 65 70 C 69 67 71 63 71 58 C 76 66 76 76 70 82 C 66 86 60 88 52 88 Z");
   ctx.lineWidth = 11;
   ctx.strokeStyle = "#ffffff";
   ctx.stroke(outer);
