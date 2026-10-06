@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { TRACKS } from "../tracks";
 import { lapsDone } from "./race";
 import { seeded } from "./random";
-import { finishInPlace, jumpToFinalLap } from "./shortcuts";
+import { fillHands, finishInPlace, jumpToFinalLap } from "./shortcuts";
 import { RACE, STEP } from "./tuning";
 import { RaceWorld } from "./world";
 
@@ -47,5 +47,15 @@ describe("admin shortcuts", () => {
     expect(world.drainEvents().some((e) => e.type === "raceOver")).toBe(true);
     expect([...world.karts].sort((a, b) => a.race.place - b.race.place).map((k) => k.id)).toEqual(order);
     expect(world.karts.every((k) => k.race.finishTime !== null)).toBe(true);
+  });
+
+  it("fills every hand to two power ups, keeping what was already held", () => {
+    const world = racing();
+    const kart = world.karts[0]!;
+    kart.items.length = 0;
+    kart.items.push({ kind: "shield", readyAt: 0 });
+    fillHands(world, () => 0.1);
+    for (const k of world.karts) expect(k.items).toHaveLength(2);
+    expect(kart.items[0]!.kind).toBe("shield");
   });
 });

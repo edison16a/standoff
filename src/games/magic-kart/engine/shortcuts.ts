@@ -1,3 +1,5 @@
+import { stow } from "./item-queue";
+import { rollItem } from "./items";
 import { checkpointSpacing, lapsDone } from "./race";
 import { RACE } from "./tuning";
 import type { RaceWorld } from "./world";
@@ -32,4 +34,12 @@ export function finishInPlace(world: RaceWorld): void {
     kart.race.finishTime = world.time + i * 0.5;
     kart.race.place = home + i + 1;
   });
+}
+
+/** Fills every kart's hand to two power ups, rolled as for the middle of the pack, for trying the queue. */
+export function fillHands(world: RaceWorld, random: () => number = Math.random): void {
+  if (world.phase !== "racing") return;
+  for (const kart of world.karts) {
+    if (!kart.race.finished) stow(kart, [rollItem(0.5, random()), rollItem(0.5, random())], world.time);
+  }
 }
