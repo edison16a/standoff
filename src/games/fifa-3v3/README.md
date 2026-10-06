@@ -210,7 +210,7 @@ The loop is a wordless trailer, cut like a game advert (`showcase/trailer-plan.t
 
 The poster is the Striker's strike an instant after the ball leaves his boot, with the keeper set in goal. Two spotlights light it like key art, warm from one side and cold from behind.
 
-The icon is made like a game cover, from its own short film (`showcase/icon-film.ts`). The Striker runs at goal alone with the ball, the computer players set to training so they stand clear, and the film holds as he winds up to shoot: arms spread wide, his boot drawn back over the ball, facing the viewer. The camera is low in front of him and to one side, with the stands behind sunk in a nearer haze. A warm spot from the front lights his face and two cold spots from behind cut a rim along him (`iconLights`). The camera follows the Striker to wherever the simulation carries him, so he stays framed if the run plays out a little differently. The referee is sent out of shot. The logo sits over a dark foot. With no phones in it, every name is a build's.
+The icon is made like a game cover: the trailer's hurdle, held at the top of the hop. The Striker is in the air over the Winger's slide, the ball lifted over the boot with him, seen from down on the grass in front as the slide comes at the camera (`showcase/stills.ts`). A warm spot from the front lights his face and two cold spots from behind cut a rim along him (`iconLights`). Anyone else near him is stepped back out of the square frame. The logo sits over a dark foot.
 
 Do not edit the game while a capture runs: the dev server's hot reload restarts the showcase mid clip. Check each clip for held frames with ffmpeg's `mpdecimate`.
 
