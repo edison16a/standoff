@@ -20,7 +20,7 @@ const LEAD: Record<ShowcaseView, number> = { loop: -2.7, poster: 0, icon: 0 };
  * ahead without drawing and then held. The poster is the Dunker at the
  * top of his windmill; the icon has its own film (icon-film.ts).
  */
-const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 2.6, icon: ICON_AT };
+const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 2.8, icon: ICON_AT };
 
 /**
  * The loop plays behind the home screen, so it draws a little under full
@@ -59,7 +59,7 @@ export class ShowcaseDirector {
 
   constructor(canvas: HTMLCanvasElement, readonly view: ShowcaseView) {
     this.renderer = new CourtRenderer(canvas);
-    if (view === "poster") this.renderer.cinematic({ lights: stillLights(STILL_SUBJECT), fill: 0.25, key: 0.55, haze: 0.05 });
+    if (view === "poster") this.renderer.cinematic({ lights: stillLights(STILL_SUBJECT), fill: 0.5, key: 0.8, haze: 0.018, boards: true });
     if (view === "icon") this.renderer.cinematic(iconLook());
     // Development aids: ?cam=x,y,z,lookX,lookY,lookZ,fov pins the camera for close looks at the models,
     // ?at=seconds holds a still at another moment of the film, and dev.ts reads the rest.

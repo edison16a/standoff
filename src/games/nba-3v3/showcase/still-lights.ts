@@ -30,8 +30,8 @@ export function iconLights(subject: THREE.Vector3, facing: { x: number; z: numbe
   const at = (ahead: number, side: number, up: number) =>
     new THREE.Vector3(subject.x + facing.x * ahead - facing.z * side, subject.y + up, subject.z + facing.z * ahead + facing.x * side);
   return [
-    ...spot("#ffd6a0", 70, at(5, 2, 4.5), subject, 0.3),
-    ...spot("#7fb2ff", 150, at(-5, 3.5, 4.5), subject, 0.4),
-    ...spot("#9fc4ff", 110, at(-5, -3.5, 4), subject, 0.4),
+    ...spot("#ffd6a0", 60, at(5, 2, 4.5), subject, 0.3),
+    ...spot("#7fb2ff", 95, at(-5, 3.5, 4.5), subject, 0.4),
+    ...spot("#9fc4ff", 70, at(-5, -3.5, 4), subject, 0.4),
   ];
 }

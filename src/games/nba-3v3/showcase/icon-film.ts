@@ -17,14 +17,14 @@ const FACING = { x: 0.596, z: -0.803 };
 
 /** Low on his line, a few steps ahead of him, so he drives right at the viewer with the side stands behind. */
 export const ICON_CAMERA = {
-  pos: new THREE.Vector3(SUBJECT.x + FACING.x * 2.25, 0.45, SUBJECT.z + FACING.z * 2.25),
+  pos: new THREE.Vector3(SUBJECT.x + FACING.x * 2.25, 0.75, SUBJECT.z + FACING.z * 2.25),
   look: new THREE.Vector3(SUBJECT.x, 1.1, SUBJECT.z),
   fov: 44,
 };
 
 /** A darker arena than the game's, so the lit hero stands out of it. */
 export function iconLook(): CinemaLook {
-  return { lights: iconLights(SUBJECT, FACING), fill: 0.3, key: 0.6, haze: 0.025 };
+  return { lights: iconLights(SUBJECT, FACING), fill: 0.45, key: 0.8, haze: 0.014, boards: true };
 }
 
 const DUNKER = 1;
