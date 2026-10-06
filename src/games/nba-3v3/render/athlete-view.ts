@@ -40,7 +40,7 @@ export class AthleteView {
   private phase = 0;
   private lastY = 0;
   private lastKind = "none";
-  private readonly mem: ActionMemory = { time: 0, releasedAt: null, endedAt: -9, landAt: -9, hardLand: false };
+  private readonly mem: ActionMemory = { time: 0, releasedAt: null, endedAt: -9, landAt: -9, hardLand: false, shove: 1 };
   private readonly placement: Placement;
   private readonly seed: number;
   private readonly lastV = new THREE.Vector2();
@@ -124,6 +124,8 @@ export class AthleteView {
       // A spin in the air ends facing the same way it started, so unwind it without turning back round.
       if (wasDrive) this.pose.spin = Math.atan2(Math.sin(this.pose.spin), Math.cos(this.pose.spin));
       if (kind === "none") m.endedAt = m.time;
+      // Thrown the wrong way: his speed to the left in his own frame says which way to fall.
+      if (kind === "stumble") m.shove = a.vx * Math.cos(a.yaw) - a.vz * Math.sin(a.yaw) >= 0 ? 1 : -1;
       m.releasedAt = null;
       this.lastKind = kind;
     }

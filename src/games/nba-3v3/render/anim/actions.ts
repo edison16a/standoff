@@ -105,24 +105,6 @@ export function stealPose(t: number, base: Pose): Pose {
   );
 }
 
-/**
- * Knocked off balance: thrown back and to one side with the arms
- * windmilling, a couple of stagger steps to stay up, then the stance
- * again. It reads from across the room, so a beaten defender is plain.
- */
-export function stumblePose(t: number, dur: number, base: Pose): Pose {
-  const wave = Math.sin(t * 16) * 0.45;
-  // Alternating stagger steps, fading out as he gets his feet back.
-  const step = Math.sin(t * 13) * Math.max(0, 1 - t / dur);
-  const frames: (readonly [number, PosePatch])[] = [
-    [0, { torsoX: -0.55, torsoZ: 0.35, neckX: 0.3, hipY: -0.1, armLRaise: 1.6 + wave, armRRaise: 1.3 - wave, armLSpread: 1.3, armRSpread: 1.4, elbowL: 0.3, elbowR: 0.3, legRLift: -0.5, kneeR: 0.5, legLLift: 0.45 + step * 0.3, kneeL: 0.8 }],
-    [dur * 0.35, { torsoX: -0.2, torsoZ: -0.25, hipY: -0.16, armLRaise: 1.0 - wave, armRRaise: 1.2 + wave, legLLift: 0.2 - step * 0.3, legRLift: 0.5 + step * 0.3, kneeR: 1.0, kneeL: 0.6 }],
-    [dur * 0.7, { torsoX: 0.3, torsoZ: 0.1, hipY: -0.14, legRLift: 0.25, kneeR: 0.9, legLLift: 0.5, kneeL: 0.9 }],
-    [dur, { torsoX: 0.1, hipY: -0.03 }],
-  ];
-  return keyed(frames, t, base);
-}
-
 /** The knees give on a hard landing. */
 export function landPose(since: number, hard: boolean, base: Pose): Pose {
   const depth = hard ? 1 : 0.55;

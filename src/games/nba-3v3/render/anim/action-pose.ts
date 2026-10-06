@@ -1,6 +1,6 @@
 import type { BuildSpec } from "../../builds";
 import type { Athlete } from "../../engine/types";
-import { blockPose, landPose, passPose, shootPose, stealPose, stumblePose } from "./actions";
+import { blockPose, landPose, passPose, shootPose, stealPose } from "./actions";
 import type { AthleteScene } from "./base";
 import { celebratePose, dejectedPose } from "./celebrations";
 import { dunkPose, dunkSpin } from "./dunks";
@@ -10,6 +10,7 @@ import { layupPose } from "./layups";
 import { setShotPose } from "./line";
 import { movePose } from "./moves";
 import { blend, type Pose } from "./pose";
+import { stumblePose } from "./reactions";
 import { captainPose, matePose } from "./trophy-poses";
 
 /** After a shot, a dunk or a pass the body eases back into its run this slowly at first. */
@@ -29,6 +30,8 @@ export interface ActionMemory {
   endedAt: number;
   landAt: number;
   hardLand: boolean;
+  /** Which way a stumble threw him, from his speed as it began: + to his left. */
+  shove: number;
 }
 
 /**
@@ -60,7 +63,7 @@ export function actionPose(a: Athlete, c: BuildSpec, s: AthleteScene, base: Pose
     case "move":
       return { pose: movePose(act, base), rate: 26 };
     case "stumble":
-      return { pose: stumblePose(act.t, act.dur, base), rate: 22 };
+      return { pose: stumblePose(act.t, act.dur, base, act.fall, m.shove), rate: act.fall ? 18 : 22 };
     case "celebrate": {
       // Into the celebration and out of it again smoothly, back to the walk to the check.
       if (s.holding) return { pose: base, rate: 16 };

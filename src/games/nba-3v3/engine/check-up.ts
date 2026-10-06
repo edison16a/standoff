@@ -74,12 +74,12 @@ export function walkTo(m: Match, a: Athlete, to: V2, pace: number): number {
   return d;
 }
 
-/** The nearest player on the team getting the ball goes for it. */
+/** The nearest player on the team getting the ball goes for it, unless he is still picking himself up off the floor. */
 function chooseFetcher(m: Match, c: CheckUp): number {
   let best = c.plan.checker;
   let bestD = Infinity;
   for (const a of m.athletes) {
-    const d = dist2(a, m.ball.pos);
+    const d = dist2(a, m.ball.pos) + (a.action.kind === "stumble" ? 50 : 0);
     if (a.team === c.team && d < bestD) {
       bestD = d;
       best = a.id;
