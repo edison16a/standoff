@@ -79,7 +79,7 @@ export function meterView(m: Match): MeterView | null {
  * and then the gold; easy ones float a few and fire a few.
  */
 export function botReading(m: Match, qb: Athlete, skill: FootballSkill): ThrowReading {
-  const sigma = 0.035 + (1 - skill.accuracy) * 0.13;
+  const sigma = 0.055 + (1 - skill.accuracy) * 0.13;
   const level = clamp(METER.center + m.rng.gauss(sigma), 0, 1);
   return gradeLevel(level, meterWindow(statsOf(qb).arm));
 }

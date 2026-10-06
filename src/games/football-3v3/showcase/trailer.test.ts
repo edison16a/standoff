@@ -36,14 +36,14 @@ describe("football trailer", () => {
     for (const s of SHOTS) expect(shotLength(s)).toBeLessThan(2.5);
   });
 
-  it("lands the throw, the catch and the big hit inside their shots", () => {
+  it("lands the throw, the catch and the tackler's dive inside their shots", () => {
     const throwAt = log.find((l) => l.e.type === "throw")!.at;
     const catchAt = log.find((l) => l.e.type === "catch")!.at;
-    const hit = log.find((l) => l.e.type === "tackle" && l.at > shot("hit").from - 1)!;
+    const dive = log.find((l) => l.e.type === "lunge" && l.at > shot("hit").from - 1)!;
     expect(inside(throwAt, "qbLow") || Math.abs(throwAt - shot("qbLow").to) < 0.2).toBe(true);
     expect(inside(catchAt, "catch")).toBe(true);
-    expect(inside(hit.at, "hit")).toBe(true);
-    expect(hit.e).toMatchObject({ id: JUKER, by: TACKLER });
+    expect(inside(dive.at, "hit")).toBe(true);
+    expect(dive.e).toMatchObject({ id: TACKLER, target: JUKER });
   });
 
   it("shows the side step as the Storm's runner carries it the distance", () => {
