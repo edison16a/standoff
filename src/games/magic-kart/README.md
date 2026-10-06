@@ -38,8 +38,8 @@ For testing on one computer, turn on the admin panel's **Keyboard player** (thre
 | --- | --- |
 | A D or Left Right | Steer, full lock |
 | W or Up | Drive |
-| S or Down | Brake, or reverse from a stop |
-| Shift | Brake under the other hand: hold it with Drive into a bend to drift |
+| S, Down or Shift | Brake, or reverse from a stop |
+| W and S, or W and Shift | Drive and Brake held together into a bend drift, as two thumbs do |
 | Space, E or F | Use the power up |
 
 ## Power ups

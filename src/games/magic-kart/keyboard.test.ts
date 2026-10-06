@@ -67,6 +67,25 @@ describe("Magic Kart keyboard", () => {
     expect(t.sent.at(-1)).toEqual({ kind: "input", steer: 1, drive: true, brake: false });
   });
 
+  it("holds Drive and Brake together as two thumbs do, so W and S drift", () => {
+    const t = setup();
+    t.keys.key("KeyW", true);
+    t.keys.key("KeyA", true);
+    t.keys.key("KeyS", true);
+    expect(t.sent.at(-1)).toEqual({ kind: "input", steer: -1, drive: true, brake: true });
+    t.keys.key("KeyS", false);
+    expect(t.sent.at(-1)).toEqual({ kind: "input", steer: -1, drive: true, brake: false });
+  });
+
+  it("keeps Brake down until both of its keys are up", () => {
+    const t = setup();
+    t.keys.key("KeyS", true);
+    t.keys.key("ShiftLeft", true);
+    t.keys.key("KeyS", false);
+    t.keys.tick();
+    expect(t.lossy.at(-1)).toEqual({ kind: "input", steer: 0, drive: false, brake: true });
+  });
+
   it("uses a power up only once it has stopped rolling, mid race", () => {
     const t = setup(state({ item: "orb", rolling: true }));
     t.keys.key("Space", true);

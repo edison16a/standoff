@@ -18,15 +18,17 @@ export function canUse(state: PhoneState | null): boolean {
 
 /**
  * Magic Kart on the keyboard, as a phone steering with its arrow
- * buttons: full lock left or right, Drive and Brake as held pedals. A
- * pedal change goes at once and reliably, the steady stream may drop, as
- * the phone does it. Shift is a second Brake under the other hand, so
- * Drive, a turn and Shift together power slide into a drift.
+ * buttons: full lock left or right, Drive and Brake as held pedals. The
+ * pedals are separate keys, not a stick, so holding both works as two
+ * thumbs on the phone do: Drive and Brake into a turn power slides into
+ * a drift. Shift is a second Brake under the other hand. A pedal change
+ * goes at once and reliably, the steady stream may drop, as the phone
+ * does it.
  */
 export class KartKeys implements KeyboardPlayer {
   private readonly stick = new StickKeys();
   private readonly pedals = new ButtonKeys(
-    { drift: ["ShiftLeft", "ShiftRight"], use: ["Space", "KeyE", "KeyF"] },
+    { drive: ["KeyW", "ArrowUp"], brake: ["KeyS", "ArrowDown", "ShiftLeft", "ShiftRight"], use: ["Space", "KeyE", "KeyF"] },
     {
       press: (button) => {
         if (button === "use") this.use();
@@ -39,7 +41,8 @@ export class KartKeys implements KeyboardPlayer {
   constructor(private readonly ctx: KeyboardContext) {}
 
   key(code: string, down: boolean): boolean {
-    const used = this.stick.key(code, down) || this.pedals.key(code, down);
+    // The pedals first, so W and S never reach the stick, which only steers.
+    const used = this.pedals.key(code, down) || this.stick.key(code, down);
     if (used) this.stream(true);
     return used;
   }
@@ -56,8 +59,7 @@ export class KartKeys implements KeyboardPlayer {
 
   /** The wheel and pedals as the phone sends them. */
   input(): InputMessage {
-    const { x, y } = this.stick.vector();
-    return { kind: "input", steer: Math.sign(x), drive: y > 0, brake: y < 0 || this.pedals.isHeld("drift") };
+    return { kind: "input", steer: Math.sign(this.stick.vector().x), drive: this.pedals.isHeld("drive"), brake: this.pedals.isHeld("brake") };
   }
 
   /** Streams while driving. A pedal change goes reliably; a turn rides the next tick, as the phone's arrows do. */
@@ -83,8 +85,8 @@ export const keyboard: KeyboardBinding = {
       rows: [
         { action: "Steer", keys: [["A", "D"], ["Left", "Right"]] },
         { action: "Drive", keys: ["W", "Up"] },
-        { action: "Brake, or reverse when stopped", keys: ["S", "Down"] },
-        { action: "Drift (hold with Drive into a turn)", keys: ["Shift"] },
+        { action: "Brake, or reverse when stopped", keys: ["S", "Down", "Shift"] },
+        { action: "Drift: hold Drive and Brake into a turn", keys: [["W", "S"], ["W", "Shift"]] },
         { action: "Use power up", keys: ["Space", "E", "F"] },
       ],
     },
