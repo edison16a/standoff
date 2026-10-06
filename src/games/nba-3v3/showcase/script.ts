@@ -87,7 +87,7 @@ export class HighlightScript {
         break;
       case "drive":
         dunker.move = toward(dunker, RIM_SPOT, 1);
-        if (rimDistance(dunker) < 3.1 && m.ball.holder === DUNKER) {
+        if (rimDistance(dunker) < 2.38 && m.ball.holder === DUNKER) {
           m.forced = "swish";
           m.forcedDunk = SHOWCASE_DUNK;
           m.press(DUNKER, "shoot");
