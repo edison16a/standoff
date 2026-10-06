@@ -1,10 +1,16 @@
+import * as THREE from "three";
 import type { Rig } from "../models/body";
 import type { Pose } from "./pose";
+
+const UP = new THREE.Vector3(0, 1, 0);
+const spin = new THREE.Quaternion();
 
 /** Copies a pose onto the rig's joints. */
 export function applyPose(rig: Rig, p: Pose): void {
   rig.body.position.set(p.side, p.lift, p.fwd);
   rig.body.rotation.set(p.pitch, p.yaw, p.roll, "YXZ");
+  // The barrel roll turns the body about its own spine first, then the tilt lays it down.
+  if (p.barrel !== 0) rig.body.quaternion.multiply(spin.setFromAxisAngle(UP, p.barrel));
   // The pelvis turns under the spine and the spine turns back, so spine angles stay relative to the body.
   rig.hips.rotation.set(0, p.pelvisY, p.pelvisZ, "YXZ");
   rig.spine.rotation.set(p.spineX, p.spineY - p.pelvisY, p.spineZ - p.pelvisZ, "YXZ");

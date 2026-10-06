@@ -3,12 +3,13 @@ import type { Phase, TeamId } from "../../engine/types";
 import { BUILDS } from "../../builds";
 import { pitchPose, securePose } from "./ball-actions";
 import { celebratePose, dejectedPose } from "./celebrations";
-import { divePose, downPose, lungePose } from "./contact";
+import { divePose, downPose } from "./contact";
 import type { FootMode } from "./foot-lock";
 import { gait, type Carry } from "./gait";
 import { jukePose } from "./jukes";
 import { clamp01, type Pose } from "./pose";
 import { blockPose, breathe, CENTER, KICK_SET, READY, SHOTGUN, snapPose, THREE_POINT, TWO_POINT } from "./stance";
+import { stumbleOver, tacklePose } from "./tackle";
 import { catchPose, kickPose, throwPose } from "./throwing";
 import { captainPose, matePose } from "./trophy-poses";
 
@@ -108,6 +109,17 @@ function ceremonyPose(a: AthleteView, t: number, b: BodyScene): Pose {
   return dejectedPose(b.time, b.seed);
 }
 
+/**
+ * Braking hard while the run bends is a plant and cut: the outside foot
+ * sticks in the turf and the body pushes off it the other way.
+ */
+export function plantFor(a: AthleteView, b: BodyScene): FootMode {
+  const push = b.push ?? 0;
+  const turn = b.turn ?? 0;
+  if (a.speed < 2.5 || push > -3.5 || Math.abs(turn) < 2.5) return "gait";
+  return turn > 0 ? "plantR" : "plantL";
+}
+
 /** Picks the body's target pose from the engine's view of this player. Pure, so tests can check it. */
 export function choosePose(a: AthleteView, s: PoseScene, b: BodyScene): Chosen {
   const carry = carryOf(a, s);
@@ -131,13 +143,16 @@ export function choosePose(a: AthleteView, s: PoseScene, b: BodyScene): Chosen {
     case "dive":
       return free(divePose(t, a.actionDur), 22, "R");
     case "lunge":
-      return free(lungePose(t, a.actionDur), 22);
+      return free(tacklePose(a, run)!, 24);
     case "throw":
       return a.lob ? free(pitchPose(t, a.actionDur, towardTarget(a, s)), 30, "both") : free(throwPose(t, a.actionDur), 30, "R");
     case "kick":
       return free(kickPose(t), 26, "both");
-    case "down":
-      return free(downPose(t, a.actionDur, a.downCause ?? "dive", a.id), 18, "R");
+    case "down": {
+      // Tackles and misses play their authored presets; a dive and anything else lies down plainly.
+      const preset = tacklePose(a, run);
+      return free(preset ?? downPose(t, a.actionDur, a.downCause ?? "dive", a.id), preset ? 26 : 18, "R");
+    }
     case "celebrate": {
       const style = a.build ? BUILDS[a.build].celebration : "point";
       return free(celebratePose(style, t, a.spike), 14, "R");
@@ -150,11 +165,17 @@ export function choosePose(a: AthleteView, s: PoseScene, b: BodyScene): Chosen {
     return free(s.winner === a.team ? celebratePose(style, s.phaseT, false) : dejectedPose(b.time, b.seed), 8);
   }
   if (s.center && s.ball.state === "snap") return free(snapPose(s.phaseT), 30);
-  if (a.role === "lineman" && a.blocked) return free(blockPose(b.time, b.seed, a.team === s.offense ? -0.2 : 0.2), 12);
+  const fooled = (p: Pose) => (a.stumble ? stumbleOver(p, a.stumble.t, a.stumble.dur, a.stumble.side) : p);
+  if (a.role === "lineman" && a.blocked) {
+    // Two big men leaning on each other: a shove that drives one back sits him up, the one winning leans in.
+    const lurch = Math.max(-1, Math.min(1, (b.push ?? 0) / 4));
+    return free(fooled(blockPose(b.time, b.seed, (a.team === s.offense ? -0.2 : 0.2) + lurch)), a.stumble ? 18 : 12);
+  }
   // Teammates of the passer leave it to the receiver; only the target and the defence go up for it.
   const { reach, high } = a.targeted || a.team !== s.offense ? reachFor(a, s.ball) : { reach: 0, high: 0 };
   let pose = reach > 0 ? catchPose(run(), reach, high) : run();
   if (securing) pose = securePose(pose, b.secured! / 0.5);
+  pose = fooled(pose);
   // The stride is tracked closely so the planted foot and the legs agree; reaching blends in a touch slower.
-  return { pose, rate: reach > 0 ? 18 : 28, hand, feet: "gait" };
+  return { pose, rate: reach > 0 ? 18 : 28, hand, feet: plantFor(a, b) };
 }
