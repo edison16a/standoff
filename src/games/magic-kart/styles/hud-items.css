@@ -1,0 +1,159 @@
+/*
+  The power ups on a player's view of the big screen: the slot with the
+  item they use next, top centre, and a smaller one tucked behind it at
+  the lower right with the item queued after it. Empty slots are faint
+  outlines; full ones light up. Using an item slides the queued one
+  forward into the big slot.
+*/
+
+.mk-view__items {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.mk-view__item {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border: 3px dashed rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  background: rgba(16, 12, 38, 0.28);
+  color: rgba(255, 255, 255, 0.55);
+  transition: width 160ms ease, height 160ms ease;
+}
+
+.mk-view__item .mk-icon,
+.mk-view__next .mk-icon {
+  width: 100%;
+  height: 100%;
+}
+
+.mk-view__item-icon {
+  display: grid;
+  width: 60%;
+  height: 60%;
+}
+
+.mk-view__item--full {
+  width: 84px;
+  height: 84px;
+  border: 4px solid #ffe14d;
+  background: radial-gradient(circle at 50% 35%, #4a3890, #1a1236 72%);
+  box-shadow: 0 0 0 4px rgba(255, 225, 77, 0.25), 0 8px 24px rgba(0, 0, 0, 0.45);
+  animation: mk-slot-in 360ms cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+.mk-view__item--full .mk-view__item-icon {
+  width: 64%;
+  height: 64%;
+}
+
+.mk-view__item--rolling {
+  animation: mk-slot-roll 240ms ease-in-out infinite alternate;
+}
+
+.mk-view__item-name {
+  position: absolute;
+  bottom: -12px;
+  padding: 1px 9px;
+  border-radius: 999px;
+  background: #ffe14d;
+  color: #2a1a00;
+  font-size: 12px;
+  font-weight: 900;
+  text-shadow: none;
+  white-space: nowrap;
+}
+
+.mk-view__item-icon--slide {
+  animation: mk-view-slide 380ms cubic-bezier(0.25, 1.25, 0.4, 1) both;
+}
+
+/* The queued slot, behind the big one: its middle sits this far right and down of the big slot's middle. */
+.mk-view__next {
+  --dx: 44px;
+  --dy: 30px;
+  position: absolute;
+  top: calc(50% + var(--dy) - 21px);
+  left: calc(50% + var(--dx) - 21px);
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 2px dashed rgba(255, 255, 255, 0.32);
+  border-radius: 50%;
+  background: rgba(16, 12, 38, 0.3);
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.mk-view__next--full {
+  border: 3px solid rgba(255, 225, 77, 0.85);
+  background: radial-gradient(circle at 50% 35%, #3f3080, #160f30 72%);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+}
+
+.mk-view__next--rolling {
+  animation: mk-next-roll 240ms ease-in-out infinite alternate;
+}
+
+.mk-view__next-icon {
+  display: grid;
+  width: 62%;
+  height: 62%;
+}
+
+.mk-view__next-icon--in {
+  animation: mk-next-in 320ms cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+
+@keyframes mk-slot-in {
+  from {
+    transform: scale(0.4);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes mk-slot-roll {
+  from {
+    transform: scale(1);
+    box-shadow: 0 0 0 4px rgba(255, 225, 77, 0.2), 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+  to {
+    transform: scale(1.07);
+    box-shadow: 0 0 0 10px rgba(255, 225, 77, 0.35), 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+}
+
+@keyframes mk-view-slide {
+  from {
+    opacity: 0.5;
+    transform: translate(44px, 30px) scale(0.45);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes mk-next-in {
+  from {
+    transform: scale(0.3);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes mk-next-roll {
+  to {
+    transform: scale(1.08);
+  }
+}
