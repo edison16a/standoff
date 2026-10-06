@@ -65,8 +65,9 @@ export function survivalPlayer(ctx: KeyboardContext, now: () => number = () => p
     key: (code, down) => keys.key(code, down),
     pointer: (event) => mouse.pointer(event),
     tick() {
-      // A held trigger lets go in a cutscene or a loss, as the phone's disabled button does.
-      if (hold.held && !armed()) {
+      // A held trigger lets go in a cutscene or a loss, as the phone's disabled button does,
+      // so a key still down from before never blocks the next click.
+      if ((hold.held || fingers.size > 0) && !armed()) {
         fingers.clear();
         hold.release();
       }

@@ -50,6 +50,19 @@ describe("Zombie Survival keyboard", () => {
     expect(fired()).toBe(before);
   });
 
+  it("fires on a click after a cutscene even with Space still down from before it", () => {
+    vi.useFakeTimers();
+    const { player, fired, host } = seat("fight", "shotgun");
+    player.key!("Space", true);
+    expect(fired()).toBe(1);
+    host.state = { kind: "state", phase: "cutscene", seats: [{ playing: true }] };
+    player.tick!();
+    host.state = { kind: "state", phase: "fight", seats: [{ playing: true }] };
+    player.tick!();
+    player.pointer!({ type: "down", x: 0, y: 0, button: 0 });
+    expect(fired()).toBe(2);
+  });
+
   it("reloads on R and stays quiet outside the run", () => {
     const live = seat("clear");
     live.player.key!("KeyR", true);
