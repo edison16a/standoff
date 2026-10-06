@@ -23,9 +23,10 @@ export interface PresetShot {
   detail: TraceDetail;
 }
 
-const TRIES = 40;
+/** Enough that a missed ending is rare, few enough that a shot never stalls a frame for long. */
+const TRIES = 28;
 /** Past this many tries the authored ranges are let out a little, for odd angles. */
-const WIDEN_AFTER = 24;
+const WIDEN_AFTER = 18;
 
 function glassFamily(family: Family): Family {
   if (family === "layup" || family === "reverse" || family === "bank") return "bank";

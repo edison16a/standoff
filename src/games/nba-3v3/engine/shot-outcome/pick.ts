@@ -65,9 +65,10 @@ export function missWeights(q: ShotQuality): Record<MissPreset, number> {
   return {
     rimOut: 0.55,
     // A flat late jumper comes hard off the back and long; a layup never has the speed, a free throw seldom.
-    backIron: finish ? 0 : q.kind === "free" ? 0.03 + (q.grade === "late" ? 0.1 : 0) : 0.07 + (q.grade === "late" ? 0.3 : 0) + deep * 0.12,
+    backIron: finish || q.distance < 3.5 ? 0 : q.kind === "free" ? 0.03 + (q.grade === "late" ? 0.1 : 0) : 0.07 + (q.grade === "late" ? 0.3 : 0) + deep * 0.12,
     rollOut: soft ? 0.25 : 0.05,
-    glassOut: glass ? 0.35 : finish ? 0.08 : 0.02 * q.bankable,
+    // Under the ring on a reverse there is no glass to miss off.
+    glassOut: glass ? 0.35 : q.family === "reverse" ? 0 : finish ? 0.08 : 0.02 * q.bankable,
     // Rare, as in a real game: a hand in the face, a deep heave or a wild release.
     airball: finish ? q.contest * 0.03 : q.kind === "free" ? 0.004 : 0.006 + q.contest * q.contest * 0.05 + deep * 0.02 + (off(q.grade) ? 0.015 : 0),
   };

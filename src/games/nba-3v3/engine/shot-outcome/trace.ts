@@ -23,7 +23,7 @@ export interface TraceDetail {
   firstAt: number;
   rimTouches: number;
   rode: boolean;
-  /** For a miss, how far from the rim the rebound first lands. */
+  /** For a miss off the back iron, how far from the rim the rebound first lands; else 0. */
   landing: number;
   /** Seconds until the shot was decided. */
   t: number;
@@ -56,7 +56,10 @@ export function traceFlight(start: BallBody, ride: RideSpec | null): TraceDetail
     if (track.made || (!f.riding && missed(track, b))) break;
   }
   const t = track.t;
-  return { made: track.made, outcome: classify(track), first: track.first, firstAt, rimTouches: track.rimTouches, rode: f.rode && !!ride, landing: track.made ? 0 : landing(b), t };
+  const rode = f.rode && !!ride;
+  // Only a miss off the back of the iron needs the rebound followed down: it tells a back iron from a rim out.
+  const long = !track.made && !rode && track.rimTouches > 0 && firstAt > 0;
+  return { made: track.made, outcome: classify(track), first: track.first, firstAt, rimTouches: track.rimTouches, rode, landing: long ? landing(b) : 0, t };
 }
 
 /** Flies a missed ball on until it first meets the floor, and says how far from the rim that is. */
