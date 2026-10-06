@@ -14,9 +14,9 @@ The running list of what is being built, so work can pick up again after a break
 
 | Work | Workflow | State |
 | --- | --- | --- |
-| Basketball animation presets: free throw hold fix, harder green with a gold swish window, faster guards, 1v1 2v2 3v3, control switch to the pass receiver, shot outcome presets (swish, bank, rim in, toilet bowl), 10 layups and 10 dunks chosen by approach and defender space, dribble and shake presets, block presets, media. Owner words in scratchpad/anim/owner-request.md | wf_a1691984-8ee | building |
-| Football animation presets: control switch to the receiver, throw meter with green and gold, tackle and missed tackle presets, heavier running, throw, catch, interception and blocker presets, media | wf_a1691984-8ee | building |
-| Keyboard bindings for the other 11 games (Soccer, Brawl, Kart, Blade Clash; the four aim games; Subway, Cube, Boxing) | wf_a1691984-8ee | building |
+| Basketball animation presets: free throw hold fix, harder green with a gold swish window, faster guards, 1v1 2v2 3v3, control switch to the pass receiver, shot outcome presets (swish, bank, rim in, toilet bowl), 10 layups and 10 dunks chosen by approach and defender space, dribble and shake presets, block presets, then README screenshots, a shooter versus blocker icon, trailer and poster. Owner words in scratchpad/anim/owner-request.md | wf_98f5653c-f86 | building |
+| Football animation presets: QB faces his target when throwing, control switch to the receiver, throw meter with green and gold, tackle and missed tackle presets, heavier running, throw, catch, interception and blocker presets, then README screenshots, a runner and two tacklers icon, trailer and poster | wf_98f5653c-f86 | building |
+| Keyboard bindings for the other 11 games (Soccer, Brawl, Kart, Blade Clash; the four aim games; Subway, Cube, Boxing) | wf_98f5653c-f86 | building |
 
 All final builds are on main: cover icons, sports phone controls, Paintball Battle controls, Subway camera still, 1.2x tiles, final README. Final check done and on main (503ea5b): every game played end to end except the live site, which this machine's browser cannot reach (certificate block). Part 1 fixes: Soccer feet, Kart, Brawl, Blade Clash, Zombie and Gallery rejoin, phone download retry.
 
