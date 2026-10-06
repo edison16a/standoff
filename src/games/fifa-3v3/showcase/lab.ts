@@ -44,5 +44,8 @@ export function labMatch(): MatchState {
   return state;
 }
 
+/** The laps of lab-run.ts, from high in the stand. */
+export const RUN_POSE: Pose = { pos: new THREE.Vector3(0, 11, 26), look: new THREE.Vector3(0, 0, 0), fov: 46 };
+
 /** The whole row, from in front at eye height. */
 export const LAB_POSE: Pose = { pos: new THREE.Vector3(0, 1.3, 8.5), look: new THREE.Vector3(0, 1.0, 0), fov: 50 };

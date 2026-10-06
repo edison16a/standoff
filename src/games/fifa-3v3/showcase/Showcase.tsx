@@ -4,7 +4,8 @@ import * as THREE from "three";
 import type { ShowcaseView } from "@/platform/games/game-api";
 import { buildView } from "../engine/view";
 import { MatchRenderer } from "../render/match-renderer";
-import { LAB_POSE, labMatch } from "./lab";
+import { LAB_POSE, labMatch, RUN_POSE } from "./lab";
+import { runView } from "./lab-run";
 import { iconLights, stillLights } from "./still-lights";
 import { stillScene } from "./stills";
 import { Trailer } from "./trailer";
@@ -44,13 +45,25 @@ function stillFrames(renderer: MatchRenderer, view: Exclude<ShowcaseView, "loop"
   };
 }
 
-/** Development: every build in a row under the match's own lights, for close looks. `cam` pins the camera as for a still. */
+/**
+ * Development: every build in a row under the match's own lights, for
+ * close looks, or with `lab=run` running laps to show the gaits. `cam`
+ * pins the camera as for a still; `t` freezes the laps at that second.
+ */
 function labFrames(renderer: MatchRenderer, params: URLSearchParams): { frame: Frame; resized(): void } {
   const cam = params.get("cam")?.split(",").map(Number);
+  const running = params.get("lab") === "run";
+  const pose = running ? RUN_POSE : LAB_POSE;
   if (cam && cam.length === 7) renderer.director.setFixed(new THREE.Vector3(cam[0], cam[1], cam[2]), new THREE.Vector3(cam[3], cam[4], cam[5]), cam[6]!);
-  else renderer.director.setFixed(LAB_POSE.pos, LAB_POSE.look, LAB_POSE.fov);
+  else renderer.director.setFixed(pose.pos, pose.look, pose.fov);
   const view0 = buildView(labMatch());
-  return { frame: (now) => renderer.draw(view0, "fixed", now, undefined, false), resized: () => undefined };
+  if (!running) return { frame: (now) => renderer.draw(view0, "fixed", now, undefined, false), resized: () => undefined };
+  const at = params.get("t");
+  if (at === null) return { frame: (now) => renderer.draw(runView(view0, now / 1000), "fixed", now, undefined, false), resized: () => undefined };
+  // A frozen moment: the bodies are played up to it at sixty frames a second, so their poses and leans are what they would be live.
+  const t = Number(at);
+  for (let s = Math.max(0, t - 2); s < t; s += 1 / 60) renderer.update(runView(view0, s), "fixed", s * 1000, undefined, false);
+  return { frame: () => renderer.draw(runView(view0, t), "fixed", t * 1000, undefined, false), resized: () => undefined };
 }
 
 /**
