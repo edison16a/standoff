@@ -21,8 +21,13 @@ export interface ViewHud {
   color: string;
   place: number;
   lap: number;
+  /** The power up used next, and the one queued behind it. */
   item: ItemKind | null;
   rolling: boolean;
+  next: ItemKind | null;
+  nextRolling: boolean;
+  /** Power ups used so far, which tells a slide forward from a fresh pickup. */
+  uses: number;
   wrongWay: boolean;
   finished: boolean;
   effect: EffectKind | null;

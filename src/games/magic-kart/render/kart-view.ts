@@ -5,10 +5,12 @@ import { DRIVE } from "../engine/tuning";
 import { GliderView } from "./glider-view";
 import type { KartExtras } from "./kart-extras";
 import { nameTag } from "./kart-extras";
+import { SHADOW_PAD } from "./kart-shadow";
 import { KartModel } from "./models/kart-model";
 import { kartDesign } from "./models/karts";
 
 const local = new THREE.Vector3();
+
 
 /**
  * One kart as the big screen draws it: the model, posed from the race
@@ -26,7 +28,11 @@ export class KartView {
   private readonly stars = new THREE.Group();
   private readonly ice = new THREE.Group();
   private readonly flames: THREE.Group[] = [];
+  /** Metres from the camera beyond which this kart is drawn in its coarse cut. */
+  farSwitch = 15;
   private pitch = 0;
+  private lastHeading: number;
+  private yawRate = 0;
   /** Lean into a turn under the glider, eased. */
   private bank = 0;
   /** How far the body is swung round in a drift, radians, eased in and out. */
@@ -39,15 +45,16 @@ export class KartView {
   private readonly footprint: { w: number; l: number };
 
   constructor(readonly kartId: number, kart: Kart, name: string, color: string, extras: KartExtras, scene: THREE.Object3D) {
-    this.model = new KartModel(kart.character);
+    this.model = new KartModel(kart.character, true);
+    this.lastHeading = kart.heading;
     const design = kartDesign(kart.character);
-    this.shadow = new THREE.Mesh(extras.shadowGeo, extras.shadowMat);
-    this.footprint = { w: design.width * 1.35, l: design.length * 1.15 };
+    this.shadow = new THREE.Mesh(extras.shadowGeo, extras.shadowFor(kart.character));
+    this.footprint = { w: design.width * SHADOW_PAD.w, l: design.length * SHADOW_PAD.l };
     this.shadow.renderOrder = 1;
     const flagShape = new THREE.Shape([new THREE.Vector2(0, 0), new THREE.Vector2(0, -0.42), new THREE.Vector2(-0.7, -0.21)]);
     this.flag = new THREE.Mesh(new THREE.ShapeGeometry(flagShape), new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide }));
     this.flag.position.set(...design.flagAt);
-    this.model.chassis.add(this.flag);
+    this.model.body.add(this.flag);
     this.tag = nameTag(name, color);
     this.tag.position.y = 3.1;
     this.shield = new THREE.Mesh(extras.shieldGeo, extras.shieldMat);
@@ -64,11 +71,12 @@ export class KartView {
     for (const at of design.exhausts) {
       const flame = new THREE.Group();
       flame.position.set(...at);
-      flame.add(new THREE.Mesh(extras.flameGeo, extras.flameMat));
-      const core = new THREE.Mesh(extras.flameGeo, extras.flameCoreMat);
-      core.scale.setScalar(0.55);
+      const style = extras.flames[design.flame];
+      flame.add(new THREE.Mesh(extras.flameGeo, style.outer));
+      const core = new THREE.Mesh(extras.flameGeo, style.core);
+      core.scale.set(0.5, 0.5, 0.6);
       flame.add(core);
-      this.model.chassis.add(flame);
+      this.model.body.add(flame);
       this.flames.push(flame);
     }
     this.glider = new GliderView(kart.character);
@@ -94,7 +102,21 @@ export class KartView {
     this.pitch += (target - this.pitch) * Math.min(1, dt * 10);
     this.model.chassis.rotation.x = this.pitch;
     const speed = speedOf(kart) * Math.sign(Math.sin(kart.heading) * kart.vx + Math.cos(kart.heading) * kart.vz || 1);
-    this.model.animate(speed, kart.steer, dt, time + kart.id, kart.airborne ? 0 : 1);
+    // Heading change since last frame, unwrapped, for how hard the body is cornering.
+    const turn = Math.atan2(Math.sin(kart.heading - this.lastHeading), Math.cos(kart.heading - this.lastHeading));
+    this.lastHeading = kart.heading;
+    this.yawRate += ((dt > 0 ? turn / dt : 0) - this.yawRate) * Math.min(1, dt * 12);
+    this.model.animate(dt, time + kart.id, {
+      speed,
+      steer: kart.steer,
+      yawRate: kart.timers.stun > 0 ? 0 : this.yawRate,
+      vy: kart.vy,
+      airborne: kart.airborne,
+      drift: kart.airborne ? 0 : kart.drift,
+      brake: kart.brakeHeld > 0 ? Math.min(1, 0.4 + kart.brakeHeld * 2) : 0,
+      boost: kart.timers.boost > 0 ? 1 : 0,
+      rough: kart.surface === "offroad" ? 1 : kart.surface === "kerb" ? 0.6 : 0,
+    });
     this.flag.rotation.y = Math.sin(time * 9 + kart.id) * 0.35;
     this.glider.update(kart, time);
 
@@ -122,7 +144,11 @@ export class KartView {
     const boosting = t.boost > 0;
     this.boosting = boosting;
     for (const flame of this.flames) {
-      if (boosting) flame.scale.set(1, 1, 0.8 + Math.random() * 0.7 + Math.min(1, t.boost) * 0.5);
+      // Longer the more boost is left, with a ragged flicker.
+      if (boosting) {
+        const width = 0.9 + Math.random() * 0.25;
+        flame.scale.set(width, width, 0.7 + Math.random() * 0.3 + Math.min(1, t.boost) * 0.45);
+      }
     }
     this.model.setTint(t.ice > 0 ? "#3fb8ff" : "#ffffff", t.ice > 0 ? 0.35 : t.stun > 0 ? 0.12 * (Math.sin(time * 30) > 0 ? 1 : 0) : 0);
     this.ghost = t.ghost > 0;
@@ -136,11 +162,14 @@ export class KartView {
    * its driver, who still sees a ghost of it. `eye` is where the view's
    * camera is.
    */
-  setViewer(viewerKartId: number | null, eye: THREE.Vector3, tags = true): void {
+  setViewer(viewerKartId: number | null, eye: THREE.Vector3, tags = true, viewScale = 1): void {
     const own = viewerKartId === this.kartId;
     // Another kart right in front of the camera would block the view of your own, so it turns see through.
     const near = !own && viewerKartId !== null ? eye.distanceTo(this.model.root.position) : Infinity;
     const inTheWay = near < 5.5;
+    // Beyond a few kart lengths the coarse cut looks the same and costs far less.
+    // The view's own kart is always drawn in full.
+    this.model.setFar(!own && eye.distanceTo(this.model.root.position) > Math.max(8, this.farSwitch * viewScale));
     this.tag.visible = tags && !own && !this.ghost && near > 9;
     const opacity = this.ghost ? (own ? 0.4 : 0.06) : inTheWay ? Math.max(0.3, Math.min(0.75, 0.3 + (near - 2) * 0.13)) : 1;
     this.model.setOpacity(opacity);
@@ -151,6 +180,11 @@ export class KartView {
     // A bubble or flames would give a vanished kart away, so others do not see them.
     this.shield.visible = this.shieldOn && !hidden;
     for (const flame of this.flames) flame.visible = this.boosting && !hidden;
+  }
+
+  /** A point on the sprung body, in the world, for lamps and exhausts that ride with it. */
+  bodyPoint(x: number, y: number, z: number, out: THREE.Vector3): THREE.Vector3 {
+    return out.set(x, y, z).applyMatrix4(this.model.body.matrixWorld);
   }
 
   /** A point on the kart, in the world, for effects to come from. */

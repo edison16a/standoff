@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { CHARACTERS, type CharacterId } from "../characters";
-import { KartModel } from "./models/kart-model";
+import { bakeKartEnvironment, STUDIO } from "./kart-env";
+import { idlePose, KartModel } from "./models/kart-model";
 
 /**
  * The spinning kart on the phone's picker: the very same model the big
@@ -14,6 +15,8 @@ export class KartPreview {
   private readonly turntable = new THREE.Group();
   private readonly ring: THREE.Mesh<THREE.TorusGeometry, THREE.MeshBasicMaterial>;
   private model: KartModel | null = null;
+  /** The studio the paint reflects, so the turntable kart shines like the race ones. */
+  private readonly environment: THREE.Texture;
   private frame = 0;
   private last = 0;
   private angle = -0.6;
@@ -30,7 +33,8 @@ export class KartPreview {
     this.canvas.className = "mk-pick__canvas";
     holder.appendChild(this.canvas);
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: true });
-    this.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    // Sharp enough on a phone, and light enough to leave the controller smooth.
+    this.renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
     this.scene.add(new THREE.HemisphereLight("#ffffff", "#6b5a8a", 1.6));
@@ -46,6 +50,7 @@ export class KartPreview {
     this.ring.rotation.x = Math.PI / 2;
     this.turntable.add(disc, this.ring);
     this.scene.add(this.turntable);
+    this.environment = bakeKartEnvironment(this.renderer, STUDIO);
     this.camera.position.set(0, 2.2, 5.3);
     this.camera.lookAt(0, 0.75, 0);
     this.frame = requestAnimationFrame(this.draw);
@@ -58,6 +63,7 @@ export class KartPreview {
       this.model.dispose();
     }
     this.model = new KartModel(character);
+    this.model.setEnvironment(this.environment, 1);
     this.turntable.add(this.model.root);
     this.ring.material.color.set(CHARACTERS[character].color);
   }
@@ -66,6 +72,7 @@ export class KartPreview {
     cancelAnimationFrame(this.frame);
     if (this.model) this.turntable.remove(this.model.root);
     this.model?.dispose();
+    this.environment.dispose();
     // The turntable and ring are this preview's own. The kart geometry is shared, so it stays.
     this.turntable.traverse((object) => {
       if (!(object instanceof THREE.Mesh)) return;
@@ -88,12 +95,15 @@ export class KartPreview {
       if (size.x !== width || size.y !== height) {
         this.renderer.setSize(width, height, false);
         this.camera.aspect = width / height;
+        // A tall card would crop the kart's ends, so the view widens until the whole kart fits across it.
+        const across = Math.tan(THREE.MathUtils.degToRad(19));
+        this.camera.fov = Math.max(32, THREE.MathUtils.radToDeg(2 * Math.atan(across / this.camera.aspect)));
         this.camera.updateProjectionMatrix();
       }
       this.angle += dt * 0.7;
       this.turntable.rotation.y = this.angle;
       // Idle wheels turn slowly and the steering wanders, so the kart looks alive.
-      this.model?.animate(3, Math.sin(now / 900) * 0.6, dt, now / 1000, 0);
+      this.model?.animate(dt, now / 1000, idlePose(Math.sin(now / 900) * 0.6, 3));
       this.renderer.render(this.scene, this.camera);
     }
     this.frame = requestAnimationFrame(this.draw);

@@ -16,6 +16,7 @@ export const OVAL: TrackDef = {
   gaps: [],
   boostPads: [],
   cubeRows: [0.3],
+  doubles: [],
   obstacles: [],
   openEdges: [],
 };

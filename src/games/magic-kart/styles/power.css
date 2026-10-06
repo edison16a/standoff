@@ -1,22 +1,39 @@
 /*
-  Magic Kart on the phone: the round power up button, the note to turn
-  the phone sideways, and the place at the end of a race.
+  Magic Kart on the phone: the round power up button with the queued
+  item stacked behind it, the note to turn the phone sideways, and the
+  place at the end of a race.
 */
 
 .mk-power {
+  --big: 122px;
+  --small: 56px;
+  /* Where the queued slot sits from the big one's middle, which the slide forward starts from. */
+  --next-x: 60px;
+  --next-y: -60px;
+  --stack: 160px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  width: 128px;
+  width: 150px;
+}
+
+.mk-power__stack {
+  position: relative;
+  width: 150px;
+  height: var(--stack);
 }
 
 .mk-power__button {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
   display: grid;
   place-items: center;
-  width: 122px;
-  height: 122px;
+  width: var(--big);
+  height: var(--big);
   padding: 0;
   border: 3px dashed rgba(255, 255, 255, 0.2);
   border-radius: 50%;

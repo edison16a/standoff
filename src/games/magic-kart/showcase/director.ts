@@ -44,6 +44,7 @@ export class ShowcaseDirector {
   constructor(canvas: HTMLCanvasElement, private readonly plan: Plan) {
     this.renderer = new GameRenderer(canvas);
     this.renderer.tags = false;
+    this.renderer.adaptive = false;
   }
 
   resize(width: number, height: number, dpr: number): void {

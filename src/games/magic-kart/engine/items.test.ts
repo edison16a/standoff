@@ -1,14 +1,19 @@
 import { describe, expect, it } from "vitest";
 import type { RaceEvent } from "./events";
 import { fireItem, strike, tickTimers } from "./item-use";
-import { ITEM_KINDS, rollItem } from "./items";
-import { createKart } from "./kart";
+import { ITEM_KINDS, rollItem, type ItemKind } from "./items";
+import { createKart, type Kart } from "./kart";
 import { nearestAhead, stepProjectile } from "./projectiles";
 import { OVAL } from "./test-track";
 import { Track } from "./track";
 import { EFFECTS, STEP } from "./tuning";
 
 const track = new Track(OVAL);
+
+/** Puts power ups straight in hand, roulettes already stopped. */
+function give(kart: Kart, ...kinds: ItemKind[]): void {
+  for (const kind of kinds) kart.items.push({ kind, readyAt: 0 });
+}
 
 function tally(place: number): Record<string, number> {
   const counts: Record<string, number> = {};
@@ -45,10 +50,10 @@ describe("using items", () => {
   it("throws the orb at the kart ahead and spins it out", () => {
     const { leader, chaser, karts } = setup();
     const events: RaceEvent[] = [];
-    chaser.item = "orb";
+    give(chaser, "orb");
     const orb = fireItem(chaser, karts, track, 1, 0, (e) => events.push(e));
     expect(orb?.target).toBe(0);
-    expect(chaser.item).toBeNull();
+    expect(chaser.items).toEqual([]);
     let struck = null;
     for (let i = 0; i < 180 && !struck; i++) struck = stepProjectile(orb!, karts, track, STEP);
     expect(struck).toBe(leader);
@@ -59,17 +64,16 @@ describe("using items", () => {
 
   it("cannot be used while the roulette still spins", () => {
     const { chaser, karts } = setup();
-    chaser.item = "nitro";
-    chaser.itemReadyAt = 5;
+    chaser.items.push({ kind: "nitro", readyAt: 5 });
     expect(fireItem(chaser, karts, track, 1, 4, () => undefined)).toBeNull();
-    expect(chaser.item).toBe("nitro");
+    expect(chaser.items[0]?.kind).toBe("nitro");
     fireItem(chaser, karts, track, 1, 5, () => undefined);
     expect(chaser.timers.boost).toBeGreaterThan(0);
   });
 
   it("hides a vanished kart from throws", () => {
     const { leader, chaser, karts } = setup();
-    leader.item = "ghost";
+    give(leader, "ghost");
     fireItem(leader, karts, track, 1, 0, () => undefined);
     expect(leader.timers.ghost).toBeGreaterThan(0);
     expect(nearestAhead(chaser, karts)).toBeNull();
@@ -92,7 +96,7 @@ describe("using items", () => {
     const ahead = createKart(2, "nova", null, track, 90, 0);
     ahead.race.progress = 90;
     const all = [...karts, ahead];
-    chaser.item = "orb";
+    give(chaser, "orb");
     const orb = fireItem(chaser, all, track, 1, 0, () => undefined)!;
     expect(orb.target).toBe(leader.id);
     leader.timers.ghost = 5;
@@ -103,7 +107,7 @@ describe("using items", () => {
 
   it("never hits a kart that has finished", () => {
     const { leader, chaser, karts } = setup();
-    chaser.item = "orb";
+    give(chaser, "orb");
     const orb = fireItem(chaser, karts, track, 1, 0, () => undefined)!;
     leader.race.finished = true;
     let struck = null;

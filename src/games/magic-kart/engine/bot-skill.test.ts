@@ -15,11 +15,17 @@ const GRID: Entrant[] = [
 ];
 
 /** How far the computers got, in total, after some seconds of racing. */
-function computerProgress(level: BotLevel, seconds: number): { world: RaceWorld; total: number } {
-  const world = new RaceWorld(TRACKS[0]!, GRID, seeded(7), level);
+function computerProgress(level: BotLevel, seconds: number, seed = 7): { world: RaceWorld; total: number } {
+  const world = new RaceWorld(TRACKS[0]!, GRID, seeded(seed), level);
   for (let i = 0; i < 60 * (seconds + 5); i++) world.step(STEP);
   const total = world.karts.filter((k) => k.seat === null).reduce((sum, k) => sum + k.race.progress, 0);
   return { world, total };
+}
+
+/** The same over a few seeds, since one race can turn on a single lucky throw. */
+function averageProgress(level: BotLevel, seconds: number): number {
+  const seeds = [7, 8, 9];
+  return seeds.reduce((sum, seed) => sum + computerProgress(level, seconds, seed).total, 0) / seeds.length;
 }
 
 describe("computer kart difficulty", () => {
@@ -30,11 +36,11 @@ describe("computer kart difficulty", () => {
   });
 
   it("drives slower on easy than on hard", () => {
-    const easy = computerProgress("easy", 40).total;
-    const hard = computerProgress("hard", 40).total;
+    const easy = averageProgress("easy", 40);
+    const hard = averageProgress("hard", 40);
     expect(easy).toBeGreaterThan(300);
     expect(easy).toBeLessThan(hard * 0.95);
-  }, 20_000);
+  }, 40_000);
 
   // Lazy steering must still make every bend and every glide jump.
   it.each(TRACKS.map((def) => [def.name, def] as const))("easy computers still finish %s", (_, def) => {

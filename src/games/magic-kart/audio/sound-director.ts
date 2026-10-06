@@ -98,7 +98,7 @@ export class SoundDirector {
       case "go":
         return this.sfx.go();
       case "pickup":
-        return this.sfx.pickup(level);
+        return this.sfx.pickup(level, event.items.length);
       case "use":
         if (event.item === "orb") this.sfx.throwOrb(level);
         else if (event.item === "ice") this.sfx.throwIce(level);

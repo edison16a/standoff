@@ -31,6 +31,20 @@ export interface SkyRowDef {
   at: number;
   /** Metres above the road. */
   height: number;
+  /** Which of the pair is a double box, 0 the left and 1 the right, if either is. */
+  double?: 0 | 1;
+}
+
+/**
+ * A double box: two cubes stacked, worth two power ups. It stands in one
+ * place of a ground row instead of a single cube, out at the edge, so
+ * going for it costs a little line.
+ */
+export interface DoubleBoxDef {
+  /** Which entry of `cubeRows`. */
+  row: number;
+  /** Which of the row's four places, 0 on the left looking along the road. */
+  place: number;
 }
 
 /** A glowing strip that gives a short boost when driven over. */
@@ -75,6 +89,8 @@ export interface TrackDef {
   boostPads: readonly BoostPadDef[];
   /** Each entry is a row of power up cubes across the road. */
   cubeRows: readonly number[];
+  /** The places in those rows that hold a double box. */
+  doubles: readonly DoubleBoxDef[];
   skyRows?: readonly SkyRowDef[];
   obstacles: readonly ObstacleDef[];
   openEdges: readonly OpenEdgeDef[];

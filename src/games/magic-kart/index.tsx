@@ -10,6 +10,7 @@ import { ControllerContext } from "./phone/components/session-context";
 import "./styles/host.css";
 import "./styles/lobby.css";
 import "./styles/hud.css";
+import "./styles/hud-items.css";
 import "./styles/overview.css";
 import "./styles/results.css";
 import "./styles/phone.css";
@@ -17,6 +18,7 @@ import "./styles/pick.css";
 import "./styles/drive.css";
 import "./styles/pedal-states.css";
 import "./styles/power.css";
+import "./styles/power-queue.css";
 
 // The showcase brings three.js and every map with it, so it loads only on the capture page, never on a phone.
 const ShowcaseScene = lazy(() => import("./showcase/ShowcaseScene"));

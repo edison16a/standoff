@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { createCupTrophy, createPodium, VictoryRoom, type Metal } from "@/games/kit/victory";
 import type { CharacterId } from "../../../characters";
-import { KartModel } from "../../../render/models/kart-model";
+import { bakeKartEnvironment, STUDIO } from "../../../render/kart-env";
+import { idlePose, KartModel } from "../../../render/models/kart-model";
 
 export interface PodiumPlace {
   place: 1 | 2 | 3;
@@ -22,6 +23,8 @@ const KART_SCALE = 0.62;
 export class PodiumScene {
   private readonly room: VictoryRoom;
   private readonly karts: { model: KartModel; place: number; phase: number; baseY: number }[] = [];
+  /** A studio for the karts' paint to reflect, so they shine under the spotlights. */
+  private readonly environment: THREE.Texture;
 
   constructor(holder: HTMLElement, places: readonly PodiumPlace[]) {
     this.room = new VictoryRoom(holder, {
@@ -32,12 +35,14 @@ export class PodiumScene {
       // Far enough back that Pip's antenna at the top of a hop stays under the name, and the step numbers above the places, from 1280 by 720 up.
       orbit: { centre: { x: 0, y: 0, z: 0 }, radius: 14.25, height: 3.5, lookHeight: 2.25, startAngle: 0, speed: 0.12, arc: 0.3, introS: 2.4, pullBack: 1.45, rise: 2.2, bob: 0.2 },
     });
+    this.environment = bakeKartEnvironment(this.room.renderer, STUDIO);
     const podium = createPodium({ width: STEP, height: 1.3 });
     this.room.scene.add(podium.object);
     this.room.scene.updateMatrixWorld(true);
     for (const p of places) {
       const top = podium.topOf(p.place);
       const model = new KartModel(p.character);
+      model.setEnvironment(this.environment, 0.8);
       model.root.scale.setScalar(KART_SCALE);
       model.root.position.copy(top).add(new THREE.Vector3(0, 0, -0.15));
       // The two lower karts turn in a little toward the winner.
@@ -62,6 +67,7 @@ export class PodiumScene {
       this.room.scene.remove(model.root);
       model.dispose();
     }
+    this.environment.dispose();
     this.room.dispose();
   }
 
@@ -71,7 +77,7 @@ export class PodiumScene {
       // The winner hops every couple of seconds; the others idle with a little steer wiggle.
       const hop = kart.place === 1 ? Math.max(0, Math.sin(time * 3.2)) ** 6 * 0.25 : 0;
       root.position.y = kart.baseY + hop;
-      kart.model.animate(0, Math.sin(time * 1.4 + kart.phase) * 0.35, dt, time, 0);
+      kart.model.animate(dt, time, idlePose(Math.sin(time * 1.4 + kart.phase) * 0.35));
     }
   }
 }

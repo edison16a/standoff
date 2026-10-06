@@ -1,5 +1,5 @@
 import { CHARACTERS, type CharacterId, type KartStats } from "../characters";
-import type { ItemKind } from "./items";
+import { emptyHand, type ItemHand } from "./item-queue";
 import type { Located, Track } from "./track";
 
 /** What a driver asks for this step. Steer is -1 (full left) to 1 (full right). */
@@ -46,7 +46,8 @@ export interface KartRace {
   safeD: number;
 }
 
-export interface Kart {
+/** A kart in the race. Its power ups in hand come from ItemHand. */
+export interface Kart extends ItemHand {
   /** Grid slot, from 0. */
   id: number;
   character: CharacterId;
@@ -85,9 +86,6 @@ export interface Kart {
   timers: KartTimers;
   /** Spin out angle for the stun animation. */
   spin: number;
-  item: ItemKind | null;
-  /** Race time when the roulette stops and the item can be used. */
-  itemReadyAt: number;
   /** A computer kart's top speed nudge, to keep a solo race close. */
   speedBias: number;
   race: KartRace;
@@ -125,8 +123,7 @@ export function createKart(id: number, character: CharacterId, seat: number | nu
     driftTime: 0,
     timers: { stun: 0, ice: 0, boost: 0, ghost: 0, shield: 0, grace: 0 },
     spin: 0,
-    item: null,
-    itemReadyAt: 0,
+    ...emptyHand(),
     speedBias: 1,
     race: {
       checkpoints: 0,

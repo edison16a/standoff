@@ -32,7 +32,11 @@ export const CITY: TrackDef = {
     { at: 0.62, offset: 0 },
   ],
   cubeRows: [0.14, 0.4, 0.66, 0.9],
-  skyRows: [{ at: 0.526, height: 5.4 }],
+  doubles: [
+    { row: 0, place: 3 },
+    { row: 2, place: 0 },
+  ],
+  skyRows: [{ at: 0.526, height: 5.4, double: 1 }],
   obstacles: [
     { kind: "drone", at: 0.27, offset: 0, radius: 1.3, sweep: { amplitude: 5.5, period: 3.2 } },
     { kind: "cone", at: 0.445, offset: -3.5, radius: 0.9 },

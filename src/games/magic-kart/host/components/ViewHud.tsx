@@ -2,17 +2,19 @@
 import { SplitFinish } from "@/games/kit/split/SplitFinish";
 import { ITEM_NAMES } from "../../engine/items";
 import type { ViewRect } from "../../render/layout";
-import { CubeGlyph, ItemIcon } from "../../ui/icons";
-import { Roulette } from "../../ui/Roulette";
+import { Arrival, SlotIcon } from "../../ui/SlotIcon";
+import { useSlideForward } from "../../ui/use-slide";
 import { ordinal } from "../../ui/format";
 import type { ViewHud as Hud } from "../host-store";
 
 /**
  * The overlay on one player's view: their name tag, place and lap in the
- * corners, the held power up, and big messages in the middle: the
- * countdown, wrong way, final lap and the finish.
+ * corners, the power up they use next with the one queued behind it, and
+ * big messages in the middle: the countdown, wrong way, final lap and
+ * the finish.
  */
 export function ViewHud({ hud, rect, countdown, laps }: { hud: Hud; rect: ViewRect; countdown: number | null; laps: number }) {
+  const slid = useSlideForward(hud.uses, hud.item, hud.next);
   const style = { left: `${rect.x * 100}%`, top: `${rect.y * 100}%`, width: `${rect.w * 100}%`, height: `${rect.h * 100}%`, "--player": hud.color } as React.CSSProperties;
   return (
     <div className="mk-view" style={style}>
@@ -27,13 +29,23 @@ export function ViewHud({ hud, rect, countdown, laps }: { hud: Hud; rect: ViewRe
       <div className="mk-view__lap">
         Lap <strong>{hud.lap}</strong>/{laps}
       </div>
-      <div
-        key={hud.item ?? "empty"}
-        className={`mk-view__item ${hud.item ? "mk-view__item--full" : ""} ${hud.rolling ? "mk-view__item--rolling" : ""}`}
-        title={hud.item ? ITEM_NAMES[hud.item] : "No power up"}
-      >
-        {hud.item ? hud.rolling ? <Roulette /> : <ItemIcon item={hud.item} /> : <CubeGlyph />}
-        {hud.item && !hud.rolling && <span className="mk-view__item-name">{ITEM_NAMES[hud.item]}</span>}
+      <div className="mk-view__items">
+        {/* Remounted on each use and each new item, so the ring pops as something lands in it. */}
+        <div
+          key={`${hud.uses}-${hud.item ?? "empty"}`}
+          className={`mk-view__item ${hud.item ? "mk-view__item--full" : ""} ${hud.rolling ? "mk-view__item--rolling" : ""}`}
+          title={hud.item ? ITEM_NAMES[hud.item] : "No power up"}
+        >
+          <Arrival className="mk-view__item-icon" motion="mk-view__item-icon--slide" play={slid}>
+            <SlotIcon item={hud.item} rolling={hud.rolling} />
+          </Arrival>
+          {hud.item && !hud.rolling && <span className="mk-view__item-name">{ITEM_NAMES[hud.item]}</span>}
+        </div>
+        <div className={`mk-view__next ${hud.next ? "mk-view__next--full" : ""} ${hud.nextRolling ? "mk-view__next--rolling" : ""}`} title={hud.next ? `Next: ${ITEM_NAMES[hud.next]}` : "Room for one more"}>
+          <Arrival key={`${hud.uses}-${hud.next ?? "none"}`} className="mk-view__next-icon" motion="mk-view__next-icon--in" play={hud.next !== null}>
+            <SlotIcon item={hud.next} rolling={hud.nextRolling} />
+          </Arrival>
+        </div>
       </div>
       {countdown !== null && (
         <div key={countdown} className={`mk-view__count ${countdown === 0 ? "mk-view__count--go" : ""}`}>

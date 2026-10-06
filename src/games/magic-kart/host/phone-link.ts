@@ -6,7 +6,7 @@ const MIN_GAP_MS = 90;
 
 /**
  * The host's line to the phones. Each phone gets its own screen state,
- * sent only when it changed. A change to the phase or the held item goes
+ * sent only when it changed. A change to the phase or the held items goes
  * out at once, since the player is waiting on it. So does a drift
  * starting, ending or changing colour. The steady churn of places and
  * speed during a race is held to a few updates a second.
@@ -18,7 +18,7 @@ export class PhoneLink {
 
   sendState(seat: number, state: PhoneState, nowMs: number): void {
     const json = JSON.stringify(state);
-    const urgent = `${state.phase}|${state.item}|${state.rolling}|${state.countdown}|${state.finished}|${state.pick}|${state.ready}|${state.drift}`;
+    const urgent = `${state.phase}|${state.item}|${state.rolling}|${state.next}|${state.nextRolling}|${state.uses}|${state.countdown}|${state.finished}|${state.pick}|${state.ready}|${state.drift}`;
     const prev = this.last.get(seat);
     if (prev?.json === json) return;
     if (prev && prev.urgent === urgent && nowMs - prev.at < MIN_GAP_MS) return;

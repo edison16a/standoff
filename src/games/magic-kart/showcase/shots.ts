@@ -18,6 +18,11 @@ export type Rig =
    */
   | { kind: "post"; at: number; d: number; height: number; frame: number }
   /**
+   * Planted at a point on the lap and looking at a fixed point on the
+   * lap, for close ups of what stands on the road, like the item boxes.
+   */
+  | { kind: "spot"; at: number; d: number; height: number; look: { at: number; d: number; height: number }; fov: number }
+  /**
    * Close on one kart from a corner, turning with it. Angle 0 is dead
    * ahead of it. The camera looks at a point `aim` metres above the kart,
    * so a low aim lifts the kart up the picture.

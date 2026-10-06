@@ -2,6 +2,7 @@ import { playerColor } from "@/games/kit/players";
 import { CHARACTERS } from "../characters";
 import type { Kart } from "../engine/kart";
 import { driftTier } from "../engine/drive";
+import { currentItem, isRolling, queuedItem } from "../engine/item-queue";
 import { currentLap } from "../engine/race";
 import { RACE } from "../engine/tuning";
 import type { RaceWorld } from "../engine/world";
@@ -43,6 +44,19 @@ export function buildStandings(world: RaceWorld, names: ReadonlyMap<number, stri
   }));
 }
 
+/** A kart's hand of power ups as the screens show it. With no race running, it is empty. */
+export function handOf(kart: Kart | null, time: number): Pick<PhoneState, "item" | "rolling" | "next" | "nextRolling" | "uses"> {
+  const first = kart ? currentItem(kart) : null;
+  const second = kart ? queuedItem(kart) : null;
+  return {
+    item: first?.kind ?? null,
+    rolling: isRolling(first, time),
+    next: second?.kind ?? null,
+    nextRolling: isRolling(second, time),
+    uses: kart?.itemUses ?? 0,
+  };
+}
+
 export function buildView(world: RaceWorld, kart: Kart, names: ReadonlyMap<number, string>, banner: string | null): ViewHud {
   return {
     seat: kart.seat ?? 0,
@@ -51,8 +65,7 @@ export function buildView(world: RaceWorld, kart: Kart, names: ReadonlyMap<numbe
     color: kartColor(kart),
     place: kart.race.place,
     lap: currentLap(kart),
-    item: kart.item,
-    rolling: kart.item !== null && world.time < kart.itemReadyAt,
+    ...handOf(kart, world.time),
     wrongWay: kart.race.wrongWay,
     finished: kart.race.finished,
     effect: effectOf(kart),
@@ -88,8 +101,7 @@ export function buildPhoneState(c: PhoneContext): PhoneState {
     karts: c.world?.karts.length ?? 0,
     lap: kart ? currentLap(kart) : 0,
     laps: RACE.laps,
-    item: kart?.item ?? null,
-    rolling: kart !== null && c.world !== null && kart.item !== null && c.world.time < kart.itemReadyAt,
+    ...handOf(c.world ? kart : null, c.world?.time ?? 0),
     wrongWay: kart?.race.wrongWay ?? false,
     finished: kart?.race.finished ?? false,
     effect: kart ? effectOf(kart) : null,

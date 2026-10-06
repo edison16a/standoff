@@ -28,7 +28,11 @@ export const BEACH: TrackDef = {
     { at: 0.9, offset: 0 },
   ],
   cubeRows: [0.1, 0.33, 0.52, 0.8],
-  skyRows: [{ at: 0.646, height: 5.4 }],
+  doubles: [
+    { row: 1, place: 0 },
+    { row: 3, place: 3 },
+  ],
+  skyRows: [{ at: 0.646, height: 5.4, double: 1 }],
   obstacles: [
     { kind: "crab", at: 0.22, offset: 0, radius: 1.1, sweep: { amplitude: 5, period: 3.4 } },
     { kind: "crab", at: 0.45, offset: 0, radius: 1.1, sweep: { amplitude: 5.5, period: 4, phase: 1.5 } },
