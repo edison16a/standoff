@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import type { MatchEvent } from "../engine/events";
 import type { MatchView } from "../engine/view";
-import { focusRange, lookFor, subject } from "./broadcast-look";
+import { focusBand, lookFor } from "./broadcast-look";
 import { CameraDirector } from "./camera/director";
 import { CeremonyScene } from "./ceremony/ceremony-scene";
 import { BallTrace, type TracePoint } from "./effects/ball-trace";
@@ -22,8 +22,6 @@ export interface RendererOptions {
   /** Draws at this share of the screen's resolution. */
   scale?: number;
 }
-
-const focusAt = new THREE.Vector3();
 
 /**
  * Draws a football match under the lights: the stadium and field, the
@@ -163,10 +161,8 @@ export class MatchRenderer {
     const replay = this.director.replayShot;
     this.picture.grade(lookFor(view, replay), dt, cut || !this.graded);
     this.graded = true;
-    const at = subject(view, replay, focusAt);
-    if (!at) return;
-    const d = at.distanceTo(this.director.camera.position);
-    this.picture.focus(d, focusRange(d));
+    const band = focusBand(view, replay, this.director.camera.position);
+    if (band) this.picture.focus(band.distance, band.range);
   }
 
   /** Where the captain's hands are, into handL and handR, while he has the trophy. */

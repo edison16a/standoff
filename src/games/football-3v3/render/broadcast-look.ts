@@ -29,3 +29,22 @@ export function subject(view: MatchView, replay: ReplayShot | null, out: THREE.V
 export function focusRange(distance: number): number {
   return THREE.MathUtils.clamp(distance * 0.18, 0.8, 4);
 }
+
+const focusAt = new THREE.Vector3();
+const scorerAt = new THREE.Vector3();
+
+/**
+ * Where the lens focuses, in metres from it, and how deep the sharp band
+ * is either side, or null in live play. Chasing the ball, the band
+ * reaches on to the man it is flying to, so the catch it heads for reads
+ * clearly rather than the ball alone in a blur.
+ */
+export function focusBand(view: MatchView, replay: ReplayShot | null, lens: THREE.Vector3): { distance: number; range: number } | null {
+  const at = subject(view, replay, focusAt);
+  if (!at) return null;
+  const distance = at.distanceTo(lens);
+  let range = focusRange(distance);
+  const scorer = replay?.camera === "ball" ? view.athletes.find((a) => a.id === replay.scorer) : undefined;
+  if (scorer) range = Math.max(range, Math.abs(scorerAt.set(scorer.x, 1.2, scorer.z).distanceTo(lens) - distance) + 1.5);
+  return { distance, range };
+}
