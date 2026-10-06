@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { MatchEvent } from "../engine/events";
 import type { MatchView } from "../engine/view";
 import { TEAMS } from "../teams";
 import { Arena } from "./arena/arena";
+import { stadiumEnvironment } from "./arena/environment";
 import { excitement } from "./arena/crowd-mood";
 import { AthleteMaterials } from "./body/materials";
 import { CameraDirector, type Shot } from "./camera/director";
@@ -50,11 +50,9 @@ export class MatchRenderer {
   constructor(canvas: HTMLCanvasElement, options: RendererOptions = {}) {
     this.picture = new Picture(canvas, options);
     const low = this.picture.low;
-    const pmrem = new THREE.PMREMGenerator(this.picture.renderer);
-    this.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    pmrem.dispose();
+    this.environment = stadiumEnvironment(this.picture.renderer);
     this.scene.environment = this.environment;
-    this.scene.environmentIntensity = 0.35;
+    this.scene.environmentIntensity = 0.5;
     this.scene.fog = new THREE.Fog("#0b1024", 70, 220);
     this.arena = new Arena(low);
     this.effects = new Effects(this.arena.glow);

@@ -6,6 +6,7 @@ import { Boards } from "./boards";
 import { Crowd } from "./crowd";
 import { buildFloodlights } from "./floodlights";
 import { GoalModel } from "./goal-model";
+import { stadiumLights } from "./lighting";
 import { buildPitch } from "./pitch";
 import { buildSky } from "./sky";
 import { buildStands } from "./stands";
@@ -22,7 +23,7 @@ export class Arena {
   readonly goals: [GoalModel, GoalModel];
   readonly crowd: Crowd;
   readonly key: THREE.DirectionalLight;
-  readonly ambient = new THREE.HemisphereLight("#9fb2ff", "#10281a", 0.42);
+  readonly ambient: THREE.HemisphereLight;
   readonly glow: THREE.CanvasTexture;
   private readonly net: THREE.CanvasTexture;
   private readonly parts: { dispose(): void }[] = [];
@@ -32,37 +33,20 @@ export class Arena {
     this.net = netTexture();
     const pitch = buildPitch();
     const stands = buildStands();
-    const lights = buildFloodlights(this.glow, !lite);
+    const towers = buildFloodlights(this.glow, !lite);
     const sky = buildSky();
     this.goals = [new GoalModel(-1, this.net), new GoalModel(1, this.net)];
     this.crowd = new Crowd(stands.seats, [TEAMS[0].kit.shirt, TEAMS[1].kit.shirt]);
-    this.parts.push(pitch, stands, lights, sky, this.boards, ...this.goals, this.crowd);
-    this.group.add(sky.group, pitch.group, stands.group, lights.group, this.boards.group, this.goals[0].group, this.goals[1].group);
+    this.parts.push(pitch, stands, towers, sky, this.boards, ...this.goals, this.crowd);
+    this.group.add(sky.group, pitch.group, stands.group, towers.group, this.boards.group, this.goals[0].group, this.goals[1].group);
     // Thousands of fans are the heaviest thing to draw; software graphics in tests leave them out.
     if (!lite) this.group.add(this.crowd.mesh);
     this.group.add(this.catchNets());
 
-    this.group.add(this.ambient);
-    // The key light comes from high on the camera's side, so the faces the broadcast sees are lit.
-    this.key = new THREE.DirectionalLight("#fff4e2", 2.4);
-    this.key.position.set(-14, 34, 22);
-    this.key.castShadow = true;
-    this.key.shadow.mapSize.set(2048, 2048);
-    const cam = this.key.shadow.camera;
-    // Wide enough for the whole pitch and its boards.
-    cam.left = -(PITCH.halfLength + 8);
-    cam.right = PITCH.halfLength + 8;
-    cam.top = PITCH.halfWidth + 8;
-    cam.bottom = -(PITCH.halfWidth + 8);
-    cam.near = 5;
-    cam.far = 90;
-    this.key.shadow.bias = -0.0004;
-    this.key.shadow.normalBias = 0.02;
-    const fill = new THREE.DirectionalLight("#cfdcff", 0.7);
-    fill.position.set(18, 26, -20);
-    const rim = new THREE.DirectionalLight("#ffe9c7", 0.7);
-    rim.position.set(20, 22, 18);
-    this.group.add(this.key, this.key.target, fill, rim);
+    const lights = stadiumLights(!lite);
+    this.key = lights.key;
+    this.ambient = lights.ambient;
+    this.group.add(lights.group);
   }
 
   /** Tall catch nets behind each goal, and a light cage net along the far side. */
