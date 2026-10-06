@@ -80,6 +80,7 @@ export class MatchRenderer {
     this.floods = new Floodlights(!this.low);
     this.picture.governor.onTier((tier) => this.floods.setTier(tier));
     this.stadium = new Stadium(this.low, renderer.capabilities.getMaxAnisotropy());
+    this.picture.governor.onTier((tier) => this.stadium.crowd?.setFull(tier.fullCrowd));
     this.scene.add(this.floods.group, this.stadium.group, this.lines.group, this.contacts.mesh, this.squad.group, this.trace.group, this.ceremony.group);
     this.overlay.add(this.tags.group);
   }

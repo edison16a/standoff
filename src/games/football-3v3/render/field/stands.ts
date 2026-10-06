@@ -52,7 +52,7 @@ export function stands(low: boolean): Stands {
   shell([[0, 0], [0, LOWER.base - 0.2], [-0.25, LOWER.base - 0.2], [-0.25, LOWER.base], [0, LOWER.base]]);
   parts.push(ringStrip(deckProfile(LOWER), { segments, colour: seatColour }));
   // The concourse behind the lower deck, the suites' base, and the soffit under the upper deck.
-  shell([[lowTop.out, lowTop.y], [SUITES.out, lowTop.y], [SUITES.out, SUITES.bottom]]);
+  shell([[lowTop.out, lowTop.y + 0.5], [lowTop.out, lowTop.y], [SUITES.out, lowTop.y], [SUITES.out, SUITES.bottom]]);
   shell([[SUITES.out, SUITES.top], [UPPER.out, UPPER.base - 1.4], [UPPER.out, UPPER.base]]);
   parts.push(ringStrip(deckProfile(UPPER), { segments, colour: seatColour }));
   // The back wall up to the roof, the roof's top, its thick inner lip and the dark underside.
@@ -65,7 +65,7 @@ export function stands(low: boolean): Stands {
 
   // The LED rail along the top of the lower deck, the team names running round in their colours.
   const ribbon = ribbonTexture();
-  const ribbonGeo = ringStrip([[lowTop.out, lowTop.y], [lowTop.out, lowTop.y + 1.3]], { segments, uMetres: 26 });
+  const ribbonGeo = ringStrip([[lowTop.out, lowTop.y + 0.5], [lowTop.out, lowTop.y + 1.8]], { segments, uMetres: 26 });
   const ribbonMat = new THREE.MeshBasicMaterial({ map: ribbon, color: new THREE.Color(1.6, 1.6, 1.6), side: THREE.DoubleSide });
   const ribbonMesh = new THREE.Mesh(ribbonGeo, ribbonMat);
 

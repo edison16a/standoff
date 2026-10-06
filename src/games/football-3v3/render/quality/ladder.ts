@@ -14,12 +14,14 @@ export interface Tier {
   /** The shadow map's size, texels a side. */
   shadowMap: 1024 | 2048;
   bloom: boolean;
+  /** Fans in the upper deck too; the leanest rungs keep only the lower deck's. */
+  fullCrowd: boolean;
 }
 
-const FULL: Tier = { samples: 4, shadowLights: 2, shadowMap: 2048, bloom: true };
+const FULL: Tier = { samples: 4, shadowLights: 2, shadowMap: 2048, bloom: true, fullCrowd: true };
 const ONE_SHADOW: Tier = { ...FULL, shadowLights: 1 };
 const HALF_MSAA: Tier = { ...ONE_SHADOW, samples: 2 };
-const LEAN: Tier = { samples: 0, shadowLights: 1, shadowMap: 1024, bloom: false };
+const LEAN: Tier = { samples: 0, shadowLights: 1, shadowMap: 1024, bloom: false, fullCrowd: false };
 
 export interface Rung {
   tier: Tier;

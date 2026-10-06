@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { TEAMS } from "../../teams";
-import { box, merge, paint } from "../models/geo";
+import { merge, paint } from "../models/geo";
 import { BOWL, edge, LOWER, seat, UPPER } from "./bowl";
 
 /**
@@ -14,11 +14,13 @@ export class Crowd {
   private readonly material: THREE.MeshLambertMaterial;
   private readonly uniforms = { uTime: { value: 0 }, uExcite: { value: 0.1 } };
   private excite = 0.1;
+  private readonly total: number;
+  private readonly lower: number;
 
-  constructor(spacing = 0.72) {
+  constructor(spacing = 0.84) {
     const geo = merge([
-      paint(box(0.42, 0.62, 0.3), "#ffffff", { at: [0, 0.31, 0] }),
-      paint(box(0.2, 0.22, 0.2), "#e0b793", { at: [0, 0.74, 0] }),
+      paint(frontBox(0.42, 0.62, 0.3), "#ffffff", { at: [0, 0.31, 0] }),
+      paint(frontBox(0.2, 0.22, 0.2), "#e0b793", { at: [0, 0.74, 0] }),
     ]);
     this.material = new THREE.MeshLambertMaterial({ vertexColors: true });
     this.material.onBeforeCompile = (shader) => {
@@ -32,9 +34,10 @@ export class Crowd {
         );
     };
     const spots: THREE.Vector3[] = [];
+    let lower = 0;
     let n = 7;
     // The upper deck sits further from the camera, so its fans are spaced a little wider.
-    for (const [deck, gap] of [[LOWER, spacing], [UPPER, spacing * 1.15]] as const) {
+    for (const [deck, gap] of [[LOWER, spacing], [UPPER, spacing * 1.2]] as const) {
       for (let r = 0; r < deck.rows; r++) {
         const count = Math.floor(around(deck.out + (r + 0.5) * deck.rowDepth) / gap);
         for (let i = 0; i < count; i++) {
@@ -44,25 +47,39 @@ export class Crowd {
           spots.push(seat(deck, (i / count) * Math.PI * 2, r + 0.45));
         }
       }
+      if (deck === LOWER) lower = spots.length;
     }
     this.mesh = new THREE.InstancedMesh(geo, this.material, spots.length);
+    this.total = spots.length;
+    this.lower = lower;
     const m = new THREE.Matrix4();
     const q = new THREE.Quaternion();
-    const shirts = [TEAMS[0].color, TEAMS[0].color, TEAMS[1].color, TEAMS[1].color, TEAMS[0].trim, "#ffffff", "#20242c", "#c9ced6"];
+    const neutral = ["#20242c", "#2f3b55", "#c9ced6", "#f2f2f2", "#3c3f46", "#59616e"];
     const colour = new THREE.Color();
+    const up = new THREE.Vector3(0, 1, 0);
+    const scale = new THREE.Vector3();
     spots.forEach((p, i) => {
-      // Everyone faces the middle of the field.
-      q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.atan2(-p.x, -p.z));
-      const h = 0.9 + ((i * 37) % 23) / 100;
-      m.compose(p, q, new THREE.Vector3(1, h, 1));
+      // Everyone faces the middle of the field, give or take, and no two fans are quite the same size.
+      q.setFromAxisAngle(up, Math.atan2(-p.x, -p.z) + (((i * 53) % 17) - 8) * 0.03);
+      scale.set(0.9 + ((i * 29) % 13) / 60, 0.9 + ((i * 37) % 23) / 100, 1);
+      m.compose(p, q, scale);
       this.mesh.setMatrixAt(i, m);
-      // Home fans fill the side behind Storm's bench, away fans the other.
-      const side = p.z > 0 ? 0 : 1;
-      const pick = (i * 7919) % 11;
-      colour.set(pick < 6 ? TEAMS[side as 0 | 1].color : shirts[pick % shirts.length]!);
+      // Home fans fill the side behind Storm's bench, away fans the other; plenty wear neither.
+      const side = (p.z > 0 ? 0 : 1) as 0 | 1;
+      const pick = (i * 7919) % 20;
+      const team = TEAMS[side];
+      const rival = TEAMS[side === 0 ? 1 : 0];
+      colour.set(pick < 8 ? team.color : pick < 10 ? team.dark : pick < 11 ? team.trim : pick < 13 ? rival.color : neutral[pick % neutral.length]!);
+      // Shade varies fan to fan, and the high rows sit further from the floods.
+      colour.multiplyScalar((0.62 + ((i * 131) % 29) / 75) * (1 - Math.min(0.35, p.y / 110)));
       this.mesh.setColorAt(i, colour);
     });
     this.mesh.instanceMatrix.needsUpdate = true;
+  }
+
+  /** The lower deck's fans come first, so the upper deck can be left out by drawing fewer instances. */
+  setFull(full: boolean): void {
+    this.mesh.count = full ? this.total : this.lower;
   }
 
   /** 0 for a murmur, 1 for a touchdown roar. */
@@ -92,4 +109,20 @@ function around(out: number): number {
     last = e;
   }
   return total;
+}
+
+/**
+ * A box without its bottom and back faces: fans face the field and the
+ * camera is always inside the bowl, so those faces are never seen. It
+ * takes a third off the crowd's triangles.
+ */
+function frontBox(w: number, h: number, d: number): THREE.BufferGeometry {
+  const geo = new THREE.BoxGeometry(w, h, d);
+  // Faces come in the order +x, -x, +y, -y, +z, -z, six indices each.
+  const all = geo.getIndex()!.array;
+  const keep: number[] = [];
+  for (const face of [0, 1, 2, 4]) for (let i = 0; i < 6; i++) keep.push(all[face * 6 + i]!);
+  geo.setIndex(keep);
+  geo.clearGroups();
+  return geo;
 }
