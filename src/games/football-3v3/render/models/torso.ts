@@ -32,9 +32,10 @@ export function torsoStations(d: Dims): Station[] {
     st(0.582, 0.084 * W, 0.068 * D + gut, 0.064 * D, 2.1),
     st(0.63, 0.087 * W, 0.072 * D + gut * 1.2, 0.063 * D, 2.1),
     st(0.685, 0.093 * W, 0.08 * D + gut * 0.7, 0.068 * D, 2.2),
-    st(0.73, 0.106 * W, 0.084 * D, 0.075 * D, 2.4),
-    st(0.752, 0.13 * P, 0.088 * D, 0.08 * D, 2.6),
-    st(0.782, 0.15 * P, 0.091 * D, 0.087 * D, 3),
+    st(0.738, 0.11 * W, 0.084 * D, 0.076 * D, 2.4),
+    // The pads' lower edge: the jersey turns sharply under it, so the pads read as a hard shell, not a cushion.
+    st(0.757, 0.141 * P, 0.089 * D, 0.083 * D, 2.8),
+    st(0.782, 0.152 * P, 0.091 * D, 0.087 * D, 3.2),
     st(0.808, 0.155 * P, 0.09 * D, 0.087 * D, 3.5),
     st(0.826, 0.149 * P, 0.086 * D, 0.083 * D, 3),
     st(0.837, 0.134 * P, 0.078 * D, 0.076 * D, 2.6),
