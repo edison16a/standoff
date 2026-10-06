@@ -40,6 +40,8 @@ For testing without a camera, pick **Keyboard** beside the difficulty in the fir
 | K | Cross |
 | U | Left hook |
 | I | Right hook |
+| N | Left uppercut |
+| M | Right uppercut |
 | A and D, or Left and Right | Slip the head, for as long as it is held |
 | S or Down | Duck, for as long as it is held |
 | S held while punching | The punch goes to the body, as dipping the knees does on camera |
@@ -48,7 +50,9 @@ For testing without a camera, pick **Keyboard** beside the difficulty in the fir
 | F | Elbows tucked over the ribs, against body shots |
 | E | Both gloves held out, to touch gloves |
 
-On the build choice, A and D browse and Space locks in. Everything else is clicked. The keys feed the very same input the camera does (`host/key-boxer.ts`): the head eases to a full slip or duck in about a tenth of a second, the gloves cover what a real guard covers, and a punch thrown from a key is a firm one. As on camera, the feet move by themselves and there is no uppercut. The keys only count in keyboard mode, so a camera fight never fights them.
+On the build choice, A and D browse and Space locks in. Everything else is clicked. The keys feed the very same input the camera does (`host/key-boxer.ts`): the head eases to a full slip or duck in about a tenth of a second, the gloves cover what a real guard covers, and a punch thrown from a key is a firm one. As on camera, the feet move by themselves. The keys only count in keyboard mode, so a camera fight never fights them.
+
+The uppercut is only on the keys, since the camera does not read one yet. It is the heaviest punch and the slowest back to the guard. The glove drops by the hip and drives up under the chin with the knees behind it (`render/anim/punch-arcs.ts`). It comes up between the gloves, so a tight guard takes most of it and a high shell less. It comes from below, so ducking walks into it and only a slip gets away. The computer boxer slips it rather than ducking, and never throws one, so a camera fight plays as before.
 
 The host's admin panel has a **Keyboard player** for testing (three quick taps on the settings gear, then Platform). It takes a seat and says hello, and the first menu switches to keyboard mode by itself. Its controls card shows the keys above. Each key goes through the room down and up (`keyboard.ts`, `host/key-messages.ts`), and the page's own key listener skips any key the keyboard player already took, so each press counts once.
 
