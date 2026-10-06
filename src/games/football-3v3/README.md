@@ -211,10 +211,21 @@ const board = scoreboard(view); // for <Scoreboard board={board} />
 
 ### The stadium
 
-* **Field.** One painted texture: grass mowed in 5 yard bands, yard lines, hash marks at every yard, the numbers 10 to 50 facing their sideline, both end zones in team colours with the team name, a star at midfield and the white border. The layout is plain data in `field/marks.ts`.
-* **Goal posts.** Yellow slingshot posts on both end lines, with the crossbar and uprights where the engine scores kicks, and a ribbon on each tip.
-* **Around it.** Team benches, a bowl of stands, a crowd of thousands in team colours that bounce harder after a score, four light towers and a night sky.
+* **Turf.** One shader on one plane (`field/turf.ts`). Grass from a baked blade texture read at two scales, so it never shows a repeat, with blade normals up close, mowing stripes every five yards that swap light and dark with the camera's side, and worn, drier grass between the hashes. The paint is maths per pixel (`field/turf-paint.glsl.ts`): yard lines, hash marks, the six foot border, the coaches' box, the star at midfield and both end zones in team colour with the team name. The numbers and names come from distance field atlases (`field/sdf.ts`, `field/paint-glyphs.ts`), so they stay sharp from the turf to the roof and the lines never flicker in the distance.
+* **Goal posts and nets.** Yellow slingshot posts on both end lines, with the crossbar and uprights where the engine scores kicks, and a ribbon on each tip.
+* **Sidelines.** Each team's area behind its sideline: a mat, two rows of benches with team coloured backs, a branded backdrop, coolers and a heater. Orange pylons at the corners of both end zones and the yard markers along the far side (`field/sideline.ts`).
+* **The bowl.** Two decks of seats swept round a rounded rectangle (`field/bowl.ts`, `field/ring-strip.ts`): the lower deck from a padded wall, an LED rail with the team names running round, a row of lit suites, the upper deck over them and a roof canopy. Each team's fans fill its own side. The whole building is three draw calls (`field/stands.ts`).
+* **Crowd.** Some twenty thousand fans in one instanced draw, mostly in their side's colours, bouncing in the vertex shader and harder after a score. No crowd noise.
+* **Floodlights.** Fourteen banks of lamps hang under the roof's inner edge, every lamp aimed at its own spot on the field (`field/light-rig.ts`, `field/lamp-banks.ts`). The faces burn far over white so the bloom catches them, and each bank throws a soft glare with a streak into the lens, strongest when it faces the camera (`field/glare.ts`).
+* **Sky.** A hazy glow at the horizon over the open roof, deep navy overhead, faint cloud lit from below and a few stars (`field/sky.ts`).
 * **TV lines.** The blue line of scrimmage and the yellow first down line sit on the grass under the players. They glide to the new spot between plays and hide at goal to go.
+
+### Light and the picture
+
+* **Light.** Physically based materials, linear light, ACES filmic tone mapping and sRGB out. Two key lights stand in for the banks over each sideline, both casting soft shadows from every player and the ball, so a player stands in two faint crossed shadows the way he does under real floods (`lighting/floodlights.ts`). The shadow boxes follow the action and snap to whole texels, so shadows never shimmer. A sky fill from above and a green bounce off the turf fill the rest.
+* **Reflections.** An environment map built once from the stadium's own shapes (`lighting/stadium-env.ts`): every bank where it really hangs, the suites' glow, the turf below. Helmets and visors mirror the lights the camera sees overhead.
+* **Contact shadows.** A soft dark blob under each player's body and feet and under a loose ball (`lighting/contact-shadows.ts`), one instanced draw, so players sit on the grass even where the shadow map is coarse.
+* **The finish.** The scene draws into a multisampled half float target, then gets a subtle bloom on the lights and highlights, the filmic curve, a broadcast grade and a light vignette (`post/`). Depth of field comes on only for replays and the trophy presentation, focused on the subject of the shot (`broadcast-look.ts`). The grade eases between the live look, the replay look and the ceremony look, and changes at once on a cut.
 
 ### The players
 
@@ -252,8 +263,9 @@ Every frame a figure picks a target pose from the engine's view and eases toward
 
 * **Shared shapes.** Every kind of body, the helmet shell, each team's masks and the visor are built once and shared (`models/athlete-shapes.ts`), so a player rebuilt for a new name keeps his body. A player is three draws for the body (skin, gear and jersey) and two for the helmet.
 * **Levels of detail.** A player who fills less than about a fifth of the picture's height swaps to a lighter body and helmet. Close up a body is about 23 thousand triangles and a helmet about 7 thousand; far away about 8 and 3 thousand.
-* **Frame budget.** Where the browser can time the graphics card (`render/frame-budget.ts`), frames over 12 ms draw fewer pixels, down to six tenths of full resolution, and come back up once there is room. Software graphics (the `lowGpu` test hook) always get the light bodies, half size textures and no sheen or skin glow.
-* **Measured** in Chromium with software WebGL, a game from the broadcast camera at 1600 by 900: 140 draw calls with shadows and 650 thousand triangles a frame, of which the twelve players are 270 thousand across both passes (1.1 million before the far bodies). Animating all twelve, feet included, takes about 0.9 ms of the CPU a frame. Textures: one 1024 by 768 jersey print per player and one 1024 square helmet paint per team.
+* **Automatic quality.** Where the browser can time the graphics card, frames over 12 ms walk down a ladder (`quality/ladder.ts`, `quality/governor.ts`): first the second set of shadows goes, then a little resolution, then half the multisampling, then the bloom, the upper deck's crowd and the rest of the multisampling, down to six tenths of full resolution. It climbs back once there is room. Where the card cannot be timed it watches the frame pace instead (`quality/pace.ts`). Software graphics (the `lowGpu` test hook) skip the finish and the shadows and always get the light bodies, half size textures and no sheen or skin glow.
+* **The venue's cost.** The building is three draws, the floodlights four, the crowd one and the turf one. Textures: the grass tile, two small distance field atlases, the LED rail and the suites.
+* **Measured** in Chromium with software WebGL, a game from the broadcast camera at 1920 by 1080 on the top rung: 220 draw calls and 890 thousand triangles a frame across every pass, with both shadow maps, the finish and the crowd. Before the new stadium, at 1600 by 900: 140 draw calls with shadows and 650 thousand triangles a frame, of which the twelve players are 270 thousand across both passes (1.1 million before the far bodies). Animating all twelve, feet included, takes about 0.9 ms of the CPU a frame. Textures: one 1024 by 768 jersey print per player and one 1024 square helmet paint per team.
 
 ### The camera
 
@@ -261,6 +273,7 @@ Every frame a figure picks a target pose from the engine's view and eases toward
 * **Phone sticks.** `renderer.director.groundForward()` is the way up the screen on the ground, in field space, for turning a phone's stick into a field direction that matches the camera.
 * **Kicks.** Low behind the kicker through the posts, then up and after the ball, staying with it after the whistle as it flies on into the net.
 * **Touchdowns.** A slow orbit round the scorer. At the final whistle, a wide orbit of the winners until the trophy presentation takes over with its own shots.
+* **Broadcast feel.** The camera's spot and its aim ride critically damped springs (`camera/broadcast.ts`), so moves ease in and out like a heavy broadcast head and never overshoot. The lens leads the ball a little the way it is moving, and the zoom breathes with the play: a touch tighter while the teams set, opening as the ball moves fast or flies deep. The formation is fitted after the zoom, so it is never cropped.
 * A big hit shakes it a little. Any move that would sweep across the field cuts instead, like the lobby giving way to the game or the ball spotted far downfield.
 
 ### The scoreboard
