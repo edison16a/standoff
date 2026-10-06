@@ -6,6 +6,7 @@ import { DUNK_STYLES, type DunkStyle } from "../roster";
 import { BotFilm } from "./bot-film";
 import { LAB_SCENES, LabFilm, type LabScene } from "./lab";
 import { CeremonyFilm } from "./lab-ceremony";
+import { LineupFilm } from "./lab-lineup";
 
 declare global {
   interface Window {
@@ -28,12 +29,14 @@ export interface Film {
  * The development aids read from the address: `?bots=seed` films a
  * computer game, `?lab=scene&style=dunk` a lab scene (`?lab=ceremony` the trophy ceremony), `?step=1` hands
  * the clock to `window.__nbaStep` for frame by frame review, and
- * `?follow=id,angle,dist` keeps a close camera on one player.
+ * `?follow=id,angle,dist,height` keeps a close camera on one player,
+ * looking at chest height unless a height is given. `?lab=lineup` stands
+ * all six builds in a row for close looks at the models.
  */
 export interface DevOptions {
   film: Film | null;
   step: boolean;
-  follow: { id: number; angle: number; dist: number } | null;
+  follow: { id: number; angle: number; dist: number; height: number | null } | null;
 }
 
 export function readDev(params: URLSearchParams): DevOptions {
@@ -42,13 +45,14 @@ export function readDev(params: URLSearchParams): DevOptions {
   const style = params.get("style") as DunkStyle | null;
   let film: Film | null = null;
   if (params.get("lab") === "ceremony") film = new CeremonyFilm();
+  else if (params.get("lab") === "lineup") film = new LineupFilm();
   else if (lab && LAB_SCENES.includes(lab)) film = new LabFilm(lab, style && DUNK_STYLES.includes(style) ? style : null);
   else if (bots !== null) film = new BotFilm(Number(bots) || 1);
   const f = params.get("follow");
   let follow: DevOptions["follow"] = null;
   if (f) {
-    const [id = 0, angle = 90, dist = 4] = f.split(",").map(Number);
-    follow = { id, angle: (angle * Math.PI) / 180, dist };
+    const [id = 0, angle = 90, dist = 4, height] = f.split(",").map(Number);
+    follow = { id, angle: (angle * Math.PI) / 180, dist, height: height ?? null };
   }
   return { film, step: params.get("step") === "1", follow };
 }
@@ -58,7 +62,8 @@ export function followCamera(tv: TvCamera, m: Match, follow: NonNullable<DevOpti
   const a = m.athletes[follow.id];
   if (!a) return;
   const yaw = follow.angle;
-  const look = new THREE.Vector3(a.x, 1.05 + a.y * 0.8, a.z);
-  const pos = new THREE.Vector3(a.x + Math.sin(yaw) * follow.dist, 1.5, a.z + Math.cos(yaw) * follow.dist);
+  const h = follow.height;
+  const look = new THREE.Vector3(a.x, (h ?? 1.05) + a.y * 0.8, a.z);
+  const pos = new THREE.Vector3(a.x + Math.sin(yaw) * follow.dist, h ?? 1.5, a.z + Math.cos(yaw) * follow.dist);
   tv.fixed = { pos, look, fov: 40 };
 }

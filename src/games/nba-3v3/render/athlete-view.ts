@@ -13,6 +13,7 @@ import { setShotPose } from "./anim/line";
 import { strideLength } from "./anim/locomotion";
 import { movePose } from "./anim/moves";
 import { applyPose, approach, blend, STAND, type Pose } from "./anim/pose";
+import type { AthleteMaterials } from "./materials/athlete-materials";
 import { buildAthlete, type AthleteModel } from "./models/athlete-model";
 import { Placement } from "./placement";
 
@@ -53,8 +54,8 @@ export class AthleteView {
   private side = 0;
 
   /** `backName` goes across the jersey: the player's own name, or the build's for a computer player. */
-  constructor(readonly athlete: Athlete, bodyMat: THREE.Material, parent: THREE.Object3D, backName?: string) {
-    this.model = buildAthlete(BUILDS[athlete.build], TEAMS[athlete.team], bodyMat, backName);
+  constructor(readonly athlete: Athlete, mats: AthleteMaterials, parent: THREE.Object3D, backName?: string) {
+    this.model = buildAthlete(BUILDS[athlete.build], TEAMS[athlete.team], mats, { backName });
     this.seed = athlete.id * 1.7;
     this.placement = new Placement(athlete);
     parent.add(this.model.joints.root);

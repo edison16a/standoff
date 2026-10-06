@@ -1,186 +1,96 @@
 import * as THREE from "three";
 import type { BuildSpec } from "../../builds";
 import type { Team } from "../../roster";
-import { ball, box, cyl, lathe, limb, merge, paint } from "./geo";
-import { buildHead, shade } from "./head";
-import { jerseyTexture } from "./jersey";
+import type { AthleteMaterials } from "../materials/athlete-materials";
+import { buildHand } from "./hands";
+import { addGear } from "./gear";
+import { buildHead } from "./head";
+import { addKit } from "./kit";
+import { kitTexture } from "./kit-texture";
+import { limbs } from "./limbs";
+import { PartList, tint } from "./parts";
+import { buildRig, type Dims, type Extras, type Joints } from "./rig";
+import { neckInfluence, neckTube, torsoInfluence, torsoTube } from "./torso";
 
-/** Every joint the animations turn. Each is a group whose children hang from it. */
-export interface Joints {
-  root: THREE.Group;
-  hips: THREE.Group;
-  torso: THREE.Group;
-  neck: THREE.Group;
-  shoulderL: THREE.Group;
-  shoulderR: THREE.Group;
-  elbowL: THREE.Group;
-  elbowR: THREE.Group;
-  handL: THREE.Group;
-  handR: THREE.Group;
-  hipL: THREE.Group;
-  hipR: THREE.Group;
-  kneeL: THREE.Group;
-  kneeR: THREE.Group;
-  ankleL: THREE.Group;
-  ankleR: THREE.Group;
-}
-
-/** Lengths the animations need, in metres. */
-export interface Dims {
-  height: number;
-  hipY: number;
-  thigh: number;
-  shin: number;
-  upper: number;
-  fore: number;
-  torso: number;
-  /** The shoe's sole in the ankle's frame: a hair over its underside, so it never flickers on the floor, and the heel and toe. */
-  sole: { y: number; heel: number; toe: number };
-}
+export type { Dims, Joints } from "./rig";
 
 export interface AthleteModel {
   joints: Joints;
+  /** The shorts' sway bones and the breathing rib cage, which the view drives. */
+  extras: Extras;
   dims: Dims;
   meshes: THREE.Mesh[];
   dispose(): void;
 }
 
-const group = (name: string, parent?: THREE.Object3D, at: [number, number, number] = [0, 0, 0]) => {
-  const g = new THREE.Group();
-  g.name = name;
-  g.position.set(...at);
-  parent?.add(g);
-  return g;
-};
+export interface AthleteOptions {
+  /** The name across the back; the build's own by default. */
+  backName?: string;
+  /** Stripes and trousers instead of a team's kit. */
+  referee?: boolean;
+}
+
+/** Where the head's centre sits over the neck joint: high enough for a real neck, a little forward of it. */
+export function headOffset(s: number, k: number): THREE.Vector3 {
+  return new THREE.Vector3(0, 0.074 * s + 0.106 * k, 0.014 * s);
+}
 
 /**
- * A stylised athlete on a simple skeleton: pelvis, torso, neck, and two
- * arms and legs of two segments each. Proportions come from the
- * player's height, shoulder width, bulk and reach; the look from their
- * skin, hair, beard and gear, in their team's jersey with their number
- * and `backName` across the back: the player's own name.
+ * A player built for the broadcast: one continuous skinned body from
+ * the build's height, width, bulk and reach, a sculpted head with the
+ * build's face, hair and beard, hands with fingers, and the team's kit
+ * with the player's number and name, over high top shoes and socks.
+ * Everything one material draws merges into one skinned mesh, so a
+ * player costs three draws: skin, kit and gear.
  */
-export function buildAthlete(c: BuildSpec, team: Team, bodyMat: THREE.Material, backName: string = c.name): AthleteModel {
-  const H = c.body.height;
-  const { bulk, width, reach } = c.body;
-  const skin = c.look.skin;
-  const s = H / 2;
-  const ankle = 0.075;
-  const shoe = 0.075 * H;
-  const thigh = 0.245 * H;
-  const shin = 0.232 * H;
-  const hipY = thigh + shin + ankle;
-  const torsoLen = 0.285 * H;
-  const upper = 0.168 * H * reach;
-  const fore = 0.148 * H * reach;
-  const shoulderX = 0.1 * H * width;
-  const headR = (0.105 + (H - 2) * 0.02) * 1.12;
+export function buildAthlete(c: BuildSpec, team: Team, mats: AthleteMaterials, o: AthleteOptions = {}): AthleteModel {
+  const rig = buildRig(c);
+  const fine = mats.detail === "high";
+  const { s, bulk } = rig.m;
+  const look = c.look;
 
+  const skin = new PartList(rig);
+  for (const limb of limbs(rig, fine ? 22 : 12)) skin.weighted(tint(limb.geo, look.skin), limb.weigh, 0.42);
+  skin.weighted(tint(torsoTube(rig, { n: fine ? 36 : 18, capStart: 0.04 * s, capEnd: 0.02 * s }), look.skin), torsoInfluence(rig), 0.44);
+  skin.weighted(tint(neckTube(rig, fine ? 20 : 12), look.skin), neckInfluence(rig), 0.44);
+  const headScale = 1 + (c.body.height - 2) * 0.12;
+  const head = buildHead(look, headScale, fine);
+  const at = headOffset(s, headScale);
+  skin.rigid(head.skin.translate(at.x, at.y, at.z), "neck");
+  for (const side of [1, -1] as const) skin.rigid(buildHand(look, side, s * (0.97 + 0.03 * bulk), fine), side > 0 ? "handL" : "handR");
+
+  const kit = new PartList(rig);
+  addKit(kit, rig, { referee: o.referee, fine });
+  const gear = new PartList(rig);
+  addGear(gear, rig, look, fine);
+  gear.rigid(head.gear.translate(at.x, at.y, at.z), "neck");
+
+  const print = kitTexture({ team, number: c.number, name: o.backName ?? c.name, referee: o.referee });
+  const kitMat = mats.kit(print, o.referee ? "#d4d4d4" : team.color);
+  const skeleton = new THREE.Skeleton(rig.bones);
   const meshes: THREE.Mesh[] = [];
-  const textures: THREE.Texture[] = [];
-  const materials: THREE.Material[] = [];
-  const add = (parent: THREE.Object3D, geo: THREE.BufferGeometry, mat: THREE.Material = bodyMat) => {
-    const mesh = new THREE.Mesh(geo, mat);
+  for (const [list, mat] of [[skin, mats.skin], [kit, kitMat], [gear, mats.gear]] as const) {
+    const geo = list.geometry();
+    if (!geo) continue;
+    const mesh = new THREE.SkinnedMesh(geo, mat);
     mesh.castShadow = true;
-    parent.add(mesh);
+    // The body moves far from where it was bound, so it is never culled on a stale box.
+    mesh.frustumCulled = false;
+    rig.joints.root.add(mesh);
+    mesh.bind(skeleton);
     meshes.push(mesh);
-    return mesh;
-  };
-
-  const root = group("root");
-  const hips = group("hips", root, [0, hipY, 0]);
-  const torso = group("torso", hips, [0, 0.03 * H, 0]);
-  const neck = group("neck", torso, [0, torsoLen, 0]);
-
-  // Shorts: a flared pelvis piece in team colour with a trim stripe down each side.
-  const shortsTop = 0.06 * H;
-  add(hips, merge([
-    paint(lathe([[0.14 * s * width, -0.1 * H], [0.16 * s * width, -0.02 * H], [0.145 * s * width, shortsTop]], 22), team.color, { scale: [1.05, 1, 0.72] }),
-    paint(cyl(0.148 * s * width, 0.148 * s * width, 0.02 * H, 22, true), team.dark, { at: [0, shortsTop - 0.01 * H, 0], scale: [1.05, 1, 0.72] }),
-  ]));
-
-  // Torso: a jersey with the number printed round it, and bare shoulders and neck.
-  const jersey = jerseyTexture(team, c.number, backName);
-  textures.push(jersey);
-  const jerseyMat = new THREE.MeshStandardMaterial({ map: jersey, roughness: 0.62, side: THREE.DoubleSide });
-  materials.push(jerseyMat);
-  const r = 0.17 * s * width;
-  const profile = lathe(
-    [[0.62 * r, 0], [0.7 * r, 0.3 * torsoLen], [0.86 * r, 0.62 * torsoLen], [0.92 * r, 0.82 * torsoLen], [0.74 * r, 0.95 * torsoLen], [0.34 * r, torsoLen]],
-    32,
-  );
-  profile.rotateY(Math.PI);
-  profile.scale(1, 1, 0.64 + (bulk - 1) * 0.2);
-  add(torso, profile, jerseyMat);
-  add(torso, merge([
-    paint(cyl(0.3 * r, 0.36 * r, 0.12 * torsoLen, 14), skin, { at: [0, torsoLen * 0.98, 0.01] }),
-    paint(ball(0.36 * r, 14, 10), skin, { at: [0, torsoLen * 0.93, 0.02], scale: [1, 0.5, 0.9] }),
-  ]));
-
-  add(neck, buildHead(c.look, headR));
-
-  const arm = (side: 1 | -1) => {
-    const shoulder = group(side > 0 ? "shoulderL" : "shoulderR", torso, [side * shoulderX, torsoLen * 0.9, 0]);
-    const sleeve = c.look.sleeve?.side === side ? c.look.sleeve.color : null;
-    const upperParts = [
-      paint(limb(0.056 * s * bulk, 0.044 * s * bulk, upper, { bulge: 0.2, at: 0.45 }), sleeve ?? skin),
-      paint(ball(0.068 * s * bulk, 14, 10), skin, { at: [side * 0.01, -0.01, 0], scale: [1.05, 1.1, 1] }),
-    ];
-    add(shoulder, merge(upperParts));
-    const elbow = group("elbow", shoulder, [0, -upper, 0]);
-    const foreParts = [paint(limb(0.044 * s * bulk, 0.032 * s * bulk, fore, { bulge: 0.16, at: 0.28 }), sleeve ?? skin)];
-    const band = c.look.wristband;
-    if (band) foreParts.push(paint(cyl(0.038 * s * bulk, 0.036 * s * bulk, 0.06, 12), band, { at: [0, -fore + 0.05, 0] }));
-    add(elbow, merge(foreParts));
-    const hand = group("hand", elbow, [0, -fore, 0]);
-    add(hand, merge([
-      paint(box(0.055 * s, 0.1 * s, 0.085 * s), skin, { at: [0, -0.045 * s, 0.005] }),
-      paint(ball(0.045 * s, 10, 8), skin, { at: [0, -0.02 * s, 0.01], scale: [0.75, 1, 1.05] }),
-      paint(box(0.022 * s, 0.06 * s, 0.024 * s), skin, { at: [side * -0.012, -0.03 * s, 0.05 * s], rot: [0.4, 0, 0] }),
-    ]));
-    return { shoulder, elbow, hand };
-  };
-  const left = arm(1);
-  const right = arm(-1);
-
-  const leg = (side: 1 | -1) => {
-    const hip = group(side > 0 ? "hipL" : "hipR", hips, [side * 0.052 * H * width, 0, 0]);
-    add(hip, merge([
-      paint(limb(0.07 * s * bulk, 0.05 * s * bulk, thigh, { bulge: 0.12, at: 0.3 }), skin),
-      paint(lathe([[0.085 * s * bulk * 1.25, -thigh * 0.48], [0.085 * s * bulk * 1.18, 0.02]], 18), team.color),
-      paint(cyl(0.085 * s * bulk * 1.26, 0.085 * s * bulk * 1.26, 0.03, 18, true), team.trim, { at: [0, -thigh * 0.46, 0] }),
-    ]));
-    const knee = group("knee", hip, [0, -thigh, 0]);
-    add(knee, merge([
-      paint(limb(0.05 * s * bulk, 0.032 * s, shin, { bulge: 0.22, at: 0.3 }), skin),
-      paint(cyl(0.036 * s * 1.2, 0.033 * s * 1.2, 0.14 * s, 14), c.look.sock, { at: [0, -shin + 0.07 * s, 0] }),
-    ]));
-    const foot = group("ankle", knee, [0, -shin, 0]);
-    const f = shoe;
-    add(foot, merge([
-      paint(box(0.1 * s, 0.035, f * 1.95), "#f5f5f4", { at: [0, -ankle + 0.02, f * 0.45] }),
-      paint(box(0.094 * s, 0.075, f * 1.7), c.look.shoe, { at: [0, -ankle + 0.07, f * 0.38] }),
-      paint(ball(0.05 * s, 12, 8), c.look.shoe, { at: [0, -ankle + 0.07, f * 1.18], scale: [0.95, 0.75, 1.2] }),
-      paint(box(0.098 * s, 0.022, f * 0.9), c.look.shoeAccent, { at: [0, -ankle + 0.075, f * 0.45], rot: [0.25, 0, 0] }),
-      paint(cyl(0.05 * s, 0.056 * s, 0.07, 14), shade(c.look.shoe, 0.9), { at: [0, -ankle + 0.1, 0] }),
-    ]));
-    return { hip, knee, foot };
-  };
-  const legL = leg(1);
-  const legR = leg(-1);
+  }
 
   return {
-    joints: {
-      root, hips, torso, neck,
-      shoulderL: left.shoulder, shoulderR: right.shoulder, elbowL: left.elbow, elbowR: right.elbow, handL: left.hand, handR: right.hand,
-      hipL: legL.hip, hipR: legR.hip, kneeL: legL.knee, kneeR: legR.knee, ankleL: legL.foot, ankleR: legR.foot,
-    },
-    dims: { height: H, hipY, thigh, shin, upper, fore, torso: torsoLen, sole: { y: -ankle, heel: -0.525 * shoe, toe: 1.425 * shoe } },
+    joints: rig.joints,
+    extras: rig.extras,
+    dims: rig.dims,
     meshes,
     dispose() {
       for (const mesh of meshes) mesh.geometry.dispose();
-      for (const t of textures) t.dispose();
-      for (const m of materials) m.dispose();
+      skeleton.dispose();
+      print.dispose();
+      kitMat.dispose();
     },
   };
 }

@@ -4,6 +4,7 @@ import type { Match } from "../engine/match";
 import { COURT } from "../engine/tuning";
 import { angleDiff, clamp, yawOf } from "../engine/vec";
 import { applyPose, approach, keyed, STAND, type Pose, type PosePatch } from "./anim/pose";
+import type { AthleteMaterials } from "./materials/athlete-materials";
 import { buildReferee, type RefereeModel } from "./referee-model";
 
 type Keys = readonly (readonly [number, PosePatch])[];
@@ -101,8 +102,8 @@ export class Referee {
   private leaving = 0;
   private yaw = 0;
 
-  constructor(bodyMat: THREE.Material, private readonly parent: THREE.Object3D) {
-    this.ref = buildReferee(bodyMat);
+  constructor(mats: AthleteMaterials, private readonly parent: THREE.Object3D) {
+    this.ref = buildReferee(mats);
     this.ref.model.joints.root.visible = false;
     parent.add(this.ref.model.joints.root);
   }

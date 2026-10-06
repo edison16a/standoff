@@ -6,6 +6,7 @@ import type { Athlete } from "../engine/types";
 import { lineBouncing } from "../engine/free-throw";
 import { dist2 } from "../engine/vec";
 import { Arena } from "./arena/arena";
+import { AthleteMaterials, type AthleteDetail } from "./materials/athlete-materials";
 import { AthleteView } from "./athlete-view";
 import { hanging } from "./arena/hoop";
 import { BallView } from "./ball-view";
@@ -27,10 +28,12 @@ export interface Quality {
   reflections?: boolean;
   /** The most device pixels drawn per CSS pixel. */
   maxPixelRatio?: number;
+  /** How finely the players are built and dressed. */
+  athletes?: AthleteDetail;
 }
 
-/** For computers that draw WebGL in software: a smaller picture without antialiasing or shadows. */
-export const LOW_QUALITY: Quality = { antialias: false, shadows: false, maxPixelRatio: 0.6 };
+/** For computers that draw WebGL in software: a smaller picture without antialiasing or shadows, and lighter players. */
+export const LOW_QUALITY: Quality = { antialias: false, shadows: false, maxPixelRatio: 0.6, athletes: "low" };
 
 /**
  * Draws the game: the arena, six players, the ball and every effect,
@@ -44,8 +47,7 @@ export class CourtRenderer {
   readonly tv = new TvCamera();
   private readonly effects: Effects;
   private readonly ball = new BallView();
-  // Both faces are drawn, so the open ends of the shorts and the jersey never show as see through panels.
-  private readonly bodyMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.58, metalness: 0.02, side: THREE.DoubleSide });
+  private readonly athleteMats: AthleteMaterials;
   private readonly players = new THREE.Group();
   private readonly environment: THREE.Texture;
   private views: AthleteView[] = [];
@@ -63,7 +65,8 @@ export class CourtRenderer {
   jerseyName: (a: Athlete) => string | null = () => null;
 
   constructor(canvas: HTMLCanvasElement, quality: Quality = {}) {
-    const { antialias = true, shadows = true, reflections = true, maxPixelRatio = 1.75 } = quality;
+    const { antialias = true, shadows = true, reflections = true, maxPixelRatio = 1.75, athletes = "high" } = quality;
+    this.athleteMats = new AthleteMaterials(athletes);
     this.maxPixelRatio = maxPixelRatio;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias, powerPreference: "high-performance" });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -79,7 +82,7 @@ export class CourtRenderer {
     this.scene.fog = new THREE.FogExp2("#060812", 0.014);
     this.effects = new Effects(this.arena, this.tv);
     this.scene.add(this.arena.group, this.players, this.ball.mesh, this.effects.group, this.ceremony.scene.group);
-    this.referee = new Referee(this.bodyMat, this.players);
+    this.referee = new Referee(this.athleteMats, this.players);
     this.keyLight = this.arena.key.intensity;
   }
 
@@ -94,7 +97,7 @@ export class CourtRenderer {
   setMatch(match: Match, intro = false): void {
     if (match === this.match) return;
     for (const view of this.views) view.dispose(this.players);
-    this.views = match.athletes.map((a) => new AthleteView(a, this.bodyMat, this.players, this.jerseyName(a) ?? undefined));
+    this.views = match.athletes.map((a) => new AthleteView(a, this.athleteMats, this.players, this.jerseyName(a) ?? undefined));
     this.match = match;
     this.effects.reset();
     this.ball.reset();
@@ -208,7 +211,7 @@ export class CourtRenderer {
     this.arena.dispose();
     this.ball.dispose();
     this.effects.dispose();
-    this.bodyMat.dispose();
+    this.athleteMats.dispose();
     this.environment.dispose();
     this.renderer.dispose();
   }

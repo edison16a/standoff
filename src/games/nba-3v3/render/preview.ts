@@ -5,6 +5,7 @@ import { BUILDS, type BuildId } from "../builds";
 import { TEAMS } from "../roster";
 import { locomotion } from "./anim/locomotion";
 import { applyPose } from "./anim/pose";
+import { AthleteMaterials } from "./materials/athlete-materials";
 import { buildAthlete, type AthleteModel } from "./models/athlete-model";
 import { ballTexture } from "./textures";
 
@@ -18,7 +19,7 @@ export class AthletePreview {
   private readonly scene = new THREE.Scene();
   private readonly camera = new THREE.PerspectiveCamera(30, 1, 0.1, 40);
   private readonly turntable = new THREE.Group();
-  private readonly bodyMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.58, side: THREE.DoubleSide });
+  private readonly mats: AthleteMaterials;
   private readonly ball: THREE.Mesh;
   private readonly canvas: HTMLCanvasElement;
   private model: AthleteModel | null = null;
@@ -34,6 +35,7 @@ export class AthletePreview {
     holder.appendChild(this.canvas);
     // A phone without a working graphics driver draws in software, so it draws fewer pixels.
     const soft = softwareWebGl();
+    this.mats = new AthleteMaterials(soft ? "low" : "high");
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: !soft, alpha: true });
     this.renderer.setPixelRatio(soft ? 1 : Math.min(2, window.devicePixelRatio || 1));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -61,7 +63,7 @@ export class AthletePreview {
       this.model.dispose();
     }
     const kit = team === null ? { name: "Standoff", color: "#475569", dark: "#1e293b", trim: "#e2e8f0" } : TEAMS[team];
-    this.model = buildAthlete(BUILDS[build], kit, this.bodyMat, name || BUILDS[build].name);
+    this.model = buildAthlete(BUILDS[build], kit, this.mats, { backName: name || BUILDS[build].name });
     this.turntable.add(this.model.joints.root);
     const h = BUILDS[build].body.height;
     this.camera.position.set(0, h * 0.62, h * 2.35);
@@ -72,6 +74,7 @@ export class AthletePreview {
     cancelAnimationFrame(this.frame);
     if (this.model) this.turntable.remove(this.model.joints.root);
     this.model?.dispose();
+    this.mats.dispose();
     this.scene.traverse((o) => {
       if (!(o instanceof THREE.Mesh)) return;
       o.geometry.dispose();

@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 import { createAthlete } from "../engine/athlete";
 import type { AthleteModel, Dims, Joints } from "./models/athlete-model";
+import type { Extras } from "./models/rig";
 import { Placement } from "./placement";
 
 const DT = 1 / 60;
@@ -25,7 +26,7 @@ function legs(): AthleteModel {
   const l = leg(1);
   const r = leg(-1);
   const joints = { root, hips, hipL: l.hip, kneeL: l.knee, ankleL: l.ankle, hipR: r.hip, kneeR: r.knee, ankleR: r.ankle } as unknown as Joints;
-  return { joints, dims: DIMS, meshes: [], dispose() {} };
+  return { joints, extras: {} as Extras, dims: DIMS, meshes: [], dispose() {} };
 }
 
 function sole(ankle: THREE.Object3D, z: number): number {
