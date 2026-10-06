@@ -7,6 +7,7 @@ import type { Athlete } from "../types";
 import type { V3 } from "../vec";
 import { bobble, swat } from "./deflect";
 import { catchOdds } from "./odds";
+import { holdChance } from "../pass-meter";
 import { caught, intercepted } from "./outcome";
 import { tracePath } from "./path";
 import { meetHands, reachOf } from "./reach";
@@ -90,7 +91,8 @@ export function touchBall(m: Match, from: V3): boolean {
     if (closing(f.vel, a, near) && near.gap > reach.radius * NEAR) continue;
     pass.tried[a.id] = m.time;
     if (play === "swat") {
-      const chance = Math.min(0.9, botSkill(m.level).accuracy * 0.45 * swatFactor(statsOf(a)));
+      // A bad ball is easier to get a hand on; a perfect one is past him.
+      const chance = Math.min(0.9, botSkill(m.level).accuracy * 0.45 * swatFactor(statsOf(a)) * pass.quality.pick);
       if (!m.rng.chance(chance)) continue;
       swat(f, a, near.hand, m.rng);
       knocked(m, pass);
@@ -98,7 +100,9 @@ export function touchBall(m: Match, from: V3): boolean {
       continue;
     }
     // The defender who read the throw is set for it; anyone else picking it off is reacting.
-    const p = odds(m, a, near.ball, near.gap, reach.radius) * (play === "pick" && a.id !== pass.interceptor ? PICK : 1);
+    const base = odds(m, a, near.ball, near.gap, reach.radius);
+    // The throw meter's timing: a good ball sticks, a hot one pops out, a floater hangs for the defence.
+    const p = play === "catch" ? holdChance(base, pass.quality) : Math.min(0.98, base * pass.quality.pick * (a.id !== pass.interceptor ? PICK : 1));
     if (m.rng.chance(p)) {
       if (play === "catch") caught(m, a);
       else intercepted(m, a, pass.from);

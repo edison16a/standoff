@@ -1,3 +1,4 @@
+import { meterView, type MeterView } from "./meter-live";
 import type { BuildId } from "../builds";
 import { ceremonyTime } from "./ceremony";
 import { downText, goalToGo, toGo } from "./downs";
@@ -111,6 +112,8 @@ export interface MatchView {
   winner: TeamId | null;
   lastEnd: PlayEnd | null;
   ceremony: CeremonyView | null;
+  /** The throw meter over the QB: running while a person holds the throw, then where it stopped. */
+  meter: MeterView | null;
 }
 
 function driveView(m: Match): DriveView {
@@ -165,6 +168,6 @@ export function buildView(m: Match): MatchView {
         ceremony: !ceremony ? null : a.id === ceremony.captain ? "captain" : a.team === ceremony.team ? "mate" : "beaten",
       };
     }),
-    countdown: countdown(m), scorer: m.scorer, winner: m.winner, lastEnd: m.lastEnd, ceremony,
+    countdown: countdown(m), scorer: m.scorer, winner: m.winner, lastEnd: m.lastEnd, ceremony, meter: meterView(m),
   };
 }

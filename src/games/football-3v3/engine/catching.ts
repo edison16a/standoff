@@ -19,13 +19,13 @@ const canPlayBall = (d: Athlete) => d.role !== "lineman" && !isDown(d) && d.guar
  * otherwise only knocks passes down); the ball itself goes where it was
  * thrown and the hands decide.
  */
-export function jumpingDefender(m: Match, qb: Athlete, from: V3, spot: V2, target: Athlete): Athlete | null {
+export function jumpingDefender(m: Match, qb: Athlete, from: V3, spot: V2, target: Athlete, read = 1): Athlete | null {
   const dir = norm2({ x: spot.x - from.x, z: spot.z - from.z });
   const along = (p: V2) => (p.x - from.x) * dir.x + (p.z - from.z) * dir.z;
   let best: Athlete | null = null;
   for (const d of m.athletes) {
     if (d.team === qb.team || !canPlayBall(d)) continue;
-    if (dist2(d, spot) > PASS.jumpRadius * coverReach(statsOf(d)) || along(d) >= along(target)) continue;
+    if (dist2(d, spot) > PASS.jumpRadius * read * coverReach(statsOf(d)) || along(d) >= along(target)) continue;
     if (!best || dist2(d, spot) < dist2(best, spot)) best = d;
   }
   return best;

@@ -8,6 +8,8 @@ import type { Match } from "./match";
 import { canPitch, releasePitch } from "./run-play";
 import { handOver } from "./control";
 import { handSpot } from "./passer-facing";
+import { showReading } from "./meter-live";
+import { PLAIN, passQuality, type PassQuality, type ThrowReading } from "./pass-meter";
 import { PASS } from "./tuning";
 import type { Athlete } from "./types";
 import { len3, type V3 } from "./vec";
@@ -44,26 +46,32 @@ export function updateTarget(m: Match): void {
   play.target = pickTarget(qb, qb.aim, receivers(m, qb));
 }
 
-/** Starts the throwing motion at a receiver. The ball leaves the hand part way through. */
-export function throwTo(m: Match, a: Athlete, to: number): boolean {
+/**
+ * Starts the throwing motion at a receiver. The ball leaves the hand
+ * part way through. `reading` is where the throw meter stopped; without
+ * one the throw is the plain physics.
+ */
+export function throwTo(m: Match, a: Athlete, to: number, reading: ThrowReading | null = null): boolean {
   if (!canThrow(m, a) || m.athlete(to)?.team !== a.team) return false;
   m.play!.target = to;
-  a.action = { kind: "throw", t: 0, dur: PASS.throwTime, released: false, to, lob: false };
+  const quality = reading ? passQuality(reading) : PLAIN;
+  if (reading) showReading(m, a, reading);
+  a.action = { kind: "throw", t: 0, dur: PASS.throwTime, released: false, to, lob: false, quality };
   return true;
 }
 
-/** Lets the ball go: led to meet the target, off by the hand's error. */
-function letGo(m: Match, a: Athlete, to: number): void {
+/** Lets the ball go: led to meet the target, off by the hand's error, as good as the meter's timing. */
+function letGo(m: Match, a: Athlete, to: number, q: PassQuality): void {
   const play = m.play!;
   const target = m.athlete(to);
   if (!target || m.carrier()?.id !== a.id) return;
   // Out toward the target, not along the facing, so the flight never depends on how far he had turned.
   const from: V3 = handSpot(a, target, PASS.releaseHeight);
-  const lead = leadPass(from, target, { x: target.vx, z: target.vz }, statsOf(a).arm);
-  // A defender sitting in front of the receiver reads it and breaks on the ball.
-  const jumper = jumpingDefender(m, a, from, lead.spot, target);
+  const lead = leadPass(from, target, { x: target.vx, z: target.vz }, statsOf(a).arm, q.time);
+  // A defender sitting in front of the receiver reads it and breaks on the ball; a perfect ball gives him nothing to read.
+  const jumper = q.read > 0 ? jumpingDefender(m, a, from, lead.spot, target, q.read) : null;
   // The hand's error turns the aimed throw into the real one.
-  const out = release(m, a, lead.vel);
+  const out = release(m, a, lead.vel, q);
   const flight = launch(from, out.vel, "spiral", out.spin, out.wobble);
   m.ball.state = "pass";
   m.ball.holder = null;
@@ -72,11 +80,11 @@ function letGo(m: Match, a: Athlete, to: number): void {
   const spin = out.spin;
   m.ball.pass = {
     from: a.id, to: target.id, interceptor: jumper?.id ?? null, spot: lead.spot, arrive: lead.time, t: 0,
-    speed, rps: spin / (Math.PI * 2), release: from, at: m.time, tried: {}, path: tracePath(flight, m.time), tipped: false, pitch: false,
+    speed, rps: spin / (Math.PI * 2), release: from, at: m.time, tried: {}, path: tracePath(flight, m.time), tipped: false, pitch: false, quality: q,
   };
   play.passed = true;
   a.stats.attempts++;
-  m.emit({ type: "throw", id: a.id, to: target.id, speed, spin: spin / (Math.PI * 2), air: lead.time, intercepting: jumper !== null });
+  m.emit({ type: "throw", id: a.id, to: target.id, speed, spin: spin / (Math.PI * 2), air: lead.time, intercepting: jumper !== null, grade: q.grade });
   handOver(m, a, target);
 }
 
@@ -87,7 +95,7 @@ export function updateThrow(m: Match, a: Athlete, dt: number): void {
   if (!act.released && act.t >= PASS.windup) {
     act.released = true;
     if (act.lob) releasePitch(m, a, act.to);
-    else letGo(m, a, act.to);
+    else letGo(m, a, act.to, act.quality);
   }
   if (act.t >= act.dur) a.action = { kind: "none" };
 }

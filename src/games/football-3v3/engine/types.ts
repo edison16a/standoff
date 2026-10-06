@@ -1,5 +1,6 @@
 import type { BuildId } from "../builds";
 import type { TeamId } from "../teams";
+import type { PassQuality } from "./pass-meter";
 import type { V2 } from "./vec";
 
 export type { TeamId };
@@ -32,8 +33,8 @@ export type Action =
   | { kind: "juke"; t: number; dur: number; juke: JukeKind; side: 1 | -1; dir: V2; speed: number; push: V2; plant: number; dodge: [number, number] }
   | { kind: "dive"; t: number; dur: number; dir: V2 }
   | { kind: "lunge"; t: number; dur: number; dir: V2; target: number }
-  /** A forward pass, or with `lob` the pitch to the back on a run call. */
-  | { kind: "throw"; t: number; dur: number; released: boolean; to: number; lob: boolean }
+  /** A forward pass, or with `lob` the pitch to the back on a run call. `quality` is the throw meter's timing. */
+  | { kind: "throw"; t: number; dur: number; released: boolean; to: number; lob: boolean; quality: PassQuality }
   | { kind: "kick"; t: number; dur: number; released: boolean }
   /** On the ground, then getting up for the last TACKLE.getUp seconds. */
   | { kind: "down"; t: number; dur: number; cause: DownCause }

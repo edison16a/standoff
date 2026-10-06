@@ -2,6 +2,8 @@ import { pressKick } from "./kick";
 import { startJuke } from "./juke";
 import type { Match } from "./match";
 import { pickTarget } from "./aim";
+import { statsOf } from "./body";
+import { gradeThrow } from "./pass-meter";
 import { canThrow, receivers, throwTo } from "./passing";
 import { hike } from "./phases";
 import { startRun } from "./qb-run";
@@ -29,13 +31,15 @@ export function setMove(m: Match, id: number, move: V2): void {
  * let go, it throws to that target. A stick resting near the middle
  * keeps the last aim, so easing off before letting go does not cancel.
  */
-export function setAim(m: Match, id: number, aim: V2 | null): void {
+export function setAim(m: Match, id: number, aim: V2 | null, heldMs?: number): void {
   const a = own(m, id);
   if (!a) return;
   if (aim === null) {
     // A flick released before the match has looked at it still finds its receiver.
     const target = m.play?.target ?? (a.aim ? pickTarget(a, a.aim, receivers(m, a)) : null);
-    if (a.aim && target !== null && canThrow(m, a)) throwTo(m, a, target);
+    const reading = heldMs === undefined ? null : gradeThrow(heldMs, statsOf(a).arm);
+    if (a.aim && target !== null && canThrow(m, a)) throwTo(m, a, target, reading);
+    else if (m.meter?.id === a.id && !m.meter.result) m.meter = null;
     a.aim = null;
     return;
   }

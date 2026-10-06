@@ -71,12 +71,14 @@ export interface Lead {
  * the flight time, moves the receiver on by their run for that long,
  * and settles on a spot after a few rounds.
  */
-export function leadPass(from: V3, receiver: V2, run: V2, arm: number): Lead {
+export function leadPass(from: V3, receiver: V2, run: V2, arm: number, timeScale = 1): Lead {
+  // The meter's timing sets the pace: a firm ball gets there sooner, a floater hangs.
+  const hang = (d: number) => flightTime(d, arm) * timeScale;
   let spot: V2 = { x: receiver.x, z: receiver.z };
-  let time = flightTime(Math.hypot(spot.x - from.x, spot.z - from.z), arm);
+  let time = hang(Math.hypot(spot.x - from.x, spot.z - from.z));
   for (let i = 0; i < 4; i++) {
     spot = clampToWorld({ x: receiver.x + run.x * time, z: receiver.z + run.z * time });
-    time = flightTime(Math.hypot(spot.x - from.x, spot.z - from.z), arm);
+    time = hang(Math.hypot(spot.x - from.x, spot.z - from.z));
   }
   const vel = solveLaunch(from, { x: spot.x, y: PASS.catchHeight, z: spot.z }, time, "spiral", PASS.spin);
   return { spot, time, vel };
