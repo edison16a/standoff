@@ -11,7 +11,7 @@ export interface Still {
   key?: number;
 }
 
-/** The juker and the tackler who flies at him, by id in the seeded game. */
+/** The receiver and the corner who wraps him up, by id in the seeded game. */
 const RUNNER = JUKER;
 
 /**
@@ -33,9 +33,8 @@ function coverCam(view: MatchView): FilmCam {
 
 /** The home screen's stills, held from the trailer. */
 export const STILLS: Partial<Record<ShowcaseView, Still>> = {
-  // The corner flying in at the runner a beat before the hit, the goal posts behind them.
-  // Held on a planted stride: from about 6.35 the runner hops the juke with both feet up and reads as hovering.
+  // The corner leaving his feet at the receiver who has just pulled the ball in.
   poster: { t: 6.31 },
-  // The juke in the big hit shot, a beat before contact: the runner and the ball at us, the tackler diving in beside him.
+  // A beat before the wrap: the receiver and the ball at us, the tackler flying in beside him.
   icon: { t: 6.1, key: 2.5, camera: coverCam },
 };

@@ -11,12 +11,12 @@ export interface FilmCam {
   fov: number;
 }
 
-/** The players the film follows, by id in the seeded game: the Storm's QB and the runner he hits. */
+/** The players the film follows, by id in the seeded game: the Storm's QB and the receiver he hits for the long touchdown. */
 export const QB = 0;
-export const CATCHER = 1;
-/** Later the Blaze's receiver catches one and the Storm's corner flies at him. */
-export const JUKER = 8;
-export const TACKLER = 2;
+export const CATCHER = 2;
+/** Later the Storm's speedster catches one over the middle and the Blaze's corner wraps him up. */
+export const JUKER = 1;
+export const TACKLER = 7;
 
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 const ease = (t: number) => t * t * (3 - 2 * t);
