@@ -28,6 +28,8 @@ export interface AthleteScene {
   ceremony?: CeremonyRole | null;
   /** The ball, given to whoever holds it or has it coming, for the hands to meet. */
   ball?: Ball | null;
+  /** The ball in the air, given to a defender up in a block jump, for the hand to go for it. */
+  flight?: Ball | null;
   /** 0 to 1 as the man this defender guards rises into a jumper, for the hand up in his face. */
   contest?: number;
   /** Guarding: which side of him the ball is, + his left, - his right. */

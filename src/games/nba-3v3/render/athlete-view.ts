@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { BUILDS } from "../builds";
 import { palmHold } from "../engine/dribble-ball";
-import type { Athlete } from "../engine/types";
+import type { Athlete, Ball } from "../engine/types";
 import { TEAMS } from "../roster";
 import { actionPose, type ActionMemory } from "./anim/action-pose";
 import { basePose, type AthleteScene } from "./anim/base";
@@ -10,6 +10,7 @@ import { Flinch } from "./anim/flinch";
 import { strideLength, type Stride } from "./anim/locomotion";
 import { applyPose, approach, STAND, type Pose } from "./anim/pose";
 import { reachArm, type ArmChain } from "./arm-ik";
+import { BlockReach, type BlockTouch } from "./block-reach";
 import { DribbleHand } from "./dribble-hand";
 import type { AthleteMaterials } from "./materials/athlete-materials";
 import { buildAthlete, type AthleteModel } from "./models/athlete-model";
@@ -23,6 +24,8 @@ const PALM = new THREE.Vector3(0, -0.07, 0.03);
 /** Each dribbling elbow points out and back, in the torso's frame; catching, out and down. */
 const POLE = { L: new THREE.Vector3(0.7, -0.25, -0.65), R: new THREE.Vector3(-0.7, -0.25, -0.65) };
 const CATCH_POLE = { L: new THREE.Vector3(0.6, -0.8, 0), R: new THREE.Vector3(-0.6, -0.8, 0) };
+/** Reaching up for a block, the elbow points out to the side and a little forward. */
+const UP_POLE = { L: new THREE.Vector3(0.9, -0.2, 0.25), R: new THREE.Vector3(-0.9, -0.2, 0.25) };
 const side = new THREE.Vector3();
 const grip = new THREE.Vector3();
 
@@ -50,6 +53,7 @@ export class AthleteView {
   private readonly cloth: ClothAndBreath;
   private readonly flinch = new Flinch();
   private readonly dribbleHand = new DribbleHand();
+  private readonly blockReach = new BlockReach();
   private readonly arms: Record<"L" | "R", ArmChain>;
 
   /** `backName` goes across the jersey: the player's own name, or the build's for a computer player. */
@@ -98,6 +102,11 @@ export class AthleteView {
     this.flinch.hit(ahead, left, power);
   }
 
+  /** The engine says this player's hand met the ball: a block or a tipped pass. */
+  touched(t: BlockTouch, ballVel: { x: number; y: number; z: number }): void {
+    this.blockReach.hit(this.athlete, t, ballVel);
+  }
+
   /** The dribbling hand on the real ball: riding it down on the push, waiting where it will come back up. */
   private reachForBall(a: Athlete, s: AthleteScene, dt: number): void {
     const ball = s.ball ?? null;
@@ -105,6 +114,7 @@ export class AthleteView {
     const active = !!ball && s.holding && !s.chest && (kind === "none" || kind === "move") && !palmHold(a) && (ball.hand === "dribble" || ball.hand === "free");
     this.dribbleHand.update(a, ball, active, dt);
     for (const k of ["L", "R"] as const) reachArm(this.arms[k], this.dribbleHand.target, PALM, POLE[k], this.dribbleHand.weight[k]);
+    this.reachToBlock(a, s.flight ?? null, dt);
     // A pass on its way in: both hands reach out to either side of the ball, palms toward it.
     if (!ball || s.holding || ball.mode !== "flight" || s.receiving <= 0) return;
     side.set(Math.cos(a.yaw), 0, -Math.sin(a.yaw)).multiplyScalar(0.125);
@@ -113,6 +123,16 @@ export class AthleteView {
       grip.set(ball.pos.x, ball.pos.y, ball.pos.z).addScaledVector(side, sign);
       reachArm(this.arms[k], grip, PALM, CATCH_POLE[k], w * w);
     }
+  }
+
+  /** Up for a block, the nearer hand goes to the ball in the air and through it on a touch. */
+  private reachToBlock(a: Athlete, ball: Ball | null, dt: number): void {
+    const r = this.blockReach;
+    const arm = this.arms[r.side];
+    arm.shoulder.getWorldPosition(v);
+    const d = this.model.dims;
+    r.update(a, ball, v, d.upper + d.fore + 0.1, dt);
+    if (r.weight > 0.01) reachArm(this.arms[r.side], r.target, PALM, UP_POLE[r.side], r.weight);
   }
 
   /** Notes the start and end of each action and the landing after a jump, for the actions' timing. */
