@@ -13,19 +13,21 @@ describe("keyboard mode keys", () => {
       "duck",
       "duck",
     ]);
-    expect([KEYS.KeyJ, KEYS.KeyK, KEYS.KeyU, KEYS.KeyI]).toEqual(["jab", "cross", "hook-left", "hook-right"]);
+    expect([KEYS.KeyJ, KEYS.KeyK, KEYS.KeyU, KEYS.KeyI, KEYS.KeyN, KEYS.KeyM]).toEqual(["jab", "cross", "hook-left", "hook-right", "upper-left", "upper-right"]);
     expect([KEYS.Space, KEYS.ShiftLeft, KEYS.ShiftRight, KEYS.KeyF, KEYS.KeyE]).toEqual(["guard", "high", "high", "body", "touch"]);
   });
 });
 
 describe("KeyBoxer", () => {
-  it("throws the four punches on key down only", () => {
+  it("throws the six punches on key down only", () => {
     const boxer = new KeyBoxer();
-    expect(boxer.press("jab", true)).toEqual({ hand: "left", straight: true, level: "head" });
+    expect(boxer.press("jab", true)).toEqual({ hand: "left", style: "jab", level: "head" });
     expect(boxer.press("jab", false)).toBeNull();
-    expect(boxer.press("cross", true)).toEqual({ hand: "right", straight: true, level: "head" });
-    expect(boxer.press("hook-left", true)).toEqual({ hand: "left", straight: false, level: "head" });
-    expect(boxer.press("hook-right", true)).toEqual({ hand: "right", straight: false, level: "head" });
+    expect(boxer.press("cross", true)).toEqual({ hand: "right", style: "cross", level: "head" });
+    expect(boxer.press("hook-left", true)).toEqual({ hand: "left", style: "hook", level: "head" });
+    expect(boxer.press("hook-right", true)).toEqual({ hand: "right", style: "hook", level: "head" });
+    expect(boxer.press("upper-left", true)).toEqual({ hand: "left", style: "uppercut", level: "head" });
+    expect(boxer.press("upper-right", true)).toEqual({ hand: "right", style: "uppercut", level: "head" });
     expect(boxer.press("guard", true)).toBeNull();
   });
 

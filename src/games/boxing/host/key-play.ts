@@ -66,7 +66,7 @@ export class KeyPlay {
     if (screen === "fight" && punch) this.throw(punch);
   }
 
-  private throw({ hand, straight, level }: KeyPunch): void {
-    this.hooks.driver()?.punch(1, hand, straight, KEY_POWER, level);
+  private throw({ hand, style, level }: KeyPunch): void {
+    this.hooks.driver()?.throw(1, hand, style, KEY_POWER, level);
   }
 }

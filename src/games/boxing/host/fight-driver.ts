@@ -6,7 +6,7 @@ import type { MatchEvent } from "../engine/events";
 import { Match } from "../engine/match";
 import { seeded } from "../engine/random";
 import { stopFight } from "../engine/shortcuts";
-import { styleFor, type DefenseInput, type FighterId, type Hand, type Level } from "../engine/types";
+import { styleFor, type DefenseInput, type FighterId, type Hand, type Level, type PunchStyle } from "../engine/types";
 import { REPLAY_LENGTH } from "../render/replay";
 
 /** The knockout replay, then a moment before the results. */
@@ -92,9 +92,14 @@ export class FightDriver {
   }
 
   punch(slot: number, hand: Hand, straight: boolean, power: number, level: Level = "head"): boolean {
+    return this.throw(slot, hand, styleFor(hand, straight), power, level);
+  }
+
+  /** Any kind of punch by name, such as an uppercut from the keys, which the camera never reads. */
+  throw(slot: number, hand: Hand, style: PunchStyle, power: number, level: Level = "head"): boolean {
     const id = this.fighterFor(slot);
     if (id === null || !this.live) return false;
-    const thrown = this.match.throwPunch(id, hand, styleFor(hand, straight), power, 0, level);
+    const thrown = this.match.throwPunch(id, hand, style, power, 0, level);
     if (thrown) this.flush();
     return thrown;
   }

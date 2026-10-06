@@ -36,6 +36,7 @@ export function InputToggle() {
 export const KEY_HELP: readonly [string, string][] = [
   ["Jab, cross", "J and K"],
   ["Hooks", "U and I"],
+  ["Uppercuts", "N and M"],
   ["Slip and duck", "A, D and S, or the arrows"],
   ["Body shot", "punch while holding S"],
   ["Guard", "Space. Shift for hooks, F for the body"],

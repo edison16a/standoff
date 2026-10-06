@@ -1,8 +1,22 @@
 import { defenseOf, type Shell } from "../engine/stance";
-import type { DefenseInput, Hand, Level } from "../engine/types";
+import type { DefenseInput, Hand, Level, PunchStyle } from "../engine/types";
 
-/** Everything a boxer does in keyboard mode. Holds move the head and the gloves; punches are taps. */
-export const BOX_KEYS = ["slip-left", "slip-right", "duck", "jab", "cross", "hook-left", "hook-right", "guard", "high", "body", "touch"] as const;
+/** Everything a boxer does in keyboard mode. Holds move the head and the gloves; punches are taps. N and M are the uppercuts, under J and K. */
+export const BOX_KEYS = [
+  "slip-left",
+  "slip-right",
+  "duck",
+  "jab",
+  "cross",
+  "hook-left",
+  "hook-right",
+  "upper-left",
+  "upper-right",
+  "guard",
+  "high",
+  "body",
+  "touch",
+] as const;
 export type BoxKey = (typeof BOX_KEYS)[number];
 
 /** The keys of keyboard mode, by `event.code`, so every keyboard layout plays the same. */
@@ -17,6 +31,8 @@ export const KEYS: Readonly<Record<string, BoxKey>> = {
   KeyK: "cross",
   KeyU: "hook-left",
   KeyI: "hook-right",
+  KeyN: "upper-left",
+  KeyM: "upper-right",
   Space: "guard",
   ShiftLeft: "high",
   ShiftRight: "high",
@@ -27,15 +43,17 @@ export const KEYS: Readonly<Record<string, BoxKey>> = {
 /** A punch thrown from the keys, for the fight driver. */
 export interface KeyPunch {
   hand: Hand;
-  straight: boolean;
+  style: PunchStyle;
   level: Level;
 }
 
 const PUNCHES: Partial<Record<BoxKey, Omit<KeyPunch, "level">>> = {
-  jab: { hand: "left", straight: true },
-  cross: { hand: "right", straight: true },
-  "hook-left": { hand: "left", straight: false },
-  "hook-right": { hand: "right", straight: false },
+  jab: { hand: "left", style: "jab" },
+  cross: { hand: "right", style: "cross" },
+  "hook-left": { hand: "left", style: "hook" },
+  "hook-right": { hand: "right", style: "hook" },
+  "upper-left": { hand: "left", style: "uppercut" },
+  "upper-right": { hand: "right", style: "uppercut" },
 };
 
 /** How hard a key punch is, 0 to 1: a firm punch, inside what the computer boxer throws. */
@@ -45,9 +63,10 @@ const HEAD_EASE_MS = 60;
 const MAX_STEP_MS = 250;
 
 /**
- * Keyboard mode for one boxer, the same input the camera gives. A and D
- * slip the head, S ducks it, and a punch thrown while ducking digs to the
- * body, as dipping the knees does in front of the camera. Space is the
+ * Keyboard mode for one boxer, the same input the camera gives, plus the
+ * uppercut, which the camera does not read. A and D slip the head, S
+ * ducks it, and a punch thrown while ducking digs to the body, as
+ * dipping the knees does in front of the camera. Space is the
  * guard, Shift pins both gloves up by the ears against hooks, F tucks the
  * elbows against body shots, and E holds both gloves out to touch. The
  * guard is also both gloves raised, which gets a boxer up from a

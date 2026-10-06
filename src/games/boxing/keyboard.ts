@@ -27,6 +27,8 @@ export const keyboard: KeyboardBinding = {
         { action: "Cross", keys: ["K"] },
         { action: "Left hook", keys: ["U"] },
         { action: "Right hook", keys: ["I"] },
+        { action: "Left uppercut", keys: ["N"] },
+        { action: "Right uppercut", keys: ["M"] },
         { action: "To the body", keys: [["S", "punch"]] },
       ],
     },

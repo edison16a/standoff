@@ -99,5 +99,10 @@ describe("keyboard mode for Boxing", () => {
     say({ kind: "box-key", key: "duck", down: true });
     say({ kind: "box-key", key: "hook-left", down: true });
     expect(ofType(events, "throw")[1]).toMatchObject({ fighter: 0, style: "hook", level: "body" });
+    tick(1500);
+    say({ kind: "box-key", key: "hook-left", down: false });
+    say({ kind: "box-key", key: "duck", down: false });
+    say({ kind: "box-key", key: "upper-right", down: true });
+    expect(ofType(events, "throw")[2]).toMatchObject({ fighter: 0, hand: "right", style: "uppercut", level: "head" });
   });
 });
