@@ -15,12 +15,17 @@ import { beatenFrame, skillFrame } from "../anim/skill-poses";
 import { captainPose, matePose } from "../anim/trophy-poses";
 import { buildBody, type Rig } from "../body/athlete-body";
 import type { AthleteMaterials } from "../body/materials";
+import { BodyDynamics } from "./body-dynamics";
 import { FootLock } from "./foot-locks";
+import { Jolt } from "./jolt";
 import { figureOf, type FigureSpec } from "./figure-spec";
 import { keepAboveTurf } from "./turf";
 
 /** How long a new move takes to blend in: kicks and tackles snap in, the rest ease. */
 const QUICK = new Set(["shoot", "pass", "slide", "stumble", "skill", "beaten", "jump", "steal", "header", "chest"]);
+
+/** How much the body's momentum leans each move: fully on the run, a little through a kick, not at all in the air or on the floor. */
+const LEAN: Partial<Record<AthleteView["action"], number>> = { free: 1, skill: 0.6, beaten: 0.7, shoot: 0.35, pass: 0.45, hurdle: 0.4, dejected: 0.6 };
 
 /**
  * One footballer on the pitch: their body in the team's kit, their own
@@ -41,6 +46,9 @@ export class AthleteFigure {
   private readonly build: Build;
   private readonly lead: Side;
   private readonly locks = { left: new FootLock(), right: new FootLock() };
+  private readonly dynamics: BodyDynamics;
+  private readonly jolt = new Jolt();
+  private facing = 0;
   private last: { x: number; z: number } | null = null;
   private readonly move = { x: 0, y: 0, z: 1 };
   private ball = { x: 0, y: 0, z: 0.5 };
@@ -53,6 +61,7 @@ export class AthleteFigure {
     const c = spec;
     this.rig = buildBody({ look: c.look, kit, name: c.name, number: c.number }, mats);
     this.phase = view.id * 1.7;
+    this.dynamics = new BodyDynamics(this.phase);
     this.build = buildOf(c.look.height, c.look.build);
     this.lead = c.foot === "left" ? LEFT : RIGHT;
   }
@@ -62,8 +71,16 @@ export class AthleteFigure {
     root.position.set(view.x, 0, view.z);
     root.rotation.y = Math.PI / 2 - view.facing;
     root.updateWorldMatrix(true, false);
+    this.facing = view.facing;
+    this.dynamics.track(view.x, view.z, view.facing, dt);
     const ctx = this.context(view, ball);
     const frame = this.target(view, ctx, time);
+    // Momentum, breath and knocks go on before the legs are solved, so the feet stay planted under the lean.
+    const lean = (LEAN[view.action] ?? 0) * (view.wall ? 0 : view.guarding || view.bar ? 0.7 : 1);
+    this.dynamics.lean(frame.pose, lean);
+    this.dynamics.breathe(frame.pose);
+    this.jolt.step(dt);
+    this.jolt.apply(frame.pose);
     const left = this.locks.left.resolve(frame.left, root, this.build, dt);
     const right = this.locks.right.resolve(frame.right, root, this.build, dt);
     if (left) solveLeg(frame.pose, LEFT, left, this.build);
@@ -78,10 +95,19 @@ export class AthleteFigure {
     this.blendT = Math.min(this.blendLen, this.blendT + dt);
     blendPoses(this.shown, this.from, frame.pose, smooth(this.blendT / this.blendLen));
     applyPose(this.rig, this.shown);
+    this.dynamics.swell(this.rig.chest);
     root.updateMatrixWorld(true);
     keepAboveTurf(this.rig, this.shown, this.build);
     this.locks.left.remember(this.rig.ankleL);
     this.locks.right.remember(this.rig.ankleR);
+  }
+
+  /** A knock from contact, pushing the body along the world direction (x, z), `strength` from a nudge (0.3) to a heavy hit (1.5). */
+  knock(x: number, z: number, strength: number): void {
+    const c = Math.cos(this.facing);
+    const s = Math.sin(this.facing);
+    const len = Math.hypot(x, z) || 1;
+    this.jolt.hit((x * s - z * c) / len, (x * c + z * s) / len, strength);
   }
 
   /** The ball and the way the body is travelling, in the body's own frame. */

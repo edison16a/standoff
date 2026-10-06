@@ -102,6 +102,7 @@ export class MatchRenderer {
 
   onEvent(event: MatchEvent, view: MatchView): void {
     this.effects.onEvent(event, view);
+    this.squad.onEvent(event, view);
     if (event.type === "goal") {
       this.arena.boards.flash(TEAMS[event.team].color);
       this.director.bump(0.6);

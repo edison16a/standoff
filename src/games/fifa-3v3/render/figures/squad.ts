@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import type { MatchEvent } from "../../engine/events";
 import type { AthleteView, MatchView } from "../../engine/view";
 import { BUILDS } from "../../builds";
 import { TEAMS } from "../../teams";
@@ -6,6 +7,7 @@ import type { AthleteMaterials } from "../body/materials";
 import { AthleteFigure } from "./athlete-figure";
 import { figureOf } from "./figure-spec";
 import { ChargeSprite } from "./charge-bar";
+import { Contacts } from "./contacts";
 import { KeeperFigure } from "./keeper-figure";
 import { Marker } from "./markers";
 import { NameTag } from "./tag";
@@ -39,6 +41,7 @@ export class Squad {
   private markers: (Marker | null)[] = [];
   private blobs: THREE.Mesh[] = [];
   private bars: ChargeSprite[] = [];
+  private readonly contacts = new Contacts();
   /** How far each tag is drawn up the screen to keep clear of the others, eased so it glides. */
   private lifts: number[] = [];
   private lineup = "";
@@ -79,6 +82,12 @@ export class Squad {
       bar.sprite.position.set(a.x, figure.spec.look.height + 0.34, a.z);
     });
     view.keepers.forEach((k, i) => this.keepers[i]!.update(k, dt, time));
+    this.contacts.update(view, this.athletes, dt);
+  }
+
+  /** Tackles, fouls and the ball hitting a body rock the players involved. */
+  onEvent(event: MatchEvent, view: MatchView): void {
+    this.contacts.onEvent(event, view, this.athletes);
   }
 
   /** Where a player's hands are in the world, for the cup in the captain's grip. False if there is no such player. */
