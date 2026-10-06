@@ -41,7 +41,7 @@ export class CeremonyScene {
   dim = 0;
 
   constructor() {
-    this.lights = new StageLights({ count: 6, colours: ["#fff3dc", "#ffd27a", "#fff3dc"], radius: 6, height: 12, intensity: 1500, angle: 0.2, beamStrength: 0.24, sweep: 0.35 });
+    this.lights = new StageLights({ count: 6, colours: ["#fff3dc", "#ffd27a", "#fff3dc"], radius: 6, height: 12, intensity: 1000, angle: 0.2, beamStrength: 0.24, sweep: 0.35 });
     this.lights.object.position.set(CEREMONY_SPOT.x, 0, CEREMONY_SPOT.z);
     this.lights.aimAt(AIM);
     this.lights.setLevel(0);
