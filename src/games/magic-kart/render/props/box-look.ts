@@ -44,7 +44,7 @@ export function glassMaterial(environment: THREE.Texture | null): THREE.MeshPhys
     iridescenceIOR: 1.35,
     iridescenceThicknessRange: [180, 760],
     envMap: environment,
-    envMapIntensity: 1.8,
+    envMapIntensity: 1.4,
     side: THREE.DoubleSide,
     depthWrite: false,
   });
@@ -56,7 +56,7 @@ export function glassMaterial(environment: THREE.Texture | null): THREE.MeshPhys
     shader.fragmentShader = shader.fragmentShader
       .replace("#include <common>", "#include <common>\nvarying vec3 vBoxLocal;\nuniform float uHalf;")
       // The glass itself is only faintly tinted; the colour lives in the frame and the mark.
-      .replace("#include <color_fragment>", "#include <color_fragment>\nvec3 boxTint = diffuseColor.rgb;\ndiffuseColor.rgb = mix(vec3(1.0), boxTint, 0.55) * 0.35;")
+      .replace("#include <color_fragment>", "#include <color_fragment>\nvec3 boxTint = diffuseColor.rgb;\ndiffuseColor.rgb = mix(vec3(1.0), boxTint, 0.8) * 0.45;")
       .replace(
         "#include <emissivemap_fragment>",
         `#include <emissivemap_fragment>
@@ -64,11 +64,11 @@ export function glassMaterial(environment: THREE.Texture | null): THREE.MeshPhys
         vec3 boxA = abs(vBoxLocal) / uHalf;
         float boxHi = max(boxA.x, max(boxA.y, boxA.z));
         float boxMid = boxA.x + boxA.y + boxA.z - boxHi - min(boxA.x, min(boxA.y, boxA.z));
-        float boxFrame = smoothstep(0.84, 0.93, boxMid);
+        float boxFrame = smoothstep(0.8, 0.92, boxMid);
         float boxBack = gl_FrontFacing ? 1.0 : 0.6;
         // A glowing frame in the box's colour, white hot along the very edge, and a faint glow in the glass.
         totalEmissiveRadiance += (boxTint * 1.5 + vec3(0.35) * smoothstep(0.93, 0.99, boxMid)) * boxFrame * boxBack;
-        totalEmissiveRadiance += boxTint * 0.07 * (1.0 - boxFrame);
+        totalEmissiveRadiance += boxTint * 0.16 * (1.0 - boxFrame);
         // A soap film shimmer: the rim runs through the rainbow as the box turns.
         float boxView = abs(dot(normalize(normal), normalize(vViewPosition)));
         float boxHue = fract(boxView * 1.7 + dot(vBoxLocal, vec3(0.35, 0.5, 0.25)));
@@ -162,7 +162,7 @@ export function markMaterial(): THREE.ShaderMaterial {
       varying vec3 vNormalV;
       varying vec3 vView;
       void main() {
-        float heart = 1.0 - smoothstep(0.05, 0.42, length(vLocal.xy));
+        float heart = 1.0 - smoothstep(0.02, 0.3, length(vLocal.xy));
         float rim = pow(1.0 - abs(dot(normalize(vNormalV), normalize(vView))), 2.0);
         vec3 c = mix(vTint * 1.25, vec3(1.0, 0.98, 0.92) * 1.6, heart) + vTint * rim * 0.8;
         gl_FragColor = vec4(c, 1.0);
