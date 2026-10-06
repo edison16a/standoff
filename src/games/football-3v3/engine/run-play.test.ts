@@ -81,6 +81,7 @@ describe("the run call", () => {
     expect(t.ball.state).toBe("held");
   });
 
+  // Three whole games take a few seconds, more on a busy machine.
   it("is called by computer QBs now and then", () => {
     const calls = [4, 5, 6].flatMap((seed) => {
       const m = new Match({ entries: BOTS, seed, level: "medium", quarterSeconds: 45 });
@@ -88,5 +89,5 @@ describe("the run call", () => {
     });
     expect(calls).toContain("run");
     expect(calls).toContain("throw");
-  });
+  }, 60000);
 });

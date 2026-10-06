@@ -5,6 +5,9 @@ import { extent } from "./physics/ball-shape";
 import { BOTS } from "./test-helpers";
 import { STEP } from "./tuning";
 
+/** A whole game checked every step takes seconds, more on a busy machine. */
+const WHOLE_GAME_MS = 60000;
+
 /**
  * Whole games of computer players, checked every step: nothing goes
  * NaN, the ball never sinks into the turf, and no two players on their
@@ -38,6 +41,6 @@ describe("long simulations", () => {
       expect(m.phase).toBe("over");
       expect(deepest).toBeGreaterThan(-0.01);
       expect(closest).toBeGreaterThan(0.45);
-    });
+    }, WHOLE_GAME_MS);
   }
 });
