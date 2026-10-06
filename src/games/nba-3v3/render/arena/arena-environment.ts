@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import { TEAMS } from "../../roster";
+import { JUMBOTRON } from "./jumbotron";
+import { LAMP_RINGS } from "./roof";
 
 /** Where the environment is seen from: chest height over the middle of the half court. */
 const EYE = new THREE.Vector3(0, 1.4, 5);
@@ -45,14 +47,14 @@ export function arenaEnvironment(renderer: THREE.WebGLRenderer): THREE.Texture {
   }
   // Two rings of lamp banks in the roof, pointing down at the court: what makes the long highlights on the floor and the ball.
   const lamp = glow("#fff3e2", 26);
-  for (const [ring, count, r] of [[0, 10, 7], [1, 16, 13]] as const) {
-    for (let i = 0; i < count; i++) {
-      const a = (i / count) * Math.PI * 2 + ring * 0.2;
-      add(new THREE.PlaneGeometry(1.8, 0.7), lamp, Math.sin(a) * r, 19 + ring * 2, 5 + Math.cos(a) * r, a, Math.PI / 2);
+  for (const ring of LAMP_RINGS) {
+    for (let i = 0; i < ring.count; i++) {
+      const a = (i / ring.count) * Math.PI * 2 + ring.turn;
+      add(new THREE.PlaneGeometry(1.8, 0.7), lamp, Math.sin(a) * ring.radius, ring.y, 5 + Math.cos(a) * ring.radius, a, Math.PI / 2);
     }
   }
   // The scoreboard over centre court.
-  add(new THREE.BoxGeometry(5, 3, 5), glow("#9fb7ff", 2.2), 0, 13, 5.5);
+  add(new THREE.BoxGeometry(JUMBOTRON.width, JUMBOTRON.height, JUMBOTRON.depth), glow("#9fb7ff", 2.2), JUMBOTRON.x, JUMBOTRON.y, JUMBOTRON.z);
   const pmrem = new THREE.PMREMGenerator(renderer);
   const texture = pmrem.fromScene(scene, 0.03, 0.1, 100, { position: EYE }).texture;
   pmrem.dispose();

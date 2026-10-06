@@ -58,10 +58,10 @@ export class CourtRenderer {
   jerseyName: (a: Athlete) => string | null = () => null;
 
   constructor(canvas: HTMLCanvasElement, quality: Quality = {}) {
-    const { reflections = true, athletes = "high", mirror = 0.5 } = quality;
+    const { reflections = true, athletes = "high", mirror = 0.5, post = true } = quality;
     this.athleteMats = new AthleteMaterials(athletes);
     this.picture = new Picture(canvas, quality);
-    this.arena = new Arena(mirror);
+    this.arena = new Arena(mirror, post);
     this.environment = arenaEnvironment(this.picture.renderer);
     if (reflections) this.scene.environment = this.environment;
     this.scene.background = new THREE.Color("#060812");
@@ -148,6 +148,7 @@ export class CourtRenderer {
     this.tv.update(this.shot(m), dt, this.time);
     const calm = m.phase === "over" ? 0.6 : m.shotClock < 4 && m.phase === "live" ? 0.45 : 0.18;
     this.arena.hoop.setClock(m.shotClock);
+    this.arena.jumbotron.show(m.score);
     this.arena.hoop.hold(hanging(m.athletes));
     this.arena.update(dt, this.time, this.ball.mesh.position, calm);
     this.effects.setView(this.height * this.picture.pixelRatio, this.tv.camera.fov);

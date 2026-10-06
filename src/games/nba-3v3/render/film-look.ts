@@ -22,6 +22,7 @@ export function applyFilmLook(scene: THREE.Scene, arena: Arena, look: CinemaLook
   arena.fill.intensity *= fill;
   arena.rim.intensity *= 2.6;
   arena.ribbons.visible = false;
+  arena.jumbotron.screens.visible = false;
   scene.fog = new THREE.FogExp2("#060812", haze);
   return { key, exposure: 1.12 / 1.05 };
 }
