@@ -14,6 +14,9 @@ import type { Dims } from "./rig";
 
 export const BELT = "#151515";
 
+/** A colour darkened by a baked shade, 1 for none. */
+const tint = (hex: string, k: number) => new THREE.Color(hex).multiplyScalar(k);
+
 /** The pants from the crotch up to the belt, which covers the jersey's hem. */
 export function pelvis(d: Dims, kit: KitSpec, detail: number): THREE.BufferGeometry {
   const H = d.height;
@@ -79,12 +82,16 @@ export function leg(d: Dims, kit: KitSpec, side: 1 | -1, detail: number): THREE.
       return (knee + pad) * front + (t > hem && t < hem + 0.01 * H ? 0.002 * H : 0);
     },
     paint: (t, a) => {
+      // Baked shade: the crease behind the knee and the inside of the thigh up by the crotch.
+      const behindKnee = Math.exp(-(((t - d.thigh) / (0.03 * H)) ** 2)) * Math.max(0, -Math.cos(a)) ** 2 * 0.3;
+      const inner = Math.max(0, -Math.sin(a) * side) ** 2 * Math.max(0, 1 - t / (0.12 * H)) * 0.25;
+      const shade = 1 - behindKnee - inner;
       if (t < hem) {
         const onStripe = Math.abs(Math.atan2(Math.sin(a - outer), Math.cos(a - outer))) < stripe;
-        return { colour: onStripe ? kit.stripe : kit.pants, rough: 0.62 };
+        return { colour: tint(onStripe ? kit.stripe : kit.pants, shade), rough: 0.62 };
       }
       const band = (t > bands[0]! && t < bands[1]!) || (t > bands[2]! && t < bands[3]!);
-      return { colour: band ? kit.trim : kit.socks, rough: 0.85 };
+      return { colour: tint(band ? kit.trim : kit.socks, shade), rough: 0.85 };
     },
   });
   return weigh(geo, legWeights(d, side));

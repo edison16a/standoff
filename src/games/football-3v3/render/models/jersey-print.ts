@@ -73,6 +73,7 @@ export function printJersey(kit: KitSpec, d: Dims, team: TeamId, width: number):
   folds.addColorStop(1, "rgba(0,0,0,0.28)");
   ctx.fillStyle = folds;
   ctx.fillRect(0, hem - 0.06 * Hc, W, 0.06 * Hc);
+  creases(ctx, W, pit, hem);
 
   const n = String(kit.number);
   const span = (top: number, bottom: number) => ({ top: row(top * H), bottom: row(bottom * H), metres: (top - bottom) * H });
@@ -93,6 +94,40 @@ export function printJersey(kit: KitSpec, d: Dims, team: TeamId, width: number):
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.anisotropy = 8;
   return texture;
+}
+
+/**
+ * Baked creases: the jersey pulls tight from under each pad down toward
+ * the waist, and bunches in soft horizontal ripples above the belt. Faint,
+ * so the numbers stay clean, but enough that the cloth reads as cloth.
+ */
+function creases(ctx: CanvasRenderingContext2D, W: number, pit: number, hem: number): void {
+  ctx.save();
+  ctx.lineCap = "round";
+  const span = hem - pit;
+  for (const centre of [0.25, 0.75]) {
+    for (const side of [-1, 1]) {
+      for (let i = 0; i < 3; i++) {
+        const x0 = (centre + side * (0.2 - i * 0.025)) * W;
+        const x1 = (centre + side * (0.13 - i * 0.03)) * W;
+        ctx.strokeStyle = `rgba(0,0,0,${0.07 - i * 0.015})`;
+        ctx.lineWidth = 5 - i;
+        ctx.beginPath();
+        ctx.moveTo(x0, pit - span * 0.15 + i * 6);
+        ctx.quadraticCurveTo((x0 + x1) / 2 + side * 6, pit + span * 0.3, x1, pit + span * (0.55 + i * 0.08));
+        ctx.stroke();
+      }
+    }
+  }
+  for (let k = 0; k < 4; k++) {
+    const y = hem - span * (0.05 + k * 0.045);
+    ctx.strokeStyle = `rgba(0,0,0,${0.06 - k * 0.012})`;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    for (let x = 0; x <= W; x += 16) ctx.lineTo(x, y + Math.sin(x * 0.03 + k * 1.7) * 3);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 function line(ctx: CanvasRenderingContext2D, x0: number, y0: number, x1: number, y1: number): void {
