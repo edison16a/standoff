@@ -15,6 +15,7 @@ import { ViewHud } from "./ViewHud";
  */
 export function FightHud() {
   const hud = useBoxingStore((state) => state.hud);
+  const keys = useBoxingStore((state) => state.input === "keys");
   const session = useSession();
   if (!hud) return null;
   const split = hud.panes.length === 2;
@@ -38,7 +39,7 @@ export function FightHud() {
       {hud.count && (
         <div className="bx-count" key={hud.count.n}>
           <span className="bx-count__n">{hud.count.n}</span>
-          {!hud.count.rising && hud.fighters[hud.count.fighter].human && <span className="bx-count__hint">Drop your gloves, then raise both to get up!</span>}
+          {!hud.count.rising && hud.fighters[hud.count.fighter].human && <span className="bx-count__hint">{keys ? "Let go of Space, then hold it to get up!" : "Drop your gloves, then raise both to get up!"}</span>}
         </div>
       )}
       {hud.away.length > 0 && (

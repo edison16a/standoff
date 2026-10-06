@@ -10,6 +10,8 @@ import { Banners } from "./banners";
 import { FightDriver } from "./fight-driver";
 import { useBoxingStore as store } from "./host-store";
 import { hudFrom, shotOf } from "./hud";
+import { applyKey, KeyControls } from "./key-controls";
+import type { KeyAction } from "./key-input";
 import { MenuDemo } from "./menu-demo";
 import { PickControl } from "./pick-control";
 import { levelOf } from "./player-input";
@@ -30,6 +32,8 @@ export class BoxingHost {
   kit: CameraKit | null = null;
   driver: FightDriver | null = null;
   pick: PickControl | null = null;
+  /** The keyboard mode, in place of the camera. */
+  keys: KeyControls | null = null;
   readonly audio: BoxingAudio;
   /** Changes with every new fight, so the picture knows to clear the last one. */
   fightId = 0;
@@ -73,12 +77,22 @@ export class BoxingHost {
 
   choosePlayers(players: 1 | 2): void {
     this.audio.confirm();
+    this.dropKeys();
     if (this.kit && this.kit.players !== players) this.dropKit();
     if (!this.kit) {
       this.kit = new CameraKit({ players });
       this.stopKit = this.kit.onMove((event) => this.onMove(event));
     }
-    store.setState({ players, screen: "setup" });
+    store.setState({ players, screen: "setup", input: "camera" });
+  }
+
+  /** Keyboard mode: one player against the computer, no camera, straight to the builds. */
+  playWithKeys(): void {
+    this.audio.confirm();
+    this.dropKit();
+    this.keys ??= new KeyControls((action) => this.onKey(action));
+    store.setState({ players: 1, input: "keys" });
+    this.openPick();
   }
 
   /** Calibration finished: on to choosing boxers. */
@@ -141,6 +155,7 @@ export class BoxingHost {
     // Nobody boxes in the menu, so the camera and the body tracking stop. The model starts again from the cache.
     this.pick = null;
     this.dropKit();
+    this.dropKeys();
     store.setState({ screen: "players" });
   }
 
@@ -156,8 +171,8 @@ export class BoxingHost {
     const driver = screen === "fight" || screen === "results" ? this.driver : null;
     if (driver) this.fightFrame(driver, now);
     else for (const event of this.demo.step(dt)) for (const listener of this.listeners) listener(event, this.demo.match);
-    if (screen === "pick" && this.pick && this.kit) {
-      const locked = this.pick.update([this.kit.moves(1), this.kit.moves(2)], now);
+    if (screen === "pick" && this.pick) {
+      const locked = this.kit ? this.pick.update([this.kit.moves(1), this.kit.moves(2)], now) : [];
       if (locked.length) this.audio.confirm();
       this.publishPick();
       if (this.pick.done) this.startFight();
@@ -177,12 +192,14 @@ export class BoxingHost {
     this.stopDriver?.();
     this.stopAdmin?.();
     this.dropKit();
+    this.dropKeys();
     this.audio.stop();
     this.room.setPlaying(false);
   }
 
   private fightFrame(driver: FightDriver, now: number): void {
-    this.feed.defend(driver, this.kit, now);
+    if (this.keys) driver.defend(1, this.keys.defense());
+    else this.feed.defend(driver, this.kit, now);
     driver.tick(now);
     if (driver.stage !== this.lastStage) {
       this.audio.replay(driver.stage === "replay");
@@ -230,6 +247,17 @@ export class BoxingHost {
       this.audio.tick();
       this.publishPick();
     }
+  }
+
+  private onKey(action: KeyAction): void {
+    if (!applyKey(action, store.getState().screen, this.driver, this.pick)) return;
+    this.audio.tick();
+    this.publishPick();
+  }
+
+  private dropKeys(): void {
+    this.keys?.dispose();
+    this.keys = null;
   }
 
   private publishPick(): void {

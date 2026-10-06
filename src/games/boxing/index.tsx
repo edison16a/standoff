@@ -4,6 +4,7 @@ import { BoxingHost } from "./host/boxing-host";
 import { SessionContext } from "./host/components/session-context";
 import { Stage } from "./host/components/Stage";
 import { Showcase } from "./showcase/Showcase";
+import { keyboard } from "./keyboard";
 import "./styles/host.css";
 import "./styles/menus.css";
 import "./styles/pick.css";
@@ -36,4 +37,5 @@ export const game: GameModule = {
   },
 
   Showcase,
+  keyboard,
 };

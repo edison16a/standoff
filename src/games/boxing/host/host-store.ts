@@ -77,6 +77,8 @@ export interface Records {
 export interface BoxingState {
   screen: Screen;
   players: 1 | 2;
+  /** Played in front of the camera, or with the keyboard for testing. */
+  input: "camera" | "keys";
   /** How sharp the computer boxer is, for one player fights. */
   botLevel: BotLevel;
   /** The chosen look for each boxer, as an index into LOOKS. */
@@ -94,6 +96,7 @@ export interface BoxingState {
 export const useBoxingStore = create<BoxingState>(() => ({
   screen: "players",
   players: 1,
+  input: "camera",
   botLevel: DEFAULT_BOT_LEVEL,
   picks: [0, 1],
   locked: [false, false],

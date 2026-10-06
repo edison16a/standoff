@@ -92,6 +92,24 @@
   color: var(--bx-gold);
 }
 
+.bx-keys {
+  padding: 6px 4px;
+  border: 0;
+  background: none;
+  color: rgba(255, 255, 255, 0.78);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.bx-keys:hover,
+.bx-keys:focus-visible {
+  color: var(--bx-gold);
+}
+
 .bx-menu__records {
   margin: 0;
   font-size: 15px;

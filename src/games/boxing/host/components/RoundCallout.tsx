@@ -1,5 +1,5 @@
 "use client";
-import type { Hud } from "../host-store";
+import { useBoxingStore, type Hud } from "../host-store";
 
 /**
  * The big words between the fighting: the walk out, touching gloves with
@@ -30,10 +30,11 @@ export function RoundCallout({ hud }: { hud: Hud }) {
 
 function TouchPrompt({ hud }: { hud: Hud }) {
   const players = hud.views.length;
+  const keys = useBoxingStore((state) => state.input === "keys");
   return (
     <div className="bx-callout bx-touch">
       <span className="bx-touch__title">Touch gloves</span>
-      <span className="bx-callout__small">Hold both gloves straight out in front of you</span>
+      <span className="bx-callout__small">{keys ? "Hold F to reach both gloves out" : "Hold both gloves straight out in front of you"}</span>
       <div className="bx-touch__who">
         {([0, 1] as const).map((id) => {
           const fighter = hud.fighters[id];

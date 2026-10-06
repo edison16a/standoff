@@ -36,6 +36,9 @@ export function PlayersMenu() {
         </button>
       </div>
       <DifficultyPicker level={botLevel} onChange={(level) => useBoxingStore.setState({ botLevel: level })} />
+      <button type="button" className="bx-keys" onClick={() => session.playWithKeys()}>
+        No camera? Play with the keyboard
+      </button>
       <ul className="bx-menu__how">
         <li>
           <strong>Punch</strong> at the screen with either hand

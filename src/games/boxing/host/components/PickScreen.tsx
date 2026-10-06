@@ -18,13 +18,14 @@ export function PickScreen() {
   const picks = useBoxingStore((state) => state.picks);
   const locked = useBoxingStore((state) => state.locked);
   const holding = useBoxingStore((state) => state.holding);
+  const keys = useBoxingStore((state) => state.input === "keys");
   const names = session.names();
   const sides = players === 2 ? ([0, 1] as const) : ([0] as const);
   return (
     <section className="bx-pick">
       <header className="bx-pick__head">
         <h2>Choose your build</h2>
-        <p>Lean left or right to browse. Hold your guard up to lock in.</p>
+        <p>{keys ? "A and D browse. Space locks in." : "Lean left or right to browse. Hold your guard up to lock in."}</p>
       </header>
       <div className={`bx-pick__sides bx-pick__sides--${players}`}>
         {sides.map((id) => (
