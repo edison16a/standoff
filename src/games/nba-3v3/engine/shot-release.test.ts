@@ -12,7 +12,7 @@ const SHOTS: { input: ReleaseInput; distance: number }[] = [
   { input: { family: "free", from: { x: 0.1, y: 2.5, z: 6.05 }, apex: RIM.y + 1.5, spinRate: 16 }, distance: 4.5 },
   { input: { family: "floater", from: { x: -0.8, y: 2.6, z: 4.6 }, apex: RIM.y + 1.4, spinRate: 4 }, distance: 3.1 },
   { input: { family: "layup", from: { x: -0.25, y: 3.05, z: 2.2 }, apex: 3.45, spinRate: 6 }, distance: 0.8 },
-  { input: { family: "bank", from: { x: -0.5, y: 2.95, z: 1.95 }, apex: 3.4, spinRate: 7 }, distance: 0.8 },
+  { input: { family: "bank", from: { x: -0.45, y: 2.95, z: 1.97 }, apex: 3.4, spinRate: 7 }, distance: 0.8 },
   { input: { family: "dunk", from: { x: 0.1, y: RIM.y + 0.24, z: RIM.z + 0.14 }, apex: RIM.y + 0.24, spinRate: 0 }, distance: 0.5 },
 ];
 
