@@ -10,6 +10,8 @@ const ADS = [
 /** One ad panel is this many metres long on the boards. */
 const PANEL_M = 4;
 const PANEL_PX = 512;
+/** LEDs burn brighter than the white of a lit shirt, so the finish gives them a slight glow. */
+const GLOW = 1.6;
 
 /**
  * The LED boards round the pitch. They scroll their ads gently and,
@@ -51,7 +53,7 @@ export class Boards {
   private add(w: number, h: number, d: number, x: number, z: number, face: number): void {
     const map = this.texture.clone();
     map.repeat.set(Math.max(w, d) / (PANEL_M * ADS.length), 1);
-    const screen = new THREE.MeshBasicMaterial({ map, toneMapped: false });
+    const screen = new THREE.MeshBasicMaterial({ map, color: new THREE.Color().setScalar(GLOW) });
     this.screens.push(screen);
     const materials: THREE.Material[] = [];
     for (let i = 0; i < 6; i++) materials.push(i === face ? screen : this.body);
@@ -88,7 +90,7 @@ export class Boards {
     this.flashFor = 0;
     this.drawAds();
     this.refresh();
-    for (const screen of this.screens) screen.color.setScalar(1);
+    for (const screen of this.screens) screen.color.setScalar(GLOW);
   }
 
   update(dt: number, time: number): void {
@@ -104,7 +106,7 @@ export class Boards {
       }
     }
     for (const screen of this.screens) {
-      screen.color.setScalar(brightness);
+      screen.color.setScalar(brightness * GLOW);
       if (screen.map) screen.map.offset.x = this.scroll;
     }
   }

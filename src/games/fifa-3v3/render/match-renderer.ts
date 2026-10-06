@@ -146,7 +146,7 @@ export class MatchRenderer {
     this.referee.update(view.referee, view.ball, dt, time);
     this.aim.update(view.setPiece, time);
     this.ball.update(view.ball, dt);
-    this.arena.update(view.nets, dt, time);
+    this.arena.update(view.nets, dt, time, this.director.camera);
     this.arena.crowd.setExcitement(excitement(view));
     this.effects.frame(view, dt, time);
     this.director.update(view, shot, dt, time, focus);

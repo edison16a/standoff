@@ -4,7 +4,8 @@ import type { NetsView } from "../../engine/net-view";
 import { TEAMS } from "../../teams";
 import { Boards } from "./boards";
 import { Crowd } from "./crowd";
-import { buildFloodlights } from "./floodlights";
+import { buildDugouts } from "./dugouts";
+import { Floodlights } from "./floodlights";
 import { GoalModel } from "./goal-model";
 import { stadiumLights } from "./lighting";
 import { buildPitch } from "./pitch";
@@ -13,9 +14,10 @@ import { buildStands } from "./stands";
 import { blobTexture, netTexture } from "./textures";
 
 /**
- * The whole ground under the floodlights: pitch, boards, goals, stands
- * full of fans, the towers, the sky, and the lights that make the kits
- * and the turf read like a night match on television.
+ * The whole ground under the floodlights: pitch, boards, goals, the
+ * roofed bowl of stands full of fans, the towers, the sky, and the
+ * lights that make the kits and the turf read like a night match on
+ * television.
  */
 export class Arena {
   readonly group = new THREE.Group();
@@ -25,6 +27,7 @@ export class Arena {
   readonly key: THREE.DirectionalLight;
   readonly ambient: THREE.HemisphereLight;
   readonly glow: THREE.CanvasTexture;
+  private readonly towers = new Floodlights();
   private readonly net: THREE.CanvasTexture;
   private readonly parts: { dispose(): void }[] = [];
 
@@ -33,53 +36,57 @@ export class Arena {
     this.net = netTexture();
     const pitch = buildPitch();
     const stands = buildStands();
-    const towers = buildFloodlights(this.glow, !lite);
     const sky = buildSky();
     this.goals = [new GoalModel(-1, this.net), new GoalModel(1, this.net)];
-    this.crowd = new Crowd(stands.seats, [TEAMS[0].kit.shirt, TEAMS[1].kit.shirt]);
-    this.parts.push(pitch, stands, towers, sky, this.boards, ...this.goals, this.crowd);
-    this.group.add(sky.group, pitch.group, stands.group, towers.group, this.boards.group, this.goals[0].group, this.goals[1].group);
+    const colours = [TEAMS[0].kit.shirt, TEAMS[1].kit.shirt] as const;
+    this.crowd = new Crowd(stands.seats, colours);
+    const dugouts = buildDugouts(colours);
+    this.parts.push(pitch, stands, dugouts, this.towers, sky, this.boards, ...this.goals, this.crowd);
+    this.group.add(sky.group, pitch.group, stands.group, dugouts.group, this.towers.group, this.boards.group, this.goals[0].group, this.goals[1].group);
     // Thousands of fans are the heaviest thing to draw; software graphics in tests leave them out.
     if (!lite) this.group.add(this.crowd.mesh);
     this.group.add(this.catchNets());
-
     const lights = stadiumLights(!lite);
     this.key = lights.key;
     this.ambient = lights.ambient;
     this.group.add(lights.group);
   }
 
-  /** Tall catch nets behind each goal, and a light cage net along the far side. */
+  /** A tall, fine catch net behind each goal on thin poles. */
   private catchNets(): THREE.Group {
     const group = new THREE.Group();
     const map = this.net.clone();
-    map.repeat.set(60, 20);
-    const material = new THREE.MeshBasicMaterial({ map, transparent: true, opacity: 0.22, side: THREE.DoubleSide, depthWrite: false, color: "#d8dde8" });
-    const poles = new THREE.MeshStandardMaterial({ color: "#6b707a", metalness: 0.5, roughness: 0.5 });
+    map.repeat.set(90, 24);
+    const material = new THREE.MeshBasicMaterial({ map, transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false, color: "#c9ced8" });
+    const poles = new THREE.MeshStandardMaterial({ color: "#3c4048", metalness: 0.5, roughness: 0.5 });
     const W = PITCH.halfWidth * 2;
+    const geometries: THREE.BufferGeometry[] = [];
     for (const end of [-1, 1]) {
-      const net = new THREE.Mesh(new THREE.PlaneGeometry(W, 7), material);
+      const sheet = new THREE.PlaneGeometry(W, 7);
+      geometries.push(sheet);
+      const net = new THREE.Mesh(sheet, material);
       net.rotation.y = Math.PI / 2;
       net.position.set(end * (PITCH.halfLength + PITCH.catchNet), 3.5, 0);
       group.add(net);
-      for (const z of [-W / 2, -W / 4, 0, W / 4, W / 2]) {
-        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 7, 8), poles);
+      for (const z of [-W / 2, 0, W / 2]) {
+        const rod = new THREE.CylinderGeometry(0.04, 0.04, 7, 6);
+        geometries.push(rod);
+        const pole = new THREE.Mesh(rod, poles);
         pole.position.set(end * (PITCH.halfLength + PITCH.catchNet), 3.5, z);
         group.add(pole);
       }
     }
-    const far = new THREE.Mesh(new THREE.PlaneGeometry(PITCH.halfLength * 2 + 7, 4), material);
-    far.position.set(0, PITCH.boardHeight + 2, -PITCH.halfWidth - 0.15);
-    group.add(far);
-    this.parts.push(map, material, poles, { dispose: () => group.traverse((o) => (o as THREE.Mesh).geometry?.dispose()) });
+    this.parts.push(map, material, poles, ...geometries);
     return group;
   }
 
-  update(nets: NetsView, dt: number, time: number): void {
+  /** Each frame: the boards, the fans, the nets and the glare for where `camera` stands. */
+  update(nets: NetsView, dt: number, time: number, camera: THREE.Camera): void {
     this.boards.update(dt, time);
     this.crowd.update(dt, time);
     this.goals[0].update(nets[0], dt);
     this.goals[1].update(nets[1], dt);
+    this.towers.update(camera);
   }
 
   dispose(): void {
