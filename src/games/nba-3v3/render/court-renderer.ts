@@ -15,6 +15,7 @@ import { joltOnContact } from "./contact-jolts";
 import { CeremonyStage } from "./ceremony/ceremony-stage";
 import type { Ceremony } from "../engine/ceremony";
 import { Referee } from "./referee";
+import { PixelBudget } from "./resolution-governor";
 import { Effects } from "./effects/effects";
 import { applyFilmLook, type CinemaLook } from "./film-look";
 import { broadcastShot, lineScene, pressureOn } from "./scene-read";
@@ -45,7 +46,7 @@ export class CourtRenderer {
   private intro: number | null = null;
   private time = 0;
   private height = 1;
-  private readonly maxPixelRatio: number;
+  private readonly budget: PixelBudget;
   private readonly pixel = new Uint8Array(4);
   private readonly replayCam = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 50 };
   private readonly ceremony = new CeremonyStage();
@@ -56,8 +57,8 @@ export class CourtRenderer {
   constructor(canvas: HTMLCanvasElement, quality: Quality = {}) {
     const { antialias = true, shadows = true, reflections = true, maxPixelRatio = 1.75, athletes = "high" } = quality;
     this.athleteMats = new AthleteMaterials(athletes);
-    this.maxPixelRatio = maxPixelRatio;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias, powerPreference: "high-performance" });
+    this.budget = new PixelBudget(this.renderer, maxPixelRatio);
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
     this.renderer.shadowMap.enabled = shadows;
@@ -77,8 +78,7 @@ export class CourtRenderer {
 
   resize(width: number, height: number, dpr: number): void {
     this.height = Math.max(1, height);
-    this.renderer.setPixelRatio(Math.min(dpr, this.maxPixelRatio));
-    this.renderer.setSize(Math.max(1, width), this.height, false);
+    this.budget.resize(width, height, dpr);
     this.tv.setAspect(Math.max(1, width) / this.height);
   }
 
@@ -167,7 +167,7 @@ export class CourtRenderer {
     this.arena.update(dt, this.time, this.ball.mesh.position, calm);
     this.effects.setView(this.height * this.renderer.getPixelRatio(), this.tv.camera.fov);
     this.effects.frame(m, dt);
-    if (draw) this.renderer.render(this.scene, this.tv.camera);
+    if (draw) this.budget.draw(() => this.renderer.render(this.scene, this.tv.camera));
   }
 
   /**
@@ -204,6 +204,7 @@ export class CourtRenderer {
     this.ball.dispose();
     this.effects.dispose();
     this.athleteMats.dispose();
+    this.budget.dispose();
     this.environment.dispose();
     this.renderer.dispose();
   }
