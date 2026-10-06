@@ -77,5 +77,11 @@ export interface KeyboardBinding {
    * dropped, so a resting on screen stick never fights the keys.
    */
   replaces?: readonly string[];
+  /**
+   * The card's last line, on where the menus are. A camera game, whose
+   * menus are on the big screen, says so here. Unset, it says to click
+   * the phone panel.
+   */
+  foot?: string;
   create(ctx: KeyboardContext): KeyboardPlayer;
 }
