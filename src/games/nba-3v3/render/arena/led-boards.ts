@@ -61,14 +61,15 @@ export class LedBoards {
     const housing = new THREE.MeshStandardMaterial({ color: "#0c0e14", roughness: 0.5, metalness: 0.3 });
     this.owned.push(housing);
     const shell = new Bake();
-    const strip = (w: number, x: number, z: number, yaw: number) => {
+    const strip = (w: number, x: number, z: number, yaw: number, start: number) => {
       // One uv unit spans two passes of the picture, so the diode grid is sized to that.
       const face = ledMaterial(this.texture, CYCLE * 2, 0.7);
       this.owned.push(face);
       const plane = new THREE.PlaneGeometry(w, 0.7);
-      // The texture repeats twice per uv unit, so scale the uvs to show the words at their true width.
+      // The texture repeats twice per uv unit, so scale the uvs to show the words at their true width,
+      // and start each board where the one before it stops so the words run on round the corners.
       const uv = plane.getAttribute("uv");
-      for (let i = 0; i < uv.count; i++) uv.setX(i, (uv.getX(i) * w) / (CYCLE * 2));
+      for (let i = 0; i < uv.count; i++) uv.setX(i, (start + uv.getX(i) * w) / (CYCLE * 2));
       const m = new THREE.Mesh(plane, face);
       m.position.set(x, 0.46, z);
       m.rotation.y = yaw;
@@ -81,9 +82,10 @@ export class LedBoards {
     };
     // The three boards meet at the front corners and stop there, so no board shows through another.
     const side = 18 - FRONT_Z;
-    strip(2 * SIDE_X, 0, FRONT_Z, 0);
-    strip(side, -SIDE_X, FRONT_Z + side / 2, Math.PI / 2);
-    strip(side, SIDE_X, FRONT_Z + side / 2, -Math.PI / 2);
+    // They read left to right from the far end of the left board, along the front, and down the right.
+    strip(side, -SIDE_X, FRONT_Z + side / 2, Math.PI / 2, 0);
+    strip(2 * SIDE_X, 0, FRONT_Z, 0, side);
+    strip(side, SIDE_X, FRONT_Z + side / 2, -Math.PI / 2, side + 2 * SIDE_X);
     this.group.add(...shell.build(false));
 
     // The ring round the upper deck's face, high over the stands.
