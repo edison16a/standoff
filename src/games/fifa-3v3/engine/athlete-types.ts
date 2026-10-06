@@ -19,7 +19,11 @@ export type AthleteAction =
   /** Off the ground to block a shot or a pass, or a free kick wall leaping as it is struck. */
   | "jump"
   /** A standing poke at the dribbler's ball. */
-  | "steal";
+  | "steal"
+  /** Heading the ball: a nod where he stands, or a leap to meet it (longer than half a second). */
+  | "header"
+  /** Bringing a dropping ball down on the chest. */
+  | "chest";
 
 /**
  * The skill moves, picked by the stick against the goal the player
@@ -125,6 +129,19 @@ export interface Athlete {
   bufferHeld: number;
   /** How hard the kick being wound up is, 0 to 1: the charge bar's level for a shot. */
   power: number;
+  /** The shot being wound up is hit first time, off the pass, which is harder to keep on target. */
+  firstTime: boolean;
+  /** Where the stick (or a computer player's brain) wants to run this step, 0 to 1 long. */
+  want: Vec2;
+  /** The dribble: the stride count at the last touch on the ball, and seconds before a quick correcting touch. */
+  touchStride: number;
+  touchCool: number;
+  /** Strides the last touch was played for: the next one is due then, when the boot gets back to the ball. */
+  touchEvery: number;
+  /** The hardest shove taken from a body lately, m/s, which makes the next touch heavier. Fades away. */
+  shove: number;
+  /** A slide is coming at him and he has seen it in time to hop it. */
+  readSlide: boolean;
   skill: SkillState;
   /** A slide has already met the ball or the man, so it cannot win twice. */
   slideDone: boolean;

@@ -3,6 +3,7 @@ import type { TeamId } from "../teams";
 import type { Athlete } from "./athlete-types";
 import type { MatchEvent } from "./events";
 import type { Foul, Referee, SetPiece } from "./foul-types";
+import type { Nets } from "./physics/net";
 import type { Rng } from "./rng";
 import type { Vec2, Vec3 } from "./vec";
 
@@ -38,17 +39,24 @@ export interface Keeper {
   holdFor: number;
   noTouch: number;
   saves: number;
+  /** The fastest ball his gloves can hold in the dive or stance he is in, m/s; faster ones are palmed. */
+  grip: number;
 }
 
 export type ShotOutcome = "goal" | "catch" | "parry" | "post" | "bar" | "over" | "wide";
 
-/** A shot on its way. Its outcome was decided when it was struck and physics plays it out. */
+/**
+ * A shot on its way. It was struck at a spot with the striker's error,
+ * and what happens to it is up to the flight: the keeper's gloves, a
+ * body in the way, the woodwork, the net, or nothing at all.
+ */
 export interface Flight {
   shooter: number;
   team: TeamId;
-  outcome: ShotOutcome;
+  /** What became of it, once that is known. */
+  outcome: ShotOutcome | "block" | null;
   t: number;
-  /** Where the ball crosses the goal line, or the woodwork it is aimed at. */
+  /** The spot on the goal the striker went for, before his error. */
   target: Vec3;
   /** The line along the pitch where the keeper meets it, for saves. */
   keeperX: number;
@@ -73,6 +81,12 @@ export interface Ball {
   passTo: number | null;
   /** Seconds since the current owner took it, so a fresh touch cannot be stolen at once. */
   heldFor: number;
+  /** A knuckled strike's swing phase in radians, or 0 for a ball with no knuckle in it. */
+  wobble: number;
+  /** Metres flown since it was last struck, which times the knuckle's swing. */
+  travel: number;
+  /** The match time it was last struck or knocked off a body: players need their reaction time to it. */
+  struckAt: number;
 }
 
 /** "foul": the whistle has gone and the referee runs in to book the player. "setpiece": a free kick or a penalty is being lined up. */
@@ -103,6 +117,8 @@ export interface MatchState {
   athletes: Athlete[];
   keepers: [Keeper, Keeper];
   ball: Ball;
+  /** Both goals' nets, which give and swing back where the ball hits them. */
+  nets: Nets;
   flight: Flight | null;
   winner: TeamId | null;
   lastGoal: { team: TeamId; scorer: number | null } | null;

@@ -1,77 +1,93 @@
 import * as THREE from "three";
 import { PITCH } from "../../engine/tuning";
 import { merge, paint, rod } from "../models/geo";
+import { glareStrength, glareTexture } from "./glare";
 
-const HEIGHT = 25;
+const HEIGHT = 27;
+const LAMPS = 16;
 
 /**
- * Four floodlight towers at the corners: steel masts with a bank of
- * lamps each, a soft halo round the lamps and a faint beam of light
- * falling onto the pitch, like the haze on a cold match night.
+ * Four floodlight towers at the corners: lattice masts with a tilted
+ * bank of lamps each. The lamps burn far above white, so the finish
+ * blooms them, and each bank throws a lens glare that swells as the
+ * camera comes round into its beam. All four masts are one draw, all
+ * the lamps another.
  */
-export function buildFloodlights(glowMap: THREE.Texture, beams = true): { group: THREE.Group; dispose(): void } {
-  const group = new THREE.Group();
-  const disposables: { dispose(): void }[] = [];
-  const steel = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, metalness: 0.6 });
-  const lamp = new THREE.MeshBasicMaterial({ color: "#fffaf0", toneMapped: false });
-  const halo = new THREE.SpriteMaterial({ map: glowMap, color: "#fff1d0", blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: 0.85 });
-  const beamMap = beamTexture();
-  const beam = new THREE.MeshBasicMaterial({ map: beamMap, color: "#fff3d6", transparent: true, opacity: 0.09, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
-  disposables.push(steel, lamp, halo, beamMap, beam);
-  const x = PITCH.halfLength + 10;
-  const z = PITCH.halfWidth + 8.5;
-  for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) {
-    const tower = new THREE.Group();
-    tower.position.set(sx * x, 0, sz * z);
-    const mast = merge([
-      rod([0, 0, 0], [0, HEIGHT, 0], 0.35, "#8a8f99", 12),
-      ...[0.25, 0.5, 0.75].map((f) => rod([-0.9, HEIGHT * f, 0], [0.9, HEIGHT * f + 1.2, 0], 0.08, "#6b707a", 6)),
-      paint(new THREE.BoxGeometry(5.4, 3.2, 0.45), "#3b3f48", { at: [0, HEIGHT + 1.2, 0] }),
-    ]);
-    const mastMesh = new THREE.Mesh(mast, steel);
-    disposables.push(mast);
-    tower.add(mastMesh);
-    // The lamp bank faces the middle of the pitch, tipped down toward it.
-    const head = new THREE.Group();
-    head.position.set(0, HEIGHT + 1.2, 0);
-    tower.add(head);
-    head.lookAt(0, 0, 0);
-    const lamps = new THREE.InstancedMesh(new THREE.BoxGeometry(0.9, 0.62, 0.12), lamp, 12);
-    disposables.push(lamps.geometry);
+export class Floodlights {
+  readonly group = new THREE.Group();
+  private readonly glares: { sprite: THREE.Sprite; facing: THREE.Vector3 }[] = [];
+  private readonly disposables: { dispose(): void }[] = [];
+  private readonly toCamera = new THREE.Vector3();
+
+  constructor() {
+    const steel = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0.6 });
+    const lamp = new THREE.MeshBasicMaterial({ color: new THREE.Color("#fff6e6").multiplyScalar(14) });
+    const map = glareTexture();
+    const glare = new THREE.SpriteMaterial({ map, color: "#fff1dc", blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
+    this.disposables.push(steel, lamp, map, glare);
+    const x = PITCH.halfLength + 10.5;
+    const z = PITCH.halfWidth + 9;
+    const masts: THREE.BufferGeometry[] = [];
+    const lamps: THREE.BufferGeometry[] = [];
     const m = new THREE.Matrix4();
-    for (let i = 0; i < 12; i++) {
-      m.makeTranslation(-1.8 + (i % 4) * 1.2, -0.9 + Math.floor(i / 4) * 0.85, 0.28);
-      lamps.setMatrixAt(i, m);
+    for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) {
+      const base = new THREE.Vector3(sx * x, 5, sz * z);
+      for (const g of lattice()) masts.push(g.translate(base.x, base.y, base.z));
+      // The bank faces a point short of the centre spot, tipped down toward it.
+      const head = new THREE.Object3D();
+      head.position.set(base.x, base.y + HEIGHT - 5, base.z);
+      head.lookAt(-sx * 6, 0, -sz * 3);
+      head.updateMatrixWorld();
+      const frame = paint(new THREE.BoxGeometry(6.2, 3.6, 0.4), "#2f333b", { at: [0, 0, -0.1] });
+      masts.push(frame.applyMatrix4(head.matrixWorld));
+      for (let i = 0; i < LAMPS; i++) {
+        m.makeTranslation(-2.25 + (i % 4) * 1.5, -1.2 + Math.floor(i / 4) * 0.8, 0.14);
+        lamps.push(new THREE.BoxGeometry(1.2, 0.62, 0.1).applyMatrix4(m).applyMatrix4(head.matrixWorld));
+      }
+      const sprite = new THREE.Sprite(glare);
+      sprite.position.copy(head.position).add(new THREE.Vector3(0, 0, 0.9).applyQuaternion(head.quaternion));
+      sprite.renderOrder = 6;
+      this.glares.push({ sprite, facing: new THREE.Vector3(0, 0, 1).applyQuaternion(head.quaternion) });
+      this.group.add(sprite);
     }
-    head.add(lamps);
-    const glow = new THREE.Sprite(halo);
-    glow.scale.set(16, 12, 1);
-    glow.position.set(0, 0, 0.8);
-    head.add(glow);
-    const toPitch = new THREE.Vector3(-sx * x * 0.75, -(HEIGHT + 1.2), -sz * z * 0.75);
-    const cone = new THREE.ConeGeometry(9, toPitch.length(), 24, 1, true);
-    disposables.push(cone);
-    const beamMesh = new THREE.Mesh(cone, beam);
-    beamMesh.position.copy(toPitch.clone().multiplyScalar(0.5)).add(new THREE.Vector3(0, HEIGHT + 1.2, 0));
-    beamMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), toPitch.clone().normalize());
-    beamMesh.renderOrder = 5;
-    if (beams) tower.add(beamMesh);
-    group.add(tower);
+    const mastGeo = merge(masts);
+    const lampGeo = merge(lamps.map((g) => paint(g, "#ffffff")));
+    this.disposables.push(mastGeo, lampGeo);
+    this.group.add(new THREE.Mesh(mastGeo, steel), new THREE.Mesh(lampGeo, lamp));
   }
-  return { group, dispose: () => disposables.forEach((d) => d.dispose()) };
+
+  /** Sizes each glare for where the camera stands. */
+  update(camera: THREE.Camera): void {
+    for (const { sprite, facing } of this.glares) {
+      this.toCamera.copy(camera.position).sub(sprite.position);
+      const far = this.toCamera.length();
+      const k = glareStrength(facing, this.toCamera.normalize());
+      sprite.visible = k > 0.01;
+      // Glare is a lens effect: it keeps its size on screen however far away the lamp is.
+      const size = far * (0.12 + 0.3 * k);
+      sprite.scale.set(size * 1.6, size, 1);
+      sprite.material.opacity = 0.35 + 0.65 * k;
+    }
+  }
+
+  dispose(): void {
+    for (const d of this.disposables) d.dispose();
+  }
 }
 
-/** Bright at the lamp, fading out toward the ground, for the light beams. */
-function beamTexture(): THREE.CanvasTexture {
-  const canvas = document.createElement("canvas");
-  canvas.width = 4;
-  canvas.height = 128;
-  const ctx = canvas.getContext("2d")!;
-  const g = ctx.createLinearGradient(0, 0, 0, 128);
-  g.addColorStop(0, "rgba(255,255,255,0.9)");
-  g.addColorStop(0.5, "rgba(255,255,255,0.3)");
-  g.addColorStop(1, "rgba(255,255,255,0)");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, 4, 128);
-  return new THREE.CanvasTexture(canvas);
+/** A tapering lattice mast: four legs, braced across every few metres. */
+function lattice(): THREE.BufferGeometry[] {
+  const parts: THREE.BufferGeometry[] = [];
+  const h = HEIGHT - 5;
+  const w = (y: number) => 0.9 - (0.5 * y) / h;
+  const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]] as const;
+  for (const [cx, cz] of corners) parts.push(rod([cx * w(0), 0, cz * w(0)], [cx * w(h), h, cz * w(h)], 0.07, "#8a909b", 6));
+  for (let y = 0; y < h; y += 2.2) {
+    for (let i = 0; i < 4; i++) {
+      const [ax, az] = corners[i]!;
+      const [bx, bz] = corners[(i + 1) % 4]!;
+      parts.push(rod([ax * w(y), y, az * w(y)], [bx * w(y + 2.2), y + 2.2, bz * w(y + 2.2)], 0.035, "#6f7580", 4));
+    }
+  }
+  return parts;
 }

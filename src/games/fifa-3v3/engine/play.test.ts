@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { footPoint } from "./athlete";
 import type { MatchEvent } from "./events";
 import { createMatch, stepMatch, type Entrant } from "./match";
 import { makeSave } from "./keeper";
@@ -46,6 +47,7 @@ describe("open play", () => {
     const me = state.athletes[0]!;
     me.pos = { x: 0, z: PITCH.halfWidth - 1.5 };
     state.ball.owner = { kind: "athlete", id: 0 };
+    state.ball.pos = { ...footPoint(me), y: BALL.radius };
     let widest = 0;
     for (let t = 0; t < 2; t += STEP) {
       stepMatch(state, new Map([[0, { move: { x: 0.2, z: 1 } }]]));
@@ -61,7 +63,7 @@ describe("open play", () => {
     state.ball.owner = null;
     state.ball.pos = { x: HL - 4, y: BALL.radius, z: 5 };
     state.ball.vel = { x: 14, y: 0, z: 0 };
-    state.flight = { shooter: 0, team: 0, outcome: "wide", t: 0, target: { x: HL, y: 0.3, z: 5 }, keeperX: HL - 1, power: 0.5, resolved: false };
+    state.flight = { shooter: 0, team: 0, outcome: null, t: 0, target: { x: HL, y: 0.3, z: 5 }, keeperX: HL - 1, power: 0.5, resolved: false };
     const events = run(state, 0.6);
     expect(events).toContainEqual({ type: "miss", team: 0, kind: "wide" });
     expect(state.flight.resolved).toBe(true);
@@ -74,7 +76,7 @@ describe("open play", () => {
     shot.ball.owner = null;
     shot.ball.pos = { x: HL - 4, y: PITCH.goalHeight + 0.3, z: 0.5 };
     shot.ball.vel = { x: 18, y: 1, z: 0 };
-    shot.flight = { shooter: 0, team: 0, outcome: "over", t: 0, target: { x: HL, y: PITCH.goalHeight + 0.6, z: 0.5 }, keeperX: HL - 1, power: 0.5, resolved: false };
+    shot.flight = { shooter: 0, team: 0, outcome: null, t: 0, target: { x: HL, y: PITCH.goalHeight + 0.6, z: 0.5 }, keeperX: HL - 1, power: 0.5, resolved: false };
     const shotEvents = run(shot, 0.5);
     expect(shotEvents).toContainEqual({ type: "miss", team: 0, kind: "over" });
     expect(shotEvents).toContainEqual({ type: "out", team: 1 });
@@ -101,6 +103,7 @@ describe("the keeper", () => {
       // Running at the goal line past the keeper, the way a phone's player might.
       me.pos = { x: HL - 3.5, z: (seed % 5) - 2 };
       state.ball.owner = { kind: "athlete", id: 0 };
+      state.ball.pos = { ...footPoint(me), y: BALL.radius };
       for (let t = 0; t < 3 && state.phase === "play"; t += STEP) {
         stepMatch(state, new Map([[0, { move: { x: 1, z: -me.pos.z * 0.1 } }]]));
         if (state.events.some((e) => e.type === "save" && e.kind === "claim")) smothered++;
@@ -117,7 +120,7 @@ describe("a catch with no dive planned", () => {
     clearAround(state);
     const keeper = state.keepers[1];
     expect(keeper.action).toBe("set");
-    makeSave(state, keeper, false);
+    makeSave(state, keeper);
     const events = run(state, 3);
     expect(events.some((e) => e.type === "throw")).toBe(true);
     expect(state.ball.owner).toBeNull();

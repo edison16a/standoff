@@ -6,10 +6,10 @@ import { shotWindup } from "./kick";
 import { updateKeeperFacing } from "./keeper-update";
 import { botSetPiece } from "./set-piece-bot";
 import { AIM_RATE, takerInput, type TakerInput } from "./set-piece-input";
-import { SET_KICK, strikeKick } from "./set-piece-kick";
-import { judgeFreeKick, judgePenalty, penaltyDive } from "./set-piece-save";
+import { penaltyTarget, SET_KICK, strikeKick } from "./set-piece-kick";
+import { freeKickKeeper, penaltyKeeper } from "./set-piece-save";
 import { goalX } from "./goal";
-import { planDive } from "./keeper";
+import { freeKickTarget } from "./free-kick";
 import { TOUCH } from "./tuning";
 import type { Command, MatchState, SetPiece } from "./types";
 import { add, clamp, dist, len, norm, scale, sub } from "./vec";
@@ -103,22 +103,25 @@ function launch(state: MatchState, sp: SetPiece): void {
   const ball = state.ball;
   const kick = strikeKick(sp, state.rng);
   const keeper = state.keepers[other(sp.team)];
-  const judged = sp.kind === "penalty" ? judgePenalty(state, sp, kick, keeper) : { outcome: judgeFreeKick(state, sp, kick, keeper), guess: 0 as const, rightWay: true };
   ball.vel = kick.vel;
   ball.spin = kick.spin;
+  ball.wobble = 0;
+  ball.travel = 0;
   ball.lastTouch = { team: taker.team, id: taker.id };
+  ball.struckAt = state.time;
   taker.noTouch = TOUCH.afterKick;
   taker.stats.shots++;
-  const target = { x: keeper.pos.x, y: 0, z: 0 };
-  state.flight = { shooter: taker.id, team: taker.team, outcome: judged.outcome, t: 0, target, keeperX: keeper.pos.x, power: sp.power, resolved: false };
-  if (sp.kind === "penalty") penaltyDive(state, keeper, judged.guess, judged.rightWay);
-  else planDive(state, keeper);
+  // The spot the taker lined up, for the replay's target; the flight decides the rest.
+  const target = sp.kind === "penalty" ? penaltyTarget(sp) : freeKickTarget(sp, sp.power);
+  state.flight = { shooter: taker.id, team: taker.team, outcome: null, t: 0, target, keeperX: keeper.pos.x, power: sp.power, resolved: false };
+  if (sp.kind === "penalty") penaltyKeeper(state, keeper);
+  else freeKickKeeper(state, keeper);
   sp.launched = true;
   sp.struckT = 0;
   if (sp.wall.length && botSkill(state).acts) jumpWall(state, sp);
   state.phase = "play";
   state.phaseT = 0;
-  state.events.push({ type: "shot", athlete: taker.id, team: taker.team, outcome: judged.outcome, power: sp.power, distance: dist(sp.spot, { x: keeper.pos.x, z: 0 }) });
+  state.events.push({ type: "shot", athlete: taker.id, team: taker.team, power: sp.power, distance: dist(sp.spot, { x: keeper.pos.x, z: 0 }) });
 }
 
 /** The wall goes up together as the ball is struck, each a hair apart. */

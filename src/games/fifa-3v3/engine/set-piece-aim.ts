@@ -17,13 +17,14 @@ export const SET_KICK = {
   penMax: 30,
   /**
    * Sidespin at full curve from `spinAt` metres, in radians a second: a
-   * wide bend round the wall. Closer in it spins harder, further out
-   * softer, so full curve bows the path about a tenth of the way out
-   * from any range.
+   * wide bend round the wall, about 14 turns a second. Closer in it
+   * spins harder, up to the 17 or so turns a boot can put on a ball,
+   * and further out softer, so full curve bows the path by a similar
+   * share from any range.
    */
-  spin: 80,
+  spin: 88,
   spinAt: 18,
-  spinMax: 140,
+  spinMax: 110,
   /** At this power a free kick dips in under the bar, at this height. */
   nominal: 0.55,
   crossHeight: 0.74 * PITCH.goalHeight,

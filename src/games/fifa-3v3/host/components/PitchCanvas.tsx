@@ -17,7 +17,8 @@ export default function PitchCanvas() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const renderer = new MatchRenderer(canvas, { quality: testHooks().lowGpu ? "low" : "high" });
+    const hooks = testHooks();
+    const renderer = new MatchRenderer(canvas, { quality: hooks.lowGpu ? "low" : "high", auto: !hooks.fullPicture });
     const fit = () => renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
     fit();
     const observer = new ResizeObserver(fit);
@@ -25,7 +26,7 @@ export default function PitchCanvas() {
     renderer.setLabels((id) => session.label(id));
     renderer.onFirework(() => session.audio.firework());
     // Browser tests steer the test phones by reading the match from here. Development builds only.
-    if (process.env.NODE_ENV === "development") Object.assign(window, { __fifa: session });
+    if (process.env.NODE_ENV === "development") Object.assign(window, { __fifa: session, __fifaStats: () => renderer.stats() });
 
     let frame = 0;
     const loop = (now: number) => {

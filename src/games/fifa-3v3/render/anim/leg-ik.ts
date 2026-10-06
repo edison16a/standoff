@@ -8,12 +8,15 @@ import type { Pose } from "./pose";
  * boot at the ball is what keeps the ball at the feet.
  */
 
-/** A body's leg measurements in metres, from its height and build (see models/body.ts). */
+/** A body's leg measurements in metres, from its height and build (see body/rig.ts). */
 export interface Build {
   /** Height over 1.8 m, which scales every bone. */
   s: number;
   hipW: number;
+  /** The hip joints' height standing. */
   hipY: number;
+  /** How far the hip joints hang below the pelvis's centre, which it turns and tips about. */
+  hipDrop: number;
   thigh: number;
   shin: number;
   /** The ankle's height with the sole flat on the turf. */
@@ -22,7 +25,7 @@ export interface Build {
 
 export function buildOf(height: number, build: number): Build {
   const s = height / 1.8;
-  return { s, hipW: (0.095 + 0.015 * build) * s, hipY: 0.92 * s, thigh: 0.44 * s, shin: 0.43 * s, ground: 0.06 * s };
+  return { s, hipW: (0.095 + 0.015 * build) * s, hipY: 0.92 * s, hipDrop: 0.02 * s, thigh: 0.44 * s, shin: 0.43 * s, ground: 0.06 * s };
 }
 
 /** Where an ankle goes, in the figure's own frame: x to its left, y up, z forward. `toe` tips the boot down. */
@@ -41,39 +44,50 @@ export const RIGHT: Side = -1;
 
 /**
  * Solves one leg so its ankle reaches `foot`, given the body's lift,
- * lean and roll already in the pose. Out of reach, the leg straightens
- * toward it rather than snapping.
+ * lean and roll and the pelvis's turn and tilt already in the pose. Out
+ * of reach, the leg straightens toward it rather than snapping.
  */
 export function solveLeg(p: Pose, side: Side, foot: Foot, b: Build): void {
-  // The hip joint in the figure's frame: the body group lifts, then tips forward by pitch and sideways by roll.
   const cp = Math.cos(p.pitch);
   const sp = Math.sin(p.pitch);
   const cr = Math.cos(p.roll);
   const sr = Math.sin(p.roll);
+  const cy = Math.cos(p.pelvisY);
+  const sy = Math.sin(p.pelvisY);
+  const cz = Math.cos(p.pelvisZ);
+  const sz = Math.sin(p.pelvisZ);
+  // The hip joint in the body's frame: the pelvis tips (z) then turns (y) about its centre.
   const hx0 = side * b.hipW;
-  // Roll about z, then pitch about x (the rig turns in YXZ order).
-  const rx = hx0 * cr - b.hipY * sr;
-  const ry = hx0 * sr + b.hipY * cr;
-  const hip = { x: rx, y: p.lift + ry * cp, z: p.fwd + ry * sp };
-  // The target from the hip, turned back into the body's tipped frame.
+  const px = hx0 * cz + b.hipDrop * sz;
+  const py = hx0 * sz - b.hipDrop * cz;
+  const bx = px * cy;
+  const by = b.hipY + b.hipDrop + py;
+  const bz = -px * sy;
+  // Then the body rolls about z and pitches about x (the rig turns in YXZ order).
+  const rx = bx * cr - by * sr;
+  const ry = bx * sr + by * cr;
+  const hip = { x: rx, y: p.lift + ry * cp - bz * sp, z: p.fwd + ry * sp + bz * cp };
+  // The target from the hip, turned back through the body's lean and the pelvis into the thigh's own frame.
   const dx = foot.x - hip.x;
   const dy = foot.y - hip.y;
   const dz = foot.z - hip.z;
   const ty = dy * cp + dz * sp;
-  const tz = -dy * sp + dz * cp;
-  const lx = dx * cr + ty * sr;
-  const ly = -dx * sr + ty * cr;
-  const reach = Math.hypot(lx, ly, tz);
-  // Sideways first: the leg spreads out or crosses in toward the target.
-  const spread = Math.asin(Math.max(-0.9, Math.min(0.9, lx / Math.max(1e-4, reach))));
-  const py = ly / Math.max(0.3, Math.cos(spread));
+  const tz0 = -dy * sp + dz * cp;
+  const lx0 = dx * cr + ty * sr;
+  const ly0 = -dx * sr + ty * cr;
+  const lx1 = lx0 * cy - tz0 * sy;
+  const tz = lx0 * sy + tz0 * cy;
+  const lx = lx1 * cz + ly0 * sz;
+  const ly = -lx1 * sz + ly0 * cz;
+  // The knee bends to make the hip to ankle distance; the thigh then spreads (z) and swings (x) to point the leg at it.
   const a = b.thigh;
   const c = b.shin;
-  const d = Math.max(Math.abs(a - c) + 1e-3, Math.min((a + c) * 0.9995, Math.hypot(py, tz)));
+  const d = Math.max(Math.abs(a - c) + 1e-3, Math.min((a + c) * 0.9995, Math.hypot(lx, ly, tz)));
   const bend = Math.PI - Math.acos(clampCos((a * a + c * c - d * d) / (2 * a * c)));
-  const lean = Math.atan2(-tz, -py);
-  const lift = Math.acos(clampCos((a * a + d * d - c * c) / (2 * a * d)));
-  const hipX = lean - lift;
+  const along = a + c * Math.cos(bend);
+  const across = c * Math.sin(bend);
+  const spread = Math.asin(Math.max(-0.9, Math.min(0.9, lx / along)));
+  const hipX = wrap(Math.atan2(tz, ly) - Math.atan2(-across, -along * Math.cos(spread)));
   const ankle = foot.toe - p.pitch - hipX - bend;
   if (side === LEFT) {
     p.hipLX = hipX;
@@ -89,3 +103,4 @@ export function solveLeg(p: Pose, side: Side, foot: Foot, b: Build): void {
 }
 
 const clampCos = (v: number) => Math.max(-1, Math.min(1, v));
+const wrap = (v: number) => Math.atan2(Math.sin(v), Math.cos(v));

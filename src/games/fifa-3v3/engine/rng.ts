@@ -26,6 +26,13 @@ export class Rng {
     return this.next() < p;
   }
 
+  /** A draw from the bell curve with mean 0 and spread 1 (Box and Muller), for errors that are usually small and now and then big. */
+  gauss(): number {
+    const u = Math.max(1e-12, this.next());
+    const v = this.next();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+
   sign(): 1 | -1 {
     return this.next() < 0.5 ? -1 : 1;
   }

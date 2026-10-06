@@ -5,7 +5,7 @@ import { PITCH } from "./tuning";
 import { clamp01, type Vec2 } from "./vec";
 
 /** Inside the post by this much, so a placed shot still clears the keeper's hand and the woodwork. */
-const POST_IN = 0.55;
+const POST_IN = 0.8;
 /** A keeper this far across has already covered that post. */
 const COVERED = 0.7;
 

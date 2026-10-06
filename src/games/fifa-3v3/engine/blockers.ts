@@ -1,69 +1,96 @@
-import { ballSpeed } from "./ball";
-import { jumpHeight } from "./defend";
-import { BALL } from "./tuning";
+import type { BallCollider } from "./ball";
+import { JUMP, jumpHeight } from "./defend";
+import { handlesInAir, ready } from "./reach";
 import type { Athlete, MatchState } from "./types";
 
-/** A body as the ball sees it: a column from the boots up past the head, and the arms when they go up. */
+/** A body as the ball sees it: a column from the shins up past the head, and the arms when they go up. */
 export const BODY = {
-  radius: 0.27,
+  radius: 0.24,
   /** Boots to the top of the head, and to the raised hands in a jump. */
   height: 1.85,
   reach: 2.2,
   /** How much of its speed into the body the ball keeps as it flies off. */
   restitution: 0.38,
-  /** A ball slower than this is simply controlled or rolls past. */
-  minSpeed: 6,
+  friction: 0.5,
 } as const;
 
 /** Who stands in the ball's way as a solid body: players leaping to block, and the free kick wall. */
-function blocking(state: MatchState, a: Athlete): boolean {
+export function blocking(state: MatchState, a: Athlete): boolean {
   if (a.action === "jump") return true;
   return state.setPiece !== null && state.setPiece.wall.includes(a.id) && state.setPiece.stage === "struck";
 }
 
+/** Upright and in the way: not sliding along the turf or down on it. */
+function upright(a: Athlete): boolean {
+  return a.action !== "slide" && a.action !== "getup" && a.action !== "stumble" && a.action !== "celebrate";
+}
+
 /**
- * A loose ball flying into a blocking body comes off it: bounced back
- * off the curve of the body with most of its pace gone, lifted a little
- * and spinning, rather than stopping dead. Each body can only be hit
- * once in quick succession.
+ * Everyone the ball can run into this step. A player ready to play a
+ * ball meets it with his feet, chest or head instead, and nobody is in
+ * the way of a ball at his own feet or one he has only just struck; the
+ * rest stand there as shins, a body and a head, so a pass through a
+ * crowd can clip a leg and a shot can hit a man square.
  */
-export function blockBall(state: MatchState): void {
+export function bodyColliders(state: MatchState, out: BallCollider[]): void {
+  blockerColliders(state, out);
   const ball = state.ball;
-  if (ball.owner || ball.inGoal !== null) return;
-  const speed = ballSpeed(ball);
-  if (speed < BODY.minSpeed) return;
+  const owner = ball.owner?.kind === "athlete" ? ball.owner.id : null;
+  const kicker = ball.lastTouch?.id ?? null;
+  const shotLive = state.flight !== null && !state.flight.resolved;
+  for (const a of state.athletes) {
+    if (blocking(state, a) || !upright(a) || a.id === owner) continue;
+    if (a.id === kicker && state.time - ball.struckAt < 0.35) continue;
+    // A ball he will play himself goes to his boot, chest or head instead; a shot hits whoever stands in its way.
+    if (!shotLive && ready(state, a) && handlesInAir(state)) continue;
+    const vel = { x: a.vel.x, y: 0, z: a.vel.z };
+    const lift = jumpHeight(a);
+    const legs = { a: { x: a.pos.x, y: 0.14 + lift, z: a.pos.z }, b: { x: a.pos.x, y: 1.42 + lift, z: a.pos.z }, radius: 0.2 };
+    out.push({ id: a.id, kind: "body", shape: legs, vel, restitution: BODY.restitution, friction: BODY.friction });
+    const head = { x: a.pos.x + Math.cos(a.facing) * 0.04, y: 1.7 + lift, z: a.pos.z + Math.sin(a.facing) * 0.04 };
+    out.push({ id: a.id, kind: "head", shape: { a: head, b: head, radius: 0.12 }, vel, restitution: 0.55, friction: 0.4 });
+  }
+}
+
+/**
+ * The blocking bodies this step, as colliders for the ball. The column
+ * rises with the jump and moves with the body, so a ball fired into a
+ * leaping man glances off the curve of him, loses most of its pace and
+ * spins away, rather than stopping dead.
+ */
+export function blockerColliders(state: MatchState, out: BallCollider[]): void {
   for (const a of state.athletes) {
     if (a.noTouch > 0 || !blocking(state, a)) continue;
     const lift = jumpHeight(a);
     const top = lift + (a.action === "jump" ? BODY.reach : BODY.height);
-    if (ball.pos.y < lift + BALL.radius * 0.5 || ball.pos.y > top + BALL.radius) continue;
-    const dx = ball.pos.x - a.pos.x;
-    const dz = ball.pos.z - a.pos.z;
-    const d = Math.hypot(dx, dz);
-    if (d > BODY.radius + BALL.radius || d < 1e-6) continue;
-    const nx = dx / d;
-    const nz = dz / d;
-    const into = ball.vel.x * nx + ball.vel.z * nz;
-    // Already heading away from this body.
-    if (into >= 0) continue;
-    const r = state.rng;
-    // Push the ball back out of the body, then reflect the part of its motion into it.
-    ball.pos.x = a.pos.x + nx * (BODY.radius + BALL.radius);
-    ball.pos.z = a.pos.z + nz * (BODY.radius + BALL.radius);
-    const bounce = (1 + BODY.restitution) * into;
-    ball.vel.x = (ball.vel.x - bounce * nx) * 0.55;
-    ball.vel.z = (ball.vel.z - bounce * nz) * 0.55;
-    // Off the chest or the thigh it pops up; off a raised arm or the head it loops.
-    const high = ball.pos.y > lift + 1.45;
-    ball.vel.y = Math.max(ball.vel.y * 0.3, 0) + r.range(high ? 2 : 0.8, high ? 4.5 : 2.4);
-    ball.spin = { x: r.range(-8, 8), y: r.range(-12, 12), z: r.range(-8, 8) };
-    ball.lastTouch = { team: a.team, id: a.id };
-    ball.passTo = null;
-    a.noTouch = 0.35;
-    const shot = state.flight;
-    if (shot && !shot.resolved && shot.team !== a.team) a.stats.blocks++;
-    if (shot) shot.resolved = true;
-    state.events.push({ type: "block", athlete: a.id, speed: -into, at: { ...ball.pos } });
-    return;
+    // How fast the body is rising or falling in the leap.
+    const u = a.actionLen > 0 ? Math.max(0, Math.min(1, a.actionT / a.actionLen)) : 0;
+    const rise = a.action === "jump" && a.actionT > 0 ? (4 * JUMP.height * (1 - 2 * u)) / Math.max(0.1, a.actionLen) : 0;
+    out.push({
+      id: a.id,
+      kind: "body",
+      // The legs hang below a leaping body, so a ball skimming under it can still clip a boot.
+      shape: { a: { x: a.pos.x, y: lift * 0.4 + 0.12, z: a.pos.z }, b: { x: a.pos.x, y: top - 0.15, z: a.pos.z }, radius: BODY.radius },
+      vel: { x: a.vel.x, y: rise, z: a.vel.z },
+      restitution: BODY.restitution,
+      friction: BODY.friction,
+    });
   }
+}
+
+/** The ball struck a body: it was blocked, and a shot it was is over. */
+export function onBodyHit(state: MatchState, a: Athlete, speed: number): void {
+  const ball = state.ball;
+  ball.lastTouch = { team: a.team, id: a.id };
+  ball.struckAt = state.time;
+  ball.passTo = null;
+  ball.owner = null;
+  a.noTouch = 0.35;
+  const shot = state.flight;
+  if (shot && !shot.resolved) {
+    if (shot.team !== a.team) a.stats.blocks++;
+    shot.resolved = true;
+    shot.outcome = "block";
+  }
+  state.events.push({ type: "block", athlete: a.id, speed, at: { ...ball.pos } });
 }

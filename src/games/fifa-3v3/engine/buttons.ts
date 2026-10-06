@@ -3,8 +3,9 @@ import { planPass, shotAimZ } from "./assist";
 import { autoShootAt, chargeLevel, isTap } from "./charge";
 import { botPass, owns, startKick, startShot } from "./kick";
 import { startJump, startSteal } from "./defend";
+import { atFeet } from "./reach";
 import { startSkill } from "./skills";
-import { startSlide } from "./tackle";
+import { startSlide } from "./slide";
 import { SHOOT } from "./tuning";
 import type { Athlete, Command, MatchState } from "./types";
 import type { Vec2 } from "./vec";
@@ -20,6 +21,8 @@ import type { Vec2 } from "./vec";
  */
 export function applyButtons(state: MatchState, a: Athlete, c: Command, dt: number): void {
   const has = owns(state, a);
+  // A kick needs the ball at the boot; between dribble touches the press waits for it.
+  const feet = has && atFeet(state, a);
   const free = a.action === "free";
   if (c.shootDown) {
     a.charging = true;
@@ -27,7 +30,7 @@ export function applyButtons(state: MatchState, a: Athlete, c: Command, dt: numb
     a.release = null;
     if (!has) callForBall(state, a);
   }
-  if (c.shoot !== undefined && has && free && !a.charging) {
+  if (c.shoot !== undefined && feet && free && !a.charging) {
     // A computer player holds Shoot until the bar reaches the level it wants.
     a.charging = true;
     a.charge = 0;
@@ -35,11 +38,11 @@ export function applyButtons(state: MatchState, a: Athlete, c: Command, dt: numb
   }
   if (a.charging) a.charge += dt;
   if (c.shootUp && a.charging) release(state, a, c.held ?? a.charge, c.aim ?? c.move);
-  else if (a.charging && has && free) {
+  else if (a.charging && feet && free) {
     if (a.release !== null && chargeLevel(a.charge) >= a.release) shootNow(state, a, null, a.charge);
     else if (a.charge >= autoShootAt()) shootNow(state, a, c.move, a.charge);
   }
-  if (c.passTo !== undefined && has && free) botPass(state, a, c.passTo);
+  if (c.passTo !== undefined && feet && free) botPass(state, a, c.passTo);
   if (c.slide && a.action === "free") {
     if (has) startSkill(state, a, c.move);
     else startSlide(state, a, c.move);
@@ -54,12 +57,13 @@ export function applyButtons(state: MatchState, a: Athlete, c: Command, dt: numb
 function release(state: MatchState, a: Athlete, held: number, stick: Vec2): void {
   a.charging = false;
   a.release = null;
-  if (owns(state, a) && a.action === "free") {
+  if (owns(state, a) && a.action === "free" && atFeet(state, a)) {
     if (isTap(held)) passNow(state, a, stick);
     else shootNow(state, a, stick, held);
     return;
   }
-  a.buffered = SHOOT.buffer;
+  // Waiting for the ball: a pass on its way, or his own dribble a stride ahead.
+  a.buffered = owns(state, a) ? SHOOT.buffer * 2.5 : SHOOT.buffer;
   a.bufferAim = stick;
   a.bufferHeld = held;
 }
@@ -80,11 +84,17 @@ export function shootNow(state: MatchState, a: Athlete, stick: Vec2 | null, held
   startShot(state, a, chargeLevel(held), aimZ);
 }
 
-/** The kick a player lined up before the ball arrived, played the moment it does. */
-export function firstTime(state: MatchState, a: Athlete): void {
+/**
+ * The kick a player lined up before the ball arrived, played the moment
+ * it does: off a pass it is hit first time, which is harder to place.
+ */
+export function firstTime(state: MatchState, a: Athlete, onePass = true): void {
   if (a.buffered <= 0 || a.charging || a.action !== "free") return;
   if (isTap(a.bufferHeld)) passNow(state, a, a.bufferAim);
-  else shootNow(state, a, a.bufferAim ?? { x: 0, z: 0 }, a.bufferHeld);
+  else {
+    shootNow(state, a, a.bufferAim ?? { x: 0, z: 0 }, a.bufferHeld);
+    a.firstTime = onePass;
+  }
   a.buffered = 0;
   a.bufferAim = null;
 }

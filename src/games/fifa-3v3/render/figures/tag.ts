@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { OVERLAY_LAYER } from "../layers";
 
 /** Tag height as a share of the screen's height, the same however far away the player is. */
 const SCREEN_HEIGHT = 0.034;
@@ -65,6 +66,7 @@ export class NameTag {
     this.texture.colorSpace = THREE.SRGBColorSpace;
     const material = new THREE.SpriteMaterial({ map: this.texture, sizeAttenuation: false, depthTest: false, transparent: true });
     this.sprite = new THREE.Sprite(material);
+    this.sprite.layers.set(OVERLAY_LAYER);
     this.sprite.center.set(0.5, 0);
     this.sprite.renderOrder = 20;
     this.aspect = canvas.width / canvas.height;

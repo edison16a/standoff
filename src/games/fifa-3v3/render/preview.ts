@@ -4,7 +4,8 @@ import { BUILDS, type BuildId } from "../builds";
 import { celebration } from "./anim/celebrations";
 import { idle } from "./anim/moves";
 import { applyPose, ease, neutral, type Pose } from "./anim/pose";
-import { buildBody, type Rig } from "./models/body";
+import { buildBody, type Body } from "./body/athlete-body";
+import { AthleteMaterials } from "./body/materials";
 
 /**
  * The build turning on a spotlit podium on the phone's picker, in its
@@ -17,11 +18,11 @@ export class BuildPreview {
   private readonly scene = new THREE.Scene();
   private readonly camera = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
   private readonly turntable = new THREE.Group();
-  private readonly material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.6 });
+  private readonly mats = new AthleteMaterials(true);
   private readonly ring: THREE.Mesh<THREE.TorusGeometry, THREE.MeshBasicMaterial>;
   private readonly canvas: HTMLCanvasElement;
   private readonly environment: THREE.Texture;
-  private rig: Rig | null = null;
+  private rig: Body | null = null;
   private build: BuildId | null = null;
   private shown = "";
   private readonly pose: Pose = neutral();
@@ -69,7 +70,9 @@ export class BuildPreview {
       this.rig.dispose();
     }
     const c = BUILDS[build];
-    this.rig = buildBody({ look: c.look, kit: c.look.kit, name, number: c.number }, this.material);
+    this.rig = buildBody({ look: c.look, kit: c.look.kit, name, number: c.number }, this.mats);
+    // The picker shows one player up close: always the fine cut.
+    this.rig.setFine(true);
     this.turntable.add(this.rig.root);
     this.ring.material.color.set(c.look.kit.shirt);
     this.shownAt = this.last;
@@ -78,13 +81,14 @@ export class BuildPreview {
   dispose(): void {
     cancelAnimationFrame(this.frame);
     this.rig?.dispose();
-    this.turntable.traverse((o) => {
-      if (o instanceof THREE.Mesh && o.material !== this.material) {
+    // The podium and ring are this preview's own; the body's meshes are shared and stay.
+    for (const o of this.turntable.children) {
+      if (o instanceof THREE.Mesh) {
         o.geometry.dispose();
         (o.material as THREE.Material).dispose();
       }
-    });
-    this.material.dispose();
+    }
+    this.mats.dispose();
     this.environment.dispose();
     this.renderer.dispose();
     // Phones allow only a few live WebGL contexts; moving between steps must not use them up.

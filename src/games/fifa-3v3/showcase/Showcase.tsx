@@ -4,6 +4,9 @@ import * as THREE from "three";
 import type { ShowcaseView } from "@/platform/games/game-api";
 import { buildView } from "../engine/view";
 import { MatchRenderer } from "../render/match-renderer";
+import { broadcastFrames } from "./broadcast-lab";
+import { LAB_POSE, labMatch, RUN_POSE } from "./lab";
+import { runView } from "./lab-run";
 import { iconLights, stillLights } from "./still-lights";
 import { stillScene } from "./stills";
 import { Trailer } from "./trailer";
@@ -44,6 +47,27 @@ function stillFrames(renderer: MatchRenderer, view: Exclude<ShowcaseView, "loop"
 }
 
 /**
+ * Development: every build in a row under the match's own lights, for
+ * close looks, or with `lab=run` running laps to show the gaits. `cam`
+ * pins the camera as for a still; `t` freezes the laps at that second.
+ */
+function labFrames(renderer: MatchRenderer, params: URLSearchParams): { frame: Frame; resized(): void } {
+  const cam = params.get("cam")?.split(",").map(Number);
+  const running = params.get("lab") === "run";
+  const pose = running ? RUN_POSE : LAB_POSE;
+  if (cam && cam.length === 7) renderer.director.setFixed(new THREE.Vector3(cam[0], cam[1], cam[2]), new THREE.Vector3(cam[3], cam[4], cam[5]), cam[6]!);
+  else renderer.director.setFixed(pose.pos, pose.look, pose.fov);
+  const view0 = buildView(labMatch());
+  if (!running) return { frame: (now) => renderer.draw(view0, "fixed", now, undefined, false), resized: () => undefined };
+  const at = params.get("t");
+  if (at === null) return { frame: (now) => renderer.draw(runView(view0, now / 1000), "fixed", now, undefined, false), resized: () => undefined };
+  // A frozen moment: the bodies are played up to it at sixty frames a second, so their poses and leans are what they would be live.
+  const t = Number(at);
+  for (let s = Math.max(0, t - 2); s < t; s += 1 / 60) renderer.update(runView(view0, s), "fixed", s * 1000, undefined, false);
+  return { frame: () => renderer.draw(runView(view0, t), "fixed", t * 1000, undefined, false), resized: () => undefined };
+}
+
+/**
  * Soccer 3v3 playing itself for the home screen: the loop is a wordless
  * trailer of one seeded match's best moments and the cup lift, the icon
  * and the poster single frames of it, lit like key art. It runs only from
@@ -63,8 +87,13 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     stage.prepend(canvas);
     const params = new URLSearchParams(window.location.search);
     // The clip is filmed a frame at a time in software; a lighter frame keeps each one in time.
-    const renderer = new MatchRenderer(canvas, { quality: "film", scale: view === "loop" && !params.has("t") ? 0.75 : 1 });
-    const film = view === "loop" ? trailerFrames(renderer, params) : stillFrames(renderer, view, params);
+    // The live picture's lab (broadcast-lab.ts) draws as the host page does.
+    const live = params.get("lab") === "tv";
+    const quality = live ? (params.get("q") === "low" ? "low" : "high") : "film";
+    const renderer = new MatchRenderer(canvas, { quality, auto: false, scale: view === "loop" && !params.has("t") && !live ? 0.75 : 1 });
+    // Development: what each frame costs, read by the browser checks.
+    Object.assign(window, { __fifaStats: () => renderer.stats() });
+    const film = live ? broadcastFrames(renderer, params) : params.has("lab") ? labFrames(renderer, params) : view === "loop" ? trailerFrames(renderer, params) : stillFrames(renderer, view, params);
     const fit = () => {
       renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
       film.resized();

@@ -6,6 +6,8 @@
 export interface TestHooks {
   /** A lighter picture: no shadows, no crowd, lower resolution. */
   lowGpu?: boolean;
+  /** Keeps the full picture however slow the frames, for screenshots in software graphics. */
+  fullPicture?: boolean;
   /** A shorter match. */
   seconds?: number;
   goalsToWin?: number;

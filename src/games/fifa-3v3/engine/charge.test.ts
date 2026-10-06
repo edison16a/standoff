@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { footPoint } from "./athlete";
 import { autoShootAt, CHARGE, chargeLevel, chargeZone, heldFor, isTap, shotSpread } from "./charge";
 import { createMatch, stepMatch, type Entrant } from "./match";
 import { MATCH, STEP } from "./tuning";
@@ -45,6 +46,8 @@ function onTheBall(x = 8): MatchState {
   for (const a of state.athletes) if (a.id !== 0) a.pos = { x: -16 + a.id, z: a.team === 0 ? -10 : 10 };
   state.athletes[0]!.pos = { x, z: 0 };
   state.ball.owner = { kind: "athlete", id: 0 };
+  // The ball is a real object: it sits at his boot.
+  state.ball.pos = { ...footPoint(state.athletes[0]!), y: 0.11 };
   return state;
 }
 

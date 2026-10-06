@@ -1,15 +1,15 @@
 import * as THREE from "three";
 import { LEFT, RIGHT, solveLeg, type Build } from "../anim/leg-ik";
 import { applyPose, type Pose } from "../anim/pose";
-import type { Rig } from "../models/body";
+import type { Rig } from "../body/rig";
 
 const v = new THREE.Vector3();
 
-/** The boot's sole in the ankle's frame, over the body's scale: its underside, heel and toe (see models/body.ts). */
-const SOLE = { y: -0.075, heel: -0.06, toe: 0.2 };
+/** The boot's soleplate in the ankle's frame, over the body's scale: its underside, heel and toe (see body/boots.ts). */
+const SOLE = { y: -0.065, heel: -0.06, toe: 0.2 };
 
 /** How far a flat boot stands into the grass, over the body's scale: its studs. */
-const STUDS = 0.015;
+const STUDS = 0.012;
 
 /**
  * Keeps both boots out of the turf. Moves set by joint angles alone (a

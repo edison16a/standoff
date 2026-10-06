@@ -11,6 +11,8 @@ export interface DiveLayout {
   leap: number;
   /** 0 fully stretched to about 0.5 curled round a close ball. */
   curl: number;
+  /** Boots to gloves along the body at full stretch. */
+  stretch: number;
 }
 
 /**
@@ -30,5 +32,6 @@ export function diveLayout(dive: Pick<Dive, "fromZ" | "gloveZ" | "height">): Div
     lean,
     leap: clamp(h - Math.cos(lean) * stretch, 0, 0.9),
     curl: 1 - stretch / KEEPER.reach,
+    stretch,
   };
 }

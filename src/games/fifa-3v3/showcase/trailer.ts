@@ -1,6 +1,7 @@
 import { STEP } from "../engine/tuning";
 import type { MatchState } from "../engine/types";
-import { blendViews, buildView, type MatchView } from "../engine/view";
+import { buildView, type MatchView } from "../engine/view";
+import { blendViews } from "../engine/view-blend";
 import type { MatchRenderer } from "../render/match-renderer";
 import { TrailerCams } from "./trailer-cams";
 import { makeFilm, stepFilm } from "./trailer-films";

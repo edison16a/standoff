@@ -163,6 +163,7 @@ function distribute(state: MatchState, k: Keeper): void {
   ball.vel.y = 1.2;
   ball.passTo = best?.id ?? null;
   ball.lastTouch = { team: k.team, id: null };
+  ball.struckAt = state.time;
   k.noTouch = TOUCH.afterKick + 0.8;
   setAction(k, "throw");
   state.events.push({ type: "throw", team: k.team });

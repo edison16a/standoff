@@ -1,9 +1,11 @@
 import * as THREE from "three";
-import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { MatchEvent } from "../engine/events";
 import type { MatchView } from "../engine/view";
 import { TEAMS } from "../teams";
 import { Arena } from "./arena/arena";
+import { stadiumEnvironment } from "./arena/environment";
+import { excitement } from "./arena/crowd-mood";
+import { AthleteMaterials } from "./body/materials";
 import { CameraDirector, type Shot } from "./camera/director";
 import { CeremonyScene } from "./ceremony/ceremony-scene";
 import { Effects } from "./effects/effects";
@@ -13,20 +15,11 @@ import { AimMarker } from "./figures/aim-marker";
 import { RefereeFigure } from "./figures/referee-figure";
 import { Squad, type Label } from "./figures/squad";
 import { BallModel } from "./models/ball-model";
+import { Picture, type PictureOptions } from "./picture";
 
 export type { Label };
 
-export interface RendererOptions {
-  /**
-   * "low" drops shadows, antialiasing, the crowd and the light beams and
-   * draws at a lower resolution, for software graphics in browser tests.
-   * "film" is "high" without antialiasing, for the showcase: the capture
-   * tool renders it in software, and the video encoder softens edges anyway.
-   */
-  quality?: "high" | "low" | "film";
-  /** Draws at this share of the screen's resolution. The showcase's clip uses less, to film in time. */
-  scale?: number;
-}
+export type RendererOptions = PictureOptions;
 
 /**
  * Draws the match: the floodlit ground, the players and keepers, the
@@ -35,14 +28,14 @@ export interface RendererOptions {
  */
 export class MatchRenderer {
   readonly director = new CameraDirector();
-  private readonly renderer: THREE.WebGLRenderer;
+  private readonly picture: Picture;
   private readonly scene = new THREE.Scene();
   private readonly arena: Arena;
   private readonly effects: Effects;
   private readonly ball: BallModel;
   private readonly squad: Squad;
   private readonly referee: RefereeFigure;
-  private readonly refMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.62, metalness: 0.02 });
+  private readonly bodies: AthleteMaterials;
   private readonly aim = new AimLine();
   private readonly marker = new AimMarker();
   private readonly ceremony = new CeremonyScene();
@@ -51,34 +44,28 @@ export class MatchRenderer {
   private markerAt: { x: number; y: number; z: number } | null = null;
   private readonly environment: THREE.Texture;
   private last = 0;
-  private readonly low: boolean;
-  private readonly scale: number;
+  private shot: Shot = "tv";
+  private dt = 0;
 
   constructor(canvas: HTMLCanvasElement, options: RendererOptions = {}) {
-    this.low = options.quality === "low";
-    this.scale = options.scale ?? 1;
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: options.quality !== "low" && options.quality !== "film", powerPreference: "high-performance" });
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 0.95;
-    this.renderer.shadowMap.enabled = !this.low;
-    this.renderer.shadowMap.type = THREE.PCFShadowMap;
-    const pmrem = new THREE.PMREMGenerator(this.renderer);
-    this.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    pmrem.dispose();
+    this.picture = new Picture(canvas, options);
+    const low = this.picture.low;
+    this.environment = stadiumEnvironment(this.picture.renderer);
     this.scene.environment = this.environment;
-    this.scene.environmentIntensity = 0.35;
+    this.scene.environmentIntensity = 0.5;
     this.scene.fog = new THREE.Fog("#0b1024", 70, 220);
-    this.arena = new Arena(this.low);
+    this.arena = new Arena(low);
     this.effects = new Effects(this.arena.glow);
     this.ball = new BallModel(this.arena.glow);
-    this.squad = new Squad(this.arena.glow);
-    this.referee = new RefereeFigure(this.refMaterial);
+    this.bodies = new AthleteMaterials(!low);
+    this.squad = new Squad(this.arena.glow, this.bodies);
+    this.referee = new RefereeFigure(this.bodies);
     this.scene.add(this.arena.group, this.effects.group, this.ball.group, this.squad.group, this.referee.group, this.aim.group, this.marker.group, this.ceremony.group);
   }
 
   /** The showcase's film look (film-look.ts). */
   cinematic(look: CinemaLook = {}): void {
-    applyFilmLook(this.scene, this.renderer, this.arena, look);
+    applyFilmLook(this.scene, this.picture, this.arena, look);
   }
 
   /** The replay's target on the goal, shown through the strike, or null to hide it. */
@@ -87,9 +74,7 @@ export class MatchRenderer {
   }
 
   resize(width: number, height: number, dpr: number): void {
-    const ratio = (this.low ? 0.6 : Math.min(dpr, 1.5)) * this.scale;
-    this.renderer.setPixelRatio(ratio);
-    this.renderer.setSize(width, height, false);
+    this.picture.resize(width, height, dpr);
     this.director.setAspect(width / Math.max(1, height));
   }
 
@@ -100,11 +85,15 @@ export class MatchRenderer {
 
   onEvent(event: MatchEvent, view: MatchView): void {
     this.effects.onEvent(event, view);
+    this.squad.onEvent(event, view);
     if (event.type === "goal") {
       this.arena.boards.flash(TEAMS[event.team].color);
       this.director.bump(0.6);
     }
-    if (event.type === "woodwork") this.director.bump(0.5);
+    if (event.type === "woodwork") {
+      this.director.bump(0.5);
+      this.arena.goals[event.at.x < 0 ? 0 : 1].ring(event.speed);
+    }
     if (event.type === "kickoff") {
       this.effects.reset();
       this.arena.boards.calm();
@@ -118,7 +107,7 @@ export class MatchRenderer {
 
   draw(view: MatchView, shot: Shot, nowMs: number, focus?: THREE.Vector3, tags = true): void {
     this.advance(view, shot, nowMs, focus, tags);
-    this.renderer.render(this.scene, this.director.camera);
+    this.picture.draw(this.scene, this.director.camera, this.shot, this.director.target, this.dt);
   }
 
   /** Everything a frame does except drawing it: the camera, the bodies and the effects move on. */
@@ -140,8 +129,12 @@ export class MatchRenderer {
   }
 
   private advance(view: MatchView, shot: Shot, nowMs: number, focus: THREE.Vector3 | undefined, tags: boolean): void {
-    const dt = this.last ? Math.min(0.1, Math.max(0, nowMs - this.last) / 1000) : 1 / 60;
+    const raw = this.last ? Math.max(0, nowMs - this.last) / 1000 : 0;
+    const dt = this.last ? Math.min(0.1, raw) : 1 / 60;
+    this.picture.frame(raw);
     this.last = nowMs;
+    this.shot = shot;
+    this.dt = raw;
     const time = nowMs / 1000;
     this.squad.update(view, dt, time, tags && shot !== "replay-kicker" && shot !== "replay-keeper");
     const captain = view.ceremony?.captain ?? null;
@@ -153,12 +146,21 @@ export class MatchRenderer {
     this.referee.update(view.referee, view.ball, dt, time);
     this.aim.update(view.setPiece, time);
     this.ball.update(view.ball, dt);
-    this.arena.update(view.ball, dt, time);
+    this.arena.update(view.nets, dt, time, this.director.camera);
     this.arena.crowd.setExcitement(excitement(view));
     this.effects.frame(view, dt, time);
     this.director.update(view, shot, dt, time, focus);
-    this.squad.fitTags(this.director.camera.fov);
+    const fine = this.picture.fineBodies;
+    const pixels = this.picture.renderer.domElement.height;
+    this.squad.fitView(this.director.camera, pixels, fine);
+    this.referee.fitDetail(this.director.camera, pixels, fine);
     this.squad.stackTags(this.director.camera, dt);
+  }
+
+  /** What the last frame cost the graphics card, shadows included, and what it holds: for development checks of the frame budget. */
+  stats(): { calls: number; triangles: number; geometries: number; textures: number; programs: number } {
+    const { render, memory, programs } = this.picture.renderer.info;
+    return { calls: render.calls, triangles: render.triangles, geometries: memory.geometries, textures: memory.textures, programs: programs?.length ?? 0 };
   }
 
   /** Where a player stands, for the close up camera. */
@@ -171,21 +173,13 @@ export class MatchRenderer {
     this.ceremony.dispose();
     this.squad.dispose();
     this.referee.dispose();
-    this.refMaterial.dispose();
+    this.bodies.dispose();
     this.aim.dispose();
     this.marker.dispose();
     this.ball.dispose();
     this.effects.dispose();
     this.arena.dispose();
     this.environment.dispose();
-    this.renderer.dispose();
+    this.picture.dispose();
   }
-}
-
-/** How loud and bouncy the crowd is: a hum, rising as the ball nears a goal, and wild for goals. */
-function excitement(view: MatchView): number {
-  if (view.phase === "goal") return 1;
-  if (view.phase === "fulltime") return 0.9;
-  const nearGoal = Math.max(0, (Math.abs(view.ball.x) - 8) / 8);
-  return 0.12 + 0.35 * nearGoal;
 }

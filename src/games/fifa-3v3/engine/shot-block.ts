@@ -1,66 +1,48 @@
+import { newBall, stepBall } from "./ball";
+import { BODY } from "./blockers";
 import { blockLane, blockSharpness } from "./build-effects";
 import { JUMP } from "./defend";
+import type { Kick } from "./shot-aim";
+import { BALL, STEP } from "./tuning";
 import type { Athlete, MatchState } from "./types";
 import { clamp, clamp01, type Vec3 } from "./vec";
 
-/** How far to the side of the ball's line an ordinary defender can still throw a leg or the body in. Reach stretches it. */
-const REACH = 0.95;
-/** The nearest and furthest along the line a block can happen, in metres from the ball. */
-const NEAR = 1.1;
-const FAR = 11;
-
-export interface BlockPlan {
-  id: number;
-  /** How long the blocker's leap lasts. */
-  leap: number;
-  /** Where the ball meets the body. The kick is solved to fly through it. */
-  at: Vec3;
-}
-
 /**
- * Whether a defender standing in the shot's path gets a body on it.
- * Every opponent near the line from the ball to the target gets a roll:
- * the more central in the lane, the closer to the shooter and the harder
- * the chance (a low quality shot through a crowd), the likelier the
- * block. Long reach widens the lane a body covers, and quick reflexes
- * get it there more often. The ball is then struck at the body, and blockers.ts bounces it
- * off with real physics.
+ * Defenders throwing themselves in front of a shot. Each one near the
+ * ball's real path, the one the strike will fly, sees it after his
+ * reaction time and can lunge a step and stretch a leg toward it. If he
+ * can get his body onto the line before the ball gets there, and the
+ * ball is not over his head, he goes for it, more readily with sharp
+ * reflexes and the closer it passes. The ball then meets his body in
+ * the flight, and the bounce off it is physics.
  */
-export function planBlock(state: MatchState, shooter: Athlete, from: Vec3, target: Vec3, quality: number, speed: number): BlockPlan | null {
-  const dx = target.x - from.x;
-  const dz = target.z - from.z;
-  const length = Math.hypot(dx, dz);
-  if (length < NEAR + 1) return null;
-  const ux = dx / length;
-  const uz = dz / length;
-  let best: { a: Athlete; along: number; across: number } | null = null;
-  for (const o of state.athletes) {
-    if (o.team === shooter.team || !canBlock(o)) continue;
-    const rx = o.pos.x - from.x;
-    const rz = o.pos.z - from.z;
-    const along = rx * ux + rz * uz;
-    if (along < NEAR || along > Math.min(FAR, length - 0.8)) continue;
-    // Solving the kick needs the body to be ahead along the pitch, not level with the ball.
-    if (Math.abs(o.pos.x - from.x) < 0.9) continue;
-    const across = rx * uz - rz * ux;
-    const reach = REACH * blockLane(o);
-    if (Math.abs(across) > reach) continue;
-    // Central in the lane and close to the boot gives the defender the most time and the biggest target.
-    const lane = 1 - Math.abs(across) / reach;
-    const close = 1 - (along - NEAR) / (FAR - NEAR);
-    const chance = clamp01(lane * (0.25 + 0.55 * (1 - quality)) * (0.55 + 0.45 * close) * blockSharpness(o) + (o.action === "jump" ? 0.15 : 0));
-    if (!state.rng.chance(chance)) continue;
-    if (!best || along < best.along) best = { a: o, along, across };
+export const LUNGE = {
+  /** Seconds to see the strike and move, before reflexes. */
+  react: 0.22,
+  /** A defender reads the backswing, so he can start this early, before the ball is struck. */
+  anticipate: 0.15,
+  /** How fast a lunge carries the body, m/s, and how far a leg stretches past it. */
+  speed: 3.6,
+  leg: 0.55,
+  /** No block closer than this to the boot, or further than this down the path. */
+  near: 1.1,
+  far: 12,
+} as const;
+
+/** The flight a kick will make, sampled every match step until it is past `untilX` or 1.5 seconds. */
+export function samplePath(from: Vec3, kick: Kick, untilX: number): { at: Vec3; t: number }[] {
+  const ball = newBall();
+  ball.pos = { ...from };
+  ball.vel = { ...kick.vel };
+  ball.spin = { ...kick.spin };
+  const dir = Math.sign(untilX - from.x) || 1;
+  const path: { at: Vec3; t: number }[] = [];
+  for (let t = STEP; t < 1.5; t += STEP) {
+    stepBall(ball, STEP, [], { flightOnly: true });
+    path.push({ at: { ...ball.pos }, t });
+    if ((ball.pos.x - untilX) * dir > 0) break;
   }
-  if (!best) return null;
-  const o = best.a;
-  const arrive = best.along / Math.max(8, speed);
-  // The leap lasts until just after the ball gets there, so a far block is still in the air for it.
-  const leap = Math.max(JUMP.length, arrive + 0.25);
-  // Slightly off the middle of the body, so it glances off rather than bouncing straight back.
-  const side = clamp(best.across, -0.12, 0.12);
-  const y = liftAt(arrive, leap) + state.rng.range(0.3, 1.35);
-  return { id: o.id, leap, at: { x: o.pos.x - side * uz, y, z: o.pos.z + side * ux } };
+  return path;
 }
 
 /** Standing, running or already up for a jump: not on the floor or mid slide. */
@@ -68,20 +50,55 @@ function canBlock(a: Athlete): boolean {
   return a.action === "free" || a.action === "jump" || a.action === "beaten";
 }
 
-/** The block itself is a leap into the path: how high the boots are `t` seconds in, as jumpHeight has it. */
-function liftAt(t: number, leap: number): number {
-  const u = clamp(t / leap, 0, 1);
-  return 4 * JUMP.height * u * (1 - u);
+/**
+ * Picks the defender who gets in the way of this kick, if anyone, and
+ * throws him into its path. Returns his id, or null.
+ */
+export function chargeDown(state: MatchState, shooter: Athlete, from: Vec3, kick: Kick, goalLine: number): number | null {
+  const path = samplePath(from, kick, goalLine);
+  let best: { a: Athlete; t: number; at: Vec3; gap: number } | null = null;
+  for (const o of state.athletes) {
+    if (o.team === shooter.team || !canBlock(o)) continue;
+    const react = LUNGE.react * (1.35 - 0.6 * o.attrs.reflexes) - LUNGE.anticipate;
+    for (const p of path) {
+      const along = Math.hypot(p.at.x - from.x, p.at.z - from.z);
+      if (along < LUNGE.near || along > LUNGE.far || p.t < react) continue;
+      const gap = Math.hypot(p.at.x - o.pos.x, p.at.z - o.pos.z) - BODY.radius - BALL.radius;
+      const reach = LUNGE.leg * blockLane(o) + LUNGE.speed * (p.t - react);
+      // Over his head even in a leap, or out of reach: not this point.
+      if (p.at.y - BALL.radius > BODY.height + JUMP.height || gap > reach) continue;
+      if (!best || p.t < best.t) best = { a: o, t: p.t, at: p.at, gap };
+      break;
+    }
+  }
+  if (!best) return null;
+  const o = best.a;
+  // Central and early he cannot miss it; a long stretch he may not risk.
+  const commit = clamp01((1.15 - best.gap / (LUNGE.leg * blockLane(o) + 0.6)) * blockSharpness(o));
+  if (!state.rng.chance(commit)) return null;
+  throwBodyIn(state, o, best.at, best.t);
+  return o.id;
 }
 
-/** Puts the blocker into the leap, square on and planted, so the body is where the kick was aimed. */
-export function throwBodyIn(state: MatchState, plan: BlockPlan): void {
-  const o = state.athletes[plan.id];
-  if (!o) return;
+/**
+ * Sends the defender lunging onto the ball's line so his body is on it
+ * as the ball arrives, leaping if it is coming in high. The leap's
+ * braking (defend.ts) is allowed for in the lunge.
+ */
+export function throwBodyIn(state: MatchState, o: Athlete, at: Vec3, t: number): void {
+  const dx = at.x - o.pos.x;
+  const dz = at.z - o.pos.z;
+  const d = Math.hypot(dx, dz);
+  // Into the line, not just touching it, so the ball meets him square.
+  const go = Math.max(0, d - 0.1);
+  const brake = 1.5;
+  const speed = clamp((go * brake) / Math.max(0.05, 1 - Math.exp(-brake * t)), 0, 7);
   o.action = "jump";
-  o.actionT = 0;
-  o.actionLen = plan.leap;
-  o.vel = { x: 0, z: 0 };
+  o.actionLen = JUMP.length;
+  // A low ball is met crouched and lunging, the leap held back until it has gone; a high one at the top of the leap.
+  o.actionT = at.y < 1 ? -t : Math.min(0, JUMP.length / 2 - t);
+  o.vel = d > 1e-6 ? { x: (dx / d) * speed, z: (dz / d) * speed } : { x: 0, z: 0 };
+  o.facing = Math.atan2(-dz, -dx);
   o.noTouch = 0;
   o.charging = false;
   o.guard.on = false;

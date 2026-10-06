@@ -1,4 +1,6 @@
 import type { TeamId } from "../teams";
+import { NET } from "./physics/constants";
+import type { Nets } from "./physics/net";
 import { BALL, PITCH } from "./tuning";
 import type { Ball } from "./types";
 import type { Vec2 } from "./vec";
@@ -13,19 +15,26 @@ export function goalCentre(team: TeamId): Vec2 {
   return { x: goalX(team), z: 0 };
 }
 
-/** The team whose goal the whole ball has gone into, or null. */
-export function scoredIn(ball: Ball): TeamId | null {
+/**
+ * The team whose goal the whole ball has gone into, or null. With the
+ * nets, it must be on the inside of every sheet: a ball that dropped
+ * behind the goal or onto its roof is not in.
+ */
+export function scoredIn(ball: Ball, nets?: Nets): TeamId | null {
   const { x, y, z } = ball.pos;
+  const team: TeamId = x < 0 ? 0 : 1;
   if (Math.abs(x) < PITCH.halfLength + BALL.radius) return null;
   if (Math.abs(z) > PITCH.goalHalfWidth - PITCH.postRadius || y > PITCH.goalHeight) return null;
-  return x < 0 ? 0 : 1;
+  if (!nets) return Math.abs(x) < PITCH.halfLength + PITCH.goalDepth + NET.maxDepth ? team : null;
+  const n = nets[team];
+  return n.back.side < 0 && n.roof.side < 0 && n.left.side < 0 && n.right.side < 0 ? team : null;
 }
 
 /** The team whose end the ball went out over, or null while it is in play. */
-export function outAt(ball: Ball): TeamId | null {
+export function outAt(ball: Ball, nets?: Nets): TeamId | null {
   const { x } = ball.pos;
   if (Math.abs(x) < PITCH.halfLength + BALL.radius) return null;
-  if (scoredIn(ball) !== null) return null;
+  if (scoredIn(ball, nets) !== null) return null;
   return x < 0 ? 0 : 1;
 }
 

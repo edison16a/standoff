@@ -31,19 +31,19 @@ export const CRANE_TO = 4.7;
 export const RAMP = 0.12;
 
 /**
- * Timings come from the seeded match: the Striker takes the ball at
- * 65.9 s, the All Rounder slides in at 66.0 and the Striker hops over
- * him. He strikes from the edge of the box at 68.9, it hits the net at
- * 69.3, and his SUI leaps from 70.8 to 71.4. In the ceremony the captain
- * drives the cup up between 2.1 and 3.1.
+ * Timings come from the seeded match: the Striker takes a dropping ball
+ * on his chest at 21.25 s, the Winger slides in at 21.72 and the Striker
+ * hops over him. He strikes from the edge of the box at 24.12, it is in
+ * at 24.5 and bulges the net, and his SUI leaps from 25.98 to 26.6. In
+ * the ceremony the captain drives the cup up between 2.1 and 3.1.
  */
 export const CUTS: readonly Cut[] = [
   // The last second of the crane, so the capture's cross fade from the end back to the start blends a shot into itself.
   { film: "ceremony", from: CRANE_TO - 1, to: CRANE_TO, cam: "crane" },
-  { film: "match", from: 65.8, to: 66.6, cam: "hurdle", slow: { from: 66.06, to: 66.4, scale: 0.3 } },
-  { film: "match", from: 68.45, to: 69.05, cam: "strike", slow: { from: 68.84, to: 68.98, scale: 0.3 } },
-  { film: "match", from: 69.12, to: 69.55, cam: "net" },
-  { film: "match", from: 70.45, to: 71.6, cam: "sui", slow: { from: 70.75, to: 71.35, scale: 0.45 } },
+  { film: "match", from: 21.52, to: 22.32, cam: "hurdle", slow: { from: 21.78, to: 22.12, scale: 0.3 } },
+  { film: "match", from: 23.67, to: 24.27, cam: "strike", slow: { from: 24.06, to: 24.2, scale: 0.3 } },
+  { film: "match", from: 24.32, to: 24.75, cam: "net" },
+  { film: "match", from: 25.63, to: 26.78, cam: "sui", slow: { from: 25.93, to: 26.53, scale: 0.45 } },
   { film: "ceremony", from: 1.6, to: CRANE_FROM, cam: "lift", slow: { from: 2.2, to: 2.9, scale: 0.65 } },
   { film: "ceremony", from: CRANE_FROM, to: CRANE_TO, cam: "crane" },
 ];

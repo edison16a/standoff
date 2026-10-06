@@ -70,7 +70,10 @@ export function onGoal(state: MatchState, team: TeamId): void {
   state.score[scoring]++;
   if (scorer !== null) state.athletes[scorer]!.stats.goals++;
   state.lastGoal = { team: scoring, scorer };
-  if (state.flight) state.flight.resolved = true;
+  if (state.flight && !state.flight.resolved) {
+    state.flight.resolved = true;
+    state.flight.outcome = "goal";
+  }
   state.setPiece = null;
   state.foul = null;
   if (state.golden || state.score[scoring] >= state.options.goalsToWin) state.winner = scoring;
@@ -93,6 +96,7 @@ export function onOut(state: MatchState, team: TeamId): void {
     const over = y > PITCH.goalHeight - 0.2 && Math.abs(z) < PITCH.goalHalfWidth + 0.8;
     state.events.push({ type: "miss", team: flight.team, kind: over ? "over" : "wide" });
     flight.resolved = true;
+    flight.outcome = over ? "over" : "wide";
   }
   state.setPiece = null;
   state.foul = null;

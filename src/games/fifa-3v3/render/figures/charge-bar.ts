@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { OVERLAY_LAYER } from "../layers";
 import { CHARGE } from "../../engine/charge";
 
 /** Bar height as a share of the screen's height, the same however far away the player is. */
@@ -26,6 +27,7 @@ export class ChargeSprite {
     this.sprite = new THREE.Sprite(material);
     this.sprite.center.set(0.5, 0);
     this.sprite.renderOrder = 21;
+    this.sprite.layers.set(OVERLAY_LAYER);
     this.sprite.visible = false;
     this.fit(36);
   }

@@ -1,5 +1,6 @@
 import { attackSign } from "../teams";
 import { newBall, stepBall, type Contact } from "./ball";
+import { rollDistance, rollSpeedFor, rollTime } from "./physics/roll-table";
 import { BALL, PASS, STEP } from "./tuning";
 import type { Athlete, MatchState } from "./types";
 import { dist, dot, len, norm, sub, type Vec2, type Vec3 } from "./vec";
@@ -12,9 +13,29 @@ export function openness(state: MatchState, a: Athlete, at: Vec2 = a.pos): numbe
 }
 
 /**
+ * Whether an opponent's legs stand in the first few metres of the line
+ * to `to`: too close to chip over, so a ball played there hits him.
+ */
+export function laneBlocked(state: MatchState, a: Athlete, to: Vec2): boolean {
+  const lane = sub(to, a.pos);
+  const length = len(lane);
+  if (length < 0.5) return false;
+  const dir = norm(lane);
+  for (const o of state.athletes) {
+    if (o.team === a.team) continue;
+    const rel = sub(o.pos, a.pos);
+    const along = dot(rel, dir);
+    if (along < 0.3 || along > Math.min(4, length - 0.6)) continue;
+    if (Math.abs(rel.x * dir.z - rel.z * dir.x) < 0.6) return true;
+  }
+  return false;
+}
+
+/**
  * Who a pass goes to. With the stick pushed, the team mate most in that
  * direction, within a cone. With the stick centred, the most open team
- * mate, leaning toward those further up the pitch.
+ * mate, leaning toward those further up the pitch, and never through a
+ * man standing right in the way.
  */
 export function choosePassTarget(state: MatchState, a: Athlete, aim: Vec2 | null): Athlete | null {
   const forward = attackSign(a.team);
@@ -34,6 +55,7 @@ export function choosePassTarget(state: MatchState, a: Athlete, aim: Vec2 | null
     } else {
       score = openness(state, m) * 0.5 + ((m.pos.x - a.pos.x) * forward) * 0.12 - d * 0.05;
     }
+    if (laneBlocked(state, a, m.pos)) score -= pushed ? 0.5 : 3;
     if (score > bestScore) {
       bestScore = score;
       best = m;
@@ -43,16 +65,37 @@ export function choosePassTarget(state: MatchState, a: Athlete, aim: Vec2 | null
 }
 
 /**
- * A ground pass that reaches `to` at a comfortable pace, however far:
- * the turf slows a rolling ball steadily, so the starting speed follows
- * from the distance.
+ * A ground pass that reaches `to` at a comfortable pace, however far.
+ * It is struck through the top half, so it rolls true from the boot,
+ * and the turf and the air slow it as they really do: the pace off the
+ * boot is read from the roll the match's own physics makes.
  */
 export function passVelocity(from: Vec3, to: Vec2, arrive: number = PASS.arrive): Vec3 {
   const dx = to.x - from.x;
   const dz = to.z - from.z;
   const d = Math.max(0.1, Math.hypot(dx, dz));
-  const speed = Math.min(PASS.maxSpeed, Math.sqrt(arrive * arrive + 2 * BALL.roll * d));
+  const speed = Math.min(PASS.maxSpeed, rollSpeedFor(d, arrive));
   return { x: (dx / d) * speed, y: 0, z: (dz / d) * speed };
+}
+
+/** The topspin of a ball rolling true along `vel`, so it leaves the boot rolling rather than skidding. */
+export function rollingSpin(vel: Vec3): Vec3 {
+  return { x: vel.z / BALL.radius, y: 0, z: -vel.x / BALL.radius };
+}
+
+/** Seconds a ground pass struck at `speed` takes to roll `distance`. */
+export function rollArrival(speed: number, distance: number): number {
+  const left = rollDistance(speed);
+  if (distance >= left) return rollTime(speed) + 5;
+  // Find the pace left at that distance by bisection, then the time to it.
+  let lo = 0;
+  let hi = speed;
+  for (let i = 0; i < 30; i++) {
+    const mid = (lo + hi) / 2;
+    if (rollDistance(speed, mid) < distance) hi = mid;
+    else lo = mid;
+  }
+  return rollTime(speed, (lo + hi) / 2);
 }
 
 /**
@@ -64,8 +107,8 @@ export function leadFor(from: Vec3, receiver: Athlete, share = 0.8): Vec2 {
   let target = { ...receiver.pos };
   for (let i = 0; i < 2; i++) {
     const d = Math.hypot(target.x - from.x, target.z - from.z);
-    const v0 = Math.min(PASS.maxSpeed, Math.sqrt(PASS.arrive * PASS.arrive + 2 * BALL.roll * d));
-    const t = d / ((v0 + PASS.arrive) / 2);
+    const v0 = Math.min(PASS.maxSpeed, rollSpeedFor(d, PASS.arrive));
+    const t = rollArrival(v0, d);
     target = { x: receiver.pos.x + receiver.vel.x * t * share, z: receiver.pos.z + receiver.vel.z * t * share };
   }
   return target;

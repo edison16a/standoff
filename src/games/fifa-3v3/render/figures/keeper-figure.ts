@@ -1,24 +1,27 @@
-import * as THREE from "three";
 import type { KeeperView } from "../../engine/view";
 import { TEAMS, type TeamId } from "../../teams";
 import { keeperFrame } from "../anim/keeper-moves";
 import { buildOf, type Build } from "../anim/leg-ik";
 import { applyPose, ease, neutral, type Pose } from "../anim/pose";
-import { buildBody, type Rig } from "../models/body";
+import { buildBody, type Body } from "../body/athlete-body";
+import type { AthleteMaterials } from "../body/materials";
+import { LodSwitch } from "./lod";
 import { keepAboveTurf } from "./turf";
 
 /** A computer keeper in goal: gloves, long sleeves and the dives. */
 export class KeeperFigure {
-  readonly rig: Rig;
+  readonly rig: Body;
+  readonly lod: LodSwitch;
   private readonly build: Build;
   private readonly pose: Pose = neutral();
   private lastX = 0;
   private lastZ = 0;
 
-  constructor(team: TeamId, material: THREE.Material) {
+  constructor(team: TeamId, mats: AthleteMaterials) {
     const t = TEAMS[team];
-    this.rig = buildBody({ look: t.keeperLook, kit: t.keeper, name: "KEEPER", number: 1, keeper: true }, material);
+    this.rig = buildBody({ look: t.keeperLook, kit: t.keeper, name: "KEEPER", number: 1, keeper: true }, mats);
     this.build = buildOf(t.keeperLook.height, t.keeperLook.build);
+    this.lod = new LodSwitch(this.rig);
   }
 
   update(k: KeeperView, dt: number, time: number): void {

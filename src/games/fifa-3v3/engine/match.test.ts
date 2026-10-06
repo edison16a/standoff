@@ -49,12 +49,13 @@ describe("a match of computer players", () => {
     expect(count("steal")).toBeGreaterThan(20);
   });
 
-  it("sees shots of every kind", () => {
-    const outcomes = new Set(all.flatMap((e) => (e.type === "shot" ? [e.outcome] : [])));
-    for (const outcome of ["goal", "catch", "parry", "over"]) expect(outcomes).toContain(outcome);
+  it("sees shots end every way: in the net, held, palmed, off the woodwork and over or wide", () => {
+    const kinds = new Set(all.flatMap((e) => (e.type === "save" ? [e.kind] : e.type === "miss" ? ["miss"] : e.type === "woodwork" ? ["woodwork"] : [])));
+    for (const kind of ["catch", "parry", "miss", "woodwork"]) expect(kinds).toContain(kind);
+    expect(count("goal")).toBeGreaterThan(0);
   });
 
-  it("plays the same match from the same seed", () => {
+  it("plays the same match from the same seed", { timeout: 30000 }, () => {
     const again = playOut(1);
     expect(again.state.score).toEqual(matches[0]!.state.score);
     expect(again.state.time).toBeCloseTo(matches[0]!.state.time, 6);

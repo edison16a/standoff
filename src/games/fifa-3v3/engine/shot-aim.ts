@@ -1,55 +1,6 @@
-import type { TeamId } from "../teams";
 import { cloneBall, newBall, stepBall } from "./ball";
-import { goalX } from "./goal";
-import type { Rng } from "./rng";
-import { shotHeight } from "./shot-plan";
-import { BALL, PITCH, STEP } from "./tuning";
-import type { Keeper, ShotOutcome } from "./types";
-import { clamp, type Vec3 } from "./vec";
-
-const GW = PITCH.goalHalfWidth;
-const GH = PITCH.goalHeight;
-const R = BALL.radius;
-/** The widest a ball can cross the line and still be all inside the posts. */
-const INSIDE = GW - PITCH.postRadius - R - 0.06;
-
-/**
- * Where a shot with this outcome crosses the line. Goals go into the
- * side away from the keeper, saves come within reach of the gloves (on
- * the keeper's line), and the woodwork is hit just off centre so the
- * ball bounces away from goal rather than in.
- */
-export function aimPoint(outcome: ShotOutcome, defending: TeamId, keeper: Keeper, rng: Rng, aimZ: number | null = null, spread = 0.2, power = 0.5): Vec3 {
-  const x = goalX(defending);
-  const kz = keeper.pos.z;
-  // A player who pointed at one side gets that side; otherwise the side the keeper left open.
-  const pointed = aimZ !== null && Math.abs(aimZ) > 0.5 ? (Math.sign(aimZ) as 1 | -1) : null;
-  const away = pointed ?? (Math.abs(kz) < 0.25 ? rng.sign() : kz > 0 ? -1 : 1);
-  const side = pointed ?? rng.sign();
-  // The bar sets the height: low and placed, driven, or into the top corner.
-  const height = () => Math.min(GH - R - 0.14, shotHeight(power, rng.next()));
-  switch (outcome) {
-    case "goal": {
-      const inner = pointed !== null ? Math.min(INSIDE - 0.1, Math.max(0.9, Math.abs(aimZ!) - 0.4)) : Math.min(INSIDE - 0.1, Math.abs(kz) + 1.2);
-      return { x, y: height(), z: away * rng.range(inner, INSIDE) };
-    }
-    case "catch":
-      return { x: keeper.pos.x, y: rng.range(0.35, 1.5), z: clamp(kz + rng.range(-0.8, 0.8), -INSIDE, INSIDE) };
-    case "parry": {
-      const side = rng.sign();
-      return { x: keeper.pos.x, y: rng.range(0.3, 1.8), z: clamp(kz + side * rng.range(0.7, 1.45), -INSIDE, INSIDE) };
-    }
-    case "post":
-      return { x, y: rng.range(0.3, 1.6), z: side * (GW + 0.07) };
-    case "bar":
-      return { x, y: GH + 0.08, z: rng.range(-GW + 0.4, GW - 0.4) };
-    case "over":
-      // A red bar balloons it well over.
-      return { x, y: GH + rng.range(0.7, 2.2 + 3.5 * spread), z: clamp((aimZ ?? rng.range(-GW, GW)) + rng.range(-0.6, 0.6) * (1 + spread), -GW, GW) * 0.9 };
-    case "wide":
-      return { x, y: rng.range(0.2, 1.6 + spread), z: side * (GW + rng.range(0.5, 1.5 + 2 * spread)) };
-  }
-}
+import { BALL, STEP } from "./tuning";
+import type { Vec3 } from "./vec";
 
 export interface Kick {
   vel: Vec3;
@@ -62,8 +13,8 @@ export interface Kick {
  * Finds the kick that sends a ball from `from` through `target`, at
  * about `speed`, with curl from `spinY`. It flies trial balls with the
  * very same physics the match uses and corrects the aim until they pass
- * within a couple of centimetres, so the outcome the dice chose is
- * exactly what the ball does.
+ * within a couple of centimetres, so the kick flies to the spot the
+ * striker picked before his own error is put in.
  */
 export function solveKick(from: Vec3, target: Vec3, speed: number, spinY: number): Kick {
   let aimZ = target.z;

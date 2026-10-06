@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { AthleteView, BallView, RefereeView } from "../../engine/view";
 import type { Kit } from "../../looks";
 import { smooth } from "../anim/frame";
+import type { AthleteMaterials } from "../body/materials";
 import { AthleteFigure } from "./athlete-figure";
 import type { FigureSpec } from "./figure-spec";
 
@@ -30,14 +31,18 @@ export class RefereeFigure {
   private readonly figure: AthleteFigure;
   private readonly card: THREE.Mesh;
 
-  constructor(material: THREE.Material) {
-    this.figure = new AthleteFigure(asAthlete(null), KIT, material, REFEREE);
+  constructor(mats: AthleteMaterials) {
+    this.figure = new AthleteFigure(asAthlete(null), KIT, mats, REFEREE);
     this.group.add(this.figure.rig.root);
     this.card = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.105, 0.006), new THREE.MeshStandardMaterial({ color: "#ffd400", emissive: "#a88a00", emissiveIntensity: 0.5, roughness: 0.4 }));
     // Held upright between the fingers, face toward the player being booked.
     this.card.position.set(0, -0.07, 0.03);
     this.card.visible = false;
     this.figure.rig.handR.add(this.card);
+  }
+
+  fitDetail(camera: THREE.PerspectiveCamera, pixels: number, allowFine: boolean): void {
+    this.figure.lod.fit(camera, pixels, allowFine);
   }
 
   update(view: RefereeView, ball: BallView, dt: number, time: number): void {

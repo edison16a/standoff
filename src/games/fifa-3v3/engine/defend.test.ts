@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { blockBall } from "./blockers";
+import { stepLooseBall } from "./loose-ball";
 import type { MatchEvent } from "./events";
 import { createMatch, stepMatch, type Entrant } from "./match";
 import { thinkScale } from "./difficulty";
@@ -64,20 +64,30 @@ describe("steal", () => {
 });
 
 describe("blocks", () => {
-  it("knocks a shot back off a jumping body instead of stopping it dead", () => {
-    const state = inPlay("training");
-    const me = state.athletes[0]!;
-    me.pos = { x: 5, z: 0 };
-    me.action = "jump";
-    me.actionT = 0.3;
-    me.actionLen = 0.62;
-    state.ball.owner = null;
-    state.ball.pos = { x: 5 + 0.3, y: 1.2, z: 0.05 };
-    state.ball.vel = { x: -20, y: 0, z: 0 };
-    blockBall(state);
-    expect(state.events.some((e) => e.type === "block")).toBe(true);
-    expect(state.ball.vel.x).toBeGreaterThan(0);
-    expect(Math.hypot(state.ball.vel.x, state.ball.vel.z)).toBeLessThan(12);
-    expect(state.ball.vel.y).toBeGreaterThan(0);
+  it("knocks a shot back off a jumping body instead of stopping it dead, glancing off the curve of him", () => {
+    for (const [offset, glance] of [[0.05, false], [0.25, true]] as const) {
+      const state = inPlay("training");
+      const me = state.athletes[0]!;
+      me.pos = { x: 5, z: 0 };
+      me.action = "jump";
+      me.actionT = 0.3;
+      me.actionLen = 0.62;
+      state.ball.owner = null;
+      state.ball.pos = { x: 5 + 3, y: 1.2, z: offset };
+      state.ball.vel = { x: -20, y: 0.6, z: 0 };
+      const events: MatchEvent[] = [];
+      for (let t = 0; t < 0.2; t += STEP) {
+        stepLooseBall(state, STEP);
+        events.push(...state.events);
+      }
+      expect(events.some((e) => e.type === "block")).toBe(true);
+      const speed = Math.hypot(state.ball.vel.x, state.ball.vel.z);
+      expect(speed).toBeLessThan(12);
+      expect(speed).toBeGreaterThan(2);
+      // Square on it comes straight back; off the side of him it is turned away sideways.
+      if (glance) expect(Math.abs(state.ball.vel.z)).toBeGreaterThan(2);
+      else expect(state.ball.vel.x).toBeGreaterThan(0);
+      expect(Math.hypot(state.ball.spin.x, state.ball.spin.y, state.ball.spin.z)).toBeGreaterThan(1);
+    }
   });
 });
