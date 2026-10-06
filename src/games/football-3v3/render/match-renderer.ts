@@ -1,112 +1,97 @@
 import * as THREE from "three";
-import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { MatchEvent } from "../engine/events";
 import type { MatchView } from "../engine/view";
+import { focusRange, lookFor, subject } from "./broadcast-look";
 import { CameraDirector } from "./camera/director";
 import { CeremonyScene } from "./ceremony/ceremony-scene";
 import { BallTrace, type TracePoint } from "./effects/ball-trace";
 import { ScrimmageLines } from "./field/scrimmage-lines";
-import { PixelBudget } from "./frame-budget";
 import { Stadium } from "./field/stadium";
 import { Squad } from "./figures/squad";
 import { NameTags, type TagOf } from "./figures/tags";
+import { ContactShadows } from "./lighting/contact-shadows";
+import { Floodlights } from "./lighting/floodlights";
+import { stadiumEnvironment } from "./lighting/stadium-env";
 import { AthleteMaterials } from "./materials/athlete-materials";
-import { glossEnvironment } from "./materials/gloss-env";
 import { AthleteShapes } from "./models/athlete-shapes";
+import { Picture, type Quality } from "./picture";
 
 export interface RendererOptions {
-  /**
-   * "low" drops shadows, antialiasing and the crowd and draws at a lower
-   * resolution, for software graphics in browser tests. "film" is "high"
-   * without antialiasing, for the showcase capture.
-   */
-  quality?: "high" | "low" | "film";
+  /** "high" for a real card, "film" for the showcase capture (fixed quality), "low" for software drawing in browser tests. */
+  quality?: Quality;
   /** Draws at this share of the screen's resolution. */
   scale?: number;
 }
 
+const focusAt = new THREE.Vector3();
+
 /**
  * Draws a football match under the lights: the stadium and field, the
  * broadcast lines, the players and the ball, filmed by the director's
- * camera. It only reads match views, so live play and slow motion
- * replays go through the same drawing.
+ * camera and finished like a broadcast. It only reads match views, so
+ * live play and slow motion replays go through the same drawing.
  */
 export class MatchRenderer {
   readonly director = new CameraDirector();
   readonly squad: Squad;
   /** The replay's traced ball path. */
   readonly trace = new BallTrace();
+  /** The world drawn; the showcase adds its film lights to it. */
+  readonly scene = new THREE.Scene();
+  /** Drawn over the graded picture: the name tags. */
+  private readonly overlay = new THREE.Scene();
+  readonly picture: Picture;
+  readonly floods: Floodlights;
   private readonly tags = new NameTags();
   private tagOf: TagOf | null = null;
   private traceAt: number | null = null;
-  private readonly renderer: THREE.WebGLRenderer;
-  /** The world drawn; the showcase adds its film lights to it. */
-  readonly scene = new THREE.Scene();
   private readonly stadium: Stadium;
   private readonly lines = new ScrimmageLines();
+  private readonly contacts = new ContactShadows();
   /** The trophy, lights and confetti of the presentation at the end. */
   private readonly ceremony = new CeremonyScene();
   private readonly handL = new THREE.Vector3();
   private readonly handR = new THREE.Vector3();
-  private readonly sun: THREE.DirectionalLight;
+  /** The stadium as everything shiny sees it, and the soft light from all round. */
   private readonly environment: THREE.Texture;
-  /** What helmets and visors mirror: the floodlights against the night. */
-  private readonly gloss: THREE.Texture;
   private readonly materials: AthleteMaterials;
   private readonly shapes: AthleteShapes;
   private readonly low: boolean;
   private readonly scale: number;
   private last = 0;
   private excitement = 0.1;
-  /** Card time per frame, and the resolution it allows. */
-  private readonly pixels: PixelBudget;
+  private graded = false;
 
   constructor(canvas: HTMLCanvasElement, options: RendererOptions = {}) {
-    this.low = options.quality === "low";
+    const quality = options.quality ?? "high";
+    this.low = quality === "low";
     this.scale = options.scale ?? 1;
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: options.quality === "high" || options.quality === undefined, powerPreference: "high-performance" });
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.0;
-    this.pixels = new PixelBudget(this.renderer);
-    this.renderer.shadowMap.enabled = !this.low;
-    this.renderer.shadowMap.type = THREE.PCFShadowMap;
-    const pmrem = new THREE.PMREMGenerator(this.renderer);
-    this.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    pmrem.dispose();
+    this.picture = new Picture(canvas, quality);
+    const renderer = this.picture.renderer;
+    this.environment = stadiumEnvironment(renderer);
     this.scene.environment = this.environment;
-    this.scene.environmentIntensity = 0.3;
-    this.gloss = glossEnvironment(this.renderer);
-    this.materials = new AthleteMaterials(this.low ? "low" : "high", this.gloss);
+    this.scene.environmentIntensity = 1;
+    this.materials = new AthleteMaterials(this.low ? "low" : "high", this.environment);
     // Software drawing gets the light bodies only; a real card swaps by distance.
     this.shapes = new AthleteShapes(!this.low);
     this.squad = new Squad({ materials: this.materials, shapes: this.shapes });
-    this.scene.fog = new THREE.Fog("#0b1330", 140, 420);
-    // Stadium lights from high above: a cool fill from the sky and one strong key that casts the shadows.
-    this.scene.add(new THREE.HemisphereLight("#c9d8ff", "#1f3a1f", 1.1));
-    this.sun = new THREE.DirectionalLight("#fff6e0", 2.4);
-    this.sun.castShadow = !this.low;
-    this.sun.shadow.mapSize.set(2048, 2048);
-    const sc = this.sun.shadow.camera;
-    sc.left = -30;
-    sc.right = 30;
-    sc.top = 30;
-    sc.bottom = -30;
-    sc.near = 10;
-    sc.far = 120;
-    this.sun.shadow.bias = -0.0005;
-    this.scene.add(this.sun, this.sun.target);
-    this.stadium = new Stadium(this.low, this.renderer.capabilities.getMaxAnisotropy());
-    this.scene.add(this.stadium.group, this.lines.group, this.squad.group, this.trace.group, this.tags.group, this.ceremony.group);
+    // The night air holds a little haze: far stands fade toward the sky's glow.
+    this.scene.fog = new THREE.FogExp2("#141a2c", 0.0028);
+    this.floods = new Floodlights(!this.low);
+    this.picture.governor.onTier((tier) => this.floods.setTier(tier));
+    this.stadium = new Stadium(this.low, renderer.capabilities.getMaxAnisotropy());
+    this.scene.add(this.floods.group, this.stadium.group, this.lines.group, this.contacts.mesh, this.squad.group, this.trace.group, this.ceremony.group);
+    this.overlay.add(this.tags.group);
   }
 
-  /** What the last frame drew: draw calls, triangles, and the geometries and textures held. */
-  get info(): { calls: number; triangles: number; geometries: number; textures: number } {
-    const i = this.renderer.info;
-    return { calls: i.render.calls, triangles: i.render.triangles, geometries: i.memory.geometries, textures: i.memory.textures };
+  /** What the last frame drew, every pass included: draw calls, triangles, and the geometries and textures held. */
+  get info(): { calls: number; triangles: number; geometries: number; textures: number; rung: number; gpuMs: number | null } {
+    const i = this.picture.renderer.info;
+    return { calls: i.render.calls, triangles: i.render.triangles, geometries: i.memory.geometries, textures: i.memory.textures, rung: this.picture.governor.rung, gpuMs: this.picture.governor.gpuMs };
   }
 
   resize(width: number, height: number, dpr: number): void {
-    this.pixels.resize(width, height, (this.low ? 0.6 : Math.min(dpr, 1.5)) * this.scale);
+    this.picture.resize(width, height, (this.low ? 0.6 : Math.min(dpr, 1.5)) * this.scale);
     this.director.setAspect(width / Math.max(1, height));
   }
 
@@ -145,7 +130,7 @@ export class MatchRenderer {
 
   draw(view: MatchView, nowMs: number): void {
     this.update(view, nowMs);
-    this.pixels.draw(() => this.renderer.render(this.scene, this.director.camera));
+    this.picture.draw(this.scene, this.director.camera, this.overlay);
   }
 
   /** Everything a frame does except drawing it. */
@@ -153,19 +138,34 @@ export class MatchRenderer {
     const dt = this.last ? Math.min(0.1, Math.max(0, nowMs - this.last) / 1000) : 1 / 60;
     this.last = nowMs;
     const time = nowMs / 1000;
-    this.squad.update(view, dt, time, this.director.camera);
+    const camera = this.director.camera;
+    this.squad.update(view, dt, time, camera);
     this.lines.update(view, dt);
-    this.director.update(view, dt, time);
+    const cut = this.director.update(view, dt, time);
     this.trace.update(this.traceAt);
     const holding = this.captainHands(view);
     this.ceremony.update(view.ceremony, holding ? this.handL : null, holding ? this.handR : null, dt, time);
-    this.tags.update(view, this.tagOf, this.squad, this.director.camera.fov);
-    this.stadium.crowd?.setExcitement(view.phase === "over" ? 0.8 : this.excitement);
-    this.stadium.update(time, dt, view.ball.goal, view.kick !== null);
-    // The shadow box follows the action so its detail is spent where the camera looks.
-    const at = view.ball;
-    this.sun.target.position.set(at.x, 0, at.z);
-    this.sun.position.set(at.x - 25, 60, at.z + 30);
+    this.tags.update(view, this.tagOf, this.squad, camera.fov);
+    this.contacts.update(view, this.squad);
+    this.stadium.update(view, time, dt, view.phase === "over" ? 0.8 : this.excitement);
+    // The floods dim for the presentation so its spotlights carry the scene.
+    this.floods.dim(view.ceremony ? 0.5 : 1);
+    this.floods.update(dt);
+    this.stadium.lamps.setLevel(this.floods.brightness);
+    this.scene.environmentIntensity = 0.45 + 0.55 * this.floods.brightness;
+    this.floods.follow(view.ball.x, view.ball.z);
+    this.grade(view, dt, cut);
+  }
+
+  /** Eases the picture's grade toward the moment's look, focusing the lens on the replay's subject. */
+  private grade(view: MatchView, dt: number, cut: boolean): void {
+    const replay = this.director.replayShot;
+    this.picture.grade(lookFor(view, replay), dt, cut || !this.graded);
+    this.graded = true;
+    const at = subject(view, replay, focusAt);
+    if (!at) return;
+    const d = at.distanceTo(this.director.camera.position);
+    this.picture.focus(d, focusRange(d));
   }
 
   /** Where the captain's hands are, into handL and handR, while he has the trophy. */
@@ -187,14 +187,14 @@ export class MatchRenderer {
     this.squad.dispose();
     this.materials.dispose();
     this.shapes.dispose();
-    this.gloss.dispose();
     this.ceremony.dispose();
     this.trace.dispose();
     this.tags.dispose();
     this.lines.dispose();
+    this.contacts.dispose();
+    this.floods.dispose();
     this.stadium.dispose();
     this.environment.dispose();
-    this.pixels.dispose();
-    this.renderer.dispose();
+    this.picture.dispose();
   }
 }

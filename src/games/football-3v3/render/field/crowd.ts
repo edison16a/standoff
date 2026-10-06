@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { TEAMS } from "../../teams";
 import { box, merge, paint } from "../models/geo";
-import { BOWL, seat } from "./bowl";
+import { BOWL, edge, LOWER, seat, UPPER } from "./bowl";
 
 /**
  * The crowd: one instanced mesh of simple fans, a person in most seats,
@@ -32,16 +32,17 @@ export class Crowd {
         );
     };
     const spots: THREE.Vector3[] = [];
-    const around = 2 * (BOWL.a + BOWL.b) * 2;
     let n = 7;
-    for (let r = 0; r < BOWL.rows; r++) {
-      const count = Math.floor(around / spacing + r * 3);
-      for (let i = 0; i < count; i++) {
-        n = (n * 16807) % 2147483647;
-        // A few empty seats keep it from looking like wallpaper.
-        if (n % 100 < 14) continue;
-        const p = seat(BOWL, (i / count) * Math.PI * 2, r + 0.45);
-        spots.push(p);
+    // The upper deck sits further from the camera, so its fans are spaced a little wider.
+    for (const [deck, gap] of [[LOWER, spacing], [UPPER, spacing * 1.15]] as const) {
+      for (let r = 0; r < deck.rows; r++) {
+        const count = Math.floor(around(deck.out + (r + 0.5) * deck.rowDepth) / gap);
+        for (let i = 0; i < count; i++) {
+          n = (n * 16807) % 2147483647;
+          // A few empty seats keep it from looking like wallpaper.
+          if (n % 100 < 14) continue;
+          spots.push(seat(deck, (i / count) * Math.PI * 2, r + 0.45));
+        }
       }
     }
     this.mesh = new THREE.InstancedMesh(geo, this.material, spots.length);
@@ -79,4 +80,16 @@ export class Crowd {
     this.mesh.geometry.dispose();
     this.material.dispose();
   }
+}
+
+/** The length of the ring `out` metres behind the bowl's front edge. */
+function around(out: number): number {
+  let total = 0;
+  let last = edge(BOWL, 0);
+  for (let i = 1; i <= 256; i++) {
+    const e = edge(BOWL, (i / 256) * Math.PI * 2);
+    total += Math.hypot(e.x + e.nx * out - (last.x + last.nx * out), e.z + e.nz * out - (last.z + last.nz * out));
+    last = e;
+  }
+  return total;
 }

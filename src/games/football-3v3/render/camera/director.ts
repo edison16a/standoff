@@ -60,13 +60,19 @@ export class CameraDirector {
     this.shake = Math.max(this.shake, amount);
   }
 
-  update(view: MatchView, dt: number, time: number): void {
+  /** The replay angle being filmed, or null in live play. */
+  get replayShot(): ReplayShot | null {
+    return this.replay;
+  }
+
+  /** Moves the camera for this frame; returns true when it cut rather than glided. */
+  update(view: MatchView, dt: number, time: number): boolean {
     const cam = this.camera;
     if (this.fixed) {
       cam.position.copy(this.fixed.pos);
       cam.lookAt(this.fixed.look);
       this.setFov(this.fixed.fov);
-      return;
+      return true;
     }
     // Narrow screens see less of the field side to side, so the fit backs the camera up for them.
     const aim = this.replay
@@ -93,6 +99,7 @@ export class CameraDirector {
     }
     cam.lookAt(this.look);
     this.setFov(this.fov);
+    return cut;
   }
 
   private setFov(fov: number): void {

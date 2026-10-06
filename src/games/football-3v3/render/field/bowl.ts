@@ -1,86 +1,84 @@
 import * as THREE from "three";
 
 /**
- * The shape of the stadium bowl: a rounded rectangle round the field
- * (a superellipse), with rows of seats stepping up and back from it.
- * Plain maths so the crowd and the stands agree on where a seat is.
+ * The shape of the stadium: a rounded rectangle round the field (a
+ * superellipse) that every ring of the building follows. A lower bowl
+ * of seats steps up from a wall at the front edge; behind its top row a
+ * band of suites; above them an upper deck, steeper and further back,
+ * that overhangs the suites; over that a roof canopy whose inner edge
+ * carries the floodlights. Plain maths, so the crowd, the stands and
+ * the lights all agree on where things are.
  */
 export interface BowlShape {
-  /** Half length and half width of the front row. */
+  /** Half length and half width of the front edge, metres. */
   a: number;
   b: number;
   /** How square the corners are: 2 is an ellipse, higher is boxier. */
   n: number;
+}
+
+/** A deck of seats: rows stepping up and back from where it starts. */
+export interface Deck {
   rows: number;
   rowDepth: number;
   rowRise: number;
-  /** Height of the front wall under the first row. */
-  wall: number;
+  /** How far back from the front edge its first row is. */
+  out: number;
+  /** The first row's height. */
+  base: number;
 }
 
-export const BOWL: BowlShape = { a: 72, b: 40, n: 5, rows: 26, rowDepth: 0.95, rowRise: 0.55, wall: 2.2 };
+export const BOWL: BowlShape = { a: 72, b: 40, n: 5 };
+export const LOWER: Deck = { rows: 26, rowDepth: 0.95, rowRise: 0.55, out: 0, base: 2.2 };
+export const UPPER: Deck = { rows: 20, rowDepth: 0.9, rowRise: 0.68, out: 27, base: 23.8 };
+/** The suites between the decks: their glass stands this far back, from the club rail on the lower deck to under the upper deck. */
+export const SUITES = { out: 30.5, bottom: 17.9, top: 22.6 } as const;
+/** The roof canopy: its inner edge, where the lights hang, and its back over the top of the upper deck. */
+export const ROOF = { inner: 19, back: 47, y: 44, thickness: 2.2 } as const;
+
+/** Where a deck's rows end: the top of its last riser. */
+export function deckTop(deck: Deck): { out: number; y: number } {
+  return { out: deck.out + deck.rows * deck.rowDepth, y: deck.base + deck.rows * deck.rowRise };
+}
 
 /** A point on the front edge at angle `t`, and the outward direction there. */
 export function edge(shape: BowlShape, t: number): { x: number; z: number; nx: number; nz: number } {
   const e = 2 / shape.n;
-  const c = Math.cos(t);
-  const s = Math.sin(t);
-  const x = shape.a * Math.sign(c) * Math.abs(c) ** e;
-  const z = shape.b * Math.sign(s) * Math.abs(s) ** e;
-  // The outward normal from a tiny step along the curve, turned a quarter.
-  const d = 1e-3;
-  const c2 = Math.cos(t + d);
-  const s2 = Math.sin(t + d);
-  const tx = shape.a * Math.sign(c2) * Math.abs(c2) ** e - x;
-  const tz = shape.b * Math.sign(s2) * Math.abs(s2) ** e - z;
-  const len = Math.hypot(tx, tz) || 1;
-  return { x, z, nx: tz / len, nz: -tx / len };
-}
-
-/** Where a seat is: along the bowl at angle `t`, `row` rows back and up. */
-export function seat(shape: BowlShape, t: number, row: number): THREE.Vector3 {
-  const p = edge(shape, t);
-  const out = row * shape.rowDepth;
-  return new THREE.Vector3(p.x + p.nx * out, shape.wall + row * shape.rowRise, p.z + p.nz * out);
-}
-
-/**
- * The concrete terraces as one stepped mesh: every row a tread and a
- * riser, all the way round, coloured in bands of seat colours.
- */
-export function standsGeometry(shape: BowlShape, segments: number): THREE.BufferGeometry {
-  const positions: number[] = [];
-  const colours: number[] = [];
-  const band = [new THREE.Color("#1d2a4a"), new THREE.Color("#233257"), new THREE.Color("#8a1c1c")];
-  const quad = (a: THREE.Vector3, b: THREE.Vector3, c: THREE.Vector3, d: THREE.Vector3, col: THREE.Color) => {
-    for (const p of [a, b, c, a, c, d]) {
-      positions.push(p.x, p.y, p.z);
-      colours.push(col.r, col.g, col.b);
-    }
+  const at = (u: number) => {
+    const c = Math.cos(u);
+    const s = Math.sin(u);
+    return { x: shape.a * Math.sign(c) * Math.abs(c) ** e, z: shape.b * Math.sign(s) * Math.abs(s) ** e };
   };
-  for (let i = 0; i < segments; i++) {
-    const t0 = (i / segments) * Math.PI * 2;
-    const t1 = ((i + 1) / segments) * Math.PI * 2;
-    // The front wall from the ground up to the first row.
-    const f0 = edge(shape, t0);
-    const f1 = edge(shape, t1);
-    quad(new THREE.Vector3(f0.x, 0, f0.z), new THREE.Vector3(f1.x, 0, f1.z), new THREE.Vector3(f1.x, shape.wall, f1.z), new THREE.Vector3(f0.x, shape.wall, f0.z), new THREE.Color("#0e1528"));
-    for (let r = 0; r < shape.rows; r++) {
-      const col = r % 9 === 8 ? band[2]! : band[r % 2]!;
-      const a0 = seat(shape, t0, r);
-      const a1 = seat(shape, t1, r);
-      const b0 = seat(shape, t0, r + 1);
-      const b1 = seat(shape, t1, r + 1);
-      // Tread: flat at this row's height, out to the next row's riser.
-      const tread0 = b0.clone().setY(a0.y);
-      const tread1 = b1.clone().setY(a1.y);
-      quad(a0, tread0, tread1, a1, col);
-      quad(tread0, b0, b1, tread1, col.clone().multiplyScalar(0.7));
-    }
+  const p = at(t);
+  // The outward normal from a tiny step along the curve, turned a quarter.
+  const q = at(t + 1e-3);
+  const tx = q.x - p.x;
+  const tz = q.z - p.z;
+  const len = Math.hypot(tx, tz) || 1;
+  return { x: p.x, z: p.z, nx: tz / len, nz: -tx / len };
+}
+
+/** A point `out` metres back from the front edge at angle `t`, `y` metres up. */
+export function ring(t: number, out: number, y: number, shape: BowlShape = BOWL): THREE.Vector3 {
+  const p = edge(shape, t);
+  return new THREE.Vector3(p.x + p.nx * out, y, p.z + p.nz * out);
+}
+
+/** Where a seat is: round the bowl at angle `t`, `row` rows into `deck`. */
+export function seat(deck: Deck, t: number, row: number, shape: BowlShape = BOWL): THREE.Vector3 {
+  return ring(t, deck.out + row * deck.rowDepth, deck.base + row * deck.rowRise, shape);
+}
+
+/** The angle round the bowl whose front edge passes `x` on the side of `sign` (1 for +z), found by halving. */
+export function angleAtX(x: number, sign: 1 | -1, shape: BowlShape = BOWL): number {
+  // Along the +z side x falls from a to -a as t runs from 0 to pi.
+  let lo = 0;
+  let hi = Math.PI;
+  for (let i = 0; i < 40; i++) {
+    const mid = (lo + hi) / 2;
+    if (edge(shape, mid).x > x) lo = mid;
+    else hi = mid;
   }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  geo.setAttribute("color", new THREE.Float32BufferAttribute(colours, 3));
-  geo.computeVertexNormals();
-  return geo;
+  const t = (lo + hi) / 2;
+  return sign > 0 ? t : -t;
 }
