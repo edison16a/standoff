@@ -10,6 +10,7 @@ import { ChargeSprite } from "./charge-bar";
 import { Contacts } from "./contacts";
 import { KeeperFigure } from "./keeper-figure";
 import { Marker } from "./markers";
+import { ContactShadows } from "./contact-shadows";
 import { NameTag } from "./tag";
 import { BAR_UP, TagStack } from "./tag-stack";
 
@@ -36,18 +37,17 @@ export class Squad {
   private keepers: KeeperFigure[] = [];
   private tags: (NameTag | null)[] = [];
   private markers: (Marker | null)[] = [];
-  private blobs: THREE.Mesh[] = [];
   private bars: ChargeSprite[] = [];
   private readonly contacts = new Contacts();
   private readonly stack = new TagStack();
   private lineup = "";
   private labels = "";
   private label: ((id: number) => Label) | null = null;
-  private readonly blobMaterial: THREE.MeshBasicMaterial;
-  private readonly blobGeometry = new THREE.PlaneGeometry(1, 1);
+  private readonly shadows: ContactShadows;
 
   constructor(glow: THREE.Texture, private readonly mats: AthleteMaterials) {
-    this.blobMaterial = new THREE.MeshBasicMaterial({ map: glow, color: "#000000", transparent: true, opacity: 0.45, depthWrite: false });
+    this.shadows = new ContactShadows(glow);
+    this.group.add(this.shadows.mesh);
     this.keepers = [new KeeperFigure(0, mats), new KeeperFigure(1, mats)];
     for (const k of this.keepers) this.group.add(k.rig.root);
   }
@@ -65,8 +65,6 @@ export class Squad {
     view.athletes.forEach((a, i) => {
       const figure = this.athletes[i]!;
       figure.update(a, view.ball, dt, time);
-      const blob = this.blobs[i]!;
-      blob.position.set(a.x, 0.015, a.z);
       const tag = this.tags[i];
       if (tag) {
         tag.sprite.visible = tags;
@@ -79,6 +77,7 @@ export class Squad {
     });
     view.keepers.forEach((k, i) => this.keepers[i]!.update(k, dt, time));
     this.contacts.update(view, this.athletes, dt);
+    this.shadows.update([...this.athletes.map((f) => f.rig), ...this.keepers.map((k) => k.rig)]);
   }
 
   /** Tackles, fouls and the ball hitting a body rock the players involved. */
@@ -115,13 +114,6 @@ export class Squad {
       const figure = new AthleteFigure(a, TEAMS[a.team].kit, this.mats, figureOf(a.build, this.shirtName(a)));
       this.athletes.push(figure);
       this.group.add(figure.rig.root);
-      // A soft contact shadow grounds each player even where the shadow map is thin.
-      const blob = new THREE.Mesh(this.blobGeometry, this.blobMaterial);
-      blob.rotation.x = -Math.PI / 2;
-      blob.scale.setScalar(1.3);
-      blob.renderOrder = 1;
-      this.blobs.push(blob);
-      this.group.add(blob);
       // The charge bar sits above the name tag, anchored at the same spot.
       const bar = new ChargeSprite();
       bar.sprite.center.set(0.5, -BAR_UP);
@@ -178,13 +170,11 @@ export class Squad {
       this.group.remove(figure.rig.root);
       figure.dispose();
     }
-    for (const blob of this.blobs) this.group.remove(blob);
     for (const bar of this.bars) {
       this.group.remove(bar.sprite);
       bar.dispose();
     }
     this.athletes = [];
-    this.blobs = [];
     this.bars = [];
   }
 
@@ -193,7 +183,6 @@ export class Squad {
     for (const k of this.keepers) k.dispose();
     for (const tag of this.tags) tag?.dispose();
     for (const marker of this.markers) marker?.dispose();
-    this.blobMaterial.dispose();
-    this.blobGeometry.dispose();
+    this.shadows.dispose();
   }
 }
