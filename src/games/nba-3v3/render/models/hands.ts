@@ -61,7 +61,7 @@ export function buildHand(look: Look, side: 1 | -1, scale: number, fine: boolean
   const skin = new THREE.Color(look.skin);
   const palmTone = skin.clone().lerp(new THREE.Color("#e8b9a0"), 0.35);
   const nail = skin.clone().lerp(new THREE.Color("#f1d6c8"), 0.55);
-  const radial = fine ? 8 : 5;
+  const radial = fine ? 7 : 5;
   const parts: THREE.BufferGeometry[] = [];
   const palm = new THREE.SphereGeometry(1, fine ? 14 : 8, fine ? 10 : 6);
   palm.scale(0.0165 * s, 0.054 * s, 0.043 * s);

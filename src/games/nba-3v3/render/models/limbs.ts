@@ -110,7 +110,7 @@ export function limbTube(rig: Rig, kind: "arm" | "leg", side: Side, o: Partial<T
   const s = rig.m.s;
   const joint = kind === "arm" ? rig.dims.upper : rig.dims.thigh;
   const bump = jointBump(joint, kind === "leg", (kind === "leg" ? 0.05 : 0.04) * s);
-  return tube(origin, -1, keys, { step: 0.022 * s, bump, ...o });
+  return tube(origin, -1, keys, { step: 0.026 * s, bump, ...o });
 }
 
 /** The skin of both arms and both legs, closed off at the shoulder and the hip. */

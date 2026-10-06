@@ -63,7 +63,7 @@ function headband(head: HeadSurface, look: Look, colour: string): THREE.BufferGe
  * gear. `fine` picks the detail.
  */
 export function buildHead(look: Look, k: number, fine: boolean): HeadParts {
-  const head = headSurface(fine ? 56 : 32, fine ? 44 : 24, k);
+  const head = headSurface(fine ? 48 : 30, fine ? 36 : 22, k);
   const pos = head.geo.getAttribute("position");
   const colours = new Float32Array(pos.count * 3);
   const rough: number[] = [];
@@ -82,7 +82,7 @@ export function buildHead(look: Look, k: number, fine: boolean): HeadParts {
   const skin = join([head.geo, faceSkin(look, k, fine)]);
 
   const gear: THREE.BufferGeometry[] = [...eyes(look, k, fine)];
-  const hair = hairPiece(head, look, fine ? 46 : 22);
+  const hair = hairPiece(head, look, fine ? 40 : 20);
   if (hair) gear.push(roughen(hair, 0.55));
   const beard = beardPiece(head, look);
   if (beard) gear.push(roughen(beard, 0.7));

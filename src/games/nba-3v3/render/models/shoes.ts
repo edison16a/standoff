@@ -66,15 +66,15 @@ function along(size: ShoeSize, n: number, rows: number, section: (u: number) => 
 
 export function buildShoe(look: Look, size: ShoeSize, fine: boolean): THREE.BufferGeometry {
   const { ankle: A, s, heel, toe } = size;
-  const n = fine ? 24 : 12;
-  const rows = fine ? 22 : 10;
+  const n = fine ? 18 : 10;
+  const rows = fine ? 14 : 7;
   const u = (z: number) => (z - heel) / (toe - heel);
   const w = (v: number) => lerpKeys(WIDTH, v) * s;
   const mid = (v: number) => lerpKeys(MID, v) * s;
   const top = (v: number) => lerpKeys(TOP, v) * s;
   const midsoleColour = look.shoe.toLowerCase() === "#e5e7eb" ? look.shoeAccent : "#f1f0ec";
 
-  const outsole = along(size, n, rows, (v) => ({ y: -A + 0.0045 * s, s: footSection(w(v) + 0.003 * s, 0.0045 * s, 0.0045 * s, 6) }));
+  const outsole = along(size, n, rows - 2, (v) => ({ y: -A + 0.0045 * s, s: footSection(w(v) + 0.003 * s, 0.0045 * s, 0.0045 * s, 6) }));
   tint(outsole, "#262626");
   roughen(outsole, 0.85);
   const midsole = along(size, n, rows, (v) => ({ y: -A + 0.009 * s + mid(v) / 2, s: footSection(w(v) + 0.004 * s, mid(v) / 2, mid(v) / 2, 5) }));
@@ -86,7 +86,7 @@ export function buildShoe(look: Look, size: ShoeSize, fine: boolean): THREE.Buff
   roughen(midsole, 0.62);
 
   const upperBase = -A + 0.02 * s;
-  const upper = along(size, n, rows + 6, (v) => {
+  const upper = along(size, n + 4, rows + 4, (v) => {
     const h = top(v) - 0.02 * s;
     return { y: upperBase + h * 0.45, s: footSection(w(v), h * 0.55, h * 0.45, 2.6) };
   });

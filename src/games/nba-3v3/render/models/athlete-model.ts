@@ -2,17 +2,12 @@ import * as THREE from "three";
 import type { BuildSpec } from "../../builds";
 import type { Team } from "../../roster";
 import type { AthleteMaterials } from "../materials/athlete-materials";
-import { buildHand } from "./hands";
-import { addGear } from "./gear";
-import { buildHead } from "./head";
-import { addKit } from "./kit";
 import { kitTexture } from "./kit-texture";
-import { limbs } from "./limbs";
-import { PartList, tint } from "./parts";
 import { buildRig, type Dims, type Extras, type Joints } from "./rig";
-import { neckInfluence, neckTube, torsoInfluence, torsoTube } from "./torso";
+import { sharedGeometry } from "./athlete-geometry";
 
 export type { Dims, Joints } from "./rig";
+export { headOffset } from "./athlete-geometry";
 
 export interface AthleteModel {
   joints: Joints;
@@ -30,11 +25,6 @@ export interface AthleteOptions {
   referee?: boolean;
 }
 
-/** Where the head's centre sits over the neck joint: high enough for a real neck, a little forward of it. */
-export function headOffset(s: number, k: number): THREE.Vector3 {
-  return new THREE.Vector3(0, 0.074 * s + 0.106 * k, 0.014 * s);
-}
-
 /**
  * A player built for the broadcast: one continuous skinned body from
  * the build's height, width, bulk and reach, a sculpted head with the
@@ -44,34 +34,14 @@ export function headOffset(s: number, k: number): THREE.Vector3 {
  * player costs three draws: skin, kit and gear.
  */
 export function buildAthlete(c: BuildSpec, team: Team, mats: AthleteMaterials, o: AthleteOptions = {}): AthleteModel {
+  // Each player gets its own bones; the build's geometry is shared, bound the same way to any rig of the build.
   const rig = buildRig(c);
-  const fine = mats.detail === "high";
-  const { s, bulk } = rig.m;
-  const look = c.look;
-
-  const skin = new PartList(rig);
-  for (const limb of limbs(rig, fine ? 22 : 12)) skin.weighted(tint(limb.geo, look.skin), limb.weigh, 0.42);
-  skin.weighted(tint(torsoTube(rig, { n: fine ? 36 : 18, from: -0.1 * s, capStart: 0.03 * s, capEnd: 0.02 * s }), look.skin), torsoInfluence(rig), 0.44);
-  skin.weighted(tint(neckTube(rig, fine ? 20 : 12), look.skin), neckInfluence(rig), 0.44);
-  const headScale = 1 + (c.body.height - 2) * 0.12;
-  const head = buildHead(look, headScale, fine);
-  const at = headOffset(s, headScale);
-  skin.rigid(head.skin.translate(at.x, at.y, at.z), "neck");
-  for (const side of [1, -1] as const) skin.rigid(buildHand(look, side, s * (0.97 + 0.03 * bulk), fine), side > 0 ? "handL" : "handR");
-
-  const kit = new PartList(rig);
-  addKit(kit, rig, { referee: o.referee, fine });
-  const gear = new PartList(rig);
-  addGear(gear, rig, look, fine);
-  gear.rigid(head.gear.translate(at.x, at.y, at.z), "neck");
-
+  const { skin, kit, gear } = sharedGeometry(c, mats.detail === "high", o.referee);
   const print = kitTexture({ team, number: c.number, name: o.backName ?? c.name, referee: o.referee });
   const kitMat = mats.kit(print, o.referee ? "#d4d4d4" : team.color);
   const skeleton = new THREE.Skeleton(rig.bones);
   const meshes: THREE.Mesh[] = [];
-  for (const [list, mat] of [[skin, mats.skin], [kit, kitMat], [gear, mats.gear]] as const) {
-    const geo = list.geometry();
-    if (!geo) continue;
+  for (const [geo, mat] of [[skin, mats.skin], [kit, kitMat], [gear, mats.gear]] as const) {
     const mesh = new THREE.SkinnedMesh(geo, mat);
     mesh.castShadow = true;
     // The body moves far from where it was bound, so it is never culled on a stale box.
@@ -86,8 +56,8 @@ export function buildAthlete(c: BuildSpec, team: Team, mats: AthleteMaterials, o
     extras: rig.extras,
     dims: rig.dims,
     meshes,
+    // The geometry stays: other players of the build share it.
     dispose() {
-      for (const mesh of meshes) mesh.geometry.dispose();
       skeleton.dispose();
       print.dispose();
       kitMat.dispose();
