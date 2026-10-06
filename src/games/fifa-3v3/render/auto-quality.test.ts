@@ -21,11 +21,16 @@ describe("AutoQuality", () => {
     run(q, 40, 8);
     expect(q.level).toBe(1);
     expect(q.fineBodies).toBe(false);
+    expect(q.depthOfField).toBe(false);
+    expect(q.samples).toBe(4);
     run(q, 40, 7.5);
     expect(q.level).toBe(2);
     expect(q.pixelCap).toBeLessThan(1.5);
+    expect(q.samples).toBe(2);
+    expect(q.bloom).toBe(true);
     run(q, 40, 60);
     expect(q.level).toBe(MAX_LEVEL);
+    expect(q.bloom).toBe(false);
   });
 
   it("judges against the player's cap, so a match capped at thirty is not a slow card", () => {

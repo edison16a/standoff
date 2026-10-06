@@ -5,7 +5,6 @@ import type { MatchView } from "../engine/view";
 import { TEAMS } from "../teams";
 import { Arena } from "./arena/arena";
 import { excitement } from "./arena/crowd-mood";
-import { AutoQuality, targetFps } from "./auto-quality";
 import { AthleteMaterials } from "./body/materials";
 import { CameraDirector, type Shot } from "./camera/director";
 import { CeremonyScene } from "./ceremony/ceremony-scene";
@@ -16,22 +15,11 @@ import { AimMarker } from "./figures/aim-marker";
 import { RefereeFigure } from "./figures/referee-figure";
 import { Squad, type Label } from "./figures/squad";
 import { BallModel } from "./models/ball-model";
+import { Picture, type PictureOptions } from "./picture";
 
 export type { Label };
 
-export interface RendererOptions {
-  /**
-   * "low" drops shadows, antialiasing, the crowd and the light beams and
-   * draws at a lower resolution, for software graphics in browser tests.
-   * "film" is "high" without antialiasing, for the showcase: the capture
-   * tool renders it in software, and the video encoder softens edges anyway.
-   */
-  quality?: "high" | "low" | "film";
-  /** Draws at this share of the screen's resolution. The showcase's clip uses less, to film in time. */
-  scale?: number;
-  /** Steps the picture down on a card that cannot hold the frame rate. On by default for "high". */
-  auto?: boolean;
-}
+export type RendererOptions = PictureOptions;
 
 /**
  * Draws the match: the floodlit ground, the players and keepers, the
@@ -40,7 +28,7 @@ export interface RendererOptions {
  */
 export class MatchRenderer {
   readonly director = new CameraDirector();
-  private readonly renderer: THREE.WebGLRenderer;
+  private readonly picture: Picture;
   private readonly scene = new THREE.Scene();
   private readonly arena: Arena;
   private readonly effects: Effects;
@@ -56,31 +44,22 @@ export class MatchRenderer {
   private markerAt: { x: number; y: number; z: number } | null = null;
   private readonly environment: THREE.Texture;
   private last = 0;
-  /** Steps the picture down on a card that cannot hold the frame rate. Live play only: the showcase is filmed on a fake clock. */
-  private readonly auto: AutoQuality | null;
-  private size = { width: 1, height: 1, dpr: 1 };
-  private readonly low: boolean;
-  private readonly scale: number;
+  private shot: Shot = "tv";
+  private dt = 0;
 
   constructor(canvas: HTMLCanvasElement, options: RendererOptions = {}) {
-    this.low = options.quality === "low";
-    this.auto = (options.quality ?? "high") === "high" && options.auto !== false ? new AutoQuality(targetFps) : null;
-    this.scale = options.scale ?? 1;
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: options.quality !== "low" && options.quality !== "film", powerPreference: "high-performance" });
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 0.95;
-    this.renderer.shadowMap.enabled = !this.low;
-    this.renderer.shadowMap.type = THREE.PCFShadowMap;
-    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    this.picture = new Picture(canvas, options);
+    const low = this.picture.low;
+    const pmrem = new THREE.PMREMGenerator(this.picture.renderer);
     this.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     pmrem.dispose();
     this.scene.environment = this.environment;
     this.scene.environmentIntensity = 0.35;
     this.scene.fog = new THREE.Fog("#0b1024", 70, 220);
-    this.arena = new Arena(this.low);
+    this.arena = new Arena(low);
     this.effects = new Effects(this.arena.glow);
     this.ball = new BallModel(this.arena.glow);
-    this.bodies = new AthleteMaterials(!this.low);
+    this.bodies = new AthleteMaterials(!low);
     this.squad = new Squad(this.arena.glow, this.bodies);
     this.referee = new RefereeFigure(this.bodies);
     this.scene.add(this.arena.group, this.effects.group, this.ball.group, this.squad.group, this.referee.group, this.aim.group, this.marker.group, this.ceremony.group);
@@ -88,7 +67,7 @@ export class MatchRenderer {
 
   /** The showcase's film look (film-look.ts). */
   cinematic(look: CinemaLook = {}): void {
-    applyFilmLook(this.scene, this.renderer, this.arena, look);
+    applyFilmLook(this.scene, this.picture, this.arena, look);
   }
 
   /** The replay's target on the goal, shown through the strike, or null to hide it. */
@@ -97,10 +76,7 @@ export class MatchRenderer {
   }
 
   resize(width: number, height: number, dpr: number): void {
-    this.size = { width, height, dpr };
-    const ratio = (this.low ? 0.6 : Math.min(dpr, this.auto?.pixelCap ?? 1.5)) * this.scale;
-    this.renderer.setPixelRatio(ratio);
-    this.renderer.setSize(width, height, false);
+    this.picture.resize(width, height, dpr);
     this.director.setAspect(width / Math.max(1, height));
   }
 
@@ -133,7 +109,7 @@ export class MatchRenderer {
 
   draw(view: MatchView, shot: Shot, nowMs: number, focus?: THREE.Vector3, tags = true): void {
     this.advance(view, shot, nowMs, focus, tags);
-    this.renderer.render(this.scene, this.director.camera);
+    this.picture.draw(this.scene, this.director.camera, this.shot, this.director.target, this.dt);
   }
 
   /** Everything a frame does except drawing it: the camera, the bodies and the effects move on. */
@@ -157,8 +133,10 @@ export class MatchRenderer {
   private advance(view: MatchView, shot: Shot, nowMs: number, focus: THREE.Vector3 | undefined, tags: boolean): void {
     const raw = this.last ? Math.max(0, nowMs - this.last) / 1000 : 0;
     const dt = this.last ? Math.min(0.1, raw) : 1 / 60;
-    if (this.auto?.frame(raw)) this.resize(this.size.width, this.size.height, this.size.dpr);
+    this.picture.frame(raw);
     this.last = nowMs;
+    this.shot = shot;
+    this.dt = raw;
     const time = nowMs / 1000;
     this.squad.update(view, dt, time, tags && shot !== "replay-kicker" && shot !== "replay-keeper");
     const captain = view.ceremony?.captain ?? null;
@@ -174,15 +152,16 @@ export class MatchRenderer {
     this.arena.crowd.setExcitement(excitement(view));
     this.effects.frame(view, dt, time);
     this.director.update(view, shot, dt, time, focus);
-    const fine = this.auto?.fineBodies ?? true;
-    this.squad.fitView(this.director.camera, this.renderer.domElement.height, fine);
-    this.referee.fitDetail(this.director.camera, this.renderer.domElement.height, fine);
+    const fine = this.picture.fineBodies;
+    const pixels = this.picture.renderer.domElement.height;
+    this.squad.fitView(this.director.camera, pixels, fine);
+    this.referee.fitDetail(this.director.camera, pixels, fine);
     this.squad.stackTags(this.director.camera, dt);
   }
 
   /** What the last frame cost the graphics card, shadows included, and what it holds: for development checks of the frame budget. */
   stats(): { calls: number; triangles: number; geometries: number; textures: number; programs: number } {
-    const { render, memory, programs } = this.renderer.info;
+    const { render, memory, programs } = this.picture.renderer.info;
     return { calls: render.calls, triangles: render.triangles, geometries: memory.geometries, textures: memory.textures, programs: programs?.length ?? 0 };
   }
 
@@ -203,6 +182,6 @@ export class MatchRenderer {
     this.effects.dispose();
     this.arena.dispose();
     this.environment.dispose();
-    this.renderer.dispose();
+    this.picture.dispose();
   }
 }

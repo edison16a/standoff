@@ -28,6 +28,11 @@ export class CameraDirector {
   private shake = 0;
   private aspect = 16 / 9;
 
+  /** The point the camera looks at: what the replay and the ceremony keep in focus. */
+  get target(): THREE.Vector3 {
+    return this.look;
+  }
+
   setAspect(aspect: number): void {
     this.aspect = aspect;
     this.camera.aspect = aspect;

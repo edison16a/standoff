@@ -8,8 +8,9 @@ import { effectiveCap, loadFrameRate, loadSavedRefresh } from "@/platform/frame-
  * the picture never pumps between levels in the middle of a match.
  *
  * Level 0 is everything. Level 1 keeps every body in its light cut, even
- * in close ups. Level 2 draws at a lower resolution, and level 3 lower
- * still.
+ * in close ups, and drops the replay's depth of field. Level 2 draws at
+ * a lower resolution with lighter antialiasing, and level 3 lower still,
+ * without the glow round the lights.
  */
 
 /** Seconds of frames judged together, and seconds to wait after a change before judging again. */
@@ -57,6 +58,21 @@ export class AutoQuality {
   /** Whether close ups may use the fine cut of the bodies. */
   get fineBodies(): boolean {
     return this.level === 0;
+  }
+
+  /** Multisamples for the picture's edges. */
+  get samples(): number {
+    return this.level < 2 ? 4 : 2;
+  }
+
+  /** Whether the replays and the ceremony may throw the background out of focus. */
+  get depthOfField(): boolean {
+    return this.level === 0;
+  }
+
+  /** Whether the lights and highlights glow. */
+  get bloom(): boolean {
+    return this.level < 3;
   }
 }
 
