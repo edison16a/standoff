@@ -1,4 +1,5 @@
-import { blendViews, type MatchView } from "../engine/view";
+import type { MatchView } from "../engine/view";
+import { blendViews } from "../engine/view-blend";
 import { locate, scriptReplay, type ReplayScript, type ReplaySegment } from "./replay-script";
 
 /** A still every step, so the deep slow motion of the strike blends between close frames. */
