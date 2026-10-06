@@ -81,11 +81,14 @@ export function knockLoose(m: Match, holder: Athlete, dir: V2, speed: number): v
   const spill = m.rng() < 0.5 ? -1 : 1;
   b.mode = "loose";
   b.holder = null;
-  b.flight = null;
+  b.aim = null;
   b.flightKind = null;
   b.shot = null;
-  b.pos = { x: holder.x + dir.x * 0.4, y: 0.9, z: holder.z + dir.z * 0.4 };
-  b.vel = { x: dir.x * speed - dir.z * spill * 0.8, y: 1.6, z: dir.z * speed + dir.x * spill * 0.8 };
+  // Knocked from wherever it is on the dribble, with the tumble a slap puts on it.
+  if (Math.hypot(b.pos.x - holder.x, b.pos.z - holder.z) > 1.2) b.pos = { x: holder.x + dir.x * 0.4, y: 0.9, z: holder.z + dir.z * 0.4 };
+  b.vel = { x: dir.x * speed - dir.z * spill * 0.8, y: Math.max(1.6, b.vel.y), z: dir.z * speed + dir.x * spill * 0.8 };
+  b.w = { x: dir.z * 18, y: spill * 6, z: -dir.x * 18 };
+  b.hand = "none";
   b.lastTouch = holder.id;
   holder.grabCd = DEFENCE.grabCooldown;
 }

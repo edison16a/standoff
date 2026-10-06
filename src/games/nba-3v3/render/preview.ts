@@ -5,8 +5,14 @@ import { BUILDS, type BuildId } from "../builds";
 import { TEAMS } from "../roster";
 import { locomotion } from "./anim/locomotion";
 import { applyPose } from "./anim/pose";
+import { AthleteMaterials } from "./materials/athlete-materials";
 import { buildAthlete, type AthleteModel } from "./models/athlete-model";
+import { reachArm } from "./arm-ik";
 import { ballTexture } from "./textures";
+
+/** The palm where the ball sits under it, and the way the dribbling elbow points, as on the court. */
+const PALM = new THREE.Vector3(0, -0.07, 0.03);
+const POLE_R = new THREE.Vector3(-0.7, -0.25, -0.65);
 
 /**
  * The build on the phone's picker: the very same model the big screen
@@ -18,7 +24,7 @@ export class AthletePreview {
   private readonly scene = new THREE.Scene();
   private readonly camera = new THREE.PerspectiveCamera(30, 1, 0.1, 40);
   private readonly turntable = new THREE.Group();
-  private readonly bodyMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.58, side: THREE.DoubleSide });
+  private readonly mats: AthleteMaterials;
   private readonly ball: THREE.Mesh;
   private readonly canvas: HTMLCanvasElement;
   private model: AthleteModel | null = null;
@@ -34,6 +40,7 @@ export class AthletePreview {
     holder.appendChild(this.canvas);
     // A phone without a working graphics driver draws in software, so it draws fewer pixels.
     const soft = softwareWebGl();
+    this.mats = new AthleteMaterials(soft ? "low" : "high");
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: !soft, alpha: true });
     this.renderer.setPixelRatio(soft ? 1 : Math.min(2, window.devicePixelRatio || 1));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -61,7 +68,7 @@ export class AthletePreview {
       this.model.dispose();
     }
     const kit = team === null ? { name: "Standoff", color: "#475569", dark: "#1e293b", trim: "#e2e8f0" } : TEAMS[team];
-    this.model = buildAthlete(BUILDS[build], kit, this.bodyMat, name || BUILDS[build].name);
+    this.model = buildAthlete(BUILDS[build], kit, this.mats, { backName: name || BUILDS[build].name });
     this.turntable.add(this.model.joints.root);
     const h = BUILDS[build].body.height;
     this.camera.position.set(0, h * 0.62, h * 2.35);
@@ -72,6 +79,7 @@ export class AthletePreview {
     cancelAnimationFrame(this.frame);
     if (this.model) this.turntable.remove(this.model.joints.root);
     this.model?.dispose();
+    this.mats.dispose();
     this.scene.traverse((o) => {
       if (!(o instanceof THREE.Mesh)) return;
       o.geometry.dispose();
@@ -101,11 +109,17 @@ export class AthletePreview {
       this.turntable.rotation.y = this.angle;
       this.dribble = (this.dribble + dt * 2.3) % 1;
       const pose = locomotion({ speed: 0, phase: 0, guarding: false, dribble: this.dribble, dribbleSide: 1, pressure: 0, time: now / 1000, seed: 0 });
-      applyPose(pose, this.model.joints, this.model.dims);
+      const j = this.model.joints;
+      applyPose(pose, j, this.model.dims);
       this.turntable.updateMatrixWorld(true);
-      // The ball bounces under the dribbling hand, sharp at the floor and slow at the top.
-      const hand = this.model.joints.handR.localToWorld(new THREE.Vector3(0, -0.08, 0.05));
+      // The dribbling hand works the ball beside the hip, pushing down as the ball leaves it.
       const drop = 1 - Math.abs(1 - 2 * this.dribble);
+      const h = this.model.dims.height;
+      const push = 1 - Math.min(1, drop / 0.3);
+      const goal = j.root.localToWorld(new THREE.Vector3(-0.15 * h, 0.47 * h - 0.09 * push, 0.11 * h));
+      reachArm({ shoulder: j.shoulderR, elbow: j.elbowR, hand: j.handR }, goal, PALM, POLE_R, 1);
+      // The ball bounces under the dribbling hand, sharp at the floor and slow at the top.
+      const hand = j.handR.localToWorld(PALM.clone());
       this.ball.position.set(hand.x, 0.12 + (hand.y - 0.2) * (1 - drop * drop), hand.z);
       this.renderer.render(this.scene, this.camera);
     }

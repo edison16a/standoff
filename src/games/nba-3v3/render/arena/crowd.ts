@@ -1,107 +1,86 @@
 import * as THREE from "three";
-import { seeded } from "../../engine/rng";
 import { TEAMS } from "../../roster";
-
-/** One block of stands: rows stepping back and up from a front edge. */
-export interface Section {
-  /** Front centre of the first row. */
-  x: number;
-  z: number;
-  /** Which way the fans face, as a floor angle (0 faces +z). */
-  yaw: number;
-  width: number;
-  rows: number;
-}
-
-const ROW_DEPTH = 0.85;
-const ROW_RISE = 0.48;
-const SEAT = 0.62;
+import { fanArms, fanBody, fanHead, SHOULDER } from "./fan-geometry";
+import { CrowdFlashes } from "./crowd-flashes";
+import type { Seat } from "./seat-layout";
 
 // Team colours for the fans who dressed up, and mostly everyday clothes: darks, greys, denim and a few whites.
 // A crowd of bright primaries reads as a toy; muted stands make the lit court pop like a broadcast.
 const SHIRTS = [
-  TEAMS[0].color, TEAMS[1].color, TEAMS[0].dark, TEAMS[1].dark,
+  TEAMS[0].color, TEAMS[1].color, TEAMS[0].color, TEAMS[1].color, TEAMS[0].dark, TEAMS[1].dark,
   "#1f2937", "#111827", "#374151", "#4b5563", "#1e293b", "#3f3f46",
-  "#e5e7eb", "#cbd5e1", "#35507a", "#5b3a2e", "#6b7280", "#7c2d12",
+  "#e5e7eb", "#cbd5e1", "#35507a", "#5b3a2e", "#6b7280", "#7c2d12", "#14532d", "#78350f",
 ];
-const SKINS = ["#f1c7a3", "#d9a47a", "#a86f4c", "#6b4430", "#4b2e1e", "#e8b893"];
+const TROUSERS = ["#1e293b", "#27324a", "#334155", "#111827", "#3b4a63", "#57534e", "#1c1917", "#a8a29e"];
+const SKINS = ["#f1c7a3", "#d9a47a", "#a86f4c", "#6b4430", "#4b2e1e", "#e8b893", "#c68a62"];
+const HAIR = ["#120c08", "#1f140c", "#3b2414", "#5a3a1e", "#8a6a3a", "#b9b2a6", "#0a0a0a"];
+
+const q = new THREE.Quaternion();
+const p = new THREE.Vector3();
+const s = new THREE.Vector3();
+const UP = new THREE.Vector3(0, 1, 0);
+const pick = <T>(list: readonly T[], r: number): T => list[Math.floor(r * list.length) % list.length]!;
 
 /**
- * The fans: hundreds of people drawn as three instanced meshes (bodies,
- * heads and raised arms) so the whole crowd costs three draws. Their
- * bouncing runs in the vertex shader from one excitement level, so a
- * roar sets every seat jumping without touching a single matrix.
+ * The fans: two thousand seated people drawn as three instanced meshes
+ * (bodies, heads, arms), each in two colours of its own (shirt and
+ * trousers, skin and hair, sleeve and forearm), so the whole crowd costs
+ * three draws. Their life runs in the vertex shader from one excitement
+ * level: a calm crowd sits with hands in laps, a roar brings them up off
+ * their seats with arms in the air, and camera flashes pop round the bowl.
  */
 export class Crowd {
   readonly group = new THREE.Group();
   private readonly uniforms = { uTime: { value: 0 }, uExcite: { value: 0.1 } };
-  private readonly meshes: THREE.InstancedMesh[] = [];
+  private readonly flashes: CrowdFlashes;
   private excite = 0.1;
   private target = 0.1;
 
-  constructor(sections: readonly Section[]) {
-    const rng = seeded(33);
-    const seats: { m: THREE.Matrix4; phase: number; shirt: THREE.Color; skin: THREE.Color }[] = [];
-    const stands: THREE.BufferGeometry[] = [];
-    for (const s of sections) {
-      const across = Math.floor(s.width / SEAT);
-      const fx = Math.sin(s.yaw);
-      const fz = Math.cos(s.yaw);
-      const rx = Math.cos(s.yaw);
-      const rz = -Math.sin(s.yaw);
-      for (let row = 0; row < s.rows; row++) {
-        const back = row * ROW_DEPTH;
-        const y = 0.35 + row * ROW_RISE;
-        const step = new THREE.BoxGeometry(s.width + 1, y + 0.1, ROW_DEPTH);
-        step.rotateY(s.yaw);
-        step.translate(s.x - fx * (back + ROW_DEPTH * 0.5), (y + 0.1) / 2, s.z - fz * (back + ROW_DEPTH * 0.5));
-        stands.push(step);
-        for (let i = 0; i < across; i++) {
-          if (rng() < 0.08) continue;
-          const side = (i - across / 2 + 0.5) * SEAT + (rng() - 0.5) * 0.12;
-          const m = new THREE.Matrix4().makeRotationY(s.yaw + (rng() - 0.5) * 0.3);
-          const scale = 0.9 + rng() * 0.2;
-          m.scale(new THREE.Vector3(scale, scale, scale));
-          m.setPosition(s.x + rx * side - fx * (back + 0.35), y + 0.1, s.z + rz * side - fz * (back + 0.35));
-          // Higher rows sit further from the court lights, so they fade a little darker.
-          const dim = 0.62 - row * 0.022;
-          const shirt = new THREE.Color(SHIRTS[Math.floor(rng() * SHIRTS.length)]!).multiplyScalar(dim);
-          seats.push({ m, phase: rng() * Math.PI * 2, shirt, skin: new THREE.Color(SKINS[Math.floor(rng() * SKINS.length)]!).multiplyScalar(dim) });
-        }
-      }
-    }
-    const standGeo = mergeBoxes(stands);
-    const stand = new THREE.Mesh(standGeo, new THREE.MeshStandardMaterial({ color: "#1b1f33", roughness: 0.9 }));
-    stand.receiveShadow = true;
-    this.group.add(stand);
+  constructor(seats: readonly Seat[], seed = 7) {
+    let r = seed;
+    const rand = () => ((r = (r * 16807) % 2147483647) - 1) / 2147483646;
+    // About one seat in fourteen is empty, and the empties cluster toward the back.
+    const taken = seats.filter((seat) => seat.luck > 0.04 + seat.row * 0.004);
+    const n = taken.length;
+    const phase = new Float32Array(n);
+    const colours = { body: [new Float32Array(n * 3), new Float32Array(n * 3)], head: [new Float32Array(n * 3), new Float32Array(n * 3)], arms: [new Float32Array(n * 3), new Float32Array(n * 3)] };
+    const matrices: THREE.Matrix4[] = [];
+    const c = new THREE.Color();
+    taken.forEach((seat, i) => {
+      const size = 0.92 + rand() * 0.16;
+      matrices.push(new THREE.Matrix4().compose(p.set(seat.x, seat.y, seat.z), q.setFromAxisAngle(UP, seat.yaw + (rand() - 0.5) * 0.35), s.set(size * (0.94 + rand() * 0.12), size, size)));
+      phase[i] = rand() * Math.PI * 2;
+      // Higher rows sit further from the court lights, so they fade a little darker.
+      const dim = 0.66 - seat.row * 0.02;
+      const shirt = pick(SHIRTS, rand());
+      const skin = pick(SKINS, rand());
+      const put = (out: Float32Array, hex: string) => c.set(hex).multiplyScalar(dim).toArray(out, i * 3);
+      put(colours.body[0]!, shirt);
+      put(colours.body[1]!, pick(TROUSERS, rand()));
+      put(colours.head[0]!, skin);
+      put(colours.head[1]!, rand() < 0.12 ? skin : pick(HAIR, rand()));
+      put(colours.arms[0]!, shirt);
+      put(colours.arms[1]!, rand() < 0.3 ? shirt : skin);
+    });
 
-    // Low poly on purpose: nearly two thousand fans are only a few pixels each.
-    const body = new THREE.CapsuleGeometry(0.2, 0.42, 2, 7);
-    body.translate(0, 0.42, 0);
-    const head = new THREE.SphereGeometry(0.12, 8, 6);
-    head.translate(0, 0.98, 0.02);
-    const arms = new THREE.BoxGeometry(0.1, 0.55, 0.1);
-    arms.translate(0, 0.28, 0);
-    const armPair = mergeBoxes([arms.clone().rotateZ(0.35).translate(-0.24, 0.9, 0), arms.clone().rotateZ(-0.35).translate(0.24, 0.9, 0)]);
-    const phases = new Float32Array(seats.map((s) => s.phase));
-    const parts: [THREE.BufferGeometry, "shirt" | "skin", boolean][] = [
-      [body, "shirt", false],
-      [head, "skin", false],
-      [armPair, "shirt", true],
-    ];
-    for (const [geo, paint, isArms] of parts) {
-      geo.setAttribute("aPhase", new THREE.InstancedBufferAttribute(phases, 1));
+    const parts = [
+      ["body", fanBody()],
+      ["head", fanHead()],
+      ["arms", fanArms()],
+    ] as const;
+    for (const [name, geo] of parts) {
+      geo.setAttribute("aPhase", new THREE.InstancedBufferAttribute(phase, 1));
+      geo.setAttribute("aB", new THREE.InstancedBufferAttribute(colours[name][1]!, 3));
       const mat = new THREE.MeshLambertMaterial({ color: "#ffffff" });
-      this.hook(mat, isArms);
-      const mesh = new THREE.InstancedMesh(geo, mat, seats.length);
-      seats.forEach((s, i) => {
-        mesh.setMatrixAt(i, s.m);
-        mesh.setColorAt(i, paint === "shirt" ? s.shirt : s.skin);
-      });
+      this.hook(mat, name === "arms");
+      const mesh = new THREE.InstancedMesh(geo, mat, n);
+      mesh.instanceColor = new THREE.InstancedBufferAttribute(colours[name][0]!, 3);
+      matrices.forEach((mx, i) => mesh.setMatrixAt(i, mx));
       mesh.frustumCulled = false;
-      this.meshes.push(mesh);
       this.group.add(mesh);
     }
+    this.flashes = new CrowdFlashes(taken, this.uniforms);
+    this.group.add(this.flashes.points);
   }
 
   /** How loud the moment is, 0 seated and murmuring to 1 on their feet. It eases toward it. */
@@ -116,54 +95,60 @@ export class Crowd {
     this.uniforms.uExcite.value = this.excite;
   }
 
-  /** Adds the bounce to the stock Lambert shader: fans hop and their arms go up with the excitement. */
+  /** Adds the crowd's life to the stock Lambert shader: two colours per fan, standing, hopping and raised arms. */
   private hook(mat: THREE.MeshLambertMaterial, arms: boolean): void {
-    // The two hooks read the same as text, so without their own keys three.js would share one program.
-    mat.customProgramCacheKey = () => (arms ? "nba-crowd-arms" : "nba-crowd-body");
+    // The hooks differ only in text three.js cannot see, so each needs its own program key.
+    mat.customProgramCacheKey = () => (arms ? "nba-fans-arms" : "nba-fans");
     mat.onBeforeCompile = (shader) => {
       shader.uniforms.uTime = this.uniforms.uTime;
       shader.uniforms.uExcite = this.uniforms.uExcite;
+      const head = `#include <common>
+        attribute float aPhase;
+        attribute float aPart;
+        attribute vec3 aB;
+        ${arms ? "attribute float aSide;" : ""}
+        uniform float uTime;
+        uniform float uExcite;
+        // How far this fan is out of his seat, and how high his arms are: each fan has his own threshold.
+        float risen() { return smoothstep(0.3, 0.75, uExcite + fract(aPhase * 3.7) * 0.35 - 0.18); }
+        vec3 swing(vec3 v, float up, float side) {
+          float a = mix(2.9, 0.12, up);
+          v.yz = vec2(v.y * cos(a) - v.z * sin(a), v.y * sin(a) + v.z * cos(a));
+          float b = -side * mix(0.04, 0.42 + fract(aPhase * 5.3) * 0.3, up);
+          v.xy = vec2(v.x * cos(b) - v.y * sin(b), v.x * sin(b) + v.y * cos(b));
+          return v;
+        }`;
+      const arm = arms
+        ? `float up = smoothstep(0.35, 0.8, uExcite + fract(aPhase * 7.0) * 0.3 - 0.15);
+           transformed = swing(transformed, up, aSide) + vec3(aSide * ${SHOULDER.x.toFixed(3)}, ${SHOULDER.y.toFixed(3)}, 0.0);`
+        : "";
       shader.vertexShader = shader.vertexShader
-        .replace("#include <common>", "#include <common>\nattribute float aPhase;\nuniform float uTime;\nuniform float uExcite;")
+        .replace("#include <common>", head)
+        .replace("#include <beginnormal_vertex>", arms ? "#include <beginnormal_vertex>\nobjectNormal = swing(objectNormal, smoothstep(0.35, 0.8, uExcite + fract(aPhase * 7.0) * 0.3 - 0.15), aSide);" : "#include <beginnormal_vertex>")
         .replace(
           "#include <begin_vertex>",
           `#include <begin_vertex>
-          float hop = max(0.0, sin(uTime * (7.0 + fract(aPhase) * 4.0) + aPhase * 6.28)) * uExcite * 0.28;
-          float sway = sin(uTime * 1.3 + aPhase * 3.0) * 0.03;
-          transformed.y += hop;
-          transformed.x += sway;
-          ${arms ? "float up = smoothstep(0.35, 0.8, uExcite + fract(aPhase * 7.0) * 0.3 - 0.15); transformed.y = mix(0.62, transformed.y, up); transformed.xz *= mix(0.2, 1.0, up);" : ""}`,
+          ${arm}
+          float stand = risen();
+          float hop = max(0.0, sin(uTime * (7.0 + fract(aPhase) * 4.0) + aPhase * 6.28)) * uExcite * uExcite * 0.16;
+          transformed.y += stand * 0.3 * step(0.3, transformed.y) + hop;
+          transformed.x += sin(uTime * 1.3 + aPhase * 3.0) * 0.025 * step(0.4, transformed.y);`,
+        )
+        .replace(
+          "#include <color_vertex>",
+          `#include <color_vertex>
+          vColor.rgb = mix(instanceColor.rgb, aB, aPart);
+          ${arms ? "" : "// A little shade low down, where the fan sits between the rows.\n          vColor.rgb *= mix(0.55, 1.0, smoothstep(0.25, 0.9, position.y));"}`,
         );
     };
   }
 
   dispose(): void {
+    this.flashes.dispose();
     this.group.traverse((o) => {
       if (!(o instanceof THREE.Mesh)) return;
       o.geometry.dispose();
       (o.material as THREE.Material).dispose();
     });
   }
-}
-
-function mergeBoxes(parts: THREE.BufferGeometry[]): THREE.BufferGeometry {
-  const clean = parts.map((p) => {
-    const g = p.index ? p.toNonIndexed() : p;
-    g.deleteAttribute("uv");
-    return g;
-  });
-  const total = clean.reduce((n, g) => n + g.getAttribute("position").count, 0);
-  const pos = new Float32Array(total * 3);
-  const nor = new Float32Array(total * 3);
-  let off = 0;
-  for (const g of clean) {
-    pos.set(g.getAttribute("position").array as Float32Array, off * 3);
-    nor.set(g.getAttribute("normal").array as Float32Array, off * 3);
-    off += g.getAttribute("position").count;
-    g.dispose();
-  }
-  const out = new THREE.BufferGeometry();
-  out.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-  out.setAttribute("normal", new THREE.BufferAttribute(nor, 3));
-  return out;
 }

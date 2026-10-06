@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { isThree, beyondArc } from "./court";
-import { seeded } from "./rng";
-import { GREEN_MS, gradeRelease, greenHalfMs, isMake, makeChance, pickOutcome, type ShotContext } from "./shot-model";
+import { GREEN_MS, gradeRelease, greenHalfMs, isMake, makeChance, type ShotContext } from "./shot-model";
 
 const open: ShotContext = { kind: "jumper", grade: "perfect", distance: 7, shooting: 7, contest: 0, strengthEdge: 0, onFire: false };
 
@@ -42,12 +41,15 @@ describe("the chance a shot goes in", () => {
     expect(makeChance({ ...layup, strengthEdge: 4 })).toBeGreaterThan(makeChance({ ...layup, strengthEdge: -4 }));
   });
 
-  it("draws makes and misses of the right kind", () => {
-    const rng = seeded(5);
-    for (let i = 0; i < 50; i++) {
-      expect(isMake(pickOutcome(rng, true, open, 0.5))).toBe(true);
-      expect(isMake(pickOutcome(rng, false, open, 0.5))).toBe(false);
-    }
+  it("names the makes and the misses apart", () => {
+    for (const outcome of ["swish", "bank", "roll", "bounce"] as const) expect(isMake(outcome)).toBe(true);
+    for (const outcome of ["rimOut", "boardOut", "inOut", "airball"] as const) expect(isMake(outcome)).toBe(false);
+  });
+
+  it("gives a floater a fair chance over a big man", () => {
+    const floater: ShotContext = { ...open, distance: 3.6, grade: "good", contest: 0.6, floater: true };
+    expect(makeChance(floater)).toBeGreaterThan(makeChance({ ...floater, floater: false }));
+    expect(makeChance(floater)).toBeLessThan(0.8);
   });
 });
 

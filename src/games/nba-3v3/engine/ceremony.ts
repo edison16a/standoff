@@ -105,7 +105,7 @@ export class Ceremony {
     const b = m.ball;
     b.holder = null;
     b.mode = "loose";
-    b.flight = null;
+    b.aim = null;
     b.flightKind = null;
     b.shot = null;
     b.pos = { x: -6.8, y: 0.12, z: 11.5 };

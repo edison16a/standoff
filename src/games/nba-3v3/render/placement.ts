@@ -56,9 +56,10 @@ export class Placement {
    * hips are raised or lowered so the lowest point of either sole meets
    * the court: a crouch never sinks a toe into it and no pose floats.
    * A foot up in the stride keeps the pose's angle. In the air nothing
-   * changes.
+   * changes. `lift` holds the lower foot that far off the floor, for the
+   * flight between running steps.
    */
-  plant(a: Athlete, model: AthleteModel, toes: { L: number; R: number }, dt: number): void {
+  plant(a: Athlete, model: AthleteModel, toes: { L: number; R: number }, dt: number, lift = 0): void {
     this.grounded += ((a.y < 0.01 ? 1 : 0) - this.grounded) * (1 - Math.exp(-dt * 25));
     if (this.grounded < 0.01) return;
     const { joints: j, dims: d } = model;
@@ -78,6 +79,6 @@ export class Placement {
     for (const ankle of [j.ankleL, j.ankleR]) {
       for (const z of [d.sole.heel, d.sole.toe]) low = Math.min(low, ankle.localToWorld(v.set(0, d.sole.y, z)).y);
     }
-    j.hips.position.y -= (low - j.root.position.y) * this.grounded;
+    j.hips.position.y -= (low - j.root.position.y - lift) * this.grounded;
   }
 }

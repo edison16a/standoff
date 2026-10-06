@@ -31,7 +31,7 @@ export function startDead(m: Match, next: TeamId): void {
   // A pass in the air when the clock ran out just drops.
   if (b.mode === "flight" && b.flightKind === "pass") {
     b.mode = "loose";
-    b.flight = null;
+    b.aim = null;
     b.flightKind = null;
     b.passTo = null;
   }
@@ -74,12 +74,12 @@ export function walkTo(m: Match, a: Athlete, to: V2, pace: number): number {
   return d;
 }
 
-/** The nearest player on the team getting the ball goes for it. */
+/** The nearest player on the team getting the ball goes for it, unless he is still picking himself up off the floor. */
 function chooseFetcher(m: Match, c: CheckUp): number {
   let best = c.plan.checker;
   let bestD = Infinity;
   for (const a of m.athletes) {
-    const d = dist2(a, m.ball.pos);
+    const d = dist2(a, m.ball.pos) + (a.action.kind === "stumble" ? 50 : 0);
     if (a.team === c.team && d < bestD) {
       bestD = d;
       best = a.id;
@@ -182,6 +182,6 @@ export function stepCheckBall(m: Match, dt: number): boolean {
     return true;
   }
   if (m.phase !== "check") return false;
-  holdAtChest(m);
+  holdAtChest(m, dt);
   return true;
 }

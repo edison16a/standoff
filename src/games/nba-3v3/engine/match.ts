@@ -2,6 +2,7 @@ import type { DunkStyle } from "../roster";
 import { pressDefend, pressPass, pressShoot, releaseShot, updateAction } from "./actions";
 import { createAthlete, moveAthlete, separate } from "./athlete";
 import { updateBall } from "./ball";
+import { endCharge, refereeHit } from "./body/charge";
 import { Brains } from "./bot/brains";
 import { botTuning, type BotTuning } from "./bot/skill";
 import { updateDribbleHand } from "./dribble";
@@ -64,6 +65,8 @@ export class Match {
   forced: Outcome | null = null;
   /** The dunk thrown on the next drive, set by the showcase for the same reason. */
   forcedDunk: DunkStyle | null = null;
+  /** The next hand that gets to a shot blocks it, for the showcase and the lab. */
+  forcedBlock = false;
   gamePoint: [boolean, boolean] = [false, false];
   /** Whose turn it is to bring the ball up, per team, so everyone gets to handle it. */
   readonly checkTurn: [number, number] = [0, 0];
@@ -196,7 +199,8 @@ export class Match {
       moveAthlete(a, dt, this.ball.holder === a.id, facingFor(this, a), this.queue);
       updateDribbleHand(this, a, dt);
     }
-    separate(this.athletes, this.queue, this.bumpCd);
+    separate(this.athletes, this.queue, this.bumpCd, (a, b, hit) => refereeHit(this, a, b, hit));
+    endCharge(this);
     if (!stepCheckBall(this, dt) && !stepFreeThrowBall(this, dt)) updateBall(this, dt);
     if (this.phase === "live") updateClock(this, dt);
   }

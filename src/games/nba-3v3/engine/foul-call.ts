@@ -6,14 +6,17 @@ import type { Athlete } from "./types";
 import type { V2 } from "./vec";
 
 /**
- * The whistle. A reach in stops play at once and sends the fouled
- * player to the line for two. A foul on a shot lets the shot finish
+ * The whistle. A reach in, or a defender moving into the ball handler,
+ * stops play at once and sends the fouled player to the line for two;
+ * a ball handler running over a set defender is a charge, and the ball
+ * goes the other way (see `body/charge.ts`). A foul on a shot lets the shot finish
  * first: if it drops the basket counts and one free throw follows, and
  * if it misses the shooter gets two, or three on a three. Either way the
  * referee comes on at the whistle, which the renderer reads here.
  */
 
-export type FoulKind = "reach" | "shooting";
+/** A reach in, contact on a shot, a defender moving into the ball handler, or the ball handler running over a set defender. */
+export type FoulKind = "reach" | "shooting" | "block" | "charge";
 
 /** What the referee is signalling, from the whistle until the walk to the line. */
 export interface FoulCall {
@@ -38,12 +41,12 @@ export interface PendingFoul {
 function whistle(m: Match, kind: FoulKind, fouler: Athlete, victim: Athlete): void {
   m.foulCall = { kind, fouler: fouler.id, victim: victim.id, at: m.time, spot: { x: (fouler.x + victim.x) / 2, z: (fouler.z + victim.z) / 2 }, andOne: false };
   const attempt = fouler.action.kind === "steal" ? fouler.action.attempt : 0;
-  m.emit({ type: "foul", id: fouler.id, victim: victim.id, attempt, shooting: kind === "shooting" });
+  m.emit({ type: "foul", id: fouler.id, victim: victim.id, attempt, shooting: kind === "shooting", call: kind });
 }
 
-/** A reach in: the whistle, then two free throws. */
-export function callFoul(m: Match, fouler: Athlete, victim: Athlete, shots: 1 | 2 | 3 = 2): void {
-  whistle(m, "reach", fouler, victim);
+/** A reach in, or a blocking foul: the whistle, then two free throws. */
+export function callFoul(m: Match, fouler: Athlete, victim: Athlete, shots: 1 | 2 | 3 = 2, kind: "reach" | "block" = "reach"): void {
+  whistle(m, kind, fouler, victim);
   m.pendingFoul = null;
   startFreeThrows(m, fouler, victim, shots, FREE_THROW.whistle);
 }

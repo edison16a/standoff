@@ -14,8 +14,18 @@ import { dir2, dist2, type V2 } from "./vec";
 
 /** A defender this close, in front, is in the shooter's chest. */
 const TIGHT = 1.2;
-/** The hop's speed, metres per second. Over the dip it covers most of a metre. */
-const HOP = 3.1;
+
+/**
+ * The hop: off the front foot at `speed` metres a second, `height` off
+ * the floor for `air` seconds, then both feet plant and soak up all but
+ * `keep` of the speed, so the shooter rises on balance instead of fading.
+ */
+export const STEPBACK = { speed: 3.4, air: 0.2, height: 0.07, keep: 0.2 } as const;
+
+/** Feet off the floor during the hop: a low, quick arc. */
+export function hopHeight(t: number): number {
+  return t > 0 && t < STEPBACK.air ? STEPBACK.height * Math.sin((Math.PI * t) / STEPBACK.air) : 0;
+}
 
 export function stepbackFor(m: Match, a: Athlete): V2 | null {
   if (rimDistance(a) < 3.2) return null;
@@ -35,5 +45,12 @@ export function stepbackFor(m: Match, a: Athlete): V2 | null {
   const x = off.x * 0.7 - toRim.x * 0.3;
   const z = off.z * 0.7 - toRim.z * 0.3;
   const l = Math.hypot(x, z) || 1;
-  return { x: (x / l) * HOP, z: (z / l) * HOP };
+  return { x: (x / l) * STEPBACK.speed, z: (z / l) * STEPBACK.speed };
+}
+
+/** Both feet come down out of the hop and dig in: the legs take the speed, so the jumper goes straight up. */
+export function plantStepback(a: Athlete): void {
+  a.vx *= STEPBACK.keep;
+  a.vz *= STEPBACK.keep;
+  a.plant = Math.max(a.plant, 0.12);
 }

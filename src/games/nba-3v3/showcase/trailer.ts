@@ -39,7 +39,7 @@ export class TrailerDirector {
   private draws = 0;
 
   constructor(canvas: HTMLCanvasElement, seek: number | null) {
-    this.renderer = new CourtRenderer(canvas);
+    this.renderer = new CourtRenderer(canvas, { governed: false });
     this.renderer.cinematic();
     this.enter(0);
     // Development: `?t=seconds` holds the trailer at that moment, for looking at single frames.

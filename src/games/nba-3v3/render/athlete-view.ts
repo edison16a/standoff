@@ -1,153 +1,168 @@
 import * as THREE from "three";
-import type { Athlete } from "../engine/types";
 import { BUILDS } from "../builds";
+import { palmHold } from "../engine/dribble-ball";
+import type { Athlete, Ball } from "../engine/types";
 import { TEAMS } from "../roster";
-import { blockPose, landPose, passPose, shootPose, stealPose, stumblePose } from "./anim/actions";
-import { celebratePose, dejectedPose } from "./anim/celebrations";
-import { dunkPose, dunkSpin } from "./anim/dunks";
-import { gesturePose } from "./anim/gestures";
-import { captainPose, matePose } from "./anim/trophy-poses";
-import { layupPose } from "./anim/layups";
+import { actionPose, type ActionMemory } from "./anim/action-pose";
 import { basePose, type AthleteScene } from "./anim/base";
-import { setShotPose } from "./anim/line";
-import { strideLength } from "./anim/locomotion";
-import { movePose } from "./anim/moves";
-import { applyPose, approach, blend, STAND, type Pose } from "./anim/pose";
+import { ClothAndBreath } from "./anim/cloth";
+import { Flinch } from "./anim/flinch";
+import { strideLength, type Stride } from "./anim/locomotion";
+import { applyPose, approach, STAND, type Pose } from "./anim/pose";
+import { reachArm, type ArmChain } from "./arm-ik";
+import { BlockReach, type BlockTouch } from "./block-reach";
+import { DribbleHand } from "./dribble-hand";
+import type { AthleteMaterials } from "./materials/athlete-materials";
 import { buildAthlete, type AthleteModel } from "./models/athlete-model";
 import { Placement } from "./placement";
 
 export type { AthleteScene };
 
 const v = new THREE.Vector3();
-/** After a shot, a dunk or a pass the body eases back into its run this slowly at first. */
-const RECOVER = 0.4;
-
-const ease = (u: number) => {
-  const k = Math.min(1, Math.max(0, u));
-  return k * k * (3 - 2 * k);
-};
+/** The palm, in the hand's frame, where the ball sits under it. */
+const PALM = new THREE.Vector3(0, -0.07, 0.03);
+/** Each dribbling elbow points out and back, in the torso's frame; catching, out and down. */
+const POLE = { L: new THREE.Vector3(0.7, -0.25, -0.65), R: new THREE.Vector3(-0.7, -0.25, -0.65) };
+const CATCH_POLE = { L: new THREE.Vector3(0.6, -0.8, 0), R: new THREE.Vector3(-0.6, -0.8, 0) };
+/** Reaching up for a block, the elbow points out to the side and a little forward. */
+const UP_POLE = { L: new THREE.Vector3(0.9, -0.2, 0.25), R: new THREE.Vector3(-0.9, -0.2, 0.25) };
+const side = new THREE.Vector3();
+const grip = new THREE.Vector3();
 
 /**
  * One player on screen: the model, and the animation that follows the
- * engine's state. Running, dribbling and guarding blend underneath;
- * shots, dunks, passes, blocks and steals play on top, timed from the
- * engine's own action clock so the ball and the body agree. Every change
- * of state eases into the next, and the stride is matched to the ground
- * speed so the feet stay planted.
+ * engine's state. The gait, the dribble and the stance blend underneath
+ * and the actions play over them (see `anim/action-pose.ts`), each on
+ * the engine's own clock. The stride follows the ground covered so the
+ * feet stay planted, the dribbling hand reaches for the real ball, the
+ * shorts swing and the chest breathes, and a hit jolts the body.
  */
 export class AthleteView {
   readonly model: AthleteModel;
   private readonly pose: Pose = { ...STAND };
   private phase = 0;
-  private time = 0;
   private lastY = 0;
-  private landAt = -9;
-  private hardLand = false;
-  private releasedAt: number | null = null;
   private lastKind = "none";
-  private endedAt = -9;
+  private readonly mem: ActionMemory = { time: 0, releasedAt: null, endedAt: -9, landAt: -9, hardLand: false, shove: 1 };
   private readonly placement: Placement;
   private readonly seed: number;
   private readonly lastV = new THREE.Vector2();
   private ahead = 0;
   private side = 0;
+  private readonly stride: Stride = { air: 0 };
+  private readonly cloth: ClothAndBreath;
+  private readonly flinch = new Flinch();
+  private readonly dribbleHand = new DribbleHand();
+  private readonly blockReach = new BlockReach();
+  private readonly arms: Record<"L" | "R", ArmChain>;
 
   /** `backName` goes across the jersey: the player's own name, or the build's for a computer player. */
-  constructor(readonly athlete: Athlete, bodyMat: THREE.Material, parent: THREE.Object3D, backName?: string) {
-    this.model = buildAthlete(BUILDS[athlete.build], TEAMS[athlete.team], bodyMat, backName);
+  constructor(readonly athlete: Athlete, mats: AthleteMaterials, parent: THREE.Object3D, backName?: string) {
+    this.model = buildAthlete(BUILDS[athlete.build], TEAMS[athlete.team], mats, { backName });
     this.seed = athlete.id * 1.7;
+    this.cloth = new ClothAndBreath(this.seed);
     this.placement = new Placement(athlete);
-    parent.add(this.model.joints.root);
+    const j = this.model.joints;
+    this.arms = { L: { shoulder: j.shoulderL, elbow: j.elbowL, hand: j.handL }, R: { shoulder: j.shoulderR, elbow: j.elbowR, hand: j.handR } };
+    parent.add(j.root);
   }
 
   update(a: Athlete, s: AthleteScene, dt: number): void {
-    this.time += dt;
-    const c = BUILDS[a.build];
+    const m = this.mem;
+    m.time += dt;
     const speed = Math.hypot(a.vx, a.vz);
-    this.stride(a, s, speed, dt);
+    const dims = this.model.dims;
+    this.advanceStride(a, s, speed, dt);
     this.feelMomentum(a, dt);
-    const base = basePose(a, s, { speed, phase: this.phase, ahead: this.ahead, side: this.side, time: this.time, seed: this.seed });
+    // The way of travel in the player's own frame: ahead along his facing, his left a quarter turn round.
+    const heading = Math.atan2(a.vx * Math.cos(a.yaw) - a.vz * Math.sin(a.yaw), a.vx * Math.sin(a.yaw) + a.vz * Math.cos(a.yaw));
+    const leg = dims.thigh + dims.shin;
+    const base = basePose(a, s, { speed, phase: this.phase, ahead: this.ahead, side: this.side, time: m.time, seed: this.seed, heading, leg, stride: this.stride });
+    this.track(a);
+    const { pose: target, rate } = actionPose(a, BUILDS[a.build], s, base, m);
+    approach(this.pose, target, rate, dt);
+    const shown = this.flinch.apply({ ...this.pose }, dt);
+    const j = this.model.joints;
+    applyPose(shown, j, dims);
+    this.placement.place(a, j.root, shown.spin, dt);
+    const free = a.action.kind === "none" || a.action.kind === "move";
+    this.placement.plant(a, this.model, { L: shown.footL, R: shown.footR }, dt, free ? this.stride.air * 0.022 * dims.height : 0);
+    j.root.updateMatrixWorld(true);
+    this.reachForBall(a, s, dt);
+    this.cloth.update(j, this.model.extras, speed, dt);
+    j.root.updateMatrixWorld(true);
+  }
 
-    const act = a.action;
+  /** A push from a collision, along (x, z) in the world, of strength 0 to 1. */
+  hit(x: number, z: number, power: number): void {
+    const len = Math.hypot(x, z) || 1;
+    const yaw = this.athlete.yaw;
+    const ahead = (x * Math.sin(yaw) + z * Math.cos(yaw)) / len;
+    const left = (x * Math.cos(yaw) - z * Math.sin(yaw)) / len;
+    this.flinch.hit(ahead, left, power);
+  }
+
+  /** The engine says this player's hand met the ball: a block or a tipped pass. */
+  touched(t: BlockTouch, ballVel: { x: number; y: number; z: number }): void {
+    this.blockReach.hit(this.athlete, t, ballVel);
+  }
+
+  /** The dribbling hand on the real ball: riding it down on the push, waiting where it will come back up. */
+  private reachForBall(a: Athlete, s: AthleteScene, dt: number): void {
+    const ball = s.ball ?? null;
+    const kind = a.action.kind;
+    const active = !!ball && s.holding && !s.chest && (kind === "none" || kind === "move") && !palmHold(a) && (ball.hand === "dribble" || ball.hand === "free");
+    this.dribbleHand.update(a, ball, active, dt);
+    for (const k of ["L", "R"] as const) reachArm(this.arms[k], this.dribbleHand.target, PALM, POLE[k], this.dribbleHand.weight[k]);
+    this.reachToBlock(a, s.flight ?? null, dt);
+    // A pass on its way in: both hands reach out to either side of the ball, palms toward it.
+    if (!ball || s.holding || ball.mode !== "flight" || s.receiving <= 0) return;
+    side.set(Math.cos(a.yaw), 0, -Math.sin(a.yaw)).multiplyScalar(0.125);
+    const w = Math.min(1, s.receiving * 1.6);
+    for (const [k, sign] of [["L", 1], ["R", -1]] as const) {
+      grip.set(ball.pos.x, ball.pos.y, ball.pos.z).addScaledVector(side, sign);
+      reachArm(this.arms[k], grip, PALM, CATCH_POLE[k], w * w);
+    }
+  }
+
+  /** Up for a block, the nearer hand goes to the ball in the air and through it on a touch. */
+  private reachToBlock(a: Athlete, ball: Ball | null, dt: number): void {
+    const r = this.blockReach;
+    const arm = this.arms[r.side];
+    arm.shoulder.getWorldPosition(v);
+    const d = this.model.dims;
+    r.update(a, ball, v, d.upper + d.fore + 0.1, dt);
+    if (r.weight > 0.01) reachArm(this.arms[r.side], r.target, PALM, UP_POLE[r.side], r.weight);
+  }
+
+  /** Notes the start and end of each action and the landing after a jump, for the actions' timing. */
+  private track(a: Athlete): void {
+    const m = this.mem;
+    const kind = a.action.kind;
     const wasDrive = this.lastKind === "drive";
-    if (act.kind !== this.lastKind) {
+    if (kind !== this.lastKind) {
       // A spin in the air ends facing the same way it started, so unwind it without turning back round.
       if (wasDrive) this.pose.spin = Math.atan2(Math.sin(this.pose.spin), Math.cos(this.pose.spin));
-      if (act.kind === "none") this.endedAt = this.time;
-      this.releasedAt = null;
-      this.lastKind = act.kind;
+      if (kind === "none") m.endedAt = m.time;
+      // Thrown the wrong way: his speed to the left in his own frame says which way to fall.
+      if (kind === "stumble") m.shove = a.vx * Math.cos(a.yaw) - a.vz * Math.sin(a.yaw) >= 0 ? 1 : -1;
+      m.releasedAt = null;
+      this.lastKind = kind;
     }
     if (this.lastY > 0.05 && a.y <= 0.001) {
-      this.landAt = this.time;
-      this.hardLand = act.kind === "drive" || wasDrive;
+      m.landAt = m.time;
+      m.hardLand = kind === "drive" || wasDrive;
     }
     this.lastY = a.y;
-
-    let target: Pose = base;
-    let rate = 16;
-    switch (act.kind) {
-      case "shoot":
-        if (act.released && this.releasedAt === null) this.releasedAt = act.t;
-        target = act.free ? setShotPose(act.t, this.releasedAt, base) : shootPose(act.t, this.releasedAt, base, act.step !== null);
-        rate = 34;
-        break;
-      case "drive": {
-        const timing = { takeoff: act.takeoff, finish: act.finish, land: act.land, rimHang: act.rimHang };
-        const style = act.style ?? c.dunk;
-        target = act.dunk ? dunkPose(style, act.t, timing, base) : layupPose(act.layup ?? "finger", act.t, timing, base);
-        target.spin = act.dunk ? dunkSpin(style, act.t, timing) : 0;
-        rate = 30;
-        break;
-      }
-      case "pass":
-        target = passPose(act.t, base);
-        rate = 30;
-        break;
-      case "block":
-        target = blockPose(act.t, act.gather, act.air, base);
-        rate = 30;
-        break;
-      case "steal":
-        target = stealPose(act.t, base);
-        rate = 30;
-        break;
-      case "move":
-        target = movePose(act, base);
-        rate = 26;
-        break;
-      case "stumble":
-        target = stumblePose(act.t, act.dur, base);
-        rate = 22;
-        break;
-      case "celebrate":
-        // Into the celebration and out of it again smoothly, back to the walk to the check.
-        target = s.holding ? base : blend(base, act.gesture ? gesturePose(act.gesture, act.t) : celebratePose(c.celebration, act.t), ease(act.t / 0.25) * ease((act.dur - act.t) / 0.3), { ...base });
-        break;
-      case "none": {
-        const part = s.ceremony;
-        if (part) target = part.role === "captain" ? captainPose(part.t) : part.role === "mate" ? matePose(part.t, part.phase) : dejectedPose(this.time);
-        else if (s.winner !== null) target = s.winner === a.team ? celebratePose(c.celebration, this.time) : dejectedPose(this.time);
-        else if (this.time - this.landAt < 0.4) target = landPose(this.time - this.landAt, this.hardLand, base);
-        // Coming out of an action the limbs settle gently instead of snapping back to the run.
-        rate = 7 + 9 * ease((this.time - this.endedAt) / RECOVER);
-        break;
-      }
-    }
-    approach(this.pose, target, rate, dt);
-    applyPose(this.pose, this.model.joints, this.model.dims);
-    this.placement.place(a, this.model.joints.root, this.pose.spin, dt);
-    this.placement.plant(a, this.model, { L: this.pose.footL, R: this.pose.footR }, dt);
-    this.model.joints.root.updateMatrixWorld(true);
   }
 
   /**
    * Moves the legs through their stride by the ground covered, so the
    * feet stay planted. On the run with the ball the stride is also
    * drawn gently into step with the dribble, the ball hitting the floor
-   * as the foot opposite the ball hand lands; the engine already bounces
-   * it once a stride, so the pull is tiny and the feet do not skate.
+   * as the foot opposite the ball hand lands.
    */
-  private stride(a: Athlete, s: AthleteScene, speed: number, dt: number): void {
+  private advanceStride(a: Athlete, s: AthleteScene, speed: number, dt: number): void {
     const leg = this.model.dims.thigh + this.model.dims.shin;
     this.phase = (this.phase + (speed * dt) / strideLength(speed, leg, s.guarding)) % 1;
     if (!s.holding || s.chest || speed < 1.6 || (a.action.kind !== "none" && a.action.kind !== "move")) return;
@@ -173,8 +188,7 @@ export class AthleteView {
 
   /** Where a hand is in the world, for putting the ball in it. */
   hand(side: "L" | "R", out: THREE.Vector3): THREE.Vector3 {
-    const hand = side === "L" ? this.model.joints.handL : this.model.joints.handR;
-    return hand.localToWorld(out.set(0, -0.07, 0.03));
+    return this.arms[side].hand.localToWorld(out.copy(PALM));
   }
 
   /** A point just above the head, where the name tag and the shot meter float. */

@@ -1,12 +1,13 @@
 import { airborne, buildOf, standingReach } from "./athlete";
 import { RIM_SPOT, rimDistance } from "./court";
+import { drivePosition, driveHeight, landTime } from "./body/drive-flight";
 import { chooseDunk } from "./dunk-style";
 import { finishSpot, layupKind, releaseHand } from "./finish";
 import type { Match } from "./match";
 import { launchShot, slam } from "./shooting";
 import { JUMP, RIM } from "./tuning";
 import type { Athlete } from "./types";
-import { clamp, dir2, dist2, lerp, segmentDistance, yawOf } from "./vec";
+import { clamp, dir2, dist2, segmentDistance, yawOf } from "./vec";
 
 /**
  * Driving at the rim: the last two steps of the gather, then off the
@@ -33,7 +34,7 @@ export function startDrive(m: Match, a: Athlete): void {
       const push = dir2(a, inWay);
       inWay.vx = push.x * 4;
       inWay.vz = push.z * 4;
-      inWay.action = { kind: "stumble", t: 0, dur: 0.8 };
+      inWay.action = { kind: "stumble", t: 0, dur: 1, fall: "back" };
       m.emit({ type: "knockdown", id: inWay.id, by: a.id });
     } else {
       // An even or a losing battle: into his body and up, a layup through the contact.
@@ -51,11 +52,11 @@ export function startDrive(m: Match, a: Athlete): void {
   m.forcedDunk = null;
   const air = plan ? plan.air : layup === "reverse" ? 0.46 : 0.4;
   const rimHang = plan ? plan.rimHang : 0;
-  // Down from the rim takes about as long as the way up, a touch less for a layup that never went as high.
-  const fall = dunk ? 0.32 : 0.28;
+  // The landing follows from the jump under real gravity (see `body/drive-flight.ts`).
+  const timing = { takeoff: gather, finish: gather + air, rimHang, peak };
   a.action = {
     kind: "drive", t: 0, dunk, style: plan?.style ?? null, layup, from: { x: a.x, z: a.z }, to,
-    takeoff: gather, finish: gather + air, rimHang, land: gather + air + rimHang + fall, peak, released: false,
+    ...timing, land: landTime(timing), released: false,
   };
   a.yaw = driveYaw(a);
   if (contact) {
@@ -78,10 +79,7 @@ export function updateDrive(m: Match, a: Athlete, dt: number): void {
   const before = act.t;
   act.t += dt;
   const t = act.t;
-  const u = clamp(t / act.finish, 0, 1);
-  const eased = 1 - (1 - u) * (1 - u);
-  a.x = lerp(act.from.x, act.to.x, eased);
-  a.z = lerp(act.from.z, act.to.z, eased);
+  drivePosition(act, t, a);
   a.vx = a.vz = 0;
   if (act.layup !== "reverse" || t < act.finish) a.yaw = driveYaw(a);
   a.y = driveHeight(act, t);
@@ -97,28 +95,4 @@ export function updateDrive(m: Match, a: Athlete, dt: number): void {
     a.recover = act.dunk ? JUMP.driveRecover : JUMP.shotRecover;
     m.emit({ type: "land", id: a.id, hard: act.dunk });
   }
-}
-
-type Drive = Extract<Athlete["action"], { kind: "drive" }>;
-
-/**
- * Feet off the floor through a drive: up to the peak at the finish, then
- * for a dunk that hangs, a drop of a hand's length as the arms take the
- * weight on the rim, a hold, and the fall to the floor.
- */
-export function driveHeight(act: Drive, t: number): number {
-  const hang = act.rimHang;
-  const onRim = act.peak - 0.24;
-  if (t < act.takeoff) return 0;
-  if (t < act.finish) {
-    const s = (t - act.takeoff) / (act.finish - act.takeoff);
-    return act.peak * (1 - (1 - s) * (1 - s));
-  }
-  if (t < act.finish + hang) {
-    const s = clamp(((t - act.finish) / hang) * 4, 0, 1);
-    return lerp(act.peak, onRim, s * s * (3 - 2 * s));
-  }
-  const from = hang > 0 ? onRim : act.peak;
-  const s = clamp((t - act.finish - hang) / Math.max(0.1, act.land - act.finish - hang), 0, 1);
-  return from * (1 - s * s);
 }

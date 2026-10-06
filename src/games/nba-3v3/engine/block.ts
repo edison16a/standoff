@@ -1,4 +1,5 @@
 import { buildOf } from "./athlete";
+import { hangTime } from "./body/jump";
 import type { Match } from "./match";
 import { DEFENCE, JUMP } from "./tuning";
 import type { Action, Athlete } from "./types";
@@ -12,12 +13,14 @@ export type BlockStage = "gather" | "rise" | "fall" | "done";
 /**
  * A jump with the arms up, to contest or block a shot or to rebound.
  * A short crouch first loads the legs, so a jump pressed late is late;
- * then a real arc, highest halfway through the air time.
+ * then a flight under real gravity, highest halfway through the air time.
  */
 export function startBlock(a: Athlete): void {
   if (a.blockCd > 0) return;
   const s = buildOf(a).stats;
-  a.action = { kind: "block", t: 0, peak: 0.42 + s.speed * 0.012 + s.strength * 0.008, gather: JUMP.blockGather, air: JUMP.blockAir };
+  const peak = 0.42 + s.speed * 0.012 + s.strength * 0.008;
+  // Real gravity: the time up there follows from how high the legs send him.
+  a.action = { kind: "block", t: 0, peak, gather: JUMP.blockGather, air: hangTime(peak) };
   a.blockCd = DEFENCE.blockCooldown;
 }
 

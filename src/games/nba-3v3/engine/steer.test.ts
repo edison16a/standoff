@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createAthlete, moveAthlete, topSpeed } from "./athlete";
+import { BODY } from "./body/body-spec";
+import { powerPerKg } from "./body/mass";
 import type { MatchEvent } from "./events";
 import { STEP } from "./tuning";
 import type { Athlete } from "./types";
@@ -105,5 +107,61 @@ describe("running with momentum", () => {
     const free = runUntil(runner(), { x: 1, z: 0 }, (p) => speedOf(p) >= 4.5);
     const dribbling = runUntil(runner(), { x: 1, z: 0 }, (p) => speedOf(p) >= 4.5, [], true);
     expect(dribbling).toBeGreaterThan(free);
+  });
+
+  it("never asks more of the shoes than they grip: the friction circle", () => {
+    const a = runner();
+    const limit = BODY.plantTraction * BODY.gravity * BODY.plantTraction + 1e-6;
+    const sticks = [{ x: 1, z: 0 }, { x: 0, z: -1 }, { x: -1, z: 0 }, { x: 0.7, z: 0.7 }, { x: 0, z: 0 }];
+    for (const stick of sticks) {
+      a.move = stick;
+      for (let t = 0; t < 0.6; t += STEP) {
+        const vx = a.vx;
+        const vz = a.vz;
+        moveAthlete(a, STEP, false, null, []);
+        expect(Math.hypot(a.vx - vx, a.vz - vz) / STEP).toBeLessThanOrEqual(limit);
+      }
+    }
+  });
+
+  it("speeds up with limited leg power once moving: force times speed never passes it", () => {
+    const a = runner();
+    a.move = { x: 1, z: 0 };
+    const power = powerPerKg(a);
+    for (let t = 0; t < 1.2; t += STEP) {
+      const v = speedOf(a);
+      moveAthlete(a, STEP, false, null, []);
+      const accel = (speedOf(a) - v) / STEP;
+      if (v > 1) expect(accel * v).toBeLessThanOrEqual(power * 1.02);
+    }
+  });
+
+  it("stops in about the distance one g of braking takes", () => {
+    const a = runner();
+    runFor(a, { x: 1, z: 0 }, 1.2);
+    const v = speedOf(a);
+    const x0 = a.x;
+    runUntil(a, { x: 0, z: 0 }, (p) => speedOf(p) < 0.02);
+    const ideal = (v * v) / (2 * BODY.traction * BODY.gravity);
+    expect(a.x - x0).toBeGreaterThan(ideal * 0.9);
+    expect(a.x - x0).toBeLessThan(ideal * 1.3);
+  });
+
+  it("turns wider at speed: the sideways pull never passes the grip, so the radius is speed squared over it", () => {
+    const a = runner();
+    runFor(a, { x: 1, z: 0 }, 1.2);
+    const v0 = speedOf(a);
+    a.move = { x: Math.cos(1), z: -Math.sin(1) };
+    let first = Infinity;
+    for (let t = 0; t < 0.5; t += STEP) {
+      const h0 = Math.atan2(a.vz, a.vx);
+      moveAthlete(a, STEP, false, null, []);
+      const turn = Math.abs(Math.atan2(a.vz, a.vx) - h0);
+      const v = speedOf(a);
+      // Sideways acceleration is speed times the rate of turn.
+      expect((v * turn) / STEP).toBeLessThanOrEqual(BODY.plantTraction * BODY.gravity * 1.001);
+      if (t === 0 && turn > 0) first = (v * STEP) / turn;
+    }
+    expect(first).toBeGreaterThan((v0 * v0) / (BODY.plantTraction * BODY.gravity) - 0.05);
   });
 });

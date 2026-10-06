@@ -27,9 +27,10 @@ export function layupPose(kind: LayupKind, t: number, d: DriveTiming, base: Pose
 function gather(d: DriveTiming): Key[] {
   const g = d.takeoff;
   return [
-    [0, { legRLift: 0.75, kneeR: 0.55, legLLift: -0.35, kneeL: 0.8, hipY: -0.06, torsoX: 0.28, armLRaise: 0.8, armRRaise: 0.85, elbowL: 1.6, elbowR: 1.7, armLSpread: 0.2, armRSpread: 0.1 }],
-    [g * 0.45, { legRLift: 0.05, kneeR: 0.5, legLLift: 0.8, kneeL: 0.5, hipY: -0.09, torsoX: 0.3, armLRaise: 1.0, armRRaise: 1.05, elbowL: 1.7, elbowR: 1.8 }],
-    [g, { legLLift: 0.15, kneeL: 0.75, legRLift: 0.55, kneeR: 1.35, hipY: -0.15, torsoX: 0.22, armLRaise: 1.35, armRRaise: 1.45, elbowL: 1.6, elbowR: 1.7 }],
+    // The ball comes up off the bounce into both hands at the hip, is carried tight at the chest, and is at the chin as he leaves the floor.
+    [0, { legRLift: 0.75, kneeR: 0.55, legLLift: -0.35, kneeL: 0.8, hipY: -0.06, torsoX: 0.3, armLRaise: 0.55, armRRaise: 0.6, elbowL: 1.3, elbowR: 1.4, armLSpread: 0.25, armRSpread: 0.15 }],
+    [g * 0.45, { legRLift: 0.05, kneeR: 0.5, legLLift: 0.8, kneeL: 0.5, hipY: -0.09, torsoX: 0.3, armLRaise: 0.7, armRRaise: 0.75, elbowL: 1.5, elbowR: 1.55 }],
+    [g, { legLLift: 0.15, kneeL: 0.75, legRLift: 0.55, kneeR: 1.35, hipY: -0.15, torsoX: 0.22, armLRaise: 1.1, armRRaise: 1.2, elbowL: 1.55, elbowR: 1.6 }],
   ];
 }
 

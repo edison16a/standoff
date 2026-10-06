@@ -45,8 +45,9 @@ export function dunkPose(style: DunkStyle, t: number, d: DriveTiming, base: Pose
   const hang = d.rimHang;
   const g = d.takeoff;
   const keys: Key[] = [
-    [0, { legRLift: 0.75, kneeR: 0.55, legLLift: -0.35, kneeL: 0.8, hipY: -0.06, torsoX: 0.3, armLRaise: 1.0, armRRaise: 1.05, elbowL: 1.7, elbowR: 1.8, armLSpread: 0.25 }],
-    [g * 0.4, { legRLift: 0.05, kneeR: 0.5, legLLift: 0.85, kneeL: 0.55, hipY: -0.1, torsoX: 0.32, armLRaise: 0.9, armRRaise: 0.95, elbowL: 1.8, elbowR: 1.8 }],
+    // The ball comes up off the bounce into both hands at the hip and is carried tight at the chest through the steps.
+    [0, { legRLift: 0.75, kneeR: 0.55, legLLift: -0.35, kneeL: 0.8, hipY: -0.06, torsoX: 0.3, armLRaise: 0.6, armRRaise: 0.65, elbowL: 1.35, elbowR: 1.45, armLSpread: 0.25 }],
+    [g * 0.4, { legRLift: 0.05, kneeR: 0.5, legLLift: 0.85, kneeL: 0.55, hipY: -0.1, torsoX: 0.32, armLRaise: 0.7, armRRaise: 0.75, elbowL: 1.5, elbowR: 1.55 }],
     // The load: both feet down, hips low, the ball swung down past the knees to throw the arms up with.
     [g * 0.85, { legLLift: 0.8, legRLift: 0.75, kneeL: 1.4, kneeR: 1.35, hipY: -0.24, torsoX: 0.5, armLRaise: 0.15, armRRaise: 0.2, elbowL: 0.45, elbowR: 0.45, armLSpread: 0.15, armRSpread: 0.15, neckX: -0.25 }],
     [g + 0.02, { legLLift: -0.05, legRLift: 0.1, kneeL: 0.15, kneeR: 0.25, footL: 0.6, footR: 0.6, hipY: 0, torsoX: 0.05, armLRaise: 2.2, armRRaise: 2.2, elbowL: 0.9, elbowR: 0.9 }],

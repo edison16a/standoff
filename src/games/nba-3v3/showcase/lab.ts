@@ -7,9 +7,10 @@ import { GREEN_MS } from "../engine/shot-model";
 import type { Athlete } from "../engine/types";
 import { dir2, type V2 } from "../engine/vec";
 import { DUNK_STYLES, type DunkStyle } from "../roster";
+import { DEFENCE_SCENES, DEFENCE_SEEDS, DEFENCE_SPOTS, setupDefence, steerDefence, type DefenceScene } from "./lab-defence";
 import { FINISH_SCENES, FINISH_SPOTS, steerFinish, type FinishScene } from "./lab-finishes";
 
-export const LAB_SCENES = ["moves", "run", "dunk", "block", "free", ...FINISH_SCENES] as const;
+export const LAB_SCENES = ["moves", "run", "dunk", "block", "free", ...FINISH_SCENES, ...DEFENCE_SCENES] as const;
 export type LabScene = (typeof LAB_SCENES)[number];
 
 const SHOOTER = 0;
@@ -28,7 +29,7 @@ const MOVE_CUES: readonly Cue[] = [[0.6, "back"], [1.7, "left"], [2.6, "right"],
  * `moves` runs every dribble move into a defender, `run` sprints and
  * cuts with the ball then passes, `dunk` throws `&style=` at the rim,
  * `block` jumps at a jumper, and `free` calls a foul for free throws.
- * The finishes and the celebrations are in `lab-finishes.ts`.
+ * The finishes and the celebrations are in `lab-finishes.ts`, the defence in `lab-defence.ts`.
  */
 export class LabFilm {
   readonly match: Match;
@@ -36,8 +37,9 @@ export class LabFilm {
   private done = new Set<string>();
 
   constructor(readonly scene: LabScene, private readonly style: DunkStyle | null) {
+    const defence = isDefence(scene);
     this.match = new Match({
-      seed: 7,
+      seed: defence ? DEFENCE_SEEDS[scene] : 7,
       firstOffence: 0,
       entries: [
         { team: 0, build: "shooter", seat: null },
@@ -54,10 +56,11 @@ export class LabFilm {
     const spots: Record<LabScene, [number, number][]> = {
       moves: [[0, 8.6], [-6, 3], [6, 3], [0, 7.4], [-5, 9], [5, 9]],
       run: [[-4, 9], [4, 6], [6, 2], [-6, 3], [-5, 10], [6, 10]],
-      dunk: [[6, 10.5], [-4.6, 7.2], [6.5, 9], [-2.5, 5.5], [5, 10.5], [3.5, 10.5]],
+      dunk: [[6, 10.5], [-4.6, 7.2], [6.5, 9], [-0.6, 6.4], [5, 10.5], [3.5, 10.5]],
       block: [[0, 6.2], [-6, 3], [6, 3], [-5, 9], [5, 9], [0.1, 5.3]],
       free: [[0, 7], [-4, 6], [4, 6], [0.4, 6.4], [-5, 9], [5, 9]],
       ...FINISH_SPOTS,
+      ...DEFENCE_SPOTS,
     };
     spots[scene].forEach(([x, z], id) => Object.assign(m.athletes[id]!, { x, z, yaw: Math.PI }));
     // In the gesture scene the Shooter celebrates with his hands free.
@@ -67,6 +70,9 @@ export class LabFilm {
     // At the line the computer shoots for the holder, as it would for anyone.
     holder.auto = scene === "free";
     if (scene === "free") callFoul(m, m.athletes[LOCKDOWN]!, holder);
+    // The defence stands still where the scene is about the finish, so nobody walls off the drive.
+    if (scene === "dunk" || scene === "contact") for (const a of m.athletes) if (a.team === 1) a.auto = false;
+    if (defence) setupDefence(scene, m);
   }
 
   steer(t: number): void {
@@ -74,13 +80,14 @@ export class LabFilm {
     // The lab shows animation, not the defence winning: no steals, and blocks only where asked.
     for (const a of m.athletes) {
       a.stealCd = Math.max(a.stealCd, 0.5);
-      if (this.scene !== "block") a.blockCd = Math.max(a.blockCd, 0.5);
+      if (this.scene !== "block" && this.scene !== "swat") a.blockCd = Math.max(a.blockCd, 0.5);
     }
     if (this.scene === "moves") this.moves(t);
     else if (this.scene === "run") this.run(t);
     else if (this.scene === "dunk") this.dunk(t);
     else if (this.scene === "block") this.block(t);
     else if ((FINISH_SCENES as readonly string[]).includes(this.scene)) steerFinish(this.scene as FinishScene, m, t, (key) => this.once(key));
+    else if (isDefence(this.scene)) steerDefence(this.scene, m, t, (key) => this.once(key));
   }
 
   private moves(t: number): void {
@@ -138,6 +145,10 @@ export class LabFilm {
     void e;
     return null;
   }
+}
+
+function isDefence(scene: LabScene): scene is DefenceScene {
+  return (DEFENCE_SCENES as readonly string[]).includes(scene);
 }
 
 function toward(a: Athlete, spot: V2, pace: number): V2 {

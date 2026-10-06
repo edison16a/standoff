@@ -5,7 +5,9 @@ import { startDrive, updateDrive } from "./drive";
 import type { Match } from "./match";
 import { canShootOutOf, updateMove } from "./moves";
 import { choosePassTarget, throwPass } from "./passing";
+import { floaterFits, startFloater, updateFloater } from "./floater";
 import { JUMPER, releaseJumper, startJumper } from "./shooting";
+import { hopHeight, plantStepback, STEPBACK } from "./stepback";
 import { BOARD, JUMP, SHOT } from "./tuning";
 import type { Athlete } from "./types";
 import { dir2, type V2 } from "./vec";
@@ -32,7 +34,9 @@ export function pressShoot(m: Match, a: Athlete): void {
   const driving = d < SHOT.driveRange && speed > 1.6 && heading > 0.55;
   // Under the glass there is no jumper to take, so it becomes a reverse layup.
   const underGlass = a.z < BOARD.face + 0.3 && Math.abs(a.x - RIM_SPOT.x) < 2.8;
-  if (driving || underGlass || d < SHOT.closeRange) startDrive(m, a);
+  // Running hard at the rim from the edge of the paint, or with a big man waiting, it goes up early and soft.
+  if (!underGlass && floaterFits(m, a, d, speed, heading)) startFloater(m, a);
+  else if (driving || underGlass || d < SHOT.closeRange) startDrive(m, a);
   else startJumper(m, a);
 }
 
@@ -66,11 +70,13 @@ export function updateAction(m: Match, a: Athlete, dt: number): void {
       if (a.cheer) startCheer(a, false);
       return;
     case "shoot": {
+      if (act.float) return updateFloater(m, a, act, dt);
       const before = act.t;
       act.t += dt;
       const s = (act.t - JUMPER.takeoff) / JUMPER.air;
-      // A free throw is a set shot: the knees dip and the feet stay down.
-      a.y = !act.free && s > 0 && s < 1 ? JUMPER.peak * 4 * s * (1 - s) : 0;
+      // A free throw is a set shot: the knees dip and the feet stay down. A stepback hops back first.
+      a.y = !act.free && s > 0 && s < 1 ? JUMPER.peak * 4 * s * (1 - s) : act.step ? hopHeight(act.t) : 0;
+      if (act.step && before < STEPBACK.air && act.t >= STEPBACK.air) plantStepback(a);
       if (!act.released && act.t * 1000 >= SHOT.meterMs * SHOT.autoReleaseAt) releaseJumper(m, a);
       const landAt = JUMPER.takeoff + JUMPER.air;
       if (!act.free && before < landAt && act.t >= landAt) {

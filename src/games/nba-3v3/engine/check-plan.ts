@@ -76,7 +76,7 @@ export function handTo(m: Match, id: number): void {
   const b = m.ball;
   b.mode = "held";
   b.holder = id;
-  b.flight = null;
+  b.aim = null;
   b.flightKind = null;
   b.passTo = null;
   b.shot = null;

@@ -4,6 +4,8 @@ import type { Match } from "../engine/match";
 import { COURT } from "../engine/tuning";
 import { angleDiff, clamp, yawOf } from "../engine/vec";
 import { applyPose, approach, keyed, STAND, type Pose, type PosePatch } from "./anim/pose";
+import type { AthleteMaterials } from "./materials/athlete-materials";
+import type { Joints } from "./models/athlete-model";
 import { buildReferee, type RefereeModel } from "./referee-model";
 
 type Keys = readonly (readonly [number, PosePatch])[];
@@ -34,6 +36,37 @@ const SHOOTING: Keys = [
   [2.4, { armRRaise: 2.7 }],
 ];
 
+/** Both hands on the hips, elbows out. */
+const HIPS: PosePatch = { armLRaise: -0.3, armLSpread: 0.85, armLTwist: -1.0, elbowL: 1.4, armRRaise: -0.3, armRSpread: 0.85, armRTwist: -0.15, elbowR: 1.4, torsoX: -0.02 };
+
+/** A blocking foul: fist up, both hands on the hips, then the arm held up for the shots. */
+const BLOCK: Keys = [
+  [0, FIST_UP],
+  [0.55, FIST_UP],
+  [0.85, HIPS],
+  [1.5, HIPS],
+  [1.8, { armLRaise: 0.2, armLSpread: 0.12, armLTwist: 0, elbowL: 0.3, armRRaise: 2.7, armRSpread: 0.35, armRTwist: 0, elbowR: 0.15, wristR: -0.3 }],
+  [2.4, { armRRaise: 2.7 }],
+];
+
+/** The left palm open in front of the chest, the right fist drawn back. */
+const PALM: PosePatch = { armLRaise: 1.3, armLSpread: -0.35, elbowL: 1.2, wristL: 0.2, armRRaise: 1.05, armRSpread: 0.35, elbowR: 1.7 };
+const PUNCH: PosePatch = { armRRaise: 1.35, armRSpread: -0.2, elbowR: 0.75, torsoX: 0.08 };
+
+/** A charge: fist up, the fist punched into the open palm twice, then the arm out to the other team's way. */
+const CHARGE_CALL: Keys = [
+  [0, FIST_UP],
+  [0.55, FIST_UP],
+  [0.8, PALM],
+  [0.95, PUNCH],
+  [1.1, PALM],
+  [1.25, PUNCH],
+  [1.5, PUNCH],
+  [1.8, { armLRaise: 0.15, armLSpread: 0.12, elbowL: 0.3, wristL: 0, armRRaise: 1.55, armRSpread: 1.3, elbowR: 0.08, torsoX: 0 }],
+];
+
+const SIGNAL: Record<FoulCall["kind"], Keys> = { reach: REACH, shooting: SHOOTING, block: BLOCK, charge: CHARGE_CALL };
+
 /** The basket counts: the right arm swung down across the body, twice, like a scoring call. */
 const COUNTS: Keys = [
   [0, { armRRaise: 2.6, armRSpread: 0.1, elbowR: 0.2 }],
@@ -56,8 +89,9 @@ const pop = (u: number) => {
  * The referee who comes on at every foul. He pops in beside the play,
  * facing the camera and turned toward the foul, blows the whistle with a
  * fist in the air and makes the signal: a chop on the wrist for a reach
- * in, the arm held up for the shots on a shooting foul, and a swing of
- * the arm when a fouled shot still counts. He goes again as the players
+ * in, the arm held up for the shots on a shooting foul, hands on the hips
+ * for a block, the fist into the palm for a charge, and a swing of the
+ * arm when a fouled shot still counts. He goes again as the players
  * walk to the line.
  */
 export class Referee {
@@ -69,10 +103,16 @@ export class Referee {
   private leaving = 0;
   private yaw = 0;
 
-  constructor(bodyMat: THREE.Material, private readonly parent: THREE.Object3D) {
-    this.ref = buildReferee(bodyMat);
+  constructor(mats: AthleteMaterials, private readonly parent: THREE.Object3D) {
+    this.ref = buildReferee(mats);
     this.ref.model.joints.root.visible = false;
     parent.add(this.ref.model.joints.root);
+  }
+
+  /** The referee's bones while he is on the floor, for his contact shadow, or null. */
+  get joints(): Joints | null {
+    const j = this.ref.model.joints;
+    return j.root.visible ? j : null;
   }
 
   update(m: Match, dt: number): void {
@@ -97,7 +137,7 @@ export class Referee {
     }
     root.visible = true;
     root.scale.setScalar(Math.max(0.001, scale));
-    const target = this.andOneAt !== null ? keyed(COUNTS, this.shownFor - this.andOneAt, STAND) : keyed(this.call.kind === "shooting" ? SHOOTING : REACH, this.shownFor, STAND);
+    const target = this.andOneAt !== null ? keyed(COUNTS, this.shownFor - this.andOneAt, STAND) : keyed(SIGNAL[this.call.kind], this.shownFor, STAND);
     approach(this.pose, target, 22, dt);
     applyPose(this.pose, this.ref.model.joints, this.ref.model.dims);
     root.rotation.y = this.yaw;

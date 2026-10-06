@@ -1,5 +1,5 @@
-import { buildOf } from "./athlete";
 import { holdAtChest, stepToss } from "./check-toss";
+import { dribbleBall } from "./dribble-ball";
 import { ready } from "./free-throw";
 import type { Match } from "./match";
 import { FREE_THROW as FT } from "./tuning";
@@ -27,8 +27,8 @@ export function stepFreeThrowBall(m: Match, dt: number): boolean {
   }
   if (ft.stage === "shooting" || ft.stage === "result") return false;
   if (ft.stage === "whistle" && m.ball.holder === null) return false;
-  if (lineBouncing(m)) bounceAtLine(m);
-  else holdAtChest(m);
+  if (lineBouncing(m)) bounceAtLine(m, dt);
+  else holdAtChest(m, dt);
   return true;
 }
 
@@ -38,17 +38,8 @@ export function lineBouncing(m: Match): boolean {
   return !!ft && ft.stage === "set" && ft.t < FT.bounces && m.holder?.action.kind === "none";
 }
 
-/** Two easy bounces in front of the feet, the ball back in the hand as the routine ends. */
-function bounceAtLine(m: Match): void {
-  const ft = m.freeThrows!;
-  const a = m.athletes[ft.shooter]!;
-  const before = a.dribble;
-  a.dribble = ((ft.t / FT.bounces) * 2) % 1;
-  const h = buildOf(a).body.height;
-  const drop = 1 - Math.abs(1 - 2 * a.dribble);
-  const side = 0.3 * a.dribbleSide;
-  const fwd = 0.3;
-  m.ball.pos = { x: a.x + Math.sin(a.yaw) * fwd - Math.cos(a.yaw) * side, y: 0.12 + (h * 0.44 - 0.12) * (1 - drop * drop), z: a.z + Math.cos(a.yaw) * fwd + Math.sin(a.yaw) * side };
-  m.ball.vel = { x: 0, y: 0, z: 0 };
-  if (before < 0.5 && a.dribble >= 0.5) m.emit({ type: "bounce", id: a.id, x: m.ball.pos.x, z: m.ball.pos.z, power: 0.45 });
+/** Two easy bounces in front of the feet on the same dribble physics, the ball back in the hand as the routine ends. */
+function bounceAtLine(m: Match, dt: number): void {
+  const a = m.athletes[m.freeThrows!.shooter]!;
+  dribbleBall(m, a, dt, 2 / FT.bounces);
 }

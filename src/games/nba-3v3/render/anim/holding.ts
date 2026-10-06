@@ -16,7 +16,8 @@ function dribbleRight(dribble: number, run: number, still: number, pressure: num
   const push = ride(dribble) * (1 + still * 0.5);
   return {
     armRRaise: 0.55 + run * 0.12 - push * 0.3, armRSpread: 0.24, elbowR: 0.95 - push * 0.4 + still * 0.15, wristR: -0.15 + push * 0.8, armRTwist: 0.25,
-    armLRaise: 0.3 + run * 0.15 + pressure * 0.7, armLSpread: 0.3 + pressure * 0.25, elbowL: 0.7 + pressure * 0.75 + run * 0.3, armLTwist: pressure * 0.35, wristL: 0,
+    // The arm bar: the upper arm out toward the defender and the forearm across the chest, not up by the face.
+    armLRaise: 0.3 + run * 0.15 + pressure * 0.45, armLSpread: 0.3 + pressure * 0.4, elbowL: 0.7 + pressure * 0.8 + run * 0.3, armLTwist: pressure * 1.0, wristL: 0,
   };
 }
 
@@ -27,7 +28,7 @@ function dribbleRight(dribble: number, run: number, still: number, pressure: num
  * from the defence, and standing still the whole body sinks into a
  * crouch over the pound dribble.
  */
-export function dribblePose(p: Pose, dribble: number, run: number, side: number, pressure: number): Pose {
+export function dribblePose(p: Pose, dribble: number, run: number, side: number, pressure: number, drive = 0): Pose {
   const still = 1 - Math.min(1, run * 4);
   const right = dribbleRight(dribble, run, still, pressure);
   const k = Math.min(1, Math.max(0, (side + 1) / 2));
@@ -48,6 +49,13 @@ export function dribblePose(p: Pose, dribble: number, run: number, side: number,
   out.legRLift += low * 0.28;
   out.legLSpread += still * 0.08;
   out.legRSpread += still * 0.08;
+  // Attacking the rim: the shoulders down and over the ball, the hips sunk, the eyes up on the rim.
+  out.torsoX += drive * 0.16;
+  out.neckX -= drive * 0.14;
+  out.kneeL += drive * 0.22;
+  out.kneeR += drive * 0.22;
+  out.legLLift += drive * 0.12;
+  out.legRLift += drive * 0.12;
   return out;
 }
 
