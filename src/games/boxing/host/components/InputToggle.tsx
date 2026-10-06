@@ -38,6 +38,6 @@ export const KEY_HELP: readonly [string, string][] = [
   ["Hooks", "U and I"],
   ["Slip and duck", "A, D and S, or the arrows"],
   ["Body shot", "punch while holding S"],
-  ["Guard", "hold Space. Shift guards the sides, F the body"],
+  ["Guard", "Space. Shift for hooks, F for the body"],
   ["Touch gloves", "hold E"],
 ];
