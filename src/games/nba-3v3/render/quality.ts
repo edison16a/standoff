@@ -14,6 +14,8 @@ export interface Quality {
   post?: boolean;
   /** The floor's mirror of the players and lights, drawn at this share of the picture's size; 0 turns it off. */
   mirror?: number;
+  /** Whether the frame budget may lower the resolution and shed extras; the showcase films offline, so it turns this off. */
+  governed?: boolean;
 }
 
 /** For computers that draw WebGL in software: a smaller picture without antialiasing, shadows, the finish or the floor's mirror, and lighter players. */

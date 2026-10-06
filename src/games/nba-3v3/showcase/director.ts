@@ -58,7 +58,7 @@ export class ShowcaseDirector {
   private draws = 0;
 
   constructor(canvas: HTMLCanvasElement, readonly view: ShowcaseView) {
-    this.renderer = new CourtRenderer(canvas);
+    this.renderer = new CourtRenderer(canvas, { governed: false });
     if (view === "poster") this.renderer.cinematic({ lights: stillLights(STILL_SUBJECT), fill: 0.5, key: 0.8, haze: 0.018, boards: true });
     if (view === "icon") this.renderer.cinematic(iconLook());
     // Development aids: ?cam=x,y,z,lookX,lookY,lookZ,fov pins the camera for close looks at the models,

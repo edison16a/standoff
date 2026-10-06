@@ -114,10 +114,13 @@ export class PixelBudget {
   private readonly timer: GpuTimer;
   private readonly g = governor();
   private size = { width: 1, height: 1, dpr: 1 };
+  /** A new scale waits for the next frame: resizing the canvas clears it, so doing it after a draw would show one blank frame. */
+  private pending = false;
   /** Called once if the governor gives up on pixels alone and asks for the extras to go. */
   onShed: (() => void) | null = null;
 
-  constructor(private readonly renderer: THREE.WebGLRenderer, private readonly maxPixelRatio: number) {
+  /** `governed` false keeps the full resolution and never sheds, for offline filming where time does not matter. */
+  constructor(private readonly renderer: THREE.WebGLRenderer, private readonly maxPixelRatio: number, private readonly governed = true) {
     this.timer = new GpuTimer(renderer.getContext());
   }
 
@@ -128,6 +131,8 @@ export class PixelBudget {
 
   /** Draws through `render`, timing it, and resizes once the governor says so. */
   draw(render: () => void): void {
+    if (!this.governed) return render();
+    if (this.pending) this.apply();
     this.timer.begin();
     render();
     this.timer.end();
@@ -135,11 +140,12 @@ export class PixelBudget {
       const shed = this.g.shed;
       if (!measure(this.g, ms)) continue;
       if (this.g.shed && !shed) this.onShed?.();
-      else this.apply();
+      else this.pending = true;
     }
   }
 
   private apply(): void {
+    this.pending = false;
     this.renderer.setPixelRatio(Math.min(this.size.dpr, this.maxPixelRatio) * this.g.scale);
     this.renderer.setSize(this.size.width, this.size.height, false);
   }

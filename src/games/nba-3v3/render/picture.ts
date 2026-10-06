@@ -19,7 +19,7 @@ export class Picture {
   private exposureScale = 1;
 
   constructor(canvas: HTMLCanvasElement, quality: Quality) {
-    const { antialias = true, shadows = true, maxPixelRatio = 1.75, post = true } = quality;
+    const { antialias = true, shadows = true, maxPixelRatio = 1.75, post = true, governed = true } = quality;
     // With the finish on, the multisampling happens in its own target, so the canvas itself needs none.
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: antialias && !post, powerPreference: "high-performance", stencil: false });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -30,7 +30,7 @@ export class Picture {
     this.renderer.shadowMap.autoUpdate = false;
     const samples = antialias ? Math.min(4, this.renderer.capabilities.maxSamples) : 0;
     this.post = post ? new BroadcastPost(samples) : null;
-    this.budget = new PixelBudget(this.renderer, maxPixelRatio);
+    this.budget = new PixelBudget(this.renderer, maxPixelRatio, governed);
   }
 
   /** Called once if even the fewest pixels cannot keep the frame in budget. */
