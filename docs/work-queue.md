@@ -98,7 +98,7 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ## Done recently
 
-* Football 3v3 quality pass: rigid body ball with a real spiral, drag and turf bounces, new athletes with pads and helmets, new stadium, broadcast camera, touchdown replay and ceremony, re-recorded trailer, icon and poster (cd1c9d4), on main. Follow up: retime the poster so runner 84 has a foot planted.
+* Football 3v3 quality pass: rigid body ball with a real spiral, drag and turf bounces, new athletes with pads and helmets, new stadium, broadcast camera, touchdown replay and ceremony, re-recorded trailer, icon and poster (cd1c9d4), on main. Poster retimed to a planted stride.
 * Basketball 3v3 quality pass: real ball physics with torus rim and cloth net, hand driven dribble, charges and blocking fouls, clean drives, stepbacks and floaters, NBA style defence, the cream and orange ball with visible spin, new athletes, arena and camera, re-recorded trailer, icon and poster (c988101), on main.
 * Soccer 3v3 quality pass: real ball physics with spin, curl and giving nets, skinned athletes, roofed stadium with floodlights, broadcast camera, re-recorded trailer, icon and poster (0384347), on main.
 * Magic Kart media: re-recorded trailer, icon and poster with the new karts and double boxes (ff83d1a), on main.
