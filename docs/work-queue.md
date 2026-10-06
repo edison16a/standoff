@@ -100,6 +100,7 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ## Done recently
 
+* Magic Kart media: re-recorded trailer, icon and poster with the new karts and double boxes (ff83d1a), on main.
 * Magic Kart quality pass: detailed karts, double item boxes with a two item queue, gold marking only double boxes (7ba15e6), on main.
 * Trailer style home clips and posters for all 13 games (six media groups, each reviewed), on main.
 * Batch G: Football (defence pad stays, normal QB stick, slower QB with a RUN button, Run the ball call with a pitch, magenta target ring, no player strip) and Basketball (buttons always lit, Guard sticks to your man, stronger jukes with a stun), and no duplicate name boxes (Soccer's strip removed).
