@@ -46,9 +46,10 @@ export class AthleteMaterials {
       normalScale: new THREE.Vector2(0.35, 0.35),
       roughness: 0.62,
       metalness: 0,
-      sheen: high ? 0.8 : 0,
-      sheenRoughness: 0.45,
-      sheenColor: new THREE.Color(colour).lerp(new THREE.Color("#ffffff"), 0.55),
+      // A sheen in the cloth's own colour keeps the kit saturated; a white one would wash it out.
+      sheen: high ? 0.55 : 0,
+      sheenRoughness: 0.5,
+      sheenColor: new THREE.Color(colour).lerp(new THREE.Color("#ffffff"), 0.18),
       alphaTest: 0.5,
       alphaToCoverage: high,
       side: THREE.DoubleSide,
