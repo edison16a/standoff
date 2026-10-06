@@ -5,6 +5,7 @@ import { COURT } from "../engine/tuning";
 import { angleDiff, clamp, yawOf } from "../engine/vec";
 import { applyPose, approach, keyed, STAND, type Pose, type PosePatch } from "./anim/pose";
 import type { AthleteMaterials } from "./materials/athlete-materials";
+import type { Joints } from "./models/athlete-model";
 import { buildReferee, type RefereeModel } from "./referee-model";
 
 type Keys = readonly (readonly [number, PosePatch])[];
@@ -106,6 +107,12 @@ export class Referee {
     this.ref = buildReferee(mats);
     this.ref.model.joints.root.visible = false;
     parent.add(this.ref.model.joints.root);
+  }
+
+  /** The referee's bones while he is on the floor, for his contact shadow, or null. */
+  get joints(): Joints | null {
+    const j = this.ref.model.joints;
+    return j.root.visible ? j : null;
   }
 
   update(m: Match, dt: number): void {

@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { MatchEvent } from "../engine/events";
 import type { Match } from "../engine/match";
 import type { Athlete } from "../engine/types";
+import { BALL } from "../engine/tuning";
 import { Arena } from "./arena/arena";
 import { arenaEnvironment } from "./arena/arena-environment";
 import { AthleteMaterials } from "./materials/athlete-materials";
@@ -10,6 +11,7 @@ import { AthleteView } from "./athlete-view";
 import { hanging } from "./arena/hoop";
 import { BallView } from "./ball-view";
 import { joltOnContact } from "./contact-jolts";
+import { ContactShadows } from "./contact-shadows";
 import { CeremonyStage } from "./ceremony/ceremony-stage";
 import type { Ceremony } from "../engine/ceremony";
 import { Referee } from "./referee";
@@ -50,6 +52,7 @@ export class CourtRenderer {
   private readonly pixel = new Uint8Array(4);
   private readonly replayCam = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 50 };
   private readonly ceremony = new CeremonyStage();
+  private readonly contact = new ContactShadows();
   private keyLight: number;
   /** The name across a player's back, or null for the build's own. The host sets it to people's names. */
   jerseyName: (a: Athlete) => string | null = () => null;
@@ -64,7 +67,8 @@ export class CourtRenderer {
     this.scene.background = new THREE.Color("#060812");
     this.scene.fog = new THREE.FogExp2("#060812", 0.014);
     this.effects = new Effects(this.arena, this.tv);
-    this.scene.add(this.arena.group, this.players, this.ball.mesh, this.effects.group, this.ceremony.scene.group);
+    this.arena.mirror.hidden.push(this.contact.mesh);
+    this.scene.add(this.arena.group, this.contact.mesh, this.players, this.ball.mesh, this.effects.group, this.ceremony.scene.group);
     this.referee = new Referee(this.athleteMats, this.players);
     this.keyLight = this.arena.key.intensity;
   }
@@ -136,6 +140,7 @@ export class CourtRenderer {
     this.arena.key.intensity = this.keyLight * (1 - this.ceremony.scene.dim);
     this.ball.update(b, holder !== null ? (this.views[holder] ?? null) : null, chest, dt);
     this.referee.update(m, dt);
+    this.contact.cast([...this.views.map((v) => v.model.joints), this.referee.joints], this.ball.mesh.visible ? this.ball.mesh.position : null, BALL.radius);
     if (this.intro !== null) {
       this.intro += dt;
       if (this.intro > 2.8) this.intro = null;
@@ -191,6 +196,7 @@ export class CourtRenderer {
   dispose(): void {
     for (const view of this.views) view.dispose(this.players);
     this.referee.dispose();
+    this.contact.dispose();
     this.ceremony.dispose();
     this.arena.dispose();
     this.ball.dispose();
