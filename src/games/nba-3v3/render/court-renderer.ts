@@ -148,7 +148,8 @@ export class CourtRenderer {
       const line = lineScene(m, a);
       const ceremony = this.ceremony.roleOf(a.id);
       const holding = holder === a.id;
-      view.update(a, { holding, chest, receiving: Math.max(0, incoming), guarding, pressure: holding ? pressure : 0, ...line, winner, ceremony, ball: holding ? b : null }, dt);
+      const contest = guarding && onBall?.action.kind === "shoot" && !onBall.action.free ? Math.min(1, onBall.action.t / 0.3) : 0;
+      view.update(a, { holding, chest, receiving: Math.max(0, incoming), guarding, pressure: holding ? pressure : 0, ...line, winner, ceremony, ball: holding || incoming > 0 ? b : null, contest }, dt);
     }
     this.ceremony.update(this.views, dt, this.time);
     // The ball is put away for the ceremony, and the arena's lights come down under the spotlights.

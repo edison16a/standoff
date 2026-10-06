@@ -20,8 +20,11 @@ export type { AthleteScene };
 const v = new THREE.Vector3();
 /** The palm, in the hand's frame, where the ball sits under it. */
 const PALM = new THREE.Vector3(0, -0.07, 0.03);
-/** Each dribbling elbow points out and back, in the torso's frame. */
+/** Each dribbling elbow points out and back, in the torso's frame; catching, out and down. */
 const POLE = { L: new THREE.Vector3(0.7, -0.25, -0.65), R: new THREE.Vector3(-0.7, -0.25, -0.65) };
+const CATCH_POLE = { L: new THREE.Vector3(0.6, -0.8, 0), R: new THREE.Vector3(-0.6, -0.8, 0) };
+const side = new THREE.Vector3();
+const grip = new THREE.Vector3();
 
 /**
  * One player on screen: the model, and the animation that follows the
@@ -102,6 +105,14 @@ export class AthleteView {
     const active = !!ball && s.holding && !s.chest && (kind === "none" || kind === "move") && !palmHold(a) && (ball.hand === "dribble" || ball.hand === "free");
     this.dribbleHand.update(a, ball, active, dt);
     for (const k of ["L", "R"] as const) reachArm(this.arms[k], this.dribbleHand.target, PALM, POLE[k], this.dribbleHand.weight[k]);
+    // A pass on its way in: both hands reach out to either side of the ball, palms toward it.
+    if (!ball || s.holding || ball.mode !== "flight" || s.receiving <= 0) return;
+    side.set(Math.cos(a.yaw), 0, -Math.sin(a.yaw)).multiplyScalar(0.125);
+    const w = Math.min(1, s.receiving * 1.6);
+    for (const [k, sign] of [["L", 1], ["R", -1]] as const) {
+      grip.set(ball.pos.x, ball.pos.y, ball.pos.z).addScaledVector(side, sign);
+      reachArm(this.arms[k], grip, PALM, CATCH_POLE[k], w * w);
+    }
   }
 
   /** Notes the start and end of each action and the landing after a jump, for the actions' timing. */
