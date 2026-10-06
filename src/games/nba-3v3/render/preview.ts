@@ -7,7 +7,12 @@ import { locomotion } from "./anim/locomotion";
 import { applyPose } from "./anim/pose";
 import { AthleteMaterials } from "./materials/athlete-materials";
 import { buildAthlete, type AthleteModel } from "./models/athlete-model";
+import { reachArm } from "./arm-ik";
 import { ballTexture } from "./textures";
+
+/** The palm where the ball sits under it, and the way the dribbling elbow points, as on the court. */
+const PALM = new THREE.Vector3(0, -0.07, 0.03);
+const POLE_R = new THREE.Vector3(-0.7, -0.25, -0.65);
 
 /**
  * The build on the phone's picker: the very same model the big screen
@@ -104,11 +109,17 @@ export class AthletePreview {
       this.turntable.rotation.y = this.angle;
       this.dribble = (this.dribble + dt * 2.3) % 1;
       const pose = locomotion({ speed: 0, phase: 0, guarding: false, dribble: this.dribble, dribbleSide: 1, pressure: 0, time: now / 1000, seed: 0 });
-      applyPose(pose, this.model.joints, this.model.dims);
+      const j = this.model.joints;
+      applyPose(pose, j, this.model.dims);
       this.turntable.updateMatrixWorld(true);
-      // The ball bounces under the dribbling hand, sharp at the floor and slow at the top.
-      const hand = this.model.joints.handR.localToWorld(new THREE.Vector3(0, -0.08, 0.05));
+      // The dribbling hand works the ball beside the hip, pushing down as the ball leaves it.
       const drop = 1 - Math.abs(1 - 2 * this.dribble);
+      const h = this.model.dims.height;
+      const push = 1 - Math.min(1, drop / 0.3);
+      const goal = j.root.localToWorld(new THREE.Vector3(-0.15 * h, 0.47 * h - 0.09 * push, 0.11 * h));
+      reachArm({ shoulder: j.shoulderR, elbow: j.elbowR, hand: j.handR }, goal, PALM, POLE_R, 1);
+      // The ball bounces under the dribbling hand, sharp at the floor and slow at the top.
+      const hand = j.handR.localToWorld(PALM.clone());
       this.ball.position.set(hand.x, 0.12 + (hand.y - 0.2) * (1 - drop * drop), hand.z);
       this.renderer.render(this.scene, this.camera);
     }
