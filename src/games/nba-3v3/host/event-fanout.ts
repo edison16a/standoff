@@ -50,7 +50,7 @@ export class EventFanout {
     this.effects(event);
     buzzer.onEvent(event, m, driver.athleteBySeat);
     slowForMoment(event, driver);
-    if (event.type === "shot" && isGreen(event.grade) && m.athletes[event.id]?.seat !== null) audio.green(event.grade === "gold");
+    if (event.type === "shot" && isGreen(event.grade) && driver.pilotOf(event.id) !== null) audio.green(event.grade === "gold");
     const shown = banner(event, m, nameOf, this.banners.count);
     if (shown) this.banners.show(shown);
     if (PROMPT.has(event.type)) refresh();

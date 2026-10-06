@@ -167,11 +167,15 @@ export class Match {
     return this.offence !== a.team;
   }
 
-  /** A human's phone dropped or came back. The computer plays for them meanwhile. */
+  /**
+   * The computer takes a player over, or hands him back to a phone: when
+   * a phone drops or comes back, or switches to a teammate (`hand-over.ts`).
+   */
   setAuto(id: number, auto: boolean): void {
     const a = this.athletes[id];
-    if (!a || a.seat === null) return;
+    if (!a) return;
     a.auto = auto;
+    a.guard = false;
     if (auto) {
       a.move = { x: 0, z: 0 };
       if (a.action.kind === "shoot" && !a.action.released) releaseShot(this, a);

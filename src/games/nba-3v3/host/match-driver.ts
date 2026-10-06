@@ -2,10 +2,12 @@ import type { BotLevel } from "@/games/kit/difficulty/difficulty";
 import type { Stick } from "@/games/kit/pad/stick-math";
 import { Ceremony } from "../engine/ceremony";
 import type { MatchEvent } from "../engine/events";
+import { handOver } from "../engine/hand-over";
 import { Match, type Entry } from "../engine/match";
 import { STEP } from "../engine/tuning";
 import type { Button } from "../engine/types";
 import type { V2 } from "../engine/vec";
+import { ControlSwitch, pilotOf } from "./control-switch";
 import { ReplayDirector } from "./replay-director";
 
 /** A frame longer than this is a stall; the game does not try to catch up past it. */
@@ -23,7 +25,9 @@ const CEREMONY_AFTER = 2.4;
  */
 export class MatchDriver {
   readonly match: Match;
+  /** The player each phone moves now. A pass to a computer teammate moves it to the receiver (see `control-switch.ts`). */
   readonly athleteBySeat = new Map<number, number>();
+  private readonly switcher = new ControlSwitch();
   readonly replays: ReplayDirector;
   /** The trophy ceremony once it has started. It stays to the end, under the box scores. */
   ceremony: Ceremony | null = null;
@@ -97,10 +101,29 @@ export class MatchDriver {
       this.match.step(STEP);
       const events = this.match.drainEvents();
       if (this.replay) this.replays.record(this.match, events);
-      for (const event of events) for (const listener of this.listeners) listener(event);
+      for (const event of events) {
+        this.switchControl(event);
+        for (const listener of this.listeners) listener(event);
+      }
     }
     if (this.replay) this.replays.update(this.match, () => this.voters());
     return dt;
+  }
+
+  /** The phone moving this player, or null when the computer is. */
+  pilotOf(id: number): number | null {
+    return pilotOf(this.athleteBySeat, id);
+  }
+
+  /** The player a phone started the game as, whose name and box score are theirs. */
+  ownerOf(seat: number): number | undefined {
+    return this.match.athletes.find((a) => a.seat === seat)?.id;
+  }
+
+  private switchControl(event: MatchEvent): void {
+    const s = this.switcher.onEvent(event, this.match, this.athleteBySeat);
+    const from = s ? this.athleteBySeat.get(s.seat) : undefined;
+    if (s && from !== undefined && handOver(this.match, from, s.to)) this.athleteBySeat.set(s.seat, s.to);
   }
 
   private ceremonyDue(): boolean {

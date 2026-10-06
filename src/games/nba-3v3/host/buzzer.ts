@@ -1,6 +1,7 @@
 import type { MatchEvent } from "../engine/events";
 import type { Match } from "../engine/match";
 import type { BuzzKind } from "../protocol";
+import { pilotOf } from "./control-switch";
 import type { PhoneLink } from "./phone-link";
 
 const GRADE_WORDS = { gold: "Gold!", perfect: "Green!", good: "Good release", early: "Early", late: "Late" } as const;
@@ -14,7 +15,8 @@ export class Buzzer {
   constructor(private readonly phones: PhoneLink) {}
 
   onEvent(e: MatchEvent, m: Match, athleteBySeat: ReadonlyMap<number, number>): void {
-    const seatOf = (id: number): number | null => m.athletes[id]?.seat ?? null;
+    // Buzzes go to the phone moving that player now, which after a switch may not be the one it started as.
+    const seatOf = (id: number): number | null => pilotOf(athleteBySeat, id);
     const send = (id: number, kind: BuzzKind, text: string | null) => {
       const seat = seatOf(id);
       if (seat !== null) this.phones.buzz(seat, kind, text);

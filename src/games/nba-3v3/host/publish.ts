@@ -34,7 +34,7 @@ export function phaseOf(driver: MatchDriver | null): Phase {
 export function replayVotes(driver: MatchDriver | null, players: readonly Player[]): { seat: number; name: string; done: boolean }[] {
   const r = driver?.replays.replay;
   if (!r || !driver) return [];
-  return r.voters.map((seat) => ({ seat, name: nameFor(driver.match, driver.athleteBySeat.get(seat) ?? -1, players) || "Player", done: r.skipped.has(seat) }));
+  return r.voters.map((seat) => ({ seat, name: nameFor(driver.match, driver.ownerOf(seat) ?? -1, players) || "Player", done: r.skipped.has(seat) }));
 }
 
 /** The name a player goes by on screen: their own for people, CPU and the build for computer players, like CPU Shooter. */
@@ -142,6 +142,9 @@ export function publish(c: PublishContext): void {
     const s = c.lobby.seats.get(seat)!;
     const id = c.driver?.athleteBySeat.get(seat);
     const athlete = m && id !== undefined ? m.athletes[id] : undefined;
+    // The box score line is the player they started as, even after switching to a teammate.
+    const ownId = c.driver?.ownerOf(seat);
+    const own = m && ownId !== undefined ? m.athletes[ownId] : undefined;
     const state: PhoneState = {
       kind: "state",
       phase: early ? "live" : phase,
@@ -153,7 +156,7 @@ export function publish(c: PublishContext): void {
       playing: !!athlete,
       court: m && athlete ? courtState(m, athlete.id, c.players) : null,
       replay: replay && athlete ? { voted: replay.skipped.has(seat), votes: votes.map(({ name, done }) => ({ name, done })) } : null,
-      result: m && athlete && m.phase === "over" && !early ? { won: m.winner === athlete.team, ...lineOf(athlete) } : null,
+      result: m && own && m.phase === "over" && !early ? { won: m.winner === own.team, ...lineOf(own) } : null,
     };
     c.phones.sendState(seat, state, c.nowMs);
   }
