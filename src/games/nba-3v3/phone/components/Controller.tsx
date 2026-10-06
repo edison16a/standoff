@@ -6,6 +6,7 @@ import type { CourtState } from "../../protocol";
 import { TEAMS } from "../../roster";
 import { BlockIcon, CallIcon, DribbleIcon, GuardIcon, PassIcon, ShootIcon, StealIcon } from "../../ui/icons";
 import { useControllerStore } from "../controller-store";
+import { shootEnabled } from "../shoot-button";
 import { useController } from "./session-context";
 import { ShotMeter } from "./ShotMeter";
 
@@ -86,7 +87,8 @@ export function Controller({ court }: { court: CourtState }) {
   // Only free throws grey them out, where the shooter's Shoot alone works once set.
   const ft = court.freeThrow;
   const dead = ft !== null;
-  const canShoot = ft ? ft.ready : true;
+  const aiming = useControllerStore((s) => s.aimingSince !== null);
+  const canShoot = shootEnabled(court, aiming);
   // The meter only runs for a real shot, so Shoot held without the ball stays quiet.
   // At the line the shooter gets a big meter and only Shoot.
   const atLine = court.freeThrow?.mine ?? false;

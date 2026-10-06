@@ -142,6 +142,8 @@ export const FREE_THROW = {
   /** Two bounces at the line to settle before each shot. */
   bounces: 1,
   humanWait: 8,
+  /** A set shot at the line waits for the thumb. Only a hold this long, in ms, lets it go by itself. */
+  maxHoldMs: 5000,
   /** From the first shot leaving the hand to the ball going back to the shooter. */
   resultPause: 1.1,
   /** Where the shooter stands: just behind the free throw line, at the top of the key. */
