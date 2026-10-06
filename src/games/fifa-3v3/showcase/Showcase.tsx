@@ -4,6 +4,7 @@ import * as THREE from "three";
 import type { ShowcaseView } from "@/platform/games/game-api";
 import { buildView } from "../engine/view";
 import { MatchRenderer } from "../render/match-renderer";
+import { broadcastFrames } from "./broadcast-lab";
 import { LAB_POSE, labMatch, RUN_POSE } from "./lab";
 import { runView } from "./lab-run";
 import { iconLights, stillLights } from "./still-lights";
@@ -86,10 +87,13 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     stage.prepend(canvas);
     const params = new URLSearchParams(window.location.search);
     // The clip is filmed a frame at a time in software; a lighter frame keeps each one in time.
-    const renderer = new MatchRenderer(canvas, { quality: "film", scale: view === "loop" && !params.has("t") ? 0.75 : 1 });
+    // The live picture's lab (broadcast-lab.ts) draws as the host page does.
+    const live = params.get("lab") === "tv";
+    const quality = live ? (params.get("q") === "low" ? "low" : "high") : "film";
+    const renderer = new MatchRenderer(canvas, { quality, auto: false, scale: view === "loop" && !params.has("t") && !live ? 0.75 : 1 });
     // Development: what each frame costs, read by the browser checks.
     Object.assign(window, { __fifaStats: () => renderer.stats() });
-    const film = params.has("lab") ? labFrames(renderer, params) : view === "loop" ? trailerFrames(renderer, params) : stillFrames(renderer, view, params);
+    const film = live ? broadcastFrames(renderer, params) : params.has("lab") ? labFrames(renderer, params) : view === "loop" ? trailerFrames(renderer, params) : stillFrames(renderer, view, params);
     const fit = () => {
       renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
       film.resized();
