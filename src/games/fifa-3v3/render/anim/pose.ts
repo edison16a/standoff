@@ -9,9 +9,11 @@ import type { Rig } from "../body/rig";
  * positive knee bends the heel up behind, a negative elbow bends the
  * forearm forward. Z spreads a limb out to the side (positive is out
  * for both sides, mirrored when applied). Body pitch tips forward.
+ * The pelvis turns (pelvisY, toward the left with a positive turn) and
+ * drops a hip (pelvisZ) under the trunk, as it does on every stride.
  */
 export const JOINTS = [
-  "lift", "fwd", "pitch", "roll", "yaw",
+  "lift", "fwd", "pitch", "roll", "yaw", "pelvisY", "pelvisZ",
   "spineX", "spineY", "spineZ", "neckX", "neckY",
   "shLX", "shLY", "shLZ", "elL", "shRX", "shRY", "shRZ", "elR",
   "hipLX", "hipLZ", "kneeL", "ankL", "hipRX", "hipRZ", "kneeR", "ankR",
@@ -63,6 +65,7 @@ export function blendPoses(out: Pose, a: Pose, b: Pose, t: number): void {
 export function applyPose(rig: Rig, p: Pose): void {
   rig.body.position.set(0, p.lift, p.fwd);
   rig.body.rotation.set(p.pitch, p.yaw, p.roll, "YXZ");
+  rig.hips.rotation.set(0, p.pelvisY, p.pelvisZ, "YXZ");
   rig.spine.rotation.set(p.spineX, p.spineY, p.spineZ, "YXZ");
   rig.neck.rotation.set(p.neckX, p.neckY, 0, "YXZ");
   // The left side is +x, so spreading it out is a positive turn about z and the right a negative one.
