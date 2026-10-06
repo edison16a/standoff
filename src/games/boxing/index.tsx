@@ -3,9 +3,11 @@ import type { GameModule } from "@/platform/games/game-api";
 import { BoxingHost } from "./host/boxing-host";
 import { SessionContext } from "./host/components/session-context";
 import { Stage } from "./host/components/Stage";
+import { keyboard } from "./keyboard";
 import { Showcase } from "./showcase/Showcase";
 import "./styles/host.css";
 import "./styles/menus.css";
+import "./styles/input.css";
 import "./styles/pick.css";
 import "./styles/build-card.css";
 import "./styles/hud.css";
@@ -36,4 +38,5 @@ export const game: GameModule = {
   },
 
   Showcase,
+  keyboard,
 };
