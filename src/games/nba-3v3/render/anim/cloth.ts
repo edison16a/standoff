@@ -5,6 +5,8 @@ const STIFF = 170;
 const DAMP = 13;
 /** How much of the thigh's swing the loose cloth takes. */
 const FOLLOW = 0.9;
+/** The most the cloth may trail a thigh swinging forward, radians: past this the knee pushes through the front. */
+const SLACK = 0.05;
 
 interface Swing {
   x: number;
@@ -42,6 +44,11 @@ export class ClothAndBreath {
         s.vz += (STIFF * (hip.rotation.z * FOLLOW - s.z) - DAMP * s.vz) * h;
         s.x += s.vx * h;
         s.z += s.vz * h;
+      }
+      // A knee driving up takes the cloth with it once the slack is gone; behind, the leg opening leaves room.
+      if (s.x - hip.rotation.x > SLACK) {
+        s.x = hip.rotation.x + SLACK;
+        s.vx = Math.min(s.vx, 0);
       }
       cloth.rotation.set(s.x, hip.rotation.y * FOLLOW, s.z);
     }

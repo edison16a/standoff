@@ -17,7 +17,18 @@ describe("ClothAndBreath", () => {
       expect(Number.isFinite(r.extras.clothL.rotation.x)).toBe(true);
     }
     expect(overshoot).toBeLessThan(-0.01);
-    expect(r.extras.clothL.rotation.x).toBeCloseTo(-0.72, 2);
+    // A thigh this far forward takes up the slack, so the cloth rests a few hundredths behind it, not at nine tenths.
+    expect(r.extras.clothL.rotation.x).toBeCloseTo(-0.75, 2);
+  });
+
+  it("never lets a knee driving up leave the cloth behind", () => {
+    const r = buildRig(BUILDS.dunker);
+    const c = new ClothAndBreath(1);
+    for (let i = 0; i < 60; i++) {
+      r.joints.hipL.rotation.x = -1.4 * Math.min(1, i / 10);
+      c.update(r.joints, r.extras, 6, 1 / 60);
+      expect(r.extras.clothL.rotation.x - r.joints.hipL.rotation.x).toBeLessThanOrEqual(0.0501);
+    }
   });
 
   it("breathes deeper after a sprint than at rest", () => {

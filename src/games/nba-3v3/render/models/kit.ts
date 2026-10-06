@@ -95,7 +95,8 @@ export function addKit(parts: PartList, rig: Rig, o: KitOptions): void {
     }
     const top = rig.rest("hips").y;
     parts.weighted(band(mirrorU(shortsLeg(rig, side, n), side), ATLAS.shorts[1], ATLAS.shorts[0]), (at) => {
-      const k = smooth(0.0, 0.25 * s, top - at.y) * 0.92;
+      // Below the hip joint the cloth goes with the thigh, so a raised knee never pushes through the front.
+      const k = smooth(-0.03 * s, 0.11 * s, top - at.y) * 0.97;
       return [["hips", 1 - k], [cloth, k]];
     }, 0.6);
   }
