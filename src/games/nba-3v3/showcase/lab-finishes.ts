@@ -19,7 +19,7 @@ const SHOOTER = 0;
 /** Where the six stand at the start: the Shooter, two teammates, then the Lockdown defender, the Playmaker and the All Rounder. */
 export const FINISH_SPOTS: Record<FinishScene, [number, number][]> = {
   reverse: [[5.2, 1.3], [-6, 6], [4, 9], [6.2, 2.6], [-5, 10], [5, 10.5]],
-  contact: [[0, 6.4], [-6, 3], [6, 3], [-5, 10], [0, 3.3], [5, 10]],
+  contact: [[0, 6.4], [-6, 3], [6, 3], [-5, 10], [0, 3.0], [5, 10]],
   stepback: [[0, 7.6], [-6, 3], [6, 3], [0, 6.8], [-5, 10], [5, 10]],
   gesture: [[0, 6], [-6, 3], [6, 3], [-5, 10], [2, 10], [5, 10]],
   floater: [[0.5, 8.5], [-6, 6], [6, 6], [-6, 10], [6.5, 3], [5, 10.5]],
