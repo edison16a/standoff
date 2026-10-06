@@ -20,10 +20,11 @@ export function pelvis(d: Dims, kit: KitSpec, detail: number): THREE.BufferGeome
   const W = 1 + 0.2 * d.build;
   const gut = Math.max(0, d.build - 0.6) * 0.03;
   const st = (y: number, l: number, f: number, b: number) => ({ y: y * H, l: l * H * W, r: l * H * W, f: f * H * W, b: b * H * W });
+  // A small, high crotch: below the seat the thighs make the outline, not the pants' shell.
   const keys: Station[] = along([
-    st(0.47, 0.074, 0.046, 0.05),
-    st(0.492, 0.095, 0.062, 0.074),
-    st(0.52, 0.105, 0.07, 0.087),
+    st(0.474, 0.034, 0.026, 0.032),
+    st(0.49, 0.074, 0.05, 0.064),
+    st(0.515, 0.1, 0.066, 0.085),
     st(0.552, 0.104, 0.074 + gut, 0.083),
     st(0.585, 0.093, 0.072 + gut * 1.1, 0.07),
     st(0.614, 0.091, 0.073 + gut, 0.068),
@@ -32,7 +33,7 @@ export function pelvis(d: Dims, kit: KitSpec, detail: number): THREE.BufferGeome
   const geo = tube(new THREE.Vector3(), 1, keys, {
     ring: angles(Math.round(44 * detail)),
     step: 0.02 / detail,
-    capStart: 0.02 * H,
+    capStart: 0.01 * H,
     cuts: [beltFrom],
     paint: (t) => (t > beltFrom ? { colour: BELT, rough: 0.45 } : { colour: kit.pants, rough: 0.62 }),
   });
