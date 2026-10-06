@@ -10,6 +10,7 @@ import { BladePhone } from "./phone/blade-phone";
 import { PhoneScreen } from "./phone/components/PhoneScreen";
 import { ControllerContext } from "./phone/components/session-context";
 import { Showcase } from "./showcase/Showcase";
+import { keyboard } from "./keyboard";
 import "./styles/stage.css";
 import "./styles/moment.css";
 import "./styles/moment-anim.css";
@@ -50,4 +51,5 @@ export const game: GameModule = {
   },
 
   Showcase,
+  keyboard,
 };
