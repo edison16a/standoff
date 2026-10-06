@@ -1,7 +1,7 @@
 import { strideLength } from "../../engine/dribble-ball";
 import { gait } from "./gait";
 import { dribblePose } from "./holding";
-import { blend, over, STAND, type Pose } from "./pose";
+import { blend, mirrorPatch, over, STAND, type Pose, type PosePatch } from "./pose";
 
 export interface MoveContext {
   /** Ground speed in metres per second. */
@@ -16,6 +16,8 @@ export interface MoveContext {
   dribbleSide: number;
   /** 0 to 1 as a defender closes in on the ball handler, raising the off arm to shield the ball. */
   pressure: number;
+  /** Guarding: which side of him the ball is, + his left, - his right. */
+  ballSide?: number;
   time: number;
   /** A per player offset so idle players do not breathe in step. */
   seed: number;
@@ -31,6 +33,12 @@ export interface Stride {
 }
 
 const TAU = Math.PI * 2;
+
+/** The guarding arms with the ball on his left: that hand low and wide, the right one up by the head. */
+const GUARD_HANDS: PosePatch = {
+  armLRaise: 0.4, armLSpread: 0.8, elbowL: 0.35, wristL: -0.15, armLTwist: 0.2,
+  armRRaise: 1.6, armRSpread: 0.5, elbowR: 0.85, wristR: 0.1, armRTwist: 0,
+};
 
 export { strideLength };
 
@@ -55,10 +63,13 @@ export function locomotion(c: MoveContext, out?: Stride): Pose {
   if (c.guarding) {
     const slide = Math.min(1, c.speed / 4);
     over(p, {
-      hipY: -0.16, torsoX: 0.32, neckX: -0.25,
-      armLRaise: 0.55, armRRaise: 0.55, armLSpread: 0.95, armRSpread: 0.95, elbowL: 0.55, elbowR: 0.55,
+      hipY: -0.16, torsoX: 0.28, neckX: -0.22,
       legLLift: 0.55, legRLift: 0.55, kneeL: 1.0, kneeR: 1.0, legLSpread: 0.2, legRSpread: 0.2,
     });
+    // Active hands: the one on the ball's side low and out to swipe at it, the other up in the passing lane.
+    const k = Math.max(0, Math.min(1, ((c.ballSide ?? 0) + 1) / 2));
+    blend(p, mirrorPatch(GUARD_HANDS), 1, p);
+    blend(p, GUARD_HANDS, k * k * (3 - 2 * k), p);
     // Shuffle: the feet open and close, never crossing.
     const shuffle = Math.sin(th) * slide * 0.22;
     p.legLSpread += shuffle;

@@ -29,7 +29,9 @@ export function poseAthletes(m: Match, views: readonly AthleteView[], ceremony: 
     const role = ceremony.roleOf(a.id);
     const holding = holder === a.id;
     const contest = guarding && onBall?.action.kind === "shoot" && !onBall.action.free ? Math.min(1, onBall.action.t / 0.3) : 0;
-    view.update(a, { holding, chest, receiving: Math.max(0, incoming), guarding, pressure: holding ? pressure : 0, ...line, winner, ceremony: role, ball: holding || incoming > 0 ? b : null, contest }, dt);
+    // The ball's side of a guarding defender, along his left: (cos yaw, -sin yaw).
+    const ballSide = guarding ? Math.max(-1, Math.min(1, ((b.pos.x - a.x) * Math.cos(a.yaw) - (b.pos.z - a.z) * Math.sin(a.yaw)) / 0.3)) : 0;
+    view.update(a, { holding, chest, receiving: Math.max(0, incoming), guarding, ballSide, pressure: holding ? pressure : 0, ...line, winner, ceremony: role, ball: holding || incoming > 0 ? b : null, contest }, dt);
   }
   return chest;
 }

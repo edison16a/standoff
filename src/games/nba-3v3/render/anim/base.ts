@@ -30,6 +30,8 @@ export interface AthleteScene {
   ball?: Ball | null;
   /** 0 to 1 as the man this defender guards rises into a jumper, for the hand up in his face. */
   contest?: number;
+  /** Guarding: which side of him the ball is, + his left, - his right. */
+  ballSide?: number;
 }
 
 /** The contest: up off the stance, one hand straight up in the shooter's face, the other out for balance. */
@@ -72,7 +74,7 @@ export function basePose(a: Athlete, s: AthleteScene, b: BodyState): Pose {
   const pocket = s.holding && !carry && (s.chest || palmHold(a));
   const dribbling = s.holding && free && !pocket && !carry;
   let p = locomotion(
-    { speed: b.speed, phase: b.phase, guarding: s.guarding, dribble: dribbling ? a.dribble : null, dribbleSide: a.dribbleSide, pressure: s.pressure, time: b.time, seed: b.seed, heading: b.heading, leg: b.leg },
+    { speed: b.speed, phase: b.phase, guarding: s.guarding, ballSide: s.ballSide, dribble: dribbling ? a.dribble : null, dribbleSide: a.dribbleSide, pressure: s.pressure, time: b.time, seed: b.seed, heading: b.heading, leg: b.leg },
     b.stride,
   );
   if (carry) p = blend(p, SPIN_PULL[a.dribbleHand === 1 ? "R" : "L"], 1, p);

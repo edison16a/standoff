@@ -24,15 +24,16 @@ export function stumblePose(t: number, dur: number, base: Pose, fall: "back" | "
 
 function rocked(dur: number, hard: boolean): Keys {
   const deep = hard ? 1 : 0.6;
+  // A side lunge: the left leg folds under the weight with the foot out wide, the right one shoots out straight to brace.
   return [
-    [0, { torsoZ: -0.2, torsoX: 0.2, hipY: -0.08, legLSpread: 0.3, kneeL: 0.7, legLLift: 0.4, kneeR: 0.4, legRLift: 0.2 }],
+    [0, { torsoZ: -0.2, torsoX: 0.25, legLSpread: 0.25, kneeL: 0.8, legLLift: 0.45, legRSpread: 0.3, kneeR: 0.3, legRLift: 0.1 }],
     [dur * 0.25, {
-      torsoZ: -0.5 * deep, torsoX: 0.35, torsoY: 0.25, neckY: -0.45, neckZ: 0.2, hipY: -0.2 * deep, pelvisZ: -0.12,
-      legLSpread: 0.55, legLLift: 0.75 * deep, kneeL: 1.5 * deep, footL: 0.2, legRSpread: 0.1, legRLift: 0.05, kneeR: 0.2, footR: 0.35,
-      armLRaise: 0.45, armLSpread: 0.75, elbowL: 0.2, wristL: -0.4, armRRaise: 2.0, armRSpread: 1.1, elbowR: 0.5,
+      torsoZ: -0.55 * deep, torsoX: 0.45, torsoY: 0.2, neckY: -0.45, neckZ: 0.25, pelvisZ: -0.15 * deep,
+      legLSpread: 0.35, legLLift: 0.9 * deep, kneeL: 1.55 * deep, footL: 0.15, legRSpread: 0.65 * deep, legRLift: -0.05, kneeR: 0.1, footR: 0.3,
+      armLRaise: 0.35, armLSpread: 0.45, elbowL: 0.1, wristL: -0.5, armRRaise: 2.1, armRSpread: 1.1, elbowR: 0.45,
     }],
-    [dur * 0.65, { torsoZ: -0.25 * deep, torsoX: 0.3, torsoY: 0.1, neckY: -0.2, hipY: -0.12, legLSpread: 0.35, legLLift: 0.55, kneeL: 1.0, legRLift: 0.3, kneeR: 0.6, armLRaise: 0.6, armRRaise: 1.1, armRSpread: 0.7 }],
-    [dur, { torsoZ: 0, torsoX: 0.2, torsoY: 0, neckY: 0, neckZ: 0, pelvisZ: 0, hipY: -0.05, legLSpread: 0.15, legRSpread: 0.12 }],
+    [dur * 0.65, { torsoZ: -0.25 * deep, torsoX: 0.3, torsoY: 0.1, neckY: -0.2, legLSpread: 0.3, legLLift: 0.6, kneeL: 1.0, legRSpread: 0.35, legRLift: 0.25, kneeR: 0.55, armLRaise: 0.6, armRRaise: 1.1, armRSpread: 0.7 }],
+    [dur, { torsoZ: 0, torsoX: 0.2, torsoY: 0, neckY: 0, neckZ: 0, pelvisZ: 0, legLSpread: 0.15, legRSpread: 0.12 }],
   ];
 }
 
