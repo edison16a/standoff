@@ -60,8 +60,8 @@ function contrast(hex: string): string {
 /** One boot in the ankle's own frame. */
 export function bootGeometry(c: BodyCtx): THREE.BufferGeometry {
   const s = c.d.s;
-  const n = c.fine ? 30 : 12;
-  const step = c.fine ? 0.012 : 0.04;
+  const n = c.fine ? 30 : 14;
+  const step = c.fine ? 0.012 : 0.03;
   const colour = new THREE.Color(c.look.boots);
   const accent = new THREE.Color(contrast(c.look.boots));
   const upper = loft(rings(UPPER, n, s, step), { start: new THREE.Vector3(0, -0.02 * s, -0.07 * s), end: new THREE.Vector3(0, -0.061 * s, 0.207 * s) });

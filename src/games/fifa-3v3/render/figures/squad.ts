@@ -99,6 +99,12 @@ export class Squad {
     return true;
   }
 
+  /** Each body in its fine cut when it is big on screen, its light one otherwise. */
+  fitDetail(camera: THREE.PerspectiveCamera, pixels: number): void {
+    for (const f of this.athletes) f.lod.fit(camera, pixels);
+    for (const k of this.keepers) k.lod.fit(camera, pixels);
+  }
+
   fitTags(fov: number): void {
     for (const tag of this.tags) tag?.fit(fov);
     for (const bar of this.bars) bar.fit(fov);

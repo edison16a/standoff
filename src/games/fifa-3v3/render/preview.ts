@@ -4,7 +4,7 @@ import { BUILDS, type BuildId } from "../builds";
 import { celebration } from "./anim/celebrations";
 import { idle } from "./anim/moves";
 import { applyPose, ease, neutral, type Pose } from "./anim/pose";
-import { buildBody, type Rig } from "./body/athlete-body";
+import { buildBody, type Body } from "./body/athlete-body";
 import { AthleteMaterials } from "./body/materials";
 
 /**
@@ -22,7 +22,7 @@ export class BuildPreview {
   private readonly ring: THREE.Mesh<THREE.TorusGeometry, THREE.MeshBasicMaterial>;
   private readonly canvas: HTMLCanvasElement;
   private readonly environment: THREE.Texture;
-  private rig: Rig | null = null;
+  private rig: Body | null = null;
   private build: BuildId | null = null;
   private shown = "";
   private readonly pose: Pose = neutral();
@@ -71,6 +71,8 @@ export class BuildPreview {
     }
     const c = BUILDS[build];
     this.rig = buildBody({ look: c.look, kit: c.look.kit, name, number: c.number }, this.mats);
+    // The picker shows one player up close: always the fine cut.
+    this.rig.setFine(true);
     this.turntable.add(this.rig.root);
     this.ring.material.color.set(c.look.kit.shirt);
     this.shownAt = this.last;

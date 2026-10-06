@@ -37,7 +37,7 @@ export function beardMask(b: THREE.Vector3, moustache: boolean): number {
 }
 
 export function buildHead(look: Look, k: number, fine: boolean, shape: HeadShape): HeadParts {
-  const head = headSurface(fine ? 64 : 26, fine ? 48 : 18, k, shape);
+  const head = headSurface(fine ? 64 : 32, fine ? 48 : 22, k, shape);
   const skin = new THREE.Color(look.skin);
   const warm = skin.clone().lerp(new THREE.Color("#c4544a"), 0.14);
   const socket = skin.clone().multiplyScalar(0.72);

@@ -74,6 +74,8 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     const params = new URLSearchParams(window.location.search);
     // The clip is filmed a frame at a time in software; a lighter frame keeps each one in time.
     const renderer = new MatchRenderer(canvas, { quality: "film", scale: view === "loop" && !params.has("t") ? 0.75 : 1 });
+    // Development: what each frame costs, read by the browser checks.
+    Object.assign(window, { __fifaStats: () => renderer.stats() });
     const film = params.has("lab") ? labFrames(renderer, params) : view === "loop" ? trailerFrames(renderer, params) : stillFrames(renderer, view, params);
     const fit = () => {
       renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);

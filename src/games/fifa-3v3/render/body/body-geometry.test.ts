@@ -16,12 +16,12 @@ const triangles = (g: THREE.BufferGeometry) => g.index!.count / 3;
 describe("bodyGeometry", () => {
   for (const fine of [true, false]) {
     for (const { name, look, keeper } of LOOKS) {
-      it(`builds the ${name} ${fine ? "finely" : "coarsely"}, skinned and within budget`, () => {
+      it(`builds the ${name} ${fine ? "for close ups" : "for the wide view"}, skinned and within budget`, () => {
         const g = bodyGeometry(look, keeper, fine);
         const parts = [g.skin, g.kit, g.gear];
-        // Three draws a player: the budget keeps nine players and their shadows cheap on a laptop.
+        // Three draws a player: the budget keeps nine players and their shadows cheap on a laptop. Only close ups use the fine cut.
         const total = parts.reduce((sum, p) => sum + triangles(p), 0);
-        expect(total).toBeLessThan(fine ? 48000 : 12000);
+        expect(total).toBeLessThan(fine ? 48000 : 16000);
         for (const p of parts) {
           const index = p.getAttribute("skinIndex");
           const weight = p.getAttribute("skinWeight");

@@ -164,7 +164,16 @@ export class MatchRenderer {
     this.effects.frame(view, dt, time);
     this.director.update(view, shot, dt, time, focus);
     this.squad.fitTags(this.director.camera.fov);
+    const pixels = this.renderer.domElement.height;
+    this.squad.fitDetail(this.director.camera, pixels);
+    this.referee.fitDetail(this.director.camera, pixels);
     this.squad.stackTags(this.director.camera, dt);
+  }
+
+  /** What the last frame cost the graphics card, shadows included, and what it holds: for development checks of the frame budget. */
+  stats(): { calls: number; triangles: number; geometries: number; textures: number; programs: number } {
+    const { render, memory, programs } = this.renderer.info;
+    return { calls: render.calls, triangles: render.triangles, geometries: memory.geometries, textures: memory.textures, programs: programs?.length ?? 0 };
   }
 
   /** Where a player stands, for the close up camera. */

@@ -3,16 +3,12 @@ import type { Look } from "../../looks";
 import type { ShirtSpan } from "./kit-layout";
 import { dimsOf, restPositions, type BoneName, type Dims } from "./rig";
 
-/** How finely bodies are built: `fine` for a real graphics card, coarse for software drawing and weak devices. */
-export interface Detail {
-  fine: boolean;
-}
-
 /** Everything a piece of the body needs to know to build itself. */
 export interface BodyCtx {
   d: Dims;
   look: Look;
   rest: Record<BoneName, THREE.Vector3>;
+  /** Built for close ups, or for the broadcast view (and weak devices), where a player is a couple of hundred pixels tall. */
   fine: boolean;
   /** Width and depth from the build: a powerful player is broader and thicker through. */
   wide: number;
@@ -36,9 +32,9 @@ export function bodyCtx(look: Look, keeper: boolean, fine: boolean): BodyCtx {
     fine,
     wide: 0.92 + 0.16 * d.b,
     deep: 0.94 + 0.12 * d.b,
-    n: fine ? 40 : 18,
-    nSmall: fine ? 22 : 10,
-    step: (fine ? 0.018 : 0.045) * d.s,
+    n: fine ? 40 : 22,
+    nSmall: fine ? 22 : 12,
+    step: (fine ? 0.018 : 0.034) * d.s,
     keeper,
     span: { hem: 0.8 * d.s, collar: 1.535 * d.s },
   };

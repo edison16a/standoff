@@ -13,11 +13,12 @@ import { getUp, hurdle, slide, stumble } from "../anim/moves";
 import { applyPose, blendPoses, neutral, type Pose } from "../anim/pose";
 import { beatenFrame, skillFrame } from "../anim/skill-poses";
 import { captainPose, matePose } from "../anim/trophy-poses";
-import { buildBody, type Rig } from "../body/athlete-body";
+import { buildBody, type Body } from "../body/athlete-body";
 import type { AthleteMaterials } from "../body/materials";
 import { BodyDynamics } from "./body-dynamics";
 import { FootLock } from "./foot-locks";
 import { Jolt } from "./jolt";
+import { LodSwitch } from "./lod";
 import { figureOf, type FigureSpec } from "./figure-spec";
 import { keepAboveTurf } from "./turf";
 
@@ -35,7 +36,7 @@ const LEAN: Partial<Record<AthleteView["action"], number>> = { free: 1, skill: 0
  * the last pose shown, so nothing snaps and nothing lags.
  */
 export class AthleteFigure {
-  readonly rig: Rig;
+  readonly rig: Body;
   readonly spec: FigureSpec;
   private readonly shown: Pose = neutral();
   private from: Pose = neutral();
@@ -48,6 +49,7 @@ export class AthleteFigure {
   private readonly locks = { left: new FootLock(), right: new FootLock() };
   private readonly dynamics: BodyDynamics;
   private readonly jolt = new Jolt();
+  readonly lod: LodSwitch;
   private facing = 0;
   private last: { x: number; z: number } | null = null;
   private readonly move = { x: 0, y: 0, z: 1 };
@@ -62,6 +64,7 @@ export class AthleteFigure {
     this.rig = buildBody({ look: c.look, kit, name: c.name, number: c.number }, mats);
     this.phase = view.id * 1.7;
     this.dynamics = new BodyDynamics(this.phase);
+    this.lod = new LodSwitch(this.rig);
     this.build = buildOf(c.look.height, c.look.build);
     this.lead = c.foot === "left" ? LEFT : RIGHT;
   }

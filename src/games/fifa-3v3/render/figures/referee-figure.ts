@@ -41,6 +41,10 @@ export class RefereeFigure {
     this.figure.rig.handR.add(this.card);
   }
 
+  fitDetail(camera: THREE.PerspectiveCamera, pixels: number): void {
+    this.figure.lod.fit(camera, pixels);
+  }
+
   update(view: RefereeView, ball: BallView, dt: number, time: number): void {
     this.figure.update(asAthlete(view), ball, dt, time);
     const carding = view.action === "card";
