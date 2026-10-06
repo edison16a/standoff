@@ -43,6 +43,17 @@ Each player gets their own view over their fighter's shoulder. Two players share
 
 A round ends when one side is all down. Round banners call Round 3 (or Match point), Fight, and who took it. Sides swap every round. First to five rounds wins. The results open on the winners' scene, and a moment later every fighter's kills, deaths, head shots and damage come up in the bottom right corner. Then Play again with the same teams, or Menu to go back to the lobby and change teams, guns or the match. The Standoff logo at the top left goes home to pick another game.
 
+### Keyboard play
+
+The admin panel's Keyboard player (three quick taps on the settings gear, then Platform) seats a test player on the computer, for playing alone without a phone (`keyboard.ts`). Its phone screen floats in a small panel: click through Aim, Gun and Ready there with the mouse. In the match the mouse aims inside your own view of the split screen, and your fighter moves by themselves as usual.
+
+| Action | Keys |
+| --- | --- |
+| Aim | Mouse |
+| Shoot | Left click or Space. Hold it for the rifle and the SMG |
+| Crouch on or off | C |
+| Reload | R |
+
 ### The winners' scene
 
 When the match is won the results open on the winning team together on a stage spattered with paint, under spotlights with confetti in their colour, as the camera swings slowly round. The top scorer lifts the gold cup overhead. Their names drop in big across the top in gold, each with their own colour under it, with the score under the names. Once the names have landed, the table and the Play again and Menu buttons come up in the bottom right corner, and the room's code comes back in the bottom left for anyone new to scan in.

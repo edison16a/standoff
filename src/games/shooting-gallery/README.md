@@ -15,6 +15,17 @@ Status: ready. A fairground duck shoot for 1 to 4 players. Stand still, aim well
 
 Phones without motion sensors aim by dragging around the Shoot button instead.
 
+## Keyboard play
+
+The admin panel's Keyboard player (three quick taps on the settings gear, then Platform) seats a test player on the computer, for playing alone without a phone (`keyboard.ts`). Its phone screen floats in a small panel: click through Calibrate, Gun and Ready there with the mouse. Then the mouse is the phone pointed at the screen.
+
+| Action | Keys |
+| --- | --- |
+| Aim | Mouse |
+| Shoot | Left click or Space |
+
+The keys wait out the pump between shots, as the phone's button does.
+
 ## What is worth what
 
 | Target | Points |

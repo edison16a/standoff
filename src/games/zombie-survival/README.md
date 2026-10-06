@@ -19,6 +19,16 @@ Every shot kicks the gun. The crosshair jumps with it and springs back to where 
 
 Speed makes it hard, not numbers. On the first stage the dead come at their own pace, and each stage after runs them ten percent faster, up to twice as fast from stage 11 on. Walkers fall to one rifle round anywhere. Brutes soak up body hits but drop fast to head shots, and riot zombies shrug off body shots unless an AK round hits them. Bosses only hurt through the glowing weak points on their joints, so the team has to aim together. Zombies that reach the team hurt the shared health. At zero, the team retries the stage from its checkpoint with its stats kept.
 
+## Keyboard play
+
+The admin panel's Keyboard player (three quick taps on the settings gear, then Platform) seats a test player on the computer, for playing alone without a phone (`keyboard.ts`). Its phone screen floats in a small panel: click through Calibrate, Weapon and Ready there with the mouse, and Retry or Play again when they come up. In the run the mouse is the phone pointed at the screen.
+
+| Action | Keys |
+| --- | --- |
+| Aim | Mouse |
+| Shoot | Left click or Space. Hold it with an automatic gun to keep firing at its rate |
+| Reload | R |
+
 ## What is in it
 
 * **Route**: 16 segments of streets, the Butcher's alley, the park, the army roadblock, the hospital car park, the parking ramp, the hospital roof and the docks out to pier nine. The team runs between fights, about six seconds a leg, and turns corners on its own. From the roof it flies.
