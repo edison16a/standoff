@@ -8,7 +8,7 @@ import type { Pose } from "./pose";
  * boot at the ball is what keeps the ball at the feet.
  */
 
-/** A body's leg measurements in metres, from its height and build (see models/body.ts). */
+/** A body's leg measurements in metres, from its height and build (see body/rig.ts). */
 export interface Build {
   /** Height over 1.8 m, which scales every bone. */
   s: number;

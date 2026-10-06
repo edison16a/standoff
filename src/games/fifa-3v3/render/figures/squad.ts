@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { AthleteView, MatchView } from "../../engine/view";
 import { BUILDS } from "../../builds";
 import { TEAMS } from "../../teams";
+import type { AthleteMaterials } from "../body/materials";
 import { AthleteFigure } from "./athlete-figure";
 import { figureOf } from "./figure-spec";
 import { ChargeSprite } from "./charge-bar";
@@ -32,7 +33,6 @@ export interface Label {
  */
 export class Squad {
   readonly group = new THREE.Group();
-  private readonly material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.62, metalness: 0.02 });
   private athletes: AthleteFigure[] = [];
   private keepers: KeeperFigure[] = [];
   private tags: (NameTag | null)[] = [];
@@ -47,9 +47,9 @@ export class Squad {
   private readonly blobMaterial: THREE.MeshBasicMaterial;
   private readonly blobGeometry = new THREE.PlaneGeometry(1, 1);
 
-  constructor(glow: THREE.Texture) {
+  constructor(glow: THREE.Texture, private readonly mats: AthleteMaterials) {
     this.blobMaterial = new THREE.MeshBasicMaterial({ map: glow, color: "#000000", transparent: true, opacity: 0.45, depthWrite: false });
-    this.keepers = [new KeeperFigure(0, this.material), new KeeperFigure(1, this.material)];
+    this.keepers = [new KeeperFigure(0, mats), new KeeperFigure(1, mats)];
     for (const k of this.keepers) this.group.add(k.rig.root);
   }
 
@@ -132,7 +132,7 @@ export class Squad {
     this.clearAthletes();
     this.lineup = lineup;
     for (const a of view.athletes) {
-      const figure = new AthleteFigure(a, TEAMS[a.team].kit, this.material, figureOf(a.build, this.shirtName(a)));
+      const figure = new AthleteFigure(a, TEAMS[a.team].kit, this.mats, figureOf(a.build, this.shirtName(a)));
       this.athletes.push(figure);
       this.group.add(figure.rig.root);
       // A soft contact shadow grounds each player even where the shadow map is thin.
@@ -213,7 +213,6 @@ export class Squad {
     for (const k of this.keepers) k.dispose();
     for (const tag of this.tags) tag?.dispose();
     for (const marker of this.markers) marker?.dispose();
-    this.material.dispose();
     this.blobMaterial.dispose();
     this.blobGeometry.dispose();
   }

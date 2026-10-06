@@ -1,4 +1,3 @@
-import * as THREE from "three";
 import { shotWindup } from "../../engine/kick";
 import { PASS } from "../../engine/tuning";
 import type { AthleteView, BallView } from "../../engine/view";
@@ -14,7 +13,8 @@ import { getUp, hurdle, slide, stumble } from "../anim/moves";
 import { applyPose, blendPoses, neutral, type Pose } from "../anim/pose";
 import { beatenFrame, skillFrame } from "../anim/skill-poses";
 import { captainPose, matePose } from "../anim/trophy-poses";
-import { buildBody, type Rig } from "../models/body";
+import { buildBody, type Rig } from "../body/athlete-body";
+import type { AthleteMaterials } from "../body/materials";
 import { FootLock } from "./foot-locks";
 import { figureOf, type FigureSpec } from "./figure-spec";
 import { keepAboveTurf } from "./turf";
@@ -48,10 +48,10 @@ export class AthleteFigure {
   private ballKick = "";
 
   /** `spec` is the build with the player's name, or someone who plays no build, like the referee. */
-  constructor(view: AthleteView, kit: Kit, material: THREE.Material, spec: FigureSpec = figureOf(view.build, "")) {
+  constructor(view: AthleteView, kit: Kit, mats: AthleteMaterials, spec: FigureSpec = figureOf(view.build, "")) {
     this.spec = spec;
     const c = spec;
-    this.rig = buildBody({ look: c.look, kit, name: c.name, number: c.number }, material);
+    this.rig = buildBody({ look: c.look, kit, name: c.name, number: c.number }, mats);
     this.phase = view.id * 1.7;
     this.build = buildOf(c.look.height, c.look.build);
     this.lead = c.foot === "left" ? LEFT : RIGHT;

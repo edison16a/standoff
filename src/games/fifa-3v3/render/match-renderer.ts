@@ -4,6 +4,7 @@ import type { MatchEvent } from "../engine/events";
 import type { MatchView } from "../engine/view";
 import { TEAMS } from "../teams";
 import { Arena } from "./arena/arena";
+import { AthleteMaterials } from "./body/materials";
 import { CameraDirector, type Shot } from "./camera/director";
 import { CeremonyScene } from "./ceremony/ceremony-scene";
 import { Effects } from "./effects/effects";
@@ -42,7 +43,7 @@ export class MatchRenderer {
   private readonly ball: BallModel;
   private readonly squad: Squad;
   private readonly referee: RefereeFigure;
-  private readonly refMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.62, metalness: 0.02 });
+  private readonly bodies: AthleteMaterials;
   private readonly aim = new AimLine();
   private readonly marker = new AimMarker();
   private readonly ceremony = new CeremonyScene();
@@ -71,8 +72,9 @@ export class MatchRenderer {
     this.arena = new Arena(this.low);
     this.effects = new Effects(this.arena.glow);
     this.ball = new BallModel(this.arena.glow);
-    this.squad = new Squad(this.arena.glow);
-    this.referee = new RefereeFigure(this.refMaterial);
+    this.bodies = new AthleteMaterials(!this.low);
+    this.squad = new Squad(this.arena.glow, this.bodies);
+    this.referee = new RefereeFigure(this.bodies);
     this.scene.add(this.arena.group, this.effects.group, this.ball.group, this.squad.group, this.referee.group, this.aim.group, this.marker.group, this.ceremony.group);
   }
 
@@ -174,7 +176,7 @@ export class MatchRenderer {
     this.ceremony.dispose();
     this.squad.dispose();
     this.referee.dispose();
-    this.refMaterial.dispose();
+    this.bodies.dispose();
     this.aim.dispose();
     this.marker.dispose();
     this.ball.dispose();

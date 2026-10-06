@@ -1,4 +1,4 @@
-import type { Rig } from "../models/body";
+import type { Rig } from "../body/rig";
 
 /**
  * A pose is a flat set of joint angles in radians, plus the body's lift
