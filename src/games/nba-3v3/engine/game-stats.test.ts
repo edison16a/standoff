@@ -34,7 +34,7 @@ function tally(seeds: readonly number[]): Tally {
 
 describe("the pace of a computer game on the ball physics", () => {
   it("keeps scoring, shooting, blocks and lost balls near what the game had before", () => {
-    const t = tally([31, 32, 33, 34, 35, 36]);
+    const t = tally([31, 32, 33, 34, 35, 36, 37, 38]);
     const per = (k: string) => (t[k] ?? 0) / t.games!;
     expect(per("points")).toBeGreaterThan(14);
     expect(per("points")).toBeLessThan(24);

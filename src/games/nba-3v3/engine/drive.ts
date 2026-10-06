@@ -34,7 +34,7 @@ export function startDrive(m: Match, a: Athlete): void {
       const push = dir2(a, inWay);
       inWay.vx = push.x * 4;
       inWay.vz = push.z * 4;
-      inWay.action = { kind: "stumble", t: 0, dur: 0.8 };
+      inWay.action = { kind: "stumble", t: 0, dur: 1, fall: "back" };
       m.emit({ type: "knockdown", id: inWay.id, by: a.id });
     } else {
       // An even or a losing battle: into his body and up, a layup through the contact.

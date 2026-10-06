@@ -57,7 +57,12 @@ export type Action =
   | { kind: "move"; t: number; move: DribbleMove; dur: number; side: 1 | -1; dir: V2; resolved: boolean }
   /** A swipe at the ball of `victim`, the defender's `attempt`th on them this possession. */
   | { kind: "steal"; t: number; resolved: boolean; victim: number; attempt: number }
-  | { kind: "stumble"; t: number; dur: number }
+  /**
+   * Off balance for `dur`: rocked by a dribble move (no `fall`), knocked
+   * down on his backside taking a charge or a bigger man's drive
+   * (`back`), or lurching on over the man he ran into (`forward`).
+   */
+  | { kind: "stumble"; t: number; dur: number; fall?: "back" | "forward" }
   /** After a make: a gesture for a big basket, or the player's own celebration when `gesture` is null. */
   | { kind: "celebrate"; t: number; dur: number; gesture: Gesture | null };
 

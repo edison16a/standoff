@@ -31,6 +31,9 @@ export const CHARGE = {
   seenBlock: 0.3,
   /** Seconds the referee shows a charge before play goes on to the check. */
   show: 1.9,
+  /** Seconds the defender is down after taking the charge, and the handler stumbles on. */
+  fall: 1.3,
+  lurch: 0.5,
 } as const;
 
 /** What the contact was: a charge, a blocking foul, or nothing to call. */
@@ -75,7 +78,9 @@ export function callCharge(m: Match, handler: Athlete, defender: Athlete): void 
   b.holder = null;
   b.vel = { x: 0, y: 1.2, z: 0 };
   b.shot = null;
-  handler.action = { kind: "none" };
+  // The man who held his spot goes down on his backside; the one who ran him over lurches on over him.
+  handler.action = { kind: "stumble", t: 0, dur: CHARGE.lurch, fall: "forward" };
+  defender.action = { kind: "stumble", t: 0, dur: CHARGE.fall, fall: "back" };
   startDead(m, defender.team);
 }
 

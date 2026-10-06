@@ -70,6 +70,10 @@ describe("the calls in a game", () => {
     expect(m.ball.holder).toBeNull();
     expect(m.foulCall?.kind).toBe("charge");
     expect(m.drainEvents().some((e) => e.type === "foul" && e.call === "charge" && e.id === handler.id)).toBe(true);
+    // The defender who took it goes down, and the handler lurches on over him.
+    const taker = m.athletes[m.foulCall!.victim]!;
+    expect(taker.action).toMatchObject({ kind: "stumble", fall: "back" });
+    expect(handler.action).toMatchObject({ kind: "stumble", fall: "forward" });
     m.time += CHARGE.show + 0.1;
     endCharge(m);
     expect(m.foulCall).toBeNull();
