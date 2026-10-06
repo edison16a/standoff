@@ -226,7 +226,7 @@ const board = scoreboard(view); // for <Scoreboard board={board} />
 * **Reaching.** The target and nearby defenders go up for a pass. The passer's own linemen leave it alone.
 * **Rings.** A bold magenta ring with a white edge pulses under the receiver the throw stick is on (or the back on a run call), and stays lit on the receiver the ball was thrown to until it arrives. No team or seat wears magenta, so it is never mistaken for another ring. A thin ring in team trim marks each player a person controls.
 * **The ball.** A laced football drawn exactly as the engine's rigid body is turned: the spiral's spin, a duck's wobble, a kick's tumble. A fast spin smears the laces round the ball the way a camera sees it, and a hard knock off the turf or the posts squashes it along the hit for a moment. Held, it sits in the carrier's hands.
-* **The posts and the nets.** A kick off the steel sets the goal post shaking and dying away. The net behind each goal post bulges where a kick hits it and swings back.
+* **The posts and the nets.** A kick off the steel sets the goal post shaking and dying away. The net behind each goal post is thin dark cord. It rises for kicks and drops away for the rest of play, and it bulges where a kick hits it and swings back.
 * **Touchdowns.** The scorer spikes it if that is their style, and the ball bounces away. Everyone else celebrates their own way: a dance, a flex, a salute, a leap or a point to the crowd. At the end the winners celebrate and the losers hang their heads.
 
 ### The camera
