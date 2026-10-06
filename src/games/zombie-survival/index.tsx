@@ -9,6 +9,7 @@ import { PhoneScreen } from "./phone/components/PhoneScreen";
 import { PhoneContext } from "./phone/components/session-context";
 import { SurvivalPhone } from "./phone/survival-phone";
 import { Showcase } from "./showcase/Showcase";
+import { keyboard } from "./keyboard";
 import "./styles/stage.css";
 import "./styles/lobby.css";
 import "./styles/hud.css";
@@ -53,4 +54,5 @@ export const game: GameModule = {
   },
 
   Showcase,
+  keyboard,
 };
