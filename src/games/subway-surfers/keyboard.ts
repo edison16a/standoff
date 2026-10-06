@@ -35,6 +35,7 @@ export const keyboard: KeyboardBinding = {
       ],
     },
   ],
+  foot: "Menus are on the big screen. Click them with the mouse.",
   create(ctx) {
     ctx.send({ kind: "keyboard" } satisfies KeyboardHello);
     const move = (to: KeyMove, down: boolean) => ctx.send({ kind: "key-move", move: to, down } satisfies KeyMoveMessage);

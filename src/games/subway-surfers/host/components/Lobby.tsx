@@ -52,7 +52,7 @@ function HowTo({ input }: { input: InputMode }) {
           <b>Left and right</b> or A and D to change track
         </li>
         <li>
-          <b>Up</b> or W to jump
+          <b>Up</b>, W or Space to jump
         </li>
         <li>
           <b>Down</b> or S to roll, hold to keep rolling

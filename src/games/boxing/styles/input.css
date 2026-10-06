@@ -60,3 +60,9 @@
 .bx-input__segments button:focus-visible {
   outline: 3px solid var(--bx-gold);
 }
+
+/* The Keyboard player's phone panel: a note that the keys are on the big screen. */
+.bx-phone {
+  padding: 24px;
+  text-align: center;
+}

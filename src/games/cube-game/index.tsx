@@ -42,9 +42,9 @@ export const game: GameModule = {
   },
 
   createPhone() {
-    // No seats are offered for a camera game, so no phone ever gets here.
+    // Only the admin panel's Keyboard player takes a seat here. Its keys are on the big screen.
     function Screen() {
-      return <p className="cg-phone">Cube Game is played in front of the computer&apos;s camera.</p>;
+      return <p className="cg-phone">Cube Game is played in front of the computer&apos;s camera. Playing with the keys? They are on the big screen.</p>;
     }
     return { Screen, dispose: () => undefined };
   },

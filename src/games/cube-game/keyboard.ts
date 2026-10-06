@@ -28,6 +28,7 @@ export const keyboard: KeyboardBinding = {
       rows: [{ action: "Level, then Play with the keyboard", keys: ["Left click"] }],
     },
   ],
+  foot: "Menus are on the big screen. Click them with the mouse.",
   create(ctx) {
     const jumps = new ButtonKeys(JUMP_KEYS, {
       press: (code) => ctx.send({ kind: "key-jump", player: KEYS[code] ?? 1, at: performance.now() } satisfies KeyJumpMessage),
