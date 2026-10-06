@@ -14,15 +14,14 @@ export interface CinemaLook {
  * players stand out of a darker arena, thicker haze to sink the stands,
  * and no LED ribbons, whose words would read as captions in a wordless
  * trailer. A still adds its own lights and darkens further. Returns the
- * key light's scale, since the renderer owns the key's base intensity.
+ * key light's scale and the exposure, since the renderer owns both.
  */
-export function applyFilmLook(scene: THREE.Scene, renderer: THREE.WebGLRenderer, arena: Arena, look: CinemaLook): number {
+export function applyFilmLook(scene: THREE.Scene, arena: Arena, look: CinemaLook): { key: number; exposure: number } {
   const { lights = [], fill = 0.45, key = 1, haze = 0.028 } = look;
   if (lights.length) scene.add(...lights);
   arena.fill.intensity *= fill;
   arena.rim.intensity *= 2.6;
   arena.ribbons.visible = false;
-  renderer.toneMappingExposure = 1.12;
   scene.fog = new THREE.FogExp2("#060812", haze);
-  return key;
+  return { key, exposure: 1.12 / 1.05 };
 }

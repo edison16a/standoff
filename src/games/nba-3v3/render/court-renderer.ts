@@ -3,8 +3,6 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import type { MatchEvent } from "../engine/events";
 import type { Match } from "../engine/match";
 import type { Athlete } from "../engine/types";
-import { lineBouncing } from "../engine/free-throw";
-import { dist2 } from "../engine/vec";
 import { Arena } from "./arena/arena";
 import { AthleteMaterials } from "./materials/athlete-materials";
 import type { Quality } from "./quality";
@@ -15,10 +13,12 @@ import { joltOnContact } from "./contact-jolts";
 import { CeremonyStage } from "./ceremony/ceremony-stage";
 import type { Ceremony } from "../engine/ceremony";
 import { Referee } from "./referee";
-import { PixelBudget } from "./resolution-governor";
 import { Effects } from "./effects/effects";
 import { applyFilmLook, type CinemaLook } from "./film-look";
-import { broadcastShot, lineScene, pressureOn } from "./scene-read";
+import { poseAthletes } from "./athlete-scenes";
+import { Picture } from "./picture";
+import { BROADCAST_LOOK, CEREMONY_LOOK, REPLAY_LOOK, type Look } from "./post/look";
+import { broadcastShot } from "./scene-read";
 import { TvCamera, type Shot } from "./tv-camera";
 
 export { LOW_QUALITY, type Quality } from "./quality";
@@ -31,7 +31,7 @@ const tmp = new THREE.Vector3();
  * changes it; events from the match drive the sparks, shakes and cheers.
  */
 export class CourtRenderer {
-  private readonly renderer: THREE.WebGLRenderer;
+  private readonly picture: Picture;
   private readonly scene = new THREE.Scene();
   readonly arena = new Arena();
   readonly tv = new TvCamera();
@@ -46,7 +46,7 @@ export class CourtRenderer {
   private intro: number | null = null;
   private time = 0;
   private height = 1;
-  private readonly budget: PixelBudget;
+  private lastLook: Readonly<Look> | null = null;
   private readonly pixel = new Uint8Array(4);
   private readonly replayCam = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 50 };
   private readonly ceremony = new CeremonyStage();
@@ -55,15 +55,10 @@ export class CourtRenderer {
   jerseyName: (a: Athlete) => string | null = () => null;
 
   constructor(canvas: HTMLCanvasElement, quality: Quality = {}) {
-    const { antialias = true, shadows = true, reflections = true, maxPixelRatio = 1.75, athletes = "high" } = quality;
+    const { reflections = true, athletes = "high" } = quality;
     this.athleteMats = new AthleteMaterials(athletes);
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias, powerPreference: "high-performance" });
-    this.budget = new PixelBudget(this.renderer, maxPixelRatio);
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
-    this.renderer.shadowMap.enabled = shadows;
-    this.renderer.shadowMap.type = THREE.PCFShadowMap;
-    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    this.picture = new Picture(canvas, quality);
+    const pmrem = new THREE.PMREMGenerator(this.picture.renderer);
     this.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     pmrem.dispose();
     if (reflections) this.scene.environment = this.environment;
@@ -78,7 +73,7 @@ export class CourtRenderer {
 
   resize(width: number, height: number, dpr: number): void {
     this.height = Math.max(1, height);
-    this.budget.resize(width, height, dpr);
+    this.picture.resize(width, height, dpr);
     this.tv.setAspect(Math.max(1, width) / this.height);
   }
 
@@ -108,7 +103,9 @@ export class CourtRenderer {
 
   /** The showcase's film look (film-look.ts). */
   cinematic(look: CinemaLook = {}): void {
-    this.keyLight *= applyFilmLook(this.scene, this.renderer, this.arena, look);
+    const film = applyFilmLook(this.scene, this.arena, look);
+    this.keyLight *= film.key;
+    this.picture.setExposureScale(film.exposure);
   }
 
   /** The trophy ceremony to show, run by the host, or null. It takes over the camera while it runs. */
@@ -134,23 +131,7 @@ export class CourtRenderer {
     this.time += dt;
     const b = m.ball;
     const holder = b.holder;
-    const onBall = holder !== null ? m.athletes[holder] : null;
-    // During the check, and at the free throw line before the shot, the ball is held at the chest, not dribbled,
-    // except for the shooter's bounces to settle at the line.
-    const shooting = onBall?.action.kind === "shoot";
-    const chest = m.phase === "check" || (m.phase === "freeThrow" && !shooting && !lineBouncing(m));
-    const pressure = onBall ? pressureOn(m, onBall) : 0;
-    const winner = m.phase === "over" && m.phaseT > 1 ? m.winner : null;
-    for (const [i, view] of this.views.entries()) {
-      const a = m.athletes[i]!;
-      const guarding = !!onBall && onBall.team !== a.team && m.phase === "live" && dist2(a, onBall) < 2.6 && a.action.kind === "none";
-      const incoming = b.mode === "flight" && b.passTo === a.id && a.action.kind === "none" ? 1 - Math.hypot(b.pos.x - a.x, b.pos.z - a.z) / 3 : 0;
-      const line = lineScene(m, a);
-      const ceremony = this.ceremony.roleOf(a.id);
-      const holding = holder === a.id;
-      const contest = guarding && onBall?.action.kind === "shoot" && !onBall.action.free ? Math.min(1, onBall.action.t / 0.3) : 0;
-      view.update(a, { holding, chest, receiving: Math.max(0, incoming), guarding, pressure: holding ? pressure : 0, ...line, winner, ceremony, ball: holding || incoming > 0 ? b : null, contest }, dt);
-    }
+    const chest = poseAthletes(m, this.views, this.ceremony, dt);
     this.ceremony.update(this.views, dt, this.time);
     // The ball is put away for the ceremony, and the arena's lights come down under the spotlights.
     this.ball.mesh.visible = !this.ceremony.active;
@@ -166,9 +147,22 @@ export class CourtRenderer {
     this.arena.hoop.setClock(m.shotClock);
     this.arena.hoop.hold(hanging(m.athletes));
     this.arena.update(dt, this.time, this.ball.mesh.position, calm);
-    this.effects.setView(this.height * this.renderer.getPixelRatio(), this.tv.camera.fov);
+    this.effects.setView(this.height * this.picture.pixelRatio, this.tv.camera.fov);
     this.effects.frame(m, dt);
-    if (draw) this.budget.draw(() => this.renderer.render(this.scene, this.tv.camera));
+    this.grade(dt);
+    if (draw) this.picture.draw(this.scene, this.tv.camera);
+  }
+
+  /** The replay and the ceremony have their own grade, with the subject in focus; a cut changes it at once. */
+  private grade(dt: number): void {
+    const fixed = this.tv.fixed;
+    const look = this.ceremony.active ? CEREMONY_LOOK : fixed === this.replayCam ? REPLAY_LOOK : BROADCAST_LOOK;
+    this.picture.grade(look, dt, look !== this.lastLook);
+    this.lastLook = look;
+    if (fixed) {
+      const distance = this.tv.camera.position.distanceTo(fixed.look);
+      this.picture.focus(distance, 1 + distance * 0.35);
+    }
   }
 
   /**
@@ -177,8 +171,7 @@ export class CourtRenderer {
    * software renderer can take longer than its patience to catch up.
    */
   finish(): void {
-    const gl = this.renderer.getContext();
-    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, this.pixel);
+    this.picture.finish(this.pixel);
   }
 
   /** Where a world point lands on the canvas, in CSS pixels from the top left, or null behind the camera. */
@@ -205,8 +198,7 @@ export class CourtRenderer {
     this.ball.dispose();
     this.effects.dispose();
     this.athleteMats.dispose();
-    this.budget.dispose();
     this.environment.dispose();
-    this.renderer.dispose();
+    this.picture.dispose();
   }
 }
