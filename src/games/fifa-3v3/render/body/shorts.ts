@@ -61,7 +61,9 @@ export function addShorts(kit: PartList, c: BodyCtx): void {
     occlude(tint(leg, "#ffffff"), (p) => 0.22 * ramp(0.8 * s, 0.86 * s, p.y) + 0.15 * ramp(HEM * s + 0.03 * s, HEM * s, p.y));
     const hip = side > 0 ? "hipL" : "hipR";
     kit.weighted(leg, (p): Influence => {
-      const follow = thighFollow(c, p.y);
+      // Up under the shirt at the back, the shorts trail the thigh less, so a leg swung back for a kick stays under the hem.
+      const tucked = ramp(0.03 * s, -0.09 * s, p.z) * ramp(HEM * s, (HEM + 0.09) * s, p.y);
+      const follow = thighFollow(c, p.y) * (1 - 0.45 * tucked);
       return [["hips", 1 - follow], [hip, follow]];
     });
   }
