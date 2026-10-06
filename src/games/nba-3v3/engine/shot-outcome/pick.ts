@@ -41,11 +41,12 @@ export function makeWeights(q: ShotQuality): Record<MakePreset, number> {
   const glass = q.family === "bank" || q.family === "bankJumper";
   const finish = q.kind === "layup";
   const soft = finish || q.family === "floater";
+  const wing = q.bankable >= 1;
   const swish = finish ? 0.2 + 0.2 * quality : 0.35 + 0.45 * quality + (isGreen(q.grade) ? 0.2 : 0);
   return {
     swish: glass ? 0.05 : swish,
-    // Off the wings the glass is a real way in: layups, floaters and the mid range bank.
-    bank: glass ? 1.4 : soft ? 0.3 * q.bankable : q.kind === "jumper" && q.distance < 6.2 ? 0.15 * q.bankable : 0,
+    // Off the wings the glass is a real way in: layups, floaters and the mid range bank. Straight on there is no angle.
+    bank: glass ? 1.4 : !wing ? 0 : soft ? 0.3 : q.kind === "jumper" && q.distance < 6.2 ? 0.15 : 0,
     frontRimIn: 0.09 + (q.grade === "early" ? 0.12 : 0) + (1 - quality) * 0.05,
     backRimIn: 0.09 + (q.grade === "late" ? 0.12 : 0) + (1 - quality) * 0.05,
     // A long ball comes in too fast to rattle about much.

@@ -4,8 +4,8 @@ import type { Outcome } from "../shot-model";
  * The hand made endings a shot can be given at release. The outcome
  * picker (`pick.ts`) chooses one from how good the shot was, and the
  * solver (`solve.ts`) finds the real flight that ends that way, so the
- * ball always looks like it earned the result. Each preset maps onto the
- * coarser `Outcome` the rest of the game reads (score calls, stats).
+ * ball always looks like it earned the result. The physics still names
+ * each shot with the coarser `Outcome` the rest of the game reads.
  */
 export const PRESETS = [
   "swish",
@@ -30,21 +30,6 @@ export type MissPreset = (typeof MISS_PRESETS)[number];
 export function isMakePreset(p: ShotPreset): p is MakePreset {
   return (MAKE_PRESETS as readonly string[]).includes(p);
 }
-
-/** What each preset reads as once the physics names it: a rattle and a roll both ride the iron. */
-export const PRESET_OUTCOME: Record<ShotPreset, Outcome> = {
-  swish: "swish",
-  bank: "bank",
-  frontRimIn: "bounce",
-  backRimIn: "bounce",
-  rattleIn: "roll",
-  rollIn: "roll",
-  rimOut: "rimOut",
-  backIron: "rimOut",
-  rollOut: "inOut",
-  glassOut: "boardOut",
-  airball: "airball",
-};
 
 /** The preset a coarse outcome stands for, for the showcase and tests that still ask by outcome. */
 const FROM_OUTCOME: Record<Outcome, ShotPreset> = {

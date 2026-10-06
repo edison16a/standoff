@@ -37,7 +37,7 @@ export const RECIPES: Record<ShotPreset, Recipe> = {
   rollIn: { long: [-0.04, 0.08], side: [0.19, 0.25], apex: 0.15, spin: 0.6, tilt: 2, ride: { laps: [0.7, 1.7], drop: "in" } },
   rollOut: { long: [-0.04, 0.08], side: [0.19, 0.25], apex: 0.15, spin: 0.6, tilt: 2, ride: { laps: [0.5, 1.3], drop: "out" } },
   rimOut: { long: [0.15, 0.3], side: [0, 0.2], either: true, tilt: 1 },
-  backIron: { long: [0.3, 0.55], side: [0, 0.08], apex: -0.35, spin: 0.8 },
+  backIron: { long: [0.3, 0.5], side: [0, 0.08], apex: 0.2, spin: 0.8 },
   glassOut: { glass: true, long: [0.2, 0.5], side: [0.26, 0.4] },
   airball: { long: [-0.85, -0.45], side: [0, 0.45], tilt: 2 },
 };

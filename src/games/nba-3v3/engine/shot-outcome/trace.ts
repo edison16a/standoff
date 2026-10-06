@@ -78,7 +78,8 @@ export function presetOf(d: TraceDetail): ShotPreset {
     if (d.rode) return "rollIn";
     if (d.first === null) return "swish";
     if (d.first === "board") return "bank";
-    if (d.rimTouches >= 3) return "rattleIn";
+    // Riding the iron a while or hit again and again, as the coarse outcome names a roll.
+    if (d.outcome === "roll") return "rattleIn";
     return d.firstAt < 0 ? "frontRimIn" : "backRimIn";
   }
   if (d.rode) return "rollOut";
