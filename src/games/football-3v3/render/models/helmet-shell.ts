@@ -73,17 +73,24 @@ export function uvDirection(u: number, v: number): THREE.Vector3 {
     .addScaledVector(UV_POLE, (q2 - 1) / (q2 + 1));
 }
 
-export function shellGeometry(o: ShellOptions): THREE.BufferGeometry {
+/** The shell in two pieces: the painted outside, and the dark lining (padding and edge trim) that shares the masks' material. */
+export interface ShellParts {
+  outer: THREE.BufferGeometry;
+  lining: THREE.BufferGeometry;
+}
+
+export function shellGeometry(o: ShellOptions): ShellParts {
   const rim = edge(o.around);
   const cols = o.around + 1;
   const pos: number[] = [];
-  const uv: number[] = [];
   const col: number[] = [];
+  const rough: number[] = [];
   const index: number[] = [];
   const q = new THREE.Quaternion();
   const d = new THREE.Vector3();
+  const dirs: THREE.Vector3[] = [];
   // Three sheets: the painted outside, the padded inside and the rubber trim joining them at the edge.
-  const surface = (inset: number, grey: number, flipFaces: boolean) => {
+  const surface = (inset: number, grey: number, shine: number, flipFaces: boolean) => {
     const base = pos.length / 3;
     for (let i = 0; i <= o.rings; i++) {
       const t = i / o.rings;
@@ -97,8 +104,9 @@ export function shellGeometry(o: ShellOptions): THREE.BufferGeometry {
           SHELL_CENTRE.y + d.y * (SHELL_SIZE.y + out - inset),
           SHELL_CENTRE.z + d.z * (SHELL_SIZE.z + out - inset),
         );
-        uv.push(...shellUV(d));
+        dirs.push(d.clone());
         col.push(grey, grey, grey);
+        rough.push(shine);
       }
     }
     for (let i = 0; i < o.rings; i++) {
@@ -113,8 +121,9 @@ export function shellGeometry(o: ShellOptions): THREE.BufferGeometry {
     }
     return base;
   };
-  const outer = surface(0, 1, true);
-  const inner = surface(THICK, 0.09, false);
+  const outer = surface(0, 1, 1, true);
+  const split = index.length;
+  const inner = surface(THICK, 0.07, 0.95, false);
   // The trim: a band from the outer edge to the inner one.
   const last = o.rings * cols;
   const trim = pos.length / 3;
@@ -122,8 +131,9 @@ export function shellGeometry(o: ShellOptions): THREE.BufferGeometry {
     for (let j = 0; j < cols; j++) {
       const k = (from + last + j) * 3;
       pos.push(pos[k]!, pos[k + 1]!, pos[k + 2]!);
-      uv.push(0.5, 0.02);
-      col.push(0.06, 0.06, 0.06);
+      dirs.push(dirs[from + last + j]!);
+      col.push(0.05, 0.05, 0.05);
+      rough.push(0.6);
     }
   }
   for (let j = 0; j < o.around; j++) {
@@ -131,11 +141,22 @@ export function shellGeometry(o: ShellOptions): THREE.BufferGeometry {
     const c = trim + cols + j;
     index.push(a, c + 1, a + 1, a, c, c + 1);
   }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
-  geo.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
-  geo.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
-  geo.setIndex(index);
-  geo.computeVertexNormals();
-  return geo;
+  const all = new THREE.BufferGeometry();
+  all.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  all.setIndex(index);
+  all.computeVertexNormals();
+  const nrm = all.getAttribute("normal").array as Float32Array;
+  // Cut the sheets apart: the outside's vertices come first, the lining's after.
+  const piece = (from: number, to: number, tris: number[], withUv: boolean) => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(pos.slice(from * 3, to * 3), 3));
+    g.setAttribute("normal", new THREE.Float32BufferAttribute(Array.from(nrm.slice(from * 3, to * 3)), 3));
+    const uv = withUv ? dirs.slice(from, to).flatMap((v) => shellUV(v)) : new Array<number>((to - from) * 2).fill(0);
+    g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+    g.setAttribute("color", new THREE.Float32BufferAttribute(col.slice(from * 3, to * 3), 3));
+    g.setAttribute("rough", new THREE.Float32BufferAttribute(rough.slice(from, to), 1));
+    g.setIndex(tris.map((k) => k - from));
+    return g;
+  };
+  return { outer: piece(0, inner, index.slice(0, split), true), lining: piece(inner, pos.length / 3, index.slice(split), false) };
 }

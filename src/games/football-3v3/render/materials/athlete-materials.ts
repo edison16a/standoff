@@ -3,7 +3,8 @@ import type { Look } from "../../builds";
 import type { TeamId } from "../../teams";
 import { faceMask, visorGeometry } from "../models/face-mask";
 import { HELMETS, paintHelmet } from "../models/helmet-paint";
-import { shellGeometry } from "../models/helmet-shell";
+import { shellGeometry, type ShellParts } from "../models/helmet-shell";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { knitNormalMap } from "./fabric";
 import { roughFromVertices, skinWrap } from "./shader-patches";
 
@@ -33,6 +34,7 @@ export class AthleteMaterials {
   private readonly visors = new Map<string, THREE.MeshPhysicalMaterial>();
   /** Shapes every player of a kind shares: the shell, each team's masks, the visor. */
   private readonly shapes = new Map<string, THREE.BufferGeometry>();
+  private shellCache: ShellParts | null = null;
 
   constructor(readonly detail: Detail, private readonly gloss: THREE.Texture | null) {
     const high = detail === "high";
@@ -45,7 +47,8 @@ export class AthleteMaterials {
     this.gear = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, metalness: 0 });
     this.gear.onBeforeCompile = roughFromVertices;
     this.gear.customProgramCacheKey = () => "fb-gear";
-    this.mask = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, metalness: 0.35, envMap: gloss, envMapIntensity: 0.9 });
+    // Powder coated steel bars, the chin strap and the shell's padded lining all share it.
+    this.mask = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, metalness: 0.15, envMap: gloss, envMapIntensity: 0.8 });
     this.mask.onBeforeCompile = roughFromVertices;
     this.mask.customProgramCacheKey = () => "fb-mask";
     this.knit = high ? knitNormalMap() : null;
@@ -97,16 +100,23 @@ export class AthleteMaterials {
     return g;
   }
 
-  /** The helmet shell, the same for everyone; the head's scale sizes it. */
-  shell(): THREE.BufferGeometry {
-    const m = DETAIL[this.detail].mesh;
-    return this.shape("shell", () => shellGeometry({ around: Math.round(64 * m), rings: Math.round(20 * m) }));
+  private shellParts(): ShellParts {
+    if (!this.shellCache) {
+      const m = DETAIL[this.detail].mesh;
+      this.shellCache = shellGeometry({ around: Math.round(64 * m), rings: Math.round(20 * m) });
+    }
+    return this.shellCache;
   }
 
-  /** A team's mask in one style, painted in the team's mask colour. */
+  /** The helmet shell's painted outside, the same for everyone; the head's scale sizes it. */
+  shell(): THREE.BufferGeometry {
+    return this.shellParts().outer;
+  }
+
+  /** A team's mask in one style, painted in the team's mask colour, with the shell's lining in the same draw. */
   faceMask(team: TeamId, look: Look): THREE.BufferGeometry {
     const style = look.mask === "cage" ? "cage" : "open";
-    return this.shape(`mask:${team}:${style}`, () => faceMask(look, { colour: HELMETS[team].mask, detail: DETAIL[this.detail].mesh }));
+    return this.shape(`mask:${team}:${style}`, () => mergeGeometries([faceMask(look, { colour: HELMETS[team].mask, detail: DETAIL[this.detail].mesh }), this.shellParts().lining], false)!);
   }
 
   visorShape(): THREE.BufferGeometry {
@@ -137,6 +147,9 @@ export class AthleteMaterials {
     }
     for (const v of this.visors.values()) v.dispose();
     for (const g of this.shapes.values()) g.dispose();
+    this.shellCache?.outer.dispose();
+    this.shellCache?.lining.dispose();
+    this.shellCache = null;
     this.helmets.clear();
     this.visors.clear();
     this.shapes.clear();

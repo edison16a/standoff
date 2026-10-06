@@ -4,7 +4,7 @@ import type { KitSpec } from "./kit";
 import { drawLogo } from "./logos";
 import { sample } from "./loft";
 import type { Dims } from "./rig";
-import { JERSEY_U, TORSO_V0, torsoStations, torsoV } from "./torso";
+import { collarV, JERSEY_U, TORSO_V0, torsoStations, torsoV } from "./torso";
 
 /**
  * The jersey's print, laid out for the torso and sleeve texture
@@ -62,10 +62,11 @@ export function printJersey(kit: KitSpec, d: Dims, team: TeamId, width: number):
   for (const x of [0.045, 0.455, 0.545, 0.955]) line(ctx, x * W, pit, x * W, hem);
   line(ctx, 0, row(0.81 * H), W, row(0.81 * H));
   // The collar's trim: a band along the edge, which the V neck dips at the front.
+  const collar = (1 - collarV(d)) * Hc;
   ctx.fillStyle = kit.trim;
-  ctx.fillRect(0, 0, W, 0.022 * Hc);
+  ctx.fillRect(0, collar - 0.004 * Hc, W, 0.02 * Hc);
   ctx.fillStyle = "rgba(0,0,0,0.3)";
-  ctx.fillRect(0, 0.022 * Hc, W, 0.004 * Hc);
+  ctx.fillRect(0, collar + 0.016 * Hc, W, 0.004 * Hc);
   // Soft folds where the jersey bunches into the belt.
   const folds = ctx.createLinearGradient(0, hem - 0.06 * Hc, 0, hem);
   folds.addColorStop(0, "rgba(0,0,0,0)");

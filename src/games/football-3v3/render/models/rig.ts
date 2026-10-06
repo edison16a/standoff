@@ -80,7 +80,7 @@ export function dimsFor(height: number, b: number): Dims {
     upper: 0.172 * H,
     fore: 0.148 * H,
     palm: 0.03 * H,
-    head: 0.092 * H,
+    head: 0.085 * H,
     headScale: Math.sqrt(H / 1.85),
     heel: -0.05 * H,
     toe: 0.105 * H,

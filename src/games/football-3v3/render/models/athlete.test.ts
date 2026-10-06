@@ -82,13 +82,26 @@ describe("the skinned athlete", () => {
     expect(box(p.skin[1]!).max.x).toBeLessThan(-0.08);
   });
 
-  it("points the torso's faces outward", () => {
+  it("points the torso's faces outward, and the collar's lining in toward the neck", () => {
     const g = torso(d, 1);
     const pos = g.getAttribute("position");
     const n = g.getAttribute("normal");
     let out = 0;
-    for (let i = 0; i < pos.count; i++) if (pos.getX(i) * n.getX(i) + pos.getZ(i) * n.getZ(i) > 0) out++;
-    expect(out / pos.count).toBeGreaterThan(0.95);
+    let body = 0;
+    let lining = 0;
+    let inward = 0;
+    for (let i = 0; i < pos.count; i++) {
+      const facing = pos.getX(i) * n.getX(i) + pos.getZ(i) * n.getZ(i);
+      if (pos.getY(i) < 0.82 * d.height) {
+        body++;
+        if (facing > 0) out++;
+      } else if (Math.hypot(pos.getX(i), pos.getZ(i)) < 0.06 * d.height && pos.getY(i) < 0.845 * d.height) {
+        lining++;
+        if (facing < 0) inward++;
+      }
+    }
+    expect(out / body).toBeGreaterThan(0.97);
+    expect(inward / lining).toBeGreaterThan(0.8);
   });
 
   it("places the jersey's chest a quarter of the way round and maps heights up the torso", () => {
@@ -120,23 +133,23 @@ describe("the skinned athlete", () => {
 
 describe("the helmet", () => {
   it("faces its shell outward and its padding inward", () => {
-    const g = shellGeometry({ around: 48, rings: 14 });
-    const pos = g.getAttribute("position");
-    const n = g.getAttribute("normal");
-    const cols = 49;
-    const sheet = 15 * cols;
+    const { outer, lining } = shellGeometry({ around: 48, rings: 14 });
     const p = new THREE.Vector3();
     const v = new THREE.Vector3();
-    let outer = 0;
-    let inner = 0;
-    for (let i = cols; i < sheet; i++) if (v.fromBufferAttribute(n, i).dot(p.fromBufferAttribute(pos, i).sub(SHELL_CENTRE)) > 0) outer++;
-    for (let i = sheet + cols; i < 2 * sheet; i++) if (v.fromBufferAttribute(n, i).dot(p.fromBufferAttribute(pos, i).sub(SHELL_CENTRE)) < 0) inner++;
-    expect(outer / (sheet - cols)).toBeGreaterThan(0.97);
-    expect(inner / (sheet - cols)).toBeGreaterThan(0.97);
+    const facing = (g: THREE.BufferGeometry, from: number, to: number) => {
+      const pos = g.getAttribute("position");
+      const n = g.getAttribute("normal");
+      let out = 0;
+      for (let i = from; i < to; i++) if (v.fromBufferAttribute(n, i).dot(p.fromBufferAttribute(pos, i).sub(SHELL_CENTRE)) > 0) out++;
+      return out / (to - from);
+    };
+    const sheet = 15 * 49;
+    expect(facing(outer, 49, sheet)).toBeGreaterThan(0.97);
+    expect(facing(lining, 49, sheet)).toBeLessThan(0.03);
   });
 
   it("leaves the face open and covers the crown and the back", () => {
-    const g = shellGeometry({ around: 48, rings: 14 });
+    const g = shellGeometry({ around: 48, rings: 14 }).outer;
     g.computeBoundingBox();
     const b = g.boundingBox!;
     expect(b.max.y).toBeGreaterThan(0.14);
@@ -155,7 +168,7 @@ describe("the helmet", () => {
   });
 
   it("maps the whole shell inside its texture with no seam", () => {
-    const g = shellGeometry({ around: 48, rings: 14 });
+    const g = shellGeometry({ around: 48, rings: 14 }).outer;
     const uv = g.getAttribute("uv");
     for (let i = 0; i < uv.count; i++) {
       expect(uv.getX(i)).toBeGreaterThan(0);

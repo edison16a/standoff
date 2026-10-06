@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { blend, shade } from "./geo";
 import type { KitSpec } from "./kit";
-import { angles, tube } from "./loft";
+import { angles, tube, type Station } from "./loft";
 import { dress, merge, ramp, rigid, weigh, type Weights } from "./parts";
 import type { Dims } from "./rig";
 import { neckRadius } from "./torso";
@@ -14,6 +14,18 @@ import { neckRadius } from "./torso";
  * builds that wear it. Locks fall from under the back of the shell.
  */
 
+/** The head from the chin up, in metres about its middle: the face is fuller in front, the jaw narrows to the chin. */
+const SKULL: readonly Station[] = [
+  { t: -0.112, l: 0.024, r: 0.024, f: 0.02, b: 0.02, z: 0.05 },
+  { t: -0.1, l: 0.046, r: 0.046, f: 0.034, b: 0.03, z: 0.04 },
+  { t: -0.078, l: 0.061, r: 0.061, f: 0.058, b: 0.05, z: 0.026 },
+  { t: -0.048, l: 0.068, r: 0.068, f: 0.077, b: 0.07, z: 0.01 },
+  { t: -0.014, l: 0.072, r: 0.072, f: 0.084, b: 0.086, z: 0.004 },
+  { t: 0.022, l: 0.074, r: 0.074, f: 0.088, b: 0.095 },
+  { t: 0.062, l: 0.071, r: 0.071, f: 0.08, b: 0.097, z: -0.004 },
+  { t: 0.098, l: 0.058, r: 0.058, f: 0.06, b: 0.08, z: -0.01 },
+];
+
 /** The middle of the head, in the model at rest. */
 export const headCentre = (d: Dims) => new THREE.Vector3(0, d.neckY + d.head, 0);
 
@@ -21,7 +33,7 @@ export function neck(d: Dims, kit: KitSpec, detail: number): THREE.BufferGeometr
   const H = d.height;
   const r = neckRadius(d);
   const geo = tube(new THREE.Vector3(0, d.neckY - 0.035 * H, 0.004 * H), 1, [
-    { t: 0, l: r * 1.12, r: r * 1.12, f: r, b: r * 1.05 },
+    { t: 0, l: r * 1.3, r: r * 1.3, f: r * 1.05, b: r * 1.15 },
     { t: 0.06 * H, l: r, r, f: r * 0.92, b: r },
     { t: 0.1 * H, l: r * 0.92, r: r * 0.92, f: r * 0.86, b: r * 0.9 },
   ], { ring: angles(Math.round(18 * detail)), step: 0.025 / detail, paint: () => ({ colour: kit.look.skin, rough: 0.5 }) });
@@ -40,7 +52,7 @@ function shadeUnderBrim(g: THREE.BufferGeometry): void {
   const pos = g.getAttribute("position");
   const col = g.getAttribute("color");
   for (let i = 0; i < pos.count; i++) {
-    const k = 1 - 0.42 * ramp(-0.035, 0.035, pos.getY(i)) - 0.15 * ramp(0.06, -0.02, pos.getZ(i));
+    const k = 1 - 0.3 * ramp(-0.09, 0.07, pos.getY(i)) - 0.15 * ramp(0.06, -0.02, pos.getZ(i));
     col.setXYZ(i, col.getX(i) * k, col.getY(i) * k, col.getZ(i) * k);
   }
   col.needsUpdate = true;
@@ -53,15 +65,11 @@ export function face(d: Dims, kit: KitSpec, detail: number): THREE.BufferGeometr
   // The face is small and mostly inside the shell, so its pieces stay light.
   const seg = Math.max(6, Math.round(12 * detail));
   const fine = Math.max(5, Math.round(8 * detail));
-  const ball = (r: number, w = fine, h = fine - 2) => new THREE.SphereGeometry(r, w, Math.max(3, h));
+  const ball = (r: number) => new THREE.SphereGeometry(r, fine, Math.max(3, fine - 2));
   const S = { colour: skin, rough: 0.48 };
   const parts: THREE.BufferGeometry[] = [
-    // The skull and the jaw below it.
-    dress(ball(0.08, seg + 2, seg), S, { at: [0, 0.01, -0.005], scale: [0.93, 1.3, 1.16] }),
-    dress(ball(0.06, seg, seg - 2), S, { at: [0, -0.06, 0.03], scale: [0.98, 0.85, 1.05] }),
-    // Cheekbones.
-    dress(ball(0.025), S, { at: [0.038, -0.012, 0.07], scale: [1, 0.8, 0.8] }),
-    dress(ball(0.025), S, { at: [-0.038, -0.012, 0.07], scale: [1, 0.8, 0.8] }),
+    // One smooth head from the chin to the crown: jaw, cheekbones, temples and forehead.
+    tube(new THREE.Vector3(), 1, SKULL, { ring: angles(seg * 2), step: 0.02 / Math.max(0.5, detail), capStart: 0.012, capEnd: 0.03, paint: () => S }),
     // The brow ridge shades the eyes from the lights above.
     dress(ball(0.03), S, { at: [0, 0.026, 0.08], scale: [2.0, 0.42, 0.62] }),
     // The nose: a bridge and a rounded tip with nostrils' shadow under it.

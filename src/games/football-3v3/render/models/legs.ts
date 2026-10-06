@@ -56,7 +56,8 @@ const SHIN: readonly Row[] = [[0.008, 0.029, 0.028, 0.031, 0.028], [0.05, 0.028,
 
 export function leg(d: Dims, kit: KitSpec, side: 1 | -1, detail: number): THREE.BufferGeometry {
   const H = d.height;
-  const M = 1 + 0.24 * d.build;
+  // Big thighs and calves, as the game's athletes have; heavier builds bigger still.
+  const M = 1.07 * (1 + 0.24 * d.build);
   const make = (t: number, out: number, inn: number, f: number, b: number): Station => ({
     t: t * H, l: (side > 0 ? out : inn) * H * M, r: (side > 0 ? inn : out) * H * M, f: f * H * M, b: b * H * M,
   });
