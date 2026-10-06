@@ -2,28 +2,13 @@ import * as THREE from "three";
 import { Rng } from "../../engine/rng";
 
 /**
- * The night around the ground: a deep blue sky that glows purple at the
- * horizon, a scatter of stars, and a city skyline with lit windows.
+ * The night around the ground: a deep blue sky with drifting cloud lit
+ * from below by the city, the floodlights' haze rising over the bowl, a
+ * moon, a scatter of stars, and a city skyline with lit windows.
  */
 export function buildSky(): { group: THREE.Group; dispose(): void } {
   const group = new THREE.Group();
-  const dome = new THREE.Mesh(
-    new THREE.SphereGeometry(240, 32, 16),
-    new THREE.ShaderMaterial({
-      side: THREE.BackSide,
-      depthWrite: false,
-      fog: false,
-      uniforms: { top: { value: new THREE.Color("#03050e") }, horizon: { value: new THREE.Color("#2a2152") }, glow: { value: new THREE.Color("#6b3fa0") } },
-      vertexShader: "varying vec3 vDir; void main() { vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
-      fragmentShader: `uniform vec3 top; uniform vec3 horizon; uniform vec3 glow; varying vec3 vDir;
-        void main() {
-          float h = clamp(vDir.y, 0.0, 1.0);
-          vec3 c = mix(horizon, top, pow(h, 0.45));
-          c += glow * pow(1.0 - h, 10.0) * 0.35;
-          gl_FragColor = vec4(c, 1.0);
-        }`,
-    }),
-  );
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(240, 32, 16), skyMaterial());
   const rng = new Rng(21);
   const stars = new Float32Array(900 * 3);
   for (let i = 0; i < 900; i++) {
@@ -82,4 +67,54 @@ function skylineTexture(): THREE.CanvasTexture {
   t.wrapS = THREE.RepeatWrapping;
   t.repeat.set(3, 1);
   return t;
+}
+
+const SKY_FRAGMENT = /* glsl */ `
+  uniform vec3 uTop;
+  uniform vec3 uHorizon;
+  uniform vec3 uCity;
+  uniform vec3 uMoon;
+  varying vec3 vDir;
+  float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+  float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
+  }
+  void main() {
+    vec3 d = normalize(vDir);
+    float h = clamp(d.y, 0.0, 1.0);
+    vec3 c = mix(uHorizon, uTop, pow(h, 0.5));
+    // The city's sodium glow along the horizon, and the floodlights' haze hanging over the ground.
+    c += uCity * pow(1.0 - h, 8.0) * 0.6;
+    c += vec3(0.05, 0.055, 0.07) * pow(1.0 - h, 2.0);
+    // Clouds: two octaves of noise on a flat layer above, lit warm from below.
+    vec2 p = d.xz / max(d.y, 0.08) * 1.4;
+    float n = noise(p) * 0.65 + noise(p * 2.7 + 3.1) * 0.35;
+    float cloud = smoothstep(0.5, 0.85, n) * smoothstep(0.02, 0.25, h);
+    c = mix(c, uCity * 0.35 + vec3(0.03, 0.035, 0.05), cloud * 0.75);
+    // The moon, high over the far stand, with a soft halo.
+    vec3 moonDir = normalize(vec3(-0.35, 0.55, -0.76));
+    float m = dot(d, moonDir);
+    c += uMoon * (smoothstep(0.99955, 0.9997, m) * 6.0 + pow(max(m, 0.0), 300.0) * 0.25) * (1.0 - cloud * 0.8);
+    gl_FragColor = vec4(c, 1.0);
+  }
+`;
+
+/** The dome's colours are linear light: the finish's curve and grade bring them to the screen. */
+function skyMaterial(): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    depthWrite: false,
+    fog: false,
+    uniforms: {
+      uTop: { value: new THREE.Color("#02040b") },
+      uHorizon: { value: new THREE.Color("#141a33") },
+      uCity: { value: new THREE.Color("#6b4a32") },
+      uMoon: { value: new THREE.Color("#e8ecf5") },
+    },
+    vertexShader: "varying vec3 vDir; void main() { vDir = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+    fragmentShader: SKY_FRAGMENT,
+  });
 }
