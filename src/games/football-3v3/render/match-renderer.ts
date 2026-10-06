@@ -6,6 +6,7 @@ import { CameraDirector } from "./camera/director";
 import { CeremonyScene } from "./ceremony/ceremony-scene";
 import { BallTrace, type TracePoint } from "./effects/ball-trace";
 import { ScrimmageLines } from "./field/scrimmage-lines";
+import { PixelBudget } from "./frame-budget";
 import { Stadium } from "./field/stadium";
 import { Squad } from "./figures/squad";
 import { NameTags, type TagOf } from "./figures/tags";
@@ -57,6 +58,8 @@ export class MatchRenderer {
   private readonly scale: number;
   private last = 0;
   private excitement = 0.1;
+  /** Card time per frame, and the resolution it allows. */
+  private readonly pixels: PixelBudget;
 
   constructor(canvas: HTMLCanvasElement, options: RendererOptions = {}) {
     this.low = options.quality === "low";
@@ -64,6 +67,7 @@ export class MatchRenderer {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: options.quality === "high" || options.quality === undefined, powerPreference: "high-performance" });
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.0;
+    this.pixels = new PixelBudget(this.renderer);
     this.renderer.shadowMap.enabled = !this.low;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     const pmrem = new THREE.PMREMGenerator(this.renderer);
@@ -102,9 +106,7 @@ export class MatchRenderer {
   }
 
   resize(width: number, height: number, dpr: number): void {
-    const ratio = (this.low ? 0.6 : Math.min(dpr, 1.5)) * this.scale;
-    this.renderer.setPixelRatio(ratio);
-    this.renderer.setSize(width, height, false);
+    this.pixels.resize(width, height, (this.low ? 0.6 : Math.min(dpr, 1.5)) * this.scale);
     this.director.setAspect(width / Math.max(1, height));
   }
 
@@ -143,7 +145,7 @@ export class MatchRenderer {
 
   draw(view: MatchView, nowMs: number): void {
     this.update(view, nowMs);
-    this.renderer.render(this.scene, this.director.camera);
+    this.pixels.draw(() => this.renderer.render(this.scene, this.director.camera));
   }
 
   /** Everything a frame does except drawing it. */
@@ -192,6 +194,7 @@ export class MatchRenderer {
     this.lines.dispose();
     this.stadium.dispose();
     this.environment.dispose();
+    this.pixels.dispose();
     this.renderer.dispose();
   }
 }
