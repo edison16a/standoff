@@ -32,7 +32,7 @@ Turning the phone never breaks the controller. A hard turn of the wheel can swin
 
 ## Power ups
 
-The item boxes are glass cubes with a glowing star inside, spinning and bobbing over the road in rows. Most are single boxes. A **double box** is two gold cubes stacked, and it gives two power ups. Every map has two double boxes on the ground, out at the edge of a row, and one over the glide jump. Each power up is rolled on its own, with the same odds as a single box. The leader tends to get defence, the back of the pack speed.
+The item boxes are glass cubes with a glowing star inside, spinning and bobbing over the road in rows. Most are single boxes. A **double box** is two gold cubes stacked, and it gives two power ups. Single boxes come in every colour but gold, so a double stands out down the road. Every map has two double boxes on the ground, out at the edge of a row, and one over the glide jump. Each power up is rolled on its own, with the same odds as a single box. The leader tends to get defence, the back of the pack speed.
 
 You hold two at a time: the one a tap uses, and one queued behind it. Use the first and the queued one slides forward, ready a moment later, so one hurried double tap never fires both. A single box adds one. A double box fills both places, or just the one that is free. A kart with both places full drives straight through a box and leaves it whole for someone else: the box is knocked aside and swings back. A box you take shatters into glass shards and comes back after a few seconds.
 
