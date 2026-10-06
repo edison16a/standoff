@@ -200,6 +200,7 @@ export class Effects {
     this.streaks.dispose();
     this.flares.dispose();
     this.marks.dispose();
+    this.shards.dispose();
   }
 }
 
