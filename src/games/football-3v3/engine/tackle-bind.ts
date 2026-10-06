@@ -110,7 +110,9 @@ export function followBinds(list: readonly Athlete[]): void {
     if (!held(a) || a.action.kind !== "down") continue;
     const b = a.action.bind!;
     const carrier = list[b.partner];
-    if (!carrier) continue;
+    // Only while the carrier is still down in this tackle: a man lined up for the next play is not dragged back.
+    const cb = carrier?.action.kind === "down" ? carrier.action.bind : null;
+    if (!carrier || !cb || cb.role !== "carrier" || cb.kind !== b.kind) continue;
     const move = TACKLE_MOVES[b.kind];
     const at = holdAt(b.role === "pile" ? move.pile : move.hold, b.from, a.action.t);
     const l = leftOf(b.f);
