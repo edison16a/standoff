@@ -5,6 +5,11 @@ import { Bake } from "./bake";
 
 /** LEDs per metre of board, across and up. */
 const PITCH = 40;
+/** Metres of ribbon one pass of the scrolling picture covers at its own shape, so words keep their proportions. */
+/** Where the courtside boards stand: the front board's line and the side boards' lines. */
+const FRONT_Z = -4.75;
+const SIDE_X = 11.35;
+const CYCLE = (4096 / 128) * 0.7;
 
 /**
  * An LED panel: the picture comes through a grid of round diodes with
@@ -57,9 +62,14 @@ export class LedBoards {
     this.owned.push(housing);
     const shell = new Bake();
     const strip = (w: number, x: number, z: number, yaw: number) => {
-      const face = ledMaterial(this.texture, w, 0.7);
+      // One uv unit spans two passes of the picture, so the diode grid is sized to that.
+      const face = ledMaterial(this.texture, CYCLE * 2, 0.7);
       this.owned.push(face);
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, 0.7), face);
+      const plane = new THREE.PlaneGeometry(w, 0.7);
+      // The texture repeats twice per uv unit, so scale the uvs to show the words at their true width.
+      const uv = plane.getAttribute("uv");
+      for (let i = 0; i < uv.count; i++) uv.setX(i, (uv.getX(i) * w) / (CYCLE * 2));
+      const m = new THREE.Mesh(plane, face);
       m.position.set(x, 0.46, z);
       m.rotation.y = yaw;
       this.group.add(m);
@@ -69,9 +79,11 @@ export class LedBoards {
       shell.add(new THREE.BoxGeometry(w + 0.1, 0.86, 0.22), housing, { x: x + bx, y: 0.43, z: z + bz, ry: yaw });
       shell.add(new THREE.BoxGeometry(w + 0.1, 0.04, 0.3), housing, { x: x + bx * 0.7, y: 0.87, z: z + bz * 0.7, ry: yaw });
     };
-    strip(34, 0, -4.75, 0);
-    strip(24, -11.35, 6, Math.PI / 2);
-    strip(24, 11.35, 6, -Math.PI / 2);
+    // The three boards meet at the front corners and stop there, so no board shows through another.
+    const side = 18 - FRONT_Z;
+    strip(2 * SIDE_X, 0, FRONT_Z, 0);
+    strip(side, -SIDE_X, FRONT_Z + side / 2, Math.PI / 2);
+    strip(side, SIDE_X, FRONT_Z + side / 2, -Math.PI / 2);
     this.group.add(...shell.build(false));
 
     // The ring round the upper deck's face, high over the stands.

@@ -41,7 +41,7 @@ export function ledTexture(words: readonly string[], colours: readonly string[])
   const step = W / words.length;
   words.forEach((word, i) => {
     ctx.fillStyle = colours[i % colours.length]!;
-    ctx.fillText(word, (i + 0.5) * step, 68);
+    ctx.fillText(word, (i + 0.5) * step, 68, step * 0.86);
   });
   const t = finish(c);
   t.wrapS = THREE.RepeatWrapping;
