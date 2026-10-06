@@ -41,6 +41,8 @@ Pick **Keyboard** in the menu and **Start** goes straight to the countdown, with
 
 The keys go by where they sit on the keyboard, so other layouts work the same. Holding a key down does not repeat the move. On the results, Up (or W) plays again once the card says so. The keys are off in camera mode, so a camera run on the leaderboard was run with the body. If the camera or the model will not start, **Play with the keyboard** on that screen switches to keyboard mode.
 
+The admin panel's Keyboard player (three quick taps on the settings gear, then Platform) shows these keys on its controls card (`keyboard.ts`). It sends nothing itself: pick **Keyboard** in the menu and the keys above work on the big screen.
+
 ## Leaderboard
 
 Every finished run is saved on this computer only, in the browser's localStorage, ranked by final score, however low and whether or not a name was typed. It never fills up and never ends. Each row shows the rank, the name, the level (with "keys" for a keyboard run) and the score. The lobby shows it beside the menu, and the results show it with your run lit up. **Clear leaderboards** in the host's Settings panel wipes it, with every other game's boards, after a confirm. The old best runs table from before moves onto the leaderboard by itself the first time the game opens. The board is the kit's (`src/games/kit/leaderboard`), keyed `subway-surfers` and `runs`.
