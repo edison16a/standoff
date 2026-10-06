@@ -4,6 +4,7 @@ import { SessionContext } from "./host/components/session-context";
 import { Stage } from "./host/components/Stage";
 import { SurfSession } from "./host/session";
 import { Showcase } from "./showcase/Showcase";
+import { keyboard } from "./keyboard";
 import "./styles/host.css";
 import "./styles/hud.css";
 import "./styles/menus.css";
@@ -37,4 +38,5 @@ export const game: GameModule = {
   },
 
   Showcase,
+  keyboard,
 };
