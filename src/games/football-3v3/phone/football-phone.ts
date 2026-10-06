@@ -5,6 +5,7 @@ import { tone } from "@/platform/audio/voices";
 import { hostMessageSchema, PAD_BUTTONS, type Call, type HostMessage, type PadButton, type PhoneMessage } from "../protocol";
 import type { BuildId } from "../builds";
 import { buzz } from "./haptics";
+import { gradeLevel, meterLevel } from "../engine/pass-meter";
 import { followMeter, tapMeter } from "./kick-meter";
 import { usePhoneStore as store, type SetupStep } from "./phone-store";
 
@@ -76,10 +77,33 @@ export class FootballPhone {
     this.aimTimer ??= setInterval(() => this.sendAim(), AIM_MS);
   }
 
-  /** The throw stick let go: throw, reliably, with its last reading. */
+  /** A thumb down on the throw stick: the throw meter starts here and on the big screen. */
+  holdThrow(): void {
+    store.setState({ throwSince: performance.now(), lastThrow: null });
+    this.send({ kind: "hold", down: true });
+  }
+
+  /**
+   * The throw stick let go: throw, reliably, with its last reading and how
+   * long the meter ran. The phone grades it too, the same way the host
+   * will, so the result shows at once.
+   */
   throwBall(stick: Stick): void {
     this.stopAim();
-    this.send({ kind: "throw", x: stick.x, y: stick.y });
+    const { throwSince, host } = store.getState();
+    const now = performance.now();
+    const heldMs = throwSince === null ? undefined : Math.min(60000, now - throwSince);
+    const window = host?.throwWindow ?? null;
+    const reading = heldMs !== undefined && window ? gradeLevel(meterLevel(heldMs), window) : null;
+    store.setState({ throwSince: null, lastThrow: reading ? { reading, at: now } : null });
+    this.send({ kind: "throw", x: stick.x, y: stick.y, heldMs });
+  }
+
+  /** The thumb came off the throw stick without a throw. */
+  cancelThrow(): void {
+    if (store.getState().throwSince === null) return;
+    store.setState({ throwSince: null });
+    this.send({ kind: "hold", down: false });
   }
 
   call(call: Call): void {
@@ -104,6 +128,7 @@ export class FootballPhone {
   letGo({ keepStick = false }: { keepStick?: boolean } = {}): void {
     for (const button of [...PAD_BUTTONS, "skip"]) this.pad.release(button);
     this.stopAim();
+    this.cancelThrow();
     if (!keepStick) this.pad.setStick({ x: 0, y: 0 });
   }
 

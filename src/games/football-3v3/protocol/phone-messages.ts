@@ -30,10 +30,17 @@ export const kickSchema = z.object({ kind: z.literal("kick"), value: axis });
 /** The throw stick while held, on the screen's axes: x right and y up. Sent often and allowed to drop. */
 export const aimSchema = z.object({ kind: z.literal("aim"), x: axis, y: axis });
 
-/** The throw stick let go: throw at the receiver it was on. Sent reliably. */
-export const throwSchema = z.object({ kind: z.literal("throw"), x: axis, y: axis });
+/**
+ * The throw stick let go: throw at the receiver it was on. Sent reliably,
+ * with how long the throw meter ran on this phone, so the grade is what
+ * the player saw whatever the network did.
+ */
+export const throwSchema = z.object({ kind: z.literal("throw"), x: axis, y: axis, heldMs: z.number().finite().min(0).max(60000).optional() });
 
-export const phoneMessageSchema = z.discriminatedUnion("kind", [pickSchema, readySchema, helloSchema, callSchema, kickSchema, aimSchema, throwSchema]);
+/** A thumb down on the throw stick starts the throw meter; up without a throw stops it. Sent reliably. */
+export const holdSchema = z.object({ kind: z.literal("hold"), down: z.boolean() });
+
+export const phoneMessageSchema = z.discriminatedUnion("kind", [pickSchema, readySchema, helloSchema, callSchema, kickSchema, aimSchema, throwSchema, holdSchema]);
 
 export type PhoneMessage = z.infer<typeof phoneMessageSchema>;
 

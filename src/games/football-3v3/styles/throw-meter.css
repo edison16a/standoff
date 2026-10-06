@@ -1,0 +1,87 @@
+/* The throw meter beside the QB's throw stick. */
+
+.fb-throwpad {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  align-self: stretch;
+  gap: 10px;
+  min-width: 0;
+}
+
+.fb-tmeter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 78cqh;
+  opacity: 0.55;
+  transition: opacity 120ms ease;
+  pointer-events: none;
+}
+
+.fb-tmeter--on,
+.fb-tmeter--perfect,
+.fb-tmeter--good,
+.fb-tmeter--weak,
+.fb-tmeter--hot {
+  opacity: 1;
+}
+
+.fb-tmeter__bar {
+  position: relative;
+  flex: 1;
+  width: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+
+.fb-tmeter__green,
+.fb-tmeter__gold,
+.fb-tmeter__marker {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+.fb-tmeter__green {
+  background: #22c55e;
+}
+
+.fb-tmeter__gold {
+  min-height: 3px;
+  background: #fde047;
+  box-shadow: 0 0 6px #facc15;
+}
+
+.fb-tmeter__marker {
+  height: 4px;
+  margin-bottom: -2px;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.9);
+}
+
+.fb-tmeter__word {
+  min-width: 52px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.fb-tmeter--perfect .fb-tmeter__word {
+  color: #fde047;
+}
+
+.fb-tmeter--good .fb-tmeter__word {
+  color: #4ade80;
+}
+
+.fb-tmeter--weak .fb-tmeter__word,
+.fb-tmeter--hot .fb-tmeter__word {
+  color: #f87171;
+}

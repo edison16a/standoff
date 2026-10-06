@@ -19,6 +19,7 @@ import "./styles/phone.css";
 import "./styles/phone-ready.css";
 import "./styles/pad.css";
 import "./styles/pad-controls.css";
+import "./styles/throw-meter.css";
 import "./styles/kick.css";
 import "./styles/showcase.css";
 
