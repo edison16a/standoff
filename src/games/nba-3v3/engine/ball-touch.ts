@@ -55,7 +55,7 @@ export function blockHook(m: Match): TouchHook | undefined {
       if (!m.forcedBlock && m.rng() >= touchChance(d, kind)) continue;
       m.forcedBlock = false;
       // A ball whose path runs deep into the reach meets the whole hand and is swatted; one that only grazes it gets fingertips.
-      const tip = closestPass(body, s) > s.reach * TIP_REACH;
+      const tip = fingertip(body, s);
       if (tip) tipShot(m, body);
       else swat(m, body);
       d.box.blocks++;
@@ -90,8 +90,13 @@ export function swat(m: Match, body: BallBody): void {
 /** Beyond this share of the arm's reach a block is only a fingertip on the ball. */
 const TIP_REACH = 0.7;
 
+/** Whether a hand that gets to the ball only gets fingertips on it: its path grazes the end of the reach. */
+export function fingertip(body: Pick<BallBody, "pos" | "vel">, s: { x: number; y: number; z: number; reach: number }): boolean {
+  return closestPass(body, s) > s.reach * TIP_REACH;
+}
+
 /** How near the ball's straight path comes to the shoulder from here on. */
-function closestPass(body: BallBody, s: { x: number; y: number; z: number }): number {
+function closestPass(body: Pick<BallBody, "pos" | "vel">, s: { x: number; y: number; z: number }): number {
   const rx = body.pos.x - s.x;
   const ry = body.pos.y - s.y;
   const rz = body.pos.z - s.z;
