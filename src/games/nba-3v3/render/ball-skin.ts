@@ -48,6 +48,27 @@ function sample(x: number, y: number, z: number): void {
   hit.channel = Math.max(0, 1 - d / CHANNEL);
 }
 
+/** Pebbles about this many texels apart: two or three millimetres on the leather, big enough to survive the mipmaps. */
+const PEBBLE = 3.2;
+
+/**
+ * The pebble under a texel, 0 between pebbles to 1 on a crown. Pebbles
+ * sit on a staggered grid that keeps its size toward the poles, each a
+ * little dome of its own height.
+ */
+function pebble(r: number, c: number, W: number, H: number, st: number): number {
+  const rows = r / PEBBLE;
+  const row = Math.floor(rows);
+  const across = Math.max(6, Math.round((W * st) / PEBBLE));
+  const cols = (c / W) * across + (row % 2) * 0.5;
+  const col = Math.floor(cols);
+  const fu = cols - col - 0.5;
+  const fv = rows - row - 0.5;
+  const dome = Math.max(0, 1 - 4 * (fu * fu + fv * fv));
+  const lift = Math.abs(Math.sin(row * 12.9898 + (col % across) * 78.233) * 43758.5453) % 1;
+  return dome * (0.65 + 0.35 * lift);
+}
+
 function canvas(w: number, h: number): [HTMLCanvasElement, CanvasRenderingContext2D, ImageData] {
   const c = document.createElement("canvas");
   c.width = w;
@@ -73,14 +94,15 @@ export function ballSkin(width = 1024): Skin {
       sample(-Math.cos(phi) * st, y, Math.sin(phi) * st);
       const { tone, channel } = hit;
       const base = tone ? CREAM : ORANGE;
-      // Pebbling: tiny bumps that catch the light a little lighter, and a faint mottle in the dye.
-      const pebble = rng();
-      const shade = 0.94 + pebble * 0.1 - channel * 0.05;
+      // Pebbling: the orange leather is pebbled deep, the cream panels only lightly, with a faint mottle in the dye.
+      const grain = pebble(r, c, W, H, st) * (tone ? 0.45 : 1);
+      const mottle = rng();
+      const shade = 0.93 + grain * 0.07 + mottle * 0.04 - channel * 0.05;
       const k = (r * W + c) * 4;
       const groove = channel * channel * (3 - 2 * channel);
       for (let i = 0; i < 3; i++) colour.data[k + i] = Math.round((base[i]! * shade) * (1 - groove) + SEAM[i]! * groove);
       colour.data[k + 3] = 255;
-      const height = 200 + pebble * 55 - groove * 190;
+      const height = 150 + grain * 95 + mottle * 10 - groove * 150;
       bump.data[k] = bump.data[k + 1] = bump.data[k + 2] = height;
       bump.data[k + 3] = 255;
     }
