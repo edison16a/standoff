@@ -34,11 +34,13 @@ function start(size: { width: number; height: number }): Point {
 export function useDrag(size: { width: number; height: number }) {
   const [position, setPosition] = useState(() => start(size));
   const [grab, setGrab] = useState<Point | null>(null);
+  // A box that grew, turned sideways or met a smaller window is pulled back on screen.
+  const shown = clamp(position, size);
 
   const onPointerDown = (event: ReactPointerEvent<HTMLElement>) => {
     if ((event.target as Element).closest("button")) return;
     event.currentTarget.setPointerCapture(event.pointerId);
-    setGrab({ x: event.clientX - position.x, y: event.clientY - position.y });
+    setGrab({ x: event.clientX - shown.x, y: event.clientY - shown.y });
   };
   const onPointerMove = (event: ReactPointerEvent<HTMLElement>) => {
     if (grab) setPosition(clamp({ x: event.clientX - grab.x, y: event.clientY - grab.y }, size));
@@ -52,5 +54,5 @@ export function useDrag(size: { width: number; height: number }) {
       // Not remembered, which is fine.
     }
   };
-  return { position, handle: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp } };
+  return { position: shown, handle: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp } };
 }

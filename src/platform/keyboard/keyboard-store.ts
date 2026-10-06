@@ -18,6 +18,8 @@ export interface KeyboardUi {
   folded: boolean;
   /** The controls card put away with Escape. */
   cardHidden: boolean;
+  /** The phone held sideways, for controllers made for landscape. */
+  sideways: boolean;
 }
 
 function savedRoom(): string | null {
@@ -33,6 +35,7 @@ export const useKeyboardUi = create<KeyboardUi>(() => ({
   phone: null,
   folded: false,
   cardHidden: false,
+  sideways: false,
 }));
 
 /** Turns the keyboard player on for this room, or off with null. */

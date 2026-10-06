@@ -78,6 +78,11 @@
   color: var(--text);
 }
 
+.kb-panel__btn[aria-pressed="true"] {
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
 .kb-panel__btn--icon {
   padding: 0;
 }
