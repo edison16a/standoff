@@ -7,7 +7,9 @@ const REFRACTORY_MS = 260;
 const KEY_REFRACTORY_MS = 60;
 
 /** Keys for playing without the camera. Space is always player one. */
-const KEYS: Record<string, number> = { Space: 1, KeyW: 1, Enter: 2, ArrowUp: 2, Numpad0: 2 };
+export const KEYS: Readonly<Record<string, 1 | 2>> = { Space: 1, KeyW: 1, Enter: 2, ArrowUp: 2, Numpad0: 2 };
+/** A Keyboard player's jump is timed from its key, but never from further back than this. */
+const MAX_KEY_LAG_MS = 250;
 
 /**
  * Turns jumps into presses: a real jump seen by the camera, or a key.
@@ -62,10 +64,20 @@ export class Controls {
     if (event.type === "back") this.onPresence(event.slot, true);
   }
 
+  /**
+   * A jump from the admin panel's Keyboard player, timed from its key on
+   * this page. It takes the keys on this page first and sends them here,
+   * so each counts once.
+   */
+  remote(player: 1 | 2, pageMs: number, now = performance.now()): void {
+    const at = Math.min(now, Math.max(now - MAX_KEY_LAG_MS, pageMs));
+    this.press(this.players === 1 ? 1 : player, at, KEY_REFRACTORY_MS);
+  }
+
   private onKey(event: KeyboardEvent): void {
     // With one player, the second player's keys work for them too.
     const slot = this.players === 1 && KEYS[event.code] ? 1 : KEYS[event.code];
-    if (!slot || event.repeat || event.target instanceof HTMLInputElement) return;
+    if (!slot || event.repeat || event.defaultPrevented || event.target instanceof HTMLInputElement) return;
     // Space would otherwise press whichever button has focus.
     event.preventDefault();
     // The event's own time stamp is when the key went down, even if a slow frame kept it waiting.

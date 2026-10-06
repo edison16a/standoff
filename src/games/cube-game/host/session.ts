@@ -7,6 +7,7 @@ import type { DrawInput } from "../render/game-renderer";
 import { beatPulse } from "../render/pulse";
 import { loadBoard, syncBoard } from "./board-sync";
 import { JUMP_SMOOTHING, JUMP_TUNING } from "./jump-tuning";
+import { listenKeyboardSeat } from "./key-messages";
 import { MenuDemo } from "./menu-demo";
 import { loadProgress } from "./progress";
 import type { Round } from "./round";
@@ -28,6 +29,7 @@ export class CubeSession {
   private readonly demo: MenuDemo;
   private lastFrame = 0;
   private readonly stopBoard: () => void;
+  private readonly stopSeat: () => void;
 
   constructor(private readonly room: HostRoomApi) {
     this.sound = new SoundDirector(room.audio);
@@ -36,6 +38,8 @@ export class CubeSession {
     store.setState({ ...initialCubeState(), progress: loadProgress() });
     this.demo = new MenuDemo(store.getState().levelId);
     this.stopBoard = syncBoard();
+    // The admin panel's Keyboard player jumps like the keys on this computer.
+    this.stopSeat = listenKeyboardSeat(room, (player, at) => this.play.keyJump(player, at));
     this.clock.restart(0, 0.3);
     if (process.env.NODE_ENV === "development") Object.assign(window, { __cubeGame: this });
   }
@@ -154,6 +158,7 @@ export class CubeSession {
 
   dispose(): void {
     this.stopBoard();
+    this.stopSeat();
     this.play.end();
     this.kit?.dispose();
     this.sound.dispose();

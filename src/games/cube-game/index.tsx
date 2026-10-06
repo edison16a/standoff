@@ -4,6 +4,7 @@ import type { GameModule, ShowcaseView } from "@/platform/games/game-api";
 import { SessionContext } from "./host/components/session-context";
 import { Stage, Tools } from "./host/components/Stage";
 import { CubeSession } from "./host/session";
+import { keyboard } from "./keyboard";
 import "./styles/host.css";
 import "./styles/menu.css";
 import "./styles/hud.css";
@@ -49,4 +50,5 @@ export const game: GameModule = {
   },
 
   Showcase,
+  keyboard,
 };
