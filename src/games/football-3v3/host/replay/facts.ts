@@ -52,14 +52,18 @@ export function describePlay(clip: readonly MatchView[], m: PlayMoments): PlayFa
   };
 }
 
-/** The ball's path from the hand to the catch, for drawing the traced line. */
+/**
+ * The ball's path from the hand to the catch, for drawing the traced
+ * line. It starts at the release: before it the view puts the held ball
+ * at the carrier's middle, and a line from there ran up through the
+ * QB's body in the close replay angle.
+ */
 export function tracePass(clip: readonly MatchView[], m: PlayMoments): TracePoint[] {
   if (!m.pass) return [];
   const out: TracePoint[] = [];
-  for (let i = m.pass.from - 1; i <= m.pass.to; i++) {
+  for (let i = m.pass.from; i <= m.pass.to; i++) {
     const f = clip[i];
     if (!f) continue;
-    // The held ball rides in the hand; the view places it at the carrier, which is close enough for the ends.
     out.push({ t: f.time, x: f.ball.x, y: f.ball.y, z: f.ball.z });
   }
   return out;
