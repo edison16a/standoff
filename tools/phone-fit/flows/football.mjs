@@ -1,7 +1,8 @@
 // Football 3v3's phone pages: the star and ready steps, then every
 // controller layout, reached by handing the phone made up host states:
-// the play call, the QB before and after the snap and on a run call, the
-// QB after he pressed Run, a runner, the defence (also while the other side calls its play), the
+// the play call, the QB before and after the snap (with the throw meter)
+// and on a run call, the QB after he pressed Run, a runner, the receiver
+// a QB took over after his pass, the defence (also while the other side calls its play), the
 // kick meters, a replay with Skip, and the result.
 
 async function pickStar(ctx) {
@@ -26,6 +27,7 @@ async function pickStar(ctx) {
 
 const GAME = {
   team: 0, role: "qb", playing: true, score: [7, 3], quarter: 2, overtime: false, clock: 94, down: "2nd and 6", offense: true,
+  switched: false, throwWindow: null,
   choose: null, hikeLeft: null, meter: null, withBall: false, canThrow: false, runPlay: false, canPitch: false, canRun: false, jukeReady: true, rushReady: true, guarding: false,
   grounded: false, banner: null, skip: null, result: null, stats: { passYards: 42, rushYards: 8, recYards: 0, touchdowns: 1, tackles: 0, interceptions: 0 },
 };
@@ -39,7 +41,7 @@ export async function football3v3(ctx) {
   await ctx.snap("call-try");
   await ctx.fake("state", { ...GAME, phase: "presnap", pad: "qb", hikeLeft: 4 });
   await ctx.snap("hike");
-  await ctx.fake("state", { ...GAME, phase: "live", pad: "qb", withBall: true, canThrow: true, canRun: true });
+  await ctx.fake("state", { ...GAME, phase: "live", pad: "qb", withBall: true, canThrow: true, canRun: true, throwWindow: { center: 0.8, green: 0.08, gold: 0.014 } });
   await ctx.snap("qb");
   await ctx.fake("state", { ...GAME, phase: "live", pad: "qb", withBall: true, runPlay: true, canPitch: true, canRun: true });
   await ctx.snap("qb-run");
@@ -47,6 +49,8 @@ export async function football3v3(ctx) {
   await ctx.snap("qb-ran");
   await ctx.fake("state", { ...GAME, phase: "live", role: "runner", pad: "runner", withBall: true });
   await ctx.snap("runner");
+  await ctx.fake("state", { ...GAME, phase: "live", role: "runner", pad: "runner", switched: true });
+  await ctx.snap("switched");
   await ctx.fake("state", { ...GAME, phase: "live", role: "runner", offense: false, pad: "defense", guarding: true });
   await ctx.snap("defense");
   await ctx.fake("state", { ...GAME, phase: "choose", role: "runner", offense: false, pad: "defense" });
