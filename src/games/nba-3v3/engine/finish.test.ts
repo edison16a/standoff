@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BUILD_IDS } from "../builds";
 import { Match, type Entry } from "./match";
+import { STEPBACK } from "./stepback";
 import { RIM, STEP } from "./tuning";
 
 const ENTRIES: Entry[] = BUILD_IDS.slice(0, 6).map((build, i) => ({ team: (i % 2) as 0 | 1, build, seat: i === 0 ? 1 : null }));
@@ -81,6 +82,22 @@ describe("the stepback jumper", () => {
     expect(act.kind === "shoot" && act.step !== null).toBe(true);
     for (let t = 0; t < 0.3; t += STEP) m.step(STEP);
     expect(a.z).toBeGreaterThan(7.9);
+  });
+
+  it("leaves the floor in a low hop, then plants and kills the speed before rising", () => {
+    const m = setup(0, 7.4, { x: 0, z: 6.6 });
+    const a = m.athletes[0]!;
+    m.press(0, "shoot");
+    let top = 0;
+    for (let t = 0; t < STEPBACK.air - 0.02; t += STEP) {
+      m.step(STEP);
+      top = Math.max(top, a.y);
+    }
+    expect(top).toBeGreaterThan(0.04);
+    expect(top).toBeLessThan(0.08);
+    for (let t = 0; t < 0.05; t += STEP) m.step(STEP);
+    expect(a.y).toBe(0);
+    expect(Math.hypot(a.vx, a.vz)).toBeLessThan(STEPBACK.speed * 0.3);
   });
 
   it("goes straight up with nobody close", () => {

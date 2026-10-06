@@ -1,4 +1,5 @@
 import { JUMPER } from "../../engine/shooting";
+import { STEPBACK } from "../../engine/stepback";
 import { blend, keyed, type Pose, type PosePatch } from "./pose";
 
 const TAKEOFF = JUMPER.takeoff;
@@ -15,15 +16,17 @@ export function shootPose(t: number, releasedAt: number | null, base: Pose, step
 }
 
 /**
- * The stepback's hop through the dip: pushed off the front foot, the
- * body leaning back from the defender, the trailing leg reaching back
- * to plant, both feet landing together just in time to rise.
+ * The stepback's hop, timed to the engine's: pushed off the front foot,
+ * the body leaning back from the defender, both knees tucked and the
+ * trailing leg reaching back, then both feet plant wide together and
+ * the dip loads the jumper.
  */
-const HOP: PosePatch = { torsoX: -0.12, legLLift: 0.75, kneeL: 0.7, legRLift: -0.3, kneeR: 0.45, footR: 0.3, hipY: -0.08, neckX: -0.1 };
+const HOP: PosePatch = { torsoX: -0.14, legLLift: 0.8, kneeL: 0.95, legRLift: -0.2, kneeR: 0.75, footR: 0.35, footL: 0.2, hipY: -0.04, neckX: -0.12, armLSpread: 0.3 };
 
 function hop(t: number, p: Pose): Pose {
-  if (t >= TAKEOFF) return p;
-  const k = Math.sin(Math.PI * Math.min(1, t / (TAKEOFF * 0.85)));
+  const end = STEPBACK.air;
+  if (t >= end) return p;
+  const k = Math.sin(Math.PI * Math.min(1, t / end));
   return blend(p, HOP, Math.max(0, k), { ...p });
 }
 

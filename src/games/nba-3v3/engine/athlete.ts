@@ -5,6 +5,7 @@ import { powerPerKg } from "./body/mass";
 import { clampToCourt } from "./court";
 import type { MatchEvent } from "./events";
 import { steer } from "./steer";
+import { STEPBACK } from "./stepback";
 import { MOVE } from "./tuning";
 import type { Athlete, TeamId } from "./types";
 import { angleDiff, clamp, yawOf } from "./vec";
@@ -54,14 +55,11 @@ export function airborne(a: Athlete): boolean {
   return a.y > 0.08;
 }
 
-/** The stepback hop runs through most of the dip before the rise, then the feet plant. */
-const STEPBACK_HOP = 0.24;
-
 /** A dribble move carries the player itself, a jump keeps the run it left the floor with, and so does a stepback hop. */
 const carried = (a: Athlete) =>
   a.action.kind === "move" ||
   (a.action.kind === "block" && a.y > 0.02) ||
-  (a.action.kind === "shoot" && !!a.action.step && a.action.t < STEPBACK_HOP) ||
+  (a.action.kind === "shoot" && !!a.action.step && a.action.t < STEPBACK.air) ||
   // A floater is let go on the run: in the air the body carries on at the speed it left the floor with.
   (a.action.kind === "shoot" && !!a.action.float && a.y > 0.02);
 

@@ -7,6 +7,7 @@ import { canShootOutOf, updateMove } from "./moves";
 import { choosePassTarget, throwPass } from "./passing";
 import { floaterFits, startFloater, updateFloater } from "./floater";
 import { JUMPER, releaseJumper, startJumper } from "./shooting";
+import { hopHeight, plantStepback, STEPBACK } from "./stepback";
 import { BOARD, JUMP, SHOT } from "./tuning";
 import type { Athlete } from "./types";
 import { dir2, type V2 } from "./vec";
@@ -73,8 +74,9 @@ export function updateAction(m: Match, a: Athlete, dt: number): void {
       const before = act.t;
       act.t += dt;
       const s = (act.t - JUMPER.takeoff) / JUMPER.air;
-      // A free throw is a set shot: the knees dip and the feet stay down.
-      a.y = !act.free && s > 0 && s < 1 ? JUMPER.peak * 4 * s * (1 - s) : 0;
+      // A free throw is a set shot: the knees dip and the feet stay down. A stepback hops back first.
+      a.y = !act.free && s > 0 && s < 1 ? JUMPER.peak * 4 * s * (1 - s) : act.step ? hopHeight(act.t) : 0;
+      if (act.step && before < STEPBACK.air && act.t >= STEPBACK.air) plantStepback(a);
       if (!act.released && act.t * 1000 >= SHOT.meterMs * SHOT.autoReleaseAt) releaseJumper(m, a);
       const landAt = JUMPER.takeoff + JUMPER.air;
       if (!act.free && before < landAt && act.t >= landAt) {
