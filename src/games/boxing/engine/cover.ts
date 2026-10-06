@@ -8,7 +8,9 @@ import { otherHand } from "./types";
  * a left hand lands on the defender's right side. A jab or a cross to
  * the head needs the gloves in front of the face, the nearer one most.
  * A hook needs the glove up on that side, though a tight guard in front
- * of the face takes some of it. A body shot needs the elbows down. A
+ * of the face takes some of it. An uppercut comes up between the gloves,
+ * so only a tight guard, forearms together, takes most of it. A body
+ * shot needs the elbows down. A
  * boxer in the middle of a punch has a glove out and no block at all.
  */
 export function coverOf(punch: ActivePunch, defender: Fighter, now: number): number {
@@ -18,7 +20,9 @@ export function coverOf(punch: ActivePunch, defender: Fighter, now: number): num
   const far = cover[punch.hand];
   let amount: number;
   if (punch.level === "head") {
-    amount = punch.style === "hook" ? Math.max(near.side, 0.5 * near.face) : 0.6 * near.face + 0.5 * far.face;
+    if (punch.style === "hook") amount = Math.max(near.side, 0.5 * near.face);
+    else if (punch.style === "uppercut") amount = 0.4 * (near.face + far.face);
+    else amount = 0.6 * near.face + 0.5 * far.face;
   } else {
     amount = punch.style === "hook" ? near.body : 0.5 * (near.body + far.body);
   }

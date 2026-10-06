@@ -7,7 +7,7 @@ export interface PunchShape {
   extend: number;
   /** The wind up: the glove drawn back and the shoulder loaded. */
   cock: number;
-  /** A hook's swing out wide before it comes round. */
+  /** A hook's swing out wide before it comes round, or an uppercut's dip before it comes up. */
   swing: number;
   /** The hips and shoulders turning into it. */
   turn: number;
@@ -50,7 +50,7 @@ export function punchShape(punch: ActivePunch, now: number): PunchShape {
     return {
       extend: drive,
       cock: cocked * (1 - smooth(t * 2.5)),
-      swing: punch.style === "hook" ? Math.sin(Math.PI * Math.min(1, t * 1.1)) : 0,
+      swing: punch.style === "hook" || punch.style === "uppercut" ? Math.sin(Math.PI * Math.min(1, t * 1.1)) : 0,
       turn: smooth(t * 1.4),
       lunge: smooth(t),
       toImpact,

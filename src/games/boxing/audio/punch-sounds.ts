@@ -4,7 +4,7 @@ import type { PunchStyle } from "../engine/types";
 import { human } from "./band";
 
 /** How heavy each punch sounds, 0 to 1, before a counter or power adds to it. */
-const WEIGHT: Record<PunchStyle, number> = { jab: 0.35, cross: 0.7, hook: 0.85 };
+const WEIGHT: Record<PunchStyle, number> = { jab: 0.35, cross: 0.7, hook: 0.85, uppercut: 0.9 };
 
 /**
  * The sounds of gloves: the swish of a punch leaving, the crack of one

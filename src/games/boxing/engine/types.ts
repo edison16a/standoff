@@ -5,9 +5,9 @@ export type Hand = "left" | "right";
 
 /**
  * Every boxer is orthodox: the left straight is the jab, the right
- * straight is the cross, and either hand can hook.
+ * straight is the cross, and either hand can hook or throw an uppercut.
  */
-export type PunchStyle = "jab" | "cross" | "hook";
+export type PunchStyle = "jab" | "cross" | "hook" | "uppercut";
 
 /** Where a punch is aimed: up at the head, or dug in to the body. */
 export type Level = "head" | "body";

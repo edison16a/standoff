@@ -80,8 +80,8 @@ export class ComputerBoxer {
       const until = event.impactAt + 160;
       const side = otherHand(event.hand);
       if (roll < level.dodge && event.level === "head") {
-        // A hook sweeps across, so it gets ducked; a straight gets slipped or ducked.
-        const duck = event.style === "hook" || this.random() < 0.4;
+        // A hook sweeps across, so it gets ducked; an uppercut comes from below, so it gets slipped; a straight gets either.
+        const duck = event.style === "hook" || (event.style !== "uppercut" && this.random() < 0.4);
         this.defense = { posture: duck ? { duck: 1 } : { slip: this.random() < 0.5 ? -1 : 1 }, until };
       } else if (roll < level.dodge + level.block) {
         const shell = event.level === "body" ? "body" : event.style === "hook" ? "high" : "guard";
