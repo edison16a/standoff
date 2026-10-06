@@ -23,8 +23,8 @@ export function BotsToggle({ on, onChange }: { on: boolean; onChange(on: boolean
 const COUNT = ["Nobody", "One", "Two", "Three"];
 
 /** The lobby's subtitle: the size of the game, with the real numbers once computers are off. */
-export function matchSize(bots: boolean, home: number, away: number): string {
-  if (bots) return "Three on three, first to 11.";
+export function matchSize(bots: boolean, size: number, home: number, away: number): string {
+  if (bots) return `${COUNT[size] ?? size} on ${(COUNT[size] ?? String(size)).toLowerCase()}, first to 11.`;
   if (home === 0 || away === 0) return "Teams of any size, first to 11.";
   return `${COUNT[home] ?? home} on ${(COUNT[away] ?? String(away)).toLowerCase()}, first to 11.`;
 }

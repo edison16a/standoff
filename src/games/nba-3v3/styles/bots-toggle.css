@@ -53,3 +53,34 @@
 .nba-bots__segments button:focus-visible {
   outline: 3px solid #ffd23f;
 }
+
+/* Players sitting out when both teams are full for the game size. Click one to bring them in. */
+.nba-bench {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.nba-bench__label {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.nba-bench__player {
+  padding: 6px 14px;
+  border: 2px solid var(--player, #ffffff);
+  border-radius: 999px;
+  background: rgba(10, 12, 30, 0.8);
+  color: #ffffff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.nba-bench__player:focus-visible {
+  outline: 3px solid #ffd23f;
+}

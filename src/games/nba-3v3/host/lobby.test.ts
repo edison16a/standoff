@@ -100,3 +100,58 @@ describe("the team lobby", () => {
     expect(new Lobby().startBlock()).toBe("empty");
   });
 });
+
+describe("the game size", () => {
+  const six = ["shooter", "lockdown", "allround", "dunker", "big", "playmaker"] as const;
+
+  it("fills each side to the size with computers", () => {
+    for (const size of [1, 2, 3] as const) {
+      const lobby = new Lobby();
+      lobby.setSize(size);
+      readyPlayer(lobby, 1, "shooter");
+      const spots = lobby.spots();
+      expect(spots).toHaveLength(size * 2);
+      expect(spots.filter((s) => s.team === 0)).toHaveLength(size);
+      expect(lobby.startBlock()).toBeNull();
+    }
+  });
+
+  it("sits players out when both teams are full, and brings them back when it grows", () => {
+    const lobby = new Lobby();
+    lobby.setSize(1);
+    six.slice(0, 3).forEach((build, i) => readyPlayer(lobby, i + 1, build));
+    expect(lobby.bench).toEqual([3]);
+    expect(lobby.spots().every((s) => s.seat !== null)).toBe(true);
+    expect(lobby.spots()).toHaveLength(2);
+    lobby.setSize(2);
+    expect(lobby.bench).toEqual([]);
+    expect(lobby.spots().filter((s) => s.seat !== null)).toHaveLength(3);
+  });
+
+  it("shrinks a full three a side to one a side, keeping the first on each team", () => {
+    const lobby = new Lobby();
+    six.forEach((build, i) => readyPlayer(lobby, i + 1, build));
+    lobby.setSize(1);
+    expect(lobby.bench).toHaveLength(4);
+    const playing = lobby.spots().map((s) => s.seat);
+    expect(playing.sort()).toEqual([1, 2]);
+  });
+
+  it("swaps a player off the bench for the newest on that team", () => {
+    const lobby = new Lobby();
+    lobby.setSize(1);
+    six.slice(0, 3).forEach((build, i) => readyPlayer(lobby, i + 1, build));
+    lobby.setTeam(3, 0);
+    expect(lobby.seats.get(3)!.team).toBe(0);
+    expect(lobby.bench).toEqual([1]);
+  });
+
+  it("deals a shuffle up to the size and sits out the rest", () => {
+    const lobby = new Lobby();
+    six.forEach((build, i) => readyPlayer(lobby, i + 1, build));
+    lobby.setSize(2);
+    lobby.shuffle(() => 0.5);
+    expect(lobby.bench).toHaveLength(2);
+    expect(lobby.spots()).toHaveLength(4);
+  });
+});

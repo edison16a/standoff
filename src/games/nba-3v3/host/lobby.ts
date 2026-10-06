@@ -4,12 +4,16 @@ import { DEFAULT_BOT_LEVEL, type BotLevel } from "@/games/kit/difficulty/difficu
 import { BUILD_IDS, type BuildId } from "../builds";
 import { freeRole, nextRole, type Role } from "./roles";
 
-export const TEAM_SIZE = 3;
+/** How many a side the host can pick: one on one, two on two or three on three. */
+export const TEAM_SIZES = [1, 2, 3] as const;
+export type TeamSize = (typeof TEAM_SIZES)[number];
+export const TEAM_SIZE: TeamSize = 3;
 
 export interface SeatState {
   connected: boolean;
   pick: BuildId | null;
   ready: boolean;
+  /** Null while sitting out: both teams are full for the game size. */
   team: TeamId | null;
   /** When they were put on their team, so a swap moves the newest arrival. */
   placedAt: number;
@@ -27,12 +31,13 @@ export interface Spot {
 
 /**
  * Who is in the room, which build each player picked, and which team the
- * person at the computer put them on. Each build can be taken once. New
- * players land on the smaller team; the host moves them with the mouse,
- * and a full team swaps its newest member across so it stays three a
- * side. Computer players fill whatever spots are left, unless the host
- * turns them off: then the teams are just the people, one a side or more,
- * and a team may have more players than the other.
+ * person at the computer put them on. Each build can be taken once. The
+ * host picks the game size, one to three a side. New players land on
+ * the smaller team, or sit out when both are full; the host moves them
+ * with the mouse, and a full team swaps its newest member out so it
+ * stays at the size. Computer players fill whatever spots are left,
+ * unless the host turns them off: then the teams are just the people,
+ * and a team may have fewer players than the other.
  */
 export class Lobby {
   readonly seats = new Map<number, SeatState>();
@@ -40,6 +45,8 @@ export class Lobby {
   bots = true;
   /** How good the computer players are. */
   level: BotLevel = DEFAULT_BOT_LEVEL;
+  /** Players a side. */
+  size: TeamSize = TEAM_SIZE;
   private clock = 0;
 
   private state(seat: number): SeatState {
@@ -58,7 +65,7 @@ export class Lobby {
       s.pick = null;
       s.ready = false;
     }
-    if (s.team === null || this.members(s.team).length > TEAM_SIZE) this.place(seat, this.smallerTeam(seat));
+    if (s.team === null || this.members(s.team).length > this.size) this.seatSomewhere(seat);
   }
 
   /** A player whose phone drops keeps their team and pick for when they come back. */
@@ -77,23 +84,45 @@ export class Lobby {
     s.ready = ready && s.pick !== null && s.connected;
   }
 
-  /** Moves a player to a team. A full team sends its newest member the other way. */
+  /**
+   * Moves a player to a team. A full team sends its newest member the
+   * other way, or to sit out when the player came off the bench.
+   */
   setTeam(seat: number, team: TeamId): void {
     const s = this.seats.get(seat);
     if (!s || s.team === team) return;
     const from = s.team;
     const there = this.members(team);
-    if (there.length >= TEAM_SIZE) {
+    if (there.length >= this.size) {
       const newest = there.sort((a, b) => this.state(b).placedAt - this.state(a).placedAt)[0]!;
-      this.place(newest, from ?? (team === 0 ? 1 : 0));
+      this.place(newest, from);
     }
     this.place(seat, team);
   }
 
-  /** Deals everyone onto the two teams at random, as evenly as possible. */
+  /** Deals everyone onto the two teams at random, as evenly as possible; past the size the rest sit out. */
   shuffle(random: () => number = Math.random): void {
     const players = this.connectedSeats.map((seat) => ({ seat, key: random() })).sort((a, b) => a.key - b.key);
-    players.forEach(({ seat }, i) => this.place(seat, (i % 2) as TeamId));
+    players.forEach(({ seat }, i) => this.place(seat, i < this.size * 2 ? ((i % 2) as TeamId) : null));
+  }
+
+  /**
+   * Changes the game size. Players past the new size on a team go to the
+   * other team if it has room, or sit out; players sitting out come on
+   * where there is room again.
+   */
+  setSize(size: TeamSize): void {
+    this.size = size;
+    for (const team of [0, 1] as const) {
+      const extra = this.members(team).sort((a, b) => this.state(a).placedAt - this.state(b).placedAt).slice(size);
+      for (const seat of extra) this.place(seat, null);
+    }
+    for (const seat of this.bench) this.seatSomewhere(seat);
+  }
+
+  /** Connected players sitting out because both teams are full. */
+  get bench(): number[] {
+    return this.connectedSeats.filter((seat) => this.state(seat).team === null);
   }
 
   /** Characters held by connected players other than `seat`. */
@@ -145,7 +174,7 @@ export class Lobby {
 
   /**
    * The spots, team by team: every ready player on their team, then
-   * computer players in the builds nobody picked, up to three a side when
+   * computer players in the builds nobody picked, up to the size when
    * they are on. Players who are still choosing sit this game out.
    */
   spots(): Spot[] {
@@ -153,10 +182,10 @@ export class Lobby {
     const spare = BUILD_IDS.filter((id) => !used.has(id));
     const out: Spot[] = [];
     for (const team of [0, 1] as const) {
-      const players = this.readySeats.filter((seat) => this.state(seat).team === team).slice(0, TEAM_SIZE);
+      const players = this.readySeats.filter((seat) => this.state(seat).team === team).slice(0, this.size);
       const side: Spot[] = players.map((seat) => ({ team, seat, build: this.state(seat).pick!, role: this.state(seat).role }));
       if (this.bots) {
-        for (let i = players.length; i < TEAM_SIZE; i++) side.push({ team, seat: null, build: spare.shift()!, role: freeRole(side.map((s) => s.role)) });
+        for (let i = players.length; i < this.size; i++) side.push({ team, seat: null, build: spare.shift()!, role: freeRole(side.map((s) => s.role)) });
       }
       out.push(...side.sort((a, b) => a.role - b.role));
     }
@@ -171,16 +200,18 @@ export class Lobby {
     return this.connectedSeats.filter((seat) => this.state(seat).team === team);
   }
 
-  private smallerTeam(seat: number): TeamId {
+  /** The smaller team when it has room for one more, or sitting out. */
+  private seatSomewhere(seat: number): void {
     const a = this.members(0).filter((s) => s !== seat).length;
     const b = this.members(1).filter((s) => s !== seat).length;
-    return a <= b ? 0 : 1;
+    const team: TeamId = a <= b ? 0 : 1;
+    this.place(seat, Math.min(a, b) < this.size ? team : null);
   }
 
-  private place(seat: number, team: TeamId): void {
+  private place(seat: number, team: TeamId | null): void {
     const s = this.state(seat);
     // Joining a team takes the first role free there; the host can change it.
-    if (s.team !== team) s.role = freeRole(this.members(team).filter((o) => o !== seat).map((o) => this.state(o).role));
+    if (team !== null && s.team !== team) s.role = freeRole(this.members(team).filter((o) => o !== seat).map((o) => this.state(o).role));
     s.team = team;
     s.placedAt = ++this.clock;
   }

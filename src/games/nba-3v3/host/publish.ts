@@ -120,6 +120,8 @@ export function publish(c: PublishContext): void {
     spots,
     bots: c.lobby.bots,
     level: c.lobby.level,
+    size: c.lobby.size,
+    bench: c.lobby.bench.map((seat) => ({ seat, name: c.players.find((p) => p.seat === seat)?.name ?? "Player" })),
     startBlock: c.lobby.startBlock(),
     score: m ? [m.score[0], m.score[1]] : [0, 0],
     shotClock: m ? Math.max(0, Math.ceil(m.shotClock)) : RULES.shotClock,

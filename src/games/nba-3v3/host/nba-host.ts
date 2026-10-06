@@ -12,7 +12,7 @@ import { Buzzer } from "./buzzer";
 import { DemoGame } from "./demo";
 import { EventFanout } from "./event-fanout";
 import { useNbaStore as store } from "./host-store";
-import { Lobby } from "./lobby";
+import { Lobby, type TeamSize } from "./lobby";
 import { MatchDriver } from "./match-driver";
 import { PhoneLink } from "./phone-link";
 import { nameFor, phaseOf, publish } from "./publish";
@@ -134,6 +134,11 @@ export class NbaHost {
   /** Computer players on or off, for the next game. */
   setBots(on: boolean): void {
     this.edit(() => this.lobby.setBots(on));
+  }
+
+  /** One, two or three a side, for the next game. */
+  setSize(size: TeamSize): void {
+    this.edit(() => this.lobby.setSize(size));
   }
 
   /** How good the computer players are, for the next game. */

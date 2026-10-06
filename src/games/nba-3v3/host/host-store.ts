@@ -4,6 +4,7 @@ import type { TeamId } from "../engine/types";
 import type { Phase } from "../protocol";
 import type { BuildId } from "../builds";
 import type { CeremonyCard } from "./ceremony-card";
+import { TEAM_SIZE, type TeamSize } from "./lobby";
 import type { Role } from "./roles";
 
 export interface SeatView {
@@ -59,6 +60,10 @@ export interface NbaHostState {
   bots: boolean;
   /** The Computer difficulty picked in the lobby. */
   level: BotLevel;
+  /** Players a side in the next game. */
+  size: TeamSize;
+  /** Names of ready players sitting out because both teams are full. */
+  bench: { seat: number; name: string }[];
   /** Why the game cannot start yet, or null when it can. */
   startBlock: "empty" | "oneSided" | null;
   score: [number, number];
@@ -90,6 +95,8 @@ export const useNbaStore = create<NbaHostState>(() => ({
   spots: [],
   bots: true,
   level: DEFAULT_BOT_LEVEL,
+  size: TEAM_SIZE,
+  bench: [],
   startBlock: "empty",
   score: [0, 0],
   shotClock: 12,

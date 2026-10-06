@@ -10,6 +10,7 @@ import { JerseyBadge } from "../../ui/JerseyBadge";
 import { useNbaStore, type SpotView } from "../host-store";
 import { ROLE_NAMES } from "../roles";
 import { BotsToggle, matchSize } from "./BotsToggle";
+import { SizePicker } from "./SizePicker";
 import { useSession } from "./session-context";
 
 /** The role on a card. The host clicks a player's role to hand them the next one. */
@@ -105,6 +106,20 @@ function TeamColumn({ team, spots, onDrop, onMove, onRole }: ColumnProps) {
   );
 }
 
+/** Players sitting out because both teams are full. Clicking one puts them in, and the newest on that team sits out instead. */
+function Bench({ bench, onPick }: { bench: { seat: number; name: string }[]; onPick(seat: number): void }) {
+  return (
+    <div className="nba-bench" role="group" aria-label="Sitting out">
+      <span className="nba-bench__label">Sitting out</span>
+      {bench.map((b) => (
+        <button key={b.seat} type="button" className="nba-bench__player" style={{ "--player": playerColor(b.seat) } as React.CSSProperties} onClick={() => onPick(b.seat)}>
+          {b.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /**
  * The lobby on the big screen: two team columns with everyone who is
  * ready, and computer players in the empty spots unless they are turned
@@ -118,6 +133,8 @@ export function Lobby() {
   const seats = useNbaStore((state) => state.seats);
   const bots = useNbaStore((state) => state.bots);
   const level = useNbaStore((state) => state.level);
+  const size = useNbaStore((state) => state.size);
+  const bench = useNbaStore((state) => state.bench);
   const block = useNbaStore((state) => state.startBlock);
   const choosing = seats.filter((s) => s.connected && !s.ready);
   const humans = spots.filter((s) => s.seat !== null).length;
@@ -134,14 +151,16 @@ export function Lobby() {
         <span className="nba-lobby__logo">
           <b>Basketball</b> 3v3
         </span>
-        <p>{matchSize(bots, home.length, away.length)} Pick your build on your phone.</p>
+        <p>{matchSize(bots, size, home.length, away.length)} Pick your build on your phone.</p>
       </header>
       <div className="nba-lobby__teams">
         <TeamColumn team={0} spots={home} onDrop={(seat, team) => session.setTeam(seat, team)} onMove={move} onRole={(seat) => session.cycleRole(seat)} />
         <span className="nba-lobby__vs">VS</span>
         <TeamColumn team={1} spots={away} onDrop={(seat, team) => session.setTeam(seat, team)} onMove={move} onRole={(seat) => session.cycleRole(seat)} />
       </div>
+      {bench.length > 0 && <Bench bench={bench} onPick={(seat) => session.setTeam(seat, home.length <= away.length ? 0 : 1)} />}
       <div className="nba-lobby__options">
+        <SizePicker size={size} onChange={(next) => session.setSize(next)} />
         <BotsToggle on={bots} onChange={(on) => session.setBots(on)} />
         {bots && <DifficultyPicker level={level} onChange={(next) => session.setLevel(next)} />}
       </div>
