@@ -8,6 +8,7 @@ import { GalleryPhone } from "./phone/gallery-phone";
 import { PhoneScreen } from "./phone/components/PhoneScreen";
 import { PhoneContext } from "./phone/components/session-context";
 import { ShowcaseScene } from "./showcase/ShowcaseScene";
+import { keyboard } from "./keyboard";
 import "./styles/host.css";
 import "./styles/hud.css";
 import "./styles/phone.css";
@@ -49,4 +50,5 @@ export const game: GameModule = {
 
   // Part of the game's own chunk, so it is ready the moment the capture tool starts its clock.
   Showcase: ShowcaseScene,
+  keyboard,
 };
