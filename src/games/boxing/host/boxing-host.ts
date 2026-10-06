@@ -251,7 +251,9 @@ export class BoxingHost {
 
   private onKey(action: KeyAction): void {
     if (!applyKey(action, store.getState().screen, this.driver, this.pick)) return;
-    this.audio.tick();
+    // Locking in sounds as it does on camera, browsing ticks.
+    if (action.type === "lock") this.audio.confirm();
+    else this.audio.tick();
     this.publishPick();
   }
 
