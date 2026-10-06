@@ -34,7 +34,8 @@ function coverCam(view: MatchView): FilmCam {
 /** The home screen's stills, held from the trailer. */
 export const STILLS: Partial<Record<ShowcaseView, Still>> = {
   // The corner flying in at the runner a beat before the hit, the goal posts behind them.
-  poster: { t: 6.45 },
+  // Held on a planted stride: from about 6.35 the runner hops the juke with both feet up and reads as hovering.
+  poster: { t: 6.31 },
   // The juke in the big hit shot, a beat before contact: the runner and the ball at us, the tackler diving in beside him.
   icon: { t: 6.1, key: 2.5, camera: coverCam },
 };
