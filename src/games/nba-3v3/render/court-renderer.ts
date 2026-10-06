@@ -71,6 +71,7 @@ export class CourtRenderer {
     this.scene.add(this.arena.group, this.contact.mesh, this.players, this.ball.mesh, this.effects.group, this.ceremony.scene.group);
     this.referee = new Referee(this.athleteMats, this.players);
     this.keyLight = this.arena.key.intensity;
+    this.picture.onShed = () => this.arena.shed();
   }
 
   resize(width: number, height: number, dpr: number): void {

@@ -31,4 +31,17 @@ describe("resolution governor", () => {
     for (let i = 0; i < 1000; i++) measure(g, 10);
     expect(g.scale).toBe(1);
   });
+
+  it("asks for the extras to go only once the fewest pixels are still too slow", () => {
+    // The card's time grows with the pixels drawn, so a frame costs its full price times the scale squared.
+    const card = (cost: number) => {
+      const g = governor();
+      for (let i = 0; i < 3000; i++) measure(g, cost * g.scale * g.scale);
+      return g;
+    };
+    expect(card(BUDGET_MS * 1.6).shed).toBe(false);
+    const slow = card(BUDGET_MS * 5);
+    expect(slow.scale).toBeCloseTo(0.55);
+    expect(slow.shed).toBe(true);
+  });
 });

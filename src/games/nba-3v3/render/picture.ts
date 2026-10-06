@@ -33,6 +33,11 @@ export class Picture {
     this.budget = new PixelBudget(this.renderer, maxPixelRatio);
   }
 
+  /** Called once if even the fewest pixels cannot keep the frame in budget. */
+  set onShed(fn: (() => void) | null) {
+    this.budget.onShed = fn;
+  }
+
   resize(width: number, height: number, dpr: number): void {
     this.budget.resize(width, height, dpr);
   }

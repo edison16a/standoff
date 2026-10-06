@@ -42,6 +42,7 @@ export class Roof {
   readonly group = new THREE.Group();
   private readonly owned: THREE.Material[] = [];
   private readonly beamUniforms = { uStrength: { value: 0.05 } };
+  private beamMesh: THREE.Mesh | null = null;
 
   constructor(beams: boolean) {
     const steel = new THREE.MeshStandardMaterial({ color: "#1a1d26", roughness: 0.6, metalness: 0.6 });
@@ -100,8 +101,14 @@ export class Roof {
     const [mesh] = bake.build(false);
     if (mesh) {
       mesh.renderOrder = 3;
+      this.beamMesh = mesh;
       this.group.add(mesh);
     }
+  }
+
+  /** Puts out the haze beams, for a card that cannot keep up. */
+  dropBeams(): void {
+    if (this.beamMesh) this.beamMesh.visible = false;
   }
 
   dispose(): void {

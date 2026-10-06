@@ -34,7 +34,12 @@ export class FloorMirror {
   /** Whether the mirror was drawn this frame; the floor shows none when it was not. */
   active = false;
 
-  constructor(private readonly scale: number) {}
+  constructor(private scale: number) {}
+
+  /** Stops drawing the mirror for good; the floor keeps its environment map gloss. */
+  off(): void {
+    this.scale = 0;
+  }
 
   render(renderer: THREE.WebGLRenderer, scene: THREE.Scene, view: THREE.PerspectiveCamera): void {
     this.active = this.scale > 0;

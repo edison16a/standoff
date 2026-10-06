@@ -93,6 +93,16 @@ export class Arena {
     this.mirror.hidden.push(wall, deck);
   }
 
+  /**
+   * The last resort for a slow card, once the picture is already at its
+   * fewest pixels: the floor's mirror (a second drawing of the scene)
+   * and the haze beams go, and the floor keeps its environment gloss.
+   */
+  shed(): void {
+    this.mirror.off();
+    this.roof.dropBeams();
+  }
+
   /** Draws the floor's reflection for this frame's camera; the shadows must already be drawn. */
   reflect(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera): void {
     this.mirror.render(renderer, scene, camera);

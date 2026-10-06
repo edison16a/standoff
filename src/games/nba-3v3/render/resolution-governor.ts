@@ -23,10 +23,12 @@ export interface Governor {
   gpuMs: number | null;
   /** Frames measured since the last change. */
   since: number;
+  /** Set once, when even the fewest pixels run over budget: the costly extras should go. */
+  shed: boolean;
 }
 
 export function governor(): Governor {
-  return { scale: 1, gpuMs: null, since: 0 };
+  return { scale: 1, gpuMs: null, since: 0, shed: false };
 }
 
 /** Takes one frame's measured card time and returns whether the scale changed. */
@@ -37,6 +39,9 @@ export function measure(g: Governor, ms: number): boolean {
   if (g.gpuMs > BUDGET_MS && g.scale > MIN_SCALE) {
     // Card time grows with the pixels drawn, so step down in proportion to the overrun.
     g.scale = Math.max(MIN_SCALE, g.scale * Math.max(0.75, Math.sqrt(BUDGET_MS / g.gpuMs)));
+  } else if (g.gpuMs > BUDGET_MS && !g.shed) {
+    // Already at the fewest pixels and still slow: the last resort is to drop the extras (see Picture.onShed).
+    g.shed = true;
   } else if (g.gpuMs < LOW_MS && g.scale < 1) {
     g.scale = Math.min(1, g.scale * 1.1);
   } else return false;
@@ -109,6 +114,8 @@ export class PixelBudget {
   private readonly timer: GpuTimer;
   private readonly g = governor();
   private size = { width: 1, height: 1, dpr: 1 };
+  /** Called once if the governor gives up on pixels alone and asks for the extras to go. */
+  onShed: (() => void) | null = null;
 
   constructor(private readonly renderer: THREE.WebGLRenderer, private readonly maxPixelRatio: number) {
     this.timer = new GpuTimer(renderer.getContext());
@@ -124,7 +131,12 @@ export class PixelBudget {
     this.timer.begin();
     render();
     this.timer.end();
-    for (const ms of this.timer.collect()) if (measure(this.g, ms)) this.apply();
+    for (const ms of this.timer.collect()) {
+      const shed = this.g.shed;
+      if (!measure(this.g, ms)) continue;
+      if (this.g.shed && !shed) this.onShed?.();
+      else this.apply();
+    }
   }
 
   private apply(): void {
