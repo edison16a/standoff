@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { knitNormalMap } from "./knit";
+import { hairFibers, skinPores } from "./micro-detail";
 import { roughFromVertices, subsurfaceSkin } from "./shader-patches";
 
 /** How finely players are built: `high` for a real graphics card, `low` for software drawing and weak devices. */
@@ -19,14 +20,19 @@ export class AthleteMaterials {
 
   constructor(readonly detail: AthleteDetail = "high") {
     this.skin = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, metalness: 0 });
+    const fine = detail === "high";
     this.skin.onBeforeCompile = (shader) => {
       roughFromVertices(shader);
       subsurfaceSkin(shader);
+      if (fine) skinPores(shader);
     };
-    this.skin.customProgramCacheKey = () => "athlete-skin";
+    this.skin.customProgramCacheKey = () => `athlete-skin-${detail}`;
     this.gear = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, metalness: 0 });
-    this.gear.onBeforeCompile = roughFromVertices;
-    this.gear.customProgramCacheKey = () => "athlete-gear";
+    this.gear.onBeforeCompile = (shader) => {
+      roughFromVertices(shader);
+      if (fine) hairFibers(shader);
+    };
+    this.gear.customProgramCacheKey = () => `athlete-gear-${detail}`;
     this.knit = knitNormalMap();
     this.knit.repeat.set(110, 120);
   }

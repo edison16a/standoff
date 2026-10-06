@@ -82,7 +82,7 @@ describe("athlete geometry", () => {
     for (const id of BUILD_IDS) {
       const high = all(fine[id]!).reduce((n, g) => n + triangles(g), 0);
       const low = all(athleteGeometry(BUILDS[id], false)).reduce((n, g) => n + triangles(g), 0);
-      expect(high).toBeLessThan(36000);
+      expect(high).toBeLessThan(38000);
       expect(low).toBeLessThan(high * 0.55);
     }
   });

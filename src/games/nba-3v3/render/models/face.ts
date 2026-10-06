@@ -2,7 +2,7 @@ import * as THREE from "three";
 import type { Look } from "../../roster";
 import { FACE, sculpt } from "./head-shape";
 import { tube, type Key } from "./profile";
-import { join, place, roughen, tint } from "./parts";
+import { fiber, join, place, roughen, tint } from "./parts";
 
 /**
  * The features set into the sculpted head: ears, nose and eyelids in
@@ -71,7 +71,7 @@ function lids(look: Look, side: 1 | -1, k: number, seg: number): THREE.BufferGeo
   const r = 0.0128 * k;
   // The hood's edge crosses the eye just above the iris, the lash line dark along it.
   const tilt = 0;
-  const upper = new THREE.SphereGeometry(r, seg, 6, 0, Math.PI * 2, 0, Math.PI * 0.4);
+  const upper = new THREE.SphereGeometry(r, seg, 6, 0, Math.PI * 2, 0, Math.PI * 0.43);
   upper.rotateX(tilt);
   upper.translate(centre.x, centre.y, centre.z);
   const axis = new THREE.Vector3(0, Math.cos(tilt), Math.sin(tilt));
@@ -82,15 +82,28 @@ function lids(look: Look, side: 1 | -1, k: number, seg: number): THREE.BufferGeo
     const edge = rel.copy(p).sub(centre).divideScalar(r).dot(axis) < 0.4 && p.z > centre.z;
     out.copy(edge ? lash : lid);
   });
-  const lower = new THREE.SphereGeometry(r * 0.98, seg, 4, 0, Math.PI * 2, Math.PI * 0.6, Math.PI * 0.4);
+  const lower = new THREE.SphereGeometry(r * 0.98, seg, 4, 0, Math.PI * 2, Math.PI * 0.58, Math.PI * 0.42);
   lower.translate(centre.x, centre.y, centre.z);
   return join([upper, tint(lower, darker(look.skin, 0.9))]);
 }
 
-/** Ears, nose and lids: the skin coloured parts of the face. */
+/** The lips: a fuller lower lip under a shaped upper one, a little darker and redder than the skin, parted by a dark line. */
+function lips(look: Look, k: number, seg: number): THREE.BufferGeometry {
+  const tone = new THREE.Color(look.skin).multiplyScalar(0.74);
+  tone.r = Math.min(1, tone.r * 1.22);
+  const y = FACE.mouthY;
+  const z = faceZ(y) - 0.0035;
+  return join([
+    tint(place(sphere(seg + 2, seg - 2), [0, (y + 0.0045) * k, z * k], [0.12, 0, 0], [0.0235 * k, 0.0052 * k, 0.0075 * k]), tone),
+    tint(place(sphere(seg + 2, seg - 2), [0, (y - 0.0055) * k, (z - 0.0005) * k], [-0.15, 0, 0], [0.021 * k, 0.0065 * k, 0.0082 * k]), tone),
+    tint(place(sphere(seg, 4), [0, (y - 0.0004) * k, (z + 0.0028) * k], [0, 0, 0], [0.0225 * k, 0.0011 * k, 0.0055 * k]), darker(look.skin, 0.3)),
+  ]);
+}
+
+/** Ears, nose, lids and lips: the skin coloured parts of the face. */
 export function faceSkin(look: Look, k: number, fine: boolean): THREE.BufferGeometry {
   const seg = fine ? 12 : 8;
-  return roughen(join([ear(look, 1, k, seg), ear(look, -1, k, seg), nose(look, k, seg), lids(look, 1, k, seg), lids(look, -1, k, seg)]), 0.48);
+  return roughen(join([ear(look, 1, k, seg), ear(look, -1, k, seg), nose(look, k, seg), lids(look, 1, k, seg), lids(look, -1, k, seg), lips(look, k, seg)]), 0.46);
 }
 
 /** The iris colour: dark brown for most, a lighter hazel for a fair player. */
@@ -106,7 +119,7 @@ export function eyes(look: Look, k: number, fine: boolean): THREE.BufferGeometry
   const iris = irisColour(look.skin);
   for (const side of [1, -1] as const) {
     const at = [side * FACE.eyeX * k, FACE.eyeY * k, FACE.eyeZ * k];
-    const ball = tint(place(sphere(seg, seg - 4), at, [0, 0, 0], 0.0118 * k), "#ece7de");
+    const ball = tint(place(sphere(seg, seg - 4), at, [0, 0, 0], 0.0118 * k), "#d9d1c4");
     const cap = new THREE.SphereGeometry(0.01185 * k, seg, 5, 0, Math.PI * 2, 0, Math.PI * 0.17);
     cap.rotateX(Math.PI / 2);
     cap.translate(at[0]!, at[1]!, at[2]!);
@@ -117,10 +130,10 @@ export function eyes(look: Look, k: number, fine: boolean): THREE.BufferGeometry
     out.push(roughen(join([ball, cap]), 0.12));
     // Brows: a thicker inner half and a thinner outer half, the outer end dropping and wrapping round.
     const brow = darker(look.hairColor, 1);
-    out.push(roughen(join([
+    out.push(fiber(roughen(join([
       tint(place(sphere(8, 5), [side * 0.019 * k, (FACE.browY + 0.002) * k, 0.097 * k], [0, side * 0.2, side * -0.06], [0.0115 * k, 0.0034 * k, 0.0045 * k]), brow),
       tint(place(sphere(8, 5), [side * 0.037 * k, (FACE.browY + 0.001) * k, 0.088 * k], [0, side * 0.55, side * 0.18], [0.012 * k, 0.0026 * k, 0.004 * k]), brow),
-    ]), 0.85));
+    ]), 0.85), 1));
   }
   return out;
 }

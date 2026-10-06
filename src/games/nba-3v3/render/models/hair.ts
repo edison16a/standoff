@@ -31,7 +31,7 @@ function hairline(dir: THREE.Vector3): number {
 export function scalp(base: THREE.Vector3, dir: THREE.Vector3, style: HairStyle): number {
   if (style === "bald") return 0;
   const h = hairline(dir);
-  return smooth(h - 0.003, h + 0.003, base.y);
+  return smooth(h - 0.005, h + 0.005, base.y);
 }
 
 /** How thick each style is at a spot of the scalp, in metres. */
@@ -83,17 +83,17 @@ export function hairPiece(head: HeadSurface, look: Look, twists: number): THREE.
   if (look.hair === "bald") return null;
   const skin = new THREE.Color(look.skin);
   const hair = new THREE.Color();
-  // The shell thins to nothing at the hairline and its colour fades into the skin's, so the edge is soft.
+  // The hairline itself is painted on the skin, soft; the shell starts just inside it and thins to nothing at its edge.
   const geo = shell(
     head,
     (b, d) => {
       const cover = scalp(b, d, look.hair);
-      return cover < 0.08 ? 0 : Math.max(0.0004, thickness(look.hair, b) * smooth(0.08, 0.9, cover));
+      return cover < 0.85 ? 0 : 0.0004 + thickness(look.hair, b) * smooth(0.85, 1, cover);
     },
     (b, d, out) => {
       const cover = scalp(b, d, look.hair);
       hairColour(look.hair, look.hairColor, b, cover, hair);
-      out.copy(skin).lerp(hair, smooth(0.1, 0.75, cover));
+      out.copy(skin).lerp(hair, 0.9 + 0.1 * cover);
     },
   );
   if (!geo) return null;
@@ -120,7 +120,7 @@ function twistPieces(head: HeadSurface, look: Look, count: number): THREE.Buffer
     // Short on the sides, longer on top, and falling outward and down under their own weight.
     const len = (0.022 + 0.022 * Math.max(0, n.y)) * (0.8 + 0.4 * (0.5 + 0.5 * noise3(j, j * 0.3, 1)));
     const dir = n.clone().add(new THREE.Vector3(0, -0.9 * (1 - n.y * 0.6), 0)).normalize();
-    const geo = new THREE.CylinderGeometry(0.0042, 0.0062, len, 6, 3, false);
+    const geo = new THREE.CylinderGeometry(0.0042, 0.0062, len, 5, 3, false);
     geo.translate(0, len / 2 - 0.004, 0);
     geo.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir));
     geo.translate(root.x, root.y, root.z);
@@ -156,15 +156,15 @@ export function beardPiece(head: HeadSurface, look: Look): THREE.BufferGeometry 
   return shell(
     head,
     (b, d) => {
+      // As with the hair, the beard's edge is painted on the skin and the shell starts just inside it.
       const cover = beardCover(look.beard, b, d);
-      if (cover < 0.08) return 0;
+      if (cover < 0.8) return 0;
       const chin = look.beard === "full" ? 0.006 * smooth(-0.07, -0.1, b.y) : 0;
-      return Math.max(0.0004, (depth + chin) * smooth(0.08, 0.85, cover));
+      return 0.0004 + (depth + chin) * smooth(0.8, 1, cover);
     },
     (b, d, out) => {
-      const cover = beardCover(look.beard, b, d);
-      hairColour("curly", look.hairColor, b, cover, hair);
-      out.copy(skin).lerp(hair, smooth(0.1, 0.7, cover));
+      hairColour("curly", look.hairColor, b, beardCover(look.beard, b, d), hair);
+      out.copy(skin).lerp(hair, 0.9);
     },
   );
 }

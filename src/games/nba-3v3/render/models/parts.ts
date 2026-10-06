@@ -8,7 +8,7 @@ export type Influence = readonly (readonly [BoneName, number])[];
 /** How rough a surface is, for the whole piece or vertex by vertex from its rest position. */
 export type Roughness = number | ((p: THREE.Vector3) => number);
 
-const KEEP = new Set(["position", "normal", "uv", "color", "skinIndex", "skinWeight", "rough"]);
+const KEEP = new Set(["position", "normal", "uv", "color", "skinIndex", "skinWeight", "rough", "fiber"]);
 const p = new THREE.Vector3();
 
 /** Fills in what a piece lacks so every piece merges: an index, uvs, white vertex colours and a middling roughness. */
@@ -19,7 +19,14 @@ function complete(geo: THREE.BufferGeometry): THREE.BufferGeometry {
   if (!geo.getAttribute("uv")) geo.setAttribute("uv", new THREE.BufferAttribute(new Float32Array(count * 2), 2));
   if (!geo.getAttribute("color")) geo.setAttribute("color", new THREE.BufferAttribute(new Float32Array(count * 3).fill(1), 3));
   if (!geo.getAttribute("rough")) roughen(geo, 0.6);
+  if (!geo.getAttribute("fiber")) fiber(geo, 0);
   for (const name of Object.keys(geo.attributes)) if (!KEEP.has(name)) geo.deleteAttribute(name);
+  return geo;
+}
+
+/** Marks a piece as hair for the shader: 1 for combed strands, 2 for coils, 0 for none. */
+export function fiber(geo: THREE.BufferGeometry, kind: 0 | 1 | 2): THREE.BufferGeometry {
+  geo.setAttribute("fiber", new THREE.Float32BufferAttribute(new Float32Array(geo.getAttribute("position").count).fill(kind), 1));
   return geo;
 }
 

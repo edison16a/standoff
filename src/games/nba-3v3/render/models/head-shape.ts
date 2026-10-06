@@ -50,10 +50,13 @@ export function sculpt(d: THREE.Vector3, out: THREE.Vector3): THREE.Vector3 {
   // A flatter face, and a forehead that slopes back.
   p.z -= 0.006 * front ** 4 + 0.01 * smooth(0.06, 0.12, base.y) * front ** 2;
   let push = 0;
-  push += 0.006 * gauss(base, 0, FACE.browY + 0.004, 0.09, 0.05, 0.011, 0.04) * front;
-  push -= 0.008 * pair(base, FACE.eyeX, FACE.eyeY, 0.088, 0.016, 0.012);
-  push += 0.005 * pair(base, 0.053, -0.014, 0.068, 0.018);
-  push -= 0.003 * pair(base, 0.068, 0.042, 0.04, 0.02);
+  // The brow ridge shades the eyes; the sockets sit under it; cheekbones and the angle of the jaw give the face its frame.
+  push += 0.0085 * gauss(base, 0, FACE.browY + 0.004, 0.09, 0.05, 0.01, 0.04) * front;
+  push -= 0.009 * pair(base, FACE.eyeX, FACE.eyeY, 0.088, 0.016, 0.012);
+  push += 0.0075 * pair(base, 0.054, -0.012, 0.066, 0.017, 0.014, 0.02);
+  push -= 0.004 * pair(base, 0.068, 0.042, 0.04, 0.02);
+  push += 0.006 * pair(base, 0.058, -0.072, 0.02, 0.018, 0.016, 0.03);
+  push -= 0.003 * pair(base, 0.046, -0.045, 0.07, 0.014);
   push += 0.009 * gauss(base, 0, FACE.chinY + 0.012, 0.075, 0.02, 0.014, 0.03);
   push += 0.004 * gauss(base, 0, FACE.mouthY + 0.003, 0.09, 0.02, 0.006, 0.03);
   push += 0.0035 * gauss(base, 0, FACE.mouthY - 0.009, 0.09, 0.017, 0.006, 0.03);
@@ -136,6 +139,31 @@ export function shell(
   geo.setIndex(keep.map((i) => map.get(i)!));
   geo.computeVertexNormals();
   return geo;
+}
+
+/**
+ * A ring round the head at height `y(phi)` (in the head's units, before
+ * scaling), each point lifted `lift` off the surface: for bands that
+ * must have clean edges, which a shell cut from the head's grid cannot.
+ * `phi` runs round from the front.
+ */
+export function ringRound(n: number, k: number, y: (phi: number) => number, lift: (base: THREE.Vector3, dir: THREE.Vector3) => number): THREE.Vector3[] {
+  const out: THREE.Vector3[] = [];
+  const d = new THREE.Vector3();
+  const p = new THREE.Vector3();
+  for (let i = 0; i < n; i++) {
+    const phi = (i / n) * Math.PI * 2;
+    const want = y(phi);
+    // Tip the direction up or down until the surface point sits at the wanted height.
+    let lat = Math.asin(Math.max(-1, Math.min(1, want / 0.11)));
+    for (let it = 0; it < 5; it++) {
+      sculpt(d.set(Math.sin(phi) * Math.cos(lat), Math.sin(lat), Math.cos(phi) * Math.cos(lat)), p);
+      lat += (want - p.y) / 0.11;
+    }
+    sculpt(d.set(Math.sin(phi) * Math.cos(lat), Math.sin(lat), Math.cos(phi) * Math.cos(lat)), p);
+    out.push(p.clone().addScaledVector(d, lift(p, d)).multiplyScalar(k));
+  }
+  return out;
 }
 
 /** A cheap, smooth 3D noise in -1 to 1, for curls and the grain of hair. */
