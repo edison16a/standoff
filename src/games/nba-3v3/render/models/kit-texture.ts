@@ -9,7 +9,9 @@ import type { Team } from "../../roster";
  * piping. The bottom band is the shorts: waistband, side stripes, hem.
  */
 
+/** Drawn in a 1024 unit square, onto a smaller canvas: sharp enough for any shot the cameras take, at a fraction of the memory. */
 const SIZE = 1024;
+const PIXELS = 640;
 /** Where each garment sits on the texture, in v (0 at the bottom). */
 export const ATLAS = {
   jersey: [0.42, 1] as const,
@@ -63,9 +65,9 @@ function holes(ctx: CanvasRenderingContext2D, referee: boolean): void {
 function fabricGrain(ctx: CanvasRenderingContext2D, top: number, bottom: number): void {
   // Faint vertical ribs, the way a knit catches the light.
   ctx.globalAlpha = 0.05;
-  for (let x = 0; x < SIZE; x += 3) {
-    ctx.fillStyle = x % 6 === 0 ? "#ffffff" : "#000000";
-    ctx.fillRect(x, top, 1, bottom - top);
+  for (let x = 0; x < SIZE; x += 4) {
+    ctx.fillStyle = x % 8 === 0 ? "#ffffff" : "#000000";
+    ctx.fillRect(x, top, 2, bottom - top);
   }
   ctx.globalAlpha = 1;
 }
@@ -80,9 +82,10 @@ export interface KitPrint {
 
 export function kitTexture(p: KitPrint): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
-  canvas.width = SIZE;
-  canvas.height = SIZE;
+  canvas.width = PIXELS;
+  canvas.height = PIXELS;
   const ctx = canvas.getContext("2d")!;
+  ctx.scale(PIXELS / SIZE, PIXELS / SIZE);
   const { team } = p;
   const top = Y(ATLAS.jersey[1]);
   const bottom = Y(ATLAS.jersey[0]);

@@ -1,6 +1,7 @@
-import { strideLength, strideSwing } from "../../engine/dribble-ball";
+import { strideLength } from "../../engine/dribble-ball";
+import { gait } from "./gait";
 import { dribblePose } from "./holding";
-import { over, STAND, type Pose } from "./pose";
+import { blend, over, STAND, type Pose } from "./pose";
 
 export interface MoveContext {
   /** Ground speed in metres per second. */
@@ -18,6 +19,15 @@ export interface MoveContext {
   time: number;
   /** A per player offset so idle players do not breathe in step. */
   seed: number;
+  /** The way of travel in the player's own frame, radians: 0 ahead, π/2 to his left. */
+  heading?: number;
+  /** Hip to ankle, metres. */
+  leg?: number;
+}
+
+/** What the legs leave for the placement: how high both feet are off the floor in a running stride. */
+export interface Stride {
+  air: number;
 }
 
 const TAU = Math.PI * 2;
@@ -26,21 +36,21 @@ export { strideLength };
 
 /**
  * Feet and arms on the move: an idle sway with the weight drifting from
- * foot to foot, a run that grows with speed (bigger strides, more lean,
- * arms pumping against the legs), a low sliding stance on defence, and
- * the dribbling arm working the ball.
+ * foot to foot, the gait (walk to sprint, see `gait.ts`) blended in
+ * with speed, a low sliding stance on defence, and the dribbling arm
+ * working the ball. `out.air` is set to the running stride's flight.
  */
-export function locomotion(c: MoveContext): Pose {
+export function locomotion(c: MoveContext, out?: Stride): Pose {
   const p = { ...STAND };
   const run = Math.min(1, c.speed / 6.5);
   const th = c.phase * TAU;
   const breathe = Math.sin(c.time * 2.1 + c.seed) * 0.02;
-  p.torsoX = 0.05 + breathe + run * 0.22;
-  p.neckX = -run * 0.12;
+  p.torsoX = 0.05 + breathe;
   const still = 1 - Math.min(1, c.speed / 0.8);
   const shift = Math.sin(c.time * 0.9 + c.seed * 2) * still;
   p.pelvisZ = shift * 0.04;
   p.torsoZ = -shift * 0.03;
+  if (out) out.air = 0;
 
   if (c.guarding) {
     const slide = Math.min(1, c.speed / 4);
@@ -57,24 +67,13 @@ export function locomotion(c: MoveContext): Pose {
     p.armLRaise += Math.sin(c.time * 5 + c.seed) * 0.08;
     p.armRRaise += Math.cos(c.time * 5 + c.seed) * 0.08;
   } else {
-    const stride = strideSwing(c.speed);
-    p.legLLift = 0.08 + Math.sin(th) * stride;
-    p.legRLift = 0.08 - Math.sin(th) * stride;
-    p.kneeL = 0.15 + run * (0.2 + 1.25 * Math.max(0, Math.cos(th)));
-    p.kneeR = 0.15 + run * (0.2 + 1.25 * Math.max(0, -Math.cos(th)));
-    p.footL = run * 0.25 * Math.max(0, -Math.sin(th));
-    p.footR = run * 0.25 * Math.max(0, Math.sin(th));
-    // The body bobs twice a stride, lowest as each foot takes the weight.
-    p.hipY = -0.02 - run * (0.03 + 0.035 * Math.abs(Math.cos(th)));
-    p.pelvisY = Math.sin(th) * run * 0.12;
-    p.torsoY = -Math.sin(th) * run * 0.16;
-    const pump = 0.1 + run * 0.75;
-    p.armLRaise = 0.1 - Math.sin(th) * pump;
-    p.armRRaise = 0.1 + Math.sin(th) * pump;
-    p.elbowL = 0.35 + run * 1.05;
-    p.elbowR = 0.35 + run * 1.05;
-    p.armLSpread = 0.14;
-    p.armRSpread = 0.14;
+    const leg = c.leg ?? 0.95;
+    // The gait's left heel strikes a quarter cycle in, where the old stride had the left foot furthest forward.
+    const g = gait({ phase: c.phase - 0.25, speed: c.speed, stride: strideLength(c.speed, leg, false), leg, heading: c.heading ?? 0 });
+    const moving = Math.min(1, c.speed / 0.6);
+    blend(p, g.pose, moving * moving * (3 - 2 * moving), p);
+    p.torsoX += breathe;
+    if (out) out.air = g.air;
   }
   return c.dribble === null ? p : dribblePose(p, c.dribble, run, c.dribbleSide, c.pressure);
 }

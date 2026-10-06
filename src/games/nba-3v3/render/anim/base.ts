@@ -1,10 +1,10 @@
 import { palmHold, spinCarry } from "../../engine/dribble-ball";
-import type { Athlete, TeamId } from "../../engine/types";
+import type { Athlete, Ball, TeamId } from "../../engine/types";
 import type { CeremonyRole } from "../ceremony/ceremony-stage";
 import { balance } from "./balance";
 import { CHEST_HOLD, RECEIVE, SPIN_PULL } from "./holding";
 import { foulPose, lanePose, type LaneStance } from "./line";
-import { locomotion } from "./locomotion";
+import { locomotion, type Stride } from "./locomotion";
 import { blend, type Pose } from "./pose";
 
 export interface AthleteScene {
@@ -26,6 +26,8 @@ export interface AthleteScene {
   winner: TeamId | null;
   /** This player's part in the trophy ceremony, while it runs. */
   ceremony?: CeremonyRole | null;
+  /** The ball, given to whoever holds it, for the dribbling hand to meet. */
+  ball?: Ball | null;
 }
 
 /** What the view knows of the legs and the body's momentum this frame. */
@@ -37,6 +39,12 @@ export interface BodyState {
   side: number;
   time: number;
   seed: number;
+  /** The way of travel in the player's own frame, radians: 0 ahead, π/2 to his left. */
+  heading: number;
+  /** Hip to ankle, metres. */
+  leg: number;
+  /** Filled in with the running stride's flight, for the placement. */
+  stride: Stride;
 }
 
 const ease = (u: number) => {
@@ -55,7 +63,10 @@ export function basePose(a: Athlete, s: AthleteScene, b: BodyState): Pose {
   const carry = s.holding && spinCarry(a);
   const pocket = s.holding && !carry && (s.chest || palmHold(a));
   const dribbling = s.holding && free && !pocket && !carry;
-  let p = locomotion({ speed: b.speed, phase: b.phase, guarding: s.guarding, dribble: dribbling ? a.dribble : null, dribbleSide: a.dribbleSide, pressure: s.pressure, time: b.time, seed: b.seed });
+  let p = locomotion(
+    { speed: b.speed, phase: b.phase, guarding: s.guarding, dribble: dribbling ? a.dribble : null, dribbleSide: a.dribbleSide, pressure: s.pressure, time: b.time, seed: b.seed, heading: b.heading, leg: b.leg },
+    b.stride,
+  );
   if (carry) p = blend(p, SPIN_PULL[a.dribbleHand === 1 ? "R" : "L"], 1, p);
   else if (pocket) p = blend(p, CHEST_HOLD, 1, p);
   else if (s.receiving > 0) p = blend(p, RECEIVE, ease(s.receiving), p);

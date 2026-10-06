@@ -6,10 +6,12 @@ import type { Athlete } from "../engine/types";
 import { lineBouncing } from "../engine/free-throw";
 import { dist2 } from "../engine/vec";
 import { Arena } from "./arena/arena";
-import { AthleteMaterials, type AthleteDetail } from "./materials/athlete-materials";
+import { AthleteMaterials } from "./materials/athlete-materials";
+import type { Quality } from "./quality";
 import { AthleteView } from "./athlete-view";
 import { hanging } from "./arena/hoop";
 import { BallView } from "./ball-view";
+import { joltOnContact } from "./contact-jolts";
 import { CeremonyStage } from "./ceremony/ceremony-stage";
 import type { Ceremony } from "../engine/ceremony";
 import { Referee } from "./referee";
@@ -18,22 +20,9 @@ import { applyFilmLook, type CinemaLook } from "./film-look";
 import { broadcastShot, lineScene, pressureOn } from "./scene-read";
 import { TvCamera, type Shot } from "./tv-camera";
 
+export { LOW_QUALITY, type Quality } from "./quality";
+
 const tmp = new THREE.Vector3();
-
-/** Rendering features that can be turned off for weak graphics hardware. */
-export interface Quality {
-  antialias?: boolean;
-  shadows?: boolean;
-  /** Glossy reflections of the arena on the floor, the ball and the rim. */
-  reflections?: boolean;
-  /** The most device pixels drawn per CSS pixel. */
-  maxPixelRatio?: number;
-  /** How finely the players are built and dressed. */
-  athletes?: AthleteDetail;
-}
-
-/** For computers that draw WebGL in software: a smaller picture without antialiasing or shadows, and lighter players. */
-export const LOW_QUALITY: Quality = { antialias: false, shadows: false, maxPixelRatio: 0.6, athletes: "low" };
 
 /**
  * Draws the game: the arena, six players, the ball and every effect,
@@ -130,7 +119,9 @@ export class CourtRenderer {
   }
 
   onEvent(event: MatchEvent): void {
-    if (this.match) this.effects.onEvent(event, this.match);
+    if (!this.match) return;
+    this.effects.onEvent(event, this.match);
+    joltOnContact(event, this.match, this.views);
   }
 
   /**
@@ -156,7 +147,8 @@ export class CourtRenderer {
       const incoming = b.mode === "flight" && b.passTo === a.id && a.action.kind === "none" ? 1 - Math.hypot(b.pos.x - a.x, b.pos.z - a.z) / 3 : 0;
       const line = lineScene(m, a);
       const ceremony = this.ceremony.roleOf(a.id);
-      view.update(a, { holding: holder === a.id, chest, receiving: Math.max(0, incoming), guarding, pressure: holder === a.id ? pressure : 0, ...line, winner, ceremony }, dt);
+      const holding = holder === a.id;
+      view.update(a, { holding, chest, receiving: Math.max(0, incoming), guarding, pressure: holding ? pressure : 0, ...line, winner, ceremony, ball: holding ? b : null }, dt);
     }
     this.ceremony.update(this.views, dt, this.time);
     // The ball is put away for the ceremony, and the arena's lights come down under the spotlights.
