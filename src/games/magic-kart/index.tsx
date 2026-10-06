@@ -7,6 +7,7 @@ import { Stage } from "./host/components/Stage";
 import { KartPhone } from "./phone/kart-phone";
 import { PhoneScreen } from "./phone/components/PhoneScreen";
 import { ControllerContext } from "./phone/components/session-context";
+import { keyboard } from "./keyboard";
 import "./styles/host.css";
 import "./styles/lobby.css";
 import "./styles/hud.css";
@@ -63,4 +64,5 @@ export const game: GameModule = {
   },
 
   Showcase,
+  keyboard,
 };
