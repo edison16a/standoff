@@ -2,6 +2,7 @@
 import { useSyncExternalStore } from "react";
 import { Icon } from "@/components/ui/Icon";
 import { adminActions, subscribeAdminActions } from "./admin-actions";
+import { KeyboardToggle } from "@/platform/keyboard/components/KeyboardToggle";
 import { meterVisible, setMeterVisible, subscribeMeter } from "./frame-meter";
 import "./admin.css";
 
@@ -46,6 +47,7 @@ export function AdminPanel() {
           >
             Frame rate
           </button>
+          <KeyboardToggle />
           <button type="button" className="admin__action" onClick={() => window.location.reload()}>
             Reload page
           </button>
