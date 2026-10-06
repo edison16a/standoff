@@ -28,6 +28,8 @@ export class GoalModel {
   private readonly sheets: { id: PanelId; mesh: THREE.Mesh; rest: Float32Array }[] = [];
   private ringAmp = 0;
   private ringT = 0;
+  /** The net's own clock, for the breeze. */
+  private time = 0;
   private readonly disposables: { dispose(): void }[] = [];
 
   constructor(private readonly end: -1 | 1, netMap: THREE.Texture) {
@@ -53,7 +55,8 @@ export class GoalModel {
     const frameMesh = new THREE.Mesh(frame, frameMat);
     frameMesh.castShadow = true;
     this.group.add(frameMesh);
-    const net = new THREE.MeshStandardMaterial({ map: netMap, alphaTest: 0.35, side: THREE.DoubleSide, roughness: 0.8, color: "#f2f2f2" });
+    // Alpha to coverage turns the cords' edges into the multisampled picture's own soft edges, so a far net never shimmers.
+    const net = new THREE.MeshStandardMaterial({ map: netMap, alphaTest: 0.35, alphaToCoverage: true, side: THREE.DoubleSide, roughness: 0.8, color: "#f2f2f2" });
     for (const id of IDS) {
       const { w, h } = PANELS[id];
       const [sw, sh] = STEPS[id];
@@ -78,6 +81,7 @@ export class GoalModel {
 
   /** Each frame: the sheets bent to the simulation's dents, and the frame's ring dying away. */
   update(net: NetsView[number], dt: number): void {
+    this.time += dt;
     this.shape(net);
     this.ringT += dt;
     const shake = this.ringAmp * Math.exp(-this.ringT / RING.decay) * Math.sin(2 * Math.PI * RING.hz * this.ringT);
@@ -99,7 +103,7 @@ export class GoalModel {
       for (let i = 0; i < pos.count; i++) {
         const u = rest[i * 3]! + w / 2;
         const v = rest[i * 3 + 1]! + h / 2;
-        const p = panelPoint(id, this.end, u, v, dent.depth * tent(u, dent.u, w) * tent(v, dent.v, h) + sag(id, u, v));
+        const p = panelPoint(id, this.end, u, v, dent.depth * tent(u, dent.u, w) * tent(v, dent.v, h) + sag(id, u, v) + breeze(id, u, v, this.time));
         arr[i * 3] = p.x;
         arr[i * 3 + 1] = p.y;
         arr[i * 3 + 2] = p.z;
@@ -115,6 +119,13 @@ export class GoalModel {
 }
 
 const still = (): NetDent => ({ u: 0, v: 0, depth: 0 });
+
+/** A night breeze through the mesh: slow ripples a centimetre deep, still where the net is tied to the frame. */
+export function breeze(id: PanelId, u: number, v: number, time: number): number {
+  const { w, h } = PANELS[id];
+  const held = Math.sin((Math.PI * u) / w) * Math.sin((Math.PI * v) / h);
+  return 0.012 * held * (Math.sin(time * 1.3 + u * 1.9 + v * 0.7) + 0.5 * Math.sin(time * 2.9 - u * 3.1 + v * 2.3));
+}
 
 /**
  * How much of the dent reaches a point, along one direction of a sheet:

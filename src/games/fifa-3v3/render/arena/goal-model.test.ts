@@ -2,7 +2,8 @@ import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 import type { NetDent, NetsView } from "../../engine/net-view";
 import { PITCH } from "../../engine/tuning";
-import { GoalModel } from "./goal-model";
+import { breeze, GoalModel } from "./goal-model";
+import { PANELS } from "../../engine/physics/net-panels";
 
 const HL = PITCH.halfLength;
 const GW = PITCH.goalHalfWidth;
@@ -43,5 +44,17 @@ describe("the drawn goal", () => {
     for (let t = 0; t < 3; t += 1 / 60) goal.update(rest, 1 / 60);
     expect(goal.group.position.length()).toBeLessThan(1e-4);
     goal.dispose();
+  });
+
+  it("stirs in the breeze by a centimetre or so, never where it is tied", () => {
+    const { w, h } = PANELS.back;
+    let most = 0;
+    for (let t = 0; t < 10; t += 0.37) {
+      most = Math.max(most, Math.abs(breeze("back", w / 2, h / 2, t)));
+      expect(breeze("back", 0, h / 2, t)).toBeCloseTo(0, 9);
+      expect(breeze("back", w / 2, 0, t)).toBeCloseTo(0, 9);
+    }
+    expect(most).toBeGreaterThan(0.005);
+    expect(most).toBeLessThan(0.02);
   });
 });

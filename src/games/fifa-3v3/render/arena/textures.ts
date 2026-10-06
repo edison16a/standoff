@@ -26,12 +26,29 @@ export function blobTexture(): THREE.CanvasTexture {
   return texture(canvas);
 }
 
-/** Net mesh: white cords on a clear background, in 12 centimetre squares when tiled. */
+/**
+ * Net mesh: a knotted cord in 12 centimetre squares when tiled, a little
+ * thicker at each knot, with soft edges so the mipmaps keep the cords
+ * as the net recedes.
+ */
 export function netTexture(): THREE.CanvasTexture {
-  const [canvas, ctx] = canvasOf(64, 64);
+  const [canvas, ctx] = canvasOf(128, 128);
   ctx.strokeStyle = "rgba(255,255,255,1)";
-  ctx.lineWidth = 5;
-  ctx.strokeRect(0, 0, 64, 64);
+  ctx.lineWidth = 7;
+  ctx.shadowColor = "rgba(255,255,255,0.8)";
+  ctx.shadowBlur = 3;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(128, 0);
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, 128);
+  ctx.stroke();
+  ctx.fillStyle = "rgba(255,255,255,1)";
+  for (const [x, y] of [[0, 0], [128, 0], [0, 128], [128, 128]] as const) {
+    ctx.beginPath();
+    ctx.arc(x, y, 7, 0, Math.PI * 2);
+    ctx.fill();
+  }
   const t = texture(canvas);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   return t;
