@@ -79,6 +79,8 @@ export class ShowcaseDirector {
     this.still = at > 0;
     for (let t = 0; t < at; t += STEP) this.renderer.render(this.advance(STEP), false);
     if (this.dev.step) window.__nbaStep = (frames = 1) => this.stepFrames(frames);
+    // Browser checks read the renderer (its players, materials and draw counts) from here. Development builds only.
+    if (process.env.NODE_ENV === "development") Object.assign(window, { __nbaRenderer: this.renderer });
   }
 
   /** Development only: the film moves on only when asked, one filmed frame at a time. */

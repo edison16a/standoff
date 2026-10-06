@@ -44,15 +44,21 @@ function wrapped(draw: (x: number) => void, u: number): void {
   for (const k of [-1, 0, 1]) draw((u + k) * SIZE);
 }
 
+/** One closed ellipse as its own subpath, so separate holes are never joined by a stray edge. */
+function oval(ctx: CanvasRenderingContext2D, x: number, y: number, rx: number, ry: number): void {
+  ctx.moveTo(x + rx, y);
+  ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+}
+
 /** The holes in the jersey, in canvas space, for cutting and for piping round. */
 function holes(ctx: CanvasRenderingContext2D, referee: boolean): void {
   ctx.beginPath();
   if (!referee) {
-    for (const u of [0, 0.5]) wrapped((x) => ctx.ellipse(x, JY(0.745), 0.085 * SIZE, (JY(0.585) - JY(0.905)) / 2, 0, 0, Math.PI * 2), u);
+    for (const u of [0, 0.5]) wrapped((x) => oval(ctx, x, JY(0.745), 0.085 * SIZE, (JY(0.585) - JY(0.905)) / 2), u);
   }
   // A scooped neck in front, shallower behind.
-  ctx.ellipse(0.75 * SIZE, JY(1.0), 0.12 * SIZE, JY(0.885) - JY(1.0), 0, 0, Math.PI * 2);
-  ctx.ellipse(0.25 * SIZE, JY(1.0), 0.09 * SIZE, JY(0.955) - JY(1.0), 0, 0, Math.PI * 2);
+  oval(ctx, 0.75 * SIZE, JY(1.0), 0.12 * SIZE, JY(0.885) - JY(1.0));
+  oval(ctx, 0.25 * SIZE, JY(1.0), 0.09 * SIZE, JY(0.955) - JY(1.0));
 }
 
 function fabricGrain(ctx: CanvasRenderingContext2D, top: number, bottom: number): void {
@@ -96,8 +102,8 @@ export function kitTexture(p: KitPrint): THREE.CanvasTexture {
     for (const u of [0, 0.5]) wrapped((x) => ctx.fillRect(x - 46, JY(0.0), 92, JY(0.58) - JY(0.0)), u);
     ctx.fillStyle = team.trim;
     for (const u of [0, 0.5]) wrapped((x) => { ctx.fillRect(x - 50, JY(0.0), 5, JY(0.6) - JY(0.0)); ctx.fillRect(x + 45, JY(0.0), 5, JY(0.6) - JY(0.0)); }, u);
-    text(ctx, team.name.toUpperCase(), 0.75 * SIZE, JY(0.72), 54, team.trim, team.dark, 200);
-    text(ctx, String(p.number), 0.75 * SIZE, JY(0.48), 150, "#ffffff", team.dark);
+    text(ctx, team.name.toUpperCase(), 0.75 * SIZE, JY(0.665), 50, team.trim, team.dark, 190);
+    text(ctx, String(p.number), 0.75 * SIZE, JY(0.45), 150, "#ffffff", team.dark);
     text(ctx, p.name.toUpperCase(), 0.25 * SIZE, JY(0.79), 44, "#ffffff", team.dark, 210);
     text(ctx, String(p.number), 0.25 * SIZE, JY(0.53), 168, "#ffffff", team.dark);
   }

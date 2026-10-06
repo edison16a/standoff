@@ -51,7 +51,7 @@ export function buildAthlete(c: BuildSpec, team: Team, mats: AthleteMaterials, o
 
   const skin = new PartList(rig);
   for (const limb of limbs(rig, fine ? 22 : 12)) skin.weighted(tint(limb.geo, look.skin), limb.weigh, 0.42);
-  skin.weighted(tint(torsoTube(rig, { n: fine ? 36 : 18, capStart: 0.04 * s, capEnd: 0.02 * s }), look.skin), torsoInfluence(rig), 0.44);
+  skin.weighted(tint(torsoTube(rig, { n: fine ? 36 : 18, from: -0.1 * s, capStart: 0.03 * s, capEnd: 0.02 * s }), look.skin), torsoInfluence(rig), 0.44);
   skin.weighted(tint(neckTube(rig, fine ? 20 : 12), look.skin), neckInfluence(rig), 0.44);
   const headScale = 1 + (c.body.height - 2) * 0.12;
   const head = buildHead(look, headScale, fine);

@@ -19,16 +19,16 @@ const K = (side: Side) => (side > 0 ? "L" : "R");
 /** Keys for the left arm, `t` down from the shoulder joint, for a two metre player of average bulk. */
 function armKeys(U: number, F: number): Key[] {
   return [
-    { t: -0.01, l: 0.054, r: 0.042, f: 0.05, b: 0.05 },
-    { t: 0.015, l: 0.061, r: 0.044, f: 0.054, b: 0.052 },
-    { t: 0.05, l: 0.062, r: 0.042, f: 0.055, b: 0.05 },
-    { t: 0.1, l: 0.054, r: 0.04, f: 0.05, b: 0.049 },
-    { t: 0.16, l: 0.045, r: 0.04, f: 0.055, b: 0.05 },
-    { t: U - 0.12, l: 0.043, r: 0.039, f: 0.05, b: 0.047 },
+    { t: 0.0, l: 0.05, r: 0.03, f: 0.046, b: 0.046 },
+    { t: 0.02, l: 0.06, r: 0.04, f: 0.055, b: 0.054 },
+    { t: 0.055, l: 0.066, r: 0.043, f: 0.059, b: 0.054 },
+    { t: 0.1, l: 0.057, r: 0.042, f: 0.053, b: 0.052 },
+    { t: 0.16, l: 0.048, r: 0.043, f: 0.061, b: 0.054 },
+    { t: U - 0.12, l: 0.046, r: 0.042, f: 0.055, b: 0.051 },
     { t: U - 0.04, l: 0.039, r: 0.035, f: 0.038, b: 0.042 },
     { t: U, l: 0.038, r: 0.034, f: 0.035, b: 0.043, z: -0.003 },
-    { t: U + 0.05, l: 0.046, r: 0.038, f: 0.041, b: 0.04 },
-    { t: U + 0.12, l: 0.04, r: 0.034, f: 0.038, b: 0.034 },
+    { t: U + 0.05, l: 0.05, r: 0.04, f: 0.044, b: 0.042 },
+    { t: U + 0.12, l: 0.043, r: 0.035, f: 0.04, b: 0.035 },
     { t: U + F - 0.07, l: 0.028, r: 0.025, f: 0.031, b: 0.027 },
     { t: U + F - 0.01, l: 0.021, r: 0.02, f: 0.029, b: 0.026 },
     { t: U + F + 0.025, l: 0.02, r: 0.018, f: 0.026, b: 0.024 },
@@ -59,7 +59,8 @@ export function limbKeys(rig: Rig, kind: "arm" | "leg", side: Side): Key[] {
   const { s, bulk } = rig.m;
   const d = rig.dims;
   const raw = kind === "arm" ? armKeys(d.upper / s, d.fore / s) : legKeys(d.thigh / s, d.shin / s);
-  const girth = s * bulk;
+  // Athletes carry more muscle on the arms than an average build.
+  const girth = s * bulk * (kind === "arm" ? 1.08 : 1);
   const keys = raw.map((k) => ({ ...k, t: k.t * s, l: k.l * girth, r: k.r * girth, f: k.f * girth, b: k.b * girth, z: (k.z ?? 0) * girth }));
   return side > 0 ? keys : mirrorKeys(keys);
 }
@@ -117,7 +118,7 @@ export function limbs(rig: Rig, n: number): { geo: THREE.BufferGeometry; weigh: 
   const s = rig.m.s;
   const out: { geo: THREE.BufferGeometry; weigh: (at: THREE.Vector3) => Influence }[] = [];
   for (const side of [1, -1] as const) {
-    out.push({ geo: limbTube(rig, "arm", side, { n, capStart: 0.032 * s, capEnd: 0.012 * s }), weigh: armInfluence(rig, side) });
+    out.push({ geo: limbTube(rig, "arm", side, { n, capStart: 0.024 * s, capEnd: 0.012 * s }), weigh: armInfluence(rig, side) });
     out.push({ geo: limbTube(rig, "leg", side, { n, capStart: 0.04 * s, capEnd: 0.012 * s }), weigh: legInfluence(rig, side) });
   }
   return out;

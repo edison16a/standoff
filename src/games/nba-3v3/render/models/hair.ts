@@ -113,13 +113,14 @@ function twistPieces(head: HeadSurface, look: Look, count: number): THREE.Buffer
     const j = (i * 7919) % pos.count;
     d.fromArray(head.dirs, j * 3);
     b.fromArray(head.bases, j * 3);
-    if (scalp(b, d, "twists") < 1 || b.y < 0.035 || seen.some((k) => Math.abs(k - j) < 3)) continue;
+    if (scalp(b, d, "twists") < 1 || b.y < 0.02 || seen.some((k) => Math.abs(k - j) < 2)) continue;
     seen.push(j);
     const root = new THREE.Vector3().fromBufferAttribute(pos, j);
     const n = new THREE.Vector3().fromBufferAttribute(nrm, j);
-    const len = 0.045 + 0.035 * (0.5 + 0.5 * noise3(j, j * 0.3, 1));
-    const dir = n.clone().add(new THREE.Vector3(0, -0.45 * (1 - n.y), 0)).normalize();
-    const geo = new THREE.CylinderGeometry(0.0038, 0.0058, len, 6, 4, false);
+    // Short on the sides, longer on top, and falling outward and down under their own weight.
+    const len = (0.022 + 0.022 * Math.max(0, n.y)) * (0.8 + 0.4 * (0.5 + 0.5 * noise3(j, j * 0.3, 1)));
+    const dir = n.clone().add(new THREE.Vector3(0, -0.9 * (1 - n.y * 0.6), 0)).normalize();
+    const geo = new THREE.CylinderGeometry(0.0042, 0.0062, len, 6, 3, false);
     geo.translate(0, len / 2 - 0.004, 0);
     geo.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir));
     geo.translate(root.x, root.y, root.z);

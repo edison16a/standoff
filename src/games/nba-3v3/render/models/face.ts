@@ -18,9 +18,9 @@ function darker(hex: string, k: number): THREE.Color {
 /** One ear: the rim, the hollow inside it and the lobe, tipped back a little. */
 function ear(look: Look, side: 1 | -1, k: number, seg: number): THREE.BufferGeometry {
   const x = side * FACE.earX * k;
-  const rim = place(sphere(seg, seg - 2), [x, -0.004 * k, -0.01 * k], [-0.18, side * 0.42, side * 0.06], [0.0085 * k, 0.03 * k, 0.019 * k]);
-  const hollow = place(sphere(seg - 2, seg - 4), [x + side * 0.0035 * k, -0.002 * k, -0.007 * k], [-0.18, side * 0.42, 0], [0.006 * k, 0.017 * k, 0.011 * k]);
-  const lobe = place(sphere(8, 6), [x - side * 0.001 * k, -0.029 * k, -0.004 * k], [0, side * 0.4, 0], [0.006 * k, 0.008 * k, 0.007 * k]);
+  const rim = place(sphere(seg, seg - 2), [x - side * 0.002 * k, -0.004 * k, -0.01 * k], [-0.18, side * 0.18, side * 0.06], [0.0075 * k, 0.029 * k, 0.018 * k]);
+  const hollow = place(sphere(seg - 2, seg - 4), [x + side * 0.0018 * k, -0.002 * k, -0.008 * k], [-0.18, side * 0.18, 0], [0.005 * k, 0.016 * k, 0.0105 * k]);
+  const lobe = place(sphere(8, 6), [x - side * 0.002 * k, -0.028 * k, -0.005 * k], [0, side * 0.18, 0], [0.0055 * k, 0.0075 * k, 0.0065 * k]);
   return join([tint(rim, look.skin), tint(hollow, darker(look.skin, 0.72)), tint(lobe, look.skin)]);
 }
 
@@ -28,7 +28,7 @@ function ear(look: Look, side: 1 | -1, k: number, seg: number): THREE.BufferGeom
 function nose(look: Look, k: number, seg: number): THREE.BufferGeometry {
   const sk = look.skin;
   const parts = [
-    tint(place(sphere(seg, seg - 2), [0, -0.009 * k, 0.096 * k], [-0.36, 0, 0], [0.0068 * k, 0.025 * k, 0.0092 * k]), sk),
+    tint(place(sphere(seg, seg - 2), [0, -0.012 * k, 0.096 * k], [-0.32, 0, 0], [0.0066 * k, 0.02 * k, 0.009 * k]), sk),
     tint(place(sphere(seg, seg - 2), [0, FACE.noseTipY * k, 0.106 * k], [0, 0, 0], [0.0094 * k, 0.0088 * k, 0.0092 * k]), sk),
   ];
   for (const side of [1, -1]) {
@@ -44,7 +44,7 @@ function lids(look: Look, side: 1 | -1, k: number, seg: number): THREE.BufferGeo
   const r = 0.0128 * k;
   // The hood's edge crosses the eye just above the iris, the lash line dark along it.
   const tilt = 0;
-  const upper = new THREE.SphereGeometry(r, seg, 6, 0, Math.PI * 2, 0, Math.PI * 0.35);
+  const upper = new THREE.SphereGeometry(r, seg, 6, 0, Math.PI * 2, 0, Math.PI * 0.4);
   upper.rotateX(tilt);
   upper.translate(centre.x, centre.y, centre.z);
   const axis = new THREE.Vector3(0, Math.cos(tilt), Math.sin(tilt));
@@ -52,10 +52,10 @@ function lids(look: Look, side: 1 | -1, k: number, seg: number): THREE.BufferGeo
   const lid = darker(look.skin, 0.94);
   const rel = new THREE.Vector3();
   tint(upper, (p, out) => {
-    const edge = rel.copy(p).sub(centre).divideScalar(r).dot(axis) < 0.6 && p.z > centre.z;
+    const edge = rel.copy(p).sub(centre).divideScalar(r).dot(axis) < 0.4 && p.z > centre.z;
     out.copy(edge ? lash : lid);
   });
-  const lower = new THREE.SphereGeometry(r * 0.98, seg, 4, 0, Math.PI * 2, Math.PI * 0.67, Math.PI * 0.33);
+  const lower = new THREE.SphereGeometry(r * 0.98, seg, 4, 0, Math.PI * 2, Math.PI * 0.6, Math.PI * 0.4);
   lower.translate(centre.x, centre.y, centre.z);
   return join([upper, tint(lower, darker(look.skin, 0.9))]);
 }
