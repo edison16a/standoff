@@ -12,6 +12,9 @@ const KEYS: Record<KeyButton, readonly string[]> = {
   shield: ["ShiftLeft", "ShiftRight"],
 };
 
+/** An unchanged pad still goes out this often, as the gamepad kit's phone does, so the host never goes stale. */
+const KEEPALIVE_MS = 250;
+
 const PRESSES: Partial<Record<KeyButton, ButtonName>> = { attack: BUTTONS.attack, special: BUTTONS.special, ult: BUTTONS.ult };
 
 function readState(payload: unknown): PhoneState | null {
@@ -36,8 +39,14 @@ export class BrawlKeys implements KeyboardPlayer {
   private readonly buttons = new ButtonKeys(KEYS, { press: (key) => this.press(key), release: (key) => this.letGo(key) });
   /** Pad buttons held now, as the host has heard them. */
   private readonly held = new Set<ButtonName>();
+  /** The last pad streamed and when, so an unchanged one waits for the keepalive as on the phone. */
+  private lastPad = "";
+  private lastPadAt = -Infinity;
 
-  constructor(private readonly ctx: KeyboardContext) {}
+  constructor(
+    private readonly ctx: KeyboardContext,
+    private readonly now: () => number = () => performance.now(),
+  ) {}
 
   key(code: string, down: boolean): boolean {
     const used = this.stick.key(code, down) || this.buttons.key(code, down);
@@ -50,12 +59,19 @@ export class BrawlKeys implements KeyboardPlayer {
     if (!fighting(state)) {
       // The controller left the screen: the phone lets go of everything.
       for (const button of [...this.held]) this.padPress(button, false);
+      this.lastPad = "";
       return;
     }
     // The Ult button turns off once the meter is spent, which lets it go.
     if (this.held.has(BUTTONS.ult) && state.ult < 1) this.padPress(BUTTONS.ult, false);
-    const { x, y } = this.axes();
-    this.ctx.sendLossy({ kind: "pad", x, y, held: [...this.held] });
+    const pad = { kind: "pad", ...this.axes(), held: [...this.held] };
+    const key = JSON.stringify(pad);
+    const now = this.now();
+    // Every stream message costs the relay a command, so an idle pad only keeps alive.
+    if (key === this.lastPad && now - this.lastPadAt < KEEPALIVE_MS) return;
+    this.lastPad = key;
+    this.lastPadAt = now;
+    this.ctx.sendLossy(pad);
   }
 
   release(): void {

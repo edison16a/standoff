@@ -11,8 +11,9 @@ function setup(initial: PhoneState = state()) {
   let host = initial;
   const sent: Payload[] = [];
   const lossy: Payload[] = [];
-  const keys = new BrawlKeys({ seat: 2, send: (p) => sent.push(p), sendLossy: (p) => lossy.push(p), last: () => host });
-  return { keys, sent, lossy, setHost: (next: PhoneState) => (host = next) };
+  let time = 0;
+  const keys = new BrawlKeys({ seat: 2, send: (p) => sent.push(p), sendLossy: (p) => lossy.push(p), last: () => host }, () => time);
+  return { keys, sent, lossy, setHost: (next: PhoneState) => (host = next), wait: (ms: number) => (time += ms) };
 }
 
 describe("Brawl Battle keyboard", () => {
@@ -22,6 +23,20 @@ describe("Brawl Battle keyboard", () => {
     t.keys.key("KeyS", true);
     t.keys.tick();
     expect(t.lossy.at(-1)).toEqual({ kind: "pad", x: 1, y: -1, held: [] });
+  });
+
+  it("sends an unchanged pad only as a keepalive, as the phone does", () => {
+    const t = setup();
+    t.keys.key("KeyA", true);
+    t.keys.tick();
+    t.keys.tick();
+    expect(t.lossy).toHaveLength(1);
+    t.wait(250);
+    t.keys.tick();
+    expect(t.lossy).toHaveLength(2);
+    t.keys.key("KeyJ", true);
+    t.keys.tick();
+    expect(t.lossy.at(-1)).toEqual({ kind: "pad", x: -1, y: 0, held: ["attack"] });
   });
 
   it("jumps on Space with the Up press alone, and on W with the stick up too", () => {
