@@ -30,6 +30,28 @@ Your boxer copies your whole upper body: your arms, and your head as you duck, l
 
 Gloves that only half cover a punch take only part of the damage away, and a head that only half gets away turns it into a glancing blow. You cannot block while punching.
 
+### Keyboard mode
+
+For testing without a camera, pick **Keyboard** beside the difficulty in the first menu. Then **One player** goes straight to choosing a build, with no camera and no calibration, and you box the computer with the keys. Two players need the camera, so that card is greyed out.
+
+| Key | Move |
+| --- | --- |
+| J | Jab |
+| K | Cross |
+| U | Left hook |
+| I | Right hook |
+| A and D, or Left and Right | Slip the head, for as long as it is held |
+| S or Down | Duck, for as long as it is held |
+| S held while punching | The punch goes to the body, as dipping the knees does on camera |
+| Space | Guard: both gloves in front of the face. Also gets you up from a knockdown: let go, then hold it |
+| Shift | Both gloves up by the ears, against hooks |
+| F | Elbows tucked over the ribs, against body shots |
+| E | Both gloves held out, to touch gloves |
+
+On the build choice, A and D browse and Space locks in. Everything else is clicked. The keys feed the very same input the camera does (`host/key-boxer.ts`): the head eases to a full slip or duck in about a tenth of a second, the gloves cover what a real guard covers, and a punch thrown from a key is a firm one. As on camera, the feet move by themselves and there is no uppercut. The keys only count in keyboard mode, so a camera fight never fights them.
+
+The host's admin panel has a **Keyboard player** for testing (three quick taps on the settings gear, then Platform). It takes a seat and says hello, and the first menu switches to keyboard mode by itself. Its controls card shows the keys above. Each key goes through the room down and up (`keyboard.ts`, `host/key-messages.ts`), and the page's own key listener skips any key the keyboard player already took, so each press counts once.
+
 About fifteen clean body shots empty the health bar, and a head shot does two and a half times as much. A big head shot or a counter to the head stuns: the stunned boxer reels back to their corner, their guard barely works and they cannot punch, and the other boxer follows them in and pins them there for a moment. A boxer who has just been hurt, or has taken a run of shots, punches slower and softer for a few seconds, marked Hurt on their bar. Every punch also costs stamina (the blue bar under your health), and a tired boxer is slower and softer too.
 
 At the bell the boxers walk to their corners and sit on their stools. Each gets back about two and a half body shots' worth of health, then they walk out to the middle, touch gloves and go again. A fight ends on a knockout, on the third knockdown, or on points after the final bell.
