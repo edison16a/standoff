@@ -29,7 +29,7 @@ const bell2 = (x: number, y: number, cx: number, cy: number, w: number, h: numbe
 export function beardMask(b: THREE.Vector3, moustache: boolean): number {
   const ax = Math.abs(b.x);
   // The upper edge runs from the sideburn down across the cheek to the corner of the mouth.
-  const edge = -0.004 - 0.75 * Math.max(0, 0.07 - ax);
+  const edge = -0.018 - 0.6 * Math.max(0, 0.07 - ax);
   const cheek = ramp(edge, edge - 0.012, b.y) * ramp(-0.035, -0.012, b.z);
   const lipGap = 1 - bell2(b.x, b.y, 0, FACE.mouthY - 0.002, 0.026, 0.0095);
   const lip = moustache ? bell2(b.x, b.y, 0, FACE.mouthY + 0.014, 0.026, 0.006) * ramp(0.06, 0.08, b.z) : 0;
@@ -74,7 +74,8 @@ export function buildHead(look: Look, k: number, fine: boolean, shape: HeadShape
         const m = beardMask(base, true);
         return m > 0.05 ? (0.0004 + m * m * (0.0026 + 0.0012 * Math.abs(noise3(base.x * 300, base.y * 300, base.z * 300)))) * k : 0;
       },
-      (base, _d, out) => out.copy(hair).multiplyScalar(0.9 + 0.2 * Math.abs(noise3(base.x * 700, base.y * 700, base.z * 700))),
+      // A touch of the skin shows through the hairs, so the beard reads as hair and not a dark mask.
+      (base, _d, out) => out.copy(hair).lerp(skin, 0.18).multiplyScalar(0.9 + 0.25 * Math.abs(noise3(base.x * 700, base.y * 700, base.z * 700))),
       false,
     );
     if (beard) gear.push(groom(roughen(beard, 0.75), [900 / k, 900 / k, 900 / k]));
