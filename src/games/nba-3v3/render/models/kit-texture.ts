@@ -13,8 +13,7 @@ const SIZE = 1024;
 /** Where each garment sits on the texture, in v (0 at the bottom). */
 export const ATLAS = {
   jersey: [0.42, 1] as const,
-  shortsTop: [0.2, 0.38] as const,
-  shortsLegs: [0, 0.26] as const,
+  shorts: [0, 0.38] as const,
 };
 
 /** Canvas y for a v on the texture. */
@@ -123,7 +122,7 @@ export function kitTexture(p: KitPrint): THREE.CanvasTexture {
   ctx.restore();
 
   // The shorts: team colour, or dark trousers for the referee.
-  const shortsTop = Y(ATLAS.shortsTop[1]);
+  const shortsTop = Y(ATLAS.shorts[1]);
   const shorts = ctx.createLinearGradient(0, shortsTop, 0, SIZE);
   shorts.addColorStop(0, p.referee ? "#1a1a1a" : team.color);
   shorts.addColorStop(1, p.referee ? "#111111" : new THREE.Color(team.color).lerp(new THREE.Color(team.dark), 0.4).getStyle());
@@ -132,7 +131,8 @@ export function kitTexture(p: KitPrint): THREE.CanvasTexture {
   if (!p.referee) {
     ctx.fillStyle = team.dark;
     ctx.fillRect(0, shortsTop - 4, SIZE, 26);
-    for (const u of [0.25, 0.75]) {
+    // One stripe down the outside of each leg (the right leg's print is mirrored onto the left's).
+    for (const u of [0.25]) {
       ctx.fillStyle = team.trim;
       ctx.fillRect(u * SIZE - 26, shortsTop, 52, SIZE - shortsTop);
       ctx.fillStyle = team.dark;

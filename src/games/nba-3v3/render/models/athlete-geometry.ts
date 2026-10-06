@@ -33,12 +33,14 @@ export interface AthleteGeometry {
 export function athleteGeometry(c: BuildSpec, fine: boolean, referee = false): AthleteGeometry {
   const rig = buildRig(c);
   const { s, bulk } = rig.m;
-  const look = c.look;
+  // Real skin reflects less than its swatch suggests under arena lights.
+  const look = { ...c.look, skin: `#${new THREE.Color(c.look.skin).multiplyScalar(0.9).getHexString()}` };
 
   const skin = new PartList(rig);
-  for (const limb of limbs(rig, fine ? 20 : 12)) skin.weighted(tint(limb.geo, look.skin), limb.weigh, 0.42);
-  skin.weighted(tint(torsoTube(rig, { n: fine ? 36 : 18, from: -0.1 * s, capStart: 0.03 * s, capEnd: 0.02 * s }), look.skin), torsoInfluence(rig), 0.44);
-  skin.weighted(tint(neckTube(rig, fine ? 20 : 12), look.skin), neckInfluence(rig), 0.44);
+  const tone = look.skin;
+  for (const limb of limbs(rig, fine ? 20 : 12)) skin.weighted(tint(limb.geo, tone), limb.weigh, 0.42);
+  skin.weighted(tint(torsoTube(rig, { n: fine ? 36 : 18, from: -0.1 * s, capStart: 0.03 * s, capEnd: 0.02 * s }), tone), torsoInfluence(rig), 0.44);
+  skin.weighted(tint(neckTube(rig, fine ? 20 : 12), tone), neckInfluence(rig), 0.44);
   const headScale = 1 + (c.body.height - 2) * 0.12;
   const head = buildHead(look, headScale, fine);
   const at = headOffset(s, headScale);

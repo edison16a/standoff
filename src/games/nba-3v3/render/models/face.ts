@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type { Look } from "../../roster";
-import { FACE } from "./head-shape";
+import { FACE, sculpt } from "./head-shape";
+import { tube, type Key } from "./profile";
 import { join, place, roughen, tint } from "./parts";
 
 /**
@@ -24,16 +25,42 @@ function ear(look: Look, side: 1 | -1, k: number, seg: number): THREE.BufferGeom
   return join([tint(rim, look.skin), tint(hollow, darker(look.skin, 0.72)), tint(lobe, look.skin)]);
 }
 
-/** The nose: a bridge sloping out from between the eyes to a rounded tip, with the wings of the nostrils. */
+/** Where the face's surface is, straight out in front of the centre line at height `y`. */
+function faceZ(y: number): number {
+  const d = new THREE.Vector3();
+  const p = new THREE.Vector3();
+  let dy = y / 0.1;
+  for (let i = 0; i < 4; i++) {
+    sculpt(d.set(0, dy, 1).normalize(), p);
+    dy += (y - p.y) / 0.1;
+  }
+  return p.z;
+}
+
+/** The nose's profile down from between the eyes: half width, how far it stands off the face, and how sharp its ridge is. */
+const NOSE: readonly (readonly [y: number, w: number, out: number, power: number])[] = [
+  [0.016, 0.0055, 0.001, 1.8],
+  [0.0, 0.0062, 0.0055, 1.8],
+  [-0.015, 0.007, 0.0105, 1.9],
+  [-0.026, 0.0095, 0.0155, 2],
+  [-0.034, 0.0135, 0.0185, 2.2],
+  [-0.04, 0.0155, 0.0145, 2.3],
+  [-0.044, 0.011, 0.008, 2.2],
+];
+
+/**
+ * The nose as one smooth piece: a narrow ridge from between the eyes
+ * that widens and stands out to a rounded tip, flaring at the base into
+ * the wings of the nostrils, its back half sunk into the face.
+ */
 function nose(look: Look, k: number, seg: number): THREE.BufferGeometry {
-  const sk = look.skin;
-  const parts = [
-    tint(place(sphere(seg, seg - 2), [0, -0.012 * k, 0.096 * k], [-0.32, 0, 0], [0.0066 * k, 0.02 * k, 0.009 * k]), sk),
-    tint(place(sphere(seg, seg - 2), [0, FACE.noseTipY * k, 0.106 * k], [0, 0, 0], [0.0094 * k, 0.0088 * k, 0.0092 * k]), sk),
-  ];
+  const sink = 0.005;
+  const keys: Key[] = NOSE.map(([y, w, out, power]) => ({ t: (NOSE[0]![0] - y) * k, l: w * k, r: w * k, f: (out + sink) * k, b: sink * k, z: (faceZ(y) - sink) * k, power }));
+  const body = tube(new THREE.Vector3(0, NOSE[0]![0] * k, 0), -1, keys, { n: seg + 4, step: 0.004 * k, capStart: 0.003 * k, capEnd: 0.004 * k });
+  const parts = [tint(body, look.skin)];
   for (const side of [1, -1]) {
-    parts.push(tint(place(sphere(seg - 2, seg - 4), [side * 0.0112 * k, (FACE.noseTipY - 0.003) * k, 0.098 * k], [0, side * 0.3, 0], [0.0068 * k, 0.006 * k, 0.0075 * k]), sk));
-    parts.push(tint(place(sphere(6, 4), [side * 0.0058 * k, (FACE.noseTipY - 0.0075) * k, 0.101 * k], [0.4, 0, 0], [0.003 * k, 0.0015 * k, 0.0026 * k]), darker(sk, 0.35)));
+    // The nostrils, dark under the wings.
+    parts.push(tint(place(sphere(6, 4), [side * 0.0062 * k, (FACE.noseTipY - 0.0105) * k, (faceZ(-0.044) + 0.006) * k], [0.5, 0, 0], [0.0034 * k, 0.0016 * k, 0.003 * k]), darker(look.skin, 0.3)));
   }
   return join(parts);
 }

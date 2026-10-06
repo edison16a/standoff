@@ -46,8 +46,14 @@ function footSection(w: number, up: number, down: number, power: number): Sectio
   };
 }
 
+/** How far each piece rounds off past the heel and the toe: the sole wraps up round the toe, the upper tucks into it. */
+interface Ends {
+  heel: number;
+  toe: number;
+}
+
 /** A lofted slab or shell along the shoe, rounded off at the heel and the toe. */
-function along(size: ShoeSize, n: number, rows: number, section: (u: number) => { y: number; s: Section }): THREE.BufferGeometry {
+function along(size: ShoeSize, n: number, rows: number, ends: Ends, section: (u: number) => { y: number; s: Section }): THREE.BufferGeometry {
   const { heel, toe } = size;
   const z = (u: number) => heel + (toe - heel) * u;
   const rings: THREE.Vector3[][] = [];
@@ -58,10 +64,12 @@ function along(size: ShoeSize, n: number, rows: number, section: (u: number) => 
       return [x * k, y * k];
     });
   };
-  for (const k of [0.45, 0.8, 0.96]) rings.push(end(0, k).map((p) => p.setZ(heel - 0.012 * size.s * Math.sqrt(1 - k * k))));
+  const hz = ends.heel * size.s;
+  const tz = ends.toe * size.s;
+  for (const k of [0.45, 0.8, 0.96]) rings.push(end(0, k).map((p) => p.setZ(heel - hz * 0.92 * Math.sqrt(1 - k * k))));
   for (let i = 0; i <= rows; i++) rings.push(end(i / rows, 1));
-  for (const k of [0.96, 0.8, 0.45]) rings.push(end(1, k).map((p) => p.setZ(toe + 0.016 * size.s * Math.sqrt(1 - k * k))));
-  return loft(rings, { start: new THREE.Vector3(0, section(0).y, heel - 0.013 * size.s), end: new THREE.Vector3(0, section(1).y, toe + 0.017 * size.s) });
+  for (const k of [0.96, 0.8, 0.45]) rings.push(end(1, k).map((p) => p.setZ(toe + tz * 0.92 * Math.sqrt(1 - k * k))));
+  return loft(rings, { start: new THREE.Vector3(0, section(0).y, heel - hz), end: new THREE.Vector3(0, section(1).y, toe + tz) });
 }
 
 export function buildShoe(look: Look, size: ShoeSize, fine: boolean): THREE.BufferGeometry {
@@ -74,10 +82,10 @@ export function buildShoe(look: Look, size: ShoeSize, fine: boolean): THREE.Buff
   const top = (v: number) => lerpKeys(TOP, v) * s;
   const midsoleColour = look.shoe.toLowerCase() === "#e5e7eb" ? look.shoeAccent : "#f1f0ec";
 
-  const outsole = along(size, n, rows - 2, (v) => ({ y: -A + 0.0045 * s, s: footSection(w(v) + 0.003 * s, 0.0045 * s, 0.0045 * s, 6) }));
+  const outsole = along(size, n, rows - 2, { heel: 0.013, toe: 0.018 }, (v) => ({ y: -A + 0.0045 * s, s: footSection(w(v) + 0.003 * s, 0.0045 * s, 0.0045 * s, 6) }));
   tint(outsole, "#262626");
   roughen(outsole, 0.85);
-  const midsole = along(size, n, rows, (v) => ({ y: -A + 0.009 * s + mid(v) / 2, s: footSection(w(v) + 0.004 * s, mid(v) / 2, mid(v) / 2, 5) }));
+  const midsole = along(size, n, rows, { heel: 0.013, toe: 0.019 }, (v) => ({ y: -A + 0.009 * s + mid(v) / 2, s: footSection(w(v) + 0.004 * s, mid(v) / 2, mid(v) / 2, 5) }));
   tint(midsole, (p, c) => {
     // A thin accent line runs round the midsole just above the outsole.
     const line = Math.abs(p.y - (-A + 0.014 * s)) < 0.0018 * s;
@@ -86,9 +94,9 @@ export function buildShoe(look: Look, size: ShoeSize, fine: boolean): THREE.Buff
   roughen(midsole, 0.62);
 
   const upperBase = -A + 0.02 * s;
-  const upper = along(size, n + 4, rows + 4, (v) => {
+  const upper = along(size, n + 4, rows + 4, { heel: 0.009, toe: 0.009 }, (v) => {
     const h = top(v) - 0.02 * s;
-    return { y: upperBase + h * 0.45, s: footSection(w(v), h * 0.55, h * 0.45, 2.6) };
+    return { y: upperBase + h * 0.45, s: footSection(w(v), h * 0.55, h * 0.45, 3.2) };
   });
   const body = new THREE.Color(look.shoe);
   const accent = new THREE.Color(look.shoeAccent);
@@ -109,8 +117,8 @@ export function buildShoe(look: Look, size: ShoeSize, fine: boolean): THREE.Buff
 
   const parts = [outsole, midsole, upper];
   // A padded collar round the ankle opening.
-  const collar = new THREE.TorusGeometry(0.041 * s, 0.009 * s, 6, fine ? 18 : 10);
-  parts.push(roughen(tint(place(collar, [0, -A + top(0.2) - 0.004 * s, heel + (toe - heel) * 0.21], [Math.PI / 2 - 0.12, 0, 0], [1, 1.2, 1]), body.clone().multiplyScalar(0.75)), 0.7));
+  const collar = new THREE.TorusGeometry(0.039 * s, 0.011 * s, 6, fine ? 18 : 10);
+  parts.push(roughen(tint(place(collar, [0, -A + top(0.2) - 0.012 * s, heel + (toe - heel) * 0.21], [Math.PI / 2 - 0.12, 0, 0], [1, 1.25, 1]), body.clone().multiplyScalar(0.8)), 0.7));
   // The tongue, rising at the front of the collar.
   parts.push(roughen(tint(place(new THREE.BoxGeometry(0.036 * s, 0.034 * s, 0.008 * s), [0, -A + top(0.36) + 0.004 * s, heel + (toe - heel) * 0.37], [-0.45, 0, 0]), body), 0.6));
   // Laces across the instep, following its slope.

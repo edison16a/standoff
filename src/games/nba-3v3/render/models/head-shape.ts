@@ -57,7 +57,7 @@ export function sculpt(d: THREE.Vector3, out: THREE.Vector3): THREE.Vector3 {
   push += 0.009 * gauss(base, 0, FACE.chinY + 0.012, 0.075, 0.02, 0.014, 0.03);
   push += 0.004 * gauss(base, 0, FACE.mouthY + 0.003, 0.09, 0.02, 0.006, 0.03);
   push += 0.0035 * gauss(base, 0, FACE.mouthY - 0.009, 0.09, 0.017, 0.006, 0.03);
-  push += 0.004 * gauss(base, 0, FACE.noseTipY, 0.095, 0.02, 0.02, 0.02);
+  push += 0.002 * gauss(base, 0, FACE.noseTipY, 0.095, 0.02, 0.02, 0.02);
   return p.addScaledVector(d, push);
 }
 
