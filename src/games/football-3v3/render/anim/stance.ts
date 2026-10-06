@@ -57,9 +57,10 @@ export function breathe(p: Pose, time: number, seed: number): Pose {
 export function blockPose(time: number, seed: number, win: number): Pose {
   const chop = time * 9 + seed;
   const s = Math.sin(chop);
-  const lean = 0.55 + 0.15 * win;
+  const lean = 0.5 + 0.15 * win;
+  // The hips sit back off the spot, so two sets of shoulder pads meet at the hands rather than through each other.
   return over(base, {
-    pitch: lean, spineX: 0.1 - 0.1 * win, neckX: -lean * 0.9,
+    fwd: -0.17, pitch: lean, spineX: 0.1 - 0.1 * win, neckX: -lean * 0.9,
     hipLX: -0.7 - s * 0.25, hipRX: -0.7 + s * 0.25, kneeL: 1.0 + Math.max(0, s) * 0.4, kneeR: 1.0 + Math.max(0, -s) * 0.4,
     hipLZ: 0.2, hipRZ: 0.2,
     shLX: -1.35 + s * 0.08, shRX: -1.35 - s * 0.08, elL: -0.45, elR: -0.45, shLZ: 0.3, shRZ: 0.3,

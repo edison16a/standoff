@@ -11,6 +11,8 @@ import { filmAt, type FilmSpot } from "./trailer";
 const WARMUP = 3;
 /** Drawn at most once per filmed frame: the page's own frames come twice as often. */
 const DRAW_EVERY = 0.025;
+/** Frames of match time a still plays through before its moment, so the bodies arrive in their poses. */
+const LEAD_IN = 45;
 
 /**
  * Plays the trailer through the real renderer. The film is a pure
@@ -67,7 +69,13 @@ export class TrailerPlayer {
     const { spot, view, cam: filmed } = this.spot(t);
     const cam = typeof still === "number" ? filmed : (still.camera?.(view) ?? filmed);
     this.anim = spot.time;
-    this.renderer.settle(view, this.anim * 1000, 1.5);
+    // Played up to the moment through the real stills before it: a frozen view settled from rest leaves dives and strides stiff.
+    const reel = this.reels[spot.shot.reel];
+    for (let k = LEAD_IN; k > 0; k--) {
+      const at = spot.time - k / 30;
+      this.renderer.settle(reel.at(at), at * 1000, 1 / 30);
+    }
+    this.renderer.settle(view, this.anim * 1000, 1 / 30);
     this.pos.set(cam.pos.x, cam.pos.y, cam.pos.z);
     this.look.set(cam.look.x, cam.look.y, cam.look.z);
     this.renderer.director.setFixed(this.pos, this.look, cam.fov);

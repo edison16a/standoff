@@ -1,3 +1,4 @@
+import { qSlerp } from "./physics/quat";
 import { angleDiff, lerp, norm3 } from "./vec";
 import type { MatchView } from "./view";
 
@@ -21,7 +22,9 @@ export function blendViews(a: MatchView, b: MatchView, t: number): MatchView {
       x: lerp(ba.x, bb.x, t), y: lerp(ba.y, bb.y, t), z: lerp(ba.z, bb.z, t),
       vx: lerp(ba.vx, bb.vx, t), vy: lerp(ba.vy, bb.vy, t), vz: lerp(ba.vz, bb.vz, t),
       axis: norm3({ x: lerp(ba.axis.x, bb.axis.x, t), y: lerp(ba.axis.y, bb.axis.y, t), z: lerp(ba.axis.z, bb.axis.z, t) }),
-      roll: lerp(ba.roll, bb.roll, t),
+      quat: qSlerp(ba.quat, bb.quat, t),
+      knock: pick.ball.knock && { ...pick.ball.knock, age: lerp(ba.knock?.age ?? pick.ball.knock.age, bb.knock?.age ?? pick.ball.knock.age, t) },
+      goal: pick.ball.goal && { ...pick.ball.goal, age: lerp(ba.goal?.age ?? pick.ball.goal.age, bb.goal?.age ?? pick.ball.goal.age, t) },
     },
     athletes: pick.athletes.map((p, i) => {
       const from = a.athletes[i] ?? p;
@@ -33,6 +36,8 @@ export function blendViews(a: MatchView, b: MatchView, t: number): MatchView {
         z: lerp(from.z, to.z, t),
         yaw: mixAngle(from.yaw, to.yaw, t),
         speed: lerp(from.speed, to.speed, t),
+        ax: lerp(from.ax, to.ax, t),
+        az: lerp(from.az, to.az, t),
         actionT: same ? lerp(from.actionT, to.actionT, t) : p.actionT,
       };
     }),

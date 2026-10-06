@@ -5,19 +5,23 @@ import { BUILDS, type BuildId } from "../builds";
 import type { TeamId } from "../teams";
 import type { PoseScene } from "./anim/choose";
 import { Figure } from "./figures/figure";
+import { AthleteMaterials } from "./materials/athlete-materials";
+import { glossEnvironment } from "./materials/gloss-env";
+import { AthleteShapes } from "./models/athlete-shapes";
 import { buildKit } from "./models/kit";
 
 const BALL: BallView = {
-  x: 0, y: 0, z: 9, vx: 0, vy: 0, vz: 0, axis: { x: 1, y: 0, z: 0 }, roll: 0, spin: 0, style: "spiral", state: "dead", holder: null, pitch: false,
+  x: 0, y: 0, z: 9, vx: 0, vy: 0, vz: 0, quat: { x: 0, y: 0, z: 0, w: 1 }, axis: { x: 1, y: 0, z: 0 }, spin: 0, style: "spiral", knock: null, goal: null,
+  state: "dead", holder: null, pitch: false,
 };
 
 /** The build standing on the podium, or celebrating `celebrating` seconds in. */
 function still(build: BuildId, team: TeamId, celebrating: number | null): AthleteView {
   return {
     id: 0, team, role: "runner", build, number: BUILDS[build].number, seat: null,
-    x: 0, z: 0, yaw: 0, vx: 0, vz: 0, speed: 0,
+    x: 0, z: 0, yaw: 0, vx: 0, vz: 0, speed: 0, ax: 0, az: 0, stagger: 0,
     action: celebrating === null ? "none" : "celebrate", actionT: celebrating ?? 0, actionDur: 3,
-    juke: null, side: 1, downCause: null, spike: false, hasBall: false, targeted: false, guarding: null, rushing: false, blocked: false, ceremony: null,
+    juke: null, side: 1, plant: 0, lob: false, downCause: null, spike: false, hasBall: false, targeted: false, guarding: null, rushing: false, blocked: false, ceremony: null,
   };
 }
 
@@ -32,7 +36,9 @@ export class StarPreview {
   private readonly scene = new THREE.Scene();
   private readonly camera = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
   private readonly turntable = new THREE.Group();
-  private readonly material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0.05 });
+  private readonly materials: AthleteMaterials;
+  private readonly shapes = new AthleteShapes(true);
+  private readonly gloss: THREE.Texture;
   private readonly canvas: HTMLCanvasElement;
   private readonly environment: THREE.Texture;
   private figure: Figure | null = null;
@@ -54,6 +60,8 @@ export class StarPreview {
     pmrem.dispose();
     this.scene.environment = this.environment;
     this.scene.environmentIntensity = 0.4;
+    this.gloss = glossEnvironment(this.renderer);
+    this.materials = new AthleteMaterials("high", this.gloss);
     this.scene.add(new THREE.HemisphereLight("#dfe8ff", "#1d3a24", 1.3));
     const key = new THREE.DirectionalLight("#fff3dc", 2.6);
     key.position.set(3, 6, 5);
@@ -73,7 +81,7 @@ export class StarPreview {
     if (this.shown?.build === build && this.shown.team === team) return;
     this.shown = { build, team };
     this.figure?.dispose();
-    this.figure = new Figure(buildKit(team, build), this.material, 0);
+    this.figure = new Figure(buildKit(team, build), { materials: this.materials, shapes: this.shapes }, 0);
     this.turntable.add(this.figure.root);
     this.shownAt = this.last;
   }
@@ -81,13 +89,17 @@ export class StarPreview {
   dispose(): void {
     cancelAnimationFrame(this.frame);
     this.figure?.dispose();
+    this.figure = null;
+    // Only the podium is left on the turntable; the figure freed its own parts.
     this.turntable.traverse((o) => {
-      if (o instanceof THREE.Mesh && o.material !== this.material) {
+      if (o instanceof THREE.Mesh) {
         o.geometry.dispose();
         (o.material as THREE.Material).dispose();
       }
     });
-    this.material.dispose();
+    this.materials.dispose();
+    this.shapes.dispose();
+    this.gloss.dispose();
     this.environment.dispose();
     this.renderer.dispose();
     // Phones allow only a few live WebGL contexts; moving between steps must not use them up.

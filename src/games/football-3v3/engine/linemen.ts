@@ -1,21 +1,26 @@
-import { statsOf } from "./body";
-import { breakChance } from "./build-effects";
 import { yardToX } from "./field";
 import { dodging } from "./juke";
 import type { Match } from "./match";
+import { resolveHit } from "./hit";
 import { tackle } from "./tackle";
 import { LINE, RUSH, TACKLE } from "./tuning";
 import type { Athlete } from "./types";
 import { clamp, dist2 } from "./vec";
 
 /**
- * One pair of linemen locked together at the line. They surge back and
- * forth as one; `x` is where they meet. The defence slowly wins, so the
- * pocket closes the longer the QB holds the ball.
+ * One pair of linemen locked together at the line, pushing as one body
+ * with both men's mass. Each surge is a new balance of leg drive; the
+ * pair accelerates by the difference over its mass and the cleats'
+ * resistance, so it lurches and settles instead of snapping. The
+ * defence slowly wins, so the pocket closes the longer the QB holds it.
+ * A runner who crashes into a pair shoves it by real momentum too.
  */
 export interface LinePair {
   x: number;
   z: number;
+  /** Speed of the pair along the field, metres a second. */
+  v: number;
+  /** The current balance of drive, positive toward the offense's backfield. */
   surge: number;
   /** Seconds until the next surge. */
   next: number;
@@ -23,7 +28,7 @@ export interface LinePair {
 }
 
 export function newLinePairs(): LinePair[] {
-  return [0, 1, 2].map(() => ({ x: 0, z: 0, surge: 0, next: 0, engaged: false }));
+  return [0, 1, 2].map(() => ({ x: 0, z: 0, v: 0, surge: 0, next: 0, engaged: false }));
 }
 
 const lineman = (m: Match, team: 0 | 1, slot: number) => m.athletes.find((a) => a.team === team && a.role === "lineman" && a.slot === slot)!;
@@ -34,6 +39,7 @@ export function setLine(m: Match): void {
   m.lines.forEach((p, i) => {
     p.x = losX;
     p.z = m.drive.ballZ + (i - 1) * LINE.spacing;
+    p.v = 0;
     p.surge = 0;
     p.next = 0;
     p.engaged = false;
@@ -48,6 +54,9 @@ export function engageLine(m: Match): void {
   });
 }
 
+/** Mass of a locked pair, for anyone who runs into it. */
+export const pairMass = (m: Match, slot: number) => lineman(m, m.offense, slot).mass + lineman(m, m.defense, slot).mass;
+
 export function updateLinemen(m: Match, dt: number): void {
   const s = m.sign;
   const losX = yardToX(m.offense, m.drive.los);
@@ -58,6 +67,7 @@ export function updateLinemen(m: Match, dt: number): void {
     const d = lineman(m, m.defense, i);
     if (!p.engaged || !pushing) {
       o.vx = o.vz = d.vx = d.vz = 0;
+      p.v = 0;
       return;
     }
     p.next -= dt;
@@ -68,15 +78,22 @@ export function updateLinemen(m: Match, dt: number): void {
       p.next = m.rng.range(0.45, 1.1);
       if (Math.abs(p.surge) > 0.75) m.emit({ type: "pads", a: o.id, b: d.id, power: Math.min(1, Math.abs(p.surge)) });
     }
-    const v = -s * p.surge * 0.8;
-    const before = p.x;
-    p.x = clamp(p.x + v * dt, Math.min(losX - s * 3.5, losX + s * 2.5), Math.max(losX - s * 3.5, losX + s * 2.5));
-    const moved = (p.x - before) / dt;
+    // Net drive over the pair's mass, against the cleats' hold on the turf.
+    const mass = o.mass + d.mass;
+    const force = -s * p.surge * LINE.drive;
+    p.v += ((force - LINE.hold * p.v) / mass) * dt;
+    const lo = Math.min(losX - s * 3.5, losX + s * 2.5);
+    const hi = Math.max(losX - s * 3.5, losX + s * 2.5);
+    const x = clamp(p.x + p.v * dt, lo, hi);
+    if (x !== p.x + p.v * dt) p.v = 0;
+    p.x = x;
     for (const [a, side] of [[o, -1], [d, 1]] as const) {
       a.x = p.x + side * s * LINE.gap * 0.75;
       a.z = p.z;
-      a.vx = moved;
+      a.vx = p.v;
       a.vz = 0;
+      a.ax = 0;
+      a.az = 0;
       // Locked up with the man across: the view draws the two of them driving into each other.
       a.blocked = 0.15;
       // Each lineman faces the other: the offense's way for its own, back the other way for the defence.
@@ -99,9 +116,15 @@ export function lineContact(m: Match): void {
   }
 }
 
+/**
+ * A lineman reaches out of his block for a carrier going past: he only
+ * sometimes gets a hand free, and then it is an arm tackle, held or
+ * broken by the carrier's momentum like any other.
+ */
 function grab(m: Match, l: Athlete, a: Athlete): void {
   l.tackleCd = 1;
-  // A strong carrier slips more of the big men's grabs.
-  if (dodging(a) || !m.rng.chance(TACKLE.linemanGrab * (1 - breakChance(statsOf(a), statsOf(l))))) return;
-  tackle(m, a, l);
+  if (dodging(a) || !m.rng.chance(TACKLE.linemanGrab)) return;
+  const hit = resolveHit(l, a, m.rng, LINE.grabWrap);
+  if (hit.down) tackle(m, a, l);
+  else a.stagger = Math.max(a.stagger, 0.25);
 }

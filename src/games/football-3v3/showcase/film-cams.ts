@@ -1,5 +1,6 @@
 import type { AthleteView, MatchView } from "../engine";
 import { CEREMONY_SPOT } from "../engine/ceremony";
+import { FIELD } from "../engine/field";
 import type { Vec } from "../render/camera/shots";
 import type { ShotCamera } from "./trailer";
 
@@ -11,11 +12,11 @@ export interface FilmCam {
 }
 
 /** The players the film follows, by id in the seeded game: the Storm's QB and the runner he hits. */
-const QB = 0;
-const CATCHER = 1;
-/** Later in the game the Storm's other runner jukes and the Blitz's corner buries him. */
-const JUKER = 2;
-const TACKLER = 8;
+export const QB = 0;
+export const CATCHER = 1;
+/** Later in the game he jukes again and the Blaze's corner buries him. */
+export const JUKER = 1;
+export const TACKLER = 7;
 
 const mix = (a: number, b: number, t: number) => a + (b - a) * t;
 const ease = (t: number) => t * t * (3 - 2 * t);
@@ -79,6 +80,21 @@ export function filmCam(camera: ShotCamera, view: MatchView, u: number, span: Sp
       const r = who(view, CATCHER);
       const dir = course(span, CATCHER);
       return { pos: around(r, dir, mix(2.5, 0.5, e), 4.8, 0.55), look: { x: r.x + dir.x * 0.8, y: 1.1, z: r.z + dir.z * 0.8 }, fov: 40 };
+    }
+    case "pylon": {
+      // On the turf beside the pylon, the scorer racing at the lens and over the goal line.
+      const r = who(view, CATCHER);
+      const pylon = { x: FIELD.goalX, z: Math.sign(r.z || -1) * FIELD.halfWidth };
+      const pos = { x: pylon.x + mix(2.6, 2.2, e), y: 0.32, z: pylon.z * 1.03 };
+      // A long lens while he is far, opening up as he arrives, so he stays big in the frame.
+      return { pos, look: { x: r.x, y: mix(1.05, 1.2, e), z: r.z }, fov: mix(22, 40, e) };
+    }
+    case "dance": {
+      // Low in the end zone, the scorer celebrating against the painted end zone and the crowd.
+      const r = who(view, CATCHER);
+      // He dances facing the end line, so the camera stands deep in the end zone looking back at him.
+      const dir = flat(1, -Math.sign(r.z || -1) * 0.6);
+      return { pos: around(r, dir, mix(3.6, 3.1, e), mix(-0.6, -0.9, e), 0.6), look: { x: r.x, y: 1.25, z: r.z }, fov: 40 };
     }
     case "hit": {
       // Down on the turf just ahead of the runner, the tackler flying in from behind him.

@@ -1,25 +1,18 @@
 import { updatePass } from "./catching";
-import { stepFlight, type Flight } from "./flight";
+import { stepFlight } from "./flight";
 import type { Match } from "./match";
 import { SNAP_TIME } from "./phases";
-import { BALL } from "./tuning";
 
 /** Where a carried ball sits: tucked at the hip, a little ahead of the body. */
 const CARRY_HEIGHT = 1.05;
 
-/** A ball on the turf bounces a few times and rolls to a stop. */
-export function bounce(f: Flight, dt: number): void {
-  if (Math.hypot(f.vel.x, f.vel.y, f.vel.z) < 0.05 && f.pos.y <= 0.12) return;
-  stepFlight(f, dt);
-  if (f.pos.y > 0.12) return;
-  f.pos.y = 0.12;
-  f.vel.y = Math.abs(f.vel.y) > 1 ? -f.vel.y * BALL.restitution : 0;
-  const k = f.vel.y === 0 ? Math.max(0, 1 - 3 * dt) : BALL.groundFriction;
-  f.vel.x *= k;
-  f.vel.z *= k;
-  f.spin *= k;
-}
-
+/**
+ * Moves the ball for a step. Held, it rides with the carrier. Snapped,
+ * it flies to the QB. A live pass checks every pair of hands it passes.
+ * Anything else that is free (a kick after its verdict, a pass that
+ * fell incomplete, a fumble) is just a ball: the physics carries it on,
+ * into the net, bouncing and rolling to a stop.
+ */
 export function updateBall(m: Match, dt: number): void {
   const b = m.ball;
   if (b.state === "held") {
@@ -38,8 +31,10 @@ export function updateBall(m: Match, dt: number): void {
     return;
   }
   if (b.state === "pass" && m.phase === "live") return updatePass(m, dt);
-  if ((b.state === "loose" || b.state === "pass") && b.flight) {
-    bounce(b.flight, dt);
+  // The kick phase flies its own ball; after the verdict it flies here.
+  if (b.state === "kick" && m.phase === "kick") return;
+  if (b.flight) {
+    stepFlight(b.flight, dt);
     b.pos = { ...b.flight.pos };
   }
 }

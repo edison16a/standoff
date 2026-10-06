@@ -58,7 +58,7 @@ export class NameTag {
     ctx.fillText(text, 30, h / 2 + 1);
     this.texture = new THREE.CanvasTexture(canvas);
     this.texture.colorSpace = THREE.SRGBColorSpace;
-    const material = new THREE.SpriteMaterial({ map: this.texture, sizeAttenuation: false, depthTest: false, transparent: true });
+    const material = new THREE.SpriteMaterial({ map: this.texture, sizeAttenuation: false, depthTest: false, transparent: true, toneMapped: false });
     this.sprite = new THREE.Sprite(material);
     this.sprite.center.set(0.5, 0);
     this.sprite.renderOrder = 20;

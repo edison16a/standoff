@@ -25,8 +25,8 @@ Every rating runs from 1 to 10 and changes play (`engine/build-effects.ts`, and 
 
 * **Speed** sets top speed.
 * **Agility** sets how sharply a player turns and how soon they can juke again.
-* **Power** sets how quickly a player gets going, how far a tackle reaches, and how often a ball carrier breaks a tackle that reached him or slips a lineman's grab. Only the stronger man breaks one, and never more than two in five.
-* **Hands** set how far from the body a pass can be caught, for receivers and for defenders picking it off.
+* **Power** sets how quickly a player gets going, how far a tackle reaches, how hard a tackler's grip holds, and a ball carrier's leg drive and balance, so a strong back runs through arm tackles and stays up through bumps (see The physics).
+* **Hands** set how far from the body a pass can be caught and how surely it is held, for receivers and for defenders picking it off, and how securely a carrier holds the ball in a big hit.
 * **Arm** sets the speed and spiral of a throw and how far the QB kicks.
 * **Cover** sets how wide a defender reads the throw: how far from the catch spot he jumps the route, how close to the ball's path he picks it off, and how often a computer defender knocks a pass down.
 
@@ -87,7 +87,7 @@ Everything is synthesised through the audio engine, with no crowd: the brass and
 
 **Admin shortcuts** (three quick taps on the settings gear), for the team with the ball: Touchdown, Field goal, Two point try and Win the game, which goes straight to the trophy presentation. They go through the real rules.
 
-**Browser tests** can set `window.__footballTest` before the page loads (development only): `lowGpu`, `quarterSeconds`, `target` and `catchUp`. The host session is on `window.__football` and a phone's on `window.__footballPhone`.
+**Browser tests** can set `window.__footballTest` before the page loads (development only): `lowGpu`, `fullPicture` (the full broadcast picture held at its top rung, to check the look in software drawing), `quarterSeconds`, `target` and `catchUp`. The host session is on `window.__football` and a phone's on `window.__footballPhone`.
 
 **Phone pages** fit one iPhone 16 screen: `node tools/phone-fit.mjs --games football-3v3` walks every layout.
 
@@ -104,13 +104,15 @@ Everything is synthesised through the audio engine, with no crowd: the brass and
 1. **Pick.** The QB picks throw, run or kick. A kick in range (58 yards or less) goes for the posts, anything longer is a punt. Ten seconds with no pick means throw. The defence can move while the offense decides.
 2. **Hike.** The QB has 5 seconds to hike. After that the ball is snapped anyway. Nobody on defence crosses the line before the snap. The rush starts at the snap.
 3. **Live.** The QB drops back and throws, or runs. Receivers run routes. Linemen crash together and push, and the defence slowly wins, so the pocket closes.
-4. **Whistle.** A tackle, stepping out, an incomplete pass, a dive landing, or a score.
+4. **Whistle.** A tackle, stepping out, an incomplete pass, a dive landing, or a score. A fumble stays live until someone picks it up, or until it goes out or lies dead, when the side that had it keeps it there.
 
 ### Throwing
 
-The throw stick draws an invisible aim line from the QB. The receiver nearest that line is the target and its ring lights up. Letting go throws. The throw leads the receiver's run and bends gently after a receiver who changes course, so a good throw does not miss. It can still be picked off: a defender standing in front of the target at the throw takes the ball, and a defender a person steers into the ball's path picks it off. A defender on Guard, or a computer defender, never jumps into the path.
+The throw stick draws an invisible aim line from the QB. The receiver nearest that line is the target and its ring lights up. Letting go throws. The throw is solved to lead the receiver's run, then leaves the hand a little off, as a real throw does: the arm sets how far, and a pass rusher in the QB's face makes it worse. From there it is a real ball in the air. Once it is up, the receiver reads it and his legs take him to meet it, a person's receiver too unless he pushes the stick well away.
 
-The QB throws once a play, with the ball in hand, and his accuracy is the same on every throw. He can shuffle back while he throws.
+Who gets it is decided where the ball meets the hands (see The physics). A defender sitting in front of the target at the throw reads it and breaks on the ball, and a defender a person steers can pick it off too. A computer defender only knocks passes down. A defender on Guard never plays the ball.
+
+The QB throws once a play, with the ball in hand. Moving or standing makes no difference to his aim. He can shuffle back while he throws.
 
 **The QB and Run.** As a passer the QB is clearly slower than everyone else, slowest just after the snap while he sets up, then a little quicker a few seconds in (`QB_PACE` in `engine/tuning.ts`). To take off he presses Run. From then on he is the runner for the rest of the play: he cannot throw or pitch, his phone switches to the runner's pad with Juke and Dive, and he moves at a normal runner's speed (`engine/qb-run.ts`). Crossing the line with the ball does the same. Computer QBs press Run too, when nobody is open and there is grass ahead, or when the read goes on too long. A QB brought down after pressing Run is tackled, not sacked.
 
@@ -123,18 +125,41 @@ On a run call one runner lines up beside the QB and a yard deeper, on the side w
 * **Juke.** The stick against the run picks the move: ahead or no stick is a 360 spin, back is a back move, across is a side step. Jukes slow the runner. There is a cooldown, and each juke in quick succession comes out slower and leaves the legs heavier.
 * **Dive.** A burst forward. A ball carrier is down where they land. A receiver can dive for a catch with a longer reach.
 * **Rush.** A short burst that pushes through the line far more easily.
-* **Tackle.** A lunge, only when the ball carrier is close enough. A runner mid juke makes it miss, and the tackler stays down for a while.
+* **Tackle.** A lunge, only when the ball carrier is close enough. A runner mid juke makes it miss, and the tackler stays down for a while. Otherwise the two bodies collide and momentum decides (see The physics).
 * **Guard.** Held, the defender tails the nearest receiver on their own. Trailing like that never puts them in front of the ball.
 
-Everyone runs with weight: a player gets going over a couple of seconds, curves on a wide radius at speed, and needs room to stop. Heavier players get going slower.
+Everyone runs with weight: a player gets going over a couple of seconds and needs room to stop, and heavier players get going slower. A hard cut at speed is a plant and cut: speeding up, braking and turning share the grip of the cleats, so the player brakes and turns at once.
 
 ### Kicking
 
-Two meters. A marker sweeps left and right: stop it in the green for a straight kick. Then a marker climbs and falls: stop it high for a long one. Field goals tumble end over end; punts spiral and bounce.
+Two meters. A marker sweeps left and right: stop it in the green for a straight kick. Then a marker climbs and falls: stop it high for a long one. Field goals tumble end over end and can clang off the posts, in or out; punts spiral and take the hops of a real football.
+
+## The physics
+
+Everything that happens to the ball and the bodies comes from the simulation (`engine/physics/`, `engine/catch/`, `engine/hit.ts`, `engine/fumble.ts`). It is deterministic: the same seed and inputs play the same.
 
 ### The ball
 
-A spiral spins about its long axis, its nose tips over to follow the arc, and it wobbles a little around that line, more for a weak arm or a throw under pressure. Drag is lower nose first than side on, so a tight spiral carries farther than a tumbling kick.
+* **A real football.** A prolate spheroid 28 cm long and 17 cm across, 0.42 kg, with the moments of inertia of a leather shell. It is a rigid body: position, velocity, orientation and angular momentum, stepped 480 times a second.
+* **The air.** Drag rises from nose on to side on. Lift pushes toward where the nose points off the path. The air also tries to turn the ball side on, and that is what a spiral's spin turns into a slow circling of the nose round the path: a good spiral keeps its nose along its arc and drifts a little to one side. Too little spin or too much wobble and the gyroscope cannot hold it: the ball ducks, turns side on and dies short.
+* **Kicks** tumble end over end with the top going back. A kick off the green also picks up a twist, so it wobbles.
+* **Bounces.** The contact is the lowest point of the spheroid. Landing on a tip, the bounce kicks the ball into a spin and up; landing on its side, it skids and rolls. A tiny change of angle sends it another way, as a real football does. Grass slows it and it settles.
+* **The posts and the net.** The uprights and the crossbar are solid steel tubes, so a kick can clang off one and still go through, or bounce back out. A net behind each goal post swallows the kicks that clear. The ball keeps flying after the whistle, into the net or down the field.
+
+### Hands
+
+* **The reach** is a capsule round each player from the hips to a leap over the head, as wide as the arms reach out, wider for good hands, stretched along the turf in a dive.
+* **The catch** happens where the ball passes nearest the hands. The odds come from how it arrives: into the chest or at full stretch, soft or a bullet, seen coming or over the shoulder, with a defender's hands in there or not, and the hands rating. A pitch is a soft toss and is rarely dropped.
+* **Drops and tips.** A ball the hands do not hold is a collision with them: it pops up off soft hands, or is slapped down by a swat, and stays live. Anyone can catch the tip, the receiver too, and every player reads the new path.
+
+### Bodies
+
+* **Running.** The legs push hard from a standstill and fade to nothing at top speed. The cleats' grip is a friction circle, so a hard cut brakes and turns at once.
+* **Jukes** push off a planted foot as hard as the cleats hold (agile players harder), then the stride bends back into the run.
+* **Tackles.** A lunging tackler and the carrier meet in a hard, sticky collision along the line between them, so momentum (mass times speed) is traded and the lighter or slower man is knocked back. A change of speed past the carrier's balance is a big hit: he goes down. Otherwise the tackler's grip, strongest square on and weakest chasing from behind, has to hold the momentum of the carrier's run and his leg drive. A big back at full speed runs through arm tackles; a speedster does not. A broken tackle leaves the carrier shaken for a moment.
+* **Fumbles.** A big hit can jar the ball loose, more the bigger the hit, less with strong hands. The ball flies out with the hit and bounces as a real ball; the first player to it scoops it up.
+* **Blocks.** Each pair of linemen pushes as one body with both men's mass: every surge is a new balance of leg drive, and the pair lurches and settles. A runner who crashes into them shoves them by his momentum and is stopped.
+* **Bumps and piles.** Players who run into each other trade momentum; a big jolt shakes a player's footing. Players on the ground settle apart into a pile and men on their feet step over them.
 
 ## Computer players
 
@@ -142,13 +167,13 @@ Difficulty comes from `src/games/kit/difficulty`: Easy (the default), Medium, Ha
 
 * The QB drops back, reads the receivers, throws to the most open one, and avoids throwing into a defender sat in front. With nobody open and room ahead, or when the read drags on, it presses Run and takes off.
 * Receivers run slants, gos, outs, curls, drags and posts, and go to meet the ball.
-* Defenders cover a receiver from over the top. A spare one rushes the QB on about half the plays and sits deep as a safety on the rest. A computer defender next to a pass can knock it down, but never catches it. Once someone has the ball they chase and tackle.
+* Defenders cover a receiver from over the top. A spare one rushes the QB on about half the plays and sits deep as a safety on the rest. A computer defender next to a pass can knock it down; only one sitting in front of the receiver at the throw reads it well enough to catch it. Once someone has the ball they chase and tackle.
 * It calls a run on about one play in four, and on half of them with three yards or less to go.
 * On fourth down the bot kicks, a field goal in range or a punt, unless it is fourth and short past midfield.
 
 ## The engine
 
-`engine/` is plain TypeScript with no drawing or sound. It steps at a fixed rate (`STEP`, 60 a second) and plays the same way from the same seed and inputs.
+`engine/` is plain TypeScript with no drawing or sound. It steps at a fixed rate (`STEP`, 60 a second) and plays the same way from the same seed and inputs. Inside a step the ball runs in 8 fixed sub steps and the bodies in 2.
 
 ```ts
 const match = new Match({ entries: buildLineup(signups), seed, level: "easy" });
@@ -163,14 +188,14 @@ const events = match.drainEvents(); // hikes, throws, catches, tackles, kicks, s
 const pad = seatStatus(match, seat); // which controls a phone should show
 ```
 
-* `buildView` gives plain numbers: players with their action and its clock, the ball with its axis and spin, the lines of scrimmage and first down, down and distance, the kick meters, the clock and score. `blendViews` mixes two for slow motion replays.
+* `buildView` gives plain numbers: players with their action and its clock and their acceleration, the ball with its orientation, axis and spin and the last thing it hit, the lines of scrimmage and first down, down and distance, the kick meters, the clock and score. `blendViews` mixes two for slow motion replays.
 * `match.lastPass` keeps the last throw's release, speed and spin for the touchdown replay.
 * Sticks come in field space. The host turns a phone's stick into field space for its camera.
 * The kick meters run from `meterAim` and `meterPower`. A phone can draw them itself from `seatStatus(...).meter` and send its own reading with the press.
 * A phone that drops is played by the computer with `setAuto`.
 * `admin.ts` has the shortcuts for the host's admin panel: `adminTouchdown`, `adminFieldGoal` and `adminTwoPoint`. They go through the real rules.
 
-Files: `field` and `downs` for the field and the rules of downs, `motion` and `body` for running, `juke`, `tackle`, `guard` and `linemen` for contact, `flight`, `aim`, `passing` and `catching` for the ball in the air, `qb-run` for the QB's pace and the Run button, `run-play` for the run call and the pitch, `kick` and `kick-flight` for kicking, `whistle`, `score` and `phases` for how plays end and what comes next, `build-effects` for what each rating does, `ceremony` for the trophy presentation, `bots/` for the computer players.
+Files: `field` and `downs` for the field and the rules of downs, `motion`, `body` and `bodies` for running, `juke`, `tackle`, `hit`, `collide`, `guard` and `linemen` for contact, `fumble` for a loose ball, `physics/` for the rigid ball, the air, the turf, the posts and the net, `flight`, `aim`, `throw-error`, `passing`, `catching` and `catch/` for the ball in the air and the hands, `qb-run` for the QB's pace and the Run button, `run-play` for the run call and the pitch, `kick` and `kick-flight` for kicking, `whistle`, `score` and `phases` for how plays end and what comes next, `build-effects` for what each rating does, `ceremony` for the trophy presentation, `bots/` for the computer players.
 
 ## Drawing the game
 
@@ -186,29 +211,69 @@ const board = scoreboard(view); // for <Scoreboard board={board} />
 
 ### The stadium
 
-* **Field.** One painted texture: grass mowed in 5 yard bands, yard lines, hash marks at every yard, the numbers 10 to 50 facing their sideline, both end zones in team colours with the team name, a star at midfield and the white border. The layout is plain data in `field/marks.ts`.
-* **Goal posts.** Yellow slingshot posts on both end lines, with the crossbar and uprights where the engine scores kicks, and a ribbon on each tip.
-* **Around it.** Team benches, a bowl of stands, a crowd of thousands in team colours that bounce harder after a score, four light towers and a night sky.
+* **Turf.** One shader on one plane (`field/turf.ts`). Grass from a baked blade texture read at two scales, so it never shows a repeat, with blade normals up close, mowing stripes every five yards that swap light and dark with the camera's side, and worn, drier grass between the hashes. The paint is maths per pixel (`field/turf-paint.glsl.ts`): yard lines, hash marks, the six foot border, the coaches' box, the star at midfield and both end zones in team colour with the team name. The numbers and names come from distance field atlases (`field/sdf.ts`, `field/paint-glyphs.ts`), so they stay sharp from the turf to the roof and the lines never flicker in the distance.
+* **Goal posts and nets.** Yellow slingshot posts on both end lines, with the crossbar and uprights where the engine scores kicks, and a ribbon on each tip.
+* **Sidelines.** Each team's area behind its sideline: a mat, two rows of benches with team coloured backs, a branded backdrop, coolers and a heater. Orange pylons at the corners of both end zones and the yard markers along the far side (`field/sideline.ts`).
+* **The bowl.** Two decks of seats swept round a rounded rectangle (`field/bowl.ts`, `field/ring-strip.ts`): the lower deck from a padded wall, an LED rail with the team names running round, a row of lit suites, the upper deck over them and a roof canopy. Each team's fans fill its own side. The whole building is three draw calls (`field/stands.ts`).
+* **Crowd.** Some twenty thousand fans in one instanced draw, mostly in their side's colours, bouncing in the vertex shader and harder after a score. No crowd noise.
+* **Floodlights.** Fourteen banks of lamps hang under the roof's inner edge, every lamp aimed at its own spot on the field (`field/light-rig.ts`, `field/lamp-banks.ts`). The faces burn far over white so the bloom catches them, and each bank throws a soft glare with a streak into the lens, strongest when it faces the camera (`field/glare.ts`).
+* **Sky.** A hazy glow at the horizon over the open roof, deep navy overhead, faint cloud lit from below and a few stars (`field/sky.ts`).
 * **TV lines.** The blue line of scrimmage and the yellow first down line sit on the grass under the players. They glide to the new spot between plays and hide at goal to go.
+
+### Light and the picture
+
+* **Light.** Physically based materials, linear light, ACES filmic tone mapping and sRGB out. Two key lights stand in for the banks over each sideline, both casting soft shadows from every player and the ball, so a player stands in two faint crossed shadows the way he does under real floods (`lighting/floodlights.ts`). The shadow boxes follow the action and snap to whole texels, so shadows never shimmer. A sky fill from above and a green bounce off the turf fill the rest.
+* **Reflections.** An environment map built once from the stadium's own shapes (`lighting/stadium-env.ts`): every bank where it really hangs, the suites' glow, the turf below. Helmets and visors mirror the lights the camera sees overhead.
+* **Contact shadows.** A soft dark blob under each player's body and feet and under a loose ball (`lighting/contact-shadows.ts`), one instanced draw, so players sit on the grass even where the shadow map is coarse.
+* **The finish.** The scene draws into a multisampled half float target, then gets a subtle bloom on the lights and highlights, the filmic curve, a broadcast grade and a light vignette (`post/`). Depth of field comes on only for replays and the trophy presentation, focused on the subject of the shot (`broadcast-look.ts`). The grade eases between the live look, the replay look and the ceremony look, and changes at once on a cut.
 
 ### The players
 
-* **Looks.** A jointed body with a helmet, shoulder pads under a printed jersey with big numbers front and back and the player's own name across the back (shrunk to fit a long one; the computer's players wear none), pants with a stripe, socks and cleats. Size follows height and weight. Each build has its own touches on top of its look: mask style (open, cage or tinted visor), sleeves, towels, neck rolls, locks under the helmet and eye black. Linemen share one big build.
-* **Animation.** Every frame a figure picks a target pose from the engine's view, eases toward it, then stands itself on the turf: its lowest point touches the grass and its hips sit over the player's spot. So stances, dives and tackles land right without hand tuned heights. Action poses run on the engine's own action clock, so the body and the ball agree.
-* **Moves.** Three point stances for linemen, the center's snap, the QB in the shotgun, receivers in a two point stance, the drop back, the throwing motion, running with the ball tucked under the arm, cuts, the spin, back move and side step, dives, tackle lunges, lying on the ground, rolling over and getting up, linemen locked together driving their legs, and reaching for a pass. Strides match the ground speed so the feet do not skate.
+Each player is one skinned body (`render/models/`): a smooth surface lofted through cross sections and bent by fifteen bones, so elbows, knees and the waist fold without gaps. The helmet rides the neck bone.
+
+* **Build.** Real proportions from the player's height and weight: a lean receiver, a thick back, a lineman with a gut. Arms, legs and the torso swell and taper on smooth curves through their sections (`models/loft.ts`). Linemen share one big build and differ in skin.
+* **Pads and jersey.** The torso is the jersey stretched over shoulder pads: a narrow waist tucked under the belt, the hard lower edge of the pads, a cap over each shoulder, a flat shelf up to a V neck with a dark lining. The print (`models/jersey-print.ts`) puts big numbers on the chest and back, the player's own name across the shoulders (shrunk to fit a long one; the computer's players wear none), numbers on the sleeves, stripes at the cuffs, mesh side panels, seams, a trim collar and the team mark under the V, each drawn at its true size on the body. A knit normal map gives the mesh its little holes and the cloth a soft sheen.
+* **Below the belt.** Tight pants over thigh and knee pads with a stripe down the outside and the hem under the knee, socks banded in the trim, and cleats: a sculpted upper with laces and a side stripe on a sole plate with studs. Skill players spat white tape over their ankles.
+* **Hands.** Gloves with a tacky palm, four fingers curled in two joints, a thumb and a wrist strap over white tape.
+* **Helmets.** A clear coated shell whose edge runs along the brim, down each jaw flap and round the back of the neck, with a rib over the crown, a dark padded lining and rubber trim (`models/helmet-shell.ts`). Its paint (`models/helmet-paint.ts`) lays the stripe and pinstripes over the crown, the ear holes, and the team logo on both sides, facing forward: a bolt for Storm, a flame for Blaze. The shells mirror the floodlights. Masks are bent steel tubes: two bars and an upright for the QBs and receivers, a full cage for the linemen and the hitters, a tinted visor on the visor builds, and a chin strap with a cup and snaps.
+* **Faces.** One smooth head inside the shell with a brow, a nose, lips and eyes that catch the light, shaded under the brim, with eye black on the builds that wear it. Locks hang from under the back of the shell.
+* **Touches.** Each build keeps its own mask, sleeves (bare, short, or a long compression sleeve), towel, neck roll, locks, eye black and spats, so the six read apart at a glance.
+
+### How the players move
+
+Every frame a figure picks a target pose from the engine's view and eases toward it, then stands itself on the turf: its lowest point touches the grass and its hips sit over the player's spot. Action poses run on the engine's own action clock, so the body and the ball agree. Then the legs reach for any planted feet.
+
+* **Strides.** Walking, jogging and sprinting are one blended cycle on curves taken from real strides (`anim/strides.ts`): a heel strike and roll walking, a stance knee that takes the landing, the heel folded up behind and the knee driven high at a sprint, and a moment in the air between steps. The cadence climbs from under two steps a second walking to over four sprinting. A backpedal plays the stride backward in short, low steps.
+* **Counter rotation.** The pelvis turns with the leading leg and drops on the swinging side. The chest turns back against it and the arms pump against the legs.
+* **Planted feet.** Each foot locks to the turf where it lands and stays there for its whole stance (`anim/foot-lock.ts`), and the leg reaches for it with the foot flat on the grass (`anim/leg-ik.ts`, `figures/feet.ts`). As the body moves past, the heel rolls up onto the toes. Standing players keep both feet down and step them round when they turn or drift. A juke holds its push off foot still while the body drives away from it. Dives, falls and set moves leave the feet free.
+* **Momentum.** The body leans into a push, sits back on bent knees with the arms out front when braking, in quicker and shorter steps, banks into curves and plants the outside leg wide on a hard cut (`anim/lean.ts`). The engine's acceleration drives all of it.
+* **Contact.** A hit is a change of speed far beyond what legs make: the torso, head and arms whip with it on a spring and settle back (`anim/reactions.ts`). A shaken player wobbles on loose knees with his arms out until he finds his footing. Blocking linemen sit their hips back so their pads meet at the hands.
+* **Ball moves.** Every one follows through. The pitch is an underhand toss with both hands, the body turned to the back and the hands carrying on up after the ball. A catch is pulled into the chest with the eyes on it, then tucked away under the arm.
+* **Idle.** Nobody stands frozen: the chest rises and falls, the weight drifts from leg to leg with the free knee unlocking, and the head looks about. Set stances breathe too.
+* **Moves.** Three point stances for linemen, the center's snap, the QB in the shotgun, receivers in a two point stance, the drop back, the throwing motion, running with the ball tucked under the arm, cuts, the spin, back move and side step, dives, tackle lunges, lying on the ground, rolling over and getting up, linemen locked together driving their legs, and reaching for a pass.
 * **The throw.** The QB closes the chest with the ball by the right ear and the left shoulder at the target, steps, turns through, and finishes with the hand across the body by the left hip.
 * **The line.** From the snap to the whistle each pair of linemen is locked together, low and driving. The engine marks them `blocked` for that, so the drawing never guesses.
 * **Reaching.** The target and nearby defenders go up for a pass. The passer's own linemen leave it alone.
 * **Rings.** A bold magenta ring with a white edge pulses under the receiver the throw stick is on (or the back on a run call), and stays lit on the receiver the ball was thrown to until it arrives. No team or seat wears magenta, so it is never mistaken for another ring. A thin ring in team trim marks each player a person controls.
-* **The ball.** A laced football that follows the engine's flight: its long axis, the wobble and the spiral spin, or the tumble of a kick. Held, it sits in the carrier's hands.
+* **The ball.** A laced football drawn exactly as the engine's rigid body is turned: the spiral's spin, a duck's wobble, a kick's tumble. A fast spin smears the laces round the ball the way a camera sees it, and a hard knock off the turf or the posts squashes it along the hit for a moment. Held, it sits in the carrier's hands.
+* **The posts and the nets.** A kick off the steel sets the goal post shaking and dying away. The net behind each goal post is thin dark cord. It rises for kicks and drops away for the rest of play, and it bulges where a kick hits it and swings back.
 * **Touchdowns.** The scorer spikes it if that is their style, and the ball bounces away. Everyone else celebrates their own way: a dance, a flex, a salute, a leap or a point to the crowd. At the end the winners celebrate and the losers hang their heads.
+
+### Frame rate
+
+* **Shared shapes.** Every kind of body, the helmet shell, each team's masks and the visor are built once and shared (`models/athlete-shapes.ts`), so a player rebuilt for a new name keeps his body. A player is three draws for the body (skin, gear and jersey) and two for the helmet.
+* **Levels of detail.** A player who fills less than about a fifth of the picture's height swaps to a lighter body and helmet. Close up a body is about 23 thousand triangles and a helmet about 7 thousand; far away about 8 and 3 thousand.
+* **Automatic quality.** Where the browser can time the graphics card, frames over 12 ms walk down a ladder (`quality/ladder.ts`, `quality/governor.ts`): first the second set of shadows goes, then a little resolution, then half the multisampling, then the bloom, the upper deck's crowd and the rest of the multisampling, down to six tenths of full resolution. It climbs back once there is room. Where the card cannot be timed it watches the frame pace instead (`quality/pace.ts`). Software graphics (the `lowGpu` test hook) skip the finish and the shadows and always get the light bodies, half size textures and no sheen or skin glow.
+* **The venue's cost.** The building is three draws, the floodlights four, the crowd one and the turf one. Textures: the grass tile, two small distance field atlases, the LED rail and the suites.
+* **Measured** in Chromium with software WebGL, a game from the broadcast camera at 1920 by 1080 on the top rung: 220 draw calls and 890 thousand triangles a frame across every pass, with both shadow maps, the finish and the crowd. Before the new stadium, at 1600 by 900: 140 draw calls with shadows and 650 thousand triangles a frame, of which the twelve players are 270 thousand across both passes (1.1 million before the far bodies). Animating all twelve, feet included, takes about 0.9 ms of the CPU a frame. Textures: one 1024 by 768 jersey print per player and one 1024 square helmet paint per team.
 
 ### The camera
 
 * **Behind the play.** High behind the team with the ball, looking downfield. Before the snap and while the QB is in the pocket it keeps the whole formation in the picture, receivers split wide included: `camera/fit.ts` backs it straight up its line of sight until they fit, so a narrow screen sees the same players as a wide one. Once someone runs with the ball it comes in tighter behind them. It backs up and rises a little as a pass goes deep, turns round after a turnover and glides rather than jerks.
 * **Phone sticks.** `renderer.director.groundForward()` is the way up the screen on the ground, in field space, for turning a phone's stick into a field direction that matches the camera.
-* **Kicks.** Low behind the kicker through the posts, then up and after the ball.
+* **Kicks.** Low behind the kicker through the posts, then up and after the ball, staying with it after the whistle as it flies on into the net.
 * **Touchdowns.** A slow orbit round the scorer. At the final whistle, a wide orbit of the winners until the trophy presentation takes over with its own shots.
+* **Broadcast feel.** The camera's spot and its aim ride critically damped springs (`camera/broadcast.ts`), so moves ease in and out like a heavy broadcast head and never overshoot. The lens leads the ball a little the way it is moving, and the zoom breathes with the play: a touch tighter while the teams set, opening as the ball moves fast or flies deep. The formation is fitted after the zoom, so it is never cropped.
 * A big hit shakes it a little. Any move that would sweep across the field cuts instead, like the lobby giving way to the game or the ball spotted far downfield.
 
 ### The scoreboard
@@ -217,10 +282,10 @@ const board = scoreboard(view); // for <Scoreboard board={board} />
 
 ### The showcase
 
-`showcase/` makes the home screen media from a seeded game of computer players (seed 11) and its trophy presentation, drawn by the real renderer. `reel.ts` records every still of the game, so any moment can be shown at any speed and from any camera.
+`showcase/` makes the home screen media from a seeded game of computer players (`SHOWCASE_SEED` in `scene.ts`) and its trophy presentation, drawn by the real renderer. `reel.ts` records every still of the game, so any moment can be shown at any speed and from any camera.
 
-* The loop is a wordless eight second trailer (`trailer.ts`, cameras in `film-cams.ts`). The QB winds up and throws in slow motion from low in front of him. A camera rides the spiral. The receiver catches it, then side steps a diving tackler. A corner flies in and buries a runner on a juke, deep in slow motion. The captain lifts the trophy. The film runs in a circle, so its last frame cuts straight into its first and the clip loops with no seam.
-* The icon is a cover: the runner in the big hit shot drives straight at the viewer with the ball, a beat before contact, the tackler flying in over his shoulder, from low on the turf under the FOOTBALL 3v3 logo. The still turns up the warm key light, so his front reads at a glance. The poster is the diving tackler reaching for the receiver as he leaps clear.
+* The loop is a wordless eight second trailer (`trailer.ts`, cameras in `film-cams.ts`). The QB winds up and throws in slow motion from low in front of him. A camera rides the spiral. The receiver catches it and side steps a diving tackler. A camera on the turf by the pylon watches him race over the goal line with the defence chasing, then he dances in the end zone. Later the corner flies in and buries the same receiver on a juke, deep in slow motion. The captain lifts the trophy. The film runs in a circle, so its last frame cuts straight into its first and the clip loops with no seam.
+* The icon is key art: the runner drives at the viewer with the ball, a beat before contact, the tackler diving flat out beside him, from low on the turf under the FOOTBALL 3v3 logo. The still turns up the warm key light, so his front reads at a glance. The poster is the same hit from the trailer's side camera, the corner in the air reaching for the runner with the goal posts behind them.
 * `film-lights.ts` dims the stadium's fill and adds a hard rim light and a warm key that follow the camera, and the page grades the picture with more contrast and a vignette.
 
 `trailer.test.ts` fails if an engine or bot change moves these moments, as a reminder to film again. To film them, with the dev server running:
@@ -229,7 +294,7 @@ const board = scoreboard(view); // for <Scoreboard board={board} />
 node tools/media/capture.mjs football-3v3 --url http://localhost:3000 --ffmpeg /path/to/ffmpeg
 ```
 
-For development: `?t=<seconds>` holds the trailer at that moment, and on a still `window.__fbHold(seconds)` moves the hold, for a review script. `?lab=<move>` shows the animation lab, where all six builds do one move on a loop next to a pair of linemen. The moves are idle, run, tuck, ready, throw, kick, spin, back, side, dive, lunge, down, tackled, celebrate, spike, stance, block and catch. A spin turns the whole body round, as the engine does in a game.
+For development: `?t=<seconds>` holds the trailer at that moment, and on a still `window.__fbHold(seconds)` moves the hold, for a review script. `?lab=<move>` shows the animation lab, where all six builds do one move on a loop next to a pair of linemen. The moves are idle, run, tuck, ready, throw, kick, spin, back, side, dive, lunge, down, tackled, celebrate, spike, stance, block and catch. A spin turns the whole body round, as the engine does in a game, and runners really run, round a loop, so their feet plant. `cam=x,y,z`, `look=x,y,z` and `fov` move the lab's camera for close looks. `?game=<seconds>` plays the seeded game from that moment through the broadcast camera: `speed=0` holds it, and `speed=step` moves it only when a script calls `window.__fbStep(frames)`, a thirtieth of a second a frame. `follow=<id>` tracks one player close from the sideline.
 
 ## Tests
 

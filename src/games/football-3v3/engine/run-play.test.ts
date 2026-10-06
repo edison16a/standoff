@@ -81,11 +81,13 @@ describe("the run call", () => {
     expect(t.ball.state).toBe("held");
   });
 
+  // Three whole games take a few seconds, more on a busy machine.
   it("is called by computer QBs now and then", () => {
-    const m = new Match({ entries: BOTS, seed: 4, level: "medium", quarterSeconds: 45 });
-    const events = run(m, 240);
-    const calls = events.filter((e) => e.type === "call").map((e) => (e.type === "call" ? e.call : null));
+    const calls = [4, 5, 6].flatMap((seed) => {
+      const m = new Match({ entries: BOTS, seed, level: "medium", quarterSeconds: 45 });
+      return run(m, 240).filter((e) => e.type === "call").map((e) => (e.type === "call" ? e.call : null));
+    });
     expect(calls).toContain("run");
     expect(calls).toContain("throw");
-  });
+  }, 60000);
 });

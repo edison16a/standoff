@@ -25,6 +25,10 @@ export function buzzFor(event: MatchEvent, m: Match): [number, BuzzKind][] {
       return one(event.id, "catch");
     case "intercept":
       return [...one(event.id, "pick"), ...one(event.from, "tackled")];
+    case "fumble":
+      return one(event.id, "tackled");
+    case "recover":
+      return one(event.id, "pick");
     case "tackle":
       return [...one(event.by, "tackle"), ...one(event.id, "tackled")];
     case "kick":

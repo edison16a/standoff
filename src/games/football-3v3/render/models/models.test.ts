@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { describe, expect, it } from "vitest";
 import { BUILD_IDS } from "../../builds";
-import { BALL_HALF, BALL_RADIUS, orientBall, profile } from "./football";
+import { BALL_HALF, BALL_RADIUS, footballGeometry, laceBlurGeometry, orientBall, profile, radiusAt } from "./football";
 import { buildFor, buildKit, linemanKit } from "./kit";
 
 describe("the football", () => {
@@ -10,6 +10,20 @@ describe("the football", () => {
     expect(p[8]![0]).toBeCloseTo(BALL_RADIUS);
     expect(p[0]![0]).toBeLessThan(0.01);
     expect(p[16]![1]).toBeCloseTo(BALL_HALF);
+  });
+
+  it("keeps the laces and stripes down on the leather", () => {
+    for (const g of [footballGeometry(), laceBlurGeometry()]) {
+      const p = g.getAttribute("position");
+      let worst = 0;
+      for (let i = 0; i < p.count; i++) {
+        const off = Math.hypot(p.getX(i), p.getZ(i)) - radiusAt(p.getY(i));
+        worst = Math.max(worst, off);
+      }
+      // A lace stands a few millimetres proud, never a centimetre off the ball.
+      expect(worst).toBeLessThan(0.008);
+      g.dispose();
+    }
   });
 
   it("lays its long axis along the flight and rolls about it", () => {

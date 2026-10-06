@@ -1,5 +1,6 @@
 import { statsOf } from "./body";
-import { breakChance } from "./build-effects";
+import { popBall } from "./fumble";
+import { resolveHit } from "./hit";
 import { dodging } from "./juke";
 import type { Match } from "./match";
 import { endPlay } from "./whistle";
@@ -38,14 +39,18 @@ export function pressTackle(m: Match, a: Athlete, carrier: Athlete): boolean {
   return true;
 }
 
-/** Brings the carrier down: the play is over where they fall. */
-export function tackle(m: Match, carrier: Athlete, by: Athlete): void {
+/**
+ * Brings the carrier down: the play is over where they fall, unless the
+ * hit jarred the ball out, when it is a live fumble instead.
+ */
+export function tackle(m: Match, carrier: Athlete, by: Athlete, fumble: { x: number; z: number } | null = null): void {
   const sack = carrier.role === "qb" && carrier.team === m.offense && !m.play?.passed && !m.play?.qbRun;
   knockDown(carrier, 1.5, "tackled");
   if (by.role !== "lineman") knockDown(by, 1.2, "tackler");
   by.stats.tackles++;
   if (sack) by.stats.sacks++;
   m.emit({ type: "tackle", id: carrier.id, by: by.id, sack });
+  if (fumble && m.carrier() === carrier) return popBall(m, carrier, fumble);
   endPlay(m, sack ? "sack" : "tackle");
 }
 
@@ -64,8 +69,10 @@ function home(a: Athlete, carrier: Athlete, dt: number): void {
 }
 
 /**
- * Carries a lunge through. Reaching the carrier mid lunge tackles them,
- * unless they are in the middle of a juke, which leaves the tackler on
+ * Carries a lunge through. Reaching the carrier mid lunge is a collision
+ * settled by momentum (hit.ts): a big hit or a grip that holds brings
+ * him down, a stronger run breaks it and he stumbles on. A carrier in
+ * the middle of a juke is not there to hit, which leaves the tackler on
  * the ground for a while. A lunge at nothing ends on the ground too.
  */
 export function updateLunge(m: Match, a: Athlete, dt: number): void {
@@ -79,16 +86,22 @@ export function updateLunge(m: Match, a: Athlete, dt: number): void {
   // Early in the lunge the arms still reach after a runner who keeps going, but not after a juke.
   if (carrier && carrier.team !== a.team && act.t < 0.25 && !dodging(carrier)) home(a, carrier, dt);
   if (m.phase === "live" && carrier && carrier.team !== a.team && act.t > 0.04 && dist2(a, carrier) < TACKLE.contact) {
-    // A juke makes the lunge miss; a stronger carrier may run straight through it.
-    if (dodging(carrier) || m.rng.chance(breakChance(statsOf(carrier), statsOf(a)))) {
-      knockDown(a, TACKLE.missedDown, "missed");
-      m.emit({ type: "missedTackle", id: carrier.id, by: a.id });
-    } else {
-      tackle(m, carrier, a);
+    if (dodging(carrier)) return missed(m, a, carrier);
+    const hit = resolveHit(a, carrier, m.rng);
+    if (!hit.down) {
+      // He runs through it, shaken.
+      carrier.stagger = Math.max(carrier.stagger, 0.3 + Math.min(0.3, hit.dv * 0.1));
+      return missed(m, a, carrier);
     }
+    tackle(m, carrier, a, hit.fumble ? hit.n : null);
     return;
   }
   if (act.t >= act.dur) knockDown(a, TACKLE.whiffDown, "whiff");
+}
+
+function missed(m: Match, a: Athlete, carrier: Athlete): void {
+  knockDown(a, TACKLE.missedDown, "missed");
+  m.emit({ type: "missedTackle", id: carrier.id, by: a.id });
 }
 
 /** A dive: a burst forward and onto the ground. A ball carrier who dives is down where they land. */

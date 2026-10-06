@@ -82,7 +82,13 @@ export class SoundDirector {
         return music.sting("sink");
       case "incomplete":
       case "breakUp":
+      case "tip":
+      case "fumble":
         return sfx.bounce();
+      case "recover":
+        return sfx.catchBall();
+      case "doink":
+        return sfx.clang(event.power);
       case "whistle":
         return sfx.whistle(event.end === "touchdown" || event.end === "safety" ? "score" : "dead");
       case "firstDown":

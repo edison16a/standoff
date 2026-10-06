@@ -4,8 +4,11 @@ import { applyPose } from "../anim/apply";
 import { aheadSpeed, choosePose, type Chosen, type PoseScene } from "../anim/choose";
 import { strideLength } from "../anim/gait";
 import { approach, neutral, type Pose } from "../anim/pose";
-import { buildBody, type Rig } from "../models/body";
+import { Jolt, wobble } from "../anim/reactions";
+import type { Lod } from "../models/athlete-shapes";
+import { buildBody, type Rig, type Wardrobe } from "../models/body";
 import type { KitSpec } from "../models/kit";
+import { Feet } from "./feet";
 
 /** A spot on a joint that can touch the turf, and how far the body sticks out past it. */
 interface Contact {
@@ -29,32 +32,44 @@ export class Figure {
   readonly rig: Rig;
   readonly kit: KitSpec;
   private readonly pose: Pose = neutral();
+  /** The eased pose with this frame's jolts and wobbles on top, as drawn. */
+  private shown: Pose = neutral();
   private readonly contacts: Contact[];
+  private readonly feet = new Feet();
+  private readonly jolt = new Jolt();
+  /** Acceleration along the facing and to the left, eased over a tenth of a second. */
+  private push = 0;
+  private turn = 0;
+  /** Seconds since this player took the ball in his hands, or null without it. */
+  private secured: number | null = null;
   private readonly hipsAnchor: THREE.Object3D;
   private phase = 0;
   private hand: Chosen["hand"] = "R";
   private readonly seed: number;
 
-  constructor(kit: KitSpec, material: THREE.Material, readonly id: number) {
+  constructor(kit: KitSpec, wardrobe: Wardrobe, readonly id: number) {
     this.kit = kit;
-    this.rig = buildBody(kit, material);
+    this.rig = buildBody(kit, wardrobe);
     this.seed = id * 1.37;
-    const s = kit.height / 1.85;
     const r = this.rig;
+    const d = r.dims;
+    const H = d.height;
     const anchor = (parent: THREE.Object3D, x: number, y: number, z: number, radius: number): Contact => {
       const at = new THREE.Object3D();
       at.position.set(x, y, z);
       parent.add(at);
       return { at, radius };
     };
+    // The heel and the toe of each cleat, the knees, hands and elbows, the seat, the pads and the helmet.
+    const sole = -d.ankleY;
     this.contacts = [
-      anchor(r.ankleL, 0, -0.03 * s, 0.05 * s, 0.05 * s), anchor(r.ankleR, 0, -0.03 * s, 0.05 * s, 0.05 * s),
-      anchor(r.ankleL, 0, -0.03 * s, 0.17 * s, 0.03 * s), anchor(r.ankleR, 0, -0.03 * s, 0.17 * s, 0.03 * s),
-      anchor(r.kneeL, 0, 0, 0.02, 0.08 * s), anchor(r.kneeR, 0, 0, 0.02, 0.08 * s),
-      anchor(r.handL, 0, -0.02, 0, 0.05), anchor(r.handR, 0, -0.02, 0, 0.05),
-      anchor(r.elbowL, 0, 0, 0, 0.06), anchor(r.elbowR, 0, 0, 0, 0.06),
-      anchor(r.hips, 0, 0, 0, 0.15 * s), anchor(r.spine, 0, 0.32 * s, 0, 0.19 * s),
-      anchor(r.neck, 0, 0.2 * s, 0, 0.16 * s),
+      anchor(r.ankleL, 0, sole + 0.02, d.heel + 0.035, 0.02), anchor(r.ankleR, 0, sole + 0.02, d.heel + 0.035, 0.02),
+      anchor(r.ankleL, 0, sole + 0.015, d.toe - 0.03, 0.015), anchor(r.ankleR, 0, sole + 0.015, d.toe - 0.03, 0.015),
+      anchor(r.kneeL, 0, 0, 0.012 * H, 0.04 * H), anchor(r.kneeR, 0, 0, 0.012 * H, 0.04 * H),
+      anchor(r.handL, 0, -0.02, 0, 0.045), anchor(r.handR, 0, -0.02, 0, 0.045),
+      anchor(r.elbowL, 0, 0, 0, 0.035), anchor(r.elbowR, 0, 0, 0, 0.035),
+      anchor(r.hips, 0, -0.02 * H, 0, 0.09 * H), anchor(r.spine, 0, d.shoulderY - d.spineY - 0.04 * H, 0, 0.095 * H),
+      anchor(r.neck, 0, d.head, 0, 0.14 * d.headScale),
     ];
     this.hipsAnchor = r.hips;
   }
@@ -67,20 +82,34 @@ export class Figure {
     // Legs move through their stride by the ground covered, so the feet do not skate.
     const ahead = aheadSpeed(a);
     const dir = ahead < -0.5 ? -1 : 1;
-    this.phase = (this.phase + dir * (a.speed * dt) / strideLength(a.speed, this.rig.legLength) + 1) % 1;
-    const chosen = choosePose(a, scene, { phase: this.phase, build: this.kit.build, time, seed: this.seed });
+    // Braking chops the stride into quick short steps.
+    const chop = 1 - 0.4 * Math.max(0, Math.min(1, -this.push / 7));
+    this.phase = (this.phase + dir * (a.speed * dt) / (strideLength(a.speed, this.rig.legLength) * chop) + 1) % 1;
+    // The engine's acceleration in the body's own frame: along the facing and to its left.
+    const push = a.ax * Math.sin(a.yaw) + a.az * Math.cos(a.yaw);
+    const turn = a.ax * Math.cos(a.yaw) - a.az * Math.sin(a.yaw);
+    const ease = 1 - Math.exp(-dt * 10);
+    this.push += (push - this.push) * ease;
+    this.turn += (turn - this.turn) * ease;
+    this.jolt.update(push, turn, this.push, this.turn, dt);
+    this.secured = a.hasBall ? (this.secured ?? 0) + dt : null;
+    const chosen = choosePose(a, scene, { phase: this.phase, build: this.kit.build, time, seed: this.seed, push: this.push, turn: this.turn, secured: this.secured });
     this.hand = chosen.hand;
     approach(this.pose, chosen.pose, chosen.rate, dt);
+    this.shown = { ...this.pose };
+    this.jolt.apply(this.shown);
+    wobble(this.shown, a.stagger, time, this.seed);
     const root = this.rig.root;
     root.position.set(a.x, 0, a.z);
     root.rotation.set(0, a.yaw, 0);
     this.stand();
+    this.feet.update(this.rig, chosen.feet, this.phase, a.speed, dt);
   }
 
   /** Applies the pose, then shifts the body so it rests on the turf with the hips over the spot. */
   private stand(): void {
     const r = this.rig;
-    applyPose(r, this.pose);
+    applyPose(r, this.shown);
     // Measure the body where it stands on its own, then move it into place.
     r.body.position.set(0, 0, 0);
     r.root.updateMatrixWorld(true);
@@ -91,7 +120,7 @@ export class Figure {
       low = Math.min(low, v.y - c.radius);
     }
     this.hipsAnchor.getWorldPosition(w).applyMatrix4(inverse);
-    r.body.position.set(this.pose.side - w.x, this.pose.lift - low, this.pose.fwd - w.z);
+    r.body.position.set(this.shown.side - w.x, this.shown.lift - low, this.shown.fwd - w.z);
     r.root.updateMatrixWorld(true);
   }
 
@@ -116,6 +145,20 @@ export class Figure {
     pos.addScaledVector(axis, 0.04);
     pos.y -= 0.02;
   }
+
+  /**
+   * Picks the level of detail from how tall the player stands on screen,
+   * `fill` being his height over the view's height: the full body for a
+   * close look, the lighter one across the field. A margin either way
+   * stops a player flickering between them at the boundary.
+   */
+  showAt(fill: number): void {
+    if (fill > 0.2) this.lod = "near";
+    else if (fill < 0.16) this.lod = "far";
+    this.rig.setLod(this.lod);
+  }
+
+  private lod: Lod = "near";
 
   /** A point over the head, for the name tag. */
   top(out: THREE.Vector3): THREE.Vector3 {

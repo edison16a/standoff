@@ -3,7 +3,7 @@ import { canThrow } from "../passing";
 import { canPitch } from "../run-play";
 import { pitchRead } from "./run";
 import type { Athlete } from "../types";
-import { cover, pursue, rushQb, safety } from "./defense";
+import { chaseLoose, cover, pursue, rushQb, safety } from "./defense";
 import { carry, escort, readField, runRoute } from "./offense";
 import { botSkill, type FootballSkill } from "./skill";
 
@@ -29,6 +29,7 @@ export function think(m: Match, dt: number): void {
 }
 
 function decide(m: Match, a: Athlete, skill: FootballSkill): void {
+  if (m.ball.state === "loose" && m.ball.fumble) return chaseLoose(m, a);
   const carrier = m.carrier();
   const attacking = carrier ? carrier.team : m.offense;
   if (carrier === a) {

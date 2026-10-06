@@ -1,11 +1,11 @@
 /**
  * The home screen's trailer for Football 3v3, cut from the showcase's
- * seeded game (seed 11) and its trophy presentation. Each shot plays a
+ * seeded game (SHOWCASE_SEED) and its trophy presentation. Each shot plays a
  * stretch of match time at its own speed from its own camera. The film
  * runs round in a circle: its last frame cuts straight into its first,
  * so the clip loops with no seam wherever the capture happens to start.
  */
-export type ShotCamera = "qbLow" | "spiral" | "catch" | "juke" | "hit" | "lift";
+export type ShotCamera = "qbLow" | "spiral" | "catch" | "juke" | "pylon" | "dance" | "hit" | "lift";
 
 export interface Shot {
   /** Which recording the shot plays: the game, or the trophy presentation after it. */
@@ -21,17 +21,20 @@ export interface Shot {
 /**
  * The long touchdown: the QB winds up and lets it go in slow motion, the
  * spiral is chased through the air, the catch, the side step as a
- * tackler dives past. Then a crunching hit on a juke from later in the
- * game, deep in slow motion, and the trophy going up over the captain's
- * head.
+ * tackler dives past, then the scorer racing over the goal line at the
+ * pylon and his dance in the end zone. Then a crunching hit on a juke
+ * from later in the game, deep in slow motion, and the trophy going up
+ * over the captain's head.
  */
 export const SHOTS: readonly Shot[] = [
-  { reel: "game", from: 4.6, to: 5.12, rate: 0.4, camera: "qbLow" },
-  { reel: "game", from: 5.12, to: 5.9, rate: 0.6, camera: "spiral" },
-  { reel: "game", from: 5.9, to: 6.35, rate: 0.45, camera: "catch" },
-  { reel: "game", from: 8.35, to: 9.25, rate: 0.8, camera: "juke" },
-  { reel: "game", from: 62.0, to: 62.7, rate: 0.35, camera: "hit" },
-  { reel: "trophy", from: 5.4, to: 6.42, rate: 0.8, camera: "lift" },
+  { reel: "game", from: 4.23, to: 4.75, rate: 0.5, camera: "qbLow" },
+  { reel: "game", from: 4.75, to: 5.53, rate: 0.75, camera: "spiral" },
+  { reel: "game", from: 5.53, to: 5.98, rate: 0.5, camera: "catch" },
+  { reel: "game", from: 6.5, to: 7.1, rate: 0.75, camera: "juke" },
+  { reel: "game", from: 13.1, to: 13.7, rate: 0.5, camera: "pylon" },
+  { reel: "game", from: 14.4, to: 15.2, rate: 1, camera: "dance" },
+  { reel: "game", from: 56.65, to: 57.2, rate: 0.4, camera: "hit" },
+  { reel: "trophy", from: 5.45, to: 6.295, rate: 1, camera: "lift" },
 ];
 
 /** Seconds a shot lasts on screen. */

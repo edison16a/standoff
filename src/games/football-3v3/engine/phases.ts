@@ -29,6 +29,7 @@ function deadBall(m: Match): void {
   m.ball.holder = null;
   m.ball.flight = null;
   m.ball.pass = null;
+  m.ball.fumble = null;
   m.ball.pos = { x, y: 0.15, z: m.drive.ballZ };
 }
 

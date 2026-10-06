@@ -62,6 +62,9 @@ describe("the host's match driver", () => {
     const script = scriptReplay(driver.recorder.all, scored!)!;
     expect(script.segments.map((s) => s.stage)).toEqual(["aim", "throw", "flight", "run"]);
     expect(script.trace.length).toBeGreaterThan(10);
+    // The traced line starts with the ball out of the QB's hand, never inside his body.
+    const first = driver.recorder.all.find((v) => v.time === script.trace[0]!.t)!;
+    expect(first.ball.state).toBe("pass");
     expect(script.facts.ballMph).toBeGreaterThan(20);
     expect(script.facts.spinRpm).toBeGreaterThan(300);
     const throwing = script.segments[1]!;

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import type { MatchView } from "../../engine/view";
+import { broadcastAim, Spring3 } from "./broadcast";
 import { ceremonyAim } from "./ceremony-cam";
 import { fitWidth } from "./fit";
 import { replayAim, type ReplayShot } from "./replay-shots";
@@ -16,8 +17,9 @@ const CUT_DISTANCE = 25;
  */
 export class CameraDirector {
   readonly camera = new THREE.PerspectiveCamera(52, 16 / 9, 0.3, 900);
-  private readonly pos = new THREE.Vector3(-20, 8, 0);
-  private readonly look = new THREE.Vector3(0, 0, 0);
+  /** The camera's spot and where it looks, each on a spring so moves ease in and out like a heavy broadcast head. */
+  private readonly pos = new Spring3();
+  private readonly look = new Spring3();
   private fov = 52;
   private kind: Aim["kind"] | null = null;
   private shake = 0;
@@ -60,39 +62,53 @@ export class CameraDirector {
     this.shake = Math.max(this.shake, amount);
   }
 
-  update(view: MatchView, dt: number, time: number): void {
+  /** The replay angle being filmed, or null in live play. */
+  get replayShot(): ReplayShot | null {
+    return this.replay;
+  }
+
+  /** Moves the camera for this frame; returns true when it cut rather than glided. */
+  update(view: MatchView, dt: number, time: number): boolean {
     const cam = this.camera;
     if (this.fixed) {
       cam.position.copy(this.fixed.pos);
       cam.lookAt(this.fixed.look);
       this.setFov(this.fixed.fov);
-      return;
+      return true;
     }
     // Narrow screens see less of the field side to side, so the fit backs the camera up for them.
     const aim = this.replay
       ? replayAim(view, this.replay)
       : view.ceremony
         ? ceremonyAim(view.ceremony.t, cam.aspect)
-        : fitWidth(aimFor(view, time), cam.aspect);
+        : fitWidth(broadcastAim(aimFor(view, time), view), cam.aspect);
     const target = new THREE.Vector3(aim.pos.x, aim.pos.y, aim.pos.z);
     const look = new THREE.Vector3(aim.look.x, aim.look.y, aim.look.z);
     // Far from the shot means a new scene, like the lobby's demo giving way to the game or the ball spotted downfield: cut to it.
     // The trophy presentation opens on a cut too, as the broadcast switches to it.
-    const cut = this.kind === null || this.pos.distanceTo(target) > CUT_DISTANCE || (aim.kind === "ceremony" && this.kind !== "ceremony");
+    const at = this.pos.at;
+    const cut = this.kind === null || target.distanceTo(new THREE.Vector3(at.x, at.y, at.z)) > CUT_DISTANCE || (aim.kind === "ceremony" && this.kind !== "ceremony");
     this.kind = aim.kind;
+    if (cut) {
+      this.pos.snap(target);
+      this.look.snap(look);
+    } else {
+      // A critically damped spring at about twice the rate keeps the same lag as the old chase, with softer starts.
+      this.pos.step(target, aim.rate * 1.8, dt);
+      this.look.step(look, aim.rate * 2.9, dt);
+    }
     const k = cut ? 1 : 1 - Math.exp(-aim.rate * dt);
-    this.pos.lerp(target, k);
-    this.look.lerp(look, cut ? 1 : 1 - Math.exp(-aim.rate * 1.6 * dt));
     this.fov += (aim.fov - this.fov) * k;
-    cam.position.copy(this.pos);
+    cam.position.set(at.x, at.y, at.z);
     if (this.shake > 0.001 && aim.kind !== "ceremony") {
       const s = this.shake * 0.12;
       cam.position.x += Math.sin(time * 71) * s;
       cam.position.y += Math.sin(time * 53 + 1) * s;
       this.shake *= Math.exp(-dt * 7);
     }
-    cam.lookAt(this.look);
+    cam.lookAt(this.look.at.x, this.look.at.y, this.look.at.z);
     this.setFov(this.fov);
+    return cut;
   }
 
   private setFov(fov: number): void {

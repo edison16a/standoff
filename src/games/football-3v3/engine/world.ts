@@ -1,16 +1,13 @@
 import { updateBall } from "./ball-update";
 import { ceremonyTime, stepCeremony } from "./ceremony";
-import { guardMove } from "./guard";
-import { holdOnside } from "./formation";
 import { FIELD, xToYard, yardToX } from "./field";
 import { updateJuke } from "./juke";
 import { updateKick } from "./kick";
-import { lineContact, updateLinemen } from "./linemen";
+import { lineContact } from "./linemen";
 import type { Match } from "./match";
-import { moveAthlete } from "./motion";
-import { paceOf } from "./qb-run";
 import { updateTarget, updateThrow } from "./passing";
-import { separate } from "./collide";
+import { stepBodies } from "./bodies";
+import { updateFumble } from "./fumble";
 import { updateDive, updateDown, updateLunge } from "./tackle";
 import { updatePhase } from "./phases";
 import { JUKE } from "./tuning";
@@ -24,6 +21,7 @@ function tick(a: Athlete, dt: number): void {
   a.rushT = Math.max(0, a.rushT - dt);
   a.rushCd = Math.max(0, a.rushCd - dt);
   a.blocked = Math.max(0, a.blocked - dt);
+  a.stagger = Math.max(0, a.stagger - dt);
 }
 
 function act(m: Match, a: Athlete, dt: number): void {
@@ -39,19 +37,6 @@ function act(m: Match, a: Athlete, dt: number): void {
     if (now.t >= now.dur) a.action = { kind: "none" };
   }
 }
-
-/**
- * Who may move now. The defence sets itself while the offense calls the
- * play and lines up; in the break between plays and during a kick
- * everyone waits.
- */
-function frozen(m: Match, a: Athlete): boolean {
-  if (m.phase === "live" || m.phase === "touchdown") return false;
-  if (settingUp(m)) return a.team === m.offense;
-  return true;
-}
-
-const settingUp = (m: Match) => m.phase === "presnap" || m.phase === "choose" || m.phase === "convert";
 
 /** The checks that end a live play: a score, stepping out, and the QB running past the line. */
 function liveChecks(m: Match): void {
@@ -80,22 +65,10 @@ export function stepWorld(m: Match, dt: number): void {
     updateTarget(m);
   }
   if (m.phase === "kick") updateKick(m, dt);
-  const holder = m.ball.state === "held" ? m.ball.holder : null;
-  const face = { x: m.ball.pos.x, z: m.ball.pos.z };
-  for (const a of m.athletes) {
-    if (a.role === "lineman") continue;
-    act(m, a, dt);
-    // The stick is kept as sent; freezing and Guard only steer this one step.
-    const stick = a.move;
-    if (frozen(m, a)) a.move = { x: 0, z: 0 };
-    else if (live && a.guard !== null) a.move = guardMove(m, a, a.guard);
-    moveAthlete(a, dt, holder === a.id, face, paceOf(m, a));
-    a.move = stick;
-    if (settingUp(m)) holdOnside(a, m.drive);
-  }
-  updateLinemen(m, dt);
+  for (const a of m.athletes) if (a.role !== "lineman") act(m, a, dt);
+  stepBodies(m, dt);
   if (live) lineContact(m);
-  separate(m, m.bumps);
   updateBall(m, dt);
+  updateFumble(m);
   if (m.phase === "live") liveChecks(m);
 }

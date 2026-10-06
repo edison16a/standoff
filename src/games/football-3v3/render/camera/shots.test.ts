@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { POSTS } from "../../engine/field";
 import type { MatchView } from "../../engine/view";
 import { freshView, viewWhen } from "../test-views";
+import { broadcastAim } from "./broadcast";
 import { CameraDirector } from "./director";
 import { fitWidth, sideReach } from "./fit";
 import { aimFor, behind, closeup, kickCam, playSign, type Aim, type Vec } from "./shots";
@@ -125,7 +126,7 @@ describe("the director", () => {
     d.update(v, 1 / 60, 0);
     const moved = shifted(v, 40);
     d.update(moved, 1 / 60, 0.02);
-    expect(d.camera.position.x).toBeCloseTo(fitWidth(behind(moved), d.camera.aspect).pos.x, 0);
+    expect(d.camera.position.x).toBeCloseTo(fitWidth(broadcastAim(behind(moved), moved), d.camera.aspect).pos.x, 0);
   });
 
   it("glides after a small move", () => {
@@ -134,7 +135,7 @@ describe("the director", () => {
     d.update(v, 1 / 60, 0);
     const before = d.camera.position.x;
     const moved = shifted(v, 4);
-    const target = fitWidth(behind(moved), d.camera.aspect).pos.x;
+    const target = fitWidth(broadcastAim(behind(moved), moved), d.camera.aspect).pos.x;
     d.update(moved, 1 / 60, 0.02);
     expect(Math.abs(target - before)).toBeGreaterThan(3);
     expect(Math.abs(d.camera.position.x - before)).toBeLessThan(0.2 * Math.abs(target - before));

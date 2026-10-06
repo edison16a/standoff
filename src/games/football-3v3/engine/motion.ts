@@ -5,43 +5,52 @@ import type { Athlete } from "./types";
 import { angleDiff, clamp, yawOf, type V2 } from "./vec";
 
 /**
- * Heavy, momentum driven running. The push is strongest from a
- * standstill and fades to nothing at top speed, and is weaker for heavier
- * players. Turning is limited by sideways grip, so a player at full speed
- * curves on a radius of speed squared over grip instead of snapping
- * round, and stopping takes braking distance.
+ * Running on cleats. Two limits shape every change of speed. The legs'
+ * power pushes hard from a standstill and fades to nothing at top
+ * speed, weaker for heavier players. The grip of the cleats on the turf
+ * is a friction circle that speeding up, braking and turning all share,
+ * so a hard turn at speed brakes and turns at once: the plant and cut.
+ * The acceleration is kept on the athlete for the drawing to lean into.
  */
 export function steer(a: Athlete, tx: number, tz: number, top: number, dt: number): void {
   const speed = Math.hypot(a.vx, a.vz);
   const dvx = tx - a.vx;
   const dvz = tz - a.vz;
   const dv = Math.hypot(dvx, dvz);
-  if (dv < 1e-6) return;
-  const drive = pushOf(a) * Math.max(0.12, 1 - speed / Math.max(1, top));
-  if (speed < 0.4) {
-    // From a standstill every direction is a fresh push.
-    const k = Math.min(1, (Math.max(drive, 2) * dt) / dv);
-    a.vx += dvx * k;
-    a.vz += dvz * k;
+  if (dv < 1e-6) {
+    a.ax = 0;
+    a.az = 0;
     return;
   }
-  const ux = a.vx / speed;
-  const uz = a.vz / speed;
-  const along = dvx * ux + dvz * uz;
-  const across = -dvx * uz + dvz * ux;
-  const alongLimit = (along > 0 ? drive : MOVE.brake) * dt;
-  const acrossLimit = gripOf(a) * dt;
-  const da = clamp(along, -alongLimit, alongLimit);
-  const dc = clamp(across, -acrossLimit, acrossLimit);
-  a.vx += ux * da - uz * dc;
-  a.vz += uz * da + ux * dc;
+  const grip = gripOf(a) * (a.stagger > 0 ? MOVE.staggerGrip : 1);
+  // What it would take to get there this step, held inside the friction circle.
+  const want = Math.min(dv / dt, grip);
+  let ax = (dvx / dv) * want;
+  let az = (dvz / dv) * want;
+  // Speeding up along the run is also capped by what the legs have left at this speed.
+  const ux = speed > 0.4 ? a.vx / speed : dvx / dv;
+  const uz = speed > 0.4 ? a.vz / speed : dvz / dv;
+  const drive = Math.max(speed < 0.4 ? 2 : 0, pushOf(a) * Math.max(0.12, 1 - speed / Math.max(1, top)));
+  const along = ax * ux + az * uz;
+  if (along > drive) {
+    ax -= (along - drive) * ux;
+    az -= (along - drive) * uz;
+  }
+  a.vx += ax * dt;
+  a.vz += az * dt;
+  a.ax = ax;
+  a.az = az;
 }
 
 /** Slides to a stop, as a player on the ground does. */
 export function friction(a: Athlete, decel: number, dt: number): void {
   const speed = Math.hypot(a.vx, a.vz);
+  a.ax = 0;
+  a.az = 0;
   if (speed < 1e-6) return;
   const k = Math.max(0, speed - decel * dt) / speed;
+  a.ax = (a.vx * (k - 1)) / dt;
+  a.az = (a.vz * (k - 1)) / dt;
   a.vx *= k;
   a.vz *= k;
 }
@@ -57,10 +66,13 @@ export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: V2 |
   if (k === "stance") {
     a.vx = 0;
     a.vz = 0;
+    a.ax = 0;
+    a.az = 0;
   } else if (k === "none" || k === "throw" || k === "celebrate" || k === "kick") {
     const slow = k === "throw" ? 0.55 : k === "kick" ? 0 : 1;
     const through = a.blocked > 0 ? (a.rushT > 0 ? RUSH.rushing : RUSH.blocked) : 1;
-    const top = topSpeed(a, hasBall, pace) * slow * through;
+    const shaken = a.stagger > 0 ? MOVE.staggerPace : 1;
+    const top = topSpeed(a, hasBall, pace) * slow * through * shaken;
     steer(a, a.move.x * top, a.move.z * top, top, dt);
   } else if (k === "down") {
     friction(a, 7, dt);

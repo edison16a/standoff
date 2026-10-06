@@ -1,6 +1,13 @@
 import { Match, buildView, type MatchView } from "../engine";
 import type { Entry } from "../engine/lineup";
 
+/**
+ * The showcase's seeded game. The trailer's moments are picked from it,
+ * so a change to the engine or the bots that moves them means picking
+ * new ones (trailer.test.ts says so).
+ */
+export const SHOWCASE_SEED = 198;
+
 /** Two full teams of computer players, one of every build. */
 export const SHOWCASE_TEAMS: Entry[] = [
   { team: 0, role: "qb", build: "gunslinger", seat: null },

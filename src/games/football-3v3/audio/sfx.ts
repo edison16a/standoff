@@ -87,6 +87,16 @@ export class Sfx {
     noise(this.engine, this.out, this.at, { filter: "lowpass", frequency: 800, decay: 0.05, peak: 0.15 });
   }
 
+  /** A kick off the posts: the clang of a padded steel tube, ringing on. */
+  clang(power: number): void {
+    const p = 0.4 + Math.min(1, power) * 0.6;
+    for (const [f, d] of [[vary(520, 0.04), 1.1], [vary(1310, 0.04), 0.7], [vary(2170, 0.04), 0.45]] as const) {
+      tone(this.engine, this.out, this.at, { type: "triangle", frequency: f, decay: d, peak: 0.07 * p });
+      tone(this.engine, this.wet, this.at, { frequency: f, decay: d * 1.4, peak: 0.04 * p });
+    }
+    noise(this.engine, this.out, this.at, { filter: "bandpass", frequency: 3200, q: 2, decay: 0.03, peak: 0.2 * p });
+  }
+
   /** Cleats biting into the turf on a cut. */
   cut(): void {
     for (const d of [0, 0.07]) noise(this.engine, this.out, this.at + d, { filter: "bandpass", frequency: vary(1900, 0.15), q: 0.8, decay: 0.06, peak: 0.12 });
