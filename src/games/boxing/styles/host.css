@@ -153,3 +153,9 @@
   font-size: 18px;
   color: rgba(255, 255, 255, 0.8);
 }
+
+.bx-phone {
+  padding: 24px;
+  font-size: 18px;
+  text-align: center;
+}

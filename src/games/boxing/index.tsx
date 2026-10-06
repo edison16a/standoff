@@ -32,8 +32,11 @@ export const game: GameModule = {
   },
 
   createPhone() {
-    // Nobody joins a camera game from a phone, so there is nothing to show.
-    return { Screen: () => null, dispose: () => undefined };
+    // Nobody plays Boxing from a phone; the keyboard player's panel says where the fight is.
+    function Screen() {
+      return <p className="bx-phone">Boxing is played in front of the computer&apos;s camera, or with the keyboard on the big screen.</p>;
+    }
+    return { Screen, dispose: () => undefined };
   },
 
   Showcase,
