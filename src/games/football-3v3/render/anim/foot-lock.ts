@@ -58,6 +58,18 @@ export class FootLock {
     return { locked: false, at: { x: 0, y: 0, z: 0 }, yaw: 0, weight: 0, step: null };
   }
 
+  /** Lifts a foot the leg can no longer reach, so it swings on rather than stretching the leg. */
+  release(i: number): void {
+    const foot = this.feet[i]!;
+    foot.locked = false;
+    foot.step = null;
+    foot.weight = Math.min(foot.weight, 0.5);
+    this.released[i] = true;
+  }
+
+  /** A foot let go early stays free until its stride next puts it down. */
+  private readonly released = [false, false];
+
   update(f: FootFrame, dt: number): void {
     for (let i = 0; i < 2; i++) {
       const foot = this.feet[i]!;
@@ -65,7 +77,9 @@ export class FootLock {
       // A cut to another moment moves the body far in a frame: let go rather than stretch.
       if (Math.hypot(foot.at.x - fk.x, foot.at.z - fk.z) > 1.6) Object.assign(foot, this.fresh());
       const other = this.feet[1 - i]!;
-      const want = this.wants(f, i, foot, fk, other);
+      let want = this.wants(f, i, foot, fk, other);
+      if (!want) this.released[i] = false;
+      else if (this.released[i] && f.mode === "gait" && f.speed >= STAND) want = false;
       if (want && !foot.locked) {
         foot.locked = true;
         foot.at = { x: fk.x, y: f.ankle, z: fk.z };

@@ -47,7 +47,7 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     if (process.env.NODE_ENV === "development") Object.assign(window, { __fbRenderer: renderer });
     const game = params.get("game");
     const speed = params.get("speed");
-    const broadcast = !labScene && game !== null ? new BroadcastPlayer(renderer, Number(game) || 0, speed === "step" ? "step" : Number(speed ?? 1)) : null;
+    const broadcast = !labScene && game !== null ? new BroadcastPlayer(renderer, Number(game) || 0, speed === "step" ? "step" : Number(speed ?? 1), params.has("follow") ? Number(params.get("follow")) : null) : null;
     const player = labScene || broadcast ? null : new TrailerPlayer(renderer, renderer.scene);
     const held = params.get("t");
     const still = held !== null ? Number(held) : view === "loop" ? null : (STILLS[view] ?? null);

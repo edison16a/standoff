@@ -37,12 +37,14 @@ export function strideLength(speed: number, leg: number): number {
 }
 
 /**
- * The share of the stride each foot is on the ground. A foot stays down
- * for about a leg's length of travel at any pace, so the share falls from
- * most of the stride walking to under a quarter at a sprint.
+ * The share of the stride each foot is on the ground. Walking, one foot
+ * is always down and both are for a moment each step; running, a foot
+ * stays down for under a leg's length of travel, so the share falls to
+ * under a quarter at a sprint.
  */
 export function dutyFactor(speed: number): number {
-  return Math.max(0.22, Math.min(0.62, 1.05 / Math.min(4.8, 1.25 + 0.47 * speed)));
+  const running = Math.max(0.22, Math.min(0.5, 0.85 / Math.min(4.8, 1.25 + 0.47 * speed)));
+  return 0.6 + (running - 0.6) * gaitMix(speed).run;
 }
 
 /** How much of each gait the body is in: walking below about 1.5 m/s, sprinting over 6. */
@@ -91,11 +93,12 @@ export function gait(g: GaitInput): Pose {
   const s = Math.sin(th);
   const heavy = 1 - 0.22 * Math.min(1, g.build);
   const duty = dutyFactor(g.speed);
-  // Backpedalling reaches the feet back instead, with shorter steps.
-  const dir = back ? -0.55 : 1;
+  // Backpedalling plays the stride backward (the phase runs the other way) in short, low, choppy steps.
+  const reachK = back ? 0.55 : 1;
   const leg = (left: boolean) => {
     const l = legAngles(legPhase(g.phase, left), duty, run, sprint);
-    return { hip: l.hip * moving * heavy * dir, knee: 0.06 + (l.knee - 0.06) * moving, ankle: l.ankle * moving };
+    const knee = 0.06 + (l.knee - 0.06) * (back ? 0.55 : 1) + (back ? 0.3 : 0);
+    return { hip: (l.hip * reachK - (back ? 0.15 : 0)) * moving * heavy, knee: 0.06 + (knee - 0.06) * moving, ankle: l.ankle * moving * reachK };
   };
   const L = leg(true);
   const R = leg(false);

@@ -82,7 +82,9 @@ export class Figure {
     // Legs move through their stride by the ground covered, so the feet do not skate.
     const ahead = aheadSpeed(a);
     const dir = ahead < -0.5 ? -1 : 1;
-    this.phase = (this.phase + dir * (a.speed * dt) / strideLength(a.speed, this.rig.legLength) + 1) % 1;
+    // Braking chops the stride into quick short steps.
+    const chop = 1 - 0.4 * Math.max(0, Math.min(1, -this.push / 7));
+    this.phase = (this.phase + dir * (a.speed * dt) / (strideLength(a.speed, this.rig.legLength) * chop) + 1) % 1;
     // The engine's acceleration in the body's own frame: along the facing and to its left.
     const push = a.ax * Math.sin(a.yaw) + a.az * Math.cos(a.yaw);
     const turn = a.ax * Math.cos(a.yaw) - a.az * Math.sin(a.yaw);
