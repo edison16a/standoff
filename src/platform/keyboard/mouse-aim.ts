@@ -2,6 +2,11 @@ import type { StagePointer } from "./types";
 
 /** As fast as the aim kit streams a phone's aim. */
 const AIM_HZ = 60;
+/**
+ * A phone streams its aim even while it is held still, and the aim kit
+ * drops a seat that goes quiet, so a still mouse repeats its point this often.
+ */
+const KEEP_ALIVE_MS = 250;
 
 /** A point in the aim kit's space, the whole big screen from -1 to 1, y up. */
 export interface AimPoint {
@@ -60,9 +65,14 @@ export class MouseAim {
     this.flush(time);
   }
 
-  /** Call from the binding's tick, so the last move of a quick flick is never lost. */
+  /**
+   * Call from the binding's tick while the game wants the aim: the last
+   * move of a quick flick is never lost, and a still mouse keeps aiming.
+   */
   tick(): void {
-    if (this.pending) this.flush(this.now());
+    const time = this.now();
+    const quiet = this.sentAt > -Infinity && time - this.sentAt >= KEEP_ALIVE_MS;
+    if (this.pending || quiet) this.flush(time);
   }
 
   private flush(time: number): void {
