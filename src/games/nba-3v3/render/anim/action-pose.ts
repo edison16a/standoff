@@ -4,6 +4,7 @@ import { blockPose, landPose, passPose, shootPose, stealPose, stumblePose } from
 import type { AthleteScene } from "./base";
 import { celebratePose, dejectedPose } from "./celebrations";
 import { dunkPose, dunkSpin } from "./dunks";
+import { floaterPose } from "./floater-pose";
 import { gesturePose } from "./gestures";
 import { layupPose } from "./layups";
 import { setShotPose } from "./line";
@@ -41,6 +42,7 @@ export function actionPose(a: Athlete, c: BuildSpec, s: AthleteScene, base: Pose
   switch (act.kind) {
     case "shoot":
       if (act.released && m.releasedAt === null) m.releasedAt = act.t;
+      if (act.float) return { pose: floaterPose(act.t, m.releasedAt, base), rate: 34 };
       return { pose: act.free ? setShotPose(act.t, m.releasedAt, base) : shootPose(act.t, m.releasedAt, base, act.step !== null), rate: 34 };
     case "drive": {
       const timing = { takeoff: act.takeoff, finish: act.finish, land: act.land, rimHang: act.rimHang };

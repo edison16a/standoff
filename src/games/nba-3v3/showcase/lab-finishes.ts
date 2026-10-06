@@ -8,9 +8,10 @@ import { dir2, type V2 } from "../engine/vec";
  * Lab scenes for the finishes and the celebrations: `reverse` drives the
  * baseline under the rim for a reverse layup, `contact` drives into a
  * big man for a layup through the contact, `stepback` rises with a
- * defender in the chest, and `gesture` plays each celebration in turn.
+ * defender in the chest, `gesture` plays each celebration in turn, and
+ * `floater` runs at the rim and floats it up from the edge of the paint.
  */
-export const FINISH_SCENES = ["reverse", "contact", "stepback", "gesture"] as const;
+export const FINISH_SCENES = ["reverse", "contact", "stepback", "gesture", "floater"] as const;
 export type FinishScene = (typeof FINISH_SCENES)[number];
 
 const SHOOTER = 0;
@@ -21,6 +22,7 @@ export const FINISH_SPOTS: Record<FinishScene, [number, number][]> = {
   contact: [[0, 6.4], [-6, 3], [6, 3], [-5, 10], [0, 3.3], [5, 10]],
   stepback: [[0, 7.6], [-6, 3], [6, 3], [0, 6.8], [-5, 10], [5, 10]],
   gesture: [[0, 6], [-6, 3], [6, 3], [-5, 10], [2, 10], [5, 10]],
+  floater: [[0.5, 8.5], [-6, 6], [6, 6], [-6, 10], [6.5, 3], [5, 10.5]],
 };
 
 export function steerFinish(scene: FinishScene, m: Match, t: number, once: (key: string) => boolean): void {
@@ -44,7 +46,7 @@ export function steerFinish(scene: FinishScene, m: Match, t: number, once: (key:
   const d = dir2(a, target);
   a.move = { x: d.x, z: d.z };
   const near = Math.hypot(a.x - RIM_SPOT.x, a.z - RIM_SPOT.z);
-  const ready = scene === "reverse" ? a.x < 0.9 : near < 2.9;
+  const ready = scene === "reverse" ? a.x < 0.9 : scene === "floater" ? near < 4.4 : near < 2.9;
   if (t > 0.4 && ready && once("finish")) {
     m.forced = "bank";
     m.press(SHOOTER, "shoot");
