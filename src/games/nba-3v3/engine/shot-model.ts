@@ -74,7 +74,7 @@ export interface ShotContext {
  * a stepback beat any defence, so a contest now bites hard on all but a
  * gold release, and harder still on a shooter who is off balance.
  */
-export const CONTEST_BITE = { layup: 0.55, floater: 0.3, perfect: 0.42, good: 0.62, poor: 0.5, offBalance: 0.6 } as const;
+export const CONTEST_BITE = { layup: 0.62, floater: 0.3, perfect: 0.5, good: 0.62, poor: 0.5, offBalance: 0.6 } as const;
 
 /** The chance the shot goes in, from 0.02 to 0.99. */
 export function makeChance(c: ShotContext): number {
