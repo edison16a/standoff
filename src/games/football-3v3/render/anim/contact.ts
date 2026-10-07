@@ -50,7 +50,8 @@ export function downPose(t: number, dur: number, cause: DownCause, seed: number)
   const lying = cause === "tackled" && seed % 2 === 0 ? SUPINE : PRONE;
   const fall = smooth(t / 0.25);
   // The fall itself: from upright to the ground in a quarter of a second.
-  const falling = mix(over(base, { pitch: cause === "tackled" ? 0.4 : 0.9 }), lying, fall);
+  // A dive already ends flat on the turf, so it starts there rather than standing back up to fall.
+  const falling = cause === "dive" ? lying : mix(over(base, { pitch: cause === "tackled" ? 0.4 : 0.9 }), lying, fall);
   const up = t - (dur - TACKLE.getUp);
   if (up <= 0) return settle(falling, t, seed);
   const u = up / TACKLE.getUp;

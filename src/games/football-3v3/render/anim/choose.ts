@@ -11,6 +11,7 @@ import { clamp01, type Pose } from "./pose";
 import { blockPose, breathe, CENTER, KICK_SET, READY, SHOTGUN, snapPose, THREE_POINT, TWO_POINT } from "./stance";
 import { stumbleOver, tacklePose } from "./tackle";
 import { catchPose } from "./catch/reaching";
+import { catchMove } from "./catch";
 import { kickPose } from "./kick";
 import { holdingThrow, throwMotion } from "./throw";
 import { captainPose, matePose } from "./trophy-poses";
@@ -136,6 +137,9 @@ export function choosePose(a: AthleteView, s: PoseScene, b: BodyScene): Chosen {
   const t = a.actionT;
   const free = (pose: Pose, rate: number, h: Chosen["hand"] = hand): Chosen => ({ pose, rate, hand: h, feet: "free" });
   if (a.ceremony && s.ceremonyT !== null) return free(ceremonyPose(a, s.ceremonyT, b), 12, "both");
+  // A catch, pick or swat the engine picked plays over whatever he was doing, a dive included.
+  const caught = a.action === "none" || a.action === "juke" || a.action === "dive" || (a.action === "down" && a.downCause === "dive") ? catchMove(a, run) : null;
+  if (caught) return { pose: caught.pose, rate: 26, hand, feet: caught.air || a.action !== "none" ? "free" : plantFor(a, b) };
   switch (a.action) {
     case "stance":
       return free(breathe(stance(a, s), b.time, b.seed), 8);
