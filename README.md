@@ -21,7 +21,11 @@
 
 <table>
   <tr>
-    <td width="50%" align="center"><img src="docs/screenshots/magic-kart.jpg" alt="Four karts gliding under their wings above the Star Ring road" width="100%" /><br /><sub><b>Magic Kart</b></sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/nba-3v3.jpg" alt="A dunk at the rim in the Basketball 3v3 arena" width="100%" /><br /><sub><b>Basketball 3v3</b> (Standoff Premium)</sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/magic-kart.jpg" alt="Four karts gliding under their wings above the Star Ring road" width="100%" /><br /><sub><b>Magic Kart</b> (Standoff Premium)</sub></td>
+  </tr>
+  <tr>
+    <td width="50%" align="center"><img src="docs/screenshots/football-3v3.jpg" alt="A diving catch with the corner flying in, in Football 3v3" width="100%" /><br /><sub><b>Football 3v3</b> (Standoff Premium)</sub></td>
     <td width="50%" align="center"><img src="docs/screenshots/fruit-ninja.jpg" alt="A lightning blade bursting a giant melon beside a glowing dragonfruit on the wooden board" width="100%" /><br /><sub><b>Fruit Slicer</b></sub></td>
   </tr>
   <tr>
@@ -33,11 +37,7 @@
     <td width="50%" align="center"><img src="docs/screenshots/subway-surfers.jpg" alt="The runner jumping over the tracks with the inspector and his dog behind" width="100%" /><br /><sub><b>Subway Runner</b></sub></td>
   </tr>
   <tr>
-    <td width="50%" align="center"><img src="docs/screenshots/nba-3v3.jpg" alt="A dunk at the rim in the Basketball 3v3 arena" width="100%" /><br /><sub><b>Basketball 3v3</b></sub></td>
     <td width="50%" align="center"><img src="docs/screenshots/fifa-3v3.jpg" alt="A striker shooting past a sliding defender toward the keeper" width="100%" /><br /><sub><b>Soccer 3v3</b></sub></td>
-  </tr>
-  <tr>
-    <td width="50%" align="center"><img src="docs/screenshots/football-3v3.jpg" alt="A diving catch with the corner flying in, in Football 3v3" width="100%" /><br /><sub><b>Football 3v3</b></sub></td>
     <td width="50%" align="center"><img src="docs/screenshots/cube-game.jpg" alt="The UFO flying through a green portal in a neon city level" width="100%" /><br /><sub><b>Cube Game</b></sub></td>
   </tr>
   <tr>
@@ -77,13 +77,25 @@ Empty places are filled by computer players, so one person can always play.
 
 ## The games
 
-In the order the home screen shows them.
+In the order the home screen shows them. The first three are Standoff Premium. They are the most polished games, so they lead the row and carry a gold badge.
 
-### Magic Kart
+### Basketball 3v3 (Standoff Premium)
+
+<img src="docs/screenshots/nba-3v3.jpg" alt="A dunk at the rim in the Basketball 3v3 arena" width="100%" />
+
+Half court for up to six phones, one on one, two on two or three on three. Pick one of six builds, hold Shoot and let go in the green or the rare gold that always swishes, pass to a computer teammate to take him over, and break ankles with stepbacks, crossovers and spins. Dunks, reverse layups, blocks at the top of the jump, steals, fouls and free throws. First to 11 wins, the winning basket replays in slow motion, and the captain lifts the trophy at centre court.
+
+### Magic Kart (Standoff Premium)
 
 <img src="docs/screenshots/magic-kart.jpg" alt="Four karts gliding under their wings above the Star Ring road" width="100%" />
 
 Split screen kart racing for up to four. Turn your phone like a steering wheel, brake into a bend to drift, and fire a blue, orange or purple mini turbo out of it. Grab Star Orbs, Nitro, Ice Blasts, Vanish and Shields from the glowing cubes. Launch off the big jump on every map and a glider unfolds over your kart, so you steer through the air. Four wild maps: Sunny Shores, Star Ring, Neo City and Magma Peak. The top three lift their cups on a podium under confetti.
+
+### Football 3v3 (Standoff Premium)
+
+<img src="docs/screenshots/football-3v3.jpg" alt="A diving catch with the corner flying in, in Football 3v3" width="100%" />
+
+Three on three American football under the lights, with computer linemen battling at the line. The QB calls Throw, Run or Kick, hikes it and throws a spiral with the throw stick. Runners juke and dive, defenders rush, cover and tackle. Touchdowns replay like a TV broadcast, and the captain lifts a silver football on a kicking tee at midfield. First to 14 wins, or the lead after four quarters.
 
 ### Fruit Slicer
 
@@ -115,23 +127,11 @@ Stand in front of the camera and fight. Jabs, crosses, hooks and body shots come
 
 An endless runner played with your body. Lean to change tracks, jump over barriers, duck to roll under them, and run along the roofs of the trains while the inspector and his dog give chase. Pick Easy, Medium, Hard or Demon for a bigger score multiplier, or play with the keyboard. Every run goes on the leaderboard on this computer.
 
-### Basketball 3v3
-
-<img src="docs/screenshots/nba-3v3.jpg" alt="A dunk at the rim in the Basketball 3v3 arena" width="100%" />
-
-Half court for up to six phones, one on one, two on two or three on three. Pick one of six builds, hold Shoot and let go in the green or the rare gold that always swishes, pass to a computer teammate to take him over, and break ankles with stepbacks, crossovers and spins. Dunks, reverse layups, blocks at the top of the jump, steals, fouls and free throws. First to 11 wins, the winning basket replays in slow motion, and the captain lifts the trophy at centre court.
-
 ### Soccer 3v3
 
 <img src="docs/screenshots/fifa-3v3.jpg" alt="A striker shooting past a sliding defender toward the keeper" width="100%" />
 
 Three on three football on a big floodlit pitch with a keeper in each goal. Tap to pass, hold to fill the power bar and shoot, and let the curl bend it round the keeper. Beat your man with a rainbow flick, a crossover, a drag back or a 360. Slide tackles, free kicks, penalties, goal replays and golden goal, then the winners lift a World Cup style trophy.
-
-### Football 3v3
-
-<img src="docs/screenshots/football-3v3.jpg" alt="A diving catch with the corner flying in, in Football 3v3" width="100%" />
-
-Three on three American football under the lights, with computer linemen battling at the line. The QB calls Throw, Run or Kick, hikes it and throws a spiral with the throw stick. Runners juke and dive, defenders rush, cover and tackle. Touchdowns replay like a TV broadcast, and the captain lifts a silver football on a kicking tee at midfield. First to 14 wins, or the lead after four quarters.
 
 ### Cube Game
 
