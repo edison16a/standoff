@@ -33,7 +33,7 @@ export default function RunCanvas() {
       last = now;
       session.tick(now);
       const lane = session.view();
-      // The runner is Kai, in player one's colours.
+      // The runner is Zip, in their first palette.
       scene ??= new RunScene(lane.run.seed, 0);
       if (scene.run !== lane.run) scene.setRun(lane.run);
       scene.update(dt, now / 1000, lane.mood);

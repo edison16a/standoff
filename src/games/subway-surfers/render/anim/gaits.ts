@@ -72,7 +72,7 @@ export function rollPose(p: Pose): Pose {
   p.set("kneeL", -2.5).set("kneeR", -2.5);
   p.set("shoulderL", 1.3, 0, 0.3).set("shoulderR", 1.3, 0, -0.3);
   p.set("elbowL", 1.9).set("elbowR", 1.9);
-  p.set("spine", -0.7).set("chest", -0.3).set("neck", -0.4).set("head", -0.3);
+  p.set("spine", -0.85).set("chest", -0.4).set("neck", -0.5).set("head", -0.45);
   p.lift = -0.42;
   return p;
 }

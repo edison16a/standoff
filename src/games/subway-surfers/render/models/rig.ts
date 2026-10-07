@@ -37,6 +37,9 @@ export interface Rig {
   hipHeight: number;
 }
 
+/** How far the leg joints hang below the hips, so the ankles sit this much under the foot height. */
+export const HIP_DROP = 0.04;
+
 export function makeRig(d: BodyDims): Rig {
   const root = new THREE.Group();
   const hipHeight = d.foot + d.shin + d.thigh;
@@ -61,7 +64,7 @@ export function makeRig(d: BodyDims): Rig {
     return [shoulder, elbow, hand] as const;
   };
   const leg = (side: -1 | 1) => {
-    const hip = joint(hips, (side * d.hipW) / 2, -0.04, 0);
+    const hip = joint(hips, (side * d.hipW) / 2, -HIP_DROP, 0);
     const knee = joint(hip, 0, -d.thigh, 0);
     const ankle = joint(knee, 0, -d.shin, 0);
     return [hip, knee, ankle] as const;
@@ -80,15 +83,19 @@ export class Dresser {
   private readonly builders = new Map<Bone, MeshBuilder>();
   private readonly details = new Map<Bone, MeshBuilder>();
 
-  constructor(private readonly rig: Rig) {}
+  /** With `cloth` on, parts carry a weave: denim, fleece or shine. */
+  constructor(
+    private readonly rig: Rig,
+    private readonly cloth = false,
+  ) {}
 
   on(bone: Bone): MeshBuilder {
-    return take(this.builders, bone);
+    return take(this.builders, bone, this.cloth);
   }
 
   /** Fine features, like eyes, brows and a mouth, drawn with no ink line so they read as painted on. */
   detail(bone: Bone): MeshBuilder {
-    return take(this.details, bone);
+    return take(this.details, bone, this.cloth);
   }
 
   finish(): Rig {
@@ -107,10 +114,10 @@ export class Dresser {
   }
 }
 
-function take(builders: Map<Bone, MeshBuilder>, bone: Bone): MeshBuilder {
+function take(builders: Map<Bone, MeshBuilder>, bone: Bone, cloth: boolean): MeshBuilder {
   let builder = builders.get(bone);
   if (!builder) {
-    builder = new MeshBuilder();
+    builder = new MeshBuilder(cloth);
     builders.set(bone, builder);
   }
   return builder;

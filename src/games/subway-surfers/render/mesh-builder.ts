@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { clothMaterial, weaveAttribute, type Weave } from "./cloth";
 import { inkMaterial, toon } from "./toon";
 
 export type V3 = readonly [number, number, number];
@@ -11,7 +12,7 @@ export type V3 = readonly [number, number, number];
  * vertex colours, so a whole character or train of many colours still
  * draws in a handful of calls.
  */
-export type Paint = number | { color: number; finish: Finish } | THREE.Material;
+export type Paint = number | { color: number; finish: Finish; weave?: Weave } | THREE.Material;
 /** Every lit finish shares one toon material, so they merge into one draw. Glow is unlit. */
 export type Finish = "matte" | "satin" | "gloss" | "metal" | "glow";
 
@@ -46,6 +47,9 @@ export class MeshBuilder {
   private readonly origin = new THREE.Vector3();
   private hull = 0;
 
+  /** With `cloth` on, lit parts go on the characters' cloth material, each with its weave. */
+  constructor(private readonly cloth = false) {}
+
   /** Gives the parts added from here an ink outline this thick, in metres. Zero stops it. */
   outline(thickness: number): this {
     this.hull = thickness;
@@ -78,8 +82,12 @@ export class MeshBuilder {
     let material: THREE.Material;
     if (paint instanceof THREE.Material) material = paint;
     else {
-      const { color: hex, finish: kind } = typeof paint === "number" ? { color: paint, finish: "satin" as Finish } : paint;
+      const { color: hex, finish: kind, weave } = typeof paint === "number" ? { color: paint, finish: "satin" as Finish, weave: undefined } : paint;
       material = finish(kind);
+      if (this.cloth && kind !== "glow") {
+        material = clothMaterial();
+        geo.setAttribute("weave", weaveAttribute(weave ?? (kind === "gloss" ? "shine" : "plain"), count));
+      }
       // setHex already takes the sRGB hex into the linear working space. Converting again darkened every colour.
       color.setHex(hex);
       const colors = new Float32Array(count * 3);
@@ -100,7 +108,10 @@ export class MeshBuilder {
   box(w: number, h: number, d: number, paint: Paint, at: V3, rot?: V3, round = 0): this {
     const shape = (g: number) => {
       const r = Math.min(round + g, (w + 2 * g) / 2 - 1e-4, (h + 2 * g) / 2 - 1e-4, (d + 2 * g) / 2 - 1e-4);
-      return round > 0 ? new RoundedBoxGeometry(w + 2 * g, h + 2 * g, d + 2 * g, 2, r) : new THREE.BoxGeometry(w + 2 * g, h + 2 * g, d + 2 * g);
+      if (round <= 0) return new THREE.BoxGeometry(w + 2 * g, h + 2 * g, d + 2 * g);
+      const rounded = new RoundedBoxGeometry(w + 2 * g, h + 2 * g, d + 2 * g, 2, r);
+      // A rounded box comes unindexed, which would turn a whole character bone flat: three times the vertices.
+      return this.cloth ? mergeVertices(rounded) : rounded;
     };
     this.ink(shape, at, rot);
     return this.add(shape(0), paint, at, rot);
