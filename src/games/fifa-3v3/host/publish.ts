@@ -50,7 +50,6 @@ export function publish(c: PublishContext): void {
     golden: match?.golden ?? false,
     replay: c.replay.active,
     replayCard: c.driver ? c.replay.card(c.driver, (id) => c.nameOf(id)) : null,
-    skip: c.replay.skipList((seat) => names.get(seat) ?? `Player ${seat + 1}`),
     winner: match?.winner ?? null,
     ceremony: match ? withStats(ceremonyCard(match, names), c.statsNow) : null,
     results: match && match.phase === "fulltime" ? results(c.driver!, names) : [],
