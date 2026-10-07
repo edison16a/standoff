@@ -19,7 +19,7 @@ const BALL: BallView = {
 function still(build: BuildId, team: TeamId, celebrating: number | null): AthleteView {
   return {
     id: 0, team, role: "runner", slot: 0, build, number: BUILDS[build].number, seat: null,
-    x: 0, z: 0, yaw: 0, vx: 0, vz: 0, speed: 0, ax: 0, az: 0, stagger: 0,
+    x: 0, z: 0, yaw: 0, vx: 0, vz: 0, speed: 0, ax: 0, az: 0, stagger: 0, stamina: 1,
     action: celebrating === null ? "none" : "celebrate", actionT: celebrating ?? 0, actionDur: 3,
     juke: null, side: 1, plant: 0, lob: false, throwKind: null, downCause: null, lunge: null, tackle: null, catching: null, block: null, stumble: null, spike: false, hasBall: false, targeted: false, guarding: null, rushing: false, blocked: false, ceremony: null,
   };

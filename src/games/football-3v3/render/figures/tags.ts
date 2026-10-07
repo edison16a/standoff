@@ -35,6 +35,7 @@ export class NameTags {
         figure.top(at);
         entry.tag.sprite.position.copy(at);
         entry.tag.fit(fov);
+        entry.tag.setStamina(a.stamina);
         seen.add(a.id);
       }
     }
