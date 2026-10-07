@@ -1,5 +1,6 @@
 import type { BuildId } from "../builds";
 import type { ApproachKind, TackleKind } from "./tackle-preset";
+import type { ThrowKind } from "./throw-preset";
 import type { Athlete, ActionKind, DownCause, JukeKind, Role, TackleBind, TeamId } from "./types";
 
 /**
@@ -35,6 +36,8 @@ export interface AthleteView {
   plant: number;
   /** A throw that is the soft pitch to the back on a run call, not a pass. */
   lob: boolean;
+  /** The throwing motion of a forward pass while it plays (throw-preset.ts), null otherwise. */
+  throwKind: ThrowKind | null;
   /** Why a player is on the ground, while they are: a tackled carrier lands differently from a diver. */
   downCause: DownCause | null;
   /** The tackle preset a lunge was picked as, while lunging. */
@@ -64,6 +67,7 @@ export function athleteView(a: Athlete, hasBall: boolean, targeted: boolean, cer
     action: act.kind, actionT: "t" in act ? act.t : 0, actionDur: "dur" in act ? act.dur : 0,
     juke: act.kind === "juke" ? act.juke : null, side: act.kind === "juke" ? act.side : 1,
     plant: act.kind === "juke" ? act.plant : 0, lob: act.kind === "throw" && act.lob,
+    throwKind: act.kind === "throw" && !act.lob ? act.style : null,
     downCause: act.kind === "down" ? act.cause : null,
     lunge: act.kind === "lunge" ? act.approach : null,
     tackle: act.kind === "down" && act.bind ? { kind: act.bind.kind, role: act.bind.role, side: act.bind.side } : null,

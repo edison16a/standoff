@@ -3,16 +3,15 @@ import { isDown, statsOf } from "./body";
 import { launch } from "./flight";
 import { jumpingDefender } from "./catching";
 import { tracePath } from "./catch/path";
-import { release } from "./throw-error";
+import { pressure, release } from "./throw-error";
+import { releaseSpot, squareUp, THROW_MOVES, THROW_PICK, throwKindFor } from "./throw-preset";
 import type { Match } from "./match";
 import { canPitch, releasePitch } from "./run-play";
 import { handOver } from "./control";
-import { handSpot } from "./passer-facing";
 import { showReading } from "./meter-live";
 import { PLAIN, passQuality, type PassQuality, type ThrowReading } from "./pass-meter";
-import { PASS } from "./tuning";
 import type { Athlete } from "./types";
-import { len3, type V3 } from "./vec";
+import { dir2, dist2, len3, type V3 } from "./vec";
 
 /** Only the QB throws, once a play, with the ball in hand, and never after he turned runner (qb-run.ts). */
 export function canThrow(m: Match, a: Athlete): boolean {
@@ -47,17 +46,36 @@ export function updateTarget(m: Match): void {
 }
 
 /**
- * Starts the throwing motion at a receiver. The ball leaves the hand
- * part way through. `reading` is where the throw meter stopped; without
- * one the throw is the plain physics.
+ * Starts the throwing motion at a receiver, picked by the throw's
+ * length, the QB's speed and the rush (throw-preset.ts). The ball leaves
+ * the hand on that motion's release frame. `reading` is where the throw
+ * meter stopped; without one the throw is the plain physics.
  */
 export function throwTo(m: Match, a: Athlete, to: number, reading: ThrowReading | null = null): boolean {
-  if (!canThrow(m, a) || m.athlete(to)?.team !== a.team) return false;
+  const target = m.athlete(to);
+  if (!canThrow(m, a) || !target || target.team !== a.team) return false;
   m.play!.target = to;
   const quality = reading ? passQuality(reading) : PLAIN;
   if (reading) showReading(m, a, reading);
-  a.action = { kind: "throw", t: 0, dur: PASS.throwTime, released: false, to, lob: false, quality };
+  const rush = pressure(m, a);
+  const style = throwKindFor(dist2(a, target), Math.hypot(a.vx, a.vz), rush);
+  const move = THROW_MOVES[style];
+  a.action = { kind: "throw", t: 0, dur: move.dur, released: false, to, lob: false, quality, style, release: move.release };
+  if (style === "pressure") fadeAway(m, a);
   return true;
+}
+
+/** Off the back foot: a hop away from the nearest rusher as the arm comes round. */
+function fadeAway(m: Match, a: Athlete): void {
+  let near: Athlete | null = null;
+  for (const o of m.athletes) {
+    if (o.team === a.team || o.role === "lineman" || isDown(o)) continue;
+    if (!near || dist2(o, a) < dist2(near, a)) near = o;
+  }
+  if (!near) return;
+  const away = dir2(near, a);
+  a.vx += away.x * THROW_PICK.fade;
+  a.vz += away.z * THROW_PICK.fade;
 }
 
 /** Lets the ball go: led to meet the target, off by the hand's error, as good as the meter's timing. */
@@ -66,7 +84,11 @@ function letGo(m: Match, a: Athlete, to: number, q: PassQuality): void {
   const target = m.athlete(to);
   if (!target || m.carrier()?.id !== a.id) return;
   // Out toward the target, not along the facing, so the flight never depends on how far he had turned.
-  const from: V3 = handSpot(a, target, PASS.releaseHeight);
+  const act = a.action;
+  const style = act.kind === "throw" ? act.style : "flick";
+  // Square to the target on the release frame, then out of the hand where the motion has it.
+  squareUp(a, target);
+  const from: V3 = releaseSpot(a, target, THROW_MOVES[style]);
   const lead = leadPass(from, target, { x: target.vx, z: target.vz }, statsOf(a).arm, q.time);
   // A defender sitting in front of the receiver reads it and breaks on the ball; a perfect ball gives him nothing to read.
   const jumper = q.read > 0 ? jumpingDefender(m, a, from, lead.spot, target, q.read) : null;
@@ -92,7 +114,7 @@ export function updateThrow(m: Match, a: Athlete, dt: number): void {
   const act = a.action;
   if (act.kind !== "throw") return;
   act.t += dt;
-  if (!act.released && act.t >= PASS.windup) {
+  if (!act.released && act.t >= act.release) {
     act.released = true;
     if (act.lob) releasePitch(m, a, act.to);
     else letGo(m, a, act.to, act.quality);

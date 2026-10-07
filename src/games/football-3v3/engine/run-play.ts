@@ -57,7 +57,7 @@ export function startPitch(m: Match, a: Athlete): boolean {
   if (!canPitch(m, a)) return false;
   const to = m.play!.back!;
   m.play!.target = to;
-  a.action = { kind: "throw", t: 0, dur: PASS.throwTime, released: false, to, lob: true, quality: PLAIN };
+  a.action = { kind: "throw", t: 0, dur: PASS.throwTime, released: false, to, lob: true, quality: PLAIN, style: "flick", release: PASS.windup };
   return true;
 }
 

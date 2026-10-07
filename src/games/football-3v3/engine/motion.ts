@@ -1,6 +1,7 @@
 import { gripOf, pushOf, topSpeed } from "./body";
 import { clampToWorld } from "./field";
 import { slideOf } from "./tackle-bind";
+import { throwPace } from "./throw-preset";
 import { MOVE, PASS, RUSH } from "./tuning";
 import type { Athlete } from "./types";
 import { angleDiff, clamp, yawOf, type V2 } from "./vec";
@@ -96,7 +97,8 @@ export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: V2 |
     a.ax = 0;
     a.az = 0;
   } else if (k === "none" || k === "throw" || k === "celebrate" || k === "kick") {
-    const slow = k === "throw" ? 0.55 : k === "kick" ? 0 : 1;
+    // A throw keeps the share of speed its motion allows: set feet brake, a throw on the run keeps going.
+    const slow = k === "throw" ? throwPace(a) : k === "kick" ? 0 : 1;
     const through = a.blocked > 0 ? (a.rushT > 0 ? RUSH.rushing : RUSH.blocked) : 1;
     const shaken = a.stagger > 0 ? MOVE.staggerPace : 1;
     const top = topSpeed(a, hasBall, pace) * slow * through * shaken;
