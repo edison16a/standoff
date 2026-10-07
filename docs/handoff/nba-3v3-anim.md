@@ -38,9 +38,30 @@ Known gaps from step 2:
 * Long range rattles are rare in the physics, so the picker gives them little weight from deep, and a failed rattle falls back to another make.
 * The shot event names the ending at release, but the sounds and the phone do not use `preset` yet (a gold, swish or toilet bowl call could).
 
+## Step 3: layup and dunk presets
+
+Done:
+
+* Every finish at the rim is a preset in `engine/finish/`. `spec.ts` is the shape: footwork (`steps`), gather and air time, where the body stops, a side shift, a turn, a ball path through the hands (`TrackKey`s in `tracks.ts`) and the release. `layups.ts` has 11 layups (finger, reverse, euro, upUnder, scoop, teardrop, glass, wrongFoot, spin, shield, power). `dunks.ts` has 15 dunks (twoHand, flush, tomahawk, cockback, hammer, windmill, reverse, spin360, scoop, clutch, rimhang, poster, putback, alley, jumpStop).
+* Selection before the gather. `approach.ts` reads the angle (front, side, baseline), speed, natural hand, putback or alley oop, and the defender that matters (path, rim, ballSide, offSide, trail, in the air or not, strength edge). `select.ts` picks from that alone: open (nobody within `OPEN_RADIUS` 1.8 m, nobody at the rim) and able to get up there means a dunk, always. A much stronger man goes through a smaller one: poster. Otherwise a layup that beats the man where he is. `m.forcedFinish` forces one for labs and tests. Tests in `select.test.ts`.
+* `plan.ts` lays out the drive for the body: finish spot (`spots.ts`), gather time capped at sprint step speed, dunk peak from the arm reach, the slam point over the ring, a hang, and the layup release from the shoulder. A layup release is kept `RING_CLEAR` out from the middle of the ring, so a putback from right under it can still drop.
+* The ball in the hands: `ball-track.ts` carries the ball on the preset's path relative to the body until the release; `render/finish-hands.ts` puts the hands on the engine's real ball, then on the ring for a slap or a hang. Poses in `render/anim/finish/` (`gather.ts`, `layup-tops.ts`, `dunk-tops.ts`, `finish-pose.ts`). The old `render/anim/layups.ts`, `render/anim/dunks.ts`, `engine/finish.ts` and `engine/dunk-style.ts` are gone.
+* The dunk no longer floats: the hand takes the ball over the ring and drives it down through the net, then the body hangs or drops. Test: `presets.test.ts` (ball within arm reach of a shoulder and moving no faster than an arm swing for every build and preset; every dunk released over the ring and through the net; every layup released clear of the ring and makeable, from 2.6 m and from right under).
+* Blocking a layup is hard: `evade` per layup cuts the contest (`shot-launch.ts`), the touch chance (`ball-touch.ts`) and the foul chance. About one block a game in bot games.
+* Up and under: a computer defender near the pump fake usually jumps at it (`drive.ts`). Poster: the man under it is knocked down as the slam comes down (`poster.test.ts`).
+* Alley oop: a pass to an open teammate running hard at the rim goes up as a lob, and he catches it into the alley oop dunk (`alley.ts`, `passing.ts`, `alley.test.ts`).
+* Lab scenes in `showcase/lab-presets.ts`: `/showcase/nba-3v3?lab=layup-<kind>&step=1` and `?lab=dunk-<style>&step=1`. `lab-presets.test.ts` checks every scene plays the preset it names. Checked in the browser: two hand dunk, poster, body shield, finger roll.
+
+Known gaps from step 3:
+
+* Over 14 bot games: about 55 layups (reverse 15, wrongFoot 10, power 9, finger, scoop, glass, teardrop a few) and 40 dunks (poster about 10). Bots seldom see a euro, spin or up and under because they rarely drive square into a set man; a person driving does.
+* Posters are common because the Dunker and the Big Man often meet a smaller man at the rim. If it feels too often, raise the strength edge in `throughHim`.
+* Sounds and the phone do not tell the presets apart yet (a poster or an alley oop call could).
+
 ## Notes for later steps
 
 * Shot endings: layups and floaters (step 3) go through `launchShot`, so they get the picker and the solver for free. A new finish only needs a sensible `ReleaseInput` (family, hand point, apex, spin). A finish that must end a set way can call `solvePreset` with that ending.
 * A gold release still sets `shot.rolled` to every defender, so no block can touch it.
-* Step 3 to 5 are still to do: layup and dunk presets, dribble, shake and block presets, then polish and media. The media (README stills, `docs/screenshots/nba-3v3.jpg`, the icon and the trailer) were not redone in step 1 on purpose; step 5 redoes them once the animations land.
-* Layup and dunk poses live in `render/anim/layups.ts` and `render/anim/dunks.ts`; the engine side is `engine/drive.ts`, `engine/finish.ts` and `engine/dunk-style.ts`.
+* Step 4 and 5 are still to do: dribble, shake and block presets, then polish and media. The media (README stills, `docs/screenshots/nba-3v3.jpg`, the icon and the trailer) were not redone in step 1 on purpose; step 5 redoes them once the animations land.
+* Layup and dunk presets: engine side in `engine/finish/` and `engine/drive.ts`, poses in `render/anim/finish/`, hands in `render/finish-hands.ts`. A new preset needs a `LayupKind` or `DunkStyle`, a spec row, a track, a pose top, a selection rule and a lab setup in `showcase/lab-presets.ts`.
+* Step 4 (blocks) can read `act.layup` and `act.style` on a driving player to choose a block preset, and `shot.evade` says how hard the layup is to get a hand on.
