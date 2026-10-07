@@ -3,6 +3,7 @@ import { BUILD_IDS } from "../builds";
 import type { MatchEvent } from "./events";
 import { JUKE, stun, wrongWay } from "./juke";
 import { Match, type Entry } from "./match";
+import { SHAKE_TIME } from "./shake";
 import { STEP } from "./tuning";
 import type { Action } from "./types";
 
@@ -41,14 +42,15 @@ describe("jukes", () => {
     expect(beaten / runs).toBeGreaterThan(0.4);
   });
 
-  it("always leave the beaten defender stumbling and slow", () => {
+  it("always leave the beaten defender in a reaction and slow", () => {
     const m = setup(1);
     const d = m.athletes[1]!;
     stun(d, move("crossover", 1, { x: 1, z: 0 }), false);
-    expect(d.action).toMatchObject({ kind: "stumble", dur: JUKE.softStun });
+    expect(d.action).toMatchObject({ kind: "stumble", dur: SHAKE_TIME.slip[0], react: "slip" });
     expect(d.whiff).toBeGreaterThan(0);
     stun(d, move("crossover", 1, { x: 1, z: 0 }), true);
-    expect(d.action).toMatchObject({ kind: "stumble", dur: JUKE.hardStun });
+    expect(d.action).toMatchObject({ kind: "stumble", dur: SHAKE_TIME.ankles[1], react: "ankles" });
+    expect(d.whiff).toBeGreaterThanOrEqual(JUKE.hardSlow);
   });
 
   it("throw the defender the wrong way", () => {

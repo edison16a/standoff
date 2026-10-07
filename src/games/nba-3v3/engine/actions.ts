@@ -4,6 +4,7 @@ import { pressJump, updateBlock, updateSteal } from "./defend";
 import { startDrive, updateDrive } from "./drive";
 import type { Match } from "./match";
 import { canShootOutOf, updateMove } from "./moves";
+import { flowShot, queueShot, releaseQueued } from "./move-flow";
 import { choosePassTarget, throwPass } from "./passing";
 import { floaterFits, startFloater, updateFloater } from "./floater";
 import { JUMPER, releaseJumper, startJumper } from "./shooting";
@@ -20,8 +21,9 @@ export { pressDefend } from "./defend";
  */
 export function pressShoot(m: Match, a: Athlete): void {
   if (m.ball.holder !== a.id) return;
-  // Late in a dribble move the shot comes straight out of it, as off a stepback.
+  // Late in a dribble move the shot comes straight out of it, as off a stepback; earlier it waits for that moment.
   if (a.action.kind === "move" && canShootOutOf(a.action)) a.action = { kind: "none" };
+  else if (a.action.kind === "move") return queueShot(m, a.action);
   if (a.action.kind !== "none" && a.action.kind !== "pass") return;
   if (m.needsClear) {
     m.emit({ type: "mustClear", id: a.id });
@@ -42,6 +44,7 @@ export function pressShoot(m: Match, a: Athlete): void {
 
 export function releaseShot(m: Match, a: Athlete, heldMs?: number): void {
   if (a.action.kind === "shoot") releaseJumper(m, a, heldMs);
+  else if (a.action.kind === "move") releaseQueued(a.action, heldMs);
 }
 
 /** Pass with the ball, or ask for it when a teammate has it. */
@@ -95,7 +98,8 @@ export function updateAction(m: Match, a: Athlete, dt: number): void {
     case "steal":
       return updateSteal(m, a, dt);
     case "move":
-      return updateMove(m, a, dt);
+      updateMove(m, a, dt);
+      return flowShot(m, a, act, pressShoot);
     case "pass":
       act.t += dt;
       if (act.t > 0.3) a.action = { kind: "none" };

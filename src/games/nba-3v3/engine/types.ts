@@ -3,6 +3,8 @@ import type { DunkStyle } from "../roster";
 import type { ShotTrack } from "./physics/shot-watch";
 import type { Grade, Outcome, ShotKind } from "./shot-model";
 import type { ShotFlight } from "./shot-outcome/flight";
+import type { DribbleStyle } from "./dribble-style";
+import type { ShakeReact } from "./shake";
 import type { ShotPreset } from "./shot-outcome/presets";
 import type { V2, V3 } from "./vec";
 
@@ -13,7 +15,7 @@ export const BUTTONS = ["shoot", "pass", "defend"] as const;
 export type Button = (typeof BUTTONS)[number];
 
 /** The dribble moves, picked by where the stick points against the way to the basket. */
-export const DRIBBLE_MOVES = ["stepback", "crossover", "spin", "hesitation", "behindBack"] as const;
+export const DRIBBLE_MOVES = ["stepback", "crossover", "spin", "hesitation", "behindBack", "betweenLegs"] as const;
 export type DribbleMove = (typeof DRIBBLE_MOVES)[number];
 
 /**
@@ -65,16 +67,22 @@ export type Action =
    * A dribble move lasting `dur`. `side` is the hand the ball ends in or
    * the way the move goes, `dir` the way the move carries the player, and
    * `resolved` is set once it has been checked against the defender.
+   * `queued` holds a Shoot pressed too early, to flow into the jumper
+   * as soon as the move allows (see `move-flow.ts`).
    */
-  | { kind: "move"; t: number; move: DribbleMove; dur: number; side: 1 | -1; dir: V2; resolved: boolean }
+  | {
+      kind: "move"; t: number; move: DribbleMove; dur: number; side: 1 | -1; dir: V2; resolved: boolean;
+      queued?: { at: number; released: boolean; heldMs: number | undefined };
+    }
   /** A swipe at the ball of `victim`, the defender's `attempt`th on them this possession. */
   | { kind: "steal"; t: number; resolved: boolean; victim: number; attempt: number }
   /**
-   * Off balance for `dur`: rocked by a dribble move (no `fall`), knocked
+   * Off balance for `dur`: beaten by a dribble move (`react` says how,
+   * see `shake.ts`, and `turn` which way a spin twists him), knocked
    * down on his backside taking a charge or a bigger man's drive
    * (`back`), or lurching on over the man he ran into (`forward`).
    */
-  | { kind: "stumble"; t: number; dur: number; fall?: "back" | "forward" }
+  | { kind: "stumble"; t: number; dur: number; fall?: "back" | "forward"; react?: ShakeReact; turn?: 1 | -1 }
   /** After a make: a gesture for a big basket, or the player's own celebration when `gesture` is null. */
   | { kind: "celebrate"; t: number; dur: number; gesture: Gesture | null };
 
@@ -142,6 +150,8 @@ export interface Athlete {
   dribble: number;
   /** The dribbling hand, right (1) or left (-1). */
   dribbleHand: 1 | -1;
+  /** The blend of dribble presets the handler is in now (see `dribble-style.ts`). */
+  dribbleStyle: DribbleStyle;
   /** Where the ball is dribbled across the body, -1 left to 1 right, easing over during a crossover. */
   dribbleSide: number;
   crossCd: number;

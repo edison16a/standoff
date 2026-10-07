@@ -61,7 +61,7 @@ export function actionPose(a: Athlete, c: BuildSpec, s: AthleteScene, base: Pose
     case "move":
       return { pose: movePose(act, base), rate: 26 };
     case "stumble":
-      return { pose: stumblePose(act.t, act.dur, base, act.fall, m.shove), rate: act.fall ? 18 : 22 };
+      return { pose: stumblePose(act, base, m.shove), rate: act.fall ? 18 : 22 };
     case "celebrate": {
       // Into the celebration and out of it again smoothly, back to the walk to the check.
       if (s.holding) return { pose: base, rate: 16 };

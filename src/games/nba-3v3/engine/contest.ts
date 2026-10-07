@@ -50,7 +50,9 @@ export function contestFor(shooter: Athlete, defenders: readonly Athlete[], kind
     const up = d.action.kind === "block" && airborne(d);
     const timing = blockTiming(d);
     const inFront = (d.x - shooter.x) * toRimX + (d.z - shooter.z) * toRimZ > -0.2 * dist;
-    const value = near * (up ? 0.6 + 0.4 * timing : 0.5) * (inFront ? 1 : 0.55) * contestScale(buildOf(d).stats.defence);
+    // A man still reeling from a dribble move barely gets a hand up: the shake bought the space.
+    const shaken = d.action.kind === "stumble" && d.action.react ? 0.3 : 1;
+    const value = near * (up ? 0.6 + 0.4 * timing : 0.5) * (inFront ? 1 : 0.55) * shaken * contestScale(buildOf(d).stats.defence);
     contest = Math.max(contest, clamp(value, 0, 1));
     if (!up || dist > 1.3 + Math.max(0, long) * 0.8 + (kind === "jumper" ? 0 : 0.25)) continue;
     const ds = buildOf(d).stats;
