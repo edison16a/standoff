@@ -12,6 +12,7 @@ import { applyPose, approach, STAND, type Pose } from "./anim/pose";
 import { reachArm, type ArmChain } from "./arm-ik";
 import { BlockReach, type BlockTouch } from "./block-reach";
 import { DribbleHand } from "./dribble-hand";
+import { finishHands } from "./finish-hands";
 import type { AthleteMaterials } from "./materials/athlete-materials";
 import { buildAthlete, type AthleteModel } from "./models/athlete-model";
 import { Placement } from "./placement";
@@ -114,6 +115,8 @@ export class AthleteView {
     const active = !!ball && s.holding && !s.chest && (kind === "none" || kind === "move") && !palmHold(a) && (ball.hand === "dribble" || ball.hand === "free");
     this.dribbleHand.update(a, ball, active, dt);
     for (const k of ["L", "R"] as const) reachArm(this.arms[k], this.dribbleHand.target, PALM, POLE[k], this.dribbleHand.weight[k]);
+    // At the rim the hands are on the real ball, then on the ring.
+    finishHands(a, ball, this.arms, PALM);
     this.reachToBlock(a, s.flight ?? null, dt);
     // A pass on its way in: both hands reach out to either side of the ball, palms toward it.
     if (!ball || s.holding || ball.mode !== "flight" || s.receiving <= 0) return;

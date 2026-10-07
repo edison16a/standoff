@@ -49,14 +49,6 @@ function rawShootPose(t: number, releasedAt: number | null, base: Pose): Pose {
   return blend(p, { armRRaise: 2.8, elbowR: 0.06, wristR: 1.15, armLRaise: 2.05, elbowL: 0.85, armLSpread: 0.55, armRSpread: 0.02 }, k, p);
 }
 
-export interface DriveTiming {
-  takeoff: number;
-  finish: number;
-  land: number;
-  /** Seconds hanging on the rim after the slam, 0 for none. */
-  rimHang: number;
-}
-
 /** A two hand chest pass, snapped out from the chest. */
 export function passPose(t: number, base: Pose): Pose {
   return keyed(

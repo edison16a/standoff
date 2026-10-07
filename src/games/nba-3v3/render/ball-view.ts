@@ -56,12 +56,14 @@ export class BallView {
     const carry = !!a && spinCarry(a);
     const hand = carry ? "carry" : chest && holder ? "held" : ball.hand;
     const target = new THREE.Vector3(ball.pos.x, ball.pos.y, ball.pos.z);
-    if (holder && a && (hand === "carry" || hand === "dribble")) {
+    // At the rim the engine's ball is the hands' ball: the drawn hands are put on it, not the other way round.
+    const atRim = a?.action.kind === "drive";
+    if (!atRim && holder && a && (hand === "carry" || hand === "dribble")) {
       // Pulled round through a spin, or riding the push of a dribble, the ball is under the dribbling palm.
       holder.hand(a.dribbleHand === 1 ? "R" : "L", palm);
       target.copy(palm);
       target.y -= BALL.radius * 0.85;
-    } else if (holder && hand === "held") {
+    } else if (!atRim && holder && hand === "held") {
       holder.hand("L", left);
       holder.hand("R", right);
       // Two hands close together hold it between them; as they part it slides into the right palm, never jumping across.

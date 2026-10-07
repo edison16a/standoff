@@ -3,10 +3,9 @@ import type { Athlete } from "../../engine/types";
 import { blockPose, landPose, passPose, shootPose, stealPose } from "./actions";
 import type { AthleteScene } from "./base";
 import { celebratePose, dejectedPose } from "./celebrations";
-import { dunkPose, dunkSpin } from "./dunks";
 import { floaterPose } from "./floater-pose";
 import { gesturePose } from "./gestures";
-import { layupPose } from "./layups";
+import { finishPose } from "./finish/finish-pose";
 import { setShotPose } from "./line";
 import { movePose } from "./moves";
 import { blend, type Pose } from "./pose";
@@ -48,10 +47,9 @@ export function actionPose(a: Athlete, c: BuildSpec, s: AthleteScene, base: Pose
       if (act.float) return { pose: floaterPose(act.t, m.releasedAt, base), rate: 34 };
       return { pose: act.free ? setShotPose(act.t, m.releasedAt, base) : shootPose(act.t, m.releasedAt, base, act.step !== null), rate: 34 };
     case "drive": {
-      const timing = { takeoff: act.takeoff, finish: act.finish, land: act.land, rimHang: act.rimHang };
-      const style = act.style ?? c.dunk;
-      const pose = act.dunk ? dunkPose(style, act.t, timing, base) : layupPose(act.layup ?? "finger", act.t, timing, base);
-      pose.spin = act.dunk ? dunkSpin(style, act.t, timing) : 0;
+      // The preset's own footwork and shape; a turn in the air is the engine's facing, so no extra spin.
+      const pose = finishPose(act, base);
+      pose.spin = 0;
       return { pose, rate: 30 };
     }
     case "pass":
