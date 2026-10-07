@@ -18,8 +18,8 @@ export interface ManualBoost {
 export const MANUAL = {
   /** A stick pushed further than this is a person steering. */
   stick: 0.1,
-  ball: { speed: 1.08, power: 1.3, grip: 1.12 },
-  free: { speed: 1.12, power: 1.5, grip: 1.2 },
+  ball: { speed: 1.08, power: 1.35, grip: 1.15 },
+  free: { speed: 1.12, power: 1.7, grip: 1.35 },
 } as const;
 
 const NONE: ManualBoost = { speed: 1, power: 1, grip: 1 };
