@@ -32,12 +32,12 @@ const LOOP_PIXELS = 0.8;
 const STILL_DRAWS = 1;
 
 /**
- * The poster's hero angle is off the left block at shoulder height,
- * looking up at the windmill over the ring. Lower and further out, the
- * Lockdown defender walks into the shot as he gets up off the floor.
+ * The poster's hero angle is high over the left block, just behind the
+ * Dunker, looking across at the windmill over the ring. Any lower and
+ * the players getting up off the floor walk into the bottom of the shot.
  */
 const STILL_CAMERA: Partial<Record<ShowcaseView, { pos: THREE.Vector3; look: THREE.Vector3; fov: number }>> = {
-  poster: { pos: new THREE.Vector3(-4.4, 1.7, 3.6), look: new THREE.Vector3(-0.4, 2.4, 1.9), fov: 42 },
+  poster: { pos: new THREE.Vector3(-3.6, 2.7, 3.2), look: new THREE.Vector3(-0.3, 2.85, 1.6), fov: 42 },
   icon: ICON_CAMERA,
 };
 
