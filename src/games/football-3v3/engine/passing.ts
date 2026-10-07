@@ -1,15 +1,13 @@
 import { leadPass, pickTarget } from "./aim";
 import { isDown, statsOf } from "./body";
 import { launch } from "./flight";
-import { jumpingDefender } from "./catching";
 import { tracePath } from "./catch/path";
+import { readLane } from "./pass-lane";
 import { pressure, release } from "./throw-error";
 import { releaseSpot, squareUp, THROW_MOVES, THROW_PICK, throwKindFor } from "./throw-preset";
 import type { Match } from "./match";
 import { canPitch, releasePitch } from "./run-play";
 import { handOver } from "./control";
-import { showReading } from "./meter-live";
-import { PLAIN, passQuality, type PassQuality, type ThrowReading } from "./pass-meter";
 import type { Athlete } from "./types";
 import { dir2, dist2, len3, type V3 } from "./vec";
 
@@ -48,19 +46,16 @@ export function updateTarget(m: Match): void {
 /**
  * Starts the throwing motion at a receiver, picked by the throw's
  * length, the QB's speed and the rush (throw-preset.ts). The ball leaves
- * the hand on that motion's release frame. `reading` is where the throw
- * meter stopped; without one the throw is the plain physics.
+ * the hand on that motion's release frame.
  */
-export function throwTo(m: Match, a: Athlete, to: number, reading: ThrowReading | null = null): boolean {
+export function throwTo(m: Match, a: Athlete, to: number): boolean {
   const target = m.athlete(to);
   if (!canThrow(m, a) || !target || target.team !== a.team) return false;
   m.play!.target = to;
-  const quality = reading ? passQuality(reading) : PLAIN;
-  if (reading) showReading(m, a, reading);
   const rush = pressure(m, a);
   const style = throwKindFor(dist2(a, target), Math.hypot(a.vx, a.vz), rush);
   const move = THROW_MOVES[style];
-  a.action = { kind: "throw", t: 0, dur: move.dur, released: false, to, lob: false, quality, style, release: move.release };
+  a.action = { kind: "throw", t: 0, dur: move.dur, released: false, to, lob: false, style, release: move.release };
   if (style === "pressure") fadeAway(m, a);
   return true;
 }
@@ -78,8 +73,8 @@ function fadeAway(m: Match, a: Athlete): void {
   a.vz += away.z * THROW_PICK.fade;
 }
 
-/** Lets the ball go: led to meet the target, off by the hand's error, as good as the meter's timing. */
-function letGo(m: Match, a: Athlete, to: number, q: PassQuality): void {
+/** Lets the ball go: led to meet the target and thrown true, with the defenders in the lane read as it leaves. */
+function letGo(m: Match, a: Athlete, to: number): void {
   const play = m.play!;
   const target = m.athlete(to);
   if (!target || m.carrier()?.id !== a.id) return;
@@ -89,11 +84,11 @@ function letGo(m: Match, a: Athlete, to: number, q: PassQuality): void {
   // Square to the target on the release frame, then out of the hand where the motion has it.
   squareUp(a, target);
   const from: V3 = releaseSpot(a, target, THROW_MOVES[style]);
-  const lead = leadPass(from, target, { x: target.vx, z: target.vz }, statsOf(a).arm, q.time);
-  // A defender sitting in front of the receiver reads it and breaks on the ball; a perfect ball gives him nothing to read.
-  const jumper = q.read > 0 ? jumpingDefender(m, a, from, lead.spot, target, q.read) : null;
-  // The hand's error turns the aimed throw into the real one.
-  const out = release(m, a, lead.vel, q);
+  const lead = leadPass(from, target, { x: target.vx, z: target.vz }, statsOf(a).arm);
+  // Only defenders in the lane get a play on it; the biggest threat reads it and breaks on the ball.
+  const lane = readLane(m, a, from, lead.spot);
+  const jumper = lane[0] ?? null;
+  const out = release(m, a, lead.vel);
   const flight = launch(from, out.vel, "spiral", out.spin, out.wobble);
   m.ball.state = "pass";
   m.ball.holder = null;
@@ -102,11 +97,12 @@ function letGo(m: Match, a: Athlete, to: number, q: PassQuality): void {
   const spin = out.spin;
   m.ball.pass = {
     from: a.id, to: target.id, interceptor: jumper?.id ?? null, spot: lead.spot, arrive: lead.time, t: 0,
-    speed, rps: spin / (Math.PI * 2), release: from, at: m.time, tried: {}, path: tracePath(flight, m.time), tipped: false, pitch: false, quality: q,
+    speed, rps: spin / (Math.PI * 2), release: from, at: m.time, tried: {}, path: tracePath(flight, m.time), tipped: false, pitch: false,
+    lane: Object.fromEntries(lane.map((l) => [l.id, l.threat])),
   };
   play.passed = true;
   a.stats.attempts++;
-  m.emit({ type: "throw", id: a.id, to: target.id, speed, spin: spin / (Math.PI * 2), air: lead.time, intercepting: jumper !== null, grade: q.grade });
+  m.emit({ type: "throw", id: a.id, to: target.id, speed, spin: spin / (Math.PI * 2), air: lead.time, intercepting: jumper !== null });
   handOver(m, a, target);
 }
 
@@ -117,7 +113,7 @@ export function updateThrow(m: Match, a: Athlete, dt: number): void {
   if (!act.released && act.t >= act.release) {
     act.released = true;
     if (act.lob) releasePitch(m, a, act.to);
-    else letGo(m, a, act.to, act.quality);
+    else letGo(m, a, act.to);
   }
   if (act.t >= act.dur) a.action = { kind: "none" };
 }

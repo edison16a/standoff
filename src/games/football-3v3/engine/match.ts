@@ -4,7 +4,6 @@ import { newBall, type Ball, type PassInfo } from "./ball";
 import { createAthlete } from "./body";
 import { think } from "./bots/brain";
 import { setAway, steered } from "./control";
-import { holdThrow, tickMeter, type MeterState } from "./meter-live";
 import { pressButton, releaseButton, setAim, setMove } from "./controls";
 import { newDrive, type Drive } from "./downs";
 import type { MatchEvent, PlayEnd } from "./events";
@@ -70,8 +69,6 @@ export class Match {
   readonly lines: LinePair[];
   /** When each pair of players may next make a pads sound, so one collision is one thud. */
   readonly bumps = new Map<number, number>();
-  /** The throw meter while a QB holds the throw, and the reading he let go on just after. */
-  meter: MeterState | null = null;
   /** Phones that dropped: the computer plays whoever they steer until they come back. */
   readonly away = new Set<number>();
   private readonly queue: MatchEvent[] = [];
@@ -154,19 +151,9 @@ export class Match {
     setMove(this, id, move);
   }
 
-  /**
-   * The QB's throw stick in field space while held, or null when let go.
-   * Letting go throws, graded by `heldMs`, how long the phone's throw
-   * meter ran; without it the throw has no meter.
-   */
-  setAim(id: number, aim: V2 | null, heldMs?: number): void {
-    setAim(this, id, aim, heldMs);
-  }
-
-  /** A thumb went down on the throw (the meter starts) or came off without a throw. */
-  holdThrow(id: number, down: boolean): void {
-    const a = this.athlete(id);
-    if (a && !a.auto) holdThrow(this, a, down);
+  /** The QB's throw stick in field space while held, or null when let go. Letting go throws. */
+  setAim(id: number, aim: V2 | null): void {
+    setAim(this, id, aim);
   }
 
   /** A button pressed. `value` is the phone's own meter reading for a kick, free of lag. */
@@ -194,6 +181,5 @@ export class Match {
     this.phaseT += dt;
     think(this, dt);
     stepWorld(this, dt);
-    tickMeter(this, dt);
   }
 }

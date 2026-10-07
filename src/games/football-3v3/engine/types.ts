@@ -2,7 +2,6 @@ import type { BuildId } from "../builds";
 import type { TeamId } from "../teams";
 import type { BlockKind } from "./block-preset";
 import type { CatchPlan } from "./catch-preset";
-import type { PassQuality } from "./pass-meter";
 import type { ApproachKind, TackleKind } from "./tackle-preset";
 import type { ThrowKind } from "./throw-preset";
 import type { V2 } from "./vec";
@@ -39,10 +38,10 @@ export type Action =
   /** `approach` is the tackle preset the lunge was picked as, so the leap already looks like that tackle. */
   | { kind: "lunge"; t: number; dur: number; dir: V2; target: number; approach: ApproachKind }
   /**
-   * A forward pass, or with `lob` the pitch to the back on a run call. `quality` is the throw meter's timing,
-   * `style` the throwing motion picked for it (throw-preset.ts) and `release` the second the ball leaves the hand.
+   * A forward pass, or with `lob` the pitch to the back on a run call.
+   * `style` is the throwing motion picked for it (throw-preset.ts) and `release` the second the ball leaves the hand.
    */
-  | { kind: "throw"; t: number; dur: number; released: boolean; to: number; lob: boolean; quality: PassQuality; style: ThrowKind; release: number }
+  | { kind: "throw"; t: number; dur: number; released: boolean; to: number; lob: boolean; style: ThrowKind; release: number }
   | { kind: "kick"; t: number; dur: number; released: boolean }
   /** On the ground, then getting up for the last TACKLE.getUp seconds. `bind` ties the men of one tackle together. */
   | { kind: "down"; t: number; dur: number; cause: DownCause; bind: TackleBind | null }

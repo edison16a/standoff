@@ -1,10 +1,10 @@
-import { meterView, type MeterView } from "./meter-live";
 import { ceremonyTime } from "./ceremony";
 import { downText, goalToGo, toGo } from "./downs";
 import type { PlayEnd } from "./events";
 import { yardToX } from "./field";
 import { inGreen, meterAim, meterPower } from "./kick";
 import type { Match } from "./match";
+import { canThrow } from "./passing";
 import { KICK, RULES } from "./tuning";
 import type { Phase, TeamId } from "./types";
 import { athleteView, type AthleteView } from "./view-athlete";
@@ -65,8 +65,8 @@ export interface MatchView {
   winner: TeamId | null;
   lastEnd: PlayEnd | null;
   ceremony: CeremonyView | null;
-  /** The throw meter over the QB: running while a person holds the throw, then where it stopped. */
-  meter: MeterView | null;
+  /** The QB with his throw stick held and a pass still to throw, who brings the ball up ready. */
+  aiming: number | null;
 }
 
 function driveView(m: Match): DriveView {
@@ -110,6 +110,7 @@ export function buildView(m: Match): MatchView {
       const role = !ceremony ? null : a.id === ceremony.captain ? "captain" : a.team === ceremony.team ? "mate" : "beaten";
       return athleteView(a, b.state === "held" && b.holder === a.id, target === a.id, role);
     }),
-    countdown: countdown(m), scorer: m.scorer, winner: m.winner, lastEnd: m.lastEnd, ceremony, meter: meterView(m),
+    countdown: countdown(m), scorer: m.scorer, winner: m.winner, lastEnd: m.lastEnd, ceremony,
+    aiming: m.athletes.find((a) => a.aim !== null && canThrow(m, a))?.id ?? null,
   };
 }
