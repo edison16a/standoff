@@ -16,8 +16,8 @@ const PRESS_AT = 0.4;
 const HOLD_MS = GREEN_MS + 30;
 const JUMP_AT = PRESS_AT + 0.3;
 
-/** Seconds the icon's film runs before it is held: the ball just off the Shooter's fingertips, at the defender's hand. */
-export const ICON_AT = PRESS_AT + HOLD_MS / 1000 + 0.045;
+/** Seconds the icon's film runs before it is held: the ball just off the Shooter's fingertips, under the defender's hands. */
+export const ICON_AT = PRESS_AT + HOLD_MS / 1000 + 0.03;
 
 /**
  * The Shooter on the right wing, squared up to the rim. His man starts
@@ -34,15 +34,15 @@ const CLOSE = 0.95;
 const at = (ahead: number, side: number, y: number) => new THREE.Vector3(SPOT.x + TO_RIM.x * ahead + SIDE.x * side, y, SPOT.z + TO_RIM.z * ahead + SIDE.z * side);
 
 /**
- * Chest high off the Shooter's front, out past his guide hand, looking
- * across the lane at the lit stands on the far side: his face in three
- * quarter view clear of both arms, the ball just off his fingers, and
- * the defender in the air beside him with a hand up at it.
+ * Chest high and close in off the Shooter's front, out past his guide
+ * hand, looking a little up across the lane at the lit stands on the far
+ * side: his face in three quarter view under the ball as it leaves his
+ * fingers, and the defender in the air beside him reaching over it.
  */
-export const ICON_CAMERA = { pos: at(2.6, -1.3, 1.4), look: at(0.35, 0.35, 2.15), fov: 36 };
+export const ICON_CAMERA = { pos: at(1.4, -1.2, 1.6), look: at(0.3, 0.15, 2.05), fov: 50 };
 
 /** The lights aim at the ball between the two, keyed from the camera's side so both faces catch it. */
-const SUBJECT = at(0.35, 0.35, 2.5);
+const SUBJECT = at(0.3, 0.15, 2.5);
 const TO_CAMERA = { x: ICON_CAMERA.pos.x - SUBJECT.x, z: ICON_CAMERA.pos.z - SUBJECT.z };
 const KEY_FROM = { x: TO_CAMERA.x / Math.hypot(TO_CAMERA.x, TO_CAMERA.z), z: TO_CAMERA.z / Math.hypot(TO_CAMERA.x, TO_CAMERA.z) };
 
