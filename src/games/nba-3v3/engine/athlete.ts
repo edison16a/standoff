@@ -4,6 +4,7 @@ import { collide, type BodyHit } from "./body/contact";
 import { footGrip, powerPerKg, sizeEdge } from "./body/mass";
 import { clampToCourt } from "./court";
 import { freshStyle } from "./dribble-style";
+import { manualBoost } from "./manual-move";
 import type { MatchEvent } from "./events";
 import { steer } from "./steer";
 import { STEPBACK } from "./stepback";
@@ -34,7 +35,7 @@ export function topSpeed(a: Athlete, withBall: boolean): number {
   const base = (MOVE.baseSpeed + buildOf(a).stats.speed * MOVE.perSpeed) * sizeEdge(a);
   // Off balance after a whiff or a beaten move, and still gathering after a landing, a player is slow.
   const hurt = (a.whiff > 0 ? 0.45 : 1) * (a.recover > 0 ? 0.55 : 1);
-  return base * (withBall ? MOVE.withBall : 1) * hurt * (a.onFire ? 1.06 : 1);
+  return base * (withBall ? MOVE.withBall : 1) * hurt * (a.onFire ? 1.06 : 1) * manualBoost(a, withBall).speed;
 }
 
 /** How high a hand gets standing flat footed: roughly 1.33 times height, more for long arms. */
@@ -76,7 +77,12 @@ export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: { x:
     const tx = free ? a.move.x * speed : 0;
     const tz = free ? a.move.z * speed : 0;
     // Stopping to shoot is a jump stop on both feet, which brakes harder than a run, so jumpers go up on balance.
-    const legs = { power: powerPerKg(a) * (hasBall ? BODY.ballPower : 1), grip: footGrip(a) * (hasBall ? BODY.ballGrip : 1), brake: free ? 1 : BODY.plantTraction };
+    const boost = manualBoost(a, hasBall);
+    const legs = {
+      power: powerPerKg(a) * (hasBall ? BODY.ballPower : 1) * boost.power,
+      grip: footGrip(a) * (hasBall ? BODY.ballGrip : 1) * boost.grip,
+      brake: free ? 1 : BODY.plantTraction,
+    };
     const { planted } = steer(a, tx, tz, dt, legs);
     if (planted && a.squeakCd <= 0) {
       events.push({ type: "squeak", id: a.id });
