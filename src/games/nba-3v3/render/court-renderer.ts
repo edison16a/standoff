@@ -143,7 +143,8 @@ export class CourtRenderer {
     // The ball is put away for the ceremony, and the arena's lights come down under the spotlights.
     this.ball.mesh.visible = !this.ceremony.active;
     this.arena.key.intensity = this.keyLight * (1 - this.ceremony.scene.dim);
-    this.ball.update(b, holder !== null ? (this.views[holder] ?? null) : null, chest, dt);
+    const shooter = b.shot ? (this.views[b.shot.shooter] ?? null) : null;
+    this.ball.update(b, holder !== null ? (this.views[holder] ?? null) : null, chest, dt, shooter);
     this.referee.update(m, dt);
     this.rings.update(m, this.pilots(), dt, !this.ceremony.active && this.tv.fixed !== this.replayCam && m.phase !== "over");
     this.contact.cast([...this.views.map((v) => v.model.joints), this.referee.joints], this.ball.mesh.visible ? this.ball.mesh.position : null, BALL.radius);
