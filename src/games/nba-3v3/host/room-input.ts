@@ -31,7 +31,7 @@ export class RoomInput {
     if (down) driver.press(seat, button as Button, stick);
     // The phone's own release message usually lands first; this catches one that did not.
     else if (button === "shoot") driver.release(seat);
-    // A skip vote shows at once on every screen.
+    // A skip vote shows at once on every phone.
     if (replaying) this.host.refresh();
   }
 

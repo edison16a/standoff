@@ -78,8 +78,8 @@ export interface NbaHostState {
   gamePoint: [boolean, boolean];
   banner: Banner | null;
   winner: TeamId | null;
-  /** The replay of the winning basket while it plays: whose view, who scored, and who has voted to skip. */
-  replay: { view: "scorer" | "defender"; scorer: string; votes: { name: string; done: boolean }[] } | null;
+  /** The replay of the winning basket while it plays: whose view and who scored. The skip vote is only on the phones. */
+  replay: { view: "scorer" | "defender"; scorer: string } | null;
   /** Someone has won and the replay or the trophy ceremony is still to come, so the results wait. */
   replayDue: boolean;
   /** The trophy ceremony's names and where it is, once it has started. */
