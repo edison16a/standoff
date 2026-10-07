@@ -17,10 +17,12 @@ export const DRIBBLE_MOVES = ["stepback", "crossover", "spin", "hesitation", "be
 export type DribbleMove = (typeof DRIBBLE_MOVES)[number];
 
 /**
- * How a layup is finished: off the fingers in front of the rim, a
- * reverse under it on the far side, or through a defender's body.
+ * The layups, each a hand made preset (see `finish/layups.ts`): a finger
+ * roll, a reverse, a euro step, an up and under, a scoop, a teardrop,
+ * high off the glass, off the wrong foot, a spin, a body shield and a
+ * power layup off a jump stop.
  */
-export const LAYUPS = ["finger", "reverse", "contact"] as const;
+export const LAYUPS = ["finger", "reverse", "euro", "upUnder", "scoop", "teardrop", "glass", "wrongFoot", "spin", "shield", "power"] as const;
 export type LayupKind = (typeof LAYUPS)[number];
 
 /** The small gestures after a big basket: patting down a smaller man, the sleep sign, the shush, the flex. */
@@ -45,9 +47,17 @@ export type Action =
    * A layup or a dunk. `takeoff`, `finish` (the ball leaves the hand or is
    * slammed) and `land` are times on `t`; a dunk hangs on the rim for
    * `rimHang` seconds after the slam, and `style` is the dunk thrown.
-   * `layup` is how a layup is finished, null for a dunk.
+   * `layup` is how a layup is finished, null for a dunk. `hand` is the
+   * finishing hand (1 right, -1 left) and `side` the way a sidestep or a
+   * spin goes. The ball rides the hands from `pick` (where it was when
+   * the gather began) to `release`, the hand at the rim (see
+   * `finish/ball-track.ts`). `hangY` is the body's height hanging on the rim.
    */
-  | { kind: "drive"; t: number; dunk: boolean; style: DunkStyle | null; layup: LayupKind | null; from: V2; to: V2; takeoff: number; finish: number; rimHang: number; land: number; peak: number; released: boolean }
+  | {
+      kind: "drive"; t: number; dunk: boolean; style: DunkStyle | null; layup: LayupKind | null; from: V2; to: V2;
+      takeoff: number; finish: number; rimHang: number; land: number; peak: number; released: boolean;
+      hand: 1 | -1; side: 1 | -1; pick: V3; release: V3; hangY: number; baseYaw: number;
+    }
   | { kind: "pass"; t: number }
   /** A jump with the arms up: a crouch for `gather` seconds, then `air` seconds off the floor. */
   | { kind: "block"; t: number; peak: number; gather: number; air: number }
@@ -171,6 +181,8 @@ export interface ShotInfo {
   flight: ShotFlight;
   /** Defenders who already had their one chance to get a hand on it. */
   rolled: number[];
+  /** 0 to 1: how much of a defender's chance to block it the finish took away (a scoop, a reverse). */
+  evade: number;
 }
 
 export type BallMode = "held" | "flight" | "loose";
