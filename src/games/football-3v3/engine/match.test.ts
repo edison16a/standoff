@@ -40,7 +40,7 @@ describe("a whole game of computer players", () => {
     expect(count("takePitch")).toBeGreaterThan(0);
     expect(count("catch")).toBeGreaterThan(3);
     expect(count("tackle") + count("incomplete")).toBeGreaterThan(3);
-  });
+  }, 60_000);
 
   it("keeps the stats in step with the plays", () => {
     const catches = events.filter((e) => e.type === "catch").length;

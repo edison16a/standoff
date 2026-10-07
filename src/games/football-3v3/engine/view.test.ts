@@ -10,7 +10,8 @@ describe("the view", () => {
     const v = buildView(peopleMatch());
     expect(v.drive.text).toBe("1st and 10");
     expect(v.drive.firstDownX! - v.drive.losX).toBeCloseTo(10 * YARD);
-    expect(v.athletes).toHaveLength(10);
+    // Two people a side, three linemen and five support players each.
+    expect(v.athletes).toHaveLength(20);
     expect(v.countdown).toBeGreaterThan(0);
   });
 
