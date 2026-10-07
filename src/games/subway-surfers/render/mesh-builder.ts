@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { clothMaterial, weaveAttribute, type Weave } from "./cloth";
 import { inkMaterial, toon } from "./toon";
 
@@ -108,7 +108,10 @@ export class MeshBuilder {
   box(w: number, h: number, d: number, paint: Paint, at: V3, rot?: V3, round = 0): this {
     const shape = (g: number) => {
       const r = Math.min(round + g, (w + 2 * g) / 2 - 1e-4, (h + 2 * g) / 2 - 1e-4, (d + 2 * g) / 2 - 1e-4);
-      return round > 0 ? new RoundedBoxGeometry(w + 2 * g, h + 2 * g, d + 2 * g, 2, r) : new THREE.BoxGeometry(w + 2 * g, h + 2 * g, d + 2 * g);
+      if (round <= 0) return new THREE.BoxGeometry(w + 2 * g, h + 2 * g, d + 2 * g);
+      const rounded = new RoundedBoxGeometry(w + 2 * g, h + 2 * g, d + 2 * g, 2, r);
+      // A rounded box comes unindexed, which would turn a whole character bone flat: three times the vertices.
+      return this.cloth ? mergeVertices(rounded) : rounded;
     };
     this.ink(shape, at, rot);
     return this.add(shape(0), paint, at, rot);

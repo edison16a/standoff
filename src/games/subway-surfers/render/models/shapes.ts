@@ -7,10 +7,14 @@ import type { MeshBuilder, Paint, V3 } from "../mesh-builder";
  * laid along a seam.
  */
 
-/** A part of a sphere's shell. `phi` runs round from -x toward +z, `theta` down from the top. Its UVs span the patch. */
+/**
+ * A part of a sphere's shell. `phi` runs round from -x toward +z, `theta`
+ * down from the top, and `segments` counts round a whole circle, as a
+ * sphere's would. Its UVs span the patch.
+ */
 export function shell(radius: number, phi: readonly [number, number], theta: readonly [number, number], segments = 24): THREE.BufferGeometry {
-  const rings = Math.max(4, Math.round(segments * ((theta[1] - theta[0]) / Math.PI)));
-  const around = Math.max(4, Math.round(segments * ((phi[1] - phi[0]) / (Math.PI * 2)) * 2));
+  const rings = Math.max(3, Math.round((segments / 2) * ((theta[1] - theta[0]) / Math.PI)));
+  const around = Math.max(4, Math.round(segments * ((phi[1] - phi[0]) / (Math.PI * 2))));
   return new THREE.SphereGeometry(radius, around, rings, phi[0], phi[1] - phi[0], theta[0], theta[1] - theta[0]);
 }
 
