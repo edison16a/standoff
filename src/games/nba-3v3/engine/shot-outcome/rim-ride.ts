@@ -1,7 +1,7 @@
 import type { BallBody } from "../physics/air";
 import { BALL } from "../physics/ball-spec";
 import type { Contact } from "../physics/world";
-import { RIM } from "../tuning";
+import { BOARD, RIM } from "../tuning";
 import { clamp, lerp, type V3 } from "../vec";
 
 /**
@@ -91,7 +91,10 @@ export function ridePoint(r: RideState, t: number, out: V3 = { x: 0, y: 0, z: 0 
   const settle = smooth(Math.min(1, t / Math.max(0.2, r.hopT)));
   const tip = smooth(clamp((s - 0.72) / 0.28, 0, 1));
   const wobble = 0.012 * Math.sin(Math.PI * 6 * s) * (1 - s);
-  const u = lerp(lerp(r.u0, U_RIDE + wobble, settle), r.spec.drop === "in" ? -U_TIP : U_TIP, tip);
+  const want = lerp(lerp(r.u0, U_RIDE + wobble, settle), r.spec.drop === "in" ? -U_TIP : U_TIP, tip);
+  // The back of the ring is a hand from the glass: out there the ball rides against the glass, never into it.
+  const back = -Math.sin(a);
+  const u = back > 0 ? Math.min(want, (RIM.z - BOARD.face - BALL.radius) / back - RIM.radius) : want;
   // A falling arc off the landing, as a real bounce.
   const k = t / r.hopT;
   const hop = k < 1 ? 4 * r.hop * k * (1 - k) : 0;

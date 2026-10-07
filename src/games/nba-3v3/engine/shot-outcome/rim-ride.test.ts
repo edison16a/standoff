@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { BallBody } from "../physics/air";
 import { BALL } from "../physics/ball-spec";
 import type { Contact } from "../physics/world";
-import { RIM, STEP } from "../tuning";
+import { BOARD, RIM, STEP } from "../tuning";
 import { newFlight, stepShotFlight } from "./flight";
 import { ridePoint, startRide } from "./rim-ride";
 import { traceFlight } from "./trace";
@@ -75,4 +75,14 @@ describe("the roll round the ring", () => {
     expect(ticks).toBeGreaterThan(3);
     expect(fastest).toBeLessThan(5);
   });
+
+  it("never pushes the ball into the glass behind the ring, even tipping out at the back", () => {
+    for (const drop of ["in", "out"] as const) {
+      // Landing outside the back of the ring, rolling round it.
+      const b: BallBody = { pos: { x: RIM.x + 0.05, y: RIM.y + 0.12, z: RIM.z - RIM.radius - 0.08 }, vel: { x: 1.5, y: -2, z: 0 }, w: { x: 0, y: 0, z: 0 } };
+      const r = startRide({ laps: 1.5, drop }, b)!;
+      for (let t = 0; t <= r.dur; t += STEP / 4) expect(ridePoint(r, t).z, `${drop} ${t}`).toBeGreaterThanOrEqual(BOARD.face + BALL.radius - 1e-9);
+    }
+  });
 });
+
