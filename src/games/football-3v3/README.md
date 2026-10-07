@@ -2,6 +2,13 @@
 
 American football for 2 to 6 players, with phones held sideways as controllers. Each team has a QB, up to two runners, and three computer linemen who fight it out at the line. First to 14 points wins, or the higher score when four quarters run out.
 
+<p>
+  <img src="media/poster.jpg" alt="The speedster lays out for a diving catch as the corner flies in" width="66%" />
+  <img src="media/icon.jpg" alt="A ball carrier at full sprint with two defenders diving at him" width="32%" />
+</p>
+
+Both are drawn by the game itself (see The showcase): a diving catch from the trailer, and the icon's key art.
+
 ## Playing it
 
 1. **Join.** Everyone scans the code on the big screen and picks one of six builds on their phone, a way to play (see Builds below). The build turns in 3D in the side's uniform beside its rating bars. Then Ready. The name each player typed is who they are everywhere: on the back of their jersey, their tag on the field, the callouts, the winners' names and the stats.
