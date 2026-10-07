@@ -2,6 +2,14 @@
 
 Status: ready. Half court basketball for 1 to 6 players: one on one, two on two or three on three, with computer players filling every empty spot. Turn them off to play uneven teams of people only. First to 11.
 
+<table>
+  <tr>
+    <td width="33%" align="center"><img src="media/readme/windmill.jpg" alt="The Dunker at the top of a windmill over the ring" width="100%" /><br /><sub>A windmill dunk</sub></td>
+    <td width="33%" align="center"><img src="media/readme/chase-block.jpg" alt="The Lockdown defender coming from behind to swat a layup off the glass" width="100%" /><br /><sub>A chase down block</sub></td>
+    <td width="33%" align="center"><img src="media/readme/ankles.jpg" alt="A defender down on one hip with a hand on the floor after a hard crossover" width="100%" /><br /><sub>Broken ankles</sub></td>
+  </tr>
+</table>
+
 ## How to play
 
 1. Open Basketball 3v3 on the computer. Everyone scans the code with their phone.
