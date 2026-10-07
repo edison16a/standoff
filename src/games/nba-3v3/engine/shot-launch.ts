@@ -61,7 +61,8 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   // Gold is a sure swish: no hand gets to it, and it goes in clean even through a foul.
   const gold = grade === "gold";
   // Contact on the shot is a foul, and a fouled shot flies on and may still drop.
-  const fouler = scripted || free ? null : rollShootingFoul(m, a, kind, evade);
+  // A block set up by the lab is never fouled, so the scene always plays the block.
+  const fouler = scripted || free || m.forcedHit ? null : rollShootingFoul(m, a, kind, evade);
   if (fouler) callShootingFoul(m, fouler, a, three ? 3 : 2);
   b.shot = shotInfo(m, a, kind, grade, three ? 3 : free ? 1 : 2, c.contest, distance);
   // A scripted film, a gold release and a fouled shot fly clear of hands.

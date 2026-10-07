@@ -57,9 +57,9 @@ export function jumpStyle(m: Match, d: Athlete): BlockJump {
       // Behind him and running his way: the chase down.
       if (ahead < -0.25 && along > 1.2) return "chase";
     }
-    // Someone else is the nearest man to him: this one is coming over to help.
-    const nearest = m.opponents(t.team).reduce((best, o) => (dist2(o, t) < dist2(best, t) ? o : best), d);
-    if (nearest !== d && gap < 3.6 && speed > 1) return "help";
+    // Another man is already on him: this one is coming over to help.
+    const onBall = m.opponents(t.team).some((o) => o !== d && dist2(o, t) < 1.8);
+    if (onBall && gap < 3.6 && speed > 1) return "help";
   }
   return speed > 2.2 ? "run" : "stand";
 }
