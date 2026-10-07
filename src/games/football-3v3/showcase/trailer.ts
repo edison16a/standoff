@@ -22,18 +22,19 @@ export interface Shot {
  * The long touchdown: the QB winds up and lets it go in slow motion, the
  * spiral is chased through the air, the catch, the side step as a
  * tackler dives past, then the scorer racing over the goal line at the
- * pylon and his dance in the end zone. Then a crunching hit on a juke
- * from later in the game, deep in slow motion, and the trophy going up
- * over the captain's head.
+ * pylon and his dance in the end zone. Then the Storm's speedster laying
+ * out for a catch over the middle and wrapped up by the Blaze's corner as
+ * he comes up with it, deep in slow motion, and the trophy going up over
+ * the captain's head.
  */
 export const SHOTS: readonly Shot[] = [
-  { reel: "game", from: 4.23, to: 4.75, rate: 0.5, camera: "qbLow" },
-  { reel: "game", from: 4.75, to: 5.53, rate: 0.75, camera: "spiral" },
-  { reel: "game", from: 5.53, to: 5.98, rate: 0.5, camera: "catch" },
-  { reel: "game", from: 6.5, to: 7.1, rate: 0.75, camera: "juke" },
-  { reel: "game", from: 13.1, to: 13.7, rate: 0.5, camera: "pylon" },
-  { reel: "game", from: 14.4, to: 15.2, rate: 1, camera: "dance" },
-  { reel: "game", from: 56.65, to: 57.2, rate: 0.4, camera: "hit" },
+  { reel: "game", from: 4.83, to: 5.35, rate: 0.5, camera: "qbLow" },
+  { reel: "game", from: 5.35, to: 6.13, rate: 0.75, camera: "spiral" },
+  { reel: "game", from: 6.13, to: 6.58, rate: 0.5, camera: "catch" },
+  { reel: "game", from: 12.62, to: 13.22, rate: 0.75, camera: "juke" },
+  { reel: "game", from: 13.68, to: 14.28, rate: 0.5, camera: "pylon" },
+  { reel: "game", from: 14.5, to: 15.3, rate: 1, camera: "dance" },
+  { reel: "game", from: 62.38, to: 62.93, rate: 0.4, camera: "hit" },
   { reel: "trophy", from: 5.45, to: 6.295, rate: 1, camera: "lift" },
 ];
 

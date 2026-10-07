@@ -9,14 +9,14 @@ const LINEMAN_STATS: CharStats = { speed: 3, agility: 3, power: 9, hands: 3, arm
 export function createAthlete(id: number, team: TeamId, role: Role, slot: number, build: BuildId | null, seat: number | null): Athlete {
   const c = build ? BUILDS[build] : null;
   return {
-    id, team, role, slot, build, seat, auto: seat === null,
+    id, team, role, slot, build, seat, pilot: seat, auto: seat === null,
     number: c ? c.number : (LINEMAN_NUMBERS[team][slot] ?? 60 + slot),
     x: 0, z: 0, vx: 0, vz: 0, ax: 0, az: 0,
     yaw: attackSign(team) > 0 ? Math.PI / 2 : -Math.PI / 2,
     mass: c ? c.frame.weight : LINEMAN_FRAME.weight,
     move: { x: 0, z: 0 }, aim: null,
     action: { kind: "none" },
-    jukeCd: 0, jukeHeat: 0, tackleCd: 0, rushT: 0, rushCd: 0, guard: null, blocked: 0, stagger: 0,
+    jukeCd: 0, jukeHeat: 0, tackleCd: 0, rushT: 0, rushCd: 0, guard: null, blocked: 0, stagger: 0, stumble: null, catching: null, block: null,
     bot: { wait: 0, route: [], leg: 0, stop: false, goal: { x: 0, z: 0 }, cover: null, rush: true, readAt: 2 },
     stats: emptyStats(),
   };
@@ -48,9 +48,14 @@ export function pushOf(a: Athlete): number {
   return MOVE.push * power * Math.sqrt(MOVE.refMass / a.mass);
 }
 
-/** The cleats' grip: the most a player can speed up, brake and turn at once, metres a second squared. */
+/**
+ * The cleats' grip: the most a player can speed up, brake and turn at
+ * once, metres a second squared. The same cleats hold a heavier body
+ * back less, so a big man brakes and cuts on a longer line.
+ */
 export function gripOf(a: Athlete): number {
-  return MOVE.grip + (statsOf(a).agility - 5) * MOVE.gripPerAgility;
+  const weight = Math.pow(MOVE.refMass / a.mass, MOVE.gripMass);
+  return (MOVE.grip + (statsOf(a).agility - 5) * MOVE.gripPerAgility) * weight;
 }
 
 /** Players on the ground and mid lunge or dive have no say over their legs. */

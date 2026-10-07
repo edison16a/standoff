@@ -1,3 +1,4 @@
+import type { PassGrade } from "./pass-meter";
 import type { ConversionCall, JukeKind, PlayCall, TeamId } from "./types";
 
 /** How a play ended, for the whistle, the banner and the replay. */
@@ -31,10 +32,13 @@ export type MatchEvent =
   | { type: "lunge"; id: number; target: number }
   | { type: "missedTackle"; id: number; by: number }
   | { type: "tackle"; id: number; by: number; sack: boolean }
-  | { type: "throw"; id: number; to: number; speed: number; spin: number; air: number; intercepting: boolean }
+  /** `grade` is where the throw meter stopped, or null for a throw with no meter. */
+  | { type: "throw"; id: number; to: number; speed: number; spin: number; air: number; intercepting: boolean; grade: PassGrade | null }
   /** The QB's pitch to the back on a run call, and the back taking it. */
   | { type: "pitch"; id: number; to: number }
   | { type: "takePitch"; id: number }
+  /** A phone took over the computer teammate it gave the ball to (control.ts). */
+  | { type: "control"; seat: number; from: number; to: number }
   | { type: "catch"; id: number; yards: number }
   | { type: "intercept"; id: number; from: number }
   | { type: "incomplete"; id: number | null }

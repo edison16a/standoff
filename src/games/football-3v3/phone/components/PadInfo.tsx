@@ -2,6 +2,7 @@
 import { ROLE_NAMES } from "../../roles";
 import { TEAMS } from "../../teams";
 import type { PhoneState } from "../../protocol";
+import { GRADE_WORDS, useFreshThrow } from "./ThrowMeter";
 
 /** The QB with the ball who has not turned runner: what he can do right now. */
 function qbStatus(host: PhoneState): string {
@@ -20,6 +21,7 @@ export function statusOf(host: PhoneState): string | null {
   if (host.grounded) return "Getting up";
   if (host.withBall && host.pad === "qb") return qbStatus(host);
   if (host.withBall) return "Run it in";
+  if (host.switched && host.phase === "live") return host.runPlay ? "You have the back" : "You have the receiver";
   switch (host.phase) {
     case "choose":
     case "convert":
@@ -46,7 +48,9 @@ export function statusOf(host: PhoneState): string | null {
  */
 export function PadInfo({ host }: { host: PhoneState }) {
   const team = host.team !== null ? TEAMS[host.team] : TEAMS[0];
-  const status = statusOf(host);
+  // Just after a throw the line says how it came out, even once the pad has moved on to the receiver.
+  const thrown = useFreshThrow();
+  const status = thrown && !host.skip ? `${GRADE_WORDS[thrown.reading.grade]} pass` : statusOf(host);
   return (
     <div className="fb-info">
       <div className="fb-info__me">

@@ -53,9 +53,9 @@ function padFor(m: Match, id: number, onOffense: boolean, withBall: boolean): Pa
   return "defense";
 }
 
-/** What a phone should show for the player it plays, or null for a phone with no player. */
+/** What a phone should show for the player it steers now, or null for a phone with no player. */
 export function seatStatus(m: Match, seat: number): SeatStatus | null {
-  const a = m.bySeat(seat);
+  const a = m.steered(seat);
   if (!a) return null;
   const onOffense = a.team === m.offense;
   const withBall = m.carrier()?.id === a.id;

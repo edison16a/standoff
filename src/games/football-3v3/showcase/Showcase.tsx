@@ -6,6 +6,7 @@ import { MatchRenderer } from "../render/match-renderer";
 import { isLabMove, labView } from "./lab";
 import { SHOWCASE_SEED, ShowcaseScene } from "./scene";
 import { STILLS } from "./stills";
+import { KeyArt } from "./keyart";
 import { BroadcastPlayer } from "./broadcast-player";
 import { TrailerPlayer } from "./trailer-player";
 
@@ -45,11 +46,27 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     }
     // Review scripts read what a frame draws from here. Development builds only.
     if (process.env.NODE_ENV === "development") Object.assign(window, { __fbRenderer: renderer });
+    // With labstep the lab's clock only moves when a review script steps it, so slow machines still see every frame.
+    const stepped = labScene && isLabMove(lab) && params.has("labstep");
+    let labTime = 0;
+    if (stepped) {
+      Object.assign(window, {
+        __fbLabStep: (dt: number, draw: boolean) => {
+          labTime += dt;
+          const v = labView(labScene.view, lab, labTime);
+          if (draw) renderer.draw(v, labTime * 1000);
+          else renderer.update(v, labTime * 1000);
+        },
+      });
+    }
     const game = params.get("game");
     const speed = params.get("speed");
     const broadcast = !labScene && game !== null ? new BroadcastPlayer(renderer, Number(game) || 0, speed === "step" ? "step" : Number(speed ?? 1), params.has("follow") ? Number(params.get("follow")) : null) : null;
-    const player = labScene || broadcast ? null : new TrailerPlayer(renderer, renderer.scene);
     const held = params.get("t");
+    // The icon is staged key art, not a moment of the seeded game (keyart.ts); t= still shows the film.
+    const keyArt = view === "icon" && !labScene && !broadcast && held === null ? new KeyArt(renderer, renderer.scene, new ShowcaseScene(SHOWCASE_SEED).view) : null;
+    if (keyArt) Object.assign(window, { __fbHold: (t: number) => keyArt.hold(t) });
+    const player = labScene || broadcast || keyArt ? null : new TrailerPlayer(renderer, renderer.scene);
     const still = held !== null ? Number(held) : view === "loop" ? null : (STILLS[view] ?? null);
     // On a still, a review script can move the hold to any moment, through the still's own camera, and look at a sheet of them.
     if (still !== null && player) Object.assign(window, { __fbHold: (t: number) => player.hold(typeof still === "number" ? t : { ...still, t }) });
@@ -68,8 +85,16 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     const loop = () => {
       const now = performance.now();
       if (first < 0) first = now;
-      if (labScene && isLabMove(lab)) renderer.draw(labView(labScene.view, lab, (now - first) / 1000), now);
+      if (stepped) {
+        // The review script draws each frame itself.
+      } else if (labScene && isLabMove(lab)) renderer.draw(labView(labScene.view, lab, (now - first) / 1000), now);
       else if (broadcast) broadcast.frame(now);
+      else if (keyArt) {
+        if (draws > 0) {
+          keyArt.hold();
+          draws--;
+        }
+      }
       else if (player && still !== null) {
         if (draws > 0) {
           player.hold(still);
@@ -83,6 +108,7 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
       cancelAnimationFrame(frame);
       observer.disconnect();
       player?.dispose();
+      keyArt?.dispose();
       renderer.dispose();
       canvas.remove();
     };

@@ -12,7 +12,9 @@
  * forearm forward. Z spreads a limb out to the side (positive is out
  * for both sides, mirrored when applied). Y twists an upper arm inward,
  * swinging the forearm across the chest. Body pitch tips forward, roll
- * tips to the body's left, and yaw turns it left.
+ * tips to the body's left, and yaw turns it left. Barrel rolls the body
+ * about its own spine before any of that, so a man lying on the turf can
+ * roll over onto his side or his back as he tumbles.
  *
  * The figure stands every pose on the ground by itself: its lowest
  * point touches the turf and its hips sit over the player's spot. So
@@ -20,7 +22,7 @@
  * off the spot, as in a lunge that throws the body ahead of the feet.
  */
 export const JOINTS = [
-  "lift", "fwd", "side", "pitch", "roll", "yaw",
+  "lift", "fwd", "side", "pitch", "roll", "yaw", "barrel",
   "pelvisY", "pelvisZ",
   "spineX", "spineY", "spineZ", "neckX", "neckY",
   "shLX", "shLY", "shLZ", "elL", "shRX", "shRY", "shRZ", "elR",
@@ -66,13 +68,16 @@ export function mix(a: Pose, b: Pose, t: number): Pose {
   return out;
 }
 
+/** Angles that come round: easing them goes the short way, so a full roll ending at 2 PI does not unwind. */
+const ROUND = new Set<Joint>(["yaw", "barrel"]);
+
 /**
  * Moves `current` toward `target` at `rate` per second, frame rate
  * independent: the same motion at 30 or 144 frames a second.
  */
 export function approach(current: Pose, target: Pose, rate: number, dt: number): void {
   const k = 1 - Math.exp(-rate * dt);
-  for (const j of JOINTS) current[j] += (j === "yaw" ? wrap(target.yaw - current.yaw) : target[j] - current[j]) * k;
+  for (const j of JOINTS) current[j] += (ROUND.has(j) ? wrap(target[j] - current[j]) : target[j] - current[j]) * k;
 }
 
 export const clamp01 = (v: number) => Math.max(0, Math.min(1, v));

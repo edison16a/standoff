@@ -1,5 +1,6 @@
 import { isDown, statsOf } from "./body";
 import type { Match } from "./match";
+import { PLAIN, type PassQuality } from "./pass-meter";
 import { PASS } from "./tuning";
 import type { Athlete } from "./types";
 import type { V3 } from "./vec";
@@ -37,7 +38,8 @@ export interface Release {
 export function pressure(m: Match, qb: Athlete): number {
   let near = Infinity;
   for (const o of m.athletes) {
-    if (o.team === qb.team || o.role === "lineman" || isDown(o)) continue;
+    // A rusher who shed his blocker counts; one still locked up does not.
+    if (o.team === qb.team || (o.role === "lineman" && !m.lines[o.slot]?.loose) || isDown(o)) continue;
     near = Math.min(near, Math.hypot(o.x - qb.x, o.z - qb.z));
   }
   return Math.max(0, 1 - near / ERROR.rush);
@@ -56,14 +58,14 @@ function offLine(v: V3, yaw: number, pitch: number, scale: number): V3 {
   return { x: x * k, y: Math.sin(up) * speed, z: z * k };
 }
 
-/** The ball as it actually leaves the hand for an aimed velocity. */
-export function release(m: Match, qb: Athlete, aimed: V3): Release {
+/** The ball as it actually leaves the hand for an aimed velocity, as tight as the meter's timing allows. */
+export function release(m: Match, qb: Athlete, aimed: V3, q: Pick<PassQuality, "line" | "wobble"> = PLAIN): Release {
   const r = m.rng;
   const arm = statsOf(qb).arm;
   const p = pressure(m, qb);
-  const line = ERROR.line + (10 - arm) * ERROR.perArm + p * ERROR.rushLine + Math.min(0.01, qb.jukeHeat * 0.003);
+  const line = (ERROR.line + (10 - arm) * ERROR.perArm + p * ERROR.rushLine + Math.min(0.01, qb.jukeHeat * 0.003)) * q.line;
   const vel = offLine(aimed, r.gauss(line), r.gauss(line * 0.8), 1 + r.gauss(ERROR.pace + p * ERROR.rushPace));
   const spin = PASS.spin * (0.85 + arm * 0.02) * (1 - p * ERROR.rushSpin) * (1 + r.gauss(0.05));
-  const wobble = 0.02 + (10 - arm) * 0.005 + p * ERROR.rushWobble + Math.abs(r.gauss(0.015));
+  const wobble = (0.02 + (10 - arm) * 0.005 + p * ERROR.rushWobble + Math.abs(r.gauss(0.015))) * q.wobble;
   return { vel, spin, wobble };
 }

@@ -3,6 +3,8 @@ import { attackSign, other, type TeamId } from "../teams";
 import { newBall, type Ball, type PassInfo } from "./ball";
 import { createAthlete } from "./body";
 import { think } from "./bots/brain";
+import { setAway, steered } from "./control";
+import { holdThrow, tickMeter, type MeterState } from "./meter-live";
 import { pressButton, releaseButton, setAim, setMove } from "./controls";
 import { newDrive, type Drive } from "./downs";
 import type { MatchEvent, PlayEnd } from "./events";
@@ -38,6 +40,8 @@ export class Match {
   readonly athletes: Athlete[];
   readonly ball: Ball = newBall();
   readonly rng: Rng;
+  /** The line's own dice for sheds and pancakes, so rolling them leaves every other draw in a seeded game alone. */
+  readonly lineRng: Rng;
   readonly target: number;
   readonly quarterSeconds: number;
   level: BotLevel;
@@ -66,12 +70,18 @@ export class Match {
   readonly lines: LinePair[];
   /** When each pair of players may next make a pads sound, so one collision is one thud. */
   readonly bumps = new Map<number, number>();
+  /** The throw meter while a QB holds the throw, and the reading he let go on just after. */
+  meter: MeterState | null = null;
+  /** Phones that dropped: the computer plays whoever they steer until they come back. */
+  readonly away = new Set<number>();
   private readonly queue: MatchEvent[] = [];
 
   constructor(options: MatchOptions) {
     const problem = lineupProblem(options.entries);
     if (problem) throw new Error(problem);
-    this.rng = new Rng(options.seed ?? Math.floor(Math.random() * 2 ** 31));
+    const seed = options.seed ?? Math.floor(Math.random() * 2 ** 31);
+    this.rng = new Rng(seed);
+    this.lineRng = new Rng((seed ^ 0x5bd1e995) >>> 0);
     this.target = options.target ?? RULES.target;
     this.quarterSeconds = options.quarterSeconds ?? RULES.quarterSeconds;
     this.clock = this.quarterSeconds;
@@ -124,9 +134,14 @@ export class Match {
     return this.athletes.find((a) => a.team === team && a.role === "qb")!;
   }
 
-  /** The athlete a phone plays, if any. */
+  /** The athlete a phone owns, if any: its own player, for its name, team and stats. */
   bySeat(seat: number): Athlete | null {
     return this.athletes.find((a) => a.seat === seat) ?? null;
+  }
+
+  /** The athlete a phone steers now, which after a pass to a computer teammate is that teammate. */
+  steered(seat: number): Athlete | null {
+    return steered(this, seat);
   }
 
   /** Which way along x the team with the ball is going. */
@@ -139,9 +154,19 @@ export class Match {
     setMove(this, id, move);
   }
 
-  /** The QB's throw stick in field space while held, or null when let go. Letting go throws. */
-  setAim(id: number, aim: V2 | null): void {
-    setAim(this, id, aim);
+  /**
+   * The QB's throw stick in field space while held, or null when let go.
+   * Letting go throws, graded by `heldMs`, how long the phone's throw
+   * meter ran; without it the throw has no meter.
+   */
+  setAim(id: number, aim: V2 | null, heldMs?: number): void {
+    setAim(this, id, aim, heldMs);
+  }
+
+  /** A thumb went down on the throw (the meter starts) or came off without a throw. */
+  holdThrow(id: number, down: boolean): void {
+    const a = this.athlete(id);
+    if (a && !a.auto) holdThrow(this, a, down);
   }
 
   /** A button pressed. `value` is the phone's own meter reading for a kick, free of lag. */
@@ -158,14 +183,10 @@ export class Match {
     chooseCall(this, id, call);
   }
 
-  /** A person's phone dropped or came back. The computer plays for them meanwhile. */
+  /** A person's phone dropped or came back, by the athlete it owns. The computer plays for them meanwhile. */
   setAuto(id: number, auto: boolean): void {
     const a = this.athlete(id);
-    if (!a || a.seat === null) return;
-    a.auto = auto;
-    a.move = { x: 0, z: 0 };
-    a.aim = null;
-    a.guard = null;
+    if (a && a.seat !== null) setAway(this, a.seat, auto);
   }
 
   step(dt: number): void {
@@ -173,5 +194,6 @@ export class Match {
     this.phaseT += dt;
     think(this, dt);
     stepWorld(this, dt);
+    tickMeter(this, dt);
   }
 }

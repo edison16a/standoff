@@ -59,3 +59,26 @@ describe("heavy running", () => {
     expect(a.x).toBe(0);
   });
 });
+
+describe("weight on the run", () => {
+  it("brakes a heavy man over a longer distance than a light one", () => {
+    const stop = (build: "speedster" | "powerback") => {
+      const a = runner(build);
+      a.vx = 8;
+      const x = a.x;
+      run(a, 3, { x: 0, z: 0 });
+      return a.x - x;
+    };
+    expect(stop("powerback")).toBeGreaterThan(stop("speedster"));
+  });
+
+  it("has to plant to cut at full speed: a sprinter turns on a wider line than a jogger", () => {
+    const turn = (speed: number) => {
+      const a = runner();
+      a.vx = speed;
+      run(a, 0.35, { x: 0, z: 1 });
+      return Math.atan2(a.vz, a.vx);
+    };
+    expect(turn(8.5)).toBeLessThan(turn(3));
+  });
+});

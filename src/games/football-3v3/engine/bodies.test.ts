@@ -3,7 +3,7 @@ import { createAthlete, gripOf } from "./body";
 import { separate } from "./collide";
 import { startJuke, updateJuke } from "./juke";
 import { moveAthlete } from "./motion";
-import { knockDown } from "./tackle";
+import { knockDown } from "./down";
 import { bySeat, peopleMatch, run, snap } from "./test-helpers";
 import { JUKE } from "./tuning";
 import type { Athlete } from "./types";

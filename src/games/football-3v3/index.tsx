@@ -8,6 +8,7 @@ import { FootballPhone } from "./phone/football-phone";
 import { PhoneScreen } from "./phone/components/PhoneScreen";
 import { PhoneContext } from "./phone/components/session-context";
 import Showcase from "./showcase/Showcase";
+import { keyboard } from "./keyboard/binding";
 import "./styles/host.css";
 import "./styles/lobby.css";
 import "./styles/lobby-cards.css";
@@ -19,6 +20,7 @@ import "./styles/phone.css";
 import "./styles/phone-ready.css";
 import "./styles/pad.css";
 import "./styles/pad-controls.css";
+import "./styles/throw-meter.css";
 import "./styles/kick.css";
 import "./styles/showcase.css";
 
@@ -57,4 +59,5 @@ export const game: GameModule = {
 
   // Loaded with the module, not lazily, so the capture tool never films an empty frame.
   Showcase,
+  keyboard,
 };

@@ -1,6 +1,8 @@
 import { gripOf, pushOf, topSpeed } from "./body";
 import { clampToWorld } from "./field";
-import { MOVE, RUSH } from "./tuning";
+import { slideOf } from "./tackle-bind";
+import { throwPace } from "./throw-preset";
+import { MOVE, PASS, RUSH } from "./tuning";
 import type { Athlete } from "./types";
 import { angleDiff, clamp, yawOf, type V2 } from "./vec";
 
@@ -36,6 +38,14 @@ export function steer(a: Athlete, tx: number, tz: number, top: number, dt: numbe
     ax -= (along - drive) * ux;
     az -= (along - drive) * uz;
   }
+  // At speed the body's weight carries it on: less grip is left to bend the run sideways.
+  const side = -ax * uz + az * ux;
+  const carve = grip * (1 - (1 - MOVE.carve) * Math.min(1, speed / Math.max(1, top)) ** 2);
+  if (Math.abs(side) > carve) {
+    const cut = side - Math.sign(side) * carve;
+    ax += cut * uz;
+    az -= cut * ux;
+  }
   a.vx += ax * dt;
   a.vz += az * dt;
   a.ax = ax;
@@ -56,12 +66,30 @@ export function friction(a: Athlete, decel: number, dt: number): void {
 }
 
 /**
+ * On the ground: a man in a tackle preset slides out by its drag, driven
+ * on while the tackler's legs still churn; anyone else skids to a stop.
+ */
+function slideDown(a: Athlete, dt: number): void {
+  const slide = slideOf(a);
+  if (!slide) return friction(a, 7, dt);
+  friction(a, slide.decel, dt);
+  if (slide.push <= 0 || a.action.kind !== "down" || !a.action.bind) return;
+  // The drive goes along the tackle's line, away from the tackler.
+  const f = a.action.bind.f;
+  a.vx += f.x * slide.push * dt;
+  a.vz += f.z * slide.push * dt;
+  a.ax += f.x * slide.push;
+  a.az += f.z * slide.push;
+}
+
+/**
  * Moves one player for a step. Free legs run toward the stick; a
  * blocked player pushes through a lineman at a fraction of their speed.
- * `face` is a point to look at while standing, such as the ball, and
- * `pace` scales top speed (a QB who is still a passer is slower).
+ * `face` is a point to look at while standing, such as the ball,
+ * `pace` scales top speed (a QB who is still a passer is slower) and
+ * `look` is a way to face whatever the legs do, as a passer does.
  */
-export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: V2 | null, pace = 1): void {
+export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: V2 | null, pace = 1, look: V2 | null = null): void {
   const k = a.action.kind;
   if (k === "stance") {
     a.vx = 0;
@@ -69,13 +97,14 @@ export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: V2 |
     a.ax = 0;
     a.az = 0;
   } else if (k === "none" || k === "throw" || k === "celebrate" || k === "kick") {
-    const slow = k === "throw" ? 0.55 : k === "kick" ? 0 : 1;
+    // A throw keeps the share of speed its motion allows: set feet brake, a throw on the run keeps going.
+    const slow = k === "throw" ? throwPace(a) : k === "kick" ? 0 : 1;
     const through = a.blocked > 0 ? (a.rushT > 0 ? RUSH.rushing : RUSH.blocked) : 1;
     const shaken = a.stagger > 0 ? MOVE.staggerPace : 1;
     const top = topSpeed(a, hasBall, pace) * slow * through * shaken;
     steer(a, a.move.x * top, a.move.z * top, top, dt);
   } else if (k === "down") {
-    friction(a, 7, dt);
+    slideDown(a, dt);
   }
   a.x += a.vx * dt;
   a.z += a.vz * dt;
@@ -84,17 +113,19 @@ export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: V2 |
   if (p.z !== a.z) a.vz = 0;
   a.x = p.x;
   a.z = p.z;
-  turn(a, dt, face);
+  turn(a, dt, face, look);
 }
 
-function turn(a: Athlete, dt: number, face: V2 | null): void {
+function turn(a: Athlete, dt: number, face: V2 | null, look: V2 | null): void {
   const k = a.action.kind;
   if (k === "down" || k === "juke" || k === "dive" || k === "lunge") return;
   const speed = Math.hypot(a.vx, a.vz);
   let want = a.yaw;
   if (a.aim && k !== "kick") want = yawOf(a.aim.x, a.aim.z);
+  else if (look) want = yawOf(look.x, look.z);
   else if (speed > 0.8) want = yawOf(a.vx, a.vz);
   else if (face) want = yawOf(face.x - a.x, face.z - a.z);
-  const rate = MOVE.turnRate * dt;
+  // A passer snaps his shoulders round to the target far quicker than a runner turns.
+  const rate = (k === "throw" ? PASS.turnRate : MOVE.turnRate) * dt;
   a.yaw += clamp(angleDiff(a.yaw, want), -rate, rate);
 }

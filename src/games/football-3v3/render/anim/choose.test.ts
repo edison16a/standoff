@@ -7,7 +7,8 @@ import { downPose } from "./contact";
 import { gait } from "./gait";
 import { approach, JOINTS, keyed, mix, neutral, over } from "./pose";
 import { CENTER, THREE_POINT } from "./stance";
-import { kickPose, throwPose } from "./throwing";
+import { kickPose } from "./kick";
+import { throwMotion } from "./throw";
 import { TACKLE } from "../../engine/tuning";
 
 const body = { phase: 0.25, build: 0.3, time: 1, seed: 1 };
@@ -71,8 +72,8 @@ describe("poses", () => {
   });
 
   it("lets the throwing arm come forward through the release", () => {
-    const loaded = throwPose(0.12, 0.45);
-    const released = throwPose(0.22, 0.45);
+    const loaded = throwMotion("flick", 0.12, 0.5, neutral);
+    const released = throwMotion("flick", 0.2, 0.5, neutral);
     expect(loaded.shRZ).toBeGreaterThan(1);
     expect(released.shRX).toBeLessThan(loaded.shRX);
   });

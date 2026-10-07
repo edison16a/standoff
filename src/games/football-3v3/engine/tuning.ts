@@ -46,6 +46,10 @@ export const MOVE = {
    */
   grip: 9,
   gripPerAgility: 0.25,
+  /** How much a heavier body loses of that grip: grip times (refMass / mass) to this power. */
+  gripMass: 0.35,
+  /** Share of the grip left for turning sideways at top speed: a sprinter has to plant to cut. */
+  carve: 0.6,
   radius: 0.42,
   turnRate: 9,
   /** A jolt bigger than this change of speed shakes a player's footing. */
@@ -84,7 +88,9 @@ export const TACKLE = {
   homing: 3.5,
   /** On the ground after a missed tackle the runner dodged, and after a plain whiff. */
   missedDown: 1.8,
-  whiffDown: 1.1,
+  whiffDown: 1.3,
+  /** On the ground after bouncing off a carrier who ran through the tackle. */
+  shedDown: 1.4,
   /** The last part of any time on the ground is getting up. */
   getUp: 0.6,
   cooldown: 0.6,
@@ -110,6 +116,8 @@ export const PASS = {
   catchHeight: 1.3,
   windup: 0.18,
   throwTime: 0.45,
+  /** How fast the passer turns square to his target through the motion, radians a second. */
+  turnRate: 18,
   /** A defender standing this close in front of the catch spot takes the ball. */
   jumpRadius: 2.1,
   spin: 62,

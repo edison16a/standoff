@@ -1,7 +1,9 @@
+import { BLOCK_PICK, blockKindFor, breaksPair, type BlockMove } from "./block-preset";
 import { yardToX } from "./field";
 import { dodging } from "./juke";
 import type { Match } from "./match";
 import { resolveHit } from "./hit";
+import { breakPair, moveLoose } from "./line-free";
 import { tackle } from "./tackle";
 import { LINE, RUSH, TACKLE } from "./tuning";
 import type { Athlete } from "./types";
@@ -25,10 +27,14 @@ export interface LinePair {
   /** Seconds until the next surge. */
   next: number;
   engaged: boolean;
+  /** The block move the pair is in (block-preset.ts), carried on after a pancake or shed breaks it up. */
+  move: BlockMove;
+  /** Broken up by a pancake or a shed: the two men play on alone (line-free.ts). */
+  loose: "pancake" | "shed" | null;
 }
 
 export function newLinePairs(): LinePair[] {
-  return [0, 1, 2].map(() => ({ x: 0, z: 0, v: 0, surge: 0, next: 0, engaged: false }));
+  return [0, 1, 2].map(() => ({ x: 0, z: 0, v: 0, surge: 0, next: 0, engaged: false, move: { kind: "engage", t: 0 }, loose: null }));
 }
 
 const lineman = (m: Match, team: 0 | 1, slot: number) => m.athletes.find((a) => a.team === team && a.role === "lineman" && a.slot === slot)!;
@@ -43,6 +49,9 @@ export function setLine(m: Match): void {
     p.surge = 0;
     p.next = 0;
     p.engaged = false;
+    p.move = { kind: "engage", t: 0 };
+    p.loose = null;
+    for (const team of [0, 1] as const) lineman(m, team, i).block = null;
   });
 }
 
@@ -57,6 +66,21 @@ export function engageLine(m: Match): void {
 /** Mass of a locked pair, for anyone who runs into it. */
 export const pairMass = (m: Match, slot: number) => lineman(m, m.offense, slot).mass + lineman(m, m.defense, slot).mass;
 
+/** A lineman held in his pair's block, moved only through it; a loose one runs and is shoved like anyone. */
+export const locked = (m: Match, a: Athlete) => a.role === "lineman" && !m.lines[a.slot]?.loose;
+
+/** Picks the pair's block move at a shove, and breaks the pair up when the move does. */
+function pickMove(m: Match, p: LinePair, o: Athlete, d: Athlete, since: number): void {
+  // Only a shove strong enough to break the pair rolls the dice, so ordinary line play draws nothing extra.
+  const roll = p.surge >= BLOCK_PICK.shed || p.surge <= BLOCK_PICK.pancake ? m.lineRng.range(0, 1) : 1;
+  const picked = blockKindFor(m.play?.call ?? "kick", since, p.surge, roll);
+  // One rusher getting home is a pressure; the whole line giving way at once would be a rout.
+  const kind = picked === "shed" && m.lines.some((l) => l.loose === "shed") ? "anchor" : picked;
+  if (kind === p.move.kind) return;
+  p.move = { kind, t: 0 };
+  if (breaksPair(kind)) breakPair(m, p, o, d, kind);
+}
+
 export function updateLinemen(m: Match, dt: number): void {
   const s = m.sign;
   const losX = yardToX(m.offense, m.drive.los);
@@ -65,11 +89,19 @@ export function updateLinemen(m: Match, dt: number): void {
   m.lines.forEach((p, i) => {
     const o = lineman(m, m.offense, i);
     const d = lineman(m, m.defense, i);
+    if (p.loose && pushing) {
+      p.move.t += dt;
+      moveLoose(m, p, o, d, p.move.t, dt);
+      o.block = { offense: true, ...p.move };
+      d.block = { offense: false, ...p.move };
+      return;
+    }
     if (!p.engaged || !pushing) {
       o.vx = o.vz = d.vx = d.vz = 0;
       p.v = 0;
       return;
     }
+    p.move.t += dt;
     p.next -= dt;
     if (p.next <= 0) {
       // A fresh shove: mostly a stalemate, with the defence gaining as the play goes on.
@@ -77,11 +109,14 @@ export function updateLinemen(m: Match, dt: number): void {
       p.surge = m.rng.range(-1, 1) * LINE.surge + bias;
       p.next = m.rng.range(0.45, 1.1);
       if (Math.abs(p.surge) > 0.75) m.emit({ type: "pads", a: o.id, b: d.id, power: Math.min(1, Math.abs(p.surge)) });
-    }
+      pickMove(m, p, o, d, since);
+      if (!p.engaged) return;
+    } else if (p.move.kind === "engage" && since >= BLOCK_PICK.engage) pickMove(m, p, o, d, since);
     // Net drive over the pair's mass, against the cleats' hold on the turf.
     const mass = o.mass + d.mass;
     const force = -s * p.surge * LINE.drive;
-    p.v += ((force - LINE.hold * p.v) / mass) * dt;
+    const lurch = (force - LINE.hold * p.v) / mass;
+    p.v += lurch * dt;
     const lo = Math.min(losX - s * 3.5, losX + s * 2.5);
     const hi = Math.max(losX - s * 3.5, losX + s * 2.5);
     const x = clamp(p.x + p.v * dt, lo, hi);
@@ -92,12 +127,14 @@ export function updateLinemen(m: Match, dt: number): void {
       a.z = p.z;
       a.vx = p.v;
       a.vz = 0;
-      a.ax = 0;
+      // The pair's lurch, for the two big bodies to sway with each shove.
+      a.ax = lurch;
       a.az = 0;
       // Locked up with the man across: the view draws the two of them driving into each other.
       a.blocked = 0.15;
       // Each lineman faces the other: the offense's way for its own, back the other way for the defence.
       a.yaw = -side * s > 0 ? Math.PI / 2 : -Math.PI / 2;
+      a.block = { offense: a === o, ...p.move };
     }
   });
 }
@@ -106,7 +143,8 @@ export function updateLinemen(m: Match, dt: number): void {
 export function lineContact(m: Match): void {
   const carrier = m.carrier();
   for (const l of m.athletes) {
-    if (l.role !== "lineman" || !m.lines[l.slot]?.engaged) continue;
+    const pair = m.lines[l.slot];
+    if (l.role !== "lineman" || !(pair?.engaged || pair?.loose) || l.action.kind === "down") continue;
     for (const a of m.athletes) {
       if (a.role === "lineman" || a.team === l.team) continue;
       const d = dist2(a, l);
@@ -125,6 +163,7 @@ function grab(m: Match, l: Athlete, a: Athlete): void {
   l.tackleCd = 1;
   if (dodging(a) || !m.rng.chance(TACKLE.linemanGrab)) return;
   const hit = resolveHit(l, a, m.rng, LINE.grabWrap);
-  if (hit.down) tackle(m, a, l);
+  // Tripped up by an arm out of the block: he stumbles on and pitches forward, as from a heel clipped.
+  if (hit.down) tackle(m, a, l, "shoestring", hit.n);
   else a.stagger = Math.max(a.stagger, 0.25);
 }

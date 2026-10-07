@@ -75,6 +75,21 @@ function idle(p: Pose, g: GaitInput, still: number): void {
 }
 
 /**
+ * Weight on the move. Every body rocks over the foot it stands on, and
+ * a heavy one more: the hips slide out over the planted foot, its knee
+ * sinks as it takes the load, and a big man spends less time in the air.
+ * `stance` is the stride angle at which the left foot is fully loaded.
+ */
+function heft(p: Pose, g: GaitInput, stance: number, moving: number): void {
+  const big = Math.min(1, g.build);
+  const load = Math.cos(stance);
+  p.side += load * (0.012 + 0.03 * big) * moving;
+  p.kneeL += Math.max(0, load) * (0.04 + 0.12 * big) * moving;
+  p.kneeR += Math.max(0, -load) * (0.04 + 0.12 * big) * moving;
+  p.lift *= 1 - 0.4 * big;
+}
+
+/**
  * Standing, walking, jogging and sprinting as one blended cycle. The
  * thigh drives further forward than back, and higher the faster he goes;
  * the swinging knee folds the heel up behind; the stance knee gives a
@@ -124,6 +139,7 @@ export function gait(g: GaitInput): Pose {
   p.elR = -(bend + 0.25 * s * run * moving);
   p.shLZ = 0.2 + 0.06 * g.build;
   p.shRZ = p.shLZ;
+  heft(p, g, th - TAU * (0.25 + duty / 2), moving);
   leanInto(p, g, moving);
   idle(p, g, 1 - moving);
   // Eyes stay level over everything the body does.

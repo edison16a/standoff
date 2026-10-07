@@ -72,7 +72,11 @@ export function routePhone(t: InputTarget, seat: number, message: PhoneMessage):
       return false;
     case "throw":
       t.aims.clear(seat);
-      if (!t.vote(seat, true)) d?.throwAt(seat, message, t.forward);
+      if (!t.vote(seat, true)) d?.throwAt(seat, message, t.forward, message.heldMs);
+      return false;
+    case "hold":
+      // The meter starts on the big screen too. Not a skip vote: the release is.
+      if (!t.replays.active) d?.holdThrow(seat, message.down);
       return false;
     case "call":
       if (!t.vote(seat, true)) d?.call(seat, message.call);

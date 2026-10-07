@@ -1,14 +1,18 @@
 import { updateBall } from "./ball-update";
+import { planCatches } from "./catch/plan";
 import { ceremonyTime, stepCeremony } from "./ceremony";
 import { FIELD, xToYard, yardToX } from "./field";
 import { updateJuke } from "./juke";
+import { jukeBeats, updateStumble } from "./juke-beat";
 import { updateKick } from "./kick";
 import { lineContact } from "./linemen";
 import type { Match } from "./match";
 import { updateTarget, updateThrow } from "./passing";
 import { stepBodies } from "./bodies";
 import { updateFumble } from "./fumble";
-import { updateDive, updateDown, updateLunge } from "./tackle";
+import { updateDive } from "./dive";
+import { updateDown } from "./down";
+import { updateLunge } from "./tackle";
 import { updatePhase } from "./phases";
 import { JUKE } from "./tuning";
 import { endPlay } from "./whistle";
@@ -22,11 +26,15 @@ function tick(a: Athlete, dt: number): void {
   a.rushCd = Math.max(0, a.rushCd - dt);
   a.blocked = Math.max(0, a.blocked - dt);
   a.stagger = Math.max(0, a.stagger - dt);
+  updateStumble(a, dt);
 }
 
 function act(m: Match, a: Athlete, dt: number): void {
   const now = a.action;
-  if (now.kind === "juke") updateJuke(a, dt);
+  if (now.kind === "juke") {
+    updateJuke(a, dt);
+    if (m.carrier() === a) jukeBeats(m.athletes, a, dt);
+  }
   else if (now.kind === "lunge") updateLunge(m, a, dt);
   else if (now.kind === "dive") updateDive(m, a, dt);
   else if (now.kind === "down") updateDown(a, dt);
@@ -65,7 +73,13 @@ export function stepWorld(m: Match, dt: number): void {
     updateTarget(m);
   }
   if (m.phase === "kick") updateKick(m, dt);
-  for (const a of m.athletes) if (a.role !== "lineman") act(m, a, dt);
+  // Moves for a pass coming down are picked before it arrives, so a dive leaves the ground in time.
+  planCatches(m, dt);
+  // Linemen move with their pair; a juke can still put one on the turf for a moment.
+  for (const a of m.athletes) {
+    if (a.role !== "lineman") act(m, a, dt);
+    else updateDown(a, dt);
+  }
   stepBodies(m, dt);
   if (live) lineContact(m);
   updateBall(m, dt);

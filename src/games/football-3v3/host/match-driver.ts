@@ -47,8 +47,9 @@ export class MatchDriver {
     this.view = buildView(this.match);
   }
 
+  /** The athlete a phone steers now: its own, or the computer teammate it passed to this play. */
   private id(seat: number): number | null {
-    return this.idBySeat.get(seat) ?? null;
+    return this.idBySeat.has(seat) ? (this.match.steered(seat)?.id ?? null) : null;
   }
 
   /** A button went down or up. The stick at that instant goes first, so a juke reads the right way. */
@@ -71,18 +72,24 @@ export class MatchDriver {
     if (id !== null && !this.held) this.match.press(id, "kick", value);
   }
 
-  /** The throw stick let go: aim one last time, then throw. */
-  throwAt(seat: number, stick: Stick, forward: V2): void {
+  /** The throw stick let go: aim one last time, then throw, graded by the phone's own meter. */
+  throwAt(seat: number, stick: Stick, forward: V2, heldMs?: number): void {
     const id = this.id(seat);
     if (id === null || this.held) return;
     this.match.setAim(id, stickToField(stick, forward));
-    this.match.setAim(id, null);
+    this.match.setAim(id, null, heldMs);
+  }
+
+  /** A thumb down on the throw (the meter starts) or off it without a throw. */
+  holdThrow(seat: number, down: boolean): void {
+    const id = this.id(seat);
+    if (id !== null && !this.held) this.match.holdThrow(id, down);
   }
 
   /** A phone left or came back. While away, the computer plays for them. */
   setOnline(seat: number, online: boolean): void {
-    const id = this.id(seat);
-    if (id !== null) this.match.setAuto(id, !online);
+    const id = this.idBySeat.get(seat);
+    if (id !== undefined) this.match.setAuto(id, !online);
   }
 
   /** Admin panel shortcuts, for the team with the ball. Their events come out on the next tick. */
@@ -136,7 +143,9 @@ export class MatchDriver {
   }
 
   private steer(sticks: Sticks): void {
-    for (const [seat, id] of this.idBySeat) {
+    for (const seat of this.idBySeat.keys()) {
+      const id = this.id(seat);
+      if (id === null) continue;
       this.match.setMove(id, stickToField(sticks.move(seat), sticks.forward));
       const aim = sticks.aim(seat);
       if (aim) this.match.setAim(id, stickToField(aim, sticks.forward));

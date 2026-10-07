@@ -5,7 +5,9 @@ import { guardMove } from "./guard";
 import { updateLinemen } from "./linemen";
 import type { Match } from "./match";
 import { moveAthlete } from "./motion";
+import { passerLook } from "./passer-facing";
 import { paceOf } from "./qb-run";
+import { followBinds } from "./tackle-bind";
 import { MOVE } from "./tuning";
 import type { Athlete } from "./types";
 import type { V2 } from "./vec";
@@ -52,10 +54,12 @@ export function stepBodies(m: Match, dt: number): void {
       // The stick is kept as sent; freezing, Guard and the read only steer this step.
       const stick = a.move;
       a.move = sticks.get(a.id) ?? stick;
-      moveAthlete(a, h, holder === a.id, face, paceOf(m, a));
+      moveAthlete(a, h, holder === a.id, face, paceOf(m, a), passerLook(m, a));
       a.move = stick;
       if (settingUp(m)) holdOnside(a, m.drive);
     }
+    // The men of a tackle are held on the carrier before anything shoves them.
+    followBinds(m.athletes);
     updateLinemen(m, h);
     separate(m, m.bumps);
   }

@@ -3,6 +3,7 @@ import { HostPad } from "@/games/kit/pad/host-pad";
 import type { HostRoomApi, Player } from "@/platform/games/game-api";
 import { SoundDirector } from "../audio/director";
 import { ceremonyTime } from "../engine/ceremony";
+import { piloted } from "../engine/control";
 import type { MatchEvent } from "../engine/events";
 import type { V2 } from "../engine/vec";
 import type { MatchView } from "../engine/view";
@@ -174,7 +175,7 @@ export class FootballHost implements InputTarget {
   }
 
   private startReplay(driver: MatchDriver, nowMs: number): void {
-    const voters = driver.match.athletes.filter((a) => a.seat !== null && !a.auto).map((a) => a.seat!);
+    const voters = piloted(driver.match).map((p) => p.seat);
     if (driver.replayFor === null || !this.replays.start(driver.recorder.all, driver.replayFor, voters, nowMs)) return driver.resume();
     this.aims.clear();
     this.audio.replayIn();

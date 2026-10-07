@@ -37,7 +37,7 @@
     <td width="50%" align="center"><img src="docs/screenshots/fifa-3v3.jpg" alt="A striker shooting past a sliding defender toward the keeper" width="100%" /><br /><sub><b>Soccer 3v3</b></sub></td>
   </tr>
   <tr>
-    <td width="50%" align="center"><img src="docs/screenshots/football-3v3.jpg" alt="A diving tackle at the goal line in Football 3v3" width="100%" /><br /><sub><b>Football 3v3</b></sub></td>
+    <td width="50%" align="center"><img src="docs/screenshots/football-3v3.jpg" alt="A diving catch with the corner flying in, in Football 3v3" width="100%" /><br /><sub><b>Football 3v3</b></sub></td>
     <td width="50%" align="center"><img src="docs/screenshots/cube-game.jpg" alt="The UFO flying through a green portal in a neon city level" width="100%" /><br /><sub><b>Cube Game</b></sub></td>
   </tr>
   <tr>
@@ -129,7 +129,7 @@ Three on three football on a big floodlit pitch with a keeper in each goal. Tap 
 
 ### Football 3v3
 
-<img src="docs/screenshots/football-3v3.jpg" alt="A diving tackle at the goal line in Football 3v3" width="100%" />
+<img src="docs/screenshots/football-3v3.jpg" alt="A diving catch with the corner flying in, in Football 3v3" width="100%" />
 
 Three on three American football under the lights, with computer linemen battling at the line. The QB calls Throw, Run or Kick, hikes it and throws a spiral with the throw stick. Runners juke and dive, defenders rush, cover and tackle. Touchdowns replay like a TV broadcast, and the captain lifts a silver football on a kicking tee at midfield. First to 14 wins, or the lead after four quarters.
 

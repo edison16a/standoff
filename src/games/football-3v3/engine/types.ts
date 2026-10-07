@@ -1,5 +1,10 @@
 import type { BuildId } from "../builds";
 import type { TeamId } from "../teams";
+import type { BlockKind } from "./block-preset";
+import type { CatchPlan } from "./catch-preset";
+import type { PassQuality } from "./pass-meter";
+import type { ApproachKind, TackleKind } from "./tackle-preset";
+import type { ThrowKind } from "./throw-preset";
 import type { V2 } from "./vec";
 
 export type { TeamId };
@@ -31,18 +36,43 @@ export type Action =
    */
   | { kind: "juke"; t: number; dur: number; juke: JukeKind; side: 1 | -1; dir: V2; speed: number; push: V2; plant: number; dodge: [number, number] }
   | { kind: "dive"; t: number; dur: number; dir: V2 }
-  | { kind: "lunge"; t: number; dur: number; dir: V2; target: number }
-  /** A forward pass, or with `lob` the pitch to the back on a run call. */
-  | { kind: "throw"; t: number; dur: number; released: boolean; to: number; lob: boolean }
+  /** `approach` is the tackle preset the lunge was picked as, so the leap already looks like that tackle. */
+  | { kind: "lunge"; t: number; dur: number; dir: V2; target: number; approach: ApproachKind }
+  /**
+   * A forward pass, or with `lob` the pitch to the back on a run call. `quality` is the throw meter's timing,
+   * `style` the throwing motion picked for it (throw-preset.ts) and `release` the second the ball leaves the hand.
+   */
+  | { kind: "throw"; t: number; dur: number; released: boolean; to: number; lob: boolean; quality: PassQuality; style: ThrowKind; release: number }
   | { kind: "kick"; t: number; dur: number; released: boolean }
-  /** On the ground, then getting up for the last TACKLE.getUp seconds. */
-  | { kind: "down"; t: number; dur: number; cause: DownCause }
+  /** On the ground, then getting up for the last TACKLE.getUp seconds. `bind` ties the men of one tackle together. */
+  | { kind: "down"; t: number; dur: number; cause: DownCause; bind: TackleBind | null }
   | { kind: "celebrate"; t: number; dur: number; spike: boolean };
 
 export type ActionKind = Action["kind"];
 
-/** Why a player went down: tackled with the ball, dodged or whiffed as a tackler, a dive, or making the tackle. */
-export type DownCause = "tackled" | "missed" | "whiff" | "dive" | "tackler";
+/**
+ * Why a player went down: tackled with the ball, making the tackle or
+ * piling on, a dive, or a miss: dodged by a juke, lunging at nothing,
+ * bounced off a carrier who ran through him, or his ankles broken by a
+ * juke he never lunged at. A rusher a blocker drove onto his back is pancaked.
+ */
+export type DownCause = "tackled" | "tackler" | "pile" | "dive" | "missed" | "whiff" | "shed" | "juked" | "pancaked";
+
+/** The men of one tackle, held together through its preset (tackle-bind.ts). */
+export interface TackleBind {
+  kind: TackleKind;
+  role: "carrier" | "tackler" | "pile";
+  /** The carrier, for the tackler and the pile; the tackler, for the carrier. */
+  partner: number;
+  /** The tackle's line on the ground. */
+  f: V2;
+  /** The side of that line the man came from: 1 on its left. */
+  side: 1 | -1;
+  /** Where he was from the carrier when they met, along the line and across it, to ease from. */
+  from: { along: number; across: number };
+  /** The carrier was already laid out in a dive when he was hit, so he stays down on his chest. */
+  prone?: boolean;
+}
 
 export interface Stats {
   passYards: number;
@@ -93,7 +123,12 @@ export interface Athlete {
   number: number;
   /** The phone playing this athlete, or null for a computer player. */
   seat: number | null;
-  /** True while the computer plays them: bots, and humans whose phone dropped. */
+  /**
+   * The phone steering this athlete right now: its own seat, or a phone
+   * that gave a computer player the ball and took him over (control.ts).
+   */
+  pilot: number | null;
+  /** True while the computer plays them: bots, players lent to a teammate's phone, and humans whose phone dropped. */
   auto: boolean;
   x: number;
   z: number;
@@ -121,6 +156,12 @@ export interface Athlete {
   blocked: number;
   /** Seconds left of shaky footing after a big jolt or a broken tackle. */
   stagger: number;
+  /** Fooled by a juke: seconds into it, how long it lasts and which way he lurches, or null. He may be on the turf for it. */
+  stumble: { t: number; dur: number; side: 1 | -1 } | null;
+  /** His move for a pass coming down, picked before it arrives (catch/plan.ts), or null. */
+  catching: CatchPlan | null;
+  /** A lineman's block move this play, seconds into it, and which side of it he is on (block-preset.ts), or null. */
+  block: { kind: BlockKind; t: number; offense: boolean } | null;
   bot: BotMemory;
   stats: Stats;
 }

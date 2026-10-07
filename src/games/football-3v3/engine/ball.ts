@@ -1,4 +1,5 @@
 import type { BallPath } from "./catch/path";
+import type { PassQuality } from "./pass-meter";
 import type { Flight } from "./flight";
 import type { BallState, TeamId } from "./types";
 import type { V2, V3 } from "./vec";
@@ -28,6 +29,8 @@ export interface PassInfo {
   tipped: boolean;
   /** A short lob back to a runner on a run play, not a forward pass: nobody picks it off. */
   pitch: boolean;
+  /** What the throw meter's timing did to the pass: catchability and interception risk ride on it. */
+  quality: PassQuality;
 }
 
 /** A fumble while the ball is loose: who lost it and when. */
