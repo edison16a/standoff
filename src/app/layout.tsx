@@ -9,6 +9,7 @@ import "@/styles/tabs.css";
 import "@/styles/range.css";
 import "@/styles/home.css";
 import "@/styles/home-tiles.css";
+import "@/styles/home-premium.css";
 import "@/styles/shell.css";
 import "@/styles/room-card.css";
 import "@/styles/settings.css";

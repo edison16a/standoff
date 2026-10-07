@@ -1,6 +1,7 @@
 "use client";
 import { Icon } from "@/components/ui/Icon";
 import type { GameInfo } from "@/platform/games/game-api";
+import { PremiumBadge } from "./PremiumBadge";
 
 interface GameDetailsProps {
   game: GameInfo;
@@ -29,6 +30,7 @@ export function GameDetails({ game, canPlay, starting, onHost }: GameDetailsProp
 
   return (
     <section key={game.id} className="home__details" style={{ "--game": game.color } as React.CSSProperties}>
+      {game.premium && <PremiumBadge place="details" />}
       <h1 className="home__title">{game.title}</h1>
       <p className="home__tagline">{game.tagline}</p>
       <p className="home__meta">
