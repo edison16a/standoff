@@ -109,6 +109,7 @@ export class Squad {
       have.seat.dispose();
     }
     const figure = new Figure(kitOf(a, name), this.wardrobe, a.id);
+    if (a.role === "support") figure.makeLight();
     const seat = new Ring(TEAMS[a.team].color, 0.62, 0.74);
     this.group.add(figure.root, seat.mesh);
     const entry = { figure, key, seat };
