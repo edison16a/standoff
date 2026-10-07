@@ -7,6 +7,9 @@ import { dir2, dist2, type V2 } from "./vec";
 const NEUTRAL = 0.35;
 /** How far off straight at or away from the basket the stick can be and still count as forward or back. */
 const STRAIGHT = 0.55;
+/** Pulled straight back, within about 40 degrees, is a stepback; at an angle, past this much back, between the legs. */
+const BACK = 0.75;
+const DIAGONAL = 0.25;
 
 /** The way to the basket from a player, or the way they face when right under it. */
 export function basketDir(a: Athlete): V2 {
@@ -47,7 +50,8 @@ export interface MoveChoice {
 
 /**
  * Reads the stick against the way to the basket. Pulled back is a
- * stepback, left or right a crossover to that side, forward a spin
+ * stepback, back at an angle between the legs to that side (rocking
+ * back off the man), left or right a crossover to that side, forward a spin
  * round the defender (away from the side they are on), and neutral a
  * hesitation, or behind the back when the defender sits on the ball.
  */
@@ -65,7 +69,14 @@ export function pickMove(a: Athlete, aim: V2 | null, defender: Athlete | null): 
   }
   const fwd = (aim.x * f.x + aim.z * f.z) / l;
   const lat = (aim.x * r.x + aim.z * r.z) / l;
-  if (fwd < -STRAIGHT) return { move: "stepback", side: hand, dir: { x: -f.x, z: -f.z } };
+  if (fwd < -BACK) return { move: "stepback", side: hand, dir: { x: -f.x, z: -f.z } };
+  if (fwd < -DIAGONAL) {
+    const side = lat >= 0 ? 1 : -1;
+    const x = r.x * side - f.x;
+    const z = r.z * side - f.z;
+    const l2 = Math.hypot(x, z) || 1;
+    return { move: "betweenLegs", side, dir: { x: x / l2, z: z / l2 } };
+  }
   if (fwd > STRAIGHT) {
     const side = defender ? (sideOf(a, defender) === 1 ? -1 : 1) : lat >= 0 ? 1 : -1;
     return { move: "spin", side, dir: f };

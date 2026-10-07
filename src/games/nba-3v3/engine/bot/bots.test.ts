@@ -73,7 +73,7 @@ describe("computer players", () => {
         for (const d of m.athletes) for (const h of m.athletes) if (d.team !== h.team) most = Math.max(most, m.stealLog.count(d.id, h.id));
       }
     }
-    expect([...moves].sort()).toEqual(["behindBack", "crossover", "hesitation", "spin", "stepback"]);
+    expect([...moves].sort()).toEqual(["behindBack", "betweenLegs", "crossover", "hesitation", "spin", "stepback"]);
     expect(shakes).toBeGreaterThan(3);
     expect(most).toBeLessThanOrEqual(3);
   }, 60000);

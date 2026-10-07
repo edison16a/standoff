@@ -15,7 +15,7 @@ const MAX_HEAT = 1.1;
  * A computer ball handler with a defender square in front of it tries
  * to shake them. Shooters step back into their jumper, strong drivers
  * spin, everyone crosses over away from the defender, and now and then
- * a hesitation. It pushes the stick the same way a person would, so the
+ * goes between the legs rocking back off him or throws a hesitation. It pushes the stick the same way a person would, so the
  * move is picked by the same rules. Returns true when it made a move.
  */
 export function tryMove(m: Match, a: Athlete, s: BotState, jumper: number): boolean {
@@ -36,9 +36,12 @@ export function tryMove(m: Match, a: Athlete, s: BotState, jumper: number): bool
   } else if (st.strength >= 7 && rimDistance(a) < 6 && roll < 0.35) {
     aim = f;
     s.afterMove = "drive";
-  } else if (roll < 0.8) {
+  } else if (roll < 0.72) {
     aim = { x: r.x * away, z: r.z * away };
     s.afterMove = "drive";
+  } else if (roll < 0.86) {
+    aim = { x: r.x * away - f.x * 0.7, z: r.z * away - f.z * 0.7 };
+    s.afterMove = st.shooting >= 7 && jumper > 1 ? "shoot" : "drive";
   } else {
     aim = null;
     s.afterMove = "drive";
