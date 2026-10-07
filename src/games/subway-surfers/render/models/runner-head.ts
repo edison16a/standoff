@@ -56,7 +56,7 @@ function dressFace(dress: Dresser, look: Look): void {
   face.add(mouth, matte(0x6b1d22), [0.012, CY - 0.083, -0.183], tilt, [1, 0.62, 0.32]);
   const tongue = new THREE.SphereGeometry(0.03, 14, 6, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2);
   face.add(tongue, matte(0xe05a62), [0.016, CY - 0.1, -0.192], tilt, [1, 0.5, 0.3]);
-  face.box(0.074, 0.016, 0.01, matte(0xffffff), [0.012, CY - 0.088, -0.2], tilt, 0.005);
+  face.box(0.074, 0.016, 0.01, matte(0xffffff), [0.012, CY - 0.088, -0.2], tilt);
   // A dimple at the high corner.
   const dimple = new THREE.TorusGeometry(0.014, 0.0035, 4, 8, Math.PI * 0.7);
   face.add(dimple, matte(shadeOf(look.skin, 0.7)), [0.066, CY - 0.072, -0.178], [0, -0.5, -0.2]);
@@ -67,15 +67,19 @@ function dressHair(dress: Dresser, look: Look): void {
   const head = dress.on("head");
   const hair = satin(look.hair);
   const dark = satin(shadeOf(look.hair, 0.82));
-  head.add(shell(R + 0.012, [BACK - 1.95, BACK + 1.95], [0.3, 1.8], 30), hair, [0, CY + 0.005, 0.004]);
-  // Tufts at the nape, flicking out under the cap from behind.
-  for (let i = -2; i <= 2; i++) {
-    const out = i / 2;
-    head.sphere(0.048, i % 2 === 0 ? hair : dark, [out * 0.12, CY - 0.1 + Math.abs(out) * 0.02, 0.15 - Math.abs(out) * 0.04], [1, 1.5, 0.75], 10, [-0.6, out * 0.6, -out * 0.4]);
+  // Over the ears at the sides, and right down to the nape at the back.
+  head.add(shell(R + 0.012, [BACK - 1.95, BACK + 1.95], [0.3, 1.5], 40), hair, [0, CY + 0.005, 0.004]);
+  head.add(shell(R + 0.014, [BACK - 1.25, BACK + 1.25], [0.3, 2.2], 40), hair, [0, CY + 0.005, 0.004]);
+  // Tufts flicking out along the hairline at the nape, the way the chase camera sees them.
+  for (let i = -3; i <= 3; i++) {
+    const out = i / 3;
+    const a = BACK + out * 1.1;
+    const at: [number, number, number] = [-Math.cos(a) * 0.17, CY - 0.11 + Math.abs(out) * 0.035, Math.sin(a) * 0.17];
+    head.sphere(0.04, i % 2 === 0 ? hair : dark, at, [0.9, 1.25, 0.6], 10, [-0.45, -out * 1.1, 0]);
   }
   for (const x of [-1, 1]) {
     // Sideburns in front of the ears, and a tuft over each ear.
-    head.box(0.03, 0.08, 0.05, hair, [x * (R * 0.95), CY - 0.03, -0.05], [0, 0, x * 0.08], 0.014);
+    head.sphere(0.032, hair, [x * 0.19, CY - 0.005, -0.065], [0.45, 1.35, 0.75], 10, [0.25, 0, 0]);
     head.sphere(0.05, hair, [x * 0.175, CY + 0.06, 0.03], [0.7, 1.1, 1.3], 10, [0, 0, x * 0.5]);
   }
   // The fringe, three locks under the peak.

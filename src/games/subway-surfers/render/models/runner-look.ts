@@ -41,7 +41,7 @@ export const LOOKS: readonly Look[] = [
     cap: 0xe8302c,
     capFront: 0xffc928,
     hoodie: 0xc9cdd5,
-    hoodieRib: 0xa9aeb9,
+    hoodieRib: 0x9ea4b0,
     vest: 0x8cc0ec,
     thread: 0xf2b34a,
     bandana: 0xdf2a2a,

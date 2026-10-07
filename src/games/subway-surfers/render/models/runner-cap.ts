@@ -3,7 +3,7 @@ import { badgeMaterial } from "../art/badge-art";
 import type { V3 } from "../mesh-builder";
 import type { Dresser } from "./rig";
 import { gloss, HEAD_R, HEAD_Y, satin, shadeOf, type Look } from "./runner-look";
-import { BACK, FRONT, peakGeometry, shell } from "./shapes";
+import { FRONT, peakGeometry, shell } from "./shapes";
 
 /** The crown's radius, just over the head, and how far the cap tips its front up. */
 const CR = HEAD_R + 0.018;
@@ -22,12 +22,12 @@ export function dressCap(dress: Dresser, look: Look): void {
   const head = dress.on("head");
   const tilt: V3 = [TILT, 0, 0];
   const crown = satin(look.cap);
-  head.add(shell(CR, [0, Math.PI * 2], [0, Math.PI / 2], 32), crown, C, tilt, SQUASH);
-  head.add(shell(CR + 0.003, [FRONT - 0.78, FRONT + 0.78], [0.1, Math.PI / 2], 32), satin(look.capFront), C, tilt, SQUASH);
-  // The gap over the strap, with hair showing through it, and the strap and its buckle.
-  head.add(shell(CR + 0.003, [BACK - 0.36, BACK + 0.36], [1.12, Math.PI / 2], 24), satin(look.hair), C, tilt, SQUASH);
-  head.add(shell(CR + 0.006, [BACK - 0.4, BACK + 0.4], [1.47, Math.PI / 2], 24), satin(shadeOf(look.cap, 0.8)), C, tilt, SQUASH);
-  head.box(0.034, 0.024, 0.012, gloss(0xd9dde4), at([0, -0.02, CR * SQUASH[2] + 0.006]), tilt, 0.004);
+  head.add(shell(CR, [0, Math.PI * 2], [0, Math.PI / 2], 40), crown, C, tilt, SQUASH);
+  head.add(shell(CR + 0.003, [FRONT - 0.78, FRONT + 0.78], [0.1, Math.PI / 2], 44), satin(look.capFront), C, tilt, SQUASH);
+  // A flat dome sunk into the crown at its rim leaves an arch of hair showing above the strap and its buckle.
+  head.sphere(0.046, satin(shadeOf(look.hair, 0.85)), at([0, 0, CR * SQUASH[2] - 0.004]), [1.15, 1.25, 0.3], 16, tilt);
+  head.box(0.12, 0.02, 0.012, satin(shadeOf(look.cap, 0.8)), at([0, 0.012, CR * SQUASH[2] + 0.008]), tilt);
+  head.box(0.03, 0.026, 0.01, gloss(0xd9dde4), at([0.03, 0.012, CR * SQUASH[2] + 0.013]), tilt);
   head.sphere(0.02, satin(look.capFront), at([0, CR * SQUASH[1], 0]), [1, 0.6, 1], 10, tilt);
 
   // The peak leaves the crown at the front of its rim and reaches out level, bent down at its sides.
@@ -45,7 +45,7 @@ export function dressCap(dress: Dresser, look: Look): void {
     face.sphere(0.008, satin(shadeOf(look.cap, 0.55)), at([side * CR * 0.62, CR * 0.62, 0.02]), [1, 1, 0.5], 6, tilt);
   }
   const badge = badgeMaterial();
-  if (badge) face.add(shell(CR + 0.0065, [FRONT - 0.55, FRONT + 0.55], [0.62, 1.42], 20), badge, C, tilt, SQUASH);
+  if (badge) face.add(shell(CR + 0.0065, [FRONT - 0.55, FRONT + 0.55], [0.62, 1.42], 36), badge, C, tilt, SQUASH);
 }
 
 /** A point on the cap, from its own frame into the head's: tipped, then moved onto the head. */

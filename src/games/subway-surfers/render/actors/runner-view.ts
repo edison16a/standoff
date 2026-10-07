@@ -59,7 +59,7 @@ export class RunnerView {
     this.board.position.y = 0.16;
     this.root.add(this.board);
     this.jetpack = buildJetpack();
-    this.jetpack.position.set(0, 0.2, 0.2);
+    this.jetpack.position.set(0, 0.09, 0.19);
     this.rig.bones.chest.add(this.jetpack);
     for (const side of ["ankleL", "ankleR"] as const) {
       const glow = new MeshBuilder().sphere(0.14, { color: 0x3ddc84, finish: "glow" }, [0, -0.07, -0.06], [1, 0.75, 1.6], 10).build("boot-glow");
