@@ -102,4 +102,21 @@ describe("the finishing presets", () => {
       expect(made / n, kind).toBeGreaterThan(0.75);
     }
   });
+
+  it("let a layup from right under the ring go clear of it too, as on a putback", () => {
+    const rng = seeded(4);
+    for (const kind of ["power", "finger", "scoop", "shield", "wrongFoot"] as const) {
+      let made = 0;
+      for (const build of BUILD_IDS) {
+        const a = createAthlete(0, 0, 0, build, null);
+        Object.assign(a, { x: 0.3, z: RIM.z + 0.55, vx: 0, vz: -0.5 });
+        const act = planFinish(rng, a, { dunk: false, layup: kind, style: null, hand: 1, side: 1 }, { x: a.x, y: 1, z: a.z });
+        const out = Math.hypot(act.release.x - RIM.x, act.release.z - RIM.z);
+        expect(out, `${kind} ${build}`).toBeGreaterThan(RIM.radius + 0.2);
+        const input = layupInput(rng, kind, act.release, out);
+        if (solvePreset(rng, input, "swish").detail.made) made++;
+      }
+      expect(made / BUILD_IDS.length, kind).toBeGreaterThan(0.6);
+    }
+  });
 });

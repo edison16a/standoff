@@ -97,7 +97,15 @@ function finishSpot(a: Athlete, pick: FinishChoice, spec: FinishSpec, d: number)
   return spot;
 }
 
-/** The layup's hand at the release: a reach from the shoulder up, toward the rim and out to the hand side. */
+/** How far out from the middle of the ring the ball must leave the hand, so it can go up and drop in rather than hit the iron. */
+const RING_CLEAR = 0.46;
+
+/**
+ * The layup's hand at the release: a reach from the shoulder up, toward
+ * the rim and out to the hand side. In close (a putback, a jump stop
+ * under it) the reach toward the rim is cut back until the ball is clear
+ * of the ring.
+ */
 function layupRelease(a: Athlete, ls: LayupSpec, at: V3, yaw: number, hand: number): V3 {
   const sh = shoulderAt(a, at, yaw, hand, { x: 0, y: 0, z: 0 });
   const to = dir2({ x: sh.x, z: sh.z }, RIM_SPOT);
@@ -105,9 +113,14 @@ function layupRelease(a: Athlete, ls: LayupSpec, at: V3, yaw: number, hand: numb
   const sx = -to.z * hand;
   const sz = to.x * hand;
   const r = ls.release;
-  const vx = to.x * r.rim + sx * r.side;
-  const vz = to.z * r.rim + sz * r.side;
-  const len = Math.hypot(vx, r.up, vz);
   const ext = armLength(a) * Math.min(r.ext, ARM_USE);
-  return { x: sh.x + (vx / len) * ext, y: sh.y + (r.up / len) * ext, z: sh.z + (vz / len) * ext };
+  let out: V3 = sh;
+  for (let rim = r.rim; rim >= -0.4; rim -= 0.1) {
+    const vx = to.x * rim + sx * r.side;
+    const vz = to.z * rim + sz * r.side;
+    const len = Math.hypot(vx, r.up, vz);
+    out = { x: sh.x + (vx / len) * ext, y: sh.y + (r.up / len) * ext, z: sh.z + (vz / len) * ext };
+    if (Math.hypot(out.x - RIM.x, out.z - RIM.z) >= RING_CLEAR) break;
+  }
+  return out;
 }
