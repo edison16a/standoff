@@ -147,6 +147,21 @@ describe("mouse aim", () => {
     expect(sent).toHaveLength(2);
   });
 
+  it("repeats a still point from the tick, as a phone keeps streaming", () => {
+    const sent: number[] = [];
+    let time = 0;
+    const aim = new MouseAim({ aim: (p) => sent.push(p.x) }, () => time);
+    aim.tick();
+    expect(sent).toEqual([]);
+    aim.pointer({ type: "move", x: 0.3, y: 0, button: 0 });
+    time += 100;
+    aim.tick();
+    expect(sent).toEqual([0.3]);
+    time += 200;
+    aim.tick();
+    expect(sent).toEqual([0.3, 0.3]);
+  });
+
   it("fires buttons with the point at that instant", () => {
     const shots: string[] = [];
     const aim = new MouseAim({ button: (b, down, p) => shots.push(`${b} ${down} ${p.x}`) });

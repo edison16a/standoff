@@ -14,6 +14,10 @@ Status: ready. Up to 4 players slice fruit on one shared screen. Each phone is a
 5. During the round there is nothing to press. Where the phone points is where the blade is. Swing through fruit fast to cut it. Slow moves never cut. The phone shows your score, your place and the clock, plus a small Recenter button for when the aim drifts.
 6. When time runs out, fruit already in the air can still be cut for a moment. Then the results show the winner, everyone's score and confetti, with Play again and Change settings.
 
+## Keyboard play
+
+The admin panel's Keyboard player (three quick taps on the settings gear, then Platform) seats a test player on the computer, for playing alone without a phone (`keyboard.ts`). Its phone screen floats in a small panel: click through Calibrate, Blade and Ready there with the mouse. Then the mouse is the blade. As on the phone there is nothing to press: swipe the mouse fast through fruit to slice it. A slow move never cuts.
+
 ## Scoring
 
 * Fruit: 10 points, small fruit (kiwi, strawberry, lime, plum) 15.

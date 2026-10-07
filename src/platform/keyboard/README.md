@@ -28,7 +28,7 @@ Send the payloads the game's phone sends today, with the same kinds and fields, 
 
 * `StickKeys`: W A S D and the arrow keys as a thumb stick. `vector()` is `{ x, y }`, x right and y up, from -1 to 1, with a diagonal scaled to length 1 and opposite keys cancelling. `new StickKeys("wasd")` leaves the arrows free for something else.
 * `ButtonKeys`: keys as buttons, several keys per button. `press(button)` runs on the first key down, `release(button, heldMs)` on the last key up, so a tap button only needs `press` and a hold or charge button uses both. `held()` lists the buttons down now.
-* `MouseAim`: the mouse as a phone pointed at the screen, in the aim kit's space (-1 to 1, y up). `aim(point)` streams at the phone's rate, `button(button, down, point)` gives clicks, and `point` is always the latest. Call its `tick()` from the binding's tick.
+* `MouseAim`: the mouse as a phone pointed at the screen, in the aim kit's space (-1 to 1, y up). `aim(point)` streams at the phone's rate, `button(button, down, point)` gives clicks, and `point` is always the latest. Call its `tick()` from the binding's tick while the game wants the aim: it also repeats a still point now and then, since the aim kit forgets a seat that goes quiet.
 
 ### Example
 
