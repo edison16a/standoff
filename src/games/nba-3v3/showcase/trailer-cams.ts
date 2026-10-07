@@ -58,6 +58,22 @@ const AIMS: Record<TrailerCam, Aim> = {
     out.look.set(-0.25, 2.65, 1.7);
     out.fov = 44;
   },
+  // Low beside the drive and a little ahead, keeping pace: the driver going at the rim, the defender chasing on his hip.
+  chase: (m, u, g, out) => {
+    const d = m.athletes[SHOOTER]!;
+    const c = m.athletes[LOCKDOWN]!;
+    const cx = (d.x + c.x) / 2;
+    const cz = (d.z + c.z) / 2;
+    out.pos.set(cx + 3.0, 0.55, cz - 1.6);
+    out.look.set(cx, 1.15, cz - 0.3);
+    out.fov = 42;
+  },
+  // Under the glass off the lane, looking up as the chaser comes over the top and swats it away.
+  swat: (m, u, g, out) => {
+    between(out.pos, [2.3, 0.55, 4.7], [2.0, 0.5, 4.4], ease(u / 1.6));
+    out.look.set(0.05, 2.15, 2.85);
+    out.fov = 46;
+  },
   // Low and square to the two of them at the top of the key: the iso, face to face.
   iso: (m, u, g, out) => {
     const p = m.athletes[PLAYMAKER]!;
@@ -102,7 +118,7 @@ const AIMS: Record<TrailerCam, Aim> = {
 };
 
 /** Cameras that follow players are eased toward their aim, so a stride never jolts the picture. */
-const FOLLOW: Partial<Record<TrailerCam, number>> = { ankles: 5, iso: 6, release: 7 };
+const FOLLOW: Partial<Record<TrailerCam, number>> = { ankles: 5, chase: 6, iso: 6, release: 7 };
 
 const want: Pose = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 40 };
 

@@ -3,12 +3,16 @@ import type { MatchEvent } from "../engine/events";
 import { Match } from "../engine/match";
 import type { Entry as MatchEntry } from "../engine/match-options";
 import { basketDir, rightOf } from "../engine/move-pick";
+import { stun } from "../engine/juke";
+import { MOVES } from "../engine/moves";
+import { reactFor } from "../engine/shake";
 import { GREEN_MS } from "../engine/shot-model";
 import type { Athlete } from "../engine/types";
 import { dir2, type V2 } from "../engine/vec";
 import type { DunkStyle } from "../roster";
 
 const DUNKER = 1;
+const LOCKDOWN = 3;
 const PLAYMAKER = 4;
 /** One of the new dunks, and one that reads from the broadcast camera. */
 export const SHOWCASE_DUNK: DunkStyle = "windmill";
@@ -37,10 +41,10 @@ type Stage = "setup" | "cross" | "drive" | "dunked" | "check" | "iso" | "stepbac
 
 /**
  * The highlight the showcase films, all of it live play with nothing
- * skipped: the Dunker crosses the Lockdown defender over on the wing, bursts to the rim
- * with the new momentum and throws down a windmill. Then the real check
- * up at the top of the key, and the Playmaker's iso: a crossover, a
- * stepback, and a three off the glass.
+ * skipped: the Dunker crosses the Lockdown defender over on the wing and
+ * breaks his ankles, bursts to the rim and throws down a windmill. Then
+ * the real check up at the top of the key, and the Playmaker's iso: a
+ * crossover, a stepback, and a gold three that swishes.
  * The two leads are steered like players on phones; everyone else plays as
  * the computer would, only without stealing or blocking the scripted
  * plays. Outcomes are forced, so every capture films the same moments.
@@ -49,6 +53,7 @@ export class HighlightScript {
   readonly match: Match;
   private stage: Stage = "setup";
   private at = 0;
+  private broke = false;
 
   constructor(private readonly lead: number) {
     this.match = new Match({
@@ -83,6 +88,7 @@ export class HighlightScript {
         break;
       case "cross":
         dunker.move = toward(dunker, { x: -3.2, z: 5.2 }, 0.8);
+        this.breakAnkles();
         if (s - this.at > 0.3) this.next("drive", s);
         break;
       case "drive":
@@ -126,7 +132,7 @@ export class HighlightScript {
         playmaker.move = { x: 0, z: 0 };
         // Shoot as he lands, as a player on a phone would.
         if (s - this.at > 0.36) {
-          m.forced = "bank";
+          m.forced = "swish";
           m.press(PLAYMAKER, "shoot");
           this.next("shot", s);
         }
@@ -141,6 +147,16 @@ export class HighlightScript {
       case "done":
         break;
     }
+  }
+
+  /** The crossover always drops the Lockdown defender: a hard shake, his ankles gone, as the move would roll it at its best. */
+  private breakAnkles(): void {
+    const m = this.match;
+    const act = m.athletes[DUNKER]!.action;
+    if (this.broke || act.kind !== "move" || act.t < MOVES[act.move].at - 0.02) return;
+    this.broke = true;
+    stun(m.athletes[LOCKDOWN]!, act, true, m.athletes[DUNKER]!);
+    m.emit({ type: "shake", id: DUNKER, victim: LOCKDOWN, hard: true, react: reactFor(act.move, true) });
   }
 
   private next(stage: Stage, s: number, then?: () => void): void {

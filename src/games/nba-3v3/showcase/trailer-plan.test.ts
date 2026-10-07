@@ -41,10 +41,10 @@ describe("the trailer's cuts", () => {
     for (const cut of CUTS) expect(cutLength(cut, FRAME)).toBeLessThan(2);
   });
 
-  it("runs about eleven seconds, so the clip loops in ten after the cross fade", () => {
+  it("runs about fourteen seconds, so the clip loops in thirteen after the cross fade", () => {
     const length = trailerLength(FRAME);
-    expect(length).toBeGreaterThan(10);
-    expect(length).toBeLessThan(12);
+    expect(length).toBeGreaterThan(12.5);
+    expect(length).toBeLessThan(15);
   });
 });
 
