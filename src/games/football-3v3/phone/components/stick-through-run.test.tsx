@@ -12,7 +12,7 @@ const BASE: PhoneState = {
   phase: "live", pad: "qb", team: 0, role: "qb", playing: true, pick: null, taken: [], ready: true,
   score: [0, 0], quarter: 1, overtime: false, clock: 300, down: "1st and 10", offense: true,
   choose: null, hikeLeft: null, meter: null, withBall: true, canThrow: true, runPlay: false, canPitch: false, canRun: true,
-  jukeReady: true, rushReady: true, guarding: false, grounded: false, banner: null, skip: null, result: null, stats: null, switched: false, throwWindow: null,
+  jukeReady: true, rushReady: true, guarding: false, grounded: false, banner: null, skip: null, result: null, stats: null, switched: false,
 } as unknown as PhoneState;
 
 /** A pointer event as the browser sends it. jsdom has no PointerEvent, so a mouse event carries the id. */

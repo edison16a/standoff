@@ -9,7 +9,7 @@ import { mouseStick } from "./throw-keys";
 const BASE = {
   kind: "state", phase: "live", name: "Kim", taken: [], pick: "gunslinger", ready: true, team: 0, role: "qb", playing: true,
   score: [0, 0], quarter: 1, overtime: false, clock: 150, down: "1st and 10", offense: true, switched: false, pad: "qb",
-  choose: null, hikeLeft: null, meter: null, withBall: true, canThrow: true, throwWindow: { center: 0.8, green: 0.08, gold: 0.014 },
+  choose: null, hikeLeft: null, meter: null, withBall: true, canThrow: true,
   runPlay: false, canPitch: false, canRun: true, jukeReady: true, rushReady: true, guarding: false, grounded: false,
   banner: null, skip: null, result: null, stats: null,
 } satisfies PhoneState;
@@ -47,25 +47,25 @@ describe("football keyboard", () => {
     expect(s.reliable()[0]).toMatchObject({ kind: "pad-press", button: "hike", down: true });
   });
 
-  it("holds the throw meter on Space and throws on release with the time held and the arrow's aim", () => {
+  it("aims while Space is held and throws on release with the arrow's aim, however long it was held", () => {
     const s = seat();
     s.keys.key("Space", true);
-    expect(s.reliable()[0]).toEqual({ kind: "hold", down: true });
+    expect(s.reliable()).toEqual([]);
     s.keys.key("ArrowLeft", true);
     s.keys.tick();
     expect(s.sent.some((p) => p.kind === "aim" && p.x === -1)).toBe(true);
     s.wait(780);
     s.keys.key("Space", false);
     const thrown = s.reliable().find((p) => p.kind === "throw")!;
-    expect(thrown).toMatchObject({ x: -1, y: 0, heldMs: 780 });
+    expect(thrown).toEqual({ kind: "throw", x: -1, y: 0 });
     expect(phoneMessageSchema.safeParse(thrown).success).toBe(true);
   });
 
-  it("throws straight up the field when nothing aimed", () => {
+  it("throws straight up the field on a quick tap with nothing aimed", () => {
     const s = seat();
     s.keys.key("Space", true);
     s.keys.key("Space", false);
-    expect(s.reliable().find((p) => p.kind === "throw")).toMatchObject({ x: 0, y: 1 });
+    expect(s.reliable()).toEqual([{ kind: "throw", x: 0, y: 1 }]);
   });
 
   it("throws with the left mouse button toward the pointer", () => {
@@ -82,14 +82,14 @@ describe("football keyboard", () => {
   });
 
   it("pitches with Space on a run call and takes off with Shift", () => {
-    const s = seat({ runPlay: true, throwWindow: null, canPitch: true });
+    const s = seat({ runPlay: true, canPitch: true });
     s.keys.key("Space", true);
     s.keys.key("ShiftLeft", true);
     expect(s.reliable().map((p) => p.button)).toEqual(["pass", "run"]);
   });
 
   it("tackles, rushes and guards on defence", () => {
-    const s = seat({ pad: "defense", role: "runner", withBall: false, canThrow: false, throwWindow: null });
+    const s = seat({ pad: "defense", role: "runner", withBall: false, canThrow: false });
     s.keys.key("KeyF", true);
     s.keys.key("ShiftRight", true);
     s.keys.key("KeyG", true);
@@ -101,7 +101,7 @@ describe("football keyboard", () => {
   });
 
   it("steers with W A S D in every press and the stream", () => {
-    const s = seat({ pad: "runner", withBall: true, throwWindow: null });
+    const s = seat({ pad: "runner", withBall: true });
     s.keys.key("KeyD", true);
     s.keys.key("KeyE", true);
     s.keys.tick();
@@ -135,6 +135,7 @@ describe("football keyboard", () => {
     const s = seat();
     s.keys.key("Space", true);
     s.keys.release();
-    expect(s.reliable().at(-1)).toEqual({ kind: "hold", down: false });
+    s.keys.key("Space", false);
+    expect(s.reliable().some((p) => p.kind === "throw")).toBe(false);
   });
 });

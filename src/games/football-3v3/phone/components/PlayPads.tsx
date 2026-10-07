@@ -6,7 +6,6 @@ import { TEAMS } from "../../teams";
 import { ButtonFace, type FaceIcon } from "./ButtonFace";
 import { PadInfo } from "./PadInfo";
 import { usePhone } from "./session-context";
-import { ThrowMeter } from "./ThrowMeter";
 import { ThrowStick } from "./ThrowStick";
 
 /** A round button that presses one of the pad's buttons while held. */
@@ -50,16 +49,7 @@ function QbControls({ host }: { host: PhoneState }) {
         {host.runPlay ? (
           <Hold button="pass" icon="ball" text="Pass" colour="#9333ea" size="lg" disabled={!host.canPitch} />
         ) : (
-          <div className="fb-throwpad">
-            {host.throwWindow && <ThrowMeter window={host.throwWindow} />}
-            <ThrowStick
-              disabled={!host.canThrow}
-              onHold={() => phone.holdThrow()}
-              onAim={(stick) => phone.aim(stick)}
-              onThrow={(stick) => phone.throwBall(stick)}
-              onCancel={() => phone.cancelThrow()}
-            />
-          </div>
+          <ThrowStick disabled={!host.canThrow} onAim={(stick) => phone.aim(stick)} onThrow={(stick) => phone.throwBall(stick)} />
         )}
       </div>
     </>

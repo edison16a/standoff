@@ -19,7 +19,7 @@ export const keyboard: KeyboardBinding = {
       title: "QB",
       rows: [
         { action: "Hike", keys: ["Space"] },
-        { action: "Hold to throw, let go in the green", keys: ["Space", "Left click"] },
+        { action: "Hold to aim, let go to throw", keys: ["Space", "Left click"] },
         { action: "Aim the throw", keys: [["Up", "Left", "Down", "Right"], "Mouse"] },
         { action: "Pitch on a run call", keys: ["Space"] },
         { action: "Take off and run", keys: ["Shift"] },

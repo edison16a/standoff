@@ -72,18 +72,12 @@ export class MatchDriver {
     if (id !== null && !this.held) this.match.press(id, "kick", value);
   }
 
-  /** The throw stick let go: aim one last time, then throw, graded by the phone's own meter. */
-  throwAt(seat: number, stick: Stick, forward: V2, heldMs?: number): void {
+  /** The throw stick let go: aim one last time, then throw. */
+  throwAt(seat: number, stick: Stick, forward: V2): void {
     const id = this.id(seat);
     if (id === null || this.held) return;
     this.match.setAim(id, stickToField(stick, forward));
-    this.match.setAim(id, null, heldMs);
-  }
-
-  /** A thumb down on the throw (the meter starts) or off it without a throw. */
-  holdThrow(seat: number, down: boolean): void {
-    const id = this.id(seat);
-    if (id !== null && !this.held) this.match.holdThrow(id, down);
+    this.match.setAim(id, null);
   }
 
   /** A phone left or came back. While away, the computer plays for them. */

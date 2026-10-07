@@ -19,54 +19,46 @@ export function mouseStick(point: AimPoint): StickVector | null {
 }
 
 /**
- * The throw on keys: hold Space (or the left mouse button) and the meter
- * runs, as a thumb on the phone's throw stick starts it. The arrows aim,
- * or the mouse when no arrow is held, or straight up the field when
- * neither has said anything. Letting go throws with how long it was held.
+ * The throw on keys: hold Space (or the left mouse button) as a thumb
+ * holds the phone's throw stick. The arrows aim, or the mouse when no
+ * arrow is held, or straight up the field when neither has said
+ * anything. Letting go throws; how long it was held makes no difference.
  */
 export class ThrowKeys {
-  private since: number | null = null;
+  private held = false;
   private sent: StickVector | null = null;
 
-  constructor(
-    private readonly ctx: KeyboardContext,
-    private readonly now: () => number = () => performance.now(),
-  ) {}
+  constructor(private readonly ctx: KeyboardContext) {}
 
   get holding(): boolean {
-    return this.since !== null;
+    return this.held;
   }
 
   start(): void {
-    if (this.since !== null) return;
-    this.since = this.now();
+    this.held = true;
     this.sent = null;
-    this.ctx.send({ kind: "hold", down: true });
   }
 
   /** Streams the aim while held, as the phone streams its throw stick. */
   tick(aim: StickVector | null): void {
-    if (this.since === null || !aim) return;
+    if (!this.held || !aim) return;
     if (this.sent && Math.abs(aim.x - this.sent.x) < 0.02 && Math.abs(aim.y - this.sent.y) < 0.02) return;
     this.sent = aim;
     this.ctx.sendLossy({ kind: "aim", x: aim.x, y: aim.y });
   }
 
-  /** Let go: throw where it aims, with the meter's time. */
+  /** Let go: throw where it aims. */
   release(aim: StickVector | null): void {
-    if (this.since === null) return;
-    const heldMs = Math.min(60000, Math.max(0, this.now() - this.since));
+    if (!this.held) return;
     const to = aim ?? { x: 0, y: 1 };
-    this.since = null;
+    this.held = false;
     this.sent = null;
-    this.ctx.send({ kind: "throw", x: to.x, y: to.y, heldMs });
+    this.ctx.send({ kind: "throw", x: to.x, y: to.y });
   }
 
   /** The window lost focus or the chance to throw went: no throw. */
   cancel(): void {
-    if (this.since === null) return;
-    this.since = null;
+    this.held = false;
     this.sent = null;
-    this.ctx.send({ kind: "hold", down: false });
   }
 }
