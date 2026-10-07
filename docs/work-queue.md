@@ -16,7 +16,6 @@ The running list of what is being built, so work can pick up again after a break
 | --- | --- | --- |
 | Football: remove the pass meter, passes land unless a defender is in the lane; skip replay only on phones | agent | building |
 | Basketball: rarer fouls, ref bounce passes the second free throw, black lines fix, skip replay only on phones | agent | building |
-| Soccer: skip replay only on phones | agent | building |
 | Basketball trailer redo (owner script in scratchpad/anim/owner-request.md): drive, lob, two hand poster dunk; small guard stepback over two leaping defenders, green, shooter POV of the spin, trophy lift. Starts after the Basketball fixes merge | | queued |
 
 All final builds are on main: cover icons, sports phone controls, Paintball Battle controls, Subway camera still, 1.2x tiles, final README. Final check done and on main (503ea5b): every game played end to end except the live site, which this machine's browser cannot reach (certificate block). Part 1 fixes: Soccer feet, Kart, Brawl, Blade Clash, Zombie and Gallery rejoin, phone download retry.
