@@ -8,6 +8,7 @@ import { Jolt, wobble } from "../anim/reactions";
 import type { Lod } from "../models/athlete-shapes";
 import { buildBody, type Rig, type Wardrobe } from "../models/body";
 import type { KitSpec } from "../models/kit";
+import { Facing } from "./facing";
 import { Feet } from "./feet";
 
 /** A spot on a joint that can touch the turf, and how far the body sticks out past it. */
@@ -37,6 +38,7 @@ export class Figure {
   private readonly contacts: Contact[];
   private readonly feet = new Feet();
   private readonly jolt = new Jolt();
+  private readonly facing = new Facing();
   /** Acceleration along the facing and to the left, eased over a tenth of a second. */
   private push = 0;
   private turn = 0;
@@ -101,7 +103,7 @@ export class Figure {
     wobble(this.shown, a.stagger, time, this.seed);
     const root = this.rig.root;
     root.position.set(a.x, 0, a.z);
-    root.rotation.set(0, a.yaw, 0);
+    root.rotation.set(0, this.facing.update(a.yaw, a.x, a.z, dt), 0);
     this.stand();
     this.feet.update(this.rig, chosen.feet, this.phase, a.speed, dt);
   }
