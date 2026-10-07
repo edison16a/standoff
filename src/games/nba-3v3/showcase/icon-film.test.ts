@@ -27,18 +27,25 @@ describe("the icon's film", () => {
     expect(shot).toBeDefined();
     expect(m.ball.holder).toBeNull();
     expect(shooter.action.kind).toBe("shoot");
-    // Still in the air after the follow through, the ball clear of his fingers above the rim's height.
-    expect(shooter.y).toBeGreaterThan(0.15);
-    expect(m.ball.pos.y).toBeGreaterThan(3.05);
+    // Still rising off the floor, the ball just off his fingers: up over his head, not yet at the rim's height.
+    expect(shooter.y).toBeGreaterThan(0.25);
+    expect(m.ball.pos.y).toBeGreaterThan(2.6);
+    expect(m.ball.pos.y).toBeLessThan(3.05);
+    expect(Math.hypot(m.ball.pos.x - shooter.x, m.ball.pos.z - shooter.z)).toBeLessThan(0.6);
     // No stepback: the defender started outside the chest.
-    expect(Math.hypot(shooter.x + 2.5, shooter.z - 6.4)).toBeLessThan(0.15);
+    expect(Math.hypot(shooter.x - 4.3, shooter.z - 3.4)).toBeLessThan(0.15);
   });
 
   it("has the defender in the air in front of him, facing him, and no block", () => {
     expect(defender.action.kind).toBe("block");
     expect(defender.y).toBeGreaterThan(0.4);
-    expect(Math.hypot(defender.x - shooter.x, defender.z - shooter.z)).toBeLessThan(1.1);
-    expect(Math.cos(defender.yaw - shooter.yaw)).toBeLessThan(-0.8);
+    const gap = Math.hypot(defender.x - shooter.x, defender.z - shooter.z);
+    expect(gap).toBeLessThan(1.1);
+    // In front of the Shooter, toward the rim, and turned to him.
+    const ahead = (defender.x - shooter.x) * Math.sin(shooter.yaw) + (defender.z - shooter.z) * Math.cos(shooter.yaw);
+    expect(ahead / gap).toBeGreaterThan(0.3);
+    const facing = ((shooter.x - defender.x) * Math.sin(defender.yaw) + (shooter.z - defender.z) * Math.cos(defender.yaw)) / gap;
+    expect(facing).toBeGreaterThan(0.9);
     expect(events.some((e) => e.type === "block")).toBe(false);
   });
 
@@ -47,7 +54,7 @@ describe("the icon's film", () => {
     for (const p of [shooter, defender, m.ball.pos]) {
       const to = { x: p.x - ICON_CAMERA.pos.x, z: p.z - ICON_CAMERA.pos.z };
       const d = Math.hypot(to.x, to.z);
-      expect((to.x * look.x + to.z * look.z) / d).toBeGreaterThan(0.9);
+      expect((to.x * look.x + to.z * look.z) / d).toBeGreaterThan(0.95);
     }
   });
 });

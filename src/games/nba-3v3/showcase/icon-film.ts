@@ -16,32 +16,33 @@ const PRESS_AT = 0.4;
 const HOLD_MS = GREEN_MS + 30;
 const JUMP_AT = PRESS_AT + 0.3;
 
-/** Seconds the icon's film runs before it is held: the wrist snapped through and the ball just clear of the fingers, over the defender's reach. */
-export const ICON_AT = PRESS_AT + HOLD_MS / 1000 + 0.1;
+/** Seconds the icon's film runs before it is held: the ball just off the Shooter's fingertips, at the defender's hand. */
+export const ICON_AT = PRESS_AT + HOLD_MS / 1000 + 0.045;
 
 /**
- * The Shooter on the left elbow, squared up to the rim. His man starts
- * just outside a stepback's reach on that line (stepback.ts), so the
- * jumper goes straight up, and closes out to `CLOSE` as the shot rises.
+ * The Shooter on the right wing, squared up to the rim. His man starts
+ * off his shooting hand, just outside a stepback's reach (stepback.ts),
+ * so the jumper goes straight up, and closes out to `CLOSE` as it rises.
+ * `SIDE` is the Shooter's right.
  */
-const SPOT = { x: -2.5, z: 6.4 };
+const SPOT = { x: 4.3, z: 3.4 };
 const TO_RIM = dir2(SPOT, RIM_SPOT);
 const SIDE = { x: -TO_RIM.z, z: TO_RIM.x };
-const GUARD = { x: SPOT.x + TO_RIM.x * 1.3, z: SPOT.z + TO_RIM.z * 1.3 };
+const GUARD = { x: SPOT.x + TO_RIM.x * 0.8 + SIDE.x * 1.0, z: SPOT.z + TO_RIM.z * 0.8 + SIDE.z * 1.0 };
 const CLOSE = 0.95;
-/** Where the camera sits from the Shooter, along his line to the rim and out to his left, and what it looks at. */
+/** A point from the Shooter, along his line to the rim and out to his right, at height `y`. */
 const at = (ahead: number, side: number, y: number) => new THREE.Vector3(SPOT.x + TO_RIM.x * ahead + SIDE.x * side, y, SPOT.z + TO_RIM.z * ahead + SIDE.z * side);
 
 /**
- * On the floor off the Shooter's front, out to the side of his man,
- * looking up past them into the ring of arena lights: his face in three
- * quarter view as he rises, the ball just off his fingers, and the
- * defender in the air beside it, reaching for it.
+ * Chest high off the Shooter's front, out past his guide hand, looking
+ * across the lane at the lit stands on the far side: his face in three
+ * quarter view clear of both arms, the ball just off his fingers, and
+ * the defender in the air beside him with a hand up at it.
  */
-export const ICON_CAMERA = { pos: at(1.5, 1.55, 0.35), look: at(0.5, 0, 2.25), fov: 54 };
+export const ICON_CAMERA = { pos: at(2.6, -1.3, 1.4), look: at(0.35, 0.35, 2.15), fov: 36 };
 
 /** The lights aim at the ball between the two, keyed from the camera's side so both faces catch it. */
-const SUBJECT = at(0.45, 0, 2.5);
+const SUBJECT = at(0.35, 0.35, 2.5);
 const TO_CAMERA = { x: ICON_CAMERA.pos.x - SUBJECT.x, z: ICON_CAMERA.pos.z - SUBJECT.z };
 const KEY_FROM = { x: TO_CAMERA.x / Math.hypot(TO_CAMERA.x, TO_CAMERA.z), z: TO_CAMERA.z / Math.hypot(TO_CAMERA.x, TO_CAMERA.z) };
 
@@ -50,20 +51,20 @@ export function iconLook(): CinemaLook {
   return { lights: iconLights(SUBJECT, KEY_FROM), fill: 0.4, key: 0.75, haze: 0.016, boards: true };
 }
 
-/** Where the six stand: the pair at the elbow, everyone else back in the dark, out of the shot. */
+/** Where the six stand: the pair on the right wing, everyone else back behind the camera, out of the shot. */
 const START: readonly [number, number, number][] = [
   [SHOOTER, SPOT.x, SPOT.z],
-  [1, 5.8, 9.6],
-  [2, 6.2, 3.2],
+  [1, -5.8, 9.6],
+  [2, -6.2, 3.2],
   [LOCKDOWN, GUARD.x, GUARD.z],
-  [4, 5.2, 10.4],
-  [5, 6.8, 4.4],
+  [4, -5.2, 10.4],
+  [5, -6.8, 4.4],
 ];
 
 /**
  * The icon's film, made like a cover shot: the Shooter rises into a
- * jumper at the elbow and the Lockdown defender leaps at it from a step
- * in front, both arms up. It is held as the ball leaves his fingers,
+ * jumper on the wing and the Lockdown defender leaps at it from a step
+ * in front, off his shooting hand. It is held as the ball leaves his fingers,
  * the defender's hand reaching for it. The block is forced to fall
  * short, so the film never depends on a roll of the dice.
  */
