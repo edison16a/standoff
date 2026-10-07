@@ -59,10 +59,32 @@ Known gaps from step 3:
 * Posters are common because the Dunker and the Big Man often meet a smaller man at the rim. If it feels too often, raise the strength edge in `throughHim`.
 * Sounds and the phone do not tell the presets apart yet (a poster or an alley oop call could).
 
+## Step 4: dribble, shakes and blocks
+
+Done:
+
+* Dribble presets in `engine/dribble-style.ts`: pound, jog, sprint, drive, retreat and protect, each a palm height, a spot ahead and out, a pound rate and how low the body sinks. `styleWeights` blends them by speed, travel direction and the nearest defender; `updateDribbleStyle` eases `a.dribbleStyle` toward the blend each step (called from `dribble.ts`). `handSpot` and `dribbleRate` read it, and the render reads `dribbleStyle.low` for the crouch. The old `driving()` is gone. A ball more than 1.3 m from the handler resets the dribble to the hand (was 2.5 m), so a teleport in a test or a film never reads as a fumble.
+* A sixth move, `betweenLegs`: the stick pulled back at an angle (straight back within about 40 degrees is still the stepback). Footwork in `render/anim/moves.ts`, the ball under the hips in `handSpot`. Bots use it.
+* Shakes in `engine/shake.ts`: `reactFor(move, hard)` gives bite, freeze, slip, ankles or turned, with its own time and push. `stun` in `juke.ts` plays it; the stumble action carries `react` and `turn`, the `shake` event carries `react`. Poses in `render/anim/shake-poses.ts`. A shaken man contests at 0.3 (`contest.ts`).
+* Flow: Shoot pressed too early in a move is queued on the move (`move-flow.ts`) and fires as soon as `canShootOutOf`; the jumper starts with `t` set to the time held (capped short of takeoff), so the meter matches the phone's hold. A release while queued goes up and out in one motion.
+* Blocks in `engine/blocks/`: `style.ts` picks the jump (stand, run, chase, help) as he leaves the floor, `plan.ts` flies the shot and the jump ahead together (`planBlock`, run at the jump and again at release by `planBlocks`) and rolls the block math for the moment the ball comes into reach, `hit.ts` picks and applies swat, spike, pin or tip, and `hook.ts` carries the plan out in the physics substeps. The block action carries `style` and `plan`; the `block` event carries `hit` and `preset`. Dunks at the rim swat or spike in `slam`. `ball-touch.ts` now only catches passes and loose balls.
+* `guard-leap.ts`: Guard pressed on the run to the post as a shot or drive goes up is a `run` leap with both hands. Bots trailing a driver jump for the chase down (`bot/defence.ts`).
+* Render: `render/block-reach.ts` times the strike to the plan (both hands for stand, run and help; one for chase), follows through by hit, and lets a near miss fall short. `render/anim/block-poses.ts` has a clip per jump style and the body's answer to a spike, a pin or a miss.
+* Lab scenes: `move-<move>` for all six, `shake-ankles`, `dribble` (`showcase/lab-moves.ts`), and `block-stand|run|chase|help|layup|spike|pin|tip|miss` (`showcase/lab-blocks.ts`). `m.forcedHit` sets the hit or a miss, and a lab block is never fouled. The old `block` and `swat` labs now release short of gold, since step 1 made gold untouchable. Tests: `dribble-style.test.ts`, `shake.test.ts`, `blocks/blocks.test.ts`, `blocks/hit.test.ts`, `lab-moves.test.ts`, `lab-blocks.test.ts`.
+* Checked in the browser: block-stand (both hands up, the hand on the ball at the touch), block-chase (one long arm over the driver's shoulder onto the ball), block-spike, shake-ankles (down on the hip, hand on the floor) and move-betweenLegs.
+
+Known gaps from step 4:
+
+* A jumper is usually blocked right out of the hand, because a defender must be close to reach it at all, so the strike has little lead. The pose has the arms up already, so it reads fine, but a pre release plan (guessing the release while the shooter rises) would let the hand wind up on screen.
+* The plan extrapolates the defender at his current velocity. A man bumped off line after the plan just misses; the render then shows a reach that falls short, which is the right look.
+* The lab move scenes force the shake (`stun`) and skip one random draw so the fixed seed does not fumble. Real games still roll `jukeChance`.
+* Sounds do not tell block hits or shake reactions apart yet (a spike or ankles call could), and the phone shows none of it.
+
 ## Notes for later steps
 
 * Shot endings: layups and floaters (step 3) go through `launchShot`, so they get the picker and the solver for free. A new finish only needs a sensible `ReleaseInput` (family, hand point, apex, spin). A finish that must end a set way can call `solvePreset` with that ending.
 * A gold release still sets `shot.rolled` to every defender, so no block can touch it.
-* Step 4 and 5 are still to do: dribble, shake and block presets, then polish and media. The media (README stills, `docs/screenshots/nba-3v3.jpg`, the icon and the trailer) were not redone in step 1 on purpose; step 5 redoes them once the animations land.
+* Step 5 is still to do: polish and media. The media (README stills, `docs/screenshots/nba-3v3.jpg`, the icon and the trailer) were not redone in step 1 on purpose; step 5 redoes them once the animations land.
 * Layup and dunk presets: engine side in `engine/finish/` and `engine/drive.ts`, poses in `render/anim/finish/`, hands in `render/finish-hands.ts`. A new preset needs a `LayupKind` or `DunkStyle`, a spec row, a track, a pose top, a selection rule and a lab setup in `showcase/lab-presets.ts`.
-* Step 4 (blocks) can read `act.layup` and `act.style` on a driving player to choose a block preset, and `shot.evade` says how hard the layup is to get a hand on.
+* Blocks read `shot.evade` for how hard a layup is to get a hand on (`blocks/plan.ts`). A new block hit needs a `BlockHit`, a branch in `applyHit` and `chooseHit`, a follow through in `render/block-reach.ts`, and a lab row in `showcase/lab-blocks.ts`. A new shake reaction needs a `ShakeReact` row in `shake.ts` and a clip in `render/anim/shake-poses.ts`.
+* For step 5 media: `?lab=block-chase`, `block-spike`, `shake-ankles` and `move-betweenLegs` make good stills.
