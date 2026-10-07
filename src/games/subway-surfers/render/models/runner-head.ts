@@ -1,96 +1,89 @@
 import * as THREE from "three";
-import type { Look } from "./runner-model";
 import type { Dresser } from "./rig";
+import { dressCap } from "./runner-cap";
+import { gloss, HEAD_R, HEAD_Y, matte, satin, shadeOf, type Look } from "./runner-look";
+import { BACK, shell } from "./shapes";
 
-const matte = (color: number) => ({ color, finish: "matte" as const });
-const satin = (color: number) => ({ color, finish: "satin" as const });
-const gloss = (color: number) => ({ color, finish: "gloss" as const });
-
-/** The head's radius. Big, as cartoon runners have. */
-const R = 0.17;
-const CY = 0.16;
+const R = HEAD_R;
+const CY = HEAD_Y;
 
 /**
- * A runner's head: a big cartoon head with ears, glossy eyes, brows, a
- * grin and the hair. The face looks down -z, the way the runner runs,
- * though players mostly see the back of it.
+ * A runner's head: a big round head with a full jaw, ears, big glossy eyes
+ * with brown irises, one brow cocked, and a lopsided grin. Brown hair pokes
+ * out under the cap. The face looks down -z, the way the runner runs, though
+ * players mostly see the back of it.
  */
 export function dressHead(dress: Dresser, look: Look): void {
   const head = dress.on("head");
   const skin = matte(look.skin);
-  head.sphere(R, skin, [0, CY, 0], [1, 1.06, 1], 24);
-  // A fuller jaw and cheeks give the face its chunky cartoon shape.
-  head.sphere(0.13, skin, [0, CY - 0.075, -0.035], [1.08, 0.78, 1], 18);
-  // Ears on the head itself; the face is painted on, with no ink line round every feature.
+  head.sphere(R, skin, [0, CY, 0], [1, 1.02, 0.98], 30);
+  // A full jaw and round cheeks give the face its chunky cartoon shape.
+  head.sphere(0.152, skin, [0, CY - 0.085, -0.042], [1.08, 0.8, 1], 24);
+  head.sphere(0.06, skin, [0, CY - 0.15, -0.1], [1.3, 0.8, 1], 14);
+  for (const x of [-1, 1]) head.sphere(0.052, skin, [x * R * 0.97, CY - 0.02, 0.015], [0.5, 1, 0.85], 14);
+  dressFace(dress, look);
+  dressHair(dress, look);
+  dressCap(dress, look);
+}
+
+function dressFace(dress: Dresser, look: Look): void {
   const face = dress.detail("head");
+  // A small button nose, a shade warmer than the face, with no line round it.
+  face.sphere(0.028, matte(blend(look.skin, 0xe58a6a, 0.25)), [0, CY - 0.025, -0.193], [1, 0.8, 0.8], 12);
   for (const x of [-1, 1]) {
-    head.sphere(0.045, skin, [x * R, CY - 0.01, 0.01], [0.55, 1, 0.9], 12);
-    face.sphere(0.022, matte(shade(look.skin, 0.8)), [x * (R + 0.012), CY - 0.01, 0.01], [0.4, 0.7, 0.6], 8);
-    // Eyes: glossy whites, big dark pupils and a glint, so they read from across a room.
-    face.sphere(0.044, gloss(0xffffff), [x * 0.062, CY + 0.025, -0.145], [1, 1.28, 0.55], 14);
-    face.sphere(0.026, gloss(0x24160f), [x * 0.058, CY + 0.02, -0.163], [1, 1.2, 0.45], 12);
-    face.sphere(0.009, { color: 0xffffff, finish: "glow" }, [x * 0.052 + 0.008, CY + 0.034, -0.176], [1, 1, 0.6], 6);
-    // Thick brows, tilted up at the middle for a cheeky look.
-    face.box(0.07, 0.02, 0.03, satin(look.hair), [x * 0.064, CY + 0.092, -0.15], [0.25, 0, x * 0.2], 0.009);
-    face.sphere(0.026, matte(shade(look.skin, 1.12, 0xff6f7d)), [x * 0.098, CY - 0.045, -0.135], [1, 0.62, 0.35], 8);
+    // The inner ear, a warm shadow.
+    face.sphere(0.026, matte(shadeOf(look.skin, 0.82)), [x * (R * 0.97 + 0.018), CY - 0.02, 0.012], [0.35, 0.7, 0.6], 10);
+    // Big eyes: glossy whites, a brown iris, a dark pupil and two glints, so they read from across a room.
+    const ex = x * 0.074;
+    face.sphere(0.056, gloss(0xffffff), [ex, CY + 0.024, -0.17], [0.88, 1.2, 0.5], 18);
+    face.sphere(0.034, satin(look.eyes), [ex - x * 0.004, CY + 0.016, -0.192], [0.92, 1.12, 0.42], 16);
+    face.sphere(0.019, gloss(0x1a100a), [ex - x * 0.004, CY + 0.016, -0.2], [0.95, 1.1, 0.4], 12);
+    face.sphere(0.0095, { color: 0xffffff, finish: "glow" }, [ex - x * 0.004 + 0.012, CY + 0.034, -0.205], [1, 1.1, 0.5], 8);
+    face.sphere(0.005, { color: 0xffffff, finish: "glow" }, [ex - x * 0.004 - 0.01, CY + 0.0, -0.205], [1, 1, 0.5], 6);
+    // A dark lash line over each eye sharpens the look.
+    const lid = new THREE.TorusGeometry(0.05, 0.0065, 6, 16, Math.PI * 0.9);
+    lid.rotateZ(Math.PI * 0.05);
+    face.add(lid, matte(0x2a1810), [ex, CY + 0.026, -0.187], [-0.35, 0, 0], [0.9, 1.25, 1]);
+    // Brows: the right one cocked high for the cheeky look, the left one flatter.
+    const cocked = x > 0;
+    face.box(0.075, 0.019, 0.03, satin(look.hair), [x * 0.08, CY + (cocked ? 0.112 : 0.098), -0.172], [0.3, 0, x * (cocked ? 0.28 : 0.1)], 0.009);
+    // Rosy cheeks.
+    face.sphere(0.03, matte(blend(look.skin, 0xff6f7d, 0.45)), [x * 0.11, CY - 0.05, -0.15], [1, 0.6, 0.35], 10);
   }
-  head.sphere(0.026, skin, [0, CY - 0.018, -0.172], [0.95, 0.82, 1], 10);
-  // A wide open grin.
-  const smile = new THREE.TorusGeometry(0.045, 0.012, 6, 16, Math.PI);
-  smile.rotateZ(Math.PI);
-  face.add(smile, matte(0x5a1f1f), [0, CY - 0.058, -0.162], [-0.25, 0, 0]);
-  face.sphere(0.03, matte(0x7a2a2a), [0, CY - 0.083, -0.155], [1.2, 0.5, 0.4], 10);
-  face.box(0.05, 0.012, 0.012, matte(0xffffff), [0, CY - 0.07, -0.168], [-0.25, 0, 0], 0.004);
-
-  if (look.style === "cap") cap(dress, look);
-  else bun(dress, look);
+  // The grin: wide, open and pulled up at one corner.
+  const tilt: [number, number, number] = [0.15, 0, 0.14];
+  const mouth = new THREE.SphereGeometry(0.052, 20, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2);
+  face.add(mouth, matte(0x6b1d22), [0.012, CY - 0.083, -0.183], tilt, [1, 0.62, 0.32]);
+  const tongue = new THREE.SphereGeometry(0.03, 14, 6, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2);
+  face.add(tongue, matte(0xe05a62), [0.016, CY - 0.1, -0.192], tilt, [1, 0.5, 0.3]);
+  face.box(0.074, 0.016, 0.01, matte(0xffffff), [0.012, CY - 0.088, -0.2], tilt, 0.005);
+  // A dimple at the high corner.
+  const dimple = new THREE.TorusGeometry(0.014, 0.0035, 4, 8, Math.PI * 0.7);
+  face.add(dimple, matte(shadeOf(look.skin, 0.7)), [0.066, CY - 0.072, -0.178], [0, -0.5, -0.2]);
 }
 
-function cap(dress: Dresser, look: Look): void {
+/** Hair under the cap: round the back and sides, sideburns, a tufty nape and a fringe under the peak. */
+function dressHair(dress: Dresser, look: Look): void {
   const head = dress.on("head");
   const hair = satin(look.hair);
-  // Hair shows at the sides and back under a backwards cap.
-  head.sphere(R + 0.004, hair, [0, CY + 0.02, 0.014], [1.02, 1, 1.02], 18);
-  for (const x of [-1, 1]) head.box(0.03, 0.09, 0.07, hair, [x * (R - 0.01), CY - 0.02, -0.03], undefined, 0.012);
-  head.sphere(R + 0.012, satin(look.cap), [0, CY + 0.06, 0.005], [1, 0.74, 1.02], 22);
-  head.box(0.26, 0.035, 0.18, satin(look.capPeak), [0, CY + 0.035, R + 0.07], [-0.22, 0, 0], 0.016);
-  head.sphere(0.024, satin(look.capPeak), [0, CY + R * 0.74 + 0.07, 0.005]);
-  // The strap and its snaps show at the front, since the cap is on backwards.
-  head.box(0.1, 0.028, 0.02, matte(0x2a2d35), [0, CY + 0.045, -R + 0.005], [0.35, 0, 0], 0.008);
-  // Headphones round the neck, a splash of colour from behind.
-  head.add(ringGeometry(), gloss(look.pack), [0, -0.03, 0.02]);
+  const dark = satin(shadeOf(look.hair, 0.82));
+  head.add(shell(R + 0.012, [BACK - 1.95, BACK + 1.95], [0.3, 1.8], 30), hair, [0, CY + 0.005, 0.004]);
+  // Tufts at the nape, flicking out under the cap from behind.
+  for (let i = -2; i <= 2; i++) {
+    const out = i / 2;
+    head.sphere(0.048, i % 2 === 0 ? hair : dark, [out * 0.12, CY - 0.1 + Math.abs(out) * 0.02, 0.15 - Math.abs(out) * 0.04], [1, 1.5, 0.75], 10, [-0.6, out * 0.6, -out * 0.4]);
+  }
+  for (const x of [-1, 1]) {
+    // Sideburns in front of the ears, and a tuft over each ear.
+    head.box(0.03, 0.08, 0.05, hair, [x * (R * 0.95), CY - 0.03, -0.05], [0, 0, x * 0.08], 0.014);
+    head.sphere(0.05, hair, [x * 0.175, CY + 0.06, 0.03], [0.7, 1.1, 1.3], 10, [0, 0, x * 0.5]);
+  }
+  // The fringe, three locks under the peak.
+  for (const [x, s] of [[-0.07, 1], [-0.01, 1.15], [0.06, 0.9]] as const) {
+    head.sphere(0.045 * s, hair, [x, CY + 0.128, -0.16], [1.15, 0.75, 0.55], 12, [0.3, 0, -x * 3]);
+  }
 }
 
-function bun(dress: Dresser, look: Look): void {
-  const head = dress.on("head");
-  const hair = satin(look.hair);
-  head.sphere(R + 0.007, hair, [0, CY + 0.035, 0.02], [1.03, 1, 1.03], 22);
-  // A fringe swept to one side over the forehead.
-  head.sphere(0.1, hair, [-0.055, CY + 0.105, -0.1], [1.4, 0.55, 0.8], 14);
-  head.sphere(0.075, hair, [0.075, CY + 0.12, -0.09], [1.2, 0.5, 0.8], 12);
-  // The bun on top, and headbands in her pack's colour.
-  head.sphere(0.09, hair, [0, CY + 0.22, 0.07], [1, 0.95, 1], 16);
-  head.add(bandGeometry(0.092), satin(look.cap), [0, CY + 0.22, 0.07], [0.2, 0, 0]);
-  head.add(bandGeometry(R + 0.008), satin(look.cap), [0, CY + 0.075, 0.01], [-0.35, 0, 0]);
-  for (const x of [-1, 1]) head.sphere(0.02, gloss(0xffd21f), [x * (R + 0.01), CY - 0.045, -0.005]);
-}
-
-function bandGeometry(radius: number): THREE.BufferGeometry {
-  const geometry = new THREE.TorusGeometry(radius, 0.02, 8, 28);
-  geometry.rotateX(Math.PI / 2);
-  return geometry;
-}
-
-function ringGeometry(): THREE.BufferGeometry {
-  const geometry = new THREE.TorusGeometry(0.11, 0.024, 8, 24, Math.PI * 1.3);
-  geometry.rotateX(Math.PI / 2);
-  geometry.rotateY(Math.PI * 0.35);
-  return geometry;
-}
-
-/** The skin a little lighter or darker, or tinted toward another colour, for ears and cheeks. */
-function shade(skin: number, light: number, tint?: number): number {
-  const c = new THREE.Color(skin).multiplyScalar(light);
-  if (tint !== undefined) c.lerp(new THREE.Color(tint), 0.4);
-  return c.getHex();
+function blend(a: number, b: number, k: number): number {
+  return new THREE.Color(a).lerp(new THREE.Color(b), k).getHex();
 }
