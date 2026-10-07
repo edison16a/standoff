@@ -27,7 +27,9 @@ describe("the icon's film", () => {
     expect(shot).toBeDefined();
     expect(m.ball.holder).toBeNull();
     expect(shooter.action.kind).toBe("shoot");
-    expect(shooter.y).toBeGreaterThan(0.2);
+    // Still in the air after the follow through, the ball clear of his fingers above the rim's height.
+    expect(shooter.y).toBeGreaterThan(0.15);
+    expect(m.ball.pos.y).toBeGreaterThan(3.05);
     // No stepback: the defender started outside the chest.
     expect(Math.hypot(shooter.x + 2.5, shooter.z - 6.4)).toBeLessThan(0.15);
   });

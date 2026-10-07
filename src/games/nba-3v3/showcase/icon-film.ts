@@ -16,8 +16,8 @@ const PRESS_AT = 0.4;
 const HOLD_MS = GREEN_MS + 30;
 const JUMP_AT = PRESS_AT + 0.3;
 
-/** Seconds the icon's film runs before it is held: the ball a hand's width off his fingers, the defender near the top of his leap. */
-export const ICON_AT = PRESS_AT + HOLD_MS / 1000 + 0.02;
+/** Seconds the icon's film runs before it is held: the wrist snapped through and the ball just clear of the fingers, over the defender's reach. */
+export const ICON_AT = PRESS_AT + HOLD_MS / 1000 + 0.1;
 
 /**
  * The Shooter on the left elbow, squared up to the rim. His man starts
