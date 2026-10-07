@@ -105,7 +105,8 @@ export class StepbackFilm {
         break;
       }
       case "done":
-        if (lock.action.kind !== "block") lock.move = { x: 0, z: 0 };
+        // Down again, the Lockdown defender drifts off to the Shooter's right to watch it, out of his line of sight to the rim.
+        if (lock.action.kind !== "block") lock.move = toward(lock, { x: s.x + 1.1, z: s.z - 1.1 }, 0.45);
         if (help.action.kind !== "block") help.move = { x: 0, z: 0 };
         break;
     }
