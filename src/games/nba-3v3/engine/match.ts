@@ -68,7 +68,8 @@ export class Match {
   forcedFinish: Forced | null = null;
   /** The last rebound, for a putback straight back up. */
   lastBoard: { id: number; at: number; offensive: boolean } | null = null;
-  /** The last lob caught on the way to the rim, for an alley oop finish. */
+  /** Who an alley oop lob in the air is for, and the last one caught, for the finish. */
+  alleyLob: number | null = null;
   alleyCatch: { id: number; at: number } | null = null;
   /** The next hand that gets to a shot blocks it, for the showcase and the lab. */
   forcedBlock = false;

@@ -1,6 +1,7 @@
 import { buildOf } from "./athlete";
 import { passLead, passSpeedScale } from "./build-effects";
 import { clampToCourt, RIM_SPOT } from "./court";
+import { alleyFits, alleyHeight } from "./finish/alley";
 import type { Match } from "./match";
 import { aimThrough, aimTimed, backspin } from "./physics/aim";
 import { normal } from "./shot-error";
@@ -79,12 +80,22 @@ export function throwPass(m: Match, a: Athlete, target: Athlete): void {
   }
   // The arc of a pass in the air for t seconds rises g t^2 / 8 over the line; near the hoop it stays below the glass.
   if (nearHoop(lead)) time = Math.max(0.14, Math.min(time, Math.sqrt((8 * Math.max(0.3, 2.55 - from.y)) / 9.81)));
+  // A cutter with the lane to himself gets it lobbed up high for the alley oop (see `finish/alley.ts`).
+  const alley = alleyFits(m, target);
+  m.alleyLob = alley ? target.id : null;
+  if (alley) {
+    // Up and over on a timed arc, so it comes down into his hands where he will be.
+    lob = true;
+    time = Math.max(0.5, d / 7);
+    lead = clampToCourt({ x: target.x + target.vx * time, z: target.z + target.vz * time }, 0.4);
+  }
   const off = (0.05 + (10 - passing) * 0.012 + (openness(m, a) < 1.2 ? 0.05 : 0)) * (lob ? 1.5 : 1);
-  const to = { x: lead.x + normal(m.rng) * off, y: buildOf(target).body.height * 0.62 + normal(m.rng) * off * 0.5, z: lead.z + normal(m.rng) * off };
+  const high = alley ? alleyHeight(target) : buildOf(target).body.height * 0.62;
+  const to = { x: lead.x + normal(m.rng) * off, y: high + normal(m.rng) * off * 0.5, z: lead.z + normal(m.rng) * off };
   const spin = backspin(from, to, lob ? 9 : 14);
   b.holder = null;
   b.mode = "flight";
-  b.vel = lob ? aimThrough(from, to, Math.max(from.y, to.y) + 0.8 + d * 0.08, spin) : aimTimed(from, to, time, spin);
+  b.vel = lob && !alley ? aimThrough(from, to, Math.max(from.y, to.y) + 0.8 + d * 0.08, spin) : aimTimed(from, to, time, spin);
   b.w = spin;
   b.flightT = 0;
   b.flightKind = "pass";

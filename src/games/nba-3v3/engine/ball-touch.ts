@@ -2,6 +2,8 @@ import { airborne, buildOf, standingReach } from "./athlete";
 import { blockTiming } from "./block";
 import { contestScale, interceptChance } from "./build-effects";
 import { extraReach } from "./contest";
+import { startDrive } from "./drive";
+import { catchAlley } from "./finish/alley";
 import type { Match } from "./match";
 import type { BallBody } from "./physics/air";
 import { BALL } from "./physics/ball-spec";
@@ -129,6 +131,7 @@ export function passCaught(m: Match): boolean {
     gainPossession(m, receiver);
     receiver.dribble = 0;
     m.emit({ type: "catch", id: receiver.id });
+    if (m.alleyLob === receiver.id) catchAlley(m, receiver, startDrive);
     return true;
   }
   if (b.flightT < 0.08 || !receiver) return false;
