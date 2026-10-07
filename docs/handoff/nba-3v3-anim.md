@@ -49,6 +49,7 @@ Done:
 * The dunk no longer floats: the hand takes the ball over the ring and drives it down through the net, then the body hangs or drops. Test: `presets.test.ts` (ball within arm reach of a shoulder and moving no faster than an arm swing for every build and preset; every dunk released over the ring and through the net; every layup released clear of the ring and makeable, from 2.6 m and from right under).
 * Blocking a layup is hard: `evade` per layup cuts the contest (`shot-launch.ts`), the touch chance (`ball-touch.ts`) and the foul chance. About one block a game in bot games.
 * Up and under: a computer defender near the pump fake usually jumps at it (`drive.ts`). Poster: the man under it is knocked down as the slam comes down (`poster.test.ts`).
+* Fix to step 2: the toilet bowl ride now keeps the ball out of the glass round the back of the ring (`rim-ride.ts`, test in `rim-ride.test.ts`).
 * Alley oop: a pass to an open teammate running hard at the rim goes up as a lob, and he catches it into the alley oop dunk (`alley.ts`, `passing.ts`, `alley.test.ts`).
 * Lab scenes in `showcase/lab-presets.ts`: `/showcase/nba-3v3?lab=layup-<kind>&step=1` and `?lab=dunk-<style>&step=1`. `lab-presets.test.ts` checks every scene plays the preset it names. Checked in the browser: two hand dunk, poster, body shield, finger roll.
 
