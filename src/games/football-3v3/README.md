@@ -56,7 +56,7 @@ Held sideways, like a controller: moving under the left thumb, the ball and the 
 The QB, runner and defence pads share one move stick that stays on screen between them (`phone/pad-layout.ts`). A thumb steering the QB keeps steering him through the switch when he presses Run, with no reset.
 
 * **The call.** Before each play the QB gets three big tiles, Throw, Run and Kick, with the seconds left. After a touchdown: Kick for 1 or Go for 2.
-* **The QB.** The same move stick as everyone on the left. Before the snap the middle is one big Hike button with the seconds left of the 5 second window. On the right the throw stick with the throw meter beside it: touch it and the meter starts, push toward a receiver on the big screen (the one nearest that line lights up), and let go in the green to throw. On a run call a big Pass button takes its place for the pitch. Juke and Run sit in the middle after the snap.
+* **The QB.** The same move stick as everyone on the left. Before the snap the middle is one big Hike button with the seconds left of the 5 second window. On the right the throw stick: hold it, push toward a receiver on the big screen (the one nearest that line lights up), and let go to throw. A quick flick throws too. On a run call a big Pass button takes its place for the pitch. Juke and Run sit in the middle after the snap.
 * **After the pass.** A QB who throws or pitches to a computer teammate takes him over for the rest of the play: the phone switches to the runner's pad and says "You have the receiver" (or the back). See One player control below.
 * **A runner** (and the QB once he presses Run or crosses the line): the run stick, Dive and Juke.
 * **The defence:** the move stick, Rush, Guard (held) and Tackle. The defence never picks a play, so its pad stays up while the offense calls one, and defenders can move to set up (never across the line before the snap). After an interception the QB defends too.
@@ -120,28 +120,28 @@ Everything is synthesised through the audio engine, with no crowd: the brass and
 
 The QB always turns square to his target to throw: he drops back with his eyes downfield, snaps his shoulders round to the receiver through the motion and follows through along the throw (`engine/passer-facing.ts`). He used to face his own run, so a throw made while drifting back left his hand with his back to the field.
 
-The throw stick draws an invisible aim line from the QB. The receiver nearest that line is the target and its ring lights up. Letting go throws. The throw is solved to lead the receiver's run, then leaves the hand a little off, as a real throw does: the arm sets how far, and a pass rusher in the QB's face makes it worse. From there it is a real ball in the air. Once it is up, the receiver reads it and his legs take him to meet it, a person's receiver too unless he pushes the stick well away.
+The throw stick draws an invisible aim line from the QB. The receiver nearest that line is the target and its ring lights up. Letting go throws. The throw is solved to lead the receiver's run and leaves the hand true. The arm and the rush only show in the spiral: a strong arm spins it tighter, a rusher in the QB's face makes it wobble. From there it is a real ball in the air. Once it is up, the receiver reads it and his legs take him to meet it, a person's receiver too unless he pushes the stick well away.
 
-Who gets it is decided where the ball meets the hands (see The physics). A defender sitting in front of the target at the throw reads it and breaks on the ball, and a defender a person steers can pick it off too. A computer defender only knocks passes down. A defender on Guard never plays the ball.
+Who gets it is decided where the ball meets the hands (see The physics and Passing lanes below). A defender on Guard never plays the ball.
 
 The QB throws once a play, with the ball in hand. Moving or standing makes no difference to his aim. He can shuffle back while he throws.
 
 * **Throw presets** (`engine/throw-preset.ts`). The game logic picks the throwing motion as the throw starts, from how far the ball goes, how fast the QB moves and how close the rush is. A short ball off set feet is a quick **flick**. A long one is a **bomb** with a full wind up and a long stride. Moving fast he throws **on the run** with the legs still going. With a rusher in his face he fades away **under pressure**, the arm coming round lower and sooner. The ball leaves the hand on that motion's own release frame, from the right hand, with the QB square to his target.
 * **Catch presets** (`engine/catch-preset.ts`, `engine/catch/plan.ts`). Half a second before a pass arrives, every player going for it gets a move from how it will reach him. At the chest he bends his knees, catches it and turns upfield. Over his head he loads and **high points** it in the air, then lands. Led past where he can run he **dives** and lays out, leaving the ground just in time. From behind it is an **over the shoulder** catch. Hot or with a defender on him he hauls it in and **stumbles** with it. The hands still decide; the result picks how the move finishes. Held, it goes into the chest and away under the arm. Dropped, the hands fly open. A drop with a defender within a metre was a hit that **jarred** it loose, and he staggers.
-* **Picks and swats.** A defender who reads a throw leaps and **picks** it off. A computer defender in the lane gets a hand up and **swats** it down, leaping only as high as the ball needs. A bad ball from the meter is easier for both.
+* **Picks and swats.** A defender who reads a throw leaps and **picks** it off. A computer defender in the lane gets a hand up and **swats** it down, leaping only as high as the ball needs.
 
-### The throw meter
+### Passing lanes
 
-Like Basketball's shot meter (`engine/pass-meter.ts`). Touching the throw stick starts a marker that climbs the bar in a second and falls back again, round and round, so the QB can take his time to find a receiver. Let go in the green for a good pass; in the thin gold band in its middle, a window of under thirty milliseconds, for a perfect one. Below the green the ball comes out weak, above it too hot. A better arm gets a wider green; the gold is the same for everyone.
+There is no timing to a throw. Every pass is thrown true and reaches the receiver it was aimed at (`engine/pass-lane.ts`, `engine/catch/lane-odds.ts`). An open receiver always catches it.
 
-| Timing | Accuracy | Velocity | Catchability | Interception risk |
-| --- | --- | --- | --- | --- |
-| Gold | the line almost exact, a tight spiral | a firm ball | drops a fifth as often | nobody reads it; picks a quarter as likely |
-| Green | a little tighter than a plain throw | a touch firmer | drops less often | a little lower |
-| Weak | off line, a wobbly floater | hangs in the air | as usual | defenders read it from further and pick it more |
-| Too hot | off line | a fastball | pops out of the hands far more | a little higher |
+Only a defender in the passing lane can stop it. As the ball leaves the hand each defender gets a threat from 0 to 1:
 
-How far outside the green it stopped makes a miss worse. The phone draws the bar on its own clock and sends how long it ran with the throw, so the grade is what the player saw. The big screen hangs the same bar beside the QB while he holds it, then the word for how it came out. Computer QBs stop the marker near the middle, closer the harder they are, so a hard QB finds the green most of the time and the gold now and then.
+* **How close** he is to the ball's line. Right on it he is in the way; at the edge of his reach he only gets a hand out. His build's cover reach widens it.
+* **Where** he sits along it. Jumping the route in front of the receiver counts fully, near the QB about half, trailing behind the receiver a little more.
+* **How far** the throw goes. A long ball hangs, so he has more time to get there than on a quick one.
+* **Who** he is. A person plays it fully; a computer by its level; a training dummy not at all.
+
+The best placed defender reads it and breaks on the ball. When it reaches his hands his threat is the chance he makes a play. Part of that is a pick, for a person or the one who read it; the rest is a swat or a tip, and the ball may go anywhere. A defender right on the receiver as it arrives can also hit it loose. Nobody tops 0.92, so even a perfect jump loses some.
 
 ### One player control
 
@@ -203,7 +203,7 @@ Difficulty comes from `src/games/kit/difficulty`: Easy (the default), Medium, Ha
 
 * The QB drops back, reads the receivers, throws to the most open one, and avoids throwing into a defender sat in front. With nobody open and room ahead, or when the read drags on, it presses Run and takes off.
 * Receivers run slants, gos, outs, curls, drags and posts, and go to meet the ball.
-* Defenders cover a receiver from over the top. A spare one rushes the QB on about half the plays and sits deep as a safety on the rest. A computer defender next to a pass can knock it down; only one sitting in front of the receiver at the throw reads it well enough to catch it. Once someone has the ball they chase and tackle.
+* Defenders cover a receiver from over the top. A spare one rushes the QB on about half the plays and sits deep as a safety on the rest. A computer defender in the passing lane can knock it down; only the one best placed in it reads it well enough to catch it. Once someone has the ball they chase and tackle.
 * It calls a run on about one play in four, and on half of them with three yards or less to go.
 * On fourth down the bot kicks, a field goal in range or a punt, unless it is fourth and short past midfield.
 
@@ -214,9 +214,7 @@ Difficulty comes from `src/games/kit/difficulty`: Easy (the default), Medium, Ha
 ```ts
 const match = new Match({ entries: buildLineup(signups), seed, level: "easy" });
 match.setMove(id, { x, z });      // the move stick, in field space
-match.holdThrow(id, true);        // a thumb on the throw stick: the throw meter starts
 match.setAim(id, { x, z });       // the throw stick while held; null lets go and throws
-match.setAim(id, null, heldMs);   // let go, graded by how long the phone's meter ran
 match.steered(seat);              // the athlete a phone steers now (its teammate after a pass)
 match.press(id, "juke");          // hike, juke, dive, rush, tackle, guard, kick, pass (the pitch), run (the QB takes off)
 match.release(id, "guard");
@@ -228,14 +226,14 @@ const pad = seatStatus(match, seat); // which controls a phone should show
 ```
 
 * `buildView` gives plain numbers: players with their action and its clock and their acceleration, the ball with its orientation, axis and spin and the last thing it hit, the lines of scrimmage and first down, down and distance, the kick meters, the clock and score. `blendViews` mixes two for slow motion replays.
-* `match.lastPass` keeps the last throw's release, speed and spin for the touchdown replay, and its `quality` from the meter.
-* `view.meter` is the throw meter for the big screen; an athlete view's `seat` is the phone steering him now, so the ring moves with control.
+* `match.lastPass` keeps the last throw's release, speed and spin for the touchdown replay, and its `lane`, the defenders who had a play on it.
+* `view.aiming` is the QB holding his throw stick, who brings the ball up ready; an athlete view's `seat` is the phone steering him now, so the ring moves with control.
 * Sticks come in field space. The host turns a phone's stick into field space for its camera.
 * The kick meters run from `meterAim` and `meterPower`. A phone can draw them itself from `seatStatus(...).meter` and send its own reading with the press.
 * A phone that drops is played by the computer with `setAuto`.
 * `admin.ts` has the shortcuts for the host's admin panel: `adminTouchdown`, `adminFieldGoal` and `adminTwoPoint`. They go through the real rules.
 
-Files: `field` and `downs` for the field and the rules of downs, `motion`, `body` and `bodies` for running, `juke`, `juke-beat`, `tackle`, `dive`, `down`, `hit`, `collide`, `guard` and `linemen` for contact, `tackle-preset`, `tackle-moves` and `tackle-bind` for the tackle presets, `block-preset` and `line-free` for the block presets, `throw-preset` and `catch-preset` for the throw and catch presets, `fumble` for a loose ball, `physics/` for the rigid ball, the air, the turf, the posts and the net, `flight`, `aim`, `throw-error`, `passing`, `catching` and `catch/` for the ball in the air and the hands, `qb-run` for the QB's pace and the Run button, `passer-facing` for where a passer looks, `pass-meter` and `meter-live` for the throw meter, `control` for which player each phone steers, `run-play` for the run call and the pitch, `kick` and `kick-flight` for kicking, `whistle`, `score` and `phases` for how plays end and what comes next, `build-effects` for what each rating does, `ceremony` for the trophy presentation, `bots/` for the computer players.
+Files: `field` and `downs` for the field and the rules of downs, `motion`, `body` and `bodies` for running, `juke`, `juke-beat`, `tackle`, `dive`, `down`, `hit`, `collide`, `guard` and `linemen` for contact, `tackle-preset`, `tackle-moves` and `tackle-bind` for the tackle presets, `block-preset` and `line-free` for the block presets, `throw-preset` and `catch-preset` for the throw and catch presets, `fumble` for a loose ball, `physics/` for the rigid ball, the air, the turf, the posts and the net, `flight`, `aim`, `throw-error`, `passing`, `catching` and `catch/` for the ball in the air and the hands, `qb-run` for the QB's pace and the Run button, `passer-facing` for where a passer looks, `pass-lane` for who can make a play on a pass, `control` for which player each phone steers, `run-play` for the run call and the pitch, `kick` and `kick-flight` for kicking, `whistle`, `score` and `phases` for how plays end and what comes next, `build-effects` for what each rating does, `ceremony` for the trophy presentation, `bots/` for the computer players.
 
 ## Drawing the game
 
