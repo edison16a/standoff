@@ -1,0 +1,64 @@
+/* The juke cooldown ring and the stamina bar on the controller. */
+
+/* Registered so the ring's sweep eases between updates instead of jumping. */
+@property --cool {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+.fb-pad .kit-pad-btn {
+  position: relative;
+}
+
+/* A ring round the button: what is left of the cooldown, sweeping down to nothing as the move comes back. */
+.fb-cool {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: conic-gradient(#ffffff calc(var(--cool) * 1turn), rgba(255, 255, 255, 0.14) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000000 calc(100% - 4px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000000 calc(100% - 4px));
+  transition: --cool 140ms linear;
+}
+
+.fb-legs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: min(150px, 100%);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.fb-legs__track {
+  position: relative;
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bg-muted);
+  overflow: hidden;
+}
+
+.fb-legs__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: #22c55e;
+  transition: width 160ms linear, background-color 300ms ease;
+}
+
+.fb-legs--tired .fb-legs__fill {
+  background: #f59e0b;
+}
+
+.fb-legs--spent .fb-legs__fill {
+  background: #ef4444;
+}
+
+.fb-legs--spent .fb-legs__label {
+  color: #ef4444;
+}

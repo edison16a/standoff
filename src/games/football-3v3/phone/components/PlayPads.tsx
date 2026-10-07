@@ -8,12 +8,24 @@ import { PadInfo } from "./PadInfo";
 import { usePhone } from "./session-context";
 import { ThrowStick } from "./ThrowStick";
 
+interface HoldProps {
+  button: Button | "skip";
+  icon: FaceIcon;
+  text: string;
+  colour: string;
+  size?: "lg" | "md";
+  disabled: boolean;
+  /** Share of a cooldown still to run: a ring round the button sweeps down to empty as it comes back. */
+  cool?: number;
+}
+
 /** A round button that presses one of the pad's buttons while held. */
-function Hold({ button, icon, text, colour, size = "md", disabled }: { button: Button | "skip"; icon: FaceIcon; text: string; colour: string; size?: "lg" | "md"; disabled: boolean }) {
+function Hold({ button, icon, text, colour, size = "md", disabled, cool = 0 }: HoldProps) {
   const phone = usePhone();
   return (
     <PadButton label={text} size={size} colour={colour} disabled={disabled} onDown={() => phone.press(button, true)} onUp={() => phone.press(button, false)}>
       <ButtonFace icon={icon} text={text} />
+      {cool > 0 && <span className="fb-cool" style={{ "--cool": cool } as React.CSSProperties} aria-hidden="true" />}
     </PadButton>
   );
 }
@@ -40,7 +52,7 @@ function QbControls({ host }: { host: PhoneState }) {
           </div>
         ) : (
           <div className="fb-pad__row" key="juke">
-            <Hold button="juke" icon="juke" text="Juke" colour="#a855f7" disabled={host.phase !== "live" || !host.jukeReady || host.grounded} />
+            <Hold button="juke" icon="juke" text="Juke" colour="#a855f7" cool={host.jukeCool} disabled={host.phase !== "live" || !host.jukeReady || host.grounded} />
             <Hold button="run" icon="run" text="Run" colour="#0d9488" disabled={!host.canRun || host.grounded} />
           </div>
         )}
@@ -65,7 +77,7 @@ function RunnerControls({ host }: { host: PhoneState }) {
         <PadInfo host={host} />
       </div>
       <div className="fb-pad__right fb-pad__buttons fb-pad__buttons--two">
-        <Hold button="juke" icon="juke" text="Juke" colour="#a855f7" disabled={!live || !host.jukeReady} />
+        <Hold button="juke" icon="juke" text="Juke" colour="#a855f7" cool={host.jukeCool} disabled={!live || !host.jukeReady} />
         <Hold button="dive" icon="dive" text="Dive" colour="#ef4444" size="lg" disabled={!live} />
       </div>
     </>

@@ -69,6 +69,10 @@ export const phoneStateSchema = z.object({
   /** The QB can press Run to become the runner for the rest of the play. */
   canRun: z.boolean(),
   jukeReady: z.boolean(),
+  /** Share of the juke cooldown still to run, 0 once Juke is ready: the button's ring sweeps it down. */
+  jukeCool: z.number().min(0).max(1),
+  /** How fresh the legs of the player this phone steers are, 1 fresh to 0 spent, or null with no player. */
+  stamina: z.number().min(0).max(1).nullable(),
   rushReady: z.boolean(),
   guarding: z.boolean(),
   /** On the ground: every button waits until the player is up. */

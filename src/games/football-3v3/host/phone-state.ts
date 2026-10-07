@@ -76,6 +76,9 @@ export function phoneState(c: PhoneContext, seatNo: number): PhoneState {
     canPitch: status?.canPitch ?? false,
     canRun: status?.canRun ?? false,
     jukeReady: status?.jukeReady ?? false,
+    // Steps fine enough for a smooth sweep and bar, coarse enough not to flood the link.
+    jukeCool: Math.ceil((status?.jukeCool ?? 0) * 12) / 12,
+    stamina: status ? Math.round(status.stamina * 20) / 20 : null,
     rushReady: status?.rushReady ?? false,
     guarding: status?.guarding ?? false,
     grounded: status?.down ?? false,
