@@ -28,6 +28,9 @@ export interface DrillOptions {
 
 export interface DrillResult {
   shots: ShotRecord[];
+  /** The shots taken after the stepback shook the defender, and after it did not. */
+  shaken: ShotRecord[];
+  held: ShotRecord[];
   /** Stepbacks that shook the defender. */
   shakes: number;
   /** Turnovers on the move: a fumble or a steal before the shot. */
@@ -41,7 +44,7 @@ export interface DrillResult {
  * the computer and against a person on Guard.
  */
 export function runStepbackDrill(o: DrillOptions): DrillResult {
-  const out: DrillResult = { shots: [], shakes: 0, lost: 0 };
+  const out: DrillResult = { shots: [], shaken: [], held: [], shakes: 0, lost: 0 };
   for (let rep = 0; rep < o.reps; rep++) playRep(o, (o.firstSeed ?? 1) + rep, out);
   return out;
 }
@@ -67,6 +70,7 @@ function playRep(o: DrillOptions, seed: number, out: DrillResult): void {
   const holdMs = GREEN_MS + between(rng, -1.6, 1.6) * greenHalfMs(buildOf(s).stats.shooting);
   let stage: "jab" | "move" | "shot" = "jab";
   let pressedAt = -1;
+  let shook = false;
   for (let t = 0; t < 4; t += STEP) {
     if (stage === "jab") {
       const f = basketDir(s);
@@ -90,10 +94,14 @@ function playRep(o: DrillOptions, seed: number, out: DrillResult): void {
     const events = m.drainEvents();
     log.observe(m, events);
     for (const e of events) {
-      if (e.type === "shake" && e.id === 0) out.shakes++;
+      if (e.type === "shake" && e.id === 0) {
+        out.shakes++;
+        shook = true;
+      }
       if (e.type === "fumble" || e.type === "steal") out.lost++;
     }
     if (events.some((e) => e.type === "score" || e.type === "rebound" || e.type === "fumble" || e.type === "steal")) break;
   }
   out.shots.push(...log.shots);
+  (shook ? out.shaken : out.held).push(...log.shots);
 }
