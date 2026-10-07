@@ -16,7 +16,7 @@ export function createAthlete(id: number, team: TeamId, role: Role, slot: number
     mass: c ? c.frame.weight : LINEMAN_FRAME.weight,
     move: { x: 0, z: 0 }, aim: null,
     action: { kind: "none" },
-    jukeCd: 0, jukeHeat: 0, tackleCd: 0, rushT: 0, rushCd: 0, guard: null, blocked: 0, stagger: 0, stumble: null,
+    jukeCd: 0, jukeHeat: 0, tackleCd: 0, rushT: 0, rushCd: 0, guard: null, blocked: 0, stagger: 0, stumble: null, catching: null,
     bot: { wait: 0, route: [], leg: 0, stop: false, goal: { x: 0, z: 0 }, cover: null, rush: true, readAt: 2 },
     stats: emptyStats(),
   };

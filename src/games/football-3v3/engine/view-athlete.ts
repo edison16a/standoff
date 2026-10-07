@@ -1,4 +1,5 @@
 import type { BuildId } from "../builds";
+import type { CatchKind, CatchResult } from "./catch-preset";
 import type { ApproachKind, TackleKind } from "./tackle-preset";
 import type { ThrowKind } from "./throw-preset";
 import type { Athlete, ActionKind, DownCause, JukeKind, Role, TackleBind, TeamId } from "./types";
@@ -44,6 +45,11 @@ export interface AthleteView {
   lunge: ApproachKind | null;
   /** The tackle preset this man is part of while he is down in one, and his part in it. */
   tackle: { kind: TackleKind; role: TackleBind["role"]; side: 1 | -1 } | null;
+  /**
+   * His move for a pass coming down (catch-preset.ts): seconds into it, seconds from its start to the
+   * ball in his hands, the side it comes in on, how high, and how it finished with seconds since.
+   */
+  catching: { kind: CatchKind; t: number; at: number; side: 1 | -1; height: number; result: CatchResult | null; since: number } | null;
   /** Fooled by a juke: seconds into the stumble and which way he lurches. */
   stumble: { t: number; dur: number; side: 1 | -1 } | null;
   spike: boolean;
@@ -71,6 +77,7 @@ export function athleteView(a: Athlete, hasBall: boolean, targeted: boolean, cer
     downCause: act.kind === "down" ? act.cause : null,
     lunge: act.kind === "lunge" ? act.approach : null,
     tackle: act.kind === "down" && act.bind ? { kind: act.bind.kind, role: act.bind.role, side: act.bind.side } : null,
+    catching: a.catching && { kind: a.catching.kind, t: a.catching.t, at: a.catching.at, side: a.catching.side, height: a.catching.height, result: a.catching.result, since: a.catching.since },
     stumble: a.stumble && { ...a.stumble },
     spike: act.kind === "celebrate" && act.spike,
     hasBall, targeted, guarding: a.guard, rushing: a.rushT > 0, blocked: a.blocked > 0, ceremony,

@@ -1,4 +1,5 @@
 import { updateBall } from "./ball-update";
+import { planCatches } from "./catch/plan";
 import { ceremonyTime, stepCeremony } from "./ceremony";
 import { FIELD, xToYard, yardToX } from "./field";
 import { updateJuke } from "./juke";
@@ -72,6 +73,8 @@ export function stepWorld(m: Match, dt: number): void {
     updateTarget(m);
   }
   if (m.phase === "kick") updateKick(m, dt);
+  // Moves for a pass coming down are picked before it arrives, so a dive leaves the ground in time.
+  planCatches(m, dt);
   // Linemen move with their pair; a juke can still put one on the turf for a moment.
   for (const a of m.athletes) {
     if (a.role !== "lineman") act(m, a, dt);

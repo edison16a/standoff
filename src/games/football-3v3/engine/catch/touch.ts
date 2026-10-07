@@ -9,6 +9,8 @@ import { bobble, swat } from "./deflect";
 import { catchOdds } from "./odds";
 import { holdChance } from "../pass-meter";
 import { caught, intercepted } from "./outcome";
+import { playFor } from "./eligible";
+import { noteCatch } from "./plan";
 import { tracePath } from "./path";
 import { meetHands, reachOf } from "./reach";
 
@@ -18,24 +20,12 @@ import { meetHands, reachOf } from "./reach";
  * through get their go, and the odds come from how it arrived there.
  */
 
-/** What a player may do with a pass: catch it, pick it off, or (a computer defender) only knock it down. */
-type Play = "catch" | "pick" | "swat";
-
 /** A player gets one go at the ball, then another only after it has been knocked about. */
 const AGAIN = 0.3;
 /** A defender's hands are not a receiver's: picks are harder than catches. */
 const PICK = 0.8;
 /** Into the chest: this close to the body the hands take it at once. */
 const NEAR = 0.25;
-
-function playFor(m: Match, a: Athlete, pass: PassInfo): Play | null {
-  if (a.role === "lineman" || isDown(a) || a.id === pass.from) return null;
-  const thrower = m.athlete(pass.from);
-  if (a.team === thrower?.team) return a.role === "runner" && (!pass.pitch || a.id === pass.to) ? "catch" : null;
-  // Nobody picks off a pitch, and a defender on Guard only tails his man.
-  if (pass.pitch || a.guard !== null) return null;
-  return !a.auto || a.id === pass.interceptor ? "pick" : "swat";
-}
 
 /** How close another player's hands came to the ball: they fight for it. */
 function contest(m: Match, a: Athlete, ball: V3): number {
@@ -96,6 +86,7 @@ export function touchBall(m: Match, from: V3): boolean {
       if (!m.rng.chance(chance)) continue;
       swat(f, a, near.hand, m.rng);
       knocked(m, pass);
+      noteCatch(m, a, "swatted", play);
       m.emit({ type: "breakUp", id: a.id });
       continue;
     }
@@ -106,10 +97,13 @@ export function touchBall(m: Match, from: V3): boolean {
     if (m.rng.chance(p)) {
       if (play === "catch") caught(m, a);
       else intercepted(m, a, pass.from);
+      // Caught out of bounds is no catch: the move finishes empty handed.
+      noteCatch(m, a, m.ball.holder === a.id ? "held" : "dropped", play);
       return true;
     }
     bobble(f, a, near.hand, m.rng);
     knocked(m, pass);
+    noteCatch(m, a, "dropped", play);
     m.emit({ type: "tip", id: a.id });
   }
   return false;

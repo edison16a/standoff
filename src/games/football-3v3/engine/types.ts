@@ -1,5 +1,6 @@
 import type { BuildId } from "../builds";
 import type { TeamId } from "../teams";
+import type { CatchPlan } from "./catch-preset";
 import type { PassQuality } from "./pass-meter";
 import type { ApproachKind, TackleKind } from "./tackle-preset";
 import type { ThrowKind } from "./throw-preset";
@@ -154,6 +155,8 @@ export interface Athlete {
   stagger: number;
   /** Fooled by a juke: seconds into it, how long it lasts and which way he lurches, or null. He may be on the turf for it. */
   stumble: { t: number; dur: number; side: 1 | -1 } | null;
+  /** His move for a pass coming down, picked before it arrives (catch/plan.ts), or null. */
+  catching: CatchPlan | null;
   bot: BotMemory;
   stats: Stats;
 }
