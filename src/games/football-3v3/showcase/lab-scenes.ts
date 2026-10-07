@@ -19,6 +19,14 @@ export const STAGES = {
       { build: "speedster", at: { x: -1.0, z: 5.0 }, vel: { x: 0, z: 0 } },
     ],
   },
+  // The icon's key art: two defenders leaving their feet at a carrier from both sides at once.
+  keyart: {
+    carrier: "powerback", speed: 7, outcome: "gang", length: 3.4,
+    cast: [
+      { build: "lockdown", at: { x: 2.3, z: 5.4 }, vel: { x: -2.5, z: -2 }, lunge: { at: 0.5, approach: "wrap" } },
+      { build: "speedster", at: { x: -2.4, z: 5.0 }, vel: { x: 2.5, z: -1.5 }, lunge: { at: 0.52, approach: "shoestring" } },
+    ],
+  },
   // Misses: lunging at nothing, dodged by a juke, and bounced off a carrier who runs through it.
   whiff: { carrier: "routerunner", speed: 7, outcome: "whiff", length: 2.8, cast: [{ build: "lockdown", at: { x: 2.4, z: 3.4 }, vel: { x: -2, z: 0 }, lunge: { at: 0.45, approach: "wrap", aim: { x: -0.8, z: -0.6 } } }] },
   missed: {
