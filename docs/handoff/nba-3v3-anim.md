@@ -80,11 +80,31 @@ Known gaps from step 4:
 * The lab move scenes force the shake (`stun`) and skip one random draw so the fixed seed does not fumble. Real games still roll `jukeChance`.
 * Sounds do not tell block hits or shake reactions apart yet (a spike or ankles call could), and the phone shows none of it.
 
+## Step 5: polish and media
+
+Done:
+
+* Ball off the fingers: `render/release-roll.ts` blends the drawn ball from the shooting palm onto the real flight over the first tenth of a second of a jumper or a free throw, so it leaves the hand on the follow through instead of before it. Picture only. Test in `release-roll.test.ts`.
+* Odds: over 36 bot games (12 each at 1v1, 2v2 and 3v3) threes went in 54 to 59 percent and twos about 30. `SHOT.goodThree` (0.72) cuts a good, not green, release from beyond the arc; threes now land near 40 percent. `JUKE.hard` went from 0.45 to 0.25, so broken ankles drop from about a third of shakes to about one in seven. Free throws sit at 74 to 83 percent, layups 55 to 60, about one block a game. Games take 140 to 190 seconds.
+* `body.test.ts` now caps a jump at `MAX_DUNK_PEAK`, the dunk plan's own limit, since a small guard with space may get up to 1.3 m.
+* Icon: `showcase/icon-film.ts` is a new film. The Shooter rises at the left elbow, the Lockdown defender closes out and leaps (the block forced to fall short), held as the ball rolls off the fingers, from the floor looking up into the ring of arena lights. Tests in `icon-film.test.ts`.
+* Highlight film (`script.ts`): the crossover now forces a hard shake, so the Lockdown defender breaks his ankles; the Playmaker's iso three is a gold swish. Poster moved to off the left block (`director.ts`), since the shaken defender now walks through the old spot.
+* Trailer (`trailer-plan.ts`, `trailer-cams.ts`, `trailer.ts`): new `chase` film kind (the `block-chase` lab scene) with `chase` and `swat` cameras; all cuts retimed; about 13.9 s, captured with `--seconds 12.93`. Every frame moves (388 of 388 kept by mpdecimate). WebM 3.6 MB at crf 46, MP4 3.9 MB at crf 38.
+* Media: `media/icon.jpg`, `media/poster.jpg`, `public/games/nba-3v3/backdrop.webm|mp4`, `docs/screenshots/nba-3v3.jpg` (the poster), and three README pictures in `media/readme/`.
+* Play tested with the Keyboard player and a Playwright phone in 1v1, 2v2 and 3v3 (lobby size picker, live play, CPU free throws). Admin Free throws to the phone, Shoot held for about a second by touch: the shot only went up on the release. Phone fit passes.
+
+Known gaps from step 5:
+
+* Mid range jumpers in bot games go in about 30 percent, a little low next to 2K; bots take many of them contested off a stepback. Not tuned.
+* The trailer is longer now, so the clip is encoded harder (crf 46 WebM) to fit 3.9 MB. A shorter cut list would buy back quality.
+* The phone meter did not draw while the test held Shoot, because the test throttles the phone's frames; the hold itself and the release are covered by `free-throw-hold.test.ts`.
+* Sounds and the phone still do not tell presets apart (poster, spike, ankles, gold calls).
+
 ## Notes for later steps
 
 * Shot endings: layups and floaters (step 3) go through `launchShot`, so they get the picker and the solver for free. A new finish only needs a sensible `ReleaseInput` (family, hand point, apex, spin). A finish that must end a set way can call `solvePreset` with that ending.
 * A gold release still sets `shot.rolled` to every defender, so no block can touch it.
-* Step 5 is still to do: polish and media. The media (README stills, `docs/screenshots/nba-3v3.jpg`, the icon and the trailer) were not redone in step 1 on purpose; step 5 redoes them once the animations land.
+* All five steps are done. Media is current as of step 5; redo it with `tools/media/capture.mjs` if a film's timings move (the trailer cuts are timed to the films, see the comment in `trailer-plan.ts`).
 * Layup and dunk presets: engine side in `engine/finish/` and `engine/drive.ts`, poses in `render/anim/finish/`, hands in `render/finish-hands.ts`. A new preset needs a `LayupKind` or `DunkStyle`, a spec row, a track, a pose top, a selection rule and a lab setup in `showcase/lab-presets.ts`.
 * Blocks read `shot.evade` for how hard a layup is to get a hand on (`blocks/plan.ts`). A new block hit needs a `BlockHit`, a branch in `applyHit` and `chooseHit`, a follow through in `render/block-reach.ts`, and a lab row in `showcase/lab-blocks.ts`. A new shake reaction needs a `ShakeReact` row in `shake.ts` and a clip in `render/anim/shake-poses.ts`.
-* For step 5 media: `?lab=block-chase`, `block-spike`, `shake-ankles` and `move-betweenLegs` make good stills.
+* Stills: `?lab=block-chase&step=1&cam=2.0,0.55,4.4,0.05,2.15,2.85,46` at frame 66 and `?lab=shake-ankles&step=1&cam=3.0,0.6,7.6,0,0.9,7.6,40` at frame 36 made the README pictures.
