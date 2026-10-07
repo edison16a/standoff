@@ -1,4 +1,5 @@
 import type { BuildId } from "../builds";
+import type { BlockKind } from "./block-preset";
 import type { CatchKind, CatchResult } from "./catch-preset";
 import type { ApproachKind, TackleKind } from "./tackle-preset";
 import type { ThrowKind } from "./throw-preset";
@@ -50,6 +51,8 @@ export interface AthleteView {
    * ball in his hands, the side it comes in on, how high, and how it finished with seconds since.
    */
   catching: { kind: CatchKind; t: number; at: number; side: 1 | -1; height: number; result: CatchResult | null; since: number } | null;
+  /** A lineman's block move, seconds into it, and whether he is the blocker (offense) or the rusher. */
+  block: { kind: BlockKind; t: number; offense: boolean } | null;
   /** Fooled by a juke: seconds into the stumble and which way he lurches. */
   stumble: { t: number; dur: number; side: 1 | -1 } | null;
   spike: boolean;
@@ -78,6 +81,7 @@ export function athleteView(a: Athlete, hasBall: boolean, targeted: boolean, cer
     lunge: act.kind === "lunge" ? act.approach : null,
     tackle: act.kind === "down" && act.bind ? { kind: act.bind.kind, role: act.bind.role, side: act.bind.side } : null,
     catching: a.catching && { kind: a.catching.kind, t: a.catching.t, at: a.catching.at, side: a.catching.side, height: a.catching.height, result: a.catching.result, since: a.catching.since },
+    block: a.block && { ...a.block },
     stumble: a.stumble && { ...a.stumble },
     spike: act.kind === "celebrate" && act.spike,
     hasBall, targeted, guarding: a.guard, rushing: a.rushT > 0, blocked: a.blocked > 0, ceremony,

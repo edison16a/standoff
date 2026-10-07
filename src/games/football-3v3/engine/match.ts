@@ -40,6 +40,8 @@ export class Match {
   readonly athletes: Athlete[];
   readonly ball: Ball = newBall();
   readonly rng: Rng;
+  /** The line's own dice for sheds and pancakes, so rolling them leaves every other draw in a seeded game alone. */
+  readonly lineRng: Rng;
   readonly target: number;
   readonly quarterSeconds: number;
   level: BotLevel;
@@ -77,7 +79,9 @@ export class Match {
   constructor(options: MatchOptions) {
     const problem = lineupProblem(options.entries);
     if (problem) throw new Error(problem);
-    this.rng = new Rng(options.seed ?? Math.floor(Math.random() * 2 ** 31));
+    const seed = options.seed ?? Math.floor(Math.random() * 2 ** 31);
+    this.rng = new Rng(seed);
+    this.lineRng = new Rng((seed ^ 0x5bd1e995) >>> 0);
     this.target = options.target ?? RULES.target;
     this.quarterSeconds = options.quarterSeconds ?? RULES.quarterSeconds;
     this.clock = this.quarterSeconds;

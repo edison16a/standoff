@@ -1,5 +1,6 @@
 import type { BuildId } from "../builds";
 import type { TeamId } from "../teams";
+import type { BlockKind } from "./block-preset";
 import type { CatchPlan } from "./catch-preset";
 import type { PassQuality } from "./pass-meter";
 import type { ApproachKind, TackleKind } from "./tackle-preset";
@@ -53,9 +54,9 @@ export type ActionKind = Action["kind"];
  * Why a player went down: tackled with the ball, making the tackle or
  * piling on, a dive, or a miss: dodged by a juke, lunging at nothing,
  * bounced off a carrier who ran through him, or his ankles broken by a
- * juke he never lunged at.
+ * juke he never lunged at. A rusher a blocker drove onto his back is pancaked.
  */
-export type DownCause = "tackled" | "tackler" | "pile" | "dive" | "missed" | "whiff" | "shed" | "juked";
+export type DownCause = "tackled" | "tackler" | "pile" | "dive" | "missed" | "whiff" | "shed" | "juked" | "pancaked";
 
 /** The men of one tackle, held together through its preset (tackle-bind.ts). */
 export interface TackleBind {
@@ -157,6 +158,8 @@ export interface Athlete {
   stumble: { t: number; dur: number; side: 1 | -1 } | null;
   /** His move for a pass coming down, picked before it arrives (catch/plan.ts), or null. */
   catching: CatchPlan | null;
+  /** A lineman's block move this play, seconds into it, and which side of it he is on (block-preset.ts), or null. */
+  block: { kind: BlockKind; t: number; offense: boolean } | null;
   bot: BotMemory;
   stats: Stats;
 }

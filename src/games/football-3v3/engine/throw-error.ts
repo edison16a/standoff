@@ -38,7 +38,8 @@ export interface Release {
 export function pressure(m: Match, qb: Athlete): number {
   let near = Infinity;
   for (const o of m.athletes) {
-    if (o.team === qb.team || o.role === "lineman" || isDown(o)) continue;
+    // A rusher who shed his blocker counts; one still locked up does not.
+    if (o.team === qb.team || (o.role === "lineman" && !m.lines[o.slot]?.loose) || isDown(o)) continue;
     near = Math.min(near, Math.hypot(o.x - qb.x, o.z - qb.z));
   }
   return Math.max(0, 1 - near / ERROR.rush);
