@@ -3,14 +3,15 @@ import { releaseSpread } from "./bot/shot-value";
 import { handTo } from "./check-plan";
 import { walkTo } from "./check-up";
 import { returnToss, type Toss } from "./check-toss";
-import { lineUp } from "./free-throw-plan";
+import { LINE, lineUp } from "./free-throw-plan";
+import { bouncePass, collectBall, newOfficial, REF, settleOfficial, turnTo, walkOfficial, type Official } from "./free-throw-ref";
 import type { Match } from "./match";
 import { gaussian } from "./rng";
 import { GREEN_MS } from "./shot-model";
 import { releaseJumper, startJumper } from "./shooting";
 import { CHECK, FREE_THROW as FT, RULES } from "./tuning";
 import type { Athlete } from "./types";
-import type { V2 } from "./vec";
+import { yawOf, type V2 } from "./vec";
 
 export { lineBouncing, stepFreeThrowBall } from "./free-throw-ball";
 
@@ -19,12 +20,13 @@ export { lineBouncing, stepFreeThrowBall } from "./free-throw-ball";
  * are while the referee makes the call; then the fouled player walks to
  * the line, the ball comes back to them, and the rest line up along the
  * lane. Each shot uses the shot meter: the player's own on their phone,
- * or a computer's steady hand. Every shot but the last comes back to
- * the shooter. The last is live: play restarts as it leaves the hand,
- * so a miss is anyone's rebound.
+ * or a computer's steady hand. After every shot but the last the
+ * referee collects the ball, walks it up the lane and bounce passes it
+ * back to the shooter (`free-throw-ref.ts`). The last is live: play
+ * restarts as it leaves the hand, so a miss is anyone's rebound.
  */
 
-export type FreeThrowStage = "whistle" | "walk" | "set" | "shooting" | "result" | "return";
+export type FreeThrowStage = "whistle" | "walk" | "set" | "shooting" | "result" | "collect" | "carry" | "return";
 
 export interface FreeThrows {
   shooter: number;
@@ -42,6 +44,8 @@ export interface FreeThrows {
   toss: Toss | null;
   /** How long a computer holds Shoot, in milliseconds, once it has started its shot. */
   botRelease: number | null;
+  /** The referee working the line. */
+  official: Official;
 }
 
 /** Stops play for free throws. The ball finishes what it was doing until the walk to the line. */
@@ -52,7 +56,7 @@ export function startFreeThrows(m: Match, fouler: Athlete, victim: Athlete, shot
   m.offence = victim.team;
   m.phase = "freeThrow";
   m.phaseT = 0;
-  m.freeThrows = { shooter: victim.id, fouler: fouler.id, shot: 1, shots, stage: "whistle", t: 0, whistle, spots: lineUp(m, victim), toss: null, botRelease: null };
+  m.freeThrows = { shooter: victim.id, fouler: fouler.id, shot: 1, shots, stage: "whistle", t: 0, whistle, spots: lineUp(m, victim), toss: null, botRelease: null, official: newOfficial(m.foulCall?.spot ?? victim) };
 }
 
 function stage(ft: FreeThrows, next: FreeThrowStage): void {
@@ -72,6 +76,7 @@ export function updateFreeThrows(m: Match, dt: number): void {
     a.move = { x: 0, z: 0 };
     if (walking && walkTo(m, a, ft.spots.get(a.id)!, CHECK.walk) > CHECK.onSpot) settled = false;
   }
+  official(m, ft, dt);
   switch (ft.stage) {
     case "whistle":
       if (ft.t < ft.whistle) return;
@@ -94,14 +99,34 @@ export function updateFreeThrows(m: Match, dt: number): void {
     case "shooting":
       return shooting(m, ft, shooter);
     case "result":
-      if (ft.t >= FT.resultPause && m.ball.mode === "loose") {
-        ft.toss = returnToss(m, shooter);
-        stage(ft, "return");
-      }
+      // Once the ball is down off the rim or through the net, the referee goes for it.
+      if (ft.t >= FT.resultPause && m.ball.mode === "loose" && m.ball.pos.y < 2.6) stage(ft, "collect");
+      return;
+    case "collect":
+      if (collectBall(m, ft.official, ft.t, dt)) stage(ft, "carry");
+      return;
+    case "carry":
+      // Up from the pick up first, then the walk.
+      if (ft.official.act !== "scoop" && walkOfficial(ft.official, REF.pass, REF.walk, dt) < 0.05) stage(ft, "return");
       return;
     case "return":
+      if (!ft.toss) ft.toss = bouncePass(m, ft.official, shooter.id, dt);
       return;
   }
+}
+
+/** The referee's own walk when he is not working the ball: to the baseline, facing the line. */
+function official(m: Match, ft: FreeThrows, dt: number): void {
+  const o = ft.official;
+  if (ft.stage === "whistle") {
+    o.speed = 0;
+    return;
+  }
+  if (ft.stage === "walk" && !m.foulCall) {
+    if (walkOfficial(o, REF.base, REF.walk, dt) < 0.05) turnTo(o, yawOf(LINE.x - o.x, LINE.z - o.z), dt);
+    return;
+  }
+  if (ft.stage === "set" || ft.stage === "shooting" || ft.stage === "result" || (ft.stage === "return" && ft.toss)) settleOfficial(o, LINE, dt);
 }
 
 function shooting(m: Match, ft: FreeThrows, shooter: Athlete): void {

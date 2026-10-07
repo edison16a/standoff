@@ -111,7 +111,7 @@ export function publish(c: PublishContext): void {
   const votes = replayVotes(c.driver, c.players);
   const replay = c.driver?.replays.replay;
   store.setState({
-    replay: replay ? { view: replay.view, scorer: nameFor(replay.ghost, replay.scorer, c.players), votes: votes.map(({ name, done }) => ({ name, done })) } : null,
+    replay: replay ? { view: replay.view, scorer: nameFor(replay.ghost, replay.scorer, c.players) } : null,
     // The results wait for the replay and then the trophy ceremony.
     replayDue: !!m && m.phase === "over" && !c.driver?.ceremony,
     ceremony: m && c.driver ? ceremonyCard(m, c.driver.ceremony, (id) => nameFor(m, id, c.players), c.statsNow) : null,

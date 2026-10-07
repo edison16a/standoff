@@ -20,6 +20,11 @@ const CYCLE = (4096 / 128) * 0.7;
  */
 export function ledMaterial(map: THREE.Texture, metresAcross: number, metresUp: number, brightness = 1.7): THREE.MeshBasicMaterial {
   const mat = new THREE.MeshBasicMaterial({ map, color: new THREE.Color(brightness, brightness, brightness) });
+  // Every panel sits a hair in front of its black housing; pulled forward in depth so the housing never
+  // fights through as dark lines on a far or edge on view, as on the scoreboard's side screens.
+  mat.polygonOffset = true;
+  mat.polygonOffsetFactor = -1;
+  mat.polygonOffsetUnits = -4;
   mat.customProgramCacheKey = () => "nba-led";
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.uGrid = { value: new THREE.Vector2(metresAcross * PITCH, metresUp * PITCH) };

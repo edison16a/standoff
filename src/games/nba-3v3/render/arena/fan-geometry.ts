@@ -49,8 +49,8 @@ export function fanBody(): THREE.BufferGeometry {
 export function fanHead(): THREE.BufferGeometry {
   const head = new THREE.SphereGeometry(0.105, 7, 5);
   head.scale(0.9, 1.06, 0.98);
-  // Hair over the crown and down the back; the face stays skin.
-  const skull = part(head, (y, z) => (y > 0.025 || (z < -0.02 && y > -0.05) ? 1 : 0));
+  // Hair over the crown and down the back; the face stays skin, the hairline above the brow.
+  const skull = part(head, (y, z) => (y > 0.06 || (z < -0.02 && y > -0.05) ? 1 : 0));
   skull.translate(0, 1.11, 0.01);
   const neck = new THREE.CylinderGeometry(0.045, 0.05, 0.12, 6, 1, true);
   neck.translate(0, 1.0, 0);
@@ -61,7 +61,7 @@ export function fanHead(): THREE.BufferGeometry {
 export function fanArms(): THREE.BufferGeometry {
   const arms: THREE.BufferGeometry[] = [];
   for (const side of [-1, 1]) {
-    const arm = part(new THREE.BoxGeometry(0.085, 0.56, 0.085, 1, 2, 1).translate(0, 0.28, 0), (y) => (y > 0.26 ? 1 : 0));
+    const arm = part(new THREE.BoxGeometry(0.085, 0.56, 0.085, 1, 4, 1).translate(0, 0.28, 0), (y) => (y > 0.26 ? 1 : 0));
     arm.setAttribute("aSide", new THREE.BufferAttribute(new Float32Array(arm.getAttribute("position").count).fill(side), 1));
     arms.push(arm);
   }

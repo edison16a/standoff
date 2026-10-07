@@ -106,6 +106,8 @@ export class Crowd {
         attribute float aPhase;
         attribute float aPart;
         attribute vec3 aB;
+        varying vec3 vSecond;
+        varying float vPart;
         ${arms ? "attribute float aSide;" : ""}
         uniform float uTime;
         uniform float uExcite;
@@ -137,9 +139,15 @@ export class Crowd {
         .replace(
           "#include <color_vertex>",
           `#include <color_vertex>
-          vColor.rgb = mix(instanceColor.rgb, aB, aPart);
-          ${arms ? "" : "// A little shade low down, where the fan sits between the rows.\n          vColor.rgb *= mix(0.55, 1.0, smoothstep(0.25, 0.9, position.y));"}`,
+          vSecond = aB;
+          vPart = aPart;
+          ${arms ? "" : "// A little shade low down, where the fan sits between the rows.\n          vColor.rgb *= mix(0.55, 1.0, smoothstep(0.25, 0.9, position.y));\n          vSecond *= mix(0.55, 1.0, smoothstep(0.25, 0.9, position.y));"}`,
         );
+      // The two colours meet at a hard edge per pixel. Blended across a whole face they left a dark
+      // smear, so every fan had a black band over the eyes where the hair met the face.
+      shader.fragmentShader = shader.fragmentShader
+        .replace("#include <common>", "#include <common>\nvarying vec3 vSecond;\nvarying float vPart;")
+        .replace("#include <color_fragment>", "#include <color_fragment>\ndiffuseColor.rgb = mix(vColor.rgb, vSecond, step(0.5, vPart));");
     };
   }
 

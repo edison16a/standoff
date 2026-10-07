@@ -34,13 +34,15 @@ describe("the referee's read of a collision", () => {
 
   it("calls a defender stepping into the handler, or sliding across late, for blocking", () => {
     const [h, d] = pair();
-    expect(judge(h, d, 5, 2.5, 2.5)).toBe("block");
-    d.vx = 2.6;
+    expect(judge(h, d, 5.5, 2.5, 3)).toBe("block");
+    d.vx = 3;
     expect(judge(h, d, 4.5, 4.5, 0)).toBe("block");
   });
 
   it("lets incidental contact go, and a defender turned away is no wall", () => {
     const [h, d] = pair();
+    // A defender leaning in on a soft bump is not a blocking foul.
+    expect(judge(h, d, CHARGE.blockClosing - 0.3, 0.5, 3)).toBeNull();
     expect(judge(h, d, CHARGE.closing - 0.5, 2, 0)).toBeNull();
     d.yaw = Math.PI;
     expect(judge(h, d, 4.5, 4.5, 0)).toBeNull();

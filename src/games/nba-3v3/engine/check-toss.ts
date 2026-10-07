@@ -53,15 +53,21 @@ function throwTo(m: Match, start: V3, catcher: Athlete, dur: number, bounce: boo
   }
 }
 
+/** Lets the ball go from `start` toward a player's hands, at an easy pace for the distance. */
+export function tossFrom(m: Match, start: V3, to: Athlete, bounce: boolean): Toss {
+  const d = Math.hypot(to.x - start.x, to.z - start.z);
+  const dur = Math.max(0.36, d / (bounce ? 5.5 : 8));
+  throwTo(m, start, to, dur, bounce);
+  return { to: to.id, t: 0, dur, bounce, bounced: false };
+}
+
 /** Lets the ball go from one player toward another's hands. */
 export function startToss(m: Match, from: Athlete, to: Athlete, bounce: boolean): Toss {
-  const d = Math.hypot(to.x - from.x, to.z - from.z);
-  const dur = Math.max(0.36, d / (bounce ? 5.5 : 8));
-  throwTo(m, chestPoint(from), to, dur, bounce);
+  const toss = tossFrom(m, chestPoint(from), to, bounce);
   m.ball.lastTouch = from.id;
   if (from.action.kind === "none") from.action = { kind: "pass", t: 0 };
   m.emit({ type: "pass", from: from.id, to: to.id, lob: false });
-  return { to: to.id, t: 0, dur, bounce, bounced: false };
+  return toss;
 }
 
 /** A ball that went into the crowd comes back: thrown from where it lies to the checker, as a ball kid would. */

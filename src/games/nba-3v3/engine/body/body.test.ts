@@ -105,8 +105,9 @@ describe("bodies over a whole game", () => {
       }
     }
     expect(fastest).toBeLessThan(8);
-    // A small guard with space gets up as high as the dunk plan lets anyone go.
-    expect(highest).toBeLessThanOrEqual(MAX_DUNK_PEAK + 0.01);
+    // A small guard with space gets up as high as the dunk plan lets anyone go, and a slower,
+    // showier dunk rises a touch past it to slam on the way down (see `speedToMeet`).
+    expect(highest).toBeLessThanOrEqual(MAX_DUNK_PEAK + 0.1);
   }, 60000);
 });
 
