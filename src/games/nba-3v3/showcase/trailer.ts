@@ -2,24 +2,24 @@ import { STEP } from "../engine/tuning";
 import { CourtRenderer } from "../render/court-renderer";
 import type { Film } from "./dev";
 import { FILMED_FRAME, FilmClock } from "./film-clock";
-import { LabFilm } from "./lab";
+import { PosterFilm } from "./film-poster";
+import { StepbackFilm } from "./film-stepback";
 import { CeremonyFilm } from "./lab-ceremony";
-import { HIGHLIGHT_LINEUP, HighlightScript } from "./script";
+import { CAST, TRAILER_LINEUP } from "./trailer-cast";
 import { TrailerCams } from "./trailer-cams";
 import { CUTS, rateAt, type Cut, type TrailerFilmKind } from "./trailer-plan";
 
 /** The loop draws a little under full resolution: much quicker to film, and the video's own softening hides it. */
 const LOOP_PIXELS = 0.8;
-/** The Dunker lifts the trophy: id 1 in the highlight's lineup. */
-const CAPTAIN = 1;
+/** The Dunker, who threw down the poster, lifts the trophy. */
+const CAPTAIN = CAST.dunker;
 /** Before a cut, the players' animation is run this long without drawing, so they are mid stride when it opens. */
 const SETTLE = 1.5;
 
 function makeFilm(kind: TrailerFilmKind): Film {
-  if (kind === "ceremony") return new CeremonyFilm(HIGHLIGHT_LINEUP, CAPTAIN);
-  // The lab scene plays the same six builds as the highlight.
-  if (kind === "chase") return new LabFilm("block-chase", null);
-  return new HighlightScript(0);
+  if (kind === "ceremony") return new CeremonyFilm(TRAILER_LINEUP, CAPTAIN);
+  if (kind === "poster") return new PosterFilm();
+  return new StepbackFilm();
 }
 
 /**

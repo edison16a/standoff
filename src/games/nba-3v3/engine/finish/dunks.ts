@@ -35,8 +35,8 @@ export const DUNK_SPEC: Record<DunkStyle, DunkSpec> = {
   clutch: { ...FRONT, gather: 0.42, air: 0.54, steps: "two", track: T.clutch, blendFrom: 1.75, hands: 2, hang: 0, power: 0.85 },
   /** Slammed and hung on the rim, legs swinging. */
   rimhang: { ...FRONT, gather: 0.42, air: 0.44, steps: "two", track: T.twoUp, blendFrom: 1.45, hands: 2, hang: 1, power: 0.9 },
-  /** Poster: up through the man at the rim, one hand over him. */
-  poster: { ...FRONT, stop: 0.4, gather: 0.4, air: 0.46, steps: "two", track: T.tomahawk, blendFrom: 1.6, hands: 1, hang: 0.5, power: 1 },
+  /** Poster: up through the man at the rim, both hands cocked back over him and hammered down. */
+  poster: { ...FRONT, stop: 0.4, gather: 0.4, air: 0.46, steps: "two", track: T.hammer, blendFrom: 1.6, hands: 2, hang: 0.5, power: 1 },
   /** Putback: off the offensive board straight back up with both hands. */
   putback: { ...FRONT, gather: 0.2, air: 0.38, steps: "stop", track: T.board, blendFrom: 1.4, hands: 2, hang: 0.2, power: 0.95 },
   /** Alley oop finish: caught high on the run and thrown down in one motion. */

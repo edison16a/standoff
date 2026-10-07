@@ -28,11 +28,11 @@ export const DUNK_TOPS: Record<DunkStyle, AirKey[]> = {
   rimhang: [[0.2, { ...TUCK, ...TWO_UP }], [0.85, { neckX: -0.2 }], [1, SLAM2]],
   cockback: [[0.15, { ...AIR, armLRaise: 1.5, armLSpread: 0.5 }], [0.75, { torsoX: -0.45, neckX: -0.3, legRLift: -0.2, kneeR: 1.8 }], [1, { ...SLAM1 }]],
   clutch: [[0.12, { ...TUCK, ...TWO_UP }], [0.42, { torsoX: 0.35, legLLift: 1.0, legRLift: 1.0, kneeL: 1.7, kneeR: 1.7 }], [0.8, { torsoX: 0 }], [1, SLAM2]],
-  // Up through the man: the left knee driven up into him, the free arm out over his head.
+  // Up through the man: the left knee driven up into him, both hands cocked back over his head, then hammered down.
   poster: [
-    [0.15, { ...AIR, legLLift: 1.2, kneeL: 1.5, legLSpread: 0.35, legRLift: 0.2, kneeR: 1.3, armLRaise: 1.6, armLSpread: 0.7, elbowL: 0.5, torsoX: 0.15 }],
-    [0.7, { torsoX: -0.2, neckX: -0.2 }],
-    [1, { ...SLAM1, armLRaise: 1.4, legLLift: 0.9 }],
+    [0.15, { ...AIR, legLLift: 1.2, kneeL: 1.5, legLSpread: 0.35, legRLift: 0.2, kneeR: 1.3, torsoX: 0.15, ...TWO_UP }],
+    [0.7, { torsoX: -0.25, neckX: -0.2 }],
+    [1, { ...SLAM2, legLLift: 0.9 }],
   ],
   // Straight back up off both feet from under the rim.
   putback: [[0.2, { ...TUCK, ...TWO_UP, legLLift: 0.4, legRLift: 0.4, kneeL: 0.9, kneeR: 0.9 }], [1, SLAM2]],

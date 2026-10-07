@@ -2,13 +2,14 @@
  * The home screen trailer, cut by cut. Each cut plays a stretch of one
  * film, in the film's own game seconds, through one camera, with an
  * optional slow motion window that ramps in and out like a speed ramp.
- * The highlight film is the scripted ankle breaker, windmill and gold iso
- * three (script.ts); the chase film is the chase down block lab scene
- * (lab-blocks.ts); the ceremony film is the trophy lift (lab-ceremony.ts).
+ * The poster film is the drive, the lob and the poster dunk
+ * (film-poster.ts); the stepback film is the Shooter's stepback and gold
+ * three over two leaping defenders (film-stepback.ts); the ceremony film
+ * is the trophy lift (lab-ceremony.ts).
  */
-export type TrailerFilmKind = "highlight" | "chase" | "ceremony";
+export type TrailerFilmKind = "poster" | "stepback" | "ceremony";
 
-export type TrailerCam = "ankles" | "rise" | "slam" | "chase" | "swat" | "iso" | "release" | "glass" | "lift" | "crane";
+export type TrailerCam = "drive" | "lob" | "poster" | "floor" | "jab" | "leap" | "pov" | "lift" | "crane";
 
 export interface SlowWindow {
   /** Game seconds where the film is fully slowed, and how slow. */
@@ -34,25 +35,24 @@ export const RAMP = 0.12;
 
 /**
  * Timings come from the films, stepped as the trailer steps them. The
- * highlight: the crossover at 0.7 s breaks the Lockdown defender's
- * ankles at 0.83, the Dunker gathers at 1.83, takes off at 2.25 and
- * slams at 2.78. The Playmaker is checked the ball at 9.03, crosses at
- * once, steps back at 9.7 and lets a gold three go at 10.73, and it
- * drops through the net at 12.05. The chase film: the driver gathers at
- * 1.45 with the Lockdown defender on his hip, and the swat lands at
- * 2.18. The ceremony's captain drives the trophy up between 2.3 and 3.3.
+ * poster film: the Big Man leaves his feet at 1.4, the lob goes up at
+ * 1.48 and is caught at 1.9, the Dunker takes off at 2.28 and slams at
+ * 2.75, and the Big Man is down on the floor from 3.05. The stepback
+ * film: the stepback goes at 0.83, the Shooter rises at 1.13, both
+ * defenders are up and the gold three leaves his hand at 1.58, and it
+ * drops through the net at 2.92. The ceremony's captain drives the
+ * trophy up between 2.3 and 3.3.
  */
 export const CUTS: readonly Cut[] = [
   // The last second of the crane, so the capture's cross fade from the end back to the start blends a shot into itself.
   { film: "ceremony", from: CRANE_TO - 1, to: CRANE_TO, cam: "crane" },
-  { film: "highlight", from: 0.45, to: 1.6, cam: "ankles", slow: { from: 0.82, to: 1.05, scale: 0.4 } },
-  { film: "highlight", from: 1.95, to: 2.45, cam: "rise", slow: { from: 2.2, to: 2.45, scale: 0.3 } },
-  { film: "highlight", from: 2.45, to: 3.0, cam: "slam", slow: { from: 2.5, to: 2.8, scale: 0.3 } },
-  { film: "chase", from: 1.15, to: 1.95, cam: "chase" },
-  { film: "chase", from: 1.95, to: 2.65, cam: "swat", slow: { from: 2.1, to: 2.32, scale: 0.3 } },
-  { film: "highlight", from: 9.0, to: 10.2, cam: "iso" },
-  { film: "highlight", from: 10.2, to: 11.05, cam: "release" },
-  { film: "highlight", from: 11.6, to: 12.25, cam: "glass", slow: { from: 11.9, to: 12.1, scale: 0.4 } },
+  { film: "poster", from: 0.32, to: 1.44, cam: "drive" },
+  { film: "poster", from: 1.44, to: 1.99, cam: "lob", slow: { from: 1.52, to: 1.84, scale: 0.4 } },
+  { film: "poster", from: 1.99, to: 2.84, cam: "poster", slow: { from: 2.64, to: 2.82, scale: 0.25 } },
+  { film: "poster", from: 2.84, to: 3.34, cam: "floor", slow: { from: 2.88, to: 3.18, scale: 0.35 } },
+  { film: "stepback", from: 0.35, to: 1.13, cam: "jab" },
+  { film: "stepback", from: 1.13, to: 1.72, cam: "leap", slow: { from: 1.5, to: 1.7, scale: 0.35 } },
+  { film: "stepback", from: 1.72, to: 3.02, cam: "pov", slow: { from: 2.72, to: 3.0, scale: 0.35 } },
   { film: "ceremony", from: 2.0, to: CRANE_FROM, cam: "lift", slow: { from: 2.6, to: 3.1, scale: 0.65 } },
   { film: "ceremony", from: CRANE_FROM, to: CRANE_TO, cam: "crane" },
 ];

@@ -3,7 +3,7 @@ import { FilmClock, PREROLL } from "./film-clock";
 import { CRANE_TO, CUTS, RAMP, cutLength, rateAt, trailerLength, type Cut } from "./trailer-plan";
 
 const FRAME = 1 / 30;
-const slowCut: Cut = { film: "highlight", from: 0, to: 2, cam: "rise", slow: { from: 1, to: 1.5, scale: 0.25 } };
+const slowCut: Cut = { film: "poster", from: 0, to: 2, cam: "poster", slow: { from: 1, to: 1.5, scale: 0.25 } };
 
 describe("the trailer's speed ramps", () => {
   it("runs at full speed outside a slow window and at its scale inside", () => {

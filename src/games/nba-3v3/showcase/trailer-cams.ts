@@ -1,8 +1,9 @@
 import * as THREE from "three";
 import { CEREMONY_SPOT } from "../engine/ceremony";
 import type { Match } from "../engine/match";
-import { RIM } from "../engine/tuning";
 import { CRANE_FROM, type TrailerCam } from "./trailer-plan";
+import { CAST } from "./trailer-cast";
+import { povAim } from "./trailer-pov";
 
 /** A camera framing: where it sits, what it looks at and its lens. The TV camera takes it as its fixed shot. */
 export interface Pose {
@@ -10,11 +11,6 @@ export interface Pose {
   look: THREE.Vector3;
   fov: number;
 }
-
-const DUNKER = 1;
-const LOCKDOWN = 3;
-const PLAYMAKER = 4;
-const SHOOTER = 0;
 
 type Aim = (m: Match, u: number, g: number, out: Pose) => void;
 
@@ -30,73 +26,51 @@ function between(out: THREE.Vector3, a: readonly number[], b: readonly number[],
 
 /**
  * Each cut's camera, from the match, `u`, real seconds into the cut, and
- * `g`, the film's own seconds.
- * Low angles close to the play, as a trailer shoots it, never the
- * broadcast view.
+ * `g`, the film's own seconds. Low angles close to the play, as a
+ * trailer shoots it, never the broadcast view.
  */
 const AIMS: Record<TrailerCam, Aim> = {
-  // Knee high beside the two of them on the wing: the crossover, and the defender's ankles going.
-  ankles: (m, u, g, out) => {
-    const d = m.athletes[DUNKER]!;
-    const l = m.athletes[LOCKDOWN]!;
-    const cx = (d.x + l.x) / 2;
-    const cz = (d.z + l.z) / 2;
-    const push = ease(u / 1.3);
-    out.pos.set(cx + 3.1 - push * 0.5, 0.5, cz + 1.4 - push * 0.3);
-    out.look.set(cx, 0.95, cz);
-    out.fov = 40;
+  // Backing down the lane just ahead of the Playmaker, knee high, as he drives at the rim with the Lockdown defender on his hip.
+  drive: (m, u, g, out) => {
+    const p = m.athletes[CAST.playmaker]!;
+    out.pos.set(p.x + 1.3, 0.5, p.z - 2.5);
+    out.look.set(p.x - 0.2, 1.05, p.z + 0.3);
+    out.fov = 52;
   },
-  // On the floor under the glass, looking up and out as he leaves the ground.
-  rise: (m, u, g, out) => {
-    between(out.pos, [0.95, 0.42, 0.25], [0.75, 0.48, 0.45], ease(u / 1.2));
-    out.look.set(-0.7, 2.2, 2.4);
-    out.fov = 54;
+  // On the floor off the right block, looking up the lane: the Big Man rises at the drive and the lob goes up over him.
+  lob: (m, u, g, out) => {
+    between(out.pos, [2.5, 0.38, 1.6], [2.3, 0.42, 1.8], ease(u / 1.1));
+    out.look.set(-0.6, 1.9, 3.4);
+    out.fov = 58;
   },
-  // Round the other side, level with the rim, as the windmill comes down.
-  slam: (m, u, g, out) => {
-    between(out.pos, [-2.9, 1.55, 4.3], [-2.6, 1.3, 4.0], ease(u / 1.4));
-    out.look.set(-0.25, 2.65, 1.7);
-    out.fov = 44;
+  // Low under the glass on the right: the Dunker catches it, rises over the Big Man and hammers it down on him.
+  poster: (m, u, g, out) => {
+    between(out.pos, [1.9, 0.4, 0.45], [1.6, 0.5, 0.6], ease(u / 1.6));
+    out.look.set(-0.35, 2.15, 2.4);
+    out.fov = 56;
   },
-  // Low beside the drive and a little ahead, keeping pace: the driver going at the rim, the defender chasing on his hip.
-  chase: (m, u, g, out) => {
-    const d = m.athletes[SHOOTER]!;
-    const c = m.athletes[LOCKDOWN]!;
-    const cx = (d.x + c.x) / 2;
-    const cz = (d.z + c.z) / 2;
-    out.pos.set(cx + 3.0, 0.55, cz - 1.6);
-    out.look.set(cx, 1.15, cz - 0.3);
-    out.fov = 42;
+  // Down on the floor off the left block, as the Big Man hits it with the Dunker hanging on the rim above him.
+  floor: (m, u, g, out) => {
+    between(out.pos, [-2.6, 0.3, 4.0], [-2.3, 0.34, 3.7], ease(u / 1.2));
+    out.look.set(0.3, 1.75, 2.0);
+    out.fov = 56;
   },
-  // Under the glass off the lane, looking up as the chaser comes over the top and swats it away.
-  swat: (m, u, g, out) => {
-    between(out.pos, [2.3, 0.55, 4.7], [2.0, 0.5, 4.4], ease(u / 1.6));
-    out.look.set(0.05, 2.15, 2.85);
+  // Low off the Shooter's right, square to the two of them, as he jabs at the Lockdown defender and steps back.
+  jab: (m, u, g, out) => {
+    const s = m.athletes[CAST.shooter]!;
+    const l = m.athletes[CAST.lockdown]!;
+    out.pos.set(s.x + 3.2, 0.55, (s.z + l.z) / 2 + 0.3);
+    out.look.set((s.x + l.x) / 2 - 0.1, 1.0, (s.z + l.z) / 2);
+    out.fov = 48;
+  },
+  // Low in front, past the two defenders: he rises, they both fly at him, and the gold leaves his hand.
+  leap: (m, u, g, out) => {
+    const s = m.athletes[CAST.shooter]!;
+    out.pos.set(s.x - 1.5, 0.4, s.z - 4.3);
+    out.look.set(s.x - 0.4, 2.0, s.z - 0.8);
     out.fov = 46;
   },
-  // Low and square to the two of them at the top of the key: the iso, face to face.
-  iso: (m, u, g, out) => {
-    const p = m.athletes[PLAYMAKER]!;
-    const s = m.athletes[SHOOTER]!;
-    const push = ease(u / 1.4);
-    out.pos.set(p.x + 3.2 - push * 0.5, 0.65, p.z - 1.3 + push * 0.2);
-    out.look.set((p.x + s.x) / 2, 1.15, (p.z + s.z) / 2 + 0.3);
-    out.fov = 38;
-  },
-  // Over his shoulder as it leaves his hand, turning to follow the ball to the rim.
-  release: (m, u, g, out) => {
-    const p = m.athletes[PLAYMAKER]!;
-    const b = m.ball.pos;
-    out.pos.set(p.x + 0.9, 1.85 + ease(u / 0.9) * 0.4, p.z + 2.6);
-    out.look.set(b.x * 0.6 + RIM.x * 0.4, Math.min(b.y, 4) * 0.6 + RIM.y * 0.4, b.z * 0.6 + RIM.z * 0.4);
-    out.fov = 46;
-  },
-  // Close on the rim under the glass: the three comes down and drops through the net.
-  glass: (m, u, g, out) => {
-    between(out.pos, [2.1, 2.55, 4.3], [1.8, 2.7, 3.9], ease(u / 1.1));
-    out.look.set(RIM.x + 0.1, RIM.y + 0.25, RIM.z - 0.1);
-    out.fov = 36;
-  },
+  pov: (m, u, g, out) => povAim(m, u, g, out),
   // Low in front of the captain as the trophy goes up over his head.
   lift: (m, u, g, out) => {
     const at = CEREMONY_SPOT;
@@ -118,7 +92,7 @@ const AIMS: Record<TrailerCam, Aim> = {
 };
 
 /** Cameras that follow players are eased toward their aim, so a stride never jolts the picture. */
-const FOLLOW: Partial<Record<TrailerCam, number>> = { ankles: 5, chase: 6, iso: 6, release: 7 };
+const FOLLOW: Partial<Record<TrailerCam, number>> = { drive: 6, jab: 6, leap: 6, pov: 14 };
 
 const want: Pose = { pos: new THREE.Vector3(), look: new THREE.Vector3(), fov: 40 };
 
