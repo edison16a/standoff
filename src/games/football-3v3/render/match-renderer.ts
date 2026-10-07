@@ -9,7 +9,6 @@ import { ScrimmageLines } from "./field/scrimmage-lines";
 import { Stadium } from "./field/stadium";
 import { Squad } from "./figures/squad";
 import { NameTags, type TagOf } from "./figures/tags";
-import { ThrowMeterSprite } from "./figures/throw-meter-sprite";
 import { ContactShadows } from "./lighting/contact-shadows";
 import { Floodlights } from "./lighting/floodlights";
 import { stadiumEnvironment } from "./lighting/stadium-env";
@@ -42,7 +41,6 @@ export class MatchRenderer {
   readonly picture: Picture;
   readonly floods: Floodlights;
   private readonly tags = new NameTags();
-  private readonly meter = new ThrowMeterSprite();
   private tagOf: TagOf | null = null;
   private traceAt: number | null = null;
   private readonly stadium: Stadium;
@@ -82,7 +80,7 @@ export class MatchRenderer {
     this.stadium = new Stadium(this.low, renderer.capabilities.getMaxAnisotropy());
     this.picture.governor.onTier((tier) => this.stadium.crowd?.setFull(tier.fullCrowd));
     this.scene.add(this.floods.group, this.stadium.group, this.lines.group, this.contacts.mesh, this.squad.group, this.trace.group, this.ceremony.group);
-    this.overlay.add(this.tags.group, this.meter.sprite);
+    this.overlay.add(this.tags.group);
   }
 
   /** What the last frame drew, every pass included: draw calls, triangles, and the geometries and textures held. */
@@ -148,7 +146,6 @@ export class MatchRenderer {
     this.ceremony.update(view.ceremony, holding ? this.handL : null, holding ? this.handR : null, dt, time);
     this.tags.update(view, this.tagOf, this.squad, camera.fov);
     // Broadcast graphics like the tags: the showcase's film has neither.
-    this.meter.update(view, this.squad, camera.fov, this.tagOf !== null);
     this.contacts.update(view, this.squad);
     this.stadium.update(view, time, dt, view.phase === "over" ? 0.8 : this.excitement);
     // The floods dim for the presentation so its spotlights carry the scene.
@@ -191,7 +188,6 @@ export class MatchRenderer {
     this.ceremony.dispose();
     this.trace.dispose();
     this.tags.dispose();
-    this.meter.dispose();
     this.lines.dispose();
     this.contacts.dispose();
     this.floods.dispose();

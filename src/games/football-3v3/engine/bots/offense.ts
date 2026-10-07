@@ -1,11 +1,10 @@
 import { attackSign } from "../../teams";
 import { isDown } from "../body";
 import { ballTrack } from "../catch/track";
-import { jumpingDefender } from "../catching";
 import { FIELD, YARD, yardToX } from "../field";
 import { startJuke } from "../juke";
 import type { Match } from "../match";
-import { botReading } from "../meter-live";
+import { readLane } from "../pass-lane";
 import { receivers, throwTo } from "../passing";
 import { startRun } from "../qb-run";
 import { PASS } from "../tuning";
@@ -17,12 +16,12 @@ import type { FootballSkill } from "./skill";
 
 const defendersOf = (m: Match, a: Athlete) => m.athletes.filter((d) => d.team !== a.team && d.role !== "lineman" && !isDown(d));
 
-/** How open a receiver is: room from the nearest defender, a little extra for depth, and no defender sat in front. */
+/** How open a receiver is: room from the nearest defender, a little extra for depth, and nobody in the lane to him. */
 function openness(m: Match, qb: Athlete, r: Athlete, skill: FootballSkill): number {
   const near = Math.min(99, ...defendersOf(m, qb).map((d) => dist2(d, r)));
   const depth = Math.max(0, (r.x - yardToX(m.offense, m.drive.los)) * m.sign);
   const from = { x: qb.x, y: PASS.releaseHeight, z: qb.z };
-  const trap = jumpingDefender(m, qb, from, ahead(r, 0.8), r) ? 6 * skill.accuracy : 0;
+  const trap = (readLane(m, qb, from, ahead(r, 0.8))[0]?.threat ?? 0) * 10 * skill.accuracy;
   return near + depth * 0.03 - trap + m.rng.gauss((1 - skill.accuracy) * 2);
 }
 
@@ -60,7 +59,7 @@ export function readField(m: Match, qb: Athlete, skill: FootballSkill): void {
     }
     if (best && (bestOpen >= 3 || pressure || t > qb.bot.readAt + 1.2)) {
       qb.aim = { x: best.x - qb.x, z: best.z - qb.z };
-      throwTo(m, qb, best.id, botReading(m, qb, skill));
+      throwTo(m, qb, best.id);
       qb.aim = null;
       qb.bot.goal = { x: 0, z: 0 };
       return;

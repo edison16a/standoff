@@ -33,13 +33,6 @@ export interface Callout {
   colour: string;
 }
 
-/** One player's say in skipping the replay. */
-export interface SkipView {
-  seat: number;
-  name: string;
-  agreed: boolean;
-}
-
 /** A player's line on the end screen. */
 export interface ResultRow {
   id: number;
@@ -72,7 +65,6 @@ export interface FootballHostState {
   board: Board | null;
   callout: Callout | null;
   replayCard: ReplayCard | null;
-  skip: SkipView[];
   score: [number, number];
   /** Set at the final whistle: the winners, or null for a tie. */
   over: { winner: TeamId | null } | null;
@@ -90,7 +82,6 @@ export const useFootballStore = create<FootballHostState>(() => ({
   board: null,
   callout: null,
   replayCard: null,
-  skip: [],
   score: [0, 0],
   over: null,
   results: [],

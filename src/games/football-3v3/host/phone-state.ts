@@ -1,7 +1,5 @@
 import { downText } from "../engine/downs";
 import type { Match } from "../engine/match";
-import { statsOf } from "../engine/body";
-import { meterWindow } from "../engine/pass-meter";
 import { seatStatus } from "../engine/status";
 import type { Athlete } from "../engine/types";
 import type { PhoneState, RoomPhase, StatLine } from "../protocol";
@@ -74,7 +72,6 @@ export function phoneState(c: PhoneContext, seatNo: number): PhoneState {
     meter: status?.meter && !replay ? { stage: status.meter.stage, fieldGoal: kick?.fieldGoal ?? true } : null,
     withBall: status?.withBall ?? false,
     canThrow: status?.canThrow ?? false,
-    throwWindow: body && status?.pad === "qb" && !status.runPlay && !replay ? meterWindow(statsOf(body).arm) : null,
     runPlay: status?.runPlay ?? false,
     canPitch: status?.canPitch ?? false,
     canRun: status?.canRun ?? false,

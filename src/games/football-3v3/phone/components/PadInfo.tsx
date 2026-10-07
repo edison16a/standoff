@@ -2,7 +2,6 @@
 import { ROLE_NAMES } from "../../roles";
 import { TEAMS } from "../../teams";
 import type { PhoneState } from "../../protocol";
-import { GRADE_WORDS, useFreshThrow } from "./ThrowMeter";
 
 /** The QB with the ball who has not turned runner: what he can do right now. */
 function qbStatus(host: PhoneState): string {
@@ -48,9 +47,7 @@ export function statusOf(host: PhoneState): string | null {
  */
 export function PadInfo({ host }: { host: PhoneState }) {
   const team = host.team !== null ? TEAMS[host.team] : TEAMS[0];
-  // Just after a throw the line says how it came out, even once the pad has moved on to the receiver.
-  const thrown = useFreshThrow();
-  const status = thrown && !host.skip ? `${GRADE_WORDS[thrown.reading.grade]} pass` : statusOf(host);
+  const status = statusOf(host);
   return (
     <div className="fb-info">
       <div className="fb-info__me">

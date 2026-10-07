@@ -6,7 +6,6 @@ import { clampToWorld, FIELD, YARD } from "./field";
 import type { Match } from "./match";
 import { handOver } from "./control";
 import { handSpot } from "./passer-facing";
-import { PLAIN } from "./pass-meter";
 import { PASS, PITCH } from "./tuning";
 import type { Athlete, TeamId } from "./types";
 import { clamp, len3, type V2, type V3 } from "./vec";
@@ -57,7 +56,7 @@ export function startPitch(m: Match, a: Athlete): boolean {
   if (!canPitch(m, a)) return false;
   const to = m.play!.back!;
   m.play!.target = to;
-  a.action = { kind: "throw", t: 0, dur: PASS.throwTime, released: false, to, lob: true, quality: PLAIN, style: "flick", release: PASS.windup };
+  a.action = { kind: "throw", t: 0, dur: PASS.throwTime, released: false, to, lob: true, style: "flick", release: PASS.windup };
   return true;
 }
 
@@ -74,7 +73,7 @@ export function releasePitch(m: Match, a: Athlete, to: number): void {
   m.ball.flight = flight;
   m.ball.pass = {
     from: a.id, to, interceptor: null, spot, arrive: PITCH.time, t: 0, speed: len3(vel),
-    rps: PITCH.spin / (Math.PI * 2), release: from, at: m.time, tried: {}, path: tracePath(flight, m.time), tipped: false, pitch: true, quality: PLAIN,
+    rps: PITCH.spin / (Math.PI * 2), release: from, at: m.time, tried: {}, path: tracePath(flight, m.time), tipped: false, pitch: true, lane: {},
   };
   m.play!.pitched = true;
   m.emit({ type: "pitch", id: a.id, to });

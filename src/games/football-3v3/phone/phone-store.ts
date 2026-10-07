@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import type { PhoneState } from "../protocol";
 import type { BuildId } from "../builds";
-import type { ThrowReading } from "../engine/pass-meter";
 import type { LocalMeter } from "./kick-meter";
 
 export type SetupStep = "build" | "ready";
@@ -15,10 +14,6 @@ export interface PhoneStore {
   host: PhoneState | null;
   /** The kick meters as this phone draws them, on its own clock. */
   kick: LocalMeter | null;
-  /** When the thumb went down on the throw stick, on this phone's clock, while it is held. */
-  throwSince: number | null;
-  /** Where the throw meter stopped on the last throw, and when, to show the grade a moment. */
-  lastThrow: { reading: ThrowReading; at: number } | null;
 }
 
 export const usePhoneStore = create<PhoneStore>(() => ({
@@ -26,6 +21,4 @@ export const usePhoneStore = create<PhoneStore>(() => ({
   wanted: null,
   host: null,
   kick: null,
-  throwSince: null,
-  lastThrow: null,
 }));

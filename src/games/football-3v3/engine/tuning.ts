@@ -118,8 +118,6 @@ export const PASS = {
   throwTime: 0.45,
   /** How fast the passer turns square to his target through the motion, radians a second. */
   turnRate: 18,
-  /** A defender standing this close in front of the catch spot takes the ball. */
-  jumpRadius: 2.1,
   spin: 62,
 } as const;
 

@@ -118,5 +118,5 @@ function passView(base: MatchView, move: PassMove, time: number): MatchView {
     passes.set(move, frames);
   }
   const at = frames[Math.floor(time / STEP) % frames.length]!;
-  return { ...base, phase: "live", athletes: at.athletes, ball: at.ball, kick: null, scorer: null, meter: null };
+  return { ...base, phase: "live", athletes: at.athletes, ball: at.ball, kick: null, scorer: null, aiming: null };
 }
