@@ -128,14 +128,18 @@ export class AthleteView {
     }
   }
 
-  /** Up for a block, the nearer hand goes to the ball in the air and through it on a touch. */
+  /** Up for a block, the hands strike to where the plan says the ball will be, and through it on a touch. */
   private reachToBlock(a: Athlete, ball: Ball | null, dt: number): void {
     const r = this.blockReach;
     const arm = this.arms[r.side];
     arm.shoulder.getWorldPosition(v);
     const d = this.model.dims;
     r.update(a, ball, v, d.upper + d.fore + 0.1, dt);
-    if (r.weight > 0.01) reachArm(this.arms[r.side], r.target, PALM, UP_POLE[r.side], r.weight);
+    if (r.weight <= 0.01) return;
+    reachArm(this.arms[r.side], r.target, PALM, UP_POLE[r.side], r.weight);
+    // Both hands up: the other palm goes beside the first.
+    const other = r.side === "L" ? "R" : "L";
+    if (r.two) reachArm(this.arms[other], r.second, PALM, UP_POLE[other], r.weight * 0.9);
   }
 
   /** Notes the start and end of each action and the landing after a jump, for the actions' timing. */

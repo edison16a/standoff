@@ -62,28 +62,6 @@ export function passPose(t: number, base: Pose): Pose {
   );
 }
 
-/**
- * A block jump, timed from the engine's own stages: a crouch to load
- * the legs with the arms cocked, the push up with the arms driving
- * overhead, full stretch at the top, and the knees giving on the way
- * down. Stage 2 polishes the shapes; the timing is the engine's.
- */
-export function blockPose(t: number, gather: number, air: number, base: Pose): Pose {
-  const top = gather + air * 0.5;
-  return keyed(
-    [
-      [0, { hipY: -0.06, kneeL: 0.5, kneeR: 0.5, legLLift: 0.25, legRLift: 0.25, armLRaise: 0.9, armRRaise: 0.9, elbowL: 1.1, elbowR: 1.1 }],
-      [gather, { hipY: -0.18, kneeL: 1.25, kneeR: 1.25, legLLift: 0.62, legRLift: 0.62, torsoX: 0.3, armLRaise: 1.2, armRRaise: 1.2, elbowL: 1.3, elbowR: 1.3 }],
-      [gather + 0.09, { hipY: 0, kneeL: 0.15, kneeR: 0.25, legLLift: 0.05, legRLift: 0.2, footL: 0.6, footR: 0.5, torsoX: 0.05, armLRaise: 2.6, armRRaise: 2.65, elbowL: 0.4, elbowR: 0.4, neckX: -0.2 }],
-      [top, { armLRaise: 3.0, armRRaise: 3.05, armLSpread: 0.14, armRSpread: 0.1, elbowL: 0.04, elbowR: 0.04, wristL: 0.25, wristR: 0.35, neckX: -0.32 }],
-      [gather + air - 0.1, { kneeL: 0.35, kneeR: 0.4, legLLift: 0.22, legRLift: 0.26, footL: 0.2, footR: 0.2, armLRaise: 2.5, armRRaise: 2.5, elbowL: 0.3, elbowR: 0.3 }],
-      [gather + air + 0.06, { hipY: -0.13, kneeL: 0.85, kneeR: 0.85, legLLift: 0.45, legRLift: 0.45, footL: 0, footR: 0, torsoX: 0.2, armLRaise: 1.2, armRRaise: 1.2, elbowL: 0.5, elbowR: 0.5 }],
-    ],
-    t,
-    base,
-  );
-}
-
 /** A lunge with a quick swipe of the hand across the ball. */
 export function stealPose(t: number, base: Pose): Pose {
   return keyed(

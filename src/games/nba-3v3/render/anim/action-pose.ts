@@ -1,6 +1,7 @@
 import type { BuildSpec } from "../../builds";
 import type { Athlete } from "../../engine/types";
-import { blockPose, landPose, passPose, shootPose, stealPose } from "./actions";
+import { landPose, passPose, shootPose, stealPose } from "./actions";
+import { blockPose } from "./block-poses";
 import type { AthleteScene } from "./base";
 import { celebratePose, dejectedPose } from "./celebrations";
 import { floaterPose } from "./floater-pose";
@@ -55,7 +56,8 @@ export function actionPose(a: Athlete, c: BuildSpec, s: AthleteScene, base: Pose
     case "pass":
       return { pose: passPose(act.t, base), rate: 30 };
     case "block":
-      return { pose: blockPose(act.t, act.gather, act.air, base), rate: 30 };
+      // A help leap leans the way he is going: his speed to his left, in his own frame.
+      return { pose: blockPose(act, base, a.vx * Math.cos(a.yaw) - a.vz * Math.sin(a.yaw)), rate: 30 };
     case "steal":
       return { pose: stealPose(act.t, base), rate: 30 };
     case "move":
