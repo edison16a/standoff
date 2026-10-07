@@ -3,6 +3,8 @@ import { THROW_MOVES, type ThrowKind } from "../engine/throw-preset";
 import { KICK, STEP, TACKLE } from "../engine/tuning";
 import type { ActionKind, JukeKind } from "../engine/types";
 import { BUILD_IDS, BUILDS, LINEMAN_NUMBERS } from "../builds";
+import { recordPass, type PassFrame } from "./lab-pass";
+import { PASS_MOVES, PASS_STAGES, type PassMove } from "./lab-pass-scenes";
 import { STAGE_MOVES, STAGES, type StageMove } from "./lab-scenes";
 import { recordStage } from "./lab-stage";
 
@@ -13,9 +15,9 @@ import { recordStage } from "./lab-stage";
  */
 const POSE_MOVES = ["idle", "run", "tuck", "ready", "throw", "bomb", "onrun", "fade", "kick", "spin", "back", "side", "dive", "lunge", "down", "tackled", "celebrate", "spike", "stance", "block", "catch"] as const;
 type PoseMove = (typeof POSE_MOVES)[number];
-/** The single poses on a row of builds, then the staged tackles, misses and runs (lab-scenes.ts). */
-export const LAB_MOVES = [...POSE_MOVES, ...STAGE_MOVES] as const;
-export type LabMove = PoseMove | StageMove;
+/** The single poses on a row of builds, the staged tackles, misses and runs (lab-scenes.ts), then passes and line play (lab-pass-scenes.ts). */
+export const LAB_MOVES = [...POSE_MOVES, ...STAGE_MOVES, ...PASS_MOVES] as const;
+export type LabMove = PoseMove | StageMove | PassMove;
 
 export function isLabMove(v: string | null): v is LabMove {
   return v !== null && (LAB_MOVES as readonly string[]).includes(v);
@@ -62,6 +64,7 @@ function act(move: PoseMove): Act {
 /** The lab's still for a moment `time` seconds in: everyone lined up across the field, facing the camera at -x. */
 export function labView(base: MatchView, move: LabMove, time: number): MatchView {
   if (move in STAGES) return stageView(base, move as StageMove, time);
+  if (move in PASS_STAGES) return passView(base, move as PassMove, time);
   const a = act(move as PoseMove);
   const cycle = Math.max(1.6, a.dur + 1);
   const t = a.dur > 0 ? Math.min(a.dur, time % cycle) : time;
@@ -103,4 +106,17 @@ function stageView(base: MatchView, move: StageMove, time: number): MatchView {
   const athletes = at.map((a) => ({ ...base.athletes[0]!, ...a }));
   const ball = { ...base.ball, state: "held" as const, holder: 0 };
   return { ...base, phase: "live", athletes, ball, kick: null, scorer: null };
+}
+
+const passes = new Map<PassMove, PassFrame[]>();
+
+/** A staged pass or block on a loop, the real ball and all, recorded once from a whole match. */
+function passView(base: MatchView, move: PassMove, time: number): MatchView {
+  let frames = passes.get(move);
+  if (!frames) {
+    frames = recordPass(PASS_STAGES[move]).frames;
+    passes.set(move, frames);
+  }
+  const at = frames[Math.floor(time / STEP) % frames.length]!;
+  return { ...base, phase: "live", athletes: at.athletes, ball: at.ball, kick: null, scorer: null, meter: null };
 }

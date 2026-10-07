@@ -87,4 +87,4 @@ export const CATCH_AFTER: Record<CatchKind, number> = {
 };
 
 /** A drop off the hands with a defender this close was a hit that jarred it loose. */
-export const JARRED = 0.75;
+export const JARRED = 1.0;
