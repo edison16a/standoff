@@ -13,21 +13,25 @@ import { info as shootingGallery } from "./shooting-gallery/info";
 import { info as subwaySurfers } from "./subway-surfers/info";
 import { info as zombieSurvival } from "./zombie-survival/info";
 
+/** Marks a game as Standoff Premium. Set here, so a game's own folder stays untouched. */
+const premium = (game: GameInfo): GameInfo => ({ ...game, premium: true });
+
 /**
- * Every game, in the order the home screen shows them. This file and each
- * game's own folder are all a new game touches: add its info here, and
- * its loader below once it can be played.
+ * Every game, in the order the home screen shows them. The premium games
+ * come first, and the home screen opens on the first one. This file and
+ * each game's own folder are all a new game touches: add its info here,
+ * and its loader below once it can be played.
  */
 export const GAMES: readonly GameInfo[] = [
-  magicKart,
+  premium(nba3v3),
+  premium(magicKart),
+  premium(football3v3),
   fruitNinja,
   zombieSurvival,
   shootingGallery,
   boxing,
   subwaySurfers,
-  nba3v3,
   fifa3v3,
-  football3v3,
   cubeGame,
   bladeClash,
   brawlBattle,

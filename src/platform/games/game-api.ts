@@ -149,4 +149,6 @@ export interface GameInfo {
   /** The art drawn in code, used when there is no captured media yet. */
   Cover: ComponentType;
   media?: GameMedia;
+  /** Tuned to a higher finish. The home screen puts these first and badges them Standoff Premium. */
+  premium?: boolean;
 }
