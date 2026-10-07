@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { BUILD_IDS } from "../builds";
 import type { MatchEvent } from "./events";
 import { forceFoul } from "./foul-call";
-import { frontness, handChance, inFront, shotsFor } from "./fouls";
+import { frontness, HAND, handChance, inFront, shotsFor } from "./fouls";
 import { Match, type Entry } from "./match";
 import { gainPossession } from "./rules";
 import { DEFENCE, STEP } from "./tuning";
@@ -61,9 +61,9 @@ describe("reaching in and fouls", () => {
 
   it("catches the hand more often with every reach in a possession", () => {
     expect(handChance(0)).toBe(0);
-    expect(handChance(1)).toBeCloseTo(0.28);
+    expect(handChance(1)).toBeCloseTo(HAND.first);
     expect(handChance(3)).toBeGreaterThan(handChance(2));
-    expect(handChance(20)).toBe(0.6);
+    expect(handChance(20)).toBe(HAND.most);
   });
 
   it("gives two shots for a reach in, one after a made basket and three on a missed three", () => {
@@ -78,8 +78,9 @@ describe("reaching in and fouls", () => {
 
   it("fouls from the side when the swipe catches the hand", () => {
     const first = foulRate(true, 0);
-    expect(first).toBeGreaterThan(0.18);
-    expect(first).toBeLessThan(0.4);
+    // Rare: most reaches are let go, and only a clear slap on the arm is called.
+    expect(first).toBeGreaterThan(0.02);
+    expect(first).toBeLessThan(0.16);
     expect(foulRate(true, 3)).toBeGreaterThan(first);
   }, 30000);
 

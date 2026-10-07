@@ -23,12 +23,14 @@ export const CHARGE = {
   /** A defender sliding sideways slower than this is set. */
   set: 0.9,
   /** A defender stepping into the handler faster than this is blocking. */
-  stepIn: 2.2,
+  stepIn: 2.6,
+  /** A blocking foul needs a real collision: closing at least this fast. */
+  blockClosing: 3.8,
   /** Inside this arc under the rim no charge is ever taken. */
   restricted: 1.25,
-  /** How often the referee sees a charge and blows; a block in a crowd of bodies is seen less. */
-  seen: 0.65,
-  seenBlock: 0.3,
+  /** How often the referee sees a charge and blows; a block in a crowd of bodies is let go far more. */
+  seen: 0.6,
+  seenBlock: 0.12,
   /** Seconds the referee shows a charge before play goes on to the check. */
   show: 1.9,
   /** Seconds the defender is down after taking the charge, and the handler stumbles on. */
@@ -48,11 +50,12 @@ export function judge(handler: Athlete, defender: Athlete, closing: number, hand
   // Sideways speed across the line between them; giving ground straight back is still a legal guard.
   const lateral = Math.abs((defender.vx * dz - defender.vz * dx) / d);
   const legal = defender.y < 0.02 && defender.action.kind === "none" && facing > 0.4 && defenderInto <= 0.3 && lateral < CHARGE.set;
-  if (defenderInto > CHARGE.stepIn) return "block";
+  const hard = closing >= CHARGE.blockClosing;
+  if (defenderInto > CHARGE.stepIn && hard) return "block";
   if (handlerInto <= CHARGE.drive) return null;
   if (legal) return rimDistance(defender) > CHARGE.restricted ? "charge" : "block";
   // Sliding across late, into the path, is a block too.
-  return lateral > CHARGE.stepIn ? "block" : null;
+  return lateral > CHARGE.stepIn && hard ? "block" : null;
 }
 
 /** Hears a body hit in the match and blows the whistle when the referee sees a foul in it. */

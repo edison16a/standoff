@@ -25,10 +25,16 @@ export function inFront(a: V2, holder: Athlete): boolean {
   return frontness(a, holder) >= Math.cos(FRONT_ANGLE);
 }
 
-/** The chance a swipe from the side or behind catches the hand: attempt 1 is the first this possession. */
+/**
+ * The chance a swipe from the side or behind catches the hand: attempt 1
+ * is the first this possession. Kept low so only a clear slap on the arm
+ * is called, the way a referee lets most hand checking go.
+ */
+export const HAND = { first: 0.08, perTry: 0.05, most: 0.3 } as const;
+
 export function handChance(attempt: number): number {
   if (attempt < 1) return 0;
-  return clamp(0.28 + (attempt - 1) * 0.1, 0.28, 0.6);
+  return clamp(HAND.first + (attempt - 1) * HAND.perTry, HAND.first, HAND.most);
 }
 
 /** Free throws for a foul: two for a reach in or a missed two, three for a missed three, one after a make. */
