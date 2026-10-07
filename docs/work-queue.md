@@ -98,7 +98,7 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ## Done recently
 
-* Basketball animation presets (e3841f8) and Football animation presets (e0d8eac), with new screenshots, icons, trailers and posters, on main. Follow up: redo the Basketball icon so the shooter reads clearly.
+* Basketball animation presets (e3841f8) and Football animation presets (e0d8eac), with new screenshots, icons, trailers and posters, on main. Basketball icon redone: shooter facing camera, defender leaping.
 * Keyboard bindings for all 11 other games, reviewed, plus a Boxing uppercut (80daf8e, 0d21b1d, 7ac0ff3), on main.
 * Keyboard player for dev testing: admin toggle, floating phone panel, controls card, bindings API in src/platform/keyboard (a56e0ab), on main.
 * Football 3v3 quality pass: rigid body ball with a real spiral, drag and turf bounces, new athletes with pads and helmets, new stadium, broadcast camera, touchdown replay and ceremony, re-recorded trailer, icon and poster (cd1c9d4), on main. Poster retimed to a planted stride.
