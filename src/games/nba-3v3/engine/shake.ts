@@ -29,9 +29,13 @@ export function reactFor(move: DribbleMove, hard: boolean): ShakeReact {
   return (hard ? HARD : SOFT)[move];
 }
 
-/** Seconds each reaction keeps him out of the play, soft and hard. Short, so a beaten man recovers and closes out; broken ankles stay long. */
+/**
+ * Seconds each reaction keeps him out of the play, soft and hard. A bite
+ * lasts, so a stepback that wins buys its space; the rest are short, so a
+ * beaten man recovers and closes out. Broken ankles stay a highlight.
+ */
 export const SHAKE_TIME: Record<ShakeReact, readonly [number, number]> = {
-  bite: [0.42, 0.7],
+  bite: [0.85, 1.05],
   freeze: [0.4, 0.62],
   slip: [0.42, 0.8],
   ankles: [0.95, 1.35],

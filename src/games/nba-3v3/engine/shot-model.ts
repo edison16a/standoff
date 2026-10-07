@@ -78,7 +78,8 @@ export const CONTEST_BITE = { layup: 0.55, floater: 0.3, perfect: 0.42, good: 0.
 
 /** The chance the shot goes in, from 0.02 to 0.99. */
 export function makeChance(c: ShotContext): number {
-  if (c.kind === "dunk") return clamp(0.97 - c.contest * Math.max(0, 0.36 - c.strengthEdge * 0.05), 0.5, 0.99);
+  // A man at the rim always costs a dunk something; a much stronger dunker goes through most of it.
+  if (c.kind === "dunk") return clamp(0.97 - c.contest * Math.max(0.15, 0.5 - c.strengthEdge * 0.05), 0.5, 0.99);
   if (c.kind === "layup") return clamp(0.8 + c.strengthEdge * 0.03 + c.shooting * 0.01 - c.contest * CONTEST_BITE.layup, 0.18, 0.97);
   // Released high and early, a floater beats the contest more than a jumper but is never easy.
   if (c.floater) return clamp(0.36 + c.shooting * 0.035 + (c.onFire ? 0.1 : 0) - c.contest * CONTEST_BITE.floater, 0.15, 0.85);

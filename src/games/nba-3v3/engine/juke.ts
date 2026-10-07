@@ -34,7 +34,7 @@ export const JUKE = {
   hard: 0.25,
   /** How long he stays slow after the reaction, in seconds. */
   hardSlow: 0.75,
-  softSlow: 0.4,
+  softSlow: 0.5,
   maxChance: 0.9,
 } as const;
 
