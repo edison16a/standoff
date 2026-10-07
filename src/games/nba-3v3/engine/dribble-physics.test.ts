@@ -78,19 +78,23 @@ describe("a dribble on the ball physics", () => {
     expect(far).toBeLessThan(0.9);
   });
 
-  it("stays low and tight on a drive at the rim", () => {
-    const top = (move: { x: number; z: number }, from: { x: number; z: number }) => {
+  it("goes low and tight on a sprint, lowest on a drive at the rim", () => {
+    const top = (move: { x: number; z: number }, from: { x: number; z: number }, fast = 3) => {
       const m = setup();
       const a = m.athletes[0]!;
       Object.assign(a, from);
       m.setMove(0, move);
       let high = 0;
       run(m, 1.6, () => {
-        if (Math.hypot(a.vx, a.vz) > 3 && m.ball.hand === "free") high = Math.max(high, m.ball.pos.y);
+        if (Math.hypot(a.vx, a.vz) > fast && m.ball.hand === "free") high = Math.max(high, m.ball.pos.y);
       });
       return high / buildOf(a).body.height;
     };
-    expect(top({ x: 0, z: -1 }, { x: 0, z: 9.5 })).toBeLessThan(top({ x: 1, z: 0 }, { x: -6, z: 9.5 }) - 0.03);
+    const jog = top({ x: 0.45, z: 0 }, { x: -6, z: 9.5 }, 1.8);
+    const sprint = top({ x: 1, z: 0 }, { x: -6, z: 9.5 });
+    const drive = top({ x: 0, z: -1 }, { x: 0, z: 9.5 });
+    expect(sprint).toBeLessThan(jog - 0.03);
+    expect(drive).toBeLessThan(jog - 0.03);
   });
 
   it("takes the ball across in front on a crossover", () => {

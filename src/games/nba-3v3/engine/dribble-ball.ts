@@ -47,12 +47,14 @@ const LOST = 1.7;
 export function dribbleRate(a: Athlete, speed: number): number {
   const leg = LEG_SHARE * buildOf(a).body.height;
   const stride = speed / strideLength(speed, leg, false);
-  const base = lerp(POUND, Math.max(1.5, stride), clamp(speed / 1.6, 0, 1));
+  // Standing, the preset in play sets the pound; on the run the bounce keeps time with the feet.
+  const base = lerp(POUND * a.dribbleStyle.rate, Math.max(1.5, stride), clamp(speed / 1.6, 0, 1));
   const act = a.action;
   if (act.kind !== "move") return base;
   switch (act.move) {
     case "crossover":
     case "behindBack":
+    case "betweenLegs":
       // A quick, low push across; a ball still on its way up is met early.
       return Math.max(3, base * 1.5) * (a.crossArmed ? 1 : 1.8);
     case "hesitation":
@@ -76,7 +78,7 @@ export function dribbleBall(m: Match, a: Athlete, dt: number, rate = dribbleRate
   if (a.pocket > 0) return pocket(m, a, dt);
   // Coming to the dribble from anything else, or put somewhere new by a film or a test, the hand has the ball first.
   const b = m.ball;
-  if ((b.hand !== "dribble" && b.hand !== "free") || Math.hypot(b.pos.x - a.x, b.pos.z - a.z) > 2.5) a.dribble = 0;
+  if ((b.hand !== "dribble" && b.hand !== "free") || Math.hypot(b.pos.x - a.x, b.pos.z - a.z) > 1.3) a.dribble = 0;
   if (inContact(a.dribble)) handPhase(m, a, dt, rate);
   else freePhase(m, a, dt, rate);
 }

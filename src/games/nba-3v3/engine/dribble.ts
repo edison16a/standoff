@@ -1,4 +1,5 @@
 import { inContact } from "./dribble-path";
+import { updateDribbleStyle } from "./dribble-style";
 import type { Match } from "./match";
 import type { Athlete } from "./types";
 import { clamp } from "./vec";
@@ -17,6 +18,7 @@ const CROSS_COOLDOWN = 0.9;
  */
 export function updateDribbleHand(m: Match, a: Athlete, dt: number): void {
   a.crossCd = Math.max(0, a.crossCd - dt);
+  if (m.ball.holder === a.id && m.ball.mode === "held") updateDribbleStyle(m, a, dt);
   if (m.ball.holder === a.id && m.ball.mode === "held" && a.action.kind === "none") {
     const rx = -Math.cos(a.yaw);
     const rz = Math.sin(a.yaw);

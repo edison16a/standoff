@@ -3,6 +3,7 @@ import { BODY, CONTACT } from "./body/body-spec";
 import { collide, type BodyHit } from "./body/contact";
 import { footGrip, powerPerKg, sizeEdge } from "./body/mass";
 import { clampToCourt } from "./court";
+import { freshStyle } from "./dribble-style";
 import type { MatchEvent } from "./events";
 import { steer } from "./steer";
 import { STEPBACK } from "./stepback";
@@ -21,7 +22,7 @@ export function createAthlete(id: number, team: TeamId, slot: number, build: Bui
     guardMan: null,
     action: { kind: "none" },
     stealCd: 0, blockCd: 0, grabCd: 0, whiff: 0, squeakCd: 0, plant: 0, recover: 0, moveCd: 0, moveHeat: 0,
-    streak: 0, onFire: false, dribble: 0, dribbleHand: 1, dribbleSide: 1, crossCd: 0, crossArmed: true, pocket: 0, calledAt: -99, cheer: null,
+    streak: 0, onFire: false, dribble: 0, dribbleStyle: freshStyle(), dribbleHand: 1, dribbleSide: 1, crossCd: 0, crossArmed: true, pocket: 0, calledAt: -99, cheer: null,
     box: { points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0, made: 0, attempts: 0, threes: 0, dunks: 0, freeMade: 0, freeAttempts: 0 },
   };
 }

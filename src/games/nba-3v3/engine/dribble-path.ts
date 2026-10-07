@@ -1,16 +1,14 @@
 import { buildOf, topSpeed } from "./athlete";
-import { RIM_SPOT, rimDistance } from "./court";
 import { BALL } from "./physics/ball-spec";
 import { bounceDrop } from "./physics/bounce-solve";
 import type { Athlete } from "./types";
-import { clamp, lerp, type V3 } from "./vec";
+import type { V3 } from "./vec";
 
 /**
  * Where the dribbling hand takes the ball and lets it go, and the push
  * that sends it to the floor and back up to the hand. The hand works
- * the ball out to the side and a little ahead, low and tight on a
- * drive at the rim, tall on a hesitation, behind the hips on a behind
- * the back, and across the front on a crossover.
+ * the ball where the blended dribble preset says: out to the side and
+ * a little ahead, low and tight on a sprint, shielded when pressed.
  */
 
 /** Phases of the dribble clock: the hand takes the ball at CATCH and lets it go at RELEASE, wrapping through 0. */
@@ -26,34 +24,31 @@ export function phaseGap(phase: number, to: number, rate: number): number {
   return gap / Math.max(0.2, rate);
 }
 
-/** Driving hard at the rim: the dribble stays low and tight to the body. */
-export function driving(a: Athlete): boolean {
-  const speed = Math.hypot(a.vx, a.vz);
-  if (speed < 2.8 || rimDistance(a) > 7) return false;
-  const dx = RIM_SPOT.x - a.x;
-  const dz = RIM_SPOT.z - a.z;
-  return (a.vx * dx + a.vz * dz) / (speed * Math.hypot(dx, dz)) > 0.6;
-}
-
 /**
  * Where the ball's centre sits under the dribbling palm, `ahead`
- * seconds from now, with the ball on `side` (-1 left to 1 right).
+ * seconds from now, with the ball on `side` (-1 left to 1 right). The
+ * spot comes from the blended dribble preset (`dribble-style.ts`); a
+ * hesitation stands it up, a behind the back takes it round the hips,
+ * and between the legs sends it under the body from foot to foot.
  */
 export function handSpot(a: Athlete, side: number, ahead: number): V3 {
   const h = buildOf(a).body.height;
   const fx = Math.sin(a.yaw);
   const fz = Math.cos(a.yaw);
-  const speed = Math.hypot(a.vx, a.vz);
-  const still = 1 - clamp(speed / 1.6, 0, 1);
+  const style = a.dribbleStyle;
   const act = a.action;
   const tall = act.kind === "move" && act.move === "hesitation" && act.t < 0.26;
-  const low = driving(a);
-  // The palm is at the hip running, a little lower in a stand still pound, lower still on a drive; the ball hangs under it.
-  const palm = h * (tall ? 0.5 : low ? 0.33 : lerp(0.46, 0.41, still));
-  let fwd = low ? 0.3 : 0.26;
+  const palm = h * (tall ? 0.5 : style.palm);
+  let fwd = style.fwd;
+  let out = style.out * side;
+  const crossing = act.kind === "move" && a.crossArmed && Math.sign(side) !== a.dribbleHand;
   // Behind the back the ball goes round behind the hips on its way across.
-  if (act.kind === "move" && act.move === "behindBack" && a.crossArmed && Math.sign(side) !== a.dribbleHand) fwd = -0.22;
-  const out = (low ? 0.2 : 0.3) * side;
+  if (crossing && act.move === "behindBack") fwd = -0.22;
+  // Between the legs it is bounced under the hips, between the split feet.
+  if (crossing && act.move === "betweenLegs") {
+    fwd = 0.05;
+    out *= 0.25;
+  }
   const { x, z } = whereAhead(a, ahead);
   return { x: x + fx * fwd - fz * out + a.vx * 0.05, y: palm - 0.1, z: z + fz * fwd + fx * out + a.vz * 0.05 };
 }
