@@ -6,21 +6,24 @@ import { followCamera, readDev, type DevOptions, type Film } from "./dev";
 import { FILMED_FRAME, FilmClock } from "./film-clock";
 import { stillLights } from "./still-lights";
 import { ICON_AT, ICON_CAMERA, IconFilm, iconLook } from "./icon-film";
+import { PosterFilm } from "./film-poster";
 import { HighlightScript } from "./script";
 
 /**
  * Where the highlight starts for each view, in seconds of the script.
  * The loop's first three seconds are the capture tool's unfilmed warm
- * up, so its film opens just before the crossover.
+ * up, so its film opens just before the crossover. The poster has its
+ * own film, the trailer's lob into the poster dunk (film-poster.ts).
  */
 const LEAD: Record<ShowcaseView, number> = { loop: -2.7, poster: 0, icon: 0 };
 
 /**
  * The poster and the icon are single frames, so the film is run this far
  * ahead without drawing and then held. The poster is the Dunker at the
- * top of his windmill; the icon has its own film (icon-film.ts).
+ * top of his poster dunk, both hands cocked back over the Big Man; the
+ * icon has its own film (icon-film.ts).
  */
-const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 2.6, icon: ICON_AT };
+const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 2.5, icon: ICON_AT };
 
 /**
  * The loop plays behind the home screen, so it draws a little under full
@@ -32,17 +35,16 @@ const LOOP_PIXELS = 0.8;
 const STILL_DRAWS = 1;
 
 /**
- * The poster's hero angle is high over the left block, just behind the
- * Dunker, looking across at the windmill over the ring. Any lower and
- * the players getting up off the floor walk into the bottom of the shot.
+ * The poster's hero angle is low under the glass off the right block,
+ * looking up past the Big Man at the Dunker rising over him to the ring.
  */
 const STILL_CAMERA: Partial<Record<ShowcaseView, { pos: THREE.Vector3; look: THREE.Vector3; fov: number }>> = {
-  poster: { pos: new THREE.Vector3(-3.6, 2.7, 3.2), look: new THREE.Vector3(-0.3, 2.85, 1.6), fov: 42 },
+  poster: { pos: new THREE.Vector3(1.8, 0.55, 0.7), look: new THREE.Vector3(-0.3, 2.3, 2.2), fov: 50 },
   icon: ICON_CAMERA,
 };
 
-/** Where the poster's spotlights point: the Dunker in the air by the rim. */
-const STILL_SUBJECT = new THREE.Vector3(-0.5, 2.3, 1.9);
+/** Where the poster's spotlights point: the Dunker in the air over the Big Man by the rim. */
+const STILL_SUBJECT = new THREE.Vector3(-0.2, 2.3, 2.0);
 
 /**
  * Runs the showcase: the scripted highlight stepped at the engine's
@@ -63,13 +65,13 @@ export class ShowcaseDirector {
 
   constructor(canvas: HTMLCanvasElement, readonly view: ShowcaseView) {
     this.renderer = new CourtRenderer(canvas, { governed: false });
-    if (view === "poster") this.renderer.cinematic({ lights: stillLights(STILL_SUBJECT), fill: 0.5, key: 0.8, haze: 0.018, boards: true });
+    if (view === "poster") this.renderer.cinematic({ lights: stillLights(STILL_SUBJECT), fill: 0.45, key: 0.55, haze: 0.018, boards: true });
     if (view === "icon") this.renderer.cinematic(iconLook());
     // Development aids: ?cam=x,y,z,lookX,lookY,lookZ,fov pins the camera for close looks at the models,
     // ?at=seconds holds a still at another moment of the film, and dev.ts reads the rest.
     const params = new URLSearchParams(window.location.search);
     this.dev = readDev(params);
-    this.script = this.dev.film ?? (view === "icon" ? new IconFilm() : new HighlightScript(LEAD[view]));
+    this.script = this.dev.film ?? (view === "icon" ? new IconFilm() : view === "poster" ? new PosterFilm() : new HighlightScript(LEAD[view]));
     this.renderer.setMatch(this.script.match);
     this.renderer.tv.fixed = this.dev.film ? null : (STILL_CAMERA[view] ?? null);
     // A film of the ceremony hands the camera to the ceremony's own shots.
