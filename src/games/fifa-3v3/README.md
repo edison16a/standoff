@@ -85,7 +85,7 @@ The replay is cut like a television replay, each stage at its own speed and from
 
 A goal from a free kick or a penalty is replayed from the taker's run up, not from the lining up before it.
 
-Any button on any phone votes to skip, but the replay only ends early when every player in the match has pressed. The big screen shows each player's name with a tick once they have agreed, and each phone shows the count. A player who leaves stops counting.
+Any button on any phone votes to skip, but the replay only ends early when every player in the match has pressed. Only the phones show the vote: each phone shows the count. The big screen shows nothing about skipping, so the replay stays clear. A player who leaves stops counting.
 
 ## Fouls, free kicks and penalties
 

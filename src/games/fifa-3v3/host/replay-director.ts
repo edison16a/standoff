@@ -1,4 +1,4 @@
-import type { ReplayCard, SkipView } from "./host-store";
+import type { ReplayCard } from "./host-store";
 import type { MatchDriver } from "./match-driver";
 import type { ReplayFrame } from "./replay";
 import { SkipVotes } from "./replay-skip";
@@ -10,8 +10,8 @@ const TAIL = 0.3;
  * Runs the goal replay on the big screen. When the match enters its
  * replay phase it cuts the clip; it plays it through, stage by stage,
  * and ends it when it is done or when every player has pressed a button
- * to skip. It also says what the overlay shows: the stage's numbers and
- * who has voted to skip.
+ * to skip. It also says what the overlay shows: the stage's numbers. The
+ * votes go only to the phones, never the big screen.
  */
 export class ReplayDirector {
   readonly votes = new SkipVotes();
@@ -61,12 +61,6 @@ export class ReplayDirector {
     if (!this.active || !script || !frame) return null;
     const stage = frame.segment.stage;
     return { stage, kicker: script.kicker !== null ? nameOf(script.kicker) : null, facts: script.facts, slow: frame.segment.rate < 0.5 };
-  }
-
-  /** Who may skip, and who has. */
-  skipList(nameOf: (seat: number) => string): SkipView[] {
-    if (!this.active) return [];
-    return this.votes.list().map((v) => ({ ...v, name: nameOf(v.seat) }));
   }
 
   stop(): void {

@@ -1,5 +1,4 @@
 "use client";
-import { playerColor } from "@/games/kit/players";
 import { useFifaStore, type ReplayCard } from "../host-store";
 
 /** The numbers for each stage of the replay, like a broadcast's telestrator. */
@@ -33,35 +32,11 @@ function Line({ label, value }: { label: string; value: string }) {
   );
 }
 
-/** Who can skip the replay and who has: any button on a phone is a vote, and it takes everyone. */
-function SkipBar() {
-  const skip = useFifaStore((s) => s.skip);
-  if (skip.length === 0) return null;
-  const agreed = skip.filter((s) => s.agreed).length;
-  return (
-    <div className="fifa-skip" aria-label={`${agreed} of ${skip.length} want to skip`}>
-      <span className="fifa-skip__title">
-        Skip: {agreed} of {skip.length}
-      </span>
-      <ul className="fifa-skip__list">
-        {skip.map((s) => (
-          <li key={s.seat} className={`fifa-skip__player ${s.agreed ? "fifa-skip__player--in" : ""}`} style={{ "--player": playerColor(s.seat) } as React.CSSProperties}>
-            <span className="fifa-skip__tick" aria-hidden>
-              {s.agreed ? "✓" : ""}
-            </span>
-            {s.name}
-          </li>
-        ))}
-      </ul>
-      <span className="fifa-skip__hint">Press any button to skip</span>
-    </div>
-  );
-}
-
 /**
  * The goal replay's overlay: the REPLAY tag, the scorer's numbers for
  * the stage on screen (run speed, the aim, the ball's speed and spin),
- * a slow motion mark, and who has voted to skip.
+ * and a slow motion mark. Skipping lives only on the phones, so nothing
+ * about it covers the replay here.
  */
 export function ReplayOverlay() {
   const card = useFifaStore((s) => s.replayCard);
@@ -77,7 +52,6 @@ export function ReplayOverlay() {
         {card.kicker && <p className="fifa-replay-card__name">{card.kicker}</p>}
         <StatLines card={card} />
       </section>
-      <SkipBar />
     </>
   );
 }

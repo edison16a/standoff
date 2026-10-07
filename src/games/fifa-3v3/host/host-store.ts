@@ -44,13 +44,6 @@ export interface ReplayCard {
   slow: boolean;
 }
 
-/** One player's say in skipping the replay. */
-export interface SkipView {
-  seat: number;
-  name: string;
-  agreed: boolean;
-}
-
 export interface ResultRow {
   /** An athlete's id, or -1 and -2 for the red and blue keepers. */
   id: number;
@@ -89,7 +82,6 @@ export interface FifaHostState {
   golden: boolean;
   replay: boolean;
   replayCard: ReplayCard | null;
-  skip: SkipView[];
   winner: TeamId | null;
   /** The trophy ceremony's names and where it is, once the scene has cut to it. */
   ceremony: CeremonyCard | null;
@@ -109,7 +101,6 @@ export const useFifaStore = create<FifaHostState>(() => ({
   golden: false,
   replay: false,
   replayCard: null,
-  skip: [],
   winner: null,
   ceremony: null,
   results: [],
