@@ -36,10 +36,14 @@ Pick **Keyboard** in the menu and **Start** goes straight to the countdown, with
 | --- | --- |
 | Left arrow or A | One track left |
 | Right arrow or D | One track right |
-| Up arrow or W | Jump |
+| Up arrow, W or Space | Jump |
 | Down arrow or S | Roll, for as long as it is held |
 
-The keys go by where they sit on the keyboard, so other layouts work the same. Holding a key down does not repeat the move. On the results, Up (or W) plays again once the card says so. The keys are off in camera mode, so a camera run on the leaderboard was run with the body. If the camera or the model will not start, **Play with the keyboard** on that screen switches to keyboard mode.
+The keys go by where they sit on the keyboard, so other layouts work the same. Holding a key down does not repeat the move. On the results, Up, W or Space plays again once the card says so. The keys are off in camera mode, so a camera run on the leaderboard was run with the body. If the camera or the model will not start, **Play with the keyboard** on that screen switches to keyboard mode.
+
+### Keyboard player
+
+The host's admin panel has a **Keyboard player** for testing (three quick taps on the settings gear, then Platform). It takes the room's seat and says hello, and the lobby switches to Keyboard by itself. Its controls card shows the same keys as the table above. Start, the level and Play again are clicked on the big screen. The phone panel only says the keys are there. Each key goes through the room as a move, down and up (`keyboard.ts`, `host/key-messages.ts`), and keyboard mode plays it. The page's own key listener skips any key the keyboard player already took, so each press counts once.
 
 ## Leaderboard
 

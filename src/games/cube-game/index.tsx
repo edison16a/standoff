@@ -4,6 +4,7 @@ import type { GameModule, ShowcaseView } from "@/platform/games/game-api";
 import { SessionContext } from "./host/components/session-context";
 import { Stage, Tools } from "./host/components/Stage";
 import { CubeSession } from "./host/session";
+import { keyboard } from "./keyboard";
 import "./styles/host.css";
 import "./styles/menu.css";
 import "./styles/hud.css";
@@ -41,12 +42,13 @@ export const game: GameModule = {
   },
 
   createPhone() {
-    // No seats are offered for a camera game, so no phone ever gets here.
+    // Only the admin panel's Keyboard player takes a seat here. Its keys are on the big screen.
     function Screen() {
-      return <p className="cg-phone">Cube Game is played in front of the computer&apos;s camera.</p>;
+      return <p className="cg-phone">Cube Game is played in front of the computer&apos;s camera. Playing with the keys? They are on the big screen.</p>;
     }
     return { Screen, dispose: () => undefined };
   },
 
   Showcase,
+  keyboard,
 };

@@ -10,6 +10,8 @@ import { Banners } from "./banners";
 import { FightDriver } from "./fight-driver";
 import { useBoxingStore as store } from "./host-store";
 import { hudFrom, shotOf } from "./hud";
+import type { BoxKey } from "./key-boxer";
+import { KeyPlay } from "./key-play";
 import { MenuDemo } from "./menu-demo";
 import { PickControl } from "./pick-control";
 import { levelOf } from "./player-input";
@@ -36,6 +38,8 @@ export class BoxingHost {
   private readonly demo = new MenuDemo();
   private readonly feed = new PlayersFeed();
   private readonly banners = new Banners();
+  /** Keyboard mode, from this computer's keys or the admin panel's Keyboard player. */
+  readonly keys: KeyPlay;
   private readonly listeners = new Set<(event: MatchEvent, match: Match) => void>();
   private stopKit: (() => void) | null = null;
   private stopDriver: (() => void) | null = null;
@@ -47,6 +51,7 @@ export class BoxingHost {
   constructor(private readonly room: HostRoomApi) {
     this.audio = new BoxingAudio(room.audio);
     store.setState({ ...store.getInitialState(), records: loadRecords() });
+    this.keys = new KeyPlay(room, { driver: () => this.driver, pick: (key) => this.keyPick(key) });
   }
 
   get humans(): [boolean, boolean] {
@@ -73,6 +78,12 @@ export class BoxingHost {
 
   choosePlayers(players: 1 | 2): void {
     this.audio.confirm();
+    // Keyboard mode is one player on the keys, with no camera to set up.
+    if (this.keys.on) {
+      this.dropKit();
+      store.setState({ players: 1 });
+      return this.openPick();
+    }
     if (this.kit && this.kit.players !== players) this.dropKit();
     if (!this.kit) {
       this.kit = new CameraKit({ players });
@@ -119,6 +130,7 @@ export class BoxingHost {
     this.audio.screen("fight");
     this.fightId++;
     this.feed.reset();
+    this.keys.reset();
     this.room.setPlaying(true);
     // The overlay starts from this fight, not the last one's knockdowns and empty bars on a rematch.
     this.lastStage = "";
@@ -156,9 +168,9 @@ export class BoxingHost {
     const driver = screen === "fight" || screen === "results" ? this.driver : null;
     if (driver) this.fightFrame(driver, now);
     else for (const event of this.demo.step(dt)) for (const listener of this.listeners) listener(event, this.demo.match);
-    if (screen === "pick" && this.pick && this.kit) {
-      const locked = this.pick.update([this.kit.moves(1), this.kit.moves(2)], now);
-      if (locked.length) this.audio.confirm();
+    if (screen === "pick" && this.pick) {
+      // In keyboard mode there is no camera: the keys and the mouse choose.
+      if (this.kit && this.pick.update([this.kit.moves(1), this.kit.moves(2)], now).length) this.audio.confirm();
       this.publishPick();
       if (this.pick.done) this.startFight();
     }
@@ -176,6 +188,7 @@ export class BoxingHost {
   dispose(): void {
     this.stopDriver?.();
     this.stopAdmin?.();
+    this.keys.dispose();
     this.dropKit();
     this.audio.stop();
     this.room.setPlaying(false);
@@ -183,6 +196,7 @@ export class BoxingHost {
 
   private fightFrame(driver: FightDriver, now: number): void {
     this.feed.defend(driver, this.kit, now);
+    if (this.keys.on && !this.kit) this.keys.defend(driver, now);
     driver.tick(now);
     if (driver.stage !== this.lastStage) {
       this.audio.replay(driver.stage === "replay");
@@ -227,6 +241,17 @@ export class BoxingHost {
       this.driver?.punch(event.slot, event.hand, event.style === "straight", event.power, level);
     }
     if (screen === "pick" && this.pick?.onMove(event)) {
+      this.audio.tick();
+      this.publishPick();
+    }
+  }
+
+  /** Keyboard mode on the build choice: A and D browse, Space locks in. */
+  private keyPick(key: BoxKey): void {
+    if (!this.pick) return;
+    if (key === "guard") this.lock(0);
+    else if (key === "slip-left" || key === "slip-right") {
+      this.pick.step(0, key === "slip-left" ? -1 : 1);
       this.audio.tick();
       this.publishPick();
     }

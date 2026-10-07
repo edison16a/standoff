@@ -41,7 +41,7 @@ export function Results() {
             Menu
           </button>
         </div>
-        {jump && <p className="ss-results__jump">{session.kit ? "Or jump to play again" : "Or press Up to play again"}</p>}
+        {jump && <p className="ss-results__jump">{session.kit ? "Or jump to play again" : "Or press Up or Space to play again"}</p>}
       </div>
       <Board highlight={row.entryId} />
     </div>

@@ -28,13 +28,14 @@ export function followAim(punch: ActivePunch, head: HeadSpot, now: number, dtMs:
  * Where the head is against where the punch is going, as it lands. A
  * straight punch goes to a point, so the head moving any way takes it
  * out. A hook sweeps across, so moving sideways barely helps and only
- * ducking under it does. The body stays where it is, so a body shot
+ * ducking under it does. An uppercut comes up from below, so ducking
+ * walks into it and only a slip gets away. The body stays where it is, so a body shot
  * always gets there, and only the elbows stop it.
  */
 export function contactOf(punch: ActivePunch, head: HeadSpot): Contact {
   if (punch.level === "body") return { amount: 1, dodge: null };
   const dx = (head.x - punch.aim.x) * (punch.style === "hook" ? RULES.hookSweep : 1);
-  const dy = head.y - punch.aim.y;
+  const dy = (head.y - punch.aim.y) * (punch.style === "uppercut" ? RULES.uppercutRise : 1);
   const off = Math.hypot(dx, dy);
   // Long arms chase a moving head further, so the head has to travel further to get away.
   const clean = RULES.cleanRadius * punch.reach;

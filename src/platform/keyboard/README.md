@@ -13,10 +13,11 @@ A way to play any game on the host computer alone, for testing. It is in the hid
 
 Give the game module a `keyboard` (a `KeyboardBinding`, see `types.ts`), in its own file such as `src/games/<id>/keyboard.ts`, and add it to the module in `index.tsx`. Import only from `@/platform/keyboard`.
 
-A binding has three parts:
+A binding has these parts:
 
 * `controls`: groups of rows for the card. Each row is an action and the keys that do it. A key entry is one cap (`"Space"`) or caps pressed as one (`["W", "A", "S", "D"]`). Several entries are shown with "or" between them. Name keys the way they are printed: `"W"`, `"Space"`, `"Shift"`, `"Up"`, `"Left click"`.
 * `replaces`: message kinds the keyboard sends in place of the phone screen. The panel's own messages of those kinds are dropped, so its resting on screen stick or wheel never fights the keys. List the stream kinds (`"pad"`, `"input"`, `"aim"`); leave the menu kinds (`"pick"`, `"ready"`) to the panel.
+* `foot` (optional): the card's last line, on where the menus are. Unset, it says to click the phone panel. A camera game, whose menus are on the big screen, says so here.
 * `create(ctx)`: makes the seat's controller when the seat is known. `ctx.seat` is the seat, `ctx.send(payload)` and `ctx.sendLossy(payload)` send exactly as that phone would, and `ctx.last("state")` is the newest message of that kind the host sent the phone (or of any kind with no argument), so the binding can tell lobby from match.
 
 The controller can have `key(code, down)` (return true when the key was used, which stops the browser's own action such as scrolling), `pointer(event)` for the mouse over the big screen, `tick()` which runs about 30 times a second for streams, `release()` and `dispose()`.

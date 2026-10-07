@@ -61,7 +61,7 @@ export function ControlsCard({ binding }: { binding: KeyboardBinding | null }) {
       ) : (
         <p className="kb-card__empty">This game has no keyboard controls yet. Play it with the mouse on the phone panel.</p>
       )}
-      <p className="kb-card__foot">Menus and picks: click the phone panel.</p>
+      <p className="kb-card__foot">{binding?.foot ?? "Menus and picks: click the phone panel."}</p>
     </aside>
   );
 }

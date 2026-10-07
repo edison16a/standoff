@@ -2,18 +2,20 @@
 import { DifficultyPicker } from "@/games/kit/difficulty/DifficultyPicker";
 import { RULES } from "../../engine/rules";
 import { useBoxingStore } from "../host-store";
+import { InputToggle, KEY_HELP } from "./InputToggle";
 import { useSession } from "./session-context";
 
 /**
  * The first screen: one player against the computer, or two side by side
  * in front of the camera. Chosen with the mouse, since nobody is
  * calibrated yet. The computer's difficulty is picked here too, for the
- * same reason.
+ * same reason, and so is keyboard mode, for testing without a camera.
  */
 export function PlayersMenu() {
   const session = useSession();
   const records = useBoxingStore((state) => state.records);
   const botLevel = useBoxingStore((state) => state.botLevel);
+  const keys = useBoxingStore((state) => state.input === "keys");
   return (
     <section className="bx-menu">
       <header className="bx-menu__head">
@@ -29,27 +31,17 @@ export function PlayersMenu() {
           <span className="bx-choice__name">One player</span>
           <span className="bx-choice__text">Against the computer, {RULES.rounds} rounds</span>
         </button>
-        <button type="button" className="bx-choice bx-choice--two" onClick={() => session.choosePlayers(2)}>
+        <button type="button" className="bx-choice bx-choice--two" disabled={keys} onClick={() => session.choosePlayers(2)}>
           <span className="bx-choice__count">2</span>
           <span className="bx-choice__name">Two players</span>
-          <span className="bx-choice__text">Side by side in front of the camera</span>
+          <span className="bx-choice__text">{keys ? "With the camera only" : "Side by side in front of the camera"}</span>
         </button>
       </div>
-      <DifficultyPicker level={botLevel} onChange={(level) => useBoxingStore.setState({ botLevel: level })} />
-      <ul className="bx-menu__how">
-        <li>
-          <strong>Punch</strong> at the screen with either hand
-        </li>
-        <li>
-          <strong>Block</strong> with both gloves up by your face
-        </li>
-        <li>
-          <strong>Duck</strong> or slip to the side to make punches miss
-        </li>
-        <li>
-          <strong>Counter</strong> with a left jab after a block or a dodge
-        </li>
-      </ul>
+      <div className="bx-menu__options">
+        <InputToggle />
+        <DifficultyPicker level={botLevel} onChange={(level) => useBoxingStore.setState({ botLevel: level })} />
+      </div>
+      {keys ? <KeyHelp /> : <CameraHelp />}
       {records.wins + records.losses > 0 && (
         <p className="bx-menu__records">
           Against the computer: {records.wins} won, {records.losses} lost
@@ -57,6 +49,37 @@ export function PlayersMenu() {
         </p>
       )}
     </section>
+  );
+}
+
+function CameraHelp() {
+  return (
+    <ul className="bx-menu__how">
+      <li>
+        <strong>Punch</strong> at the screen with either hand
+      </li>
+      <li>
+        <strong>Block</strong> with both gloves up by your face
+      </li>
+      <li>
+        <strong>Duck</strong> or slip to the side to make punches miss
+      </li>
+      <li>
+        <strong>Counter</strong> with a left jab after a block or a dodge
+      </li>
+    </ul>
+  );
+}
+
+function KeyHelp() {
+  return (
+    <ul className="bx-menu__how">
+      {KEY_HELP.map(([what, keys]) => (
+        <li key={what}>
+          <strong>{what}:</strong> {keys}
+        </li>
+      ))}
+    </ul>
   );
 }
 

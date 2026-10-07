@@ -1,12 +1,19 @@
 import { loadAudioSettings } from "@/platform/audio/audio-settings";
 import type { MatchEvent } from "../engine/events";
 import { RULES } from "../engine/rules";
-import type { FighterId } from "../engine/types";
+import type { FighterId, PunchStyle } from "../engine/types";
 
 /** Colour lines wait at least this long after the last one, so the call never turns to chatter. */
 const COLOUR_GAP_MS = 5_000;
 
 const pick = (lines: readonly string[]) => lines[Math.floor(Math.random() * lines.length)]!;
+/** What a heavy punch that lands gets called, by the kind of punch. */
+const BIG_SHOT: Record<PunchStyle, () => string> = {
+  jab: () => pick(["Big right hand!", "Oh, that landed!"]),
+  cross: () => pick(["Big right hand!", "Oh, that landed!"]),
+  hook: () => pick(["Huge hook!", "Big left hook!"]),
+  uppercut: () => pick(["What an uppercut!", "Right up the middle!"]),
+};
 
 /** How a line is spoken: cutting in, after whatever is being said, or only if the booth is quiet. */
 type Mode = "cut" | "queue" | "colour";
@@ -38,7 +45,7 @@ export class Commentator {
         return;
       case "hit":
         if (event.stagger) return this.say(pick([event.counter ? "What a counter!" : "What a shot!", `${surname(event.target)} is hurt!`, "He is stunned, back to the corner!"]), "colour");
-        if (event.heavy && Math.random() < 0.5) return this.say(event.style === "hook" ? pick(["Huge hook!", "Big left hook!"]) : pick(["Big right hand!", "Oh, that landed!"]), "colour");
+        if (event.heavy && Math.random() < 0.5) return this.say(BIG_SHOT[event.style](), "colour");
         return;
       case "miss":
         if (event.dodge && Math.random() < 0.15) this.say(pick(["Slick defence!", "Just missed!"]), "colour");

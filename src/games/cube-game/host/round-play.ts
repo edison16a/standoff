@@ -71,6 +71,11 @@ export class RoundPlay {
     kit?.getSnapshot().present.forEach((seen, i) => !seen && this.presence(i + 1, false));
   }
 
+  /** A jump from the admin panel's Keyboard player, during a round only. */
+  keyJump(player: 1 | 2, pageMs: number): void {
+    this.controls?.remote(player, pageMs);
+  }
+
   end(): void {
     if (this.resultsTimer) clearTimeout(this.resultsTimer);
     this.resultsTimer = null;

@@ -3,6 +3,7 @@ import type { GameModule } from "@/platform/games/game-api";
 import { SessionContext } from "./host/components/session-context";
 import { Stage } from "./host/components/Stage";
 import { SurfSession } from "./host/session";
+import { keyboard } from "./keyboard";
 import { Showcase } from "./showcase/Showcase";
 import "./styles/host.css";
 import "./styles/hud.css";
@@ -29,12 +30,13 @@ export const game: GameModule = {
   },
 
   createPhone() {
-    // No seats are offered for a camera game, so no phone ever gets here.
+    // Only the admin panel's Keyboard player takes a seat here. Its keys are on the big screen.
     function Screen() {
-      return <p className="ss-phone">Subway Runner is played in front of the computer&apos;s camera.</p>;
+      return <p className="ss-phone">Subway Runner is played in front of the computer&apos;s camera. Playing with the keys? They are on the big screen.</p>;
     }
     return { Screen, dispose: () => undefined };
   },
 
   Showcase,
+  keyboard,
 };

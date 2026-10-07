@@ -11,8 +11,11 @@ const TURN: Record<PunchStyle, Record<Hand, number>> = {
   jab: { left: -0.22, right: 0.22 },
   cross: { left: -0.45, right: 0.5 },
   hook: { left: -0.55, right: 0.55 },
+  uppercut: { left: -0.3, right: 0.38 },
 };
-const LUNGE: Record<PunchStyle, number> = { jab: 0.1, cross: 0.16, hook: 0.1 };
+const LUNGE: Record<PunchStyle, number> = { jab: 0.1, cross: 0.16, hook: 0.1, uppercut: 0.08 };
+/** How far the knees dip to load an uppercut, in metres, before the legs drive it up. */
+const UPPERCUT_DIP = 0.07;
 /** The hips on the corner stool, a little over its seat. */
 const SEAT_HEIGHT = 0.6;
 
@@ -65,6 +68,10 @@ export class BodyMotion {
         this.headYaw.hit(from * 14 * power);
         this.chestYaw.hit(from * 4 * power);
         this.headPitch.hit(-3 * power);
+      } else if (event.style === "uppercut") {
+        // Lifted from under the chin: the head snaps straight back and up.
+        this.headPitch.hit(-15 * power);
+        this.chestPitch.hit(-5 * power);
       } else {
         this.headPitch.hit(-11 * power);
         this.chestPitch.hit(-4 * power);
@@ -120,6 +127,7 @@ export class BodyMotion {
       pose.hips.yaw += turn * 0.35;
       pose.spine.pitch += 0.1 * shape.lunge;
       forward = LUNGE[punch.style] * shape.lunge;
+      if (punch.style === "uppercut") pose.hipHeight -= UPPERCUT_DIP * shape.swing;
     }
 
     // The head keeps its eyes on the other boxer through all of that, then takes the hits on top.

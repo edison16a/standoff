@@ -16,6 +16,8 @@ export const PUNCHES: Record<PunchStyle, PunchSpec> = {
   jab: { damage: 5, stamina: 7, travelMs: 110, recoverMs: 240 },
   cross: { damage: 7, stamina: 12, travelMs: 140, recoverMs: 320 },
   hook: { damage: 8, stamina: 14, travelMs: 170, recoverMs: 360 },
+  // The heaviest punch, and the slowest back to the guard, so a missed one leaves a boxer open.
+  uppercut: { damage: 9, stamina: 15, travelMs: 160, recoverMs: 400 },
 };
 
 /** Every number that shapes a fight, in one place so balance is easy to find. */
@@ -59,6 +61,8 @@ export const RULES = {
   missRadius: 0.2,
   /** A hook sweeps across, so moving sideways takes the head only this far out of its path. */
   hookSweep: 0.4,
+  /** An uppercut comes up from below, so ducking takes the head only this far out of its path. */
+  uppercutRise: 0.35,
   /** Blocking a punch costs the blocker a little stamina. */
   blockStamina: 3,
   /** Missing costs the puncher a little more. */

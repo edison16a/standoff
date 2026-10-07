@@ -11,6 +11,7 @@ import type { AnimInput } from "./anim-input";
 import { BodyMotion, fallParts } from "./body-motion";
 import { FootPlanner, STANCE_FEET } from "./feet";
 import { blendHand, CHEST_POSES, cloneHand, ROOT_POSES, type HandPose } from "./hand-poses";
+import { ARCS, UPPERCUT_CHIN } from "./punch-arcs";
 import { punchShape, REST, type PunchShape } from "./punch-curve";
 import { Spring, SpringVector } from "./springs";
 
@@ -133,18 +134,20 @@ export class BoxerAnimator {
       this.aimFor = punch.start;
       this.rig.worldToModel(punch.level === "body" ? input.opponentBody : input.opponentFace, this.aim);
       if (input.opponentBlocking) this.aim.z -= 0.12;
+      // An uppercut finds the point of the chin, under the face.
+      if (punch.style === "uppercut" && punch.level === "head") this.aim.y -= UPPERCUT_CHIN;
     }
     const side = hand === "left" ? 1 : -1;
     const out = this.pose.hands[hand];
     const toAim = this.tmp.copy(this.aim).sub(shoulder);
     const wrist = shoulder.clone().add(toAim.multiplyScalar(Math.max(0, 1 - GLOVE_REACH / Math.max(0.2, toAim.length()))));
-    const hook = punch.style === "hook";
+    const arc = ARCS[punch.style];
     out.target.lerp(wrist, shape.extend);
-    out.target.add(this.tmp.set(side * (hook ? 0.08 : 0.02), -0.03, -0.12).multiplyScalar(shape.cock));
-    if (hook) out.target.add(this.tmp.set(side * 0.28, 0.05, -0.05).multiplyScalar(shape.swing));
-    const pole = shoulder.clone().add(hook ? this.tmp.set(side * 0.9, 0.05, -0.15) : this.tmp.set(side * 0.35, -0.7, -0.1));
+    out.target.add(this.tmp.set(side * arc.cock[0], arc.cock[1], arc.cock[2]).multiplyScalar(shape.cock));
+    out.target.add(this.tmp.set(side * arc.swing[0], arc.swing[1], arc.swing[2]).multiplyScalar(shape.swing));
+    const pole = shoulder.clone().add(this.tmp.set(side * arc.pole[0], arc.pole[1], arc.pole[2]));
     out.pole.lerp(pole, Math.max(shape.extend, shape.cock));
-    this.pose.gloveRoll[hand] = hook ? 0.9 : 0.1;
+    this.pose.gloveRoll[hand] = arc.roll;
   }
 
   private placeFeet(input: AnimInput): void {
