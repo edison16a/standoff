@@ -76,7 +76,7 @@ After the celebration the game waits and the big screen replays the play, cut in
 3. **Flight**, chasing the ball from behind with its path traced in a glowing line into the catcher's hands, with the air yards and the hang time.
 4. **Run**, at full speed from behind the scorer as he runs and dodges into the end zone, with the yards after the catch and his top speed.
 
-A touchdown on the ground is just the run. Any button on a phone is a vote to skip, and it takes everyone in the game; a phone that drops stops counting. The music steps back under it, with the broadcast swoosh in and out.
+A touchdown on the ground is just the run. Any button on a phone is a vote to skip, and it takes everyone in the game; a phone that drops stops counting. The Skip button and the tally show only on the phones (and the keyboard player's panel), never on the big screen, so nothing covers the replay. The music steps back under it, with the broadcast swoosh in and out.
 
 `MatchDriver` keeps every step's still for the last 16 seconds and holds the match at the end of the celebration. `scriptReplay` reads the clip for the snap, the throw, the catch and the score, and `ReplayDirector` plays it on the animation clock, blending stills for the slow motion.
 

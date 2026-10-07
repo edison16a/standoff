@@ -1,5 +1,4 @@
 "use client";
-import { playerColor } from "@/games/kit/players";
 import type { ReplayCard } from "../replay/director";
 import { useFootballStore } from "../host-store";
 
@@ -43,35 +42,11 @@ function StatLines({ card }: { card: ReplayCard }) {
   }
 }
 
-/** Who can skip the replay and who has: any button on a phone is a vote, and it takes everyone. */
-function SkipBar() {
-  const skip = useFootballStore((s) => s.skip);
-  if (skip.length === 0) return null;
-  const agreed = skip.filter((s) => s.agreed).length;
-  return (
-    <div className="fb-skip" aria-label={`${agreed} of ${skip.length} want to skip`}>
-      <span className="fb-skip__title">
-        Skip: {agreed} of {skip.length}
-      </span>
-      <ul className="fb-skip__list">
-        {skip.map((s) => (
-          <li key={s.seat} className={`fb-skip__player ${s.agreed ? "fb-skip__player--in" : ""}`} style={{ "--player": playerColor(s.seat) } as React.CSSProperties}>
-            <span className="fb-skip__tick" aria-hidden>
-              {s.agreed ? "✓" : ""}
-            </span>
-            {s.name}
-          </li>
-        ))}
-      </ul>
-      <span className="fb-skip__hint">Press any button to skip</span>
-    </div>
-  );
-}
-
 /**
  * The touchdown replay's overlay: the REPLAY tag with a slow motion mark,
  * the scorer and the numbers for the stage on screen (the ball's speed
- * and spiral on the throw, its flight, the run), and who has voted to skip.
+ * and spiral on the throw, its flight, the run). Nothing about skipping
+ * shows here: that lives on the phones, so the replay plays clean.
  */
 export function ReplayOverlay() {
   const card = useFootballStore((s) => s.replayCard);
@@ -88,7 +63,6 @@ export function ReplayOverlay() {
         <p className="fb-replay-card__name">{card.scorer}</p>
         <StatLines card={card} />
       </section>
-      <SkipBar />
     </>
   );
 }

@@ -53,7 +53,6 @@ export function publish(c: PublishContext): void {
     board: c.driver ? scoreboard(c.driver.view) : null,
     callout: c.callout,
     replayCard: c.replay.card(c.nameOf),
-    skip: c.replay.active ? c.replay.votes.list().map((v) => ({ ...v, name: names.get(v.seat) ?? `Player ${v.seat}` })) : [],
     score: m ? [m.score[0], m.score[1]] : [0, 0],
     over: m && m.phase === "over" ? { winner: m.winner } : null,
     results: m && m.phase === "over" ? resultRows(m, names) : [],

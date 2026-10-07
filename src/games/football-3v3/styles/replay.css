@@ -1,6 +1,6 @@
 /*
   The touchdown replay's graphics: the REPLAY tag at the top, a stat
-  card on the left like a telestrator, and the skip tally at the right.
+  card on the left like a telestrator. Skipping shows only on the phones.
 */
 
 .fb-replay {
@@ -100,56 +100,4 @@
     opacity: 0;
     transform: translateX(-12px);
   }
-}
-
-.fb-skip {
-  position: absolute;
-  right: clamp(16px, 3vw, 48px);
-  bottom: calc(clamp(12px, 3vh, 32px) + clamp(40px, 6vh, 64px) + 14px);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: var(--fb-glass);
-}
-
-.fb-skip__title {
-  font-family: var(--fb-display);
-  font-size: 18px;
-}
-
-.fb-skip__list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.fb-skip__player {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border: 2px solid var(--player);
-  border-radius: 999px;
-  font-weight: 800;
-  opacity: 0.6;
-}
-
-.fb-skip__player--in {
-  background: var(--player);
-  opacity: 1;
-}
-
-.fb-skip__tick {
-  width: 1em;
-  text-align: center;
-}
-
-.fb-skip__hint {
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 13px;
 }
