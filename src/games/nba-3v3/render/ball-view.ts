@@ -5,6 +5,7 @@ import { BALL } from "../engine/tuning";
 import type { AthleteView } from "./athlete-view";
 import { ballSkin } from "./ball-skin";
 import { Squash } from "./ball-squash";
+import { ReleaseRoll } from "./release-roll";
 
 const left = new THREE.Vector3();
 const right = new THREE.Vector3();
@@ -30,6 +31,7 @@ export class BallView {
   readonly mesh = new THREE.Group();
   private readonly leather: THREE.Mesh;
   private readonly squash = new Squash();
+  private readonly roll = new ReleaseRoll();
   /** The ball's own turn, in the world, kept apart from the squash's frame. */
   private readonly turn = new THREE.Quaternion();
   private readonly offset = new THREE.Vector3();
@@ -50,18 +52,24 @@ export class BallView {
     this.fresh = true;
   }
 
-  /** `chest` is true while the holder has it in both hands at the chest, as in a check. */
-  update(ball: Ball, holder: AthleteView | null, chest: boolean, dt: number): void {
+  /**
+   * `chest` is true while the holder has it in both hands at the chest,
+   * as in a check. `shooter` is the last shot's shooter, whose fingers
+   * the ball rolls off just after a jumper's release (`release-roll.ts`).
+   */
+  update(ball: Ball, holder: AthleteView | null, chest: boolean, dt: number, shooter: AthleteView | null = null): void {
     const a = holder?.athlete;
     const carry = !!a && spinCarry(a);
     const hand = carry ? "carry" : chest && holder ? "held" : ball.hand;
     const target = new THREE.Vector3(ball.pos.x, ball.pos.y, ball.pos.z);
-    if (holder && a && (hand === "carry" || hand === "dribble")) {
+    // At the rim the engine's ball is the hands' ball: the drawn hands are put on it, not the other way round.
+    const atRim = a?.action.kind === "drive";
+    if (!atRim && holder && a && (hand === "carry" || hand === "dribble")) {
       // Pulled round through a spin, or riding the push of a dribble, the ball is under the dribbling palm.
       holder.hand(a.dribbleHand === 1 ? "R" : "L", palm);
       target.copy(palm);
       target.y -= BALL.radius * 0.85;
-    } else if (holder && hand === "held") {
+    } else if (!atRim && holder && hand === "held") {
       holder.hand("L", left);
       holder.hand("R", right);
       // Two hands close together hold it between them; as they part it slides into the right palm, never jumping across.
@@ -69,6 +77,7 @@ export class BallView {
       target.copy(left).lerp(right, 0.5 + 0.5 * apart * apart * (3 - 2 * apart));
       target.y += 0.02;
     }
+    this.roll.apply(ball, shooter, target, dt);
     const travel = Math.hypot(ball.vel.x, ball.vel.y, ball.vel.z) * dt * 1.5;
     if (this.fresh) this.offset.set(0, 0, 0);
     else if (hand !== this.lastHand || target.distanceTo(this.lastTarget) > JUMP + travel) {

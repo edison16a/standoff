@@ -86,10 +86,15 @@ export const SHOT = {
   /** Where the green window sits along the meter, 0 to 1. */
   greenAt: 0.8,
   /** Half the green window in milliseconds, plus a bit more per shooting point. */
-  greenBase: 46,
-  greenPerShooting: 5,
+  greenBase: 40,
+  greenPerShooting: 4.4,
+  /** The gold window is this share of the green, centred in it, and at least this many ms each side. */
+  goldShare: 0.2,
+  goldMinMs: 11,
   /** A good release is this many green widths from the centre. */
   goodSpread: 2.3,
+  /** A good release from three keeps this share of its chance, so threes lean on the green as in NBA 2K. */
+  goodThree: 0.72,
   /** Holding past a full meter throws the shot anyway, late. */
   autoReleaseAt: 1.18,
   /** When the shooter leaves the floor, along the meter. */
@@ -142,6 +147,8 @@ export const FREE_THROW = {
   /** Two bounces at the line to settle before each shot. */
   bounces: 1,
   humanWait: 8,
+  /** A set shot at the line waits for the thumb. Only a hold this long, in ms, lets it go by itself. */
+  maxHoldMs: 5000,
   /** From the first shot leaving the hand to the ball going back to the shooter. */
   resultPause: 1.1,
   /** Where the shooter stands: just behind the free throw line, at the top of the key. */

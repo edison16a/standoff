@@ -2,6 +2,9 @@ import type { DunkStyle } from "../roster";
 import type { FoulKind } from "./foul-call";
 import type { Grade, Outcome, ShotKind } from "./shot-model";
 import type { DribbleMove, TeamId } from "./types";
+import type { BlockHit, BlockPreset } from "./blocks/hit";
+import type { ShakeReact } from "./shake";
+import type { ShotPreset } from "./shot-outcome/presets";
 import type { V3 } from "./vec";
 
 /**
@@ -15,7 +18,7 @@ export type MatchEvent =
   | { type: "squeak"; id: number }
   | { type: "bump"; a: number; b: number; power: number }
   | { type: "gather"; id: number; kind: ShotKind }
-  | { type: "shot"; id: number; kind: ShotKind; three: boolean; grade: Grade; chance: number; outcome: Outcome; made: boolean; contest: number }
+  | { type: "shot"; id: number; kind: ShotKind; three: boolean; grade: Grade; chance: number; outcome: Outcome; preset: ShotPreset; made: boolean; contest: number }
   | { type: "takeoff"; id: number; dunk: boolean }
   | { type: "dunk"; id: number; style: DunkStyle; power: number }
   | { type: "land"; id: number; hard: boolean }
@@ -25,8 +28,8 @@ export type MatchEvent =
   | { type: "floor"; power: number; x: number; z: number }
   | { type: "score"; team: TeamId; points: 1 | 2 | 3; id: number; kind: ShotKind; outcome: Outcome; assist: number | null; streak: number; dunk: DunkStyle | null }
   | { type: "move"; id: number; move: DribbleMove }
-  /** A dribble move beat its defender: `hard` sends them stumbling. */
-  | { type: "shake"; id: number; victim: number; hard: boolean }
+  /** A dribble move beat its defender: `hard` sends them stumbling, and `react` is how he loses it. */
+  | { type: "shake"; id: number; victim: number; hard: boolean; react: ShakeReact }
   /** A dribble move went wrong and the ball got away, knocked by `by` if a defender was on top. */
   | { type: "fumble"; id: number; by: number | null }
   /** The whistle: a foul on `id` against `victim`, a reach in or contact on a shot. */
@@ -37,8 +40,8 @@ export type MatchEvent =
   /** A free throw is ready to shoot: shot `n` of `of`. */
   | { type: "freeThrow"; id: number; n: number; of: number }
   | { type: "miss"; id: number }
-  /** A shot blocked: swatted away, or with `tip` only got a fingertip on; `at` is where the hand met the ball. */
-  | { type: "block"; id: number; victim: number; tip: boolean; at: V3 }
+  /** A shot blocked: `hit` is what the hand did to it (a `tip` is only a fingertip), `preset` the block played, `at` where the hand met the ball. */
+  | { type: "block"; id: number; victim: number; tip: boolean; at: V3; hit: BlockHit; preset: BlockPreset }
   /** A fingertip on a pass that knocks it loose. */
   | { type: "tip"; id: number; at: V3 }
   | { type: "steal"; id: number; victim: number }

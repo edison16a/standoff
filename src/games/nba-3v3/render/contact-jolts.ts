@@ -4,7 +4,7 @@ import type { AthleteView } from "./athlete-view";
 
 /** Players who collide hard are each jolted away from the other, as hard as the hit; a hand on the ball in the air reaches for it. */
 export function joltOnContact(event: MatchEvent, m: Match, views: readonly AthleteView[]): void {
-  if (event.type === "block") views[event.id]?.touched({ at: event.at, tip: event.tip }, m.ball.vel);
+  if (event.type === "block") views[event.id]?.touched({ at: event.at, tip: event.tip, hit: event.hit }, m.ball.vel);
   if (event.type === "tip") views[event.id]?.touched({ at: event.at, tip: true }, m.ball.vel);
   if (event.type !== "bump") return;
   const a = m.athletes[event.a];

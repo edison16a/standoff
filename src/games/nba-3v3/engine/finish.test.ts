@@ -33,13 +33,13 @@ describe("finishing at the rim", () => {
     if (act.layup === "reverse") expect(Math.sign(act.to.x - RIM.x)).toBe(-1);
   });
 
-  it("lays it up through a defender who is in the way, and says so with a bump", () => {
+  it("lays it up round a defender who is in the way, and says so with a bump", () => {
     const m = setup(0, 3.4, { x: 0, z: 2.6 }, "shooter");
     m.athletes[0]!.vz = -4;
     m.press(0, "shoot");
     const act = m.athletes[0]!.action;
     expect(act.kind).toBe("drive");
-    if (act.kind === "drive" && !act.dunk) expect(act.layup).toBe("contact");
+    if (act.kind === "drive") expect(act.dunk).toBe(false);
     expect(m.events.some((e) => e.type === "bump" || e.type === "knockdown")).toBe(true);
   });
 
@@ -53,7 +53,7 @@ describe("finishing at the rim", () => {
 
   it("hangs on the rim with the body dropping under the hands, then lets go", () => {
     const m = setup(0, 3.2, null, "lockdown");
-    m.forcedDunk = "rimhang";
+    m.forcedFinish = { dunk: "rimhang" };
     m.athletes[0]!.vz = -4;
     m.press(0, "shoot");
     const a = m.athletes[0]!;

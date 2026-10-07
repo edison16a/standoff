@@ -44,7 +44,8 @@ export function steerDefence(scene: DefenceScene, m: Match, t: number, once: (ke
       m.forcedBlock = true;
       m.press(SHOOTER, "shoot");
     }
-    if (t > 0.4 + GREEN_MS / 1000 && once("release")) m.release(SHOOTER, GREEN_MS);
+    // Green but short of gold, which no hand can touch.
+    if (t > 0.4 + (GREEN_MS + 30) / 1000 && once("release")) m.release(SHOOTER, GREEN_MS + 30);
     if (t > 0.62 && once("block")) m.press(HOLLOWAY, "defend");
     return;
   }

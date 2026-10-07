@@ -1,12 +1,12 @@
 import type { BuildSpec } from "../../builds";
 import type { Athlete } from "../../engine/types";
-import { blockPose, landPose, passPose, shootPose, stealPose } from "./actions";
+import { landPose, passPose, shootPose, stealPose } from "./actions";
+import { blockPose } from "./block-poses";
 import type { AthleteScene } from "./base";
 import { celebratePose, dejectedPose } from "./celebrations";
-import { dunkPose, dunkSpin } from "./dunks";
 import { floaterPose } from "./floater-pose";
 import { gesturePose } from "./gestures";
-import { layupPose } from "./layups";
+import { finishPose } from "./finish/finish-pose";
 import { setShotPose } from "./line";
 import { movePose } from "./moves";
 import { blend, type Pose } from "./pose";
@@ -48,22 +48,22 @@ export function actionPose(a: Athlete, c: BuildSpec, s: AthleteScene, base: Pose
       if (act.float) return { pose: floaterPose(act.t, m.releasedAt, base), rate: 34 };
       return { pose: act.free ? setShotPose(act.t, m.releasedAt, base) : shootPose(act.t, m.releasedAt, base, act.step !== null), rate: 34 };
     case "drive": {
-      const timing = { takeoff: act.takeoff, finish: act.finish, land: act.land, rimHang: act.rimHang };
-      const style = act.style ?? c.dunk;
-      const pose = act.dunk ? dunkPose(style, act.t, timing, base) : layupPose(act.layup ?? "finger", act.t, timing, base);
-      pose.spin = act.dunk ? dunkSpin(style, act.t, timing) : 0;
+      // The preset's own footwork and shape; a turn in the air is the engine's facing, so no extra spin.
+      const pose = finishPose(act, base);
+      pose.spin = 0;
       return { pose, rate: 30 };
     }
     case "pass":
       return { pose: passPose(act.t, base), rate: 30 };
     case "block":
-      return { pose: blockPose(act.t, act.gather, act.air, base), rate: 30 };
+      // A help leap leans the way he is going: his speed to his left, in his own frame.
+      return { pose: blockPose(act, base, a.vx * Math.cos(a.yaw) - a.vz * Math.sin(a.yaw)), rate: 30 };
     case "steal":
       return { pose: stealPose(act.t, base), rate: 30 };
     case "move":
       return { pose: movePose(act, base), rate: 26 };
     case "stumble":
-      return { pose: stumblePose(act.t, act.dur, base, act.fall, m.shove), rate: act.fall ? 18 : 22 };
+      return { pose: stumblePose(act, base, m.shove), rate: act.fall ? 18 : 22 };
     case "celebrate": {
       // Into the celebration and out of it again smoothly, back to the walk to the check.
       if (s.holding) return { pose: base, rate: 16 };

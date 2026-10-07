@@ -22,6 +22,7 @@ export const MOVES: Record<DribbleMove, MoveSpec> = {
   spin: { dur: 0.56, at: 0.3 },
   hesitation: { dur: 0.5, at: 0.3 },
   behindBack: { dur: 0.38, at: 0.18 },
+  betweenLegs: { dur: 0.42, at: 0.2 },
 };
 
 /** A short breather after each move before the next. */
@@ -43,8 +44,8 @@ export function pressDribble(m: Match, a: Athlete, aim: V2 | null): void {
   const spec = MOVES[choice.move];
   a.moveHeat += 1;
   a.moveCd = spec.dur + COOLDOWN;
-  // Crossovers and behind the back change hands on the next push down.
-  if (choice.move === "crossover" || choice.move === "behindBack") {
+  // Crossovers, behind the back and between the legs change hands on the next push down.
+  if (choice.move === "crossover" || choice.move === "behindBack" || choice.move === "betweenLegs") {
     switchHands(a, choice.side);
     a.crossCd = spec.dur + 0.4;
   }
@@ -83,6 +84,9 @@ function wanted(act: Move, a: Athlete, f: V2, r: V2): { v: V2; rate: number } {
       return t < 0.26 ? { v: mix(0.8, 0), rate: 9 } : { v: mix(top * 1.05, 0), rate: 16 };
     case "behindBack":
       return { v: mix(Math.max(1.5, fwd), 3 * s * bump(t, 0.04, 0.28)), rate: 22 };
+    case "betweenLegs":
+      // Rock back off the man as the ball goes through, then push out to the new hand's side.
+      return { v: mix(-2.2 * bump(t, 0.02, 0.24) + 1.4 * bump(t, 0.24, 0.42), 2.4 * s * bump(t, 0.12, 0.42)), rate: 22 };
   }
 }
 

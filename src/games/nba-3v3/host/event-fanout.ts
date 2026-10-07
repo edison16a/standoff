@@ -1,6 +1,7 @@
 import type { SoundDirector } from "../audio/sound-director";
 import type { MatchEvent } from "../engine/events";
 import type { Match } from "../engine/match";
+import { isGreen } from "../engine/shot-model";
 import { BannerBoard, REPLAY_SOUNDS, slowForMoment } from "./banners";
 import type { Buzzer } from "./buzzer";
 import { banner } from "./callouts";
@@ -49,7 +50,7 @@ export class EventFanout {
     this.effects(event);
     buzzer.onEvent(event, m, driver.athleteBySeat);
     slowForMoment(event, driver);
-    if (event.type === "shot" && event.grade === "perfect" && m.athletes[event.id]?.seat !== null) audio.green();
+    if (event.type === "shot" && isGreen(event.grade) && driver.pilotOf(event.id) !== null) audio.green(event.grade === "gold");
     const shown = banner(event, m, nameOf, this.banners.count);
     if (shown) this.banners.show(shown);
     if (PROMPT.has(event.type)) refresh();

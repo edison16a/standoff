@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fingertip } from "./ball-touch";
+import { fingertip } from "./blocks/hit";
 
 describe("a hand on a shot", () => {
   const shoulder = { x: 0, y: 2.4, z: 0, reach: 0.8 };

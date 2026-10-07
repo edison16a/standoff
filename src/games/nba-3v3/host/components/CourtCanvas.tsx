@@ -27,6 +27,8 @@ export default function CourtCanvas() {
     const tags = new Tags(layer);
     // People wear their own name on their backs; computer players wear their build's.
     renderer.jerseyName = (a) => (a.seat !== null ? session.nameOf(a.id) || null : null);
+    // A ring in the phone's colour under whoever each phone moves now, which slides over on a switch.
+    renderer.pilots = () => [...(session.driver?.athleteBySeat ?? [])].map(([seat, id]) => ({ seat, id, colour: playerColor(seat) }));
     const fit = () => renderer.resize(canvas.clientWidth, canvas.clientHeight, window.devicePixelRatio || 1);
     fit();
     const observer = new ResizeObserver(fit);
@@ -54,8 +56,8 @@ export default function CourtCanvas() {
       // The ceremony has the winners' names over it instead of tags.
       if (session.driver && !replayCam && !session.driver.ceremony) {
         tags.update(match, renderer, (id) => {
-          const a = match.athletes[id]!;
-          return { name: session.nameOf(id), colour: a.seat !== null ? playerColor(a.seat) : null };
+          const pilot = session.driver?.pilotOf(id) ?? null;
+          return { name: session.nameOf(id), colour: pilot !== null ? playerColor(pilot) : null };
         }, canvas.clientWidth, canvas.clientHeight, now);
       } else tags.hide();
       frame = requestAnimationFrame(loop);

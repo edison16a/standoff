@@ -25,6 +25,17 @@ export const BODY = {
   refMass: 85,
   /** Carrying the ball costs a little of the push. */
   ballPower: 0.86,
+  /**
+   * Small players are quicker: top speed rises this share per metre a
+   * player stands under `sizeRef`, and falls the same per metre over it,
+   * within the clamp. Their legs get the square of it in power, so they
+   * reach the higher speed just as soon, and half of it again in grip,
+   * so they cut sharper too.
+   */
+  sizeRef: 2.0,
+  sizePerMetre: 0.5,
+  sizeMin: 0.92,
+  sizeMax: 1.1,
 } as const;
 
 /** Bodies meeting: how much they bounce off each other and rub as they slide past. */

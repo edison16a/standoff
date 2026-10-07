@@ -1,4 +1,4 @@
-import { SHOT } from "./tuning";
+import { COURT, SHOT } from "./tuning";
 import { clamp } from "./vec";
 
 /**
@@ -9,7 +9,13 @@ import { clamp } from "./vec";
  * went in or out with the outcomes below.
  */
 
-export type Grade = "perfect" | "good" | "early" | "late";
+/** Gold is the small heart of the green: it always swishes, even with a hand in the face. */
+export type Grade = "gold" | "perfect" | "good" | "early" | "late";
+
+/** A green release, gold included. */
+export function isGreen(grade: Grade): boolean {
+  return grade === "gold" || grade === "perfect";
+}
 /** A free throw is a set shot from the line, worth one. */
 export type ShotKind = "jumper" | "layup" | "dunk" | "free";
 export const MAKES = ["swish", "bank", "roll", "bounce"] as const;
@@ -28,6 +34,11 @@ export function greenHalfMs(shooting: number, onFire = false, free = false): num
   return base * (onFire ? 1.5 : 1) * (free ? SHOT.freeGreen : 1);
 }
 
+/** Half the gold window inside the green, in milliseconds: a small share of it, but never under a frame and a half. */
+export function goldHalfMs(shooting: number, onFire = false, free = false): number {
+  return Math.max(SHOT.goldMinMs, greenHalfMs(shooting, onFire, free) * SHOT.goldShare);
+}
+
 /** When the green window is centred, in milliseconds after the press. */
 export const GREEN_MS = SHOT.meterMs * SHOT.greenAt;
 
@@ -35,6 +46,7 @@ export const GREEN_MS = SHOT.meterMs * SHOT.greenAt;
 export function gradeRelease(heldMs: number, shooting: number, onFire = false, free = false): { grade: Grade; offsetMs: number } {
   const offsetMs = heldMs - GREEN_MS;
   const half = greenHalfMs(shooting, onFire, free);
+  if (Math.abs(offsetMs) <= goldHalfMs(shooting, onFire, free)) return { grade: "gold", offsetMs };
   if (Math.abs(offsetMs) <= half) return { grade: "perfect", offsetMs };
   if (Math.abs(offsetMs) <= half * SHOT.goodSpread) return { grade: "good", offsetMs };
   return { grade: offsetMs < 0 ? "early" : "late", offsetMs };
@@ -61,10 +73,14 @@ export function makeChance(c: ShotContext): number {
   if (c.kind === "layup") return clamp(0.8 + c.strengthEdge * 0.03 + c.shooting * 0.01 - c.contest * 0.45, 0.2, 0.97);
   // Released high and early, a floater beats the contest more than a jumper but is never easy.
   if (c.floater) return clamp(0.36 + c.shooting * 0.035 + (c.onFire ? 0.1 : 0) - c.contest * 0.2, 0.15, 0.85);
+  // Gold is a sure swish, guarded or not.
+  if (c.grade === "gold") return 1;
   let chance: number;
   if (c.grade === "perfect") chance = (c.onFire ? 0.99 : 0.96) - c.contest * 0.28;
   else if (c.grade === "good") chance = (0.42 + c.shooting * 0.035 + (c.onFire ? 0.15 : 0)) * (1 - c.contest * 0.5);
   else chance = (0.08 + c.shooting * 0.012) * (1 - c.contest * 0.4);
+  // A three needs the green more than a two does: just off it, the long ball falls short or long more often.
+  if (c.grade === "good" && c.kind === "jumper" && c.distance > COURT.arcRadius) chance *= SHOT.goodThree;
   // Deep heaves fall away fast, short jumpers are a touch easier.
   // Nobody guards a free throw, and the line is short.
   if (c.kind === "free") return clamp(chance + 0.04, 0.02, 0.99);

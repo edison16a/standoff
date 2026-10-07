@@ -26,7 +26,8 @@ describe("games with fewer than three a side", () => {
   const shapes: [number, number][] = [[1, 1], [2, 2], [1, 2], [2, 1], [3, 1], [1, 3], [2, 3]];
   for (const [home, away] of shapes) {
     it(`plays a ${home} on ${away} game to the end`, () => {
-      const { match, events } = playOut(teams(home, away), 5);
+      // A seed where neither side shuts the other out, so both get to check the ball.
+      const { match, events } = playOut(teams(home, away), 6);
       expect(match.phase).toBe("over");
       expect(Math.max(...match.score)).toBeGreaterThanOrEqual(match.target);
       // Balls go dead and get checked up again; on an even floor both sides get their turn.

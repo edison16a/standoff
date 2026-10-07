@@ -4,11 +4,12 @@ import { pressJump, updateBlock, updateSteal } from "./defend";
 import { startDrive, updateDrive } from "./drive";
 import type { Match } from "./match";
 import { canShootOutOf, updateMove } from "./moves";
+import { flowShot, queueShot, releaseQueued } from "./move-flow";
 import { choosePassTarget, throwPass } from "./passing";
 import { floaterFits, startFloater, updateFloater } from "./floater";
 import { JUMPER, releaseJumper, startJumper } from "./shooting";
 import { hopHeight, plantStepback, STEPBACK } from "./stepback";
-import { BOARD, JUMP, SHOT } from "./tuning";
+import { BOARD, FREE_THROW, JUMP, SHOT } from "./tuning";
 import type { Athlete } from "./types";
 import { dir2, type V2 } from "./vec";
 
@@ -20,8 +21,9 @@ export { pressDefend } from "./defend";
  */
 export function pressShoot(m: Match, a: Athlete): void {
   if (m.ball.holder !== a.id) return;
-  // Late in a dribble move the shot comes straight out of it, as off a stepback.
+  // Late in a dribble move the shot comes straight out of it, as off a stepback; earlier it waits for that moment.
   if (a.action.kind === "move" && canShootOutOf(a.action)) a.action = { kind: "none" };
+  else if (a.action.kind === "move") return queueShot(m, a.action);
   if (a.action.kind !== "none" && a.action.kind !== "pass") return;
   if (m.needsClear) {
     m.emit({ type: "mustClear", id: a.id });
@@ -42,6 +44,7 @@ export function pressShoot(m: Match, a: Athlete): void {
 
 export function releaseShot(m: Match, a: Athlete, heldMs?: number): void {
   if (a.action.kind === "shoot") releaseJumper(m, a, heldMs);
+  else if (a.action.kind === "move") releaseQueued(a.action, heldMs);
 }
 
 /** Pass with the ball, or ask for it when a teammate has it. */
@@ -54,7 +57,7 @@ export function pressPass(m: Match, a: Athlete, aim: V2 | null): void {
     return;
   }
   // On defence Pass is Block, even while the attackers' pass is in the air.
-  if (m.defending(a)) return pressJump(a);
+  if (m.defending(a)) return pressJump(m, a);
   if (holder && holder.team === a.team && m.time - a.calledAt > 0.8) {
     a.calledAt = m.time;
     m.emit({ type: "call", id: a.id });
@@ -77,7 +80,9 @@ export function updateAction(m: Match, a: Athlete, dt: number): void {
       // A free throw is a set shot: the knees dip and the feet stay down. A stepback hops back first.
       a.y = !act.free && s > 0 && s < 1 ? JUMPER.peak * 4 * s * (1 - s) : act.step ? hopHeight(act.t) : 0;
       if (act.step && before < STEPBACK.air && act.t >= STEPBACK.air) plantStepback(a);
-      if (!act.released && act.t * 1000 >= SHOT.meterMs * SHOT.autoReleaseAt) releaseJumper(m, a);
+      // A jumper in the air must come out; a free throw is a set shot and waits as long as Shoot is held.
+      const limitMs = act.free ? FREE_THROW.maxHoldMs : SHOT.meterMs * SHOT.autoReleaseAt;
+      if (!act.released && act.t * 1000 >= limitMs) releaseJumper(m, a);
       const landAt = JUMPER.takeoff + JUMPER.air;
       if (!act.free && before < landAt && act.t >= landAt) {
         a.recover = JUMP.shotRecover;
@@ -93,7 +98,8 @@ export function updateAction(m: Match, a: Athlete, dt: number): void {
     case "steal":
       return updateSteal(m, a, dt);
     case "move":
-      return updateMove(m, a, dt);
+      updateMove(m, a, dt);
+      return flowShot(m, a, act, pressShoot);
     case "pass":
       act.t += dt;
       if (act.t > 0.3) a.action = { kind: "none" };

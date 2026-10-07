@@ -2,6 +2,12 @@ import type { BuildId } from "../builds";
 import type { DunkStyle } from "../roster";
 import type { ShotTrack } from "./physics/shot-watch";
 import type { Grade, Outcome, ShotKind } from "./shot-model";
+import type { ShotFlight } from "./shot-outcome/flight";
+import type { BlockPlan } from "./blocks/plan";
+import type { BlockJump } from "./blocks/style";
+import type { DribbleStyle } from "./dribble-style";
+import type { ShakeReact } from "./shake";
+import type { ShotPreset } from "./shot-outcome/presets";
 import type { V2, V3 } from "./vec";
 
 export type TeamId = 0 | 1;
@@ -11,14 +17,16 @@ export const BUTTONS = ["shoot", "pass", "defend"] as const;
 export type Button = (typeof BUTTONS)[number];
 
 /** The dribble moves, picked by where the stick points against the way to the basket. */
-export const DRIBBLE_MOVES = ["stepback", "crossover", "spin", "hesitation", "behindBack"] as const;
+export const DRIBBLE_MOVES = ["stepback", "crossover", "spin", "hesitation", "behindBack", "betweenLegs"] as const;
 export type DribbleMove = (typeof DRIBBLE_MOVES)[number];
 
 /**
- * How a layup is finished: off the fingers in front of the rim, a
- * reverse under it on the far side, or through a defender's body.
+ * The layups, each a hand made preset (see `finish/layups.ts`): a finger
+ * roll, a reverse, a euro step, an up and under, a scoop, a teardrop,
+ * high off the glass, off the wrong foot, a spin, a body shield and a
+ * power layup off a jump stop.
  */
-export const LAYUPS = ["finger", "reverse", "contact"] as const;
+export const LAYUPS = ["finger", "reverse", "euro", "upUnder", "scoop", "teardrop", "glass", "wrongFoot", "spin", "shield", "power"] as const;
 export type LayupKind = (typeof LAYUPS)[number];
 
 /** The small gestures after a big basket: patting down a smaller man, the sleep sign, the shush, the flex. */
@@ -43,26 +51,45 @@ export type Action =
    * A layup or a dunk. `takeoff`, `finish` (the ball leaves the hand or is
    * slammed) and `land` are times on `t`; a dunk hangs on the rim for
    * `rimHang` seconds after the slam, and `style` is the dunk thrown.
-   * `layup` is how a layup is finished, null for a dunk.
+   * `layup` is how a layup is finished, null for a dunk. `hand` is the
+   * finishing hand (1 right, -1 left) and `side` the way a sidestep or a
+   * spin goes. The ball rides the hands from `pick` (where it was when
+   * the gather began) to `release`, the hand at the rim (see
+   * `finish/ball-track.ts`). `hangY` is the body's height hanging on the rim.
    */
-  | { kind: "drive"; t: number; dunk: boolean; style: DunkStyle | null; layup: LayupKind | null; from: V2; to: V2; takeoff: number; finish: number; rimHang: number; land: number; peak: number; released: boolean }
+  | {
+      kind: "drive"; t: number; dunk: boolean; style: DunkStyle | null; layup: LayupKind | null; from: V2; to: V2;
+      takeoff: number; finish: number; rimHang: number; land: number; peak: number; released: boolean;
+      hand: 1 | -1; side: 1 | -1; pick: V3; release: V3; hangY: number; baseYaw: number;
+    }
   | { kind: "pass"; t: number }
-  /** A jump with the arms up: a crouch for `gather` seconds, then `air` seconds off the floor. */
-  | { kind: "block"; t: number; peak: number; gather: number; air: number }
+  /**
+   * A jump with the arms up: a crouch for `gather` seconds, then `air`
+   * seconds off the floor. `style` is how he goes up (see
+   * `blocks/style.ts`) and `plan` the touch or near miss on the shot in
+   * the air, decided ahead (see `blocks/plan.ts`).
+   */
+  | { kind: "block"; t: number; peak: number; gather: number; air: number; style: BlockJump; plan?: BlockPlan }
   /**
    * A dribble move lasting `dur`. `side` is the hand the ball ends in or
    * the way the move goes, `dir` the way the move carries the player, and
    * `resolved` is set once it has been checked against the defender.
+   * `queued` holds a Shoot pressed too early, to flow into the jumper
+   * as soon as the move allows (see `move-flow.ts`).
    */
-  | { kind: "move"; t: number; move: DribbleMove; dur: number; side: 1 | -1; dir: V2; resolved: boolean }
+  | {
+      kind: "move"; t: number; move: DribbleMove; dur: number; side: 1 | -1; dir: V2; resolved: boolean;
+      queued?: { at: number; released: boolean; heldMs: number | undefined };
+    }
   /** A swipe at the ball of `victim`, the defender's `attempt`th on them this possession. */
   | { kind: "steal"; t: number; resolved: boolean; victim: number; attempt: number }
   /**
-   * Off balance for `dur`: rocked by a dribble move (no `fall`), knocked
+   * Off balance for `dur`: beaten by a dribble move (`react` says how,
+   * see `shake.ts`, and `turn` which way a spin twists him), knocked
    * down on his backside taking a charge or a bigger man's drive
    * (`back`), or lurching on over the man he ran into (`forward`).
    */
-  | { kind: "stumble"; t: number; dur: number; fall?: "back" | "forward" }
+  | { kind: "stumble"; t: number; dur: number; fall?: "back" | "forward"; react?: ShakeReact; turn?: 1 | -1 }
   /** After a make: a gesture for a big basket, or the player's own celebration when `gesture` is null. */
   | { kind: "celebrate"; t: number; dur: number; gesture: Gesture | null };
 
@@ -130,6 +157,8 @@ export interface Athlete {
   dribble: number;
   /** The dribbling hand, right (1) or left (-1). */
   dribbleHand: 1 | -1;
+  /** The blend of dribble presets the handler is in now (see `dribble-style.ts`). */
+  dribbleStyle: DribbleStyle;
   /** Where the ball is dribbled across the body, -1 left to 1 right, easing over during a crossover. */
   dribbleSide: number;
   crossCd: number;
@@ -153,6 +182,8 @@ export interface ShotInfo {
   dunk: DunkStyle | null;
   grade: Grade;
   outcome: Outcome;
+  /** The ending picked at release; a block or a scripted film can still change what really happens. */
+  preset: ShotPreset;
   made: boolean;
   /** Set once the points are on the board, so a shot never counts twice. */
   counted: boolean;
@@ -163,8 +194,12 @@ export interface ShotInfo {
   distance: number;
   /** What the ball has touched so far, read live off the physics. */
   track: ShotTrack;
+  /** The flight the ending was planned on, with any roll round the ring. */
+  flight: ShotFlight;
   /** Defenders who already had their one chance to get a hand on it. */
   rolled: number[];
+  /** 0 to 1: how much of a defender's chance to block it the finish took away (a scoop, a reverse). */
+  evade: number;
 }
 
 export type BallMode = "held" | "flight" | "loose";

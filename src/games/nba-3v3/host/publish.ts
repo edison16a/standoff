@@ -3,7 +3,7 @@ import type { Match } from "../engine/match";
 import type { Athlete } from "../engine/types";
 import { canSteal, stealInReach } from "../engine/defend";
 import { guardStatus } from "../engine/guard";
-import { greenHalfMs, GREEN_MS } from "../engine/shot-model";
+import { goldHalfMs, greenHalfMs, GREEN_MS } from "../engine/shot-model";
 import { RULES, SHOT } from "../engine/tuning";
 import type { CourtState, Phase, PhoneState } from "../protocol";
 import { BUILDS, cpuName } from "../builds";
@@ -34,7 +34,7 @@ export function phaseOf(driver: MatchDriver | null): Phase {
 export function replayVotes(driver: MatchDriver | null, players: readonly Player[]): { seat: number; name: string; done: boolean }[] {
   const r = driver?.replays.replay;
   if (!r || !driver) return [];
-  return r.voters.map((seat) => ({ seat, name: nameFor(driver.match, driver.athleteBySeat.get(seat) ?? -1, players) || "Player", done: r.skipped.has(seat) }));
+  return r.voters.map((seat) => ({ seat, name: nameFor(driver.match, driver.ownerOf(seat) ?? -1, players) || "Player", done: r.skipped.has(seat) }));
 }
 
 /** The name a player goes by on screen: their own for people, CPU and the build for computer players, like CPU Shooter. */
@@ -49,6 +49,11 @@ export function nameFor(m: Match, id: number, players: readonly Player[]): strin
 export function freeThrowText(m: Match): string | null {
   const ft = m.phase === "freeThrow" ? m.freeThrows : null;
   return ft ? `Free throw ${ft.shot} of ${ft.shots}` : null;
+}
+
+/** The shot meter's windows for a shooter, in milliseconds. */
+function meterOf(shooting: number, onFire: boolean, free: boolean): CourtState["meter"] {
+  return { fullMs: SHOT.meterMs, greenMs: GREEN_MS, halfMs: greenHalfMs(shooting, onFire, free), goldMs: goldHalfMs(shooting, onFire, free) };
 }
 
 /** What one phone's controller shows for its player. */
@@ -72,7 +77,7 @@ export function courtState(m: Match, id: number, players: readonly Player[]): Co
     guard: guardStatus(m, a),
     freeThrow: ft ? { mine, n: ft.shot, of: ft.shots, ready: mine && ft.stage === "set" } : null,
     // At the line the green band is wider: a set shot with nobody in the face.
-    meter: { fullMs: SHOT.meterMs, greenMs: GREEN_MS, halfMs: greenHalfMs(BUILDS[a.build].stats.shooting, a.onFire, mine) },
+    meter: meterOf(BUILDS[a.build].stats.shooting, a.onFire, mine),
     onFire: a.onFire,
     // The whole break counts, from the basket to the check, so the phone never shows a loose ball meanwhile.
     checking: m.phase === "dead" || m.phase === "check",
@@ -115,6 +120,8 @@ export function publish(c: PublishContext): void {
     spots,
     bots: c.lobby.bots,
     level: c.lobby.level,
+    size: c.lobby.size,
+    bench: c.lobby.bench.map((seat) => ({ seat, name: c.players.find((p) => p.seat === seat)?.name ?? "Player" })),
     startBlock: c.lobby.startBlock(),
     score: m ? [m.score[0], m.score[1]] : [0, 0],
     shotClock: m ? Math.max(0, Math.ceil(m.shotClock)) : RULES.shotClock,
@@ -135,6 +142,9 @@ export function publish(c: PublishContext): void {
     const s = c.lobby.seats.get(seat)!;
     const id = c.driver?.athleteBySeat.get(seat);
     const athlete = m && id !== undefined ? m.athletes[id] : undefined;
+    // The box score line is the player they started as, even after switching to a teammate.
+    const ownId = c.driver?.ownerOf(seat);
+    const own = m && ownId !== undefined ? m.athletes[ownId] : undefined;
     const state: PhoneState = {
       kind: "state",
       phase: early ? "live" : phase,
@@ -146,7 +156,7 @@ export function publish(c: PublishContext): void {
       playing: !!athlete,
       court: m && athlete ? courtState(m, athlete.id, c.players) : null,
       replay: replay && athlete ? { voted: replay.skipped.has(seat), votes: votes.map(({ name, done }) => ({ name, done })) } : null,
-      result: m && athlete && m.phase === "over" && !early ? { won: m.winner === athlete.team, ...lineOf(athlete) } : null,
+      result: m && own && m.phase === "over" && !early ? { won: m.winner === own.team, ...lineOf(own) } : null,
     };
     c.phones.sendState(seat, state, c.nowMs);
   }

@@ -12,6 +12,7 @@ import { applyPose, approach, STAND, type Pose } from "./anim/pose";
 import { reachArm, type ArmChain } from "./arm-ik";
 import { BlockReach, type BlockTouch } from "./block-reach";
 import { DribbleHand } from "./dribble-hand";
+import { finishHands } from "./finish-hands";
 import type { AthleteMaterials } from "./materials/athlete-materials";
 import { buildAthlete, type AthleteModel } from "./models/athlete-model";
 import { Placement } from "./placement";
@@ -114,6 +115,8 @@ export class AthleteView {
     const active = !!ball && s.holding && !s.chest && (kind === "none" || kind === "move") && !palmHold(a) && (ball.hand === "dribble" || ball.hand === "free");
     this.dribbleHand.update(a, ball, active, dt);
     for (const k of ["L", "R"] as const) reachArm(this.arms[k], this.dribbleHand.target, PALM, POLE[k], this.dribbleHand.weight[k]);
+    // At the rim the hands are on the real ball, then on the ring.
+    finishHands(a, ball, this.arms, PALM);
     this.reachToBlock(a, s.flight ?? null, dt);
     // A pass on its way in: both hands reach out to either side of the ball, palms toward it.
     if (!ball || s.holding || ball.mode !== "flight" || s.receiving <= 0) return;
@@ -125,14 +128,18 @@ export class AthleteView {
     }
   }
 
-  /** Up for a block, the nearer hand goes to the ball in the air and through it on a touch. */
+  /** Up for a block, the hands strike to where the plan says the ball will be, and through it on a touch. */
   private reachToBlock(a: Athlete, ball: Ball | null, dt: number): void {
     const r = this.blockReach;
     const arm = this.arms[r.side];
     arm.shoulder.getWorldPosition(v);
     const d = this.model.dims;
     r.update(a, ball, v, d.upper + d.fore + 0.1, dt);
-    if (r.weight > 0.01) reachArm(this.arms[r.side], r.target, PALM, UP_POLE[r.side], r.weight);
+    if (r.weight <= 0.01) return;
+    reachArm(this.arms[r.side], r.target, PALM, UP_POLE[r.side], r.weight);
+    // Both hands up: the other palm goes beside the first.
+    const other = r.side === "L" ? "R" : "L";
+    if (r.two) reachArm(this.arms[other], r.second, PALM, UP_POLE[other], r.weight * 0.9);
   }
 
   /** Notes the start and end of each action and the landing after a jump, for the actions' timing. */

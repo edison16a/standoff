@@ -1,5 +1,7 @@
 import { airborne } from "./athlete";
 import { startBlock } from "./block";
+import { planBlock } from "./blocks/plan";
+import { jumpStyle } from "./blocks/style";
 import type { Match } from "./match";
 import { pressDribble } from "./moves";
 import { inStealRange, stealable, startSteal } from "./steal";
@@ -21,12 +23,18 @@ export function pressDefend(m: Match, a: Athlete, aim: V2 | null = null): void {
   if (holder === a) return pressDribble(m, a, aim);
   if (!ready(a)) return;
   if (canSteal(m, a) && holder) return startSteal(m, a, holder);
-  startBlock(a);
+  jump(m, a);
 }
 
 /** On defence Pass becomes Block: a jump with the arms up whenever it is wanted, Guard held or not. */
-export function pressJump(a: Athlete): void {
-  if (ready(a)) startBlock(a);
+export function pressJump(m: Match, a: Athlete): void {
+  if (ready(a)) jump(m, a);
+}
+
+/** Up he goes, the way the play calls for, with any shot already in the air planned against him. */
+function jump(m: Match, a: Athlete): void {
+  startBlock(a, jumpStyle(m, a));
+  planBlock(m, a);
 }
 
 function ready(a: Athlete): boolean {

@@ -108,9 +108,10 @@ export class SoundDirector {
     this.trophyUp = up;
   }
 
-  /** Called after the green of a perfect release, for the host's own chime. */
-  green(): void {
-    this.sfx.green();
+  /** Called after a green release, for the host's own chime; gold gets its own bigger one. */
+  green(gold = false): void {
+    if (gold) this.sfx.gold();
+    else this.sfx.green();
   }
 
   private onPlayPhase(to: PlayPhase): void {

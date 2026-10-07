@@ -2,6 +2,7 @@ import { STEP } from "../engine/tuning";
 import { CourtRenderer } from "../render/court-renderer";
 import type { Film } from "./dev";
 import { FILMED_FRAME, FilmClock } from "./film-clock";
+import { LabFilm } from "./lab";
 import { CeremonyFilm } from "./lab-ceremony";
 import { HIGHLIGHT_LINEUP, HighlightScript } from "./script";
 import { TrailerCams } from "./trailer-cams";
@@ -15,7 +16,10 @@ const CAPTAIN = 1;
 const SETTLE = 1.5;
 
 function makeFilm(kind: TrailerFilmKind): Film {
-  return kind === "ceremony" ? new CeremonyFilm(HIGHLIGHT_LINEUP, CAPTAIN) : new HighlightScript(0);
+  if (kind === "ceremony") return new CeremonyFilm(HIGHLIGHT_LINEUP, CAPTAIN);
+  // The lab scene plays the same six builds as the highlight.
+  if (kind === "chase") return new LabFilm("block-chase", null);
+  return new HighlightScript(0);
 }
 
 /**

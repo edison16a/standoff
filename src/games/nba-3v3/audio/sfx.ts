@@ -110,6 +110,18 @@ export class Sfx {
     tone(this.engine, ui, this.at + 0.1, { frequency: midi(96), decay: 0.4, peak: 0.08 });
   }
 
+  /**
+   * The gold release: a rising bell arpeggio over a warm fifth, then a
+   * high shimmer, longer and richer than the green's chime so the room
+   * hears it is the rare one.
+   */
+  gold(): void {
+    const ui = this.engine.bus("ui");
+    [79, 84, 88, 91, 96].forEach((n, i) => tone(this.engine, ui, this.at + i * 0.045, { type: "triangle", frequency: midi(n), decay: 0.5, peak: 0.22 }));
+    [67, 74].forEach((n) => tone(this.engine, this.wet, this.at, { frequency: midi(n), attack: 0.02, decay: 0.9, peak: 0.12 }));
+    [103, 108].forEach((n, i) => tone(this.engine, ui, this.at + 0.24 + i * 0.07, { frequency: midi(n), decay: 0.6, peak: 0.05 }));
+  }
+
   /** The referee's whistle for a dead ball: one firm blast (see `whistle.ts`). */
   whistle(): void {
     playWhistle(this.engine, this.out, this.wet, STOP_CALL);

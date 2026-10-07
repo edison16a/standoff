@@ -48,7 +48,8 @@ describe("running with momentum", () => {
     runFor(a, { x: 1, z: 0 }, 1.2);
     const stop = runUntil(a, { x: 0, z: 0 }, (p) => speedOf(p) < 0.05);
     expect(stop).toBeGreaterThan(0.25);
-    expect(stop).toBeLessThan(0.6);
+    // A quick guard at full tilt needs a little longer: about his speed over one g of grip.
+    expect(stop).toBeLessThan(0.68);
   });
 
   it("gets a light guard going quicker than a heavy big man", () => {

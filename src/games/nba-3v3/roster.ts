@@ -3,7 +3,16 @@
  * themselves live in `builds.ts`.
  */
 
-export const DUNK_STYLES = ["scoop", "tomahawk", "reverse", "hammer", "rimhang", "flush", "cockback", "clutch", "spin360", "windmill"] as const;
+/**
+ * Every dunk the game can throw. The first ten are also the builds'
+ * signatures; the rest come from the play: a two hand flush alone at the
+ * rim, a poster over a man, a putback off the board, an alley oop on the
+ * catch, and a two hand dunk off a jump stop.
+ */
+export const DUNK_STYLES = [
+  "scoop", "tomahawk", "reverse", "hammer", "rimhang", "flush", "cockback", "clutch", "spin360", "windmill",
+  "twoHand", "poster", "putback", "alley", "jumpStop",
+] as const;
 export type DunkStyle = (typeof DUNK_STYLES)[number];
 
 export type HairStyle = "buzz" | "short" | "waves" | "curly" | "swept" | "twists" | "bald";

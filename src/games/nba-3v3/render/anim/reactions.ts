@@ -1,40 +1,25 @@
-import { keyed, mirrorPatch, type Pose, type PosePatch } from "./pose";
+import type { Action } from "../../engine/types";
+import { keyed, type Pose, type PosePatch } from "./pose";
+import { shakePose } from "./shake-poses";
 
 type Keys = (readonly [number, PosePatch])[];
+type Stumble = Extract<Action, { kind: "stumble" }>;
 
 /**
  * Bodies that lose their balance, on the engine's stumble clock:
  *
- * * Rocked by a dribble move: the weight thrown the way he bit, the
- *   near leg buckling under him and that hand dropping to the floor,
- *   the other arm flung up, then the feet come back under him.
+ * * Beaten by a dribble move: the reaction made for it (bite, freeze,
+ *   slip, ankles or turned, see `shake-poses.ts`).
  * * Down on his backside taking a charge, or run over by a bigger man:
  *   snapped back at the hit, sat down with the hands behind to break the
  *   fall, a beat on the floor, and up again.
  * * Lurching on over the man he ran into: the chest pitched forward,
  *   a long catch step and the arms out.
  */
-export function stumblePose(t: number, dur: number, base: Pose, fall: "back" | "forward" | undefined, shove: number): Pose {
-  if (fall === "back") return keyed(fallBack(dur), t, base);
-  if (fall === "forward") return keyed(lurch(dur), t, base);
-  const keys = rocked(dur, dur > 0.8);
-  // Built for a shove to his left; mirrored for one to his right.
-  return keyed(shove >= 0 ? keys : keys.map(([at, p]) => [at, mirrorPatch(p)] as const), t, base);
-}
-
-function rocked(dur: number, hard: boolean): Keys {
-  const deep = hard ? 1 : 0.6;
-  // A side lunge: the left leg folds under the weight with the foot out wide, the right one shoots out straight to brace.
-  return [
-    [0, { torsoZ: -0.2, torsoX: 0.25, legLSpread: 0.25, kneeL: 0.8, legLLift: 0.45, legRSpread: 0.3, kneeR: 0.3, legRLift: 0.1 }],
-    [dur * 0.25, {
-      torsoZ: -0.55 * deep, torsoX: 0.45, torsoY: 0.2, neckY: -0.45, neckZ: 0.25, pelvisZ: -0.15 * deep,
-      legLSpread: 0.35, legLLift: 0.9 * deep, kneeL: 1.55 * deep, footL: 0.15, legRSpread: 0.65 * deep, legRLift: -0.05, kneeR: 0.1, footR: 0.3,
-      armLRaise: 0.35, armLSpread: 0.45, elbowL: 0.1, wristL: -0.5, armRRaise: 2.1, armRSpread: 1.1, elbowR: 0.45,
-    }],
-    [dur * 0.65, { torsoZ: -0.25 * deep, torsoX: 0.3, torsoY: 0.1, neckY: -0.2, legLSpread: 0.3, legLLift: 0.6, kneeL: 1.0, legRSpread: 0.35, legRLift: 0.25, kneeR: 0.55, armLRaise: 0.6, armRRaise: 1.1, armRSpread: 0.7 }],
-    [dur, { torsoZ: 0, torsoX: 0.2, torsoY: 0, neckY: 0, neckZ: 0, pelvisZ: 0, legLSpread: 0.15, legRSpread: 0.12 }],
-  ];
+export function stumblePose(act: Stumble, base: Pose, shove: number): Pose {
+  if (act.fall === "back") return keyed(fallBack(act.dur), act.t, base);
+  if (act.fall === "forward") return keyed(lurch(act.dur), act.t, base);
+  return shakePose(act.react ?? "slip", act.t, act.dur, base, shove, act.turn ?? 1);
 }
 
 /** Sitting on the floor: legs out in front, so the placement drops the hips to the court, the hands planted behind. */

@@ -9,9 +9,14 @@ import { dir2, type V2 } from "../engine/vec";
 import { DUNK_STYLES, type DunkStyle } from "../roster";
 import { DEFENCE_SCENES, DEFENCE_SEEDS, DEFENCE_SPOTS, setupDefence, steerDefence, type DefenceScene } from "./lab-defence";
 import { FINISH_SCENES, FINISH_SPOTS, steerFinish, type FinishScene } from "./lab-finishes";
+import { BLOCK_LABS, blockSpots, isBlockScene, setupBlock, steerBlock, type BlockScene } from "./lab-blocks";
+import { MOVE_LABS, isMoveScene, moveSpots, setupMoves, steerMoves, type MoveScene } from "./lab-moves";
+import { PRESET_SCENES, isPresetScene, presetSpots, setupPreset, steerPreset, type PresetScene } from "./lab-presets";
+import { SHOT_SCENES, SHOT_SPOTS, isShotScene, setupShot, steerShot, type ShotScene } from "./lab-shots";
 
-export const LAB_SCENES = ["moves", "run", "dunk", "block", "free", ...FINISH_SCENES, ...DEFENCE_SCENES] as const;
-export type LabScene = (typeof LAB_SCENES)[number];
+const PLAYS = ["moves", "run", "dunk", "block", "free"] as const;
+export type LabScene = (typeof PLAYS)[number] | FinishScene | DefenceScene | ShotScene | PresetScene | BlockScene | MoveScene;
+export const LAB_SCENES: readonly LabScene[] = [...PLAYS, ...FINISH_SCENES, ...DEFENCE_SCENES, ...SHOT_SCENES, ...PRESET_SCENES, ...BLOCK_LABS, ...MOVE_LABS];
 
 const SHOOTER = 0;
 const DUNKER = 1;
@@ -29,7 +34,11 @@ const MOVE_CUES: readonly Cue[] = [[0.6, "back"], [1.7, "left"], [2.6, "right"],
  * `moves` runs every dribble move into a defender, `run` sprints and
  * cuts with the ball then passes, `dunk` throws `&style=` at the rim,
  * `block` jumps at a jumper, and `free` calls a foul for free throws.
- * The finishes and the celebrations are in `lab-finishes.ts`, the defence in `lab-defence.ts`.
+ * The finishes and the celebrations are in `lab-finishes.ts`, the defence in `lab-defence.ts`,
+ * one scene per shot ending (`shot-swish`, `shot-rollIn` and the rest) in `lab-shots.ts`,
+ * one per layup and dunk preset (`layup-euro`, `dunk-twoHand` and the rest) in `lab-presets.ts`,
+ * one per block preset (`block-chase`, `block-spike` and the rest) in `lab-blocks.ts`,
+ * and the dribble moves, the shakes and the dribble presets (`move-crossover`, `dribble`) in `lab-moves.ts`.
  */
 export class LabFilm {
   readonly match: Match;
@@ -53,7 +62,7 @@ export class LabFilm {
     const m = this.match;
     m.checkBeat = false;
     m.phase = "live";
-    const spots: Record<LabScene, [number, number][]> = {
+    const spots: Record<Exclude<LabScene, PresetScene | BlockScene | MoveScene>, [number, number][]> = {
       moves: [[0, 8.6], [-6, 3], [6, 3], [0, 7.4], [-5, 9], [5, 9]],
       run: [[-4, 9], [4, 6], [6, 2], [-6, 3], [-5, 10], [6, 10]],
       dunk: [[6, 10.5], [-4.6, 7.2], [6.5, 9], [-0.6, 6.4], [5, 10.5], [3.5, 10.5]],
@@ -61,8 +70,9 @@ export class LabFilm {
       free: [[0, 7], [-4, 6], [4, 6], [0.4, 6.4], [-5, 9], [5, 9]],
       ...FINISH_SPOTS,
       ...DEFENCE_SPOTS,
+      ...SHOT_SPOTS,
     };
-    spots[scene].forEach(([x, z], id) => Object.assign(m.athletes[id]!, { x, z, yaw: Math.PI }));
+    (isPresetScene(scene) ? presetSpots(scene) : isBlockScene(scene) ? blockSpots(scene) : isMoveScene(scene) ? moveSpots(scene) : spots[scene]).forEach(([x, z], id) => Object.assign(m.athletes[id]!, { x, z, yaw: Math.PI }));
     // In the gesture scene the Shooter celebrates with his hands free.
     m.ball.holder = scene === "dunk" || scene === "gesture" ? DUNKER : SHOOTER;
     m.brains.reset();
@@ -73,6 +83,10 @@ export class LabFilm {
     // The defence stands still where the scene is about the finish, so nobody walls off the drive.
     if (scene === "dunk" || scene === "contact") for (const a of m.athletes) if (a.team === 1) a.auto = false;
     if (defence) setupDefence(scene, m);
+    if (isShotScene(scene)) setupShot(m);
+    if (isPresetScene(scene)) setupPreset(scene, m);
+    if (isBlockScene(scene)) setupBlock(m);
+    if (isMoveScene(scene)) setupMoves(m);
   }
 
   steer(t: number): void {
@@ -80,7 +94,7 @@ export class LabFilm {
     // The lab shows animation, not the defence winning: no steals, and blocks only where asked.
     for (const a of m.athletes) {
       a.stealCd = Math.max(a.stealCd, 0.5);
-      if (this.scene !== "block" && this.scene !== "swat") a.blockCd = Math.max(a.blockCd, 0.5);
+      if (this.scene !== "block" && this.scene !== "swat" && !isBlockScene(this.scene)) a.blockCd = Math.max(a.blockCd, 0.5);
     }
     if (this.scene === "moves") this.moves(t);
     else if (this.scene === "run") this.run(t);
@@ -88,6 +102,10 @@ export class LabFilm {
     else if (this.scene === "block") this.block(t);
     else if ((FINISH_SCENES as readonly string[]).includes(this.scene)) steerFinish(this.scene as FinishScene, m, t, (key) => this.once(key));
     else if (isDefence(this.scene)) steerDefence(this.scene, m, t, (key) => this.once(key));
+    else if (isShotScene(this.scene)) steerShot(this.scene, m, t, (key) => this.once(key));
+    else if (isPresetScene(this.scene)) steerPreset(this.scene, m, t, (key) => this.once(key));
+    else if (isBlockScene(this.scene)) steerBlock(this.scene, m, t, (key) => this.once(key));
+    else if (isMoveScene(this.scene)) steerMoves(this.scene, m, t, (key) => this.once(key));
   }
 
   private moves(t: number): void {
@@ -120,7 +138,7 @@ export class LabFilm {
     a.move = t < 0.6 ? toward(a, { x: -3.9, z: 7 }, 0.3) : toward(a, RIM_SPOT, 1);
     if (t > 0.6 && Math.hypot(a.x - RIM_SPOT.x, a.z - RIM_SPOT.z) < 3.1 && this.once("dunk")) {
       m.forced = "swish";
-      m.forcedDunk = this.style ?? DUNK_STYLES[0];
+      m.forcedFinish = { dunk: this.style ?? DUNK_STYLES[0] };
       m.press(DUNKER, "shoot");
     }
   }
@@ -131,7 +149,8 @@ export class LabFilm {
       m.forced = "rimOut";
       m.press(SHOOTER, "shoot");
     }
-    if (t > 0.4 + GREEN_MS / 1000 && this.once("release")) m.release(SHOOTER, GREEN_MS);
+    // Green but short of gold, which no hand can touch.
+    if (t > 0.4 + (GREEN_MS + 30) / 1000 && this.once("release")) m.release(SHOOTER, GREEN_MS + 30);
     if (t > 0.62 && this.once("block")) m.press(HOLLOWAY, "defend");
   }
 

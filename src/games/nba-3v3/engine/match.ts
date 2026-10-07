@@ -1,4 +1,6 @@
-import type { DunkStyle } from "../roster";
+import type { BlockHit } from "./blocks/hit";
+import { guardLeap } from "./blocks/guard-leap";
+import type { Forced } from "./finish/select";
 import { pressDefend, pressPass, pressShoot, releaseShot, updateAction } from "./actions";
 import { createAthlete, moveAthlete, separate } from "./athlete";
 import { updateBall } from "./ball";
@@ -16,6 +18,7 @@ import { restingBall, type MatchOptions } from "./match-options";
 import { tickMoves } from "./moves";
 import { seeded, type Rng } from "./rng";
 import type { Outcome } from "./shot-model";
+import type { ShotPreset } from "./shot-outcome/presets";
 import { placeForCheck } from "./check-plan";
 import { stepCheckBall, updateCheck, updateDead, type CheckUp } from "./check-up";
 import { updateClock, updateCountdown } from "./rules";
@@ -61,12 +64,18 @@ export class Match {
   readonly stealLog = new StealLog();
   /** The showcase turns the check up off to keep its highlight short. Real games always check. */
   checkBeat = true;
-  /** The next shot's outcome, set by the showcase to film a sure highlight. Real games leave it alone. */
-  forced: Outcome | null = null;
-  /** The dunk thrown on the next drive, set by the showcase for the same reason. */
-  forcedDunk: DunkStyle | null = null;
-  /** The next hand that gets to a shot blocks it, for the showcase and the lab. */
+  /** The next shot's ending, set by the showcase to film a sure highlight. Real games leave it alone. */
+  forced: ShotPreset | Outcome | null = null;
+  /** The layup or dunk thrown on the next drive, set by the showcase and the lab for the same reason. */
+  forcedFinish: Forced | null = null;
+  /** The last rebound, for a putback straight back up. */
+  lastBoard: { id: number; at: number; offensive: boolean } | null = null;
+  /** Who an alley oop lob in the air is for, and the last one caught, for the finish. */
+  alleyLob: number | null = null;
+  alleyCatch: { id: number; at: number } | null = null;
+  /** The next hand that gets to a shot blocks it, for the showcase and the lab; `forcedHit` also sets how, or makes it a near miss. */
   forcedBlock = false;
+  forcedHit: BlockHit | "miss" | null = null;
   gamePoint: [boolean, boolean] = [false, false];
   /** Whose turn it is to bring the ball up, per team, so everyone gets to handle it. */
   readonly checkTurn: [number, number] = [0, 0];
@@ -144,7 +153,8 @@ export class Match {
     // On defence Shoot is Guard, held for as long as the thumb stays down. It is armed
     // on offence too, so a turnover mid hold turns the held button straight into Guard.
     if (button === "shoot") this.setGuard(id, true);
-    if (button === "shoot" && this.defending(a)) return;
+    // Guard on the run to the post as the shot goes up is a two hand leap.
+    if (button === "shoot" && this.defending(a)) return guardLeap(this, a);
     if (button === "shoot") pressShoot(this, a);
     else if (button === "pass") pressPass(this, a, aim);
     else pressDefend(this, a, aim);
@@ -167,11 +177,15 @@ export class Match {
     return this.offence !== a.team;
   }
 
-  /** A human's phone dropped or came back. The computer plays for them meanwhile. */
+  /**
+   * The computer takes a player over, or hands him back to a phone: when
+   * a phone drops or comes back, or switches to a teammate (`hand-over.ts`).
+   */
   setAuto(id: number, auto: boolean): void {
     const a = this.athletes[id];
-    if (!a || a.seat === null) return;
+    if (!a) return;
     a.auto = auto;
+    a.guard = false;
     if (auto) {
       a.move = { x: 0, z: 0 };
       if (a.action.kind === "shoot" && !a.action.released) releaseShot(this, a);

@@ -20,7 +20,7 @@ const LEAD: Record<ShowcaseView, number> = { loop: -2.7, poster: 0, icon: 0 };
  * ahead without drawing and then held. The poster is the Dunker at the
  * top of his windmill; the icon has its own film (icon-film.ts).
  */
-const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 2.8, icon: ICON_AT };
+const STILL_AT: Record<ShowcaseView, number> = { loop: 0, poster: 2.6, icon: ICON_AT };
 
 /**
  * The loop plays behind the home screen, so it draws a little under full
@@ -31,9 +31,13 @@ const LOOP_PIXELS = 0.8;
 /** A held still is drawn once, and again after a resize, so the capture waits on as little as possible. */
 const STILL_DRAWS = 1;
 
-/** The poster's hero angle is low in front of the lane, looking up at the dunk over the defender. */
+/**
+ * The poster's hero angle is high over the left block, just behind the
+ * Dunker, looking across at the windmill over the ring. Any lower and
+ * the players getting up off the floor walk into the bottom of the shot.
+ */
 const STILL_CAMERA: Partial<Record<ShowcaseView, { pos: THREE.Vector3; look: THREE.Vector3; fov: number }>> = {
-  poster: { pos: new THREE.Vector3(-3.4, 0.75, 5.4), look: new THREE.Vector3(-0.2, 2.25, 1.9), fov: 44 },
+  poster: { pos: new THREE.Vector3(-3.6, 2.7, 3.2), look: new THREE.Vector3(-0.3, 2.85, 1.6), fov: 42 },
   icon: ICON_CAMERA,
 };
 

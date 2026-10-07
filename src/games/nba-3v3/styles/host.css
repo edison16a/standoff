@@ -109,6 +109,16 @@
   opacity: 0.85;
 }
 
+/* The gold heart of the green: a thin line that always swishes. */
+.nba-tag__gold {
+  position: absolute;
+  left: 0;
+  right: 0;
+  min-height: 2px;
+  background: #ffd23f;
+  box-shadow: 0 0 6px #ffd23f;
+}
+
 .nba-tag__fill {
   position: absolute;
   left: 0;
@@ -122,6 +132,21 @@
 .nba-tag__meter[data-grade="perfect"] {
   border-color: #22c55e;
   box-shadow: 0 0 16px #22c55e;
+}
+
+.nba-tag__meter[data-grade="gold"] {
+  border-color: #ffd23f;
+  box-shadow: 0 0 10px #fff1a8, 0 0 28px #ffb703;
+  animation: nba-tag-gold 0.7s ease-out both;
+}
+
+@keyframes nba-tag-gold {
+  0% {
+    transform: scale(1.5);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .nba-tag__meter[data-grade="good"] {

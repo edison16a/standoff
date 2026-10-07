@@ -1,77 +1,72 @@
-import { airborne, buildOf, standingReach } from "./athlete";
-import { RIM_SPOT, rimDistance } from "./court";
-import { drivePosition, driveHeight, landTime } from "./body/drive-flight";
-import { chooseDunk } from "./dunk-style";
-import { finishSpot, layupKind, releaseHand } from "./finish";
+import { airborne } from "./athlete";
+import { drivePosition, driveHeight } from "./body/drive-flight";
+import { pressJump } from "./defend";
+import { readApproach } from "./finish/approach";
+import { ballInHands, specOf } from "./finish/ball-track";
+import { facingAt } from "./finish/facing";
+import { planFinish } from "./finish/plan";
+import { selectFinish } from "./finish/select";
 import type { Match } from "./match";
 import { launchShot, slam } from "./shooting";
-import { JUMP, RIM } from "./tuning";
+import { JUMP } from "./tuning";
 import type { Athlete } from "./types";
-import { clamp, dir2, dist2, segmentDistance, yawOf } from "./vec";
+import { clamp, dir2, dist2, type V3 } from "./vec";
 
 /**
- * Driving at the rim: the last two steps of the gather, then off the
- * floor into a layup or a dunk. Strong players dunk; anyone dunks when
- * nobody is near. A defender in the way loses the contact battle if
- * much weaker, and wins it if much stronger, which turns the dunk into
- * a layup through the contact. Under the rim it becomes a reverse.
+ * Driving at the rim. The finish is picked before the gather starts
+ * (`finish/select.ts`) from how the drive arrives: space means a dunk,
+ * a defender close by means a layup preset that goes round him. Then
+ * the preset plays out on its own footwork and timing, the ball riding
+ * the hands (`finish/ball-track.ts`) to the release or the slam.
  */
 export function startDrive(m: Match, a: Athlete): void {
-  const c = buildOf(a);
-  const d = rimDistance(a);
-  const defenders = m.opponents(a.team);
-  const open = defenders.every((o) => dist2(o, a) > 2);
-  let dunk = (c.stats.strength >= 6 || open) && d > 0.7;
-  const path = { from: { x: a.x, z: a.z }, to: RIM_SPOT };
-  const inWay = defenders
-    .filter((o) => !airborne(o) && segmentDistance(o, path.from, path.to).d < 0.9 && dist2(o, a) < 2.2)
-    .sort((p, q) => dist2(p, a) - dist2(q, a))[0];
-  let contact: Athlete | null = null;
-  if (inWay) {
-    const edge = c.stats.strength - buildOf(inWay).stats.strength;
-    if (edge >= 2) {
-      // Too much muscle: the defender is sent sprawling.
-      const push = dir2(a, inWay);
-      inWay.vx = push.x * 4;
-      inWay.vz = push.z * 4;
-      inWay.action = { kind: "stumble", t: 0, dur: 1, fall: "back" };
-      m.emit({ type: "knockdown", id: inWay.id, by: a.id });
-    } else {
-      // An even or a losing battle: into his body and up, a layup through the contact.
-      if (edge <= -2) dunk = false;
-      contact = inWay;
-    }
-  }
-  const layup = dunk ? null : layupKind(a, contact !== null && dist2(contact, a) < 1.6);
-  const to = finishSpot(a, dunk, layup);
-  const reach = standingReach(a);
-  const peak = dunk ? clamp(RIM.y + 0.3 - reach, 0.5, 1.05) : clamp(RIM.y - 0.1 - reach, 0.35, 0.8) * (layup === "contact" ? 0.85 : 1);
-  // The last two steps: a longer run in makes for a longer gather, and a dunk loads up a touch longer.
-  const gather = clamp((d - dist2(to, RIM_SPOT)) / 7, 0.3, 0.42) + (dunk ? 0.05 : 0);
-  const plan = dunk ? chooseDunk(m.rng, a, open, m.forcedDunk) : null;
-  m.forcedDunk = null;
-  const air = plan ? plan.air : layup === "reverse" ? 0.46 : 0.4;
-  const rimHang = plan ? plan.rimHang : 0;
-  // The landing follows from the jump under real gravity (see `body/drive-flight.ts`).
-  const timing = { takeoff: gather, finish: gather + air, rimHang, peak };
-  a.action = {
-    kind: "drive", t: 0, dunk, style: plan?.style ?? null, layup, from: { x: a.x, z: a.z }, to,
-    ...timing, land: landTime(timing), released: false,
-  };
-  a.yaw = driveYaw(a);
-  if (contact) {
-    const power = clamp(0.4 + (buildOf(contact).stats.strength - c.stats.strength) * 0.08, 0.3, 0.9);
-    m.emit({ type: "bump", a: a.id, b: contact.id, power });
-  }
-  m.emit({ type: "gather", id: a.id, kind: dunk ? "dunk" : "layup" });
+  const ap = readApproach(m, a);
+  const pick = selectFinish(m.rng, ap, m.forcedFinish);
+  m.forcedFinish = null;
+  a.action = planFinish(m.rng, a, pick, m.ball.pos);
+  a.yaw = facingAt(a.action, a, 0);
+  const t = ap.threat;
+  const man = t ? m.athletes[t.id] : undefined;
+  if (man && t && !airborne(man) && t.dist < 1.6 && (t.spot === "path" || t.spot === "rim" || t.spot === "ballSide")) contact(m, a, man, t.edge, pick.dunk);
+  m.emit({ type: "gather", id: a.id, kind: pick.dunk ? "dunk" : "layup" });
 }
 
-/** A reverse is laid in with the back to the rim, going along the baseline; everything else faces the rim. */
-function driveYaw(a: Athlete): number {
-  const act = a.action;
-  if (act.kind === "drive" && act.layup === "reverse") return yawOf(act.to.x - act.from.x, act.to.z - act.from.z);
-  return yawOf(RIM.x - a.x, RIM.z - a.z);
+/**
+ * Into a defender's body: much more muscle sends him sprawling (a
+ * poster, or a layup straight through him); otherwise it is a bump
+ * the finish absorbs.
+ */
+function contact(m: Match, a: Athlete, man: Athlete, edge: number, dunk: boolean): void {
+  if (edge >= 2) {
+    const push = dir2(a, man);
+    man.vx = push.x * 4;
+    man.vz = push.z * 4;
+    man.action = { kind: "stumble", t: 0, dur: 1, fall: "back" };
+    m.emit({ type: "knockdown", id: man.id, by: a.id });
+    return;
+  }
+  const power = clamp(0.4 - edge * 0.08 + (dunk ? 0.15 : 0), 0.3, 0.9);
+  m.emit({ type: "bump", a: a.id, b: man.id, power });
 }
+
+/** Dunked on: the man under it is sent back off his feet as the slam comes down through him. */
+function posterize(m: Match, a: Athlete): void {
+  const man = m.opponents(a.team).find((o) => dist2(o, a) < 1.5 && o.action.kind !== "stumble");
+  if (!man) return;
+  const push = dir2(a, man);
+  man.vx = push.x * 3;
+  man.vz = push.z * 3;
+  man.action = { kind: "stumble", t: 0, dur: 1.1, fall: "back" };
+  m.emit({ type: "knockdown", id: man.id, by: a.id });
+}
+
+/** The man nearest the fake jumps at it, mostly, and is in the air as the driver steps through under him. */
+function biteOnFake(m: Match, a: Athlete): void {
+  const man = m.opponents(a.team).find((o) => o.auto && dist2(o, a) < 1.8);
+  if (man && m.rng() < 0.75) pressJump(m, man);
+}
+
+const hand: V3 = { x: 0, y: 0, z: 0 };
 
 export function updateDrive(m: Match, a: Athlete, dt: number): void {
   const act = a.action;
@@ -79,15 +74,23 @@ export function updateDrive(m: Match, a: Athlete, dt: number): void {
   const before = act.t;
   act.t += dt;
   const t = act.t;
-  drivePosition(act, t, a);
+  drivePosition(act, specOf(act).steps, t, a);
   a.vx = a.vz = 0;
-  if (act.layup !== "reverse" || t < act.finish) a.yaw = driveYaw(a);
+  // A layup along the baseline keeps its facing once the ball is gone, rather than snapping round.
+  if (t < act.finish || specOf(act).yaw === "rim") a.yaw = facingAt(act, a, Math.min(t, act.finish));
   a.y = driveHeight(act, t);
   if (before < act.takeoff && t >= act.takeoff) m.emit({ type: "takeoff", id: a.id, dunk: act.dunk });
+  // The pump fake of an up and under: a computer defender close by usually leaves his feet for it.
+  const fake = act.takeoff * 0.45;
+  if (act.layup === "upUnder" && before < fake && t >= fake) biteOnFake(m, a);
   if (!act.released && t >= act.finish && m.ball.holder === a.id && m.phase === "live") {
     act.released = true;
-    if (act.dunk) slam(m, a);
-    else launchShot(m, a, "layup", "good", releaseHand(a, act.layup ?? "finger"));
+    // The ball goes from where the hand has it right now.
+    ballInHands(a, { ...act, t: act.finish }, hand);
+    if (act.dunk) {
+      slam(m, a, hand);
+      if (act.style === "poster") posterize(m, a);
+    } else launchShot(m, a, "layup", "good", { ...hand });
   }
   if (t >= act.land) {
     a.y = 0;

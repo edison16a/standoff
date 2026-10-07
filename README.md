@@ -119,7 +119,7 @@ An endless runner played with your body. Lean to change tracks, jump over barrie
 
 <img src="docs/screenshots/nba-3v3.jpg" alt="A dunk at the rim in the Basketball 3v3 arena" width="100%" />
 
-Three on three half court for up to six phones. Pick one of six builds, hold Shoot and let go in the green, and break ankles with stepbacks, crossovers and spins. Dunks, reverse layups, blocks at the top of the jump, steals, fouls and free throws. First to 11 wins, the winning basket replays in slow motion, and the captain lifts the trophy at centre court.
+Half court for up to six phones, one on one, two on two or three on three. Pick one of six builds, hold Shoot and let go in the green or the rare gold that always swishes, pass to a computer teammate to take him over, and break ankles with stepbacks, crossovers and spins. Dunks, reverse layups, blocks at the top of the jump, steals, fouls and free throws. First to 11 wins, the winning basket replays in slow motion, and the captain lifts the trophy at centre court.
 
 ### Soccer 3v3
 

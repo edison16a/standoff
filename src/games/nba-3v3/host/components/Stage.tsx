@@ -22,7 +22,8 @@ export function Stage() {
   const replayDue = useNbaStore((state) => state.replayDue);
   const ceremony = useNbaStore((state) => state.ceremony?.stage ?? null);
   return (
-    <div className="nba-stage">
+    // Right click holds Guard for the keyboard player, so the browser's menu stays shut over the court.
+    <div className="nba-stage" onContextMenu={(e) => e.preventDefault()}>
       <Suspense fallback={null}>
         <CourtCanvas />
       </Suspense>

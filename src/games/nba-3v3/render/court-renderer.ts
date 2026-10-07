@@ -12,6 +12,7 @@ import { hanging } from "./arena/hoop";
 import { BallView } from "./ball-view";
 import { joltOnContact } from "./contact-jolts";
 import { ContactShadows } from "./contact-shadows";
+import { ControlRings, type Pilot } from "./control-rings";
 import { CeremonyStage } from "./ceremony/ceremony-stage";
 import type { Ceremony } from "../engine/ceremony";
 import { Referee } from "./referee";
@@ -54,8 +55,11 @@ export class CourtRenderer {
   private readonly ceremony = new CeremonyStage();
   private readonly contact = new ContactShadows();
   private keyLight: number;
+  private readonly rings = new ControlRings();
   /** The name across a player's back, or null for the build's own. The host sets it to people's names. */
   jerseyName: (a: Athlete) => string | null = () => null;
+  /** Which player each phone moves now, for the rings on the floor. The host sets it. */
+  pilots: () => readonly Pilot[] = () => [];
 
   constructor(canvas: HTMLCanvasElement, quality: Quality = {}) {
     const { reflections = true, athletes = "high", mirror = 0.5, post = true } = quality;
@@ -67,8 +71,8 @@ export class CourtRenderer {
     this.scene.background = new THREE.Color("#060812");
     this.scene.fog = new THREE.FogExp2("#060812", 0.014);
     this.effects = new Effects(this.arena, this.tv);
-    this.arena.mirror.hidden.push(this.contact.mesh);
-    this.scene.add(this.arena.group, this.contact.mesh, this.players, this.ball.mesh, this.effects.group, this.ceremony.scene.group);
+    this.arena.mirror.hidden.push(this.contact.mesh, this.rings.group);
+    this.scene.add(this.arena.group, this.contact.mesh, this.rings.group, this.players, this.ball.mesh, this.effects.group, this.ceremony.scene.group);
     this.referee = new Referee(this.athleteMats, this.players);
     this.keyLight = this.arena.key.intensity;
     this.picture.onShed = () => this.arena.shed();
@@ -139,8 +143,10 @@ export class CourtRenderer {
     // The ball is put away for the ceremony, and the arena's lights come down under the spotlights.
     this.ball.mesh.visible = !this.ceremony.active;
     this.arena.key.intensity = this.keyLight * (1 - this.ceremony.scene.dim);
-    this.ball.update(b, holder !== null ? (this.views[holder] ?? null) : null, chest, dt);
+    const shooter = b.shot ? (this.views[b.shot.shooter] ?? null) : null;
+    this.ball.update(b, holder !== null ? (this.views[holder] ?? null) : null, chest, dt, shooter);
     this.referee.update(m, dt);
+    this.rings.update(m, this.pilots(), dt, !this.ceremony.active && this.tv.fixed !== this.replayCam && m.phase !== "over");
     this.contact.cast([...this.views.map((v) => v.model.joints), this.referee.joints], this.ball.mesh.visible ? this.ball.mesh.position : null, BALL.radius);
     if (this.intro !== null) {
       this.intro += dt;
@@ -199,6 +205,7 @@ export class CourtRenderer {
     for (const view of this.views) view.dispose(this.players);
     this.referee.dispose();
     this.contact.dispose();
+    this.rings.dispose();
     this.ceremony.dispose();
     this.arena.dispose();
     this.ball.dispose();

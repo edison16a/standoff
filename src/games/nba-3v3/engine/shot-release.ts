@@ -19,6 +19,8 @@ export interface ReleaseInput {
   apex: number;
   /** Backspin in radians a second: a jumper about two and a half turns, a layup a little. */
   spinRate: number;
+  /** Side spin about the upright, radians a second: the slight tilt every real release has. */
+  sideSpin?: number;
 }
 
 export interface Launch {
@@ -46,7 +48,7 @@ function cachedSpot(from: V3, apex: number, spin: V3): V3 | null {
 /** The launch for a release off by `long` metres past the aim and `side` metres to the shooter's right. */
 export function launchFor(input: ReleaseInput, long: number, side: number): Launch {
   const { from, apex, spinRate } = input;
-  const spin = backspin(from, RIM_CENTRE, spinRate);
+  const spin = backspin(from, RIM_CENTRE, spinRate, input.sideSpin ?? 0);
   const dx = RIM.x - from.x;
   const dz = RIM.z - from.z;
   const d = Math.hypot(dx, dz);

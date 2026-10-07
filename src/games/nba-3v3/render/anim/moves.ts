@@ -57,8 +57,17 @@ const BEHIND_BACK = (d: number): Key[] => [
   [d, { ...LOW }],
 ];
 
+/** Split the feet, front foot out, and bounce the ball through under the hips; rock back on the rear leg, then push off it to the new hand's side. */
+const BETWEEN_LEGS = (d: number): Key[] => [
+  [0, { ...LOW }],
+  [d * 0.25, { torsoX: 0.5, hipY: -0.1, legLLift: 0.95, kneeL: 1.15, legLSpread: 0.05, legRLift: -0.45, kneeR: 0.85, footR: 0.4, legRSpread: 0.12, neckX: -0.35, torsoZ: -0.08 }],
+  [d * 0.55, { torsoX: 0.35, legLLift: 0.7, kneeL: 0.95, legRLift: -0.25, kneeR: 1.05, torsoZ: 0.1, armLRaise: 0.7, armLSpread: 0.5 }],
+  [d * 0.8, { ...LOW, legRSpread: 0.3, torsoZ: 0.08 }],
+  [d, { ...LOW }],
+];
+
 const KEYS: Record<Move["move"], (d: number) => Key[]> = {
-  crossover: CROSSOVER, stepback: STEPBACK, spin: SPIN, hesitation: HESITATION, behindBack: BEHIND_BACK,
+  crossover: CROSSOVER, stepback: STEPBACK, spin: SPIN, hesitation: HESITATION, behindBack: BEHIND_BACK, betweenLegs: BETWEEN_LEGS,
 };
 
 export function movePose(act: Move, base: Pose): Pose {

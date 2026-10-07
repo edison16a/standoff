@@ -6,7 +6,7 @@ const open: ShotContext = { kind: "jumper", grade: "perfect", distance: 7, shoot
 
 describe("the shot meter", () => {
   it("greens a release in the middle of the window and grades misses by side", () => {
-    expect(gradeRelease(GREEN_MS, 5).grade).toBe("perfect");
+    expect(gradeRelease(GREEN_MS + greenHalfMs(5) * 0.6, 5).grade).toBe("perfect");
     expect(gradeRelease(GREEN_MS - 400, 5).grade).toBe("early");
     expect(gradeRelease(GREEN_MS + 400, 5).grade).toBe("late");
     expect(gradeRelease(GREEN_MS + greenHalfMs(5) * 1.5, 5).grade).toBe("good");
@@ -34,6 +34,14 @@ describe("the chance a shot goes in", () => {
   it("rewards the better shooter on a good release, and falls off from deep", () => {
     expect(makeChance({ ...open, grade: "good", shooting: 10 })).toBeGreaterThan(makeChance({ ...open, grade: "good", shooting: 4 }));
     expect(makeChance({ ...open, distance: 11 })).toBeLessThan(makeChance(open));
+  });
+
+  it("makes a three lean on the green more than a two", () => {
+    const two = { ...open, grade: "good" as const, distance: 5 };
+    const three = { ...two, distance: 7 };
+    expect(makeChance(three)).toBeLessThan(makeChance(two) * 0.8);
+    // On the green a three is as good as a two from that range.
+    expect(makeChance({ ...three, grade: "perfect" })).toBeCloseTo(makeChance({ ...two, grade: "perfect" }), 5);
   });
 
   it("lets strength win at the rim", () => {

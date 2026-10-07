@@ -1,7 +1,8 @@
-import { buildOf, standingReach } from "./athlete";
+import { buildOf } from "./athlete";
 import { carry } from "./ball-carry";
 import { freeBall } from "./ball-flight";
 import { dribbleBall } from "./dribble-ball";
+import { ballInHands } from "./finish/ball-track";
 import type { Match } from "./match";
 import { JUMPER } from "./shooting";
 import { clamp, lerp } from "./vec";
@@ -31,12 +32,12 @@ function holdBall(m: Match, dt: number): void {
     return;
   }
   const act = a.action;
-  if (act.kind !== "shoot" && act.kind !== "drive") return dribbleBall(m, a, dt);
-  // Both hands bring it up: to the set point for a jumper, to full stretch at the rim.
+  // At the rim the preset's own path through the hands carries it.
+  if (act.kind === "drive") return carry(m, ballInHands(a, act, { x: 0, y: 0, z: 0 }), dt);
+  if (act.kind !== "shoot") return dribbleBall(m, a, dt);
+  // Both hands bring it up to the set point for a jumper.
   const h = buildOf(a).body.height;
-  const lift = act.kind === "shoot" ? clamp(act.t / JUMPER.takeoff, 0, 1) : clamp(act.t / act.finish, 0, 1);
-  const top = act.kind === "shoot" ? h * 1.12 : standingReach(a) - 0.12;
-  const fwd = act.kind === "shoot" ? 0.2 : 0.3;
-  const to = { x: a.x + Math.sin(a.yaw) * fwd, y: a.y + lerp(h * 0.62, top, lift), z: a.z + Math.cos(a.yaw) * fwd };
+  const lift = clamp(act.t / JUMPER.takeoff, 0, 1);
+  const to = { x: a.x + Math.sin(a.yaw) * 0.2, y: a.y + lerp(h * 0.62, h * 1.12, lift), z: a.z + Math.cos(a.yaw) * 0.2 };
   carry(m, to, dt);
 }

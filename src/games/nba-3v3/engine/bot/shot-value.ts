@@ -2,7 +2,7 @@ import { buildOf } from "../athlete";
 import { contestFor } from "../contest";
 import { isThree, rimDistance } from "../court";
 import type { Match } from "../match";
-import { greenHalfMs, makeChance, type ShotContext } from "../shot-model";
+import { goldHalfMs, greenHalfMs, makeChance, type ShotContext } from "../shot-model";
 import { SHOT } from "../tuning";
 import type { Athlete } from "../types";
 import { clamp } from "../vec";
@@ -34,11 +34,12 @@ export function jumperValue(m: Match, a: Athlete): number {
   const st = buildOf(a).stats;
   const sd = releaseSpread(st.shooting) * SIGMA;
   const half = greenHalfMs(st.shooting, a.onFire);
+  const pGold = within(goldHalfMs(st.shooting, a.onFire), sd);
   const pGreen = within(half, sd);
   const pGood = within(half * SHOT.goodSpread, sd) - pGreen;
   const c = contestFor(a, m.opponents(a.team), "jumper");
   const ctx: ShotContext = { kind: "jumper", grade: "perfect", distance: rimDistance(a), shooting: st.shooting, contest: clamp(c.contest * 1.6, 0, 1), strengthEdge: 0, onFire: a.onFire };
   const chance =
-    pGreen * makeChance(ctx) + pGood * makeChance({ ...ctx, grade: "good" }) + (1 - pGreen - pGood) * makeChance({ ...ctx, grade: "late" });
+    pGold + (pGreen - pGold) * makeChance(ctx) + pGood * makeChance({ ...ctx, grade: "good" }) + (1 - pGreen - pGood) * makeChance({ ...ctx, grade: "late" });
   return chance * (isThree(a) ? 3 : 2);
 }

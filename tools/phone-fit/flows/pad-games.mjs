@@ -94,7 +94,7 @@ export async function nba3v3(ctx) {
   const court = {
     team: 0, score: [12, 9], shotClock: 14, hasBall: true, attacking: true, holder: "P1", mustClear: false,
     canSteal: false, stealReach: false, defending: false, guard: "off",
-    freeThrow: null, meter: { fullMs: 900, greenMs: 620, halfMs: 60 }, onFire: false, checking: false, countdown: null,
+    freeThrow: null, meter: { fullMs: 900, greenMs: 620, halfMs: 60, goldMs: 12 }, onFire: false, checking: false, countdown: null,
   };
   await ctx.fake("state", { phase: "countdown", team: 0, playing: true, court: { ...court, countdown: 3 } });
   await ctx.snap("countdown");

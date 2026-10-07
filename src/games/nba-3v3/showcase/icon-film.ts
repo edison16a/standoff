@@ -2,53 +2,74 @@ import * as THREE from "three";
 import { RIM_SPOT } from "../engine/court";
 import type { MatchEvent } from "../engine/events";
 import { Match } from "../engine/match";
-import type { Athlete } from "../engine/types";
-import { dir2, type V2 } from "../engine/vec";
+import { GREEN_MS } from "../engine/shot-model";
+import { dir2 } from "../engine/vec";
 import type { CinemaLook } from "../render/film-look";
 import { HIGHLIGHT_LINEUP } from "./script";
 import { iconLights } from "./still-lights";
 
-/** Seconds the icon's film runs before it is held: the Dunker in full stride, the ball in his hand. */
-export const ICON_AT = 1.32;
-
-/** Where he is then, and the way he runs: from the left wing straight at the rim. */
-const SUBJECT = new THREE.Vector3(-2.13, 1.4, 4.46);
-const FACING = { x: 0.596, z: -0.803 };
-
-/** Low on his line, a few steps ahead of him, so he drives right at the viewer with the side stands behind. */
-export const ICON_CAMERA = {
-  pos: new THREE.Vector3(SUBJECT.x + FACING.x * 2.25, 0.75, SUBJECT.z + FACING.z * 2.25),
-  look: new THREE.Vector3(SUBJECT.x, 1.1, SUBJECT.z),
-  fov: 44,
-};
-
-/** A darker arena than the game's, so the lit hero stands out of it. */
-export function iconLook(): CinemaLook {
-  return { lights: iconLights(SUBJECT, FACING), fill: 0.45, key: 0.8, haze: 0.014, boards: true };
-}
-
-const DUNKER = 1;
+const SHOOTER = 0;
 const LOCKDOWN = 3;
 
-/** Where the six stand as the drive starts: the Dunker on the left wing, his man a step behind, the rest wide. */
+/** When Shoot goes down, how long it is held (a green, short of gold), and when the defender jumps at it. */
+const PRESS_AT = 0.4;
+const HOLD_MS = GREEN_MS + 30;
+const JUMP_AT = PRESS_AT + 0.3;
+
+/** Seconds the icon's film runs before it is held: the wrist snapped through and the ball just clear of the fingers, over the defender's reach. */
+export const ICON_AT = PRESS_AT + HOLD_MS / 1000 + 0.1;
+
+/**
+ * The Shooter on the left elbow, squared up to the rim. His man starts
+ * just outside a stepback's reach on that line (stepback.ts), so the
+ * jumper goes straight up, and closes out to `CLOSE` as the shot rises.
+ */
+const SPOT = { x: -2.5, z: 6.4 };
+const TO_RIM = dir2(SPOT, RIM_SPOT);
+const SIDE = { x: -TO_RIM.z, z: TO_RIM.x };
+const GUARD = { x: SPOT.x + TO_RIM.x * 1.3, z: SPOT.z + TO_RIM.z * 1.3 };
+const CLOSE = 0.95;
+/** Where the camera sits from the Shooter, along his line to the rim and out to his left, and what it looks at. */
+const at = (ahead: number, side: number, y: number) => new THREE.Vector3(SPOT.x + TO_RIM.x * ahead + SIDE.x * side, y, SPOT.z + TO_RIM.z * ahead + SIDE.z * side);
+
+/**
+ * On the floor off the Shooter's front, out to the side of his man,
+ * looking up past them into the ring of arena lights: his face in three
+ * quarter view as he rises, the ball just off his fingers, and the
+ * defender in the air beside it, reaching for it.
+ */
+export const ICON_CAMERA = { pos: at(1.5, 1.55, 0.35), look: at(0.5, 0, 2.25), fov: 54 };
+
+/** The lights aim at the ball between the two, keyed from the camera's side so both faces catch it. */
+const SUBJECT = at(0.45, 0, 2.5);
+const TO_CAMERA = { x: ICON_CAMERA.pos.x - SUBJECT.x, z: ICON_CAMERA.pos.z - SUBJECT.z };
+const KEY_FROM = { x: TO_CAMERA.x / Math.hypot(TO_CAMERA.x, TO_CAMERA.z), z: TO_CAMERA.z / Math.hypot(TO_CAMERA.x, TO_CAMERA.z) };
+
+/** A darker arena than the game's, so the lit pair stands out of it. */
+export function iconLook(): CinemaLook {
+  return { lights: iconLights(SUBJECT, KEY_FROM), fill: 0.4, key: 0.75, haze: 0.016, boards: true };
+}
+
+/** Where the six stand: the pair at the elbow, everyone else back in the dark, out of the shot. */
 const START: readonly [number, number, number][] = [
-  [0, 6.4, 6.5],
-  [DUNKER, -5.2, 8.6],
-  [2, 6.6, 4.2],
-  [LOCKDOWN, -6.2, 9.4],
-  [4, 2.6, 10.2],
-  [5, 6.2, 8.8],
+  [SHOOTER, SPOT.x, SPOT.z],
+  [1, 5.8, 9.6],
+  [2, 6.2, 3.2],
+  [LOCKDOWN, GUARD.x, GUARD.z],
+  [4, 5.2, 10.4],
+  [5, 6.8, 4.4],
 ];
 
 /**
- * The icon's film, made like a cover shot: the Dunker attacks the rim
- * from the wing at full speed with the ball, so a camera low on his line
- * sees him head on, driving at the viewer, with the side stands behind.
- * His defender chases a step behind; nobody else is near. It is held
- * mid stride, the ball in his hand, well before he takes off.
+ * The icon's film, made like a cover shot: the Shooter rises into a
+ * jumper at the elbow and the Lockdown defender leaps at it from a step
+ * in front, both arms up. It is held as the ball leaves his fingers,
+ * the defender's hand reaching for it. The block is forced to fall
+ * short, so the film never depends on a roll of the dice.
  */
 export class IconFilm {
   readonly match: Match;
+  private readonly done = new Set<string>();
 
   constructor() {
     this.match = new Match({ seed: 4, firstOffence: 0, entries: [...HIGHLIGHT_LINEUP] });
@@ -56,32 +77,40 @@ export class IconFilm {
     m.checkBeat = false;
     m.phase = "live";
     for (const [id, x, z] of START) Object.assign(m.athletes[id]!, { x, z, yaw: 0 });
-    m.ball.holder = DUNKER;
+    m.ball.holder = SHOOTER;
     m.brains.reset();
     for (const a of m.athletes) a.auto = false;
   }
 
-  steer(): void {
+  steer(t: number): void {
     const m = this.match;
     for (const a of m.athletes) {
       a.stealCd = Math.max(a.stealCd, 0.5);
-      a.blockCd = Math.max(a.blockCd, 0.5);
       a.move = { x: 0, z: 0 };
     }
-    const dunker = m.athletes[DUNKER]!;
-    dunker.move = toward(dunker, RIM_SPOT, 1);
-    // The defender chases on the Dunker's shoulder, never quite level.
-    const lock = m.athletes[LOCKDOWN]!;
-    lock.move = toward(lock, { x: dunker.x, z: dunker.z + 1.5 }, 1);
+    for (const a of m.athletes) if (a.id !== LOCKDOWN) a.blockCd = Math.max(a.blockCd, 0.5);
+    if (this.once("set")) {
+      m.forced = "swish";
+      m.forcedHit = "miss";
+    }
+    if (t > PRESS_AT && this.once("shoot")) m.press(SHOOTER, "shoot");
+    // The close out: a hard step at the shooter once he has risen, then up.
+    const d = m.athletes[LOCKDOWN]!;
+    const s = m.athletes[SHOOTER]!;
+    if (t > PRESS_AT && t < JUMP_AT && Math.hypot(d.x - s.x, d.z - s.z) > CLOSE) d.move = dir2(d, s);
+    // On defence Pass is Block.
+    if (t > JUMP_AT && this.once("jump")) m.press(LOCKDOWN, "pass");
+    if (t > PRESS_AT + HOLD_MS / 1000 && this.once("release")) m.release(SHOOTER, HOLD_MS);
+  }
+
+  private once(key: string): boolean {
+    if (this.done.has(key)) return false;
+    this.done.add(key);
+    return true;
   }
 
   slowFor(e: MatchEvent): null {
     void e;
     return null;
   }
-}
-
-function toward(a: Athlete, spot: V2, pace: number): V2 {
-  const d = dir2(a, spot);
-  return { x: d.x * pace, z: d.z * pace };
 }
