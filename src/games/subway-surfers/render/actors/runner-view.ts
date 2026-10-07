@@ -13,11 +13,14 @@ import { hoverboard } from "../models/pickups";
 import type { Rig } from "../models/rig";
 import { buildRunner, LOOKS } from "../models/runner-model";
 import { shadowPaint } from "../models/train";
+import { GroundContact } from "./ground-contact";
 import { buildJetpack } from "./jetpack";
 import { shadowFloor } from "./shadow-floor";
 
 /** Metres of track per full stride, left and right foot. */
 const STRIDE = 2.9;
+/** The top of the hoverboard's deck over the runner's feet, where their shoes stand while they ride. */
+const DECK = 0.21;
 
 export type Mood = "run" | "idle" | "cheer";
 
@@ -37,6 +40,7 @@ export class RunnerView {
   private readonly jetpack: THREE.Group;
   private readonly boots: THREE.Group[] = [];
   private readonly shadow: THREE.Mesh;
+  private readonly contact: GroundContact;
   private lastX = 0;
   private lean = 0;
   private flip = 0;
@@ -46,6 +50,7 @@ export class RunnerView {
     const style = LOOKS[look % LOOKS.length]!;
     this.rig = buildRunner(style);
     addOutline(this.rig.root);
+    this.contact = new GroundContact(this.rig);
     this.root.add(this.rig.root);
     const board = new MeshBuilder();
     hoverboard(board, style.board[0], style.board[1]);
@@ -57,7 +62,7 @@ export class RunnerView {
     this.jetpack.position.set(0, 0.2, 0.2);
     this.rig.bones.chest.add(this.jetpack);
     for (const side of ["ankleL", "ankleR"] as const) {
-      const glow = new MeshBuilder().sphere(0.13, { color: 0x3ddc84, finish: "glow" }, [0, 0.02, -0.04], [1, 0.8, 1.6], 10).build("boot-glow");
+      const glow = new MeshBuilder().sphere(0.14, { color: 0x3ddc84, finish: "glow" }, [0, -0.07, -0.06], [1, 0.75, 1.6], 10).build("boot-glow");
       this.rig.bones[side].add(glow);
       this.boots.push(glow);
     }
@@ -106,18 +111,23 @@ export class RunnerView {
     let rate = 16;
     let spin = 0;
     let running = false;
+    // Whether the body stands, runs or rolls on the floor, and is brought down onto it.
+    let settle = false;
     if (!run || mood !== "run") {
       if (mood === "cheer") cheerPose(this.target, time);
       else idlePose(this.target, time);
+      settle = mood !== "cheer";
       rate = 8;
     } else if (run.crashed) {
       crashPose(this.target, run.time - run.crashed.time);
+      settle = !!s?.grounded;
       rate = 30;
     } else if (flying) {
       flyPose(this.target, time);
       rate = 6;
     } else if (s!.rollLeft > 0) {
       rollPose(this.target);
+      settle = s!.grounded;
       rate = 30;
       spin = -Math.PI * 2 * Math.min(1, s!.rollAge / ROLL.minS);
     } else if (!s!.grounded && s!.airTime > 0.04) {
@@ -131,11 +141,13 @@ export class RunnerView {
       }
     } else if (board) {
       boardPose(this.target, time);
+      settle = true;
       rate = 10;
     } else {
       runPose(this.target, (s!.distance / STRIDE) * Math.PI * 2, 1);
       rate = 22;
       running = true;
+      settle = true;
     }
     this.reactions.apply(this.target, running || board, time);
     // Leaning into a lane change, body and head turning the way they go.
@@ -153,6 +165,8 @@ export class RunnerView {
     }
     this.rig.pivot.rotation.x = this.flip;
     if (board) this.board.rotation.set(Math.sin(time * 5) * 0.05, 0, -0.25 * lean);
+    // Nothing sinks into the ground or the deck: planted feet stay on it, and a roll tumbles over it.
+    if (!flying) this.contact.plant(this.board.visible ? DECK : 0, settle);
 
     // The shadow stays on the ground under them, shrinking as they rise.
     const ground = run ? shadowFloor(run) : 0;
