@@ -130,6 +130,24 @@ describe("guard", () => {
     expect(lagAfter(true)).toBeGreaterThan(lagAfter(false) + 0.3);
   });
 
+  it("keeps up with a straight drive and steps up into a shooter", () => {
+    const m = setup();
+    const d = m.athletes[3]!;
+    const h = m.athletes[0]!;
+    Object.assign(d, { x: 0, z: 7 });
+    m.press(3, "shoot");
+    run(m, 1);
+    run(m, 0.6, () => {
+      h.x += 3 * STEP;
+    });
+    const spot = guardSpot(m, h);
+    expect(Math.hypot(d.x - spot.x, d.z - spot.z)).toBeLessThan(0.45);
+    const off = Math.hypot(d.x - h.x, d.z - h.z);
+    h.action = { kind: "shoot", t: 0, three: true, released: false, free: false, step: null };
+    run(m, 0.5);
+    expect(Math.hypot(d.x - h.x, d.z - h.z)).toBeLessThan(off - 0.25);
+  });
+
   it("gives way to the stick", () => {
     const m = setup();
     const d = m.athletes[3]!;

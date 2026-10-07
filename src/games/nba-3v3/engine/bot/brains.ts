@@ -6,6 +6,9 @@ import { thinkOffBall, thinkWithBall } from "./offence";
 import { thinkScramble } from "./scramble";
 import { freshState, type BotState } from "./util";
 
+/** Added to a computer's pace while it guards the ball. */
+const ON_BALL_PACE = 0.12;
+
 /** Every way to pair three defenders with three attackers. */
 const PAIRINGS = [
   [0, 1, 2],
@@ -86,8 +89,18 @@ export class Brains {
       } else {
         thinkDefence(m, a, s, this.manFor(a.id), dt);
       }
-      if (a.seat === null) a.move = { x: a.move.x * tuning.pace, z: a.move.z * tuning.pace };
+      if (a.seat === null) {
+        // The man on the ball works hardest: even an easy computer stays nearly with its man.
+        const pace = this.onBall(a) ? Math.min(1, tuning.pace + ON_BALL_PACE) : tuning.pace;
+        a.move = { x: a.move.x * pace, z: a.move.z * pace };
+      }
     }
+  }
+
+  /** A defender whose man has the ball. */
+  private onBall(a: Athlete): boolean {
+    const holder = this.m.holder;
+    return !!holder && holder.team !== a.team && this.manFor(a.id) === holder;
   }
 
   private state(id: number): BotState {

@@ -68,9 +68,12 @@ describe("a dribble on the ball physics", () => {
   it("keeps the ball at the side on the run and never loses it", () => {
     const m = setup();
     const a = m.athletes[0]!;
+    // From the far side, so the whole run stays on the floor and never stops dead at the sideline.
+    Object.assign(a, { x: -6.5 });
+    m.ball.pos = { x: -6.5, y: 1.2, z: 7.7 };
     m.setMove(0, { x: 1, z: 0 });
     let far = 0;
-    const events = run(m, 2.5, () => {
+    const events = run(m, 2.2, () => {
       if (m.ball.hand === "free") far = Math.max(far, Math.hypot(m.ball.pos.x - a.x, m.ball.pos.z - a.z));
     });
     expect(events.some((e) => e.type === "fumble")).toBe(false);

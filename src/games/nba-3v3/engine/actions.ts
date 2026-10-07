@@ -21,6 +21,7 @@ export { pressDefend } from "./defend";
  */
 export function pressShoot(m: Match, a: Athlete): void {
   if (m.ball.holder !== a.id) return;
+  const outOf = a.action.kind === "move" ? a.action.move : null;
   // Late in a dribble move the shot comes straight out of it, as off a stepback; earlier it waits for that moment.
   if (a.action.kind === "move" && canShootOutOf(a.action)) a.action = { kind: "none" };
   else if (a.action.kind === "move") return queueShot(m, a.action);
@@ -39,7 +40,7 @@ export function pressShoot(m: Match, a: Athlete): void {
   // Running hard at the rim from the edge of the paint, or with a big man waiting, it goes up early and soft.
   if (!underGlass && floaterFits(m, a, d, speed, heading)) startFloater(m, a);
   else if (driving || underGlass || d < SHOT.closeRange) startDrive(m, a);
-  else startJumper(m, a);
+  else startJumper(m, a, false, outOf);
 }
 
 export function releaseShot(m: Match, a: Athlete, heldMs?: number): void {
