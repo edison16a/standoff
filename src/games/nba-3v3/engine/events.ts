@@ -2,6 +2,7 @@ import type { DunkStyle } from "../roster";
 import type { FoulKind } from "./foul-call";
 import type { Grade, Outcome, ShotKind } from "./shot-model";
 import type { DribbleMove, TeamId } from "./types";
+import type { BlockHit, BlockPreset } from "./blocks/hit";
 import type { ShakeReact } from "./shake";
 import type { ShotPreset } from "./shot-outcome/presets";
 import type { V3 } from "./vec";
@@ -39,8 +40,8 @@ export type MatchEvent =
   /** A free throw is ready to shoot: shot `n` of `of`. */
   | { type: "freeThrow"; id: number; n: number; of: number }
   | { type: "miss"; id: number }
-  /** A shot blocked: swatted away, or with `tip` only got a fingertip on; `at` is where the hand met the ball. */
-  | { type: "block"; id: number; victim: number; tip: boolean; at: V3 }
+  /** A shot blocked: `hit` is what the hand did to it (a `tip` is only a fingertip), `preset` the block played, `at` where the hand met the ball. */
+  | { type: "block"; id: number; victim: number; tip: boolean; at: V3; hit: BlockHit; preset: BlockPreset }
   /** A fingertip on a pass that knocks it loose. */
   | { type: "tip"; id: number; at: V3 }
   | { type: "steal"; id: number; victim: number }

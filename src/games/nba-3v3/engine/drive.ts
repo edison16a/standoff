@@ -63,7 +63,7 @@ function posterize(m: Match, a: Athlete): void {
 /** The man nearest the fake jumps at it, mostly, and is in the air as the driver steps through under him. */
 function biteOnFake(m: Match, a: Athlete): void {
   const man = m.opponents(a.team).find((o) => o.auto && dist2(o, a) < 1.8);
-  if (man && m.rng() < 0.75) pressJump(man);
+  if (man && m.rng() < 0.75) pressJump(m, man);
 }
 
 const hand: V3 = { x: 0, y: 0, z: 0 };

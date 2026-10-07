@@ -1,9 +1,10 @@
 import { buildOf } from "./athlete";
 import { hangTime } from "./body/jump";
 import type { Match } from "./match";
+import { JUMP_LIFT, type BlockJump } from "./blocks/style";
+import { timingAt } from "./blocks/plan";
 import { DEFENCE, JUMP } from "./tuning";
 import type { Action, Athlete } from "./types";
-import { clamp } from "./vec";
 
 type Block = Extract<Action, { kind: "block" }>;
 
@@ -15,12 +16,12 @@ export type BlockStage = "gather" | "rise" | "fall" | "done";
  * A short crouch first loads the legs, so a jump pressed late is late;
  * then a flight under real gravity, highest halfway through the air time.
  */
-export function startBlock(a: Athlete): void {
+export function startBlock(a: Athlete, style: BlockJump = "stand"): void {
   if (a.blockCd > 0) return;
   const s = buildOf(a).stats;
-  const peak = 0.42 + s.speed * 0.012 + s.strength * 0.008;
+  const peak = 0.42 + s.speed * 0.012 + s.strength * 0.008 + JUMP_LIFT[style];
   // Real gravity: the time up there follows from how high the legs send him.
-  a.action = { kind: "block", t: 0, peak, gather: JUMP.blockGather, air: hangTime(peak) };
+  a.action = { kind: "block", t: 0, peak, gather: JUMP.blockGather, air: hangTime(peak), style };
   a.blockCd = DEFENCE.blockCooldown;
 }
 
@@ -39,9 +40,7 @@ export function blockStage(act: Block): { stage: BlockStage; u: number } {
  */
 export function blockTiming(a: Athlete): number {
   const act = a.action;
-  if (act.kind !== "block" || act.t < act.gather) return 0;
-  const s = (act.t - act.gather) / act.air;
-  return clamp(Math.sin(Math.PI * clamp(s, 0, 1)), 0, 1);
+  return act.kind === "block" ? timingAt(act, act.t) : 0;
 }
 
 export function updateBlock(m: Match, a: Athlete, dt: number): void {

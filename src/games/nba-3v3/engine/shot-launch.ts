@@ -1,5 +1,6 @@
 import { buildOf } from "./athlete";
-import { swat } from "./ball-touch";
+import { applyHit, presetName } from "./blocks/hit";
+import { planBlocks } from "./blocks/plan";
 import { contestFor } from "./contest";
 import { isThree, rimDistance } from "./court";
 import { callShootingFoul } from "./foul-call";
@@ -80,6 +81,8 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   b.w = plan.launch.spin;
   b.shot.flight = newFlight(plan.ride);
   b.shot.preset = plan.preset;
+  // Anyone already up gets his touch or near miss decided now, on the real flight.
+  planBlocks(m);
   // The ending is known now, for the sounds and buzzes that want it early; the live ball still flies it out.
   m.emit({ type: "shot", id: a.id, kind, three, grade, chance, outcome: plan.detail.outcome, preset: plan.preset, made: plan.detail.made, contest: c.contest });
 }
@@ -124,12 +127,17 @@ export function slam(m: Match, a: Athlete, hand: V3): void {
   b.shot = shotInfo(m, a, "dunk", "perfect", 2, c.contest, 0.5);
   b.shot.rolled = m.opponents(a.team).map((o) => o.id);
   if (!forced && !fouler && c.blocker && m.rng() < c.blockChance) {
-    swat(m, b);
+    const d = c.blocker;
+    const strong = buildOf(d).stats.strength >= 7;
+    // Met at the rim: a big man spikes it away now and then, anyone else swats it.
+    const hit = strong && m.rng() < 0.35 ? "spike" : "swat";
+    applyHit(m, b, hit);
     b.flightKind = "block";
     b.shot.outcome = "airball";
     b.lastTouch = c.blocker.id;
     c.blocker.box.blocks++;
-    m.emit({ type: "block", id: c.blocker.id, victim: a.id, tip: false, at: { ...top } });
+    const style = d.action.kind === "block" ? d.action.style : "stand";
+    m.emit({ type: "block", id: d.id, victim: a.id, tip: false, at: { ...top }, hit, preset: presetName(style, hit, "dunk") });
     missShot(m);
     return;
   }

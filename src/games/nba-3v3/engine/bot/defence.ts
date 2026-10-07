@@ -73,7 +73,11 @@ function contestJumper(m: Match, a: Athlete, s: BotState, shooter: Athlete): voi
 }
 
 function contestDrive(m: Match, a: Athlete, driver: Athlete): void {
-  if (driver.action.kind !== "drive") return;
-  const leave = driver.action.takeoff - 0.2 + (m.rng() - 0.5) * 0.12;
-  if (driver.action.t >= leave && dist2(a, driver.action.to) < 2) m.press(a.id, "defend");
+  const act = driver.action;
+  if (act.kind !== "drive") return;
+  const leave = act.takeoff - 0.2 + (m.rng() - 0.5) * 0.12;
+  // Waiting at the rim, or trailing him close behind on the way there: the chase down from behind.
+  const way = dir2(act.from, act.to);
+  const trailing = (a.x - driver.x) * way.x + (a.z - driver.z) * way.z < -0.2 && dist2(a, driver) < 2.4;
+  if (act.t >= leave && (dist2(a, act.to) < 2 || trailing)) m.press(a.id, "defend");
 }

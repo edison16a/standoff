@@ -3,6 +3,8 @@ import type { DunkStyle } from "../roster";
 import type { ShotTrack } from "./physics/shot-watch";
 import type { Grade, Outcome, ShotKind } from "./shot-model";
 import type { ShotFlight } from "./shot-outcome/flight";
+import type { BlockPlan } from "./blocks/plan";
+import type { BlockJump } from "./blocks/style";
 import type { DribbleStyle } from "./dribble-style";
 import type { ShakeReact } from "./shake";
 import type { ShotPreset } from "./shot-outcome/presets";
@@ -61,8 +63,13 @@ export type Action =
       hand: 1 | -1; side: 1 | -1; pick: V3; release: V3; hangY: number; baseYaw: number;
     }
   | { kind: "pass"; t: number }
-  /** A jump with the arms up: a crouch for `gather` seconds, then `air` seconds off the floor. */
-  | { kind: "block"; t: number; peak: number; gather: number; air: number }
+  /**
+   * A jump with the arms up: a crouch for `gather` seconds, then `air`
+   * seconds off the floor. `style` is how he goes up (see
+   * `blocks/style.ts`) and `plan` the touch or near miss on the shot in
+   * the air, decided ahead (see `blocks/plan.ts`).
+   */
+  | { kind: "block"; t: number; peak: number; gather: number; air: number; style: BlockJump; plan?: BlockPlan }
   /**
    * A dribble move lasting `dur`. `side` is the hand the ball ends in or
    * the way the move goes, `dir` the way the move carries the player, and

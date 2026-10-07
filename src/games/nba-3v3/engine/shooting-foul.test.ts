@@ -60,7 +60,7 @@ describe("fouls on a shot", () => {
         const s = shooting(seed);
         const d = s.athletes[1]!;
         // Up in the air: at the top of the jump, or on the way down and flying in.
-        d.action = { kind: "block", t: late ? 0.6 : 0.4, peak: 0.5, gather: 0.12, air: 0.56 };
+        d.action = { kind: "block", t: late ? 0.6 : 0.4, peak: 0.5, gather: 0.12, air: 0.56, style: "stand" };
         d.y = 0.3;
         if (late) d.vz = 3;
         if (rollShootingFoul(s, s.athletes[0]!, "jumper")) fouls++;

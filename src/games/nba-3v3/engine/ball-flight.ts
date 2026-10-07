@@ -1,4 +1,5 @@
-import { blockHook, grab, passCaught } from "./ball-touch";
+import { grab, passCaught } from "./ball-touch";
+import { blockHook } from "./blocks/hook";
 import type { Match } from "./match";
 import { stepBall, type Contact } from "./physics/world";
 import { classify, missed, noteContacts } from "./physics/shot-watch";

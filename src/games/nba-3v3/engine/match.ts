@@ -1,3 +1,5 @@
+import type { BlockHit } from "./blocks/hit";
+import { guardLeap } from "./blocks/guard-leap";
 import type { Forced } from "./finish/select";
 import { pressDefend, pressPass, pressShoot, releaseShot, updateAction } from "./actions";
 import { createAthlete, moveAthlete, separate } from "./athlete";
@@ -71,8 +73,9 @@ export class Match {
   /** Who an alley oop lob in the air is for, and the last one caught, for the finish. */
   alleyLob: number | null = null;
   alleyCatch: { id: number; at: number } | null = null;
-  /** The next hand that gets to a shot blocks it, for the showcase and the lab. */
+  /** The next hand that gets to a shot blocks it, for the showcase and the lab; `forcedHit` also sets how, or makes it a near miss. */
   forcedBlock = false;
+  forcedHit: BlockHit | "miss" | null = null;
   gamePoint: [boolean, boolean] = [false, false];
   /** Whose turn it is to bring the ball up, per team, so everyone gets to handle it. */
   readonly checkTurn: [number, number] = [0, 0];
@@ -150,7 +153,8 @@ export class Match {
     // On defence Shoot is Guard, held for as long as the thumb stays down. It is armed
     // on offence too, so a turnover mid hold turns the held button straight into Guard.
     if (button === "shoot") this.setGuard(id, true);
-    if (button === "shoot" && this.defending(a)) return;
+    // Guard on the run to the post as the shot goes up is a two hand leap.
+    if (button === "shoot" && this.defending(a)) return guardLeap(this, a);
     if (button === "shoot") pressShoot(this, a);
     else if (button === "pass") pressPass(this, a, aim);
     else pressDefend(this, a, aim);

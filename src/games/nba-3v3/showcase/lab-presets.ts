@@ -87,7 +87,7 @@ export function steerPreset(scene: PresetScene, m: Match, t: number, once: (key:
   const a = m.athletes[driver]!;
   // The man stands still in the lab, so he is put up on the pump fake by hand, as a computer defender would go.
   const act = a.action;
-  if (scene === "layup-upUnder" && act.kind === "drive" && act.t >= act.takeoff * 0.45 && once("bite")) pressJump(m.athletes[3]!);
+  if (scene === "layup-upUnder" && act.kind === "drive" && act.t >= act.takeoff * 0.45 && once("bite")) pressJump(m, m.athletes[3]!);
   if (a.action.kind === "drive" || m.ball.holder !== driver) {
     a.move = { x: 0, z: 0 };
     return;
