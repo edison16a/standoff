@@ -61,7 +61,7 @@ export function filmCam(camera: ShotCamera, view: MatchView, u: number, span: Sp
       // In front and to the side of the QB as he winds up, looking up at him, the throw coming at us.
       const qb = who(view, QB);
       const dir = flat(who(view, CATCHER).x - qb.x, who(view, CATCHER).z - qb.z);
-      return { pos: around(qb, dir, mix(-2.6, -2.2, e), mix(-2.6, -2.1, e), 0.75), look: { x: qb.x, y: 1.45, z: qb.z }, fov: 36 };
+      return { pos: around(qb, dir, mix(3.0, 2.6, e), mix(-1.9, -1.5, e), 0.8), look: { x: qb.x, y: 1.2, z: qb.z }, fov: 42 };
     }
     case "spiral": {
       // Riding just behind and beside the ball, the receiver ahead in the distance.
