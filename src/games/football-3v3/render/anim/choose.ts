@@ -10,7 +10,9 @@ import { jukePose } from "./jukes";
 import { clamp01, type Pose } from "./pose";
 import { blockPose, breathe, CENTER, KICK_SET, READY, SHOTGUN, snapPose, THREE_POINT, TWO_POINT } from "./stance";
 import { stumbleOver, tacklePose } from "./tackle";
-import { catchPose, kickPose, throwPose } from "./throwing";
+import { catchPose } from "./catch/reaching";
+import { kickPose } from "./kick";
+import { holdingThrow, throwMotion } from "./throw";
 import { captainPose, matePose } from "./trophy-poses";
 
 /** What a figure knows about the play around it this frame. */
@@ -28,6 +30,8 @@ export interface PoseScene {
   ceremonyT: number | null;
   /** Where the player the ball is going to stands, for the QB to turn and pitch to him. */
   target?: { x: number; z: number } | null;
+  /** The QB holding the throw while its meter runs, who brings the ball up ready. */
+  holding?: number | null;
 }
 
 /** What the figure knows about its own body. */
@@ -145,7 +149,9 @@ export function choosePose(a: AthleteView, s: PoseScene, b: BodyScene): Chosen {
     case "lunge":
       return free(tacklePose(a, run)!, 24);
     case "throw":
-      return a.lob ? free(pitchPose(t, a.actionDur, towardTarget(a, s)), 30, "both") : free(throwPose(t, a.actionDur), 30, "R");
+      if (a.lob || !a.throwKind) return free(pitchPose(t, a.actionDur, towardTarget(a, s)), 30, "both");
+      // On the run the stride keeps going under the throw; set throws are authored to the feet.
+      return { pose: throwMotion(a.throwKind, t, a.actionDur, run), rate: 30, hand: "R", feet: a.throwKind === "run" ? "gait" : "free" };
     case "kick":
       return free(kickPose(t), 26, "both");
     case "down": {
@@ -174,6 +180,7 @@ export function choosePose(a: AthleteView, s: PoseScene, b: BodyScene): Chosen {
   // Teammates of the passer leave it to the receiver; only the target and the defence go up for it.
   const { reach, high } = a.targeted || a.team !== s.offense ? reachFor(a, s.ball) : { reach: 0, high: 0 };
   let pose = reach > 0 ? catchPose(run(), reach, high) : run();
+  if (carry === "ready" && s.holding === a.id) pose = holdingThrow(pose);
   if (securing) pose = securePose(pose, b.secured! / 0.5);
   pose = fooled(pose);
   // The stride is tracked closely so the planted foot and the legs agree; reaching blends in a touch slower.

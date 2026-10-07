@@ -1,5 +1,6 @@
 import type { AthleteView, MatchView } from "../engine";
-import { KICK, PASS, STEP, TACKLE } from "../engine/tuning";
+import { THROW_MOVES, type ThrowKind } from "../engine/throw-preset";
+import { KICK, STEP, TACKLE } from "../engine/tuning";
 import type { ActionKind, JukeKind } from "../engine/types";
 import { BUILD_IDS, BUILDS, LINEMAN_NUMBERS } from "../builds";
 import { STAGE_MOVES, STAGES, type StageMove } from "./lab-scenes";
@@ -10,7 +11,7 @@ import { recordStage } from "./lab-stage";
  * animation at a time: all six builds in a row doing the same thing on
  * a loop, with a pair of linemen alongside. Pick it with ?lab=<move>.
  */
-const POSE_MOVES = ["idle", "run", "tuck", "ready", "throw", "kick", "spin", "back", "side", "dive", "lunge", "down", "tackled", "celebrate", "spike", "stance", "block", "catch"] as const;
+const POSE_MOVES = ["idle", "run", "tuck", "ready", "throw", "bomb", "onrun", "fade", "kick", "spin", "back", "side", "dive", "lunge", "down", "tackled", "celebrate", "spike", "stance", "block", "catch"] as const;
 type PoseMove = (typeof POSE_MOVES)[number];
 /** The single poses on a row of builds, then the staged tackles, misses and runs (lab-scenes.ts). */
 export const LAB_MOVES = [...POSE_MOVES, ...STAGE_MOVES] as const;
@@ -28,7 +29,11 @@ interface Act {
   hasBall?: boolean;
   downCause?: AthleteView["downCause"];
   spike?: boolean;
+  throwKind?: ThrowKind;
 }
+
+/** A pass thrown with one of the throwing motions, standing or on the run. */
+const pass = (kind: ThrowKind, speed = 0): Act => ({ action: "throw", dur: THROW_MOVES[kind].dur, speed, hasBall: true, throwKind: kind });
 
 function act(move: PoseMove): Act {
   switch (move) {
@@ -36,7 +41,10 @@ function act(move: PoseMove): Act {
     case "run": return { action: "none", dur: 0, speed: 8.5 };
     case "tuck": return { action: "none", dur: 0, speed: 8.5, hasBall: true };
     case "ready": return { action: "none", dur: 0, speed: 0, hasBall: true };
-    case "throw": return { action: "throw", dur: PASS.throwTime, speed: 0, hasBall: true };
+    case "throw": return pass("flick");
+    case "bomb": return pass("bomb");
+    case "onrun": return pass("run", 4);
+    case "fade": return pass("pressure");
     case "kick": return { action: "kick", dur: KICK.windup + 1, speed: 0 };
     case "spin": case "back": case "side": return { action: "juke", dur: move === "spin" ? 0.55 : 0.45, speed: 6, juke: move, hasBall: true };
     case "dive": return { action: "dive", dur: TACKLE.diveTime, speed: 0 };
@@ -63,7 +71,7 @@ export function labView(base: MatchView, move: LabMove, time: number): MatchView
     ...base.athletes[0]!, id: i, team: i < 3 ? 0 : 1, role: i === 0 || i === 3 ? "qb" : "runner", build: id, number: BUILDS[id].number,
     // Runners really run, round a loop in front of the camera, so their feet plant on the turf.
     seat: null, x: a.speed > 0 && move !== "catch" ? 6 - ((time * a.speed) % 12) : 0, z: (i - 2.5) * 2.6, yaw, vx: -a.speed, vz: 0, speed: a.speed,
-    action: a.action, actionT: t, actionDur: a.dur, juke: a.juke ?? null, side: 1, spike: !!a.spike,
+    action: a.action, actionT: t, actionDur: a.dur, juke: a.juke ?? null, side: 1, spike: !!a.spike, throwKind: a.throwKind ?? null,
     hasBall: false, targeted: move === "catch", guarding: null, rushing: false, blocked: false, downCause: a.downCause ?? null,
   }));
   // Two linemen at the end of the row, squared up against each other.

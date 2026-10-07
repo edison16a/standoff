@@ -72,6 +72,7 @@ export class Squad {
       phase: view.phase, phaseT: view.phaseT, offense: view.drive.offense, ball: view.ball,
       winner: view.winner, center: false, kicker, ceremonyT: view.ceremony?.t ?? null,
       target: aimed ? { x: aimed.x, z: aimed.z } : null,
+      holding: view.meter && view.meter.grade === null ? view.meter.id : null,
     };
     let targeted: AthleteView | null = null;
     this.control.update(view, dt, time);

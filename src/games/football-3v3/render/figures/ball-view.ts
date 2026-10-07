@@ -13,6 +13,14 @@ const UP = new THREE.Vector3(0, 1, 0);
 const SQUASH = { impulse: 2.5, most: 0.16, lasts: 0.07 } as const;
 
 /**
+ * Seconds the drawn ball takes to go from the hand to the engine's ball
+ * as it is thrown, and from the air into the hands as it is caught. The
+ * engine lets go a step from where the drawn hand is, so without this
+ * the ball would pop. Farther apart than `far` it was a cut, not a throw.
+ */
+const HANDOFF = { release: 0.1, take: 0.08, far: 2.5 } as const;
+
+/**
  * The football on screen. Free, it is exactly the engine's rigid body:
  * its orientation, the spiral's spin, a duck's wobble, a kick's tumble.
  * A fast spin smears the laces round the ball the way a camera sees it,
@@ -33,6 +41,12 @@ export class BallModel {
   private readonly last = new THREE.Quaternion();
   /** The spiked ball's own little flight: position, velocity and tumble. */
   private spike: { p: THREE.Vector3; v: THREE.Vector3; roll: number; spin: number; dir: THREE.Vector3 } | null = null;
+  /** Where the ball was drawn last frame, and whether it was in someone's hands. */
+  private readonly drawnAt = new THREE.Vector3();
+  private readonly drawnQ = new THREE.Quaternion();
+  private wasHeld: boolean | null = null;
+  /** Leaving or reaching the hands: the gap still to close, and the turn it had. */
+  private handoff: { off: THREE.Vector3; q: THREE.Quaternion; age: number; lasts: number } | null = null;
 
   constructor() {
     this.material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0.02 });
@@ -60,7 +74,28 @@ export class BallModel {
       if (ball.state === "dead") orientBall(target, axis.set(1, 0, 0), 0);
       else target.set(ball.quat.x, ball.quat.y, ball.quat.z, ball.quat.w);
     }
+    this.blendHandoff(holder !== null, target, dt);
     this.place(pos, target, holder ? null : ball, dt);
+    this.drawnAt.copy(pos);
+    this.drawnQ.copy(target);
+  }
+
+  /** Eases `pos` and `q` from where the ball was drawn to the new owner of it, the air or the hands. */
+  private blendHandoff(held: boolean, q: THREE.Quaternion, dt: number): void {
+    if (this.wasHeld !== null && held !== this.wasHeld && this.drawnAt.distanceTo(pos) < HANDOFF.far) {
+      this.handoff = { off: this.drawnAt.clone().sub(pos), q: this.drawnQ.clone(), age: 0, lasts: held ? HANDOFF.take : HANDOFF.release };
+    }
+    this.wasHeld = held;
+    const h = this.handoff;
+    if (!h) return;
+    h.age += dt;
+    const left = 1 - THREE.MathUtils.smoothstep(h.age / h.lasts, 0, 1);
+    if (left <= 0) {
+      this.handoff = null;
+      return;
+    }
+    pos.addScaledVector(h.off, left);
+    q.slerp(h.q, left);
   }
 
   /** Puts the ball at `p` turned to `q`, with the spin blur and the squash of the last knock. */
