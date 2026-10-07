@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useRef } from "react";
 import type { GameInfo } from "@/platform/games/game-api";
+import { PremiumBadge } from "./PremiumBadge";
 import { COPIES, useTileRail } from "./use-tile-rail";
 
 interface GameTilesProps {
@@ -55,10 +56,10 @@ export function GameTiles({ games, selected, onSelect, onHost }: GameTilesProps)
             <button
               key={slot}
               type="button"
-              className="game-tile"
+              className={game.premium ? "game-tile game-tile--premium" : "game-tile"}
               data-tile={copy ? undefined : game.id}
               style={{ "--game": game.color } as React.CSSProperties}
-              aria-label={game.title}
+              aria-label={game.premium ? `${game.title}, Standoff Premium` : game.title}
               aria-hidden={copy && !chosen ? true : undefined}
               aria-pressed={chosen}
               tabIndex={chosen ? 0 : -1}
@@ -71,6 +72,7 @@ export function GameTiles({ games, selected, onSelect, onHost }: GameTilesProps)
               <span className="game-tile__art">
                 {game.media ? <Image className="cover__art" src={game.media.icon} alt="" fill sizes="270px" /> : <Cover />}
               </span>
+              {game.premium && <PremiumBadge place="tile" />}
             </button>
           );
         })}

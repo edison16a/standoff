@@ -1,0 +1,84 @@
+/*
+  The Standoff Premium badge. A small gold pill with the logo mark, on the
+  premium games' tiles and above the chosen game's name. Gold reads as a
+  step up without fighting each game's own colour.
+*/
+:root {
+  --premium: #8a5a00;
+  --premium-soft: #fff4d6;
+  --premium-line: #e9c46a;
+}
+
+:root[data-theme="dark"] {
+  --premium: #f6cf6a;
+  --premium-soft: #2e2410;
+  --premium-line: #8f6d1f;
+}
+
+.premium-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* The mark is wider than tall, so only its height is set. */
+.premium-badge svg {
+  flex: none;
+  width: auto;
+}
+
+/* Above the name, in the theme's own colours. */
+.premium-badge--details {
+  height: 28px;
+  padding: 0 12px 0 10px;
+  border: 1px solid var(--premium-line);
+  background: var(--premium-soft);
+  color: var(--premium);
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.premium-badge--details svg {
+  height: 13px;
+}
+
+/*
+  On the art, always dark glass with light gold, so it reads on any cover
+  in either theme. Sized from the tile, so it grows with the chosen one.
+*/
+.premium-badge--tile {
+  position: absolute;
+  top: 8%;
+  left: 8%;
+  max-width: 84%;
+  height: max(20px, 13cqi);
+  padding: 0 max(8px, 5cqi) 0 max(6px, 4cqi);
+  border: 1px solid rgba(246, 207, 106, 0.55);
+  background: rgba(14, 10, 4, 0.72);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  color: #f6cf6a;
+  font-size: max(10px, 6.4cqi);
+  pointer-events: none;
+  backdrop-filter: blur(6px);
+}
+
+.premium-badge--tile svg {
+  height: max(8px, 5.2cqi);
+}
+
+/* Sizes the tile badge from the tile's width. */
+.game-tile--premium {
+  container-type: inline-size;
+}
+
+/* A small tile keeps the mark and "Premium", so the pill never overflows. */
+@container (max-width: 170px) {
+  .premium-badge__brand {
+    display: none;
+  }
+}

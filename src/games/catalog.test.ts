@@ -19,4 +19,25 @@ describe("the game catalog", () => {
       for (const count of game.players) expect([1, 2, 3, 4, 5, 6]).toContain(count);
     }
   });
+
+  it("leads with the Standoff Premium games, and only those carry the flag", () => {
+    const ids = GAMES.map((game) => game.id);
+    expect(ids.slice(0, 3)).toEqual(["nba-3v3", "magic-kart", "football-3v3"]);
+    expect(GAMES.filter((game) => game.premium).map((game) => game.id)).toEqual(ids.slice(0, 3));
+  });
+
+  it("keeps the rest in their home screen order", () => {
+    expect(GAMES.slice(3).map((game) => game.id)).toEqual([
+      "fruit-ninja",
+      "zombie-survival",
+      "shooting-gallery",
+      "boxing",
+      "subway-surfers",
+      "fifa-3v3",
+      "cube-game",
+      "blade-clash",
+      "brawl-battle",
+      "counter-battle",
+    ]);
+  });
 });
