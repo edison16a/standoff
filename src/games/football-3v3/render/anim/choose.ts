@@ -11,6 +11,7 @@ import { clamp01, type Pose } from "./pose";
 import { blockPose, breathe, CENTER, KICK_SET, READY, SHOTGUN, snapPose, THREE_POINT, TWO_POINT } from "./stance";
 import { stumbleOver, tacklePose } from "./tackle";
 import { catchPose } from "./catch/reaching";
+import { blockMove } from "./block";
 import { catchMove } from "./catch";
 import { kickPose } from "./kick";
 import { holdingThrow, throwMotion } from "./throw";
@@ -176,10 +177,11 @@ export function choosePose(a: AthleteView, s: PoseScene, b: BodyScene): Chosen {
   }
   if (s.center && s.ball.state === "snap") return free(snapPose(s.phaseT), 30);
   const fooled = (p: Pose) => (a.stumble ? stumbleOver(p, a.stumble.t, a.stumble.dur, a.stumble.side) : p);
-  if (a.role === "lineman" && a.blocked) {
-    // Two big men leaning on each other: a shove that drives one back sits him up, the one winning leans in.
+  if (a.role === "lineman") {
+    // Line play is the block move the engine picked; a shove that drives one back sits him up, the one winning leans in.
     const lurch = Math.max(-1, Math.min(1, (b.push ?? 0) / 4));
-    return free(fooled(blockPose(b.time, b.seed, (a.team === s.offense ? -0.2 : 0.2) + lurch)), a.stumble ? 18 : 12);
+    const line = blockMove(a, b.time, b.seed, lurch) ?? (a.blocked ? blockPose(b.time, b.seed, lurch) : null);
+    if (line) return free(fooled(line), a.stumble ? 18 : 14);
   }
   // Teammates of the passer leave it to the receiver; only the target and the defence go up for it.
   const { reach, high } = a.targeted || a.team !== s.offense ? reachFor(a, s.ball) : { reach: 0, high: 0 };

@@ -42,8 +42,11 @@ function approach(kind: CatchKind, at: Arrival): Step[] {
       return [[-0.42, {}], [-0.3, join(LOAD, { pitch: 0.55 })], [-0.12, join(LAYOUT, { lift: 0.35 })], [0, join(LAYOUT, { lift: 0.3, shLX: -2.8, shRX: -2.7 })]];
     case "shoulder":
       return [[-0.5, {}], [-0.3, { neckY: 1.0, spineY: 0.4, neckX: -0.3 }], [0, OVER_SHOULDER]];
-    case "swat":
-      return [[-0.4, {}], [-0.22, LOAD], [-0.06, join(AIR, SWAT_UP, { lift: 0.45 })], [0, join(AIR, SWAT_UP, { lift: 0.5 })]];
+    case "swat": {
+      // He gets up to a ball over him, and only rises onto his toes for one at the chest.
+      const lift = Math.max(0.1, Math.min(0.5, (at.height - 1.2) * 0.7));
+      return [[-0.4, {}], [-0.22, LOAD], [-0.06, join(AIR, SWAT_UP, { lift: lift * 0.9 })], [0, join(AIR, SWAT_UP, { lift })]];
+    }
   }
 }
 

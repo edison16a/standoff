@@ -8,7 +8,8 @@ import type { Fall } from "./carrier";
  * nothing belly flops and log rolls on with its momentum; a man the
  * juke left grabbing air lands on his shoulder and tumbles over; one
  * the carrier ran through is spun round and dumped on his seat; and a
- * heavy man whose ankles a juke broke sits down hard on the turf.
+ * heavy man whose ankles a juke broke sits down hard on the turf. A
+ * rusher a blocker pancaked goes up and over onto his back.
  */
 const TURN = Math.PI * 2;
 /** Tucked in through a roll, the arms in close. */
@@ -61,6 +62,17 @@ export function missFall(cause: DownCause): Fall | null {
           [0.18, over(BASE, { roll: -0.35, side: -0.1, pitch: 0.2, hipRZ: -0.25, hipLZ: 0.45, kneeL: 0.3, kneeR: 0.55, ...FLAIL })],
           [0.45, over(SEATED, { roll: -0.25, yaw: -0.4, shRX: 0.9, shRZ: 0.6, shLX: -0.6, shLZ: 0.9 })],
           [0.6, over(SEATED, { roll: -0.15, yaw: -0.4 })],
+        ],
+      };
+    case "pancaked":
+      // Driven up and back off his feet by a blocker who won: the legs go up and he lands flat on his back.
+      return {
+        lying: "back",
+        keys: [
+          [0, over(BASE, { pitch: -0.3, spineX: -0.35, neckX: 0.4, shLX: -1.3, shRX: -1.3, elL: -0.5, elR: -0.5, kneeL: 0.6, kneeR: 0.4 })],
+          [0.2, over(BASE, { lift: 0.16, pitch: -0.95, ...FLAIL, hipLX: -0.9, hipRX: -0.6, kneeL: 0.8, kneeR: 0.5 })],
+          [0.42, over(SUPINE, { lift: 0.03 })],
+          [0.55, SUPINE],
         ],
       };
     default:
