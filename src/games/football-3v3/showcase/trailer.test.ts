@@ -37,8 +37,8 @@ describe("football trailer", () => {
   });
 
   it("lands the throw, the catch and the tackler's dive inside their shots", () => {
-    const throwAt = log.find((l) => l.e.type === "throw")!.at;
-    const catchAt = log.find((l) => l.e.type === "catch")!.at;
+    const throwAt = log.find((l) => l.e.type === "throw" && l.e.to === CATCHER)!.at;
+    const catchAt = log.find((l) => l.e.type === "catch" && l.e.id === CATCHER)!.at;
     const dive = log.find((l) => l.e.type === "lunge" && l.at > shot("hit").from - 1)!;
     expect(inside(throwAt, "qbLow") || Math.abs(throwAt - shot("qbLow").to) < 0.2).toBe(true);
     expect(inside(catchAt, "catch")).toBe(true);
