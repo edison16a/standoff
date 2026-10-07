@@ -32,7 +32,7 @@ export interface PoseScene {
   ceremonyT: number | null;
   /** Where the player the ball is going to stands, for the QB to turn and pitch to him. */
   target?: { x: number; z: number } | null;
-  /** The QB holding the throw while its meter runs, who brings the ball up ready. */
+  /** The QB holding the throw stick while he aims, who brings the ball up ready. */
   holding?: number | null;
 }
 

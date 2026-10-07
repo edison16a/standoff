@@ -62,7 +62,7 @@ export function throwMotion(kind: ThrowKind, t: number, dur: number, run: () => 
 /** The ball high by the right shoulder in both hands, ready to go. */
 const HIGH = over(SET, { shRX: -0.95, shLX: -0.75, elR: -1.65, elL: -1.7, shRZ: 0.45, spineY: -0.3, neckY: 0.25 });
 
-/** Holding the throw while the meter runs: the ball up and ready, the legs carrying on. */
+/** Holding the throw stick while he aims: the ball up and ready, the legs carrying on. */
 export function holdingThrow(run: Pose): Pose {
   return onLegs(HIGH, run);
 }
