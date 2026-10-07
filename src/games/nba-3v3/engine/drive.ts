@@ -1,5 +1,6 @@
 import { airborne } from "./athlete";
 import { drivePosition, driveHeight } from "./body/drive-flight";
+import { pressJump } from "./defend";
 import { readApproach } from "./finish/approach";
 import { ballInHands, specOf } from "./finish/ball-track";
 import { facingAt } from "./finish/facing";
@@ -9,7 +10,7 @@ import type { Match } from "./match";
 import { launchShot, slam } from "./shooting";
 import { JUMP } from "./tuning";
 import type { Athlete } from "./types";
-import { clamp, dir2, type V3 } from "./vec";
+import { clamp, dir2, dist2, type V3 } from "./vec";
 
 /**
  * Driving at the rim. The finish is picked before the gather starts
@@ -48,6 +49,12 @@ function contact(m: Match, a: Athlete, man: Athlete, edge: number, dunk: boolean
   m.emit({ type: "bump", a: a.id, b: man.id, power });
 }
 
+/** The man nearest the fake jumps at it, mostly, and is in the air as the driver steps through under him. */
+function biteOnFake(m: Match, a: Athlete): void {
+  const man = m.opponents(a.team).find((o) => o.auto && dist2(o, a) < 1.8);
+  if (man && m.rng() < 0.75) pressJump(man);
+}
+
 const hand: V3 = { x: 0, y: 0, z: 0 };
 
 export function updateDrive(m: Match, a: Athlete, dt: number): void {
@@ -62,6 +69,9 @@ export function updateDrive(m: Match, a: Athlete, dt: number): void {
   if (t < act.finish || specOf(act).yaw === "rim") a.yaw = facingAt(act, a, Math.min(t, act.finish));
   a.y = driveHeight(act, t);
   if (before < act.takeoff && t >= act.takeoff) m.emit({ type: "takeoff", id: a.id, dunk: act.dunk });
+  // The pump fake of an up and under: a computer defender close by usually leaves his feet for it.
+  const fake = act.takeoff * 0.45;
+  if (act.layup === "upUnder" && before < fake && t >= fake) biteOnFake(m, a);
   if (!act.released && t >= act.finish && m.ball.holder === a.id && m.phase === "live") {
     act.released = true;
     // The ball goes from where the hand has it right now.

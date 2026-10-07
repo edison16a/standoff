@@ -61,7 +61,8 @@ export function finishHands(a: Athlete, ball: Ball | null, arms: Record<Side, Ar
 /** After the slam: the hands on the front of the ring for the hang, or a slap of the rim on the way down. */
 function rimHands(act: Drive, arms: Record<Side, ArmChain>, main: Side, off: Side, since: number, palm: THREE.Vector3): void {
   const hang = act.rimHang;
-  const w = hang > 0 ? smooth(since / 0.05) * (1 - smooth((since - hang) / 0.12)) : smooth(since / 0.04) * (1 - smooth((since - 0.08) / 0.14));
+  // Straight on from the ball to the ring: the hand was already there with it.
+  const w = hang > 0 ? 1 - smooth((since - hang) / 0.12) : 1 - smooth((since - 0.08) / 0.14);
   if (w <= 0.001) return;
   // The near side of the ring, from the body.
   const bx = act.to.x - RIM.x;

@@ -11,13 +11,13 @@ import { LAYUP_TRACKS as T } from "./tracks";
 export const LAYUP_SPEC: Record<LayupKind, LayupSpec> = {
   /** Finger roll from the front: up at full stretch and rolled soft off the fingertips. */
   finger: {
-    gather: 0.36, air: 0.4, stop: 0.72, shift: 0, steps: "two", turn: null, yaw: "rim", track: T.front, blendFrom: 1.35,
-    peak: 0.7, release: { up: 0.86, rim: 0.5, side: 0.05, ext: 0.96 }, family: "layup", apex: 0.42, backspin: [3, 5], evade: 0.1,
+    gather: 0.36, air: 0.4, stop: 1.0, shift: 0, steps: "two", turn: null, yaw: "rim", track: T.front, blendFrom: 1.35,
+    peak: 0.7, release: { up: 0.9, rim: 0.32, side: 0.05, ext: 0.96 }, family: "layup", apex: 0.42, backspin: [3, 5], evade: 0.1,
   },
   /** Under the backboard from the baseline, back to the rim, flipped up the far side. */
   reverse: {
     gather: 0.36, air: 0.46, stop: 0.6, shift: 0, steps: "two", turn: null, yaw: "path", track: T.reverse, blendFrom: 1.3,
-    peak: 0.66, release: { up: 0.9, rim: 0.35, side: 0.1, ext: 0.95 }, family: "reverse", apex: 0.55, backspin: [6, 9], evade: 0.5,
+    peak: 0.66, release: { up: 0.95, rim: 0.1, side: 0.15, ext: 0.95 }, family: "reverse", apex: 0.55, backspin: [6, 9], evade: 0.5,
   },
   /** Euro step: one step at the defender, a long step across, and up away from him. */
   euro: {
@@ -26,13 +26,13 @@ export const LAYUP_SPEC: Record<LayupKind, LayupSpec> = {
   },
   /** Up and under: stop, show it high to get him up, then step through under his arms. */
   upUnder: {
-    gather: 0.64, air: 0.34, stop: 0.72, shift: 0.55, steps: "fake", turn: null, yaw: "rim", track: T.fake, blendFrom: 1.3,
-    peak: 0.5, release: { up: 0.62, rim: 0.6, side: 0.28, ext: 0.92 }, family: "layup", apex: 0.55, backspin: [6, 9], evade: 0.6,
+    gather: 0.64, air: 0.34, stop: 0.85, shift: 0.55, steps: "fake", turn: null, yaw: "rim", track: T.fake, blendFrom: 1.3,
+    peak: 0.55, release: { up: 0.75, rim: 0.5, side: 0.28, ext: 0.94 }, family: "layup", apex: 0.55, backspin: [6, 9], evade: 0.6,
   },
   /** Scoop: the ball kept low and away, then swung up underhand round the hands. */
   scoop: {
-    gather: 0.38, air: 0.4, stop: 0.9, shift: 0.35, steps: "two", turn: null, yaw: "rim", track: T.low, blendFrom: 1.3,
-    peak: 0.58, release: { up: 0.5, rim: 0.65, side: 0.35, ext: 0.9 }, family: "layup", apex: 0.78, backspin: [7, 10], evade: 0.5,
+    gather: 0.38, air: 0.4, stop: 1.0, shift: 0.35, steps: "two", turn: null, yaw: "rim", track: T.low, blendFrom: 1.3,
+    peak: 0.6, release: { up: 0.62, rim: 0.55, side: 0.32, ext: 0.92 }, family: "layup", apex: 0.78, backspin: [7, 10], evade: 0.5,
   },
   /** Teardrop: up early off one foot from short of the rim, high and soft over the big man. */
   teardrop: {
@@ -61,7 +61,7 @@ export const LAYUP_SPEC: Record<LayupKind, LayupSpec> = {
   },
   /** Power layup: a hard jump stop on both feet and up strong off the glass. */
   power: {
-    gather: 0.42, air: 0.36, stop: 0.78, shift: 0, steps: "stop", turn: null, yaw: "rim", track: T.front, blendFrom: 1.35,
+    gather: 0.42, air: 0.36, stop: 0.9, shift: 0, steps: "stop", turn: null, yaw: "rim", track: T.front, blendFrom: 1.35,
     peak: 0.62, release: { up: 0.9, rim: 0.4, side: 0, ext: 0.95 }, family: "auto", apex: 0.45, backspin: [5, 8], evade: 0.25,
   },
 };

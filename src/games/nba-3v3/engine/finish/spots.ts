@@ -25,5 +25,5 @@ function baselineSide(a: Athlete): number {
 /** A reverse goes up on the far side of the rim from where the drive came in, just in front of the glass. */
 export function underSpot(a: Athlete): V2 {
   const side = baselineSide(a);
-  return { x: RIM.x - side * 0.5, z: RIM.z + 0.38 };
+  return { x: RIM.x - side * 0.7, z: RIM.z + 0.42 };
 }
