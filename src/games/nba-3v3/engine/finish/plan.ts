@@ -14,8 +14,10 @@ import { finishSide, underSpot } from "./spots";
 
 type Drive = Extract<Athlete["action"], { kind: "drive" }>;
 
-/** The highest a body goes up for a dunk, metres; past this a player lays it in instead. */
-export const MAX_DUNK_PEAK = 1.25;
+/** The fastest the feet carry the body through a gather, metres a second. */
+const MAX_STEP_SPEED = 5.5;
+/** The highest a body goes up for a dunk, metres: a small guard with space gets up there; past it a player lays it in. */
+export const MAX_DUNK_PEAK = 1.3;
 /** At the slam the ball is just over the ring on the near side, the palm on top of it. */
 const SLAM_UP = 0.16;
 const SLAM_IN = 0.1;
@@ -50,7 +52,9 @@ export function planFinish(rng: Rng, a: Athlete, pick: FinishChoice, ball: V3): 
   const from = { x: a.x, z: a.z };
   const to = finishSpot(a, pick, spec, d);
   // A longer run in makes for a longer gather.
-  const gather = spec.gather * clamp(0.85 + (d - dist2(to, RIM_SPOT)) * 0.08, 0.85, 1.15);
+  const run = dist2(from, to);
+  // A longer run in makes for a longer gather, and never steps faster than a sprint: a quick preset from far out takes its time.
+  const gather = Math.max(spec.gather * clamp(0.85 + (d - dist2(to, RIM_SPOT)) * 0.08, 0.85, 1.15), (run * 0.65) / MAX_STEP_SPEED);
   const air = spec.air;
   const baseYaw = spec.yaw === "path" ? yawOf(to.x - from.x, to.z - from.z) : yawOf(RIM.x - a.x, RIM.z - a.z);
   const finishYaw = (spec.yaw === "path" ? baseYaw : yawOf(RIM.x - to.x, RIM.z - to.z)) + (spec.turn ? spec.turn.turns * Math.PI * 2 * -pick.side : 0);

@@ -38,7 +38,7 @@ export const DUNK_SPEC: Record<DunkStyle, DunkSpec> = {
   /** Poster: up through the man at the rim, one hand over him. */
   poster: { ...FRONT, stop: 0.4, gather: 0.4, air: 0.46, steps: "two", track: T.tomahawk, blendFrom: 1.6, hands: 1, hang: 0.5, power: 1 },
   /** Putback: off the offensive board straight back up with both hands. */
-  putback: { ...FRONT, gather: 0.2, air: 0.38, steps: "stop", track: T.stop, blendFrom: 1.4, hands: 2, hang: 0.2, power: 0.95 },
+  putback: { ...FRONT, gather: 0.2, air: 0.38, steps: "stop", track: T.board, blendFrom: 1.4, hands: 2, hang: 0.2, power: 0.95 },
   /** Alley oop finish: caught high on the run and thrown down in one motion. */
   alley: { ...FRONT, gather: 0.18, air: 0.42, steps: "one", track: T.catch, blendFrom: 1.35, hands: 1, hang: 0.3, power: 0.95 },
   /** Two hand dunk off a jump stop. */

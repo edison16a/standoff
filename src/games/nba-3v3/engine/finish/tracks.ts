@@ -33,7 +33,7 @@ export const LAYUP_TRACKS = {
 } satisfies Record<string, TrackKey[]>;
 
 /** A dunk's load: the ball swung down past the knees on the last step to throw the arms up with. */
-const LOAD: TrackKey[] = [k(0.35, 0.3, 0.1, 0.58), k(0.85, 0.34, 0.02, 0.44), k(1, 0.3, 0.02, 0.8)];
+const LOAD: TrackKey[] = [k(0.35, 0.3, 0.1, 0.58), k(0.78, 0.34, 0.02, 0.46), k(1, 0.3, 0.02, 0.74)];
 
 export const DUNK_TRACKS = {
   /** Both hands overhead, straight up to the rim. */
@@ -57,5 +57,7 @@ export const DUNK_TRACKS = {
   /** Caught high, one step, straight up. */
   catch: [k(0.3, 0.24, 0.05, 0.9), k(1, 0.26, 0.05, 1.0), k(1.3, 0.25, 0.1, 1.12, false)],
   /** Off a jump stop on both feet: the ball low between the knees on the load. */
-  stop: [k(0.3, 0.3, 0.08, 0.6), k(0.85, 0.32, 0, 0.4), k(1, 0.3, 0, 0.8), k(1.35, 0.25, 0, 1.12)],
+  stop: [k(0.3, 0.3, 0.08, 0.6), k(0.7, 0.32, 0, 0.42), k(1, 0.3, 0, 0.72), k(1.35, 0.25, 0, 1.12)],
+  /** Off the board: brought down to the chin and straight back up with both hands. */
+  board: [k(0.3, 0.24, 0.04, 0.72), k(1, 0.26, 0, 0.92), k(1.35, 0.25, 0, 1.12)],
 } satisfies Record<string, TrackKey[]>;

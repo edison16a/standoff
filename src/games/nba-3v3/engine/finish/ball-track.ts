@@ -76,7 +76,8 @@ export function ballInHands(a: Athlete, act: Drive, out: V3): V3 {
   body.z = a.z;
   toWorld(a, body, a.yaw, act.hand, along(keys, s, "f"), along(keys, s, "x"), along(keys, s, "y"), out);
   // From where the ball was as the gather began, carried along with the body.
-  const first = keys[0]!.s;
+  // A sixth of a second at least to get the ball up off the bounce, however quick the gather.
+  const first = Math.max(keys[0]!.s, Math.min(0.9, 0.16 / Math.max(1e-3, act.takeoff)));
   if (s < first) {
     const k = smooth(s / first);
     start.x = act.pick.x + (a.x - act.from.x);
