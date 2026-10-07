@@ -24,6 +24,22 @@ A platform fighter for 1 to 4 players on one big screen, with phones as controll
 5. After a fall you come back on a platform that floats down from above. You cannot be hurt for a moment. Move to step off it.
 6. The last fighter with lives left wins. Play again keeps everyone on a new stage; Change fighters goes back to the lobby.
 
+### Keyboard play
+
+For testing on one computer, turn on the admin panel's **Keyboard player** (three quick taps on the settings gear). Pick a fighter and tap Ready on its phone panel with the mouse, then fight with the keys (`keyboard.ts`).
+
+| Key | Does |
+| --- | --- |
+| A D or Left Right | Move |
+| Space | Jump, and again in the air for the double jump |
+| W or Up | Push the stick up: aims a move up, and jumps |
+| S, Down or Shift | Push the stick down: shield, fall faster, drop through a platform, aim a move down |
+| J or F | Attack. Hold to charge |
+| K or E | Special. Hold to charge |
+| L or Q | Ult, once the meter is full |
+
+The direction keys act like a d-pad, a full push each way, so a move's direction is always clear.
+
 ## The fighters
 
 | Fighter | Style | Signature moves |

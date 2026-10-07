@@ -8,6 +8,7 @@ import { BrawlPhone } from "./phone/brawl-phone";
 import { PhoneScreen } from "./phone/components/PhoneScreen";
 import { ControllerContext } from "./phone/components/session-context";
 import { Showcase } from "./showcase/Showcase";
+import { keyboard } from "./keyboard";
 import "./styles/host.css";
 import "./styles/hud.css";
 import "./styles/lobby.css";
@@ -50,4 +51,5 @@ export const game: GameModule = {
   },
 
   Showcase,
+  keyboard,
 };
