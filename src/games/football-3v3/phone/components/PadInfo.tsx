@@ -40,6 +40,19 @@ export function statusOf(host: PhoneState): string | null {
   }
 }
 
+/** The stamina bar: full and green on fresh legs, amber then red as they go. */
+function Legs({ stamina }: { stamina: number }) {
+  const tone = stamina > 0.55 ? "fresh" : stamina > 0.25 ? "tired" : "spent";
+  return (
+    <div className={`fb-legs fb-legs--${tone}`} role="meter" aria-label="Stamina" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(stamina * 100)}>
+      <span className="fb-legs__label">Legs</span>
+      <span className="fb-legs__track">
+        <span className="fb-legs__fill" style={{ width: `${Math.round(stamina * 100)}%` }} />
+      </span>
+    </div>
+  );
+}
+
 /**
  * The middle of the controller: this player's side and role, and a
  * status line saying what to do. The score, the clock and the down are
@@ -57,6 +70,7 @@ export function PadInfo({ host }: { host: PhoneState }) {
         {host.role && <span>{ROLE_NAMES[host.role]}</span>}
       </div>
       {status && <div className={`fb-info__status ${host.withBall ? "fb-info__status--ball" : ""}`}>{status}</div>}
+      {host.stamina !== null && host.playing && <Legs stamina={host.stamina} />}
     </div>
   );
 }

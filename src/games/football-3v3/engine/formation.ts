@@ -2,6 +2,7 @@ import { attackSign } from "../teams";
 import { inFieldGoalRange, type Drive } from "./downs";
 import { FIELD, YARD, yardToX } from "./field";
 import { backSpot } from "./run-play";
+import { supportSpot } from "./support/formation";
 import { LINE, RULES } from "./tuning";
 import type { Athlete, PlayCall } from "./types";
 import { clamp, type V2 } from "./vec";
@@ -25,6 +26,7 @@ export function formationSpot(a: Athlete, drive: Drive, call: PlayCall, back: nu
   const onOffense = a.team === drive.offense;
   const s = attackSign(drive.offense);
   const edge = FIELD.halfWidth - 3;
+  if (a.role === "support") return supportSpot(a, drive);
   if (a.role === "lineman") {
     const z = zBall + (a.slot - 1) * LINE.spacing;
     return { x: losX + (onOffense ? -s : s) * LINE.gap, z };

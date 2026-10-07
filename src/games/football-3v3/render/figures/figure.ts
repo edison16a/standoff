@@ -158,7 +158,23 @@ export class Figure {
     if (fill > 0.2) this.lod = "near";
     else if (fill < 0.16) this.lod = "far";
     this.rig.setLod(this.lod);
+    // A light figure far off leaves its shadow to the contact shadow under him, a draw less per shadow map.
+    if (this.light) this.rig.mesh.castShadow = this.lod === "near";
   }
+
+  /**
+   * A support player: one of many on a full field, so his helmet never
+   * casts a shadow and his body only does close up. Eleven a side then
+   * costs little more in the shadow passes than six did.
+   */
+  makeLight(): void {
+    this.light = true;
+    this.rig.root.traverse((o) => {
+      if (o !== this.rig.mesh) o.castShadow = false;
+    });
+  }
+
+  private light = false;
 
   private lod: Lod = "near";
 

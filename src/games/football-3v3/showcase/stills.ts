@@ -13,6 +13,6 @@ export interface Still {
 
 /** The home screen's stills held from the trailer. The icon is staged key art instead (keyart.ts). */
 export const STILLS: Partial<Record<ShowcaseView, Still>> = {
-  // The corner leaving his feet at the receiver who has just pulled the ball in.
-  poster: { t: 6.73 },
+  // Two of the Blaze leaving their feet at the Storm ball carrier, the rest of the field behind.
+  poster: { t: 6.9 },
 };

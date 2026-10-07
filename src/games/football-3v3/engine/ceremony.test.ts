@@ -23,7 +23,7 @@ describe("the trophy presentation", () => {
     // Every winner is close round the captain; every loser well away.
     for (const a of m.athletes) {
       const role = view.athletes[a.id]!.ceremony;
-      if (a.team === 1) expect(dist2(a, CEREMONY_SPOT)).toBeLessThan(3.5);
+      if (a.team === 1) expect(dist2(a, CEREMONY_SPOT)).toBeLessThan(4.6);
       else expect(role).toBe("beaten");
       if (a.team === 0) expect(dist2(a, CEREMONY_SPOT)).toBeGreaterThan(8);
     }

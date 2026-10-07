@@ -7,6 +7,8 @@ import type { Match } from "./match";
 import { moveAthlete } from "./motion";
 import { passerLook } from "./passer-facing";
 import { paceOf } from "./qb-run";
+import { ageLooseBlocks } from "./support/clinch-break";
+import { engageClinches, updateClinches } from "./support/clinch";
 import { followBinds } from "./tackle-bind";
 import { MOVE } from "./tuning";
 import type { Athlete } from "./types";
@@ -61,6 +63,10 @@ export function stepBodies(m: Match, dt: number): void {
     // The men of a tackle are held on the carrier before anything shoves them.
     followBinds(m.athletes);
     updateLinemen(m, h);
+    // Blocks out in space move their two men as one, over whatever their legs did.
+    updateClinches(m, h);
     separate(m, m.bumps);
   }
+  ageLooseBlocks(m, dt);
+  engageClinches(m);
 }

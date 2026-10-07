@@ -20,21 +20,21 @@ export interface Shot {
 
 /**
  * The long touchdown: the QB winds up and lets it go in slow motion, the
- * spiral is chased through the air, the catch, the side step as a
- * tackler dives past, then the scorer racing over the goal line at the
- * pylon and his dance in the end zone. Then the Storm's speedster laying
- * out for a catch over the middle and wrapped up by the Blaze's corner as
- * he comes up with it, deep in slow motion, and the trophy going up over
- * the captain's head.
+ * spiral is chased through the air, the catch, then four tacklers from
+ * the line, the backers and the deep layer diving at him as he jukes
+ * through them, then the scorer racing over the goal line at the pylon
+ * and his dance in the end zone. Then a Storm support player who picked
+ * one off brought down by three of the Blaze at once, deep in slow
+ * motion, and the trophy going up over the captain's head.
  */
 export const SHOTS: readonly Shot[] = [
-  { reel: "game", from: 14.25, to: 14.77, rate: 0.5, camera: "qbLow" },
-  { reel: "game", from: 14.77, to: 15.55, rate: 0.75, camera: "spiral" },
-  { reel: "game", from: 15.7, to: 16.15, rate: 0.5, camera: "catch" },
-  { reel: "game", from: 20.45, to: 21.05, rate: 0.75, camera: "juke" },
-  { reel: "game", from: 22.45, to: 23.05, rate: 0.5, camera: "pylon" },
-  { reel: "game", from: 23.27, to: 24.07, rate: 1, camera: "dance" },
-  { reel: "game", from: 7.05, to: 7.6, rate: 0.4, camera: "hit" },
+  { reel: "game", from: 4.75, to: 5.2, rate: 0.5, camera: "qbLow" },
+  { reel: "game", from: 5.2, to: 5.95, rate: 0.75, camera: "spiral" },
+  { reel: "game", from: 5.95, to: 6.3, rate: 0.5, camera: "catch" },
+  { reel: "game", from: 6.3, to: 7.08, rate: 0.6, camera: "juke" },
+  { reel: "game", from: 13.4, to: 14.05, rate: 0.5, camera: "pylon" },
+  { reel: "game", from: 14.25, to: 15.205, rate: 1, camera: "dance" },
+  { reel: "game", from: 51.62, to: 52.02, rate: 0.4, camera: "hit" },
   { reel: "trophy", from: 5.45, to: 6.295, rate: 1, camera: "lift" },
 ];
 

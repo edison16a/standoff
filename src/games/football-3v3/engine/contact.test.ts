@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { tailSpot } from "./guard";
-import { jukeFor } from "./juke";
+import { createAthlete } from "./body";
+import { jukeCooling, jukeFor, startJuke } from "./juke";
 import { TACKLE } from "./tuning";
 import { bySeat, peopleMatch, run, snap } from "./test-helpers";
 
@@ -59,22 +60,32 @@ describe("jukes", () => {
     expect(jukeFor(run, { x: 0, z: -1 })).toEqual({ juke: "side", side: -1 });
   });
 
-  it("has a cooldown, and spamming makes each juke slower", () => {
+  it("has a cooldown of about two seconds, shown as a share still to run", () => {
     const m = peopleMatch();
     snap(m);
     const qb = bySeat(m, 0);
     m.press(qb.id, "juke");
-    const first = qb.action.kind === "juke" ? qb.action.dur : 0;
-    run(m, 0.1);
+    expect(qb.action.kind).toBe("juke");
+    expect(qb.jukeCd).toBeGreaterThan(1.5);
+    expect(qb.jukeCd).toBeLessThan(2.5);
+    expect(jukeCooling(qb)).toBe(1);
+    run(m, 1.2);
+    expect(jukeCooling(qb)).toBeGreaterThan(0);
+    expect(jukeCooling(qb)).toBeLessThan(1);
     m.press(qb.id, "juke");
-    expect(qb.action.kind === "juke" ? qb.action.t : 0).toBeGreaterThan(0);
-    let last = first;
-    for (let i = 0; i < 4; i++) {
-      run(m, 1.2);
-      m.press(qb.id, "juke");
-      if (qb.action.kind === "juke") last = qb.action.dur;
-    }
-    expect(last).toBeGreaterThan(first);
+    expect(qb.action.kind).not.toBe("juke");
+    run(m, 1.2);
+    expect(jukeCooling(qb)).toBe(0);
+    m.press(qb.id, "juke");
+    expect(qb.action.kind).toBe("juke");
+  });
+
+  it("gives an agile player his juke back sooner", () => {
+    const quick = { ...createAthlete(0, 0, "runner", 0, "routerunner", null), move: { x: 0, z: 1 } };
+    const slow = { ...createAthlete(1, 0, "support", 0, null, null), move: { x: 0, z: 1 } };
+    startJuke(quick, () => {});
+    startJuke(slow, () => {});
+    expect(quick.jukeCd).toBeLessThan(slow.jukeCd);
   });
 });
 
@@ -94,8 +105,8 @@ describe("passing", () => {
     snap(m);
     const qb = bySeat(m, 0);
     const wr = bySeat(m, 1);
-    // Clear the defender lined up across from the receiver out of the way.
-    bySeat(m, 3).z = 20;
+    // Clear every defender who could play the ball out of the way.
+    for (const d of m.athletes) if (d.team !== m.offense && d.role !== "lineman") d.z = 25;
     m.setMove(wr.id, { x: m.sign, z: 0 });
     run(m, 1.2);
     m.setAim(qb.id, { x: wr.x - qb.x, z: wr.z - qb.z });

@@ -11,7 +11,7 @@ export const keyboard: KeyboardBinding = {
       title: "Run",
       rows: [
         { action: "Move", keys: [["W", "A", "S", "D"]] },
-        { action: "Juke", keys: ["E"] },
+        { action: "Juke, ready again in about 2 seconds", keys: ["E"] },
         { action: "Dive", keys: ["Q"] },
       ],
     },

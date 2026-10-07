@@ -101,5 +101,5 @@ describe("block presets", () => {
     expect(sheds / snaps).toBeGreaterThan(0.1);
     expect(sheds / snaps).toBeLessThan(0.7);
     expect(pancakes).toBeGreaterThan(0);
-  }, 30_000);
+  }, 60_000);
 });

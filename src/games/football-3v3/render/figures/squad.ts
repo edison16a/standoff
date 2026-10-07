@@ -1,11 +1,11 @@
 import * as THREE from "three";
 import type { AthleteView, MatchView } from "../../engine/view";
-import { LINEMAN_NUMBERS } from "../../builds";
+import { LINEMAN_NUMBERS, SUPPORT_NUMBERS } from "../../builds";
 import { TEAMS } from "../../teams";
 import type { Wardrobe } from "../models/body";
 import { SPIKE_RELEASE } from "../anim/celebrations";
 import type { PoseScene } from "../anim/choose";
-import { buildKit, linemanKit, type KitSpec } from "../models/kit";
+import { buildKit, linemanKit, supportKit, type KitSpec } from "../models/kit";
 import { BallModel } from "./ball-view";
 import { ARRIVE_PULSE, ControlSwitch } from "./control-switch";
 import { Figure } from "./figure";
@@ -34,6 +34,7 @@ export type JerseyName = (id: number) => string | null;
 
 function kitOf(a: AthleteView, name: string | null): KitSpec {
   if (a.build) return buildKit(a.team, a.build, name);
+  if (a.role === "support") return supportKit(a.team, a.number, Math.max(0, SUPPORT_NUMBERS[a.team].indexOf(a.number)));
   const slot = Math.max(0, LINEMAN_NUMBERS[a.team].indexOf(a.number));
   return linemanKit(a.team, a.number, slot);
 }
@@ -99,7 +100,7 @@ export class Squad {
 
   private ensure(a: AthleteView) {
     const name = a.build ? this.jerseyName(a.id) : null;
-    const key = `${a.team}:${a.build ?? "line"}:${a.number}:${name ?? ""}`;
+    const key = `${a.team}:${a.build ?? a.role}:${a.number}:${name ?? ""}`;
     const have = this.figures.get(a.id);
     if (have && have.key === key) return have;
     if (have) {
@@ -108,6 +109,7 @@ export class Squad {
       have.seat.dispose();
     }
     const figure = new Figure(kitOf(a, name), this.wardrobe, a.id);
+    if (a.role === "support") figure.makeLight();
     const seat = new Ring(TEAMS[a.team].color, 0.62, 0.74);
     this.group.add(figure.root, seat.mesh);
     const entry = { figure, key, seat };

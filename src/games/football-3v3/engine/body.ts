@@ -1,5 +1,7 @@
-import { BUILDS, LINEMAN_FRAME, LINEMAN_NUMBERS, type BuildId, type Stats as CharStats } from "../builds";
+import { BUILDS, LINEMAN_FRAME, LINEMAN_NUMBERS, SUPPORT_FRAME, SUPPORT_NUMBERS, type BuildId, type Stats as CharStats } from "../builds";
 import { attackSign, type TeamId } from "../teams";
+import { staminaPace } from "./stamina";
+import { SUPPORT, supportStats } from "./support/roster";
 import { JUKE, MOVE, RUSH } from "./tuning";
 import { emptyStats, type Athlete, type Role } from "./types";
 
@@ -8,22 +10,25 @@ const LINEMAN_STATS: CharStats = { speed: 3, agility: 3, power: 9, hands: 3, arm
 
 export function createAthlete(id: number, team: TeamId, role: Role, slot: number, build: BuildId | null, seat: number | null): Athlete {
   const c = build ? BUILDS[build] : null;
+  const support = role === "support";
+  const numbers = support ? SUPPORT_NUMBERS : LINEMAN_NUMBERS;
   return {
     id, team, role, slot, build, seat, pilot: seat, auto: seat === null,
-    number: c ? c.number : (LINEMAN_NUMBERS[team][slot] ?? 60 + slot),
+    number: c ? c.number : (numbers[team][slot] ?? (support ? 40 : 60) + slot),
     x: 0, z: 0, vx: 0, vz: 0, ax: 0, az: 0,
     yaw: attackSign(team) > 0 ? Math.PI / 2 : -Math.PI / 2,
-    mass: c ? c.frame.weight : LINEMAN_FRAME.weight,
+    mass: c ? c.frame.weight : support ? SUPPORT_FRAME.weight : LINEMAN_FRAME.weight,
     move: { x: 0, z: 0 }, aim: null,
     action: { kind: "none" },
-    jukeCd: 0, jukeHeat: 0, tackleCd: 0, rushT: 0, rushCd: 0, guard: null, blocked: 0, stagger: 0, stumble: null, catching: null, block: null,
+    jukeCd: 0, jukeCdFull: 0, jukeHeat: 0, stamina: 1, tackleCd: 0, rushT: 0, rushCd: 0, guard: null, blocked: 0, stagger: 0, stumble: null, catching: null, block: null,
     bot: { wait: 0, route: [], leg: 0, stop: false, goal: { x: 0, z: 0 }, cover: null, rush: true, readAt: 2 },
     stats: emptyStats(),
   };
 }
 
 export function statsOf(a: Athlete): CharStats {
-  return a.build ? BUILDS[a.build].stats : LINEMAN_STATS;
+  if (a.build) return BUILDS[a.build].stats;
+  return a.role === "support" ? supportStats(a.slot) : LINEMAN_STATS;
 }
 
 /** Spamming jukes wears a player out: past a little heat, they run slower. */
@@ -31,15 +36,20 @@ export function heatDrag(a: Athlete): number {
   return Math.max(0.6, 1 - 0.1 * Math.max(0, a.jukeHeat - JUKE.heatFree));
 }
 
+/** Top speed on fresh legs, from the player's speed rating and role alone. */
+export function freshSpeed(a: Athlete): number {
+  const role = a.role === "lineman" ? 0.7 : a.role === "support" ? SUPPORT.pace : 1;
+  return (MOVE.baseSpeed + statsOf(a).speed * MOVE.perSpeed) * role;
+}
+
 /**
  * Top speed right now, from the player's speed, role, ball, rush and
- * tired legs. `pace` scales it for a QB who is still a passer (qb-run.ts).
+ * tired legs, both from jukes and from running all play (stamina.ts).
+ * `pace` scales it for a QB who is still a passer (qb-run.ts).
  */
 export function topSpeed(a: Athlete, withBall: boolean, pace = 1): number {
-  const base = MOVE.baseSpeed + statsOf(a).speed * MOVE.perSpeed;
-  const role = (a.role === "lineman" ? 0.7 : 1) * pace;
   const rush = a.rushT > 0 ? RUSH.boost : 1;
-  return base * role * (withBall ? MOVE.withBall : 1) * rush * heatDrag(a);
+  return freshSpeed(a) * pace * (withBall ? MOVE.withBall : 1) * rush * heatDrag(a) * staminaPace(a);
 }
 
 /** Forward push at a standstill: heavier players get going slower. */

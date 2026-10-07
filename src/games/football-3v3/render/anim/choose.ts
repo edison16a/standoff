@@ -1,6 +1,7 @@
 import type { AthleteView, BallView } from "../../engine/view";
 import type { Phase, TeamId } from "../../engine/types";
 import { BUILDS } from "../../builds";
+import { offenseJob } from "../../engine/support/roster";
 import { pitchPose, securePose } from "./ball-actions";
 import { celebratePose, dejectedPose } from "./celebrations";
 import { divePose, downPose } from "./contact";
@@ -87,6 +88,8 @@ function stance(a: AthleteView, s: PoseScene): Pose {
   if (a.id === s.kicker) return KICK_SET;
   const onOffense = a.team === s.offense;
   if (a.role === "lineman") return onOffense && s.center ? CENTER : THREE_POINT;
+  // Support players on the line get down in a three point stance; the rest stand ready.
+  if (a.role === "support") return !onOffense ? READY : offenseJob(a.slot) === "tackle" ? THREE_POINT : TWO_POINT;
   if (a.role === "qb") return onOffense ? SHOTGUN : READY;
   return onOffense ? TWO_POINT : READY;
 }
@@ -177,8 +180,8 @@ export function choosePose(a: AthleteView, s: PoseScene, b: BodyScene): Chosen {
   }
   if (s.center && s.ball.state === "snap") return free(snapPose(s.phaseT), 30);
   const fooled = (p: Pose) => (a.stumble ? stumbleOver(p, a.stumble.t, a.stumble.dur, a.stumble.side) : p);
-  if (a.role === "lineman") {
-    // Line play is the block move the engine picked; a shove that drives one back sits him up, the one winning leans in.
+  if (a.role === "lineman" || a.block) {
+    // Line play, and a block out in space (support/clinch.ts), is the block move the engine picked; a shove that drives one back sits him up, the one winning leans in.
     const lurch = Math.max(-1, Math.min(1, (b.push ?? 0) / 4));
     const line = blockMove(a, b.time, b.seed, lurch) ?? (a.blocked ? blockPose(b.time, b.seed, lurch) : null);
     if (line) return free(fooled(line), a.stumble ? 18 : 14);

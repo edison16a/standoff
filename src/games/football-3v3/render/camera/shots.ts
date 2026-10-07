@@ -41,7 +41,7 @@ function inPocket(view: MatchView, s: 1 | -1): boolean {
 
 /** Where the offense's QB and receivers stand, so the shot keeps them all in view. */
 function skillSpots(view: MatchView): Vec[] {
-  return view.athletes.filter((a) => a.team === view.drive.offense && a.role !== "lineman").map((a) => ({ x: a.x, y: 1, z: a.z }));
+  return view.athletes.filter((a) => a.team === view.drive.offense && (a.role === "qb" || a.role === "runner")).map((a) => ({ x: a.x, y: 1, z: a.z }));
 }
 
 /**
@@ -122,7 +122,7 @@ export function closeup(view: MatchView, time: number): Aim {
 /** High over midfield, for the final whistle. */
 export function wide(view: MatchView, time: number): Aim {
   const team = view.winner ?? view.drive.offense;
-  const players = view.athletes.filter((a) => a.team === team && a.role !== "lineman");
+  const players = view.athletes.filter((a) => a.team === team && (a.role === "qb" || a.role === "runner"));
   const cx = players.reduce((sum, a) => sum + a.x, 0) / Math.max(1, players.length);
   const cz = players.reduce((sum, a) => sum + a.z, 0) / Math.max(1, players.length);
   const angle = time * 0.12;

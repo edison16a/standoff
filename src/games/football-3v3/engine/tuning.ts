@@ -71,7 +71,8 @@ export const JUKE = {
   /** How hard a planted foot pushes the body, metres a second squared, and what agility adds. */
   grip: 22,
   gripPerAgility: 0.8,
-  cooldown: 0.7,
+  /** Seconds until the next juke at average agility: long enough that a juke is a choice, not a button to mash. */
+  cooldown: 2,
   /** Each juke adds heat; heat cools this fast. Hot jukes are slower and so is the runner. */
   heatPerJuke: 1,
   cool: 0.55,

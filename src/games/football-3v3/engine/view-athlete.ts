@@ -13,6 +13,8 @@ export interface AthleteView {
   id: number;
   team: TeamId;
   role: Role;
+  /** Where in the role he lines up: a support player's slot sets his job. */
+  slot: number;
   build: BuildId | null;
   number: number;
   /** The phone steering this player now, for its ring; null for the computer. Moves with a pass to a computer teammate. */
@@ -28,6 +30,8 @@ export interface AthleteView {
   az: number;
   /** Seconds left of shaky footing after a jolt or a broken tackle. */
   stagger: number;
+  /** How fresh his legs are, 1 to 0 (stamina.ts), for the strip on a phone player's tag. */
+  stamina: number;
   action: ActionKind;
   actionT: number;
   actionDur: number;
@@ -71,8 +75,8 @@ export interface AthleteView {
 export function athleteView(a: Athlete, hasBall: boolean, targeted: boolean, ceremony: AthleteView["ceremony"]): AthleteView {
   const act = a.action;
   return {
-    id: a.id, team: a.team, role: a.role, build: a.build, number: a.number, seat: a.auto ? null : a.pilot,
-    x: a.x, z: a.z, yaw: a.yaw, vx: a.vx, vz: a.vz, speed: Math.hypot(a.vx, a.vz), ax: a.ax, az: a.az, stagger: a.stagger,
+    id: a.id, team: a.team, role: a.role, slot: a.slot, build: a.build, number: a.number, seat: a.auto ? null : a.pilot,
+    x: a.x, z: a.z, yaw: a.yaw, vx: a.vx, vz: a.vz, speed: Math.hypot(a.vx, a.vz), ax: a.ax, az: a.az, stagger: a.stagger, stamina: a.stamina,
     action: act.kind, actionT: "t" in act ? act.t : 0, actionDur: "dur" in act ? act.dur : 0,
     juke: act.kind === "juke" ? act.juke : null, side: act.kind === "juke" ? act.side : 1,
     plant: act.kind === "juke" ? act.plant : 0, lob: act.kind === "throw" && act.lob,

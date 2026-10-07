@@ -9,8 +9,9 @@ describe("the end screen's stats", () => {
     m.winner = 1;
     m.athletes[1]!.stats.touchdowns = 2;
     m.athletes[1]!.stats.recYards = 40;
-    m.athletes[6]!.stats.tackles = 2;
-    m.athletes[7]!.stats.interceptions = 1;
+    const blaze = m.athletes.filter((a) => a.team === 1 && a.build);
+    blaze[0]!.stats.tackles = 2;
+    blaze[1]!.stats.interceptions = 1;
     const rows = resultRows(m, new Map());
     expect(rows).toHaveLength(6);
     expect(rows.slice(0, 3).every((r) => r.team === 1)).toBe(true);

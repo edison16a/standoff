@@ -5,8 +5,10 @@ import { sameTackle } from "./tackle-bind";
 import { MOVE } from "./tuning";
 import type { Athlete } from "./types";
 
-/** Body radius: a lineman is broad, a man on the ground is a low heap. */
-const radius = (a: Athlete) => (isDown(a) ? MOVE.radius * 0.9 : a.role === "lineman" ? MOVE.radius * 1.3 : MOVE.radius);
+/** Body radius: a lineman is broad, a support player a little less, a man on the ground is a low heap. */
+export const radiusOf = (a: Athlete) =>
+  isDown(a) ? MOVE.radius * 0.9 : a.role === "lineman" ? MOVE.radius * 1.3 : a.role === "support" ? MOVE.radius * 1.12 : MOVE.radius;
+const radius = radiusOf;
 
 /** A locked lineman moves with his pair, so a runner hitting him meets both men's mass. */
 const massOf = (m: Match, a: Athlete) => (locked(m, a) ? pairMass(m, a.slot) : a.mass);

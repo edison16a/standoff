@@ -28,7 +28,7 @@ async function pickStar(ctx) {
 const GAME = {
   team: 0, role: "qb", playing: true, score: [7, 3], quarter: 2, overtime: false, clock: 94, down: "2nd and 6", offense: true,
   switched: false,
-  choose: null, hikeLeft: null, meter: null, withBall: false, canThrow: false, runPlay: false, canPitch: false, canRun: false, jukeReady: true, rushReady: true, guarding: false,
+  choose: null, hikeLeft: null, meter: null, withBall: false, canThrow: false, runPlay: false, canPitch: false, canRun: false, jukeReady: true, jukeCool: 0, stamina: 0.65, rushReady: true, guarding: false,
   grounded: false, banner: null, skip: null, result: null, stats: { passYards: 42, rushYards: 8, recYards: 0, touchdowns: 1, tackles: 0, interceptions: 0 },
 };
 
