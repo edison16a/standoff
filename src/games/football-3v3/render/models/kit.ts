@@ -1,4 +1,4 @@
-import { BUILDS, LINEMAN_FRAME, type BuildId, type Look } from "../../builds";
+import { BUILDS, LINEMAN_FRAME, SUPPORT_FRAME, type BuildId, type Look } from "../../builds";
 import { TEAMS, type TeamId } from "../../teams";
 
 /**
@@ -75,5 +75,16 @@ export function linemanKit(team: TeamId, number: number, slot: number): KitSpec 
   return {
     ...teamKit(team), look, team, number, name: null, height: LINEMAN_FRAME.height, build: buildFor(LINEMAN_FRAME.height, LINEMAN_FRAME.weight),
     sleeves: "bare", neckRoll: slot === 1, towel: false, locks: null, eyeBlack: false, spats: false,
+  };
+}
+
+/** Support players vary their skin and kit by slot, so eleven a side never reads as a row of clones. */
+const SUPPORT_SKIN = ["#c58c63", "#6b4431", "#e0b793", "#4e3022", "#a8704c"];
+
+export function supportKit(team: TeamId, number: number, slot: number): KitSpec {
+  const look: Look = { skin: SUPPORT_SKIN[slot % SUPPORT_SKIN.length]!, mask: slot < 2 ? "cage" : "open", visor: null, accent: TEAMS[team].dark, cleats: "#111111" };
+  return {
+    ...teamKit(team), look, team, number, name: null, height: SUPPORT_FRAME.height, build: buildFor(SUPPORT_FRAME.height, SUPPORT_FRAME.weight),
+    sleeves: slot % 2 === 0 ? "short" : "bare", neckRoll: slot < 2, towel: slot === 3, locks: slot === 4 ? "#1a120c" : null, eyeBlack: slot >= 2, spats: slot === 2,
   };
 }
