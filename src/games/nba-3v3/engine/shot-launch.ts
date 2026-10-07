@@ -15,6 +15,7 @@ import { asPreset } from "./shot-outcome/presets";
 import { solvePreset } from "./shot-outcome/solve";
 import { bankAngle, makeChance, type Grade, type ShotContext, type ShotKind } from "./shot-model";
 import { planRelease, type ReleaseInput } from "./shot-release";
+import { shotBalance } from "./shot-balance";
 import { rollShootingFoul } from "./shooting-foul";
 import { RIM } from "./tuning";
 import type { Athlete, ShotInfo } from "./types";
@@ -69,7 +70,7 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   if (scripted || gold || fouler) b.shot.rolled = m.opponents(a.team).map((o) => o.id);
   b.shot.evade = evade;
   const s = buildOf(a).stats;
-  const ctx: ShotContext = { kind, grade, distance, shooting: s.shooting, contest: c.contest, strengthEdge: c.edge, onFire: a.onFire, floater };
+  const ctx: ShotContext = { kind, grade, distance, shooting: s.shooting, contest: c.contest, strengthEdge: c.edge, onFire: a.onFire, floater, offBalance: kind === "jumper" ? shotBalance(a) : 0 };
   const chance = makeChance(ctx) * (fouler ? FOULED_MAKE : 1);
   const input = release(m, a, kind, hand, distance, floater);
   const side = Math.atan2(a.x - RIM.x, a.z - RIM.z);

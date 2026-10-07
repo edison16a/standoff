@@ -65,20 +65,32 @@ export interface ShotContext {
   onFire: boolean;
   /** A floater: a soft, high one hander off the run, released early over a big man. */
   floater?: boolean;
+  /** How far off balance a jumper goes up, 0 set to 1 falling away (see `shot-balance.ts`). */
+  offBalance?: number;
 }
+
+/**
+ * How much a hand in the face takes off each release. Play testers found
+ * a stepback beat any defence, so a contest now bites hard on all but a
+ * gold release, and harder still on a shooter who is off balance.
+ */
+export const CONTEST_BITE = { layup: 0.55, floater: 0.3, perfect: 0.42, good: 0.62, poor: 0.5, offBalance: 0.6 } as const;
 
 /** The chance the shot goes in, from 0.02 to 0.99. */
 export function makeChance(c: ShotContext): number {
-  if (c.kind === "dunk") return clamp(0.97 - c.contest * Math.max(0, 0.3 - c.strengthEdge * 0.05), 0.5, 0.99);
-  if (c.kind === "layup") return clamp(0.8 + c.strengthEdge * 0.03 + c.shooting * 0.01 - c.contest * 0.45, 0.2, 0.97);
+  if (c.kind === "dunk") return clamp(0.97 - c.contest * Math.max(0, 0.36 - c.strengthEdge * 0.05), 0.5, 0.99);
+  if (c.kind === "layup") return clamp(0.8 + c.strengthEdge * 0.03 + c.shooting * 0.01 - c.contest * CONTEST_BITE.layup, 0.18, 0.97);
   // Released high and early, a floater beats the contest more than a jumper but is never easy.
-  if (c.floater) return clamp(0.36 + c.shooting * 0.035 + (c.onFire ? 0.1 : 0) - c.contest * 0.2, 0.15, 0.85);
+  if (c.floater) return clamp(0.36 + c.shooting * 0.035 + (c.onFire ? 0.1 : 0) - c.contest * CONTEST_BITE.floater, 0.15, 0.85);
   // Gold is a sure swish, guarded or not.
   if (c.grade === "gold") return 1;
+  const off = c.offBalance ?? 0;
+  // Falling away, the shooter cannot rise over the hand, so it counts for more.
+  const contest = clamp(c.contest * (1 + CONTEST_BITE.offBalance * off), 0, 1);
   let chance: number;
-  if (c.grade === "perfect") chance = (c.onFire ? 0.99 : 0.96) - c.contest * 0.28;
-  else if (c.grade === "good") chance = (0.42 + c.shooting * 0.035 + (c.onFire ? 0.15 : 0)) * (1 - c.contest * 0.5);
-  else chance = (0.08 + c.shooting * 0.012) * (1 - c.contest * 0.4);
+  if (c.grade === "perfect") chance = (c.onFire ? 0.99 : 0.96) - contest * CONTEST_BITE.perfect - off * 0.05;
+  else if (c.grade === "good") chance = (0.42 + c.shooting * 0.035 + (c.onFire ? 0.15 : 0)) * (1 - contest * CONTEST_BITE.good) * (1 - off * 0.12);
+  else chance = (0.08 + c.shooting * 0.012) * (1 - contest * CONTEST_BITE.poor);
   // A three needs the green more than a two does: just off it, the long ball falls short or long more often.
   if (c.grade === "good" && c.kind === "jumper" && c.distance > COURT.arcRadius) chance *= SHOT.goodThree;
   // Deep heaves fall away fast, short jumpers are a touch easier.

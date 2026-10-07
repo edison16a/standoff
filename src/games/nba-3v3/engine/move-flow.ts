@@ -1,5 +1,6 @@
 import type { Match } from "./match";
 import { canShootOutOf } from "./moves";
+import { offBalanceFor } from "./shot-balance";
 import { JUMPER, releaseJumper } from "./shooting";
 import type { Action, Athlete } from "./types";
 
@@ -32,6 +33,8 @@ export function flowShot(m: Match, a: Athlete, act: Move, press: (m: Match, a: A
   // Read back fresh: the press has just replaced the action.
   const now: Action = a.action as Action;
   if (now.kind !== "shoot" || now.float) return;
+  // Straight out of the move, the feet are not set: a stepback most of all.
+  now.offBalance = offBalanceFor(a, act.move, !!now.step);
   // A stepback hop plays from its start; any other jumper picks up the rhythm of the move.
   if (!now.step) now.t = Math.min(m.time - q.at, JUMPER.takeoff * 0.9);
   if (q.released) releaseJumper(m, a, q.heldMs);

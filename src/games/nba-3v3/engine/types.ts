@@ -45,8 +45,9 @@ export type Action =
    * `step` is the velocity of a stepback hop before the rise, when a
    * defender was right on the shooter, or null for a straight up jumper.
    * `float` marks a floater, let go early on the way up (see `floater.ts`).
+   * `offBalance` is how far off balance it goes up, 0 to 1 (see `shot-balance.ts`).
    */
-  | { kind: "shoot"; t: number; three: boolean; released: boolean; free: boolean; step: V2 | null; float?: boolean }
+  | { kind: "shoot"; t: number; three: boolean; released: boolean; free: boolean; step: V2 | null; float?: boolean; offBalance?: number }
   /**
    * A layup or a dunk. `takeoff`, `finish` (the ball leaves the hand or is
    * slammed) and `land` are times on `t`; a dunk hangs on the rim for

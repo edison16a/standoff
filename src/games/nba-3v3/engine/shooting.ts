@@ -4,9 +4,10 @@ import { isThree } from "./court";
 import type { Match } from "./match";
 import { launchShot } from "./shot-launch";
 import { gradeRelease } from "./shot-model";
+import { offBalanceFor } from "./shot-balance";
 import { stepbackFor } from "./stepback";
 import { SHOT } from "./tuning";
-import type { Athlete } from "./types";
+import type { Athlete, DribbleMove } from "./types";
 import { clamp, type V3 } from "./vec";
 
 export { launchShot, slam } from "./shot-launch";
@@ -20,11 +21,16 @@ export function releasePoint(a: Athlete): V3 {
   return { x: a.x + Math.sin(a.yaw) * 0.22, y: a.y + h * 1.17, z: a.z + Math.cos(a.yaw) * 0.22 };
 }
 
-/** Starts a jumper and its meter, or at the line a free throw, which is the same meter with no jump. */
-export function startJumper(m: Match, a: Athlete, free = false): void {
+/**
+ * Starts a jumper and its meter, or at the line a free throw, which is
+ * the same meter with no jump. `outOf` is the dribble move it comes
+ * straight out of, which leaves it a little off balance.
+ */
+export function startJumper(m: Match, a: Athlete, free = false, outOf: DribbleMove | null = null): void {
   // With a defender in the chest the shooter steps back off him first (see `stepback.ts`).
   const step = free ? null : stepbackFor(m, a);
-  a.action = { kind: "shoot", t: 0, three: !free && isThree(a), released: false, free, step };
+  const offBalance = free ? 0 : offBalanceFor(a, outOf, !!step);
+  a.action = { kind: "shoot", t: 0, three: !free && isThree(a), released: false, free, step, offBalance };
   if (step) {
     a.vx = step.x;
     a.vz = step.z;
