@@ -36,6 +36,29 @@ describe("the ball rolling off the fingers", () => {
     expect(late.distanceTo(engine)).toBeLessThan(1e-9);
   });
 
+  it("rolls the ball off once in a replay, where every frame is a fresh copy", () => {
+    const roll = new ReleaseRoll();
+    const engine = new THREE.Vector3(0.3, 2.9, 5.6);
+    let late = engine.clone();
+    for (let t = 0; t < ROLL_TIME + 0.05; t += 1 / 60) {
+      const copy = { ...ballInFlight(), shot: { kind: "jumper", shooter: 0, distance: 6, contest: 0 } } as unknown as Ball;
+      late = engine.clone();
+      roll.apply(copy, shooter, late, 1 / 60);
+    }
+    expect(late.distanceTo(engine)).toBeLessThan(1e-9);
+  });
+
+  it("rolls each of two free throws in a row off the fingers", () => {
+    const roll = new ReleaseRoll();
+    const shot = { kind: "free", shooter: 0, distance: 4.6, contest: 0 };
+    const fly = (s: object) => ({ holder: null, mode: "flight", shot: s }) as unknown as Ball;
+    for (let t = 0; t < ROLL_TIME * 2; t += 1 / 60) roll.apply(fly(shot), shooter, new THREE.Vector3(), 1 / 60);
+    roll.apply({ holder: 0, mode: "held", shot } as unknown as Ball, shooter, new THREE.Vector3(), 1 / 60);
+    const second = new THREE.Vector3(0.3, 2.9, 5.6);
+    roll.apply(fly({ ...shot }), shooter, second, 1 / 60);
+    expect(second.distanceTo(PALM)).toBeLessThan(0.15);
+  });
+
   it("leaves a pass, a held ball and a dunk alone", () => {
     const roll = new ReleaseRoll();
     const engine = new THREE.Vector3(1, 1, 1);

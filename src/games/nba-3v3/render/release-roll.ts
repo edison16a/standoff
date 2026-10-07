@@ -25,6 +25,7 @@ export function rollShare(since: number): number {
  */
 export class ReleaseRoll {
   private shot: ShotInfo | null = null;
+  private rolling = false;
   private since = 0;
 
   /** Moves `target` (the engine's ball) toward the shooter's palm while the ball is still leaving it. */
@@ -33,12 +34,14 @@ export class ReleaseRoll {
     const rolling = !!shooter && !!shot && ball.holder === null && ball.mode === "flight" && (shot.kind === "jumper" || shot.kind === "free");
     if (!rolling) {
       this.shot = shot;
+      this.rolling = false;
       return;
     }
-    if (shot !== this.shot) {
-      this.shot = shot;
-      this.since = 0;
-    } else this.since += dt;
+    // The replay hands over a fresh copy of the ball every frame, so a shot is known by what it is, not which object holds it.
+    if (!this.rolling || !sameShot(shot, this.shot)) this.since = 0;
+    else this.since += dt;
+    this.shot = shot;
+    this.rolling = true;
     const k = rollShare(this.since);
     if (k >= 1) return;
     shooter.hand("R", palm);
@@ -46,4 +49,9 @@ export class ReleaseRoll {
     palm.y += BALL.radius * 0.9;
     target.lerp(palm, 1 - k);
   }
+}
+
+/** True when two shot records are the same shot, even as copies. */
+function sameShot(a: ShotInfo, b: ShotInfo | null): boolean {
+  return a === b || (!!b && a.shooter === b.shooter && a.kind === b.kind && a.distance === b.distance && a.contest === b.contest);
 }
