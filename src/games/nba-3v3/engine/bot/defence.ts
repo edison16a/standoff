@@ -13,11 +13,25 @@ function between(p: V2, gap: number): V2 {
   return { x: p.x + d.x * gap, z: p.z + d.z * gap };
 }
 
+/** On the ball: how far a moment ahead the defender reads the run, and how tight he steps up on a shooter rising. */
+export const ON_BALL = { lead: 0.16, closeGap: 0.55, ease: 0.3 } as const;
+
+/** Where the man on the ball wants to be: between the handler, read a moment ahead, and the rim. */
+export function onBallSpot(holder: Athlete): V2 {
+  const at = { x: holder.x + holder.vx * ON_BALL.lead, z: holder.z + holder.vz * ON_BALL.lead };
+  const act = holder.action;
+  const rising = act.kind === "shoot" && !act.released && !act.free;
+  const gap = rising ? ON_BALL.closeGap : 0.85 + (10 - buildOf(holder).stats.shooting) * 0.06;
+  return between(at, gap);
+}
+
 /**
  * The computer on defence. It stays between its player and the rim,
- * tighter on the ball and on good shooters, sags off the ball toward the
- * paint, helps when someone drives free, jumps at shooters with a
- * reaction delay, and now and then reaches for a steal.
+ * reading the handler's run a moment ahead so it mirrors a drive or a
+ * stepback, tighter on good shooters, and closes out on a jumper with a
+ * hand up. Off the ball it sags toward the paint, helps when someone
+ * drives free, jumps at shooters with a reaction delay, and now and
+ * then reaches for a steal.
  */
 export function thinkDefence(m: Match, a: Athlete, s: BotState, man: Athlete | null, dt: number): void {
   const holder = ballCarrier(m);
@@ -26,8 +40,7 @@ export function thinkDefence(m: Match, a: Athlete, s: BotState, man: Athlete | n
   const act = holder.action;
 
   if (man === holder || (!man && dist2(a, holder) < 3)) {
-    const gap = 0.9 + (10 - buildOf(holder).stats.shooting) * 0.07;
-    goTo(a, between(holder, gap), 1);
+    goTo(a, onBallSpot(holder), 1, ON_BALL.ease);
     if (act.kind === "shoot" && !act.released) contestJumper(m, a, s, holder);
     else if (act.kind === "drive") contestDrive(m, a, holder);
     else {

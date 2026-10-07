@@ -34,8 +34,8 @@ export function ballCarrier(m: Match): Athlete | null {
   return null;
 }
 
-/** Steers toward a spot, easing in as it arrives, at a share of top speed. */
-export function goTo(a: Athlete, spot: V2, urgency = 1): void {
+/** Steers toward a spot, easing in over the last `ease` metres, at a share of top speed. */
+export function goTo(a: Athlete, spot: V2, urgency = 1, ease = 0.7): void {
   const dx = spot.x - a.x;
   const dz = spot.z - a.z;
   const d = Math.hypot(dx, dz);
@@ -43,7 +43,7 @@ export function goTo(a: Athlete, spot: V2, urgency = 1): void {
     a.move = { x: 0, z: 0 };
     return;
   }
-  const pace = Math.min(1, d / 0.7) * urgency;
+  const pace = Math.min(1, d / ease) * urgency;
   a.move = { x: (dx / d) * pace, z: (dz / d) * pace };
 }
 
