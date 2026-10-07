@@ -52,23 +52,23 @@ const AIMS: Record<TrailerCam, Aim> = {
   // Down on the floor off the left block, as the Big Man hits it with the Dunker hanging on the rim above him.
   floor: (m, u, g, out) => {
     between(out.pos, [-2.6, 0.3, 4.0], [-2.3, 0.34, 3.7], ease(u / 1.2));
-    out.look.set(0.4, 1.25, 2.0);
-    out.fov = 48;
+    out.look.set(0.3, 1.75, 2.0);
+    out.fov = 56;
   },
-  // Low off the Shooter's left as he jabs at the Lockdown defender and steps back.
+  // Low off the Shooter's right, square to the two of them, as he jabs at the Lockdown defender and steps back.
   jab: (m, u, g, out) => {
     const s = m.athletes[CAST.shooter]!;
     const l = m.athletes[CAST.lockdown]!;
-    out.pos.set(s.x - 3.3, 0.55, (s.z + l.z) / 2 + 0.4);
-    out.look.set((s.x + l.x) / 2 + 0.1, 1.0, (s.z + l.z) / 2);
-    out.fov = 50;
+    out.pos.set(s.x + 3.2, 0.55, (s.z + l.z) / 2 + 0.3);
+    out.look.set((s.x + l.x) / 2 - 0.1, 1.0, (s.z + l.z) / 2);
+    out.fov = 48;
   },
   // Low in front, past the two defenders: he rises, they both fly at him, and the gold leaves his hand.
   leap: (m, u, g, out) => {
     const s = m.athletes[CAST.shooter]!;
-    out.pos.set(s.x - 1.1, 0.4, s.z - 3.1);
-    out.look.set(s.x - 0.4, 2.1, s.z - 0.6);
-    out.fov = 54;
+    out.pos.set(s.x - 1.5, 0.4, s.z - 4.3);
+    out.look.set(s.x - 0.4, 2.0, s.z - 0.8);
+    out.fov = 46;
   },
   pov: (m, u, g, out) => povAim(m, u, g, out),
   // Low in front of the captain as the trophy goes up over his head.

@@ -82,7 +82,7 @@ export class StepbackFilm {
       case "step":
         // Played off to stop the drive, he is out of the stepback's reach (a move only beats a man within 2.2 m), then flies out at the shot.
         lock.move = act.kind === "move" && act.t < 0.22 ? { x: 0, z: 0 } : toward(lock, { x: s.x - 0.2, z: s.z - 0.95 }, 1, 0.1);
-        help.move = act.kind === "move" && act.t < 0.22 ? { x: 0, z: 0 } : toward(help, { x: s.x - 1.0, z: s.z - 1.3 }, 1, 0.1);
+        help.move = act.kind === "move" && act.t < 0.22 ? { x: 0, z: 0 } : toward(help, { x: s.x - 1.35, z: s.z - 1.2 }, 1, 0.1);
         // Shoot pressed early in the move waits on it and comes straight out of the stepback.
         if (act.kind === "move" && act.t > 0.08) m.press(SHOOTER, "shoot");
         if (act.kind === "shoot") {
@@ -95,7 +95,7 @@ export class StepbackFilm {
         const release = GOLD_MS / 1000;
         // Both close out on him, then leap.
         if (lock.action.kind === "none") lock.move = toward(lock, { x: s.x - 0.2, z: s.z - 0.95 }, 1, 0.1);
-        if (help.action.kind === "none") help.move = toward(help, { x: s.x - 1.0, z: s.z - 1.3 }, 1, 0.1);
+        if (help.action.kind === "none") help.move = toward(help, { x: s.x - 1.35, z: s.z - 1.2 }, 1, 0.1);
         if (into >= release - LEAP_LOCKDOWN) this.leap(LOCKDOWN);
         if (into >= release - LEAP_HELP) this.leap(ALLROUND);
         if (act.kind === "shoot" && act.t * 1000 >= GOLD_MS) {

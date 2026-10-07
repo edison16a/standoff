@@ -37,7 +37,7 @@ export function povAim(m: Match, u: number, g: number, out: Pose): void {
   out.pos.set(s.x + fx * AHEAD + fz * ASIDE, s.y + h * EYES, s.z + fz * AHEAD - fx * ASIDE);
   const b = m.ball.pos;
   // Just out of the hand the ball is overhead: the eyes stay mostly on the rim, then lock onto the ball.
-  const k = 0.3 + 0.7 * smooth((g - ZOOM_FROM - 0.1) / 0.6);
+  const k = 0.4 + 0.6 * smooth((g - ZOOM_FROM) / 0.45);
   out.look.set(RIM.x + (b.x - RIM.x) * k, RIM.y + (b.y - RIM.y) * k, RIM.z + (b.z - RIM.z) * k);
   out.fov = WIDE + (TIGHT - WIDE) * smooth((g - ZOOM_FROM) / (ZOOM_TO - ZOOM_FROM));
 }
