@@ -54,6 +54,18 @@ describe("the chance a shot goes in", () => {
     for (const outcome of ["rimOut", "boardOut", "inOut", "airball"] as const) expect(isMake(outcome)).toBe(false);
   });
 
+  it("makes an off balance jumper with a hand in the face a poor shot, but never touches gold", () => {
+    const set: ShotContext = { ...open, grade: "good", contest: 0.6 };
+    const falling = { ...set, offBalance: 1 };
+    expect(makeChance(falling)).toBeLessThan(makeChance(set) * 0.8);
+    // Open, being off balance costs only a little.
+    expect(makeChance({ ...falling, contest: 0 })).toBeGreaterThan(makeChance({ ...set, contest: 0 }) * 0.85);
+    expect(makeChance({ ...falling, grade: "gold", contest: 1 })).toBe(1);
+    // A green in the face drops under half; open it is nearly sure.
+    expect(makeChance({ ...open, contest: 1 })).toBeLessThan(0.5);
+    expect(makeChance({ ...open, contest: 0 })).toBeGreaterThan(0.9);
+  });
+
   it("gives a floater a fair chance over a big man", () => {
     const floater: ShotContext = { ...open, distance: 3.6, grade: "good", contest: 0.6, floater: true };
     expect(makeChance(floater)).toBeGreaterThan(makeChance({ ...floater, floater: false }));
