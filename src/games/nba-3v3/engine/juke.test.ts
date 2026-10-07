@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BUILD_IDS } from "../builds";
 import type { MatchEvent } from "./events";
-import { JUKE, stun, wrongWay } from "./juke";
+import { JUKE, jukeChance, stun, wrongWay } from "./juke";
 import { Match, type Entry } from "./match";
 import { SHAKE_TIME } from "./shake";
 import { STEP } from "./tuning";
@@ -26,7 +26,7 @@ function setup(seed: number): Match {
 const move = (kind: Move["move"], side: 1 | -1, dir: { x: number; z: number }): Move => ({ kind: "move", t: 0, move: kind, dur: 0.4, side, dir, resolved: false });
 
 describe("jukes", () => {
-  it("beat an honest defender more often than not", () => {
+  it("beat an honest defender some of the time, not most", () => {
     let beaten = 0;
     const runs = 80;
     for (let seed = 1; seed <= runs; seed++) {
@@ -39,7 +39,20 @@ describe("jukes", () => {
       }
       if (events.some((e) => e.type === "shake")) beaten++;
     }
-    expect(beaten / runs).toBeGreaterThan(0.4);
+    expect(beaten / runs).toBeGreaterThan(0.25);
+    expect(beaten / runs).toBeLessThan(0.6);
+  });
+
+  it("make a stepback work on a defender who bit, rarely on one who stayed home", () => {
+    const m = setup(1);
+    const [a, d] = [m.athletes[0]!, m.athletes[1]!];
+    const step = move("stepback", 1, { x: 0, z: 1 });
+    const home = jukeChance(a, d, step, 0);
+    expect(home).toBeLessThan(0.35);
+    expect(jukeChance(a, d, step, JUKE.stepbackBit)).toBeGreaterThan(0.55);
+    // Flying in at the handler is a bite too.
+    d.vz = 4;
+    expect(jukeChance(a, d, step, 0)).toBeGreaterThan(home + 0.25);
   });
 
   it("always leave the beaten defender in a reaction and slow", () => {
