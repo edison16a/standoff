@@ -8,6 +8,7 @@ import { BODY } from "./body-spec";
 import { collide } from "./contact";
 import { bodyMass, contactMass } from "./mass";
 import { fallTime, hangTime, heightAt, speedToMeet, takeoffSpeed } from "./jump";
+import { MAX_DUNK_PEAK } from "../finish/plan";
 
 const G = BODY.gravity;
 
@@ -104,7 +105,8 @@ describe("bodies over a whole game", () => {
       }
     }
     expect(fastest).toBeLessThan(8);
-    expect(highest).toBeLessThan(1.2);
+    // A small guard with space gets up as high as the dunk plan lets anyone go.
+    expect(highest).toBeLessThanOrEqual(MAX_DUNK_PEAK + 0.01);
   }, 60000);
 });
 

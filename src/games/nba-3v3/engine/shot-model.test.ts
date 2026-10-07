@@ -36,6 +36,14 @@ describe("the chance a shot goes in", () => {
     expect(makeChance({ ...open, distance: 11 })).toBeLessThan(makeChance(open));
   });
 
+  it("makes a three lean on the green more than a two", () => {
+    const two = { ...open, grade: "good" as const, distance: 5 };
+    const three = { ...two, distance: 7 };
+    expect(makeChance(three)).toBeLessThan(makeChance(two) * 0.8);
+    // On the green a three is as good as a two from that range.
+    expect(makeChance({ ...three, grade: "perfect" })).toBeCloseTo(makeChance({ ...two, grade: "perfect" }), 5);
+  });
+
   it("lets strength win at the rim", () => {
     const layup: ShotContext = { ...open, kind: "layup", distance: 1, contest: 0.8 };
     expect(makeChance({ ...layup, strengthEdge: 4 })).toBeGreaterThan(makeChance({ ...layup, strengthEdge: -4 }));

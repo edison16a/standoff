@@ -1,4 +1,4 @@
-import { SHOT } from "./tuning";
+import { COURT, SHOT } from "./tuning";
 import { clamp } from "./vec";
 
 /**
@@ -79,6 +79,8 @@ export function makeChance(c: ShotContext): number {
   if (c.grade === "perfect") chance = (c.onFire ? 0.99 : 0.96) - c.contest * 0.28;
   else if (c.grade === "good") chance = (0.42 + c.shooting * 0.035 + (c.onFire ? 0.15 : 0)) * (1 - c.contest * 0.5);
   else chance = (0.08 + c.shooting * 0.012) * (1 - c.contest * 0.4);
+  // A three needs the green more than a two does: just off it, the long ball falls short or long more often.
+  if (c.grade === "good" && c.kind === "jumper" && c.distance > COURT.arcRadius) chance *= SHOT.goodThree;
   // Deep heaves fall away fast, short jumpers are a touch easier.
   // Nobody guards a free throw, and the line is short.
   if (c.kind === "free") return clamp(chance + 0.04, 0.02, 0.99);

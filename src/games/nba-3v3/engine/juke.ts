@@ -17,8 +17,12 @@ type Move = Extract<Action, { kind: "move" }>;
 export const JUKE = {
   /** Base chance each move beats a defender who stays home. */
   beat: { stepback: 0.58, crossover: 0.62, spin: 0.58, hesitation: 0.52, behindBack: 0.5, betweenLegs: 0.54 } satisfies Record<DribbleMove, number>,
-  /** Share of beats that are hard, before a bite on a reach adds to it. */
-  hard: 0.45,
+  /**
+   * Share of beats that are hard, before a bite on a reach adds to it.
+   * A hard cross breaks ankles, so it is kept for a highlight: mostly
+   * the man who reached or bit already.
+   */
+  hard: 0.25,
   /** How long he stays slow after the reaction, in seconds. */
   hardSlow: 0.9,
   softSlow: 0.55,

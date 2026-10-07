@@ -93,6 +93,8 @@ export const SHOT = {
   goldMinMs: 11,
   /** A good release is this many green widths from the centre. */
   goodSpread: 2.3,
+  /** A good release from three keeps this share of its chance, so threes lean on the green as in NBA 2K. */
+  goodThree: 0.72,
   /** Holding past a full meter throws the shot anyway, late. */
   autoReleaseAt: 1.18,
   /** When the shooter leaves the floor, along the meter. */
