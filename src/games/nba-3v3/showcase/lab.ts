@@ -9,11 +9,12 @@ import { dir2, type V2 } from "../engine/vec";
 import { DUNK_STYLES, type DunkStyle } from "../roster";
 import { DEFENCE_SCENES, DEFENCE_SEEDS, DEFENCE_SPOTS, setupDefence, steerDefence, type DefenceScene } from "./lab-defence";
 import { FINISH_SCENES, FINISH_SPOTS, steerFinish, type FinishScene } from "./lab-finishes";
+import { PRESET_SCENES, isPresetScene, presetSpots, setupPreset, steerPreset, type PresetScene } from "./lab-presets";
 import { SHOT_SCENES, SHOT_SPOTS, isShotScene, setupShot, steerShot, type ShotScene } from "./lab-shots";
 
 const PLAYS = ["moves", "run", "dunk", "block", "free"] as const;
-export type LabScene = (typeof PLAYS)[number] | FinishScene | DefenceScene | ShotScene;
-export const LAB_SCENES: readonly LabScene[] = [...PLAYS, ...FINISH_SCENES, ...DEFENCE_SCENES, ...SHOT_SCENES];
+export type LabScene = (typeof PLAYS)[number] | FinishScene | DefenceScene | ShotScene | PresetScene;
+export const LAB_SCENES: readonly LabScene[] = [...PLAYS, ...FINISH_SCENES, ...DEFENCE_SCENES, ...SHOT_SCENES, ...PRESET_SCENES];
 
 const SHOOTER = 0;
 const DUNKER = 1;
@@ -32,7 +33,8 @@ const MOVE_CUES: readonly Cue[] = [[0.6, "back"], [1.7, "left"], [2.6, "right"],
  * cuts with the ball then passes, `dunk` throws `&style=` at the rim,
  * `block` jumps at a jumper, and `free` calls a foul for free throws.
  * The finishes and the celebrations are in `lab-finishes.ts`, the defence in `lab-defence.ts`,
- * and one scene per shot ending (`shot-swish`, `shot-rollIn` and the rest) in `lab-shots.ts`.
+ * one scene per shot ending (`shot-swish`, `shot-rollIn` and the rest) in `lab-shots.ts`,
+ * and one per layup and dunk preset (`layup-euro`, `dunk-twoHand` and the rest) in `lab-presets.ts`.
  */
 export class LabFilm {
   readonly match: Match;
@@ -56,7 +58,7 @@ export class LabFilm {
     const m = this.match;
     m.checkBeat = false;
     m.phase = "live";
-    const spots: Record<LabScene, [number, number][]> = {
+    const spots: Record<Exclude<LabScene, PresetScene>, [number, number][]> = {
       moves: [[0, 8.6], [-6, 3], [6, 3], [0, 7.4], [-5, 9], [5, 9]],
       run: [[-4, 9], [4, 6], [6, 2], [-6, 3], [-5, 10], [6, 10]],
       dunk: [[6, 10.5], [-4.6, 7.2], [6.5, 9], [-0.6, 6.4], [5, 10.5], [3.5, 10.5]],
@@ -66,7 +68,7 @@ export class LabFilm {
       ...DEFENCE_SPOTS,
       ...SHOT_SPOTS,
     };
-    spots[scene].forEach(([x, z], id) => Object.assign(m.athletes[id]!, { x, z, yaw: Math.PI }));
+    (isPresetScene(scene) ? presetSpots(scene) : spots[scene]).forEach(([x, z], id) => Object.assign(m.athletes[id]!, { x, z, yaw: Math.PI }));
     // In the gesture scene the Shooter celebrates with his hands free.
     m.ball.holder = scene === "dunk" || scene === "gesture" ? DUNKER : SHOOTER;
     m.brains.reset();
@@ -78,6 +80,7 @@ export class LabFilm {
     if (scene === "dunk" || scene === "contact") for (const a of m.athletes) if (a.team === 1) a.auto = false;
     if (defence) setupDefence(scene, m);
     if (isShotScene(scene)) setupShot(m);
+    if (isPresetScene(scene)) setupPreset(scene, m);
   }
 
   steer(t: number): void {
@@ -94,6 +97,7 @@ export class LabFilm {
     else if ((FINISH_SCENES as readonly string[]).includes(this.scene)) steerFinish(this.scene as FinishScene, m, t, (key) => this.once(key));
     else if (isDefence(this.scene)) steerDefence(this.scene, m, t, (key) => this.once(key));
     else if (isShotScene(this.scene)) steerShot(this.scene, m, t, (key) => this.once(key));
+    else if (isPresetScene(this.scene)) steerPreset(this.scene, m, t, (key) => this.once(key));
   }
 
   private moves(t: number): void {
