@@ -182,18 +182,22 @@ export const DEFENCE = {
 export const GUARD = {
   /** Beyond this from the man, Guard sprints to catch up rather than shadowing. */
   range: 5,
-  /** Share of top speed the shadow runs at, a little under a player running it themselves, and the catch up sprint. */
-  pace: 0.8,
+  /** Share of top speed the shadow runs at, and the catch up sprint. Full speed: play testers found a stepback shook it every time. */
+  pace: 1,
   chasePace: 1,
   /** Metres off the ball handler, toward the rim, and off a man without the ball. */
   gap: 1.0,
   offGap: 1.6,
+  /** On a shooter rising into his jumper: stepped up into him with a hand up. */
+  closeGap: 0.6,
   /** Off the ball the spot sags this share of the way toward the ball. */
   sag: 0.25,
-  /** How fast the shadow follows, per second: on a still man, a dribbling one, and through a move. */
-  track: 7,
-  dribbleTrack: 2.6,
-  moveTrack: 0.7,
+  /** How fast the shadow follows, per second: on a still man, a dribbling one, and through a move. Through a move it still lags, so a move that wins buys a step. */
+  track: 10,
+  dribbleTrack: 6,
+  moveTrack: 3.2,
+  /** Seconds of the man's run the shadow reads ahead, so it mirrors a drive or a stepback instead of trailing it. */
+  lead: 0.14,
   /** A stick pushed past this takes over from Guard. */
   manual: 0.3,
 } as const;

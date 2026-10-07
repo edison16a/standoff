@@ -8,10 +8,10 @@ import { dir2, dist2, lerp, type V2 } from "./vec";
 
 /**
  * Holding Guard on defence. The player shadows their man on their own,
- * staying between him and the rim a set gap off, a touch slower than a
- * player running flat out. The shadow reads the ball handler late: a
- * dribble drags it, a crossover or a spin leaves it behind, so the stick
- * is needed to catch up. Pushing the stick always takes over. Guard
+ * staying between him and the rim a set gap off, at full speed, and
+ * closes out on him when he rises to shoot. The shadow reads a dribble
+ * a little late and a move later still, so a move that wins buys a
+ * step, and the stick can always do better. Pushing the stick always takes over. Guard
  * never gives up: past the range it sprints back to the man, and it
  * keeps the same man through passes and turnovers until let go.
  */
@@ -38,12 +38,18 @@ export function guardStatus(m: Match, a: Athlete): GuardStatus {
   return dist2(a, man) <= GUARD.range ? "on" : "chase";
 }
 
-/** The spot to hold: tight between the ball handler and the rim, sagging toward the ball off it. */
+/**
+ * The spot to hold: tight between the ball handler and the rim, read a
+ * moment ahead on his run, sagging toward the ball off it. On a shooter
+ * rising into his jumper it steps right up into him, for the hand up.
+ */
 export function guardSpot(m: Match, man: Athlete): V2 {
-  const toRim = dir2(man, RIM_SPOT);
+  const at = { x: man.x + man.vx * GUARD.lead, z: man.z + man.vz * GUARD.lead };
+  const toRim = dir2(at, RIM_SPOT);
   const onBall = m.ball.holder === man.id;
-  const gap = onBall ? GUARD.gap : GUARD.offGap;
-  const spot = { x: man.x + toRim.x * gap, z: man.z + toRim.z * gap };
+  const shooting = onBall && man.action.kind === "shoot" && !man.action.released;
+  const gap = shooting ? GUARD.closeGap : onBall ? GUARD.gap : GUARD.offGap;
+  const spot = { x: at.x + toRim.x * gap, z: at.z + toRim.z * gap };
   if (onBall) return spot;
   const ball = m.ball.pos;
   return { x: lerp(spot.x, ball.x, GUARD.sag), z: lerp(spot.z, ball.z, GUARD.sag) };
@@ -79,6 +85,6 @@ export function steerGuard(m: Match, a: Athlete, dt: number): void {
     return;
   }
   // Eases in on arrival so the defender settles into a stance rather than jittering; far off it sprints.
-  const pace = Math.min(1, d / 0.6) * (status === "chase" ? GUARD.chasePace : GUARD.pace);
+  const pace = Math.min(1, d / 0.35) * (status === "chase" ? GUARD.chasePace : GUARD.pace);
   a.move = { x: (dx / d) * pace, z: (dz / d) * pace };
 }
