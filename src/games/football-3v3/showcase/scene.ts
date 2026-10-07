@@ -6,7 +6,7 @@ import type { Entry } from "../engine/lineup";
  * so a change to the engine or the bots that moves them means picking
  * new ones (trailer.test.ts says so).
  */
-export const SHOWCASE_SEED = 347;
+export const SHOWCASE_SEED = 10;
 
 /** Two full teams of computer players, one of every build. */
 export const SHOWCASE_TEAMS: Entry[] = [
