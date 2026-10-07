@@ -140,7 +140,7 @@ export function choosePose(a: AthleteView, s: PoseScene, b: BodyScene): Chosen {
   if (a.ceremony && s.ceremonyT !== null) return free(ceremonyPose(a, s.ceremonyT, b), 12, "both");
   // A catch, pick or swat the engine picked plays over whatever he was doing, a dive included.
   const caught = a.action === "none" || a.action === "juke" || a.action === "dive" || (a.action === "down" && a.downCause === "dive") ? catchMove(a, run) : null;
-  if (caught) return { pose: caught.pose, rate: 26, hand, feet: caught.air || a.action !== "none" ? "free" : plantFor(a, b) };
+  if (caught) return { pose: caught.pose, rate: 26, hand, feet: caught.air || a.action !== "none" || a.speed < 3 ? "free" : plantFor(a, b) };
   switch (a.action) {
     case "stance":
       return free(breathe(stance(a, s), b.time, b.seed), 8);

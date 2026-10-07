@@ -79,6 +79,8 @@ function attempt(stage: PassStage, seed: number): { frames: PassFrame[]; shown: 
   if (stage.wr?.move) m.setMove(wr.id, { x: stage.wr.move[0] * s, z: stage.wr.move[1] });
   if (stage.d) Object.assign(d, spot(wr, stage.d.at), { auto: !!stage.d.auto });
   else Object.assign(d, spot(qb, [40, 0]));
+  // A computer defender holds his spot in the lane rather than running his coverage.
+  if (stage.d?.auto) d.bot.wait = Infinity;
   if (stage.d?.move) m.setMove(d.id, { x: stage.d.move[0] * s, z: stage.d.move[1] });
   // The other side's QB is out of the picture.
   Object.assign(m.bySeat(2)!, spot(qb, [45, 8]));
