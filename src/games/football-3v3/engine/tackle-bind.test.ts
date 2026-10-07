@@ -100,6 +100,18 @@ describe("holding the men of a tackle together", () => {
     expect(dist2(helper, qb)).toBeLessThan(0.7);
   });
 
+  it("leaves a carrier hit in his dive down on his chest, facing the way he dove", () => {
+    const { m, qb, d } = meet(0.4);
+    qb.action = { kind: "dive", t: 0.4, dur: 0.7, dir: { x: m.sign, z: 0 } };
+    const yaw = qb.yaw;
+    tackle(m, qb, d, "drive", { x: m.sign, z: 0 });
+    expect(bindOf(qb)).toMatchObject({ role: "carrier", prone: true });
+    expect(qb.yaw).toBe(yaw);
+    const { qb: up, d: d2 } = meet(0.4);
+    tackle(m, up, d2, "wrap", { x: m.sign, z: 0 });
+    expect(bindOf(up)?.prone).toBeUndefined();
+  });
+
   it("gets everyone up in time for the next play", () => {
     const longest = Math.max(...TACKLE_KINDS.map((k: TackleKind) => TACKLE_MOVES[k].carrierDown));
     expect(longest).toBeLessThan(2.2);

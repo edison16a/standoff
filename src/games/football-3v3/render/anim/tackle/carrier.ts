@@ -19,6 +19,16 @@ const BRACE: Partial<Pose> = { shLX: -2.3, shLZ: 0.45, elL: -0.25 };
 /** Face down with the ball held in under the chest. */
 const PRONE_BALL = over(PRONE, { shRX: -0.9, elR: -2.1, shRY: 0.6, shRZ: 0.15 });
 
+/** Hit while laid out in a dive: he stays on his chest, the ball pulled in under him, and takes the weight. */
+export const PINNED: Fall = {
+  lying: "front",
+  keys: [
+    [0, over(PRONE, { lift: 0.06, ...TUCKED, shLX: -2.4, shLZ: 0.3, elL: -0.3 })],
+    [0.18, over(PRONE_BALL, { lift: 0.02, spineX: 0.15, neckX: -0.6, ...BRACE })],
+    [0.4, PRONE_BALL],
+  ],
+};
+
 export function carrierFall(kind: TackleKind, run: Pose): Fall {
   switch (kind) {
     case "wrap":

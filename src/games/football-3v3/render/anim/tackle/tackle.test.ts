@@ -36,7 +36,7 @@ describe("tackle presets on the body", () => {
       if (move.pileDown > 0) roles.push(["pile", move.pileDown]);
       for (const [role, dur] of roles) {
         for (const side of [1, -1] as const) {
-          const at = (t: number) => tacklePose(man({ action: "down", actionT: t, actionDur: dur, downCause: "tackled", tackle: { kind, role, side } }), run)!;
+          const at = (t: number) => tacklePose(man({ action: "down", actionT: t, actionDur: dur, downCause: "tackled", tackle: { kind, role, side, prone: false } }), run)!;
           for (let t = 0; t <= dur; t += 0.05) expect(finite(at(t))).toBe(true);
           // Down on the turf in the middle of it, standing at the end.
           expect(Math.abs(at(dur * 0.55).pitch)).toBeGreaterThan(0.9);
@@ -47,7 +47,7 @@ describe("tackle presets on the body", () => {
   });
 
   it("keeps the ball under the carrier's right arm when he falls the other way", () => {
-    const pose = (side: 1 | -1) => tacklePose(man({ action: "down", actionT: 0.3, actionDur: 2, tackle: { kind: "wrap", role: "carrier", side } }), run)!;
+    const pose = (side: 1 | -1) => tacklePose(man({ action: "down", actionT: 0.3, actionDur: 2, tackle: { kind: "wrap", role: "carrier", side, prone: false } }), run)!;
     expect(pose(-1).elR).toBeCloseTo(pose(1).elR);
     expect(pose(-1).barrel).toBeCloseTo(-pose(1).barrel);
   });
@@ -68,8 +68,15 @@ describe("tackle presets on the body", () => {
     expect(miss("dive", 0.5, 1)).toBeNull();
   });
 
+  it("keeps a carrier hit in his dive on his chest instead of standing him up", () => {
+    for (const t of [0, 0.2, 0.6, 1.2]) {
+      const p = tacklePose(man({ action: "down", actionT: t, actionDur: 2, downCause: "tackled", tackle: { kind: "wrap", role: "carrier", side: 1, prone: true } }), run)!;
+      expect(p.pitch).toBeGreaterThan(1.2);
+    }
+  });
+
   it("is what the figure plays for a man down in a tackle", () => {
-    const a = man({ action: "down", actionT: 0.5, actionDur: 2, downCause: "tackled", tackle: { kind: "drive", role: "carrier", side: 1 } });
+    const a = man({ action: "down", actionT: 0.5, actionDur: 2, downCause: "tackled", tackle: { kind: "drive", role: "carrier", side: 1, prone: false } });
     const chosen = choosePose(a, scene(), { phase: 0, build: 0.3, time: 1, seed: 1 });
     expect(chosen.pose.pitch).toBeLessThan(-1.2);
     expect(chosen.feet).toBe("free");

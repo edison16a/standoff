@@ -66,6 +66,8 @@ function down(a: Athlete, dur: number, cause: "tackled" | "tackler" | "pile", bi
  */
 export function bindTackle(kind: TackleKind, carrier: Athlete, tackler: Athlete, n: V2, helpers: readonly Athlete[] = []): void {
   const move = TACKLE_MOVES[kind];
+  // A diving catch already has him on the turf: he is down by contact, not stood up and thrown down again.
+  const prone = carrier.action.kind === "dive" || carrier.action.kind === "down";
   const f = lineOf(kind, n, carrier);
   const fy = yawOf(f.x, f.z);
   const side = sideOf(tackler, carrier, f);
@@ -81,8 +83,9 @@ export function bindTackle(kind: TackleKind, carrier: Athlete, tackler: Athlete,
     down(h, move.pileDown, "pile", bind("pile", carrier.id, h, s));
     h.yaw = yawOf(carrier.x - h.x, carrier.z - h.z);
   }
-  down(carrier, move.carrierDown, "tackled", bind("carrier", tackler.id, carrier, side));
-  carrier.yaw = fy + move.carrierYaw;
+  down(carrier, move.carrierDown, "tackled", prone ? { ...bind("carrier", tackler.id, carrier, side), prone } : bind("carrier", tackler.id, carrier, side));
+  // A man lying in his dive keeps facing the way he dove.
+  if (!prone) carrier.yaw = fy + move.carrierYaw;
 }
 
 /** A tackler who let go skids on his chest and stops quickly. */

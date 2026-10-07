@@ -45,7 +45,7 @@ export interface AthleteView {
   /** The tackle preset a lunge was picked as, while lunging. */
   lunge: ApproachKind | null;
   /** The tackle preset this man is part of while he is down in one, and his part in it. */
-  tackle: { kind: TackleKind; role: TackleBind["role"]; side: 1 | -1 } | null;
+  tackle: { kind: TackleKind; role: TackleBind["role"]; side: 1 | -1; prone: boolean } | null;
   /**
    * His move for a pass coming down (catch-preset.ts): seconds into it, seconds from its start to the
    * ball in his hands, the side it comes in on, how high, and how it finished with seconds since.
@@ -79,7 +79,7 @@ export function athleteView(a: Athlete, hasBall: boolean, targeted: boolean, cer
     throwKind: act.kind === "throw" && !act.lob ? act.style : null,
     downCause: act.kind === "down" ? act.cause : null,
     lunge: act.kind === "lunge" ? act.approach : null,
-    tackle: act.kind === "down" && act.bind ? { kind: act.bind.kind, role: act.bind.role, side: act.bind.side } : null,
+    tackle: act.kind === "down" && act.bind ? { kind: act.bind.kind, role: act.bind.role, side: act.bind.side, prone: !!act.bind.prone } : null,
     catching: a.catching && { kind: a.catching.kind, t: a.catching.t, at: a.catching.at, side: a.catching.side, height: a.catching.height, result: a.catching.result, since: a.catching.since },
     block: a.block && { ...a.block },
     stumble: a.stumble && { ...a.stumble },

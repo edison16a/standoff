@@ -70,6 +70,8 @@ export interface TackleBind {
   side: 1 | -1;
   /** Where he was from the carrier when they met, along the line and across it, to ease from. */
   from: { along: number; across: number };
+  /** The carrier was already laid out in a dive when he was hit, so he stays down on his chest. */
+  prone?: boolean;
 }
 
 export interface Stats {
