@@ -46,7 +46,8 @@ export function readField(m: Match, qb: Athlete, skill: FootballSkill): void {
     let best: Athlete | null = null;
     let bestOpen = -Infinity;
     for (const r of options) {
-      const o = openness(m, qb, r, skill);
+      // A support player leaking out is a last look, not the first read.
+      const o = openness(m, qb, r, skill) - (r.role === "support" ? 1.5 : 0);
       if (o > bestOpen) {
         best = r;
         bestOpen = o;

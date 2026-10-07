@@ -37,7 +37,9 @@ export function planPlay(m: Match): void {
 }
 
 function assignCoverage(m: Match, receivers: readonly Athlete[]): void {
-  const defenders = m.athletes.filter((a) => a.team === m.defense && a.role !== "lineman");
+  // Support players have their own jobs (support-defense.ts), and start every play with nobody to block.
+  for (const a of m.athletes) if (a.role === "support") a.bot.cover = null;
+  const defenders = m.athletes.filter((a) => a.team === m.defense && (a.role === "qb" || a.role === "runner"));
   for (const d of defenders) {
     d.bot.cover = null;
     // A spare defender blitzes about half the time and otherwise sits deep as a safety.

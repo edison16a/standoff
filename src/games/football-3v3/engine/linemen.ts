@@ -4,6 +4,7 @@ import { dodging } from "./juke";
 import type { Match } from "./match";
 import { resolveHit } from "./hit";
 import { breakPair, moveLoose } from "./line-free";
+import { resetClinches } from "./support/clinch";
 import { tackle } from "./tackle";
 import { LINE, RUSH, TACKLE } from "./tuning";
 import type { Athlete } from "./types";
@@ -39,8 +40,9 @@ export function newLinePairs(): LinePair[] {
 
 const lineman = (m: Match, team: 0 | 1, slot: number) => m.athletes.find((a) => a.team === team && a.role === "lineman" && a.slot === slot)!;
 
-/** Squares the pairs up over the ball for the next snap. */
+/** Squares the pairs up over the ball for the next snap, with every block out in space let go. */
 export function setLine(m: Match): void {
+  resetClinches(m);
   const losX = yardToX(m.offense, m.drive.los);
   m.lines.forEach((p, i) => {
     p.x = losX;

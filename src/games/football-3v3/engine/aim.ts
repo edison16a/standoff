@@ -7,6 +7,8 @@ export interface Candidate {
   id: number;
   x: number;
   z: number;
+  /** Metres added to his distance from the aim line: a support player only gets the ball when the stick is right on him. */
+  penalty?: number;
 }
 
 /**
@@ -24,7 +26,7 @@ export function pickTarget(from: V2, aim: V2, receivers: readonly Candidate[]): 
     const rz = r.z - from.z;
     const along = rx * dir.x + rz * dir.z;
     const off = Math.abs(rx * dir.z - rz * dir.x);
-    const score = along > 0 ? off : 1000 + Math.hypot(rx, rz);
+    const score = (along > 0 ? off : 1000 + Math.hypot(rx, rz)) + (r.penalty ?? 0);
     if (score < bestScore) {
       bestScore = score;
       best = r.id;

@@ -1,4 +1,6 @@
 import { updateBall } from "./ball-update";
+import { freshSpeed } from "./body";
+import { updateStamina } from "./stamina";
 import { planCatches } from "./catch/plan";
 import { ceremonyTime, stepCeremony } from "./ceremony";
 import { FIELD, xToYard, yardToX } from "./field";
@@ -18,7 +20,8 @@ import { JUKE } from "./tuning";
 import { endPlay } from "./whistle";
 import type { Athlete } from "./types";
 
-function tick(a: Athlete, dt: number): void {
+function tick(a: Athlete, live: boolean, dt: number): void {
+  updateStamina(a, Math.hypot(a.vx, a.vz) / freshSpeed(a), live, dt);
   a.jukeCd = Math.max(0, a.jukeCd - dt);
   a.jukeHeat = Math.max(0, a.jukeHeat - JUKE.cool * dt);
   a.tackleCd = Math.max(0, a.tackleCd - dt);
@@ -64,7 +67,7 @@ function liveChecks(m: Match): void {
 export function stepWorld(m: Match, dt: number): void {
   // After the cut the end of the game is the trophy presentation, which moves everyone itself.
   if (ceremonyTime(m) !== null) return stepCeremony(m, dt);
-  for (const a of m.athletes) tick(a, dt);
+  for (const a of m.athletes) tick(a, m.phase === "live", dt);
   updatePhase(m);
   const live = m.phase === "live";
   if (live && m.play) {

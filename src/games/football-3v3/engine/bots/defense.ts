@@ -16,7 +16,7 @@ import type { FootballSkill } from "./skill";
  * to it: the one who jumped the route goes for the ball itself, the rest
  * for where it comes down.
  */
-function breakOnBall(m: Match, a: Athlete): boolean {
+export function breakOnBall(m: Match, a: Athlete): boolean {
   const pass = m.ball.pass;
   if (m.ball.state !== "pass" || !pass) return false;
   const track = ballTrack(m, a);

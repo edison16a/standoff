@@ -10,7 +10,9 @@ export type Play = "catch" | "pick" | "swat";
 export function playFor(m: Match, a: Athlete, pass: PassInfo): Play | null {
   if (a.role === "lineman" || isDown(a) || a.id === pass.from) return null;
   const thrower = m.athlete(pass.from);
-  if (a.team === thrower?.team) return a.role === "runner" && (!pass.pitch || a.id === pass.to) ? "catch" : null;
+  // A support player catches only a ball thrown to him, never one going past to a runner.
+  const hands = a.role === "runner" || (a.role === "support" && a.id === pass.to);
+  if (a.team === thrower?.team) return hands && (!pass.pitch || a.id === pass.to) ? "catch" : null;
   // Nobody picks off a pitch, and a defender on Guard only tails his man.
   if (pass.pitch || a.guard !== null) return null;
   // A clean ball is only the lane's to play (pass-lane.ts); once knocked about it is anyone's.

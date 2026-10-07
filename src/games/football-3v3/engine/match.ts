@@ -14,6 +14,8 @@ import { chooseCall, startChoose } from "./phases";
 import type { Play } from "./play";
 import { Rng } from "./rng";
 import { stepWorld } from "./world";
+import { newSupportState, type SupportState } from "./support/clinch";
+import { SUPPORT } from "./support/roster";
 import { RULES } from "./tuning";
 import type { Athlete, Button, ConversionCall, Phase, PlayCall } from "./types";
 import type { V2 } from "./vec";
@@ -26,6 +28,8 @@ export interface MatchOptions {
   target?: number;
   quarterSeconds?: number;
   level?: BotLevel;
+  /** Support players a side, SUPPORT.perSide unless a test wants the field bare. */
+  support?: number;
 }
 
 /**
@@ -67,6 +71,8 @@ export class Match {
   /** The last pass once it is caught or falls, kept for the replay's numbers. */
   lastPass: PassInfo | null = null;
   readonly lines: LinePair[];
+  /** The support players' blocks out in space (support/clinch.ts). */
+  readonly support: SupportState;
   /** When each pair of players may next make a pads sound, so one collision is one thud. */
   readonly bumps = new Map<number, number>();
   /** Phones that dropped: the computer plays whoever they steer until they come back. */
@@ -90,9 +96,11 @@ export class Match {
       athletes.push(createAthlete(athletes.length, team, "qb", 0, qb.build, qb.seat));
       side.filter((e) => e.role === "runner").forEach((e, slot) => athletes.push(createAthlete(athletes.length, team, "runner", slot, e.build, e.seat)));
       for (let slot = 0; slot < 3; slot++) athletes.push(createAthlete(athletes.length, team, "lineman", slot, null, null));
+      for (let slot = 0; slot < (options.support ?? SUPPORT.perSide); slot++) athletes.push(createAthlete(athletes.length, team, "support", slot, null, null));
     }
     this.athletes = athletes;
     this.lines = newLinePairs();
+    this.support = newSupportState(seed);
     const first = options.firstOffense ?? (this.rng.chance(0.5) ? 0 : 1);
     this.drive = newDrive(first, RULES.driveStart);
     startChoose(this);

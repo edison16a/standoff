@@ -1,4 +1,5 @@
 import { isDown } from "./body";
+import { jukeCooling } from "./juke";
 import type { Match } from "./match";
 import { canThrow } from "./passing";
 import { canRun, qbRunning } from "./qb-run";
@@ -34,6 +35,10 @@ export interface SeatStatus {
   /** The QB can still press Run and become the runner. */
   canRun: boolean;
   jukeReady: boolean;
+  /** Share of the juke cooldown still to run. */
+  jukeCool: number;
+  /** How fresh his legs are, 1 to 0 (stamina.ts). */
+  stamina: number;
   rushReady: boolean;
   guarding: boolean;
   down: boolean;
@@ -73,6 +78,8 @@ export function seatStatus(m: Match, seat: number): SeatStatus | null {
     canPitch: canPitch(m, a),
     canRun: canRun(m, a),
     jukeReady: a.jukeCd <= 0,
+    jukeCool: jukeCooling(a),
+    stamina: a.stamina,
     rushReady: a.rushCd <= 0,
     guarding: a.guard !== null,
     down: isDown(a),

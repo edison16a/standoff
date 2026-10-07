@@ -24,6 +24,11 @@ export function canJuke(a: Athlete): boolean {
   return a.role !== "lineman" && a.jukeCd <= 0 && a.action.kind === "none";
 }
 
+/** Share of the juke cooldown still to run: 1 just after a juke, 0 once it is ready again. */
+export function jukeCooling(a: Pick<Athlete, "jukeCd" | "jukeCdFull">): number {
+  return a.jukeCd <= 0 || a.jukeCdFull <= 0 ? 0 : Math.min(1, a.jukeCd / a.jukeCdFull);
+}
+
 /** How hard a planted foot can push the body: well past a running stride, more for agile players. */
 const plantGrip = (a: Athlete) => JUKE.grip + (statsOf(a).agility - 5) * JUKE.gripPerAgility;
 
@@ -51,6 +56,7 @@ export function startJuke(a: Athlete, emit: (e: MatchEvent) => void): boolean {
     dodge: [spec.dodge[0] * slow, spec.dodge[1] * slow],
   };
   a.jukeCd = JUKE.cooldown * slow * jukeRecovery(statsOf(a));
+  a.jukeCdFull = a.jukeCd;
   a.jukeHeat += JUKE.heatPerJuke;
   emit({ type: "juke", id: a.id, juke });
   return true;

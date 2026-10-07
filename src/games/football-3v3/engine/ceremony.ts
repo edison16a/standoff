@@ -37,6 +37,11 @@ const AROUND: readonly V2[] = [
   { x: -2.3, z: -1.5 },
   { x: 2.3, z: -1.5 },
   { x: -0.7, z: -1.9 },
+  { x: -3.2, z: -2.9 },
+  { x: 3.2, z: -2.9 },
+  { x: -1.6, z: -3.3 },
+  { x: 1.6, z: -3.3 },
+  { x: 3.9, z: -1.7 },
 ];
 const CROWDED: readonly V2[] = [
   { x: -1.0, z: -0.25 },
@@ -44,6 +49,11 @@ const CROWDED: readonly V2[] = [
   { x: -1.8, z: -1.15 },
   { x: 1.8, z: -1.15 },
   { x: -0.55, z: -1.5 },
+  { x: -2.6, z: -2.3 },
+  { x: 2.6, z: -2.3 },
+  { x: -1.3, z: -2.6 },
+  { x: 1.3, z: -2.6 },
+  { x: 3.1, z: -1.3 },
 ];
 
 /** Where the beaten side stands, well back and off to the sides, heads down. */
@@ -54,6 +64,17 @@ const BEATEN: readonly V2[] = [
   { x: 10, z: -13 },
   { x: -11, z: -12.5 },
   { x: 3.5, z: -14 },
+  { x: -6, z: -15.5 },
+  { x: 8.5, z: -16 },
+  { x: -13, z: -15 },
+  { x: 12.5, z: -10 },
+  { x: 0.5, z: -17 },
+  { x: -15, z: -10 },
+  { x: 15, z: -14 },
+  { x: -9.5, z: -18 },
+  { x: 5.5, z: -19 },
+  { x: -2.5, z: -20 },
+  { x: 11, z: -19.5 },
 ];
 
 /** Seconds into the presentation, or null before the cut, with no winner, or outside the end of the game. */
@@ -69,10 +90,10 @@ function impact(a: Athlete): number {
 
 /**
  * Who lifts the trophy: the winners' best player on the day, a phone's
- * player before a computer's, then the QB. Linemen never do.
+ * player before a computer's, then the QB. Linemen and support players never do.
  */
 export function captainOf(m: Match, team: TeamId): Athlete | null {
-  const side = m.athletes.filter((a) => a.team === team && a.role !== "lineman");
+  const side = m.athletes.filter((a) => a.team === team && (a.role === "qb" || a.role === "runner"));
   const rank = (a: Athlete) => impact(a) * 10 + (a.seat !== null ? 5 : 0) + (a.role === "qb" ? 1 : 0);
   return side.reduce<Athlete | null>((best, a) => (!best || rank(a) > rank(best) ? a : best), null);
 }
@@ -84,10 +105,11 @@ export function mateSpot(index: number, crowded: boolean): V2 {
   return { x: CEREMONY_SPOT.x + at.x, z: CEREMONY_SPOT.z + at.z };
 }
 
-/** The winners in their order round the captain: the runners and QB first, then the linemen. */
+/** The winners in their order round the captain: the runners and QB first, then the linemen, then the support players. */
 export function matesOf(m: Match, team: TeamId, captain: number | null): Athlete[] {
   const side = m.athletes.filter((a) => a.team === team && a.id !== captain);
-  return [...side.filter((a) => a.role !== "lineman"), ...side.filter((a) => a.role === "lineman")];
+  const rank = (a: Athlete) => (a.role === "lineman" ? 1 : a.role === "support" ? 2 : 0);
+  return [...side].sort((a, b) => rank(a) - rank(b));
 }
 
 function place(a: Athlete, at: V2, yaw: number): void {

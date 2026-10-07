@@ -6,6 +6,8 @@ import type { Athlete } from "../types";
 import { chaseLoose, cover, pursue, rushQb, safety } from "./defense";
 import { carry, escort, readField, runRoute } from "./offense";
 import { botSkill, type FootballSkill } from "./skill";
+import { supportDefense } from "./support-defense";
+import { supportOffense } from "./support-offense";
 
 /**
  * The computer players. Each one rethinks every so often (sooner the
@@ -37,6 +39,8 @@ function decide(m: Match, a: Athlete, skill: FootballSkill): void {
     if (a.role === "qb" && canThrow(m, a)) return readField(m, a, skill);
     return carry(m, a, skill);
   }
+  // Support players block or play their layer, never a route or a man to cover.
+  if (a.role === "support") return a.team === attacking ? supportOffense(m, a, carrier) : supportDefense(m, a, carrier, skill);
   if (a.team === attacking) {
     const play = m.play;
     if (carrier && (play?.caughtBy !== null || play?.pitched || play?.intercepted || play?.qbRun)) return escort(m, a, carrier);

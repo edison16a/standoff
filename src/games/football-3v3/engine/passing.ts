@@ -8,6 +8,8 @@ import { releaseSpot, squareUp, THROW_MOVES, THROW_PICK, throwKindFor } from "./
 import type { Match } from "./match";
 import { canPitch, releasePitch } from "./run-play";
 import { handOver } from "./control";
+import { yardToX } from "./field";
+import { clinchOf } from "./support/clinch";
 import type { Athlete } from "./types";
 import { dir2, dist2, len3, type V3 } from "./vec";
 
@@ -19,10 +21,21 @@ export function canThrow(m: Match, a: Athlete): boolean {
   return a.role === "qb" && a.team === m.offense && m.carrier()?.id === a.id && (a.action.kind === "none" || a.action.kind === "juke");
 }
 
-/** Runners on the QB's team who can catch right now. */
+/** Metres of aim line a support outlet gives away to a runner. */
+const OUTLET_PENALTY = 3;
+
+/**
+ * Who on the QB's team can catch right now: the runners, and a support
+ * player who is free of his block and out past the line, an outlet.
+ */
 export function receivers(m: Match, a: Athlete): Athlete[] {
-  return m.athletes.filter((o) => o.team === a.team && o.role === "runner" && !isDown(o));
+  const losX = yardToX(m.offense, m.drive.los);
+  const outlet = (o: Athlete) => o.role === "support" && !clinchOf(m, o.id) && (o.x - losX) * m.sign > 1.5;
+  return m.athletes.filter((o) => o.team === a.team && (o.role === "runner" || outlet(o)) && !isDown(o));
 }
+
+/** The receivers as aim candidates: a support player outlet has to be aimed right at. */
+export const candidates = (m: Match, qb: Athlete) => receivers(m, qb).map((r) => ({ id: r.id, x: r.x, z: r.z, penalty: r.role === "support" ? OUTLET_PENALTY : 0 }));
 
 /** Keeps the target under the throw stick up to date, so its ring can light up. */
 export function updateTarget(m: Match): void {
@@ -40,7 +53,7 @@ export function updateTarget(m: Match): void {
     play.target = null;
     return;
   }
-  play.target = pickTarget(qb, qb.aim, receivers(m, qb));
+  play.target = pickTarget(qb, qb.aim, candidates(m, qb));
 }
 
 /**

@@ -138,3 +138,10 @@ export const LINEMAN_NUMBERS: readonly [readonly number[], readonly number[]] = 
   [62, 70, 75],
   [91, 97, 99],
 ];
+
+/** The support players: one solid frame, numbered per team and slot (engine/support/roster.ts). */
+export const SUPPORT_FRAME: Frame = { height: 1.9, weight: 108 };
+export const SUPPORT_NUMBERS: readonly [readonly number[], readonly number[]] = [
+  [52, 55, 81, 36, 21],
+  [50, 58, 86, 32, 29],
+];

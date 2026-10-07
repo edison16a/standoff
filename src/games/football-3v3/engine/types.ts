@@ -8,8 +8,12 @@ import type { V2 } from "./vec";
 
 export type { TeamId };
 
-/** Every team has one QB, up to two runners, and three computer linemen. */
-export type Role = "qb" | "runner" | "lineman";
+/**
+ * Every team has one QB, up to two runners, three computer linemen and
+ * five computer support players, who block on offense and rush or play
+ * deep on defence but never run routes (support/roster.ts).
+ */
+export type Role = "qb" | "runner" | "lineman" | "support";
 
 /** Which juke comes out depends on the stick against the run: ahead or none, back, or across. */
 export type JukeKind = "spin" | "back" | "side";
@@ -103,7 +107,7 @@ export interface BotMemory {
   stop: boolean;
   /** The last move it chose, held until it thinks again. */
   goal: V2;
-  /** The offensive player it covers, or null to rush or play deep. */
+  /** The offensive player it covers, or null to rush or play deep. A support blocker's man to block. */
   cover: number | null;
   /** With nobody to cover: rush the QB this play, or sit deep as a safety. */
   rush: boolean;
@@ -144,8 +148,12 @@ export interface Athlete {
   /** The throw stick, in field space, while it is held. */
   aim: V2 | null;
   action: Action;
+  /** Seconds until the next juke, and the cooldown it started from, for the phone's ring. */
   jukeCd: number;
+  jukeCdFull: number;
   jukeHeat: number;
+  /** How fresh the legs are, 1 to 0: running drains it and a tired player slows (stamina.ts). */
+  stamina: number;
   tackleCd: number;
   rushT: number;
   rushCd: number;
