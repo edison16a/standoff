@@ -89,7 +89,7 @@ export class HighlightScript {
         dunker.move = toward(dunker, RIM_SPOT, 1);
         if (rimDistance(dunker) < 2.38 && m.ball.holder === DUNKER) {
           m.forced = "swish";
-          m.forcedDunk = SHOWCASE_DUNK;
+          m.forcedFinish = { dunk: SHOWCASE_DUNK };
           m.press(DUNKER, "shoot");
           this.next("dunked", s);
         }

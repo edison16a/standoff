@@ -9,7 +9,7 @@ import type { ShotInfo } from "./types";
 const ENTRIES: Entry[] = BUILD_IDS.slice(0, 6).map((build, i) => ({ team: (i % 2) as 0 | 1, build, seat: null }));
 
 function shot(patch: Partial<ShotInfo>): ShotInfo {
-  return { shooter: 0, team: 0, points: 2, kind: "jumper", dunk: null, grade: "good", outcome: "swish", preset: "swish", made: true, counted: true, touchedRim: false, assist: null, contest: 0, distance: 4, track: freshTrack(), flight: newFlight(null), rolled: [], ...patch };
+  return { shooter: 0, team: 0, points: 2, kind: "jumper", dunk: null, grade: "good", outcome: "swish", preset: "swish", made: true, counted: true, touchedRim: false, assist: null, contest: 0, distance: 4, track: freshTrack(), flight: newFlight(null), rolled: [], evade: 0, ...patch };
 }
 
 describe("celebrations after big baskets", () => {

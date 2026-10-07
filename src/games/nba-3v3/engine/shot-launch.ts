@@ -7,13 +7,13 @@ import { missShot } from "./rules";
 import type { Match } from "./match";
 import { freshTrack, traceShot } from "./physics/shot-watch";
 import { between } from "./rng";
+import { layupEvade, layupInput } from "./finish/layup-release";
 import { newFlight } from "./shot-outcome/flight";
 import { pickPreset, type ShotQuality } from "./shot-outcome/pick";
 import { asPreset } from "./shot-outcome/presets";
 import { solvePreset } from "./shot-outcome/solve";
 import { bankAngle, makeChance, type Grade, type ShotContext, type ShotKind } from "./shot-model";
 import { planRelease, type ReleaseInput } from "./shot-release";
-import type { Family } from "./shot-calibration";
 import { rollShootingFoul } from "./shooting-foul";
 import { RIM } from "./tuning";
 import type { Athlete, ShotInfo } from "./types";
@@ -25,13 +25,8 @@ const FOULED_MAKE = 0.4;
 /** How the shooter throws it: a set shot or jumper, a floater, a layup off the glass or straight in. */
 function release(m: Match, a: Athlete, kind: ShotKind, hand: V3, distance: number, floater: boolean): ReleaseInput {
   const side = Math.atan2(a.x - RIM.x, a.z - RIM.z);
-  if (kind === "layup") {
-    // A reverse is flipped up from under the ring on the far side, high enough to clear the iron.
-    if (a.action.kind === "drive" && a.action.layup === "reverse") return { family: "reverse", from: hand, apex: Math.max(hand.y, RIM.y) + 0.55, spinRate: between(m.rng, 6, 9) };
-    // From the wings the glass is the easy way in.
-    const family: Family = m.rng() < 0.25 + 0.45 * bankAngle(side, distance) ? "bank" : "layup";
-    return { family, from: hand, apex: Math.max(hand.y, RIM.y) + 0.38, spinRate: between(m.rng, 5, 8) };
-  }
+  // Each layup preset throws it its own way (see `finish/layup-release.ts`).
+  if (kind === "layup") return layupInput(m.rng, a.action.kind === "drive" ? (a.action.layup ?? "finger") : "finger", hand, distance);
   if (floater) return { family: "floater", from: hand, apex: RIM.y + between(m.rng, 1.3, 1.55), spinRate: between(m.rng, 3, 6) };
   const free = kind === "free";
   const bank = !free && distance < 6.2 && m.rng() < 0.12 * bankAngle(side, distance);
@@ -54,6 +49,9 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   const free = kind === "free";
   // Nobody may contest a free throw.
   const c = contestFor(a, free ? [] : m.opponents(a.team), kind);
+  // A layup made to go round the man (a scoop, a reverse, a shield) takes much of the sting out of his contest.
+  const evade = kind === "layup" && a.action.kind === "drive" ? layupEvade(a.action.layup) : 0;
+  c.contest *= 1 - evade * 0.6;
   if (free) a.box.freeAttempts++;
   else a.box.attempts++;
   letGo(m, a, hand);
@@ -62,11 +60,12 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   // Gold is a sure swish: no hand gets to it, and it goes in clean even through a foul.
   const gold = grade === "gold";
   // Contact on the shot is a foul, and a fouled shot flies on and may still drop.
-  const fouler = scripted || free ? null : rollShootingFoul(m, a, kind);
+  const fouler = scripted || free ? null : rollShootingFoul(m, a, kind, evade);
   if (fouler) callShootingFoul(m, fouler, a, three ? 3 : 2);
   b.shot = shotInfo(m, a, kind, grade, three ? 3 : free ? 1 : 2, c.contest, distance);
   // A scripted film, a gold release and a fouled shot fly clear of hands.
   if (scripted || gold || fouler) b.shot.rolled = m.opponents(a.team).map((o) => o.id);
+  b.shot.evade = evade;
   const s = buildOf(a).stats;
   const ctx: ShotContext = { kind, grade, distance, shooting: s.shooting, contest: c.contest, strengthEdge: c.edge, onFire: a.onFire, floater };
   const chance = makeChance(ctx) * (fouler ? FOULED_MAKE : 1);
@@ -102,18 +101,20 @@ function letGo(m: Match, a: Athlete, at: V3): void {
 function shotInfo(m: Match, a: Athlete, kind: ShotKind, grade: Grade, points: 1 | 2 | 3, contest: number, distance: number): ShotInfo {
   const assist = kind !== "free" && m.lastPass && m.lastPass.to === a.id ? m.lastPass.from : null;
   const dunk = kind === "dunk" ? (a.action.kind === "drive" && a.action.style ? a.action.style : buildOf(a).dunk) : null;
-  return { shooter: a.id, team: a.team, points, kind, dunk, grade, outcome: "swish", preset: "swish", made: false, counted: false, touchedRim: kind === "dunk", assist, contest, distance, track: freshTrack(), flight: newFlight(null), rolled: [] };
+  return { shooter: a.id, team: a.team, points, kind, dunk, grade, outcome: "swish", preset: "swish", made: false, counted: false, touchedRim: kind === "dunk", assist, contest, distance, track: freshTrack(), flight: newFlight(null), rolled: [], evade: 0 };
 }
 
 /**
- * The slam: the hand drives the ball down through the ring from above.
+ * The slam: the hand, already over the ring with the ball (see
+ * `finish/plan.ts`), drives it down through the net.
  * A defender who got up in time may swat it at the rim, and a slam put
  * off line by contact can come off the iron.
  */
-export function slam(m: Match, a: Athlete): void {
+export function slam(m: Match, a: Athlete, hand: V3): void {
   const b = m.ball;
   const c = contestFor(a, m.opponents(a.team), "dunk");
-  const top = { x: RIM.x + (a.x - RIM.x) * 0.25, y: RIM.y + 0.24, z: RIM.z + (a.z - RIM.z) * 0.25 };
+  // From the hand, over the ring: the ball is pushed down from where the hand really has it.
+  const top = { ...hand };
   a.box.attempts++;
   letGo(m, a, top);
   const forced = m.forced;

@@ -28,11 +28,16 @@ function arm(a: Athlete): { x: number; y: number; z: number; reach: number } {
   return { x: a.x, y: shoulder, z: a.z, reach: a.y + standingReach(a) - shoulder + 0.06 };
 }
 
-/** The chance a hand that gets there blocks it: the timing of the jump, the length of the arms and the defence rating. */
-function touchChance(d: Athlete, kind: "jumper" | "layup"): number {
+/**
+ * The chance a hand that gets there blocks it: the timing of the jump,
+ * the length of the arms and the defence rating. A layup preset made to
+ * go round the hands (a scoop, a reverse, a shield) takes its `evade`
+ * share of that away, so a layup is hard to block.
+ */
+function touchChance(d: Athlete, kind: "jumper" | "layup", evade: number): number {
   const long = extraReach(d);
-  const base = kind === "jumper" ? 0.1 + long * 0.2 : 0.3 + long * 0.25;
-  return clamp(base * (0.3 + 0.7 * blockTiming(d)) * contestScale(buildOf(d).stats.defence), 0.03, 0.62);
+  const base = kind === "jumper" ? 0.1 + long * 0.2 : (0.24 + long * 0.22) * (1 - evade);
+  return clamp(base * (0.3 + 0.7 * blockTiming(d)) * contestScale(buildOf(d).stats.defence), 0.02, 0.62);
 }
 
 /** For a shot in the air with defenders up: checks every small step whether a hand gets to it. */
@@ -52,7 +57,7 @@ export function blockHook(m: Match): TouchHook | undefined {
       const s = arm(d);
       if (body.pos.y < s.y || Math.hypot(body.pos.x - s.x, body.pos.y - s.y, body.pos.z - s.z) > s.reach + BALL.radius) continue;
       shot.rolled.push(d.id);
-      if (!m.forcedBlock && m.rng() >= touchChance(d, kind)) continue;
+      if (!m.forcedBlock && m.rng() >= touchChance(d, kind, shot.evade)) continue;
       m.forcedBlock = false;
       // A ball whose path runs deep into the reach meets the whole hand and is swatted; one that only grazes it gets fingertips.
       const tip = fingertip(body, s);

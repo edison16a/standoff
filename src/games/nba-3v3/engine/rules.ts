@@ -30,6 +30,7 @@ export function gainPossession(m: Match, a: Athlete): void {
   a.pocket = POCKET;
   if (shot && !shot.counted) {
     a.box.rebounds++;
+    m.lastBoard = { id: a.id, at: m.time, offensive: a.team === shot.team };
     m.emit({ type: "rebound", id: a.id, offensive: a.team === shot.team });
   }
   b.shot = null;

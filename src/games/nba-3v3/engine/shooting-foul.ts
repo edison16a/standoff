@@ -10,9 +10,11 @@ import { clamp, dir2, dist2 } from "./vec";
  * Contact on a shot. A defender who goes straight up in front of the
  * shooter, at the top of the jump, is clean. Jumping in late, from the
  * side or flying into the shooter's body is a foul more often, and so
- * is being run over at the rim. Returns the fouler, or null.
+ * is being run over at the rim. A layup made to go round the man
+ * (`evade`, see `finish/layups.ts`) meets less of him. Returns the
+ * fouler, or null.
  */
-export function rollShootingFoul(m: Match, shooter: Athlete, kind: ShotKind): Athlete | null {
+export function rollShootingFoul(m: Match, shooter: Athlete, kind: ShotKind, evade = 0): Athlete | null {
   if (kind === "free") return null;
   const reach = kind === "jumper" ? 1.05 : 1.2;
   for (const d of m.opponents(shooter.team)) {
@@ -25,7 +27,7 @@ export function rollShootingFoul(m: Match, shooter: Athlete, kind: ShotKind): At
     const toward = dir2(d, shooter);
     const lunge = clamp((d.vx * toward.x + d.vz * toward.z) / 4, 0, 0.5);
     const angle = inFront(d, shooter) ? 0.6 : 1.4;
-    const chance = close * (0.08 + 0.22 * late + lunge) * angle * (kind === "jumper" ? 1 : 1.25);
+    const chance = close * (0.08 + 0.22 * late + lunge) * angle * (kind === "jumper" ? 1 : 1.25 * (1 - evade * 0.5));
     if (chance > 0 && m.rng() < chance) return d;
   }
   return null;

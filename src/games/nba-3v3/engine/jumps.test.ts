@@ -1,13 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { BUILD_IDS, BUILDS } from "../builds";
+import { BUILD_IDS } from "../builds";
 import { createAthlete } from "./athlete";
 import { blockStage, startBlock, updateBlock } from "./block";
 import { BODY } from "./body/body-spec";
 import { hangTime } from "./body/jump";
 import { contestFor } from "./contest";
-import { chooseDunk } from "./dunk-style";
 import { Match, type Entry } from "./match";
-import { seeded } from "./rng";
 import { JUMP, STEP } from "./tuning";
 
 const ENTRIES: Entry[] = BUILD_IDS.slice(0, 6).map((build, i) => ({ team: (i % 2) as 0 | 1, build, seat: null }));
@@ -67,31 +65,6 @@ describe("jumping to block", () => {
 });
 
 describe("dunks", () => {
-  it("come in a few variants, with the build's own the most common", () => {
-    const rng = seeded(4);
-    const dunker = createAthlete(0, 0, 0, "dunker", null);
-    Object.assign(dunker, { x: 0.3, z: 3 });
-    const styles = new Map<string, number>();
-    for (let i = 0; i < 300; i++) {
-      const plan = chooseDunk(rng, dunker, i % 2 === 0);
-      styles.set(plan.style, (styles.get(plan.style) ?? 0) + 1);
-    }
-    expect(styles.size).toBeGreaterThanOrEqual(3);
-    const own = styles.get(BUILDS.dunker.dunk) ?? 0;
-    for (const [style, n] of styles) if (style !== BUILDS.dunker.dunk) expect(own).toBeGreaterThan(n);
-  });
-
-  it("go reverse along the baseline, and hang on the rim for the rim hang", () => {
-    const rng = seeded(9);
-    const playmaker = createAthlete(0, 0, 0, "playmaker", null);
-    Object.assign(playmaker, { x: 2.2, z: 1.2 });
-    let reverse = 0;
-    for (let i = 0; i < 100; i++) if (chooseDunk(rng, playmaker, true).style === "reverse") reverse++;
-    expect(reverse).toBeGreaterThan(40);
-    const plan = chooseDunk(rng, playmaker, true, "rimhang");
-    expect(plan.rimHang).toBeGreaterThan(0.4);
-  });
-
   it("hang the dunker on the rim, the body dropping under the hands and holding there, then drop and gather", () => {
     const m = new Match({ entries: ENTRIES, seed: 2, firstOffence: 0 });
     while (m.phase !== "live") m.step(STEP);

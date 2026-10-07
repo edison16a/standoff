@@ -126,7 +126,7 @@ export class LabFilm {
     a.move = t < 0.6 ? toward(a, { x: -3.9, z: 7 }, 0.3) : toward(a, RIM_SPOT, 1);
     if (t > 0.6 && Math.hypot(a.x - RIM_SPOT.x, a.z - RIM_SPOT.z) < 3.1 && this.once("dunk")) {
       m.forced = "swish";
-      m.forcedDunk = this.style ?? DUNK_STYLES[0];
+      m.forcedFinish = { dunk: this.style ?? DUNK_STYLES[0] };
       m.press(DUNKER, "shoot");
     }
   }

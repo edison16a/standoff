@@ -1,4 +1,4 @@
-import type { DunkStyle } from "../roster";
+import type { Forced } from "./finish/select";
 import { pressDefend, pressPass, pressShoot, releaseShot, updateAction } from "./actions";
 import { createAthlete, moveAthlete, separate } from "./athlete";
 import { updateBall } from "./ball";
@@ -64,8 +64,12 @@ export class Match {
   checkBeat = true;
   /** The next shot's ending, set by the showcase to film a sure highlight. Real games leave it alone. */
   forced: ShotPreset | Outcome | null = null;
-  /** The dunk thrown on the next drive, set by the showcase for the same reason. */
-  forcedDunk: DunkStyle | null = null;
+  /** The layup or dunk thrown on the next drive, set by the showcase and the lab for the same reason. */
+  forcedFinish: Forced | null = null;
+  /** The last rebound, for a putback straight back up. */
+  lastBoard: { id: number; at: number; offensive: boolean } | null = null;
+  /** The last lob caught on the way to the rim, for an alley oop finish. */
+  alleyCatch: { id: number; at: number } | null = null;
   /** The next hand that gets to a shot blocks it, for the showcase and the lab. */
   forcedBlock = false;
   gamePoint: [boolean, boolean] = [false, false];
