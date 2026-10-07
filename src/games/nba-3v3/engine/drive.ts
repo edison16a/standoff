@@ -49,6 +49,17 @@ function contact(m: Match, a: Athlete, man: Athlete, edge: number, dunk: boolean
   m.emit({ type: "bump", a: a.id, b: man.id, power });
 }
 
+/** Dunked on: the man under it is sent back off his feet as the slam comes down through him. */
+function posterize(m: Match, a: Athlete): void {
+  const man = m.opponents(a.team).find((o) => dist2(o, a) < 1.5 && o.action.kind !== "stumble");
+  if (!man) return;
+  const push = dir2(a, man);
+  man.vx = push.x * 3;
+  man.vz = push.z * 3;
+  man.action = { kind: "stumble", t: 0, dur: 1.1, fall: "back" };
+  m.emit({ type: "knockdown", id: man.id, by: a.id });
+}
+
 /** The man nearest the fake jumps at it, mostly, and is in the air as the driver steps through under him. */
 function biteOnFake(m: Match, a: Athlete): void {
   const man = m.opponents(a.team).find((o) => o.auto && dist2(o, a) < 1.8);
@@ -76,8 +87,10 @@ export function updateDrive(m: Match, a: Athlete, dt: number): void {
     act.released = true;
     // The ball goes from where the hand has it right now.
     ballInHands(a, { ...act, t: act.finish }, hand);
-    if (act.dunk) slam(m, a, hand);
-    else launchShot(m, a, "layup", "good", { ...hand });
+    if (act.dunk) {
+      slam(m, a, hand);
+      if (act.style === "poster") posterize(m, a);
+    } else launchShot(m, a, "layup", "good", { ...hand });
   }
   if (t >= act.land) {
     a.y = 0;
