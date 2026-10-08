@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { FINITE } from "./finite";
 import { FullScreen, passMaterial } from "./fullscreen";
 
 /** Turns the depth buffer's 0 to 1 back into metres from the camera. */
@@ -25,7 +26,10 @@ export const CIRCLE = /* glsl */ `
 /**
  * Gathers a disc of samples round each pixel at half resolution. A
  * sample counts only as far as its own blur reaches this pixel, so a
- * sharp player is not smeared over the blurred stands behind him.
+ * sharp player is not smeared over the blurred stands behind him. A bad
+ * sample (NaN or infinity) counts for nothing: summed in, one bad pixel
+ * would spoil every pixel whose disc reaches it, a thick black stroke.
+ * A bad pixel itself is filled from its neighbours, for the grade to use.
  */
 const GATHER = /* glsl */ `
   uniform sampler2D tColor;
@@ -35,11 +39,14 @@ const GATHER = /* glsl */ `
   varying vec2 vUv;
   ${VIEW_DEPTH}
   ${CIRCLE}
+  ${FINITE}
   const int TAPS = 28;
   void main() {
     float centre = circle(metres(texture2D(tDepth, vUv).r));
-    vec3 sum = texture2D(tColor, vUv).rgb;
-    float total = 1.0;
+    vec3 own = texture2D(tColor, vUv).rgb;
+    bool hole = nonFinite(own);
+    float total = hole ? 0.0 : 1.0;
+    vec3 sum = finite(own) * total;
     for (int i = 1; i < TAPS; i++) {
       float r = sqrt(float(i) / float(TAPS));
       float a = float(i) * 2.39996323;
@@ -48,10 +55,14 @@ const GATHER = /* glsl */ `
       float c = circle(metres(texture2D(tDepth, uv).r));
       // The sample reaches here if its own blur is at least this far out, or this pixel is blurred over it.
       float w = smoothstep(r - 0.15, r, max(c, centre * 0.6));
-      sum += texture2D(tColor, uv).rgb * w;
+      // A bad pixel here is filled from its nearest neighbours, even where all is sharp.
+      if (hole && r < 0.4) w = 1.0;
+      vec3 tap = texture2D(tColor, uv).rgb;
+      if (nonFinite(tap)) w = 0.0;
+      sum += finite(tap) * w;
       total += w;
     }
-    gl_FragColor = vec4(sum / total, centre);
+    gl_FragColor = vec4(sum / max(total, 1e-4), centre);
   }
 `;
 

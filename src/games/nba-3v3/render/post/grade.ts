@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { CIRCLE, VIEW_DEPTH } from "./depth-of-field";
+import { FINITE } from "./finite";
 import { passMaterial } from "./fullscreen";
 
 /**
@@ -7,7 +8,9 @@ import { passMaterial } from "./fullscreen";
  * bloom, white balance, the ACES filmic curve (the same fit three.js
  * uses), sRGB encoding, then the grade in display space (saturation, a
  * gentle S curve, lifted blacks), a vignette and a breath of noise so
- * the dark stands never band.
+ * the dark stands never band. Every input is cleaned as it is read, so
+ * a bad pixel from any shader shows as one dark dot at worst, never a
+ * black streak.
  */
 const FRAGMENT = /* glsl */ `
   uniform sampler2D tScene;
@@ -27,6 +30,7 @@ const FRAGMENT = /* glsl */ `
   varying vec2 vUv;
   ${VIEW_DEPTH}
   ${CIRCLE}
+  ${FINITE}
 
   vec3 fit(vec3 v) {
     vec3 a = v * (v + 0.0245786) - 0.000090537;
@@ -48,13 +52,15 @@ const FRAGMENT = /* glsl */ `
   }
 
   void main() {
-    vec3 c = texture2D(tScene, vUv).rgb;
+    vec3 raw = texture2D(tScene, vUv).rgb;
+    vec3 c = finite(raw);
     if (uDof > 0.001) {
       float blur = circle(metres(texture2D(tDepth, vUv).r));
-      vec4 soft = texture2D(tDof, vUv);
-      c = mix(c, soft.rgb, smoothstep(0.03, 0.4, blur) * uDof);
+      vec3 soft = finite(texture2D(tDof, vUv).rgb);
+      // A bad pixel takes its neighbours' blur, which skipped it, so it vanishes.
+      c = mix(c, soft, nonFinite(raw) ? 1.0 : smoothstep(0.03, 0.4, blur) * uDof);
     }
-    c += texture2D(tBloom, vUv).rgb * uBloom;
+    c += finite(texture2D(tBloom, vUv).rgb) * uBloom;
     c = aces(max(c, vec3(0.0)) * uBalance * uExposure);
     c = srgb(c);
     float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
