@@ -6,6 +6,7 @@ import { clampToWorld, FIELD, YARD } from "./field";
 import type { Match } from "./match";
 import { handOver } from "./control";
 import { handSpot } from "./passer-facing";
+import { insideRoute } from "./route-bounds";
 import { PASS, PITCH } from "./tuning";
 import type { Athlete, TeamId } from "./types";
 import { clamp, len3, type V2, type V3 } from "./vec";
@@ -33,13 +34,8 @@ export function backSpot(qb: V2, sign: 1 | -1, ballZ: number): V2 {
 /** The computer back's path: out wide past the linemen, then upfield. */
 export function sweepRoute(back: V2, qb: V2, sign: 1 | -1): V2[] {
   const side = back.z >= qb.z ? 1 : -1;
-  const edgeX = FIELD.endX - 1;
-  const edgeZ = FIELD.halfWidth - 1.5;
   const legs: [number, number][] = [[1, 3], [5, 7], [40, 9]];
-  return legs.map(([down, wide]) => ({
-    x: clamp(back.x + sign * down, -edgeX, edgeX),
-    z: clamp(back.z + side * wide, -edgeZ, edgeZ),
-  }));
+  return legs.map(([down, wide]) => insideRoute({ x: back.x + sign * down, z: back.z + side * wide }));
 }
 
 /** The QB may pitch once, on a run call, while still a passer, with the ball and the back on his feet. */

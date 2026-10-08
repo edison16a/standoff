@@ -57,7 +57,7 @@ export function cover(m: Match, a: Athlete, skill: FootballSkill): void {
   const r = a.bot.cover === null ? null : m.athlete(a.bot.cover);
   if (!r) return rushQb(m, a, skill);
   const spot = ahead(r, 0.3);
-  headFor(a, { x: spot.x + m.sign * skill.cushion, z: spot.z - Math.sign(spot.z) * 0.5 }, 0.6);
+  headFor(a, { x: spot.x + m.sign * skill.cushion * Number(process.env.CC ?? "1"), z: spot.z - Math.sign(spot.z) * Number(process.env.CZ ?? "0.5") }, 0.6);
 }
 
 /** The deep safety: fourteen yards off the line in the middle, drifting toward the ball, until it is thrown. */

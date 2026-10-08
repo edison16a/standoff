@@ -5,11 +5,11 @@ import { FIELD, YARD, yardToX } from "../field";
 import type { Match } from "../match";
 import { clinchOf } from "../support/clinch";
 import { LAYERS } from "../support/formation";
-import { defenseJob, sideOf } from "../support/roster";
+import { defenseJob, isReceiver, sideOf } from "../support/roster";
 import type { Athlete } from "../types";
 import { clamp, dist2, type V2 } from "../vec";
 import { breakOnBall, pursue, rushQb } from "./defense";
-import { headFor } from "./goal";
+import { ahead, headFor } from "./goal";
 import type { FootballSkill } from "./skill";
 
 /** Inside this the deep man stops keeping leverage and comes up to make the tackle. */
@@ -17,8 +17,8 @@ const DEEP_TRIGGER = 13;
 
 const onField = (p: V2): V2 => ({ x: clamp(p.x, -(FIELD.endX - 1), FIELD.endX - 1), z: clamp(p.z, -(FIELD.halfWidth - 1), FIELD.halfWidth - 1) });
 
-/** Receivers past the line, the men a dropping defender has to keep in front of him. */
-const routes = (m: Match) => m.athletes.filter((r) => r.team === m.offense && r.role === "runner" && !isDown(r));
+/** Receivers past the line, the deep threat among them, the men a dropping defender has to keep in front of him. */
+export const routes = (m: Match) => m.athletes.filter((r) => r.team === m.offense && isReceiver(r) && !isDown(r));
 
 /**
  * A backer in his zone while the QB looks to throw: nine yards off on
@@ -32,15 +32,26 @@ function zone(m: Match, a: Athlete): void {
   headFor(a, onField(spot), 1);
 }
 
-/** The deep man over the top: always deeper than the deepest receiver, drifting with the ball. */
+/** How far over the top the deep man plays a receiver, metres: tighter on the deep threat he keys. */
+const CUSHION = { keyed: Number(process.env.CUSH ?? "4.5"), deepest: 6 } as const;
+
+/**
+ * The deep man over the top: always deeper than the deepest receiver,
+ * drifting with the ball. On a play where he keys the deep threat he
+ * shades over him from the snap and stays a few steps over the top.
+ */
 function deepZone(m: Match, a: Athlete): void {
   const s = m.sign;
+  const key = a.bot.key ? routes(m).find((r) => r.deep) : undefined;
   let x = yardToX(m.offense, m.drive.los) + s * LAYERS.deep * YARD;
-  let z = m.ball.pos.z * 0.5;
+  let z = key ? key.z * 0.8 + m.ball.pos.z * 0.2 : m.ball.pos.z * 0.5;
   for (const r of routes(m)) {
-    if ((r.x + s * 6 - x) * s > 0) {
-      x = r.x + s * 6;
-      z = r.z * 0.6 + m.ball.pos.z * 0.4;
+    // The man he keys he judges a moment ahead, so he bails in time against a sprinter.
+    const at = r === key ? ahead(r, Number(process.env.LEAD ?? "0.6")) : r;
+    const cushion = r === key ? CUSHION.keyed : CUSHION.deepest;
+    if ((at.x + s * cushion - x) * s > 0) {
+      x = at.x + s * cushion;
+      z = r === key ? r.z * 0.9 + m.ball.pos.z * 0.1 : r.z * 0.6 + m.ball.pos.z * 0.4;
     }
   }
   headFor(a, onField({ x, z }), 1);

@@ -5,10 +5,12 @@ import { YARD, yardToX } from "../field";
 import { locked } from "../linemen";
 import type { Match } from "../match";
 import { clinchOf } from "../support/clinch";
-import { offenseJob } from "../support/roster";
+import { jobOf } from "../support/roster";
 import type { Athlete } from "../types";
+import { insideRoute } from "../route-bounds";
 import { dist2, type V2 } from "../vec";
 import { ahead, headFor } from "./goal";
+import { runRoute } from "./offense";
 
 /** Seconds after the snap a wing or the lead back with nobody to block leaks out as an outlet. */
 const LEAK_AFTER = 1.3;
@@ -39,9 +41,9 @@ function protect(m: Match, a: Athlete, qb: Athlete): void {
   a.bot.cover = mark?.id ?? null;
   if (mark) return headFor(a, blockSpot(mark, qb), 0.3);
   const since = m.play?.sinceSnap ?? 0;
-  if (offenseJob(a.slot) === "tackle" || since < LEAK_AFTER) return headFor(a, a, 1);
+  if (jobOf(a) === "tackle" || since < LEAK_AFTER) return headFor(a, a, 1);
   const s = attackSign(a.team);
-  headFor(a, { x: yardToX(m.offense, m.drive.los) + s * 4 * YARD, z: a.z }, 1.5);
+  headFor(a, insideRoute({ x: yardToX(m.offense, m.drive.los) + s * 4 * YARD, z: a.z }), 1.5);
 }
 
 /**
@@ -59,9 +61,11 @@ function leadBlock(m: Match, a: Athlete, carrier: Athlete): void {
 }
 
 /**
- * A support player on the side with the ball. He never runs a route: he
- * blocks, keeps driving the man in his hands, and only goes for the ball
- * when it is thrown to him.
+ * A support player on the side with the ball. A blocker never runs a
+ * route: he blocks, keeps driving the man in his hands, and only goes
+ * for the ball when it is thrown to him. The deep threat goes long on
+ * a throw call, keeps running his route while the ball is in the air,
+ * and blocks once someone runs with it.
  */
 export function supportOffense(m: Match, a: Athlete, carrier: Athlete | null): void {
   const track = ballTrack(m, a);
@@ -72,9 +76,10 @@ export function supportOffense(m: Match, a: Athlete, carrier: Athlete | null): v
   const c = clinchOf(m, a.id);
   const man = c ? m.athlete(c.d) : null;
   if (man) return headFor(a, man, 0.3);
-  if (!carrier) return headFor(a, m.ball.pass ? m.ball.pass.spot : a, 1.5);
   const play = m.play;
-  const passing = carrier.role === "qb" && play?.call === "throw" && !play.passed && !play.qbRun;
+  const passing = carrier?.role === "qb" && play?.call === "throw" && !play.passed && !play.qbRun;
+  if (a.deep && play?.call === "throw" && (passing || !carrier)) return runRoute(m, a);
+  if (!carrier) return headFor(a, m.ball.pass ? m.ball.pass.spot : a, 1.5);
   if (passing) return protect(m, a, carrier);
   leadBlock(m, a, carrier);
 }

@@ -30,6 +30,12 @@ export interface MatchOptions {
   level?: BotLevel;
   /** Support players a side, SUPPORT.perSide unless a test wants the field bare. */
   support?: number;
+  /**
+   * Whether the last support slot plays the deep threat on offense (on by
+   * default). Off, he is the lead back who blocks, as in the game the
+   * showcase's media were filmed from.
+   */
+  deepThreat?: boolean;
 }
 
 /**
@@ -96,7 +102,11 @@ export class Match {
       athletes.push(createAthlete(athletes.length, team, "qb", 0, qb.build, qb.seat));
       side.filter((e) => e.role === "runner").forEach((e, slot) => athletes.push(createAthlete(athletes.length, team, "runner", slot, e.build, e.seat)));
       for (let slot = 0; slot < 3; slot++) athletes.push(createAthlete(athletes.length, team, "lineman", slot, null, null));
-      for (let slot = 0; slot < (options.support ?? SUPPORT.perSide); slot++) athletes.push(createAthlete(athletes.length, team, "support", slot, null, null));
+      for (let slot = 0; slot < (options.support ?? SUPPORT.perSide); slot++) {
+        const a = createAthlete(athletes.length, team, "support", slot, null, null);
+        a.deep = slot === SUPPORT.deepSlot && options.deepThreat !== false;
+        athletes.push(a);
+      }
     }
     this.athletes = athletes;
     this.lines = newLinePairs();

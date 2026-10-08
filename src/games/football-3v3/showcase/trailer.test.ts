@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 import { Match, STEP, type MatchEvent } from "../engine";
 import { CEREMONY } from "../engine/ceremony";
 import { CATCHER, JUKER, QB, TACKLER } from "./film-cams";
-import { SHOWCASE_SEED, SHOWCASE_TEAMS } from "./scene";
+import { showcaseMatch } from "./scene";
 import { FILM_LENGTH, SHOTS, filmAt, shotLength } from "./trailer";
 import { STILLS } from "./stills";
 
 /** Plays the showcase game to `until`, noting when each event happened. */
 function play(until: number): { at: number; e: MatchEvent }[] {
-  const match = new Match({ entries: SHOWCASE_TEAMS, seed: SHOWCASE_SEED, level: "hard", firstOffense: 0 });
+  const match = new Match(showcaseMatch());
   const log: { at: number; e: MatchEvent }[] = [];
   while (match.time < until - 1e-9) {
     match.step(STEP);

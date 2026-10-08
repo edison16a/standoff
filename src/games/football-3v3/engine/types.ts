@@ -111,6 +111,8 @@ export interface BotMemory {
   cover: number | null;
   /** With nobody to cover: rush the QB this play, or sit deep as a safety. */
   rush: boolean;
+  /** The deep man keys the offense's deep threat this play, rather than whoever goes deepest. */
+  key: boolean;
   /** When the QB bot will throw, in seconds after the snap. */
   readAt: number;
 }
@@ -171,6 +173,8 @@ export interface Athlete {
   block: { kind: BlockKind; t: number; offense: boolean } | null;
   bot: BotMemory;
   stats: Stats;
+  /** The support player who goes long on offense, the deep threat (support/roster.ts). */
+  deep: boolean;
 }
 
 export type BallState = "dead" | "held" | "snap" | "pass" | "kick" | "loose";

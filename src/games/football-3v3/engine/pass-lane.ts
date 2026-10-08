@@ -72,7 +72,8 @@ export function readLane(m: Match, qb: Athlete, from: V2, spot: V2): LaneThreat[
   const out: LaneThreat[] = [];
   for (const d of m.athletes) {
     if (d.team === qb.team || !canPlayBall(d)) continue;
-    const threat = laneThreat(d, from, spot, LANE.reach * coverReach(statsOf(d)), skillOf(m, d));
+    const extra = Number(process.env.LR ?? "0") * Math.max(0, Math.hypot(spot.x - from.x, spot.z - from.z) / 18 - Number(process.env.LF ?? "0.6"));
+    const threat = laneThreat(d, from, spot, LANE.reach * coverReach(statsOf(d)) + extra, skillOf(m, d));
     if (threat > 0) out.push({ id: d.id, threat });
   }
   return out.sort((a, b) => b.threat - a.threat);

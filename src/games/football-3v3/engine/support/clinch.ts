@@ -67,6 +67,8 @@ export function engageClinches(m: Match): void {
   const passPro = !!carrier && carrier.role === "qb" && !m.play?.passed && !m.play?.qbRun;
   for (const o of m.athletes) {
     if (o.role !== "support" || o.team !== team || o === carrier || isDown(o) || o.action.kind !== "none" || resting(m, o) || clinchOf(m, o.id)) continue;
+    // The deep threat is out on his route while the QB looks to throw, not blocking.
+    if (o.deep && passPro && m.play?.call === "throw") continue;
     let best: Athlete | null = null;
     for (const d of m.athletes) {
       if (d.team === o.team || !blockable(m, d, carrier, passPro) || clinchOf(m, d.id)) continue;
