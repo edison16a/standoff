@@ -10,6 +10,16 @@ The running list of what is being built, so work can pick up again after a break
 4. Start the next queued batch.
 5. If an agent has gone quiet for a long time, check whether it is stuck on a permission prompt (usually a cleanup command). Its committed work is safe; stop it and continue from its branch with a fresh agent told to leave cleanup to the lead.
 
+## Paused for next week (owner is out of usage, resume from these branches)
+
+Owner words, verbatim, are in docs/handoff/next-week/owner-requests.md. Screenshots of the bug are next to it.
+
+1. **Basketball black streaks** (top priority). Thick black streaks radiate from the ball handler in live play, and big black loops swirl around the trophy lift in the ceremony. See docs/handoff/next-week/live.webp and ceremony.webp. It only shows on the owner's real graphics card, not in our software renderer. Lead theory: NaN or infinite pixels in the HDR finish, spread by bloom into streaks. Work so far is on branch `wip/worktree-agent-af02290b073d1ed42` (3 commits: safe math in the skin, hair and spark shaders, bad pixels cleaned through the whole finish, no black rings from the haze beams). Next: finish the depth of field part, confirm the fix, add the permanent safety net before bloom and the final composite, then ask the owner which browser and computer they use so it can be checked there.
+2. **Replay black bar.** A black bar along the bottom of the big screen covers part of every replay. Remove it in Basketball, Football and Soccer. Not started; same branch as item 1.
+3. **Football routes and deep runner.** Route runners must never stay out of bounds; they turn back inside so they can still be thrown to. Add one deep runner per offense who goes long when the play allows (keep eleven a side by turning one blocking support bot into him). Work so far is one WIP commit on branch `wip/worktree-agent-a004ba54ddce70b1c`.
+
+Still waiting on the owner: pause or keep the heartbeat, re-record the Paintball trailer, keep or remove the three unrequested extras (crouched shot pops up, bots wait for range, extra Next tap), add a license, remove the duplicate screenshots lower in the README, re-take the README home screenshot with the Standoff Premium badges.
+
 ## Running now
 
 | Work | Workflow | State |
