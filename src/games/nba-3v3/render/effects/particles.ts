@@ -30,7 +30,8 @@ void main() {
   vAlpha = aAlpha;
   vColour = aColour;
   vec4 mv = modelViewMatrix * vec4(position, 1.0);
-  gl_PointSize = aSize * uScale / -mv.z;
+  // A point at the camera's own depth would divide by zero.
+  gl_PointSize = aSize * uScale / max(-mv.z, 0.01);
   gl_Position = projectionMatrix * mv;
 }`;
 
