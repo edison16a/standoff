@@ -20,13 +20,15 @@ const BEAM_VERTEX = /* glsl */ `
   }
 `;
 
-const BEAM_FRAGMENT = /* glsl */ `
+export const BEAM_FRAGMENT = /* glsl */ `
   uniform float uStrength;
   varying float vAlong;
   varying float vEdge;
   void main() {
     // Bright at the lamp, gone before the floor, and soft at the beam's sides.
-    float a = pow(vAlong, 2.2) * vEdge * vEdge * uStrength;
+    // At the cone's open end vAlong dips just under zero (multisampled edges sit past the
+    // triangle), and pow of a negative is NaN on most graphics cards: a black ring on the floor.
+    float a = pow(max(vAlong, 0.0), 2.2) * vEdge * vEdge * uStrength;
     gl_FragColor = vec4(vec3(1.0, 0.95, 0.86) * a, 1.0);
   }
 `;
