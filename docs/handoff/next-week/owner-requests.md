@@ -58,3 +58,9 @@ Then next clip is like small shooter and hes dribbling does stepback then 2 peop
 Alright some changes for the football and basketball game! SHoud be harder to score like its too easy to js sidestep and shoot like guard should be better at following and manual movement should be faster right
 
 For football, there should be like 5x more bots, so theres bots are just like poeple who run back to make sure no body tries to get past so like extra layer of defense for runners, so they dont run routes but you can pass to them right but they mostly like go push against the row or if on defense they fall back to tackle the runner, should be some cooldown on juke and runnign should have stamina so they slow down over time
+
+# Owner request for Zombie Survival (2026-10-09), verbatim
+
+ALRIGHT also add this to the todo for next wekk.
+
+So for the guns in the zombie game, I want to make it like 10x more realistic. Like use real gun sfx and like actual bullets with real physics like flying out on shots and when realod like utlra releastic

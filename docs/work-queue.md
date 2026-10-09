@@ -18,6 +18,8 @@ Owner words, verbatim, are in docs/handoff/next-week/owner-requests.md. Screensh
 2. **Replay black bar.** A black bar along the bottom of the big screen covers part of every replay. Remove it in Basketball, Football and Soccer. Not started; same branch as item 1.
 3. **Football routes and deep runner.** Route runners must never stay out of bounds; they turn back inside so they can still be thrown to. Add one deep runner per offense who goes long when the play allows (keep eleven a side by turning one blocking support bot into him). Work so far is one WIP commit on branch `wip/worktree-agent-a004ba54ddce70b1c`.
 
+4. **Zombie Survival guns, 10x more realistic.** Real sounding gun sound effects for every weapon (shot, tail and echo, dry fire, bolt or slide), real bullet physics (visible rounds or tracers with travel time and drop, hits that react), shell casings ejecting from the gun with real physics (spin, bounce and rattle on the ground), muzzle flash and smoke, recoil, and ultra realistic reload animations and sounds per weapon (magazine out and in, slide or bolt, shells loaded one by one for the pump). Not started. Sounds must be original or properly licensed (made in code or from a free licence source), never ripped from other games.
+
 Still waiting on the owner: pause or keep the heartbeat, re-record the Paintball trailer, keep or remove the three unrequested extras (crouched shot pops up, bots wait for range, extra Next tap), add a license, remove the duplicate screenshots lower in the README, re-take the README home screenshot with the Standoff Premium badges.
 
 ## Running now
