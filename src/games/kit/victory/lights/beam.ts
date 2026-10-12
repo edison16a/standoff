@@ -27,8 +27,10 @@ export function beamMaterial(colour: THREE.ColorRepresentation, strength = 0.35)
       varying float vAlong;
       varying vec3 vNormal;
       varying vec3 vView;
+      // Interpolated, the view can shrink to nothing where a camera sits on the cone's skin, and normalize of zero is NaN on most cards.
+      vec3 unit(vec3 v) { return v * inversesqrt(max(dot(v, v), 1e-12)); }
       void main() {
-        float edge = pow(abs(dot(normalize(vNormal), normalize(vView))), 1.6);
+        float edge = pow(abs(dot(unit(vNormal), unit(vView))), 1.6);
         // vAlong dips under zero at the open end, and pow of a negative is NaN on most cards.
         float fade = pow(clamp(vAlong, 0.0, 1.0), 1.8);
         gl_FragColor = vec4(colour * strength * edge * fade, 1.0);
