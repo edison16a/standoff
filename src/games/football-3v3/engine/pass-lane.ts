@@ -61,11 +61,17 @@ export function laneThreat(p: V2, from: V2, spot: V2, reach: number, skill: numb
   return clamp(close * place * hang * skill, 0, LANE.max);
 }
 
-/** How well a defender plays the ball: a person fully, a computer by its level, a training dummy not at all. */
+/**
+ * How well a defender plays the ball: a person fully, a computer by its
+ * level, a training dummy not at all. Even an Easy bot gets most of it,
+ * so throwing into a covered man is a risk at every level.
+ */
 function skillOf(m: Match, d: Athlete): number {
   if (!d.auto) return 1;
   const s = botSkill(m.level);
-  return s.acts ? 0.55 + 0.45 * s.accuracy : 0;
+  // The showcase's game was filmed with Easy bots playing it worse (Match.filmed).
+  const floor = m.filmed ? 0.55 : 0.7;
+  return s.acts ? floor + (1 - floor) * s.accuracy : 0;
 }
 
 /** Defenders who can play a pass: on their feet and not tailing someone on Guard. */
