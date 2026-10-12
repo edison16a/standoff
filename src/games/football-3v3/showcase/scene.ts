@@ -21,10 +21,10 @@ export const SHOWCASE_TEAMS: Entry[] = [
 
 /**
  * The showcase's match: its seed, its teams and Hard computer players.
- * The media were filmed before the deep threat, so this game plays the
- * last support slot as the lead back, as it was filmed.
+ * The media were filmed before the deep threat and the defence's sharper
+ * reads, so this game plays as it was filmed (MatchOptions.filmed).
  */
-export const showcaseMatch = (seed = SHOWCASE_SEED): MatchOptions => ({ entries: SHOWCASE_TEAMS, seed, level: "hard", firstOffense: 0, deepThreat: false });
+export const showcaseMatch = (seed = SHOWCASE_SEED): MatchOptions => ({ entries: SHOWCASE_TEAMS, seed, level: "hard", firstOffense: 0, filmed: true });
 
 /**
  * A seeded match of computer players at kick off, for the animation

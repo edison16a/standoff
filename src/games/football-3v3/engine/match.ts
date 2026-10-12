@@ -30,12 +30,13 @@ export interface MatchOptions {
   level?: BotLevel;
   /** Support players a side, SUPPORT.perSide unless a test wants the field bare. */
   support?: number;
-  /**
-   * Whether the last support slot plays the deep threat on offense (on by
-   * default). Off, he is the lead back who blocks, as in the game the
-   * showcase's media were filmed from.
-   */
+  /** Whether the last support slot plays the deep threat on offense (on by default). Off, he is a lead back who blocks. */
   deepThreat?: boolean;
+  /**
+   * The showcase's game, played as it was when its media were filmed: no
+   * deep threat, and the computer defence's older, looser reads (bots/defense.ts).
+   */
+  filmed?: boolean;
 }
 
 /**
@@ -53,6 +54,8 @@ export class Match {
   readonly lineRng: Rng;
   readonly target: number;
   readonly quarterSeconds: number;
+  /** Played as the showcase's media were filmed (MatchOptions.filmed). */
+  readonly filmed: boolean;
   level: BotLevel;
   phase: Phase = "choose";
   phaseT = 0;
@@ -93,6 +96,7 @@ export class Match {
     this.lineRng = new Rng((seed ^ 0x5bd1e995) >>> 0);
     this.target = options.target ?? RULES.target;
     this.quarterSeconds = options.quarterSeconds ?? RULES.quarterSeconds;
+    this.filmed = options.filmed ?? false;
     this.clock = this.quarterSeconds;
     this.level = options.level ?? DEFAULT_BOT_LEVEL;
     const athletes: Athlete[] = [];
@@ -104,7 +108,7 @@ export class Match {
       for (let slot = 0; slot < 3; slot++) athletes.push(createAthlete(athletes.length, team, "lineman", slot, null, null));
       for (let slot = 0; slot < (options.support ?? SUPPORT.perSide); slot++) {
         const a = createAthlete(athletes.length, team, "support", slot, null, null);
-        a.deep = slot === SUPPORT.deepSlot && options.deepThreat !== false;
+        a.deep = slot === SUPPORT.deepSlot && options.deepThreat !== false && !this.filmed;
         athletes.push(a);
       }
     }
