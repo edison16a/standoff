@@ -65,7 +65,10 @@ export function buildSmg(): GunModel {
   const muzzle = marker("muzzle", 0, 0, -0.405);
   const laser = marker("laser", 0, -0.052, -0.34);
   root.add(muzzle, laser);
-  return { root, muzzle, laser, magazine, pump: null, bolt, shell: null, length: 0.75 };
+  // The ejection port, on the right of the receiver.
+  const ejector = marker("ejector", 0.024, 0.004, -0.02);
+  root.add(ejector);
+  return { root, muzzle, laser, ejector, magazine, pump: null, bolt, shell: null, length: 0.75 };
 }
 
 // Moving parts. Everything below is animated by the gun rig and kept apart

@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { ScreenPoint } from "@/games/kit/aim/aim-math";
-import { playerColor } from "@/games/kit/players";
 import type { Seat } from "@/platform/protocol";
 import type { GameEvent } from "../engine/events";
 import { fightFrame, segmentAt } from "../engine/route";
@@ -11,6 +10,7 @@ import { isBoss } from "../engine/zombie-kinds";
 import type { SurvivalView } from "../host/survival-host";
 import { AimCaster, type CastResult } from "./aim-caster";
 import { Atmosphere } from "./atmosphere";
+import { Gunfire } from "./ballistics/gunfire";
 import { lowQuality } from "./quality";
 import type { SceneSource, TargetPoint } from "./scene-source";
 import { CameraRig, sailed } from "./camera-rig";
@@ -46,6 +46,7 @@ export class SurvivalRenderer implements SurvivalView {
   private readonly env: THREE.Texture;
   private readonly atmosphere: Atmosphere;
   private readonly pending = new Map<Seat, CastResult[]>();
+  private readonly gunfire: Gunfire;
   private readonly idle = lobbyZombies();
   private readonly horde = new EscapeHorde();
   private last = 0;
@@ -70,10 +71,12 @@ export class SurvivalRenderer implements SurvivalView {
     setGunEnvironment(this.env);
     this.scene.add(this.camera);
     this.atmosphere = new Atmosphere(this.scene, this.camera);
+    if (this.scene.fog) this.effects.setHaze(this.scene.fog.color);
     this.guns = new FirstPerson(this.camera);
     this.crosshairs = new CrosshairLayer(this.camera);
     this.chopper = new ChopperView(this.scene);
     this.caster = new AimCaster(this.camera);
+    this.gunfire = new Gunfire({ camera: this.camera, view: this.rig, guns: this.guns, effects: this.effects, zombies: this.zombies, game: () => this.source.game });
     this.scene.add(this.atmosphere.group, this.world.group, this.zombies.group, this.effects.group, this.guns.lasers);
   }
 
@@ -115,9 +118,10 @@ export class SurvivalRenderer implements SurvivalView {
     const { shooters, sights } = aimAll(this.source, this.caster, [...this.zombies.proxies(), ...this.world.solids()], nowMs);
     const armed = game.phase !== "cutscene" && game.phase !== "escaped";
     this.guns.update(shooters, dt, time, armed);
+    this.gunfire.barrels(shooters.map((s) => s.seat), dt);
     // A fallen team's trigger is off, so its crosshairs leave the end card clear.
     this.crosshairs.update(sights, dt, armed && game.phase !== "down");
-    this.effects.update(dt);
+    this.effects.update(dt, this.camera.position);
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -136,28 +140,18 @@ export class SurvivalRenderer implements SurvivalView {
   }
 
   shotFx(seat: Seat): void {
-    const rig = this.guns.rig(seat);
     const results = this.pending.get(seat) ?? [];
     this.pending.delete(seat);
     this.crosshairs.fire(seat);
-    if (!rig) return;
-    rig.fire(this.source.game.squad.get(seat)?.gun.ammo ?? 1);
-    const at = new THREE.Vector3();
-    const dir = new THREE.Vector3();
-    rig.muzzle(at, dir);
-    this.effects.muzzle(at, dir, rig.big);
-    const colour = new THREE.Color(playerColor(seat));
-    results.forEach((r, i) => {
-      if (i < 3) this.effects.tracer(at, r.point, colour);
-      this.effects.impact(r.point, r.normal, r.impact, i < 3 ? this.camera.position : undefined);
-    });
-    this.rig.kick(rig.big ? 0.12 : 0.04);
+    this.gunfire.shot(seat, results);
   }
 
   react(event: GameEvent): void {
     const rig = "seat" in event && event.seat ? this.guns.rig(event.seat) : undefined;
     const at = new THREE.Vector3();
     switch (event.type) {
+      case "shot":
+        return this.gunfire.eject(event.seat, event.weapon, event.shotId);
       case "reload-start":
         return rig?.startReload(event.seconds, event.empty);
       case "shell":
@@ -165,8 +159,7 @@ export class SurvivalRenderer implements SurvivalView {
       case "reloaded":
         return rig?.finishReload();
       case "hit":
-        if (!event.killed) this.zombies.flinch(event.zombie);
-        return;
+        return this.gunfire.hit(event);
       case "kill":
         if (this.zombies.chest(event.zombie, at)) this.effects.splatter(at, isBoss(event.kind));
         return;

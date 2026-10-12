@@ -9,7 +9,8 @@ import { isBoss, KINDS, type Joint } from "../engine/zombie-kinds";
 import { flightView, rooftopView } from "./chopper-camera";
 import { SHIP_DECK } from "./models/vehicles/ship";
 
-const EYE = 1.65;
+/** Eye height above the street. Casings use it to find the ground under the team. */
+export const EYE = 1.65;
 const v = (p: Vec3, up = 0) => new THREE.Vector3(p.x, p.y + up, p.z);
 
 /** Where each glowing joint sits on a boss, as a share of its height. Elbows rise as it swings. */
