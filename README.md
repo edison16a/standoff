@@ -107,7 +107,7 @@ Up to four blades on one board. Point your phone at the screen and swing fast to
 
 <img src="docs/screenshots/zombie-survival.jpg" alt="The team firing from the back of a truck at zombies in a night street" width="100%" />
 
-A team shooter on rails for up to four. Each phone is a gun: Shotgun, Submachine Gun, Assault Rifle or AK-47, each with its own crosshair and kick. Fight through fifteen stages of a foggy dead city, shoot the glowing weak points on the Butcher, the Surgeon and the Juggernaut, get lifted off the hospital roof by helicopter at stage 10, and make it to the ship at stage 15.
+A team shooter on rails for up to four. Each phone is a gun: Shotgun, Submachine Gun, Assault Rifle or AK-47, each with its own crosshair and kick. The guns behave like the real thing: recorded gunshots echo down the street, rounds and tracers fly at their true speed, spent cases spin out and rattle on the road, and gloved hands work every reload, from a magazine rocked out of the AK to shells pushed one by one into the pump. Fight through fifteen stages of a foggy dead city, shoot the glowing weak points on the Butcher, the Surgeon and the Juggernaut, get lifted off the hospital roof by helicopter at stage 10, and make it to the ship at stage 15.
 
 ### Shooting Gallery
 
@@ -184,7 +184,7 @@ Everything around the games is shared, so every game works the same way.
 * **Full screen** from the button in the tool bar, on the home screen and in every game.
 * **Settings** behind the gear: music and sound effect volume, a frame rate cap (Max by default), Clear leaderboards, and Remake lobby while a room is open. The sun button switches between light and dark mode.
 * **Admin panel.** Three quick taps on the settings gear open a hidden testing panel. Games add their own shortcuts while a match runs, like winning a stage or putting both teams one basket from the end, and there is a frame rate meter and a reload button.
-* **Sound.** Every game has its own music and effects, all synthesized in the browser with the Web Audio API. The music starts as the home screen opens, or on your first click, tap or key press where the browser holds sound back.
+* **Sound.** Every game has its own music and effects, synthesized in the browser with the Web Audio API. Zombie Survival's guns also use real recordings, all CC0, credited in `public/games/zombie-survival/sfx/CREDITS.md`. The music starts as the home screen opens, or on your first click, tap or key press where the browser holds sound back.
 
 Opening the site on a phone goes straight to the join screen. Type the code from the big screen, or tap **Scan QR code** where the browser can read QR codes. When the host ends a game, every phone lands on **Join a new game**.
 
@@ -362,7 +362,7 @@ src/
 tools/                    Media capture, the phone fit check and camera test helpers
 ```
 
-Every game is drawn with three.js and plays its own synthesized music and sound.
+Every game is drawn with three.js and plays its own synthesized music and sound (Zombie Survival layers CC0 gun recordings over its synthesis).
 
 ## Tests
 
