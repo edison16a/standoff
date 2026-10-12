@@ -5,11 +5,11 @@ import { FIELD, YARD, yardToX } from "../field";
 import type { Match } from "../match";
 import { clinchOf } from "../support/clinch";
 import { LAYERS } from "../support/formation";
-import { defenseJob, sideOf } from "../support/roster";
+import { defenseJob, isReceiver, sideOf } from "../support/roster";
 import type { Athlete } from "../types";
 import { clamp, dist2, type V2 } from "../vec";
 import { breakOnBall, pursue, rushQb } from "./defense";
-import { headFor } from "./goal";
+import { ahead, headFor } from "./goal";
 import type { FootballSkill } from "./skill";
 
 /** Inside this the deep man stops keeping leverage and comes up to make the tackle. */
@@ -17,29 +17,50 @@ const DEEP_TRIGGER = 13;
 
 const onField = (p: V2): V2 => ({ x: clamp(p.x, -(FIELD.endX - 1), FIELD.endX - 1), z: clamp(p.z, -(FIELD.halfWidth - 1), FIELD.halfWidth - 1) });
 
-/** Receivers past the line, the men a dropping defender has to keep in front of him. */
-const routes = (m: Match) => m.athletes.filter((r) => r.team === m.offense && r.role === "runner" && !isDown(r));
+/** Receivers past the line, the deep threat among them, the men a dropping defender has to keep in front of him. */
+export const routes = (m: Match) => m.athletes.filter((r) => r.team === m.offense && isReceiver(r) && !isDown(r));
 
 /**
  * A backer in his zone while the QB looks to throw: nine yards off on
- * his side, sliding under any receiver who comes into it.
+ * his side, sliding over any runner who comes into it. He reads the
+ * runner a moment ahead and leans off his spot toward him, both by his
+ * reaction time: a slow bot has to guess further and stay closer. The
+ * deep threat going past he leaves to the deep man.
  */
-function zone(m: Match, a: Athlete): void {
+function zone(m: Match, a: Athlete, skill: FootballSkill): void {
   const s = m.sign;
   const home = { x: yardToX(m.offense, m.drive.los) + s * LAYERS.backer * YARD, z: m.drive.ballZ + sideOf(a.slot) * 7 };
-  const near = routes(m).filter((r) => Math.abs(r.z - home.z) < 10).sort((p, q) => dist2(p, home) - dist2(q, home))[0];
-  const spot = near ? { x: near.x + s * 2.5, z: (near.z + home.z) / 2 } : { x: home.x, z: home.z + (m.ball.pos.z - home.z) * 0.3 };
+  const near = routes(m).filter((r) => !r.deep && Math.abs(r.z - home.z) < 10).sort((p, q) => dist2(p, home) - dist2(q, home))[0];
+  // The showcase's game was filmed before backers read the runner (Match.filmed).
+  const read = m.filmed ? 0 : skill.reaction;
+  const at = near ? ahead(near, read * 0.5) : null;
+  const lean = 0.5 + read * 0.3;
+  const spot = at ? { x: at.x + s * 2.5, z: at.z * lean + home.z * (1 - lean) } : { x: home.x, z: home.z + (m.ball.pos.z - home.z) * 0.3 };
   headFor(a, onField(spot), 1);
 }
 
-/** The deep man over the top: always deeper than the deepest receiver, drifting with the ball. */
+/** How far over the top the deep man plays a receiver, metres: tighter on the deep threat he keys. */
+const CUSHION = { keyed: 4.5, deepest: 6 } as const;
+
+/** Seconds ahead he reads the man he keys, so he bails in time against a sprinter. */
+const KEY_LEAD = 0.6;
+
+/**
+ * The deep man over the top: always deeper than the deepest receiver,
+ * drifting with the ball. Keyed on the deep threat (every play he has
+ * one), he shades toward him from the snap and stays a few steps over
+ * the top.
+ */
 function deepZone(m: Match, a: Athlete): void {
   const s = m.sign;
+  const key = a.bot.key ? routes(m).find((r) => r.deep) : undefined;
   let x = yardToX(m.offense, m.drive.los) + s * LAYERS.deep * YARD;
-  let z = m.ball.pos.z * 0.5;
+  let z = key ? key.z * 0.4 + m.ball.pos.z * 0.6 : m.ball.pos.z * 0.5;
   for (const r of routes(m)) {
-    if ((r.x + s * 6 - x) * s > 0) {
-      x = r.x + s * 6;
+    const at = r === key ? ahead(r, KEY_LEAD) : r;
+    const cushion = r === key ? CUSHION.keyed : CUSHION.deepest;
+    if ((at.x + s * cushion - x) * s > 0) {
+      x = at.x + s * cushion;
       z = r.z * 0.6 + m.ball.pos.z * 0.4;
     }
   }
@@ -76,7 +97,7 @@ export function supportDefense(m: Match, a: Athlete, carrier: Athlete | null, sk
   const job = defenseJob(a.slot);
   if (passing) {
     if (job === "edge") return rushQb(m, a, skill);
-    return job === "backer" ? zone(m, a) : deepZone(m, a);
+    return job === "backer" ? zone(m, a, skill) : deepZone(m, a);
   }
   if (job === "deep") return lastLayer(m, a, carrier, skill);
   pursue(m, a, carrier, skill);

@@ -1,4 +1,4 @@
-import { clampToWorld } from "./field";
+import { FIELD } from "./field";
 import { launch, predict, type SpinStyle } from "./flight";
 import { BALL, PASS } from "./tuning";
 import { clamp, norm2, type V2, type V3 } from "./vec";
@@ -68,6 +68,12 @@ export interface Lead {
   vel: V3;
 }
 
+/** A pass is led to a spot in bounds, short of the sideline and the end line, so it can always be caught. */
+const inField = (p: V2): V2 => ({
+  x: clamp(p.x, -(FIELD.endX - 0.5), FIELD.endX - 0.5),
+  z: clamp(p.z, -(FIELD.halfWidth - 1), FIELD.halfWidth - 1),
+});
+
 /**
  * Throws to where the receiver will be, not where they are: it guesses
  * the flight time, moves the receiver on by their run for that long,
@@ -78,7 +84,7 @@ export function leadPass(from: V3, receiver: V2, run: V2, arm: number): Lead {
   let spot: V2 = { x: receiver.x, z: receiver.z };
   let time = hang(Math.hypot(spot.x - from.x, spot.z - from.z));
   for (let i = 0; i < 4; i++) {
-    spot = clampToWorld({ x: receiver.x + run.x * time, z: receiver.z + run.z * time });
+    spot = inField({ x: receiver.x + run.x * time, z: receiver.z + run.z * time });
     time = hang(Math.hypot(spot.x - from.x, spot.z - from.z));
   }
   const vel = solveLaunch(from, { x: spot.x, y: PASS.catchHeight, z: spot.z }, time, "spiral", PASS.spin);

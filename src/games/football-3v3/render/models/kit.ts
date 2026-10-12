@@ -1,4 +1,4 @@
-import { BUILDS, LINEMAN_FRAME, SUPPORT_FRAME, type BuildId, type Look } from "../../builds";
+import { BUILDS, DEEP_FRAME, LINEMAN_FRAME, SUPPORT_FRAME, type BuildId, type Look } from "../../builds";
 import { TEAMS, type TeamId } from "../../teams";
 
 /**
@@ -81,10 +81,14 @@ export function linemanKit(team: TeamId, number: number, slot: number): KitSpec 
 /** Support players vary their skin and kit by slot, so eleven a side never reads as a row of clones. */
 const SUPPORT_SKIN = ["#c58c63", "#6b4431", "#e0b793", "#4e3022", "#a8704c"];
 
-export function supportKit(team: TeamId, number: number, slot: number): KitSpec {
-  const look: Look = { skin: SUPPORT_SKIN[slot % SUPPORT_SKIN.length]!, mask: slot < 2 ? "cage" : "open", visor: null, accent: TEAMS[team].dark, cleats: "#111111" };
+/** A support player's kit. The deep threat (`deep`) gets a receiver's frame, a tinted visor and white cleats. */
+export function supportKit(team: TeamId, number: number, slot: number, deep = false): KitSpec {
+  const look: Look = deep
+    ? { skin: SUPPORT_SKIN[slot % SUPPORT_SKIN.length]!, mask: "visor", visor: "#1f2937", accent: TEAMS[team].dark, cleats: "#f5f5f4" }
+    : { skin: SUPPORT_SKIN[slot % SUPPORT_SKIN.length]!, mask: slot < 2 ? "cage" : "open", visor: null, accent: TEAMS[team].dark, cleats: "#111111" };
+  const frame = deep ? DEEP_FRAME : SUPPORT_FRAME;
   return {
-    ...teamKit(team), look, team, number, name: null, height: SUPPORT_FRAME.height, build: buildFor(SUPPORT_FRAME.height, SUPPORT_FRAME.weight),
-    sleeves: slot % 2 === 0 ? "short" : "bare", neckRoll: slot < 2, towel: slot === 3, locks: slot === 4 ? "#1a120c" : null, eyeBlack: slot >= 2, spats: slot === 2,
+    ...teamKit(team), look, team, number, name: null, height: frame.height, build: buildFor(frame.height, frame.weight),
+    sleeves: slot % 2 === 0 ? "short" : "bare", neckRoll: slot < 2 && !deep, towel: slot === 3 || deep, locks: slot === 4 ? "#1a120c" : null, eyeBlack: slot >= 2, spats: slot === 2,
   };
 }

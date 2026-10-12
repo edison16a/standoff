@@ -22,6 +22,8 @@ export const LANE = {
   /** Throw length: a quick pass gives him this much, one this long in metres gives him all of it. */
   quick: 0.7,
   long: 25,
+  /** Past that length a defender this many metres further off the line, per metre of throw, still closes on the ball as it hangs. */
+  hangReach: 0.15,
   /** The most a single defender can ever be: a perfectly placed one still loses some. */
   max: 0.92,
 } as const;
@@ -47,21 +49,29 @@ export function onLine(p: V2, from: V2, spot: V2): { off: number; along: number 
  */
 export function laneThreat(p: V2, from: V2, spot: V2, reach: number, skill: number): number {
   const { off, along } = onLine(p, from, spot);
-  // Behind the QB he is no threat to a ball going forward, and out of reach of the line none at all.
-  if (along < 0 || off >= reach) return 0;
-  // Right on the line he is in the ball's way; at the edge of his reach he only just gets a hand out.
-  const close = 1 - (off / reach) ** 2;
-  const place = along > 1 ? LANE.trailing : LANE.nearQb + (1 - LANE.nearQb) * along;
   const length = Math.hypot(spot.x - from.x, spot.z - from.z);
+  // A deep ball hangs, so a defender further off its line, a safety over the top, can still get there.
+  const far = reach + LANE.hangReach * Math.max(0, length - LANE.long);
+  // Behind the QB he is no threat to a ball going forward, and out of reach of the line none at all.
+  if (along < 0 || off >= far) return 0;
+  // Right on the line he is in the ball's way; at the edge of his reach he only just gets a hand out.
+  const close = 1 - (off / far) ** 2;
+  const place = along > 1 ? LANE.trailing : LANE.nearQb + (1 - LANE.nearQb) * along;
   const hang = clamp(LANE.quick + (1 - LANE.quick) * (length / LANE.long), LANE.quick, 1);
   return clamp(close * place * hang * skill, 0, LANE.max);
 }
 
-/** How well a defender plays the ball: a person fully, a computer by its level, a training dummy not at all. */
+/**
+ * How well a defender plays the ball: a person fully, a computer by its
+ * level, a training dummy not at all. Even an Easy bot gets most of it,
+ * so throwing into a covered man is a risk at every level.
+ */
 function skillOf(m: Match, d: Athlete): number {
   if (!d.auto) return 1;
   const s = botSkill(m.level);
-  return s.acts ? 0.55 + 0.45 * s.accuracy : 0;
+  // The showcase's game was filmed with Easy bots playing it worse (Match.filmed).
+  const floor = m.filmed ? 0.55 : 0.7;
+  return s.acts ? floor + (1 - floor) * s.accuracy : 0;
 }
 
 /** Defenders who can play a pass: on their feet and not tailing someone on Guard. */

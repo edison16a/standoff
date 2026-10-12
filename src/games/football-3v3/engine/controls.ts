@@ -7,6 +7,7 @@ import { hike } from "./phases";
 import { startRun } from "./qb-run";
 import { startPitch } from "./run-play";
 import { startDive } from "./dive";
+import { isReceiver } from "./support/roster";
 import { pressTackle } from "./tackle";
 import { RUSH } from "./tuning";
 import type { Athlete, Button } from "./types";
@@ -43,11 +44,11 @@ export function setAim(m: Match, id: number, aim: V2 | null): void {
   if (Math.hypot(aim.x, aim.z) >= 0.2) a.aim = { x: aim.x, z: aim.z };
 }
 
-/** The receiver nearest a defender, who they will tail while Guard is held. */
+/** The receiver nearest a defender, the deep threat among them, who they will tail while Guard is held. */
 function guardPick(m: Match, a: Athlete): number | null {
   let best: Athlete | null = null;
   for (const o of m.athletes) {
-    if (o.team === a.team || o.role !== "runner") continue;
+    if (o.team === a.team || !isReceiver(o)) continue;
     if (!best || dist2(o, a) < dist2(best, a)) best = o;
   }
   return best?.id ?? null;

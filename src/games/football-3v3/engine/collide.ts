@@ -38,9 +38,11 @@ export function separate(m: Match, bumpCd: Map<number, number>): void {
       const dz = b.z - a.z;
       const d = Math.hypot(dx, dz);
       const min = radius(a) + radius(b);
-      if (d >= min || d < 1e-6) continue;
-      const nx = dx / d;
-      const nz = dz / d;
+      if (d >= min) continue;
+      // Two men on the very same spot, say a pile that got up together, part across the field.
+      const same = d < 1e-6;
+      const nx = same ? 0 : dx / d;
+      const nz = same ? 1 : dz / d;
       const overlap = min - d;
       if (downA) {
         // A pile settles: the bodies ease apart instead of passing through each other.

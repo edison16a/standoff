@@ -34,7 +34,7 @@ export type JerseyName = (id: number) => string | null;
 
 function kitOf(a: AthleteView, name: string | null): KitSpec {
   if (a.build) return buildKit(a.team, a.build, name);
-  if (a.role === "support") return supportKit(a.team, a.number, Math.max(0, SUPPORT_NUMBERS[a.team].indexOf(a.number)));
+  if (a.role === "support") return supportKit(a.team, a.number, Math.max(0, SUPPORT_NUMBERS[a.team].indexOf(a.number)), a.deep);
   const slot = Math.max(0, LINEMAN_NUMBERS[a.team].indexOf(a.number));
   return linemanKit(a.team, a.number, slot);
 }
@@ -100,7 +100,8 @@ export class Squad {
 
   private ensure(a: AthleteView) {
     const name = a.build ? this.jerseyName(a.id) : null;
-    const key = `${a.team}:${a.build ?? a.role}:${a.number}:${name ?? ""}`;
+    // The deep threat is in the key: the same id is a plain support player in a match without him.
+    const key = `${a.team}:${a.build ?? a.role}:${a.number}:${name ?? ""}:${a.deep ? "deep" : ""}`;
     const have = this.figures.get(a.id);
     if (have && have.key === key) return have;
     if (have) {

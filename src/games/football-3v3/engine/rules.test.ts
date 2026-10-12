@@ -58,7 +58,7 @@ describe("play flow", () => {
     snap(m);
     const qb = bySeat(m, 0);
     // Wide of the linemen, who would grab a runner going through them.
-    m.setMove(qb.id, { x: 1, z: 0.8 });
+    m.setMove(qb.id, { x: 1, z: 1 });
     const events = run(m, 6, () => m.phase === "touchdown");
     expect(events.some((e) => e.type === "touchdown")).toBe(true);
     expect(m.score).toEqual([6, 0]);

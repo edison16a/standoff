@@ -1,14 +1,15 @@
 import type { Match } from "../match";
-import { callRoutes, routePoints, STOPS } from "../routes";
+import { callRoutes, deepRoute, routePoints, STOPS } from "../routes";
 import { sweepRoute } from "../run-play";
 import type { Athlete } from "../types";
 import { dist2 } from "../vec";
+import { defenseJob } from "../support/roster";
 import { botSkill } from "./skill";
 
 /**
  * The play call before the snap. Every receiver gets a route (a person
- * who drops out mid play runs it too), the QB a moment to throw or
- * pitch, the back on a run call a sweep, and the
+ * who drops out mid play runs it too), the deep threat his go route, the
+ * QB a moment to throw or pitch, the back on a run call a sweep, and the
  * computer defenders a man to cover, nearest first. A defender left over
  * rushes the QB.
  */
@@ -21,10 +22,20 @@ export function planPlay(m: Match): void {
     r.bot.leg = 0;
     r.bot.stop = STOPS.has(kind);
   });
+  for (const d of m.athletes) {
+    if (d.team !== m.offense || !d.deep) continue;
+    d.bot.route = deepRoute(d, m.sign);
+    d.bot.leg = 0;
+    d.bot.stop = false;
+  }
   const skill = botSkill(m.level);
   const qb = m.qbOf(m.offense);
   // Sharper QBs read the field sooner.
   qb.bot.readAt = m.rng.range(1.3, 2.4) + (1 - skill.accuracy) * 0.8;
+  // Only a match with a deep threat rolls for him, so one without plays the same from the same seed.
+  const threat = m.athletes.some((a) => a.team === m.offense && a.deep);
+  // Only some calls have a shot for him in them; on the rest the QB looks elsewhere.
+  qb.bot.key = threat && m.rng.chance(DEEP_LOOK);
   const back = m.play?.call === "run" ? m.athlete(m.play.back ?? -1) : null;
   if (back) {
     // On a run call the back sweeps wide and the QB pitches soon after the snap.
@@ -32,13 +43,20 @@ export function planPlay(m: Match): void {
     back.bot.stop = false;
     qb.bot.readAt = m.rng.range(0.6, 0.9);
   }
-  assignCoverage(m, receivers);
+  assignCoverage(m, receivers, threat);
   for (const a of m.athletes) a.bot.wait = 0;
 }
 
-function assignCoverage(m: Match, receivers: readonly Athlete[]): void {
+/** How often a computer QB's call has a deep shot for the deep threat in it. */
+const DEEP_LOOK = 0.35;
+
+function assignCoverage(m: Match, receivers: readonly Athlete[], threat: boolean): void {
   // Support players have their own jobs (support-defense.ts), and start every play with nobody to block.
   for (const a of m.athletes) if (a.role === "support") a.bot.cover = null;
+  for (const a of m.athletes) {
+    // The deep man always keys the deep threat: he is the one man over the top of him.
+    if (a.role === "support" && a.team === m.defense) a.bot.key = threat && defenseJob(a.slot) === "deep";
+  }
   const defenders = m.athletes.filter((a) => a.team === m.defense && (a.role === "qb" || a.role === "runner"));
   for (const d of defenders) {
     d.bot.cover = null;

@@ -141,6 +141,8 @@ export const LINEMAN_NUMBERS: readonly [readonly number[], readonly number[]] = 
 
 /** The support players: one solid frame, numbered per team and slot (engine/support/roster.ts). */
 export const SUPPORT_FRAME: Frame = { height: 1.9, weight: 108 };
+/** The deep threat among them is built like a receiver: long and light, so he reads as the one who goes long. */
+export const DEEP_FRAME: Frame = { height: 1.88, weight: 88 };
 export const SUPPORT_NUMBERS: readonly [readonly number[], readonly number[]] = [
   [52, 55, 81, 36, 21],
   [50, 58, 86, 32, 29],

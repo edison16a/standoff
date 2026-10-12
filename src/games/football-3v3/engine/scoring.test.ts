@@ -37,17 +37,20 @@ function pointsPerDrive(level: BotLevel, seeds: readonly number[]): number {
  * scoring is hard work. Before the support players, the stamina and the
  * juke cooldown, computer games scored about five to six points a drive,
  * nearly a touchdown every time; now it is about two, as in real
- * football. These bands pin it there.
+ * football. Over 64 seeded games a level it comes to about 1.7, 2.4 and
+ * 2.7 points a drive on Easy, Medium and Hard (main before the deep
+ * threat: 1.9, 2.2 and 2.8). These seeds run a little hot, and each level
+ * plays several so one game cannot tip it. These bands pin it there.
  */
 describe("scoring", () => {
   it("comes to about two points a drive, at every level", () => {
-    const medium = pointsPerDrive("medium", [101, 202]);
+    const medium = pointsPerDrive("medium", [101, 202, 303, 404]);
     expect(medium).toBeGreaterThan(0.8);
-    expect(medium).toBeLessThan(3.5);
-    const easy = pointsPerDrive("easy", [303]);
-    const hard = pointsPerDrive("hard", [303]);
+    expect(medium).toBeLessThan(3);
+    const easy = pointsPerDrive("easy", [303, 404]);
+    const hard = pointsPerDrive("hard", [303, 404]);
     expect(easy).toBeLessThan(3.5);
     expect(hard).toBeGreaterThan(0.8);
-    expect(hard).toBeLessThan(4);
+    expect(hard).toBeLessThan(3.5);
   }, GAMES_MS);
 });
