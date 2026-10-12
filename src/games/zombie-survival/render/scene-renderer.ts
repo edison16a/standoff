@@ -141,7 +141,7 @@ export class SurvivalRenderer implements SurvivalView {
     this.pending.delete(seat);
     this.crosshairs.fire(seat);
     if (!rig) return;
-    rig.fire();
+    rig.fire(this.source.game.squad.get(seat)?.gun.ammo ?? 1);
     const at = new THREE.Vector3();
     const dir = new THREE.Vector3();
     rig.muzzle(at, dir);
@@ -159,7 +159,7 @@ export class SurvivalRenderer implements SurvivalView {
     const at = new THREE.Vector3();
     switch (event.type) {
       case "reload-start":
-        return rig?.startReload(event.seconds);
+        return rig?.startReload(event.seconds, event.empty);
       case "shell":
         return rig?.shell();
       case "reloaded":
