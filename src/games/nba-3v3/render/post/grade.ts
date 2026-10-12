@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { CIRCLE, VIEW_DEPTH } from "./depth-of-field";
-import { FINITE } from "./finite";
+import { FILL, FINITE, VIEW_DEPTH } from "@/games/kit/post";
+import { CIRCLE } from "./depth-of-field";
 import { passMaterial } from "./fullscreen";
 
 /**
@@ -33,6 +33,7 @@ const FRAGMENT = /* glsl */ `
   ${VIEW_DEPTH}
   ${CIRCLE}
   ${FINITE}
+  ${FILL}
 
   vec3 fit(vec3 v) {
     vec3 a = v * (v + 0.0245786) - 0.000090537;
@@ -50,19 +51,6 @@ const FRAGMENT = /* glsl */ `
     // c comes clamped from the curve, but pow of a negative is NaN on most cards, so the base is guarded anyway.
     return mix(c * 12.92, 1.055 * pow(max(c, vec3(0.0)), vec3(1.0 / 2.4)) - 0.055, step(vec3(0.0031308), c));
   }
-  // A bad pixel takes the average of its good neighbours: one pixel out each way, then two.
-  vec3 fill() {
-    const vec2 ring[8] = vec2[8](vec2(1.0, 0.0), vec2(-1.0, 0.0), vec2(0.0, 1.0), vec2(0.0, -1.0), vec2(2.0, 0.0), vec2(-2.0, 0.0), vec2(0.0, 2.0), vec2(0.0, -2.0));
-    vec3 sum = vec3(0.0);
-    float n = 0.0;
-    for (int i = 0; i < 8; i++) {
-      vec3 t = texture2D(tScene, vUv + ring[i] * uTexel).rgb;
-      if (nonFinite(t)) continue;
-      sum += finite(t);
-      n += 1.0;
-    }
-    return n > 0.0 ? sum / n : vec3(0.0);
-  }
   float hash(vec2 p) {
     return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
   }
@@ -70,7 +58,7 @@ const FRAGMENT = /* glsl */ `
   void main() {
     vec3 raw = texture2D(tScene, vUv).rgb;
     bool hole = nonFinite(raw);
-    vec3 c = hole && uDof <= 0.001 ? fill() : finite(raw);
+    vec3 c = hole && uDof <= 0.001 ? fillHole(tScene, vUv, uTexel) : finite(raw);
     if (uDof > 0.001) {
       float blur = circle(metres(texture2D(tDepth, vUv).r));
       vec3 soft = finite(texture2D(tDof, vUv).rgb);

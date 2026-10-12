@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { capLight } from "../materials/shader-patches";
-import { FINITE } from "../post/finite";
+import { FINITE } from "@/games/kit/post";
 import { FLOOR, floorTexture } from "./floor-texture";
 import type { FloorMirror } from "./floor-mirror";
 import { mapleBoards } from "./maple";

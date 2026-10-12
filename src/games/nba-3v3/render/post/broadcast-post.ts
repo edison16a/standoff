@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { safeFocus } from "@/games/kit/post";
 import { Bloom } from "./bloom";
 import { DepthOfField } from "./depth-of-field";
 import { FullScreen } from "./fullscreen";
@@ -12,13 +13,6 @@ export interface Focus {
 }
 
 const size = new THREE.Vector2();
-
-/** A focus fit for the shaders: a NaN or infinite distance (a subject lost for a frame) would blur every pixel by NaN, a black screen. */
-function safeFocus(focus: Focus): Focus {
-  const distance = Number.isFinite(focus.distance) ? Math.max(0.1, focus.distance) : 6;
-  const range = Number.isFinite(focus.range) ? Math.max(0, focus.range) : 1.5;
-  return { distance, range };
-}
 
 /**
  * The picture's finish, as on a sports broadcast. The scene is drawn in
@@ -50,7 +44,7 @@ export class BroadcastPost {
     this.resize(size.x, size.y);
     const look = this.look;
     const dof = look.dof > 0.01;
-    const focus = safeFocus(this.focus);
+    const focus = safeFocus(this.focus, { distance: 6, range: 1.5 });
     // Depth is only copied out of the multisampled buffer when the depth of field needs it.
     this.target.resolveDepthBuffer = dof;
     renderer.setRenderTarget(this.target);
