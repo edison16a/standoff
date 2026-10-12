@@ -1,18 +1,6 @@
 import * as THREE from "three";
-import { FINITE } from "./finite";
+import { FINITE, VIEW_DEPTH } from "@/games/kit/post";
 import { FullScreen, passMaterial } from "./fullscreen";
-
-/**
- * Turns the depth buffer's 0 to 1 back into metres from the camera. The
- * depth is clamped and the divisor kept above zero, so a stray depth
- * past the far plane (a resolve that rounds up, or a sample off the
- * edge) can never divide by zero and blur a pixel by infinity.
- */
-export const VIEW_DEPTH = /* glsl */ `
-  uniform float uNear;
-  uniform float uFar;
-  float metres(float d) { return (uNear * uFar) / max(uFar - clamp(d, 0.0, 1.0) * (uFar - uNear), 1e-6); }
-`;
 
 /**
  * How blurred a point is, 0 sharp to 1 fully soft: zero inside the

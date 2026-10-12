@@ -1,27 +1,31 @@
 import * as THREE from "three";
+import { FINITE, VIEW_DEPTH } from "@/games/kit/post";
 import { FullScreen, passMaterial } from "./fullscreen";
 
 /**
- * GLSL shared with the grade: the depth buffer back in metres, and how
- * blurred a point is, 0 sharp inside the focused band to 1 fully soft,
- * as a long lens wide open throws the stands behind a player.
+ * GLSL shared with the grade: the depth buffer back in metres (the
+ * kit's, which never divides by zero), and how blurred a point is, 0
+ * sharp inside the focused band to 1 fully soft, as a long lens wide
+ * open throws the stands behind a player.
  */
 export const DEPTH_GLSL = /* glsl */ `
-  uniform float uNear;
-  uniform float uFar;
+  ${VIEW_DEPTH}
   uniform float uFocus;
   uniform float uRange;
-  float metres(float d) { return (uNear * uFar) / (uFar - d * (uFar - uNear)); }
   float circle(float z) {
     float off = abs(z - uFocus) - uRange;
-    return clamp(off / (uFocus * 0.8 + 1.0), 0.0, 1.0);
+    // The divisor stays positive even for a focus behind the lens, so the blur is never NaN.
+    return clamp(off / max(uFocus * 0.8 + 1.0, 0.1), 0.0, 1.0);
   }
 `;
 
 /**
  * A disc of samples round each pixel at half resolution. A sample only
  * counts as far as its own blur reaches this pixel, so a sharp player
- * is not smeared over the blurred stands behind him.
+ * is not smeared over the blurred stands behind him. A bad sample (NaN
+ * or infinity) counts for nothing, since summed in it would spoil every
+ * pixel whose disc reaches it: a thick black stroke. A bad pixel itself
+ * is filled from its neighbours, for the grade to use.
  */
 const GATHER = /* glsl */ `
   uniform sampler2D tColor;
@@ -30,21 +34,28 @@ const GATHER = /* glsl */ `
   uniform float uRadius;
   varying vec2 vUv;
   ${DEPTH_GLSL}
+  ${FINITE}
   const int TAPS = 24;
   void main() {
     float centre = circle(metres(texture2D(tDepth, vUv).r));
-    vec3 sum = texture2D(tColor, vUv).rgb;
-    float total = 1.0;
+    vec3 own = texture2D(tColor, vUv).rgb;
+    bool hole = nonFinite(own);
+    float total = hole ? 0.0 : 1.0;
+    vec3 sum = finite(own) * total;
     for (int i = 1; i < TAPS; i++) {
       float r = sqrt(float(i) / float(TAPS));
       float a = float(i) * 2.39996323;
       vec2 uv = vUv + vec2(cos(a), sin(a)) * r * uRadius * uTexel;
       float c = circle(metres(texture2D(tDepth, uv).r));
       float w = smoothstep(r - 0.15, r, max(c, centre * 0.6));
-      sum += texture2D(tColor, uv).rgb * w;
+      // A bad pixel here is filled from the whole disc, the nearest counting most.
+      if (hole) w = max(w, 1.0 - r);
+      vec3 tap = texture2D(tColor, uv).rgb;
+      if (nonFinite(tap)) w = 0.0;
+      sum += finite(tap) * w;
       total += w;
     }
-    gl_FragColor = vec4(sum / total, centre);
+    gl_FragColor = vec4(sum / max(total, 1e-4), centre);
   }
 `;
 

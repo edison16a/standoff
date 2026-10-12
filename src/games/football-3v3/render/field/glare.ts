@@ -13,7 +13,7 @@ void main() {
   // Glare is strongest when the bank shines straight down the lens, as a real flood does.
   vec3 toEye = normalize(cameraPosition - aCentre);
   float facing = max(dot(toEye, aAim), 0.0);
-  vStrength = uLevel * (0.25 + 0.75 * pow(facing, 3.0));
+  vStrength = uLevel * (0.25 + 0.75 * facing * facing * facing);
   vec4 mv = viewMatrix * vec4(aCentre, 1.0);
   // Billboarded in view space, wider than tall, at a size that holds up far away.
   float size = aSize * (0.7 + 0.6 * facing);

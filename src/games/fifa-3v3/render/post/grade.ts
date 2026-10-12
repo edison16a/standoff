@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { FILL, FINITE } from "@/games/kit/post";
 import { DEPTH_GLSL } from "./depth-of-field";
 import { passMaterial } from "./fullscreen";
 
@@ -7,7 +8,10 @@ import { passMaterial } from "./fullscreen";
  * bloom, white balance, the ACES filmic curve (the fit three.js uses),
  * sRGB encoding, then the grade in display space (saturation, a green
  * push on the grass, a gentle S curve), a vignette and a breath of
- * noise so the dark sky never bands.
+ * noise so the dark sky never bands. Every input is cleaned as it is
+ * read, and a bad scene pixel is filled from its good neighbours (or
+ * from the depth of field, which skipped it), so nothing that is not a
+ * finite colour ever reaches the screen.
  */
 const FRAGMENT = /* glsl */ `
   uniform sampler2D tScene;
@@ -23,9 +27,12 @@ const FRAGMENT = /* glsl */ `
   uniform float uDof;
   uniform float uAspect;
   uniform float uSeed;
+  uniform vec2 uTexel;
   uniform vec3 uBalance;
   varying vec2 vUv;
   ${DEPTH_GLSL}
+  ${FINITE}
+  ${FILL}
 
   vec3 fit(vec3 v) {
     vec3 a = v * (v + 0.0245786) - 0.000090537;
@@ -38,17 +45,21 @@ const FRAGMENT = /* glsl */ `
     return clamp(outM * fit(inM * (c / 0.6)), 0.0, 1.0);
   }
   vec3 srgb(vec3 c) {
-    return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(vec3(0.0031308), c));
+    // c comes clamped from the curve, but pow of a negative is NaN on most cards, so the base is guarded anyway.
+    return mix(c * 12.92, 1.055 * pow(max(c, vec3(0.0)), vec3(1.0 / 2.4)) - 0.055, step(vec3(0.0031308), c));
   }
   float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 
   void main() {
-    vec3 c = texture2D(tScene, vUv).rgb;
+    vec3 raw = texture2D(tScene, vUv).rgb;
+    bool hole = nonFinite(raw);
+    vec3 c = hole && uDof <= 0.001 ? fillHole(tScene, vUv, uTexel) : finite(raw);
     if (uDof > 0.001) {
       float blur = circle(metres(texture2D(tDepth, vUv).r));
-      c = mix(c, texture2D(tDof, vUv).rgb, smoothstep(0.03, 0.4, blur) * uDof);
+      // A bad pixel takes its neighbours' blur, which skipped it, so it vanishes.
+      c = mix(c, finite(texture2D(tDof, vUv).rgb), hole ? 1.0 : smoothstep(0.03, 0.4, blur) * uDof);
     }
-    c += texture2D(tBloom, vUv).rgb * uBloom;
+    c += finite(texture2D(tBloom, vUv).rgb) * uBloom;
     c = srgb(aces(max(c, vec3(0.0)) * uBalance * uExposure));
     float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
     c = clamp(mix(vec3(l), c, uSaturation), 0.0, 1.0);
@@ -76,6 +87,7 @@ export function gradeMaterial(): THREE.ShaderMaterial {
     uDof: { value: 0 },
     uAspect: { value: 16 / 9 },
     uSeed: { value: 0 },
+    uTexel: { value: new THREE.Vector2(1, 1) },
     uBalance: { value: new THREE.Vector3(1, 1, 1) },
     uNear: { value: 0.1 },
     uFar: { value: 100 },
