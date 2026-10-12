@@ -39,9 +39,9 @@ function inPocket(view: MatchView, s: 1 | -1): boolean {
   return !!c && c.role === "qb" && c.team === view.drive.offense && (c.x - view.drive.losX) * s < 0.5;
 }
 
-/** Where the offense's QB and receivers stand, so the shot keeps them all in view. */
+/** Where the offense's QB and receivers stand, the deep threat split out among them, so the shot keeps them all in view. */
 function skillSpots(view: MatchView): Vec[] {
-  return view.athletes.filter((a) => a.team === view.drive.offense && (a.role === "qb" || a.role === "runner")).map((a) => ({ x: a.x, y: 1, z: a.z }));
+  return view.athletes.filter((a) => a.team === view.drive.offense && (a.role === "qb" || a.role === "runner" || a.deep)).map((a) => ({ x: a.x, y: 1, z: a.z }));
 }
 
 /**
