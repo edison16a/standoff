@@ -20,7 +20,7 @@ const BEAM_VERTEX = /* glsl */ `
   }
 `;
 
-export const BEAM_FRAGMENT = /* glsl */ `
+const BEAM_FRAGMENT = /* glsl */ `
   uniform float uStrength;
   varying float vAlong;
   varying float vEdge;
