@@ -10,15 +10,14 @@ The running list of what is being built, so work can pick up again after a break
 4. Start the next queued batch.
 5. If an agent has gone quiet for a long time, check whether it is stuck on a permission prompt (usually a cleanup command). Its committed work is safe; stop it and continue from its branch with a fresh agent told to leave cleanup to the lead.
 
-## Paused for next week (owner is out of usage, resume from these branches)
+## Needs a check on the owner's machine
 
-Owner words, verbatim, are in docs/handoff/next-week/owner-requests.md. Screenshots of the bug are next to it.
+These landed on main but our software renderer cannot show them, so the owner has to see them on a real graphics card and speakers.
 
-1. **Basketball black streaks** (top priority). Thick black streaks radiate from the ball handler in live play, and big black loops swirl around the trophy lift in the ceremony. See docs/handoff/next-week/live.webp and ceremony.webp. It only shows on the owner's real graphics card, not in our software renderer. Lead theory: NaN or infinite pixels in the HDR finish, spread by bloom into streaks. Work so far is on branch `wip/worktree-agent-af02290b073d1ed42` (3 commits: safe math in the skin, hair and spark shaders, bad pixels cleaned through the whole finish, no black rings from the haze beams). Next: finish the depth of field part, confirm the fix, add the permanent safety net before bloom and the final composite, then ask the owner which browser and computer they use so it can be checked there.
-2. **Replay black bar.** A black bar along the bottom of the big screen covers part of every replay. Remove it in Basketball, Football and Soccer. Not started; same branch as item 1.
-3. **Football routes and deep runner.** Route runners must never stay out of bounds; they turn back inside so they can still be thrown to. Add one deep runner per offense who goes long when the play allows (keep eleven a side by turning one blocking support bot into him). Work so far is one WIP commit on branch `wip/worktree-agent-a004ba54ddce70b1c`.
-
-4. **Zombie Survival guns, 10x more realistic.** Real sounding gun sound effects for every weapon (shot, tail and echo, dry fire, bolt or slide), real bullet physics (visible rounds or tracers with travel time and drop, hits that react), shell casings ejecting from the gun with real physics (spin, bounce and rattle on the ground), muzzle flash and smoke, recoil, and ultra realistic reload animations and sounds per weapon (magazine out and in, slide or bolt, shells loaded one by one for the pump). Not started. Sounds must be original or properly licensed (made in code or from a free licence source), never ripped from other games.
+1. **Black streaks** in Basketball, Football and Soccer: watch a replay and a trophy ceremony in each. If streaks remain, note the browser and computer.
+2. **Soccer replay bar**: no bar was found in Soccer. If one still shows, a screenshot will say what it is.
+3. **Zombie Survival guns**: listen to the mix (cases, echo, reload steps) and look at the smoke, the tracers and the arms during reloads with four players.
+4. **Football media**: the home screen clip, icon and poster were filmed before the deep runner. The showcase plays with `filmed: true` (no deep runner, the old defence) so its trailer tests still pass. Filming it again on a real machine would let that option go.
 
 Still waiting on the owner: pause or keep the heartbeat, re-record the Paintball trailer, keep or remove the three unrequested extras (crouched shot pops up, bots wait for range, extra Next tap), add a license, remove the duplicate screenshots lower in the README, re-take the README home screenshot with the Standoff Premium badges.
 
@@ -26,11 +25,6 @@ Still waiting on the owner: pause or keep the heartbeat, re-record the Paintball
 
 | Work | Workflow | State |
 | --- | --- | --- |
-| Basketball black streaks and the replay black bar | agent worktree, backed up as `wip/worktree-agent-*` | resumed from `wip/worktree-agent-af02290b073d1ed42` |
-| Football routes in bounds and the deep runner | agent worktree | resumed from `wip/worktree-agent-a004ba54ddce70b1c` |
-| Zombie Survival gun sounds | agent worktree | running, builds on `src/games/zombie-survival/ballistics` (on main) |
-| Zombie Survival rounds, casings, flash, smoke and hit reactions | agent worktree | running, same foundation |
-| Zombie Survival reloads, hands and held gun recoil | agent worktree | running, same foundation |
 
 All final builds are on main: cover icons, sports phone controls, Paintball Battle controls, Subway camera still, 1.2x tiles, final README. Final check done and on main (503ea5b): every game played end to end except the live site, which this machine's browser cannot reach (certificate block). Part 1 fixes: Soccer feet, Kart, Brawl, Blade Clash, Zombie and Gallery rejoin, phone download retry.
 
@@ -115,6 +109,9 @@ Every Computer player game gets Easy (default), Medium, Hard and Training (bots 
 
 ## Done recently
 
+* Zombie Survival realistic guns: shared ballistics (real round speeds, seeded casing physics, reload step timelines), 36 CC0 gun recordings with a street echo built in code (credits in `public/games/zombie-survival/sfx/CREDITS.md`), rounds and tracers that fly at true speed with drop, impacts and zombie hit reactions on arrival, casings that tumble and rattle in step with their clinks, muzzle flash per gun, smoke and hot barrels, gloved hands, a recoil spring per gun and a full reload per gun.
+* Football: routes stay in bounds, a deep runner in each offense (eleven a side kept), a sharper computer defence so scoring stays at its old level (Medium about 2.3 points a drive).
+* Black streaks: bad pixel cleaning shared from `src/games/kit/post` by Basketball, Football and Soccer, a shader scan in each game's tests, and the replay letterbox removed (Basketball) and the score bug hidden during replays (Football).
 * Basketball animation presets (e3841f8) and Football animation presets (e0d8eac), with new screenshots, icons, trailers and posters, on main. Basketball icon redone: shooter facing camera, defender leaping.
 * Keyboard bindings for all 11 other games, reviewed, plus a Boxing uppercut (80daf8e, 0d21b1d, 7ac0ff3), on main.
 * Keyboard player for dev testing: admin toggle, floating phone panel, controls card, bindings API in src/platform/keyboard (a56e0ab), on main.
