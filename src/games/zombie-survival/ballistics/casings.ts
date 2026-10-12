@@ -42,16 +42,16 @@ export interface Bounce {
   at: Vec3;
 }
 
+/**
+ * How high above the street a held gun throws its case, in metres. The
+ * renderer launches each case from here and the sound plays its bounces
+ * from the same height, so a clink lands as the case is seen to.
+ */
+export const EJECT_HEIGHT = 1.3;
+
 const GRAVITY = 9.81;
 /** Fixed time step, so the picture and the sound replay the same case exactly. */
 export const CASING_STEP = 1 / 240;
-/**
- * How high above the street a spent case leaves the gun, in metres. The
- * team holds its guns a little under the eye (1.65 m), at about chest
- * height. The picture and the sound both start every case from here, so
- * each clink is heard as the case is seen to land.
- */
-export const EJECT_HEIGHT = 1.3;
 /** Below this speed into the ground a bounce becomes a roll. */
 const SETTLE = 0.35;
 /** Rolling friction on asphalt, metres per second lost per second. */

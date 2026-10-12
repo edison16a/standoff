@@ -31,7 +31,8 @@ const KEYS = ["exposure", "bloom", "vignette", "saturation", "contrast", "warmth
 
 /** Eases `out` toward `to` with a time constant of 1/`rate` seconds, so a cut to the replay grades in over a few frames. */
 export function easeLook(out: Look, to: Readonly<Look>, dt: number, rate: number): Look {
-  const k = 1 - Math.exp(-rate * Math.max(0, dt));
+  // A NaN step would make the whole look NaN for good, and the grade would draw every frame black after it.
+  const k = Number.isNaN(dt) ? 0 : 1 - Math.exp(-rate * Math.max(0, dt));
   for (const key of KEYS) out[key] += (to[key] - out[key]) * k;
   return out;
 }

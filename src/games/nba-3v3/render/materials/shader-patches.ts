@@ -39,6 +39,25 @@ export function subsurfaceSkin(shader: Shader): void {
     .replace("#include <lights_physical_pars_fragment>", chunk);
 }
 
+/**
+ * The most light any surface may send, a quarter of what the finish's
+ * half float picture holds. A glossy surface seen edge on with a lamp
+ * behind it can work out a glint past 65504, which the picture stores
+ * as infinity; the cap keeps it finite, with room for the glows added on
+ * top. No light goes under zero either, which a blur spreads as a dark
+ * smear. It is far brighter than anything the grade tells apart, so
+ * nothing visible changes.
+ */
+export const LIGHT_CAP = 16384;
+
+/** Holds the surface's light inside 0 to `LIGHT_CAP` just before it is written out. */
+export function capLight(shader: Shader): void {
+  shader.fragmentShader = shader.fragmentShader.replace(
+    "#include <opaque_fragment>",
+    `outgoingLight = clamp( outgoingLight, vec3( 0.0 ), vec3( ${LIGHT_CAP.toFixed(1)} ) );\n#include <opaque_fragment>`,
+  );
+}
+
 /** True if both replacements in the skin patch still find their lines, which a three upgrade could break. */
 export function skinPatchApplies(): boolean {
   const c = THREE.ShaderChunk.lights_physical_pars_fragment;
