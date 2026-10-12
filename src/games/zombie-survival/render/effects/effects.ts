@@ -85,10 +85,9 @@ export class Effects {
     this.eye.copy(shot.eye);
     const spec = ROUNDS[shot.weapon];
     const kind = roundKind(shot.weapon, shot.left);
-    return shot.rounds.map((r, i) => {
-      this.impacts.impact(r.point, r.normal, r.impact, i < FLASHED ? this.eye : undefined);
-      return this.rounds.launch(spec, kind, shot.muzzle, r.point, shot.colour, { normal: r.normal, impact: "none", flash: false, miss: r.impact === "none" });
-    });
+    return shot.rounds.map((r, i) =>
+      this.rounds.launch(spec, kind, shot.muzzle, r.point, shot.colour, { normal: r.normal, impact: r.impact, flash: i < FLASHED, miss: r.impact === "none" }),
+    );
   }
 
   /**
