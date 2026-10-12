@@ -40,14 +40,14 @@ describe("support players", () => {
     expect(clinchKindFor(CLINCH.longest, 0, true, 0.99)).toBe("shed");
   });
 
-  it("block the edge rushers on a pass play and never run routes", () => {
+  it("block the edge rushers on a pass play, and only the deep threat runs a route", () => {
     const m = new Match({ entries: PEOPLE, seed: 3, firstOffense: 0, level: "hard" });
     snap(m);
     let blocked = 0;
     let deepest = -Infinity;
     for (let t = 0; t < 2.5 && m.phase === "live"; t += STEP) {
       run(m, STEP);
-      for (const o of supports(m, m.offense)) {
+      for (const o of supports(m, m.offense).filter((a) => !a.deep)) {
         deepest = Math.max(deepest, past(m, o.x));
         if (clinchOf(m, o.id)) blocked++;
       }
@@ -59,7 +59,7 @@ describe("support players", () => {
 
   it("make blocks, sheds and pancakes and tackle runners over whole computer games", () => {
     const seen = { blocks: 0, sheds: 0, pancakes: 0, tackles: 0 };
-    for (const seed of [31, 32]) {
+    for (const seed of [31, 32, 33]) {
       const m = new Match({ entries: BOTS, seed, level: "medium", quarterSeconds: 40 });
       const clinched = new Set<string>();
       const was = new Map<number, string | null>();
