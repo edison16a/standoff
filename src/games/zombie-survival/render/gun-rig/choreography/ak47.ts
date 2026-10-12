@@ -10,8 +10,12 @@ const ZERO: V3 = [0, 0, 0];
 const ROCK = 0.45;
 /** The banana magazine curves forward, so the hand sits ahead of the lug's line. */
 const ON_MAG = holdMag([-0.017, -0.06, 0.042]);
-/** The right hand over the top, fingers hooked in front of the charging handle's knob. */
-const ON_HANDLE = hand([0.05, 0.024, 0.004], [-0.45, -0.89, 0], [0, 0, -1], 0.85, 0.85, 0.75);
+/**
+ * The right hand comes up under the charging handle from the right, palm
+ * up, fingers hooked round the knob. Staying low on the gun's own side
+ * keeps the arm out of the middle of the screen.
+ */
+const ON_HANDLE = hand([0.052, -0.004, -0.004], [-0.45, 0.89, 0], [0, 0, -1], 0.85, 0.85, 0.75);
 
 type Place = { pos: V3; rot: V3 };
 
@@ -71,7 +75,7 @@ export function akReload(pose: GunPose, input: ReloadInput): GunPose {
   const handle = empty ? play<number>([[back - 0.14, 0], [back, 1, "out"], [forward - 0.03, 1], [forward, 0, "in"]], t) : 0;
   const onHandle = (share: number, open = 0): HandPose => ({
     ...ON_HANDLE,
-    pos: add(ON_HANDLE.pos, [open * 0.012, open * 0.006, share * TRAVEL.ak47.handle]),
+    pos: add(ON_HANDLE.pos, [open * 0.012, -open * 0.008, share * TRAVEL.ak47.handle]),
     curl: ON_HANDLE.curl - open * 0.5,
     index: ON_HANDLE.index - open * 0.5,
   });
@@ -90,5 +94,5 @@ export function akReload(pose: GunPose, input: ReloadInput): GunPose {
     dropped: t >= letGo,
   };
   const lift = envelope(t, release, settle, input.seconds);
-  return liftBody(posed, lift, { roll: 0.55, pitch: 0.11, raise: 0.045 }, input.inward, jolts(t, [[seat, 0.8], [forward, 1]]));
+  return liftBody(posed, lift, { roll: 0.45, pitch: 0.11, raise: 0.045 }, input.inward, jolts(t, [[seat, 0.8], [forward, 1]]));
 }

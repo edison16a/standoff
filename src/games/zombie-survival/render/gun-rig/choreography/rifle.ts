@@ -75,5 +75,5 @@ export function rifleReload(pose: GunPose, input: ReloadInput): GunPose {
   const held = empty ? play<number>([[boltCatch, 1], [boltCatch + 0.035, 0, "in"]], t) : 0;
   const lifted = { ...pose, mag, spare, support, grip: thumbing, carrier: Math.max(pose.carrier, held), dropped: t >= out };
   const lift = envelope(t, release + 0.04, settle, input.seconds);
-  return liftBody(lifted, lift, { roll: 0.6, pitch: 0.12, raise: 0.05 }, input.inward, jolts(t, [[seat, 1], [boltCatch, 0.8]]));
+  return liftBody(lifted, lift, { roll: 0.5, pitch: 0.12, raise: 0.05 }, input.inward, jolts(t, [[seat, 1], [boltCatch, 0.8]]));
 }

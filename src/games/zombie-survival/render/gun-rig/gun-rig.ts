@@ -3,7 +3,7 @@ import { Rng } from "../../engine/rng";
 import { WEAPONS, type WeaponId } from "../../engine/weapons";
 import { buildGun, type GunModel } from "../models/guns";
 import { Debris } from "./debris";
-import { ELBOWS } from "./hands/grips";
+import { forearmLine } from "./hands/grips";
 import { Hands } from "./hands/hands";
 import { GunParts } from "./parts";
 import { KICKS, RecoilSpring } from "./recoil-spring";
@@ -117,9 +117,11 @@ export class GunRig {
     this.gun.updateMatrix();
 
     this.parts.apply(pose);
-    // Elbows hang from the body, not the gun, so carry them into the gun's frame.
-    const toGun = MATRIX.copy(this.gun.matrix).invert();
-    this.hands.apply(pose.support, pose.grip, LEFT.set(...ELBOWS.left).applyMatrix4(toGun), RIGHT.set(...ELBOWS.right).applyMatrix4(toGun));
+    // Forearms hang from the body, not the gun, so turn their lines into the gun's frame.
+    const toGun = QUAT.copy(this.gun.quaternion).invert();
+    const support = LEFT.set(...forearmLine("support", inward)).normalize().applyQuaternion(toGun);
+    const grip = RIGHT.set(...forearmLine("grip", inward)).normalize().applyQuaternion(toGun);
+    this.hands.apply(pose.support, pose.grip, support, grip);
 
     if (pose.dropped && !this.dropped) this.dropMagazine();
     this.dropped = pose.dropped;
@@ -158,7 +160,6 @@ export class GunRig {
 
 const QUAT = new THREE.Quaternion();
 const EULER = new THREE.Euler();
-const MATRIX = new THREE.Matrix4();
 const LEFT = new THREE.Vector3();
 const RIGHT = new THREE.Vector3();
 const DOWN = new THREE.Vector3();

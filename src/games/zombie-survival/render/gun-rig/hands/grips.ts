@@ -44,13 +44,15 @@ export const GRIPS: Record<WeaponId, { grip: HandPose; support: HandPose }> = {
 };
 
 /**
- * Where the elbows are, in the frame of the gun's resting place rather
- * than the gun, so the forearms swing from the body as the gun turns.
- * Both sit low, well off the bottom of the screen, so a hand reaching
- * over the top of the gun drops its forearm down out of view instead of
- * sweeping it across the neighbouring guns.
+ * Which way each forearm runs from its wrist, in the frame of the gun's
+ * resting place, so it hangs from the body however the gun turns.
+ * `outward` is 1 for a gun right of centre and -1 for one on the left.
+ * Each runs mostly straight down, leaning out toward the gun's own edge
+ * of the screen and a little back toward the player. From the game camera
+ * that takes it off the bottom of the frame within a hand's length, so
+ * even a hand reaching over the top of the gun never lays its sleeve
+ * across the middle of the view or a neighbour's gun.
  */
-export const ELBOWS: { left: V3; right: V3 } = {
-  left: [-0.3, -0.46, -0.1],
-  right: [0.14, -0.34, 0.3],
-};
+export function forearmLine(arm: "support" | "grip", outward: number): V3 {
+  return arm === "support" ? [0.3 * outward, -1, 0.22] : [0.25 * outward, -1, 0.35];
+}

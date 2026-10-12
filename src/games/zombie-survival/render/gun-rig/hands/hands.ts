@@ -4,8 +4,8 @@ import type { HandPose } from "../pose";
 import { handMaterials } from "./hand-materials";
 import { HandModel, WRIST, type Side } from "./hand-model";
 
-/** Forearm length drawn past the cuff. It runs off the bottom of the screen long before it ends. */
-const FOREARM = 0.34;
+/** Forearm length drawn past the cuff. Running down, it leaves the bottom of the screen long before it ends. */
+const FOREARM = 0.26;
 
 /**
  * A forearm along +z from the wrist: a band of skin above the glove, the
@@ -17,10 +17,11 @@ function forearm(cuff: THREE.Material): THREE.Group {
   const b = new MeshBuilder();
   const along = (radius: number, length: number, z: number, material: THREE.Material, end = radius) =>
     b.add(new THREE.CylinderGeometry(radius, end, length, 14), material, [0, 0, z], [-Math.PI / 2, 0, 0], [1.12, 1, 0.9]);
+  // A slim, rolled up sleeve: less cloth between the camera and the guns.
   along(0.025, 0.03, 0.012, m.skin, 0.026);
-  along(0.037, 0.026, 0.036, cuff);
-  along(0.04, FOREARM, 0.046 + FOREARM / 2, m.sleeve, 0.05);
-  for (const z of [0.09, 0.15]) b.add(new THREE.TorusGeometry(0.041 + z * 0.04, 0.005, 6, 16), m.sleeve, [0, 0, z], [0, 0, 0], [1.12, 0.9, 1]);
+  along(0.032, 0.024, 0.034, cuff);
+  along(0.033, FOREARM, 0.046 + FOREARM / 2, m.sleeve, 0.04);
+  for (const z of [0.08, 0.13]) b.add(new THREE.TorusGeometry(0.034 + z * 0.03, 0.004, 6, 16), m.sleeve, [0, 0, z], [0, 0, 0], [1.12, 0.9, 1]);
   return b.build("forearm");
 }
 
@@ -29,15 +30,14 @@ class Arm {
   readonly hand: HandModel;
   readonly forearm: THREE.Group;
   private readonly wrist = new THREE.Vector3();
-  private readonly toElbow = new THREE.Vector3();
 
   constructor(side: Side, cuff: THREE.Material) {
     this.hand = new HandModel(side);
     this.forearm = forearm(cuff);
   }
 
-  /** Puts the hand where the pose says, then aims the forearm from its wrist at the elbow. */
-  apply(pose: HandPose, elbow: THREE.Vector3): void {
+  /** Puts the hand where the pose says, then lays the forearm from its wrist along `line`, a unit vector. */
+  apply(pose: HandPose, line: THREE.Vector3): void {
     const { root } = this.hand;
     root.position.set(...pose.pos);
     root.rotation.set(...pose.rot);
@@ -46,8 +46,7 @@ class Arm {
     this.wrist.set(...WRIST).applyMatrix4(root.matrix);
     this.forearm.position.copy(this.wrist);
     // A cylinder looks the same however it twists, so the shortest turn onto the line is enough.
-    this.toElbow.subVectors(elbow, this.wrist).normalize();
-    this.forearm.quaternion.setFromUnitVectors(PLUS_Z, this.toElbow);
+    this.forearm.quaternion.setFromUnitVectors(PLUS_Z, line);
   }
 
   dispose(): void {
@@ -77,10 +76,10 @@ export class Hands {
     for (const arm of [this.support, this.grip]) this.group.add(arm.hand.root, arm.forearm);
   }
 
-  /** Poses both arms. Elbows are given in the gun's frame, where the hands are. */
-  apply(support: HandPose, grip: HandPose, leftElbow: THREE.Vector3, rightElbow: THREE.Vector3): void {
-    this.support.apply(support, leftElbow);
-    this.grip.apply(grip, rightElbow);
+  /** Poses both arms. Forearm lines are unit vectors in the gun's frame, where the hands are. */
+  apply(support: HandPose, grip: HandPose, supportLine: THREE.Vector3, gripLine: THREE.Vector3): void {
+    this.support.apply(support, supportLine);
+    this.grip.apply(grip, gripLine);
   }
 
   dispose(): void {

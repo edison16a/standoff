@@ -33,14 +33,16 @@ export interface Lift {
 }
 
 /**
- * Lifts and rolls the gun toward the middle by `amount` (0 to 1), so the
- * hands working the magazine or the loading port face the room, then
- * adds any jolts. Jolts pitch the muzzle and bump the gun up: a magazine
- * slapped home or a bolt slamming forward rocks the whole gun.
+ * Lifts the gun and rolls it toward the middle by `amount` (0 to 1), so the
+ * hands working the magazine or the loading port face the room. It stays
+ * in its own lane across the screen, so its hands never reach into a
+ * neighbour's. Then it adds any jolts, which pitch the muzzle and bump
+ * the gun up: a magazine slapped home or a bolt slamming forward rocks the
+ * whole gun.
  */
 export function liftBody(pose: GunPose, amount: number, lift: Lift, inward: number, jolts: number): GunPose {
   const rot: V3 = [lift.pitch * amount + jolts * 0.035, 0, lift.roll * amount * inward];
-  const pos: V3 = [-inward * amount * 0.05, lift.raise * amount + jolts * 0.004, -jolts * 0.004];
+  const pos: V3 = [0, lift.raise * amount + jolts * 0.004, -jolts * 0.004];
   return { ...pose, body: { pos: add(pose.body.pos, pos), rot: add(pose.body.rot, rot) } };
 }
 
