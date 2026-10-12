@@ -74,7 +74,8 @@ A phone that joins during a game picks a build and joins the next one. A player 
 
 * After the winning basket the winners celebrate for a moment, then the basket plays again in slow motion, twice. First from over the scorer's shoulder, looking at the rim. Then from behind the defender who was on him, looking at the scorer as he rises.
 * The replay shows the play as it happened, frame by frame, with the ball's own sounds: the dribble, the rim, the glass and the net. The arena's calls stay out of it.
-* Any button skips it, but only when every player in the game has pressed one. The big screen shows a chip for each player that turns green once they have. The phone shows a big Skip button, then Waiting, and who else has agreed. A game with only computer players just plays it through.
+* The big screen shows the replay edge to edge, with only a small Replay tag in the top corner saying whose view it is. No bars cover it.
+* Any button skips it, but only when every player in the game has pressed one. Only the phones show the vote: a big Skip button, then Waiting, and who else has agreed. The big screen shows nothing about skipping. A game with only computer players just plays it through.
 * The vote follows who is there. A phone that drops during the replay stops holding it up, and one that comes back gets a say.
 * Until the replay rolls, the phones keep the controller. The join code and the results wait until it is done, so nothing covers it.
 
