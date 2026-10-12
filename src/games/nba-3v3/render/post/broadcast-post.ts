@@ -13,6 +13,13 @@ export interface Focus {
 
 const size = new THREE.Vector2();
 
+/** A focus fit for the shaders: a NaN or infinite distance (a subject lost for a frame) would blur every pixel by NaN, a black screen. */
+function safeFocus(focus: Focus): Focus {
+  const distance = Number.isFinite(focus.distance) ? Math.max(0.1, focus.distance) : 6;
+  const range = Number.isFinite(focus.range) ? Math.max(0, focus.range) : 1.5;
+  return { distance, range };
+}
+
 /**
  * The picture's finish, as on a sports broadcast. The scene is drawn in
  * linear light into a half float target with 4x multisampling (clean
@@ -43,12 +50,13 @@ export class BroadcastPost {
     this.resize(size.x, size.y);
     const look = this.look;
     const dof = look.dof > 0.01;
+    const focus = safeFocus(this.focus);
     // Depth is only copied out of the multisampled buffer when the depth of field needs it.
     this.target.resolveDepthBuffer = dof;
     renderer.setRenderTarget(this.target);
     renderer.render(scene, camera);
     if (look.bloom > 0.001) this.bloom.render(renderer, this.target.texture);
-    if (dof) this.dof.render(renderer, this.target.texture, this.target.depthTexture!, camera, this.focus.distance, this.focus.range, 0.012);
+    if (dof) this.dof.render(renderer, this.target.texture, this.target.depthTexture!, camera, focus.distance, focus.range, 0.012);
     const u = this.grade.uniforms;
     u.tScene!.value = this.target.texture;
     u.tBloom!.value = this.bloom.texture;
@@ -63,11 +71,12 @@ export class BroadcastPost {
     u.uLift!.value = look.lift;
     u.uDof!.value = dof ? look.dof : 0;
     u.uAspect!.value = size.x / Math.max(1, size.y);
+    (u.uTexel!.value as THREE.Vector2).set(1 / Math.max(1, size.x), 1 / Math.max(1, size.y));
     u.uSeed!.value = (this.frame++ % 64) * 1.7;
     u.uNear!.value = camera.near;
     u.uFar!.value = camera.far;
-    u.uFocus!.value = this.focus.distance;
-    u.uRange!.value = this.focus.range;
+    u.uFocus!.value = focus.distance;
+    u.uRange!.value = focus.range;
     (u.uBalance!.value as THREE.Vector3).set(...balance(look.warmth));
     this.quad.draw(renderer, this.grade, null);
   }

@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { BOARD, RIM } from "../../engine/tuning";
+import { LIGHT_CAP } from "../materials/shader-patches";
 import { Bake } from "./bake";
 
 const W = BOARD.halfWidth * 2;
@@ -25,7 +26,8 @@ function glassMaterial(): THREE.MeshPhysicalMaterial {
       "#include <opaque_fragment>",
       `vec3 glint = reflectedLight.directSpecular + reflectedLight.indirectSpecular;
       float shine = clamp(max(glint.r, max(glint.g, glint.b)) * 1.4, 0.0, 1.0);
-      gl_FragColor = vec4(outgoingLight, clamp(diffuseColor.a + shine, 0.0, 1.0));`,
+      // Seen edge on, the near mirror glass can work out a glint past what the half float picture holds.
+      gl_FragColor = vec4(clamp(outgoingLight, vec3(0.0), vec3(${LIGHT_CAP.toFixed(1)})), clamp(diffuseColor.a + shine, 0.0, 1.0));`,
     );
   };
   return glass;

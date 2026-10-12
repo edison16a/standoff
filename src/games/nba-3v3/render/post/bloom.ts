@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { FINITE } from "./finite";
 import { FullScreen, passMaterial } from "./fullscreen";
 
 /** Halvings below the picture's own size: half, a quarter, down to a thirty second. */
@@ -8,7 +9,8 @@ const LEVELS = 5;
  * Thirteen taps in five overlapping boxes, weighted as in a filmic
  * bloom. On the first step down each box is averaged by its brightness
  * (a Karis average), so one blazing pixel, a glint on the rim, cannot
- * flicker into a blob as it crosses pixels.
+ * flicker into a blob as it crosses pixels. Every tap is cleaned first,
+ * so a bad pixel (NaN or infinity) cannot spread through the levels.
  */
 const DOWN = /* glsl */ `
   uniform sampler2D tInput;
@@ -17,7 +19,8 @@ const DOWN = /* glsl */ `
   uniform float uThreshold;
   uniform float uKnee;
   varying vec2 vUv;
-  vec3 tap(vec2 o) { return texture2D(tInput, vUv + o * uTexel).rgb; }
+  ${FINITE}
+  vec3 tap(vec2 o) { return finite(texture2D(tInput, vUv + o * uTexel).rgb); }
   float weight(vec3 c) { return uFirst > 0.5 ? 1.0 / (1.0 + max(max(c.r, c.g), c.b)) : 1.0; }
   vec3 box(vec3 a, vec3 b, vec3 c, vec3 d) {
     float wa = weight(a), wb = weight(b), wc = weight(c), wd = weight(d);
@@ -31,8 +34,7 @@ const DOWN = /* glsl */ `
     vec3 k = tap(vec2(-2.0, 2.0)), l = tap(vec2(0.0, 2.0)), m = tap(vec2(2.0, 2.0));
     vec3 col = box(d, e, i, j) * 0.5 + (box(a, b, f, g) + box(b, c, g, h) + box(f, g, k, l) + box(g, h, l, m)) * 0.125;
     if (uFirst > 0.5) {
-      // A bad pixel (NaN or infinity) must not spread; then only light over the threshold blooms, with a soft knee.
-      if (any(isnan(col)) || any(isinf(col))) col = vec3(0.0);
+      // Only light over the threshold blooms, with a soft knee.
       col = min(col, vec3(64.0));
       float bright = max(max(col.r, col.g), col.b);
       float soft = clamp(bright - uThreshold + uKnee, 0.0, 2.0 * uKnee);
