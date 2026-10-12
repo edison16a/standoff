@@ -48,16 +48,32 @@ export function pursue(m: Match, a: Athlete, carrier: Athlete, skill: FootballSk
 }
 
 /**
- * Man coverage from over the top: the bot shadows its receiver a step
- * deeper, toward the end zone it defends. Playing deep means it is never
- * sat in front of the receiver, so it is not the one picking passes off.
+ * How a man defender reads his receiver. He looks `base` seconds down
+ * the route plus `perReaction` of his reaction time: a bot holds each
+ * move until it next thinks, so a slower one has to aim further ahead to
+ * still be on the route when the ball comes. He gives the receiver
+ * `cushion` of his level's cushion, playing tight and trusting the read.
+ */
+const READ = { base: 0.1, perReaction: 0.95, cushion: 0.5 } as const;
+
+/** The read the showcase's game was filmed with (Match.filmed): a fixed glance ahead and the full cushion. */
+const FILMED_READ = { base: 0.3, perReaction: 0, cushion: 1 } as const;
+
+/**
+ * Man coverage from over the top: the bot shadows where its receiver's
+ * route takes him next, a step deeper, toward the end zone it defends.
+ * Playing deep means it is never sat in front of the receiver, so it is
+ * not the one picking passes off.
  */
 export function cover(m: Match, a: Athlete, skill: FootballSkill): void {
   if (breakOnBall(m, a)) return;
   const r = a.bot.cover === null ? null : m.athlete(a.bot.cover);
   if (!r) return rushQb(m, a, skill);
-  const spot = ahead(r, 0.3);
-  headFor(a, { x: spot.x + m.sign * skill.cushion, z: spot.z - Math.sign(spot.z) * 0.5 }, 0.6);
+  const read = m.filmed ? FILMED_READ : READ;
+  const spot = ahead(r, read.base + skill.reaction * read.perReaction);
+  // Over the top stops at the end line: past it he would only shove his man out of the back of the end zone.
+  const x = clamp(spot.x + m.sign * skill.cushion * read.cushion, -(FIELD.endX - 0.5), FIELD.endX - 0.5);
+  headFor(a, { x, z: spot.z - Math.sign(spot.z) * 0.5 }, 0.6);
 }
 
 /** The deep safety: fourteen yards off the line in the middle, drifting toward the ball, until it is thrown. */
