@@ -84,7 +84,7 @@ export class Effects {
     this.muzzle(shot.muzzle, shot.dir, shot.weapon, shot.seat);
     this.eye.copy(shot.eye);
     const spec = ROUNDS[shot.weapon];
-    const kind = roundKind(shot.weapon);
+    const kind = roundKind(shot.weapon, shot.left);
     return shot.rounds.map((r, i) => {
       this.impacts.impact(r.point, r.normal, r.impact, i < FLASHED ? this.eye : undefined);
       return this.rounds.launch(spec, kind, shot.muzzle, r.point, shot.colour, { normal: r.normal, impact: "none", flash: false, miss: r.impact === "none" });
@@ -108,7 +108,7 @@ export class Effects {
 
   /** A lone tracer round flying to `to`, where it stops. The showcase draws its fire with it and adds its own impacts. */
   tracer(from: THREE.Vector3, to: THREE.Vector3, colour: THREE.Color): void {
-    this.rounds.launch(ROUNDS.rifle, "heat", from, to, colour, { normal: UP, impact: "none", flash: false, miss: false });
+    this.rounds.launch(ROUNDS.rifle, "tracer", from, to, colour, { normal: UP, impact: "none", flash: false, miss: false });
   }
 
   /** Each frame, per gun: a hot barrel cools and trails a thin wisp from its muzzle at `at`. */
