@@ -26,6 +26,11 @@ Still waiting on the owner: pause or keep the heartbeat, re-record the Paintball
 
 | Work | Workflow | State |
 | --- | --- | --- |
+| Basketball black streaks and the replay black bar | agent worktree, backed up as `wip/worktree-agent-*` | resumed from `wip/worktree-agent-af02290b073d1ed42` |
+| Football routes in bounds and the deep runner | agent worktree | resumed from `wip/worktree-agent-a004ba54ddce70b1c` |
+| Zombie Survival gun sounds | agent worktree | running, builds on `src/games/zombie-survival/ballistics` (on main) |
+| Zombie Survival rounds, casings, flash, smoke and hit reactions | agent worktree | running, same foundation |
+| Zombie Survival reloads, hands and held gun recoil | agent worktree | running, same foundation |
 
 All final builds are on main: cover icons, sports phone controls, Paintball Battle controls, Subway camera still, 1.2x tiles, final README. Final check done and on main (503ea5b): every game played end to end except the live site, which this machine's browser cannot reach (certificate block). Part 1 fixes: Soccer feet, Kart, Brawl, Blade Clash, Zombie and Gallery rejoin, phone download retry.
 
