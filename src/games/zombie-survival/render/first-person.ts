@@ -46,7 +46,7 @@ export class FirstPerson {
         entry = undefined;
       }
       if (!entry) {
-        entry = { rig: new GunRig(shooter.weapon), laser: new Laser(playerColor(shooter.seat)) };
+        entry = { rig: new GunRig(shooter.weapon, playerColor(shooter.seat)), laser: new Laser(playerColor(shooter.seat)) };
         this.group.add(entry.rig.holder);
         this.lasers.add(entry.laser.group);
         this.rigs.set(shooter.seat, entry);
