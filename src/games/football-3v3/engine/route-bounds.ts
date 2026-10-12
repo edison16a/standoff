@@ -18,7 +18,12 @@ export const ROUTE_EDGE = {
   bend: 4,
   /** Inside this many metres (or over the line) he turns back in. */
   safe: 1.2,
+  /** Seconds ahead his run is judged, so a man at full speed turns before the line, not after it. */
+  look: 0.4,
 } as const;
+
+/** Where a runner is and how fast he is going, enough to judge where his run takes him. */
+export type Runner = V2 & { vx: number; vz: number };
 
 /** A waypoint pulled inside the end lines and within `side` metres of the middle across. */
 export const insideRoute = (p: V2, side: number = ROUTE_EDGE.side): V2 => ({
@@ -50,13 +55,15 @@ function bend(along: number, across: number, room: number, drift: number): [numb
 }
 
 /**
- * A route runner's stick, kept in bounds. `at` is where he stands,
- * `goal` the stick his route asks for and `sign` the way his team
- * attacks. Running at a sideline he turns upfield along it; at the end
- * line he turns across toward the middle; and a man already over either
- * line comes straight back in, so he can still be thrown to.
+ * A route runner's stick, kept in bounds. `a` is the runner, judged
+ * where his run takes him a moment from now, `goal` the stick his route
+ * asks for and `sign` the way his team attacks. Running at a sideline he
+ * turns upfield along it; at the end line he turns across toward the
+ * middle; and a man already over either line comes straight back in, so
+ * he can still be thrown to.
  */
-export function keepGoalInside(at: V2, goal: V2, sign: 1 | -1): V2 {
+export function keepGoalInside(a: Runner, goal: V2, sign: 1 | -1): V2 {
+  const at = { x: a.x + a.vx * ROUTE_EDGE.look, z: a.z + a.vz * ROUTE_EDGE.look };
   const outZ = at.z >= 0 ? 1 : -1;
   const [toSide, upfield] = bend(goal.z * outZ, goal.x * sign, FIELD.halfWidth - Math.abs(at.z), 1);
   let x = upfield * sign;
