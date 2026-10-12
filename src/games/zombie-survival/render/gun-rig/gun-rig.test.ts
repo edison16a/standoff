@@ -69,6 +69,20 @@ describe("the gun rig", () => {
     rig.dispose();
   });
 
+  it("frees the AR's locked bolt when a new stage refills the gun without a reload", () => {
+    const { rig, run } = held("rifle");
+    const slide = named(rig, PART.portSlide);
+    rig.fire(0);
+    run(0.3);
+    rig.rounds(0);
+    run(0.1);
+    expect(slide.scale.z).toBeLessThan(0.5);
+    rig.rounds(WEAPONS.rifle.magazine);
+    run(0.1);
+    expect(slide.scale.z).toBe(1);
+    rig.dispose();
+  });
+
   it("never moves the aim: a shot kicks the gun and it springs back to the same place", () => {
     const { rig, run } = held("ak47");
     run(1);
