@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { safeFocus } from "@/games/kit/post";
 import { Bloom } from "./bloom";
 import { DepthOfField } from "./depth-of-field";
 import { FullScreen } from "./fullscreen";
@@ -49,12 +50,13 @@ export class BroadcastPost {
     const look = this.look;
     const dof = this.options.dof && look.dof > 0.01;
     const bloom = this.options.bloom && look.bloom > 0.001;
+    const focus = safeFocus(this.focus, { distance: 6, range: 1.5 });
     // Depth is only copied out of the multisampled buffer when the depth of field needs it.
     this.target.resolveDepthBuffer = dof;
     renderer.setRenderTarget(this.target);
     renderer.render(scene, camera);
     if (bloom) this.bloom.render(renderer, this.target.texture);
-    if (dof) this.dof.render(renderer, this.target.texture, this.target.depthTexture!, camera, this.focus.distance, this.focus.range, 0.011);
+    if (dof) this.dof.render(renderer, this.target.texture, this.target.depthTexture!, camera, focus.distance, focus.range, 0.011);
     const u = this.grade.uniforms;
     u.tScene!.value = this.target.texture;
     u.tBloom!.value = this.bloom.texture;
@@ -69,11 +71,12 @@ export class BroadcastPost {
     u.uGrass!.value = look.grass;
     u.uDof!.value = dof ? look.dof : 0;
     u.uAspect!.value = size.x / Math.max(1, size.y);
+    (u.uTexel!.value as THREE.Vector2).set(1 / Math.max(1, size.x), 1 / Math.max(1, size.y));
     u.uSeed!.value = (this.frame++ % 64) * 1.7;
     u.uNear!.value = camera.near;
     u.uFar!.value = camera.far;
-    u.uFocus!.value = this.focus.distance;
-    u.uRange!.value = this.focus.range;
+    u.uFocus!.value = focus.distance;
+    u.uRange!.value = focus.range;
     (u.uBalance!.value as THREE.Vector3).set(...balance(look.warmth));
     this.quad.draw(renderer, this.grade, null);
   }
