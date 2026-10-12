@@ -22,13 +22,20 @@ export const routes = (m: Match) => m.athletes.filter((r) => r.team === m.offens
 
 /**
  * A backer in his zone while the QB looks to throw: nine yards off on
- * his side, sliding under any receiver who comes into it.
+ * his side, sliding over any runner who comes into it. He reads the
+ * runner a moment ahead and leans off his spot toward him, both by his
+ * reaction time: a slow bot has to guess further and stay closer. The
+ * deep threat going past he leaves to the deep man.
  */
-function zone(m: Match, a: Athlete): void {
+function zone(m: Match, a: Athlete, skill: FootballSkill): void {
   const s = m.sign;
   const home = { x: yardToX(m.offense, m.drive.los) + s * LAYERS.backer * YARD, z: m.drive.ballZ + sideOf(a.slot) * 7 };
-  const near = routes(m).filter((r) => Math.abs(r.z - home.z) < 10).sort((p, q) => dist2(p, home) - dist2(q, home))[0];
-  const spot = near ? { x: near.x + s * 2.5, z: (near.z + home.z) / 2 } : { x: home.x, z: home.z + (m.ball.pos.z - home.z) * 0.3 };
+  const near = routes(m).filter((r) => !r.deep && Math.abs(r.z - home.z) < 10).sort((p, q) => dist2(p, home) - dist2(q, home))[0];
+  // The showcase's game was filmed before backers read the runner (Match.filmed).
+  const read = m.filmed ? 0 : skill.reaction;
+  const at = near ? ahead(near, read * 0.5) : null;
+  const lean = 0.5 + read * 0.3;
+  const spot = at ? { x: at.x + s * 2.5, z: at.z * lean + home.z * (1 - lean) } : { x: home.x, z: home.z + (m.ball.pos.z - home.z) * 0.3 };
   headFor(a, onField(spot), 1);
 }
 
@@ -40,8 +47,9 @@ const KEY_LEAD = 0.6;
 
 /**
  * The deep man over the top: always deeper than the deepest receiver,
- * drifting with the ball. On a play where he keys the deep threat he
- * shades over him from the snap and stays a few steps over the top.
+ * drifting with the ball. Keyed on the deep threat (every play he has
+ * one), he shades toward him from the snap and stays a few steps over
+ * the top.
  */
 function deepZone(m: Match, a: Athlete): void {
   const s = m.sign;
@@ -89,7 +97,7 @@ export function supportDefense(m: Match, a: Athlete, carrier: Athlete | null, sk
   const job = defenseJob(a.slot);
   if (passing) {
     if (job === "edge") return rushQb(m, a, skill);
-    return job === "backer" ? zone(m, a) : deepZone(m, a);
+    return job === "backer" ? zone(m, a, skill) : deepZone(m, a);
   }
   if (job === "deep") return lastLayer(m, a, carrier, skill);
   pursue(m, a, carrier, skill);
