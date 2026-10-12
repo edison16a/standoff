@@ -13,6 +13,8 @@ export interface GunModel {
   muzzle: THREE.Object3D;
   /** Where the laser sight's beam leaves the gun. */
   laser: THREE.Object3D;
+  /** The ejection port, where spent cases leave the gun to its right (+x). */
+  ejector: THREE.Object3D;
   magazine: THREE.Object3D | null;
   /** The shotgun's slide. */
   pump: THREE.Object3D | null;

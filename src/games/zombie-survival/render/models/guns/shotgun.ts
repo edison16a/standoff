@@ -81,5 +81,8 @@ export function buildShotgun(): GunModel {
   const muzzle = marker("muzzle", 0, 0, -0.665);
   const laser = marker("laser", 0, -0.064, -0.54);
   root.add(muzzle, laser);
-  return { root, muzzle, laser, magazine: null, pump, bolt: null, shell, length: 1.12 };
+  // The ejection port, on the right of the receiver.
+  const ejector = marker("ejector", 0.028, 0.002, -0.065);
+  root.add(ejector);
+  return { root, muzzle, laser, ejector, magazine: null, pump, bolt: null, shell, length: 1.12 };
 }

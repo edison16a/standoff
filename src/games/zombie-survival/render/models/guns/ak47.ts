@@ -88,5 +88,8 @@ export function buildAk47(): GunModel {
   const muzzle = marker("muzzle", 0, 0, -0.622);
   const laser = marker("laser", 0, -0.056, -0.345);
   root.add(muzzle, laser);
-  return { root, muzzle, laser, magazine, pump: null, bolt, shell: null, length: 1.06 };
+  // The ejection port under the dust cover, on the right.
+  const ejector = marker("ejector", 0.024, 0.012, -0.03);
+  root.add(ejector);
+  return { root, muzzle, laser, ejector, magazine, pump: null, bolt, shell: null, length: 1.06 };
 }
