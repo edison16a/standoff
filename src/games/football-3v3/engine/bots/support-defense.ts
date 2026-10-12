@@ -47,13 +47,13 @@ function deepZone(m: Match, a: Athlete): void {
   const s = m.sign;
   const key = a.bot.key ? routes(m).find((r) => r.deep) : undefined;
   let x = yardToX(m.offense, m.drive.los) + s * LAYERS.deep * YARD;
-  let z = key ? key.z * 0.8 + m.ball.pos.z * 0.2 : m.ball.pos.z * 0.5;
+  let z = key ? key.z * 0.4 + m.ball.pos.z * 0.6 : m.ball.pos.z * 0.5;
   for (const r of routes(m)) {
     const at = r === key ? ahead(r, KEY_LEAD) : r;
     const cushion = r === key ? CUSHION.keyed : CUSHION.deepest;
     if ((at.x + s * cushion - x) * s > 0) {
       x = at.x + s * cushion;
-      z = r === key ? r.z * 0.9 + m.ball.pos.z * 0.1 : r.z * 0.6 + m.ball.pos.z * 0.4;
+      z = r.z * 0.6 + m.ball.pos.z * 0.4;
     }
   }
   headFor(a, onField({ x, z }), 1);
