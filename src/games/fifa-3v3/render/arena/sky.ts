@@ -85,10 +85,11 @@ const SKY_FRAGMENT = /* glsl */ `
   void main() {
     vec3 d = normalize(vDir);
     float h = clamp(d.y, 0.0, 1.0);
-    vec3 c = mix(uHorizon, uTop, pow(h, 0.5));
+    vec3 c = mix(uHorizon, uTop, sqrt(h));
     // The city's sodium glow along the horizon, and the floodlights' haze hanging over the ground.
-    c += uCity * pow(1.0 - h, 8.0) * 0.6;
-    c += vec3(0.05, 0.055, 0.07) * pow(1.0 - h, 2.0);
+    // h is clamped, but pow of a negative is NaN on most cards, so each base is guarded where it is read.
+    c += uCity * pow(max(1.0 - h, 0.0), 8.0) * 0.6;
+    c += vec3(0.05, 0.055, 0.07) * pow(max(1.0 - h, 0.0), 2.0);
     // Clouds: two octaves of noise on a flat layer above, lit warm from below.
     vec2 p = d.xz / max(d.y, 0.08) * 1.4;
     float n = noise(p) * 0.65 + noise(p * 2.7 + 3.1) * 0.35;
