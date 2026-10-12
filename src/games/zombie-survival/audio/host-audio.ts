@@ -50,6 +50,7 @@ export class HostAudio {
   }
 
   onLobby(): void {
+    this.guns.reset();
     this.ambience.rotorLevel(0);
     this.score.lobby();
   }
@@ -112,7 +113,11 @@ export class HostAudio {
         return this.stingers.checkpoint();
       case "phase":
         this.score.phase(event.phase);
-        if (event.phase === "down") this.stingers.gameOver();
+        // A retry refills every gun, so a reload still playing out when the team falls is called off.
+        if (event.phase === "down") {
+          this.stingers.gameOver();
+          this.guns.reset();
+        }
         if (event.phase === "escaped") this.celebrate(game.squad.present().length);
         if (event.phase === "cutscene" && game.cutscene === "escape") this.stingers.horn(1.5);
         return;
