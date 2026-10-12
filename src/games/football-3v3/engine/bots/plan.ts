@@ -39,12 +39,12 @@ export function planPlay(m: Match): void {
     back.bot.stop = false;
     qb.bot.readAt = m.rng.range(0.6, 0.9);
   }
-  assignCoverage(m, process.env.MAN === "1" ? [...receivers, ...m.athletes.filter((d) => d.team === m.offense && d.deep)] : receivers);
+  assignCoverage(m, receivers);
   for (const a of m.athletes) a.bot.wait = 0;
 }
 
 /** How often the deep man keys the deep threat; on the other plays he takes whoever goes deepest. */
-const DEEP_KEY = Number(process.env.KEY ?? "0.7");
+const DEEP_KEY = 0.7;
 
 function assignCoverage(m: Match, receivers: readonly Athlete[]): void {
   // Support players have their own jobs (support-defense.ts), and start every play with nobody to block.
@@ -58,7 +58,7 @@ function assignCoverage(m: Match, receivers: readonly Athlete[]): void {
   for (const d of defenders) {
     d.bot.cover = null;
     // A spare defender blitzes about half the time and otherwise sits deep as a safety.
-    d.bot.rush = m.rng.chance(Number(process.env.RUSH ?? "0.5"));
+    d.bot.rush = m.rng.chance(0.5);
   }
   // Runners cover first; the defensive QB covers only when a receiver is left.
   const pool = [...defenders].sort((a, b) => (a.role === b.role ? a.slot - b.slot : a.role === "runner" ? -1 : 1));

@@ -33,7 +33,10 @@ function zone(m: Match, a: Athlete): void {
 }
 
 /** How far over the top the deep man plays a receiver, metres: tighter on the deep threat he keys. */
-const CUSHION = { keyed: Number(process.env.CUSH ?? "4.5"), deepest: 6 } as const;
+const CUSHION = { keyed: 4.5, deepest: 6 } as const;
+
+/** Seconds ahead he reads the man he keys, so he bails in time against a sprinter. */
+const KEY_LEAD = 0.6;
 
 /**
  * The deep man over the top: always deeper than the deepest receiver,
@@ -46,8 +49,7 @@ function deepZone(m: Match, a: Athlete): void {
   let x = yardToX(m.offense, m.drive.los) + s * LAYERS.deep * YARD;
   let z = key ? key.z * 0.8 + m.ball.pos.z * 0.2 : m.ball.pos.z * 0.5;
   for (const r of routes(m)) {
-    // The man he keys he judges a moment ahead, so he bails in time against a sprinter.
-    const at = r === key ? ahead(r, Number(process.env.LEAD ?? "0.6")) : r;
+    const at = r === key ? ahead(r, KEY_LEAD) : r;
     const cushion = r === key ? CUSHION.keyed : CUSHION.deepest;
     if ((at.x + s * cushion - x) * s > 0) {
       x = at.x + s * cushion;
