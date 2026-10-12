@@ -2,11 +2,16 @@ import * as THREE from "three";
 import { FINITE } from "./finite";
 import { FullScreen, passMaterial } from "./fullscreen";
 
-/** Turns the depth buffer's 0 to 1 back into metres from the camera. */
+/**
+ * Turns the depth buffer's 0 to 1 back into metres from the camera. The
+ * depth is clamped and the divisor kept above zero, so a stray depth
+ * past the far plane (a resolve that rounds up, or a sample off the
+ * edge) can never divide by zero and blur a pixel by infinity.
+ */
 export const VIEW_DEPTH = /* glsl */ `
   uniform float uNear;
   uniform float uFar;
-  float metres(float d) { return (uNear * uFar) / (uFar - d * (uFar - uNear)); }
+  float metres(float d) { return (uNear * uFar) / max(uFar - clamp(d, 0.0, 1.0) * (uFar - uNear), 1e-6); }
 `;
 
 /**
@@ -19,7 +24,8 @@ export const CIRCLE = /* glsl */ `
   uniform float uRange;
   float circle(float z) {
     float off = abs(z - uFocus) - uRange;
-    return clamp(off / (uFocus * 0.9 + 1.0), 0.0, 1.0);
+    // The divisor stays positive even for a focus behind the lens, so the blur is never NaN.
+    return clamp(off / max(uFocus * 0.9 + 1.0, 0.1), 0.0, 1.0);
   }
 `;
 
@@ -55,8 +61,9 @@ const GATHER = /* glsl */ `
       float c = circle(metres(texture2D(tDepth, uv).r));
       // The sample reaches here if its own blur is at least this far out, or this pixel is blurred over it.
       float w = smoothstep(r - 0.15, r, max(c, centre * 0.6));
-      // A bad pixel here is filled from its nearest neighbours, even where all is sharp.
-      if (hole && r < 0.4) w = 1.0;
+      // A bad pixel here is filled from its neighbours, the nearest counting most, even where all is sharp.
+      // The whole disc takes part, so a bad patch wider than a pixel or two still finds good colour.
+      if (hole) w = max(w, 1.0 - r);
       vec3 tap = texture2D(tColor, uv).rgb;
       if (nonFinite(tap)) w = 0.0;
       sum += finite(tap) * w;
