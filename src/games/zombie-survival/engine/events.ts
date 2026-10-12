@@ -19,9 +19,9 @@ export interface RadioLine {
  * a hit looks, sounds and feels like one moment.
  */
 export type GameEvent =
-  | { type: "shot"; seat: Seat; weapon: WeaponId; shotId: number }
+  | { type: "shot"; seat: Seat; weapon: WeaponId; shotId: number; left: number }
   | { type: "dry"; seat: Seat }
-  | { type: "reload-start"; seat: Seat; weapon: WeaponId; seconds: number }
+  | { type: "reload-start"; seat: Seat; weapon: WeaponId; seconds: number; empty: boolean }
   | { type: "shell"; seat: Seat }
   | { type: "reloaded"; seat: Seat }
   | { type: "hit"; seat: Seat; zombie: number; kind: ZombieKind; part: HitPart; weak: number | null; blocked: boolean; damage: number; killed: boolean }

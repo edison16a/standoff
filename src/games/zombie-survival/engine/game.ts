@@ -90,7 +90,8 @@ export class SurvivalGame {
       return false;
     }
     this.shotId += 1;
-    this.emit({ type: "shot", seat, weapon: member.gun.weapon, shotId: this.shotId });
+    // `left` is what stays in the gun, so the picture knows which rounds are tracers and which was the last.
+    this.emit({ type: "shot", seat, weapon: member.gun.weapon, shotId: this.shotId, left: member.gun.ammo });
     const events = resolveShot(member, this.encounter, cast, this.random, this.phase === "fight");
     for (const event of events) this.emit(event);
     return true;

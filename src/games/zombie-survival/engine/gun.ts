@@ -3,7 +3,8 @@ import { WEAPONS, type WeaponId, type WeaponSpec } from "./weapons";
 
 export type TriggerResult = "fired" | "dry" | "wait";
 
-export type GunEvent = { type: "reload-start"; seconds: number } | { type: "shell" } | { type: "reloaded" };
+/** `empty` is a reload from a dry gun, which also has to chamber a round. */
+export type GunEvent = { type: "reload-start"; seconds: number; empty: boolean } | { type: "shell" } | { type: "reloaded" };
 
 /**
  * Phone timers drift and the network bunches messages, so shots may
@@ -79,7 +80,7 @@ export class Gun {
   /** Starts a reload if one is useful. Returns whether it started. */
   startReload(): boolean {
     if (this.reloading || this.ammo >= this.spec.magazine) return false;
-    this.pending.push({ type: "reload-start", seconds: this.reloadSeconds });
+    this.pending.push({ type: "reload-start", seconds: this.reloadSeconds, empty: this.ammo === 0 });
     this.clicked = false;
     this.reloadLeft = this.spec.style === "magazine" ? this.spec.reload : SHELL_START + (this.spec.shell ?? 0.4);
     return true;
