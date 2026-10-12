@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { capLight } from "../materials/shader-patches";
+import { FINITE } from "../post/finite";
 import { FLOOR, floorTexture } from "./floor-texture";
 import type { FloorMirror } from "./floor-mirror";
 import { mapleBoards } from "./maple";
@@ -75,7 +77,8 @@ export class Floor {
         uniform sampler2D tMirror;
         uniform vec2 uWoodScale;
         uniform vec2 uWoodTexel;
-        uniform float uMirror;`,
+        uniform float uMirror;
+        ${FINITE}`,
       )
       .replace(
         "#include <map_fragment>",
@@ -94,16 +97,29 @@ export class Floor {
         vec3 floorNormal = normalize(vec3(-hx * 0.35, 1.0, -hz * 0.35));
         normal = normalize((viewMatrix * vec4(floorNormal, 0.0)).xyz);`,
       );
-    if (!mirror) return;
+    if (mirror) this.reflect(shader);
+    capLight(shader);
+  }
+
+  /**
+   * The mirror's light on the lacquer. Its sample is cleaned first: one
+   * bad pixel in the mirror spreads through its mipmaps into a blot. The
+   * gloss never goes under zero where the grain pushes the roughness past
+   * one, and the swap of the stock reflection for the mirror's is
+   * subtractive, so the cap after this keeps the result from going
+   * negative.
+   */
+  private reflect(shader: THREE.WebGLProgramParametersWithUniforms): void {
     shader.fragmentShader = shader.fragmentShader.replace(
       "#include <opaque_fragment>",
       `if (uMirror > 0.5) {
         vec2 mirrorUv = vMirror.xy / vMirror.w + floorNormal.xz * 0.03;
         vec4 seen = textureLod(tMirror, mirrorUv, 0.6);
+        seen = vec4(finite(seen.rgb), clamp(seen.a, 0.0, 1.0));
         float facing = clamp(dot(normal, normalize(vViewPosition)), 0.0, 1.0);
-        float fresnel = 0.04 + 0.96 * pow(1.0 - facing, 5.0);
+        float fresnel = 0.04 + 0.96 * pow(max(1.0 - facing, 0.0), 5.0);
         // A fresh gloss coat under arena lamps reads stronger than bare physics says, as on any broadcast; the floor of 0.35 is that.
-        float gloss = mix(0.35, 1.0, fresnel) * (1.0 - roughnessFactor);
+        float gloss = mix(0.35, 1.0, fresnel) * max(1.0 - roughnessFactor, 0.0);
         outgoingLight += seen.rgb * gloss - reflectedLight.indirectSpecular * seen.a;
       }
       #include <opaque_fragment>`,
