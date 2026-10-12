@@ -70,6 +70,7 @@ export class SurvivalRenderer implements SurvivalView {
     setGunEnvironment(this.env);
     this.scene.add(this.camera);
     this.atmosphere = new Atmosphere(this.scene, this.camera);
+    if (this.scene.fog) this.effects.setHaze(this.scene.fog.color);
     this.guns = new FirstPerson(this.camera);
     this.crosshairs = new CrosshairLayer(this.camera);
     this.chopper = new ChopperView(this.scene);
@@ -145,7 +146,7 @@ export class SurvivalRenderer implements SurvivalView {
     const at = new THREE.Vector3();
     const dir = new THREE.Vector3();
     rig.muzzle(at, dir);
-    this.effects.muzzle(at, dir, rig.big);
+    this.effects.muzzle(at, dir, rig.weapon);
     const colour = new THREE.Color(playerColor(seat));
     results.forEach((r, i) => {
       if (i < 3) this.effects.tracer(at, r.point, colour);

@@ -1,8 +1,11 @@
 import * as THREE from "three";
-import { flashTexture } from "../textures";
-import { Particles } from "./particles";
+import type { WeaponId } from "../../engine/weapons";
+import { lowQuality } from "../quality";
+import { FLASH_STYLES } from "./flash-styles";
+import { Impacts, type Impact } from "./impacts";
+import { MuzzleFlash } from "./muzzle-flash";
 
-export type Impact = "flesh" | "armor" | "weak" | "world" | "none";
+export type { Impact } from "./impacts";
 
 interface Tracer {
   mesh: THREE.Mesh;
@@ -11,57 +14,44 @@ interface Tracer {
   t: number;
 }
 
-interface Flash {
-  sprite: THREE.Sprite;
-  life: number;
-  /** Drawn at least once. A flash made between two slow frames must still be seen. */
-  shown: boolean;
-}
-
-const SPARK = new THREE.Color(1, 0.72, 0.3);
-const GOO = new THREE.Color(0.35, 0.95, 0.2);
-const BLOOD = new THREE.Color(0.25, 0.5, 0.08);
-const WEAK = new THREE.Color(1, 0.55, 0.15);
-const DUST = new THREE.Color(0.45, 0.43, 0.4);
+const POWDER = new THREE.Color(1, 0.72, 0.3);
 
 /**
  * Everything a shot leaves in the air: the flash at the muzzle with its
- * burst of light, a streak of tracer to the hit, sparks off stone and
- * armour, green goo from flesh, and a burning orange spray from weak
- * points.
+ * burst of light, a streak of tracer to the hit, and the impact where it
+ * lands. Each part lives in its own module; this ties them to one clock.
  */
 export class Effects {
   readonly group = new THREE.Group();
-  private readonly sparks: Particles;
-  private readonly goo: Particles;
-  private readonly smoke: Particles;
+  private readonly flash: MuzzleFlash;
+  private readonly impacts: Impacts;
   private readonly tracers: Tracer[] = [];
-  private readonly flashes: Flash[] = [];
-  private readonly light = new THREE.PointLight(0xffc070, 0, 10, 1.6);
-  private lightLife = 0;
-  private lightFresh = false;
   private readonly tracerGeo = new THREE.CylinderGeometry(0.018, 0.018, 1, 6, 1, true).rotateX(Math.PI / 2);
+  /** The air's colour, which lights smoke and the blast ring. The renderer sets it from the fog. */
+  private readonly haze = new THREE.Color(0x3a4250);
 
-  /** `random` shapes every spray. The showcase seeds it, so its clip plays the same each time. */
+  /** `random` shapes every flash and spray. The showcase seeds it, so its clip plays the same each time. */
   constructor(private readonly random: () => number = Math.random) {
-    this.sparks = new Particles(700, 0.09, true, 9, random);
-    this.goo = new Particles(600, 0.13, false, 7, random);
-    this.smoke = new Particles(500, 1.6, false, -1.2, random);
-    this.group.add(this.sparks.points, this.goo.points, this.smoke.points, this.light);
+    const low = lowQuality();
+    this.flash = new MuzzleFlash(random);
+    this.impacts = new Impacts(random, low);
+    this.group.add(this.flash.group, this.impacts.group);
   }
 
-  muzzle(at: THREE.Vector3, dir: THREE.Vector3, big: boolean): void {
-    const material = new THREE.SpriteMaterial({ map: flashTexture(), color: 0xffe0a0, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false, rotation: this.random() * Math.PI });
-    const sprite = new THREE.Sprite(material);
-    sprite.position.copy(at).addScaledVector(dir, 0.05);
-    sprite.scale.setScalar(big ? 0.32 : 0.22);
-    this.group.add(sprite);
-    this.flashes.push({ sprite, life: 0.06, shown: false });
-    this.light.position.copy(at);
-    this.light.intensity = big ? 40 : 22;
-    this.lightLife = 0.06;
-    this.lightFresh = true;
-    this.sparks.burst(at, dir, big ? 6 : 3, 4, 0.8, SPARK, 0.12);
+  /** Lights smoke and haze with the scene's fog colour, so they sit in the same air. */
+  setHaze(fog: THREE.Color): void {
+    this.haze.copy(fog).lerp(new THREE.Color(0x9a9aa0), 0.35);
+  }
+
+  /**
+   * A muzzle flash for `weapon`. The showcase still passes `big` as a
+   * flag, which reads as the AK's bloom or the rifle's split flash.
+   */
+  muzzle(at: THREE.Vector3, dir: THREE.Vector3, weapon: WeaponId | boolean): void {
+    const id: WeaponId = typeof weapon === "string" ? weapon : weapon ? "ak47" : "rifle";
+    this.flash.fire(at, dir, FLASH_STYLES[id], this.haze);
+    // Unburnt powder flecks out with the gas.
+    this.impacts.sparks.burst(at, dir, id === "shotgun" ? 8 : id === "ak47" ? 5 : 2, 4, 0.8, POWDER, 0.12);
   }
 
   tracer(from: THREE.Vector3, to: THREE.Vector3, colour: THREE.Color): void {
@@ -79,70 +69,22 @@ export class Effects {
     tracer.mesh.visible = true;
   }
 
-  /**
-   * Where a bullet lands. Sparks and goo are small in the world, so a hit
-   * twenty metres off also gets a flash sized to the distance from `eye`,
-   * which reads on screen however far away it is.
-   */
+  /** Where a bullet lands. `eye` adds a flash sized to the distance, so a far hit reads. */
   impact(at: THREE.Vector3, normal: THREE.Vector3, kind: Impact, eye?: THREE.Vector3): void {
-    if (eye && kind !== "none") this.hitFlash(at, kind, at.distanceTo(eye));
-    if (kind === "flesh") {
-      this.goo.burst(at, normal, 14, 3.2, 1.4, GOO, 0.7);
-      this.goo.burst(at, normal, 6, 1.5, 1, BLOOD, 0.9);
-    } else if (kind === "weak") {
-      this.goo.burst(at, normal, 20, 4, 1.6, GOO, 0.8);
-      this.sparks.burst(at, normal, 18, 5, 1.6, WEAK, 0.5);
-    } else if (kind === "armor") {
-      this.sparks.burst(at, normal, 16, 6, 1.4, SPARK, 0.35);
-    } else if (kind === "world") {
-      this.sparks.burst(at, normal, 9, 4.5, 1.2, SPARK, 0.3);
-      this.smoke.burst(at, normal, 2, 0.6, 0.6, DUST, 0.8);
-    }
-  }
-
-  private hitFlash(at: THREE.Vector3, kind: Impact, distance: number): void {
-    const colour = kind === "flesh" ? 0x9dff6a : kind === "weak" ? 0xffc050 : 0xffd9a0;
-    const material = new THREE.SpriteMaterial({ map: flashTexture(), color: colour, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false, rotation: this.random() * Math.PI });
-    const sprite = new THREE.Sprite(material);
-    sprite.position.copy(at);
-    sprite.scale.setScalar(Math.max(0.2, distance * (kind === "weak" ? 0.05 : 0.032)));
-    this.group.add(sprite);
-    this.flashes.push({ sprite, life: kind === "weak" ? 0.1 : 0.07, shown: false });
+    this.impacts.impact(at, normal, kind, eye);
   }
 
   /** A bigger spray for a kill or a broken weak point. */
   splatter(at: THREE.Vector3, big: boolean): void {
-    const up = new THREE.Vector3(0, 1, 0);
-    this.goo.burst(at, up, big ? 60 : 24, big ? 5 : 3, 2, GOO, 1);
-    if (big) this.sparks.burst(at, up, 30, 6, 2, WEAK, 0.6);
+    this.impacts.splatter(at, big);
   }
 
   update(dt: number): void {
-    this.sparks.update(dt);
-    this.goo.update(dt);
-    this.smoke.update(dt);
-    // The muzzle light, like the flash, always gets one frame on screen.
-    if (this.lightFresh) this.lightFresh = false;
-    else this.lightLife -= dt;
-    if (this.lightLife <= 0) this.light.intensity = 0;
-    for (let i = this.flashes.length - 1; i >= 0; i--) {
-      const flash = this.flashes[i]!;
-      if (!flash.shown) {
-        flash.shown = true;
-        continue;
-      }
-      flash.life -= dt;
-      flash.sprite.material.opacity = Math.min(1, flash.life * 12);
-      if (flash.life <= 0) {
-        this.group.remove(flash.sprite);
-        flash.sprite.material.dispose();
-        this.flashes.splice(i, 1);
-      }
-    }
+    this.flash.update(dt);
+    this.impacts.update(dt);
     for (const tracer of this.tracers) {
       if (tracer.t >= 1) continue;
       tracer.t = Math.min(1, tracer.t + dt / 0.09);
-      // A short bright streak that runs from the muzzle to the hit.
       const head = tracer.from.clone().lerp(tracer.to, Math.min(1, tracer.t * 1.3));
       const tail = tracer.from.clone().lerp(tracer.to, Math.max(0, tracer.t * 1.3 - 0.45));
       const length = head.distanceTo(tail);
@@ -155,12 +97,9 @@ export class Effects {
   }
 
   dispose(): void {
-    this.sparks.dispose();
-    this.goo.dispose();
-    this.smoke.dispose();
+    this.flash.dispose();
+    this.impacts.dispose();
     this.tracerGeo.dispose();
     for (const t of this.tracers) (t.mesh.material as THREE.Material).dispose();
-    for (const f of this.flashes) f.sprite.material.dispose();
-    this.flashes.length = 0;
   }
 }
