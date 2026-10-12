@@ -18,10 +18,10 @@ Some foley sources (marked airsoft) were recorded by their authors with full met
 | dry-click.mp3 | 0 to 0.52 | [A rifle being dry fired once](https://freesound.org/people/ser%C3%B8ut%C5%8Dnin--depriv%C9%99d/sounds/725402/) | serøutōnin--deprivəd | CC0 1.0 |
 | mag-drop.mp3 | 0 to 0.333 | [Magazine Hitting Surface](https://freesound.org/people/MootMcnoodles/sounds/444402/) | MootMcnoodles | CC0 1.0 |
 | rifle-mag-out.mp3 | 0.15 to 0.85 | [An M16 Rifle being reloaded while empty; full sequence](https://freesound.org/people/ser%C3%B8ut%C5%8Dnin--depriv%C9%99d/sounds/725397/) (airsoft) | serøutōnin--deprivəd | CC0 1.0 |
-| rifle-mag-in.mp3 | 2.30 to 2.54 | same as above (airsoft) | serøutōnin--deprivəd | CC0 1.0 |
+| rifle-mag-in.mp3 | 2.36 to 2.54 | same as above (airsoft) | serøutōnin--deprivəd | CC0 1.0 |
 | rifle-mag-seat.mp3 | 2.54 to 2.95 | same as above (airsoft) | serøutōnin--deprivəd | CC0 1.0 |
-| rifle-bolt-back.mp3 | 4.05 to 4.50 | same as above (airsoft) | serøutōnin--deprivəd | CC0 1.0 |
-| rifle-bolt-forward.mp3 | 4.82 to 5.25 | same as above (airsoft) | serøutōnin--deprivəd | CC0 1.0 |
+| rifle-bolt-back.mp3 | 4.11 to 4.50 | same as above (airsoft) | serøutōnin--deprivəd | CC0 1.0 |
+| rifle-bolt-forward.mp3 | 4.88 to 5.25 | same as above (airsoft) | serøutōnin--deprivəd | CC0 1.0 |
 | ak-mag-out.mp3 | 0 to 0.72 | [AK-47 Assault Rifle being unloaded and reloaded](https://freesound.org/people/ser%C3%B8ut%C5%8Dnin--depriv%C9%99d/sounds/674742/) (airsoft) | serøutōnin--deprivəd | CC0 1.0 |
 | ak-mag-in.mp3 | 0.83 to 1.08 | same as above (airsoft) | serøutōnin--deprivəd | CC0 1.0 |
 | ak-mag-seat.mp3 | 1.08 to 1.55 | same as above (airsoft) | serøutōnin--deprivəd | CC0 1.0 |
