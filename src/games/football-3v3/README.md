@@ -1,6 +1,6 @@
 # Football 3v3
 
-American football for 2 to 6 players, with phones held sideways as controllers. Each team has a QB, up to two runners, three computer linemen who fight it out at the line and five computer support players, so it is eleven a side. The support players block on offense and rush or sit back in layers on defence (see Support players). First to 14 points wins, or the higher score when four quarters run out.
+American football for 2 to 6 players, with phones held sideways as controllers. Each team has a QB, up to two runners, three computer linemen who fight it out at the line and five computer support players, so it is eleven a side. The support players block on offense, except one deep threat who goes long, and rush or sit back in layers on defence (see Support players). First to 14 points wins, or the higher score when four quarters run out.
 
 <p>
   <img src="media/poster.jpg" alt="Blaze defenders leave their feet at a Storm ball carrier" width="66%" />
@@ -115,7 +115,7 @@ Everything is synthesised through the audio engine, with no crowd: the brass and
 
 1. **Pick.** The QB picks throw, run or kick. A kick in range (58 yards or less) goes for the posts, anything longer is a punt. Ten seconds with no pick means throw. The defence can move while the offense decides.
 2. **Hike.** The QB has 5 seconds to hike. After that the ball is snapped anyway. Nobody on defence crosses the line before the snap. The rush starts at the snap.
-3. **Live.** The QB drops back and throws, or runs. Receivers run routes. Linemen crash together and push, and the defence slowly wins, so the pocket closes. The support players block for the ball on offense. On defence two of them rush and three sit back in layers to tackle whoever gets through.
+3. **Live.** The QB drops back and throws, or runs. Receivers run routes, and on a pass call the deep threat goes long. Linemen crash together and push, and the defence slowly wins, so the pocket closes. The support players block for the ball on offense. On defence two of them rush and three sit back in layers to tackle whoever gets through.
 4. **Whistle.** A tackle, stepping out, an incomplete pass, a dive landing, or a score. A fumble stays live until someone picks it up, or until it goes out or lies dead, when the side that had it keeps it there.
 
 ### Throwing
@@ -140,7 +140,7 @@ Only a defender in the passing lane can stop it. As the ball leaves the hand eac
 
 * **How close** he is to the ball's line. Right on it he is in the way; at the edge of his reach he only gets a hand out. His build's cover reach widens it.
 * **Where** he sits along it. Jumping the route in front of the receiver counts fully, near the QB about half, trailing behind the receiver a little more.
-* **How far** the throw goes. A long ball hangs, so he has more time to get there than on a quick one.
+* **How far** the throw goes. A long ball hangs, so he has more time to get there than on a quick one. Past 25 metres his reach off the line grows too, so a safety over the top still has a play on a deep ball.
 * **Who** he is. A person plays it fully; a computer by its level; a training dummy not at all.
 
 The best placed defender reads it and breaks on the ball. When it reaches his hands his threat is the chance he makes a play. Part of that is a pick, for a person or the one who read it; the rest is a swat or a tip, and the ball may go anywhere. A defender right on the receiver as it arrives can also hit it loose. Nobody tops 0.92, so even a perfect jump loses some.
@@ -162,17 +162,18 @@ On a run call one runner lines up beside the QB and a yard deeper, on the side w
 * **Dive.** A burst forward. A ball carrier is down where they land. A receiver can dive for a catch with a longer reach.
 * **Rush.** A short burst that pushes through the line far more easily.
 * **Tackle.** A lunge, only when the ball carrier is close enough. The kind of tackle is picked as the lunge starts (see Tackle presets). A runner mid juke makes it miss, and the tackler stays down for a while. Otherwise the two bodies collide and momentum decides (see The physics).
-* **Guard.** Held, the defender tails the nearest receiver on their own. Trailing like that never puts them in front of the ball.
+* **Guard.** Held, the defender tails the nearest receiver on their own, the deep threat included. Trailing like that never puts them in front of the ball.
 
 Everyone runs with weight: a player gets going over a couple of seconds and needs room to stop, and heavier players get going slower. A hard cut at speed is a plant and cut: speeding up, braking and turning share the grip of the cleats, so the player brakes and turns at once.
 
 ### Support players
 
-Five computer players a side fill the field out to eleven (`engine/support/`). They never run routes.
+Five computer players a side fill the field out to eleven (`engine/support/`). Four of them block and never run routes; the fifth is the deep threat.
 
-* **On offense.** Two tackles stretch the line on each end, two wings stand a step off its corners and a lead back sits three yards deep. On a pass they pick up the rushers nearest the QB and stand in their way. A wing or the lead back with nobody to block leaks a few yards past the line as an outlet: the QB can throw to him, but the throw stick has to be right on him, and a computer QB only looks there last. Once someone runs with the ball every one of them blocks for him: he takes the free defender who is the biggest threat to the ball and gets in his way.
+* **On offense.** Two tackles stretch the line on each end and two wings stand a step off its corners. On a pass they pick up the rushers nearest the QB and stand in their way. A wing with nobody to block leaks a few yards past the line as an outlet: the QB can throw to him, but the throw stick has to be right on him, and a computer QB only looks there last. Once someone runs with the ball every one of them blocks for him: he takes the free defender who is the biggest threat to the ball and gets in his way.
+* **The deep threat** (`support/roster.ts`, `routes.ts`, `bots/deep-read.ts`). The last support slot plays like a receiver: built long and light with a tinted visor, as quick as a runner, with good hands. He splits out on the line in the slot, eight and a half metres from the ball on the side with more room. On a pass call he runs a go route with a slight fade, inside the numbers, and keeps running it while the ball is in the air; on a run call, or once someone runs with the ball, he blocks like the others. He is a full pass target: he is in the throw stick's candidates with no penalty, the ring lights up on him, the passing lanes are read to him like anyone, and he plays any ball from his own QB, not only one thrown to him. A computer QB has a deep shot for him in about a third of his calls. On those he throws it once the deep threat is twelve yards past the line with nobody level with him or deeper within eleven metres across; otherwise he looks elsewhere. The camera behind the play keeps him in the formation shot. A match can leave him out (`deepThreat: false`), and the showcase's game does, since its media were filmed before he existed; that slot then plays the old lead back, three yards deep, who blocks.
 * **Blocks in space** (`support/clinch.ts`, `support/clinch-pick.ts`). A blocker who gets his hands on a defender locks up with him and the two push as one body, like a pair of linemen, while the defender works sideways toward the ball. The block move is picked like the linemen's: the punch as they meet, then a **drive** block while the blocker wins, an **anchor** while the defender does, a **pancake** that puts the defender on his back, or a **shed** where he rips free and the blocker stumbles. A defender pressing Rush wins more shoves. No block in space lasts much over three seconds, and a defender in one can still reach out for a carrier going right past him.
-* **On defence.** Two edges crowd the ends of the line and rush the passer. Two backers sit nine yards off and slide under any receiver in their zone. The deep man sits twenty yards back, always deeper than the deepest receiver. Once the ball is run the backers fly to it and the deep man keeps himself between the ball and the goal line, closing the angle, and only comes up to tackle when the runner is close. So a runner has to beat the line, then the backers, then the deep man.
+* **On defence.** Two edges crowd the ends of the line and rush the passer. Two backers sit nine yards off and slide under any receiver in their zone, the deep threat included. The deep man sits twenty yards back, always deeper than the deepest receiver. He is the same quick player who is the deep threat on offense. On about seven plays in ten he keys the other side's deep threat: he shades toward him from the snap and judges him a moment ahead, so he bails in time against the sprint, and stays a few steps over the top while still sitting deep in the middle for the runners. Once the ball is run the backers fly to it and the deep man keeps himself between the ball and the goal line, closing the angle, and only comes up to tackle when the runner is close. So a runner has to beat the line, then the backers, then the deep man.
 
 ### Kicking
 
@@ -212,8 +213,8 @@ Everything that happens to the ball and the bodies comes from the simulation (`e
 
 Difficulty comes from `src/games/kit/difficulty`: Easy (the default), Medium, Hard and Training. It sets how quickly bots react, how well they read the field, tackle and kick, and how hard they run. In Training they stand still.
 
-* The QB drops back, reads the receivers, throws to the most open one, and avoids throwing into a defender sat in front. With nobody open and room ahead, or when the read drags on, it presses Run and takes off.
-* Receivers run slants, gos, outs, curls, drags and posts, and go to meet the ball.
+* The QB drops back, reads the receivers, throws to the most open one, and avoids throwing into a defender sat in front. On some calls he looks for the deep threat over the top (see Support players). With nobody open and room ahead, or when the read drags on, it presses Run and takes off.
+* Receivers run slants, gos, outs, curls, drags and posts, and go to meet the ball. They stay in bounds so they can always be thrown to (`engine/route-bounds.ts`). Route waypoints sit at least a metre and a half inside the sidelines and the end line. A receiver steers by where his run takes him 0.4 seconds on: near a sideline he turns upfield along it, at the end line he turns across toward the middle, and one pushed out comes straight back in. A pass is always led to a spot in bounds.
 * Support players block, rush or play their layer (see Support players).
 * Defenders cover a receiver from over the top. A spare one rushes the QB on about half the plays and sits deep as a safety on the rest. A computer defender in the passing lane can knock it down; only the one best placed in it reads it well enough to catch it. Once someone has the ball they chase and tackle.
 * It calls a run on about one play in four, and on half of them with three yards or less to go.
@@ -359,4 +360,4 @@ For development: `?t=<seconds>` holds the trailer at that moment, and on a still
 npx vitest run src/games/football-3v3
 ```
 
-`engine/scoring.test.ts` plays whole computer games and pins how hard it is to score. Before the support players, the stamina and the juke cooldown, computer games scored about 4.8, 5.6 and 6.0 points a drive on Easy, Medium and Hard, nearly a touchdown every time. Now it is about 2.2, 2.1 and 2.6, close to real football, and the test holds it between about 0.8 and 3.5.
+`engine/scoring.test.ts` plays whole computer games and pins how hard it is to score. Before the support players, the stamina and the juke cooldown, computer games scored about 4.8, 5.6 and 6.0 points a drive on Easy, Medium and Hard, nearly a touchdown every time. That came down to about 2.2, 2.1 and 2.6. Routes that stay in bounds and the deep threat complete more passes, so over twelve seeded games it is now about 2.7, 3.5 and 3.2. The test holds Easy under 3.5 and Medium and Hard between 0.8 and 4. `engine/route-bounds.test.ts` checks that route runners never leave the field before the ball is caught and come back in when pushed out, and `engine/deep-threat.test.ts` covers the deep threat.
