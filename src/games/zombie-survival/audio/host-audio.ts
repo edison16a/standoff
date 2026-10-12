@@ -8,7 +8,7 @@ import { isBoss, KINDS } from "../engine/zombie-kinds";
 import { gunSlotX } from "../render/gun-layout";
 import { Ambience } from "./ambience";
 import { cheer } from "./crowd";
-import { GunSounds } from "./gun-sounds";
+import { GunSounds } from "./guns/gun-sounds";
 import { ScoreDirector } from "./score-director";
 import { Stingers } from "./stingers";
 import { ZombieSounds, type Spot } from "./zombie-sounds";
@@ -43,6 +43,8 @@ export class HostAudio {
   }
 
   onStart(): void {
+    // Guns are refilled on the spot, so reload sounds still booked must not play out.
+    this.guns.reset();
     this.growlAt.clear();
     this.stompAt.clear();
   }
@@ -57,16 +59,25 @@ export class HostAudio {
     const spot = (id: number) => this.spotOf(game, id);
     switch (event.type) {
       case "shot":
-        return this.guns.shot(event.weapon, pan(event.seat));
-      case "dry":
-        return this.guns.dry(pan(event.seat));
-      case "reload-start":
-        return this.guns.reload(event.weapon, pan(event.seat), event.seconds);
-      case "shell":
-        return this.guns.shell(pan(event.seat));
-      case "reloaded":
-        if (game.squad.get(event.seat)?.gun.weapon === "shotgun") this.guns.pump(pan(event.seat));
+        return this.guns.shot(event.seat, event.weapon, event.shotId, event.left, pan(event.seat));
+      case "dry": {
+        const gun = game.squad.get(event.seat)?.gun;
+        if (gun) this.guns.dry(gun.weapon, pan(event.seat));
         return;
+      }
+      case "reload-start":
+        return this.guns.reloadStart(event.seat, event.weapon, event.seconds, event.empty, pan(event.seat));
+      case "shell": {
+        // The shell is already counted, so the gun says whether another will follow.
+        const gun = game.squad.get(event.seat)?.gun;
+        if (gun) this.guns.shell(event.seat, gun.weapon, gun.ammo < gun.spec.magazine, pan(event.seat));
+        return;
+      }
+      case "reloaded": {
+        const gun = game.squad.get(event.seat)?.gun;
+        if (gun) this.guns.reloaded(event.seat, gun.weapon, pan(event.seat));
+        return;
+      }
       case "hit": {
         const at = spot(event.zombie);
         if (event.part === "weak") return this.zombies.weak(at, false);
@@ -124,6 +135,7 @@ export class HostAudio {
   }
 
   dispose(): void {
+    this.guns.dispose();
     this.ambience.stop();
     this.score.stop();
   }
