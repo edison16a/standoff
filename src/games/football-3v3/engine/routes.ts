@@ -1,6 +1,7 @@
 import type { Rng } from "./rng";
-import { FIELD, YARD } from "./field";
-import { clamp, type V2 } from "./vec";
+import { YARD } from "./field";
+import { insideRoute, ROUTE_EDGE } from "./route-bounds";
+import type { V2 } from "./vec";
 
 /** The routes a computer receiver runs. */
 export const ROUTES = ["slant", "go", "out", "curl", "drag", "post"] as const;
@@ -24,18 +25,25 @@ const SHAPES: Record<RouteKind, readonly [number, number][]> = {
 export const STOPS: ReadonlySet<RouteKind> = new Set(["curl"]);
 
 /**
- * The route's waypoints on the ground for a receiver lined up at `start`,
- * attacking toward `sign` along x. Waypoints stay inside the field.
+ * The deep threat's go route: straight up the field with a slight fade
+ * toward his sideline, held inside the numbers so the ball has room.
  */
-export function routePoints(kind: RouteKind, start: V2, sign: 1 | -1): V2[] {
+const DEEP: readonly [number, number][] = [[4, 0.3], [15, 1.2], [45, 3]];
+
+const lay = (shape: readonly [number, number][], start: V2, sign: 1 | -1, side?: number): V2[] => {
   const out = start.z >= 0 ? 1 : -1;
-  const edgeX = FIELD.endX - 1;
-  const edgeZ = FIELD.halfWidth - 1.2;
-  return SHAPES[kind].map(([down, wide]) => ({
-    x: clamp(start.x + sign * down * YARD, -edgeX, edgeX),
-    z: clamp(start.z + out * wide * YARD, -edgeZ, edgeZ),
-  }));
-}
+  return shape.map(([down, wide]) => insideRoute({ x: start.x + sign * down * YARD, z: start.z + out * wide * YARD }, side));
+};
+
+/**
+ * The route's waypoints on the ground for a receiver lined up at `start`,
+ * attacking toward `sign` along x. Waypoints stay a safe margin inside
+ * the sidelines and the end line (route-bounds.ts).
+ */
+export const routePoints = (kind: RouteKind, start: V2, sign: 1 | -1): V2[] => lay(SHAPES[kind], start, sign);
+
+/** The deep threat's go route, never wider than the numbers unless he lined up wider. */
+export const deepRoute = (start: V2, sign: 1 | -1): V2[] => lay(DEEP, start, sign, Math.max(ROUTE_EDGE.numbers, Math.min(ROUTE_EDGE.side, Math.abs(start.z))));
 
 /** Two receivers never run the same route on one play. */
 export function callRoutes(rng: Rng, count: number): RouteKind[] {

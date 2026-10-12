@@ -4,25 +4,29 @@ import { ballTrack } from "../catch/track";
 import { FIELD, YARD, yardToX } from "../field";
 import { startJuke } from "../juke";
 import type { Match } from "../match";
-import { readLane } from "../pass-lane";
+import { keepGoalInside } from "../route-bounds";
 import { receivers, throwTo } from "../passing";
 import { startRun } from "../qb-run";
-import { PASS } from "../tuning";
 import { startDive } from "../dive";
 import type { Athlete } from "../types";
 import { dist2, type V2 } from "../vec";
-import { ahead, headFor, runDir } from "./goal";
+import { deepRead, laneThreat } from "./deep-read";
+import { headFor, runDir } from "./goal";
 import type { FootballSkill } from "./skill";
 
 const defendersOf = (m: Match, a: Athlete) => m.athletes.filter((d) => d.team !== a.team && d.role !== "lineman" && !isDown(d));
 
-/** How open a receiver is: room from the nearest defender, a little extra for depth, and nobody in the lane to him. */
+/**
+ * How open a receiver is: room from the nearest defender, a little extra
+ * for depth, and nobody in the lane to him. The deep threat is read for
+ * the long ball (deep-read.ts).
+ */
 function openness(m: Match, qb: Athlete, r: Athlete, skill: FootballSkill): number {
-  const near = Math.min(99, ...defendersOf(m, qb).map((d) => dist2(d, r)));
+  const defenders = defendersOf(m, qb);
+  const near = Math.min(99, ...defenders.map((d) => dist2(d, r)));
   const depth = Math.max(0, (r.x - yardToX(m.offense, m.drive.los)) * m.sign);
-  const from = { x: qb.x, y: PASS.releaseHeight, z: qb.z };
-  const trap = (readLane(m, qb, from, ahead(r, 0.8))[0]?.threat ?? 0) * 10 * skill.accuracy;
-  return near + depth * 0.03 - trap + m.rng.gauss((1 - skill.accuracy) * 2);
+  const read = r.deep ? deepRead(m, qb, r, defenders, depth, skill) : -laneThreat(m, qb, r, 0.8) * 10 * skill.accuracy;
+  return near + depth * 0.03 + read + m.rng.gauss((1 - skill.accuracy) * 2);
 }
 
 /** Open grass in front of the QB: nobody within a few metres of a spot just ahead of him. */
@@ -46,8 +50,8 @@ export function readField(m: Match, qb: Athlete, skill: FootballSkill): void {
     let best: Athlete | null = null;
     let bestOpen = -Infinity;
     for (const r of options) {
-      // A support player leaking out is a last look, not the first read.
-      const o = openness(m, qb, r, skill) - (r.role === "support" ? 1.5 : 0);
+      // A support player leaking out is a last look, not the first read; the deep threat is a real one.
+      const o = openness(m, qb, r, skill) - (r.role === "support" && !r.deep ? 1.5 : 0);
       if (o > bestOpen) {
         best = r;
         bestOpen = o;
@@ -106,13 +110,22 @@ export function carry(m: Match, a: Athlete, skill: FootballSkill): void {
   runDir(a, dir);
 }
 
-/** A receiver runs the route, or, with the ball in the air to them, reads it and goes to meet it. */
+/**
+ * A receiver runs the route, or, with the ball in the air to them, reads
+ * it and goes to meet it. Off the ball he never runs out of bounds: near
+ * the sideline he bends upfield, and past it he comes back in.
+ */
 export function runRoute(m: Match, a: Athlete): void {
   const track = ballTrack(m, a);
   if (track) {
     a.bot.goal = track;
     return;
   }
+  followRoute(a);
+  a.bot.goal = keepGoalInside(a, a.bot.goal, attackSign(a.team));
+}
+
+function followRoute(a: Athlete): void {
   const route = a.bot.route;
   if (route.length === 0) return headFor(a, a, 1);
   while (a.bot.leg < route.length && dist2(a, route[a.bot.leg]!) < 1.3) a.bot.leg++;
@@ -123,10 +136,13 @@ export function runRoute(m: Match, a: Athlete): void {
   runDir(a, { x: last.x - prev.x, z: last.z - prev.z });
 }
 
-/** Teammates of the ball carrier get in the way of the nearest tackler. */
+/** Teammates of the ball carrier get in the way of the nearest tackler, staying in bounds while the QB scrambles. */
 export function escort(m: Match, a: Athlete, carrier: Athlete): void {
   const threats = defendersOf(m, carrier);
-  if (threats.length === 0) return runDir(a, { x: attackSign(a.team), z: 0 });
-  const t = threats.reduce((n, d) => (dist2(d, carrier) < dist2(n, carrier) ? d : n));
-  headFor(a, { x: (t.x + carrier.x) / 2, z: (t.z + carrier.z) / 2 }, 0.8);
+  if (threats.length === 0) runDir(a, { x: attackSign(a.team), z: 0 });
+  else {
+    const t = threats.reduce((n, d) => (dist2(d, carrier) < dist2(n, carrier) ? d : n));
+    headFor(a, { x: (t.x + carrier.x) / 2, z: (t.z + carrier.z) / 2 }, 0.8);
+  }
+  a.bot.goal = keepGoalInside(a, a.bot.goal, attackSign(a.team));
 }

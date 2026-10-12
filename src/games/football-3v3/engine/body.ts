@@ -21,14 +21,15 @@ export function createAthlete(id: number, team: TeamId, role: Role, slot: number
     move: { x: 0, z: 0 }, aim: null,
     action: { kind: "none" },
     jukeCd: 0, jukeCdFull: 0, jukeHeat: 0, stamina: 1, tackleCd: 0, rushT: 0, rushCd: 0, guard: null, blocked: 0, stagger: 0, stumble: null, catching: null, block: null,
-    bot: { wait: 0, route: [], leg: 0, stop: false, goal: { x: 0, z: 0 }, cover: null, rush: true, readAt: 2 },
+    bot: { wait: 0, route: [], leg: 0, stop: false, goal: { x: 0, z: 0 }, cover: null, rush: true, key: false, readAt: 2 },
     stats: emptyStats(),
+    deep: false,
   };
 }
 
 export function statsOf(a: Athlete): CharStats {
   if (a.build) return BUILDS[a.build].stats;
-  return a.role === "support" ? supportStats(a.slot) : LINEMAN_STATS;
+  return a.role === "support" ? supportStats(a.slot, a.deep) : LINEMAN_STATS;
 }
 
 /** Spamming jukes wears a player out: past a little heat, they run slower. */
@@ -38,7 +39,8 @@ export function heatDrag(a: Athlete): number {
 
 /** Top speed on fresh legs, from the player's speed rating and role alone. */
 export function freshSpeed(a: Athlete): number {
-  const role = a.role === "lineman" ? 0.7 : a.role === "support" ? SUPPORT.pace : 1;
+  // The deep threat runs with the skill players; the other support players are big men.
+  const role = a.role === "lineman" ? 0.7 : a.role === "support" && !a.deep ? SUPPORT.pace : 1;
   return (MOVE.baseSpeed + statsOf(a).speed * MOVE.perSpeed) * role;
 }
 
