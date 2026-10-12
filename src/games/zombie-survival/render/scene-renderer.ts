@@ -147,12 +147,10 @@ export class SurvivalRenderer implements SurvivalView {
     const at = new THREE.Vector3();
     const dir = new THREE.Vector3();
     rig.muzzle(at, dir);
-    this.effects.muzzle(at, dir, rig.weapon, seat);
+    // The engine has already taken the round, so what is left now is what the shot left behind.
+    const left = this.source.game.squad.get(seat)?.gun.ammo ?? 0;
     const colour = new THREE.Color(playerColor(seat));
-    results.forEach((r, i) => {
-      if (i < 3) this.effects.tracer(at, r.point, colour);
-      this.effects.impact(r.point, r.normal, r.impact, i < 3 ? this.camera.position : undefined);
-    });
+    this.effects.fire({ seat, weapon: rig.weapon, left, muzzle: at, dir, colour, eye: this.camera.position, rounds: results });
     this.rig.kick(rig.big ? 0.12 : 0.04);
   }
 
