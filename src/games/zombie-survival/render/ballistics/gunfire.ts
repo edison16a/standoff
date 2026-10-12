@@ -29,7 +29,7 @@ interface Strike {
  * It stays small enough that the crosshair can still be read through a
  * burst; the held gun's own kick does the rest.
  */
-const CAMERA_KICK: Record<WeaponId, number> = { shotgun: 0.12, ak47: 0.12, rifle: 0.04, smg: 0.04 };
+const CAMERA_KICK: Record<WeaponId, number> = { shotgun: 0.3, ak47: 0.2, rifle: 0.09, smg: 0.06 };
 
 /** What the gunfire draws with, all owned by the renderer. */
 export interface GunfireParts {
