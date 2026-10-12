@@ -74,7 +74,8 @@ A phone that joins during a game picks a build and joins the next one. A player 
 
 * After the winning basket the winners celebrate for a moment, then the basket plays again in slow motion, twice. First from over the scorer's shoulder, looking at the rim. Then from behind the defender who was on him, looking at the scorer as he rises.
 * The replay shows the play as it happened, frame by frame, with the ball's own sounds: the dribble, the rim, the glass and the net. The arena's calls stay out of it.
-* Any button skips it, but only when every player in the game has pressed one. The big screen shows a chip for each player that turns green once they have. The phone shows a big Skip button, then Waiting, and who else has agreed. A game with only computer players just plays it through.
+* The big screen shows the replay edge to edge, with only a small Replay tag in the top corner saying whose view it is. No bars cover it.
+* Any button skips it, but only when every player in the game has pressed one. Only the phones show the vote: a big Skip button, then Waiting, and who else has agreed. The big screen shows nothing about skipping. A game with only computer players just plays it through.
 * The vote follows who is there. A phone that drops during the replay stops holding it up, and one that comes back gets a say.
 * Until the replay rolls, the phones keep the controller. The join code and the results wait until it is done, so nothing covers it.
 
@@ -248,6 +249,7 @@ The dribble, the shake and the block are hand made presets too, picked by the ga
 
 * The light is physically based (`arena/lighting.ts`). The key is the lamp bank over the court, high and nearly overhead, so each player's shadow pools soft round his feet and the ball's follows it down. A weak sky and floor pair fills under the environment map, and a cool rim from behind the basket lifts the players off the stands.
 * The scene draws in linear light into a multisampled half float picture (`render/post/`). It then gets a soft bloom on the lamps, the LEDs and the highlights, the ACES filmic curve, a TV grade and a light vignette. Replays and the trophy ceremony ease into their own grade with depth of field, and only there (`post/look.ts`).
+* No bad pixel reaches the screen. A graphics card returns NaN for some shader math (pow or log of a negative, a divide by zero) where software drawing returns a number, and the bloom and the depth of field used to smear one bad pixel into a thick black streak. Every pass now cleans what it reads (`post/finite.ts`): NaN goes black and is filled from its neighbours, a glint past what a half float holds stays white, and negative light goes to zero. The glossy materials cap their light at the source (`capLight` in `materials/shader-patches.ts`), and `shader-safety.test.ts` scans every shader of the game and the victory kit for unguarded math.
 * The broadcast camera leads the play (`tv-camera.ts`, `broadcast-framing.ts`). It aims where the play is going, eases into and out of each pan on springs, and its lens tightens a few degrees when the players bunch up and opens when they spread.
 * Measured in Chromium at 1920 by 1080 on the full finish: about 128 draws and a million triangles a frame, counting the shadow pass and the floor's mirror, and about 50 MB of scene textures.
 

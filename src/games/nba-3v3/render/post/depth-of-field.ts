@@ -1,11 +1,17 @@
 import * as THREE from "three";
+import { FINITE } from "./finite";
 import { FullScreen, passMaterial } from "./fullscreen";
 
-/** Turns the depth buffer's 0 to 1 back into metres from the camera. */
+/**
+ * Turns the depth buffer's 0 to 1 back into metres from the camera. The
+ * depth is clamped and the divisor kept above zero, so a stray depth
+ * past the far plane (a resolve that rounds up, or a sample off the
+ * edge) can never divide by zero and blur a pixel by infinity.
+ */
 export const VIEW_DEPTH = /* glsl */ `
   uniform float uNear;
   uniform float uFar;
-  float metres(float d) { return (uNear * uFar) / (uFar - d * (uFar - uNear)); }
+  float metres(float d) { return (uNear * uFar) / max(uFar - clamp(d, 0.0, 1.0) * (uFar - uNear), 1e-6); }
 `;
 
 /**
@@ -18,14 +24,18 @@ export const CIRCLE = /* glsl */ `
   uniform float uRange;
   float circle(float z) {
     float off = abs(z - uFocus) - uRange;
-    return clamp(off / (uFocus * 0.9 + 1.0), 0.0, 1.0);
+    // The divisor stays positive even for a focus behind the lens, so the blur is never NaN.
+    return clamp(off / max(uFocus * 0.9 + 1.0, 0.1), 0.0, 1.0);
   }
 `;
 
 /**
  * Gathers a disc of samples round each pixel at half resolution. A
  * sample counts only as far as its own blur reaches this pixel, so a
- * sharp player is not smeared over the blurred stands behind him.
+ * sharp player is not smeared over the blurred stands behind him. A bad
+ * sample (NaN or infinity) counts for nothing: summed in, one bad pixel
+ * would spoil every pixel whose disc reaches it, a thick black stroke.
+ * A bad pixel itself is filled from its neighbours, for the grade to use.
  */
 const GATHER = /* glsl */ `
   uniform sampler2D tColor;
@@ -35,11 +45,14 @@ const GATHER = /* glsl */ `
   varying vec2 vUv;
   ${VIEW_DEPTH}
   ${CIRCLE}
+  ${FINITE}
   const int TAPS = 28;
   void main() {
     float centre = circle(metres(texture2D(tDepth, vUv).r));
-    vec3 sum = texture2D(tColor, vUv).rgb;
-    float total = 1.0;
+    vec3 own = texture2D(tColor, vUv).rgb;
+    bool hole = nonFinite(own);
+    float total = hole ? 0.0 : 1.0;
+    vec3 sum = finite(own) * total;
     for (int i = 1; i < TAPS; i++) {
       float r = sqrt(float(i) / float(TAPS));
       float a = float(i) * 2.39996323;
@@ -48,10 +61,15 @@ const GATHER = /* glsl */ `
       float c = circle(metres(texture2D(tDepth, uv).r));
       // The sample reaches here if its own blur is at least this far out, or this pixel is blurred over it.
       float w = smoothstep(r - 0.15, r, max(c, centre * 0.6));
-      sum += texture2D(tColor, uv).rgb * w;
+      // A bad pixel here is filled from its neighbours, the nearest counting most, even where all is sharp.
+      // The whole disc takes part, so a bad patch wider than a pixel or two still finds good colour.
+      if (hole) w = max(w, 1.0 - r);
+      vec3 tap = texture2D(tColor, uv).rgb;
+      if (nonFinite(tap)) w = 0.0;
+      sum += finite(tap) * w;
       total += w;
     }
-    gl_FragColor = vec4(sum / total, centre);
+    gl_FragColor = vec4(sum / max(total, 1e-4), centre);
   }
 `;
 

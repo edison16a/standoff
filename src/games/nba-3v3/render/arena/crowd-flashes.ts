@@ -17,7 +17,8 @@ const VERTEX = /* glsl */ `
     vFlash = smoothstep(0.985, 0.995, t) * (1.0 - smoothstep(0.995, 1.0, t));
     vec4 view = modelViewMatrix * vec4(position, 1.0);
     gl_Position = projectionMatrix * view;
-    gl_PointSize = vFlash > 0.0 ? uScale * 0.22 / -view.z : 0.0;
+    // A point at the camera's own depth would divide by zero: an infinite point size, undefined on real cards.
+    gl_PointSize = vFlash > 0.0 ? uScale * 0.22 / max(-view.z, 0.01) : 0.0;
   }
 `;
 
