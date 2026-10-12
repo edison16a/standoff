@@ -3,6 +3,7 @@ import { ROUNDS } from "../../ballistics/rounds";
 import type { WeaponId } from "../../engine/weapons";
 import { FlyingRounds, type Landing } from "../ballistics/flying-rounds";
 import { roundKind } from "../ballistics/round-look";
+import { Casings, type Ejection } from "../casings/casings";
 import { lowQuality } from "../quality";
 import { FLASH_STYLES } from "./flash-styles";
 import { BarrelHeat } from "./heat";
@@ -11,6 +12,7 @@ import { MuzzleFlash } from "./muzzle-flash";
 import { Smoke } from "./smoke";
 
 export type { Impact } from "./impacts";
+export type { Ejection } from "../casings/casings";
 
 /** One bullet of a shot: where the raycast says it lands and what it strikes. */
 export interface ShotRound {
@@ -42,8 +44,8 @@ const FLASHED = 3;
 
 /**
  * Everything a shot leaves in the air: the flash and smoke at the
- * muzzle, the rounds flying at their real speed, and the impact when
- * each one gets there. Each part lives in its own module; this ties them
+ * muzzle, the rounds flying at their real speed, the impact when each
+ * one gets there, and the spent cases on the street. Each part lives in its own module; this ties them
  * to one clock and one random source.
  */
 export class Effects {
@@ -52,6 +54,7 @@ export class Effects {
   private readonly impacts: Impacts;
   private readonly smoke: Smoke;
   private readonly rounds: FlyingRounds;
+  private readonly casings: Casings;
   private readonly heat = new Map<number, BarrelHeat>();
   private readonly low: boolean;
   /** Where the camera was at the last shot, for sizing far hit flashes when the round lands. */
@@ -66,7 +69,8 @@ export class Effects {
     this.impacts = new Impacts(random, low);
     this.smoke = new Smoke(random, low);
     this.rounds = new FlyingRounds(low ? 64 : 160, (at, landing) => this.land(at, landing));
-    this.group.add(this.flash.group, this.impacts.group, this.smoke.mesh, this.rounds.mesh);
+    this.casings = new Casings(low ? 40 : 120, (at) => this.smoke.trail(at));
+    this.group.add(this.flash.group, this.impacts.group, this.smoke.mesh, this.rounds.mesh, this.casings.group);
   }
 
   /** Lights smoke and haze with the scene's fog colour, so they sit in the same air. */
@@ -118,9 +122,13 @@ export class Effects {
     for (let i = 0; i < wisps; i++) this.smoke.wisp(at);
   }
 
-  /** A puff of smoke trailing off something hot, like a spent shotgun hull. */
-  trail(at: THREE.Vector3): void {
-    this.smoke.trail(at);
+  /**
+   * Throws a spent case `delay` seconds from now. `seed` comes from the
+   * shot, so the sound builds the same case. `locate` finds the gun's
+   * port at that moment, or null if the gun is gone.
+   */
+  eject(weapon: WeaponId, seed: number, delay: number, locate: () => Ejection | null): void {
+    this.casings.eject(weapon, seed, delay, locate);
   }
 
   /** Where a bullet lands, right now. `eye` adds a flash sized to the distance, so a far hit reads. */
@@ -133,11 +141,13 @@ export class Effects {
     this.impacts.splatter(at, big);
   }
 
-  update(dt: number): void {
+  /** `eye` is the camera, so cases left far behind can be swept up. */
+  update(dt: number, eye?: THREE.Vector3): void {
     // Rounds first, so an impact that lands this frame is drawn this frame.
     this.rounds.update(dt);
     this.flash.update(dt);
     this.impacts.update(dt);
+    this.casings.update(dt, eye);
     this.smoke.update(dt);
   }
 
@@ -146,6 +156,7 @@ export class Effects {
     this.impacts.dispose();
     this.smoke.dispose();
     this.rounds.dispose();
+    this.casings.dispose();
   }
 
   /** A round has reached what it was fired at: sparks, goo or dust, and the hit flash. */

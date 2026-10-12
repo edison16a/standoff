@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { ScreenPoint } from "@/games/kit/aim/aim-math";
-import { playerColor } from "@/games/kit/players";
 import type { Seat } from "@/platform/protocol";
 import type { GameEvent } from "../engine/events";
 import { fightFrame, segmentAt } from "../engine/route";
@@ -11,6 +10,7 @@ import { isBoss } from "../engine/zombie-kinds";
 import type { SurvivalView } from "../host/survival-host";
 import { AimCaster, type CastResult } from "./aim-caster";
 import { Atmosphere } from "./atmosphere";
+import { Gunfire } from "./ballistics/gunfire";
 import { lowQuality } from "./quality";
 import type { SceneSource, TargetPoint } from "./scene-source";
 import { CameraRig, sailed } from "./camera-rig";
@@ -46,6 +46,7 @@ export class SurvivalRenderer implements SurvivalView {
   private readonly env: THREE.Texture;
   private readonly atmosphere: Atmosphere;
   private readonly pending = new Map<Seat, CastResult[]>();
+  private readonly gunfire: Gunfire;
   private readonly idle = lobbyZombies();
   private readonly horde = new EscapeHorde();
   private last = 0;
@@ -75,6 +76,7 @@ export class SurvivalRenderer implements SurvivalView {
     this.crosshairs = new CrosshairLayer(this.camera);
     this.chopper = new ChopperView(this.scene);
     this.caster = new AimCaster(this.camera);
+    this.gunfire = new Gunfire({ camera: this.camera, view: this.rig, guns: this.guns, effects: this.effects, game: () => this.source.game });
     this.scene.add(this.atmosphere.group, this.world.group, this.zombies.group, this.effects.group, this.guns.lasers);
   }
 
@@ -116,10 +118,10 @@ export class SurvivalRenderer implements SurvivalView {
     const { shooters, sights } = aimAll(this.source, this.caster, [...this.zombies.proxies(), ...this.world.solids()], nowMs);
     const armed = game.phase !== "cutscene" && game.phase !== "escaped";
     this.guns.update(shooters, dt, time, armed);
-    this.smokeBarrels(dt);
+    this.gunfire.barrels(shooters.map((s) => s.seat), dt);
     // A fallen team's trigger is off, so its crosshairs leave the end card clear.
     this.crosshairs.update(sights, dt, armed && game.phase !== "down");
-    this.effects.update(dt);
+    this.effects.update(dt, this.camera.position);
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -138,26 +140,18 @@ export class SurvivalRenderer implements SurvivalView {
   }
 
   shotFx(seat: Seat): void {
-    const rig = this.guns.rig(seat);
     const results = this.pending.get(seat) ?? [];
     this.pending.delete(seat);
     this.crosshairs.fire(seat);
-    if (!rig) return;
-    rig.fire();
-    const at = new THREE.Vector3();
-    const dir = new THREE.Vector3();
-    rig.muzzle(at, dir);
-    // The engine has already taken the round, so what is left now is what the shot left behind.
-    const left = this.source.game.squad.get(seat)?.gun.ammo ?? 0;
-    const colour = new THREE.Color(playerColor(seat));
-    this.effects.fire({ seat, weapon: rig.weapon, left, muzzle: at, dir, colour, eye: this.camera.position, rounds: results });
-    this.rig.kick(rig.big ? 0.12 : 0.04);
+    this.gunfire.shot(seat, results);
   }
 
   react(event: GameEvent): void {
     const rig = "seat" in event && event.seat ? this.guns.rig(event.seat) : undefined;
     const at = new THREE.Vector3();
     switch (event.type) {
+      case "shot":
+        return this.gunfire.eject(event.seat, event.weapon, event.shotId);
       case "reload-start":
         return rig?.startReload(event.seconds);
       case "shell":
@@ -195,18 +189,6 @@ export class SurvivalRenderer implements SurvivalView {
     setGunEnvironment(null);
     this.env.dispose();
     this.renderer.dispose();
-  }
-
-  /** A barrel hot from rapid fire trails a wisp from its muzzle, wherever the gun has swung. */
-  private smokeBarrels(dt: number): void {
-    const at = new THREE.Vector3();
-    const dir = new THREE.Vector3();
-    for (const { seat } of this.source.armed()) {
-      const rig = this.guns.rig(seat);
-      if (!rig) continue;
-      rig.muzzle(at, dir);
-      this.effects.barrel(seat, at, dt);
-    }
   }
 
   /** Applies the source's own framing, if it has one, over the camera rig's. */
