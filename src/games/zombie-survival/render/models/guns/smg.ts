@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { MeshBuilder } from "../../mesh-builder";
-import { boreHole, gunMaterials, laserModule, marker, profile, type GunModel } from "./gun-kit";
+import { boreHole, gunMaterials, laserModule, marker, profile, type GunMaterials, type GunModel } from "./gun-kit";
+import { portSlide, spareOf } from "./moving-parts";
 
 const X = Math.PI / 2;
 
@@ -59,7 +60,22 @@ export function buildSmg(): GunModel {
   laserModule(b, m, 0, -0.052, -0.3);
   root.add(b.build("smg-body"));
 
-  // Curved magazine, built as a stack of slightly turned segments.
+  const { magazine, bolt } = smgParts(m, root);
+
+  const muzzle = marker("muzzle", 0, 0, -0.405);
+  const laser = marker("laser", 0, -0.052, -0.34);
+  root.add(muzzle, laser);
+  // The ejection port, on the right of the receiver.
+  const ejector = marker("ejector", 0.024, 0.004, -0.02);
+  root.add(ejector);
+  return { root, muzzle, laser, ejector, magazine, pump: null, bolt, shell: null, length: 0.75 };
+}
+
+// Moving parts. Everything below is animated by the gun rig and kept apart
+// from the still body above.
+
+/** Curved steel magazine, built as a stack of slightly turned segments. */
+function smgMagazine(m: GunMaterials): THREE.Group {
   const magazine = new THREE.Group();
   magazine.name = "magazine";
   const mb = new MeshBuilder();
@@ -74,23 +90,40 @@ export function buildSmg(): GunModel {
   mb.box(0.03, 0.01, 0.045, m.polymer, [0, y - 0.01, z - 0.004], [0.45, 0, 0], 0.003);
   mb.box(0.018, 0.006, 0.02, m.brass, [0, 0.003, 0.004]);
   magazine.add(mb.build("magazine"));
-  magazine.position.set(0, -0.052, -0.09);
-  root.add(magazine);
+  return magazine;
+}
 
-  // The cocking handle sticks out on the left and snaps back with each shot.
+/** The cocking handle rests at ten o'clock on the tube, tipped up off the left side. */
+const SMG_HANDLE_TILT = -0.35;
+
+/**
+ * The magazine and its spare, the bolt in the ejection port, and the
+ * cocking handle at the front left of the tube over the barrel. The
+ * handle's origin is on the tube's axis, so turning it about z flips it
+ * up into the notch it locks in, as the real one does.
+ */
+function smgParts(m: GunMaterials, root: THREE.Group): { magazine: THREE.Object3D; bolt: THREE.Object3D } {
+  const magazine = smgMagazine(m);
+  magazine.position.set(0, -0.052, -0.09);
+  const spare = spareOf(magazine, () => smgMagazine(m));
+
   const bolt = new THREE.Group();
   bolt.name = "bolt";
   const bb = new MeshBuilder();
-  bb.box(0.03, 0.008, 0.01, m.steel, [-0.022, 0.022, -0.3], [0, 0.4, 0]);
-  bb.sphere(0.006, m.polymer, [-0.037, 0.022, -0.306]);
+  bb.box(0.026, 0.007, 0.009, m.steel, [-0.021, 0, 0.002], [0, 0.25, 0], 0.002);
+  bb.sphere(0.0062, m.polymer, [-0.035, 0, -0.002], [1, 1, 1.2], 10);
   bolt.add(bb.build("bolt"));
-  root.add(bolt);
+  bolt.position.set(0, 0.022, -0.3);
+  bolt.rotation.z = SMG_HANDLE_TILT;
 
-  const muzzle = marker("muzzle", 0, 0, -0.405);
-  const laser = marker("laser", 0, -0.052, -0.34);
-  root.add(muzzle, laser);
-  // The ejection port, on the right of the receiver.
-  const ejector = marker("ejector", 0.024, 0.004, -0.02);
-  root.add(ejector);
-  return { root, muzzle, laser, ejector, magazine, pump: null, bolt, shell: null, length: 0.75 };
+  // The slot the handle runs back along, cut in the tube's left side.
+  const slot = new MeshBuilder();
+  slot.box(0.002, 0.004, 0.085, m.hole, [0, 0.0098, -0.005]);
+  const slotGroup = slot.build("slot");
+  slotGroup.position.set(0, 0.022, -0.26);
+  slotGroup.rotation.z = SMG_HANDLE_TILT + Math.PI / 2;
+
+  const slide = portSlide(m, 0.0222, 0.004, 0.005, 0.017, 0.05);
+  root.add(magazine, spare, bolt, slide, slotGroup);
+  return { magazine, bolt };
 }

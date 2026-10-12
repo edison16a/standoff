@@ -41,7 +41,10 @@ vec3 grassAt(vec2 p, vec3 eye, out vec2 tilt) {
   vec3 view = normalize(vec3(p.x, 0.0, p.y) - eye);
   c *= 1.0 + onField * stripe * (0.06 + 0.07 * view.z);
   // Worn and drier between the hashes, most of all round midfield and the goal lines where the lines meet.
-  float wear = (1.0 - smoothstep(HASH_Z, HASH_Z + 4.0, abs(p.y))) * (0.45 + 0.55 * exp(-pow(p.x / 14.0, 2.0)) + 0.6 * exp(-pow((abs(p.x) - GOAL_X + 4.0) / 6.0, 2.0)));
+  // The squares are written out: pow of a negative base is NaN on most cards, and both go negative.
+  float mid = p.x / 14.0;
+  float goalLine = (abs(p.x) - GOAL_X + 4.0) / 6.0;
+  float wear = (1.0 - smoothstep(HASH_Z, HASH_Z + 4.0, abs(p.y))) * (0.45 + 0.55 * exp(-mid * mid) + 0.6 * exp(-goalLine * goalLine));
   c = mix(c, c * vec3(1.18, 1.0, 0.7), clamp(wear * coarse.r * 0.55, 0.0, 0.4));
   return c;
 }

@@ -10,6 +10,7 @@ Shared code that games may import. The kit never imports a game, and games still
 * `steps/StepShell.tsx`: the frame for a game's phone setup. Every game uses the same order: the platform asks for a name (or Skip), then the game shows **Calibrate**, then its own choices (weapon, kart, blade), then **Ready**. Each step is its own page.
 * `aim/`: pointing the phone at the big screen, for Fruit Slicer, Zombie Survival, Shooting Gallery and Paintball Battle. `aim/look/` is the calibration look every aiming game shares, Blade Clash included.
 * `victory/`: winners' scenes. Confetti, spotlights, a circling camera, trophies and a belt made in code, podiums, and the winners' names over it all. See Victory scenes below.
+* `post/`: what every game's HDR finish shares so no bad pixel reaches the screen. A graphics card gives NaN for some shader maths where software drawing gives a number, and a bloom or depth of field spreads one bad pixel into a thick black streak. `FINITE` (`finite`, `nonFinite`) cleans each pixel a pass reads: NaN and negatives go black, a glint past what a half float holds stays white. `FILL` (`fillHole`) fills a bad pixel from its neighbours in the last pass. `VIEW_DEPTH` turns depth into metres without ever dividing by zero, and `safeFocus` keeps the focus finite. `shader-scan.ts` is for tests: it scans a game's shaders for pow, log, normalize and point sizes that can give NaN.
 * `leaderboard/`: local leaderboards that keep every finished run on this computer, and the list that shows them. See Leaderboards below.
 
 ## Aiming

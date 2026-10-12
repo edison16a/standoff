@@ -60,10 +60,10 @@ export class Gunfire {
     const { guns, effects, game, camera, view } = this.parts;
     const rig = guns.rig(seat);
     if (!rig) return;
-    rig.fire();
-    rig.muzzle(this.at, this.dir);
     // The engine has already taken the round, so what is left now is what the shot left behind.
-    const left = game().squad.get(seat)?.gun.ammo ?? 0;
+    const left = game().squad.get(seat)?.gun.ammo ?? 1;
+    rig.fire(left);
+    rig.muzzle(this.at, this.dir);
     this.colour.set(playerColor(seat));
     const times = effects.fire({ seat, weapon: rig.weapon, left, muzzle: this.at, dir: this.dir, colour: this.colour, eye: camera.position, rounds: results });
     view.kick(CAMERA_KICK[rig.weapon]);

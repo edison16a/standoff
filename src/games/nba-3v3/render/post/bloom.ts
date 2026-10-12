@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { FINITE } from "./finite";
+import { FINITE } from "@/games/kit/post";
 import { FullScreen, passMaterial } from "./fullscreen";
 
 /** Halvings below the picture's own size: half, a quarter, down to a thirty second. */

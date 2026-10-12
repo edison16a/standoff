@@ -1,12 +1,6 @@
 import * as THREE from "three";
+import { FINITE, VIEW_DEPTH } from "@/games/kit/post";
 import { FullScreen, passMaterial } from "./fullscreen";
-
-/** The depth buffer's 0 to 1 back into metres from the lens. */
-export const METRES = /* glsl */ `
-  uniform float uNear;
-  uniform float uFar;
-  float metres(float d) { return (uNear * uFar) / (uFar - d * (uFar - uNear)); }
-`;
 
 /**
  * How soft a point is, 0 sharp to 1 fully blurred: sharp inside the band
@@ -18,7 +12,8 @@ export const CIRCLE = /* glsl */ `
   uniform float uRange;
   float circle(float z) {
     float off = abs(z - uFocus) - uRange;
-    return clamp(off / (uFocus * 0.8 + 2.0), 0.0, 1.0);
+    // The divisor stays positive even for a focus behind the lens, so the blur is never NaN.
+    return clamp(off / max(uFocus * 0.8 + 2.0, 0.1), 0.0, 1.0);
   }
 `;
 
@@ -40,7 +35,7 @@ export const UPSAMPLE = /* glsl */ `
       for (int i = 0; i < 2; i++) {
         vec4 s = texture2D(tex, base + vec2(float(i), float(j)) * uDofTexel);
         float w = mix(1.0 - f.x, f.x, float(i)) * mix(1.0 - f.y, f.y, float(j)) / (0.02 + abs(s.a - coc));
-        sum += s.rgb * w;
+        sum += finite(s.rgb) * w;
         total += w;
       }
     }
@@ -51,7 +46,10 @@ export const UPSAMPLE = /* glsl */ `
 /**
  * A disc of samples round each pixel, at half resolution. A sample
  * counts only as far as its own blur reaches this pixel, so a sharp
- * player is never smeared over the soft stands behind him.
+ * player is never smeared over the soft stands behind him. A bad sample
+ * (NaN or infinity) counts for nothing, since summed in it would spoil
+ * every pixel whose disc reaches it: a thick black stroke. A bad pixel
+ * itself is filled from its neighbours, for the grade to use.
  */
 const GATHER = /* glsl */ `
   uniform sampler2D tColor;
@@ -59,14 +57,17 @@ const GATHER = /* glsl */ `
   uniform vec2 uTexel;
   uniform float uRadius;
   varying vec2 vUv;
-  ${METRES}
+  ${VIEW_DEPTH}
   ${CIRCLE}
+  ${FINITE}
   const int TAPS = 24;
   void main() {
     float z = metres(texture2D(tDepth, vUv).r);
     float centre = circle(z);
-    vec3 sum = texture2D(tColor, vUv).rgb;
-    float total = 1.0;
+    vec3 own = texture2D(tColor, vUv).rgb;
+    bool hole = nonFinite(own);
+    float total = hole ? 0.0 : 1.0;
+    vec3 sum = finite(own) * total;
     for (int i = 1; i < TAPS; i++) {
       float r = sqrt(float(i) / float(TAPS));
       float a = float(i) * 2.39996323;
@@ -77,10 +78,14 @@ const GATHER = /* glsl */ `
       // player in front never bleeds a glowing outline into the soft stands behind him.
       float reach = zs < z - 0.5 ? c : max(c, centre * 0.6);
       float w = smoothstep(r - 0.15, r, reach);
-      sum += texture2D(tColor, uv).rgb * w;
+      // A bad pixel here is filled from the whole disc, the nearest counting most.
+      if (hole) w = max(w, 1.0 - r);
+      vec3 tap = texture2D(tColor, uv).rgb;
+      if (nonFinite(tap)) w = 0.0;
+      sum += finite(tap) * w;
       total += w;
     }
-    gl_FragColor = vec4(sum / total, centre);
+    gl_FragColor = vec4(sum / max(total, 1e-4), centre);
   }
 `;
 

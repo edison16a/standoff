@@ -153,7 +153,7 @@ export class SurvivalRenderer implements SurvivalView {
       case "shot":
         return this.gunfire.eject(event.seat, event.weapon, event.shotId);
       case "reload-start":
-        return rig?.startReload(event.seconds);
+        return rig?.startReload(event.seconds, event.empty);
       case "shell":
         return rig?.shell();
       case "reloaded":

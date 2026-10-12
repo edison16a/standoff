@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { MeshBuilder } from "../../mesh-builder";
-import { boreHole, gunMaterials, laserModule, marker, profile, type GunModel } from "./gun-kit";
+import { boreHole, gunMaterials, laserModule, marker, profile, type GunMaterials, type GunModel } from "./gun-kit";
+import { portSlide } from "./moving-parts";
 
 const Z = Math.PI / 2;
 
@@ -57,7 +58,26 @@ export function buildShotgun(): GunModel {
   laserModule(b, m, 0, -0.064, -0.5);
   root.add(b.build("shotgun-body"));
 
-  // The slide and its action bars move together.
+  const { pump, shell } = shotgunParts(m, root);
+
+  const muzzle = marker("muzzle", 0, 0, -0.665);
+  const laser = marker("laser", 0, -0.064, -0.54);
+  root.add(muzzle, laser);
+  // The ejection port, on the right of the receiver.
+  const ejector = marker("ejector", 0.028, 0.002, -0.065);
+  root.add(ejector);
+  return { root, muzzle, laser, ejector, magazine: null, pump, bolt: null, shell, length: 1.12 };
+}
+
+// Moving parts. Everything below is animated by the gun rig and kept apart
+// from the still body above.
+
+/**
+ * The wooden slide with its action bars, the bolt that rides back with
+ * them and opens the ejection port, and a loose shell for the reload to
+ * thumb into the loading port, hidden until then.
+ */
+function shotgunParts(m: GunMaterials, root: THREE.Group): { pump: THREE.Object3D; shell: THREE.Object3D } {
   const pump = new THREE.Group();
   pump.name = "pump";
   const p = new MeshBuilder();
@@ -66,7 +86,6 @@ export function buildShotgun(): GunModel {
   p.tube(0.021, 0.012, m.polymer, [0, -0.031, -0.37], 20);
   for (const x of [-0.015, 0.015]) p.box(0.003, 0.006, 0.13, m.steel, [x, -0.03, -0.15]);
   pump.add(p.build("pump"));
-  root.add(pump);
 
   const shell = new THREE.Group();
   shell.name = "loose-shell";
@@ -76,13 +95,8 @@ export function buildShotgun(): GunModel {
   shell.add(s.build("shell"));
   shell.position.set(0, -0.09, -0.02);
   shell.visible = false;
-  root.add(shell);
 
-  const muzzle = marker("muzzle", 0, 0, -0.665);
-  const laser = marker("laser", 0, -0.064, -0.54);
-  root.add(muzzle, laser);
-  // The ejection port, on the right of the receiver.
-  const ejector = marker("ejector", 0.028, 0.002, -0.065);
-  root.add(ejector);
-  return { root, muzzle, laser, ejector, magazine: null, pump, bolt: null, shell, length: 1.12 };
+  const bolt = portSlide(m, 0.0262, 0.002, -0.0325, 0.023, 0.065);
+  root.add(pump, shell, bolt);
+  return { pump, shell };
 }

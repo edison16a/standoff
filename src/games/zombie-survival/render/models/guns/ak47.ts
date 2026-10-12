@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { MeshBuilder } from "../../mesh-builder";
-import { boreHole, gunMaterials, laserModule, marker, profile, type GunModel } from "./gun-kit";
+import { boreHole, gunMaterials, laserModule, marker, profile, type GunMaterials, type GunModel } from "./gun-kit";
+import { portSlide, spareOf } from "./moving-parts";
 
 /**
  * The AK-47: stamped steel receiver with a ribbed dust cover, wooden
@@ -57,33 +58,7 @@ export function buildAk47(): GunModel {
   laserModule(b, m, 0, -0.056, -0.305);
   root.add(b.build("ak-body"));
 
-  // The banana magazine curves hard forward.
-  const magazine = new THREE.Group();
-  magazine.name = "magazine";
-  const mb = new MeshBuilder();
-  let y = 0;
-  let z = 0;
-  for (let i = 0; i < 7; i++) {
-    const a = 0.1 + i * 0.075;
-    mb.box(0.026, 0.034, 0.056, m.metal, [0, y - 0.017, z], [a, 0, 0], 0.003);
-    mb.box(0.028, 0.03, 0.008, m.metal, [0, y - 0.017, z - 0.025], [a, 0, 0]);
-    y -= Math.cos(a) * 0.031;
-    z -= Math.sin(a) * 0.031;
-  }
-  mb.box(0.03, 0.01, 0.062, m.metal, [0, y - 0.003, z], [0.62, 0, 0], 0.003);
-  mb.box(0.014, 0.005, 0.03, m.brass, [0, 0.002, 0.004]);
-  magazine.add(mb.build("magazine"));
-  magazine.position.set(0, -0.034, -0.08);
-  root.add(magazine);
-
-  // The charging handle rides the bolt carrier on the right.
-  const bolt = new THREE.Group();
-  bolt.name = "bolt";
-  const bb = new MeshBuilder();
-  bb.box(0.022, 0.009, 0.012, m.steel, [0.03, 0.012, -0.05]);
-  bb.sphere(0.007, m.steel, [0.042, 0.012, -0.05]);
-  bolt.add(bb.build("bolt"));
-  root.add(bolt);
+  const { magazine, bolt } = akParts(m, root);
 
   const muzzle = marker("muzzle", 0, 0, -0.622);
   const laser = marker("laser", 0, -0.056, -0.345);
@@ -92,4 +67,62 @@ export function buildAk47(): GunModel {
   const ejector = marker("ejector", 0.024, 0.012, -0.03);
   root.add(ejector);
   return { root, muzzle, laser, ejector, magazine, pump: null, bolt, shell: null, length: 1.06 };
+}
+
+// Moving parts. Everything below is animated by the gun rig and kept apart
+// from the still body above.
+
+/** How far the magazine's front lug sits ahead of its middle, where the old origin was. */
+const LUG = 0.028;
+
+/**
+ * The steel banana magazine, curving hard forward. Its origin is the front
+ * lug, the hook it rocks on, so turning it about x rocks it in and out of
+ * the well the way a real one goes.
+ */
+function akMagazine(m: GunMaterials): THREE.Group {
+  const magazine = new THREE.Group();
+  magazine.name = "magazine";
+  const mb = new MeshBuilder();
+  let y = 0;
+  let z = LUG;
+  for (let i = 0; i < 7; i++) {
+    const a = 0.1 + i * 0.075;
+    mb.box(0.026, 0.034, 0.056, m.metal, [0, y - 0.017, z], [a, 0, 0], 0.003);
+    mb.box(0.028, 0.03, 0.008, m.metal, [0, y - 0.017, z - 0.025], [a, 0, 0]);
+    y -= Math.cos(a) * 0.031;
+    z -= Math.sin(a) * 0.031;
+  }
+  mb.box(0.03, 0.01, 0.062, m.metal, [0, y - 0.003, z], [0.62, 0, 0], 0.003);
+  mb.box(0.014, 0.005, 0.03, m.brass, [0, 0.002, LUG + 0.004]);
+  // The front lug itself and the rear locking lug.
+  mb.box(0.012, 0.006, 0.006, m.steel, [0, 0.002, 0.002]);
+  mb.box(0.014, 0.005, 0.008, m.steel, [0, 0.001, LUG * 2 - 0.004]);
+  magazine.add(mb.build("magazine"));
+  return magazine;
+}
+
+/**
+ * The magazine and its spare, the paddle release behind the well, the
+ * bolt carrier showing in the ejection port, and the charging handle on
+ * the carrier's right side, which rides back with it on every shot.
+ */
+function akParts(m: GunMaterials, root: THREE.Group): { magazine: THREE.Object3D; bolt: THREE.Object3D } {
+  const magazine = akMagazine(m);
+  magazine.position.set(0, -0.034, -0.08 - LUG);
+  const spare = spareOf(magazine, () => akMagazine(m));
+
+  const bolt = new THREE.Group();
+  bolt.name = "bolt";
+  const bb = new MeshBuilder();
+  bb.box(0.022, 0.009, 0.012, m.steel, [0.03, 0.012, -0.05]);
+  bb.sphere(0.007, m.steel, [0.042, 0.012, -0.05]);
+  bolt.add(bb.build("bolt"));
+
+  const slide = portSlide(m, 0.0224, 0.012, 0.02, 0.013, 0.1);
+
+  const paddle = new MeshBuilder();
+  paddle.box(0.016, 0.004, 0.012, m.steel, [0, -0.038, -0.046], [0.4, 0, 0], 0.001);
+  root.add(magazine, spare, bolt, slide, paddle.build("paddle"));
+  return { magazine, bolt };
 }

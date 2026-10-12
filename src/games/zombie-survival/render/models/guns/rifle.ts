@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { MeshBuilder, type V3 } from "../../mesh-builder";
 import { boreHole, gunMaterials, laserModule, marker, profile, type GunMaterials, type GunModel } from "./gun-kit";
+import { PART, portSlide, spareOf } from "./moving-parts";
 
 /** A picatinny rail: a flat bar with a row of teeth. */
 function rail(b: MeshBuilder, m: GunMaterials, at: V3, length: number, rot: V3 = [0, 0, 0]): void {
@@ -33,7 +34,6 @@ export function buildRifle(): GunModel {
   b.box(0.04, 0.046, 0.21, m.metal, [0, 0.004, -0.03], undefined, 0.004);
   rail(b, m, [0, 0.03, -0.03], 0.2);
   b.box(0.002, 0.016, 0.05, m.hole, [0.0205, 0.006, -0.02]);
-  b.box(0.003, 0.02, 0.055, m.metal, [0.022, 0.004, -0.02]);
   b.tube(0.007, 0.03, m.metal, [0.024, 0.014, 0.035], 10, 0.007, [Math.PI / 2, 0, 0]);
   b.box(0.036, 0.042, 0.17, m.metal, [0, -0.036, -0.015], undefined, 0.004);
   b.box(0.034, 0.05, 0.075, m.metal, [0, -0.07, -0.07], undefined, 0.004);
@@ -86,6 +86,22 @@ export function buildRifle(): GunModel {
   laserModule(b, m, 0, -0.05, -0.36);
   root.add(b.build("rifle-body"));
 
+  const { magazine, bolt } = rifleParts(m, root);
+
+  const muzzle = marker("muzzle", 0, 0, -0.628);
+  const laser = marker("laser", 0, -0.05, -0.4);
+  root.add(muzzle, laser);
+  // The ejection port, on the right of the upper receiver.
+  const ejector = marker("ejector", 0.024, 0.006, -0.02);
+  root.add(ejector);
+  return { root, muzzle, laser, ejector, magazine, pump: null, bolt, shell: null, length: 1 };
+}
+
+// Moving parts. Everything below is animated by the gun rig and kept apart
+// from the still body above.
+
+/** The tan polymer magazine, a stack of segments that curve gently forward. */
+function rifleMagazine(m: GunMaterials): THREE.Group {
   const magazine = new THREE.Group();
   magazine.name = "magazine";
   const mb = new MeshBuilder();
@@ -101,8 +117,19 @@ export function buildRifle(): GunModel {
   mb.box(0.03, 0.012, 0.07, m.tan, [0, y - 0.004, z], [0.2, 0, 0], 0.004);
   mb.box(0.012, 0.004, 0.03, m.brass, [0, 0.002, 0.005]);
   magazine.add(mb.build("magazine"));
+  return magazine;
+}
+
+/**
+ * The magazine and its spare, the charging handle at the back of the
+ * upper, the bolt carrier in the ejection port and the dust cover that
+ * pops open on the first shot. The release button and the bolt catch are
+ * here too, as the hands press and strike them.
+ */
+function rifleParts(m: GunMaterials, root: THREE.Group): { magazine: THREE.Object3D; bolt: THREE.Object3D } {
+  const magazine = rifleMagazine(m);
   magazine.position.set(0, -0.09, -0.07);
-  root.add(magazine);
+  const spare = spareOf(magazine, () => rifleMagazine(m));
 
   const bolt = new THREE.Group();
   bolt.name = "bolt";
@@ -110,13 +137,21 @@ export function buildRifle(): GunModel {
   bb.box(0.04, 0.008, 0.012, m.metal, [0, 0.02, 0.085]);
   bb.box(0.01, 0.006, 0.03, m.metal, [0, 0.02, 0.068]);
   bolt.add(bb.build("bolt"));
-  root.add(bolt);
 
-  const muzzle = marker("muzzle", 0, 0, -0.628);
-  const laser = marker("laser", 0, -0.05, -0.4);
-  root.add(muzzle, laser);
-  // The ejection port, on the right of the upper receiver.
-  const ejector = marker("ejector", 0.024, 0.006, -0.02);
-  root.add(ejector);
-  return { root, muzzle, laser, ejector, magazine, pump: null, bolt, shell: null, length: 1 };
+  const slide = portSlide(m, 0.0213, 0.006, 0.005, 0.015, 0.05);
+
+  // The cover is hinged on its lower edge and swings out and down.
+  const cover = new THREE.Group();
+  cover.name = PART.portCover;
+  const cb = new MeshBuilder();
+  cb.box(0.002, 0.02, 0.055, m.metal, [0, 0.01, 0], undefined, 0.0008);
+  cb.box(0.003, 0.003, 0.012, m.steel, [0.001, 0.016, 0.012]);
+  cover.add(cb.build("cover"));
+  cover.position.set(0.0232, -0.006, -0.02);
+
+  const controls = new MeshBuilder();
+  controls.tube(0.0045, 0.004, m.steel, [0.0195, -0.045, -0.032], 10, 0.0045, [0, 0, Math.PI / 2]);
+  controls.box(0.004, 0.022, 0.012, m.metal, [-0.02, -0.02, -0.05], [0, 0, 0.06], 0.0015);
+  root.add(magazine, spare, bolt, slide, cover, controls.build("controls"));
+  return { magazine, bolt };
 }
