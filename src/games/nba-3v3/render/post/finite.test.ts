@@ -27,10 +27,15 @@ describe("non finite test", () => {
 });
 
 describe("finite clean up", () => {
-  it("turns bad values black", () => {
+  it("turns NaN and negative infinity black", () => {
     expect(finite(Number.NaN)).toBe(0);
-    expect(finite(Infinity)).toBe(0);
     expect(finite(-Infinity)).toBe(0);
+    expect(finite(-1e39)).toBe(0);
+  });
+
+  it("keeps a glint too bright for a half float as the brightest light, not a black dot", () => {
+    expect(finite(Infinity)).toBe(HALF_MAX);
+    expect(finite(1e39)).toBe(HALF_MAX);
   });
 
   it("keeps light as it is, within what a half float holds", () => {
@@ -42,5 +47,12 @@ describe("finite clean up", () => {
 
   it("puts the half float ceiling into the shader", () => {
     expect(FINITE).toContain(HALF_MAX.toFixed(1));
+  });
+
+  it("tells positive infinity from NaN by its exact bits in the shader", () => {
+    // Positive infinity is exactly the exponent bits; NaN has mantissa bits set and negative infinity the sign bit.
+    expect(FINITE).toMatch(/equal\(bits, uvec3\(0x7f800000u\)\)/);
+    // A boolean mix selects, so a NaN on the other side cannot poison the result as a float mix would.
+    expect(FINITE).toMatch(/mix\(kept, swap, bad\)/);
   });
 });
