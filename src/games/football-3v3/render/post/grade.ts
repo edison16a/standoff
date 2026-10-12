@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import { CIRCLE, METRES, UPSAMPLE } from "./depth-of-field";
+import { FILL, FINITE, VIEW_DEPTH } from "@/games/kit/post";
+import { CIRCLE, UPSAMPLE } from "./depth-of-field";
 import { passMaterial } from "./fullscreen";
 
 /**
@@ -8,6 +9,9 @@ import { passMaterial } from "./fullscreen";
  * uses), sRGB encoding, then a broadcast camera's light edge crispening
  * and the grade in display space: saturation, a gentle S curve, lifted
  * blacks, a vignette, and a breath of noise so the night sky never bands.
+ * Every input is cleaned as it is read, and a bad scene pixel is filled
+ * from its good neighbours (or from the depth of field, which skipped
+ * it), so nothing that is not a finite colour ever reaches the screen.
  */
 const FRAGMENT = /* glsl */ `
   uniform sampler2D tScene;
@@ -27,8 +31,10 @@ const FRAGMENT = /* glsl */ `
   uniform float uSeed;
   uniform vec3 uBalance;
   varying vec2 vUv;
-  ${METRES}
+  ${VIEW_DEPTH}
   ${CIRCLE}
+  ${FINITE}
+  ${FILL}
   ${UPSAMPLE}
 
   vec3 fit(vec3 v) {
@@ -42,27 +48,31 @@ const FRAGMENT = /* glsl */ `
     return clamp(outM * fit(inM * (c / 0.6)), 0.0, 1.0);
   }
   vec3 srgb(vec3 c) {
-    return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(vec3(0.0031308), c));
+    // c comes clamped from the curve, but pow of a negative is NaN on most cards, so the base is guarded anyway.
+    return mix(c * 12.92, 1.055 * pow(max(c, vec3(0.0)), vec3(1.0 / 2.4)) - 0.055, step(vec3(0.0031308), c));
   }
   float hash(vec2 p) {
     return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
   }
   vec3 scene(vec2 uv) {
-    return max(texture2D(tScene, uv).rgb, vec3(0.0));
+    return finite(texture2D(tScene, uv).rgb);
   }
   vec3 display(vec3 c) {
     return srgb(aces(c * uBalance * uExposure));
   }
 
   void main() {
-    vec3 c = scene(vUv);
+    vec3 raw = texture2D(tScene, vUv).rgb;
+    bool hole = nonFinite(raw);
+    vec3 c = hole && uDof <= 0.001 ? fillHole(tScene, vUv, uTexel) : finite(raw);
     float blur = 0.0;
     if (uDof > 0.001) {
       float coc = circle(metres(texture2D(tDepth, vUv).r));
-      blur = smoothstep(0.03, 0.4, coc) * uDof;
+      // A bad pixel takes its neighbours' blur, which skipped it, so it vanishes.
+      blur = hole ? 1.0 : smoothstep(0.03, 0.4, coc) * uDof;
       c = mix(c, softAt(tDof, vUv, coc), blur);
     }
-    vec3 glow = texture2D(tBloom, vUv).rgb * uBloom;
+    vec3 glow = finite(texture2D(tBloom, vUv).rgb) * uBloom;
     vec3 col = display(c + glow);
     if (uSharpen > 0.001) {
       // Neighbours through the same curve, so the crispening never rings round the floodlights.
