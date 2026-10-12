@@ -2,12 +2,26 @@ import * as THREE from "three";
 import { playerColor } from "@/games/kit/players";
 import type { Seat } from "@/platform/protocol";
 import { casingSeed, ejectDelay } from "../../ballistics";
+import type { GameEvent } from "../../engine/events";
 import type { SurvivalGame } from "../../engine/game";
 import type { WeaponId } from "../../engine/weapons";
 import type { CastResult } from "../aim-caster";
 import { EYE, type CameraRig } from "../camera-rig";
 import type { Effects, Ejection } from "../effects/effects";
 import type { FirstPerson } from "../first-person";
+import { hitWeight } from "../models/zombies/hit-weight";
+import type { ZombieLayer } from "../zombie-layer";
+import { ShotLedger } from "./shot-ledger";
+
+type HitEvent = Extract<GameEvent, { type: "hit" }>;
+
+/** One bullet that struck a zombie, waiting for the engine's word on it. */
+interface Strike {
+  weapon: WeaponId;
+  arrive: number;
+  dir: THREE.Vector3;
+  point: THREE.Vector3;
+}
 
 /**
  * How hard each gun shakes the view. The shake grows with the square of
@@ -23,19 +37,21 @@ export interface GunfireParts {
   view: CameraRig;
   guns: FirstPerson;
   effects: Effects;
+  zombies: ZombieLayer;
   game: () => SurvivalGame;
 }
 
 /**
  * The picture of the team's gunfire, between the engine's events and the
  * effects: the flash, smoke and flying rounds of each trigger pull, the
- * spent case thrown when the action cycles, and the barrels smoking
- * after a long burst.
+ * spent case thrown when the action cycles, the barrels smoking after a
+ * long burst, and each zombie's flinch when a round reaches it.
  */
 export class Gunfire {
   private readonly at = new THREE.Vector3();
   private readonly dir = new THREE.Vector3();
   private readonly colour = new THREE.Color();
+  private readonly strikes = new ShotLedger<Strike>();
 
   constructor(private readonly parts: GunfireParts) {}
 
@@ -49,8 +65,29 @@ export class Gunfire {
     // The engine has already taken the round, so what is left now is what the shot left behind.
     const left = game().squad.get(seat)?.gun.ammo ?? 0;
     this.colour.set(playerColor(seat));
-    effects.fire({ seat, weapon: rig.weapon, left, muzzle: this.at, dir: this.dir, colour: this.colour, eye: camera.position, rounds: results });
+    const times = effects.fire({ seat, weapon: rig.weapon, left, muzzle: this.at, dir: this.dir, colour: this.colour, eye: camera.position, rounds: results });
     view.kick(CAMERA_KICK[rig.weapon]);
+    const now = this.parts.zombies.now;
+    results.forEach((r, i) => {
+      if (!r.hit) return;
+      const dir = r.point.clone().sub(this.at).normalize();
+      this.strikes.record(seat, r.hit.zombie, now, { weapon: rig.weapon, arrive: now + (times[i] ?? 0), dir, point: r.point.clone() });
+    });
+  }
+
+  /**
+   * The engine's hit event comes at the trigger pull. The zombie reacts
+   * when the round that made it arrives, pushed along that round's path.
+   * A hit with no round on record (a shot the picture never drew) lands
+   * at once, straight down the view.
+   */
+  hit(event: HitEvent): void {
+    const { zombies, game, camera } = this.parts;
+    const strike = this.strikes.take(event.seat, event.zombie);
+    const weapon = strike?.weapon ?? game().squad.get(event.seat)?.gun.weapon ?? "rifle";
+    const weight = hitWeight(weapon, event.part, event.kind, event.blocked);
+    const dir = strike?.dir ?? camera.getWorldDirection(new THREE.Vector3());
+    zombies.hit(event.zombie, { dir, point: strike?.point ?? null, weight, part: event.part }, strike?.arrive ?? zombies.now);
   }
 
   /**

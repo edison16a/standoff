@@ -76,7 +76,7 @@ export class SurvivalRenderer implements SurvivalView {
     this.crosshairs = new CrosshairLayer(this.camera);
     this.chopper = new ChopperView(this.scene);
     this.caster = new AimCaster(this.camera);
-    this.gunfire = new Gunfire({ camera: this.camera, view: this.rig, guns: this.guns, effects: this.effects, game: () => this.source.game });
+    this.gunfire = new Gunfire({ camera: this.camera, view: this.rig, guns: this.guns, effects: this.effects, zombies: this.zombies, game: () => this.source.game });
     this.scene.add(this.atmosphere.group, this.world.group, this.zombies.group, this.effects.group, this.guns.lasers);
   }
 
@@ -159,8 +159,7 @@ export class SurvivalRenderer implements SurvivalView {
       case "reloaded":
         return rig?.finishReload();
       case "hit":
-        if (!event.killed) this.zombies.flinch(event.zombie);
-        return;
+        return this.gunfire.hit(event);
       case "kill":
         if (this.zombies.chest(event.zombie, at)) this.effects.splatter(at, isBoss(event.kind));
         return;
