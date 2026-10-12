@@ -13,7 +13,7 @@ function reload(weapon: MagGun, empty: boolean) {
   const seconds = WEAPONS[weapon].reload;
   const steps = reloadSteps(weapon, seconds, empty);
   const at = (step: ActionStep) => steps.find((s) => s.step === step)?.at ?? NaN;
-  const pose = (t: number): GunPose => reloadPose(weapon, restPose(weapon), { t, seconds, empty, steps, inward: 1 });
+  const pose = (t: number): GunPose => reloadPose(weapon, restPose(weapon), { t, seconds, empty, steps, inward: 1, sinceShot: Infinity });
   return { seconds, steps, at, pose };
 }
 

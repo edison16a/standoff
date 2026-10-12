@@ -15,6 +15,8 @@ export interface ReloadInput {
   steps: readonly TimedStep[];
   /** 1 when the gun sits right of centre, -1 on the left: it rolls toward the middle for all to see. */
   inward: number;
+  /** Seconds since the gun last fired when the reload began, so a pump gun can finish its rack first. */
+  sinceShot: number;
 }
 
 /** When a step falls in this reload. A step the timeline lacks reads as never. */

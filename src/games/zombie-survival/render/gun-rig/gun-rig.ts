@@ -82,7 +82,7 @@ export class GunRig {
 
   /** `empty` reloads a dry gun, which also has to chamber a round. */
   startReload(seconds: number, empty = false): void {
-    this.reload.start(seconds, empty);
+    this.reload.start(seconds, empty, this.shot.since);
     // The reload shows the held open bolt itself, until the catch is struck.
     this.shot.left = Infinity;
   }
