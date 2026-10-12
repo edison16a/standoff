@@ -23,7 +23,7 @@ export const LANE = {
   quick: 0.7,
   long: 25,
   /** Past that length a defender this many metres further off the line, per metre of throw, still closes on the ball as it hangs. */
-  hangReach: 0.1,
+  hangReach: 0.15,
   /** The most a single defender can ever be: a perfectly placed one still loses some. */
   max: 0.92,
 } as const;

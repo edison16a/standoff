@@ -51,7 +51,7 @@ export function planPlay(m: Match): void {
 const DEEP_KEY = 0.7;
 
 /** How often a computer QB's call has a deep shot for the deep threat in it. */
-const DEEP_LOOK = 0.5;
+const DEEP_LOOK = 0.35;
 
 function assignCoverage(m: Match, receivers: readonly Athlete[], threat: boolean): void {
   // Support players have their own jobs (support-defense.ts), and start every play with nobody to block.
