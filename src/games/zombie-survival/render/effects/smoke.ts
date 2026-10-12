@@ -37,7 +37,7 @@ export class Smoke {
   private readonly batch: QuadBatch;
   private readonly puffs: Puff[] = [];
   private next = 0;
-  private readonly tint = new THREE.Color(0x6a6e76);
+  private readonly tint = new THREE.Color(0x80848c);
 
   constructor(
     private readonly random: () => number,
@@ -70,7 +70,7 @@ export class Smoke {
       p.vel.x += (r() - 0.5) * 0.5;
       p.vel.y += r() * 0.35;
       p.vel.z += (r() - 0.5) * 0.5;
-      this.shape(p, 0.9 + r() * 0.8, 0.03 * scale, (0.22 + r() * 0.2) * scale, 0.2 + r() * 0.06, 0.08);
+      this.shape(p, 0.9 + r() * 0.8, 0.03 * scale, (0.22 + r() * 0.2) * scale, 0.3 + r() * 0.08, 0.08);
     }
   }
 
@@ -79,7 +79,7 @@ export class Smoke {
     const r = this.random;
     const p = this.spawn(at);
     p.vel.set((r() - 0.5) * 0.06, 0.12 + r() * 0.1, (r() - 0.5) * 0.06);
-    this.shape(p, 1.3 + r() * 0.7, 0.012, 0.09 + r() * 0.05, 0.13, 0.22);
+    this.shape(p, 1.3 + r() * 0.7, 0.012, 0.09 + r() * 0.05, 0.2, 0.22);
   }
 
   /** A trail puff off a smoking hull in flight. */

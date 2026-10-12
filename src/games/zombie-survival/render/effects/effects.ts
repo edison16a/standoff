@@ -60,7 +60,7 @@ export class Effects {
   /** Where the camera was at the last shot, for sizing far hit flashes when the round lands. */
   private readonly eye = new THREE.Vector3();
   /** The air's colour, which lights smoke and the blast ring. The renderer sets it from the fog. */
-  private readonly haze = new THREE.Color(0x3a4250);
+  private readonly haze = new THREE.Color(0x80848c);
 
   /** `random` shapes every flash and spray. The showcase seeds it, so its clip plays the same each time. */
   constructor(random: () => number = Math.random) {
@@ -75,7 +75,7 @@ export class Effects {
 
   /** Lights smoke and haze with the scene's fog colour, so they sit in the same air. */
   setHaze(fog: THREE.Color): void {
-    this.haze.copy(fog).lerp(new THREE.Color(0x9a9aa0), 0.35);
+    this.haze.copy(fog).lerp(new THREE.Color(0xc4c4c8), 0.6);
     this.smoke.setTint(this.haze);
   }
 
