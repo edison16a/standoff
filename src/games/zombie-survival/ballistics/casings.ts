@@ -42,6 +42,13 @@ export interface Bounce {
   at: Vec3;
 }
 
+/**
+ * How high above the street a held gun throws its case, in metres. The
+ * renderer launches each case from here and the sound plays its bounces
+ * from the same height, so a clink lands as the case is seen to.
+ */
+export const EJECT_HEIGHT = 1.3;
+
 const GRAVITY = 9.81;
 /** Fixed time step, so the picture and the sound replay the same case exactly. */
 export const CASING_STEP = 1 / 240;
