@@ -10,7 +10,7 @@ import { startRun } from "../qb-run";
 import { startDive } from "../dive";
 import type { Athlete } from "../types";
 import { dist2, type V2 } from "../vec";
-import { deepRead, laneThreat } from "./deep-read";
+import { deepRead, laneRisk } from "./deep-read";
 import { headFor, runDir } from "./goal";
 import type { FootballSkill } from "./skill";
 
@@ -25,7 +25,7 @@ function openness(m: Match, qb: Athlete, r: Athlete, skill: FootballSkill): numb
   const defenders = defendersOf(m, qb);
   const near = Math.min(99, ...defenders.map((d) => dist2(d, r)));
   const depth = Math.max(0, (r.x - yardToX(m.offense, m.drive.los)) * m.sign);
-  const read = r.deep ? deepRead(m, qb, r, defenders, depth, skill) : -laneThreat(m, qb, r, 0.8) * 10 * skill.accuracy;
+  const read = r.deep ? deepRead(m, qb, r, defenders, depth, skill) : -laneRisk(m, qb, r, 0.8) * 10 * skill.accuracy;
   return near + depth * 0.03 + read + m.rng.gauss((1 - skill.accuracy) * 2);
 }
 
