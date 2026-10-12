@@ -19,11 +19,14 @@ import { playSample, type SampleBank } from "./sample-bank";
 const SYNTH: Record<CasingSpec["material"], Clank> = {
   brass: { noise: [{ filter: "highpass", frequency: 5000, decay: 0.005, peak: 0.12 }], ring: { modes: [4200, 6900, 9800], decay: 0.14, peak: 0.07 } },
   steel: { noise: [{ filter: "highpass", frequency: 3500, decay: 0.006, peak: 0.12 }], ring: { modes: [3100, 5000, 7400], decay: 0.05, peak: 0.07 } },
-  hull: { noise: [{ filter: "bandpass", frequency: 520, q: 1, decay: 0.03, peak: 0.25 }], ring: { modes: [2800], decay: 0.02, peak: 0.03 } },
+  hull: { noise: [{ filter: "bandpass", frequency: 520, q: 1, decay: 0.03, peak: 0.5 }], ring: { modes: [2800], decay: 0.02, peak: 0.03 } },
 };
 
 /** Smaller cases ring higher: the 9 mm above the 5.56, the stubby 7.62 steel case lowest. */
 const PITCH: Record<WeaponId, number> = { shotgun: 1, smg: 1.2, rifle: 1, ak47: 0.88 };
+
+/** A case on asphalt is a small sound next to a gunshot: its loudest strike sits about 20 dB under the bang. */
+const LEVEL = 0.16;
 
 /** Quieter strikes than this are lost under the gunfire, so they are not played. */
 const AUDIBLE = 0.03;
@@ -51,16 +54,16 @@ function strike(engine: AudioEngine, out: AudioNode, bank: SampleBank, weapon: W
   const pitch = PITCH[weapon] * (0.96 + Math.random() * 0.08);
   const sample = bank.pick(CASE_SAMPLES[material]);
   if (!sample) {
-    clank(engine, out, at, SYNTH[material], pitch, level);
+    clank(engine, out, at, SYNTH[material], pitch, level * LEVEL * 5);
     return;
   }
   if (material === "hull") {
-    playSample(engine.ctx, out, sample, at, { rate: pitch, gain: 0.7 * level });
+    playSample(engine.ctx, out, sample, at, { rate: pitch, gain: 0.8 * LEVEL * level });
     return;
   }
   // Steel shares brass takes, played lower, through the dulling filter and cut short.
   const steel = material === "steel";
-  playSample(engine.ctx, out, sample, at, { rate: steel ? pitch * 0.9 : pitch, gain: (steel ? 0.55 : 0.45) * level, length: steel ? 0.09 : undefined });
+  playSample(engine.ctx, out, sample, at, { rate: steel ? pitch * 0.9 : pitch, gain: (steel ? 0.6 : 0.5) * LEVEL * level, length: steel ? 0.09 : undefined });
 }
 
 /** A low pass in front of `out` for steel cases, freed when the case has settled. */

@@ -19,9 +19,9 @@ export class GunBus {
     this.send = ctx.createGain();
 
     const glue = ctx.createDynamicsCompressor();
-    glue.threshold.value = -16;
-    glue.knee.value = 8;
-    glue.ratio.value = 3;
+    glue.threshold.value = -10;
+    glue.knee.value = 6;
+    glue.ratio.value = 2.5;
     glue.attack.value = 0.002;
     glue.release.value = 0.18;
 
@@ -38,10 +38,14 @@ export class GunBus {
     const echoLevel = ctx.createGain();
     echoLevel.gain.value = 0.8;
 
+    // Web Audio compressors add their own make up gain, so the limited mix is trimmed back under full scale.
+    const trim = ctx.createGain();
+    trim.gain.value = 0.7;
+
     this.dry.connect(glue);
     this.send.connect(echo).connect(echoLevel).connect(glue);
-    glue.connect(limiter).connect(engine.bus("sfx"));
-    this.nodes = [this.dry, this.send, glue, limiter, echo, echoLevel];
+    glue.connect(limiter).connect(trim).connect(engine.bus("sfx"));
+    this.nodes = [this.dry, this.send, glue, limiter, trim, echo, echoLevel];
   }
 
   /**

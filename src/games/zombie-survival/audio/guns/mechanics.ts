@@ -51,7 +51,7 @@ const SYNTH: Record<GunCue, Clank> = {
   // A plastic hull pushed past the shell latch.
   "shell-in": { noise: [{ filter: "bandpass", frequency: 2600, q: 3, decay: 0.035, peak: 0.32 }], ring: { modes: [1250, 2900], decay: 0.03, peak: 0.07 } },
   // The hammer falling on nothing.
-  dry: { noise: [{ filter: "bandpass", frequency: 3400, q: 3, decay: 0.03, peak: 0.28 }], ring: { modes: [2600, 4100, 6900], decay: 0.015, peak: 0.18 } },
+  dry: { noise: [{ filter: "bandpass", frequency: 3400, q: 3, decay: 0.03, peak: 0.55 }], ring: { modes: [2600, 4100, 6900], decay: 0.015, peak: 0.35 } },
   // The AR's bolt slamming onto the catch behind the empty magazine: a hard, ringing steel clack.
   "bolt-lock": {
     noise: [{ filter: "bandpass", frequency: 3000, q: 1.5, decay: 0.02, peak: 0.45 }],
@@ -63,8 +63,17 @@ const SYNTH: Record<GunCue, Clank> = {
 /** Bigger guns have bigger parts that ring lower. */
 const PITCH: Record<WeaponId, number> = { shotgun: 0.85, smg: 1.12, rifle: 1, ak47: 0.92 };
 
-/** Recording levels per cue, against the shot. A magazine hitting the street is quieter than a bolt slamming. */
-const SAMPLE_GAIN: Partial<Record<GunCue, number>> = { "mag-drop": 0.55, "mag-out": 0.6, "mag-in": 0.6, "shell-in": 0.6, dry: 0.7 };
+/**
+ * How loud the moving parts are against the shot. The recordings are
+ * normalised near full scale, but even a bolt slamming home is far quieter
+ * than the bang, so they sit about 12 dB under it. The synthesised clanks
+ * were voiced quieter to begin with.
+ */
+const SAMPLE_LEVEL = 0.25;
+const SYNTH_LEVEL = 0.3;
+
+/** Levels per cue on top of that. A magazine hitting the street is quieter than a bolt slamming; the dry click must be heard. */
+const SAMPLE_GAIN: Partial<Record<GunCue, number>> = { "mag-drop": 0.55, "mag-out": 0.6, "mag-in": 0.6, "shell-in": 0.6, dry: 1.2 };
 
 /** The magazine falls to the street, so more of it reaches the echo. */
 const WET: Partial<Record<GunCue, number>> = { "mag-drop": 0.3, "bolt-lock": 0.2, dry: 0.15 };
@@ -83,11 +92,11 @@ export function playCue(engine: AudioEngine, bus: GunBus, bank: SampleBank, weap
   const vary = 0.97 + Math.random() * 0.06;
   if (cue === "bolt-catch") {
     // The click of the paddle, then the bolt runs home a moment later.
-    clank(engine, out, at, SYNTH[cue], PITCH[weapon] * vary);
-    if (sample) playSample(engine.ctx, out, sample, at + 0.02, { rate: vary, gain: 0.8 });
-    else clank(engine, out, at + 0.02, SYNTH["bolt-forward"], PITCH[weapon] * vary);
+    clank(engine, out, at, SYNTH[cue], PITCH[weapon] * vary, SYNTH_LEVEL);
+    if (sample) playSample(engine.ctx, out, sample, at + 0.02, { rate: vary, gain: 0.8 * SAMPLE_LEVEL });
+    else clank(engine, out, at + 0.02, SYNTH["bolt-forward"], PITCH[weapon] * vary, SYNTH_LEVEL);
     return;
   }
-  if (sample) playSample(engine.ctx, out, sample, at, { rate: vary, gain: (SAMPLE_GAIN[cue] ?? 0.8) * (0.9 + Math.random() * 0.2) });
-  else clank(engine, out, at, SYNTH[cue], PITCH[weapon] * vary);
+  if (sample) playSample(engine.ctx, out, sample, at, { rate: vary, gain: SAMPLE_LEVEL * (SAMPLE_GAIN[cue] ?? 0.8) * (0.9 + Math.random() * 0.2) });
+  else clank(engine, out, at, SYNTH[cue], PITCH[weapon] * vary, SYNTH_LEVEL);
 }
