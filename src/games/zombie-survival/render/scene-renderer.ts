@@ -116,6 +116,7 @@ export class SurvivalRenderer implements SurvivalView {
     const { shooters, sights } = aimAll(this.source, this.caster, [...this.zombies.proxies(), ...this.world.solids()], nowMs);
     const armed = game.phase !== "cutscene" && game.phase !== "escaped";
     this.guns.update(shooters, dt, time, armed);
+    this.smokeBarrels(dt);
     // A fallen team's trigger is off, so its crosshairs leave the end card clear.
     this.crosshairs.update(sights, dt, armed && game.phase !== "down");
     this.effects.update(dt);
@@ -146,7 +147,7 @@ export class SurvivalRenderer implements SurvivalView {
     const at = new THREE.Vector3();
     const dir = new THREE.Vector3();
     rig.muzzle(at, dir);
-    this.effects.muzzle(at, dir, rig.weapon);
+    this.effects.muzzle(at, dir, rig.weapon, seat);
     const colour = new THREE.Color(playerColor(seat));
     results.forEach((r, i) => {
       if (i < 3) this.effects.tracer(at, r.point, colour);
@@ -196,6 +197,18 @@ export class SurvivalRenderer implements SurvivalView {
     setGunEnvironment(null);
     this.env.dispose();
     this.renderer.dispose();
+  }
+
+  /** A barrel hot from rapid fire trails a wisp from its muzzle, wherever the gun has swung. */
+  private smokeBarrels(dt: number): void {
+    const at = new THREE.Vector3();
+    const dir = new THREE.Vector3();
+    for (const { seat } of this.source.armed()) {
+      const rig = this.guns.rig(seat);
+      if (!rig) continue;
+      rig.muzzle(at, dir);
+      this.effects.barrel(seat, at, dt);
+    }
   }
 
   /** Applies the source's own framing, if it has one, over the camera rig's. */
