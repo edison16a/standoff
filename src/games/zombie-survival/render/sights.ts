@@ -17,8 +17,9 @@ export function aimAll(source: SceneSource, caster: AimCaster, targets: readonly
   const sights: Sight[] = [];
   for (const { seat, weapon } of source.armed()) {
     const point = source.aimAt(seat, nowMs);
-    const kick = source.game.squad.get(seat)?.gun.recoil.offset ?? STILL;
-    shooters.push({ seat, weapon, aim: point ? caster.cast(point, kick, targets, () => undefined).point : null });
+    const gun = source.game.squad.get(seat)?.gun;
+    const kick = gun?.recoil.offset ?? STILL;
+    shooters.push({ seat, weapon, aim: point ? caster.cast(point, kick, targets, () => undefined).point : null, rounds: gun?.ammo });
     sights.push({ seat, weapon, point, kick });
   }
   return { shooters, sights };

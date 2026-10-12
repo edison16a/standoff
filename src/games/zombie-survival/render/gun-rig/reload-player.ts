@@ -16,6 +16,7 @@ interface Run {
   steps: TimedStep[];
   length: number;
   shells: number;
+  sinceShot: number;
 }
 
 /**
@@ -40,9 +41,10 @@ export class ReloadPlayer {
     return this.run?.t ?? null;
   }
 
-  start(seconds: number, empty: boolean): void {
+  /** `sinceShot` is how long ago the gun last fired, which a pump gun's reload waits on. */
+  start(seconds: number, empty: boolean, sinceShot = Infinity): void {
     const steps = reloadSteps(this.weapon, seconds, empty);
-    this.run = { t: 0, seconds, empty, steps, length: reloadLength(this.weapon, seconds, empty), shells: 0 };
+    this.run = { t: 0, seconds, empty, steps, length: reloadLength(this.weapon, seconds, empty), shells: 0, sinceShot };
     this.outro = null;
   }
 
@@ -84,7 +86,7 @@ export class ReloadPlayer {
   pose(base: GunPose, inward: number): GunPose {
     const run = this.run;
     if (run) {
-      this.last = reloadPose(this.weapon, base, { t: run.t, seconds: run.seconds, empty: run.empty, steps: run.steps, inward });
+      this.last = reloadPose(this.weapon, base, { t: run.t, seconds: run.seconds, empty: run.empty, steps: run.steps, inward, sinceShot: run.sinceShot });
       return this.last;
     }
     this.last = null;

@@ -12,10 +12,14 @@ const SLAP = palmUnder([0, -0.21, -0.05], 0.45);
 /** The cocking handle's knob, forward and turned up into its notch. */
 const KNOB: V3 = [-0.033, 0.034, -0.302];
 const KNOB_UP: V3 = [-0.017, 0.052, -0.302];
-/** The left hand over the tube, fingers hooked round the knob. */
-const ON_HANDLE = hand([-0.045, 0.05, -0.256], [0.45, -0.89, 0], [0, 0, -1], 0.85, 0.85, 0.7);
-/** The flat of the hand coming down on the locked handle: the HK slap. */
-const SLAP_HANDLE = hand([-0.03, 0.064, -0.212], [0.6, -0.8, 0], [0, 0, -1], 0.15, 0.1, 0.2);
+/**
+ * The left hand at the handle from the gun's left side, low, palm in and
+ * fingers hooked up round the knob. Working from the side rather than over
+ * the top keeps the arm out of the middle of the screen.
+ */
+const ON_HANDLE = hand([-0.049, 0.02, -0.256], [0.9, 0.35, 0], [0, 0, -1], 0.85, 0.85, 0.7);
+/** The flat of the hand swung in from the left onto the locked handle: the HK slap. */
+const SLAP_HANDLE = hand([-0.034, 0.058, -0.214], [0.85, -0.5, 0], [-0.35, 0, -0.94], 0.15, 0.1, 0.2);
 
 type Place = { pos: V3; rot: V3 };
 
@@ -25,8 +29,8 @@ function onHandle(back: number, up: number): HandPose {
   return { ...ON_HANDLE, pos: add(ON_HANDLE.pos, [lifted[0] - KNOB[0], lifted[1] - KNOB[1], back * TRAVEL.smg.handle]) };
 }
 
-/** The slapping hand `above` metres up and out from the handle. */
-const slapping = (above: number): HandPose => ({ ...SLAP_HANDLE, pos: add(SLAP_HANDLE.pos, [-above * 0.7, above, 0]) });
+/** The slapping hand `away` metres out to the left of the handle and a little above. */
+const slapping = (away: number): HandPose => ({ ...SLAP_HANDLE, pos: add(SLAP_HANDLE.pos, [-away, away * 0.6, 0]) });
 
 /**
  * The MP5's reload. From empty the left hand first pulls the cocking
@@ -94,5 +98,5 @@ export function smgReload(pose: GunPose, input: ReloadInput): GunPose {
 
   const posed = { ...pose, mag, spare, support, handle, handleLock, carrier: Math.max(pose.carrier, handle), dropped: t >= letGo };
   const lift = envelope(t, Math.min(back, release) + 0.05, settle, input.seconds);
-  return liftBody(posed, lift, { roll: 0.6, pitch: 0.12, raise: 0.05 }, input.inward, jolts(t, [[seat, 0.7], [forward, 1]]));
+  return liftBody(posed, lift, { roll: 0.4, pitch: 0.12, raise: 0.04 }, input.inward, jolts(t, [[seat, 0.7], [forward, 1]]));
 }

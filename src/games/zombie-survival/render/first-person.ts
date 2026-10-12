@@ -11,6 +11,8 @@ export interface Shooter {
   weapon: WeaponId;
   /** Where the gun points in the world, kick included, or null when the player is not aiming. */
   aim: THREE.Vector3 | null;
+  /** Rounds in the gun right now, so a refill without a reload shows on the held gun. */
+  rounds?: number;
 }
 
 /** Guns sit this far in front of the eye, in metres. */
@@ -57,6 +59,7 @@ export class FirstPerson {
       rig.place(x, -halfH * 1.02, -DEPTH * 0.86);
       const aimLocal = shooter.aim ? this.camera.worldToLocal(shooter.aim.clone()) : new THREE.Vector3(x * 0.5, 0, -20);
       rig.pointAt(aimLocal);
+      if (shooter.rounds !== undefined) rig.rounds(shooter.rounds);
       rig.update(dt, time + shooter.seat);
       rig.holder.visible = visible;
       rig.holder.updateMatrixWorld(true);

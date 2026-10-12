@@ -9,9 +9,10 @@ import { shotLayer } from "./shot-cycle";
 const PER_SHELL = WEAPONS.shotgun.shell!;
 const seconds = (shells: number) => SHOTGUN_LIFT + shells * PER_SHELL;
 
-function shotgun(shells: number, empty: boolean) {
+function shotgun(shells: number, empty: boolean, sinceShot = Infinity) {
   const steps = reloadSteps("shotgun", seconds(shells), empty);
-  const pose = (t: number) => reloadPose("shotgun", restPose("shotgun"), { t, seconds: seconds(shells), empty, steps, inward: -1 });
+  const base = (t: number) => shotLayer("shotgun", restPose("shotgun"), { since: sinceShot + t, left: 0, sinceFirst: 1 });
+  const pose = (t: number) => reloadPose("shotgun", base(t), { t, seconds: seconds(shells), empty, steps, inward: -1, sinceShot });
   return { steps, pose };
 }
 
@@ -39,6 +40,21 @@ describe("the shotgun's reload", () => {
       expect(after.shell.pos[2]).toBeLessThan(before.shell.pos[2]);
       expect(pose(push.at + 0.1).shell.shown).toBe(0);
     }
+  });
+
+  it("fired dry, racks the pump to throw out the hull before going for shells", () => {
+    const { pose } = shotgun(8, true, 0);
+    const back = shotCycle("shotgun").find((s) => s.step === "pump-back")!.at;
+    const rest = restPose("shotgun").support.pos;
+    const racking = pose(back);
+    expect(racking.pump).toBe(1);
+    // The hand is still on the fore end, pulled back with it, and the gun not yet lifted.
+    expect(racking.support.pos[2]).toBeGreaterThan(rest[2] + 0.05);
+    expect(racking.support.pos[1]).toBeCloseTo(rest[1], 3);
+    expect(Math.abs(racking.body.rot[2])).toBeLessThan(0.01);
+    // Then it goes down for the first shell, which still lands on its push.
+    const first = shotgun(8, true, 0).steps.find((s) => s.step === "shell-in")!.at;
+    expect(pose(first - 0.06).shell.shown).toBe(1);
   });
 
   it("racks the pump after the last shell when it began empty, and not otherwise", () => {
