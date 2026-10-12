@@ -47,9 +47,6 @@ export function planPlay(m: Match): void {
   for (const a of m.athletes) a.bot.wait = 0;
 }
 
-/** How often the deep man keys the deep threat; on the other plays he takes whoever goes deepest. */
-const DEEP_KEY = 0.7;
-
 /** How often a computer QB's call has a deep shot for the deep threat in it. */
 const DEEP_LOOK = 0.35;
 
@@ -57,7 +54,8 @@ function assignCoverage(m: Match, receivers: readonly Athlete[], threat: boolean
   // Support players have their own jobs (support-defense.ts), and start every play with nobody to block.
   for (const a of m.athletes) if (a.role === "support") a.bot.cover = null;
   for (const a of m.athletes) {
-    if (a.role === "support" && a.team === m.defense) a.bot.key = threat && defenseJob(a.slot) === "deep" && m.rng.chance(DEEP_KEY);
+    // The deep man always keys the deep threat: he is the one man over the top of him.
+    if (a.role === "support" && a.team === m.defense) a.bot.key = threat && defenseJob(a.slot) === "deep";
   }
   const defenders = m.athletes.filter((a) => a.team === m.defense && (a.role === "qb" || a.role === "runner"));
   for (const d of defenders) {

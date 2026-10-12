@@ -112,9 +112,9 @@ export interface BotMemory {
   /** With nobody to cover: rush the QB this play, or sit deep as a safety. */
   rush: boolean;
   /**
-   * Keyed on the deep threat this play. The deep man shades over him
-   * rather than playing whoever goes deepest; a QB has a deep shot to
-   * him in the call.
+   * Keyed on the deep threat this play. The deep man always is, in a
+   * match with one, and shades over him; a QB is when the call has a
+   * deep shot to him in it.
    */
   key: boolean;
   /** When the QB bot will throw, in seconds after the snap. */
