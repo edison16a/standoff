@@ -29,7 +29,8 @@ export function beamMaterial(colour: THREE.ColorRepresentation, strength = 0.35)
       varying vec3 vView;
       void main() {
         float edge = pow(abs(dot(normalize(vNormal), normalize(vView))), 1.6);
-        float fade = pow(vAlong, 1.8);
+        // vAlong dips under zero at the open end, and pow of a negative is NaN on most cards.
+        float fade = pow(clamp(vAlong, 0.0, 1.0), 1.8);
         gl_FragColor = vec4(colour * strength * edge * fade, 1.0);
       }
     `,
