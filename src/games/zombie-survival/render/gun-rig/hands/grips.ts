@@ -46,9 +46,11 @@ export const GRIPS: Record<WeaponId, { grip: HandPose; support: HandPose }> = {
 /**
  * Where the elbows are, in the frame of the gun's resting place rather
  * than the gun, so the forearms swing from the body as the gun turns.
- * Both sit low and behind, off the bottom of the screen.
+ * Both sit low, well off the bottom of the screen, so a hand reaching
+ * over the top of the gun drops its forearm down out of view instead of
+ * sweeping it across the neighbouring guns.
  */
 export const ELBOWS: { left: V3; right: V3 } = {
-  left: [-0.22, -0.34, 0.02],
-  right: [0.12, -0.2, 0.36],
+  left: [-0.3, -0.46, -0.1],
+  right: [0.14, -0.34, 0.3],
 };
