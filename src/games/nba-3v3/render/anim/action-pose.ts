@@ -85,7 +85,11 @@ export function actionPose(a: Athlete, c: BuildSpec, s: AthleteScene, base: Pose
       const part = s.ceremony;
       if (part) pose = part.role === "captain" ? captainPose(part.t) : part.role === "mate" ? matePose(part.t, part.phase) : dejectedPose(m.time);
       else if (s.winner !== null) pose = s.winner === a.team ? celebratePose(c.celebration, m.time) : dejectedPose(m.time);
-      else if (m.block && m.time - m.landAt < 1) pose = blockLandPose(m.block.preset, m.block.left, m.time - m.landAt, speed, base) ?? base;
+      else if (m.block && m.time - m.landAt < 1) {
+        // Down out of a block the arms come straight down to the sides, not in a slow sweep across the man in front.
+        const land = blockLandPose(m.block.preset, m.block.left, m.time - m.landAt, speed, base);
+        if (land) return { pose: land, rate: 18 };
+      }
       else if (m.time - m.landAt < 0.4) pose = landPose(m.time - m.landAt, m.hardLand, base);
       // Coming out of an action the limbs settle gently instead of snapping back to the run.
       return { pose, rate: 7 + 9 * ease((m.time - m.endedAt) / RECOVER) };

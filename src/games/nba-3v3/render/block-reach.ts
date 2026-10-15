@@ -91,7 +91,7 @@ export class BlockReach {
       // Past the moment with no touch: a near miss, or a touch the engine is a frame late with.
       if (lead < -LOCK || (!plan.hit && lead < 0)) {
         this.struck = plan;
-        this.startFollow(contact, ball?.vel ?? { x: 0, y: 0, z: 0 }, plan.hit ? path : HAND_PATHS.miss, this.two);
+        this.startFollow(contact, ball?.vel ?? { x: 0, y: 0, z: 0 }, plan.hit ? path : HAND_PATHS.miss, this.two, plan.hit ? null : shoulder);
       }
     } else if (ball && act.kind === "block" && a.y > 0.05 && ball.mode === "held") {
       // The shooter still rising: a hand up in his face, over the ball and cocked, so the strike to come starts from a real windup.
@@ -132,8 +132,9 @@ export class BlockReach {
     this.target.addScaledVector(r, PALMS);
   }
 
-  private startFollow(at: { x: number; y: number; z: number }, vel: { x: number; y: number; z: number }, path: HandPath, two: boolean): void {
-    const dir = new THREE.Vector3(vel.x, 0, vel.z);
+  /** `home` set, the hand comes back toward it rather than on with the ball: a reach that missed falls back to him. */
+  private startFollow(at: { x: number; y: number; z: number }, vel: { x: number; y: number; z: number }, path: HandPath, two: boolean, home: THREE.Vector3 | null = null): void {
+    const dir = home ? new THREE.Vector3(home.x - at.x, 0, home.z - at.z) : new THREE.Vector3(vel.x, 0, vel.z);
     if (dir.lengthSq() > 1e-6) dir.normalize();
     this.follow = { at: new THREE.Vector3(at.x, at.y, at.z), dir, age: 0, path, two };
     this.two = two;

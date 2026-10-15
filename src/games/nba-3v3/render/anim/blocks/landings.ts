@@ -12,13 +12,13 @@ import { blend, mirrorPatch, type Pose, type PosePatch } from "../pose";
  */
 const LAND: Record<BlockPreset, { hold: number; patch: PosePatch }> = {
   rejection: { hold: 0.55, patch: { hipY: -0.16, kneeL: 1.0, kneeR: 1.0, torsoX: 0.18, neckX: 0.05, armLRaise: 0.9, armRRaise: 0.9, armLSpread: 1.0, armRSpread: 1.0, elbowL: 1.7, elbowR: 1.7, wristL: 0.4, wristR: 0.4 } },
-  swat: { hold: 0.5, patch: { hipY: -0.12, kneeL: 0.8, kneeR: 0.8, torsoX: 0.12, torsoY: 0.35, neckY: 0.55, neckX: -0.1, armRRaise: 1.2, armRSpread: 0.5, elbowR: 0.2, armLRaise: 0.5, armLSpread: 0.6 } },
+  swat: { hold: 0.5, patch: { hipY: -0.12, kneeL: 0.8, kneeR: 0.8, torsoX: 0.12, torsoY: 0.35, neckY: 0.55, neckX: -0.1, armRRaise: 0.45, armRSpread: 0.65, elbowR: 0.6, armLRaise: 0.35, armLSpread: 0.6, elbowL: 0.5 } },
   chase: { hold: 0.45, patch: { hipY: -0.1, kneeL: 0.9, kneeR: 0.6, torsoX: 0.42, neckX: 0.1, armRRaise: 0.9, elbowR: 0.6, armLRaise: 0.7, armLSpread: 0.8, elbowL: 0.5 } },
   help: { hold: 0.45, patch: { hipY: -0.13, kneeL: 0.95, kneeR: 0.7, torsoX: 0.2, torsoZ: 0.12, neckY: 0.3, armLRaise: 1.0, armRRaise: 0.8, armLSpread: 0.7, armRSpread: 0.3, elbowL: 0.5, elbowR: 0.5 } },
-  pin: { hold: 0.5, patch: { hipY: -0.15, kneeL: 1.0, kneeR: 1.0, torsoX: 0.15, neckX: -0.3, armRRaise: 1.6, elbowR: 0.5, armLRaise: 0.6, armLSpread: 0.5 } },
-  tip: { hold: 0.4, patch: { hipY: -0.1, kneeL: 0.75, kneeR: 0.75, torsoX: 0.12, torsoY: 0.2, neckY: 0.35, neckX: -0.15, armRRaise: 1.3, elbowR: 0.4 } },
-  miss: { hold: 0.45, patch: { hipY: -0.11, kneeL: 0.8, kneeR: 0.8, torsoX: 0.1, torsoY: 0.4, neckY: 0.6, neckX: -0.2, armRRaise: 1.0, elbowR: 0.6, armLRaise: 0.3 } },
-  closeout: { hold: 0.5, patch: { hipY: -0.1, kneeL: 0.8, kneeR: 0.55, torsoX: 0.15, torsoY: -0.5, neckY: -0.6, armRRaise: 0.8, armRSpread: 0.4, elbowR: 0.5, armLRaise: 0.4, armLSpread: 0.7 } },
+  pin: { hold: 0.5, patch: { hipY: -0.15, kneeL: 1.0, kneeR: 1.0, torsoX: 0.15, neckX: -0.3, armRRaise: 0.7, armRSpread: 0.35, elbowR: 0.7, armLRaise: 0.5, armLSpread: 0.5 } },
+  tip: { hold: 0.4, patch: { hipY: -0.1, kneeL: 0.75, kneeR: 0.75, torsoX: 0.12, torsoY: 0.2, neckY: 0.35, neckX: -0.15, armRRaise: 0.5, armRSpread: 0.4, elbowR: 0.7 } },
+  miss: { hold: 0.45, patch: { hipY: -0.11, kneeL: 0.8, kneeR: 0.8, torsoX: 0.1, torsoY: 0.4, neckY: 0.6, neckX: -0.2, armRRaise: 0.25, armRSpread: 0.35, elbowR: 0.9, armLRaise: 0.25, armLSpread: 0.3, elbowL: 0.8 } },
+  closeout: { hold: 0.5, patch: { hipY: -0.1, kneeL: 0.8, kneeR: 0.55, torsoX: 0.15, torsoY: -0.5, neckY: -0.6, armRRaise: 0.45, armRSpread: 0.55, elbowR: 0.6, armLRaise: 0.4, armLSpread: 0.7 } },
 };
 
 /** The body's knee and hip give is cut back this much at a run, so the stride underneath carries on. */

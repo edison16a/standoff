@@ -1,5 +1,4 @@
 import { buildOf, standingReach } from "../athlete";
-import type { Match } from "../match";
 import { copyBody, type BallBody } from "../physics/air";
 import { BALL } from "../physics/ball-spec";
 import type { Contact } from "../physics/world";

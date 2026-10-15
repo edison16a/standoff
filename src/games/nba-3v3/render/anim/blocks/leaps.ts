@@ -10,6 +10,9 @@ export type Keys = (readonly [number, PosePatch])[];
  * only carry up with the jump; the strike of the preset (`strikes.ts`)
  * and the hand on the ball (`block-reach.ts`) play over them.
  *
+ * Coming down, the arms come in half open and tucked, bent at the
+ * elbow, so they do not sweep across the shooter who is usually close.
+ *
  * On the run the plant foot is set down ahead and the body passes over
  * it during the crouch, so the leg sweeps back by as much ground as the
  * run covers: the foot stays put on the floor instead of sliding.
@@ -27,8 +30,8 @@ function stand(g: number, air: number): Keys {
     [g, { hipY: -0.2, kneeL: 1.3, kneeR: 1.3, legLLift: 0.66, legRLift: 0.66, torsoX: 0.34, armLRaise: -0.35, armRRaise: -0.35, elbowL: 0.5, elbowR: 0.5 }],
     [g + 0.09, { hipY: 0, kneeL: 0.15, kneeR: 0.25, legLLift: 0.05, legRLift: 0.2, footL: 0.6, footR: 0.5, torsoX: 0.05, armLRaise: 2.4, armRRaise: 2.45, elbowL: 0.5, elbowR: 0.5, neckX: -0.2 }],
     [top, { armLRaise: 2.95, armRRaise: 3.0, armLSpread: 0.14, armRSpread: 0.1, elbowL: 0.08, elbowR: 0.08, wristL: 0.25, wristR: 0.35, neckX: -0.32, kneeL: 0.3, kneeR: 0.4 }],
-    [g + air - 0.1, { kneeL: 0.4, kneeR: 0.45, legLLift: 0.25, legRLift: 0.28, footL: 0.25, footR: 0.25, armLRaise: 2.3, armRRaise: 2.3, elbowL: 0.35, elbowR: 0.35 }],
-    [g + air + 0.05, { hipY: -0.14, kneeL: 0.9, kneeR: 0.9, legLLift: 0.48, legRLift: 0.48, footL: 0, footR: 0, torsoX: 0.22, armLRaise: 1.1, armRRaise: 1.1, elbowL: 0.5, elbowR: 0.5 }],
+    [g + air - 0.1, { kneeL: 0.4, kneeR: 0.45, legLLift: 0.25, legRLift: 0.28, footL: 0.25, footR: 0.25, armLRaise: 2.1, armRRaise: 2.1, armLSpread: 0.55, armRSpread: 0.55, elbowL: 0.4, elbowR: 0.4 }],
+    [g + air + 0.05, { hipY: -0.14, kneeL: 0.9, kneeR: 0.9, legLLift: 0.48, legRLift: 0.48, footL: 0, footR: 0, torsoX: 0.22, armLRaise: 0.45, armRRaise: 0.45, armLSpread: 0.3, armRSpread: 0.3, elbowL: 0.85, elbowR: 0.85 }],
   ];
 }
 
@@ -49,8 +52,8 @@ function chase(g: number, air: number, sweep: number): Keys {
     [g, { torsoX: 0.5, hipY: -0.16, legLLift: 0.45 - sweep * 0.5, kneeL: 1.25, legRLift: 0.25, kneeR: 1.2, armRRaise: 1.9, elbowR: 1.5, armRSpread: 0.15, armLRaise: 0.3 }],
     [g + 0.1, { torsoX: 0.38, hipY: 0, legLLift: -0.35, kneeL: 0.8, footL: 0.6, legRLift: 0.85, kneeR: 1.4, armRRaise: 2.5, elbowR: 0.7, armLRaise: 0.7, armLSpread: 0.9, elbowL: 0.4, neckX: -0.3 }],
     [g + air * 0.5, { torsoX: 0.3, legLLift: -0.15, kneeL: 0.9, legRLift: 0.7, kneeR: 1.2, armRRaise: 2.8, elbowR: 0.2, armLRaise: 0.5, armLSpread: 1.0, neckX: -0.4 }],
-    [g + air - 0.1, { torsoX: 0.25, legLLift: 0.2, kneeL: 0.5, legRLift: 0.5, kneeR: 0.6, footL: 0.2, armRRaise: 2.0, elbowR: 0.4 }],
-    [g + air + 0.05, { hipY: -0.13, torsoX: 0.32, legLLift: 0.35, kneeL: 0.8, legRLift: 0.55, kneeR: 0.9, footL: 0, armRRaise: 1.1, armLRaise: 0.6, armLSpread: 0.5 }],
+    [g + air - 0.1, { torsoX: 0.25, legLLift: 0.2, kneeL: 0.5, legRLift: 0.5, kneeR: 0.6, footL: 0.2, armRRaise: 2.0, armRSpread: 0.55, elbowR: 0.4 }],
+    [g + air + 0.05, { hipY: -0.13, torsoX: 0.32, legLLift: 0.35, kneeL: 0.8, legRLift: 0.55, kneeR: 0.9, footL: 0, armRRaise: 0.6, armRSpread: 0.4, elbowR: 0.6, armLRaise: 0.5, armLSpread: 0.5 }],
   ];
 }
 
@@ -78,8 +81,8 @@ function closeout(g: number, air: number, sweep: number): Keys {
     [g, { torsoX: 0.1, hipY: -0.17, legLLift: 0.3 - sweep * 0.4, kneeL: 1.2, legRLift: 0.35, kneeR: 1.2, armRRaise: 2.0, elbowR: 0.8, armLRaise: 0.2, armLSpread: 0.4 }],
     [g + 0.09, { torsoX: -0.05, hipY: 0, legLLift: -0.3, kneeL: 0.6, footL: 0.7, legRLift: 0.8, kneeR: 1.0, armRRaise: 2.7, elbowR: 0.3, armLRaise: -0.2, armLSpread: 0.7, neckX: -0.25 }],
     [g + air * 0.5, { torsoX: -0.12, legLLift: -0.45, kneeL: 0.7, legRLift: 0.9, kneeR: 0.7, footR: 0.4, armRRaise: 3.0, elbowR: 0.05, armRSpread: 0.05, armLRaise: -0.35, armLSpread: 0.85, elbowL: 0.3, neckX: -0.35 }],
-    [g + air - 0.1, { torsoX: 0.02, legLLift: -0.1, kneeL: 0.5, legRLift: 0.55, kneeR: 0.5, footL: 0.25, armRRaise: 2.2, elbowR: 0.3, armLRaise: 0.2, armLSpread: 0.6 }],
-    [g + air + 0.05, { hipY: -0.12, torsoX: 0.2, legLLift: 0.2, kneeL: 0.8, legRLift: 0.5, kneeR: 0.9, footL: 0, footR: 0, armRRaise: 1.0, armLRaise: 0.5, armLSpread: 0.4 }],
+    [g + air - 0.1, { torsoX: 0.02, legLLift: -0.1, kneeL: 0.5, legRLift: 0.55, kneeR: 0.5, footL: 0.25, armRRaise: 2.0, armRSpread: 0.55, elbowR: 0.3, armLRaise: 0.2, armLSpread: 0.6 }],
+    [g + air + 0.05, { hipY: -0.12, torsoX: 0.2, legLLift: 0.2, kneeL: 0.8, legRLift: 0.5, kneeR: 0.9, footL: 0, footR: 0, armRRaise: 0.5, armRSpread: 0.45, elbowR: 0.6, armLRaise: 0.4, armLSpread: 0.45 }],
   ];
 }
 
