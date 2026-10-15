@@ -94,6 +94,14 @@ Known gaps from step 3:
 * The knock off line at the slam is still rolled at the slam (the shot model's contest), not before the gather. It now plays the clang preset from the slam, so it looks like a planned clang.
 * Bots still never steer a layup with the stick, and `BOT_DUNK_SENSE` stays at 0.45: bot dunks land about two in three on Hard, much as before.
 
+## Review of steps 1 to 3
+
+Checked against the task point by point, in lab scenes stepped frame by frame (the step through, hop, juke, stuff, slam knocked off line, swat and closeout) and in a live game with the Keyboard player as the Dunker and a Playwright phone as the Big Man (a double tap went down "Slam!", holds went in, a double tap from the floater band came up "Too far out", no page errors). Fixed:
+
+* **A stuff whose stopper never got there** played the thrown back stuff pose over a ball off the iron, and the phone heard nothing (no block event came). Now the slam takes the clang in that case and tells the phone Off the iron (`failSlam` in `finish/dunk-fail.ts`, test in `slam-fail.test.ts`).
+* **The rim hint offered the dunk where it can only come up short.** See the step 3 gaps above: the phone now shows Tap tap dunk only within reach.
+* **The icon cut off the contest hand.** The block presets raised the Lockdown's hand above the top of the frame. The icon camera now looks a touch higher and wider (`ICON_CAMERA`), and the icon was filmed again. The trailer and the poster were not touched.
+
 ## Notes for later steps
 
 * Step 2 (blocks) is done above. A new block preset needs a name in `BLOCK_PRESETS`, a rule in `pickPreset`, a hit in `hitFor`, a strike in `strikes.ts`, a hand path in `block-paths.ts`, a landing in `landings.ts` and a lab row in `lab-blocks.ts`.
