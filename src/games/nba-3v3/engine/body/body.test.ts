@@ -5,7 +5,7 @@ import { Match } from "../match";
 import { COURT, STEP } from "../tuning";
 import type { Athlete } from "../types";
 import { BODY } from "./body-spec";
-import { collide } from "./contact";
+import { MAX_PUSH, collide } from "./contact";
 import { bodyMass, contactMass } from "./mass";
 import { fallTime, hangTime, heightAt, speedToMeet, takeoffSpeed } from "./jump";
 import { MAX_DUNK_PEAK } from "../finish/plan";
@@ -76,9 +76,17 @@ describe("bodies running into each other", () => {
   it("pushes apart two who overlap, the lighter one giving more ground", () => {
     const light = at("playmaker", 0, 5);
     const heavy = at("big", 0.5, 5);
-    collide(light, heavy, 0.4, 0.45);
+    // A deep overlap eases out a few centimetres a step, so it never pops.
+    for (let i = 0; i < 8; i++) collide(light, heavy, 0.4, 0.45);
     expect(heavy.x - light.x).toBeCloseTo(0.85, 6);
     expect(-light.x).toBeGreaterThan(heavy.x - 0.5);
+  });
+
+  it("moves two who overlap deeply apart by no more than a few centimetres in one step", () => {
+    const light = at("playmaker", 0, 5);
+    const heavy = at("big", 0.1, 5);
+    collide(light, heavy, 0.4, 0.45);
+    expect(heavy.x - light.x - 0.1).toBeCloseTo(MAX_PUSH, 6);
   });
 
   it("rubs off sideways speed when two brush past each other", () => {
