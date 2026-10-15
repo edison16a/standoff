@@ -1,7 +1,9 @@
 import type { DunkStyle } from "../../roster";
 import { weighted, type Rng } from "../rng";
 import type { LayupKind } from "../types";
+import type { V2 } from "../vec";
 import type { Approach, Threat } from "./approach";
+import { steerLayup, type SteerFrame } from "./steer-layup";
 
 /**
  * Picks the finish before the gather starts, from how the drive arrives
@@ -20,19 +22,41 @@ export interface FinishChoice {
   hand: 1 | -1;
   /** Which way a sidestep or a spin goes, + the driver's right: away from the defender. */
   side: 1 | -1;
+  /** A reverse steered by the stick: the side of the rim along x it goes up on. */
+  cross?: 1 | -1;
 }
 
 export type Forced = { dunk: DunkStyle } | { layup: LayupKind };
 
+/**
+ * What a person asked for at the rim (see `pick-up.ts`): a dunk on a
+ * double tap, else a layup steered by the stick (`steer-layup.ts`).
+ */
+export interface Intent {
+  dunk: boolean;
+  stick: V2 | null;
+  frame: SteerFrame;
+}
+
 /** Slower than this into the gather, the feet stop and both go up together. */
 const JUMP_STOP_SPEED = 2.4;
 
-export function selectFinish(rng: Rng, ap: Approach, forced: Forced | null = null): FinishChoice {
+export function selectFinish(rng: Rng, ap: Approach, forced: Forced | null = null, intent: Intent | null = null): FinishChoice {
   const side = awayFrom(ap.threat, ap.hand);
   if (forced) return "dunk" in forced ? dunkChoice(forced.dunk, ap, side) : layupChoice(forced.layup, ap, side);
+  if (intent) return asked(rng, ap, intent, side);
   if (ap.canDunk && ap.open) return dunkChoice(openDunk(rng, ap), ap, side);
   if (ap.canDunk && ap.threat && throughHim(ap, ap.threat)) return dunkChoice(ap.putback ? "putback" : "poster", ap, side);
   return layupChoice(pickLayup(rng, ap), ap, side);
+}
+
+/** A person's own call: the dunk he asked for, whatever the odds, or the layup his stick points to. */
+function asked(rng: Rng, ap: Approach, intent: Intent, side: 1 | -1): FinishChoice {
+  if (intent.dunk) return dunkChoice(ap.putback ? "putback" : ap.threat && throughHim(ap, ap.threat) ? "poster" : openDunk(rng, ap), ap, side);
+  const steered = steerLayup(ap, intent.stick, intent.frame, ap.hand);
+  if (!steered) return layupChoice(pickLayup(rng, ap), ap, side);
+  const pick = layupChoice(steered.layup, ap, steered.side);
+  return steered.cross ? { ...pick, cross: steered.cross } : pick;
 }
 
 /** A much stronger man goes up through a smaller one standing in front of him at the rim. */
@@ -51,9 +75,12 @@ function dunkChoice(style: DunkStyle, ap: Approach, side: 1 | -1): FinishChoice 
   return { dunk: true, layup: null, style, hand: ap.hand, side };
 }
 
+/** The layups that go up in the hand away from the man, the way the step or the spin went. */
+const AWAY_HAND = new Set<LayupKind>(["shield", "euro", "spin", "scoop", "upUnder", "juke", "stepThrough"]);
+
 function layupChoice(layup: LayupKind, ap: Approach, side: 1 | -1): FinishChoice {
   // The ball goes up in the hand away from the man: the far hand on a shield, the way of the step on a euro, a spin or a scoop.
-  const away = layup === "shield" || layup === "euro" || layup === "spin" || layup === "scoop" || layup === "upUnder";
+  const away = AWAY_HAND.has(layup);
   return { dunk: false, layup, style: null, hand: away && ap.threat ? side : ap.hand, side };
 }
 
@@ -93,11 +120,11 @@ function pickLayup(rng: Rng, ap: Approach): LayupKind {
       // A big man waiting under it: over him early from out, off the glass from the wing, or under him once he leaves his feet.
       if (ap.distance > 2) return "teardrop";
       if (t.up) return "upUnder";
-      return ap.angle === "side" ? weighted<LayupKind>(rng, { glass: 1.4, scoop: 0.8 }) : weighted<LayupKind>(rng, { scoop: 1, upUnder: 0.6, teardrop: 0.4 });
+      return ap.angle === "side" ? weighted<LayupKind>(rng, { glass: 1.4, scoop: 0.8 }) : weighted<LayupKind>(rng, { scoop: 1, upUnder: 0.6, teardrop: 0.4, hop: 0.35 });
     case "path":
       // Square in the way: round him with a step across at speed, a spin or a fake up close.
-      if (ap.fast) return weighted<LayupKind>(rng, { euro: 1.6, spin: 0.6, glass: ap.angle === "side" ? 0.6 : 0 });
-      return t.dist < 1.3 ? weighted<LayupKind>(rng, { upUnder: 1.1, spin: 0.7, shield: 0.4 }) : weighted<LayupKind>(rng, { euro: 1, spin: 0.8 });
+      if (ap.fast) return weighted<LayupKind>(rng, { euro: 1.6, spin: 0.6, glass: ap.angle === "side" ? 0.6 : 0, stepThrough: ap.angle === "side" ? 0.4 : 0 });
+      return t.dist < 1.3 ? weighted<LayupKind>(rng, { upUnder: 1.1, spin: 0.7, shield: 0.4, juke: 0.5 }) : weighted<LayupKind>(rng, { euro: 1, spin: 0.8 });
     case "ballSide":
       // On the ball: the body goes between him and the ball, or spins off him.
       return weighted<LayupKind>(rng, { shield: 1.4, spin: ap.fast ? 0.3 : 0.7 });

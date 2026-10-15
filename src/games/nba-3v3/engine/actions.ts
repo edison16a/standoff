@@ -7,6 +7,7 @@ import { canShootOutOf, updateMove } from "./moves";
 import { flowShot, queueShot, releaseQueued } from "./move-flow";
 import { choosePassTarget, throwPass } from "./passing";
 import { floaterFits, startFloater, updateFloater } from "./floater";
+import { liftAtRim, pressAtRim, readsTaps, startPickUp } from "./finish/rim-press";
 import { JUMPER, releaseJumper, startJumper } from "./shooting";
 import { hopHeight, plantStepback, STEPBACK } from "./stepback";
 import { BOARD, FREE_THROW, JUMP, SHOT } from "./tuning";
@@ -17,10 +18,12 @@ export { pressDefend } from "./defend";
 
 /**
  * Shoot pressed. Driving at the rim close in makes it a layup or a dunk;
- * anywhere else it starts a jump shot and the meter.
+ * anywhere else it starts a jump shot and the meter. A person's press at
+ * the rim is read by the tap rules first (see `finish/pick-up.ts`).
  */
 export function pressShoot(m: Match, a: Athlete): void {
   if (m.ball.holder !== a.id) return;
+  if (pressAtRim(m, a)) return;
   const outOf = a.action.kind === "move" ? a.action.move : null;
   // Late in a dribble move the shot comes straight out of it, as off a stepback; earlier it waits for that moment.
   if (a.action.kind === "move" && canShootOutOf(a.action)) a.action = { kind: "none" };
@@ -38,12 +41,17 @@ export function pressShoot(m: Match, a: Athlete): void {
   // Under the glass there is no jumper to take, so it becomes a reverse layup.
   const underGlass = a.z < BOARD.face + 0.3 && Math.abs(a.x - RIM_SPOT.x) < 2.8;
   // Running hard at the rim from the edge of the paint, or with a big man waiting, it goes up early and soft.
-  if (!underGlass && floaterFits(m, a, d, speed, heading)) startFloater(m, a);
-  else if (driving || underGlass || d < SHOT.closeRange) startDrive(m, a);
+  const floater = !underGlass && floaterFits(m, a, d, speed, heading);
+  const atRim = floater || driving || underGlass || d < SHOT.closeRange;
+  if (atRim && readsTaps(m, a)) startPickUp(m, a);
+  // A finish forced by a film or the lab is always a drive, from wherever Shoot goes.
+  else if (floater && !m.forcedFinish) startFloater(m, a);
+  else if (atRim) startDrive(m, a);
   else startJumper(m, a, false, outOf);
 }
 
 export function releaseShot(m: Match, a: Athlete, heldMs?: number): void {
+  liftAtRim(m, a);
   if (a.action.kind === "shoot") releaseJumper(m, a, heldMs);
   else if (a.action.kind === "move") releaseQueued(a.action, heldMs);
 }
