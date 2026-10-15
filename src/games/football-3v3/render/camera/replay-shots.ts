@@ -65,13 +65,17 @@ function atCatch(view: MatchView, r: AthleteView, sign: number): Aim {
   };
 }
 
-/** Low behind the ball carrier and a little wide, riding with him. */
+/**
+ * Low behind the ball carrier and a little wide, riding with him. It
+ * holds him tight: a loose follow trails a man in full stride by a few
+ * metres and shrinks him to a speck down the sideline.
+ */
 function chase(r: AthleteView, sign: number): Aim {
   const run = flat(r.vx, r.vz, { x: sign, z: 0 });
   return {
-    pos: { x: r.x - run.x * 7 - run.z * 2.2, y: 3.1, z: r.z - run.z * 7 + run.x * 2.2 },
+    pos: { x: r.x - run.x * 6 - run.z * 2.2, y: 2.9, z: r.z - run.z * 6 + run.x * 2.2 },
     look: { x: r.x + run.x * 3, y: 0.9, z: r.z + run.z * 3 },
-    fov: 46, rate: 4, kind: "replay-chase",
+    fov: 44, rate: 7, kind: "replay-chase",
   };
 }
 
