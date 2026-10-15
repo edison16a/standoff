@@ -34,8 +34,10 @@ describe("a slam that does not go down", () => {
     while (act.t + STEP < act.finish) m.step(STEP);
     // Knocked off line at the slam.
     m.forced = "rimOut";
+    m.drainEvents();
     m.step(STEP);
     m.step(STEP);
+    expect(m.drainEvents().some((e) => e.type === "dunkFail" && e.fail === "clang")).toBe(true);
     expect(act.released).toBe(true);
     expect(act.fail).toBe("clang");
     expect(act.rimHang).toBe(0);

@@ -112,8 +112,14 @@ export function updateDrive(m: Match, a: Athlete, dt: number): void {
     else if (act.dunk) {
       // Met in the air, or knocked off line by a hand or a foul: the body plays that fail from the slam on,
       // never a made dunk's hang over a ball that rims out.
-      if (!slam(m, a, hand)) failFromSlam(act, m.ball.flightKind === "block" ? "stuff" : "clang");
-      else if (act.style === "poster") posterize(m, a);
+      if (slam(m, a, hand)) {
+        if (act.style === "poster") posterize(m, a);
+      } else {
+        const fail = m.ball.flightKind === "block" ? "stuff" : "clang";
+        failFromSlam(act, fail);
+        // The phone hears of a knock off line like any clang; a foul and a block have their own calls.
+        if (fail === "clang" && m.phase === "live") m.emit({ type: "dunkFail", id: a.id, fail, by: null });
+      }
     } else launchShot(m, a, "layup", "good", { ...hand });
   }
   if (before < act.land && t >= act.land) m.emit({ type: "land", id: a.id, hard: act.dunk });
