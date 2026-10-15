@@ -26,6 +26,8 @@ const AGAIN = 0.3;
 const PICK = 0.8;
 /** Into the chest: this close to the body the hands take it at once. */
 const NEAR = 0.25;
+/** A knocked ball can be grabbed by hands this share of their reach from it, and no further. */
+const SCRAMBLE = 0.6;
 
 /** How close another player's hands came to the ball: they fight for it. */
 function contest(m: Match, a: Athlete, ball: V3): number {
@@ -69,6 +71,18 @@ function holds(m: Match, a: Athlete, play: Play, call: LaneCall | null, pass: Pa
   return m.rng.chance(play === "pick" && a.id !== pass.interceptor ? base * PICK : base);
 }
 
+/**
+ * Whether these hands are really on the ball. A clean pass is only for
+ * a player who read it and has his move for it under way (plan.ts), so
+ * nobody catches or picks one he never looked at. A ball knocked loose
+ * is a scramble, but only for hands right on it. A pitch is always seen.
+ */
+function readIt(a: Athlete, pass: PassInfo, stretch: number): boolean {
+  if (pass.pitch) return true;
+  if (pass.tipped) return stretch < SCRAMBLE;
+  return a.catching !== null && a.catching.result === null;
+}
+
 /** The ball was knocked about: anyone may go again, and the readers read its new path. */
 function knocked(m: Match, pass: PassInfo): void {
   pass.tipped = true;
@@ -91,6 +105,7 @@ export function touchBall(m: Match, from: V3): boolean {
     if (near.gap > reach.radius) continue;
     // The hands take it at its nearest: while it is still coming in, let it come.
     if (closing(f.vel, a, near) && near.gap > reach.radius * NEAR) continue;
+    if (!m.filmed && !readIt(a, pass, near.gap / reach.radius)) continue;
     pass.tried[a.id] = m.time;
     // A clean ball goes by the lane (lane-odds.ts); one knocked about is a scramble for whoever is there.
     const call = pass.tipped || play === "catch" ? null : laneCall(threatOf(pass, a), m.rng.next(), play === "pick");
