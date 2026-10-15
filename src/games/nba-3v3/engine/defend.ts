@@ -1,7 +1,8 @@
 import { airborne } from "./athlete";
 import { startBlock } from "./block";
 import { planBlock } from "./blocks/plan";
-import { jumpStyle } from "./blocks/style";
+import { closeoutLeap } from "./blocks/closeout";
+import { jumpStyle, jumpTarget } from "./blocks/style";
 import type { Match } from "./match";
 import { pressDribble } from "./moves";
 import { inStealRange, stealable, startSteal } from "./steal";
@@ -33,7 +34,9 @@ export function pressJump(m: Match, a: Athlete): void {
 
 /** Up he goes, the way the play calls for, with any shot already in the air planned against him. */
 function jump(m: Match, a: Athlete): void {
-  startBlock(a, jumpStyle(m, a));
+  const style = jumpStyle(m, a);
+  startBlock(a, style);
+  if (style === "closeout") closeoutLeap(a, jumpTarget(m, a));
   planBlock(m, a);
 }
 
