@@ -82,3 +82,17 @@ Bot games score about 1.6, 2.3 and 2.7 points a drive on Easy, Medium and Hard o
 * The spin sack is rare in bot games because most sacks come from behind; the blindside is the common one.
 * `catching.contest` is still not drawn as a two man contested catch.
 
+
+## Step 3: the replay and the media (done)
+
+### The touchdown replay, rebuilt
+
+The owner wanted it like Basketball 3v3's: clean, no slow motion needed, several good angles that show the throw and then the run, and nobody standing around.
+
+* **Two takes at full speed** (`host/replay/script.ts`). Take one is **All 22**: high behind the offense from 0.7 s before the snap to the line, the whole field sharp, at most the last 9 s. Take two is close: **Behind the QB** from 1.1 s before the throw, **The catch** from a second before the ball arrives, **End zone** from a second after the catch (only when at least 1.3 s of run is left). A run in is the wide take, then **The run** (a chase from just behind) and the end zone camera. No shot is shorter than 0.7 s; a cut that would make one is dropped. A replay is about 8 to 16 s.
+* **Angles** (`render/camera/replay-shots.ts`). The camera director cuts on every change of angle or take (`CameraDirector.setReplay` returns true on a cut), and `MatchRenderer.setReplay` then snaps every figure: no easing from the last shot's pose and no foot left held (`Figure.cut`, `FootLock.reset`). Depth of field: the wide angle is sharp everywhere, behind the QB the line ahead stays sharp, the others hold the subject (`broadcast-look.ts`).
+* **Everyone moves.** The replay plays the recorded stills, so every one of the 22 plays his real authored animation. Two bot changes cut the last standing still: a computer QB walks a few steps after his throw (`bots/offense.ts` `followThrow`), and a pass blocker with nobody coming kick slides and mirrors the nearest defender (`bots/support-offense.ts` `setPass`). Both are off in the filmed showcase game. Over 12 seeded bot touchdowns, players standing still (under 1 m/s, not blocking or down) from 0.7 s after the snap fell from 3 to 7 percent to 1 to 5 percent, most of what is left being the QB set in the pocket.
+* **Sound** (`host/replay/cues.ts`, `recorder.ts`). The recorder keeps the play's events with the stills; the replay plays the snap, pads, jukes, lunges, hits, throw and catch again for each take and gives them to the renderer, so a slam still shakes the camera. Never the whistle, the horn or the score's music.
+* **Clean screen.** The stat card, the slow motion tag and the traced ball line are gone (`facts.ts` and `render/effects/ball-trace.ts` removed). The only graphic is a small bug top left: Replay and the angle's name (`ReplayOverlay.tsx`, `styles/replay.css`). Rings, name tags and play marks are hidden. Skip stays on the phones only.
+* **Review tool.** `/showcase/football-3v3?replay=<seed>` plays a seeded computer game to a touchdown and shows its replay through the real renderer (`showcase/replay-preview.ts`): `level`, `td=<n>`, `run`, `speed=step` with `window.__fbStep(frames)`. Rushing touchdowns are rare in bot games; `replay=2&run&level=hard` has one.
+* **Tests.** `host/match-driver.test.ts` plays a bot game to a passing touchdown and checks the takes, the angles, the length, the shot minimum, the sounds and that each take hears the throw once. `render/broadcast-look.test.ts` covers the lens; `engine/bots/follow-throw.test.ts` the QB.
