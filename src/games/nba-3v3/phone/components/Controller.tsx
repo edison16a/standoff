@@ -28,7 +28,7 @@ function Status({ court }: { court: CourtState }) {
       {court.mustClear && <span className="nba-status__warn">Take it back past the arc</span>}
       {court.defending && !ft && <GuardRange state={court.guard} />}
       {ft?.ready && <span className="nba-status__warn">Hold Shoot, let go in the green</span>}
-      {court.rim && !ft && <RimHint />}
+      {court.rim && !ft && <RimHint dunk={court.dunk} />}
       {court.onFire && <span className="nba-status__fire">On fire</span>}
       {flash && (
         <strong key={flash.key} className={`nba-flash nba-flash--${flash.tone}`}>
@@ -39,16 +39,18 @@ function Status({ court }: { court: CourtState }) {
   );
 }
 
-/** At the rim Shoot is a finish: the two ways to go up, and the stick to pick the layup. */
-function RimHint() {
+/** At the rim Shoot is a finish: hold to lay it up, and a double tap to dunk once the rim is in reach. */
+function RimHint({ dunk }: { dunk: boolean }) {
   return (
     <span className="nba-status__rim">
       <span>
         <b>Hold</b> layup
       </span>
-      <span>
-        <b>Tap tap</b> dunk
-      </span>
+      {dunk && (
+        <span>
+          <b>Tap tap</b> dunk
+        </span>
+      )}
     </span>
   );
 }

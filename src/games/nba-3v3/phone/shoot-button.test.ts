@@ -4,7 +4,7 @@ import { shootEnabled } from "./shoot-button";
 
 function court(freeThrow: CourtState["freeThrow"]): CourtState {
   return {
-    team: 0, score: [0, 0], shotClock: 12, hasBall: true, rim: false, attacking: true, holder: "Me", mustClear: false, canSteal: false, stealReach: false,
+    team: 0, score: [0, 0], shotClock: 12, hasBall: true, rim: false, dunk: false, attacking: true, holder: "Me", mustClear: false, canSteal: false, stealReach: false,
     defending: false, guard: "off", freeThrow, meter: { fullMs: 820, greenMs: 656, halfMs: 60, goldMs: 12 }, onFire: false, checking: false, countdown: null,
   };
 }

@@ -4,6 +4,8 @@ import type { Match } from "../match";
 import { BOARD, SHOT } from "../tuning";
 import type { Athlete } from "../types";
 import { dir2 } from "../vec";
+import { DUNK_ODDS } from "./dunk-odds";
+import { canDunk } from "./plan";
 
 /**
  * How a ball handler is coming at the rim right now, and whether Shoot
@@ -37,4 +39,20 @@ export function runIn(m: Match, a: Athlete): RunIn {
 /** Shoot here is a finish at the rim, not a jumper. */
 export function atRim(r: RunIn): boolean {
   return r.floater || r.driving || r.underGlass || r.distance < SHOT.closeRange;
+}
+
+/**
+ * Seconds of running a double tap usually takes to be read, and how far
+ * past the dunk's reach it may then be: about one in four comes up short.
+ */
+const TAP_READ = 0.15;
+const SHORT_EDGE = 0.3;
+
+/**
+ * Whether a double tap from here can still get the ball over the ring.
+ * The rim hint shows from the far edge of the floater band, where a dunk
+ * would only come up short, so the phone offers the dunk only in range.
+ */
+export function dunkInReach(a: Athlete, r: RunIn): boolean {
+  return canDunk(a) && r.distance - r.speed * TAP_READ <= DUNK_ODDS.reach + SHORT_EDGE;
 }

@@ -92,7 +92,7 @@ async function pickStar(ctx, card) {
 export async function nba3v3(ctx) {
   await pickStar(ctx, ".nba-pick__card");
   const court = {
-    team: 0, score: [12, 9], shotClock: 14, hasBall: true, rim: false, attacking: true, holder: "P1", mustClear: false,
+    team: 0, score: [12, 9], shotClock: 14, hasBall: true, rim: false, dunk: false, attacking: true, holder: "P1", mustClear: false,
     canSteal: false, stealReach: false, defending: false, guard: "off",
     freeThrow: null, meter: { fullMs: 900, greenMs: 620, halfMs: 60, goldMs: 12 }, onFire: false, checking: false, countdown: null,
   };
@@ -103,7 +103,7 @@ export async function nba3v3(ctx) {
   await ctx.phone.locator(".nba-pad").waitFor({ state: "attached", timeout: 5000 });
   await ctx.snap("pad");
   // Near the rim Shoot is a finish, and the pad says how: hold to lay it up, tap twice to dunk.
-  await ctx.fake("state", { phase: "live", team: 0, playing: true, court: { ...court, rim: true } });
+  await ctx.fake("state", { phase: "live", team: 0, playing: true, court: { ...court, rim: true, dunk: true } });
   await ctx.snap("rim");
   // On defence: Guard, Block and Steal, with the light that says Guard has his man.
   const defence = { ...court, hasBall: false, attacking: false, holder: "CPU Lockdown", canSteal: true, stealReach: true, defending: true, guard: "on" };
