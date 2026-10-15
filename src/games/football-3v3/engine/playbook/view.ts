@@ -49,7 +49,9 @@ export function playbookView(m: Match): PlaybookView | null {
   const play = m.play;
   if (!play?.design || play.runners.length === 0) return null;
   if (m.phase === "presnap") {
-    return { stage: "set", runners: play.runners.map((id, i) => ({ id, n: i + 1, arrow: arrowOf(m.athletes[id]!, m.athletes[id]!.bot.route) })) };
+    // A blocker on a run gets no arrow: he only steps up into his man.
+    const arrow = (id: number, i: number) => (play.design!.routes[i] === "block" && id !== play.back ? null : arrowOf(m.athletes[id]!, m.athletes[id]!.bot.route));
+    return { stage: "set", runners: play.runners.map((id, i) => ({ id, n: i + 1, arrow: arrow(id, i) })) };
   }
   // Into the play the rings stay while the ball is still his to throw, then they get out of the way.
   if (m.phase !== "live" || play.passed || play.qbRun || play.pitched || m.carrier()?.id !== qb.id) return null;

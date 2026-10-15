@@ -11,6 +11,7 @@ import { clipToCard, pageCards } from "./card";
 import { DEAL, dealPlays, playKey, type RunnerKind } from "./deal";
 import { HUDDLE } from "./huddle";
 import { DEEP, type PlayRoute } from "./shapes";
+import { ARROW_LENGTH, playbookView } from "./view";
 
 const CLEAR_OUT_SET: ReadonlySet<PlayRoute> = new Set(["go", "fade", "post", "slant", "out", "curl"]);
 
@@ -157,5 +158,32 @@ describe("routes on the card and the field", () => {
     expect(cut).toBe(true);
     expect(path[path.length - 1]).toEqual([0.525, 1]);
     expect(clipToCard([[0.1, 0.1], [0.2, 0.3]]).cut).toBe(false);
+  });
+});
+
+describe("the play marks on the big screen", () => {
+  it("rings the four while the QB picks, adds route arrows lined up, and fades once the ball is gone", () => {
+    const m = new Match({ entries: FULL, seed: 8, firstOffense: 0 });
+    const qb = bySeat(m, 0);
+    m.choose(qb.id, "throw");
+    expect(playbookView(m)).toMatchObject({ stage: "picking" });
+    expect(playbookView(m)!.runners.map((r) => r.n)).toEqual([1, 2, 3, 4]);
+    m.playbook(qb.id, 0);
+    const set = playbookView(m)!;
+    expect(set.stage).toBe("set");
+    for (const r of set.runners) {
+      const arrow = r.arrow!;
+      const length = arrow.slice(1).reduce((sum, p, i) => sum + Math.hypot(p.x - arrow[i]!.x, p.z - arrow[i]!.z), 0);
+      expect(length).toBeCloseTo(ARROW_LENGTH, 3);
+    }
+    m.press(qb.id, "hike");
+    run(m, 1, () => m.carrier() === qb);
+    expect(playbookView(m)?.stage).toBe("live");
+    m.press(qb.id, "run");
+    expect(playbookView(m)).toBeNull();
+    // A computer QB's play is not marked.
+    const bots = new Match({ entries: BOTS, seed: 8, firstOffense: 0 });
+    run(bots, 5, (mm) => mm.phase === "presnap");
+    expect(playbookView(bots)).toBeNull();
   });
 });
