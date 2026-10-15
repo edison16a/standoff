@@ -96,3 +96,16 @@ The owner wanted it like Basketball 3v3's: clean, no slow motion needed, several
 * **Clean screen.** The stat card, the slow motion tag and the traced ball line are gone (`facts.ts` and `render/effects/ball-trace.ts` removed). The only graphic is a small bug at the top centre, clear of the platform logo: Replay and the angle's name (`ReplayOverlay.tsx`, `styles/replay.css`). Rings, name tags, play marks and the control marker are hidden. Skip stays on the phones only.
 * **Review tool.** `/showcase/football-3v3?replay=<seed>` plays a seeded computer game to a touchdown and shows its replay through the real renderer (`showcase/replay-preview.ts`): `level`, `td=<n>`, `run`, `speed=step` with `window.__fbStep(frames)`. Rushing touchdowns are rare in bot games; `replay=2&run&level=hard` has one.
 * **Tests.** `host/match-driver.test.ts` plays a bot game to a passing touchdown and checks the takes, the angles, the length, the shot minimum, the sounds and that each take hears the throw once. `render/broadcast-look.test.ts` covers the lens; `engine/bots/follow-throw.test.ts` the QB.
+
+### Play test and media
+
+* **Keyboard player and a Playwright phone** played a full game on Easy against the bots (software drawing, the host's `catchUp` hook raised so the game ran near real time). Two real passing touchdowns were replayed on the big screen: the wide take from the line set, then behind the QB and the catch, about 8 s each. The phones showed only the Skip button and the tally. The play test found two things, both fixed: the control marker flew across the replay (the replay moves the seat back to the QB and on to the receiver), and the replay bug sat on the platform logo top left.
+* **Trailer re-recorded** (`public/games/football-3v3/backdrop.*`, 240 frames, none held, 3.2 MB mp4 and 3.4 MB webm): its tacklers now play the step 2 presets. The icon and poster came out the same as before and were kept.
+* **Phone pages** all fit an iPhone 16 (`tools/phone-fit.mjs --games football-3v3`).
+* `render/camera/shots.test.ts` "goes in close on the scorer" plays a whole drive and now has 20 s, since it passed 5 s on a busy shared machine.
+
+### For later
+
+* A replay of a long run spends up to 9 s on the wide take; a third, shorter cut could trim it if it feels long.
+* The two player contested catch (`catching.contest`) is still not drawn.
+* Bot games rarely score on the ground, so the run replay is mostly seen after a person's run in (`?replay=2&run&level=hard` shows one).
