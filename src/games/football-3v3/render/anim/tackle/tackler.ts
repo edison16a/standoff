@@ -2,6 +2,8 @@ import type { TackleKind } from "../../../engine/tackle-preset";
 import { over } from "../pose";
 import { BASE, churn, ON_SIDE, PRONE, ROLLED_BACK, WRAP_ARMS } from "./body-keys";
 import type { Fall } from "./carrier";
+import { sackerFall } from "./sacks";
+import { SLAM_TACKLER } from "./slam";
 
 /**
  * The tackler's side of each preset, authored from the carrier's left,
@@ -31,10 +33,15 @@ export function tacklerFall(kind: TackleKind, t: number): Fall {
         ],
       };
     case "drive": {
-      // Shoulder into the chest, legs churning as he drives him back, then down on top of him.
-      const hit = churn(over(BASE, { pitch: 0.6, spineX: 0.2, neckX: -0.7, ...WRAP_ARMS, hipLX: -0.9, kneeL: 1.2, hipRX: 0.35, kneeR: 0.5 }), t, 0.42);
-      return { lying: "seat", keys: [[0, hit], [0.42, over(hit, { pitch: 0.85 })], [0.62, ASTRIDE]] };
+      // Shoulder into the chest, legs churning as he walks him back two strides, then down on top of him.
+      const hit = churn(over(BASE, { pitch: 0.6, spineX: 0.2, neckX: -0.7, ...WRAP_ARMS, hipLX: -0.9, kneeL: 1.2, hipRX: 0.35, kneeR: 0.5 }), t, 0.75);
+      return { lying: "seat", keys: [[0, hit], [0.75, over(hit, { pitch: 0.85 })], [1.0, ASTRIDE]] };
     }
+    case "slam":
+      return SLAM_TACKLER;
+    case "spin":
+    case "blindside":
+      return sackerFall(kind, t);
     case "ankle":
       // Low at the shins: he lands flat hugging both ankles and holds on while the man topples.
       return {

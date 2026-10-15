@@ -2,6 +2,8 @@ import type { TackleKind } from "../../../engine/tackle-preset";
 import { over, type Keys, type Pose } from "../pose";
 import { BASE, FLAIL, ON_SIDE, PRONE, ROLLED_BACK, SUPINE, TUCKED } from "./body-keys";
 import type { Lying } from "./getup";
+import { sackedFall } from "./sacks";
+import { SLAM_CARRIER } from "./slam";
 
 /**
  * The ball carrier's side of each tackle, authored with the tackler on
@@ -43,17 +45,26 @@ export function carrierFall(kind: TackleKind, run: Pose): Fall {
           [1.0, over(ROLLED_BACK, TUCKED)],
         ],
       };
-    case "drive":
-      // He faces the hit: the chest caves, the feet are driven back from under him and he lands flat on his back.
+    case "drive": {
+      // He faces the hit: the chest caves, his feet backpedal under the drive for two strides, then go out from under him and he lands flat on his back.
+      const held = over(BASE, { pitch: -0.25, spineX: -0.35, neckX: 0.4, ...TUCKED, shLX: -1.2, shLZ: 0.8, elL: -0.6, hipLX: -0.3, hipRX: 0.2, kneeL: 0.5, kneeR: 0.3 });
       return {
         lying: "back",
         keys: [
-          [0, over(BASE, { pitch: -0.2, spineX: -0.35, neckX: 0.4, ...TUCKED, shLX: -1.2, shLZ: 0.8, elL: -0.6, hipLX: -0.3, hipRX: 0.2, kneeL: 0.5, kneeR: 0.3 })],
-          [0.22, over(BASE, { lift: 0.14, pitch: -0.6, spineX: -0.2, neckX: 0.5, ...TUCKED, shLX: -1.5, shLZ: 1.1, hipLX: -0.9, hipRX: -0.4, kneeL: 1.0, kneeR: 0.7 })],
-          [0.48, over(SUPINE, { ...TUCKED, lift: 0.04 })],
-          [0.62, over(SUPINE, TUCKED)],
+          [0, held],
+          [0.25, over(held, { hipLX: 0.35, kneeL: 0.3, hipRX: -0.6, kneeR: 0.9 })],
+          [0.5, over(held, { pitch: -0.35, hipLX: -0.6, kneeL: 0.9, hipRX: 0.3, kneeR: 0.3 })],
+          [0.72, over(BASE, { lift: 0.14, pitch: -0.6, spineX: -0.2, neckX: 0.5, ...TUCKED, shLX: -1.5, shLZ: 1.1, hipLX: -0.9, hipRX: -0.4, kneeL: 1.0, kneeR: 0.7 })],
+          [0.95, over(SUPINE, { ...TUCKED, lift: 0.04 })],
+          [1.1, over(SUPINE, TUCKED)],
         ],
       };
+    }
+    case "slam":
+      return SLAM_CARRIER;
+    case "spin":
+    case "blindside":
+      return sackedFall(kind);
     case "ankle":
       // The feet stop dead in the tackler's arms and the rest of him topples on forward onto his chest.
       return {

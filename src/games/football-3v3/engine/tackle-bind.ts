@@ -45,9 +45,12 @@ function placeIn(a: Athlete, carrier: Athlete, f: V2, side: 1 | -1): { along: nu
 
 const sideOf = (a: Athlete, carrier: Athlete, f: V2): 1 | -1 => (dot2({ x: a.x - carrier.x, z: a.z - carrier.z }, leftOf(f)) >= 0 ? 1 : -1);
 
-/** The tackle's line: the hit's own line for a head on drive, otherwise the way the pair is sliding. */
+/** Presets that play along the hit's own line: the carrier is driven straight away from the man who hit him. */
+const ON_HIT_LINE = new Set<TackleKind>(["drive", "slam", "blindside"]);
+
+/** The tackle's line: the hit's own line for a man driven away from the hit, otherwise the way the pair is sliding. */
 export function lineOf(kind: TackleKind, n: V2, carrier: Athlete): V2 {
-  if (kind === "drive") return n;
+  if (ON_HIT_LINE.has(kind)) return n;
   const v = norm2({ x: carrier.vx, z: carrier.vz });
   return v.x !== 0 || v.z !== 0 ? v : { x: Math.sin(carrier.yaw), z: Math.cos(carrier.yaw) };
 }

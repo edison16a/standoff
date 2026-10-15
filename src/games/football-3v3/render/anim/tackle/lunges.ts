@@ -17,8 +17,14 @@ const DRIVE_B = over(DRIVE_A, { hipLX: 0.35, kneeL: 0.6, hipRX: -1.0, kneeR: 1.3
 const SKIM = over(BASE, { lift: 0.12, pitch: 1.25, neckX: -1.0, shLX: -2.3, shRX: -2.3, elL: -0.4, elR: -0.4, shLZ: 0.4, shRZ: 0.4, hipLX: 0.2, hipRX: 0.35, kneeL: 0.5, kneeR: 0.8 });
 const LAYOUT = over(BASE, { lift: 0.32, pitch: 1.45, neckX: -1.1, shLX: -2.9, shRX: -2.8, elL: -0.1, elR: -0.15, shLZ: 0.15, shRZ: 0.1, hipLX: 0.25, hipRX: 0.35, kneeL: 0.4, kneeR: 0.7 });
 
+/** Full power: the last drive step low, then launched shoulder first with the arms cocked to wrap. */
+const LOAD_UP = over(COIL, { pitch: 0.75, hipLX: -1.25, kneeL: 1.6, hipRX: 0.3, kneeR: 0.7, shLX: 0.5, shRX: 0.5, elL: -1.4, elR: -1.4 });
+const LAUNCH = over(BASE, { lift: 0.32, pitch: 0.8, spineX: 0.2, neckX: -0.8, fwd: 0.2, shLX: -0.7, shRX: -0.4, shLZ: 0.7, shRZ: 0.9, elL: -1.5, elR: -1.5, hipLX: -0.3, kneeL: 0.9, hipRX: 0.7, kneeR: 0.2 });
+
 export function lungeFor(approach: ApproachKind, u: number): Pose {
   switch (approach) {
+    case "slam":
+      return keyed([[0, LOAD_UP], [0.18, LAUNCH], [0.55, over(LAUNCH, { ...WRAP_ARMS, pitch: 0.95 })], [0.85, over(LAUNCH, { lift: 0.12, pitch: 1.3, ...WRAP_ARMS })], [1, PRONE]], u);
     case "wrap":
       return keyed([[0, COIL], [0.25, LEAP], [0.8, over(LEAP, { lift: 0.15, pitch: 1.3, ...WRAP_ARMS })], [1, PRONE]], u);
     case "drive":
