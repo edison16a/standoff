@@ -42,9 +42,11 @@ export function blockPose(act: Block, base: Pose, left: number, speed: number): 
     act.t,
     leap,
   );
-  // In ahead of the windup, held through the follow, and out as the feet reach for the floor.
+  // In ahead of the windup, or from the moment it was decided when that is later, held through the follow, and out as the feet reach for the floor.
   const land = g + air;
-  const w = smooth((act.t - (c - s.windup - IN)) / IN) * smooth((land - act.t) / OUT);
+  const start = Math.max(c - s.windup - IN, plan.made);
+  const span = Math.max(0.04, Math.min(IN, c - start));
+  const w = smooth((act.t - start) / span) * smooth((land - act.t) / OUT);
   return blend(leap, strike, w, { ...leap });
 }
 

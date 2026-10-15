@@ -49,6 +49,6 @@ function guideStopper(m: Match, act: Drive): void {
   // Read back fresh: the jump has just replaced his action.
   const jump = man.action as Athlete["action"];
   if (jump.kind !== "block") return;
-  jump.plan = { at: act.finish - act.t, point: { ...act.release }, hit: "reject", preset: "rejection", hand: handFor(man, act.release) };
+  jump.plan = { made: 0, at: act.finish - act.t, point: { ...act.release }, hit: "reject", preset: "rejection", hand: handFor(man, act.release) };
   man.move = { x: 0, z: 0 };
 }

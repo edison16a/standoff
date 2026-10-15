@@ -63,9 +63,11 @@ export function strikeFrame(shoulder: THREE.Vector3, ball: THREE.Vector3, side: 
  * along the curve from the windup through the bend to the contact. The
  * curve is warped to wherever the ball really is, so its end is exact.
  */
-export function pathPoint(p: HandPath, shoulder: THREE.Vector3, contact: THREE.Vector3, side: 1 | -1, k: number, out: THREE.Vector3): THREE.Vector3 {
+export function pathPoint(p: HandPath, shoulder: THREE.Vector3, contact: THREE.Vector3, side: 1 | -1, k: number, out: THREE.Vector3, from: THREE.Vector3 | null = null): THREE.Vector3 {
   strikeFrame(shoulder, contact, side, f, r);
-  w.copy(contact).addScaledVector(f, p.windup[0]).addScaledVector(UP, p.windup[1]).addScaledVector(r, p.windup[2]);
+  // A strike that starts from where the hand already is uses that for its windup.
+  if (from) w.copy(from);
+  else w.copy(contact).addScaledVector(f, p.windup[0]).addScaledVector(UP, p.windup[1]).addScaledVector(r, p.windup[2]);
   b.copy(contact).addScaledVector(f, p.bend[0]).addScaledVector(UP, p.bend[1]).addScaledVector(r, p.bend[2]);
   // Accelerating into the ball: slow off the windup, fastest at the touch.
   const e = Math.pow(Math.min(1, Math.max(0, k)), p.whip);

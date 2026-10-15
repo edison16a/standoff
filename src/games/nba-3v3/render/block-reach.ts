@@ -12,7 +12,7 @@ const COCK = 0.16;
 /** In the last instant the palm is put on the real ball, so it truly meets it. */
 const LOCK = 0.05;
 /** Over a shot still in the hands, the contest hand hovers this far back toward him and this far above the ball, cocked for the strike. */
-const HOVER = { back: 0.4, up: 0.35 };
+const HOVER = { back: 0.25, up: 0.6 };
 /** Half the gap between two palms on the ball. */
 const PALMS = 0.11;
 
@@ -57,6 +57,10 @@ export class BlockReach {
   private planned: object | null = null;
   /** The plan whose strike has been played, so it is never swung twice. */
   private struck: object | null = null;
+  /** A plan that came in with the hand already up swings from where the hand is, over the time that is left. */
+  private readonly from = new THREE.Vector3();
+  private fromHand = false;
+  private span = 0;
 
   /** The engine's block: where the hand met the ball, and which way the ball went off. */
   hit(a: Athlete, t: BlockTouch, ballVel: { x: number; y: number; z: number }): void {
@@ -74,19 +78,23 @@ export class BlockReach {
     if (this.follow) want = this.playFollow(dt);
     else if (act.kind === "block" && plan && this.struck !== plan) {
       const path = HAND_PATHS[plan.preset];
+      const lead = plan.at - act.t;
       if (this.planned !== plan) {
         this.planned = plan;
         this.side = plan.hand;
+        // Decided late (as the shot leaves the hand), with the hand already up: no jump back to the preset's windup.
+        this.fromHand = this.weight > 0.2 && lead < path.strike;
+        this.span = this.fromHand ? Math.max(0.03, lead) : path.strike;
+        this.from.copy(this.target);
       }
       this.two = TWO_HANDED[plan.preset];
-      const lead = plan.at - act.t;
       contact.set(plan.point.x, plan.point.y, plan.point.z);
       if (plan.hit && ball && ball.mode === "flight" && lead < LOCK) contact.set(ball.pos.x, ball.pos.y, ball.pos.z);
       // The palm on the near face of the ball, not at its middle.
       toBall.copy(contact).sub(shoulder).normalize();
       contact.addScaledVector(toBall, -BALL.radius);
-      const k = 1 - Math.max(0, lead) / path.strike;
-      pathPoint(path, shoulder, contact, this.sd(a, plan.preset), Math.max(0, k), this.target);
+      const k = 1 - Math.max(0, lead) / this.span;
+      pathPoint(path, shoulder, contact, this.sd(a, plan.preset), Math.max(0, k), this.target, this.fromHand ? this.from : null);
       want = lead > path.strike ? 0.6 * smooth(1 - (lead - path.strike) / COCK) : 0.6 + 0.4 * Math.min(1, k);
       // Past the moment with no touch: a near miss, or a touch the engine is a frame late with.
       if (lead < -LOCK || (!plan.hit && lead < 0)) {
@@ -101,7 +109,7 @@ export class BlockReach {
       strikeFrame(shoulder, contact, this.side === "R" ? 1 : -1, f, r);
       this.target.copy(contact).addScaledVector(f, -HOVER.back).addScaledVector(r, 0.1);
       this.target.y += HOVER.up;
-      want = 0.55 * smooth((a.y - 0.05) / 0.2);
+      want = 0.8 * smooth((a.y - 0.05) / 0.2);
     } else if (ball && act.kind === "block" && a.y > 0.05 && ball.mode === "flight") {
       // No plan (a pass, a ball nobody shot): the hand only goes for it if it comes close.
       toBall.set(ball.pos.x, ball.pos.y, ball.pos.z).sub(shoulder);

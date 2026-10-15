@@ -21,8 +21,9 @@ export { armAt, goaltend, jumpHeight, timingAt } from "./meet";
  * ball, or to fall just short of it.
  */
 export interface BlockPlan {
-  /** When the hand meets the ball, on the jump's own clock. */
+  /** When the hand meets the ball, on the jump's own clock, and when that was decided. */
   at: number;
+  made: number;
   /** Where the ball is then. */
   point: V3;
   /** What the hand does to it, or null: the near miss. */
@@ -90,7 +91,7 @@ export function planBlock(m: Match, d: Athlete): void {
     m.forcedBlock = false;
     m.forcedPreset = null;
   }
-  act.plan = { at: act.t + k.dt, point: { ...k.body.pos }, hit, preset, hand: handFor(d, k.body.pos) };
+  act.plan = { at: act.t + k.dt, made: act.t, point: { ...k.body.pos }, hit, preset, hand: handFor(d, k.body.pos) };
 }
 
 /** Plans every defender already up, as a shot leaves the hand. */
