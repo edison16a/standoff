@@ -57,6 +57,7 @@ export function lineUp(athletes: readonly Athlete[], drive: Drive, call: PlayCal
     a.aim = null;
     a.guard = null;
     a.burst = null;
+    a.breaking = null;
     a.action = { kind: "none" };
     // Each side faces the way it attacks, so the two lines face each other.
     a.yaw = attackSign(a.team) > 0 ? Math.PI / 2 : -Math.PI / 2;

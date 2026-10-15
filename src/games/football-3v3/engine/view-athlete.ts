@@ -1,5 +1,6 @@
 import type { BuildId } from "../builds";
 import type { BlockKind } from "./block-preset";
+import type { BreakKind } from "./break-tackle";
 import type { CatchKind, CatchResult } from "./catch-preset";
 import type { ApproachKind, TackleKind } from "./tackle-preset";
 import type { ThrowKind } from "./throw-preset";
@@ -61,6 +62,8 @@ export interface AthleteView {
   block: { kind: BlockKind; t: number; offense: boolean } | null;
   /** Breaking free of a block with Rush (burst.ts): seconds into it, how long it lasts, and the shoulder he swims over. */
   burst: { t: number; dur: number; side: 1 | -1 } | null;
+  /** Running through a head on tackle with a truck or a stiff arm (break-tackle.ts). */
+  breaking: { kind: BreakKind; t: number; dur: number } | null;
   /** Fooled by a juke: seconds into the stumble and which way he lurches. */
   stumble: { t: number; dur: number; side: 1 | -1 } | null;
   spike: boolean;
@@ -92,6 +95,7 @@ export function athleteView(a: Athlete, hasBall: boolean, targeted: boolean, cer
     block: a.block && { ...a.block },
     stumble: a.stumble && { ...a.stumble },
     burst: a.burst && { ...a.burst },
+    breaking: a.breaking && { ...a.breaking },
     spike: act.kind === "celebrate" && act.spike,
     hasBall, targeted, guarding: a.guard, rushing: a.rushT > 0, blocked: a.blocked > 0, ceremony,
   };

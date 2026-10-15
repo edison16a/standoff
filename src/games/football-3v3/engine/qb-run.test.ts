@@ -18,7 +18,8 @@ function across(m: Match, seconds: number): number {
 
 describe("the QB as a passer", () => {
   it("is slowest at the snap and still clearly slower once settled", () => {
-    const m = peopleMatch();
+    // Training bots stand still, so no rusher ends the play before the pace settles.
+    const m = peopleMatch({ level: "training" });
     snap(m);
     const qb = bySeat(m, 0);
     expect(paceOf(m, qb)).toBeCloseTo(QB_PACE.early, 1);

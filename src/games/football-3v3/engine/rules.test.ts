@@ -57,7 +57,8 @@ describe("play flow", () => {
     setDrive(m, 0, 96);
     snap(m);
     const qb = bySeat(m, 0);
-    // Wide of the linemen, who would grab a runner going through them.
+    // Wide of the linemen, who would grab a runner going through them, and with the support defenders sent across the field: from behind or the side nobody breaks a tackle.
+    for (const a of m.athletes) if (a.team === 1 && a.role === "support") a.z = qb.z - 20;
     m.setMove(qb.id, { x: 1, z: 1 });
     const events = run(m, 6, () => m.phase === "touchdown");
     expect(events.some((e) => e.type === "touchdown")).toBe(true);
