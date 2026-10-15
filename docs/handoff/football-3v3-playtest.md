@@ -104,6 +104,12 @@ The owner wanted it like Basketball 3v3's: clean, no slow motion needed, several
 * **Phone pages** all fit an iPhone 16 (`tools/phone-fit.mjs --games football-3v3`).
 * `render/camera/shots.test.ts` "goes in close on the scorer" plays a whole drive and now has 20 s, since it passed 5 s on a busy shared machine.
 
+### Review pass
+
+* Played again with a Playwright phone calling plays: the page of six plays, New plays, the play marks in card colours on the big screen, and a real touchdown replayed on the host with only the top bug and Skip on the phone.
+* **The run angle** (`replay-shots.ts` `chase`) followed loosely from 7 m back, so a runner in full stride shrank to a small figure down the sideline. It now rides 6 m back and keeps up with him.
+* **Tests.** `host/replay/script.test.ts` checks the cuts on their own: a pass, a catch at the line with no end zone shot, a run, the 9 s cap on the wide take, a score with no live play, and the second take starting the play over.
+
 ### For later
 
 * A replay of a long run spends up to 9 s on the wide take; a third, shorter cut could trim it if it feels long.
