@@ -42,9 +42,22 @@ function protect(m: Match, a: Athlete, qb: Athlete): void {
   a.bot.cover = mark?.id ?? null;
   if (mark) return headFor(a, blockSpot(mark, qb), 0.3);
   const since = m.play?.sinceSnap ?? 0;
-  if (jobOf(a) === "tackle" || since < LEAK_AFTER) return headFor(a, a, 1);
+  if (jobOf(a) === "tackle" || since < LEAK_AFTER) return m.filmed ? headFor(a, a, 1) : setPass(m, a);
   const s = attackSign(a.team);
   headFor(a, insideRoute({ x: yardToX(m.offense, m.drive.los) + s * 4 * YARD, z: a.z }), 1.5);
+}
+
+/**
+ * A pass blocker with nobody coming: he kick slides back off the line
+ * and mirrors the nearest defender, ready for him, instead of standing
+ * up still. The steps are short, so he stays where the pocket needs him.
+ */
+function setPass(m: Match, a: Athlete): void {
+  const s = attackSign(a.team);
+  const line = yardToX(m.offense, m.drive.los);
+  const near = m.athletes.filter((d) => d.team !== a.team && !isDown(d)).sort((p, q) => dist2(p, a) - dist2(q, a))[0];
+  const mirror = near ? Math.max(-1, Math.min(1, near.z - a.z)) : 0;
+  headFor(a, { x: line - s * 1.6, z: a.z + mirror }, 1.5);
 }
 
 /**
