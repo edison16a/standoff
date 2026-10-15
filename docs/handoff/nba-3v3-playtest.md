@@ -80,7 +80,19 @@ Done:
   * A dunker landing on the man under the rim was pushed out of him in one frame, both jumping up to 0.45 m. The push apart is now at most 8 cm a step (`MAX_PUSH` in `body/contact.ts`).
   * After both, the only jumps left are the free throw line up (a camera cut) and the engine ball changing hands, which the renderer eases.
 * **Balance.** Over 250 hard bot games on fresh seeds, 1.23 points a trip against 1.26 at the end of step 2, inside the noise. Open layups 88 percent against 78. Bot dunks the same (65 percent).
+* **Lab scenes for the two new paths**: `/showcase/nba-3v3?lab=slam-knocked` (a rim hang knocked off line at the slam: he lets go and comes down in the clang) and `?lab=slam-posterAir` (the Lockdown leaves his feet as the Dunker takes off and is posterized in the air: he falls back to the floor). Tests in `showcase/lab-presets.test.ts`.
+* **Checked in the browser.** Frame sheets of both new lab scenes. Two real games with the Keyboard player as the Dunker and a Playwright phone as the Big Man on the other team (holding Guard, jumping now and then): drives with a double tap, a hold, a hold steering left, right and back, a tap, a late tap and a tap from far out. A double tap from the edge of the paint came up "Too far out", holds went up as layups, rebounds and steals came through, no page errors on the big screen. On this shared machine the software renderer runs a few frames a second, so the live game is only good for flow; the frame by frame checks are the lab scenes.
+* **Controls.** The keys card says to tap for a dunk "a step or two out", and the README's At the rim section has the timing rules (when to tap, what fails and why) and the open layup rule.
+* **Media filmed again** (`tools/media/capture.mjs nba-3v3 --seconds 12.13 --max-mb 3.9`). The block presets changed the trailer's stepback three (the Lockdown now flies past the Shooter's shoulder in a closeout leap, the All Rounder goes straight up) and the icon (the Lockdown's contest: one long arm over the ball, the other cocked). Both are committed. The poster frame came out the same, so the old one is kept. Both clips are 364 frames with none held (mpdecimate), the WebM 3.5 MB at crf 44 and the MP4 3.4 MB at crf 38. The README picture of the chase down block (`media/readme/chase-block.jpg`) is from before the presets; it still shows a chase down from behind, so it was left.
+* **Phone fit** passes for every Basketball page.
 * `match.test.ts` plays four more seeds: the rarer endings (off the glass and out) came up by luck of the seeds.
+
+Known gaps from step 3:
+
+* A stuff takes over the stopper's body for the walk in and the jump, even when a person plays him (`finish/stopper.ts`, from step 1). It reads as the preset, but a person on defence may feel his man taken for half a second.
+* The rim hint on the phone also shows in the floater band from the edge of the paint, where a double tap is a dunk from too far out ("Too far out"). That is the rule working, but a player who reads the hint as "dunk range" will learn it the hard way.
+* The knock off line at the slam is still rolled at the slam (the shot model's contest), not before the gather. It now plays the clang preset from the slam, so it looks like a planned clang.
+* Bots still never steer a layup with the stick, and `BOT_DUNK_SENSE` stays at 0.45: bot dunks land about two in three on Hard, much as before.
 
 ## Notes for later steps
 
