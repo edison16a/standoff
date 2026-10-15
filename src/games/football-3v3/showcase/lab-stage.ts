@@ -9,6 +9,8 @@ import { Rng } from "../engine/rng";
 import { home } from "../engine/tackle";
 import { bindTackle, followBinds } from "../engine/tackle-bind";
 import { breakTackle, updateBreak, type BreakKind } from "../engine/break-tackle";
+import { CLINCH } from "../engine/support/clinch-pick";
+import { putDown } from "../engine/support/clinch-break";
 import type { ApproachKind, TackleKind } from "../engine/tackle-preset";
 import { STEP, TACKLE } from "../engine/tuning";
 import type { Athlete } from "../engine/types";
@@ -32,6 +34,8 @@ export interface Cast {
   move?: V2;
   /** Seconds in when he presses tackle, and the preset his lunge is drawn as. */
   lunge?: { at: number; approach: ApproachKind; aim?: V2 };
+  /** On the carrier's side, a blocker who slams the cast member `slams` when he reaches him. */
+  slams?: number;
 }
 
 export interface Stage {
@@ -60,7 +64,7 @@ export function recordStage(stage: Stage): AthleteView[][] {
   const start = stage.start ?? -5.5;
   const carrier = make(0, stage.carrier, 0, { x: 0, z: start }, { x: 0, z: stage.speed }, !!stage.qb);
   carrier.move = stage.qb ?? { x: 0, z: 1 };
-  const cast = stage.cast.map((c, i) => make(i + 1, c.build, 1, { x: c.at.x, z: c.at.z + start }, c.vel ?? { x: 0, z: 0 }));
+  const cast = stage.cast.map((c, i) => make(i + 1, c.build, c.slams === undefined ? 1 : 0, { x: c.at.x, z: c.at.z + start }, c.vel ?? { x: 0, z: 0 }));
   for (const [i, a] of cast.entries()) {
     const c = stage.cast[i]!;
     if (!c.vel) a.yaw = Math.atan2(carrier.x - a.x, carrier.z - a.z);
@@ -81,6 +85,12 @@ export function recordStage(stage: Stage): AthleteView[][] {
       const speed = Math.max(TACKLE.lungeSpeed, Math.hypot(a.vx, a.vz) + 2.5);
       a.action = { kind: "lunge", t: 0, dur: TACKLE.lungeTime, dir, target: 0, approach: l.approach };
       Object.assign(a, { vx: dir.x * speed, vz: dir.z * speed, yaw: Math.atan2(dir.x, dir.z) });
+    }
+    for (const [i, a] of cast.entries()) {
+      const target = stage.cast[i]!.slams;
+      const d = target === undefined ? null : cast[target]!;
+      if (d && !a.block && dist2(a, d) < CLINCH.gap + 0.15) putDown(a, d, "slam");
+      if (a.block) a.block.t += STEP;
     }
     for (const a of list) step(a, list, stage, rng);
     frames.push(list.map((a) => athleteView(a, a === carrier, false, null)));

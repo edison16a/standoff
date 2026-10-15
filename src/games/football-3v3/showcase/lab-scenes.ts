@@ -53,6 +53,14 @@ export const STAGES = {
     sticks: [{ at: 0.68, move: { x: -1, z: 0.2 }, juke: true }, { at: 1.1, move: { x: 0, z: 1 } }],
     cast: [{ build: "powerback", at: { x: 0.3, z: 6.4 } }],
   },
+  // A lead blocker in space arriving at speed and blowing up the man in front of the carrier.
+  blowup: {
+    carrier: "powerback", speed: 4, outcome: "none", length: 3,
+    cast: [
+      { build: "powerback", at: { x: 0.4, z: 1.6 }, vel: { x: 0, z: 6 }, move: { x: 0, z: 1 }, slams: 1 },
+      { build: "speedster", at: { x: 0.5, z: 6.5 }, vel: { x: 0, z: -1.5 }, move: { x: 0, z: -0.3 } },
+    ],
+  },
   // Running with weight: a plant and cut at speed, and a lineman next to a speedster pulling up.
   cut: { carrier: "speedster", speed: 8, outcome: "none", length: 2.6, sticks: [{ at: 0.65, move: { x: 1, z: 0.1 } }], cast: [] },
   heavy: {

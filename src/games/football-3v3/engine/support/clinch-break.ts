@@ -30,20 +30,7 @@ export function breakClinch(m: Match, o: Athlete, d: Athlete, kind: "pancake" | 
   o.block = { kind, t: 0, offense: true };
   d.block = { kind, t: 0, offense: false };
   m.support.rest.set(o.id, m.time + CLINCH.rest);
-  if (kind !== "shed") {
-    knockDown(d, LOOSE.pancakeDown, "pancaked");
-    const back = dir2(o, d);
-    const hard = kind === "slam" ? SLAM_BACK : PANCAKE_BACK;
-    d.vx = back.x * hard;
-    d.vz = back.z * hard;
-    d.yaw = Math.atan2(-back.x, -back.z);
-    // A slam drives on through him; a pancake stops over him.
-    const through = kind === "slam" ? 1.2 : 0;
-    o.vx = back.x * through;
-    o.vz = back.z * through;
-    o.yaw = Math.atan2(back.x, back.z);
-    return;
-  }
+  if (kind !== "shed") return putDown(o, d, kind);
   m.support.rest.set(d.id, m.time + CLINCH.free);
   const c = m.carrier();
   const past = dir2(d, c && c.team !== d.team ? c : { x: d.x + (d.x - o.x), z: d.z + (d.z - o.z) });
@@ -53,6 +40,22 @@ export function breakClinch(m: Match, o: Athlete, d: Athlete, kind: "pancake" | 
   const across = past.x * Math.cos(o.yaw) - past.z * Math.sin(o.yaw);
   o.stumble = { t: 0, dur: LOOSE.beaten, side: across >= 0 ? 1 : -1 };
   o.stagger = Math.max(o.stagger, LOOSE.beaten);
+}
+
+/** The defender put on his back by a pancake or a slam: thrown back off the blocker, who stops over him or drives on through. */
+export function putDown(o: Athlete, d: Athlete, kind: "pancake" | "slam"): void {
+  o.block = { kind, t: 0, offense: true };
+  d.block = { kind, t: 0, offense: false };
+  knockDown(d, LOOSE.pancakeDown, "pancaked");
+  const back = dir2(o, d);
+  const hard = kind === "slam" ? SLAM_BACK : PANCAKE_BACK;
+  d.vx = back.x * hard;
+  d.vz = back.z * hard;
+  d.yaw = Math.atan2(-back.x, -back.z);
+  const through = kind === "slam" ? 1.2 : 0;
+  o.vx = back.x * through;
+  o.vz = back.z * through;
+  o.yaw = Math.atan2(back.x, back.z);
 }
 
 /** The pancake or shed plays out on its own clock after the block ends, then the men run as normal. */
