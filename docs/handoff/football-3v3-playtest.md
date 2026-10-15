@@ -64,6 +64,10 @@ Everything here is an authored preset the game logic picks; the engine holds the
 * **Engine** (`engine/catch/settle.ts`): a whip stops him and turns him upfield at the catch, storing the swing in `CatchPlan.turn` for the drawing; a one hand catch puts him down where he lands (the play ends like a diving catch) and has a longer reach while it is coming (`catch/reach.ts`, `HANDS.one`); a toe tap keeps his feet 0.15 m inside the sideline until the ball is his.
 * **Poses** (`render/anim/catch/moves.ts`, `shapes.ts`, `index.ts`): whip (knees give, hop round over 0.26 s), one hand (arm up and out, topple onto the hip, up again), toe tap (pointed toes, lean out over the line, mirrored to the sideline). Labs: `whip`, `whipslam` (a hitter waits for the catch and slams him), `onehand`, `toetap`. `chest` now runs across so it stays a chest catch.
 
+### Scoring
+
+Bot games score about 1.6, 2.3 and 2.7 points a drive on Easy, Medium and Hard over 16 seeds each (step 1: 1.8, 2.5, 2.8). Tackles from the side or behind always holding take a little off; slam blocks give a little back. `engine/scoring.test.ts` bands still pass.
+
 ### Whistle
 
 `audio/whistle-call.ts`: only touchdowns, safeties and good field goals are whistled; the end of a quarter keeps its own. Phones still buzz on every whistle event.
