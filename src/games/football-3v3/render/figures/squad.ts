@@ -60,6 +60,11 @@ export class Squad {
     this.group.add(this.ball.group, this.target.mesh, this.targetEdge.mesh, this.control.group);
   }
 
+  /** A camera cut: every figure takes its next pose at once instead of easing into it. */
+  cut(): void {
+    for (const { figure } of this.figures.values()) figure.cut();
+  }
+
   figure(id: number): Figure | null {
     return this.figures.get(id)?.figure ?? null;
   }

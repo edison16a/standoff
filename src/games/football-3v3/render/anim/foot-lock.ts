@@ -67,6 +67,14 @@ export class FootLock {
     this.released[i] = true;
   }
 
+  /** Both feet free with nothing held, as after a cut to a new shot. */
+  reset(): void {
+    this.feet[0] = this.fresh();
+    this.feet[1] = this.fresh();
+    this.released[0] = false;
+    this.released[1] = false;
+  }
+
   /** A foot let go early stays free until its stride next puts it down. */
   private readonly released = [false, false];
 

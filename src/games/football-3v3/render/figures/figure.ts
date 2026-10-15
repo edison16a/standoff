@@ -48,6 +48,8 @@ export class Figure {
   private phase = 0;
   private hand: Chosen["hand"] = "R";
   private readonly seed: number;
+  /** The next frame follows a camera cut: take the pose outright rather than easing from the last shot's. */
+  private snap = false;
 
   constructor(kit: KitSpec, wardrobe: Wardrobe, readonly id: number) {
     this.kit = kit;
@@ -80,7 +82,14 @@ export class Figure {
     return this.rig.root;
   }
 
+  /** The next frame is a new shot: no easing from this one, and no foot held where it stood. */
+  cut(): void {
+    this.snap = true;
+  }
+
   update(a: AthleteView, scene: PoseScene, dt: number, time: number): void {
+    const snap = this.snap;
+    this.snap = false;
     // Legs move through their stride by the ground covered, so the feet do not skate.
     const ahead = aheadSpeed(a);
     const dir = ahead < -0.5 ? -1 : 1;
@@ -90,14 +99,14 @@ export class Figure {
     // The engine's acceleration in the body's own frame: along the facing and to its left.
     const push = a.ax * Math.sin(a.yaw) + a.az * Math.cos(a.yaw);
     const turn = a.ax * Math.cos(a.yaw) - a.az * Math.sin(a.yaw);
-    const ease = 1 - Math.exp(-dt * 10);
+    const ease = snap ? 1 : 1 - Math.exp(-dt * 10);
     this.push += (push - this.push) * ease;
     this.turn += (turn - this.turn) * ease;
     this.jolt.update(push, turn, this.push, this.turn, dt);
     this.secured = a.hasBall ? (this.secured ?? 0) + dt : null;
     const chosen = choosePose(a, scene, { phase: this.phase, build: this.kit.build, time, seed: this.seed, push: this.push, turn: this.turn, secured: this.secured });
     this.hand = chosen.hand;
-    approach(this.pose, chosen.pose, chosen.rate, dt);
+    approach(this.pose, chosen.pose, snap ? Infinity : chosen.rate, dt);
     this.shown = { ...this.pose };
     this.jolt.apply(this.shown);
     wobble(this.shown, a.stagger, time, this.seed);
@@ -105,6 +114,7 @@ export class Figure {
     root.position.set(a.x, 0, a.z);
     root.rotation.set(0, this.facing.update(a.yaw, a.x, a.z, dt), 0);
     this.stand();
+    if (snap) this.feet.release();
     this.feet.update(this.rig, chosen.feet, this.phase, a.speed, dt);
   }
 
