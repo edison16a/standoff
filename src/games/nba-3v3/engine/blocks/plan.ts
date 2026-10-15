@@ -29,6 +29,13 @@ export interface BlockPlan {
   hit: BlockHit | null;
   /** The authored play the body runs. */
   preset: BlockPreset;
+  /** The hand that strikes (both go up for a two hand play, this one leads): the one on the ball's side. */
+  hand: "L" | "R";
+}
+
+/** The hand on the ball's side of him, as he faces when the play is decided: his left is (cos yaw, -sin yaw). */
+export function handFor(d: Pick<Athlete, "x" | "z" | "yaw">, p: { x: number; z: number }): "L" | "R" {
+  return (p.x - d.x) * Math.cos(d.yaw) - (p.z - d.z) * Math.sin(d.yaw) >= 0 ? "L" : "R";
 }
 
 /**
@@ -83,7 +90,7 @@ export function planBlock(m: Match, d: Athlete): void {
     m.forcedBlock = false;
     m.forcedPreset = null;
   }
-  act.plan = { at: act.t + k.dt, point: { ...k.body.pos }, hit, preset };
+  act.plan = { at: act.t + k.dt, point: { ...k.body.pos }, hit, preset, hand: handFor(d, k.body.pos) };
 }
 
 /** Plans every defender already up, as a shot leaves the hand. */
