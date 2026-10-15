@@ -32,7 +32,7 @@ const POOLS: Record<Exclude<RunnerKind, "back">, readonly PlayRoute[]> = {
 const CLEAR_OUTS: readonly PlayRoute[] = ["go", "fade", "post", "slant", "out", "curl"];
 
 /** The short routes that name a play, most eye catching first. */
-const FEATURE: readonly PlayRoute[] = ["zig", "wheel", "comeback", "dig", "slant", "drag", "out", "curl", "flat"];
+const FEATURE: readonly PlayRoute[] = ["zig", "comeback", "dig", "slant", "drag", "out", "curl", "flat"];
 
 const deepCount = (routes: readonly PlayRoute[]) => routes.filter((r) => DEEP.has(r)).length;
 

@@ -2,8 +2,8 @@
 import { RUNNER_COLOURS } from "../../engine/playbook/colours";
 import type { Book, CardRunner, PlayCardView } from "../../protocol";
 
-/** The card's drawing space: the field's width across, as many yards up as the card shows. */
-const W = 160;
+/** The card's drawing space: the field's width across, stretched a little to fill a phone's card, and as many yards up as the card shows. */
+const W = 200;
 const H = 90;
 
 const px = ([u, v]: [number, number]): [number, number] => [u * W, (1 - v) * H];
