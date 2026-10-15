@@ -2,6 +2,7 @@ import type { Player } from "@/platform/games/game-api";
 import type { Match } from "../engine/match";
 import type { Athlete } from "../engine/types";
 import { canSteal, stealInReach } from "../engine/defend";
+import { atRim, runIn } from "../engine/finish/zone";
 import { guardStatus } from "../engine/guard";
 import { goldHalfMs, greenHalfMs, GREEN_MS } from "../engine/shot-model";
 import { RULES, SHOT } from "../engine/tuning";
@@ -67,6 +68,8 @@ export function courtState(m: Match, id: number, players: readonly Player[]): Co
     score: [m.score[0], m.score[1]],
     shotClock: Math.max(0, Math.ceil(m.shotClock)),
     hasBall: holder === a,
+    // Shoot here is a finish, read as a tap, a hold or a double tap, with no jumper's meter.
+    rim: holder === a && m.phase === "live" && atRim(runIn(m, a)),
     attacking: m.offence === a.team,
     holder: holder ? nameFor(m, holder.id, players) : null,
     mustClear: m.needsClear && m.offence === a.team,

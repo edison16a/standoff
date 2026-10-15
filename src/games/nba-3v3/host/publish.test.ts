@@ -35,6 +35,14 @@ describe("what the phones are told", () => {
     expect(courtState(m, 0, PLAYERS)).toMatchObject({ hasBall: true, canSteal: false });
   });
 
+  it("tells the ball handler when Shoot is a finish at the rim, and never the defence", () => {
+    const m = live(4);
+    expect(courtState(m, 0, PLAYERS).rim).toBe(false);
+    Object.assign(m.athletes[0]!, { x: 0.3, z: 3.8, vx: 0, vz: -4 });
+    expect(courtState(m, 0, PLAYERS).rim).toBe(true);
+    expect(courtState(m, 1, PLAYERS).rim).toBe(false);
+  });
+
   it("puts the fouled player on the free throw meter once set at the line", () => {
     const m = live(0.9);
     const normal = courtState(m, 0, PLAYERS).meter.halfMs;

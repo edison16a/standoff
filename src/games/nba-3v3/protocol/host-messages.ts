@@ -14,6 +14,8 @@ export const courtSchema = z.object({
   shotClock: z.number().int().min(0).max(24),
   /** This player has the ball. */
   hasBall: z.boolean(),
+  /** With the ball near the rim: Shoot is a finish (hold to lay it up, double tap to dunk), not a jumper. */
+  rim: z.boolean(),
   /** This player's team has the ball. */
   attacking: z.boolean(),
   /** Who has the ball, by name, or null when it is loose. */

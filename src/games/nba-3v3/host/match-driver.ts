@@ -41,6 +41,8 @@ export class MatchDriver {
   /** `replay` is off for the demo behind the lobby, which just starts a new game. */
   constructor(entries: readonly Entry[], seed?: number, botLevel?: BotLevel, private readonly replay = true) {
     this.match = new Match({ entries, seed, botLevel });
+    // People's presses at the rim are read as a tap, a hold or a double tap (see `engine/finish/pick-up.ts`).
+    this.match.finishTaps = true;
     this.replays = new ReplayDirector(entries);
     entries.forEach((entry, id) => {
       if (entry.seat !== null) this.athleteBySeat.set(entry.seat, id);

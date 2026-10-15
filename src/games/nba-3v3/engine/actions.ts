@@ -1,18 +1,18 @@
 import { startCheer } from "./celebrate";
-import { RIM_SPOT, rimDistance } from "./court";
 import { pressJump, updateBlock, updateSteal } from "./defend";
 import { startDrive, updateDrive } from "./drive";
 import type { Match } from "./match";
 import { canShootOutOf, updateMove } from "./moves";
 import { flowShot, queueShot, releaseQueued } from "./move-flow";
 import { choosePassTarget, throwPass } from "./passing";
-import { floaterFits, startFloater, updateFloater } from "./floater";
+import { startFloater, updateFloater } from "./floater";
 import { liftAtRim, pressAtRim, readsTaps, startPickUp } from "./finish/rim-press";
+import { atRim, runIn } from "./finish/zone";
 import { JUMPER, releaseJumper, startJumper } from "./shooting";
 import { hopHeight, plantStepback, STEPBACK } from "./stepback";
-import { BOARD, FREE_THROW, JUMP, SHOT } from "./tuning";
+import { FREE_THROW, JUMP, SHOT } from "./tuning";
 import type { Athlete } from "./types";
-import { dir2, type V2 } from "./vec";
+import type { V2 } from "./vec";
 
 export { pressDefend } from "./defend";
 
@@ -33,20 +33,12 @@ export function pressShoot(m: Match, a: Athlete): void {
     m.emit({ type: "mustClear", id: a.id });
     return;
   }
-  const d = rimDistance(a);
-  const speed = Math.hypot(a.vx, a.vz);
-  const toRim = dir2(a, RIM_SPOT);
-  const heading = speed > 0.1 ? (a.vx * toRim.x + a.vz * toRim.z) / speed : 0;
-  const driving = d < SHOT.driveRange && speed > 1.6 && heading > 0.55;
-  // Under the glass there is no jumper to take, so it becomes a reverse layup.
-  const underGlass = a.z < BOARD.face + 0.3 && Math.abs(a.x - RIM_SPOT.x) < 2.8;
-  // Running hard at the rim from the edge of the paint, or with a big man waiting, it goes up early and soft.
-  const floater = !underGlass && floaterFits(m, a, d, speed, heading);
-  const atRim = floater || driving || underGlass || d < SHOT.closeRange;
-  if (atRim && readsTaps(m, a)) startPickUp(m, a);
+  const run = runIn(m, a);
+  const finish = atRim(run);
+  if (finish && readsTaps(m, a)) startPickUp(m, a);
   // A finish forced by a film or the lab is always a drive, from wherever Shoot goes.
-  else if (floater && !m.forcedFinish) startFloater(m, a);
-  else if (atRim) startDrive(m, a);
+  else if (run.floater && !m.forcedFinish) startFloater(m, a);
+  else if (finish) startDrive(m, a);
   else startJumper(m, a, false, outOf);
 }
 
