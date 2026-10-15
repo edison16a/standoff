@@ -6,7 +6,7 @@ import type { Athlete } from "../types";
 import { clamp, dir2, dist2 } from "../vec";
 import type { Approach } from "./approach";
 import { DUNK_ODDS, dunkRating, type DunkRead, type Stopper } from "./dunk-odds";
-import { dunkHeadroom } from "./plan";
+import { canDunk, dunkHeadroom } from "./plan";
 
 /**
  * Reads a dunk attempt off the court for the odds (`dunk-odds.ts`):
@@ -23,7 +23,8 @@ export function readDunk(m: Match, a: Athlete, ap: Approach): { read: DunkRead; 
   const read: DunkRead = {
     distance: ap.distance, speed: ap.speed, heading, offBalance,
     rating: dunkRating(s.speed, s.strength, dunkHeadroom(a)),
-    canDunk: ap.canDunk, stopper: man ? stopperRead(a, man, ap) : null,
+    // The body's reach, not the approach's distance gate: right under the ring a person still goes straight up with it.
+    canDunk: canDunk(a), stopper: man ? stopperRead(a, man, ap) : null,
   };
   return { read, stopper: man };
 }

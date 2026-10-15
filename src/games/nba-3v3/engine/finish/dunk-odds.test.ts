@@ -40,6 +40,13 @@ describe("the dunk odds", () => {
     expect(dunkOdds({ ...GOOD, speed: 0, distance: 0.9 }).clang).toBeLessThan(base + 0.03);
   });
 
+  it("jams a dunk called late at a sprint, right under the ring, into the back iron", () => {
+    const base = dunkOdds(GOOD).clang;
+    expect(dunkOdds({ ...GOOD, distance: 0.5, speed: 5.5 }).clang).toBeGreaterThan(base + 0.3);
+    // Jogging in under it, or standing there, he just goes up with it.
+    expect(dunkOdds({ ...GOOD, distance: 0.5, speed: 2 }).clang).toBeLessThan(base + 0.01);
+  });
+
   it("adds up to one, and rolls each way about as often as it says", () => {
     const o = dunkOdds({ ...GOOD, distance: 3.8, speed: 1, stopper: { ...BIG, edge: 0 } });
     expect(o.make + o.stuff + o.clang + o.short).toBeCloseTo(1, 6);

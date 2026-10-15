@@ -59,6 +59,8 @@ export const DUNK_ODDS = {
   shortSpan: 1.2,
   /** Slower than this a dunk is from a standstill. */
   standing: 1.5,
+  /** Closer than this at a run he has gone past his takeoff and jams it too deep. */
+  deep: 0.9,
   /** A man this close at the rim can stuff it; nobody past `far`. */
   near: 0.9,
   far: 2.2,
@@ -76,7 +78,9 @@ export function dunkOdds(r: DunkRead): DunkOdds {
   const still = clamp((DUNK_ODDS.standing - r.speed) / DUNK_ODDS.standing, 0, 1) * clamp((r.distance - 0.9) / 1.2, 0, 1);
   // Running away or across is worse from out; right under, the gather step turns him to it.
   const slant = Math.max(0, 0.35 - r.heading) * 0.45 * clamp((r.distance - 0.8) / 1.2, 0, 1);
-  const clang = clamp(0.015 + (10 - r.rating) * 0.01 + still * Math.max(0.12, 0.55 - r.rating * 0.04) + slant + r.offBalance * 0.3, 0, 0.9);
+  // Called late at a sprint, right under the ring: the slam is jammed into the back iron.
+  const deep = clamp((DUNK_ODDS.deep - r.distance) / 0.5, 0, 1) * clamp((r.speed - 2.5) / 2.5, 0, 1) * Math.max(0, r.heading) * 0.4;
+  const clang = clamp(0.015 + (10 - r.rating) * 0.01 + still * Math.max(0.12, 0.55 - r.rating * 0.04) + slant + deep + r.offBalance * 0.3, 0, 0.9);
   const stuff = stuffChance(r.stopper);
   const rest = 1 - short;
   return { make: rest * (1 - stuff) * (1 - clang), stuff: rest * stuff, clang: rest * (1 - stuff) * clang, short };

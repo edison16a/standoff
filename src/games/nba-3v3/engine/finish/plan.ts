@@ -109,8 +109,8 @@ function finishSpot(a: Athlete, pick: FinishChoice, spec: FinishSpec, d: number,
   // Never back the way he came: a driver already in close finishes a little in from where he is.
   let stop = Math.min(spec.stop, Math.max(pick.dunk ? 0.34 : 0.55, d - 0.35));
   if (pick.layup === "teardrop") stop = clamp(d - 0.45, spec.stop, 2.8);
-  // A dunk that comes up short left the floor well out.
-  if (pick.dunk && fail === "short") stop = clamp(d - 0.35, SHORT.stop[0], SHORT.stop[1]);
+  // A dunk that comes up short left the floor well out, but never steps back out to do it.
+  if (pick.dunk && fail === "short") stop = clamp(d - 0.35, Math.min(SHORT.stop[0], d), SHORT.stop[1]);
   // Off the line toward `side`: the right of the run in (along -away) is (away.z, -away.x).
   const shift = spec.shift * pick.side;
   const spot = { x: RIM.x + away.x * stop + away.z * shift, z: RIM.z + away.z * stop - away.x * shift };
