@@ -90,7 +90,7 @@ Done:
 Known gaps from step 3:
 
 * A stuff takes over the stopper's body for the walk in and the jump, even when a person plays him (`finish/stopper.ts`, from step 1). It reads as the preset, but a person on defence may feel his man taken for half a second.
-* The rim hint on the phone also shows in the floater band from the edge of the paint, where a double tap is a dunk from too far out ("Too far out"). That is the rule working, but a player who reads the hint as "dunk range" will learn it the hard way.
+* Fixed in review: the rim hint showed "Tap tap dunk" in the floater band too, where a double tap only comes up short. The court state now carries `dunk` (`dunkInReach` in `finish/zone.ts`: the body can dunk, and the distance after the usual read of a double tap is within a step of the dunk's reach), and the phone shows "Tap tap dunk" only then.
 * The knock off line at the slam is still rolled at the slam (the shot model's contest), not before the gather. It now plays the clang preset from the slam, so it looks like a planned clang.
 * Bots still never steer a layup with the stick, and `BOT_DUNK_SENSE` stays at 0.45: bot dunks land about two in three on Hard, much as before.
 

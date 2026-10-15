@@ -200,7 +200,7 @@ Measured over 30 computer games a level, with the ball physics deciding every sh
 
 ## At the rim
 
-Near the rim (driving at it inside 3.3 m, within 1.7 m, under the glass, or on a floater run from the edge of the paint) Shoot is not a jumper. The phone shows Hold layup, Tap tap dunk, and the meter stays off. The press is read for a moment while you keep running (`engine/finish/pick-up.ts`):
+Near the rim (driving at it inside 3.3 m, within 1.7 m, under the glass, or on a floater run from the edge of the paint) Shoot is not a jumper. The phone shows Hold layup, and the meter stays off. Tap tap dunk shows too once a double tap from where you are can still reach the rim (`dunkInReach` in `zone.ts`). The press is read for a moment while you keep running (`engine/finish/pick-up.ts`):
 
 * **Hold** Shoot past 0.17 s: a layup.
 * **Double tap**: let go inside 0.17 s and press again within 0.3 s of the first press. A dunk attempt.
