@@ -11,6 +11,8 @@ const SEEK = 0.7;
 const COCK = 0.16;
 /** In the last instant the palm is put on the real ball, so it truly meets it. */
 const LOCK = 0.05;
+/** Over a shot still in the hands, the contest hand hovers this far back toward him and this far above the ball, cocked for the strike. */
+const HOVER = { back: 0.4, up: 0.35 };
 /** Half the gap between two palms on the ball. */
 const PALMS = 0.11;
 
@@ -91,6 +93,15 @@ export class BlockReach {
         this.struck = plan;
         this.startFollow(contact, ball?.vel ?? { x: 0, y: 0, z: 0 }, plan.hit ? path : HAND_PATHS.miss, this.two);
       }
+    } else if (ball && act.kind === "block" && a.y > 0.05 && ball.mode === "held") {
+      // The shooter still rising: a hand up in his face, over the ball and cocked, so the strike to come starts from a real windup.
+      this.side = sideOf(a, ball.pos);
+      this.two = false;
+      contact.set(ball.pos.x, ball.pos.y, ball.pos.z);
+      strikeFrame(shoulder, contact, this.side === "R" ? 1 : -1, f, r);
+      this.target.copy(contact).addScaledVector(f, -HOVER.back).addScaledVector(r, 0.1);
+      this.target.y += HOVER.up;
+      want = 0.55 * smooth((a.y - 0.05) / 0.2);
     } else if (ball && act.kind === "block" && a.y > 0.05 && ball.mode === "flight") {
       // No plan (a pass, a ball nobody shot): the hand only goes for it if it comes close.
       toBall.set(ball.pos.x, ball.pos.y, ball.pos.z).sub(shoulder);

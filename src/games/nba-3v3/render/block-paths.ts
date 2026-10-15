@@ -38,7 +38,7 @@ export const HAND_PATHS: Record<BlockPreset, HandPath> = {
   // Straight up to the end of the reach for the graze, then a flick.
   tip: { strike: 0.16, windup: [-0.14, -0.34, 0.06], bend: [-0.06, -0.12, 0.03], through: 0.1, drop: -0.08, hold: 0, show: 0.26, whip: 1.3 },
   // The same full reach; the ball is never there, and the hand falls away.
-  miss: { strike: 0.18, windup: [-0.14, -0.34, 0.06], bend: [-0.06, -0.12, 0.03], through: 0.05, drop: 0.5, hold: 0, show: 0.3, whip: 1.3 },
+  miss: { strike: 0.18, windup: [-0.14, -0.34, 0.06], bend: [-0.06, -0.12, 0.03], through: 0.05, drop: 0.7, hold: 0, show: 0.2, whip: 1.3 },
   // Up out of the run, the arm long and straight up and out in front of him.
   closeout: { strike: 0.2, windup: [-0.25, -0.45, 0.1], bend: [-0.12, -0.15, 0.05], through: 0.25, drop: 0.2, hold: 0, show: 0.32, whip: 1.5 },
 };
