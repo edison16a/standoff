@@ -1,4 +1,4 @@
-import type { BlockHit } from "./blocks/hit";
+import type { BlockPreset } from "./blocks/presets";
 import { guardLeap } from "./blocks/guard-leap";
 import type { ForcedDunk } from "./finish/dunk-fail";
 import type { PickUp } from "./finish/pick-up";
@@ -82,9 +82,9 @@ export class Match {
   /** Who an alley oop lob in the air is for, and the last one caught, for the finish. */
   alleyLob: number | null = null;
   alleyCatch: { id: number; at: number } | null = null;
-  /** The next hand that gets to a shot blocks it, for the showcase and the lab; `forcedHit` also sets how, or makes it a near miss. */
+  /** The next hand that gets to a shot blocks it, for the showcase and the lab; `forcedPreset` also sets the play, or makes it a near miss. */
   forcedBlock = false;
-  forcedHit: BlockHit | "miss" | null = null;
+  forcedPreset: BlockPreset | null = null;
   gamePoint: [boolean, boolean] = [false, false];
   /** Whose turn it is to bring the ball up, per team, so everyone gets to handle it. */
   readonly checkTurn: [number, number] = [0, 0];
