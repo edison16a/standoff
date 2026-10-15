@@ -3,6 +3,7 @@ import { CEREMONY } from "../engine/ceremony";
 import type { MatchEvent } from "../engine/events";
 import { Music } from "./music";
 import { Sfx } from "./sfx";
+import { whistleFor } from "./whistle-call";
 
 /**
  * The mix in the lobby, and under a game where the field comes first.
@@ -89,8 +90,10 @@ export class SoundDirector {
         return sfx.catchBall();
       case "doink":
         return sfx.clang(event.power);
-      case "whistle":
-        return sfx.whistle(event.end === "touchdown" || event.end === "safety" ? "score" : "dead");
+      case "whistle": {
+        const call = whistleFor(event.end);
+        return call ? sfx.whistle(call) : undefined;
+      }
       case "firstDown":
         return sfx.chime();
       case "turnoverOnDowns":

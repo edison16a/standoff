@@ -91,7 +91,7 @@ Everything is synthesised through the audio engine, with no crowd: the brass and
 * **Prime Time**, the game's theme: a big brass and drums broadcast theme in D major at 138, with trumpets on the fanfare, horns on the answer, trombones and tuba, driving strings, a marching snare that rolls into every turn, timpani and a crash on each section.
 * **Tailgate**, the lobby and results: a laid back soul groove in F at 82 with a vibraphone, an electric piano, a round bass and brushes.
 * **Stings:** a touchdown fanfare over a timpani roll, a lift for a good kick, a sinking line for a turnover or a miss, a bumper at the end of a quarter, the winners' fanfare, and the horn and fanfare as the trophy goes up.
-* **Effects:** the officials' pealess whistle (one blast for a dead ball, a long one for a score, two short and a long for a quarter), pads cracking, bodies hitting the turf, the kick thump, the snap, the throw, the catch, cleats cutting, the stadium horn, and a soft chime for a first down.
+* **Effects:** the officials' pealess whistle (a long blast for a touchdown, a safety or a good field goal, and two short and a long for a quarter; a play that is simply over is not whistled, `audio/whistle-call.ts`), pads cracking, bodies hitting the turf, the kick thump, the snap, the throw, the catch, cleats cutting, the stadium horn, and a soft chime for a first down.
 
 ## The host
 
