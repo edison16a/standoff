@@ -35,15 +35,19 @@ const focusAt = new THREE.Vector3();
 
 /** The wide angle shows the whole field, so its band covers all of it. */
 const WIDE_RANGE = 60;
+/** Behind the QB the line in front of him stays readable, pushing and fighting, past the soft foreground. */
+const LINE_RANGE = 9;
 
 /**
  * Where the lens focuses, in metres from it, and how deep the sharp band
  * is either side, or null in live play. The wide angle keeps every
- * player sharp; the close angles hold the subject and soften the rest.
+ * player sharp, behind the QB the line ahead of him stays sharp too,
+ * and the other close angles hold the subject and soften the rest.
  */
 export function focusBand(view: MatchView, replay: ReplayShot | null, lens: THREE.Vector3): { distance: number; range: number } | null {
   const at = subject(view, replay, focusAt);
   if (!at) return null;
   const distance = at.distanceTo(lens);
-  return { distance, range: replay?.angle === "all22" ? WIDE_RANGE : focusRange(distance) };
+  const angle = replay?.angle;
+  return { distance, range: angle === "all22" ? WIDE_RANGE : angle === "qb" ? Math.max(LINE_RANGE, focusRange(distance)) : focusRange(distance) };
 }

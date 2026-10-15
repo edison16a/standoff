@@ -144,12 +144,14 @@ export class MatchRenderer {
     this.last = nowMs;
     const time = nowMs / 1000;
     const camera = this.director.camera;
+    // The replay plays clean: no rings, tags or play marks over it.
+    this.squad.rings = !this.replaying;
     this.squad.update(view, dt, time, camera);
     this.lines.update(view, dt);
     const cut = this.director.update(view, dt, time);
     const holding = this.captainHands(view);
     this.ceremony.update(view.ceremony, holding ? this.handL : null, holding ? this.handR : null, dt, time);
-    this.tags.update(view, this.tagOf, this.squad, camera.fov);
+    this.tags.update(view, this.replaying ? null : this.tagOf, this.squad, camera.fov);
     // Not over a replay: the marks are for calling the play, not watching it again.
     this.marks.update(view, this.squad, camera.fov, !this.replaying, (id) => !!this.tagOf?.(id), dt, time);
     // Broadcast graphics like the tags: the showcase's film has neither.

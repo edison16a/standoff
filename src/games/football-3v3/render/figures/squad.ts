@@ -53,6 +53,8 @@ export class Squad {
   private readonly targetEdge = new Ring("#ffffff", 1.05, 1.18, true);
   /** The control marker flying to a teammate a phone takes over. */
   private readonly control = new ControlSwitch();
+  /** The rings under people's players and on the throw's target; off for the replay, which plays clean. */
+  rings = true;
   /** Who wears which name on their back; the players' own names, set by the host. */
   jerseyName: JerseyName = () => null;
 
@@ -88,11 +90,11 @@ export class Squad {
       if (camera) entry.figure.showAt(fill(camera, a.x, a.z, entry.figure.kit.height));
       // The ring waits for the marker flying in, then pulses brighter for a moment.
       const pulse = this.control.pulse(a.id) / ARRIVE_PULSE;
-      const ringed = a.seat !== null && view.phase !== "over" && !this.control.incoming(a.id);
+      const ringed = this.rings && a.seat !== null && view.phase !== "over" && !this.control.incoming(a.id);
       entry.seat.update(ringed, a.x, a.z, time, dt, 0.55 + 0.45 * pulse, pulse > 0);
       if (a.targeted) targeted = a;
     }
-    const aiming = targeted !== null && (view.ball.state === "held" || view.ball.state === "pass");
+    const aiming = this.rings && targeted !== null && (view.ball.state === "held" || view.ball.state === "pass");
     const pulse = view.ball.state === "held";
     this.target.update(aiming, targeted?.x ?? 0, targeted?.z ?? 0, time, dt, 0.95, pulse);
     this.targetEdge.update(aiming, targeted?.x ?? 0, targeted?.z ?? 0, time, dt, 0.9, pulse);

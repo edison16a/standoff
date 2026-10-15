@@ -26,11 +26,12 @@ const mix = (a: Vec, b: Vec, t: number): Vec => ({ x: a.x + (b.x - a.x) * t, y: 
 /** High behind the offense, like a coach's film: the line, the routes and the pursuit all in one picture. */
 function all22(view: MatchView, sign: number): Aim {
   const b = view.ball;
-  const z = b.z * 0.6;
+  // Leans toward the ball across the field, so a run down the sideline stays in the picture.
+  const z = b.z * 0.8;
   return {
-    pos: { x: b.x - sign * 15, y: 11.5, z },
+    pos: { x: b.x - sign * 12, y: 8.5, z },
     look: { x: b.x + sign * 8, y: 0, z: z * 1.05 },
-    fov: 50, rate: 2.6, kind: "replay-all22",
+    fov: 46, rate: 2.6, kind: "replay-all22",
   };
 }
 
@@ -42,8 +43,8 @@ function overQb(view: MatchView, passer: AthleteView, to: AthleteView | undefine
   const b = view.ball;
   const look = b.state === "pass" ? mix(ahead, { x: b.x, y: Math.max(1, b.y * 0.8), z: b.z }, 0.45) : ahead;
   return {
-    pos: { x: passer.x - dir.x * 4.4 + right.x * 1.2, y: 2.5, z: passer.z - dir.z * 4.4 + right.z * 1.2 },
-    look, fov: 44, rate: 4, kind: "replay-qb",
+    pos: { x: passer.x - dir.x * 3.6 + right.x * 1.1, y: 2.2, z: passer.z - dir.z * 3.6 + right.z * 1.1 },
+    look, fov: 42, rate: 4, kind: "replay-qb",
   };
 }
 
@@ -68,8 +69,8 @@ function atCatch(view: MatchView, r: AthleteView, sign: number): Aim {
 function chase(r: AthleteView, sign: number): Aim {
   const run = flat(r.vx, r.vz, { x: sign, z: 0 });
   return {
-    pos: { x: r.x - run.x * 6.5 - run.z * 2, y: 2.3, z: r.z - run.z * 6.5 + run.x * 2 },
-    look: { x: r.x + run.x * 5, y: 1, z: r.z + run.z * 5 },
+    pos: { x: r.x - run.x * 7 - run.z * 2.2, y: 3.1, z: r.z - run.z * 7 + run.x * 2.2 },
+    look: { x: r.x + run.x * 3, y: 0.9, z: r.z + run.z * 3 },
     fov: 46, rate: 4, kind: "replay-chase",
   };
 }
@@ -83,7 +84,7 @@ function endZone(r: AthleteView, sign: number): Aim {
   const back = sign * (FIELD.goalX + 8.5);
   const pos = { x: back, y: 2.1, z: clamp(r.z * 0.45, -12, 12) };
   const d = Math.max(3, Math.hypot(r.x - pos.x, r.z - pos.z));
-  const fov = clamp((2 * Math.atan(3.4 / d) * 180) / Math.PI, 14, 48);
+  const fov = clamp((2 * Math.atan(2.7 / d) * 180) / Math.PI, 10, 48);
   return { pos, look: { x: r.x, y: 1.05, z: r.z }, fov, rate: 6, kind: "replay-endzone" };
 }
 
