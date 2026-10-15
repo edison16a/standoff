@@ -41,7 +41,33 @@ Known gaps from step 1:
 * The rim flag on the phone comes from the last state sent, so on the edge of the zone the phone may run a meter for a press the host reads as a finish, or the other way. Both sides cope: the host uses its own hold time.
 * Bots never steer a layup with the stick; their choice stays the selection rules.
 
+## Step 2: pre animated blocks
+
+Done:
+
+* **Why blocks looked like a raw collision.** Every block touched the ball on the very frame it left the shooter's hand: the plan took the first moment in reach, and at release the ball is already there. The hand had no time to strike; the ball just popped off the shooter's fingers. Seen in a probe of the old lab scenes (plan, shot and block all on one step) and in the browser.
+* **The touch now lands a beat later** (`engine/blocks/meet.ts`). Whether the hand gets there is still the first moment in reach, anywhere on the path, so the block rate is unchanged. The touch is then slid on while the ball stays in reach and clean (not over the ring, not off the iron or the glass) up to 0.1 s after the plan. The hook (`blocks/hook.ts`) plays it on the planned frame only. Regression test in `blocks/blocks.test.ts`.
+* **Eight presets picked by the block math** (`engine/blocks/presets.ts`, tests in `presets.test.ts`): `rejection` (two hands at the rim), `swat` (one hand into the stands), `chase` (from behind), `help` (weak side), `pin` (glass), `tip` (fingertips on a jumper), `miss` (the contest that just misses) and `closeout` (a running leap at a three). Order: the leap the body is in (chase, closeout), then the place (glass, rim), then strength. At the rim a strong man stuffs it with both hands three times in five, anyone else about one in three. The fingertip is judged where the path runs deepest into the reach, not at the later contact. Labs fix a play with `m.forcedPreset` (which replaced `forcedHit`).
+* **Ball exits** (`engine/blocks/exits.ts`, tests in `hit.test.ts`): `reject` drives it down into the lane and out toward the top of the key; `stands` sends it rising over the nearest sideline; `swat` slaps it on the way the arm travels (ahead of a chase down, across from the help side); `pin`; `tip`; `deflect` knocks a closeout back up over the shooter. After that only the physics moves it. The old `spike` is gone.
+* **The closeout leap** (`blocks/style.ts`, `blocks/closeout.ts`): running out at a man shooting from past 5.4 m. As the feet leave the floor he keeps only 60 percent of his run and the run is turned to pass the shooter at 0.75 m, so he flies by his shoulder. Tests in `closeout.test.ts`.
+* **Whole body, authored** (render):
+  * `render/anim/blocks/leaps.ts`: the leap per jump style, from the plant step to the touchdown. On the run the plant leg sweeps back by the ground covered so the foot does not slide. Coming down the arms come in tucked, not across the shooter.
+  * `render/anim/blocks/strikes.ts`: per preset a windup, contact and follow through for the torso, head, legs and both arms, keyed on the planned contact (`plan.at`), mirrored for the left hand (`plan.hand`). It eases in from the moment the plan was made (`plan.made`), so a plan decided at release does not snap the body.
+  * `render/block-paths.ts` and `render/block-reach.ts`: the hand path per preset (windup, bend, contact) in the strike's own frame, warped onto the real ball in the last 0.05 s so the palm is on its near face at the touch; two palms either side of the ball for the rejection and the help. Over a shot still in the shooter's hands the contest hand hovers cocked above the ball; a late plan swings from there over the time left. After the touch the hand carries on the way the ball went; a miss comes back to him.
+  * `render/anim/blocks/landings.ts`: a landing per preset (flex, eyes after the swat, stumble on, turn back to the rim), the thighs left to the run underneath.
+* **Dunks.** The planned stuff from step 1 and a dunk blocked at the rim now play the rejection (or the chase or help from those leaps), with the `reject` exit.
+* **Lab scenes** (`showcase/lab-blocks.ts`): `/showcase/nba-3v3?lab=block-rejection|block-swat|block-chase|block-help|block-pin|block-tip|block-miss|block-closeout&step=1`. The old `block-stand|run|layup|spike` names are gone. `lab-blocks.test.ts` checks each plays its preset.
+* **Balance.** Over 300 hard bot games blocks are 9.1 percent of shots against 9.4 before, with the same points (5622 against 5626). Over 120 easy games points are the same within noise. The preset mix over 120 hard games: tip 74, chase 55, rejection 40, closeout 35, swat 5, help 3, pin 2.
+* **Checked in the browser.** Contact sheets of all eight lab scenes and the stuffed dunk, and every frame of the swat through windup, strike and contact (no pop at the plan, the palm on the ball at the touch, the ball off into the seats). A real game with the Keyboard player as the Big Man on defence (Guard held, Block on the shot): jumps fired, two blocks in the game played the tip preset, no page errors.
+
+Known gaps from step 2:
+
+* A jumper is usually decided at release, so the strike has only about three frames; the hover over the rising shot is what sells it. A pre plan from the shooter's set point could give it a longer swing.
+* The one hand swat into the stands is rare in bot games (5 in 120), because most bot blocks on jumpers graze (tip) and three point blocks are closeouts. Tune `pickPreset` if it should show more.
+* Bots never pick a closeout leap on purpose; they get one when their run at a deep shooter happens to be fast enough.
+* Sounds and the phone still do not tell the presets apart.
+
 ## Notes for later steps
 
-* Step 2 (blocks): a planned stuff is `act.fail === "stuff"` with `act.stopper` on the dunker's drive; `finish/stopper.ts` walks him in and gives his jump `plan = { at, point, hit }`. A block preset can take over from there. `failSlam` in `finish/dunk-fail.ts` applies the hit at the slam.
+* Step 2 (blocks) is done above. A new block preset needs a name in `BLOCK_PRESETS`, a rule in `pickPreset`, a hit in `hitFor`, a strike in `strikes.ts`, a hand path in `block-paths.ts`, a landing in `landings.ts` and a lab row in `lab-blocks.ts`.
 * Step 3: tune `DUNK_ODDS` and `BOT_DUNK_SENSE` from play; the README controls section needs the rim rules.
