@@ -6,7 +6,8 @@ import { isThree, rimDistance } from "./court";
 import { callShootingFoul } from "./foul-call";
 import { missShot } from "./rules";
 import type { Match } from "./match";
-import { freshTrack, traceShot } from "./physics/shot-watch";
+import { traceShot } from "./physics/shot-watch";
+import { letGo, shotInfo } from "./shot-info";
 import { between } from "./rng";
 import { layupEvade, layupInput } from "./finish/layup-release";
 import { newFlight } from "./shot-outcome/flight";
@@ -18,7 +19,7 @@ import { planRelease, type ReleaseInput } from "./shot-release";
 import { shotBalance } from "./shot-balance";
 import { rollShootingFoul } from "./shooting-foul";
 import { RIM } from "./tuning";
-import type { Athlete, ShotInfo } from "./types";
+import type { Athlete } from "./types";
 import { clamp, type V3 } from "./vec";
 
 /** A shot fouled in the act goes in this share as often as it would have. */
@@ -87,26 +88,6 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   planBlocks(m);
   // The ending is known now, for the sounds and buzzes that want it early; the live ball still flies it out.
   m.emit({ type: "shot", id: a.id, kind, three, grade, chance, outcome: plan.detail.outcome, preset: plan.preset, made: plan.detail.made, contest: c.contest });
-}
-
-/** The ball leaves the hand. */
-function letGo(m: Match, a: Athlete, at: V3): void {
-  const b = m.ball;
-  b.holder = null;
-  b.mode = "flight";
-  b.flightT = 0;
-  b.flightKind = "shot";
-  b.lastTouch = a.id;
-  b.pos = { ...at };
-  b.hand = "none";
-  b.passTo = null;
-  b.aim = null;
-}
-
-function shotInfo(m: Match, a: Athlete, kind: ShotKind, grade: Grade, points: 1 | 2 | 3, contest: number, distance: number): ShotInfo {
-  const assist = kind !== "free" && m.lastPass && m.lastPass.to === a.id ? m.lastPass.from : null;
-  const dunk = kind === "dunk" ? (a.action.kind === "drive" && a.action.style ? a.action.style : buildOf(a).dunk) : null;
-  return { shooter: a.id, team: a.team, points, kind, dunk, grade, outcome: "swish", preset: "swish", made: false, counted: false, touchedRim: kind === "dunk", assist, contest, distance, track: freshTrack(), flight: newFlight(null), rolled: [], evade: 0 };
 }
 
 /**

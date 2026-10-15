@@ -1,4 +1,5 @@
 import type { DunkStyle } from "../roster";
+import type { DunkFail } from "./finish/dunk-odds";
 import type { FoulKind } from "./foul-call";
 import type { Grade, Outcome, ShotKind } from "./shot-model";
 import type { DribbleMove, TeamId } from "./types";
@@ -21,6 +22,8 @@ export type MatchEvent =
   | { type: "shot"; id: number; kind: ShotKind; three: boolean; grade: Grade; chance: number; outcome: Outcome; preset: ShotPreset; made: boolean; contest: number }
   | { type: "takeoff"; id: number; dunk: boolean }
   | { type: "dunk"; id: number; style: DunkStyle; power: number }
+  /** A dunk that would not go down: stuffed by `by`, off the iron, or short of the rim (see `finish/dunk-odds.ts`). */
+  | { type: "dunkFail"; id: number; fail: DunkFail; by: number | null }
   | { type: "land"; id: number; hard: boolean }
   | { type: "rim"; power: number }
   | { type: "board"; power: number }

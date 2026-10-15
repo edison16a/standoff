@@ -18,11 +18,16 @@ export type BlockStage = "gather" | "rise" | "fall" | "done";
  */
 export function startBlock(a: Athlete, style: BlockJump = "stand"): void {
   if (a.blockCd > 0) return;
-  const s = buildOf(a).stats;
-  const peak = 0.42 + s.speed * 0.012 + s.strength * 0.008 + JUMP_LIFT[style];
+  const peak = blockPeak(a, style);
   // Real gravity: the time up there follows from how high the legs send him.
   a.action = { kind: "block", t: 0, peak, gather: JUMP.blockGather, air: hangTime(peak), style };
   a.blockCd = DEFENCE.blockCooldown;
+}
+
+/** How high a block jump of this style takes him, metres. */
+export function blockPeak(a: Athlete, style: BlockJump): number {
+  const s = buildOf(a).stats;
+  return 0.42 + s.speed * 0.012 + s.strength * 0.008 + JUMP_LIFT[style];
 }
 
 /** The stage of the jump and how far through it, 0 to 1. The animation reads this too. */

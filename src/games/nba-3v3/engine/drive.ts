@@ -4,13 +4,20 @@ import { pressJump } from "./defend";
 import { readApproach } from "./finish/approach";
 import { ballInHands, specOf } from "./finish/ball-track";
 import { facingAt } from "./finish/facing";
+import { dunkChances, failSlam, judgeDunk } from "./finish/dunk-fail";
+import { gatherLift } from "./finish/footwork";
 import { planFinish } from "./finish/plan";
-import { selectFinish } from "./finish/select";
+import { selectFinish, type Intent } from "./finish/select";
 import type { Match } from "./match";
 import { launchShot, slam } from "./shooting";
 import { JUMP } from "./tuning";
 import type { Athlete } from "./types";
 import { clamp, dir2, dist2, type V3 } from "./vec";
+
+/** The computer only dunks when it goes down at least this often. */
+const BOT_DUNK_SENSE = 0.45;
+/** Seconds a failed dunk holds its preset on the floor after the landing. */
+export const FAIL_SETTLE = 0.36;
 
 /**
  * Driving at the rim. The finish is picked before the gather starts
@@ -19,15 +26,28 @@ import { clamp, dir2, dist2, type V3 } from "./vec";
  * the preset plays out on its own footwork and timing, the ball riding
  * the hands (`finish/ball-track.ts`) to the release or the slam.
  */
-export function startDrive(m: Match, a: Athlete): void {
+export function startDrive(m: Match, a: Athlete, intent: Intent | null = null): void {
   const ap = readApproach(m, a);
-  const pick = selectFinish(m.rng, ap, m.forcedFinish);
+  const forced = m.forcedFinish;
   m.forcedFinish = null;
-  a.action = planFinish(m.rng, a, pick, m.ball.pos);
-  a.yaw = facingAt(a.action, a, 0);
+  let pick = selectFinish(m.rng, ap, forced, intent);
+  let chances = pick.dunk ? dunkChances(m, a, ap) : null;
+  // The computer reads the odds and lays a bad dunk up instead; a person gets the dunk he asked for.
+  if (chances && !intent && !forced && chances.odds.make < BOT_DUNK_SENSE) {
+    pick = selectFinish(m.rng, { ...ap, canDunk: false });
+    chances = null;
+  }
+  // A dunk's fate is rolled now, so a fail plays as its own preset from the first step (see `finish/dunk-odds.ts`).
+  const judged = chances ? judgeDunk(m, chances) : null;
+  const act = planFinish(m.rng, a, pick, m.ball.pos, judged?.fail ?? null);
+  act.stopper = judged?.stopper?.id ?? null;
+  a.action = act;
+  a.yaw = facingAt(act, a, 0);
   const t = ap.threat;
   const man = t ? m.athletes[t.id] : undefined;
-  if (man && t && !airborne(man) && t.dist < 1.6 && (t.spot === "path" || t.spot === "rim" || t.spot === "ballSide")) contact(m, a, man, t.edge, pick.dunk);
+  // The man who will stuff it stands his ground: no bump sends him off his spot.
+  const standing = man && man.id === act.stopper;
+  if (man && t && !standing && !airborne(man) && t.dist < 1.6 && (t.spot === "path" || t.spot === "rim" || t.spot === "ballSide")) contact(m, a, man, t.edge, pick.dunk);
   m.emit({ type: "gather", id: a.id, kind: pick.dunk ? "dunk" : "layup" });
 }
 
@@ -78,24 +98,27 @@ export function updateDrive(m: Match, a: Athlete, dt: number): void {
   a.vx = a.vz = 0;
   // A layup along the baseline keeps its facing once the ball is gone, rather than snapping round.
   if (t < act.finish || specOf(act).yaw === "rim") a.yaw = facingAt(act, a, Math.min(t, act.finish));
-  a.y = driveHeight(act, t);
+  const spec = specOf(act);
+  a.y = driveHeight(act, t) + (t < act.takeoff ? gatherLift(spec.steps, t / act.takeoff) : 0);
   if (before < act.takeoff && t >= act.takeoff) m.emit({ type: "takeoff", id: a.id, dunk: act.dunk });
   // The pump fake of an up and under: a computer defender close by usually leaves his feet for it.
-  const fake = act.takeoff * 0.45;
-  if (act.layup === "upUnder" && before < fake && t >= fake) biteOnFake(m, a);
+  const fake = act.takeoff * (act.layup === "juke" ? 0.42 : 0.45);
+  if ((act.layup === "upUnder" || act.layup === "juke") && before < fake && t >= fake) biteOnFake(m, a);
   if (!act.released && t >= act.finish && m.ball.holder === a.id && m.phase === "live") {
     act.released = true;
     // The ball goes from where the hand has it right now.
     ballInHands(a, { ...act, t: act.finish }, hand);
-    if (act.dunk) {
+    if (act.dunk && act.fail) failSlam(m, a, hand, act);
+    else if (act.dunk) {
       slam(m, a, hand);
       if (act.style === "poster") posterize(m, a);
     } else launchShot(m, a, "layup", "good", { ...hand });
   }
-  if (t >= act.land) {
-    a.y = 0;
+  if (before < act.land && t >= act.land) m.emit({ type: "land", id: a.id, hard: act.dunk });
+  if (t >= act.land) a.y = 0;
+  // A failed dunk stays in its preset a moment on the floor, for the heavy landing and getting back up.
+  if (t >= act.land + (act.fail ? FAIL_SETTLE : 0)) {
     a.action = { kind: "none" };
-    a.recover = act.dunk ? JUMP.driveRecover : JUMP.shotRecover;
-    m.emit({ type: "land", id: a.id, hard: act.dunk });
+    a.recover = act.fail ? JUMP.driveRecover * 1.5 : act.dunk ? JUMP.driveRecover : JUMP.shotRecover;
   }
 }
