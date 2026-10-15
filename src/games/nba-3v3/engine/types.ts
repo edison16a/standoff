@@ -130,6 +130,8 @@ export interface Athlete {
   vz: number;
   /** Feet off the floor, in metres. */
   y: number;
+  /** Falling speed, metres a second, of a body knocked out of the action that held it up (see `body/settle.ts`). */
+  fall?: number;
   /** Facing: 0 looks toward the camera, pi toward the hoop. */
   yaw: number;
   /** Where the player is steered, in court space, length up to 1: the stick, or Guard, or the computer. */

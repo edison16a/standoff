@@ -1,3 +1,4 @@
+import { settleToFloor } from "./body/settle";
 import { startCheer } from "./celebrate";
 import { pressJump, updateBlock, updateSteal } from "./defend";
 import { startDrive, updateDrive } from "./drive";
@@ -67,6 +68,8 @@ export function pressPass(m: Match, a: Athlete, aim: V2 | null): void {
 
 /** Moves every action on by one step. */
 export function updateAction(m: Match, a: Athlete, dt: number): void {
+  // The trophy ceremony hops its players by hand.
+  if (m.phase !== "over") settleToFloor(a, dt);
   const act = a.action;
   switch (act.kind) {
     case "none":
