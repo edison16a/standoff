@@ -21,12 +21,15 @@ These landed on main but our software renderer cannot show them, so the owner ha
 
 Still waiting on the owner: pause or keep the heartbeat, re-record the Paintball trailer, keep or remove the three unrequested extras (crouched shot pops up, bots wait for range, extra Next tap), add a license, remove the duplicate screenshots lower in the README, re-take the README home screenshot with the Standoff Premium badges.
 
+## Done recently (owner playtest round, 2026-10-15)
+
+* Basketball (926e953): layup cut off fixed, double tap dunk and hold layup with dunk fail presets, stick steered layups (step through, hop, reverse, euro, juke), eight authored block presets, new icon.
+* Football (00aacdf): six play cards with refresh and highlighted runners, QB pressure, rush sheds with a speed burst, authored tackles, blocks, catches and front tackle breaks, whistle only on scores, multi angle replays with every player animated.
+
 ## Running now
 
 | Work | Workflow | State |
 | --- | --- | --- |
-| Owner playtest round, Basketball: layup cut off glitch, double tap dunk and hold layup with dunk fail math, direction steered layups (step through, reverse, euro, up and under), pre animated blocks on layups, dunks and threes. Owner words in docs/handoff/next-week/owner-requests.md | wf_d25fedc6-5e2 | building |
-| Owner playtest round, Football: 6 auto generated play cards with refresh and highlighted runners, cleaner passing, QB pressure, rush shed with speed boost, pre animated tackles, blocks, catches and front tackle breaks, whistle only on scores, new Basketball style replays | wf_d25fedc6-5e2 | building |
 
 All final builds are on main: cover icons, sports phone controls, Paintball Battle controls, Subway camera still, 1.2x tiles, final README. Final check done and on main (503ea5b): every game played end to end except the live site, which this machine's browser cannot reach (certificate block). Part 1 fixes: Soccer feet, Kart, Brawl, Blade Clash, Zombie and Gallery rejoin, phone download retry.
 
