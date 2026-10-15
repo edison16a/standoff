@@ -23,6 +23,8 @@ export const PASS_STAGES = {
   anchor: { call: "throw", block: { kind: "anchor", at: 0.45 }, length: 2.6 },
   pancake: { call: "run", block: { kind: "pancake", at: 0.9 }, length: 3.6 },
   ripby: { call: "throw", block: { kind: "shed", at: 1.0 }, length: 3.2 },
+  // A rusher held at the line breaks free with Rush and bursts at the QB.
+  breakfree: { call: "throw", burst: 0.9, length: 3 },
 } satisfies Record<string, PassStage>;
 
 export type PassMove = keyof typeof PASS_STAGES;

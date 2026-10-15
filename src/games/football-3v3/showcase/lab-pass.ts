@@ -3,6 +3,7 @@ import type { CatchKind, CatchResult } from "../engine/catch-preset";
 import { tracePath } from "../engine/catch/path";
 import { newDrive } from "../engine/downs";
 import { breakPair } from "../engine/line-free";
+import { breakFree } from "../engine/rush-shed";
 import type { Entry } from "../engine/lineup";
 import { Match } from "../engine/match";
 import { startChoose } from "../engine/phases";
@@ -34,6 +35,8 @@ export interface PassStage {
   want?: { who: "wr" | "d"; kind: CatchKind; result: CatchResult };
   /** A block move forced on the middle pair from this many seconds after the snap. */
   block?: { kind: BlockKind; at: number };
+  /** Seconds after the snap the Blaze QB, held at the line beside the middle pair, breaks free with Rush. */
+  burst?: number;
   length: number;
 }
 
@@ -73,7 +76,7 @@ function attempt(stage: PassStage, seed: number): { frames: PassFrame[]; shown: 
   const frames: PassFrame[] = [];
   for (let i = 0; i < 240 && m.carrier() !== qb; i++) {
     m.step(STEP);
-    if (stage.block) frames.push(turned(m, lineAt));
+    if (stage.block || stage.burst !== undefined) frames.push(turned(m, lineAt));
   }
   const s = m.sign;
   const spot = (o: { x: number; z: number }, [f, c]: [number, number]) => ({ x: o.x + f * s, z: o.z + c });
@@ -84,11 +87,13 @@ function attempt(stage: PassStage, seed: number): { frames: PassFrame[]; shown: 
   // A computer defender holds his spot in the lane rather than running his coverage.
   if (stage.d?.auto) d.bot.wait = Infinity;
   if (stage.d?.move) m.setMove(d.id, { x: stage.d.move[0] * s, z: stage.d.move[1] });
-  // The other side's QB is out of the picture.
-  Object.assign(m.bySeat(2)!, spot(qb, [45, 8]));
+  // The other side's QB is out of the picture, unless he is the rusher who breaks free beside the middle pair.
+  const rusher = m.bySeat(2)!;
+  if (stage.burst === undefined) Object.assign(rusher, spot(qb, [45, 8]));
+  else Object.assign(rusher, { x: lineAt.x + s * 1.1, z: lineAt.z + 1.5 });
   const origin = stage.wr ? { x: wr.x, z: wr.z } : lineAt;
   const who = stage.want?.who === "d" ? d : wr;
-  let shown = !stage.want;
+  let shown = !stage.want && stage.burst === undefined;
   let thrown = false;
   let since = 0;
   for (let t = 0; t < stage.length; t += STEP) {
@@ -100,6 +105,14 @@ function attempt(stage: PassStage, seed: number): { frames: PassFrame[]; shown: 
       thrown = true;
     }
     if (stage.block && since >= stage.block.at) force(m, stage.block.kind);
+    // Held at the line as he presses Rush, he wins it: the club, swim and rip, then the burst (rush-shed.ts).
+    if (stage.burst !== undefined && since >= stage.burst && !shown) {
+      rusher.blocked = 0.15;
+      breakFree(m, rusher);
+      // His thumb drives him at the QB.
+      m.setMove(rusher.id, { x: qb.x - rusher.x, z: qb.z - rusher.z });
+      shown = true;
+    }
     const before = m.ball.state;
     m.step(STEP);
     if (before !== "pass" && m.ball.state === "pass") afterThrow(m, wr, stage);
