@@ -146,3 +146,18 @@ export function escort(m: Match, a: Athlete, carrier: Athlete): void {
   }
   a.bot.goal = keepGoalInside(a, a.bot.goal, attackSign(a.team));
 }
+
+/**
+ * The QB after he lets it go: he does not stand and stare, he drifts a
+ * few steps after his throw at a walk, watching it come down, as a real
+ * one does. He goes no further than that until someone has the ball.
+ */
+export function followThrow(m: Match, qb: Athlete): void {
+  const spot = m.ball.pass?.spot;
+  if (!spot) return headFor(qb, qb, 1);
+  const dx = spot.x - qb.x;
+  const dz = spot.z - qb.z;
+  const d = Math.hypot(dx, dz) || 1;
+  // A step and a half toward it, eased over six metres: about a quarter of the stick.
+  headFor(qb, { x: qb.x + (dx / d) * 1.5, z: qb.z + (dz / d) * 1.5 }, 6);
+}
