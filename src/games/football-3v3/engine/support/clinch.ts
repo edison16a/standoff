@@ -79,10 +79,10 @@ export function engageClinches(m: Match): void {
       if (!best || d.id === o.bot.cover || (best.id !== o.bot.cover && gap < dist2(o, best))) best = d;
     }
     if (!best) continue;
-    // Arriving at speed he may not lock up at all: a shoulder through the chest puts the man on his back.
+    // Arriving at speed he may not lock up at all: a shoulder through the chest puts the man on his back. Not in the filmed game, which plays as recorded.
     const to = dir2(o, best);
     const closing = (o.vx - best.vx) * to.x + (o.vz - best.vz) * to.z;
-    if (slamsHim(closing, statsOf(o).power - statsOf(best).power, m.support.rng.range(0, 1))) {
+    if (!m.filmed && slamsHim(closing, statsOf(o).power - statsOf(best).power, m.support.rng.range(0, 1))) {
       breakClinch(m, o, best, "slam");
       continue;
     }
