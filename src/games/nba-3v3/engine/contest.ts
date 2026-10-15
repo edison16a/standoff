@@ -16,6 +16,22 @@ export interface Contest {
   edge: number;
 }
 
+/** Nobody close: the body at the rim has the edge, as if three points stronger. */
+const OPEN_EDGE = 3;
+/** The closest man's strength counts fully this close, and not at all past `far`. */
+const BODY = { near: 1.2, far: 2.6 } as const;
+
+/**
+ * The strength edge at the rim. A big man four metres away never touches
+ * the layup, so his strength fades out with the gap: a guard alone at the
+ * rim finishes like anyone alone at the rim.
+ */
+function bodyEdge(s: number, closest: Athlete | null, dist: number): number {
+  if (!closest) return OPEN_EDGE;
+  const near = clamp((BODY.far - dist) / (BODY.far - BODY.near), 0, 1);
+  return (s - buildOf(closest).stats.strength) * near + OPEN_EDGE * (1 - near);
+}
+
 /** A defender on his feet: square to the shooter with a hand up, or caught side on. */
 const HAND_UP = 0.62;
 const FLAT = 0.45;
@@ -82,6 +98,5 @@ export function contestFor(shooter: Athlete, defenders: readonly Athlete[], kind
       blocker = d;
     }
   }
-  const edge = closest ? s.strength - buildOf(closest).stats.strength : 3;
-  return { contest, blocker, blockChance, edge };
+  return { contest, blocker, blockChance, edge: bodyEdge(s.strength, closest, closestD) };
 }

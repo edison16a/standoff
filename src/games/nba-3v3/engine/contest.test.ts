@@ -36,4 +36,15 @@ describe("the contest", () => {
     d.action = { kind: "stumble", t: 0, dur: 0.8, react: "bite" };
     expect(contestFor(shooter, [d], "jumper").contest).toBeLessThan(set * 0.4);
   });
+
+  it("only counts the closest man's strength at the rim when he is close enough to touch the shot", () => {
+    const shooter = createAthlete(0, 0, 0, "shooter", null);
+    const big = createAthlete(1, 1, 0, "big", null);
+    Object.assign(shooter, { x: 0, z: 2.2, yaw: Math.PI });
+    // A Big Man in his chest outmuscles the Shooter; four metres off he is no part of the layup.
+    Object.assign(big, { x: 0, z: 1.2 });
+    expect(contestFor(shooter, [big], "layup").edge).toBe(-6);
+    Object.assign(big, { x: 0, z: 6.2 });
+    expect(contestFor(shooter, [big], "layup").edge).toBe(contestFor(shooter, [], "layup").edge);
+  });
 });
