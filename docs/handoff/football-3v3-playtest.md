@@ -37,3 +37,44 @@ A running note between the three steps of the Football 3v3 playtest work. The ow
 * `catching.contest` is ready for contested catch presets.
 * The playbook view is null in the filmed showcase game, so the trailer is unchanged; a new trailer could show the play marks by playing a person's QB.
 * Replays hide the play marks (`MatchRenderer` passes `traceAt === null`).
+
+## Step 2: pre animated contact and catches (done)
+
+Everything here is an authored preset the game logic picks; the engine holds the bodies to the preset's clock so they never drift apart or sink into each other. Every preset has a lab stage (`/showcase/football-3v3?lab=<name>`, add `labstep`, `cam=x,y,z` and `look=x,y,z` for close looks).
+
+### Tackles and sacks
+
+* **Picking** (`engine/tackle-preset.ts`). `approachFor` at the press: head on a smaller man goes for the ankles, close in a drive, at 4.5 m/s or more a **slam**, slower a wrap; from the side a strong hitter (power 6 or more) at speed slams, others wrap or go low; from behind a shoestring or a wrap. `finishFor(approach, contact)` at contact: help close by makes a gang; a pocket QB is sacked (`blindside` from behind, a slam for a big hit off a slam approach, otherwise the bear hug `spin`); a drive that blew him back 2.5 m/s or more with a big hit becomes a slam, one that did not drive him back a wrap.
+* **New moves** (`engine/tackle-moves.ts`, poses in `render/anim/tackle/slam.ts` and `sacks.ts`). Slam: carrier lifted and thrown back about two metres onto his back, the hitter flies through, lands on him and is up first. Drive now walks him back two strides before he goes over. Spin: the QB is swung round off his feet and thrown on his side. Blindside: whiplash, ball arm out, face first. The slam lunge is its own pose (shoulder first launch, `lunges.ts`). Slam, drive and blindside play along the hit's line (`tackle-bind.ts`).
+* **Mix in bot games** (Easy, 16 games): wrap 236, shoestring 214, gang 164, slam 120, ankle 103, drive 58, blindside 18, spin rare. Labs: `slam`, `spin`, `blindside`, plus the old `wrap`, `drive`, `ankle`, `shoestring`, `gang`.
+
+### Breaking tackles only head on
+
+* `engine/break-tackle.ts`. The momentum hit (`hit.ts`) still moves the bodies and decides how big it was, but staying up is now its own rule: only a hit at least as square as -0.45 along his run, at 4.5 m/s or more, can be broken, with odds 0.12 plus 0.05 a power point over the tackler, 0.06 a m/s over 4.5 and 0.006 a kilogram heavier, capped at 0.5. From the side or behind he always goes down. A big back (6 kg heavier or power 8) **trucks**, anyone else **stiff arms**; he keeps 70 or 85 percent of his run. `Athlete.breaking` drives the carrier's overlay (`render/anim/break-tackle.ts`), the tackler goes down `trucked` or `stiffarmed` (`render/anim/tackle/misses.ts`). Labs: `truck`, `stiffarm`.
+* The filmed showcase game keeps the old rule (any grip too weak breaks) and no slam blocks, so the trailer test and media are unchanged.
+
+### Blocking
+
+* **The pop** (`render/anim/block/index.ts`, `keys.ts`): every block starts by firing out of the stance, striking, rocking back off the pads and striking again before the hand fight. Render only.
+* **Slam in space** (`engine/support/clinch-pick.ts` `slamsHim`, `clinch-break.ts` `putDown`): a support blocker closing at 3 m/s or more may blow his man up (odds 0.25 plus 0.06 a power point over him, capped 0.7), about one block in space in seven. The defender is thrown back onto his back (`pancaked`), the blocker drives through and stands over him (`BlockKind` `slam`). Lab: `blowup`. Pancakes, hand fight, drive, anchor and the rip were already there.
+
+### Catches
+
+* **Picking** (`engine/catch-preset.ts`, now fed `sideline` and `pace`): onehand for a high ball (1.5 m or more) he is 0.05 to 0.8 m short of, or over the shoulder at 5.5 m/s or more and 1.7 m high; toetap within 1.1 m of the sideline; stumble when crowded or hot; **whip** when settled (under 3.5 m/s) and facing the throw. A late lay out of a high ball becomes a one hand grab (`catch/plan.ts`).
+* **Engine** (`engine/catch/settle.ts`): a whip stops him and turns him upfield at the catch, storing the swing in `CatchPlan.turn` for the drawing; a one hand catch puts him down where he lands (the play ends like a diving catch) and has a longer reach while it is coming (`catch/reach.ts`, `HANDS.one`); a toe tap keeps his feet 0.15 m inside the sideline until the ball is his.
+* **Poses** (`render/anim/catch/moves.ts`, `shapes.ts`, `index.ts`): whip (knees give, hop round over 0.26 s), one hand (arm up and out, topple onto the hip, up again), toe tap (pointed toes, lean out over the line, mirrored to the sideline). Labs: `whip`, `whipslam` (a hitter waits for the catch and slams him), `onehand`, `toetap`. `chest` now runs across so it stays a chest catch.
+
+### Whistle
+
+`audio/whistle-call.ts`: only touchdowns, safeties and good field goals are whistled; the end of a quarter keeps its own. Phones still buzz on every whistle event.
+
+### Tests
+
+`engine/tackle-preset.test.ts`, `engine/break-tackle.test.ts`, `engine/catch-preset.test.ts`, `engine/catch/settle.test.ts`, `engine/support/support.test.ts` (slamsHim), `render/anim/contact-presets.test.ts`, `render/anim/tackle/tackle.test.ts`, `render/anim/block/block.test.ts`, `render/anim/catch/catch.test.ts`, `audio/whistle-call.test.ts`. Two old tests changed set up: the QB pace test uses training bots and the run in touchdown test sends the support defenders away, since a tackle from behind now always holds.
+
+### For step 3
+
+* From the broadcast camera the presets are small. A replay angle (or a push in on a slam) is where they will read best; `tackle` events carry the carrier and tackler ids, and the bind's `kind` is in the view (`AthleteView.tackle`).
+* The spin sack is rare in bot games because most sacks come from behind; the blindside is the common one.
+* `catching.contest` is still not drawn as a two man contested catch.
+
