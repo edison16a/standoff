@@ -63,4 +63,28 @@ const STEPS: Record<Steps, (g: number) => Key[]> = {
     [0, { legLLift: 0.6, kneeL: 0.7, legRLift: -0.1, kneeR: 0.6, hipY: -0.1, torsoX: 0.28, ...CARRY }],
     [g, OFF_LEFT],
   ],
+  // Braking onto the right foot with the shoulders turned in, then one long stride across with the left, and up off it.
+  through: (g) => [
+    [0, { legRLift: 0.6, kneeR: 0.6, legLLift: -0.25, kneeL: 0.7, hipY: -0.07, torsoX: 0.3, ...CARRY }],
+    [g * 0.3, { legRLift: 0.15, kneeR: 1.0, legLLift: 0.3, kneeL: 0.5, hipY: -0.14, torsoX: 0.2, torsoY: -0.25, neckY: 0.25 }],
+    [g * 0.7, { legLLift: 0.9, kneeL: 0.45, legLSpread: 0.45, legRLift: -0.3, kneeR: 0.5, hipY: -0.16, torsoX: 0.32, torsoY: 0.2, neckY: -0.1 }],
+    [g, { ...OFF_LEFT, legLSpread: 0.1, torsoY: 0, neckY: 0 }],
+  ],
+  // Loaded on the right, a hop with both knees up, down deep on both feet, then up off both.
+  hop: (g) => [
+    [0, { legRLift: 0.6, kneeR: 0.6, legLLift: -0.25, kneeL: 0.7, hipY: -0.06, torsoX: 0.3, ...CARRY }],
+    [g * 0.3, { legRLift: 0.2, kneeR: 0.9, legLLift: 0.45, kneeL: 0.8, hipY: -0.12, torsoX: 0.28 }],
+    [g * 0.54, { legLLift: 0.7, kneeL: 1.2, legRLift: 0.6, kneeR: 1.25, footL: 0.4, footR: 0.4, hipY: 0, torsoX: 0.12 }],
+    [g * 0.76, { legLLift: 0.85, kneeL: 1.4, legRLift: 0.85, kneeR: 1.4, legLSpread: 0.15, legRSpread: 0.15, footL: 0, footR: 0, hipY: -0.24, torsoX: 0.45, neckX: -0.25 }],
+    [g, { legLLift: -0.05, kneeL: 0.15, legRLift: -0.05, kneeR: 0.15, legLSpread: 0.06, legRSpread: 0.06, footL: 0.6, footR: 0.6, hipY: 0, torsoX: 0.08, neckX: -0.2 }],
+  ],
+  // Into a two foot stop, the pump fake up on the toes with the shoulders sold left, back down, the jab out right, and up.
+  juke: (g) => [
+    [0, { legRLift: 0.6, kneeR: 0.6, legLLift: -0.2, kneeL: 0.7, hipY: -0.06, torsoX: 0.3, ...CARRY }],
+    [g * 0.36, { legLLift: 0.6, kneeL: 1.0, legRLift: 0.6, kneeR: 1.0, legLSpread: 0.12, legRSpread: 0.12, hipY: -0.17, torsoX: 0.35 }],
+    [g * 0.47, { legLLift: 0.12, kneeL: 0.25, legRLift: 0.12, kneeR: 0.25, footL: 0.4, footR: 0.4, hipY: -0.02, torsoX: 0.02, torsoZ: -0.15, neckX: -0.3, armLRaise: 2.3, armRRaise: 2.3, elbowL: 1.0, elbowR: 1.0 }],
+    [g * 0.6, { legLLift: 0.6, kneeL: 1.05, legRLift: 0.6, kneeR: 1.05, footL: 0, footR: 0, hipY: -0.19, torsoX: 0.45, torsoZ: 0, neckX: -0.1, ...CARRY }],
+    [g * 0.8, { legRLift: 0.35, kneeR: 0.9, legRSpread: 0.5, legLLift: 0.2, kneeL: 0.8, hipY: -0.2, torsoX: 0.4, torsoZ: 0.25 }],
+    [g, { ...OFF_LEFT, legRSpread: 0.12, torsoZ: 0.1 }],
+  ],
 };

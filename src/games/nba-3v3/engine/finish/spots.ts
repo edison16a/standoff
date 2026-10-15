@@ -22,8 +22,21 @@ function baselineSide(a: Athlete): number {
   return Math.sign(a.x - RIM.x) || 1;
 }
 
-/** A reverse goes up on the far side of the rim from where the drive came in, just in front of the glass. */
-export function underSpot(a: Athlete): V2 {
-  const side = baselineSide(a);
-  return { x: RIM.x - side * 0.7, z: RIM.z + 0.42 };
+/**
+ * A reverse goes up on the far side of the rim from where the drive came
+ * in, just in front of the glass, or on the side the stick sends it
+ * (`cross`, the sign along x).
+ */
+export function underSpot(a: Athlete, cross?: 1 | -1): V2 {
+  const x = cross ?? -baselineSide(a);
+  return { x: RIM.x + x * 0.7, z: RIM.z + 0.42 };
+}
+
+/** How far a step through ends out from the rim, and across to the side. */
+const THROUGH = { out: 0.75, across: 0.9 } as const;
+
+/** A step through finishes across in front of the rim on its `side` (+ the driver's right facing the rim). */
+export function throughSpot(a: V2, side: 1 | -1): V2 {
+  const away = finishSide(a);
+  return { x: RIM.x + away.x * THROUGH.out + away.z * THROUGH.across * side, z: RIM.z + away.z * THROUGH.out - away.x * THROUGH.across * side };
 }

@@ -18,7 +18,13 @@ export type Steps =
   /** A hard two foot jump stop, then up off both feet. */
   | "stop"
   /** Off one step, early, before the defence is set. */
-  | "one";
+  | "one"
+  /** A plant, then one long stride across in front of the rim. */
+  | "through"
+  /** A hop off one foot onto both, then up off two. */
+  | "hop"
+  /** Stop and pump fake, then a jab step out past his side. */
+  | "juke";
 
 /**
  * A point the ball passes through in the body's own frame. `s` runs 0
