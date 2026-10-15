@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { CATCH_AFTER, CATCH_KINDS, CATCH_PICK, catchKindFor, type CatchRead } from "./catch-preset";
+import { CATCH_AFTER, CATCH_KINDS, CATCH_PICK, catchKindFor, ENDS_DOWN, type CatchRead } from "./catch-preset";
 import { noteCatch } from "./catch/plan";
 import type { Match } from "./match";
 import { bySeat, peopleMatch, run, snap } from "./test-helpers";
 import type { Athlete } from "./types";
 
-const soft: CatchRead = { height: 1.3, speed: 15, facing: 1, contest: 6, short: 0, play: "catch" };
+// Running onto it in the middle of the field, the ball coming over his shoulder from the side.
+const soft: CatchRead = { height: 1.3, speed: 15, facing: 0.3, contest: 6, short: 0, play: "catch", sideline: 15, pace: 7 };
 
 /** Throws a pass to the receiver standing `dx` metres downfield and `dz` across, steps until the ball is his or gone. */
 function passTo(dx: number, dz: number): { m: Match; wr: Athlete; kinds: string[] } {
@@ -40,8 +41,36 @@ describe("catch presets", () => {
     expect(catchKindFor({ ...soft, play: "swat" })).toBe("swat");
   });
 
-  it("keeps every move short enough to be running again before the play moves on", () => {
-    for (const k of CATCH_KINDS) expect(CATCH_AFTER[k]).toBeLessThan(0.8);
+  it("whips round after a catch made settled and facing the throw, but not on the run", () => {
+    expect(catchKindFor({ ...soft, facing: 0.95, pace: 1 })).toBe("whip");
+    expect(catchKindFor({ ...soft, facing: 0.95, pace: 7 })).toBe("chest");
+    expect(catchKindFor({ ...soft, facing: 0.3, pace: 1 })).toBe("chest");
+    // With a defender already on him he hauls it in through the contact instead.
+    expect(catchKindFor({ ...soft, facing: 0.95, pace: 1, contest: 0.8 })).toBe("stumble");
+  });
+
+  it("goes up one handed for a high ball just out of reach, and still lays out for a low or long one", () => {
+    expect(catchKindFor({ ...soft, height: 1.8, short: 0.3 })).toBe("onehand");
+    expect(catchKindFor({ ...soft, height: 1.8, short: 0.9 })).toBe("dive");
+    expect(catchKindFor({ ...soft, height: 1.0, short: 0.5 })).toBe("dive");
+    expect(catchKindFor({ ...soft, height: 1.8, short: 0 })).toBe("chest");
+  });
+
+  it("reaches up one handed for a high ball over the shoulder at full tilt, two hands when slower or lower", () => {
+    expect(catchKindFor({ ...soft, facing: -0.7, height: 1.9, pace: 7.5 })).toBe("onehand");
+    expect(catchKindFor({ ...soft, facing: -0.7, height: 1.9, pace: 4 })).toBe("shoulder");
+    expect(catchKindFor({ ...soft, facing: -0.7, height: 1.4, pace: 7.5 })).toBe("shoulder");
+  });
+
+  it("drags the toes in at the sideline, but only a receiver does", () => {
+    expect(catchKindFor({ ...soft, sideline: 0.6 })).toBe("toetap");
+    expect(catchKindFor({ ...soft, sideline: 0.6, play: "pick" })).toBe("pick");
+    // A ball over his head at the sideline is still a high point.
+    expect(catchKindFor({ ...soft, sideline: 0.6, height: CATCH_PICK.high + 0.3 })).toBe("high");
+  });
+
+  it("keeps every move short enough to be running again before the play moves on, bar the one that ends on the turf", () => {
+    for (const k of CATCH_KINDS) if (!ENDS_DOWN.has(k)) expect(CATCH_AFTER[k]).toBeLessThan(0.8);
   });
 
   it("gives the receiver his move before the ball gets there, and finishes it with the result", () => {

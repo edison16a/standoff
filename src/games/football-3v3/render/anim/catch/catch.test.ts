@@ -14,7 +14,7 @@ function catcher(kind: CatchKind, tau: number, more: Partial<NonNullable<Athlete
   const v = freshView();
   const a = v.athletes.find((x) => x.role === "runner")!;
   const result: CatchResult | null = more.result ?? null;
-  return { ...a, speed, catching: { kind, t: 0.5 + tau, at: 0.5, side: 1, height: 1.3, result, since: Math.max(0, tau), contest: null, ...more } as NonNullable<AthleteView["catching"]> };
+  return { ...a, speed, catching: { kind, t: 0.5 + tau, at: 0.5, side: 1, height: 1.3, result, since: Math.max(0, tau), contest: null, turn: 0, ...more } as NonNullable<AthleteView["catching"]> };
 }
 
 const at = (kind: CatchKind, tau: number, more: Partial<NonNullable<AthleteView["catching"]>> = {}, speed = 6) =>
@@ -80,5 +80,31 @@ describe("catch moves", () => {
     expect(high.feet).toBe("free");
     const dive = choosePose({ ...catcher("dive", 0), action: "dive", actionT: 0.2, actionDur: 0.5 }, s, body);
     expect(dive.pose.shLX).toBeLessThan(-2.5);
+  });
+
+  it("whips a settled receiver round upfield after the catch, starting from facing the throw", () => {
+    const turn = 2.6;
+    expect(at("whip", 0, { result: "held", turn }).yaw).toBeCloseTo(turn);
+    expect(Math.abs(at("whip", 0.4, { result: "held", turn }).yaw)).toBeLessThan(0.05);
+    // Sat into the knees for the ball as it comes.
+    expect(at("whip", 0, {}, 0.5).kneeL).toBeGreaterThan(0.8);
+  });
+
+  it("throws one hand up and out for a ball past him, then tips onto his hip with it", () => {
+    const up = at("onehand", 0);
+    expect(up.lift).toBeGreaterThan(0.4);
+    expect(up.shLX).toBeLessThan(-2.5);
+    expect(up.shRX).toBeGreaterThan(0);
+    expect(at("onehand", 0.6, { result: "held" }).pitch).toBeGreaterThan(1.3);
+  });
+
+  it("drags both toes and leans out over the sideline, the same way on either side", () => {
+    const left = at("toetap", 0, { side: 1 });
+    const right = at("toetap", 0, { side: -1 });
+    expect(left.ankL).toBeGreaterThan(0.6);
+    expect(left.roll).toBeGreaterThan(0.3);
+    expect(right.roll).toBeCloseTo(-left.roll);
+    // Still leaning out after the ball is in, not only up to the catch.
+    expect(at("toetap", 0.15, { side: -1, result: "held" }).roll).toBeLessThan(-0.3);
   });
 });

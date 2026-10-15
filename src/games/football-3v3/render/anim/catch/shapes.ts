@@ -71,5 +71,31 @@ export const CLAP: Part = { shLX: -1.7, shRX: -1.7, elL: -0.25, elR: -0.25, shLY
 /** The swatting hand raised high, the other arm up for balance. */
 export const SWAT_UP: Part = { shLX: -3.05, elL: -0.15, shLZ: 0.25, shRX: -2.2, elR: -0.6, shRZ: 0.35, spineY: 0.25, neckX: -0.55 };
 
+/** One hand thrown up and out for a ball past the other, the body stretched long after it, the free arm down for balance. */
+export const ONE_UP: Part = {
+  roll: 0.3, spineZ: 0.25, spineY: 0.3, neckX: -0.55, neckY: 0.3,
+  shLX: -2.7, elL: -0.1, shLZ: 0.75, shLY: 0.1, shRX: 0.45, elR: -0.5, shRZ: 0.5,
+};
+
+/** Toes dragging on the paint: both feet down close together, toes pointed, the body leaning out over the line. */
+export const TOE_DRAG: Part = {
+  roll: 0.38, spineZ: 0.22, pitch: 0.05, side: 0.12,
+  hipLX: 0.15, hipRX: 0.3, kneeL: 0.15, kneeR: 0.3, hipLZ: -0.05, hipRZ: 0.1, ankL: 0.75, ankR: 0.8,
+};
+
+/** Off balance on the way down after a one hand grab: tipping onto the hip, the ball pulled in, a hand out for the turf. */
+export const TOPPLE: Part = {
+  pitch: 0.7, roll: 0.7, barrel: 0.4, lift: 0.2, neckX: -0.6,
+  shLX: -0.8, elL: -2.0, shLY: 0.8, shRX: -1.8, elR: -0.2, shRZ: 0.7,
+  hipLX: -0.9, kneeL: 1.0, hipRX: -0.2, kneeR: 0.5,
+};
+
+/** Down on his side with it, curled round the ball. */
+export const ON_HIP: Part = {
+  pitch: 1.45, barrel: 1.45, lift: 0, neckX: -0.4, spineX: 0.2,
+  shLX: -0.8, elL: -2.0, shLY: 0.8, shRX: -1.6, elR: -0.6, shRZ: 0.4,
+  hipLX: -0.8, kneeL: 1.1, hipRX: -0.4, kneeR: 0.7,
+};
+
 /** The swat: the arm whips down and across through the ball, the chest turning with it. */
 export const SWAT_DOWN: Part = { shLX: -1.15, elL: -0.1, shLZ: -0.05, shLY: 0.6, shRX: -1.5, elR: -0.7, shRZ: 0.6, spineY: -0.35, spineX: 0.3, neckX: 0.1 };
