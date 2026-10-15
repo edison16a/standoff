@@ -22,7 +22,15 @@ export function startBlock(a: Athlete, style: BlockJump = "stand"): void {
   // Real gravity: the time up there follows from how high the legs send him.
   a.action = { kind: "block", t: 0, peak, gather: JUMP.blockGather, air: hangTime(peak), style };
   a.blockCd = DEFENCE.blockCooldown;
+  // A closeout chops its last steps to brake, so the leap carries him by the shooter rather than through him.
+  if (style === "closeout") {
+    a.vx *= CLOSEOUT_CARRY;
+    a.vz *= CLOSEOUT_CARRY;
+  }
 }
+
+/** How much of his run a closeout keeps into the leap. */
+const CLOSEOUT_CARRY = 0.6;
 
 /** How high a block jump of this style takes him, metres. */
 export function blockPeak(a: Athlete, style: BlockJump): number {
