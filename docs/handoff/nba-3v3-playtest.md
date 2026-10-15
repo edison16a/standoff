@@ -32,6 +32,8 @@ Done:
 * **Lab scenes**: `/showcase/nba-3v3?lab=layup-stepThrough|layup-hop|layup-juke|dunkfail-stuff|dunkfail-clang|dunkfail-short&step=1`. Tests in `showcase/lab-presets.test.ts` (each plays its preset; the stuff is a block by the stopper; no fail scores).
 * The bot game stat tests (`sim/scoring.test.ts`, `game-stats.test.ts`) were passing by luck of the seeds: adding one extra random roll per dunk to main alone moved the jumper and layup rates past their bands. They now play more games or allow the swing that was measured, with comments.
 
+* **Checked in the browser.** Lab scenes for the juke, the stuff and the short dunk, stepped frame by frame. A real game with the Keyboard player as the Dunker against bots: a double tap from too far out came up short ("Too far out"), a double tap close in went down ("Slam!"), a hold laid it in ("+2"). The phone panel showed the rim hint as he got close. Phone fit passes, with a new snapshot of the pad at the rim.
+
 Known gaps from step 1:
 
 * The stuff's block is the existing block hand (`render/block-reach.ts`) with a plan; the defender's whole body is not yet an authored preset. Step 2 replaces it.
