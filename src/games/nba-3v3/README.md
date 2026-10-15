@@ -356,7 +356,7 @@ Measured on the engine itself with `engine/sim/`: whole computer games, and a on
 The host's hidden admin panel (three quick taps on the settings gear) has Keyboard player under Platform. It seats a phone panel on the big screen; pick a build and Ready in the panel, then play with the keys. A card lists them.
 
 * **W A S D** or the arrows run, at a jog. Hold **Shift** to sprint.
-* **Space** (or J) with the ball: hold to shoot and let go in the green. The hold is timed on the keyboard, so it works like the phone, free throws included. Near the rim hold it for a layup, aiming with W A S D to pick which, or tap it twice for a dunk. On defence it jumps to block; off the ball on offence it jumps for a rebound.
+* **Space** (or J) with the ball: hold to shoot and let go in the green. The hold is timed on the keyboard, so it works like the phone, free throws included. Near the rim hold it for a layup, aiming with W A S D to pick which, or tap it twice for a dunk, a step or two out from the rim (see At the rim). On defence it jumps to block; off the ball on offence it jumps for a rebound.
 * **E** (or K): pass with the ball, call for it without, steal on defence.
 * **F** or the **right mouse button**: hold Guard on defence.
 * **Q**: a skill move with the ball, picked by the direction held, like Dribble on the phone.
