@@ -53,7 +53,7 @@
 /* At the rim: hold to lay it up, tap twice to dunk. */
 .nba-status__rim {
   display: inline-flex;
-  gap: 5px;
+  gap: 12px;
   align-items: baseline;
   padding: 2px 9px;
   border-radius: 8px;
@@ -62,6 +62,11 @@
   font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.nba-status__rim span {
+  display: inline-flex;
+  gap: 4px;
 }
 
 .nba-status__rim b {

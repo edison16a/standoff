@@ -43,7 +43,12 @@ function Status({ court }: { court: CourtState }) {
 function RimHint() {
   return (
     <span className="nba-status__rim">
-      <b>Hold</b> layup <b>Tap tap</b> dunk
+      <span>
+        <b>Hold</b> layup
+      </span>
+      <span>
+        <b>Tap tap</b> dunk
+      </span>
     </span>
   );
 }
