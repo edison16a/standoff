@@ -44,7 +44,7 @@ export class SoundDirector {
     this.music.play("game");
   }
 
-  /** Into the replay: the broadcast swoosh, and the theme steps back for the slow motion. */
+  /** Into the replay: the broadcast swoosh, and the theme steps back under the play's own sounds. */
   replayIn(): void {
     this.sfx.swoosh();
     this.engine.holdDuck("music", 0.45);

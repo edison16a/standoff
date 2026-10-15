@@ -3,8 +3,8 @@ import type { MatchEvent } from "../engine/events";
 import type { MatchView } from "../engine/view";
 import { focusBand, lookFor } from "./broadcast-look";
 import { CameraDirector } from "./camera/director";
+import type { ReplayShot } from "./camera/replay-shots";
 import { CeremonyScene } from "./ceremony/ceremony-scene";
-import { BallTrace, type TracePoint } from "./effects/ball-trace";
 import { ScrimmageLines } from "./field/scrimmage-lines";
 import { Stadium } from "./field/stadium";
 import { Squad } from "./figures/squad";
@@ -28,13 +28,11 @@ export interface RendererOptions {
  * Draws a football match under the lights: the stadium and field, the
  * broadcast lines, the players and the ball, filmed by the director's
  * camera and finished like a broadcast. It only reads match views, so
- * live play and slow motion replays go through the same drawing.
+ * live play and the touchdown replays go through the same drawing.
  */
 export class MatchRenderer {
   readonly director = new CameraDirector();
   readonly squad: Squad;
-  /** The replay's traced ball path. */
-  readonly trace = new BallTrace();
   /** The world drawn; the showcase adds its film lights to it. */
   readonly scene = new THREE.Scene();
   /** Drawn over the graded picture: the name tags. */
@@ -45,7 +43,7 @@ export class MatchRenderer {
   /** The play's runners in their card colours, for a person's QB. */
   private readonly marks = new PlayMarks();
   private tagOf: TagOf | null = null;
-  private traceAt: number | null = null;
+  private replaying = false;
   private readonly stadium: Stadium;
   private readonly lines = new ScrimmageLines();
   private readonly contacts = new ContactShadows();
@@ -82,7 +80,7 @@ export class MatchRenderer {
     this.picture.governor.onTier((tier) => this.floods.setTier(tier));
     this.stadium = new Stadium(this.low, renderer.capabilities.getMaxAnisotropy());
     this.picture.governor.onTier((tier) => this.stadium.crowd?.setFull(tier.fullCrowd));
-    this.scene.add(this.floods.group, this.stadium.group, this.lines.group, this.contacts.mesh, this.squad.group, this.trace.group, this.ceremony.group, this.marks.group);
+    this.scene.add(this.floods.group, this.stadium.group, this.lines.group, this.contacts.mesh, this.squad.group, this.ceremony.group, this.marks.group);
     this.overlay.add(this.tags.group, this.marks.overlay);
   }
 
@@ -102,10 +100,15 @@ export class MatchRenderer {
     this.tagOf = tagOf;
   }
 
-  /** The replay's ball path and the match time the replay is at, or null outside a replay. */
-  setTrace(points: readonly TracePoint[] | null, time: number | null): void {
-    this.trace.set(points);
-    this.traceAt = time;
+  /**
+   * The replay angle to film, or null for live play. On a cut, to a new
+   * angle, a new take of the play or back to live, the players drop
+   * their eased poses and take the new moment's at once, so nobody
+   * blends across the cut from where the last shot left him.
+   */
+  setReplay(shot: ReplayShot | null): void {
+    if (this.director.setReplay(shot)) this.squad.cut();
+    this.replaying = shot !== null;
   }
 
   onEvent(event: MatchEvent): void {
@@ -144,12 +147,11 @@ export class MatchRenderer {
     this.squad.update(view, dt, time, camera);
     this.lines.update(view, dt);
     const cut = this.director.update(view, dt, time);
-    this.trace.update(this.traceAt);
     const holding = this.captainHands(view);
     this.ceremony.update(view.ceremony, holding ? this.handL : null, holding ? this.handR : null, dt, time);
     this.tags.update(view, this.tagOf, this.squad, camera.fov);
     // Not over a replay: the marks are for calling the play, not watching it again.
-    this.marks.update(view, this.squad, camera.fov, this.traceAt === null, (id) => !!this.tagOf?.(id), dt, time);
+    this.marks.update(view, this.squad, camera.fov, !this.replaying, (id) => !!this.tagOf?.(id), dt, time);
     // Broadcast graphics like the tags: the showcase's film has neither.
     this.contacts.update(view, this.squad);
     this.stadium.update(view, time, dt, view.phase === "over" ? 0.8 : this.excitement);
@@ -191,7 +193,6 @@ export class MatchRenderer {
     this.materials.dispose();
     this.shapes.dispose();
     this.ceremony.dispose();
-    this.trace.dispose();
     this.tags.dispose();
     this.marks.dispose();
     this.lines.dispose();

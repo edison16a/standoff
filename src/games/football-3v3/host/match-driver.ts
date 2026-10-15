@@ -119,7 +119,7 @@ export class MatchDriver {
       const fresh = this.match.drainEvents();
       this.notice(fresh);
       events.push(...fresh);
-      this.recorder.record(buildView(this.match));
+      this.recorder.record(buildView(this.match), fresh);
     }
     this.view = buildView(this.match);
     return events;

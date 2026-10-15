@@ -3,6 +3,8 @@ import type { MatchEvent } from "../engine/events";
 import { BOTS, PEOPLE } from "../engine/test-helpers";
 import { RULES } from "../engine/tuning";
 import { MatchDriver, type Sticks } from "./match-driver";
+import { ReplayDirector } from "./replay/director";
+import { findMoments } from "./replay/moments";
 import { scriptReplay } from "./replay/script";
 
 const still: Sticks = { move: () => ({ x: 0, y: 0 }), aim: () => null, forward: { x: 1, z: 0 } };
@@ -59,15 +61,35 @@ describe("the host's match driver", () => {
       return scored !== null;
     });
     expect(scored).not.toBeNull();
-    const script = scriptReplay(driver.recorder.all, scored!)!;
-    expect(script.segments.map((s) => s.stage)).toEqual(["aim", "throw", "flight", "run"]);
-    expect(script.trace.length).toBeGreaterThan(10);
-    // The traced line starts with the ball out of the QB's hand, never inside his body.
-    const first = driver.recorder.all.find((v) => v.time === script.trace[0]!.t)!;
-    expect(first.ball.state).toBe("pass");
-    expect(script.facts.ballMph).toBeGreaterThan(20);
-    expect(script.facts.spinRpm).toBeGreaterThan(300);
-    const throwing = script.segments[1]!;
-    expect(throwing.rate).toBeLessThan(0.3);
+    const clip = driver.recorder.all;
+    const script = scriptReplay(clip, scored!)!;
+    // Wide first from before the snap, then close: the throw, the catch, the run in. All at full speed.
+    expect(script.segments[0]!.angle).toBe("all22");
+    expect(script.segments[0]!.take).toBe(0);
+    const close = script.segments.filter((s) => s.take === 1).map((s) => s.angle);
+    expect(close[0]).toBe("qb");
+    expect(close).toContain("catch");
+    const shown = script.segments.reduce((n, s) => n + (s.to - s.from), 0);
+    expect(script.length).toBeCloseTo(shown, 6);
+    // The wide take shows the line set before the snap.
+    expect(script.segments[0]!.from).toBeLessThan(findMoments(clip, scored!)!.snapAt);
+    for (const s of script.segments) expect(s.to - s.from).toBeGreaterThanOrEqual(0.7 - 1e-6);
+    // The play's sounds come with it, and none of the live moment's.
+    const heard = new Set(driver.recorder.cues.map((c) => c.event.type));
+    expect(heard.has("throw")).toBe(true);
+    expect(heard.has("catch")).toBe(true);
+    expect(heard.has("whistle")).toBe(false);
+    expect(heard.has("touchdown")).toBe(false);
+    // Played through, each take hears the throw and the catch again, at full speed on the frame clock.
+    const replay = new ReplayDirector();
+    expect(replay.start(clip, scored!, [], 0, driver.recorder.cues)).toBe(true);
+    const throws: number[] = [];
+    let ms = 0;
+    while (!replay.update(ms)) {
+      for (const e of replay.sounds()) if (e.type === "throw") throws.push(replay.frame()!.segment.take);
+      ms += 1000 / 60;
+    }
+    expect(throws).toEqual([0, 1]);
+    expect(ms / 1000).toBeCloseTo(script.length + 0.4, 1);
   });
 });

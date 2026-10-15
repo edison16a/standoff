@@ -163,6 +163,9 @@ export class FootballHost implements InputTarget {
     if (!driver) events = this.demo.tick(nowMs);
     else if (this.replays.active) {
       if (this.replays.update(nowMs)) this.endReplay();
+      // The play's own pads, hits and catch, heard again and felt by the camera; nothing else reacts to them.
+      else events = this.replays.sounds();
+      for (const event of events) this.audio.event(event);
     } else {
       events = driver.tick(nowMs, { move: (s) => this.pad.stick(s, nowMs), aim: (s) => this.aims.get(s), forward: this.forward });
       for (const event of events) this.onMatchEvent(event, driver, nowMs);
@@ -176,7 +179,7 @@ export class FootballHost implements InputTarget {
 
   private startReplay(driver: MatchDriver, nowMs: number): void {
     const voters = piloted(driver.match).map((p) => p.seat);
-    if (driver.replayFor === null || !this.replays.start(driver.recorder.all, driver.replayFor, voters, nowMs)) return driver.resume();
+    if (driver.replayFor === null || !this.replays.start(driver.recorder.all, driver.replayFor, voters, nowMs, driver.recorder.cues)) return driver.resume();
     this.aims.clear();
     this.audio.replayIn();
   }
