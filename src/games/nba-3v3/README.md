@@ -169,6 +169,8 @@ Measured over 30 computer games a level, with the ball physics deciding every sh
 * Every push, brake and turn goes through the shoes, and sneakers on maple grip at about one g. Together they can never pass that grip. A player braking hard cannot turn at the same moment, and at full speed the tightest curve is a few metres wide: speed squared over the grip. A turn sharper than that plants the outside foot, which digs in a little harder, bleeds speed and comes round with a squeak.
 * Speeding up is limited by grip from a standstill and by leg power once moving, since force is power over speed. So the first steps are explosive and the last of the speed comes slowly. Legs give about 20 to 25 watts a kilogram, more for quick builds, less for heavy ones, and a little less with the ball.
 * Each build has a real weight from its frame, from about 76 kg for the Playmaker to 121 kg for the Big Man (`engine/body/mass.ts`).
+* Two players who end up inside each other, like a dunker landing on the man under the rim, ease apart a few centimetres a frame rather than popping apart at once (`body/contact.ts`).
+* A body knocked out of a jump, like a man posterized at the top of his block, falls to the floor under gravity in his stumble (`body/settle.ts`).
 * Players who run into each other trade momentum by weight. A set player braces with his legs and counts as heavier, more so with strong legs; one on the run or in the air counts only his weight. A guard who sprints into a big man's screen stops dead and the big man barely gives. Players brushing past each other rub off some sideways speed, and a hard hit leaves the one it rocked with slow legs for a moment.
 * Jumps follow real gravity. The height of a jump sets how long it lasts: a block jump of half a metre is about 0.64 seconds off the floor, and every jump falls at one g. A dunk or a layup leaves the floor at the speed that has the hand at the rim exactly when the ball goes. A showier dunk that needs longer goes a touch higher and slams on the way down. A dunker hanging on the rim drops a hand's length under his hands, then falls from rest. Along the floor the last two steps of the gather slow the run, and in the air the body carries straight on at a steady speed.
 
@@ -221,7 +223,19 @@ A hold is already a layup, so a late second press never turns it into a dunk. Fr
 * **Off the iron**: up there but the slam catches the rim and kicks out.
 * **Too far out**: you leave the floor short of the rim and the ball only meets the front of the ring.
 
+**When to tap.** A double tap takes a beat to read, and you keep running while it is read, so start it a step or two out:
+
+* In stride from about two or three metres out, square to the rim and nobody bigger waiting: it goes down almost every time.
+* Tapped late at a sprint, you are already under the ring when it is read. You still go up, but the slam is jammed into the back iron up to a third of the time.
+* Standing right under the ring, you go straight up with it, like a putback.
+* From the free throw line or further, you come up short.
+* Into a bigger man waiting at the rim, he stuffs it.
+
+A dunk can still go wrong at the slam: a hand knocks it off line, a foul, or a man in the air meets it. Then the body plays the clang or the stuff from that moment on and lets go of the rim, never a made dunk's hang over a ball rolling out. The phone says Off the iron or Blocked.
+
 The computer reads the same odds and lays a bad dunk up instead.
+
+**Layups** go in about nine times in ten with nobody close. A defender's strength only counts against you when he is near enough to touch the shot: from 1.2 metres in fully, and not at all past 2.6 metres. A guard alone at the rim finishes like anyone alone at the rim.
 
 A shot already in its motion beats the shot clock: a layup gathered as the clock runs out still goes up.
 
