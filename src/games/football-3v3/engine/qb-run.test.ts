@@ -4,7 +4,7 @@ import { FIELD, yardToX } from "./field";
 import { Match } from "./match";
 import { canRun, paceOf } from "./qb-run";
 import { seatStatus } from "./status";
-import { BOTS, bySeat, peopleMatch, run, snap } from "./test-helpers";
+import { callPlay, BOTS, bySeat, peopleMatch, run, snap } from "./test-helpers";
 import { QB_PACE } from "./tuning";
 
 /** How far the QB gets in `seconds` running straight across the field. */
@@ -97,7 +97,7 @@ describe("the Run button", () => {
   it("takes the pitch away on a run call", () => {
     const m = peopleMatch();
     const qb = bySeat(m, 0);
-    m.choose(qb.id, "run");
+    callPlay(m, qb.id, "run");
     m.press(qb.id, "hike");
     run(m, 1, () => m.carrier() === qb);
     expect(seatStatus(m, 0)?.canPitch).toBe(true);
@@ -133,7 +133,8 @@ describe("the Run button", () => {
   });
 
   it("is used by a computer QB when nobody gets open", () => {
-    const m = new Match({ entries: BOTS.filter((e) => e.role === "qb"), seed: 5, firstOffense: 0 });
+    // No support players either, so there is nobody to throw to.
+    const m = new Match({ entries: BOTS.filter((e) => e.role === "qb"), seed: 5, firstOffense: 0, support: 0 });
     // A computer QB calls and hikes by itself once its windows run out.
     run(m, 25, (mm) => mm.phase === "live");
     expect(m.play?.call).toBe("throw");

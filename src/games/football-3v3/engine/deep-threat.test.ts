@@ -7,7 +7,7 @@ import { Match } from "./match";
 import { candidates, receivers } from "./passing";
 import { DEEP_SPLIT } from "./support/formation";
 import { defenseJob, jobOf, SUPPORT } from "./support/roster";
-import { BOTS, PEOPLE, bySeat, run, snap } from "./test-helpers";
+import { callPlay, BOTS, PEOPLE, bySeat, run, snap } from "./test-helpers";
 import { STEP } from "./tuning";
 import type { Athlete, TeamId } from "./types";
 
@@ -23,6 +23,21 @@ function deepest(m: Match, a: Athlete, seconds: number): number {
     most = Math.max(most, yardsPast(m, a));
   }
   return most;
+}
+
+/** Calls a play off the page that sends the deep threat straight up the field, hikes with no rusher able to break free, and steps until the QB has it. */
+function snapDeep(m: Match): void {
+  const qb = m.qbOf(m.offense);
+  m.choose(qb.id, "throw");
+  for (let deal = 0; deal < 20 && m.huddle; deal++) {
+    const at = m.huddle.runners.indexOf(deepOf(m, m.offense).id);
+    const pick = m.huddle.plays.findIndex((p) => p.routes[at] === "go" || p.routes[at] === "seam");
+    m.playbook(qb.id, pick >= 0 ? pick : "redeal");
+  }
+  // Nobody breaks free of his block (rush-shed.ts), so the QB stands in long enough for the route to develop.
+  for (const d of m.athletes) if (d.team !== m.offense) d.rushCd = 99;
+  m.press(qb.id, "hike");
+  run(m, 1, () => m.carrier() === qb);
 }
 
 describe("the deep threat", () => {
@@ -56,7 +71,7 @@ describe("the deep threat", () => {
     const dt = deepOf(m, m.offense);
     expect(yardsPast(m, dt)).toBeLessThan(0);
     expect(Math.abs(dt.z - m.drive.ballZ)).toBeCloseTo(DEEP_SPLIT, 0);
-    snap(m);
+    snapDeep(m);
     expect(deepest(m, dt, 3.5)).toBeGreaterThan(15);
     expect(Math.abs(dt.z)).toBeLessThan(FIELD.halfWidth);
   });
@@ -64,7 +79,7 @@ describe("the deep threat", () => {
   it("blocks instead on a run call", () => {
     const m = new Match({ entries: PEOPLE, seed: 2, firstOffense: 0, level: "hard" });
     const qb = bySeat(m, 0);
-    m.choose(qb.id, "run");
+    callPlay(m, qb.id, "run");
     m.press(qb.id, "hike");
     run(m, 1, () => m.carrier() === qb);
     expect(deepest(m, deepOf(m, m.offense), 1.5)).toBeLessThan(8);
@@ -88,7 +103,7 @@ describe("the deep threat", () => {
 
   it("catches a long ball thrown to him when he is open", () => {
     const m = new Match({ entries: PEOPLE, seed: 5, firstOffense: 0, level: "hard" });
-    snap(m);
+    snapDeep(m);
     const qb = bySeat(m, 0);
     const dt = deepOf(m, m.offense);
     run(m, 2.2);
@@ -103,7 +118,7 @@ describe("the deep threat", () => {
 
   it("is covered over the top by the deep man when he keys him", () => {
     const m = new Match({ entries: PEOPLE, seed: 6, firstOffense: 0, level: "hard" });
-    snap(m);
+    snapDeep(m);
     const dt = deepOf(m, m.offense);
     const dm = deepOf(m, m.defense);
     dm.bot.key = true;

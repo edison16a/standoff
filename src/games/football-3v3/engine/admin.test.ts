@@ -25,6 +25,9 @@ describe("admin shortcuts", () => {
   it("sets up a two point try", () => {
     const m = peopleMatch();
     adminTwoPoint(m, 1);
+    // A person's QB gets his page of plays first.
+    expect(m.huddle?.call).toBe("throw");
+    m.playbook(m.qbOf(1).id, 0);
     expect(m.phase).toBe("presnap");
     expect(m.drive.conversion).toBe(true);
     expect(m.drive.los).toBe(RULES.twoPointSpot);

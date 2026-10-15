@@ -10,7 +10,8 @@ import type { MatchEvent, PlayEnd } from "./events";
 import type { KickState } from "./kick";
 import { lineupProblem, type Entry } from "./lineup";
 import { newLinePairs, type LinePair } from "./linemen";
-import { chooseCall, startChoose } from "./phases";
+import { chooseCall, huddleAction, startChoose } from "./phases";
+import type { Huddle } from "./playbook/huddle";
 import type { Play } from "./play";
 import { Rng } from "./rng";
 import { stepWorld } from "./world";
@@ -52,6 +53,8 @@ export class Match {
   readonly rng: Rng;
   /** The line's own dice for sheds and pancakes, so rolling them leaves every other draw in a seeded game alone. */
   readonly lineRng: Rng;
+  /** The playbook's and the rush's own dice, so dealing plays or shedding a block leaves every other draw alone. */
+  readonly playRng: Rng;
   readonly target: number;
   readonly quarterSeconds: number;
   /** Played as the showcase's media were filmed (MatchOptions.filmed). */
@@ -68,6 +71,8 @@ export class Match {
   score: [number, number] = [0, 0];
   drive: Drive;
   play: Play | null = null;
+  /** The page of plays a person's QB is picking from, after he called Throw or Run (playbook/huddle.ts). */
+  huddle: Huddle | null = null;
   kick: KickState | null = null;
   /** The drive after the whistle, decided when the play ends. */
   nextDrive: Drive | null = null;
@@ -94,6 +99,7 @@ export class Match {
     const seed = options.seed ?? Math.floor(Math.random() * 2 ** 31);
     this.rng = new Rng(seed);
     this.lineRng = new Rng((seed ^ 0x5bd1e995) >>> 0);
+    this.playRng = new Rng((seed ^ 0x1b873593) >>> 0);
     this.target = options.target ?? RULES.target;
     this.quarterSeconds = options.quarterSeconds ?? RULES.quarterSeconds;
     this.filmed = options.filmed ?? false;
@@ -190,6 +196,11 @@ export class Match {
   /** The QB's pick before a play (kick or throw) or after a touchdown (kick or two). */
   choose(id: number, call: PlayCall | ConversionCall): void {
     chooseCall(this, id, call);
+  }
+
+  /** The QB's page of plays: pick one by its place on the page, deal a fresh page, or go back to the call. */
+  playbook(id: number, action: number | "redeal" | "back"): void {
+    huddleAction(this, id, action);
   }
 
   /** A person's phone dropped or came back, by the athlete it owns. The computer plays for them meanwhile. */

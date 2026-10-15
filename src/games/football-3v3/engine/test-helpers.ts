@@ -47,10 +47,16 @@ export function setDrive(m: Match, team: TeamId, yardline: number, down = 1): vo
   m.drainEvents();
 }
 
-/** Picks throw and hikes, then steps until the QB has the ball. */
+/** The QB calls a play, and from the page of plays a person QB gets picks the one at `index`. */
+export function callPlay(m: Match, qb: number, call: "throw" | "run" | "two", index = 0): void {
+  m.choose(qb, call);
+  if (m.huddle) m.playbook(qb, index);
+}
+
+/** Picks throw and the first play on the page, hikes, then steps until the QB has the ball. */
 export function snap(m: Match): void {
   const qb = m.qbOf(m.offense);
-  m.choose(qb.id, "throw");
+  callPlay(m, qb.id, "throw");
   m.press(qb.id, "hike");
   run(m, 1, () => m.carrier() === qb);
 }

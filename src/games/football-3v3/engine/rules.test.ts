@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { xToYard, yardToX } from "./field";
 import { RULES } from "./tuning";
-import { bySeat, peopleMatch, run, setDrive, snap } from "./test-helpers";
+import { callPlay, bySeat, peopleMatch, run, setDrive, snap } from "./test-helpers";
 
 describe("play flow", () => {
   it("waits for the QB's pick, then gives five seconds to hike", () => {
@@ -9,7 +9,7 @@ describe("play flow", () => {
     expect(m.phase).toBe("choose");
     run(m, 2);
     expect(m.phase).toBe("choose");
-    m.choose(bySeat(m, 0).id, "throw");
+    callPlay(m, bySeat(m, 0).id, "throw");
     expect(m.phase).toBe("presnap");
     const events = run(m, RULES.hikeSeconds + 0.1, () => m.phase === "live");
     expect(m.phase).toBe("live");
@@ -25,7 +25,7 @@ describe("play flow", () => {
 
   it("keeps the defence onside until the snap", () => {
     const m = peopleMatch();
-    m.choose(bySeat(m, 0).id, "throw");
+    callPlay(m, bySeat(m, 0).id, "throw");
     const d = bySeat(m, 3);
     m.setMove(d.id, { x: -1, z: 0 });
     run(m, 3);
@@ -64,7 +64,7 @@ describe("play flow", () => {
     expect(m.score).toEqual([6, 0]);
     run(m, RULES.touchdownSeconds + 0.1);
     expect(m.phase).toBe("convert");
-    m.choose(qb.id, "two");
+    callPlay(m, qb.id, "two");
     expect(m.phase).toBe("presnap");
     expect(m.drive.los).toBe(RULES.twoPointSpot);
   });

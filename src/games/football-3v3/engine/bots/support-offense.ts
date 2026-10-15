@@ -10,6 +10,7 @@ import type { Athlete } from "../types";
 import { insideRoute } from "../route-bounds";
 import { dist2, type V2 } from "../vec";
 import { ahead, headFor } from "./goal";
+import { onPlayRoute } from "../playbook/on-route";
 import { runRoute } from "./offense";
 
 /** Seconds after the snap a wing or the lead back with nobody to block leaks out as an outlet. */
@@ -78,7 +79,7 @@ export function supportOffense(m: Match, a: Athlete, carrier: Athlete | null): v
   if (man) return headFor(a, man, 0.3);
   const play = m.play;
   const passing = carrier?.role === "qb" && play?.call === "throw" && !play.passed && !play.qbRun;
-  if (a.deep && play?.call === "throw" && (passing || !carrier)) return runRoute(m, a);
+  if ((a.deep || onPlayRoute(m, a)) && play?.call === "throw" && (passing || !carrier)) return runRoute(m, a);
   if (!carrier) return headFor(a, m.ball.pass ? m.ball.pass.spot : a, 1.5);
   if (passing) return protect(m, a, carrier);
   leadBlock(m, a, carrier);

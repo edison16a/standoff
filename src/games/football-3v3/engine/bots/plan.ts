@@ -1,5 +1,7 @@
 import type { Match } from "../match";
 import { callRoutes, deepRoute, routePoints, STOPS } from "../routes";
+import { applyDesign } from "../playbook/huddle";
+import { onPlayRoute } from "../playbook/on-route";
 import { sweepRoute } from "../run-play";
 import type { Athlete } from "../types";
 import { dist2 } from "../vec";
@@ -15,6 +17,32 @@ import { botSkill } from "./skill";
  */
 export function planPlay(m: Match): void {
   const receivers = m.athletes.filter((a) => a.team === m.offense && a.role === "runner");
+  const qb = m.qbOf(m.offense);
+  const design = m.play?.design ?? null;
+  if (design) applyDesign(m, design, (m.play?.runners ?? []).map((id) => m.athletes[id]!), qb);
+  else drawRoutes(m, receivers);
+  const skill = botSkill(m.level);
+  // Sharper QBs read the field sooner.
+  qb.bot.readAt = m.rng.range(1.3, 2.4) + (1 - skill.accuracy) * 0.8;
+  // Only a match with a deep threat rolls for him, so one without plays the same from the same seed.
+  const threat = m.athletes.some((a) => a.team === m.offense && a.deep);
+  // Only some calls have a shot for him in them; on the rest the QB looks elsewhere.
+  qb.bot.key = threat && m.rng.chance(DEEP_LOOK);
+  const back = m.play?.call === "run" ? m.athlete(m.play.back ?? -1) : null;
+  if (back) {
+    // On a run call the back runs his carry (a sweep without a playbook) and the QB pitches soon after the snap.
+    if (!design?.carry) back.bot.route = sweepRoute(back, qb, m.sign);
+    back.bot.stop = false;
+    qb.bot.readAt = m.rng.range(0.6, 0.9);
+  }
+  // A wing the play sends out is a man to cover too, after the runners (the deep threat is the deep man's).
+  const wings = m.athletes.filter((a) => a.role === "support" && !a.deep && onPlayRoute(m, a));
+  assignCoverage(m, [...receivers, ...wings], threat);
+  for (const a of m.athletes) a.bot.wait = 0;
+}
+
+/** Routes with no playbook, as the showcase's game was filmed: each runner a different one, the deep threat his go route. */
+function drawRoutes(m: Match, receivers: readonly Athlete[]): void {
   const routes = callRoutes(m.rng, receivers.length);
   receivers.forEach((r, i) => {
     const kind = routes[i]!;
@@ -28,23 +56,6 @@ export function planPlay(m: Match): void {
     d.bot.leg = 0;
     d.bot.stop = false;
   }
-  const skill = botSkill(m.level);
-  const qb = m.qbOf(m.offense);
-  // Sharper QBs read the field sooner.
-  qb.bot.readAt = m.rng.range(1.3, 2.4) + (1 - skill.accuracy) * 0.8;
-  // Only a match with a deep threat rolls for him, so one without plays the same from the same seed.
-  const threat = m.athletes.some((a) => a.team === m.offense && a.deep);
-  // Only some calls have a shot for him in them; on the rest the QB looks elsewhere.
-  qb.bot.key = threat && m.rng.chance(DEEP_LOOK);
-  const back = m.play?.call === "run" ? m.athlete(m.play.back ?? -1) : null;
-  if (back) {
-    // On a run call the back sweeps wide and the QB pitches soon after the snap.
-    back.bot.route = sweepRoute(back, qb, m.sign);
-    back.bot.stop = false;
-    qb.bot.readAt = m.rng.range(0.6, 0.9);
-  }
-  assignCoverage(m, receivers, threat);
-  for (const a of m.athletes) a.bot.wait = 0;
 }
 
 /** How often a computer QB's call has a deep shot for the deep threat in it. */

@@ -2,6 +2,7 @@ import { isDown, statsOf } from "../body";
 import type { BlockMove } from "../block-preset";
 import { radiusOf } from "../collide";
 import type { Match } from "../match";
+import { onPlayRoute } from "../playbook/on-route";
 import { Rng } from "../rng";
 import { LINE } from "../tuning";
 import type { Athlete } from "../types";
@@ -55,7 +56,7 @@ const resting = (m: Match, a: Athlete) => (m.support.rest.get(a.id) ?? -1) > m.t
 
 /** A defender a blocker may take on: before a pass is out only the men rushing it, once the ball is run anyone. */
 function blockable(m: Match, d: Athlete, carrier: Athlete | null, passPro: boolean): boolean {
-  if (d.role === "lineman" || isDown(d) || d === carrier || d.action.kind !== "none" || resting(m, d)) return false;
+  if (d.role === "lineman" || isDown(d) || d === carrier || d.action.kind !== "none" || resting(m, d) || d.burst) return false;
   return !passPro || d.role === "support" || d.role === "qb";
 }
 
@@ -68,7 +69,7 @@ export function engageClinches(m: Match): void {
   for (const o of m.athletes) {
     if (o.role !== "support" || o.team !== team || o === carrier || isDown(o) || o.action.kind !== "none" || resting(m, o) || clinchOf(m, o.id)) continue;
     // The deep threat is out on his route while the QB looks to throw, not blocking.
-    if (o.deep && passPro && m.play?.call === "throw") continue;
+    if ((o.deep || onPlayRoute(m, o)) && passPro && m.play?.call === "throw") continue;
     let best: Athlete | null = null;
     for (const d of m.athletes) {
       if (d.team === o.team || !blockable(m, d, carrier, passPro) || clinchOf(m, d.id)) continue;

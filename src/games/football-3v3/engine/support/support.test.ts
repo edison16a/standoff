@@ -40,14 +40,15 @@ describe("support players", () => {
     expect(clinchKindFor(CLINCH.longest, 0, true, 0.99)).toBe("shed");
   });
 
-  it("block the edge rushers on a pass play, and only the deep threat runs a route", () => {
+  it("block the edge rushers on a pass play, and only the deep threat and the wing on the play run routes", () => {
     const m = new Match({ entries: PEOPLE, seed: 3, firstOffense: 0, level: "hard" });
     snap(m);
     let blocked = 0;
     let deepest = -Infinity;
     for (let t = 0; t < 2.5 && m.phase === "live"; t += STEP) {
       run(m, STEP);
-      for (const o of supports(m, m.offense).filter((a) => !a.deep)) {
+      // The wing the play card sends out runs his route (playbook/); the rest block.
+      for (const o of supports(m, m.offense).filter((a) => !a.deep && !m.play?.runners.includes(a.id))) {
         deepest = Math.max(deepest, past(m, o.x));
         if (clinchOf(m, o.id)) blocked++;
       }

@@ -1,3 +1,4 @@
+import type { PlayDesign } from "./playbook/deal";
 import type { PlayCall } from "./types";
 
 /**
@@ -22,14 +23,18 @@ export interface Play {
   back: number | null;
   /** The pitch has left the QB's hand; there is one a play. */
   pitched: boolean;
+  /** The play picked from the playbook, or null for a kick or a game played as it was filmed. */
+  design: PlayDesign | null;
+  /** The four runners the design draws, left to right, by id (playbook/runners.ts). */
+  runners: number[];
   /** Match time the play went live, for replays. */
   startedAt: number;
   over: boolean;
 }
 
-export function newPlay(call: PlayCall, time: number, back: number | null = null): Play {
+export function newPlay(call: PlayCall, time: number, back: number | null = null, design: PlayDesign | null = null, runners: number[] = []): Play {
   return {
     call, sinceSnap: null, rushOn: false, passed: false, qbRun: false,
-    caughtBy: null, intercepted: false, target: null, back, pitched: false, startedAt: time, over: false,
+    caughtBy: null, intercepted: false, target: null, back, pitched: false, design, runners, startedAt: time, over: false,
   };
 }

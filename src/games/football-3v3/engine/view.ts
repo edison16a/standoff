@@ -5,6 +5,8 @@ import { yardToX } from "./field";
 import { inGreen, meterAim, meterPower } from "./kick";
 import type { Match } from "./match";
 import { canThrow } from "./passing";
+import { huddleLeft } from "./playbook/huddle";
+import { playbookView, type PlaybookView } from "./playbook/view";
 import { KICK, RULES } from "./tuning";
 import type { Phase, TeamId } from "./types";
 import { athleteView, type AthleteView } from "./view-athlete";
@@ -65,6 +67,8 @@ export interface MatchView {
   winner: TeamId | null;
   lastEnd: PlayEnd | null;
   ceremony: CeremonyView | null;
+  /** The play's four runners, marked in their card colours for a person's QB (playbook/view.ts). */
+  playbook: PlaybookView | null;
   /** The QB with his throw stick held and a pass still to throw, who brings the ball up ready. */
   aiming: number | null;
 }
@@ -86,6 +90,7 @@ function kickView(m: Match): KickView | null {
 }
 
 function countdown(m: Match): number | null {
+  if (m.huddle) return huddleLeft(m.huddle, m.time);
   if (m.phase === "choose" || m.phase === "convert") return Math.max(0, RULES.chooseSeconds - m.phaseT);
   if (m.phase === "presnap") return Math.max(0, RULES.hikeSeconds - m.phaseT);
   return null;
@@ -112,5 +117,6 @@ export function buildView(m: Match): MatchView {
     }),
     countdown: countdown(m), scorer: m.scorer, winner: m.winner, lastEnd: m.lastEnd, ceremony,
     aiming: m.athletes.find((a) => a.aim !== null && canThrow(m, a))?.id ?? null,
+    playbook: playbookView(m),
   };
 }
