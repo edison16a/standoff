@@ -46,6 +46,8 @@ describe("the QB as a passer", () => {
       m.setMove(wr.id, { x: m.sign, z: 0 });
       m.setMove(bySeat(m, 3).id, { x: 0, z: -Math.sign(wr.z || 1) });
       m.setMove(qb.id, shuffle ? { x: -m.sign, z: 0 } : { x: 0, z: 0 });
+      // A clean pocket: nobody breaks free to hurry the throw (rush-shed.ts), so only the feet differ.
+      for (const d of m.athletes) if (d.team !== m.offense) d.rushCd = 99;
       run(m, 1.6);
       m.setAim(qb.id, { x: wr.x - qb.x, z: wr.z - qb.z });
       run(m, 0.05);
