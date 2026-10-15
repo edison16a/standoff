@@ -171,6 +171,8 @@ export interface Athlete {
   stagger: number;
   /** Fooled by a juke: seconds into it, how long it lasts and which way he lurches, or null. He may be on the turf for it. */
   stumble: { t: number; dur: number; side: 1 | -1 } | null;
+  /** Breaking free of a block with Rush: seconds into it, how long it lasts, and the shoulder he swims over (burst.ts). */
+  burst: { t: number; dur: number; side: 1 | -1 } | null;
   /** His move for a pass coming down, picked before it arrives (catch/plan.ts), or null. */
   catching: CatchPlan | null;
   /** A lineman's block move this play, seconds into it, and which side of it he is on (block-preset.ts), or null. */

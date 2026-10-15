@@ -2,13 +2,15 @@ import { isDown, statsOf } from "./body";
 import type { Match } from "./match";
 import { PASS } from "./tuning";
 import type { Athlete } from "./types";
+import { pocketPressure, pressuredThrow } from "./pocket";
 import type { V3 } from "./vec";
 
 /**
- * The ball as it leaves the hand. Every pass goes exactly where it was
- * aimed, so an open receiver always gets it; whether a covered one does
- * is down to the defenders in the lane (pass-lane.ts). The arm and the
- * rush still show in the spiral: a strong arm spins it tighter, a
+ * The ball as it leaves the hand. From a clean pocket a pass goes
+ * exactly where it was aimed, so an open receiver gets it; whether a
+ * covered one does is down to the defenders in the lane (pass-lane.ts).
+ * A rush closing on the QB pushes it off his line (pocket.ts). The arm
+ * and the rush show in the spiral too: a strong arm spins it tighter, a
  * defender in the QB's face makes it wobble.
  */
 export const ERROR = {
@@ -42,5 +44,7 @@ export function release(m: Match, qb: Athlete, aimed: V3): Release {
   const p = pressure(m, qb);
   const spin = PASS.spin * (0.85 + arm * 0.02) * (1 - p * ERROR.rushSpin) * (1 + m.rng.gauss(0.05));
   const wobble = 0.02 + (10 - arm) * 0.005 + p * ERROR.rushWobble + Math.abs(m.rng.gauss(0.015));
-  return { vel: { ...aimed }, spin, wobble };
+  // Pressure pushes the ball off the line he aimed (pocket.ts); the game played as it was filmed threw true.
+  const vel = m.filmed ? { ...aimed } : pressuredThrow(aimed, pocketPressure(m, qb), m.playRng);
+  return { vel, spin, wobble };
 }

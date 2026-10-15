@@ -1,7 +1,7 @@
 import { topSpeed } from "../body";
 import { meetPoint } from "../catch/path";
 import { ballTrack } from "../catch/track";
-import { startRush } from "../controls";
+import { pressRush } from "../rush-shed";
 import { FIELD, YARD, yardToX } from "../field";
 import type { Match } from "../match";
 import { pressTackle } from "../tackle";
@@ -89,7 +89,7 @@ export function rushQb(m: Match, a: Athlete, skill: FootballSkill): void {
   if (breakOnBall(m, a)) return;
   const qb = m.qbOf(m.offense);
   if ((m.play?.sinceSnap ?? 0) < skill.reaction) return headFor(a, a, 1);
-  if (a.rushCd <= 0 && a.blocked > 0) startRush(a);
+  if (a.rushCd <= 0 && a.blocked > 0) pressRush(m, a);
   if (m.carrier() === qb) return pursue(m, a, qb, skill);
   headFor(a, qb, 0.5);
 }

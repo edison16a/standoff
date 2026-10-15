@@ -1,5 +1,6 @@
 import { BUILDS, LINEMAN_FRAME, LINEMAN_NUMBERS, SUPPORT_FRAME, SUPPORT_NUMBERS, type BuildId, type Stats as CharStats } from "../builds";
 import { attackSign, type TeamId } from "../teams";
+import { burstPace } from "./burst";
 import { staminaPace } from "./stamina";
 import { SUPPORT, supportStats } from "./support/roster";
 import { JUKE, MOVE, RUSH } from "./tuning";
@@ -20,7 +21,7 @@ export function createAthlete(id: number, team: TeamId, role: Role, slot: number
     mass: c ? c.frame.weight : support ? SUPPORT_FRAME.weight : LINEMAN_FRAME.weight,
     move: { x: 0, z: 0 }, aim: null,
     action: { kind: "none" },
-    jukeCd: 0, jukeCdFull: 0, jukeHeat: 0, stamina: 1, tackleCd: 0, rushT: 0, rushCd: 0, guard: null, blocked: 0, stagger: 0, stumble: null, catching: null, block: null,
+    jukeCd: 0, jukeCdFull: 0, jukeHeat: 0, stamina: 1, tackleCd: 0, rushT: 0, rushCd: 0, guard: null, blocked: 0, stagger: 0, stumble: null, burst: null, catching: null, block: null,
     bot: { wait: 0, route: [], leg: 0, stop: false, goal: { x: 0, z: 0 }, cover: null, rush: true, key: false, readAt: 2 },
     stats: emptyStats(),
     deep: false,
@@ -50,7 +51,8 @@ export function freshSpeed(a: Athlete): number {
  * `pace` scales it for a QB who is still a passer (qb-run.ts).
  */
 export function topSpeed(a: Athlete, withBall: boolean, pace = 1): number {
-  const rush = a.rushT > 0 ? RUSH.boost : 1;
+  // Breaking free of a block (burst.ts) sets the pace in place of the plain rush.
+  const rush = a.burst ? burstPace(a) : a.rushT > 0 ? RUSH.boost : 1;
   return freshSpeed(a) * pace * (withBall ? MOVE.withBall : 1) * rush * heatDrag(a) * staminaPace(a);
 }
 

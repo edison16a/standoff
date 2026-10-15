@@ -9,7 +9,7 @@ import { startPitch } from "./run-play";
 import { startDive } from "./dive";
 import { isReceiver } from "./support/roster";
 import { pressTackle } from "./tackle";
-import { RUSH } from "./tuning";
+import { pressRush } from "./rush-shed";
 import type { Athlete, Button } from "./types";
 import { dist2, type V2 } from "./vec";
 
@@ -54,12 +54,6 @@ function guardPick(m: Match, a: Athlete): number | null {
   return best?.id ?? null;
 }
 
-export function startRush(a: Athlete): void {
-  if (a.rushCd > 0) return;
-  a.rushT = RUSH.time;
-  a.rushCd = RUSH.cooldown;
-}
-
 export function pressButton(m: Match, id: number, button: Button, value?: number): void {
   const a = own(m, id);
   if (!a) return;
@@ -77,7 +71,7 @@ export function pressButton(m: Match, id: number, button: Button, value?: number
   } else if (button === "dive") {
     if (withBall || onOffense) startDive(m, a);
   } else if (button === "rush") {
-    if (!onOffense) startRush(a);
+    if (!onOffense) pressRush(m, a);
   } else if (button === "tackle") {
     if (holder && holder.team !== a.team) pressTackle(m, a, holder);
   } else if (button === "guard") {

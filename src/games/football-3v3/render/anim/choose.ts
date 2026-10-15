@@ -13,6 +13,7 @@ import { blockPose, breathe, CENTER, KICK_SET, READY, SHOTGUN, snapPose, THREE_P
 import { stumbleOver, tacklePose } from "./tackle";
 import { catchPose } from "./catch/reaching";
 import { blockMove } from "./block";
+import { burstMove } from "./burst";
 import { catchMove } from "./catch";
 import { kickPose } from "./kick";
 import { holdingThrow, throwMotion } from "./throw";
@@ -179,6 +180,9 @@ export function choosePose(a: AthleteView, s: PoseScene, b: BodyScene): Chosen {
     return free(s.winner === a.team ? celebratePose(style, s.phaseT, false) : dejectedPose(b.time, b.seed), 8);
   }
   if (s.center && s.ball.state === "snap") return free(snapPose(s.phaseT), 30);
+  // A rusher breaking free with Rush plays the authored club, swim, rip and burst (burst.ts).
+  const burst = burstMove(a, run);
+  if (burst) return { pose: burst.pose, rate: 24, hand, feet: burst.free ? "free" : plantFor(a, b) };
   const fooled = (p: Pose) => (a.stumble ? stumbleOver(p, a.stumble.t, a.stumble.dur, a.stumble.side) : p);
   if (a.role === "lineman" || a.block) {
     // Line play, and a block out in space (support/clinch.ts), is the block move the engine picked; a shove that drives one back sits him up, the one winning leans in.

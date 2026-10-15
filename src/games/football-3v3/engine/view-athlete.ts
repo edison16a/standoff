@@ -59,6 +59,8 @@ export interface AthleteView {
   catching: { kind: CatchKind; t: number; at: number; side: 1 | -1; height: number; result: CatchResult | null; since: number } | null;
   /** A lineman's block move, seconds into it, and whether he is the blocker (offense) or the rusher. */
   block: { kind: BlockKind; t: number; offense: boolean } | null;
+  /** Breaking free of a block with Rush (burst.ts): seconds into it, how long it lasts, and the shoulder he swims over. */
+  burst: { t: number; dur: number; side: 1 | -1 } | null;
   /** Fooled by a juke: seconds into the stumble and which way he lurches. */
   stumble: { t: number; dur: number; side: 1 | -1 } | null;
   spike: boolean;
@@ -89,6 +91,7 @@ export function athleteView(a: Athlete, hasBall: boolean, targeted: boolean, cer
     catching: a.catching && { kind: a.catching.kind, t: a.catching.t, at: a.catching.at, side: a.catching.side, height: a.catching.height, result: a.catching.result, since: a.catching.since },
     block: a.block && { ...a.block },
     stumble: a.stumble && { ...a.stumble },
+    burst: a.burst && { ...a.burst },
     spike: act.kind === "celebrate" && act.spike,
     hasBall, targeted, guarding: a.guard, rushing: a.rushT > 0, blocked: a.blocked > 0, ceremony,
   };
