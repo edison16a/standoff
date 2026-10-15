@@ -47,40 +47,50 @@ export interface Meet {
   body: BallBody;
   gap: number;
   arm: ReturnType<typeof armAt>;
+  /** The moment the ball's path runs deepest into his reach: how solid the hand on it can be, whenever it lands. */
+  deep: { body: BallBody; arm: ReturnType<typeof armAt> };
 }
 
+type Sample = Omit<Meet, "deep">;
+
 /** Whether a gap counts as in reach of the hand. */
-const inReach = (k: Meet | null): k is Meet => !!k && k.gap <= 0;
+const inReach = (k: Sample | null): k is Sample => !!k && k.gap <= 0;
 
 /**
  * Flies the shot and the jump ahead together and finds the moment the
- * hand gets it: the first in reach at least `LEAD` on, or the last in
- * reach before then if the ball is gone by `LEAD`. With no touch at all,
- * the nearest pass, for a near miss.
+ * hand gets it. Whether it gets there at all is the first moment the
+ * ball comes into reach, wherever that is on its path. The touch itself
+ * is then slid on from that moment, while the ball stays in reach and
+ * clean (not yet over the ring nor off the iron or the glass), up to
+ * `LEAD` on, so the hand has its frames. With no touch at all, the
+ * nearest pass, for a near miss.
  */
 export function meet(ball: BallBody, shot: ShotInfo, d: Athlete, act: Block): Meet | null {
   const body = copyBody(ball);
   const flight = copyFlight(shot.flight);
   const out: Contact[] = [];
-  let near: Meet | null = null;
-  let early: Meet | null = null;
+  let near: Sample | null = null;
+  let best: Sample | null = null;
+  // The nearest pass so far is also the deepest the path has run into his reach.
+  const done = (k: Sample): Meet => ({ ...k, deep: near ?? k });
   for (let dt = 0; act.t + dt < act.gather + act.air; dt += STEP) {
     const y = jumpHeight(act, act.t + dt);
-    if (y > 0.08 && !goaltend(body)) {
+    const over = goaltend(body);
+    // Off the iron or the glass, or coming down over the ring: the touch already found can slide no further.
+    if (best && (over || out.length)) return done(best);
+    if (y > 0.08 && !over) {
       const s = armAt(d, d.x + d.vx * dt, y, d.z + d.vz * dt);
       const gap = Math.hypot(body.pos.x - s.x, body.pos.y - s.y, body.pos.z - s.z) - s.reach - BALL.radius;
-      const k: Meet = { dt, body: copyBody(body), gap, arm: s };
-      if (body.pos.y >= s.y) {
-        if (!near || gap < near.gap) near = k;
-        if (inReach(k)) {
-          if (dt >= LEAD - 1e-9) return k;
-          early = k;
-        }
-      }
+      const k: Sample = { dt, body: copyBody(body), gap, arm: s };
+      if (body.pos.y >= s.y && (!near || gap < near.gap)) near = k;
+      if (body.pos.y >= s.y && inReach(k)) {
+        best = k;
+        if (dt >= LEAD - 1e-9) return done(k);
+      } else if (best) return done(best);
     }
     out.length = 0;
     stepShotFlight(body, flight, STEP, out);
   }
-  if (early) return early;
-  return near && near.gap < NEAR ? near : null;
+  if (best) return done(best);
+  return near && near.gap < NEAR ? done(near) : null;
 }

@@ -79,7 +79,7 @@ export function planBlock(m: Match, d: Athlete): void {
       kind: shot.kind,
       three: shot.points === 3,
       touch,
-      grazing: fingertip(k.body, k.arm),
+      grazing: fingertip(k.deep.body, k.deep.arm),
       glass,
       rimGap: Math.hypot(k.body.pos.x - RIM.x, k.body.pos.z - RIM.z),
       strong: buildOf(d).stats.strength >= 7,

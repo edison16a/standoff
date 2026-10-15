@@ -45,8 +45,8 @@ describe("block preset selection", () => {
   });
 
   it("at the rim picks the two hand rejection or the one hand swat, a strong man stuffing it more often", () => {
-    expect(pickPreset(read({ roll: 0.6, strong: true }))).toBe("rejection");
-    expect(pickPreset(read({ roll: 0.6, strong: false }))).toBe("swat");
+    expect(pickPreset(read({ roll: 0.5, strong: true }))).toBe("rejection");
+    expect(pickPreset(read({ roll: 0.5, strong: false }))).toBe("swat");
     expect(pickPreset(read({ roll: 0.9, strong: true }))).toBe("swat");
     expect(pickPreset(read({ roll: 0.1, strong: false }))).toBe("rejection");
   });

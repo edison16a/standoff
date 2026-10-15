@@ -57,7 +57,7 @@ export function pickPreset(r: BlockRead): BlockPreset {
   if (r.glass && r.kind !== "jumper") return "pin";
   if (r.jump === "help") return "help";
   if (r.kind === "dunk") return "rejection";
-  if (r.rimGap < AT_RIM) return r.roll < (r.strong ? 0.75 : 0.5) ? "rejection" : "swat";
+  if (r.rimGap < AT_RIM) return r.roll < (r.strong ? 0.6 : 0.35) ? "rejection" : "swat";
   return "swat";
 }
 
