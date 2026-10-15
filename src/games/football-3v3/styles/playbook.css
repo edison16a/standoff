@@ -1,0 +1,107 @@
+/* The QB's page of plays on the phone: a bar on top, six play cards in a three by two grid. */
+
+.fb-book {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+
+.fb-book__bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fb-book__title {
+  display: flex;
+  flex: 1;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.fb-book__hint {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+.fb-book__clock {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #f5c518;
+  color: #1a1203;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.fb-book__btn {
+  min-width: 64px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--bg-muted);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.fb-book__btn--new {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+.fb-book__btn:active,
+.fb-play:active {
+  transform: scale(0.97);
+}
+
+.fb-book__grid {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  min-height: 0;
+}
+
+/* A card: the little field on top, the play's name in a strip under it, clear of the runners' numbers. */
+.fb-play {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  background: #0f3d22;
+  cursor: pointer;
+}
+
+.fb-play__field {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+}
+
+.fb-play__name {
+  padding: 2px 8px 3px;
+  background: rgba(5, 12, 8, 0.85);
+  text-align: left;
+  white-space: nowrap;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}

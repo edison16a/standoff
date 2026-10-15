@@ -51,7 +51,7 @@ export function adminFieldGoal(m: Match, team: TeamId): void {
   chooseCall(m, m.qbOf(team).id, "kick");
 }
 
-/** `team` lines up for a two point try at the two. */
+/** `team` lines up for a two point try at the two: a person QB then picks the play off his page. */
 export function adminTwoPoint(m: Match, team: TeamId): void {
   if (m.phase === "over") return;
   m.scorer = m.qbOf(team).id;

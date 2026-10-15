@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import type { PhoneState } from "../../protocol";
 import { TEAMS } from "../../teams";
 import { ChoosePad } from "./ChoosePad";
+import { PlaybookPad } from "./PlaybookPad";
 import { KickPad } from "./KickPad";
 import { hasMoveStick, layoutKey } from "../pad-layout";
 import { StickPad, WaitPad } from "./PlayPads";
@@ -34,6 +35,7 @@ export function Controller({ host }: { host: PhoneState }) {
     <div className="fb-controller" style={{ "--team": team.color } as React.CSSProperties}>
       {stick && <StickPad host={host} />}
       {host.pad === "choose" && <ChoosePad host={host} />}
+      {host.pad === "playbook" && <PlaybookPad host={host} />}
       {host.pad === "kicker" && <KickPad host={host} />}
       {host.pad === "wait" && <WaitPad host={host} />}
     </div>

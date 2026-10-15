@@ -1,6 +1,7 @@
 import { attackSign } from "../../teams";
 import { isDown } from "../body";
-import { startRush } from "../controls";
+import { onPlayRoute } from "../playbook/on-route";
+import { pressRush } from "../rush-shed";
 import { FIELD, YARD, yardToX } from "../field";
 import type { Match } from "../match";
 import { clinchOf } from "../support/clinch";
@@ -17,8 +18,8 @@ const DEEP_TRIGGER = 13;
 
 const onField = (p: V2): V2 => ({ x: clamp(p.x, -(FIELD.endX - 1), FIELD.endX - 1), z: clamp(p.z, -(FIELD.halfWidth - 1), FIELD.halfWidth - 1) });
 
-/** Receivers past the line, the deep threat among them, the men a dropping defender has to keep in front of him. */
-export const routes = (m: Match) => m.athletes.filter((r) => r.team === m.offense && isReceiver(r) && !isDown(r));
+/** Receivers past the line, the deep threat and a wing the play sends out among them, the men a dropping defender has to keep in front of him. */
+export const routes = (m: Match) => m.athletes.filter((r) => r.team === m.offense && (isReceiver(r) || onPlayRoute(m, r)) && !isDown(r));
 
 /**
  * A backer in his zone while the QB looks to throw: nine yards off on
@@ -88,7 +89,7 @@ function lastLayer(m: Match, a: Athlete, carrier: Athlete, skill: FootballSkill)
 export function supportDefense(m: Match, a: Athlete, carrier: Athlete | null, skill: FootballSkill): void {
   if (breakOnBall(m, a)) return;
   if (clinchOf(m, a.id)) {
-    if (a.rushCd <= 0 && m.rng.chance(skill.accuracy * 0.5)) startRush(a);
+    if (a.rushCd <= 0 && m.rng.chance(skill.accuracy * 0.5)) pressRush(m, a);
     return headFor(a, carrier ?? m.ball.pos, 0.3);
   }
   if (!carrier) return headFor(a, m.ball.pos, 1);

@@ -77,4 +77,27 @@ export const BEATEN = over(base, {
   hipLX: -0.6, kneeL: 0.9, hipRX: -0.2, kneeR: 0.5, hipLZ: 0.3,
 });
 
+/** Firing out of the stance: low and coiled, elbows cocked back to strike. */
+export const FIRE = over(base, {
+  fwd: 0.05, pitch: 0.8, spineX: 0.15, neckX: -0.75,
+  shLX: 0.35, shRX: 0.35, elL: -1.5, elR: -1.5, shLZ: 0.25, shRZ: 0.25,
+  hipLX: -1.1, hipRX: 0.25, kneeL: 1.3, kneeR: 0.6, hipLZ: 0.15, hipRZ: 0.15,
+});
+
+/** The pop as two sets of pads meet: the head snapped back, the chest rocked up, the hands still on him. */
+export const RECOIL = over(PUNCH, { pitch: 0.3, spineX: -0.25, neckX: 0.15, elL: -0.6, elR: -0.6, kneeL: 1.3, kneeR: 1.0 });
+
+/** The slam in space: launched shoulder first through the man, the arms driving up through his chest. */
+export const SLAM_LAUNCH = over(base, {
+  fwd: 0.18, pitch: 0.75, spineX: 0.2, neckX: -0.7, spineY: -0.25,
+  shLX: -1.9, shRX: -1.6, elL: -0.2, elR: -0.5, shLZ: 0.2, shRZ: 0.3,
+  hipLX: -0.3, kneeL: 0.6, hipRX: 0.7, kneeR: 0.25,
+});
+/** Driven on through: the arms extended high where the man used to be, the legs still running. */
+export const SLAM_THROUGH = over(base, {
+  fwd: 0.12, pitch: 0.55, neckX: -0.4,
+  shLX: -2.3, shRX: -2.2, elL: -0.1, elR: -0.1, shLZ: 0.3, shRZ: 0.3,
+  hipLX: -1.0, kneeL: 1.0, hipRX: 0.3, kneeR: 0.5,
+});
+
 export type { Pose };

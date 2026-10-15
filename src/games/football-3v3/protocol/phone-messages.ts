@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { BUILD_IDS } from "../builds";
 import { CALLS } from "./host-messages";
+import { playSchema } from "./playbook";
 
 /**
  * Messages a phone sends to the host, besides the gamepad kit's own
@@ -33,7 +34,7 @@ export const aimSchema = z.object({ kind: z.literal("aim"), x: axis, y: axis });
 /** The throw stick let go: throw at the receiver it was on. Sent reliably. */
 export const throwSchema = z.object({ kind: z.literal("throw"), x: axis, y: axis });
 
-export const phoneMessageSchema = z.discriminatedUnion("kind", [pickSchema, readySchema, helloSchema, callSchema, kickSchema, aimSchema, throwSchema]);
+export const phoneMessageSchema = z.discriminatedUnion("kind", [pickSchema, readySchema, helloSchema, callSchema, playSchema, kickSchema, aimSchema, throwSchema]);
 
 export type PhoneMessage = z.infer<typeof phoneMessageSchema>;
 

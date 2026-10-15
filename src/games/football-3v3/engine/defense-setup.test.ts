@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { yardToX } from "./field";
 import { seatStatus } from "./status";
-import { bySeat, peopleMatch, run } from "./test-helpers";
+import { callPlay, bySeat, peopleMatch, run } from "./test-helpers";
 
 describe("the defence while the offense calls the play", () => {
   it("keeps its pad up through the call and the line up", () => {
     const m = peopleMatch();
     expect(m.phase).toBe("choose");
     expect(seatStatus(m, 3)?.pad).toBe("defense");
-    m.choose(m.qbOf(m.offense).id, "throw");
+    callPlay(m, m.qbOf(m.offense).id, "throw");
     expect(seatStatus(m, 3)?.pad).toBe("defense");
   });
 
@@ -19,7 +19,7 @@ describe("the defence while the offense calls the play", () => {
     m.setMove(d.id, { x: 0, z: 1 });
     run(m, 1);
     expect(d.z - start.z).toBeGreaterThan(2);
-    m.choose(m.qbOf(m.offense).id, "throw");
+    callPlay(m, m.qbOf(m.offense).id, "throw");
     expect(d.z - start.z).toBeGreaterThan(2);
     // Pushing at the line never takes a defender across it before the snap.
     m.setMove(d.id, { x: -m.sign, z: 0 });

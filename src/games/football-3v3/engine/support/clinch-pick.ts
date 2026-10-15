@@ -34,7 +34,18 @@ export const CLINCH = {
   /** How hard the pair surges, and the edge a stronger man has per point of power. */
   surge: 0.85,
   perPower: 0.07,
+  /** A blocker closing on his man this fast, metres a second, may slam him: these odds, more per point of power over him, at most `slamCap`. */
+  slamSpeed: 3.0,
+  slamOdds: 0.25,
+  slamPerPower: 0.06,
+  slamCap: 0.7,
 } as const;
+
+/** Whether a blocker arriving at `closing` m/s with `edge` power over his man blows him up. Pure: `roll` is a chance from 0 to 1. */
+export function slamsHim(closing: number, edge: number, roll: number): boolean {
+  if (closing < CLINCH.slamSpeed) return false;
+  return roll < Math.max(0, Math.min(CLINCH.slamCap, CLINCH.slamOdds + CLINCH.slamPerPower * edge));
+}
 
 /** The move for a shove. Pure: `roll` is a chance from 0 to 1. Positive `surge` is the defender winning. */
 export function clinchKindFor(t: number, surge: number, passPro: boolean, roll: number): BlockKind {

@@ -41,17 +41,21 @@ export function statusOf(host: PhoneState): string | null {
 }
 
 /** The stamina bar: full and green on fresh legs, amber then red as they go. */
-function Legs({ stamina }: { stamina: number }) {
-  const tone = stamina > 0.55 ? "fresh" : stamina > 0.25 ? "tired" : "spent";
+function Bar({ label, name, share, tone }: { label: string; name: string; share: number; tone: string }) {
   return (
-    <div className={`fb-legs fb-legs--${tone}`} role="meter" aria-label="Stamina" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(stamina * 100)}>
-      <span className="fb-legs__label">Legs</span>
+    <div className={`fb-legs fb-legs--${tone}`} role="meter" aria-label={name} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(share * 100)}>
+      <span className="fb-legs__label">{label}</span>
       <span className="fb-legs__track">
-        <span className="fb-legs__fill" style={{ width: `${Math.round(stamina * 100)}%` }} />
+        <span className="fb-legs__fill" style={{ width: `${Math.round(share * 100)}%` }} />
       </span>
     </div>
   );
 }
+
+const Legs = ({ stamina }: { stamina: number }) => <Bar label="Legs" name="Stamina" share={stamina} tone={stamina > 0.55 ? "fresh" : stamina > 0.25 ? "tired" : "spent"} />;
+
+/** The QB's accuracy under the rush: full and green in a clean pocket, dropping to red as defenders close on him. */
+const Aim = ({ aim }: { aim: number }) => <Bar label="Aim" name="Throwing accuracy" share={aim} tone={aim > 0.85 ? "fresh" : aim > 0.6 ? "tired" : "spent"} />;
 
 /**
  * The middle of the controller: this player's side and role, and a
@@ -70,7 +74,8 @@ export function PadInfo({ host }: { host: PhoneState }) {
         {host.role && <span>{ROLE_NAMES[host.role]}</span>}
       </div>
       {status && <div className={`fb-info__status ${host.withBall ? "fb-info__status--ball" : ""}`}>{status}</div>}
-      {host.stamina !== null && host.playing && <Legs stamina={host.stamina} />}
+      {/* A passer reads his accuracy under the rush in place of his legs; once he runs it is his legs again. */}
+      {host.aim !== null ? <Aim aim={host.aim} /> : host.stamina !== null && host.playing && <Legs stamina={host.stamina} />}
     </div>
   );
 }

@@ -11,6 +11,8 @@ import { newKick } from "./kick";
 import { engageLine, setLine } from "./linemen";
 import type { Match } from "./match";
 import { newPlay } from "./play";
+import type { PlayDesign } from "./playbook/deal";
+import { dealHuddle, huddleLeft, redeal } from "./playbook/huddle";
 import { pickBack } from "./run-play";
 import { endOfRegulation } from "./score";
 import { PASS, RULES } from "./tuning";
@@ -25,6 +27,7 @@ const FRESH: ReadonlySet<Match["phase"]> = new Set(["choose", "convert", "kick",
 function enter(m: Match, phase: Match["phase"]): void {
   m.phase = phase;
   m.phaseT = 0;
+  m.huddle = null;
   if (FRESH.has(phase)) restoreControl(m);
 }
 
@@ -63,10 +66,10 @@ export function startConvert(m: Match): void {
   m.emit({ type: "choose", team: m.offense, qb: m.qbOf(m.offense).id, conversion: true });
 }
 
-function startPresnap(m: Match, call: "throw" | "run"): void {
+function startPresnap(m: Match, call: "throw" | "run", design: PlayDesign | null = null, runners: number[] = []): void {
   enter(m, "presnap");
   const back = call === "run" ? pickBack(m.athletes, m.offense) : null;
-  m.play = newPlay(call, m.time, back);
+  m.play = newPlay(call, m.time, back, design, runners);
   // The defence keeps the spots it moved to during the call.
   lineUp(m.athletes.filter((a) => a.team === m.offense || a.role === "lineman"), m.drive, call, back);
   setLine(m);
@@ -88,13 +91,29 @@ function startKickPlay(m: Match): void {
   m.ball.pos = { x: kicker.x + m.sign * 0.6, y: 0.2, z: kicker.z };
 }
 
+/**
+ * Throw or Run picked: a person's QB gets a page of plays to pick from;
+ * a computer QB picks one at once. The game played as it was filmed has
+ * no playbook and lines straight up.
+ */
+function callFor(m: Match, call: "throw" | "run"): void {
+  if (m.filmed) return startPresnap(m, call);
+  const page = dealHuddle(m, call);
+  if (page.plays.length === 0) return startPresnap(m, call);
+  if (!m.qbOf(m.offense).auto) {
+    m.huddle = page;
+    return;
+  }
+  startPresnap(m, call, m.playRng.pick(page.plays), page.runners);
+}
+
 /** The QB's pick, before a play (throw, run or kick) or for the try after a touchdown. Only the offense's QB decides. */
 export function chooseCall(m: Match, id: number, call: PlayCall | ConversionCall): void {
   const qb = m.qbOf(m.offense);
-  if (qb.id !== id) return;
+  if (qb.id !== id || m.huddle) return;
   if (m.phase === "choose" && (call === "throw" || call === "run" || call === "kick")) {
     m.emit({ type: "call", team: m.offense, call });
-    return call === "kick" ? startKickPlay(m) : startPresnap(m, call);
+    return call === "kick" ? startKickPlay(m) : callFor(m, call);
   }
   if (m.phase === "convert" && (call === "kick" || call === "two")) {
     m.emit({ type: "call", team: m.offense, call });
@@ -102,7 +121,21 @@ export function chooseCall(m: Match, id: number, call: PlayCall | ConversionCall
       m.drive = { ...m.drive, los: RULES.kickTrySpot };
       return startKickPlay(m);
     }
-    return startPresnap(m, "throw");
+    return callFor(m, "throw");
+  }
+}
+
+/** The QB on his page of plays: pick one by its place, deal a fresh page, or go back to the call with a fresh clock. */
+export function huddleAction(m: Match, id: number, action: number | "redeal" | "back"): void {
+  const h = m.huddle;
+  if (!h || m.qbOf(m.offense).id !== id) return;
+  if (action === "redeal") m.huddle = redeal(m, h);
+  else if (action === "back") {
+    m.huddle = null;
+    m.phaseT = 0;
+  } else {
+    const design = h.plays[action];
+    if (design) startPresnap(m, h.call, design, h.runners);
   }
 }
 
@@ -151,7 +184,10 @@ function finishGame(m: Match): void {
 export function updatePhase(m: Match): void {
   const qb = m.qbOf(m.offense);
   const beat = 0.9 + Math.min(1.2, botSkill(m.level).reaction * 1.5);
-  if (m.phase === "choose") {
+  if (m.huddle) {
+    // A page left too long calls its first play, and so does a QB whose phone dropped.
+    if (huddleLeft(m.huddle, m.time) <= 0 || qb.auto) huddleAction(m, qb.id, 0);
+  } else if (m.phase === "choose") {
     if (qb.auto && m.phaseT >= beat) chooseCall(m, qb.id, botPlayCall(m));
     else if (m.phaseT >= RULES.chooseSeconds) chooseCall(m, qb.id, "throw");
   } else if (m.phase === "convert") {

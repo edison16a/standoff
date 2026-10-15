@@ -2,12 +2,14 @@ import type { PassInfo } from "../ball";
 import { isDown, topSpeed } from "../body";
 import { CATCH_AFTER, CATCH_PICK, catchKindFor, JARRED, type CatchKind, type CatchPlan, type CatchResult } from "../catch-preset";
 import { startDive } from "../dive";
+import { FIELD } from "../field";
 import type { Match } from "../match";
 import type { Athlete } from "../types";
 import { dir2, dist2, type V2 } from "../vec";
 import { playFor, type Play } from "./eligible";
 import { meetPoint, PATH_DT, type Meet } from "./path";
 import { reachOf } from "./reach";
+import { settleCatch, settleStep } from "./settle";
 
 /**
  * Picks and plays each player's move for a pass in the air (the moves
@@ -35,8 +37,9 @@ export function planCatches(m: Match, dt: number): void {
 
 function tick(m: Match, a: Athlete, p: CatchPlan, pass: PassInfo | null, dt: number): void {
   p.t += dt;
+  if (p.result) p.since += dt;
+  settleStep(m, a, p, dt);
   if (p.result) {
-    p.since += dt;
     if (p.since > CATCH_AFTER[p.kind]) a.catching = null;
     return;
   }
@@ -45,10 +48,11 @@ function tick(m: Match, a: Athlete, p: CatchPlan, pass: PassInfo | null, dt: num
   const meet = meetFor(m, a, pass);
   if (meet) {
     p.at = p.t + meet.wait;
-    // Still short of it as he would have to leave the ground: a catch on his feet becomes a lay out.
+    // Still short of it as he would have to leave the ground: a catch on his feet becomes a leap for a high one, a lay out for the rest.
     const late = meet.wait > CATCH_PICK.diveLead * 0.5 && meet.wait <= CATCH_PICK.diveLead + 0.05;
-    if (ON_FEET.has(p.kind) && late && shortOf(a, meet) > CATCH_PICK.short) {
-      p.kind = "dive";
+    const short = shortOf(a, meet);
+    if (ON_FEET.has(p.kind) && late && short > CATCH_PICK.short) {
+      p.kind = p.height >= CATCH_PICK.oneHigh && short <= CATCH_PICK.oneTo ? "onehand" : "dive";
       p.spot = meet.spot;
     }
   }
@@ -59,7 +63,7 @@ function tick(m: Match, a: Athlete, p: CatchPlan, pass: PassInfo | null, dt: num
 }
 
 /** Moves a player makes on his feet, which a ball led too far turns into a dive. */
-const ON_FEET = new Set<CatchKind>(["chest", "stumble", "shoulder"]);
+const ON_FEET = new Set<CatchKind>(["chest", "stumble", "shoulder", "whip", "toetap"]);
 
 /** Metres he is still short of the meeting spot when the ball gets there, running flat out. */
 function shortOf(a: Athlete, meet: Meet): number {
@@ -85,8 +89,13 @@ function consider(m: Match, a: Athlete, pass: PassInfo): void {
   const facing = -(Math.sin(a.yaw) * vel.x + Math.cos(a.yaw) * vel.z) / speed;
   // The side it comes in on: where it meets him across his body, and the side it is coming from.
   const across = (meet.spot.x - a.x) * left.x + (meet.spot.z - a.z) * left.z - ((vel.x * left.x + vel.z * left.z) / speed) * 0.3;
-  const kind = catchKindFor({ height: meet.y, speed: Math.hypot(vel.x, vel.y, vel.z), facing, contest: nearestFoe(m, a, meet.spot), short, play });
-  a.catching = { kind, t: 0, at: meet.wait, side: across >= 0 ? 1 : -1, height: meet.y, spot: meet.spot, result: null, since: 0 };
+  const sideline = FIELD.halfWidth - Math.abs(meet.spot.z);
+  const pace = Math.hypot(a.vx, a.vz);
+  const kind = catchKindFor({ height: meet.y, speed: Math.hypot(vel.x, vel.y, vel.z), facing, contest: nearestFoe(m, a, meet.spot), short, play, sideline, pace });
+  // A toe tap leans out over the sideline: its side is the sideline's, on his left when 1.
+  const out = (Math.sign(meet.spot.z) || 1) * left.z >= 0 ? 1 : -1;
+  const side = kind === "toetap" ? out : across >= 0 ? 1 : -1;
+  a.catching = { kind, t: 0, at: meet.wait, side, height: meet.y, spot: meet.spot, result: null, since: 0, contest: rival(m, a, pass, meet.spot), turn: 0 };
 }
 
 /** The ball's velocity on its traced path at match time `time`. */
@@ -96,6 +105,28 @@ function ballVelocity(pass: PassInfo, time: number): { x: number; y: number; z: 
   const a = pts[i]!;
   const b = pts[i + 1] ?? a;
   return { x: (b.x - a.x) / PATH_DT, y: (b.y - a.y) / PATH_DT, z: (b.z - a.z) / PATH_DT };
+}
+
+/** Inside this many metres of the meeting spot, an opponent going for the ball makes it a contested catch. */
+const CONTEST = 1.6;
+
+/**
+ * The opponent fighting him for this ball: the receiver it was thrown to,
+ * or a defender with a play on it (in its lane), nearest the spot where
+ * the ball comes down. Both go up for it together.
+ */
+function rival(m: Match, a: Athlete, pass: PassInfo, spot: V2): number | null {
+  let best: number | null = null;
+  let near = CONTEST;
+  for (const o of m.athletes) {
+    if (o.team === a.team || isDown(o) || (o.id !== pass.to && !(o.id in pass.lane))) continue;
+    const d = dist2(o, spot);
+    if (d < near) {
+      near = d;
+      best = o.id;
+    }
+  }
+  return best;
 }
 
 /** Metres from a spot to the nearest opponent who could get a hand in. */
@@ -121,7 +152,7 @@ function finish(p: CatchPlan, result: CatchResult): void {
  * defender on him was a hit that jarred it loose.
  */
 export function noteCatch(m: Match, a: Athlete, result: Exclude<CatchResult, "missed" | "jarred">, play: Play): void {
-  const p = a.catching ?? (a.catching = { kind: play === "swat" ? "swat" : play === "pick" ? "pick" : "chest", t: 0, at: 0, side: 1, height: 1.3, spot: { x: a.x, z: a.z }, result: null, since: 0 });
+  const p = a.catching ?? (a.catching = { kind: play === "swat" ? "swat" : play === "pick" ? "pick" : "chest", t: 0, at: 0, side: 1, height: 1.3, spot: { x: a.x, z: a.z }, result: null, since: 0, contest: null, turn: 0 });
   const hit = result === "dropped" && nearestFoe(m, a, a) < JARRED;
   finish(p, hit ? "jarred" : result);
   if (hit) {
@@ -133,4 +164,5 @@ export function noteCatch(m: Match, a: Athlete, result: Exclude<CatchResult, "mi
   } else if (result === "held" && (p.kind === "high" || p.kind === "pick")) {
     a.stagger = Math.max(a.stagger, 0.25);
   }
+  if (result === "held") settleCatch(a, p);
 }

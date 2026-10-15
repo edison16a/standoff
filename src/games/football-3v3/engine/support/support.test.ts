@@ -4,7 +4,7 @@ import { Match } from "../match";
 import { BOTS, PEOPLE, run, snap } from "../test-helpers";
 import { STEP } from "../tuning";
 import { clinchOf } from "./clinch";
-import { CLINCH, clinchKindFor } from "./clinch-pick";
+import { CLINCH, clinchKindFor, slamsHim } from "./clinch-pick";
 import { LAYERS } from "./formation";
 import { SUPPORT } from "./roster";
 
@@ -40,14 +40,23 @@ describe("support players", () => {
     expect(clinchKindFor(CLINCH.longest, 0, true, 0.99)).toBe("shed");
   });
 
-  it("block the edge rushers on a pass play, and only the deep threat runs a route", () => {
+  it("slam a man only when arriving at speed, more often the stronger the blocker", () => {
+    expect(slamsHim(CLINCH.slamSpeed - 0.1, 5, 0)).toBe(false);
+    expect(slamsHim(CLINCH.slamSpeed + 1, 0, CLINCH.slamOdds - 0.01)).toBe(true);
+    expect(slamsHim(CLINCH.slamSpeed + 1, 0, CLINCH.slamOdds + 0.01)).toBe(false);
+    expect(slamsHim(CLINCH.slamSpeed + 1, 3, CLINCH.slamOdds + 0.01)).toBe(true);
+    expect(slamsHim(CLINCH.slamSpeed + 1, 20, CLINCH.slamCap + 0.01)).toBe(false);
+  });
+
+  it("block the edge rushers on a pass play, and only the deep threat and the wing on the play run routes", () => {
     const m = new Match({ entries: PEOPLE, seed: 3, firstOffense: 0, level: "hard" });
     snap(m);
     let blocked = 0;
     let deepest = -Infinity;
     for (let t = 0; t < 2.5 && m.phase === "live"; t += STEP) {
       run(m, STEP);
-      for (const o of supports(m, m.offense).filter((a) => !a.deep)) {
+      // The wing the play card sends out runs his route (playbook/); the rest block.
+      for (const o of supports(m, m.offense).filter((a) => !a.deep && !m.play?.runners.includes(a.id))) {
         deepest = Math.max(deepest, past(m, o.x));
         if (clinchOf(m, o.id)) blocked++;
       }
@@ -58,7 +67,7 @@ describe("support players", () => {
   });
 
   it("make blocks, sheds and pancakes and tackle runners over whole computer games", () => {
-    const seen = { blocks: 0, sheds: 0, pancakes: 0, tackles: 0 };
+    const seen = { blocks: 0, sheds: 0, pancakes: 0, slams: 0, tackles: 0 };
     for (const seed of [31, 32, 33]) {
       const m = new Match({ entries: BOTS, seed, level: "medium", quarterSeconds: 40 });
       const clinched = new Set<string>();
@@ -75,13 +84,14 @@ describe("support players", () => {
           const kind = a.role !== "lineman" && a.block?.offense ? a.block.kind : null;
           if (kind !== was.get(a.id) && kind === "shed") seen.sheds++;
           if (kind !== was.get(a.id) && kind === "pancake") seen.pancakes++;
+          if (kind !== was.get(a.id) && kind === "slam") seen.slams++;
           was.set(a.id, kind);
         }
       }
     }
     expect(seen.blocks).toBeGreaterThan(20);
     expect(seen.sheds).toBeGreaterThan(3);
-    expect(seen.pancakes).toBeGreaterThan(0);
+    expect(seen.pancakes + seen.slams).toBeGreaterThan(0);
     expect(seen.tackles).toBeGreaterThan(3);
   }, 60_000);
 });

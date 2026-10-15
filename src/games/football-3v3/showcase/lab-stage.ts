@@ -8,6 +8,9 @@ import { moveAthlete } from "../engine/motion";
 import { Rng } from "../engine/rng";
 import { home } from "../engine/tackle";
 import { bindTackle, followBinds } from "../engine/tackle-bind";
+import { breakTackle, updateBreak, type BreakKind } from "../engine/break-tackle";
+import { CLINCH } from "../engine/support/clinch-pick";
+import { putDown } from "../engine/support/clinch-break";
 import type { ApproachKind, TackleKind } from "../engine/tackle-preset";
 import { STEP, TACKLE } from "../engine/tuning";
 import type { Athlete } from "../engine/types";
@@ -20,7 +23,7 @@ import { dir2, dist2, type V2 } from "../engine/vec";
  * the outcome forced so each preset can be watched on a loop. The
  * carrier always runs up +z through the middle of the picture.
  */
-export type Outcome = TackleKind | "missed" | "shed" | "whiff" | "none";
+export type Outcome = TackleKind | BreakKind | "missed" | "shed" | "whiff" | "none";
 
 export interface Cast {
   build: BuildId | "lineman";
@@ -31,11 +34,17 @@ export interface Cast {
   move?: V2;
   /** Seconds in when he presses tackle, and the preset his lunge is drawn as. */
   lunge?: { at: number; approach: ApproachKind; aim?: V2 };
+  /** On the carrier's side, a blocker who slams the cast member `slams` when he reaches him. */
+  slams?: number;
 }
 
 export interface Stage {
   carrier: BuildId | "lineman";
   speed: number;
+  /** The carrier is a QB in the pocket, drifting on this stick instead of running up the field: for the sacks. */
+  qb?: V2;
+  /** Where the carrier starts up the field, -5.5 unless set; the cast's spots are from it. */
+  start?: number;
   /** Stick changes for the carrier: from `at` seconds the stick is `move`, with a juke pressed if `juke`. */
   sticks?: { at: number; move: V2; juke?: boolean }[];
   cast: Cast[];
@@ -43,8 +52,8 @@ export interface Stage {
   length: number;
 }
 
-function make(id: number, build: BuildId | "lineman", team: 0 | 1, at: V2, vel: V2): Athlete {
-  const a = createAthlete(id, team, build === "lineman" ? "lineman" : "runner", 0, build === "lineman" ? null : build, null);
+function make(id: number, build: BuildId | "lineman", team: 0 | 1, at: V2, vel: V2, qb = false): Athlete {
+  const a = createAthlete(id, team, build === "lineman" ? "lineman" : qb ? "qb" : "runner", 0, build === "lineman" ? null : build, null);
   Object.assign(a, { x: at.x, z: at.z, vx: vel.x, vz: vel.z, yaw: Math.atan2(vel.x || 1e-6, vel.z) });
   return a;
 }
@@ -52,9 +61,10 @@ function make(id: number, build: BuildId | "lineman", team: 0 | 1, at: V2, vel: 
 /** Runs the stage through and keeps a still of every man at every step. */
 export function recordStage(stage: Stage): AthleteView[][] {
   const rng = new Rng(5);
-  const carrier = make(0, stage.carrier, 0, { x: 0, z: -5.5 }, { x: 0, z: stage.speed });
-  carrier.move = { x: 0, z: 1 };
-  const cast = stage.cast.map((c, i) => make(i + 1, c.build, 1, { x: c.at.x, z: c.at.z - 5.5 }, c.vel ?? { x: 0, z: 0 }));
+  const start = stage.start ?? -5.5;
+  const carrier = make(0, stage.carrier, 0, { x: 0, z: start }, { x: 0, z: stage.speed }, !!stage.qb);
+  carrier.move = stage.qb ?? { x: 0, z: 1 };
+  const cast = stage.cast.map((c, i) => make(i + 1, c.build, c.slams === undefined ? 1 : 0, { x: c.at.x, z: c.at.z + start }, c.vel ?? { x: 0, z: 0 }));
   for (const [i, a] of cast.entries()) {
     const c = stage.cast[i]!;
     if (!c.vel) a.yaw = Math.atan2(carrier.x - a.x, carrier.z - a.z);
@@ -76,6 +86,12 @@ export function recordStage(stage: Stage): AthleteView[][] {
       a.action = { kind: "lunge", t: 0, dur: TACKLE.lungeTime, dir, target: 0, approach: l.approach };
       Object.assign(a, { vx: dir.x * speed, vz: dir.z * speed, yaw: Math.atan2(dir.x, dir.z) });
     }
+    for (const [i, a] of cast.entries()) {
+      const target = stage.cast[i]!.slams;
+      const d = target === undefined ? null : cast[target]!;
+      if (d && !a.block && dist2(a, d) < CLINCH.gap + 0.15) putDown(a, d, "slam");
+      if (a.block) a.block.t += STEP;
+    }
     for (const a of list) step(a, list, stage, rng);
     frames.push(list.map((a) => athleteView(a, a === carrier, false, null)));
   }
@@ -87,6 +103,7 @@ function step(a: Athlete, list: Athlete[], stage: Stage, rng: Rng): void {
   a.stagger = Math.max(0, a.stagger - STEP);
   a.jukeCd = Math.max(0, a.jukeCd - STEP);
   updateStumble(a, STEP);
+  updateBreak(a, STEP);
   const act = a.action;
   if (act.kind === "juke") {
     updateJuke(a, STEP);
@@ -115,7 +132,9 @@ function lunge(a: Athlete, carrier: Athlete, list: Athlete[], stage: Stage, rng:
   if (act.t < 0.25 && out !== "missed") home(a, carrier, STEP);
   if (act.t > 0.04 && dist2(a, carrier) < TACKLE.contact && carrier.action.kind !== "down") {
     if (out === "missed") return knockDown(a, TACKLE.missedDown, "missed");
+    const before = { x: carrier.vx, z: carrier.vz };
     const hit = resolveHit(a, carrier, rng);
+    if (out === "truck" || out === "stiffarm") return breakTackle(out, carrier, a, hit.n, before);
     if (out === "shed" || out === "none") {
       carrier.stagger = 0.5;
       return knockDown(a, TACKLE.shedDown, "shed");

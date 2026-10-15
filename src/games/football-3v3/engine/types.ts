@@ -1,6 +1,7 @@
 import type { BuildId } from "../builds";
 import type { TeamId } from "../teams";
 import type { BlockKind } from "./block-preset";
+import type { BreakKind } from "./break-tackle";
 import type { CatchPlan } from "./catch-preset";
 import type { ApproachKind, TackleKind } from "./tackle-preset";
 import type { ThrowKind } from "./throw-preset";
@@ -58,8 +59,9 @@ export type ActionKind = Action["kind"];
  * piling on, a dive, or a miss: dodged by a juke, lunging at nothing,
  * bounced off a carrier who ran through him, or his ankles broken by a
  * juke he never lunged at. A rusher a blocker drove onto his back is pancaked.
+ * A tackler a carrier broke head on was trucked or stiff armed (break-tackle.ts).
  */
-export type DownCause = "tackled" | "tackler" | "pile" | "dive" | "missed" | "whiff" | "shed" | "juked" | "pancaked";
+export type DownCause = "tackled" | "tackler" | "pile" | "dive" | "missed" | "whiff" | "shed" | "juked" | "pancaked" | "trucked" | "stiffarmed";
 
 /** The men of one tackle, held together through its preset (tackle-bind.ts). */
 export interface TackleBind {
@@ -171,6 +173,10 @@ export interface Athlete {
   stagger: number;
   /** Fooled by a juke: seconds into it, how long it lasts and which way he lurches, or null. He may be on the turf for it. */
   stumble: { t: number; dur: number; side: 1 | -1 } | null;
+  /** Breaking free of a block with Rush: seconds into it, how long it lasts, and the shoulder he swims over (burst.ts). */
+  burst: { t: number; dur: number; side: 1 | -1 } | null;
+  /** Running through a head on tackle: the truck or stiff arm he broke it with, seconds into it (break-tackle.ts). */
+  breaking: { kind: BreakKind; t: number; dur: number } | null;
   /** His move for a pass coming down, picked before it arrives (catch/plan.ts), or null. */
   catching: CatchPlan | null;
   /** A lineman's block move this play, seconds into it, and which side of it he is on (block-preset.ts), or null. */

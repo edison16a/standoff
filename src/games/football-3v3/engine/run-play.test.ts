@@ -3,12 +3,12 @@ import { createAthlete } from "./body";
 import { Match } from "./match";
 import { pickBack } from "./run-play";
 import { seatStatus } from "./status";
-import { BOTS, bySeat, peopleMatch, run } from "./test-helpers";
+import { callPlay, BOTS, bySeat, peopleMatch, run } from "./test-helpers";
 
 /** Calls a run and hikes, then steps until the QB has the ball. */
 function runSnap(m: Match): void {
   const qb = m.qbOf(m.offense);
-  m.choose(qb.id, "run");
+  callPlay(m, qb.id, "run");
   m.press(qb.id, "hike");
   run(m, 1, () => m.carrier() === qb);
 }
@@ -20,7 +20,7 @@ describe("the run call", () => {
 
   it("lines the back up beside the QB", () => {
     const m = peopleMatch();
-    m.choose(bySeat(m, 0).id, "run");
+    callPlay(m, bySeat(m, 0).id, "run");
     const qb = bySeat(m, 0);
     const back = bySeat(m, 1);
     expect(m.play?.back).toBe(back.id);
@@ -68,11 +68,11 @@ describe("the run call", () => {
   it("allows one pitch, only after the snap, and only on a run call", () => {
     const m = peopleMatch();
     const qb = bySeat(m, 0);
-    m.choose(qb.id, "run");
+    callPlay(m, qb.id, "run");
     m.press(qb.id, "pass");
     expect(m.play?.pitched).toBe(false);
     const t = peopleMatch();
-    t.choose(t.qbOf(t.offense).id, "throw");
+    callPlay(t, t.qbOf(t.offense).id, "throw");
     t.press(t.qbOf(t.offense).id, "hike");
     run(t, 1, () => t.carrier() !== null);
     t.press(t.qbOf(t.offense).id, "pass");

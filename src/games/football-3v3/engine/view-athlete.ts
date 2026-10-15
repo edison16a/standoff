@@ -1,5 +1,6 @@
 import type { BuildId } from "../builds";
 import type { BlockKind } from "./block-preset";
+import type { BreakKind } from "./break-tackle";
 import type { CatchKind, CatchResult } from "./catch-preset";
 import type { ApproachKind, TackleKind } from "./tackle-preset";
 import type { ThrowKind } from "./throw-preset";
@@ -56,9 +57,13 @@ export interface AthleteView {
    * His move for a pass coming down (catch-preset.ts): seconds into it, seconds from its start to the
    * ball in his hands, the side it comes in on, how high, and how it finished with seconds since.
    */
-  catching: { kind: CatchKind; t: number; at: number; side: 1 | -1; height: number; result: CatchResult | null; since: number } | null;
+  catching: { kind: CatchKind; t: number; at: number; side: 1 | -1; height: number; result: CatchResult | null; since: number; contest: number | null; turn: number } | null;
   /** A lineman's block move, seconds into it, and whether he is the blocker (offense) or the rusher. */
   block: { kind: BlockKind; t: number; offense: boolean } | null;
+  /** Breaking free of a block with Rush (burst.ts): seconds into it, how long it lasts, and the shoulder he swims over. */
+  burst: { t: number; dur: number; side: 1 | -1 } | null;
+  /** Running through a head on tackle with a truck or a stiff arm (break-tackle.ts). */
+  breaking: { kind: BreakKind; t: number; dur: number } | null;
   /** Fooled by a juke: seconds into the stumble and which way he lurches. */
   stumble: { t: number; dur: number; side: 1 | -1 } | null;
   spike: boolean;
@@ -86,9 +91,11 @@ export function athleteView(a: Athlete, hasBall: boolean, targeted: boolean, cer
     downCause: act.kind === "down" ? act.cause : null,
     lunge: act.kind === "lunge" ? act.approach : null,
     tackle: act.kind === "down" && act.bind ? { kind: act.bind.kind, role: act.bind.role, side: act.bind.side, prone: !!act.bind.prone } : null,
-    catching: a.catching && { kind: a.catching.kind, t: a.catching.t, at: a.catching.at, side: a.catching.side, height: a.catching.height, result: a.catching.result, since: a.catching.since },
+    catching: a.catching && { kind: a.catching.kind, t: a.catching.t, at: a.catching.at, side: a.catching.side, height: a.catching.height, result: a.catching.result, since: a.catching.since, contest: a.catching.contest, turn: a.catching.turn },
     block: a.block && { ...a.block },
     stumble: a.stumble && { ...a.stumble },
+    burst: a.burst && { ...a.burst },
+    breaking: a.breaking && { ...a.breaking },
     spike: act.kind === "celebrate" && act.spike,
     hasBall, targeted, guarding: a.guard, rushing: a.rushT > 0, blocked: a.blocked > 0, ceremony,
   };

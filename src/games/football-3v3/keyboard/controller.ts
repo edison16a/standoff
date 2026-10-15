@@ -15,7 +15,10 @@ const KEYS: Record<Key, readonly string[]> = {
   guard: ["KeyG"],
 };
 
-const DIGITS = ["Digit1", "Digit2", "Digit3"];
+const DIGITS = ["Digit1", "Digit2", "Digit3", "Digit4", "Digit5", "Digit6"];
+
+/** On the page of plays: R deals new plays, B goes back to Throw, Run and Kick. */
+const BOOK_KEYS: Record<string, "redeal" | "back"> = { KeyR: "redeal", KeyB: "back" };
 
 /** The pad button a key presses now, from the controls the phone shows; null for none. */
 export function padFor(key: Key, s: PhoneState): PadButton | "skip" | null {
@@ -70,6 +73,11 @@ export class FootballKeys implements KeyboardPlayer {
       if (isDown) this.call(digit);
       return true;
     }
+    const book = BOOK_KEYS[code];
+    if (book && this.state()?.pad === "playbook") {
+      if (isDown) this.ctx.send({ kind: "play", action: book });
+      return true;
+    }
     return this.move.key(code, isDown) || this.arrows.key(code, isDown) || this.buttons.key(code, isDown);
   }
 
@@ -111,7 +119,7 @@ export class FootballKeys implements KeyboardPlayer {
     const s = this.state();
     if (!s) return;
     if (key === "act" && s.pad === "kicker") return this.tapKick();
-    if (key === "act" && s.pad === "choose") return this.call(0);
+    if (key === "act" && (s.pad === "choose" || s.pad === "playbook")) return this.call(0);
     if (key === "act" && s.pad === "qb" && s.canThrow && !s.runPlay && s.phase === "live") return this.startThrow("act");
     const button = padFor(key, s);
     if (!button) return;
@@ -138,9 +146,13 @@ export class FootballKeys implements KeyboardPlayer {
     this.ctx.send({ kind: "pad-press", button, down: isDown, x: s.x, y: s.y });
   }
 
-  /** 1, 2 and 3 pick the play call in the order the phone shows them. */
+  /** 1, 2 and 3 pick the play call in the order the phone shows them; on the page of plays 1 to 6 pick a play. */
   private call(index: number): void {
     const s = this.state();
+    if (s?.pad === "playbook") {
+      if (s.book && index < s.book.plays.length) this.ctx.send({ kind: "play", action: index });
+      return;
+    }
     const call = s?.pad === "choose" ? s.choose?.options[index] : undefined;
     if (call) this.ctx.send({ kind: "call", call });
   }

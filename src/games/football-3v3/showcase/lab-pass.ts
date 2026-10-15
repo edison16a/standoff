@@ -2,10 +2,14 @@ import { breaksPair, type BlockKind } from "../engine/block-preset";
 import type { CatchKind, CatchResult } from "../engine/catch-preset";
 import { tracePath } from "../engine/catch/path";
 import { newDrive } from "../engine/downs";
+import { FIELD } from "../engine/field";
 import { breakPair } from "../engine/line-free";
+import { breakFree } from "../engine/rush-shed";
 import type { Entry } from "../engine/lineup";
 import { Match } from "../engine/match";
 import { startChoose } from "../engine/phases";
+import { pressTackle } from "../engine/tackle";
+import type { TackleKind } from "../engine/tackle-preset";
 import { STEP } from "../engine/tuning";
 import type { Athlete, PlayCall } from "../engine/types";
 import { buildView, type AthleteView, type BallView } from "../engine/view";
@@ -21,19 +25,26 @@ import { buildView, type AthleteView, type BallView } from "../engine/view";
  */
 export interface PassStage {
   call: PlayCall;
-  wr?: { at: [number, number]; move?: [number, number] };
-  d?: { at: [number, number]; move?: [number, number]; auto?: boolean };
+  /** `face` sets him still and square to the QB, settled for the ball. */
+  wr?: { at: [number, number]; move?: [number, number]; face?: boolean };
+  /** `hit` has him tackle the receiver the moment the ball is his. */
+  d?: { at: [number, number]; move?: [number, number]; auto?: boolean; hit?: boolean };
   /** Seconds after the snap the QB lets it go. */
   throwAt?: number;
   /** A shove off his spot just after the throw, so the ball is led past him. */
   shift?: [number, number];
   /** Metres a second added to the ball's climb, for one that arrives high. */
   loft?: number;
+  /** The receiver is out by the sideline, his stick drifting toward it. */
+  edge?: boolean;
   /** Nobody read the throw: a computer defender in the lane can only get a hand to it. */
   unread?: boolean;
-  want?: { who: "wr" | "d"; kind: CatchKind; result: CatchResult };
+  /** The move and finish the stage is there to show, and the tackle that should follow the catch. */
+  want?: { who: "wr" | "d"; kind: CatchKind; result: CatchResult; then?: TackleKind };
   /** A block move forced on the middle pair from this many seconds after the snap. */
   block?: { kind: BlockKind; at: number };
+  /** Seconds after the snap the Blaze QB, held at the line beside the middle pair, breaks free with Rush. */
+  burst?: number;
   length: number;
 }
 
@@ -64,6 +75,8 @@ function attempt(stage: PassStage, seed: number): { frames: PassFrame[]; shown: 
   const wr = m.bySeat(1)!;
   const d = m.bySeat(3)!;
   m.choose(qb.id, stage.call);
+  // A person's QB gets his page of plays: the stage takes the first one.
+  if (m.huddle) m.playbook(qb.id, 0);
   m.press(qb.id, "hike");
   // Line play is watched from the snap, over the middle pair; a pass from the throw, over the receiver.
   const pair = m.lines[1]!;
@@ -71,22 +84,28 @@ function attempt(stage: PassStage, seed: number): { frames: PassFrame[]; shown: 
   const frames: PassFrame[] = [];
   for (let i = 0; i < 240 && m.carrier() !== qb; i++) {
     m.step(STEP);
-    if (stage.block) frames.push(turned(m, lineAt));
+    if (stage.block || stage.burst !== undefined) frames.push(turned(m, lineAt));
   }
   const s = m.sign;
   const spot = (o: { x: number; z: number }, [f, c]: [number, number]) => ({ x: o.x + f * s, z: o.z + c });
   if (stage.wr) Object.assign(wr, spot(qb, stage.wr.at));
+  if (stage.edge) wr.z = FIELD.halfWidth - 0.75;
   if (stage.wr?.move) m.setMove(wr.id, { x: stage.wr.move[0] * s, z: stage.wr.move[1] });
+  if (stage.wr?.face) settle(m, wr, qb);
   if (stage.d) Object.assign(d, spot(wr, stage.d.at), { auto: !!stage.d.auto });
   else Object.assign(d, spot(qb, [40, 0]));
   // A computer defender holds his spot in the lane rather than running his coverage.
   if (stage.d?.auto) d.bot.wait = Infinity;
   if (stage.d?.move) m.setMove(d.id, { x: stage.d.move[0] * s, z: stage.d.move[1] });
-  // The other side's QB is out of the picture.
-  Object.assign(m.bySeat(2)!, spot(qb, [45, 8]));
+  // The other side's QB is out of the picture, unless he is the rusher who breaks free beside the middle pair.
+  const rusher = m.bySeat(2)!;
+  if (stage.burst === undefined) Object.assign(rusher, spot(qb, [45, 8]));
+  else Object.assign(rusher, { x: lineAt.x + s * 1.1, z: lineAt.z + 1.5 });
   const origin = stage.wr ? { x: wr.x, z: wr.z } : lineAt;
   const who = stage.want?.who === "d" ? d : wr;
-  let shown = !stage.want;
+  let shown = !stage.want && stage.burst === undefined;
+  let moved = false;
+  let hit = !stage.want?.then;
   let thrown = false;
   let since = 0;
   for (let t = 0; t < stage.length; t += STEP) {
@@ -98,14 +117,41 @@ function attempt(stage: PassStage, seed: number): { frames: PassFrame[]; shown: 
       thrown = true;
     }
     if (stage.block && since >= stage.block.at) force(m, stage.block.kind);
+    // Held at the line as he presses Rush, he wins it: the club, swim and rip, then the burst (rush-shed.ts).
+    if (stage.burst !== undefined && since >= stage.burst && !shown) {
+      rusher.blocked = 0.15;
+      breakFree(m, rusher);
+      // His thumb drives him at the QB.
+      m.setMove(rusher.id, { x: qb.x - rusher.x, z: qb.z - rusher.z });
+      shown = true;
+    }
     const before = m.ball.state;
     m.step(STEP);
     if (before !== "pass" && m.ball.state === "pass") afterThrow(m, wr, stage);
+    // The hitter waits for the catch, then comes at full speed and leaves his feet from just outside arm's length.
+    if (stage.d?.hit) hitter(m, d, wr);
     const p = who.catching;
-    if (stage.want && p && p.kind === stage.want.kind && p.result === stage.want.result) shown = true;
+    if (stage.want && p && p.kind === stage.want.kind && p.result === stage.want.result) moved = true;
+    if (wr.action.kind === "down" && wr.action.bind?.kind === stage.want?.then) hit = true;
+    if (moved && hit) shown = true;
     frames.push(turned(m, origin));
   }
   return { frames, shown };
+}
+
+/** A defender who holds until the receiver has the ball, then runs at him and lunges from out of close range. */
+function hitter(m: Match, d: Athlete, wr: Athlete): void {
+  d.bot.wait = Infinity;
+  if (m.carrier() !== wr) return m.setMove(d.id, { x: 0, z: 0 });
+  m.setMove(d.id, { x: wr.x - d.x, z: wr.z - d.z });
+  if (d.action.kind === "none" && Math.hypot(wr.x - d.x, wr.z - d.z) > 2.1) pressTackle(m, d, wr);
+}
+
+/** Stood still and square to the QB, as a receiver settled at the end of his route. */
+function settle(m: Match, wr: Athlete, qb: Athlete): void {
+  m.setMove(wr.id, { x: 0, z: 0 });
+  Object.assign(wr, { vx: 0, vz: 0, yaw: Math.atan2(qb.x - wr.x, qb.z - wr.z) });
+  wr.bot.wait = Infinity;
 }
 
 /** The ball just left the hand: shove the receiver off his spot, loft it or leave it unread, as the stage asks. */

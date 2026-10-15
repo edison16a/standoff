@@ -17,19 +17,19 @@ describe("the replay lens", () => {
     expect(focusBand(scene().view, null, new THREE.Vector3())).toBeNull();
   });
 
-  it("chasing the ball, holds the catcher it flies to in the sharp band", () => {
+  it("on the wide angle, keeps the whole field sharp", () => {
     const { view, scorer } = scene();
-    const lens = new THREE.Vector3(view.ball.x - 6.5, 7.6, view.ball.z);
-    const band = focusBand(view, { camera: "ball", passer: null, scorer: scorer.id }, lens)!;
+    const lens = new THREE.Vector3(view.ball.x - 15, 11.5, view.ball.z);
+    const band = focusBand(view, { angle: "all22", passer: null, scorer: scorer.id, take: 0 }, lens)!;
     const toScorer = new THREE.Vector3(scorer.x, 1.2, scorer.z).distanceTo(lens);
-    expect(band.distance).toBeCloseTo(new THREE.Vector3(view.ball.x, 6, view.ball.z).distanceTo(lens), 5);
     expect(Math.abs(toScorer - band.distance)).toBeLessThan(band.range);
   });
 
-  it("behind the runner, keeps the tight band on him", () => {
+  it("at the end zone, keeps the tight band on the runner", () => {
     const { view, scorer } = scene();
-    const lens = new THREE.Vector3(scorer.x - 8, 3.6, scorer.z);
-    const band = focusBand(view, { camera: "runner", passer: null, scorer: scorer.id }, lens)!;
+    const lens = new THREE.Vector3(scorer.x - 8, 2.1, scorer.z);
+    const band = focusBand(view, { angle: "endzone", passer: null, scorer: scorer.id, take: 1 }, lens)!;
+    expect(band.distance).toBeCloseTo(new THREE.Vector3(scorer.x, 1.2, scorer.z).distanceTo(lens), 5);
     expect(band.range).toBeCloseTo(focusRange(band.distance), 5);
   });
 });

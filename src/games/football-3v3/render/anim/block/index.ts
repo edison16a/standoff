@@ -2,7 +2,9 @@ import { LOOSE } from "../../../engine/block-preset";
 import type { AthleteView } from "../../../engine/view";
 import { add, keyed, mix, over, type Keys, type Pose } from "../pose";
 import { mirror } from "../tackle/body-keys";
-import { ANCHOR, BEATEN, BULL, DRIVE, FIGHT_L, FIGHT_R, GIVING, OVER_HIM, PASS_SET, PUNCH, RIP_THROUGH, STAND_OVER, SWIM } from "./keys";
+import {
+  ANCHOR, BEATEN, BULL, DRIVE, FIGHT_L, FIGHT_R, FIRE, GIVING, OVER_HIM, PASS_SET, PUNCH, RECOIL, RIP_THROUGH, SLAM_LAUNCH, SLAM_THROUGH, STAND_OVER, SWIM,
+} from "./keys";
 
 /**
  * The authored line play for a lineman in a block move (picked by the
@@ -21,13 +23,20 @@ const PANCAKE: Keys = [
   [0.72, OVER_HIM],
   [LOOSE.overHim, STAND_OVER],
 ];
+/** The blow up block in space: the shoulder through him, driving on, then stood over the man on his back. */
+const SLAM: Keys = [[0, SLAM_LAUNCH], [0.16, SLAM_THROUGH], [0.45, over(SLAM_THROUGH, { pitch: 0.3, shLX: -1.0, shRX: -1.0, elL: -0.9, elR: -0.9 })], [0.75, STAND_OVER]];
+/**
+ * Off the snap: fire out of the stance, strike, rock back off the pop of
+ * the pads meeting, strike again and lock on, then the hand fight.
+ */
+const POP: Keys = [[0, FIRE], [0.08, over(PUNCH, { fwd: 0.05, pitch: 0.65 })], [0.14, RECOIL], [0.24, PUNCH]];
 /** The rusher's swim and rip past the blocker. */
 const SHED: Keys = [[0, BULL], [0.16, SWIM], [0.36, RIP_THROUGH]];
 /** The blocker spun off it, reaching after him. */
 const BEAT: Keys = [[0, PASS_SET], [0.18, BEATEN], [LOOSE.beaten * 0.75, over(BEATEN, { yaw: -0.3, pitch: 0.2 })]];
 
 /** Seconds each one off move plays before the stride takes over. */
-const ENDS = { pancake: LOOSE.overHim + 0.25, shed: 0.55, beaten: LOOSE.beaten } as const;
+const ENDS = { pancake: LOOSE.overHim + 0.25, slam: 1.0, shed: 0.55, beaten: LOOSE.beaten } as const;
 
 /** The shape each side holds through a locked up move. */
 function held(kind: "pass" | "drive" | "anchor", offense: boolean): Pose {
@@ -48,6 +57,7 @@ export function blockMove(a: AthleteView, time: number, seed: number, win: numbe
   if (!b || a.action === "down") return null;
   const t = b.t;
   if (b.kind === "pancake") return b.offense && t < ENDS.pancake ? keyed(PANCAKE, t) : null;
+  if (b.kind === "slam") return b.offense && t < ENDS.slam ? keyed(SLAM, t) : null;
   if (b.kind === "shed") {
     // The rusher swims over one shoulder or the other; the blocker spins the same way.
     const left = a.number % 2 === 0;
@@ -59,8 +69,8 @@ export function blockMove(a: AthleteView, time: number, seed: number, win: numbe
   if (b.kind === "engage") {
     // The punch off the snap, then the hands fight for the inside.
     const fight = mix(FIGHT_L, FIGHT_R, 0.5 + 0.5 * Math.sin(time * 7 + seed));
-    p = keyed([[0, over(PUNCH, { shLX: -0.6, shRX: -0.6, elL: -1.2, elR: -1.2 })], [0.12, PUNCH], [0.28, fight]], t);
-    if (t > 0.28) p = fight;
+    p = t < 0.24 ? keyed(POP, t) : keyed([[0, PUNCH], [0.12, fight]], t - 0.24);
+    if (t > 0.36) p = fight;
   } else p = busyHands(held(b.kind, b.offense), time, seed);
   // The pair's shove: the man winning leans in, the man giving it sits up.
   const lean = Math.max(-1, Math.min(1, win)) * 0.18;

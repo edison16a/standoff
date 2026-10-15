@@ -12,10 +12,14 @@ import type { PlayCall } from "./types";
  * who is winning; pancake, the blocker putting his man flat on his
  * back; shed, the rusher ripping past and going after the ball.
  *
- * A pancake and a shed break the pair up: the men play on alone
+ * Out in space a blocker arriving at speed may slam his man instead
+ * (support/clinch-pick.ts): a shoulder through the chest that puts him
+ * on his back at once.
+ *
+ * A pancake, a slam and a shed break the pair up: the men play on alone
  * (line-free.ts). The pair's leg drive still moves the bodies.
  */
-export const BLOCK_KINDS = ["engage", "pass", "drive", "anchor", "pancake", "shed"] as const;
+export const BLOCK_KINDS = ["engage", "pass", "drive", "anchor", "pancake", "shed", "slam"] as const;
 export type BlockKind = (typeof BLOCK_KINDS)[number];
 
 /** One pair's move: which, and seconds into it. */
@@ -52,7 +56,7 @@ export function blockKindFor(call: PlayCall, since: number, surge: number, roll:
 }
 
 /** Moves that leave the two men apart. */
-export const breaksPair = (k: BlockKind): boolean => k === "pancake" || k === "shed";
+export const breaksPair = (k: BlockKind): boolean => k === "pancake" || k === "shed" || k === "slam";
 
 /** Seconds a blocker stands over a man he pancaked, and a beaten blocker stumbles, before they play on. */
 export const LOOSE = { pancakeDown: 1.9, overHim: 0.9, beaten: 0.8 } as const;

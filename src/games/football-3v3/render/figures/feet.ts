@@ -28,6 +28,11 @@ const FOOT = 0.15;
 export class Feet {
   readonly lock = new FootLock();
 
+  /** Lets both feet go, after a cut to a new shot. */
+  release(): void {
+    this.lock.reset();
+  }
+
   update(rig: Rig, mode: FootMode, phase: number, speed: number, dt: number): void {
     rig.ankleL.getWorldPosition(fk[0]);
     rig.ankleR.getWorldPosition(fk[1]);

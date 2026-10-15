@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { YARD } from "./field";
 import { seatStatus } from "./status";
-import { bySeat, peopleMatch, run, snap } from "./test-helpers";
+import { callPlay, bySeat, peopleMatch, run, snap } from "./test-helpers";
 import { buildView } from "./view";
 import { blendViews } from "./view-blend";
 
@@ -69,7 +69,7 @@ describe("phone status", () => {
     const m = peopleMatch();
     expect(seatStatus(m, 0)?.pad).toBe("choose");
     expect(seatStatus(m, 2)?.pad).toBe("defense");
-    m.choose(bySeat(m, 0).id, "throw");
+    callPlay(m, bySeat(m, 0).id, "throw");
     expect(seatStatus(m, 0)?.pad).toBe("qb");
     expect(seatStatus(m, 0)?.hikeLeft).toBeGreaterThan(4);
     expect(seatStatus(m, 1)?.pad).toBe("runner");

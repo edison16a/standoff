@@ -10,6 +10,7 @@ import { canPitch, releasePitch } from "./run-play";
 import { handOver } from "./control";
 import { yardToX } from "./field";
 import { clinchOf } from "./support/clinch";
+import { onPlayRoute } from "./playbook/on-route";
 import { isReceiver } from "./support/roster";
 import type { Athlete } from "./types";
 import { dir2, dist2, len3, type V3 } from "./vec";
@@ -33,11 +34,11 @@ const OUTLET_PENALTY = 3;
 export function receivers(m: Match, a: Athlete): Athlete[] {
   const losX = yardToX(m.offense, m.drive.los);
   const outlet = (o: Athlete) => o.role === "support" && !clinchOf(m, o.id) && (o.x - losX) * m.sign > 1.5;
-  return m.athletes.filter((o) => o.team === a.team && (o.role === "runner" || outlet(o)) && !isDown(o));
+  return m.athletes.filter((o) => o.team === a.team && (o.role === "runner" || onPlayRoute(m, o) || outlet(o)) && !isDown(o));
 }
 
 /** The receivers as aim candidates: a blocker leaking out has to be aimed right at; the deep threat aims like a runner. */
-export const candidates = (m: Match, qb: Athlete) => receivers(m, qb).map((r) => ({ id: r.id, x: r.x, z: r.z, penalty: isReceiver(r) ? 0 : OUTLET_PENALTY }));
+export const candidates = (m: Match, qb: Athlete) => receivers(m, qb).map((r) => ({ id: r.id, x: r.x, z: r.z, penalty: isReceiver(r) || onPlayRoute(m, r) ? 0 : OUTLET_PENALTY }));
 
 /** Keeps the target under the throw stick up to date, so its ring can light up. */
 export function updateTarget(m: Match): void {

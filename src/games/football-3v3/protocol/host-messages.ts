@@ -1,13 +1,14 @@
 import { z } from "zod";
 import { ROLES } from "../roles";
 import { BUILD_IDS } from "../builds";
+import { bookSchema } from "./playbook";
 
 /** Where the room is, as a phone sees it: the lobby, one of the match's phases, or the touchdown replay. */
 export const PHASES = ["lobby", "choose", "presnap", "live", "kick", "dead", "touchdown", "convert", "over", "replay"] as const;
 export type RoomPhase = (typeof PHASES)[number];
 
 /** Which controls the phone shows. See engine/status.ts. */
-export const PADS = ["qb", "runner", "defense", "kicker", "choose", "wait"] as const;
+export const PADS = ["qb", "runner", "defense", "kicker", "choose", "playbook", "wait"] as const;
 export const CALLS = ["throw", "run", "kick", "two"] as const;
 
 const team = z.union([z.literal(0), z.literal(1)]);
@@ -57,6 +58,10 @@ export const phoneStateSchema = z.object({
   pad: z.enum(PADS),
   /** The QB's pick before a play, and the whole seconds left to make it. */
   choose: z.object({ options: z.array(z.enum(CALLS)).max(3), left: count }).nullable(),
+  /** After Throw or Run: the page of plays to pick from (protocol/playbook.ts). */
+  book: bookSchema.nullable(),
+  /** The QB's throwing accuracy under the rush right now, 1 clean to about a third, while he can throw. */
+  aim: z.number().min(0).max(1).nullable(),
   /** Whole seconds left to hike, for the QB before the snap. */
   hikeLeft: count.nullable(),
   /** The kick meter this phone stops, and whether it is a field goal or a punt. */

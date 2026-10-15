@@ -55,7 +55,7 @@ describe("tackle presets on the body", () => {
   it("draws each lunge as its tackle: the drive stays on its feet, the dives leave the ground", () => {
     const mid = (k: ApproachKind) => lungeFor(k, 0.5);
     expect(mid("drive").lift).toBe(0);
-    for (const k of ["wrap", "ankle", "shoestring"] as const) expect(mid(k).lift).toBeGreaterThan(0.05);
+    for (const k of ["wrap", "ankle", "shoestring", "slam"] as const) expect(mid(k).lift).toBeGreaterThan(0.05);
     // A shoestring lays out flatter than a wrap leaps.
     expect(mid("shoestring").pitch).toBeGreaterThan(mid("wrap").pitch);
   });
@@ -65,6 +65,10 @@ describe("tackle presets on the body", () => {
     expect(Math.abs(miss("whiff", 0.6, 1.3)!.barrel)).toBeCloseTo(TURN, 1);
     expect(miss("juked", 0.55, 1.3)!.hipLX).toBeLessThan(-0.9);
     expect(miss("shed", 0.8, 1.4)!.pitch).toBeLessThan(-1);
+    // Trucked flat on his back, stiff armed onto his seat.
+    expect(miss("trucked", 0.15, 1.6)!.lift).toBeGreaterThan(0.2);
+    expect(miss("trucked", 0.8, 1.6)!.pitch).toBeLessThan(-1.2);
+    expect(miss("stiffarmed", 0.55, 1.3)!.hipLX).toBeLessThan(-0.9);
     expect(miss("dive", 0.5, 1)).toBeNull();
   });
 
@@ -76,7 +80,7 @@ describe("tackle presets on the body", () => {
   });
 
   it("is what the figure plays for a man down in a tackle", () => {
-    const a = man({ action: "down", actionT: 0.5, actionDur: 2, downCause: "tackled", tackle: { kind: "drive", role: "carrier", side: 1, prone: false } });
+    const a = man({ action: "down", actionT: 1.2, actionDur: 2.15, downCause: "tackled", tackle: { kind: "drive", role: "carrier", side: 1, prone: false } });
     const chosen = choosePose(a, scene(), { phase: 0, build: 0.3, time: 1, seed: 1 });
     expect(chosen.pose.pitch).toBeLessThan(-1.2);
     expect(chosen.feet).toBe("free");

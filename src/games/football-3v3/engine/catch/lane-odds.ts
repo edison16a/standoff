@@ -37,6 +37,8 @@ export const threatOf = (pass: PassInfo, a: Athlete): number => pass.lane[a.id] 
 export function holdOdds(m: Match, a: Athlete, pass: PassInfo): number {
   let on = 0;
   for (const [id, threat] of Object.entries(pass.lane)) {
+    // A defender who already had his go at this ball and let it by does not get a second one (the filmed game gave him one).
+    if (!m.filmed && id in pass.tried) continue;
     const d = m.athlete(Number(id));
     if (d && !isDown(d) && dist2(d, a) < JARRED) on = Math.max(on, threat);
   }

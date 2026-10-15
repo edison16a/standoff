@@ -66,7 +66,8 @@ describe("camera shots", () => {
     const scorer = v!.athletes.find((x) => x.id === v!.scorer)!;
     expect(Math.hypot(a.pos.x - scorer.x, a.pos.z - scorer.z)).toBeLessThan(9);
     expect(aimFor(v!, 0).kind).toBe("closeup");
-  });
+    // It plays a whole drive to the touchdown, which can pass five seconds on a busy machine.
+  }, 20000);
 
   it("backs up before the snap until the receivers split wide are in the picture", () => {
     const v = freshView();

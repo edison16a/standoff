@@ -15,10 +15,15 @@ function lineman(kind: BlockKind, t: number, offense: boolean, more: Partial<Ath
 const pose = (kind: BlockKind, t: number, offense: boolean, more: Partial<AthleteView> = {}) => blockMove(lineman(kind, t, offense, more), 1, 0, 0);
 
 describe("block moves", () => {
-  it("punch both hands out off the snap, then fight with them", () => {
-    const punch = pose("engage", 0.12, true)!;
+  it("fire out, strike, rock back off the pop of the pads, strike again, then fight with the hands", () => {
+    const fire = pose("engage", 0, true)!;
+    expect(fire.elL).toBeLessThan(-1.2);
+    const strike = pose("engage", 0.08, true)!;
+    expect(strike.shLX).toBeLessThan(-1.4);
+    expect(strike.elL).toBeGreaterThan(-0.4);
+    expect(pose("engage", 0.14, true)!.neckX).toBeGreaterThan(strike.neckX + 0.4);
+    const punch = pose("engage", 0.24, true)!;
     expect(punch.shLX).toBeLessThan(-1.4);
-    expect(punch.elL).toBeGreaterThan(-0.4);
     const a = blockMove(lineman("engage", 0.4, true), 1, 0, 0)!;
     const b = blockMove(lineman("engage", 0.4, true), 1.2, 0, 0)!;
     expect(Math.abs(a.shLX - b.shLX)).toBeGreaterThan(0.05);
@@ -63,5 +68,15 @@ describe("block moves", () => {
   it("only holds a locked up move while the two are locked up", () => {
     expect(pose("pass", 1, true, { blocked: false })).toBeNull();
     expect(blockMove({ ...lineman("pass", 1, true), block: null }, 1, 0, 0)).toBeNull();
+  });
+
+  it("blow a man up in space with the shoulder, drive through and stand over him, then hand back to the stride", () => {
+    const hit = pose("slam", 0, true)!;
+    expect(hit.pitch).toBeGreaterThan(0.6);
+    expect(hit.fwd).toBeGreaterThan(0.1);
+    expect(pose("slam", 0.2, true)!.shLX).toBeLessThan(-2);
+    expect(pose("slam", 1.2, true)).toBeNull();
+    // The man slammed is on the turf, so the block move has nothing for him.
+    expect(pose("slam", 0.2, false)).toBeNull();
   });
 });

@@ -1,5 +1,7 @@
 import { updateBall } from "./ball-update";
 import { freshSpeed } from "./body";
+import { updateBreak } from "./break-tackle";
+import { updateBurst } from "./burst";
 import { updateStamina } from "./stamina";
 import { planCatches } from "./catch/plan";
 import { ceremonyTime, stepCeremony } from "./ceremony";
@@ -30,6 +32,8 @@ function tick(a: Athlete, live: boolean, dt: number): void {
   a.blocked = Math.max(0, a.blocked - dt);
   a.stagger = Math.max(0, a.stagger - dt);
   updateStumble(a, dt);
+  updateBurst(a, dt);
+  updateBreak(a, dt);
 }
 
 function act(m: Match, a: Athlete, dt: number): void {

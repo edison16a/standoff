@@ -1,6 +1,6 @@
 import type { AthleteView } from "../../../engine/view";
 import { mirrorDelta } from "../tackle/body-keys";
-import { keyed, over, type Keys, type Pose } from "../pose";
+import { keyed, over, smooth, type Keys, type Pose } from "../pose";
 import { catchTrack } from "./moves";
 
 export { catchTrack } from "./moves";
@@ -9,6 +9,8 @@ export { catchTrack } from "./moves";
 const SLOW = 3;
 /** Keys up to this long after the ball arrives are still about where it came in, so they mirror with it. */
 const SIDED = 0.15;
+/** Seconds the whip takes to swing him round upfield. */
+const WHIP_TIME = 0.26;
 
 export interface CatchMove {
   pose: Pose;
@@ -29,7 +31,11 @@ export function catchMove(a: AthleteView, run: () => Pose): CatchMove | null {
   const tau = c.t - c.at;
   const track = catchTrack(c.kind, c.result, { height: c.height, slow: a.speed < SLOW });
   const legs = run();
-  // A ball on his right is the same move in a mirror, up to the moment it is in his hands.
-  const keys: Keys = track.steps.map(([at, part]) => [at, over(legs, c.side < 0 && at <= SIDED ? mirrorDelta(part) : part)]);
-  return { pose: keyed(keys, tau), air: track.air };
+  // A ball on his right is the same move in a mirror, up to the moment it is in his hands; a toe tap leans out over the sideline all the way.
+  const sided = c.kind === "toetap" ? Infinity : SIDED;
+  const keys: Keys = track.steps.map(([at, part]) => [at, over(legs, c.side < 0 && at <= sided ? mirrorDelta(part) : part)]);
+  const pose = keyed(keys, tau);
+  // A whip swings the body round from facing the throw to upfield, where the engine already has him facing.
+  if (c.kind === "whip" && c.result === "held") pose.yaw += c.turn * (1 - smooth(c.since / WHIP_TIME));
+  return { pose, air: track.air };
 }

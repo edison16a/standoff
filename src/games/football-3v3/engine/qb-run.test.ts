@@ -4,7 +4,7 @@ import { FIELD, yardToX } from "./field";
 import { Match } from "./match";
 import { canRun, paceOf } from "./qb-run";
 import { seatStatus } from "./status";
-import { BOTS, bySeat, peopleMatch, run, snap } from "./test-helpers";
+import { callPlay, BOTS, bySeat, peopleMatch, run, snap } from "./test-helpers";
 import { QB_PACE } from "./tuning";
 
 /** How far the QB gets in `seconds` running straight across the field. */
@@ -18,7 +18,8 @@ function across(m: Match, seconds: number): number {
 
 describe("the QB as a passer", () => {
   it("is slowest at the snap and still clearly slower once settled", () => {
-    const m = peopleMatch();
+    // Training bots stand still, so no rusher ends the play before the pace settles.
+    const m = peopleMatch({ level: "training" });
     snap(m);
     const qb = bySeat(m, 0);
     expect(paceOf(m, qb)).toBeCloseTo(QB_PACE.early, 1);
@@ -46,6 +47,8 @@ describe("the QB as a passer", () => {
       m.setMove(wr.id, { x: m.sign, z: 0 });
       m.setMove(bySeat(m, 3).id, { x: 0, z: -Math.sign(wr.z || 1) });
       m.setMove(qb.id, shuffle ? { x: -m.sign, z: 0 } : { x: 0, z: 0 });
+      // A clean pocket: nobody breaks free to hurry the throw (rush-shed.ts), so only the feet differ.
+      for (const d of m.athletes) if (d.team !== m.offense) d.rushCd = 99;
       run(m, 1.6);
       m.setAim(qb.id, { x: wr.x - qb.x, z: wr.z - qb.z });
       run(m, 0.05);
@@ -97,7 +100,7 @@ describe("the Run button", () => {
   it("takes the pitch away on a run call", () => {
     const m = peopleMatch();
     const qb = bySeat(m, 0);
-    m.choose(qb.id, "run");
+    callPlay(m, qb.id, "run");
     m.press(qb.id, "hike");
     run(m, 1, () => m.carrier() === qb);
     expect(seatStatus(m, 0)?.canPitch).toBe(true);
@@ -133,7 +136,8 @@ describe("the Run button", () => {
   });
 
   it("is used by a computer QB when nobody gets open", () => {
-    const m = new Match({ entries: BOTS.filter((e) => e.role === "qb"), seed: 5, firstOffense: 0 });
+    // No support players either, so there is nobody to throw to.
+    const m = new Match({ entries: BOTS.filter((e) => e.role === "qb"), seed: 5, firstOffense: 0, support: 0 });
     // A computer QB calls and hikes by itself once its windows run out.
     run(m, 25, (mm) => mm.phase === "live");
     expect(m.play?.call).toBe("throw");

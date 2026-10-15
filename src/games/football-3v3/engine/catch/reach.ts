@@ -6,8 +6,9 @@ import type { V3 } from "../vec";
 /**
  * Where a player's hands can get to: a capsule from the hips up to a
  * leap over the head, a little ahead of the body, as wide as the arms
- * reach out. Good hands reach further round the body; a dive stretches
- * the whole body out along the turf.
+ * reach out. Good hands reach further round the body; one hand thrown
+ * out alone gets a little further; a dive stretches the whole body out
+ * along the turf.
  */
 export interface Reach {
   /** The capsule's axis, low end and high end. */
@@ -23,6 +24,8 @@ export const HANDS = {
   /** How far the arms reach out from the body's line, for average hands. */
   arms: 0.82,
   dive: 1.55,
+  /** One arm thrown out alone for a ball just past him reaches further than two together. */
+  one: 1.3,
   /** The hands work a little ahead of the chest. */
   ahead: 0.18,
 } as const;
@@ -32,7 +35,8 @@ export function reachOf(a: Athlete): Reach {
   const fx = Math.sin(a.yaw) * HANDS.ahead;
   const fz = Math.cos(a.yaw) * HANDS.ahead;
   const diving = a.action.kind === "dive";
-  const radius = (diving ? HANDS.dive : HANDS.arms) * k;
+  const one = a.catching?.kind === "onehand" && !a.catching.result;
+  const radius = (diving ? HANDS.dive : one ? HANDS.one : HANDS.arms) * k;
   // The top of the axis sits below the leap, so the round end of the reach tops out just over it.
   return {
     low: { x: a.x + fx, y: diving ? 0.3 : HANDS.low, z: a.z + fz },

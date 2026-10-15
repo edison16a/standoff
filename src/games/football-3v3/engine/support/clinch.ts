@@ -2,12 +2,13 @@ import { isDown, statsOf } from "../body";
 import type { BlockMove } from "../block-preset";
 import { radiusOf } from "../collide";
 import type { Match } from "../match";
+import { onPlayRoute } from "../playbook/on-route";
 import { Rng } from "../rng";
 import { LINE } from "../tuning";
 import type { Athlete } from "../types";
-import { dist2, type V2 } from "../vec";
+import { dir2, dist2, type V2 } from "../vec";
 import { breakClinch, reachOut } from "./clinch-break";
-import { CLINCH, clinchKindFor } from "./clinch-pick";
+import { CLINCH, clinchKindFor, slamsHim } from "./clinch-pick";
 
 /**
  * A support blocker with his hands on a defender, out in space. The two
@@ -55,7 +56,7 @@ const resting = (m: Match, a: Athlete) => (m.support.rest.get(a.id) ?? -1) > m.t
 
 /** A defender a blocker may take on: before a pass is out only the men rushing it, once the ball is run anyone. */
 function blockable(m: Match, d: Athlete, carrier: Athlete | null, passPro: boolean): boolean {
-  if (d.role === "lineman" || isDown(d) || d === carrier || d.action.kind !== "none" || resting(m, d)) return false;
+  if (d.role === "lineman" || isDown(d) || d === carrier || d.action.kind !== "none" || resting(m, d) || d.burst) return false;
   return !passPro || d.role === "support" || d.role === "qb";
 }
 
@@ -68,7 +69,7 @@ export function engageClinches(m: Match): void {
   for (const o of m.athletes) {
     if (o.role !== "support" || o.team !== team || o === carrier || isDown(o) || o.action.kind !== "none" || resting(m, o) || clinchOf(m, o.id)) continue;
     // The deep threat is out on his route while the QB looks to throw, not blocking.
-    if (o.deep && passPro && m.play?.call === "throw") continue;
+    if ((o.deep || onPlayRoute(m, o)) && passPro && m.play?.call === "throw") continue;
     let best: Athlete | null = null;
     for (const d of m.athletes) {
       if (d.team === o.team || !blockable(m, d, carrier, passPro) || clinchOf(m, d.id)) continue;
@@ -78,6 +79,13 @@ export function engageClinches(m: Match): void {
       if (!best || d.id === o.bot.cover || (best.id !== o.bot.cover && gap < dist2(o, best))) best = d;
     }
     if (!best) continue;
+    // Arriving at speed he may not lock up at all: a shoulder through the chest puts the man on his back. Not in the filmed game, which plays as recorded.
+    const to = dir2(o, best);
+    const closing = (o.vx - best.vx) * to.x + (o.vz - best.vz) * to.z;
+    if (!m.filmed && slamsHim(closing, statsOf(o).power - statsOf(best).power, m.support.rng.range(0, 1))) {
+      breakClinch(m, o, best, "slam");
+      continue;
+    }
     m.support.clinches.push({ o: o.id, d: best.id, move: { kind: "engage", t: 0 }, surge: 0, next: 0, v: 0, passPro });
     m.emit({ type: "pads", a: o.id, b: best.id, power: 0.8 });
   }

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Match } from "./match";
 import { buildView } from "./view";
 import { seatStatus } from "./status";
-import { PEOPLE, run, snap } from "./test-helpers";
+import { callPlay, PEOPLE, run, snap } from "./test-helpers";
 import type { Entry } from "./lineup";
 import { STEP } from "./tuning";
 
@@ -70,7 +70,7 @@ describe("one player control switch", () => {
   it("takes over the back on a pitch", () => {
     const m = aloneMatch();
     const qb = m.bySeat(0)!;
-    m.choose(qb.id, "run");
+    callPlay(m, qb.id, "run");
     m.press(qb.id, "hike");
     run(m, 1, () => m.carrier() === qb);
     const back = m.athlete(m.play!.back!)!;

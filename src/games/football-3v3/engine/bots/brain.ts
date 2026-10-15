@@ -4,7 +4,7 @@ import { canPitch } from "../run-play";
 import { pitchRead } from "./run";
 import type { Athlete } from "../types";
 import { chaseLoose, cover, pursue, rushQb, safety } from "./defense";
-import { carry, escort, readField, runRoute } from "./offense";
+import { carry, escort, followThrow, readField, runRoute } from "./offense";
 import { botSkill, type FootballSkill } from "./skill";
 import { supportDefense } from "./support-defense";
 import { supportOffense } from "./support-offense";
@@ -44,6 +44,8 @@ function decide(m: Match, a: Athlete, skill: FootballSkill): void {
   if (a.team === attacking) {
     const play = m.play;
     if (carrier && (play?.caughtBy !== null || play?.pitched || play?.intercepted || play?.qbRun)) return escort(m, a, carrier);
+    // The showcase's game was filmed with the QB still after his throw (Match.filmed).
+    if (a.role === "qb" && !carrier && play?.passed && !m.filmed) return followThrow(m, a);
     return runRoute(m, a);
   }
   if (carrier && (carrier.role !== "qb" || m.play?.qbRun || m.play?.intercepted)) return pursue(m, a, carrier, skill);

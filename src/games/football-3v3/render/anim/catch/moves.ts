@@ -1,6 +1,7 @@
 import type { CatchKind, CatchResult } from "../../../engine/catch-preset";
+import { SETTLE } from "../../../engine/catch/settle";
 import {
-  AIR, CLAP, CRADLE, GIVE, JOLT, join, LAND, LAYOUT, LOAD, OPEN, OVER_SHOULDER, SECURE, SWAT_DOWN, SWAT_UP, handsTo, type Part,
+  AIR, CLAP, CRADLE, GIVE, JOLT, join, LAND, LAYOUT, LOAD, ON_HIP, ONE_UP, OPEN, OVER_SHOULDER, SECURE, SWAT_DOWN, SWAT_UP, TOE_DRAG, TOPPLE, handsTo, type Part,
 } from "./shapes";
 
 /**
@@ -42,6 +43,13 @@ function approach(kind: CatchKind, at: Arrival): Step[] {
       return [[-0.42, {}], [-0.3, join(LOAD, { pitch: 0.55 })], [-0.12, join(LAYOUT, { lift: 0.35 })], [0, join(LAYOUT, { lift: 0.3, shLX: -2.8, shRX: -2.7 })]];
     case "shoulder":
       return [[-0.5, {}], [-0.3, { neckY: 1.0, spineY: 0.4, neckX: -0.3 }], [0, OVER_SHOULDER]];
+    case "whip":
+      // Settled facing the throw: he stops, sits into his knees and gives with it at the chest.
+      return [[-0.45, {}], [-0.22, join(GIVE, hands)], [0, join(GIVE, hands, { pitch: 0.2 })]];
+    case "onehand":
+      return [[-0.45, {}], [-0.26, join(LOAD, { neckX: -0.6 })], [-0.08, join(AIR, ONE_UP, { lift: 0.4 })], [0, join(AIR, ONE_UP, { lift: 0.52 })]];
+    case "toetap":
+      return [[-0.42, {}], [-0.2, join(hands, { roll: 0.15 })], [0, join(TOE_DRAG, hands)]];
     case "swat": {
       // He gets up to a ball over him, and only rises onto his toes for one at the chest.
       const lift = Math.max(0.1, Math.min(0.5, (at.height - 1.2) * 0.7));
@@ -50,10 +58,13 @@ function approach(kind: CatchKind, at: Arrival): Step[] {
   }
 }
 
+/** Moves that leave the ground. */
+const AIR_MOVES = new Set<CatchKind>(["high", "pick", "swat", "dive", "onehand"]);
+
 /** Where the body comes down after a move in the air: landing on two feet, or flat out on the turf from a dive. */
 function landing(kind: CatchKind): Step[] {
   if (kind === "dive") return [[0.18, join(LAYOUT, { lift: 0.1 })], [0.32, join(LAYOUT, { pitch: 1.5, lift: 0 })]];
-  if (kind === "high" || kind === "pick" || kind === "swat") return [[0.3, join(LAND, { lift: 0 })], [0.55, {}]];
+  if (kind === "high" || kind === "pick" || kind === "swat" || kind === "onehand") return [[0.3, join(LAND, { lift: 0 })], [0.55, {}]];
   return [[0.45, {}]];
 }
 
@@ -65,13 +76,28 @@ function held(kind: CatchKind, at: Arrival): Step[] {
     // Rocked back by a hot or crowded ball, he pitches forward to catch his balance with it.
     return [[0.1, join(CRADLE, { pitch: -0.25, spineX: -0.1 })], [0.32, join(SECURE, { pitch: 0.45, neckX: -0.4 })], [0.55, SECURE]];
   }
+  if (kind === "whip") {
+    // Into the chest, then the hop round upfield (the body's swing is laid on by the turn) and the first drive step.
+    return [[0.08, join(GIVE, CRADLE)], [0.2, join(CRADLE, { lift: 0.08, hipLX: -0.7, kneeL: 1.0, hipRX: 0.2, kneeR: 0.4 })], [0.34, join(SECURE, { pitch: 0.4, hipLX: -1.0, kneeL: 1.1, hipRX: 0.4, kneeR: 0.3 })], [0.5, SECURE]];
+  }
+  if (kind === "onehand") {
+    // Pulled down into the chest in the air, lands off balance on one foot, tips over onto his hip and gets up.
+    return [
+      [0.12, join(AIR, CRADLE, { lift: 0.38, roll: 0.25 })], [SETTLE.fall - 0.08, join(TOPPLE, CRADLE, { lift: 0.18 })],
+      [SETTLE.fall + 0.12, join(ON_HIP)], [SETTLE.fall + 0.6, ON_HIP], [SETTLE.fall + 0.95, { pitch: 0.5, hipLX: -1.6, kneeL: 1.4, hipRX: -0.4, kneeR: 2.0, ...SECURE }], [1.6, SECURE],
+    ];
+  }
+  if (kind === "toetap") {
+    // Both toes still down on the paint as the ball comes in, then he gathers it in and straightens up.
+    return [[0.15, join(TOE_DRAG, CRADLE)], [0.32, join(SECURE, { roll: 0.15 })], [0.55, SECURE]];
+  }
   const give = at.slow ? GIVE : {};
   return [[0.12, join(give, CRADLE)], [0.35, join(SECURE, { spineY: -0.35, neckY: -0.4 })], [0.55, SECURE]];
 }
 
 /** Every other ending: the ball off the hands, knocked loose, slapped away or gone by. */
 function lost(kind: CatchKind, result: Exclude<CatchResult, "held">): Step[] {
-  const air = kind === "high" || kind === "pick" || kind === "swat" || kind === "dive";
+  const air = AIR_MOVES.has(kind);
   const up = air && kind !== "dive" ? join(AIR, { lift: 0.3 }) : kind === "dive" ? join(LAYOUT, { lift: 0.18 }) : {};
   const first: Part =
     result === "swatted" ? SWAT_DOWN : result === "jarred" ? JOLT : result === "dropped" ? OPEN : CLAP;
@@ -82,7 +108,8 @@ function lost(kind: CatchKind, result: Exclude<CatchResult, "held">): Step[] {
 /** The whole track of a move that finished with `result`, or still coming when null. */
 export function catchTrack(kind: CatchKind, result: CatchResult | null, at: Arrival): CatchTrack {
   const steps = approach(kind, at);
-  const air = kind === "high" || kind === "pick" || kind === "swat" || kind === "dive";
+  // The feet are the move's own in the air, and for the set feet of a whip and a toe tap.
+  const air = AIR_MOVES.has(kind) || kind === "whip" || kind === "toetap";
   if (result === "held") steps.push(...held(kind, at));
   else if (result) steps.push(...lost(kind, result));
   return { steps, air };

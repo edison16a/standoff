@@ -9,7 +9,7 @@ import { mouseStick } from "./throw-keys";
 const BASE = {
   kind: "state", phase: "live", name: "Kim", taken: [], pick: "gunslinger", ready: true, team: 0, role: "qb", playing: true,
   score: [0, 0], quarter: 1, overtime: false, clock: 150, down: "1st and 10", offense: true, switched: false, pad: "qb",
-  choose: null, hikeLeft: null, meter: null, withBall: true, canThrow: true,
+  choose: null, book: null, aim: 1, hikeLeft: null, meter: null, withBall: true, canThrow: true,
   runPlay: false, canPitch: false, canRun: true, jukeReady: true, jukeCool: 0, stamina: 1, rushReady: true, guarding: false, grounded: false,
   banner: null, skip: null, result: null, stats: null,
 } satisfies PhoneState;

@@ -150,7 +150,8 @@ export function lineContact(m: Match): void {
     for (const a of m.athletes) {
       if (a.role === "lineman" || a.team === l.team) continue;
       const d = dist2(a, l);
-      if (d < RUSH.contact) a.blocked = 0.15;
+      // A rusher breaking free (burst.ts) is past the line: its hands no longer slow him.
+      if (d < RUSH.contact && !a.burst) a.blocked = 0.15;
       if (a === carrier && m.phase === "live" && d < 1.1 && l.tackleCd <= 0) grab(m, l, a);
     }
   }

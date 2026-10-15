@@ -5,7 +5,8 @@ import { resolveHit } from "./hit";
 import { dodging } from "./juke";
 import type { Match } from "./match";
 import { bindTackle } from "./tackle-bind";
-import { approachFor, finishFor, helpersFor, type TackleKind } from "./tackle-preset";
+import { breakKindFor, breakOdds, breakTackle } from "./break-tackle";
+import { alongOf, approachFor, finishFor, fromOf, helpersFor, type TackleKind } from "./tackle-preset";
 import { endPlay } from "./whistle";
 import { TACKLE } from "./tuning";
 import type { Athlete } from "./types";
@@ -37,13 +38,18 @@ export function pressTackle(m: Match, a: Athlete, carrier: Athlete): boolean {
   return true;
 }
 
+/** A QB caught with the ball before he throws or takes off is sacked. */
+export function isSack(m: Match, carrier: Athlete): boolean {
+  return carrier.role === "qb" && carrier.team === m.offense && !m.play?.passed && !m.play?.qbRun;
+}
+
 /**
  * Brings the carrier down in the preset `kind`, with anyone in `helpers`
  * piling on: the play is over where he falls, unless the hit jarred the
  * ball out, when it is a live fumble instead.
  */
 export function tackle(m: Match, carrier: Athlete, by: Athlete, kind: TackleKind, n: V2, helpers: readonly Athlete[] = [], fumble: V2 | null = null): void {
-  const sack = carrier.role === "qb" && carrier.team === m.offense && !m.play?.passed && !m.play?.qbRun;
+  const sack = isSack(m, carrier);
   bindTackle(kind, carrier, by, n, helpers);
   by.stats.tackles++;
   if (sack) by.stats.sacks++;
@@ -70,10 +76,11 @@ export function home(a: Athlete, carrier: Athlete, dt: number): void {
 /**
  * Carries a lunge through. Reaching the carrier mid lunge is a collision
  * settled by momentum (hit.ts): a big hit or a grip that holds brings
- * him down in the lunge's preset, or a pile if help is there; a stronger
- * run breaks it and the tackler bounces off. A carrier in the middle of a
- * juke is not there to hit, and the tackler sails past and tumbles. A
- * lunge at nothing ends on the ground too.
+ * him down in the preset the contact picks (tackle-preset.ts). Only
+ * head on, at speed, can he run through it, with a truck or a stiff arm
+ * (break-tackle.ts); from the side or behind he goes down. A carrier in
+ * the middle of a juke is not there to hit, and the tackler sails past
+ * and tumbles. A lunge at nothing ends on the ground.
  */
 export function updateLunge(m: Match, a: Athlete, dt: number): void {
   const act = a.action;
@@ -87,21 +94,38 @@ export function updateLunge(m: Match, a: Athlete, dt: number): void {
   if (carrier && carrier.team !== a.team && act.t < 0.25 && !dodging(carrier)) home(a, carrier, dt);
   if (m.phase === "live" && carrier && carrier.team !== a.team && act.t > 0.04 && dist2(a, carrier) < TACKLE.contact) {
     if (dodging(carrier)) return missed(m, a, carrier, "missed", TACKLE.missedDown);
+    const from = fromOf(alongOf(a, carrier));
+    const before = { x: carrier.vx, z: carrier.vz };
+    const speed = Math.hypot(before.x, before.z);
     const hit = resolveHit(a, carrier, m.rng);
-    if (!hit.down) {
-      // He runs through it, shaken, and the tackler is bounced off him.
-      carrier.stagger = Math.max(carrier.stagger, 0.3 + Math.min(0.3, hit.dv * 0.1));
-      return missed(m, a, carrier, "shed", TACKLE.shedDown);
+    // The filmed showcase game keeps the old rule, any grip broken by momentum, so the trailer plays as recorded.
+    if (m.filmed) {
+      if (!hit.down) return shed(m, a, carrier, hit.dv);
+    } else {
+      const odds = breakOdds(carrier, a, hit.n, speed);
+      if (odds > 0 && m.rng.chance(odds)) {
+        breakTackle(breakKindFor(carrier, a), carrier, a, hit.n, before);
+        m.emit({ type: "pads", a: a.id, b: carrier.id, power: 1 });
+        return m.emit({ type: "missedTackle", id: carrier.id, by: a.id });
+      }
     }
     const helpers = helpersFor(m.athletes, carrier, a);
-    const kind = finishFor(act.approach, helpers.length, dot2({ x: carrier.vx, z: carrier.vz }, hit.n));
+    const drivenBack = dot2({ x: carrier.vx, z: carrier.vz }, hit.n);
+    const kind = finishFor(act.approach, { helpers: helpers.length, drivenBack, big: hit.big, sack: isSack(m, carrier), from });
     tackle(m, carrier, a, kind, hit.n, helpers, hit.fumble ? hit.n : null);
     return;
   }
   if (act.t >= act.dur) knockDown(a, TACKLE.whiffDown, "whiff");
 }
 
-function missed(m: Match, a: Athlete, carrier: Athlete, cause: "missed" | "shed", dur: number): void {
+function missed(m: Match, a: Athlete, carrier: Athlete, cause: "missed", dur: number): void {
   knockDown(a, dur, cause);
+  m.emit({ type: "missedTackle", id: carrier.id, by: a.id });
+}
+
+/** The filmed game's broken tackle: he runs through it shaken and the tackler is bounced off him. */
+function shed(m: Match, a: Athlete, carrier: Athlete, dv: number): void {
+  carrier.stagger = Math.max(carrier.stagger, 0.3 + Math.min(0.3, dv * 0.1));
+  knockDown(a, TACKLE.shedDown, "shed");
   m.emit({ type: "missedTackle", id: carrier.id, by: a.id });
 }

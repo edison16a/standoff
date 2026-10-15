@@ -9,7 +9,9 @@ import type { Fall } from "./carrier";
  * juke left grabbing air lands on his shoulder and tumbles over; one
  * the carrier ran through is spun round and dumped on his seat; and a
  * heavy man whose ankles a juke broke sits down hard on the turf. A
- * rusher a blocker pancaked goes up and over onto his back.
+ * rusher a blocker pancaked goes up and over onto his back. A tackler
+ * trucked head on is blown back onto his back; one stiff armed is
+ * twisted off the hand and sits down.
  */
 const TURN = Math.PI * 2;
 /** Tucked in through a roll, the arms in close. */
@@ -73,6 +75,29 @@ export function missFall(cause: DownCause): Fall | null {
           [0.2, over(BASE, { lift: 0.16, pitch: -0.95, ...FLAIL, hipLX: -0.9, hipRX: -0.6, kneeL: 0.8, kneeR: 0.5 })],
           [0.42, over(SUPINE, { lift: 0.03 })],
           [0.55, SUPINE],
+        ],
+      };
+    case "trucked":
+      // Run over head on: blown back off his feet by the shoulder, the legs flying up, flat on his back.
+      return {
+        lying: "back",
+        keys: [
+          [0, over(BASE, { pitch: -0.4, spineX: -0.45, neckX: 0.55, ...FLAIL, hipLX: -0.3, kneeL: 0.4 })],
+          [0.15, over(BASE, { lift: 0.3, pitch: -1.0, neckX: 0.5, ...FLAIL, hipLX: -1.2, hipRX: -0.8, kneeL: 0.5, kneeR: 0.7 })],
+          [0.38, over(SUPINE, { lift: 0.05, hipLX: -1.0, hipRX: -0.7 })],
+          [0.52, over(SUPINE, { lift: 0.08, neckX: 0.7 })],
+          [0.7, SUPINE],
+        ],
+      };
+    case "stiffarmed":
+      // A hand in the facemask: the head snaps back, he is twisted off it and sits down hard.
+      return {
+        lying: "seat",
+        keys: [
+          [0, over(BASE, { pitch: -0.25, spineX: -0.35, neckX: -0.7, shLX: -1.4, shRX: -1.4, elL: -0.6, elR: -0.6, hipLX: -0.4, kneeL: 0.5 })],
+          [0.18, over(BASE, { pitch: -0.2, yaw: 0.6, roll: -0.3, spineY: 0.3, neckX: -0.4, ...FLAIL, hipLX: -0.6, kneeL: 0.8, kneeR: 0.4 })],
+          [0.4, over(SEATED, { yaw: 0.7, roll: -0.15, ...FLAIL })],
+          [0.55, over(SEATED, { yaw: 0.7 })],
         ],
       };
     default:
