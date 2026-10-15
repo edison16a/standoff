@@ -1,12 +1,14 @@
 /*
-  The touchdown replay's only graphic: a small bug in the top corner
-  naming the angle. Skipping shows only on the phones.
+  The touchdown replay's only graphic: a small bug at the top
+  naming the angle, clear of the platform's logo and buttons in the
+  corners. Skipping shows only on the phones.
 */
 
 .fb-replay {
   position: absolute;
   top: clamp(12px, 2.4vh, 24px);
-  left: clamp(12px, 2.4vw, 32px);
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 10px;

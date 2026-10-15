@@ -27,7 +27,7 @@ const ease = (u: number) => (u < 0.5 ? 2 * u * u : 1 - 2 * (1 - u) * (1 - u));
  * other; this sends a bright ring skimming along the turf from the
  * passer to the new player, swelling in the middle of its run, and then
  * lets the new player's ring pulse for a moment. It reads the views
- * only, so replays show the same move.
+ * only. Replays play clean, without it.
  */
 export class ControlSwitch {
   readonly group = new THREE.Group();
@@ -38,13 +38,15 @@ export class ControlSwitch {
   /** The last view's match time, to tell a cut (into or out of a replay) from play going on. */
   private lastTime: number | null = null;
 
-  update(view: MatchView, dt: number, time: number): void {
+  /** `shown` false (over a replay, which plays clean) keeps track of the seats but flies nothing. */
+  update(view: MatchView, dt: number, time: number, shown = true): void {
     const seen = new Map<number, AthleteView>();
     for (const a of view.athletes) if (a.seat !== null) seen.set(a.seat, a);
     // A new play, the final whistle or a cut puts everyone back without a flight: only a switch in play flies.
     const cut = this.lastTime === null || Math.abs(view.time - this.lastTime) > 0.5;
-    const flies = !cut && view.phase !== "choose" && view.phase !== "convert" && view.phase !== "over";
+    const flies = shown && !cut && view.phase !== "choose" && view.phase !== "convert" && view.phase !== "over";
     this.lastTime = view.time;
+    if (!shown) this.clear();
     for (const [seat, a] of seen) {
       const before = this.last.get(seat);
       if (flies && before !== undefined && before !== a.id) this.launch(view, seat, before, a);
@@ -92,6 +94,16 @@ export class ControlSwitch {
     const k = ease(u);
     f.ring.update(true, a.x + (b.x - a.x) * k, a.z + (b.z - a.z) * k, time, dt * 4, 1, false);
     f.ring.mesh.scale.setScalar(1 + Math.sin(u * Math.PI) * 0.9);
+  }
+
+  /** Drops every marker in flight and every pulse. */
+  private clear(): void {
+    for (const f of this.flights) {
+      f.ring.mesh.removeFromParent();
+      f.ring.dispose();
+    }
+    this.flights.length = 0;
+    this.arrived.clear();
   }
 
   dispose(): void {

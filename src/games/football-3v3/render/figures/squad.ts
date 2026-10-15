@@ -83,7 +83,7 @@ export class Squad {
       holding: view.aiming,
     };
     let targeted: AthleteView | null = null;
-    this.control.update(view, dt, time);
+    this.control.update(view, dt, time, this.rings);
     for (const a of view.athletes) {
       const entry = this.ensure(a);
       entry.figure.update(a, { ...scene, center: a.id === center }, dt, time);

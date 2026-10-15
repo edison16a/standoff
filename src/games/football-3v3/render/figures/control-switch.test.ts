@@ -27,4 +27,16 @@ describe("the control marker", () => {
     c.update(view(3, 1), 1 / 30, 0);
     expect(c.incoming(1)).toBe(false);
   });
+
+  it("flies nothing over a replay, and drops a marker already flying", () => {
+    const c = new ControlSwitch();
+    c.update(view(10, 0), 1 / 30, 0);
+    c.update(view(10.03, 1), 1 / 30, 0);
+    expect(c.incoming(1)).toBe(true);
+    c.update(view(10.06, 1), 1 / 30, 0, false);
+    expect(c.incoming(1)).toBe(false);
+    c.update(view(10.09, 0), 1 / 30, 0, false);
+    expect(c.incoming(0)).toBe(false);
+    expect(c.group.children.length).toBe(0);
+  });
 });

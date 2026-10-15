@@ -12,7 +12,7 @@ const ANGLE_NAME: Record<ReplayAngle, string> = {
 };
 
 /**
- * Over the touchdown replay: a small replay bug in the corner with the
+ * Over the touchdown replay: a small replay bug at the top with the
  * angle on screen, and nothing else. No bars, no stat card, so the play
  * fills the screen, and nothing about skipping: the skip button and the
  * vote live on the phones.
