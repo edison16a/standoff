@@ -1,5 +1,5 @@
 import { airborne } from "../athlete";
-import { applyHit, presetName } from "../blocks/hit";
+import { applyHit } from "../blocks/hit";
 import { BODY } from "../body/body-spec";
 import { rimDistance, RIM_SPOT } from "../court";
 import type { Match } from "../match";
@@ -55,13 +55,14 @@ function stuff(m: Match, a: Athlete, man: Athlete, hand: V3): void {
   b.shot = shotInfo(m, a, "dunk", "perfect", 2, 1, rimDistance(a));
   b.shot.rolled = m.opponents(a.team).map((o) => o.id);
   b.vel = { x: 0, y: -1, z: 0 };
-  const hit = m.rng() < 0.3 ? "spike" : "swat";
-  applyHit(m, b, hit);
+  // The stuff is the two hand rejection: both palms on it as it comes over the ring, and back out it goes.
+  const hit = "reject";
+  applyHit(m, b, hit, man);
   b.flightKind = "block";
   b.shot.outcome = "airball";
   b.lastTouch = man.id;
   man.box.blocks++;
-  m.emit({ type: "block", id: man.id, victim: a.id, tip: false, at: { ...hand }, hit, preset: presetName("stand", hit, "dunk") });
+  m.emit({ type: "block", id: man.id, victim: a.id, tip: false, at: { ...hand }, hit, preset: "rejection" });
   missShot(m);
 }
 

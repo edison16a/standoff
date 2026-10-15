@@ -1,5 +1,6 @@
 import { buildOf } from "./athlete";
-import { applyHit, presetName } from "./blocks/hit";
+import { applyHit, byGlass } from "./blocks/hit";
+import { dunkPreset, hitFor } from "./blocks/presets";
 import { planBlocks } from "./blocks/plan";
 import { contestFor } from "./contest";
 import { isThree, rimDistance } from "./court";
@@ -64,7 +65,7 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   const gold = grade === "gold";
   // Contact on the shot is a foul, and a fouled shot flies on and may still drop.
   // A block set up by the lab is never fouled, so the scene always plays the block.
-  const fouler = scripted || free || m.forcedHit ? null : rollShootingFoul(m, a, kind, evade);
+  const fouler = scripted || free || m.forcedPreset ? null : rollShootingFoul(m, a, kind, evade);
   if (fouler) callShootingFoul(m, fouler, a, three ? 3 : 2);
   b.shot = shotInfo(m, a, kind, grade, three ? 3 : free ? 1 : 2, c.contest, distance);
   // A scripted film, a gold release and a fouled shot fly clear of hands.
@@ -111,16 +112,15 @@ export function slam(m: Match, a: Athlete, hand: V3): void {
   b.shot.rolled = m.opponents(a.team).map((o) => o.id);
   if (!forced && !fouler && c.blocker && m.rng() < c.blockChance) {
     const d = c.blocker;
-    const strong = buildOf(d).stats.strength >= 7;
-    // Met at the rim: a big man spikes it away now and then, anyone else swats it.
-    const hit = strong && m.rng() < 0.35 ? "spike" : "swat";
-    applyHit(m, b, hit);
+    // Met at the rim: the leap he is in says the play, and the play says what his hand does to it.
+    const preset = dunkPreset(d.action.kind === "block" ? d.action.style : "stand");
+    const hit = hitFor(preset, byGlass(top));
+    applyHit(m, b, hit, d);
     b.flightKind = "block";
     b.shot.outcome = "airball";
     b.lastTouch = c.blocker.id;
     c.blocker.box.blocks++;
-    const style = d.action.kind === "block" ? d.action.style : "stand";
-    m.emit({ type: "block", id: d.id, victim: a.id, tip: false, at: { ...top }, hit, preset: presetName(style, hit, "dunk") });
+    m.emit({ type: "block", id: d.id, victim: a.id, tip: false, at: { ...top }, hit, preset });
     missShot(m);
     return;
   }

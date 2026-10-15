@@ -92,7 +92,7 @@ export class IconFilm {
     for (const a of m.athletes) if (a.id !== LOCKDOWN) a.blockCd = Math.max(a.blockCd, 0.5);
     if (this.once("set")) {
       m.forced = "swish";
-      m.forcedHit = "miss";
+      m.forcedPreset = "miss";
     }
     if (t > PRESS_AT && this.once("shoot")) m.press(SHOOTER, "shoot");
     // The close out: a hard step at the shooter once he has risen, then up.
