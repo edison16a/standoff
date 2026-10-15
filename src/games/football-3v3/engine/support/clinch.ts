@@ -6,9 +6,9 @@ import { onPlayRoute } from "../playbook/on-route";
 import { Rng } from "../rng";
 import { LINE } from "../tuning";
 import type { Athlete } from "../types";
-import { dist2, type V2 } from "../vec";
+import { dir2, dist2, type V2 } from "../vec";
 import { breakClinch, reachOut } from "./clinch-break";
-import { CLINCH, clinchKindFor } from "./clinch-pick";
+import { CLINCH, clinchKindFor, slamsHim } from "./clinch-pick";
 
 /**
  * A support blocker with his hands on a defender, out in space. The two
@@ -79,6 +79,13 @@ export function engageClinches(m: Match): void {
       if (!best || d.id === o.bot.cover || (best.id !== o.bot.cover && gap < dist2(o, best))) best = d;
     }
     if (!best) continue;
+    // Arriving at speed he may not lock up at all: a shoulder through the chest puts the man on his back.
+    const to = dir2(o, best);
+    const closing = (o.vx - best.vx) * to.x + (o.vz - best.vz) * to.z;
+    if (slamsHim(closing, statsOf(o).power - statsOf(best).power, m.support.rng.range(0, 1))) {
+      breakClinch(m, o, best, "slam");
+      continue;
+    }
     m.support.clinches.push({ o: o.id, d: best.id, move: { kind: "engage", t: 0 }, surge: 0, next: 0, v: 0, passPro });
     m.emit({ type: "pads", a: o.id, b: best.id, power: 0.8 });
   }

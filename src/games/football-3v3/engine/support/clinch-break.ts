@@ -1,4 +1,4 @@
-import { LOOSE } from "../block-preset";
+import { breaksPair, LOOSE } from "../block-preset";
 import { knockDown } from "../down";
 import { resolveHit } from "../hit";
 import { dodging } from "../juke";
@@ -14,23 +14,34 @@ const RIP = 3.2;
 /** Seconds a finished pancake or shed keeps playing on the two men before they run as normal. */
 const AFTER = 1.4;
 
+/** How hard a pancaked man is put down, and a slammed one blown back, metres a second. */
+const PANCAKE_BACK = 1.5;
+const SLAM_BACK = 3.4;
+
 /**
  * Ends a block with the move that beat it. A pancake puts the defender
- * on his back with the blocker stood over him; a shed has the defender
+ * on his back with the blocker stood over him; a slam blows him back
+ * off his feet as the blocker drives through; a shed has the defender
  * rip free toward the ball while the beaten blocker stumbles. Either way
  * neither can be blocked again for a moment.
  */
-export function breakClinch(m: Match, o: Athlete, d: Athlete, kind: "pancake" | "shed"): void {
-  m.emit({ type: "pads", a: o.id, b: d.id, power: kind === "pancake" ? 1 : 0.7 });
+export function breakClinch(m: Match, o: Athlete, d: Athlete, kind: "pancake" | "shed" | "slam"): void {
+  m.emit({ type: "pads", a: o.id, b: d.id, power: kind === "shed" ? 0.7 : 1 });
   o.block = { kind, t: 0, offense: true };
   d.block = { kind, t: 0, offense: false };
   m.support.rest.set(o.id, m.time + CLINCH.rest);
-  if (kind === "pancake") {
+  if (kind !== "shed") {
     knockDown(d, LOOSE.pancakeDown, "pancaked");
     const back = dir2(o, d);
-    d.vx = back.x * 1.5;
-    d.vz = back.z * 1.5;
-    o.vx = o.vz = 0;
+    const hard = kind === "slam" ? SLAM_BACK : PANCAKE_BACK;
+    d.vx = back.x * hard;
+    d.vz = back.z * hard;
+    d.yaw = Math.atan2(-back.x, -back.z);
+    // A slam drives on through him; a pancake stops over him.
+    const through = kind === "slam" ? 1.2 : 0;
+    o.vx = back.x * through;
+    o.vz = back.z * through;
+    o.yaw = Math.atan2(back.x, back.z);
     return;
   }
   m.support.rest.set(d.id, m.time + CLINCH.free);
@@ -49,7 +60,7 @@ export function ageLooseBlocks(m: Match, dt: number): void {
   for (const a of m.athletes) {
     if (a.role === "lineman" || !a.block || m.support.clinches.some((c) => c.o === a.id || c.d === a.id)) continue;
     a.block.t += dt;
-    if (a.block.t > AFTER || (a.block.kind !== "pancake" && a.block.kind !== "shed")) a.block = null;
+    if (a.block.t > AFTER || !breaksPair(a.block.kind)) a.block = null;
   }
 }
 
