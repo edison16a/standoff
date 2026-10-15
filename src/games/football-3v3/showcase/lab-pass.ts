@@ -64,6 +64,8 @@ function attempt(stage: PassStage, seed: number): { frames: PassFrame[]; shown: 
   const wr = m.bySeat(1)!;
   const d = m.bySeat(3)!;
   m.choose(qb.id, stage.call);
+  // A person's QB gets his page of plays: the stage takes the first one.
+  if (m.huddle) m.playbook(qb.id, 0);
   m.press(qb.id, "hike");
   // Line play is watched from the snap, over the middle pair; a pass from the throw, over the receiver.
   const pair = m.lines[1]!;
