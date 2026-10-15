@@ -8,7 +8,12 @@ import type { PassStage } from "./lab-pass";
  */
 export const PASS_STAGES = {
   // Catches the game logic picks from how the ball arrives.
-  chest: { call: "throw", wr: { at: [9, 2] }, want: { who: "wr", kind: "chest", result: "held" }, length: 2.6 },
+  chest: { call: "throw", wr: { at: [9, 2], move: [-0.5, 1] }, want: { who: "wr", kind: "chest", result: "held" }, length: 2.6 },
+  whip: { call: "throw", wr: { at: [8, 1], face: true }, want: { who: "wr", kind: "whip", result: "held" }, length: 2.6 },
+  // Settled for it, whipped round upfield, and slammed back by the man waiting for him.
+  whipslam: { call: "throw", wr: { at: [8, 1], face: true }, d: { at: [7, 0.3], hit: true }, throwAt: 0.3, want: { who: "wr", kind: "whip", result: "held", then: "slam" }, length: 3.6 },
+  onehand: { call: "throw", wr: { at: [5, 0], move: [1, 0] }, throwAt: 0.9, shift: [-1.4, 0], loft: 0.7, want: { who: "wr", kind: "onehand", result: "held" }, length: 3.2 },
+  toetap: { call: "throw", wr: { at: [10, 0], move: [0.3, 1] }, edge: true, want: { who: "wr", kind: "toetap", result: "held" }, length: 2.8 },
   highpoint: { call: "throw", wr: { at: [10, 0] }, loft: 3.2, want: { who: "wr", kind: "high", result: "held" }, length: 2.8 },
   layout: { call: "throw", wr: { at: [9, 0] }, shift: [0, 2.5], want: { who: "wr", kind: "dive", result: "held" }, length: 2.8 },
   shoulder: { call: "throw", wr: { at: [5, 3], move: [1, 0] }, throwAt: 0.9, want: { who: "wr", kind: "shoulder", result: "held" }, length: 3.4 },
