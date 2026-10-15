@@ -43,6 +43,31 @@ describe("a slam that does not go down", () => {
     expect(act.rimHang).toBe(0);
   });
 
+  it("plays the clang, not the stuff, when the stopper never got to the slam", () => {
+    const m = new Match({ entries: ENTRIES, seed: 9, firstOffence: 1 });
+    while (m.phase !== "live") m.step(STEP);
+    m.athletes.forEach((a, i) => Object.assign(a, { x: i === 1 ? RIM_SPOT.x : -6 + i, z: i === 1 ? RIM_SPOT.z + 2.4 : 11, vx: 0, vz: i === 1 ? -5 : 0, action: { kind: "none" } }));
+    // A man on the other team waits under the ring for the stuff.
+    const man = m.opponents(1)[0]!;
+    Object.assign(man, { x: RIM_SPOT.x, z: RIM_SPOT.z + 0.6 });
+    m.ball.holder = 1;
+    m.forcedFinish = { dunk: "twoHand" };
+    m.forcedDunk = "stuff";
+    startDrive(m, m.athletes[1]!);
+    const act = m.athletes[1]!.action;
+    if (act.kind !== "drive") throw new Error("no drive");
+    expect(act.fail).toBe("stuff");
+    while (act.t + STEP < act.finish) m.step(STEP);
+    // Knocked well off his spot just before the slam.
+    man.x += 3;
+    m.drainEvents();
+    m.step(STEP);
+    const events = m.drainEvents();
+    expect(events.some((e) => e.type === "dunkFail" && e.fail === "clang" && e.by === null)).toBe(true);
+    expect(events.some((e) => e.type === "block")).toBe(false);
+    expect(act.fail).toBe("clang");
+  });
+
   it("leaves a slam that goes down alone", () => {
     const m = hangDunk();
     const act = m.athletes[1]!.action;

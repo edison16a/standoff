@@ -40,9 +40,12 @@ export function judgeDunk(m: Match, chances: { odds: DunkOdds; stopper: Athlete 
 /** The slam that fails, at the moment the ball would have gone down. */
 export function failSlam(m: Match, a: Athlete, hand: V3, act: Drive): void {
   const man = act.stopper === null || act.stopper === undefined ? null : m.athletes[act.stopper];
-  m.emit({ type: "dunkFail", id: a.id, fail: act.fail ?? "clang", by: man?.id ?? null });
+  const met = man && man.action.kind === "block" && Math.hypot(man.x - hand.x, man.z - hand.z) < 1.4;
+  // A stopper knocked off his spot never got there: the slam catches the iron, and the body plays the clang.
+  if (act.fail === "stuff" && !met) act.fail = "clang";
+  m.emit({ type: "dunkFail", id: a.id, fail: act.fail ?? "clang", by: act.fail === "stuff" ? (man?.id ?? null) : null });
   if (act.fail === "short") return shortOfRim(m, a, hand);
-  if (act.fail === "stuff" && man && man.action.kind === "block" && Math.hypot(man.x - hand.x, man.z - hand.z) < 1.4) return stuff(m, a, man, hand);
+  if (act.fail === "stuff" && man) return stuff(m, a, man, hand);
   // Up there but off the iron: off the back, or rattled out.
   m.forced = m.rng() < 0.55 ? "backIron" : "rimOut";
   slam(m, a, hand);
