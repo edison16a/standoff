@@ -35,6 +35,8 @@ export interface CatchPlan {
   result: CatchResult | null;
   /** Seconds since the result. */
   since: number;
+  /** The opponent going for the same ball at the same spot, so the two meet in the air, or null for a clean one. */
+  contest: number | null;
 }
 
 /** How the ball will arrive at one player, read from its path. */

@@ -14,7 +14,7 @@ function catcher(kind: CatchKind, tau: number, more: Partial<NonNullable<Athlete
   const v = freshView();
   const a = v.athletes.find((x) => x.role === "runner")!;
   const result: CatchResult | null = more.result ?? null;
-  return { ...a, speed, catching: { kind, t: 0.5 + tau, at: 0.5, side: 1, height: 1.3, result, since: Math.max(0, tau), ...more } };
+  return { ...a, speed, catching: { kind, t: 0.5 + tau, at: 0.5, side: 1, height: 1.3, result, since: Math.max(0, tau), contest: null, ...more } as NonNullable<AthleteView["catching"]> };
 }
 
 const at = (kind: CatchKind, tau: number, more: Partial<NonNullable<AthleteView["catching"]>> = {}, speed = 6) =>

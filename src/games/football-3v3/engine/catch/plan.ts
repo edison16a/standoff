@@ -86,7 +86,7 @@ function consider(m: Match, a: Athlete, pass: PassInfo): void {
   // The side it comes in on: where it meets him across his body, and the side it is coming from.
   const across = (meet.spot.x - a.x) * left.x + (meet.spot.z - a.z) * left.z - ((vel.x * left.x + vel.z * left.z) / speed) * 0.3;
   const kind = catchKindFor({ height: meet.y, speed: Math.hypot(vel.x, vel.y, vel.z), facing, contest: nearestFoe(m, a, meet.spot), short, play });
-  a.catching = { kind, t: 0, at: meet.wait, side: across >= 0 ? 1 : -1, height: meet.y, spot: meet.spot, result: null, since: 0 };
+  a.catching = { kind, t: 0, at: meet.wait, side: across >= 0 ? 1 : -1, height: meet.y, spot: meet.spot, result: null, since: 0, contest: rival(m, a, pass, meet.spot) };
 }
 
 /** The ball's velocity on its traced path at match time `time`. */
@@ -96,6 +96,28 @@ function ballVelocity(pass: PassInfo, time: number): { x: number; y: number; z: 
   const a = pts[i]!;
   const b = pts[i + 1] ?? a;
   return { x: (b.x - a.x) / PATH_DT, y: (b.y - a.y) / PATH_DT, z: (b.z - a.z) / PATH_DT };
+}
+
+/** Inside this many metres of the meeting spot, an opponent going for the ball makes it a contested catch. */
+const CONTEST = 1.6;
+
+/**
+ * The opponent fighting him for this ball: the receiver it was thrown to,
+ * or a defender with a play on it (in its lane), nearest the spot where
+ * the ball comes down. Both go up for it together.
+ */
+function rival(m: Match, a: Athlete, pass: PassInfo, spot: V2): number | null {
+  let best: number | null = null;
+  let near = CONTEST;
+  for (const o of m.athletes) {
+    if (o.team === a.team || isDown(o) || (o.id !== pass.to && !(o.id in pass.lane))) continue;
+    const d = dist2(o, spot);
+    if (d < near) {
+      near = d;
+      best = o.id;
+    }
+  }
+  return best;
 }
 
 /** Metres from a spot to the nearest opponent who could get a hand in. */
@@ -121,7 +143,7 @@ function finish(p: CatchPlan, result: CatchResult): void {
  * defender on him was a hit that jarred it loose.
  */
 export function noteCatch(m: Match, a: Athlete, result: Exclude<CatchResult, "missed" | "jarred">, play: Play): void {
-  const p = a.catching ?? (a.catching = { kind: play === "swat" ? "swat" : play === "pick" ? "pick" : "chest", t: 0, at: 0, side: 1, height: 1.3, spot: { x: a.x, z: a.z }, result: null, since: 0 });
+  const p = a.catching ?? (a.catching = { kind: play === "swat" ? "swat" : play === "pick" ? "pick" : "chest", t: 0, at: 0, side: 1, height: 1.3, spot: { x: a.x, z: a.z }, result: null, since: 0, contest: null });
   const hit = result === "dropped" && nearestFoe(m, a, a) < JARRED;
   finish(p, hit ? "jarred" : result);
   if (hit) {

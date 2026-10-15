@@ -72,13 +72,15 @@ function holds(m: Match, a: Athlete, play: Play, call: LaneCall | null, pass: Pa
 }
 
 /**
- * Whether these hands are really on the ball. A clean pass is only for
- * a player who read it and has his move for it under way (plan.ts), so
- * nobody catches or picks one he never looked at. A ball knocked loose
- * is a scramble, but only for hands right on it. A pitch is always seen.
+ * Whether these hands are really on the ball. A clean pass is for the
+ * man it was thrown to and the defender who broke on it, who both read
+ * it from the throw, and for anyone else only once his move for it is
+ * under way (plan.ts): nobody catches or picks one he never looked at.
+ * A ball knocked loose is a scramble, but only for hands right on it.
+ * A pitch is always seen.
  */
 function readIt(a: Athlete, pass: PassInfo, stretch: number): boolean {
-  if (pass.pitch) return true;
+  if (pass.pitch || a.id === pass.to || a.id === pass.interceptor) return true;
   if (pass.tipped) return stretch < SCRAMBLE;
   return a.catching !== null && a.catching.result === null;
 }
