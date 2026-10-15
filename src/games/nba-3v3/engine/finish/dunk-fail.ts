@@ -1,6 +1,7 @@
 import { airborne } from "../athlete";
 import { applyHit } from "../blocks/hit";
 import { BODY } from "../body/body-spec";
+import { landTime } from "../body/drive-flight";
 import { rimDistance, RIM_SPOT } from "../court";
 import type { Match } from "../match";
 import { traceShot } from "../physics/shot-watch";
@@ -45,6 +46,17 @@ export function failSlam(m: Match, a: Athlete, hand: V3, act: Drive): void {
   // Up there but off the iron: off the back, or rattled out.
   m.forced = m.rng() < 0.55 ? "backIron" : "rimOut";
   slam(m, a, hand);
+}
+
+/**
+ * A slam that was to go down but did not: a man in the air met it, or a
+ * foul knocked it off line. The body takes the fail preset from the slam
+ * on, and lets go of the rim at once, rather than finishing a make.
+ */
+export function failFromSlam(act: Drive, fail: DunkFail): void {
+  act.fail = fail;
+  act.rimHang = 0;
+  act.land = landTime(act);
 }
 
 /** Met at the rim: his hand on the ball as it comes over, and the ball thrown back out. */

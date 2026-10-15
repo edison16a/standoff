@@ -95,9 +95,10 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
  * The slam: the hand, already over the ring with the ball (see
  * `finish/plan.ts`), drives it down through the net.
  * A defender who got up in time may swat it at the rim, and a slam put
- * off line by contact can come off the iron.
+ * off line by contact can come off the iron. Returns whether it went
+ * down, so the body can take a fail preset from the slam on.
  */
-export function slam(m: Match, a: Athlete, hand: V3): void {
+export function slam(m: Match, a: Athlete, hand: V3): boolean {
   const b = m.ball;
   const c = contestFor(a, m.opponents(a.team), "dunk");
   // From the hand, over the ring: the ball is pushed down from where the hand really has it.
@@ -122,7 +123,7 @@ export function slam(m: Match, a: Athlete, hand: V3): void {
     c.blocker.box.blocks++;
     m.emit({ type: "block", id: d.id, victim: a.id, tip: false, at: { ...top }, hit, preset });
     missShot(m);
-    return;
+    return false;
   }
   const ctx: ShotContext = { kind: "dunk", grade: "perfect", distance: 0.5, shooting: 5, contest: c.contest, strengthEdge: c.edge, onFire: a.onFire };
   const chance = makeChance(ctx) * (fouler ? FOULED_MAKE + 0.15 : 1);
@@ -137,7 +138,8 @@ export function slam(m: Match, a: Athlete, hand: V3): void {
     m.emit({ type: "rim", power: 1 });
     const power = clamp(0.5 + buildOf(a).stats.strength * 0.05, 0.5, 1);
     m.emit({ type: "dunk", id: a.id, style: b.shot.dunk ?? buildOf(a).dunk, power });
-    return;
+    return true;
   }
   m.emit({ type: "shot", id: a.id, kind: "dunk", three: false, grade: "perfect", chance, outcome: ahead.outcome, preset: "rimOut", made: false, contest: c.contest });
+  return false;
 }

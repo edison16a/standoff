@@ -4,7 +4,7 @@ import { pressJump } from "./defend";
 import { readApproach } from "./finish/approach";
 import { ballInHands, specOf } from "./finish/ball-track";
 import { facingAt } from "./finish/facing";
-import { dunkChances, failSlam, judgeDunk } from "./finish/dunk-fail";
+import { dunkChances, failFromSlam, failSlam, judgeDunk } from "./finish/dunk-fail";
 import { gatherLift } from "./finish/footwork";
 import { planFinish } from "./finish/plan";
 import { selectFinish, type Intent } from "./finish/select";
@@ -110,8 +110,10 @@ export function updateDrive(m: Match, a: Athlete, dt: number): void {
     ballInHands(a, { ...act, t: act.finish }, hand);
     if (act.dunk && act.fail) failSlam(m, a, hand, act);
     else if (act.dunk) {
-      slam(m, a, hand);
-      if (act.style === "poster") posterize(m, a);
+      // Met in the air, or knocked off line by a hand or a foul: the body plays that fail from the slam on,
+      // never a made dunk's hang over a ball that rims out.
+      if (!slam(m, a, hand)) failFromSlam(act, m.ball.flightKind === "block" ? "stuff" : "clang");
+      else if (act.style === "poster") posterize(m, a);
     } else launchShot(m, a, "layup", "good", { ...hand });
   }
   if (before < act.land && t >= act.land) m.emit({ type: "land", id: a.id, hard: act.dunk });
