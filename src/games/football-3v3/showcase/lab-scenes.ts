@@ -2,7 +2,7 @@ import type { Stage } from "./lab-stage";
 
 /**
  * The lab's staged moments, one per preset. The carrier starts 5.5 m
- * down the field running up +z; each man's spot is from that start, so
+ * down the field running up +z (a sacked QB nearer the middle); each man's spot is from that start, so
  * the contact lands near the middle of the picture. +x is away from
  * the lab camera, which looks along it.
  */
@@ -10,6 +10,7 @@ export const STAGES = {
   // Tackles: a lunge picked as each approach, brought down in that preset.
   wrap: { carrier: "routerunner", speed: 7, outcome: "wrap", length: 3.4, cast: [{ build: "lockdown", at: { x: 2.2, z: 4.6 }, vel: { x: -3, z: -1 }, lunge: { at: 0.5, approach: "wrap" } }] },
   drive: { carrier: "routerunner", speed: 6, outcome: "drive", length: 3.4, cast: [{ build: "powerback", at: { x: 0.2, z: 6.4 }, vel: { x: 0, z: -4 }, lunge: { at: 0.45, approach: "drive" } }] },
+  slam: { carrier: "routerunner", speed: 6, outcome: "slam", length: 3.6, cast: [{ build: "lockdown", at: { x: 0.3, z: 8.2 }, vel: { x: 0, z: -7 }, move: { x: 0, z: -1 }, lunge: { at: 0.42, approach: "slam" } }] },
   ankle: { carrier: "powerback", speed: 6.5, outcome: "ankle", length: 3.2, cast: [{ build: "speedster", at: { x: 2, z: 4.8 }, vel: { x: -3, z: -1 }, lunge: { at: 0.5, approach: "ankle" } }] },
   shoestring: { carrier: "routerunner", speed: 7, outcome: "shoestring", length: 3.4, cast: [{ build: "lockdown", at: { x: 0.35, z: -1.0 }, vel: { x: 0, z: 7.4 }, move: { x: 0, z: 1 }, lunge: { at: 0.5, approach: "shoestring" } }] },
   gang: {
@@ -19,6 +20,12 @@ export const STAGES = {
       { build: "speedster", at: { x: -1.0, z: 5.0 }, vel: { x: 0, z: 0 } },
     ],
   },
+  // Sacks: a QB drifting in the pocket, wrapped up from the side and swung down, or blindsided from behind.
+  spin: { carrier: "gunslinger", qb: { x: 0, z: 0.12 }, start: -0.5, speed: 0.8, outcome: "spin", length: 3.4, cast: [{ build: "lockdown", at: { x: 3.6, z: 0.4 }, vel: { x: -6, z: 0 }, move: { x: -1, z: 0 }, lunge: { at: 0.32, approach: "wrap" } }] },
+  blindside: { carrier: "gunslinger", qb: { x: 0, z: 0.12 }, start: 0, speed: 0.8, outcome: "blindside", length: 3.4, cast: [{ build: "lockdown", at: { x: 0.2, z: -3.6 }, vel: { x: 0, z: 6.5 }, move: { x: 0, z: 1 }, lunge: { at: 0.3, approach: "wrap" } }] },
+  // Broken head on: a power back trucks a smaller man, a receiver stiff arms one.
+  truck: { carrier: "powerback", speed: 7.5, outcome: "truck", length: 3, cast: [{ build: "speedster", at: { x: 0.3, z: 8.5 }, vel: { x: 0, z: -5 }, move: { x: 0, z: -1 }, lunge: { at: 0.38, approach: "drive" } }] },
+  stiffarm: { carrier: "routerunner", speed: 7.5, outcome: "stiffarm", length: 3, cast: [{ build: "lockdown", at: { x: 0.6, z: 8.5 }, vel: { x: 0, z: -5 }, move: { x: 0, z: -1 }, lunge: { at: 0.38, approach: "wrap" } }] },
   // The icon's key art: two defenders leaving their feet at a carrier from both sides at once.
   keyart: {
     carrier: "powerback", speed: 7, outcome: "gang", length: 3.4,
