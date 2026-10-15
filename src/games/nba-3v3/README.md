@@ -21,7 +21,7 @@ Status: ready. Half court basketball for 1 to 6 players: one on one, two on two 
    * **Computer difficulty.** Easy (the default), Medium, Hard or Training. Harder computers read the play sooner, run a touch faster and hit the green more often. In Training they stand still, so you can practise moves, shots and steals against them.
 4. Turn the phone sideways. It is a controller:
    * **Thumb stick** (left half): always on screen, so it is clear how to move. Put your thumb anywhere on that side and it jumps there. It moves your player the way the big screen shows it. Up runs at the hoop. Players carry their weight (see Bodies below). The first steps are explosive and top speed comes over most of a second; they stop in a couple of strides, curve wide at full speed and plant a foot to cut. Heavy players get going a little later than light ones. A player you steer with the stick is quicker than the plain body: about a tenth faster at the top, with a harder push and sharper cuts, most of all without the ball, so a defender on the stick can stay in front (`engine/manual-move.ts`). With the ball a player is a little slower and turns wider, because the dribble has to come round too. With the ball you dribble on your own, keeping it away from your defender and crossing it over when they switch sides.
-   * **Shoot** (big orange button): hold it and a meter fills, on the phone and over your player on the big screen. Let go in the green band to green it. Driving at the rim close in turns Shoot into a layup or a dunk. With space you always dunk, if your body can get up there. With a defender close by you lay it up round him. The finish follows the play: from under the rim, or cutting across it on the baseline, it is a reverse layup up the far side. A defender on the ball side gets a body shield layup. Running hard at the rim from the edge of the paint, or with a long defender waiting in the lane, it is a floater: up early off one foot on a soft, high arc. A jumper with a defender right in your chest starts with a stepback off him.
+   * **Shoot** (big orange button): hold it and a meter fills, on the phone and over your player on the big screen. Let go in the green band to green it. Near the rim Shoot is a finish instead, and the phone says so: hold it for a layup, or tap it twice quickly for a dunk (see At the rim below). The finish follows the play: from under the rim, or cutting across it on the baseline, it is a reverse layup up the far side. A defender on the ball side gets a body shield layup. Running hard at the rim from the edge of the paint, or with a long defender waiting in the lane, it is a floater: up early off one foot on a soft, high arc. A jumper with a defender right in your chest starts with a stepback off him.
    * **Pass**: to the teammate most in the direction of the stick, or the most open one. Without the ball it becomes **Call**, which asks a teammate for it.
    * **Switching.** Pass to a computer teammate and you take him over as he catches it, like NBA 2K: your ring on the floor slides across to him and pulses, and his tag takes your colour. The computer plays the one you left. You never take another person's player. When you are the only person on your team, a computer teammate who steals the ball or grabs a rebound becomes yours the same way. Your name, jersey and box score stay with the player you picked.
    * **Block**: jump with your arms up, to contest a jumper or stop a layup or dunk, or to grab a rebound higher. There is a short crouch before you leave the floor, and a block counts most at the top of the jump, so time it.
@@ -196,6 +196,35 @@ Measured over 30 computer games a level, with the ball physics deciding every sh
 * The shorts' legs swing after the thighs on springs, and the chest breathes, slow at rest and deep after a sprint (`anim/cloth.ts`). A hard bump jolts both players, the chest snapping with the push and the head whipping after it (`anim/flinch.ts`). A rocked defender lunges the wrong way, and a player who takes a charge or is run over sits down on the court and gets up again (`anim/reactions.ts`).
 * Bursts, stops and cuts lean the body and plant a foot, a landing gives at the knees, and every action plays on the engine's own clock with its follow through (`anim/action-pose.ts`). A floater goes up off one foot with the other knee driving, the ball carried up in front and let go early at full stretch (`anim/floater-pose.ts`). The defender on a shooter comes up out of his stance with a hand in the shooter's face, and a player with a pass coming reaches both hands out to the ball.
 
+## At the rim
+
+Near the rim (driving at it inside 3.3 m, within 1.7 m, under the glass, or on a floater run from the edge of the paint) Shoot is not a jumper. The phone shows Hold layup, Tap tap dunk, and the meter stays off. The press is read for a moment while you keep running (`engine/finish/pick-up.ts`):
+
+* **Hold** Shoot past 0.17 s: a layup.
+* **Double tap**: let go inside 0.17 s and press again within 0.3 s of the first press. A dunk attempt.
+* **One quick tap** and nothing more: a layup, once the 0.3 s window shuts.
+
+A hold is already a layup, so a late second press never turns it into a dunk. From the edge of the paint the layup is the floater. Away from the rim nothing changed: hold and let go in the green.
+
+**The stick picks the layup** (`steer-layup.ts`), read against the line to the rim:
+
+* At the rim: straight on. A finger roll, off the glass from the wing, or a power layup when slow.
+* A little off to a side: a euro step that way.
+* Across the line: a step through under the rim to that side.
+* Pulled back: a hop step onto both feet.
+* From the wing or the baseline, past the rim toward the far baseline: a reverse under the backboard.
+* Let go, with a man in front of you: a juke. A pump fake gets him up, then a jab step takes you past him.
+
+**A dunk is only as good as where it starts** (`dunk-odds.ts`). It is decided before the gather from how far out you are, your speed, how square you run at the rim, your balance, your dunk rating, and who waits at the rim. From a good spot it almost always goes down. A bad one fails in its own animation:
+
+* **Stuffed**: a bigger man at the rim steps in, goes up and throws it back out. You land heavy.
+* **Off the iron**: up there but the slam catches the rim and kicks out.
+* **Too far out**: you leave the floor short of the rim and the ball only meets the front of the ring.
+
+The computer reads the same odds and lays a bad dunk up instead.
+
+A shot already in its motion beats the shot clock: a layup gathered as the clock runs out still goes up.
+
 ## Layups and dunks
 
 Every finish at the rim is a hand made preset (`engine/finish/`): its own footwork, timing, height, ball path through the hands and release. The game picks it before the gather starts, then plays it out. The physics only takes over once the ball leaves the hand, or once the dunk drives it down through the ring.
@@ -204,7 +233,7 @@ Every finish at the rim is a hand made preset (`engine/finish/`): its own footwo
 * **What it reads** (`approach.ts`). The angle (straight down the lane, in from the wing, or along the baseline), the speed, the natural hand (the side of the rim the drive is on), and the defender that matters most: in the path, waiting at the rim, beside on the ball side or the other side, or chasing from behind. Also whether he is already in the air, and who is stronger.
 * **Space means a dunk** (`select.ts`). Nobody within 1.8 m and nobody waiting at the rim, and anyone who can get the ball over the ring dunks. Walking into it, a two hand dunk off a jump stop. Settled, mostly the two hand flush. With speed, a tomahawk or a cock back. Along the baseline, a reverse or a windmill. A much stronger man goes up through a smaller one in his way: the poster, and the man under it is knocked down.
 * **A defender close by means a layup that beats him.** In the path at speed, a euro step or a spin. In the path up close, an up and under, a spin or a body shield. On the ball side, a body shield. From the other side, a scoop or the glass. Chasing from behind, off the wrong foot early. A big man at the rim, a teardrop from out, the glass from the wing, or under him once he leaves his feet. Nobody near, a finger roll from the front or the glass from the wing.
-* **Layups** (`layups.ts`): finger roll, reverse, euro step, up and under, scoop, teardrop, high off the glass, wrong foot, spin, body shield and power. Each has its own steps: the plain two step, the euro step across, a stop with a pump fake (a computer defender close by usually jumps at it), a full spin, a jump stop, or one early step.
+* **Layups** (`layups.ts`): finger roll, reverse, euro step, up and under, scoop, teardrop, high off the glass, wrong foot, spin, body shield, power, step through, hop step and juke. Each has its own steps: the plain two step, the euro step across, a stop with a pump fake (a computer defender close by usually jumps at it), a full spin, a jump stop, one early step, a plant and one long stride across, a hop onto both feet, or a fake and a jab step out wide.
 * **Dunks** (`dunks.ts`): two hand, one hand flush, tomahawk, cock back, two hand hammer, windmill, reverse, three sixty, scoop, double clutch, rim hang, poster, putback, alley oop and the jump stop dunk. An open cutter running hard at the rim gets the lob, catches it and goes straight up into the alley oop (`alley.ts`).
 * **The ball stays in the hands** (`ball-track.ts`, `render/finish-hands.ts`). From the pick up off the last bounce to the release, the ball follows the preset's path through the hands and the hands are put on the engine's real ball. A dunk takes it over the ring in the hand, slams it down through the net, and the hands go on the ring for a slap or a hang. No ball floats to the rim on its own.
 * **Hard to block.** A layup made to go round the man takes much of the sting out of his contest and much of his chance to get a hand on it: a reverse uses the rim, a scoop and an up and under go round the hands, a body shield keeps the ball the far side of him. They draw fewer fouls too.
@@ -212,7 +241,7 @@ Every finish at the rim is a hand made preset (`engine/finish/`): its own footwo
 * Each dunk has an approach, the last two steps, a deep load onto both feet with the ball swung down, the rise with the arms driving up, time in the air, the slam, and either a hang on the rim or letting go straight away, then the landing. On a hang the body drops a hand's length as the arms take the weight, the legs swing under and settle, then he lets go. Players land with slow legs for a moment.
 * The plain layup gather is two steps: the ball comes up off the last bounce into both hands at the hip and is carried tight at the chest, the right foot plants, the left plants long with the knee loaded, and the right knee drives up. Off the fingers the ball is rolled up at full stretch. A reverse is carried under the rim with the back to the basket, the head turned up over the shoulder, and flipped up the far side. A body shield layup dips a shoulder into the defender, braces the off arm against him and lays it up high and away in the far hand. Contact at the rim is a foul more often.
 * A big dunk shakes the rim and the camera, slows time for a moment and the camera swoops in.
-* **Lab scenes.** `/showcase/nba-3v3?lab=layup-euro&step=1` or `?lab=dunk-twoHand&step=1`, one for every layup and every dunk.
+* **Lab scenes.** `/showcase/nba-3v3?lab=layup-euro&step=1` or `?lab=dunk-twoHand&step=1`, one for every layup and every dunk, and `?lab=dunkfail-stuff`, `dunkfail-clang` and `dunkfail-short` for the failed dunks.
 
 ## Dribble, shakes and blocks
 
@@ -311,7 +340,7 @@ Measured on the engine itself with `engine/sim/`: whole computer games, and a on
 The host's hidden admin panel (three quick taps on the settings gear) has Keyboard player under Platform. It seats a phone panel on the big screen; pick a build and Ready in the panel, then play with the keys. A card lists them.
 
 * **W A S D** or the arrows run, at a jog. Hold **Shift** to sprint.
-* **Space** (or J) with the ball: hold to shoot and let go in the green. The hold is timed on the keyboard, so it works like the phone, free throws included. On defence it jumps to block; off the ball on offence it jumps for a rebound.
+* **Space** (or J) with the ball: hold to shoot and let go in the green. The hold is timed on the keyboard, so it works like the phone, free throws included. Near the rim hold it for a layup, aiming with W A S D to pick which, or tap it twice for a dunk. On defence it jumps to block; off the ball on offence it jumps for a rebound.
 * **E** (or K): pass with the ball, call for it without, steal on defence.
 * **F** or the **right mouse button**: hold Guard on defence.
 * **Q**: a skill move with the ball, picked by the direction held, like Dribble on the phone.
