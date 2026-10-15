@@ -8,6 +8,7 @@ import { BallTrace, type TracePoint } from "./effects/ball-trace";
 import { ScrimmageLines } from "./field/scrimmage-lines";
 import { Stadium } from "./field/stadium";
 import { Squad } from "./figures/squad";
+import { PlayMarks } from "./figures/play-marks";
 import { NameTags, type TagOf } from "./figures/tags";
 import { ContactShadows } from "./lighting/contact-shadows";
 import { Floodlights } from "./lighting/floodlights";
@@ -41,6 +42,8 @@ export class MatchRenderer {
   readonly picture: Picture;
   readonly floods: Floodlights;
   private readonly tags = new NameTags();
+  /** The play's runners in their card colours, for a person's QB. */
+  private readonly marks = new PlayMarks();
   private tagOf: TagOf | null = null;
   private traceAt: number | null = null;
   private readonly stadium: Stadium;
@@ -79,8 +82,8 @@ export class MatchRenderer {
     this.picture.governor.onTier((tier) => this.floods.setTier(tier));
     this.stadium = new Stadium(this.low, renderer.capabilities.getMaxAnisotropy());
     this.picture.governor.onTier((tier) => this.stadium.crowd?.setFull(tier.fullCrowd));
-    this.scene.add(this.floods.group, this.stadium.group, this.lines.group, this.contacts.mesh, this.squad.group, this.trace.group, this.ceremony.group);
-    this.overlay.add(this.tags.group);
+    this.scene.add(this.floods.group, this.stadium.group, this.lines.group, this.contacts.mesh, this.squad.group, this.trace.group, this.ceremony.group, this.marks.group);
+    this.overlay.add(this.tags.group, this.marks.overlay);
   }
 
   /** What the last frame drew, every pass included: draw calls, triangles, and the geometries and textures held. */
@@ -145,6 +148,8 @@ export class MatchRenderer {
     const holding = this.captainHands(view);
     this.ceremony.update(view.ceremony, holding ? this.handL : null, holding ? this.handR : null, dt, time);
     this.tags.update(view, this.tagOf, this.squad, camera.fov);
+    // Not over a replay: the marks are for calling the play, not watching it again.
+    this.marks.update(view, this.squad, camera.fov, this.traceAt === null, (id) => !!this.tagOf?.(id), dt, time);
     // Broadcast graphics like the tags: the showcase's film has neither.
     this.contacts.update(view, this.squad);
     this.stadium.update(view, time, dt, view.phase === "over" ? 0.8 : this.excitement);
@@ -188,6 +193,7 @@ export class MatchRenderer {
     this.ceremony.dispose();
     this.trace.dispose();
     this.tags.dispose();
+    this.marks.dispose();
     this.lines.dispose();
     this.contacts.dispose();
     this.floods.dispose();
