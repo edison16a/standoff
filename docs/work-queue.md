@@ -25,6 +25,8 @@ Still waiting on the owner: pause or keep the heartbeat, re-record the Paintball
 
 | Work | Workflow | State |
 | --- | --- | --- |
+| Owner playtest round, Basketball: layup cut off glitch, double tap dunk and hold layup with dunk fail math, direction steered layups (step through, reverse, euro, up and under), pre animated blocks on layups, dunks and threes. Owner words in docs/handoff/next-week/owner-requests.md | wf_d25fedc6-5e2 | building |
+| Owner playtest round, Football: 6 auto generated play cards with refresh and highlighted runners, cleaner passing, QB pressure, rush shed with speed boost, pre animated tackles, blocks, catches and front tackle breaks, whistle only on scores, new Basketball style replays | wf_d25fedc6-5e2 | building |
 
 All final builds are on main: cover icons, sports phone controls, Paintball Battle controls, Subway camera still, 1.2x tiles, final README. Final check done and on main (503ea5b): every game played end to end except the live site, which this machine's browser cannot reach (certificate block). Part 1 fixes: Soccer feet, Kart, Brawl, Blade Clash, Zombie and Gallery rejoin, phone download retry.
 
