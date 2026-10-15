@@ -29,6 +29,10 @@ export class Buzzer {
         send(e.id, e.kind === "dunk" ? "dunk" : "score", e.kind === "dunk" ? "Slam!" : `+${e.points}`);
         if (e.assist !== null) send(e.assist, "score", "Assist!");
         return;
+      case "dunkFail":
+        // A stuff is told by the block that comes with it.
+        if (e.fail !== "stuff") send(e.id, "blocked", e.fail === "short" ? "Too far out" : "Off the iron");
+        return;
       case "block":
         send(e.id, "block", "Blocked it!");
         send(e.victim, "blocked", "Blocked");

@@ -1,6 +1,10 @@
-import type { BlockHit } from "./blocks/hit";
+import type { BlockPreset } from "./blocks/presets";
 import { guardLeap } from "./blocks/guard-leap";
+import type { ForcedDunk } from "./finish/dunk-fail";
+import type { PickUp } from "./finish/pick-up";
+import { settlePickUps } from "./finish/rim-press";
 import type { Forced } from "./finish/select";
+import { guideStoppers } from "./finish/stopper";
 import { pressDefend, pressPass, pressShoot, releaseShot, updateAction } from "./actions";
 import { createAthlete, moveAthlete, separate } from "./athlete";
 import { updateBall } from "./ball";
@@ -68,14 +72,19 @@ export class Match {
   forced: ShotPreset | Outcome | null = null;
   /** The layup or dunk thrown on the next drive, set by the showcase and the lab for the same reason. */
   forcedFinish: Forced | null = null;
+  /** How the next dunk goes, for the lab and tests: a fail, or `make`. Real games roll it. */
+  forcedDunk: ForcedDunk | null = null;
+  /** People's presses at the rim read by the tap rules (`finish/pick-up.ts`). The host turns it on; films and tests call finishes at once. */
+  finishTaps = false;
+  readonly pickUps = new Map<number, PickUp>();
   /** The last rebound, for a putback straight back up. */
   lastBoard: { id: number; at: number; offensive: boolean } | null = null;
   /** Who an alley oop lob in the air is for, and the last one caught, for the finish. */
   alleyLob: number | null = null;
   alleyCatch: { id: number; at: number } | null = null;
-  /** The next hand that gets to a shot blocks it, for the showcase and the lab; `forcedHit` also sets how, or makes it a near miss. */
+  /** The next hand that gets to a shot blocks it, for the showcase and the lab; `forcedPreset` also sets the play, or makes it a near miss. */
   forcedBlock = false;
-  forcedHit: BlockHit | "miss" | null = null;
+  forcedPreset: BlockPreset | null = null;
   gamePoint: [boolean, boolean] = [false, false];
   /** Whose turn it is to bring the ball up, per team, so everyone gets to handle it. */
   readonly checkTurn: [number, number] = [0, 0];
@@ -186,6 +195,7 @@ export class Match {
     if (!a) return;
     a.auto = auto;
     a.guard = false;
+    this.pickUps.delete(id);
     if (auto) {
       a.move = { x: 0, z: 0 };
       if (a.action.kind === "shoot" && !a.action.released) releaseShot(this, a);
@@ -200,6 +210,8 @@ export class Match {
     if (this.phase === "countdown" || this.phase === "over") for (const a of this.athletes) a.move = { x: 0, z: 0 };
     if (this.phase === "live") this.brains.think(dt);
     if (this.phase === "live") for (const a of this.athletes) if (a.guard && !a.auto) steerGuard(this, a, dt);
+    if (this.phase === "live") settlePickUps(this);
+    guideStoppers(this);
     if (this.phase === "dead") updateDead(this, dt);
     if (this.phase === "check") updateCheck(this);
     if (this.phase === "freeThrow") updateFreeThrows(this, dt);

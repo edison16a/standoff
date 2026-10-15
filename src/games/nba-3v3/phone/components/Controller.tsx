@@ -28,6 +28,7 @@ function Status({ court }: { court: CourtState }) {
       {court.mustClear && <span className="nba-status__warn">Take it back past the arc</span>}
       {court.defending && !ft && <GuardRange state={court.guard} />}
       {ft?.ready && <span className="nba-status__warn">Hold Shoot, let go in the green</span>}
+      {court.rim && !ft && <RimHint dunk={court.dunk} />}
       {court.onFire && <span className="nba-status__fire">On fire</span>}
       {flash && (
         <strong key={flash.key} className={`nba-flash nba-flash--${flash.tone}`}>
@@ -35,6 +36,22 @@ function Status({ court }: { court: CourtState }) {
         </strong>
       )}
     </div>
+  );
+}
+
+/** At the rim Shoot is a finish: hold to lay it up, and a double tap to dunk once the rim is in reach. */
+function RimHint({ dunk }: { dunk: boolean }) {
+  return (
+    <span className="nba-status__rim">
+      <span>
+        <b>Hold</b> layup
+      </span>
+      {dunk && (
+        <span>
+          <b>Tap tap</b> dunk
+        </span>
+      )}
+    </span>
   );
 }
 
@@ -119,7 +136,7 @@ export function Controller({ court }: { court: CourtState }) {
             size="lg"
             colour={defending ? "#16a34a" : "#ff7a18"}
             disabled={!canShoot}
-            onDown={() => session.press("shoot", ft ? ft.ready : !defending && court.hasBall)}
+            onDown={() => session.press("shoot", ft ? ft.ready : !defending && court.hasBall && !court.rim)}
             onUp={() => session.release("shoot")}
           >
             {defending ? <GuardIcon /> : <ShootIcon />}

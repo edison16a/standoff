@@ -50,6 +50,30 @@
   font-weight: 800;
 }
 
+/* At the rim: hold to lay it up, tap twice to dunk. */
+.nba-status__rim {
+  display: inline-flex;
+  gap: 12px;
+  align-items: baseline;
+  padding: 2px 9px;
+  border-radius: 8px;
+  background: #ffedd5;
+  color: #7c2d12;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.nba-status__rim span {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.nba-status__rim b {
+  color: #c2410c;
+  font-weight: 900;
+}
+
 .nba-status__fire {
   padding: 2px 10px;
   border-radius: 999px;

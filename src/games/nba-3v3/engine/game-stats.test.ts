@@ -34,7 +34,8 @@ function tally(seeds: readonly number[]): Tally {
 
 describe("the pace of a computer game on the ball physics", () => {
   it("keeps scoring, shooting, blocks and lost balls near what the game had before", () => {
-    const t = tally([31, 32, 33, 34, 35, 36, 37, 38]);
+    // Twenty games: eight left the three point rate to the luck of a few seeds, swinging from 13 to 30 percent.
+    const t = tally(Array.from({ length: 20 }, (_, i) => 31 + i));
     const per = (k: string) => (t[k] ?? 0) / t.games!;
     expect(per("points")).toBeGreaterThan(14);
     expect(per("points")).toBeLessThan(24);

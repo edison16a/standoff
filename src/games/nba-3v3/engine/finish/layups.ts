@@ -64,4 +64,19 @@ export const LAYUP_SPEC: Record<LayupKind, LayupSpec> = {
     gather: 0.42, air: 0.36, stop: 0.9, shift: 0, steps: "stop", turn: null, yaw: "rim", track: T.front, blendFrom: 1.35,
     peak: 0.62, release: { up: 0.9, rim: 0.4, side: 0, ext: 0.95 }, family: "auto", apex: 0.45, backspin: [5, 8], evade: 0.25,
   },
+  /** Step through: a plant, then one long stride across in front of the rim, and up on the far side off the glass. */
+  stepThrough: {
+    gather: 0.54, air: 0.38, stop: 0.75, shift: 0, steps: "through", turn: null, yaw: "rim", track: T.across, blendFrom: 1.35,
+    peak: 0.6, release: { up: 0.88, rim: 0.36, side: 0.14, ext: 0.95 }, family: "auto", apex: 0.48, backspin: [5, 8], evade: 0.5,
+  },
+  /** Hop step: a hop off one foot onto both, the ball high at the chin, then up strong off two. */
+  hop: {
+    gather: 0.6, air: 0.36, stop: 0.95, shift: 0.4, steps: "hop", turn: null, yaw: "rim", track: T.hop, blendFrom: 1.3,
+    peak: 0.6, release: { up: 0.9, rim: 0.4, side: 0.04, ext: 0.95 }, family: "auto", apex: 0.46, backspin: [5, 8], evade: 0.35,
+  },
+  /** Juke: stop, pump fake him up, then a jab step past his side and up under his arms. */
+  juke: {
+    gather: 0.74, air: 0.36, stop: 0.85, shift: 0.7, steps: "juke", turn: null, yaw: "rim", track: T.juke, blendFrom: 1.3,
+    peak: 0.58, release: { up: 0.82, rim: 0.42, side: 0.2, ext: 0.95 }, family: "auto", apex: 0.5, backspin: [6, 9], evade: 0.6,
+  },
 };

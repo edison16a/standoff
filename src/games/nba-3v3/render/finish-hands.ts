@@ -55,6 +55,8 @@ export function finishHands(a: Athlete, ball: Ball | null, arms: Record<Side, Ar
     grip(arms[main], main, 0, palm, w);
     return;
   }
+  // Stuffed or short, the hands never reach the ring: the fail's own pose carries the arms.
+  if (act.fail === "stuff" || act.fail === "short") return;
   rimHands(act, arms, main, off, since, palm);
 }
 

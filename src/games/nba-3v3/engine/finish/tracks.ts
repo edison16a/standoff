@@ -30,6 +30,12 @@ export const LAYUP_TRACKS = {
   tuck: [k(0.3, 0.22, 0.06, 0.64), k(0.9, 0.2, 0.04, 0.64), k(1, 0.24, 0.1, 0.76), k(1.35, 0.28, 0.16, 0.95, false)],
   /** Held high and away from the defender, the body between them. */
   shield: [k(0.4, 0.26, 0.2, 0.62), k(1, 0.2, 0.3, 0.8), k(1.3, 0.15, 0.32, 1.0, false)],
+  /** Tucked on the near hip at the plant, swung across the belly with the long stride, then up on the far side. */
+  across: [k(0.3, 0.26, -0.18, 0.6), k(0.7, 0.26, 0.22, 0.6), k(1, 0.26, 0.18, 0.76), k(1.35, 0.3, 0.18, 0.95, false)],
+  /** High at the chin in both hands through the hop, then up. */
+  hop: [k(0.3, 0.26, 0.08, 0.68), k(0.7, 0.22, 0.04, 0.8), k(1, 0.24, 0.08, 0.8), k(1.35, 0.3, 0.14, 0.95, false)],
+  /** Shown high on the pump fake, then brought low and across with the jab, and up the side he went. */
+  juke: [k(0.25, 0.3, 0.1, 0.62), k(0.48, 0.24, 0.04, 1.0), k(0.64, 0.3, 0.1, 0.62), k(1, 0.3, 0.28, 0.66), k(1.3, 0.32, 0.26, 0.86, false)],
 } satisfies Record<string, TrackKey[]>;
 
 /** A dunk's load: the ball swung down past the knees on the last step to throw the arms up with. */

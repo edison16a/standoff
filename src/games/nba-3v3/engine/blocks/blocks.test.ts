@@ -3,8 +3,9 @@ import type { MatchEvent } from "../events";
 import { Match, type Entry } from "../match";
 import { GREEN_MS } from "../shot-model";
 import { COURT, STEP } from "../tuning";
-import { BLOCK_HITS, type BlockHit } from "./hit";
+import { LEAD } from "./meet";
 import type { BlockPlan } from "./plan";
+import { BLOCK_PRESETS, hitFor, type BlockPreset } from "./presets";
 import { jumpStyle } from "./style";
 
 const RELEASE = GREEN_MS + 30;
@@ -30,13 +31,15 @@ function setup(seed = 3): Match {
 }
 
 /** A green jumper (not gold, which no hand can touch) with the big man going up to meet it. */
-function shootIntoBlock(m: Match, forced: BlockHit | "miss"): { events: MatchEvent[]; plan: BlockPlan | undefined; planAt: number; blockAt: number } {
-  m.forcedHit = forced;
+function shootIntoBlock(m: Match, forced: BlockPreset | null): { events: MatchEvent[]; plan: BlockPlan | undefined; planAt: number; blockAt: number; releasedAt: number } {
+  m.forcedPreset = forced;
+  m.forcedBlock = true;
   const events: MatchEvent[] = [];
   let plan: BlockPlan | undefined;
   let planAt = -1;
   let blockAt = -1;
   let jumpStart = 0;
+  let releasedAt = -1;
   for (let t = 0; t < 2.4; t += STEP) {
     if (Math.abs(t - 0.05) < STEP / 2) m.press(0, "shoot");
     if (Math.abs(t - 0.05 - RELEASE / 1000) < STEP / 2) m.release(0, RELEASE);
@@ -53,9 +56,10 @@ function shootIntoBlock(m: Match, forced: BlockHit | "miss"): { events: MatchEve
     for (const e of m.drainEvents()) {
       events.push(e);
       if (e.type === "block") blockAt = t;
+      if (e.type === "shot" && releasedAt < 0) releasedAt = t;
     }
   }
-  return { events, plan, planAt, blockAt };
+  return { events, plan, planAt, blockAt, releasedAt };
 }
 
 describe("block presets", () => {
@@ -75,30 +79,50 @@ describe("block presets", () => {
     expect(jumpStyle(m, help)).toBe("help");
   });
 
+  it("close out on a deep shooter with a running leap", () => {
+    const m = setup();
+    const [a, d] = m.athletes as [typeof m.athletes[0], typeof m.athletes[1]];
+    // Rising for a three from the top, the big man running out at him.
+    Object.assign(a, { x: 0, z: 8.4 });
+    m.press(0, "shoot");
+    Object.assign(d, { x: 0.3, z: 6.2, vx: 0, vz: 3.5 });
+    expect(jumpStyle(m, d)).toBe("closeout");
+    // Standing in front of him is no closeout.
+    Object.assign(d, { vz: 0 });
+    expect(jumpStyle(m, d)).toBe("stand");
+  });
+
   it("decide the touch before the hand gets there, and the hand meets the ball when and where it was planned", () => {
     const m = setup();
-    const r = shootIntoBlock(m, "swat");
-    expect(r.plan?.hit).toBe("swat");
+    const r = shootIntoBlock(m, null);
+    if (!r.plan || r.plan.preset === "miss") throw new Error("no touch planned");
+    expect(r.plan.hit).toBe(hitFor(r.plan.preset, false));
     const block = r.events.find((e) => e.type === "block");
-    expect(block).toMatchObject({ hit: "swat", id: 1 });
+    expect(block).toMatchObject({ hit: r.plan.hit, preset: r.plan.preset, id: 1 });
     expect(Math.abs(r.blockAt - r.planAt)).toBeLessThan(0.07);
     if (block?.type !== "block" || !r.plan) throw new Error("no block");
     const p = r.plan.point;
     expect(Math.hypot(block.at.x - p.x, block.at.y - p.y, block.at.z - p.z)).toBeLessThan(0.35);
   });
 
-  it("play every hit the block math can call, and let the ball fly off on its own", () => {
-    for (const hit of BLOCK_HITS) {
-      if (hit === "pin") continue;
-      const r = shootIntoBlock(setup(), hit);
+  it("never touch the ball on the frame it leaves the shooter's hand: the strike gets its frames", () => {
+    const r = shootIntoBlock(setup(), null);
+    expect(r.releasedAt).toBeGreaterThan(0);
+    expect(r.blockAt - r.releasedAt).toBeGreaterThanOrEqual(LEAD - 0.02);
+  });
+
+  it("play every preset with a touch the lab can ask for, and let the ball fly off on its own", () => {
+    for (const preset of BLOCK_PRESETS) {
+      if (preset === "miss") continue;
+      const r = shootIntoBlock(setup(), preset);
       const block = r.events.find((e) => e.type === "block");
-      expect(block, hit).toMatchObject({ hit, tip: hit === "tip" });
+      expect(block, preset).toMatchObject({ preset, tip: preset === "tip" });
     }
   });
 
-  it("spike it down and out of bounds", () => {
+  it("swat it into the stands, out of bounds", () => {
     const m = setup();
-    shootIntoBlock(m, "spike");
+    shootIntoBlock(m, "swat");
     const p = m.ball.pos;
     const out = Math.abs(p.x) > COURT.halfWidth || p.z < 0 || m.events.some((e) => e.type === "violation");
     expect(out || m.phase !== "live").toBe(true);
@@ -107,6 +131,7 @@ describe("block presets", () => {
   it("show a near miss as a reach that never touches it", () => {
     const m = setup();
     const r = shootIntoBlock(m, "miss");
+    m.forcedBlock = false;
     expect(r.plan).toBeDefined();
     expect(r.plan!.hit).toBeNull();
     expect(r.events.some((e) => e.type === "block")).toBe(false);

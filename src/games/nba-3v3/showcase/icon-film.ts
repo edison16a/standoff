@@ -39,7 +39,7 @@ const at = (ahead: number, side: number, y: number) => new THREE.Vector3(SPOT.x 
  * side: his face in three quarter view under the ball as it leaves his
  * fingers, and the defender in the air beside him reaching over it.
  */
-export const ICON_CAMERA = { pos: at(1.4, -1.2, 1.6), look: at(0.3, 0.15, 2.05), fov: 50 };
+export const ICON_CAMERA = { pos: at(1.4, -1.2, 1.6), look: at(0.3, 0.15, 2.12), fov: 54 };
 
 /** The lights aim at the ball between the two, keyed from the camera's side so both faces catch it. */
 const SUBJECT = at(0.3, 0.15, 2.5);
@@ -92,7 +92,7 @@ export class IconFilm {
     for (const a of m.athletes) if (a.id !== LOCKDOWN) a.blockCd = Math.max(a.blockCd, 0.5);
     if (this.once("set")) {
       m.forced = "swish";
-      m.forcedHit = "miss";
+      m.forcedPreset = "miss";
     }
     if (t > PRESS_AT && this.once("shoot")) m.press(SHOOTER, "shoot");
     // The close out: a hard step at the shooter once he has risen, then up.

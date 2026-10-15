@@ -54,6 +54,18 @@ export const LAYUP_TOPS: Record<LayupKind, AirKey[]> = {
     [0.55, { torsoZ: -0.44, torsoY: 0.18, armLSpread: 1.15, neckZ: 0.22 }],
     [1, { torsoZ: -0.3, torsoY: 0.1, neckX: -0.3 }],
   ],
+  // Off the long stride across: still turning back square to the glass, the eyes on the spot on the board.
+  stepThrough: [[0.25, { ...RISE, ...GUARD_ARM, torsoZ: 0.15, torsoY: -0.15 }], [1, { torsoZ: 0.05, torsoY: 0, neckX: -0.4, neckY: 0.12 }]],
+  // Off both feet out of the hop, balanced and square, the off arm up.
+  hop: [
+    [0.25, { legLLift: 0.5, kneeL: 1.0, legRLift: 0.6, kneeR: 1.15, footL: 0.5, footR: 0.5, hipY: 0, torsoX: 0.05, ...GUARD_ARM }],
+    [1, { neckX: -0.32, legLLift: 0.3, legRLift: 0.4, kneeL: 0.7, kneeR: 0.8 }],
+  ],
+  // Past him off the jab: leaning away, the off arm up between his hands and the ball.
+  juke: [
+    [0.25, { ...RISE, legRLift: 1.25, kneeR: 1.65, torsoX: 0.18, torsoZ: 0.22, armLRaise: 1.9, elbowL: 0.9, armLSpread: 0.5, neckX: -0.15 }],
+    [1, { torsoX: 0.05, torsoZ: 0.12, neckX: -0.35, armLRaise: 2.0 }],
+  ],
   // Up off both feet, square and strong, knees tucked together.
   power: [
     [0.25, { legLLift: 0.55, kneeL: 1.1, legRLift: 0.65, kneeR: 1.2, footL: 0.5, footR: 0.5, hipY: 0, torsoX: 0.05, armLRaise: 2.2, elbowL: 1.0 }],

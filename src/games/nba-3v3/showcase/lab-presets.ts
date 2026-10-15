@@ -4,6 +4,7 @@ import type { Forced } from "../engine/finish/select";
 import type { Match } from "../engine/match";
 import { LAYUPS, type LayupKind } from "../engine/types";
 import { dir2, type V2 } from "../engine/vec";
+import type { DunkFail } from "../engine/finish/dunk-odds";
 import { DUNK_STYLES, type DunkStyle } from "../roster";
 
 /**
@@ -13,10 +14,21 @@ import { DUNK_STYLES, type DunkStyle } from "../roster";
  * where the preset is meant to beat him, and the finish is set ahead,
  * so each can be stepped through frame by frame. Layups are the
  * Shooter's (id 0), dunks the Dunker's (id 1); the man to beat is the
- * Lockdown defender (id 3).
+ * Lockdown defender (id 3). The failed dunks (`dunkfail-stuff`,
+ * `dunkfail-clang`, `dunkfail-short`) force the fail the same way.
  */
-export type PresetScene = `layup-${LayupKind}` | `dunk-${DunkStyle}`;
-export const PRESET_SCENES: readonly PresetScene[] = [...LAYUPS.map((k) => `layup-${k}` as const), ...DUNK_STYLES.map((s) => `dunk-${s}` as const)];
+/**
+ * Two slams that go wrong only at the rim: `slam-knocked`, a rim hang
+ * judged to go down but knocked off line at the slam, which plays the
+ * clang from there; and `slam-posterAir`, a poster on a man who left
+ * his feet as the dunker took off, knocked down out of the air.
+ */
+export const SLAM_SCENES = ["slam-knocked", "slam-posterAir"] as const;
+type SlamScene = (typeof SLAM_SCENES)[number];
+
+export type PresetScene = `layup-${LayupKind}` | `dunk-${DunkStyle}` | `dunkfail-${DunkFail}` | SlamScene;
+export const DUNK_FAIL_SCENES = ["dunkfail-stuff", "dunkfail-clang", "dunkfail-short"] as const satisfies readonly PresetScene[];
+export const PRESET_SCENES: readonly PresetScene[] = [...LAYUPS.map((k) => `layup-${k}` as const), ...DUNK_STYLES.map((s) => `dunk-${s}` as const), ...DUNK_FAIL_SCENES, ...SLAM_SCENES];
 
 interface Setup {
   /** Where the driver starts and runs toward; where the man stands, or nobody. */
@@ -43,6 +55,16 @@ const LAYUP_SETUPS: Record<LayupKind, Setup> = {
   spin: { ...WING, man: { x: 3.3, z: 3.4 }, pace: 0.8 },
   shield: { ...WING, man: { x: 2.9, z: 2.75 }, pace: 0.8 },
   power: { ...FRONT, from: { x: 0.3, z: 5.0 }, pace: 0.4, at: 2.0 },
+  stepThrough: { ...WING, man: { x: 1.6, z: 1.9 }, at: 2.3 },
+  hop: { ...FRONT, man: { x: 0.35, z: 2.1 }, pace: 0.8, at: 2.3 },
+  juke: { ...FRONT, from: { x: 0.3, z: 5.4 }, man: { x: 0.15, z: 2.5 }, pace: 0.6, at: 2.3 },
+};
+
+/** The failed dunks: into the Lockdown defender waiting at the rim, a flat footed slam off the iron, and a leap from too far out. */
+const FAIL_SETUPS: Record<DunkFail, Setup & { style: DunkStyle }> = {
+  stuff: { ...FRONT, man: { x: 0.1, z: 2.0 }, at: 3.0, style: "twoHand" },
+  clang: { ...FRONT, from: { x: 0.3, z: 5.0 }, pace: 0.45, at: 2.2, style: "flush" },
+  short: { ...FRONT, at: 4.3, style: "twoHand" },
 };
 
 const DUNK_SETUPS: Partial<Record<DunkStyle, Setup>> = {
@@ -53,13 +75,20 @@ const DUNK_SETUPS: Partial<Record<DunkStyle, Setup>> = {
   jumpStop: { ...FRONT, from: { x: 0.3, z: 5.0 }, pace: 0.35, at: 2.4 },
 };
 
-export function presetSetup(scene: PresetScene): { setup: Setup; forced: Forced; driver: number } {
+export function presetSetup(scene: PresetScene): { setup: Setup; forced: Forced; driver: number; fail: DunkFail | null } {
+  if (scene === "slam-knocked") return { setup: FRONT, forced: { dunk: "rimhang" }, driver: 1, fail: null };
+  if (scene === "slam-posterAir") return { setup: DUNK_SETUPS.poster!, forced: { dunk: "poster" }, driver: 1, fail: null };
+  if (scene.startsWith("dunkfail-")) {
+    const fail = scene.slice(9) as DunkFail;
+    const setup = FAIL_SETUPS[fail];
+    return { setup, forced: { dunk: setup.style }, driver: 1, fail };
+  }
   if (scene.startsWith("layup-")) {
     const kind = scene.slice(6) as LayupKind;
-    return { setup: LAYUP_SETUPS[kind], forced: { layup: kind }, driver: 0 };
+    return { setup: LAYUP_SETUPS[kind], forced: { layup: kind }, driver: 0, fail: null };
   }
   const style = scene.slice(5) as DunkStyle;
-  return { setup: DUNK_SETUPS[style] ?? FRONT, forced: { dunk: style }, driver: 1 };
+  return { setup: DUNK_SETUPS[style] ?? FRONT, forced: { dunk: style }, driver: 1, fail: null };
 }
 
 export function isPresetScene(scene: string): scene is PresetScene {
@@ -83,11 +112,13 @@ export function setupPreset(scene: PresetScene, m: Match): void {
 }
 
 export function steerPreset(scene: PresetScene, m: Match, t: number, once: (key: string) => boolean): void {
-  const { setup, forced, driver } = presetSetup(scene);
+  const { setup, forced, driver, fail } = presetSetup(scene);
   const a = m.athletes[driver]!;
   // The man stands still in the lab, so he is put up on the pump fake by hand, as a computer defender would go.
   const act = a.action;
-  if (scene === "layup-upUnder" && act.kind === "drive" && act.t >= act.takeoff * 0.45 && once("bite")) pressJump(m, m.athletes[3]!);
+  const fake = scene === "layup-upUnder" ? 0.45 : scene === "layup-juke" ? 0.42 : null;
+  if (fake !== null && act.kind === "drive" && act.t >= act.takeoff * fake && once("bite")) pressJump(m, m.athletes[3]!);
+  if (act.kind === "drive") slamCues(scene, m, act, once);
   if (a.action.kind === "drive" || m.ball.holder !== driver) {
     a.move = { x: 0, z: 0 };
     return;
@@ -98,6 +129,21 @@ export function steerPreset(scene: PresetScene, m: Match, t: number, once: (key:
   if (t > 0.6 && near < setup.at && once("finish")) {
     m.forced = "swish";
     m.forcedFinish = forced;
+    m.forcedDunk = fail ?? "make";
     m.press(driver, "shoot");
   }
+}
+
+type Drive = Extract<Match["athletes"][number]["action"], { kind: "drive" }>;
+
+/** The two slam scenes: the man leaves his feet as the dunker takes off, or the slam is put off line. */
+function slamCues(scene: PresetScene, m: Match, act: Drive, once: (key: string) => boolean): void {
+  if (scene === "slam-posterAir" && act.t >= act.takeoff - 0.2 && once("leap")) {
+    // The lab holds every block back; this one is asked for.
+    const man = m.athletes[3]!;
+    man.blockCd = 0;
+    pressJump(m, man);
+  }
+  // Knocked off line at the slam, as a hand in the way or a foul would: the ball rims out.
+  if (scene === "slam-knocked" && act.t >= act.finish - 0.05 && once("knock")) m.forced = "rimOut";
 }

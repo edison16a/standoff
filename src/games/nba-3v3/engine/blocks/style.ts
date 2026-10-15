@@ -1,3 +1,4 @@
+import { rimDistance } from "../court";
 import type { Match } from "../match";
 import type { Athlete } from "../types";
 import { dist2, type V2 } from "../vec";
@@ -12,15 +13,17 @@ import { dist2, type V2 } from "../vec";
  * * chase: behind a man going to the rim and running the same way, the
  *   chase down from behind with one long arm.
  * * help: from the side, off another man, the weak side help leap.
+ * * closeout: running out at a man shooting from deep, a leap off one
+ *   foot that carries him on past the shooter with one hand high.
  */
-export const BLOCK_JUMPS = ["stand", "run", "chase", "help"] as const;
+export const BLOCK_JUMPS = ["stand", "run", "chase", "help", "closeout"] as const;
 export type BlockJump = (typeof BLOCK_JUMPS)[number];
 
 /** How much higher each one goes, in metres: a run up adds spring. */
-export const JUMP_LIFT: Record<BlockJump, number> = { stand: 0, run: 0.06, chase: 0.08, help: 0.04 };
+export const JUMP_LIFT: Record<BlockJump, number> = { stand: 0, run: 0.06, chase: 0.08, help: 0.04, closeout: 0.05 };
 
-/** Both hands go up for these; a chase down reaches with one. */
-export const TWO_HANDS: Record<BlockJump, boolean> = { stand: true, run: true, chase: false, help: true };
+/** A shooter at least this far out is a deep shooter, closed out on rather than met at the rim. */
+const DEEP = 5.4;
 
 /** The man a jump is at: the shooter of a shot in the air, or the ball handler. */
 export function jumpTarget(m: Match, d: Athlete): Athlete | null {
@@ -57,9 +60,19 @@ export function jumpStyle(m: Match, d: Athlete): BlockJump {
       // Behind him and running his way: the chase down.
       if (ahead < -0.25 && along > 1.2) return "chase";
     }
+    // Running out at a deep shooter as he rises: the closeout leap.
+    if (deepShot(m, t) && gap < 3.4 && (d.vx * -rx + d.vz * -rz) / Math.max(0.01, gap) > 1.5) return "closeout";
     // Another man is already on him: this one is coming over to help.
     const onBall = m.opponents(t.team).some((o) => o !== d && dist2(o, t) < 1.8);
     if (onBall && gap < 3.6 && speed > 1) return "help";
   }
   return speed > 2.2 ? "run" : "stand";
+}
+
+/** A jump shot from deep: rising with it, or just let go. */
+function deepShot(m: Match, t: Athlete): boolean {
+  const b = m.ball;
+  const flying = b.mode === "flight" && b.flightKind === "shot" && b.shot?.shooter === t.id && b.shot.kind === "jumper";
+  const rising = t.action.kind === "shoot" && !t.action.float && !t.action.free;
+  return (flying || rising) && rimDistance(t) > DEEP;
 }

@@ -30,8 +30,8 @@ describe("a game between computer players", () => {
 
   it("shows the whole game over a few seeds: dunks, blocks, steals, passes, rebounds and every kind of shot", () => {
     const seen = new Set<string>();
-    // The ball physics decides every shot, so the rarer endings, a roll round the ring, need a few more games to come up.
-    for (const seed of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]) {
+    // The ball physics decides every shot, so the rarer endings, a roll round the ring or off the glass and out, need a few more games to come up.
+    for (const seed of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]) {
       for (const e of playOut(seed).events) {
         seen.add(e.type);
         if (e.type === "shot") seen.add(`outcome:${e.outcome}`);

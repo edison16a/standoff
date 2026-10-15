@@ -1,6 +1,7 @@
 import { specOf } from "../../../engine/finish/ball-track";
 import type { Athlete } from "../../../engine/types";
 import { keyed, mirrorPatch, type Pose, type PosePatch } from "../pose";
+import { failKeys } from "./dunk-fails";
 import { DUNK_TOPS } from "./dunk-tops";
 import { gatherKeys, type Key } from "./gather";
 import { LAYUP_TOPS } from "./layup-tops";
@@ -19,7 +20,7 @@ export function finishPose(act: Drive, base: Pose): Pose {
   const keys: Key[] = gatherKeys(specOf(act).steps, g);
   const tops = act.dunk ? DUNK_TOPS[act.style ?? "flush"] : LAYUP_TOPS[act.layup ?? "finger"];
   for (const [s, patch] of tops) keys.push([g + Math.max(0.08, s) * air, patch]);
-  keys.push(...(act.dunk ? afterSlam(act) : afterLayup(act)));
+  keys.push(...(act.dunk && act.fail ? failKeys(act, act.fail) : act.dunk ? afterSlam(act) : afterLayup(act)));
   keys.sort((p, q) => p[0] - q[0]);
   return keyed(act.hand === -1 ? keys.map(([at, p]) => [at, mirrorPatch(p)] as const) : keys, act.t, base);
 }

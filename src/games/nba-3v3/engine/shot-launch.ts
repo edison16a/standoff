@@ -1,12 +1,14 @@
 import { buildOf } from "./athlete";
-import { applyHit, presetName } from "./blocks/hit";
+import { applyHit, byGlass } from "./blocks/hit";
+import { dunkPreset, hitFor } from "./blocks/presets";
 import { planBlocks } from "./blocks/plan";
 import { contestFor } from "./contest";
 import { isThree, rimDistance } from "./court";
 import { callShootingFoul } from "./foul-call";
 import { missShot } from "./rules";
 import type { Match } from "./match";
-import { freshTrack, traceShot } from "./physics/shot-watch";
+import { traceShot } from "./physics/shot-watch";
+import { letGo, shotInfo } from "./shot-info";
 import { between } from "./rng";
 import { layupEvade, layupInput } from "./finish/layup-release";
 import { newFlight } from "./shot-outcome/flight";
@@ -18,7 +20,7 @@ import { planRelease, type ReleaseInput } from "./shot-release";
 import { shotBalance } from "./shot-balance";
 import { rollShootingFoul } from "./shooting-foul";
 import { RIM } from "./tuning";
-import type { Athlete, ShotInfo } from "./types";
+import type { Athlete } from "./types";
 import { clamp, type V3 } from "./vec";
 
 /** A shot fouled in the act goes in this share as often as it would have. */
@@ -63,7 +65,7 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   const gold = grade === "gold";
   // Contact on the shot is a foul, and a fouled shot flies on and may still drop.
   // A block set up by the lab is never fouled, so the scene always plays the block.
-  const fouler = scripted || free || m.forcedHit ? null : rollShootingFoul(m, a, kind, evade);
+  const fouler = scripted || free || m.forcedPreset ? null : rollShootingFoul(m, a, kind, evade);
   if (fouler) callShootingFoul(m, fouler, a, three ? 3 : 2);
   b.shot = shotInfo(m, a, kind, grade, three ? 3 : free ? 1 : 2, c.contest, distance);
   // A scripted film, a gold release and a fouled shot fly clear of hands.
@@ -89,33 +91,14 @@ export function launchShot(m: Match, a: Athlete, kind: ShotKind, grade: Grade, h
   m.emit({ type: "shot", id: a.id, kind, three, grade, chance, outcome: plan.detail.outcome, preset: plan.preset, made: plan.detail.made, contest: c.contest });
 }
 
-/** The ball leaves the hand. */
-function letGo(m: Match, a: Athlete, at: V3): void {
-  const b = m.ball;
-  b.holder = null;
-  b.mode = "flight";
-  b.flightT = 0;
-  b.flightKind = "shot";
-  b.lastTouch = a.id;
-  b.pos = { ...at };
-  b.hand = "none";
-  b.passTo = null;
-  b.aim = null;
-}
-
-function shotInfo(m: Match, a: Athlete, kind: ShotKind, grade: Grade, points: 1 | 2 | 3, contest: number, distance: number): ShotInfo {
-  const assist = kind !== "free" && m.lastPass && m.lastPass.to === a.id ? m.lastPass.from : null;
-  const dunk = kind === "dunk" ? (a.action.kind === "drive" && a.action.style ? a.action.style : buildOf(a).dunk) : null;
-  return { shooter: a.id, team: a.team, points, kind, dunk, grade, outcome: "swish", preset: "swish", made: false, counted: false, touchedRim: kind === "dunk", assist, contest, distance, track: freshTrack(), flight: newFlight(null), rolled: [], evade: 0 };
-}
-
 /**
  * The slam: the hand, already over the ring with the ball (see
  * `finish/plan.ts`), drives it down through the net.
  * A defender who got up in time may swat it at the rim, and a slam put
- * off line by contact can come off the iron.
+ * off line by contact can come off the iron. Returns whether it went
+ * down, so the body can take a fail preset from the slam on.
  */
-export function slam(m: Match, a: Athlete, hand: V3): void {
+export function slam(m: Match, a: Athlete, hand: V3): boolean {
   const b = m.ball;
   const c = contestFor(a, m.opponents(a.team), "dunk");
   // From the hand, over the ring: the ball is pushed down from where the hand really has it.
@@ -130,18 +113,17 @@ export function slam(m: Match, a: Athlete, hand: V3): void {
   b.shot.rolled = m.opponents(a.team).map((o) => o.id);
   if (!forced && !fouler && c.blocker && m.rng() < c.blockChance) {
     const d = c.blocker;
-    const strong = buildOf(d).stats.strength >= 7;
-    // Met at the rim: a big man spikes it away now and then, anyone else swats it.
-    const hit = strong && m.rng() < 0.35 ? "spike" : "swat";
-    applyHit(m, b, hit);
+    // Met at the rim: the leap he is in says the play, and the play says what his hand does to it.
+    const preset = dunkPreset(d.action.kind === "block" ? d.action.style : "stand");
+    const hit = hitFor(preset, byGlass(top));
+    applyHit(m, b, hit, d);
     b.flightKind = "block";
     b.shot.outcome = "airball";
     b.lastTouch = c.blocker.id;
     c.blocker.box.blocks++;
-    const style = d.action.kind === "block" ? d.action.style : "stand";
-    m.emit({ type: "block", id: d.id, victim: a.id, tip: false, at: { ...top }, hit, preset: presetName(style, hit, "dunk") });
+    m.emit({ type: "block", id: d.id, victim: a.id, tip: false, at: { ...top }, hit, preset });
     missShot(m);
-    return;
+    return false;
   }
   const ctx: ShotContext = { kind: "dunk", grade: "perfect", distance: 0.5, shooting: 5, contest: c.contest, strengthEdge: c.edge, onFire: a.onFire };
   const chance = makeChance(ctx) * (fouler ? FOULED_MAKE + 0.15 : 1);
@@ -156,7 +138,8 @@ export function slam(m: Match, a: Athlete, hand: V3): void {
     m.emit({ type: "rim", power: 1 });
     const power = clamp(0.5 + buildOf(a).stats.strength * 0.05, 0.5, 1);
     m.emit({ type: "dunk", id: a.id, style: b.shot.dunk ?? buildOf(a).dunk, power });
-    return;
+    return true;
   }
   m.emit({ type: "shot", id: a.id, kind: "dunk", three: false, grade: "perfect", chance, outcome: ahead.outcome, preset: "rimOut", made: false, contest: c.contest });
+  return false;
 }

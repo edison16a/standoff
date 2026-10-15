@@ -112,10 +112,10 @@ describe("picking the finish", () => {
         { ...OPEN, open: false, threat: threat(s) }, { ...OPEN, open: false, fast: true, angle: "side" as const, threat: threat(s, { dist: 1.6 }) },
         { ...OPEN, open: false, distance: 2.3, threat: threat(s, { up: true }) }, { ...OPEN, open: false, angle: "side" as const, threat: threat(s) },
       ]),
-      { ...OPEN, canDunk: false, angle: "baseline" }, { ...OPEN, canDunk: false, speed: 2 },
+      { ...OPEN, canDunk: false, angle: "baseline" }, { ...OPEN, canDunk: false, speed: 2 }, { ...OPEN, open: false, distance: 1.6, threat: threat("rim") },
     ];
     for (const ap of ways) for (const k of spread(ap, 200).keys()) seen.add(k);
-    expect([...seen].filter((k) => k.startsWith("layup:")).length).toBe(11);
+    expect([...seen].filter((k) => k.startsWith("layup:")).length).toBe(14);
     expect([...seen].filter((k) => k.startsWith("dunk:")).length).toBeGreaterThanOrEqual(13);
   });
 });

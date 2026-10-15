@@ -1,7 +1,8 @@
 import type { BuildSpec } from "../../builds";
 import type { Athlete } from "../../engine/types";
 import { landPose, passPose, shootPose, stealPose } from "./actions";
-import { blockPose } from "./block-poses";
+import type { BlockPreset } from "../../engine/blocks/presets";
+import { blockLandPose, blockPose } from "./block-poses";
 import type { AthleteScene } from "./base";
 import { celebratePose, dejectedPose } from "./celebrations";
 import { floaterPose } from "./floater-pose";
@@ -32,6 +33,8 @@ export interface ActionMemory {
   hardLand: boolean;
   /** Which way a stumble threw him, from his speed as it began: + to his left. */
   shove: number;
+  /** The block play he is in or just came down from, for its landing; `left` when it was struck with the left hand. */
+  block: { preset: BlockPreset; left: boolean } | null;
 }
 
 /**
@@ -42,6 +45,9 @@ export interface ActionMemory {
  */
 export function actionPose(a: Athlete, c: BuildSpec, s: AthleteScene, base: Pose, m: ActionMemory): { pose: Pose; rate: number } {
   const act = a.action;
+  // Only a block's own landing plays its landing preset.
+  if (act.kind !== "block" && act.kind !== "none") m.block = null;
+  const speed = Math.hypot(a.vx, a.vz);
   switch (act.kind) {
     case "shoot":
       if (act.released && m.releasedAt === null) m.releasedAt = act.t;
@@ -55,9 +61,13 @@ export function actionPose(a: Athlete, c: BuildSpec, s: AthleteScene, base: Pose
     }
     case "pass":
       return { pose: passPose(act.t, base), rate: 30 };
-    case "block":
+    case "block": {
       // A help leap leans the way he is going: his speed to his left, in his own frame.
-      return { pose: blockPose(act, base, a.vx * Math.cos(a.yaw) - a.vz * Math.sin(a.yaw)), rate: 30 };
+      const left = a.vx * Math.cos(a.yaw) - a.vz * Math.sin(a.yaw);
+      const plan = act.plan;
+      m.block = plan ? { preset: plan.preset, left: plan.preset === "help" ? left < 0 : plan.hand === "L" } : null;
+      return { pose: blockPose(act, base, left, speed), rate: 30 };
+    }
     case "steal":
       return { pose: stealPose(act.t, base), rate: 30 };
     case "move":
@@ -75,6 +85,11 @@ export function actionPose(a: Athlete, c: BuildSpec, s: AthleteScene, base: Pose
       const part = s.ceremony;
       if (part) pose = part.role === "captain" ? captainPose(part.t) : part.role === "mate" ? matePose(part.t, part.phase) : dejectedPose(m.time);
       else if (s.winner !== null) pose = s.winner === a.team ? celebratePose(c.celebration, m.time) : dejectedPose(m.time);
+      else if (m.block && m.time - m.landAt < 1) {
+        // Down out of a block the arms come straight down to the sides, not in a slow sweep across the man in front.
+        const land = blockLandPose(m.block.preset, m.block.left, m.time - m.landAt, speed, base);
+        if (land) return { pose: land, rate: 18 };
+      }
       else if (m.time - m.landAt < 0.4) pose = landPose(m.time - m.landAt, m.hardLand, base);
       // Coming out of an action the limbs settle gently instead of snapping back to the run.
       return { pose, rate: 7 + 9 * ease((m.time - m.endedAt) / RECOVER) };

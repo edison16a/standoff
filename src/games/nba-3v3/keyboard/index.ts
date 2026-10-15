@@ -24,6 +24,14 @@ export const keyboard: KeyboardBinding = {
       ],
     },
     {
+      title: "At the rim",
+      rows: [
+        { action: "Layup: hold Shoot", keys: ["Space", "J"] },
+        { action: "Dunk: tap Shoot twice, a step or two out", keys: ["Space", "J"] },
+        { action: "Pick the layup: aim while you hold", keys: [["W", "A", "S", "D"]] },
+      ],
+    },
+    {
       title: "Without it",
       rows: [
         { action: "Guard: hold", keys: ["F", "Right click"] },

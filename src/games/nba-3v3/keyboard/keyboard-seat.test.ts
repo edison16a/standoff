@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import type { KeyboardContext } from "@/platform/keyboard";
 import type { Payload } from "@/platform/protocol";
 import type { CourtState, PhoneState } from "../protocol";
-import { buttonFor, JOG, NbaKeyboardSeat } from "./keyboard-seat";
+import { buttonFor, JOG, meterRuns, NbaKeyboardSeat } from "./keyboard-seat";
 
 function court(over: Partial<CourtState> = {}): CourtState {
   return {
-    team: 0, score: [0, 0], shotClock: 12, hasBall: true, attacking: true, holder: "Me", mustClear: false, canSteal: false, stealReach: false,
+    team: 0, score: [0, 0], shotClock: 12, hasBall: true, rim: false, dunk: false, attacking: true, holder: "Me", mustClear: false, canSteal: false, stealReach: false,
     defending: false, guard: "off", freeThrow: null, meter: { fullMs: 820, greenMs: 656, halfMs: 60, goldMs: 12 }, onFire: false, checking: false, countdown: null,
     ...over,
   };
@@ -37,6 +37,12 @@ describe("keys to phone buttons", () => {
     expect(buttonFor("shoot", d)).toBe("pass");
     expect(buttonFor("pass", d)).toBe("defend");
     expect(buttonFor("skill", d)).toBeNull();
+  });
+
+  it("runs the meter for a jumper, and not at the rim where Shoot is a finish", () => {
+    expect(meterRuns(court())).toBe(true);
+    expect(meterRuns(court({ rim: true }))).toBe(false);
+    expect(buttonFor("shoot", court({ rim: true }))).toBe("shoot");
   });
 
   it("only shoots at the line once set", () => {

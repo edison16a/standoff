@@ -33,10 +33,10 @@ export function buttonFor(intent: Intent, court: CourtState | null): Button | nu
   return intent === "pass" ? "pass" : intent === "shoot" || intent === "guard" ? "defend" : null;
 }
 
-/** Whether Shoot pressed now runs the meter, exactly as the phone decides it. */
+/** Whether Shoot pressed now runs the meter, exactly as the phone decides it: never at the rim, where it is a finish. */
 export function meterRuns(court: CourtState | null): boolean {
   if (!court) return false;
-  return court.freeThrow ? court.freeThrow.ready : !court.defending && court.hasBall;
+  return court.freeThrow ? court.freeThrow.ready : !court.defending && court.hasBall && !court.rim;
 }
 
 /**

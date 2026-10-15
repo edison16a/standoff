@@ -14,6 +14,18 @@ const clamp01 = (u: number) => Math.min(1, Math.max(0, u));
 /** How far a euro step's first step goes the other way, and how wide a spin swings round the man. */
 const EURO_OUT = 0.42;
 const SPIN_OUT = 0.22;
+/** How far a juke's shoulders sell the other way on the fake, and how much a step through holds back for its plant. */
+const JUKE_SELL = 0.14;
+const THROUGH_PLANT = 0.08;
+/** How high a hop step's hop goes, and where in the gather it is off the floor. */
+const HOP = { height: 0.2, from: 0.36, to: 0.72 } as const;
+
+/** Feet off the floor during a gather, metres: only a hop step leaves it before the takeoff. */
+export function gatherLift(steps: Steps, u: number): number {
+  if (steps !== "hop" || u <= HOP.from || u >= HOP.to) return 0;
+  const s = (u - HOP.from) / (HOP.to - HOP.from);
+  return HOP.height * 4 * s * (1 - s);
+}
 
 /** `u` is 0 to 1 through the gather. */
 export function gatherPath(steps: Steps, u: number): { along: number; lat: number } {
@@ -27,6 +39,14 @@ export function gatherPath(steps: Steps, u: number): { along: number; lat: numbe
       if (k < 0.42) return { along: 0.5 * easeOut(k / 0.42), lat: 0 };
       if (k < 0.6) return { along: 0.5, lat: 0 };
       return { along: 0.5 + 0.5 * smooth((k - 0.6) / 0.4), lat: 0 };
+    case "juke":
+      // Into the stop, the shoulders sold the other way on the fake, then the jab out past him.
+      if (k < 0.38) return { along: 0.45 * easeOut(k / 0.38), lat: 0 };
+      if (k < 0.58) return { along: 0.45, lat: -JUKE_SELL * Math.sin(Math.PI * ((k - 0.38) / 0.2)) };
+      return { along: 0.45 + 0.55 * smooth((k - 0.58) / 0.42), lat: 0 };
+    case "through":
+      // A short braking step to plant, then the long stride across carries the rest.
+      return { along: glide(k) - THROUGH_PLANT * Math.sin(Math.PI * k) ** 2, lat: 0 };
     case "spin":
       // Round the man in a small arc while turning.
       return { along: glide(k), lat: -SPIN_OUT * Math.sin(Math.PI * k) };
@@ -50,6 +70,6 @@ function glide(k: number): number {
  */
 export function floorShare(steps: Steps, gather: number, air: number): number {
   if (steps === "stop") return gather / (gather + 0.25 * air);
-  if (steps === "fake") return (gather * 0.7) / (gather * 0.7 + air * 0.8);
+  if (steps === "fake" || steps === "juke") return (gather * 0.7) / (gather * 0.7 + air * 0.8);
   return (1.5 * gather) / (1.5 * gather + air);
 }

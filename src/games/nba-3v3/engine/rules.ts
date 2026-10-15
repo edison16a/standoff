@@ -3,6 +3,7 @@ import { startDead } from "./check-up";
 import { settleShootingFoul } from "./foul-call";
 import { beyondArc, outOfBounds } from "./court";
 import { POCKET } from "./dribble-ball";
+import { shotInMotion } from "./shot-motion";
 import type { Match } from "./match";
 import { RULES } from "./tuning";
 import type { Athlete, TeamId } from "./types";
@@ -164,7 +165,8 @@ export function updateClock(m: Match, dt: number): void {
       m.clockWarned = true;
       m.emit({ type: "clockWarning" });
     }
-    if (m.shotClock <= 0) return turnover(m, m.offence === 0 ? 1 : 0, "clock");
+    // A shot already in its motion beats the clock: it waits for the ball to leave the hands (see `shot-motion.ts`).
+    if (m.shotClock <= 0 && !(holder && shotInMotion(m, holder))) return turnover(m, m.offence === 0 ? 1 : 0, "clock");
   }
   if (b.mode === "loose" && b.pos.y < 1.4 && outOfBounds(b.pos)) {
     const last = b.lastTouch === null ? null : m.athletes[b.lastTouch];

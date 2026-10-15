@@ -31,7 +31,10 @@ export function poseAthletes(m: Match, views: readonly AthleteView[], ceremony: 
     const contest = guarding && onBall?.action.kind === "shoot" && !onBall.action.free ? Math.min(1, onBall.action.t / 0.3) : 0;
     // The ball's side of a guarding defender, along his left: (cos yaw, -sin yaw).
     const ballSide = guarding ? Math.max(-1, Math.min(1, ((b.pos.x - a.x) * Math.cos(a.yaw) - (b.pos.z - a.z) * Math.sin(a.yaw)) / 0.3)) : 0;
-    view.update(a, { holding, chest, receiving: Math.max(0, incoming), guarding, ballSide, pressure: holding ? pressure : 0, ...line, winner, ceremony: role, ball: holding || incoming > 0 ? b : null, flight: a.action.kind === "block" && b.mode === "flight" ? b : null, contest }, dt);
+    // Up for a block, he sees the ball in the air, or in the hands of a man rising to shoot it, to get a hand up at.
+    const rising = !!onBall && onBall.team !== a.team && onBall.action.kind === "shoot";
+    const flight = a.action.kind === "block" && (b.mode === "flight" || rising) ? b : null;
+    view.update(a, { holding, chest, receiving: Math.max(0, incoming), guarding, ballSide, pressure: holding ? pressure : 0, ...line, winner, ceremony: role, ball: holding || incoming > 0 ? b : null, flight, contest }, dt);
   }
   return chest;
 }

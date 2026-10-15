@@ -13,6 +13,9 @@ export interface BodyHit {
   intoB: number;
 }
 
+/** The most two overlapping bodies are pushed apart in one step, metres (about 5 m/s at 60 steps a second). */
+export const MAX_PUSH = 0.08;
+
 /**
  * Two bodies that overlap: pushed apart by weight, and if they were
  * running into each other, a real exchange of momentum along the line
@@ -31,8 +34,9 @@ export function collide(a: Athlete, b: Athlete, ra: number, rb: number): BodyHit
   const mb = contactMass(b);
   const nx = dx / d;
   const nz = dz / d;
-  // The lighter body gives the ground.
-  const overlap = min - d;
+  // The lighter body gives the ground, a few centimetres a step at most: a dunker landing on a man under
+  // the rim eases off him over a few frames instead of both popping apart in one.
+  const overlap = Math.min(min - d, MAX_PUSH);
   const shareA = mb / (ma + mb);
   a.x -= nx * overlap * shareA;
   a.z -= nz * overlap * shareA;

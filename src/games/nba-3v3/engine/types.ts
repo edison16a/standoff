@@ -6,6 +6,7 @@ import type { ShotFlight } from "./shot-outcome/flight";
 import type { BlockPlan } from "./blocks/plan";
 import type { BlockJump } from "./blocks/style";
 import type { DribbleStyle } from "./dribble-style";
+import type { DunkFail } from "./finish/dunk-odds";
 import type { ShakeReact } from "./shake";
 import type { ShotPreset } from "./shot-outcome/presets";
 import type { V2, V3 } from "./vec";
@@ -23,10 +24,12 @@ export type DribbleMove = (typeof DRIBBLE_MOVES)[number];
 /**
  * The layups, each a hand made preset (see `finish/layups.ts`): a finger
  * roll, a reverse, a euro step, an up and under, a scoop, a teardrop,
- * high off the glass, off the wrong foot, a spin, a body shield and a
- * power layup off a jump stop.
+ * high off the glass, off the wrong foot, a spin, a body shield, a
+ * power layup off a jump stop, a step through under the rim to the far
+ * side, a hop step onto both feet, and a juke: a pump fake and a jab
+ * step round the man.
  */
-export const LAYUPS = ["finger", "reverse", "euro", "upUnder", "scoop", "teardrop", "glass", "wrongFoot", "spin", "shield", "power"] as const;
+export const LAYUPS = ["finger", "reverse", "euro", "upUnder", "scoop", "teardrop", "glass", "wrongFoot", "spin", "shield", "power", "stepThrough", "hop", "juke"] as const;
 export type LayupKind = (typeof LAYUPS)[number];
 
 /** The small gestures after a big basket: patting down a smaller man, the sleep sign, the shush, the flex. */
@@ -57,11 +60,14 @@ export type Action =
    * spin goes. The ball rides the hands from `pick` (where it was when
    * the gather began) to `release`, the hand at the rim (see
    * `finish/ball-track.ts`). `hangY` is the body's height hanging on the rim.
+   * `fail` is how a dunk that will not go down fails, decided before the
+   * gather (see `finish/dunk-odds.ts`), and `stopper` the man who stuffs it.
    */
   | {
       kind: "drive"; t: number; dunk: boolean; style: DunkStyle | null; layup: LayupKind | null; from: V2; to: V2;
       takeoff: number; finish: number; rimHang: number; land: number; peak: number; released: boolean;
       hand: 1 | -1; side: 1 | -1; pick: V3; release: V3; hangY: number; baseYaw: number;
+      fail?: DunkFail | null; stopper?: number | null;
     }
   | { kind: "pass"; t: number }
   /**
@@ -124,6 +130,8 @@ export interface Athlete {
   vz: number;
   /** Feet off the floor, in metres. */
   y: number;
+  /** Falling speed, metres a second, of a body knocked out of the action that held it up (see `body/settle.ts`). */
+  fall?: number;
   /** Facing: 0 looks toward the camera, pi toward the hoop. */
   yaw: number;
   /** Where the player is steered, in court space, length up to 1: the stick, or Guard, or the computer. */

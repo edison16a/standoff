@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { RIM_SPOT } from "../engine/court";
+import { canDunk } from "../engine/finish/plan";
 import { callFoul } from "../engine/foul-call";
 import { Match, type Entry } from "../engine/match";
 import { STEP } from "../engine/tuning";
@@ -33,6 +35,26 @@ describe("what the phones are told", () => {
     // The ball handler's own third button is Dribble, never Steal.
     const m = live(0.9);
     expect(courtState(m, 0, PLAYERS)).toMatchObject({ hasBall: true, canSteal: false });
+  });
+
+  it("tells the ball handler when Shoot is a finish at the rim, and never the defence", () => {
+    const m = live(4);
+    expect(courtState(m, 0, PLAYERS).rim).toBe(false);
+    Object.assign(m.athletes[0]!, { x: 0.3, z: 3.8, vx: 0, vz: -4 });
+    expect(courtState(m, 0, PLAYERS).rim).toBe(true);
+    expect(courtState(m, 1, PLAYERS).rim).toBe(false);
+  });
+
+  it("offers the dunk only where a double tap can still reach the rim", () => {
+    const m = live(4);
+    const a = m.athletes[0]!;
+    // Close in at a run: hold for the layup or tap twice to dunk.
+    Object.assign(a, { x: RIM_SPOT.x, z: RIM_SPOT.z + 2.4, vx: 0, vz: -5 });
+    expect(courtState(m, 0, PLAYERS)).toMatchObject({ rim: true, dunk: true });
+    expect(canDunk(a)).toBe(true);
+    // Far out in the floater band the finish is on, but a dunk from here only comes up short.
+    Object.assign(a, { z: RIM_SPOT.z + 5, vz: -6 });
+    expect(courtState(m, 0, PLAYERS)).toMatchObject({ rim: true, dunk: false });
   });
 
   it("puts the fouled player on the free throw meter once set at the line", () => {

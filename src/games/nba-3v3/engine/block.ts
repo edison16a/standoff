@@ -1,7 +1,8 @@
 import { buildOf } from "./athlete";
 import { hangTime } from "./body/jump";
 import type { Match } from "./match";
-import { JUMP_LIFT, type BlockJump } from "./blocks/style";
+import { closeoutLeap } from "./blocks/closeout";
+import { JUMP_LIFT, jumpTarget, type BlockJump } from "./blocks/style";
 import { timingAt } from "./blocks/plan";
 import { DEFENCE, JUMP } from "./tuning";
 import type { Action, Athlete } from "./types";
@@ -18,11 +19,16 @@ export type BlockStage = "gather" | "rise" | "fall" | "done";
  */
 export function startBlock(a: Athlete, style: BlockJump = "stand"): void {
   if (a.blockCd > 0) return;
-  const s = buildOf(a).stats;
-  const peak = 0.42 + s.speed * 0.012 + s.strength * 0.008 + JUMP_LIFT[style];
+  const peak = blockPeak(a, style);
   // Real gravity: the time up there follows from how high the legs send him.
   a.action = { kind: "block", t: 0, peak, gather: JUMP.blockGather, air: hangTime(peak), style };
   a.blockCd = DEFENCE.blockCooldown;
+}
+
+/** How high a block jump of this style takes him, metres. */
+export function blockPeak(a: Athlete, style: BlockJump): number {
+  const s = buildOf(a).stats;
+  return 0.42 + s.speed * 0.012 + s.strength * 0.008 + JUMP_LIFT[style];
 }
 
 /** The stage of the jump and how far through it, 0 to 1. The animation reads this too. */
@@ -46,7 +52,10 @@ export function blockTiming(a: Athlete): number {
 export function updateBlock(m: Match, a: Athlete, dt: number): void {
   const act = a.action;
   if (act.kind !== "block") return;
+  const before = act.t;
   act.t += dt;
+  // A closeout sets its flight as the feet leave the floor, after the last chopped steps of the run.
+  if (act.style === "closeout" && before < act.gather && act.t >= act.gather) closeoutLeap(a, jumpTarget(m, a));
   const s = (act.t - act.gather) / act.air;
   a.y = s > 0 && s < 1 ? act.peak * 4 * s * (1 - s) : 0;
   if (s < 1) return;

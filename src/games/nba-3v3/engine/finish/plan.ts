@@ -10,7 +10,8 @@ import { LAYUP_SPEC } from "./layups";
 import { ARM_USE, armLength, shoulderAt, shoulderHeight } from "./reach";
 import type { FinishChoice } from "./select";
 import type { FinishSpec, LayupSpec } from "./spec";
-import { finishSide, underSpot } from "./spots";
+import type { DunkFail } from "./dunk-odds";
+import { finishSide, throughSpot, underSpot } from "./spots";
 
 type Drive = Extract<Athlete["action"], { kind: "drive" }>;
 
@@ -22,10 +23,17 @@ export const MAX_DUNK_PEAK = 1.3;
 const SLAM_UP = 0.16;
 const SLAM_IN = 0.1;
 const PALM_ON_TOP = 0.09;
+/** A dunk that comes up short: takes off this far out, gets this much less high, and meets the ring this far out and under. */
+const SHORT = { stop: [0.95, 1.4], by: 0.2, out: 0.12, under: 0.08 } as const;
 
 /** Whether this body can get a hand with the ball over the ring at all. */
 export function canDunk(a: Athlete): boolean {
-  return dunkPeak(a, 0.36, 1) <= MAX_DUNK_PEAK;
+  return dunkHeadroom(a) >= 0;
+}
+
+/** How much higher than he needs to this body can get, metres: the room he dunks with. */
+export function dunkHeadroom(a: Athlete): number {
+  return MAX_DUNK_PEAK - dunkPeak(a, 0.36, 1);
 }
 
 /**
@@ -46,11 +54,11 @@ function dunkPeak(a: Athlete, stop: number, hands: 1 | 2): number {
  * floor and where they are at the release, the timing, the jump, the
  * point at the rim the hand takes the ball to, and a hang on the rim.
  */
-export function planFinish(rng: Rng, a: Athlete, pick: FinishChoice, ball: V3): Drive {
+export function planFinish(rng: Rng, a: Athlete, pick: FinishChoice, ball: V3, fail: DunkFail | null = null): Drive {
   const spec: FinishSpec = pick.dunk ? DUNK_SPEC[pick.style ?? "flush"] : LAYUP_SPEC[pick.layup ?? "finger"];
   const d = rimDistance(a);
   const from = { x: a.x, z: a.z };
-  const to = finishSpot(a, pick, spec, d);
+  const to = finishSpot(a, pick, spec, d, fail);
   // A longer run in makes for a longer gather.
   const run = dist2(from, to);
   // A longer run in makes for a longer gather, and never steps faster than a sprint: a quick preset from far out takes its time.
@@ -64,10 +72,17 @@ export function planFinish(rng: Rng, a: Athlete, pick: FinishChoice, ball: V3): 
   let rimHang = 0;
   if (pick.dunk) {
     const ds = DUNK_SPEC[pick.style ?? "flush"];
-    peak = clamp(dunkPeak(a, dist2(to, RIM_SPOT), ds.hands), 0.5, MAX_DUNK_PEAK);
+    const need = dunkPeak(a, dist2(to, RIM_SPOT), ds.hands);
     const back = dir2(RIM_SPOT, to);
+    peak = clamp(need, 0.5, MAX_DUNK_PEAK);
     release = { x: RIM.x + back.x * SLAM_IN, y: RIM.y + SLAM_UP, z: RIM.z + back.z * SLAM_IN };
-    rimHang = pick.style === "rimhang" ? 0.55 : rng() < ds.hang ? between(rng, 0.32, 0.48) : 0;
+    if (fail === "short") {
+      // Up from too far out, or not high enough: the ball only gets to the front of the ring, from under it.
+      peak = clamp(need - SHORT.by, 0.4, MAX_DUNK_PEAK - SHORT.by);
+      release = { x: RIM.x + back.x * (RIM.radius + SHORT.out), y: RIM.y - SHORT.under, z: RIM.z + back.z * (RIM.radius + SHORT.out) };
+    }
+    // A dunk that fails never hangs on the rim.
+    rimHang = fail ? 0 : pick.style === "rimhang" ? 0.55 : rng() < ds.hang ? between(rng, 0.32, 0.48) : 0;
     // Hanging, the arms are straight up holding the front of the ring.
     hangY = Math.min(peak - 0.05, RIM.y + 0.04 - shoulderHeight(a) - armLength(a) * 0.97);
   } else {
@@ -79,16 +94,23 @@ export function planFinish(rng: Rng, a: Athlete, pick: FinishChoice, ball: V3): 
   return {
     kind: "drive", t: 0, dunk: pick.dunk, style: pick.style, layup: pick.layup, from, to, ...timing,
     land: landTime(timing), released: false, hand: pick.hand, side: pick.side, pick: { ...ball }, release, baseYaw,
+    fail: pick.dunk ? fail : null, stopper: null,
   };
 }
 
 /** Where the body is as the ball goes: in front of the rim on the drive's side, stepped off to the side for some. */
-function finishSpot(a: Athlete, pick: FinishChoice, spec: FinishSpec, d: number): V2 {
-  if (pick.layup === "reverse") return underSpot(a);
+function finishSpot(a: Athlete, pick: FinishChoice, spec: FinishSpec, d: number, fail: DunkFail | null): V2 {
+  if (pick.layup === "reverse") return underSpot(a, pick.cross);
+  if (pick.layup === "stepThrough") {
+    const spot = throughSpot(a, pick.side);
+    return { x: spot.x, z: Math.max(spot.z, BOARD.face + 0.4) };
+  }
   const away = finishSide(a, d);
   // Never back the way he came: a driver already in close finishes a little in from where he is.
   let stop = Math.min(spec.stop, Math.max(pick.dunk ? 0.34 : 0.55, d - 0.35));
   if (pick.layup === "teardrop") stop = clamp(d - 0.45, spec.stop, 2.8);
+  // A dunk that comes up short left the floor well out, but never steps back out to do it.
+  if (pick.dunk && fail === "short") stop = clamp(d - 0.35, Math.min(SHORT.stop[0], d), SHORT.stop[1]);
   // Off the line toward `side`: the right of the run in (along -away) is (away.z, -away.x).
   const shift = spec.shift * pick.side;
   const spot = { x: RIM.x + away.x * stop + away.z * shift, z: RIM.z + away.z * stop - away.x * shift };
