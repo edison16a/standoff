@@ -87,6 +87,12 @@ export class FootballPhone {
     this.send({ kind: "call", call });
   }
 
+  /** On the page of plays: pick one by its place, deal a fresh page, or go back to the call. */
+  playbook(action: number | "redeal" | "back"): void {
+    this.click();
+    this.send({ kind: "play", action });
+  }
+
   /** A tap on the kick button: the reading drawn on this phone at that instant goes to the host, and the next meter starts. */
   kick(): void {
     const tap = tapMeter(store.getState().kick, performance.now());

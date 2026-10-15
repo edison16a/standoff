@@ -4,6 +4,9 @@ import type { Match } from "./match";
 import { canThrow } from "./passing";
 import { canRun, qbRunning } from "./qb-run";
 import { canPitch } from "./run-play";
+import { pageCards } from "./playbook/card";
+import { huddleLeft } from "./playbook/huddle";
+import { accuracyOf, pocketPressure } from "./pocket";
 import { RULES } from "./tuning";
 import type { ConversionCall, Phase, PlayCall, Role, TeamId } from "./types";
 
@@ -12,7 +15,7 @@ import type { ConversionCall, Phase, PlayCall, Role, TeamId } from "./types";
  * throw stick, juke, run and hike; runners run, dive and juke; the defence
  * moves, rushes, tackles and guards; the kicker gets the two meters.
  */
-export type Pad = "qb" | "runner" | "defense" | "kicker" | "choose" | "wait";
+export type Pad = "qb" | "runner" | "defense" | "kicker" | "choose" | "playbook" | "wait";
 
 export interface SeatStatus {
   athlete: number;
@@ -23,6 +26,10 @@ export interface SeatStatus {
   pad: Pad;
   /** The pick to make and the seconds left to make it, when it is this phone's pick. */
   choose: { options: readonly (PlayCall | ConversionCall)[]; left: number } | null;
+  /** The page of plays a QB picks from after Throw or Run, drawn for his phone (playbook/card.ts). */
+  book: (ReturnType<typeof pageCards> & { call: "throw" | "run"; left: number }) | null;
+  /** His throwing accuracy under the rush now, 1 to POCKET.floor, while the QB can still throw (pocket.ts). */
+  aim: number | null;
   /** Seconds left in the hike window, for the QB. */
   hikeLeft: number | null;
   /** The meter to stop and how long it has run, so the phone can draw it in step with the match. */
@@ -49,7 +56,7 @@ function padFor(m: Match, id: number, onOffense: boolean, withBall: boolean): Pa
   const k = m.kick;
   if (m.phase === "kick") return k && k.kicker === id && (k.stage === "aim" || k.stage === "power") ? "kicker" : "wait";
   // The defence never picks, so its pad stays up while the offense calls the play.
-  if (m.phase === "choose" || m.phase === "convert") return !onOffense ? "defense" : a.role === "qb" ? "choose" : "wait";
+  if (m.phase === "choose" || m.phase === "convert") return !onOffense ? "defense" : a.role !== "qb" ? "wait" : m.huddle ? "playbook" : "choose";
   if (m.phase !== "presnap" && m.phase !== "live") return "wait";
   // A QB who pressed Run gets the runner's pad: the stick, Juke and Dive.
   if (withBall && (a.role !== "qb" || qbRunning(m))) return "runner";
@@ -70,6 +77,8 @@ export function seatStatus(m: Match, seat: number): SeatStatus | null {
   return {
     athlete: a.id, team: a.team, role: a.role, onOffense, phase: m.phase, pad,
     choose: pad === "choose" ? { options, left: Math.max(0, RULES.chooseSeconds - m.phaseT) } : null,
+    book: pad === "playbook" && m.huddle ? { call: m.huddle.call, left: huddleLeft(m.huddle, m.time), ...pageCards(m, m.huddle) } : null,
+    aim: pad === "qb" && (m.phase === "presnap" || canThrow(m, a)) ? accuracyOf(m.phase === "presnap" ? 0 : pocketPressure(m, a)) : null,
     hikeLeft: m.phase === "presnap" && pad === "qb" ? Math.max(0, RULES.hikeSeconds - m.phaseT) : null,
     meter: pad === "kicker" && k && (k.stage === "aim" || k.stage === "power") ? { stage: k.stage, t: k.t } : null,
     withBall,

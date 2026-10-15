@@ -66,6 +66,12 @@ export class MatchDriver {
     if (id !== null && !this.held) this.match.choose(id, call);
   }
 
+  /** The QB on his page of plays: pick one by its place, deal a fresh page, or go back to the call. */
+  playbook(seat: number, action: number | "redeal" | "back"): void {
+    const id = this.id(seat);
+    if (id !== null && !this.held) this.match.playbook(id, action);
+  }
+
   /** A tap on the kick meter, with the phone's own reading. */
   kick(seat: number, value: number): void {
     const id = this.id(seat);

@@ -77,6 +77,9 @@ export function routePhone(t: InputTarget, seat: number, message: PhoneMessage):
     case "call":
       if (!t.vote(seat, true)) d?.call(seat, message.call);
       return true;
+    case "play":
+      if (!t.vote(seat, true)) d?.playbook(seat, message.action);
+      return true;
     case "kick":
       if (!t.vote(seat, true)) d?.kick(seat, message.value);
       return true;

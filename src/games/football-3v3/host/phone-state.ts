@@ -5,6 +5,7 @@ import type { Athlete } from "../engine/types";
 import type { PhoneState, RoomPhase, StatLine } from "../protocol";
 import type { Callout } from "./host-store";
 import type { SeatState } from "./lobby";
+import { bookFor } from "./phone-book";
 import type { SkipVotes } from "./replay/skip";
 
 export interface PhoneContext {
@@ -68,6 +69,9 @@ export function phoneState(c: PhoneContext, seatNo: number): PhoneState {
     switched: !!a && !!body && body.id !== a.id,
     pad: padFor(m, status, replay),
     choose: status?.choose && !replay ? { options: [...status.choose.options], left: Math.ceil(status.choose.left) } : null,
+    book: replay ? null : bookFor(status?.book ?? null),
+    // Twentieths: smooth enough for the bar, coarse enough not to flood the link.
+    aim: status?.aim != null && !replay ? Math.round(status.aim * 20) / 20 : null,
     hikeLeft: status?.hikeLeft != null && !replay ? Math.ceil(status.hikeLeft) : null,
     meter: status?.meter && !replay ? { stage: status.meter.stage, fieldGoal: kick?.fieldGoal ?? true } : null,
     withBall: status?.withBall ?? false,

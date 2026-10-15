@@ -29,7 +29,7 @@ export const keyboard: KeyboardBinding = {
       title: "Defence",
       rows: [
         { action: "Tackle", keys: ["F", "Space"] },
-        { action: "Rush", keys: ["Shift"] },
+        { action: "Rush, and break free when held", keys: ["Shift"] },
         { action: "Guard, held", keys: ["G"] },
       ],
     },
@@ -37,6 +37,9 @@ export const keyboard: KeyboardBinding = {
       title: "Calls and kicks",
       rows: [
         { action: "Throw, Run, Kick", keys: [["1", "2", "3"]] },
+        { action: "Pick a play off the page", keys: [["1", "2", "3", "4", "5", "6"], "Space"] },
+        { action: "Deal six new plays", keys: ["R"] },
+        { action: "Back to Throw, Run, Kick", keys: ["B"] },
         { action: "After a touchdown: kick, go for two", keys: [["1", "2"]] },
         { action: "Stop the kick meter", keys: ["Space"] },
         { action: "Skip the replay", keys: ["Space"] },

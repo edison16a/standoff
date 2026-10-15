@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { peopleMatch, run, snap } from "../engine/test-helpers";
+import { callPlay, peopleMatch, run, snap } from "../engine/test-helpers";
 import { phoneStateSchema } from "../protocol";
 import { phoneState, type PhoneContext } from "./phone-state";
 import { SkipVotes } from "./replay/skip";
@@ -16,7 +16,7 @@ describe("a phone's screen state", () => {
     const call = phoneState(context({ phase: m.phase, match: m }), 0);
     expect(call.pad).toBe("choose");
     expect(call.choose?.options).toEqual(["throw", "run", "kick"]);
-    m.choose(m.bySeat(0)!.id, "throw");
+    callPlay(m, m.bySeat(0)!.id, "throw");
     const hike = phoneState(context({ phase: m.phase, match: m }), 0);
     expect(hike.pad).toBe("qb");
     expect(hike.hikeLeft).toBe(5);
