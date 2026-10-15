@@ -44,7 +44,7 @@ export class AthleteView {
   private phase = 0;
   private lastY = 0;
   private lastKind = "none";
-  private readonly mem: ActionMemory = { time: 0, releasedAt: null, endedAt: -9, landAt: -9, hardLand: false, shove: 1 };
+  private readonly mem: ActionMemory = { time: 0, releasedAt: null, endedAt: -9, landAt: -9, hardLand: false, shove: 1, block: null };
   private readonly placement: Placement;
   private readonly seed: number;
   private readonly lastV = new THREE.Vector2();
