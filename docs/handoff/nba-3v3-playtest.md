@@ -67,7 +67,22 @@ Known gaps from step 2:
 * Bots never pick a closeout leap on purpose; they get one when their run at a deep shooter happens to be fast enough.
 * Sounds and the phone still do not tell the presets apart.
 
+## Step 3: polish, odds and media
+
+Done:
+
+* **A dunk called under the ring read as too far out.** A double tap is read a beat after the first press while the player keeps running, so a dunk tapped at 1.6 m at a sprint is read about 0.6 m from the rim. The odds then used the approach's distance gate (`ap.canDunk`, false inside 0.7 m), played the short preset ("Too far out") nine times in ten, and the short plan even stepped him back out to 0.95 m to do it. Found with a scripted probe of people's dunks against hard bots (`finish/dunk-read.ts`, `plan.ts`). Now the body's reach decides whether he can dunk, so standing under the ring goes straight up, and a late call at a sprint under the ring is jammed off the back iron up to a third of the time (`deep` in `dunk-odds.ts`). A short dunk never steps back out. Tests: `finish/dunk-read.test.ts`, `dunk-odds.test.ts`.
+* **The probe after the fix**, 14 drives each against hard bots: the Dunker tapping in stride from 2.4 to 3 m lands 25 of 27 (the other two lost the ball first); tapped late at 1.6 m, 4 down, 5 off the iron and 1 stuffed of 12; standing under the ring 11 of 14; tapped from 4.8 m (read at about 3.9 m) 4 of 14 short. Guards get stuffed by the Big Man or the Lockdown in the lane (the Shooter 9 of 14 standing under the rim in traffic).
+* **Open layups by guards missed a third of the time.** The strength edge at the rim came from the closest defender wherever he was, so a Shooter alone at the rim lost about 0.18 off his layup to a Big Man four metres away. It now fades out between 1.2 and 2.6 m (`contest.ts`). Against standing bots the Shooter and Playmaker went from about 70 to 95 percent. Test in `contest.test.ts`.
+* **A slam that misses no longer plays a made dunk.** A dunk judged to go down could still miss at the slam: a hand put it off line (the shot model's contest), a foul, or a block. The body went on into the made dunk's hang over a ball rimming out, the raw look the owner dislikes. Now `slam` says whether it went down and the drive takes the clang (or the stuff, after a block) from the slam on, lets go of the rim and holds the heavy landing (`failFromSlam` in `finish/dunk-fail.ts`). A knock off line also tells the phone Off the iron. Folding that miss into the odds before the gather was tried and dropped: the hands at the gather do not predict the hands at the slam (correlation 0.0 over 115 bot dunks). Test: `finish/slam-fail.test.ts`.
+* **Pops found by a frame to frame probe of 30 bot games:**
+  * A man posterized at the top of his block jump went into his stumble 0.36 m up and stood on air until his next jump. Bodies in an action that does not carry them through the air now fall under gravity (`body/settle.ts`, test `settle.test.ts`).
+  * A dunker landing on the man under the rim was pushed out of him in one frame, both jumping up to 0.45 m. The push apart is now at most 8 cm a step (`MAX_PUSH` in `body/contact.ts`).
+  * After both, the only jumps left are the free throw line up (a camera cut) and the engine ball changing hands, which the renderer eases.
+* **Balance.** Over 250 hard bot games on fresh seeds, 1.23 points a trip against 1.26 at the end of step 2, inside the noise. Open layups 88 percent against 78. Bot dunks the same (65 percent).
+* `match.test.ts` plays four more seeds: the rarer endings (off the glass and out) came up by luck of the seeds.
+
 ## Notes for later steps
 
 * Step 2 (blocks) is done above. A new block preset needs a name in `BLOCK_PRESETS`, a rule in `pickPreset`, a hit in `hitFor`, a strike in `strikes.ts`, a hand path in `block-paths.ts`, a landing in `landings.ts` and a lab row in `lab-blocks.ts`.
-* Step 3: tune `DUNK_ODDS` and `BOT_DUNK_SENSE` from play; the README controls section needs the rim rules.
+* Step 3 is done above.
