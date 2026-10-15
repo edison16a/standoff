@@ -77,3 +77,6 @@ For football, huge idea, when user cliks run, then there should be 6 play option
 ALSO i hate the replay logic, sorry, but its just not me, I love the baskebtall one for refernce shold jsut be really clean showing that nice throw then run right maybe no need for slow mo but multiple actual good angles and rmeember like all those other bots shoudlnt just sit around shoudl look like real pre aniamted football like relaly pushign ahrd at each other running trying to tackle right so u gto this goat! 
 
 PLEASE FOCUS on these 2 changes
+
+ADDED BY THE OWNER (2026-10-15, after the round started; whichever Football step reads this first and finds it not done yet must do it, with tests): "ALSO when the qb throws shoudl auto take accoutn for the users motion like assume a good pass right like it shoudl throw to that persons FUTURE not where they are right now unless they are still and unless they getting pressured"
+Meaning: the QB's pass leads a moving receiver automatically (aim at where he will be when the ball arrives, from his current velocity and the ball's flight time), so a normal pass is a good pass. A standing receiver gets the ball thrown at him. When the QB is under pressure, the lead is less accurate (the pressure rule adds error to the lead).
