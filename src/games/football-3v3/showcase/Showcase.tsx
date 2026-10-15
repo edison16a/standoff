@@ -9,6 +9,8 @@ import { STILLS } from "./stills";
 import { KeyArt } from "./keyart";
 import { BroadcastPlayer } from "./broadcast-player";
 import { TrailerPlayer } from "./trailer-player";
+import { ReplayPreview } from "./replay-preview";
+import { isBotLevel } from "@/games/kit/difficulty/difficulty";
 
 /**
  * Football 3v3's home screen media, drawn by the real renderer from a
@@ -18,8 +20,9 @@ import { TrailerPlayer } from "./trailer-player";
  * steps it frame by frame and gets the same film every time.
  *
  * Development options in the address: t=<seconds> holds the trailer at
- * that moment, lab=<move> shows the animation lab, and game=<seconds>
- * plays the seeded game from then through the broadcast camera.
+ * that moment, lab=<move> shows the animation lab, game=<seconds>
+ * plays the seeded game from then through the broadcast camera, and
+ * replay=<seed> plays a touchdown replay as the big screen shows it.
  */
 export default function Showcase({ view }: { view: ShowcaseView }) {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -33,7 +36,8 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     stage.prepend(canvas);
     const params = new URLSearchParams(window.location.search);
     // The broadcast view is the game's own picture, antialiased; the film is captured without.
-    const renderer = new MatchRenderer(canvas, { quality: params.has("game") ? "high" : "film", scale: view === "loop" && !params.has("game") ? 0.8 : 1 });
+    const live = params.has("game") || params.has("replay");
+    const renderer = new MatchRenderer(canvas, { quality: live ? "high" : "film", scale: view === "loop" && !live ? 0.8 : 1 });
     const lab = params.get("lab");
     const labScene = isLabMove(lab) ? new ShowcaseScene(SHOWCASE_SEED) : null;
     if (labScene) {
@@ -62,11 +66,16 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
     const game = params.get("game");
     const speed = params.get("speed");
     const broadcast = !labScene && game !== null ? new BroadcastPlayer(renderer, Number(game) || 0, speed === "step" ? "step" : Number(speed ?? 1), params.has("follow") ? Number(params.get("follow")) : null) : null;
+    const asked = params.get("level");
+    const level = isBotLevel(asked) ? asked : "easy";
+    const replayOf = !labScene && !broadcast && params.has("replay")
+      ? new ReplayPreview(renderer, Number(params.get("replay")) || 1, level, Number(params.get("td")) || 1, params.has("run"), speed === "step")
+      : null;
     const held = params.get("t");
     // The icon is staged key art, not a moment of the seeded game (keyart.ts); t= still shows the film.
-    const keyArt = view === "icon" && !labScene && !broadcast && held === null ? new KeyArt(renderer, renderer.scene, new ShowcaseScene(SHOWCASE_SEED).view) : null;
+    const keyArt = view === "icon" && !labScene && !broadcast && !replayOf && held === null ? new KeyArt(renderer, renderer.scene, new ShowcaseScene(SHOWCASE_SEED).view) : null;
     if (keyArt) Object.assign(window, { __fbHold: (t: number) => keyArt.hold(t) });
-    const player = labScene || broadcast || keyArt ? null : new TrailerPlayer(renderer, renderer.scene);
+    const player = labScene || broadcast || keyArt || replayOf ? null : new TrailerPlayer(renderer, renderer.scene);
     const still = held !== null ? Number(held) : view === "loop" ? null : (STILLS[view] ?? null);
     // On a still, a review script can move the hold to any moment, through the still's own camera, and look at a sheet of them.
     if (still !== null && player) Object.assign(window, { __fbHold: (t: number) => player.hold(typeof still === "number" ? t : { ...still, t }) });
@@ -89,6 +98,7 @@ export default function Showcase({ view }: { view: ShowcaseView }) {
         // The review script draws each frame itself.
       } else if (labScene && isLabMove(lab)) renderer.draw(labView(labScene.view, lab, (now - first) / 1000), now);
       else if (broadcast) broadcast.frame(now);
+      else if (replayOf) replayOf.frame(now);
       else if (keyArt) {
         if (draws > 0) {
           keyArt.hold();
