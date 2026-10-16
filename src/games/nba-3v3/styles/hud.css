@@ -146,17 +146,26 @@
   }
 }
 
-.nba-hud__clear {
+/* Under the scoreboard: the call, then the note to take it back, stacked so they never overlap. */
+.nba-hud__under {
   position: absolute;
   top: 92px;
-  left: 50%;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.nba-hud__clear {
+  margin: 0;
   padding: 6px 16px;
   border-radius: 999px;
   background: rgba(8, 10, 24, 0.82);
   border: 2px solid var(--team);
   font-size: 16px;
   font-weight: 800;
-  transform: translateX(-50%);
   animation: nba-pulse 0.6s ease-in-out infinite alternate;
 }
 
@@ -199,16 +208,18 @@
   }
 }
 
-/* The big calls: DUNK!, FROM DOWNTOWN!, BLOCKED! */
+/*
+  The calls (BLOCKED!, GAME POINT, the win): small, tucked under the
+  scoreboard at the top, so the words never sit over the rim or the
+  ball on its way in.
+*/
 .nba-banner {
-  position: absolute;
-  top: 24%;
-  left: 50%;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 4px;
-  transform: translateX(-50%);
+  gap: 10px;
+  padding: 4px 16px 4px 18px;
+  border-radius: 10px;
+  background: rgba(8, 10, 24, 0.72);
   animation: nba-banner 1.9s cubic-bezier(0.2, 0.9, 0.2, 1) both;
 }
 
@@ -216,22 +227,21 @@
   --ink: #ffd23f;
   --edge: #7a4a00;
   font-family: Impact, "Arial Black", sans-serif;
-  font-size: clamp(64px, 9vw, 132px);
+  font-size: clamp(24px, 2.4vw, 34px);
   font-style: italic;
   line-height: 1;
   letter-spacing: 0.01em;
   white-space: nowrap;
   color: var(--ink);
-  text-shadow: 0 5px 0 var(--edge), 0 10px 0 rgba(0, 0, 0, 0.35), 0 0 40px rgba(0, 0, 0, 0.6);
+  text-shadow: 0 2px 0 var(--edge), 0 4px 10px rgba(0, 0, 0, 0.5);
   transform: skewX(-8deg);
 }
 
 .nba-banner span {
-  padding: 4px 16px;
-  border-radius: 999px;
-  background: rgba(8, 10, 24, 0.8);
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 800;
+  white-space: nowrap;
+  opacity: 0.9;
 }
 
 .nba-banner--team0 strong {
@@ -257,22 +267,15 @@
 @keyframes nba-banner {
   0% {
     opacity: 0;
-    transform: translateX(-50%) scale(2.2);
+    transform: translateY(-10px) scale(0.9);
   }
-  12% {
+  12%,
+  82% {
     opacity: 1;
-    transform: translateX(-50%) scale(0.94);
-  }
-  20% {
-    transform: translateX(-50%) scale(1.04);
-  }
-  28%,
-  80% {
-    opacity: 1;
-    transform: translateX(-50%) scale(1);
+    transform: translateY(0) scale(1);
   }
   100% {
     opacity: 0;
-    transform: translateX(-50%) scale(0.96) translateY(-20px);
+    transform: translateY(-6px) scale(0.98);
   }
 }
