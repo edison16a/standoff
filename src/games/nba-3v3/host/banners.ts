@@ -5,7 +5,7 @@ import type { MatchDriver } from "./match-driver";
 
 const BANNER_MS = 1900;
 
-/** The banner across the big screen: each new one replaces the last, and it clears itself. */
+/** The banner under the scoreboard: each new one replaces the last, and it clears itself. */
 export class BannerBoard {
   private key = 0;
   private timer: ReturnType<typeof setTimeout> | null = null;
