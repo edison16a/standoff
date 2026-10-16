@@ -18,7 +18,7 @@ describe("the big screen banners", () => {
   });
 
   it("still call a block, game point and the win", () => {
-    expect(banner({ type: "block", id: 1, victim: 0, tip: false, at: { x: 0, y: 3, z: 1 }, hit: "rejection", preset: "rejection" }, m, nameOf, 0)?.sub).toBe("P1");
+    expect(banner({ type: "block", id: 1, victim: 0, tip: false, at: { x: 0, y: 3, z: 1 }, hit: "reject", preset: "rejection" }, m, nameOf, 0)?.sub).toBe("P1");
     expect(banner({ type: "gamePoint", team: 1 }, m, nameOf, 0)?.text).toBe("GAME POINT");
     expect(banner({ type: "win", team: 0 }, m, nameOf, 0)?.tone).toBe("team0");
   });
