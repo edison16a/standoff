@@ -2,62 +2,79 @@ import * as THREE from "three";
 import type { V2 } from "../../engine/vec";
 
 /** The arrow painted on the turf: ribbon width, and the head's length and width, metres. */
-export const ARROW = { width: 0.3, head: 0.95, headWidth: 0.85, y: 0.035 } as const;
+export const ARROW = { width: 0.3, head: 1.0, headWidth: 0.9, y: 0.035 } as const;
 
-/** The unit normal to the left of the way from `a` to `b` on the ground. */
-function normal(a: V2, b: V2): V2 {
-  const l = Math.hypot(b.x - a.x, b.z - a.z) || 1;
-  return { x: -(b.z - a.z) / l, z: (b.x - a.x) / l };
-}
+/** A corner sharper than this mitre length (in half widths) is bevelled on its outside, so it never spikes. */
+const MITRE_LIMIT = 3;
+
+const sub = (a: V2, b: V2): V2 => ({ x: a.x - b.x, z: a.z - b.z });
+const add = (a: V2, b: V2, k = 1): V2 => ({ x: a.x + b.x * k, z: a.z + b.z * k });
+const unit = (v: V2): V2 => {
+  const l = Math.hypot(v.x, v.z) || 1;
+  return { x: v.x / l, z: v.z / l };
+};
+/** The unit normal to the left of a direction on the ground. */
+const leftOf = (d: V2): V2 => ({ x: -d.z, z: d.x });
 
 /**
- * The offset at a corner: the two legs' normals averaged and stretched
- * so the ribbon keeps its width round the cut (a mitre), capped so a
- * sharp cut does not spike.
+ * The offset of a corner on one side (`s` 1 left, -1 right), for the leg
+ * coming in along `d1` and the one going out along `d2`. The inside of
+ * the turn and a gentle outside meet in one mitred point; a sharp
+ * outside gets two, cut square across the corner.
  */
-export function mitre(n1: V2, n2: V2): V2 {
+export function cornerPoints(p: V2, d1: V2, d2: V2, half: number, s: 1 | -1): V2[] {
+  const n1 = leftOf(d1);
+  const n2 = leftOf(d2);
   const m = { x: n1.x + n2.x, z: n1.z + n2.z };
-  const l = Math.hypot(m.x, m.z);
-  if (l < 1e-6) return n1;
-  const k = 1 / Math.max(0.5, (m.x * n1.x + m.z * n1.z) / l);
-  return { x: (m.x / l) * k, z: (m.z / l) * k };
+  const ml = Math.hypot(m.x, m.z);
+  const cos = ml / 2;
+  const turnLeft = d1.x * d2.z - d1.z * d2.x > 0;
+  const outside = (s === 1) !== turnLeft;
+  if (ml > 1e-6 && (!outside || 1 / cos <= MITRE_LIMIT)) {
+    const k = (half * s) / Math.max(cos, 1 / MITRE_LIMIT ** 2);
+    return [add(p, { x: m.x / ml, z: m.z / ml }, k)];
+  }
+  return [add(p, n1, half * s), add(p, n2, half * s)];
 }
 
 /**
- * A flat arrow along the first steps of a route, as a ribbon with mitred
- * corners so a cut reads as one clean line, and a head at its end.
- * Built once for a set of points; null for a route too short to draw.
+ * The outline of a route arrow: a ribbon of even width along every leg
+ * with sharp corners, and a crisp head at its end. Left side out, head,
+ * right side back. Null for a route too short to draw. Pure.
  */
-export function arrowGeometry(points: readonly V2[]): THREE.BufferGeometry | null {
+export function arrowOutline(points: readonly V2[]): V2[] | null {
   const pts = points.filter((p, i) => i === 0 || Math.hypot(p.x - points[i - 1]!.x, p.z - points[i - 1]!.z) > 0.05);
   if (pts.length < 2) return null;
   const last = pts[pts.length - 1]!;
   const prev = pts[pts.length - 2]!;
   const seg = Math.hypot(last.x - prev.x, last.z - prev.z);
-  const dir = { x: (last.x - prev.x) / seg, z: (last.z - prev.z) / seg };
+  const dir = unit(sub(last, prev));
   // The ribbon stops where the head begins.
   const cut = Math.min(ARROW.head, seg * 0.9);
-  const body = [...pts.slice(0, -1), { x: last.x - dir.x * cut, z: last.z - dir.z * cut }];
-  const pos: number[] = [];
-  const index: number[] = [];
+  const body = [...pts.slice(0, -1), add(last, dir, -cut)];
   const half = ARROW.width / 2;
+  const sides: V2[][] = [[], []];
   body.forEach((p, i) => {
-    const before = normal(body[Math.max(0, i - 1)]!, i > 0 ? p : body[1]!);
-    const after = i < body.length - 1 ? normal(p, body[i + 1]!) : before;
-    const n = i === 0 ? after : mitre(before, after);
-    pos.push(p.x + n.x * half, ARROW.y, p.z + n.z * half, p.x - n.x * half, ARROW.y, p.z - n.z * half);
-    if (i > 0) {
-      const o = (i - 1) * 2;
-      index.push(o, o + 1, o + 2, o + 1, o + 3, o + 2);
-    }
+    const d1 = unit(sub(p, body[Math.max(0, i - 1)]!));
+    const d2 = i < body.length - 1 ? unit(sub(body[i + 1]!, p)) : d1;
+    const din = i === 0 ? d2 : d1;
+    const ends = i === 0 || i === body.length - 1;
+    ([1, -1] as const).forEach((s, k) => sides[k]!.push(...(ends ? [add(p, leftOf(din), half * s)] : cornerPoints(p, d1, d2, half, s))));
   });
   const tail = body[body.length - 1]!;
-  const side = { x: -dir.z * (ARROW.headWidth / 2), z: dir.x * (ARROW.headWidth / 2) };
-  const h = pos.length / 3;
-  pos.push(tail.x + side.x, ARROW.y, tail.z + side.z, tail.x - side.x, ARROW.y, tail.z - side.z, last.x, ARROW.y, last.z);
-  index.push(h, h + 1, h + 2);
+  const wing = leftOf(dir);
+  const head = [add(tail, wing, ARROW.headWidth / 2), last, add(tail, wing, -ARROW.headWidth / 2)];
+  return [...sides[0]!, ...head, ...sides[1]!.reverse()];
+}
+
+/** The arrow as a flat mesh on the turf, filled once with no overlaps, so a see through arrow is even all over. */
+export function arrowGeometry(points: readonly V2[]): THREE.BufferGeometry | null {
+  const outline = arrowOutline(points);
+  if (!outline) return null;
+  const faces = THREE.ShapeUtils.triangulateShape(outline.map((p) => new THREE.Vector2(p.x, p.z)), []);
+  const pos = outline.flatMap((p) => [p.x, ARROW.y, p.z]);
   const g = new THREE.BufferGeometry();
   g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
-  g.setIndex(index);
+  g.setIndex(faces.flat());
   return g;
 }

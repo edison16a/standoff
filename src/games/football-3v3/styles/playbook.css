@@ -1,4 +1,4 @@
-/* The QB's page of plays on the phone: a bar on top, six play cards in a three by two grid. */
+/* The QB's page of plays on the phone: a bar on top, two big play cards side by side. */
 
 .fb-book {
   display: flex;
@@ -69,9 +69,9 @@
 .fb-book__grid {
   display: grid;
   flex: 1;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: minmax(0, 1fr);
+  gap: 10px;
   min-height: 0;
 }
 
@@ -95,12 +95,12 @@
 }
 
 .fb-play__name {
-  padding: 2px 8px 3px;
+  padding: 4px 10px 5px;
   background: rgba(5, 12, 8, 0.85);
   text-align: left;
   white-space: nowrap;
   color: #ffffff;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 900;
   letter-spacing: 0.02em;
   text-transform: uppercase;

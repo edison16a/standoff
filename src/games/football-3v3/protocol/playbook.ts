@@ -31,13 +31,13 @@ export const bookSchema = z.object({
   left: z.number().int().min(0).max(99),
   los: unit,
   qb: point,
-  plays: z.array(playCardSchema).max(6),
+  plays: z.array(playCardSchema).max(2),
 });
 
 /** The QB picks a play off the page by its place, deals a fresh page, or goes back to Throw, Run and Kick. */
 export const playSchema = z.object({
   kind: z.literal("play"),
-  action: z.union([z.number().int().min(0).max(5), z.enum(["redeal", "back"])]),
+  action: z.union([z.number().int().min(0).max(1), z.enum(["redeal", "back"])]),
 });
 
 export type CardRunner = z.infer<typeof cardRunnerSchema>;
