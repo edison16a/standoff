@@ -80,3 +80,11 @@ PLEASE FOCUS on these 2 changes
 
 ADDED BY THE OWNER (2026-10-15, after the round started; whichever Football step reads this first and finds it not done yet must do it, with tests): "ALSO when the qb throws shoudl auto take accoutn for the users motion like assume a good pass right like it shoudl throw to that persons FUTURE not where they are right now unless they are still and unless they getting pressured"
 Meaning: the QB's pass leads a moving receiver automatically (aim at where he will be when the ball arrives, from his current velocity and the ball's flight time), so a normal pass is a good pass. A standing receiver gets the ball thrown at him. When the QB is under pressure, the lead is less accurate (the pressure rule adds error to the lead).
+
+# Owner quick fixes (2026-10-16), verbatim
+
+Basketball: FIrst realyl good, one thing is that get rid of that bulldozed text cuz you cant see the ball going in
+
+Football: Make it only show 2 plays at a time, and I dont lik ehwo they are drawn doesnt look unfirom enough should be clearn arrows sharp turns not like slowly drifitng like or smooth curves right. ALSO rework the passing mechanic, on the right side, there should be 4 buttons labeled with the color so user throws to that color by clicking instead of dragging and aiming yk. AND for run like the user shoudl still be able to choose who to throw to it shoudl still be throw button not only pass to runner as thats just the type of play right!
+
+ALSO i realized sometimes theres bug where user just faces wrong way and also when user scores touchdown the npc is so weird like it doesnt even catch the ball normally it just like snaps to the celebration, the user should catch it normally and when runnign in the zone like finsih slowing down first befoer celebrating like normal same with catching it in touchdown zone. ALSO for replay should be 1 replay which shows from like the throwing tracing the ball and in the replay theres too much like collision noise!
