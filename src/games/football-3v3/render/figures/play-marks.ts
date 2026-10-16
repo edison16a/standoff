@@ -10,6 +10,8 @@ import type { Squad } from "./squad";
 /** One runner's marks: a ring in his colour, his number over his helmet, and his route's first steps on the turf. */
 interface Mark {
   ring: Ring;
+  /** A bright white halo round the ring while the QB's finger rests on this runner's throw button. */
+  halo: Ring;
   badge: PlayBadge;
   arrow: THREE.Mesh | null;
   arrowKey: string;
@@ -24,7 +26,9 @@ const top = new THREE.Vector3();
  * of the QB's card (engine/playbook/view.ts): while he picks, each wears
  * his ring and number; lined up, an arrow shows where his route goes
  * first; into the play the rings stay while the ball is still to be
- * thrown, and everything fades once it is gone. Rings and arrows lie on
+ * thrown, and everything fades once it is gone. The runner whose throw
+ * button the QB holds lights up: his ring full and pulsing in a white
+ * halo, his number back over his head, and what is left of his route. Rings and arrows lie on
  * the turf; the numbers float over the picture like the name tags.
  */
 export class PlayMarks {
@@ -49,13 +53,15 @@ export class PlayMarks {
       const at = a ?? null;
       // Into the play the ring is all that is left, quieter, so the target ring still stands out.
       const live = view.playbook?.stage === "live";
-      if (at) mark.ring.update(true, at.x, at.z, time, dt, live ? 0.55 : 0.95, view.playbook?.stage === "picking");
+      const hot = !!(live && at && r?.hot);
+      if (at) mark.ring.update(true, at.x, at.z, time, dt, hot ? 1 : live ? 0.55 : 0.95, hot || view.playbook?.stage === "picking");
       else mark.ring.update(false, 0, 0, time, dt);
-      this.arrow(mark, r?.arrow ?? null, view.playbook?.stage === "set" ? mark.glow : 0);
+      mark.halo.update(hot, at?.x ?? 0, at?.z ?? 0, time, dt, 0.9, true);
+      this.arrow(mark, r?.arrow ?? null, view.playbook?.stage === "set" ? mark.glow : hot ? 1 : 0);
       const figure = at ? squad.figure(at.id) : null;
       if (figure && at) {
         figure.top(top);
-        mark.badge.place(top, fov, tagged(at.id) ? 1 : 0, live ? 0 : mark.glow);
+        mark.badge.place(top, fov, tagged(at.id) ? 1 : 0, live && !hot ? 0 : mark.glow);
       } else mark.badge.place(top, fov, 0, 0);
     }
   }
@@ -63,11 +69,12 @@ export class PlayMarks {
   private make(n: number): Mark {
     const colour = RUNNER_COLOURS[n - 1] ?? "#ffffff";
     const ring = new Ring(colour, 0.78, 0.94, true);
+    const halo = new Ring("#ffffff", 0.98, 1.32);
     const badge = new PlayBadge(n, colour);
     const arrowMaterial = new THREE.MeshBasicMaterial({ color: colour, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide });
-    this.group.add(ring.mesh);
+    this.group.add(ring.mesh, halo.mesh);
     this.overlay.add(badge.sprite);
-    return { ring, badge, arrow: null, arrowKey: "", arrowMaterial, glow: 0 };
+    return { ring, halo, badge, arrow: null, arrowKey: "", arrowMaterial, glow: 0 };
   }
 
   /** Builds the arrow when its route changes, and fades it with the line up. */
@@ -93,6 +100,8 @@ export class PlayMarks {
     if (!mark) return;
     mark.ring.mesh.removeFromParent();
     mark.ring.dispose();
+    mark.halo.mesh.removeFromParent();
+    mark.halo.dispose();
     mark.badge.sprite.removeFromParent();
     mark.badge.dispose();
     mark.arrow?.geometry.dispose();
