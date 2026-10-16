@@ -20,6 +20,8 @@ export interface Play {
   intercepted: boolean;
   /** The receiver the throw stick picks right now, whose ring lights up. */
   target: number | null;
+  /** The throw button the QB's finger rests on, by slot, whose runner lights up on the big screen (throw-highlight.ts). */
+  hot: number | null;
   /** On a run call, the runner lined up beside the QB for the pitch. */
   back: number | null;
   /** The pitch has left the QB's hand; there is one a play. */
@@ -38,6 +40,6 @@ export interface Play {
 export function newPlay(call: PlayCall, time: number, back: number | null = null, design: PlayDesign | null = null, runners: number[] = []): Play {
   return {
     call, sinceSnap: null, rushOn: false, passed: false, qbRun: false,
-    caughtBy: null, intercepted: false, target: null, back, pitched: false, design, runners, startedAt: time, over: false, runout: null,
+    caughtBy: null, intercepted: false, target: null, hot: null, back, pitched: false, design, runners, startedAt: time, over: false, runout: null,
   };
 }

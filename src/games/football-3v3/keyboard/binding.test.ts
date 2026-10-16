@@ -52,8 +52,8 @@ describe("football keyboard", () => {
     s.keys.key("Digit3", true);
     s.keys.key("Digit3", false);
     const thrown = s.reliable();
-    expect(thrown).toEqual([{ kind: "throw", slot: 2 }]);
-    expect(phoneMessageSchema.safeParse(thrown[0]).success).toBe(true);
+    expect(thrown).toEqual([{ kind: "highlight", slot: 2 }, { kind: "throw", slot: 2 }]);
+    for (const m of thrown) expect(phoneMessageSchema.safeParse(m).success).toBe(true);
   });
 
   it("throws nothing to a button the phone shows greyed out, and Space alone never throws", () => {
@@ -67,8 +67,9 @@ describe("football keyboard", () => {
   it("throws on a run call too, where Space pitches", () => {
     const s = seat({ runPlay: true, canPitch: true, backSlot: 1 });
     s.keys.key("Digit4", true);
+    s.keys.key("Digit4", false);
     s.keys.key("Space", true);
-    expect(s.reliable()).toEqual([{ kind: "throw", slot: 3 }, expect.objectContaining({ kind: "pad-press", button: "pass" })]);
+    expect(s.reliable()).toEqual([{ kind: "highlight", slot: 3 }, { kind: "throw", slot: 3 }, expect.objectContaining({ kind: "pad-press", button: "pass" })]);
   });
 
   it("pitches with Space on a run call and takes off with Shift", () => {

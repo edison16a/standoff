@@ -64,7 +64,8 @@ function Dock({ code, game }: { code: string; game: string }) {
       const message = receive<PanelMessage>(event, frame.current?.contentWindow);
       if (!message) return;
       if (message.type === "key" && message.input.code === "Escape") {
-        if (message.input.down && !message.input.repeat) toggleCard();
+        // The binding may use it to cancel something held; otherwise it is the card's.
+        if (!made.key(message.input) && message.input.down && !message.input.repeat) toggleCard();
         return;
       }
       if (message.type === "blur") setTimeout(() => !document.hasFocus() && made.release(), 0);

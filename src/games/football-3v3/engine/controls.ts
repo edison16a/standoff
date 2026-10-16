@@ -8,6 +8,7 @@ import { startRun } from "./qb-run";
 import { startPitch } from "./run-play";
 import { startDive } from "./dive";
 import { followStick } from "./stick-latch";
+import { highlightSlot } from "./throw-highlight";
 import { throwToSlot } from "./throw-targets";
 import { isReceiver } from "./support/roster";
 import { pressTackle } from "./tackle";
@@ -53,6 +54,12 @@ export function setAim(m: Match, id: number, aim: V2 | null): void {
 export function throwAtSlot(m: Match, id: number, slot: number): void {
   const a = own(m, id);
   if (a) throwToSlot(m, a, slot);
+}
+
+/** The QB's finger held on a throw button (or off them all), lighting that runner up (throw-highlight.ts). */
+export function holdAtSlot(m: Match, id: number, slot: number | null): void {
+  const a = own(m, id);
+  if (a?.role === "qb") highlightSlot(m, a, slot);
 }
 
 /** The receiver nearest a defender, the deep threat among them, who they will tail while Guard is held. */

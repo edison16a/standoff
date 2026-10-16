@@ -23,3 +23,8 @@ const PATTERNS: Record<BuzzKind, number[]> = {
 export function buzz(event: BuzzKind): void {
   if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") navigator.vibrate(PATTERNS[event]);
 }
+
+/** A tap you can feel as the light moves onto another runner. */
+export function tick(): void {
+  if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") navigator.vibrate(8);
+}

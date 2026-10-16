@@ -4,7 +4,7 @@ import type { PhoneRoomApi, PhoneRoomEvent } from "@/platform/games/game-api";
 import { tone } from "@/platform/audio/voices";
 import { hostMessageSchema, PAD_BUTTONS, type Call, type HostMessage, type PadButton, type PhoneMessage } from "../protocol";
 import type { BuildId } from "../builds";
-import { buzz } from "./haptics";
+import { buzz, tick } from "./haptics";
 import { followMeter, tapMeter } from "./kick-meter";
 import { usePhoneStore as store, type SetupStep } from "./phone-store";
 
@@ -18,6 +18,8 @@ import { usePhoneStore as store, type SetupStep } from "./phone-store";
 export class FootballPhone {
   readonly pad: PhonePad;
   private readonly off: () => void;
+  /** The throw button last lit on the big screen, so the host hears only changes. */
+  private lit: number | null = null;
 
   constructor(private readonly room: PhoneRoomApi) {
     store.setState({ ...store.getInitialState() });
@@ -63,9 +65,18 @@ export class FootballPhone {
     else this.pad.release(button);
   }
 
-  /** A tap on one of the QB's throw buttons: throw to that runner, sent reliably. */
+  /** Letting go on one of the QB's throw buttons: throw to that runner, sent reliably. The throw ends the light too. */
   throwTo(slot: number): void {
+    this.lit = null;
     this.send({ kind: "throw", slot });
+  }
+
+  /** The QB's finger held on a throw button (or off them all): his runner lights up on the big screen. Sent only on a change. */
+  highlight(slot: number | null): void {
+    if (slot === this.lit) return;
+    this.lit = slot;
+    if (slot !== null) tick();
+    this.send({ kind: "highlight", slot });
   }
 
   call(call: Call): void {
@@ -118,6 +129,7 @@ export class FootballPhone {
     const { wanted, host } = store.getState();
     if (wanted) this.send({ kind: "pick", build: wanted });
     if (host?.ready) this.send({ kind: "ready", ready: true });
+    if (this.lit !== null) this.send({ kind: "highlight", slot: this.lit });
   }
 
   private send(payload: PhoneMessage): void {

@@ -10,7 +10,7 @@ const NOT_STAGE = "button, a, input, select, textarea, label, [role='button'], .
 
 /**
  * Feeds the host page's keys and its mouse over the big screen to the
- * keyboard seat. Escape is the card's. A lost focus lets go of every key,
+ * keyboard seat. Escape is the card's unless the binding uses it. A lost focus lets go of every key,
  * unless the focus only moved into the phone panel, which passes its keys
  * up the same way.
  */
@@ -20,7 +20,9 @@ export function useStageInput(seat: KeyboardSeat | null, toggleCard: () => void)
     const onKey = (event: KeyboardEvent) => {
       if (isTypingTarget(event.target)) return;
       if (event.code === "Escape") {
-        if (event.type === "keydown" && !event.repeat) toggleCard();
+        // The binding may use it to cancel something held; otherwise it is the card's.
+        const used = seat.key({ code: event.code, down: event.type === "keydown", repeat: event.repeat });
+        if (!used && event.type === "keydown" && !event.repeat) toggleCard();
         return;
       }
       if (isSystemKey(event)) return;

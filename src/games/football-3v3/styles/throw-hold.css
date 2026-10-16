@@ -1,0 +1,49 @@
+/* The QB's throw buttons while a finger holds them: the runner under it lit, the rest stepped back, and a word on cancelling. */
+
+.fb-throws {
+  position: relative;
+}
+
+.fb-throws__btn {
+  transition: transform 80ms ease-out, opacity 80ms ease-out, filter 80ms ease-out;
+}
+
+.fb-throws--holding .fb-throws__btn:not(.fb-throws__btn--hot) {
+  opacity: 0.55;
+  transform: scale(0.94);
+}
+
+.fb-throws__btn--hot {
+  outline: 4px solid #ffffff;
+  outline-offset: -4px;
+  transform: scale(1.05);
+  filter: brightness(1.18);
+  box-shadow: 0 0 0 4px var(--runner), 0 0 26px 6px var(--runner);
+  z-index: 1;
+}
+
+/* Slid off every button: all of them dim, so letting go plainly throws nothing. */
+.fb-throws--off .fb-throws__btn {
+  opacity: 0.35;
+}
+
+/* Floats over the middle of the four, so it never moves the layout. */
+.fb-throws__hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(6, 12, 8, 0.86);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.fb-throws--off .fb-throws__hint {
+  background: #dc2626;
+}

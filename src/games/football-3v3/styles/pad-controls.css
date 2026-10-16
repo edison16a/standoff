@@ -41,7 +41,6 @@
   box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.22), 0 3px 10px rgba(0, 0, 0, 0.35);
 }
 
-.fb-throws__btn:active:not(:disabled),
 .fb-pitch:active:not(:disabled) {
   transform: scale(0.95);
   filter: brightness(1.15);

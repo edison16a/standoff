@@ -19,7 +19,9 @@ export const keyboard: KeyboardBinding = {
       title: "QB",
       rows: [
         { action: "Hike", keys: ["Space"] },
-        { action: "Throw to runner 1, 2, 3 or 4, by his colour", keys: [["1", "2", "3", "4"]] },
+        { action: "Throw to runner 1, 2, 3 or 4: hold to light him up, let go to throw", keys: [["1", "2", "3", "4"]] },
+        { action: "Another number while holding moves the light", keys: [["1", "2", "3", "4"]] },
+        { action: "Cancel a held throw", keys: ["Esc"] },
         { action: "Pitch on a run call", keys: ["Space"] },
         { action: "Take off and run", keys: ["Shift"] },
       ],
