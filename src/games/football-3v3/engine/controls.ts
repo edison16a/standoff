@@ -7,6 +7,7 @@ import { hike } from "./phases";
 import { startRun } from "./qb-run";
 import { startPitch } from "./run-play";
 import { startDive } from "./dive";
+import { followStick } from "./stick-latch";
 import { throwToSlot } from "./throw-targets";
 import { isReceiver } from "./support/roster";
 import { pressTackle } from "./tackle";
@@ -25,6 +26,7 @@ export function setMove(m: Match, id: number, move: V2): void {
   if (!a) return;
   const l = Math.hypot(move.x, move.z);
   a.move = l > 1 ? { x: move.x / l, z: move.z / l } : { x: move.x, z: move.z };
+  followStick(a, a.move);
 }
 
 /**

@@ -10,6 +10,7 @@ import { buildView, type MatchView } from "../engine/view";
 import type { Call } from "../protocol";
 import { ReplayRecorder } from "./replay/recorder";
 import { StepClock } from "./step-clock";
+import { StickFrames } from "./stick-frames";
 import { stickToField, type Stick } from "./steer";
 import { testHooks } from "./test-hooks";
 
@@ -36,6 +37,8 @@ export class MatchDriver {
   replayFor: number | null = null;
   held = false;
   private readonly clock: StepClock;
+  /** Each stick keeps the view it was pushed in through a camera turning round (stick-frames.ts). */
+  private readonly frames = new StickFrames();
 
   constructor(entries: readonly Entry[], seed: number, level: BotLevel) {
     const hooks = testHooks();
@@ -54,7 +57,7 @@ export class MatchDriver {
   press(seat: number, button: Button, down: boolean, stick: Stick, forward: V2): void {
     const id = this.id(seat);
     if (id === null || this.held) return;
-    this.match.setMove(id, stickToField(stick, forward));
+    this.match.setMove(id, stickToField(stick, this.frames.frame(seat, stick, forward)));
     if (down) this.match.press(id, button);
     else this.match.release(id, button);
   }
@@ -142,7 +145,8 @@ export class MatchDriver {
     for (const seat of this.idBySeat.keys()) {
       const id = this.id(seat);
       if (id === null) continue;
-      this.match.setMove(id, stickToField(sticks.move(seat), sticks.forward));
+      const stick = sticks.move(seat);
+      this.match.setMove(id, stickToField(stick, this.frames.frame(seat, stick, sticks.forward)));
     }
   }
 }

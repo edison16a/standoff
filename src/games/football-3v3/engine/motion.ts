@@ -118,7 +118,8 @@ export function moveAthlete(a: Athlete, dt: number, hasBall: boolean, face: V2 |
 
 function turn(a: Athlete, dt: number, face: V2 | null, look: V2 | null): void {
   const k = a.action.kind;
-  if (k === "down" || k === "juke" || k === "dive" || k === "lunge") return;
+  // Set in his stance a man keeps the facing the line up gave him, downfield. Turned to the ball he faced the middle, side on at the snap.
+  if (k === "down" || k === "juke" || k === "dive" || k === "lunge" || k === "stance") return;
   const speed = Math.hypot(a.vx, a.vz);
   let want = a.yaw;
   if (a.aim && k !== "kick") want = yawOf(a.aim.x, a.aim.z);

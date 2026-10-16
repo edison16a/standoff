@@ -19,7 +19,7 @@ export function createAthlete(id: number, team: TeamId, role: Role, slot: number
     x: 0, z: 0, vx: 0, vz: 0, ax: 0, az: 0,
     yaw: attackSign(team) > 0 ? Math.PI / 2 : -Math.PI / 2,
     mass: c ? c.frame.weight : support ? SUPPORT_FRAME.weight : LINEMAN_FRAME.weight,
-    move: { x: 0, z: 0 }, aim: null,
+    move: { x: 0, z: 0 }, aim: null, latch: null,
     action: { kind: "none" },
     jukeCd: 0, jukeCdFull: 0, jukeHeat: 0, stamina: 1, tackleCd: 0, rushT: 0, rushCd: 0, guard: null, blocked: 0, stagger: 0, stumble: null, burst: null, breaking: null, catching: null, block: null,
     bot: { wait: 0, route: [], leg: 0, stop: false, goal: { x: 0, z: 0 }, cover: null, rush: true, key: false, readAt: 2 },
