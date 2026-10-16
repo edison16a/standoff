@@ -2,6 +2,7 @@ import type { SoundDirector } from "../audio/sound-director";
 import type { MatchEvent } from "../engine/events";
 import type { Match } from "../engine/match";
 import { isGreen } from "../engine/shot-model";
+import { BannerGate } from "./banner-gate";
 import { BannerBoard, REPLAY_SOUNDS, slowForMoment } from "./banners";
 import type { Buzzer } from "./buzzer";
 import { banner } from "./callouts";
@@ -29,6 +30,7 @@ interface FanoutDeps {
 export class EventFanout {
   private readonly listeners = new Set<Listener>();
   private readonly banners = new BannerBoard();
+  private readonly gate = new BannerGate();
 
   constructor(private readonly deps: FanoutDeps) {}
 
@@ -51,9 +53,18 @@ export class EventFanout {
     buzzer.onEvent(event, m, driver.athleteBySeat);
     slowForMoment(event, driver);
     if (event.type === "shot" && isGreen(event.grade) && driver.pilotOf(event.id) !== null) audio.green(event.grade === "gold");
+    if (event.type === "score" || event.type === "dunk") this.gate.basket(m.time);
     const shown = banner(event, m, nameOf, this.banners.count);
-    if (shown) this.banners.show(shown);
+    const now = shown && this.gate.offer(shown, m);
+    if (now) this.banners.show(now);
     if (PROMPT.has(event.type)) refresh();
+  }
+
+  /** Every frame of a game: a banner held while the ball went in shows once it is through. */
+  frame(driver: MatchDriver): void {
+    if (driver.replays.replay || driver.ceremony) return this.gate.drop();
+    const ready = this.gate.release(driver.match);
+    if (ready) this.banners.show(ready);
   }
 
   /** The replay plays the ball's and the players' sounds and the effects, and nothing that changes the game. */

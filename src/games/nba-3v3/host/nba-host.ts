@@ -195,6 +195,7 @@ export class NbaHost {
     if (this.driver) {
       dt = 0;
       for (let i = 0; i < this.turbo; i++) dt += this.driver.tick(realDt, (seat) => this.pad.stick(seat, nowMs));
+      this.fanout.frame(this.driver);
       this.audio.frame(this.driver.match);
       this.audio.ceremony(this.driver.ceremony?.t ?? null);
     } else dt = this.demo.tick(realDt);
