@@ -86,10 +86,19 @@ export class MatchDriver {
     if (id !== null && !this.held) this.match.throwTo(id, slot);
   }
 
+  /** The QB's finger held on a throw button, or off them all: that runner lights up on the big screen. */
+  highlight(seat: number, slot: number | null): void {
+    const id = this.id(seat);
+    if (id !== null && !this.held) this.match.highlight(id, slot);
+  }
+
   /** A phone left or came back. While away, the computer plays for them. */
   setOnline(seat: number, online: boolean): void {
     const id = this.idBySeat.get(seat);
-    if (id !== undefined) this.match.setAuto(id, !online);
+    if (id === undefined) return;
+    // A phone gone mid hold leaves no runner lit.
+    if (!online) this.highlight(seat, null);
+    this.match.setAuto(id, !online);
   }
 
   /** Admin panel shortcuts, for the team with the ball. Their events come out on the next tick. */

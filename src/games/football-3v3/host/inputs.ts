@@ -64,6 +64,10 @@ export function routePhone(t: InputTarget, seat: number, message: PhoneMessage):
     case "throw":
       if (!t.vote(seat, true)) d?.throwTo(seat, message.slot);
       return true;
+    case "highlight":
+      // Only looks: never a vote to skip, and nothing on the phones changes.
+      d?.highlight(seat, message.slot);
+      return false;
     case "call":
       if (!t.vote(seat, true)) d?.call(seat, message.call);
       return true;

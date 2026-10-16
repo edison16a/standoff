@@ -31,7 +31,14 @@ export const kickSchema = z.object({ kind: z.literal("kick"), value: axis });
 /** A tap on one of the QB's four throw buttons, by its place left to right: throw to that runner. Sent reliably. */
 export const throwSchema = z.object({ kind: z.literal("throw"), slot: z.number().int().min(0).max(3) });
 
-export const phoneMessageSchema = z.discriminatedUnion("kind", [pickSchema, readySchema, helloSchema, callSchema, playSchema, kickSchema, throwSchema]);
+/**
+ * The QB's finger held on a throw button, or slid off them all (null),
+ * before he lets go: the host lights that runner up on the big screen.
+ * Sent reliably, and only when it changes.
+ */
+export const highlightSchema = z.object({ kind: z.literal("highlight"), slot: z.number().int().min(0).max(3).nullable() });
+
+export const phoneMessageSchema = z.discriminatedUnion("kind", [pickSchema, readySchema, helloSchema, callSchema, playSchema, kickSchema, throwSchema, highlightSchema]);
 
 export type PhoneMessage = z.infer<typeof phoneMessageSchema>;
 
