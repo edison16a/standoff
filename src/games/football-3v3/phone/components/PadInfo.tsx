@@ -5,7 +5,7 @@ import type { PhoneState } from "../../protocol";
 
 /** The QB with the ball who has not turned runner: what he can do right now. */
 function qbStatus(host: PhoneState): string {
-  if (host.canPitch) return "Press Pass to pitch";
+  if (host.canPitch) return "Pitch, or throw by colour";
   if (host.canThrow) return "Find a receiver";
   // A run call whose back went down leaves only Run.
   if (host.canRun) return "Press Run to keep it";
