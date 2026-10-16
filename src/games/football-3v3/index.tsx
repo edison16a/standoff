@@ -21,6 +21,7 @@ import "./styles/phone-ready.css";
 import "./styles/pad.css";
 import "./styles/legs.css";
 import "./styles/pad-controls.css";
+import "./styles/throw-hold.css";
 import "./styles/kick.css";
 import "./styles/playbook.css";
 import "./styles/showcase.css";
