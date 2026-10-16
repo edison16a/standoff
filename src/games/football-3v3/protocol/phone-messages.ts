@@ -28,13 +28,10 @@ export const callSchema = z.object({ kind: z.literal("call"), call: z.enum(CALLS
  */
 export const kickSchema = z.object({ kind: z.literal("kick"), value: axis });
 
-/** The throw stick while held, on the screen's axes: x right and y up. Sent often and allowed to drop. */
-export const aimSchema = z.object({ kind: z.literal("aim"), x: axis, y: axis });
+/** A tap on one of the QB's four throw buttons, by its place left to right: throw to that runner. Sent reliably. */
+export const throwSchema = z.object({ kind: z.literal("throw"), slot: z.number().int().min(0).max(3) });
 
-/** The throw stick let go: throw at the receiver it was on. Sent reliably. */
-export const throwSchema = z.object({ kind: z.literal("throw"), x: axis, y: axis });
-
-export const phoneMessageSchema = z.discriminatedUnion("kind", [pickSchema, readySchema, helloSchema, callSchema, playSchema, kickSchema, aimSchema, throwSchema]);
+export const phoneMessageSchema = z.discriminatedUnion("kind", [pickSchema, readySchema, helloSchema, callSchema, playSchema, kickSchema, throwSchema]);
 
 export type PhoneMessage = z.infer<typeof phoneMessageSchema>;
 

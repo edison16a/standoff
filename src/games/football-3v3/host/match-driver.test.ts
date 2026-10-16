@@ -7,7 +7,7 @@ import { ReplayDirector } from "./replay/director";
 import { findMoments } from "./replay/moments";
 import { scriptReplay } from "./replay/script";
 
-const still: Sticks = { move: () => ({ x: 0, y: 0 }), aim: () => null, forward: { x: 1, z: 0 } };
+const still: Sticks = { move: () => ({ x: 0, y: 0 }), forward: { x: 1, z: 0 } };
 
 /** Ticks the driver at 60 frames a second until `until` holds or `seconds` run out. */
 function play(driver: MatchDriver, seconds: number, until: (events: MatchEvent[]) => boolean, from = 0): number {

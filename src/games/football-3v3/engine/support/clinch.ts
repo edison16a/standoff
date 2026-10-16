@@ -54,6 +54,9 @@ export function resetClinches(m: Match): void {
 
 const resting = (m: Match, a: Athlete) => (m.support.rest.get(a.id) ?? -1) > m.time;
 
+/** A blocker the QB threw to lets go of his man and goes for the ball. */
+const thrownTo = (m: Match, a: Athlete) => m.ball.state === "pass" && m.ball.pass?.to === a.id;
+
 /** A defender a blocker may take on: before a pass is out only the men rushing it, once the ball is run anyone. */
 function blockable(m: Match, d: Athlete, carrier: Athlete | null, passPro: boolean): boolean {
   if (d.role === "lineman" || isDown(d) || d === carrier || d.action.kind !== "none" || resting(m, d) || d.burst) return false;
@@ -67,7 +70,7 @@ export function engageClinches(m: Match): void {
   const team = carrier?.team ?? m.offense;
   const passPro = !!carrier && carrier.role === "qb" && !m.play?.passed && !m.play?.qbRun;
   for (const o of m.athletes) {
-    if (o.role !== "support" || o.team !== team || o === carrier || isDown(o) || o.action.kind !== "none" || resting(m, o) || clinchOf(m, o.id)) continue;
+    if (o.role !== "support" || o.team !== team || o === carrier || isDown(o) || o.action.kind !== "none" || resting(m, o) || clinchOf(m, o.id) || thrownTo(m, o)) continue;
     // The deep threat is out on his route while the QB looks to throw, not blocking.
     if ((o.deep || onPlayRoute(m, o)) && passPro && m.play?.call === "throw") continue;
     let best: Athlete | null = null;
@@ -99,7 +102,7 @@ export function updateClinches(m: Match, dt: number): void {
     const o = m.athlete(c.o)!;
     const d = m.athlete(c.d)!;
     const carrier = m.carrier();
-    if (m.phase !== "live" || isDown(o) || isDown(d) || o === carrier || d === carrier || d.action.kind !== "none") {
+    if (m.phase !== "live" || isDown(o) || isDown(d) || o === carrier || d === carrier || d.action.kind !== "none" || thrownTo(m, o)) {
       list.splice(i, 1);
       continue;
     }

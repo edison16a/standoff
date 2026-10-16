@@ -19,8 +19,7 @@ export const keyboard: KeyboardBinding = {
       title: "QB",
       rows: [
         { action: "Hike", keys: ["Space"] },
-        { action: "Hold to aim, let go to throw", keys: ["Space", "Left click"] },
-        { action: "Aim the throw", keys: [["Up", "Left", "Down", "Right"], "Mouse"] },
+        { action: "Throw to runner 1, 2, 3 or 4, by his colour", keys: [["1", "2", "3", "4"]] },
         { action: "Pitch on a run call", keys: ["Space"] },
         { action: "Take off and run", keys: ["Shift"] },
       ],
@@ -37,8 +36,8 @@ export const keyboard: KeyboardBinding = {
       title: "Calls and kicks",
       rows: [
         { action: "Throw, Run, Kick", keys: [["1", "2", "3"]] },
-        { action: "Pick a play off the page", keys: [["1", "2", "3", "4", "5", "6"], "Space"] },
-        { action: "Deal six new plays", keys: ["R"] },
+        { action: "Pick a play off the page", keys: [["1", "2"], "Space"] },
+        { action: "Refresh: two new plays", keys: ["R"] },
         { action: "Back to Throw, Run, Kick", keys: ["B"] },
         { action: "After a touchdown: kick, go for two", keys: [["1", "2"]] },
         { action: "Stop the kick meter", keys: ["Space"] },
@@ -46,7 +45,7 @@ export const keyboard: KeyboardBinding = {
       ],
     },
   ],
-  // The panel's resting stick and throw stick would fight the keys.
-  replaces: ["pad", "aim"],
+  // The panel's resting stick would fight the keys.
+  replaces: ["pad"],
   create: (ctx) => new FootballKeys(ctx),
 };

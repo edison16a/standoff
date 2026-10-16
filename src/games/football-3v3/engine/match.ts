@@ -4,7 +4,7 @@ import { newBall, type Ball, type PassInfo } from "./ball";
 import { createAthlete } from "./body";
 import { think } from "./bots/brain";
 import { setAway, steered } from "./control";
-import { pressButton, releaseButton, setAim, setMove } from "./controls";
+import { pressButton, releaseButton, setAim, setMove, throwAtSlot } from "./controls";
 import { newDrive, type Drive } from "./downs";
 import type { MatchEvent, PlayEnd } from "./events";
 import type { KickState } from "./kick";
@@ -182,6 +182,11 @@ export class Match {
   /** The QB's throw stick in field space while held, or null when let go. Letting go throws. */
   setAim(id: number, aim: V2 | null): void {
     setAim(this, id, aim);
+  }
+
+  /** One of the QB's four throw buttons, by its place left to right: throws to that runner. */
+  throwTo(id: number, slot: number): void {
+    throwAtSlot(this, id, slot);
   }
 
   /** A button pressed. `value` is the phone's own meter reading for a kick, free of lag. */

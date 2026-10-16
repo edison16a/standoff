@@ -7,6 +7,7 @@ import { hike } from "./phases";
 import { startRun } from "./qb-run";
 import { startPitch } from "./run-play";
 import { startDive } from "./dive";
+import { throwToSlot } from "./throw-targets";
 import { isReceiver } from "./support/roster";
 import { pressTackle } from "./tackle";
 import { pressRush } from "./rush-shed";
@@ -41,7 +42,15 @@ export function setAim(m: Match, id: number, aim: V2 | null): void {
     a.aim = null;
     return;
   }
-  if (Math.hypot(aim.x, aim.z) >= 0.2) a.aim = { x: aim.x, z: aim.z };
+  // Only a QB who can still throw holds an aim: a stale reading left on a runner turned him to face it while he ran.
+  if (!canThrow(m, a)) a.aim = null;
+  else if (Math.hypot(aim.x, aim.z) >= 0.2) a.aim = { x: aim.x, z: aim.z };
+}
+
+/** One of the QB's four throw buttons, by its place left to right (throw-targets.ts). */
+export function throwAtSlot(m: Match, id: number, slot: number): void {
+  const a = own(m, id);
+  if (a) throwToSlot(m, a, slot);
 }
 
 /** The receiver nearest a defender, the deep threat among them, who they will tail while Guard is held. */

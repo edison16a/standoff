@@ -34,15 +34,33 @@ describe("the run call", () => {
     expect(pickBack(athletes, 0)).toBe(1);
   });
 
-  it("swaps the throw stick for Pass and rings the back", () => {
+  it("keeps the throw buttons on a run call, adds the pitch and rings the back", () => {
     const m = peopleMatch();
     runSnap(m);
     const s = seatStatus(m, 0)!;
     expect(s.runPlay).toBe(true);
-    expect(s.canThrow).toBe(false);
+    // A run call is only the play's shape: every one of the four can still be thrown to.
+    expect(s.canThrow).toBe(true);
+    expect(s.throws).toEqual([true, true, true, true]);
     expect(s.canPitch).toBe(true);
+    expect(m.play!.runners[s.backSlot!]).toBe(bySeat(m, 1).id);
     run(m, 0.05);
     expect(m.play?.target).toBe(bySeat(m, 1).id);
+  });
+
+  it("throws to any runner on a run call, and no throw is left after the pitch", () => {
+    const m = peopleMatch();
+    runSnap(m);
+    const qb = bySeat(m, 0);
+    const wing = m.play!.runners.find((id) => m.athletes[id]!.role === "support")!;
+    m.throwTo(qb.id, m.play!.runners.indexOf(wing));
+    const events = run(m, 1.5, () => m.ball.state === "pass");
+    expect(events.find((e) => e.type === "throw")).toMatchObject({ id: qb.id, to: wing });
+    const p = peopleMatch();
+    runSnap(p);
+    p.press(bySeat(p, 0).id, "pass");
+    run(p, 0.6);
+    expect(seatStatus(p, 0)!.canThrow).toBe(false);
   });
 
   it("pitches to the back, who runs with it as a rush", () => {

@@ -68,9 +68,13 @@ export const phoneStateSchema = z.object({
   meter: z.object({ stage: z.enum(["aim", "power"]), fieldGoal: z.boolean() }).nullable(),
   withBall: z.boolean(),
   canThrow: z.boolean(),
-  /** A run call: the QB gets Pass for the pitch in place of the throw stick. */
+  /** The QB's four throw buttons, left to right in the runners' colours and numbers: whether each throws now. Empty off the QB pad. */
+  throws: z.array(z.boolean()).max(4),
+  /** A run call: the QB gets Pitch as well as the throw buttons. */
   runPlay: z.boolean(),
   canPitch: z.boolean(),
+  /** On a run call, which of the four throw buttons is the back the pitch goes to. */
+  backSlot: z.number().int().min(0).max(3).nullable(),
   /** The QB can press Run to become the runner for the rest of the play. */
   canRun: z.boolean(),
   jukeReady: z.boolean(),

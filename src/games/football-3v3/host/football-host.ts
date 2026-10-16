@@ -11,7 +11,6 @@ import { isPadButton, type RoomPhase } from "../protocol";
 import type { LobbyRole } from "../roles";
 import type { TeamId } from "../teams";
 import { registerFootballAdmin } from "./admin";
-import { AimSticks } from "./aim-sticks";
 import { buzzFor } from "./buzz";
 import { CALLOUT_MS, calloutFor } from "./callouts";
 import { DemoMatch } from "./demo-match";
@@ -44,7 +43,6 @@ export class FootballHost implements InputTarget {
   /** The way up the screen on the ground, which the canvas updates from the camera each frame. */
   forward: V2 = DEFAULT_FORWARD;
   readonly phones: PhoneLink;
-  readonly aims = new AimSticks();
   /** Who each player is on screen: the phones' players by their own names. */
   readonly names: Names;
   private readonly pad: HostPad;
@@ -129,7 +127,6 @@ export class FootballHost implements InputTarget {
     this.offAdmin?.();
     this.offAdmin = registerFootballAdmin(() => this.driver);
     this.replays.stop();
-    this.aims.clear();
     this.callout = null;
     this.statsEarly = false;
     this.room.setPlaying(true);
@@ -167,7 +164,7 @@ export class FootballHost implements InputTarget {
       else events = this.replays.sounds();
       for (const event of events) this.audio.event(event);
     } else {
-      events = driver.tick(nowMs, { move: (s) => this.pad.stick(s, nowMs), aim: (s) => this.aims.get(s), forward: this.forward });
+      events = driver.tick(nowMs, { move: (s) => this.pad.stick(s, nowMs), forward: this.forward });
       for (const event of events) this.onMatchEvent(event, driver, nowMs);
       if (driver.held) this.startReplay(driver, nowMs);
       this.audio.ceremony(ceremonyTime(driver.match));
@@ -180,7 +177,6 @@ export class FootballHost implements InputTarget {
   private startReplay(driver: MatchDriver, nowMs: number): void {
     const voters = piloted(driver.match).map((p) => p.seat);
     if (driver.replayFor === null || !this.replays.start(driver.recorder.all, driver.replayFor, voters, nowMs, driver.recorder.cues)) return driver.resume();
-    this.aims.clear();
     this.audio.replayIn();
   }
 
@@ -204,7 +200,6 @@ export class FootballHost implements InputTarget {
     for (const [seat, kind] of buzzFor(event, driver.match)) this.phones.buzz(seat, kind);
     const said = calloutFor(event, driver.match, (id) => this.nameOf(id));
     if (said) this.callout = { value: said, until: nowMs + CALLOUT_MS };
-    if (event.type === "win") this.aims.clear();
   }
 
   private refresh(nowMs: number): void {

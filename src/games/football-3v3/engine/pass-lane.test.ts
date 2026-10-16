@@ -81,6 +81,8 @@ describe("passing lanes", () => {
       const wr = bySeat(m, 1);
       const d = bySeat(m, 3);
       bySeat(m, 2).z = 25;
+      // The offense's support players out of the lane, so only the defender can play it.
+      for (const a of m.athletes) if (a.team === m.offense && a.role === "support") a.z = 25;
       // Right on the line, a step in front of the receiver.
       d.x = wr.x - (wr.x - qb.x) * 0.08;
       d.z = wr.z - (wr.z - qb.z) * 0.08;

@@ -1,7 +1,6 @@
-import { ButtonKeys, MouseAim, StickKeys, type KeyboardContext, type KeyboardPlayer, type StagePointer } from "@/platform/keyboard";
+import { ButtonKeys, StickKeys, type KeyboardContext, type KeyboardPlayer } from "@/platform/keyboard";
 import { followMeter, tapMeter, type LocalMeter } from "../phone/kick-meter";
 import { phoneStateSchema, type PadButton, type PhoneState } from "../protocol";
-import { mouseStick, ThrowKeys } from "./throw-keys";
 
 /** The keyboard's own buttons, before the game's state says what each one means right now. */
 type Key = "act" | "juke" | "dive" | "tackle" | "sprint" | "guard";
@@ -15,7 +14,7 @@ const KEYS: Record<Key, readonly string[]> = {
   guard: ["KeyG"],
 };
 
-const DIGITS = ["Digit1", "Digit2", "Digit3", "Digit4", "Digit5", "Digit6"];
+const DIGITS = ["Digit1", "Digit2", "Digit3", "Digit4"];
 
 /** On the page of plays: R deals new plays, B goes back to Throw, Run and Kick. */
 const BOOK_KEYS: Record<string, "redeal" | "back"> = { KeyR: "redeal", KeyB: "back" };
@@ -28,7 +27,7 @@ export function padFor(key: Key, s: PhoneState): PadButton | "skip" | null {
   if (key === "tackle") return s.pad === "defense" ? "tackle" : null;
   if (key === "guard") return s.pad === "defense" ? "guard" : null;
   if (key === "sprint") return s.pad === "qb" ? "run" : s.pad === "defense" ? "rush" : null;
-  // Space: the QB's main action, or a tackle on defence.
+  // Space: the QB's hike, or his pitch on a run call; a tackle on defence.
   if (s.pad === "qb") return s.phase === "presnap" ? "hike" : s.runPlay ? "pass" : null;
   return s.pad === "defense" ? "tackle" : null;
 }
@@ -36,18 +35,14 @@ export function padFor(key: Key, s: PhoneState): PadButton | "skip" | null {
 /**
  * One keyboard seat for Football 3v3. It sends exactly what the phone
  * would: the gamepad kit's stick and presses, the play call, the kick
- * meter's reading and the throw stick. What each key does
- * follows the controls the phone shows right now, from the host's state.
+ * meter's reading and the throw buttons. What each key does follows the
+ * controls the phone shows right now, from the host's state.
  */
 export class FootballKeys implements KeyboardPlayer {
   private readonly move = new StickKeys("wasd");
-  private readonly arrows = new StickKeys("arrows");
   private readonly buttons: ButtonKeys<Key>;
-  private readonly mouse: MouseAim;
-  private readonly thrower: ThrowKeys;
   /** The pad button each key pressed, so its release lets go of the same one. */
-  private readonly down = new Map<Key | "mouse", PadButton | "skip" | "throw">();
-  private pointed = false;
+  private readonly down = new Map<Key, PadButton | "skip">();
   private kick: LocalMeter | null = null;
   private stage: "aim" | "power" | null = null;
 
@@ -55,22 +50,13 @@ export class FootballKeys implements KeyboardPlayer {
     private readonly ctx: KeyboardContext,
     private readonly now: () => number = () => performance.now(),
   ) {
-    this.thrower = new ThrowKeys(ctx);
     this.buttons = new ButtonKeys(KEYS, { press: (k) => this.press(k), release: (k) => this.lift(k) }, now);
-    this.mouse = new MouseAim({
-      aim: () => (this.pointed = true),
-      button: (button, isDown) => {
-        if (button !== 0) return;
-        if (isDown) this.startThrow("mouse");
-        else this.lift("mouse");
-      },
-    }, now);
   }
 
   key(code: string, isDown: boolean): boolean {
     const digit = DIGITS.indexOf(code);
     if (digit >= 0) {
-      if (isDown) this.call(digit);
+      if (isDown) this.number(digit);
       return true;
     }
     const book = BOOK_KEYS[code];
@@ -78,30 +64,22 @@ export class FootballKeys implements KeyboardPlayer {
       if (isDown) this.ctx.send({ kind: "play", action: book });
       return true;
     }
-    return this.move.key(code, isDown) || this.arrows.key(code, isDown) || this.buttons.key(code, isDown);
-  }
-
-  pointer(event: StagePointer): void {
-    this.mouse.pointer(event);
+    return this.move.key(code, isDown) || this.buttons.key(code, isDown);
   }
 
   tick(): void {
-    this.mouse.tick();
     this.followKick();
     const s = this.move.vector();
     const held = [...this.down.values()].filter((b) => b === "guard");
     this.ctx.sendLossy({ kind: "pad", x: s.x, y: s.y, held });
-    this.thrower.tick(this.aim());
   }
 
-  /** Focus lost: a held throw is called off, not thrown, and every pad button lets go. */
+  /** Focus lost: every pad button lets go. */
   release(): void {
-    this.thrower.cancel();
-    for (const button of this.down.values()) if (button !== "throw") this.pad(button, false);
+    for (const button of this.down.values()) this.pad(button, false);
     this.down.clear();
     this.buttons.release();
     this.move.release();
-    this.arrows.release();
   }
 
   private state(): PhoneState | null {
@@ -109,36 +87,21 @@ export class FootballKeys implements KeyboardPlayer {
     return parsed.success ? parsed.data : null;
   }
 
-  /** The arrows if held, else the mouse once it has moved, else nothing (the throw then goes up the field). */
-  private aim() {
-    if (this.arrows.active) return this.arrows.vector();
-    return this.pointed ? mouseStick(this.mouse.point) : null;
-  }
-
   private press(key: Key): void {
     const s = this.state();
     if (!s) return;
     if (key === "act" && s.pad === "kicker") return this.tapKick();
-    if (key === "act" && (s.pad === "choose" || s.pad === "playbook")) return this.call(0);
-    if (key === "act" && s.pad === "qb" && s.canThrow && !s.runPlay && s.phase === "live") return this.startThrow("act");
+    if (key === "act" && (s.pad === "choose" || s.pad === "playbook")) return this.number(0);
     const button = padFor(key, s);
     if (!button) return;
     this.down.set(key, button);
     this.pad(button, true);
   }
 
-  private startThrow(from: Key | "mouse"): void {
-    const s = this.state();
-    if (!s || s.pad !== "qb" || !s.canThrow || s.runPlay || this.thrower.holding) return;
-    this.down.set(from, "throw");
-    this.thrower.start();
-  }
-
-  private lift(key: Key | "mouse"): void {
+  private lift(key: Key): void {
     const button = this.down.get(key);
     this.down.delete(key);
-    if (button === "throw") this.thrower.release(this.aim());
-    else if (button) this.pad(button, false);
+    if (button) this.pad(button, false);
   }
 
   private pad(button: PadButton | "skip", isDown: boolean): void {
@@ -146,11 +109,19 @@ export class FootballKeys implements KeyboardPlayer {
     this.ctx.send({ kind: "pad-press", button, down: isDown, x: s.x, y: s.y });
   }
 
-  /** 1, 2 and 3 pick the play call in the order the phone shows them; on the page of plays 1 to 6 pick a play. */
-  private call(index: number): void {
+  /**
+   * A number key, as the phone shows things now: the play call (1 to 3),
+   * a play off the page (1 or 2), or on the QB's pad a throw to that
+   * runner (1 to 4, his number on the card and the field).
+   */
+  private number(index: number): void {
     const s = this.state();
     if (s?.pad === "playbook") {
       if (s.book && index < s.book.plays.length) this.ctx.send({ kind: "play", action: index });
+      return;
+    }
+    if (s?.pad === "qb") {
+      if (s.throws[index]) this.ctx.send({ kind: "throw", slot: index });
       return;
     }
     const call = s?.pad === "choose" ? s.choose?.options[index] : undefined;

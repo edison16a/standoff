@@ -1,55 +1,99 @@
-/* The pad's throw stick and button faces, loaded after pad.css. */
+/* The pad's throw buttons and button faces, loaded after pad.css. */
 
-.fb-throw__label {
-  color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  pointer-events: none;
-}
+/* The QB's four throw buttons, two by two, each filled in its runner's colour; Pitch spans under them on a run call. */
 
-/* The QB's throw stick. */
-
-.fb-throw {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+.fb-throws {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
   gap: 8px;
   align-self: stretch;
+  width: 100%;
+  max-width: 300px;
   touch-action: none;
 }
 
-.fb-throw__ring {
-  position: relative;
+.fb-throws--run {
+  grid-template-rows: repeat(2, minmax(0, 1fr)) minmax(44px, 0.55fr);
+}
+
+.fb-throws__btn,
+.fb-pitch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  font: inherit;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fb-throws__btn {
+  flex-direction: column;
+  gap: 2px;
+  background: var(--runner);
+  color: #0b1a10;
+  box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.22), 0 3px 10px rgba(0, 0, 0, 0.35);
+}
+
+.fb-throws__btn:active:not(:disabled),
+.fb-pitch:active:not(:disabled) {
+  transform: scale(0.95);
+  filter: brightness(1.15);
+}
+
+.fb-throws__btn:disabled,
+.fb-pitch:disabled {
+  opacity: 0.4;
+  filter: saturate(0.6);
+  cursor: default;
+}
+
+/* The back the pitch goes to wears a white edge, so Pitch and his colour read together. */
+.fb-throws__btn--back {
+  outline: 3px solid #ffffff;
+  outline-offset: -3px;
+}
+
+.fb-throws__n {
+  font-family: "Arial Black", Impact, Arial, sans-serif;
+  font-size: min(18cqh, 64px);
+  line-height: 1;
+}
+
+.fb-throws__name {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.fb-pitch {
+  grid-column: 1 / -1;
+  gap: 10px;
+  border: 3px solid var(--runner);
+  background: #9333ea;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.fb-pitch__n {
   display: grid;
   place-items: center;
-  /* Sized from the right hand box, leaving room for the label under it. */
-  width: min(74cqh, 84cqw, 200px);
-  height: min(74cqh, 84cqw, 200px);
-  border: 3px solid #f5c518;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(245, 197, 24, 0.2), rgba(245, 197, 24, 0.05));
-  pointer-events: none;
-}
-
-.fb-throw__knob {
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  background: #f5c518;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
-}
-
-.fb-throw--held .fb-throw__ring {
-  border-color: #fff27a;
-  box-shadow: 0 0 22px rgba(245, 197, 24, 0.6);
-}
-
-.fb-throw--off {
-  opacity: 0.35;
+  background: var(--runner);
+  color: #0b1a10;
+  font-size: 16px;
 }
 
 /* An icon over a short word on each round button. */

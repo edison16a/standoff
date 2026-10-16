@@ -8,22 +8,16 @@ import { buzz } from "./haptics";
 import { followMeter, tapMeter } from "./kick-meter";
 import { usePhoneStore as store, type SetupStep } from "./phone-store";
 
-/** The throw stick streams this often while held. */
-const AIM_MS = 1000 / 30;
-
 /**
  * Football 3v3 on the phone. It shows the setup steps, then turns the
  * phone into the controller for whatever this player is doing: the QB's
- * move stick and throw stick, a runner's stick, the defence's buttons, the
+ * move stick and throw buttons, a runner's stick, the defence's buttons, the
  * play call, the kick meters. It makes no game decisions; what happens
  * on the field is always the host's call.
  */
 export class FootballPhone {
   readonly pad: PhonePad;
   private readonly off: () => void;
-  private aimNow: Stick | null = null;
-  private aimSent: Stick | null = null;
-  private aimTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(private readonly room: PhoneRoomApi) {
     store.setState({ ...store.getInitialState() });
@@ -33,7 +27,6 @@ export class FootballPhone {
   }
 
   dispose(): void {
-    this.stopAim();
     this.pad.dispose();
     this.off();
   }
@@ -70,16 +63,9 @@ export class FootballPhone {
     else this.pad.release(button);
   }
 
-  /** The throw stick while it is held: streamed to the host, which lights up the target. */
-  aim(stick: Stick): void {
-    this.aimNow = stick;
-    this.aimTimer ??= setInterval(() => this.sendAim(), AIM_MS);
-  }
-
-  /** The throw stick let go: throw, reliably, with its last reading. */
-  throwBall(stick: Stick): void {
-    this.stopAim();
-    this.send({ kind: "throw", x: stick.x, y: stick.y });
+  /** A tap on one of the QB's throw buttons: throw to that runner, sent reliably. */
+  throwTo(slot: number): void {
+    this.send({ kind: "throw", slot });
   }
 
   call(call: Call): void {
@@ -109,22 +95,7 @@ export class FootballPhone {
    */
   letGo({ keepStick = false }: { keepStick?: boolean } = {}): void {
     for (const button of [...PAD_BUTTONS, "skip"]) this.pad.release(button);
-    this.stopAim();
     if (!keepStick) this.pad.setStick({ x: 0, y: 0 });
-  }
-
-  private sendAim(): void {
-    const s = this.aimNow;
-    if (!s || (this.aimSent && Math.abs(s.x - this.aimSent.x) < 0.02 && Math.abs(s.y - this.aimSent.y) < 0.02)) return;
-    this.aimSent = s;
-    this.room.sendLossy({ kind: "aim", x: s.x, y: s.y });
-  }
-
-  private stopAim(): void {
-    if (this.aimTimer) clearInterval(this.aimTimer);
-    this.aimTimer = null;
-    this.aimNow = null;
-    this.aimSent = null;
   }
 
   private onRoom(event: PhoneRoomEvent): void {

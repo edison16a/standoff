@@ -1,7 +1,5 @@
 import type { HostRoomEvent, Player } from "@/platform/games/game-api";
-import type { V2 } from "../engine/vec";
 import { phoneMessageSchema, type PhoneMessage } from "../protocol";
-import type { AimSticks } from "./aim-sticks";
 import type { Lobby } from "./lobby";
 import type { MatchDriver } from "./match-driver";
 import type { PhoneLink } from "./phone-link";
@@ -11,10 +9,8 @@ import type { ReplayDirector } from "./replay/director";
 export interface InputTarget {
   readonly lobby: Lobby;
   readonly driver: MatchDriver | null;
-  readonly aims: AimSticks;
   readonly phones: PhoneLink;
   readonly replays: ReplayDirector;
-  readonly forward: V2;
   players(): readonly Player[];
   /** During a replay a press is a vote to skip it. True when it was taken as one. */
   vote(seat: number, down: boolean): boolean;
@@ -32,7 +28,6 @@ export function routeRoom(t: InputTarget, event: HostRoomEvent): boolean {
     case "left":
       t.lobby.disconnect(event.seat);
       t.driver?.setOnline(event.seat, false);
-      t.aims.clear(event.seat);
       if (t.replays.left(event.seat)) t.endReplay();
       return true;
     case "message": {
@@ -53,7 +48,7 @@ export function routeRoom(t: InputTarget, event: HostRoomEvent): boolean {
   }
 }
 
-/** A phone's own message: a pick, the QB's call, a kick, the throw stick. Returns whether to refresh. */
+/** A phone's own message: a pick, the QB's call, a kick, a throw button. Returns whether to refresh. */
 export function routePhone(t: InputTarget, seat: number, message: PhoneMessage): boolean {
   const d = t.driver;
   switch (message.kind) {
@@ -66,14 +61,9 @@ export function routePhone(t: InputTarget, seat: number, message: PhoneMessage):
     case "hello":
       t.phones.forget(seat);
       return true;
-    case "aim":
-      // Streamed often, and nothing on screen changes, so no refresh.
-      if (!t.replays.active) t.aims.set(seat, message);
-      return false;
     case "throw":
-      t.aims.clear(seat);
-      if (!t.vote(seat, true)) d?.throwAt(seat, message, t.forward);
-      return false;
+      if (!t.vote(seat, true)) d?.throwTo(seat, message.slot);
+      return true;
     case "call":
       if (!t.vote(seat, true)) d?.call(seat, message.call);
       return true;
