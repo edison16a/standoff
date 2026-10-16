@@ -50,7 +50,7 @@ export class ReplayPreview {
     const frame = this.replay.frame();
     const script = this.replay.script;
     if (!frame || !script) return;
-    this.renderer.setReplay({ angle: frame.segment.angle, take: frame.segment.take, passer: script.passer, scorer: script.scorer });
+    this.renderer.setReplay({ angle: frame.segment.angle, passer: script.passer, scorer: script.scorer });
     for (const event of this.replay.sounds()) this.renderer.onEvent(event);
     if (render) this.renderer.draw(frame.view, ms);
     else this.renderer.update(frame.view, ms);

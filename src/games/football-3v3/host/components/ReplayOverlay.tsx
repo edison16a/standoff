@@ -2,13 +2,10 @@
 import type { ReplayAngle } from "../../render/camera/replay-shots";
 import { useFootballStore } from "../host-store";
 
-/** What each angle is called on the bug, as a broadcast names its cameras. */
+/** What the shot is called on the bug. */
 const ANGLE_NAME: Record<ReplayAngle, string> = {
-  all22: "All 22",
-  qb: "Behind the QB",
-  catch: "The catch",
-  chase: "The run",
-  endzone: "End zone",
+  trace: "The pass",
+  run: "The run",
 };
 
 /**

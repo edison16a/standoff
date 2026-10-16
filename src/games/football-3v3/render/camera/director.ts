@@ -37,14 +37,14 @@ export class CameraDirector {
   }
 
   /**
-   * Films the touchdown replay's angles instead of the live shots, or
-   * goes back to them with null. Going in or out of a replay, a new
-   * angle and a new take of the play are all cuts, like a director
-   * switching cameras, never a sweep across the field. True on a cut.
+   * Films the touchdown replay's shot instead of the live ones, or goes
+   * back to them with null. Going in or out of a replay is a cut, like a
+   * director switching cameras, never a sweep across the field. Inside
+   * it the one camera glides. True on a cut.
    */
   setReplay(shot: ReplayShot | null): boolean {
     const was = this.replay;
-    const cut = (shot === null) !== (was === null) || (!!shot && !!was && (shot.angle !== was.angle || shot.take !== was.take));
+    const cut = (shot === null) !== (was === null) || (!!shot && !!was && shot.angle !== was.angle);
     if (cut) this.kind = null;
     this.replay = shot;
     return cut;

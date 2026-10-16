@@ -2,8 +2,8 @@ import type { MatchEvent } from "../../engine/events";
 import type { MatchView } from "../../engine/view";
 import { replays, type Cue } from "./cues";
 
-/** Long enough for a snap, a deep throw and the run after the catch. */
-const KEEP_S = 16;
+/** Long enough for a snap, a deep throw, the run after the catch and the scorer's celebration after it. */
+const KEEP_S = 18;
 
 /**
  * Keeps the last few seconds of match stills, one every step, and the

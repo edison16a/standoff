@@ -7,14 +7,14 @@ export interface Cue {
 }
 
 /**
- * The sounds a replay plays again: the snap, the pads, the hits, the
- * throw and the catch. Never the whistle, the horn or the score's music,
- * which belong to the live moment, and nothing a phone or the board
- * reacts to.
+ * The sounds a replay plays again: only the key moments, the snap, the
+ * throw, the pitch and the catch, with a cut or two. The stream of pads,
+ * hits and bodies on the turf is left out: heard again under the replay
+ * it was a clatter that buried the play. Never the whistle, the horn or
+ * the score's music, which belong to the live moment, and nothing a
+ * phone or the board reacts to.
  */
-const REPLAYED = new Set<MatchEvent["type"]>([
-  "hike", "pads", "juke", "dive", "lunge", "missedTackle", "tackle", "throw", "pitch", "takePitch", "catch", "breakUp", "tip",
-]);
+const REPLAYED = new Set<MatchEvent["type"]>(["hike", "juke", "throw", "pitch", "takePitch", "catch"]);
 
 export const replays = (event: MatchEvent): boolean => REPLAYED.has(event.type);
 
