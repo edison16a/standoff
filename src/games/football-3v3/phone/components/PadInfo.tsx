@@ -19,7 +19,8 @@ export function statusOf(host: PhoneState): string | null {
   if (host.banner) return host.banner;
   if (host.grounded) return "Getting up";
   if (host.withBall && host.pad === "qb") return qbStatus(host);
-  if (host.withBall) return "Run it in";
+  // A scorer still has the ball as he pulls up in the end zone: he has run it in.
+  if (host.withBall && host.phase !== "touchdown") return "Run it in";
   if (host.switched && host.phase === "live") return host.runPlay ? "You have the back" : "You have the receiver";
   switch (host.phase) {
     case "choose":
