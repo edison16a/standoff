@@ -41,6 +41,8 @@ export function slotsOpen(m: Match, qb: Athlete): boolean[] {
 
 /** A throw button tapped: the throw to that slot's runner starts, or nothing when it cannot go. */
 export function throwToSlot(m: Match, qb: Athlete, slot: number): boolean {
+  // Letting go ends the highlight, whether or not the throw can go.
+  if (m.play) m.play.hot = null;
   const id = throwSlots(m, qb)[slot];
   if (id === undefined || !canThrowTo(m, qb, id)) return false;
   qb.aim = null;

@@ -4,7 +4,7 @@ import { newBall, type Ball, type PassInfo } from "./ball";
 import { createAthlete } from "./body";
 import { think } from "./bots/brain";
 import { setAway, steered } from "./control";
-import { pressButton, releaseButton, setAim, setMove, throwAtSlot } from "./controls";
+import { holdAtSlot, pressButton, releaseButton, setAim, setMove, throwAtSlot } from "./controls";
 import { newDrive, type Drive } from "./downs";
 import type { MatchEvent, PlayEnd } from "./events";
 import type { KickState } from "./kick";
@@ -14,6 +14,7 @@ import { chooseCall, huddleAction, startChoose } from "./phases";
 import type { Huddle } from "./playbook/huddle";
 import type { Play } from "./play";
 import { Rng } from "./rng";
+import { dropStaleHighlight } from "./throw-highlight";
 import { stepWorld } from "./world";
 import { newSupportState, type SupportState } from "./support/clinch";
 import { SUPPORT } from "./support/roster";
@@ -189,6 +190,11 @@ export class Match {
     throwAtSlot(this, id, slot);
   }
 
+  /** The QB's finger held on a throw button, or null off them all: lights that runner up, throws nothing. */
+  highlight(id: number, slot: number | null): void {
+    holdAtSlot(this, id, slot);
+  }
+
   /** A button pressed. `value` is the phone's own meter reading for a kick, free of lag. */
   press(id: number, button: Button, value?: number): void {
     pressButton(this, id, button, value);
@@ -219,5 +225,6 @@ export class Match {
     this.phaseT += dt;
     think(this, dt);
     stepWorld(this, dt);
+    dropStaleHighlight(this);
   }
 }
