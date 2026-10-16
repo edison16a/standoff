@@ -7,7 +7,7 @@ import { findMoments } from "./moments";
  * sets, rides the ball from his hand all the way down into the
  * receiver's, then chases the run in. A touchdown on the ground is the
  * run chased from the handoff to the end zone. It ends as the scorer
- * pulls up, before the celebration that was just seen live.
+ * pulls up, a beat into the celebration that was just seen live at most.
  */
 export type ReplayAngle = "trace" | "run";
 
@@ -32,13 +32,21 @@ const SET_S = 0.9;
 const RUN_S = 6;
 /** This long after the line: the scorer easing up in the end zone. */
 const AFTER_S = 1.3;
+/** A beat of his celebration at most: it was just seen live. */
+const DANCE_S = 0.4;
+
+/** Match time the scorer starts to celebrate, or Infinity if the clip never shows it. */
+function danceAt(clip: readonly MatchView[], scorer: number, from: number): number {
+  const f = clip.find((v) => v.time >= from && v.athletes.find((a) => a.id === scorer)?.action === "celebrate");
+  return f ? f.time : Infinity;
+}
 
 /** Lays out the replay of a touchdown in the clip, or null when there is no play to show. */
 export function scriptReplay(clip: readonly MatchView[], scorer: number): ReplayScript | null {
   const m = findMoments(clip, scorer);
   if (!m) return null;
   const first = clip[0]!.time;
-  const to = Math.min(clip[clip.length - 1]!.time, m.tdAt + AFTER_S);
+  const to = Math.min(clip[clip.length - 1]!.time, m.tdAt + AFTER_S, danceAt(clip, scorer, m.tdAt) + DANCE_S);
   const from = m.pass ? Math.max(first, m.snapAt, m.pass.throwAt - SET_S) : Math.max(first, m.snapAt - 0.2, m.tdAt - RUN_S);
   if (to - from < 0.5) return null;
   const segments: ReplaySegment[] = [{ from, to, angle: m.pass ? "trace" : "run" }];

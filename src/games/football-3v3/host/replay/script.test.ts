@@ -65,6 +65,14 @@ describe("the touchdown replay's script", () => {
     expect(15 - shot.from).toBeLessThanOrEqual(6 + 1e-6);
   });
 
+  it("ends a beat into the scorer's celebration", () => {
+    const frames = clip({ snap: 1, td: 8, pass: { windup: 2.4, release: 2.8, catch: 7.9 } });
+    for (const f of frames) if (f.time >= 8.3) (f.athletes[1] as { action: string }).action = "celebrate";
+    const shot = scriptReplay(frames, WR)!.segments[0]!;
+    expect(shot.to).toBeGreaterThan(8.3);
+    expect(shot.to).toBeLessThan(8.3 + 0.45);
+  });
+
   it("has nothing to show for a score with no live play before it", () => {
     expect(scriptReplay(clip({ snap: 0, td: 0 }), WR)).toBeNull();
   });
