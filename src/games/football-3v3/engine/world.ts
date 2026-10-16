@@ -18,6 +18,7 @@ import { updateDive } from "./dive";
 import { updateDown } from "./down";
 import { updateLunge } from "./tackle";
 import { updatePhase } from "./phases";
+import { stepRunout } from "./score-runout";
 import { JUKE } from "./tuning";
 import { endPlay } from "./whistle";
 import type { Athlete } from "./types";
@@ -82,6 +83,7 @@ export function stepWorld(m: Match, dt: number): void {
   if (m.phase === "kick") updateKick(m, dt);
   // Moves for a pass coming down are picked before it arrives, so a dive leaves the ground in time.
   planCatches(m, dt);
+  stepRunout(m);
   // Linemen move with their pair; a juke can still put one on the turf for a moment.
   for (const a of m.athletes) {
     if (a.role !== "lineman") act(m, a, dt);

@@ -1,5 +1,6 @@
 import type { BotLevel } from "@/games/kit/difficulty/difficulty";
-import { Match, RULES, STEP, buildView } from "../engine";
+import { Match, STEP, buildView } from "../engine";
+import { touchdownEnd } from "../engine/score-runout";
 import type { MatchEvent } from "../engine/events";
 import { ReplayDirector } from "../host/replay/director";
 import { ReplayRecorder } from "../host/replay/recorder";
@@ -36,7 +37,7 @@ export class ReplayPreview {
       for (const e of events) if (e.type === "touchdown" && !e.conversion && (e.pass === null) === run && ++found === nth) scorer = e.id;
     }
     // On to the end of the celebration, where the host rolls its replay.
-    while (scorer !== null && match.phase === "touchdown" && match.phaseT + STEP < RULES.touchdownSeconds) {
+    while (scorer !== null && match.phase === "touchdown" && match.phaseT + STEP < touchdownEnd(match)) {
       match.step(STEP);
       recorder.record(buildView(match), match.drainEvents());
     }

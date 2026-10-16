@@ -1,10 +1,10 @@
-import { BUILDS } from "../builds";
 import { other } from "../teams";
 import { advance, newDrive, type Drive } from "./downs";
 import type { PlayEnd } from "./events";
 import { spotZ, xToYard } from "./field";
 import type { Match } from "./match";
 import { addScore } from "./score";
+import { startRunout } from "./score-runout";
 import { RULES } from "./tuning";
 import type { Athlete } from "./types";
 import { clamp } from "./vec";
@@ -52,12 +52,12 @@ function touchdown(m: Match, carrier: Athlete): void {
   if (!d.conversion) celebrate(m, carrier);
 }
 
-/** The scorer and teammates celebrate on their own: a spike or the player's own dance. */
+/** Teammates celebrate on their own at once; the scorer runs it out first (score-runout.ts). */
 function celebrate(m: Match, scorer: Athlete): void {
+  startRunout(m, scorer);
   for (const a of m.athletes) {
-    if (a.team !== scorer.team || a.role === "lineman") continue;
-    const spike = a === scorer && a.build !== null && BUILDS[a.build].celebration === "spike";
-    a.action = { kind: "celebrate", t: 0, dur: RULES.touchdownSeconds, spike };
+    if (a.team !== scorer.team || a.role === "lineman" || a === scorer) continue;
+    a.action = { kind: "celebrate", t: 0, dur: RULES.touchdownSeconds, spike: false };
   }
 }
 

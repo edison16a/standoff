@@ -3,7 +3,8 @@ import { adminFieldGoal, adminTouchdown, adminTwoPoint, adminWin } from "../engi
 import type { MatchEvent } from "../engine/events";
 import type { Entry } from "../engine/lineup";
 import { Match } from "../engine/match";
-import { RULES, STEP } from "../engine/tuning";
+import { touchdownEnd } from "../engine/score-runout";
+import { STEP } from "../engine/tuning";
 import type { Button } from "../engine/types";
 import type { V2 } from "../engine/vec";
 import { buildView, type MatchView } from "../engine/view";
@@ -138,7 +139,7 @@ export class MatchDriver {
   /** The celebration is over and a replay is owed: hold here. */
   private replayDue(): boolean {
     const m = this.match;
-    return this.replayFor !== null && m.phase === "touchdown" && m.phaseT + STEP >= RULES.touchdownSeconds;
+    return this.replayFor !== null && m.phase === "touchdown" && m.phaseT + STEP >= touchdownEnd(m);
   }
 
   private steer(sticks: Sticks): void {
