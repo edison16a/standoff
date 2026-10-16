@@ -58,9 +58,9 @@ function Banner() {
 }
 
 /**
- * The overlay during a game: the scoreboard, the countdown, the big
- * calls, and a reminder when the team with the ball must take it back
- * past the arc.
+ * The overlay during a game: the scoreboard, the countdown, and under
+ * the scoreboard the calls and a reminder when the team with the ball
+ * must take it back past the arc. Nothing sits over the rim.
  */
 export function Hud() {
   const countdown = useNbaStore((s) => s.countdown);
@@ -71,17 +71,19 @@ export function Hud() {
   return (
     <div className="nba-hud">
       <Scoreboard />
-      {phase === "live" && mustClear && (
-        <p className="nba-hud__clear" style={{ "--team": TEAMS[offence].color } as React.CSSProperties}>
-          {TEAMS[offence].name}: take it back past the arc
-        </p>
-      )}
       {countdown !== null && countdown > 0 && (
         <div key={countdown} className="nba-count">
           {countdown}
         </div>
       )}
-      <Banner />
+      <div className="nba-hud__under">
+        <Banner />
+        {phase === "live" && mustClear && (
+          <p className="nba-hud__clear" style={{ "--team": TEAMS[offence].color } as React.CSSProperties}>
+            {TEAMS[offence].name}: take it back past the arc
+          </p>
+        )}
+      </div>
       {waiting.length > 0 && phase !== "over" && <p className="nba-hud__waiting">{waiting.join(", ")} will join the next game</p>}
     </div>
   );

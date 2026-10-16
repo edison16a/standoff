@@ -8,12 +8,13 @@ export type BannerText = Omit<Banner, "key">;
 const pick = <T,>(options: readonly T[], n: number): T => options[Math.abs(n) % options.length]!;
 
 /**
- * The banner across the big screen, for the moments that change the
- * game: the tip, a block or a steal, a turnover, game point and the
- * win. Baskets get no banner; the arena answers them and the
- * scoreboard ticks over. Jukes get none either: the beaten defender's
- * stumble says it. `nameOf` gives the name the room knows a
- * player by, and `n` varies the wording.
+ * The banner on the big screen, for the moments that change the game:
+ * the tip, a block or a steal, a turnover, game point and the win.
+ * Baskets get no banner; the arena answers them and the scoreboard
+ * ticks over. Jukes get none either: the beaten defender's stumble
+ * says it. A man knocked down gets none, as it comes as the dunk goes
+ * up and words there would hide the ball going in. `nameOf` gives the
+ * name the room knows a player by, and `n` varies the wording.
  */
 export function banner(e: MatchEvent, m: Match, nameOf: (id: number) => string, n: number): BannerText | null {
   const tone = (id: number) => (m.athletes[id]?.team === 1 ? "team1" : "team0") as Banner["tone"];
@@ -24,8 +25,6 @@ export function banner(e: MatchEvent, m: Match, nameOf: (id: number) => string, 
       return { text: "STOLEN!", sub: nameOf(e.id), tone: tone(e.id) };
     case "intercept":
       return { text: "PICKED OFF!", sub: nameOf(e.id), tone: tone(e.id) };
-    case "knockdown":
-      return { text: "BULLDOZED!", sub: nameOf(e.by), tone: tone(e.by) };
     case "foul":
       if (e.call === "charge") return { text: "CHARGE", sub: `${nameOf(e.victim)} took it`, tone: tone(e.victim) };
       return { text: e.call === "block" ? "BLOCKING FOUL" : e.shooting ? "SHOOTING FOUL" : "FOUL", sub: `${nameOf(e.id)} on ${nameOf(e.victim)}`, tone: "red" };
