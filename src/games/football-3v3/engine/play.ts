@@ -1,4 +1,5 @@
 import type { PlayDesign } from "./playbook/deal";
+import type { Runout } from "./score-runout";
 import type { PlayCall } from "./types";
 
 /**
@@ -30,11 +31,13 @@ export interface Play {
   /** Match time the play went live, for replays. */
   startedAt: number;
   over: boolean;
+  /** The scorer pulling up after a touchdown, then celebrating (score-runout.ts). */
+  runout: Runout | null;
 }
 
 export function newPlay(call: PlayCall, time: number, back: number | null = null, design: PlayDesign | null = null, runners: number[] = []): Play {
   return {
     call, sinceSnap: null, rushOn: false, passed: false, qbRun: false,
-    caughtBy: null, intercepted: false, target: null, back, pitched: false, design, runners, startedAt: time, over: false,
+    caughtBy: null, intercepted: false, target: null, back, pitched: false, design, runners, startedAt: time, over: false, runout: null,
   };
 }

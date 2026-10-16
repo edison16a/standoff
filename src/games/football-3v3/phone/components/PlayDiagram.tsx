@@ -2,41 +2,63 @@
 import { RUNNER_COLOURS } from "../../engine/playbook/colours";
 import type { Book, CardRunner, PlayCardView } from "../../protocol";
 
-/** The card's drawing space: the field's width across, stretched a little to fill a phone's card, and as many yards up as the card shows. */
+/**
+ * The card's drawing space: the field's 53 yards across and the card's
+ * 30 yards up (engine/playbook/card.ts) at one scale, so a cut at forty
+ * five degrees on the grass is drawn at forty five degrees.
+ */
 const W = 200;
-const H = 90;
+const H = 112;
+/** One line weight and one head for every runner, so the card reads as one clean diagram. */
+const LINE = 2.6;
+const HEAD = { length: 7.5, half: 4.2 } as const;
+const INK = "#0b1a10";
 
-const px = ([u, v]: [number, number]): [number, number] => [u * W, (1 - v) * H];
+type Pt = [number, number];
 
-/** The arrow head, the settle dot or the block bar at the end of a runner's line. */
-function EndMark({ runner, colour }: { runner: CardRunner; colour: string }) {
-  const pts = runner.path.map(px);
+const px = ([u, v]: [number, number]): Pt => [u * W, (1 - v) * H];
+const join = (pts: readonly Pt[]) => pts.map((p) => `${p[0].toFixed(2)},${p[1].toFixed(2)}`).join(" ");
+
+/**
+ * The line to draw for a route ending in an arrow: the same points with
+ * the last leg stopped where the head starts, so the head's tip is the
+ * route's end and no rounded line end pokes past it. Pure.
+ */
+export function lineToHead(pts: readonly Pt[]): { line: Pt[]; head: Pt[] } | null {
   const tip = pts[pts.length - 1];
   const from = pts[pts.length - 2];
   if (!tip || !from) return null;
-  const a = Math.atan2(tip[1] - from[1], tip[0] - from[0]);
-  const at = (d: number, turn: number): [number, number] => [tip[0] + Math.cos(a + turn) * d, tip[1] + Math.sin(a + turn) * d];
-  if (runner.end === "stop") return <circle cx={tip[0]} cy={tip[1]} r={2.6} fill={colour} />;
-  if (runner.end === "block") {
-    // A blocker's line ends in a bar across it, as on a coach's card.
-    const [l, r] = [at(4, Math.PI / 2), at(4, -Math.PI / 2)];
-    return <line x1={l[0]} y1={l[1]} x2={r[0]} y2={r[1]} stroke={colour} strokeWidth={2.4} strokeLinecap="round" />;
-  }
-  return <polygon points={[at(0.5, 0), at(6, Math.PI * 0.84), at(6, -Math.PI * 0.84)].map((p) => p.join(",")).join(" ")} fill={colour} />;
+  const len = Math.hypot(tip[0] - from[0], tip[1] - from[1]);
+  if (len < 1e-6) return null;
+  const d: Pt = [(tip[0] - from[0]) / len, (tip[1] - from[1]) / len];
+  const back = Math.min(HEAD.length, len * 0.85);
+  const base: Pt = [tip[0] - d[0] * back, tip[1] - d[1] * back];
+  const side: Pt = [-d[1] * HEAD.half, d[0] * HEAD.half];
+  return { line: [...pts.slice(0, -1), base], head: [[base[0] + side[0], base[1] + side[1]], tip, [base[0] - side[0], base[1] - side[1]]] };
 }
 
-/** One runner: his line in his colour, dashed when a person runs him, and his number where he lines up. */
+/** One runner: a crisp line in his colour with sharp corners and his end mark, and his number where he lines up. */
 function RunnerLine({ runner }: { runner: CardRunner }) {
   const colour = RUNNER_COLOURS[runner.n - 1] ?? "#ffffff";
   const pts = runner.path.map(px);
   const start = pts[0];
   if (!start) return null;
+  const arrow = runner.end === "arrow" ? lineToHead(pts) : null;
+  const line = arrow?.line ?? pts;
+  const tip = pts[pts.length - 1]!;
+  const from = pts[pts.length - 2] ?? start;
+  const a = Math.atan2(tip[1] - from[1], tip[0] - from[0]);
+  const bar = (k: number): Pt => [tip[0] + Math.cos(a + (Math.PI / 2) * k) * 4.5, tip[1] + Math.sin(a + (Math.PI / 2) * k) * 4.5];
   return (
     <g>
-      <polyline points={pts.map((p) => p.join(",")).join(" ")} fill="none" stroke={colour} strokeWidth={runner.carry ? 3.4 : 2.4} strokeLinejoin="round" strokeLinecap="round" strokeDasharray={runner.free ? "4 3" : undefined} />
-      <EndMark runner={runner} colour={colour} />
-      <circle cx={start[0]} cy={start[1]} r={5.2} fill={colour} stroke="#0b1a10" strokeWidth={1.2} />
-      <text x={start[0]} y={start[1] + 2.6} textAnchor="middle" fontSize={7.5} fontWeight={900} fill="#0b1a10">
+      <polyline points={join(line)} fill="none" stroke={colour} strokeWidth={LINE} strokeLinejoin="miter" strokeMiterlimit={4} strokeLinecap="butt" />
+      {arrow && <polygon points={join(arrow.head)} fill={colour} />}
+      {runner.end === "stop" && <rect x={tip[0] - 2.8} y={tip[1] - 2.8} width={5.6} height={5.6} fill={colour} />}
+      {/* A blocker's line ends in a bar across it, as on a coach's card. */}
+      {runner.end === "block" && <polyline points={join([bar(1), bar(-1)])} stroke={colour} strokeWidth={LINE} strokeLinecap="butt" />}
+      {/* A person's runner has a hollow number: the card is only a suggestion for him. */}
+      <circle cx={start[0]} cy={start[1]} r={5.4} fill={runner.free ? INK : colour} stroke={runner.free ? colour : INK} strokeWidth={1.4} />
+      <text x={start[0]} y={start[1] + 2.7} textAnchor="middle" fontSize={7.5} fontWeight={900} fill={runner.free ? colour : INK}>
         {runner.n}
       </text>
     </g>

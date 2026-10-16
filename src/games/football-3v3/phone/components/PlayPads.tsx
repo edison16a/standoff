@@ -6,7 +6,7 @@ import { TEAMS } from "../../teams";
 import { ButtonFace, type FaceIcon } from "./ButtonFace";
 import { PadInfo } from "./PadInfo";
 import { usePhone } from "./session-context";
-import { ThrowStick } from "./ThrowStick";
+import { ThrowButtons } from "./ThrowButtons";
 
 interface HoldProps {
   button: Button | "skip";
@@ -34,12 +34,11 @@ const colourOf = (host: PhoneState) => TEAMS[host.team ?? 0].color;
 
 /**
  * The QB's middle and right: before the snap one big Hike button with
- * the seconds left, after it Juke and Run. On the right the throw stick,
- * or on a run call a big Pass button for the pitch. Run hands him the
- * runner's pad for the rest of the play (engine/qb-run.ts).
+ * the seconds left, after it Juke and Run. On the right a throw button
+ * for each runner in his colour, and on a run call Pitch under them. Run
+ * hands him the runner's pad for the rest of the play (engine/qb-run.ts).
  */
 function QbControls({ host }: { host: PhoneState }) {
-  const phone = usePhone();
   const presnap = host.phase === "presnap";
   return (
     <>
@@ -58,11 +57,7 @@ function QbControls({ host }: { host: PhoneState }) {
         )}
       </div>
       <div className="fb-pad__right">
-        {host.runPlay ? (
-          <Hold button="pass" icon="ball" text="Pass" colour="#9333ea" size="lg" disabled={!host.canPitch} />
-        ) : (
-          <ThrowStick disabled={!host.canThrow} onAim={(stick) => phone.aim(stick)} onThrow={(stick) => phone.throwBall(stick)} />
-        )}
+        <ThrowButtons host={host} />
       </div>
     </>
   );

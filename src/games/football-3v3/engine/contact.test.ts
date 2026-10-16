@@ -127,6 +127,8 @@ describe("passing", () => {
       const qb = bySeat(m, 0);
       const wr = bySeat(m, 1);
       const d = bySeat(m, 3);
+      // The offense's support players out of the lane, so only the defender can play it.
+      for (const a of m.athletes) if (a.team === m.offense && a.role === "support") a.z = 25;
       d.x = wr.x - (wr.x - qb.x) * 0.1;
       d.z = wr.z - (wr.z - qb.z) * 0.1;
       m.setAim(qb.id, { x: wr.x - qb.x, z: wr.z - qb.z });

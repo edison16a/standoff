@@ -5,7 +5,7 @@ import type { PhoneState } from "../../protocol";
 
 /** The QB with the ball who has not turned runner: what he can do right now. */
 function qbStatus(host: PhoneState): string {
-  if (host.canPitch) return "Press Pass to pitch";
+  if (host.canPitch) return "Pitch, or throw by colour";
   if (host.canThrow) return "Find a receiver";
   // A run call whose back went down leaves only Run.
   if (host.canRun) return "Press Run to keep it";
@@ -19,7 +19,8 @@ export function statusOf(host: PhoneState): string | null {
   if (host.banner) return host.banner;
   if (host.grounded) return "Getting up";
   if (host.withBall && host.pad === "qb") return qbStatus(host);
-  if (host.withBall) return "Run it in";
+  // A scorer still has the ball as he pulls up in the end zone: he has run it in.
+  if (host.withBall && host.phase !== "touchdown") return "Run it in";
   if (host.switched && host.phase === "live") return host.runPlay ? "You have the back" : "You have the receiver";
   switch (host.phase) {
     case "choose":

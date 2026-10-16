@@ -1,17 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { newDrive } from "../downs";
-import { FIELD } from "../field";
+import { FIELD, YARD } from "../field";
 import { Match } from "../match";
 import { startChoose } from "../phases";
 import { Rng } from "../rng";
 import { ROUTE_EDGE } from "../route-bounds";
 import { BOTS, PEOPLE, bySeat, peopleMatch, run } from "../test-helpers";
 import { STEP } from "../tuning";
-import { clipToCard, pageCards } from "./card";
+import { CARD, clipToCard, pageCards } from "./card";
 import { DEAL, dealPlays, playKey, type RunnerKind } from "./deal";
 import { HUDDLE } from "./huddle";
-import { DEEP, type PlayRoute } from "./shapes";
-import { ARROW_LENGTH, playbookView } from "./view";
+import { layLegs } from "./lay";
+import { DEEP, PLAY_ROUTES, playRoutePoints, type PlayRoute } from "./shapes";
+import { playbookView, routeArrow } from "./view";
 
 const CLEAR_OUT_SET: ReadonlySet<PlayRoute> = new Set(["go", "fade", "post", "slant", "out", "curl"]);
 
@@ -22,7 +23,7 @@ const RUN_KINDS: RunnerKind[] = ["wide", "wing", "deep", "back"];
 const FULL = [...PEOPLE.slice(0, 2), { team: 0, role: "runner", build: "routerunner", seat: null } as const, ...PEOPLE.slice(2)];
 
 describe("the playbook's deal", () => {
-  it("deals six different pass plays, each with one or two deep routes and every route different", () => {
+  it("deals two different pass plays, each with one or two deep routes and every route different", () => {
     for (let seed = 1; seed <= 30; seed++) {
       const plays = dealPlays(new Rng(seed), "throw", PASS_KINDS);
       expect(plays).toHaveLength(DEAL.size);
@@ -69,15 +70,15 @@ describe("the play call", () => {
     expect(m.phase).toBe("choose");
     expect(m.huddle?.plays).toHaveLength(DEAL.size);
     expect(m.huddle?.runners).toHaveLength(4);
-    const pick = m.huddle!.plays[3]!;
-    m.playbook(qb.id, 3);
+    const pick = m.huddle!.plays[1]!;
+    m.playbook(qb.id, 1);
     expect(m.phase).toBe("presnap");
     expect(m.play?.design).toEqual(pick);
     // Every computer runner on the card has the route the card drew.
     for (const id of m.play!.runners) expect(m.athletes[id]!.bot.route.length).toBeGreaterThan(0);
   });
 
-  it("deals a new page on New plays, and goes back to the call with a fresh clock", () => {
+  it("deals a new page on Refresh, and goes back to the call with a fresh clock", () => {
     const m = new Match({ entries: FULL, seed: 7, firstOffense: 0 });
     const qb = bySeat(m, 0);
     m.choose(qb.id, "run");
@@ -153,6 +154,27 @@ describe("routes on the card and the field", () => {
     }
   });
 
+  it("draws every route in straight legs: up, across or at forty five degrees", () => {
+    const start = { x: 0, z: 0 };
+    for (const kind of PLAY_ROUTES) {
+      const pts = [start, ...playRoutePoints(kind, start, 1, 1)];
+      for (let i = 1; i < pts.length; i++) {
+        const a = pts[i - 1]!;
+        const b = pts[i]!;
+        const angle = (Math.atan2(Math.abs(b.z - a.z), Math.abs(b.x - a.x)) * 180) / Math.PI;
+        expect([0, 45, 90].some((k) => Math.abs(angle - k) < 0.5)).toBe(true);
+      }
+    }
+  });
+
+  it("cuts a leg where it meets the sideline and carries on along it, keeping its corners sharp", () => {
+    const side = ROUTE_EDGE.side;
+    const pts = layLegs({ x: 0, z: side - 3 }, [{ x: 10, z: side - 3 }, { x: 30, z: side + 17 }]);
+    expect(pts[1]).toEqual({ x: 13, z: side });
+    expect(pts[2]).toEqual({ x: 30, z: side });
+    expect(routeArrow({ x: 0, z: 0 }, [{ x: 10, z: 0 }, { x: 30, z: 20 }], 20, 1)).toEqual([{ x: 0, z: 0 }, { x: 10, z: 0 }, { x: 20, z: 10 }]);
+  });
+
   it("cuts a line where it leaves the card, so its arrow sits on the edge", () => {
     const { path, cut } = clipToCard([[0.5, 0.2], [0.5, 0.8], [0.6, 1.6]]);
     expect(cut).toBe(true);
@@ -162,7 +184,7 @@ describe("routes on the card and the field", () => {
 });
 
 describe("the play marks on the big screen", () => {
-  it("rings the four while the QB picks, adds route arrows lined up, and fades once the ball is gone", () => {
+  it("rings the four while the QB picks, draws each whole route lined up, and fades once the ball is gone", () => {
     const m = new Match({ entries: FULL, seed: 8, firstOffense: 0 });
     const qb = bySeat(m, 0);
     m.choose(qb.id, "throw");
@@ -171,10 +193,14 @@ describe("the play marks on the big screen", () => {
     m.playbook(qb.id, 0);
     const set = playbookView(m)!;
     expect(set.stage).toBe("set");
+    const top = (m.drive.los + CARD.ahead - 50) * YARD * m.sign;
     for (const r of set.runners) {
       const arrow = r.arrow!;
-      const length = arrow.slice(1).reduce((sum, p, i) => sum + Math.hypot(p.x - arrow[i]!.x, p.z - arrow[i]!.z), 0);
-      expect(length).toBeCloseTo(ARROW_LENGTH, 3);
+      const route = m.athletes[r.id]!.bot.route;
+      // Every cut of the route is on the turf, not just its first leg, up to the card's top edge.
+      const shown = route.filter((p) => (p.x - top) * m.sign <= 0);
+      for (const p of shown) expect(arrow.some((q) => Math.hypot(q.x - p.x, q.z - p.z) < 1e-6)).toBe(true);
+      for (const p of arrow) expect((p.x - top) * m.sign).toBeLessThanOrEqual(1e-6);
     }
     m.press(qb.id, "hike");
     run(m, 1, () => m.carrier() === qb);

@@ -7,6 +7,8 @@ import type { Match } from "./match";
 import { moveAthlete } from "./motion";
 import { passerLook } from "./passer-facing";
 import { paceOf } from "./qb-run";
+import { runoutLegs } from "./score-runout";
+import { latchedLegs } from "./stick-latch";
 import { ageLooseBlocks } from "./support/clinch-break";
 import { engageClinches, updateClinches } from "./support/clinch";
 import { followBinds } from "./tackle-bind";
@@ -34,8 +36,13 @@ export const settingUp = (m: Match) => m.phase === "presnap" || m.phase === "cho
  */
 function legs(m: Match, a: Athlete, live: boolean): V2 {
   if (frozen(m, a)) return { x: 0, z: 0 };
+  const runout = runoutLegs(m, a);
+  if (runout) return runout;
   if (live && a.guard !== null) return guardMove(m, a, a.guard);
   const read = live && !a.auto ? readBall(m, a) : null;
+  // A player just taken over with the passer's stick still held plays on by himself until the thumb moves (stick-latch.ts).
+  const latched = live ? latchedLegs(m, a, read?.stick ?? null) : null;
+  if (latched) return latched;
   return read ? withTrack(a.move, read.stick, read.wait) : a.move;
 }
 

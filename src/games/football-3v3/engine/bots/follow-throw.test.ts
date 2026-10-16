@@ -8,17 +8,18 @@ describe("a computer QB after his throw", () => {
     run(m, 300, (x) => x.ball.state === "pass" && !!x.play?.passed);
     expect(m.ball.state).toBe("pass");
     const qb = m.athletes.find((a) => a.role === "qb" && a.team === m.offense)!;
-    // Let the follow through finish, then watch him walk.
+    // Let the follow through finish and the speed he threw with die away, then watch him walk.
     run(m, 0.35);
-    const from = { x: qb.x, z: qb.z };
     const spot = m.ball.pass!.spot;
-    const before = Math.hypot(spot.x - from.x, spot.z - from.z);
+    const gap = () => Math.hypot(spot.x - qb.x, spot.z - qb.z);
+    let farthest = gap();
     let top = 0;
-    run(m, 0.6, (x) => {
-      top = Math.max(top, Math.hypot(qb.vx, qb.vz));
+    run(m, 1.2, (x) => {
+      farthest = Math.max(farthest, gap());
+      if (qb.action.kind === "none") top = Math.max(top, Math.hypot(qb.vx, qb.vz));
       return x.ball.state !== "pass";
     });
-    expect(Math.hypot(spot.x - qb.x, spot.z - qb.z)).toBeLessThan(before - 0.2);
+    expect(gap()).toBeLessThan(farthest - 0.2);
     expect(top).toBeLessThan(3.5);
   });
 

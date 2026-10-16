@@ -4,3 +4,6 @@
  * magenta, and each reads on grass.
  */
 export const RUNNER_COLOURS = ["#2ee6ff", "#a6ff3a", "#ffa424", "#9d7bff"] as const;
+
+/** The colours' names, for the QB's throw buttons. */
+export const RUNNER_COLOUR_NAMES = ["Cyan", "Lime", "Orange", "Violet"] as const;

@@ -38,44 +38,49 @@ function clip(beat: Beat, length = beat.td + 3): MatchView[] {
   return frames;
 }
 
-const angles = (beat: Beat) => scriptReplay(clip(beat), WR)!.segments.map((s) => `${s.take}:${s.angle}`);
-
 describe("the touchdown replay's script", () => {
-  it("shows a passing touchdown wide, then behind the QB, at the catch and from the end zone", () => {
-    expect(angles({ snap: 1, td: 8, pass: { windup: 2.4, release: 2.8, catch: 4.2 } })).toEqual(["0:all22", "1:qb", "1:catch", "1:endzone"]);
-  });
-
-  it("leaves out the end zone camera when the catch is at the line", () => {
-    expect(angles({ snap: 1, td: 4.4, pass: { windup: 2.4, release: 2.8, catch: 4.2 } })).toEqual(["0:all22", "1:qb", "1:catch"]);
-  });
-
-  it("shows a run wide, then chased, then met at the end zone", () => {
-    expect(angles({ snap: 1, td: 9 })).toEqual(["0:all22", "1:chase", "1:endzone"]);
-  });
-
-  it("opens wide on the line set before the snap and plays every shot long enough to read", () => {
+  it("is one shot of a passing touchdown, from the QB set through the catch to the run in", () => {
     const script = scriptReplay(clip({ snap: 1, td: 8, pass: { windup: 2.4, release: 2.8, catch: 4.2 } }), WR)!;
-    expect(script.segments[0]!.from).toBeLessThan(1);
-    for (const s of script.segments) expect(s.to - s.from).toBeGreaterThanOrEqual(0.7 - 1e-6);
+    expect(script.segments).toHaveLength(1);
+    const shot = script.segments[0]!;
+    expect(shot.angle).toBe("trace");
+    // Opens with the QB set, a beat before his throwing motion, and plays past the line as the scorer eases up.
+    expect(shot.from).toBeLessThan(2.4);
+    expect(shot.from).toBeGreaterThanOrEqual(1);
+    expect(shot.to).toBeGreaterThan(8.5);
     expect(script.passer).toBe(QB);
-    expect(script.length).toBeCloseTo(script.segments.reduce((n, s) => n + s.to - s.from, 0), 6);
+    expect(script.length).toBeCloseTo(shot.to - shot.from, 6);
   });
 
-  it("keeps the wide take to nine seconds on a long run", () => {
+  it("is one chase of a touchdown on the ground", () => {
+    const script = scriptReplay(clip({ snap: 1, td: 5 }), WR)!;
+    expect(script.segments.map((s) => s.angle)).toEqual(["run"]);
+    expect(script.segments[0]!.from).toBeLessThan(1);
+    expect(script.passer).toBeNull();
+  });
+
+  it("keeps a long run to its last six seconds", () => {
     const script = scriptReplay(clip({ snap: 1, td: 15 }), WR)!;
-    const wide = script.segments[0]!;
-    expect(wide.to - wide.from).toBeLessThanOrEqual(9 + 0.8 + 1e-6);
+    const shot = script.segments[0]!;
+    expect(15 - shot.from).toBeLessThanOrEqual(6 + 1e-6);
+  });
+
+  it("ends a beat into the scorer's celebration", () => {
+    const frames = clip({ snap: 1, td: 8, pass: { windup: 2.4, release: 2.8, catch: 7.9 } });
+    for (const f of frames) if (f.time >= 8.3) (f.athletes[1] as { action: string }).action = "celebrate";
+    const shot = scriptReplay(frames, WR)!.segments[0]!;
+    expect(shot.to).toBeGreaterThan(8.3);
+    expect(shot.to).toBeLessThan(8.3 + 0.45);
   });
 
   it("has nothing to show for a score with no live play before it", () => {
     expect(scriptReplay(clip({ snap: 0, td: 0 }), WR)).toBeNull();
   });
 
-  it("starts the play over at the second take", () => {
+  it("plays straight through the clip at full speed", () => {
     const script = scriptReplay(clip({ snap: 1, td: 8, pass: { windup: 2.4, release: 2.8, catch: 4.2 } }), WR)!;
-    const wide = script.segments[0]!;
-    const spot = locate(script, wide.to - wide.from + 0.01)!;
-    expect(spot.segment.take).toBe(1);
-    expect(spot.time).toBeLessThan(wide.to - 2);
+    const shot = script.segments[0]!;
+    expect(locate(script, 1)!.time).toBeCloseTo(shot.from + 1, 6);
+    expect(locate(script, 99)!.time).toBeCloseTo(shot.to, 6);
   });
 });

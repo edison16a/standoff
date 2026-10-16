@@ -1,5 +1,6 @@
 import type { BotLevel } from "@/games/kit/difficulty/difficulty";
-import { Match, RULES, STEP, buildView } from "../engine";
+import { Match, STEP, buildView } from "../engine";
+import { touchdownEnd } from "../engine/score-runout";
 import type { MatchEvent } from "../engine/events";
 import { ReplayDirector } from "../host/replay/director";
 import { ReplayRecorder } from "../host/replay/recorder";
@@ -36,7 +37,7 @@ export class ReplayPreview {
       for (const e of events) if (e.type === "touchdown" && !e.conversion && (e.pass === null) === run && ++found === nth) scorer = e.id;
     }
     // On to the end of the celebration, where the host rolls its replay.
-    while (scorer !== null && match.phase === "touchdown" && match.phaseT + STEP < RULES.touchdownSeconds) {
+    while (scorer !== null && match.phase === "touchdown" && match.phaseT + STEP < touchdownEnd(match)) {
       match.step(STEP);
       recorder.record(buildView(match), match.drainEvents());
     }
@@ -49,7 +50,7 @@ export class ReplayPreview {
     const frame = this.replay.frame();
     const script = this.replay.script;
     if (!frame || !script) return;
-    this.renderer.setReplay({ angle: frame.segment.angle, take: frame.segment.take, passer: script.passer, scorer: script.scorer });
+    this.renderer.setReplay({ angle: frame.segment.angle, passer: script.passer, scorer: script.scorer });
     for (const event of this.replay.sounds()) this.renderer.onEvent(event);
     if (render) this.renderer.draw(frame.view, ms);
     else this.renderer.update(frame.view, ms);

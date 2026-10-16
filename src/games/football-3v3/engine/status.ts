@@ -4,15 +4,16 @@ import type { Match } from "./match";
 import { canThrow } from "./passing";
 import { canRun, qbRunning } from "./qb-run";
 import { canPitch } from "./run-play";
+import { slotsOpen, throwSlots } from "./throw-targets";
 import { pageCards } from "./playbook/card";
 import { huddleLeft } from "./playbook/huddle";
 import { accuracyOf, pocketPressure } from "./pocket";
 import { RULES } from "./tuning";
-import type { ConversionCall, Phase, PlayCall, Role, TeamId } from "./types";
+import type { Athlete, ConversionCall, Phase, PlayCall, Role, TeamId } from "./types";
 
 /**
- * Which control layout a phone shows. The QB pad has the move stick,
- * throw stick, juke, run and hike; runners run, dive and juke; the defence
+ * Which control layout a phone shows. The QB pad has the move stick, a
+ * throw button per runner, juke, run and hike; runners run, dive and juke; the defence
  * moves, rushes, tackles and guards; the kicker gets the two meters.
  */
 export type Pad = "qb" | "runner" | "defense" | "kicker" | "choose" | "playbook" | "wait";
@@ -36,9 +37,13 @@ export interface SeatStatus {
   meter: { stage: "aim" | "power"; t: number } | null;
   withBall: boolean;
   canThrow: boolean;
-  /** This play is a run call: the QB has Pass for the pitch instead of the throw stick. */
+  /** The QB's four throw buttons, left to right in the runners' colours: whether each throws now (throw-targets.ts). Empty off the QB pad. */
+  throws: boolean[];
+  /** This play is a run call: the QB has Pitch as well as the throw buttons. */
   runPlay: boolean;
   canPitch: boolean;
+  /** On a run call, which of the four buttons is the back the pitch goes to. */
+  backSlot: number | null;
   /** The QB can still press Run and become the runner. */
   canRun: boolean;
   jukeReady: boolean;
@@ -65,6 +70,13 @@ function padFor(m: Match, id: number, onOffense: boolean, withBall: boolean): Pa
   return "defense";
 }
 
+/** The back's place among the QB's throw buttons on a run call, or null. */
+function backSlot(m: Match, qb: Athlete): number | null {
+  const back = m.play?.call === "run" ? m.play.back : null;
+  const at = back === null ? -1 : throwSlots(m, qb).indexOf(back);
+  return at >= 0 ? at : null;
+}
+
 /** What a phone should show for the player it steers now, or null for a phone with no player. */
 export function seatStatus(m: Match, seat: number): SeatStatus | null {
   const a = m.steered(seat);
@@ -83,8 +95,10 @@ export function seatStatus(m: Match, seat: number): SeatStatus | null {
     meter: pad === "kicker" && k && (k.stage === "aim" || k.stage === "power") ? { stage: k.stage, t: k.t } : null,
     withBall,
     canThrow: canThrow(m, a),
+    throws: pad === "qb" ? slotsOpen(m, a) : [],
     runPlay: m.play?.call === "run",
     canPitch: canPitch(m, a),
+    backSlot: backSlot(m, a),
     canRun: canRun(m, a),
     jukeReady: a.jukeCd <= 0,
     jukeCool: jukeCooling(a),

@@ -18,8 +18,8 @@ export interface PlayDesign {
   carry: CarryKind | null;
 }
 
-/** Plays dealt at a time, and the most deep routes one can have. */
-export const DEAL = { size: 6, deepMin: 1, deepMax: 2, tries: 400 } as const;
+/** Plays dealt at a time (two, so each card is big enough to read at a glance), and the most deep routes one can have. */
+export const DEAL = { size: 2, deepMin: 1, deepMax: 2, tries: 400 } as const;
 
 /** The routes each kind of runner may get on a pass play. */
 const POOLS: Record<Exclude<RunnerKind, "back">, readonly PlayRoute[]> = {

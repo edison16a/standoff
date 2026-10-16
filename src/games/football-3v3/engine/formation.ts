@@ -55,6 +55,7 @@ export function lineUp(athletes: readonly Athlete[], drive: Drive, call: PlayCal
     a.vz = 0;
     a.move = { x: 0, z: 0 };
     a.aim = null;
+    a.latch = null;
     a.guard = null;
     a.burst = null;
     a.breaking = null;

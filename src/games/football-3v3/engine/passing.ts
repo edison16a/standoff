@@ -15,11 +15,14 @@ import { isReceiver } from "./support/roster";
 import type { Athlete } from "./types";
 import { dir2, dist2, len3, type V3 } from "./vec";
 
-/** Only the QB throws, once a play, with the ball in hand, and never after he turned runner (qb-run.ts). */
+/**
+ * Only the QB throws, once a play, with the ball in hand, and never after
+ * he turned runner (qb-run.ts) or pitched. A run call is only the play's
+ * shape: until he pitches he may still throw to any of his runners.
+ */
 export function canThrow(m: Match, a: Athlete): boolean {
   const play = m.play;
-  // A run call has no forward pass: the QB pitches to the back instead (run-play.ts).
-  if (m.phase !== "live" || !play || play.call === "run" || play.passed || play.qbRun) return false;
+  if (m.phase !== "live" || !play || play.passed || play.pitched || play.qbRun) return false;
   return a.role === "qb" && a.team === m.offense && m.carrier()?.id === a.id && (a.action.kind === "none" || a.action.kind === "juke");
 }
 

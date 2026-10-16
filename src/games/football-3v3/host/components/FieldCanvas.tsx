@@ -33,7 +33,7 @@ export default function FieldCanvas() {
       for (const event of session.tick(now)) renderer.onEvent(event);
       const replay = session.replayFrame;
       const script = session.replays.script;
-      renderer.setReplay(replay && script ? { angle: replay.segment.angle, take: replay.segment.take, passer: script.passer, scorer: script.scorer } : null);
+      renderer.setReplay(replay && script ? { angle: replay.segment.angle, passer: script.passer, scorer: script.scorer } : null);
       renderer.draw(session.view, now);
       session.forward = renderer.director.groundForward();
       frame = requestAnimationFrame(loop);

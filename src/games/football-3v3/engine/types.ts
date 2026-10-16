@@ -153,8 +153,10 @@ export interface Athlete {
   mass: number;
   /** Where the stick asks to go, in field space, length up to 1. */
   move: V2;
-  /** The throw stick, in field space, while it is held. */
+  /** Where a passer looks to throw, in field space: a computer QB's read, held only while he can throw. */
   aim: V2 | null;
+  /** The stick a phone held as it took this player over (control.ts), until the thumb moves off it (stick-latch.ts). */
+  latch: V2 | null;
   action: Action;
   /** Seconds until the next juke, and the cooldown it started from, for the phone's ring. */
   jukeCd: number;

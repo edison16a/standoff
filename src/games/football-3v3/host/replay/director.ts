@@ -23,9 +23,10 @@ export interface ReplayCard {
 
 /**
  * Runs the touchdown replay on the big screen while the match waits. It
- * cuts the clip from the recorder, plays it shot by shot at full speed
- * on the animation clock with the play's own sounds, and ends it when it
- * has played or when every player has pressed a button to skip it.
+ * cuts the clip from the recorder, plays it in one shot at full speed
+ * on the animation clock with the key sounds of the play, and ends it
+ * when it has played or when every player has pressed a button on their
+ * phone to skip it.
  */
 export class ReplayDirector {
   readonly votes = new SkipVotes();
@@ -34,8 +35,8 @@ export class ReplayDirector {
   private cues: readonly Cue[] = [];
   private startMs = 0;
   private t = 0;
-  /** Where the last sounds were taken up to, in match time and take. */
-  private heard = { time: -Infinity, take: -1 };
+  /** Where the last sounds were taken up to, in match time, or null before the first frame. */
+  private heard: number | null = null;
 
   get active(): boolean {
     return this.script !== null;
@@ -48,7 +49,7 @@ export class ReplayDirector {
     this.script = scriptReplay(this.clip, scorer);
     this.startMs = nowMs;
     this.t = 0;
-    this.heard = { time: -Infinity, take: -1 };
+    this.heard = null;
     if (!this.script) return false;
     this.votes.start(voters);
     return true;
@@ -82,16 +83,14 @@ export class ReplayDirector {
   }
 
   /**
-   * The play's sounds passed since the last call: the pads, the hits,
-   * the throw and the catch. A new take starts the sounds over with the
-   * play; its first frame plays nothing from before it.
+   * The play's key sounds passed since the last call (cues.ts). The
+   * first frame plays nothing from before it.
    */
   sounds(): MatchEvent[] {
     const frame = this.frame();
     if (!frame) return [];
-    const take = frame.segment.take;
-    const from = take === this.heard.take ? this.heard.time : frame.time;
-    this.heard = { time: frame.time, take };
+    const from = this.heard ?? frame.time;
+    this.heard = frame.time;
     return cuesBetween(this.cues, from, frame.time);
   }
 

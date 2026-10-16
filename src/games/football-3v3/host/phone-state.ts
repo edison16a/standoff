@@ -76,8 +76,10 @@ export function phoneState(c: PhoneContext, seatNo: number): PhoneState {
     meter: status?.meter && !replay ? { stage: status.meter.stage, fieldGoal: kick?.fieldGoal ?? true } : null,
     withBall: status?.withBall ?? false,
     canThrow: status?.canThrow ?? false,
+    throws: replay ? [] : (status?.throws ?? []),
     runPlay: status?.runPlay ?? false,
     canPitch: status?.canPitch ?? false,
+    backSlot: status?.backSlot ?? null,
     canRun: status?.canRun ?? false,
     jukeReady: status?.jukeReady ?? false,
     // Steps fine enough for a smooth sweep and bar, coarse enough not to flood the link.

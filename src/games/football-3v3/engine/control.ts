@@ -1,4 +1,5 @@
 import type { Match } from "./match";
+import { latchStick } from "./stick-latch";
 import type { Athlete } from "./types";
 
 /**
@@ -23,6 +24,7 @@ export function piloted(m: Match): { seat: number; athlete: Athlete }[] {
 const still = (a: Athlete) => {
   a.move = { x: 0, z: 0 };
   a.aim = null;
+  a.latch = null;
   a.guard = null;
 };
 
@@ -38,6 +40,8 @@ export function handOver(m: Match, from: Athlete, to: Athlete): boolean {
   to.pilot = seat;
   to.auto = false;
   to.move = { ...from.move };
+  // The thumb is still where it steered the passer: it only steers the receiver once it moves (stick-latch.ts).
+  latchStick(to, from.move);
   to.aim = null;
   to.guard = null;
   from.pilot = null;

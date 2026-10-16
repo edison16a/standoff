@@ -3,21 +3,21 @@ import { adminFieldGoal, adminTouchdown, adminTwoPoint, adminWin } from "../engi
 import type { MatchEvent } from "../engine/events";
 import type { Entry } from "../engine/lineup";
 import { Match } from "../engine/match";
-import { RULES, STEP } from "../engine/tuning";
+import { touchdownEnd } from "../engine/score-runout";
+import { STEP } from "../engine/tuning";
 import type { Button } from "../engine/types";
 import type { V2 } from "../engine/vec";
 import { buildView, type MatchView } from "../engine/view";
 import type { Call } from "../protocol";
 import { ReplayRecorder } from "./replay/recorder";
 import { StepClock } from "./step-clock";
+import { StickFrames } from "./stick-frames";
 import { stickToField, type Stick } from "./steer";
 import { testHooks } from "./test-hooks";
 
 /** What the driver reads from the phones each step, already on the screen's axes. */
 export interface Sticks {
   move(seat: number): Stick;
-  /** The throw stick while it is held, or null. */
-  aim(seat: number): Stick | null;
   /** The way up the screen on the ground, from the camera. */
   forward: V2;
 }
@@ -38,6 +38,8 @@ export class MatchDriver {
   replayFor: number | null = null;
   held = false;
   private readonly clock: StepClock;
+  /** Each stick keeps the view it was pushed in through a camera turning round (stick-frames.ts). */
+  private readonly frames = new StickFrames();
 
   constructor(entries: readonly Entry[], seed: number, level: BotLevel) {
     const hooks = testHooks();
@@ -56,7 +58,7 @@ export class MatchDriver {
   press(seat: number, button: Button, down: boolean, stick: Stick, forward: V2): void {
     const id = this.id(seat);
     if (id === null || this.held) return;
-    this.match.setMove(id, stickToField(stick, forward));
+    this.match.setMove(id, stickToField(stick, this.frames.frame(seat, stick, forward)));
     if (down) this.match.press(id, button);
     else this.match.release(id, button);
   }
@@ -78,12 +80,10 @@ export class MatchDriver {
     if (id !== null && !this.held) this.match.press(id, "kick", value);
   }
 
-  /** The throw stick let go: aim one last time, then throw. */
-  throwAt(seat: number, stick: Stick, forward: V2): void {
+  /** One of the QB's four throw buttons: throw to that runner. */
+  throwTo(seat: number, slot: number): void {
     const id = this.id(seat);
-    if (id === null || this.held) return;
-    this.match.setAim(id, stickToField(stick, forward));
-    this.match.setAim(id, null);
+    if (id !== null && !this.held) this.match.throwTo(id, slot);
   }
 
   /** A phone left or came back. While away, the computer plays for them. */
@@ -139,16 +139,15 @@ export class MatchDriver {
   /** The celebration is over and a replay is owed: hold here. */
   private replayDue(): boolean {
     const m = this.match;
-    return this.replayFor !== null && m.phase === "touchdown" && m.phaseT + STEP >= RULES.touchdownSeconds;
+    return this.replayFor !== null && m.phase === "touchdown" && m.phaseT + STEP >= touchdownEnd(m);
   }
 
   private steer(sticks: Sticks): void {
     for (const seat of this.idBySeat.keys()) {
       const id = this.id(seat);
       if (id === null) continue;
-      this.match.setMove(id, stickToField(sticks.move(seat), sticks.forward));
-      const aim = sticks.aim(seat);
-      if (aim) this.match.setAim(id, stickToField(aim, sticks.forward));
+      const stick = sticks.move(seat);
+      this.match.setMove(id, stickToField(stick, this.frames.frame(seat, stick, sticks.forward)));
     }
   }
 }

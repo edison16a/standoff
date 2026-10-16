@@ -15,6 +15,7 @@ import type { PlayDesign } from "./playbook/deal";
 import { dealHuddle, huddleLeft, redeal } from "./playbook/huddle";
 import { pickBack } from "./run-play";
 import { endOfRegulation } from "./score";
+import { touchdownEnd } from "./score-runout";
 import { PASS, RULES } from "./tuning";
 import type { ConversionCall, PlayCall } from "./types";
 
@@ -199,7 +200,7 @@ export function updatePhase(m: Match): void {
   } else if (m.phase === "dead") {
     if (m.phaseT >= RULES.deadSeconds) afterWhistle(m);
   } else if (m.phase === "touchdown") {
-    if (m.phaseT >= RULES.touchdownSeconds) {
+    if (m.phaseT >= touchdownEnd(m)) {
       if (m.winner !== null) finishGame(m);
       else startConvert(m);
     }
